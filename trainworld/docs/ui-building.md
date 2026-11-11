@@ -110,7 +110,9 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   selection bar's words, then three icon buttons, **Single track** (one line), **Double track** (two lines)
   and **Quad track** (four lines) [T-2931, T-3093]. Single is 0.6x the cost and the single-track upkeep shown;
   quad is two double tracks' price (2x the cost and upkeep shown). Single is never high speed
-  (picking it switches to Regular); quad can be high speed [T-3126]; picking single clears quad. Tram has no count. A browser remembers the
+  (picking it switches to Regular); quad can be high speed [T-3126]; picking single clears quad. Tram has
+  Double and Quad only [T-3166]: quad tram is off-street tram track, so picking it turns Snap to streets off,
+  and turning that on picks Double again. A browser remembers the
   choice (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
   Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength

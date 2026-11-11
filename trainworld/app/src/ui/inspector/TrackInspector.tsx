@@ -54,7 +54,7 @@ export function TrackInspector({ edge }: { edge: number }) {
             <Icon.addPoint />
           </button>
         )}
-        {e.tracks === 2 && !e.crossover && !e.hsr && !e.kind && <DoubleUp edge={e.id} version={w.version} />}
+        {e.tracks === 2 && !e.crossover && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
         {tSeries([distance(e.lengthM), lv])}

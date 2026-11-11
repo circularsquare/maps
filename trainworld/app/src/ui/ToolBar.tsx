@@ -106,14 +106,14 @@ function TrackBar() {
         <div class="tb-row">
           <div class="tb-wide"><Segmented<TrackType> options={trackTypes()} value={tt} onChange={setTrackType} /></div>
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
-          {!tram && <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
-            <button class={"btn icon" + (one ? " on" : "")} aria-label={t("toolBar.singleTrack")} aria-pressed={one} data-tip={t("toolBar.singleTrack")}
-              onClick={() => setSingleTrack(true)}><Icon.tracks1 /></button>
+          <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
+            {!tram && <button class={"btn icon" + (one ? " on" : "")} aria-label={t("toolBar.singleTrack")} aria-pressed={one} data-tip={t("toolBar.singleTrack")}
+              onClick={() => setSingleTrack(true)}><Icon.tracks1 /></button>}
             <button class={"btn icon" + (!q && !one ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q && !one} data-tip={t("toolBar.doubleTrack")}
               onClick={() => { setQuadTrack(false); setSingleTrack(false); }}><Icon.tracks2 /></button>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrack")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
-          </div>}
+          </div>
           <span class="build-toggles">
             <button class={"btn icon" + (keepPlacing.value ? " on" : "")} aria-label={t("toolBar.keepPlacing")} aria-pressed={keepPlacing.value}
               data-tip={t(mobileDevice() ? "toolBar.keepPlacingTipTouch" : "toolBar.keepPlacingTip")}
@@ -121,7 +121,7 @@ function TrackBar() {
             {tram ? (
               <button class={"btn icon tb-streets" + (snapStreets.value ? " on" : "")} aria-label={t("toolBar.snapStreets")} aria-pressed={snapStreets.value}
                 data-tip={t("toolBar.snapStreets") + (mobileDevice() ? "" : "\n" + t("toolBar.snapStreetsCtrl", { on: snapStreets.value }))}
-                onClick={() => (snapStreets.value = !snapStreets.peek())}><Icon.snapReal /></button>
+                onClick={() => { const on = !snapStreets.peek(); snapStreets.value = on; if (on) setQuadTrack(false); }}><Icon.snapReal /></button>
             ) : (
               <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
                 data-tip={t("toolBar.snapReal")}

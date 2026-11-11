@@ -16,7 +16,7 @@ Double track costs this much a km, in US$ millions:
 
 Each stretch of an edge costs its length, times the base price a km, times its level's multiplier plus whatever the ground or water adds, times a factor for the kind of track. Long edges are cut into stretches wherever any of those change.
 
-High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track is two lots of double.
+High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track is two lots of double, and regular, high-speed and tram track can all be quad.
 
 **Ground isn't always cheap.** Ground-level track through a city has to knock things down, so it adds US${{sim/src/track/params.rs:ROAD_CROSSING_COST|0}}M for every road it crosses, more for a motorway. A viaduct or a tunnel goes past all of them, so past about {{sim/src/track/params.rs:BASE_COST_PER_KM*(LEVEL_MULT[4]-LEVEL_MULT[3])/ROAD_CROSSING_COST|1}} roads a km a viaduct is cheaper than the ground. Out in the country there's hardly a road to cross and the ground stays cheapest.
 

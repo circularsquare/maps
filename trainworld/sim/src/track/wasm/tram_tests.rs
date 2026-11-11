@@ -40,23 +40,34 @@ fn tram_track_is_drawn_double_priced_by_its_table_and_saved() {
     assert_eq!(route(&mut plain, (0.0, 0.0), (3000.0, 0.0), 2), 0);
     let mut a = api();
     a.set_route_kind(3);
-    // single and quad are asked for and come out as double tram track
-    for (y, tracks) in [(0.0, 1u8), (2000.0, 4)] {
-        assert_eq!(route(&mut a, (0.0, y), (3000.0, y), tracks), 0, "{}", a.issues());
-    }
+    // single is asked for and comes out as double tram track; quad is two tram doubles (T-3166)
+    assert_eq!(route(&mut a, (0.0, 0.0), (3000.0, 0.0), 1), 0, "{}", a.issues());
+    let single = live(&a);
+    assert_eq!(route(&mut a, (0.0, 2000.0), (3000.0, 2000.0), 4), 0, "{}", a.issues());
     let edges = live(&a);
-    assert!(!edges.is_empty());
+    assert!(edges.len() >= single.len() + 2);
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram && a.w.net.edge_tracks[e as usize] == 2));
     assert!(edges.iter().all(|&e| a.edge_kind(e) == 3));
-    // ground tram track is 0.5 x US$75M a km, as ground rail, and no road crossing is charged
-    assert!((a.blueprint_cost() - 2.0 * plain.blueprint_cost()).abs() < 1e-6, "{} against {}", a.blueprint_cost(), plain.blueprint_cost());
+    // ground tram track is 0.5 x US$75M a km, as ground rail, and no road crossing is charged; quad is twice that
+    assert!((a.blueprint_cost() - 3.0 * plain.blueprint_cost()).abs() < 0.1, "{} against {}", a.blueprint_cost(), plain.blueprint_cost());
     let bytes = a.save();
     let mut b = api();
     assert!(b.load(&bytes));
     assert!(live(&b).iter().all(|&e| b.w.net.edge_kind[e as usize] == TrackKind::Tram));
     assert_eq!(b.save(), bytes);
-    // no doubling up or reshaping into other kinds
-    assert_ne!(a.double_up(edges[0]), 0);
+    // doubling up adds a tram pair (T-3166)
+    let before = live(&a).len();
+    let price = a.preview_double_up(single[0]);
+    assert!(price > 0.0, "{}", a.issues());
+    assert_eq!(a.double_up(single[0]), 0, "{}", a.issues());
+    let now = live(&a);
+    assert_eq!(now.len(), before + single.len());
+    assert!(now.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
+    assert_ne!(a.double_up(single[0]), 0);
+    assert!(a.issue_kinds().contains("Alongside"), "{}", a.issue_kinds());
+    let mut b = api();
+    assert!(b.load(&a.save()));
+    assert_eq!(live(&b).len(), now.len());
     // rail drawn after it is rail again
     a.set_route_kind(0);
     assert_eq!(route(&mut a, (0.0, 4000.0), (3000.0, 4000.0), 2), 0);

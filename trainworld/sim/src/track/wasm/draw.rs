@@ -24,7 +24,7 @@ impl TrackApi {
     }
 
     fn route_op_plain(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
-        let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
+        let tracks = if self.route_kind.spec().family != 0 && tracks == 1 { 2 } else { tracks };
         if let Some(eb) = self.route_beside.take() {
             if let Some((b_ends, b_pis, on_line, run)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
                 // a start on the line leaves along it; one coming in keeps its lead-in
@@ -315,7 +315,8 @@ impl TrackApi {
                 Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled, min_r),
                 None => stroke_pieces(&ex, first, clicks, scaled, min_r),
             };
-            let pieces: Vec<_> = pieces.into_iter().map(|p| (p, kind)).collect();
+            let pair = if kind == TrackKind::StreetTram { TrackKind::Tram } else { kind };
+            let pieces: Vec<_> = pieces.into_iter().map(|p| (p, pair)).collect();
             self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex_bridged.unwrap_or(ex);
         }
@@ -629,7 +630,7 @@ impl TrackApi {
     /// speed limit km/h, then the polyline as x, y, height (m) triples]. `issue_kinds()` holds
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
-        let tracks = if self.route_kind.spec().family != 0 { 2 } else { tracks };
+        let tracks = if self.route_kind.spec().family != 0 && tracks == 1 { 2 } else { tracks };
         self.preview_lanes.clear();
         self.preview_speeds.clear();
         self.preview_marks.clear();

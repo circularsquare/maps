@@ -335,7 +335,7 @@ export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== fa
 export const snapReal = signal(saved.build?.snap === true);
 /** T-2927: tram track drawn with the track tool follows the streets (street tram track); on unless
  * turned off, and flipped while Ctrl is held (tools.ts) */
-export const snapStreets = signal(saved.build?.streets !== false);
+export const snapStreets = signal(saved.build?.streets !== false && !(saved.build?.tram === true && saved.build?.tracks === 4));
 /** T-3129: rail track drawn with the track tool follows the main roads; off by default, and off whenever the real
  * network or beside track is snapped to (the three exclude each other in the bar) */
 export const snapRoads = signal(saved.build?.roads === true && saved.build?.snap !== true && saved.build?.beside !== true);
@@ -359,15 +359,15 @@ export const buildAdvanced = signal(saved.build?.advanced === true);
 export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 1 && saved.build?.tram !== true);
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
  * Regular and High speed. Drawn by hand it is the off-street kind (`TrackApi::set_route_kind(3)`). */
-export const tramTrack = signal(saved.build?.tram === true && saved.build?.tracks !== 4);
-/** T-2931: the track tool lays quad track (two pairs) instead of double; high-speed too (T-3126). */
-export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.tram !== true);
+export const tramTrack = signal(saved.build?.tram === true);
+/** T-2931: the track tool lays quad track (two pairs) instead of double; high-speed (T-3126) and tram (T-3166) too. */
+export const quadTrack = signal(saved.build?.tracks === 4);
 export function setQuadTrack(on: boolean) {
   if (on === quadTrack.peek()) return;
-  if (on && tramTrack.peek()) return;
   batch(() => {
     quadTrack.value = on;
     if (on) singleTrack.value = false;
+    if (on && tramTrack.peek()) snapStreets.value = false; // quad tram is off-street track (T-3166)
   });
 }
 /** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; never high-speed or tram. */
@@ -395,8 +395,8 @@ export function setTrackType(t: TrackType) {
   if ((t === "hsr" && was) || (t === "tram" && wasTram) || (t === 2 && !was && !wasTram)) return;
   batch(() => {
     if (t === "tram") {
-      quadTrack.value = false;
       singleTrack.value = false;
+      if (quadTrack.peek()) snapStreets.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
       highSpeed.value = false;

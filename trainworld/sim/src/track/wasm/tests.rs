@@ -2135,9 +2135,16 @@ fn high_speed_track_costs_half_again_and_is_saved() {
     let mut c = api();
     assert!(c.load(&plain.save()));
     assert!(c.hsr_edges().is_empty());
-    // high-speed track has no quad form
+    // high-speed track doubles up into high-speed quad (T-3166), priced as a second high-speed double
+    let before = (a.hsr_edges().len(), a.blueprint_cost());
+    let price = a.preview_double_up(hsr[0]);
+    assert!(price > 0.0, "{}", a.issue_kinds());
+    assert_eq!(a.double_up(hsr[0]), 0, "{}", a.issues());
+    assert!(a.hsr_edges().len() > before.0, "the pair is high speed too");
+    assert!((a.blueprint_cost() - before.1 - price).abs() < 1e-6);
+    assert!(a.hsr_edges().iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::HighSpeed));
     assert_ne!(a.double_up(hsr[0]), 0);
-    assert!(a.issue_kinds().contains("HighSpeed"), "{}", a.issue_kinds());
+    assert!(a.issue_kinds().contains("Alongside"), "{}", a.issue_kinds());
 }
 
 /// T-817 b1: a split keeps high-speed track high speed; two high-speed pieces join under a

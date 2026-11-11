@@ -294,11 +294,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   Blueprint double track switches between regular, high speed and tram, shape and level kept, with the Select
   tool's bar (T-1898, T-3108, `TrackApi::set_edges_kind`, the planner rebuilding built track uses): rail and tram
   change as whole joined stretches with their stations and lines; single track, crossovers, constructed track
-  and pieces the track model refuses stay as they are. It cannot be doubled up (`HighSpeed`). Its cap is 320 km/h, which only a line's high-speed
+  and pieces the track model refuses stay as they are. It doubles up into high-speed quad like any double (T-3166). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
   `TRACK_SPECS` in params.rs holds every kind's figures; `game/trackKinds.ts` copies them for the app).
-  Always double, curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
+  Always double or quad (T-3166: quad is two tram doubles 8 m apart, off-street, so priced 0.5x at ground twice over;
+  never single), curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
   T-2927), 0.5x (off street) of the 75M a km, viaducts and tunnels 0.4 under rail's, plus a quarter of what hills
   and mountains add (`TRAM_TERRAIN`, T-3004), and it pays no road crossings. The track bar's
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
@@ -364,9 +365,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   stations of its own (T-1689): the player clicks stations onto it where wanted (T-1687), and no
   crossover goes in (above). At a junction end the pair swings in to meet the junction (the T-255 taper), so lines
   can change pairs there; at any other end it has its own loose end beside the drawn pair's, or
-  carries on from a loose end of the pair beside that is there already (quad drawn earlier). Refused
-  on single track (`Tracks`), high-speed track (`HighSpeed`), a crossover, and track with a pair
-  beside it (`Alongside`); a run stops at high-speed track as at single track.
+  carries on from a loose end of the pair beside that is there already (quad drawn earlier). The pair
+  has the piece's own track type (T-3166): high-speed track doubles up into high-speed quad, tram track
+  into tram quad (street tram's pair is off-street tram track, with no street-running price, as quad tram
+  drawn by hand), and a run stops where the type changes, as at single track. Refused on single track
+  (`Tracks`), a crossover, and track with a pair beside it (`Alongside`).
 
 #### Routes beside track, crossovers and junctions
 

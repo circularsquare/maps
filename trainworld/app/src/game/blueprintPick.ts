@@ -153,12 +153,13 @@ export function pathTo(p: BpPicked, edge: number): number[] {
 }
 
 /** T-1680: one picked piece of double track for each run Double up would cover (`TrackApi::double_up`
- * stops at junctions, track ends, single, high-speed track and crossovers). */
+ * stops at junctions, track ends, single track, crossovers and a change of rail, high-speed or tram track, T-3166). */
 export function doubleUpPieces(p: BpPicked): number[] {
   const w = world.peek();
   if (!w) return [];
   const picked = new Set(p.edges);
-  const ok = (e: TrackEdge) => e.tracks === 2 && !e.hsr && !e.kind && !e.crossover;
+  const ok = (e: TrackEdge) => e.tracks === 2 && !e.crossover;
+  const family = (e: TrackEdge) => (e.hsr ? 1 : e.kind ? 2 : 0);
   const adj = adjacency(w.edges);
   const seen = new Set<number>(), out: number[] = [];
   for (const e0 of w.edges) {
@@ -171,7 +172,7 @@ export function doubleUpPieces(p: BpPicked): number[] {
       for (const n of [e.a, e.b]) {
         const at = adj.get(n) ?? [];
         const o = at.length === 2 ? at.find((x) => x !== e) : undefined;
-        if (o && picked.has(o.id) && ok(o) && !seen.has(o.id)) seen.add(o.id), stack.push(o);
+        if (o && picked.has(o.id) && ok(o) && family(o) === family(e) && !seen.has(o.id)) seen.add(o.id), stack.push(o);
       }
     }
   }

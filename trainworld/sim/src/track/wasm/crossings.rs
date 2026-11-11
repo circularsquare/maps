@@ -100,12 +100,7 @@ impl TrackApi {
         if net.edge_tracks[edge as usize] != 2 {
             return Err(Issue::Tracks { edge });
         }
-        if net.edge_hsr(edge) {
-            return Err(Issue::HighSpeed { edge });
-        }
-        if net.edge_kind[edge as usize].spec().family != 0 {
-            return Err(Issue::Tracks { edge });
-        }
+        let kind = pair_kind(net.edge_kind[edge as usize]);
         let doubled = |e: u32| self.twin_at(e, net.edge_len[e as usize] / 2.0).is_some();
         if doubled(edge) {
             return Err(Issue::Alongside { edge });
@@ -122,7 +117,7 @@ impl TrackApi {
                 }
                 let Some(&c) = p.ends().iter().find(|&&c| c >> 1 != from) else { break };
                 let e = c >> 1;
-                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || net.edge_hsr(e) || doubled(e) {
+                if run.iter().any(|r| r.0 == e) || net.edge_crossover[e as usize] || net.edge_tracks[e as usize] != 2 || pair_kind(net.edge_kind[e as usize]) != kind || doubled(e) {
                     break;
                 }
                 // c & 1 is the end of e at `node`: walking forward, e runs a to b when that is its a
@@ -195,7 +190,7 @@ impl TrackApi {
             let id = self.w.net.alloc_edge();
             ne.push(id);
             let (na, nb) = (a.map_or(nodes[i], |o| o.0), b.map_or(nodes[i + 1], |o| o.0));
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: na, b: nb, tracks: 2, pis: ex[1..ex.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind: pair_kind(self.w.net.edge_kind[run[i].0 as usize]), sep: false, day: 0, oneway: 0, join: [0; 2] }) });
         }
         Ok((Op::Batch(ops), nn, ne))
     }
@@ -421,4 +416,10 @@ impl TrackApi {
         self.delete_pieces(&[], &[node])
     }
 
+}
+
+/// The kind of the express pair beside a piece of `kind` (T-3166): its own, except street tram
+/// track, whose pair is off-street tram track. A run covers pieces of one such kind.
+fn pair_kind(kind: TrackKind) -> TrackKind {
+    if kind == TrackKind::StreetTram { TrackKind::Tram } else { kind }
 }
