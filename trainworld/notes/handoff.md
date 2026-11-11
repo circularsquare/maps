@@ -64,6 +64,8 @@ then community on (5), push maps master.
 - T-3227 (P3, her call: hidden names show as "player", no ban), T-3228 keep = immune, T-3229 reports plain in the
   inbox (Resend hits its cap, email unreliable): one moderation agent after search's server work lands. T-3230 time
   played (share alert, account panel, per game): after search too (Community.tsx). All low prio, her word.
+- maps-18, uncommitted in en.json (beside search's keys; commit with search's landing): community.errNewShare
+  "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine, list it for her).
 - uitweaks T-3220..T-3223 landed 01d527ee; 8800 = 01d527ee, smoke PASSED.
 - Anita away from ~12:30 11-11, can't test for a while: keep going on self-contained work; no publish or deploys.
 - Her calls on T-3213: campus fixes queue with T-2896's airport items for the next world rebuild; attendance raise a
