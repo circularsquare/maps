@@ -79,8 +79,10 @@ then community on (5), push maps master.
 - realnet (Opus, 6117, a27b2a7568b124ee7): T-3225 survey done (notes/T-3225.md, 0a48b758); her calls listed under
   Waiting on Anita. T-1773 DONE, landed 93be52a1: realgraphs rebuilt (118), six real saves shipped into data/packs/real
   (London held on its old -1 save for T-3233); 8800 = 93be52a1, smoke PASSED. realnet is past 600k: retire it.
-- lonslow (Opus, 6120, worktree .tw-trees/lonslow, a94ca6075f373d26a): T-3233 London real network ~135 s to settle
-  (was 13 s): bisect in its worktree, fix, browser check.
+- lonslow (Opus, 6120, a94ca6075f373d26a, ~300k): T-3233 bisected (notes/T-3233.md): T-2973 repeat settles + T-2986
+  dead ends on one platform; live game: London real network 190-220 s to playable, New York 97-113 s. Now in the
+  main tree: world.rs early stop, real termini get terminals (my call), saves load without a full settle, reship all
+  seven incl. London, re-measure. T-3234 filed (NY 16.7 s to the world view).
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
 - community.errNewShare "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine,
   she said fine) landed in cc510cc1. Next translation batch: these, sandboxNote, stopMarkers.oneWay, search strings.
@@ -97,7 +99,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3234**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
+- Next free id **T-3235**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
