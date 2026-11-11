@@ -8,7 +8,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 ## State
 - **Live = v0.2.1 = R2 2026-11-10d** (f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept for hotfixes until
   the next release). R2 purge due: 2026-11-07c and 11-08 from 11-11; 11-09, 09b, 09c a few days later; keep 11-10, 10b-10d.
-- **Master = f6ed4814, pushed; 8800 = f6ed4814** (adds T-3159, T-2773, T-3129 notes after 1df60242) (the night's batch: T-3137 C3+C4 single track done,
+- **Master = f28a04b9, pushed; 8800 = f28a04b9** (after 1df60242: T-3159, T-2773, T-3129 notes, T-2802) (the night's batch: T-3137 C3+C4 single track done,
   T-3149 clicks, T-3157/3158 look, T-3147/3131 bus stops, T-3151/3152/3154 TODO items, T-3153/3126 track mode, T-2766
   stop clicks; tsc clean, cargo 501/681, smoke 27 PASS on dev).
 - **v0.2.2 HELD** until she has tested 8800 (single track is now fully built). Then: translation batch for new and stale
@@ -21,7 +21,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
   when ready").
 
 ## In flight (maps-04's agents, main tree)
-- phonemem DONE, committed: T-2802 (WASM heap step 8 MB on small devices, outlines.json parsed once on the page and copied to workers; first line 691->600 MB, peak 948->825 on an emulated Pixel 7); rest filed T-3160 [P3]. Was:
+- phonemem DONE, committed f28a04b9: T-2802 (WASM heap step 8 MB on small devices, outlines.json parsed once on the page and copied to workers; first line 691->600 MB, peak 948->825 on an emulated Pixel 7); rest filed T-3160 [P3]. Was:
   file T-3160.
 - riderdip DONE, committed f6ed4814 with stopfast: T-2773 verified closed by the 11-07 hold + T-2793; check
   t2773-pending-dip.mjs rewritten; her Japan save is C:\Users\anita\Downloads\trainsworld-tokyo-day-414.save.
