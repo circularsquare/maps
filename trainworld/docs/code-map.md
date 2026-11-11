@@ -942,15 +942,18 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   track model's network, routed hops traced with `trace.rs` at 3 m, names tidied by `track/names.rs`:
   lines lose their feed word, stations get title case without "STATION", T-1442; the sim's `load`
   runs the same on older saves), `gamesave` (the game file
-  `<city>_real.save`); `ship` copies the seven a sandbox starts from to `data/packs/real/<id>.save`
+  `<city>_real.save`); `ship [city ...]` copies the seven a sandbox starts from (or those named) to `data/packs/real/<id>.save`
   (T-731; new files, since data/frozen/ links to the old ones). Tokyo's trips file is `calib_tyo.py trips` (peak trains an hour
   by tier and `REAL_PEAK`, timed at the count point, T-1751). `REALNET_OUT` stages geom, route and gamesave outside data/. `realcorridors.py <city>` (or
   `realnet.py corridors <city>`, T-1305) routes the hops again keeping their chains and writes
   `<city>_real_corridors.json`: lines routed again off other classes' track and off full pieces
   (T-1774), parallel chains grouped into corridors, cut at stations and where the
   lines change, as many double-track pairs a piece as its trains need and OSM's tracks allow and
-  the lines on each, with a picture, and (`realshared.py`) the track model's nodes, edges, platform
-  tracks and line paths from them, which `realsave --shared` builds into the save (`--slow` also
+  the lines on each, with a picture, (`realshared.py`) the track model's nodes, edges, platform
+  tracks and line paths from them, and (`reallevels.py`, T-1773) each node's level and each edge's
+  stretches of level from OSM's layer, tunnel and bridge tags (rules in its docstring, notes/T-1773.md),
+  which `realsave --shared` builds into the save, a ramp per change placed clear of platforms
+  (`REALGRAPH_DIR` reads a staged set of graphs) (`--slow` also
   prints where trains lose time: curves, the capacity pass's holds by node, resources over 90%, and
   writes `<city>_holds.json`). Each line has its real colour (T-1770,
   `realcolour.py`, called by `net`; `realnet.py colours <city>` adds it to an older network JSON, staged
@@ -969,7 +972,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
   extract, `ways.json` and `track_extra.json` (the ways tiles flag `x`, T-3043; read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
-  docstring; 0.01-7.5 MB, 1-32 s a region) and `index.json` (the regions built, which the track
+  docstring, which has each chain's OSM `layer` in its flags' top bits for the real networks' levels,
+  T-1773; 0.01-7.5 MB, 1-32 s a region) and `index.json` (the regions built, which the track
   tool snaps inside, T-913; no regions given rewrites only it). Built for all 118 noritetsu regions
   with drawn track (44.2 MB, about 5 min on 1 core; T-727e, T-3043), copied into the build. Rerun after
   noritetsu rebuilds a region.

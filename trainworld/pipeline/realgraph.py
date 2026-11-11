@@ -22,7 +22,8 @@ degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker), chain 
     i32[J] lon, i32[J] lat                      junctions (OSM nodes where chains meet or end)
     u32[C] a, u32[C] b                          each chain's two junctions, a at its first vertex
     u8[C] kind (0 rail, 2 subway), u8[C] rank (0 main, 1 other), u8[C] flags (1 passenger route,
-        2 bridge, 4 tunnel, 8 high speed)
+        2 bridge, 4 tunnel, 8 high speed; the top four bits OSM's `layer`, a signed nibble clamped
+        to -8..7, for the real networks' levels, T-1773; `layer_of`)
     u32[C + 1] first vertex of each chain
     varint[2V] lon, lat, lon, lat, ...          zigzag LEB128; a chain's first vertex absolute,
                                                 the rest as differences from the vertex before
@@ -69,6 +70,20 @@ def rank_of(kind, tags):
     if usage == "branch":
         return 1
     return 0 if kind in URBAN else 1
+
+
+def layer_tag(v):
+    """OSM's `layer` as an integer clamped to a signed nibble; 0 when absent or unreadable ("-1;0")."""
+    try:
+        return max(-8, min(7, int(round(float(v)))))
+    except (TypeError, ValueError):
+        return 0
+
+
+def layer_of(flags):
+    """The `layer` a chain's flags carry (the top four bits, signed)."""
+    n = (int(flags) >> 4) & 15
+    return n - 16 if n >= 8 else n
 
 
 def thin(x, y, tol):
@@ -233,7 +248,8 @@ def build(cc, boxes):
         if pos is None:
             continue
         flags = (1 if pax else 0) | (2 if tags.get("bridge") not in (None, "no") else 0) \
-            | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0)
+            | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0) \
+            | (layer_tag(tags.get("layer")) & 15) << 4
         (keep if shown else spare).append((pos, KIND[rw], min(rank, 1), flags))
     del ways
     keep += gap_fillers(keep, spare, cx, cy, cid.size)

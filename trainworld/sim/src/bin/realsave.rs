@@ -35,6 +35,9 @@ use trainworld_sim::track::world::TrackWorld;
 /// The fit's tolerance: well under the 6 m between lines set side by side (`realnet.py spread`),
 /// so that two lines on one real track do not cross over and back (the track tool's is 25 m).
 const TRACE_TOL_M: f64 = 3.0;
+/// T-1773: a ramp gets its own end corners only this far clear of the leg's corners (their curves)
+const RAMP_CLEAR_M: f64 = 30.0;
+const RAMP_SLACK_M: f64 = 20.0;
 
 const PALETTE: [u32; 10] = [0xd7263d, 0x1b998b, 0x2e86de, 0xf46036, 0x7d3c98, 0x2ca02c, 0xe1a100, 0x8c564b, 0x17becf, 0xe377c2];
 
@@ -59,6 +62,8 @@ fn main() {
         eprintln!("no {city}_real_route.json: every hop from its shape or straight (realnet.py route lays them on real track)");
     }
     let (mut n_traced, mut n_untraced, mut worst_fit, mut trace_s) = (0usize, 0usize, 0f64, 0f64);
+    // T-1773: level changes by how their ramp was placed (the kinds in the edge loop, in order)
+    let mut ramps_by_how = [0usize; 5];
     let pack_name = net_j["pack"].as_str().unwrap_or(&city).to_string();
     let pack: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/data/packs/{pack_name}.json")).unwrap()).unwrap();
     let (lon0, lat0) = (pack["origin"]["lon"].as_f64().unwrap(), pack["origin"]["lat"].as_f64().unwrap());
@@ -104,36 +109,164 @@ fn main() {
         for ed in m["edges"].as_array().unwrap() {
             let (a, b) = (ed["a"].as_u64().unwrap() as u32, ed["b"].as_u64().unwrap() as u32);
             let mut pis = vec![];
+            let node_level = |n: u32| m["nodes"][n as usize]["level"].as_i64().unwrap() as i8;
+            let (lv_a, lv_b) = (node_level(a), node_level(b));
             if !ed["lead_a"].is_null() {
                 let (la, lb) = (xy(&ed["lead_a"]), xy(&ed["lead_b"]));
                 let inner: Vec<(f64, f64)> = ed["line"].as_array().unwrap().iter().map(xy).collect();
-                pis.push(Pi::new(la.0, la.1, 0.0, -1).quantised());
+                let a_xy = xy(&m["nodes"][a as usize]["xy"]);
+                let b_xy = xy(&m["nodes"][b as usize]["xy"]);
+                let mut full = vec![a_xy, la];
+                full.extend(inner.iter().copied());
+                full.push(lb);
+                full.push(b_xy);
+                let mut cum = vec![0.0];
+                for w in full.windows(2) {
+                    cum.push(cum.last().unwrap() + (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1));
+                }
+                // a point's distance along `full`, where it lies nearest
+                let arc_of = |p: (f64, f64)| -> f64 {
+                    let mut best = (f64::INFINITY, 0.0);
+                    for i in 1..full.len() {
+                        let (a, b) = (full[i - 1], full[i]);
+                        let (dx, dy) = (b.0 - a.0, b.1 - a.1);
+                        let l2 = dx * dx + dy * dy;
+                        let t = if l2 > 0.0 { (((p.0 - a.0) * dx + (p.1 - a.1) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+                        let d = (a.0 + dx * t - p.0).hypot(a.1 + dy * t - p.1);
+                        if d < best.0 {
+                            best = (d, cum[i - 1] + t * (cum[i] - cum[i - 1]));
+                        }
+                    }
+                    best.1
+                };
+                let runs: Vec<(f64, f64, i8)> = ed["levels"].as_array().map(|r| r.iter().map(|x| (x[0].as_f64().unwrap(), x[1].as_f64().unwrap(), x[2].as_i64().unwrap() as i8)).collect()).unwrap_or_default();
                 let mut line = vec![la];
                 line.extend(inner.iter().copied());
                 line.push(lb);
                 let t = std::time::Instant::now();
-                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, R_CAP, -1) };
+                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, R_CAP, lv_a) };
                 trace_s += t.elapsed().as_secs_f64();
-                match r {
+                let mid: Vec<Pi> = match r {
                     Some(t) => {
                         n_traced += 1;
                         worst_fit = worst_fit.max(t.worst);
-                        pis.extend(t.pis);
+                        t.pis
                     }
                     None => {
                         if !inner.is_empty() {
                             n_untraced += 1;
                         }
+                        let mut v = vec![];
                         let mut last = la;
                         for &p in &inner {
                             if (p.0 - last.0).hypot(p.1 - last.1) > 30.0 && (p.0 - lb.0).hypot(p.1 - lb.1) > 30.0 {
-                                pis.push(Pi::new(p.0, p.1, 0.0, -1).quantised());
+                                v.push(Pi::new(p.0, p.1, 0.0, lv_a).quantised());
                                 last = p;
                             }
                         }
+                        v
                     }
+                };
+                // every corner on its stretch's level (pipeline/reallevels.py's `levels`, [from m, to
+                // m, level] along a, lead a, line, lead b, b, and `flat`, the metres level at each end).
+                // The game lays a ramp (RAMP_PER_LEVEL a level) centred between the two corners of
+                // different levels, spreading over the corners either side at its two levels when
+                // longer than its leg. Each change's ramp is centred where the stretches put it, moved
+                // into the room it has (past the flat ends and the ramp before, RAMP_SLACK_M short of
+                // each), by, in order: a new corner at each end on a leg with room clear of its corners'
+                // curves (RAMP_CLEAR_M); one new corner making a leg centred there with an existing
+                // corner, both clear; the existing leg whose middle is nearest inside the room; the
+                // same new corner nearer a curve; else its own corners at the change anyway.
+                let mut seq: Vec<(f64, Pi)> = vec![(cum[1], Pi::new(la.0, la.1, 0.0, lv_a).quantised())];
+                for p in mid {
+                    seq.push((arc_of((p.x, p.y)), p));
                 }
-                pis.push(Pi::new(lb.0, lb.1, 0.0, -1).quantised());
+                seq.push((cum[cum.len() - 2], Pi::new(lb.0, lb.1, 0.0, lv_b).quantised()));
+                let len = cum[cum.len() - 1];
+                let flat = |i: usize| ed["flat"][i].as_f64().unwrap_or(0.0);
+                let pt = |seq: &Vec<(f64, Pi)>, j: usize, s: f64, lv: i8| {
+                    let ((sp, p), (sq, q)) = (seq[j], seq[j + 1]);
+                    let f = if sq > sp { ((s - sp) / (sq - sp)).clamp(0.0, 1.0) } else { 0.5 };
+                    (s, Pi::new(p.x + (q.x - p.x) * f, p.y + (q.y - p.y) * f, 0.0, lv).quantised())
+                };
+                // where each change happens along the edge: corners before it take the level before
+                let mut cuts: Vec<f64> = vec![];
+                let mut room_lo = flat(0) + RAMP_SLACK_M;
+                for k in 1..runs.len() {
+                    let (l0, l1, b) = (runs[k - 1].2, runs[k].2, runs[k].0);
+                    let r = RAMP_PER_LEVEL * (l1 - l0).abs() as f64;
+                    let room_hi = if k + 1 == runs.len() { len - flat(1) } else { runs[k].1 - RAMP_PER_LEVEL / 2.0 * (runs[k + 1].2 - l1).abs() as f64 } - RAMP_SLACK_M;
+                    let n = seq.len();
+                    let in_room = |c: f64| c - r / 2.0 >= room_lo - 1e-6 && c + r / 2.0 <= room_hi + 1e-6;
+                    // the middle wanted, inside the room where there is one
+                    let c = if room_hi - room_lo >= r { b.clamp(room_lo + r / 2.0, room_hi - r / 2.0) } else { b };
+                    // the leg holding it: corners i - 1 and i
+                    let i = (1..n).find(|&i| seq[i].0 > c).unwrap_or(n - 1);
+                    let (sp, sq) = (seq[i - 1].0, seq[i].0);
+                    // (corners to add as (leg, arc, level), the ramp's middle, how)
+                    let mut pick: Option<(Vec<(usize, f64, i8)>, f64, u8)> = None;
+                    if in_room(c) && sp + RAMP_CLEAR_M <= c - r / 2.0 && c + r / 2.0 + RAMP_CLEAR_M <= sq {
+                        pick = Some((vec![(i - 1, c - r / 2.0, l0), (i - 1, c + r / 2.0, l1)], c, 0));
+                    }
+                    // one new corner q with an existing one p centred on c: p after c (the first
+                    // corner on l1; lead b only for the last change), or p before c (the last on l0;
+                    // lead a only for the first change); how clear q is of both corners of its leg
+                    let one = |p_after: bool| -> Option<((usize, f64, i8), f64)> {
+                        let (p, other, ok) = if p_after { (sq, sp, i < n - 1 || k + 1 == runs.len()) } else { (sp, sq, i - 1 > 0 || k == 1) };
+                        let q = 2.0 * c - p;
+                        if !ok || !in_room(c) || (q - other).abs() < 1.0 || (q < sp.min(sq)) || (q > sp.max(sq)) {
+                            return None;
+                        }
+                        Some(((i - 1, q, if p_after { l0 } else { l1 }), (q - p).abs().min((q - other).abs())))
+                    };
+                    let best_one = [one(true), one(false)].into_iter().flatten().max_by(|x, y| x.1.total_cmp(&y.1));
+                    if pick.is_none() {
+                        if let Some((add, clear)) = best_one {
+                            if clear >= RAMP_CLEAR_M {
+                                pick = Some((vec![add], c, 1));
+                            }
+                        }
+                    }
+                    if pick.is_none() {
+                        pick = (0..n - 1)
+                            .map(|j| (seq[j].0 + seq[j + 1].0) / 2.0)
+                            .filter(|&m| in_room(m))
+                            .min_by(|x, y| (x - c).abs().total_cmp(&(y - c).abs()))
+                            .map(|m| (vec![], m, 2));
+                    }
+                    if pick.is_none() {
+                        if let Some((add, clear)) = best_one {
+                            if clear >= 5.0 {
+                                pick = Some((vec![add], c, 3));
+                            }
+                        }
+                    }
+                    let (add, cut, how) = pick.unwrap_or_else(|| {
+                        let j = (0..n - 1).find(|&j| seq[j + 1].0 >= b).unwrap_or(n - 2);
+                        // only the ends that fall inside the leg, so no leg is left of zero length
+                        let add = [(b - r / 2.0, l0), (b + r / 2.0, l1)].into_iter()
+                            .filter(|&(s, _)| s > seq[j].0 + 1.0 && s < seq[j + 1].0 - 1.0)
+                            .map(|(s, lv)| (j, s, lv)).collect();
+                        (add, b, 4)
+                    });
+                    ramps_by_how[how as usize] += 1;
+                    let z0 = cut - r / 2.0;
+                    // added from the last, so the leg indices still hold
+                    for &(j, s, lv) in add.iter().rev() {
+                        let p = pt(&seq, j, s, lv);
+                        seq.insert(j + 1, p);
+                    }
+                    cuts.push(cut);
+                    room_lo = z0 + r + RAMP_SLACK_M;
+                }
+                let n = seq.len();
+                for (i, (s, p)) in seq.iter_mut().enumerate() {
+                    if i == 0 || i + 1 == n {
+                        continue;
+                    }
+                    p.level = runs.get(cuts.iter().filter(|&&c| c < *s).count()).map(|r| r.2).unwrap_or(lv_b);
+                }
+                pis = seq.into_iter().map(|(_, p)| p).collect();
             }
             let e = net.alloc_edge();
             if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: true, day: 0, oneway: 0, join: [0; 2] })).is_err() {
@@ -295,6 +428,7 @@ fn main() {
     }
     eprintln!("save: {} bytes, {} nodes, {} lines set ({} ok); load + derive {:.0} ms", bytes.len(), node_key.len(), lines.len(), n_lines_ok, t0.elapsed().as_secs_f64() * 1000.0);
     eprintln!("hops traced on real track {n_traced} (fit within {worst_fit:.1} m), from a shape or straight {n_untraced}; traced in {:.0} ms", trace_s * 1000.0);
+    eprintln!("level changes: {} ramps with a new corner at each end, {} with one new corner, {} between existing corners, {} with one new corner near a curve, {} with corners anyway (no room)", ramps_by_how[0], ramps_by_how[1], ramps_by_how[2], ramps_by_how[3], ramps_by_how[4]);
     let issues = w.net.validate(&(0..w.net.edge_count() as u32).collect::<Vec<_>>(), &(0..w.net.node_count() as u32).collect::<Vec<_>>(), &[]);
     let mut kinds = std::collections::BTreeMap::new();
     for i in &issues {

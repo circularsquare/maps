@@ -10,7 +10,7 @@
     python pipeline/realnet.py corridors <city> # shared-track pieces and pairs (T-1305, pipeline/realcorridors.py)
     (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR]
     python pipeline/realnet.py gamesave <city>  # the `realsave` output as a game file, <city>_real.save
-    python pipeline/realnet.py ship       # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731)
+    python pipeline/realnet.py ship [city ...]   # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731); the cities named, else all
 
 geom, route and gamesave write to $REALNET_OUT when set (else data/work/realnet) and read each
 other's files there first, so a rebuild can be staged while something else owns data/.
@@ -65,6 +65,8 @@ WORK = os.path.join(ROOT, "data", "work", "realnet")
 # rebuild elsewhere while something else owns data/ (T-1303)
 OUT = os.environ.get("REALNET_OUT", WORK)
 PACKS = os.path.join(ROOT, "data", "packs")
+# the real-network graphs `route` and `corridors` read: REALGRAPH_DIR stages a rebuilt set (T-1773)
+REALGRAPH = os.environ.get("REALGRAPH_DIR", os.path.join(PACKS, "realgraph"))
 R_EARTH = 6371008.8
 
 NYCRIDERS = os.path.join(MAPS, "riders", "nycriders")
@@ -1185,7 +1187,7 @@ def cmd_route():
         f"{city}_real_geom.json does not match {city}_real.json: run geom first"
     xy = np.array([p for g in geo for p in g["nodes"]])
     box = (*(xy.min(0) - 5000), *(xy.max(0) + 5000))
-    graph = Graph(os.path.join(PACKS, "realgraph", f"{REGION[city]}.rgr"), o, box, R_EARTH)
+    graph = Graph(os.path.join(REALGRAPH, f"{REGION[city]}.rgr"), o, box, R_EARTH)
     print(f"{city}: graph {len(graph.pts):,} chains in the box, {time.time() - t0:.1f} s")
     out, n_hops, n_real, why = [], 0, 0, Counter()
     for l, g in zip(net["lines"], geo):
@@ -1363,7 +1365,9 @@ def cmd_ship():
     reg = json.load(open(os.path.join(ROOT, "app", "src", "game", "registry.json"), encoding="utf-8"))
     out = os.path.join(ROOT, "data", "packs", "real")
     os.makedirs(out, exist_ok=True)
-    for city in SHIPPED:
+    # T-1773: only the cities named, so one held back keeps its shipped file
+    for city in sys.argv[2:] or SHIPPED:
+        assert city in SHIPPED, f"{city} is not a shipped real network"
         raw = gzip.decompress(open(out_or_work(f"{city}_real.save"), "rb").read())
         n = struct.unpack("<I", raw[4:8])[0]
         header = json.loads(raw[8:8 + n])

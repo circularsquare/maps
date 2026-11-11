@@ -55,6 +55,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import realnet  # noqa: E402
 from realroute import Graph, length, far_from  # noqa: E402
 from realshared import track_model  # noqa: E402
+from reallevels import assign as assign_levels  # noqa: E402
 
 STEP = 10.0
 NEAR = 15.0
@@ -473,7 +474,7 @@ def build(city, out_dir, avoid=None):
         f"{city}_real_geom.json does not match {city}_real.json"
     xy = np.array([p for g in geo for p in g["nodes"]])
     box = (*(xy.min(0) - 5000), *(xy.max(0) + 5000))
-    graph = Graph(os.path.join(realnet.PACKS, "realgraph", f"{realnet.REGION[city]}.rgr"), o, box, realnet.R_EARTH)
+    graph = Graph(os.path.join(realnet.REALGRAPH, f"{realnet.REGION[city]}.rgr"), o, box, realnet.R_EARTH)
     t_graph = time.time() - t0
     hops, why = route_hops(graph, net, geo, avoid or frozenset())
     t_route = time.time() - t0
@@ -1027,6 +1028,8 @@ def build(city, out_dir, avoid=None):
     doc = {"city": city, "stats": stats, "pieces": out_pieces, "nodes": out_nodes, "lines": out_lines}
     doc["model"] = track_model(doc, [P["poly"] for P in pieces], net)
     stats["model"] = doc["model"]["stats"]
+    # T-1773: each node and stretch of edge on its real level from OSM's layer, tunnel and bridge tags
+    stats["levels"] = assign_levels(doc["model"], graph)
     os.makedirs(out_dir, exist_ok=True)
     p = os.path.join(out_dir, f"{city}_real_corridors.json")
     with open(p, "w") as f:

@@ -11,8 +11,8 @@ platforms' end, as the drawing tool puts one (nearer, where the next node that s
 A group with no stops is one
 plain or junction node. Every node gets a heading from its ends, and every edge leaves it along
 that heading through a lead point, as `realsave` does for a station. A line changing pair at a
-node is a junction there (the crossover). One level for all (-1; levels per piece are T-1773),
-every edge grade separated (`sep`) as before."""
+node is a junction there (the crossover). Every node starts on LEVEL; `reallevels.assign` then puts
+nodes and stretches of edge on their real levels (T-1773). Every edge is grade separated (`sep`)."""
 import math
 from collections import Counter, defaultdict
 
