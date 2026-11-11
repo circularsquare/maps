@@ -19,7 +19,9 @@
       "Bash(python C:/Users/anita/projects/maps/noritetsu/tools/rebuild.py:*)",
       "Bash(python C:/Users/anita/projects/maps/noritetsu/tools/compare_lines.py:*)",
       "PowerShell(python tools/rebuild.py:*)",
-      "PowerShell(python tools/compare_lines.py:*)"
+      "PowerShell(python tools/compare_lines.py:*)",
+      "Bash(python trainworld/tools/r2_purge.py:*)",
+      "PowerShell(python trainworld/tools/r2_purge.py:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\anita\\projects",
