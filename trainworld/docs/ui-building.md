@@ -916,9 +916,8 @@ running line's trains stop at then wins over one they do; then the nearest.
   does; until the answer lands an estimate from the track graph shows on entering, and after an edit
   the last answer stands with only the stops changed (T-648). A click on a marker adds or removes a stop and
   nothing else (T-3109, trains and trams alike): on a station that is no stop it is one edit (`insertStop`): the
-  worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then, and an end the
-  station leaves standing on a loop of track turns round it (`TrackApi::add_stop`, T-3122, track-and-service.md "A
-  click turns an end on a loop by itself"); on a stop it
+  worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then, and never turns
+  the line round a loop (`TrackApi::add_stop`, T-3140, track-and-service.md "Only the right click turns an end"); on a stop it
   takes out every visit of it (`setStops`), and a loop that loses its first stop closes again on its new first stop.
   A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
   or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
@@ -960,7 +959,9 @@ running line's trains stop at then wins over one they do; then the nearest.
   loop, and rows do not drag. No list shows every visit in order. Adding passed stations on a turned line goes
   through `insertStop`, as a map click does (T-3039). A one-way stop's marker (a stop the sim says the line serves one
   way, `LineStats.oneWayAt`, track-and-service.md "Which way a stop is served", T-3122) is filled on the half to the right of
-  the way the train goes there along the track (T-3041), with a chevron in the line colour beside it pointing that way (T-3111). The markers take no pointer events (the map's pick handles clicks), so the wheel
+  the way the train goes there along the track (T-3041), with a chevron beside it pointing that way along the track's
+  tangent (T-3111, T-3139: 18 px, its middle 7 px past the dot's edge; `map/stopHeading.ts` turns the sim's
+  north-up heading into the map's south-down local frame). The markers take no pointer events (the map's pick handles clicks), so the wheel
   and dragging work over them.
 - A panel at the map's lower left shows "Editing stops on <line>: N stops" and Done; Enter and
   Escape also leave. Red removal crosses show in the stop list while editing.

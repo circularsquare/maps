@@ -897,11 +897,6 @@ struct Turn {
     stops: Vec<u32>,
     path: Vec<u32>,
     branch: u32,
-    /// T-3122: the end stop stands on the loop (the line already runs onto it and turns back
-    /// there), so a click that makes it an end turns it without being asked
-    on_loop: bool,
-    /// the end stop the turn is at
-    end: u32,
 }
 
 /// A path's node list, `path.len() + 1` nodes.
@@ -942,7 +937,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
     let branch = (0..n).rev().find(|&i| at[i] <= k)?;
     let mut new = stops.to_vec();
     new.extend((0..n - 1).rev().filter(|&i| at[i] <= k).map(|i| stops[i]));
-    turned(net, line, new, stops[branch], old, net.path_reversals(path).len(), memo).map(|t| Turn { on_loop: at[n - 1] > k, end: stops[n - 1], ..t })
+    turned(net, line, new, stops[branch], old, net.path_reversals(path).len(), memo)
 }
 
 /// A balloon turned round a loop past its first stop too, a circle: from the first stop after
@@ -956,7 +951,7 @@ fn turn_first(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut 
     let mut new: Vec<u32> = (1..n).filter(|&i| at[i] > k).map(|i| stops[i]).collect();
     let &first = new.first()?;
     new.push(first);
-    turned(net, line, new, first, old, net.path_reversals(path).len(), memo).map(|t| Turn { on_loop: k > at[0], end: stops[0], ..t })
+    turned(net, line, new, first, old, net.path_reversals(path).len(), memo)
 }
 
 /// A turn's stops routed, kept when they make a loop with no more reversals than before and a round
@@ -970,7 +965,7 @@ fn turned(net: &Network, line: u32, stops: Vec<u32>, branch: u32, old: f64, turn
     // the turn alone (a balloon) is offered
     let take = |path: Vec<u32>| {
         let s = every_pass(net, &stops, &path);
-        ok(&s, &path).then_some(Turn { stops: s, path, branch, on_loop: false, end: branch })
+        ok(&s, &path).then_some(Turn { stops: s, path, branch })
     };
     route_memo(net, &stops, memo).and_then(take).or_else(|| route_plain_close(net, &stops, memo).and_then(take))
 }
@@ -1010,32 +1005,6 @@ fn turns_of(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut Ho
     let mut out: Vec<Turn> = turn_last(net, line, stops, path, memo).into_iter().collect();
     out.extend(turn_last(net, line, &back, &back_path, memo));
     out
-}
-
-/// T-3122: a click that puts `station` at an end of a line (an open line's first or last stop, or
-/// past a balloon's turning stop) turns each end that comes to stand on a loop of track with it
-/// (`Turn::on_loop`), as `turn_end` would: a line clicked along a stem and onto a loop runs round it,
-/// and with a loop at each end it becomes a circle round both. An end on a loop before the click
-/// stays as it was (a loop the player opened). The stops and path, to run one way; None when no end
-/// turns. Bus, ferry and hand-ordered lines never turn by themselves.
-fn auto_turn(net: &Network, line: u32, station: u32, stops: &[u32], path: &[u32], memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
-    let i = line as usize;
-    if net.line_bus.get(i).is_some_and(|b| b.is_some()) || net.line_ferry.get(i).is_some_and(|f| f.is_some()) || net.line_hand.get(i).copied().unwrap_or(false) {
-        return None;
-    }
-    let at_end = if closed(stops) { stops[0] == station && net.loop_kind(stops, path) == LoopKind::Balloon } else { stops.first() == Some(&station) || stops.last() == Some(&station) };
-    if !at_end {
-        return None;
-    }
-    let (old, old_path) = (net.line_stops(line), net.line_path(line));
-    let was: Vec<u32> = if old.len() >= 2 { turns_of(net, line, old, old_path, memo).into_iter().filter(|t| t.on_loop).map(|t| t.end).collect() } else { vec![] };
-    let mut cur: Option<(Vec<u32>, Vec<u32>)> = None;
-    for _ in 0..2 {
-        let (s, p) = cur.as_ref().map_or((stops, path), |c| (&c.0[..], &c.1[..]));
-        let Some(t) = turns_of(net, line, s, p, memo).into_iter().find(|t| t.on_loop && !was.contains(&t.end)) else { break };
-        cur = Some((t.stops, t.path));
-    }
-    cur
 }
 
 /// Where a loop's stops start coming back (T-3021): the least index i whose later stops all come
@@ -1092,7 +1061,8 @@ pub(super) fn every_pass(net: &Network, stops: &[u32], path: &[u32]) -> Vec<u32>
 }
 
 /// T-3122: every loop line of a loaded save (derived) stopping at every pass (`every_pass`); a save
-/// made before the rule can have a station a turned line stops at only one way. Whether any changed.
+/// made before the rule can have a station a turned line stops at only one way. A one-way circle
+/// with one branch comes to end there as `set_line` makes it (T-3141). Whether any changed.
 fn stop_every_pass(net: &mut Network) -> bool {
     let mut changed = false;
     for l in 0..net.line_count() as u32 {
@@ -1100,8 +1070,8 @@ fn stop_every_pass(net: &mut Network) -> bool {
             continue;
         }
         let stops = every_pass(net, net.line_stops(l), net.line_path(l));
-        if stops.len() != net.line_stops(l).len() {
-            let mut d = net.line_data(l).unwrap();
+        let mut d = net.line_data(l).unwrap();
+        if stops.len() != d.stops.len() || net.branch_end(&d).is_some() {
             d.stops = stops;
             changed |= net.set_line(l, Some(d)).is_ok();
         }

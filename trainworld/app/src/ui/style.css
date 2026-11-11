@@ -1433,7 +1433,7 @@ button.save-add:hover { color: var(--text); }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }
 .bullet-heading { display: inline-flex; align-items: center; gap: 1px; }
 .heading-chevron { display: inline-flex; width: 16px; height: 16px; flex: none; transform-origin: 50% 50%; }
-.stop-mark > .heading-chevron { position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -8px; pointer-events: none; scale: 1.5;
+.stop-mark > .heading-chevron { position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -8px; pointer-events: none;
   color: var(--map-chev) !important; filter: drop-shadow(0 0 1px var(--map-chev-halo)); }
 /* T-3124: on the map the chevron lies on the line's own colour, so it is white (light) or near-black (dark); the hover's stays the line's colour */
 :root { --map-chev: #fff; --map-chev-halo: rgba(0, 0, 0, .45); }

@@ -56,6 +56,9 @@ const SIZE: [number, number][] = [[9, 9], [12, 14], [14, 20], [16, 24]];
  * this much (style.css repeats both). */
 export const NEAR_SCALE = 0.8;
 const FAR_SCALE = 0.65;
+/** T-3139: a one-way stop's chevron, its 16 px drawing scaled, and from the dot's edge to its middle, CSS px */
+const CHEV_SCALE = 1.125;
+const CHEV_GAP = 7;
 const REASON_MS = 4000;
 /** T-3109: a finger held this long on a marker is a right click; it may move this far, CSS px */
 const LONG_PRESS_MS = 500;
@@ -344,7 +347,7 @@ export class StopMarkers {
       } else {
         if (!m.chev) m.el.append((m.chev = headingChevron(this.colour, 0)));
         m.chev.style.display = "";
-        m.chev.style.transform = `rotate(${heading.toFixed(1)}deg) translateX(${(size / 2 + 12).toFixed(1)}px)`;
+        m.chev.style.transform = `rotate(${heading.toFixed(1)}deg) translateX(${(size / 2 + CHEV_GAP).toFixed(1)}px) scale(${CHEV_SCALE})`;
       }
     }
     // stations that left the list (an undo): their markers go

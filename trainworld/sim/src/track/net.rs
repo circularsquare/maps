@@ -1489,10 +1489,36 @@ impl Network {
         Ok(old)
     }
 
+    /// T-3141: a one-way rail circle whose trains turn back at one stop, and nowhere else (a branch off the
+    /// loop), started at that stop: a balloon, so they turn there as at an end of the line rather than
+    /// reversing partway. The same stops in the same order round the lap, and the same path. None for
+    /// any other line.
+    pub fn branch_end(&self, d: &LineData) -> Option<(Vec<u32>, Vec<u32>)> {
+        let (stops, path) = (&d.stops, &d.path);
+        if !d.one_way || d.bus.is_some() || d.ferry.is_some() || self.loop_kind(stops, path) != LoopKind::Circle {
+            return None;
+        }
+        let [k] = self.path_reversals(path)[..] else { return None };
+        let nodes: Vec<u32> = std::iter::once(self.path_nodes(path[0]).0).chain(path.iter().map(|&p| self.path_nodes(p).1)).collect();
+        let at = match_stops(&nodes, stops, &[k])?;
+        let i = at.iter().position(|&a| a == k)?;
+        let n = stops.len();
+        if i == 0 || i == n - 1 {
+            return None;
+        }
+        let mut s: Vec<u32> = stops[i..n - 1].iter().chain(&stops[..i]).copied().collect();
+        s.push(stops[i]);
+        let p: Vec<u32> = path[k..].iter().chain(&path[..k]).copied().collect();
+        Some((s, p))
+    }
+
     pub fn set_line(&mut self, id: u32, data: Option<LineData>) -> Result<Option<LineData>, Issue> {
         let old = self.line_data(id);
         match data {
-            Some(d) => {
+            Some(mut d) => {
+                if let Some((stops, path)) = self.branch_end(&d) {
+                    (d.stops, d.path) = (stops, path);
+                }
                 if d.tph.iter().any(|t| !t.is_finite() || *t < 0.0) || d.dwell_s < 0.0 || d.turnaround_s < 0.0 {
                     return Err(Issue::LineSchedule { line: id });
                 }

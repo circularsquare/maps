@@ -193,3 +193,58 @@ fn a_ferry_loop_names_its_first_port_twice_and_pays_for_it_once() {
     assert_eq!(a.set_ferry_line(o, &[p, q, r], open, 900, 1200, 1800, 60.0, 300.0, 0x1f77b4, "Ferry 2".into()), 0, "{}", a.issues());
     assert_eq!(a.line_loop(o), 0);
 }
+
+/// T-3142: `[id, heading]` per stop a line serves one way.
+fn ways(a: &TrackApi, l: u32) -> Vec<(u32, f64)> {
+    a.line_stop_ways(l).chunks_exact(2).map(|c| (c[0] as u32, c[1])).collect()
+}
+
+/// The ids of a bus line's stops at (x, y), to the metre.
+fn ids_at(a: &TrackApi, l: u32, x: i64, y: i64) -> Vec<u32> {
+    stops(a, l).iter().filter(|c| (c[1].round() as i64, c[2].round() as i64) == (x, y)).map(|c| c[0] as u32).collect()
+}
+
+#[test]
+fn a_one_way_bus_ring_serves_every_stop_one_way_and_a_two_way_one_none() {
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &square(0.0, 0.0, 3000.0, true), 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 3010.0, 1000.0, true), 0, "{}", a.issues());
+    let w = ways(&a, b);
+    let s = ids_at(&a, b, 3000, 1000)[0];
+    let h = w.iter().find(|x| x.0 == s).expect("the stop on the east side is one way").1;
+    assert!((h - std::f64::consts::FRAC_PI_2).abs() < 1e-6, "heading +y: {h}");
+    assert_eq!(w.len(), 3, "the closing stop once, the half way one and the placed one: {w:?}");
+    assert_eq!(a.set_line_one_way(b, false), 0, "{}", a.issues());
+    assert!(ways(&a, b).is_empty(), "run both ways, every stop is both");
+}
+
+#[test]
+fn a_bus_route_that_loops_back_serves_its_loop_one_way_and_its_way_out_both() {
+    let mut a = api();
+    let b = a.new_line_id();
+    let route = [0.0, 0.0, 1.0, 2000.0, 0.0, 1.0, 3000.0, 0.0, 1.0, 3000.0, 1000.0, 1.0, 2000.0, 1000.0, 1.0, 2000.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 3000.0, 400.0, true), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 1000.0, 10.0, true), 0, "{}", a.issues());
+    let w: Vec<u32> = ways(&a, b).into_iter().map(|x| x.0).collect();
+    assert!(ids_at(&a, b, 3000, 400).iter().all(|i| w.contains(i)), "the loop's stop is one way: {w:?}");
+    assert!(ids_at(&a, b, 1000, 0).iter().all(|i| !w.contains(i)), "the way out is both ways: {w:?}");
+    assert!(ids_at(&a, b, 0, 0).iter().all(|i| !w.contains(i)), "the end the bus turns at is both ways: {w:?}");
+}
+
+#[test]
+fn a_one_way_ferry_loop_serves_every_port_one_way() {
+    let mut a = api();
+    let (p, q, r) = (port(&mut a, 0.0, 0.0, "A"), port(&mut a, 4000.0, 0.0, "B"), port(&mut a, 2000.0, 3000.0, "C"));
+    let route = [0.0, 0.0, K_PORT as f64, 8.0, 4000.0, 0.0, K_PORT as f64, 8.0, 2000.0, 3000.0, K_PORT as f64, 8.0, 1000.0, 1500.0, K_ROUTE as f64, 8.0, 0.0, 0.0, K_PORT as f64, 8.0];
+    let l = a.new_line_id();
+    assert_eq!(a.set_ferry_line(l, &[p, q, r, p], &route, 900, 1200, 1800, 60.0, 300.0, 0x1f77b4, "Ferry 1".into()), 0, "{}", a.issues());
+    let w = ways(&a, l);
+    assert_eq!(w.iter().map(|x| x.0).collect::<Vec<_>>(), vec![p, q, r]);
+    assert!(w[1].1.abs() > 1.0 && (w[1].1 - (3000.0f64).atan2(-2000.0)).abs() < 1e-6, "B heads on to C: {}", w[1].1);
+    assert_eq!(a.set_line_one_way(l, false), 0, "{}", a.issues());
+    assert!(ways(&a, l).is_empty());
+}

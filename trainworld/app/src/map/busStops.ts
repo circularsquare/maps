@@ -17,6 +17,7 @@ import { BUS_XFER_M } from "../game/busLinks";
 import { tagLines } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { sizeAt } from "./stopMarkers";
+import { halfFill, headingAtPlane } from "./halfDot";
 
 /** The route takes a click this near, CSS px. */
 const ROUTE_SLOP_PX = 8;
@@ -42,6 +43,8 @@ interface Item {
   sy: number;
   shown: boolean;
   hit: Hit;
+  /** T-3142: the plane heading of the buses here when the line serves this stop one way (`LineStats.oneWayAt`) */
+  way?: { x: number; y: number; heading: number };
 }
 
 const metres = (a: { lng: number; lat: number }, b: { lng: number; lat: number }) =>
@@ -109,7 +112,7 @@ export class BusStopMarkers {
       const w = world.value;
       const l = id !== null && w ? w.save.lines.find((x) => x.num === id) : undefined;
       const bus = l && w ? w.lineStats[l.id]?.bus : undefined;
-      this.load(l && bus?.hand ? l.num : null, bus ?? null, l?.colour);
+      this.load(l && bus?.hand ? l.num : null, bus ?? null, l?.colour, l && w ? w.lineStats[l.id]?.oneWayAt : undefined);
     });
   }
 
@@ -118,7 +121,7 @@ export class BusStopMarkers {
     return this.line !== null;
   }
 
-  private load(line: number | null, bus: ClockBus | null, colour?: string) {
+  private load(line: number | null, bus: ClockBus | null, colour?: string, oneWay: Record<string, number> = {}) {
     this.line = line;
     this.bus = line === null ? null : bus;
     this.box.style.display = line === null ? "none" : "";
@@ -150,11 +153,12 @@ export class BusStopMarkers {
         if (metres(p, s) <= BUS_XFER_M) this.meetOn.push({ p, name: o.name });
       }
     }
-    const add = (lng: number, lat: number, on: boolean, hit: Hit) => {
+    const add = (lng: number, lat: number, on: boolean, hit: Hit, way?: Item["way"]) => {
       const [mx, my] = toMerc01(lng, lat);
       const el = this.pool[this.items.length] ?? (this.pool[this.items.length] = this.box.appendChild(document.createElement("div")));
       el.className = "stop-mark " + (on ? "on" : "route");
-      this.items.push({ mx, my, on, el, sx: 0, sy: 0, shown: false, hit });
+      el.style.background = "";
+      this.items.push({ mx, my, on, el, sx: 0, sy: 0, shown: false, hit, way });
     };
     // T-3123: a loop keeps one stop between its ends (on a route that loops back, maybe a stop on both passes)
     const r = bus.route, between = bus.stops.slice(1, -1);
@@ -163,7 +167,8 @@ export class BusStopMarkers {
     const lastOne = closed && new Set(between.map(place)).size === 1;
     bus.stops.forEach((s, i) => {
       const end = i === 0 || i === bus.stops.length - 1 || lastOne;
-      add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)) });
+      const heading = oneWay[String(s.id)];
+      add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)) }, heading === undefined ? undefined : { x: s.x, y: s.y, heading });
     });
     this.place();
     this.overlay.invalidate();
@@ -189,6 +194,7 @@ export class BusStopMarkers {
       m.sx = p[0];
       m.sy = p[1];
       m.el.style.transform = `translate(${Math.round(p[0])}px, ${Math.round(p[1])}px)`;
+      if (m.way) m.el.style.background = halfFill(headingAtPlane(this.overlay, m.way.x, m.way.y, m.way.heading));
     }
     if (this.ghostAt) {
       this.overlay.mercToScreen(this.ghostAt[0], this.ghostAt[1], p);

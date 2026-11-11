@@ -185,7 +185,7 @@ function FerryPorts({ l, st, bus, colour, editable, flip, time }: { l: LineInput
         // the stretches above and below the row
         const above = flip ? (i < n - 1 ? i : -1) : i - 1, below = flip ? i - 1 : i < n - 1 ? i : -1;
         return (
-          <li data-port={at} class={"xfer" + (drag?.from === at ? " dragged" : "") + (moving?.gap === at ? " drop-before" : moving && at === n - 1 && moving.gap === n ? " drop-after" : "")}
+          <li data-port={at} class={"xfer" + (st.oneWayAt?.[String(p.node)] !== undefined ? " oneway" : "") + (drag?.from === at ? " dragged" : "") + (moving?.gap === at ? " drop-before" : moving && at === n - 1 && moving.gap === n ? " drop-after" : "")}
             onPointerDown={(e) => pointerDown(e, at)}>
             {looks && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}
             {looks && below >= 0 && looks[below] && <StretchHalf s={looks[below]} down />}

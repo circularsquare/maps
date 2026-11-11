@@ -8,7 +8,7 @@ Updated: 2026-11-10 22:50 (maps-dc finished winding down 22:45)
 **LIVE = v0.2.1 = R2 2026-11-10d** (from f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept until the next
 release in case live needs a hotfix). Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a
 few days after; keep 11-10, 10b-10d.
-**Master = a5d6a81a, pushed.** **8800 = 8ae4e2ae** (maps-dc's last landing: 7db3b454 main batch T-3123/3124/3125/3127/
+**Master = c7de3704 (pushed through a5d6a81a).** **8800 = c7de3704** (adds T-3134 ghost, T-3136 widths, changelog) (maps-dc's last landing: 7db3b454 main batch T-3123/3124/3125/3127/
 3128/3130/3132/3133, 7b260b67 flyover2 T-3120/3121, 8ae4e2ae stoporder T-3122; smoke on 8800 13/13). a5d6a81a adds only
 the changelog rewording, so no rebuild for it.
 **v0.2.2 is HELD until single track is fully fixed** (Anita 22:20, T-3134..T-3137; and 21:50: no publish until she has
@@ -25,21 +25,35 @@ country or region, self-like, copy names, shares left today); country leaderboar
 word each time.
 
 **Running (maps-04's subagents):**
-- lanes (Opus, a5b1193bb6b1afcf8, tree `.tw-trees/lanes` from a5d6a81a, Vite 6192): T-3137 stage C1, double track as
-  lanes inside one piece + per-node move table; routing, flat badge, junction moves, train guard read it; no visible
-  change; parity check on NYC. Anita chose model (c) 22:35. Then C2 single joins + inferred way, C3 app snap/draw, C4
-  switch/docs (notes/T-3137.md, notes/T-3135.md). Land with agent-tree.mjs.
-- singleghost (Sonnet, a2bdab2e9d1eef273, main tree, Vite 6191): T-3134 ghost per-segment track count (sim preview answer
-  + tools.ts, realSnap.ts, previewStrokes, flyover preview) and T-3136 single thinner / double thicker when zoomed out.
-  23:00: sent back for a thicker zoomed-out floor for double (z11.5 still identical). Then commit + snapbuild.
+- Tree `.tw-trees/lanes` (branch tw/lanes from a5d6a81a): T-3137 C1 DONE 00:05 by agent lanes (a5b1193bb6b1afcf8, ~320k,
+  retired): `lanes.rs`, move table, readers moved, parity 44/44 equal on NYC, Northeast and two small games
+  (`checks/t3137-lanes-parity.mjs`), perf same, cargo 483/663, smoke 27. NOT LANDED: main tree's loops3 has net.rs and
+  wasm.rs dirty; land after loops3 reports. Meanwhile **lanes2** (Opus, a508bd99244a5b08b, same tree, Vite 6196) builds C2
+  (single joins + inferred way, sim + set_route_join) on top; land C1+C2 together or C1 alone if lanes2 is mid-way
+  (agent-tree.mjs lands the whole tree, so only between lanes2's edits). Then C3 app snap/ring/ghost, C4 switch/docs.
+  T-3138 left-hand: sim side done by `lanes()`; left is app-only (pass the pack's side to `new TrackApi`, draw by it).
+- singleghost DONE, committed c7de3704 (T-3134 ghost per-segment lanes, T-3136 widths: single 0.75x, double 1.3x, double
+  floor 2 px); 8800 rebuilt at c7de3704 00:00. Review image artifacts/trainworld/review/track-widths-z11.png.
 - loops3 (Opus, a8acc7928a61a451b, main, Vite 6193): T-3140 no automatic loops (undo T-3122 rule 2), T-3141 lone branch
   = line end, T-3139 chevrons on the track tangent, 25% smaller and closer. May file T-3145/3146.
-- onewayui (Sonnet, ac84a57324f0462ac, main, Vite 6194): T-3142 half dots on bus/ferry loops, T-3143 hover says one way and
-  which way (new strings). May file T-3147.
+- onewayui DONE 00:20, uncommitted in main (shares wasm/lines.rs + loop_tests.rs with loops3: commit together after
+  loops3, one smoke): T-3142/T-3143 archived; `route_stop_ways` for bus/ferry, `halfDot.ts`, busStops.ts, ferryDraw.ts,
+  BusInspector.tsx, networkTips.ts `oneWayRows`, check t3142-oneway-ui.mjs. Strings shown to Anita: "One way, towards
+  {name}", "One way" (Anita: good). Filed T-3147 (bus rings in line view, bus stop hover).
+- community3 DONE 00:35, game part uncommitted in main (community.ts, Community.tsx, community.css, en/context.json shared
+  with onewayui, ui-panels.md, notes/T-2887.md "Round 3", checks/t3144-community.mjs; T-3144 archived); shonei-server
+  01c2321 committed, NOT pushed/deployed (asked Anita 00:35). Biggest+World was empty because her share is sandbox (no
+  points); now World lists unranked shares after ranked. Copy named by title alone. Strings "Title", "Please pick a
+  different title." Anita 00:45: Biggest stays points-only with a note "sandbox not counted"; copy named "<title> -
+  <name>" (title first). Sent back to community3 (a74ecb7dd2921c010) 00:45.
+- loops3 DONE 00:40 (T-3139 the chevron flip was in stopHeading.ts's frame, sim was right; T-3140 auto_turn removed;
+  T-3141 `branch_end` rotates a one-way circle with one turn-back into a balloon). Combined smoke of loops3+onewayui+
+  community3 running on my Vite 6190 (log scratchpad/smoke-batch.log); then commit all, snapbuild, land lanes tree C1.
+- Anita 00:25: widths OK, 5% thinner -> 0.71x / 1.24x, committed 7a316293 (not on 8800 yet; fold into the next rebuild).
 - community3 (Sonnet, a74ecb7dd2921c010, main + shonei-server commits, Vite 6195): T-3144 Biggest/World empty bug, card
   space, share title (default save name, profanity screen, title bold + name grey), sandbox button alignment. Server
   deploy needs her word. May file T-3148. Next free id after these: **T-3149**.
-- Anita 23:15: "auto-ramp" fine; changelog RightClick -> "more explicit loop controls" (done in en.json, uncommitted).
+- Anita 23:15: "auto-ramp" fine; changelog RightClick -> "more explicit loop controls" (committed c7de3704).
 - singletrack (Opus, addd2bb7c40268aea) is done (design stages 1 and 1b; ~320k tokens); resume only for questions about
   its notes.
 
@@ -109,6 +123,9 @@ speed colour ramp and tram upkeep (T-3013/2999), tram playtest fixes (T-3014-301
 - An agent's estimate of a change (T-3034 +32 joins) can miss what the code really touches: recount before landing.
 
 ## Anita's standing asks
+- **No deploys overnight without her there** (Anita 00:45, 2026-11-11). Server 01c2321+ waits for her morning word.
+- **Time estimates in hours from how long agents really take** (Anita 00:45: today's "days" estimates were off; C1, estimated
+  2-3 days, took ~45 min). Don't relay a design note's agent-day figures as they are.
 - **Keep 4 cores free** (Anita 22:32, 2026-11-10: "for the next few hours"): cores.py cap set 14 -> 12 at 22:32; briefs
   say `TW_CORES` small (Playwright self-claims under the cap); raise back to 14 once she says or after ~03:00.
 - **v0.2.2: no publish until she has tested 8800** (Anita 2026-11-10 21:50: "the last few times around there were things

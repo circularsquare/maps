@@ -39,6 +39,7 @@ import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
 import { touchInput, type TouchCtl } from "./touch";
 import { safeColour } from "./safeColour";
+import { halfFillVector, headingAtPlane } from "./halfDot";
 import { playBuild } from "./buildSound";
 
 interface Pt { lng: number; lat: number }
@@ -105,6 +106,8 @@ export class FerryDraw {
   private built = false;
   private busy = false;
   private svg: SVGSVGElement;
+  /** T-3142: the ports the line serves one way as the sim says (port node to the boats' plane heading and the port's plane spot), until the player edits it */
+  private oneWay = new Map<number, { heading: number; x: number; y: number }>();
 
   constructor(private map: MlMap, box: HTMLElement, private tag: HTMLElement, private overlay: Overlay, private host: { exit(): void }) {
     this.water = new FerryWater(map);
@@ -146,7 +149,13 @@ export class FerryDraw {
     this.routeKey = "";
     const st = line === null ? undefined : world.peek()?.lineStats[String(line)]?.bus;
     const names = new Map((world.peek()?.save.stations ?? []).map((s) => [s.num, s.name]));
+    this.oneWay = new Map();
+    const stats = line === null ? undefined : world.peek()?.lineStats[String(line)];
     if (st?.ferry) {
+      for (const s of st.stops) {
+        const heading = stats?.oneWayAt[String(s.id)];
+        if (heading !== undefined) this.oneWay.set(s.station, { heading, x: s.x, y: s.y });
+      }
       for (const p of st.ferry.ports) {
         this.ports.push({ node: p.node, landing: { lng: p.landing[0], lat: p.landing[1] }, berth: { lng: p.berth[0], lat: p.berth[1] }, name: names.get(p.node) ?? "" });
       }
@@ -714,8 +723,17 @@ export class FerryDraw {
       const a = xy(p.landing), b = xy(p.berth), big = i === (u.kind === "handle" ? u.i : -1);
       parts.push(`<path d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}" style="stroke:${col};stroke-width:2.5px"/>`);
       const at = `cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}"`;
-      if (i === ei) parts.push(`<circle class="ferry-end" ${at} r="${big ? 8 : 7}" style="fill:var(--map-land);stroke:${col};stroke-width:3px"/>`);
-      else parts.push(`<circle class="ferry-port" ${at} r="${big ? 7 : 5.5}" style="fill:var(--map-land);stroke:${col};stroke-width:2.5px"/>`);
+      // T-3142: a port the line serves one way is filled on the half to the right of the way the boats go
+      const way = this.dirty || p.node === null ? undefined : this.oneWay.get(p.node);
+      const deg = way ? headingAtPlane(this.overlay, way.x, way.y, way.heading) : null;
+      let fill = "var(--map-land)";
+      if (deg !== null) {
+        const v = halfFillVector(deg);
+        parts.push(`<defs><linearGradient id="ferry-half-${i}" x1="${v.x1.toFixed(3)}" y1="${v.y1.toFixed(3)}" x2="${v.x2.toFixed(3)}" y2="${v.y2.toFixed(3)}"><stop offset="0.5" style="stop-color:var(--map-land)"/><stop offset="0.5" style="stop-color:${col}"/></linearGradient></defs>`);
+        fill = `url(#ferry-half-${i})`;
+      }
+      if (i === ei) parts.push(`<circle class="ferry-end" ${at} r="${big ? 8 : 7}" style="fill:${fill};stroke:${col};stroke-width:3px"/>`);
+      else parts.push(`<circle class="ferry-port" ${at} r="${big ? 7 : 5.5}" style="fill:${fill};stroke:${col};stroke-width:2.5px"/>`);
     });
     this.svg.style.display = "";
     this.svg.setAttribute("width", String(this.overlay.cssW));

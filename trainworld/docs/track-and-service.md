@@ -929,15 +929,17 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   the same way, its stops from the first after the rejoin. Offered only when a rough round trip
   (track time, dwells and turnarounds) comes out at most `TURN_SLACK_S` (120 s) or 10% longer than
   the line's now, with no more reversals; the search is one Dijkstra per end, cut off at that budget.
-  **A click turns an end on a loop by itself** (T-3122, `TrackApi::add_stop`, the line tool's click): when
-  a click puts a station at an end (an open line's first or last stop, or past a balloon's turning stop,
-  where its stem grows: `best_slot` tries the station before the first stop and after the last there),
-  every end that now stands on a loop is turned as above, and the line set one way. An end stands on a
-  loop when its stop lies past the point the loop rejoins the path (the line already runs onto the loop
-  and turns back on it); an end before a loop with no stop on it is only turned by the player's right
-  click. An end already on a loop before the click stays open (a loop the player opened); hand-ordered,
-  bus and ferry lines never turn by themselves. So a stem with a loop at each end, clicked once per
-  station in any order, becomes a circle round both loops.
+  **Only the right click turns an end** (T-3140, `TrackApi::add_stop`, the line tool's click): a click puts
+  the station in where `insert_stop` puts it and never turns the line round a loop or sets it one way, so
+  a line clicked onto a loop runs out onto it and back (both ways). A balloon's stem still grows past its
+  turning stop (`best_slot` tries the station before the first stop and after the last there), so a loop
+  turned early keeps working as the stem is clicked. A stem with a loop at each end becomes a circle round
+  both with a right click on each.
+  **A one-way circle's lone branch is its end** (T-3141, `Network::branch_end`, run by `set_line` on every
+  line edit and load): a rail circle run one way whose trains turn back at exactly one place, a stop
+  (a branch off the loop, run out and back), is started at that stop: the same stops round the lap and
+  the same path, now a balloon, so trains turn there with the turnaround as at an end of the line, not
+  a reversal partway. A circle run both ways, or with two such turns, is left as it is.
   **A loop stops at every pass** (T-3122, `every_pass`): after every stop edit of a loop line (and for
   every loop line of a save as it loads), each pass of its path over a station it stops at is a stop,
   except one that would come straight before or after a stop at the same station (a turn round a loop
@@ -956,7 +958,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   closing. The direction is the one drawn: no reverse state (redrawing reverses it); arrows on the map
   show it (T-2991, ui-map.md "Bus lines"). **Which way a stop is served** (T-3122, `TrackApi::line_stop_ways`,
   `LineStats.oneWayAt`): a rail line run one way serves a station it stops at one way when its run passes
-  the station only heading one way (the side of the station node its trains leave by, `node_heading`);
+  the station only heading one way (the side of the station node its trains leave by; the heading is
+  `node_heading`, the track's tangent there, radians counter-clockwise from east in the world frame);
   passing both ways, or turning back there, is both ways (a terminal whose loop has no stop, stopped at
   once, is both ways). Every other line serves every stop both ways. The map's half-filled markers, the
   stop list's half dots and the hover's chevrons all read this. Stops closed into a loop whose path only runs out and back the same way (a

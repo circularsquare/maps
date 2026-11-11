@@ -262,26 +262,18 @@ impl TrackApi {
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
     }
-    /// T-3122, the line tool's click: `station` put in where `insert_stop` puts it, as `set_stops`
-    /// takes those stops, and an end that comes to stand on a loop of track with it turned round the
-    /// loop, the line then run one way (`auto_turn`). 2 when there is nowhere to put it.
+    /// The line tool's click: `station` put in where `insert_stop` puts it, as `set_stops` takes those
+    /// stops. A line never turns round a loop by itself; the right click does that (T-3140, `turn_end`).
+    /// 2 when there is nowhere to put it.
     pub fn add_stop(&mut self, id: u32, station: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let net = &self.w.net;
-        let mut memo = HopMemo::new();
-        let Some((stops, _)) = best_insert(net, id, station, &mut memo) else {
+        let Some((stops, _)) = best_insert(&self.w.net, id, station, &mut HopMemo::new()) else {
             self.issues.clear();
             self.money_short = None;
             return 2;
         };
-        let Some((stops, path)) = edited_stops(net, &stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
-        match auto_turn(net, id, station, &stops, &path, &mut memo) {
-            Some((s, p)) => {
-                (d.stops, d.path) = (s, p);
-                d.one_way = true;
-            }
-            None => (d.stops, d.path) = (stops, path),
-        }
+        let Some((stops, path)) = edited_stops(&self.w.net, &stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        (d.stops, d.path) = (stops, path);
         self.run(Op::Line { id, data: Some(d) })
     }
 
@@ -436,10 +428,16 @@ impl TrackApi {
     /// too, or turns back at, is served both ways and left out (a loop stops at every pass, and a
     /// pass it skips is one straight after a stop there: a terminal whose loop has no stop), as is
     /// every stop of a line run both ways. The one answer to "which way does this line stop here" for
-    /// the map's half dots, the stop list and the hover's chevrons. Empty for a bus or ferry line.
+    /// the map's half dots, the stop list and the hover's chevrons. A bus or ferry loop run one way
+    /// answers the same way with the stop's id in place of the node (`route_stop_ways`, T-3142).
     pub fn line_stop_ways(&self, line: u32) -> Vec<f64> {
-        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok && l.one_way && !l.is_bus()) else { return vec![] };
+        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok && l.one_way) else { return vec![] };
         let net = &self.w.net;
+        if let Some(plan) = ls.bus.as_ref() {
+            let l = line as usize;
+            let pts = net.line_bus.get(l).and_then(|b| b.as_ref()).map(|r| &r.points).or_else(|| net.line_ferry.get(l).and_then(|f| f.as_ref()).map(|r| &r.points));
+            return pts.map_or(vec![], |p| route_stop_ways(net, p, plan, ls.ferry));
+        }
         let run = &ls.runs[0];
         let segs = &run.segs;
         if segs.is_empty() {
@@ -662,4 +660,49 @@ impl TrackApi {
         }
         self.run(Op::Batch(ops))
     }
+}
+
+/// T-3142: `line_stop_ways` for a bus or ferry loop run one way. A stop is served one way when the route passes its
+/// place once, or every time the same way round, and does not turn back there (a route that loops back turns at its
+/// first stop and passes its way out twice, both ways round; a hairpin at a berth is no turn). `[id, heading]` per
+/// such stop, the heading the route leaves it by, radians in the plane as the rail answer's.
+fn route_stop_ways(net: &Network, pts: &[[f64; 2]], plan: &crate::track::bus::Plan, ferry: bool) -> Vec<f64> {
+    let (cum, len) = (&plan.cum, plan.len);
+    if pts.len() < 2 || cum.len() != pts.len() || plan.stops.len() < 2 {
+        return vec![];
+    }
+    const EPS: f64 = 1e-6;
+    let heading = |k: usize| (pts[k + 1][1] - pts[k][1]).atan2(pts[k + 1][0] - pts[k][0]);
+    let last = pts.len() - 2;
+    // the way the route heads just after `s`, round the lap at its end
+    let leaving = |s: f64| heading(cum.partition_point(|&c| c <= if s >= len - EPS { 0.0 } else { s } + EPS).saturating_sub(1).min(last));
+    let place = |a: &crate::track::bus::BusStop, b: &crate::track::bus::BusStop| match (a.station, b.station) {
+        (Some(p), Some(q)) => p == q,
+        (None, None) => (a.x - b.x).hypot(a.y - b.y) / net.k_at(a.y) < 3.0,
+        _ => false,
+    };
+    let mut stops = &plan.stops[..];
+    if place(&stops[0], &stops[stops.len() - 1]) {
+        stops = &stops[..stops.len() - 1];
+    }
+    // a ferry route loops back by its ports (two ports can share a lead-in without it), a bus route by its points
+    let turns_at_start = if ferry {
+        let ports: Vec<Option<u32>> = plan.stops.iter().map(|s| s.station).collect();
+        let (n, mut k) = (ports.len(), 0);
+        while 2 * (k + 1) < n - 1 && ports[k + 1] == ports[n - 2 - k] {
+            k += 1;
+        }
+        k >= 1 && n - 1 - 2 * k >= 3
+    } else {
+        crate::track::bus::loop_back_at(pts).is_some()
+    };
+    let mut out: Vec<(usize, Option<f64>)> = vec![];
+    for (i, s) in stops.iter().enumerate() {
+        let h = (i > 0 || !turns_at_start).then(|| leaving(s.s));
+        match out.iter_mut().find(|o| place(&stops[o.0], s)) {
+            Some(o) => o.1 = match (o.1, h) { (Some(a), Some(b)) if (a - b).cos() > 0.0 => Some(a), _ => None },
+            None => out.push((i, h)),
+        }
+    }
+    out.into_iter().filter_map(|(i, h)| h.map(|h| [stops[i].id as f64, h])).flatten().collect()
 }
