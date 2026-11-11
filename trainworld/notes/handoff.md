@@ -83,8 +83,11 @@ then community on (5), push maps master.
   real termini get terminals; settle early stop; all seven reshipped, London on real levels too). London real network
   190-220 s -> 86-92 s to playable; native load 42.8 -> 0.6 s. Busy real lines run real rates (Tokyo 1429 -> 1761/h
   at high). 8800 = 92dc1ef6, smoke PASSED. T-3235 filed (London train-count edit 3.5 s, pace hysteresis moves rates).
-- loadpath (Opus, 6122, aaf8eec89182c3f08): T-3234 where a real-network start's time goes before lines show (NY
-  16.7 s) and whether the ~60 s demand phase is normal.
+- loadpath: T-3234 DONE, landed 46661a4d (one derive per save load, not two; byte-identical). The ~60 s demand
+  phase is normal for any network that size (T-007 the same). Filed T-3236 (London save fixed up each load), T-3237
+  (first networkFromState 2-3 s). 8800 = 46661a4d, smoke PASSED.
+- meet (resumed, ~320k): T-3231 two lines standing on one place at a double-track terminal (t1965 fails on master).
+- firstpass (Sonnet, 6123, aafb245f80aed6ea1): T-3237, drawing pixel-identical.
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
 - community.errNewShare "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine,
   she said fine) landed in cc510cc1. Next translation batch: these, sandboxNote, stopMarkers.oneWay, search strings.
@@ -101,7 +104,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3236**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
+- Next free id **T-3238**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
