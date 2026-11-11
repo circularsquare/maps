@@ -1688,7 +1688,7 @@ fn the_first_stop_closes_and_opens_a_loop() {
     assert_eq!(a.set_line(id, &ns[..4], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     let tier = |a: &TrackApi, n: u32| a.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == n).unwrap()[1];
     assert_eq!(tier(&a, ns[0]), 5.0, "closes");
-    assert_eq!(tier(&a, ns[3]), 0.0);
+    assert_eq!(tier(&a, ns[3]), 5.0, "T-3203: the last stop closes it too");
     let mut stops = ns[..4].to_vec();
     stops.push(ns[0]);
     assert_eq!(a.set_stops(id, &stops), 0, "{}", a.issues());

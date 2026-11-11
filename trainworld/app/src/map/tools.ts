@@ -1621,8 +1621,9 @@ export class Tools {
       // a loop opened: a turned line less its way back (from any of its stops, T-3118)
       change = { op: "openLoop", line: id };
     } else if (tier === "close") {
-      if (station !== before[0] || closedLoop) return;
-      change = { op: "setStops", line: id, stops: [...before, station], autoFast: this.autoFast(id) };
+      if ((station !== before[0] && station !== before[n - 1]) || closedLoop) return;
+      // T-3203: from either end the loop closes the same way, the last stop on to the first
+      change = { op: "setStops", line: id, stops: [...before, before[0]], autoFast: this.autoFast(id) };
     } else if (tier) {
       return;
     } else if (!before.includes(station)) {

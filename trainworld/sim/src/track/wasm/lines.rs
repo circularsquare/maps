@@ -307,7 +307,7 @@ impl TrackApi {
     /// path (a station on it, or past an end on track the path can carry on over: the path is
     /// extended), 2 adding it changes the path, 3 it cannot be added, 4 adding it makes trains
     /// reverse at the station `reversal` where they did not (T-797; -1 for the other tiers), 5 the
-    /// first stop, where a click closes the line into a circle, 6 a loop's first stop, where a click
+    /// first or last stop, where a click closes the line into a circle (T-3203), 6 a loop's first stop, where a click
     /// opens it (T-798), 7 the stop before a loop at an end of the line, where a click turns the
     /// line round it (`turn_end`), 8 that stop on a line so turned, where a click opens it again
     /// (`open_loop`, T-3021). Worked out with `insert_stop`'s own search, so the markers say what a
@@ -329,11 +329,11 @@ impl TrackApi {
             if !net.node_ok(n) || net.node_platform[n as usize] == 0 {
                 continue;
             }
-            let (tier, at) = if turn_at.contains(&n) && (stops.first() != Some(&n) || closed(stops)) {
+            let (tier, at) = if turn_at.contains(&n) && ((stops.first() != Some(&n) && stops.last() != Some(&n)) || closed(stops)) {
                 (7.0, -1.0)
             } else if stops.first() == Some(&n) && closed(stops) {
                 (6.0, -1.0)
-            } else if stops.first() == Some(&n) && close_path(net, line, &mut memo).is_some() {
+            } else if (stops.first() == Some(&n) || stops.last() == Some(&n)) && close_path(net, line, &mut memo).is_some() {
                 (5.0, -1.0)
             } else if turn_at.contains(&n) {
                 (7.0, -1.0)
