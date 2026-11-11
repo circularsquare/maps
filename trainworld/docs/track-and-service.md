@@ -691,7 +691,11 @@ when their paths cross at the same level (their lanes' positions in opposite ord
 sides); merges and diverges do not, as track capacity counts them. A plain double-track Y has one
 crossing pair. Single track joined to the double's track beside it and running that track's way
 crosses nothing; one running both ways (a branch to a terminus) or joined to the far track crosses
-the other direction's track, as a real single-lead junction does. A **flyover** removes it: real one-way legs that send the crossing move over the main
+the other direction's track, as a real single-lead junction does. Running both ways, it reaches
+both tracks whichever it is joined to (its lane sits at its own slot), and the map draws that link
+as a short crossover (ui-map.md "Single-lead crossovers", T-3161). One-way single track that no
+train can use (pieces pointing into each other, or away from each other, so a node's table has no
+move out of one or into another) is badged on the map (`Network::node_unusable`, T-3164). A **flyover** removes it: real one-way legs that send the crossing move over the main
 (T-3092, 6.1 "Flyovers"), or the junction inspector's flying flag, for its price (6.4). The map's
 flat-junction badge marks a junction only where two moves in its table could cross, run by a line
 or not (`capacity::junction_crosses`, T-3103). A **flat crossing** makes every move on one

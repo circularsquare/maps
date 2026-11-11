@@ -453,6 +453,9 @@ export interface ClockNode {
   flying: boolean;
   /** two moves through it can cross at its level (T-3103): the flat-junction badge */
   crosses?: true;
+  /** T-3164: one-way single track no train can use: 1 pointing in with no way on, 2 pointing out
+   * with no way in, 3 both */
+  unusable?: 1 | 2 | 3;
   platform: number;
   stationBuilt: boolean;
   /** a blueprint station switched off (T-333) */

@@ -15,6 +15,9 @@ export const M_RAMP = 2;
 export const M_PORTAL = 3;
 /** a crossing the track model refuses: heights differ by less than a level, or one is on a ramp */
 export const M_BAD = 4;
+/** T-3164: one-way track pointing into a node with no way on, or out of it with no way in */
+export const M_CONVERGE = 5;
+export const M_DIVERGE = 6;
 
 /** T-3062: a flat crossing's modes ride in its level slot as a tenth per tram track: level + 0.1 for a
  * tram over rail track (the tram yields), + 0.2 for two tram tracks. Whole levels still round to

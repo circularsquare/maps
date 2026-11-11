@@ -122,7 +122,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   single track meets double track at a junction (a flyover's three), its end is drawn 2 m off its
   centre line, away from the nearest other track leaving that node its way, easing back over 60 m,
   so each leg carries on from its own track of the double. Its one-way arrows keep clear of
-  junctions as of stations. A line is drawn on the track its return run takes too, where that is
+  junctions as of stations, and of every mark on the track (ramps, flat crossings and junctions,
+  unusable one-way track, T-3189): one that would sit on one is skipped. A line is drawn on the track its return run takes too, where that is
   not its path backward (a flyover's other leg): stroked in its colour, in its stretches, and
   picked out with it when selected.
 - **Turn-back crossovers** [T-658d, `turnbackStrokes` in `map/network.ts`]: close in only, where
@@ -131,6 +132,12 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   a dead-end terminus's platform, and at a through station one diagonal just outside the
   platform on the side the line arrives from, from the arrival track to the departure track. Not
   picked, no hover of its own.
+- **Single-lead crossovers** [T-3161, `singleLeadStrokes` in `map/network.ts`]: close in only, where
+  single track that runs both ways joins one track of double track at a junction, the link the move
+  table gives it to the double's other track is drawn as the turn-back crossovers are: one diagonal
+  40 m long along the double leaving the node on the other side, from the joined track at the node
+  to the other track, faded unless both pieces are built. It shows where the flat-junction badge's
+  crossing is. One-way single track draws none.
 - **Passing tracks** [T-2233, `passingTracks` in `map/network.ts`, `passingState` in
   `map/renderer.ts`]: from zoom 14, a station with passing tracks on double track has an outer
   track either side in bare-track grey, along the platform and bowing back onto the running track
@@ -382,7 +389,15 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     once both tracks are. A crossing the model refuses (on a ramp, the tracks less than a level
     apart; [track-and-service.md](track-and-service.md) "The graph") is a red X, hover "Tracks cross
     on a ramp less than a level apart" [T-2226].
-  - A **ramp** (a triangle) for every change of level along track, 0 to +3, 0 to -3, 1 to 2, -1 to -2
+  - **One-way track no train can use** [T-3164, `Network::node_unusable`]: at a node with no station
+    and two or more track ends, one-way single track pointing in with no move on, or pointing out
+    with no move into it, gets a red badge with two arrows, pointing at each other or apart, sized
+    as the junction badge (big on blueprint, a node counting as built once all its ends are). Hover
+    "Unusable converging one-way track" or "Unusable diverging one-way track"; where a node has both,
+    converging. Bare ends (a stub being drawn) and stations (a line may end there) get none. Not
+    hidden by the "Flat junctions and crossings" setting.
+  - A **ramp** (a trapezoid, its narrow end a quarter of its wide end, so it does not read as a
+    one-way arrow, T-3189) for every change of level along track, 0 to +3, 0 to -3, 1 to 2, -1 to -2
     and the rest. One mark per ramp (a stretch where the height keeps rising or keeps falling), at its
     middle, pointing along the track toward the end that is farther from the ground, filled in the
     Elevation colour of that level (+1 teal, +2 blue, +3 indigo, -1 yellow, -2 orange, -3 red-orange),

@@ -390,3 +390,58 @@ fn t3137_flyover_legs_way_matches_their_flags() {
         assert_eq!(joined, 4, "both legs joined at J and J3: {:?}", a.join_edges());
     }
 }
+
+// ---- T-3164: one-way single track no train can use
+
+/// Two single pieces meeting at a plain joint b, west (W) and east (E). Pointing into each other or
+/// away from each other flags b; one way through, or a station at b, does not. One-way branches off
+/// double track never flag a node, and bare ends never do.
+#[test]
+fn t3164_one_way_pieces_no_train_can_use() {
+    use crate::track::lanes::{UNUSABLE_IN, UNUSABLE_OUT};
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(2000.0, 0.0)), &[], 1, false), 0, "{}", a.issues());
+        let b = node_near(&a, 2000.0, 0.0);
+        assert_eq!(a.add_route(&ends(at_node(&a, b), free(4000.0, 0.0)), &[], 1, false), 0, "{}", a.issues());
+        let s = singles(&a);
+        assert_eq!(s.len(), 2, "two pieces meet at b");
+        let (w, e) = if a.w.net.node_x[a.w.net.end_node(s[0], 0) as usize] < 1000.0 || a.w.net.node_x[a.w.net.end_node(s[0], 1) as usize] < 1000.0 { (s[0], s[1]) } else { (s[1], s[0]) };
+        // the way (1 a to b, 2 b to a) that runs piece `p` into b
+        let into = |a: &TrackApi, p: u32| if a.w.net.end_node(p, 1) == b { 1 } else { 2 };
+        let flag = |a: &TrackApi| a.w.net.node_unusable(b);
+        let all_but_b = |a: &TrackApi| (0..a.w.net.node_count() as u32).filter(|&n| n != b && a.w.net.node_ok(n)).all(|n| a.w.net.node_unusable(n) == 0);
+        assert_eq!(flag(&a), 0, "both ways");
+        // W into b, E automatic (both ways): fine
+        let (wi, ei) = (into(&a, w), into(&a, e));
+        assert_eq!(a.set_edge_oneway(w, wi), 0, "{}", a.issues());
+        assert_eq!(flag(&a), 0, "one way into a two-way piece");
+        // one way through
+        assert_eq!(a.set_edge_oneway(e, 3 - ei), 0, "{}", a.issues());
+        assert_eq!(flag(&a), 0, "one way straight through");
+        // pointing into each other
+        assert_eq!(a.set_edge_oneway(e, ei), 0, "{}", a.issues());
+        assert_eq!(flag(&a), UNUSABLE_IN, "converging");
+        assert!(all_but_b(&a), "bare ends say nothing");
+        // pointing away from each other
+        assert_eq!(a.set_edge_oneway(w, 3 - wi), 0, "{}", a.issues());
+        assert_eq!(a.set_edge_oneway(e, 3 - ei), 0, "{}", a.issues());
+        assert_eq!(flag(&a), UNUSABLE_OUT, "diverging");
+        assert!(all_but_b(&a));
+        // the snapshot's flags column carries it
+        let col = a.nodes_info().chunks_exact(10).find(|c| c[0] == b as f64).unwrap()[6] as u8;
+        assert_eq!(col >> 2, UNUSABLE_OUT);
+        // a station at b says nothing (a line may end there)
+        let (x, y) = (a.w.net.node_x[b as usize], a.w.net.node_y[b as usize]);
+        assert_eq!(a.add_station(1, b, x, y, 200, "S".into()), 0, "{}", a.issues());
+        assert_eq!(flag(&a), 0, "a station");
+    }
+    // one-way branches off double track: either way, nothing is flagged
+    for right_hand in [true, false] {
+        for way in [1, 2] {
+            let a = network(right_hand, way);
+            let net = &a.w.net;
+            assert!((0..net.node_count() as u32).filter(|&n| net.node_ok(n)).all(|n| net.node_unusable(n) == 0), "way {way}");
+        }
+    }
+}

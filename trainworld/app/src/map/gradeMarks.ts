@@ -4,7 +4,9 @@
 //     and while drawing (the preview); small and quiet on built track. Both are in the Elevation
 //     colour of the level they are on. A built one follows the square root of the map's scale,
 //     like the ridership circles (T-1772).
-//   - a ramp (a triangle) for every change of level along track, at the middle of the ramp,
+//   - one-way track no train can use (T-3164), two arrows pointing at each other or apart in a
+//     round badge, in the bad-crossing red, at the node where the ways meet.
+//   - a ramp (a trapezoid, T-3189) for every change of level along track, at the middle of the ramp,
 //     pointing along the track toward the level farther from the ground, in that level's
 //     Elevation colour (T-1871).
 // The data is `NetworkBuffers.marks` (map/markData.ts); the hover tag names a mark (`markTip`).
@@ -17,7 +19,7 @@ import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
 import { compile, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
-import { crossTrams, M_BAD, M_CROSSING, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
+import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
@@ -98,14 +100,19 @@ float seg(vec2 p, vec2 a, vec2 b) {
   vec2 pa = p - a, ba = b - a;
   return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
 }
-float tri(vec2 p, vec2 a, vec2 b, vec2 c) {
-  vec2 e0 = b - a, e1 = c - b, e2 = a - c, v0 = p - a, v1 = p - b, v2 = p - c;
-  vec2 q0 = v0 - e0 * clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0);
-  vec2 q1 = v1 - e1 * clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0);
-  vec2 q2 = v2 - e2 * clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0);
-  float s = sign(e0.x * e2.y - e0.y * e2.x);
-  vec2 d = min(min(vec2(dot(q0, q0), s * (v0.x * e0.y - v0.y * e0.x)), vec2(dot(q1, q1), s * (v1.x * e1.y - v1.y * e1.x))), vec2(dot(q2, q2), s * (v2.x * e2.y - v2.y * e2.x)));
-  return -sqrt(d.x) * sign(d.y);
+// signed distance to a convex quadrilateral, corners in order, negative inside
+float quad(vec2 p, vec2 a, vec2 b, vec2 c, vec2 e) {
+  vec2 v[4] = vec2[4](a, b, c, e);
+  float d = dot(p - a, p - a), s = 1.0;
+  for (int i = 0; i < 4; i++) {
+    int j = i == 0 ? 3 : i - 1;
+    vec2 ed = v[j] - v[i], w = p - v[i];
+    vec2 q = w - ed * clamp(dot(w, ed) / dot(ed, ed), 0.0, 1.0);
+    d = min(d, dot(q, q));
+    bvec3 k = bvec3(p.y >= v[i].y, p.y < v[j].y, ed.x * w.y > ed.y * w.x);
+    if (all(k) || all(not(k))) s = -s;
+  }
+  return s * sqrt(d);
 }
 void main() {
   int shape = int(v_m.z + 0.5);
@@ -116,7 +123,8 @@ void main() {
     // along the track: u along the ramp toward its far level, v across it
     vec2 dir = vec2(cos(v_m.w), sin(v_m.w));
     vec2 q = vec2(dot(v_p, dir), dot(v_p, vec2(-dir.y, dir.x)));
-    float d = tri(q, vec2(-0.65 * r, -r), vec2(-0.65 * r, r), vec2(0.65 * r, 0.0));
+    // T-3189: a trapezoid, its narrow side a quarter of the long one, so it is not read as a one-way chevron
+    float d = quad(q, vec2(-0.65 * r, -r), vec2(-0.65 * r, r), vec2(0.65 * r, 0.25 * r), vec2(0.65 * r, -0.25 * r));
     float rim = max(1.0, 1.1 * u_dpr);
     float halo = 1.4 * u_dpr;
     vec3 lc = u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
@@ -135,6 +143,13 @@ void main() {
     // a fork: a stem below, two arms up
     vec2 hub = vec2(0.0, 0.1 * r);
     glyph = cov(min(seg(v_p, vec2(0.0, 0.55 * r), hub), min(seg(v_p, hub, vec2(-0.42 * r, -0.55 * r)), seg(v_p, hub, vec2(0.42 * r, -0.55 * r)))) - g);
+  } else if (shape == ${M_CONVERGE} || shape == ${M_DIVERGE}) {
+    // T-3164: two arrows on one line, pointing at each other or apart; the right one, mirrored
+    vec2 q = vec2(abs(v_p.x), v_p.y);
+    bool into = shape == ${M_CONVERGE};
+    float tip = into ? 0.2 * r : 0.64 * r, back = into ? 0.7 * r : 0.14 * r;
+    float wing = tip + (into ? 0.26 : -0.26) * r;
+    glyph = cov(min(seg(q, vec2(tip, 0.0), vec2(back, 0.0)), min(seg(q, vec2(tip, 0.0), vec2(wing, 0.24 * r)), seg(q, vec2(tip, 0.0), vec2(wing, -0.24 * r)))) - g);
   } else {
     float over = cov(seg(v_p, vec2(-k, -k), vec2(k, k)) - g);
     float under = cov(seg(v_p, vec2(-k, k), vec2(k, -k)) - g);
@@ -151,7 +166,7 @@ void main() {
     }
     glyph = max(over, under);
   }
-  ink = shape == ${M_BAD} ? u_bad : u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
+  ink = shape == ${M_BAD} || shape == ${M_CONVERGE} || shape == ${M_DIVERGE} ? u_bad : u_level_colours[clamp(3 - int(round(v_s.y)), 0, 6)];
   vec3 col = mix(u_fill, ink, max(ring, glyph));
   float a = cov(d) * (blueprint ? 1.0 : u_quiet);
   o = vec4(col * a, a);
@@ -281,6 +296,8 @@ export function markTip(marks: Float32Array, i: number): TipLine[] {
   if (shape === M_RAMP) out.push(t("gradeMarks.rampUp", { level: levelLabel(level) }));
   else if (shape === M_PORTAL) out.push(t("gradeMarks.rampDown", { level: levelLabel(level) }));
   else if (shape === M_BAD) out.push(t("gradeMarks.badCross"));
+  else if (shape === M_CONVERGE) out.push(t("gradeMarks.converging"));
+  else if (shape === M_DIVERGE) out.push(t("gradeMarks.diverging"));
   else {
     out.push(t(shape === M_JUNCTION ? "gradeMarks.junction" : "gradeMarks.crossing"));
     if (shape === M_CROSSING && crossTrams(marks[i + 5]) === 1) out.push(t("gradeMarks.tramYields"));

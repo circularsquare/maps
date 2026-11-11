@@ -793,6 +793,8 @@
   "gradeMarks.junction": "Hover tag title over a junction mark.",
   "gradeMarks.crossing": "Hover tag title over a crossing mark.",
   "gradeMarks.tramYields": "Hover tag line on a flat crossing where a tram track crosses rail track: the tram is the one that waits.",
+  "gradeMarks.converging": "Hover tag over a red mark where pieces of one-way single track point into each other, so no train can run on them.",
+  "gradeMarks.diverging": "Hover tag over a red mark where pieces of one-way single track point away from each other, so no train can get onto them.",
   "gradeMarks.blueprint": "Hover tag row under a mark on blueprint track.",
   "groupInspector.addStop": "Hover on a place in the group diagram where a line passes without stopping, while the group's stops are edited. line: the line's coloured bullet; station: the station's name.",
   "groupInspector.all": "Hover and screen-reader label of the toggle in a group view that lists every stop.",

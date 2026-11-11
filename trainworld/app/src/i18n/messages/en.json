@@ -793,6 +793,8 @@
   "gradeMarks.junction": "Flat junction",
   "gradeMarks.crossing": "Flat crossing",
   "gradeMarks.tramYields": "Trams yield here",
+  "gradeMarks.converging": "Unusable converging one-way track",
+  "gradeMarks.diverging": "Unusable diverging one-way track",
   "gradeMarks.blueprint": "Blueprint",
   "groupInspector.addStop": "Click to add {line} stop at {station}",
   "groupInspector.all": "Show all stops",

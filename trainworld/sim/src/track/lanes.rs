@@ -16,6 +16,11 @@ use super::params::{LANE_HALF_M, PORT_PITCH_M};
 pub const WAY_AB: u8 = 1;
 pub const WAY_BA: u8 = 2;
 
+/// `Network::node_unusable`: one-way track pointing into the node with no way on, and pointing
+/// out of it with no way in.
+pub const UNUSABLE_IN: u8 = 1;
+pub const UNUSABLE_OUT: u8 = 2;
+
 /// One track of a piece.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lane {
@@ -121,6 +126,36 @@ impl Network {
             }
         }
         self.node_moves[n as usize] = m;
+    }
+
+    /// T-3164: one-way single track at node `n` that no train can use, from its move table. Bit
+    /// `UNUSABLE_IN`: an end whose track brings trains in with no move on (one-way pieces pointing
+    /// into each other); bit `UNUSABLE_OUT`: an end whose track takes trains out that no move
+    /// reaches (pointing away from each other). A bare end (a stub still being drawn) and a station
+    /// (a line may end there) say nothing.
+    pub fn node_unusable(&self, n: u32) -> u8 {
+        let i = n as usize;
+        let p = &self.node_ports[i];
+        let k = p.n as usize;
+        if k < 2 || self.node_platform[i] > 0 {
+            return 0;
+        }
+        let m = &self.node_moves[i];
+        let reached = m.to[..k].iter().fold(0u8, |acc, &t| acc | t);
+        let mut out = 0;
+        for j in 0..k {
+            let (c, e) = (p.end[j], (p.end[j] >> 1) as usize);
+            if self.edge_tracks[e] != 1 || self.edge_crossover[e] || self.edge_way(e as u32) == 0 {
+                continue;
+            }
+            if self.lane_of(c ^ 1).is_some() && m.to[j] == 0 {
+                out |= UNUSABLE_IN;
+            }
+            if self.lane_of(c).is_some() && reached >> j & 1 == 0 {
+                out |= UNUSABLE_OUT;
+            }
+        }
+        out
     }
 
     /// The node a path entry arrives at, its index there, and the ends a train may leave by

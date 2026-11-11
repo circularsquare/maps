@@ -11,7 +11,7 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { PreviewAnswer } from "../workers/clockClient";
 import type { ClockEdge, ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
-import { M_BAD, M_CROSSING, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
+import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
 import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
@@ -884,6 +884,68 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
   return b.build();
 }
 
+/** Length of a single-lead junction's crossover, m (T-3161). */
+const SINGLE_LEAD_M = 40;
+
+/**
+ * T-3161: where single track that runs both ways joins one track of double track at a junction, the move
+ * table also links it to the double's other track, crossing the one it joins (a single-lead junction,
+ * track-and-service.md 6.2). Draw that link: a crossover along the double leaving the node on the other
+ * side, from the joined track at the node to the other track `SINGLE_LEAD_M` out, as the turn-back
+ * crossovers are drawn (`F_TURNBACK`, close in only). `way(node, edge)`: the edge's points from the node out.
+ */
+function singleLeadStrokes(b: StrokeBuilder, edges: readonly ClockEdge[], way: (node: number, edge: number) => Float32Array) {
+  const byId = new Map(edges.map((e) => [e.id, e]));
+  const at = new Map<number, ClockEdge[]>();
+  for (const e of edges) for (const n of [e.a, e.b]) at.set(n, [...(at.get(n) ?? []), e]);
+  // the way an edge leaves `node`, unit x, y, from its first ~20 m
+  const out = (node: number, e: number) => {
+    const p = way(node, e), n = p.length / 3;
+    if (n < 2) return null;
+    const reach = 20 * kAtY(p[1]);
+    let k = 1;
+    while (k < n - 1 && Math.hypot(p[k * 3] - p[0], p[k * 3 + 1] - p[1]) < reach) k++;
+    const dx = p[k * 3] - p[0], dy = p[k * 3 + 1] - p[1], d = Math.hypot(dx, dy);
+    return d > 1e-9 ? { dx: dx / d, dy: dy / d, p } : null;
+  };
+  for (const e of edges) {
+    if (e.tracks !== 1 || e.oneWay || !e.join || e.crossover) continue;
+    [e.a, e.b].forEach((node, end) => {
+      const join = end === 0 ? e.join & 3 : (e.join >> 2) & 3;
+      if (!join) return;
+      const me = out(node, e.id);
+      if (!me) return;
+      // the double leaving most nearly the opposite way: trains to or from it use the link
+      let best: { id: number; dot: number; p: Float32Array } | null = null;
+      for (const o of at.get(node) ?? []) {
+        if (o.id === e.id || o.tracks !== 2 || o.crossover) continue;
+        const d = out(node, o.id);
+        const dot = d ? d.dx * me.dx + d.dy * me.dy : 1;
+        if (d && dot < 0 && (!best || dot < best.dot)) best = { id: o.id, dot, p: d.p };
+      }
+      if (!best) return;
+      const p = best.p, n = p.length / 3;
+      let len = 0;
+      for (let k = 1; k < n; k++) len += Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+      const T = Math.min(SINGLE_LEAD_M * kAtY(p[1]), 0.8 * len);
+      // looking out along the double, away from the single, the joined track is on the other hand:
+      // join 2 (right looking out along the single) is the double's left (lane -1)
+      const v0 = join === 2 ? -1 : 1, v1 = -v0;
+      const pts: number[] = [p[0], p[1], 0], lane: number[] = [Math.round(127.5 * (1 + v0))];
+      let run = 0;
+      for (let k = 1; k < n && run < T; k++) {
+        const seg = Math.hypot(p[k * 3] - p[k * 3 - 3], p[k * 3 + 1] - p[k * 3 - 2]);
+        const f = run + seg > T ? (T - run) / seg : 1;
+        run += seg * f;
+        pts.push(p[k * 3 - 3] + (p[k * 3] - p[k * 3 - 3]) * f, p[k * 3 - 2] + (p[k * 3 + 1] - p[k * 3 - 2]) * f, 0);
+        lane.push(Math.round(127.5 * (1 + v0 + (v1 - v0) * run / T)));
+      }
+      const built = e.built && byId.get(best.id)?.built;
+      if (pts.length >= 6) b.add(pts, TRACK, best.id, (built ? 0 : F_FADED) | F_TURNBACK, false, 0, undefined, lane);
+    });
+  }
+}
+
 /** The demand level whose run profiles give the Speed view's train speeds (T-1271): the levels
  * differ in how long trains stand, not in how fast they move between stops. */
 export const SPEED_LEVEL = 1;
@@ -1641,6 +1703,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       return [id, out];
     });
     passingTracks(b, [...passingAt.values()], waysOut, leadOf);
+    singleLeadStrokes(b, s.edges, way);
   });
   // The station dot sits on the track: its node position, from the local polyline of an edge
   // that ends there (exact), else converted from lng/lat by the label code.
@@ -1709,16 +1772,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const at = l.stops.map((id) => nodeLocal.get(id)).filter((p) => p !== undefined);
     trainChevrons(c.strokes, l.id, uses, at, l.tram ? 0.75 : 1, F_BLUEPRINT, oneWay);
   }
-  // T-3094: chevrons along one-way single track, clear of stations
-  const oneWayTrack: number[] = [];
-  if (s.edges.some((e) => e.oneWay)) {
-    // T-3117: clear of junctions too, where two legs leaving one node would put their arrows side by side
-    const stationAt = s.nodes.filter((n) => n.platform > 0 || n.ports >= 3).map((n) => nodeLocal.get(n.id)).filter((p) => p !== undefined);
-    for (const e of s.edges) {
-      const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
-      if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, stationAt, oneWayTrack);
-    }
-  }
   const jn = s.nodes.filter((n) => n.ports >= 3 && n.platform === 0);
   const junctions = new Float32Array(jn.length * 2);
   jn.forEach((n, i) => junctions.set(nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat), i * 2));
@@ -1727,8 +1780,39 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   jn.forEach((n, i) => {
     if (n.crosses) marks.push(junctions[i * 2], junctions[i * 2 + 1], M_JUNCTION, 0, n.builtPorts >= 3 ? 0 : 1, n.level);
   });
+  // T-3164: one-way track no train can use, at any node but a station; pointing in wins where both
+  for (const n of s.nodes) {
+    if (!n.unusable || n.platform > 0) continue;
+    const p = nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat);
+    marks.push(p[0], p[1], n.unusable & 1 ? M_CONVERGE : M_DIVERGE, 0, n.builtPorts >= n.ports ? 0 : 1, n.level);
+  }
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
+  // T-3094: chevrons along one-way single track, clear of stations
+  const oneWayTrack: number[] = [];
+  if (s.edges.some((e) => e.oneWay)) {
+    // T-3117: clear of junctions too, where two legs leaving one node would put their arrows side by side;
+    // T-3189: and of every mark (ramps, flat crossings and junctions, unusable track), which they hid
+    const clear: (readonly [number, number])[] = s.nodes.filter((n) => n.platform > 0 || n.ports >= 3).map((n) => nodeLocal.get(n.id)).filter((p) => p !== undefined);
+    const box = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const e of s.edges) {
+      const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
+      if (!c) continue;
+      for (let k = 0; k < c.pts.length; k += 3) {
+        box[0] = Math.min(box[0], c.pts[k]); box[1] = Math.min(box[1], c.pts[k + 1]);
+        box[2] = Math.max(box[2], c.pts[k]); box[3] = Math.max(box[3], c.pts[k + 1]);
+      }
+    }
+    const pad = 50 * kAtY(box[1]);
+    for (let k = 0; k < marks.length; k += MARK_STRIDE) {
+      const x = marks[k], y = marks[k + 1];
+      if (x >= box[0] - pad && x <= box[2] + pad && y >= box[1] - pad && y <= box[3] + pad) clear.push([x, y]);
+    }
+    for (const e of s.edges) {
+      const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
+      if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, clear, oneWayTrack);
+    }
+  }
   const pathTable = new Int32Array(Math.max(1, maxLine + 1) * 2);
   let pathN = 0;
   for (const l of s.lines) if (l.ok) pathN += l.path.length;
