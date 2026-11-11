@@ -1,65 +1,59 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 4a55787f-16a1-4c11-979b-2681f11405c8, name maps-b7 [ddb824], since 2026-11-11 08:39
-Updated: 2026-11-11 ~11:00 local (maps-b7 past 500k tokens; ready for a fresh orchestrator; trust git log)
+Orchestrator: session 2ba1fd73-4c91-45ba-b838-fe8f908d4b21, name maps-18 [8ecfe1], since 2026-11-11 11:10
+Updated: 2026-11-11 11:35 (v0.3 code frozen at bea8551a; translation review running; publish next)
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
 ## State
-- **Live = v0.2.1 hotfix = R2 2026-11-11** (959e1f8f on tw/release-021, worktree `.tw-trees/hotfix`; T-3196 download
-  stall + T-3192 Firefox varyings), published 11-11 on her word; website 9695c68; `--verify --page` all PASS.
-- **Master = 39c430a1** (pushed to 1bbfad4b). **8800 = 1bbfad4b** (smoke PASSED). 39c430a1 adds T-3166 quad.
-- Uncommitted in the main tree, by agent: buildtime (checks/snapbuild.cmd, tools/snap_wasm.py, app/vite.config.ts,
-  notes/buildtime.md, docs/orchestrator.md trap line), traincap (sim capacity.rs, capacity/tests.rs, wasm/lines.rs,
-  wasm/tests.rs for T-3201), branchhit (tools.ts, ToolBar.tsx, t3209-repro.mjs), mine (tools/r2_purge.py,
-  .claude/settings.json allow rule, docs/orchestrator.md "Old R2 versions" line, TASKS lines T-3201..T-3209).
-- R2: 2026-11-07c and 2026-11-08 purged via r2_purge.py (her OK, done 11-11). Next due:
-  11-09, 09b, 09c in a few days. Only through r2_purge.py. Old tw-* check profiles in %TEMP%: deleted 76 (her OK).
-- Landing while agents share the main tree: stage with keep_hunks (markers match added or removed lines), `git commit -m`
-  without paths, smoke against the rebuilt 8800. Patch files: LF, no BOM (orchestrator.md Traps).
+- **Live = v0.2.1 hotfix = R2 2026-11-11** (959e1f8f on tw/release-021, worktree `.tw-trees/hotfix`), website 9695c68.
+- **Master = bea8551a = the v0.3 code freeze** (T-3203, T-3209 + T-3204/5/6, T-3201 landed by maps-b7); origin at
+  593cd568 (later commits unpushed). **8800 = 52738393.**
+- Uncommitted, maps-18's, for v0.3: ui/AccountPanel.tsx (Privacy · Terms also in the signed-in panel, her ask);
+  changelog nerf lines red only on the new figure (her ask: `{figure}` in updates.v03Nerf* + three *Figure keys in
+  en.json/context.json, updates.ts `nerfs` is line -> figure key, StartMenu.tsx, style.css `.changelog-list .nerf`);
+  the tram line's parenthesis dropped (her word); the translation batch's messages/ and sources/ merges (and maybe a
+  fr plural in i18n/glossary.json).
+- Uncommitted, NOT for v0.3: passing's T-3202 (trainGuard.ts, clock.worker.ts, protocol.ts, network.ts, sim
+  spacing.rs, wasm/service.rs, checks/t3202-single-meet.mjs, notes/T-3202.md). The main tree's WASM includes its
+  guard_singles, so a dev smoke on the main tree is not master. Commit v0.3 files with explicit paths around it.
+- Website tree (uncommitted): privacy.html and terms.html Community text (notes/T-2887.md drafts), dated 11 November;
+  she approved it as is; push with the game publish.
+- R2: next purge due 11-09, 09b, 09c in a few days, only through r2_purge.py.
 
-## v0.3 RELEASE (her word 11-11: "good enough state to push this update ... call it 0.3 since flyovers are pretty big
-## i think, and introduction of community sharing")
-1. Agent release (Sonnet) is turning the unpublished v0.2.2 entry in app/src/ui/updates.ts into v0.3 (keys
-   updates.v03*, V0_3_AT), headliners flyovers and community sharing. Show her the lines; she rewords.
-2. Code freeze: land what finishes first among T-3209 (P1, branchhit) and T-3201 (P1, traincap); the rest waits for
-   v0.3.1. Land the buildtime snapbuild changes too (first real snapbuild with them is the test).
-3. Translation batch for all new and stale keys (agent l10nbatch: 3 groups x 3 passes, ~15 min; i18n.mjs clean).
-4. Commit, snapbuild, smoke8800.cmd light+dark, `deploy.py --dry-run --version 2026-11-11b` (or the date), set
-   V0_3_AT, deploy `--smoked`, website add/commit/push, `--verify --page`. Publish and website push: her word given
-   ("push this update"), confirm the moment with her.
-5. **Community going public**: today the server runs SHONEI_COMMUNITY=preview (Community shows only on `?community`
-   pages, writes from tester accounts). v0.3 "introduction of community sharing" means switching shonei-server to on:
-   a server deploy (`.\deploy\deploy.ps1` in shonei-server, alone; then git push). Needs her explicit yes to that deploy,
-   timed with the game publish. Check community.ts `available()` and the server's config for the flag first.
+## v0.3 RELEASE (her word 11-11: "push this update ... call it 0.3"; community goes public: yes)
+1. Translation batch (68 keys x 11 languages): passes 1 and 2 done; pass 3 review running (Agents). i18n.mjs clean.
+2. Commit (explicit paths), snapbuild, look at the changelog on 8800, smoke8800.cmd light+dark.
+3. Ask her for the yes (publish + website push + community on); she said she'll be around (~12:30).
+4. Set V0_3_AT, commit, `deploy.py --dry-run --version 2026-11-11b`, `--smoked`, website add/commit/push (with
+   privacy/terms), `--verify --page`.
+5. Community on (T-2887.md "Launch steps" 8): on the box set `SHONEI_COMMUNITY=1`, delete the TESTERS line,
+   `systemctl restart shonei`, after the website push; an ssh env edit, no deploy.ps1 (the live server already runs
+   shonei-server 0e7dd77's routes: checked top/liked/country boards/copy). Check `/noritetsu/config` says
+   `trainworldCommunity: true`. Rollback: `preview`, restart.
 
-**Her answers 11-11 (late morning)**: v0.3 notes are her own 16 lines (sent to agent release to apply exactly; she
-needs no review of them); single track is not a nerf; **community goes public with v0.3: yes** (still confirm the
-server deploy moment with her, the permission check wants her latest message to say yes to that deploy). She asked
-whether the tram nerf (track 52 -> 40/h) bites in practice given tram turning at ~15/h; agent release is checking the
-numbers to answer her. She is starting a new orchestrator: this session (maps-b7) may compact.
-
-## Agents (resume by id via SendMessage; names here are the briefs' names)
-- branchhit (Sonnet, 6112): T-3209 flyover leg shifts after a double joins it (first), then T-3204 end dots, T-3206
-  quad hover "Quad track (two parallel double tracks)", T-3205 double-onto-single ghost.
-- traincap (Sonnet, 6113): T-3201 one lone train gets "single track full" + red headway.
-- complexlabel (Sonnet, 6115): T-3203 loop from either open end.
-- passing (Opus, 6121): T-3202 two trains meet on single track; diagnose, stop and propose if big. Not for v0.3.
-- flyover (Opus, 6111, ~450k tokens): reviewing 8 lanes-parity diffs in the small test games; re-baseline if explained.
-- buildtime: snapbuild speedups 1-3 committed 52738393; first real snapbuild with them took 116 s (sim changed);
-  8800 = 52738393, smoke PASSED. flyover: lanes parity re-baselined for the flyover target (committed). Both done.
-- release: v0.3 notes drafted in updates.ts (keys updates.v03*, V0_3_AT placeholder), uncommitted; 19 lines shown to
-  her, awaiting her rewording, the single-track-nerf question and the 4 dropped lines.
-- Idle: roads, flatbadge, quad, stuck, varyings, ferrypath (done).
+## Agents (resume by id via SendMessage)
+- l10n pass 1 (Opus, done): A ja/zh-Hans/zh-TW/ko a0099a5560521fc8a, B es/pt/ca/fr a30677ac57ee90419, C de/tr/ru
+  ab4bf0175c111884b. Scratch `scratchpad/l10n-<g>-p1/<lang>/` (keys.txt from scratchpad/batchkeys.py, doubts.md).
+- l10n pass 2 (Sonnet, done): A a1faf102b42f35c31, B a5de61cc67a509d2b, C a8e067691f86b99d8.
+- l10n pass 3+4 (Opus, running): A a096c1fd986c51dab, B a1437117ad2afc220 (also fixing tools.streetsTight in zh/es,
+  pt gradeMarks.tramYields, fr "sauts-de-mouton" glossary plural), C a9aaeff42365127d7.
+- maps-b7's agents all done and landed; maps-b7 has wound down.
 
 ## Next after v0.3
+- **T-3202** (two trains meet on single track; notes/T-3202.md): passing built a draw-only guard, OFF by default,
+  uncommitted. Cause: on a symmetric 2-station line both ends depart together. Options: (1) finish draw-only ~2-3 h
+  (two trains side by side at a single-track stop, explain a 273 s lag, t1965/t1966/smoke with it on, default on;
+  passing's lean); (2) sim timetable meet schedule, changes capacity (2 trains on 2 km 5.1 -> ~6.4/h): her call;
+  (3) both. Ask her after the publish; brief a fresh agent from the notes.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
 - Next free id **T-3210**.
 
 ## Waiting on Anita
-- v0.3 changelog lines (once release reports); the community server switch.
-- Flyover strings (new, landed): "Advanced", "Flyover target max speed", hover "Attempt to build new flyovers with
+- The publish yes (publish + website push + community on) at the moment it is ready.
+- T-3202 option (after the publish).
+- Flyover strings (landed): "Advanced", "Flyover target max speed", hover "Attempt to build new flyovers with
   curves wide enough to reach this speed. Faster flyovers take more room."; 80 km/h default (60-degree branch ~840 m).
 - Achievement thresholds for countries with no save were guessed (Spain, Britain, Italy, Germany, Indonesia, Mexico,
   Brazil, Australia, Turkey); she raised KR/TW to 10% and CN to 2%. Show them as a list, not the code file.
@@ -74,7 +68,8 @@ widths 0.71x / 1.24x. 11-11: train count cap = running + 1; HSR and tram quad ye
 buses and trams on any road in the data; snap to roads (no discount, below grade too); T-3161 option 1; T-3164 text ok;
 text copied word for word from her message needs no review (CLAUDE.md); hotfix v0.2.1 done; rebuild speedups 1-3 yes;
 R2 purges via the guarded script; "small changes all look fantastic", "target speed / auto flyovers feel really nice";
-4-6 min rebuilds are "not so bad", only low-hanging fruit.
+4-6 min rebuilds are "not so bad", only low-hanging fruit. v0.3 notes are her 16 lines (tram parenthesis dropped);
+single track is not a nerf; only the nerf figures red; Privacy · Terms in the signed-in panel; privacy/terms text ok.
 
 ## Anita's standing asks
 - **No deploys overnight** without her there; every server deploy needs her word.

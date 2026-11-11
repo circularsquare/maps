@@ -25,7 +25,7 @@ import { Modal } from "./Modal";
 import { dismissUpdate, UPDATES, updateToShow } from "./updates";
 import { mobileDevice } from "../workers/deviceMemory";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
-import { t, tDate } from "../i18n";
+import { t, tDate, tRich } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
 /** The build's commit count (vite.config.ts), "dev" on a dev server. */
@@ -214,7 +214,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
     <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
       {UPDATES.map((u) => <section key={u.version}>
         <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
-        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => <li key={k} class={u.nerfs?.includes(k) ? "nerf" : undefined}>{t(k)}</li>)}</ul>
+        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => { const fig = u.nerfs?.[k]; return <li key={k}>{fig ? tRich(k, { figure: <span class="nerf">{t(fig)}</span> }) : t(k)}</li>; })}</ul>
       </section>)}
     </Modal>
   </div>;

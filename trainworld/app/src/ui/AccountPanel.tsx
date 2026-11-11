@@ -92,9 +92,11 @@ function SignInForms() {
         </div>
       </form>)}
     {msg && <p class="acct-msg">{msg}</p>}
-    <p class="acct-legal small muted"><a href="privacy.html" target="_blank">{t("accountPanel.privacy")}</a> · <a href="terms.html" target="_blank">{t("accountPanel.terms")}</a></p>
+    <Legal />
   </>;
 }
+
+const Legal = () => <p class="acct-legal small muted"><a href="privacy.html" target="_blank">{t("accountPanel.privacy")}</a> · <a href="terms.html" target="_blank">{t("accountPanel.terms")}</a></p>;
 
 function SignedIn({ a }: { a: AccountView }) {
   const [panel, setPanel] = useState<"" | "password" | "delete">("");
@@ -149,6 +151,7 @@ function SignedIn({ a }: { a: AccountView }) {
       <div class="pane-foot">{!google && <button class="btn text danger" type="submit">{t("accountPanel.deleteAccount")}</button>}<button class="btn text" type="button" onClick={() => { setPanel(""); setMsg(""); }}>{t("accountPanel.keepIt")}</button></div>
     </form>}
     {msg && <p class="acct-msg">{msg}</p>}
+    <Legal />
   </>;
 }
 

@@ -13,8 +13,9 @@ export interface Update {
   line: MessageKey;
   /** the changelog's list */
   changes: MessageKey[];
-  /** those of `changes` that make something harder, shown red (T-3133) */
-  nerfs?: MessageKey[];
+  /** those of `changes` that make something harder, each with the key of its new figure, which is filled into the
+   * line's `{figure}` and shown red (T-3133; only the figure is red, Anita 2026-11-11) */
+  nerfs?: Partial<Record<MessageKey, MessageKey>>;
 }
 
 /** When v0.1 went out: set at publish. */
@@ -52,7 +53,11 @@ export const UPDATES: Update[] = [
       "updates.v03NerfJunctions",
       "updates.v03Fixes",
     ],
-    nerfs: ["updates.v03NerfTerminals", "updates.v03NerfTrams", "updates.v03NerfJunctions"],
+    nerfs: {
+      "updates.v03NerfTerminals": "updates.v03NerfTerminalsFigure",
+      "updates.v03NerfTrams": "updates.v03NerfTramsFigure",
+      "updates.v03NerfJunctions": "updates.v03NerfJunctionsFigure",
+    },
   },
   {
     version: "v0.2.1",
