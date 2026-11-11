@@ -13,8 +13,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
   notes/buildtime.md, docs/orchestrator.md trap line), traincap (sim capacity.rs, capacity/tests.rs, wasm/lines.rs,
   wasm/tests.rs for T-3201), branchhit (tools.ts, ToolBar.tsx, t3209-repro.mjs), mine (tools/r2_purge.py,
   .claude/settings.json allow rule, docs/orchestrator.md "Old R2 versions" line, TASKS lines T-3201..T-3209).
-- R2: purging 2026-11-07c and 2026-11-08 via `python trainworld/tools/r2_purge.py 2026-11-07c 2026-11-08 --yes`
-  (her OK; started ~10:53, slow, ~20k files each; check `rclone lsf r2:anitamaps/trainworld/ --dirs-only`). Next due:
+- R2: 2026-11-07c and 2026-11-08 purged via r2_purge.py (her OK, done 11-11). Next due:
   11-09, 09b, 09c in a few days. Only through r2_purge.py. Old tw-* check profiles in %TEMP%: deleted 76 (her OK).
 - Landing while agents share the main tree: stage with keep_hunks (markers match added or removed lines), `git commit -m`
   without paths, smoke against the rebuilt 8800. Patch files: LF, no BOM (orchestrator.md Traps).
@@ -34,6 +33,12 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
    a server deploy (`.\deploy\deploy.ps1` in shonei-server, alone; then git push). Needs her explicit yes to that deploy,
    timed with the game publish. Check community.ts `available()` and the server's config for the flag first.
 
+**Her answers 11-11 (late morning)**: v0.3 notes are her own 16 lines (sent to agent release to apply exactly; she
+needs no review of them); single track is not a nerf; **community goes public with v0.3: yes** (still confirm the
+server deploy moment with her, the permission check wants her latest message to say yes to that deploy). She asked
+whether the tram nerf (track 52 -> 40/h) bites in practice given tram turning at ~15/h; agent release is checking the
+numbers to answer her. She is starting a new orchestrator: this session (maps-b7) may compact.
+
 ## Agents (resume by id via SendMessage; names here are the briefs' names)
 - branchhit (Sonnet, 6112): T-3209 flyover leg shifts after a double joins it (first), then T-3204 end dots, T-3206
   quad hover "Quad track (two parallel double tracks)", T-3205 double-onto-single ghost.
@@ -41,8 +46,10 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - complexlabel (Sonnet, 6115): T-3203 loop from either open end.
 - passing (Opus, 6121): T-3202 two trains meet on single track; diagnose, stop and propose if big. Not for v0.3.
 - flyover (Opus, 6111, ~450k tokens): reviewing 8 lanes-parity diffs in the small test games; re-baseline if explained.
-- buildtime (Sonnet): snapbuild ideas 1+3 done (154 s on a scratch copy), adding idea 2 (hard-link packs; her OK).
-- release (Sonnet): v0.3 changelog.
+- buildtime: snapbuild speedups 1-3 committed 52738393; first real snapbuild with them took 116 s (sim changed);
+  8800 = 52738393, smoke PASSED. flyover: lanes parity re-baselined for the flyover target (committed). Both done.
+- release: v0.3 notes drafted in updates.ts (keys updates.v03*, V0_3_AT placeholder), uncommitted; 19 lines shown to
+  her, awaiting her rewording, the single-track-nerf question and the 4 dropped lines.
 - Idle: roads, flatbadge, quad, stuck, varyings, ferrypath (done).
 
 ## Next after v0.3
