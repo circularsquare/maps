@@ -1,0 +1,54 @@
+{
+ "nyc": {
+  "paths": "109 5bd3f6b49ebca97f",
+  "reroute": "109 bad5f80bfbcdb00a",
+  "pairs": "599 8467f4fd365cd79b",
+  "badges": "1 4f53cda18c2baa0c",
+  "nodes_info": "1756 860d3fbacb490c8b",
+  "junction_info": "0 e3b0c44298fc1c14",
+  "guard": "1 5267535251fef8b1",
+  "capacity": "7024 34f661032f9a6da8",
+  "lines_info": "109 8ded0f8083381514",
+  "stop_s": "109 7f5c0b0bd5f1ca99",
+  "passed": "109 fafabacd8a894422"
+ },
+ "game": {
+  "paths": "14 ddc7506fa0513413",
+  "reroute": "14 ad1bc94e8172ab67",
+  "pairs": "20 39be2477f4de118e",
+  "badges": "1 3f42242236d8bf6d",
+  "nodes_info": "36 124924031e1a08ef",
+  "junction_info": "13 298adcd3ae5a3434",
+  "guard": "9 849888736056f3ac",
+  "capacity": "383 3304121a42ad4157",
+  "lines_info": "14 5a53409b0329c79a",
+  "stop_s": "14 8fe22d33a5ee739f",
+  "passed": "14 c39d6965cc099b27"
+ },
+ "game-left": {
+  "paths": "14 7f0a87cd325a5217",
+  "reroute": "14 d16f0523ee6d8acf",
+  "pairs": "20 e656ea01d81e0236",
+  "badges": "1 3f42242236d8bf6d",
+  "nodes_info": "36 124924031e1a08ef",
+  "junction_info": "13 46eb511a9ab0a686",
+  "guard": "9 aa4affcf94bb220d",
+  "capacity": "383 a6d97ea965278568",
+  "lines_info": "14 1b2fbf3c50ea0fea",
+  "stop_s": "14 001fd6e2ee6b602d",
+  "passed": "14 c39d6965cc099b27"
+ },
+ "northeast": {
+  "paths": "110 ece4fa1bf447275b",
+  "reroute": "110 f2393fa97dcfb8cb",
+  "pairs": "599 a35edfec9ca12e20",
+  "badges": "1 4f53cda18c2baa0c",
+  "nodes_info": "1758 5749b8abf1fd4dcf",
+  "junction_info": "0 e3b0c44298fc1c14",
+  "guard": "273 072f1108f7c841cb",
+  "capacity": "12472 abee7dbbffc126b1",
+  "lines_info": "110 85fd7852febb3eb0",
+  "stop_s": "110 697a098ccda9eb71",
+  "passed": "110 b1cd07aa076e8897"
+ }
+}

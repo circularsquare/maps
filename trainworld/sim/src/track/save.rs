@@ -17,7 +17,7 @@ use super::params::*;
 /// Optional trailing blocks follow the lines: `LUI1` (line numbers and symbols) and, when the
 /// player linked stations, `LNK1` (T-197: count, then node pairs in the dense ids). A save without
 /// them loads with none. An edge's flags `| 32` mark a crossover's diagonal (T-338), `| 64`
-/// high-speed track (T-817); older saves have none; bits 11-12 give one-way single track (T-3094: 0 both ways, 1 a to b, 2 b to a). A trailing `LHS1` block (T-817) lists the
+/// high-speed track (T-817); older saves have none; bits 11-12 give one-way single track (T-3094: 0 not set, 1 a to b, 2 b to a, 3 both ways, T-3137), bits 13-14 and 15-16 the joins of its ends a and b (T-3137, `EdgeData::join`). A trailing `LHS1` block (T-817) lists the
 /// lines running high-speed trains; without it all are ordinary. A trailing `LBS2` block (T-1465;
 /// `LBS1`, T-1464, is the same without a kind per point) gives the bus lines their routes; without
 /// it there are none. A trailing `LRT1` block (T-1787) carries the settled rates of the lines with
@@ -58,7 +58,7 @@ pub const BLOCKS: [&[u8; 4]; 22] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 14;
+pub const LEVEL: u32 = 15;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -178,7 +178,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.i(a - prev_a);
         w.i(node_id[d.b as usize] as i64 - a);
         prev_a = a;
-        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4 | (d.crossover as u64) << 5 | (d.kind.is_hsr() as u64) << 6 | (d.sep as u64) << 7 | edge_kind_bits(d.kind) | (if d.tracks == 1 { d.oneway as u64 } else { 0 }) << 11);
+        w.u(d.tracks as u64 | (d.built as u64) << 2 | (!d.thru.is_empty() as u64) << 3 | ((d.off && !d.built) as u64) << 4 | (d.crossover as u64) << 5 | (d.kind.is_hsr() as u64) << 6 | (d.sep as u64) << 7 | edge_kind_bits(d.kind) | (if d.tracks == 1 { d.oneway as u64 | (d.join[0] as u64) << 2 | (d.join[1] as u64) << 4 } else { 0 }) << 11);
         w.u(d.pis.len() as u64);
         let (mut px, mut py) = (net.node_x[d.a as usize], net.node_y[d.a as usize]);
         for p in &d.pis {
@@ -624,7 +624,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         let b = a + r.i()?;
         prev_a = a;
         let tb = r.u()?;
-        unknown += (tb >> 13 != 0) as usize;
+        unknown += (tb >> 17 != 0) as usize;
         let oneway = (tb >> 11 & 3) as u8;
         let (tracks, built, off, crossover, sep) = ((tb & 3) as u8, tb & 4 != 0, tb & 16 != 0, tb & 32 != 0, tb & 128 != 0);
         let kind = match (tb >> 8 & 7) as u8 {
@@ -657,7 +657,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, kind, sep, day: 0, oneway: if oneway == 3 { 0 } else { oneway } })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, kind, sep, day: 0, oneway, join: [(tb >> 13 & 3) as u8, (tb >> 15 & 3) as u8] })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     let (mut dead_node, mut dead_edge) = (None, None);
@@ -964,7 +964,7 @@ mod tests {
             net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
         }
         let e = net.alloc_edge();
-        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 })).unwrap();
+        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] })).unwrap();
         let l = net.alloc_line();
         net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 })).unwrap();
         encode(&net)
@@ -1086,7 +1086,8 @@ mod tests {
         assert_eq!(decode_read(&raw(0, 1)).unwrap().1, 0);
         assert_eq!(decode_read(&raw(1 << 12, 1)).unwrap().1, 2, "both nodes");
         assert_eq!(decode_read(&raw(0, 1 | 1 << 11)).unwrap().1, 0, "one way, a to b");
-        assert_eq!(decode_read(&raw(0, 1 | 1 << 13)).unwrap().1, 1);
+        assert_eq!(decode_read(&raw(0, 1 | 1 << 13 | 2 << 15)).unwrap().1, 0, "joins (T-3137)");
+        assert_eq!(decode_read(&raw(0, 1 | 1 << 17)).unwrap().1, 1);
         assert_eq!(decode_read(&raw(0, 1 | 7 << 8)).unwrap().1, 1, "a kind this build lacks");
         assert_eq!(decode_read(&raw(0, 2 | 3 << 8)).unwrap().1, 0, "a known kind");
     }
@@ -1103,7 +1104,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (14, 22), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (15, 22), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

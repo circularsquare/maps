@@ -81,6 +81,15 @@ pub struct TrackApi {
     route_ramp: bool,
     /// T-1685: the next route runs beside the run through this piece (`set_route_beside`).
     route_beside: Option<u32>,
+    /// T-3137: the points the next route's ends join double track nearest (`set_route_join`), and
+    /// while one is laid out (`route_op`) the ones it uses; NaN for the nearer track.
+    route_join: Option<[f64; 4]>,
+    join_at: [f64; 4],
+    /// T-3137: the last route's joins at its start and end, and its pieces in the order drawn
+    /// (`route_joins`).
+    route_join_out: [u8; 2],
+    route_pieces: Vec<u32>,
+    route_ways: Vec<u8>,
     /// The route being laid out starts on the line beside track: its ends get no lead-ins.
     beside_on: bool,
     /// The way `route_op_as` tries: `Ramp::Flat`, or the preferred way or the other.
@@ -298,6 +307,8 @@ struct Resolved {
     dirs: Vec<f64>,
     /// The route turns it into a junction (it had two edge ends, or it splits track).
     new_junction: bool,
+    /// Double track meets it there (T-3137: single track drawn from it joins one of the two).
+    double: bool,
     /// Ops creating it (a split or a new node), applied before the edge.
     ops: Vec<Op>,
 }
@@ -342,6 +353,11 @@ impl TrackApi {
             route_street: vec![],
             route_ramp: false,
             route_beside: None,
+            route_join: None,
+            join_at: [f64::NAN; 4],
+            route_join_out: [0; 2],
+            route_pieces: vec![],
+            route_ways: vec![],
             beside_on: false,
             ramp_try: Ramp::Flat,
             ramp_found: false,
@@ -1209,11 +1225,12 @@ fn reach_from(net: &Network, stops: &[u32]) -> (Vec<bool>, Vec<bool>) {
     while let Some(st) = queue.pop() {
         let (_, node) = net.path_nodes(st);
         seen_node[node as usize] = true;
-        let arr = net.port_side(super::net::path_edge(st), 1 - super::net::path_dir(st)).unwrap_or(0);
         let p = &net.node_ports[node as usize];
-        let bare = net.bare_end(node);
-        for (k, &c) in p.ends().iter().enumerate() {
-            if (p.side[k] != arr || bare) && !seen[c as usize] {
+        let arr = p.find(super::net::path_edge(st), 1 - super::net::path_dir(st));
+        let link = if net.bare_end(node) { 1 } else { arr.map_or(0, |i| net.node_moves[node as usize].link[i]) };
+        for k in super::lanes::ends_in(link) {
+            let c = p.end[k];
+            if !seen[c as usize] {
                 seen[c as usize] = true;
                 queue.push(c);
             }
@@ -1971,6 +1988,10 @@ impl TrackApi {
     }
 
     // ---- not exported to the app: Rust tests and the `realsave` bin
+    /// The network and service, read-only (`bin/lanes_parity.rs`).
+    pub fn world(&self) -> &TrackWorld {
+        &self.w
+    }
     /// Plane metres to [lon, lat] in the loaded network's frame.
     pub fn to_lonlat(&self, x: f64, y: f64) -> Vec<f64> {
         let (lon, lat) = self.w.net.frame().to_lonlat(x, y);
@@ -2001,7 +2022,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 }) })
@@ -2120,6 +2141,9 @@ mod oneway_tests;
 /// T-3103, T-3092: flat-junction badges and real flyovers.
 #[cfg(test)]
 mod flyover_tests;
+/// T-3137: lanes and the move table.
+#[cfg(test)]
+mod lanes_tests;
 
 #[cfg(test)]
 mod related_tests;

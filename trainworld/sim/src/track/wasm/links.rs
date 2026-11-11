@@ -128,7 +128,7 @@ impl TrackApi {
                     net.edge_len[ei]
                 };
                 let len = (reach + 10.0).min(room).max(reach + 1.0);
-                let d = EdgeData { a: n, b: 0, tracks: net.edge_tracks[ei], pis: vec![], built: net.edge_built[ei], off: net.edge_off[ei], thru: vec![], crossover: false, kind: net.edge_kind[ei], sep: net.edge_sep[ei], day: net.edge_day[ei], oneway: net.edge_oneway[ei] };
+                let d = EdgeData { a: n, b: 0, tracks: net.edge_tracks[ei], pis: vec![], built: net.edge_built[ei], off: net.edge_off[ei], thru: vec![], crossover: false, kind: net.edge_kind[ei], sep: net.edge_sep[ei], day: net.edge_day[ei], oneway: net.edge_oneway[ei], join: [0; 2] };
                 let k = len * kk(net.frame().scaled(), y);
                 let (m, id) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
                 nn.push(m);

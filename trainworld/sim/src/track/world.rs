@@ -683,7 +683,7 @@ impl TrackWorld {
             Op::AutoTrains { id, auto, .. } if self.net.line_auto.get(*id as usize).is_some_and(|a| a.is_some() != auto.is_some()) => Some(*id),
             _ => None,
         };
-        let (mut inv, mut t, mut der) = self.apply_and_derive(op)?;
+        let (mut inv, mut t, mut der) = self.apply_rerouted(op, checked)?;
         let issues = if checked { self.check(&t, &der) } else { vec![] };
         if !issues.is_empty() {
             // Refuse only what the edit adds: problems already there (an old save under a newer
@@ -697,7 +697,7 @@ impl TrackWorld {
             if !added.is_empty() {
                 return Err(added);
             }
-            (inv, t, der) = self.apply_and_derive(again)?;
+            (inv, t, der) = self.apply_rerouted(again, checked)?;
         }
         if !service {
             let (cost_after, built_after) = self.net.total_and_built_cost();
@@ -828,6 +828,56 @@ impl TrackWorld {
         let der = self.net.derive(&t);
         self.note_lines(&t, &der);
         Ok((inv, t, der))
+    }
+
+    /// `apply_and_derive`, and where `rerouted` and the edit changes the way single track runs
+    /// (T-3137), the lines it left running against that way, which it did not break otherwise,
+    /// moved through their same stops in the same edit (`way_reroutes`).
+    fn apply_rerouted(&mut self, op: Op, rerouted: bool) -> Result<(Op, super::net::Touch, super::net::Derived), Vec<Issue>> {
+        let broken = rerouted.then(|| self.net.line_broken.clone());
+        let (inv, mut t, mut der) = self.apply_and_derive(op)?;
+        let ops = match &broken {
+            Some(b) if !der.ways.is_empty() => self.way_reroutes(&der, b),
+            _ => vec![],
+        };
+        if ops.is_empty() {
+            return Ok((inv, t, der));
+        }
+        let Ok((inv2, t2, der2)) = self.apply_and_derive(Op::Batch(ops)) else { return Ok((inv, t, der)) };
+        for (v, w) in [(&mut t.nodes, t2.nodes), (&mut t.edges, t2.edges), (&mut t.stations, t2.stations), (&mut t.lines, t2.lines), (&mut t.schedules, t2.schedules), (&mut der.edges, der2.edges), (&mut der.nodes, der2.nodes), (&mut der.ways, der2.ways)] {
+            v.extend(w);
+            v.sort_unstable();
+            v.dedup();
+        }
+        t.paths_changed |= t2.paths_changed;
+        der.crossings.extend(der2.crossings);
+        Ok((Op::Batch(vec![inv2, inv]), t, der))
+    }
+
+    /// T-3137: ops moving each rail line on track whose way the edit changed (`der.ways`) that it
+    /// left broken (`broken`: as they were before) onto a path through its same stops that runs every
+    /// track's way, as `TrackApi::set_edge_oneway` does; one with no such path stays broken.
+    fn way_reroutes(&self, der: &super::net::Derived, broken: &[bool]) -> Vec<Op> {
+        let net = &self.net;
+        let mut lines: Vec<u32> = der.ways.iter().flat_map(|&e| net.lines_on_edge(e).iter().copied()).collect();
+        lines.extend(net.back_lines());
+        lines.sort_unstable();
+        lines.dedup();
+        let mut ops = vec![];
+        for l in lines {
+            let li = l as usize;
+            if !net.line_ok(l) || !net.line_broken[li] || broken.get(li).copied().unwrap_or(false) || net.is_bus(l) || net.is_ferry(l) || !net.line_path(l).iter().all(|&p| net.edge_ok(path_edge(p))) {
+                continue;
+            }
+            let stops = net.line_stops(l);
+            let once = net.line_runs_once(l);
+            let Some(path) = net.route_hops(stops).ok().filter(|p| once || net.back_path_of(stops, p).is_some()) else { continue };
+            if let Some(mut d) = net.line_data(l).filter(|d| d.path != path) {
+                d.path = path;
+                ops.push(Op::Line { id: l, data: Some(d) });
+            }
+        }
+        ops
     }
 
     /// Problems on what an edit touched: its edges, their nodes and stations, their crossings,

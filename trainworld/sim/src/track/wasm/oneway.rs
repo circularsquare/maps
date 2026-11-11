@@ -5,21 +5,39 @@ use crate::track::net::path_edge;
 
 #[wasm_bindgen]
 impl TrackApi {
-    /// An edge's one-way flag: 0 both ways, 1 a to b only, 2 b to a only.
+    /// An edge's one-way flag as the player set it: 0 not set, 1 a to b only, 2 b to a only, 3 both
+    /// ways (T-3137).
     pub fn edge_oneway(&self, edge: u32) -> u8 {
         let n = &self.w.net;
         if n.edge_ok(edge) { n.edge_oneway[edge as usize] } else { 0 }
     }
 
-    /// The edges that run one way, as pairs: edge, flag.
-    pub fn oneway_edges(&self) -> Vec<u32> {
+    /// T-3137: the way an edge runs, set or taken by itself (`Network::edge_way`): 0 both ways, 1 a
+    /// to b, 2 b to a.
+    pub fn edge_way(&self, edge: u32) -> u8 {
         let n = &self.w.net;
-        (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_oneway[e as usize] != 0).flat_map(|e| [e, n.edge_oneway[e as usize] as u32]).collect()
+        if n.edge_ok(edge) { n.edge_way(edge) } else { 0 }
     }
 
-    /// Set single track to run one way (`dir` 1 a to b, 2 b to a) or both (0). Free and one undoable
-    /// edit: the lines that ran the other way through it take another way through the same stops in
-    /// the same edit, and it is refused (`OneWayNoWay`) when one has none.
+    /// The edges that run one way (`edge_way`), as pairs: edge, way.
+    pub fn oneway_edges(&self) -> Vec<u32> {
+        let n = &self.w.net;
+        (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_way(e) != 0).flat_map(|e| [e, n.edge_way(e) as u32]).collect()
+    }
+
+    /// T-3137: single track's joins that count (`Network::join_away`), as pairs: edge, its end a's
+    /// join plus 4 x its end b's (`EdgeData::join`: 1 the left track looking out along the piece,
+    /// 2 the right).
+    pub fn join_edges(&self) -> Vec<u32> {
+        let n = &self.w.net;
+        let counted = |e: u32, which: u32| if n.join_away(e << 1 | which).is_some() { n.edge_join[e as usize][which as usize] as u32 } else { 0 };
+        (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e) && n.edge_tracks[e as usize] == 1).map(|e| (e, counted(e, 0) | counted(e, 1) << 2)).filter(|x| x.1 != 0).flat_map(|(e, j)| [e, j]).collect()
+    }
+
+    /// Set single track to run one way (`dir` 1 a to b, 2 b to a), both ways (3), or the way its run
+    /// takes by itself (0). Free and one undoable edit: the lines that ran the other way through it
+    /// take another way through the same stops in the same edit, and it is refused (`OneWayNoWay`)
+    /// when one has none.
     pub fn set_edge_oneway(&mut self, edge: u32, dir: u8) -> u32 {
         match self.oneway_ops(edge, dir) {
             Ok((ops, _)) => self.run(Op::Batch(ops)),
@@ -50,7 +68,7 @@ impl TrackApi {
             return Err(Issue::NoSuchEdge { edge });
         }
         let mut d = net.edge_data(edge).ok_or(Issue::NoSuchEdge { edge })?;
-        if dir > 2 || (dir != 0 && (d.tracks != 1 || d.crossover)) {
+        if dir > 3 || (dir != 0 && (d.tracks != 1 || d.crossover)) {
             return Err(Issue::Tracks { edge });
         }
         d.oneway = dir;
@@ -58,9 +76,7 @@ impl TrackApi {
         let rail = |l: u32| net.line_ok(l) && net.line_bus.get(l as usize).map_or(true, |b| b.is_none()) && net.line_ferry.get(l as usize).map_or(true, |f| f.is_none());
         // lines whose return run goes round other one-way track may now go round this
         let mut hit: Vec<u32> = (0..net.line_count() as u32).filter(|&l| rail(l) && net.line_path(l).iter().any(|&p| path_edge(p) == edge)).collect();
-        if dir != 0 {
-            hit.extend(net.back_lines());
-        }
+        hit.extend(net.back_lines());
         hit.sort_unstable();
         hit.dedup();
         let lines: Vec<(u32, Vec<u32>, Vec<u32>, bool)> = hit.iter().map(|&l| (l, net.line_stops(l).to_vec(), net.line_path(l).to_vec(), net.line_runs_once(l))).collect();

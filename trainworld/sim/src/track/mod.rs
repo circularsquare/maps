@@ -46,6 +46,7 @@ pub mod cross;
 pub mod ferry;
 pub mod frame;
 pub mod geom;
+pub mod lanes;
 pub mod localtime;
 pub mod names;
 pub mod net;

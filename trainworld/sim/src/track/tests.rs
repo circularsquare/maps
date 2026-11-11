@@ -21,7 +21,7 @@ pub fn node(w: &mut TrackWorld, x: f64, y: f64, level: i8) -> u32 {
 pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -> Result<u32, Vec<Issue>> {
     let id = w.net.alloc_edge();
     let pis = pis.iter().map(|&(x, y)| Pi::new(x, y, 0.0, level)).collect();
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) })?;
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) })?;
     Ok(id)
 }
 
@@ -68,7 +68,7 @@ fn unused_blueprint_extension_preserves_running_service_but_planned_lines_previe
         let trips = w.svc.trips(&w.net, 28800.0, 32400.0);
         let blueprint = w.net.alloc_edge();
         w.apply(Op::Edge { id: blueprint, data: Some(EdgeData {
-            a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0,
+            a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2],
         }) }).unwrap();
         let check = |w: &TrackWorld| {
             let after = &w.svc.lines[l as usize];
@@ -1330,7 +1330,7 @@ fn hsr_world(hsr: [bool; 2], fast: bool) -> (TrackWorld, u32) {
     let c = node(&mut w, 80000.0, 0.0, 0);
     for (k, (p, q)) in [(a, b), (b, c)].into_iter().enumerate() {
         let id = w.net.alloc_edge();
-        w.apply(Op::Edge { id, data: Some(EdgeData { a: p, b: q, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::from_hsr(hsr[k]), sep: false, day: 0, oneway: 0 }) }).unwrap();
+        w.apply(Op::Edge { id, data: Some(EdgeData { a: p, b: q, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::from_hsr(hsr[k]), sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     }
     station(&mut w, a, 200);
     station(&mut w, c, 200);
@@ -1406,7 +1406,7 @@ fn curves_cap_high_speed_trains_below_the_track_cap() {
     let id = w.net.alloc_edge();
     // one bend of 3,000 m radius in the middle: sqrt(1.1 x 3000) = 57.4 m/s, 207 km/h
     let pis = vec![Pi::new(40000.0, 0.0, 3000.0, 0)];
-    w.apply(Op::Edge { id, data: Some(EdgeData { a, b: c, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::HighSpeed, sep: false, day: 0, oneway: 0 }) }).unwrap();
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b: c, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::HighSpeed, sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     station(&mut w, a, 200);
     station(&mut w, c, 200);
     let l = line(&mut w, &[a, c], [4.0, 2.0, 1.0]);

@@ -6,6 +6,7 @@
 //! legs leave the main at J, the point clicked, so a flyover needs room only ahead of it.
 
 use super::*;
+use crate::track::lanes::join_for;
 
 /// The crossing leg's distance from the plain leg beside it, and from the main on its far side, m.
 const GAP: f64 = beside::BESIDE_SPACING;
@@ -438,10 +439,16 @@ impl TrackApi {
             };
             d.tracks = 1;
             d.oneway = if fwd == plain_out { 1 } else { 2 };
+            // T-3137: its ends at J and J3 join the track that runs its way
+            for (k, n) in [(0, d.a), (1, d.b)] {
+                if n == j || n == j3 {
+                    d.join[k] = join_for((n == j) == plain_out, net.right_hand);
+                }
+            }
             ops.push(Op::Edge { id, data: Some(d) });
         }
         let pis = shape[1..shape.len() - 1].to_vec();
-        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 } }) });
+        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)] }) });
         Some((ops, vec![j3], vec![e3b, leg], shape))
     }
 }

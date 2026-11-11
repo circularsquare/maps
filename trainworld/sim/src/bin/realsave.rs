@@ -136,7 +136,7 @@ fn main() {
                 pis.push(Pi::new(lb.0, lb.1, 0.0, -1).quantised());
             }
             let e = net.alloc_edge();
-            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: true, day: 0, oneway: 0 })).is_err() {
+            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: true, day: 0, oneway: 0, join: [0; 2] })).is_err() {
                 refused += 1;
             }
             edge_ids.push(e);
@@ -267,7 +267,7 @@ fn main() {
             }
             pis.push(Pi::new(lead_b.0, lead_b.1, 0.0, level).quantised());
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: trainworld_sim::track::params::TrackKind::from_hsr(hsr), sep: true, day: 0, oneway: 0 })).unwrap();
+            net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: trainworld_sim::track::params::TrackKind::from_hsr(hsr), sep: true, day: 0, oneway: 0, join: [0; 2] })).unwrap();
             path.push(e << 1);
         }
         let tph: Vec<f32> = l["tph"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap() as f32).collect();

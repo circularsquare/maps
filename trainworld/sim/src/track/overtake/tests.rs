@@ -15,7 +15,7 @@ fn shinkansen() -> (TrackWorld, Vec<u32>, u32, u32) {
     let n: Vec<u32> = (0..7).map(|k| node(&mut w, k as f64 * 30_000.0, 0.0, 0)).collect();
     for k in 0..6 {
         let id = w.net.alloc_edge();
-        w.apply(Op::Edge { id, data: Some(EdgeData { a: n[k], b: n[k + 1], tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: crate::track::params::TrackKind::HighSpeed, sep: false, day: 0, oneway: 0 }) }).unwrap();
+        w.apply(Op::Edge { id, data: Some(EdgeData { a: n[k], b: n[k + 1], tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: crate::track::params::TrackKind::HighSpeed, sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     }
     for &x in &n {
         station(&mut w, x, 400);

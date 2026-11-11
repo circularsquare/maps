@@ -17,6 +17,8 @@ impl TrackApi {
     pub(super) fn route_op(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         self.route_legs.clear();
         self.flyover_fell_back = 0;
+        self.join_at = self.route_join.take().unwrap_or([f64::NAN; 4]);
+        (self.route_join_out, self.route_pieces) = ([0; 2], vec![]);
         let r = self.route_op_plain(ends, pis, tracks)?;
         Ok(if flying { self.with_flyovers(r, tracks) } else { r })
     }
@@ -244,7 +246,25 @@ impl TrackApi {
         } else {
             stroke_pieces(shape, first_click, clicks, scaled, kind.spec().min_radius).into_iter().map(|p| (p, kind)).collect()
         };
+        let first_piece = new_edges.len();
         self.push_pieces(&pieces, ra.node, rb.node, tracks, &mut ops, &mut new_nodes, &mut new_edges);
+        self.route_pieces = new_edges[first_piece..].to_vec();
+        // T-3137: which track of double track single track meets at each end
+        let (at, back) = (self.join_at, verts.iter().rev().copied().collect::<Vec<Pi>>());
+        for (k, (r, out, at)) in [(&ra, &verts, (at[0], at[1])), (&rb, &back, (at[2], at[3]))].into_iter().enumerate() {
+            let (own, theirs) = end_joins(&self.w.net, r, out, at, tracks == 1);
+            self.route_join_out[k] = own;
+            let piece = if k == 0 { self.route_pieces.first() } else { self.route_pieces.last() };
+            if let Some(Op::Edge { data: Some(d), .. }) = ops.iter_mut().find(|o| matches!(o, Op::Edge { id, .. } if Some(id) == piece)) {
+                d.join[k] = own;
+            }
+            for (c, j) in theirs {
+                if let Some(mut d) = self.w.net.edge_data(c >> 1) {
+                    d.join[(c & 1) as usize] = j;
+                    ops.push(Op::Edge { id: c >> 1, data: Some(d) });
+                }
+            }
+        }
         self.route_bridged = bridged.unwrap_or_default();
         let mut express = vec![];
         if quad {
@@ -314,7 +334,7 @@ impl TrackApi {
             End::Free { x, y, level } => {
                 let node = self.w.net.alloc_node();
                 nodes.push(node);
-                Ok(Resolved { node, x, y, level, dirs: vec![], new_junction: false, ops: vec![Op::Node { id: node, data: Some(NodeData { x, y, level, flying: false }) }] })
+                Ok(Resolved { node, x, y, level, dirs: vec![], new_junction: false, double: false, ops: vec![Op::Node { id: node, data: Some(NodeData { x, y, level, flying: false }) }] })
             }
             End::Node(n) => {
                 if !net.node_ok(n) {
@@ -329,7 +349,7 @@ impl TrackApi {
                     1 => vec![if p.side[0] == 1 { h + PI } else { h }],
                     _ => vec![h, h + PI],
                 };
-                Ok(Resolved { node: n, x: net.node_x[i], y: net.node_y[i], level: net.node_level[i], dirs, new_junction: p.n == 2 && net.node_platform[i] == 0, ops: vec![] })
+                Ok(Resolved { node: n, x: net.node_x[i], y: net.node_y[i], level: net.node_level[i], dirs, new_junction: p.n == 2 && net.node_platform[i] == 0, double: p.ends().iter().any(|&c| net.edge_tracks[(c >> 1) as usize] == 2 && !net.edge_crossover[(c >> 1) as usize]), ops: vec![] })
             }
             End::Edge { e, x, y } => {
                 if !net.edge_ok(e) {
@@ -350,6 +370,7 @@ impl TrackApi {
                         }
                     }
                 }
+                let double = net.edge_tracks[e as usize] == 2;
                 let node = self.w.net.alloc_node();
                 let new_edge = self.w.net.alloc_edge();
                 nodes.push(node);
@@ -358,7 +379,7 @@ impl TrackApi {
                     // The first end's split created edges[0] (its new half).
                     target = edges[0];
                 }
-                Ok(Resolved { node, x: nd.x, y: nd.y, level: nd.level, dirs: vec![heading, heading + PI], new_junction: true, ops: vec![Op::Split { edge: target, s, node, new_edge }] })
+                Ok(Resolved { node, x: nd.x, y: nd.y, level: nd.level, dirs: vec![heading, heading + PI], new_junction: true, double, ops: vec![Op::Split { edge: target, s, node, new_edge }] })
             }
         }
     }
@@ -621,8 +642,10 @@ impl TrackApi {
         // T-3103: a junction's flat badge only where two moves through it can cross; on a refused
         // edit, every junction it would make
         let js: Vec<u32> = self.route_junctions.iter().map(|j| j.0).collect();
-        let r = self.w.trial_light(op, |w| js.iter().map(|&n| crate::track::capacity::junction_crosses(&w.net, n)).collect::<Vec<_>>());
-        let crosses = r.as_ref().map_or_else(|_| vec![true; js.len()], |v| v.1.clone());
+        let pieces = self.route_pieces.clone();
+        let r = self.w.trial_light(op, |w| (js.iter().map(|&n| crate::track::capacity::junction_crosses(&w.net, n)).collect::<Vec<_>>(), pieces.iter().map(|&e| w.net.edge_way(e)).collect::<Vec<u8>>()));
+        let crosses = r.as_ref().map_or_else(|_| vec![true; js.len()], |v| v.1 .0.clone());
+        self.route_ways = r.as_ref().map_or_else(|_| vec![], |v| v.1 .1.clone());
         let r = r.map(|v| v.0);
         self.release(&nn, &ne);
         let r = if self.bridge_refused { r.map_err(|i| bridge_refusal(i, &self.bridge_short)) } else { r };
@@ -739,6 +762,21 @@ impl TrackApi {
         self.route_beside = (to_edge != u32::MAX).then_some(to_edge);
     }
 
+    /// T-3137: which of double track's two tracks the next single-track route (preview or add)
+    /// joins at its start and its end: `p` = start x, y, end x, y, a point on the track to join
+    /// (the pointer); NaN for the track beside the route there, which it meets without crossing the
+    /// other (`end_joins`). Used once.
+    pub fn set_route_join(&mut self, p: &[f64]) {
+        self.route_join = (p.len() >= 4).then(|| [p[0], p[1], p[2], p[3]]);
+    }
+
+    /// T-3137: the last route's (preview or add) joins at its start and end (`EdgeData::join`: 0
+    /// none, 1 the left track looking out from the node along the route, 2 the right), then per
+    /// piece in the order drawn its way after the edit: 0 both, 1 along the drawing, 2 against.
+    pub fn route_joins(&self) -> Vec<u8> {
+        self.route_join_out.iter().chain(&self.route_ways).copied().collect()
+    }
+
     /// The circle of the last route preview's tangent arc (T-418): centre x, y and ground radius,
     /// even when the route was refused; empty when it had none.
     pub fn route_arc(&self) -> Vec<f64> {
@@ -797,7 +835,7 @@ impl TrackApi {
             };
             let edge = self.w.net.alloc_edge();
             edges.push(edge);
-            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0 }) });
+            ops.push(Op::Edge { id: edge, data: Some(EdgeData { a: from, b: to, tracks, pis: p[1..p.len() - 1].to_vec(), built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2] }) });
             from = to;
         }
     }
@@ -809,6 +847,8 @@ impl TrackApi {
             Err(i) => return self.refuse(i),
         };
         let r = self.run(op);
+        let net = &self.w.net;
+        self.route_ways = if r == 0 { self.route_pieces.iter().map(|&e| net.edge_way(e)).collect() } else { vec![] };
         if r != 0 {
             self.release(&nn, &ne);
             if self.bridge_refused && self.money_short.is_none() {
@@ -1180,6 +1220,83 @@ pub(super) const BRANCH_CLEAR: f64 = 20.0;
 /// `JOINT_SNAP` of that), or carries on from a track end short of it. A station at the end of its
 /// track, clicked on its node or with `toward` out past that end, is extended as it is. Any other
 /// end is unchanged.
+/// T-3137: the joins (`EdgeData::join`) a route makes at its end `r` (`out` its corners from there)
+/// with double track there. Its own, where it is `single`: the track on `at`'s side of double track's
+/// centre line, or with `at` NaN the track beside it, which it meets without crossing the other: on
+/// its side of the double track it leaves on its side, else of the other single track there. And
+/// where it makes a junction of a plain joint, single track's end there takes the track beside it
+/// the same way, as (edge end, join). Every lateral position is 200 m out, as `derive_node` ranks ends.
+fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bool) -> (u8, Vec<(u32, u8)>) {
+    if !r.double || r.dirs.len() != 2 || out.len() < 2 {
+        return (0, vec![]);
+    }
+    let (dx, dy) = (out[1].x - r.x, out[1].y - r.y);
+    let along = |th: f64| th.cos() * dx + th.sin() * dy;
+    let th = if along(r.dirs[0]) >= along(r.dirs[1]) { r.dirs[0] } else { r.dirs[1] };
+    let left_of = |x: f64, y: f64| th.cos() * (y - r.y) - th.sin() * (x - r.x);
+    let f = geom::fit_in(out, net.frame().scaled());
+    let mine = match f.pieces.is_empty() {
+        true => out[1..].iter().map(|p| left_of(p.x, p.y)).find(|l| l.abs() > 0.5).unwrap_or(0.0),
+        false => {
+            let (x, y, _) = geom::pos_at(&f.pieces, f.len.min(200.0));
+            left_of(x, y)
+        }
+    };
+    // the ends there already: (edge end, lateral, double, on the route's side); a split's halves
+    // run along the centre line
+    let split = r.ops.iter().any(|o| matches!(o, Op::Split { .. }));
+    let there: Vec<(u32, f64, bool, bool)> = if split {
+        vec![(u32::MAX, 0.0, true, true), (u32::MAX, 0.0, true, false)]
+    } else {
+        net.node_ports[r.node as usize]
+            .ends()
+            .iter()
+            .filter_map(|&c| {
+                let (e, which) = (c >> 1, c & 1);
+                let (pcs, len) = (net.edge_pieces(e), net.edge_len[e as usize]);
+                if pcs.is_empty() {
+                    return None;
+                }
+                let d = len.min(200.0);
+                let (h, (x, y, _)) = if which == 0 { (geom::pos_at(pcs, 0.0).2, geom::pos_at(pcs, d)) } else { (geom::pos_at(pcs, len).2 + PI, geom::pos_at(pcs, len - d)) };
+                Some((c, left_of(x, y), net.edge_tracks[e as usize] == 2 && !net.edge_crossover[e as usize], (h - th).cos() > 0.0))
+            })
+            .collect()
+    };
+    let beside = |me: f64, others: &[(f64, bool)]| -> u8 {
+        match others.iter().find(|o| o.1) {
+            Some(d) => if me > d.0 { 1 } else { 2 },
+            None if !others.is_empty() && others.iter().all(|o| me > o.0) => 1,
+            None if !others.is_empty() && others.iter().all(|o| me < o.0) => 2,
+            None => 0,
+        }
+    };
+    let own = if !single || !there.iter().any(|t| !t.3 && t.2) {
+        0
+    } else if at.0.is_finite() && at.1.is_finite() {
+        let l = left_of(at.0, at.1);
+        if l > 0.0 { 1 } else if l < 0.0 { 2 } else { 0 }
+    } else {
+        beside(mine, &there.iter().filter(|t| t.3).map(|t| (t.1, t.2)).collect::<Vec<_>>())
+    };
+    let mut theirs = vec![];
+    if !split && r.new_junction && there.iter().any(|t| !t.3 && t.2) {
+        for t in there.iter().filter(|t| t.3) {
+            let e = (t.0 >> 1) as usize;
+            if net.edge_tracks[e] != 1 || net.edge_crossover[e] || net.edge_join[e][(t.0 & 1) as usize] != 0 {
+                continue;
+            }
+            let mut others: Vec<(f64, bool)> = there.iter().filter(|u| u.3 && u.0 != t.0).map(|u| (u.1, u.2)).collect();
+            others.push((mine, !single));
+            let j = beside(t.1, &others);
+            if j != 0 {
+                theirs.push((t.0, j));
+            }
+        }
+    }
+    (own, theirs)
+}
+
 fn branch_end(net: &Network, end: End, toward: (f64, f64)) -> Result<(End, Option<(f64, f64)>), Issue> {
     let station = |n: u32| net.node_ok(n) && net.node_platform[n as usize] > 0 && net.node_ports[n as usize].n > 0;
     let n = match end {

@@ -205,7 +205,7 @@ fn blueprint_extension_does_not_change_dead_end_turnaround_capacity() {
     super::super::tests::terminals_at_dead_ends(&mut w);
     let c = node(&mut w, 6000.0, 0.0, 0);
     let id = w.net.alloc_edge();
-    w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0 }) }).unwrap();
+    w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a: b, b: c, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     assert_eq!(w.net.built_ports(b), 1);
     let cap = &w.svc.cap;
     let term = cap.res.iter().position(|r| r.node == b && r.kind == ResKind::Terminus).unwrap();
@@ -284,7 +284,7 @@ fn double_track_blueprint_cannot_double_single_track_terminal_capacity() {
     w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
     station(&mut w, a, 200); station(&mut w, b, 200); line(&mut w, &[a,b], [8.0,4.0,2.0]);
     let c = node(&mut w, 6000.0, 0.0, 0); let extension = w.net.alloc_edge();
-    w.apply(Op::Edge { id: extension, data: Some(super::super::net::EdgeData { a:b,b:c,tracks:2,pis:vec![],built:false,off:false,thru:vec![],crossover:false, kind: crate::track::params::TrackKind::Regular, sep: false, day: 0, oneway: 0 }) }).unwrap();
+    w.apply(Op::Edge { id: extension, data: Some(super::super::net::EdgeData { a:b,b:c,tracks:2,pis:vec![],built:false,off:false,thru:vec![],crossover:false, kind: crate::track::params::TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     assert_eq!(w.net.node_tracks(b), 2, "planning geometry retains proposed double track");
     assert_eq!(active_node_tracks(&w.net,b),1, "active capacity sees only constructed track");
     let r = w.svc.cap.res.iter().position(|r|r.node==b&&r.kind==ResKind::Terminus).unwrap();
@@ -521,7 +521,7 @@ fn a_tram_section_takes_about_40_trains_an_hour() {
     let c = node(&mut w, 6000.0, 0.0, 0);
     for (x, y) in [(a, b), (b, c)] {
         let e = w.net.alloc_edge();
-        let d = super::super::net::EdgeData { a: x, b: y, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: super::super::params::TrackKind::StreetTram, sep: false, day: 0, oneway: 0 };
+        let d = super::super::net::EdgeData { a: x, b: y, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: super::super::params::TrackKind::StreetTram, sep: false, day: 0, oneway: 0, join: [0; 2] };
         w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
     }
     for n in [a, b, c] { station(&mut w, n, 40); }
@@ -782,7 +782,7 @@ fn high_speed_behind_ordinary_trains() {
     let a = node(&mut w, 0.0, 0.0, 0);
     let b = node(&mut w, 60000.0, 0.0, 0);
     let id = w.net.alloc_edge();
-    w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a, b, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::HighSpeed, sep: false, day: 0, oneway: 0 }) }).unwrap();
+    w.apply(Op::Edge { id, data: Some(super::super::net::EdgeData { a, b, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::HighSpeed, sep: false, day: 0, oneway: 0, join: [0; 2] }) }).unwrap();
     station(&mut w, a, 200);
     station(&mut w, b, 200);
     let slow = line(&mut w, &[a, b], [8.0, 0.0, 0.0]);

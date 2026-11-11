@@ -349,7 +349,7 @@ impl TrackApi {
                 let Some((o, which, od)) = self.plain_joint(node, cur) else { break };
                 // a one-way piece joins only one that runs the same way along the joined edge (T-3094)
                 let flip = if k == 0 { which == 0 } else { which == 1 };
-                let sense = if flip && od.oneway != 0 { 3 - od.oneway } else { od.oneway };
+                let sense = if flip && matches!(od.oneway, 1 | 2) { 3 - od.oneway } else { od.oneway };
                 if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover || sense != d.oneway {
                     break;
                 }
@@ -399,6 +399,8 @@ impl TrackApi {
         let s = s + sides[0].iter().map(|m| net.edge_len[m.0 as usize]).sum::<f64>();
         let a = sides[0].last().map_or(d.a, |m| net.end_node(m.0, 1 - m.1));
         let b = sides[1].last().map_or(d.b, |m| net.end_node(m.0, 1 - m.1));
+        // T-3137: the joined edge's ends are its outer pieces' far ends
+        let join = [sides[0].last().map_or(d.join[0], |m| m.2.join[(1 - m.1) as usize]), sides[1].last().map_or(d.join[1], |m| m.2.join[(1 - m.1) as usize])];
         let mut pis: Vec<Pi> = verts.iter().map(|v| v.0).collect();
         let f = net.fit(&pis);
         for j in 1..pis.len() - 1 {
@@ -407,7 +409,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, oneway: d.oneway, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, oneway: d.oneway, join, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));

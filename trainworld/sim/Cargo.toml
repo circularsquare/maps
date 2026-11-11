@@ -41,6 +41,11 @@ path = "src/bin/track_bench.rs"
 name = "edit_bench"
 path = "src/bin/edit_bench.rs"
 
+# T-3137: what the lanes and move tables decide, fingerprinted to compare two builds.
+[[bin]]
+name = "lanes_parity"
+path = "src/bin/lanes_parity.rs"
+
 # T-019: the pipeline's gravity step (pipeline/build_city.py runs it).
 [[bin]]
 name = "pack_gravity"

@@ -45,6 +45,12 @@ pub const CROSSOVER_LEN: f64 = 120.0;
 pub const CROSSOVER_REACH: f64 = 15.0;
 pub const CROSSOVER_MIN_GAP: f64 = 6.0;
 pub const V_CROSSOVER: f64 = 50.0 / 3.6;
+/// Double track's two tracks lie this far either side of its centre line, m (4 m apart, T-319);
+/// `lanes.rs`.
+pub const LANE_HALF_M: f64 = 2.0;
+/// Each edge end's slot across a node, m (T-3137): wider than a double end's two lanes, so the
+/// ends' lanes never interleave.
+pub const PORT_PITCH_M: f64 = 8.0;
 
 // ---- levels (SPEC 6.1) ----
 
@@ -529,7 +535,7 @@ mod kind_tests {
         }
         for (k, kind) in kinds.into_iter().enumerate() {
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0 })).unwrap();
+            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2] })).unwrap();
         }
         net
     }

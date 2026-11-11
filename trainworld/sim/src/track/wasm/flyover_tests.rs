@@ -49,9 +49,21 @@ fn t3103_badge_only_where_moves_cross() {
     let j = y_junction(&mut a, 0.0, 2, 2);
     assert!(junction_crosses(&a.w.net, j));
     assert_eq!(flags(&a, j), 2);
-    // a two-way single branch off double track crosses too
+    // T-3137: a single stub off double track joins the track on its own side, so runs one way and
+    // crosses nothing; a station at its end makes it a two-way branch, whose trains back cross
     let j = y_junction(&mut a, 3000.0, 2, 1);
+    assert!(!junction_crosses(&a.w.net, j));
+    let end = *dead_ends(&a).iter().find(|&&n| (a.w.net.node_x[n as usize] - 2000.0).abs() < 1.0 && (a.w.net.node_y[n as usize] - 2400.0).abs() < 1.0).unwrap();
+    let (x, y) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+    assert_eq!(a.add_station(1, end, x, y, 200, "Branch".into()), 0, "{}", a.issues());
     assert!(junction_crosses(&a.w.net, j));
+    // joined to the far track, the stub's one way crosses the near one
+    assert_eq!(a.add_route(&ends(free(0.0, 15000.0), free(3000.0, 15000.0)), &[], 2, false), 0, "{}", a.issues());
+    let e = *alive(&a).iter().find(|&&e| a.w.net.project(e, 1000.0, 15000.0).1 < 1.0).unwrap();
+    a.set_route_join(&[1000.0, 15002.0, f64::NAN, f64::NAN]);
+    assert_eq!(a.add_route(&ends([2.0, e as f64, 1000.0, 15000.0, 0.0], free(2000.0, 14400.0)), &[], 1, false), 0, "{}", a.issues());
+    assert_eq!(a.route_joins()[0], 1, "the left track looking out along the branch");
+    assert!(junction_crosses(&a.w.net, junction_near(&a, 1000.0, 15000.0)));
     // single track throughout: every move shares the one track; merges only
     let j = y_junction(&mut a, 6000.0, 1, 1);
     assert!(!junction_crosses(&a.w.net, j));

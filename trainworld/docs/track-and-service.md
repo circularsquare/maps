@@ -203,17 +203,40 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
   apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
-  tracks.) **Single track** stays in the track model but the Build tab does not offer it (T-733;
-  it may come back for rural or regional lines): saves and imports that have it load and run.
-  It is cheaper, both directions share it, with sections split at stations; a single-track
-  station has one shared platform track and gets no passing loop.
-- **One-way single track** (T-3094): single track can run one way (`EdgeData.oneway`: 0 both ways,
-  1 a to b only, 2 b to a only; saves hold it in edge flag bits 11-12, older saves read 0; never set on double
-  track, a crossover, high-speed or tram track, and cleared when the piece stops being single). The track
-  inspector's "Run trains one way" switch sets it, a-to-b first, and "Reverse direction" turns it round
-  (`TrackApi::set_edge_oneway`, free, one undo step; `edge_oneway` and `oneway_edges` give the flags to the
-  app). Route searches (`find_path_turn`, `loop_back`) and `check_line` skip an entry against it
-  (`Network::dir_ok`). A line's return run is its path backward, so a line that goes both ways over a
+  tracks.) **Single track** is the track bar's other count (regular track only): cheaper, one
+  track for both directions unless it runs one way (below), with sections split at stations; a
+  single-track station has one shared platform track and gets no passing loop.
+- **Single track meeting double track** (T-3137, notes/T-3137.md "C2 as built"): where a single-track
+  piece's end meets double track at a junction, it **joins one of the double's two tracks**
+  (`EdgeData.join` per end: 0 none, 1 the left track looking out from the node along the piece, 2 the
+  right; saves hold it in edge flag bits 13-14 and 15-16, older saves read 0, which joins neither and
+  behaves as before joins). A join counts only at a node of three or more ends with double track on the
+  end's other side (`Network::join_away`); one left at a node that stops qualifying is kept and ignored.
+  The drawing tool sets it: `set_route_join` names a point on the track to join at each end (the
+  pointer, from C3 on), else the route takes the track beside it, the one it meets without crossing the
+  other (on its side of the double track it leaves, or of the other single track there). A single-track
+  route that makes a junction of a plain joint between double and single track also gives that single
+  end the track beside it. Splits keep each outer end's join on its half, joined pieces keep their
+  outer ends', and a piece that stops being single loses its joins.
+- **The way single track runs** (T-3094, T-3137): every single-track piece runs both ways or one way
+  (`Network::edge_way`: 0, 1 a to b, 2 b to a). The player's `EdgeData.oneway` decides where set (1 a to
+  b, 2 b to a, 3 both ways; saves hold it in edge flag bits 11-12, older saves read 0 = not set; never
+  set on double track, a crossover, high-speed or tram track, and cleared when the piece stops being
+  single). Otherwise the piece takes the way of its **run** (`lanes.rs` `derive_ways`, again on every
+  edit for each run it touches, and on load): the single-track pieces through nodes where only two of
+  them meet. Each run end votes: a join gives the way trains keep to on that track (the right track
+  looking out along the piece carries trains away from the node with right-hand running), a bare track
+  end says nothing, and anything else says both ways (a station, double track or a crossover end to
+  end, a junction end with no join). A station anywhere on the run also says both. The run runs one way
+  where its join votes agree (at least one) and nothing says both; otherwise both ways, so a branch to
+  a terminus runs both ways and a hand-laid flyover's legs, joined the way their trains come, each one
+  way. The track inspector's "Run trains one way" switch sets `oneway` 1, "Reverse direction" turns it
+  round (`TrackApi::set_edge_oneway`, free, one undo step, 0 to 3; `edge_oneway` gives the set value,
+  `edge_way` and `oneway_edges` the way, `join_edges` the joins that count). Route searches
+  (`find_path_turn`, `loop_back`) and `check_line` skip an entry against the way (`Network::dir_ok`).
+  An edit that changes a run's way moves each line it left running against it through its same stops
+  (`route_hops`), in the same edit (`TrackWorld::way_reroutes`); one with no such way is left broken,
+  never refused. A line's return run is its path backward, so a line that goes both ways over a
   one-way piece takes **its own way back**: `Network::back_path_of` routes the stops in reverse order
   when the reversed path runs against a one-way piece, and `build_run` builds the return run from it (a
   loop that runs one way has no return run and needs none). A line with no way back is broken
@@ -223,9 +246,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   the app asks first, listing the lines whose way changes ("{line} takes another way", `oneway_effects`),
   and the edit is refused (`OneWayNoWay`) when a line has no other way. A line already on its way keeps it.
   Splitting a piece keeps the flag on both halves; pieces join only with the same way along the joined
-  piece. Capacity: one-way single track is a directed track like double (section = `edge_section_s` +
-  v / `SIGNAL_BRAKE`, per direction, `capacity::directed`), not shared. Platforms and stations on it
-  are unchanged. The map draws chevrons along it (`oneWayTrackChevrons`), the hover says "One way".
+  piece. Capacity: single track that runs one way, set or by its run, is a directed track like double
+  (section = `edge_section_s` + v / `SIGNAL_BRAKE`, per direction, `capacity::directed`), not shared.
+  Platforms and stations on it are unchanged. The map draws chevrons along it (`oneWayTrackChevrons`),
+  the hover says "One way".
 - **Quad track** (T-255): the other setting. The stroke draws the double track as usual and an
   express double track beside it, 8 m to the left of the drawn direction (centre to centre, so
   4 m between every pair of neighbouring tracks), from the same start node to the same end node:
@@ -389,7 +413,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   km/h, whose route leaves the main sooner, about 380 and 270 m. Which direction crosses comes from
   the running side: the move toward the branch crosses when the branch leaves on the side away from
   it. At J and J3 every move then merges or diverges, so no crossing resource is made, and each
-  direction routes over its own leg (one-way track, below). The legs are ordinary track, priced as
+  direction routes over its own leg (one-way track, below). Each leg is set one way and joins, at J and
+  at J3, the track that runs its way (T-3137), so its run's own way is the one it is set to. The legs are ordinary track, priced as
   such; J3 is a junction and priced as one. The leg is drawn in the preview after a gap
   (`preview_route`), and undo takes the whole route. **No room:** the junction stays flat and the
   drawing tag says "No room for a flyover here" (`route_flyovers_flat`): no J3 with a leg that fits
@@ -628,17 +653,27 @@ across track never rewrites the graph or line paths. Track a full level (8 m) or
 freely; nearer than that the crossing is refused (`Crossing`, "Tracks cannot cross on a ramp unless
 they are a full level apart."). Since flat track sits at whole levels, a refusal always has a ramp
 at the crossing: a ramp passing track less than a level from it, or two tracks at one level within
-1 m of a ramp's foot (`Network::find_crossings`, `CrossKind::Bad`) [T-2226]. Each edge gives one directed track per
-direction (shared on single track): `(edge, direction)` is the segment in SPEC 2.1's keyframes.
-At a node, every edge end leaves along the node's heading or its reverse; a move is any pair of
-ends on opposite sides. A line's path turns back (arrives and leaves on the same side) only at a
-station it stops at or at a bare track end, one with no station (T-797, 6.3). In a **junction**, two moves conflict when their paths cross at the same
-level (track positions in opposite order on the two sides); merges and diverges do not, as track
-capacity counts them. A plain double-track Y has one crossing pair. A **flyover** removes it: real
-one-way legs that send the crossing move over the main (T-3092, 6.1 "Flyovers"), or the junction
-inspector's flying flag, for its price (6.4). The map's flat-junction badge marks a junction only
-where two moves its ports and one-way track allow could cross, run by a line or not
-(`capacity::junction_crosses`, T-3103). A **flat crossing** makes every move on one
+1 m of a ramp's foot (`Network::find_crossings`, `CrossKind::Bad`) [T-2226]. **Lanes** (T-3137,
+`lanes.rs`): an edge stays one piece to place, price and delete, and its tracks are lanes inside it,
+derived and never stored: single track one lane on the centre line (both ways, or one way as its
+way says, 6.1 "Track settings"), double track two lanes 2 m either side, each carrying one direction by the running
+side (keep right: the right lane looking from a to b carries a to b). `(edge, direction)` is the
+segment in SPEC 2.1's keyframes; on double track the direction names the lane. At a node, every
+edge end leaves along the node's heading or its reverse, and its lanes lie across the node around
+a slot of its own (its rank right to left on its side, 8 m apart), so each end's lanes stay
+together. The node's **move table**, derived on every edit with its ports, says which ends a train
+arriving through each end may leave by: any end on the other side, with a lane running each way
+the move needs. Routing, a line's check, the badge, junction capacity and the train guard all
+read it. A line's path turns back (arrives and leaves on the same side) only at a station it stops
+at or at a bare track end, one with no station (T-797, 6.3). In a **junction**, two moves conflict
+when their paths cross at the same level (their lanes' positions in opposite order on the two
+sides); merges and diverges do not, as track capacity counts them. A plain double-track Y has one
+crossing pair. Single track joined to the double's track beside it and running that track's way
+crosses nothing; one running both ways (a branch to a terminus) or joined to the far track crosses
+the other direction's track, as a real single-lead junction does. A **flyover** removes it: real one-way legs that send the crossing move over the main
+(T-3092, 6.1 "Flyovers"), or the junction inspector's flying flag, for its price (6.4). The map's
+flat-junction badge marks a junction only where two moves in its table could cross, run by a line
+or not (`capacity::junction_crosses`, T-3103). A **flat crossing** makes every move on one
 route conflict with every move on the other; one with no train on its other route (blueprint, or
 constructed track no line runs on) holds nothing. A **tram** crossing a train route at a flat
 crossing yields (T-3032): the train route's crossing resource is loaded by trains only, so tram passes
@@ -661,8 +696,9 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   tram's 60 km/h), its platform dwell + 60 s (48 an hour at the 15 s dwell), its own crossings
   and junction moves 45 s (T-3125, Anita 2026-11-10)
 - single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions: a headway each way of
-  about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; one-way
-  single track takes the track-section rule above, per direction (T-3094)
+  about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; single track that
+  runs one way (set, or by its run's joins, 6.1) takes the track-section rule above, per direction
+  (T-3094, T-3137)
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
   single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train

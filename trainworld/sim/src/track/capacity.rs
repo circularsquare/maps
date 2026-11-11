@@ -10,6 +10,7 @@
 //! the global pass's, in another order (tests below check it on random edit sequences).
 
 use super::geom;
+use super::lanes::ends_in;
 use super::net::{path_dir, path_edge, CrossKind, Crossing, LoopKind, Network};
 use super::params::*;
 use super::profile::{self, Hold};
@@ -309,48 +310,22 @@ impl Uf {
     }
 }
 
-/// Lateral track position of an edge end at a node, for the crossing rule
-/// `(pA1 - pA2)(pB1 - pB2) < 0`: ports right to left, each double-track port's two tracks by
-/// running side, a single-track port in between.
-fn track_pos(net: &Network, node: u32, e: u32, which: u32, plus_h: bool) -> f64 {
-    let p = &net.node_ports[node as usize];
-    let rank = p.find(e, which).map_or(0, |k| p.rank[k]) as f64 * 2.0;
-    if net.edge_tracks[e as usize] == 1 {
-        rank + 0.5
-    } else if plus_h == net.right_hand {
-        rank
-    } else {
-        rank + 1.0
-    }
-}
-
 /// T-3103: whether two moves through junction `n` could cross at its level, by the rule
-/// `build_nodes` holds them to, over every move its ports and one-way track allow (run by a line
-/// or not). The map's flat-junction badge; a flying junction has none.
+/// `build_nodes` holds them to, over every move in its table (run by a line or not, T-3137). The
+/// map's flat-junction badge; a flying junction has none.
 pub fn junction_crosses(net: &Network, n: u32) -> bool {
     let p = &net.node_ports[n as usize];
     if p.n < 3 || net.node_flying[n as usize] {
         return false;
     }
-    // port codes are `edge << 1 | end`: arriving there is entry `code ^ 1`, leaving it entry `code`
-    let mut moves: Vec<(f64, f64)> = vec![];
-    for i in (0..p.n as usize).filter(|&i| p.side[i] == 0) {
-        for j in (0..p.n as usize).filter(|&j| p.side[j] == 1) {
-            let (a, b) = (p.end[i], p.end[j]);
-            for plus in [true, false] {
-                let ok = if plus { net.dir_ok(a ^ 1) && net.dir_ok(b) } else { net.dir_ok(b ^ 1) && net.dir_ok(a) };
-                if ok {
-                    moves.push((track_pos(net, n, a >> 1, a & 1, plus), track_pos(net, n, b >> 1, b & 1, plus)));
-                }
-            }
-        }
-    }
+    let m = &net.node_moves[n as usize];
+    let moves: Vec<(f64, f64)> = (0..p.n as usize).flat_map(|i| ends_in(m.to[i]).map(move |j| m.at(p, i, j))).collect();
     moves.iter().enumerate().any(|(k, x)| moves[k + 1..].iter().any(|y| (x.0 - y.0) * (x.1 - y.1) < 0.0))
 }
 
-/// Trains on the edge hold only their own direction's track: double track, or one-way single track (T-3094).
+/// Trains on the edge hold only their own direction's track: double track, or single track that runs one way (T-3094, T-3137).
 fn directed(net: &Network, e: u32) -> bool {
-    net.edge_tracks[e as usize] != 1 || net.edge_oneway[e as usize] != 0
+    net.edge_tracks[e as usize] != 1 || net.edge_way(e) != 0
 }
 
 /// The directed track a path entry runs on (shared by both directions on two-way single track).
@@ -608,15 +583,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     }
                 }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
-                    let (p, q) = (run.segs[k - 1], run.segs[k]);
-                    let (ein, win) = (path_edge(p), 1 - path_dir(p));
-                    let (eout, wout) = (path_edge(q), path_dir(q));
-                    let side_in = net.port_side(ein, win).unwrap_or(0);
-                    let (pa, pb) = if side_in == 0 {
-                        (track_pos(net, n, ein, win, true), track_pos(net, n, eout, wout, true))
-                    } else {
-                        (track_pos(net, n, eout, wout, false), track_pos(net, n, ein, win, false))
-                    };
+                    let (pa, pb) = net.move_at(n, run.segs[k - 1], run.segs[k]);
                     moves.push((n, pa, pb, l as u32, r as u8, run.node_s[k] - hold_back(lines, l)));
                 }
             }
@@ -631,13 +598,7 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 let at = run.stop_s.last().unwrap() - hold_back(lines, l);
                 plat.push((n, track, l as u32, r as u8, -1, at, dwell + net.node_margin_s(n as u32), false));
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
-                    let (ein, win) = (path_edge(p), 1 - path_dir(p));
-                    let (eout, wout) = (path_edge(q), path_dir(q));
-                    let (pa, pb) = if side_in == 0 {
-                        (track_pos(net, n, ein, win, true), track_pos(net, n, eout, wout, true))
-                    } else {
-                        (track_pos(net, n, eout, wout, false), track_pos(net, n, ein, win, false))
-                    };
+                    let (pa, pb) = net.move_at(n, p, q);
                     moves.push((n, pa, pb, l as u32, r as u8, run.node_s[k_last] - hold_back(lines, l)));
                 }
             } else if in_n(n) {
@@ -776,13 +737,7 @@ pub fn move_conflicts(net: &Network, lines: &[LineSvc]) -> Vec<[u32; 5]> {
                 if net.node_ports[n as usize].n < 3 || net.node_flying[n as usize] || net.turns_back(p, q) {
                     continue;
                 }
-                let (ein, win) = (path_edge(p), 1 - path_dir(p));
-                let (eout, wout) = (path_edge(q), path_dir(q));
-                let (pa, pb) = if net.port_side(ein, win).unwrap_or(0) == 0 {
-                    (track_pos(net, n, ein, win, true), track_pos(net, n, eout, wout, true))
-                } else {
-                    (track_pos(net, n, eout, wout, false), track_pos(net, n, ein, win, false))
-                };
+                let (pa, pb) = net.move_at(n, p, q);
                 moves.push((n, pa, pb, p, q));
             }
         }

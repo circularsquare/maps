@@ -12,6 +12,7 @@ use super::cost::{self, NoWater, Terrain, WaterMask};
 use super::cross::{self, Grid};
 use super::frame::{Frame, FrameKind};
 use super::geom::{self, GeomIssue, Pi, Piece};
+use super::lanes::{ends_in, Moves};
 use super::params::*;
 use super::roads::{self, Roads};
 use std::cmp::Ordering;
@@ -163,8 +164,14 @@ pub struct EdgeData {
     pub sep: bool,
     /// The day this was first constructed (T-2871), as `DAY_UNKNOWN` documents; 0 on a blueprint.
     pub day: u32,
-    /// One-way single track (T-3094): 0 both ways, 1 a to b only, 2 b to a only. Single track only.
+    /// One-way single track (T-3094), the player's: 0 not set (the way its run takes by itself,
+    /// `Network::edge_way`), 1 a to b only, 2 b to a only, 3 both ways. Single track only.
     pub oneway: u8,
+    /// T-3137: per end (a, b), which track of the double track at that junction single track meets,
+    /// looking out from the node along this piece: 0 none (the centre, both, as before joins), 1
+    /// the left, 2 the right. Single track only; read only where the node has double track on the
+    /// end's other side (`Network::join_away`).
+    pub join: [u8; 2],
 }
 
 /// T-2871: a track piece's, station's or line's build day: 0 until constructed, this for anything
@@ -388,6 +395,8 @@ pub struct Derived {
     pub nodes: Vec<u32>,
     /// Positions of crossings removed or added.
     pub crossings: Vec<[f64; 2]>,
+    /// Single track whose way (`Network::edge_way`) changed (T-3137); also in `edges`.
+    pub ways: Vec<u32>,
 }
 
 pub struct Network {
@@ -420,6 +429,8 @@ pub struct Network {
     /// A port's berth (`StationData::berth`, T-2193); None for every other node.
     pub node_berth: Vec<Option<[f64; 2]>>,
     pub node_ports: Vec<Ports>,
+    /// Derived with the ports: where each end's lanes lie and the moves through the node (T-3137).
+    pub node_moves: Vec<Moves>,
     /// Derived: the track heading through the node.
     pub node_heading: Vec<f64>,
     node_free: Vec<u32>,
@@ -440,6 +451,10 @@ pub struct Network {
     pub edge_kind: Vec<TrackKind>,
     pub edge_sep: Vec<bool>,
     pub edge_oneway: Vec<u8>,
+    pub edge_join: Vec<[u8; 2]>,
+    /// Derived (T-3137): the way single track's run takes by itself (`lanes.rs` `derive_ways`): 0
+    /// both, 1 a to b, 2 b to a.
+    pub edge_infer: Vec<u8>,
     pub edge_len: Vec<f64>,
     pub edge_pieces: Vec<Span>,
     pub edge_vert: Vec<Span>,
@@ -763,6 +778,7 @@ impl Network {
             node_upgrades: vec![],
             node_berth: vec![],
             node_ports: vec![],
+            node_moves: vec![],
             node_heading: vec![],
             node_free: vec![],
             edge_alive: vec![],
@@ -778,6 +794,8 @@ impl Network {
             edge_kind: vec![],
             edge_sep: vec![],
             edge_oneway: vec![],
+            edge_join: vec![],
+            edge_infer: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
             edge_vert: vec![],
@@ -986,6 +1004,7 @@ impl Network {
         self.node_upgrades.push(0);
         self.node_berth.push(None);
         self.node_ports.push(Ports::default());
+        self.node_moves.push(Moves::default());
         self.node_heading.push(0.0);
     }
     fn grow_edges(&mut self) {
@@ -1002,6 +1021,8 @@ impl Network {
         self.edge_kind.push(TrackKind::Regular);
         self.edge_sep.push(false);
         self.edge_oneway.push(0);
+        self.edge_join.push([0; 2]);
+        self.edge_infer.push(0);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
         self.edge_vert.push(Span::default());
@@ -1079,7 +1100,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i], join: self.edge_join[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -1418,6 +1439,7 @@ impl Network {
                 self.edge_kind[i] = d.kind;
                 self.edge_sep[i] = d.sep;
                 self.edge_oneway[i] = if d.tracks == 1 { d.oneway } else { 0 };
+                self.edge_join[i] = if d.tracks == 1 { d.join } else { [0; 2] };
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -1439,6 +1461,8 @@ impl Network {
                 self.edge_kind[i] = TrackKind::Regular;
                 self.edge_sep[i] = false;
                 self.edge_oneway[i] = 0;
+                self.edge_join[i] = [0; 2];
+                self.edge_infer[i] = 0;
                 self.edge_free.push(id);
             }
         }
@@ -1835,6 +1859,21 @@ impl Network {
                 self.derive_node(n);
             }
         }
+        // T-3137: single track's ways, then the moves they allow
+        let mut seeds = nodes.clone();
+        seeds.extend_from_slice(&t.stations);
+        d.ways = self.derive_ways(&edges, &seeds);
+        for &e in &d.ways {
+            nodes.push(self.edge_a[e as usize]);
+            nodes.push(self.edge_b[e as usize]);
+        }
+        nodes.sort_unstable();
+        nodes.dedup();
+        for &n in &nodes {
+            if self.node_ok(n) {
+                self.derive_moves(n);
+            }
+        }
         // Crossings of touched edges.
         let before = self.crossings.len();
         let is_touched = |e: u32| edges.binary_search(&e).is_ok();
@@ -1861,6 +1900,9 @@ impl Network {
         if t.paths_changed || edges.iter().any(|&e| !self.edge_alive[e as usize]) {
             self.rebuild_edge_lines();
         }
+        edges.extend_from_slice(&d.ways);
+        edges.sort_unstable();
+        edges.dedup();
         // Broken flags of lines through touched edges and of touched lines.
         let mut lines: Vec<u32> = t.lines.clone();
         for &e in &edges {
@@ -1892,6 +1934,7 @@ impl Network {
         let ports = self.node_ports[i];
         if ports.n == 0 {
             self.node_heading[i] = 0.0;
+            self.node_moves[i] = Moves::default();
             return;
         }
         let (nx, ny) = (self.node_x[i], self.node_y[i]);
@@ -2298,9 +2341,9 @@ impl Network {
                 if self.path_nodes(prev).1 != from {
                     return Err(Issue::LinePath { line: l });
                 }
-                // Through a node: arrive on one side, leave on the other, or turn back at a
-                // stop or a bare track end (T-797, checked below).
-                if self.port_side(path_edge(prev), 1 - path_dir(prev)).is_none() {
+                // Through a node: a move its table holds, or a turn back at a stop or a bare track
+                // end (T-797, checked below).
+                if self.port_side(path_edge(prev), 1 - path_dir(prev)).is_none() || !(self.turns_back(prev, path[k]) || self.move_ok(prev, path[k])) {
                     return Err(Issue::LinePath { line: l });
                 }
             }
@@ -2682,12 +2725,10 @@ impl Network {
 
     // ---------------------------------------------------------------- routing
 
-    /// Whether a path entry (edge, direction) may run: not against a one-way single track (T-3094).
+    /// Whether a path entry (edge, direction) may run: a lane of the piece runs its way (not
+    /// against one-way single track, T-3094).
     pub fn dir_ok(&self, p: u32) -> bool {
-        match self.edge_oneway[path_edge(p) as usize] {
-            0 => true,
-            w => path_dir(p) == (w - 1) as u32,
-        }
+        self.lane_of(p).is_some()
     }
 
     /// A rail line whose trains run its path once round, one way: a loop set to run one way (T-2981).
@@ -2714,7 +2755,7 @@ impl Network {
     /// Rail lines whose return run takes a way of its own, round one-way track: their tracks are not
     /// all on `lines_on_edge`, so an edit rebuilds them whatever it touches.
     pub fn back_lines(&self) -> Vec<u32> {
-        if self.edge_oneway.iter().all(|&o| o == 0) {
+        if (0..self.edge_count() as u32).all(|e| self.edge_way(e) == 0) {
             return vec![];
         }
         (0..self.line_count() as u32)
@@ -2759,8 +2800,9 @@ impl Network {
             if d > dist[st as usize] {
                 continue;
             }
-            let (_, node) = self.path_nodes(st);
-            let arr_side = self.port_side(path_edge(st), 1 - path_dir(st)).unwrap_or(0);
+            let (node, arr, mut on) = self.moves_after(st);
+            let p = &self.node_ports[node as usize];
+            let arr_side = arr.map_or(0, |i| p.side[i]);
             if node == to && want.map_or(true, |w| w == arr_side) {
                 let mut path = vec![st];
                 let mut cur = st;
@@ -2771,17 +2813,14 @@ impl Network {
                 path.reverse();
                 return Some((path, arr_side));
             }
-            let p = &self.node_ports[node as usize];
             let bare = self.bare_end(node);
-            for (k, &c) in p.ends().iter().enumerate() {
-                if p.side[k] == arr_side && !bare {
-                    continue;
-                }
-                let (e, which) = (c >> 1, c & 1);
-                let nst = e << 1 | which;
-                if !self.dir_ok(nst) {
-                    continue;
-                }
+            if bare {
+                // a train may turn back at a track end with no station (T-797 B3)
+                on |= self.dir_ok(p.end[0]) as u8;
+            }
+            for k in ends_in(on) {
+                let nst = p.end[k];
+                let e = nst >> 1;
                 let nd = d + self.edge_time[e as usize] + if bare { REVERSAL_SEARCH_S } else { 0.0 };
                 if nd < dist[nst as usize] {
                     dist[nst as usize] = nd;
@@ -2863,32 +2902,30 @@ impl Network {
         let &last = path.last()?;
         let mut nodes = vec![self.path_nodes(path[0]).0];
         nodes.extend(path.iter().map(|&p| self.path_nodes(p).1));
-        let arrived = self.port_side(path_edge(last), 1 - path_dir(last))?;
-        // per node of the path, the rejoins there: (k, the side a train must not arrive on)
-        let mut want: std::collections::HashMap<u32, Vec<(usize, u8)>> = Default::default();
+        self.port_side(path_edge(last), 1 - path_dir(last))?;
+        // per node of the path, the rejoins there: (k, the entry the train carries on into)
+        let mut want: std::collections::HashMap<u32, Vec<(usize, u32)>> = Default::default();
         for k in 0..nodes.len().min(limit + 1) {
-            let side = if back {
+            let entry = if back {
                 if k == 0 { continue; }
-                self.port_side(path_edge(path[k - 1]), 1 - path_dir(path[k - 1]))
+                path[k - 1] ^ 1
             } else if k < path.len() {
-                self.port_side(path_edge(path[k]), path_dir(path[k]))
+                path[k]
             } else {
-                None
+                continue;
             };
-            if let Some(s) = side {
-                want.entry(nodes[k]).or_default().push((k, s));
-            }
+            want.entry(nodes[k]).or_default().push((k, entry));
         }
         let ne = self.edge_count();
         let mut dist = vec![f64::INFINITY; 2 * ne];
         let mut prev = vec![u32::MAX; 2 * ne];
         let mut heap = BinaryHeap::new();
-        let p = &self.node_ports[nodes[nodes.len() - 1] as usize];
-        for (i, &c) in p.ends().iter().enumerate() {
-            if p.side[i] != arrived && self.dir_ok(c) {
-                dist[c as usize] = self.edge_time[(c >> 1) as usize];
-                heap.push(Key(dist[c as usize], c));
-            }
+        let (node, _, on) = self.moves_after(last);
+        let p = &self.node_ports[node as usize];
+        for i in ends_in(on) {
+            let c = p.end[i];
+            dist[c as usize] = self.edge_time[(c >> 1) as usize];
+            heap.push(Key(dist[c as usize], c));
         }
         while let Some(Key(d, st)) = heap.pop() {
             if d > budget {
@@ -2897,10 +2934,11 @@ impl Network {
             if d > dist[st as usize] {
                 continue;
             }
-            let (_, node) = self.path_nodes(st);
-            let arr = self.port_side(path_edge(st), 1 - path_dir(st)).unwrap_or(0);
+            let (node, _, on) = self.moves_after(st);
+            let p = &self.node_ports[node as usize];
             if let Some(ks) = want.get(&node) {
-                let hit = if back { ks.iter().rev().find(|x| x.1 != arr) } else { ks.iter().find(|x| x.1 != arr) };
+                let goes = |x: &&(usize, u32)| p.find(path_edge(x.1), path_dir(x.1)).is_some_and(|j| on >> j & 1 != 0);
+                let hit = if back { ks.iter().rev().find(goes) } else { ks.iter().find(goes) };
                 if let Some(&(k, _)) = hit {
                     let mut out = vec![st];
                     let mut cur = st;
@@ -2912,11 +2950,8 @@ impl Network {
                     return Some((out, k));
                 }
             }
-            let p = &self.node_ports[node as usize];
-            for (i, &c) in p.ends().iter().enumerate() {
-                if p.side[i] == arr || !self.dir_ok(c) {
-                    continue;
-                }
+            for i in ends_in(on) {
+                let c = p.end[i];
                 let nd = d + self.edge_time[(c >> 1) as usize];
                 if nd < dist[c as usize] {
                     dist[c as usize] = nd;
@@ -3087,8 +3122,9 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway };
+        let join = self.edge_join[i];
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [join[0], 0] };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [0, join[1]] };
         Ok((node, a, b))
     }
 }
