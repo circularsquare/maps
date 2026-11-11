@@ -77,8 +77,8 @@ then community on (5), push maps master.
   accountPanel.nameHidden, errNewShare/errNewLike + " You've played 25 min.", stopMarkers.oneWay, community.search,
   community.noMatch, community.sandboxNote.
 - realnet (Opus, 6117, a27b2a7568b124ee7): T-3225 survey done (notes/T-3225.md, 0a48b758); her calls listed under
-  Waiting on Anita. T-1773 levels from tags built (notes/T-1773.md); told go: realsave.rs bin, all 118 realgraphs,
-  ship six cities' saves (London held), docs. ~560k tokens, finishing only.
+  Waiting on Anita. T-1773 DONE, landed 93be52a1: realgraphs rebuilt (118), six real saves shipped into data/packs/real
+  (London held on its old -1 save for T-3233); 8800 = 93be52a1, smoke PASSED. realnet is past 600k: retire it.
 - lonslow (Opus, 6120, worktree .tw-trees/lonslow, a94ca6075f373d26a): T-3233 London real network ~135 s to settle
   (was 13 s): bisect in its worktree, fix, browser check.
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
