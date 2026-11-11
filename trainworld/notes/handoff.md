@@ -47,7 +47,11 @@ then community on (5), push maps master.
   pt gradeMarks.tramYields, fr "sauts-de-mouton" glossary plural), C a9aaeff42365127d7.
 - maps-b7's agents all done and landed; maps-b7 has wound down.
 - busstop (Sonnet, 6114, a76b5cf1a943ec24c): T-3210 bus stop one way on a two-way stretch + T-3211 "One way stop" hover.
-- ubc (Opus, 6116, afbd5ad584e1de35f): T-3213 UBC demand diagnosis, stops at a proposal (notes/T-3213.md).
+- ubc (Opus, 6116, afbd5ad584e1de35f): T-3213 diagnosed (notes/T-3213.md; UBC game ~91k legs/day vs 152k real:
+  students in one cell 2.2 km off the core, Canada jobs from the proxy, campus sized by area). Filed A T-3214, B T-3215,
+  C T-3216, cache clobbering T-3217. Now building T-3214's pipeline code, proven on van in scratch; no rebuild.
+  Her calls: D (university attendance 0.6 -> 0.8 everywhere; agent says wait for A-C), E (campus as a new destination
+  factor; agent says no).
 - Not started: T-3212 single-track stations drawn as a split (waits on T-3202's call, same drawing area).
 
 ## Next after v0.3
@@ -58,7 +62,7 @@ then community on (5), push maps master.
   (3) both. Ask her after the publish; brief a fresh agent from the notes.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3214**.
+- Next free id **T-3218**.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.

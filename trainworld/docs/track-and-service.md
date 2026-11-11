@@ -1893,7 +1893,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   came: it is a loop as above (a circle, one way by default), its way out run twice. A place on the way out is on
   both passes (`Poly::project_passes`): a station within reach of the way out is a stop on the way out and on the
   way back, and a stop placed by hand there (`on_route_at`) is a stop on both passes and goes from both when taken
-  out; so is a stop placed by hand on a route drawn out and back along one road without the loop-back gesture, on each run of stretches within 25 m of the nearest one (`Poly::near_passes`, T-3131; stations still take the one nearest pass); one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
+  out; so is a stop placed by hand on a route drawn out and back along one road without the loop-back gesture, on each run of stretches within 25 m of the nearest one (`Poly::near_passes`, T-3131, also on a loop whose way out and back are drawn so, T-3210; stations still take the one nearest pass), and two stops of a one-way loop within 25 m of each other that the route leaves by opposite headings are one place, served both ways (`route_stop_ways`); one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops

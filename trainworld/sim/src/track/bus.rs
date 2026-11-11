@@ -416,15 +416,16 @@ pub fn loop_back_at(pts: &[[f64; 2]]) -> Option<usize> {
 }
 
 /// A pass over a hand stop's place counts when it is within this many ground metres of the nearest one: a route drawn
-/// out and back by hand runs its two passes along the same road without the points meeting (T-3131).
-const NEAR_PASS_M: f64 = 25.0;
+/// out and back by hand runs its two passes along the same road without the points meeting (T-3131), a loop included
+/// (T-3210).
+pub const NEAR_PASS_M: f64 = 25.0;
 
 /// T-3109, T-3131: where a point lies along a route, once per pass over it: road metres. A route that loops back has
-/// its three passes (`Poly::project_passes`); another route that is not closed has one per run of its stretches within
+/// its three passes (`Poly::project_passes`); any other route has one per run of its stretches within
 /// `NEAR_PASS_M` of the place's nearest one, so a hand stop lands on both ways of a route drawn out and back by hand.
 /// Used by hand stops only: the automatic stops at stations still take the one nearest pass.
 pub fn on_route_at(poly: &Poly, net: &Network, x: f64, y: f64) -> Vec<f64> {
-    if loop_back_at(poly.pts).is_none() && !is_closed(poly.pts) {
+    if loop_back_at(poly.pts).is_none() {
         return poly.near_passes(net, x, y);
     }
     let passes = poly.project_passes(net, x, y);

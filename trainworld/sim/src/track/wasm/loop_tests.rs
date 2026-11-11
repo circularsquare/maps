@@ -235,6 +235,23 @@ fn a_bus_route_that_loops_back_serves_its_loop_one_way_and_its_way_out_both() {
     assert!(ids_at(&a, b, 0, 0).iter().all(|i| !w.contains(i)), "the end the bus turns at is both ways: {w:?}");
 }
 
+/// T-3210: a loop whose way out and way back are drawn by hand beside each other (10 m apart, no loop-back): a hand
+/// stop on that road is on both passes and serves both ways; a stop on the loop stays one way.
+#[test]
+fn a_hand_stop_on_a_loops_two_way_road_serves_both_ways() {
+    let mut a = api();
+    let b = a.new_line_id();
+    let route = [0.0, 0.0, 1.0, 2000.0, 0.0, 1.0, 3000.0, 0.0, 1.0, 3000.0, 1000.0, 1.0, 2000.0, 1000.0, 1.0, 2000.0, 10.0, 1.0, 0.0, 0.0, 1.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 3000.0, 400.0, true), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 1000.0, 5.0, true), 0, "{}", a.issues());
+    let w: Vec<u32> = ways(&a, b).into_iter().map(|x| x.0).collect();
+    assert_eq!(places(&a, b).iter().filter(|p| p.0 == 1000).count(), 2, "{:?}", places(&a, b));
+    assert!(ids_at(&a, b, 3000, 400).iter().all(|i| w.contains(i)), "the loop's stop is one way: {w:?}");
+    assert!(ids_at(&a, b, 1000, 0).iter().all(|i| !w.contains(i)), "the road both ways is both ways: {w:?}");
+}
+
 #[test]
 fn a_one_way_ferry_loop_serves_every_port_one_way() {
     let mut a = api();

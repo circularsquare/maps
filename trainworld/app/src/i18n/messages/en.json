@@ -1888,6 +1888,7 @@
   "statusTag.terrainFailed": "Terrain could not load",
   "stopMarkers.station": "Station",
   "stopMarkers.remove": "Click to remove the stop",
+  "stopMarkers.oneWay": "One way stop",
   "stopMarkers.rightClose": "Right click to close loop",
   "stopMarkers.rightOpen": "Right click to open loop",
   "stopMarkers.rightLoopBack": "Right click to loop back here",

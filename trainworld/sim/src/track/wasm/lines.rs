@@ -699,7 +699,12 @@ fn route_stop_ways(net: &Network, pts: &[[f64; 2]], plan: &crate::track::bus::Pl
     let mut out: Vec<(usize, Option<f64>)> = vec![];
     for (i, s) in stops.iter().enumerate() {
         let h = (i > 0 || !turns_at_start).then(|| leaving(s.s));
-        match out.iter_mut().find(|o| place(&stops[o.0], s)) {
+        // a stop on each pass of a road the route runs both ways (drawn out and back by hand, T-3210) is one place
+        let opposite = |o: &(usize, Option<f64>)| {
+            let (a, b) = (&stops[o.0], s);
+            matches!((o.1, h), (Some(p), Some(q)) if (p - q).cos() < 0.0) && (a.x - b.x).hypot(a.y - b.y) / net.k_at(a.y) < crate::track::bus::NEAR_PASS_M
+        };
+        match out.iter_mut().find(|o| place(&stops[o.0], s) || opposite(o)) {
             Some(o) => o.1 = match (o.1, h) { (Some(a), Some(b)) if (a - b).cos() > 0.0 => Some(a), _ => None },
             None => out.push((i, h)),
         }

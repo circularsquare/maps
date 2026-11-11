@@ -423,7 +423,7 @@ station (1.5 px, the map's ink at 50%, the transfer; `FLAG_TRANSFER`), drawn und
 picked; the same line joins two bus lines' stops within 100 m of each other, one place for demand (T-2992,
 `game/busLinks.ts`; none between two on one spot). A bus or ferry loop run one way has small arrowheads in its colour from zoom 13, pointing the way
 its vehicles go and sticking out both sides of the route, twice as wide as they are long (their casing only
-off the route), none in the Speed and Profit displays (T-2991, `oneWayMarks.ts`). Its street rings are half filled, the half on the right of the way the buses go, where the sim serves the stop one way (`line_stop_ways`, T-3147), and the bus stop hover has the line's chevron after its bullet. A train loop run one way
+off the route), none in the Speed and Profit displays (T-2991, `oneWayMarks.ts`). Its street rings are half filled, the half on the right of the way the buses go, where the sim serves the stop one way (`line_stop_ways`, T-3147), and the bus stop hover has the line's chevron after its bullet. In stop editing, the hover over a stop served one way has "One way stop" above "Click to remove the stop" (T-3211). A train loop run one way
 has a tiny white chevron on the line instead, on the edges its path runs once (a balloon's tail runs both
 ways), from zoom 12 where the line or its band is at least 4.5 px wide, in the Line view only. Both are
 placed every 100 m along the route (bus and ferry arrows 125 m); at each zoom every 2^n-th is drawn so they are at least 150 px apart (arrows 190 px),

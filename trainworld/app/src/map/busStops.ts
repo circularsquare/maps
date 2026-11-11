@@ -29,7 +29,7 @@ const HAND_GAP_M = 50;
 /** What is under the pointer: a point of the route (`name` the station whose stop it would be) */
 type Hit =
   | { kind: "end" }
-  | { kind: "stop"; x: number; y: number; name: string | undefined }
+  | { kind: "stop"; x: number; y: number; name: string | undefined; oneWay?: boolean }
   | { kind: "route"; x: number; y: number; mx: number; my: number; name?: string };
 
 /** A mark on the map: where it is and what a click on it does. */
@@ -168,7 +168,7 @@ export class BusStopMarkers {
     bus.stops.forEach((s, i) => {
       const end = i === 0 || i === bus.stops.length - 1 || lastOne;
       const heading = oneWay[String(s.id)];
-      add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)) }, heading === undefined ? undefined : { x: s.x, y: s.y, heading });
+      add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)), oneWay: heading !== undefined }, heading === undefined ? undefined : { x: s.x, y: s.y, heading });
     });
     this.place();
     this.overlay.invalidate();
@@ -263,7 +263,7 @@ export class BusStopMarkers {
     this.ghost.style.display = this.ghostAt ? "" : "none";
     this.map.getCanvas().style.cursor = hit && hit.kind !== "end" ? "pointer" : "crosshair";
     if (!hit || hit.kind === "end") return this.hideTag();
-    const lines = hit.kind === "stop" ? [...(hit.name ? [hit.name] : []), t("stopMarkers.remove")]
+    const lines = hit.kind === "stop" ? [...(hit.name ? [hit.name] : []), ...(hit.oneWay ? [t("stopMarkers.oneWay")] : []), t("stopMarkers.remove")]
       : [...(hit.name ? [hit.name] : []), t("stopMarkers.add")];
     tagLines(this.tag, lines);
     this.tag.style.display = "";
