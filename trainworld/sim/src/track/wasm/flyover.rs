@@ -3,7 +3,8 @@
 //! real track: its first stretch, as drawn, to J3 one-way single track for the direction that crosses
 //! nothing, and the other direction a one-way single leg from J itself, out on the main's far side,
 //! a level over the main ahead of J and down between the main and the first stretch to J3. Both
-//! legs leave the main at J, the point clicked, so a flyover needs room only ahead of it.
+//! legs leave the main at J, the point clicked, so a flyover needs room only ahead of it. T-3170:
+//! high-speed track too, its legs one-way single high-speed track.
 
 use super::*;
 use crate::track::lanes::join_for;
@@ -19,8 +20,9 @@ const JOG: f64 = 0.2094;
 /// Leg needed between an end and the crossing: a level's ramp, the clearance at the crossing, and
 /// room for the ramp to move off a curve, m.
 const RAMP_ROOM: f64 = RAMP_PER_LEVEL + WATER_STEP + 2.0 + 20.0;
-/// The route at J3 leaves the main at between these, rad (4 and 80 degrees); the leg crosses the
-/// main at no more than `CROSS_MAX` (86 degrees).
+/// The route at J3 leaves the main at between these, rad (4 and 80 degrees; T-3188: down to -4,
+/// as near parallel, two GAPs off it); the leg crosses the main at no more than `CROSS_MAX` (86
+/// degrees).
 const SHALLOWEST: f64 = 0.0698;
 const STEEPEST: f64 = 1.396;
 const CROSS_MAX: f64 = 1.501;
@@ -37,8 +39,20 @@ const J3_STEP: f64 = 10.0;
 const CLEAR: f64 = 40.0;
 /// The most leg alignments a junction tries ramping before it falls back to flat.
 const RAMP_TRIES: usize = 8;
-/// The shortest arc the leg's own corners take, m, a little over the track's smallest.
-const LEG_MIN_RADIUS: f64 = MIN_RADIUS + 5.0;
+/// The shortest arc the leg's own corners take over the track's smallest, m.
+const LEG_MIN_OVER: f64 = 5.0;
+/// T-3169: what a corner may fall short of the radius aimed for, a share (the radius is floored to
+/// the millimetre, and the S-curves are drawn 2% inside their limit).
+const AIM_SLACK: f64 = 0.99;
+/// T-3169: with no room for the flyover target, the leg aims this much slower in turn, km/h.
+const AIM_STEP: f64 = 20.0;
+
+/// T-3169: an S-curve of two arcs of radius `r` that steps GAP sideways: each arc's turn, rad, at
+/// most `most`. 2% under the turn whose two arcs meet with no straight between, so the leg between
+/// its corners holds both tangents.
+fn s_turn(r: f64, most: f64) -> f64 {
+    most.min(0.98 * (1.0 - GAP / (2.0 * r)).max(-1.0).acos())
+}
 
 /// Track walked from a node: per edge (edge, the node it is entered from, distance at its start),
 /// to the first node that is not a plain joint, or `max`.
@@ -161,15 +175,15 @@ const SHORE: f64 = WATER_STEP + 2.0;
 
 /// `verts` with each corner's radius set to what `fit_capped` gives it at `cap` (an arc as wide as
 /// its legs hold, up to the cap), so later fits at the usual cap keep it; None where one would be
-/// under `LEG_MIN_RADIUS`.
-fn set_radii(verts: &mut [Pi], scaled: bool, cap: f64) -> Option<geom::Fit> {
+/// under `floor` (T-3169: the radius aimed for, less `AIM_SLACK`).
+fn set_radii(verts: &mut [Pi], scaled: bool, cap: f64, floor: f64) -> Option<geom::Fit> {
     let f = geom::fit_capped(verts, scaled, cap);
     if !f.issues.is_empty() {
         return None;
     }
     for i in 1..verts.len() - 1 {
         if f.radius[i] > 0.0 {
-            if f.radius[i] < LEG_MIN_RADIUS {
+            if f.radius[i] < floor {
                 return None;
             }
             verts[i].radius = ((f.radius[i] / QUANT).floor() - 1.0) * QUANT;
@@ -187,7 +201,8 @@ impl TrackApi {
     pub(super) fn with_flyovers(&mut self, r: (Op, Vec<Pi>, Vec<u32>, Vec<u32>), tracks: u8) -> (Op, Vec<Pi>, Vec<u32>, Vec<u32>) {
         let (op, verts, mut nn, mut ne) = r;
         let js: Vec<u32> = self.route_junctions.iter().map(|j| j.0).collect();
-        if tracks != 2 || self.route_kind_of(2) != TrackKind::Regular || js.is_empty() {
+        // T-3170: regular and high-speed double track
+        if tracks != 2 || self.route_kind_of(2).spec().family != 0 || js.is_empty() {
             return (op, verts, nn, ne);
         }
         let mut ops = match op {
@@ -258,14 +273,15 @@ impl TrackApi {
         let fwd = ends.iter().enumerate().find(|(k, e)| *k != r && e.1 == rside)?.1 .0;
         let back = ends.iter().enumerate().find(|(k, e)| *k != r && e.1 != rside)?.1 .0;
         let rail = |e: u32| net.edge_tracks[e as usize] == 2 && !net.edge_crossover[e as usize] && net.edge_kind[e as usize].spec().family == 0;
-        if !rail(re) || !rail(fwd) || !rail(back) || net.edge_kind[re as usize] != TrackKind::Regular {
+        if !rail(re) || !rail(fwd) || !rail(back) {
             return None;
         }
         Some(self.lay_flyover(j, re, fwd, rside, route_edges))
     }
 
-    /// T-3120: the flyover at `j`, as tight as the route allows. J3 is the first point out along the
-    /// route where the crossing leg fits: from `j` it jogs GAP out to the main's far side and runs
+    /// T-3120: the flyover at `j`, as tight as its curves allow (T-3169: each curve at least the
+    /// flyover target's radius, else a quarter of it, else the leg's least). J3 is the first point out
+    /// along the route where the crossing leg fits: from `j` it jogs GAP out to the main's far side and runs
     /// beside it, turns across the main once a ramp up has room, and comes down between the main and
     /// the route, GAP from it, to J3: along a line beside J3's tangent where that crosses the main
     /// far enough ahead (case A), else straight from just past J3 at the angle that puts the
@@ -297,128 +313,178 @@ impl TrackApi {
             None => route.len - 50.0,
         };
         // the main ahead, as far as the next station, junction or end
-        let main = walk(net, j, fwd, 1500.0, |_| true);
+        let main = walk(net, j, fwd, 3000.0, |_| true);
         let main_room = match main.stop {
             Some((n, d)) => d - net.node_platform[n as usize] as f64 / 2.0 - CLEAR,
             None => main.len,
         };
-        let cap = self.route_cap.max(LEG_MIN_RADIUS);
-        // The leg's far side, J to the corner where it turns across the main at `phi`, crossing at
-        // `x_c`. `swing` 0: a jog out to -GAP, then beside the main. Else straight out at `swing`
-        // (rad) to that corner, more track for a crossing close to J.
-        let jog_t = GAP / JOG.sin() / 2.0;
-        let jog_d = (jog_t / (JOG / 2.0).tan()).min(cap) * (JOG / 2.0).tan();
-        let far_side = |x_c: f64, phi: f64, swing: f64| -> Option<Vec<(f64, f64)>> {
-            if swing == 0.0 {
-                let (e, c) = (jog_d + GAP / JOG.tan(), x_c - GAP / phi.tan());
-                return (c - e > 1.0).then(|| vec![(0.0, 0.0), (jog_d, 0.0), (e, -GAP), (c, -GAP)]);
-            }
-            let d = SWING_R.min(cap) * (swing / 2.0).tan();
-            let l1 = (x_c - d) * phi.sin() / (phi + swing).sin();
-            (x_c - d > 2.0 * d).then(|| vec![(0.0, 0.0), (d, 0.0), (d + l1 * swing.cos(), -l1 * swing.sin())])
-        };
-        // The leg from J through `far` and `near` (the near side's corners, from the crossing on) to
-        // J3 at `p3` (plane `at3`), its corners rounded, and where it crosses the main. Err(Some(m)):
-        // m more metres of far side wanted.
-        let leg = |far: Vec<(f64, f64)>, near: &[(f64, f64)], p3: (f64, f64), at3: (f64, f64), d3: f64| -> Result<(Vec<Pi>, f64), Option<f64>> {
-            let mut v: Vec<Pi> = far.iter().chain(near).chain([&p3]).map(|&(a, l)| plane(a, l)).collect();
-            let last = v.len() - 1;
-            (v[0].x, v[0].y, v[last].x, v[last].y) = (jx, jy, at3.0, at3.1);
-            let fit = set_radii(&mut v, scaled, cap).ok_or(None)?;
-            let mut hits = vec![];
-            let mut s_x = f64::MAX;
-            for &(e, _, _) in &main.segs {
-                hits.clear();
-                crate::track::cross::intersect_alignments(&fit.pieces, net.edge_pieces(e), false, &mut hits);
-                s_x = hits.iter().map(|h| h.0).filter(|&s| s > SHARED_NODE_CLEAR + 5.0).fold(s_x, f64::min);
-            }
-            if s_x == f64::MAX || fit.len - s_x < RAMP_ROOM {
-                return Err(None);
-            }
-            if s_x < RAMP_ROOM {
-                return Err(Some(RAMP_ROOM - s_x));
-            }
-            // GAP or more from the route from where it is beside the main to J3's split, and so
-            // never across it
-            let mut s = 2.0 * jog_d + GAP / JOG.tan();
-            while s < fit.len - SPLIT_LEAD - SPLIT_LEN {
-                let (lx, ly, _) = geom::pos_at(&fit.pieces, s);
-                if route.segs.iter().filter(|g| g.2 < d3).any(|g| net.project(g.0, lx, ly).1 < (GAP - 0.5) * k) {
+        let leg_min = net.edge_kind[re as usize].spec().min_radius + LEG_MIN_OVER;
+        // T-3169: every curve of the leg at the flyover target's radius where there is the room, else
+        // at the radius of each `AIM_STEP` km/h less in turn, else as tight as the leg goes
+        // never faster than the route's own target max speed: its curves hold it to that anyway
+        let v_aim = (A_LAT * self.flyover_r.min(self.route_cap)).sqrt() * 3.6;
+        let mut aims: Vec<f64> = (0..).map(|s| v_aim - AIM_STEP * s as f64).take_while(|&v| v >= 2.0 * AIM_STEP).map(design_radius).filter(|&r| r > leg_min).collect();
+        aims.push(leg_min);
+        let mut laid = None;
+        for r_aim in aims {
+            let floor = leg_min.max(r_aim * AIM_SLACK);
+            let cap = self.route_cap.max(r_aim);
+            // where a curve under the aim wants a crossing further on (case B), how much further, m
+            let grow = (r_aim > leg_min).then_some(0.25 * r_aim);
+            // The leg's far side, J to the corner where it turns across the main at `phi`, crossing at
+            // `x_c`. `swing` 0: a jog out to -GAP, then beside the main. Else straight out at `swing`
+            // (rad) to that corner, more track for a crossing close to J.
+            let jog = s_turn(r_aim, JOG);
+            let jog_t = GAP / jog.sin() / 2.0;
+            let jog_d = (jog_t / (jog / 2.0).tan()).min(cap) * (jog / 2.0).tan();
+            let swing_r = SWING_R.max(r_aim).min(cap);
+            // At J3 the leg runs `lead` along the route, then parts from it by GAP over `split_len`.
+            let split = s_turn(r_aim, (GAP / SPLIT_LEN).atan());
+            let split_len = GAP / split.tan();
+            let lead = SPLIT_LEAD.max(1.02 * r_aim * (split / 2.0).tan());
+            let far_side = |x_c: f64, phi: f64, swing: f64| -> Option<Vec<(f64, f64)>> {
+                if swing == 0.0 {
+                    let (e, c) = (jog_d + GAP / jog.tan(), x_c - GAP / phi.tan());
+                    return (c - e > 1.0).then(|| vec![(0.0, 0.0), (jog_d, 0.0), (e, -GAP), (c, -GAP)]);
+                }
+                let d = swing_r * (swing / 2.0).tan();
+                let l1 = (x_c - d) * phi.sin() / (phi + swing).sin();
+                (x_c - d > 2.0 * d).then(|| vec![(0.0, 0.0), (d, 0.0), (d + l1 * swing.cos(), -l1 * swing.sin())])
+            };
+            // The leg from J through `far` and `near` (the near side's corners, from the crossing on) to
+            // J3 at `p3` (plane `at3`), its corners rounded, and where it crosses the main. Err(Some(m)):
+            // m more metres of far side wanted (less, where m is under 0).
+            let leg = |far: Vec<(f64, f64)>, near: &[(f64, f64)], p3: (f64, f64), at3: (f64, f64), d3: f64| -> Result<(Vec<Pi>, f64), Option<f64>> {
+                let mut v: Vec<Pi> = far.iter().chain(near).chain([&p3]).map(|&(a, l)| plane(a, l)).collect();
+                let last = v.len() - 1;
+                (v[0].x, v[0].y, v[last].x, v[last].y) = (jx, jy, at3.0, at3.1);
+                let fit = set_radii(&mut v, scaled, cap, floor).ok_or(grow)?;
+                let mut hits = vec![];
+                let mut s_x = f64::MAX;
+                for &(e, _, _) in &main.segs {
+                    hits.clear();
+                    crate::track::cross::intersect_alignments(&fit.pieces, net.edge_pieces(e), false, &mut hits);
+                    s_x = hits.iter().map(|h| h.0).filter(|&s| s > SHARED_NODE_CLEAR + 5.0).fold(s_x, f64::min);
+                }
+                if s_x == f64::MAX {
                     return Err(None);
                 }
-                s += 10.0;
-            }
-            Ok((v, s_x))
-        };
-        let mut tries = 0;
-        let mut d3 = J3_MIN;
-        let (e3, t3, fwd3, shape) = 'search: loop {
-            d3 += J3_STEP;
-            if d3 > limit || tries >= RAMP_TRIES {
-                return None;
-            }
-            let Some((e, t, f)) = seg_at(net, &route, d3) else { continue };
-            if t < 10.0 || t > net.edge_len[e as usize] - 10.0 {
-                continue;
-            }
-            let (x, y, th) = at(net, &route, d3)?;
-            let p3 = local(x, y);
-            let psi = (th.cos() * nrm.0 + th.sin() * nrm.1).atan2(th.cos() * u.0 + th.sin() * u.1);
-            if !(SHALLOWEST..=STEEPEST).contains(&psi) || p3.1 < GAP + 5.0 {
-                continue;
-            }
-            // back along the route from J3, and toward the main square to it
-            let b = (-psi.cos(), -psi.sin());
-            let m = (psi.sin(), -psi.cos());
-            let x_t = p3.0 - p3.1 / psi.tan();
-            for &(beside, swing) in &LEGS {
-                let found = if beside {
-                    // case A: GAP beside J3's tangent all the way to the main
-                    let x_c = x_t + GAP / psi.sin();
-                    if x_c > main_room {
-                        continue;
+                // T-3188: a crossing too near J3 wants that much less far side
+                if fit.len - s_x < RAMP_ROOM {
+                    return Err(Some(fit.len - s_x - RAMP_ROOM));
+                }
+                if s_x < RAMP_ROOM {
+                    return Err(Some(RAMP_ROOM - s_x));
+                }
+                // GAP or more from the route from where it is beside the main to J3's split, and so
+                // never across it
+                let mut s = 2.0 * jog_d + GAP / jog.tan();
+                while s < fit.len - lead - split_len {
+                    let (lx, ly, _) = geom::pos_at(&fit.pieces, s);
+                    if route.segs.iter().filter(|g| g.2 < d3).any(|g| net.project(g.0, lx, ly).1 < (GAP - 0.5) * k) {
+                        return Err(None);
                     }
-                    let near = [(p3.0 + (SPLIT_LEAD + SPLIT_LEN) * b.0 + GAP * m.0, p3.1 + (SPLIT_LEAD + SPLIT_LEN) * b.1 + GAP * m.1), (p3.0 + SPLIT_LEAD * b.0, p3.1 + SPLIT_LEAD * b.1)];
-                    let Some(far) = far_side(x_c, psi, swing) else { continue };
-                    leg(far, &near, p3, (x, y), d3).ok()
-                } else {
-                    // case B: from just past J3 straight to a crossing far enough ahead, a little
-                    // further out where the turn is sharp, so its arc holds LEG_MIN_RADIUS
-                    let mut x_need = RAMP_ROOM;
-                    let mut got = None;
-                    for _ in 0..4 {
-                        let mut lead = SPLIT_LEAD;
-                        for _ in 0..3 {
-                            let phi = (p3.1 + lead * b.1).atan2(p3.0 + lead * b.0 - x_need);
-                            lead = SPLIT_LEAD.max(1.2 * LEG_MIN_RADIUS * ((phi - psi).max(0.0) / 2.0).tan());
-                        }
-                        let p1 = (p3.0 + lead * b.0, p3.1 + lead * b.1);
-                        let phi = p1.1.atan2(p1.0 - x_need);
-                        if phi - psi < 0.03 || phi > CROSS_MAX || x_need > main_room {
-                            break;
-                        }
-                        let Some(far) = far_side(x_need, phi, swing) else { break };
-                        match leg(far, &[p1], p3, (x, y), d3) {
-                            Ok(r) => {
-                                got = Some(r);
+                    s += 10.0;
+                }
+                Ok((v, s_x))
+            };
+            let mut tries = 0;
+            let step = J3_STEP.max(r_aim / 60.0);
+            let mut d3 = J3_MIN.max(lead + split_len);
+            laid = 'search: loop {
+                d3 += step;
+                if d3 > limit || tries >= RAMP_TRIES {
+                    break None;
+                }
+                let Some((e, t, f)) = seg_at(net, &route, d3) else { continue };
+                if t < 10.0 || t > net.edge_len[e as usize] - 10.0 {
+                    continue;
+                }
+                let Some((x, y, th)) = at(net, &route, d3) else { break None };
+                let p3 = local(x, y);
+                let psi = (th.cos() * nrm.0 + th.sin() * nrm.1).atan2(th.cos() * u.0 + th.sin() * u.1);
+                // T-3188: a route nearly parallel to the main takes a flyover too, J3 two GAPs off it
+                let shallow = psi < SHALLOWEST;
+                if !(-SHALLOWEST..=STEEPEST).contains(&psi) || p3.1 < if shallow { 2.0 * GAP } else { GAP + 5.0 } {
+                    continue;
+                }
+                // back along the route from J3, and toward the main square to it
+                let b = (-psi.cos(), -psi.sin());
+                let m = (psi.sin(), -psi.cos());
+                for &(beside, swing) in &LEGS {
+                    let found = if beside {
+                        // case A: GAP beside J3's tangent from the split back, then straight to the
+                        // main at `phi`: along that tangent where it meets the main far enough
+                        // ahead, else (T-3169, T-3188) further ahead and steeper, so the crossing
+                        // curve has the room its radius wants
+                        let n0 = (p3.0 + (lead + split_len) * b.0 + GAP * m.0, p3.1 + (lead + split_len) * b.1 + GAP * m.1);
+                        let near = [n0, (p3.0 + lead * b.0, p3.1 + lead * b.1)];
+                        // the far side's last corner, GAP across the main
+                        let mut c = (n0.0 - (n0.1 + GAP) / psi.max(SHALLOWEST).tan()).max(jog_d + GAP / jog.tan() + 2.0);
+                        let mut got = None;
+                        for _ in 0..if grow.is_some() { 12 } else { 4 } {
+                            let phi = (n0.1 + GAP).atan2(n0.0 - c);
+                            let x_c = c + GAP / phi.tan();
+                            if phi > CROSS_MAX || x_c > main_room {
                                 break;
                             }
-                            Err(Some(more)) => x_need += more + 1.0,
-                            Err(None) => break,
+                            let Some(far) = far_side(x_c, phi, swing) else {
+                                c += 0.25 * r_aim;
+                                continue;
+                            };
+                            match leg(far, &near, p3, (x, y), d3) {
+                                Ok(r) => {
+                                    got = Some(r);
+                                    break;
+                                }
+                                Err(Some(more)) => c += more + more.signum(),
+                                Err(None) => break,
+                            }
                         }
+                        got
+                    } else {
+                        // case B: from just past J3 straight to a crossing far enough ahead, a little
+                        // further out where the turn is sharp, so its arc holds the radius aimed for
+                        let mut x_need = RAMP_ROOM;
+                        let mut got = None;
+                        for _ in 0..if grow.is_some() { 12 } else { 4 } {
+                            let mut lead = SPLIT_LEAD;
+                            for _ in 0..3 {
+                                let phi = (p3.1 + lead * b.1).atan2(p3.0 + lead * b.0 - x_need);
+                                lead = SPLIT_LEAD.max(1.2 * r_aim * ((phi - psi).max(0.0) / 2.0).tan());
+                            }
+                            let p1 = (p3.0 + lead * b.0, p3.1 + lead * b.1);
+                            let phi = p1.1.atan2(p1.0 - x_need);
+                            if phi - psi < 0.03 || phi > CROSS_MAX || x_need > main_room {
+                                break;
+                            }
+                            let Some(far) = far_side(x_need, phi, swing) else { break };
+                            match leg(far, &[p1], p3, (x, y), d3) {
+                                Ok(r) => {
+                                    got = Some(r);
+                                    break;
+                                }
+                                Err(Some(more)) if more > 0.0 => x_need += more + 1.0,
+                                Err(_) => break,
+                            }
+                        }
+                        got
+                    };
+                    let Some((v, s_x)) = found else { continue };
+                    tries += 1;
+                    if let Some(shape) = ramp_levels(net, &v, level, s_x).or_else(|| ramp_leg(net, &v, level)) {
+                        break 'search Some((e, t, f, shape, d3));
                     }
-                    got
-                };
-                let Some((v, s_x)) = found else { continue };
-                tries += 1;
-                if let Some(shape) = ramp_levels(net, &v, level, s_x).or_else(|| ramp_leg(net, &v, level)) {
-                    break 'search (e, t, f, shape);
+                    if tries >= RAMP_TRIES {
+                        break 'search None;
+                    }
                 }
-                if tries >= RAMP_TRIES {
-                    return None;
-                }
+            };
+            if laid.is_some() {
+                break;
             }
-        };
+        }
+        let (e3, t3, fwd3, shape, d3) = laid?;
         let (nd3, mut first3, mut second3) = net.split_plan(e3, t3).ok()?;
         if nd3.level != level {
             return None;
@@ -448,7 +514,7 @@ impl TrackApi {
             ops.push(Op::Edge { id, data: Some(d) });
         }
         let pis = shape[1..shape.len() - 1].to_vec();
-        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)] }) });
+        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: net.edge_kind[re as usize], sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)] }) });
         Some((ops, vec![j3], vec![e3b, leg], shape))
     }
 }

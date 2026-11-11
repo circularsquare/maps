@@ -119,14 +119,22 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   the other two snaps) [T-3129]: [track-and-service.md](track-and-service.md) "Snap to roads";
   and the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
   region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
-  does is under [Drawing track](#drawing-track). Last **Target max speed** (hover "Attempt to draw
+  does is under [Drawing track](#drawing-track). Last, at the row's right end (not with Tram), the
+  **Advanced** expander (a chevron that turns down when open) [T-3169]: it adds a third row, right
+  aligned under it, of the two target speeds; whether it is open is remembered per browser
+  (`build.advanced`), closed at first. **Target max speed** (hover "Attempt to draw
   track straight enough to reach this speed."), a stepper through 20, 40, 60, 80, 100, 120, 140, 160,
   200, 250 and 320 km/h whose value can be clicked and typed in the shown unit, any speed from 20 to
   320 km/h (a step from a typed speed goes to the next step past it; a stepped speed shows to the
-  nearest 5, a typed one as typed) [T-3121], 160 by default, its box fitting "320 km/h"; on a phone
-  the speed button opens the same stepper; higher lays the curves of newly drawn track wider and lower
+  nearest 5, a typed one as typed) [T-3121], 160 by default, its box fitting "320 km/h";
+  higher lays the curves of newly drawn track wider and lower
   tighter, [track-and-service.md](track-and-service.md) 6.1 [T-817, T-1127, T-3121]; picking High speed sets it to 320
   (it can still be stepped down) and picking Regular again puts back the speed from before [T-817].
+  Then **Flyover target max speed** (hover "Attempt to build new flyovers with curves wide enough to
+  reach this speed. Faster flyovers take more room."), the same stepper, 80 km/h by default
+  (`build.fly`): the speed an automatic flyover's crossing leg is laid out for where it has the room,
+  never over the target max speed ([track-and-service.md](track-and-service.md) 6.1 "Flyovers") [T-3169]. On a phone the speed
+  button (showing the target max speed) opens both, one labelled stepper each.
   There is no crossover tool, and the game adds none: the player draws crossing track [T-733, T-1688,
   [track-and-service.md](track-and-service.md) 6.1]. Everything the player reads says level for the
   track's seven steps, never elevation ("Level", "Level +1", "Levels go from −3 to +3."; "ground
@@ -135,7 +143,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   tool reads no other option. Tram stops and the other stations each keep their own length (tram 2
   cars to start, regular and high speed 10 cars, shared by those two); the bar shows the length of
   the kind under the pointer, else of the track type picked [T-3015].
-- The level, the ramp switch, the track type, the target max speed, the keep placing switch, the
+- The level, the ramp switch, the track type, both target speeds, the Advanced row, the keep placing switch, the
   snap and beside switches and both platform lengths are remembered per browser (localStorage with the other panel settings,
   not in the save) [T-468]; keep placing is on by default [T-942]. A browser with nothing remembered
   starts at +1, the first visit's level (ground track bridges water and ramps over other track, which
@@ -282,7 +290,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   into several corners); the same labels show while a selected blueprint stretch is reshaped or a
   node dragged (`placeCurveLabels`, `map/trackTagRows.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
-  [T-727d].
+  [T-727d]. A flyover the route makes adds one label at its crossing leg's slowest curve, beside
+  that leg, so the map shows both sides' speeds; it is placed first, so where the two would
+  overlap the leg's (the slower) shows [T-3168].
 - **Loose ends** [T-416, T-1485, T-1522, T-1534; `map/endMarkers.ts`]: while the track or station tool is on, a
   small hollow ring in the accent colour marks each loose end (a node with one piece of track and
   no station) within 160 px of the pointer, and only where the track is visibly drawn: built track

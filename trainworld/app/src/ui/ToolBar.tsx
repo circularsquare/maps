@@ -2,7 +2,7 @@
 // the map's bottom edge on a phone), shown only while that tool is on; T-2284: the click mode's
 // colour as an aura round the map.
 
-import { computed } from "@preact/signals";
+import { computed, type Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { distUnit, kmhFromShown, kmhToShown, length, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
@@ -11,7 +11,7 @@ import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/pal
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -39,26 +39,43 @@ const typeLabel = (tt: TrackType) => (tt === "tram" ? t("toolBar.tram") : tt ===
 const speedTip = () => t("toolBar.speedTip");
 
 /** T-3121: the next step up or down from the speed set, which may be a typed one between steps. */
-function stepSpeed(s: number) {
-  const now = designSpeed.value;
+function stepSpeed(sig: Signal<number>, s: number) {
+  const now = sig.value;
   const to = s > 0 ? DESIGN_SPEEDS.find((v) => v > now + 1e-6) : [...DESIGN_SPEEDS].reverse().find((v) => v < now - 1e-6);
   if (to === undefined) return false;
-  designSpeed.value = to;
+  sig.value = to;
 }
 
 /** A target speed: a step's to the nearest 5, as a round km/h figure reads in mph; a typed one as typed. */
 const speedShown = (v: number) => speed(v, (DESIGN_SPEEDS as readonly number[]).includes(v) ? 5 : 1);
 
-/** The target speed's stepper, its value typed in the shown unit (T-3121). */
-function SpeedStepper() {
-  const v = designSpeed.value;
-  return <Stepper value={speedShown(v)} wide label={t("toolBar.targetSpeedLabel")} onStep={stepSpeed}
-    type={{ text: String(Math.round(kmhToShown(v))), set: (n) => { designSpeed.value = clampDesign(kmhFromShown(n)); } }} />;
+/** A target speed's stepper, its value typed in the shown unit (T-3121): the design speed, or the
+ * flyover target max speed (T-3169). */
+function SpeedStepper({ sig = designSpeed, label = t("toolBar.targetSpeedLabel") }: { sig?: Signal<number>; label?: string }) {
+  const v = sig.value;
+  return <Stepper value={speedShown(v)} wide label={label} onStep={(s) => stepSpeed(sig, s)}
+    type={{ text: String(Math.round(kmhToShown(v))), set: (n) => { sig.value = clampDesign(kmhFromShown(n)); } }} />;
+}
+
+/** T-3169: the track bar's Advanced settings, one label and stepper each. */
+function AdvancedSettings() {
+  return (
+    <>
+      <span class="tb-speed">
+        <span data-tip={speedTip()}>{t("toolBar.targetSpeed")}</span>
+        <SpeedStepper />
+      </span>
+      <span class="tb-speed">
+        <span data-tip={t("toolBar.flyoverSpeedTip")}>{t("toolBar.flyoverSpeed")}</span>
+        <SpeedStepper sig={flyoverSpeed} label={t("toolBar.flyoverSpeedLabel")} />
+      </span>
+    </>
+  );
 }
 
 /** Two rows: the level, the ramp switch and the price; the track type, the three placing switches and
- * the target max speed. On a phone one row, the level, type and speed as one button each that opens
- * its choices above the bar. */
+ * the Advanced expander, which adds a third, the two target speeds (T-3169). On a phone one row, the
+ * level, type and speeds as one button each that opens its choices above the bar. */
 function TrackBar() {
   const lv = buildLevel.value;
   const tt = trackType.value;
@@ -68,6 +85,7 @@ function TrackBar() {
   const m = moneyState.value;
   const mult = trackMult(lv, tt, q, one);
   const upkeep = upkeepAt(lv, tt, m, q, one);
+  const adv = buildAdvanced.value;
   const [open, setOpen] = useState<"level" | "type" | "speed" | null>(null);
   const toggle = (k: "level" | "type" | "speed") => setOpen(open === k ? null : k);
   return (
@@ -116,13 +134,14 @@ function TrackBar() {
               data-tip={t("toolBar.snapBesideTip")}
               onClick={() => { const on = !snapBeside.peek(); snapBeside.value = on; if (on) snapReal.value = snapRoads.value = false; }}><Icon.snapBeside /></button>}
           </span>
-          {!tram && <span class="tb-wide tb-speed">
-            <span data-tip={speedTip()}>{t("toolBar.targetSpeed")}</span>
-            <SpeedStepper />
-          </span>}
+          {!tram && <button class={"btn text tb-wide tb-advanced" + (adv ? " open" : "")} aria-expanded={adv}
+            onClick={() => (buildAdvanced.value = !buildAdvanced.peek())}><Icon.chevron />{t("toolBar.advanced")}</button>}
           {!tram && <button class="btn tb-narrow tb-speed-btn" data-tip={`${t("toolBar.targetSpeed")}\n${speedTip()}`} aria-label={t("toolBar.targetSpeed")} aria-expanded={open === "speed"}
             onClick={() => toggle("speed")}>{speedShown(designSpeed.value).split(" ")[0]}</button>}
         </div>
+        {!tram && adv && <div class="tb-row tb-wide tb-adv-row">
+          <AdvancedSettings />
+        </div>}
       </div>
       {open === "level" && (
         <div class="tool-bar-pop touch-levels">
@@ -135,8 +154,8 @@ function TrackBar() {
         </div>
       )}
       {open === "speed" && (
-        <div class="tool-bar-pop">
-          <SpeedStepper />
+        <div class="tool-bar-pop tb-pop-speeds">
+          <AdvancedSettings />
         </div>
       )}
     </>

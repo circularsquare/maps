@@ -187,8 +187,14 @@ fn t3092_flyover_lays_two_one_way_legs() {
 /// The flyover a branch at `deg` off a double main makes, clicked at x = 1000 with ramps on at
 /// target speed `kmh`: (metres of main it takes behind the click, ahead of it, junctions laid).
 fn footprint(deg: f64, kmh: f64) -> (f64, f64, usize) {
+    footprint_at(deg, kmh, DESIGN_MIN_KMH).0
+}
+
+/// `footprint` at flyover target `fly` km/h, and the tightest curve of the one-way legs, m.
+fn footprint_at(deg: f64, kmh: f64, fly: f64) -> ((f64, f64, usize), f64) {
     let mut a = api();
     a.set_design_speed(kmh);
+    a.set_flyover_speed(fly);
     let th = deg.to_radians();
     assert_eq!(flyover_y(&mut a, 0.0, 1.0, (1000.0 + 3000.0 * th.cos(), 3000.0 * th.sin())), 0, "{}", a.issues());
     let net = &a.w.net;
@@ -197,7 +203,145 @@ fn footprint(deg: f64, kmh: f64) -> (f64, f64, usize) {
     let xs: Vec<f64> = js.iter().map(|&j| net.node_x[j as usize]).collect();
     let lo = xs.iter().copied().fold(f64::MAX, f64::min);
     let hi = xs.iter().copied().fold(f64::MIN, f64::max);
-    ((1000.0 - lo).max(0.0) / k, (hi - 1000.0) / k, js.len())
+    (((1000.0 - lo).max(0.0) / k, (hi - 1000.0) / k, js.len()), tightest_leg(&a))
+}
+
+/// The tightest curve of the one-way legs, ground m.
+fn tightest_leg(a: &TrackApi) -> f64 {
+    let net = &a.w.net;
+    alive(a)
+        .into_iter()
+        .filter(|&e| net.edge_tracks[e as usize] == 1)
+        .flat_map(|e| net.fit(&net.edge_vertices(e)).radius)
+        .filter(|&r| r > 0.0)
+        .fold(f64::MAX, f64::min)
+}
+
+/// T-3169: the crossing leg takes no curve under the flyover target's radius where it has the room
+/// (before, the split at J3 held every leg to about 200 m, 54 km/h); a higher target takes more of
+/// the main. `--nocapture` prints the lengths.
+#[test]
+fn t3169_flyover_target_sets_its_curves() {
+    for deg in [30.0, 60.0] {
+        let mut was = 0.0;
+        for fly in [DESIGN_MIN_KMH, 60.0, 80.0, 100.0, 120.0, 160.0] {
+            let ((behind, ahead, n), r) = footprint_at(deg, 160.0, fly);
+            let v = (A_LAT * r).sqrt() * 3.6;
+            println!("t3169 {deg} deg, flyover target {fly} km/h: {ahead:.0} m of main, tightest leg curve {r:.0} m ({v:.0} km/h)");
+            assert_eq!(n, 2, "{deg} deg at {fly} km/h: a flyover");
+            assert!(behind < 1.0);
+            // the branch is one curve, which holds the leg to about 80 km/h; past that it is laid
+            // as fast as fits, no slower than 20 km/h under the target's
+            if fly > DESIGN_MIN_KMH && fly <= FLYOVER_KMH {
+                assert!(r >= design_radius(fly) * 0.98, "{deg} deg at {fly} km/h: a curve of {r} m");
+                assert!(ahead >= was - 1.0, "{deg} deg at {fly} km/h: {ahead} m, under {was}");
+            } else if fly > FLYOVER_KMH {
+                assert!(r >= design_radius(FLYOVER_KMH) * 0.98, "{deg} deg at {fly} km/h: a curve of {r} m");
+            }
+            was = ahead;
+        }
+    }
+}
+
+/// T-3188: a branch leaving at a few degrees, nearly parallel to the main, gets a flyover too.
+/// `--nocapture` prints the lengths.
+#[test]
+fn t3188_shallow_split() {
+    let mut bad = vec![];
+    for deg in [3.0f64, 5.0, 8.0, 12.0] {
+        for fly in [40.0, FLYOVER_KMH, 120.0] {
+            let mut a = api();
+            a.set_flyover_speed(fly);
+            let th = deg.to_radians();
+            assert_eq!(flyover_y(&mut a, 0.0, 1.0, (1000.0 + 3500.0 * th.cos(), 3500.0 * th.sin())), 0, "{}", a.issues());
+            let js = junctions(&a);
+            let k = a.w.net.k_at(0.0);
+            let hi = js.iter().map(|&j| a.w.net.node_x[j as usize]).fold(f64::MIN, f64::max);
+            let r = tightest_leg(&a);
+            println!("t3188 {deg} deg, flyover target {fly} km/h: {} junctions, {:.0} m of main, tightest leg curve {r:.0} m ({:.0} km/h)", js.len(), (hi - 1000.0) / k, (A_LAT * r).sqrt() * 3.6);
+            if js.len() != 2 {
+                bad.push((deg, fly));
+            }
+        }
+    }
+    // a branch that runs out beside the main, `off` m from it
+    for off in [30.0, 50.0] {
+        let mut a = api();
+        assert_eq!(a.add_route(&ends(free(-3000.0, 0.0), free(5000.0, 0.0)), &[], 2, false), 0);
+        let e = *alive(&a).iter().find(|&&e| a.w.net.project(e, 1000.0, 0.0).1 < 1.0).unwrap();
+        a.set_route_ramp(true);
+        let k = a.w.net.k_at(0.0);
+        assert_eq!(a.add_route(&ends([2.0, e as f64, 1000.0, 0.0, 0.0], free(1000.0 + 4000.0 * k, off * k)), &[1000.0 + 800.0 * k, off * k, 0.0, 0.0], 2, true), 0, "{}", a.issues());
+        let js = junctions(&a);
+        let r = tightest_leg(&a);
+        println!("t3188 beside the main {off} m off: {} junctions, tightest leg curve {r:.0} m ({:.0} km/h)", js.len(), (A_LAT * r).sqrt() * 3.6);
+        if js.len() != 2 {
+            bad.push((off, 0.0));
+        }
+    }
+    assert!(bad.is_empty(), "flat at {bad:?}");
+}
+
+/// T-3169: a route drawn for 60 km/h aims its flyover at 60, not at a faster flyover target.
+#[test]
+fn t3169_flyover_no_faster_than_the_route() {
+    let ((_, ahead, n), r) = footprint_at(30.0, 60.0, 120.0);
+    let ((_, ahead160, _), _) = footprint_at(30.0, 160.0, 120.0);
+    println!("t3169 route at 60 km/h, flyover target 120: {ahead:.0} m of main, tightest leg curve {r:.0} m");
+    assert_eq!(n, 2);
+    // the plain leg is the route's own curve, laid for 60 a little under its radius
+    assert!(r >= design_radius(60.0) * 0.96 && r < design_radius(80.0), "{r}");
+    assert!(ahead < ahead160, "{ahead} vs {ahead160}");
+}
+
+/// T-3169: with no room for the target, the flyover is laid tighter, not flat.
+#[test]
+fn t3169_no_room_for_the_target_lays_it_tighter() {
+    let mut a = api();
+    a.set_flyover_speed(160.0);
+    // the branch ends 900 m out: room for a tight flyover, none for a 160 km/h one
+    assert_eq!(flyover_y(&mut a, 0.0, 1.0, (1800.0, 500.0)), 0, "{}", a.issues());
+    assert_eq!(a.route_flyovers_flat(), 0);
+    assert_eq!(junctions(&a).len(), 2);
+    let r = tightest_leg(&a);
+    assert!(r < design_radius(160.0) * 0.98, "{r}");
+}
+
+/// T-3170: high-speed track gets real flyovers too, its legs one-way single high-speed track, on
+/// a high-speed main and on a regular one.
+#[test]
+fn t3170_high_speed_flyover() {
+    for hsr_main in [true, false] {
+        let mut a = api();
+        a.set_route_hsr(hsr_main);
+        assert_eq!(a.add_route(&ends(free(-3000.0, 0.0), free(5000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+        let e = *alive(&a).iter().find(|&&e| a.w.net.project(e, 1000.0, 0.0).1 < 1.0).unwrap();
+        a.set_route_hsr(true);
+        a.set_route_ramp(true);
+        assert_eq!(a.add_route(&ends([2.0, e as f64, 1000.0, 0.0, 0.0], free(3500.0, 1500.0)), &[], 2, true), 0, "{}", a.issues());
+        assert_eq!(a.route_flyovers_flat(), 0, "high-speed main {hsr_main}");
+        let net = &a.w.net;
+        let js = junctions(&a);
+        assert_eq!(js.len(), 2, "high-speed main {hsr_main}");
+        assert!(js.iter().all(|&j| !junction_crosses(net, j)));
+        let singles: Vec<u32> = alive(&a).into_iter().filter(|&e| net.edge_tracks[e as usize] == 1).collect();
+        assert!(singles.len() >= 2 && singles.iter().all(|&e| net.edge_oneway[e as usize] != 0 && net.edge_kind[e as usize].is_hsr()), "{singles:?}");
+        assert!(tightest_leg(&a) >= HSR_MIN_RADIUS);
+        // it saves and loads as it was
+        let bytes = a.save();
+        let mut b = api();
+        assert!(b.load(&bytes), "{}", b.issues());
+        let m = &b.w.net;
+        assert_eq!(alive(&b).into_iter().filter(|&e| m.edge_tracks[e as usize] == 1 && m.edge_kind[e as usize].is_hsr() && m.edge_oneway[e as usize] != 0).count(), singles.len());
+    }
+    // high-speed track is still never two-way single
+    let mut a = api();
+    a.set_route_hsr(true);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(3000.0, 0.0)), &[], 2, false), 0);
+    let e = alive(&a)[0];
+    let mut d = a.w.net.edge_data(e).unwrap();
+    d.tracks = 1;
+    assert!(a.w.net.set_edge(e, Some(d)).is_err());
 }
 
 /// T-3120: a flyover needs no main behind the point clicked, and its length along the main is

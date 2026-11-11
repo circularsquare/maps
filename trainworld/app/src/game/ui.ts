@@ -178,7 +178,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 14;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; platform: number; tramPlatform: number }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -349,6 +349,12 @@ export const DESIGN_MIN = 20, DESIGN_MAX = 320;
 export type DesignSpeed = number;
 export const clampDesign = (kmh: number): number => (Number.isFinite(kmh) ? Math.round(Math.max(DESIGN_MIN, Math.min(DESIGN_MAX, kmh)) * 1000) / 1000 : 160);
 export const designSpeed = signal<DesignSpeed>(typeof saved.build?.design === "number" ? clampDesign(saved.build.design) : 160);
+/** T-3169: the speed real flyovers' crossing legs are laid out for where they have the room, km/h
+ * (`TrackApi::set_flyover_speed`; the sim's FLYOVER_KMH before one is set), stepped as the design speed. */
+export const FLYOVER_SPEED = 80;
+export const flyoverSpeed = signal<DesignSpeed>(typeof saved.build?.fly === "number" ? clampDesign(saved.build.fly) : FLYOVER_SPEED);
+/** T-3169: the track bar's Advanced row (the two target speeds) is open. */
+export const buildAdvanced = signal(saved.build?.advanced === true);
 /** T-817: the track tool lays high-speed track, else regular. Double or quad (T-3126), never single. */
 export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 1 && saved.build?.tram !== true);
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
@@ -468,7 +474,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

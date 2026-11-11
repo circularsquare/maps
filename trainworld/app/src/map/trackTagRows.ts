@@ -328,6 +328,14 @@ export function curveLabels(verts: Float64Array): CurveLabel[] {
   return out;
 }
 
+/** T-3168: a label for each flyover crossing leg's slowest curve (`PreviewAnswer.legs`), beside the
+ * route's own; listed first, so where two would overlap the tighter side's shows. */
+export function legCurveLabels(legs: Float64Array | undefined): CurveLabel[] {
+  const out: CurveLabel[] = [];
+  for (let k = 0; legs && k + 3 < legs.length; k += 4) if (curveLabelled(legs[k + 2], legs[k + 3])) out.push({ x: legs[k], y: legs[k + 1], kmh: legs[k + 3] });
+  return out;
+}
+
 /** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,
  * as the track tool's tag colours the speed. Set only when it changes, since the labels are placed
  * every frame. */

@@ -1190,7 +1190,12 @@ button.save-add:hover { color: var(--text); }
 .tool-bar .btn.lv, .tool-bar-pop .btn.lv { font-size: 15px; }
 .tool-bar { flex-direction: column; align-items: stretch; padding: 6px 10px; border-top: 2px solid var(--mode); } /* T-2446: the mode's colour, 2 px */
 .tool-bar .tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-.tool-bar .tb-speed { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.tool-bar .tb-speed, .tool-bar-pop .tb-speed { display: inline-flex; align-items: center; gap: 8px; }
+/* T-3169: the Advanced expander at the bottom right; its row, the two target speeds, right-aligned under it */
+.tool-bar .btn.tb-advanced { margin-left: auto; gap: 4px; padding: 0 6px 0 4px; }
+.tool-bar .btn.tb-advanced svg { width: 12px; height: 12px; }
+.tool-bar .btn.tb-advanced.open svg { transform: rotate(90deg); }
+.tool-bar .tb-adv-row { justify-content: flex-end; column-gap: 16px; }
 .tool-bar .price { margin: 0; }
 /* T-2664: Regular / High speed sat about 1 px high in their buttons (descenders count in the centring); the level digits are fine */
 .tool-bar .group .btn:not(.lv) { padding-top: 2px; }
@@ -1824,6 +1829,7 @@ button.save-add:hover { color: var(--text); }
   .station-bar { gap: 8px; padding-left: 10px; }
   .tool-bar-pop { display: block; position: absolute; left: 50%; bottom: calc(36px / var(--ui, 1) + 26px); transform: translateX(-50%); z-index: 4; white-space: nowrap; }
   .tool-bar-pop .btn { height: calc(36px / var(--ui, 1)); }
+  .tool-bar-pop.tb-pop-speeds { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 6px 8px; background: var(--bg); border: 1px solid var(--rule); }
   .tool-bar-pop .btn.lv { min-width: calc(40px / var(--ui, 1)); }
   /* the tool notes (the mode's descriptor first) right above a bar */
   #main:has(.tool-bar, .blueprint-bar) #tools { bottom: calc(36px / var(--ui, 1) + 26px); }

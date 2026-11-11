@@ -4069,7 +4069,7 @@ async function processMessage(msg: ToClock) {
  * preview found every mask its geometry needs in, at that version: its edit needs no second look */
 let trackVersion = 0;
 let maskedRoute = "";
-const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), !!r.hsr, !!r.tram, !!r.street, r.street ? r.streetLine ?? null : null, !!r.ramp, r.beside ?? null])}`;
+const routeKey = (r: RouteAsk) => `${trackVersion}|${JSON.stringify([r.from, r.to, r.pis, !!r.single, !!r.quad, !!r.through, designOf(r), r.flyover ?? null, !!r.hsr, !!r.tram, !!r.street, r.street ? r.streetLine ?? null : null, !!r.ramp, r.beside ?? null])}`;
 /** T-1685: the pieces a route beside track runs along, for `set_route_beside` (none: u32::MAX) */
 const besideOf = (r: { beside?: [number, number] }): [number, number] => r.beside ?? [0xffffffff, 0xffffffff];
 /** The design speed new track is laid for, km/h, where the request names none */
@@ -4079,6 +4079,7 @@ const designOf = (r: { design?: number }) => r.design ?? 160;
 function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, number, boolean] {
   a.set_route_tangent(!!r.through);
   a.set_design_speed(designOf(r));
+  a.set_flyover_speed(r.flyover ?? 80);
   a.set_route_kind(r.tram ? (r.street ? 2 : 3) : 0);
   a.set_route_street(new Float64Array(r.tram && r.street ? r.streetLine ?? [] : []));
   a.set_route_hsr(!!r.hsr);
@@ -4501,7 +4502,14 @@ async function handle(msg: ToClock) {
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
     const flatJunctions = msg.kind === "preview" ? a.route_flyovers_flat() : 0;
     const joins = msg.kind === "preview" ? a.route_joins() : undefined;
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(joins ? { joins } : {}), ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
+    // T-3168: each flyover leg's slowest curve, labelled on the map beside the route's own
+    const legRows = msg.kind === "preview" ? a.preview_leg_curves() : new Float64Array(0);
+    const legs = new Float64Array(legRows.length);
+    for (let k = 0; k + 3 < legRows.length; k += 4) {
+      const [x, y] = packLocal(legRows[k], legRows[k + 1]);
+      legs.set([x, y, legRows[k + 2], legRows[k + 3]], k);
+    }
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(joins ? { joins } : {}), ...(flatJunctions > 0 ? { noFlyover: true } : {}), ...(legs.length ? { legs } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

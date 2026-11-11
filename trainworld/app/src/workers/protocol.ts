@@ -50,7 +50,9 @@ export type StationAt =
 export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number];
   /** T-3137: which of double track's two tracks single track joins at its start and end: a point (pack units) on that
    * track, start x, y, end x, y (`TrackApi::set_route_join`); null for the track beside the route there */
-  join?: [number | null, number | null, number | null, number | null] }
+  join?: [number | null, number | null, number | null, number | null];
+  /** T-3169: the flyover target max speed, km/h (`TrackApi::set_flyover_speed`); 80 when absent */
+  flyover?: number }
 
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
@@ -732,6 +734,8 @@ export type FromClock =
       arc?: Float64Array;
       /** T-3092: a junction the route makes stays flat for want of room for a flyover */
       noFlyover?: true;
+      /** T-3168: each flyover crossing leg's slowest curve, as `verts` (x, y local units, radius, km/h) */
+      legs?: Float64Array;
       /** the draw anchor version `verts`, `pts`, `arc` and `marks` are relative to (T-307) */
       anchor?: number;
       /** where the track makes a crossing or a flat junction (T-629): x, y (local units), kind (0

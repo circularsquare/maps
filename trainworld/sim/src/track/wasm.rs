@@ -58,6 +58,8 @@ pub struct TrackApi {
     route_express: Vec<Pi>,
     /// T-3092: the crossing legs of the flyovers the last route asked about lays, each J3 to J2.
     route_legs: Vec<Vec<Pi>>,
+    /// T-3168: the last preview's crossing legs' vertex rows (`preview_leg_curves`).
+    preview_leg_rows: Vec<f64>,
     /// T-3092: how many junctions of the last route asked about fell back to flat for want of room.
     flyover_fell_back: u32,
     /// T-656: the last route's alignment once bridged over water (what is built and drawn), else
@@ -71,6 +73,9 @@ pub struct TrackApi {
     route_tangent: bool,
     /// T-817: the auto radius cap of the corners the drawing tool makes, ground m (`set_design_speed`).
     route_cap: f64,
+    /// T-3169: the radius a real flyover's crossing leg aims for at every curve, ground m
+    /// (`set_flyover_speed`).
+    flyover_r: f64,
     /// T-817: double track the drawing tool lays is high-speed track (`set_route_hsr`).
     route_hsr: bool,
     /// T-2926: the kind of track the drawing tool lays when it is a tram kind (`set_route_kind`); Regular otherwise.
@@ -342,12 +347,14 @@ impl TrackApi {
             route_vertices: vec![],
             route_express: vec![],
             route_legs: vec![],
+            preview_leg_rows: vec![],
             flyover_fell_back: 0,
             route_bridged: vec![],
             bridge_refused: false,
             bridge_short: Issue::BridgeNoRoom,
             route_tangent: false,
             route_cap: R_CAP,
+            flyover_r: design_radius(FLYOVER_KMH),
             route_hsr: false,
             route_kind: TrackKind::Regular,
             route_street: vec![],

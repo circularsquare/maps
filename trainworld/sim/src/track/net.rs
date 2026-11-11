@@ -1405,7 +1405,9 @@ impl Network {
             if d.a == d.b {
                 return Err(Issue::EdgeLoop { edge: id });
             }
-            if (d.tracks != 1 && d.tracks != 2) || ((d.kind.is_hsr() || d.kind.spec().family != 0) && (d.tracks != 2 || d.crossover)) {
+            // T-3170: high-speed track is double, or one-way single as a real flyover's leg
+            let hsr_ok = d.tracks == 2 || (d.tracks == 1 && d.oneway != 0);
+            if (d.tracks != 1 && d.tracks != 2) || (d.kind.spec().family != 0 && (d.tracks != 2 || d.crossover)) || (d.kind.is_hsr() && (!hsr_ok || d.crossover)) {
                 return Err(Issue::Tracks { edge: id });
             }
             for (node, which) in [(d.a, 0u32), (d.b, 1u32)] {

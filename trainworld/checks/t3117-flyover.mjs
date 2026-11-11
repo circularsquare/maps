@@ -42,7 +42,8 @@ try {
     res.push(await cl.edit({ op: 'addStation', at: { kind: 'edge', edge: main.id, ...s0 }, platform: 200, name: '' }));
     await pause(300);
     const S = near(s0);
-    res.push(await cl.edit({ op: 'route', from: { kind: 'node', node: S }, to: { kind: 'free', ...b0, level: 0 }, pis: [], single: false, ramp: true, design }));
+    // T-3169: flyover target 20 km/h, the tightest flyover, which this check measures
+    res.push(await cl.edit({ op: 'route', from: { kind: 'node', node: S }, to: { kind: 'free', ...b0, level: 0 }, pis: [], single: false, ramp: true, design, flyover: 20 }));
     await pause(500);
     const [W, E, B] = [near(w0), near(e0), near(b0)];
     let m = { ok: true }, b = { ok: true };

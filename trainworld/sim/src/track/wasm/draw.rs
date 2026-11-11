@@ -690,19 +690,33 @@ impl TrackApi {
             self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap()));
             self.preview_lanes.resize(self.preview_speeds.len(), 255);
         }
-        // T-3092: each flyover's crossing leg, after a step with no track
+        // T-3092: each flyover's crossing leg, after a step with no track; T-3168: its slowest
+        // curve as the route's vertices are, for the map's curve label beside it
+        self.preview_leg_rows.clear();
         if out.len() > 5 {
+            let cap = self.route_kind_of(tracks).v_cap();
             for leg in &self.route_legs {
                 let f = self.w.net.fit(leg);
                 self.preview_speeds.push(-1.0);
                 self.preview_lanes.push(0);
                 render_samples(&f.pieces, &f.vert, &mut out);
-                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
+                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, cap));
                 self.preview_lanes.resize(self.preview_speeds.len(), 0);
+                let mut rows = vec![];
+                vertex_rows(&f, leg, &mut rows, cap);
+                if let Some(slow) = rows.chunks_exact(4).filter(|r| r[2] > 0.0).min_by(|a, b| a[3].total_cmp(&b[3])) {
+                    self.preview_leg_rows.extend_from_slice(slow);
+                }
             }
         }
         self.route_vertices = verts;
         out
+    }
+
+    /// T-3168: the last route preview's flyover crossing legs' slowest curves, one per leg: x, y (the
+    /// curve's middle), radius, km/h, as `preview_route`'s vertices.
+    pub fn preview_leg_curves(&self) -> Vec<f64> {
+        self.preview_leg_rows.clone()
     }
 
     /// T-3092: how many of the junctions the last route asked about makes fell back to flat ones
@@ -725,6 +739,14 @@ impl TrackApi {
     pub fn set_design_speed(&mut self, kmh: f64) {
         let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
         self.route_cap = design_radius(kmh);
+    }
+
+    /// T-3169: the flyover target max speed of routes after this, km/h, clamped as the design
+    /// speed is: a real flyover's crossing leg takes no curve under its radius where it has the
+    /// room, and falls back to a tighter one where it has not (`flyover::lay_flyover`).
+    pub fn set_flyover_speed(&mut self, kmh: f64) {
+        let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { FLYOVER_KMH };
+        self.flyover_r = design_radius(kmh);
     }
 
     /// T-817: whether double track drawn after this (routes and stations on open ground) is

@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -53,7 +53,7 @@ import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import type { BusStopMarkers } from "./busStops";
-import { curveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
+import { curveLabels, legCurveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -262,7 +262,7 @@ export class Tools {
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
-    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; singleTrack.value; designSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
+    effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; singleTrack.value; designSpeed.value; flyoverSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
     // asked again when more of them land
     let roadsSent = false;
@@ -1102,7 +1102,7 @@ export class Tools {
 
   private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside, at: Snap | null = this.hover) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside, ...this.joinReq(at) };
+    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside, ...this.joinReq(at) };
   }
 
   /** T-3137: a single-track route's `RouteAsk.join`, from the start's and `at`'s `Snap.join`; nothing when neither has one */
@@ -1144,7 +1144,7 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...this.joinReq(at) };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), flyover: flyoverSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...this.joinReq(at) };
   }
 
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */
@@ -2053,7 +2053,7 @@ export class Tools {
       else put(this.el(k++, "pi-mark"), ...toLocal(this.start.lng, this.start.lat));
       if (pv) {
         const from = k;
-        k += placeCurveLabels(curveLabels(pv.verts), (x, y) => this.screen(x, y), this.overlay.cssW, this.overlay.cssH, (i) => this.el(from + i, "pi-label"));
+        k += placeCurveLabels([...legCurveLabels(pv.legs), ...curveLabels(pv.verts)], (x, y) => this.screen(x, y), this.overlay.cssW, this.overlay.cssH, (i) => this.el(from + i, "pi-label"));
       }
     }
     for (let i = k; i < this.marks.length; i++) this.marks[i].style.display = "none";
