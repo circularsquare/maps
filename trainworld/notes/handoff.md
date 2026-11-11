@@ -60,8 +60,12 @@ then community on (5), push maps master.
 - search: T-3224 DONE, game landed cc510cc1 (box hidden until config says trainworldCommunitySearch); shonei-server
   22f4293 committed, NOT pushed or deployed: deploy on her word, then the box appears. 8800 = cc510cc1.
   Strings: community.search "Search", community.noMatch "No networks match that search" (show her).
-- moderation (Sonnet, a358f061586f53bde): T-3227 Names tab + hide as "player", T-3228 keep = never auto-hidden until
-  updated, T-3229 report counts plain in the inbox. Commits in shonei-server, no deploy.
+- moderation: T-3227/3228/3229 DONE, inbox landed dbced80f; shonei-server 464b5af (after 22f4293), NOT deployed. The
+  inbox's Names tab errors against the live server until the deploy. Account panel note "Your name is hidden from
+  others. Pick another." handed to playtime (owns AccountPanel.tsx).
+- ubc: T-3216 + T-3226 landed 182c7091 (pipeline; every tier 0 pack at its next education step, ~2 h on 8 cores via
+  merge_cells --through "tier0 {id} --education", no OSM re-read; the outline spread needs re-made caches). Done.
+- **Server deploy waiting on her word**: shonei-server 22f4293 (search) + 464b5af (moderation), unpushed.
 - playtime (Sonnet, 6118, a152928d838f8d34c): T-3230 time played (account panel, 60-minute messages, per game);
   stops before any shonei-server edit.
 - realnet (Opus, 6117, a27b2a7568b124ee7): T-3225 survey done (notes/T-3225.md, 0a48b758); her calls listed under
