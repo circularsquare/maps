@@ -24,7 +24,11 @@ T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `s
 flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
 **Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
 **v0.2.2 = 05c857b2** (translations all 11 languages complete, l10nbatch done; update notes committed, Anita still to
-reword). 8800 = 05c857b2; smoke8800 light 13/13 and dark 13/13 PASSED, deploy dry run OK (19:40). READY TO PUBLISH. After her word: `deploy.py --version 2026-11-10e --smoked`, website add/commit/push, `--verify --page`.
+reword). 8800 = 05c857b2; smoke8800 light 13/13 and dark 13/13 PASSED, deploy dry run OK (19:40). READY TO PUBLISH.
+DO NOT snapbuild until v0.2.2 is published: deploy.py uploads .tw-snap's dist, so 8800 must stay at 05c857b2.
+Master = 4358fa86 (pushed): + T-3115 share link and open a copy (dev smoke PASSED 28; server 996cd4e committed, not
+deployed; 8 English-only strings need an l10n batch before community goes public). Server commits waiting to deploy,
+in order: 4cd43f0 + fc98bb8 country boards, 829788b preview, 996cd4e copies. Deploy server before any game with T-3115. After her word: `deploy.py --version 2026-11-10e --smoked`, website add/commit/push, `--verify --page`.
 Set V0_2_2_AT in updates.ts at publish (a reword means another small l10n batch first).
 **Release v0.2.2 in prep (earlier) (Anita out ~19:00-21:00, "feel free to keepgoing"):** master ee3a28ec has T-3117/3102 flyover
 drawing, T-3118 loop gestures round 2, T-3113 Catalan. 8800 = ee3a28ec, cargo 465/645 and smoke against 8800 PASSED (19:10). updates.ts
@@ -37,8 +41,8 @@ word, deploy shonei-server (country boards + preview), append to /opt/shonei/sho
 `SHONEI_COMMUNITY_TESTERS=pw:<her username>` (ask her username, or her account id from the console line in
 notes/T-2887.md), restart, check the journal for "PREVIEW: 1 tester accounts"; she opens
 localhost:8800/trainworld/?acct=live&community (needs 60 min playtime on the account). Full steps in notes/T-2887.md.
-- sharecopy (Opus, aee2897be32c47b21, main tree + shonei-server, Vite 6187): T-3115 share link + open a copy (ON by
-  default) + card counts.
+- sharecopy (Opus, aee2897be32c47b21) DONE: T-3115 in 4358fa86 (see above).
+- chevron (Sonnet, aaeff40a11336de02, main tree, Vite 6188): T-3111 one-way stop chevron in the hover and while editing.
 **Release (earlier note):** Anita 18:20: "flyovers + right-click loops is a good place to release" (no rush about tonight). So the next
 release = T-3117 flyover drawing fixes + T-3109/3110 landed (+ T-3112, T-3108 already in). Then: Catalan batch if it is
 in, a translation batch for stale keys, updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, her word

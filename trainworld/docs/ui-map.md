@@ -923,7 +923,7 @@ those who got on, less the load carried on.
 - **Trains and stations** [T-194, T-305, T-313; `map/networkTips.ts`]: the same tag (wrapping at 320
   px). A train: "Line 1 train", "340 riders aboard" and "352 seats, 1,280 full". A station:
   its name, then its lines as bullets, each once (a station drawn as its own dot or box lists its
-  own lines) [T-559]; with ridership circles on, its complex's circle's count rows ([ui-demand-views.md](ui-demand-views.md) "Station ridership circles": under Total the riders, then entries and transfers apart, each after a dot in its colour) [T-722, T-1448]; where crowds
+  own lines; a line that serves the station one way has a chevron in its colour after its bullet, pointing the way its trains head, turned with the map, T-3111) [T-559]; with ridership circles on, its complex's circle's count rows ([ui-demand-views.md](ui-demand-views.md) "Station ridership circles": under Total the riders, then entries and transfers apart, each after a dot in its colour) [T-722, T-1448]; where crowds
   are drawn a row per line and direction with anyone waiting (the line's bullet, "to Van Cortlandt
   Park-242 St", "120 waiting"), the count in the alert red while that platform side is full, or
   "Nobody waiting on the platforms". On a dot, the crowd lines are its pie's numbers ("1,257

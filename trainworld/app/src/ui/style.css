@@ -1430,6 +1430,9 @@ button.save-add:hover { color: var(--text); }
 .tag-fact { display: inline-flex; flex: none; gap: 3px; align-items: center; white-space: nowrap; }
 .tag-fact.purpose-row { gap: 6px; }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }
+.bullet-heading { display: inline-flex; align-items: center; gap: 1px; }
+.heading-chevron { display: inline-flex; width: 16px; height: 16px; flex: none; transform-origin: 50% 50%; }
+.stop-mark > .heading-chevron { position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -8px; pointer-events: none; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff); }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
 .mode-bar i { display: block; height: 100%; }

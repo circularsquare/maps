@@ -20,7 +20,9 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
-import { turnedLine } from "../game/turnedLine";
+import { oneWayStops } from "../game/turnedLine";
+import { headingOnScreen } from "./stopHeading";
+import { headingChevron } from "./trackTagRows";
 import { queryClock } from "../workers/clockClient";
 import { GapFlash } from "./gapFlash";
 import { tagLines } from "./labelLayout";
@@ -141,6 +143,8 @@ interface Mark {
   y: number;
   d: number;
   shown: boolean;
+  /** T-3111: the chevron beside a one-way stop, made when first needed */
+  chev?: HTMLElement;
 }
 
 /** In the order a click prefers when markers overlap: the stops, then the ones that can be added. */
@@ -238,10 +242,7 @@ export class StopMarkers {
       if (!this.line) return;
       this.colour = this.line.colour;
       this.tram = !!w.lineStats[this.line.id]?.tram;
-      this.oneWay = new Map();
-      const turned = turnedLine(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
-      const ls = this.line.stops, lm = ls.length - 1;
-      for (const r of turned?.rows ?? []) if (r.once && r.occ[0] >= 0) this.oneWay.set(ls[r.i], [ls[(r.i + lm - 1) % lm], ls[(r.i + 1) % lm]]);
+      this.oneWay = oneWayStops(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
@@ -331,6 +332,15 @@ export class StopMarkers {
       m.d = stop ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       m.el.style.background = stop ? this.halfFill(id, n, x, y) : "";
+      const heading = stop && this.oneWay.has(id) ? headingOnScreen(this.overlay, n, this.oneWay.get(id)![0], this.oneWay.get(id)![1], this.index) : null;
+      if (heading === null) {
+        if (m.chev) m.chev.style.display = "none";
+      } else {
+        if (!m.chev) m.el.append((m.chev = headingChevron(this.colour, 0)));
+        m.chev.style.display = "";
+        m.chev.style.color = this.colour;
+        m.chev.style.transform = `rotate(${heading.toFixed(1)}deg) translateX(${(size / 2 + 11).toFixed(1)}px)`;
+      }
     }
     // stations that left the list (an undo): their markers go
     for (const [id, m] of this.marks)

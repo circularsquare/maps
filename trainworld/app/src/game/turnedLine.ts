@@ -148,3 +148,12 @@ function loopsBothEnds(stops: readonly string[], c: string[], turnsAt: (i: numbe
   }
   return found[0];
 }
+
+/** The stops a turned line serves one way (the rows passed once, their dot half filled), each with the
+ * stops before and after it on the walk: the trains there head from the first towards the second. */
+export function oneWayStops(stops: readonly string[], st: Pick<LineStats, "loop" | "oneWay"> & Partial<Pick<LineStats, "reversals">>): Map<string, [string, string]> {
+  const out = new Map<string, [string, string]>();
+  const lm = stops.length - 1;
+  for (const r of turnedLine(stops, st)?.rows ?? []) if (r.once && r.occ[0] >= 0) out.set(stops[r.i], [stops[(r.i + lm - 1) % lm], stops[(r.i + 1) % lm]]);
+  return out;
+}

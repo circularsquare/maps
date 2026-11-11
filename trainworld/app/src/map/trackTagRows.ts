@@ -196,11 +196,28 @@ export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
 }
 
 /** A row of line bullets. */
-export function lineBullets(lines: LineInput[]): HTMLDivElement {
+export function lineBullets(lines: LineInput[], heading?: (l: LineInput) => number | null): HTMLDivElement {
   const d = document.createElement("div");
   d.className = "tag-lines";
-  d.append(...lines.map((l) => lineBullet(l)));
+  d.append(...lines.map((l) => {
+    const b = lineBullet(l), deg = heading?.(l) ?? null;
+    if (deg === null) return b;
+    const w = document.createElement("span");
+    w.className = "bullet-heading";
+    w.append(b, headingChevron(l.colour, deg));
+    return w;
+  }));
   return d;
+}
+
+/** T-3111: a small chevron in a line's colour, pointing `deg` degrees clockwise from screen right. */
+export function headingChevron(colour: string, deg: number): HTMLSpanElement {
+  const c = document.createElement("span");
+  c.className = "heading-chevron";
+  c.style.color = colour;
+  c.style.transform = `rotate(${deg.toFixed(1)}deg)`;
+  c.innerHTML = '<svg viewBox="0 0 14 14" width="16" height="16" style="display:block;overflow:visible"><path d="M5.25 2 L8.75 7 L5.25 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return c;
 }
 
 /** One line of the tag holding `facts`. */

@@ -16,7 +16,7 @@ import { clock } from "../game/clock";
 import { complexes } from "../game/complexView";
 import { demandView } from "../game/demand";
 import { exact, forecast } from "../game/format";
-import type { WorldView } from "../game/types";
+import type { LineInput, WorldView } from "../game/types";
 import { nameBeforeNoun, vehicleCars, vehicleOf } from "../game/vehicle";
 import { hasUpgrade, UPGRADE, UPGRADE_TEXT } from "../game/upgrades";
 import { display, purposeFilter, shownDayPhrase } from "../game/ui";
@@ -24,6 +24,8 @@ import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
 import { circleColour, circleColours, circleList, stationCircles, type Circle } from "./stationCircles";
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
+import { oneWayStops } from "../game/turnedLine";
+import { headingOnScreen } from "./stopHeading";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
@@ -133,6 +135,14 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
   return out.length ? out : [t("networkTips.nobody", { tram: !!w.save.stations.find((x) => x.id === id)?.tram })];
 }
 
+/** T-3111: the screen angle (degrees clockwise from right) the trains of line `l` head in at station `id`,
+ * when the line serves it one way; null for a two-way stop. */
+function stopHeading(ov: Overlay, w: WorldView, l: LineInput, id: string): number | null {
+  const nb = oneWayStops(l.stops, w.lineStats[l.id] ?? { loop: null, oneWay: false }).get(id);
+  const net = ov.renderer.net;
+  return nb && net ? headingOnScreen(ov, net, nb[0], nb[1]) : null;
+}
+
 /** The tag for station `i` of the network buffers. */
 export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | null {
   const net = ov.renderer.net;
@@ -144,7 +154,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   // T-305: the lines serving the station (zoomed out too, where every station is its own dot since
   // T-313), as bullets (T-559)
   const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id)).map((l) => [l.letter + l.colour, l])).values()];
-  if (serving.length) out.push(lineBullets(serving));
+  if (serving.length) out.push(lineBullets(serving, (l) => stopHeading(ov, w, l, id)));
   if (!s.built) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(ov, w, id);
