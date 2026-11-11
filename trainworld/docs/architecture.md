@@ -231,7 +231,7 @@ Web first, so it can be shared as a link.
   when a newer route is asked or the pointer leaves real track.
 - **The demand pool** [T-149, T-173, `workers/demandClient.ts`][T-381]: 3 solving workers on 12 or more
   logical threads, 2 on 6 to 11, 1 on fewer; then a phone or tablet (by its user agent), or a device
-  of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, compact outlines; notes/T-2794.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache and no market packs, so no trips between zones, unless Settings "Calculate intercity trips" is on, T-2833, T-2838; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
+  of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, compact outlines; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache and no market packs, so no trips between zones, unless Settings "Calculate intercity trips" is on, T-2833, T-2838; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
   less than the phone, an iPhone's killed near 2 GB), and unreported memory (desktop Firefox, Safari)
   at most 2; a big game may then drop some by memory [T-1205, below]. Such a small device runs no
   focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). The Settings "Use more cores" restores half the threads less one, 1 to 5

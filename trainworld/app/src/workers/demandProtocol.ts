@@ -117,6 +117,8 @@ export type ToDemand =
       copies?: boolean;
       /** T-2596: every zone's bubble sums pushed each round, not only the zones on screen (`?perfOff=allSums`) */
       allSums?: boolean;
+      /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
+      heapStep?: number;
       /** T-325, the aux worker: each solving worker's periods, in worker order, so a zone it holds
        * alone answers period group by period group as the solving workers would */
       groups?: number[][];

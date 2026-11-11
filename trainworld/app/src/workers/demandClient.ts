@@ -70,7 +70,7 @@ import {
   lineLoadsFor,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { addressLimited, deviceGB, mobileDevice, smallDevice } from "./deviceMemory";
+import { addressLimited, deviceGB, heapStep, mobileDevice, smallDevice } from "./deviceMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
@@ -882,7 +882,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
     w.postMessage(msg);
     return w;
   }

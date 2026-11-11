@@ -7,7 +7,7 @@
 // Every edit answers with an "edited" message and, if it applied, a new "state".
 
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
-import init, { last_panic, TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
+import init, { last_panic, set_heap_step, TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { initWasm } from "./wasmInit";
 import { anchor, anchorShift, EARTH_C, makeAnchor, setAnchor, toLocal, toMerc01, type Anchor } from "../map/geo";
 import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zoneBox, zoneCountry, zonesTouching } from "../game/cities";
@@ -33,7 +33,7 @@ import { besideSamples } from "../map/corridors";
 import { packCross } from "../map/markData";
 import { bandEdges, diagramGraph } from "../diagram/graph";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
-import { readOutlinesForPlaces } from "../map/coarseOutlines";
+import { readOutlinesForPlaces, type PackedOutlines } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
@@ -171,8 +171,10 @@ function placeLineCountries() {
     return [id, z ? cityById(z).country ?? "" : ""];
   }));
 }
-/** T-1265: the coarse outlines name each station's zone (game/cities.ts `cityWithin`); read once
- * from init, and the lines' countries placed again when they are in */
+/** T-1265: the coarse outlines name each station's zone (game/cities.ts `cityWithin`); the page's copy, posted
+ * once after init (T-2802), and the lines' countries placed again when they are in */
+let outlinesIn: (p: PackedOutlines | null) => void = () => {};
+const outlinesGot = new Promise<PackedOutlines | null>((got) => { outlinesIn = got; });
 let outlinesRead: Promise<void> = Promise.resolve();
 let holidaysSent = "";
 const kindOfLine = (id: number): KindOf => kindOfIn(holidayData, lineCountries.get(id));
@@ -3863,6 +3865,8 @@ onmessage = (e: MessageEvent<ToClock>) => {
     if (msg.ctx?.on && (msg.settle || !before?.on || before.acct !== msg.ctx.acct)) void cloudKick();
     return;
   }
+  // T-2802: at once, not behind init's queue, which a save's summary can wait on
+  if (msg.kind === "outlines") return outlinesIn(msg.packed);
   if (msg.kind === "previewStale") {
     previewStaleSeq = Math.max(previewStaleSeq, msg.seq);
     wakeStale?.();
@@ -3878,7 +3882,8 @@ async function processMessage(msg: ToClock) {
     if (msg.bandMode !== undefined) setBandMode(msg.bandMode);
     packBase = msg.pack;
     terrainBase = msg.terrain;
-    outlinesRead = readOutlinesForPlaces(msg.outlines).then(() => {
+    outlinesRead = outlinesGot.then((p) => {
+      if (p) readOutlinesForPlaces(p);
       if (!api) return;
       placeLineCountries();
       pinFareRef();
@@ -3887,6 +3892,7 @@ async function processMessage(msg: ToClock) {
     ready = (async () => {
       const t0 = performance.now();
       await initWasm(() => init(), "clock worker"); // i18n-ignore
+      if (msg.heapStep) set_heap_step(msg.heapStep);
       const model = newModel();
       loadHolidays();
       emptyTrack = model.save();

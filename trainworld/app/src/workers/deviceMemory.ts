@@ -46,6 +46,10 @@ export function smallDevice(): boolean {
   return mobileDevice() || (gb !== undefined && gb <= 4);
 }
 
+/** T-2802: a small device's WASM memories grow 8 MB at a time, not 32 (sim/src/heap.rs `set_heap_step`), so each
+ * ends nearer what it holds; undefined elsewhere */
+export const heapStep = (): number | undefined => (smallDevice() ? 8 << 20 : undefined);
+
 /** T-2794: the most a small device draws the map and overlays at (DECISIONS.md 2026-11-08, notes/T-2794.md) */
 const SMALL_MAX_RATIO = 2;
 /** The pixel ratio the map is capped to here, null where the device's own is used. */

@@ -79,7 +79,7 @@ try {
   const home = await page.evaluate(() => { const c = window.tw.map.getCenter(); return { center: [c.lng, c.lat], zoom: window.tw.map.getZoom() }; });
   const lines = [];
   for (const at of ZONES) {
-    await page.evaluate(([at]) => window.tw.map.jumpTo({ center: at, zoom: 12 }), [at]);
+    await page.evaluate(([at]) => { window.tw.map.jumpTo({ center: at, zoom: 12 }); }, [at]);
     const line = await acrossLine(page, at);
     if (line === null) throw new Error(`no line built at ${at}`);
     lines.push(line);
@@ -110,7 +110,7 @@ try {
     }
     return log;
   }, [lines, nums]);
-  await page.evaluate((home) => window.tw.map.jumpTo(home), home);
+  await page.evaluate((home) => { window.tw.map.jumpTo(home); }, home);
   await page.waitForFunction((added) => { const r = window.twDemand.client.knownReach(); return !!r && ![...r].some((x) => added.includes(x)); }, added, { timeout: 600000, polling: 1000 }).catch(async (e) => {
     out.reachStuck = await page.evaluate((added) => {
       const c = window.twDemand.client, svc = c.latest(), near = c.nearOf(svc);

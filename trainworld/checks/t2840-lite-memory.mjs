@@ -37,7 +37,7 @@ const STOPS = [view(-73.98, 40.75, 12), view(-73.985, 40.758, 14)];
 
 async function pan(page, cdp, rate) {
   await cdp.send('Emulation.setCPUThrottlingRate', { rate });
-  await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.99, 40.75], zoom: 13 }));
+  await page.evaluate(() => { window.tw.map.jumpTo({ center: [-73.99, 40.75], zoom: 13 }); });
   await page.waitForTimeout(3000);
   const gaps = await page.evaluate(() => new Promise((done) => {
     const map = window.tw.map, gaps = [];
@@ -81,7 +81,7 @@ async function once(kind, detail, round, phone) {
       await demandFinal(page, { timeout: 480000 });
     } else {
       await page.waitForFunction(() => window.twDemand?.view?.()?.final, undefined, { timeout: 240000 }).catch(() => {});
-      await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.98, 40.75], zoom: 13 }));
+      await page.evaluate(() => { window.tw.map.jumpTo({ center: [-73.98, 40.75], zoom: 13 }); });
       await page.waitForTimeout(2000);
       const line = await acrossLine(page, [-73.98, 40.75], 2);
       if (line === null) throw new Error('no line built');
@@ -91,10 +91,10 @@ async function once(kind, detail, round, phone) {
     await page.waitForTimeout(3000);
     const lm = await page.evaluate(() => ({ lighter: JSON.parse(localStorage.getItem('trainworld-ui')).display?.lighterMap, ratio: window.tw.map.getPixelRatio(), dpr: devicePixelRatio, layers: window.tw.map.getStyle().layers.filter((l) => window.tw.map.getLayoutProperty(l.id, 'visibility') !== 'none').length }));
     for (const v of STOPS) {
-      await page.evaluate((v) => window.tw.map.jumpTo({ center: [v.lng, v.lat], zoom: v.zoom }), v);
+      await page.evaluate((v) => { window.tw.map.jumpTo({ center: [v.lng, v.lat], zoom: v.zoom }); }, v);
       await page.waitForTimeout(7000);
     }
-    await page.evaluate(() => window.tw.map.jumpTo({ center: [-73.985, 40.758], zoom: 14 }));
+    await page.evaluate(() => { window.tw.map.jumpTo({ center: [-73.985, 40.758], zoom: 14 }); });
     await page.waitForTimeout(3000);
     await cdp.send('HeapProfiler.collectGarbage').catch(() => {});
     const { metrics } = await cdp.send('Performance.getMetrics');

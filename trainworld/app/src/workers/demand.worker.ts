@@ -19,7 +19,7 @@
 // T-301: `close` frees packs (and the market) the page no longer needs; one the solve in hand
 // covers goes when that solve ends.
 
-import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, set_heap_step, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
 import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { initWasm } from "./wasmInit";
@@ -877,6 +877,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
       try {
         const t0 = performance.now();
         [raw, attractions] = await Promise.all([initWasm(() => init(), "demand worker"), loadAttractions()]); // i18n-ignore
+        if (msg.heapStep) set_heap_step(msg.heapStep);
         const t1 = performance.now();
         aux = !!msg.aux;
         copies = !!msg.copies;

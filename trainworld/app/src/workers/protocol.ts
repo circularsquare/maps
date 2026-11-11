@@ -15,6 +15,7 @@ import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec,
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
 import type { DiagramGraph } from "../diagram/graph";
+import type { PackedOutlines } from "../map/coarseOutlines";
 
 export type { DayLedger, HourLedger };
 
@@ -185,13 +186,17 @@ export type ToClock =
    * `backupMs`: wall ms of the first backup step, 10 minutes, the others scaled with it (T-744, T-1826; `?backupMs=` for checks). `game`: how a
    * new game (`fresh` or `newSlot`) starts (T-728). `patch`: `?patch=` (T-1029: "0" every state
    * whole, "check" changes compared with whole builds). */
-  | { kind: "init"; pack: string; terrain: string; outlines: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
+  | { kind: "init"; pack: string; terrain: string; fresh?: boolean; testPage?: boolean; slot?: string; newSlot?: string; backupMs?: number; game?: NewGameSpec; pending?: boolean; patch?: string;
       /** T-2058: how lines side by side are worked out (`bandTry` in perfFlags.ts) */
       bandMode?: string;
       /** T-1822: a new normal game starts with the Getting started card (this browser has not finished it) */
       guide?: boolean;
       /** T-2703: reads of the saved game to fail on purpose, for checks (`?debug=1&readFails=N`) */
-      readFails?: number }
+      readFails?: number;
+      /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
+      heapStep?: number }
+  /** T-2802: every zone's coarse outline, the page's parse of `packs/outlines.json` (null: unavailable), after init */
+  | { kind: "outlines"; packed: PackedOutlines | null }
   /** T-1822: the Getting started card's progress, to keep in the save */
   | { kind: "guide"; guide: GuideSave }
   /** T-2395: the game's home, a zone id or `WORLD_HOME`; null for none */

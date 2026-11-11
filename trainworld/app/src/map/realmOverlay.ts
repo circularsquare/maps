@@ -24,7 +24,7 @@ import { selection, shade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
-import { outlinesUrl, takeOutlineText } from "./coarseOutlines";
+import { packedOutlinesNow } from "./coarseOutlines";
 import { smallDevice } from "../workers/deviceMemory";
 import { whenGameReady } from "../game/loading";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
@@ -206,8 +206,8 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
   const lean = smallDevice();
   let loaded = false, waiting = false;
   const start = () => {
-    const text = lean ? null : takeOutlineText();
-    if (!lean && !text) return null;
+    const packed = packedOutlinesNow();
+    if (!packed) return null;
     try {
       const w = new Worker(new URL("../workers/shade.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<ShadeOut>) => {
@@ -221,7 +221,8 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
         } else if (e.data.gen === gen) apply(e.data.tri);
       };
       w.onerror = (e) => { console.warn("Shade worker failed", e.message); onMain(); };
-      w.postMessage((lean ? { kind: "fetch", url: outlinesUrl() } : { kind: "outlines", text: text! }) satisfies ShadeIn);
+      // T-2802: a copy of the page's parse, about 12 MB, in place of the worker's own fetch and parse of the file
+      w.postMessage({ kind: "outlines", packed } satisfies ShadeIn);
       return w;
     } catch (error) {
       console.warn("Shade worker unavailable", error);
@@ -232,7 +233,7 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
     cut(ids: string[], outlines: ReadonlyMap<string, MultiPolygon>) {
       gen++;
       last = { ids, outlines };
-      // T-2794: the worker's parse of the outlines waits for the load to end, the loading card still up
+      // T-2794: the worker's rings of every zone wait for the load to end, the loading card still up
       if (lean && !loaded) {
         if (!waiting) {
           waiting = true;

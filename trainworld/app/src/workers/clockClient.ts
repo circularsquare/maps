@@ -33,6 +33,8 @@ import { decodeSave, readStored, writePending, type GuideSave, type NewGameSpec,
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
 import { dataUrl, TERRAIN_BASE } from "../game/dataBase";
+import { packedOutlines } from "../map/coarseOutlines";
+import { heapStep } from "./deviceMemory";
 import { markDownloaded } from "../game/keepState";
 import { saveRefusal } from "../game/memoryCheck";
 import { askBeforeLeaving, keepStorage } from "../game/saveSafety";
@@ -605,7 +607,9 @@ export class ClockClient {
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
-    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, outlines: dataUrl("outlines.json"), fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    // T-2802: the page's parse of the outlines, copied, in place of the worker's own fetch and parse
+    void packedOutlines().then((packed) => this.post({ kind: "outlines", packed }));
   }
 
   /** T-2710: the worker's script loaded (its `booted`): until then every message waits here, its

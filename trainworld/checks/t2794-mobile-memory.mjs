@@ -123,7 +123,7 @@ try {
   await measure('demand final');
   if (process.env.DUMP) await memoryDump(cdp);
   for (const [lng, lat, z] of [[-73.94, 40.7, 12], [-73.8, 40.75, 13], [-74.1, 40.72, 11], [-73.96, 40.78, 14], [-73.96, 40.75, 11.2]]) {
-    await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [[lng, lat], z]);
+    await page.evaluate(([c, z]) => { window.tw.map.jumpTo({ center: c, zoom: z }); }, [[lng, lat], z]); // T-2802: never return the map: Playwright serialises its whole object graph, about 1 GB of garbage on the page
     await page.waitForTimeout(4000);
   }
   await page.waitForTimeout(3000);

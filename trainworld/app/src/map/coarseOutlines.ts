@@ -1,6 +1,7 @@
 // T-800: every registered zone's coarse outline, `packs/outlines.json` (pipeline/zone_outlines.py),
-// so the map has an outline everywhere before any zone's own boundary has been fetched. Read once:
-// the outlines and the realms' shade (T-1006) share it.
+// so the map has an outline everywhere before any zone's own boundary has been fetched. Read once, by the
+// page: the outlines, the realms' shade (T-1006) and the clock worker's place names (T-1265) share it,
+// the workers as `PackedOutlines` (T-2802).
 import type { MultiPolygon } from "geojson";
 import { dataUrl } from "../game/dataBase";
 import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
@@ -12,8 +13,48 @@ import { smallDevice } from "../workers/deviceMemory";
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
 
 type Outlines = ReadonlyMap<string, MultiPolygon>;
-let read: Promise<{ zones: Outlines; water: Outlines }> | null = null;
-let text: string | null = null;
+let read: Promise<{ zones: Outlines; water: Outlines; packed: PackedOutlines | null }> | null = null;
+
+/** T-2802: the file's zones as typed arrays, which a worker takes as a copy in place of fetching and parsing the
+ * file itself (an 11 MB string and about 35 MB of arrays a context): zone `k` (`ids[k]`) has rings `zoneRing[k]` to
+ * `zoneRing[k + 1]`, and ring `r` is `data[ringAt[r]]` to `data[ringAt[r + 1]]`, the file's deltas. */
+export type PackedOutlines = { q: number; ids: string[]; zoneRing: Uint32Array; ringAt: Uint32Array; data: Int32Array };
+
+function pack(from: Record<string, number[][]> | undefined, q: number): PackedOutlines {
+  const ids = Object.keys(from ?? {});
+  let rings = 0, n = 0;
+  for (const id of ids) for (const r of from![id]) { rings++; n += r.length; }
+  const zoneRing = new Uint32Array(ids.length + 1), ringAt = new Uint32Array(rings + 1), data = new Int32Array(n);
+  let ri = 0, at = 0;
+  ids.forEach((id, k) => {
+    zoneRing[k] = ri;
+    for (const r of from![id]) { ringAt[ri++] = at; data.set(r, at); at += r.length; }
+  });
+  zoneRing[ids.length] = ri;
+  ringAt[rings] = at;
+  return { q, ids, zoneRing, ringAt, data };
+}
+
+/** Each zone's rings in `p` as views on its data, by zone id. */
+export function packedRings(p: PackedOutlines): Map<string, Int32Array[]> {
+  const out = new Map<string, Int32Array[]>();
+  p.ids.forEach((id, k) => {
+    const rs: Int32Array[] = [];
+    for (let r = p.zoneRing[k]; r < p.zoneRing[k + 1]; r++) rs.push(p.data.subarray(p.ringAt[r], p.ringAt[r + 1]));
+    out.set(id, rs);
+  });
+  return out;
+}
+
+/** T-2802: the zones' outlines for a worker (the clock's place names, the realm shade); null when the file is
+ * unavailable. Posting it copies its arrays, about 12 MB. */
+export function packedOutlines(): Promise<PackedOutlines | null> {
+  return (read ??= load()).then((r) => r.packed);
+}
+
+let packedIn: PackedOutlines | null = null;
+/** `packedOutlines` once the file is in, else null */
+export const packedOutlinesNow = () => packedIn;
 
 /** The coarse footprint of each zone in the file, by zone id; empty when the file is unavailable. */
 export function coarseOutlines(): Promise<Outlines> {
@@ -67,19 +108,7 @@ class CompactOutlines implements Outlines {
   forEach(f: (g: MultiPolygon, id: string, m: Outlines) => void) { for (const [id, g] of this.entries()) f(g, id, this); }
 }
 
-const compact = (from: Record<string, number[][]> | undefined, q: number) =>
-  new CompactOutlines(new Map(Object.entries(from ?? {}).map(([id, rings]) => [id, rings.map((r) => Int32Array.from(r))])), q);
-
-/** T-2794: where the outlines' file is, for the small device's shade worker */
-export const outlinesUrl = () => dataUrl("outlines.json");
-
-/** The file as fetched, once (the shade's worker reads its own copy, T-1026); null after that, or
- * before the file is in. */
-export function takeOutlineText(): string | null {
-  const t = text;
-  text = null;
-  return t;
-}
+const compact = (p: PackedOutlines) => new CompactOutlines(packedRings(p), p.q);
 
 /** One ring of the file as lon, lat pairs, flat and open. */
 export function decodeRing(flat: ArrayLike<number>, q: number): Float64Array {
@@ -106,20 +135,18 @@ async function fetchText(url: string): Promise<string> {
   }
 }
 
-async function load(): Promise<{ zones: Outlines; water: Outlines }> {
-  const out: { zones: Outlines; water: Outlines } = { zones: new Map(), water: new Map() };
+async function load(): Promise<{ zones: Outlines; water: Outlines; packed: PackedOutlines | null }> {
+  const out: { zones: Outlines; water: Outlines; packed: PackedOutlines | null } = { zones: new Map(), water: new Map(), packed: null };
   try {
-    const body = await fetchText(dataUrl("outlines.json"));
-    const { q, zones, water } = JSON.parse(body) as OutlineFile;
+    const { q, zones, water } = JSON.parse(await fetchText(dataUrl("outlines.json"))) as OutlineFile;
+    out.packed = packedIn = pack(zones, q);
     if (smallDevice()) {
-      out.zones = compact(zones, q);
-      out.water = compact(water, q);
+      out.zones = compact(out.packed);
+      out.water = compact(pack(water, q));
     } else {
       out.zones = new Map(Object.entries(zones).map(([id, rings]) => [id, polygons(rings, q)]));
       out.water = new Map(Object.entries(water ?? {}).map(([id, rings]) => [id, polygons(rings, q)]));
     }
-    // T-2794: a small device's shade worker fetches the file itself each cut (`outlinesUrl`)
-    if (!smallDevice()) text = body;
     placeBy((id) => out.zones.get(id)?.coordinates.flatMap((p) => p.map((r) => Float64Array.from(r.flat()))));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);
@@ -170,17 +197,11 @@ function placeBy(rings: (id: string) => Float64Array[] | undefined) {
   });
 }
 
-/** The clock worker's copy (T-1265): only the zones' rings, kept as the file has them and decoded
- * per zone when a place near it is first asked about. */
-export async function readOutlinesForPlaces(url: string): Promise<void> {
-  try {
-    const { q, zones } = JSON.parse(await fetchText(url)) as OutlineFile;
-    // T-2794: as typed arrays, which take a quarter of what the parsed file's arrays do
-    const packed = new Map(Object.entries(zones).map(([id, rings]) => [id, rings.map((r) => Int32Array.from(r))]));
-    placeBy((id) => packed.get(id)?.map((flat) => decodeRing(flat, q)));
-  } catch (error) {
-    console.warn("Coarse zone outlines unavailable", error);
-  }
+/** The clock worker's copy (T-1265, T-2802): the page's packed rings, each zone decoded when a place near it is
+ * first asked about. */
+export function readOutlinesForPlaces(p: PackedOutlines): void {
+  const rings = packedRings(p);
+  placeBy((id) => rings.get(id)?.map((flat) => decodeRing(flat, p.q)));
 }
 
 /** An outline's edges by band of latitude (x0, y0, x1, y1 each), so the crossing test reads only the

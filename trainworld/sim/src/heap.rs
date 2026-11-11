@@ -17,12 +17,25 @@
 use core::arch::wasm32;
 use core::cell::UnsafeCell;
 use core::ptr;
+use core::sync::atomic::{AtomicUsize, Ordering};
 use std::alloc::{GlobalAlloc, Layout};
+use wasm_bindgen::prelude::*;
 
 #[cfg(target_feature = "atomics")]
 compile_error!("crate::heap takes no lock: the wasm modules are single threaded");
 
 const PAGE: usize = 65536;
+
+/// T-2802: the least grow in pages when set (0: each `Heap`'s own `min`). The module's one memory, so one
+/// setting for its allocator.
+static MIN_PAGES: AtomicUsize = AtomicUsize::new(0);
+
+/// T-2802: grows of at least `bytes` from now on, in place of the module's 32 MB: a small device's page sets
+/// 8 MB, so a worker's memory ends nearer its peak (a demand worker's 65 MB held 31-40).
+#[wasm_bindgen]
+pub fn set_heap_step(bytes: f64) {
+    MIN_PAGES.store((bytes.max(0.0) as usize).div_ceil(PAGE), Ordering::Relaxed);
+}
 
 /// dlmalloc's system side: each grow is at least `min` pages, or `1/frac` of the memory once that
 /// is more (`frac` 0: no share), so a growing heap grows the memory a few dozen times in all.
@@ -78,7 +91,8 @@ unsafe impl dlmalloc::Allocator for Grow {
         }
         let now = wasm32::memory_size(0);
         let share = if self.frac == 0 { 0 } else { now / self.frac };
-        self.grow(size, self.min.max(share))
+        let min = match MIN_PAGES.load(Ordering::Relaxed) { 0 => self.min, set => set };
+        self.grow(size, min.max(share))
     }
     fn remap(&self, _ptr: *mut u8, _old: usize, _new: usize, _can_move: bool) -> *mut u8 {
         ptr::null_mut()
