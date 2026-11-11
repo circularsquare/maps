@@ -94,7 +94,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3233**. stoprow (Sonnet, 6119, afd2b6e3c47c0e859): T-3232 stop list row at the click.
+- Next free id **T-3233**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
