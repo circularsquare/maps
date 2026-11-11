@@ -10,7 +10,8 @@ it lands whatever it has in flight at its own pace and tells you when it is done
 hold off on anything that would collide with it. These steps are guidelines; if one is clearly
 wrong for the situation, do the sensible thing and say why in your first message.
 
-1. **Read** `$ARGUMENTS/CLAUDE.md`, then `$ARGUMENTS/notes/handoff.md`. If there is no
+1. **Read** `$ARGUMENTS/CLAUDE.md`, then `$ARGUMENTS/docs/orchestrator.md` if it exists (the
+   project's orchestrator procedures), then `$ARGUMENTS/notes/handoff.md`. If there is no
    `notes/handoff.md` yet, use the newest `notes/handoff-*.md` and create `notes/handoff.md` from it
    in step 3, moving the dated one to `notes/archive/`. Then `git status`, `git log --oneline -8`,
    and grep `TASKS.md` for `taking`. Read SPEC.md and other docs on demand, not up front.
@@ -47,3 +48,12 @@ wrong for the situation, do the sensible thing and say why in your first message
 
 While orchestrating, keep `notes/handoff.md` current as you go (see the `handoff` skill), so that
 the next takeover never has to wait for you.
+
+**Keep the work moving** (Anita, 2026-11-03: "there are times when we have lots of stuff to
+potentially work on but we're only doing a bit at a time, or stopping"). Each time an agent reports,
+and at least every couple of hours, look over what is not done (tasks, her open asks, follow-ups
+agents filed) and start whatever can go ahead, up to the core cap and the files agents can own
+without colliding. Hold back only for a stated reason: a run that must not be disturbed, a decision
+only she can make, a cost she would want to weigh (a usage stance in the handoff counts), or her
+asking to go slow. When everything waits on her, tell her what you need. On the same sweep, archive
+task lines that are already done.

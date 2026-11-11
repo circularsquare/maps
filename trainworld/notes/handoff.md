@@ -1,142 +1,62 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8be9971b-5363-40be-bba3-d8c1eaa4ca85, name maps-04 [6bfb1b], since 2026-11-10 21:40
-Updated: 2026-11-10 22:50 (maps-dc finished winding down 22:45)
+Updated: 2026-11-11 01:00 (earlier clock times ran ~40 min ahead; trust git log)
 
-## Now
+Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
-**LIVE = v0.2.1 = R2 2026-11-10d** (from f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept until the next
-release in case live needs a hotfix). Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a
-few days after; keep 11-10, 10b-10d.
-**Master = c7de3704 (pushed through a5d6a81a).** **8800 = c7de3704** (adds T-3134 ghost, T-3136 widths, changelog) (maps-dc's last landing: 7db3b454 main batch T-3123/3124/3125/3127/
-3128/3130/3132/3133, 7b260b67 flyover2 T-3120/3121, 8ae4e2ae stoporder T-3122; smoke on 8800 13/13). a5d6a81a adds only
-the changelog rewording, so no rebuild for it.
-**v0.2.2 is HELD until single track is fully fixed** (Anita 22:20, T-3134..T-3137; and 21:50: no publish until she has
-tested 8800). Then: translation batch for every new/stale key (13 stale per language at 22:45; last batch: agent l10nbatch,
-3 groups x 3 passes, ~15 min), snapbuild, smoke8800.cmd light+dark, `deploy.py --dry-run --version <date>`, set
-`V0_2_2_AT` in updates.ts, publish and website push on her word (notes/T-924.md "Commands"). Changelog reworded per Anita
-22:00 (a5d6a81a); two new lines she has not seen yet: `v022LoopStops` "a line on a loop stops at a station each time it
-passes", `v022TargetSpeed` "type in a target speed for new track, down to 20 km/h". Her "auto-ramp" wording vs the switch's
-tag "Ramp over track you cross": asked her. Anita: "No silent updates": every publish gets a version + entry.
-**Server (shonei-server 80e3692, pushed, deployed 22:36 on her word):** community round 2 (Biggest/Most liked in city,
-country or region, self-like, copy names, shares left today); country leaderboards live (T-3116); community in PREVIEW
-(`SHONEI_COMMUNITY=preview`, `SHONEI_COMMUNITY_TESTERS=uad72a8ab66f84c44` = Anita, Google login; env backup
-/opt/shonei/shonei.env.bak-20261111). She tests at localhost:8800/trainworld/?acct=live&community. Server deploys need her
-word each time.
+## State
+- **Live = v0.2.1 = R2 2026-11-10d** (f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept for hotfixes until
+  the next release). R2 purge due: 2026-11-07c and 11-08 from 11-11; 11-09, 09b, 09c a few days later; keep 11-10, 10b-10d.
+- **Master = 7bda06d3, pushed; 8800 = 7bda06d3** (lanes C1+C2 ed4f66fa and the hover follow-up; cargo 498/678, smoke 27 PASS).
+- **v0.2.2 HELD** until single track is fully fixed and she has tested 8800. Then: translation batch for new and stale keys
+  (as agent l10nbatch: 3 groups x 3 passes, ~15 min), snapbuild, smoke8800 light+dark, `deploy.py --dry-run --version <date>`,
+  set `V0_2_2_AT` in updates.ts, publish and website push on her word. Changelog: maybe a line for T-3141 and for single
+  track joins once C3 lands.
+- **Server**: live shonei-server 80e3692 (community round 2, preview, tester Anita). 0e7dd77 (titles, profanity screen,
+  Biggest points-only) committed, not pushed or deployed; the game side is on master, so titles do nothing until it is.
+- Uncommitted: rulescleanup's doc changes (CLAUDE.md files, docs/orchestrator.md, world-run.md, zones.md, ui-panels.md
+  "Live feel", wiki/RULES.md, notes/for-anita.md + its archive copy, TASKS T-3156, takeover/handoff skills). Commit them.
 
-**Running (maps-04's subagents):**
-- Tree `.tw-trees/lanes` (branch tw/lanes from a5d6a81a): T-3137 C1 DONE 00:05 by agent lanes (a5b1193bb6b1afcf8, ~320k,
-  retired): `lanes.rs`, move table, readers moved, parity 44/44 equal on NYC, Northeast and two small games
-  (`checks/t3137-lanes-parity.mjs`), perf same, cargo 483/663, smoke 27. NOT LANDED: main tree's loops3 has net.rs and
-  wasm.rs dirty; land after loops3 reports. Meanwhile **lanes2** (Opus, a508bd99244a5b08b, same tree, Vite 6196) builds C2
-  (single joins + inferred way, sim + set_route_join) on top; land C1+C2 together or C1 alone if lanes2 is mid-way
-  (agent-tree.mjs lands the whole tree, so only between lanes2's edits). Then C3 app snap/ring/ghost, C4 switch/docs.
-  T-3138 left-hand: sim side done by `lanes()`; left is app-only (pass the pack's side to `new TrackApi`, draw by it).
-- singleghost DONE, committed c7de3704 (T-3134 ghost per-segment lanes, T-3136 widths: single 0.75x, double 1.3x, double
-  floor 2 px); 8800 rebuilt at c7de3704 00:00. Review image artifacts/trainworld/review/track-widths-z11.png.
-- loops3 (Opus, a8acc7928a61a451b, main, Vite 6193): T-3140 no automatic loops (undo T-3122 rule 2), T-3141 lone branch
-  = line end, T-3139 chevrons on the track tangent, 25% smaller and closer. May file T-3145/3146.
-- onewayui DONE 00:20, uncommitted in main (shares wasm/lines.rs + loop_tests.rs with loops3: commit together after
-  loops3, one smoke): T-3142/T-3143 archived; `route_stop_ways` for bus/ferry, `halfDot.ts`, busStops.ts, ferryDraw.ts,
-  BusInspector.tsx, networkTips.ts `oneWayRows`, check t3142-oneway-ui.mjs. Strings shown to Anita: "One way, towards
-  {name}", "One way" (Anita: good). Filed T-3147 (bus rings in line view, bus stop hover).
-- community3 DONE 00:35, game part uncommitted in main (community.ts, Community.tsx, community.css, en/context.json shared
-  with onewayui, ui-panels.md, notes/T-2887.md "Round 3", checks/t3144-community.mjs; T-3144 archived); shonei-server
-  01c2321 committed, NOT pushed/deployed (asked Anita 00:35). Biggest+World was empty because her share is sandbox (no
-  points); now World lists unranked shares after ranked. Copy named by title alone. Strings "Title", "Please pick a
-  different title." Anita 00:45: Biggest stays points-only with a note "sandbox not counted"; copy named "<title> -
-  <name>" (title first). Sent back to community3 (a74ecb7dd2921c010) 00:45.
-- loops3 DONE 00:40 (T-3139 the chevron flip was in stopHeading.ts's frame, sim was right; T-3140 auto_turn removed;
-  T-3141 `branch_end` rotates a one-way circle with one turn-back into a balloon). Combined smoke of loops3+onewayui+
-  community3 running on my Vite 6190 (log scratchpad/smoke-batch.log); then commit all, snapbuild, land lanes tree C1.
-- Anita 00:25: widths OK, 5% thinner -> 0.71x / 1.24x, committed 7a316293 (not on 8800 yet; fold into the next rebuild).
-- community3 (Sonnet, a74ecb7dd2921c010, main + shonei-server commits, Vite 6195): T-3144 Biggest/World empty bug, card
-  space, share title (default save name, profanity screen, title bold + name grey), sandbox button alignment. Server
-  deploy needs her word. May file T-3148. Next free id after these: **T-3149**.
-- Anita 23:15: "auto-ramp" fine; changelog RightClick -> "more explicit loop controls" (committed c7de3704).
-- singletrack (Opus, addd2bb7c40268aea) is done (design stages 1 and 1b; ~320k tokens); resume only for questions about
-  its notes.
+## In flight (maps-04's agents, main tree)
+- lanes3 (Opus, aa68773ad4e68d9e2, Vite 6197): T-3137 C3, the app side of single joins (`set_route_join`, ends from
+  `join_edges()`, ghost chevrons/badge; check t3137-single-join.mjs). Then C4 (inspector switch shows the way).
+- clicks (Sonnet, ab9dfd00711fbdab7, Vite 6199): T-3149, the accepted click remapping (notes/T-3149.md "Proposal") and a
+  touch button for every important right click.
+- rays (Opus, a50b3a5f155fbf579, Vite 6198): T-3150 rays glitch after deleting a parallel line; may file T-3155.
+- todo3 (Sonnet, a87f149b37ea7d959, Vite 6200): T-3151 orange issues button, T-3152 typed train count, T-3154 complex lists
+  its stations with terminal buttons.
+- lookfix (Sonnet, ace9c2afad233d9c3, Vite 6201): T-3157 height colours blend across ramps, T-3158 uneven single-leg widths.
+- busstops2 (Sonnet, a365400196914902e, Vite 6202): T-3147 one-way rings in the bus line view and stop hover, T-3131 hand
+  stops on both passes of an out-and-back route.
 
-**Anita's calls tonight:** terminus branch on single track stays two-way with its flat badge; double track becomes lanes
-in one piece, never deletable by halves; flyover ramps 4% like normal ramps; question every "double = one object" shortcut
-from now on. Stop chevrons follow the track and one-way loops get half dots (stoporder; checks pass, not eyeballed on 8800).
-**Filed, not started:** T-3126 HSR quad, T-3129 snap to road for normal track (design first), T-3131 bus out-and-back by
-hand near-overlap stops, T-3138 [P3] left-hand running (fold into lanes if cheap). Next free id **T-3149**.
-**Anita's decisions today (for the record):** dead ends and through stations turn alike, hints only "build a terminal"
-(terminal = 30 tph), never "dead end"; single track two-way default, margin 240 s; margins: trams ~40/h, terminals 30/h,
-junction moves 120 s, platforms unchanged; community first version = share + share link + open a copy (ON by default) +
-country leaderboards; City circles only for whole loops, earned ones kept; Catalan added; usage: free reset, Opus more
-widely but "not fully gung-ho".
+## Next
+Anita 01:15: "lets do all the self contained tasks. if you find yourself finishing with those too, feel free to decide on
+more to tackle yourself". After lanes3: T-3153 delete mode independent of track mode (tools.ts), T-3126 HSR quad, tram
+street trio T-2997/2998/3000. Any time: T-2766 stop click wait on big networks (Opus), T-2417 diagram stretch, a TASKS.md
+stale sweep (406 open lines). Not started: T-3129 snap to road (design first), T-3138 [P3] left-hand running (app only).
+Next free id **T-3159**. maps-c4's scratchpad (`...\6f38e27c-5131-4ca5-81d2-160b4694f258\scratchpad\`) has
+`archive_lines.py` (TASKS lines to ARCHIVE), `cargo2.sh`, `pages_verify.sh`.
 
-**Open with Anita:**
-- National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
-  Mexico, Brazil, Australia, Turkey); she raised KR/TW to 10% and CN to 2%. `NATIONS` in app/src/game/achievements.ts.
-- Translations of the day's new strings (hidden achievements, v0.2 notes, hint, bus fare) are first pass only.
-- The post `notes/v0.2-post.md` is hers to reword and post; its v0.1.1 / quiet-update boundary is inferred.
-- Wiki-first: trainworld/CLAUDE.md now sends agents to wiki/index.md first (her OK); watch whether agents use it well.
-- Not filed, to discuss later (her word): satellite map, single track.
+## Waiting on Anita
+- Server deploy 0e7dd77: approved for the morning ("yes we can deploy in morning when ready"); do it once she is up.
+- Strings shown, answer pending: "Sandbox games aren't counted", "Title", "Please pick a different title."
+- Achievement thresholds for countries with no save were guessed (Spain, Britain, Italy, Germany, Indonesia, Mexico,
+  Brazil, Australia, Turkey); she raised KR/TW to 10% and CN to 2%. Show them as a list, not the code file.
+- Translations of the v0.2 strings are first pass only. `notes/v0.2-post.md` is hers to reword and post.
+- To discuss later (her word, not filed): satellite map, single track.
 
-**Today's work (detail in ARCHIVE.md, newest first):** v0.2 notes, looped-line view and its follow-ups (T-3025,
-T-3039-3041), hidden achievements and player shares (T-3037/3038), road gaps 3 m at ends (T-3034), faster tram ghost and
-sharp turns (T-3016/3035), end-of-line loop (T-3021/3022), bus fare multiple (T-3028), trams yield at crossings (T-3032),
-split zones planner fix (T-3012), twstats/twfeedback (T-3030/3031), delete hint (T-3026), long number words (T-3020),
-speed colour ramp and tram upkeep (T-3013/2999), tram playtest fixes (T-3014-3018), M key, dock, diagram trams
-(T-3008-3010), Israel/Palestine (maps-8e), tramfix (maps-8e).
-
-## How to
-- Scripts in trainworld/checks/: `snapbuild.cmd <hash>`, `snapbuild-frozen.cmd <hash> <freeze>` (packs from a freeze while a
-  run owns data/packs), `smoke8800.cmd` (8800 light then dark, only before a publish; logs in artifacts/trainworld/
-  smoke8800-*.log), `keep_hunks.py`, `mark_taking.py`. Run via PowerShell **from the maps root** (Set-Location first; a
-  PowerShell call from another folder fails with "cannot find the path"):
-  `cmd /c "trainworld\checks\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"`. Never run two snapbuilds at once
-  (they share .tw-snap; one collided 2026-11-10).
-- maps-c4's scratch (`...\6f38e27c-5131-4ca5-81d2-160b4694f258\scratchpad\`) has `archive_lines.py` (move TASKS lines to
-  ARCHIVE with a given entry), `cargo2.sh` (both cargo suites), `pages_verify.sh`.
-- Smoke dev: own Vite via `node trainworld/checks/dev-nowatch.mjs <port>` (restart after app or WASM changes), then
-  `$env:TW_CORES='4'; node trainworld\checks\smoke.mjs http://localhost:<port>/` (~3 min).
-- Publish: notes/T-924.md "Commands"; `venv\Scripts\python.exe trainworld\tools\deploy.py --dry-run --version X`, then
-  `--version X --smoked` (~15 min upload), website `git add trainsworld/ trainworld/`, commit, push; Pages deploy can be
-  slow (`gh run list --repo circularsquare/circularsquare.github.io`), then `--verify --page --version X`. The in-game
-  updates list is `app/src/ui/updates.ts` (set the entry's `at` at publish).
-- shonei-server deploy: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call (combined with a push it
-  was refused); then `git push` separately. Only with Anita's word.
-- Build number = `git rev-list --count`. If 8800 does not answer, restart serve.py detached.
-- Landing a tree: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`, then `remove <name>`.
-- Commit by path: `git commit -m "..." -- <paths>`; `git add` a new file first. Check `git diff` of shared docs before
-  committing: an agent's in-progress paragraph rode along once (docs/ui-building.md, bf762960).
-
-## Lessons from this run
-- `call snapbuild.cmd` inside another .cmd leaves the shell in .tw-snap\trainworld\app: `cd /d` back after it.
-- Server deploys and ssh are refused by the classifier unless Anita's latest message says yes to that exact action.
-- Landing a tree fails while the main tree has other agents' edits in the same files (en.json often): park them as a
-  patch (`git diff -- <files>`), `git checkout -- <files>`, land, `git apply --3way` the patch, then `git reset -- <files>`.
-- A translation batch that reorders a key can drop the space after a colon (`"key":"..."`); grep for `":"` before committing.
-- Never edit docs with PowerShell 5.1 Get-Content/Set-Content: it reads UTF-8 as cp1252 and writes a BOM, garbling every
-  non-ASCII character. Use the Edit tool.
-- deploy.py's rclone (32 transfers) can saturate Anita's Wi-Fi upload and slow her game on 8800.
-- Always `date` before writing a time: both orchestrators' estimates ran 1-2 h ahead on 2026-11-10.
-- Two sessions can share a name: message by ref.
-- A world run's gates serve the main tree's app/ live: hold app/ writes during gates.
-- Agents sharing the main tree work well when each brief lists the others' files; resume the same agent for follow-ups.
-- Copying files back after a source swap keeps old mtimes: cargo/wasm-pack skip the rebuild (touch them).
-- A trial that changes Rust constants with nothing visible goes into a notes/ patch, not the tree (T-3029).
-- An agent's estimate of a change (T-3034 +32 joins) can miss what the code really touches: recount before landing.
+## Her calls 11-10/11 (for the record; detail in DECISIONS and ARCHIVE)
+Single track: two-way by default, margin 240 s; a terminus branch stays two-way with its flat badge. Double track is
+lanes in one piece, never deletable by halves; question every "double = one object" shortcut. Flyover ramps 4%. Dead ends
+and through stations turn alike; hints say only "build a terminal" (30 tph). Margins: trams ~40/h, terminals 30/h,
+junction moves 120 s. Community v1 = share, share link, open a copy (on by default), country leaderboards; copies named
+"<title> - <name>"; Biggest points-only with the sandbox note. City circles only for whole loops. Catalan added.
 
 ## Anita's standing asks
-- **No deploys overnight without her there** (Anita 00:45, 2026-11-11). Server 01c2321+ waits for her morning word.
-- **Time estimates in hours from how long agents really take** (Anita 00:45: today's "days" estimates were off; C1, estimated
-  2-3 days, took ~45 min). Don't relay a design note's agent-day figures as they are.
-- **Keep 4 cores free** (Anita 22:32, 2026-11-10: "for the next few hours"): cores.py cap set 14 -> 12 at 22:32; briefs
-  say `TW_CORES` small (Playwright self-claims under the cap); raise back to 14 once she says or after ~03:00.
-- **v0.2.2: no publish until she has tested 8800** (Anita 2026-11-10 21:50: "the last few times around there were things
-  that i caught that weren't good"). After the landing: rebuild 8800, tell her, wait for her playtest and fixes.
-- **Usage this week (Anita 2026-11-10 11:50):** "at this rate we are gonna run out of usage fairly early in the week. thats
-  okay, its good to front load work this week so that we can get this important update out some time today. after we get
-  v0.2 out though we can return to leaning slightly to use sonnets, and prioritize the token-cheap compute-expensive approach
-  if we have a choice. the remaining work is also just not super urgent i think." v0.2 is out: Sonnet by default, fewer
-  agents, prefer approaches that spend compute rather than tokens.
-- Player text: agents propose wording per the style rules, list every string old -> new; land without waiting; show
-  her. Zone, region and realm names need no review.
-- TODO.md short-term = prompts: copy her words verbatim into briefs.
-- Every demand task has a "done when"; demand changes go to her first. Buses settled. Keep the work moving.
-- Disk: delete orphaned temp files; keep only current and latest published builds.
+- **No deploys overnight** without her there; every server deploy needs her word.
+- **No v0.2.2 publish until she has tested 8800** ("the last few times around there were things that i caught").
+- **Keep 4 cores free** until she says or ~03:00 11-11: ledger cap 12, back to 14 after.
+- **Usage**: after the free reset, Opus more widely but "not fully gung-ho"; where there's a choice, spend compute, not
+  tokens.
+- Watch whether agents use wiki-first reading well.

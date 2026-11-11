@@ -1,73 +1,49 @@
 # maps — notes for agents
 
+## Where rules live
+
+A project's rules live once, in its own CLAUDE.md or docs. When a rule changes, change it there and delete the
+copies (handoff, memory); a memory file links to the project file rather than restating it. Don't write down what
+is better looked up in code or a ledger (core caps, ports, file lists).
+
 ## AWS
 
-AWS here is a friend's account, shared for free, used only for long data builds. **Read
-`trainworld/docs/aws.md` before any `aws` command**; create and destroy things only through
-`trainworld/tools/aws/`. A PreToolUse hook (`trainworld/tools/aws/guard.py`, in `.claude/settings.json`)
-refuses raw AWS calls that create, change or destroy anything.
+A friend's account, shared free, for long data builds only. **Read `trainworld/docs/aws.md` before any `aws`
+command**; create and destroy only through `trainworld/tools/aws/`. A hook (`trainworld/tools/aws/guard.py`) refuses
+raw AWS calls that change anything.
 
 ## Serving maps locally
 
-Anita views the maps through one server, `python serve.py` at the root of this tree
-(http://localhost:8800/, a front page with a link to each map). Which maps it serves is the
-register `served.json`, and keeping it current is the agents' job:
+Anita views every map through one server, `python serve.py` at this root (http://localhost:8800/). It is the way to
+serve a map, for her and for your own screenshots; don't start another server for a page she will look at.
 
     python serve.py list
     python serve.py add <name> <folder with index.html> "a few words"
     python serve.py remove <name>
 
-- **This is THE way to serve a map, for her and for you.** Do not start a server of your own
-  (`npx serve`, `python -m http.server`, a new per-map serve.py) for a page she will look at;
-  register it here and give her the `localhost:8800/<name>/` link. Point your own headless
-  screenshots at 8800 too. It speaks HTTP Range, so .pmtiles work, and it opens files per
-  request rather than holding them, so a rebuild can replace an archive while it is being
-  served (`npx serve` holds files open on Windows and the rebuild's rename fails).
-- **Register a map when you start real work on one that is not listed**, so she can open it
-  at `localhost:8800/<name>/`. Remove one only when she says it is no longer being worked on.
-- Use these commands, not a hand edit; they lock the file, since sessions run at once.
-- The running server re-reads the register on every request: no restart after add or remove.
-- A map's own older server (`noritetsu/serve.py` on 8767 and the like) still works, and some
-  existing screenshot tooling points at it; leave those alone, but do not add new ones.
-- A map's page must use relative URLs (`data/x.pmtiles`, never `/data/x.pmtiles`), because
-  it is served under `/<name>/`.
+- Register a map when you start real work on one that is not listed; remove one only when she says. Use the
+  commands, not a hand edit (they lock the file). No restart needed.
+- Pages use relative URLs (`data/x.pmtiles`), since each is served under `/<name>/`.
+- Older per-map servers (noritetsu on 8767) still run for existing tooling; add no new ones.
 
 ## Sharing CPU cores
 
-Sessions from every map project run long jobs at once on a 16-core machine; `cores.py` at the root
-is the shared ledger (`cores.json`, cap 10 in all while Anita is using the machine, raised by
-`python cores.py cap <n>` when she is away).
+`cores.py` at the root is the shared core ledger for every session. The cap is whatever `python cores.py list` says;
+it is set with `python cores.py cap <n>`, never written into a doc.
 
-- **Any long job** (a build, a batch or a sweep using more than 2 cores) claims first:
-  `python cores.py claim <n> <name> --pid <pid> "what it is"`. The last line printed is the number
-  of cores you may use; size `--jobs` or workers to it. It never refuses, but under a full cap it
-  grants 1. The claim prints what you got, so no `list` first. Trainworld's Playwright checks (through
-  `launchChrome`) claim for themselves: do not claim by hand for those (T-2831).
-- **Release when done**: `python cores.py release <name>`. A claim whose `--pid` has died is
-  dropped on the next call, so a crashed job cleans up after itself.
-- `python cores.py list` shows each claim, the total, and how many cores are free under the cap.
+- **A long job** (more than 2 cores) claims first: `python cores.py claim <n> <name> --pid <pid> "what it is"`. The
+  last line printed is what you may use; size workers to it. Trainworld's Playwright checks claim for themselves.
+- **Release when done**: `python cores.py release <name>`. A claim whose pid died is dropped on the next call.
 
 ## Orchestrator sessions
 
-Projects run by an orchestrator session (trainworld, isochrone) keep its live state in
-`<project>/notes/handoff.md`, current as the work goes, so Anita can start a new orchestrator at any
-moment without waiting for the old one to wind down. Like the rest of this section, these are
-guidelines: if one is clearly unhelpful in your situation, adapt it and say why.
+Projects run by an orchestrator (trainworld, isochrone) keep its live state in `<project>/notes/handoff.md`, so a new
+orchestrator can start at any moment: `/takeover <project>` starts one, `/handoff` keeps the file current and covers
+winding down (`.claude/skills/`). Hooks (`.claude/hooks/orchestrator.py`) give each session its id, note when context
+passes 500k, and stop a taken-over session starting new agents (an `in-flight:` description gets through).
 
-- **Keep the work moving** (Anita, 2026-11-03: "there are times when we have lots of stuff to potentially work on
-  but we're only doing a bit at a time, or stopping"). By default, every time an agent reports and at least every
-  couple of hours, look over what is not done (the task list, her open asks, follow-ups the reports filed) and start
-  whatever can go ahead now, up to the cores and the files agents can own without colliding. Hold back only when you
-  have a stated reason (a run that must not be disturbed, a decision only she can make, a cost she would want to
-  weigh), or when she says to be conservative or take it slow. When everything left waits on her and she is around,
-  still look regularly and tell her what you need from her to unblock it. On the same sweep, move task lines that are
-  already done to the archive (several stale "open" lines were found 2026-11-02 and 11-03).
-- `/takeover <project>` starts a new orchestrator from the file; `/handoff` brings it up to date,
-  and covers winding down once another session has taken over (`.claude/skills/`).
-- Hooks (`.claude/hooks/orchestrator.py`): each session starts knowing its own id and where each
-  handoff stands; past 500k tokens of context, a note says it is a good time to cycle (overnight, while
-  Anita sleeps, keep going past it instead: Anita, 2026-11-05); a session
-  that has been taken over can't start new agents (an `in-flight:` description gets through).
-- **Compact instructions.** If a session compacts anyway, keep: task ids, agent names and ids still
-  running, PIDs, log paths and restart commands, what is uncommitted and whose, and Anita's latest
-  asks in her words. An orchestrator re-reads its `notes/handoff.md` after compacting.
+## Compact instructions
+
+If a session compacts, keep: task ids, agent names and ids still running, PIDs, log paths and restart commands, what
+is uncommitted and whose, and Anita's latest asks in her words. An orchestrator re-reads its `notes/handoff.md`
+after compacting.

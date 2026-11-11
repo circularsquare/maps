@@ -9,6 +9,19 @@ from `docs/adding-a-city.md` when that was split (T-1987). The procedure for a c
 Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps root
 `artifacts/trainworld/`), never in `notes/`.
 
+**Rules for any data run** (moved here from trainworld/CLAUDE.md, 2026-11-11):
+- Start it detached (a `.cmd` or `start` that outlives the session, log to a file) and write its batch id,
+  log path, liveness check and restart command into the task's notes before waiting. Before it, check the
+  copy's `data`/`app` junctions and the paths it will write; after it, report `status`'s shipped and parked
+  counts with causes (T-613).
+- While a join runs, nothing else writes `data/packs` or `data/terrain`, any country's included: each
+  unit's re-gate compares every registered pack against its snapshot and parks the unit on any change.
+- A pack rebuild backs up to `data/work/pre-T###/` first; the backup goes, without asking, once a later
+  state is checked clean. `data/work/res9/` stays.
+- Cities added through the plan need no calibration beyond the gate (Anita, 2026-10-16).
+- AWS (a friend's account, long data builds only): read `docs/aws.md` first; create or destroy only
+  through `tools/aws/*.py`.
+
 ## Running the pipeline
 
 A world plan row ("The world plan", below) needs no agent: `pipeline/world_run.py` (T-540) does sections 3

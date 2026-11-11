@@ -19,7 +19,9 @@ drifted. Also run this skill when the stop hook says context is past ~500k, and 
 ## Shape
 
 Keep it under about 60 lines. Pointers, not detail: task ids, notes/ paths, commands. Detail
-belongs in `notes/T-###.md`, TASKS.md, DECISIONS.md.
+belongs in `notes/T-###.md`, TASKS.md, DECISIONS.md. Procedures and lessons that outlast this run
+go in `<project>/docs/orchestrator.md`; a standing ask that binds subagents goes in the project's
+CLAUDE.md, since they never read this file. Finished work leaves "In flight" once it is committed.
 
     # Orchestrator handoff, <project>
 

@@ -198,6 +198,8 @@ sends most, the unit touches the metro by land (or touches a unit joining it) an
 under its cap; a unit it cannot take is grouped into zones as usual. The zones step adds the belts
 (`zones --countries`, recorded in the plan's `belt` source and the country's `belts`), so a metro
 replan is followed by a zones replan. Built metros keep their extents.
+**Built cities are not fixed** (Anita, 2026-10-20): the belt step leaves them alone, but a whole-country rebuild may
+still cut down or grow a metro built earlier when that makes the country's zones fit together better.
 **Remnants** (orchestrator, 2026-10-24, T-1191, under "built cities are not fixed"). Where there is no
 commuting table, an unbuilt metro row takes the remnants round it before zoning, in two steps:
 first the rest of any city it mostly holds (with `group_level`, a si, gun or gu of which the row has

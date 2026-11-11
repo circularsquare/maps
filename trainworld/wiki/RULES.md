@@ -5,7 +5,7 @@ then run `python trainworld/tools/wiki_build.py` from the maps root and commit `
 `--check` writes nothing; smoke runs it, so a changed constant with no rebuild fails there. Any problem stops the build.
 
 - **One idea a page.** Written for a curious player: short sentences, plain words, a little cute, present
-  tense, following "User-facing text" in Anita's global CLAUDE.md.
+  tense, following "User-facing text" in Anita's global CLAUDE.md. Wiki text is not listed for her review.
 - **Link with `[[page-name]]`** or `[[page-name|words to show]]`. Page names never change. `index.md` has one
   line per page saying what it answers.
 - **Figures come from the code.** Write a marker, never the number: `{{sim/src/track/params.rs:LEVEL_MULT[3]}}`,
