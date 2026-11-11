@@ -89,6 +89,11 @@ speed colour ramp and tram upkeep (T-3013/2999), tram playtest fixes (T-3014-301
   committing: an agent's in-progress paragraph rode along once (docs/ui-building.md, bf762960).
 
 ## Lessons from this run
+- `call snapbuild.cmd` inside another .cmd leaves the shell in .tw-snap\trainworld\app: `cd /d` back after it.
+- Server deploys and ssh are refused by the classifier unless Anita's latest message says yes to that exact action.
+- Landing a tree fails while the main tree has other agents' edits in the same files (en.json often): park them as a
+  patch (`git diff -- <files>`), `git checkout -- <files>`, land, `git apply --3way` the patch, then `git reset -- <files>`.
+- A translation batch that reorders a key can drop the space after a colon (`"key":"..."`); grep for `":"` before committing.
 - Never edit docs with PowerShell 5.1 Get-Content/Set-Content: it reads UTF-8 as cp1252 and writes a BOM, garbling every
   non-ASCII character. Use the Edit tool.
 - deploy.py's rclone (32 transfers) can saturate Anita's Wi-Fi upload and slow her game on 8800.
