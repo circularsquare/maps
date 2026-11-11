@@ -9,7 +9,8 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - **Live = v0.2.1 = R2 2026-11-10d** (f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept for hotfixes until
   the next release). R2 purge due: 2026-11-07c and 11-08 from 11-11; 11-09, 09b, 09c a few days later; keep 11-10, 10b-10d.
 - **Master = 943805fd** (T-3162/3163, T-3165, T-3172, T-3173, T-3167 landed); master 0766283d (+ T-3186 ferry, T-3193
-  icon, T-3129 snap to roads, flatbadge's three); 8800 = 0766283d, smoke against 8800 PASSED, pushed. Patch files must be
+  icon, T-3129 snap to roads, flatbadge's three); 8800 = 84d97a7d (smoke PASSED); master =
+  d3715a6c (+ T-3171), pushed. 8800 goes to the hotfix build next, then back to master. Patch files must be
   written LF without BOM (PowerShell Out-File breaks them; scratchpad\fixpatch.py converts). Landing pattern while the tree is shared: stage with keep_hunks,
   `git commit -m` without paths, smoke against the rebuilt 8800. Overnight work (detail in ARCHIVE.md): single track finished
   (T-3134..T-3137), click standard T-3149, HSR quad T-3126, typed and capped train counts T-3152, complex list T-3154,
@@ -24,6 +25,10 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - **Server**: live shonei-server 0e7dd77 (community round 3), deployed and pushed 11-11 morning; community still PREVIEW.
 
 ## In flight (maps-b7, launched 08:45)
+- **HOTFIX v0.2.1 (her go, 11-11)**: agent varyings porting T-3196 + T-3192 into `.tw-trees/hotfix` (uncommitted).
+  Then: commit on tw/release-021, `snapbuild.cmd <that hash>` (8800 serves the hotfix build), smoke8800.cmd light+dark,
+  `deploy.py --dry-run --version 2026-11-11`, then `--version 2026-11-11 --smoked`, website add/commit/push,
+  `--verify --page`; then snapbuild master again. Upload ~700 MB may slow her Wi-Fi: warn her.
 - flyover (Opus, worktree `.tw-trees/flyover`, Vite 6111): T-3170 HSR auto-flyovers, T-3169 Advanced row + flyover target
   speed, T-3168 both-sides flyover labels. Ids T-3174..3176. May get T-3166 next (same track bar).
 - flatbadge: T-3164, T-3161, T-3189 LANDED 02314c0a, archived 0766283d, worktree removed. Idle.
@@ -34,13 +39,16 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - branchhit (Sonnet, main tree, 6112): T-3162 branch hit area = drawn track, T-3163 snap dots 50% bigger. Ids T-3177/78.
 - complexlabel: T-3173 (943805fd) and T-3193 (5defa5e3) DONE; idle. (5defa5e3 also carried roads' T-3129 ARCHIVE
   line, since it shared a hunk; T-3129's code is not committed yet.)
-- varyings (Opus, main tree, 6118): T-3192 [P1] player can't start: "Statically used varyings do not fit within
-  packing limits". May mean a live v0.2.1 hotfix: ask her once the cause is known. Ids T-3194/95.
-- stuck (Opus, main tree, 6119): T-3196 [P1] Japanese players: Construct button never comes back / can't add lines,
-  and rarely all trains stop. Diagnose on master vs live; may mean a hotfix (ask her). Ids T-3197/98.
+- varyings: T-3192 DONE, committed 84d97a7d: Firefox with fingerprinting resistance (LibreWolf, Mullvad, Tor)
+  caps varyings at 8 and render sizes at 2048; the station/bridge programs needed 12. Live v0.2.1 affected. 84d97a7d
+  also carried flyover's 4 DECISIONS lines and branchhit's T-3171 ARCHIVE line (shared hunks).
+- stuck: T-3196 DONE, committed 19b4588f: two clock-worker downloads had no timeout, so a dropped road tile or
+  water-mask request froze Construct, edits and the trains' timetable until a reload. Live v0.2.1 affected; fix is
+  3 files, ~40 lines, cherry-picks onto tw/release-021 (passesHeld context differs). Hotfix asked of Anita; if yes,
+  resume agent stuck to cherry-pick in .tw-trees/hotfix, then smoke and deploy on her word. Players' saves in
+  scratchpad\stuck\kanto (delete when done).
 - traincap: T-3167 DONE, committed 943805fd (idle; free for T-3160 or the stop row re-render).
-- branchhit (Sonnet, main tree, 6112): T-3162/T-3163 DONE, committed fa7f29ea; now T-3190 (continue one track of a
-  double's loose end, zoomed in; may touch lanes.rs) then T-3191 [P3] (branch bend). Ids T-3177/78.
+- branchhit: T-3162/63 (fa7f29ea), T-3190/91 (7fce0b52), T-3171 (d3715a6c) DONE. Idle. 8800 rebuilding to 7fce0b52 + smoke.
 
 ## Next
 - Queued: T-3166 HSR/tram double-up to quad (after flyover, same track bar), T-3129 (roads agent), T-3171 [P3], T-3167
@@ -49,6 +57,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - Next free id **T-3199**.
 
 ## Waiting on Anita
+(Hotfix: Anita said yes, "please send it", ~12:50 11-11.)
 - Achievement thresholds for countries with no save were guessed (Spain, Britain, Italy, Germany, Indonesia, Mexico,
   Brazil, Australia, Turkey); she raised KR/TW to 10% and CN to 2%. Show them as a list, not the code file.
 - `notes/v0.2-post.md` is hers to reword and post. To discuss later (her word, not filed): satellite map.
