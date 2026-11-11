@@ -1104,7 +1104,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 
 ## Community
 
-[T-2887, T-3114, T-3115, T-3132; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
+[T-2887, T-3114, T-3115, T-3132, T-3144; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
 server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; notes/T-2887.md]
 
 - **Shown only when the server says so**: `/noritetsu/config`'s `trainworldCommunity`, or in preview its
@@ -1112,13 +1112,15 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **Community** (people icon in the head of the saves panel and of the leaderboards, and in Settings between Controls
   and the account button), headed "Community trains worlds", with the upload icon in its head to share the game
   being played. [Random] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Biggest is
-  by points in the place, one per person, never a sandbox game, top 50 ranked as the leaderboards are; Most liked is
+  by points in the place, one per person, never a sandbox game (a note under the list says "Sandbox games aren't
+  counted"), top 50 ranked as the leaderboards are; Most liked is
   by likes, the newest first among equals, one per person, top 50. The place is the world, a city, a country (as
   the country leaderboards have it) or a region: a realm (`game/realms.ts`, the names the map's realm buttons use)
   that is more than one country or part of one ("Benelux", "US west"). Typed, the picker finds every city, country
   and region; empty, it offers the world and the playing game's countries, regions and cities. A share is in a place
   when its game has points there, valued at their sum there. Twelve cards a page, each a shared schematic painted
-  small with the player's name, its biggest city in the place, points, lines and stations (the game's own counts,
+  small with its title in bold and the player's name after it in grey (a share from before titles shows the name alone),
+  its biggest city in the place, points, lines and stations (the game's own counts,
   bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with Open a copy
   (when offered), Copy link, Report and the heart.
 - **Likes**: every share starts with one, its player's own, which they cannot take back; on their own share the
@@ -1131,7 +1133,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   Community's head; pink once shared, hover "Last shared <date time>"), signed in: "Anyone can see this network,
   your name and its points.", "This save was last shared on <date time>." once shared, how many shares are left
   today ("You can share 3 times today", "... 2 more times today", from the server's count), a name field when the
-  account has no display name, the **Let others open a copy** tick (on by default; a share again keeps the tick as
+  account has no display name, a title field (starts as the game's name, 40 characters at most; blank sends the game's
+  name; the server refuses a title or display name its word filter blocks), the **Let others open a copy** tick (on by default; a share again keeps the tick as
   it was last sent), Share network or Share again, Stop sharing, Copy link once shared, and the people icon to
   Community.
 - **The link**: `<the game's address>?share=<id>` opens the game (start menu or not) with Community on that share;
@@ -1139,8 +1142,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   says "This network isn't shared anymore." over the Random page, the same for each.
 - **Open a copy** downloads the share's save, checks it (`game/sharedSave.ts`: sizes capped before and while
   unpacking, the header walked with limits and each field's type checked, unknown fields dropped, the file
-  re-encoded from what passed) and loads it into a new slot named "<their display name> - <their game's name>"
-  (either alone when the other is missing); the game in hand
+  re-encoded from what passed) and loads it into a new slot named "<title> - <their display name>" (either alone when the other is missing); the game in hand
   is saved first, and none of the viewer's games is written. A save this build cannot open says "This copy doesn't
   open in this version of the game." (another world, a retired or newer format), a damaged one "This copy can't be
   opened."; a load that fails after that is reported as any loaded file's is, and the page falls back to the game

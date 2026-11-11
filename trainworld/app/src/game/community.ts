@@ -20,7 +20,7 @@ export type ReportReason = "offensive" | "fake-score" | "other";
 
 export interface ShareRow {
   id: string; rev: number; name: string; city: string; points: number; lines: number; stations: number; day: number; likes: number; at: number;
-  /** the game's own name, sent only with a copy, to name it (T-3132) */
+  /** what the sharer calls it (T-3144); none on a share from before titles */
   title?: string;
   sandbox?: boolean; copy?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
 }
@@ -97,6 +97,7 @@ function plain(e: unknown, act: "share" | "like" | "report"): Error {
     case "too-small": return new Error(t("community.errTooSmall"));
     case "need-name": return new Error(t("community.errNeedName"));
     case "bad-name": return new Error(t("community.errBadName"));
+    case "bad-title": return new Error(t("community.errBadTitle"));
     case "too-new": return new Error(act === "share" ? t("community.errNewShare") : t("community.errNewLike"));
     case "preview": return new Error(t("community.errPreview"));
     case "banned": return new Error(t("community.errBanned"));
@@ -133,8 +134,11 @@ export function currentShare(): ShareRow | null {
 /** When a share went up, short, in the player's language: "11/10, 5:25 PM". */
 export const sharedWhen = (row: ShareRow) => tDate(row.at * 1000, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** T-3132: the name of a copy opened from a share, "<their display name> - <their game's name>". */
-export const copyName = (row: ShareRow) => [row.name, row.title].filter(Boolean).join(" - ");
+/** T-3144: the name of a copy opened from a share, "<title> - <their display name>"; either alone when the other is missing. */
+export const copyName = (row: ShareRow) => [row.title, row.name].filter(Boolean).join(" - ");
+
+/** the longest title the server keeps */
+export const TITLE_MAX = 40;
 
 // T-3132: Share again on one of the player's own shares whose game is another in this browser opens that game, and
 // the Share dialog once it is playing. The wish rides the reload in sessionStorage.
@@ -165,8 +169,8 @@ effect(() => {
 });
 
 /** Share or Share again on the playing game, `name` when the account has none, with its save when `copy` (Let others
- * open a copy). Throws an Error to show. */
-export async function shareGame(name: string, copy: boolean): Promise<void> {
+ * open a copy), under `title` (the game's name when blank). Throws an Error to show. */
+export async function shareGame(name: string, copy: boolean, title: string): Promise<void> {
   try {
     const game = await gameForShare();
     if (!game) throw new Error(t("community.errNoGame"));
@@ -186,10 +190,10 @@ export async function shareGame(name: string, copy: boolean): Promise<void> {
     // T-3114: the card counts what the saves list counts, every line and station, bus and ferry ones too
     const st = saveSlotsState.peek(), slot = st.slots.find((s) => s.key === st.active);
     const counts = slot && slot.lines !== undefined && slot.stations !== undefined ? { lines: slot.lines, stations: slot.stations } : {};
-    // T-3132: the game's name goes only with its save, to name a copy
-    const title = copy && slot?.name ? { title: slot.name } : {};
+    // T-3144: the title is the game's name unless the player typed another
+    const sent = (title.trim() || slot?.name || "").slice(0, TITLE_MAX);
     const form = new FormData();
-    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts, ...title }));
+    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts, ...(sent ? { title: sent } : {}) }));
     form.append("drawing", blob, "drawing.json.gz");
     if (save) form.append("save", new Blob([save as BlobPart]), "game.save");
     await api("POST", "trainworld/community", undefined, { form });

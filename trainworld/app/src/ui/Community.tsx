@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { communityOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { TITLE_MAX, communityOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { saveSlotsState } from "../workers/clockClient";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
 import { diagramShareProgress, diagramTheme } from "../diagram/view";
@@ -98,6 +99,12 @@ function Likes({ row }: { row: ShareRow }) {
   return <span class="cm-likes small num" data-tip={t("community.likes", { count: row.likes })}><Icon.heart />{row.likes}</span>;
 }
 
+/** T-3144: the title in bold, then the sharer's name in grey; a share from before titles has the name alone */
+function Heading({ row }: { row: ShareRow }) {
+  if (!row.title) return <strong>{row.name || t("community.anon")}</strong>;
+  return <span class="cm-heading"><strong>{row.title}</strong>{row.name && <span class="cm-by">{row.name}</span>}</span>;
+}
+
 function Card({ row, onOpen }: { row: ShareRow; onOpen: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const { s, failed } = useDrawing(row);
@@ -112,13 +119,13 @@ function Card({ row, onOpen }: { row: ShareRow; onOpen: () => void }) {
     return () => ro.disconnect();
   }, [s, sh, th]);
   return <li class="cm-card">
-    <button type="button" class="cm-open" onClick={onOpen} aria-label={row.name || t("community.anon")}>
+    <button type="button" class="cm-open" onClick={onOpen} aria-label={row.title || row.name || t("community.anon")}>
       <canvas ref={canvas} class="cm-thumb" />
       {!s && <span class="cm-note small muted">{failed ? t("community.errLoad") : t("leaderboard.loading")}</span>}
       <div class="cm-card-info">
         <div class="cm-card-name">
           {row.rank !== undefined && <span class="lb-rank num">{row.rank}</span>}
-          <strong>{row.name || t("community.anon")}</strong>
+          <Heading row={row} />
           <Likes row={row} />
         </div>
         <PointsLine row={row} />
@@ -219,7 +226,7 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
     <div class="cm-detail-head">
       <button type="button" class="btn icon" data-tip={t("community.back")} aria-label={t("community.back")} onClick={onBack}><Icon.goBack /></button>
       <div class="cm-detail-who">
-        <strong>{row.name || t("community.anon")}</strong>
+        <Heading row={row} />
         <PointsLine row={row} />
         <div class="small muted num">{t("savesPanel.lines", { count: row.lines })} · {t("savesPanel.stations", { count: row.stations })}</div>
       </div>
@@ -296,6 +303,7 @@ function Browse() {
       : !rows ? <p class="small muted">{t("leaderboard.loading")}</p>
       : !list.length ? <p class="muted">{t("community.empty")}</p>
       : <ul class="cm-cards">{shown.map((r) => <Card key={r.id + r.rev} row={r} onOpen={() => setPicked(r)} />)}</ul>}
+    {view === "top" && !error && rows && <p class="small muted cm-note-foot">{t("community.sandboxNote")}</p>}
     {pages > 1 && <div class="cm-pager">
       <button type="button" class="btn icon" aria-label={t("community.prev")} data-tip={t("community.prev")} disabled={page === 0} onClick={() => setPage(page - 1)}><Icon.goBack /></button>
       <span class="small muted num">{page + 1} / {pages}</span>
@@ -355,12 +363,17 @@ function ShareAsk() {
       if (code === "need-name" || code === "bad-name") setAsk(true);
     } finally { setBusy(false); }
   };
-  const go = () => run(() => shareGame(needName ? name.trim() : "", copy), t("community.shared"));
+  // T-3144: the title starts as the game's name (or what the last share used) and may be changed
+  const st = saveSlotsState.value, gameName = st.slots.find((s) => s.key === st.active)?.name ?? "";
+  const [titlePick, setTitle] = useState<string | null>(null);
+  const title = titlePick ?? row?.title ?? gameName;
+  const go = () => run(() => shareGame(needName ? name.trim() : "", copy, title), t("community.shared"));
   return <>
     <p>{t("community.ask")}</p>
     {row && <p>{t("community.lastSharedOn", { when: sharedWhen(row) })}</p>}
     {left && <p>{left.left === left.perDay ? t("community.sharesToday", { count: left.left }) : t("community.sharesLeft", { count: left.left })}</p>}
     {row?.hidden ? <p class="small muted">{t("community.hidden")}</p> : null}
+    <input maxLength={TITLE_MAX} placeholder={gameName || t("community.shareTitle")} aria-label={t("community.shareTitle")} value={title} disabled={busy} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
     {needName && <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} disabled={busy} onInput={(e) => setName((e.target as HTMLInputElement).value)} />}
     <label class="check cm-copy-tick">
       <input type="checkbox" checked={copy} disabled={busy} onChange={(e) => setCopy((e.target as HTMLInputElement).checked)} />
