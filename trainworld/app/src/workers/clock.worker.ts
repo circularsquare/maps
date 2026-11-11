@@ -261,6 +261,8 @@ let guide: GuideSave | undefined;
 let guideWanted = false;
 /** T-2395: where the game opens (`SaveHeader.home`); undefined: none */
 let home: string | undefined;
+/** T-3115: the Community share this game is a copy of (`SaveHeader.copy`); undefined: the player's own */
+let copyOf: string | undefined;
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -1986,6 +1988,7 @@ function moneyState(): MoneyState {
     cash: a.cash(),
     dayShift,
     mode,
+    ...(copyOf ? { copy: true } : {}),
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
     fleetFast: a.fleet_fast(),
@@ -2276,7 +2279,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2319,7 +2322,7 @@ async function slotSummary(): Promise<SlotSummary> {
   const stations = stationXY.length;
   const cities = [...byCity].sort((x, y) => y[1] - x[1]).map(([c]) => c);
   const li = a.lines_info();
-  const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash(), mode };
+  const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash(), mode, ...(copyOf ? { copy: true } : {}) };
   try {
     if (typeof OffscreenCanvas === "undefined") return summary;
     // track (grey) and each line's route (its colour), in local units: what the renderer draws
@@ -2652,6 +2655,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   newLineCars = h.newCars ?? NEW_LINE_CARS;
   guide = h.mode === "sandbox" ? undefined : h.guide;
   home = h.home;
+  copyOf = !fresh && typeof h.copy === "string" && h.copy ? h.copy : undefined;
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   loan = mode === "sandbox" ? null : loanFromSave(h);
@@ -2690,6 +2694,7 @@ function setNewGame(spec?: NewGameSpec) {
   demandBuilt = undefined;
   guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0, ...(g.start ? {} : { zoom: true as const }) } : undefined;
   home = undefined;
+  copyOf = undefined;
   fares = startFares(spec);
 }
 
@@ -4052,7 +4057,7 @@ async function whole(msg: Extract<ToClock, { kind: "import" | "export" | "newGam
   if (msg.kind === "export") {
     // T-1826: a newer game downloads as the newer build saved it, with everything this one cannot read
     const bytes = newer && newerFile ? newerFile.slice() : await saveBytes();
-    send({ kind: "exported", bytes, day: Math.floor(gameNow() / 86400) }, [bytes.buffer]);
+    send({ kind: "exported", bytes, day: Math.floor(gameNow() / 86400), ...(msg.share ? { share: true } : {}) }, [bytes.buffer]);
   } else {
     try {
       const name = msg.name?.trim();

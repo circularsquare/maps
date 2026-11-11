@@ -36,7 +36,7 @@ export function startAchievementCounts(send: Call) {
   let timer: ReturnType<typeof setTimeout> | undefined;
   effect(() => {
     const m = moneyState.value;
-    if (!m || m.mode === "sandbox" || !m.achievements) return;
+    if (!m || m.mode === "sandbox" || m.copy || !m.achievements) return; // T-3115: a copy holds another player's achievements
     const keys = Object.keys(m.achievements);
     clearTimeout(timer);
     timer = setTimeout(() => {

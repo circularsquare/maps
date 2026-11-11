@@ -31,6 +31,10 @@
 .cm-canvas { display: block; width: 100%; height: min(70vh, 720px); cursor: grab; }
 .cm-canvas:active { cursor: grabbing; }
 
+.cm-detail-acts { flex-wrap: wrap; justify-content: flex-end; }
+.cm-link-field { flex-basis: 100%; min-width: 0; }
+.cm-copy-tick { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+
 .cm-ask p { margin: 0 0 8px; }
 .cm-ask-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .cm-ask-browse { margin-left: auto; }

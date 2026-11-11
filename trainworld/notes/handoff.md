@@ -23,7 +23,10 @@ turning alike at every station, 15/h or 30/h with a terminal, hints name only a 
 T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `set_edges_kind`); T-3092 + T-3103 real
 flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
 **Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
-**Release v0.2.2 in prep (Anita out ~19:00-21:00, "feel free to keepgoing"):** master ee3a28ec has T-3117/3102 flyover
+**v0.2.2 = 05c857b2** (translations all 11 languages complete, l10nbatch done; update notes committed, Anita still to
+reword). 8800 = 05c857b2; smoke8800 light 13/13 and dark 13/13 PASSED, deploy dry run OK (19:40). READY TO PUBLISH. After her word: `deploy.py --version 2026-11-10e --smoked`, website add/commit/push, `--verify --page`.
+Set V0_2_2_AT in updates.ts at publish (a reword means another small l10n batch first).
+**Release v0.2.2 in prep (earlier) (Anita out ~19:00-21:00, "feel free to keepgoing"):** master ee3a28ec has T-3117/3102 flyover
 drawing, T-3118 loop gestures round 2, T-3113 Catalan. 8800 = ee3a28ec, cargo 465/645 and smoke against 8800 PASSED (19:10). updates.ts
 v0.2.2 entry + 13 `updates.v022*` strings drafted (uncommitted; draft shown to Anita, waiting on her reword). l10nbatch
 (Sonnet coordinator, a8ae0af9fd684d0d3) translating every missing/stale key in 11 languages. Then: commit, release build,

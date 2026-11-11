@@ -2,10 +2,16 @@
 // game's schematic as drawing data; anyone can browse them, and signed-in players can like and report. Everything waits
 // for `/noritetsu/config` to say `trainworldCommunity`: with the server's flag off nothing here is called or shown.
 
-import { signal } from "@preact/signals";
-import { accountConfig, accountState, api, ApiError, gameForShare, loadBoardSetting, playingGameId, session } from "./account";
+// T-3115: a share has a link (`?share=<id>`, `shareLink`) that opens the game on it in Community, and, while its
+// player leaves "Let others open a copy" ticked (the default), its save goes up too so anyone can open a copy as a
+// game of their own (game/sharedSave.ts checks it both ways).
+
+import { effect, signal } from "@preact/signals";
+import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, session } from "./account";
 import { diagramForShare } from "../diagram/view";
 import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from "../diagram/shared";
+import { exportForShare, openCopy, saveSlotsState } from "../workers/clockClient";
+import { copyFromShare, CopyRefused, forShare, MAX_SHARED_SAVE } from "./sharedSave";
 import { t } from "../i18n";
 
 export type ShareView = "random" | "best" | "top";
@@ -13,7 +19,7 @@ export type ReportReason = "offensive" | "fake-score" | "other";
 
 export interface ShareRow {
   id: string; rev: number; name: string; city: string; points: number; lines: number; stations: number; day: number; likes: number; at: number;
-  sandbox?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
+  sandbox?: boolean; copy?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
 }
 export interface ShareList { view: string; city: string; seed: string; count: number; rows: ShareRow[] }
 
@@ -32,11 +38,55 @@ const available = (c: typeof accountConfig.value) => c?.trainworldCommunity === 
 export const communityOn = () => accountState.value === "on" && available(accountConfig.value);
 const on = () => accountState.peek() === "on" && available(accountConfig.peek());
 
+const SHARE_ID = /^[a-z2-9]{8}$/;
+/** The share a `?share=<id>` link opened, until Community shows it. The switch leaves the address bar at once, so a
+ * reload, or the reload into a copy opened from it, does not open it again. */
+export const linkedShare = signal<string | null>((() => {
+  const q = new URLSearchParams(location.search), id = q.get("share");
+  if (id === null) return null;
+  const u = new URL(location.href);
+  u.searchParams.delete("share");
+  history.replaceState(history.state, "", u.href);
+  return SHARE_ID.test(id) ? id : null;
+})());
+// Community opens on the linked share once the server says Community is there (preview: on a `?community` page only).
+effect(() => { if (linkedShare.value && communityOn()) communityOpen.value = true; });
+
+/** A share's link: this page's address and the share, and in preview the flag that shows Community. */
+export function shareLink(id: string): string {
+  return `${location.origin}${location.pathname}?share=${id}${accountConfig.peek()?.trainworldCommunity === true ? "" : "&community"}`;
+}
+
+/** One share's card, for a link; an Error to show when it is not there (hidden, banned or gone answer alike). */
+export async function fetchShare(id: string): Promise<ShareRow> {
+  try { return await api<ShareRow>("GET", `trainworld/community/${encodeURIComponent(id)}`); }
+  catch (e) { throw plain(e, "share"); }
+}
+
+/** Open a copy of a share's save as a new game of this player's: downloaded, checked (game/sharedSave.ts), then the
+ * page reloads into it. `name` names the new slot. Resolves with a reason to show, "" once the reload is under way. */
+export async function openSharedCopy(row: ShareRow, name: string): Promise<string> {
+  let bytes: Uint8Array;
+  try {
+    const gz = await fetchBytes(`trainworld/community/${encodeURIComponent(row.id)}/${row.rev}/save`, MAX_SHARED_SAVE);
+    bytes = await copyFromShare(gz, row.id);
+  } catch (e) {
+    if (e instanceof CopyRefused) return e.why === "version" ? t("community.errCopyVersion") : t("community.errCopyBad");
+    const err = e as ApiError;
+    if (err.code === "too-big") return t("community.errCopyBad");
+    if (err.status === 404) return t("community.errGone");
+    if (err.status === 429) return t("community.errBusy");
+    return err.message;
+  }
+  try { return await openCopy(bytes, name); }
+  catch { return t("community.errCopyBad"); }
+}
+
 /** What went wrong, in plain words, for each of the server's codes. */
 function plain(e: unknown, act: "share" | "like" | "report"): Error {
   const err = e as ApiError, code = err.code;
   switch (code) {
-    case "bad-upload": case "bad-drawing": return new Error(t("community.errSend"));
+    case "bad-upload": case "bad-drawing": case "bad-save": return new Error(t("community.errSend"));
     case "too-small": return new Error(t("community.errTooSmall"));
     case "need-name": return new Error(t("community.errNeedName"));
     case "bad-name": return new Error(t("community.errBadName"));
@@ -69,8 +119,9 @@ export function currentShare(): ShareRow | null {
   return (id && rows.find((r) => r.game === id)) || null;
 }
 
-/** Share or Share again on the playing game, `name` when the account has none. Throws an Error to show. */
-export async function shareGame(name: string): Promise<void> {
+/** Share or Share again on the playing game, `name` when the account has none, with its save when `copy` (Let others
+ * open a copy). Throws an Error to show. */
+export async function shareGame(name: string, copy: boolean): Promise<void> {
   try {
     const game = await gameForShare();
     if (!game) throw new Error(t("community.errNoGame"));
@@ -79,10 +130,21 @@ export async function shareGame(name: string): Promise<void> {
     if (!got) throw new Error(t("community.errDraw"));
     const blob = await packShared(got.d, got.names);
     if (!blob) throw new Error(t("community.errTooBig"));
+    let save: Uint8Array | null = null;
+    if (copy) {
+      const bytes = await exportForShare();
+      if (!bytes) throw new Error(t("community.errSend"));
+      save = await forShare(bytes);
+      if (!save) throw new Error(bytes.length > MAX_SHARED_SAVE ? t("community.errTooBig") : t("community.errSend"));
+    }
     sharePhase.value = "sending";
+    // T-3114: the card counts what the saves list counts, every line and station, bus and ferry ones too
+    const st = saveSlotsState.peek(), slot = st.slots.find((s) => s.key === st.active);
+    const counts = slot && slot.lines !== undefined && slot.stations !== undefined ? { lines: slot.lines, stations: slot.stations } : {};
     const form = new FormData();
-    form.append("meta", JSON.stringify(name ? { game, name } : { game }));
+    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts }));
     form.append("drawing", blob, "drawing.json.gz");
+    if (save) form.append("save", new Blob([save as BlobPart]), "game.save");
     await api("POST", "trainworld/community", undefined, { form });
     await Promise.all([refreshMyShares(), loadBoardSetting()]);
   } catch (e) {

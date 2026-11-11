@@ -131,8 +131,10 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
 - Account (T-972, T-973): `account.ts` (the optional anita.garden account, noritetsu's, and the
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
   shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
-  T-2887, Community: `community.ts` (share, lists, like, report), `ui/Community.tsx` (the modal, the Share button and
-  dialog), `diagram/shared.ts` (a schematic in the server's drawing format and back); Anita's side is `tools/feedback-inbox/`.
+  T-2887, Community: `community.ts` (share, lists, like, report, the `?share=` link, Open a copy), `ui/Community.tsx` (the
+  modal, the Share button and dialog), `diagram/shared.ts` (a schematic in the server's drawing format and back),
+  `sharedSave.ts` (T-3115: a save going up with a share, and a stranger's checked before the loader); Anita's side is
+  `tools/feedback-inbox/`.
   T-988, games on the account: `accountGames.ts` (the main thread's side: the account's list and
   pictures, the start menu's settling, downloads and deletions, the sign-in question) over
   `workers/cloud.ts`.

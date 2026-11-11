@@ -329,6 +329,28 @@ let current: ClockClient | null = null;
 export function exportGame() {
   current?.post({ kind: "export" });
 }
+/** T-3115: the game in hand's save bytes, for a Community share; null with no game. */
+let shareExport: ((bytes: Uint8Array | null) => void) | null = null;
+export function exportForShare(): Promise<Uint8Array | null> {
+  if (!current || shareExport) return Promise.resolve(null);
+  return new Promise((done) => {
+    const late = setTimeout(() => shareExport?.(null), 60_000);
+    shareExport = (b) => { clearTimeout(late); shareExport = null; done(b); };
+    current!.post({ kind: "export", share: true });
+  });
+}
+/** T-3115: open a copy of a shared network (bytes `game/sharedSave.ts` checked) in a new slot: the game in hand
+ * is saved and the page reloads into the copy, as Load from file does; from the start menu, with no game in hand,
+ * the copy waits in storage for the reloaded page. A reason to show when it cannot go. */
+export async function openCopy(bytes: Uint8Array, name: string): Promise<string> {
+  const why = await saveRefusal({ bytes });
+  if (why && !why.soft) return why.text;
+  const pending: PendingLoad = { kind: "import", bytes, name, from: saveSlotsState.peek().active };
+  if (current?.running) { switchGame({ load: "file" }, pending); return ""; }
+  if (!await writePending(pending)) return t("clockClient.noStorage");
+  location.replace(pageWith({ load: "file" }));
+  return "";
+}
 /** A save's bytes downloaded as "trainsworld-<name>-day-<day>.save". */
 function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: string) {
   markDownloaded(slot); // T-1832: the "saved in this browser only" card has nothing more to say
@@ -1095,6 +1117,7 @@ export class ClockClient {
         askBeforeLeaving(msg.on);
         break;
       case "exported": {
+        if (msg.share) { shareExport?.(msg.bytes); break; }
         const { slots, active } = saveSlotsState.value;
         downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
         break;

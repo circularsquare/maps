@@ -131,6 +131,8 @@ export const Icon = {
   trophy: () => <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v3.5a3.5 3.5 0 01-7 0zM4.5 3.8H2.5c0 2 .8 3.2 2.3 3.4M11.5 3.8h2c0 2-.8 3.2-2.3 3.4M8 9.5v2.5M5.5 13.5h5" /></svg>,
   people: () => <svg viewBox="0 0 16 16"><circle cx="5.8" cy="5.4" r="2.4" /><path d="M1.5 13.5c.4-2.7 2.1-4.2 4.3-4.2s3.9 1.5 4.3 4.2M10.4 3.2a2.4 2.4 0 010 4.4M11.9 9.6c1.4.6 2.3 1.9 2.6 3.9" /></svg>,
   share: () => <svg viewBox="0 0 16 16"><path d="M8 10V2.5M4.8 5.5L8 2.3l3.2 3.2M3 8.5v5h10v-5" /></svg>,
+  // T-3115: a share's link, two links of a chain
+  link: () => <svg viewBox="0 0 16 16"><path d="M6.4 9.6l3.2-3.2M7.2 4.8l1.3-1.3a2.6 2.6 0 013.7 3.7l-1.3 1.3M8.8 11.2l-1.3 1.3a2.6 2.6 0 01-3.7-3.7l1.3-1.3" /></svg>,
   heart: () => <svg viewBox="0 0 16 16"><path d="M8 13.8S2 10.3 2 6.1A3.1 3.1 0 018 5a3.1 3.1 0 016 1.1c0 4.2-6 7.7-6 7.7z" /></svg>,
   flag: () => <svg viewBox="0 0 16 16"><path d="M3.5 14.5v-12M3.5 2.5h9l-2 3 2 3h-9" /></svg>,
   gear: () => (

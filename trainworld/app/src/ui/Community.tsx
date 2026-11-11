@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES } from "../game/cities";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { communityOn, communityOpen, currentShare, fetchShares, loadDrawing, myShares, newSeed, refreshMyShares, reportShare, setLiked, shareAsk, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { communityOn, communityOpen, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAsk, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
 import { diagramShareProgress, diagramTheme } from "../diagram/view";
@@ -26,6 +26,24 @@ const cityName = (id: string) => tPlace(id, CITIES.find((c) => c.id === id)?.nam
 
 /** a drawing's lines never thinner than this many CSS px when zoomed out, so a card reads at its small size */
 const MIN_LINE_PX = 1.5;
+
+/** T-3115: Copy link, on an opened share and in the Share dialog. Where the clipboard is refused, the link shows in a
+ * field to copy by hand. */
+function CopyLink({ id, text }: { id: string; text?: boolean }) {
+  const [state, setState] = useState<"" | "done" | "show">("");
+  const url = shareLink(id);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(url); setState("done"); setTimeout(() => setState((s) => (s === "done" ? "" : s)), 2000); }
+    catch { setState("show"); }
+  };
+  const label = state === "done" ? t("community.linkCopied") : t("community.copyLink");
+  return <>
+    {text
+      ? <button type="button" class="btn text cm-copy-link" onClick={() => void copy()}><Icon.link />{label}</button>
+      : <button type="button" class={"btn icon cm-copy-link" + (state === "done" ? " on" : "")} data-tip={label} aria-label={label} onClick={() => void copy()}><Icon.link /></button>}
+    {state === "show" && <input class="cm-link-field" readOnly value={url} aria-label={t("community.copyLink")} ref={(el) => el?.select()} onFocus={(e) => (e.target as HTMLInputElement).select()} />}
+  </>;
+}
 
 function paintShare(canvas: HTMLCanvasElement, s: DecodedShare, cx: number, cy: number, scale: number) {
   const dpr = devicePixelRatio || 1, w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
@@ -172,6 +190,14 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
   };
   const reasons: [ReportReason, string][] = [["offensive", t("community.offensive")], ["fake-score", t("community.fakeScore")], ["other", t("community.somethingElse")]];
   const likeLabel = row.liked ? t("community.unlike") : t("community.like");
+  const [opening, setOpening] = useState(false);
+  // T-3115: a new game of the viewer's own, named after whose network it is; the page reloads into it
+  const openCopy = async () => {
+    setMsg("");
+    setOpening(true);
+    const why = await openSharedCopy(row, row.name || (row.city ? cityName(row.city) : "") || t("savesPanel.copyMark"));
+    if (why) { setMsg(why); setOpening(false); }
+  };
   return <div class="cm-detail">
     <div class="cm-detail-head">
       <button type="button" class="btn icon" data-tip={t("community.back")} aria-label={t("community.back")} onClick={onBack}><Icon.goBack /></button>
@@ -181,6 +207,8 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
         <div class="small muted num">{t("savesPanel.lines", { count: row.lines })} · {t("savesPanel.stations", { count: row.stations })}</div>
       </div>
       <div class="cm-detail-acts">
+        {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openCopy()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
+        <CopyLink id={row.id} />
         {!row.mine && (reported
           ? <span class="small muted">{t("community.reported")}</span>
           : <button type="button" class={"btn text" + (reporting ? " on" : "")} aria-expanded={reporting} onClick={() => { if (!needSignIn()) setReporting(!reporting); }}><Icon.flag />{t("community.report")}</button>)}
@@ -204,6 +232,16 @@ function Browse() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(0);
   const [picked, setPicked] = useState<ShareRow | null>(null);
+  // T-3115: a `?share=` link opens on its share; one that is not there says so above the Random page
+  const [linkError, setLinkError] = useState("");
+  const [linkWait, setLinkWait] = useState(false);
+  const linked = linkedShare.value;
+  useEffect(() => {
+    if (!linked) return;
+    linkedShare.value = null;
+    setLinkWait(true);
+    fetchShare(linked).then(setPicked, (e) => setLinkError((e as Error).message)).finally(() => setLinkWait(false));
+  }, [linked]);
   const signedIn = session.value?.account.id ?? "";
   const city = boardKey === WORLD ? "" : boardKey.slice(WORLD.length + 1);
   useEffect(() => {
@@ -217,6 +255,7 @@ function Browse() {
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const change = (r: ShareRow) => { setPicked(r); setRows((all) => all && all.map((x) => (x.id === r.id ? r : x))); };
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
+  if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
   const list = rows ?? [], pages = Math.ceil(list.length / PAGE), shown = list.slice(page * PAGE, (page + 1) * PAGE);
   const views: [ShareView, string][] = [["random", t("community.random")], ["best", t("community.best")], ["top", t("community.top")]];
   return <>
@@ -227,6 +266,7 @@ function Browse() {
       <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} onPick={setBoardKey} />
       {view !== "top" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
     </div>
+    {linkError && <p class="acct-msg bad">{linkError}</p>}
     {error ? <p class="acct-msg bad">{error}</p>
       : !rows ? <p class="small muted">{t("leaderboard.loading")}</p>
       : !list.length ? <p class="muted">{t("community.empty")}</p>
@@ -273,6 +313,9 @@ function ShareAsk() {
   useEffect(() => { void loadBoardSetting(); void refreshMyShares(); }, []);
   const needName = ask || (setting !== null && !setting.name);
   const phase = sharePhase.value, progress = diagramShareProgress.value;
+  // T-3115: Let others open a copy, ticked unless the share went up without it
+  const [copyPick, setCopy] = useState<boolean | null>(null);
+  const copy = copyPick ?? (row ? !!row.copy : true);
   const run = async (f: () => Promise<void>, done: string) => {
     setBusy(true);
     setMsg("");
@@ -285,14 +328,19 @@ function ShareAsk() {
       if (code === "need-name" || code === "bad-name") setAsk(true);
     } finally { setBusy(false); }
   };
-  const go = () => run(() => shareGame(needName ? name.trim() : ""), t("community.shared"));
+  const go = () => run(() => shareGame(needName ? name.trim() : "", copy), t("community.shared"));
   return <>
     <p>{t("community.ask")}</p>
     {row?.hidden ? <p class="small muted">{t("community.hidden")}</p> : null}
     {needName && <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} disabled={busy} onInput={(e) => setName((e.target as HTMLInputElement).value)} />}
+    <label class="check cm-copy-tick">
+      <input type="checkbox" checked={copy} disabled={busy} onChange={(e) => setCopy((e.target as HTMLInputElement).checked)} />
+      <span>{t("community.letCopy")}</span>
+    </label>
     <div class="cm-ask-foot">
       <button type="button" class={"btn text" + (row ? "" : " save-open")} disabled={busy || (needName && !name.trim())} onClick={() => void go()}>{row ? t("community.again") : t("community.share")}</button>
       {row && <button type="button" class="btn text danger" disabled={busy} onClick={() => void run(() => stopSharing(row.id), t("community.stopped"))}>{t("community.stop")}</button>}
+      {row && !row.hidden && !busy && <CopyLink id={row.id} text />}
       {!busy && <button type="button" class="btn text cm-ask-browse" onClick={() => { shareAsk.value = false; communityOpen.value = true; }}>{t("community.title")}</button>}
     </div>
     {phase === "drawing" && <div class="cm-progress">

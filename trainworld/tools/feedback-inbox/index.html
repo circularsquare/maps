@@ -510,6 +510,15 @@ function viewer(canvas, d) {
   draw();
 }
 
+async function downloadShareSave(s) {
+  try {
+    const blob = await (await api("GET", `${INBOX_C}${s.id}/${s.rev}/save`)).blob();
+    const a = el("a", { href: URL.createObjectURL(blob), download: `share-${s.id}.save` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (e) { fail(e); }
+}
+
 async function shareAct(id, what) {
   try { await api("POST", `${INBOX_C}${id}/${what}`); askBan = ""; await Promise.all([loadShares(), loadPending()]); }
   catch (e) { fail(e); }
@@ -528,7 +537,9 @@ function shareRow(s) {
     : el("div", { class: "actions" },
         el("button", { type: "button", text: "Keep", onclick: () => shareAct(s.id, "keep") }),
         el("button", { type: "button", text: "Remove", onclick: () => shareAct(s.id, "remove") }),
-        el("button", { type: "button", text: "Ban", onclick: () => { askBan = s.id; loadShares(); } }));
+        el("button", { type: "button", text: "Ban", onclick: () => { askBan = s.id; loadShares(); } }),
+        // T-3115: line names are only in the save; it opens in the game with Load from file
+        s.copy ? el("button", { type: "button", text: "Download save", onclick: () => downloadShareSave(s) }) : null);
   const box = el("div", { class: "share" },
     el("div", { class: "head" },
       s.hidden ? el("span", { class: "tag bad", text: "hidden" }) : el("span", { class: "tag", text: "showing" }),

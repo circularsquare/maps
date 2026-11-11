@@ -1099,6 +1099,38 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   cities (the same per-city figures the city boards use; the server maps city to country with a table
   made by `tools/country_table.mjs`) [T-3116].
 
+## Community
+
+[T-2887, T-3114, T-3115; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
+server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; notes/T-2887.md]
+
+- **Shown only when the server says so**: `/noritetsu/config`'s `trainworldCommunity`, or in preview its
+  `trainworldCommunityPreview` on a page opened with `?community`. Otherwise no button, and a share link opens nothing.
+- **Community** (people icon in the head of the saves panel and of the leaderboards): Random, Best in city and Top in
+  city, a city picker, twelve cards a page, each a shared schematic painted small with the player's name, city,
+  points, lines and stations (the game's own counts, bus and ferry included, as the saves list shows them). A card
+  opens the drawing to pan and zoom, with Open a copy (when offered), Copy link, Report and the heart.
+- **Share network** (share icon on the playing game's card and beside Save picture on the schematic), signed in:
+  "Anyone can see this network, your name and its points.", a name field when the account has no display name,
+  the **Let others open a copy** tick (on by default; a share again keeps the tick as it was last sent), Share
+  network or Share again, Stop sharing, Copy link once shared, and Community.
+- **The link**: `<the game's address>?share=<id>` opens the game (start menu or not) with Community on that share;
+  works with no account. The switch leaves the address bar at once. A hidden, banned or deleted share's link
+  says "This network isn't shared anymore." over the Random page, the same for each.
+- **Open a copy** downloads the share's save, checks it (`game/sharedSave.ts`: sizes capped before and while
+  unpacking, the header walked with limits and each field's type checked, unknown fields dropped, the file
+  re-encoded from what passed) and loads it into a new slot named after the player who shared it; the game in hand
+  is saved first, and none of the viewer's games is written. A save this build cannot open says "This copy doesn't
+  open in this version of the game." (another world, a retired or newer format), a damaged one "This copy can't be
+  opened."; a load that fails after that is reported as any loaded file's is, and the page falls back to the game
+  it had.
+- **A copy never ranks**: its header carries `copy` (the share's id), the saves list marks it Copy (hover "Never on
+  the leaderboards"), it sends no figures and no achievement counts, and sharing it tells the server it is a
+  sandbox, so it shows tagged Sandbox and only in Random. It plays as a normal game otherwise.
+- **What goes up with the tick**: the save as the game writes it, minus the Getting started card's progress. The
+  game's name, account and device ids, playtime and settings are never in a save. Line and group names are, and
+  only there (the drawing has none): Anita's inbox can download a reported share's save to read them.
+
 ## Start menu
 
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]

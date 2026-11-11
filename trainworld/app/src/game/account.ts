@@ -116,6 +116,28 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
   return j as T;
 }
 
+/** T-3115: a file from the server as bytes, without the session; an ApiError for a failed answer, "too-big" past
+ * `max` bytes (read no further than that). */
+export async function fetchBytes(path: string, max: number): Promise<Uint8Array> {
+  let r: Response;
+  try { r = await fetch(BASE + path); } catch { throw new ApiError(t("account.unreachable"), 0); }
+  if (!r.ok || !r.body) throw new ApiError(t("account.answered", { status: r.status }), r.status);
+  const reader = r.body.getReader(), parts: Uint8Array[] = [];
+  let n = 0;
+  for (;;) {
+    let got: ReadableStreamReadResult<Uint8Array>;
+    try { got = await reader.read(); } catch { throw new ApiError(t("account.unreachable"), 0); }
+    if (got.done) break;
+    n += got.value.length;
+    if (n > max) { void reader.cancel().catch(() => {}); throw new ApiError("too big", 413, "too-big"); } // i18n-ignore: a code, not shown
+    parts.push(got.value);
+  }
+  const out = new Uint8Array(n);
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
 export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string>; kind?: string }) {
@@ -328,7 +350,7 @@ export async function gameForShare(): Promise<string | null> {
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
   let e = games()[slot] ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
-  if (m?.mode === "sandbox" && !e.sandbox) {
+  if (m && unranked(m) && !e.sandbox) {
     try {
       await api("PUT", `trainworld/score/${e.id}`, { mode: "sandbox" });
       e.sandbox = true;
@@ -354,6 +376,10 @@ function figures(): { day: number; points: number; cities: Record<string, number
   return { day: Math.floor(hour / 24), points, cities };
 }
 
+/** A game whose figures never rank: a sandbox, or (T-3115) a copy of a shared network, which the server is told is a
+ * sandbox so it never ranks there either, the copy's own play notwithstanding. */
+const unranked = (m: { mode: string; copy?: boolean }) => m.mode === "sandbox" || m.copy === true;
+
 let sending = false;
 /** Send the playing game's figures if they changed and the gap has passed (`now` skips the gap). */
 export async function sendScores(now = false) {
@@ -365,7 +391,7 @@ export async function sendScores(now = false) {
   let e = all[slot] ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
   let body: unknown;
-  if (m.mode === "sandbox") {
+  if (unranked(m)) {
     // only a game that may have figures on this account needs the notice
     if (e.sandbox || e.acct !== acct || !e.sent) return;
     body = { mode: "sandbox" };
@@ -382,7 +408,7 @@ export async function sendScores(now = false) {
   sending = true;
   try {
     await api("PUT", `trainworld/score/${e.id}`, body);
-    if (m.mode === "sandbox") e.sandbox = true;
+    if (unranked(m)) e.sandbox = true;
     e.acct = acct;
     e.at = Date.now();
     lsSet(GAMES_KEY, { ...games(), [slot]: e });

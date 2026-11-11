@@ -227,8 +227,8 @@ export function showStartMenu(onPick: (c: GameChoice) => void) {
   startAccountUi();
   const root = document.createElement("div");
   document.body.appendChild(root);
-  // the account panel (T-972) opens over the menu and takes the keys while it is open
-  const unblock = blockKeysOutside(root, () => !document.querySelector("dialog.acct-panel[open]"));
+  // the account panel (T-972) and Community (a share link, T-3115) open over the menu and take the keys while open
+  const unblock = blockKeysOutside(root, () => !document.querySelector("dialog.acct-panel[open], dialog.community-panel[open]"));
   let done = false;
   const pick = (c: GameChoice) => {
     if (done) return;

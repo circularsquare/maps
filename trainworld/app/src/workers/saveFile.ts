@@ -131,6 +131,9 @@ export interface SaveHeader {
   achievements?: Record<string, Achieved>;
   /** T-2395: where the game opens, a zone id or `WORLD_HOME`; absent: as `startOpenFit` picks */
   home?: string;
+  /** T-3115: the Community share this game is a copy of (game/sharedSave.ts); a copy plays as normal but its
+   * figures never reach the leaderboards. Absent for a game of the player's own */
+  copy?: string;
 }
 
 /** T-2395: `SaveHeader.home` for all the player's cities (the built area, zoomed out) */
@@ -150,8 +153,10 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
-  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true,
+  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true, copy: true,
 };
+/** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */
+export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADER_FIELDS));
 
 /** T-1826: whether a newer build wrote parts of this header that this one does not read: a higher
  * level, or (in a save with a level, so from a build that lists its fields) a field it does not know.
@@ -312,6 +317,8 @@ export interface SlotSummary {
   cash: number;
   /** T-728; absent in slots written before it */
   mode?: GameMode;
+  /** T-3115: a copy of a shared network (`SaveHeader.copy`); absent otherwise */
+  copy?: boolean;
 }
 
 /** One city's panel in a save's picture (T-894): its registry id ("" for an unnamed panel over the
@@ -516,7 +523,7 @@ export async function listSlots(): Promise<SaveSlot[]> {
     const s = saves[i];
     if (!s) return [];
     if (syncs[i]) seeSync(key, syncs[i]);
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, cloud: syncs[i], origin: s.origin, edit: s.edit }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, ...(s.copy ? { copy: true } : {}), cloud: syncs[i], origin: s.origin, edit: s.edit }];
   }).sort((a, b) => b.at - a.at);
 }
 

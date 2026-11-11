@@ -278,7 +278,7 @@ export type ToClock =
    * does not) or on the next edit once it is applied */
   | { kind: "debugPanic"; when: "now" | "read" | "afterEdit" }
   /** the game as a file: answered with "exported" */
-  | { kind: "export" }
+  | { kind: "export"; /** T-3115: for a Community share, not a download */ share?: true }
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
    * (T-743): no slot is ever written over with another game */
   | { kind: "import"; bytes: ArrayBuffer; name?: string }
@@ -318,6 +318,8 @@ export interface MoneyState {
   dayShift: number;
   /** T-728: a sandbox refuses nothing for money and hides the cash */
   mode: GameMode;
+  /** T-3115: a copy of a shared network: it plays as normal and never ranks */
+  copy?: boolean;
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;
@@ -749,7 +751,7 @@ export type FromClock =
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
   | { kind: "home"; home: string | null }
   /** the save file, for the player to keep */
-  | { kind: "exported"; bytes: Uint8Array; day: number }
+  | { kind: "exported"; bytes: Uint8Array; day: number; share?: true }
   /** a station placement's check (T-311): `issues` as an edit's; `cost` what it adds to the
    * blueprint, US$M */
   | { kind: "stationCheck"; seq: number; ok: boolean; issues: string[]; cost: number }

@@ -104,11 +104,12 @@ export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now:
   </>;
 }
 
-/** A saved game's name, with a mark when it is a sandbox (T-728); also the start menu's. While the
- * account keeps games (T-988), a cloud marks a game only on the account and a crossed cloud one only
- * in this browser. `panel`: the saves panel's, where that crossed cloud adds the game to the account. */
+/** A saved game's name, with a mark when it is a sandbox (T-728) or a copy of a shared network (T-3115); also the
+ * start menu's. While the account keeps games (T-988), a cloud marks a game only on the account and a crossed cloud
+ * one only in this browser. `panel`: the saves panel's, where that crossed cloud adds the game to the account. */
 export function SlotTitle({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
-  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip={t("savesPanel.sandboxTip")}>{t("savesPanel.sandbox")}</span>}<CloudMark slot={slot} panel={panel} /></strong>;
+  return <strong>{slot.name}{slot.mode === "sandbox" && <span class="save-sandbox small" data-tip={t("savesPanel.sandboxTip")}>{t("savesPanel.sandbox")}</span>}
+    {slot.copy && <span class="save-sandbox small" data-tip={t("savesPanel.copyMarkTip")}>{t("savesPanel.copyMark")}</span>}<CloudMark slot={slot} panel={panel} /></strong>;
 }
 
 /** T-988: the account's games are in use here (signed in, a server that keeps them); read as signals. */
