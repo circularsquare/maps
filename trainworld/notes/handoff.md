@@ -1,78 +1,55 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 95c539d5-0cf1-43f1-8067-d0686e8d7331, name maps-dc [52e59f], since 2026-11-10 16:07
-Updated: 2026-11-10 16:51 (maps-15 done winding down)
+Updated: 2026-11-10 21:32 (maps-dc past 500k tokens; ready for a fresh orchestrator)
 
 ## Now
 
-**LIVE = v0.2.1 = R2 2026-11-10d**, built from f5a2b979 on branch `tw/release-021` (= 2e2adc09 + the Exact edits hide),
-website eff496a, verified all PASS. It has: HSR-as-tram fix (T-3078), tram/bus/transit wording (T-3064/3067/3068), picker
-inter-city row (T-3074), Load without inter-city trips + OOM fallback (T-3072/3073), 10c's work. Not in it: track rebuild
-(T-3059), Exact edits (hidden). `.tw-trees/hotfix` holds tw/release-021; branches tw/hotfix-10d (abandoned) and
-tw/release-021 can be deleted with that worktree (`git worktree remove .tw-trees/hotfix`).
-Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a few days after; keep 11-10, 10b-10d.
-**No silent updates any more** (Anita): every publish gets a version and an `app/src/ui/updates.ts` entry (strings to her).
-**Website push needs her word each time** (the classifier refuses it otherwise).
-**Master = d4e4d318** (pushed). **8800 = d4e4d318**: both cargo suites in .tw-snap OK (465, 645), smoke against 8800
-PASSED (13 browser checks). Script: maps-dc scratch master_check.cmd <hash> [nobuild].
-**Landed today since the takeover (archived):** maps-15's Exact edits round 2 (41202320; being dropped by T-3109), one-way
-single track T-3094 (97564abe), rebuild fix + rebuild as tram T-3087/3088 (90e97d88), Line 1a T-3099/3081 (8846f377),
-single track in Build T-3093 (40af0202). maps-dc's: T-3104/3105 account mails name the game + quota message (shonei-server
-e1ac732, 7b68d01, deployed, pushed by Anita; client in 1719028f); T-3106 street tram at ground level over water and T-3107
-turning alike at every station, 15/h or 30/h with a terminal, hints name only a terminal, kind 3 "Turning" (1719028f);
-T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `set_edges_kind`); T-3092 + T-3103 real
-flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
-**Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
-**v0.2.2 = 05c857b2** (translations all 11 languages complete, l10nbatch done; update notes committed, Anita still to
-reword). 8800 = 05c857b2; smoke8800 light 13/13 and dark 13/13 PASSED, deploy dry run OK (19:40). READY TO PUBLISH.
-DO NOT snapbuild until v0.2.2 is published: deploy.py uploads .tw-snap's dist, so 8800 must stay at 05c857b2.
-Master = 4358fa86 (pushed): + T-3115 share link and open a copy (dev smoke PASSED 28; server 996cd4e committed, not
-deployed; 8 English-only strings need an l10n batch before community goes public). Server commits waiting to deploy,
-in order: 4cd43f0 + fc98bb8 country boards, 829788b preview, 996cd4e copies. Deploy server before any game with T-3115. After her word: `deploy.py --version 2026-11-10e --smoked`, website add/commit/push, `--verify --page`.
-Set V0_2_2_AT in updates.ts at publish (a reword means another small l10n batch first).
-**Release v0.2.2 in prep (earlier) (Anita out ~19:00-21:00, "feel free to keepgoing"):** master ee3a28ec has T-3117/3102 flyover
-drawing, T-3118 loop gestures round 2, T-3113 Catalan. 8800 = ee3a28ec, cargo 465/645 and smoke against 8800 PASSED (19:10). updates.ts
-v0.2.2 entry + 13 `updates.v022*` strings drafted (uncommitted; draft shown to Anita, waiting on her reword). l10nbatch
-(Sonnet coordinator, a8ae0af9fd684d0d3) translating every missing/stale key in 11 languages. Then: commit, release build,
-smoke8800 light+dark, deploy.py --dry-run --version v0.2.2; publish + website push wait for her word. Country boards'
-server (4cd43f0) deploys with the community preview, her word.
-**Community:** T-3114 done (32a7fcf8; server 829788b preview mode, not pushed/deployed). To let Anita try it: with her
-word, deploy shonei-server (country boards + preview), append to /opt/shonei/shonei.env `SHONEI_COMMUNITY=preview` and
-`SHONEI_COMMUNITY_TESTERS=pw:<her username>` (ask her username, or her account id from the console line in
-notes/T-2887.md), restart, check the journal for "PREVIEW: 1 tester accounts"; she opens
-localhost:8800/trainworld/?acct=live&community (needs 60 min playtime on the account). Full steps in notes/T-2887.md.
-- sharecopy (Opus, aee2897be32c47b21) DONE: T-3115 in 4358fa86 (see above).
-- chevron (Sonnet, aaeff40a11336de02, main tree, Vite 6188): T-3111 one-way stop chevron in the hover and while editing.
-**Release (earlier note):** Anita 18:20: "flyovers + right-click loops is a good place to release" (no rush about tonight). So the next
-release = T-3117 flyover drawing fixes + T-3109/3110 landed (+ T-3112, T-3108 already in). Then: Catalan batch if it is
-in, a translation batch for stale keys, updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, her word
-for the website push.
-- flyover (Opus, af64c7f0ed83c00b5) RESUMED in the MAIN tree (its tree is removed), Vite 6181: T-3117 flyover drawing
-  (smooth divergence at J3, no flat mark there, line colour on the return leg = T-3102 for flyovers).
-**Landed since:** T-3112 single track 240 s (93d77674); T-3109/T-3110/T-3063 right-click loops, Exact edits gone
-(d762b813); T-3116 country boards game part (d4e4d318; server 4cd43f0 + fc98bb8 not deployed: deploy with
-community preview, her word).
-**Running:**
-- loopclick RESUMED in the MAIN tree (Vite 6183): T-3118 loop gestures round 2 (right click any point of a closed loop
-  opens it, ferries to right click, a loop button on touch). Anita approved T-3109's strings ("text good") and the
-  country picker default (2 countries). T-3119 margin review filed (P3, to her before any change). Next free id T-3120.
-- (landed) loopclick (Opus, a2a9a1fb062be2b58, tree `.tw-trees/loopclick` from 3a0a8ee3, Vite 6183): T-3109 drop Exact edits,
-  right click loops back, left click add/remove, bus partial loops (T-3063 folded in), + T-3110 strip while editing.
-- catalan (adcc19e6d8b045139) DONE, uncommitted: T-3113 Catalan translated (7 units x 3 passes), released in OFFERED;
-  files intl.ts, glossary.json, messages/ca.json, sources/ca.json, checks/l10n.mjs, notes/T-3113.md. ca.json holds
-  `community.errPreview`, which only communitycheck's uncommitted en.json has: commit Catalan WITH T-3114 (or after),
-  never before. Points for a Catalan speaker in notes/T-3113.md "done". Run a stale batch before the release.
-- communitycheck (Sonnet, a91f2b0e73e677d8e, main tree + shonei-server, Vite 6185): T-3114 re-test community stage 1
-  (T-2887, dormant behind SHONEI_COMMUNITY=1) on today's master, fix, launch steps + all strings into notes/T-2887.md.
-  Anita 2026-11-10: community is the next major push after the track work; "first version can be pretty minimal, but
-  would be nice to get map sharing up at least". Added: preview mode (SHONEI_COMMUNITY=preview + tester accounts, game
-  shows Community only with ?community) so Anita can share her own maps from 8800 on the real server; deploy that with
-  her word. Her answers: share link and open a copy (ON by default) in the first version = T-3115 (after T-3114, same
-  files); country leaderboards same push = T-3116.
-**Queued:** T-3111 one-way stop chevron (after loopclick lands; same hover and editing view). T-3100 likely moot after T-3109.
-`.tw-trees/hotfix` (tw/release-021, live v0.2.1's source) kept until the next release in case live needs a hotfix.
-Next free id **T-3117**.
-Anita's TODO "do trams have shorter dwell times?": yes, 15 s against 30 s for trains (T-2926), answered 2026-11-10.
+**LIVE = v0.2.1 = R2 2026-11-10d** (from f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept until the next
+release in case live needs a hotfix). Due: purge R2 prefixes 2026-11-07c and 11-08 from 2026-11-11; 11-09, 11-09b, 11-09c a
+few days after; keep 11-10, 10b-10d.
+**Master = a670f0d9** (pushed through 4358fa86). **8800 = a670f0d9.**
+**v0.2.2 is HELD** (Anita 20:20: "kinda shippable. but still feels quite unpolished"): release after this round lands. Then:
+translation batch for every new/stale key (last one: agent l10nbatch, 3 groups x 3 passes, ~15 min), snapbuild,
+smoke8800.cmd light+dark, `deploy.py --dry-run --version 2026-11-10e` (or a new date), set `V0_2_2_AT` in updates.ts,
+publish and website push on her word (notes/T-924.md "Commands"). The changelog entry is in updates.ts (13 lines + 4 nerf
+lines in red, T-3133); she has not reworded it yet. Anita: "No silent updates": every publish gets a version + entry.
+**Server (shonei-server, all pushed, deployed 21:17):** country leaderboards live (T-3116); community in PREVIEW
+(`SHONEI_COMMUNITY=preview`, `SHONEI_COMMUNITY_TESTERS=uad72a8ab66f84c44` = Anita, Google login; env backup
+/opt/shonei/shonei.env.bak-20261111); testers skip the 60-minute gate (04171ac). She tests at
+localhost:8800/trainworld/?acct=live&community. Server deploys need her word each time; ssh is allowed now ("be careful").
+
+**Uncommitted in the MAIN tree, finished (commit together once margins2 reports; one smoke first):**
+- T-3123 busstops: manual bus stops on loops (bus.rs `set_bus_stop` compares plans; busStops.ts; loop_tests.rs;
+  checks/t3123-busloop-stops.mjs) + the frozen bubbles fix (stopMarkers.ts hides its box with no line).
+- T-3124 loopwords: "close loop"/"open loop"/"Open loop" (en.json), map chevron white/near-black on the line (style.css
+  `--map-chev`, stopMarkers.ts `alongTrack`), t3111-chevron.mjs; maps-dc updated t2899-loops.mjs and t3109-loopclick.mjs.
+- T-3128 citycircles: achievements.ts `networkFigures` needs no reversals; docs/ui-panels.md. Hover left as is (Anita).
+- T-3133 maps-dc: updates.ts `nerfs`, StartMenu.tsx, style.css `.changelog-list li.nerf`, 4 `updates.v022Nerf*` strings.
+TASKS lines of T-3123/T-3124/T-3128 are already archived by their agents; T-3133 still in TASKS ("Built by maps-dc").
+
+**Running (all reports come to maps-dc; if maps-dc is gone, check each one's tree/files and adopt):**
+- margins2 (Sonnet, ab04e98ac351d8fde, main): T-3125 trams ~40/h (section 60 s, platform margin 60 s, conflict 45 s),
+  terminal floor `POOLED_TURN_MIN_S` 240 s, train junction moves/flat crossings 90 -> 120 s. Platforms unchanged.
+  Until it finishes, `junction_delay_matches_the_spec_example` fails in the demand suite.
+- flyover2 (Opus, a339de0188163bf37, tree `.tw-trees/flyover2`, Vite 6181): T-3120 tighter flyovers (click point = far
+  leg's join, no kiss, tight curves in tight spots) + T-3121 typed target speed below 160. Land with agent-tree.mjs.
+- stoporder (Opus, a46cd71277664d787, tree `.tw-trees/stoporder`, Vite 6183): T-3122 barbell stop order (stop at every
+  pass, no double stop in a row at a terminal), dots = diagram = hover. Land with agent-tree.mjs.
+- tramred (Opus, ac36b927cb729e7c9, main, Vite 6189): T-3130 player report, street tram ghost red with no tag or price.
+- ferryport (Sonnet, a003a7ec70b2ec84b, main, Vite 6186): T-3127 port snap radius + port tag not showing.
+- community2 (Opus, a020e0b40b1daf1c3, main + shonei-server, Vite 6187): T-3132 community round 2 (copy named "<name> -
+  <world>", self-like, menu font sizes, [Random][Biggest][Most liked] in [place] with country/region, two-people Share
+  icon, Community button in Settings, share-current button in the window). Its server part needs a deploy (her word).
+**Waiting on Anita:** Community heading "Community trainsworlds" (my pick) or her "Community trains worlds"; shares as
+snapshots (my pick) or update on save; the four nerf lines' wording; the map chevron's look (on 8800 after the next commit).
+**Filed, not started:** T-3126 HSR quad, T-3129 snap to road for normal track (design first), T-3131 bus out-and-back by
+hand near-overlap stops. Next free id **T-3134**.
+**Anita's decisions today (for the record):** dead ends and through stations turn alike, hints only "build a terminal"
+(terminal = 30 tph), never "dead end"; single track two-way default, margin 240 s; margins: trams ~40/h, terminals 30/h,
+junction moves 120 s, platforms unchanged; community first version = share + share link + open a copy (ON by default) +
+country leaderboards; City circles only for whole loops, earned ones kept; Catalan added; usage: free reset, Opus more
+widely but "not fully gung-ho".
 
 **Open with Anita:**
 - National achievement thresholds for countries without a save were guessed (Spain, Britain, Italy, Germany, Indonesia,
