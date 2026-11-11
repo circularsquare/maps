@@ -86,7 +86,9 @@ then community on (5), push maps master.
 - loadpath: T-3234 DONE, landed 46661a4d (one derive per save load, not two; byte-identical). The ~60 s demand
   phase is normal for any network that size (T-007 the same). Filed T-3236 (London save fixed up each load), T-3237
   (first networkFromState 2-3 s). 8800 = 46661a4d, smoke PASSED.
-- meet (resumed, ~320k): T-3231 two lines standing on one place at a double-track terminal (t1965 fails on master).
+- meet (retire, ~435k): T-3231 diagnosed, not landed (notes/T-3231.md; patch artifacts/trainworld/t3231/full-fix.diff
+  breaks t2980; next steps in the notes, 1-2 h for a fresh agent). P3, left for later.
+- **Stopping point 11-11 afternoon**: no agents running; everything landed and on 8800 (643e2911+); waiting on her.
 - firstpass: T-3237 DONE, landed 3545d35c (bandPoints by bisection; T-007 first pass ~0.6 s less, NY ~0.1 s;
   identical output). Next candidates there (not filed): StrokeBuilder.add and `q` in network.ts, segmentGap (~0.2 s).
   8800 = 3545d35c, smoke PASSED.
