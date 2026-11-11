@@ -1,0 +1,15 @@
+coords scale 10000000.0
+route relations kept: 37; dropped {}
+lines (route masters or lone relations): 21
+stations (name within 400 m): 151; stop nodes with no name: 0
+hand network: 157 stations, 17 lines; sample station {"key": "osm:a11326619", "name": "仙台駅", "feed": "osm", "lon": 140.882436, "lat": 38.26011204285714, "x": 3.1432047410199, "y": 1.3391064655237832, "target": "00
+hand stations with an auto station within 200 m: 97% (152 of 157)
+auto stations with a hand station within 200 m: 98% (148 of 151)
+hand lines whose stops are 80%+ on one auto line: 16 of 17
+  missed (name, kind, best share): JR大船渡線 (JR Ofunato Line) commuter 0
+matched lines whose OSM relation has an interval tag: 1 of 16: SAR: hand peak 4.5/h, OSM interval 20
+auto lines: ?; AE; JR仙山線; JR仙石東北ライン; JR仙石線; JR常磐線; JR東北本線; JR気仙沼線 (JR Kesennuma Line); JR石巻線 (JR Ishinomaki Line); JR陸羽東線 (JR Rikuu East Line); SAR; はやて列車; ひたち（上り）; ひたち（下り）; やまびこ列車; 仙台市南北線 (Sendai Namboku Line); 仙台市東西線 (Sendai Tozai Line); 東北新幹線
+auto relations with colour: 15 of 37; with interval: 8; with wikidata: 22
+track km under the kept lines: 3727; tunnel 764, bridge 1004, layer set 1738
+ways by level from tags: {-4: 8, -3: 3, -2: 45, -1: 622, 0: 2794, 1: 2132, 2: 308, 3: 54, 4: 7}
+crossings of different lines' ways (no shared node): 185; flat if all at one level: 185; flat with levels from layer/tunnel/bridge: 6

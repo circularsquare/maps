@@ -1,0 +1,51 @@
+region subway light_rail train tram monorail (route relations, one per direction)
+cn 767 70 134 57 39
+us 225 227 687 154 53
+kr 181 22 106 1 7
+jp 143 31 1333 84 28
+de 131 187 2175 957 26
+in 121 0 255 25 0
+gb 99 29 1061 62 5
+es 80 22 396 65 1
+fr 65 20 1390 266 2
+ru 60 4 3923 949 0
+hk 54 29 1 12 0
+br 44 36 61 14 4
+it 43 31 618 112 3
+tr 42 6 72 76 0
+tw 37 9 206 2 0
+mx 32 8 16 0 1
+ir 30 2 30 0 0
+cl 26 0 34 1 0
+ca 24 26 98 35 2
+nl 24 6 292 92 1
+no 20 8 105 16 0
+sg 19 4 0 0 20
+at 16 4 389 121 0
+ve 16 6 2 0 0
+se 15 6 155 39 0
+ua 14 18 155 213 0
+be 13 14 236 119 0
+ar 12 10 98 6 0
+az 12 0 16 0 0
+gr 12 1 47 4 0
+ro 12 0 77 152 0
+sa 12 1 5 0 0
+th 12 1 21 0 6
+eg 9 0 8 17 4
+hu 9 53 503 128 0
+bg 8 0 16 34 0
+dk 8 27 91 2 0
+pt 8 22 131 20 0
+qa 8 4 0 4 0
+uz 8 0 16 4 0
+
+subway: 2565 relations; stops>=2 98%, platforms only 0%, ways 99%, colour 97%, interval 16%, PTv2 96%
+light_rail: 1067 relations; stops>=2 94%, platforms only 1%, ways 99%, colour 87%, interval 20%, PTv2 93%
+train: 19303 relations; stops>=2 94%, platforms only 1%, ways 99%, colour 42%, interval 12%, PTv2 90%
+tram: 5067 relations; stops>=2 92%, platforms only 3%, ways 100%, colour 56%, interval 9%, PTv2 90%
+monorail: 216 relations; stops>=2 85%, platforms only 1%, ways 96%, colour 57%, interval 6%, PTv2 78%
+distinct (region, network) with subway relations: 254
+distinct (region, network) with monorail relations: 74
+distinct (region, network) with light_rail relations: 212
+regions with any subway relation: 65

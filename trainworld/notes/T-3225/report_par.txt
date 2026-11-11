@@ -1,0 +1,15 @@
+coords scale 10000000.0
+route relations kept: 297; dropped {'service tag long_distance': 36, 'service tag high_speed': 22, 'service tag tourism': 9, 'service tag night': 2}
+lines (route masters or lone relations): 93
+stations (name within 400 m): 1042; stop nodes with no name: 4
+hand network: 922 stations, 97 lines; sample station {"key": "zdc:411281", "name": "Lycée Henri Sellier", "feed": "idfm", "lon": 2.5149560091576517, "lat": 48.91628657189495, "x": 12156.807642280026, "y": 6992.677
+hand stations with an auto station within 200 m: 98% (901 of 922)
+auto stations with a hand station within 200 m: 95% (989 of 1042)
+hand lines whose stops are 80%+ on one auto line: 96 of 97
+  missed (name, kind, best share): T13 tram 0.75
+matched lines whose OSM relation has an interval tag: 2 of 96: CDG VAL: hand peak 14.2/h, OSM interval 4; T12: hand peak 5.9/h, OSM interval 00:15
+auto lines: 061A; 061C; 1; 10; 11; 12; 13; 14; 2; 3; 3bis; 4; 5; 6; 7; 722; 7bis; 8; 9; A; B; C; C17; CDGVAL; Citi : Paris Saint Lazare ↔ Rouen; Citi : Serquigny ↔ Evreux ↔ Paris; D; Disneyland Railroad; E; ES; H; Horse-Drawn Streetcars; IC 501; J; K; K15; K2; K4; K6; L; N; OUIGo; Orlyval; Ouigo; P; R; S06; T1; T10; T11; T12; T13; T14; T2; T3a; T3b; T4; T5; T6; T7; T8; T9; TER; TER 14; TER 23; TER 4 : Orléans ↔ Étampes ↔ Paris; TGV; TGV 723; TGV 733; TGV 734; TGV : Bruxelles-Midi ↔ Lyon-Perrache; TGV : Bruxelles-Midi ↔ Nice-Ville; TGV : Bruxelles-Midi ↔ Perpignan; U; V
+auto relations with colour: 295 of 297; with interval: 2; with wikidata: 222
+track km under the kept lines: 14146; tunnel 781, bridge 375, layer set 1422
+ways by level from tags: {-8: 11, -7: 7, -6: 6, -5: 100, -4: 60, -3: 147, -2: 395, -1: 1336, 0: 13726, 1: 8724, 2: 155, 3: 11, 4: 18, 5: 21}
+crossings of different lines' ways (no shared node): 1377; flat if all at one level: 1377; flat with levels from layer/tunnel/bridge: 42

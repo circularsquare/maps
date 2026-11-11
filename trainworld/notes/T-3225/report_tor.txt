@@ -1,0 +1,15 @@
+coords scale 10000000.0
+route relations kept: 77; dropped {'service tag night': 6, 'service tag long_distance': 14, 'service tag tourism': 3}
+lines (route masters or lone relations): 25
+stations (name within 400 m): 496; stop nodes with no name: 2
+hand network: 488 stations, 40 lines; sample station {"key": "go:AC", "name": "Acton GO", "feed": "go", "lon": -80.034111, "lat": 43.6338043, "x": -52367.641741173684, "y": -2178.9454337318452, "target": null}
+hand stations with an auto station within 200 m: 89% (434 of 488)
+auto stations with a hand station within 200 m: 96% (477 of 496)
+hand lines whose stops are 80%+ on one auto line: 30 of 40
+  missed (name, kind, best share): 506 tram 0.67; 506 tram 0.78; 512 tram 0.47; 512 tram 0.5; BR commuter 0.56; KI commuter 0.33; KI commuter 0.33; KI commuter 0.22; KI commuter 0.18; ST commuter 0.75
+matched lines whose OSM relation has an interval tag: 18 of 30: 501: hand peak 3.0/h, OSM interval 00:10; 501: hand peak 3.0/h, OSM interval 00:10; 503: hand peak 9.8/h, OSM interval 00:10:00; 504: hand peak 3.6/h, OSM interval 00:10; 504: hand peak 7.5/h, OSM interval 00:10; 504: hand peak 3.0/h, OSM interval 00:10; 505: hand peak 10.2/h, OSM interval 00:10; 506: hand peak 6.1/h, OSM interval 00:08; 507: hand peak 12.2/h, OSM interval 00:10; 508: hand peak 2.4/h, OSM interval 00:10; 509: hand peak 3.4/h, OSM interval 00:10; 509: hand peak 3.5/h, OSM interval 00:10; 510: hand peak 9.8/h, OSM interval 00:10; 511: hand peak 10.1/h, OSM interval 00:08; LW: hand peak 1.4/h, OSM interval 01:00
+auto lines: 1; 2; 306; 4; 5; 501; 503; 504; 505; 506; 507; 509; 510; 511; 512; 6; BR; KI; LW; Lakeshore East; MI; RH; ST; UP Express; VIA Rail Corridor
+auto relations with colour: 41 of 77; with interval: 32; with wikidata: 68
+track km under the kept lines: 2906; tunnel 145, bridge 52, layer set 198
+ways by level from tags: {-4: 4, -3: 7, -2: 61, -1: 107, 0: 2471, 1: 876, 2: 10, 5: 10}
+crossings of different lines' ways (no shared node): 220; flat if all at one level: 220; flat with levels from layer/tunnel/bridge: 0
