@@ -29,7 +29,7 @@ export interface AccountGame {
   id: string; name: string; rev: number; writer: string; writerAt: number; savedAt: number;
   facts?: Partial<GameFacts>; saveBytes: number; pictureRev?: number; backups?: AccountBackup[];
 }
-export interface AccountList { games: AccountGame[]; tombstones: { id: string; at: number }[]; used: number; limit: number; maxGames: number }
+export interface AccountList { games: AccountGame[]; tombstones: { id: string; at: number }[]; used: number; limit: number; maxGames: number; /** T-3230: seconds the account has played; absent until the server says */ played?: number }
 
 /** Wall ms between two uploads of an autosaved game (the leaderboards' gap). */
 export const GAP_MS = 120_000;

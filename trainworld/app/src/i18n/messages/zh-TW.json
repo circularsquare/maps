@@ -528,8 +528,6 @@
   "community.errGone": "這個路網已不再分享。",
   "community.errLoad": "無法載入這個路網",
   "community.errNeedName": "請取一個和路網一起顯示的名字。",
-  "community.errNewLike": "遊玩60分鐘後才能按讚。",
-  "community.errNewShare": "遊玩60分鐘後才能分享。",
   "community.errNoGame": "請先儲存這場遊戲。",
   "community.errOwn": "這是你自己的路網。",
   "community.errPreview": "社群還沒有對這個帳號開放。",

@@ -528,8 +528,6 @@
   "community.errGone": "Эта сеть больше не опубликована.",
   "community.errLoad": "Не удалось открыть эту сеть",
   "community.errNeedName": "Выберите имя, которое будет видно рядом с вашей сетью.",
-  "community.errNewLike": "Ставить лайки можно после 60 минут игры.",
-  "community.errNewShare": "Делиться сетью можно после 60 минут игры.",
   "community.errNoGame": "Сначала сохраните эту игру.",
   "community.errOwn": "Это ваша сеть.",
   "community.errPreview": "Сообщество пока закрыто для этого аккаунта.",

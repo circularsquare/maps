@@ -528,8 +528,6 @@
   "community.errGone": "この路線網はもう共有されていません。",
   "community.errLoad": "この路線網を読み込めませんでした",
   "community.errNeedName": "路線網と一緒に表示する名前を決めてください。",
-  "community.errNewLike": "60分プレイするといいねできます。",
-  "community.errNewShare": "60分プレイすると共有できます。",
   "community.errNoGame": "先にこのゲームを保存してください。",
   "community.errOwn": "これはあなたの路線網です。",
   "community.errPreview": "このアカウントではまだコミュニティを利用できません。",

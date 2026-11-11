@@ -7,10 +7,11 @@
 
 import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { accountConfig, accountOpen, accountState, api, deleteAccount, session, signIn, SITE, signOut, startAccount, storeSession, type AccountView } from "../game/account";
+import { accountConfig, accountOpen, boardSetting, loadBoardSetting, accountState, api, deleteAccount, session, signIn, SITE, signOut, startAccount, storeSession, type AccountView } from "../game/account";
 import { shade } from "../game/ui";
 import { accountList, answerMergeAsk, gamesOn, mergeAsk, refreshAccountGames, watchMerge } from "../game/accountGames";
 import { t, tRich, tNumber } from "../i18n";
+import { playedText } from "../game/gameTime";
 import { Leaderboard } from "./Leaderboard";
 import { Community, ShareDialog } from "./Community";
 import { Modal } from "./Modal";
@@ -123,6 +124,8 @@ function SignedIn({ a }: { a: AccountView }) {
   return <>
     <p>{who}</p>
     <AccountGames />
+    <AccountPlayed />
+    <NameHidden />
     <MergeQuestion />
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); saveEmail(e.currentTarget, val(e.currentTarget, "email").trim()); }}>
       <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" defaultValue={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />
@@ -157,6 +160,21 @@ function SignedIn({ a }: { a: AccountView }) {
 
 /** "0.2 MB", "12 MB". */
 const mb = (bytes: number) => { const v = bytes / 1048576; return t("accountPanel.megabytes", { size: tNumber(v >= 10 ? Math.round(v) : Math.max(v, bytes ? 0.1 : 0), { maximumFractionDigits: 1 }) }); };
+
+/** One line when a moderator has hidden the display name; it goes once the server says the name is fine. */
+function NameHidden() {
+  const open = accountOpen.value;
+  useEffect(() => { if (open) void loadBoardSetting(); }, [open]);
+  if (!boardSetting.value?.nameHidden) return null;
+  return <p class="small acct-warn">{t("accountPanel.nameHidden")}</p>;
+}
+
+/** T-3230: how long the account has played, once the server's games list says. */
+function AccountPlayed() {
+  const sec = accountList.value?.played;
+  if (typeof sec !== "number") return null;
+  return <p class="small muted num acct-games">{t("playtime.played", { time: playedText(sec) })}</p>;
+}
 
 /** T-988: how many games the account keeps and the room they take. */
 function AccountGames() {

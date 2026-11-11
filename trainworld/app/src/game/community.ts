@@ -13,6 +13,8 @@ import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from 
 import { exportForShare, manageSaveSlot, openCopy, saveSlotsState } from "../workers/clockClient";
 import { copyFromShare, CopyRefused, forShare, MAX_SHARED_SAVE } from "./sharedSave";
 import { t, tDate } from "../i18n";
+import { accountList } from "./accountGames";
+import { playedText } from "./gameTime";
 
 /** T-3132: Random, Biggest (`top`, by points) and Most liked */
 export type ShareView = "random" | "top" | "liked";
@@ -98,7 +100,10 @@ function plain(e: unknown, act: "share" | "like" | "report"): Error {
     case "need-name": return new Error(t("community.errNeedName"));
     case "bad-name": return new Error(t("community.errBadName"));
     case "bad-title": return new Error(t("community.errBadTitle"));
-    case "too-new": return new Error(act === "share" ? t("community.errNewShare") : t("community.errNewLike"));
+    case "too-new": {
+      const sec = err.extra?.played ?? accountList.peek()?.played, known = typeof sec === "number" ? "yes" : "no", time = typeof sec === "number" ? playedText(sec) : "";
+      return new Error(act === "share" ? t("community.errNewShare", { known, time }) : t("community.errNewLike", { known, time }));
+    }
     case "preview": return new Error(t("community.errPreview"));
     case "banned": return new Error(t("community.errBanned"));
     case "too-many": return new Error(t("community.errTooMany"));

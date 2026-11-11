@@ -528,8 +528,6 @@
   "community.errGone": "Ce réseau n’est plus partagé.",
   "community.errLoad": "Impossible de charger ce réseau",
   "community.errNeedName": "Choisissez un nom à afficher avec votre réseau.",
-  "community.errNewLike": "Vous pourrez aimer des réseaux après 60 minutes de jeu.",
-  "community.errNewShare": "Vous pourrez partager après 60 minutes de jeu.",
   "community.errNoGame": "Sauvegardez d’abord cette partie.",
   "community.errOwn": "Ce réseau est le vôtre.",
   "community.errPreview": "La communauté n’est pas encore ouverte à ce compte.",

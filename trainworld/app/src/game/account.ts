@@ -21,6 +21,7 @@ import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
 import { pointsPast24h } from "./points";
 import { startPlaytime } from "./playtime";
+import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
 import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
@@ -36,7 +37,7 @@ export interface AccountView {
 }
 interface Session { token: string; account: AccountView }
 export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean }
-export interface BoardSetting { on: boolean; name: string }
+export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean }
 export interface BoardRow { rank: number; name: string; value: number }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
 
@@ -92,7 +93,7 @@ export const boardSetting = signal<BoardSetting | null>(null);
 export const accountOpen = signal(false);
 export const boardsOpen = signal(false);
 
-export class ApiError extends Error { constructor(msg: string, readonly status: number, readonly code = "") { super(msg); } }
+export class ApiError extends Error { constructor(msg: string, readonly status: number, readonly code = "", /** the rest of an error answer, e.g. `played` seconds on a "too-new" */ readonly extra: Record<string, unknown> | null = null) { super(msg); } }
 
 export async function api<T>(method: string, path: string, body?: unknown, opts: { auth?: boolean; keep401?: boolean; headers?: Record<string, string>; form?: FormData } = {}): Promise<T> {
   const headers: Record<string, string> = { ...opts.headers };
@@ -111,7 +112,7 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
     // a dead token means signed out; a wrong current password (keep401) does not
     if (r.status === 401 && opts.auth !== false && !opts.keep401 && s) tokenGone();
     const msg = typeof j?.error === "string" ? j.error : t("account.answered", { status: r.status });
-    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status, typeof j?.code === "string" ? j.code : "");
+    throw new ApiError(msg.charAt(0).toUpperCase() + msg.slice(1).replace(/([^.])$/, "$1."), r.status, typeof j?.code === "string" ? j.code : "", j && typeof j === "object" ? j : null);
   }
   return j as T;
 }
@@ -457,6 +458,7 @@ async function dropDeleted() {
 let started = false;
 /** Ask the server once whether accounts are on; refresh the session; start sending. Idempotent. */
 export function startAccount() {
+  startGameTime();
   if (started || !BASE) return;
   started = true;
   // T-988: the clock worker gets the account on every change; a dead token found there signs out

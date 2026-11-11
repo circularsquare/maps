@@ -1070,7 +1070,8 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   account and Forgot password; Privacy and Terms (`public/privacy.html`, `terms.html`). Signed in:
   "Signed in as alice" (or with Google); under it, while the server keeps games, "3 games on your
   account · 1.2 MB of 64 MB" (hovers: "Your account keeps up to 50 games", "Backups count too")
-  [T-988 stage 3]; for a password account the recovery email ("No recovery
+  [T-988 stage 3]; then, when the games list carries `played` (seconds), "3 h 20 min played" and, when `/trainworld/me` says
+  `nameHidden`, a red "Your name is hidden from others. Pick another." [T-3230]; for a password account the recovery email ("No recovery
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
   Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
   noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no

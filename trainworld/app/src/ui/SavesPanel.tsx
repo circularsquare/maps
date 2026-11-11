@@ -27,6 +27,7 @@ import { Modal } from "./Modal";
 import { CommunityButton, ShareButton } from "./Community";
 import { refreshMyShares } from "../game/community";
 import { Money } from "./MoneyText";
+import { gameSeconds, playedText } from "../game/gameTime";
 import { NewGameSheet } from "./NewGame";
 import { t, tDate, tList } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -85,12 +86,13 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
  * cash; also the start menu's (T-677). */
 export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren }) {
   const when = savedWhen(slot.at, now, !!autosaved);
-  const cities = cityList(slot.cities ?? []);
+  const cities = cityList(slot.cities ?? []), played = gameSeconds(slot.key);
   return <>
     <div class="small muted save-when"><span data-tip={t("savesPanel.lastSaved", { date: fullDate(slot.at) })}>{when}</span>{mark}</div>
     <div class="small muted num">
       <span data-tip={t("savesPanel.gameDay", { day: slot.day })}>{t("savesPanel.day", { day: slot.day })}</span>
       {cities ? <> · {cities}</> : null}
+      {played !== undefined && <> · <span style={{ whiteSpace: "nowrap" }}>{t("playtime.played", { time: playedText(played) })}</span></>}
     </div>
     {slot.lines !== undefined && <div class="small muted num">
       <span data-tip={t("savesPanel.lines", { count: slot.lines })}>{t("savesPanel.lines", { count: slot.lines })}</span>

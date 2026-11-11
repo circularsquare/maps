@@ -528,8 +528,6 @@
   "community.errGone": "This network isn't shared anymore.",
   "community.errLoad": "Could not load this network",
   "community.errNeedName": "Pick a name to show with your network.",
-  "community.errNewLike": "You can like networks after playing for 60 minutes.",
-  "community.errNewShare": "You can share after playing for 60 minutes.",
   "community.errNoGame": "Save this game first.",
   "community.errOwn": "This network is yours.",
   "community.errPreview": "Community is not open to this account yet.",

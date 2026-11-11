@@ -528,8 +528,6 @@
   "community.errGone": "Dieses Netz wird nicht mehr geteilt.",
   "community.errLoad": "Dieses Netz konnte nicht geladen werden",
   "community.errNeedName": "Wähle einen Namen, der bei deinem Netz angezeigt wird.",
-  "community.errNewLike": "Du kannst Netze erst nach 60 Minuten Spielzeit liken.",
-  "community.errNewShare": "Du kannst erst nach 60 Minuten Spielzeit teilen.",
   "community.errNoGame": "Speichere dieses Spiel zuerst.",
   "community.errOwn": "Dieses Netz gehört dir.",
   "community.errPreview": "Community ist für dieses Konto noch nicht offen.",
