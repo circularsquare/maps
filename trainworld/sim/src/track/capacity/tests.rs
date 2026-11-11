@@ -168,6 +168,37 @@ fn two_km_of_two_way_single_track_takes_about_five_trains_an_hour_each_way() {
     assert!((cap.rho[r][0] - 2.0 * 5.0 * occ / 3600.0).abs() < 1e-12);
 }
 
+/// T-3201 (Anita, 2026-11-11): one train alone on single track no other line uses has no train to
+/// keep the margin from, so it never fills the stretch; with two trains the margin counts again.
+#[test]
+fn a_lone_train_on_single_track_keeps_no_margin_from_itself() {
+    use super::super::tests::{edge, line, node, station, world};
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 2000.0, 0.0, 0);
+    let e = edge(&mut w, a, b, &[], 0).unwrap();
+    let mut d = w.net.edge_data(e).unwrap();
+    d.tracks = 1;
+    w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    station(&mut w, a, 200);
+    station(&mut w, b, 200);
+    let l = line(&mut w, &[a, b], [5.0, 0.0, 0.0]);
+    for (n, margin) in [(1u32, false), (2, true)] {
+        let tph = w.net.line_tph[l as usize];
+        w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
+        let cap = &w.svc.cap;
+        let r = cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
+        let occ: f64 = cap.users_of(r).iter().map(|u| u.occ - if margin { 0.0 } else { SINGLE_TRACK_MARGIN_S }).sum();
+        let want = w.net.line_tph[l as usize][0] as f64 * occ / 3600.0;
+        assert!((cap.rho[r][0] - want).abs() < 1e-9, "{n} trains: rho {} want {want}", cap.rho[r][0]);
+        if n == 1 {
+            assert!(cap.rho[r][0] < 1.0, "a lone train fills the track: {}", cap.rho[r][0]);
+            let lim = cap.line_limits(&w.net)[l as usize][0].0;
+            assert!(lim >= w.net.line_tph[l as usize][0] as f64 - 1e-9, "limit {lim} under the lone train's rate");
+        }
+    }
+}
+
 /// A line ending at a dead end and at a through station gets the same limit (T-3107, Anita
 /// 2026-11-10): 15 an hour at a 3-minute turnaround without a terminal, 30 with one.
 #[test]

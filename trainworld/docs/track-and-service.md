@@ -733,7 +733,7 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   160, 16 at 320 (T-517). Tram track (both kinds) holds 60 s + v / 0.6 (41 an hour at the street
   tram's 60 km/h), its platform dwell + 60 s (48 an hour at the 15 s dwell), its own crossings
   and junction moves 45 s (T-3125, Anita 2026-11-10)
-- single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions: a headway each way of
+- single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions (a line with one train, on track no other line uses, has no train to keep the margin from and takes the run time alone; T-3201): a headway each way of
   about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; single track that
   runs one way (set, or by its run's joins, 6.1) takes the track-section rule above, per direction
   (T-3094, T-3137)

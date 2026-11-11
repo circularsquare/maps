@@ -202,14 +202,16 @@ impl Capacity {
         let mut out = vec![[(f64::INFINITY, u32::MAX); 3]; net.line_count()];
         let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
-            own.clear();
-            for u in self.users_of(r) {
-                match own.iter_mut().find(|o| o.0 == u.line) {
-                    Some(o) => o.1 += u.occ / 3600.0,
-                    None => own.push((u.line, u.occ / 3600.0, self.caps(r, u))),
-                }
-            }
+            let single = self.res[r].kind == ResKind::SingleTrack;
             for lev in 0..LEVELS {
+                own.clear();
+                for u in self.users_of(r) {
+                    let occ = occ_at(net, self.users_of(r), single, u, lev) / 3600.0;
+                    match own.iter_mut().find(|o| o.0 == u.line) {
+                        Some(o) => o.1 += occ,
+                        None => own.push((u.line, occ, self.caps(r, u))),
+                    }
+                }
                 let load: f64 = own.iter().map(|&(l, a, _)| net.line_tph[l as usize][lev] as f64 * a).sum();
                 for &(l, a, _) in own.iter().filter(|o| o.1 > 0.0 && o.2) {
                     let most = (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0);
@@ -236,12 +238,14 @@ impl Capacity {
         let mut res: Vec<(f64, Vec<(u32, f64)>)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             let (mut fixed, mut coef) = (0.0, vec![]);
+            let single = self.res[r].kind == ResKind::SingleTrack;
             for u in self.users_of(r) {
+                let occ = occ_at(net, self.users_of(r), single, u, lev);
                 match if self.caps(r, u) { slot[u.line as usize] } else { u32::MAX } {
-                    u32::MAX => fixed += net.line_tph[u.line as usize][lev] as f64 * u.occ / 3600.0,
+                    u32::MAX => fixed += net.line_tph[u.line as usize][lev] as f64 * occ / 3600.0,
                     s => match coef.iter_mut().find(|c: &&mut (u32, f64)| c.0 == s) {
-                        Some(c) => c.1 += u.occ / 3600.0,
-                        None => coef.push((s, u.occ / 3600.0)),
+                        Some(c) => c.1 += occ / 3600.0,
+                        None => coef.push((s, occ / 3600.0)),
                     },
                 }
             }
@@ -1095,7 +1099,15 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 }
 
 /// Utilisation and delay of one resource's users for each demand level.
-fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, plans: &[Arc<Plan>]) -> ([f64; 3], [f64; 3]) {
+/// A user's occupancy per train at a level, s. A lone train (T-3201) on single track no other line
+/// runs over has no train to keep the margin from, so it takes the track for its transit alone;
+/// with two or more trains, or another line on the track, the margin counts.
+fn occ_at(net: &Network, us: &[User], single: bool, u: &User, lev: usize) -> f64 {
+    let lone = single && net.line_trains[u.line as usize].map_or(false, |t| t[lev] <= 1) && us.iter().all(|x| x.line == u.line);
+    if lone { (u.occ - SINGLE_TRACK_MARGIN_S).max(0.0) } else { u.occ }
+}
+
+fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, single: bool, plans: &[Arc<Plan>]) -> ([f64; 3], [f64; 3]) {
     let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     if matches!(tag, Tag::Follow { .. } | Tag::Wait { .. }) {
@@ -1118,7 +1130,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
             if tph <= 0.0 {
                 continue;
             }
-            load += tph * u.occ;
+            load += tph * occ_at(net, us, single, u, lev);
             trains += tph;
             let key = (u.line, u.run);
             match streams.iter_mut().find(|s| s.0 == key) {
@@ -1147,7 +1159,7 @@ pub fn solve(cap: &mut Capacity, net: &Network) {
     cap.rho.resize(n, [0.0; 3]);
     cap.delay.resize(n, [0.0; 3]);
     for r in 0..n {
-        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r], &cap.plans[r]);
+        let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r], cap.res[r].kind == ResKind::SingleTrack, &cap.plans[r]);
         cap.rho[r] = rho;
         cap.delay[r] = delay;
     }
@@ -1284,7 +1296,7 @@ impl Capacity {
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
         for r in first_new..self.res.len() {
-            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], &self.plans[r]);
+            let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]);
             self.rho[r] = rho;
             self.delay[r] = delay;
             for u in self.users_of(r) {
@@ -1304,7 +1316,7 @@ impl Capacity {
                 if !self.users_of(r).iter().any(|u| rs[u.line as usize]) {
                     continue;
                 }
-                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], &self.plans[r]);
+                let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]);
                 self.rho[r] = rho;
                 if delay != self.delay[r] {
                     self.delay[r] = delay;
