@@ -49,8 +49,8 @@ then community on (5), push maps master.
 - busstop (Sonnet, 6114, a76b5cf1a943ec24c): T-3210 + T-3211 DONE, landed 912a85ff, 8800 = 912a85ff, smoke PASSED.
   New string stopMarkers.oneWay "One way stop" is English only: translate in the next batch before a publish.
 - meet (Opus, 6121, a07934c91990ea3cc): T-3202 DONE, landed 911c949e (single-track turns on by default, trains on
-  their own sides at single-track stations, the 273 s lag fixed); 8800 = 911c949e, smoke PASSED. Now the T-3212
-  proposal with mocks (not built). t1965 fails on master too: T-3231. Option 2 (real timetable meet) is T-3219.
+  their own sides at single-track stations, the 273 s lag fixed); 8800 = 911c949e, smoke PASSED. T-3212 proposal
+  done (notes/T-3212.md, mock in review/t3212-station-split-mock.png, ~2-3 h): waits for her look; resume meet. t1965 fails on master too: T-3231. Option 2 (real timetable meet) is T-3219.
 - ubc (Opus, 6116, afbd5ad584e1de35f): T-3213 diagnosed (notes/T-3213.md; UBC game ~91k legs/day vs 152k real:
   students in one cell 2.2 km off the core, Canada jobs from the proxy, campus sized by area). Filed A T-3214, B T-3215,
   C T-3216, cache clobbering T-3217. Now building T-3214's pipeline code, proven on van in scratch; no rebuild.
@@ -87,7 +87,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3232**.
+- Next free id **T-3233**. stoprow (Sonnet, 6119, afd2b6e3c47c0e859): T-3232 stop list row at the click.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
