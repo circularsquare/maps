@@ -24,7 +24,6 @@ import { tripAt } from "./network";
 import type { Overlay } from "./overlay";
 import { circleColour, circleColours, circleList, stationCircles, type Circle } from "./stationCircles";
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
-import { oneWayStops } from "../game/turnedLine";
 import { headingOnScreen } from "./stopHeading";
 
 /** A line of a tag: plain text, or a row built as DOM. */
@@ -138,9 +137,9 @@ function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[]
 /** T-3111: the screen angle (degrees clockwise from right) the trains of line `l` head in at station `id`,
  * when the line serves it one way; null for a two-way stop. */
 function stopHeading(ov: Overlay, w: WorldView, l: LineInput, id: string): number | null {
-  const nb = oneWayStops(l.stops, w.lineStats[l.id] ?? { loop: null, oneWay: false }).get(id);
+  const way = w.lineStats[l.id]?.oneWayAt[id];
   const net = ov.renderer.net;
-  return nb && net ? headingOnScreen(ov, net, nb[0], nb[1]) : null;
+  return way !== undefined && net ? headingOnScreen(ov, net, id, way) : null;
 }
 
 /** The tag for station `i` of the network buffers. */

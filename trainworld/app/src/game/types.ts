@@ -204,6 +204,9 @@ export interface LineStats {
   reversals: number[];
   /** the bare track ends (node ids) where its trains reverse between stops, standing the turnaround (T-797 B3) */
   endTurns: number[];
+  /** T-3122: the stations it serves one way only (station id to the heading of its trains there, radians, world
+   * frame, `TrackApi::line_stop_ways`): the half dots, the stop list and the hover chevrons all read this */
+  oneWayAt: Record<string, number>;
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns

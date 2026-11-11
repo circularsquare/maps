@@ -507,6 +507,8 @@ export interface ClockLine {
   reversals: number[];
   /** the bare track ends (nodes) where its trains reverse between stops (`TrackApi::line_end_turns`, T-797 B3) */
   endTurns: number[];
+  /** T-3122: `[node, heading]` per station it serves one way only, the heading in radians, world frame (`TrackApi::line_stop_ways`) */
+  ways: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (`TrackApi::line_loop`, T-798): 0 none, 1 a circle, 2 a balloon */

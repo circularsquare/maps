@@ -35,9 +35,9 @@ try {
   await page.waitForTimeout(1000);
   const info = await page.evaluate(async () => {
     const w = window.tw.world.value, l = w.save.lines.find((x) => x.name === 'Line 1'), st = w.lineStats[l.id];
-    const { oneWayStops } = await import('/src/game/turnedLine.ts');
-    const ow = oneWayStops(l.stops, st), nm = new Map(w.save.stations.map((s) => [s.id, s.name]));
-    const two = l.stops.find((s) => !ow.has(s) && new Set(l.stops.filter((x) => x === s)).size && l.stops.filter((x) => x === s).length > 1);
+    // T-3122: the sim's one-way stops
+    const ow = new Map(Object.entries(st.oneWayAt)), nm = new Map(w.save.stations.map((s) => [s.id, s.name]));
+    const two = l.stops.find((s) => !ow.has(s) && l.stops.filter((x) => x === s).length > 1);
     const one = [...ow.keys()].find((s) => nm.get(s) === 'Apollobuurt') ?? [...ow.keys()][0];
     return { colour: l.colour, num: l.num, one, oneName: nm.get(one), two, twoName: nm.get(two), count: ow.size };
   });

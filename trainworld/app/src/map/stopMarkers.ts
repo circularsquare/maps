@@ -20,9 +20,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
-import { oneWayStops } from "../game/turnedLine";
 import { headingOnScreen } from "./stopHeading";
-import { PLATFORM_POINTS } from "./stationGeometry";
 import { headingChevron } from "./trackTagRows";
 import { queryClock } from "../workers/clockClient";
 import { GapFlash } from "./gapFlash";
@@ -160,7 +158,8 @@ export class StopMarkers {
   private line: LineInput | null = null;
   private colour = "#888";
   /** T-3041: the stops of a turned line served one way, with the stops either side of them on the walk */
-  private oneWay = new Map<string, [string, string]>();
+  /** T-3122: the stops the line serves one way, to the heading of its trains there (`LineStats.oneWayAt`) */
+  private oneWay = new Map<string, number>();
   private index = new Map<string, number>();
   private netSeen: unknown = null;
   private size = 0;
@@ -248,7 +247,7 @@ export class StopMarkers {
       }
       this.colour = this.line.colour;
       this.tram = !!w.lineStats[this.line.id]?.tram;
-      this.oneWay = oneWayStops(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
+      this.oneWay = new Map(Object.entries(w.lineStats[this.line.id]?.oneWayAt ?? {}));
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
@@ -337,9 +336,9 @@ export class StopMarkers {
       m.y = y;
       m.d = stop ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-      m.el.style.background = stop ? this.halfFill(id, n, x, y) : "";
-      let heading = stop && this.oneWay.has(id) ? headingOnScreen(this.overlay, n, this.oneWay.get(id)![0], this.oneWay.get(id)![1], this.index) : null;
-      if (heading !== null) heading = this.alongTrack(n, id, heading);
+      const way = stop ? this.oneWay.get(id) : undefined;
+      const heading = way === undefined ? null : headingOnScreen(this.overlay, n, id, way, this.index);
+      m.el.style.background = this.halfFill(heading);
       if (heading === null) {
         if (m.chev) m.chev.style.display = "none";
       } else {
@@ -356,36 +355,12 @@ export class StopMarkers {
       }
   }
 
-  /** T-3124: `chord` (screen degrees, the stop before to the stop after) turned to the track's own direction at the
-   * stop, so the chevron lies on the stroke where the line bends; the way (of the two) nearer `chord`. */
-  private alongTrack(n: NonNullable<Overlay["renderer"]["net"]>, id: string, chord: number): number {
-    const i = this.index.get(id), sl = n.stationLine;
-    if (i === undefined || !sl) return chord;
-    const m = PLATFORM_POINTS >> 1, o = i * 2 * PLATFORM_POINTS, x = n.stations[i * 3], y = n.stations[i * 3 + 1];
-    const a = this.overlay.toScreen(x + sl[o + m * 2 - 2], y + sl[o + m * 2 - 1]), b = this.overlay.toScreen(x + sl[o + m * 2 + 2], y + sl[o + m * 2 + 3]);
-    const dx = b[0] - a[0], dy = b[1] - a[1];
-    if (!dx && !dy) return chord;
-    let deg = (Math.atan2(dy, dx) * 180) / Math.PI, d = deg - chord;
-    d -= 360 * Math.round(d / 360);
-    return Math.abs(d) > 90 ? deg + 180 : deg;
-  }
-
   /** T-3041: a stop served one way is filled on one half only, split along the track, the half on the right
-   * of the way the train goes (from the stop before to the stop after); "" for any other marker. */
-  private halfFill(id: string, n: NonNullable<Overlay["renderer"]["net"]>, x: number, y: number): string {
-    const nb = this.oneWay.get(id);
-    if (!nb) return "";
-    const at = (s: string): [number, number] | null => {
-      const i = this.index.get(s);
-      return i === undefined ? null : this.overlay.toScreen(n.stations[i * 3], n.stations[i * 3 + 1]);
-    };
-    const a = at(nb[0]), b = at(nb[1]);
-    if (!a || !b) return "";
-    const dx = b[0] - a[0], dy = b[1] - a[1];
-    if (!dx && !dy) return "";
+   * of the way the train goes (`heading`, screen degrees, T-3122: the sim's); "" for any other marker. */
+  private halfFill(heading: number | null): string {
+    if (heading === null) return "";
     // the right-hand normal on screen (y down) is (-dy, dx); a CSS gradient angle points (sin, -cos)
-    const deg = (Math.atan2(-dy, -dx) * 180) / Math.PI;
-    return `linear-gradient(${deg.toFixed(1)}deg, #fff 50%, var(--c) 50%)`;
+    return `linear-gradient(${(heading + 180).toFixed(1)}deg, #fff 50%, var(--c) 50%)`;
   }
 
   /** The station whose marker is under a map point (CSS px), preferring stops, then the ones that

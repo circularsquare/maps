@@ -92,10 +92,12 @@ fn a_new_stop_on_a_turned_stem_is_served_both_ways() {
     assert_eq!(s, vec![a0, b, m, k, m, b, a0]);
     assert_eq!(a.set_stops(id, &s), 0, "{}", a.issues());
     assert!(a.insert_stop(id, b).is_empty(), "B is a stop already");
-    // K, on the loop, is passed once: taken out and put back, it is one visit
+    // K, on the loop, is passed once: taken out and put back, it is one visit; M, stopped at once
+    // while the loop had no stop (T-3122: twice in a row is once), is a stop on both passes again
     assert_eq!(a.set_stops(id, &[a0, b, m, b, a0]), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_stops(id), &[a0, b, m, b, a0]);
     let s: Vec<u32> = a.insert_stop(id, k).iter().map(|&x| x as u32).collect();
-    assert_eq!(s, vec![a0, b, m, k, b, a0]);
+    assert_eq!(s, vec![a0, b, m, k, m, b, a0]);
 }
 
 #[test]

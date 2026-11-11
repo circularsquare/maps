@@ -687,7 +687,14 @@ function RailLineInspector({ id }: { id: string }) {
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => tr("inspector.stations", { count: n });
   // a loop's closing row opens it: a turned line goes back to its way out (T-3021)
-  const removeStop = (i: number) => st.loop && i > 0 && i === l.stops.length - 1 ? stopEdit({ op: "openLoop", line: l.num }) : setStops(l.stops.filter((_, k) => k !== i).map(Number));
+  // T-3122: a loop stops at every pass of a station, so the station goes with all its visits, as from the map
+  const removeStop = (i: number) => {
+    if (st.loop && i > 0 && i === l.stops.length - 1) return stopEdit({ op: "openLoop", line: l.num });
+    if (!st.loop) return setStops(l.stops.filter((_, k) => k !== i).map(Number));
+    const left = l.stops.filter((s) => s !== l.stops[i]);
+    if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
+    return setStops(left.map(Number));
+  };
   const stopEdit = async (op: EditOp) => {
     if (stopEditing) return;
     stopEditing = true;
@@ -804,9 +811,10 @@ function RailLineInspector({ id }: { id: string }) {
     const end = i === 0 || i === nStops - 1, loop = !!st.loop;
     if (!editingStops || nStops <= 2 || st.reversals?.includes(i) || (loop && (end || nStops <= 3))) return null;
     const here = name.get(l.stops[i]) ?? "";
+    const again = loop && l.stops.filter((s) => s === l.stops[i]).length > 1;
     return {
       tip: tr("busInspector.removeStop", { name: here }) + (end || loop || nStops < 3 || mobileDevice() ? "" : "\n" + tr("lineInspector.shiftEnd")),
-      click: (e) => void stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i }),
+      click: (e) => void (again ? removeStop(i) : stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i })),
     };
   };
   // the station the line passes at a side line's stop (related lines while stops are edited)
@@ -838,7 +846,7 @@ function RailLineInspector({ id }: { id: string }) {
     }
     const dot = dotClick(i, row);
     return (
-      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (row?.once ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
+      <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (st.oneWayAt?.[s] !== undefined ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
         data-stop={i} onPointerDown={(e) => rowDown(e, i)} onMouseEnter={() => setListHot({ stations: complexOf(s) })} onMouseLeave={() => setListHot(null)}>
         {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
         {row?.arc === "end" && <i class="dir" aria-hidden="true" />}

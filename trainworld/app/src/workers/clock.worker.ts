@@ -3646,11 +3646,10 @@ function apply(op: EditOp): Applied {
       return op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
     }
     case "insertStop": {
-      // one message instead of a query and then setStops: a round trip less, and no stale stops
-      const stops = a.insert_stop(op.line, op.station);
-      if (!stops.length) return { r: INSERT_REFUSED };
-      const set = () => a.set_stops(op.line, Uint32Array.from(stops));
-      return op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
+      // one call: the stop put in, and an end it leaves on a loop of track turned round it (T-3122)
+      const set = () => a.add_stop(op.line, op.station);
+      const out = op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
+      return out.r === 2 ? { ...out, r: INSERT_REFUSED } : out;
     }
     case "dropStop": {
       const r = a.drop_stop(op.line, op.index);

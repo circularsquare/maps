@@ -262,6 +262,28 @@ impl TrackApi {
     pub fn insert_stop(&self, line: u32, station: u32) -> Vec<f64> {
         best_insert(&self.w.net, line, station, &mut HopMemo::new()).map_or(vec![], |(stops, _)| stops.iter().map(|&s| s as f64).collect())
     }
+    /// T-3122, the line tool's click: `station` put in where `insert_stop` puts it, as `set_stops`
+    /// takes those stops, and an end that comes to stand on a loop of track with it turned round the
+    /// loop, the line then run one way (`auto_turn`). 2 when there is nowhere to put it.
+    pub fn add_stop(&mut self, id: u32, station: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let net = &self.w.net;
+        let mut memo = HopMemo::new();
+        let Some((stops, _)) = best_insert(net, id, station, &mut memo) else {
+            self.issues.clear();
+            self.money_short = None;
+            return 2;
+        };
+        let Some((stops, path)) = edited_stops(net, &stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        match auto_turn(net, id, station, &stops, &path, &mut memo) {
+            Some((s, p)) => {
+                (d.stops, d.path) = (s, p);
+                d.one_way = true;
+            }
+            None => (d.stops, d.path) = (stops, path),
+        }
+        self.run(Op::Line { id, data: Some(d) })
+    }
 
     /// The stations a line passes without stopping (T-646): `[gap, node]` pairs in path order, gap
     /// i lying between stop i and stop i + 1. Only stations on the line's own path count, not
@@ -409,6 +431,39 @@ impl TrackApi {
         ls.runs[0].turn.iter().enumerate().filter(|x| *x.1).map(|x| x.0 as f64).collect()
     }
 
+    /// T-3122: the stations a line serves one way only, `[node, heading]` each: its trains pass
+    /// there only heading `heading` (radians, world frame). A station it passes going the other way
+    /// too, or turns back at, is served both ways and left out (a loop stops at every pass, and a
+    /// pass it skips is one straight after a stop there: a terminal whose loop has no stop), as is
+    /// every stop of a line run both ways. The one answer to "which way does this line stop here" for
+    /// the map's half dots, the stop list and the hover's chevrons. Empty for a bus or ferry line.
+    pub fn line_stop_ways(&self, line: u32) -> Vec<f64> {
+        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok && l.one_way && !l.is_bus()) else { return vec![] };
+        let net = &self.w.net;
+        let run = &ls.runs[0];
+        let segs = &run.segs;
+        if segs.is_empty() {
+            return vec![];
+        }
+        let stops = &ls.stops;
+        let side = |p: u32, leaving: bool| net.port_side(p >> 1, if leaving { p & 1 } else { 1 - (p & 1) });
+        // per station, the side its trains leave by, None once it is left by both
+        let mut ways: Vec<(u32, Option<u8>)> = vec![];
+        for (i, &node) in run.nodes[..segs.len()].iter().enumerate() {
+            if !stops.contains(&node) {
+                continue;
+            }
+            let arr = if i > 0 { segs[i - 1] } else { segs[segs.len() - 1] };
+            let out = side(segs[i], true);
+            let way = if out.is_none() || side(arr, false) == out { None } else { out };
+            match ways.iter_mut().find(|w| w.0 == node) {
+                Some(w) => if w.1 != way { w.1 = None },
+                None => ways.push((node, way)),
+            }
+        }
+        ways.into_iter().filter_map(|(n, w)| w.map(|s| [n as f64, net.node_heading[n as usize] + if s == 1 { 0.0 } else { PI }])).flatten().collect()
+    }
+
     /// The bare track ends where a line's trains reverse between stops, as nodes in path order
     /// (T-797 B3).
     pub fn line_end_turns(&self, line: u32) -> Vec<f64> {
@@ -525,7 +580,8 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 /// out and back the same way (a lollipop's loop stops taken out) make no loop (T-1273): the line
 /// ends where it turns, a terminus, rather than reversing partway there. An open line whose path
 /// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`),
-/// unless the player set its order by hand (`hand`, T-2895).
+/// unless the player set its order by hand (`hand`, T-2895). A loop stops at every pass of a station
+/// it stops at (T-3122, `every_pass`).
 fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
     let path = net.route(&stops)?;
@@ -534,7 +590,7 @@ fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, V
     }
     let n = path.len();
     if n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {
-        return Some((stops, path));
+        return Some((every_pass(net, &stops, &path), path));
     }
     let nodes: Vec<u32> = std::iter::once(net.path_nodes(path[0]).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();
     let at = super::super::net::match_stops(&nodes, &stops, &net.stop_reversals(&path))?;

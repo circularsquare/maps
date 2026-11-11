@@ -923,14 +923,27 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   stop, never turning back, round and onto the line's own path headed back toward the other end, the
   line can be turned round it (`TrackApi::turn_end`, one edit): its stops become the way out, then
   the stops at or before the point it rejoins again in reverse (the end stop not repeated), closing
-  at the first stop, set one way. So the loop runs one way and the stem both ways, every stem
-  station a stop on both passes; a station later put in on the stem goes in on both
-  (`best_insert`). From an open line either end may be turned (the line is reversed for its first
-  end); the closing hop may then carry on round a loop at the other end too, a circle; a balloon's
-  first stop's end can be turned later the same way, its stops from the first after the rejoin.
-  Offered only when a rough round trip (track time, dwells and turnarounds) comes out at most
-  `TURN_SLACK_S` (120 s) or 10% longer than the line's now, with no more reversals; the search is one
-  Dijkstra per end, cut off at that budget. `open_loop` takes a loop back to the stops up to where
+  at the first stop, set one way. So the loop runs one way and the stem both ways. From an open line
+  either end may be turned (the line is reversed for its first end); the closing hop may then carry
+  on round a loop at the other end too, a circle; a balloon's first stop's end can be turned later
+  the same way, its stops from the first after the rejoin. Offered only when a rough round trip
+  (track time, dwells and turnarounds) comes out at most `TURN_SLACK_S` (120 s) or 10% longer than
+  the line's now, with no more reversals; the search is one Dijkstra per end, cut off at that budget.
+  **A click turns an end on a loop by itself** (T-3122, `TrackApi::add_stop`, the line tool's click): when
+  a click puts a station at an end (an open line's first or last stop, or past a balloon's turning stop,
+  where its stem grows: `best_slot` tries the station before the first stop and after the last there),
+  every end that now stands on a loop is turned as above, and the line set one way. An end stands on a
+  loop when its stop lies past the point the loop rejoins the path (the line already runs onto the loop
+  and turns back on it); an end before a loop with no stop on it is only turned by the player's right
+  click. An end already on a loop before the click stays open (a loop the player opened); hand-ordered,
+  bus and ferry lines never turn by themselves. So a stem with a loop at each end, clicked once per
+  station in any order, becomes a circle round both loops.
+  **A loop stops at every pass** (T-3122, `every_pass`): after every stop edit of a loop line (and for
+  every loop line of a save as it loads), each pass of its path over a station it stops at is a stop,
+  except one that would come straight before or after a stop at the same station (a turn round a loop
+  with no stop of its own: one stop there). The path is kept. So a turned line's stem is served both
+  ways, a circle whose way back runs down the stem stops there, and taking a station out takes every
+  visit. `open_loop` takes a loop back to the stops up to where
   they start coming back (a circle's closing stop off, a turned line's way back). Run 0 goes
   round one way and run 1 the other, each from A to A with its own trains; a circle stands the dwell
   at A between laps, a balloon the turnaround. **One way** (T-2981, `LineData::one_way`, toggled in the line
@@ -941,7 +954,12 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   take another mode. A train line starts both ways, a new bus or ferry line one way (`set_bus_line`,
   `set_ferry_line`); the flag stays on an open line, which ignores it, so it carries over opening and
   closing. The direction is the one drawn: no reverse state (redrawing reverses it); arrows on the map
-  show it (T-2991, ui-map.md "Bus lines"). Stops closed into a loop whose path only runs out and back the same way (a
+  show it (T-2991, ui-map.md "Bus lines"). **Which way a stop is served** (T-3122, `TrackApi::line_stop_ways`,
+  `LineStats.oneWayAt`): a rail line run one way serves a station it stops at one way when its run passes
+  the station only heading one way (the side of the station node its trains leave by, `node_heading`);
+  passing both ways, or turning back there, is both ways (a terminal whose loop has no stop, stopped at
+  once, is both ways). Every other line serves every stop both ways. The map's half-filled markers, the
+  stop list's half dots and the hover's chevrons all read this. Stops closed into a loop whose path only runs out and back the same way (a
   lollipop's loop stops taken out, leaving A, M, A) make no loop: a stop edit keeps the stops up
   to where the path turns, which becomes the line's end, a terminus rather than a reversal
   partway (T-1273, `edited_stops` in `sim/src/track/wasm/lines.rs`).
