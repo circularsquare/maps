@@ -166,10 +166,15 @@ impl Network {
     /// right, looking out along the piece, carries trains away from the node with right-hand running.
     pub fn join_away(&self, c: u32) -> Option<bool> {
         let join = self.edge_join[(c >> 1) as usize][(c & 1) as usize];
+        (join != 0 && self.join_applies(c)).then_some((join == 2) == self.right_hand)
+    }
+
+    /// Whether a join at edge end `c` would count: a junction with double track on the end's other side.
+    pub fn join_applies(&self, c: u32) -> bool {
         let p = &self.node_ports[self.end_node(c >> 1, c & 1) as usize];
-        let i = p.find(c >> 1, c & 1)?;
+        let Some(i) = p.find(c >> 1, c & 1) else { return false };
         let double = |k: usize| self.edge_tracks[(p.end[k] >> 1) as usize] == 2 && !self.edge_crossover[(p.end[k] >> 1) as usize];
-        (join != 0 && p.n >= 3 && (0..p.n as usize).any(|k| p.side[k] != p.side[i] && double(k))).then_some((join == 2) == self.right_hand)
+        p.n >= 3 && (0..p.n as usize).any(|k| p.side[k] != p.side[i] && double(k))
     }
 
     fn in_run(&self, e: u32) -> bool {

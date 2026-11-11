@@ -32,7 +32,8 @@ import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type Loca
 import type { Overlay } from "./overlay";
 import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
-import { factRow, lineBullet } from "./trackTagRows";
+import { headingAtPlane } from "./halfDot";
+import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
 import { busStopLinks } from "../game/busLinks";
@@ -98,6 +99,8 @@ interface BusSource {
   stopS: number[][] | null;
   /** T-2991: a loop run one way */
   oneWay: boolean;
+  /** T-3147: per stop id served one way, the plane heading of its buses there (`LineStats.oneWayAt`) */
+  ways: Record<string, number>;
 }
 
 /** The sources' geometry in local units of one anchor. */
@@ -117,6 +120,10 @@ interface Built {
   /** the first stops, in the pass under the stations; the rest are at a train station, drawn over it */
   plainCount: number;
   stopLine: Int32Array;
+  /** T-3147: per stop the local direction its buses go one way, else 0, 0 */
+  stopWay: Float32Array;
+  /** per stop its id (a train station's node or a stop's) */
+  stopId: Int32Array;
   /** per stop 1 for an end */
   stopEnd: Uint8Array;
   /** per line id, local units a ground metre spans there */
@@ -254,7 +261,9 @@ uniform vec2 u_r;            // a ring's outer radius and an end's half side, de
 uniform vec3 u_rail_rgb;
 uniform float u_rings;       // 0: the ends only
 in vec4 a_stop;              // x, y, 1 a ring + 2 a blueprint's, the colour packed
+in vec2 a_way;               // the local direction a one-way stop's buses go, else 0
 out vec2 v_p;
+flat out vec2 v_nrm;         // T-3147: the right-hand side of the way, clip space; 0 for both ways
 flat out vec3 v_color;
 flat out float v_end;
 flat out float v_r;
@@ -266,11 +275,18 @@ void main() {
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   vec2 off = corner * (r + 2.0);
   vec4 c = project(a_stop.xy);
+  vec4 c0 = c;
   c.xy += off / (u_viewport * 0.5) * c.w;
   gl_Position = c;
   v_p = off;
   v_r = r;
   v_end = ring ? 0.0 : 1.0;
+  v_nrm = vec2(0.0);
+  if (ring && dot(a_way, a_way) > 0.0) {
+    vec4 c1 = project(a_stop.xy + a_way);
+    vec2 d = (c1.xy / c1.w - c0.xy / c0.w) * (u_viewport * 0.5);
+    if (length(d) > 1e-6) { d = normalize(d); v_nrm = vec2(d.y, -d.x); }
+  }
   float p = a_stop.w;
   v_color = bp ? u_rail_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
 }`;
@@ -280,6 +296,7 @@ precision highp float;
 uniform vec3 u_fill;
 uniform float u_rim;         // device px
 in vec2 v_p;
+flat in vec2 v_nrm;
 flat in vec3 v_color;
 flat in float v_end;
 flat in float v_r;
@@ -293,7 +310,9 @@ void main() {
   } else d = length(v_p) - v_r;
   float cover = clamp(0.5 - d, 0.0, 1.0);
   if (cover <= 0.0) discard;
-  vec3 c = mix(u_fill, v_color, clamp(d + u_rim + 0.5, 0.0, 1.0));
+  vec3 fillc = u_fill;
+  if (v_nrm != vec2(0.0)) fillc = mix(u_fill, v_color, clamp(dot(v_p, v_nrm) + 0.5, 0.0, 1.0));
+  vec3 c = mix(fillc, v_color, clamp(d + u_rim + 0.5, 0.0, 1.0));
   o = vec4(c * cover, cover);
 }`;
 
@@ -465,7 +484,7 @@ export class BusLayer {
         const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
         const st = w.lineStats[l.id], n = marks.length / 2;
         const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay });
+        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
       }
       // T-2992: stops of two bus lines at one place for demand
       const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
@@ -505,6 +524,8 @@ export class BusLayer {
     const seg = new Float32Array(nSeg * 4), info = new Float32Array(nSeg * 4);
     const rings: number[] = [], ends: number[] = [], ringLine: number[] = [], endLine: number[] = [];
     const sRings: number[] = [], sEnds: number[] = [], sRingLine: number[] = [], sEndLine: number[] = [];
+    const idRings: number[] = [], idEnds: number[] = [], idSRings: number[] = [], idSEnds: number[] = [];
+    const wRings: number[] = [], wEnds: number[] = [], wSRings: number[] = [], wSEnds: number[] = [];
     const k = new Map<number, number>();
     const cum = new Float64Array(nSeg), range = new Map<number, [number, number]>();
     let at = 0;
@@ -538,14 +559,18 @@ export class BusLayer {
         const [x, y] = toLocal(l.street[i], l.street[i + 1], a);
         rings.push(x, y, 1 + code, col);
         ringLine.push(l.id);
+        idRings.push(-1);
+        wRings.push(0, 0);
       }
       for (let i = 0; !muted && i + 2 < l.stops.length; i += 3) {
         const kind = l.stops[i + 2];
         // T-2938, T-2948: a line's two ends are drawn as ends, and its stops at a train station as stops, over it
         const end = kind === 0 || (kind === 1 && (i === 0 || i + 3 >= l.stops.length));
         const [x, y] = toLocal(l.stops[i], l.stops[i + 1], a);
-        if (end) (kind === 1 ? sEnds : ends).push(x, y, code, col), (kind === 1 ? sEndLine : endLine).push(l.id);
-        else (kind === 1 ? sRings : rings).push(x, y, 1 + code, col), (kind === 1 ? sRingLine : ringLine).push(l.id);
+        const h = l.ways[String(l.stopIds[i / 3])];
+        const way = !end && h !== undefined ? [Math.cos(h), -Math.sin(h)] : [0, 0];
+        if (end) (kind === 1 ? sEnds : ends).push(x, y, code, col), (kind === 1 ? sEndLine : endLine).push(l.id), (kind === 1 ? wSEnds : wEnds).push(0, 0), (kind === 1 ? idSEnds : idEnds).push(l.stopIds[i / 3]);
+        else (kind === 1 ? sRings : rings).push(x, y, 1 + code, col), (kind === 1 ? sRingLine : ringLine).push(l.id), (kind === 1 ? wSRings : wRings).push(...way), (kind === 1 ? idSRings : idRings).push(l.stopIds[i / 3]);
       }
     }
     // T-2982: the transfer lines last, out of the picking, each dashed from its stop
@@ -583,6 +608,8 @@ export class BusLayer {
       a, seg, info, count: at, pickCount, stops: Float32Array.from([...rings, ...ends, ...sRings, ...sEnds]), stopCount,
       plainCount: (rings.length + ends.length) / 4,
       stopLine: Int32Array.from([...ringLine, ...endLine, ...sRingLine, ...sEndLine]),
+      stopId: Int32Array.from([...idRings, ...idEnds, ...idSRings, ...idSEnds]),
+      stopWay: Float32Array.from([...wRings, ...wEnds, ...wSRings, ...wSEnds]),
       stopEnd: Uint8Array.from([...ringLine.map(() => 0), ...endLine.map(() => 1), ...sRingLine.map(() => 0), ...sEndLine.map(() => 1)]),
       k, cum, range, stopAlong: new Map(), arrows: new Float32Array(arrows),
     };
@@ -615,13 +642,17 @@ export class BusLayer {
     this.coloursFor = [b];
     gl.bindVertexArray(this.stopVao);
     put(b.stops, "a_stop", 4, this.stopProg!);
-    // the stops at train stations: the same buffer from their first, drawn in a pass of their own
-    const loc = gl.getAttribLocation(this.stopProg!, "a_stop");
+    const stopBuf = this.bufs[this.bufs.length - 1];
+    put(b.stopWay, "a_way", 2, this.stopProg!);
+    const wayBuf = this.bufs[this.bufs.length - 1];
+    // the stops at train stations: the same buffers from their first, drawn in a pass of their own
     gl.bindVertexArray(this.stationStopVao);
-    if (loc >= 0) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufs[this.bufs.length - 1]);
+    for (const [name, buf, size] of [["a_stop", stopBuf, 4], ["a_way", wayBuf, 2]] as const) {
+      const loc = gl.getAttribLocation(this.stopProg!, name);
+      if (loc < 0) continue;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, b.plainCount * 16);
+      gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, b.plainCount * size * 4);
       gl.vertexAttribDivisor(loc, 1);
     }
     if (b.arrows.length) {
@@ -943,7 +974,7 @@ export class BusLayer {
   }
 
   /** The stop drawn under the pointer: its line, and whether it is an end. */
-  stopAt(ov: Overlay, px: number, py: number): { line: number; end: boolean } | null {
+  stopAt(ov: Overlay, px: number, py: number): { line: number; end: boolean; id?: number } | null {
     const L = this.last, b = this.built;
     if (!L || !b || !b.stopCount) return null;
     const p = SCRATCH;
@@ -953,7 +984,7 @@ export class BusLayer {
       if (end ? !L.ends : !L.rings) continue;
       ov.toScreenInto(b.stops[i * 4], b.stops[i * 4 + 1], p, 0);
       const r = (end ? L.endR : L.ringR) + 3;
-      if ((p[0] - px) ** 2 + (p[1] - py) ** 2 <= r * r) return { line: b.stopLine[i], end };
+      if ((p[0] - px) ** 2 + (p[1] - py) ** 2 <= r * r) return { line: b.stopLine[i], end, id: b.stopId[i] };
     }
     return null;
   }
@@ -1014,11 +1045,15 @@ function stretchOf(stops: number[], s: number): number {
 }
 
 /** A tag row of a line's badge and its name, as the resting hover's list has them. */
-function nameRow(w: WorldView, line: number): HTMLElement | string {
+function nameRow(w: WorldView, line: number, deg: number | null = null): HTMLElement | string {
   const l = w.save.lines.find((x) => x.num === line);
   if (!l) return t("busLayer.line", { num: line });
   const name = Object.assign(document.createElement("span"), { textContent: l.name });
-  return factRow(lineBullet(l, true), name);
+  const bullet = lineBullet(l, true);
+  if (deg === null) return factRow(bullet, name);
+  const held = Object.assign(document.createElement("span"), { className: "bullet-heading" });
+  held.append(bullet, headingChevron(l.colour, deg));
+  return factRow(held, name);
 }
 
 /** The tag for a bus line (hovering its route): as a rail line's, its name, that it is a bus, and
@@ -1031,6 +1066,9 @@ export function busLineTip(w: WorldView, line: number, rows: TipLine[] = []): Ti
 }
 
 /** The tag for one of its stops. */
-export function busStopTip(w: WorldView, line: number, end: boolean): TipLine[] {
-  return [end ? t("busLayer.endOfLine") : t("busLayer.busStop"), nameRow(w, line)];
+export function busStopTip(w: WorldView, line: number, end: boolean, stop?: number, ov?: Overlay): TipLine[] {
+  const l = w.save.lines.find((x) => x.num === line);
+  const way = l && stop !== undefined && stop >= 0 ? w.lineStats[l.id]?.oneWayAt[String(stop)] : undefined;
+  const at = way !== undefined && ov ? l && w.lineStats[l.id]?.bus?.stops.find((x) => x.id === stop) : undefined;
+  return [end ? t("busLayer.endOfLine") : t("busLayer.busStop"), nameRow(w, line, at && ov && way !== undefined ? headingAtPlane(ov, at.x, at.y, way) : null)];
 }

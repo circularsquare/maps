@@ -109,8 +109,8 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   The second row: **Regular** or **High speed** track [T-255, T-817], the
   selection bar's words, then three icon buttons, **Single track** (one line), **Double track** (two lines)
   and **Quad track** (four lines) [T-2931, T-3093]. Single is 0.6x the cost and the single-track upkeep shown;
-  quad is two double tracks' price (2x the cost and upkeep shown). Single and quad are never high speed
-  (picking either switches to Regular) and picking one clears the other. Tram has no count. A browser remembers the
+  quad is two double tracks' price (2x the cost and upkeep shown). Single is never high speed
+  (picking it switches to Regular); quad can be high speed [T-3126]; picking single clears quad. Tram has no count. A browser remembers the
   choice (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
   Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength
@@ -226,6 +226,17 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
   yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
   segment will end beside track.
+- **Which track single track joins** [T-3137]: with Single track picked and the zoom where double track
+  draws as two tracks (`laneState(zoom).t > 0`), a point on or at the end of double track picks the
+  track nearer the pointer, for branching off and merging onto alike. The dot sits on that track (as far
+  off the centre line as the tracks are drawn), and the route's start and end send that point as
+  `RouteAsk.join` (`TrackApi::set_route_join`) with each preview and the click. Zoomed out the dot stays
+  on the centre line and the track model takes the track beside the route (track-and-service.md
+  "Single track meeting double track"). The ghost's ends are drawn on the joined tracks as built track's
+  are (`joinedGhost`, from the answer's `route_joins`), a far-track join crossing the near track, with
+  chevrons where every piece it lays would run one way, and the flat badge only where a move through the
+  junction would cross. The real-network snap's ghost and a placed segment's stand-in stay on the centre
+  line.
 
 - **Clicks**: the first click is the start, the second places a segment ending at it at once (one
   undo step), the track passing through the click, at the level selected. A click with Shift held
@@ -322,8 +333,43 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **Waiting** [T-1039]: when a click or the newest ghost has waited on the clock worker more than
   300 ms, a small spinner leads the tag.
 - **Placed blueprint track** is drawn as blue rails ([ui-map.md](ui-map.md) "Lines and track").
+- Nothing outside the track tool reads its settings [T-3153]: the delete and select tools, drag edits and the station tool
+  pick and describe any track whatever type, count, level, ramp or speed the track bar holds (only the track tool
+  filters its snap to tram or rail, and only its tag and issue wording follow the type).
 - A segment is one piece (each pair's on quad); the delete tool, Construct and the track
   inspector act on one piece [T-244].
+
+## Clicks while drawing a route or editing stops
+
+[T-3149; `map/busDraw.ts`, `map/ferryDraw.ts`, `map/stopMarkers.ts`, `ui/ToolNotes.tsx`; Anita, 2026-11-11] One standard for
+the bus and ferry route tools and for a train or tram line's stops. Left click adds or removes one point, port or stop.
+Right click only changes the loop, except on the last point of a route and on a lone point, where it deletes. Every
+tag over a point states what these do there. Loops are described under each tool below.
+
+| Gesture | Bus and ferry route | Train and tram stops | Hand bus stops |
+|---|---|---|---|
+| Left click, empty ground | Add a point at the active end | Hint only | Add a stop on the route |
+| Left click, a station not in the line | Ferry: add that port | Add a stop | none |
+| Left click, a middle or the first point or stop | Delete it | Remove it | Remove it |
+| Left click, the last point | Save the route (the tag says so) | Remove it | none |
+| Left click, a lone point | Nothing | Remove it | none |
+| Right click, the last point | Delete it | Nothing | Nothing |
+| Right click, a lone point | Delete it | none | none |
+| Right click, a middle point | Loop back to it and save | Turn the line round a loop of track if it offers one, else "Can't loop back here" | Nothing |
+| Right click, the first point | Close the loop and save | Close into a circle if it offers one | Nothing |
+| Right click, a point of a ring | Open the ring there | Open the ring there | none |
+| Right click, a point of a route that loops back | Stop looping back | Stop looping back (a turned line) | none |
+| Right click, empty ground | Take back the last point | Nothing | Nothing |
+| Double click | Empty ground only: save; a double click on a point does its click once | Nothing special | Nothing special |
+| Enter, the Save button | Save | Leave the tool | Leave the tool |
+| Escape | New route with 2 or more points: save. Edit: drop | Leave | Leave |
+| Backspace | Take back the last point | Nothing | Nothing |
+
+On touch each right click has a way that needs no hold. A finger held 500 ms on a point (moving up to 8 px; the lift
+adds nothing) does its right click in the bus tool, the ferry tool and the stop markers. The Loop button in the tool's
+bar (shown with two points or more, and for train and tram stops) makes the next tap a right click, which covers
+close, loop back, open and stop looping back. The touch bar's Back button takes back the last point, which deletes the
+last or a lone point.
 
 ## Drawing a bus line
 
@@ -369,13 +415,11 @@ lighter; at most 16 of each.
 
 - **Points**: each clicked point shows as a handle in the line's colour (only while the tool is
   on): a dot with a ring of the map's land colour, larger under the pointer; the **active end**, where
-  new points join, is a ring instead. As with a train line's stops (T-3109), a click on a point deletes it, its
-  neighbours joined by a new leg (a click on the active end finishes instead, below), and a right click loops (the
-  **loop** items below); a right click on the active end, a right click elsewhere, or Backspace takes back the active
-  end. A press on any point dragged more than 3 px moves it (the map does not
+  new points join, is a ring instead. Clicks follow the standard above: a click on a point deletes it, its
+  neighbours joined by a new leg (a click on the active end finishes instead, below). A press on any point dragged more than 3 px moves it (the map does not
   pan), and the legs either side are searched again on every move; Escape during the drag puts it
-  back. Over a point the tag says what a click there does ("Click to delete", or finishing), "Drag to move", and what
-  a right click does where it does something, and the network's hover is left out.
+  back. Over a point the tag says what a click there does ("Click to delete", or finishing; nothing over a lone point),
+  "Drag to move", and what a right click does where it does something, and the network's hover is left out.
   With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
   not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
   does a right click's work there (the phone buzzes) and the lift adds nothing; a tap on a point is a click on it.
@@ -403,7 +447,7 @@ lighter; at most 16 of each.
   point to loop there" ("stop", "port") and the next tap on a point does a right click's work, then it goes off; it
   also goes off when the tool changes. Holding a finger still works.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
-  the active end, a double click (its first click places the last point), Enter, or the button in
+  the active end, a double click on empty ground (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
   **Escape** drops a new route's points (a second Escape leaves the tool), and leaves an edit with
   the route as it was. A click on the active end of a single point does nothing.
@@ -477,7 +521,8 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   with no route says "No water path found", and the line cannot be made until a port is taken out.
 - **Ports as handles** (T-3118, the bus tool's gestures): new ports join at the active end; a click on a port takes
   it out ("Click to delete"; on the active end, or where a loop closes, a click finishes); a right click on the active
-  end or Backspace takes that one out. No dragging: a port is moved by taking it out and placing another.
+  end, a right click on a lone port, or Backspace takes that one out. A finger held 500 ms on a port does a right
+  click's work, as in the bus tool. No dragging: a port is moved by taking it out and placing another.
 - **Loop** (T-2899): with three ports or more, a right click on the other end puts the first port again at the end
   and makes the line, as for a bus line; the tag says "Right click to close the loop". A new port closing the loop is
   sent as `again`, the one placed first (`FerryPortIn`), so it is added once. A closed line takes no new port (a click
@@ -838,7 +883,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
 - **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
   says "Remove track") and the lines here [T-1669]. Its title carries **Add point** [T-2951], an
   icon of track with a square on it and a plus, on blueprint track that is not a crossover: a point
-  halfway along the piece, as a double click adds one (hover "Add a point halfway along"). It has no corner list and
+  halfway along the piece, as a double click adds one (hover "Add a point halfway along"). On single rail track it has the
+  **Run trains one way** switch, **Reverse direction** and **Use automatic way** ([track-and-service.md](track-and-service.md)
+  6.1 "Track settings"). It has no corner list and
   no curve radius: corners are dragged on the map. Its level is set in the selection bar, which the
   click on the piece opens too (`edgesLevel`; a notice says when it cannot change) [T-841, T-244,
   T-2283]. On double track (blueprint or

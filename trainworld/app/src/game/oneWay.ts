@@ -8,9 +8,9 @@ import { noWay } from "./issues";
 import { ask } from "./ui";
 import { edit, linesByNum, say, world } from "./world";
 
-/** Run an edge one way (`dir` 1 a to b, 2 b to a) or both ways (0). */
-export async function setOneWay(edge: number, dir: 0 | 1 | 2, reverse = false) {
-  const d = dir ? await queryClock({ what: "oneWay", edge, dir }) : null;
+/** Run an edge one way (`dir` 1 a to b, 2 b to a), both ways pinned (3), or the way its run takes (0). */
+export async function setOneWay(edge: number, dir: 0 | 1 | 2 | 3, reverse = false) {
+  const d = await queryClock({ what: "oneWay", edge, dir });
   const w = world.peek();
   if (!w) return;
   const rows: { line: number; ok: boolean }[] = [];

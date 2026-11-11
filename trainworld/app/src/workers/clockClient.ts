@@ -54,6 +54,12 @@ export const savedByHand = signal<number | null>(null);
 /** T-1815: the panels' account reads, held while track previews are asked */
 const PANEL_READS = new Set(["today", "linesPeriods", "linePeriods", "lineAccount"]);
 const PANEL_HOLD_MS = 250;
+/** T-2766: the line tool's reads of the track model's lines, which a stop click has changed already */
+const STOP_READS = new Set(["stopTiers", "stopGap", "insertStop", "passedStations"]);
+/** T-2766: every other read waits until no stop click has been answered for this long, ms (the worker holds a stop
+ * click's network as long): the panels ask a dozen after each world, 0.2 to 0.7 s of the worker's on New York's real
+ * save, and the next click waited behind them */
+const STOP_HOLD_MS = 500;
 export function manageSaveSlot(action: Extract<ToClock, { kind: "saveSlot" }>["action"], key?: string, name?: string) {
   // T-1196: a game opened or restored reloads the page into it, T-1197: if it fits
   if (action === "open" && key && key !== saveSlotsState.peek().active) return void ifItFits({ key }, () => switchGame({ slot: key }));
@@ -223,7 +229,7 @@ function edgesOf(s: ClockState): TrackEdge[] {
     const v = j >= 0 ? lastViews[j] : undefined;
     if (v && sameObjects(v.lines, ls)) return v;
     return {
-      id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, kind: e.kind || undefined, oneWay: e.oneWay || undefined, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
+      id: e.id, a: e.a, b: e.b, tracks: e.tracks, built: e.built, off: e.off, hsr: e.hsr, kind: e.kind || undefined, oneWay: e.oneWay || undefined, join: e.join || undefined, setWay: e.setWay || undefined, autoWay: e.autoWay || undefined, crossover: e.crossover, partner: e.partner, lengthM: e.lengthM, cost: e.cost * 1e6, vminKmh: e.vminKmh,
       levelMin: e.levelMin as any, levelMax: e.levelMax as any, lines: ls === none ? [] : ls,
     };
   });
@@ -982,7 +988,8 @@ export class ClockClient {
     const es = this.earlyShares;
     this.earlyShares = null;
     if (es && world.value) this.post({ kind: "chargeShares", seq: es.seq, ...chargeShares(this.worldBefore, world.value, es.line) });
-    this.onState(msg.state);
+    // T-2766: rows alone leave the renderer's network as it is until the full state
+    if (!msg.state.rows) this.onState(msg.state);
     if (moved) {
       anchorVersion.value = a.version; // the demand views rebuild at it (T-317)
       this.onAnchor(a);
@@ -1183,7 +1190,7 @@ export class ClockClient {
           this.toCurrentAnchor(msg.anchor, msg.verts, msg.pts);
           if (msg.arc) this.toCurrentAnchor(msg.anchor, msg.arc, new Float32Array(0));
           if (msg.marks) this.toCurrentAnchor(msg.anchor, new Float64Array(0), msg.marks);
-          cb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, lanes: msg.lanes, partLanes: msg.partLanes, parts: msg.parts, arc: msg.arc, marks: msg.marks });
+          cb?.({ ok: msg.ok, cost: msg.cost, lengthM: msg.lengthM, mult: msg.mult, ground: msg.ground, issues: msg.issues, verts: msg.verts, pts: msg.pts, speeds: msg.speeds, lanes: msg.lanes, partLanes: msg.partLanes, parts: msg.parts, arc: msg.arc, marks: msg.marks, joins: msg.joins });
         }, (q, cb) => this.ask(q, cb));
         break;
       }
@@ -1212,9 +1219,20 @@ export class ClockClient {
   private lastPreviewAt = -Infinity;
   private heldReads = new Map<string, { q: Extract<ToClock, { kind: "query" }>["q"]; res: ((d: Float64Array) => void)[] }>();
   private heldTimer = 0;
+  /** T-2766: stop clicks sent and not yet answered, when the last was sent, and when the last was answered */
+  private stopsOut = 0;
+  private lastStopSent = -Infinity;
+  private lastStopAt = -Infinity;
+  /** a stop click unanswered (for at most 10 s: a worker that never answers holds no read for ever) */
+  private stopOut = () => this.stopsOut > 0 && performance.now() - this.lastStopSent < 10000;
+  private holdsRead(what: string): boolean {
+    const now = performance.now();
+    if (this.stopOut() || now - this.lastStopAt < STOP_HOLD_MS) return !STOP_READS.has(what);
+    return PANEL_READS.has(what) && (now - this.lastPreviewAt < PANEL_HOLD_MS || this.heldReads.size > 0);
+  }
   private releaseHeld() {
     this.heldTimer = 0;
-    const wait = this.lastPreviewAt + PANEL_HOLD_MS - performance.now();
+    const wait = this.stopOut() ? STOP_HOLD_MS : Math.max(this.lastPreviewAt + PANEL_HOLD_MS, this.lastStopAt + STOP_HOLD_MS) - performance.now();
     if (wait > 0) {
       this.heldTimer = setTimeout(() => this.releaseHeld(), wait) as unknown as number;
       return;
@@ -1224,7 +1242,7 @@ export class ClockClient {
     for (const h of held) void this.query(h.q).then((d) => h.res.forEach((r, k) => r(k ? d.slice() : d)));
   }
   query(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array> {
-    if (PANEL_READS.has(q.what) && (performance.now() - this.lastPreviewAt < PANEL_HOLD_MS || this.heldReads.size)) {
+    if (this.holdsRead(q.what)) {
       const key = JSON.stringify(q);
       return new Promise((res) => {
         const h = this.heldReads.get(key);
@@ -1249,9 +1267,16 @@ export class ClockClient {
     return p;
   }
 
-  /** Send an edit; the promise resolves with the worker's answer. */
-  edit(op: EditOp, early = false): Promise<EditAnswer> {
+  /** Send an edit; the promise resolves with the worker's answer. `early` "rows": a stop click's (T-2766), answered
+   * once the world holds it, its network a moment after the clicks stop. */
+  edit(op: EditOp, early: boolean | "rows" = false): Promise<EditAnswer> {
     const seq = ++this.seq;
+    if (early === "rows") {
+      this.stopsOut++;
+      this.lastStopSent = performance.now();
+      this.post({ kind: "edit", seq, op, rows: true });
+      return new Promise((res) => this.pending.set(seq, (a) => { this.stopsOut--; this.lastStopAt = performance.now(); res(a); }));
+    }
     this.post(early ? { kind: "edit", seq, op, early } : { kind: "edit", seq, op });
     return new Promise((res) => this.pending.set(seq, res));
   }
@@ -1327,6 +1352,11 @@ export class ClockClient {
   /** T-1007, dev server only (`?debug=1`, `tw.client.debugPanic`): make the track model panic. */
   debugPanic(when: "now" | "read" | "afterEdit") {
     if (import.meta.env.DEV) this.post({ kind: "debugPanic", when });
+  }
+
+  /** T-2766, dev server only: set the cash, US$M; `fleet`: own only the cars in use. */
+  debugCash(cash: number, fleet = false) {
+    if (import.meta.env.DEV) this.post({ kind: "debugCash", cash, fleet });
   }
 
   /** The render epoch the renderer is drawing (start of the game hour). */

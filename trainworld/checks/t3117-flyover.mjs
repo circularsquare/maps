@@ -62,8 +62,8 @@ try {
     // the span along the main, from the station's platform end on, that the flyover's junctions take
     const along = junctions.map((n) => (n.lng - sNode.lng) * Math.cos(sNode.lat * Math.PI / 180) * 111320);
     return { refused: res.filter((r) => !r.ok).map((r) => JSON.stringify(r.issues ?? r).slice(0, 80)), main: m.line, branch: b.line, ok: m.ok && b.ok,
-      junctions: junctions.map((n) => ({ id: n.id, lng: n.lng, lat: n.lat, crosses: !!n.crosses, ports: n.ports })), legs: legs.map((e) => e.id),
-      crossings: (w.crossings ?? []).length / 5, span: Math.max(...along) - 100, behind: Math.min(...along) - 100 };
+      junctions: junctions.map((n) => ({ id: n.id, lng: n.lng, lat: n.lat, crosses: !!tw.client.lastNodes.find((x) => x.id === n.id)?.crosses, ports: n.ports })), legs: legs.map((e) => e.id),
+      crossings: ((m) => { let c = 0; for (let k = 2; m && k < m.length; k += 6) if (m[k] === 0 || m[k] === 4) c++; return c; })(tw.renderer.net?.marks), span: Math.max(...along) - 100, behind: Math.min(...along) - 100 };
   }, [RC, dy, design, lines]);
 
   const built = await build(0, 160, true);

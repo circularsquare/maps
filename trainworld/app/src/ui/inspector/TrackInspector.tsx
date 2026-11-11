@@ -65,8 +65,14 @@ export function TrackInspector({ edge }: { edge: number }) {
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
       {e.tracks === 1 && !e.crossover && !e.hsr && !e.kind && (
         <Actions>
-          <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? 1 : 0)}>{t("trackInspector.oneWay")}</Check>
+          {/* T-3137: the switch shows the way it runs, taken by itself included; off where the run gives a way pins both ways */}
+          <span data-tip={e.oneWay && !e.setWay ? t("trackInspector.oneWayAutoTip") : undefined}>
+            <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? e.autoWay ?? 1 : e.autoWay ? 3 : 0)}>{t("trackInspector.oneWay")}</Check>
+          </span>
           {e.oneWay && <button class="btn text" onClick={() => void setOneWay(e.id, e.oneWay === 1 ? 2 : 1, true)}>{t("trackInspector.reverse")}</button>}
+          {!!e.setWay && (e.setWay === 3 ? 0 : e.setWay) !== (e.autoWay ?? 0) && (
+            <button class="btn text" data-tip={t("trackInspector.autoWayTip")} onClick={() => void setOneWay(e.id, 0)}>{t("trackInspector.autoWay")}</button>
+          )}
         </Actions>
       )}
       <ul class="rows">

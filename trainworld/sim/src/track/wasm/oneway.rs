@@ -19,6 +19,13 @@ impl TrackApi {
         if n.edge_ok(edge) { n.edge_way(edge) } else { 0 }
     }
 
+    /// T-3137 C4: the way an edge's run takes by itself, whatever the player stored: 0 both ways, 1 a
+    /// to b, 2 b to a.
+    pub fn edge_infer(&self, edge: u32) -> u8 {
+        let n = &self.w.net;
+        if n.edge_ok(edge) { n.edge_infer[edge as usize] } else { 0 }
+    }
+
     /// The edges that run one way (`edge_way`), as pairs: edge, way.
     pub fn oneway_edges(&self) -> Vec<u32> {
         let n = &self.w.net;
@@ -72,6 +79,15 @@ impl TrackApi {
             return Err(Issue::Tracks { edge });
         }
         d.oneway = dir;
+        // the ends joined to a double's track move to the track that carries the set way (T-3137 C4)
+        if dir == 1 || dir == 2 {
+            for end in 0..2u32 {
+                if net.join_applies(edge << 1 | end) {
+                    let away = (dir == 1) == (end == 0);
+                    d.join[end as usize] = crate::track::lanes::join_for(away, net.right_hand);
+                }
+            }
+        }
         let op = Op::Edge { id: edge, data: Some(d) };
         let rail = |l: u32| net.line_ok(l) && net.line_bus.get(l as usize).map_or(true, |b| b.is_none()) && net.line_ferry.get(l as usize).map_or(true, |f| f.is_none());
         // lines whose return run goes round other one-way track may now go round this

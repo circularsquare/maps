@@ -254,6 +254,39 @@ fn t3137_terminus_branch_stays_two_way_with_its_badge() {
     }
 }
 
+/// Setting a stub's way moves its join at the junction to the track that carries it; pinning both ways
+/// and going back to automatic leave the joins, and the way then follows them.
+#[test]
+fn t3137_setting_a_way_moves_the_join() {
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0);
+        assert_eq!(a.add_route(&ends(on_edge(&a, 2000.0, 0.0), free(3500.0, 1500.0)), &[], 1, false), 0, "{}", a.issues());
+        let s = singles(&a)[0];
+        let end = (0..2u32).find(|&k| a.w.net.join_applies(s << 1 | k)).expect("one end at the junction");
+        let was = a.edge_way(s);
+        assert!(was != 0);
+        let toward = |a: &TrackApi| a.w.net.join_away(s << 1 | end).unwrap();
+        let away_was = toward(&a);
+        // the other way
+        assert_eq!(a.set_edge_oneway(s, 3 - was), 0, "{}", a.issues());
+        assert_eq!(a.edge_way(s), 3 - was);
+        assert_eq!(toward(&a), !away_was, "the join moved to the other track");
+        // pinned both ways: joins stay, way 0, stored 3
+        assert_eq!(a.set_edge_oneway(s, 3), 0, "{}", a.issues());
+        assert_eq!((a.edge_oneway(s), a.edge_way(s)), (3, 0));
+        assert_eq!(toward(&a), !away_was);
+        // automatic: nothing stored, the way follows the moved join
+        assert_eq!(a.set_edge_oneway(s, 0), 0, "{}", a.issues());
+        assert_eq!((a.edge_oneway(s), a.edge_way(s)), (0, 3 - was));
+        // and back
+        assert_eq!(a.set_edge_oneway(s, was), 0, "{}", a.issues());
+        assert_eq!(toward(&a), away_was);
+        assert_eq!(a.undo(), 0);
+        assert_eq!(toward(&a), !away_was);
+    }
+}
+
 /// A single-track link whose joins send trains out of it at both ends runs both ways (the setup
 /// works badly, as Anita expects), its junctions flat. The player's way wins over the joins.
 #[test]

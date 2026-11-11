@@ -57,6 +57,15 @@ export const TRAM_MARK = 0.5;
 /** The cars a `lineCars` entry stands for: a bus (below 1) and a boat (below 0) as given, a tram's without its mark. */
 export const carsOf = (raw: number) => (raw >= 1 ? Math.floor(raw) : raw);
 
+/** T-3157: `Strokes.level` packs a segment's heights (m) at its start and end, each in 1/32 levels (8 m) from level -4
+ * in 8 bits, as start * 256 + end, exact in a float; the stroke shader blends the level colours along it. */
+export const levelCode = (z0: number, z1: number) => {
+  const q = (z: number) => Math.max(0, Math.min(255, Math.round((z / 8 + 4) * 32)));
+  return q(z0) * 256 + q(z1);
+};
+/** The whole level a packed segment starts at. */
+export const levelAtStart = (code: number) => Math.round(Math.floor(code / 256) / 32 - 4);
+
 export interface Strokes {
   /** per segment: x0, y0, x1, y1 */
   seg: Float32Array;
@@ -64,7 +73,7 @@ export interface Strokes {
   colour: Uint32Array;
   /** per segment: edge id */
   edge: Uint32Array;
-  /** per segment: level at its start (height / 8 m, rounded) */
+  /** per segment: its height at its start and end (`levelCode`), so the height view blends along a ramp */
   level: Float32Array;
   flags: Float32Array;
   /** Geometry speed limit km/h, per stroke segment (bare track). */
@@ -79,6 +88,8 @@ export interface Strokes {
   stretch?: Float32Array;
   /** a preview only (T-629): its marks, `MARK_STRIDE` numbers each (map/markData.ts) */
   marks?: Float32Array;
+  /** a preview only (T-3137): the chevrons of the one-way track it would lay, `CHEVRON_STRIDE` numbers each */
+  chevrons?: Float32Array;
   /** 2 per segment (T-658): how far apart its two tracks are drawn at its start and end, 0 (single
    * track, one track on the centre line) to 255 (double track); absent: all double */
   lane?: Uint8Array;
@@ -291,7 +302,7 @@ class StrokeBuilder {
       this.seg[c * 4 + 3] = y1;
       this.colour[c] = colour;
       this.edge[c] = edge;
-      this.level[c] = Math.round(pts[i * 3 + 2] / 8);
+      this.level[c] = levelCode(pts[i * 3 + 2], pts[j * 3 + 2]);
       this.flags[c] = eased ? flags | F_EASE : flags;
       this.dist[c] = d;
       this.lane[c * 2] = typeof lane === "number" ? lane : lane[i];
@@ -564,7 +575,7 @@ const LEG_REACH_M = 300;
 
 /** T-3117, T-3120: how a one-way leg's end at a junction is drawn off its centre line (`legShifts`). */
 interface LegShift {
-  /** per end (a, b): +1 left of a to b, -1 right, 0 none */
+  /** per end (a, b): +1 left of a to b in the local frame (right on the map: local y runs south), -1 right, 0 none */
   sign: [number, number];
   /** per end: the other track leaving the node its way on that side, each as its points from the
    * node out and whether it is double */
@@ -573,16 +584,22 @@ interface LegShift {
   key: string;
 }
 
+/** `LegShift.sign` for an end's join (`ClockEdge.join`, `PreviewAnswer.joins`): 1 the track left looking out from
+ * the node along the piece, 2 the right, on the ground; local y runs south, so the ground's left is the local
+ * frame's right (`LegShift.sign` -1). `end` 0 is a, whose outward way is a to b; b's runs b to a. */
+const joinSign = (join: number, end: number) => (join === 1 ? -1 : join === 2 ? 1 : 0) * (end === 0 ? 1 : -1);
+
 /**
- * T-3117: where one-way single track meets double track at a junction (a flyover's J and J3), which
- * way its end is drawn off its centre line, so it carries on from its own track of the double: away
- * from the nearest other track leaving the node its way. T-3120: with the tracks on that side, so
- * `shiftedEnds` keeps it as far from each as the double's own tracks are drawn apart and no
- * further off its line than that needs. `parts`: each edge's points, in `edges` order.
+ * Where single track meets double track at a junction, which way its end is drawn off its centre line, so it
+ * carries on from its own track of the double. T-3137: the track its end joins (`ClockEdge.join`); for a one-way
+ * end with no join (flyovers laid before T-3137) the T-3117 guess, away from the nearest other track leaving the
+ * node its way. T-3120: with the tracks it is held off, so `shiftedEnds` keeps it as far from each as the double's
+ * own tracks are drawn apart and no further off its line than that needs: those leaving its way on the other side,
+ * and for a join to the far track the double it crosses. `parts`: each edge's points, in `edges` order.
  */
 function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number>[]): Map<number, LegShift> {
   const out = new Map<number, LegShift>();
-  if (!edges.some((e) => e.tracks === 1 && e.oneWay)) return out;
+  if (!edges.some((e) => e.tracks === 1 && (e.oneWay || e.join))) return out;
   // per node, each end there: its edge's index, whether it starts at a, and the way it leaves (unit x, y)
   const at = new Map<number, { i: number; fromA: boolean; dx: number; dy: number }[]>();
   const dir = (pts: ArrayLike<number>, fromA: boolean) => {
@@ -623,22 +640,37 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
     return xy;
   };
   edges.forEach((e, i) => {
-    if (e.tracks !== 1 || !e.oneWay) return;
+    if (e.tracks !== 1 || (!e.oneWay && !e.join)) return;
     const shift: LegShift = { sign: [0, 0], near: [[], []], key: "" };
     [e.a, e.b].forEach((node, end) => {
       const ends = at.get(node) ?? [];
       if (ends.length < 3 || !ends.some((x) => edges[x.i].tracks === 2)) return;
       const me = ends.find((x) => x.i === i && x.fromA === (end === 0));
       if (!me) return;
+      const join = end === 0 ? e.join & 3 : (e.join >> 2) & 3;
+      if (!join && !e.oneWay) return;
       const cos = Math.cos(Math.PI / 3);
       const along = ends.filter((o) => o !== me && o.dx * me.dx + o.dy * me.dy > cos);
-      if (!along.length) return;
-      const best = along.reduce((p, o) => (o.dx * me.dx + o.dy * me.dy > p.dx * me.dx + p.dy * me.dy ? o : p));
       const left = (o: { dx: number; dy: number }) => me.dx * o.dy - me.dy * o.dx > 0;
+      const near = (o: { i: number; fromA: boolean }) => ({ pts: fromNode(parts[o.i], o.fromA), double: edges[o.i].tracks === 2 });
+      const nearest = (os: typeof ends) => os.reduce((p, o) => (o.dx * me.dx + o.dy * me.dy > p.dx * me.dx + p.dy * me.dy ? o : p));
+      if (join) {
+        // `left` is the local frame's (joinSign)
+        const toLeft = join === 2, double = (o: { i: number }) => edges[o.i].tracks === 2;
+        const doubles = along.filter(double), main = doubles.length ? nearest(doubles) : null;
+        // a join to the far track crosses the double it leaves
+        const held = along.filter((o) => left(o) !== toLeft || (o === main && left(o) === toLeft));
+        shift.sign[end] = joinSign(join, end);
+        // leaving at an angle, the double track there
+        shift.near[end] = (held.length ? held : ends.filter((o) => o !== me && double(o))).map(near);
+        return;
+      }
+      if (!along.length) return;
+      const best = nearest(along);
       const otherLeft = left(best);
       // leaving from b runs b to a, so its right is a to b's left
       shift.sign[end] = (otherLeft ? -1 : 1) * (end === 0 ? 1 : -1);
-      shift.near[end] = along.filter((o) => left(o) === otherLeft).map((o) => ({ pts: fromNode(parts[o.i], o.fromA), double: edges[o.i].tracks === 2 }));
+      shift.near[end] = along.filter((o) => left(o) === otherLeft).map(near);
     });
     if (!shift.sign[0] && !shift.sign[1]) return;
     shift.key = shift.sign.join() + "|" + shift.near.map((n) => n.map((o) => `${o.double}:${o.pts.length}:${o.pts[2]}:${o.pts[3]}:${o.pts[o.pts.length - 2]}`).join(";")).join("|");
@@ -703,6 +735,49 @@ function shiftedEnds(pts: Float32Array, shift: LegShift): { pts: Float32Array; s
   put(n - 2, 1);
   // each segment drawn: the segment of \`pts\` it lies on
   return { pts: new Float32Array(out), src: seg.slice(0, -1) };
+}
+
+/**
+ * T-3137: a single-track ghost (`pts`, x, y, z triples) with each end drawn on the track of double track it joins
+ * (`PreviewAnswer.joins`, its first two), as built track's ends are (`shiftedEnds`); null when neither joins.
+ * `lines`: the points of double track near the ghost (x, y, z triples), each held off at the end it passes
+ * through. Per segment, the segment of `pts` it lies on.
+ */
+export function joinedGhost(pts: Float32Array, joins: ArrayLike<number>, lines: readonly Float32Array[]): { pts: Float32Array; src: number[] } | null {
+  const n = pts.length / 3;
+  const sign: [number, number] = [joinSign(joins[0] ?? 0, 0), joinSign(joins[1] ?? 0, 1)];
+  if (n < 2 || (!sign[0] && !sign[1])) return null;
+  const kk = kAtY(pts[1]), reach = 1.5 * LEG_REACH_M * kk;
+  const near: LegShift["near"] = [[], []];
+  for (const [end, k] of [[0, 0], [1, n - 1]] as const) {
+    if (!sign[end]) continue;
+    const x = pts[k * 3], y = pts[k * 3 + 1];
+    for (const line of lines) {
+      // its runs of points within reach of the end, the points either side included
+      let run: number[] = [];
+      const flush = () => {
+        if (run.length >= 4 && distTo(run, x, y) < kk) near[end].push({ pts: run, double: true });
+        run = [];
+      };
+      const m = line.length / 3, inside = (j: number) => Math.hypot(line[j * 3] - x, line[j * 3 + 1] - y) < reach;
+      for (let j = 0; j < m; j++) {
+        if (inside(j) || (j > 0 && inside(j - 1)) || (j + 1 < m && inside(j + 1))) run.push(line[j * 3], line[j * 3 + 1]);
+        else flush();
+      }
+      flush();
+    }
+  }
+  return shiftedEnds(pts, { sign, near, key: "" });
+}
+
+/** T-3137: a route ghost's chevrons (`s`) where every piece it lays would run one way, the same way
+ * (`PreviewAnswer.joins` after the first two: 1 along the drawing, 2 against); else none. */
+export function ghostChevrons(s: Strokes, joins: ArrayLike<number> | undefined): Float32Array | undefined {
+  const ways = joins ? Array.from(joins).slice(2) : [];
+  if (!ways.length || !ways[0] || ways.some((w) => w !== ways[0])) return undefined;
+  const out: number[] = [];
+  oneWayTrackChevrons(s, ways[0] as 1 | 2, [], out);
+  return out.length ? new Float32Array(out) : undefined;
 }
 
 /** Where double track narrows to single, m (T-658). */
@@ -1408,6 +1483,9 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
           if (band && dr.lpts.length >= 6) {
             const bp = bandPoints(dr, (p & 1) === 1, band, k);
+            // T-3158: a line alone on single track keeps a line's width; a ribbon beside it (a flyover's leg by
+            // its main) only moves it sideways, as its return leg, which has no band, is drawn
+            if (ends?.tracks === 1 && (bands.order.get(e)?.length ?? 0) < 2) for (let q = 1; q < bp.band.length; q += 3) bp.band[q] = 0;
             d = lines.add(bp.pts, l.id, e, flags, (p & 1) === 1, d, stretchOf, bp.lane, bp.band, bp.ease);
           } else d = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, d, stretchOf, dr.lane);
         }

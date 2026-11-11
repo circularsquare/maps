@@ -376,6 +376,10 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
   hashes in `t3137-parity-digest.json`; `--write` makes the current build the baseline. A minute once built. Rerun
   after any change to lanes, moves, routing or junction capacity; a stage that changes what a network decides on
   purpose reviews the differences and writes a new baseline.
+- `t3137-single-join.mjs [dev url]` (T-3137 C3): on a new game, single track drawn by the mouse off and onto each
+  track of a double main at zoom 18: the snap's join point, the preview's `join`, the ghost's and the built end's
+  offset (2 m on the hovered track), the flat badge only where a move crosses, a terminus branch's badge, none
+  zoomed out, and a flyover laid by hand from two single tracks. About 2 minutes; pictures `t3137-join-*.png`.
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"), about 3 minutes. On a url at
   :8800 it skips the Node checks, which read the working tree, not the build (T-2831); `t1380-complexes` runs 5
   seeds in it (its own default is 30). It fails when a worker

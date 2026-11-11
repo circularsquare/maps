@@ -43,10 +43,11 @@ import { edit, say, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
 import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
-import { toLngLat, toLocal } from "./geo";
+import { kAtY, toLngLat, toLocal } from "./geo";
+import { laneState } from "./renderer";
 import type { Level } from "../game/types";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
-import { strokesFromParts, strokesFromPreview } from "./network";
+import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
@@ -90,9 +91,11 @@ const BESIDE_PX = 40;
 /** tracks this much further from the pointer than the nearest still count as overlapping it (T-469) */
 const OVERLAP_PX = 4;
 
+/** `join` (T-3137): with single track picked, the point (local units) on the track of double track there that the
+ * pointer picks (`Tools.joinPoint`) */
 type Snap =
-  | { kind: "node"; node: number; lx: number; ly: number }
-  | { kind: "edge"; edge: number; lx: number; ly: number }
+  | { kind: "node"; node: number; lx: number; ly: number; join?: [number, number] }
+  | { kind: "edge"; edge: number; lx: number; ly: number; join?: [number, number] }
   | { kind: "free"; lx: number; ly: number };
 
 type Spot = Exclude<Snap, { kind: "free" }>;
@@ -108,6 +111,8 @@ const KNOWN_PX = 16;
 const LAYOUT_ISSUES = new Set(["PlatformTooLong", "PlatformStation", "PlatformJunction", "PlatformJoint", "PlatformCrossing", "StationPorts", "StationJunction"]);
 /** track drawn beside track, centre to centre (sim `BESIDE_SPACING`, T-1895) */
 const BESIDE_SPACING_M = 12;
+/** each of double track's two tracks from its centre line once drawn apart, m (renderer.ts `LANE_M`, sim `LANE_HALF_M`) */
+const LANE_HALF_M = 2;
 
 const lengthOf = (pts: ArrayLike<number>) => {
   let l = 0;
@@ -124,6 +129,8 @@ interface Placed {
   ring: [number, number] | null;
   /** the piece of track the start is beside (T-1685), or null */
   beside?: number | null;
+  /** T-3137: the track of double track the start joins (`Snap.join`) */
+  join?: [number, number];
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:
@@ -395,7 +402,8 @@ export class Tools {
     // (zoomed out that was a long stretch of track); `roomSnap` moves it where the platform needs room
     nodes &&= !station;
     // T-2926: tram track and train track never join, so while drawing, only the picked family's are snap targets
-    const fam = station ? null : tramTrack.peek();
+    // T-3153: only the track tool filters by family; delete and the rest see all track
+    const fam = station || tool.peek() !== "track" ? null : tramTrack.peek();
     const tramOf = fam === null ? null : this.tramEdgeSet(w);
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], edgePx * at[2]) : null;
@@ -410,7 +418,7 @@ export class Tools {
         hit = { kind: "node", node: node.id, lx, ly };
       }
     }
-    if (hit) return hit;
+    if (hit) return this.withJoin(hit, fx, fy);
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
@@ -431,7 +439,7 @@ export class Tools {
     }
     if (!near.length) return { kind: "free", lx: fx, ly: fy };
     near.sort((a, b) => a.d - b.d);
-    if (!station) return near[0].hit;
+    if (!station) return this.withJoin(near[0].hit, fx, fy);
     // T-469, T-671: what a click can place, in the order it is tried: the tracks within 4 px of the
     // nearest in orderOverlapping's order, then the rest by distance
     const close = near.filter((c) => c.d <= near[0].d + OVERLAP_PX);
@@ -439,6 +447,63 @@ export class Tools {
     const order = close.length > 1 ? orderOverlapping(spots, this.platFor(close[0].hit as Spot), w.edges, w.nodes, this.lastStationTrack(), this.layout(w)) : close.map((_, i) => i);
     this.alts = [...order.map((i) => close[i].hit as Spot), ...near.slice(close.length, 5).map((c) => c.hit as Spot)];
     return this.alts[0];
+  }
+
+  /** `hit` with its `join` for the pointer at (px, py), local units */
+  private withJoin(hit: Snap, px: number, py: number): Snap {
+    if (hit.kind === "free") return hit;
+    const join = this.joinPoint(hit, px, py);
+    return join ? { ...hit, join } : hit;
+  }
+
+  /**
+   * T-3137: with single track picked and double track drawn as two tracks, the point where `hit` meets the double's
+   * track nearer the pointer (px, py, local units): on its centre line's normal there, as far off it as the
+   * tracks are drawn. None zoomed out, where the track model joins the track beside the route.
+   */
+  private joinPoint(hit: Spot, px: number, py: number): [number, number] | undefined {
+    if (tool.peek() !== "track" || !singleTrack.peek() || tramTrack.peek()) return undefined;
+    const t = laneState(this.map.getZoom()).t, w = world.peek(), n = this.overlay.renderer.net;
+    if (!(t > 0) || !w || !n) return undefined;
+    const doubles = this.doubleEnds(w);
+    const edges = hit.kind === "edge" ? (doubles.ids.has(hit.edge) ? [hit.edge] : []) : doubles.byNode.get(hit.node) ?? [];
+    // the double's centre line at the hit: per edge its segment through it, of those the one nearest the pointer
+    let best: { d: number; x: number; y: number; ux: number; uy: number } | null = null;
+    for (const e of edges) {
+      const pts = n.edgePts.get(e);
+      if (!pts) continue;
+      let seg: { dh: number; d: number; x: number; y: number; ux: number; uy: number } | null = null;
+      for (let k = 0; k + 5 < pts.length; k += 3) {
+        const ux = pts[k + 3] - pts[k], uy = pts[k + 4] - pts[k + 1], l2 = ux * ux + uy * uy;
+        if (!(l2 > 0)) continue;
+        const f = Math.max(0, Math.min(1, ((hit.lx - pts[k]) * ux + (hit.ly - pts[k + 1]) * uy) / l2));
+        const dh = Math.hypot(pts[k] + ux * f - hit.lx, pts[k + 1] + uy * f - hit.ly);
+        const g = Math.max(0, Math.min(1, ((px - pts[k]) * ux + (py - pts[k + 1]) * uy) / l2));
+        const d = Math.hypot(pts[k] + ux * g - px, pts[k + 1] + uy * g - py);
+        if (!seg || dh < seg.dh - 1e-6 || (dh <= seg.dh + 1e-6 && d < seg.d)) seg = { dh, d, x: pts[k], y: pts[k + 1], ux, uy };
+      }
+      if (seg && (!best || seg.d < best.d)) best = seg;
+    }
+    if (!best) return undefined;
+    const ul = Math.hypot(best.ux, best.uy), side = Math.sign(best.ux * (py - best.y) - best.uy * (px - best.x));
+    if (!side) return undefined;
+    const off = (LANE_HALF_M * t * kAtY(hit.ly) * side) / ul;
+    return [hit.lx - best.uy * off, hit.ly + best.ux * off];
+  }
+
+  private doubleIndex: { edges: unknown; ids: Set<number>; byNode: Map<number, number[]> } | null = null;
+  /** the world's double track (crossovers aside), and its pieces by the nodes at their ends, kept while its edges are the same */
+  private doubleEnds(w: NonNullable<ReturnType<typeof world.peek>>) {
+    if (this.doubleIndex?.edges !== w.edges) {
+      const ids = new Set<number>(), byNode = new Map<number, number[]>();
+      for (const e of w.edges) {
+        if (e.tracks !== 2 || e.crossover) continue;
+        ids.add(e.id);
+        for (const k of [e.a, e.b]) byNode.set(k, [...(byNode.get(k) ?? []), e.id]);
+      }
+      this.doubleIndex = { edges: w.edges, ids, byNode };
+    }
+    return this.doubleIndex;
   }
 
   private tramEdges: { edges: unknown; set: Set<number> } | null = null;
@@ -881,6 +946,7 @@ export class Tools {
       if (by) s = { kind: "free", lx: by.lx, ly: by.ly };
       this.start = placedAt(this.endOf(s), s.lx, s.ly, ring);
       this.start.beside = by?.edge ?? null;
+      if (s.kind !== "free" && s.join) this.start.join = s.join;
       this.real.begin(ring);
       this.street.begin([this.start.lng, this.start.lat]);
       this.requestPreview();
@@ -930,7 +996,7 @@ export class Tools {
         return;
       }
       by = !rc && !sc && s.kind === "free" ? this.besideAt(e.point.x, e.point.y) : null;
-      const req = rc ? this.realReq(rc.route, s) : sc ? this.streetReq(sc.route, s) : this.routeReq(this.endOf(s), by);
+      const req = rc ? this.realReq(rc.route, s) : sc ? this.streetReq(sc.route, s) : this.routeReq(this.endOf(s), by, s);
       // T-830: the quote of this very request; an answer for an earlier pointer position (a slow
       // preview landing late) would give another segment's length and cost
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
@@ -990,9 +1056,21 @@ export class Tools {
     this.place();
   }
 
-  private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside) {
+  private routeReq(to: RouteEnd, by: { edge: number } | null = this.hoverBeside, at: Snap | null = this.hover) {
     const beside: { beside?: [number, number] } = by && to.kind === "free" ? { beside: [this.start!.beside ?? 0xffffffff, by.edge] } : {};
-    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside };
+    return { from: this.start!.end, to, pis: [], single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...beside, ...this.joinReq(at) };
+  }
+
+  /** T-3137: a single-track route's `RouteAsk.join`, from the start's and `at`'s `Snap.join`; nothing when neither has one */
+  private joinReq(at: Snap | null): { join?: [number | null, number | null, number | null, number | null] } {
+    const a = this.start?.join, b = at && at.kind !== "free" ? at.join : undefined;
+    if (!singleTrack.peek() || tramTrack.peek() || (!a && !b)) return {};
+    const p = (j?: [number, number]): [number | null, number | null] => {
+      if (!j) return [null, null];
+      const q = this.pack(j[0], j[1]);
+      return [q.x, q.y];
+    };
+    return { join: [...p(a), ...p(b)] };
   }
 
   /** T-2927: the pointer's spot for the street snap: the track it would end on, else where it is. */
@@ -1019,7 +1097,7 @@ export class Tools {
   private realReq(r: RealRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
     const se = this.start!.end;
-    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek() };
+    return { from: se.kind === "free" ? free(r.first) : se, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: tramTrack.peek(), ramp: autoRamp.peek() && !tramTrack.peek(), ...this.joinReq(at) };
   }
 
   /** Ask for the ghost of a segment from the start to the pointer; true if asked. */
@@ -1043,7 +1121,7 @@ export class Tools {
       this.clearPreview();
       return false;
     }
-    const req = this.routeReq(this.endOf(h));
+    const req = this.routeReq(this.endOf(h), undefined, h);
     const key = JSON.stringify(req);
     if (!this.wantKey || this.wantKey === this.previewKey) this.waitFrom(false);
     this.wantKey = key;
@@ -1119,10 +1197,34 @@ export class Tools {
     this.lastPreview = a;
     // a real route's preview (T-727d) answers what the ghost waits for too
     this.previewKey = this.wantKey = key;
-    // single track previews as one track close in, double and quad as two each (T-658), as the sim says per segment (T-3134)
-    this.overlay.renderer.setPreview(a.pts.length >= 6 ? strokesFromPreview(a.pts, !a.ok, a.speeds, true, a.marks, a.lanes ?? 255, highSpeed.peek(), tramTrack.peek()) : null);
+    this.overlay.renderer.setPreview(a.pts.length >= 6 ? this.ghostStrokes(a) : null);
     this.overlay.invalidate();
     this.place();
+  }
+
+  /** A route preview's ghost: single track as one track close in, double and quad as two each (T-658), as the sim
+   * says per segment (T-3134); T-3137: single track's ends on the track of double track they join, as built track's
+   * are drawn, and chevrons where it would run one way. */
+  private ghostStrokes(a: PreviewAnswer) {
+    let pts = a.pts, speeds = a.speeds, lanes: number | Uint8Array = a.lanes ?? 255;
+    const n = this.overlay.renderer.net, w = world.peek(), j = a.joins;
+    if (j && (j[0] || j[1]) && n && w && speeds && !speeds.some((v) => v < 0)) {
+      const doubles = this.doubleEnds(w).ids, lines = new Map<number, Float32Array>();
+      for (const k of [0, pts.length / 3 - 1]) {
+        const x = pts[k * 3], y = pts[k * 3 + 1];
+        for (const { edge, pts: ep } of edgesNear(n, x, y, kAtY(y)) ?? []) if (doubles.has(edge)) lines.set(edge, ep);
+      }
+      const sh = joinedGhost(pts, j, [...lines.values()]);
+      if (sh) {
+        const sp = speeds, ln = lanes;
+        pts = sh.pts;
+        speeds = Float32Array.from(sh.src, (k) => sp[k]);
+        if (typeof ln !== "number") lanes = Uint8Array.from(sh.src, (k) => ln[k]);
+      }
+    }
+    const s = strokesFromPreview(pts, !a.ok, speeds, true, a.marks, lanes, highSpeed.peek(), tramTrack.peek());
+    s.chevrons = ghostChevrons(s, j);
+    return s;
   }
 
   // ---------------------------------------------------------------- stations
@@ -1475,7 +1577,8 @@ export class Tools {
       if (closedLoop && stops.length >= 2 && stops[0] !== stops[stops.length - 1]) stops.push(stops[0]);
       change = { op: "setStops", line: id, stops, autoFast: this.autoFast(id) };
     }
-    const a = await edit(change);
+    // T-2766: answered once the world holds it (the next click reads its stops), its network once the clicks stop
+    const a = await edit(change, false, false, "rows");
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
@@ -1947,7 +2050,7 @@ export class Tools {
       if (t === "station") {
         this.stationRings(h);
         this.stationGhost(h);
-      } else put(this.ring, h.lx, h.ly);
+      } else put(this.ring, ...(h.join ?? [h.lx, h.ly]));
     } else if (hb) {
       this.ring.style.display = "";
       put(this.ring, hb.lx, hb.ly);

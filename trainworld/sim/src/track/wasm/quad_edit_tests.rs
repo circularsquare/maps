@@ -486,3 +486,20 @@ fn removed_track_keeps_a_piece_under_the_station() {
     assert_eq!(a.delete_pieces(&rest, &[st]), 0, "{}", a.issues());
     assert!(live(&a).is_empty() && station_count(&a) == 0);
 }
+
+/// T-3126: high-speed quad is two high-speed doubles, priced twice the double.
+#[test]
+fn high_speed_quad_is_two_high_speed_doubles() {
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 400.0, 0.0];
+    let mut dbl = TrackApi::new(-73.985, 40.758, true);
+    dbl.set_route_hsr(true);
+    let pd = dbl.preview_route(&ends, &[], 2, false);
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_hsr(true);
+    let pq = a.preview_route(&ends, &[], 4, false);
+    assert_eq!(pq[0], 1.0, "{}", a.issue_kinds());
+    assert!(pq[1] > 1.9 * pd[1] && pq[1] < 2.2 * pd[1], "{} vs {}", pq[1], pd[1]);
+    assert_eq!(a.add_route(&ends, &[], 4, false), 0, "{}", a.issues());
+    let edges: Vec<u32> = (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).collect();
+    assert!(edges.len() >= 2 && edges.iter().all(|&e| a.w.net.edge_hsr(e) && a.w.net.edge_tracks[e as usize] == 2));
+}

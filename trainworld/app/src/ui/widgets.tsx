@@ -200,10 +200,11 @@ export function shakeEl(el: HTMLElement | null) {
 /** `jump`: Shift-click steps by 5 and Ctrl-click by 20 (T-516), the buttons' hover says so, with
  * `jumpUnit` after the numbers ("min", the headway's, T-1888).
  * `type` (T-626): a click on the value opens a box for typing it; Enter or leaving the box applies
- * `set` with the number typed (anything else is dropped), Escape cancels. `text` is what the box
+ * `set` with the number typed (anything else is dropped), Escape cancels; `set` returning false is a
+ * refusal, shaken and knocked like a step's (T-3152). `text` is what the box
  * starts with, `tip` the value's hover. `onStep` returns false for a step refused (T-1844): the
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void | boolean; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
   const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
   const jump = p.jump && !mobileDevice() ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
@@ -223,7 +224,7 @@ export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => bo
       <button class="btn" aria-label={t("widgets.less", { label: p.label })} data-tip={tip(p.tipDown)} onClick={(e) => step(-by(e))}>
         <Icon.minus />
       </button>
-      {p.type ? <TypedValue label={p.label} type={p.type}>{p.value}</TypedValue> : <span class="v" data-tip={p.tipValue}>{p.value}</span>}
+      {p.type ? <TypedValue label={p.label} type={{ ...p.type, set: (v) => { if (p.type!.set(v) === false) { knock(); shake(); } } }}>{p.value}</TypedValue> : <span class="v" data-tip={p.tipValue}>{p.value}</span>}
       <button class="btn" aria-label={t("widgets.more", { label: p.label })} data-tip={tip(p.tipUp)} onClick={(e) => step(by(e))}>
         <Icon.plus />
       </button>
@@ -232,7 +233,7 @@ export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => bo
 }
 
 /** A stepper's value that opens a box on a click (T-626); also alone, a typed value with no steps. */
-export function TypedValue(p: { label: string; type: { text: string; set: (v: number) => void; tip?: string }; children: ComponentChildren }) {
+export function TypedValue(p: { label: string; type: { text: string; set: (v: number) => void | boolean; tip?: string }; children: ComponentChildren }) {
   const [draft, setDraft] = useState<string | null>(null);
   const done = useRef(false);
   const fresh = useRef(false);

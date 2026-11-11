@@ -13,7 +13,7 @@
 // The clicked points are handles (docs/ui-building.md "Drawing a bus line"): new points go on at the
 // active end (either end; a click on the other one switches), a drag moves a point and re-searches
 // the legs either side, a click on one deletes it (T-3109; a finger: drag, tap to delete). A click on the active
-// end, a double click, Enter, Escape or the Save/Make button finishes a new route; Escape drops an edit as a whole.
+// end, a double click on empty ground, Enter, Escape or the Save/Make button finishes a new route; Escape drops an edit as a whole.
 // A right click (a finger: hold, T-1517) loops (T-3109): on the other end, with three points or more, it closes the
 // route into a loop and finishes it (T-2899): the last point is then a copy of the first, which is all the sim keeps
 // of a loop (`bus::is_closed`). On a point partway along it joins the active end back to that point and finishes:
@@ -22,7 +22,8 @@
 // active end; a right click on any point of a loop opens it there (T-3118: the leg leaving the point goes, so the
 // route ends at it), and on any point of a route that loops back it stops looping; deleting the point where it
 // closes opens it too, and taking out a point of a loop of three leaves it open. A right click on the active end
-// deletes it. On touch the Loop button makes the next tap a right click (`loopTap`).
+// deletes it, and so does one on a lone point (T-3149). On touch the Loop button makes the next tap a right click
+// (`loopTap`), and Back takes back the active end.
 //
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
@@ -150,6 +151,8 @@ export class BusDraw {
   /** the fingers down, and whether the tap that ends a drag or a long press is to be ignored */
   private fingers = new Set<number>();
   private noTap = false;
+  /** the click before a double click's second one took a point out (T-3149) */
+  private firstEdited = false;
   /** the line whose route is redrawn, null for a new line */
   private line: number | null = null;
   /** an edit has changed something since it opened */
@@ -858,11 +861,16 @@ export class BusDraw {
   click(e: MapMouseEvent) {
     if (this.busy || this.dragEnded) return;
     // a double click: its first click placed the last point
+    const i = this.handleAt(e.point.x, e.point.y);
     if (e.originalEvent.detail >= 2) {
-      if (this.pts.length >= 2) void this.finish();
+      // a double click acts on empty ground (T-3149); where its first click took a point out, the second does nothing
+      const skip = this.firstEdited;
+      this.firstEdited = false;
+      if (skip) return;
+      if (i < 0 ? this.pts.length >= 2 : this.pts.length >= 2 && (this.isSeam(i) || (!this.looped() && i === this.endIndex()))) void this.finish();
       return;
     }
-    const i = this.handleAt(e.point.x, e.point.y);
+    this.firstEdited = i >= 0 && this.pts.length >= 2 && !(this.isSeam(i) || (!this.looped() && i === this.endIndex()));
     if (i >= 0) return this.handleClick(i);
     void this.add({ lng: e.lngLat.lng, lat: e.lngLat.lat });
   }
@@ -883,7 +891,7 @@ export class BusDraw {
    * end, close the loop at the other end, or loop back to a point partway along. */
   private rightAction(i: number): "open" | "stop" | "delete" | "close" | "loopBack" | null {
     const n = this.pts.length;
-    if (n < 2) return null;
+    if (n < 2) return n === 1 ? "delete" : null;
     if (this.closed()) return "open";
     if (this.looped()) return "stop";
     const end = this.endIndex();
@@ -1260,10 +1268,10 @@ export class BusDraw {
     const h = this.drag ? -1 : this.over;
     if (h >= 0 && at && !touchInput.peek()) {
       const finishes = this.pts.length >= 2 && (this.isSeam(h) || (!this.looped() && h === this.endIndex()));
-      const first = row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"));
+      const first = this.pts.length < 2 ? [] : [row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"))];
       const right = { open: "busDraw.rightOpen", stop: "busDraw.rightStopLooping", delete: "busDraw.rightDelete", close: "busDraw.rightClose", loopBack: "busDraw.rightLoopBack" } as const;
       const a = this.rightAction(h);
-      return show([first, row(t("busDraw.dragMove")), ...(a ? [row(t(right[a]))] : [])]);
+      return show([...first, row(t("busDraw.dragMove")), ...(a ? [row(t(right[a]))] : [])]);
     }
     // where a click (or a drop) would be refused, the tag says why before it
     const d = this.drag;

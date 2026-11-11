@@ -21,9 +21,9 @@ export const world = signal<WorldView | null>(null);
 /** A short message for the player: why an edit was refused, what a construct cost. */
 export const notice = signal<{ text: string; bad: boolean; at: number } | null>(null);
 
-let sink: ((op: EditOp, early?: boolean) => Promise<EditAnswer>) | null = null;
+let sink: ((op: EditOp, early?: boolean | "rows") => Promise<EditAnswer>) | null = null;
 /** workers/clockClient.ts hands over its edit function. */
-export function setEditSink(f: (op: EditOp, early?: boolean) => Promise<EditAnswer>) {
+export function setEditSink(f: (op: EditOp, early?: boolean | "rows") => Promise<EditAnswer>) {
   sink = f;
 }
 
@@ -70,13 +70,14 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
-export async function edit(op: EditOp, quiet = false, silent = false, early = false): Promise<EditAnswer> {
+export async function edit(op: EditOp, quiet = false, silent = false, early: boolean | "rows" = false): Promise<EditAnswer> {
   breakDeleteRun();
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
   noteEdit(op, world.peek());
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
-  // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`)
+  // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):
+  // the answer comes with `world` holding the edit, its network a moment later
   const a = await sink(op, early);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op), lineVehicle((op as { line?: number }).line)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
@@ -111,8 +112,8 @@ export function stepTrainCount(id: LineId, demand: Demand, by: number): boolean 
   return changeTrains(id, demand, (now, k) => Math.max(0, Math.round(now / k + by) * k));
 }
 
-export function setTrainCount(id: LineId, demand: Demand, trains: number) {
-  changeTrains(id, demand, (_, k) => Math.max(0, Math.ceil(Math.round(trains) / k) * k));
+export function setTrainCount(id: LineId, demand: Demand, trains: number): boolean {
+  return changeTrains(id, demand, (_, k) => Math.max(0, Math.ceil(Math.round(trains) / k) * k));
 }
 
 /** False when the count could not move (none to take away): the stepper shakes (T-1844). */

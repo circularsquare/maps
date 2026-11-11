@@ -7,7 +7,7 @@
 // (`begin(line, ...)`) finishing redraws it (`ferryRoute`), else it makes the line (`addFerryLine`).
 //
 // The bus tool's handling where it fits (busDraw.ts, T-3118): new ports go on at the active end, a click on a port
-// takes it out, a click on the active end, a double click, Enter, Escape or the Make line button finishes a new line,
+// takes it out, a click on the active end, a double click on empty ground, Enter, Escape or the Make line button finishes a new line,
 // Escape drops an edit as a whole. A finger's tap places at once (a port is a place, not a point to adjust); the
 // Loop button makes the next tap a right click (`loopTap`). No dragging: a port is moved by taking it out and placing
 // another. A right click loops: on the other end, with three ports or more, it closes the line into a loop and
@@ -15,7 +15,7 @@
 // to it and finishes, the boats running out, round and back: sent as the ports out, round and back again
 // (`runPorts`), folded back here (`begin`). A looped line has no active end; a right click on any port of a loop
 // opens it there (the leg leaving the port goes), on any port of a line that loops back it stops looping, and on the
-// active end it takes that port out.
+// active end or a lone port it takes that port out. A finger held on a port does a right click's work (T-3149).
 //
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
@@ -61,6 +61,9 @@ type Under = { kind: "handle"; i: number } | { kind: "port"; node: number; name:
 /** a click this near (px) to a port's circle is on it; a port within `PORT_NEAR_M` of the click too */
 const HANDLE_PX = 10;
 const TOUCH_HANDLE_PX = 18;
+/** a finger held still on a port this long (ms) does a right click's work there, as on the bus tool (T-1517) */
+const LONG_PRESS_MS = 500;
+const TOUCH_SLOP_PX = 8;
 const PORT_NEAR_M = 30;
 
 const farFromWater = () => t("ferryDraw.tagFar");
@@ -105,6 +108,11 @@ export class FerryDraw {
   /** a constructed line being redrawn: only its new ports are paid */
   private built = false;
   private busy = false;
+  /** a finger held on a port, and whether the tap that ends a long press is to be ignored */
+  private hold: { i: number; x: number; y: number; timer: number } | null = null;
+  private noTap = false;
+  /** the click before a double click's second one took a port out (T-3149) */
+  private firstEdited = false;
   private svg: SVGSVGElement;
   /** T-3142: the ports the line serves one way as the sim says (port node to the boats' plane heading and the port's plane spot), until the player edits it */
   private oneWay = new Map<number, { heading: number; x: number; y: number }>();
@@ -123,6 +131,10 @@ export class FerryDraw {
       if (i >= 0) this.rightClick(i);
       else this.back();
     });
+    map.getContainer().addEventListener("pointerdown", (e) => this.onTouchDown(e), true);
+    addEventListener("pointermove", (e) => this.onTouchMove(e));
+    addEventListener("pointerup", (e) => this.onTouchEnd(e));
+    addEventListener("pointercancel", (e) => this.onTouchEnd(e));
     // O (FERRY_KEY): a new ferry line, from any tab, before main.ts's key handler
     window.addEventListener("keydown", (e) => {
       if (e.key.toLowerCase() !== FERRY_KEY || e.ctrlKey || e.metaKey || e.altKey || e.repeat || keyIsTheirs(e) || ask.peek() || !world.peek()) return;
@@ -363,10 +375,17 @@ export class FerryDraw {
 
   click(e: MapMouseEvent) {
     if (this.busy) return;
+    const x = e.point.x, y = e.point.y, h = this.handleAt(x, y, HANDLE_PX);
+    const finishes = (i: number) => this.ports.length >= 2 && (this.isSeam(i) || (!this.looped() && i === this.endIndex()));
     if (e.originalEvent.detail >= 2) {
-      if (this.ports.length >= 2) void this.finish();
+      // a double click acts on empty ground (T-3149); where its first click took a port out, the second does nothing
+      const skip = this.firstEdited;
+      this.firstEdited = false;
+      if (skip) return;
+      if (this.ports.length >= 2 && (h < 0 || finishes(h))) void this.finish();
       return;
     }
+    this.firstEdited = h >= 0 && this.ports.length >= 2 && !finishes(h);
     void this.press(e.point.x, e.point.y, { lng: e.lngLat.lng, lat: e.lngLat.lat });
   }
 
@@ -425,7 +444,7 @@ export class FerryDraw {
   /** What a right click on port `i` does (T-3118), null for nothing; as the bus tool's. */
   private rightAction(i: number): "open" | "stop" | "delete" | "close" | "loopBack" | null {
     const n = this.ports.length;
-    if (n < 2) return null;
+    if (n < 2) return n === 1 ? "delete" : null;
     if (this.closed()) return "open";
     if (this.looped()) return "stop";
     const end = this.endIndex();
@@ -538,8 +557,45 @@ export class FerryDraw {
 
   // ---------------------------------------------------------------- touch
 
+  private onTouchDown(e: PointerEvent) {
+    this.holdEnd();
+    if (e.pointerType !== "touch" || !e.isPrimary) return;
+    this.noTap = false;
+    if (tool.peek() !== "ferry" || this.busy || e.target !== this.map.getCanvas()) return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const i = this.handleAt(x, y, TOUCH_HANDLE_PX);
+    if (i < 0) return;
+    const timer = window.setTimeout(() => {
+      this.hold = null;
+      this.noTap = true;
+      navigator.vibrate?.(15);
+      this.rightClick(i);
+    }, LONG_PRESS_MS);
+    this.hold = { i, x, y, timer };
+  }
+
+  private onTouchMove(e: PointerEvent) {
+    const h = this.hold;
+    if (!h || e.pointerType !== "touch") return;
+    const r = this.map.getContainer().getBoundingClientRect();
+    if (Math.hypot(e.clientX - r.left - h.x, e.clientY - r.top - h.y) >= TOUCH_SLOP_PX) this.holdEnd();
+  }
+
+  private onTouchEnd(e: PointerEvent) {
+    if (e.pointerType !== "touch") return;
+    this.holdEnd();
+    // the browser's tap after a long press must not act again
+    if (this.noTap) setTimeout(() => (this.noTap = false), 400);
+  }
+
+  private holdEnd() {
+    if (this.hold) window.clearTimeout(this.hold.timer);
+    this.hold = null;
+  }
+
   tap(e: MapMouseEvent) {
-    if (this.busy) return;
+    if (this.busy || this.noTap) return;
     void this.press(e.point.x, e.point.y, { lng: e.lngLat.lng, lat: e.lngLat.lat }, true);
   }
 

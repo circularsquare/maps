@@ -189,7 +189,7 @@ impl TrackApi {
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
-        // High-speed track is double only (T-817).
+        // High-speed quad is two high-speed doubles (T-3126); single track is never high-speed.
         let kind = self.route_kind_of(tracks);
         let tracks = if quad { 2 } else { tracks };
         // One piece of track per corner clicked (T-244), joined at plain nodes, the shape unchanged.
@@ -309,12 +309,13 @@ impl TrackApi {
                     _ => {}
                 }
             }
+            let min_r = kind.spec().min_radius;
             let pieces = match &ex_bridged {
-                Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled, MIN_RADIUS),
-                Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled, MIN_RADIUS),
-                None => stroke_pieces(&ex, first, clicks, scaled, MIN_RADIUS),
+                Some(b) if pis.is_empty() => stroke_pieces(b, first, 0, scaled, min_r),
+                Some(b) => stroke_pieces(b, first, cut(&ex_bridged, ex.len(), clicks), scaled, min_r),
+                None => stroke_pieces(&ex, first, clicks, scaled, min_r),
             };
-            let pieces: Vec<_> = pieces.into_iter().map(|p| (p, TrackKind::Regular)).collect();
+            let pieces: Vec<_> = pieces.into_iter().map(|p| (p, kind)).collect();
             self.push_pieces(&pieces, own_a.map_or(ra.node, |o| o.0), own_b.map_or(rb.node, |o| o.0), tracks, &mut ops, &mut new_nodes, &mut new_edges);
             express = ex_bridged.unwrap_or(ex);
         }
@@ -671,9 +672,10 @@ impl TrackApi {
         }
         if !self.route_express.is_empty() && out.len() > 5 {
             // T-711: the multiplier over both pairs' track, as the price is
-            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, TrackKind::Regular);
-            let (fe, te, _) = self.w.preview(&self.route_express, 2, TrackKind::Regular);
-            let base = BASE_COST_PER_KM * (fl.len + fe.len) / 1000.0;
+            let kind = self.route_kind_of(tracks);
+            let (fl, tl, _) = self.w.preview(if shape.is_empty() { &verts } else { &shape }, 2, kind);
+            let (fe, te, _) = self.w.preview(&self.route_express, 2, kind);
+            let base = BASE_COST_PER_KM * (fl.len + fe.len) / 1000.0 * crate::track::cost::price_scale(2, kind);
             out[4] = if base > 0.0 { (tl + te) / base } else { 0.0 };
             // a quad route's express pair, drawn on from the end back to the start (T-255)
             let mut back = self.route_express.clone();
@@ -685,7 +687,7 @@ impl TrackApi {
             self.preview_speeds.push(joint);
             self.preview_lanes.push(255);
             render_samples(&f.pieces, &f.vert, &mut out);
-            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, V_TOP));
+            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap()));
             self.preview_lanes.resize(self.preview_speeds.len(), 255);
         }
         // T-3092: each flyover's crossing leg, after a step with no track
@@ -726,7 +728,7 @@ impl TrackApi {
     }
 
     /// T-817: whether double track drawn after this (routes and stations on open ground) is
-    /// high-speed track. Single and quad track are never.
+    /// high-speed track. Quad is two high-speed doubles; single track never is.
     pub fn set_route_hsr(&mut self, on: bool) {
         self.route_hsr = on;
     }
@@ -747,7 +749,7 @@ impl TrackApi {
     }
 
     pub(super) fn route_kind_of(&self, tracks: u8) -> TrackKind {
-        if self.route_kind.spec().family != 0 { self.route_kind } else { TrackKind::from_hsr(self.route_hsr && tracks == 2) }
+        if self.route_kind.spec().family != 0 { self.route_kind } else { TrackKind::from_hsr(self.route_hsr && (tracks == 2 || tracks == 4)) }
     }
 
     /// T-1615: whether routes after this ramp over or under track they would cross flat.

@@ -346,20 +346,19 @@ export const DESIGN_MIN = 20, DESIGN_MAX = 320;
 export type DesignSpeed = number;
 export const clampDesign = (kmh: number): number => (Number.isFinite(kmh) ? Math.round(Math.max(DESIGN_MIN, Math.min(DESIGN_MAX, kmh)) * 1000) / 1000 : 160);
 export const designSpeed = signal<DesignSpeed>(typeof saved.build?.design === "number" ? clampDesign(saved.build.design) : 160);
-/** T-817: the track tool lays high-speed track, else regular. High-speed track is double only. */
-export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4 && saved.build?.tram !== true);
+/** T-817: the track tool lays high-speed track, else regular. Double or quad (T-3126), never single. */
+export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 1 && saved.build?.tram !== true);
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
  * Regular and High speed. Drawn by hand it is the off-street kind (`TrackApi::set_route_kind(3)`). */
 export const tramTrack = signal(saved.build?.tram === true && saved.build?.tracks !== 4);
-/** T-2931: the track tool lays quad track (two pairs) instead of double; never high-speed. */
-export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.hsr !== true && saved.build?.tram !== true);
+/** T-2931: the track tool lays quad track (two pairs) instead of double; high-speed too (T-3126). */
+export const quadTrack = signal(saved.build?.tracks === 4 && saved.build?.tram !== true);
 export function setQuadTrack(on: boolean) {
   if (on === quadTrack.peek()) return;
   if (on && tramTrack.peek()) return;
   batch(() => {
     quadTrack.value = on;
     if (on) singleTrack.value = false;
-    if (on && highSpeed.peek()) setTrackType(2);
   });
 }
 /** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; never high-speed or tram. */
@@ -403,7 +402,6 @@ export function setTrackType(t: TrackType) {
       levelBeforeTram = null;
     }
     if (t === "hsr") {
-      quadTrack.value = false;
       singleTrack.value = false;
       designBeforeHsr = designSpeed.peek();
       highSpeed.value = true;

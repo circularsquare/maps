@@ -95,6 +95,11 @@ export interface TrackEdge {
   kind?: number;
   /** one-way single track (T-3094): 1 trains run a to b only, 2 b to a only; absent both ways */
   oneWay?: 1 | 2;
+  /** T-3137: the track of double track its ends join (`ClockEdge.join`), a's + 4 x b's; absent none */
+  join?: number;
+  /** T-3137 C4: the stored way (`ClockEdge.setWay`) and the automatic one (`autoWay`); absent 0 */
+  setWay?: 1 | 2 | 3;
+  autoWay?: 1 | 2;
   /** one diagonal of a crossover (T-338): fixed shape, deleted with the other */
   crossover?: boolean;
   /** a crossover diagonal's other diagonal, -1 if none */

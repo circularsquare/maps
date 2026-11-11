@@ -1382,17 +1382,21 @@ const EARLY_WAIT_MS = 30;
  * the tool's own ask) */
 const REST_MS = 220;
 const HOLD_MS = 5000;
-/** an early edit's follow-up held: what it does besides the state, and until when */
-interface Held { rest: () => void; until: number }
+/** T-2766: a stop click's follow-up (network, trips, boarding, demand's snapshot) is held until no stop click has
+ * come for this long, ms, so quick clicks share one (players click stops 0.2 to 0.6 s apart); its rows went at once */
+const STOP_REST_MS = 500;
+/** an early edit's follow-up held: what it does besides the state, until when, and whether it is stop clicks'
+ * (T-2766), which only stop clicks join */
+interface Held { rest: () => void; until: number; stops: boolean }
 /** `step`: work that can go ahead of `run` a few ms a task (the boarding account's lines), true
  * while more is left; previews asked meanwhile are answered between the steps. `hold`: the edit's
- * work besides its state, to hold it (T-2404) */
+ * work besides its state, to hold it (T-2404); `stops`: held as a stop click's (T-2766) */
 let followUp: { run: () => void; fail: () => void; step?: () => boolean; held?: Held } | null = null;
 let followTimer = 0;
-function later(run: () => void, fail: () => void, waitMs: number, step?: () => boolean, hold?: () => void) {
+function later(run: () => void, fail: () => void, waitMs: number, step?: () => boolean, hold?: () => void, stops = false) {
   const prev = followUp;
   let until = performance.now() + HOLD_MS;
-  if (hold && prev?.held) {
+  if (hold && prev?.held && prev.held.stops === stops) {
     // one state for both edits, the earlier one's other work first
     clearTimeout(followTimer);
     followUp = null;
@@ -1400,32 +1404,41 @@ function later(run: () => void, fail: () => void, waitMs: number, step?: () => b
     run = () => { rest(); own(); };
     until = prev.held.until;
   } else runFollowUp();
-  const f = (followUp = { run, fail, step, held: hold && { rest: hold, until } });
+  const f = (followUp = { run, fail, step, held: hold && { rest: hold, until, stops } });
   if (f.held) return holdOn();
-  const go = () => {
-    if (followUp !== f) return;
-    try {
-      if (f.step?.()) { followTimer = setTimeout(go, 0) as unknown as number; return; }
-    } catch (err) {
-      // a step that throws ends the stepping, never the follow-up: its run (which meets a panic
-      // again) still answers the edit
-      if (!isPanic(err)) send({ kind: "error", message: String(err) });
-    }
-    f.step = undefined;
-    queueFollowUp();
-  };
-  followTimer = setTimeout(go, Math.max(1, waitMs)) as unknown as number;
+  followTimer = setTimeout(() => stepThenRun(f), Math.max(1, waitMs)) as unknown as number;
 }
-/** T-2404: the held follow-up's wait for the pointer's rest, started again (a ghost was just asked) */
+/** a follow-up's steps a task each, then the follow-up into the message queue */
+function stepThenRun(f: NonNullable<typeof followUp>) {
+  if (followUp !== f) return;
+  try {
+    if (f.step?.()) { followTimer = setTimeout(() => stepThenRun(f), 0) as unknown as number; return; }
+  } catch (err) {
+    // a step that throws ends the stepping, never the follow-up: its run (which meets a panic
+    // again) still answers the edit
+    if (!isPanic(err)) send({ kind: "error", message: String(err) });
+  }
+  f.step = undefined;
+  queueFollowUp();
+}
+/** T-2404: the held follow-up's wait for the pointer's rest, started again (a ghost was just asked); T-2766: a stop
+ * click's for the next click */
 function holdOn() {
   const f = followUp;
   if (!f?.held) return;
   clearTimeout(followTimer);
-  followTimer = setTimeout(() => { if (followUp === f) queueFollowUp(); }, Math.max(1, Math.min(REST_MS, f.held.until - performance.now()))) as unknown as number;
+  const rest = f.held.stops ? STOP_REST_MS : REST_MS;
+  followTimer = setTimeout(() => stepThenRun(f), Math.max(1, Math.min(rest, f.held.until - performance.now()))) as unknown as number;
 }
 /** T-2404: messages a held follow-up stays held for: they read nothing it would change (blueprint
- * track changes no line's run), and a later early edit joins it */
-const passesHeld = (m: ToClock) => (m.kind === "edit" && !!m.early) || (m.kind === "query" && HELD_QUERIES.has(m.q.what)) || HELD_KINDS.has(m.kind);
+ * track changes no line's run), and a later early edit joins it. T-2766: a stop click's, the next stop click and the
+ * line tool's reads of the track model's lines, which the click changed already */
+const passesHeld = (m: ToClock, h: Held) => h.stops
+  ? (m.kind === "edit" && !!m.rows) || (m.kind === "query" && STOP_QUERIES.has(m.q.what)) || STOP_KINDS.has(m.kind)
+  : (m.kind === "edit" && !!m.early) || (m.kind === "query" && HELD_QUERIES.has(m.q.what)) || HELD_KINDS.has(m.kind);
+const STOP_QUERIES = new Set(["stopTiers", "stopGap", "insertStop", "passedStations"]);
+/** the page's money figures from the world each click's rows gave it, and the clock: none reads what the follow-up sends */
+const STOP_KINDS = new Set<ToClock["kind"]>(["income", "points", "regionShares", "chargeShares", "clock"]);
 /** demand's results and the clock: money, riders and trips, none of which a blueprint changes */
 const HELD_KINDS = new Set<ToClock["kind"]>(["income", "points", "regionShares", "riders", "transfers", "epoch", "clock"]);
 const HELD_QUERIES = new Set(["today", "lineAccount", "linePeriods", "linesPeriods", "lineWaits", "lineTrips", "lineHeld"]);
@@ -2779,6 +2792,24 @@ const SHIFTS_EXACT = 8;
  * point near the new anchor is off by at most 12.5 cm; about 3,000 km of ground in China) */
 const SHIFT_REACH = 2 ** 22;
 
+/** T-2766: a state of the rows alone (`ClockState.rows`): the world and its money, without the network or trips,
+ * which a full state brings after it. False, nothing sent, before the first network or while the drawn pieces are to
+ * move to a new anchor (that state must be a full one). */
+function sendRows(): boolean {
+  if (!posted.net || shiftFrom) return false;
+  const t0 = performance.now();
+  const s = buildState();
+  s.rows = true;
+  s.noTrips = true;
+  s.render = { phases: NO_PHASES, meta: NO_PHASES, samples: NO_PHASES, lineTable: NO_PHASES };
+  s.ms = [performance.now() - t0, 0];
+  timing.rows = s.ms[0];
+  const t1 = performance.now();
+  postState(s, []);
+  timing.rowsPost = performance.now() - t1;
+  return true;
+}
+
 /** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
  * again, which was about half the edit's time on New York's real network.
  * `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
@@ -3976,7 +4007,7 @@ async function processMessage(msg: ToClock) {
     return;
   }
   await ready;
-  if (followUp && !jumpsAhead(msg) && !(followUp.held && passesHeld(msg))) await guardedFollowUp();
+  if (followUp && !jumpsAhead(msg) && !(followUp.held && passesHeld(msg, followUp.held))) await guardedFollowUp();
   if (msg.kind === "release") return;
   if (msg.kind === "leave") return await leave(msg);
   if (!api) return;
@@ -3990,7 +4021,7 @@ async function processMessage(msg: ToClock) {
     await handle(msg);
     // T-1407: an edit's follow-up after the previews asked so far
     // (one still stepping goes on in its own tasks)
-    if (followUp?.held && isPreview(msg)) holdOn();
+    if (followUp?.held && !followUp.held.stops && isPreview(msg)) holdOn();
     else if (followUp && !followUp.step && !followUp.held && jumpsAhead(msg)) queueFollowUp();
   } catch (err) {
     if (isPanic(err)) await recover(err, msg.kind, msg.kind === "edit" ? EDIT_UNDONE : MODEL_RESTORED, performance.now(), msg.kind === "edit");
@@ -4021,6 +4052,7 @@ function routeArgs(a: TrackApi, r: RouteAsk): [Float64Array, Float64Array, numbe
   a.set_route_hsr(!!r.hsr);
   a.set_route_ramp(!!r.ramp);
   a.set_route_beside(...besideOf(r));
+  a.set_route_join(new Float64Array((r.join ?? [null, null, null, null]).map((v) => v ?? NaN)));
   // T-3092: with ramps on, new junctions on double track are laid as flyovers
   return [new Float64Array([...endArr(r.from), ...endArr(r.to)]), pisArr(r.pis), r.single ? 1 : r.quad ? 4 : 2, !!r.ramp];
 }
@@ -4215,11 +4247,15 @@ async function handle(msg: ToClock) {
     // charge's split off the next state)
     const hold = early && charge === 0;
     if (early) answer(true, hold ? heldEdges() : undefined);
+    // T-2766: a stop click's rows (the world, its money) now and its answer after them, so the next click reads the
+    // stops this one left; the network, trips and boarding wait for the clicks to stop
+    const stops = !!msg.rows && !early && !service && sendRows();
+    if (stops) answer();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
     const rest = () => {
       if (demand.length || op.op === "undo" || op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
-      if (!early) answer();
+      if (!early && !stops) answer();
       keep();
       // Paid for something: keep it (T-029, autosave on construct).
       if (charge > 0) void autosave();
@@ -4229,11 +4265,11 @@ async function handle(msg: ToClock) {
       sendState(service, effectiveAt, trips, early, true);
       if (service) serviceEditMs = performance.now() - tA;
       rest();
-    }, () => { if (!early) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,
+    }, () => { if (!early && !stops) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,
     // the boarding account's lines the edit moved (~1.5 ms a line; a train count on New York's
     // real save moves ~90 of them), a few a task, so a ghost asked meanwhile waits for one step
     trips && api.has_riders() ? () => (todayGen++, api!.boarding_step(BOARDING_STEP_LINES)) : undefined,
-    hold ? rest : undefined);
+    hold || stops ? rest : undefined, stops);
   } else if (msg.kind === "clock") {
     if (msg.game === game) clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
@@ -4327,6 +4363,10 @@ async function handle(msg: ToClock) {
     if (msg.when === "afterEdit") panicAfterEdit = true;
     else if (msg.when === "read") api.edge_polyline(0xffffffff, 0);
     else panicNow();
+  } else if (import.meta.env.DEV && msg.kind === "debugCash") {
+    api.set_cash(msg.cash);
+    if (msg.fleet) { api.set_fleet(api.cars_needed()); api.set_fleet_fast(api.cars_needed_fast()); }
+    sendMoney();
   } else if (msg.kind === "query") {
     const q = msg.q;
     if (q.what === "lineProfile") {
@@ -4428,7 +4468,8 @@ async function handle(msg: ToClock) {
     const marks = markPoints(a.preview_marks(), 3);
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
     const flatJunctions = msg.kind === "preview" ? a.route_flyovers_flat() : 0;
-    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
+    const joins = msg.kind === "preview" ? a.route_joins() : undefined;
+    send({ kind: "preview", seq: msg.seq, ok, cost: out[1], lengthM: out[2], mult: out[4], ground, issues: ok ? [] : issues(), verts, pts, speeds, lanes, arc, anchor: anchor().version, marks, ...(joins ? { joins } : {}), ...(flatJunctions > 0 ? { noFlyover: true } : {}) }, [verts.buffer, pts.buffer, speeds.buffer, lanes.buffer, marks.buffer]);
   } else if (msg.kind === "epoch") {
     if (msg.epoch !== epoch) {
       epoch = msg.epoch;

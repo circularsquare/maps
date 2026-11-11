@@ -105,7 +105,15 @@ Web first, so it can be shared as a link.
   (`Renderer.addPlaced`). The tool asks for the state at once (`release`) when the run ends and
   when the pointer comes within 24 px of a held segment away from the start, since the snap sees a
   segment only once its state lands; a click there waits for that state (at most 3 s) before it
-  snaps. The client takes the state after the next paint (`ghostFirst`). A state carries only the edges,
+  snaps. The client takes the state after the next paint (`ghostFirst`). **A stop click's rows go
+  first** [T-2766]: the line tool's stop clicks ask `rows`; the worker applies the edit, posts a state
+  of the rows alone (`rows`: world and money, no network, no trips; the renderer keeps its network)
+  and then answers, so the next click reads the stops this one left and a refusal for money comes at
+  its click. The network, trips, boarding hour and demand's snapshot follow once no stop click has
+  come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),
+  and the line tool's reads of the lines (`stopTiers` and the like), demand's money results and the
+  clock pass it, anything else runs it first. Meanwhile the client holds every other read until no
+  stop click has been answered for 500 ms (the panels ask a dozen after each world). A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last

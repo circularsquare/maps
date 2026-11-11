@@ -46,7 +46,10 @@ export type StationAt =
 /** A route turning at the clicked points `pis`; a junction it makes is flat (T-080). `through`
  * (T-418): a route with no PIs from a heading to open ground is one tangent arc. `design` (T-817):
  * the design speed its curves are laid out for, km/h; 160 when absent. */
-export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number] }
+export interface RouteAsk { from: RouteEnd; to: RouteEnd; pis: PiInput[]; single: boolean; quad?: boolean; through?: boolean; design?: number; hsr?: boolean; tram?: boolean; /** T-2927: tram track that follows the streets (street tram track), along `streetLine` (lng, lat pairs, flat) */ street?: boolean; streetLine?: number[]; ramp?: boolean; beside?: [number, number];
+  /** T-3137: which of double track's two tracks single track joins at its start and end: a point (pack units) on that
+   * track, start x, y, end x, y (`TrackApi::set_route_join`); null for the track beside the route there */
+  join?: [number | null, number | null, number | null, number | null] }
 
 /** One edit. Blueprint edits are undoable; construct and removing constructed things are final
  * (SPEC 6.4). Line ids are the track model's numbers. */
@@ -85,7 +88,7 @@ export type EditOp =
   /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */
   | { op: "doubleUp"; edge: EdgeId }
   /** single track run one way (`dir` 1 a to b, 2 b to a) or both (0), the lines that ran against it taking another way in the same edit (T-3094); refused with "OneWayNoWay:<line>" */
-  | { op: "oneWay"; edge: EdgeId; dir: 0 | 1 | 2 }
+  | { op: "oneWay"; edge: EdgeId; dir: 0 | 1 | 2 | 3 }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   | { op: "removeStation"; node: NodeId }
   /** `buses` (T-1464): bus lines whose routes to construct */
@@ -209,7 +212,9 @@ export type ToClock =
   | { kind: "roadTiles"; template: string }
   /** `early` (T-1407, the track tool's blueprint segments): a route edit that changes no line for
    * demand is answered before its state is built, so the next ghost is not kept waiting */
-  | { kind: "edit"; seq: number; op: EditOp; early?: boolean }
+  /** `rows` (T-2766, the line tool's stop clicks): the world's rows are posted and the edit answered at once, its
+   * network, trips and boarding once no stop click has come for a moment; a stop click before then joins them */
+  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | ({ kind: "preview"; seq: number } & RouteAsk)
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
@@ -277,6 +282,9 @@ export type ToClock =
   /** T-1007, dev server only: make the track model panic, now (`now` holds its borrow, `read`
    * does not) or on the next edit once it is applied */
   | { kind: "debugPanic"; when: "now" | "read" | "afterEdit" }
+  /** T-2766, dev server only: set the cash, US$M, and with `fleet` own only the cars in use (a check's
+   * refusal for want of money) */
+  | { kind: "debugCash"; cash: number; fleet?: boolean }
   /** the game as a file: answered with "exported" */
   | { kind: "export"; /** T-3115: for a Community share, not a download */ share?: true }
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
@@ -409,6 +417,13 @@ export interface ClockEdge {
   kind: number;
   /** one-way single track (T-3094): 0 both ways, 1 a to b only, 2 b to a only */
   oneWay: 0 | 1 | 2;
+  /** T-3137: the track of double track single track's ends join (`TrackApi::join_edges`), a's + 4 x b's: 0 none, 1
+   * left, 2 right, looking out from the node along the piece; only joins that count */
+  join: number;
+  /** T-3137 C4: the way the player stored (`TrackApi::edge_oneway`): 0 automatic, 1 a to b, 2 b to a, 3 both ways pinned */
+  setWay: 0 | 1 | 2 | 3;
+  /** T-3137 C4: the way the edge's run takes by itself (`TrackApi::edge_infer`): 0 both, 1 a to b, 2 b to a */
+  autoWay: 0 | 1 | 2;
   /** one diagonal of a crossover (T-338) */
   crossover: boolean;
   /** the crossover's other diagonal, -1 if none */
@@ -659,6 +674,9 @@ export interface ClockState {
   /** T-1407: the state of an edit answered ahead of it (`early`): taken after the next paint, so
    * the ghost asked meanwhile is drawn first */
   ghostFirst?: boolean;
+  /** T-2766: the rows alone, ahead of a stop click's answer: the world and money are taken, the renderer keeps
+   * its network (`render` is empty) until the full state after it */
+  rows?: boolean;
   /** the draw anchor its local units are relative to (T-307, map/geo.ts) */
   anchor?: { lng: number; lat: number; version: number };
 }
@@ -695,6 +713,10 @@ export type FromClock =
       lanes?: Uint8Array;
       /** T-3134: a node drag's track per part: 0 single, 255 double */
       partLanes?: Uint8Array;
+      /** T-3137: a route's `TrackApi::route_joins`: the track of double track its start and end join (0 none, 1
+       * left, 2 right, looking out from that end along the route), then per piece in order drawn its way (0 both, 1
+       * along the drawing, 2 against) */
+      joins?: Uint8Array;
       /** several alignments (a node drag moves every edge there, T-093): where each starts in
        * `pts`, in triples, and the end; absent = one */
       parts?: Uint32Array;

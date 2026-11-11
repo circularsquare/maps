@@ -9,12 +9,13 @@ import { highSpeed, stationOnTram, tool, tramTrack, TRAM_PLATFORM } from "./ui";
 import { linesByNum, world } from "./world";
 
 /** T-2926: the track kind the player is working on, for the text of a limit that differs by kind */
-const onTram = () => (tool.peek() === "station" ? stationOnTram.peek() : tramTrack.peek());
+const onTram = () => (tool.peek() === "station" ? stationOnTram.peek() : tool.peek() === "track" && tramTrack.peek());
+const onHsr = () => tool.peek() === "track" && highSpeed.peek(); // T-3153: other tools do not read the track tool's type
 
 const TEXT: Record<string, () => string> = {
   "Geom:ZeroLeg": () => t("issues.zeroLeg"),
   "Geom:Reversal": () => t("issues.reversal"),
-  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(TRACK_SPECS[onTram() ? "tram" : highSpeed.peek() ? "highSpeed" : "regular"].minRadius) }),
+  "Geom:RadiusTooSmall": () => t("issues.radiusTooSmall", { radius: length(TRACK_SPECS[onTram() ? "tram" : onHsr() ? "highSpeed" : "regular"].minRadius) }),
   "Geom:RampTooShort": () => t("issues.rampTooShort", { ramp: length(200) }),
   "Geom:LevelRange": () => t("issues.levelRange"),
   NodeLevel: () => t("issues.levelRange"),

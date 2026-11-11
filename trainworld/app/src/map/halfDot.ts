@@ -2,10 +2,10 @@
 
 import type { Overlay } from "./overlay";
 
-/** The screen angle (degrees clockwise from screen right) of the plane heading `heading` (radians, as
+/** (the sim plane runs north with y, the map frame south, T-3139) The screen angle (degrees clockwise from screen right) of the plane heading `heading` (radians, as
  * `LineStats.oneWayAt` gives it) at plane point (x, y), as the map is drawn now. */
 export function headingAtPlane(ov: Overlay, x: number, y: number, heading: number): number | null {
-  const a = ov.toScreen(x, y), b = ov.toScreen(x + 10 * Math.cos(heading), y + 10 * Math.sin(heading));
+  const a = ov.toScreen(x, y), b = ov.toScreen(x + 10 * Math.cos(heading), y - 10 * Math.sin(heading));
   const dx = b[0] - a[0], dy = b[1] - a[1];
   return dx || dy ? (Math.atan2(dy, dx) * 180) / Math.PI : null;
 }

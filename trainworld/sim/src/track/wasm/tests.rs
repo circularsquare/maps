@@ -2097,7 +2097,7 @@ fn design_speed_widens_the_lead_in() {
     assert!(a.w.net.fit(&a.route_vertices).radius.iter().all(|&r| r <= R_CAP + 1e-6));
 }
 
-/// T-817 b1: high-speed track is drawn as double track only, costs 1.5x double track as
+/// T-817 b1: high-speed track is drawn as double or quad track, costs 1.5x double track as
 /// previewed and quoted (its own quote rows), and survives a save.
 #[test]
 fn high_speed_track_costs_half_again_and_is_saved() {
@@ -2118,17 +2118,18 @@ fn high_speed_track_costs_half_again_and_is_saved() {
     let rows = a.blueprint_cost_items();
     assert!(rows.chunks_exact(7).filter(|r| r[0] == 0.0).all(|r| r[2] == HSR_ROW as f64));
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - a.blueprint_cost()).abs() < 1e-6);
-    // single and quad track drawn with the setting on are ordinary track
-    for (y, tracks) in [(2000.0, 1u8), (4000.0, 4)] {
-        let e: Vec<f64> = free(0.0, y).iter().chain(free(3000.0, y).iter()).copied().collect();
-        assert_eq!(a.add_route(&e, &[], tracks, false), 0, "{}", a.issues());
-    }
+    // single track drawn with the setting on is ordinary track; quad is two high-speed doubles (T-3126)
+    let e: Vec<f64> = free(0.0, 2000.0).iter().chain(free(3000.0, 2000.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&e, &[], 1, false), 0, "{}", a.issues());
     assert_eq!(a.hsr_edges(), hsr);
+    let e: Vec<f64> = free(0.0, 4000.0).iter().chain(free(3000.0, 4000.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&e, &[], 4, false), 0, "{}", a.issues());
+    assert!(a.hsr_edges().len() >= hsr.len() + 2 && a.hsr_edges().iter().all(|&e| a.w.net.edge_tracks[e as usize] == 2));
     // saved with flag 64 and loaded as it was; a save without it loads with none
     let bytes = a.save();
     let mut b = api();
     assert!(b.load(&bytes));
-    assert_eq!(b.hsr_edges().len(), hsr.len());
+    assert_eq!(b.hsr_edges().len(), a.hsr_edges().len());
     assert_eq!(b.save(), bytes);
     assert!((b.blueprint_cost() - a.blueprint_cost()).abs() < 1e-6);
     let mut c = api();

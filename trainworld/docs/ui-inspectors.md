@@ -291,7 +291,7 @@ purpose filter the purpose drawn is ringed in the bar.
   copied from; a third, on a running line, opens the **timetable chart** (below, hover "Show timetable chart" /
   "Hide timetable chart", pressed while open); each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
-  chooses what the player sets [T-625]: with Headway the headway column holds a stepper (steps to
+  chooses what the player sets [T-625]: with Trains a click on the count types it (Enter or leaving applies, Escape cancels, a loop's rounded up to even) [T-3152]. A count is raised to at most the whole trains the line's track lets run at that level (the round trip over its shortest headway, `limits`; a loop's even, one at least) and 1000: a plus or a typed number at or past that is refused with the shake and the refusal knock, a typed number above it sets the limit and shakes, and the plus's hover says what limits the line. Lowering is free. A count already past the limit (an old save, or track edited since) stays as it is, red with the held-out alert, until it is lowered [T-3152]; with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 240
   minutes; from 60 minutes up a click moves to the multiple of 15 above or below; minus from none gives 5 min, plus gives 15, minus at 1 min gives none [T-1872, T-2519,
   `nextHeadway`]; Shift-click steps to the multiple of 5 minutes (7 goes to 5 or 10, 5 to 10 or the
@@ -762,11 +762,14 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   rules: [ui-map.md](ui-map.md) "Station complexes".
 - **Complex view** [T-1812: only these sections; no subtitle, no Trip from here, no commuters and no
   inter-city trips]:
-  - **Its lines** [T-246, T-250]: one row per line name, branches and patterns summed, with chip,
-    name, riders waiting now (red when one of its platforms is full or its last train left riders
-    behind) and boardings in the past 24 hours, busiest by the forecast first so the order holds through the day.
-    The row's hover gives line, station and where its trains go; each number has its own hover. A
-    click opens that line's busiest station there alone in station view (`openAlone`,
+  - **Its stations** [T-246, T-250, T-3154, `ComplexStations` in `ui/inspector/StationInspector.tsx`]: one row per
+    station of the complex (it replaced the row per line name), busiest by the forecast first so the order
+    holds through the day: name (muted on a blueprint), riders waiting now at it (red when its platform is full or
+    a last train left riders behind), boardings there in the past 24 hours, and the station view's terminal
+    button (same icon, hover, price and click: blueprint or build at once, take away again; a tram stop or a
+    port has none, TerminalButton in `ui/inspector/StationUpgrades.tsx`); under them the chips of the lines
+    stopping there (a name once, branches and patterns summed, busiest first), each selecting its line. The
+    figures have their hovers. A click on the row opens that station alone in station view (`openAlone`,
     `singleStation` in `game/complexView.ts`): its own inspector and outline, its
     subtitle ending with "Complex of 16 stations" as a link back (complex view itself has no subtitle). Any new selection, the same
     station included, shows the complex again.

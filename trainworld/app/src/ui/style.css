@@ -590,6 +590,10 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .complex-stations { margin-top: 6px; }
 .complex-stations .val { min-width: 48px; }
 .complex-stations .val.bad { color: var(--bad); }
+/* T-3154: a station's row: name, figures and terminal button, its line chips on a second line */
+.rows.pick.complex-stations > li { flex-wrap: wrap; row-gap: 2px; padding-top: 1px; padding-bottom: 1px; }
+.complex-stations .terminal-slot { flex: none; width: 28px; display: inline-flex; justify-content: flex-end; }
+.complex-stations .station-chips { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 2px; padding-bottom: 3px; }
 .rows.pick.complex-stations > li.cols { cursor: default; background: none; min-height: 20px; }
 .moves > li { align-items: flex-start; padding: 3px 0; }
 .board-bar { position: relative; display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); }
@@ -1757,7 +1761,7 @@ button.save-add:hover { color: var(--text); }
   filter: drop-shadow(0 0 1px var(--bg)) drop-shadow(0 0 1.5px var(--bg)) drop-shadow(0 0 2px var(--bg)); }
 .edit-arrow.up { stroke: var(--good); }
 .edit-arrow.down { stroke: var(--bad); }
-.trouble-btn { grid-auto-flow: column; gap: 5px; color: var(--bad); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.trouble-btn { grid-auto-flow: column; gap: 5px; color: var(--warn); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .trouble-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .trouble-fig.bad { color: var(--bad); }
 .rows.pick.trouble-list { width: 300px; max-width: 100%; max-height: min(260px, 50vh); overflow-y: auto; margin: 0 0 -1px;

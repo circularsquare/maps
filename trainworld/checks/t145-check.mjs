@@ -7,7 +7,9 @@ const speeds=new Float32Array([160,75]);
 const original=points.slice(),ghost=strokesFromPreview(points,false,speeds,true);
 assert.equal(ghost.count,2);
 assert.deepEqual(ghost.speed,speeds,'speed values remain in the authoritative segment order');
-assert.deepEqual([...ghost.level],[0,1],'height changes remain aligned with segment starts');
+// T-3157: a segment's level packs its heights at start and end (levelCode: 1/32 levels from -4, start * 256 + end)
+assert.deepEqual([...ghost.level].map(c=>Math.floor(c/256)/32-4),[0,1],'height changes remain aligned with segment starts');
+assert.deepEqual([...ghost.level].map(c=>(c%256)/32-4),[1,2],'and with segment ends');
 assert.ok(ghost.flags.every(f=>(f&F_BLUEPRINT)!==0&&(f&F_PLACEMENT)!==0&&(f&F_BAD)===0));
 const bad=strokesFromPreview(points,true,speeds,true);
 assert.ok(bad.flags.every(f=>(f&F_BAD)!==0),'invalid colour override survives solid placement mode');

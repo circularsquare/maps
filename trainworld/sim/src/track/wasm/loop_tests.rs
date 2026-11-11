@@ -248,3 +248,19 @@ fn a_one_way_ferry_loop_serves_every_port_one_way() {
     assert_eq!(a.set_line_one_way(l, false), 0, "{}", a.issues());
     assert!(ways(&a, l).is_empty());
 }
+
+/// T-3131: a route drawn out and back by hand along one road (the passes 15 m apart, no loop-back) gets a hand stop
+/// on both passes; a stop on the lone far end stays one; taking either pass out takes both.
+#[test]
+fn stops_by_hand_on_a_route_drawn_out_and_back_serve_both_passes() {
+    let mut a = api();
+    let b = a.new_line_id();
+    let route = [0.0, 0.0, 1.0, 3000.0, 0.0, 1.0, 3000.0, 15.0, 1.0, 0.0, 15.0, 1.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 1000.0, 5.0, true), 0, "{}", a.issues());
+    let at = places(&a, b);
+    assert_eq!(at.iter().filter(|p| p.0 == 1000).count(), 2, "{at:?}");
+    assert_eq!(a.set_bus_stop(b, 1000.0, 5.0, false), 0, "{}", a.issues());
+    assert!(places(&a, b).iter().all(|p| p.0 != 1000), "both passes go");
+}

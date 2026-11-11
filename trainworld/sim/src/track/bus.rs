@@ -225,6 +225,34 @@ impl<'a> Poly<'a> {
             None => vec![self.project(net, x, y)],
         }
     }
+    /// T-3131: the nearest place on each separate run of stretches that comes within `NEAR_PASS_M` of the nearest
+    /// one's distance: road metres, in route order.
+    fn near_passes(&self, net: &Network, x: f64, y: f64) -> Vec<f64> {
+        let per: Vec<(f64, f64)> = (1..self.pts.len())
+            .map(|i| {
+                let (a, b) = (self.pts[i - 1], self.pts[i]);
+                let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+                let l2 = dx * dx + dy * dy;
+                let t = if l2 > 0.0 { (((x - a[0]) * dx + (y - a[1]) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+                let (px, py) = (a[0] + t * dx, a[1] + t * dy);
+                ((x - px).hypot(y - py) / net.k_at(py), self.road[i - 1] + t * (self.road[i] - self.road[i - 1]))
+            })
+            .collect();
+        let best = per.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+        let mut out = vec![];
+        let mut run: Option<(f64, f64)> = None;
+        for &(d, s) in &per {
+            if d <= best + NEAR_PASS_M {
+                if run.map_or(true, |r| d < r.0) {
+                    run = Some((d, s));
+                }
+            } else if let Some(r) = run.take() {
+                out.push(r.1);
+            }
+        }
+        out.extend(run.map(|r| r.1));
+        out
+    }
     /// `project` over the stretches ending at points `lo..hi`.
     fn project_in(&self, net: &Network, x: f64, y: f64, lo: usize, hi: usize) -> (f64, f64) {
         let mut best = (0.0, f64::INFINITY);
@@ -387,8 +415,18 @@ pub fn loop_back_at(pts: &[[f64; 2]]) -> Option<usize> {
     (k >= 1 && n - 1 - 2 * k >= 3).then_some(k)
 }
 
-/// T-3109: where a point lies along a route, once per pass over it (`Poly::project_passes`): road metres.
+/// A pass over a hand stop's place counts when it is within this many ground metres of the nearest one: a route drawn
+/// out and back by hand runs its two passes along the same road without the points meeting (T-3131).
+const NEAR_PASS_M: f64 = 25.0;
+
+/// T-3109, T-3131: where a point lies along a route, once per pass over it: road metres. A route that loops back has
+/// its three passes (`Poly::project_passes`); another route that is not closed has one per run of its stretches within
+/// `NEAR_PASS_M` of the place's nearest one, so a hand stop lands on both ways of a route drawn out and back by hand.
+/// Used by hand stops only: the automatic stops at stations still take the one nearest pass.
 pub fn on_route_at(poly: &Poly, net: &Network, x: f64, y: f64) -> Vec<f64> {
+    if loop_back_at(poly.pts).is_none() && !is_closed(poly.pts) {
+        return poly.near_passes(net, x, y);
+    }
     let passes = poly.project_passes(net, x, y);
     let best = passes.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
     passes.into_iter().filter(|p| p.1 <= best + 1.0).map(|p| p.0).collect()

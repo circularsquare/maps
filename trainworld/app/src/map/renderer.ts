@@ -292,6 +292,8 @@ export class NetworkRenderer {
   readonly oneWay = new OneWayChevrons();
   /** T-3094: along one-way single track */
   readonly oneWayTrack = new OneWayChevrons();
+  /** T-3137: along the drawing tool's ghost, where the track it lays would run one way */
+  readonly oneWayGhost = new OneWayChevrons();
   /** the complexes' car parks (T-1528) */
   readonly lots = new ParkingLots();
   /** the station buildings' floors (T-2218) */
@@ -697,6 +699,7 @@ export class NetworkRenderer {
     this.marks.init(gl);
     this.oneWay.init(gl);
     this.oneWayTrack.init(gl);
+    this.oneWayGhost.init(gl);
     this.lots.init(gl);
     this.floors.init(gl);
     this.bubbles.init(gl);
@@ -1376,6 +1379,7 @@ export class NetworkRenderer {
     this.previewRes = [];
     this.preview = s && s.count ? this.strokes(s, this.previewRes) : null;
     this.marks.setPreview(s?.marks);
+    this.oneWayGhost.setNetwork(s?.chevrons);
   }
 
   /** T-1407: the ghost becomes the stand-in for the blueprint segment it was placed as, drawn
@@ -1388,6 +1392,7 @@ export class NetworkRenderer {
     this.previewRes = [];
     this.previewSrc = null;
     this.marks.setPreview(undefined);
+    this.oneWayGhost.setNetwork(undefined);
   }
   /** T-2404: a placed segment with no ghost of it (the pointer moved on before the click's own was
    * answered), drawn as a stand-in from its edges */
@@ -1853,6 +1858,7 @@ export class NetworkRenderer {
     if (!opt.byLevel && !opt.bySpeed && !opt.byProfit && !this.trafficWidths)
       this.oneWay.draw(lc, vp, zoom, dpr, { wLine, band: bandOn, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: mute ? opt.selLine : -1 });
     this.oneWayTrack.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
+    if (this.preview) this.oneWayGhost.draw(lc, vp, zoom, dpr, { wLine: wLine * 1.8, band: 0, mPx: pxPerUnitAt(zoom) * kAtY(0) * dpr, sel: -1, rgb: rgbf(shadeColours().mapInk) });
     }
     if (cache) {
       if (redraw) {

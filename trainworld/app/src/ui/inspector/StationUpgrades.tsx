@@ -42,12 +42,6 @@ const BuildingIcon =() => <svg viewBox="0 0 16 16"><path d="M1.5 3.5h13v9h-13z" 
  * built for all of them at once as one shared facility (T-1528), and the passage. */
 export function StationUpgrades({ s, members }: { s: StationInput; members?: string[] }) {
   const prices = useClockQuery({ what: "upgradeCost", node: s.num }, [s.num, s.level, s.built], (d) => Array.from(d));
-  const toggle = async (bit: number, name: string, on: boolean) => {
-    const a = await edit({ op: "stationUpgrade", nodes: [s.num], bit, on });
-    if (!a.ok) return;
-    if (on) say(a.charge > 0 ? t("stationUpgrades.built", { name, station: s.name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name }));
-    else if (s.built) say(t("stationUpgrades.removed", { name, station: s.name }));
-  };
   if (members) return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.complexGroup")}>
       {UPGRADE_TEXT.filter((u) => u.doesAll).map((u) => <ComplexUpgrade u={u} members={members} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />)}
@@ -61,31 +55,50 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   const housed = inBuilding([s.id]);
   return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
-      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))).map((u) => {
-        const on = hasUpgrade(s.upgrades, u.bit);
-        const price = prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0;
-        const state = !on ? "" : s.built ? " on" : " planned";
-        const act = on
-          ? t(s.built ? "stationUpgrades.actBuilt" : "stationUpgrades.actPlanned")
-          : t(s.built ? "stationUpgrades.actBuild" : "stationUpgrades.actAdd");
-        const Ic = ICONS[u.bit];
-        if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
-          <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does(s.tram)}\n${housedText()}`}>
-            <Ic />
-          </button>
-        );
-        return (
-          <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-            data-tip={`${u.name}\n${u.does(s.tram)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
-            onClick={() => void toggle(u.bit, u.name, !on)}>
-            <Ic />
-          </button>
-        );
-      })}
+      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))).map((u) => (
+        <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
+      ))}
       <PassageButton s={s} />
       {!s.tram && <BuildingButton s={s} />}
     </div>
   );
+}
+
+/** One station's own upgrade as a toggle: build or add it, or take it away. */
+function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: UpgradeText; price: number; housed?: boolean }) {
+  const on = hasUpgrade(s.upgrades, u.bit);
+  const state = !on ? "" : s.built ? " on" : " planned";
+  const act = on
+    ? t(s.built ? "stationUpgrades.actBuilt" : "stationUpgrades.actPlanned")
+    : t(s.built ? "stationUpgrades.actBuild" : "stationUpgrades.actAdd");
+  const Ic = ICONS[u.bit];
+  const toggle = async () => {
+    const a = await edit({ op: "stationUpgrade", nodes: [s.num], bit: u.bit, on: !on });
+    if (!a.ok) return;
+    if (!on) say(a.charge > 0 ? t("stationUpgrades.built", { name: u.name, station: s.name, price: money(a.charge * 1e6) }) : t("stationUpgrades.added", { name: u.name }));
+    else if (s.built) say(t("stationUpgrades.removed", { name: u.name, station: s.name }));
+  };
+  if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
+    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does(s.tram)}\n${housedText()}`}>
+      <Ic />
+    </button>
+  );
+  return (
+    <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
+      data-tip={`${u.name}\n${u.does(s.tram)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
+      onClick={() => void toggle()}>
+      <Ic />
+    </button>
+  );
+}
+
+/** T-3154: a station's terminal button in a complex's list, the one the station view has (a tram stop
+ * or a port has none). */
+export function TerminalButton({ s }: { s: StationInput }) {
+  const u = UPGRADE_TEXT.find((x) => x.bit === UPGRADE.terminal)!;
+  const prices = useClockQuery({ what: "upgradeCost", node: s.num }, [s.num, s.level, s.built], (d) => Array.from(d));
+  if (s.tram || s.port) return null;
+  return <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />;
 }
 
 /** T-2218: the station building tool, started on the complex's building, or on the smallest rectangle

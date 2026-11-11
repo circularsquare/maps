@@ -212,9 +212,13 @@ Full design, numbers and sources: `notes/T-008.md`.
   right; saves hold it in edge flag bits 13-14 and 15-16, older saves read 0, which joins neither and
   behaves as before joins). A join counts only at a node of three or more ends with double track on the
   end's other side (`Network::join_away`); one left at a node that stops qualifying is kept and ignored.
-  The drawing tool sets it: `set_route_join` names a point on the track to join at each end (the
-  pointer, from C3 on), else the route takes the track beside it, the one it meets without crossing the
-  other (on its side of the double track it leaves, or of the other single track there). A single-track
+  The drawing tool sets it: `set_route_join` names a point on the track to join at each end (the track
+  nearer the pointer while double track is drawn as two, ui-building.md "Drawing track"), else the route
+  takes the track beside it, the one it meets without crossing the
+  other (on its side of the double track it leaves, or of the other single track there). The map draws a
+  joined end on its track (`network.ts` `legShifts`, from `join_edges`), easing back to the piece's centre
+  line over the turnout and crossing the near track for a far-track join; a one-way end with no join
+  (flyovers laid before joins) keeps the T-3117 guess, away from the nearest track leaving its way. A single-track
   route that makes a junction of a plain joint between double and single track also gives that single
   end the track beside it. Splits keep each outer end's join on its half, joined pieces keep their
   outer ends', and a piece that stops being single loses its joins.
@@ -230,9 +234,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   end, a junction end with no join). A station anywhere on the run also says both. The run runs one way
   where its join votes agree (at least one) and nothing says both; otherwise both ways, so a branch to
   a terminus runs both ways and a hand-laid flyover's legs, joined the way their trains come, each one
-  way. The track inspector's "Run trains one way" switch sets `oneway` 1, "Reverse direction" turns it
+  way. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
   round (`TrackApi::set_edge_oneway`, free, one undo step, 0 to 3; `edge_oneway` gives the set value,
-  `edge_way` and `oneway_edges` the way, `join_edges` the joins that count). Route searches
+  `edge_infer` the run's own way, `edge_way` and `oneway_edges` the way, `join_edges` the joins that count);
+  it also moves the piece's joins that count to the double track that carries a set way 1 or 2
+  (`join_applies`, `join_for`), so the map agrees with the way. The run's far end is not touched: a way that
+  contradicts it there works badly, as before. Route searches
   (`find_path_turn`, `loop_back`) and `check_line` skip an entry against the way (`Network::dir_ok`).
   An edit that changes a run's way moves each line it left running against it through its same stops
   (`route_hops`), in the same edit (`TrackWorld::way_reroutes`); one with no such way is left broken,
@@ -278,8 +285,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   them is refused like any stops no track joins in order (`LinePath`: "No track joins these
   stations in this order."), unless a longer way round exists, which it then takes. Crossovers in
   saves stay and work.
-- **High-speed track** (T-817, design notes/T-817.md): the third setting, always double track
-  (4 m apart; there is no high-speed quad, so four tracks are HSR and double drawn side by side).
+- **High-speed track** (T-817, design notes/T-817.md): the third setting, double or quad, never single (T-3126; 4 m apart, quad is two high-speed doubles 8 m apart, priced twice the double).
   An edge flag (`EdgeData::hsr`, `TrackApi::set_route_hsr`), so a station placed on open ground
   with it set lays high-speed track too. It costs `HSR_COST` (1.5x) double track's price at the
   same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
@@ -1066,6 +1072,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `Capacity::line_limits`) or within the 0.5% of it, the line takes no more trains than fit, at least
   one, so it runs just over the headway set (4:07 for 4:00, say) and no train is held out. A headway
   well under the limit is not clamped: the trains past it wait at the ends and the panel warns.
+  A hand-set count is held to the same limit by the panel: it refuses a rise at or past the whole
+  trains the limit allows and clamps a typed number to it (ui-inspectors.md; T-3152), so a count the
+  panel shows is what runs; one already past the limit is kept until it is lowered.
   Every edit that changes the line, its track or shared track settles the counts
   again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
   to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,
@@ -1847,7 +1856,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   came: it is a loop as above (a circle, one way by default), its way out run twice. A place on the way out is on
   both passes (`Poly::project_passes`): a station within reach of the way out is a stop on the way out and on the
   way back, and a stop placed by hand there (`on_route_at`) is a stop on both passes and goes from both when taken
-  out; one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
+  out; so is a stop placed by hand on a route drawn out and back along one road without the loop-back gesture, on each run of stretches within 25 m of the nearest one (`Poly::near_passes`, T-3131; stations still take the one nearest pass); one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops

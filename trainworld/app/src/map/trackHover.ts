@@ -20,7 +20,7 @@ import { restHolds } from "./hoverRest";
 import { markAt, markTip } from "./gradeMarks";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
-import type { NetworkBuffers } from "./network";
+import { levelAtStart, type NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip, upgradeTip, type TipLine } from "./networkTips";
 import { busLineTip, busStopTip } from "./busLayer";
 import type { Overlay } from "./overlay";
@@ -190,7 +190,7 @@ export function trackTip(ov: Overlay, px: number, py: number, zoom = 12, out?: {
     const stop = buses.stopAt(ov, px, py);
     if (stop) {
       if (out) out.hot = { line: stop.line };
-      return busStopTip(w, stop.line, stop.end);
+      return busStopTip(w, stop.line, stop.end, stop.id, ov);
     }
     if (hit) {
       const num = Number(hit.line);
@@ -297,7 +297,8 @@ function trackFacts(ov: Overlay, edge: number, px: number, py: number, slop: num
   const T = ov.renderer.net!.track;
   const [i] = topSeg(ov, T.seg, T.count, px, py, slop, undefined, 0, (j) => T.edge[j] === edge);
   if (i < 0) return [];
-  const rows: TipLine[] = [T.speed?.[i] !== undefined ? factRow(elevationFact(T.level[i]), speedFact(T.speed[i])) : factRow(elevationFact(T.level[i]))];
+  const lv = levelAtStart(T.level[i]);
+  const rows: TipLine[] = [T.speed?.[i] !== undefined ? factRow(elevationFact(lv), speedFact(T.speed[i])) : factRow(elevationFact(lv))];
   // T-1271: the Speed view draws the trains' speed where they run, the limit elsewhere; say which
   if (display.peek().trackColour === "speed") {
     const v = T.trainSpeed?.[i] ?? -1;

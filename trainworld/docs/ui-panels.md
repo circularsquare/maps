@@ -39,6 +39,8 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 - **Panels show what can change** (Anita) [T-253]: labels, numbers and states. No explanatory
   notes or how-it-works sentences; a fact worth keeping goes in the hover of the label it explains.
   Icons with hovers over word labels where the icon is clear.
+- **Live feel** (Anita, 2026-10-13): a figure that would change often if every train and passenger
+  were simulated (money, riders, waiting counts) moves smoothly, not once an hour.
 - Player-facing text follows the copy rules in Anita's global CLAUDE.md (no dash-joined phrases,
   sentence case, no softeners, no hype).
 
@@ -333,8 +335,8 @@ past 24 hours' riders and the panels' Today counts always follow the clock.
 
 [T-1433, `ui/TroubleList.tsx`; shown as the "Issues list", hovers "Show issues list" and "Hide issues list"] What is wrong on the network, in one list at the map's lower right,
 10 px in from the bottom and the right, with the map's attribution button just left of it on the same baseline
-(the attribution opens leftward, kept clear of the button's measured width) [T-2932]. Shut, it is a square button with a red
-alert mark (20 px) and the count in red, 15 px bold; open, the list stands above it (300 px wide, scrolling past 260 px or half
+(the attribution opens leftward, kept clear of the button's measured width) [T-2932]. Shut, it is a square button with an orange
+alert mark (20 px) and the count in orange (`--warn`, T-3151: most items are not large problems), 15 px bold; open, the list stands above it (300 px wide, scrolling past 260 px or half
 the window), and the button shows as on. Open or shut is remembered per browser
 (`anitabuilder-trouble-open`); it never opens by itself and makes no sound. With nothing on the list
 the button is gone.

@@ -318,7 +318,11 @@ void main() {
   // that do not run (faded) stay see-through.
   bool bp = blueprint && !placement;
   v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
-  vec3 lc = u_level_colours[clamp(3 - int(round(a_level)), 0, 6)];
+  // the height at this end (levelCode in network.ts), its colour blended between the whole levels either side
+  float lq0 = floor(a_level / 256.0);
+  float lh = clamp(3.0 - ((along < 0.5 ? lq0 : a_level - lq0 * 256.0) / 32.0 - 4.0), 0.0, 6.0);
+  int lo = int(floor(lh));
+  vec3 lc = mix(u_level_colours[lo], u_level_colours[min(lo + 1, 6)], lh - float(lo));
   bool bpMid = false;
   if (ghost && u_ghost_layer < 2) v_color = u_ghost_layer == 0 ? u_ghost_rgb : u_bp_rail;
   // T-1152: a weaker edge towards the casing's colour, not see-through, which would bead at the joints
