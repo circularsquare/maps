@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} boardings in past 24h",
   "stationInspector.boardingsToday": "Boardings today",
   "stationInspector.boardingsUnit": "boardings",
-  "stationInspector.complexOf": "Complex of {count} stations",
   "stationInspector.constructPort": "Construct port",
   "stationInspector.constructStation": "Construct station",
   "stationInspector.constructed": "{name} constructed for {price}.",

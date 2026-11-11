@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "Son 24 saatte {count} biniş",
   "stationInspector.boardingsToday": "Bugünkü biniş",
   "stationInspector.boardingsUnit": "biniş",
-  "stationInspector.complexOf": "{count} istasyonlu kompleks",
   "stationInspector.constructPort": "İskele inşa et",
   "stationInspector.constructStation": "İstasyon inşa et",
   "stationInspector.constructed": "{name} inşa edildi, bedeli {price}.",

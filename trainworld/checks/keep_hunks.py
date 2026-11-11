@@ -1,7 +1,7 @@
 """Stage only some hunks of one file's working-tree diff.
 
 usage: python keep_hunks.py <repo> <path> <marker> [<marker> ...]
-Keeps a hunk if any of its added lines contains a marker; applies the result to the index
+Keeps a hunk if any of its added or removed lines contains a marker; applies the result to the index
 (git apply --cached --recount). Prints each hunk's first added line and whether it was kept.
 """
 import subprocess
@@ -22,7 +22,8 @@ for line in lines:
 kept = []
 for h in hunks:
     added = [l for l in h[1:] if l.startswith("+")]
-    keep = any(m in l for l in added for m in markers)
+    changed = [l for l in h[1:] if l[:1] in "+-"]  # a deletion-only hunk is kept by a marker in its removed lines
+    keep = any(m in l for l in changed for m in markers)
     print(("KEEP " if keep else "skip ") + (added[0][:110].rstrip() if added else h[0].rstrip()))
     if keep:
         kept.append(h)

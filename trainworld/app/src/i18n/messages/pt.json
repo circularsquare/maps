@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} embarques nas últimas 24h",
   "stationInspector.boardingsToday": "Embarques hoje",
   "stationInspector.boardingsUnit": "embarques",
-  "stationInspector.complexOf": "Complexo de {count} estações",
   "stationInspector.constructPort": "Iniciar obra do porto",
   "stationInspector.constructStation": "Iniciar obra da estação",
   "stationInspector.constructed": "Obra de {name} iniciada por {price}.",

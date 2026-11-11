@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "過去24小時上車人次{count}",
   "stationInspector.boardingsToday": "今天上車人次",
   "stationInspector.boardingsUnit": "上車人次",
-  "stationInspector.complexOf": "轉乘站（{count}座車站）",
   "stationInspector.constructPort": "碼頭動工",
   "stationInspector.constructStation": "車站動工",
   "stationInspector.constructed": "{name}已完工，花費{price}。",

@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "지난 24시간 승차 {count}명",
   "stationInspector.boardingsToday": "오늘 승차",
   "stationInspector.boardingsUnit": "승차",
-  "stationInspector.complexOf": "환승역(역 {count}개)",
   "stationInspector.constructPort": "항구 착공",
   "stationInspector.constructStation": "역 착공",
   "stationInspector.constructed": "{name} 건설을 마쳤어요. 비용: {price}.",

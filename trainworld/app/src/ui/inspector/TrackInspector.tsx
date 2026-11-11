@@ -71,7 +71,7 @@ export function TrackInspector({ edge }: { edge: number }) {
           </span>
           {e.oneWay && <button class="btn text" onClick={() => void setOneWay(e.id, e.oneWay === 1 ? 2 : 1, true)}>{t("trackInspector.reverse")}</button>}
           {!!e.setWay && (e.setWay === 3 ? 0 : e.setWay) !== (e.autoWay ?? 0) && (
-            <button class="btn text" data-tip={t("trackInspector.autoWayTip")} onClick={() => void setOneWay(e.id, 0)}>{t("trackInspector.autoWay")}</button>
+            <button class="btn text" onClick={() => void setOneWay(e.id, 0)}>{t("trackInspector.autoWay")}</button>
           )}
         </Actions>
       )}

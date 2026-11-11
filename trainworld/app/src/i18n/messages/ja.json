@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "過去24時間の乗車人数{count}人",
   "stationInspector.boardingsToday": "今日の乗車人数",
   "stationInspector.boardingsUnit": "乗車人数",
-  "stationInspector.complexOf": "乗換駅（{count}駅）",
   "stationInspector.constructPort": "港を着工",
   "stationInspector.constructStation": "駅を着工",
   "stationInspector.constructed": "{name}を{price}で建設しました。",

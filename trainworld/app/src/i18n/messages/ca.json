@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} pujades les últimes 24 h",
   "stationInspector.boardingsToday": "Pujades avui",
   "stationInspector.boardingsUnit": "pujades",
-  "stationInspector.complexOf": "Complex amb {count} estacions",
   "stationInspector.constructPort": "Inicia les obres del moll",
   "stationInspector.constructStation": "Inicia les obres de l’estació",
   "stationInspector.constructed": "{name}: s’ha construït per {price}.",

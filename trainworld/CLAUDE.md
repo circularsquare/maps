@@ -28,7 +28,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   to take (demand); "rides" and "riders" only for what happens on the player's system.
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
-- **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages.
+- **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
+  own message (Anita, 2026-11-11); still list it in the report.
 - Watch for an object or colour as the subject ("grey fills"), dropped words ("from street zooms"), and hovers that
   say what the player can see. A gesture with no visible control gets its instruction in a tag ("Click to close the
   loop"); ordinary controls get none.

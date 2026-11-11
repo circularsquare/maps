@@ -93,8 +93,9 @@ try {
     }
     return out;
   });
-  const bus = spots.find((s) => !s.ferry), ferry = spots.find((s) => s.ferry);
-  for (const view of ['line', 'traffic', 'speed', 'profit']) {
+  // Bus 110 lies under rail track where the pick takes the track first: try every bus line's points
+  const busSpots = spots.filter((s) => !s.ferry), bus = busSpots.length ? { name: 'a bus line', ferry: false, at: busSpots.flatMap((s) => s.at) } : undefined, ferry = spots.find((s) => s.ferry);
+  for (const view of ['line', 'traffic', 'speed', 'profit', 'height']) {
     await page.evaluate((v) => { const tw = window.tw; tw.display.value = { ...tw.display.value, trackColour: v }; }, view);
     for (const spot of [bus, ferry]) {
       if (!spot) continue;
@@ -111,7 +112,7 @@ try {
         }
         return null;
       }, [spot.at]);
-      const want = view === 'speed' ? new RegExp(`Fastest ${spot.ferry ? 'boat' : 'bus'} \\d+ km/h`) : view === 'profit' ? new RegExp(`Fares cover [\\d,]+% of costs.*Running ${spot.ferry ? 'boats' : 'buses'} −\\$`) : /riders per weekday/;
+      const want = view === 'speed' ? new RegExp(`Fastest ${spot.ferry ? 'boat' : 'bus'} \\d+ km/h`) : view === 'height' ? /^(?!.*(riders per|Fastest|Fares cover))/ : view === 'profit' ? new RegExp(`Fares cover [\\d,]+% of costs.*Running ${spot.ferry ? 'boats' : 'buses'} −\\$`) : /riders per weekday/;
       check(!!text && want.test(text), `${view}: the hover on ${spot.name}`, JSON.stringify(text));
     }
     for (const shade of view === 'traffic' || view === 'profit' || view === 'speed' ? ['light', 'dark'] : ['light']) {

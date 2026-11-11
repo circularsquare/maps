@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} Einstiege in den letzten 24 h",
   "stationInspector.boardingsToday": "Einstiege heute",
   "stationInspector.boardingsUnit": "Einstiege",
-  "stationInspector.complexOf": "Komplex aus {count} Stationen",
   "stationInspector.constructPort": "Hafen bauen",
   "stationInspector.constructStation": "Station bauen",
   "stationInspector.constructed": "Gebaut: {name} für {price}.",

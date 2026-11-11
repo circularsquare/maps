@@ -58,6 +58,9 @@ interface ComplexRow {
   waitTip: string;
 }
 
+/** Bullets a station's row shows before the "+" (as the line view's stop rows do). */
+const ROW_CHIPS = 3;
+
 function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null, today: Map<string, LineToday>): ComplexRow[] {
   const rows: ComplexRow[] = [];
   for (const m of members) {
@@ -146,6 +149,7 @@ function ComplexStations({ id, members, lines, byId, now }: { id: string; member
     <ul class="rows pick complex-stations">
       <li class="cols muted small">
         <span class="grow">{tr("stationInspector.stations")}</span>
+        <span class="lines-col">{tr("stationInspector.lines")}</span>
         <span class="val">{tr("stationInspector.waiting")}</span>
         <span class="val">{tr("stationInspector.today")}</span>
         <span class="terminal-slot" />
@@ -153,10 +157,13 @@ function ComplexStations({ id, members, lines, byId, now }: { id: string; member
       {rows.map((r) => (
         <li class={r.station.id === id ? "on" : ""} onClick={() => openStation(r.station.id)}>
           <span class={"grow" + (r.built ? "" : " muted")}>{r.station.name}</span>
+          <span class="lines-col">
+            <span class="bullets">{r.lines.slice(0, ROW_CHIPS).map((l) => <Chip line={l} size="sm" />)}</span>
+            {r.lines.length > ROW_CHIPS && <span class="stop-more" data-tip={r.lines.slice(ROW_CHIPS).map((l) => l.name).join("\n")}>+</span>}
+          </span>
           <span class={"val" + (r.full ? " bad" : "")} data-tip={r.waitTip || undefined}>{r.waiting !== null ? count(r.waiting) : ""}</span>
           <span class="val" data-tip={r.today !== null ? tr("stationInspector.boardings24", { count: count(r.today) }) : undefined}>{r.today !== null ? count(r.today) : ""}</span>
           <span class="terminal-slot" onClick={(e) => e.stopPropagation()}><TerminalButton s={r.station} /></span>
-          {r.lines.length > 0 && <span class="station-chips">{r.lines.map((l) => <Chip line={l} size="sm" />)}</span>}
         </li>
       ))}
     </ul>
@@ -234,12 +241,13 @@ export function StationInspector({ id }: { id: string }) {
             <>
               {" · "}
               <button class="btn text inline" onClick={() => { selection.value = { kind: "station", station: id }; live.overlay?.invalidate(); }} data-tip={tr("stationInspector.wholeComplex")}>
-                {tr("stationInspector.complexOf", { count: members.length })}
+                {tr("stationInspector.partOfComplex", { count: members.length })}
               </button>
             </>
           )}
         </div>
       )}
+      {asComplex && <div class="sub muted">{tr("stationInspector.complexOfN", { count: members.length })}</div>}
       {linking.value === id && <p class="muted">{tr(mobileDevice() ? "stationInspector.linkingTouch" : "stationInspector.linking", { distance: roughDistance(LINK_MAX_M) })}</p>}
       {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{tr(s.port ? "stationInspector.constructPort" : "stationInspector.constructStation")}</button></Actions>}
       {/* T-2194: a port has no platform to upgrade */}

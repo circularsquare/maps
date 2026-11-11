@@ -124,6 +124,7 @@ function busRows(ov: Overlay, w: WorldView, line: number, px: number, py: number
   const l = w.save.lines.find((x) => x.num === line);
   if (!l) return [];
   const ferry = !!w.lineStats[l.id]?.bus?.ferry, vehicles = ferry ? "boats" : "buses";
+  if (view === "height") return []; // T-3167: Level says nothing of a route with no track
   const k = ov.renderer.buses.stretchAt(ov, px, py, line);
   const out: TipLine[] = [];
   const dv = demandView.peek();

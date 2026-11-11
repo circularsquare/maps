@@ -18,13 +18,14 @@
 // place of its own, its width, casing and dashes kept: Speed by its vehicles' run profiles as the rail
 // track's (`map/network.ts` `speedAt`), Profit by each stretch's fares over costs (`stretchMoney`'s
 // `buses`); the plain track grey where there is no figure, and on a ferry's landings.
+// In the Level display (T-3167) every route and landing is the ground level's green at under half the width.
 //
 // Cost: the geometry is built once per world change and anchor move and kept on the GPU; a frame with
 // no bus line returns at the first line of `draw`. Picking and the tags read the same arrays
 // (`lineAt`, `stopAt`), on pointer moves only.
 
 import { t } from "../i18n";
-import { speedColour, profitColour, rgb, rgbf } from "../game/palette";
+import { speedColour, profitColour, rgb, rgbf, LEVEL_COLOURS } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
 import { anchor, kAtY, pxPerUnitAt, toLocal, type Anchor } from "./geo";
@@ -377,6 +378,8 @@ void main() {
   o = vec4(mix(u_casing_rgb, v_color, body / max(rim, 1e-3)) * a, a);
 }`;
 
+/** T-3167: in the Level display a route is this share of its usual width, in the ground level's green */
+const LEVEL_WIDTH_SHARE = 0.45;
 const pack = (colour: string) => {
   const [r, g, b] = rgb(colour);
   return r * 65536 + g * 256 + b;
@@ -409,7 +412,7 @@ export interface BusStyle {
   trackRgb: Float32Array;
 }
 
-export type BusPaintKind = "speed" | "profit" | null;
+export type BusPaintKind = "speed" | "profit" | "level" | null;
 
 export class BusLayer {
   private gl: WebGL2RenderingContext | null = null;
@@ -696,7 +699,7 @@ export class BusLayer {
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       this.coloursFor = cKey;
     }
-    const bus = s.wLine * WIDTH_SHARE;
+    const bus = s.wLine * WIDTH_SHARE * (s.paint === "level" ? LEVEL_WIDTH_SHARE : 1);
     const u = this.su;
     gl.useProgram(this.segProg);
     setCamera(gl, u, lc);
@@ -937,6 +940,7 @@ export class BusLayer {
   private segColours(b: Built, s: BusStyle): Float32Array {
     const out = new Float32Array(b.count).fill(-1);
     if (!s.paint) return out;
+    if (s.paint === "level") return out.fill(pack(LEVEL_COLOURS[0]));
     if (s.paint === "speed") this.keyframes = { phases: s.phases, meta: s.meta };
     for (const l of this.lines) {
       const r = b.range.get(l.id), stops = r && this.stopsAlong(b, l.id);

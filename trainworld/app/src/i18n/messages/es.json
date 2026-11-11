@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} subidas en las últimas 24 h",
   "stationInspector.boardingsToday": "Subidas hoy",
   "stationInspector.boardingsUnit": "las subidas",
-  "stationInspector.complexOf": "Complejo de {count} estaciones",
   "stationInspector.constructPort": "Construye el muelle",
   "stationInspector.constructStation": "Construye la estación",
   "stationInspector.constructed": "{name}: obra terminada por {price}.",

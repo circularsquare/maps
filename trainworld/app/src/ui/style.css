@@ -588,12 +588,14 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .sub .btn.inline { display: inline; min-height: 0; height: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; }
 /* T-246, T-250: the complex's lines on top, waiting now and boardings a day */
 .complex-stations { margin-top: 6px; }
-.complex-stations .val { min-width: 48px; }
+.complex-stations .val { min-width: 40px; }
 .complex-stations .val.bad { color: var(--bad); }
-/* T-3154: a station's row: name, figures and terminal button, its line chips on a second line */
-.rows.pick.complex-stations > li { flex-wrap: wrap; row-gap: 2px; padding-top: 1px; padding-bottom: 1px; }
+/* T-3154, T-3173: a station's row: name, a Lines column of up to 3 bullets and a "+", figures, terminal button */
+.rows.pick.complex-stations > li { padding-top: 1px; padding-bottom: 1px; }
 .complex-stations .terminal-slot { flex: none; width: 28px; display: inline-flex; justify-content: flex-end; }
-.complex-stations .station-chips { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 2px; padding-bottom: 3px; }
+.complex-stations .grow { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.complex-stations .lines-col { flex: none; width: 66px; display: flex; align-items: center; gap: 2px; overflow: hidden; }
+.complex-stations .lines-col .stop-more { flex: none; width: 10px; font-size: 12px; text-align: center; color: var(--muted); }
 .rows.pick.complex-stations > li.cols { cursor: default; background: none; min-height: 20px; }
 .moves > li { align-items: flex-start; padding: 3px 0; }
 .board-bar { position: relative; display: block; height: 8px; margin: 8px 0 6px; border: 1px solid var(--rule); background: var(--bg); }

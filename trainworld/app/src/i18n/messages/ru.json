@@ -1847,7 +1847,6 @@
   "stationInspector.boardings24": "{count} посадок за 24 ч",
   "stationInspector.boardingsToday": "Посадки сегодня",
   "stationInspector.boardingsUnit": "посадок",
-  "stationInspector.complexOf": "Узел, станций: {count}",
   "stationInspector.constructPort": "Построить причал",
   "stationInspector.constructStation": "Построить станцию",
   "stationInspector.constructed": "Строительство завершено: {name} за {price}.",
