@@ -51,13 +51,14 @@ const DV_KEEP = 0.25;
 /** arc points at most this far apart, m */
 const ARC_STEP_M = 20;
 /** the longest leg, m */
-export const MAX_LEG_M = 150000;
+export const MAX_LEG_M = 400000;
 /** tiles a raster reads at most; a long leg's coarse plan reads coarser tiles to stay under it */
 const MAX_TILES = 80;
 /** a leg whose box needs a coarser cell than this is searched coarse, its ends fine */
 const FINE_CELL_M = 5;
-/** half the side of each end's fine box, m */
-const END_M = 700;
+/** half the side and cell of each end's fine box, m: a leg searched coarse tries the first, then the later
+ * ones where the coarse raster has no sailable cell near an end (a narrow inlet or harbour, T-3186) */
+const END_RUNGS: [number, number][] = [[700, MIN_CELL_M], [3000, 5], [9000, 12.5]];
 /** a port click is at least this near the shore to count, on land or on the water (T-2468), m; its berth at
  * most `BERTH_REACH_M` from its landing. The tool asks for more at wide zooms: `portReachM`. */
 export const PORT_REACH_M = 200;
@@ -75,6 +76,11 @@ export function portReachM(metresPerPx: number): number {
 const BERTH_REACH_M = 300;
 /** a berth's room, m: a little more than `HALF_M`, so the coarser raster of a long leg still finds it */
 const BERTH_ROOM_M = 6;
+/** what water a berth may be in (T-3186): a body reaching the snap raster's edge needs this area (m²) or this
+ * room (m), one wholly inside it this area */
+const OPEN_EDGE_M2 = 20000;
+const OPEN_ROOM_M = 15;
+const OPEN_INSIDE_M2 = 150000;
 /** a boat's acceleration and braking, m/s² (the sim's; here for `runSeconds`) */
 export const ACCEL = 0.15;
 
@@ -664,8 +670,8 @@ export function legBox(a: LonLat, b: LonLat, wide = false): Box {
 }
 
 /** The fine box round one end of a leg searched coarse. */
-function endBox(p: LonLat): Box {
-  return boxOf(new Frame(p[0], p[1]), -END_M, -END_M, END_M, END_M, MIN_CELL_M);
+function endBox(p: LonLat, [m, cell]: [number, number]): Box {
+  return boxOf(new Frame(p[0], p[1]), -m, -m, m, m, cell);
 }
 
 const boxOnly = (r: Raster): Box => ({ frame: r.frame, x0: r.x0, y0: r.y0, cell: r.cell, W: r.W, H: r.H, z: r.z });
@@ -696,7 +702,13 @@ export async function routeLeg(load: TileLoad, a: LonLat, b: LonLat): Promise<Le
       addRaster(stats, r, tiles.length);
       const p = routeIn(r, a, b, stats, true);
       out = p ? { ok: true, pieces: [p], m: pieceM(p), stats } : { ok: false, reason: "no-water-path", stats };
-    } else out = await twoLevel(timed, a, b, box, stats);
+    } else {
+      out = { ok: false, reason: "no-water-path", stats };
+      for (const rung of END_RUNGS) {
+        out = await twoLevel(timed, a, b, box, stats, rung);
+        if (out.ok || out.reason !== "no-water-path") break;
+      }
+    }
     stats.ms = performance.now() - t0 - fetchMs;
     if (out.ok || out.reason !== "no-water-path") return out;
     last = out;
@@ -804,9 +816,9 @@ function routeIn(r: Raster, a: LonLat, b: LonLat, st: LegStats, record: boolean)
 
 /** A leg searched coarse: the coarse raster's path from water reached from `a` near it to water reached
  * from `b` near it, and fine searches from `a` out to that path and from it in to `b`. */
-async function twoLevel(load: TileLoad, a: LonLat, b: LonLat, box0: Box, st: LegStats): Promise<LegRoute> {
+async function twoLevel(load: TileLoad, a: LonLat, b: LonLat, box0: Box, st: LegStats, rung: [number, number]): Promise<LegRoute> {
   let box: Box | null = null, tiles: [number, number, number][] = [];
-  for (const z of [WATER_ZOOM, WATER_ZOOM - 1, WATER_ZOOM - 2]) {
+  for (const z of [WATER_ZOOM, WATER_ZOOM - 1, WATER_ZOOM - 2, WATER_ZOOM - 3, WATER_ZOOM - 4]) {
     const bz = { ...box0, z };
     tiles = tilesOf(bz);
     if (tiles.length <= MAX_TILES) {
@@ -815,7 +827,7 @@ async function twoLevel(load: TileLoad, a: LonLat, b: LonLat, box0: Box, st: Leg
     }
   }
   if (!box) return { ok: false, reason: "too-long", stats: st };
-  const fa = endBox(a), fb = endBox(b);
+  const fa = endBox(a, rung), fb = endBox(b, rung);
   const ta = tilesOf(fa), tb = tilesOf(fb);
   const get = await load([...tiles, ...ta, ...tb]);
   if (!get) return { ok: false, reason: "tiles", stats: st };
@@ -853,7 +865,7 @@ async function twoLevel(load: TileLoad, a: LonLat, b: LonLat, box0: Box, st: Leg
   };
   const starts: number[] = [], g0: number[] = [], goal = new Uint8Array(W * H), goalCost = new Float32Array(W * H);
   const ax = (F.x(a[0]) - R.x0) / cell, ay = (F.y(a[1]) - R.y0) / cell, bx = (F.x(b[0]) - R.x0) / cell, by = (F.y(b[1]) - R.y0) / cell;
-  const rad = Math.ceil(END_M / cell);
+  const rad = Math.ceil(rung[0] / cell);
   let goals = 0;
   for (const [px, py, e, isStart] of [[ax, ay, ends[0], true], [bx, by, ends[1], false]] as const) {
     for (let dy = -rad; dy <= rad; dy++)
@@ -922,6 +934,37 @@ function portBox(at: LonLat, reach: number): Box {
   return boxOf(f, -R, -R, R, R, Math.max(MIN_CELL_M, (2 * R) / PORT_CELLS));
 }
 
+/** The sailable cells of water a boat can get out of (T-3186): a body of sailable cells counts when it reaches
+ * the raster's edge (the sea, a river running on) and is wide or large enough, or lies wholly inside the raster
+ * and is large. A pond, a moat or a stream in a field is not one: a berth there has no route anywhere. */
+function openWater(r: Raster): Uint8Array {
+  const { W, H } = r, N = W * H, a = r.cell * r.cell;
+  const open = new Uint8Array(N), seen = new Uint8Array(N), q = new Int32Array(N);
+  for (let s = 0; s < N; s++) {
+    if (seen[s] || !r.water[s] || r.dist[s] < HALF_M) continue;
+    let head = 0, tail = 0, edge = false, room = 0;
+    seen[s] = 1;
+    q[tail++] = s;
+    while (head < tail) {
+      const i = q[head++], c = i % W, w = (i / W) | 0;
+      if (c === 0 || w === 0 || c === W - 1 || w === H - 1) edge = true;
+      room = Math.max(room, roomOf(r, i));
+      for (let n = 0; n < 8; n++) {
+        const nc = c + NB_X[n], nr = w + NB_Y[n];
+        if (nc < 0 || nr < 0 || nc >= W || nr >= H) continue;
+        const j = nr * W + nc;
+        if (!seen[j] && r.water[j] && r.dist[j] >= HALF_M) {
+          seen[j] = 1;
+          q[tail++] = j;
+        }
+      }
+    }
+    const area = tail * a;
+    if (edge ? area >= OPEN_EDGE_M2 || room >= OPEN_ROOM_M : area >= OPEN_INSIDE_M2) for (let k = 0; k < tail; k++) open[q[k]] = 1;
+  }
+  return open;
+}
+
 /** Where a click by the water puts a port: its landing on the shore (where it is drawn and walked to) and
  * its berth, the nearest water with room for a boat, where routes start and end. */
 export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M): Promise<PortSnap> {
@@ -932,6 +975,7 @@ export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M)
   const { W, cell, frame: f } = r;
   const c0 = cellAt(r, 0, 0);
   const onWater = r.water[c0] === 1;
+  const open = openWater(r);
   // the nearest cell of the other kind (water from land, land from water) within reach
   const rad = Math.ceil(reach / cell);
   const cc = c0 % W, cr = (c0 / W) | 0;
@@ -940,7 +984,7 @@ export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M)
     for (let dx = -rad; dx <= rad; dx++) {
       if (cc + dx < 0 || cr + dy < 0 || cc + dx >= W || cr + dy >= r.H) continue;
       const i = (cr + dy) * W + cc + dx;
-      if (r.water[i] === r.water[c0]) continue;
+      if (r.water[i] === r.water[c0] || (!onWater && !open[i])) continue;
       const d = dx * dx + dy * dy;
       if (d < bd && d <= rad * rad) {
         bd = d;
@@ -954,13 +998,13 @@ export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M)
   let lx = ox, ly = oy;
   for (let s = 1; s <= n; s++) {
     const x = (ox * s) / n, y = (oy * s) / n, i = cellAt(r, x, y);
-    if (r.water[i] !== r.water[c0]) {
+    if (onWater ? !r.water[i] : open[i]) {
       lx = (ox * (s - 0.5)) / n;
       ly = (oy * (s - 0.5)) / n;
       break;
     }
   }
-  // the berth: the nearest cell with room for a boat to the landing
+  // the berth: the nearest cell with room for a boat to the landing, in water a boat can get out of
   const brad = Math.ceil(BERTH_REACH_M / cell);
   const lc = Math.floor((lx - r.x0) / cell), lr = Math.floor((ly - r.y0) / cell);
   let berth = -1;
@@ -970,7 +1014,7 @@ export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M)
       const c = lc + dx, w = lr + dy;
       if (c < 0 || w < 0 || c >= r.W || w >= r.H) continue;
       const i = w * W + c;
-      if (!r.water[i] || roomOf(r, i) < BERTH_ROOM_M) continue;
+      if (!open[i] || roomOf(r, i) < BERTH_ROOM_M) continue;
       const d = dx * dx + dy * dy;
       if (d < bd && d <= brad * brad) {
         bd = d;

@@ -1881,7 +1881,10 @@ searches water.
   water on one side only and stays land).
 - **Ports**: a click within the reach of the shore, on land or on the water (T-2468), gives a landing on the
   shore (where the line from the click to the nearest cell of the other kind changes kind) and a berth,
-  the nearest water with 6 m of room within 300 m of it, where routes start and end. The reach is the
+  the nearest water with 6 m of room within 300 m of it, where routes start and end. Only water a boat can get
+  out of counts (T-3186): a body of sailable cells reaching the snap raster's edge with 20,000 m² or 15 m of
+  room, or wholly inside it with 150,000 m². A pond, a moat or a stream in a field is not one, and a click by
+  only that is `far-from-water`. The reach is the
   tool's 40 screen pixels of ground, 200 m to 1500 m (`portReachM`, T-3127); the snap raster is about 600
   cells across, 2.5 m each at the least. No shore within the reach: refused (`far-from-water` on land, `on-water` on the water).
 - **A leg** between two berths is searched on a raster of its box (the two ends plus 35% of their distance,
@@ -1893,9 +1896,11 @@ searches water.
   the plain path (weight 0), then weights 3, 1 and 0.3, the first whose path is at most 1.3 times the plain
   one's taken, else the plain one.
 - **Long legs**: where that cell would be over 5 m, the leg is planned on the coarse raster (its tiles at
-  zoom 11 or 10 where zoom 12 would take over 80) and each end's first 700 m or so searched on a 2.5 m raster
-  of its own, the coarse plan starting and ending where those reach, at their distance by water. Legs over
-  150 km are refused (`too-long`); waters that do not meet, `no-water-path`.
+  the finest zoom from 12 down to 8 that takes 80 or fewer) and each end's first 700 m or so searched on a 2.5 m
+  raster of its own, the coarse plan starting and ending where those reach, at their distance by water. Where
+  the coarse raster has no sailable cell near an end, or no path, the ends are searched wider and coarser
+  (3 km at 5 m, then 9 km at 12.5 m) and the plan tried again (T-3186). Legs over 400 km are refused
+  (`too-long`); waters that do not meet, `no-water-path`. The tool says "No water path found" for any refusal.
 - **Shape**: the cells are simplified (Douglas-Peucker at 25 m, or a quarter of the room, never off sailable
   water), then every corner but a port's gets the widest arc that fits its two sides and stays sailable, at
   most 300 m. Where pieces of a leg meet, two corners either side take the turn so the route passes straight.
