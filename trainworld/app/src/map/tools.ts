@@ -425,6 +425,26 @@ export class Tools {
         hit = { kind: "node", node: node.id, lx, ly };
       }
     }
+    // T-3190: zoomed in with single track picked, a double's loose end is picked by either of its two tracks: the
+    // pointer over a track within a node radius of the end (along it) carries on that track, not a branch off it
+    if (!hit && doubleIds && nodes) {
+      for (const [node, { edge, fromA }] of this.doubleEnds(w).loose) {
+        const pts = n.edgePts.get(edge), nd = w.nodes.get(node);
+        if (!pts || !nd || pts.length < 6) continue;
+        const [lx, ly] = toLocal(nd.lng, nd.lat), [x, y] = this.screen(lx, ly);
+        const k = fromA ? 3 : pts.length - 6;
+        const [x1, y1] = this.screen(pts[k], pts[k + 1]);
+        const l = Math.hypot(x1 - x, y1 - y);
+        if (!(l > 0)) continue;
+        const along = ((px - x) * (x1 - x) + (py - y) * (y1 - y)) / l, across = Math.abs((px - x) * (y1 - y) - (py - y) * (x1 - x)) / l;
+        if (Math.abs(along) > TRACK_NODE_PX || across > laneReach) continue;
+        const d = along * along + across * across;
+        if (d < best || !hit) {
+          best = d;
+          hit = { kind: "node", node, lx, ly };
+        }
+      }
+    }
     if (hit) return this.withJoin(hit, fx, fy);
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
@@ -499,17 +519,21 @@ export class Tools {
     return [hit.lx - best.uy * off, hit.ly + best.ux * off];
   }
 
-  private doubleIndex: { edges: unknown; ids: Set<number>; byNode: Map<number, number[]> } | null = null;
+  private doubleIndex: { edges: unknown; ids: Set<number>; byNode: Map<number, number[]>; loose: Map<number, { edge: number; fromA: boolean }> } | null = null;
   /** the world's double track (crossovers aside), and its pieces by the nodes at their ends, kept while its edges are the same */
   private doubleEnds(w: NonNullable<ReturnType<typeof world.peek>>) {
     if (this.doubleIndex?.edges !== w.edges) {
-      const ids = new Set<number>(), byNode = new Map<number, number[]>();
+      const ids = new Set<number>(), byNode = new Map<number, number[]>(), ends = new Map<number, number>();
       for (const e of w.edges) {
+        for (const k of [e.a, e.b]) ends.set(k, (ends.get(k) ?? 0) + 1);
         if (e.tracks !== 2 || e.crossover) continue;
         ids.add(e.id);
         for (const k of [e.a, e.b]) byNode.set(k, [...(byNode.get(k) ?? []), e.id]);
       }
-      this.doubleIndex = { edges: w.edges, ids, byNode };
+      // T-3190: nodes where a double piece just ends
+      const loose = new Map<number, { edge: number; fromA: boolean }>();
+      for (const [node, es] of byNode) if (es.length === 1 && ends.get(node) === 1) loose.set(node, { edge: es[0], fromA: w.edges.find((e) => e.id === es[0])!.a === node });
+      this.doubleIndex = { edges: w.edges, ids, byNode, loose };
     }
     return this.doubleIndex;
   }

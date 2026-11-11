@@ -572,6 +572,8 @@ const sameBand = (a: Float32Array, b: Float32Array) => {
 const HALF_GAP_M = 2;
 /** How far from a junction a one-way leg's end may be drawn off its centre line, m (T-3120). */
 const LEG_REACH_M = 300;
+/** T-3191: the length over which a leg's end eases from its track back to its own centre line, m */
+const EASE_M = 80;
 
 /** T-3117, T-3120: how a one-way leg's end at a junction is drawn off its centre line (`legShifts`). */
 interface LegShift {
@@ -644,10 +646,11 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
     const shift: LegShift = { sign: [0, 0], near: [[], []], key: "" };
     [e.a, e.b].forEach((node, end) => {
       const ends = at.get(node) ?? [];
-      if (ends.length < 3 || !ends.some((x) => edges[x.i].tracks === 2)) return;
+      const join = end === 0 ? e.join & 3 : (e.join >> 2) & 3;
+      // T-3190: a join also counts at the loose end of double track, where just the two meet
+      if (ends.length < (join ? 2 : 3) || !ends.some((x) => edges[x.i].tracks === 2)) return;
       const me = ends.find((x) => x.i === i && x.fromA === (end === 0));
       if (!me) return;
-      const join = end === 0 ? e.join & 3 : (e.join >> 2) & 3;
       if (!join && !e.oneWay) return;
       const cos = Math.cos(Math.PI / 3);
       const along = ends.filter((o) => o !== me && o.dx * me.dx + o.dy * me.dy > cos);
@@ -709,7 +712,10 @@ function shiftedEnds(pts: Float32Array, shift: LegShift): { pts: Float32Array; s
     for (const o of shift.near[end]) m = Math.max(m, o.double ? h - distTo(o.pts, x, y) : h - distTo(o.pts, x, y) / 2);
     // fades out short of the reach, should the tracks still be close there
     const t = Math.max(0, Math.min(1, (reach - d) / (0.2 * reach)));
-    return Math.max(0, m) * t * t * (3 - 2 * t);
+    // T-3191: and never back to the centre line faster than this, so a leg leaving just before the double ends (or at
+    // its end) carries on from its track and eases off its line, not bends in the moment the other track is gone
+    const e = Math.max(0, Math.min(1, d / (EASE_M * kk)));
+    return Math.max(Math.max(0, m) * t * t * (3 - 2 * t), h * (1 - e * e * (3 - 2 * e)));
   };
   const out: number[] = [], seg: number[] = [];
   const put = (k: number, f: number) => {
@@ -1422,7 +1428,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     endCount.set(e.a, (endCount.get(e.a) ?? 0) + 1).set(e.b, (endCount.get(e.b) ?? 0) + 1);
     if (e.tracks === 1) singleAt.add(e.a).add(e.b);
   }
-  const taperAt = (node: number) => singleAt.has(node) && endCount.get(node) === 2;
+  // T-3190: not where single track carries on one track of the double (a join that counts)
+  const joinedAt = new Set<number>();
+  for (const e of s.edges) if (e.tracks === 1) { if (e.join & 3) joinedAt.add(e.a); if ((e.join >> 2) & 3) joinedAt.add(e.b); }
+  const taperAt = (node: number) => singleAt.has(node) && endCount.get(node) === 2 && !joinedAt.has(node);
   const shifts = legShifts(s.edges, r.edgeParts!);
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();

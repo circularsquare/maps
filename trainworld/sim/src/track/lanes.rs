@@ -204,12 +204,13 @@ impl Network {
         (join != 0 && self.join_applies(c)).then_some((join == 2) == self.right_hand)
     }
 
-    /// Whether a join at edge end `c` would count: a junction with double track on the end's other side.
+    /// Whether a join at edge end `c` would count: a node with double track on the end's other side, a
+    /// junction or (T-3190) the loose end of the double track itself.
     pub fn join_applies(&self, c: u32) -> bool {
         let p = &self.node_ports[self.end_node(c >> 1, c & 1) as usize];
         let Some(i) = p.find(c >> 1, c & 1) else { return false };
         let double = |k: usize| self.edge_tracks[(p.end[k] >> 1) as usize] == 2 && !self.edge_crossover[(p.end[k] >> 1) as usize];
-        p.n >= 3 && (0..p.n as usize).any(|k| p.side[k] != p.side[i] && double(k))
+        p.n >= 2 && (0..p.n as usize).any(|k| p.side[k] != p.side[i] && double(k))
     }
 
     fn in_run(&self, e: u32) -> bool {
@@ -224,8 +225,8 @@ impl Network {
         }
         match self.node_ports[n].n {
             1 => Vote::None,
-            // double track or a crossover on: the run meets track that runs both ways
-            2 => Vote::Both,
+            // double track or a crossover on: the run meets track that runs both ways, unless it
+            // continues one track of the double (T-3190)
             _ => self.join_away(c).map_or(Vote::Both, Vote::Joined),
         }
     }

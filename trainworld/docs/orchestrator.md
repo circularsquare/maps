@@ -69,7 +69,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 
 - `call snapbuild.cmd` inside another .cmd leaves the shell in `.tw-snap\trainworld\app`: `cd /d` back.
 - Landing a tree fails while the main tree has others' edits in the same files: `git diff -- <files>` to a patch,
-  `git checkout -- <files>`, land, `git apply --3way` the patch, `git reset -- <files>`.
+  `git checkout -- <files>`, land, `git apply --3way` the patch, `git reset -- <files>`. Write the patch with
+  `cmd /c "git diff -- <files> > x.patch"`: PowerShell's Out-File adds a BOM and CRLFs and the patch won't apply. An
+  agent still editing those files may write them meanwhile: tell it to pause first.
 - A translation batch can drop the space after a colon in a JSON file: grep for `":"` before committing.
 - Copying files back after a source swap keeps old mtimes, so cargo and wasm-pack skip the rebuild: touch them.
 - A world run's gates serve the main tree's app/ live: hold app/ writes during gates.

@@ -210,7 +210,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   piece's end meets double track at a junction, it **joins one of the double's two tracks**
   (`EdgeData.join` per end: 0 none, 1 the left track looking out from the node along the piece, 2 the
   right; saves hold it in edge flag bits 13-14 and 15-16, older saves read 0, which joins neither and
-  behaves as before joins). A join counts only at a node of three or more ends with double track on the
+  behaves as before joins). A join counts only at a node of three or more ends, or the loose end of the double track itself (two ends, T-3190), with double track on the
   end's other side (`Network::join_away`); one left at a node that stops qualifying is kept and ignored.
   The drawing tool sets it: `set_route_join` names a point on the track to join at each end (the track
   nearer the pointer while double track is drawn as two, ui-building.md "Drawing track"), else the route

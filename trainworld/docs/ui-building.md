@@ -231,7 +231,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
 - **Which track single track joins** [T-3137]: with Single track picked and the zoom where double track
   draws as two tracks (`laneState(zoom).t > 0`), a point on or at the end of double track picks the
   track nearer the pointer, for branching off and merging onto alike. Double track is picked across the
-  pair's whole drawn width (centre offset plus half a track's width, never under the usual 8 px) [T-3162]. The dot sits on that track (as far
+  pair's whole drawn width (centre offset plus half a track's width, never under the usual 8 px) [T-3162]. A double's loose end is picked the same way: zoomed in, the pointer over one track within a node radius of the end carries on that track (the node, with that track's join), zoomed out it joins neither [T-3190]. A leg's drawn end eases back to its own centre line over at least 80 m (`EASE_M`) [T-3191]. The dot sits on that track (as far
   off the centre line as the tracks are drawn), and the route's start and end send that point as
   `RouteAsk.join` (`TrackApi::set_route_join`) with each preview and the click. Zoomed out the dot stays
   on the centre line and the track model takes the track beside the route (track-and-service.md

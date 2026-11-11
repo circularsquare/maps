@@ -445,3 +445,32 @@ fn t3164_one_way_pieces_no_train_can_use() {
         }
     }
 }
+
+/// T-3190: single track carried on from one track of double track's loose end joins that track, runs the
+/// way it sends trains, and the other side's join the other way; with no point named it joins neither.
+#[test]
+fn t3190_single_track_from_a_loose_end_joins_one_track() {
+    for right_hand in [true, false] {
+        let mut ways = vec![];
+        for side in [2.0, -2.0, f64::NAN] {
+            let mut a = api(right_hand);
+            assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0);
+            let end = node_near(&a, 6000.0, 0.0);
+            if side.is_finite() {
+                a.set_route_join(&[6000.0, side, f64::NAN, f64::NAN]);
+            }
+            assert_eq!(a.add_route(&ends(at_node(&a, end), free(7500.0, 1500.0)), &[], 1, false), 0, "{}", a.issues());
+            let s = singles(&a)[0];
+            let k = (0..2u32).find(|&k| a.w.net.end_node(s, k) == end).unwrap();
+            if side.is_finite() {
+                assert!(a.w.net.join_applies(s << 1 | k), "the join counts at the loose end");
+                assert!(a.w.net.edge_way(s) != 0, "the way follows the join");
+                ways.push(a.w.net.edge_way(s));
+            } else {
+                assert_eq!(a.w.net.edge_join[s as usize], [0; 2]);
+                assert_eq!(a.w.net.edge_way(s), 0);
+            }
+        }
+        assert_ne!(ways[0], ways[1], "the two tracks send trains opposite ways");
+    }
+}

@@ -89,7 +89,83 @@ try {
   const dot = await page.evaluate(() => { const r = document.querySelector('.snap-ring.branch'); if (!r) return null; const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, shown: getComputedStyle(r).display !== 'none' }; });
   check(dot && dot.shown && Math.abs(dot.w - 15) < 0.6, 'the branch dot is 15 px wide (10 px before)', JSON.stringify(dot));
   await shot('t3163-branch-dot');
-  const bad = errors.filter((e) => !/favicon|404/.test(String(e)));
+  // ---- T-3190: the double main's loose end (x 3000): zoomed in, a pointer over one track near the end carries on that
+  // track (the node, with a join on that side), zoomed out it joins neither; built, the join counts and the way follows
+  const endAt = (z) => page.evaluate(([z]) => { window.tw.map.jumpTo({ center: window.__j.ll(window.__j.P(3000, 0)), zoom: z }); return null; }, [z]).then(() => settle());
+  const endHover = async (off) => {
+    const [ex, ey] = await page.evaluate(() => { const q = window.tw.map.project(window.__j.ll(window.__j.P(3000, 0))); return [q.x, q.y]; }).then(([x, y]) => [box.x + x, box.y + y]);
+    // along: 5 px short of the end node, on the main
+    await page.mouse.move(ex - 60, ey + off, { steps: 2 });
+    await page.mouse.move(ex - 5, ey + off, { steps: 2 });
+    await wait(300);
+    return page.evaluate(() => {
+      const h = window.tw.tools.hover;
+      if (!h) return null;
+      const c = window.tw.map.project(window.tw.toLngLat(h.lx, h.ly));
+      const p = h.join ? window.tw.map.project(window.tw.toLngLat(h.join[0], h.join[1])) : null;
+      return { kind: h.kind, side: p ? (p.y < c.y ? 'up' : 'down') : null };
+    }).then((h) => ({ h, ex, ey }));
+  };
+  await endAt(15);
+  {
+    const { h } = await endHover(0);
+    check(h?.kind === 'node' && h.side === null, 'T-3190 zoomed out: the loose end is the node, joining neither track', JSON.stringify(h));
+  }
+  for (const zoom of [19, 20.5]) {
+    await endAt(zoom);
+    const L = await lanes();
+    const centre = (L.gap * L.t) / 2, half = (L.share * L.gap) / 2;
+    for (const [side, sg] of [['up', -1], ['down', 1]]) {
+      for (const [what, off] of [['middle', centre], ['outer part', centre + half - 2]]) {
+        const { h } = await endHover(sg * off);
+        check(h?.kind === 'node' && h.side === side, `T-3190 zoom ${zoom}: the ${what} of the ${side === 'up' ? 'upper' : 'lower'} track at the loose end carries on that track`, JSON.stringify(h));
+      }
+    }
+  }
+  // build a branch from each track of the end, one after the other, and read what the sim made of it
+  const singles = () => page.evaluate(() => window.tw.world.value.edges.filter((e) => e.tracks === 1).map((e) => e.id));
+  const ways = [];
+  for (const [side, sg, far] of [['up', -1, [3250, -150]], ['down', 1, [3250, 150]]]) {
+    const before = await singles();
+    await endAt(20.5);
+    const L = await lanes();
+    const { h, ex, ey } = await endHover(sg * (L.gap * L.t) / 2);
+    check(h?.kind === 'node' && h.side === side, `T-3190: ${side} track picked to carry on`, JSON.stringify(h));
+    await page.mouse.click(ex - 5, ey + sg * (L.gap * L.t) / 2);
+    await wait(400);
+    await page.evaluate(([f]) => window.tw.map.jumpTo({ center: window.__j.ll(window.__j.P(3300, 0)), zoom: 16 }), [far]);
+    await settle();
+    const [fx, fy] = await page.evaluate(([f]) => { const q = window.tw.map.project(window.__j.ll(window.__j.P(f[0], f[1]))); return [q.x, q.y]; }, [far]).then(([x, y]) => [box.x + x, box.y + y]);
+    await page.mouse.move(fx - 20, fy, { steps: 2 });
+    await page.mouse.move(fx, fy, { steps: 2 });
+    await wait(1200);
+    console.log('      ghost', JSON.stringify(await page.evaluate(() => { const a = window.tw.tools.lastPreview; return a ? { ok: a.ok, joins: a.joins ? [...a.joins] : null, issues: a.issues } : null; })));
+    await shot(`t3190-far-${side}`);
+    await page.mouse.click(fx, fy);
+    await wait(300);
+    await page.keyboard.press("Enter");
+    await wait(1500);
+    await shot(`t3190-after-${side}`);
+    console.log('      edges', JSON.stringify(await page.evaluate(() => window.tw.world.value.edges.map((e) => [e.id, e.tracks, e.join, e.oneWay, e.a, e.b]))));
+    const b = await page.evaluate(async ([before]) => {
+      const t0 = Date.now();
+      for (;;) {
+        const w = window.tw.world.value, e = w.edges.find((x) => x.tracks === 1 && !before.includes(x.id));
+        if (e) return { id: e.id, join: e.join, way: e.oneWay ?? 0 };
+        if (Date.now() - t0 > 15000) return null;
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    }, [before]);
+    check(b && b.join !== 0 && b.way !== 0, `T-3190: built from the ${side} track: its join counts and it runs one way`, JSON.stringify(b));
+    ways.push(b?.way);
+    await endAt(20.5);
+    await shot(`t3190-built-${side}`);
+    // delete it again so the next one starts from a loose end
+    if (b) await page.evaluate(async (id) => { await window.tw.client.edit({ op: 'removeEdge', edge: id }); }, b?.id).catch(() => {});
+    await wait(600);
+  }
+  check(ways[0] && ways[1] && ways[0] !== ways[1], 'T-3190: the two tracks give opposite ways', JSON.stringify(ways));
+    const bad = errors.filter((e) => !/favicon|404/.test(String(e)));
   check(bad.length === 0, 'no console errors', bad.slice(0, 3).join(' | '));
 } catch (e) {
   await shot('t3162-died').catch(() => {});
