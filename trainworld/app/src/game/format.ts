@@ -232,6 +232,9 @@ export function scaleBars(): [number, string][] {
 /** T-2885: a distance as the number typed for it in the shown unit, and back, m. */
 export const metresToShown = (m: number): number => (us() ? m / M_PER_MILE : m / 1000);
 export const metresFromShown = (v: number): number => (us() ? v * M_PER_MILE : v * 1000);
+/** T-3121: a speed as the number typed for it in the shown unit, and back, km/h. */
+export const kmhToShown = (kmh: number): number => (us() ? kmh / M_PER_MILE * 1000 : kmh);
+export const kmhFromShown = (v: number): number => (us() ? v * M_PER_MILE / 1000 : v);
 
 export function distUnit(): string {
   return t("format.distUnit", { us: us() });

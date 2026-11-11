@@ -79,6 +79,8 @@ impl TrackApi {
     fn route_op_as(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
         let mut pis = pis_from(pis);
         let scaled = self.w.net.frame().scaled();
+        // T-3121: a target speed under the kind's smallest curve's lays out that curve
+        let cap = self.route_cap.max(self.route_kind_of(tracks).spec().min_radius);
         let (a, b) = (end_from(&ends[0..5]), end_from(&ends[5..10]));
         let lift = [matches!(a, End::Free { .. }), matches!(b, End::Free { .. })];
         let mut new_nodes = vec![];
@@ -146,7 +148,7 @@ impl TrackApi {
         // T-2997: a street tram route from or to track turns onto the street at the kind's
         // smallest radius, its street corners within reach of that curve dropped
         let tram_leads = if self.route_kind.spec().family != 0 && !pis.is_empty() && !self.beside_on && !through {
-            let (p, la, lb) = tram_ends(&ra, &rb, pis.clone(), scaled, self.route_kind.spec().min_radius, self.route_cap);
+            let (p, la, lb) = tram_ends(&ra, &rb, pis.clone(), scaled, self.route_kind.spec().min_radius, cap);
             pis = p;
             Some((la, lb))
         } else {
@@ -157,7 +159,7 @@ impl TrackApi {
         let prev_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
         let tangent = through && rb.dirs.is_empty() && (!quad || beside_a.is_some()) && !self.beside_on;
         if let (true, Some(dir)) = (tangent, nearer_dir(&ra, next_a)) {
-            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, self.route_cap);
+            let (pi, circle) = tangent_arc(ra.x, ra.y, ra.level, rb.level, dir, next_a, scaled, cap);
             if let Some(c) = circle {
                 self.route_arc = c.to_vec();
             }
@@ -168,19 +170,20 @@ impl TrackApi {
                     return Err(Issue::Geom { edge: u32::MAX, issue: GeomIssue::Reversal(1) });
                 }
             }
-        } else if let Some(p) = tram_leads.map_or_else(|| lead_in(&ra, next_a, scaled, self.route_cap).filter(|_| !self.beside_on), |l| l.0) {
+        } else if let Some(p) = tram_leads.map_or_else(|| lead_in(&ra, next_a, scaled, cap).filter(|_| !self.beside_on), |l| l.0) {
             verts.push(p);
         }
         let first_click = verts.len();
         verts.extend_from_slice(&pis);
-        let lead_b = tram_leads.map_or_else(|| lead_in(&rb, prev_b, scaled, self.route_cap).filter(|_| !self.beside_on), |l| l.1);
+        let lead_b = tram_leads.map_or_else(|| lead_in(&rb, prev_b, scaled, cap).filter(|_| !self.beside_on), |l| l.1);
         if let Some(p) = lead_b {
             verts.push(p);
         }
         verts.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
-        // T-817: the corners made here, not the clicked ones (a real line's, fitted at R_CAP)
-        let made: Vec<usize> = (1..first_click).chain(lead_b.map(|_| verts.len() - 2)).collect();
-        design_radii(&mut verts, &made, self.route_cap, scaled);
+        // T-817: the corners made here, not the clicked ones (a real line's, fitted at R_CAP); T-3121:
+        // under 160 the clicked ones too, so every curve follows the target
+        let made: Vec<usize> = if cap < R_CAP { (1..verts.len() - 1).collect() } else { (1..first_click).chain(lead_b.map(|_| verts.len() - 2)).collect() };
+        design_radii(&mut verts, &made, cap, scaled);
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
         // Quad track (T-255): the drawn pair, and an express pair beside it from end to end.
@@ -672,9 +675,10 @@ impl TrackApi {
 
     /// T-817: the design speed of routes after this, km/h: their curves are laid out for it, up to
     /// `design_radius(kmh)`, and so are corners a reshape or node drag moves or adds (T-1898).
-    /// Clamped to 160..320; 160 is the drawing tool as before.
+    /// Clamped to `DESIGN_MIN_KMH`..320 (T-3121: any speed, below 160 too, curves as tight as it
+    /// allows); 160 is the drawing tool as before.
     pub fn set_design_speed(&mut self, kmh: f64) {
-        let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_SPEEDS[0], DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
+        let kmh = if kmh.is_finite() { kmh.clamp(DESIGN_MIN_KMH, DESIGN_SPEEDS[DESIGN_SPEEDS.len() - 1]) } else { DESIGN_SPEEDS[0] };
         self.route_cap = design_radius(kmh);
     }
 

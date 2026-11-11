@@ -339,10 +339,13 @@ export const snapStreets = signal(saved.build?.streets !== false);
 /** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
 // T-3046: the two snaps exclude each other in the bar; a save holding both keeps the real network
 export const snapBeside = signal(saved.build?.beside === true && saved.build?.snap !== true);
-/** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`). */
-export const DESIGN_SPEEDS = [160, 200, 250, 320] as const;
-export type DesignSpeed = (typeof DESIGN_SPEEDS)[number];
-export const designSpeed = signal<DesignSpeed>(DESIGN_SPEEDS.includes(saved.build?.design as DesignSpeed) ? (saved.build!.design as DesignSpeed) : 160);
+/** T-817: the speed the track tool lays curves out for, km/h (`TrackApi::set_design_speed`): T-3121,
+ * any speed from DESIGN_MIN to DESIGN_MAX, typed in or stepped through DESIGN_SPEEDS. */
+export const DESIGN_SPEEDS = [20, 40, 60, 80, 100, 120, 140, 160, 200, 250, 320] as const;
+export const DESIGN_MIN = 20, DESIGN_MAX = 320;
+export type DesignSpeed = number;
+export const clampDesign = (kmh: number): number => (Number.isFinite(kmh) ? Math.round(Math.max(DESIGN_MIN, Math.min(DESIGN_MAX, kmh)) * 1000) / 1000 : 160);
+export const designSpeed = signal<DesignSpeed>(typeof saved.build?.design === "number" ? clampDesign(saved.build.design) : 160);
 /** T-817: the track tool lays high-speed track, else regular. High-speed track is double only. */
 export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 4 && saved.build?.tram !== true);
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside

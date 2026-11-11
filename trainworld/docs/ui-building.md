@@ -118,9 +118,12 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   and the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
   region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
   does is under [Drawing track](#drawing-track). Last **Target max speed** (hover "Attempt to draw
-  track straight enough to reach this speed."), a stepper through 160, 200, 250 and 320 km/h, 160 by
-  default, its box fitting "320 km/h"; higher lays the curves of newly drawn track wider,
-  [track-and-service.md](track-and-service.md) 6.1 [T-817, T-1127]; picking High speed sets it to 320
+  track straight enough to reach this speed."), a stepper through 20, 40, 60, 80, 100, 120, 140, 160,
+  200, 250 and 320 km/h whose value can be clicked and typed in the shown unit, any speed from 20 to
+  320 km/h (a step from a typed speed goes to the next step past it; a stepped speed shows to the
+  nearest 5, a typed one as typed) [T-3121], 160 by default, its box fitting "320 km/h"; on a phone
+  the speed button opens the same stepper; higher lays the curves of newly drawn track wider and lower
+  tighter, [track-and-service.md](track-and-service.md) 6.1 [T-817, T-1127, T-3121]; picking High speed sets it to 320
   (it can still be stepped down) and picking Regular again puts back the speed from before [T-817].
   There is no crossover tool, and the game adds none: the player draws crossing track [T-733, T-1688,
   [track-and-service.md](track-and-service.md) 6.1]. Everything the player reads says level for the

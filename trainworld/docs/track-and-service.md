@@ -50,10 +50,14 @@ Full design, numbers and sources: `notes/T-008.md`.
   radius the straight is nil, so the shape grows out of the arc without a jump. **The design
   radius** (T-817) follows the Build tab's target max speed: the smallest whole-metre radius for it at
   a_lat (below), 1,796 m at 160 km/h (the default and the auto cap), 2,806 at 200, 4,385 at 250,
-  7,183 at 320 (`design_radius`, `TrackApi::set_design_speed`). It also sizes the lead-in curves of
-  a drawn segment (`lead_in_capped`). Above 160, a corner the tool makes whose curve comes out
-  wider than 1,796 m gets that radius set, since an auto radius is always capped at 1,796 m; so
-  drawn track keeps its shape and existing track is untouched. A real line's snapped route is
+  7,183 at 320; any speed from 20 to 320 km/h (T-3121), so 253 m at 60 and 29 m at 20, never under
+  the track kind's smallest radius (`design_radius`, `TrackApi::set_design_speed`, `DESIGN_MIN_KMH`).
+  It also sizes the lead-in curves of a drawn segment (`lead_in_capped`). Above 160, a corner the
+  tool makes whose curve comes out wider than 1,796 m gets that radius set, since an auto radius is
+  always capped at 1,796 m; under 160, every auto corner of the route, clicked ones too, gets the
+  design radius set where its curve would come out wider (T-3121: a low target lays tight curves),
+  and so do the corners a reshape or node drag makes. So drawn track keeps its shape and existing
+  track is untouched. A real line's snapped route is
   fitted with its auto radii capped at the design radius too, and its corners wider than 1,796 m
   get theirs set the same way (T-1290). Trains still run at most their top speed. A segment from a free point is straight. A segment ending on track or a node joins
   it like a turnout, so it has the lead-in shape (a lead-in PI at each end). Refused: a curve under
@@ -362,27 +366,38 @@ Full design, numbers and sources: `notes/T-008.md`.
   diagonal deletes both (the four nodes stay as plain joints); constructing either builds both.
 - **Junctions** (T-080): with the ramp switch off, a new junction is built flat (the branch crosses
   the other direction's track at the same level: cheaper, trains may wait for each other).
-- **Flyovers** (T-3092, `wasm/flyover.rs`): with the ramp switch on, a double-track regular route
-  that makes a new junction J1 on double rail track (a split, or a plain two-end node) lays it as
-  a flying junction of real track. The route's first stretch, J1 to **J3** (a new node on the route),
-  is one-way single track for the direction that crosses nothing; the route stays double past J3.
-  The other direction gets a **crossing leg**, one-way single track from J3: 40 m along the route's
-  tangent back toward J1, easing 12 m toward the main by 160 m out (so the two legs part and never run
-  together, T-3117), then straight on parallel to that tangent, over the main (the route's own ramp pass: a level up, or down from -1; the leads where it
-  leaves J3 and joins J2 are no crossing), 270 m beyond it, then back in to **J2**, a new split on
-  the main behind it at a slope of 1 in 4 across over along, with an 80 m lead along the main. J3 is
-  the first point 300 m or more out from which that straight meets the main at least 270 m on. Which
-  direction crosses comes from the running side: the move toward the branch crosses when the branch
-  leaves on the side away from it. At J1, J2 and J3 every move then merges or diverges, so no
-  crossing resource is made, and each direction routes over its own leg (one-way track, below). The
-  legs are ordinary track, priced as such; J2 and J3 are junctions and priced as junctions. The leg
-  is drawn in the preview after a gap (`preview_route`), and undo takes the whole route. **No room:**
-  the junction stays flat and the drawing tag says "No room for a flyover here"
-  (`route_flyovers_flat`): no such J3 before 50 m from the route's far end (or a station's platform
-  less 40 m), J2's split refused (a station's platform within 40 m, a junction, crossover or track
-  end before 40 m past it, a ramp there), the leg's ramps with no room either way, or the edit's
-  checks failing with the leg. A route the checks refuse anyway gets no note; single, quad,
-  high-speed and tram routes and junctions on single track stay flat with none. Each end of a
+- **Flyovers** (T-3092, T-3120, `wasm/flyover.rs`): with the ramp switch on, a double-track regular
+  route that makes a new junction **J** on double rail track (a split, or a plain two-end node) lays
+  it as a flying junction of real track, all of it ahead of J, the point clicked: a branch clicked
+  just past a station's platform gets one. The route's first stretch, as drawn, J to **J3** (a new
+  node on the route), is one-way single track for the direction that crosses nothing (the **plain
+  leg**); the route stays double past J3. The other direction gets a **crossing leg**, one-way
+  single track that leaves the main at J too, on its far side (J then has four ends, and no move
+  through it crosses another), jogs 12 m out at 12 degrees and runs beside the main, turns across
+  it and goes a level over it (or under, from -1 or where the level above is taken), and comes down
+  between the main and the plain leg to J3. From J3 it curves away at once and is 12 m from the
+  plain leg 80 m out, never nearer past that (T-3117, T-3120). Its two ramps decide the length:
+  each needs 200 m (4%) and 14.5 m level each side of the main, plus 20 m for the ramp to clear a
+  curve (`RAMP_ROOM`, 234.5 m), so the leg crosses at least that far along it from J, and J3 is at
+  least that far again on. J3 is the first point 160 m or more out along the route where a leg fits
+  (`J3_MIN`, 10 m steps), tried in turn: beside J3's tangent, 12 m toward the main, all the way down
+  (case A); straight to a crossing far enough ahead from 20 m or more past J3 (case B); or with its
+  far side swung out at 20 to 50 degrees, for a crossing close to J (`LEGS`). Its curves are as wide
+  as their legs hold up to the target max speed's radius (rounder with room, tighter in a tight
+  spot, down to 30 m), and its ramps run through them (`geom::vertical`, T-1895). On the drawn
+  route at 160 km/h, branches at 30 and 60 degrees take about 500 and 475 m of the main; at 60
+  km/h, whose route leaves the main sooner, about 380 and 270 m. Which direction crosses comes from
+  the running side: the move toward the branch crosses when the branch leaves on the side away from
+  it. At J and J3 every move then merges or diverges, so no crossing resource is made, and each
+  direction routes over its own leg (one-way track, below). The legs are ordinary track, priced as
+  such; J3 is a junction and priced as one. The leg is drawn in the preview after a gap
+  (`preview_route`), and undo takes the whole route. **No room:** the junction stays flat and the
+  drawing tag says "No room for a flyover here" (`route_flyovers_flat`): no J3 with a leg that fits
+  before 50 m from the route's far end (or a station's platform less 40 m), the main ahead too
+  short for the crossing (a station's platform, junction, crossover or track end within 40 m of
+  it), no ramps that fit either way, a move crossing another at J or J3, or the edit's checks
+  failing with the leg. A route the checks refuse anyway gets no note; single, quad, high-speed and
+  tram routes and junctions on single track stay flat with none. Each end of a
   route that makes a junction gets its own flyover where it fits. The junction inspector's
   flyover flag stays as the fix for a junction already built: bought there
   ([ui-building.md](ui-building.md)), which gives its price and the waiting it saves per train at

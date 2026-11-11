@@ -549,20 +549,32 @@ const sameBand = (a: Float32Array, b: Float32Array) => {
 
 /** Half the gap between double track's two tracks when drawn apart, m (renderer.ts `LANE_M`). */
 const HALF_GAP_M = 2;
-/** How far a one-way leg eases from its own track's line in to its centre line, m (T-3117). */
-const LEG_EASE_M = 60;
+/** How far from a junction a one-way leg's end may be drawn off its centre line, m (T-3120). */
+const LEG_REACH_M = 300;
+
+/** T-3117, T-3120: how a one-way leg's end at a junction is drawn off its centre line (`legShifts`). */
+interface LegShift {
+  /** per end (a, b): +1 left of a to b, -1 right, 0 none */
+  sign: [number, number];
+  /** per end: the other track leaving the node its way on that side, each as its points from the
+   * node out and whether it is double */
+  near: [{ pts: number[]; double: boolean }[], { pts: number[]; double: boolean }[]];
+  /** changes when any of it does, for the cache */
+  key: string;
+}
 
 /**
- * T-3117: where one-way single track meets double track at a junction (a flyover's J1, J2 and J3),
- * which way its end is drawn off its centre line, so it carries on from its own track of the double:
- * away from the nearest other track leaving the node its way. Per edge, [a end, b end]: +1 left of
- * a to b, -1 right, 0 none. `parts`: each edge's points, in `edges` order.
+ * T-3117: where one-way single track meets double track at a junction (a flyover's J and J3), which
+ * way its end is drawn off its centre line, so it carries on from its own track of the double: away
+ * from the nearest other track leaving the node its way. T-3120: with the tracks on that side, so
+ * `shiftedEnds` keeps it as far from each as the double's own tracks are drawn apart and no
+ * further off its line than that needs. `parts`: each edge's points, in `edges` order.
  */
-function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number>[]): Map<number, [number, number]> {
-  const out = new Map<number, [number, number]>();
+function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number>[]): Map<number, LegShift> {
+  const out = new Map<number, LegShift>();
   if (!edges.some((e) => e.tracks === 1 && e.oneWay)) return out;
-  // per node, each end there: its edge's index and the way it leaves (unit x, y)
-  const at = new Map<number, { i: number; dx: number; dy: number }[]>();
+  // per node, each end there: its edge's index, whether it starts at a, and the way it leaves (unit x, y)
+  const at = new Map<number, { i: number; fromA: boolean; dx: number; dy: number }[]>();
   const dir = (pts: ArrayLike<number>, fromA: boolean) => {
     const n = pts.length / 3;
     if (n < 2) return null;
@@ -582,64 +594,99 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
       const d = dir(parts[i], fromA);
       if (!d) continue;
       const v = at.get(node) ?? [];
-      v.push({ i, ...d });
+      v.push({ i, fromA, ...d });
       at.set(node, v);
     }
   });
+  // an end's points from its node out, x, y pairs, as far as a leg's end can be drawn off
+  const fromNode = (pts: ArrayLike<number>, fromA: boolean) => {
+    const n = pts.length / 3, xy: number[] = [];
+    if (n < 1) return xy;
+    const reach = 1.5 * LEG_REACH_M * kAtY(pts[1]);
+    let run = 0;
+    for (let k = 0; k < n; k++) {
+      const j = fromA ? k : n - 1 - k;
+      if (k > 0) run += Math.hypot(pts[j * 3] - xy[xy.length - 2], pts[j * 3 + 1] - xy[xy.length - 1]);
+      xy.push(pts[j * 3], pts[j * 3 + 1]);
+      if (run > reach) break;
+    }
+    return xy;
+  };
   edges.forEach((e, i) => {
     if (e.tracks !== 1 || !e.oneWay) return;
-    const shift: [number, number] = [0, 0];
+    const shift: LegShift = { sign: [0, 0], near: [[], []], key: "" };
     [e.a, e.b].forEach((node, end) => {
       const ends = at.get(node) ?? [];
       if (ends.length < 3 || !ends.some((x) => edges[x.i].tracks === 2)) return;
-      const me = ends.find((x) => x.i === i && (end === 0 ? edges[x.i].a === node : edges[x.i].b === node));
+      const me = ends.find((x) => x.i === i && x.fromA === (end === 0));
       if (!me) return;
-      let best: (typeof ends)[number] | null = null, cos = Math.cos(Math.PI / 3);
-      for (const o of ends) {
-        const c = o.dx * me.dx + o.dy * me.dy;
-        if (o !== me && c > cos) [best, cos] = [o, c];
-      }
-      if (!best) return;
-      const otherLeft = me.dx * best.dy - me.dy * best.dx > 0;
+      const cos = Math.cos(Math.PI / 3);
+      const along = ends.filter((o) => o !== me && o.dx * me.dx + o.dy * me.dy > cos);
+      if (!along.length) return;
+      const best = along.reduce((p, o) => (o.dx * me.dx + o.dy * me.dy > p.dx * me.dx + p.dy * me.dy ? o : p));
+      const left = (o: { dx: number; dy: number }) => me.dx * o.dy - me.dy * o.dx > 0;
+      const otherLeft = left(best);
       // leaving from b runs b to a, so its right is a to b's left
-      shift[end] = (otherLeft ? -1 : 1) * (end === 0 ? 1 : -1);
+      shift.sign[end] = (otherLeft ? -1 : 1) * (end === 0 ? 1 : -1);
+      shift.near[end] = along.filter((o) => left(o) === otherLeft).map((o) => ({ pts: fromNode(parts[o.i], o.fromA), double: edges[o.i].tracks === 2 }));
     });
-    if (shift[0] || shift[1]) out.set(e.id, shift);
+    if (!shift.sign[0] && !shift.sign[1]) return;
+    shift.key = shift.sign.join() + "|" + shift.near.map((n) => n.map((o) => `${o.double}:${o.pts.length}:${o.pts[2]}:${o.pts[3]}:${o.pts[o.pts.length - 2]}`).join(";")).join("|");
+    out.set(e.id, shift);
   });
   return out;
 }
 
-/** `pts` (x, y, z triples) with each end moved `shift` (as `legShifts`) half the track gap off to its
- * side, easing back to the line over LEG_EASE_M, points added every few metres there; and per
+/** The distance from (x, y) to the polyline `xy` (x, y pairs). */
+function distTo(xy: readonly number[], x: number, y: number): number {
+  let best = Infinity;
+  for (let k = 0; k + 3 < xy.length; k += 2) {
+    const ax = xy[k], ay = xy[k + 1], bx = xy[k + 2], by = xy[k + 3];
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+    best = Math.min(best, Math.hypot(ax + dx * t - x, ay + dy * t - y));
+  }
+  return best;
+}
+
+/** `pts` (x, y, z triples) with each end moved (as `legShifts`) off its centre line, by as much as
+ * keeps it half the drawn gap of a double's two tracks from each single track beside it and the whole
+ * of it from a double's centre line, so the drawn gap never dips below the gap at the node and is the
+ * real one once that is wider (T-3120, Anita's "kiss"); points added every few metres there; and per
  * segment, the segment of `pts` it lies on. */
-function shiftedEnds(pts: Float32Array, shift: [number, number]): { pts: Float32Array; src: number[] } {
+function shiftedEnds(pts: Float32Array, shift: LegShift): { pts: Float32Array; src: number[] } {
   const n = pts.length / 3;
   if (n < 2) return { pts, src: [] };
   const at = new Float64Array(n);
   for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(pts[k * 3] - pts[k * 3 - 3], pts[k * 3 + 1] - pts[k * 3 - 2]);
-  const len = at[n - 1], kk = kAtY(pts[1]), L = Math.min(LEG_EASE_M * kk, len / 2), step = 5 * kk;
-  const ease = (d: number) => {
-    const t = Math.max(0, Math.min(1, d / L));
-    return 1 - t * t * (3 - 2 * t);
+  const len = at[n - 1], kk = kAtY(pts[1]), h = HALF_GAP_M * kk, reach = LEG_REACH_M * kk, step = 5 * kk;
+  // how far off its line the end `end` holds the point (x, y), `d` along from that end
+  const need = (end: number, x: number, y: number, d: number) => {
+    if (!shift.sign[end] || d > reach) return 0;
+    let m = 0;
+    for (const o of shift.near[end]) m = Math.max(m, o.double ? h - distTo(o.pts, x, y) : h - distTo(o.pts, x, y) / 2);
+    // fades out short of the reach, should the tracks still be close there
+    const t = Math.max(0, Math.min(1, (reach - d) / (0.2 * reach)));
+    return Math.max(0, m) * t * t * (3 - 2 * t);
   };
-  const off = (s: number) => HALF_GAP_M * kk * (shift[0] * ease(s) + shift[1] * ease(len - s));
   const out: number[] = [], seg: number[] = [];
   const put = (k: number, f: number) => {
     seg.push(k);
     const x = pts[k * 3] + (pts[k * 3 + 3] - pts[k * 3]) * f, y = pts[k * 3 + 1] + (pts[k * 3 + 4] - pts[k * 3 + 1]) * f;
     const z = pts[k * 3 + 2] + (pts[k * 3 + 5] - pts[k * 3 + 2]) * f;
     const dx = pts[k * 3 + 3] - pts[k * 3], dy = pts[k * 3 + 4] - pts[k * 3 + 1], d = Math.hypot(dx, dy) || 1;
-    const o = off(at[k] + (at[k + 1] - at[k]) * f);
+    const s = at[k] + (at[k + 1] - at[k]) * f;
+    const o = shift.sign[0] * need(0, x, y, s) + shift.sign[1] * need(1, x, y, len - s);
     out.push(x - (dy / d) * o, y + (dx / d) * o, z);
   };
   for (let k = 0; k < n - 1; k++) {
     const seg = at[k + 1] - at[k];
     put(k, 0);
-    // points every `step` where either end eases
-    if (seg > step && (at[k] < L || at[k + 1] > len - L)) {
+    // points every `step` where either end may hold it off
+    if (seg > step && (at[k] < reach || at[k + 1] > len - reach)) {
       for (let d = step; d < seg - 1e-6; d += step) {
         const s0 = at[k] + d;
-        if (s0 < L || s0 > len - L) put(k, d / seg);
+        if (s0 < reach || s0 > len - reach) put(k, d / seg);
       }
     }
   }
@@ -1019,7 +1066,7 @@ interface EdgeEntry extends LanePoints {
   flags: number;
   lanes: number;
   /** T-3117: `legShifts` for it, or null */
-  shift: [number, number] | null;
+  shift: LegShift | null;
   strokes: Strokes;
   ramps: number[];
   /** the edge speeds given, and per segment of `strokes` its speed limit (`Strokes.speed`) */
@@ -1244,7 +1291,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     let c = cache.edges.get(e.id);
     const shift = shifts.get(e.id) ?? null;
-    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && c.shift?.[0] === shift?.[0] && c.shift?.[1] === shift?.[1] && (c.given === given || sameFloats(c.pts, given))) {
+    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && c.shift?.key === shift?.key && (c.given === given || sameFloats(c.pts, given))) {
       kept.add(e.id);
       if (c.given !== given) c = { ...c, given };
     } else {

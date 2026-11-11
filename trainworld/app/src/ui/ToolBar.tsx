@@ -4,14 +4,14 @@
 
 import { computed } from "@preact/signals";
 import { useState } from "preact/hooks";
-import { distUnit, length, levelLabel, levelName, millions, speed } from "../game/format";
+import { distUnit, kmhFromShown, kmhToShown, length, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
 import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -38,11 +38,22 @@ const trackTypes = (): [TrackType, string][] => [[2, t("toolBar.regular")], ["hs
 const typeLabel = (tt: TrackType) => (tt === "tram" ? t("toolBar.tram") : tt === "hsr" ? t("toolBar.highSpeed") : t("toolBar.regular"));
 const speedTip = () => t("toolBar.speedTip");
 
+/** T-3121: the next step up or down from the speed set, which may be a typed one between steps. */
 function stepSpeed(s: number) {
-  const i = DESIGN_SPEEDS.indexOf(designSpeed.value) + s;
-  const to = DESIGN_SPEEDS[Math.max(0, Math.min(DESIGN_SPEEDS.length - 1, i))];
-  if (to === designSpeed.value) return false;
+  const now = designSpeed.value;
+  const to = s > 0 ? DESIGN_SPEEDS.find((v) => v > now + 1e-6) : [...DESIGN_SPEEDS].reverse().find((v) => v < now - 1e-6);
+  if (to === undefined) return false;
   designSpeed.value = to;
+}
+
+/** A target speed: a step's to the nearest 5, as a round km/h figure reads in mph; a typed one as typed. */
+const speedShown = (v: number) => speed(v, (DESIGN_SPEEDS as readonly number[]).includes(v) ? 5 : 1);
+
+/** The target speed's stepper, its value typed in the shown unit (T-3121). */
+function SpeedStepper() {
+  const v = designSpeed.value;
+  return <Stepper value={speedShown(v)} wide label={t("toolBar.targetSpeedLabel")} onStep={stepSpeed}
+    type={{ text: String(Math.round(kmhToShown(v))), set: (n) => { designSpeed.value = clampDesign(kmhFromShown(n)); } }} />;
 }
 
 /** Two rows: the level, the ramp switch and the price; the track type, the three placing switches and
@@ -104,10 +115,10 @@ function TrackBar() {
           </span>
           {!tram && <span class="tb-wide tb-speed">
             <span data-tip={speedTip()}>{t("toolBar.targetSpeed")}</span>
-            <Stepper value={speed(designSpeed.value, 5)} wide label={t("toolBar.targetSpeedLabel")} onStep={stepSpeed} />
+            <SpeedStepper />
           </span>}
           {!tram && <button class="btn tb-narrow tb-speed-btn" data-tip={`${t("toolBar.targetSpeed")}\n${speedTip()}`} aria-label={t("toolBar.targetSpeed")} aria-expanded={open === "speed"}
-            onClick={() => toggle("speed")}>{speed(designSpeed.value, 5).split(" ")[0]}</button>}
+            onClick={() => toggle("speed")}>{speedShown(designSpeed.value).split(" ")[0]}</button>}
         </div>
       </div>
       {open === "level" && (
@@ -122,11 +133,7 @@ function TrackBar() {
       )}
       {open === "speed" && (
         <div class="tool-bar-pop">
-          <div class="group">
-            {DESIGN_SPEEDS.map((s) => (
-              <button class={"btn" + (s === designSpeed.value ? " on" : "")} onClick={() => { designSpeed.value = s; setOpen(null); }}>{speed(s, 5)}</button>
-            ))}
-          </div>
+          <SpeedStepper />
         </div>
       )}
     </>

@@ -808,7 +808,9 @@ fn narrow_set_radii(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], 
 /// the design radius `cap`, as drawing lays its own (`design_radii`): wider than `R_CAP` where they
 /// have room, set to it.
 fn design_corners(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], made: &[usize], cap: f64) {
-    if cap <= R_CAP || made.is_empty() {
+    // T-3121: under 160 too, never under the kind's smallest curve
+    let cap = cap.max(d.kind.spec().min_radius);
+    if cap == R_CAP || made.is_empty() {
         return;
     }
     let mut verts = vertices_of(net, d, moved);

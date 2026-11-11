@@ -21,6 +21,9 @@ pub const R_CAP: f64 = 1796.0;
 /// Design speeds the drawing tool offers, km/h (T-817): the auto radius of track it draws is
 /// capped at `design_radius` of the one chosen. 160 is `R_CAP`.
 pub const DESIGN_SPEEDS: [f64; 4] = [160.0, 200.0, 250.0, 320.0];
+/// T-3121: the lowest design speed the drawing tool takes, km/h: its radius (29 m) is over rail's
+/// smallest.
+pub const DESIGN_MIN_KMH: f64 = 20.0;
 
 /// The smallest whole-metre radius that allows `kmh`: 1,796 m at 160, 2,806 at 200, 4,385 at 250,
 /// 7,183 at 320.
