@@ -14,7 +14,7 @@ import { vehicleOf, type Vehicle } from "./vehicle";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
 import { noteEdit } from "./editCap";
-import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from "./types";
+import type { Demand, LineId, LineInput, LineStats, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX, loopHalves } from "./types";
 
 export const world = signal<WorldView | null>(null);
@@ -129,6 +129,19 @@ function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number
   if (t[lev] === base[lev]) return false;
   setTrainCounts(id, t);
   return true;
+}
+
+/** The most vehicles a count is raised to per level, when the track sets no lower limit (T-3152). */
+export const MAX_TYPED_VEHICLES = 1000;
+
+/** T-3165: the most a hand-set count can be at a level: the whole trains the track lets run (the
+ * round trip over its shortest headway `limitS`, a loop's even, one at least) plus one step, so one
+ * train is held and the held messages and red headway show. 1000 with no limit. */
+export function trainCap(st: Pick<LineStats, "loop" | "oneWay">, tripS: number, limitS: number | null): number {
+  const k = loopHalves(st) ? 2 : 1;
+  if (!limitS || !(tripS > 0)) return MAX_TYPED_VEHICLES;
+  const room = Math.floor(tripS / limitS + 0.01);
+  return Math.min(MAX_TYPED_VEHICLES, Math.max(k, room - (room % k)) + k);
 }
 
 /** The step of a line's train count: 2 on a loop run both ways, whose trains are half each way (T-798). */

@@ -262,12 +262,12 @@ export class RoadGraph {
   /** T-2927: the road a tram follows from one of the snapped points `starts` to one of `ends` (each
    * costing `pen` metres more: the nearest road can be a stub joined to nothing): shortest with
    * `turnM` metres more for each turn sharper than `minTurn` (radians) where two road segments meet,
-   * never turning back more than `maxTurn` at a node or within `backM` metres of road, and no motorway.
+   * never turning back more than `maxTurn` at a node or within `backM` metres of road, and no motorway (unless `motorways`, T-3129: rail).
    * A search over directed segments (each state is a segment and the way it is run), A* on the
    * straight distance to the first end; null if none is under `capM`. `turns` counts the turns paid
    * for; `from` and `to` are the ends taken. `startDir` (a unit grid vector), where the route carries on
    * from track: leaving a start against it is a turn there, so never back the way the track came (T-2997). */
-  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number, startDir: [number, number] | null = null, hardTurn = maxTurn): (RoadPath & { from: Snap; turns: number; states: number }) | null {
+  turnPath(starts: Snap[], ends: Snap[], pen: (s: Snap) => number, capM: number, turnM: number, minTurn: number, maxTurn: number, backM: number, startDir: [number, number] | null = null, hardTurn = maxTurn, motorways = false): (RoadPath & { from: Snap; turns: number; states: number }) | null {
     if (!starts.length || !ends.length) return null;
     let direct: { m: number; s: Snap; d: Snap } | null = null;
     const cosBack = Math.cos(maxTurn);
@@ -366,7 +366,7 @@ export class RoadGraph {
       }
       for (let arc = this.head[n]; arc >= 0; arc = this.arcNext[arc]) {
         const e = arc >> 1;
-        if (e === a >> 1 || this.emotor[e] === 1) continue;
+        if (e === a >> 1 || (this.emotor[e] === 1 && !motorways)) continue;
         // a node's list holds 2e at ea and 2e + 1 at eb, so its arcs leave it
         const b = arc;
         const tc = turnCost(u, dir(b));
@@ -649,7 +649,8 @@ const NEAR_UNITS = 2;
 const ALONG_COS = 0.8;
 const JOIN_CELL = 128;
 /** A line of this weight (`RoadLines.weights`) is kept only as a link: at most `LINK_MAX_M` long, each end
- * on a street (T-2882). Service roads as a class stay out, so a bus does not cut through car parks. */
+ * on a street (T-2882). The bus keep no longer gives it (T-3172: service roads count in full); a stricter
+ * keep, such as one for track following roads, may. */
 export const LINK = 0.5;
 const LINK_MAX_M = 60;
 

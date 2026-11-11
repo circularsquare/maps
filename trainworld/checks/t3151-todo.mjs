@@ -94,7 +94,7 @@ try {
   // T-3152: the limit. A typed number past it is clamped to the limit, the stepper's plus at the limit is refused,
   // and neither leaves more trains than run
   const shook = () => page.evaluate(() => !!document.querySelector('.stepper.shake') || window.__shook > 0);
-  const cap = line.cap ?? 1000;
+  const cap = line.cap === null ? 1000 : line.cap + 1; // T-3165: one train more than runs
   await page.evaluate(() => { window.__shook = 0; new MutationObserver((ms) => { for (const m of ms) if (m.target.classList?.contains('stepper') && m.target.classList.contains('shake')) window.__shook++; }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] }); });
   await type('99999', 'Enter');
   check((await count()) === cap, `a number past the limit is clamped to it (${line.cap === null ? 'no track limit here: 1000' : cap})`, `${await count()}`);

@@ -395,6 +395,11 @@ export class Tools {
     if (station) this.alts = [];
     if (!w || !n || (this.freeClick && tool.peek() === "track")) return { kind: "free", lx: fx, ly: fy };
     const edgePx = station ? SNAP_EDGE_PX : TRACK_EDGE_PX;
+    // T-3162: single track picked beside double track drawn as two tracks: each of the two is a branch point across
+    // its whole drawn width, so the pair's outer edge is the reach there
+    const laneL = !station && tool.peek() === "track" && singleTrack.peek() && !tramTrack.peek() ? laneState(this.map.getZoom()) : null;
+    const laneReach = laneL && laneL.t > 0 ? Math.max(edgePx, (laneL.gap * (laneL.t + laneL.share)) / 2) : edgePx;
+    const doubleIds = laneReach > edgePx ? this.doubleEnds(w).ids : null;
     let best = TRACK_NODE_PX * TRACK_NODE_PX, hit: Snap | null = null;
     // only what is near the pointer (T-724); everything with the map pitched
     const at = pointerLocal(this.overlay, px, py);
@@ -406,7 +411,7 @@ export class Tools {
     const fam = station || tool.peek() !== "track" ? null : tramTrack.peek();
     const tramOf = fam === null ? null : this.tramEdgeSet(w);
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
-    const nearEdges = at ? edgesNear(n, at[0], at[1], edgePx * at[2]) : null;
+    const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
       if (fam !== null && (node.kind ?? 0) >= 2 !== fam) continue;
@@ -423,7 +428,8 @@ export class Tools {
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       if (tramOf && tramOf.has(edge) !== fam) continue;
-      let eb = edgePx * edgePx, eh: Snap | null = null;
+      const er = doubleIds?.has(edge) ? laneReach : edgePx;
+      let eb = er * er, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);
         const [x1, y1] = this.screen(pts[k + 3], pts[k + 4]);

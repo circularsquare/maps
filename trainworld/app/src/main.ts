@@ -28,6 +28,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
+import "./game/capLoad";
 import { removeThing, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";

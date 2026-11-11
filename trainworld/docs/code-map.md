@@ -380,6 +380,8 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
   track of a double main at zoom 18: the snap's join point, the preview's `join`, the ghost's and the built end's
   offset (2 m on the hovered track), the flat badge only where a move crosses, a terminus branch's badge, none
   zoomed out, and a flyover laid by hand from two single tracks. About 2 minutes; pictures `t3137-join-*.png`.
+- `t3162-branch-hit.mjs [dev url]` (T-3162, T-3163): double main at zoom 17.5, 19 and 20.5: a pointer on the outer, middle and
+  inner part of each drawn track branches from it, 8 px past the pair does not; the branch dot is 15 px. Pictures `t3162-*.png`.
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"), about 3 minutes. On a url at
   :8800 it skips the Node checks, which read the working tree, not the build (T-2831); `t1380-complexes` runs 5
   seeds in it (its own default is 30). It fails when a worker

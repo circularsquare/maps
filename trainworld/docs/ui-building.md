@@ -225,10 +225,11 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   and adds no crossovers.
 - **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
   yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
-  segment will end beside track.
+  segment will end beside track. The red and yellow dots are 15 px across, the blue ring 24 px [T-3163].
 - **Which track single track joins** [T-3137]: with Single track picked and the zoom where double track
   draws as two tracks (`laneState(zoom).t > 0`), a point on or at the end of double track picks the
-  track nearer the pointer, for branching off and merging onto alike. The dot sits on that track (as far
+  track nearer the pointer, for branching off and merging onto alike. Double track is picked across the
+  pair's whole drawn width (centre offset plus half a track's width, never under the usual 8 px) [T-3162]. The dot sits on that track (as far
   off the centre line as the tracks are drawn), and the route's start and end send that point as
   `RouteAsk.join` (`TrackApi::set_route_join`) with each preview and the click. Zoomed out the dot stays
   on the centre line and the track model takes the track beside the route (track-and-service.md

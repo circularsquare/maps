@@ -2,9 +2,15 @@
 // game needs only the `transportation` layer's lines and the map library keeps its own reader to
 // itself. Pure: no DOM, no map.
 
-/** The road classes a bus may drive (OpenMapTiles `transportation.class`); motorways, service ways,
- * tracks, paths, rail and ferries are left out (notes/T-1445.md). */
+/** The street classes (OpenMapTiles `transportation.class`) that count as roads at track crossings
+ * (`crossingWeight`). */
 export const BUS_CLASSES = new Set(["trunk", "primary", "secondary", "tertiary", "minor", "busway"]);
+
+/** T-3172: every class a bus or tram may use besides motorways: the street classes, service ways, tracks
+ * and the bus guideway; a `path` only where its subclass is a pedestrian street (`PEDESTRIAN`). Left out:
+ * footways, cycleways, steps, bridleways, platforms, raceways, piers, rail and ferries. */
+export const DRIVE_CLASSES = new Set([...BUS_CLASSES, "service", "track", "bus_guideway"]);
+export const PEDESTRIAN = "pedestrian";
 
 export interface RoadLines {
   extent: number;
@@ -17,7 +23,7 @@ export interface RoadLines {
 }
 
 /** A road's `class`, `brunnel` (bridge, tunnel, ford or none), `service` and `access` in OpenMapTiles. */
-export type RoadKeep = (cls: string, brunnel: string | null, service: string | null, access: string | null) => boolean | number;
+export type RoadKeep = (cls: string, brunnel: string | null, service: string | null, access: string | null, subclass: string | null) => boolean | number;
 
 /** What a road counts for where track at ground level crosses it (T-1929): the bus classes 1, a
  * motorway 3; a road on a bridge or in a tunnel is already out of the way, 0. */
@@ -124,13 +130,13 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
     }
     t.pos = end;
     if (name !== "transportation") continue;
-    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer"), serviceKey = keys.indexOf("service"), accessKey = keys.indexOf("access");
+    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer"), serviceKey = keys.indexOf("service"), accessKey = keys.indexOf("access"), subclassKey = keys.indexOf("subclass");
     const lines: Int32Array[] = [], weights: number[] = [], levels: number[] = [];
     for (const [s, e] of feats) {
       const fr = new Reader(b, e);
       fr.pos = s;
       let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null, layer = 0;
-      let service: string | null = null, access: string | null = null;
+      let service: string | null = null, access: string | null = null, subclass: string | null = null;
       while (fr.pos < e) {
         const ft = fr.varint(), ff = ft >> 3, fw = ft & 7;
         if (ff === 2 && fw === 2) {
@@ -142,6 +148,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
             else if (k === layerKey) layer = Number(values[v]) || 0;
             else if (k === serviceKey) service = values[v] ?? null;
             else if (k === accessKey) access = values[v] ?? null;
+            else if (k === subclassKey) subclass = values[v] ?? null;
           }
         } else if (ff === 3 && fw === 0) type = fr.varint();
         else if (ff === 4 && fw === 2) {
@@ -151,7 +158,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
         } else fr.skip(fw);
       }
       if (type !== 2 || geomStart < 0 || cls === null) continue;
-      const kept = keep(cls, brunnel, service, access);
+      const kept = keep(cls, brunnel, service, access, subclass);
       const weight = kept === true ? 1 : kept === false ? 0 : kept;
       if (!(weight > 0)) continue;
       const level = (brunnel === "bridge" ? 1000 : brunnel === "tunnel" ? 2000 : 0) + layer;

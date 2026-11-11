@@ -22,7 +22,7 @@ import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type Li
 import { pendingLabel } from "../../game/lineFigures";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
-import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, setAutoTrains, setHeadway, setTrainCount, stepHeadway, stepTrainCount, trainsShown, world } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, setAutoTrains, setHeadway, setTrainCount, stepHeadway, stepTrainCount, trainCap, trainsShown, world, MAX_TYPED_VEHICLES } from "../../game/world";
 import { Row, Segmented, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
@@ -97,9 +97,6 @@ const headwayText = (s: number) => (s > 0 ? t("inspector.min", { n: tNumber(s / 
 /** How long a refused edit's control shakes, ms (T-625; style.css `.shake`) */
 const SHAKE_MS = 300;
 
-/** The most vehicles a count is raised to per level (T-3152), when the track sets no lower limit. */
-const MAX_TYPED_VEHICLES = 1000;
-
 /** One demand level's vehicles and headway cells: a count stepper and the headway it gives, or (T-625)
  * the headway stepper and the count it gives. A count an edit was refused for cash is red, and
  * its control shakes once; a headway shorter than `limit` allows is red (T-625, T-679). */
@@ -130,9 +127,8 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   if (!auto) {
     const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
     const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d];
-    // T-3152: no more trains than the track lets run (the limit's whole trains, a loop's even, one at least)
-    const room = limit !== null && trip > 0 ? Math.floor(trip / limit.s + 0.01) : Infinity;
-    const cap = Math.min(MAX_TYPED_VEHICLES, Math.max(k, k === 2 ? room - (room % 2) : room));
+    // T-3165: one train more than the track lets run, so one is held and the held messages show
+    const cap = trainCap(st, trip, limit?.s ?? null);
     const full = counts[lev] >= cap;
     const grow = (to: number) => setTrainCount(l.id, d, Math.min(to, cap));
     return (

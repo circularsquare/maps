@@ -6,22 +6,32 @@
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, LINK, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
-import { BUS_CLASSES, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
+import { EXTENT, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
+import { DRIVE_CLASSES, PEDESTRIAN, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 
-/** The roads a bus drives: the bus classes, and motorways (T-2469: most long bridges and tunnels are
- * motorways, and their approaches too), which a click lands on only where no street is near. An
- * unnamed-kind service road open to all may be a short link between streets (`LINK`, T-2882). */
-const busRoad: RoadKeep = (cls, brunnel, service, access) =>
-  cls === "trunk" ? TRUNK : BUS_CLASSES.has(cls) ? 1 : cls === "motorway" ? MOTORWAY : cls === "service" && !service && !access && !brunnel ? LINK : 0;
+/** The roads a bus or tram drives (T-3172: any road in the data): `DRIVE_CLASSES` (streets, service ways of
+ * every kind, tracks, bus guideways), pedestrian streets, and motorways (T-2469: most long bridges and
+ * tunnels are motorways, and their approaches too), which a click lands on only where no street is near. */
+const busRoad: RoadKeep = (cls, _brunnel, _service, _access, subclass) =>
+  cls === "trunk" ? TRUNK : DRIVE_CLASSES.has(cls) || (cls === "path" && subclass === PEDESTRIAN) ? 1 : cls === "motorway" ? MOTORWAY : 0;
+
+/** T-3129: the roads rail follows when snapping to roads: the main roads only (motorway to tertiary). Minor
+ * streets, service ways, links and pedestrian streets stay out: rail runs straight through an interchange,
+ * and a train on minor streets is a tram. */
+export const RAIL_CLASSES = ["trunk", "primary", "secondary", "tertiary"];
+export const railRoad: RoadKeep = (cls) => (cls === "trunk" ? TRUNK : RAIL_CLASSES.includes(cls) ? 1 : cls === "motorway" ? MOTORWAY : 0);
 
 /** `busRoad` as a MapLibre filter on the basemap's `transportation` lines (T-2883), for drawing the roads
  * a bus may use; built from the same classes, so the two cannot drift apart. Without `motorways`, the
- * streets a tram follows (T-2998: `RoadGraph` keeps a street route off motorways). T-3055: service ways
- * are left out. `joinRoads` keeps one only as a link of at most `LINK_MAX_M` with both ends on a street, which a
- * layer filter cannot test, and drawing every one painted long service roads (round water works, car parks)
- * that nothing snaps to; the few links that do work go undrawn. */
-export const busRoadFilter = (motorways = true): unknown[] => ["in", ["get", "class"], ["literal", motorways ? [...BUS_CLASSES, "motorway"] : [...BUS_CLASSES]]];
+ * streets a tram follows (T-2998: `RoadGraph` keeps a street route off motorways). */
+export const busRoadFilter = (motorways = true): unknown[] => [
+  "any",
+  ["in", ["get", "class"], ["literal", motorways ? [...DRIVE_CLASSES, "motorway"] : [...DRIVE_CLASSES]]],
+  ["all", ["==", ["get", "class"], "path"], ["==", ["get", "subclass"], PEDESTRIAN]],
+];
+
+/** `railRoad` as a MapLibre filter, for the hint over the roads rail may follow. */
+export const railRoadFilter = (): unknown[] => ["in", ["get", "class"], ["literal", [...RAIL_CLASSES, "motorway"]]];
 
 /** A click this near a road (ground metres) is moved onto it. */
 export const SNAP_M = 100;
@@ -107,7 +117,7 @@ export class BusRoads {
   /** the search's cost, for the check: calls, total and slowest, ms */
   stats = { legs: 0, ms: 0, max: 0, tiles: 0 };
 
-  constructor(private map: MlMap, private onLoad: () => void) {}
+  constructor(private map: MlMap, private onLoad: () => void, private keep: RoadKeep = busRoad) {}
 
   // ---------------------------------------------------------------- tiles
 
@@ -139,7 +149,7 @@ export class BusRoads {
       const tpl = await this.url();
       if (tpl) {
         const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
-        if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), busRoad), metresPerUnit((ty + 0.5) * EXTENT));
+        if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), this.keep), metresPerUnit((ty + 0.5) * EXTENT));
         else if (r.status === 404 || r.status === 204) rl = { extent: EXTENT, lines: [] };
       }
     } catch {
@@ -227,19 +237,19 @@ export class BusRoads {
     return s ? { lng: lngOf(s.x), lat: latOf(s.y) } : p;
   }
 
-  /** T-2927: where a tram click lands: on the nearest street (no motorway) within `SNAP_M`, null where
-   * there is none; undefined while the tiles load. */
-  street(p: Pt): Pt | null | undefined {
+  /** T-2927: where a tram click lands: on the nearest street (no motorway, unless `motorways`: rail, T-3129)
+   * within `SNAP_M`, null where there is none; undefined while the tiles load. */
+  street(p: Pt, motorways = false): Pt | null | undefined {
     if (!this.look(p)) return undefined;
     this.fresh();
-    const x = gxOf(p.lng), y = gyOf(p.lat), s = this.graph.snap(x, y, SNAP_M / metresPerUnit(y), true);
+    const x = gxOf(p.lng), y = gyOf(p.lat), s = this.graph.snap(x, y, SNAP_M / metresPerUnit(y), !motorways);
     return s ? { lng: lngOf(s.x), lat: latOf(s.y) } : null;
   }
 
   /** T-2927: the streets a tram follows between two points (`RoadGraph.turnPath`), as lng, lat pairs
    * from the street point by `a` to the one by `b`. `refused` as a bus leg's; not `ready` while tiles load.
    * `from`: a point the track ran from to reach `a`, where the route carries on from it (T-2997). */
-  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number, from: Pt | null = null, hardTurn = maxTurn): Leg & { turns: number; states: number; ms: number } {
+  tramLeg(a: Pt, b: Pt, turnM: number, minTurn: number, maxTurn: number, backM: number, from: Pt | null = null, hardTurn = maxTurn, motorways = false): Leg & { turns: number; states: number; ms: number } {
     const ax = gxOf(a.lng), ay = gyOf(a.lat), bx = gxOf(b.lng), by = gyOf(b.lat);
     const mpu = metresPerUnit((ay + by) / 2);
     const straight = Math.hypot(ax - bx, ay - by) * mpu;
@@ -255,7 +265,7 @@ export class BusRoads {
     // (one a road: a segment touching one taken, as a curved road's next one does, is skipped)
     const near = (x: number, y: number) => {
       const out: Snap[] = [], seen = new Set<number>(), g = this.graph;
-      for (const s of g.snapsWithin(x, y, SNAP_M / mpu, true)) {
+      for (const s of g.snapsWithin(x, y, SNAP_M / mpu, !motorways)) {
         const a = g.ea[s.edge], b = g.eb[s.edge], touches = seen.has(a) || seen.has(b);
         seen.add(a).add(b);
         if (touches) continue;
@@ -272,7 +282,7 @@ export class BusRoads {
       const dx = ax - gxOf(from.lng), dy = ay - gyOf(from.lat), l = Math.hypot(dx, dy);
       if (l > 0) dir = [dx / l, dy / l];
     }
-    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM, dir, hardTurn);
+    const path = this.graph.turnPath(sa, sb, (c) => SNAP_PEN * c.d * mpu, Math.max(direct * DETOUR, direct + DETOUR_M) + 20 * turnM, turnM, minTurn, maxTurn, backM, dir, hardTurn, motorways);
     const ms = performance.now() - t0;
     if (!path) return { ...none(true, "path"), ms };
     const pts = thin(path.pts, 1 / mpu), ll: number[] = [];

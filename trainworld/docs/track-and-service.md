@@ -1072,9 +1072,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `Capacity::line_limits`) or within the 0.5% of it, the line takes no more trains than fit, at least
   one, so it runs just over the headway set (4:07 for 4:00, say) and no train is held out. A headway
   well under the limit is not clamped: the trains past it wait at the ends and the panel warns.
-  A hand-set count is held to the same limit by the panel: it refuses a rise at or past the whole
-  trains the limit allows and clamps a typed number to it (ui-inspectors.md; T-3152), so a count the
-  panel shows is what runs; one already past the limit is kept until it is lowered.
+  A hand-set count is held by the panel to one train (a loop's two) more than the whole trains the
+  limit allows: it refuses a rise at that and clamps a typed number to it (ui-inspectors.md; T-3165),
+  so one train is held and shows as such; a count past it is lowered when a game loads and otherwise
+  kept until it is lowered.
   Every edit that changes the line, its track or shared track settles the counts
   again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
   to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,
@@ -1754,7 +1755,10 @@ crowding rounds. There are no signals (SPEC 2.1).
 
 A bus line (T-1464, T-1465; design notes/T-1445.md) is a line with no track: the player clicks points
 and between two clicks the route follows the basemap's roads, motorways and their bridges and tunnels
-included (T-2469); the app refuses a point they do not reach (T-2451, T-2467). It shares lines' ids, schedules (buses or a headway per
+included (T-2469); the app refuses a point they do not reach (T-2451, T-2467). Any road in the basemap data
+counts (T-3172): streets of every class, service ways of every kind, tracks, bus guideways and pedestrian
+streets. Footways, cycleways, steps, bridleways, platforms, raceways, piers, rail and ferries do not. Street
+trams use the same roads without motorways. It shares lines' ids, schedules (buses or a headway per
 demand level), trips, the boarding account and the fare curve; a bus is one 12 m vehicle.
 
 - **The route** is points, each with two bits: a corner (the player clicked it) and a road stretch
