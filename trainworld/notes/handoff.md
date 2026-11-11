@@ -23,7 +23,20 @@ turning alike at every station, 15/h or 30/h with a terminal, hints name only a 
 T-3108 blueprint Regular/High speed/Tram switch (b42a4dbc, `set_edges_hsr` -> `set_edges_kind`); T-3092 + T-3103 real
 flyovers and flat badge only where moves cross (f7ed49e9; layout differs from the note: leg crosses ahead of J1, ~1.1 km).
 **Anita on single track:** keep two-way default; too strong, so T-3112 margin 60 -> 240 s (10-20 min each way).
-**Release:** Anita 18:20: "flyovers + right-click loops is a good place to release" (no rush about tonight). So the next
+**Release v0.2.2 in prep (Anita out ~19:00-21:00, "feel free to keepgoing"):** master ee3a28ec has T-3117/3102 flyover
+drawing, T-3118 loop gestures round 2, T-3113 Catalan. 8800 = ee3a28ec, cargo 465/645 and smoke against 8800 PASSED (19:10). updates.ts
+v0.2.2 entry + 13 `updates.v022*` strings drafted (uncommitted; draft shown to Anita, waiting on her reword). l10nbatch
+(Sonnet coordinator, a8ae0af9fd684d0d3) translating every missing/stale key in 11 languages. Then: commit, release build,
+smoke8800 light+dark, deploy.py --dry-run --version v0.2.2; publish + website push wait for her word. Country boards'
+server (4cd43f0) deploys with the community preview, her word.
+**Community:** T-3114 done (32a7fcf8; server 829788b preview mode, not pushed/deployed). To let Anita try it: with her
+word, deploy shonei-server (country boards + preview), append to /opt/shonei/shonei.env `SHONEI_COMMUNITY=preview` and
+`SHONEI_COMMUNITY_TESTERS=pw:<her username>` (ask her username, or her account id from the console line in
+notes/T-2887.md), restart, check the journal for "PREVIEW: 1 tester accounts"; she opens
+localhost:8800/trainworld/?acct=live&community (needs 60 min playtime on the account). Full steps in notes/T-2887.md.
+- sharecopy (Opus, aee2897be32c47b21, main tree + shonei-server, Vite 6187): T-3115 share link + open a copy (ON by
+  default) + card counts.
+**Release (earlier note):** Anita 18:20: "flyovers + right-click loops is a good place to release" (no rush about tonight). So the next
 release = T-3117 flyover drawing fixes + T-3109/3110 landed (+ T-3112, T-3108 already in). Then: Catalan batch if it is
 in, a translation batch for stale keys, updates.ts entry (strings to her), smoke8800 light and dark, deploy.py, her word
 for the website push.
