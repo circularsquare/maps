@@ -18,6 +18,8 @@ import type { Demand, LineId, LineInput, Save, StationInput, WorldView } from ".
 import { DEMAND_INDEX, loopHalves } from "./types";
 
 export const world = signal<WorldView | null>(null);
+/** T-3159: the world just set is a stop click's rows alone (`ClockState.rows`); the network it goes with comes later */
+export const worldIsRows = { value: false };
 /** A short message for the player: why an edit was refused, what a construct cost. */
 export const notice = signal<{ text: string; bad: boolean; at: number } | null>(null);
 

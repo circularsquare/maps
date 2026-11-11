@@ -128,7 +128,10 @@ purpose filter the purpose drawn is ringed in the bar.
   count, say, or track moved under it [T-2622]). The figure is the last there is
   [T-2678, `pendingRiders` in game/today.ts]: its count now; else its last count while the line exists
   (a line stopped and built again; a game load forgets them); else the riders a day demand has for it
-  (once solved but not yet counted by the boarding account, or a new line's first estimate). With none,
+  (once solved but not yet counted by the boarding account, or a new line's first estimate). A line already
+  running keeps its last settled riders, fares and profit while it is pending, and the clock pays it its last
+  settled fare income, until its new riders land [T-2773, `settled` in game/today.ts, `settledIncome` in
+  workers/clockClient.ts]: a half-done answer never shows or books a dip. With none,
   for a line that never had riders, the label stands alone. A group's row takes the label of its
   lines, "calculating..." first, and adds up the figures its rows show. The line inspector's counts
   block shows the same figure with its other figures, the label at the right of its heading and the

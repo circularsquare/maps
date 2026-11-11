@@ -180,6 +180,8 @@ export class StopMarkers {
   private gap: GapFlash;
   /** the last gap asked for; an older answer is dropped */
   private gapAsked = 0;
+  /** T-3159: a clicked marker drawn in its new tier at the click, until its edit is answered; `n` clicks are out */
+  private guess = new Map<string, { tier: StopTier; prev: StopTier; n: number }>();
 
   /** T-3109: a finger down on a marker, until it is held long enough, moves or lifts */
   private press: { id: string; x: number; y: number; timer: number } | null = null;
@@ -265,11 +267,13 @@ export class StopMarkers {
         }
       } else this.fromWorker = null;
       this.tiers = estimate;
+      this.applyGuesses();
       // the clock worker's tiers, from the line tool's own search (T-237), replace this estimate
       const asked = ++this.asked;
       void queryClock({ what: "stopTiers", line: id }).then((d) => {
         if (!d || asked !== this.asked || world.peek() !== w || !this.line) return;
         this.tiers = this.fromWorker = tiersFrom(d, w, this.revAt);
+        this.applyGuesses();
         this.place();
         this.overlay.invalidate();
       });
@@ -282,6 +286,38 @@ export class StopMarkers {
 
   private tierOf(id: string): StopTier {
     return this.tiers.get(id) ?? "cut";
+  }
+
+  private applyGuesses() {
+    for (const [id, g] of this.guess) this.tiers.set(id, g.tier);
+  }
+
+  /** T-3159: the marker of a plain click drawn as the click will leave it, a frame after it rather than after the
+   * worker's world: a stop taken out is a route station (the worker's tier replaces it), one added is a stop. */
+  private guessClick(id: string) {
+    const prev = this.tierOf(id);
+    const tier: StopTier | null = prev === "on" ? "route" : prev === "route" || prev === "reroute" || prev === "reverse" ? "on" : null;
+    if (!tier) return;
+    const g = this.guess.get(id);
+    this.guess.set(id, { tier, prev: g?.prev ?? prev, n: (g?.n ?? 0) + 1 });
+    this.tiers.set(id, tier);
+    this.place();
+    this.overlay.invalidate();
+  }
+
+  /** T-3159: the edit of a plain click on station `id` is answered and the world holds it or does not: a marker
+   * still showing the guess goes back to what it was when the click was refused. */
+  settleClick(id: number | string) {
+    const key = String(id), g = this.guess.get(key);
+    if (!g) return;
+    if (--g.n > 0) return;
+    this.guess.delete(key);
+    if (!this.line) return;
+    const isStop = this.line.stops.includes(key), shownStop = this.tierOf(key) === "on";
+    if (isStop === shownStop) return;
+    this.tiers.set(key, isStop ? "on" : g.prev === "on" ? "route" : g.prev);
+    this.place();
+    this.overlay.invalidate();
   }
 
   /** Move the markers to the camera: after each MapLibre frame and each change. */
@@ -461,6 +497,7 @@ export class StopMarkers {
       return;
     }
     this.hideTag();
+    this.guessClick(id);
     this.toggle(Number(id));
   }
 

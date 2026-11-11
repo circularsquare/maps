@@ -113,7 +113,9 @@ Web first, so it can be shared as a link.
   come for 500 ms (5 s at most); a stop click before then joins them (one full state for the run),
   and the line tool's reads of the lines (`stopTiers` and the like), demand's money results and the
   clock pass it, anything else runs it first. Meanwhile the client holds every other read until no
-  stop click has been answered for 500 ms (the panels ask a dozen after each world). A state carries only the edges,
+  stop click has been answered for 500 ms (the panels ask a dozen after each world). The clicked marker is drawn
+  in its new tier at the click (`StopMarkers.guessClick`, settled when the edit is answered) and a rows world
+  rebuilds no demand layers (`worldIsRows`) [T-3159]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last

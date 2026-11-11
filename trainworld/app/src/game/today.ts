@@ -25,6 +25,7 @@ import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
 import type { Vehicle } from "./vehicle";
 import { cameraMoving, guideVerbose } from "./ui";
+import { perfOff } from "../perfFlags";
 
 export interface LineToday {
   /** riders boarded in the past 24 hours, or yesterday (a change of line boards again), the line's own stops */
@@ -306,7 +307,7 @@ function ask(force = false) {
     // half-done answer's (a local solve reads a long line far low); the final one replaces them when it lands
     for (const [id, x] of next) {
       const s = settled.get(id);
-      if (pend.get(id) === "change" && s) next.set(id, { ...x, riders: s.riders, fullTrains: s.fullTrains, leftBehind: s.leftBehind, fares: s.fares, dayFares: s.dayFares, stops: s.stops.length === x.stops.length ? s.stops : x.stops });
+      if (pend.get(id) === "change" && s && !perfOff("settledHold")) next.set(id, { ...x, riders: s.riders, fullTrains: s.fullTrains, leftBehind: s.leftBehind, fares: s.fares, dayFares: s.dayFares, stops: s.stops.length === x.stops.length ? s.stops : x.stops });
       else settled.set(id, x);
     }
     for (const id of settled.keys()) if (!next.has(id) && !pend.has(id)) settled.delete(id);

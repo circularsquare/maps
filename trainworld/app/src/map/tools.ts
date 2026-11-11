@@ -1539,7 +1539,7 @@ export class Tools {
     const session = this.lineSession;
     this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
       if (session === this.lineSession) say(tr("tools.stopFailed"), true);
-    });
+    }).finally(() => { if (!tier) this.stops?.settleClick(station); });
   }
 
   private async toggle(station: number, session: number, tier?: StopTier) {

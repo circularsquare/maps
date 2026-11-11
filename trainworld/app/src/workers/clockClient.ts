@@ -22,12 +22,12 @@ import { demandByDay, demandView, platformTransfers, roughZones } from "../game/
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
-import { say, setEditSink, world } from "../game/world";
+import { say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
-import { bandTry } from "../perfFlags";
+import { bandTry, perfOff } from "../perfFlags";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import { decodeSave, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
@@ -671,7 +671,7 @@ export class ClockClient {
       for (const id of [...settledIncome.keys()]) if (!live.has(id)) settledIncome.delete(id);
       for (const id of live) {
         const was = settledIncome.get(id);
-        if (!pend.has(id) || !was) { settledIncome.set(id, days.map((i) => ({ perHour: i.lines.get(id)?.perHour ?? [], rides: i.lines.get(id)?.rides ?? [] }))); continue; }
+        if (!pend.has(id) || !was || perfOff("settledHold")) { settledIncome.set(id, days.map((i) => ({ perHour: i.lines.get(id)?.perHour ?? [], rides: i.lines.get(id)?.rides ?? [] }))); continue; }
         days.forEach((i, d) => {
           const cur = i.lines.get(id), old = was[d];
           if (!cur || !old) return;
@@ -984,6 +984,7 @@ export class ClockClient {
     if (msg.state.net) msg.state.net.anchor = a;
     setMoneyState(msg.state.money);
     this.worldBefore = world.value;
+    worldIsRows.value = !!msg.state.rows;
     world.value = toWorld(msg.state);
     const es = this.earlyShares;
     this.earlyShares = null;

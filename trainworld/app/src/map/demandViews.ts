@@ -17,7 +17,7 @@ import { demandByDay, demandView } from "../game/demand";
 import { periodAt } from "../game/periods";
 import type { Selection } from "../game/types";
 import { display, purposeFilter, selection, stopEditing } from "../game/ui";
-import { world } from "../game/world";
+import { world, worldIsRows } from "../game/world";
 import { startAirportMarks } from "./airportMarks";
 import { startAttractionMarks } from "./attractionMarks";
 import { commuterStats, startCommuterView } from "./commuterView";
@@ -74,9 +74,11 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     const on = { lineLoad: d.trackColour === "traffic" && !editing, trainLoad: d.trainLoad,
       stopKey, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
-    const now = [n, w, dv, period.peek(), on.lineLoad, on.trainLoad, on.purpose, demandByDay.peek()];
-    if (now.every((v, i) => v === inputs[i])) return;
-    inputs = now;
+    // a stop click's rows-only world has the network it came after: the layers wait for the full state (T-3159)
+    const rest = [dv, period.peek(), on.lineLoad, on.trainLoad, on.purpose, demandByDay.peek()];
+    const same = n === inputs[0] && worldIsRows.value ? inputs[1] : w;
+    if ([n, same, ...rest].every((v, i) => v === inputs[i])) return;
+    inputs = [n, w, ...rest];
     const t0 = performance.now();
     renderer.setLayers(buildLayers(n, w, dv, period.peek(), on));
     renderer.buses.setTraffic(on.lineLoad ? busWidths(w, dv, on) : null);

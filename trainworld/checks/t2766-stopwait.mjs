@@ -19,6 +19,8 @@ const TL = process.env.TL === '1';
  * the new world, and now and then a slow row build in the worker), a click waiting for the last one's whole state took
  * 0.3-4 s; a guard against that coming back, the network's timing is checked exactly below */
 const SHOWN_MS = 600;
+/** T-3159: the clicked marker is drawn at the click, a frame or two on three cores (the stop list's row waits for the world) */
+const MARKER_MS = 50;
 let fail = 0;
 const check = (ok, what, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}${detail ? `  (${detail})` : ''}`); if (!ok) fail++; };
 
@@ -137,7 +139,7 @@ try {
       const p = posts[i], a = p && answers.find((x) => x.seq === p.seq);
       return { id: k.id, add: k.add, at: Math.round(k.t), sent: p ? Math.round(p.t - k.t) : null, op: p?.op, answered: a ? Math.round(a.t - k.t) : null, ok: a?.ok, early: a?.early, charge: a?.charge, issues: a?.issues, ms: a?.ms && Object.fromEntries(Object.entries(a.ms).map(([k, v]) => [k, Math.round(v)])), mark: k.mark === undefined ? null : Math.round(k.mark), row: k.row === undefined ? null : Math.round(k.row), world: k.world === undefined ? null : Math.round(k.world), cash: k.cashAt === undefined ? null : Math.round(k.cashAt) };
     });
-    return { clicks: r, edits: posts.length, states, bad, stops: line().stops, cash: cashOf(), stateCash: money.moneyState.peek()?.cash, ...(TL ? { tl } : {}) };
+    return { clicks: r, markers: Object.fromEntries(seq.map((id) => [id, isOn(mark(id))])), edits: posts.length, states, bad, stops: line().stops, cash: cashOf(), stateCash: money.moneyState.peek()?.cash, ...(TL ? { tl } : {}) };
   }, [seq, gap, pick.num, TL]);
   const undoAll = (n) => page.evaluate(async (n) => { for (let i = 0; i < n; i++) await window.tw.client.edit({ op: 'undo' }); await new Promise((r) => setTimeout(r, 2500)); }, n);
   const stopsNow = () => page.evaluate((num) => window.tw.world.value.save.lines.find((l) => l.num === num).stops, pick.num);
@@ -175,6 +177,10 @@ try {
     check(nets.length === 1 && nets[0].t > lastAnswer, `quick clicks ${label}: one network built for the run, after the last click was answered`, `${nets.map((s) => s.t).join(" ")} ms; last answer ${lastAnswer} ms; ${q.states.length} states`);
     const late = q.clicks.filter((k) => k.mark === null || k.row === null || k.mark > SHOWN_MS || k.row > SHOWN_MS);
     if (!MEASURE) check(late.length === 0, `quick clicks ${label}: every marker and list row changed within ${SHOWN_MS} ms`, late.map((k) => `${k.mark}/${k.row}`).join(' '));
+    const slowMarks = q.clicks.filter((k) => k.mark === null || k.mark > MARKER_MS);
+    if (!MEASURE) check(slowMarks.length === 0, `quick clicks ${label}: every marker changed within ${MARKER_MS} ms of its click`, q.clicks.map((k) => k.mark).join(' '));
+    else console.log(`      markers ${q.clicks.map((k) => k.mark).join(' ')}, rows ${q.clicks.map((k) => k.row).join(' ')}`);
+    check(q.clicks.every((k) => q.markers[k.id] === k.add), `quick clicks ${label}: each marker ends as its stop is`, JSON.stringify(q.markers));
   }
   const paid = [...slowOn.clicks].filter((k) => k.charge > 0);
   out.paid = paid.map((k) => ({ id: k.id, charge: k.charge }));
@@ -197,6 +203,7 @@ try {
     out.refusal = b;
     const k = b.clicks[dearAt];
     check(b.clicks.slice(0, dearAt).every((x) => x.ok) && k.ok === false && k.issues?.some((x) => x.startsWith('Money:')), 'the dear click is refused for money, the free ones taken', JSON.stringify(k.issues));
+    check(b.markers[k.id] === false && b.clicks.slice(0, dearAt).every((x) => b.markers[x.id]), 'the refused marker is back to a non-stop, the free ones are stops', JSON.stringify(b.markers));
     if (!MEASURE) check(b.bad && b.bad.t - k.at < 300, 'the refusal is told within 300 ms of its click', b.bad ? `${Math.round(b.bad.t - k.at)} ms` : 'no notice');
     else console.log(`      refusal told ${b.bad ? Math.round(b.bad.t - k.at) : null} ms after its click`);
   }
