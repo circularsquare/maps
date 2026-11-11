@@ -66,7 +66,9 @@ then community on (5), push maps master.
   others. Pick another." handed to playtime (owns AccountPanel.tsx).
 - ubc: T-3216 + T-3226 landed 182c7091 (pipeline; every tier 0 pack at its next education step, ~2 h on 8 cores via
   merge_cells --through "tier0 {id} --education", no OSM re-read; the outline spread needs re-made caches). Done.
-- **Server deploy waiting on her word**: shonei-server 22f4293 (search) + 464b5af (moderation), unpushed.
+- **Server deploy waiting on her word**: shonei-server 22f4293 (search) + 464b5af (moderation) + e3b8890 (`played`
+  on the games answer and on too-new 403s, T-3230), unpushed. After the deploy: config trainworldCommunitySearch true,
+  the inbox Names tab works, the account panel's played line shows; then `git push` shonei-server.
 - playtime: T-3230 DONE, landed 0dd4bf7b (per-game time local only, on the saved game card; account line and
   "You've played X" appear once the server sends `played`; account panel line for a hidden name). 8800 = 0dd4bf7b,
   smoke PASSED. It dropped errNewShare/errNewLike's old translations (English until the next batch). Server `played`
