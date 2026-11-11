@@ -656,7 +656,9 @@ impl TrackApi {
     }
 
     fn mask_set(&self) -> MaskSet {
-        let frame = self.w.net.frame();
+        self.mask_set_in(self.w.net.frame())
+    }
+    fn mask_set_in(&self, frame: super::frame::Frame) -> MaskSet {
         MaskSet {
             rasters: self.rasters.iter().map(|r| r.seen.clone()).collect(),
             world: self.world_water.as_ref().map(|m| Arc::new(WorldWater { mask: m.clone(), frame }) as Arc<dyn WaterMask>),
@@ -670,7 +672,18 @@ impl TrackApi {
             Ok(mut net) => {
                 // saves made from a real network before T-1442 carry its untidy names
                 super::names::tidy_network(&mut net);
-                std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
+                // T-3234: the masks in the save's frame, set before its one derive (set after it,
+                // they would derive and settle the whole network again)
+                let water = !self.rasters.is_empty() || self.world_water.is_some();
+                if water {
+                    let frame = net.frame();
+                    for r in &mut self.rasters {
+                        r.seen = pack_mask_in(frame, &r.mask, r.lon, r.lat);
+                    }
+                    net.set_water_mask(Box::new(self.mask_set_in(frame)));
+                } else {
+                    std::mem::swap(&mut net.water_mask, &mut self.w.net.water_mask);
+                }
                 net.time_zones = self.w.net.time_zones.clone();
                 net.terrain = self.w.net.terrain.clone();
                 net.roads = self.w.net.roads.clone();
@@ -681,17 +694,17 @@ impl TrackApi {
                 }
                 // T-2669: the last game's lines' prices are not this one's; the app sends them again
                 self.run_factor.clear();
-                // lines saved at a frequency, not trains, are given trains (T-1146)
-                self.w.allocate_unallocated();
+                // lines saved at a frequency, not trains, are given trains (T-1146), and derived
+                // again with them
+                if self.w.allocate_unallocated() && water {
+                    self.w.reload();
+                }
                 // a save made while trains changed over loads with them where they were (T-1071)
                 if let Some((e, phases)) = eras {
                     if self.w.svc.decode_eras(e, phases).is_err() {
                         self.w.svc.eras.clear();
                         self.w.svc.shifts.clear();
                     }
-                }
-                if !self.rasters.is_empty() || self.world_water.is_some() {
-                    self.rebuild_water();
                 }
                 true
             }
