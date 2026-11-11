@@ -142,28 +142,6 @@ function stopHeading(ov: Overlay, w: WorldView, l: LineInput, id: string): numbe
   return way !== undefined && net ? headingOnScreen(ov, net, id, way) : null;
 }
 
-/** T-3143: a row for each line that serves station `id` one way only, its bullet and the way its vehicles go,
- * as the next station on the line after this one. */
-function oneWayRows(w: WorldView, lines: LineInput[], id: string): HTMLElement[] {
-  const names = new Map(w.save.stations.map((s) => [s.id, s.name]));
-  const rows: HTMLElement[] = [];
-  for (const l of lines) {
-    if (w.lineStats[l.id]?.oneWayAt[id] === undefined) continue;
-    const n = l.stops.length, at = l.stops.indexOf(id);
-    let next = "";
-    for (let k = 1; at >= 0 && k <= n && !next; k++) {
-      const s = l.stops[(at + k) % n];
-      if (s !== id) next = names.get(s) ?? "";
-    }
-    const text = Object.assign(document.createElement("span"), { textContent: next ? t("networkTips.oneWayTo", { name: next }) : t("networkTips.oneWay") });
-    text.style.minWidth = "0";
-    const row = factRow(lineBullet(l, true), text);
-    row.style.gap = "5px";
-    rows.push(row);
-  }
-  return rows;
-}
-
 /** The tag for station `i` of the network buffers. */
 export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | null {
   const net = ov.renderer.net;
@@ -175,7 +153,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   // T-305: the lines serving the station (zoomed out too, where every station is its own dot since
   // T-313), as bullets (T-559)
   const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id)).map((l) => [l.letter + l.colour, l])).values()];
-  if (serving.length) out.push(lineBullets(serving, (l) => stopHeading(ov, w, l, id)), ...oneWayRows(w, serving, id));
+  if (serving.length) out.push(lineBullets(serving, (l) => stopHeading(ov, w, l, id)));
   if (!s.built) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {
     const c = circleOf(ov, w, id);

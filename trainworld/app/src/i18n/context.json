@@ -1422,8 +1422,6 @@
   "networkTips.toStation": "Label of a waiting-riders row in a station hover: the direction of the platform. name: the terminus, \"Canal St\".",
   "networkTips.toEnd": "Label of a waiting-riders row in a station hover when the terminus has no name.",
   "networkTips.blueprint": "Hover tag row for a station that is planned but not built.",
-  "networkTips.oneWayTo": "Row of a station hover, beside the small badge of a line that serves the station one way only (a loop run in one direction). name: the next station on that line in the direction its vehicles go.",
-  "networkTips.oneWay": "Same row as networkTips.oneWayTo when no station name can be given for the way its vehicles go.",
   "networkTips.shared": "Hover tag row over a station upgrade: how many stations of the complex share it. count: 3.",
   "newGame.back": "Button on the new game sheet that goes back to the previous screen.",
   "newGame.chooseOnMap": "Button on the new game sheet: start with the world map and pick the place there.",

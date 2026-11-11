@@ -141,7 +141,8 @@ Briefs carry only the task; these hold for every agent.
   Agents propose wording; never ask her to write it from scratch. A string no one has listed has
   not been reviewed. **Zone, region and realm names are the exception** (Anita, 2026-11-03: "lets not require my
   confirmation for region name text, i dont know much about specific places"): agents decide them and list
-  none for her. Watch hardest for an object or colour as the
+  none for her. **The wiki is not player-facing** (Anita, 2026-11-11: "and wont be for a while"): wiki text is never
+  listed for her review. Watch hardest for an object or colour as the
   subject ("grey fills", "red when"), telegraphic phrases with words dropped ("from street zooms"),
   and hovers that describe what the player can already see. "No interaction instructions" means ordinary
   controls ("Click to type"); a gesture with no visible control gets its instruction in a tag (Anita,

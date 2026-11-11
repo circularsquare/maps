@@ -1422,8 +1422,6 @@
   "networkTips.toStation": "to {name}",
   "networkTips.toEnd": "to the end",
   "networkTips.blueprint": "Blueprint",
-  "networkTips.oneWayTo": "One way, towards {name}",
-  "networkTips.oneWay": "One way",
   "networkTips.shared": "Shared by {count, plural, one {# station} other {# stations}}",
   "newGame.back": "Back",
   "newGame.chooseOnMap": "Choose on map",

@@ -216,7 +216,7 @@ export function headingChevron(colour: string, deg: number): HTMLSpanElement {
   c.className = "heading-chevron";
   c.style.color = colour;
   c.style.transform = `rotate(${deg.toFixed(1)}deg)`;
-  c.innerHTML = '<svg viewBox="0 0 14 14" width="16" height="16" style="display:block;overflow:visible"><path d="M5.25 2 L8.75 7 L5.25 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  c.innerHTML = '<svg viewBox="0 0 14 14" width="16" height="16" style="display:block;overflow:visible"><path d="M3 3.5 L10 7 L3 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   return c;
 }
 

@@ -45,16 +45,17 @@ const busMarkers = (num) => page.evaluate((num) => {
   return tw.tools.busStops.items.map((m, i) => ({ id: st.bus.stops[i].id, half: /gradient/.test(m.el.style.background), way: st.oneWayAt[st.bus.stops[i].id] !== undefined, shown: m.shown }));
 }, num);
 
-/** the text rows of a station hover for a line: its one-way rows ("One way ..."), by station name */
-const hoverRows = (num) => page.evaluate(async (num) => {
+/** per station of a line, whether its hover has a chevron beside the line's bullet and any "One way" text row */
+const hoverInfo = (num) => page.evaluate(async (num) => {
   const tw = window.tw, w = tw.world.value, l = w.save.lines.find((x) => x.num === num), net = tw.renderer.net;
   const { stationTip } = await import('/src/map/networkTips.ts');
   const nm = new Map(w.save.stations.map((s) => [s.id, s.name]));
   const res = {};
   for (const id of new Set(l.stops)) {
     const tip = stationTip(tw.overlay, w, net.stationIds.indexOf(id)) ?? [];
-    const rows = tip.filter((t) => t instanceof HTMLElement && t.classList.contains('tag-facts') && /^One way/.test(t.textContent.replace(l.letter, '').trim())).map((t) => t.textContent.replace(l.letter, '').trim());
-    res[nm.get(id)] = rows;
+    const chev = tip.some((t) => t instanceof HTMLElement && t.querySelector('.bullet-heading .heading-chevron'));
+    const text = tip.some((t) => (typeof t === 'string' ? t : t.textContent).includes('One way'));
+    res[nm.get(id)] = { chev, text };
   }
   return res;
 }, num);
@@ -140,14 +141,13 @@ try {
   await page.screenshot({ path: join(ARTIFACTS, `t3142-ferry-loop-${SHADE}.png`) });
   await page.evaluate(() => window.tw.tools.ferry.clear());
   // hovers: one way, then both ways
-  let hv = await hoverRows(ferry.line);
-  const text = Object.values(hv).flat();
-  check(Object.values(hv).length === 3 && Object.values(hv).every((r) => r.length === 1) && text.every((t) => /^One way, towards [A-Za-z ]+$/.test(t)), 'each port\'s hover has one "One way, towards ..." row', JSON.stringify(hv));
+  let hv = await hoverInfo(ferry.line);
+  check(Object.values(hv).length === 3 && Object.values(hv).every((r) => r.chev && !r.text), 'each port hover has the chevron beside the bullet and no "One way" row', JSON.stringify(hv));
   out.ferryHover = hv;
   await edit({ op: 'lineOneWay', line: ferry.line, oneWay: false });
   await page.waitForTimeout(1200);
-  hv = await hoverRows(ferry.line);
-  check(Object.values(hv).every((r) => r.length === 0), 'run both ways, no port hover says one way', JSON.stringify(hv));
+  hv = await hoverInfo(ferry.line);
+  check(Object.values(hv).every((r) => !r.chev && !r.text), 'run both ways, no chevron on the port hovers', JSON.stringify(hv));
   await edit({ op: 'lineOneWay', line: ferry.line, oneWay: true });
   await page.waitForTimeout(1000);
   await page.evaluate((num) => { const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num); window.tw.selection.value = { kind: 'line', line: l.id }; }, ferry.line);
@@ -191,13 +191,13 @@ if (RAIL && fail === 0) {
       const one = Object.keys(st.oneWayAt).map((s) => nm.get(s)).sort(), says = [], texts = [];
       for (const id of new Set(l.stops)) {
         const tip = stationTip(tw.overlay, w, net.stationIds.indexOf(id)) ?? [];
-        const rows = tip.filter((t) => t instanceof HTMLElement && t.classList.contains('tag-facts') && /One way/.test(t.textContent));
-        if (rows.length) { says.push(nm.get(id)); texts.push(rows[0].textContent.trim()); }
+        if (tip.some((t) => t instanceof HTMLElement && t.querySelector('.bullet-heading .heading-chevron'))) says.push(nm.get(id));
+        if (tip.some((t) => (typeof t === 'string' ? t : t.textContent).includes('One way'))) texts.push(nm.get(id));
       }
       return { one, says: says.sort(), texts };
     });
     out.line1 = res;
-    check(same(res.one, res.says) && res.one.length > 0, 'Amsterdam Line 1: the hovers say "One way" at the stations the sim serves one way, and no others', `${res.says.length} of ${res.one.length}; ${res.texts.slice(0, 2).join(' | ')}`);
+    check(same(res.one, res.says) && res.one.length > 0 && res.texts.length === 0, 'Amsterdam Line 1: the hovers have the chevron at the stations the sim serves one way, and no "One way" row', `${res.says.length} of ${res.one.length}, ${res.texts.length} rows`);
   } catch (e) {
     console.log('FAIL', e.message);
     fail++;
