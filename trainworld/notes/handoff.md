@@ -67,8 +67,13 @@ then community on (5), push maps master.
 - ubc: T-3216 + T-3226 landed 182c7091 (pipeline; every tier 0 pack at its next education step, ~2 h on 8 cores via
   merge_cells --through "tier0 {id} --education", no OSM re-read; the outline spread needs re-made caches). Done.
 - **Server deploy waiting on her word**: shonei-server 22f4293 (search) + 464b5af (moderation), unpushed.
-- playtime (Sonnet, 6118, a152928d838f8d34c): T-3230 time played (account panel, 60-minute messages, per game);
-  stops before any shonei-server edit.
+- playtime: T-3230 DONE, landed 0dd4bf7b (per-game time local only, on the saved game card; account line and
+  "You've played X" appear once the server sends `played`; account panel line for a hidden name). 8800 = 0dd4bf7b,
+  smoke PASSED. It dropped errNewShare/errNewLike's old translations (English until the next batch). Server `played`
+  fields: moderation agent resumed for them (shonei-server, no deploy).
+- New strings to show her / translate: playtime.played "{time} played", playtime.min/hours/hoursMin,
+  accountPanel.nameHidden, errNewShare/errNewLike + " You've played 25 min.", stopMarkers.oneWay, community.search,
+  community.noMatch, community.sandboxNote.
 - realnet (Opus, 6117, a27b2a7568b124ee7): T-3225 survey done (notes/T-3225.md, 0a48b758); her calls listed under
   Waiting on Anita. Now T-1773 levels from tags, proven in scratch; asks before writing data/packs.
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
