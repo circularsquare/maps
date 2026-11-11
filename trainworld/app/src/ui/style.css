@@ -1289,10 +1289,12 @@ button.save-add:hover { color: var(--text); }
 .pi-mark.drag:hover::before { background: var(--tint); }
 .snap-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid var(--accent); border-radius: 50%; }
 /* T-1721: the track tool's point: branching off track, joining it, or running beside it */
-.snap-ring.branch, .snap-ring.join { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border-color: var(--bg); }
+.snap-ring.branch, .snap-ring.join { width: 19px; height: 19px; margin: -9.5px 0 0 -9.5px; border-color: var(--bg); }
 .snap-ring.branch { background: var(--bad); }
 .snap-ring.join { background: var(--yellow); }
-.snap-ring.beside { width: 24px; height: 24px; margin: -12px 0 0 -12px; border-color: var(--beside); }
+/* T-3204: both tracks of a double's loose end merged into the single track that carries on */
+.snap-ring.join.merge { background: var(--warn); }
+.snap-ring.beside { width: 30px; height: 30px; margin: -15px 0 0 -15px; border-color: var(--beside); }
 .beside-band { position: absolute; left: 0; top: 0; pointer-events: none; }
 :root { --beside: #3d82d6; }
 :root[data-shade="dark"] { --beside: #79b3f0; }

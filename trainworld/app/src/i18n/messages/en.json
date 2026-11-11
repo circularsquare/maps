@@ -1947,6 +1947,7 @@
   "toolBar.tram": "Tram",
   "toolBar.priceTipTram": "{level}, {street, select, true {tram track on streets} other {tram track}}",
   "toolBar.quadTrack": "Quad track",
+  "toolBar.quadTrackTip": "Quad track (two parallel double tracks)",
   "toolBar.singleTrack": "Single track",
   "toolKeys.delete": "Delete",
   "toolKeys.deleteTip": "Delete track, stations and flyovers",

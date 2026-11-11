@@ -191,6 +191,8 @@ export interface NetworkBuffers {
   pathLen?: Float32Array;
   /** T-1966, for the train guard: `ClockState.conflicts` */
   conflicts?: Float64Array;
+  /** T-3202, for the train guard: `ClockState.singles` */
+  singles?: Float64Array;
   /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
@@ -668,6 +670,8 @@ function legShifts(edges: readonly ClockEdge[], parts: readonly ArrayLike<number
         shift.near[end] = (held.length ? held : ends.filter((o) => o !== me && double(o))).map(near);
         return;
       }
+      // T-3209: a leg that carries straight on through the node (a double drawn onto its side split it) stays on its line
+      if (ends.some((o) => o !== me && edges[o.i].tracks === 1 && o.dx * me.dx + o.dy * me.dy < -0.9)) return;
       if (!along.length) return;
       const best = nearest(along);
       const otherLeft = left(best);
@@ -1885,6 +1889,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathFrom,
     pathLen,
     conflicts: s.conflicts,
+    singles: s.singles,
     turnbacks,
     ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
     ...(oneWayTrack.length ? { oneWayTrack: new Float32Array(oneWayTrack) } : {}),

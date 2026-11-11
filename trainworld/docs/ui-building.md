@@ -237,7 +237,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   and adds no crossovers.
 - **The point by the pointer** [T-1721]: a red dot where a click branches off a piece of track, a
   yellow dot where it joins at a node (a track end, a junction, a station), a blue ring where the
-  segment will end beside track. The red and yellow dots are 15 px across, the blue ring 24 px [T-3163].
+  segment will end beside track. The red and yellow dots are 19 px across, the blue ring 30 px [T-3163, T-3204]. With Single track picked at double track the dot shows which track the click takes: offset to that track's side (its drawn offset, at least 6 px, so it reads zoomed out; the pointer within 3 px of the centre line zoomed out takes neither), and at a double's loose end an orange dot, centred, where both tracks merge into the single one (between the tracks zoomed in, or on the centre line zoomed out) [T-3204].
 - **Which track single track joins** [T-3137]: with Single track picked and the zoom where double track
   draws as two tracks (`laneState(zoom).t > 0`), a point on or at the end of double track picks the
   track nearer the pointer, for branching off and merging onto alike. Double track is picked across the

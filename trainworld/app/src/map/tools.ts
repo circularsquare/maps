@@ -79,6 +79,8 @@ const SNAP_EDGE_PX = 15;
 // a branch; a node (a loose end to carry on from) keeps more
 const TRACK_NODE_PX = 12;
 const TRACK_EDGE_PX = 8;
+/** T-3204: the dot for the track a pointer is on: zoomed out the two tracks are within this of the centre line, and nearer than this the pointer picks neither; the dot sits at least this far off */
+const DEAD_PX = 3, DOT_MIN_PX = 6;
 /** T-2404: the pointer this near a segment whose state is held (twice the node snap, so the state
  * lands before the pointer reaches what it could snap to), unless this near the start */
 const HELD_NEAR_PX = 2 * TRACK_NODE_PX, HELD_START_PX = 3 * TRACK_NODE_PX;
@@ -94,8 +96,8 @@ const OVERLAP_PX = 4;
 /** `join` (T-3137): with single track picked, the point (local units) on the track of double track there that the
  * pointer picks (`Tools.joinPoint`) */
 type Snap =
-  | { kind: "node"; node: number; lx: number; ly: number; join?: [number, number] }
-  | { kind: "edge"; edge: number; lx: number; ly: number; join?: [number, number] }
+  | { kind: "node"; node: number; lx: number; ly: number; join?: [number, number]; dot?: [number, number]; merge?: true }
+  | { kind: "edge"; edge: number; lx: number; ly: number; join?: [number, number]; dot?: [number, number] }
   | { kind: "free"; lx: number; ly: number };
 
 type Spot = Exclude<Snap, { kind: "free" }>;
@@ -480,19 +482,23 @@ export class Tools {
   /** `hit` with its `join` for the pointer at (px, py), local units */
   private withJoin(hit: Snap, px: number, py: number): Snap {
     if (hit.kind === "free") return hit;
-    const join = this.joinPoint(hit, px, py);
-    return join ? { ...hit, join } : hit;
+    const j = this.joinPoint(hit, px, py);
+    if (!j) return hit;
+    return { ...hit, ...(j.join ? { join: j.join } : {}), ...(j.dot ? { dot: j.dot } : {}), ...(j.merge && hit.kind === "node" ? { merge: true as const } : {}) };
   }
 
   /**
-   * T-3137: with single track picked and double track drawn as two tracks, the point where `hit` meets the double's
-   * track nearer the pointer (px, py, local units): on its centre line's normal there, as far off it as the
-   * tracks are drawn. None zoomed out, where the track model joins the track beside the route.
+   * T-3137: with single track picked and double track at `hit`, which track of it the pointer (px, py, local units)
+   * is on: `join`, the point on that track (on its centre line's normal there, as far off it as the tracks are
+   * drawn, 2 m where they are not), and `dot`, where the dot sits, screen px off the hit (the track's drawn offset, at
+   * least DOT_MIN_PX, so zoomed out it still reads) (T-3204). Zoomed in the pointer's side picks the track; within
+   * DEAD_PX of the centre line zoomed out, and between the tracks at a double's loose end, it takes neither: `merge`
+   * at a loose end (both tracks into the one).
    */
-  private joinPoint(hit: Spot, px: number, py: number): [number, number] | undefined {
+  private joinPoint(hit: Spot, px: number, py: number): { join?: [number, number]; dot?: [number, number]; merge?: boolean } | undefined {
     if (tool.peek() !== "track" || !singleTrack.peek() || tramTrack.peek()) return undefined;
-    const t = laneState(this.map.getZoom()).t, w = world.peek(), n = this.overlay.renderer.net;
-    if (!(t > 0) || !w || !n) return undefined;
+    const lanes = laneState(this.map.getZoom()), t = lanes.t, w = world.peek(), n = this.overlay.renderer.net;
+    if (!w || !n) return undefined;
     const doubles = this.doubleEnds(w);
     const edges = hit.kind === "edge" ? (doubles.ids.has(hit.edge) ? [hit.edge] : []) : doubles.byNode.get(hit.node) ?? [];
     // the double's centre line at the hit: per edge its segment through it, of those the one nearest the pointer
@@ -514,16 +520,31 @@ export class Tools {
     }
     if (!best) return undefined;
     const ul = Math.hypot(best.ux, best.uy), side = Math.sign(best.ux * (py - best.y) - best.uy * (px - best.x));
-    if (!side) return undefined;
-    const off = (LANE_HALF_M * t * kAtY(hit.ly) * side) / ul;
-    return [hit.lx - best.uy * off, hit.ly + best.ux * off];
+    const loose = hit.kind === "node" && doubles.loose.has(hit.node);
+    // the pointer's distance from the centre line, screen px
+    const [fx, fy] = this.screen(hit.lx, hit.ly), [ex, ey] = this.screen(hit.lx + 1, hit.ly);
+    const across = (Math.abs(best.ux * (py - best.y) - best.uy * (px - best.x)) / ul) * Math.hypot(ex - fx, ey - fy);
+    const laneOff = (lanes.gap * t) / 2, half = (lanes.share * lanes.gap) / 2;
+    const pick = !side ? false : t > 0 && !loose ? true : across > Math.max(DEAD_PX, laneOff - half);
+    if (!pick) return loose ? { merge: true } : undefined;
+    const off = (LANE_HALF_M * (t > 0 ? t : 1) * kAtY(hit.ly) * side) / ul;
+    const near = this.screen(hit.lx - best.uy * (0.01 * side) / ul, hit.ly + best.ux * (0.01 * side) / ul), nl = Math.hypot(near[0] - fx, near[1] - fy) || 1;
+    const px0 = Math.max(laneOff, DOT_MIN_PX);
+    return { join: [hit.lx - best.uy * off, hit.ly + best.ux * off], dot: [((near[0] - fx) / nl) * px0, ((near[1] - fy) / nl) * px0] };
   }
 
   /** T-3171: whether the track at (x, y) is single track with no double track there (a double may narrow to it) */
   private onlySingle(n: NonNullable<Tools["overlay"]["renderer"]["net"]>, w: NonNullable<ReturnType<typeof world.peek>>, x: number, y: number): boolean {
     const { ids: doubles, singles } = this.doubleEnds(w);
     let single = false;
-    for (const { edge } of edgesNear(n, x, y, 3 * kAtY(y)) ?? []) {
+    const reach = 3 * kAtY(y);
+    for (const { edge, pts, ks } of edgesNear(n, x, y, reach) ?? []) {
+      // the candidates are the cells' segments: only those within reach
+      const near = (ks ?? []).some((k) => {
+        const dx = pts[k + 3] - pts[k], dy = pts[k + 4] - pts[k + 1], l2 = dx * dx + dy * dy, f = l2 ? Math.max(0, Math.min(1, ((x - pts[k]) * dx + (y - pts[k + 1]) * dy) / l2)) : 0;
+        return Math.hypot(pts[k] + dx * f - x, pts[k + 1] + dy * f - y) <= reach;
+      });
+      if (!near) continue;
       if (doubles.has(edge)) return false;
       if (singles.has(edge)) single = true;
     }
@@ -2104,13 +2125,13 @@ export class Tools {
     }
     // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track
     const hb = t === "track" && h?.kind === "free" ? this.hoverBeside : null;
-    this.ring.className = "snap-ring" + (t !== "track" ? "" : hb ? " beside" : h?.kind === "edge" ? " branch" : h?.kind === "node" ? " join" : "");
+    this.ring.className = "snap-ring" + (t !== "track" ? "" : hb ? " beside" : h?.kind === "edge" ? " branch" : h?.kind === "node" ? (h.merge ? " join merge" : " join") : "");
     if ((t === "track" || t === "station") && h && h.kind !== "free") {
       this.ring.style.display = "";
       if (t === "station") {
         this.stationRings(h);
         this.stationGhost(h);
-      } else put(this.ring, ...(h.join ?? [h.lx, h.ly]));
+      } else put(this.ring, h.lx, h.ly, ...(h.dot ?? [0, 0]));
     } else if (hb) {
       this.ring.style.display = "";
       put(this.ring, hb.lx, hb.ly);

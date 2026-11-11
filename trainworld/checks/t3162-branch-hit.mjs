@@ -1,6 +1,6 @@
 // T-3162: with single track picked, each track of double track drawn as two tracks is a branch point across its
 // whole drawn width, at any zoom: a pointer anywhere over the outer track (and over the inner one) starts a branch
-// from that track (`Snap.join`), the pointer just past the drawn pair does not. T-3163: the branch dot is 15 px.
+// from that track (`Snap.join`), the pointer just past the drawn pair does not. T-3163, T-3204: the branch dot is 19 px.
 // From the maps root, on a Vite of your own (node trainworld/checks/dev-nowatch.mjs 6112):
 //   node trainworld/checks/t3162-branch-hit.mjs [dev url]
 // Pictures in artifacts/trainworld/t3162-*.png and t3163-*.png.
@@ -87,7 +87,7 @@ try {
   const [cx, cy] = await page.evaluate(() => { const q = window.tw.map.project(window.__j.ll(window.__j.P(-900, 0))); return [q.x, q.y]; }).then(([x, y]) => [box.x + x, box.y + y]);
   await hoverAt(cx, cy - ((L.gap * L.t) / 2));
   const dot = await page.evaluate(() => { const r = document.querySelector('.snap-ring.branch'); if (!r) return null; const b = r.getBoundingClientRect(); return { w: b.width, h: b.height, shown: getComputedStyle(r).display !== 'none' }; });
-  check(dot && dot.shown && Math.abs(dot.w - 15) < 0.6, 'the branch dot is 15 px wide (10 px before)', JSON.stringify(dot));
+  check(dot && dot.shown && Math.abs(dot.w - 19) < 0.6, 'the branch dot is 19 px wide (10, then 15 px before)', JSON.stringify(dot));
   await shot('t3163-branch-dot');
   // ---- T-3190: the double main's loose end (x 3000): zoomed in, a pointer over one track near the end carries on that
   // track (the node, with a join on that side), zoomed out it joins neither; built, the join counts and the way follows
@@ -110,6 +110,25 @@ try {
   {
     const { h } = await endHover(0);
     check(h?.kind === 'node' && h.side === null, 'T-3190 zoomed out: the loose end is the node, joining neither track', JSON.stringify(h));
+  }
+  // T-3204: the dot shows which of the two things a double's loose end will do, at any zoom: merge both tracks into the
+  // single one (orange, centred) or carry on one track (yellow, offset to its side by at least 6 px)
+  const dotOf = (off) => endHover(off).then(({ h }) => page.evaluate(() => {
+    const t = window.tw.tools.hover, r = document.querySelector('.snap-ring');
+    return { kind: t?.kind, merge: !!t?.merge, dot: t?.dot ?? null, cls: r?.className ?? '', bg: r ? getComputedStyle(r).backgroundColor : '' };
+  }));
+  const colours = {};
+  for (const zoom of [15, 17, 20.5]) {
+    await endAt(zoom);
+    const L = await lanes();
+    const m = await dotOf(0), up = await dotOf(-Math.max(5, (L.gap * L.t) / 2)), down = await dotOf(Math.max(5, (L.gap * L.t) / 2));
+    check(m.kind === 'node' && m.merge && !m.dot && /merge/.test(m.cls), `T-3204 zoom ${zoom}: the pointer on the centre line merges both tracks (orange dot, centred)`, JSON.stringify(m));
+    check(up.kind === 'node' && !up.merge && up.dot && up.dot[1] <= -5.9, `T-3204 zoom ${zoom}: above the centre carries on the upper track (dot offset up)`, JSON.stringify(up));
+    check(down.kind === 'node' && !down.merge && down.dot && down.dot[1] >= 5.9, `T-3204 zoom ${zoom}: below the centre carries on the lower track (dot offset down)`, JSON.stringify(down));
+    colours[zoom] = [m.bg, up.bg];
+    check(colours[zoom][0] !== colours[zoom][1], `T-3204 zoom ${zoom}: merging both and carrying on one track are different colours`, JSON.stringify(colours[zoom]));
+    if (zoom === 17) { await dotOf(-Math.max(5, (L.gap * L.t) / 2)); await shot('t3204-one-track-z17'); await dotOf(0); await shot('t3204-merge-z17'); }
+    if (zoom === 15) { await dotOf(-6); await shot('t3204-one-track-z15'); await dotOf(0); await shot('t3204-merge-z15'); }
   }
   for (const zoom of [19, 20.5]) {
     await endAt(zoom);

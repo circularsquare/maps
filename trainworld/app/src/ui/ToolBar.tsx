@@ -111,7 +111,7 @@ function TrackBar() {
               onClick={() => setSingleTrack(true)}><Icon.tracks1 /></button>}
             <button class={"btn icon" + (!q && !one ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q && !one} data-tip={t("toolBar.doubleTrack")}
               onClick={() => { setQuadTrack(false); setSingleTrack(false); }}><Icon.tracks2 /></button>
-            <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrack")}
+            <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrackTip")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
           </div>
           <span class="build-toggles">

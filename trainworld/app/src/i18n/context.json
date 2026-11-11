@@ -1946,6 +1946,7 @@
   "toolBar.doubleTrack": "Button and hover choosing double track (two tracks), in the track tool's bar. It shows two lines.",
   "toolBar.tram": "Choice of track type in the track tool's bar, beside Regular and High speed: tram track.",
   "toolBar.priceTipTram": "Hover on the track tool's price, naming the elevation and that the track is tram track. level: the elevation's name, such as Ground level. street: true while the tool lays tram track along streets (the cheap kind).",
+  "toolBar.quadTrackTip": "Hover on the quad track button, in the track tool's bar: names it and says what it is.",
   "toolBar.quadTrack": "Button and hover choosing quad track (four tracks), in the track tool's bar. It shows four lines.",
   "toolBar.singleTrack": "Button and hover choosing single track (one track), in the track tool's bar. It shows one line.",
   "toolKeys.delete": "Name of the delete tool in the Build tab.",
