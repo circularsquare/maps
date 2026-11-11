@@ -1106,7 +1106,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 
 ## Community
 
-[T-2887, T-3114, T-3115, T-3132, T-3144; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
+[T-2887, T-3114, T-3115, T-3132, T-3144, T-3224; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
 server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; notes/T-2887.md]
 
 - **Shown only when the server says so**: `/noritetsu/config`'s `trainworldCommunity`, or in preview its
@@ -1125,6 +1125,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   its biggest city in the place, points, lines and stations (the game's own counts,
   bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with Open a copy
   (when offered), Copy link, Report and the heart.
+- **Search** (T-3224): a box at the right end of the tabs' row (on a phone, beside the place picker), placeholder
+  "Search", shown only when `/noritetsu/config` says `trainworldCommunitySearch`. Sent as the list's `q` once typing
+  pauses 350 ms; matches the title or the sharer's display name, any case, accents folded, in the chosen tab and
+  place. A search lists every matching share, not one per person, so a name finds all of that player's networks; a
+  rank is still the share's place on the whole board, so only a player's best has one. Clearing it (or Escape)
+  returns to the normal page; nothing found says "No networks match that search". Works signed out.
 - **Likes**: every share starts with one, its player's own, which they cannot take back; on their own share the
   heart shows filled and disabled, hover "This network is yours.".
 - **Share again from Community**: an opened share of the player's own has Share again. For the game being played

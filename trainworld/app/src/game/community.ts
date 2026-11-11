@@ -214,8 +214,14 @@ export async function stopSharing(id: string): Promise<void> {
   } catch (e) { throw plain(e, "share"); }
 }
 
-export async function fetchShares(view: ShareView, city: string, seed: string): Promise<ShareList> {
+/** T-3224: the server's list takes a search (`q`, in titles and display names); an older one ignores it and the box is hidden */
+export const communitySearchOn = () => accountConfig.value?.trainworldCommunitySearch === true;
+/** the longest search the server takes */
+export const SEARCH_MAX = 40;
+
+export async function fetchShares(view: ShareView, city: string, seed: string, search = ""): Promise<ShareList> {
   const q = new URLSearchParams({ view, city, seed });
+  if (search) q.set("q", search.slice(0, SEARCH_MAX));
   const j = await api<ShareList>("GET", `trainworld/community/list?${q}`);
   return { ...j, rows: j.rows ?? [] };
 }

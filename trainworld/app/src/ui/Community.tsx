@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { TITLE_MAX, communityOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -24,6 +24,8 @@ import { Icon } from "./widgets";
 import "./community.css";
 
 const PAGE = 12;
+/** T-3224: ms of no typing before a search goes to the server */
+const SEARCH_PAUSE_MS = 350;
 const cityName = (id: string) => tPlace(id, CITIES.find((c) => c.id === id)?.name ?? id);
 
 // T-3132: the place picker's countries and regions. A region is a realm (game/realms.ts, named for players on the map)
@@ -269,6 +271,16 @@ function Browse() {
   }, [linked]);
   const signedIn = session.value?.account.id ?? "";
   const city = placeParam(boardKey);
+  // T-3224: what is typed in the search box, and the search sent once typing pauses (at once when cleared)
+  const [typed, setTyped] = useState("");
+  const [search, setSearch] = useState("");
+  const searchOn = communitySearchOn();
+  useEffect(() => {
+    const want = searchOn ? typed.trim() : "";
+    if (!want) { setSearch(""); return; }
+    const timer = setTimeout(() => setSearch(want), SEARCH_PAUSE_MS);
+    return () => clearTimeout(timer);
+  }, [typed, searchOn]);
   // the player's own shares, for Share again on an opened one
   useEffect(() => { void refreshMyShares(); }, [signedIn]);
   useEffect(() => {
@@ -276,9 +288,9 @@ function Browse() {
     setRows(null);
     setError("");
     setPage(0);
-    fetchShares(view, city, seed).then((l) => { if (live) setRows(l.rows); }, (e) => { if (live) setError((e as Error).message); });
+    fetchShares(view, city, seed, search).then((l) => { if (live) setRows(l.rows); }, (e) => { if (live) setError((e as Error).message); });
     return () => { live = false; };
-  }, [view, city, seed, signedIn, shareTick.value]);
+  }, [view, city, seed, search, signedIn, shareTick.value]);
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const lands = [...new Set(mine.map((id) => zoneCountry(id)?.toLowerCase() ?? "").filter(Boolean))];
   const areas = [...new Set(mine.map(regionOf).filter((r): r is string => !!r))];
@@ -297,11 +309,14 @@ function Browse() {
         <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} countries={lands} more={{ ...MORE_PLACES, regions: areas }} onPick={setBoardKey} />
       </div>
       {view === "random" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
+      {searchOn && <input type="search" class="new-game-find cm-search" maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
+        value={typed} onInput={(e) => setTyped((e.target as HTMLInputElement).value)}
+        onKeyDown={(e) => { if (e.key === "Escape" && typed) { e.preventDefault(); e.stopPropagation(); setTyped(""); } }} />}
     </div>
     {linkError && <p class="acct-msg bad">{linkError}</p>}
     {error ? <p class="acct-msg bad">{error}</p>
       : !rows ? <p class="small muted">{t("leaderboard.loading")}</p>
-      : !list.length ? <p class="muted">{t("community.empty")}</p>
+      : !list.length ? <p class="muted">{search ? t("community.noMatch") : t("community.empty")}</p>
       : <ul class="cm-cards">{shown.map((r) => <Card key={r.id + r.rev} row={r} onOpen={() => setPicked(r)} />)}</ul>}
     {view === "top" && !error && rows && <p class="small muted cm-note-foot">{t("community.sandboxNote")}</p>}
     {pages > 1 && <div class="cm-pager">
