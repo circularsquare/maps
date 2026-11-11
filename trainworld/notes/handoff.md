@@ -87,7 +87,9 @@ then community on (5), push maps master.
   phase is normal for any network that size (T-007 the same). Filed T-3236 (London save fixed up each load), T-3237
   (first networkFromState 2-3 s). 8800 = 46661a4d, smoke PASSED.
 - meet (resumed, ~320k): T-3231 two lines standing on one place at a double-track terminal (t1965 fails on master).
-- firstpass (Sonnet, 6123, aafb245f80aed6ea1): T-3237, drawing pixel-identical.
+- firstpass: T-3237 DONE, landed 3545d35c (bandPoints by bisection; T-007 first pass ~0.6 s less, NY ~0.1 s;
+  identical output). Next candidates there (not filed): StrokeBuilder.add and `q` in network.ts, segmentGap (~0.2 s).
+  8800 = 3545d35c, smoke PASSED.
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
 - community.errNewShare "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine,
   she said fine) landed in cc510cc1. Next translation batch: these, sandboxNote, stopMarkers.oneWay, search strings.
