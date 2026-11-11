@@ -12,6 +12,10 @@ use super::params::{LEVEL_H, ROAD_CROSSING_COST, ROAD_STEP};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// The cosine of 20 degrees: a road meeting track at under that angle is run along, not crossed (T-3129), so
+/// track laid on a road does not pay each time its fit wanders over the road's centre line.
+const ALONG_COS: f64 = 0.939_692_620_785_908_4;
+
 /// Tile units across a tile.
 pub const EXTENT: f64 = 4096.0;
 /// Tiles across the world at zoom 14.
@@ -105,6 +109,10 @@ impl RoadTile {
                     let (sx, sy) = (s[2] as f64 - cx0, s[3] as f64 - cy0);
                     let den = rx * sy - ry * sx;
                     if den == 0.0 {
+                        continue;
+                    }
+                    // T-3129: track meeting a road under `ALONG_DEG` runs along it, not across it
+                    if (rx * sx + ry * sy).abs() > ALONG_COS * (rx.hypot(ry) * sx.hypot(sy)) {
                         continue;
                     }
                     let t = ((cx0 - a.0) * sy - (cy0 - a.1) * sx) / den;
@@ -279,5 +287,26 @@ mod tests {
         assert_eq!(cost, ROAD_CROSSING_COST);
         let flat = [[0.0, 0.0], [1000.0, 0.0]];
         assert_eq!(charge(&flat, &c).0, 5.0);
+    }
+
+    #[test]
+    fn a_road_under_twenty_degrees_is_not_crossed() {
+        let (lon, lat) = (-73.98, 40.75);
+        let (tx, ty, t) = tile_at(lon, lat, 100.0);
+        let mut roads = Roads::default();
+        roads.tiles.insert(Roads::key(tx, ty), Arc::new(t));
+        let [w, s, e, n] = tile_bounds(tx, ty);
+        let (x0, y0) = (w + 0.2 * (e - w), s + 0.3 * (n - s));
+        let m_lon = 111_320.0 * lat.to_radians().cos();
+        // 1,000 m at `deg` degrees off the roads' (north-south) line, from the middle of the tile
+        let run = |deg: f64| {
+            let (dx, dy) = (deg.to_radians().sin() * 1000.0, deg.to_radians().cos() * 1000.0);
+            let mut out = vec![];
+            crossings(1000.0, |c| (x0 + dx * c / 1000.0 / m_lon, y0 + dy * c / 1000.0 / 110_574.0), &roads, &mut out);
+            out.len()
+        };
+        assert_eq!(run(10.0), 0, "10 degrees runs along the roads");
+        assert!(run(19.0) == 0 && run(30.0) > 0, "the cut is at 20");
+        assert!(run(90.0) >= 8, "across them, each is crossed");
     }
 }

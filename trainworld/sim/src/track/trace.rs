@@ -73,6 +73,8 @@ pub struct Tracer {
     pis: Vec<Pi>,
     done: Option<Option<Traced>>,
     tight: bool,
+    /// how far a tight corner's curve may pass from its vertex, ground m (`tight`, `tight_within`)
+    tight_m: f64,
 }
 
 enum Eased {
@@ -85,7 +87,7 @@ enum Eased {
 impl Tracer {
     pub fn new(line: &[(f64, f64)], scaled: bool, tol: f64, r_min: f64, cap: f64, level: i8) -> Tracer {
         let line = dedup(line);
-        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, geom_r: r_min.min(MIN_RADIUS), cap, level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None, tight: false };
+        let mut t = Tracer { line, samples: vec![], scaled, tol, r_min, geom_r: r_min.min(MIN_RADIUS), cap, level, keep: vec![], rounds: 0, corners: None, tried: 0, widened: 0, dropped: 0, sweep: None, pis: vec![], done: None, tight: false, tight_m: TIGHT_M };
         if t.line.len() < 2 {
             t.done = Some(None);
             return t;
@@ -171,13 +173,21 @@ impl Tracer {
         self
     }
 
+    /// T-3129: `tight` with curves allowed to pass up to `m` ground m (and the tolerance, if less) from their
+    /// vertex: rail on a road takes each corner as wide as that leaves it, up to the design radius.
+    pub fn tight_within(mut self, m: f64) -> Tracer {
+        self.tight = true;
+        self.tight_m = m;
+        self
+    }
+
     fn tighten(&self, c: &mut Corners) {
         let f = c.fit(&self.line, self.scaled, self.cap, self.level);
         let v = c.verts(&self.line, self.level);
         for j in 1..c.keep.len().saturating_sub(1) {
             let off = 1.0 / (turn_at(&v, j) / 2.0).cos() - 1.0;
-            if f.radius[j] > 0.0 && off > 0.0 && f.radius[j] * off > TIGHT_M.min(self.tol) {
-                c.radius[j] = ((TIGHT_M.min(self.tol) / off).max(self.r_min + 1e-3) / QUANT).floor() * QUANT;
+            if f.radius[j] > 0.0 && off > 0.0 && f.radius[j] * off > self.tight_m.min(self.tol) {
+                c.radius[j] = ((self.tight_m.min(self.tol) / off).max(self.r_min + 1e-3) / QUANT).floor() * QUANT;
             }
         }
     }

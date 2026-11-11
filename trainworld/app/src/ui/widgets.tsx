@@ -41,6 +41,8 @@ export const Icon = {
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
   // a magnet over a curving line
   snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
+  // a road with its centre line, a rail track curving along it (T-3129)
+  snapRoads: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5c4 0 8-2 13-9M4.5 15c4 0 8-2 11-6.5" /><path d="M2.5 9c3.5-.5 7-2 11-7" stroke-dasharray="1.5 1.5" /></svg>,
   // two curving tracks side by side, the new one dashed
   snapBeside: () => <svg viewBox="0 0 16 16"><path d="M1.5 11.5c4.5 0 8-3 10-9.5" /><path d="M4.5 14.5c4.5 0 8-3 10-9.5" stroke-dasharray="2 1.6" /></svg>,
   // two peaks, the track tag's terrain mark (T-1394)

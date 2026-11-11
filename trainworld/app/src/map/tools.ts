@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -293,8 +293,8 @@ export class Tools {
         this.clearPreview();
       }
       this.place();
-    }, () => this.place(), () => this.freeLevel());
-    effect(() => { tool.value; tramTrack.value; snapStreets.value; this.streetSwitch(); });
+    }, () => this.place(), () => this.freeLevel(), () => ({ design: designSpeed.peek(), hsr: highSpeed.peek(), quad: quadTrack.peek() }));
+    effect(() => { tool.value; tramTrack.value; snapStreets.value; snapRoads.value; this.streetSwitch(); });
     effect(() => { besideOn.value; this.place(); });
     // T-1260: the touch control bar and the handle that drags the point being previewed
     this.touchHost = document.createElement("div");
@@ -375,9 +375,11 @@ export class Tools {
   /** T-2927: the street snap on while the track tool holds Tram, its switch flipped while Ctrl is held. */
   private streetSwitch() {
     if (!this.street) return;
-    const on = tool.peek() === "track" && tramTrack.peek() && snapStreets.peek() !== this.noSnap;
-    if (on === this.street.isOn) return;
-    this.street.setOn(on);
+    // T-3129: rail follows the roads with Snap to roads on and Ctrl not held
+    const tram = tramTrack.peek(), on = tool.peek() === "track" && (tram ? snapStreets.peek() !== this.noSnap : snapRoads.peek() && !this.noSnap);
+    const profile = tram ? "tram" : "rail";
+    if (on === this.street.isOn && (!on || profile === this.street.snapProfile)) return;
+    this.street.setOn(on, profile);
     if (on && this.start) this.street.begin([this.start.lng, this.start.lat]);
     if (!on && this.start) this.requestPreview();
   }
@@ -1095,7 +1097,10 @@ export class Tools {
    * route's last point (on the street); street tram track. */
   private streetReq(r: StreetRoute, at: Snap | null = this.hover) {
     const free = ([lng, lat]: [number, number]): RouteEnd => ({ kind: "free", ...lngLatToPack(lng, lat), level: this.freeLevel() });
-    return { from: this.start!.end, to: at && at.kind !== "free" ? this.endOf(at) : free(r.last), pis: r.pis, single: false, quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
+    const to = at && at.kind !== "free" ? this.endOf(at) : free(r.last);
+    // T-3129: rail on roads is an ordinary route through the fitted corners, as the real snap's
+    if (!tramTrack.peek()) return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: false, ramp: autoRamp.peek(), ...this.joinReq(at) };
+    return { from: this.start!.end, to, pis: r.pis, single: false, quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first

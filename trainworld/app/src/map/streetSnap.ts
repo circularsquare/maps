@@ -18,7 +18,7 @@ import { getWorldFrame } from "../game/cities";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
 import { toLocal, unitPerPxAt } from "./geo";
-import { BusRoads, type BusRefusal } from "./busRoads";
+import { BusRoads, railRoad, type BusRefusal } from "./busRoads";
 
 /** the wait after the pointer moves before the streets are searched, ms; the search and fit take a few ms (notes/T-3016.md) and the workers drop stale asks */
 const REST_MS = 0;
@@ -28,6 +28,16 @@ const SAME_PX = 4;
 const SLOW_MS = 300;
 /** the fit's tolerances in turn, ground m: the street's line within the first that fits */
 const TOLS = [10, 20, 40];
+/** T-3129: rail on roads, the fit's tolerances in turn (ground m: the road's line within the first that fits) */
+const RAIL_TOLS = [20, 40];
+/** a turn costs the time lost slowing for it, as metres at the target speed: `(v - TURN_V)^2 / RAIL_DECEL`
+ * with v the target speed in m/s, a right-angle corner taken at about 44 km/h; at least `RAIL_TURN_MIN_M` and
+ * at most `RAIL_TURN_MAX_M`, past which a fast line would search the whole city for a way round */
+const RAIL_TURN_V = 12.2;
+const RAIL_DECEL = 1;
+const RAIL_TURN_MIN_M = 10;
+const RAIL_TURN_MAX_M = 600;
+export const railTurnM = (kmh: number) => Math.max(RAIL_TURN_MIN_M, Math.min(RAIL_TURN_MAX_M, (Math.max(0, kmh / 3.6 - RAIL_TURN_V) ** 2) / RAIL_DECEL));
 /** a fit whose worst point is further than this many times its tolerance, and than WORST_M, is not
  * taken. Where it leaves the street it is tram track, priced so (`set_route_street`); WORST_M is a
  * 25 m curve round the sharpest corner the search takes (BACK_DEG, 40 m from the corner) and a bit,
@@ -71,6 +81,9 @@ interface Spot {
   waiters: (() => void)[];
 }
 
+/** what the snap follows: street tram track on streets, or rail on the main roads (T-3129) */
+export type SnapProfile = "tram" | "rail";
+
 const REFUSED: Record<Exclude<BusRefusal, "far">, () => string> = { path: () => t("busDraw.tagPath"), long: () => t("busDraw.tagLong") };
 
 export class StreetSnap {
@@ -85,7 +98,9 @@ export class StreetSnap {
    * new spot's is ready, so the ghost never blanks while the pointer moves */
   private shown: "route" | "line" | "red" | null = null;
   private shownWhy = "";
-  readonly roads: BusRoads;
+  private readonly tramRoads: BusRoads;
+  private readonly railRoads: BusRoads;
+  private profile: SnapProfile = "tram";
   /** where a first click at the pointer would land on a street */
   ringAt: [number, number] | null = null;
   /** the last route's figures, for checks (`window.tw.tools.street.last`) */
@@ -102,8 +117,20 @@ export class StreetSnap {
     private redraw: () => void,
     /** the elevation a route is laid at */
     private level: () => Level,
+    /** what rail track on roads is laid for: the target speed (km/h), high speed, quad */
+    private railOpts: () => { design: number; hsr: boolean; quad: boolean },
   ) {
-    this.roads = new BusRoads(map, () => this.landed());
+    this.tramRoads = new BusRoads(map, () => this.landed());
+    this.railRoads = new BusRoads(map, () => this.landed(), railRoad);
+  }
+
+  /** the roads the snap follows now */
+  get roads(): BusRoads {
+    return this.profile === "rail" ? this.railRoads : this.tramRoads;
+  }
+
+  private get rail() {
+    return this.profile === "rail";
   }
 
   private router(): Worker {
@@ -118,16 +145,21 @@ export class StreetSnap {
     this.router().postMessage(m);
   }
 
-  /** The switch (flipped by Ctrl) with Tram in the track tool's hand. */
-  setOn(on: boolean) {
-    if (on === this.on) return;
+  /** The switch (flipped by Ctrl) with Tram in the track tool's hand, or with `profile` rail (T-3129) Snap to roads. */
+  setOn(on: boolean, profile: SnapProfile = this.profile) {
+    if (on === this.on && profile === this.profile) return;
     this.on = on;
+    this.profile = profile;
     if (!on) this.ringAt = null;
     this.drop();
   }
 
   get isOn() {
     return this.on;
+  }
+
+  get snapProfile(): SnapProfile {
+    return this.profile;
   }
 
   /** where the route at the pointer is (checks) */
@@ -137,7 +169,7 @@ export class StreetSnap {
 
   /** Where a first click at (lng, lat) goes: onto the street within reach, or where it is. */
   landing(lng: number, lat: number): [number, number] {
-    const p = this.on ? this.roads.street({ lng, lat }) : null;
+    const p = this.on ? this.roads.street({ lng, lat }, this.rail) : null;
     return p ? [p.lng, p.lat] : [lng, lat];
   }
 
@@ -175,7 +207,7 @@ export class StreetSnap {
   move(px: number, py: number, lng: number, lat: number, onTrack: boolean) {
     if (!this.on) return;
     if (!this.from) {
-      const p = this.roads.street({ lng, lat });
+      const p = this.roads.street({ lng, lat }, this.rail);
       this.ringAt = p ? [p.lng, p.lat] : null;
       return;
     }
@@ -220,7 +252,7 @@ export class StreetSnap {
       this.held = false;
     }
     if (this.spot !== s || (s.phase as Spot["phase"]) === "off") return null;
-    if (s.phase === "none" || !s.route) return { kind: "refuse", text: s.why ?? t("tools.streetsTight") };
+    if (s.phase === "none" || !s.route) return { kind: "refuse", text: s.why ?? t(this.rail ? "tools.roadsTight" : "tools.streetsTight") };
     this.endOf(s.route);
     return { kind: "route", route: s.route };
   }
@@ -261,6 +293,10 @@ export class StreetSnap {
     if (!keep) this.shown = null;
   }
 
+  private get tols() {
+    return this.rail ? RAIL_TOLS : TOLS;
+  }
+
   private display(a: PreviewAnswer | null, req?: object) {
     this.shown = a ? "route" : null;
     this.show(a, req);
@@ -293,7 +329,8 @@ export class StreetSnap {
       setTimeout(() => this.spot === s && this.redraw(), SLOW_MS + 20);
     }
     const c = this.came;
-    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, TURN_M, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] }, (HARD_DEG * Math.PI) / 180);
+    const turnM = this.rail ? railTurnM(this.railOpts().design) : TURN_M;
+    const leg = this.roads.tramLeg({ lng: f[0], lat: f[1] }, { lng: s.lng, lat: s.lat }, turnM, (TURN_DEG * Math.PI) / 180, (BACK_DEG * Math.PI) / 180, BACK_M, c && { lng: c[0], lat: c[1] }, (HARD_DEG * Math.PI) / 180, this.rail);
     // tiles still landing: asked again when they have (`landed`)
     if (!leg.ready) {
       setTimeout(() => this.redraw(), SLOW_MS + 20);
@@ -328,24 +365,26 @@ export class StreetSnap {
     s.phase = "fit";
     this.redraw();
     const fr = getWorldFrame();
-    this.post({ kind: "trace", seq: s.seq, line: s.line!.slice(), tol: TOLS[s.tol], track: STREET_TRAM, level: this.level(), frame: { kind: fr.kind, lon: fr.lon, lat: fr.lat } });
+    const rail = this.rail ? this.railOpts() : undefined;
+    this.post({ kind: "trace", seq: s.seq, line: s.line!.slice(), tol: this.tols[s.tol], track: STREET_TRAM, level: this.level(), frame: { kind: fr.kind, lon: fr.lon, lat: fr.lat }, rail });
   }
 
   private answer(m: FromRouter) {
     if (m.kind !== "fit") return;
     const s = this.spot;
     if (!s || s.seq !== m.seq || s.phase !== "fit" || !s.line) return;
-    const tol = TOLS[s.tol];
+    const tol = this.tols[s.tol];
     if (this.last) Object.assign(this.last, { fitMs: this.last.fitMs + m.ms, tol, worst: m.worst });
-    if (!m.pis || m.worst > Math.max(WORST_SHARE * tol, WORST_M)) {
-      if (s.tol + 1 < TOLS.length) {
+    if (!m.pis || m.worst > (this.rail ? WORST_SHARE * tol : Math.max(WORST_SHARE * tol, WORST_M))) {
+      if (s.tol + 1 < this.tols.length) {
         // wider, as a new request so an answer for the narrower one is not taken for it
         s.tol++;
         s.seq = ++this.seq;
         return this.fit(s);
       }
-      this.redLine(s, t("tools.streetsTight"));
-      return this.finish(s, "none", t("tools.streetsTight"));
+      const tight = t(this.rail ? "tools.roadsTight" : "tools.streetsTight");
+      this.redLine(s, tight);
+      return this.finish(s, "none", tight);
     }
     const pis: PiInput[] = [];
     for (let k = 0; k + 3 < m.pis.length; k += 4) pis.push({ x: m.pis[k], y: m.pis[k + 1], level: m.pis[k + 3] as Level, ...(m.pis[k + 2] > 0 ? { radius: m.pis[k + 2] } : {}) });

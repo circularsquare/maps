@@ -15,7 +15,7 @@ import { signal } from "@preact/signals";
 import { SHADES, type ShadeColours } from "../game/shades";
 import { display, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
-import { busRoadFilter } from "./busRoads";
+import { busRoadFilter, railRoadFilter } from "./busRoads";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
@@ -383,14 +383,19 @@ const ROAD_HINTS = {
   // at 11 the hint is the major ones)
   bus: { id: "bus_roads_hint", filter: () => busRoadFilter(), colour: ["#1a9e94", "#3fd0c4"], opacity: [0.55, 0.38], minzoom: 11, width: 1.25 },
   tram: { id: "tram_roads_hint", filter: () => busRoadFilter(false), colour: ["#3f9a1c", "#86d65a"], opacity: [0.55, 0.38], minzoom: 11, width: 1.25 },
+  // T-3129: the main roads rail track snaps to
+  rail: { id: "rail_roads_hint", filter: () => railRoadFilter(), colour: ["#c2661a", "#f0a050"], opacity: [0.6, 0.45], minzoom: 9, width: 1.5 },
 } as const;
 type RoadHint = keyof typeof ROAD_HINTS;
-const hintOn: Record<RoadHint, boolean> = { bus: false, tram: false };
+const hintOn: Record<RoadHint, boolean> = { bus: false, tram: false, rail: false };
 export function setBusRoadHint(map: maplibregl.Map, on: boolean) {
   setRoadHint(map, "bus", on);
 }
 export function setTramRoadHint(map: maplibregl.Map, on: boolean) {
   setRoadHint(map, "tram", on);
+}
+export function setRailRoadHint(map: maplibregl.Map, on: boolean) {
+  setRoadHint(map, "rail", on);
 }
 /** the hints that are on, painted again (a new style or shade) */
 function repaintRoadHints(map: maplibregl.Map) {

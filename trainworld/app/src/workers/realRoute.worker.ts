@@ -30,8 +30,9 @@ export type ToRouter =
   /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
   | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number; design: number }
   /** T-2927: a street's line (lon, lat pairs) fitted as track of kind `track` (2, street tram) at `tol`
-   * ground m; answered with a "fit" */
-  | { kind: "trace"; seq: number; line: Float64Array; tol: number; track: number; level: number; frame: FrameSpec }
+   * ground m; answered with a "fit". T-3129: with `rail`, a road's line fitted as rail track for that
+   * target speed (km/h), curves as wide as the road allows (`TrackApi::trace_road`) */
+  | { kind: "trace"; seq: number; line: Float64Array; tol: number; track: number; level: number; frame: FrameSpec; rail?: { design: number; hsr: boolean; quad: boolean } }
   /** the route asked as `seq` is no longer wanted (the pointer left real track, the run ended): a
    * search or fit still running for it stops at its next look (T-1039) */
   | { kind: "drop"; seq: number }
@@ -562,8 +563,13 @@ function apiIn(f: FrameSpec): TrackApi {
   return a;
 }
 
-async function traceLatest(seq: number, line: Float64Array, tol: number, tracks: number, level: number, kind = -1, frame: FrameSpec | null = null): Promise<Float64Array | null> {
-  const t = kind >= 0 ? apiIn(frame ?? NEW_GAME_FRAME).trace_kind(line, tol, kind, level) : api!.trace_start(line, tol, tracks, level);
+async function traceLatest(seq: number, line: Float64Array, tol: number, tracks: number, level: number, kind = -1, frame: FrameSpec | null = null, rail: { design: number; hsr: boolean; quad: boolean } | null = null): Promise<Float64Array | null> {
+  let t;
+  if (rail) {
+    const a = apiIn(frame ?? NEW_GAME_FRAME);
+    a.set_design_speed(rail.design);
+    t = a.trace_road(line, tol, rail.hsr, rail.quad, level);
+  } else t = kind >= 0 ? apiIn(frame ?? NEW_GAME_FRAME).trace_kind(line, tol, kind, level) : api!.trace_start(line, tol, tracks, level);
   try {
     let slice = performance.now();
     while (!t.step()) {
@@ -649,7 +655,7 @@ async function handle(m: ToRouter) {
     await apiReady;
     if (m.seq !== latest) return;
     const t1 = performance.now();
-    const out = await traceLatest(m.seq, m.line, m.tol, 2, m.level, m.track, m.frame);
+    const out = await traceLatest(m.seq, m.line, m.tol, 2, m.level, m.track, m.frame, m.rail ?? null);
     if (!out) return;
     const ms = performance.now() - t1;
     if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms });

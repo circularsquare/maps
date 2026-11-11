@@ -178,7 +178,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 14;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; beside: boolean; design: number; platform: number; tramPlatform: number }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; platform: number; tramPlatform: number }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -336,6 +336,9 @@ export const snapReal = signal(saved.build?.snap === true);
 /** T-2927: tram track drawn with the track tool follows the streets (street tram track); on unless
  * turned off, and flipped while Ctrl is held (tools.ts) */
 export const snapStreets = signal(saved.build?.streets !== false);
+/** T-3129: rail track drawn with the track tool follows the main roads; off by default, and off whenever the real
+ * network or beside track is snapped to (the three exclude each other in the bar) */
+export const snapRoads = signal(saved.build?.roads === true && saved.build?.snap !== true && saved.build?.beside !== true);
 /** T-1685: track drawn from beside existing track runs alongside it (`TrackApi::set_route_beside`) */
 // T-3046: the two snaps exclude each other in the bar; a save holding both keeps the real network
 export const snapBeside = signal(saved.build?.beside === true && saved.build?.snap !== true);
@@ -465,7 +468,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

@@ -814,6 +814,17 @@ impl TrackApi {
         RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, s.min_radius, design_radius(s.v_cap_kmh), level).tight() }
     }
 
+    /// T-3129: a road's line (lon, lat pairs) as rail track: `trace_kind` for the regular or high-speed
+    /// kind, but each curve as wide as the design speed's radius (`set_design_speed`) allows while it
+    /// passes within `tol` ground m of the road's corner; quad track keeps its inner pair `QUAD_SPACING` wider.
+    pub fn trace_road(&self, lonlat: &[f64], tol: f64, hsr: bool, quad: bool, level: i8) -> RouteTrace {
+        let f = self.w.net.frame();
+        let line: Vec<(f64, f64)> = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
+        let s = TrackKind::from_hsr(hsr).spec();
+        let r_min = s.min_radius + if quad { QUAD_SPACING } else { 0.0 };
+        RouteTrace { t: crate::track::trace::Tracer::new(&line, f.scaled(), tol, r_min, self.route_cap.max(r_min), level).tight_within(tol) }
+    }
+
     /// The node the last `add_route` ended at, so the next segment can start from it (T-418).
     pub fn route_end(&self) -> u32 {
         self.route_end
@@ -1229,12 +1240,13 @@ pub(super) const BRANCH_CLEAR: f64 = 20.0;
 /// where it makes a junction of a plain joint, single track's end there takes the track beside it
 /// the same way, as (edge end, join). Every lateral position is 200 m out, as `derive_node` ranks ends.
 fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bool) -> (u8, Vec<(u32, u8)>) {
-    if !r.double || r.dirs.len() != 2 || out.len() < 2 {
+    if !r.double || r.dirs.is_empty() || r.dirs.len() > 2 || out.len() < 2 {
         return (0, vec![]);
     }
     let (dx, dy) = (out[1].x - r.x, out[1].y - r.y);
     let along = |th: f64| th.cos() * dx + th.sin() * dy;
-    let th = if along(r.dirs[0]) >= along(r.dirs[1]) { r.dirs[0] } else { r.dirs[1] };
+    // (a loose end has one: the way it carries on, T-3190)
+    let th = if r.dirs.len() == 1 || along(r.dirs[0]) >= along(r.dirs[1]) { r.dirs[0] } else { r.dirs[1] };
     let left_of = |x: f64, y: f64| th.cos() * (y - r.y) - th.sin() * (x - r.x);
     let f = geom::fit_in(out, net.frame().scaled());
     let mine = match f.pieces.is_empty() {

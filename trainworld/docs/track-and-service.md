@@ -335,6 +335,21 @@ Full design, numbers and sources: `notes/T-008.md`.
   are too tight here. Add a point on the way." Street track reshaped by hand becomes tram track. Both kinds look
   alike on the map: 0.75 of rail's width, lines over them too, with two thin wires along the middle, white in light
   and near white in dark (`tramWire`, T-3006), once a stroke is wide enough, one along each track once they part (blueprint's only then).
+- **Snap to roads** (T-3129, rail with Regular or High speed; notes/T-3129.md): a switch in the track bar beside the
+  real-network and beside-track ones, off by default, remembered, and off whenever either of those is on (and they
+  turn it off). While it is on the roads rail may follow are tinted orange over the map (motorway, trunk, primary,
+  secondary and tertiary; no minor streets, service ways, links or pedestrian streets). It is the street snap with a
+  rail profile (`StreetSnap`, `SnapProfile`): a first click within 100 m of one of those roads lands on it; the
+  route to the pointer follows them, motorways included, shortest with, for each turn over 30 degrees, the time lost
+  slowing for it as metres at the target speed, `(v - 12.2 m/s)^2` (a right-angle corner at about 44 km/h; 20 m at
+  60 km/h, 250 m at 100, 600 m at most), and the same turn-back rules as the tram's. The road's line is fitted as rail
+  corners (`TrackApi::trace_road`, `Tracer::tight_within`): each curve as wide as the target speed's radius allows
+  while it passes within 20 m of its road corner (else 40 m, taking the first whose worst point is within 1.5 times
+  its tolerance), the kind's own smallest radius, quad's inner pair wider. A curve slower than the target is slow,
+  never refused (the tag's lowest limit shows it); no fit says "The roads are too tight here. Add a point on the
+  way." It is placed as an ordinary route through those corners at the level, track count and type picked (as the
+  real snap's), the road's centre line at every level, in one undo step, and costs what any route does: no discount
+  for following a road. Ctrl held draws by hand. A pointer with no road within 100 m draws an ordinary segment.
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is
@@ -1272,7 +1287,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   a ramp too), standing for the knockdowns and road works of a city. Roads are the basemap's zoom
   14 lines (OpenMapTiles `transportation`): trunk, primary, secondary, tertiary, minor and busway
   count 1, a motorway 3; service ways, tracks, paths, and any road on a bridge or in a tunnel count
-  none. A divided road is two lines, so it counts twice. So ground track through a dense centre
+  none. A road meeting the track at under 20 degrees is run along, not crossed (T-3129), so track on a road does
+  not pay for its fit wandering over the road's centre line. A divided road is two lines, so it counts twice. So ground track through a dense centre
   (11-13 crossings a km) costs about US$145-165M a km, more than a +1 viaduct (dearer from about 3.75
   crossings a km), and in open country (under 1 a km) about US$40M. The clock worker fetches the tiles from the basemap's own server (the URL template the page
   sends, `roadFeed.ts`, decoded by `map/roadTiles.ts`) under each route preview and under the
