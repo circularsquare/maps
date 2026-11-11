@@ -46,23 +46,27 @@ then community on (5), push maps master.
 - l10n pass 3+4 (Opus, running): A a096c1fd986c51dab, B a1437117ad2afc220 (also fixing tools.streetsTight in zh/es,
   pt gradeMarks.tramYields, fr "sauts-de-mouton" glossary plural), C a9aaeff42365127d7.
 - maps-b7's agents all done and landed; maps-b7 has wound down.
-- busstop (Sonnet, 6114, a76b5cf1a943ec24c): T-3210 bus stop one way on a two-way stretch + T-3211 "One way stop" hover.
+- busstop (Sonnet, 6114, a76b5cf1a943ec24c): T-3210 + T-3211 DONE, landed 912a85ff, 8800 = 912a85ff, smoke PASSED.
+  New string stopMarkers.oneWay "One way stop" is English only: translate in the next batch before a publish.
+- meet (Opus, 6121, a07934c91990ea3cc): T-3202 option 1 (her pick) from passing's uncommitted work, then a T-3212
+  proposal with mocks (not built). Option 2, the real timetable meet, is T-3219 (queued, her word).
 - ubc (Opus, 6116, afbd5ad584e1de35f): T-3213 diagnosed (notes/T-3213.md; UBC game ~91k legs/day vs 152k real:
   students in one cell 2.2 km off the core, Canada jobs from the proxy, campus sized by area). Filed A T-3214, B T-3215,
   C T-3216, cache clobbering T-3217. Now building T-3214's pipeline code, proven on van in scratch; no rebuild.
   Her calls: D (university attendance 0.6 -> 0.8 everywhere; agent says wait for A-C), E (campus as a new destination
   factor; agent says no).
-- Not started: T-3212 single-track stations drawn as a split (waits on T-3202's call, same drawing area).
+- Her calls on T-3213: campus fixes queue with T-2896's airport items for the next world rebuild; attendance raise a
+  tentative yes (T-3218, judge with the rebuild); no campus destination factor. Airports as homes = T-3070 (filed).
 
 ## Next after v0.3
 - **T-3202** (two trains meet on single track; notes/T-3202.md): passing built a draw-only guard, OFF by default,
   uncommitted. Cause: on a symmetric 2-station line both ends depart together. Options: (1) finish draw-only ~2-3 h
   (two trains side by side at a single-track stop, explain a 273 s lag, t1965/t1966/smoke with it on, default on;
   passing's lean); (2) sim timetable meet schedule, changes capacity (2 trains on 2 km 5.1 -> ~6.4/h): her call;
-  (3) both. Ask her after the publish; brief a fresh agent from the notes.
+  (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3218**.
+- Next free id **T-3220**.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
