@@ -2,7 +2,8 @@
 
 import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { applyRowGuesses } from "./stopRowGuess";
 import { nearestStation } from "../../game/places";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { Money } from "../MoneyText";
@@ -645,6 +646,8 @@ function RailLineInspector({ id }: { id: string }) {
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
   // T-3089: a row's station is lit on the map while the pointer is on it; a row that goes takes the light with it
   useEffect(() => () => setListHot(null), [l?.num, w?.version]);
+  // T-3232: a stop click's guessed row goes with the world that holds it
+  useLayoutEffect(applyRowGuesses, [w?.version]);
   // its day so far (T-293), kept fresh while the panel is open
   useToday();
   // T-1272: the Traffic view draws the stops diagram by load, with the map's crowding marks
@@ -847,7 +850,7 @@ function RailLineInspector({ id }: { id: string }) {
     const dot = dotClick(i, row);
     return (
       <li class={(xfer ? "xfer" : "") + (tall ? " tall" : "") + (drag?.from === i ? " dragged" : "") + (!row && loopEnds && (i === 0 || i === nStops - 1) ? " pinned" : "") + (st.oneWayAt?.[s] !== undefined ? " oneway" : "") + dropClass(i)} data-r={drawn ? true : undefined}
-        data-stop={i} onPointerDown={(e) => rowDown(e, i)} onMouseEnter={() => setListHot({ stations: complexOf(s) })} onMouseLeave={() => setListHot(null)}>
+        data-stop={i} data-station={s} onPointerDown={(e) => rowDown(e, i)} onMouseEnter={() => setListHot({ stations: complexOf(s) })} onMouseLeave={() => setListHot(null)}>
         {row?.arc && <i class={"arc " + row.arc} aria-hidden="true" />}
         {row?.arc === "end" && <i class="dir" aria-hidden="true" />}
         {looks && !drawn && above >= 0 && looks[above] && <StretchHalf s={looks[above]} down={false} />}

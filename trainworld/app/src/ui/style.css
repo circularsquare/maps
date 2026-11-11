@@ -724,6 +724,7 @@ rect.now { fill-opacity: .45; }
 /* T-646: the stations a line passes, offered as stops (no dot), and those about to be added (faint dot) */
 .stops li.passed::after { display: none; }
 .stops li.adding { color: var(--muted); }
+.stops li.guess-out { display: none; }
 .stops li.adding::after { opacity: 0.45; }
 /* T-1894: while stops are edited, a stop's dot (or a passed station's row in related lines) is a click target */
 .stops .stop-hit { position: absolute; left: 0; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; cursor: pointer; z-index: 3; }

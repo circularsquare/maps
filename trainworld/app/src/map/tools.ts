@@ -68,6 +68,7 @@ import { BuildingFloors, startBuildingFloors } from "./buildingFloors";
 import { playBuild } from "./buildSound";
 import { perfOff } from "../perfFlags";
 import { logShare } from "./modeBar";
+import { guessRow, settleRow } from "../ui/inspector/stopRowGuess";
 
 /** the touch control bar's gap from the point it serves, so the finger does not cover it (px) */
 const TOUCH_GAP_PX = 44;
@@ -1617,9 +1618,18 @@ export class Tools {
 
   private queueStop(station: number, tier?: StopTier) {
     const session = this.lineSession;
+    if (!tier) {
+      const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      if (line) guessRow(String(station), line.stops.includes(String(station)), line.num);
+    }
     this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
       if (session === this.lineSession) say(tr("tools.stopFailed"), true);
-    }).finally(() => { if (!tier) this.stops?.settleClick(station); });
+    }).finally(() => {
+      if (tier) return;
+      this.stops?.settleClick(station);
+      const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      settleRow(String(station), !!line?.stops.includes(String(station)));
+    });
   }
 
   private async toggle(station: number, session: number, tier?: StopTier) {
