@@ -26,34 +26,33 @@ const V0_2_AT = "2026-11-10T17:30:00Z";
 /** When v0.2.1 went out: set at publish. */
 const V0_2_1_AT = "2026-11-10T20:50:00Z";
 
-/** When v0.2.2 went out: set at publish. */
-const V0_2_2_AT = "2026-11-11T03:00:00Z";
+/** When v0.3 went out: set at publish. */
+const V0_3_AT = "2026-11-11T03:00:00Z";
 
 export const UPDATES: Update[] = [
   {
-    version: "v0.2.2",
-    at: V0_2_2_AT,
-    line: "updates.v022Line",
+    version: "v0.3",
+    at: V0_3_AT,
+    line: "updates.v03Line",
     changes: [
-      "updates.v022Flyovers",
-      "updates.v022Single",
-      "updates.v022RightClick",
-      "updates.v022BusLoops",
-      "updates.v022LoopButton",
-      "updates.v022LoopStops",
-      "updates.v022Rebuild",
-      "updates.v022BlueprintTram",
-      "updates.v022Turning",
-      "updates.v022StreetTram",
-      "updates.v022Curves",
-      "updates.v022TargetSpeed",
-      "updates.v022Catalan",
-      "updates.v022NerfTerminals",
-      "updates.v022NerfTrams",
-      "updates.v022NerfJunctions",
-      "updates.v022Fixes",
+      "updates.v03Flyovers",
+      "updates.v03Single",
+      "updates.v03Share",
+      "updates.v03Rebuild",
+      "updates.v03Boards",
+      "updates.v03Roads",
+      "updates.v03Quad",
+      "updates.v03Complexes",
+      "updates.v03Loops",
+      "updates.v03Ferries",
+      "updates.v03Curves",
+      "updates.v03Catalan",
+      "updates.v03NerfTerminals",
+      "updates.v03NerfTrams",
+      "updates.v03NerfJunctions",
+      "updates.v03Fixes",
     ],
-    nerfs: ["updates.v022NerfTerminals", "updates.v022NerfTrams", "updates.v022NerfJunctions"],
+    nerfs: ["updates.v03NerfTerminals", "updates.v03NerfTrams", "updates.v03NerfJunctions"],
   },
   {
     version: "v0.2.1",
