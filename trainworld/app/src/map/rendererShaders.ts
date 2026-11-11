@@ -14,7 +14,7 @@ const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
 /** T-3136 (Anita: "we should draw double track a bit thicker, and single a bit thinner"): rail track's
  * width as a share of a line's, single and double, so the two read apart zoomed out. Double eases back to 1
  * as its two tracks grow apart (`u_lanes.z`), and single with it, so close in nothing changes. */
-const SINGLE_WIDTH = 0.75, DOUBLE_WIDTH = 1.3;
+const SINGLE_WIDTH = 0.71, DOUBLE_WIDTH = 1.24;
 /** Zoomed far out every stroke is at least a pixel wide; double track's least is this many (device px), so
  * the two still differ where both would be at the floor. */
 const DOUBLE_FLOOR_PX = 2.0;
