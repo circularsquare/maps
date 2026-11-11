@@ -21,11 +21,11 @@ import { AccountButton, startAccountUi } from "./AccountPanel";
 import { LanguageSelect } from "./LanguageSelect";
 import { DeleteAsk, pickSaveFile, SlotFacts, SlotThumb, SlotTitle, useBackups, VersionsLine, type VersionActions } from "./SavesPanel";
 import { Icon } from "./widgets";
-import { Modal } from "./Modal";
-import { dismissUpdate, UPDATES, updateToShow } from "./updates";
-import { mobileDevice } from "../workers/deviceMemory";
+import { Changelog } from "./Changelog";
+import { CommunityButton } from "./Community";
+import { dismissUpdate, updateToShow } from "./updates";
 import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
-import { t, tDate, tRich } from "../i18n";
+import { t } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
 /** The build's commit count (vite.config.ts), "dev" on a dev server. */
@@ -183,7 +183,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
       <div class="save-files">
         <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>{t("startMenu.newGame")}</button>
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
-        <div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div>
+        <div class="start-top"><LanguageSelect /><AccountButton kind="start" /><CommunityButton start /></div>
       </div>
       {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
       {warned && !refused && <p class="muted small start-refused" role="alert">{warned.text} <button class="btn" onClick={() => { setWarned(null); warned.go(); }}>{t("startMenu.loadAnyway")}</button> <button class="btn" onClick={() => { setWarned(null); warned.go(true); }}>{t("startMenu.loadWithoutIntercity")}</button></p>}
@@ -211,12 +211,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
       </>}
     </div>}
     {!sheet && <UpdateRow onChangelog={() => setChangelog(true)} />}
-    <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
-      {UPDATES.map((u) => <section key={u.version}>
-        <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
-        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => { const fig = u.nerfs?.[k]; return <li key={k}>{fig ? tRich(k, { figure: <span class="nerf">{t(fig)}</span> }) : t(k)}</li>; })}</ul>
-      </section>)}
-    </Modal>
+    <Changelog open={changelog} onClose={() => setChangelog(false)} />
   </div>;
 }
 

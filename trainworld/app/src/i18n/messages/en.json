@@ -2460,7 +2460,7 @@
   "community.errTooSmall": "Build at least 2 lines and 8 stations first.",
   "community.errNeedName": "Pick a name to show with your network.",
   "community.errBadName": "Please pick a different name.",
-  "community.sandboxNote": "Sandbox games aren't counted",
+  "community.sandboxNote": "Sandbox games not shown",
   "community.errBadTitle": "Please pick a different title.",
   "community.shareTitle": "Title",
   "community.errNewShare": "You can share after playing for 60 minutes.",

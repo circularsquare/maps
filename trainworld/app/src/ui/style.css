@@ -1041,6 +1041,7 @@ a.btn { text-decoration: none; }
 .start-top, .start-top .lang-row { display: flex; align-items: center; gap: 6px; margin: 0 0 0 auto; }
 .start-top:empty { display: none; }
 .start-top .acct-start { position: static; margin-left: 2px; }
+.start-top .cm-start { margin-left: 2px; }
 .start-new { align-self: flex-start; border-color: var(--accent); }
 .start-new:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .start-head { font-size: 14px; font-weight: 700; margin: 6px 0 0; }

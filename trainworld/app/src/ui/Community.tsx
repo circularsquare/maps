@@ -321,9 +321,9 @@ export function Community() {
 }
 
 /** Opens Community: in the head of the saves panel and of the leaderboards, and in Settings beside Controls (T-3132). */
-export function CommunityButton({ settings }: { settings?: boolean }) {
+export function CommunityButton({ settings, start }: { settings?: boolean; start?: boolean }) {
   if (!communityOn()) return null;
-  const cls = settings ? "btn icon" + (communityOpen.value ? " on" : "") : "btn icon save-head-mark cm-head";
+  const cls = start ? "btn icon cm-start" : settings ? "btn icon" + (communityOpen.value ? " on" : "") : "btn icon save-head-mark cm-head";
   return <button type="button" class={cls} data-tip={t("community.title")} aria-label={t("community.title")} onClick={() => (communityOpen.value = true)}><Icon.people /></button>;
 }
 
