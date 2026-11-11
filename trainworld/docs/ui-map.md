@@ -618,13 +618,30 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   train for a dead end's other platform crosses the scissors on the way in, over the 50 m past the
   platform (or past its own length, if longer), and a train leaving from the arrival side's
   platform crosses on the way out; a train ending at a through platform without a terminal leaves
-  over the diagonal behind it instead of jumping across. A train standing at such an end holds no one on its track; one due at a place still
-  taken (its train standing there, or leaving and not yet off the platform) stands short of
+  over the diagonal behind it instead of jumping across. A line ending at a station on single track
+  [T-3202] has two places there, the two sides it is drawn split into (below), the crossover 60 m
+  past where they join, and each arriving train takes the place free longest, so the train it meets
+  there stands on the other. A train standing at such an end holds no one on its track; one due at a place still
+  taken (its train standing there, or leaving and not yet off the platform, but not one standing
+  for the single track until it is in) stands short of
   the crossover, 30 m before it, until it is free. One place only (a through platform without a
-  terminal, single track): the train ahead holds it, as above. A line with places at its ends is guarded
+  terminal): the train ahead holds it, as above. A line with places at its ends is guarded
   even alone on its track (`TrainGuard.placeLines`, T-2986), so a stand longer than its headway at a
   one-place end holds the next train back instead of drawing two there. Clicks and the train panel use the
   drawn place.
+- **Taking single track in turn** [T-3202, `map/trainGuard.ts`]: at every zoom, trains of
+  opposite directions on two-way single track (the capacity's single-track stretches between
+  passing points, `TrackApi.guard_singles`) take a stretch in turn. Each train's time on it comes
+  from its timetable and lag, from leaving the stop before it to coming to rest at the stop after
+  it (stops within 300 m of its ends). One already on it keeps it; the rest go in the order they
+  are due, and one coming the other way stands at its stop until 5 s after the other is in, so on
+  a two-station line with two trains one runs while the other waits, about a run time late. Trains
+  the same way go together (the train ahead holds them). Every train of a line on single track in
+  view is looked at, wherever it is, since the one coming the other way is often far out of the
+  view. Lag is made up and capped as above. At a station on single track a train is drawn on its
+  own side of the platform, as on double track once its tracks part, easing over from the middle
+  over 60 m either side (`network.ts` `singleSplits`), so two meeting there stand side by side.
+  Drawing only: no figure moves. `?perfOff=singleWait` or `renderer.guard.singles` turns the wait off.
 - **Waiting at flat crossings** [T-1966, `map/trainGuard.ts`]: zoomed in to `CONFLICT_ZOOM` (14,
   where trains are drawn as cars at about their true length), trains in or near the view wait for
   each other at flat crossings and at junction moves that cross (the track model's conflicting

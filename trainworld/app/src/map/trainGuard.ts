@@ -21,6 +21,13 @@
 // T-2233: at a station with passing tracks a train that stops is drawn on the outer track and one that
 // does not on the running track beside it, so there neither holds the other: the one place order on a
 // track may change. A faster line stopping there stops on the running track beside it (T-2248).
+//
+// T-3202: on two-way single track (the capacity's single-track sections, `TrackApi.guard_singles`)
+// trains of opposite directions take the stretch between passing points in turn, at every zoom: a
+// train due onto it while one coming the other way is on it, or is due on it first, stands at its stop
+// until that one has reached its own. The timetable already charges the stretch's wait as delay; this
+// only draws where it is spent. The two meet at a station, drawn there as on two tracks
+// (network.ts `singleSplits`, terminalBays.ts for a line's ends). `?perfOff=singleWait` turns it off.
 
 import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
 import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";
@@ -58,6 +65,12 @@ const MOVE_KEY = 2 ** 26;
  * this share of the outer track's lead short of the platform (drawn 90% of the way out), until its
  * front is past the lead. */
 const PASS_IN = 0.2;
+/** T-3202: a stop this near either end of a single-track stretch, m, is where a train waits for it and
+ * where it is clear of it (a dead end's train stands mid-platform, a hold short of the stretch) */
+const SINGLE_STOP_M = 300;
+/** T-3202: a train goes onto a single-track stretch this long after one coming the other way has
+ * reached its stop, game s */
+const SINGLE_AFTER_S = 5;
 
 /** What the guard needs of the frame: the time and the view. */
 export interface GuardFrame {
@@ -117,9 +130,21 @@ export class TrainGuard {
    * clears (`tauKey`), for the phase tables it was worked out on */
   private tauCache = new Map<number, number>();
   private tauPhases: Float32Array | null = null;
+  /** T-3202, per line: its two-way single-track stretches, 4 numbers each: stretch, where it starts and
+   * ends along run 0 (m), and which way run 0 runs over it (0 or 1, by the stretch's first edge) */
+  private singleOn = new Map<number, number[]>();
+  /** per profile and stretch start: the trip times it leaves its stop onto the stretch and reaches
+   * its stop past it (`singleSpan`) */
+  private singleCache = new Map<number, number>();
+  private singlePhases: Float32Array | null = null;
+  /** the last frame: trains standing for single track; since the last `resetCounts`, trains let on
+   * at LAG_MAX (checks) */
+  singleHeld = 0;
+  singleLetOn = 0;
   /** the game time of the last update: the lags hold for the frame drawn at it */
   lastTime = NaN;
-  /** the next trip of each line, found by its departure: line * 1e7 + round(dep * 100) */
+  /** the next trip of each line, found by its run and departure: (line * 2 + run) * 1e7 + round(dep * 100)
+   * (a line with an even number of trains sends one from each end at once, T-3202) */
   private nextIndex = new Map<number, number>();
   /** how many trips were guarded the last frame (checks) */
   guardedCount = 0;
@@ -151,6 +176,11 @@ export class TrainGuard {
   passedBy = 0;
   /** trains also wait for each other at flat crossings and crossing junction moves (T-1966) */
   crossings = !perfOff("crossWait");
+  /** trains of opposite directions take two-way single track in turn (T-3202); set before the network
+   * is read, since it also guards the lines on single track */
+  singles = !perfOff("singleWait");
+  /** the trips standing at their stop for single track this frame */
+  private singleWait = new Set<number>();
 
   resetCounts() {
     this.conflictLongest = 0;
@@ -158,6 +188,7 @@ export class TrainGuard {
     this.conflictWaitSum = 0;
     this.conflictLetThrough = 0;
     this.passedBy = 0;
+    this.singleLetOn = 0;
   }
 
   setNetwork(n: NetworkBuffers) {
@@ -184,6 +215,8 @@ export class TrainGuard {
     this.moveRes = [];
     this.movePairs.clear();
     this.tauCache.clear();
+    this.singleOn.clear();
+    this.singleCache.clear();
     this.boxes = null;
     const T = n.pathTable, E = n.pathEntry;
     const lines = (n.lineTable.length / 4) | 0;
@@ -214,6 +247,8 @@ export class TrainGuard {
         if (this.crossOn.has(E[k] >> 1) || (k + 1 < f + c && (this.moveIdx.has(E[k] * MOVE_KEY + E[k + 1]) || this.moveIdx.has((E[k + 1] ^ 1) * MOVE_KEY + (E[k] ^ 1))))) this.guardedAll[l] = 1;
       }
     }
+    if (this.singles) this.readSingles(n.singles, lines);
+    for (const l of this.singleOn.keys()) if ((n.lineCars?.[l] ?? 8) >= 1) this.guardedTrack[l] = this.guardedAll[l] = 1;
     this.trackBase = this.guardedTrack.slice();
     this.allBase = this.guardedAll.slice();
     this.baysFor = null;
@@ -231,6 +266,37 @@ export class TrainGuard {
         if (y > y1) y1 = y;
       }
       box.set([x0, y0, x1, y1], l * 4);
+    }
+  }
+
+  /** T-3202, `ClockState.singles`: each line's runs over two-way single-track stretches. */
+  private readSingles(c: Float64Array | undefined, lines: number) {
+    const n = this.net!, T = n.pathTable!, E = n.pathEntry!, PF = n.pathFrom, PL = n.pathLen;
+    if (!c || !c[0] || !PF || !PL) return;
+    // per edge: its stretch; per stretch: its first edge, which sets the way a run goes over it
+    const of = new Map<number, number>(), ref: number[] = [];
+    for (let s = 0, k = 1; s < c[0]; s++) {
+      const m = c[k++];
+      ref.push(c[k]);
+      for (let j = 0; j < m; j++) of.set(c[k + j], s);
+      k += m;
+    }
+    for (let l = 0; l < lines && 2 * l + 1 < T.length; l++) {
+      const f = T[2 * l], cnt = T[2 * l + 1];
+      const out: number[] = [];
+      for (let k = f; k < f + cnt; ) {
+        const s = of.get(E[k] >> 1);
+        if (s === undefined) { k++; continue; }
+        // the entries of this pass over it
+        let j = k, way = -1;
+        while (j < f + cnt && of.get(E[j] >> 1) === s) {
+          if (E[j] >> 1 === ref[s]) way = E[j] & 1;
+          j++;
+        }
+        if (way >= 0) out.push(s, PF[k], PF[j - 1] + PL[j - 1], way);
+        k = j;
+      }
+      if (out.length) this.singleOn.set(l, out);
     }
   }
 
@@ -320,7 +386,7 @@ export class TrainGuard {
     this.nextIndex.clear();
     for (let i = 0; i < n; i++) {
       const line = Math.floor(f.trips[i * 2] / 6);
-      if (this.guardedAll[line]) this.nextIndex.set(line * 1e7 + Math.round(f.trips[i * 2 + 1] * 100), i);
+      if (this.guardedAll[line]) this.nextIndex.set((line * 2 + (Math.floor(f.trips[i * 2] / 3) % 2)) * 1e7 + Math.round(f.trips[i * 2 + 1] * 100), i);
     }
   }
 
@@ -389,7 +455,9 @@ export class TrainGuard {
         continue;
       }
       const s = profileS(n, p, tau);
-      if (f.project) {
+      // (a line on single track in view has all its trains looked at: the one coming the other way
+      // onto a stretch in view is often far out of it, T-3202)
+      if (f.project && !(this.singles && this.singleOn.has(line))) {
         // the nearest run 0 sample is near enough for the view
         const run = Math.floor(p / 3) % 2, d = run === 0 ? s : meta[p * 4 + 3] - s;
         const first = n.lineTable[line * 4], count = n.lineTable[line * 4 + 1], step = n.lineTable[line * 4 + 3];
@@ -416,6 +484,8 @@ export class TrainGuard {
       if (cand.length) prevS[cand[0]] = cs[0];
       return changed;
     }
+    this.singleWait.clear();
+    if (this.singles && this.singleOn.size && this.holdOnSingles(f, cand, cs, half, tauOf)) changed = true;
     if (conflicts && (this.crossOn.size || this.moveRes.length)) {
       if (this.holdAtConflicts(f, cand, cs, half, tauOf)) changed = true;
     }
@@ -524,7 +594,9 @@ export class TrainGuard {
       if (lag[i] > 0 && f.ends && f.nexts) {
         const dep = f.trips[i * 2 + 1], arrive = dep + meta[p * 4 + 2] + lag[i], next = f.nexts[i];
         if (arrive > f.ends[i] && Number.isFinite(next)) {
-          const j = this.nextIndex.get(Math.floor(p / 6) * 1e7 + Math.round(next * 100));
+          // (the other run, but for a loop)
+          const at = (run: number) => this.nextIndex.get((Math.floor(p / 6) * 2 + run) * 1e7 + Math.round(next * 100));
+          const j = at(1 - (Math.floor(p / 3) % 2)) ?? at(Math.floor(p / 3) % 2);
           if (j !== undefined && lag[j] < Math.min(LAG_MAX, arrive - next)) { lag[j] = Math.min(LAG_MAX, arrive - next); changed = true; }
         }
       }
@@ -551,10 +623,11 @@ export class TrainGuard {
     for (let c = 0; c < cand.length; c++) {
       const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE, place = B[o + 2];
       if (place < 4 || !taken.has(place) || stand[c]) continue;
-      // standing there itself, or leaving from it, is not taking it from itself
+      // standing there itself, or leaving from it, is not taking it from itself; nor is one standing
+      // to leave over single track until this one is in (T-3202), which would wait for it for ever
       let other = false;
       for (let x = 0; x < cand.length && !other; x++) {
-        if (x === c) continue;
+        if (x === c || this.singleWait.has(cand[x])) continue;
         const j = cand[x], q = f.trips[j * 2], ox = j * BAY_STRIDE;
         other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(bayP(B[ox + 1]), 2 * half[x] + 5));
       }
@@ -772,6 +845,117 @@ export class TrainGuard {
       if (waitRes[i] >= 0 && waitFrom[i] !== -Infinity && !mustWait.has(c)) waitRes[i] = -1;
     }
     return changed;
+  }
+
+  /**
+   * T-3202: the turns on two-way single track. Each candidate is looked at on the next stretch of its
+   * run it has not cleared: its time there from its timetable and lag, [A, B], from leaving its stop
+   * onto it to reaching its stop past it. One already on it keeps it until B. The rest go in the order
+   * of their A, each at A unless a train going the other way holds the stretch then (or would before
+   * it is clear), else once that train is in, standing at its stop meanwhile (its lag grows). Updates
+   * `cs` and `tauOf` of those it holds; true when a lag changed.
+   */
+  private holdOnSingles(f: GuardFrame, cand: number[], cs: number[], half: number[], tauOf: number[]): boolean {
+    const n = this.net!, meta = n.meta, lag = this.lag, prevS = this.prevS;
+    if (this.singlePhases !== n.phases) { this.singleCache.clear(); this.singlePhases = n.phases; }
+    const uTime = f.time - f.epoch;
+    this.singleHeld = 0;
+    // per stretch: candidate, way over it, A, B, already on it (1) or not
+    const regs = new Map<number, number[]>();
+    for (let c = 0; c < cand.length; c++) {
+      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
+      const st = this.singleOn.get(line);
+      if (!st) continue;
+      const L = meta[p * 4 + 3], base = f.trips[i * 2 + 1] + lag[i];
+      // the stretches in the order this run meets them
+      for (let q = run === 0 ? 0 : st.length - 4; q >= 0 && q < st.length; q += run === 0 ? 4 : -4) {
+        const a = run === 0 ? st[q + 1] : L - st[q + 2], b = run === 0 ? st[q + 2] : L - st[q + 1];
+        const [tIn, tOut] = this.singleSpan(n, p, a, b, half[c]);
+        if (base + tOut <= uTime || tOut <= tIn) continue;
+        const was = prevS[i], sIn = profileS(n, p, tIn);
+        // (one first looked at this frame, come into view or after a clock jump, takes its turn by its
+        // timetable like the rest, so two found on the stretch together are parted)
+        const on = !Number.isNaN(was) && was > sIn + HOLD_TOL_M;
+        const v = regs.get(st[q]), row = [c, st[q + 3] ^ run, base + tIn, base + tOut, on ? 1 : 0];
+        if (v) v.push(...row);
+        else regs.set(st[q], row);
+        break;
+      }
+    }
+    let changed = false;
+    const R = 5;
+    for (const v of regs.values()) {
+      if (v.length < 2 * R) continue;
+      let both = false;
+      for (let j = R; j < v.length && !both; j += R) both = v[j + 1] !== v[1];
+      if (!both) continue;
+      // candidate, way, from, to
+      const grants: number[] = [];
+      const asks: number[] = [];
+      for (let j = 0; j < v.length; j += R) {
+        if (v[j + 4]) grants.push(v[j], v[j + 1], -Infinity, v[j + 3]);
+        else asks.push(j);
+      }
+      asks.sort((x, y) => v[x + 2] - v[y + 2] || v[x] - v[y]);
+      for (const j of asks) {
+        const c = v[j], way = v[j + 1], A = v[j + 2], occ = v[j + 3] - A, i = cand[c];
+        let go = A;
+        for (let again = true, rounds = 0; again && rounds < 8; rounds++) {
+          again = false;
+          for (let g = 0; g < grants.length; g += 4) {
+            if (grants[g + 1] === way || grants[g + 3] + SINGLE_AFTER_S <= go || grants[g + 2] >= go + occ + SINGLE_AFTER_S) continue;
+            go = grants[g + 3] + SINGLE_AFTER_S;
+            again = true;
+          }
+        }
+        if (go > A + 1e-6 && lag[i] + Math.min(go, uTime) - A > LAG_MAX) {
+          // waited too long behind a timetable that cannot be drawn: let on, drawn through
+          this.singleLetOn++;
+          go = A;
+        }
+        grants.push(c, way, go, go + occ);
+        const extra = Math.min(go, uTime) - A;
+        if (extra > 0) {
+          if (go > uTime) { this.singleHeld++; this.singleWait.add(i); }
+          lag[i] += extra;
+          changed = true;
+          tauOf[c] = uTime - f.trips[i * 2 + 1] - lag[i];
+          cs[c] = profileS(n, f.trips[i * 2], tauOf[c]);
+        }
+      }
+    }
+    return changed;
+  }
+
+  /** Trip times when profile `p` leaves its stop onto the single-track stretch [a, b] along its run
+   * (or its front reaches the stretch, `CONFLICT_BEFORE_M` short, where no stop is near) and reaches
+   * its stop past it (or its back is `CONFLICT_AFTER_M` past). */
+  private singleSpan(n: NetworkBuffers, p: number, a: number, b: number, h: number): readonly [number, number] {
+    const key = p * 2 ** 27 + Math.round(a * 2);
+    const tIn = this.singleCache.get(key * 2), tOut = this.singleCache.get(key * 2 + 1);
+    if (tIn !== undefined && tOut !== undefined) return [tIn, tOut];
+    const ph = n.phases, first = n.meta[p * 4], count = n.meta[p * 4 + 1], dur = n.meta[p * 4 + 2];
+    const mid = (a + b) / 2;
+    let x = NaN, y = NaN;
+    for (let k = first; k < first + count; k++) {
+      // where it stands still and from when: a stand, or the end of a braking phase that stops it (a
+      // run's last stop has no stand of its own: the trip's last phase brakes to it and stays)
+      const t0 = ph[k * 4], v = ph[k * 4 + 2], acc = ph[k * 4 + 3], t1 = k + 1 < first + count ? ph[(k + 1) * 4] : dur;
+      let s = ph[k * 4 + 1], from = t0;
+      if (v !== 0 || acc !== 0) {
+        if (!(acc < 0) || t0 + v / -acc >= t1 - 1e-3) continue;
+        from = t0 + v / -acc;
+        s += (v * v) / (2 * -acc);
+      }
+      // the last stand near the start (where it leaves from), the first near the end (where it arrives)
+      if (s >= a - SINGLE_STOP_M && s <= Math.min(a + SINGLE_STOP_M, mid)) x = t1;
+      else if (Number.isNaN(y) && s >= Math.max(b - SINGLE_STOP_M, mid) && s <= b + SINGLE_STOP_M) y = from;
+    }
+    if (Number.isNaN(x)) x = a - h - CONFLICT_BEFORE_M <= profileS(n, p, 0) + HOLD_TOL_M ? 0 : timeAt(n, p, a - h - CONFLICT_BEFORE_M + HOLD_TOL_M, dur);
+    if (Number.isNaN(y)) y = b + h + CONFLICT_AFTER_M >= profileS(n, p, dur) - HOLD_TOL_M ? dur : timeAt(n, p, b + h + CONFLICT_AFTER_M, dur);
+    this.singleCache.set(key * 2, x);
+    this.singleCache.set(key * 2 + 1, y);
+    return [x, y];
   }
 
   /** Per candidate, the passing station whose outer track it is on (`PASS_IN`), -1 none (T-2233). */

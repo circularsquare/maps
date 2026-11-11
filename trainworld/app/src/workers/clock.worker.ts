@@ -1760,6 +1760,7 @@ function buildState(): ClockState {
     return out;
   });
   const conflicts = a.guard_conflicts();
+  const singles = a.guard_singles();
   const crossings = markPoints(a.crossings_info(), 5);
   // T-3062: a flat crossing's level carries which modes cross, for the mark's drawing (markData.ts)
   for (let k = 0, f = 0; k + 4 < crossings.length; k += 5) {
@@ -1784,6 +1785,7 @@ function buildState(): ClockState {
     fullTrack,
     crossings,
     conflicts,
+    singles,
     cash: a.cash(),
     builtCost,
     blueprintCost,

@@ -667,6 +667,9 @@ export interface ClockState {
   /** T-1966: the flat crossings and crossing junction moves trains are held at on screen
    * (`TrackApi.guard_conflicts`) */
   conflicts?: Float64Array;
+  /** T-3202: the two-way single-track stretches trains of opposite directions keep off together on
+   * screen (`TrackApi.guard_singles`) */
+  singles?: Float64Array;
   money: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
    * `render` */

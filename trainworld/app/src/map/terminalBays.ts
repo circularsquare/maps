@@ -11,6 +11,9 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 
 /** Length of a turn-back crossover's diagonal, m (T-658d). */
 export const TURNBACK_M = 50;
+/** T-3202: a station on single track is drawn as two tracks along its platform (network.ts
+ * `singleSplits`), parting from the single track over this far either side, m. */
+export const SINGLE_SPLIT_LEAD_M = 60;
 /** Places at a line's end: the arriving train's own track, or the other track (it crosses the
  * scissors on the way in). */
 export const BAY_OWN = 0, BAY_OTHER = 1;
@@ -47,11 +50,14 @@ export interface TerminalEnd {
   thru: boolean;
   /** a train turning on a through platform with no terminal leaves over the crossover behind it */
   cross: boolean;
+  /** T-3202: a station on single track, its two places the sides it is drawn split into: each
+   * arriving train takes the one free longest, so the one it meets there is on the other */
+  single?: boolean;
 }
 
 /**
  * Per line, the end of each run (run 0 ends at its last stop, run 1 at its first), null where
- * nothing is drawn differently (single track, no platform, a loop).
+ * nothing is drawn differently (a bus, no platform, a loop).
  */
 export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], lines: readonly ClockLine[]): Map<number, [TerminalEnd | null, TerminalEnd | null]> {
   const endCount = new Map<number, number>(), edgeOf = new Map<number, ClockEdge>();
@@ -72,10 +78,13 @@ export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockN
       const edge = edgeOf.get(entry >> 1);
       if (!node || !node.platform || !edge) return null;
       const dead = endCount.get(node.id) === 1;
-      if (edge.tracks !== 2) return dead ? null : { group: -1, kind: 0, p: node.platform / 2, thru: true, cross: false };
+      if (edge.tracks !== 2 && (edge.tracks !== 1 || l.bus)) return dead ? null : { group: -1, kind: 0, p: node.platform / 2, thru: true, cross: false };
       const key = `${node.id}|${edge.id}`;
       let group = groups.get(key);
       if (group === undefined) groups.set(key, (group = groups.size));
+      // (the crossover past where the split joins the single track, so a train for the other side
+      // eases straight across to it)
+      if (edge.tracks === 1) return { group, kind: 1, p: (dead ? node.platform : node.platform / 2) + SINGLE_SPLIT_LEAD_M, thru: !dead, cross: false, single: true };
       const terminal = hasUpgrade(node.upgrades, UPGRADE.terminal);
       // (both platforms of a dead end only with a terminal, as the sim's `dead_end_places`)
       if (dead) return { group, kind: terminal ? 1 : 3, p: node.platform, thru: false, cross: false };
@@ -176,7 +185,7 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
     let f = free.get(end.group);
     if (!f) free.set(end.group, (f = [-Infinity, -Infinity]));
     // (wanted from when it comes up to the crossover, some 30 s before it stops)
-    const k = end.kind === 3 || f[0] <= at - 30 ? 0 : f[1] <= at - 30 ? 1 : f[0] <= f[1] ? 0 : 1;
+    const k = end.kind === 3 || (!end.single && f[0] <= at - 30) ? 0 : !end.single && f[1] <= at - 30 ? 1 : f[0] <= f[1] ? 0 : 1;
     // taken until its train on its next trip is off the platform (a hold there first included)
     const nt = nextOf(t), nx = nt && times(nt.profile);
     f[k] = Math.max(at, nt && nx ? nt.draw + nx.at(end.p + CLEAR_M) : t.end + CLEAR_S);

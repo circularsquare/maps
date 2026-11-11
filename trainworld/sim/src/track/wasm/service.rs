@@ -340,6 +340,26 @@ impl TrackApi {
         out
     }
 
+    /// T-3202: the two-way single-track stretches between passing points (the capacity's single-track
+    /// sections) the map's train guard keeps trains of opposite directions off together: `[count, per
+    /// stretch: number of edges, its edges]`.
+    pub fn guard_singles(&self) -> Vec<f64> {
+        let cap = &self.w.svc.cap;
+        let mut out = vec![0.0];
+        for r in 0..cap.res.len() {
+            if cap.res[r].kind != crate::track::capacity::ResKind::SingleTrack {
+                continue;
+            }
+            let mut es = cap.track_edges(r);
+            es.sort_unstable();
+            es.dedup();
+            out.push(es.len() as f64);
+            out.extend(es.iter().map(|&e| e as f64));
+            out[0] += 1.0;
+        }
+        out
+    }
+
     /// The flat junctions (no flyover, no station) and flat crossings a line's route passes, in
     /// route order (T-629): per mark `[4 junction | 5 crossing, the stop it follows, how far on
     /// to the next stop 0..1, x, y, number of other lines there, those lines' numbers]`. Other

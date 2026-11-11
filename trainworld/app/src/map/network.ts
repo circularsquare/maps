@@ -16,7 +16,7 @@ import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { acrossAt, endClear, TURNBACK_M } from "./terminalBays";
+import { acrossAt, endClear, SINGLE_SPLIT_LEAD_M, TURNBACK_M } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
@@ -191,6 +191,8 @@ export interface NetworkBuffers {
   pathLen?: Float32Array;
   /** T-1966, for the train guard: `ClockState.conflicts` */
   conflicts?: Float64Array;
+  /** T-3202, for the train guard: `ClockState.singles` */
+  singles?: Float64Array;
   /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
@@ -1264,6 +1266,43 @@ interface LineSamples {
   lane: Float32Array;
   /** `sampleBand`'s, empty for a line on no shared track */
   band: Float32Array;
+  /** `singleSplits`, which `lane` was made with */
+  splits: number[];
+}
+
+const smooth01 = (x: number) => {
+  const t = Math.max(0, Math.min(1, x));
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * T-3202: where a line's trains are drawn as on two tracks at a station on single track, which has
+ * two for the drawing (trains of opposite directions meet there, as the capacity has it, and stand
+ * side by side on their own sides): per such station on its path, the run 0 offsets of its platform
+ * (a dead end's runs in from the end, T-3053), the lane easing in over SINGLE_SPLIT_LEAD_M either side.
+ */
+function singleSplits(l: ClockState["lines"][number], at: ReadonlyMap<number, { node: ClockState["nodes"][number]; ends: number }>, edgeEnds: ReadonlyMap<number, ClockState["edges"][number]>, lens: readonly number[]): number[] {
+  const out: number[] = [];
+  if (l.bus || !l.path.length || !at.size) return out;
+  const L = lens.reduce((a, b) => a + b, 0);
+  let d = 0;
+  for (let k = 0; k <= l.path.length; k++) {
+    // the node at offset d: where entry k starts, or the last one ends
+    const p = l.path[Math.min(k, l.path.length - 1)], e = edgeEnds.get(p >> 1);
+    if (e) {
+      const node = k < l.path.length ? ((p & 1) ? e.b : e.a) : ((p & 1) ? e.a : e.b);
+      const st = at.get(node);
+      const single = (k > 0 && edgeEnds.get(l.path[k - 1] >> 1)?.tracks === 1) || (k < l.path.length && e.tracks === 1);
+      if (st && single) {
+        const pl = st.node.platform;
+        if (st.ends === 1 && k === 0) out.push(0, pl);
+        else if (st.ends === 1 && k === l.path.length) out.push(L - pl, L);
+        else out.push(d - pl / 2, d + pl / 2);
+      }
+    }
+    if (k < l.path.length) d += lens[k] ?? 0;
+  }
+  return out;
 }
 
 /**
@@ -1526,6 +1565,9 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     return w;
   };
   const leadOf = (node: number, edge: number) => (passingAt.has(node) ? passWay(node, edge).lead : PASS_LEAD_M);
+  // T-3202: stations on single track, with how many edges meet there (1, a dead end)
+  const singleStations = new Map<number, { node: ClockState["nodes"][number]; ends: number }>();
+  for (const n of s.nodes) if (n.platform > 0 && singleAt.has(n.id)) singleStations.set(n.id, { node: n, ends: endCount.get(n.id) ?? 0 });
   const passing: number[] = [];
   const nSamples = r.samples.length / 2;
   const samplePass = new Float32Array(passingAt.size ? nSamples : 0).fill(1e9);
@@ -1598,7 +1640,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const first = r.lineTable[l.id * 4], count = r.lineTable[l.id * 4 + 1], step = r.lineTable[l.id * 4 + 3];
     const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
     let sm = cache.samples.get(l.id);
-    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
+    const splits = singleSplits(l, singleStations, edgeEnds, lens);
+    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens) || !sameArray(sm.splits, splits)) {
       const firstStroke = c.firstStroke;
       // a bus has one centre line, not two tracks (T-1464)
       const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count * 2 : 0);
@@ -1619,8 +1662,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           bandOf[k * 2] = v[0];
           bandOf[k * 2 + 1] = v[2];
         }
+        for (let q = 0; q < splits.length; q += 2) {
+          const out = Math.max(splits[q] - at, at - splits[q + 1], 0);
+          if (out < SINGLE_SPLIT_LEAD_M) lane[k] = Math.max(lane[k], 1 - smooth01(out / SINGLE_SPLIT_LEAD_M));
+        }
       }
-      sm = { c, count, step, lens, rel, lane, band: bandOf };
+      sm = { c, count, step, lens, rel, lane, band: bandOf, splits };
     }
     samplesSeen.set(l.id, sm);
     const stretchOf = c.strokes.stretch!;
@@ -1887,6 +1934,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathFrom,
     pathLen,
     conflicts: s.conflicts,
+    singles: s.singles,
     turnbacks,
     ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
     ...(oneWayTrack.length ? { oneWayTrack: new Float32Array(oneWayTrack) } : {}),
