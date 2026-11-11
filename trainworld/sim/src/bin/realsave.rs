@@ -17,7 +17,8 @@
 //! Station and line names are tidied as they go in (T-1442, `track::names`): the lines lose their
 //! feed ("subway 6X" is "6X"), the stations their capitals and "STATION".
 //!
-//! Writes `nyc_real.twt2` (the network part of a save, uncompressed; the lines get whole trains
+//! Writes `nyc_real.twt2` (the network part of a save, uncompressed, in the game's Mercator frame
+//! with its settled rates, T-3233; the lines get whole trains
 //! from the real trains per hour when the network is derived, T-1146, unless the network JSON gives
 //! a line `trains`, and `hsr` for high-speed track and trains, T-1625) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
@@ -28,8 +29,10 @@ use trainworld_sim::track::geom::Pi;
 use trainworld_sim::track::names;
 use trainworld_sim::track::net::{EdgeData, LineData, Network, NodeData, StationData};
 use trainworld_sim::track::params::*;
+use trainworld_sim::track::frame::FrameKind;
 use trainworld_sim::track::save;
 use trainworld_sim::track::trace;
+use trainworld_sim::track::upgrades;
 use trainworld_sim::track::world::TrackWorld;
 
 /// The fit's tolerance: well under the 6 m between lines set side by side (`realnet.py spread`),
@@ -415,17 +418,36 @@ fn main() {
         }
         line_ids.push((li, id));
     }
+    // T-3233: a real terminus has the tracks to turn trains on both its platforms, so every dead-end
+    // station is given a terminal (without one it turns one train at a time, T-2986)
+    let mut terminals = 0;
+    for n in 0..net.node_count() as u32 {
+        if net.node_ok(n) && net.is_station(n) && net.built_ports(n) <= 1 {
+            let mut d = net.station_data(n).unwrap();
+            if d.upgrades & upgrades::TERMINAL == 0 {
+                d.upgrades |= upgrades::TERMINAL;
+                net.set_station(n, Some(d)).unwrap();
+                terminals += 1;
+            }
+        }
+    }
+    // T-3233: settled in the game's Mercator frame and saved in it, so the game loads the save
+    // without converting it (a conversion drops the settled rates and the game settles again from
+    // scratch, 40 s and more for London). Ids are kept; outputs keep the pack's local frame.
+    let local_frame = net.frame();
+    let net = save::decode(&save::convert_frame(&save::encode(&net), FrameKind::Merc).expect("the save converts to the game's frame")).unwrap();
+    let merc_frame = net.frame();
+    let local = |x: f64, y: f64| {
+        let (lon, lat) = merc_frame.to_lonlat(x, y);
+        local_frame.from_lonlat(lon, lat)
+    };
     let t0 = std::time::Instant::now();
     let mut w = TrackWorld::new(net);
     eprintln!("derive {:.0} ms", t0.elapsed().as_secs_f64() * 1000.0);
     w.allocate_unallocated();
     let bytes = save::encode(&w.net);
     std::fs::write(format!("{out_dir}/{city}_real.twt2"), &bytes).unwrap();
-    // the game converts a legacy-frame save to its Mercator frame on load, and refuses it silently
-    // when that fails
-    if let Err(e) = save::convert_frame(&bytes, trainworld_sim::track::frame::FrameKind::Merc) {
-        eprintln!("the save does not convert to the game's frame: {e}");
-    }
+    eprintln!("terminals given to {terminals} dead-end stations");
     eprintln!("save: {} bytes, {} nodes, {} lines set ({} ok); load + derive {:.0} ms", bytes.len(), node_key.len(), lines.len(), n_lines_ok, t0.elapsed().as_secs_f64() * 1000.0);
     eprintln!("hops traced on real track {n_traced} (fit within {worst_fit:.1} m), from a shape or straight {n_untraced}; traced in {:.0} ms", trace_s * 1000.0);
     eprintln!("level changes: {} ramps with a new corner at each end, {} with one new corner, {} between existing corners, {} with one new corner near a curve, {} with corners anyway (no room)", ramps_by_how[0], ramps_by_how[1], ramps_by_how[2], ramps_by_how[3], ramps_by_how[4]);
@@ -498,14 +520,16 @@ fn main() {
             let at: Vec<Value> = r.holds[0].iter().map(|h| {
                 let k = r.node_s.partition_point(|&s| s <= h.s).saturating_sub(1);
                 let n = r.nodes[k] as usize;
-                json!([node_names[n], w.net.node_x[n].round(), w.net.node_y[n].round(), (h.delay * 10.0).round() / 10.0, h.s.round()])
+                let (x, y) = local(w.net.node_x[n], w.net.node_y[n]);
+                json!([node_names[n], x.round(), y.round(), (h.delay * 10.0).round() / 10.0, h.s.round()])
             }).collect();
             json!({"index": li, "name": lines[li]["name"], "feed": lines[li]["feed"], "operator": lines[li]["operator"], "free_min": end(&r.free) / 60.0, "held_min": held, "holds": at})
         }).collect();
         let res_rows: Vec<Value> = (0..cap.res.len()).filter(|&r| cap.rho[r][0] > 0.5).map(|r| {
             let x = &cap.res[r];
             let names: std::collections::BTreeSet<String> = cap.users_of(r).iter().filter_map(|u| line_ids.iter().find(|l| l.1 == u.line).map(|l| lines[l.0]["name"].as_str().unwrap_or("").to_string())).collect();
-            json!({"kind": format!("{:?}", x.kind), "x": x.x, "y": x.y, "rho": cap.rho[r], "users": cap.users_of(r).len(), "lines": names})
+            let (lx, ly) = local(x.x, x.y);
+            json!({"kind": format!("{:?}", x.kind), "x": lx, "y": ly, "rho": cap.rho[r], "users": cap.users_of(r).len(), "lines": names})
         }).collect();
         std::fs::write(format!("{out_dir}/{city}_holds.json"), serde_json::to_string(&json!({"lines": line_rows, "resources": res_rows})).unwrap()).unwrap();
         for lev in 0..3 {
@@ -522,12 +546,14 @@ fn main() {
         for (rho, r) in over.iter().take(12) {
             let x = &cap.res[*r];
             let names: std::collections::BTreeSet<String> = cap.users_of(*r).iter().filter_map(|u| line_ids.iter().find(|l| l.1 == u.line).map(|l| lines[l.0]["name"].as_str().unwrap_or("").to_string())).collect();
-            eprintln!("  {:?} at {:.0},{:.0} high {:.2}: {:?}", x.kind, x.x, x.y, rho, names);
+            let (lx, ly) = local(x.x, x.y);
+            eprintln!("  {:?} at {lx:.0},{ly:.0} high {:.2}: {:?}", x.kind, rho, names);
         }
         let mut hot: Vec<(u32, f64)> = at_node.into_iter().collect();
         hot.sort_by(|a, b| b.1.total_cmp(&a.1));
         for (n, d) in hot.iter().take(15) {
-            eprintln!("  holds after node {n} ({}) at {:.0},{:.0}: {:.1} line-min (high demand)", node_names[*n as usize], w.net.node_x[*n as usize], w.net.node_y[*n as usize], d / 60.0);
+            let (x, y) = local(w.net.node_x[*n as usize], w.net.node_y[*n as usize]);
+            eprintln!("  holds after node {n} ({}) at {x:.0},{y:.0}: {:.1} line-min (high demand)", node_names[*n as usize], d / 60.0);
         }
         eprintln!("slow: one-way minutes over lines, free run {:.0}, with the capacity pass's holds {:.0} / {:.0} / {:.0} (high, medium, low demand)", free / 60.0, held[0] / 60.0, held[1] / 60.0, held[2] / 60.0);
         worst.sort_by(|a, b| b.0.total_cmp(&a.0));
@@ -537,7 +563,8 @@ fn main() {
         eprintln!("slow: {:.0} line-minutes lost to curves in all", lost.iter().map(|l| l.0).sum::<f64>() / 60.0);
         for l in lost.iter().take(25) {
             let (a, b) = (w.net.edge_a[l.1], w.net.edge_b[l.1]);
-            eprintln!("  edge {} ({}-{}) {:.0} line-s, slowest {:.0} km/h, {:.0} m, crossover {}, at {:.0},{:.0}", l.1, a, b, l.0, l.2, l.3, w.net.edge_crossover[l.1], w.net.node_x[a as usize], w.net.node_y[a as usize]);
+            let (x, y) = local(w.net.node_x[a as usize], w.net.node_y[a as usize]);
+            eprintln!("  edge {} ({}-{}) {:.0} line-s, slowest {:.0} km/h, {:.0} m, crossover {}, at {x:.0},{y:.0}", l.1, a, b, l.0, l.2, l.3, w.net.edge_crossover[l.1]);
         }
     }
     let live: Vec<usize> = (0..w.net.edge_count()).filter(|&e| w.net.edge_alive[e]).collect();
@@ -549,9 +576,10 @@ fn main() {
     let mut node_st = vec![u32::MAX; w.net.node_count()];
     for n in 0..w.net.node_count() {
         node_st[n] = (st_xy.len() / 2) as u32;
-        st_xy.push(w.net.node_x[n] as f32);
-        st_xy.push(w.net.node_y[n] as f32);
-        st_out.push(json!({"key": node_key[n], "name": node_names[n], "feed": node_key[n].split(':').next().unwrap().replace("mta", "subway"), "x": w.net.node_x[n], "y": w.net.node_y[n]}));
+        let (x, y) = local(w.net.node_x[n], w.net.node_y[n]);
+        st_xy.push(x as f32);
+        st_xy.push(y as f32);
+        st_out.push(json!({"key": node_key[n], "name": node_names[n], "feed": node_key[n].split(':').next().unwrap().replace("mta", "subway"), "x": x, "y": y}));
     }
     let (mut line_n, mut stops, mut times, mut tph, mut cars) = (vec![], vec![], vec![], vec![], vec![]);
     let mut lines_out = vec![];

@@ -938,7 +938,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `CITIES` lists each city's) into a demand test network in `data/work/realnet/`; `realnet.py`
   also has New York's older targets and the save: `geom` (GTFS shapes per hop), `route` (each hop
   over the real-network graph with `realroute.py`, the track tool's router ported, lines on the same
-  track set side by side and levels chosen on that geometry, T-1303), the sim's `realsave` bin (every edge marked `sep`, grade-separated from the others whatever its level, T-1751; the
+  track set side by side and levels chosen on that geometry, T-1303), the sim's `realsave` bin (every edge marked `sep`, grade-separated from the others whatever its level, T-1751; every
+  dead-end station a terminal, and the network converted to the game's Mercator frame before it is settled and
+  saved, so the game loads it settled, T-3233; its `_real_track.json` keeps the pack's local frame; the
   track model's network, routed hops traced with `trace.rs` at 3 m, names tidied by `track/names.rs`:
   lines lose their feed word, stations get title case without "STATION", T-1442; the sim's `load`
   runs the same on older saves), `gamesave` (the game file

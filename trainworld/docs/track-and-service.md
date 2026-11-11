@@ -1065,7 +1065,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   set on its own, so a line given trains at high alone stops at 20:00 (T-2123; the tutorial's last
   steps ask for trains at every level); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
-  most 80 rounds, ending at the first round that changes no rate or round trip, T-747; a line
+  most 80 rounds, ending at the first round that changes no rate or round trip, T-747, or, where
+  the rounds come back to a state of 1-4 rounds before, at the round the cap would end on, T-3233; a line
   within 0.05 trains of its fleet whose shortfall has changed sign three times without halving,
   as where its round trip jumps when a hold comes and goes, is settled on the side with trains to
   spare and stays so while its rate and round trip are unchanged, T-1283);
@@ -1075,8 +1076,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   that meet at a merge (directly or through other merges) and whose headways (round trip over
   trains) are within 3% of the longest of them all run that longest one, 0.2% over it
   (`PACE_SLACK`), so a round trip drifting by a second keeps them together; their trains stand the
-  time over at their ends as a headway line's do (`Network::line_pace`, derived on every settle, not
-  saved; the spacing places where it stands, 6.3 "Departures"). A headway line there counts with its
+  time over at their ends as a headway line's do (`Network::line_pace`, derived on every settle and
+  saved with the settled rates in `LPC1`, so a load keeps it rather than pacing again, T-3233; the
+  spacing places where it stands, 6.3 "Departures"). A headway line there counts with its
   set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
   it evenly: each that could run more often keeps the even share of their trains an hour together,
   so the queue is no one line's. So two branches of different lengths take even turns at the merge

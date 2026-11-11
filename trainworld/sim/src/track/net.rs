@@ -497,6 +497,9 @@ pub struct Network {
     /// T-1787: the rates came from a save's `LRT1`, so loading settles from them with an edit's
     /// quick settle, a no-op when nothing changed; without it a load settles fully, as before
     pub rates_from_save: bool,
+    /// T-3233: the pacing came from a save's `LPC1` with its rates, so a reload keeps it rather than
+    /// pacing again (the pacing can flip lines in and out of step every round, T-2973)
+    pub pace_from_save: bool,
     /// The lines and levels the last settle left circling (`TrackWorld::settle_counts`): line, level,
     /// rate and round trip bits, trains. Saved with the rates, so a load keeps them settled.
     pub settle_kept: Vec<(u32, usize, u32, u64, u32)>,
@@ -828,6 +831,7 @@ impl Network {
             line_auto: vec![],
             rates_settled: false,
             rates_from_save: false,
+            pace_from_save: false,
             settle_kept: vec![],
             line_dwell: vec![],
             line_turn: vec![],

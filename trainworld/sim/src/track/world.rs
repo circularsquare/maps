@@ -37,6 +37,10 @@ pub enum Op {
 
 /// Trains off its fleet a settle stops at: a line within it is settled.
 const SETTLED: f64 = 0.0001;
+/// Most rounds of one settle.
+const SETTLE_ROUNDS: usize = 80;
+/// T-3233: the longest repeat a settle looks for.
+const CYCLE_MAX: usize = 4;
 /// Within this many trains of its fleet, a line whose shortfall keeps turning is settled (T-1283).
 const SWING_NEAR: f64 = 0.05;
 /// Turns that do not shrink the shortfall by half before it counts as circling (T-1283).
@@ -137,7 +141,12 @@ impl TrackWorld {
         let t = self.net.take_touch();
         self.net.derive(&t);
         self.svc.update_all(&self.net);
-        self.settle_train_counts(!self.net.rates_from_save);
+        if self.net.pace_from_save {
+            // T-3233: the save's rates were settled with its pacing; pacing again would move them
+            self.settle_unpaced(false);
+        } else {
+            self.settle_train_counts(!self.net.rates_from_save);
+        }
         // T-1925: a network without phases (an older save, a new world) has every line placed once,
         // in id order; a reload for new water keeps them
         if !self.net.phases_placed {
@@ -408,9 +417,27 @@ impl TrackWorld {
         // without shrinking by half, and its size at the last turn
         let mut swings: Vec<[(i8, u8, f64); LEVELS]> = vec![[(0, 0, 0.0); LEVELS]; ids.len()];
         let mut kept_now = vec![[false; LEVELS]; ids.len()];
-        for _ in 0..80 {
+        // T-3233: a round is a function of the rates, round trips and swings it starts from, so a
+        // state seen `p` rounds before comes round every `p` rounds to the cap; the settle then runs
+        // only the rounds that end it in the cap's state, to the bit
+        let mut seen: std::collections::VecDeque<(Vec<[f32; 3]>, Vec<[f64; 3]>, Vec<[(i8, u8, f64); LEVELS]>)> = Default::default();
+        let mut stop_at: Option<usize> = None;
+        for round in 0..SETTLE_ROUNDS {
             let trips: Vec<[f64; 3]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
             let rates: Vec<[f32; 3]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
+            match stop_at {
+                Some(s) if round >= s => break,
+                Some(_) => {}
+                None => {
+                    if let Some(p) = (1..=seen.len()).find(|&p| { let x = &seen[seen.len() - p]; x.0 == rates && x.1 == trips && x.2 == swings }) {
+                        stop_at = Some(round + (SETTLE_ROUNDS - round) % p);
+                        if (SETTLE_ROUNDS - round) % p == 0 { break; }
+                    } else {
+                        if seen.len() == CYCLE_MAX { seen.pop_front(); }
+                        seen.push_back((rates.clone(), trips.clone(), swings.clone()));
+                    }
+                }
+            }
             let mut active = [false; LEVELS];
             let mut off = vec![[false; LEVELS]; ids.len()];
             let keep = &mut kept_now;
@@ -431,7 +458,8 @@ impl TrackWorld {
                     if short.abs() >= SWING_NEAR {
                         *sw = (0, 0, 0.0);
                     } else if sign != 0 && sw.0 != 0 && sign != sw.0 {
-                        if short.abs() >= 0.5 * sw.2 { sw.1 = sw.1.saturating_add(1); }
+                        // counted only up to the test below, so a repeat is seen (T-3233)
+                        if short.abs() >= 0.5 * sw.2 { sw.1 = (sw.1 + 1).min(SWING_TURNS); }
                         sw.2 = short.abs();
                     }
                     if sign != 0 { sw.0 = sign; }

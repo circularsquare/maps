@@ -429,7 +429,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   build day of each constructed station, edge and line in dense order, as deltas (0 is never
   written: 1 is before recording began, otherwise the game day + 2), written only when some day is
   known [T-2871], then `LBP1` the bus lines' own stop spacings [T-2885] and `LHO1` the lines whose
-  stop order the player set by hand (count, then line indices) [T-2895] and `LBH1` the stops placed by hand on bus lines (count, then per line its index, stop count and stops) [T-2891]; a save without one loads with none. While a line's trains change over after a service
+  stop order the player set by hand (count, then line indices) [T-2895] and `LBH1` the stops placed by hand on bus lines (count, then per line its index, stop count and stops) [T-2891], and with `LRT1` when any line is paced, `LPC1` the count lines' pacing at merges (count, then per line its index and three f32 bits), which a load keeps instead of pacing again [T-3233]; a save without one loads with none. While a line's trains change over after a service
   edit, the network bytes end with the service's eras and shifts, their length and the tag `ERA1`
   (`Service::encode_eras`, T-1071), so the trains load where they were; the network decoder stops
   before them. Formats older than TWT4 (TWT2, TWT3) no longer open: the load says the save is from
@@ -533,10 +533,12 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   station moves to a neighbour's level (Brooklyn's F and G stand at +2 at 7 Av and 15 St, really
   underground). Imported track is grade-separated from other imported track whatever the levels
   (`EdgeData.sep`, bit 7 of the edge flags in the save; T-1751): the crossings the levels miss make no
-  flat crossing, hold or price, while track the player draws crosses it by the usual rule. London's
-  save is still the one on level -1 (T-1773 held it, T-3233). A sandbox started from one loads
-  it as a new game: its network, fleet and fares, with the clock, cash, ledgers and stars of a new
-  game. They are in older frames and converted as they load (above).
+  flat crossing, hold or price, while track the player draws crosses it by the usual rule. Every
+  dead-end station has a terminal, as real termini turn trains on all their platforms [T-3233]. A
+  sandbox started from one loads it as a new game: its network, fleet and fares, with the clock,
+  cash, ledgers and stars of a new game. They are built and settled in the game's Mercator frame
+  and saved with their settled rates and pacing, so a start loads them without settling again
+  (a converted save loses its rates and settles in full, 40 s and more for London) [T-3233].
 - **Backups** [T-744, T-1826]: in the same store, the slot's record without its picture, in four
   tiers `backup:<slot>:t0` to `:t3` (`writeBackup`, `planBackups` in workers/saveFile.ts). An
   autosave at least 10 wall minutes after tier 0's backup becomes tier 0; the backup it replaces

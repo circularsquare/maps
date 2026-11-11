@@ -41,6 +41,9 @@ use super::params::*;
 /// default (count, then indices): a train line one way, a bus or ferry line both ways.
 /// A trailing `LSL1` block (T-2987) gives the rail lines with a speed limit of their own (count, then
 /// index and km/h); without it none has one.
+/// A trailing `LPC1` block (T-3233), written with `LRT1` when any line is paced, gives the count
+/// lines paced at a merge (count, then index and the three levels' headways as f32 bits); a load
+/// keeps that pacing, and without the block it paces them again (T-2973).
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -53,12 +56,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 22] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1"];
+pub const BLOCKS: [&[u8; 4]; 23] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 15;
+pub const LEVEL: u32 = 16;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -486,6 +489,16 @@ pub fn encode(net: &Network) -> Vec<u8> {
         for (i, v) in limited {
             w.u(i as u64);
             w.u(v as u64);
+        }
+    }
+    // T-3233: the pacing the settled rates were settled with, so a load starts settled
+    let paced: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_pace_of(l))).filter(|(_, p)| p.iter().any(|&x| x != 0.0)).collect();
+    if net.rates_settled && lines.iter().any(|&l| net.line_trains[l as usize].is_some()) && !paced.is_empty() {
+        w.0.extend_from_slice(b"LPC1");
+        w.u(paced.len() as u64);
+        for (i, p) in paced {
+            w.u(i as u64);
+            for x in p { w.u(x.to_bits() as u64); }
         }
     }
     w.0
@@ -929,6 +942,17 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines { net.line_limit[i] = v.min(u16::MAX as u64) as u16; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LPC1") {
+        r.1 += 4;
+        let mut pace = vec![[0.0f32; 3]; n_lines];
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
+            if i < n_lines { pace[i] = p; }
+        }
+        net.line_pace = pace;
+        net.pace_from_save = net.rates_from_save;
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1104,7 +1128,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (15, 22), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (16, 23), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

@@ -451,6 +451,15 @@ mod tests {
                 let (lo, hi) = gaps.iter().fold((f64::INFINITY, 0.0f64), |(a, b), &g| (a.min(g), b.max(g)));
                 assert!(hi / lo < 1.25, "{h0}h: gaps at J {gaps:.0?}");
             }
+            // T-3233: the pacing rides in the save with the rates, and a load keeps both
+            let bytes = super::super::save::encode(&w.net);
+            assert!(bytes.windows(4).any(|x| x == b"LPC1"));
+            let back = TrackWorld::new(super::super::save::decode(&bytes).unwrap());
+            for &l in &ls {
+                assert!(back.net.line_pace_of(l)[HIGH] > 0.0);
+                assert_eq!((back.net.line_pace_of(l), back.net.line_tph[l as usize]), (w.net.line_pace_of(l), w.net.line_tph[l as usize]));
+            }
+            assert_eq!(super::super::save::encode(&back.net), bytes, "and writes back the same bytes");
         }
     }
 }
