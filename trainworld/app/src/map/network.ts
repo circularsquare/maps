@@ -787,7 +787,7 @@ export function ghostChevrons(s: Strokes, joins: ArrayLike<number> | undefined):
 }
 
 /** Where double track narrows to single, m (T-658). */
-const TAPER_M = 40;
+export const TAPER_M = 40;
 
 /** An edge's points as drawn, with their `Strokes.lane` values; `src`, when points were added: per
  * segment, the edge's own segment it lies on. */
@@ -1422,16 +1422,18 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   /** the edges in drawing order */
   const trackOrder: number[] = [];
   const marks: number[] = [];
-  // double track narrows to single track where the two meet at a plain node (T-658)
-  const endCount = new Map<number, number>(), singleAt = new Set<number>();
+  // double track narrows to single track where the two meet at a plain node (T-658); see taperAt
+  const endCount = new Map<number, number>(), singleAt = new Set<number>(), doublesAt = new Map<number, number>();
   for (const e of s.edges) {
     endCount.set(e.a, (endCount.get(e.a) ?? 0) + 1).set(e.b, (endCount.get(e.b) ?? 0) + 1);
     if (e.tracks === 1) singleAt.add(e.a).add(e.b);
+    else if (e.tracks === 2) doublesAt.set(e.a, (doublesAt.get(e.a) ?? 0) + 1).set(e.b, (doublesAt.get(e.b) ?? 0) + 1);
   }
   // T-3190: not where single track carries on one track of the double (a join that counts)
   const joinedAt = new Set<number>();
   for (const e of s.edges) if (e.tracks === 1) { if (e.join & 3) joinedAt.add(e.a); if ((e.join >> 2) & 3) joinedAt.add(e.b); }
-  const taperAt = (node: number) => singleAt.has(node) && endCount.get(node) === 2 && !joinedAt.has(node);
+  // T-3171: also where double track is the only double at a junction of single track (a double branching off single)
+  const taperAt = (node: number) => singleAt.has(node) && (endCount.get(node) === 2 || doublesAt.get(node) === 1) && !joinedAt.has(node);
   const shifts = legShifts(s.edges, r.edgeParts!);
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();

@@ -47,7 +47,7 @@ import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
 import type { Level } from "../game/types";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
-import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview } from "./network";
+import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview, TAPER_M } from "./network";
 import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
@@ -519,13 +519,25 @@ export class Tools {
     return [hit.lx - best.uy * off, hit.ly + best.ux * off];
   }
 
-  private doubleIndex: { edges: unknown; ids: Set<number>; byNode: Map<number, number[]>; loose: Map<number, { edge: number; fromA: boolean }> } | null = null;
+  /** T-3171: whether the track at (x, y) is single track with no double track there (a double may narrow to it) */
+  private onlySingle(n: NonNullable<Tools["overlay"]["renderer"]["net"]>, w: NonNullable<ReturnType<typeof world.peek>>, x: number, y: number): boolean {
+    const { ids: doubles, singles } = this.doubleEnds(w);
+    let single = false;
+    for (const { edge } of edgesNear(n, x, y, 3 * kAtY(y)) ?? []) {
+      if (doubles.has(edge)) return false;
+      if (singles.has(edge)) single = true;
+    }
+    return single;
+  }
+
+  private doubleIndex: { edges: unknown; ids: Set<number>; byNode: Map<number, number[]>; loose: Map<number, { edge: number; fromA: boolean }>; singles: Set<number> } | null = null;
   /** the world's double track (crossovers aside), and its pieces by the nodes at their ends, kept while its edges are the same */
   private doubleEnds(w: NonNullable<ReturnType<typeof world.peek>>) {
     if (this.doubleIndex?.edges !== w.edges) {
-      const ids = new Set<number>(), byNode = new Map<number, number[]>(), ends = new Map<number, number>();
+      const ids = new Set<number>(), singles = new Set<number>(), byNode = new Map<number, number[]>(), ends = new Map<number, number>();
       for (const e of w.edges) {
         for (const k of [e.a, e.b]) ends.set(k, (ends.get(k) ?? 0) + 1);
+        if (e.tracks === 1) singles.add(e.id);
         if (e.tracks !== 2 || e.crossover) continue;
         ids.add(e.id);
         for (const k of [e.a, e.b]) byNode.set(k, [...(byNode.get(k) ?? []), e.id]);
@@ -533,7 +545,7 @@ export class Tools {
       // T-3190: nodes where a double piece just ends
       const loose = new Map<number, { edge: number; fromA: boolean }>();
       for (const [node, es] of byNode) if (es.length === 1 && ends.get(node) === 1) loose.set(node, { edge: es[0], fromA: w.edges.find((e) => e.id === es[0])!.a === node });
-      this.doubleIndex = { edges: w.edges, ids, byNode, loose };
+      this.doubleIndex = { edges: w.edges, ids, byNode, loose, singles };
     }
     return this.doubleIndex;
   }
@@ -1256,6 +1268,18 @@ export class Tools {
         speeds = Float32Array.from(sh.src, (k) => sp[k]);
         if (typeof ln !== "number") lanes = Uint8Array.from(sh.src, (k) => ln[k]);
       }
+    }
+    // T-3171: double track leaving or reaching only single track narrows to it over TAPER_M, as built track does
+    const taper = n && w && !singleTrack.peek() ? [0, pts.length / 3 - 1].map((k) => this.onlySingle(n, w, pts[k * 3], pts[k * 3 + 1])) : null;
+    if (taper && (taper[0] || taper[1]) && (typeof lanes !== "number" || lanes > 0)) {
+      const m = pts.length / 3, at = new Float64Array(m), sg = Uint8Array.from({ length: m - 1 }, (_, k) => (typeof lanes === "number" ? lanes : lanes[Math.min(k, lanes.length - 1)]));
+      for (let k = 1; k < m; k++) at[k] = at[k - 1] + Math.hypot(pts[k * 3] - pts[k * 3 - 3], pts[k * 3 + 1] - pts[k * 3 - 2]);
+      const L = Math.min(TAPER_M * kAtY(pts[1]), at[m - 1] / (taper[0] && taper[1] ? 2 : 1)) || 1;
+      for (let k = 0; k < m - 1; k++) {
+        const f = Math.max(0, Math.min(1, taper[0] ? at[k] / L : 1, taper[1] ? (at[m - 1] - at[k + 1]) / L : 1));
+        sg[k] = Math.round(sg[k] * f);
+      }
+      lanes = sg;
     }
     const s = strokesFromPreview(pts, !a.ok, speeds, true, a.marks, lanes, highSpeed.peek(), tramTrack.peek());
     s.chevrons = ghostChevrons(s, j);

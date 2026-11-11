@@ -474,3 +474,15 @@ fn t3190_single_track_from_a_loose_end_joins_one_track() {
         assert_ne!(ways[0], ways[1], "the two tracks send trains opposite ways");
     }
 }
+
+/// T-3171: double track branching off single track makes no flat badge and the single trunk keeps running both
+/// ways (the double has both directions), as a single branch off double track makes none; no joins either way.
+#[test]
+fn t3171_double_off_single_no_badge_trunk_both_ways() {
+    let mut a = api(true);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 1, false), 0);
+    assert_eq!(a.add_route(&ends(on_edge(&a, 2000.0, 0.0), free(3500.0, 1500.0)), &[], 2, false), 0, "{}", a.issues());
+    let j = junctions(&a)[0];
+    assert!(!junction_crosses(&a.w.net, j));
+    assert!(singles(&a).iter().all(|&e| a.w.net.edge_way(e) == 0 && a.w.net.edge_join[e as usize] == [0; 2]));
+}
