@@ -18,11 +18,11 @@
   "pairs": "20 39be2477f4de118e",
   "badges": "1 3f42242236d8bf6d",
   "nodes_info": "36 124924031e1a08ef",
-  "junction_info": "13 298adcd3ae5a3434",
+  "junction_info": "13 f7073c8500148b8b",
   "guard": "9 849888736056f3ac",
-  "capacity": "383 3304121a42ad4157",
-  "lines_info": "14 5a53409b0329c79a",
-  "stop_s": "14 8fe22d33a5ee739f",
+  "capacity": "383 cc6aaaa07ff5ddbf",
+  "lines_info": "14 a20ec40414253afe",
+  "stop_s": "14 2ad1bed561592e6c",
   "passed": "14 c39d6965cc099b27"
  },
  "game-left": {
@@ -31,11 +31,11 @@
   "pairs": "20 e656ea01d81e0236",
   "badges": "1 3f42242236d8bf6d",
   "nodes_info": "36 124924031e1a08ef",
-  "junction_info": "13 46eb511a9ab0a686",
+  "junction_info": "13 91f81d2d004a9f79",
   "guard": "9 aa4affcf94bb220d",
-  "capacity": "383 a6d97ea965278568",
-  "lines_info": "14 1b2fbf3c50ea0fea",
-  "stop_s": "14 001fd6e2ee6b602d",
+  "capacity": "383 e8e419ac3fa9c474",
+  "lines_info": "14 2357f149999f52df",
+  "stop_s": "14 8ed58d5ea631b4a1",
   "passed": "14 c39d6965cc099b27"
  },
  "northeast": {
