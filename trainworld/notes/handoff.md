@@ -1,48 +1,43 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8be9971b-5363-40be-bba3-d8c1eaa4ca85, name maps-04 [6bfb1b], since 2026-11-10 21:40
-Updated: 2026-11-11 ~04:00 (clock times in this file are rough; trust git log)
+Updated: 2026-11-11 morning (maps-04 past 500k tokens; ready for a fresh orchestrator; clock times are rough, trust git log)
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
 ## State
 - **Live = v0.2.1 = R2 2026-11-10d** (f5a2b979, branch tw/release-021, worktree `.tw-trees/hotfix`, kept for hotfixes until
   the next release). R2 purge due: 2026-11-07c and 11-08 from 11-11; 11-09, 09b, 09c a few days later; keep 11-10, 10b-10d.
-- **Master = f28a04b9, pushed; 8800 = f28a04b9** (after 1df60242: T-3159, T-2773, T-3129 notes, T-2802) (the night's batch: T-3137 C3+C4 single track done,
-  T-3149 clicks, T-3157/3158 look, T-3147/3131 bus stops, T-3151/3152/3154 TODO items, T-3153/3126 track mode, T-2766
-  stop clicks; tsc clean, cargo 501/681, smoke 27 PASS on dev).
-- **v0.2.2 HELD** until she has tested 8800 (single track is now fully built). Then: translation batch for new and stale
-  keys (19 stale per language at 04:00; as agent l10nbatch: 3 groups x 3 passes, ~15 min), snapbuild, smoke8800 light+dark,
+- **Master = 8800 = f28a04b9, pushed.** The main tree is clean except Anita's TODO.md. No agents running, no worktrees but
+  hotfix. Overnight work (detail in ARCHIVE.md): single track finished (T-3134..T-3137: lanes inside a piece, joins picked
+  by the pointer, way inferred, inspector switch), click standard T-3149, look fixes T-3157/3158/3136, bus/ferry half dots
+  and out-and-back stops T-3142/3147/3131, TODO items T-3151/3152/3154/3153, HSR quad T-3126, stop click speed
+  T-2766/T-3159, rider dip verified T-2773, phone memory T-2802 (rest T-3160), rules cleanup.
+- **Anita is testing 8800 now** (morning 11-11). Expect playtest notes.
+- **v0.2.2 HELD** until her test passes and the strings below are settled. Then: translation batch for new and stale keys
+  (19+ stale per language; as agent l10nbatch: 3 groups x 3 passes, ~15 min), snapbuild, smoke8800 light+dark,
   `deploy.py --dry-run --version <date>`, set `V0_2_2_AT` in updates.ts, publish and website push on her word. Changelog:
-  propose lines for single track joins (side picked by the pointer, way from the joins), T-3141, the click standard,
-  high-speed quad, typed train counts; show her.
-- **Server**: live shonei-server 80e3692 (community round 2, preview, tester Anita). 0e7dd77 (titles, profanity screen,
-  Biggest points-only) committed, not pushed or deployed: deploy once she is up (approved: "yes we can deploy in morning
-  when ready").
-
-## In flight (maps-04's agents, main tree)
-- phonemem DONE, committed f28a04b9: T-2802 (WASM heap step 8 MB on small devices, outlines.json parsed once on the page and copied to workers; first line 691->600 MB, peak 948->825 on an emulated Pixel 7); rest filed T-3160 [P3]. Was:
-  file T-3160.
-- riderdip DONE, committed f6ed4814 with stopfast: T-2773 verified closed by the 11-07 hold + T-2793; check
-  t2773-pending-dip.mjs rewritten; her Japan save is C:\Users\anita\Downloads\trainsworld-tokyo-day-414.save.
-- roadsnap DONE: T-3129 design in notes/T-3129.md (one road snap with profiles; rail on the centre line, motorway..tertiary; curves slowed not refused; crossing rule under 20 deg; stages ~4.5 h). Her questions: discount along roads (no, lean), centre line or beside (centre, lean); drafts "Snap to roads", "Hold Ctrl to draw by hand", "The roads are too tight here. Add a point on the way."
-- stopfast DONE, committed f6ed4814: T-3159 marker guessed at the click (2-5 ms), demand layer skips rows-only worlds; list
-  row not faster (the inspector re-render, ~20 ms; a possible next step).
+  propose lines (single track joins and way, the click standard, high-speed quad, typed and capped train counts, T-3141
+  lone branch = line end) and show her.
+- **Server**: live shonei-server 0e7dd77 (community round 3: titles, profanity screen, Biggest points-only), deployed and
+  pushed 11-11 morning on her word; community still PREVIEW, tester Anita.
 
 ## Next
-Anita 01:15: "lets do all the self contained tasks. if you find yourself finishing with those too, feel free to decide on
-more to tackle yourself". Candidates: T-3138 left-hand running (her TODO has a design idea: side switcher; ask first), T-3156 aws guard false positive.
-T-3150 rays parked (P3) until she reproduces it. Next free id **T-3161**.
+- Her playtest notes first. Then answers below unblock: the train-count clamp, HSR double-up to quad, T-3129 snap to roads
+  (design notes/T-3129.md, ~4.5 h in 3 stages), string tweaks.
+- Open without her: T-3156 aws guard false positive (a safety hook; do with her around), T-3160 [P3] memory leftovers,
+  the stop list row's ~20 ms re-render (T-3159 follow-up, not filed). T-3138 left-hand running needs her design (her TODO
+  has a side-switcher idea). T-3150 rays parked until she reproduces it. Next free id **T-3161**.
 
-## Waiting on Anita (all in the morning message's For you)
-- Server deploy 0e7dd77 (approved for the morning).
+## Waiting on Anita (asked in the morning summary)
 - Strings: "Sandbox games aren't counted", "Title", "Please pick a different title."; "Stations" (complex list header);
-  lanes4's "Set by the track it joins", "Use automatic way", "Run trains the way the joined track gives" (suggest dropping
-  the last); clicks' 5 help strings ("Right click or hold a route point", "Hold a route point", "Loop the route there, or
-  delete the last point", "Click a route point", "Delete it, or save the route at the last one").
-- Calls: train counts already over the held-out limit, clamp down (my lean) or leave (built); same-named complex stations
-  told apart only by chips; rail right click on a stop with no loop keeps "Can't loop back here" or goes silent; allow
-  doubling up an existing high-speed double into quad (lean yes).
+  "Set by the track it joins", "Use automatic way", "Run trains the way the joined track gives" (suggested dropping the
+  last); help panel "Right click or hold a route point", "Hold a route point", "Loop the route there, or delete the last
+  point", "Click a route point", "Delete it, or save the route at the last one"; snap-to-roads drafts "Snap to roads",
+  "Hold Ctrl to draw by hand", "The roads are too tight here. Add a point on the way."
+- Calls: train counts already over the held-out limit, clamp down (lean) or leave (built, T-752 reason); allow doubling an
+  existing high-speed double into quad (lean yes); rail right click on a stop with no loop: keep "Can't loop back here" or
+  silent; same-named complex stations told apart only by chips; snap to roads go-ahead (no discount, centre line).
 - Achievement thresholds for countries with no save were guessed (Spain, Britain, Italy, Germany, Indonesia, Mexico,
   Brazil, Australia, Turkey); she raised KR/TW to 10% and CN to 2%. Show them as a list, not the code file.
 - `notes/v0.2-post.md` is hers to reword and post. To discuss later (her word, not filed): satellite map.
@@ -54,11 +49,12 @@ and through stations turn alike; hints say only "build a terminal" (30 tph). Mar
 junction moves 120 s. Community v1 = share, share link, open a copy (on by default), country leaderboards; copies named
 "<title> - <name>"; Biggest points-only with the sandbox note. City circles only for whole loops. Catalan added. Click
 standard as notes/T-3149.md "Proposal". Train count capped at what runs; typed up to 1000. Track widths 0.71x / 1.24x.
+One-way stops shown by the chevron only (no hover row).
 
 ## Anita's standing asks
 - **No deploys overnight** without her there; every server deploy needs her word.
 - **No v0.2.2 publish until she has tested 8800** ("the last few times around there were things that i caught").
-- Cores: Anita went to sleep 01:25 11-11 ("feel free to use high cores"): ledger cap 15; back to 14 (or her word) when she is up.
+- Cores: ledger cap 14.
 - **Usage**: after the free reset, Opus more widely but "not fully gung-ho"; where there's a choice, spend compute, not
   tokens.
 - Watch whether agents use wiki-first reading well.
