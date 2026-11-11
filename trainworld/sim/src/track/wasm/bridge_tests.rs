@@ -733,6 +733,29 @@ fn street_tram_crosses_water_at_ground_level_and_others_are_raised() {
     assert_eq!(a.w.net.edge_kind[s as usize], TrackKind::StreetTram);
 }
 
+/// T-3130: a street route's corner over water, the curve that would be cut out as tram track (it leaves
+/// the street by more than `OFF_STREET_M`), stays street track at ground level instead of being refused.
+#[test]
+fn a_street_corner_over_water_stays_street_track() {
+    let mut a = api();
+    a.set_cash(1e6);
+    // the right angle's 30 m curve runs from x 470 to 500; the water under it, the legs either side dry
+    water(&mut a, &[(472.0, 495.0)]);
+    a.set_route_kind(2);
+    let (bx, by) = base(&a);
+    let e = ends(&a, (0.0, 0.0), (500.0, 500.0));
+    let pis = [bx + 500.0, by, 30.0, 0.0];
+    let pv = a.preview_route(&e, &pis, 2, false);
+    assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+    assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+    let net = &a.w.net;
+    let edges = alive(&a);
+    assert!(edges.iter().all(|&e| net.edge_kind[e as usize] == TrackKind::StreetTram), "{:?}", edges.iter().map(|&e| net.edge_kind[e as usize]).collect::<Vec<_>>());
+    assert!(edges.iter().any(|&e| !net.edge_water(e).is_empty()));
+    assert!(edges.iter().all(|&e| (0..=net.edge_len[e as usize] as usize).step_by(5).all(|s| height(&a, e, s as f64) == 0.0)));
+    assert!(problems(&a).is_empty(), "{:?}", problems(&a));
+}
+
 fn bx_of(a: &TrackApi) -> f64 {
     base(a).0
 }

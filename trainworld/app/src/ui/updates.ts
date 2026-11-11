@@ -13,6 +13,8 @@ export interface Update {
   line: MessageKey;
   /** the changelog's list */
   changes: MessageKey[];
+  /** those of `changes` that make something harder, shown red (T-3133) */
+  nerfs?: MessageKey[];
 }
 
 /** When v0.1 went out: set at publish. */
@@ -44,8 +46,13 @@ export const UPDATES: Update[] = [
       "updates.v022StreetTram",
       "updates.v022Curves",
       "updates.v022Catalan",
+      "updates.v022NerfSingle",
+      "updates.v022NerfTerminals",
+      "updates.v022NerfTrams",
+      "updates.v022NerfJunctions",
       "updates.v022Fixes",
     ],
+    nerfs: ["updates.v022NerfSingle", "updates.v022NerfTerminals", "updates.v022NerfTrams", "updates.v022NerfJunctions"],
   },
   {
     version: "v0.2.1",

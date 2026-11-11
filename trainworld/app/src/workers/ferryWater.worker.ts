@@ -12,7 +12,7 @@ import {
 
 export type FerryIn =
   | { kind: "template"; url: string }
-  | { kind: "port"; id: number; at: LonLat }
+  | { kind: "port"; id: number; at: LonLat; reach?: number }
   | { kind: "probe"; id: number; at: LonLat }
   | { kind: "line"; id: number; points: LinePoint[]; key?: string };
 
@@ -37,7 +37,8 @@ const tiles = new Map<string, { tile: WaterTile | null; at: number } | Promise<W
 async function fetchTile(x: number, y: number, z: number): Promise<WaterTile | null> {
   if (!template) await new Promise<void>((res) => waitTemplate.push(res));
   try {
-    const r = await fetch(template!.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y)));
+    // a timeout, so a tile that never answers does not hold every hover and click behind it (T-3127)
+    const r = await fetch(template!.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y)), { signal: AbortSignal.timeout(12000) });
     if (r.status === 200) return decodeWater(await r.arrayBuffer());
     if (r.status === 204 || r.status === 404) return EMPTY_TILE;
   } catch {
@@ -155,7 +156,7 @@ async function run() {
         const t0 = performance.now();
         const { route, stats } = await line(m.points);
         post({ kind: "line", id: m.id, route, stats, ms: performance.now() - t0 });
-      } else if (m.kind === "port") post({ kind: "port", id: m.id, snap: await snapPort(load, m.at) });
+      } else if (m.kind === "port") post({ kind: "port", id: m.id, snap: await snapPort(load, m.at, m.reach) });
       else if (m.kind === "probe") post({ kind: "probe", id: m.id, probe: await probe(load, m.at) });
     } catch (e) {
       console.error("ferry water", e);

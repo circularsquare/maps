@@ -33,6 +33,7 @@ import { metresBetween } from "../game/walks";
 import { keyIsTheirs } from "../ui/keys";
 import { FERRY_KEY } from "../ui/toolKeys";
 import { FerryWater, type LineRoute, type PortSnap } from "../ferry/ferryWater";
+import { portReachM } from "../ferry/route";
 import type { FerryPortIn } from "../workers/protocol";
 import type { Overlay } from "./overlay";
 import { newStationName } from "./stationNames";
@@ -96,7 +97,7 @@ export class FerryDraw {
   private under: Under = { kind: "unknown" };
   private probing = false;
   /** where a click at `at` would put a port (T-2468: the pointer's spot is snapped as a click is) */
-  private probed: { at: Pt; snap: PortSnap } | null = null;
+  private probed: { at: Pt; reach: number; snap: PortSnap } | null = null;
   private line: number | null = null;
   private dirty = false;
   private colour = "#1a7fb0";
@@ -312,21 +313,30 @@ export class FerryDraw {
     return { kind: s.reason === "on-water" ? "water" : s.reason === "tiles" ? "unknown" : "far" };
   }
 
+  /** How far off the shore a click at `at` still finds it: a fixed number of screen pixels, so it holds at any zoom (T-3127). */
+  private reachAt(at: Pt): number {
+    return portReachM((78271.517 * Math.cos((at.lat * Math.PI) / 180)) / 2 ** this.map.getZoom());
+  }
+
+  private probeIs(at: Pt): boolean {
+    return !!this.probed && same(this.probed.at, at) && this.probed.reach === this.reachAt(at);
+  }
+
   /** Ask the worker where a click at the pointer would put a port; the newest position wins. */
   private probe() {
     if (this.probing || !this.at) return;
-    const at = this.at;
+    const at = this.at, reach = this.reachAt(at);
     this.probing = true;
-    void this.water.port([at.lng, at.lat]).then((snap) => {
+    void this.water.port([at.lng, at.lat], reach).then((snap) => {
       this.probing = false;
-      if (snap) this.probed = { at, snap };
+      if (snap) this.probed = { at, reach, snap };
       if (!this.active) return;
       const k = this.under.kind;
       if (snap && k !== "handle" && k !== "port") {
         this.under = this.underOf(snap);
         this.place();
       }
-      if (this.at && !same(this.at, at)) this.probe();
+      if (this.at && !this.probeIs(this.at)) this.probe();
     });
   }
 
@@ -336,7 +346,7 @@ export class FerryDraw {
     this.at = { lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.pt = { x: e.point.x, y: e.point.y };
     this.under = this.underAt(e.point.x, e.point.y, this.at);
-    if (!this.probed || !same(this.probed.at, this.at)) this.probe();
+    if (!this.probeIs(this.at)) this.probe();
     const cur = this.under.kind === "handle" || this.under.kind === "port" ? "pointer" : "crosshair";
     if (this.map.getCanvas().style.cursor !== cur) this.map.getCanvas().style.cursor = cur;
     this.place();
@@ -363,7 +373,7 @@ export class FerryDraw {
     this.busy = true;
     try {
       // the spot the pointer's preview showed, else asked now
-      const snap = this.probed && same(this.probed.at, at) ? this.probed.snap : await this.water.port([at.lng, at.lat]);
+      const snap = this.probeIs(at) ? this.probed!.snap : await this.water.port([at.lng, at.lat], this.reachAt(at));
       if (!this.active) return;
       if (!snap || (!snap.ok && snap.reason === "tiles")) return void say(t("ferryDraw.notLoaded"), true);
       if (!snap.ok) return void say(t(snap.reason === "on-water" ? "ferryDraw.sayOnWater" : "ferryDraw.sayFar"), true);

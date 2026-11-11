@@ -237,7 +237,7 @@ impl TrackApi {
         let (shape, clicks) = (bridged.as_deref().unwrap_or(&verts), cut(&bridged, verts.len(), pis.len()));
         // T-2927: street tram track's curves that leave the street are tram track
         let pieces = if kind == TrackKind::StreetTram {
-            street_pieces(shape, first_click, clicks, scaled, &self.route_street)
+            street_over_water(&self.w.net, street_pieces(shape, first_click, clicks, scaled, &self.route_street))
         } else {
             stroke_pieces(shape, first_click, clicks, scaled, kind.spec().min_radius).into_iter().map(|p| (p, kind)).collect()
         };

@@ -214,7 +214,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
     <Modal open={changelog} onClose={() => setChangelog(false)} title={t("startMenu.changelog")} cls="changelog">
       {UPDATES.map((u) => <section key={u.version}>
         <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
-        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => <li key={k}>{t(k)}</li>)}</ul>
+        <ul class="changelog-list">{u.changes.filter((k) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map((k) => <li key={k} class={u.nerfs?.includes(k) ? "nerf" : undefined}>{t(k)}</li>)}</ul>
       </section>)}
     </Modal>
   </div>;

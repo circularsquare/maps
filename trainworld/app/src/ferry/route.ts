@@ -58,9 +58,20 @@ const MAX_TILES = 80;
 const FINE_CELL_M = 5;
 /** half the side of each end's fine box, m */
 const END_M = 700;
-/** a port click is at most this far from the shore, on land or on the water (T-2468), m; its berth at
- * most `BERTH_REACH_M` from its landing */
+/** a port click is at least this near the shore to count, on land or on the water (T-2468), m; its berth at
+ * most `BERTH_REACH_M` from its landing. The tool asks for more at wide zooms: `portReachM`. */
 export const PORT_REACH_M = 200;
+/** the most a port click may be off the shore, m (T-3127) */
+export const PORT_REACH_MAX_M = 1500;
+/** a port click counts within this many screen pixels of the shore (T-3127), between `PORT_REACH_M` and `PORT_REACH_MAX_M` */
+export const PORT_REACH_PX = 40;
+/** the snap raster has about this many cells across, so a wide reach does not slow every hover */
+const PORT_CELLS = 600;
+
+/** How far from the shore a port click counts at a map's metres per screen pixel. */
+export function portReachM(metresPerPx: number): number {
+  return Math.round(Math.min(PORT_REACH_MAX_M, Math.max(PORT_REACH_M, PORT_REACH_PX * metresPerPx)));
+}
 const BERTH_REACH_M = 300;
 /** a berth's room, m: a little more than `HALF_M`, so the coarser raster of a long leg still finds it */
 const BERTH_ROOM_M = 6;
@@ -905,16 +916,16 @@ async function twoLevel(load: TileLoad, a: LonLat, b: LonLat, box0: Box, st: Leg
 export type PortSnap = { ok: true; landing: LonLat; berth: LonLat } | { ok: false; reason: Refusal };
 
 /** The box a port click near `at` is snapped in. */
-function portBox(at: LonLat): Box {
+function portBox(at: LonLat, reach: number): Box {
   const f = new Frame(at[0], at[1]);
-  const R = PORT_REACH_M + BERTH_REACH_M + 50;
-  return boxOf(f, -R, -R, R, R, MIN_CELL_M);
+  const R = reach + BERTH_REACH_M + 50;
+  return boxOf(f, -R, -R, R, R, Math.max(MIN_CELL_M, (2 * R) / PORT_CELLS));
 }
 
 /** Where a click by the water puts a port: its landing on the shore (where it is drawn and walked to) and
  * its berth, the nearest water with room for a boat, where routes start and end. */
-export async function snapPort(load: TileLoad, at: LonLat): Promise<PortSnap> {
-  const box = portBox(at);
+export async function snapPort(load: TileLoad, at: LonLat, reach = PORT_REACH_M): Promise<PortSnap> {
+  const box = portBox(at, reach);
   const get = await load(tilesOf(box));
   if (!get) return { ok: false, reason: "tiles" };
   const r = buildRaster(get, box);
@@ -922,11 +933,12 @@ export async function snapPort(load: TileLoad, at: LonLat): Promise<PortSnap> {
   const c0 = cellAt(r, 0, 0);
   const onWater = r.water[c0] === 1;
   // the nearest cell of the other kind (water from land, land from water) within reach
-  const rad = Math.ceil(PORT_REACH_M / cell);
+  const rad = Math.ceil(reach / cell);
   const cc = c0 % W, cr = (c0 / W) | 0;
   let other = -1, bd = Infinity;
   for (let dy = -rad; dy <= rad; dy++)
     for (let dx = -rad; dx <= rad; dx++) {
+      if (cc + dx < 0 || cr + dy < 0 || cc + dx >= W || cr + dy >= r.H) continue;
       const i = (cr + dy) * W + cc + dx;
       if (r.water[i] === r.water[c0]) continue;
       const d = dx * dx + dy * dy;

@@ -207,8 +207,9 @@ export const networkFigures = computed(() => {
     if (m >= LONG_M && (!long || m > long.v!)) long = { of: l.name, v: m };
     const top = Math.max(0, ...st.stretches.map((x) => x.reached));
     if (top >= BULLET_KMH && (!bullet || top > bullet.v!)) bullet = { of: l.name, v: top };
+    // T-3128: a whole circle only: no turnaround partway (a stem or a loop-back) and no stop visited twice
     const stops = l.stops.length - 1;
-    if (st.loop === "circle" && !st.bus && stops >= CIRCLE_STOPS && (!circle || stops > circle.v!)) circle = { of: l.name, v: stops };
+    if (st.loop === "circle" && !st.bus && !st.reversals?.length && new Set(l.stops).size === stops && stops >= CIRCLE_STOPS && (!circle || stops > circle.v!)) circle = { of: l.name, v: stops };
   }
   if (long) firsts.set("long", long);
   if (bullet) firsts.set("bullet", bullet);

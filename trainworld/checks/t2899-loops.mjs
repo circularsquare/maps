@@ -96,7 +96,7 @@ try {
   await page.mouse.move(first.x, first.y, { steps: 3 });
   await page.waitForTimeout(900);
   const tag = await tags();
-  check(/Right click to close the loop/.test(tag), 'the tag over the first point says Right click to close the loop (T-3109)', tag);
+  check(/Right click to close loop/.test(tag), 'the tag over the first point says Right click to close loop (T-3109)', tag);
   await page.screenshot({ path: join(OUT, `bus-draw-${SHADE}.png`) });
   const cash0 = await page.evaluate(() => window.tw.world.value.save.cash);
   await page.mouse.click(first.x, first.y, { button: 'right' });
@@ -222,7 +222,7 @@ try {
   await page.mouse.move(w0.x, w0.y, { steps: 3 });
   await page.waitForTimeout(900);
   const ft = await tags();
-  check(/Right click to close the loop/.test(ft), 'the tag over the first port says Right click to close the loop (T-3118)', ft);
+  check(/Right click to close loop/.test(ft), 'the tag over the first port says Right click to close loop (T-3118)', ft);
   await page.screenshot({ path: join(OUT, `ferry-draw-${SHADE}.png`) });
   const fcash = await page.evaluate(() => window.tw.world.value.save.cash);
   await page.mouse.click(w0.x, w0.y, { button: 'right' });

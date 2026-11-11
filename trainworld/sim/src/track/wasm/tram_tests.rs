@@ -142,7 +142,7 @@ fn tram_over_train(tram_line: bool) -> (TrackApi, u32, u32) {
 
 /// T-3032: at a flat crossing a tram yields. The train's capacity through it is what it would be
 /// with no crossing, whatever the tram frequency; the tram's resource holds each tram pass at the
-/// tram's 30 s and each train pass at the train's 90 s.
+/// tram's 45 s and each train pass at the train's 120 s.
 #[test]
 fn a_tram_yields_to_a_train_at_a_flat_crossing() {
     use crate::track::capacity::ResKind;
@@ -160,11 +160,11 @@ fn a_tram_yields_to_a_train_at_a_flat_crossing() {
         for r in crossing {
             let us = cap.users_of(r);
             assert!(us.iter().all(|u| u.line == tram || !u.owner), "a train owns a crossing a tram crosses");
-            assert!(us.iter().filter(|u| u.owner).all(|u| u.occ == 30.0));
-            assert!(us.iter().filter(|u| !u.owner).all(|u| u.occ == 90.0 && u.line == train));
+            assert!(us.iter().filter(|u| u.owner).all(|u| u.occ == 45.0));
+            assert!(us.iter().filter(|u| !u.owner).all(|u| u.occ == 120.0 && u.line == train));
             let tph = |l: u32| a.w.net.line_tph[l as usize][0] as f64;
-            // one direction of the tram line: its trams at 30 s, the train line's passes at 90 s
-            assert!((cap.rho[r][0] - (tph(tram) * 30.0 + 2.0 * tph(train) * 90.0) / 3600.0).abs() < 1e-9, "{}", cap.rho[r][0]);
+            // one direction of the tram line: its trams at 45 s, the train line's passes at 120 s
+            assert!((cap.rho[r][0] - (tph(tram) * 45.0 + 2.0 * tph(train) * 120.0) / 3600.0).abs() < 1e-9, "{}", cap.rho[r][0]);
         }
     }
 }

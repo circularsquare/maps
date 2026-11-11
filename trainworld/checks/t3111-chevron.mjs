@@ -48,11 +48,11 @@ try {
   await hoverAt(info.one);
   let c = await chev();
   check(c.some((e) => e.tag), `hover on ${info.oneName} shows a chevron`, JSON.stringify(c));
-  await page.screenshot({ path: join(ARTIFACTS, `t3111-hover-oneway-${SHADE}.png`), clip: { x: Math.max(0, mid.x - 150), y: Math.max(0, mid.y - 120), width: 500, height: 300 }, scale: "device" });
+  await page.screenshot({ path: join(ARTIFACTS, `t3124-hover-oneway-${SHADE}.png`), clip: { x: Math.max(0, mid.x - 150), y: Math.max(0, mid.y - 120), width: 500, height: 300 }, scale: "device" });
   await hoverAt(info.two);
   c = await chev();
   check(!c.some((e) => e.tag), `hover on two-way ${info.twoName} shows none`, JSON.stringify(c));
-  await page.screenshot({ path: join(ARTIFACTS, `t3111-hover-twoway-${SHADE}.png`), clip: { x: Math.max(0, mid.x - 150), y: Math.max(0, mid.y - 120), width: 500, height: 300 }, scale: "device" });
+  await page.screenshot({ path: join(ARTIFACTS, `t3124-hover-twoway-${SHADE}.png`), clip: { x: Math.max(0, mid.x - 150), y: Math.max(0, mid.y - 120), width: 500, height: 300 }, scale: "device" });
 
   await page.evaluate(async (num) => {
     const tw = window.tw, ui = await import('/src/game/ui.ts');
@@ -66,10 +66,15 @@ try {
   await page.waitForTimeout(2500);
   c = await chev();
   check(c.filter((e) => !e.tag).length >= 1, 'editing Line 1 shows chevrons by its one-way stops', String(c.length));
-  await page.screenshot({ path: join(ARTIFACTS, `t3111-editing-${SHADE}.png`) });
+  const want = SHADE === 'dark' ? 'rgb(21, 23, 26)' : 'rgb(255, 255, 255)';
+  check(c.filter((e) => !e.tag).every((e) => e.colour === want), `map chevrons are ${want}`, c.filter((e) => !e.tag)[0]?.colour);
+
   const marks = await page.evaluate(() => [...window.tw.tools.stops.marks].filter(([, m]) => m.shown).map(([id, m]) => [id, !!m.chev && m.chev.style.display !== 'none']));
   const bad = marks.filter(([id, has]) => has && id === undefined);
   check(bad.length === 0 && marks.some(([, h]) => !h), 'two-way markers have none', `${marks.filter(([, h]) => h).length} with, ${marks.filter(([, h]) => !h).length} without`);
+  await centre(info.one, 16);
+  await page.waitForTimeout(2500);
+  await page.screenshot({ path: join(ARTIFACTS, `t3124-editing-${SHADE}.png`) });
 } catch (e) {
   console.log('FAIL', e.message);
   fail++;

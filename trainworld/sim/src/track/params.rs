@@ -317,9 +317,9 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         upkeep: 0.6,
         road_crossings: false,
         ramps_over: false,
-        section_s: 40.0,
-        conflict_s: 30.0,
-        platform_margin_s: 30.0,
+        section_s: 60.0,
+        conflict_s: 45.0,
+        platform_margin_s: 60.0,
         platform: (20, 80),
         station_flat: Some(2.0),
         station_upkeep: Some(50.0),
@@ -338,9 +338,9 @@ pub static TRACK_SPECS: [TrackSpec; TRACK_KINDS] = [
         upkeep: 1.0,
         road_crossings: false,
         ramps_over: false,
-        section_s: 40.0,
-        conflict_s: 30.0,
-        platform_margin_s: 30.0,
+        section_s: 60.0,
+        conflict_s: 45.0,
+        platform_margin_s: 60.0,
         platform: (20, 80),
         station_flat: Some(2.0),
         station_upkeep: Some(50.0),
@@ -386,7 +386,7 @@ pub const SINGLE_TRACK_MARGIN_S: f64 = 240.0;
 pub const PLATFORM_MARGIN_S: f64 = 60.0;
 pub const PASSING_S: f64 = 40.0;
 pub const TERMINUS_MARGIN_S: f64 = 60.0;
-pub const CONFLICT_S: f64 = 90.0;
+pub const CONFLICT_S: f64 = 120.0;
 /// A reversal's cost to the route search (s) and its least cost to the stop insertion (m; more on
 /// a longer route, `order_cost`), so a route without one wins unless it is much longer (T-797).
 pub const REVERSAL_SEARCH_S: f64 = 600.0;

@@ -1,12 +1,13 @@
-// T-2887: Community's modal (notes/T-2887.md). Random, Best in city and Top in city, a city picker, twelve networks a page
+// T-2887: Community's modal (notes/T-2887.md). Random, Biggest and Most liked in a place (T-3132), twelve networks a page
 // painted small with the schematic's own painter, one opened to pan and zoom with like and report; and the Share button
 // and its dialog. Nothing shows unless the server's `trainworldCommunity` is on (game/community.ts). Names reach the
 // page only through Preact's text and the canvas's fillText, never as HTML.
 
 import { useEffect, useRef, useState } from "preact/hooks";
-import { CITIES } from "../game/cities";
+import { CITIES, zoneCountry } from "../game/cities";
+import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { communityOn, communityOpen, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAsk, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { communityOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
 import { diagramShareProgress, diagramTheme } from "../diagram/view";
@@ -15,7 +16,7 @@ import { paintNames } from "../diagram/names";
 import { fitView, type DecodedShare } from "../diagram/shared";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
-import { CityPick, WORLD } from "./Leaderboard";
+import { CityPick, WORLD, type MorePlaces } from "./Leaderboard";
 import { LoadBar } from "./LoadingScreen";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -23,6 +24,22 @@ import "./community.css";
 
 const PAGE = 12;
 const cityName = (id: string) => tPlace(id, CITIES.find((c) => c.id === id)?.name ?? id);
+
+// T-3132: the place picker's countries and regions. A region is a realm (game/realms.ts, named for players on the map)
+// that is not just one country; a city's is its registry row's, else its country's, as the server's table has it.
+interface RealmRow { id: string; name: string; countries?: string[]; units?: object }
+const REALMS = (realmsJson as { realms: RealmRow[] }).realms;
+const REALM_NAME = new Map(REALMS.map((r) => [r.id, r.name]));
+const REALM_OF_COUNTRY = new Map(REALMS.flatMap((r) => (r.countries ?? []).map((cc) => [cc, r.id] as const)));
+const REGIONS = REALMS.filter((r) => r.units || (r.countries?.length ?? 0) > 1).map((r) => r.id);
+const COUNTRIES = [...new Set(CITIES.map((c) => c.country?.toLowerCase()).filter((cc): cc is string => !!cc))];
+const regionOf = (id: string) => {
+  const c = CITIES.find((x) => x.id === id), r = c?.realm && REALM_NAME.has(c.realm) ? c.realm : REALM_OF_COUNTRY.get(c?.country ?? "");
+  return r && REGIONS.includes(r) ? r : null;
+};
+const MORE_PLACES: MorePlaces = { findCountries: COUNTRIES, findRegions: REGIONS, regionName: (id) => REALM_NAME.get(id) ?? id };
+/** a picker key as the server's list takes it: "" for the world, a city id, country_<cc> or region_<id> */
+const placeParam = (key: string) => key === WORLD ? "" : key.startsWith(WORLD + "_") ? key.slice(WORLD.length + 1) : key;
 
 /** a drawing's lines never thinner than this many CSS px when zoomed out, so a card reads at its small size */
 const MIN_LINE_PX = 1.5;
@@ -195,7 +212,7 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
   const openCopy = async () => {
     setMsg("");
     setOpening(true);
-    const why = await openSharedCopy(row, row.name || (row.city ? cityName(row.city) : "") || t("savesPanel.copyMark"));
+    const why = await openSharedCopy(row, copyName(row) || (row.city ? cityName(row.city) : "") || t("savesPanel.copyMark"));
     if (why) { setMsg(why); setOpening(false); }
   };
   return <div class="cm-detail">
@@ -207,12 +224,13 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
         <div class="small muted num">{t("savesPanel.lines", { count: row.lines })} · {t("savesPanel.stations", { count: row.stations })}</div>
       </div>
       <div class="cm-detail-acts">
+        {row.mine && <button type="button" class="btn text cm-share-again" onClick={() => setMsg(shareAgain(row))}><Icon.share />{t("community.again")}</button>}
         {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openCopy()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
         <CopyLink id={row.id} />
         {!row.mine && (reported
           ? <span class="small muted">{t("community.reported")}</span>
           : <button type="button" class={"btn text" + (reporting ? " on" : "")} aria-expanded={reporting} onClick={() => { if (!needSignIn()) setReporting(!reporting); }}><Icon.flag />{t("community.report")}</button>)}
-        <button type="button" class={"btn text cm-like" + (row.liked ? " on" : "")} disabled={row.mine} aria-label={likeLabel} aria-pressed={!!row.liked} data-tip={row.mine ? t("community.errOwn") : undefined} onClick={like}><Icon.heart /><span class="num">{row.likes}</span></button>
+        <button type="button" class={"btn text cm-like" + (row.liked || row.mine ? " on" : "")} disabled={row.mine} aria-label={likeLabel} aria-pressed={!!row.liked} data-tip={row.mine ? t("community.errOwn") : undefined} onClick={like}><Icon.heart /><span class="num">{row.likes}</span></button>
       </div>
     </div>
     {reporting && <div class="cm-reasons">{reasons.map(([r, label]) => <button type="button" class="btn text" onClick={() => void report(r)}>{label}</button>)}</div>}
@@ -243,7 +261,9 @@ function Browse() {
     fetchShare(linked).then(setPicked, (e) => setLinkError((e as Error).message)).finally(() => setLinkWait(false));
   }, [linked]);
   const signedIn = session.value?.account.id ?? "";
-  const city = boardKey === WORLD ? "" : boardKey.slice(WORLD.length + 1);
+  const city = placeParam(boardKey);
+  // the player's own shares, for Share again on an opened one
+  useEffect(() => { void refreshMyShares(); }, [signedIn]);
   useEffect(() => {
     let live = true;
     setRows(null);
@@ -251,20 +271,25 @@ function Browse() {
     setPage(0);
     fetchShares(view, city, seed).then((l) => { if (live) setRows(l.rows); }, (e) => { if (live) setError((e as Error).message); });
     return () => { live = false; };
-  }, [view, city, seed, signedIn]);
+  }, [view, city, seed, signedIn, shareTick.value]);
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  const lands = [...new Set(mine.map((id) => zoneCountry(id)?.toLowerCase() ?? "").filter(Boolean))];
+  const areas = [...new Set(mine.map(regionOf).filter((r): r is string => !!r))];
   const change = (r: ShareRow) => { setPicked(r); setRows((all) => all && all.map((x) => (x.id === r.id ? r : x))); };
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
   if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
   const list = rows ?? [], pages = Math.ceil(list.length / PAGE), shown = list.slice(page * PAGE, (page + 1) * PAGE);
-  const views: [ShareView, string][] = [["random", t("community.random")], ["best", t("community.best")], ["top", t("community.top")]];
+  const views: [ShareView, string][] = [["random", t("community.random")], ["top", t("community.biggest")], ["liked", t("community.mostLiked")]];
   return <>
     <div class="cm-bar">
       <div class="cm-views" role="tablist">
         {views.map(([v, label]) => <button type="button" role="tab" aria-selected={view === v} class={"btn text" + (view === v ? " on" : "")} onClick={() => setView(v)}>{label}</button>)}
       </div>
-      <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} onPick={setBoardKey} />
-      {view !== "top" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
+      <div class="cm-where">
+        <span>{t("community.in")}</span>
+        <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} countries={lands} more={{ ...MORE_PLACES, regions: areas }} onPick={setBoardKey} />
+      </div>
+      {view === "random" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
     </div>
     {linkError && <p class="acct-msg bad">{linkError}</p>}
     {error ? <p class="acct-msg bad">{error}</p>
@@ -282,24 +307,26 @@ const ALL_CITIES: ReadonlySet<string> = new Set(CITIES.map((c) => c.id));
 
 export function Community() {
   const open = communityOpen.value && communityOn();
-  return <Modal open={open} onClose={() => (communityOpen.value = false)} title={t("community.title")} cls="community-panel">
+  return <Modal open={open} onClose={() => (communityOpen.value = false)} title={t("community.heading")} cls="community-panel" head={<ShareButton upload />}>
     {open && <Browse />}
   </Modal>;
 }
 
-/** Opens Community, in the head of the saves panel and of the leaderboards. */
-export function CommunityButton() {
+/** Opens Community: in the head of the saves panel and of the leaderboards, and in Settings beside Controls (T-3132). */
+export function CommunityButton({ settings }: { settings?: boolean }) {
   if (!communityOn()) return null;
-  return <button type="button" class="btn icon save-head-mark cm-head" data-tip={t("community.title")} aria-label={t("community.title")} onClick={() => (communityOpen.value = true)}><Icon.people /></button>;
+  const cls = settings ? "btn icon" + (communityOpen.value ? " on" : "") : "btn icon save-head-mark cm-head";
+  return <button type="button" class={cls} data-tip={t("community.title")} aria-label={t("community.title")} onClick={() => (communityOpen.value = true)}><Icon.people /></button>;
 }
 
-/** Share on the game being played: on its card in the saves panel, beside Save picture on the schematic. */
-export function ShareButton() {
+/** Share on the game being played: on its card in the saves panel and beside Save picture on the schematic with
+ * Community's people, and in Community's own head with the upload arrow (`upload`). */
+export function ShareButton({ upload }: { upload?: boolean }) {
   if (!communityOn() || !shareableSlot()) return null;
   void myShares.value;
-  const shared = !!currentShare(), tip = shared ? t("community.sharedTip") : t("community.share");
-  return <button type="button" class={"btn icon cm-share" + (shared ? " on" : "")} data-tip={tip} aria-label={tip}
-    onClick={() => { if (session.peek()) shareAsk.value = true; else accountOpen.value = true; }}><Icon.share /></button>;
+  const row = currentShare(), tip = row ? t("community.lastShared", { when: sharedWhen(row) }) : upload ? t("community.shareOpen") : t("community.share");
+  return <button type="button" class={"btn icon cm-share" + (upload ? " save-head-mark" : "") + (row ? " on" : "")} data-tip={tip} aria-label={tip}
+    onClick={() => { if (session.peek()) shareAsk.value = true; else accountOpen.value = true; }}>{upload ? <Icon.share /> : <Icon.people />}</button>;
 }
 
 function ShareAsk() {
@@ -309,7 +336,7 @@ function ShareAsk() {
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const setting = boardSetting.value;
-  const row = currentShare();
+  const row = currentShare(), left = sharesLeft.value;
   useEffect(() => { void loadBoardSetting(); void refreshMyShares(); }, []);
   const needName = ask || (setting !== null && !setting.name);
   const phase = sharePhase.value, progress = diagramShareProgress.value;
@@ -331,6 +358,8 @@ function ShareAsk() {
   const go = () => run(() => shareGame(needName ? name.trim() : "", copy), t("community.shared"));
   return <>
     <p>{t("community.ask")}</p>
+    {row && <p>{t("community.lastSharedOn", { when: sharedWhen(row) })}</p>}
+    {left && <p>{left.left === left.perDay ? t("community.sharesToday", { count: left.left }) : t("community.sharesLeft", { count: left.left })}</p>}
     {row?.hidden ? <p class="small muted">{t("community.hidden")}</p> : null}
     {needName && <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} disabled={busy} onInput={(e) => setName((e.target as HTMLInputElement).value)} />}
     <label class="check cm-copy-tick">
@@ -341,7 +370,7 @@ function ShareAsk() {
       <button type="button" class={"btn text" + (row ? "" : " save-open")} disabled={busy || (needName && !name.trim())} onClick={() => void go()}>{row ? t("community.again") : t("community.share")}</button>
       {row && <button type="button" class="btn text danger" disabled={busy} onClick={() => void run(() => stopSharing(row.id), t("community.stopped"))}>{t("community.stop")}</button>}
       {row && !row.hidden && !busy && <CopyLink id={row.id} text />}
-      {!busy && <button type="button" class="btn text cm-ask-browse" onClick={() => { shareAsk.value = false; communityOpen.value = true; }}>{t("community.title")}</button>}
+      {!busy && <button type="button" class="btn icon cm-ask-browse" data-tip={t("community.title")} aria-label={t("community.title")} onClick={() => { shareAsk.value = false; communityOpen.value = true; }}><Icon.people /></button>}
     </div>
     {phase === "drawing" && <div class="cm-progress">
       <span class="small muted">{t("diagramButton.calculating")}</span>

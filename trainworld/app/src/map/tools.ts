@@ -237,9 +237,11 @@ export class Tools {
     effect(() => { if (tool.value !== "building") this.building.clear(); });
     startBuildingFloors(overlay);
     overlay.afterMapFrame.push(() => this.place());
-    // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was (a run's segment stays)
+    // T-1777: a pointer gone off the map leaves no ghost, ring or tag where it was; T-3130: a segment being
+    // drawn keeps its ghost, and so its tag with the price or why it can't be built
     map.getContainer().addEventListener("mouseleave", () => {
       if (touchInput.peek() || (!this.hover && !this.hoverBeside && !this.delHover)) return;
+      if (tool.peek() === "track" && this.start) return;
       this.hover = this.hoverBeside = null;
       this.clearDelHover();
       this.place();

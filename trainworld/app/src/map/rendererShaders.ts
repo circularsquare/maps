@@ -314,7 +314,8 @@ void main() {
   else if (u_by_speed == 1) {
     ${SPEED_BLEND}
   }
-  else if (u_by_profit == 1) {
+  // T-3130: a ghost has no profit (its edge id, all ones, read as -1 found the texture's zero: deep red)
+  else if (u_by_profit == 1 && !placement) {
     int ei = int(a_edge);
     float pv = ei < u_profit_n ? texelFetch(u_profit, ivec2(ei % ${TEX_W}, ei / ${TEX_W}), 0).x : 1e30;
     if (pv > 1e29) v_color = u_track;

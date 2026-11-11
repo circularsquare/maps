@@ -270,7 +270,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
   switch, track count and target speed do not apply. Tram track and train track never meet at a node
   (`TrackFamily`: "Tram track and train track can't join. They can cross."), so while one is picked the other's
-  track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 90 s.
+  track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 120 s.
   A stop is a station with a 20 to 80 m platform (default 40, remembered apart from rail's), at a flat US$2M
   at ground and US$50 a day upkeep, and takes only the Waiting room and Passage upgrades. A line whose first stop is on
   tram track is a tram line: it starts with a 15 s dwell, 120 s turnaround and 2 cars of 20 m (1 to 4), and uses
@@ -295,7 +295,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   shows (T-2996). Each curve whose middle lies more than 5 m from its two legs, or more than 10 m
   from the street line, and each straight any part of which lies more than 10 m from the street line (the fit cut a
   corner), is cut out as a piece of tram track (off-street, 0.5x), 1 m beyond each end of its arc, taking in a
-  neighbouring curve where no joint fits between. A pointer with no street
+  neighbouring curve where no joint fits between; such a piece at ground level over water stays street track, as it
+  rounds the corner of a street on its bridge (T-3130). A pointer with no street
   within 100 m draws ordinary tram track; no street path is refused as the bus tool's are; no fit says "The streets
   are too tight here. Add a point on the way." Street track reshaped by hand becomes tram track. Both kinds look
   alike on the map: 0.75 of rail's width, lines over them too, with two thin wires along the middle, white in light
@@ -627,8 +628,8 @@ route conflict with every move on the other; one with no train on its other rout
 constructed track no line runs on) holds nothing. A **tram** crossing a train route at a flat
 crossing yields (T-3032): the train route's crossing resource is loaded by trains only, so tram passes
 never count against a train's capacity, delay or warnings. The tram route's resource holds each tram
-pass for 30 s and each train pass for 90 s: a tram's capacity through the crossing is what the trains
-leave, `(3600 - 90 x trains an hour) / 30`, and the trains over it are never cut back for the tram.
+pass for 45 s and each train pass for 120 s: a tram's capacity through the crossing is what the trains
+leave, `(3600 - 120 x trains an hour) / 45`, and the trains over it are never cut back for the tram.
 On the map a train never waits for a tram there and a tram waits for any train due over the
 crossing while it would be. A node where only two edge ends carry running
 lines is plain track for capacity: a branch no train uses yet does not cut the section through it
@@ -641,7 +642,9 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 
 - track section (a run with the same set of lines), per direction: `s = 70 s + v / 0.6 m/s²`
   (v the top speed reached on it), so at most 41 trains/h at 40 km/h, 34 at 80, 29 at 120, 25 at
-  160, 16 at 320 (T-517)
+  160, 16 at 320 (T-517). Tram track (both kinds) holds 60 s + v / 0.6 (41 an hour at the street
+  tram's 60 km/h), its platform dwell + 60 s (48 an hour at the 15 s dwell), its own crossings
+  and junction moves 45 s (T-3125, Anita 2026-11-10)
 - single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions: a headway each way of
   about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; one-way
   single track takes the track-section rule above, per direction (T-3094)
@@ -652,11 +655,11 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   holds none.
 - turning at a station (T-3107, Anita 2026-11-10: a dead end and a through station are the same to
   the game; no player text mentions a dead end): a train ending its line there or reversing partway
-  holds one place for max(turnaround + 60 s, 200 s), pooled over the places the station has
+  holds one place for max(turnaround + 60 s, 240 s), pooled over the places the station has
   (`capacity::turn_places`, `upgrades::pooled_turn_s`). Without a terminal that is one platform track
   of each pair: 15 an hour at the default 3 minutes. With a **terminal** it is every platform track:
-  30 an hour a pair at 3 minutes, 36 at 2 (never counted quicker than 200 s, the Victoria line's
-  best). A quad station has two pairs, so it takes twice as many. The turn holds no platform and
+  30 an hour a pair at 3 minutes and at 2 (never counted quicker than 240 s, so no turnaround
+  setting beats 30). A quad station has two pairs, so it takes twice as many. The turn holds no platform and
   crosses no other track: through trains' platform holds and junction moves are unchanged, and no
   limiter caps reversing partway. A track end with no station has one place. A reversing line's
   two directions are two streams; no track section joins across the turn. Unused blueprint
@@ -667,7 +670,7 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   it); the hold there to the headway is not counted. A balloon's first stop turns as any
   line's end. The loop itself is plain track, so a balloon has no turnback limit (about 34 an hour
   at 80 km/h).
-- junction move, with the moves it crosses; flat crossing, all moves: 90 s (30 s for a tram's own
+- junction move, with the moves it crosses; flat crossing, all moves: 120 s (45 s for a tram's own
   passes, and a tram's crossing of a train route loads only that tram's resource, above)
 
 #### Delay and slower trains
@@ -1025,7 +1028,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   shares track, a platform or a flat junction move with reach the first place they meet as far apart
   as they can (`spacing::place`: per train of an hour, how far it falls short of half the smaller
   headway from the other line's nearest there, squared, summed; 24 phases tried a headway). At a flat
-  junction move the trains need only the crossing's own time apart (90 s), not half a headway. A
+  junction move the trains need only the crossing's own time apart (120 s), not half a headway. A
   merge comes first (T-2960): it counts 25 times any other meeting (`MERGE_FIRST`), so lines joining
   one track take even turns there and the other meetings choose only among phases nearly as good at
   the merge. **Where the spare time stands** (T-2972): a headway line's share of its spare time at its
@@ -1716,7 +1719,9 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   stay stops; between them the bus stops only where the player placed a stop (at most 1,000), taken along
   the road. A placed stop within 200 m along the road of a station the route reaches is that station's
   (a constructed route: constructed stations only); no two come closer than 50 m. It stops at nothing else, crossings and
-  other stations included. In all other ways it is a line with its own spacing: no street stops, 400 m of
+  other stations included. A loop (T-3123) keeps at least one stop between: with none placed its stop at half its
+  length (below) stands, the first stop placed makes that one a placed stop too, and the last placed one cannot be
+  taken out. An edit that leaves the stops as they were (compared stop by stop) is no edit. In all other ways it is a line with its own spacing: no street stops, 400 m of
   `cover` each way, `bus::spaced_profile`. A redraw keeps the stops within 200 m of the new route, moved onto
   it. Leaving to a spacing keeps the stops in `BusRoute::hand_kept` for the session (not saved); choosing hand again gives them back (T-2939). The Save keeps them (`LBH1`).
 - **Run** (T-2904, `streets.rs`, `bus::Pace`): a hop between two stops takes the car's time over its road
@@ -1770,7 +1775,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   came: it is a loop as above (a circle, one way by default), its way out run twice. A place on the way out is on
   both passes (`Poly::project_passes`): a station within reach of the way out is a stop on the way out and on the
   way back, and a stop placed by hand there (`on_route_at`) is a stop on both passes and goes from both when taken
-  out. The app sends the route so (ui-building.md "Loop back").
+  out; one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops
@@ -1789,10 +1794,11 @@ searches water.
   water). OSM's water stops at many canal bridges: along a `transportation` line marked as a bridge, land
   with water both ways across the line, 60 m or less in all, counts as water (a viaduct along a shore has
   water on one side only and stays land).
-- **Ports**: a click within 200 m of the shore, on land or on the water (T-2468), gives a landing on the
+- **Ports**: a click within the reach of the shore, on land or on the water (T-2468), gives a landing on the
   shore (where the line from the click to the nearest cell of the other kind changes kind) and a berth,
-  the nearest water with 6 m of room within 300 m of it, where routes start and end. No shore within
-  200 m: refused (`far-from-water` on land, `on-water` on the water).
+  the nearest water with 6 m of room within 300 m of it, where routes start and end. The reach is the
+  tool's 40 screen pixels of ground, 200 m to 1500 m (`portReachM`, T-3127); the snap raster is about 600
+  cells across, 2.5 m each at the least. No shore within the reach: refused (`far-from-water` on land, `on-water` on the water).
 - **A leg** between two berths is searched on a raster of its box (the two ends plus 35% of their distance,
   at least 800 m round, then 3 km or their distance round if the waters do not meet), its cell the finest
   of 2.5 m or more that keeps the raster under 1.5M cells. A cell is sailable if its centre is 5 m or more

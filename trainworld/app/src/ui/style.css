@@ -1049,6 +1049,7 @@ a.btn { text-decoration: none; }
 .changelog-head span { font-weight: 400; }
 section + section > .changelog-head { margin-top: 16px; }
 .changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.changelog-list li.nerf { color: var(--bad); }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
   background: var(--bg); border: 1px solid var(--rule); cursor: pointer; }
@@ -1432,7 +1433,11 @@ button.save-add:hover { color: var(--text); }
 .tag-lines { display: flex; flex-wrap: wrap; gap: 2px; }
 .bullet-heading { display: inline-flex; align-items: center; gap: 1px; }
 .heading-chevron { display: inline-flex; width: 16px; height: 16px; flex: none; transform-origin: 50% 50%; }
-.stop-mark > .heading-chevron { position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -8px; pointer-events: none; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff); }
+.stop-mark > .heading-chevron { position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -8px; pointer-events: none; scale: 1.5;
+  color: var(--map-chev) !important; filter: drop-shadow(0 0 1px var(--map-chev-halo)); }
+/* T-3124: on the map the chevron lies on the line's own colour, so it is white (light) or near-black (dark); the hover's stays the line's colour */
+:root { --map-chev: #fff; --map-chev-halo: rgba(0, 0, 0, .45); }
+:root[data-shade="dark"] { --map-chev: #15171a; --map-chev-halo: rgba(255, 255, 255, .4); }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
 .mode-bar i { display: block; height: 100%; }
@@ -1566,6 +1571,8 @@ button.save-add:hover { color: var(--text); }
   background: var(--bg); color: var(--text); overflow: hidden; }
 .saves-panel[open] { display: flex; flex-direction: column; }
 .saves-panel::backdrop { background: rgb(0 0 0 / 28%); }
+/* T-3132: the panels mounted outside the dock (account, leaderboards, Community, Share) take the UI scale as the dock's do */
+#account-root .saves-panel { zoom: var(--ui, 1); }
 .saves-inner { padding: 16px 20px 20px; overflow-y: auto; min-height: 0; }
 .saves-head { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .saves-head h2 { font-size: 18px; margin: 0; flex: 1; }

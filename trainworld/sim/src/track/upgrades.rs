@@ -55,9 +55,9 @@ pub fn building_price(m2: f64) -> f64 {
 }
 
 /// Least a turn holds, summed over the tracks it is pooled across (turnaround + margin, at least
-/// this): 18 an hour on one track, 36 on two (the Victoria line's two-platform termini), so a
+/// this): 15 an hour on one track, 30 on two (about Toronto's 30 an hour theoretical), so a
 /// short turnaround never turns more than a real terminus does.
-pub const POOLED_TURN_MIN_S: f64 = 200.0;
+pub const POOLED_TURN_MIN_S: f64 = 240.0;
 
 /// Occupancy per train of a turn pooled over `tracks` (the places a turning train can stand,
 /// `capacity::turn_places`), from the line's turnaround plus `margin`.

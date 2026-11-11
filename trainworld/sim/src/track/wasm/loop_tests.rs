@@ -92,6 +92,70 @@ fn a_bus_loop_begins_at_a_station_near_its_closing_point() {
     assert_eq!(s.iter().filter(|c| c[5] == st as f64).count(), 2, "the station once at each end: {s:?}");
 }
 
+/// Each stop of a bus line as (x, y), run 0's order, to the metre.
+fn places(a: &TrackApi, l: u32) -> Vec<(i64, i64)> {
+    stops(a, l).iter().map(|c| (c[1].round() as i64, c[2].round() as i64)).collect()
+}
+
+/// T-3123: stops by hand on a ring: the first placed one is a stop with the stop the ring had at half its length
+/// kept, a stop taken out goes, and the last stop between stays. Every stop is served each way the bus runs.
+#[test]
+fn stops_by_hand_on_a_ring_add_and_go() {
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &square(0.0, 0.0, 3000.0, true), 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 3000), (0, 0)], "half way round, as before");
+    assert_eq!(a.set_bus_stop(b, 3010.0, 1000.0, true), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 1000), (3000, 3000), (0, 0)]);
+    assert_eq!(a.set_bus_stop(b, 1000.0, 2990.0, true), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 1000), (3000, 3000), (1000, 3000), (0, 0)]);
+    assert_eq!(a.stop_times(b, 0, 0).len(), 5, "one way: each stop once");
+    assert_eq!(a.set_line_one_way(b, false), 0, "{}", a.issues());
+    assert_eq!(a.stop_times(b, 1, 0).len(), 5, "both ways: each stop the other way too");
+    // near the closing stop, or on a stop: nothing
+    assert_eq!(a.set_bus_stop(b, 20.0, 0.0, true), 0);
+    assert_eq!(a.set_bus_stop(b, 3000.0, 1020.0, true), 0);
+    assert_eq!(places(&a, b).len(), 5);
+    // out, out, and the last one stays
+    assert_eq!(a.set_bus_stop(b, 3000.0, 1000.0, false), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_stop(b, 1000.0, 3000.0, false), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 3000), (0, 0)]);
+    assert_eq!(a.set_bus_stop(b, 3000.0, 3000.0, false), 0);
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 3000), (0, 0)]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 3000), (1000, 3000), (0, 0)], "one undo step per edit");
+    // automatic and back to by hand on the loop
+    assert_eq!(a.set_bus_spacing(b, 0.0), 0, "{}", a.issues());
+    assert!(!a.bus_hand(b));
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 3000), (1000, 3000), (0, 0)]);
+}
+
+/// T-3123: stops by hand on a route that loops back: one placed on the loop is a stop once, on the way out a stop
+/// on the way out and on the way back; taking either out takes both.
+#[test]
+fn stops_by_hand_on_a_route_that_loops_back_serve_the_way_out_both_ways() {
+    let mut a = api();
+    let b = a.new_line_id();
+    // out 2 km, round a 1 km square and back
+    let route = [0.0, 0.0, 1.0, 2000.0, 0.0, 1.0, 3000.0, 0.0, 1.0, 3000.0, 1000.0, 1.0, 2000.0, 1000.0, 1.0, 2000.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 1000), (0, 0)]);
+    assert_eq!(a.set_bus_stop(b, 3000.0, 400.0, true), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 400), (3000, 1000), (0, 0)], "on the loop: once");
+    assert_eq!(a.set_bus_stop(b, 1000.0, 10.0, true), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (1000, 0), (3000, 400), (3000, 1000), (1000, 0), (0, 0)], "on the way out: both passes");
+    assert_eq!(a.stop_times(b, 0, 0).len(), 6);
+    assert_eq!(a.set_bus_stop(b, 1000.0, 0.0, false), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 400), (3000, 1000), (0, 0)], "both passes go");
+    assert_eq!(a.set_bus_stop(b, 3000.0, 1000.0, false), 0, "{}", a.issues());
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 400), (0, 0)]);
+    assert_eq!(a.set_bus_stop(b, 3000.0, 400.0, false), 0);
+    assert_eq!(places(&a, b), vec![(0, 0), (3000, 400), (0, 0)], "the last stop between stays");
+}
+
 fn port(a: &mut TrackApi, x: f64, y: f64, name: &str) -> u32 {
     assert_eq!(a.add_port(x, y - 100.0, x, y, name.into()), 0, "{}", a.issues());
     a.last_port()

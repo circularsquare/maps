@@ -90,7 +90,8 @@ impl TrackApi {
         self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.hand.is_some())
     }
     /// T-2891: put a stop on a by-hand bus line where the route is nearest (x, y) (`on`), or take out
-    /// the stop nearest (x, y). The ends stay, and a click that changes no stop is no edit.
+    /// the stop nearest (x, y). The ends stay, a loop keeps one stop between (T-3123), and a click that
+    /// changes no stop is no edit.
     pub fn set_bus_stop(&mut self, id: u32, x: f64, y: f64, on: bool) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(r) = d.bus.as_mut().filter(|r| r.hand.is_some()) else { return self.refuse(Issue::LinePath { line: id }) };
@@ -98,9 +99,15 @@ impl TrackApi {
         let plan = bus::plan_route(net, id, r, r.built);
         let poly = bus::Poly::new(net, &r.points, &r.kinds);
         let mut hand = r.hand.clone().unwrap_or_default();
+        let closed = bus::is_closed(&r.points);
         if on {
             if hand.len() >= bus::HAND_MAX_STOPS {
                 return 0;
+            }
+            // T-3123: the stop a loop with none placed gets at half its length becomes a placed one, so it stays
+            if closed && hand.is_empty() {
+                let (mx, my) = poly.at_road(0.5 * poly.road_len());
+                hand.push([quant(mx), quant(my)]);
             }
             let (px, py) = poly.at_road(poly.project(net, x, y).0);
             hand.push([quant(px), quant(py)]);
@@ -114,9 +121,14 @@ impl TrackApi {
             // every point that made this stop goes, or a stop two points landed on would stay
             let nearest = |s: f64| (0..n).min_by(|&a, &b| (plan.stops[a].s - s).abs().total_cmp(&(plan.stops[b].s - s).abs()));
             hand.retain(|p| bus::on_route_at(&poly, net, p[0], p[1]).into_iter().all(|s| nearest(s) != Some(k)));
+            if closed && hand.is_empty() {
+                return 0;
+            }
         }
         r.hand = Some(hand);
-        if bus::plan_route(net, id, r, r.built).stops.len() == plan.stops.len() {
+        // T-3123: compared stop by stop, as a loop's first placed stop takes the place of its stop at half its length
+        let same = |a: &bus::Plan, b: &bus::Plan| a.stops.len() == b.stops.len() && a.stops.iter().zip(&b.stops).all(|(p, q)| p.s == q.s && p.station == q.station);
+        if same(&bus::plan_route(net, id, r, r.built), &plan) {
             return 0;
         }
         self.run(Op::Line { id, data: Some(d) })

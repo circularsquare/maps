@@ -3,6 +3,7 @@
 .community-panel { width: min(1100px, calc(100vw - 32px)); }
 .cm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
 .cm-views { display: flex; gap: 6px; }
+.cm-where { display: flex; align-items: center; gap: 8px; }
 .cm-bar .lb-find { position: relative; margin: 0; width: 200px; }
 .cm-bar .lb-hits { position: absolute; left: 0; right: 0; z-index: 3; background: var(--bg); border: 1px solid var(--rule); }
 
@@ -43,8 +44,10 @@
 @media (max-width: 560px) {
   .cm-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .cm-thumb { height: 120px; }
-  .cm-bar .lb-find { width: 100%; order: 3; }
+  .cm-where { width: 100%; order: 3; }
+  .cm-bar .lb-find { flex: 1; width: auto; }
   .cm-detail-head { flex-wrap: wrap; }
   .cm-detail-acts { width: 100%; justify-content: flex-end; }
   .cm-canvas { height: 58vh; }
 }
+.btn.cm-share.save-head-mark.on { color: var(--accent); }

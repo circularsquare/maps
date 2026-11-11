@@ -437,7 +437,9 @@ lighter; at most 16 of each.
   100 m of the route (`BUS_XFER_M`, demand's station merge; T-2992), the marker snaps there and the tag names
   that line, so the stop is one place with the other line's.
   A click on the route adds a stop, a click on a stop takes it out, each one edit and one undo; the
-  two ends stay. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
+  two ends stay. On a loop (T-3123) the closing stop is the end, and the last stop between offers no removal
+  (it has no tag and takes no click); on a route that loops back a stop on the way out is drawn on both passes,
+  and a click on it takes out both. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
   session (`BusRoute::hand_kept`, not saved): choosing Manual again gives them back, and a redraw in between
   keeps those within 200 m of the new route. A line's two end stops are drawn like its other stops in Auto
   and Manual alike (T-2938).
@@ -449,17 +451,21 @@ each half the row, key O), the Lines tab's ferry button beside the bus one, or O
 the ferry tool for a new line. The player places **ports only**; between two consecutive ports the
 route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
 
-- **A click** within 200 m of the shore, on land or on the water, puts a new port on the nearest shore
-  (T-2468): its landing where the line from the click to the nearest cell of the other kind (water from
+- **A click** within the reach of the shore, on land or on the water, puts a new port on the nearest shore
+  (T-2468). The reach is 40 screen pixels of ground at the pointer's zoom, at least 200 m and at most 1500 m
+  (`portReachM` in `ferry/route.ts`; T-3127: it was 200 m at every zoom, 5 px at zoom 12). A port's landing where the line from the click to the nearest cell of the other kind (water from
   land, land from water) crosses the shore, its berth in the water where boats stop, named as a new
   station is. Before the click the pointer shows that port where it would go, a circle on the landing
   and a line to the berth in `--ferry-ghost` (dark blue in light, light blue in dark). A click on a port
   the network has (within 10 px or 30 m), or one whose landing would fall within 30 m of such a port's,
-  stops there, so lines share ports. A click on water more than 200 m from land is refused ("Place
-  ports on land by the water"), and on land more than 200 m from water ("Too far from water"); the tag
+  stops there, so lines share ports. A click on water farther than the reach from land is refused ("Place
+  ports on land by the water"), and on land farther than it from water ("Too far from water"); the tag
   over the pointer says which before the click, "Place port" or "Stop at <port>" where a click works.
   The tag stays up as the pointer moves, as the track tool's does: while the spot under a new position
-  is asked it keeps the last answer, so only its text changes (T-2273). From the active end's berth a
+  is asked it keeps the last answer, so only its text changes (T-2273). No tag shows on touch (a tap places
+  the port at once), over a lone first port, or while the tiles have not loaded (a click then says so). The
+  water worker asks the style for the basemap's tile address until it has one, and a hover or click that gets no
+  answer in 40 s is dropped, so the tool never waits for ever (T-3127). From the active end's berth a
   dashed leg in `--ferry-ghost` runs to the berth the next click would join.
 - **While drawing** each port is a circle on its landing with a short line to its berth, the active
   end larger; the route between is dashed in the line's colour, grey and straight while it is
@@ -558,8 +564,9 @@ switch on, the track tool follows the real network the layer draws.
   `#1c4fb8` outline) where a click would place it and red (`#e03c3c`, `#b91f1f`) where it would be
   refused, fixed colours with a thin white halo; a refused spot shows the reason in the tag. On
   quad track it is on the pair under the pointer only, as the station will be [T-1687]. With the
-  pointer off the map, no ghost, ring or tag shows for the station, track and delete tools (a
-  run's segment stays) [T-1777].
+  pointer off the map, no ghost, ring or tag shows for the station, track and delete tools [T-1777],
+  except a track segment being drawn, whose ghost and tag (its price, or why it can't be built) stay
+  where the pointer left [T-3130].
   **First frame** [T-695]: the page works out at once, from what it already has, where the click
   would go and whether it would be taken (`likelyFirst`, `layoutIssues` in `map/stationSnap.ts`),
   and shows that: a spot is refused when the

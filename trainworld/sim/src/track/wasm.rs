@@ -1332,6 +1332,21 @@ fn street_pieces(verts: &[Pi], first: usize, clicks: usize, scaled: bool, street
     cut_at(verts, &f, &flat, scaled).into_iter().zip(kinds).collect()
 }
 
+/// T-3130: a street route's ground-level piece of tram track over water is street track: it rounds a
+/// corner of a street that crosses there on a bridge of its own (T-3106), and as tram track it would be
+/// refused at ground level, while the rest of the route may not leave the ground.
+fn street_over_water(net: &Network, pieces: Vec<(Vec<Pi>, TrackKind)>) -> Vec<(Vec<Pi>, TrackKind)> {
+    let water = bridge::water(net.water_mask.as_ref());
+    let scaled = net.frame().scaled();
+    pieces
+        .into_iter()
+        .map(|(p, k)| {
+            let wet = k == TrackKind::Tram && p.iter().all(|v| v.level == 0) && !water(&geom::fit_in(&p, scaled), false).is_empty();
+            (p, if wet { TrackKind::StreetTram } else { k })
+        })
+        .collect()
+}
+
 /// A stroke cut at `cuts` (leg index, joint; in order along it), each piece's corners keeping the
 /// whole stroke's radii (`stroke_pieces`).
 fn cut_at(verts: &[Pi], f: &geom::Fit, cuts: &[(usize, Pi)], scaled: bool) -> Vec<Vec<Pi>> {

@@ -156,8 +156,13 @@ export class BusStopMarkers {
       el.className = "stop-mark " + (on ? "on" : "route");
       this.items.push({ mx, my, on, el, sx: 0, sy: 0, shown: false, hit });
     };
+    // T-3123: a loop keeps one stop between its ends (on a route that loops back, maybe a stop on both passes)
+    const r = bus.route, between = bus.stops.slice(1, -1);
+    const closed = r.length >= 8 && r[0] === r[r.length - 2] && r[1] === r[r.length - 1];
+    const place = (s: ClockBus["stops"][number]) => (s.station >= 0 ? `n${s.station}` : `${Math.round(s.x)},${Math.round(s.y)}`);
+    const lastOne = closed && new Set(between.map(place)).size === 1;
     bus.stops.forEach((s, i) => {
-      const end = i === 0 || i === bus.stops.length - 1;
+      const end = i === 0 || i === bus.stops.length - 1 || lastOne;
       add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)) });
     });
     this.place();

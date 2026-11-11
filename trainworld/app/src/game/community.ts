@@ -7,27 +7,34 @@
 // game of their own (game/sharedSave.ts checks it both ways).
 
 import { effect, signal } from "@preact/signals";
-import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, session } from "./account";
+import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, session, slotOfGame } from "./account";
 import { diagramForShare } from "../diagram/view";
 import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from "../diagram/shared";
-import { exportForShare, openCopy, saveSlotsState } from "../workers/clockClient";
+import { exportForShare, manageSaveSlot, openCopy, saveSlotsState } from "../workers/clockClient";
 import { copyFromShare, CopyRefused, forShare, MAX_SHARED_SAVE } from "./sharedSave";
-import { t } from "../i18n";
+import { t, tDate } from "../i18n";
 
-export type ShareView = "random" | "best" | "top";
+/** T-3132: Random, Biggest (`top`, by points) and Most liked */
+export type ShareView = "random" | "top" | "liked";
 export type ReportReason = "offensive" | "fake-score" | "other";
 
 export interface ShareRow {
   id: string; rev: number; name: string; city: string; points: number; lines: number; stations: number; day: number; likes: number; at: number;
+  /** the game's own name, sent only with a copy, to name it (T-3132) */
+  title?: string;
   sandbox?: boolean; copy?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
 }
-export interface ShareList { view: string; city: string; seed: string; count: number; rows: ShareRow[] }
+export interface ShareList { view: string; city: string; seed: string; count: number; rows: ShareRow[]; left?: number; perDay?: number }
 
 export const communityOpen = signal(false);
 /** the Share dialog is open */
 export const shareAsk = signal(false);
 /** this account's shares, for Share or Stop sharing on the game's card */
 export const myShares = signal<ShareRow[]>([]);
+/** T-3132: shares this account has left today, of how many a day (the server's count); null until read */
+export const sharesLeft = signal<{ left: number; perDay: number } | null>(null);
+/** counts this page's shares and stops, so an open Community list reloads after one */
+export const shareTick = signal(0);
 /** what a share is doing while it runs */
 export const sharePhase = signal<"" | "drawing" | "sending">("");
 
@@ -108,7 +115,11 @@ function plain(e: unknown, act: "share" | "like" | "report"): Error {
 
 export async function refreshMyShares() {
   if (!on() || !session.peek()) { myShares.value = []; return; }
-  try { myShares.value = (await api<ShareList>("GET", "trainworld/community/list?view=mine")).rows ?? []; }
+  try {
+    const l = await api<ShareList>("GET", "trainworld/community/list?view=mine");
+    myShares.value = l.rows ?? [];
+    sharesLeft.value = l.left !== undefined && l.perDay ? { left: l.left, perDay: l.perDay } : null;
+  }
   catch { /* keeps the last list; a 401 has signed out */ }
 }
 
@@ -118,6 +129,40 @@ export function currentShare(): ShareRow | null {
   const id = playingGameId();
   return (id && rows.find((r) => r.game === id)) || null;
 }
+
+/** When a share went up, short, in the player's language: "11/10, 5:25 PM". */
+export const sharedWhen = (row: ShareRow) => tDate(row.at * 1000, { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+/** T-3132: the name of a copy opened from a share, "<their display name> - <their game's name>". */
+export const copyName = (row: ShareRow) => [row.name, row.title].filter(Boolean).join(" - ");
+
+// T-3132: Share again on one of the player's own shares whose game is another in this browser opens that game, and
+// the Share dialog once it is playing. The wish rides the reload in sessionStorage.
+const SHARE_AFTER = "tw.community.shareAfter";
+/** Share again from an opened share of the player's own: the Share dialog for the playing game, else that game opened
+ * first; "" when under way, or why not (a game not in this browser). */
+export function shareAgain(row: ShareRow): string {
+  const mine = myShares.peek().find((r) => r.id === row.id), game = mine?.game;
+  if (game && game === playingGameId()) { shareAsk.value = true; return ""; }
+  const slot = game ? slotOfGame(game) : null;
+  if (!game || !slot) return t("community.openToShare");
+  try { sessionStorage.setItem(SHARE_AFTER, game); } catch { /* opens the game only */ }
+  communityOpen.value = false;
+  manageSaveSlot("open", slot);
+  return "";
+}
+// Read once as the page starts: the page that set it is still running its game until the reload, so it must not act on it.
+let shareAfter = (() => {
+  try { const v = sessionStorage.getItem(SHARE_AFTER); sessionStorage.removeItem(SHARE_AFTER); return v; } catch { return null; }
+})();
+effect(() => {
+  void saveSlotsState.value;
+  if (!shareAfter || !communityOn()) return;
+  const id = playingGameId();
+  if (!id) return;
+  if (id === shareAfter) shareAsk.value = true;
+  shareAfter = null;
+});
 
 /** Share or Share again on the playing game, `name` when the account has none, with its save when `copy` (Let others
  * open a copy). Throws an Error to show. */
@@ -141,12 +186,15 @@ export async function shareGame(name: string, copy: boolean): Promise<void> {
     // T-3114: the card counts what the saves list counts, every line and station, bus and ferry ones too
     const st = saveSlotsState.peek(), slot = st.slots.find((s) => s.key === st.active);
     const counts = slot && slot.lines !== undefined && slot.stations !== undefined ? { lines: slot.lines, stations: slot.stations } : {};
+    // T-3132: the game's name goes only with its save, to name a copy
+    const title = copy && slot?.name ? { title: slot.name } : {};
     const form = new FormData();
-    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts }));
+    form.append("meta", JSON.stringify({ game, ...(name ? { name } : {}), copy, ...counts, ...title }));
     form.append("drawing", blob, "drawing.json.gz");
     if (save) form.append("save", new Blob([save as BlobPart]), "game.save");
     await api("POST", "trainworld/community", undefined, { form });
     await Promise.all([refreshMyShares(), loadBoardSetting()]);
+    shareTick.value++;
   } catch (e) {
     throw e instanceof ApiError ? Object.assign(plain(e, "share"), { code: e.code }) : e;
   } finally {
@@ -158,6 +206,7 @@ export async function stopSharing(id: string): Promise<void> {
   try {
     await api("DELETE", `trainworld/community/${encodeURIComponent(id)}`);
     await refreshMyShares();
+    shareTick.value++;
   } catch (e) { throw plain(e, "share"); }
 }
 

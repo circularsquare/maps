@@ -22,6 +22,7 @@ import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { oneWayStops } from "../game/turnedLine";
 import { headingOnScreen } from "./stopHeading";
+import { PLATFORM_POINTS } from "./stationGeometry";
 import { headingChevron } from "./trackTagRows";
 import { queryClock } from "../workers/clockClient";
 import { GapFlash } from "./gapFlash";
@@ -239,7 +240,12 @@ export class StopMarkers {
       this.seenLine = id;
       this.line = w.save.lines.find((l) => l.num === id) ?? null;
       if (this.line && w.lineStats[this.line.id]?.bus) this.line = null; // a bus line's are map/busStops.ts's (T-2891)
-      if (!this.line) return;
+      // T-3123: with no line here, the last line's markers would stay up, unmoved by the camera
+      this.box.style.display = this.line ? "" : "none";
+      if (!this.line) {
+        this.hideTag();
+        return;
+      }
       this.colour = this.line.colour;
       this.tram = !!w.lineStats[this.line.id]?.tram;
       this.oneWay = oneWayStops(this.line.stops, w.lineStats[this.line.id] ?? { loop: null, oneWay: false });
@@ -332,14 +338,14 @@ export class StopMarkers {
       m.d = stop ? size : tier === "route" ? size * NEAR_SCALE : size * FAR_SCALE;
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       m.el.style.background = stop ? this.halfFill(id, n, x, y) : "";
-      const heading = stop && this.oneWay.has(id) ? headingOnScreen(this.overlay, n, this.oneWay.get(id)![0], this.oneWay.get(id)![1], this.index) : null;
+      let heading = stop && this.oneWay.has(id) ? headingOnScreen(this.overlay, n, this.oneWay.get(id)![0], this.oneWay.get(id)![1], this.index) : null;
+      if (heading !== null) heading = this.alongTrack(n, id, heading);
       if (heading === null) {
         if (m.chev) m.chev.style.display = "none";
       } else {
         if (!m.chev) m.el.append((m.chev = headingChevron(this.colour, 0)));
         m.chev.style.display = "";
-        m.chev.style.color = this.colour;
-        m.chev.style.transform = `rotate(${heading.toFixed(1)}deg) translateX(${(size / 2 + 11).toFixed(1)}px)`;
+        m.chev.style.transform = `rotate(${heading.toFixed(1)}deg) translateX(${(size / 2 + 12).toFixed(1)}px)`;
       }
     }
     // stations that left the list (an undo): their markers go
@@ -348,6 +354,20 @@ export class StopMarkers {
         m.el.remove();
         this.marks.delete(id);
       }
+  }
+
+  /** T-3124: `chord` (screen degrees, the stop before to the stop after) turned to the track's own direction at the
+   * stop, so the chevron lies on the stroke where the line bends; the way (of the two) nearer `chord`. */
+  private alongTrack(n: NonNullable<Overlay["renderer"]["net"]>, id: string, chord: number): number {
+    const i = this.index.get(id), sl = n.stationLine;
+    if (i === undefined || !sl) return chord;
+    const m = PLATFORM_POINTS >> 1, o = i * 2 * PLATFORM_POINTS, x = n.stations[i * 3], y = n.stations[i * 3 + 1];
+    const a = this.overlay.toScreen(x + sl[o + m * 2 - 2], y + sl[o + m * 2 - 1]), b = this.overlay.toScreen(x + sl[o + m * 2 + 2], y + sl[o + m * 2 + 3]);
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    if (!dx && !dy) return chord;
+    let deg = (Math.atan2(dy, dx) * 180) / Math.PI, d = deg - chord;
+    d -= 360 * Math.round(d / 360);
+    return Math.abs(d) > 90 ? deg + 180 : deg;
   }
 
   /** T-3041: a stop served one way is filled on one half only, split along the track, the half on the right

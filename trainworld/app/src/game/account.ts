@@ -340,6 +340,12 @@ export function playingGameId(): string | null {
   return saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id ?? games()[slot]?.id ?? null;
 }
 
+/** T-3132: the stored game in this browser with this id (the leaderboards' and Community's), if any. */
+export function slotOfGame(id: string): string | null {
+  const local = games();
+  return saveSlotsState.peek().slots.find((x) => x.cloud?.id === id || local[x.key]?.id === id)?.key ?? null;
+}
+
 /** T-2887: the id a share of the playing game goes up under, its figures sent first so the server copies the current
  * ones; null with no stored game or no session. A sandbox game's notice goes up even with no figures before it, or the
  * share would not be tagged. Remembered, so a share of a game later deleted here is taken down with it. */

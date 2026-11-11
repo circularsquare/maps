@@ -545,7 +545,7 @@ function shareRow(s) {
       s.hidden ? el("span", { class: "tag bad", text: "hidden" }) : el("span", { class: "tag", text: "showing" }),
       s.banned ? el("span", { class: "tag bad", text: "banned" }) : null,
       el("span", { class: "name", text: s.name || "(no name)" }),
-      el("span", { class: "sub", text: [s.city, Math.round(s.points).toLocaleString("en-US") + " points", `${s.lines} lines`, `${s.stations} stations`, `${s.likes} like${s.likes === 1 ? "" : "s"}`, s.sandbox ? "sandbox" : ""].filter(Boolean).join(" · ") }),
+      el("span", { class: "sub", text: [s.title ? `game "${s.title}"` : "", s.city, Math.round(s.points).toLocaleString("en-US") + " points", `${s.lines} lines`, `${s.stations} stations`, `${s.likes} like${s.likes === 1 ? "" : "s"}`, s.sandbox ? "sandbox" : ""].filter(Boolean).join(" · ") }),
       acts),
     el("div", { class: "reasons", text: `${reasons} ${last}` }),
     el("div", { class: "sub", text: `account ${s.account} · share ${s.id} rev ${s.rev}` }),

@@ -818,13 +818,16 @@ keeps what it had and earns no more.
   **Longest road** (a line 5,000 km long), **String of pearls** (a line 3,000 km long whose profit over the
   past 24 hours, as for Money train, is above zero), **Money train** (a line's profit over the past 24 hours, the
   Lines tab's Money figure, of $200M), **Bullet train** (a train reaching 300 km/h), **City circles**
-  (a circle line of 10 stops), **Transfers world** (transfers per trip at least 1, over at least
+  (a whole circle line of 10 stops: it closes on its first stop, turns back nowhere partway and stops
+  at no station twice; a stem or a loop-back partway does not count), **Transfers world** (transfers per trip at least 1, over at least
   100k trips a day; its hover while unearned adds the figure now, "Now 0.56 transfers per trip"),
   **Trains city** (a region whose trips within it are 20% by train: its 20% goal),
   **Grounded** (a region whose trips to and from other places, both ways as the city view's "To other
   places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
   hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
   aboard there, and at least 1 a day must be sure to ride that long). Sea crossing comes with T-2150.
+  **An earned step stays earned** (Anita, 2026-11-10): the save's record is only added to, so a rule made
+  stricter later takes nothing from a game that already has the step.
 - **Hidden firsts** [T-3037]: not listed in the view or counted in its "n/N" until earned, then listed
   like the others (no rule hover, since none was shown). Gold medal, name, and a hover of what earned
   it. Two kinds. **Corridors** (`CORRIDORS` in `game/achievements.ts`): one network of running lines, joined
@@ -1101,25 +1104,43 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 
 ## Community
 
-[T-2887, T-3114, T-3115; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
+[T-2887, T-3114, T-3115, T-3132; `game/community.ts`, `game/sharedSave.ts`, `ui/Community.tsx`, `diagram/shared.ts`;
 server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; notes/T-2887.md]
 
 - **Shown only when the server says so**: `/noritetsu/config`'s `trainworldCommunity`, or in preview its
   `trainworldCommunityPreview` on a page opened with `?community`. Otherwise no button, and a share link opens nothing.
-- **Community** (people icon in the head of the saves panel and of the leaderboards): Random, Best in city and Top in
-  city, a city picker, twelve cards a page, each a shared schematic painted small with the player's name, city,
-  points, lines and stations (the game's own counts, bus and ferry included, as the saves list shows them). A card
-  opens the drawing to pan and zoom, with Open a copy (when offered), Copy link, Report and the heart.
-- **Share network** (share icon on the playing game's card and beside Save picture on the schematic), signed in:
-  "Anyone can see this network, your name and its points.", a name field when the account has no display name,
-  the **Let others open a copy** tick (on by default; a share again keeps the tick as it was last sent), Share
-  network or Share again, Stop sharing, Copy link once shared, and Community.
+- **Community** (people icon in the head of the saves panel and of the leaderboards, and in Settings between Controls
+  and the account button), headed "Community trains worlds", with the upload icon in its head to share the game
+  being played. [Random] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Biggest is
+  by points in the place, one per person, never a sandbox game, top 50 ranked as the leaderboards are; Most liked is
+  by likes, the newest first among equals, one per person, top 50. The place is the world, a city, a country (as
+  the country leaderboards have it) or a region: a realm (`game/realms.ts`, the names the map's realm buttons use)
+  that is more than one country or part of one ("Benelux", "US west"). Typed, the picker finds every city, country
+  and region; empty, it offers the world and the playing game's countries, regions and cities. A share is in a place
+  when its game has points there, valued at their sum there. Twelve cards a page, each a shared schematic painted
+  small with the player's name, its biggest city in the place, points, lines and stations (the game's own counts,
+  bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with Open a copy
+  (when offered), Copy link, Report and the heart.
+- **Likes**: every share starts with one, its player's own, which they cannot take back; on their own share the
+  heart shows filled and disabled, hover "This network is yours.".
+- **Share again from Community**: an opened share of the player's own has Share again. For the game being played
+  it opens the Share dialog; for another game in this browser it opens that game, then the dialog once it plays
+  (the wish rides the reload in sessionStorage); for one not in this browser it says "Open this game in Saved games
+  to share it again.".
+- **Share network** (people icon on the playing game's card and beside Save picture on the schematic, upload icon in
+  Community's head; pink once shared, hover "Last shared <date time>"), signed in: "Anyone can see this network,
+  your name and its points.", "This save was last shared on <date time>." once shared, how many shares are left
+  today ("You can share 3 times today", "... 2 more times today", from the server's count), a name field when the
+  account has no display name, the **Let others open a copy** tick (on by default; a share again keeps the tick as
+  it was last sent), Share network or Share again, Stop sharing, Copy link once shared, and the people icon to
+  Community.
 - **The link**: `<the game's address>?share=<id>` opens the game (start menu or not) with Community on that share;
   works with no account. The switch leaves the address bar at once. A hidden, banned or deleted share's link
   says "This network isn't shared anymore." over the Random page, the same for each.
 - **Open a copy** downloads the share's save, checks it (`game/sharedSave.ts`: sizes capped before and while
   unpacking, the header walked with limits and each field's type checked, unknown fields dropped, the file
-  re-encoded from what passed) and loads it into a new slot named after the player who shared it; the game in hand
+  re-encoded from what passed) and loads it into a new slot named "<their display name> - <their game's name>"
+  (either alone when the other is missing); the game in hand
   is saved first, and none of the viewer's games is written. A save this build cannot open says "This copy doesn't
   open in this version of the game." (another world, a retired or newer format), a damaged one "This copy can't be
   opened."; a load that fails after that is reported as any loaded file's is, and the page falls back to the game
@@ -1127,8 +1148,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **A copy never ranks**: its header carries `copy` (the share's id), the saves list marks it Copy (hover "Never on
   the leaderboards"), it sends no figures and no achievement counts, and sharing it tells the server it is a
   sandbox, so it shows tagged Sandbox and only in Random. It plays as a normal game otherwise.
-- **What goes up with the tick**: the save as the game writes it, minus the Getting started card's progress. The
-  game's name, account and device ids, playtime and settings are never in a save. Line and group names are, and
+- **What goes up with the tick**: the save as the game writes it, minus the Getting started card's progress, and the
+  game's name beside it (through the server's name filter on upload and on read, blanked if it fails; it names the
+  copy and is shown nowhere else). Account and device ids, playtime and settings are never in a save. Line and group names are, and
   only there (the drawing has none): Anita's inbox can download a reported share's save to read them.
 
 ## Start menu

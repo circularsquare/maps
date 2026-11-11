@@ -126,7 +126,7 @@ try {
   await page.mouse.move(mk.x, mk.y);
   await page.waitForTimeout(500);
   const t4 = await tagText();
-  check(/Right click to open the loop/.test(t4), `${plain}'s hover offers to open the loop`, t4.replace(/\n/g, ' / '));
+  check(/Right click to open loop/.test(t4), `${plain}'s hover offers to open the loop`, t4.replace(/\n/g, ' / '));
   await page.mouse.click(mk.x, mk.y, { button: 'right' });
   await page.waitForTimeout(2500);
   const opened = await info('Line 1');

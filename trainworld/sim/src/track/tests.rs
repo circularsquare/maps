@@ -300,18 +300,18 @@ fn y_junction(tph: [f32; 3], flying: bool) -> (TrackWorld, u32, u32, u32) {
 
 #[test]
 fn junction_delay_matches_the_spec_example() {
-    // Each move of the crossing pair sees 15 + 15 trains at 90 s: 75% and 27 s (high), and
-    // 18 + 18: 90% and 81 s (medium).
-    let (w, a, b, j) = y_junction([15.0, 18.0, 0.0], false);
+    // Each move of the crossing pair sees 12 + 12 trains at 120 s (T-3125): 80% (high), and
+    // 14 + 14: 93% (medium); the delay is the Kingman figure for those.
+    let (w, a, b, j) = y_junction([12.0, 14.0, 0.0], false);
     let cap = &w.svc.cap;
     let jr: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::Junction).collect();
     assert_eq!(jr.len(), 2, "one crossing pair, one resource per move");
     for &r in &jr {
         assert_eq!(cap.res[r].node, j);
-        assert!((cap.rho[r][HIGH] - 0.75).abs() < 1e-9);
-        assert_eq!(cap.delay[r][HIGH], 27.0);
-        assert!((cap.rho[r][MEDIUM] - 0.9).abs() < 1e-9);
-        assert_eq!(cap.delay[r][MEDIUM], 81.0);
+        assert!((cap.rho[r][HIGH] - 0.8).abs() < 1e-9);
+        assert_eq!(cap.delay[r][HIGH], super::capacity::kingman(0.8, 0.5, 120.0).round());
+        assert!((cap.rho[r][MEDIUM] - 28.0 / 30.0).abs() < 1e-9);
+        assert_eq!(cap.delay[r][MEDIUM], super::capacity::kingman(28.0 / 30.0, 0.5, 120.0).round());
         assert_eq!(cap.delay[r][LOW], 0.0);
     }
     // The crossing pair is A towards the branch and B in from the main line (right-hand running).
@@ -319,8 +319,8 @@ fn junction_delay_matches_the_spec_example() {
     assert!(owners.contains(&(a, 0)) && owners.contains(&(b, 1)), "{owners:?}");
     // Baked into the profile as a hold.
     let run = &w.svc.lines[a as usize].runs[0];
-    assert!(run.holds[HIGH].iter().any(|h| h.delay == 27.0));
-    assert!(run.prof[HIGH].hold >= 27.0);
+    assert!(run.holds[HIGH].iter().any(|h| h.delay == cap.delay[jr[0]][HIGH]));
+    assert!(run.prof[HIGH].hold >= cap.delay[jr[0]][HIGH]);
     // T-1966: the map's guard gets the same pair, as the two owners' moves
     let pairs = super::capacity::move_conflicts(&w.net, &w.svc.lines);
     assert_eq!(pairs.len(), 1, "{pairs:?}");

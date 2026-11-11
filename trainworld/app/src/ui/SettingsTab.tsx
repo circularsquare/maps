@@ -17,6 +17,7 @@ import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
 import { accountState } from "../game/account";
 import { AccountButton, AccountSection, loginText } from "./AccountPanel";
+import { CommunityButton } from "./Community";
 import { PurposeSelect } from "./DemandSelector";
 import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 import { t, tNumber, type MessageKey } from "../i18n";
@@ -52,6 +53,7 @@ export function SettingsTab() {
         <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip={t("settingsTab.controls")} aria-label={t("settingsTab.controls")} aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
           <Icon.help />
         </button>
+        <CommunityButton settings />
         <AccountButton kind="settings" />
         {accountState.value === "on" && <span class="login-text muted">{loginText()}</span>}
       </div>

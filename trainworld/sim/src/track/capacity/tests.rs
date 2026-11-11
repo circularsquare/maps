@@ -497,7 +497,47 @@ fn a_terminal_at_a_through_station_doubles_its_turns() {
     same_as_global(&w, "terminal undo");
 }
 
-/// T-1281: a short turnaround turns no more than a real terminus does (36 an hour on two
+/// T-3125 (Anita, 2026-11-10): a terminal pair turns at most 30 an hour even at a 2-minute turnaround.
+#[test]
+fn a_terminal_pair_at_a_two_minute_turnaround_turns_30_an_hour() {
+    let (mut w, b, _, _) = turnback_fixture(false, false);
+    let short = (0..w.net.line_count() as u32).filter(|&l| w.net.line_ok(l)).last().unwrap();
+    let mut d = w.net.line_data(short).unwrap();
+    d.turnaround_s = 120.0;
+    w.apply(Op::Line { id: short, data: Some(d) }).unwrap();
+    let cap = &w.svc.cap;
+    let dead = (0..cap.res.len()).find(|&r| cap.res[r].node != b && cap.res[r].kind == ResKind::Terminus && cap.users_of(r).iter().any(|u| u.line == short)).unwrap();
+    assert_eq!(3600.0 / cap.users_of(dead).iter().find(|u| u.line == short).unwrap().occ, 30.0);
+}
+
+/// T-3125 (Anita, 2026-11-10): a tram line's section holds about 40 trains an hour (60 s + v / 0.6
+/// at 60 km/h, a street tram), its platform 48, a tram's own crossings 45 s.
+#[test]
+fn a_tram_section_takes_about_40_trains_an_hour() {
+    use super::super::tests::{line, node, station, world};
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 3000.0, 0.0, 0);
+    let c = node(&mut w, 6000.0, 0.0, 0);
+    for (x, y) in [(a, b), (b, c)] {
+        let e = w.net.alloc_edge();
+        let d = super::super::net::EdgeData { a: x, b: y, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: super::super::params::TrackKind::StreetTram, sep: false, day: 0, oneway: 0 };
+        w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    }
+    for n in [a, b, c] { station(&mut w, n, 40); }
+    let l = line(&mut w, &[a, b, c], [6.0, 0.0, 0.0]);
+    let mut ld = w.net.line_data(l).unwrap();
+    ld.dwell_s = 15.0;
+    w.apply(Op::Line { id: l, data: Some(ld) }).unwrap();
+    let cap = &w.svc.cap;
+    let sec = (0..cap.res.len()).find(|&r| cap.res[r].kind == ResKind::Section).unwrap();
+    let tph = 3600.0 / cap.users_of(sec)[0].occ;
+    assert!((39.0..=42.0).contains(&tph), "{tph}");
+    let plat = (0..cap.res.len()).find(|&r| cap.res[r].kind == ResKind::Platform).unwrap();
+    assert_eq!(3600.0 / cap.users_of(plat)[0].occ, 48.0);
+}
+
+/// T-1281: a short turnaround turns no more than a real terminus does (30 an hour on two
 /// platform tracks), at a dead end and at a through station with a terminal alike.
 #[test]
 fn pooled_turns_have_a_floor() {

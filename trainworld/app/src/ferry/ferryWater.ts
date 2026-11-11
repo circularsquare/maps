@@ -29,23 +29,39 @@ export class FerryWater {
       this.waiting.delete(e.data.id);
       f?.(e.data);
     };
-    void roadTileTemplate(this.map).then((url) => {
-      if (url) w.postMessage({ kind: "template", url } satisfies FerryIn);
-    });
-    return (this.worker = w);
+    this.worker = w;
+    void this.sendTemplate(w);
+    return w;
+  }
+
+  /** The basemap's tile address, asked again until the style has it (T-3127: asked once, a style not yet loaded
+   * left the worker waiting for ever, and the port tag never appeared). */
+  private async sendTemplate(w: Worker) {
+    for (let tries = 0; this.worker === w && tries < 240; tries++) {
+      const url = await roadTileTemplate(this.map);
+      if (url) return void w.postMessage({ kind: "template", url } satisfies FerryIn);
+      await new Promise((res) => setTimeout(res, 500));
+    }
   }
 
   private ask(m: FerryIn & { id: number }): Promise<FerryOut> {
     const w = this.start();
     return new Promise((res) => {
-      this.waiting.set(m.id, res);
+      // a point or a click never waits for ever (T-3127); lines can take long, so only the quick asks time out
+      const timer = m.kind === "line" ? 0 : window.setTimeout(() => {
+        if (this.waiting.delete(m.id)) res({ kind: "dropped", id: m.id });
+      }, 40000);
+      this.waiting.set(m.id, (o) => {
+        clearTimeout(timer);
+        res(o);
+      });
       w.postMessage(m);
     });
   }
 
   /** A port for a click on land by the water: its landing and berth, or why not. */
-  async port(at: LonLat): Promise<PortSnap | null> {
-    const m = await this.ask({ kind: "port", id: this.next++, at });
+  async port(at: LonLat, reach?: number): Promise<PortSnap | null> {
+    const m = await this.ask({ kind: "port", id: this.next++, at, reach });
     return m.kind === "port" ? m.snap : null;
   }
 
