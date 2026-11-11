@@ -14,7 +14,7 @@ import { display, selection, shownDayPhrase, stationSort, uiScale, type StationU
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
 import { stationsToday, todayLoaded, useToday } from "../game/today";
-import { Chip, SortHead } from "./widgets";
+import { Chip, Icon, SortHead } from "./widgets";
 import { locateStation } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
@@ -242,7 +242,7 @@ export function StationsTab() {
   return (
     <>
       <div class="line-list-actions"><ScopeToggle />
-        <button class={"btn" + (apart.value ? " on" : "")} aria-pressed={apart.value} onClick={() => (apart.value = !apart.value)}>{t("stationsTab.apart")}</button>
+        <button class={"btn icon" + (apart.value ? " on" : "")} aria-pressed={apart.value} aria-label={t("stationsTab.apart")} data-tip={t("stationsTab.apart")} onClick={() => (apart.value = !apart.value)}><Icon.interchange /></button>
       </div>
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : t("stationsTab.noneHere")}</p>}
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
