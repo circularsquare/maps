@@ -57,15 +57,18 @@ then community on (5), push maps master.
   factor; agent says no).
 - uitweaks (Sonnet, 6114, a5dc9f6ee88553b67): T-3220 changelog in Settings, T-3221 legal links 7 px lower, T-3222
   Community button on the start menu, T-3223 "Sandbox games not shown".
-- search (Opus, 6115, ad0145ea94c950710): T-3224 Community search (server `q` + game box). Commits in shonei-server;
-  server deploy waits for her; game must work against the undeployed server.
-- realnet (Opus, a27b2a7568b124ee7): T-3225 real world networks survey/proposal (notes/T-3225.md), no code.
+- search: T-3224 DONE, game landed cc510cc1 (box hidden until config says trainworldCommunitySearch); shonei-server
+  22f4293 committed, NOT pushed or deployed: deploy on her word, then the box appears. 8800 = cc510cc1.
+  Strings: community.search "Search", community.noMatch "No networks match that search" (show her).
+- moderation (Sonnet, a358f061586f53bde): T-3227 Names tab + hide as "player", T-3228 keep = never auto-hidden until
+  updated, T-3229 report counts plain in the inbox. Commits in shonei-server, no deploy.
+- playtime (Sonnet, 6118, a152928d838f8d34c): T-3230 time played (account panel, 60-minute messages, per game);
+  stops before any shonei-server edit.
+- realnet (Opus, 6117, a27b2a7568b124ee7): T-3225 survey done (notes/T-3225.md, 0a48b758); her calls listed under
+  Waiting on Anita. Now T-1773 levels from tags, proven in scratch; asks before writing data/packs.
 - ubc: T-3214 + T-3217 landed 893fcf7c (pipeline, for the world rebuild); now T-3216 + T-3226 (parent counts, caps).
-- T-3227 (P3, her call: hidden names show as "player", no ban), T-3228 keep = immune, T-3229 reports plain in the
-  inbox (Resend hits its cap, email unreliable): one moderation agent after search's server work lands. T-3230 time
-  played (share alert, account panel, per game): after search too (Community.tsx). All low prio, her word.
-- maps-18, uncommitted in en.json (beside search's keys; commit with search's landing): community.errNewShare
-  "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine, list it for her).
+- community.errNewShare "...after playing with an account for 60 minutes." (her words) and errNewLike the same (mine,
+  she said fine) landed in cc510cc1. Next translation batch: these, sandboxNote, stopMarkers.oneWay, search strings.
 - uitweaks T-3220..T-3223 landed 01d527ee; 8800 = 01d527ee, smoke PASSED.
 - Anita away from ~12:30 11-11, can't test for a while: keep going on self-contained work; no publish or deploys.
 - Her calls on T-3213: campus fixes queue with T-2896's airport items for the next world rebuild; attendance raise a
@@ -83,7 +86,9 @@ then community on (5), push maps master.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
-- T-3202 option (after the publish).
+- T-3225 (real networks, notes/T-3225.md): go on automatic real networks from the local extract + levels (options 4+3,
+  ~5-8 h)? New game sheet: every city that passes, or the ~30 biggest? Player GeoJSON/KML import (6-10 h): now or later,
+  sandbox only? Which site is "subwayworld" (none found; Citylines, Metro Dreamin', Subway Builder guessed)?
 - Flyover strings (landed): "Advanced", "Flyover target max speed", hover "Attempt to build new flyovers with
   curves wide enough to reach this speed. Faster flyovers take more room."; 80 km/h default (60-degree branch ~840 m).
 - Achievement thresholds for countries with no save were guessed (Spain, Britain, Italy, Germany, Indonesia, Mexico,
