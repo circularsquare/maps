@@ -55,6 +55,12 @@ then community on (5), push maps master.
   C T-3216, cache clobbering T-3217. Now building T-3214's pipeline code, proven on van in scratch; no rebuild.
   Her calls: D (university attendance 0.6 -> 0.8 everywhere; agent says wait for A-C), E (campus as a new destination
   factor; agent says no).
+- uitweaks (Sonnet, 6114, a5dc9f6ee88553b67): T-3220 changelog in Settings, T-3221 legal links 7 px lower, T-3222
+  Community button on the start menu, T-3223 "Sandbox games not shown".
+- search (Opus, 6115, ad0145ea94c950710): T-3224 Community search (server `q` + game box). Commits in shonei-server;
+  server deploy waits for her; game must work against the undeployed server.
+- realnet (Opus, a27b2a7568b124ee7): T-3225 real world networks survey/proposal (notes/T-3225.md), no code.
+- Anita away from ~12:30 11-11, can't test for a while: keep going on self-contained work; no publish or deploys.
 - Her calls on T-3213: campus fixes queue with T-2896's airport items for the next world rebuild; attendance raise a
   tentative yes (T-3218, judge with the rebuild); no campus destination factor. Airports as homes = T-3070 (filed).
 
@@ -66,7 +72,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3220**.
+- Next free id **T-3226**.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
