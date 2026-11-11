@@ -10,6 +10,8 @@ import { crossingWeight, decodeRoads } from "../map/roadTiles";
 const TILES = 1 << 14;
 const EXTENT = 4096;
 const PARALLEL = 6;
+/** a tile download given up after this long, ms (tried again by the next call that needs it) */
+const TILE_TIMEOUT_MS = 20_000;
 /** A walk along a polyline looks at a tile every this many tile units (about 120 m in New York). */
 const WALK = 256;
 
@@ -104,7 +106,8 @@ export class RoadFeed {
     const tx = Math.floor(key / TILES), ty = key % TILES;
     let buf: ArrayBuffer | null = null;
     try {
-      const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
+      // T-3196: a tile that never comes would hold its slot, and Construct waiting on it, for ever
+      const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)), { signal: AbortSignal.timeout(TILE_TIMEOUT_MS) });
       if (r.status === 200) buf = await r.arrayBuffer();
       else if (r.status !== 404 && r.status !== 204) return;
     } catch {

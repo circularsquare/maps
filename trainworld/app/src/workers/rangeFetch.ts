@@ -3,8 +3,10 @@
 // while the same pack downloads whole for demand): the last was read as the whole file, so a zone's
 // street speeds came out empty and its buses ran at the top speed until a reload.
 
-export async function fetchRange(url: string, start: number, end: number): Promise<ArrayBuffer> {
-  const res = await fetch(url, { headers: { Range: `bytes=${start}-${end - 1}` } });
+// T-3196: given up after `timeoutMs`, so a stalled connection never holds the clock worker's queue for ever.
+
+export async function fetchRange(url: string, start: number, end: number, timeoutMs = 60_000): Promise<ArrayBuffer> {
+  const res = await fetch(url, { headers: { Range: `bytes=${start}-${end - 1}` }, signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) throw new Error(`${res.status} ${url}`);
   const buf = await res.arrayBuffer();
   const want = end - start;

@@ -1181,7 +1181,7 @@ function fetchStreets(id: string): Promise<StreetData | null> {
   if (!p) {
     const url = new URL(id, packBase).href;
     p = (async () => {
-      const head = await (await fetch(url + ".json")).json();
+      const head = await (await fetch(url + ".json", { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) })).json();
       const g = head.gravity;
       const arr = (name: string) => head.arrays.find((a: any) => a.name === name);
       const need = ["pop", "jobs", "zone", "zone_gx", "zone_gy", "zone_cells9"].map(arr);
@@ -1278,19 +1278,27 @@ function blueprintPolylines(): number[][] {
   return out;
 }
 
+/** T-3196: Construct waits at most this long for the ground under the blueprint, ms; what has not landed by
+ * then refuses it (the downloads go on, for the next try). Every other message waits behind it. */
+const GROUND_WAIT_MS = 20_000;
+/** `p` settled, or `until` (performance.now() ms) passed */
+const within = (p: Promise<unknown>, until: number) =>
+  Promise.race([p.then(() => {}), new Promise<void>((r) => setTimeout(r, Math.max(0, until - performance.now())))]);
+
 /** Before Construct: the terrain, water and roads (T-1929) under every blueprint piece; the issue that
  * refuses it when one of them could not be had (T-2613), or null. */
 async function groundForBlueprint(): Promise<string | null> {
+  const until = performance.now() + GROUND_WAIT_MS;
   const lines = blueprintPolylines();
   const zones = zonesOfPoints(lines.flat());
   const need = zones.filter((id) => !masksIn.has(id));
   const roads = roadKeys(lines);
-  await Promise.all([worldWaterIntoModel(), terrainIndexIntoModel(), need.length ? ensureMasks(need) : null, roadFeed.ensure(roads)]);
+  await within(Promise.all([worldWaterIntoModel(), terrainIndexIntoModel(), need.length ? ensureMasks(need) : null, roadFeed.ensure(roads)]), until);
   if (!worldWaterIn || !terrainIndexIn || zones.some((id) => !masksIn.has(id))) return "TerrainMissing";
   // walked by the track model along each edge at its own sample spacing, so a long straight piece counts
   // every block it crosses, after the index has made listed blocks known
   const blocks = api!.terrain_blocks_under(true);
-  await ensureBlocks(blocks);
+  await within(ensureBlocks(blocks), until);
   if (blocks.some((k) => !blocksIn.has(k))) return "TerrainMissing";
   return roadFeed.missing(roads) ? "RoadsMissing" : null;
 }
@@ -3832,8 +3840,26 @@ function viewMasks(): Promise<void> {
 }
 
 let messages = Promise.resolve();
+/** T-3196: above 0 while the queue waits on a download with the track model at rest (an edit's or a
+ * ghost's water masks, Construct's ground): a new hour's trips are sent at once meanwhile, or every
+ * train would stop until the download ends */
+let parked = 0;
+async function parkedOn<T>(p: Promise<T>): Promise<T> {
+  parked++;
+  try { return await p; } finally { parked--; }
+}
+/** the new hour's trips, out of the queue's turn */
+function tripsNow(e: number) {
+  if (!api || modelDown || e === epoch) return;
+  epoch = e;
+  try { sendTrips(); } catch (err) {
+    if (isPanic(err)) panicLater(err, "the hour's trips"); // i18n-ignore
+    else send({ kind: "error", message: String(err) });
+  }
+}
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
+  if (msg.kind === "epoch" && parked > 0) return tripsNow(msg.epoch);
   if (msg.kind === "view") {
     // outside the queue, so the fetch starts at once; a mask is installed between messages
     const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * M_PER_DEG * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
@@ -4211,10 +4237,10 @@ async function handle(msg: ToClock) {
       send({ kind: "edited", seq: msg.seq, ok: r === 0, issues: r === 0 ? [] : issues(), charge, node });
       return;
     }
-    await worldWaterIntoModel();
-    await masksFor(msg.op);
+    await parkedOn(worldWaterIntoModel());
+    await parkedOn(masksFor(msg.op));
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine" || msg.op.op === "rebuild") {
-      const missing = await groundForBlueprint();
+      const missing = await parkedOn(groundForBlueprint());
       if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
     }
     const tA = performance.now();
@@ -4438,14 +4464,14 @@ async function handle(msg: ToClock) {
     send({ kind: "crossoverCheck", seq: msg.seq, ok, issues: ok ? [] : issues(), cost: out[1], parts, anchor: anchor().version }, parts.map((p) => p.buffer));
   } else if (msg.kind === "previewNode" || msg.kind === "previewNodes") {
     const a = api;
-    const out = await withMasks(() => (a.set_design_speed(designOf(msg)), msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy)), nodePoints, msg.seq);
+    const out = await parkedOn(withMasks(() => (a.set_design_speed(designOf(msg)), msg.kind === "previewNode" ? a.preview_move_node(msg.node, msg.x, msg.y) : a.preview_move_nodes(new Uint32Array(msg.nodes), msg.dx, msg.dy)), nodePoints, msg.seq));
     if (out) sendNodePreview(msg.seq, out);
     else sendStale(msg.seq);
   } else if (msg.kind === "preview" || msg.kind === "previewEdge") {
     const a = api;
-    const out = await withMasks(() => msg.kind === "preview"
+    const out = await parkedOn(withMasks(() => msg.kind === "preview"
       ? a.preview_route(...routeArgs(a, msg))
-      : (a.set_design_speed(designOf(msg)), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq);
+      : (a.set_design_speed(designOf(msg)), a.preview_edge(msg.edge, pisArr(msg.pis))), routePoints, msg.seq));
     if (!out) return sendStale(msg.seq);
     void roadsUnder(routePoints(out));
     if (msg.kind === "preview") maskedRoute = masksComplete ? routeKey(msg) : "";
