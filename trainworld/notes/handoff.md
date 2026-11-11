@@ -21,12 +21,19 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
   she approved it as is; push with the game publish.
 - R2: next purge due 11-09, 09b, 09c in a few days, only through r2_purge.py.
 
-## v0.3 RELEASE (her word 11-11: "push this update ... call it 0.3"; community goes public: yes)
-1. Translation batch (68 keys x 11 languages): passes 1 and 2 done; pass 3 review running (Agents). i18n.mjs clean.
-2. Commit (explicit paths), snapbuild, look at the changelog on 8800, smoke8800.cmd light+dark.
-3. Ask her for the yes (publish + website push + community on); she said she'll be around (~12:30).
-4. Set V0_3_AT, commit, `deploy.py --dry-run --version 2026-11-11b`, `--smoked`, website add/commit/push (with
-   privacy/terms), `--verify --page`.
+## v0.3 RELEASE: DONE 2026-11-11 ~12:05
+**Live = v0.3 = R2 2026-11-11b** (3a442a6e), website 9ca1187, `--verify --page` all PASS, live terms has Community.
+**Community is ON** for everyone (shonei.env `SHONEI_COMMUNITY=1`, TESTERS line deleted, backup
+`/opt/shonei/shonei.env.bak-2026-11-11`; config says trainworldCommunity true; 3 shares). Rollback: `preview`, restart.
+She keeps one card per person in every Community view ("12 cards good").
+Record of the release:
+READY at 3a442a6e (11:55): translations reviewed and committed (b35d94b9); 9069c182 took T-3202's two network.ts
+lines back out of master (they rode in with 091626fd and broke the build); V0_3_AT = 17:15Z (f2a3a263); privacy and
+terms Community text now in app/public/*.html too (deploy copies dist over website/trainsworld, so app/public is the
+source; 3a442a6e). 8800 = 3a442a6e; smoke8800 light+dark PASSED on 9069c182; changelog checked
+(artifacts/trainworld/review/v03-changelog.png). `deploy.py --dry-run --version 2026-11-11b` preflight ok.
+Waiting on her yes, then: `deploy.py --version 2026-11-11b --smoked`, website add/commit/push, `--verify --page`,
+then community on (5), push maps master.
 5. Community on (T-2887.md "Launch steps" 8): on the box set `SHONEI_COMMUNITY=1`, delete the TESTERS line,
    `systemctl restart shonei`, after the website push; an ssh env edit, no deploy.ps1 (the live server already runs
    shonei-server 0e7dd77's routes: checked top/liked/country boards/copy). Check `/noritetsu/config` says
@@ -39,6 +46,9 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - l10n pass 3+4 (Opus, running): A a096c1fd986c51dab, B a1437117ad2afc220 (also fixing tools.streetsTight in zh/es,
   pt gradeMarks.tramYields, fr "sauts-de-mouton" glossary plural), C a9aaeff42365127d7.
 - maps-b7's agents all done and landed; maps-b7 has wound down.
+- busstop (Sonnet, 6114, a76b5cf1a943ec24c): T-3210 bus stop one way on a two-way stretch + T-3211 "One way stop" hover.
+- ubc (Opus, 6116, afbd5ad584e1de35f): T-3213 UBC demand diagnosis, stops at a proposal (notes/T-3213.md).
+- Not started: T-3212 single-track stations drawn as a split (waits on T-3202's call, same drawing area).
 
 ## Next after v0.3
 - **T-3202** (two trains meet on single track; notes/T-3202.md): passing built a draw-only guard, OFF by default,
@@ -48,7 +58,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first.
   (3) both. Ask her after the publish; brief a fresh agent from the notes.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3210**.
+- Next free id **T-3214**.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.
