@@ -380,6 +380,9 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
   track of a double main at zoom 18: the snap's join point, the preview's `join`, the ghost's and the built end's
   offset (2 m on the hovered track), the flat badge only where a move crosses, a terminus branch's badge, none
   zoomed out, and a flyover laid by hand from two single tracks. About 2 minutes; pictures `t3137-join-*.png`.
+- `t3192-varyings.mjs [--budget N]` (T-3192, in smoke): every `compile`/`compileOptional` program's varyings,
+  packed as Firefox's link check packs them (GLSL ES 1.0.17 A.7), fit in 8 vectors, Firefox's limit with
+  fingerprinting resistance. Sources are the real strings, bundled by Vite. A few seconds.
 - `t3162-branch-hit.mjs [dev url]` (T-3162, T-3163): double main at zoom 17.5, 19 and 20.5: a pointer on the outer, middle and
   inner part of each drawn track branches from it, 8 px past the pair does not; the branch dot is 15 px. Pictures `t3162-*.png`.
 - `smoke.mjs [url]`: the pre-commit smoke check (CLAUDE.md "Before a commit"), about 3 minutes. On a url at

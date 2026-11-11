@@ -278,7 +278,7 @@ try {
   // T-2831: the Node checks read the working tree, not the build under test, so on 8800 they only repeat the dev pass
   const served = /:8800\b/.test(given ?? '');
   if (served) console.log('      Node checks skipped: they read the working tree, not the build on 8800');
-  for (const f of served ? [] : ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', ['t1380-complexes.mjs', 'args:5'], 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types']]) {
+  for (const f of served ? [] : ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', ['t1380-complexes.mjs', 'args:5'], 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types'], 't3192-varyings.mjs']) {
     // 'args:x' entries go after the file (t1380-complexes gets 5 seeds here; its default is 30)
     const [file, ...rest] = [f].flat();
     const r = await runNode(file, rest.filter((x) => !x.startsWith('args:')), rest.filter((x) => x.startsWith('args:')).map((x) => x.slice(5)));

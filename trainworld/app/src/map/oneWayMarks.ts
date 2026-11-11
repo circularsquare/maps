@@ -9,7 +9,7 @@
 import type { Strokes } from "./network";
 import { kAtY } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
-import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
+import { compileOptional, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 
 /** Marks are placed every this many ground metres along a route; the shaders keep every 2^n-th. */
 export const ONE_WAY_STEP_M = 100;
@@ -167,7 +167,8 @@ export class OneWayChevrons {
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    this.prog = compile(gl, VS, FS);
+    this.prog = compileOptional(gl, VS, FS, "one-way chevrons");
+    if (!this.prog) return;
     this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_line", "u_band", "u_band_m", "u_every", "u_clear", "u_min", "u_dpr", "u_sel", "u_rgb"]);
     this.vao = gl.createVertexArray();
     this.buf = null;

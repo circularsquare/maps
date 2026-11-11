@@ -7,7 +7,7 @@
 
 import { rgbf } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
+import { compileOptional, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import { AISLE, BAY_M, LOT_BLUEPRINT, LOT_OFF, LOT_STRIDE, SPACE_L, SPACE_W } from "./facilityPlace";
 import type { Project } from "./stationGeometry";
 
@@ -72,12 +72,12 @@ void main() {
 
 export class ParkingLots {
   private gl!: WebGL2RenderingContext;
-  private prog!: WebGLProgram;
+  private prog: WebGLProgram | null = null;
   private u: Record<string, WebGLUniformLocation | null> = {};
   private vao: WebGLVertexArrayObject | null = null;
   private buf: WebGLBuffer | null = null;
   private count = 0;
-  /** the network's lots, for hit tests */
+  /** the network's lots, for hit tests (kept without the program too) */
   lots: Float32Array = new Float32Array(0);
 
   init(gl: WebGL2RenderingContext) {
@@ -85,8 +85,8 @@ export class ParkingLots {
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.vao = this.buf = null;
     this.count = 0;
-    this.prog = compile(gl, VS, FS);
-    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_fill", "u_line", "u_dpr"]);
+    this.prog = compileOptional(gl, VS, FS, "car parks");
+    if (this.prog) this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_fill", "u_line", "u_dpr"]);
   }
 
   setNetwork(lots: Float32Array | undefined) {
@@ -96,7 +96,7 @@ export class ParkingLots {
     if (this.buf) gl.deleteBuffer(this.buf);
     this.vao = this.buf = null;
     this.count = this.lots.length / LOT_STRIDE;
-    if (!this.count) return;
+    if (!this.count || !this.prog) return;
     this.vao = gl.createVertexArray()!;
     this.buf = gl.createBuffer()!;
     gl.bindVertexArray(this.vao);

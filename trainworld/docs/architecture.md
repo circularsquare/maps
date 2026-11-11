@@ -83,7 +83,11 @@ Web first, so it can be shared as a link.
   context (phones drop them) is taken on both our canvases; on restore the renderer and the demand
   canvas compile again and upload what they last drew, and the camera layer is added back to
   MapLibre's restored style (T-953). Shaders are written to WebGL2's guaranteed limits and highp
-  floats in every fragment shader that measures px (notes/T-953.md).
+  floats in every fragment shader that measures px (notes/T-953.md), and each program's varyings to
+  8 vectors, what Firefox with fingerprinting resistance allows (`checks/t3192-varyings.mjs`). A
+  decorative layer's program the browser refuses is logged and the layer left out (`compileOptional`
+  in map/gl.ts); a view wider than the context's largest renderbuffer draws its strokes every frame
+  without the stroke cache (T-3192).
 - **A state and its trips land together** [T-648]: the clock worker posts each state, then its
   trips, before anything else. The client holds the state until those trips (at most 250 ms), so
   the world, the network and the trips are taken in one task and no frame draws old trips on new run

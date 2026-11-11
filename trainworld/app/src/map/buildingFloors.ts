@@ -24,7 +24,7 @@ import { world } from "../game/world";
 import { toLngLat } from "./geo";
 import type { Overlay } from "./overlay";
 import { CELL_STRIDE, SHOP_STRIDE, type BuildingDraw } from "./buildingNet";
-import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
+import { compileOptional, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import { SEL_GLOW_PX, SEL_OUTLINE_PX, stationRing, type Project } from "./stationGeometry";
 
 /** below this zoom no building is drawn or picked; full strength from FLOOR_FULL_ZOOM */
@@ -306,6 +306,8 @@ export class BuildingFloors {
   private hallKey = "";
   private shopColours = new Float32Array(SHOP_COLOURS.flatMap((h) => rgb(h).map((v) => v / 255)));
   private selPts = new Float32Array(SEL_MAX * 2);
+  /** the browser refused a program: nothing drawn */
+  private off = false;
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -313,11 +315,17 @@ export class BuildingFloors {
     this.fillVao = this.edgeVao = this.shopVao = this.cellVao = this.cellBuf = null;
     this.bufs = [];
     this.hallKey = "";
-    this.fillProg = compile(gl, FILL_VS, FILL_FS);
-    this.edgeProg = compile(gl, EDGE_VS, EDGE_FS);
-    this.shopProg = compile(gl, QUAD_VS, SHOP_FS);
-    this.cellProg = compile(gl, QUAD_VS, CELL_FS);
-    this.selProg = compile(gl, SEL_VS, SEL_FS);
+    const progs = [
+      compileOptional(gl, FILL_VS, FILL_FS, "building floors"),
+      compileOptional(gl, EDGE_VS, EDGE_FS, "building floors"),
+      compileOptional(gl, QUAD_VS, SHOP_FS, "building floors"),
+      compileOptional(gl, QUAD_VS, CELL_FS, "building floors"),
+      compileOptional(gl, SEL_VS, SEL_FS, "building floors"),
+    ];
+    // none of the buildings' layers where one is refused (T-3192)
+    this.off = progs.some((p) => !p);
+    if (this.off) return;
+    [this.fillProg, this.edgeProg, this.shopProg, this.cellProg, this.selProg] = progs as WebGLProgram[];
     this.fu = uniforms(gl, this.fillProg, [...PROJECT_UNIFORMS, "u_rgb", "u_alpha"]);
     this.eu = uniforms(gl, this.edgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_half", "u_rgb", "u_alpha"]);
     this.su = uniforms(gl, this.shopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_fill", "u_alpha", "u_glyph", "u_dpr"]);
@@ -355,7 +363,7 @@ export class BuildingFloors {
     this.fillCount = this.markCount = this.edgeCount = this.shopCount = this.cellCount = 0;
     this.hallKey = "";
     const bs = this.drawn;
-    if (!bs.length) return;
+    if (!bs.length || this.off) return;
     const verts: number[] = [], index: number[] = [], segs: number[] = [], shops: number[] = [];
     // those with members first, so their floors are the first `markCount` indices
     const order = [...bs].sort((a, b) => Number(!a.members.length) - Number(!b.members.length));
@@ -549,7 +557,7 @@ export class BuildingFloors {
 
   /** The outline and glow round each building with a selected station (`selected`, station indices). */
   drawSelected(selected: ReadonlySet<number>, project: Project, vp: readonly [number, number], dpr: number, zoom: number, ink: Float32Array) {
-    if (!selected.size || zoom < FLOOR_FULL_ZOOM) return;
+    if (!selected.size || zoom < FLOOR_FULL_ZOOM || this.off) return;
     const gl = this.gl, w = vp[0] / dpr, h = vp[1] / dpr, u = this.xu;
     const rim = (rimOf() * stationRing(zoom)) / 2, reach = rim + SEL_OUTLINE_PX + SEL_GLOW_PX + 1;
     for (const b of this.drawn) {

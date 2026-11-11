@@ -18,6 +18,17 @@ export function compile(gl: WebGL2RenderingContext, vs: string, fs: string, feed
   return prog;
 }
 
+/** A decorative layer's program, or null where the browser will not compile or link it (T-3192): the
+ * game carries on without that layer, logged, rather than stopping at startup. */
+export function compileOptional(gl: WebGL2RenderingContext, vs: string, fs: string, layer: string): WebGLProgram | null {
+  try {
+    return compile(gl, vs, fs);
+  } catch (e) {
+    console.warn(`${layer} not drawn: ${(e as Error).message}`);
+    return null;
+  }
+}
+
 export function uniforms(gl: WebGL2RenderingContext, prog: WebGLProgram, names: string[]) {
   const u: Record<string, WebGLUniformLocation | null> = {};
   for (const n of names) u[n] = gl.getUniformLocation(prog, n);

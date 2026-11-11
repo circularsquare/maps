@@ -32,17 +32,24 @@ const FULL_DARKEN = "0.14";
 /** RGBA texels per selected shape in the outline's texture (SEL_FS): its frame, size and dot, then
  * its centre line (T-254). */
 export const SEL_STRIDE = 3 + Math.ceil(PLATFORM_POINTS / 2);
-// A platform's centre line (T-254) in the shaders: PLATFORM_POINTS points packed two to a vec4,
-// as flat varyings `v_q0...` or texels; generated so the point count is set in one place.
-// With them the station program has 12 vec4 varyings packed, 15 unpacked: WebGL2 guarantees 15
-// (some phones report no more), so no more points or varyings there without packing others (T-953).
+// A platform's centre line (T-254) in the outline's shader: PLATFORM_POINTS points packed two to a
+// texel; generated so the point count is set in one place. The station program's fragment shader
+// reads it from u_stline itself: as varyings it took 7 of the 8 vectors Firefox allows with
+// fingerprinting resistance on (T-3192; checks/t3192-varyings.mjs).
 const QV = Math.ceil(PLATFORM_POINTS / 2);
-const qVars = (dir: "in" | "out") => Array.from({ length: QV }, (_, i) => `flat ${dir} vec4 v_q${i};`).join("\n");
-const qPack = Array.from({ length: QV }, (_, i) => `v_q${i} = vec4(q[${2 * i}], ${2 * i + 1 < PLATFORM_POINTS ? `q[${2 * i + 1}]` : "vec2(0.0)"});`).join("\n  ");
-const qZero = Array.from({ length: QV }, (_, i) => `v_q${i} = vec4(0.0);`).join(" ");
 // filled element by element: PowerVR's compiler (Pixel 10) rejects an array constructor in a
 // fragment shader, "no default precision defined for variable 'vec2[13]'" (T-952)
 const qUnpack = (p: string) => `vec2 q[${PLATFORM_POINTS}]; ${Array.from({ length: PLATFORM_POINTS }, (_, j) => `q[${j}] = ${p}${j >> 1}.${j & 1 ? "zw" : "xy"};`).join(" ")}`;
+const CENTRE_VARS = (dir: "in" | "out") => `flat ${dir} vec4 v_at;\nflat ${dir} highp int v_inst;`;
+/** Point i of a station's centre line in the frame at its platform's middle, px: the same arithmetic in
+ * the station program's two shaders, so they agree (needs u_stline, u_viewport and PROJECT_GLSL). */
+const CENTRE_GLSL = `vec2 centrePoint(int inst, int i, vec2 node, vec2 mid, vec2 along, vec2 across) {
+  int t = inst * ${PLATFORM_POINTS} + i;
+  vec2 P = texelFetch(u_stline, ivec2(t % ${TEX_W}, t / ${TEX_W}), 0).xy;
+  vec4 h = project(node + P);
+  vec2 s = h.xy / h.w * (u_viewport * 0.5) - mid;
+  return vec2(dot(s, along), dot(s, across));
+}`;
 /** At most this many selected shapes (stations and bridges) share one outline and glow (T-217). */
 export const SEL_MAX = Math.floor(2048 / SEL_STRIDE); // texels in a row: 2048, the narrowest texture WebGL2 guarantees
 /** A selected train's ring (T-242): the train's own shape grown by this, CSS px, with a white band
@@ -470,8 +477,11 @@ flat out float v_lane;   // 1 on double track: a platform each side of its two t
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
 flat out float v_hot;
-// the centre line in the frame, px (T-254), two points to a vec4
-${qVars("out")}
+// for the fragment shader's centre line (T-254, T-3192): the station's node (local units) and its
+// platform's middle on the screen (px, y up), and the station's index in u_stline; -1 a straight
+// line v_size.x either side of the middle
+${CENTRE_VARS("out")}
+${CENTRE_GLSL}
 // the point of the centre line t along it from its middle (stationGeometry.ts centreAt)
 vec2 centreAt(vec2 q[${PLATFORM_POINTS}], float t) {
   float total = 0.0;
@@ -529,7 +539,8 @@ void main() {
   float lo, hi, xl, xh;
   // the quad's offset from the platform's middle and its axes on screen (a waiting room's own)
   vec2 shift = vec2(0.0), ra = along, rn = across;
-  ${qZero}
+  v_at = vec4(a_st.xy, cs);
+  v_inst = -1;
   if (v_dot > 0.0) {
     v_size = vec3(hl, hw, 0.0);
     lo = -v_dot - 1.0;
@@ -542,12 +553,9 @@ void main() {
     vec2 q[${PLATFORM_POINTS}];
     float total = 0.0;
     vec2 mn = vec2(1e20), mx = vec2(-1e20);
+    v_inst = gl_InstanceID;
     for (int i = 0; i < ${PLATFORM_POINTS}; i++) {
-      int t = gl_InstanceID * ${PLATFORM_POINTS} + i;
-      vec2 P = texelFetch(u_stline, ivec2(t % ${TEX_W}, t / ${TEX_W}), 0).xy;
-      vec4 h = project(a_st.xy + P);
-      vec2 s = h.xy / h.w * half_vp - cs;
-      q[i] = vec2(dot(s, along), dot(s, across));
+      q[i] = centrePoint(gl_InstanceID, i, a_st.xy, cs, along, across);
       if (i > 0) total += length(q[i] - q[i - 1]);
       mn = min(mn, q[i]);
       mx = max(mx, q[i]);
@@ -583,7 +591,7 @@ void main() {
       ra = along * dl.x + across * dl.y;
       rn = along * nl.x + across * nl.y;
       v_scr = vec4(ra.x, rn.x, ra.y, rn.y);
-      for (int i = 0; i < ${PLATFORM_POINTS}; i++) q[i] = vec2(-l + 2.0 * l * float(i) / ${(PLATFORM_POINTS - 1).toFixed(1)}, 0.0);
+      v_inst = -1;
       v_size = vec3(l, d, float(u_room));
       lo = -d - 1.0;
       hi = d + 1.0;
@@ -592,7 +600,6 @@ void main() {
       v_lane = 0.0;
       v_crowd = vec4(vec2(max(a_crowd.x, a_crowd.y)), vec2(max(a_crowd.z, a_crowd.w)));
     }
-    ${qPack}
   }
   v_p = vec2(corner.x < 0.0 ? xl : xh, corner.y < 0.0 ? lo : hi);
   c.xy += (shift + ra * v_p.x + rn * v_p.y) / half_vp * c.w;
@@ -621,7 +628,7 @@ flat out float v_lane;
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the bridges between hovered stations (T-730)
 uniform highp int u_hot_n;
 flat out float v_hot;
-${qVars("out")}
+${CENTRE_VARS("out")}
 void main() {
   v_hot = 0.0;
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
@@ -640,9 +647,8 @@ void main() {
   float hw = length(cx.xy / cx.w * half_vp - s0) + u_ring, hl = 0.5 * len;
   v_size = vec3(hl, hw, 0.0);
   // a straight centre line (the stations' polyline frame, T-254)
-  vec2 q[${PLATFORM_POINTS}];
-  for (int i = 0; i < ${PLATFORM_POINTS}; i++) q[i] = vec2(-hl + 2.0 * hl * float(i) / ${(PLATFORM_POINTS - 1).toFixed(1)}, 0.0);
-  ${qPack}
+  v_at = vec4(0.0);
+  v_inst = -1;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   v_p = corner * vec2(hl + 1.0, hw + 1.0);
   vec4 c = project(0.5 * (a_ends.xy + a_ends.zw));
@@ -661,6 +667,9 @@ uniform float u_tint;    // 1: dots show their crowds as pies (T-228, T-553)
 uniform float u_mask;    // 1: the white only marks the stencil (the track drawn through it, T-236)
 uniform vec3 u_lanes;    // T-658: 4 m in px, how far double track's two tracks have parted (0-1), their narrowing close in (T-713)
 uniform float u_pass_in; // T-2249: px from the centre line to a passing station's outer track's inner edge, 0 none drawn
+uniform vec2 u_viewport;
+uniform highp sampler2D u_stline;
+${PROJECT_GLSL}
 in vec2 v_p;
 flat in vec3 v_size;
 flat in float v_dot;
@@ -669,7 +678,8 @@ flat in vec4 v_crowd;
 flat in vec4 v_scr;
 flat in float v_lane;
 flat in float v_hot;
-${qVars("in")}
+${CENTRE_VARS("in")}
+${CENTRE_GLSL}
 out vec4 o;
 ${SHAPE_GLSL}
 // blueprint track's colours (renderer.ts BP_RAIL_RGB, BP_MID_RGB); a blueprint station is drawn at alpha 0.6
@@ -677,9 +687,16 @@ ${SHAPE_GLSL}
 #define BP_FILL vec3(0.663, 0.804, 0.953)
 void main() {
   bool bp = v_alpha > 0.45 && v_alpha < 0.99;
-  // along and across the platform's own centre line (T-254); a dot's own frame
-  ${qUnpack("v_q")}
-  vec2 f = v_dot > 0.0 ? v_p : polyFrame(v_p, q);
+  // along and across the platform's own centre line (T-254), as the vertex shader has it; a dot's own frame
+  vec2 f = v_p;
+  if (v_dot <= 0.0) {
+    vec2 q[${PLATFORM_POINTS}];
+    for (int i = 0; i < ${PLATFORM_POINTS}; i++) {
+      q[i] = v_inst < 0 ? vec2(-v_size.x + 2.0 * v_size.x * float(i) / ${(PLATFORM_POINTS - 1).toFixed(1)}, 0.0)
+        : centrePoint(v_inst, i, v_at.xy, v_at.zw, v_scr.xz, v_scr.yw);
+    }
+    f = polyFrame(v_p, q);
+  }
   float d = v_dot > 0.0 ? length(v_p) - v_dot : boxSdf(f, v_size.xy);
   float inner = clamp(0.5 - d - u_ring, 0.0, 1.0);
   // T-1416, T-1527: a terminal's buffer stop, the platform's -axis end where the track ends, is a

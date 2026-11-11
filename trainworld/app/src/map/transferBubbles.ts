@@ -7,7 +7,7 @@
 // off the screen.
 
 import { QUEUE_STRIDE, type BoardHour } from "../game/boarding";
-import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
+import { compileOptional, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { NetworkBuffers } from "./network";
 
 /** Floats per bubble: from x, y, to x, y; set off, arrival (s from the hour's epoch), riders, line. */
@@ -73,7 +73,8 @@ export class TransferBubbles {
 
   init(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    this.prog = compile(gl, VS, FS);
+    this.prog = compileOptional(gl, VS, FS, "transfer bubbles");
+    if (!this.prog) return;
     this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_r", "u_fill", "u_rim", "u_rim_px"]);
     this.vao = gl.createVertexArray();
     this.pathBuf = gl.createBuffer();

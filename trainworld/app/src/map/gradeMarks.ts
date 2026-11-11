@@ -17,7 +17,7 @@ import { BAD_RED, rgbf } from "../game/palette";
 import { perfOff } from "../perfFlags";
 import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
-import { compile, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
+import { compileOptional, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
 import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
 import { quietBadgeRadius } from "./stationGeometry";
@@ -180,7 +180,7 @@ interface Instances {
 
 export class GradeMarks {
   private gl!: WebGL2RenderingContext;
-  private prog!: WebGLProgram;
+  private prog: WebGLProgram | null = null;
   private u: Record<string, WebGLUniformLocation | null> = {};
   private built: Instances | null = null;
   private drawing: Instances | null = null;
@@ -191,8 +191,8 @@ export class GradeMarks {
     this.gl = gl;
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.built = this.drawing = null;
-    this.prog = compile(gl, VS, FS);
-    this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat", "u_ramps"]);
+    this.prog = compileOptional(gl, VS, FS, "grade marks");
+    if (this.prog) this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_ink", "u_bp", "u_fill", "u_bad", "u_dpr", "u_quiet", "u_level_colours", "u_flat", "u_ramps"]);
   }
 
   private upload(old: Instances | null, data: Float32Array | undefined): Instances | null {
@@ -201,7 +201,7 @@ export class GradeMarks {
       gl.deleteVertexArray(old.vao);
       gl.deleteBuffer(old.buf);
     }
-    if (!data?.length) return null;
+    if (!data?.length || !this.prog) return null;
     const vao = gl.createVertexArray()!;
     const buf = gl.createBuffer()!;
     gl.bindVertexArray(vao);
