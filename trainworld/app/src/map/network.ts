@@ -1160,19 +1160,54 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: num
   const cuts: number[] = [];
   for (let i = 0; i < c; i++) cuts.push((reverse ? 1 - b[o + i * KNOT] : b[o + i * KNOT]) * len);
   cuts.sort((x, y) => x - y);
+  // the knots' places are in order, so the knot a place falls after is found by bisection (and a profile
+  // out of order is read as `profileAt` reads it)
+  let sorted = true;
+  for (let i = 1; i < c && sorted; i++) if (!(b[o + i * KNOT] >= b[o + (i - 1) * KNOT])) sorted = false;
+  /** the first knot, from the second on, with a place at or after `v`; c when none */
+  const firstGE = (v: number) => {
+    if (!sorted) {
+      let i = 1;
+      while (i < c && !(v <= b[o + i * KNOT])) i++;
+      return i;
+    }
+    let lo = 1, hi = c;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (v <= b[o + mid * KNOT]) hi = mid;
+      else lo = mid + 1;
+    }
+    return lo;
+  };
   const out: number[] = [], lane: number[] = [], band: number[] = [], ms: number[] = [];
   const laneAt = (k: number) => (typeof dr.lane === "number" ? dr.lane : dr.lane[k]);
   const push = (x: number, y: number, z: number, m: number, l: number) => {
     out.push(x, y, z);
     lane.push(l);
     ms.push(m);
-    band.push(...profileAt(b, entry, len > 0 ? (reverse ? len - m : m) / len : 0));
+    // `profileAt(b, entry, f)`
+    const f = len > 0 ? (reverse ? len - m : m) / len : 0;
+    if (c <= 0) band.push(0, 0, 0);
+    else if (f <= b[o]) band.push(b[o + 1], b[o + 2], b[o + 4]);
+    else {
+      const i = firstGE(f);
+      if (i < c) {
+        const x = o + i * KNOT, q = x - KNOT, d = b[x] - b[q], t = d > 0 ? (f - b[q]) / d : 1;
+        band.push(b[q + 1] + (b[x + 1] - b[q + 1]) * t, b[q + 2] + (b[x + 2] - b[q + 2]) * t, b[q + 4] + (b[x + 4] - b[q + 4]) * t);
+      } else {
+        const x = o + (c - 1) * KNOT;
+        band.push(b[x + 1], b[x + 2], b[x + 4]);
+      }
+    }
   };
   push(p[0], p[1], p[2], 0, laneAt(0));
+  let ci = 0;
   for (let k = 0; k < n - 1; k++) {
     const m0 = at[k] / perM, m1 = at[k + 1] / perM;
-    for (const c of cuts) {
-      if (c <= m0 + 1e-3 || c >= m1 - 1e-3) continue;
+    // the cuts strictly inside this segment: those at or before its start are done with
+    while (ci < cuts.length && cuts[ci] <= m0 + 1e-3) ci++;
+    for (let qi = ci; qi < cuts.length && cuts[qi] < m1 - 1e-3; qi++) {
+      const c = cuts[qi];
       const f = (c - m0) / (m1 - m0);
       push(p[k * 3] + (p[k * 3 + 3] - p[k * 3]) * f, p[k * 3 + 1] + (p[k * 3 + 4] - p[k * 3 + 1]) * f, p[k * 3 + 2] + (p[k * 3 + 5] - p[k * 3 + 2]) * f, c, Math.round(laneAt(k) + (laneAt(k + 1) - laneAt(k)) * f));
     }
@@ -1182,8 +1217,7 @@ function bandPoints(dr: LanePoints, reverse: boolean, b: BandProfile, entry: num
   const ease = new Uint8Array(Math.max(0, ms.length - 1));
   for (let i = 0; i < ease.length; i++) {
     const f = len > 0 ? ((ms[i] + ms[i + 1]) / 2) / len : 0, t = reverse ? 1 - f : f;
-    let j = 1;
-    while (j < c - 1 && b[o + j * KNOT] < t) j++;
+    const j = c > 1 ? Math.min(firstGE(t), c - 1) : 1;
     const x = o + (j - 1) * KNOT, y = o + j * KNOT;
     ease[i] = c > 1 && (b[x + 1] !== b[y + 1] || b[x + 2] !== b[y + 2] || b[x + 3] !== b[y + 3] || b[x + 3] < 0 || b[x + 4] !== b[y + 4]) ? 1 : 0;
   }
