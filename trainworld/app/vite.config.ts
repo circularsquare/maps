@@ -1,4 +1,4 @@
-import { copyFileSync, createReadStream, existsSync, linkSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, createReadStream, existsSync, linkSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,22 @@ const TERRAIN_WORLD = process.env.TW_TERRAIN_WORLD ? resolve(process.env.TW_TERR
 const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
 /** T-279: the market's routed drives (pipeline/market_drives.py), served at `packs/market-drives.bin`; TW_MARKET_DRIVES: another copy. */
 const MARKET_DRIVES = process.env.TW_MARKET_DRIVES ? resolve(process.env.TW_MARKET_DRIVES) : join(PACKS, "market-drives.bin");
+
+/** TW_LINK_PACKS=1 (snapbuild.cmd): a build holds the packs as hard links to the data files instead of copies, 6 GB in
+ * 5 s instead of 35. Safe because every pipeline writer replaces a pack (a .part renamed over it), never rewrites it in
+ * place (pipeline/freeze.py relies on the same rule); a copy where a link is refused (another volume). Never over an
+ * existing file: it could be a link to the source, and copying onto that would truncate the data file. */
+const LINK_PACKS = process.env.TW_LINK_PACKS === "1";
+function put(src: string, dst: string): void {
+  if (!LINK_PACKS) return copyFileSync(src, dst);
+  try {
+    if (existsSync(dst)) unlinkSync(dst);
+    linkSync(src, dst);
+  } catch (e) {
+    if (existsSync(dst)) throw e;
+    copyFileSync(src, dst);
+  }
+}
 
 /**
  * City packs at `packs/<city>.json`, `.bin`, `.boundary.geojson`, `.market.json` (T-377) and `.places.json` (the OSM place
@@ -107,7 +123,7 @@ function packs(): Plugin {
       for (const c of CITIES)
         for (const ext of [".json", ".bin", ".boundary.geojson", ".places.json", ".market.json"]) {
           const src = join(PACKS, c + ext);
-          if (existsSync(src)) copyFileSync(src, join(out, c + ext));
+          if (existsSync(src)) put(src, join(out, c + ext));
           else if (ext === ".places.json") this.warn(`place list missing: ${src} (build it with pipeline/places.py ${c})`);
           else if (ext === ".market.json") this.warn(`market pack missing: ${src} (build it with pipeline/market_zones.py ${c})`);
           else this.warn(`city pack missing: ${src} (build it with pipeline/build_city.py ${c})`);
@@ -118,7 +134,7 @@ function packs(): Plugin {
       let noTerrain = 0;
       for (const c of CITIES) {
         const src = join(TERRAIN, c + ".terrain");
-        if (existsSync(src)) copyFileSync(src, join(terrain, c + ".terrain"));
+        if (existsSync(src)) put(src, join(terrain, c + ".terrain"));
         else noTerrain++;
       }
       if (noTerrain) this.warn(`${noTerrain} zones have no terrain file: run pipeline/zone_terrain.py build`);
@@ -131,25 +147,25 @@ function packs(): Plugin {
           try { linkSync(join(TERRAIN_WORLD, f), dst); } catch { copyFileSync(join(TERRAIN_WORLD, f), dst); }
         }
       } else this.warn("terrain blocks missing: run pipeline/world_terrain.py build");
-      if (existsSync(WORLD_WATER)) copyFileSync(WORLD_WATER, join(out, "world.water"));
+      if (existsSync(WORLD_WATER)) put(WORLD_WATER, join(out, "world.water"));
       else this.warn("world water mask missing: run pipeline/world_water.py build");
-      if (existsSync(MARKET_DRIVES)) copyFileSync(MARKET_DRIVES, join(out, "market-drives.bin"));
+      if (existsSync(MARKET_DRIVES)) put(MARKET_DRIVES, join(out, "market-drives.bin"));
       else this.warn("market drives missing: run pipeline/market_drives.py build");
       // T-800: every zone's coarse outline (pipeline/zone_outlines.py); without it every zone shows (T-1006)
       const outlines = join(PACKS, "outlines.json");
-      if (existsSync(outlines)) copyFileSync(outlines, join(out, "outlines.json"));
+      if (existsSync(outlines)) put(outlines, join(out, "outlines.json"));
       else this.warn("coarse zone outlines missing: run pipeline/zone_outlines.py");
       // T-731: the real networks a sandbox can start from (pipeline/realnet.py ship)
       const real = join(PACKS, "real");
       if (existsSync(real)) {
         mkdirSync(join(out, "real"), { recursive: true });
-        for (const f of readdirSync(real)) if (f.endsWith(".save")) copyFileSync(join(real, f), join(out, "real", f));
+        for (const f of readdirSync(real)) if (f.endsWith(".save")) put(join(real, f), join(out, "real", f));
       } else this.warn("real networks missing: run pipeline/realnet.py ship");
       // T-727: the real network's routing graphs the track tool snaps along (pipeline/realgraph.py)
       const graphs = join(PACKS, "realgraph");
       if (existsSync(graphs)) {
         mkdirSync(join(out, "realgraph"), { recursive: true });
-        for (const f of readdirSync(graphs)) if (f.endsWith(".rgr") || f === "index.json") copyFileSync(join(graphs, f), join(out, "realgraph", f));
+        for (const f of readdirSync(graphs)) if (f.endsWith(".rgr") || f === "index.json") put(join(graphs, f), join(out, "realgraph", f));
       } else this.warn("real-network graphs missing: run pipeline/realgraph.py <regions>");
     },
   };

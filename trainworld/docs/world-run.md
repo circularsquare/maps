@@ -16,6 +16,12 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
   counts with causes (T-613).
 - While a join runs, nothing else writes `data/packs` or `data/terrain`, any country's included: each
   unit's re-gate compares every registered pack against its snapshot and parks the unit on any change.
+- Anything that writes `data/packs`, `data/terrain` or `data/terrain-world` replaces the file (write `<name>.part`,
+  then `os.replace`) and never rewrites it in place (`open(..., "wb")` on the pack itself, `r+b`, `np.save` onto it).
+  Freezes (`pipeline/freeze.py`), 8800's snapbuild and terrain-world in every build hold those files as hard links, so
+  an in-place write changes the served game and the freeze too. Every writer today replaces (`packio.write`,
+  `put_arrays`, `nocar.append_array`, `realnet.py ship`, `joint_gravity`, `market_zones`, `zone_outlines`,
+  `realgraph`, `zone_terrain`, `world_terrain`'s blocks); the one exception is `world_terrain`'s `index.bin` (`write_bytes`), linked into every build already: write it as `.part` and replace too if it is ever rebuilt.
 - A pack rebuild backs up to `data/work/pre-T###/` first; the backup goes, without asking, once a later
   state is checked clean. `data/work/res9/` stays.
 - Cities added through the plan need no calibration beyond the gate (Anita, 2026-10-16).

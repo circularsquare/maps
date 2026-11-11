@@ -55,6 +55,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 
 - Game: notes/T-924.md "Commands" (`tools/deploy.py --dry-run --version X`, then `--smoked`, website push, `--verify`).
   Every publish gets a version and an entry in `app/src/ui/updates.ts`.
+- Old R2 versions: only through `python trainworld/tools/r2_purge.py <versions> [--yes]` (allowed by a permission
+  rule; it refuses the live version, the newest 3 and anything not dated). Never a bare `rclone purge`.
 - shonei-server: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call; then `git push` separately.
 - The permission check refuses deploys and ssh unless her latest message says yes to that exact action.
 
@@ -67,6 +69,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 
 ## Traps
 
+- snapbuild builds the two WASM modules at the same time (`tools/snap_wasm.py`, target dirs `.tw-snap-target` and
+  `.tw-snap-target-demand`, about 4 cores for two minutes) and deletes the old build (`dist-trash-*`) in a separate
+  window after "swapped"; it is normal for that window to run on for a minute.
 - `call snapbuild.cmd` inside another .cmd leaves the shell in `.tw-snap\trainworld\app`: `cd /d` back.
 - Landing a tree fails while the main tree has others' edits in the same files: `git diff -- <files>` to a patch,
   `git checkout -- <files>`, land, `git apply --3way` the patch, `git reset -- <files>`. Write the patch with
