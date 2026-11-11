@@ -118,9 +118,17 @@ of its proxies where it has them. Measured by building Toronto from tier 0 again
   hook) matter little for commuting. **District totals matter in old dense centres**: GHSL put
   12-19% too many people in London's central boroughs before scaling (T-288).
 - **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry,
-  so most are sized by area. The total is population x the national tertiary students a resident
+  so most are sized by area. A campus item with no count takes its institution's (part of, parent
+  organisation, occupant or operator: UBC Vancouver's is UBC's 71,201), whole, campuses outside the
+  pack not taken off (T-3216). Sites named as open or distance universities or research centres
+  are left out (IGNOU, CNEA's Centro Atómico Ezeiza; T-3226). Every site has a cap from how
+  counted campuses' students go with their area (1,872 x hectares^0.31): a count is cut to 14
+  times that and to 100,000 and then caps its sites, so a whole system's count on one campus
+  (UNAM's 360,883 on CU) or a scaled-up count (IIT Bombay's 176,000) can't stand; a site sized
+  by area takes at most 5.4 times that and 50,000. The total is population x the national tertiary students a resident
   (UNESCO enrolment via the World Bank, SE.TER.ENRL over SP.POP.TOTL; T-288), and the counts and
-  areas only spread it (counts alone sized London at several times its students). Why it may not
+  areas only spread it (counts alone sized London at several times its students), none past its
+  cap; students no site can take study near home, by adults, as schools' do. Why it may not
   carry over: students gather in university cities, so a national rate undercounts a city with
   many campuses (Toronto -20% against Ontario's files) and overcounts one with few. Check: London
   against HESA (T-382). A campus OSM maps as an outline has its students spread over the cells

@@ -282,7 +282,7 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Country | Schools | Universities | Medical | Airports |
 |---|---|---|---|---|
 | United States | U NCES CCD public schools (planned rows OSM until T-1019); N NCES PSS private, T-142 | U IPEDS (planned rows OSM until T-1019) | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share (planned rows Wikidata until T-1019) |
-| Canada | U Ontario school file (per province) | U COU and Ontario college files (per province, tor only); N partner campuses, T-282; planned rows tier 0 (UBC Vancouver's Wikidata item has no count, so sized by area, T-3213); ? Universities Canada enrolment by university (national), T-3213 | U OSM | U StatCan 23-10-0253-01; connecting by judgement |
+| Canada | U Ontario school file (per province) | U COU and Ontario college files (per province, tor only); N partner campuses, T-282; planned rows tier 0 (UBC Vancouver's Wikidata item has no count; from its next rebuild it takes UBC's by occupant, T-3216); ? Universities Canada enrolment by university (national), T-3213 | U OSM | U StatCan 23-10-0253-01; connecting by judgement |
 | England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement |
 | France | N ministry directory with pupils, T-385 | ? ministry students by site, T-505 | U OSM | U Wikidata; CDG 0.75 by judgement |
 | Germany | U tier 0 OSM (school files per Land) | ? Destatis 21311 by institution, T-505 | U OSM | U Wikidata |
