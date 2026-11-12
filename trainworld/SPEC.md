@@ -390,9 +390,10 @@ or uploaded here [T-1826]; closing the page asks first only while a change canno
 on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
-a world leaderboard and one per city, each person once per board with the current figures of the game
-they played most recently there (not their best ever, so a demand change never leaves an unreachable
-score up); a game that was ever a sandbox is never listed [T-972, T-973, T-3248; docs/ui-panels.md "Account and leaderboards"].
+a world leaderboard and one per city and country, each person once per board. A game counts at its
+current figures, never its best ever, so a demand change never leaves an unreachable score up; the
+world board takes a person's best game, a city or country board the game they played most recently
+there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248; docs/ui-panels.md "Account and leaderboards"].
 Games synced between devices and sharing by link come later (T-988 to T-990).
 [docs/architecture.md](docs/architecture.md) 11.
 

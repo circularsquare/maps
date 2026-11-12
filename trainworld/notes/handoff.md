@@ -30,7 +30,56 @@ All Opus, running, no commits (I land):
 - Her calls 11-11 late: local demand factors allowed again (CLAUDE.md, DECISIONS); T-3240 prelim go and queue: crude
   fit of the GDP-per-head exponent, big-city/small-capital pull, US as is. longdist resumed for it (~275k context).
 - rbspeed a4daa57313ae10e1c: T-3244 rebuild speed survey. rbqueue a6b54e7dbe0397d9e: T-3245 rebuild ride-alongs.
-Next free id T-3246.
+- shonei-server pushed (e3b8890) with her word.
+- **Hotfix tonight, her word** ("hotfix out tonight with the base t3239. can also include the community stuff"):
+  hotfix03 a9cb940c0840889cf builds tw/release-031 at 3a442a6e in .tw-trees/hotfix031: d5911dec code + cc510cc1,
+  0dd4bf7b, 69ea44e9, 01d527ee, translations of the new strings (also merged into master's tree). Reports READY; I run
+  deploy, website push, verify. She said it, so publish when READY (still tell her).
+- hsr resumed: her case is Sendai -> Omiya on HSR then the local line to Tokyo; income groups in route choice?;
+  build A (her lean).
+- Tokyo save: she asked the player; don't ping her about it again.
+- longdist done (T-3240 prelim, b1b7b3cd): pull exp(0.8 x rank excess, cap 3) on Natural Earth ranks, US/JP/UK/KR
+  exempt; code 3-4 h at the rebuild. Her calls: NE measure vs hand list; China weaker pull.
+- rbqueue done (T-3245, notes/T-3245.md): ~7 h must-haves before a rebuild; her calls 1-6 listed there.
+- Hotfix is **v0.3.1** with a changelog (her word: no silent updates); hotfix03 told; T-3238 (8507f0eb, patch
+  artifacts/trainworld/t3238/t3238-hotfix.patch) added to it. Changelog lines need her ack before deploy.
+- Her calls 11-11 night: Natural Earth + trim; border strength separate; China pull -20%; beaches/Capri (T-3247);
+  airports cross zone lines yes; GHSL 2025 yes; planned metro rows either way; rebuild overnight when ready (not
+  tonight); T-765 only if clearly helps; Haneda drop; leaderboards show current score (T-3248); satellite survey
+  (T-3249); wealth tiers for local trips: estimate (T-3246).
+- New agents: pull afdfa89d17e6d6967 (T-3240 code, 6138), boards a47394e3756552b10 (T-3248 shonei-server),
+  sat a94b87077ab53fc73 (T-3249 survey), oneway aebe2f1e142f3d843 (T-3250 player one-way report, 6139),
+  resources resumed for T-3251 (server caps, shonei-server commits, deploy on her word).
+- Done: savehang (T-3238 landed 8507f0eb; filed T-3252 Tokyo line 99 rate fade), rbspeed (T-3244: light pass ~4 h
+  with speed-ups vs ~50 h full; 18aa0ef0), rbqueue (T-3245), resources first run (T-3243, 74d29e5a).
+- T-3243 urgent for her: Resend at daily cap (resets blocked till midnight UTC; month runs out ~11-24; Pro $20);
+  accounts full ~11-19; GitHub Pages ~1.1 TB/month vs 100 GB (Cloudflare cache rule, her dashboard); R2 reads
+  ~38M/month vs 10M free; no off-site backup (T-2918).
+- T-3212 landed 0503b008 (split done); 8800 snapbuild of 0503b008 running.
+- T-3251 committed in shonei-server 3f97067 + 585582d (caps 30k/15k, games 16 GB, 3 backups), NOT deployed: her
+  word. deploy.ps1 builds the working tree, and boards' uncommitted shonei-server edits don't compile: deploy only
+  once boards commits (or from a clean copy).
+- 8800 = 0503b008 smoke PASSED (12 checks). Then T-3241 + T-3248 maps side landed fda21f9f; snapbuild running.
+- boards done: shonei-server b382e82 (most recent game per board + inbox cutoff tab), not deployed. Server deploy
+  now = 3f97067 + 585582d + b382e82 (tree clean), waits on her word.
+- R2 purge of 11-09..11-10c running (her yes). Guiding her through Cloudflare cache rules + off-site backup.
+- **8800 = fda21f9f** (T-3241 + T-3248 client). sat done (T-3249 notes 97fd44cf; free version 5-6 h waits on her).
+- oneway: T-3250 is a drawing bug (run 1 drawn along run 0's geometry; every line with its own way back, flyover
+  branches too); resumed to build the fix (~3-4 h) now that split landed.
+- Cloudflare cache rules on (her, verified: assets HIT, .bin Range 206 on MISS/HIT); DECISIONS 2026-11-12.
+- **v0.3.1 READY** (hotfix03): tw/release-031 head 7226acf8, .tw-trees/hotfix031, smoke light+dark PASSED. Master got
+  the changelog + translations (d0128b0b). Waits on her changelog ack, then (from maps root):
+  `venv\Scripts\python.exe trainworld\tools\deploy.py --skip-data --version 2026-11-11b --dist <wt>\trainworld\app\dist --app <wt>\trainworld\app --smoked`,
+  website add trainsworld/ trainworld/, commit, push, `deploy.py --verify --page --version 2026-11-11b`.
+- **v0.3.1 published** ~03:45Z 11-12 (her "yes can deploy server changes tonight with hotfix"): deploy.py
+  --skip-data 2026-11-11b from hotfix031 dist, website ad37087 pushed; verify running. Changelog lines went out as
+  drafted (she didn't reword; tell her).
+- Her 11-12 answers: server deploy tonight yes; world board = best game ever (boards resumed; city/country most
+  recent); SES later tonight (she sets up); satellite free version go, in Settings, hover says low quality
+  (satbuild ab10eeec5239241e4, Sonnet, 6140); purple track answered by her.
+- She asked: "please keep me up to date / try to catch the stuff i drop": every report ends with an "Open with
+  you" list of everything still waiting on her.
+Next free id T-3253.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
