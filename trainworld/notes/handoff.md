@@ -1,123 +1,91 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 441e3071-8b6e-4109-9ab2-1339e17b92be, name maps-5e [3a1e06], since 2026-11-12 04:41 UTC
-Updated: 2026-11-12 11:15 UTC (06:15 local; she is asleep)
+Updated: 2026-11-12 15:50 UTC (10:50 local; she is awake and answering). Context past 500k: ready for a takeover.
 
-Read trainworld/CLAUDE.md and docs/orchestrator.md first. maps-18's 11-11/12 log is in git history (handoff.md at
-348ef2c2).
+Read trainworld/CLAUDE.md and docs/orchestrator.md first. This session's log is in git history (handoff.md at
+e9dde1d1 and earlier).
 
 ## Live
-- **Live = v0.3.1** (tw/release-031 head 71009033, worktree .tw-trees/hotfix031; data 2026-11-11b; website cc14a89).
-  A deploy yes is not a text ack: changelog/player text waits for "text acknowledged".
-- **Server** (shonei-server, deployed 04:49Z 11-12 with her word, pushed): caps 30k accounts / 16 GB games / 3
-  backups (T-3251); efb2cd6 best game per board (T-3248); 020ba08 likes tiebreak + her 60-min exemption (T-3258,
-  T-3259; SHONEI_COMMUNITY_NO_WAIT set, env backup shonei.env.bak-2026-11-12); e98ae76 flags server (T-3269, config
-  trainworldFlags true; the game's half shows from the next publish).
-- **Off-site backup** (T-2918): nightly 03:26Z to R2 bucket shonei-backups, 7 kept; key at ~/shonei-backup-key.txt.
-- **Cloudflare**: cache rules "trainsworld assets", "trainworld data", and (11-12, her yes) "noritetsu data"
-  (data.anita.garden/noritetsu/data/*, 2 h edge TTL, after "data bypass"; DECISIONS 139ba331). Ops token at
-  ~/cloudflare-ops-token.txt. **Daily**: tools/ops/check_resources.py; look at the noritetsu rule's hit rate in the next one.
+- **Live = v0.3.1** (tw/release-031 head 71009033, worktree .tw-trees/hotfix031, read-only for agents; data
+  2026-11-11b; website cc14a89). A deploy yes is not a text ack: changelog/player text waits for "text acknowledged".
+  Not live yet (next publish): option A eb23b84b, jpn7 Shinkansen (T-3272), the world rebuild + university fixes,
+  flags client (server side is live), satellite, zoom buttons, Community View, station fixes. Translation batch for
+  all new strings before that publish; website about-page flag credit line (notes/T-3269.md).
+- **Server** (shonei-server e878c0f, deployed 15:01Z 11-12 with her word, pushed): caps 45k accounts / 22.5k
+  password / warn 30k, browsers 400k; flags (trainworldFlagSet 2: NYC + 47 prefectures); best game per board;
+  likes tiebreak; her 60-min exemption (SHONEI_COMMUNITY_NO_WAIT).
+- **Ops**: daily `tools/ops/check_resources.py` (last 11-12 14:00Z: noritetsu cache rule works, GetObject 1.6M/h ->
+  10-20k/h; Resend at its daily cap, she said no Pro; R2 storage 16.9 GB; website repo 1.1 GB). Feedback inbox:
+  `tools/ops/feedback.py` (read-only, key ~/shonei-feedback-admin-key.txt). Cloudflare ops token ~/cloudflare-ops-token.txt.
 
 ## 8800 and master
-- **8800 = 6a325b9c** (the light pass's data), smoke PASSED against 8800 (12 checks, 113 s at 4 cores; real save
-  12.58M rail trips a day).
-- Master 6a325b9c, pushed 06:25 local.
+- **8800 = e9dde1d1, smoke PASSED** (her checks: satellite fade good, shared station names good, lengthening works).
+- Master 2ed7a727 (feedback reader). Pushed to e9dde1d1 (two pushes this session; she allows a couple).
+- World rebuild done 11-12: light pass 20261112-025728 (3,919 packs) + T-3273 rerun 065909 (828) + T-3274/3275
+  rerun 084020 (1,041); frozen data/frozen/20261112-*; backup data/work/pre-T3244/ can go now (state checked clean).
+- Uncommitted in main tree (agents'): realNetwork.ts + realgraph.py (lightrail); market_tourism.*, market_zones.py,
+  sim/src/demand/intercity*, regional.md, demand-plain.md, demand-worldwide.md, wiki between-cities (jpattract);
+  data-register.md (jpattract + gaps); notes/T-3287.md + TASKS line (gaps). TODO.md is hers.
 
-## World rebuild light pass: DONE (her go, overnight 11-12)
-Batch 20261112-025728, 3,919 tier 0 packs, ~3 h wall at 10 cores (T-3244 archived with times). Fixed on the way:
-an invalid boundary in campus split, an empty university column in tier0, appended logs counted as failures, freeze
-deadlocked on the run's own packs lock (now `--locked`). Gate: 346 FAIL as before + 1 new (jiw university_rate 0.36,
-T-3273); load: all 3,983 load, 3,481 with other legs. Frozen as data/frozen/20261112-060723. Backup of the old packs
-in data/work/pre-T3244/ (delete once the new state is checked clean, e.g. after T-3273's rerun and a smoke).
-To tell her: Atlanta's airport legs 0.98 -> 0.44 of published (DB1B O&D share).
+## Running agents (all report to maps-5e; resume by id)
+- **lht** a9bf2515b4ef71c76 (Opus, worktree .tw-trees/lht, 6164): T-3297 left-hand traffic BUILD, her calls: new
+  game side from the start country's railway side, toggleable; trams/buses follow; real saves of left cities ship
+  left (saves to scratch, copy commands to me); flip-anyway with warning, broken-sites list, auto-fix safe cases.
+  Reports after each stage (1 sim+drawing, 2 choice+real saves, 3 flip). Ids T-3311/3312.
+- **bugs** a911a89a73ce91011 (Opus, worktree .tw-trees/bugs, 6165/6166): T-3313 stuck-game reports (figures stop
+  updating, 0 passengers, trains vanish at terminals, construct button, all trains stop, mizushin other-device money).
+  Told about feedback.py. Ids T-3314-3316. Report after ~3 h.
+- **haru** ae9bb543ae404b5d5 (Opus, worktree .tw-trees/haru, 6159/6160): T-3302 Haru's two Tokyo saves don't load
+  (scratchpad harusaves\in). Ids T-3305/3306. Wants a reply she can send.
+- **money** a3df8170043e5a9f4 (Sonnet, worktree .tw-trees/money, 6161): T-3303 fare exploit (on-board riders pay a
+  fare set mid-ride; she knows the detail), T-3304 x100 money hover (her sentence verbatim), T-3307 own WebGL2
+  message (strings to her). Ids T-3308/3309. Says if the exploit fix is hotfix-worthy.
+- **hsrprofit** a73b4d35d12f852f8 (Sonnet, read-only, 6162/6163): T-3310 Tokaido-style HSR profit on live vs master;
+  skill issue or balance. Then I decide the HSR top speed (320 -> 350? a player asked; rail fact, my call).
+- **transfer** a03f13c66621b0720 (Opus, worktree .tw-trees/transfer, 6156): T-3295 change between two stops of one
+  line at a near self-intersection; also Caio's tram->train walk (feedback 1794440480-9c44ca08), file separately if
+  different. Ids T-3298/3299.
+- **jpattract** a970ecbf4714f9168 (Opus, main tree): T-3280 option A BUILD (her yes): Japanese resort towns'
+  published visitors in Japan's long-trip weights, beta under rail counts. Hands back a Japan market-only rerun.
+- **lightrail** a0244723dad581e04 (Sonnet, main tree, 6154): T-3285 light_rail in the real network layer + snapping,
+  118 realgraphs + Berlin rebuilt; closes T-3265. Next for it: T-3289 (real network setting none/passenger/all).
+- **dbltrack** (done): T-3296 single -> double rebuild, archived, in worktree .tw-trees/dbltrack, READY TO LAND but
+  HELD until jpattract (sim edits in main tree) and hsrprofit (measures main tree's WASM) finish: a landing rebuilds
+  the main tree's WASM. Strings sent to her (awaiting ack). Then start T-3317.
+- Worktrees: transfer, dbltrack, haru, money, lht, bugs (+ hotfix031). Disk 25 GB free, ~1.2 GB each: no more than
+  one more until some land. Worktrees from 32ac89b1/later must copy main's registry.json + market-rows.json before
+  pages and never land them (revert in the tree first, as done for dbltrack).
 
-## T-3273 rerun: DONE 08:23 local, committed 440a601f (archived); **8800 = 440a601f, smoke PASSED** (12 checks, 117 s)
-## Running agents (report to maps-5e), started 11-12 morning
-- satfade a5f4536449d4ca90a (Sonnet): T-3278 DONE, uncommitted (basemap.ts, docs/ui-map.md, notes/T-3249.md):
-  imagery opacity = slider, drawn map underneath at its 0% look; couldn't reproduce her solid grey in headless
-  Chrome. Commit with the next batch; she checks on 8800 after the snapbuild; archive after her look.
-- flags2 a97c6cd861102a368 (Opus): T-3279 DONE + archived, uncommitted in maps (flags.ts/json, Flag.tsx, flag.css,
-  tools/flags.mjs, 309 flag files, Leaderboard/Community/account edits, checks/t3279-flags.mjs). shonei-server
-  488e09a + e878c0f (48 new codes, trainworldFlagSet 2) committed, not deployed; until then the picker hides the new
-  codes. Strings to her: flagTip -> "Flag shown after your name on the leaderboards and in Community"; "New York City".
-  At the next publish: website about-page credit line (flag-icons, circle-flags MIT; prefecture flags Commons PD).
-- jpattract a970ecbf4714f9168 (Opus): T-3280 stage 1 DONE (notes/T-3280.md): resort towns missing from the
-  attraction list + attraction trips local only (halve per 10 km, no zone crossing); Hakone ~10x under, Atami ~5x.
-  Options A (recommended: 60-100 Japanese resort municipalities with prefecture visitor counts added to Japan's
-  long-trip destination weights, beta 2-4 fitted under rail counts, ~6 h, market-only pass over Japan) / B / C / D.
-  Asked her; resume jpattract to build on her yes. Ids T-3283/3284 unused.
-- lightrail a0244723dad581e04 (Sonnet, 6154): T-3285 light_rail in the real network layer + snapping, rebuild 118
-  realgraphs + Berlin (her yes); writes data/packs only after the light pass ends; closes T-3265.
-- stations a4afc595a574ff195 (Sonnet): T-3286 + T-3288 DONE + archived in worktree .tw-trees/stations (WASM).
-  Land after the light pass ends; main tree's docs/ui-map.md also has satfade's edit: commit main-tree work first.
-  Her check: map labels of a built complex (agent judged only the inspector list).
-- gaps ac5cdaf84781d40c7 (Opus, read-only): T-3287 design for her: gap regions (Agder, Baltics, eastern Ontario,
-  North Korea) and a contiguity rule, dry count, cost; review image t3287-gaps.png. Ids T-3293/3294.
-- transfer a03f13c66621b0720 (Opus, worktree .tw-trees/transfer, 6156): T-3295 trips won't change between two
-  stops of the same line at a near self-intersection, even with a passage (her TODO verbatim). Ids T-3298/3299.
-- dbltrack a24dfb160b1f47d8c (Sonnet, worktree .tw-trees/dbltrack, 6157): T-3296 rebuild single into double track.
-  Ids T-3300/3301.
-- lhtscope (done): T-3297 estimate in notes/T-3297.md: sim already supports left-hand (Network::right_hand, lanes.rs);
-  app plumbing + drawing signs + new-game choice, ~5-7 h; her calls listed there (asked her).
-- haru ae9bb543ae404b5d5 (Opus, worktree .tw-trees/haru, 6159/6160): T-3302 Haru's two Tokyo saves don't load
-  (scratchpad harusaves\in). Ids T-3305/3306.
-- money a3df8170043e5a9f4 (Sonnet, worktree .tw-trees/money, 6161): T-3303 fare exploit (riders on board pay a fare
-  set mid-ride), T-3304 x100 money hover (her sentence verbatim), T-3307 own WebGL2 message. Ids T-3308/3309.
-- hsrprofit a73b4d35d12f852f8 (Sonnet, read-only, 6162/6163): T-3310 measure a Tokaido-style HSR line's profit on
-  live vs master; skill issue or balance?
-- Landed 11-12 ~10:20: b3dccf82 (flags 2, satellite fade, T-3274/3275 code + rerun registry, her strings), b6467f46
-  (stations: T-3286, T-3288; WASM). Not yet on 8800: snapbuild after the rerun's freeze.
-- Worktrees made from 32ac89b1: their registry/market-rows must be copied from the main tree before pages (told them).
-- Her Q: is the high-speed fare fix live? Answer: v0.3.1 has d5911dec (fares in the start country's dollars, long
-  trips take HSR again); option A eb23b84b and jpn7's Shinkansen (T-3272) are 8800 only, wait for the next publish.
-- Queued: T-3289 freight/all rail as a three-way real network setting (none, passenger, all) -> lightrail after T-3285.
-- shonei-server DEPLOYED 15:01Z 11-12 with her word, pushed (e878c0f): caps 45k accounts / 22.5k password / warn
-  30k, browsers 400k; place flags (trainworldFlagSet 2 live). Her calls 11-12: no Resend Pro; T-3276 left as is;
-  T-3280 option A -> jpattract resumed to build it (hands back a Japan market-only rerun).
-- Mine, uncommitted: her string edits (View a copy; "You can save it to keep it."; HSR notice shortened) and the
-  cursor tag's Ctrl line removed (tools.ts, en.json, context.json, DECISIONS). Commit with the light pass batch.
+## Queued (filed, start as slots free)
+- T-3317 [P1] track/train bug batch from feedback (HSR platforms > 4 cars, quad upgrade not using 4 tracks, one-way
+  singles meeting double cross lanes, local leaving ahead of express, loop lines, loopo's other-direction lengthening)
+  -> after dbltrack lands; Opus.
+- T-3318 place names (Changshu in Chinese, Hyogo shown as Osaka, Sendai Senzan skips Toshogu); Sonnet.
+- T-3319 line icon shapes by mode with a per-mode default in Settings (her words in the line); Opus (UI).
+- T-3289 freight/all rail setting -> lightrail.
+- T-3287 gap regions: her answers 11-12 10:50: plan fine; ordinary zones; ALSO all north Scandinavia (Lappi,
+  Norrbotten, Nordland, Troms, Finnmark; "the train to north norway is kinda famous"); NW Ontario's south rim along
+  the east-west route; North Korea its own realm; Spain + Portugal first ("lots of players"), then Nordic + Baltic,
+  NK alongside, Canada last. gaps ac5cdaf84781d40c7 resumed: rule in world_plan.py + plan rows + dry runs + a run
+  plan per batch (no data/packs writes); the orchestrator schedules the world runs. T-772 archives into it.
 
-## T-3274 + T-3275 rerun: RUNNING since 08:40 local
-parentsplit built both (uncommitted: tier0.py NATIONAL_TERTIARY TW 0.0468 from MoE; site_inside: a building inside a
-campus outline joins it or is left out). Rerun `--from through --ids artifacts/trainworld/t3274/packs_changed.txt`
-(1,041 packs), pid 27492, stdout artifacts/trainworld/t3274/light_pass.log, ~1.5 h. Expected: jiw 0.036, ina
-"Lecture Hall" 7,318 -> 33. After: commit, archive T-3274/3275, snapbuild, smoke, push, delete data/work/pre-T3244/.
-T-3276 filed (Georgia Gwinnett 25k: area-sized campuses in scaled packs; a lower cap moves 10-24% of students to
-near home worldwide, a demand-wide shift: asked her, I recommended leaving it). Next free id T-3311.
-Old text, for the record:
-parentsplit (Opus, a4fc96c86a876dea2, done) built pipeline/campus_pools.py (world table data/raw/tier0/campus/pools.json),
-tier0.university_sizes on it, wikidata_prefill builds it, open universities and university farms/forests out; all
-uncommitted (notes/T-3273.md). Rerun: `world_run.py step light_pass run --jobs 10 --from campus --ids
-artifacts/trainworld/t3273/packs_changed.txt` (828 packs), runner pid 42656, stdout artifacts/trainworld/t3273/light_pass.log,
-~1.5 h. Expected: Galveston 94k -> 0, Kennesaw Marietta 99.9k -> 7.1k, IU Indy 79k -> 14k, jiw 26k -> 6.5k (still
-0.090, just over the band: T-3274 Taiwan national tertiary figure from its MoE, my call, not hers: the same rule
-every World Bank country already has; resume parentsplit for it with T-3275 and one more Taiwan + affected rerun); T-3275 filed (freed students land on
-area-sized single buildings in scaled packs: ina "Lecture Hall" 7.3k). After: commit, snapbuild 8800, smoke, then
-delete data/work/pre-T3244/.
+## Waiting on Anita
+- Double track strings (T-3296): "double track" in hover/confirm/notices; "Pick a level or track type" -> "Pick a
+  level, track type or double track".
+- Later: T-3264 trains drawn through each other, stage 1 needs her look at a mock (notes/T-3264.md, 13-19 h).
+- Longer-term TODO items not filed: leaderboard map view, brainstorm, intercity-only mode, more languages, offline.
 
-## Waiting on Anita (morning)
-- Test satellite at 10/40/100% light and dark.
-- Strings to review: Community View, track tool hints (incl. "Hold Ctrl to draw straight"), zoom buttons, flags,
-  satellite ("Map", "Satellite", hover "Low resolution outside Japan and the US"). Collect old -> new from
-  notes/T-3257.md, T-3260.md, T-3268.md, T-3269.md, T-3249.md for the morning message.
-- Translation batch for all new strings before the next publish.
-- T-3264 trains drawn through each other: stage 1 needs her look at a mock (notes/T-3264.md, 13-19 h total).
-- T-3265 her question: all light rail (railway=light_rail) in the Real network layer and snapping, plus rebuilding
-  118 realgraphs (~1 h)? notes/T-3265.md.
-- T-3261: she may have meant quad onto her own quad track (built: quad on snapped routes); new task if so.
-- Flags extra list (notes/T-3269.md).
-- Longer-term TODO items not filed: leaderboard map view, brainstorm, intercity-only mode, more languages, offline,
-  advanced quad track.
+Next free id T-3320.
 
-Next free id T-3278.
-
-## Her calls 11-10/12 (for the record; detail in DECISIONS and ARCHIVE)
-11-12: option A stays; wealth tiers parked; Community Biggest left alone; China pull 0.6; Poland slight; undershoot
-rule for all demand fits; hex terrain back to squares; best game on every board; zoom buttons + flags now.
-11-10/11: single track two-way by default, margin 240 s; double track lanes in one piece; flyover ramps 4%; train
-count cap = running + 1; HSR and tram quad yes (tram quad no street running); buses and trams on any road; snap to
-roads; text copied word for word from her message needs no review; rebuild speedups 1-3 yes; R2 purges via the
-guarded script; 4-6 min rebuilds "not so bad"; Privacy · Terms in the signed-in panel.
+## Her calls 11-12 (detail in DECISIONS and ARCHIVE)
+Option A stays; wealth tiers parked; China pull 0.6; Poland slight; undershoot rule for all demand fits; squares not
+hexes; best game on every board; zoom buttons + flags; strings: "View a copy", "This network isn't saved. You can save
+it to keep it.", "High-speed track can't be single track.", every Ctrl-draws-straight hint dropped; flag round 2
+(her words in notes/T-3269.md); flag hover OK; server caps +50% / browsers x2; no Resend Pro; Georgia Gwinnett-style
+campuses left (T-3276); Japan tourism option A; left-hand traffic as above; T-3265 light rail yes; T-3261 as built;
+feedback reader yes. Earlier (11-10/11): single track two-way, margin 240 s; double track one piece; flyover ramps 4%;
+train cap running + 1; HSR and tram quad yes; buses/trams on any road; text copied from her message needs no review.
 
 ## Anita's standing asks
 - **No deploys overnight** without her there; every server deploy needs her word.
