@@ -14,8 +14,8 @@ Where things come from:
 - limits set in shonei-server's code are read from the local clone (../shonei-server), so a raised cap shows up
   here once it is in that repo; the box runs whatever was last deployed, which the doc says how to check.
 - R2: `rclone lsjson` on the `r2:` remote that deploy.py uses (rclone's own config holds the key).
-  Operation counts need a Cloudflare API token with Account Analytics read, in CF_ANALYTICS_TOKEN or the file
-  ~/.cloudflare-analytics-token; without one they are estimated from plays.
+  Operation counts and the data host's cache come from Cloudflare's GraphQL analytics with her ops token,
+  ~/cloudflare-ops-token.txt (or CF_ANALYTICS_TOKEN); never printed. Without it they are estimated from plays.
 - GitHub: `gh api` for the website repo's size; `curl`-style HEAD requests for cache status.
 Each run appends its numbers to ../artifacts/trainworld/ops/history.jsonl; growth uses that history when it
 reaches back a day or more, else timestamps inside the stores.
@@ -270,48 +270,90 @@ def r2_listing():
     return top, versions
 
 
-def r2_account_id():
-    try:
-        conf = open(os.path.join(os.environ.get("APPDATA", os.path.expanduser("~/.config")), "rclone", "rclone.conf")).read()
-    except OSError:
-        return None
-    m = re.search(r"endpoint\s*=\s*https://([0-9a-f]{32})\.r2\.cloudflarestorage\.com", conf)
-    return m.group(1) if m else None
+TOKEN_FILES = [os.path.expanduser("~/cloudflare-ops-token.txt"), os.path.expanduser("~/.cloudflare-analytics-token")]
+CF_API = "https://api.cloudflare.com/client/v4"
+
+
+def cf_token():
+    """The Cloudflare ops token (read zone settings and cache rules, list R2 buckets, account analytics), or None.
+    Never printed."""
+    if os.environ.get("CF_ANALYTICS_TOKEN"):
+        return os.environ["CF_ANALYTICS_TOKEN"]
+    for p in TOKEN_FILES:
+        if os.path.exists(p):
+            return open(p).read().strip()
+    return None
+
+
+def cf_get(token, path):
+    req = urllib.request.Request(CF_API + path, headers={"Authorization": "Bearer " + token, **UA})
+    return json.loads(urllib.request.urlopen(req, timeout=60).read())
+
+
+def cf_gql(token, query, variables):
+    req = urllib.request.Request(CF_API + "/graphql", data=json.dumps({"query": query, "variables": variables}).encode(),
+                                 headers={"Authorization": "Bearer " + token, "Content-Type": "application/json", **UA})
+    d = json.loads(urllib.request.urlopen(req, timeout=60).read())
+    if d.get("errors"):
+        raise RuntimeError(str(d["errors"][0].get("message", d["errors"]))[:160])
+    return d["data"]
 
 
 CLASS_A = {"ListBuckets", "PutBucket", "ListObjects", "PutObject", "CopyObject", "CompleteMultipartUpload",
            "CreateMultipartUpload", "UploadPart", "UploadPartCopy", "ListMultipartUploads", "ListParts",
            "PutBucketEncryption", "PutBucketCors", "PutBucketLifecycleConfiguration", "LifecycleStorageTierTransition"}
 FREE_OPS = {"DeleteObject", "DeleteBucket", "AbortMultipartUpload"}
+R2_OPS_Q = """query($a: String!, $s: Time!, $e: Time!) { viewer { accounts(filter: {accountTag: $a}) {
+  r2OperationsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $s, datetime_leq: $e}) {
+    sum { requests } dimensions { actionType bucketName datetimeHour } } } } }"""
 
 
-def r2_operations():
-    """This calendar month's Class A and B operations for the whole account, or None without a token."""
-    token = os.environ.get("CF_ANALYTICS_TOKEN")
-    path = os.path.expanduser("~/.cloudflare-analytics-token")
-    if not token and os.path.exists(path):
-        token = open(path).read().strip()
-    acct = r2_account_id()
-    if not token or not acct:
+def iso(t):
+    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def cloudflare():
+    """R2 operations by bucket (month to date, last 24 h, GetObject per hour for 8 h) and data.anita.garden's
+    cache statuses for 24 h. None without a token; parts the token may not read come back as an error string."""
+    token = cf_token()
+    if not token:
         return None
-    start = dt.datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    q = {"query": """query($a: String!, $s: Time!, $e: Time!) { viewer { accounts(filter: {accountTag: $a}) {
-            r2OperationsAdaptiveGroups(limit: 1000, filter: {datetime_geq: $s, datetime_leq: $e}) {
-              sum { requests } dimensions { actionType } } } } }""",
-         "variables": {"a": acct, "s": start.strftime("%Y-%m-%dT%H:%M:%SZ"), "e": dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}}
-    req = urllib.request.Request("https://api.cloudflare.com/client/v4/graphql", data=json.dumps(q).encode(),
-                                 headers={"Authorization": "Bearer " + token, "Content-Type": "application/json", **UA})
-    d = json.loads(urllib.request.urlopen(req, timeout=60).read())
-    if d.get("errors"):
-        raise RuntimeError(str(d["errors"])[:200])
-    a = b = 0
-    for g in d["data"]["viewer"]["accounts"][0]["r2OperationsAdaptiveGroups"]:
-        t, n = g["dimensions"]["actionType"], g["sum"]["requests"]
-        if t in CLASS_A:
-            a += n
-        elif t not in FREE_OPS:
-            b += n
-    return a, b
+    out = {}
+    acct = cf_get(token, "/accounts")["result"][0]["id"]
+    now = dt.datetime.utcnow().replace(microsecond=0)
+    month0 = now.replace(day=1, hour=0, minute=0, second=0)
+    day0 = now - dt.timedelta(hours=24)
+    mtd, last24, hourly = {}, {}, {}
+    # The adaptive groups answer at most a few days per query, so the month goes in 3-day steps.
+    s = month0
+    while s < now:
+        e = min(now, s + dt.timedelta(days=3))
+        for g in cf_gql(token, R2_OPS_Q, {"a": acct, "s": iso(s), "e": iso(e)})["viewer"]["accounts"][0]["r2OperationsAdaptiveGroups"]:
+            k, n = g["dimensions"], g["sum"]["requests"]
+            cls = "A" if k["actionType"] in CLASS_A else None if k["actionType"] in FREE_OPS else "B"
+            if not cls:
+                continue
+            b = k["bucketName"] or "(account)"
+            mtd.setdefault(b, {"A": 0, "B": 0})[cls] += n
+            h = dt.datetime.strptime(k["datetimeHour"], "%Y-%m-%dT%H:%M:%SZ")
+            if h >= day0.replace(minute=0, second=0):
+                last24.setdefault(b, {"A": 0, "B": 0})[cls] += n
+            if b == "anitamaps" and k["actionType"] == "GetObject" and h >= now - dt.timedelta(hours=9):
+                hourly[k["datetimeHour"]] = hourly.get(k["datetimeHour"], 0) + n
+        s = e
+    out["mtd"], out["last24"], out["hourly"] = mtd, last24, dict(sorted(hourly.items()))
+    try:
+        zone = cf_get(token, "/zones?name=anita.garden")["result"][0]["id"]
+        q = """query($z: String!, $s: Time!, $e: Time!) { viewer { zones(filter: {zoneTag: $z}) {
+          httpRequestsAdaptiveGroups(limit: 100, filter: {datetime_geq: $s, datetime_leq: $e, clientRequestHTTPHost: "data.anita.garden"}) {
+            count dimensions { cacheStatus } } } } }"""
+        st = {}
+        for g in cf_gql(token, q, {"z": zone, "s": iso(day0), "e": iso(now)})["viewer"]["zones"][0]["httpRequestsAdaptiveGroups"]:
+            st[g["dimensions"]["cacheStatus"]] = st.get(g["dimensions"]["cacheStatus"], 0) + g["count"]
+        out["cache"] = st
+    except Exception as e:
+        out["cache"] = f"not readable ({e})"
+    return out
 
 
 # ── the web side ────────────────────────────────────────────────────────────────────────────────────────────
@@ -548,23 +590,55 @@ def main():
                             f"{fmt(vbytes, 'B')}; oldest {dated[0] if dated else '-'}; r2_purge.py keeps 3"))
             month = dt.datetime.utcnow().strftime("%Y-%m")
             uploads = sum(versions[v][1] for v in dated if v.startswith(month))
-            ops = None
-            try:
-                ops = r2_operations()
-            except Exception as e:
-                errors.append(f"R2 operations: {e}")
-            if ops:
-                rows.append(Row("r2", "Class A this month", ops[0], R2_FREE_A, ""))
-                rows.append(Row("r2", "Class B this month", ops[1], R2_FREE_B, ""))
-            else:
-                rows.append(Row("r2", "Class A this month (estimate)", uploads, R2_FREE_A, "", None,
-                                "objects in this month's data versions still on R2 (one upload each); purged ones not counted"))
-                if plays:
-                    est = plays * R2_READS_PER_PLAY * dim
-                    rows.append(Row("r2", "Class B a month (estimate)", est, R2_FREE_B, "", None,
-                                    f"{plays:,.0f} plays/day x {R2_READS_PER_PLAY} reads on a first load; a lower bound, real use is higher"))
         except Exception as e:
             errors.append(f"R2 listing failed: {e}")
+
+    # R2 operations and the data host's cache, from Cloudflare's analytics (the ops token)
+    cf = None
+    try:
+        cf = cloudflare()
+    except Exception as e:
+        errors.append(f"Cloudflare analytics: {e}")
+    today = dt.datetime.utcnow()
+    dim = ((today.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)).day
+    left = dim - today.day + (24 - today.hour) / 24.0  # days left in the month, today's rest included
+    if cf:
+        tot = {c: sum(v[c] for v in cf["mtd"].values()) for c in "AB"}
+        day = {c: sum(v[c] for v in cf["last24"].values()) for c in "AB"}
+        by = lambda c: ", ".join(f"{b} {v[c]:,}" for b, v in sorted(cf["last24"].items(), key=lambda x: -x[1][c]) if v[c])
+        for c, free, price in (("A", R2_FREE_A, 4.50), ("B", R2_FREE_B, 0.36)):
+            proj = tot[c] + day[c] * left
+            cost = max(0.0, proj - free) / 1e6 * price
+            rows.append(Row("r2", f"Class {c}, month (projected)", proj, free, "", None,
+                            f"{tot[c]:,} so far; last 24 h {day[c]:,} ({by(c) or 'none'}); about ${cost:,.2f} past the free tier"))
+        hours = list(cf["hourly"].items())[:-1]  # the current hour is partial
+        if hours:
+            rows.append(Row("r2", "anitamaps GetObject by hour", None, None, "", None,
+                            "  ".join(f"{h[11:13]}h {n / 1e6:.2f}M" for h, n in hours[-8:])))
+        st = cf["cache"]
+        if isinstance(st, dict) and st:
+            n = sum(st.values())
+            hit = sum(v for k, v in st.items() if k in ("hit", "stale", "revalidated", "updating"))
+            rows.append(Row("cache", "data.anita.garden hits, 24 h", hit, n, "", None,
+                            ", ".join(f"{k} {v:,}" for k, v in sorted(st.items(), key=lambda x: -x[1]))))
+        else:
+            rows.append(Row("cache", "data.anita.garden hits", None, None, "", None, str(st)))
+    elif not a.no_r2 and "uploads" in locals():
+        rows.append(Row("r2", "Class A this month (estimate)", uploads, R2_FREE_A, "", None,
+                        "no Cloudflare token: objects in this month's data versions still on R2"))
+        if plays:
+            rows.append(Row("r2", "Class B a month (estimate)", plays * R2_READS_PER_PLAY * dim, R2_FREE_B, "", None,
+                            f"no Cloudflare token: {plays:,.0f} plays/day x {R2_READS_PER_PLAY} reads on a first load, a lower bound"))
+    # A browser that may not store the game's data asks the edge again on every visit.
+    try:
+        # A GET for one byte: a HEAD skips the cache and the header the cache adds.
+        req = urllib.request.Request("https://data.anita.garden/trainworld/terrain-world/v1/index.bin", headers={"Range": "bytes=0-0", **UA})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            cc, cs = r.headers.get("cache-control", ""), r.headers.get("cf-cache-status", "?")
+        rows.append(Row("cache", "data.anita.garden browser caching", None, None, "", None, f"Cache-Control: {cc} ({cs})",
+                        missing="no-store" in cc or "no-cache" in cc))
+    except Exception as e:
+        errors.append(f"data cache headers: {e}")
 
     # GitHub Pages
     try:
