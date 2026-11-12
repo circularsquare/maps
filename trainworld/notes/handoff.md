@@ -104,7 +104,11 @@ All Opus, running, no commits (I land):
 - R2 real counts (resources, 2e0638d2): 674M Class B projected this month (~$239); cache rule cut ~15% only. Causes: "data bypass" browser TTL bypass -> no-store on trainworld data; no tiered cache. Asked her: Browser TTL "Respect origin" on "trainworld data" rule, Smart Shield/Tiered Cache, Zone Analytics: Read on the token. The bypass was for religiondots staleness (memory), not T-1635.
 - 11-12 ~04:15Z: she set Browser TTL respect origin on "trainworld data" (verified: no no-store, max-age 1y immutable, Range 206 MISS->HIT), Smart Shield on, token has Zone Analytics Read. Hourly R2 re-check running (bcuzri9cv, ~05:15Z); she wants frequent checks for now.
 - Her TODO 11-12 filed T-3257..T-3267. Agents: buildfix a4d09f6f5baf12d0c (T-3260..3263, 6143), commview afcbcaeb2cb0fb5be (T-3257..3259, 6144, shonei-server commits), satfade = satbuild resumed (T-3267), hexterrain aaac72d73e4b15746 (T-3266, Sonnet, 6145), sbahn ae8f4f1cf4c2bb5e9 (T-3265, 6146), trainsdraw a924318684a130567 (T-3264 proposal, 6147). Also running: aimpact a0a866213491b49cb, pull2 a1242c4c91eb0c0c7.
-Next free id T-3268.
+- satfade done: T-3267 landed 9ced7beb; **8800 = 9ced7beb**, smoke PASSED.
+- 11-12 ~05:00Z (she heads to bed): pull2 done (T-3254 committed 1e18c190: gamma 0.6, fade 300-700 km, RU/TR off, China 0.6 since 0.8 overshoots Beijing-Shanghai; Poland-only factor = her call). Resumed split (zoomed-out thickening), boards (best game on EVERY board). New: zoombtn a89c7c2c54b523ba9 (T-3268, 6148), flags aee74445698fcc4c7 (T-3269, 6149), rbprep a75a6269120e3d2c7 (T-3244 build, scratch only), airports accd664886e499af4 (T-2896 1-5, scratch only). Website about page: satellite credit line added, uncommitted, ships with the release that has satellite.
+- OVERNIGHT: no deploys/publishes/server deploys (her rule). Land agents to master + 8800 with smoke; R2 hourly checks; next translation batch once UI strings settle; record her calls.
+- boards round 3 done: every board = best game there; shonei-server efb2cd6, NOT deployed (morning, her word). Her "North America" was the US board (14,049, rank 29).
+Next free id T-3270.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
