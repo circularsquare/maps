@@ -501,21 +501,29 @@ def run(blocks_path: str, outdir: str, jobs: int, fetchers: int, part_gb: float,
     done_n = 0
     failed = []
 
+    def write_manifest():
+        tmp = man_path.with_suffix(".json.part")
+        tmp.write_text(json.dumps(manifest), encoding="utf-8")
+        os.replace(tmp, man_path)
+
     def ship_part():
         nonlocal part_bytes, part_files, part_keys
         if not part_keys:
             return
         k = len(manifest["parts"])
         name = f"part{k}.tar"
-        with tarfile.open(out / name, "w") as tf:
+        # under a temp name, then replaced: readers of the folder (the world terrain build) never see half a tar
+        tmp = out / (name + ".part")
+        with tarfile.open(tmp, "w") as tf:
             for f in part_files:
                 tf.add(out / f, arcname=f)
+        os.replace(tmp, out / name)
         for f in part_files:
             (out / f).unlink()
         manifest["blocks"].update(part_keys)
         manifest["parts"].append({"name": name, "files": len(part_files), "bytes": (out / name).stat().st_size,
                                   "blocks": sorted(part_keys)})
-        man_path.write_text(json.dumps(manifest), encoding="utf-8")
+        write_manifest()
         print(f"part {name}: {len(part_files)} blocks, {(out / name).stat().st_size / 1e9:.2f} GB", flush=True)
         if send:
             r = subprocess.run([send, str(out / name), str(k)])
@@ -571,7 +579,7 @@ def run(blocks_path: str, outdir: str, jobs: int, fetchers: int, part_gb: float,
     ship_part()
     print(f"done: {done_n} blocks, {len([v for v in manifest['blocks'].values() if v])} files, "
           f"{len(failed)} left for a rerun {failed[:20]}, {(time.time() - t0) / 60:.0f} min", flush=True)
-    man_path.write_text(json.dumps(manifest), encoding="utf-8")
+    write_manifest()
 
 
 def check(la: int, lo: int, path: str) -> None:
