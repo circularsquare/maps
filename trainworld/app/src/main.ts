@@ -93,6 +93,7 @@ import { diagramShown, startDiagramView } from "./diagram/view";
 import { BlueprintBar } from "./ui/Blueprint";
 import { MapToolBar } from "./ui/ToolBar";
 import { startTroubleList } from "./ui/TroubleList";
+import { startZoomButtons } from "./ui/ZoomButtons";
 import { mountGuide } from "./ui/Guide";
 import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
@@ -195,6 +196,7 @@ const skyRoot = document.createElement("div");
 map.getContainer().appendChild(skyRoot);
 render(h(MapSky, null), skyRoot); // T-1868: the day and night picture at the map's top right
 startTroubleList(map.getContainer()); // T-1433: what is wrong on the network, at the lower right
+startZoomButtons(map); // T-3268: plus and minus at the right edge, Settings > Map hides them
 mountGuide(map.getContainer()); // T-1822: the Getting started card under the day and night picture
 mountKeepDot(); // T-1832: counts the hour of play before the yellow dot by the search glass shows
 const renderer = new NetworkRenderer();

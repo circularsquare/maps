@@ -165,6 +165,9 @@ export function SettingsTab() {
         <Check checked={d.rotateMap} onChange={(v) => setDisplay("rotateMap", v)}>
           {t("settingsTab.rotate")}
         </Check>
+        <Check checked={d.zoomButtons} onChange={(v) => setDisplay("zoomButtons", v)}>
+          {t("settingsTab.zoomButtons")}
+        </Check>
       </div>
       <div class="h">{t("settingsTab.theme")}</div>
       <div class="stack">

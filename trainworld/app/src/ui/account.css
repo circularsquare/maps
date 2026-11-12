@@ -17,7 +17,8 @@
 .acct-google { min-height: 32px; margin-bottom: 10px; }
 .acct-msg { margin: 8px 0 0; color: var(--muted); }
 .acct-warn { color: var(--bad); }
-.acct-legal { margin: 19px 0 0; }
+/* .acct-panel p (0,1,1) beat the bare class and zeroed this margin, which is why the links sat against the buttons */
+.acct-panel .acct-legal { margin: 20px 0 0; }
 .acct-legal a { color: inherit; }
 /* the person icon on the start menu card, at its top right */
 .start-box { position: relative; }

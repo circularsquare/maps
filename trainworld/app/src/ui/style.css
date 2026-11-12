@@ -1762,6 +1762,10 @@ button.save-add:hover { color: var(--text); }
 .trouble { position: absolute; right: 10px; bottom: 10px; z-index: 4; zoom: var(--ui, 1);
   display: flex; flex-direction: column; align-items: flex-end; max-width: calc(100% - 20px); }
 .choosing .trouble { visibility: hidden; }
+/* T-3268: zoom buttons stacked at the map's right edge, halfway down, clear of the corners' sky, trouble list and attribution */
+.map-zoom { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3; zoom: var(--ui, 1);
+  display: flex; flex-direction: column; gap: 4px; }
+.choosing .map-zoom { visibility: hidden; }
 /* T-2125: what the last edit did, under the view rows at the upper left: text on the map with a halo,
    no box, each figure after a green up or red down arrow; the passing note (the feedback's "sent", T-2166) in the same look */
 .edit-note { display: flex; flex-direction: column; gap: 2px; padding: 2px 0; font-size: 12px; color: var(--text);
@@ -1873,7 +1877,7 @@ button.save-add:hover { color: var(--text); }
 .stn-label, .pi-label, .tool-tag, .intercity-label { font-size: calc(12px * var(--ui, 1)); }
 
 /* T-1491: F2 hides the interface for screenshots (ui/hideUi.ts); the map, network, bubbles, labels and hover tags stay */
-html.ui-hidden :is(.marey, #dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
+html.ui-hidden :is(.marey, #dock, #topbar, #tools, #tool-notes, #debug, .save-notice, .map-top-left, .map-search, .blueprint-bar, .blueprint-levels, .tool-bar, .tool-bar-pop, .mode-aura, .trouble, .map-zoom, .guide, .keep-dot, .help-panel, .touch-bar-host, .loading-card-wrap, .map-sky, #map .maplibregl-control-container) { display: none !important; }
 /* T-1548: the reminder at the top centre while the mouse moves (ui/hideUi.ts); no transition */
 .ui-hint { display: none; position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 1000; pointer-events: none;
   font-size: 12px; color: var(--map-ink); background: color-mix(in srgb, var(--map-land) 88%, transparent);

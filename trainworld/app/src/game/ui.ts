@@ -108,6 +108,8 @@ export interface DisplaySettings {
   lighterMap: "on" | "off";
   /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
   rotateMap: boolean;
+  /** T-3268: the plus and minus buttons at the map's right edge (ui/ZoomButtons.tsx) */
+  zoomButtons: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
   chartOtherLines: boolean;
   /** T-2838: a phone or tablet calculates trips between cities too (the market opens); per browser, since it is
@@ -160,6 +162,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   hillshade: false,
   lighterMap: "off",
   rotateMap: false,
+  zoomButtons: true,
   chartOtherLines: true,
   mobileIntercity: false,
 };
