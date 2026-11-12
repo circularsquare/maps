@@ -125,7 +125,10 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   junctions as of stations, and of every mark on the track (ramps, flat crossings and junctions,
   unusable one-way track, T-3189): one that would sit on one is skipped. A line is drawn on the track its return run takes too, where that is
   not its path backward (a flyover's other leg): stroked in its colour, in its stretches, and
-  picked out with it when selected.
+  picked out with it when selected. That run's trains are drawn along it, as the sim runs them [T-3250]:
+  the clock worker samples the run on its own (`run_polyline` run 1) into a second half of the line
+  table (row lines + line, `backSlotOf`), and the train shader, `tripAt`, picking and the train guard
+  place them along that row as a run 0 of its own.
 - **Turn-back crossovers** [T-658d, `turnbackStrokes` in `map/network.ts`]: close in only, where
   a line ends at a double-track station, the crossover the game assumes there (6.2) is drawn in
   bare-track grey over the line's two tracks, 50 m long: a scissors (both diagonals) just outside

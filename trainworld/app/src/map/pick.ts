@@ -10,7 +10,7 @@
 import { clock } from "../game/clock";
 import { world } from "../game/world";
 import type { Selection } from "../game/types";
-import { carsOf, F_BLUEPRINT, profileS, trainCarAt, tripAt, type NetworkBuffers } from "./network";
+import { carsOf, F_BLUEPRINT, profileS, trainCarAt, trainFrame, tripAt, type NetworkBuffers } from "./network";
 import { BAY_STRIDE } from "./terminalBays";
 import type { Overlay } from "./overlay";
 import { CellLevels } from "./cellIndex";
@@ -299,12 +299,12 @@ function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number
 function tripMayBeNear(n: NetworkBuffers, lb: LineBlocks, profile: number, dep: number, t: number): boolean {
   const tau = t - dep;
   if (tau < 0 || !n.meta[profile * 4 + 1]) return false;
-  const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
+  const line = Math.floor(profile / 6);
   if (line * 4 + 3 >= n.lineTable.length) return true;
-  const s = profileS(n, profile, tau), plen = n.meta[profile * 4 + 3];
-  const d = run === 0 ? s : plen - s;
-  const count = n.lineTable[line * 4 + 1], len = n.lineTable[line * 4 + 2], step = n.lineTable[line * 4 + 3];
-  const f = lb.first[line], nb = lb.first[line + 1] - f;
+  // (a return run on its own way back is placed along its own slot, T-3250)
+  const { geo, d } = trainFrame(n, profile, profileS(n, profile, tau));
+  const count = n.lineTable[geo * 4 + 1], len = n.lineTable[geo * 4 + 2], step = n.lineTable[geo * 4 + 3];
+  const f = lb.first[geo], nb = lb.first[geo + 1] - f;
   if (!(step > 0) || count < 2) return lb.mark[f] === 1;
   const margin = Math.max(1, carsOf(n.lineCars?.[line] ?? 8)) * 20 + 30;
   const blockAt = (dd: number) => Math.min(nb - 1, Math.floor(Math.min(Math.floor(Math.max(0, Math.min(len, dd)) / step), count - 2) / BLOCK));

@@ -31,7 +31,7 @@ import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
-import { F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
+import { backBaseOf, F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
@@ -720,7 +720,7 @@ export class NetworkRenderer {
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -2360,6 +2360,7 @@ export class NetworkRenderer {
     bind(4, this.tex.meta, u.u_meta);
     bind(0, this.tex.samples, u.u_samples);
     bind(1, this.tex.lines, u.u_lines);
+    gl.uniform1i(u.u_back_base, this.net ? backBaseOf(this.net.lineTable, this.net.meta) : 0);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this.tex.colours);
   }
@@ -2373,7 +2374,7 @@ export class NetworkRenderer {
     const gl = this.gl;
     if (!this.probeProg) {
       this.probeProg = compile(gl, PROBE_VS, PROBE_FS, ["v_pos"]);
-      this.probeU = uniforms(gl, this.probeProg, ["u_time", "u_phases", "u_meta", "u_samples", "u_lines"]);
+      this.probeU = uniforms(gl, this.probeProg, ["u_time", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base"]);
     }
     this.releaseStaged(time);
     const uTime = this.sync(time);

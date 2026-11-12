@@ -1324,6 +1324,8 @@ interface LineEntry {
   band: Float32Array | null;
   strokes: Strokes;
   firstStroke: number[];
+  /** T-3250: per entry of `back`, its first stroke segment (the path's own on an edge both use), -1 none */
+  backStroke: number[];
 }
 /** A line's `lineTrainSpeeds` and what they were worked out from. */
 interface LineSpeeds {
@@ -1656,13 +1658,18 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         }
       });
       // T-3117: track only the return run takes (a flyover's other leg), its stretch counted from the far end
+      const backStroke = (l.back ?? []).map(() => -1);
       if (l.back?.length) {
-        const own = new Set(l.path.map((p) => p >> 1)), last = Math.max(0, l.stops.length - 2);
+        const own = new Map<number, number>();
+        l.path.forEach((p, k) => { if (!own.has(p >> 1)) own.set(p >> 1, firstStroke[k]); });
+        const last = Math.max(0, l.stops.length - 2);
         let bd = 0, back = 0, nextBack = l.stops.length - 2;
-        for (const p of l.back) {
+        for (const [j, p] of l.back.entries()) {
           const e = p >> 1, dr = drawn.get(e), ends = edgeEnds.get(e);
-          if (dr && !own.has(e)) {
+          if (own.has(e)) backStroke[j] = own.get(e)!;
+          else if (dr) {
             const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.tram && tramEdge.has(e) ? F_TRAM : 0);
+            if (dr.lpts.length >= 6) backStroke[j] = lines.count;
             bd = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, bd, Math.max(0, Math.min(last, last - back)), dr.lane);
           }
           const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
@@ -1672,60 +1679,70 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           }
         }
       }
-      c = { path: l.path.slice(), back: (l.back ?? []).slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke };
+      c = { path: l.path.slice(), back: (l.back ?? []).slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke, backStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);
     const base = lineCount;
     lineCount += c.strokes.count;
-    // each train sample's stroke segment (run 0 resampled every `step` m) and lane, per line (T-1029)
-    const first = r.lineTable[l.id * 4], count = r.lineTable[l.id * 4 + 1], step = r.lineTable[l.id * 4 + 3];
-    const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
-    let sm = cache.samples.get(l.id);
-    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
-      const firstStroke = c.firstStroke;
-      // a bus has one centre line, not two tracks (T-1464)
-      const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count * 2 : 0);
-      let j = 0, end = lens[0] ?? 0;
-      for (let k = 0; k < count; k++) {
-        const at = k * step;
-        while (j < l.path.length - 1 && at > end) end += lens[++j];
-        rel[k] = firstStroke[j] ?? -1;
-        // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers or splits (T-3212)
-        const p = l.path[j], dr = drawn.get(p >> 1), len = lens[j] ?? 0;
-        if (dr) {
+    // each train sample's stroke segment (run 0 resampled every `step` m) and lane, per line (T-1029);
+    // and a return run's own samples, where it takes its own way back (T-3250, `backSlot`)
+    const fwdAt = new Map<number, number>();
+    l.path.forEach((p, k) => { if (!fwdAt.has(p >> 1)) fwdAt.set(p >> 1, k); });
+    const runSamples = (slot: number, path: readonly number[], strokeOf: readonly number[], back: boolean) => {
+      const first = r.lineTable[slot * 4], count = r.lineTable[slot * 4 + 1], step = r.lineTable[slot * 4 + 3];
+      const lens = path.map((p) => edgeLen.get(p >> 1) ?? 0);
+      let sm = cache.samples.get(slot);
+      if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
+        // a bus has one centre line, not two tracks (T-1464)
+        const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c!.band ? count * 2 : 0);
+        let j = 0, end = lens[0] ?? 0;
+        for (let k = 0; k < count; k++) {
+          const at = k * step;
+          while (j < path.length - 1 && at > end) end += lens[++j];
+          rel[k] = strokeOf[j] ?? -1;
+          // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers or splits (T-3212)
+          const p = path[j], dr = drawn.get(p >> 1), len = lens[j] ?? 0;
           const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
-          lane[k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
+          if (dr) lane[k] = laneAlong(dr, (p & 1) === 1 ? 1 - along : along);
+          // its band's shift (T-1799) and metres (T-2132), left of run 0; a return run's own samples take
+          // the path's on an edge both use, turned round where it runs the other way (they are left of its own way)
+          if (c!.band) {
+            const f = back ? fwdAt.get(p >> 1) : j;
+            if (f === undefined) continue;
+            const flip = back && (l.path[f] & 1) !== (p & 1);
+            const v = profileAt(c!.band, f, flip ? 1 - along : along);
+            bandOf[k * 2] = flip ? -v[0] : v[0];
+            bandOf[k * 2 + 1] = flip ? -v[2] : v[2];
+          }
         }
-        // its band's shift (T-1799) and metres (T-2132), left of run 0
-        if (c.band) {
-          const v = profileAt(c.band, j, len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0);
-          bandOf[k * 2] = v[0];
-          bandOf[k * 2 + 1] = v[2];
+        sm = { c: c!, count, step, lens, rel, lane, band: bandOf };
+      }
+      samplesSeen.set(slot, sm);
+      const stretchOf = c!.strokes.stretch!;
+      for (let k = 0; k < count; k++) {
+        const f = sm.rel[k];
+        sampleStroke[first + k] = f < 0 ? -1 : base + f;
+        if (f >= 0) sampleStretch[first + k] = stretchOf[f];
+      }
+      sampleLane.set(sm.lane, first);
+      if (sm.band.length) sampleBand.set(sm.band, first * 2);
+      if (passingAt.size && !l.bus) {
+        // (a return run's own stops go on a scratch list: the outer tracks are drawn from its path's)
+        const mine = linePassing(back ? { ...l, path: path as number[], stops: l.stops.slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
+        for (let k = 0; k < count && mine.length; k++) {
+          let v = 1e9;
+          for (let j = 0; j < mine.length; j += 4) {
+            const x = k * step - mine[j], past = Math.abs(x) - mine[j + 1];
+            v = Math.min(v, past > 0 ? past * PASS_LEAD_M / mine[x < 0 ? j + 2 : j + 3] : past);
+          }
+          samplePass[first + k] = v;
         }
       }
-      sm = { c, count, step, lens, rel, lane, band: bandOf };
-    }
-    samplesSeen.set(l.id, sm);
-    const stretchOf = c.strokes.stretch!;
-    for (let k = 0; k < count; k++) {
-      const f = sm.rel[k];
-      sampleStroke[first + k] = f < 0 ? -1 : base + f;
-      if (f >= 0) sampleStretch[first + k] = stretchOf[f];
-    }
-    sampleLane.set(sm.lane, first);
-    if (sm.band.length) sampleBand.set(sm.band, first * 2);
-    if (passingAt.size && !l.bus) {
-      const mine = linePassing(l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, passing);
-      for (let k = 0; k < count && mine.length; k++) {
-        let v = 1e9;
-        for (let j = 0; j < mine.length; j += 4) {
-          const x = k * step - mine[j], past = Math.abs(x) - mine[j + 1];
-          v = Math.min(v, past > 0 ? past * PASS_LEAD_M / mine[x < 0 ? j + 2 : j + 3] : past);
-        }
-        samplePass[first + k] = v;
-      }
-    }
+    };
+    runSamples(l.id, l.path, c.firstStroke, false);
+    const slot = backSlotOf(r.lineTable, r.meta, l.id);
+    if (slot >= 0 && l.back?.length) runSamples(slot, l.back, c.backStroke ?? [], true);
   }
   cache.lines = linesSeen;
   cache.samples = samplesSeen;
@@ -1910,17 +1927,24 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, clear, oneWayTrack);
     }
   }
-  const pathTable = new Int32Array(Math.max(1, maxLine + 1) * 2);
-  let pathN = 0;
-  for (const l of s.lines) if (l.ok) pathN += l.path.length;
-  const pathEntry = new Int32Array(pathN), pathFrom = new Float32Array(pathN), pathLen = new Float32Array(pathN);
-  pathN = 0;
+  // per line its path, and per return run on its own way back (T-3250) that way, at its `backSlot`
+  const runPaths: [number, number[]][] = [];
   for (const l of s.lines) {
     if (!l.ok) continue;
-    pathTable[l.id * 2] = pathN;
-    pathTable[l.id * 2 + 1] = l.path.length;
+    runPaths.push([l.id, l.path]);
+    const slot = backSlotOf(r.lineTable, r.meta, l.id);
+    if (slot >= 0 && l.back?.length) runPaths.push([slot, l.back]);
+  }
+  const pathTable = new Int32Array(Math.max(1, maxLine + 1, r.lineTable.length / 4) * 2);
+  let pathN = 0;
+  for (const [, path] of runPaths) pathN += path.length;
+  const pathEntry = new Int32Array(pathN), pathFrom = new Float32Array(pathN), pathLen = new Float32Array(pathN);
+  pathN = 0;
+  for (const [id, path] of runPaths) {
+    pathTable[id * 2] = pathN;
+    pathTable[id * 2 + 1] = path.length;
     let d = 0;
-    for (const p of l.path) {
+    for (const p of path) {
       const len = edgeLen.get(p >> 1) ?? 0;
       pathEntry[pathN] = p;
       pathFrom[pathN] = d;
@@ -2070,7 +2094,7 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
  * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
  * metres to the ribbon's middle are taken (`NetworkRenderer.bandOn`, T-2132). `passM`: metres out to a
  * passing station's outer track, where its trains stop (T-2233, `NetworkRenderer.passShiftM`). */
-export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0, bay?: ArrayLike<number>, bayAt = 0): { x: number; y: number; s: number; run: number; line: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number; ex: number; lo: number; hi: number; across: (x: number) => number } | null {
+export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: number, end = -Infinity, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0, bay?: ArrayLike<number>, bayAt = 0): { x: number; y: number; s: number; run: number; line: number; geo: number; gr: number; dx: number; dy: number; shiftM: number; bandM: number; band?: Float32Array; bandOn: number; passM: number; ex: number; lo: number; hi: number; across: (x: number) => number } | null {
   const tau = t - dep;
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
@@ -2079,12 +2103,36 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const trainM = trainLengthM(n, line);
-  const across = (x: number) => (bay ? acrossAt(bay, bayAt, run, len, x, trainM) : 1);
+  // T-3250: a return run on its own way back is drawn along it, as a run 0 of its own (`geo`, `gr`)
+  const { geo, gr, d } = trainFrame(n, profile, s);
+  const across = (x: number) => (bay ? acrossAt(bay, bayAt, gr, len, x, trainM) : 1);
   const [pa, pb] = bay ? [bay[bayAt + 1], bay[bayAt + 3]] : [-1, -1];
   // the nearest its middle may come to either end of run 0 (T-3053), as the train shader clamps it
-  const lo = endClear(run === 0 ? pa : pb, trainM), hi = len - endClear(run === 0 ? pb : pa, trainM);
-  const d = run === 0 ? s : len - s;
-  return { ...pointAt(n, line, d, run, shiftM * across(d), bandM, band, bandOn, passM), s, run, line, shiftM, bandM, band, bandOn, passM, ex: 0, lo, hi, across };
+  const lo = endClear(gr === 0 ? pa : pb, trainM), hi = len - endClear(gr === 0 ? pb : pa, trainM);
+  return { ...pointAt(n, geo, d, gr, shiftM * across(d), bandM, band, bandOn, passM), s, run, line, geo, gr, shiftM, bandM, band, bandOn, passM, ex: 0, lo, hi, across };
+}
+
+/** T-3250: the line table's slot of a line's return run where it takes its own way back (the clock
+ * worker's second half of the table, after the `meta` lines), else -1. */
+export function backSlotOf(table: ArrayLike<number>, meta: ArrayLike<number>, line: number): number {
+  const lines = backBaseOf(table, meta);
+  if (!lines || line >= lines) return -1;
+  return table[(lines + line) * 4 + 1] >= 2 ? lines + line : -1;
+}
+
+/** T-3250: the lines in the line table when it has a second half of return runs' own slots, else 0
+ * (the train shader's `u_back_base`). */
+export function backBaseOf(table: ArrayLike<number>, meta: ArrayLike<number>): number {
+  const lines = meta.length / 24;
+  return lines > 0 && table.length >= lines * 8 ? lines : 0;
+}
+
+/** Where profile `p`'s train `s` m along its run is drawn: the line table's row (`geo`, its line or
+ * its return run's own slot), the run it is drawn as (`gr`) and the offset along that row. */
+export function trainFrame(n: Pick<NetworkBuffers, "lineTable" | "meta">, p: number, s: number): { geo: number; gr: number; d: number } {
+  const line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
+  const slot = run === 1 ? backSlotOf(n.lineTable, n.meta, line) : -1;
+  return slot >= 0 ? { geo: slot, gr: 0, d: s } : { geo: line, gr: run, d: run === 0 ? s : n.meta[p * 4 + 3] - s };
 }
 
 /** A line's train as drawn, m: its cars at 20 m, a bus or boat as the train shader has it. */
@@ -2144,13 +2192,13 @@ function rightOf(n: NetworkBuffers, line: number, d: number, y: number, dx: numb
 /** A close-up car's centre and bogies, matching the GPU's terminal clamp and 20 m pitch. */
 export function trainCarAt(n: NetworkBuffers, at: NonNullable<ReturnType<typeof tripAt>>, car: number) {
   const raw = n.lineCars?.[at.line] ?? 8, cars = Math.max(1, raw);
-  const len = n.lineTable[at.line * 4 + 2], total = Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), len);
-  const d = at.run === 0 ? at.s : len - at.s;
+  const len = n.lineTable[at.geo * 4 + 2], total = Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), len);
+  const d = at.gr === 0 ? at.s : len - at.s;
   const centre = Math.max(at.lo, Math.min(Math.max(at.lo, at.hi), d)) + at.ex;
   const carD = centre + (car + 0.5) * total / cars - total / 2;
   const half = Math.max(total / cars / 2 - 0.5, 1);
-  const p = pointAt(n, at.line, carD, at.run, at.shiftM * at.across(carD), at.bandM, at.band, at.bandOn, at.passM);
-  const [cx, cy] = lineAtX(n, at.line, carD), ox = p.x - cx, oy = p.y - cy;
-  const [bx, by] = lineAtX(n, at.line, carD - half), [fx, fy] = lineAtX(n, at.line, carD + half);
+  const p = pointAt(n, at.geo, carD, at.gr, at.shiftM * at.across(carD), at.bandM, at.band, at.bandOn, at.passM);
+  const [cx, cy] = lineAtX(n, at.geo, carD), ox = p.x - cx, oy = p.y - cy;
+  const [bx, by] = lineAtX(n, at.geo, carD - half), [fx, fy] = lineAtX(n, at.geo, carD + half);
   return { ...p, back: [bx + ox, by + oy] as [number, number], front: [fx + ox, fy + oy] as [number, number] };
 }

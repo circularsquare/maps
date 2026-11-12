@@ -29,7 +29,7 @@
 // only draws where it is spent. The two meet at a station, drawn there as on two tracks
 // (terminalBays.ts `singleSplitEnds`, its track split there, T-3212, and `terminalEnds` for a line's ends). `?perfOff=singleWait` turns it off.
 
-import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
+import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, trainFrame, type NetworkBuffers } from "./network";
 import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";
 
 /** T-2980: the place a trip leaving a dead end starts from, as arriving trains number them (its own
@@ -225,30 +225,32 @@ export class TrainGuard {
     this.guarded = this.guardedTrack;
     if (!T || !E) return;
     this.readConflicts(n.conflicts);
+    // a row of the path table past the lines is a return run's own way back, its line's (T-3250)
+    const base = n.meta.length / 24, lineOf = (l: number) => (base > 0 && l >= base ? l - base : l);
     // a track key is shared when two lines use it
     const owner = new Map<number, number>();
     const shared = new Set<number>();
     for (let l = 0; l < lines && 2 * l + 1 < T.length; l++) {
-      const f = T[2 * l], c = T[2 * l + 1];
+      const f = T[2 * l], c = T[2 * l + 1], ln = lineOf(l);
       for (let k = f; k < f + c; k++) {
         const p = E[k];
         for (const key of [p, p ^ 1]) {
           const o = owner.get(key);
-          if (o === undefined) owner.set(key, l);
-          else if (o !== l) shared.add(key);
+          if (o === undefined) owner.set(key, ln);
+          else if (o !== ln) shared.add(key);
         }
       }
     }
     for (let l = 0; l < lines && 2 * l + 1 < T.length; l++) {
-      const f = T[2 * l], c = T[2 * l + 1];
-      if ((n.lineCars?.[l] ?? 8) < 1) continue; // a bus runs on roads
+      const f = T[2 * l], c = T[2 * l + 1], ln = lineOf(l);
+      if ((n.lineCars?.[ln] ?? 8) < 1) continue; // a bus runs on roads
       for (let k = f; k < f + c; k++) {
-        if (shared.has(E[k]) || shared.has(E[k] ^ 1)) { this.guardedTrack[l] = this.guardedAll[l] = 1; break; }
-        if (this.crossOn.has(E[k] >> 1) || (k + 1 < f + c && (this.moveIdx.has(E[k] * MOVE_KEY + E[k + 1]) || this.moveIdx.has((E[k + 1] ^ 1) * MOVE_KEY + (E[k] ^ 1))))) this.guardedAll[l] = 1;
+        if (shared.has(E[k]) || shared.has(E[k] ^ 1)) { this.guardedTrack[ln] = this.guardedAll[ln] = 1; break; }
+        if (this.crossOn.has(E[k] >> 1) || (k + 1 < f + c && (this.moveIdx.has(E[k] * MOVE_KEY + E[k + 1]) || this.moveIdx.has((E[k + 1] ^ 1) * MOVE_KEY + (E[k] ^ 1))))) this.guardedAll[ln] = 1;
       }
     }
     if (this.singles) this.readSingles(n.singles, lines);
-    for (const l of this.singleOn.keys()) if ((n.lineCars?.[l] ?? 8) >= 1) this.guardedTrack[l] = this.guardedAll[l] = 1;
+    for (const l of this.singleOn.keys()) if ((n.lineCars?.[lineOf(l)] ?? 8) >= 1) this.guardedTrack[lineOf(l)] = this.guardedAll[lineOf(l)] = 1;
     this.trackBase = this.guardedTrack.slice();
     this.allBase = this.guardedAll.slice();
     this.baysFor = null;
@@ -266,6 +268,9 @@ export class TrainGuard {
         if (y > y1) y1 = y;
       }
       box.set([x0, y0, x1, y1], l * 4);
+      // (a return run's own way back widens its line's box)
+      const ln = lineOf(l);
+      if (ln !== l && count > 0) box.set([Math.min(x0, box[ln * 4]), Math.min(y0, box[ln * 4 + 1]), Math.max(x1, box[ln * 4 + 2]), Math.max(y1, box[ln * 4 + 3])], ln * 4);
     }
   }
 
@@ -457,10 +462,10 @@ export class TrainGuard {
       const s = profileS(n, p, tau);
       // (a line on single track in view has all its trains looked at: the one coming the other way
       // onto a stretch in view is often far out of it, T-3202)
-      if (f.project && !(this.singles && this.singleOn.has(line))) {
-        // the nearest run 0 sample is near enough for the view
-        const run = Math.floor(p / 3) % 2, d = run === 0 ? s : meta[p * 4 + 3] - s;
-        const first = n.lineTable[line * 4], count = n.lineTable[line * 4 + 1], step = n.lineTable[line * 4 + 3];
+      const { geo, d } = trainFrame(n, p, s);
+      if (f.project && !(this.singles && (this.singleOn.has(line) || this.singleOn.has(geo)))) {
+        // the nearest sample of the row it is drawn along is near enough for the view
+        const first = n.lineTable[geo * 4], count = n.lineTable[geo * 4 + 1], step = n.lineTable[geo * 4 + 3];
         const si = first + Math.max(0, Math.min(count - 1, Math.round(d / step)));
         const q = f.project(n.samples[si * 2], n.samples[si * 2 + 1]);
         const px = q[0], py = q[1];
@@ -497,7 +502,8 @@ export class TrainGuard {
     const regs = new Map<number, number[]>();
     const sNew = cs.slice();
     for (let c = 0; c < cand.length; c++) {
-      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
+      // (a return run on its own way back takes that way's entries, as a run 0, T-3250)
+      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), { geo, gr: run } = trainFrame(n, p, 0);
       // on a line here for its conflicts alone (it shares no track), a train standing out its turn
       // at the end of its run holds no one: the next one, late from a wait, would queue behind it
       // there and pass its lateness on to the one after, and so on (lags to the 20-minute cap)
@@ -505,7 +511,7 @@ export class TrainGuard {
       // T-2980: nor one standing at an end with two places: it is on its own platform or siding,
       // and a train due at its place waits for it below
       if (f.bays && f.bays[i * BAY_STRIDE + 2] >= 0 && tauOf[c] >= arriveS(n, p)) continue;
-      const L = meta[p * 4 + 3], first = T[line * 2], count = T[line * 2 + 1];
+      const L = meta[p * 4 + 3], first = T[geo * 2], count = T[geo * 2 + 1];
       const was = prevS[i];
       const a = Math.min(cs[c], Number.isNaN(was) ? cs[c] : was) - half[c], b = cs[c] + half[c] + gapM + 10;
       // the entries in run 0's offsets [d0, d1]
@@ -668,8 +674,8 @@ export class TrainGuard {
       else regs.set(res, [c, route, sx]);
     };
     for (let c = 0; c < cand.length; c++) {
-      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
-      const L = meta[p * 4 + 3], first = T[line * 2], count = T[line * 2 + 1];
+      const i = cand[c], p = f.trips[i * 2], { geo, gr: run } = trainFrame(n, p, 0);
+      const L = meta[p * 4 + 3], first = T[geo * 2], count = T[geo * 2 + 1];
       const was = prevS[i], s = cs[c], h = half[c];
       // a conflict at sx concerns it from its front at the hold point (sx - h - before) to its back
       // clear (sx + h + after), since where it was last frame; and one whose hold point it reaches
@@ -863,8 +869,8 @@ export class TrainGuard {
     // per stretch: candidate, way over it, A, B, already on it (1) or not
     const regs = new Map<number, number[]>();
     for (let c = 0; c < cand.length; c++) {
-      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
-      const st = this.singleOn.get(line);
+      const i = cand[c], p = f.trips[i * 2], { geo, gr: run } = trainFrame(n, p, 0);
+      const st = this.singleOn.get(geo);
       if (!st) continue;
       const L = meta[p * 4 + 3], base = f.trips[i * 2 + 1] + lag[i];
       // the stretches in the order this run meets them
@@ -963,7 +969,8 @@ export class TrainGuard {
     const meta = this.net!.meta, out = new Int32Array(cand.length).fill(-1);
     for (let c = 0; c < cand.length; c++) {
       const p = f.trips[cand[c] * 2], st = this.passStops.get(Math.floor(p / 6));
-      if (!st) continue;
+      // (the stops are along its path: a return run on its own way back is not looked for on them, T-3250)
+      if (!st || trainFrame(this.net!, p, 0).geo !== Math.floor(p / 6)) continue;
       const run0 = Math.floor(p / 3) % 2 === 0, L = meta[p * 4 + 3], s = cs[c], h = half[c];
       for (let k = 0; k < st.length; k += 5) {
         // the outer track's leads in its travel direction: in before the platform, out after it

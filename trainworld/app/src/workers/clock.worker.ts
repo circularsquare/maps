@@ -1631,14 +1631,18 @@ function forget(all = false) {
     lineDrawn.clear();
     edgeMerc.clear();
     lineMerc.clear();
+    backDrawn.clear();
     shiftFrom = null;
     stateRows.reset();
     platformLines.clear();
     postWhole();
     return;
   }
-  for (const e of api!.dirty_edges()) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); platformLines.forgetEdge(e); }
-  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); }
+  const edges = api!.dirty_edges();
+  for (const e of edges) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); platformLines.forgetEdge(e); }
+  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); backDrawn.delete(l); }
+  // (a way back is not on the edges' lines: any track edit may move one)
+  if (edges.length) backDrawn.clear();
 }
 
 /** The track model's mark rows (`crossings_info`, `preview_marks`) with x, y moved to local units. */
@@ -1701,6 +1705,24 @@ function drawnLine(a: TrackApi, id: number): Float32Array {
   }
   return d;
 }
+/** T-3250: a line's return run, sampled as `drawnLine`, where it takes its own way back (`back`, its
+ * path; kept while that is unchanged) */
+const backDrawn = new Map<number, { key: string; merc: Float64Array; at: Anchor | null; d: Float32Array | null }>();
+function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Array {
+  const key = back.join();
+  let c = backDrawn.get(id);
+  if (!c || c.key !== key) {
+    const p = a.run_polyline(id, 1, SAMPLE_STEP);
+    const m = new Float64Array(p.length);
+    for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
+    backDrawn.set(id, (c = { key, merc: m, at: null, d: null }));
+  }
+  if (!c.d || c.at !== anchor()) {
+    c.d = localOf(c.merc, 2);
+    c.at = anchor();
+  }
+  return c.d;
+}
 
 function buildState(): ClockState {
   const tq0 = performance.now();
@@ -1735,10 +1757,13 @@ function buildState(): ClockState {
   pinFareRef();
   syncHolidays();
   applyRunFactors();
-  // Keyframes: phase tables, profile meta, and run 0 of every line resampled.
+  // Keyframes: phase tables, profile meta, and run 0 of every line resampled; a line whose return run
+  // takes its own way back (T-3094) has that run resampled too, in the table's second half (T-3250,
+  // network.ts `backSlot`)
   const meta = a.profile_meta();
   const nLines = meta.length / 24;
-  const lineTable = new Float32Array(Math.max(1, nLines) * 4);
+  const backs = lines.filter((l) => l.ok && l.back?.length && l.id < nLines);
+  const lineTable = new Float32Array(Math.max(1, nLines) * (backs.length ? 8 : 4));
   const runs: Float32Array[] = [];
   let nSamples = 0;
   for (const l of lines) {
@@ -1746,6 +1771,13 @@ function buildState(): ClockState {
     const d = drawnLine(a, l.id);
     runs.push(d);
     lineTable.set([nSamples, d.length / 2, l.lengthM, SAMPLE_STEP], l.id * 4);
+    nSamples += d.length / 2;
+  }
+  for (const l of backs) {
+    const d = drawnBack(a, l.id, l.back!);
+    if (d.length < 4) continue;
+    runs.push(d);
+    lineTable.set([nSamples, d.length / 2, meta[(l.id * 6 + 3) * 4 + 3] || l.lengthM, SAMPLE_STEP], (nLines + l.id) * 4);
     nSamples += d.length / 2;
   }
   const samples = new Float32Array(nSamples * 2);

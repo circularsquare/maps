@@ -809,6 +809,7 @@ uniform highp sampler2D u_phases;  // RGBA32F: t, s, v, a
 uniform highp sampler2D u_meta;    // RGBA32F per profile: first phase, count, trip s, length m
 uniform highp sampler2D u_samples; // RG32F: run 0 of each line, x/y local units
 uniform highp sampler2D u_lines;   // RGBA32F per line: first sample, count, length m, step m
+uniform int u_back_base;           // T-3250: lines in the table (0 none); row base + line is that line's return run on its own way back, where it has one
 in vec2 a_trip;              // profile, departure - epoch (s)
 in float a_end;              // drawn until - epoch (s): standing at the terminal for its next departure (T-206)
 in float a_lag;              // drawn this many seconds behind its timetable (T-1965, trainGuard.ts)
@@ -817,6 +818,8 @@ ivec2 tc(int i, int w) { return ivec2(i % w, i / w); }
 
 // set by trainDist: how far through a stand after its first stop the train is (0-1), else -1
 float g_stand = -1.0;
+// set by trainDist: a return run drawn along its own way back (T-3250), as a run 0 of its own row
+bool g_own = false;
 
 /** The point at distance d (m) along run 0 of a line (L from the line table). */
 vec2 lineAt(vec4 L, float d) {
@@ -857,6 +860,10 @@ bool trainDist(out vec4 L, out float d, out int line) {
   int run = (prof / 3) % 2;
   d = run == 0 ? s : M.w - s;
   L = texelFetch(u_lines, tc(line, ${LINES_W}), 0);
+  if (run == 1 && u_back_base > 0 && line < u_back_base) {
+    vec4 B = texelFetch(u_lines, tc(u_back_base + line, ${LINES_W}), 0);
+    if (B.y > 1.5) { L = B; d = s; g_own = true; }
+  }
   return true;
 }`;
 
@@ -984,7 +991,7 @@ void main() {
   float pitchM = totalM / cars;
   int prof = int(a_trip.x + 0.5);
   vec4 M = texelFetch(u_meta, tc(prof, ${TEX_W}), 0);
-  g_run = (prof / 3) % 2;
+  g_run = g_own ? 0 : (prof / 3) % 2;
   g_len = M.w;
   // T-3053: at a through end it stands with its middle at the stop, so up to half its length past the line's end
   float cLo = endClear(g_run == 0 ? a_bay.y : a_bay.w, totalM);
@@ -1019,7 +1026,7 @@ void main() {
   vec2 nrm = vec2(-sdir.y, sdir.x);
   // T-2182: its two ends each shifted by the band there, so a train easing sideways with its band
   // turns with it rather than sliding crabwise
-  float side = (int(a_trip.x + 0.5) / 3) % 2 == 0 ? -1.0 : 1.0;
+  float side = g_run == 0 ? -1.0 : 1.0;
   vec4 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
   float shB = shiftAt(lbb, side, acrossAt(carD - h, totalM)), shF = shiftAt(lbf, side, acrossAt(carD + h, totalM));
   if (shB != shF) {
@@ -1071,7 +1078,7 @@ void main() {
   v_alpha = selectedLine(line) ? 1.0 : u_dim;
   // How full it is (T-084): the stretch it runs, from the sample ahead of it on its way.
   int run = (int(a_trip.x + 0.5) / 3) % 2;
-  float i = floor(clamp(d, 0.0, L.z) / L.w) + (run == 0 ? 1.0 : 0.0);
+  float i = floor(clamp(d, 0.0, L.z) / L.w) + (g_run == 0 ? 1.0 : 0.0);
   int si = int(L.x + clamp(i, 0.0, L.y - 1.0));
   vec2 f = texelFetch(u_fill, tc(si, ${TEX_W}), 0).xy;
   v_fill = run == 0 ? f.x : f.y;
@@ -1088,7 +1095,7 @@ void main() {
       aboard = texelFetch(u_loads, tc(int(a_load.x + st + 0.5), ${TEX_W}), 0).x;
       // standing at a stop: from the load it came in with to the one it leaves with (T-1785); a
       // stand between stops has the same stretch behind it as ahead
-      int sb = int(L.x + clamp(i + (run == 0 ? -2.0 : 2.0), 0.0, L.y - 1.0));
+      int sb = int(L.x + clamp(i + (g_run == 0 ? -2.0 : 2.0), 0.0, L.y - 1.0));
       float back = texelFetch(u_stretch, tc(sb, ${TEX_W}), 0).x;
       if (g_stand >= 0.0 && back >= 0.0 && abs(back - st) > 0.5) {
         float came = texelFetch(u_loads, tc(int(a_load.x + st + (run == 0 ? -1.0 : 1.0) + 0.5), ${TEX_W}), 0).x;
@@ -1110,10 +1117,10 @@ void main() {
     v_fill = v_fill >= 0.0 || v_fill < -1.5 ? -2.0 : -1.0;
   }
   v_empty = mix(lc, vec3(1.0), 0.18);
-  v_front = run == 0 ? 1.0 : -1.0;
+  v_front = g_run == 0 ? 1.0 : -1.0;
   v_consist = vec2(u_detail ? totalM * kM * u_px_per_unit : px.x, offsetM * kM * u_px_per_unit);
   v_detail = u_detail ? 1.0 : 0.0;
-  v_cab = u_detail && (run == 0 ? float(car) == cars - 1.0 : car == 0) ? 1.0 : 0.0;
+  v_cab = u_detail && (g_run == 0 ? float(car) == cars - 1.0 : car == 0) ? 1.0 : 0.0;
 }`;
 
 // A capsule at city scale, or separate rounded cars close up (T-103), with a white edge.
