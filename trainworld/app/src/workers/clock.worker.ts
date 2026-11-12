@@ -1697,7 +1697,14 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
 const platformLines = new PlatformLines();
 const platformLineOf = (a: TrackApi, id: number, x: number, y: number, platform: number) => platformLines.of(a, id, x, y, platform, groundK(y));
 /** what `StateRows` needs of the worker */
-const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow, platformLine: platformLineOf };
+/** T-3288: the complexes of the station rows, for the one name their untyped members show */
+function rowComplexes(rows: readonly ClockNode[]): Complexes {
+  const geo: StationGeo[] = rows.map((r) => ({ id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) }));
+  const fl = api!.station_links(), links: [string, string][] = [];
+  for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
+  return complexesOf(nodeComplexes, geo, links);
+}
+const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */
 const stateRows = new StateRows();
@@ -3686,8 +3693,13 @@ function apply(op: EditOp): Applied {
       return { r: a.double_up(op.edge) };
     case "oneWay":
       return { r: a.set_edge_oneway(op.edge, op.dir) };
-    case "stationProps":
-      return { r: a.set_station_props(op.node, op.platform, op.name) };
+    case "stationProps": {
+      // the name a complex's station shows is not its own: sent back unchanged it is no typing (T-3288)
+      const own = a.node_name(op.node);
+      return { r: a.set_station_props(op.node, op.platform, op.name !== own && op.name === stateRows.shownName(op.node) ? own : op.name) };
+    }
+    case "stationName":
+      return { r: a.set_station_name(op.node, op.name) };
     case "removeStation":
       return { r: a.remove_station(op.node) };
     case "construct":

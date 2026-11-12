@@ -8,7 +8,8 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { leadOf } from "../game/complexLead";
+import { leadOf, nameSource } from "../game/complexLead";
+import type { EditOp } from "../workers/protocol";
 import { edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
@@ -127,6 +128,8 @@ function MoreRows({ more }: { more: () => void }) {
 interface StationRow {
   /** the member a click selects, whose name the row takes (`leadOf`: a typed name, then most lines) */
   lead: StationInput;
+  /** the station the complex's other untyped names follow, when a rename of the row names the complex (T-3288) */
+  head?: StationInput;
   members: string[];
   lines: LineInput[];
   built: boolean;
@@ -160,9 +163,16 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
       if (dm !== undefined && (d === undefined || dm < d)) d = dm;
     }
     const lead = present.length ? leadOf(present, (id) => lineIdx.get(id)?.length ?? 0) : s;
-    rows.push({ lead, members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
+    const head = !apart && present.length > 1 && !lead.named ? nameSource(present, (m) => m.num, (m) => !!m.named) : undefined;
+    rows.push({ lead, ...(head ? { head } : {}), members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
   }
   return rows;
+}
+
+/** The edit a row's rename makes (T-3288): in a complex where nobody typed a name, the station the
+ * others follow takes it with no typed flag, so the whole complex shows it; otherwise the lead's own. */
+function rowName(r: StationRow, name: string): EditOp {
+  return r.head ? { op: "stationName", node: r.head.num, name } : { op: "stationProps", node: r.lead.num, platform: r.lead.length, name };
 }
 
 /** T-2788: list each station of a complex on its own row (off: one row per complex) */
@@ -257,7 +267,7 @@ export function StationsTab() {
             {renamingStation === r.lead.id ? (
               <input class="name-edit grow" value={r.lead.name} aria-label={t("stationsTab.stationName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
                 onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
-                onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.lead.name) void edit({ op: "stationProps", node: r.lead.num, platform: r.lead.length, name: n }); }}
+                onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.lead.name) void edit(rowName(r, n)); }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingStation(null); }} />
             ) : (
               // T-2786: a triple click renames (a double click snaps the camera)

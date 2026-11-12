@@ -832,9 +832,16 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   station on screen at zoom 13 or closer; with nothing else to offer it says "No other name is
   suggested here." **A name the player typed stays** [T-2683]: a rename or a pick of the cycle button
   marks the station's name as the player's (saved), and nothing renames it afterwards (not adding a
-  station or a line to its complex, a complex splitting or merging, loading). A complex goes by one
-  name in the Stations tab row and the diagram: its member with a typed name, else the one with the
-  most lines (`game/complexLead.ts`); the map still labels every distinct name. A line group's name
+  station or a line to its complex, a complex splitting or merging, loading). **A complex has one name
+  by default** [T-3288]: every station nobody typed a name for shows the name of the oldest of them
+  (`nameSource`; the model keeps each station's own, so a split complex gives them back), a station
+  joining takes it at once, and a station with a typed name keeps its own. Renaming from the complex
+  view (the title of an untyped station, the cycle button) or from a Stations tab row of an untyped
+  complex sets that oldest station's name with no typed flag (`stationName`), so the whole complex
+  follows; opened on its own from the list, or typed on a station that already has a typed name, a rename
+  names that station alone. In the Stations tab row and the diagram a complex goes by its member with
+  a typed name, else the one with the most lines (`game/complexLead.ts`), which with no typed name is
+  the shared name; the map labels every distinct name. A line group's name
   typed in its title stays even when it equals its first line's name.
 
 ## The complex map

@@ -45,7 +45,8 @@ try {
   }, [row(0), row(1), row(2)]);
   console.log(JSON.stringify(r));
   ok(!r.err && r.ok.every(Boolean), 'the scene builds ' + (r.err ?? r.issues.join(',')));
-  ok(r.names?.includes('Hand Name') && r.names.includes('Beta') && r.names.includes('Delta'), 'the player-named station keeps its name after a station and a line are added');
+  // T-3288: Delta joins the complex and shows the name of the oldest untyped station, Beta
+  ok(r.names?.includes('Hand Name') && r.names.includes('Beta') && !r.names.includes('Delta'), 'the player-named station keeps its name after a station and a line are added, and the new one takes the complex name');
   const lead = await page.evaluate(async () => {
     const mod = await import('/src/game/complexLead.ts').catch((e) => ({ err: String(e) }));
     const cv = await import('/src/game/complexView.ts').catch((e) => ({ err: String(e) }));

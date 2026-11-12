@@ -30,6 +30,7 @@ import { stationUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
+import { nameSource } from "../../game/complexLead";
 import { locateStation } from "../locate";
 import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
@@ -197,6 +198,10 @@ export function StationInspector({ id }: { id: string }) {
   const asComplex = members.length > 1 && inComplexView(id);
   const lines = linesAt(id);
   const props = (platform: number, name = s.name) => edit({ op: "stationProps", node: s.num, platform, name }).then((a) => a.ok);
+  // T-3288: in the complex view a station nobody typed a name for renames the complex: the station the
+  // others follow takes the name, with no typed flag, so every station that follows shows it
+  const head = asComplex && !s.named ? nameSource(members.flatMap((m) => stationsById(w).get(m) ?? []), (m) => m.num, (m) => !!m.named) : undefined;
+  const rename = (platform: number, name: string) => (head ? edit({ op: "stationName", node: head.num, name }).then((a) => a.ok) : props(platform, name));
   // T-534: the next of the station's suggested names, worked out now from where it stands
   const cycle = async () => {
     if (cycling || !live.map) return;
@@ -207,7 +212,7 @@ export function StationInspector({ id }: { id: string }) {
       const w = world.peek();
       const now = w && stationsById(w).get(id);
       if (!now) return;
-      if (next) void edit({ op: "stationProps", node: now.num, platform: now.length, name: next });
+      if (next) void (head ? edit({ op: "stationName", node: head.num, name: next }) : edit({ op: "stationProps", node: now.num, platform: now.length, name: next }));
       else say(tr("stationInspector.noName"));
     } finally {
       setCycling(false);
@@ -223,7 +228,7 @@ export function StationInspector({ id }: { id: string }) {
     <>
       <div class="title">
         <span class="st-glyph" />
-        <NameEdit key={id} name={s.name} onRename={(n) => props(s.length, n)}>
+        <NameEdit key={id} name={s.name} onRename={(n) => rename(s.length, n)}>
           <button class="btn icon" data-tip={tr("stationInspector.nextName")} aria-label={tr("stationInspector.nextName")} onClick={() => void cycle()}>
             <Icon.cycle />
           </button>

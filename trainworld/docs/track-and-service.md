@@ -88,7 +88,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
   within half a platform of joints first joins the pieces there into one edge, joint after joint
   until the platform has room (a long platform over several short segments; T-418), the shape
-  unchanged. Pieces that meet at a slight angle (up to the heading tolerance each way: a click
+  unchanged; lengthening a station's platform joins the same way (T-3286, `lengthen_op`), so a clicked
+  corner never stops it. Pieces that meet at a slight angle (up to the heading tolerance each way: a click
   almost straight ahead of a track end draws a straight piece that far off) join too: the joint is dropped when it is within 1 m of the straight
   between the corners either side, moving the track there by at most that, and otherwise stays as
   a corner (T-1964). A joint between two different levels stays as a corner on the joined edge, since a
@@ -280,6 +281,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   A station's name the player typed is flagged (`StationData::named`, bit 8 of its node flags in the save,
   set by `set_station_props` when the name changes; the twin copies it): load's tidying of capitals
   skips it, and a building's default name prefers such a member [T-2683].
+  The stations of a complex that carry no typed name show one name, the oldest's (T-3288, ui-map.md "Station
+  complexes"); `set_station_name` sets a name without the flag, for the complex's rename.
 - **No automatic crossovers** (T-1688): nothing the player does adds a crossover by itself, not
   drawing (quad included), placing stations or doubling up. The player draws crossing track between
   the pairs where lines should change over. A line whose stops lie on two pairs with no way between

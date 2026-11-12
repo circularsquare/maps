@@ -382,12 +382,49 @@ impl TrackApi {
         // T-2683: a new name here is the player's (typed, or picked with the cycle button); the same
         // name sent back with a new platform keeps the flag as it was
         let named = old.named || name != old.name;
-        let op = Op::Station { node, data: Some(StationData { platform, name, named, ..old.clone() }) };
+        let op = self.lengthen_op(node, Op::Station { node, data: Some(StationData { platform, name, named, ..old.clone() }) });
         if old.built && old.platform != platform {
             self.run_charged(op)
         } else {
             self.run(op)
         }
+    }
+
+    /// T-3288: set a station's name without marking it the player's own, so the stations of its
+    /// complex that follow its name follow this one too (the complex's rename).
+    pub fn set_station_name(&mut self, node: u32, name: String) -> u32 {
+        let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+        self.run(Op::Station { node, data: Some(StationData { name, ..old }) })
+    }
+
+    /// `station` (an `Op::Station` on `node`) preceded by the joins a longer platform needs
+    /// (T-3286): the pieces of track that only meet at a clicked corner become one edge under the
+    /// platform's reach, as for a new station (`unjoin_near`); a junction, another station or a joint
+    /// that cannot be joined still stops it.
+    fn lengthen_op(&self, node: u32, station: Op) -> Op {
+        let net = &self.w.net;
+        let Op::Station { data: Some(d), .. } = &station else { return station };
+        if !net.node_alive[node as usize] || d.platform as f64 <= net.node_platform[node as usize] as f64 {
+            return station;
+        }
+        let p = net.node_ports[node as usize];
+        let (reach, mut seen, mut ops) = (if p.n <= 1 { d.platform as f64 } else { d.platform as f64 / 2.0 } + 2.0, vec![], vec![]);
+        for &c in p.ends() {
+            let (e, which) = (c >> 1, c & 1);
+            if seen.contains(&e) {
+                continue;
+            }
+            seen.push(e);
+            let s = if which == 0 { 0.0 } else { net.edge_len[e as usize] };
+            if let Some((more, _)) = self.unjoin_near(e, s, reach) {
+                ops.extend(more);
+            }
+        }
+        if ops.is_empty() {
+            return station;
+        }
+        ops.push(station);
+        Op::Batch(ops)
     }
 
     /// T-751: what lengthening these stations' platforms to `platform` m would charge now, US$M,
@@ -400,8 +437,8 @@ impl TrackApi {
             if !old.built || old.platform >= platform {
                 continue;
             }
-            let op = Op::Station { node, data: Some(StationData { platform, ..old.clone() }) };
-            sum += self.w.trial(op).map_or(0.0, |r| r.charge);
+            let op = self.lengthen_op(node, Op::Station { node, data: Some(StationData { platform, ..old.clone() }) });
+            sum +=self.w.trial(op).map_or(0.0, |r| r.charge);
         }
         sum
     }

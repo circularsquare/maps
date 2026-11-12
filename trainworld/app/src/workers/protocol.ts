@@ -93,6 +93,8 @@ export type EditOp =
   /** single track run one way (`dir` 1 a to b, 2 b to a) or both (0), the lines that ran against it taking another way in the same edit (T-3094); refused with "OneWayNoWay:<line>" */
   | { op: "oneWay"; edge: EdgeId; dir: 0 | 1 | 2 | 3 }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
+  /** T-3288: the name a complex goes by, set on the station the others follow; no typed name */
+  | { op: "stationName"; node: NodeId; name: string }
   | { op: "removeStation"; node: NodeId }
   /** `buses` (T-1464): bus lines whose routes to construct */
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[]; buses?: number[] }

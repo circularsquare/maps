@@ -16,6 +16,7 @@
 // (checks/t1382-rows.mjs; `?patch=check` compares them in the page).
 import type { TrackApi } from "../wasm/track/sim";
 import type { ClockEdge, ClockLine, ClockNode } from "./protocol";
+import type { Complexes } from "../game/complexes";
 
 /** what the model answers for "every one" in `take_changed_lines` and `take_name_changes` */
 const ALL = 0xffffffff;
@@ -29,6 +30,8 @@ export interface RowEnv {
   busRow(a: TrackApi, id: number, nodes: ClockNode[]): NonNullable<ClockLine["bus"]>;
   /** a station's platform line, the same array while unchanged (T-1859, workers/platformLines.ts) */
   platformLine?(a: TrackApi, id: number, x: number, y: number, platform: number): Float32Array | undefined;
+  /** the complexes of these station rows (T-3288), for the one name their untyped members show */
+  complexes?(stations: readonly ClockNode[]): Complexes;
 }
 
 /** What a line row holds that costs several model calls and changes only when the line's service or
@@ -110,6 +113,8 @@ export class StateRows {
   private frameKey: unknown = null;
   private edgeRows = new Map<number, ClockEdge>();
   private nodeRows = new Map<number, ClockNode>();
+  /** T-3288: the rows shown with a complex's name, by station (`foldNames`) */
+  private folded = new Map<number, { from: ClockNode; name: string; row: ClockNode }>();
   private names = new Map<number, string>();
   private lineKept = new Map<number, LineKept>();
   /** each line's phase tables (`line_phases`), by id, and all of them laid end to end as `phases`
@@ -134,6 +139,7 @@ export class StateRows {
     this.owner = null;
     this.edgeRows.clear();
     this.nodeRows.clear();
+    this.folded.clear();
     this.names.clear();
     this.lineKept.clear();
     this.phaseTables.clear();
@@ -255,7 +261,42 @@ export class StateRows {
     if (kept.size !== seen.size) for (const id of kept.keys()) if (!seen.has(id)) kept.delete(id);
     // a station no longer there keeps no name
     if (this.names.size > seen.size) for (const id of this.names.keys()) if (!seen.has(id)) this.names.delete(id);
+    if (env.complexes) this.foldNames(out, env.complexes);
     return out;
+  }
+
+  /** T-3288: the name a station of a complex shows, where it is not its own: the stations nobody
+   * typed a name for take the name of the oldest of them. The model keeps every station's own name;
+   * a split complex gives each part's stations theirs back. The replaced rows are kept, so an
+   * unchanged one is the same object as before. */
+  private foldNames(out: ClockNode[], complexesOf: NonNullable<RowEnv["complexes"]>) {
+    const stations = out.filter((r) => r.platform > 0 && !r.port);
+    const cx = complexesOf(stations);
+    const source = new Map<number, ClockNode>();
+    for (const r of stations) {
+      const c = cx.of.get(String(r.id));
+      if (c === undefined || r.named) continue;
+      const s = source.get(c);
+      if (!s || r.id < s.id) source.set(c, r);
+    }
+    const seen = new Set<number>();
+    for (let k = 0; k < out.length; k++) {
+      const r = out[k];
+      if (r.platform <= 0 || r.port || r.named) continue;
+      const c = cx.of.get(String(r.id));
+      const s = c === undefined ? undefined : source.get(c);
+      if (!s || s.name === r.name) continue;
+      let f = this.folded.get(r.id);
+      if (!f || f.from !== r || f.name !== s.name) this.folded.set(r.id, (f = { from: r, name: s.name, row: { ...r, name: s.name } }));
+      seen.add(r.id);
+      out[k] = f.row;
+    }
+    if (this.folded.size !== seen.size) for (const id of this.folded.keys()) if (!seen.has(id)) this.folded.delete(id);
+  }
+
+  /** The name a station of a complex shows when that is not its own (`foldNames`), if it does. */
+  shownName(id: number): string | undefined {
+    return this.folded.get(id)?.name;
   }
 
   /** `nodes` must have been read just before, for the bus stops that join it. A planned line's build

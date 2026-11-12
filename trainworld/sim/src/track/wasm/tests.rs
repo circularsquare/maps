@@ -3605,3 +3605,52 @@ fn a_nudged_point_with_neighbours_in_a_fast_curve_keeps_its_speed() {
     }
     assert!(worst > 0.6, "the slowest nudge kept {:.0}%", worst * 100.0);
 }
+
+/// T-3286: a platform lengthens through a node that is only where the track was clicked, joining the
+/// pieces under it as a new station's does; a loose end still stops it.
+#[test]
+fn a_platform_lengthens_past_a_clicked_node() {
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    for x in [2000.0, 3000.0] {
+        let joint = a.route_end();
+        let to = [0.0, 0.0, x, 0.0, 0.0];
+        let ends: Vec<f64> = [1.0, joint as f64, 0.0, 0.0, 0.0].iter().chain(to.iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    }
+    let count = |a: &TrackApi| (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e)).count();
+    let e = edge_under(&a, 1100.0, 0.0);
+    assert_eq!(a.add_station(2, e, 1100.0, 0.0, 60, "S".into()), 0, "{}", a.issues());
+    let st = |a: &TrackApi| a.nodes_info().chunks(10).find(|c| c[7] > 0.0).unwrap()[0] as u32;
+    let n = st(&a);
+    let before = count(&a);
+    assert_eq!(a.set_station_props(n, 400, "S".into()), 0, "{}", a.issues());
+    assert_eq!(a.w.net.node_platform[n as usize], 400);
+    assert!(count(&a) < before, "the pieces under the platform were joined");
+    assert_eq!(a.undo(), 0);
+    assert_eq!((a.w.net.node_platform[n as usize], count(&a)), (60, before));
+    // a loose end stops it: 100 m from the start, 400 m needs 200 each way
+    let e = edge_under(&a, 100.0, 0.0);
+    assert_eq!(a.add_station(2, e, 100.0, 0.0, 60, "E".into()), 0, "{}", a.issues());
+    let m = a.nodes_info().chunks(10).find(|c| c[7] > 0.0 && c[1] < 500.0).unwrap()[0] as u32;
+    assert_ne!(a.set_station_props(m, 400, "E".into()), 0);
+    assert_eq!(a.issue_kinds(), "PlatformTooLong");
+}
+
+/// T-3288: the complex's rename sets a name and leaves the flag as it was; a typed rename flags it.
+#[test]
+fn a_complex_rename_does_not_flag_the_station() {
+    let mut a = api();
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(3000.0, 0.0).iter()).copied().collect();
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let e = edge_under(&a, 1500.0, 0.0);
+    assert_eq!(a.add_station(2, e, 1500.0, 0.0, 60, "Old".into()), 0, "{}", a.issues());
+    let n = a.nodes_info().chunks(10).find(|c| c[7] > 0.0).unwrap()[0] as u32;
+    assert_eq!(a.set_station_name(n, "New".into()), 0, "{}", a.issues());
+    assert_eq!((a.node_name(n), a.named_stations()), ("New".to_string(), vec![]));
+    assert_eq!(a.set_station_props(n, 60, "Typed".into()), 0);
+    assert_eq!(a.named_stations(), vec![n]);
+    assert_eq!(a.set_station_name(n, "Again".into()), 0);
+    assert_eq!(a.named_stations(), vec![n]);
+}
