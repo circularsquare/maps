@@ -59,7 +59,7 @@ export function tidyTransfer(v: number): number {
 /** T-1626: a high-speed line's fares are the curve's times this unless the player sets another.
  * The base is paid once a trip; the rest of a trip's fare is times the share of its km on such
  * lines (docs: the Money section of SPEC.md). */
-export const HSR_FARE = 1.5;
+export const HSR_FARE = 1.25;
 export const HSR_FARE_MAX = 5;
 /** The high-speed multiplier of `f`, or the default. */
 export function hsrFare(f: { hsr?: number } | undefined): number {

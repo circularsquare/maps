@@ -731,7 +731,7 @@ their steppers lined up in one column: "Base fare" with its fare in a stepper, t
 `0 -` [20] `km` [T-1264], only its end distance in a box (typed, no steps), and its rate in a stepper,
 [+$0.07] `per km`, the unit outside the box; the second "Past 20 km" with its rate only (following
 the first's end; the last node's distance changes no fare, so it is only dragged). Then, once any
-line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.50x",
+line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.25x" by default,
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
 ("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's

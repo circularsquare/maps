@@ -674,9 +674,10 @@ notes/T-420.md has the tables.
   $1.00, India $0.45, the same in every game wherever it starts. Simple on purpose (Anita); real short
   metro fares sit at 0.5-2x these (Tokyo $1.20, Mexico City $0.26, Mumbai $0.23, London $3.83; notes/T-2668.md). Check: a country's published fare at 50-150 km against it (notes/T-1521.md).
   **High-speed fares** (T-1626): the fare above the base is times the player's high-speed multiplier
-  (default 1.5) by the share of the trip's km on high-speed lines, in route choice, mode choice and
-  the market alike. 1.5 is about JR's Nozomi ticket over its ordinary one (notes/T-1616.md); Europe's
-  and China's high-speed fares sit at a similar premium over conventional ones. Why it may not carry
+  (default 1.25, from 1.5 in T-3338) by the share of the trip's km on high-speed lines, in route choice, mode choice and
+  the market alike. JR's Nozomi ticket is about 1.5 times its ordinary one (notes/T-1616.md) and Europe's
+  and China's premiums are similar; the game's default sits lower because beside a parallel local line 1.5 left
+  a high-speed line a third of the riders 1.0 did (notes/T-3310.md). Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
   Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (default 1.00, T-2195; "Ferries as lines" below).

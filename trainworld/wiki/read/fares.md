@@ -10,7 +10,9 @@ A new game starts with a base of US$2.5 where you start in the US. The fare at 2
 
 A trip pays the scale of the country it starts in, on its whole length, even if it changes lines.
 
-**Faster lines.** A line with high-speed trains charges the part of the curve above the base times 1.5, unless you set another. A ferry line has its own multiplier, 1 to start. The base is paid once a trip, whatever it rides.
+**Faster lines.** A line with high-speed trains charges the part of the curve above the base times 1.25, unless you set another. A ferry line has its own multiplier, 1 to start. The base is paid once a trip, whatever it rides.
+
+**Making a long high-speed line pay.** Most of what a high-speed line spends goes on running its trains, and that grows with every car and every train an hour. Fares barely move until the trains fill. A line from Tokyo to Osaka with sixteen cars every ten minutes loses money every day. The same line with five or eight cars makes a profit with the same riders. Start with five to eight cars and a train every twenty to thirty minutes, and add cars or trains when the line panel shows full trains. "Losing money" here is the daily profit in the profitability map and the Finances tab, fares minus running and upkeep. Paying back the building cost takes far longer.
 
 **Changing trains** can cost a transfer fare, paid on every boarding after the first. It starts at nothing.
 

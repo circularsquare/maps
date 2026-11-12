@@ -1573,8 +1573,8 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   by km. So a trip that changes lines pays each line the base share of its boarding and the curve's
   fare a km on that line's km, and no line's fares go below zero. **High-speed fares** [T-1626]: a
   line with high-speed trains charges its rate and its share of the curve's extra times the
-  high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.5, 0 to 5, saved in the header; a save
-  without one charges 1.5); the base stays once a trip; a ferry line likewise with the Ferry multiplier
+  high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.25 [was 1.5 until T-3338], 0 to 5, saved in the header; a save
+  without one charges the default, a save with one keeps it); the base stays once a trip; a ferry line likewise with the Ferry multiplier
   (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195) and a bus line with the Bus multiplier
   (`Fares.bus`, default `BUS_FARE` 1.00, 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists). So a trip pays base + (curve(km) - base) x
   (1 + (m - 1) x its share of km on high-speed lines). Demand takes it as each route node's
