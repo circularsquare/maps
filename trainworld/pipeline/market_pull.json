@@ -3,18 +3,20 @@
  "on": false,
  "notes": "notes/T-3240.md; the rule in docs/regional.md 5.1; `places` written by pipeline/market_pull.py, the rest by hand",
  "source": "Natural Earth 10m populated places (simple) 5.1.2, scalerank (public domain); resort towns from Wikidata (CC0)",
- "gamma": 0.8,
+ "gamma": 0.6,
  "gamma_x": 0.25,
  "cap": 3.0,
  "phase_km": [
-  50.0,
-  150.0
+  300.0,
+  700.0
  ],
  "off": [
   "US",
   "JP",
   "GB",
-  "KR"
+  "KR",
+  "RU",
+  "TR"
  ],
  "country_gamma": {
   "CN": 0.6
@@ -35,6 +37,10 @@
   "tky": [
    0.0,
    "Leh: Natural Earth's rank is for map balance; 60,000 people beyond the mountains"
+  ],
+  "mgg": [
+   0.0,
+   "Magong (Penghu): an island county seat of 0.08M people, ranked for map balance"
   ]
  },
  "rank_fit": [
@@ -2411,8 +2417,8 @@
    "resorts 1% of its people"
   ],
   "mgg": [
-   3.0,
-   "rank 5 (Magong)"
+   0.0,
+   "rank 5 (Magong); by hand: Magong (Penghu): an island county seat of 0.08M people, ranked for map balance"
   ],
   "mgh": [
    0.535,

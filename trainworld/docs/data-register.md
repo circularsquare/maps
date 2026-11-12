@@ -277,6 +277,15 @@ lengths are not used; its share of trips under 2 km is the check (docs/demand-wo
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Ukraine, Turkey, Mexico, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, the zones-only countries (Population above), the T-2695, T-2696 and T-2697 countries, Morocco, Algeria, Tunisia and Egypt (Population above), Israel and Palestine (Population above) | ? not looked for; worldwide (the surveys' median) | worldwide |
 | Wales, Scotland, Northern Ireland | U England's rates, NTS0504b (country GB) | worldwide |
 
+Long trips (the market's checks, T-3254; each source and what it counts in
+`research/intercity/T-3254-national.md` and `T-3254-pairs.md`): U the US NHTS 2017 and ATS 1995, Japan MLIT
+inter-regional survey FY2015, Germany INVERMO 2002/03, France EMP 2019 by straight-line band, Spain's ministry
+big-data study 2017, China NBS 2024 communiqué, Russia RZD and Rosaviatsia, Turkey DHMI, TCDD and KGM bus counts,
+Poland GUS overnight trips, Italy Isfort Audimob, for national 100-300 and 300 km+ rates; city pairs from CNMC
+(Spain), DB, PKP Intercity, FS, RFF/Setec, RZD, Cascetta & Coppola (Rome - Naples), Munich Airport. G UBA Texte
+51/2022 and the EsadeEcPol Spanish long-trip report (both refuse automated download); ? MiD 2017 has no published
+split over 100 km (microdata by application).
+
 ## Destinations
 
 | Country | Schools | Universities | Medical | Airports |

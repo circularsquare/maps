@@ -1053,11 +1053,13 @@ notes/T-420.md has the tables.
   the origin's, a border factor 0.26 x origin income^1.5, except 0.5 between two countries of the
   open-border area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK; T-809).
   From the world rebuild after 2026-11-11 (T-3240, regional.md 5.1 "The long-trip pull"), a
-  destination's attraction is also times its pull, exp(0.8 x its Natural Earth rank above what its
-  people predict, at most 3), faded in over 50-150 km, 0.25 for trips from abroad, China's at 0.6 of
-  0.8, none for residents of the US, Japan, the UK and Korea: a local factor (Anita, 2026-11-11), fitted
-  on big-city pairs outside the US (Warsaw - Kraków, Berlin - Munich, Hechi - Nanning) and FR24's
-  airport pairs for the border's. Fitted on NHTS 2017, US, UK, Japanese and Indian residents' trips abroad and flights pairs
+  destination's attraction is also times its pull, exp(0.6 x its Natural Earth rank above what its
+  people predict, at most 3), faded in over 300-700 km (the tail's window), 0.25 for trips from abroad,
+  China's at 0.6 of 0.6, none for residents of the US, Japan, the UK, Korea, Russia and Turkey: a local
+  factor (Anita, 2026-11-11), fitted at or under published figures, the lower where sources disagree
+  (Anita, 2026-11-12: Madrid - Barcelona, Berlin - Munich, Paris - Lyon, Milan - Rome, Beijing - Shanghai
+  and the national 300 km+ rates of France, Spain, Italy, Germany; T-3254), FR24's airport pairs for the
+  border's. Fitted on NHTS 2017, US, UK, Japanese and Indian residents' trips abroad and flights pairs
   (notes/T-376.md); the area's 0.5 checked on London - Paris, Paris - Brussels and Amsterdam -
   Brussels (notes/T-809.md). Why it may not carry over: one factor for the whole area, island or
   land pair alike, so the land pairs come out low; every other border, open or not (Mercosur, ASEAN, the US-Canada line), keeps the one
