@@ -1647,8 +1647,8 @@ export class NetworkRenderer {
     // T-3332: a one-track station's bar covers the line through it until double track's two tracks part,
     // then reaches from the centre line out over its own track; the bulge sticks out as far as the bar is thick
     const ls = laneState(zoom), lineHalf = 0.5 * wLine / dpr + ring;
-    const barIn = (1 - ls.t) * lineHalf, barOut = barIn + ls.t * (0.5 * ls.gap + 0.3 * wLine / dpr + ring + 1);
-    const one = { c: 0.5 * (barOut - barIn), hb: 0.5 * (barOut + barIn), depth: Math.max(4, 0.9 * (barOut + barIn)) };
+    const barIn = (1 - ls.t) * lineHalf, barOut = barIn + ls.t * (0.5 * ls.gap + 0.3 * wLine / dpr + ring + 1) + 0.5 * wLine / dpr;
+    const one = { c: 0.5 * (barOut - barIn), hb: 0.5 * (barOut + barIn), depth: Math.max(4, 0.6 * (barOut + barIn)) };
     this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one };
     const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
     // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
@@ -1806,8 +1806,10 @@ export class NetworkRenderer {
     const trackStrokes = (cap = 0) => {
       for (const part of this.hasBlueprint ? [1, 2] : [0]) {
         gl.uniform1i(u.u_bp_part, part);
-        stroke(this.track, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, cap);
-        if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) stroke(this.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, cap);
+        // through a station's box blueprint track is drawn whole (rails and middle) over a blueprint box
+        const c = part === 2 ? 0 : cap;
+        stroke(this.track, 0, opt.byLevel || opt.bySpeed || opt.byProfit ? wLine : wTrack, opt.selEdge >= 0, c);
+        if (!opt.byLevel && !opt.bySpeed && !opt.byProfit) stroke(this.lines, 1, wLine, opt.selLine >= 0 || !!opt.selLines?.length, c);
       }
       gl.uniform1i(u.u_bp_part, 0);
       // passing stations' outer tracks along their platforms (T-2233)

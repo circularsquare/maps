@@ -25,7 +25,7 @@ const shot = (name) => page.screenshot({ path: join(ARTIFACTS, `t3333-${name}.pn
 const edit = (op) => page.evaluate(async (op) => { const r = await window.tw.client.edit(op); await new Promise((d) => setTimeout(d, 500)); return r; }, op);
 
 try {
-  await page.goto(`${BASE}?debug=1&new=1&mode=sandbox&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?pairs&debug=1&new=1&mode=sandbox&paused=1&demandWorkers=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.tw.tools, undefined, { timeout: 180000 });
   await page.evaluate(([c]) => {
     const tw = window.tw, o = tw.lngLatToPack(c[0], c[1]);
