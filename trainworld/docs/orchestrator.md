@@ -85,6 +85,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   `cmd /c "git diff -- <files> > x.patch"`: PowerShell's Out-File adds a BOM and CRLFs and the patch won't apply. An
   agent still editing those files may write them meanwhile: tell it to pause first.
 - A translation batch can drop the space after a colon in a JSON file: grep for `":"` before committing.
+- A tree's `app/node_modules` is a junction to the main tree's: deleting a tree folder by hand (not `agent-tree.mjs
+  remove`, which unlinks first) deletes through it. 11-12 the main tree lost `.bin` and 15 packages ("Cannot find
+  native binding"); `npm install` from trainworld/app put them back.
 - Staging part of a JSON file (others' keys left out): parse the staged blob (`git show :<path>`) before committing.
   A line-level stage once put two keys after the closing brace and snapbuild failed (d4164171).
 - Copying files back after a source swap keeps old mtimes, so cargo and wasm-pack skip the rebuild: touch them.

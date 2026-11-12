@@ -1425,7 +1425,10 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   the memory sentence with Try again. A browser with no WebGL2 (MapLibre cannot start; `hasWebgl2`,
   `map/webgl2.ts`, asked at the top of main.ts) gets its own screen before anything else starts: one
   sentence saying to turn on hardware acceleration or update the browser, and no button, since a retry
-  or a way on cannot help [T-3307].
+  or a way on cannot help [T-3307]. A browser with no WASM SIMD (Safari before 16.4; `hasWasmSimd`,
+  `map/wasmSimd.ts`, asked right after WebGL2) gets the same screen with its own sentence: no WebAssembly
+  SIMD, worded "missing a feature the game needs", update the browser (Safari 16.4 or later), Edge, Chrome or
+  Firefox may work better [T-3315].
 - A card that sees nothing move (no demand worker message other than a query's answer, no pack
   bytes, no game or network from the clock worker) for 3 minutes, or 10 with a bar up, gives way
   to that screen ("No demand figures arrived in 3 minutes"); a hidden or frozen page counts no
@@ -1437,6 +1440,15 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   waits for it (at most 1.5 s) before reloading. An error's text is the small line under it (its
   hover the whole text). The status tag goes, the figures shown stay. `failDemand()` on `window.tw`
   (`?debug=1`) forces it.
+- If the figures stop updating without a failure (a download the network dropped, a worker that never
+  answers) [T-3314], the same kind of notice sits there once the game is up: "The game's figures stopped
+  updating. Reload the page to start them again. Your last autosave from 24s ago is kept." (the age counts up
+  while it shows; with nothing saved yet the last sentence is dropped) with a Reload button (it asks
+  for the autosave, at most 1.5 s, then reloads). It shows when an edit or read the page sent to the clock
+  worker has gone unanswered, or a network has waited for the demand pool with no download or worker step,
+  for 3 minutes of visible time (`game/figuresStopped.ts`; time in a hidden tab does not count); it goes
+  when the wait ends. Not shown while the demand-stopped or new-version notice is. `?figuresMs=N` sets the
+  3 minutes for checks; `window.tw.figures` (`?debug=1`) has the longest quiets seen.
 - A game whose view is over dead space and whose stations reach no zone loads nothing: no card, no
   status, the clock not held, the split "–" [T-318]; a change to its stations or lines is still
   solved, with no pack, so its lines get their figures (nobody aboard) [T-845].

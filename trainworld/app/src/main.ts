@@ -86,6 +86,8 @@ import { Dock } from "./ui/Dock";
 import { ToolNotes } from "./ui/ToolNotes";
 import { DemandStopped } from "./ui/DemandStopped";
 import { NewVersion } from "./ui/NewVersion";
+import { FiguresStopped } from "./ui/FiguresStopped";
+import { figuresPeaks, figuresStopped, watchFigures } from "./game/figuresStopped";
 import { DeviceNote, deviceNoteApplies } from "./ui/DeviceNote";
 import { MapSky, TopBar } from "./ui/TopBar";
 import { cycleDemandEnd, MapTopLeft } from "./ui/DemandSelector";
@@ -99,8 +101,9 @@ import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, lastLoadDied, loadCannotFinish, loadNoWebgl2, startGameWait, waitKey } from "./game/loading";
+import { choosing, lastLoadDied, loadCannotFinish, loadNoSimd, loadNoWebgl2, startGameWait, waitKey } from "./game/loading";
 import { hasWebgl2 } from "./map/webgl2";
+import { hasWasmSimd } from "./map/wasmSimd";
 import { outOfMemoryText } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
@@ -108,7 +111,7 @@ import { viewStart } from "./ui/locate";
 import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
 import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
-import { netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
+import { demandStuckSince, netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
@@ -144,6 +147,11 @@ startLoadingGate();
 if (!hasWebgl2()) {
   loadNoWebgl2();
   throw new Error("WebGL2 is not available"); // i18n-ignore: stops the page's setup; the player reads the failure screen
+}
+// T-3315: the simulation needs WASM SIMD (Safari 16.4); an older browser gets its own sentence, not a compile error
+if (!hasWasmSimd()) {
+  loadNoSimd();
+  throw new Error("WebAssembly SIMD is not available"); // i18n-ignore: stops the page's setup; the player reads the failure screen
 }
 // T-677: which game opens. A URL switch may say (ui/StartMenu.tsx); otherwise the start menu goes up
 // once the page is set up, and the workers start with the pick (`startWorkers` below), the map
@@ -187,6 +195,10 @@ render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppe
 const newVersionRoot = document.createElement("div");
 map.getContainer().appendChild(newVersionRoot);
 render(h(NewVersion, { save: () => client.saveBeforeReload() }), newVersionRoot);
+// T-3314: the clock worker or the demand pool has gone quiet for minutes: a notice with Reload
+const figuresStoppedRoot = document.createElement("div");
+map.getContainer().appendChild(figuresStoppedRoot);
+render(h(FiguresStopped, { save: () => client.saveBeforeReload() }), figuresStoppedRoot);
 // T-2802, T-2839: a phone has no trips between cities, and a device reporting 4 GB or less may not run well; said once per game load
 if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
@@ -286,6 +298,7 @@ startOpenFit(); // T-895
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
 setClockDiagnosis(() => client.diagnosis()); // T-3313: for feedback reports
+watchFigures(() => client.unansweredSince(), demandStuckSince); // T-3314
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
 // T-2142: a new game starts paused, a sandbox too (the tutorial's last step is the play button); a
@@ -796,6 +809,7 @@ if (DEBUG) {
 
   (window as any).tw = {
     failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
+    figures: { peaks: figuresPeaks, stopped: figuresStopped }, // T-3314: the longest quiet seen, and the notice's signal
     soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },

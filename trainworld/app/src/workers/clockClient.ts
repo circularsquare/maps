@@ -553,6 +553,10 @@ export class ClockClient {
       this.lastTrouble ? `last error ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
     ].filter(Boolean).join("; ");
   }
+  /** T-3314: performance.now() when the oldest unanswered edit or read went, or null (game/figuresStopped.ts) */
+  unansweredSince(): number | null {
+    return this.sent.values().next().value?.at ?? null;
+  }
   private stations = new Newest<{ at: StationAt; platform: number }, [ok: boolean, issues: string[], cost: number]>();
   private crossovers = new Newest<{ edge: number; x: number; y: number }, [a: CrossoverAnswer]>();
   private previews = new Newest<(seq: number) => ToClock, [a: PreviewAnswer]>();
@@ -684,11 +688,11 @@ export class ClockClient {
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
     setDemandFineSink((zones, built) => this.post({ kind: "demandFine", zones, built }));
     setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
+    setLineShapeSink((line, shape) => this.post({ kind: "lineShape", line, shape }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
     const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: this.game });
-    setLineShapeSink((line, shape) => this.post({ kind: "lineShape", line, shape }));
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
@@ -1102,13 +1106,13 @@ export class ClockClient {
       case "listOrder":
         takeHandOrder(msg.lines, msg.stations);
         break;
+      case "lineShapes":
+        takeLineShapes(msg.shapes);
+        break;
       case "stationsAhead":
         stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built, msg.home);
         break;
       case "home":
-      case "lineShapes":
-        takeLineShapes(msg.shapes);
-        break;
         home.value = msg.home;
         break;
       case "netAhead":

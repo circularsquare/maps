@@ -295,6 +295,15 @@ export function loadNoWebgl2() {
   loadFailed("WebGL2 is not available"); // i18n-ignore: console and the failure's reason only, the screen has its own text
 }
 
+/** T-3315: this browser has no WASM SIMD (Safari before 16.4), so the simulation cannot start. Same screen as
+ * the WebGL2 one, its own sentence. */
+export const noSimd = signal(false);
+export function loadNoSimd() {
+  noSimd.value = true;
+  gameFailed.value = true;
+  loadFailed("WebAssembly SIMD is not available"); // i18n-ignore: console and the failure's reason only, the screen has its own text
+}
+
 /** Carry on without demand after a failed startup (the loading screen's second button). */
 export function continueWithoutDemand() {
   clock?.setHeld(false);

@@ -1560,6 +1560,11 @@ class DemandClient {
     ];
     return parts.filter(Boolean).join("; ");
   }
+  /** T-3314: while a network waits to be solved, when the pool last made progress (it came, or the last step),
+   * performance.now(); else null (game/figuresStopped.ts) */
+  stuckSince(): number | null {
+    return this.waiting ? Math.max(this.waiting.arrivedAt, lastStep()) : null;
+  }
   /** the oldest pack download in flight's start, performance.now(), or null */
   oldestDownload(): number | null {
     let o: number | null = null;
@@ -4873,6 +4878,7 @@ function madeDays(): DemandDay[] {
 let client: DemandClient | null = null;
 /** T-3313: the pool's state for a feedback report ("" before it starts) */
 export const demandDiagnosis = () => client?.diagnosis() ?? "";
+export const demandStuckSince = () => client?.stuckSince() ?? null;
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
 const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";

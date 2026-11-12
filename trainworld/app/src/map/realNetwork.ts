@@ -23,6 +23,7 @@ import { styleUp } from "./styleReady";
 import { noritetsuBases, ringBox } from "../game/rings";
 import { PUBLISHED } from "../game/dataBase";
 import { perfOff } from "../perfFlags";
+import { patientFetch } from "../workers/patientFetch";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow; at 4 a view of
@@ -101,7 +102,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     (index ??= (async () => {
       for (const b of noritetsuBases(document.baseURI, PUBLISHED)) {
         try {
-          const r = await fetch(b + "regions.json");
+          const r = await patientFetch(b + "regions.json"); // T-3314: a held request gives up, and the next base is tried
           const j = r.ok ? await r.json() : null;
           if (!j?.regions) continue;
           base = b;
