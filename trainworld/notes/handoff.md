@@ -92,7 +92,19 @@ All Opus, running, no commits (I land):
 - pull done: T-3240 code landed f25f2180, config "on": false until the rebuild. Her calls: pairs where both ends pull
   (Berlin-Hamburg, Rome-Naples 3-7x); China factor 0.6 vs 0.85 reading.
 - oneway done: T-3250 landed 8a40a0df (return trains drawn on their own way back); 8800 = 8a40a0df smoke PASSED; then satellite T-3249 landed 02187910, **8800 = 02187910**.
-Next free id T-3253.
+- realauto done: T-3225 landed 81e128db (30 auto real networks, 37 on the sandbox sheet); **8800 = 81e128db**, smoke PASSED.
+  Follow-ups filed T-3255, T-3256.
+- Her 11-12 later: delete ~/shonei-backup.txt (done; scratch env deleted too); she emails the key to herself; CF API
+  token at ~/cloudflare-ops-token.txt (verified: zone read, cache rules, R2 list, analytics). Pull: damp strong pairs,
+  ERR LOW (conservative sources), China ~half the change (~0.8), Geneva/Magong my call -> T-3254 agent pull2
+  a1242c4c91eb0c0c7. Option A impact test T-3253 agent aimpact a0a866213491b49cb. resources resumed to read real R2
+  counts. Wealth tiers parked; Community Biggest left alone.
+- **R2 GetObject 31.2M in 24 h to 11-12 03:40Z** (~$11/day past the free tier if it holds): watch whether the data
+  cache rule (on ~02:50Z) cuts it; if not, ask her about Tiered Cache.
+- R2 real counts (resources, 2e0638d2): 674M Class B projected this month (~$239); cache rule cut ~15% only. Causes: "data bypass" browser TTL bypass -> no-store on trainworld data; no tiered cache. Asked her: Browser TTL "Respect origin" on "trainworld data" rule, Smart Shield/Tiered Cache, Zone Analytics: Read on the token. The bypass was for religiondots staleness (memory), not T-1635.
+- 11-12 ~04:15Z: she set Browser TTL respect origin on "trainworld data" (verified: no no-store, max-age 1y immutable, Range 206 MISS->HIT), Smart Shield on, token has Zone Analytics Read. Hourly R2 re-check running (bcuzri9cv, ~05:15Z); she wants frequent checks for now.
+- Her TODO 11-12 filed T-3257..T-3267. Agents: buildfix a4d09f6f5baf12d0c (T-3260..3263, 6143), commview afcbcaeb2cb0fb5be (T-3257..3259, 6144, shonei-server commits), satfade = satbuild resumed (T-3267), hexterrain aaac72d73e4b15746 (T-3266, Sonnet, 6145), sbahn ae8f4f1cf4c2bb5e9 (T-3265, 6146), trainsdraw a924318684a130567 (T-3264 proposal, 6147). Also running: aimpact a0a866213491b49cb, pull2 a1242c4c91eb0c0c7.
+Next free id T-3268.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
