@@ -1738,6 +1738,8 @@
   "settingsTab.dayOf": "Hover on an icon in the Day choice for a day of a long holiday (getting away, away, coming back). holiday: the holiday's name from data, in English, \"Golden Week\" or \"Christmas\".",
   "settingsTab.dayTip": "Hover on the Day choice: it sets the day every demand figure in the game is for, not only the bubbles.",
   "settingsTab.detail": "Settings, Demand bubbles: label of the slider for how finely the bubbles are split (more and smaller, or fewer and bigger). Narrow label.",
+  "settingsTab.kofi": "Settings: hover and accessible name of the Ko-fi cup icon at the foot; it opens the game's Ko-fi donation page in a new tab. Keep \"Ko-fi\" as in English.",
+  "settingsTab.donate": "Settings: text beside the Ko-fi icon, asking players to donate toward hosting costs. Anita's own casual lowercase voice; keep it informal and keep the exclamation mark.",
   "settingsTab.discord": "Settings: hover and accessible name of the Discord logo icon in the top row; it opens the game's Discord server in a new tab. Keep \"trainsworld\" (the game's name) and \"discord\" as in English.",
   "settingsTab.detailTip": "Hover on the Detail slider.",
   "settingsTab.faces": "Settings, Stations up close: checkbox for drawing the little faces of riders waiting at stations when zoomed in.",

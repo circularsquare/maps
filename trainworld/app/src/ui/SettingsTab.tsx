@@ -213,6 +213,10 @@ export function SettingsTab() {
       <AccountSection />
       <FeedbackButton />
       <FeedbackPanel />
+      <div class="donate">
+        <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.kofi")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
+        <span class="muted">{t("settingsTab.donate")}</span>
+      </div>
       <Credits />
     </>
   );

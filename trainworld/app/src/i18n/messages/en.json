@@ -1740,6 +1740,8 @@
   "settingsTab.dayOf": "A day of {holiday}",
   "settingsTab.dayTip": "Which day demand figures are shown for",
   "settingsTab.detail": "Detail",
+  "settingsTab.kofi": "Donate on Ko-fi",
+  "settingsTab.donate": "this game is free! but the cost to host it is starting to get expensive, please consider donating to keep it running.",
   "settingsTab.discord": "Join trainsworld discord",
   "settingsTab.detailTip": "How many nearby bubbles merge into one",
   "settingsTab.faces": "Faces",

@@ -605,7 +605,7 @@ Google" or "Not logged in") and a button, Account settings or Sign in, that open
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
 out, delete; [Account and leaderboards](#account-and-leaderboards)), and Submit feedback at the bottom
 [T-1673, `ui/FeedbackPanel.tsx`]: a centred modal "Feedback" (the account panel's form styles) with Name (optional), Email
-("Email (optional)") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
+("Email (optional)") and Message, and Send feedback. Under the feedback row, a Ko-fi cup icon link (inline SVG in the theme's colour, https://ko-fi.com/anitamaps in a new tab, hover "Donate on Ko-fi") with Anita's line "this game is free! but the cost to host it is starting to get expensive, please consider donating to keep it running." beside it, then About and Changelog [T-3340]. Feedback POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
 Beside the message the report carries the browser, memory, language, the last load failure, the currency, and

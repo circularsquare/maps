@@ -180,6 +180,9 @@ svg .stroke2 { stroke-width: 2; }
 .tab.gear { flex: none; width: 36px; min-width: 0; border-right: 0; border-left: 1px solid var(--rule); }
 .settings-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .discord-link { text-decoration: none; margin-left: auto; color: #5865f2; }
+.donate { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.donate a { text-decoration: none; flex: none; }
+.donate span { line-height: 1.3; }
 .lang-row { margin: 0 0 4px; }
 .lang-row { display: flex; align-items: center; gap: 4px; }
 .lang-row .lang-icon { display: inline-flex; }
