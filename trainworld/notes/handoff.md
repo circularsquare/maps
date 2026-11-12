@@ -1,7 +1,8 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 2ba1fd73-4c91-45ba-b838-fe8f908d4b21, name maps-18 [8ecfe1], since 2026-11-11 11:10
-Updated: 2026-11-12 ~04:50 UTC (she went to bed; may start a new orchestrator: maps-18 then lands its running agents)
+Orchestrator: session 441e3071-8b6e-4109-9ab2-1339e17b92be, name maps-5e [3a1e06], since 2026-11-12 04:41 UTC
+Previous: session 2ba1fd73-4c91-45ba-b838-fe8f908d4b21, name maps-18 [8ecfe1], handed over 2026-11-12 04:41 UTC, finishing in-flight work
+Updated: 2026-11-12 04:41 UTC (machine clock 11-11 23:41 local; the old "~04:50" line was ~10 min ahead)
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first. The 11-11/12 log this replaced is in git history
 (handoff.md at its previous commit).
@@ -22,8 +23,9 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. The 11-11/12 log this 
   analytics). tools/ops/check_resources.py reads real R2 counts; run daily, report flagged lines.
 - **R2 reads, 04:35Z check**: trainworld data now mostly HIT. The ~800k GetObject an hour left are **noritetsu's
   pmtiles** (data.anita.garden/noritetsu/data/*.pmtiles, 1-40 MB, `no-cache`, unversioned names, under her "data
-  bypass" rule): jp 287k, us 52k, id 56k, cn 29k per 30 min. Proposal to her: a cache rule for /noritetsu/data/ with a
-  short edge TTL (~2 h, ignore cache-control), placed after "data bypass"; pmtiles' etag check copes with a change.
+  bypass" rule): jp 287k, us 52k, id 56k, cn 29k per 30 min. **Fixed with her yes:** cache rule "noritetsu data"
+  (data.anita.garden/noritetsu/data/*, 2 h edge TTL, after "data bypass"), Range MISS->HIT verified, DECISIONS
+  139ba331. Look at its hit rate in the next daily resource check.
 
 ## 8800 and master
 - 8800 = 9ced7beb (satellite fade), smoke PASSED. Master has since: 3ea3c6e7, f25f2180 + 1e18c190 (T-3240/3254 pull,
@@ -49,6 +51,10 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. The 11-11/12 log this 
 - airports accd664886e499af4: T-2896 items 1-5 (incl. airport trips crossing zone lines, her yes), scratch only.
 
 ## World rebuild: her go for overnight 11-12, on 10 cores, once fully prepared
+Agreed 04:45 UTC: rbprep and airports keep reporting to maps-18 for prep; when both say ready and pull2's Poland
+config is in, maps-18 passes their reports to maps-5e, which owns the go/no-go and the run (WASM landings frozen).
+commview landed as e6c88dd4 (maps-18 snapbuilding it to 8800, then smoke). Server deploys for her morning:
+efb2cd6, 020ba08 (+ env line in notes/T-3257.md), flags when committed.
 Checklist before rbprep starts the light pass (it must ask first): rbprep's speed-ups proven + baselines saved;
 airports' items 1-5 landed; pull config `"on": true` with pull2's Poland factor; T-3218 attendance 0.8 applied;
 T-2112 seams.py before the joins; T-2627 market step under its limit; campus outlines fetched. During the run: no
@@ -57,7 +63,6 @@ data/packs (sbahn's data/packs/real saves excepted, finish them first). Light pa
 
 ## Waiting on Anita (morning)
 - Server deploy (efb2cd6 + commview + flags commits).
-- Noritetsu pmtiles cache rule (above).
 - Test satellite at 10/40/100% light and dark (she said morning).
 - Strings to review when agents report: Community View, track tool hints, zoom buttons, flags, satellite ("Map",
   "Satellite", hover "Low resolution outside Japan and the US").
@@ -86,3 +91,4 @@ single track is not a nerf; only the nerf figures red; Privacy · Terms in the s
 - Cores: ledger cap 14.
 - **Usage**: Opus more widely but "not fully gung-ho"; where there's a choice, spend compute, not tokens.
 - Watch whether agents use wiki-first reading well.
+- **11-12 04:49Z server deployed with her word** ("yes good to deploy server changes"): 020ba08 (T-3258, T-3259), efb2cd6 (T-3248 best game per board), e98ae76 (T-3269 flags server; config trainworldFlags true, client not live). SHONEI_COMMUNITY_NO_WAIT line added from the testers backup (log: 1 account skips the wait); env backup shonei.env.bak-2026-11-12. Pushed. Close T-3258/T-3259 lines.
