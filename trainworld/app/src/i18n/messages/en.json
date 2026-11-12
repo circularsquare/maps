@@ -2080,6 +2080,8 @@
   "topBar.sinceDay1": "Since day 1: {amount}",
   "topBar.speed": "{speed} speed",
   "topBar.speedCapped": "{speed} (time capped at {cap} while updating demand)",
+  "topBar.speedReal": "real",
+  "topBar.speedReal4": "4real",
   "topBar.speedPick": "{speed} speed\nDouble-click to pick a speed",
   "topBar.timingNow": "now",
   "topBar.timingTomorrow": "tomorrow",
@@ -2546,5 +2548,3 @@
   "oneWay.reroutes": "{line} takes another way",
   "issues.oneWayNoWay": "{line} has no other way between its stations."
 }
-  "topBar.speedReal": "real",
-  "topBar.speedReal4": "4real",
