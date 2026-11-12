@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3253 [P1] Option A's reach (2026-11-12, agent aimpact): before/after on seven games. Only a built high-speed line beside a fast ordinary line moves (Paris - Lyon HSR 0 -> 3,994 riders a day, fare income +38%); real networks and games with no HSR move under 0.3%; local rail shares under 0.01 points; nothing broke. A is consistent (one long-trip money weight in both choices), not simpler; cross-zone commuters now carry the mismatch. notes/T-3253.md.
 - T-3263 [P2] Road snap ghost lag (2026-11-12, agent buildfix): a pointer move no longer drops the road route being fitted or priced; it finishes and the newest spot goes next. With a slow track model, fitted ghosts while moving 0 -> 5-7 in 2 s. Lost clicks not reproduced. checks/t3260-track-bar.mjs; notes/T-3260.md
 - T-3262 [P2] Track count kept across track types (2026-11-12, agent buildfix): single shows as double on High speed or Tram and comes back with Regular; Single on High speed keeps High speed and says why. checks/t3260-track-bar.mjs; notes/T-3260.md
 - T-3261 [P2] Quad on snapped routes carries both pairs on (2026-11-12, agent buildfix): real-network and road routes on quad no longer merge to two at each click (sim draw.rs). checks/t3260-track-bar.mjs, Rust quad_snapped_through_corners_carries_both_pairs_on; notes/T-3260.md
