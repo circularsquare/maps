@@ -527,7 +527,12 @@ none of this runs.
 - **The rounds**: each cell's map (from its rest shape) is pulled toward its planned size at its current turn, with a cost to stretch it
   unevenly by its kind (land near lines, other land, water, small islands); a cell near folding is held. Solved by
   multigrid on the quadtree's levels, coarse to fine, then rounds with the holds frozen (a hold may only tighten) until
-  the stations move under half a pitch, so no cell folds.
+  the stations move under half a pitch, so no cell folds. The sheet's turn as a whole is taken out after the rounds.
+- **Each city keeps its turn** (a map 600 km across or more; T-3345): a cell's turn is pulled toward none, with weight
+  16 times its share of land near lines, and the sheet's own turn is measured from the hops (each hop's turn from the
+  ground one vote) rather than from every station's place. Without it the squeeze between far-apart cities turned
+  whole cities by 10 to 57 degrees (Beijing 20) and the octilinear stages snapped their grids onto the diagonals. A
+  city map is unchanged.
 - **The lines on the sheet**: the layout's octilinear stages (B, the snap, the routing, the separation, the order) run as a
   rebuild from the stations' sheet places, on the graph with those places (a pitch the sheet's pitch): each hop's target
   its length on the sheet (the dial at 0), no A and no blocks' stage, B holding each station to its sheet place at 2 (a

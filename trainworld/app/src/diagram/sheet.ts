@@ -113,6 +113,9 @@ export interface SheetOptions {
   itMove: number;
   tol: number;
   maxIt: number;
+  /** on a map 600 km across or more, each cell's turn is pulled toward none with this weight times its share of land
+   * near lines, and the sheet's own turn is measured from the hops, so a city keeps its orientation (T-3345; 0: off) */
+  turnHold: number;
 }
 
 export const SHEET: SheetOptions = {
@@ -123,7 +126,7 @@ export const SHEET: SheetOptions = {
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
   schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12", scheduleFar: "e-2:10:0.3,raise,e-2:6:0.3,raise,e-2:4:0.3,e0:5:0.3,s12", // i18n-ignore: solver schedules
-  settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6,
+  settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6, turnHold: 16,
 };
 
 /** what the sheet reads of the ground: the zones' water masks, the graph's frame in mercator, the sea and land masses */
@@ -601,7 +604,7 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
   const latOf = (y: number) => (2 * Math.atan(Math.exp(Math.PI * (1 - 2 * (fy - y / fk)))) - Math.PI / 2) / RAD;
   const sea = ground.sea;
   const seaAt = (x: number, y: number) => (sea ? sea.isSea(x, y) || sea.massAt(x, y) < 0 : false);
-  const city = E < 6e5, rr = city ? o.cityRaster : Math.max(200, E / 6000, h / 2);
+  const city = E < 6e5, rr = city ? o.cityRaster : Math.max(200, E / 6000, h / 2), holdTurn = !city && o.turnHold > 0;
   const RW = Math.ceil((bx1 - bx0) / rr), RH = Math.ceil((by1 - by0) / rr);
   // a row's spans of raster cells as packed keys start * 2^16 + end (RW is under 2^16), sorted and merged
   let wK = new Float64Array(1024), nW = 0, cK = new Float64Array(64), nC = 0;
@@ -1369,6 +1372,11 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       if (matrix) {
         const wa = (P.cellA[c] + gd) / (h * h), Ga = rest ? rGa : GA[tri], Gs = rest ? rGs : GS[tri];
         for (let k = 0; k < 36; k++) loc[k] = wa * Ga[k] + ws * Gs[k];
+        // the size pull above is at the cell's own turn, so a turn costs nothing: on a country map the squeeze between
+        // far-apart cities would turn whole cities, and the octilinear stages then snap a grid onto the diagonals
+        // (T-3345). Row 3 is the even part's turn.
+        const wr = holdTurn ? (o.turnHold * P.cellK0[c]) / (h * h) : 0;
+        if (wr > 0) for (let p = 0; p < 6; p++) for (let q = 0; q < 6; q++) loc[p * 6 + q] += wr * R3[p] * R3[q];
       }
       // each corner's share to its free vertices, each pair's block to its slot
       const e0 = P.eS[t], e1 = P.eS[t + 1], m = e1 - e0;
@@ -1394,7 +1402,13 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
     let px = 0, py = 0, qx = 0, qy = 0, dot = 0, crs = 0;
     for (let i = 0; i < n; i++) (px += PX[i]), (py += PY[i]), (qx += SXa[i]), (qy += SYa[i]);
     (px /= n), (py /= n), (qx /= n), (qy /= n);
-    for (let i = 0; i < n; i++) { const ax = PX[i] - px, ay = PY[i] - py, bx = SXa[i] - qx, by = SYa[i] - qy; (dot += ax * bx + ay * by), (crs += ax * by - ay * bx); }
+    if (holdTurn) {
+      // each hop one vote, so the cities' own orientation sets the turn, not the line through far-apart cities
+      for (let e = 0; e < nE; e++) {
+        const a = g.ea[e], b = g.eb[e], ax = PX[b] - PX[a], ay = PY[b] - PY[a], bx = SXa[b] - SXa[a], by = SYa[b] - SYa[a], l = Math.hypot(ax, ay) * Math.hypot(bx, by);
+        if (l > 1e-12) (dot += (ax * bx + ay * by) / l), (crs += (ax * by - ay * bx) / l);
+      }
+    } else for (let i = 0; i < n; i++) { const ax = PX[i] - px, ay = PY[i] - py, bx = SXa[i] - qx, by = SYa[i] - qy; (dot += ax * bx + ay * by), (crs += ax * by - ay * bx); }
     const ang = Math.atan2(crs, dot), c = Math.cos(-ang), s = Math.sin(-ang);
     for (let v = 0; v < P.nV; v++) { const x = P.QX[v] - qx, y = P.QY[v] - qy; (P.QX[v] = qx + c * x - s * y), (P.QY[v] = qy + s * x + c * y); }
     turned += ang;
