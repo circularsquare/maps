@@ -68,7 +68,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   to chain from. Segment ends are plain joints. **Quad drawn through points** (T-423): a segment
   ending on open ground leaves each pair its own loose end, the express pair's 8 m to its side; a
   segment from a loose quad end (the other pair's end within 4-12 m beside it, level with it and
-  facing the same way) carries both pairs on with no swing-out or junction: the drawn pair from the
+  facing the same way) carries both pairs on with no swing-out or junction (T-3261: a route through corners
+  from the real-network or road snap too, each corner concentric, and ending apart on open ground): the drawn pair from the
   end clicked is the tangent arc, the other pair from the end beside it, on whichever side that
   is, concentric (so a curve on the inside needs 58 m on the drawn pair). A first segment from a
   free point is two straights side by side. From other track or a node the express pair swings
@@ -314,7 +315,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
   upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
-  tram tool Ctrl means nothing else) lays it, the streets a tram may follow tinted green over the map while it is on
+  tram tool Ctrl means nothing else but, where that leaves the segment off the streets, straight on from track, T-3260) lays it, the streets a tram may follow tinted green over the map while it is on
   (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to
   the pointer follows the basemap's streets (no motorways), shortest with 200 m added for each turn over 30
   degrees, a turn back of 135 to 165 degrees costing 200 m rising to 400 m (T-3035) and none over 165 (nor any over 135
@@ -327,7 +328,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   heading, the lead-in is long enough for an 18 m curve onto the street, and up to 3 street corners by that end are
   dropped where the curve has no room before them, fewest first (`tram_ends`, T-2997). While the pointer moves, the
   last fitted route's ghost and tag stay until the next is ready; the street's line stands in only where none
-  shows (T-2996). Each curve whose middle lies more than 5 m from its two legs, or more than 10 m
+  shows (T-2996). A route being fitted or priced is finished and shown, and only the pointer's newest spot is
+  asked next (T-3263); a click asks for its own spot at once. Each curve whose middle lies more than 5 m from its two legs, or more than 10 m
   from the street line, and each straight any part of which lies more than 10 m from the street line (the fit cut a
   corner), is cut out as a piece of tram track (off-street, 0.5x), 1 m beyond each end of its arc, taking in a
   neighbouring curve where no joint fits between; such a piece at ground level over water stays street track, as it
@@ -350,7 +352,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   never refused (the tag's lowest limit shows it); no fit says "The roads are too tight here. Add a point on the
   way." It is placed as an ordinary route through those corners at the level, track count and type picked (as the
   real snap's), the road's centre line at every level, in one undo step, and costs what any route does: no discount
-  for following a road. Ctrl held draws by hand. A pointer with no road within 100 m draws an ordinary segment.
+  for following a road. Ctrl held draws by hand, straight on from track (ui-building.md "Ctrl", T-3260). A pointer
+  with no road within 100 m draws an ordinary segment. Quad track on roads carries both pairs on from a loose quad
+  end and ends them apart, as quad drawn through points does (T-3261, below).
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or
   built, becomes quad with one undoable edit that adds the express pair as blueprint (built track
   too: Construct pays for the pair as for any blueprint). It covers the run the selected piece is

@@ -126,9 +126,12 @@ impl TrackApi {
         // T-423: quad drawn through points carries both pairs on from a loose quad end, the other
         // pair's end beside the one clicked (on either side); from other track it swings out as in
         // Corners, which needs a straight, so that segment is not one arc
-        let beside_a = if quad && through { quad_beside(&self.w.net, ra.node) } else { None };
+        // T-3261: a snapped route (the real network's, the roads') through its corners too: both pairs carry on
+        // side by side from a loose quad end and end apart on open ground, as drawn through points
+        let carry = quad && self.route_tangent;
+        let beside_a = if carry { quad_beside(&self.w.net, ra.node) } else { None };
         let side = beside_a.map_or(1.0, |b| b.1);
-        let mut beside_b = if quad && through { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
+        let mut beside_b = if carry { quad_beside(&self.w.net, rb.node).filter(|b| b.1 == -side) } else { None };
         let mut beside_a = beside_a;
         // a dead-end station keeps its platform where it is (T-1667); on quad, its twin too. `own`
         // reads a moved twin end's position from `was`, its node not being in the network yet.
@@ -275,7 +278,7 @@ impl TrackApi {
                     let at = was.iter().find(|w| w.0 == m).map_or_else(|| (net.node_x[m as usize], net.node_y[m as usize]), |w| (w.1, w.2));
                     return Some((m, at));
                 }
-                if !(through && r.dirs.is_empty()) {
+                if !(carry && r.dirs.is_empty()) {
                     return None;
                 }
                 let (x, y) = express_end(&verts, at, side, scaled);

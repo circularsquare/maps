@@ -2930,6 +2930,25 @@ fn quad_track_and_twin_stations() {
 /// other way; one ending on other track joins it as a junction; twin stations go across a
 /// joint and on the loose ends; a crossover goes on it.
 #[test]
+fn quad_snapped_through_corners_carries_both_pairs_on() {
+    // T-3261: a route through corners (the real-network or road snap's) on quad track ends both pairs apart on
+    // open ground, and the next carries both on from there: no junction where they meet, four loose ends
+    let mut a = api();
+    a.set_route_tangent(true);
+    let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(1500.0, 0.0).iter()).copied().collect();
+    let pis = vec![500.0, 0.0, 0.0, 0.0, 1000.0, 200.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &pis, 4, false), 0, "{}", a.issues());
+    let end = a.route_end();
+    let (x0, y0) = (a.w.net.node_x[end as usize], a.w.net.node_y[end as usize]);
+    let pis2 = vec![x0 + 600.0, y0, 0.0, 0.0, x0 + 1100.0, y0 - 300.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&from_node(end, x0 + 1800.0, y0 - 300.0), &pis2, 4, false), 0, "{}", a.issues());
+    let nodes: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.node_ok(k)).collect();
+    let ports: Vec<u8> = nodes.iter().map(|&k| a.w.net.node_ports[k as usize].n as u8).collect();
+    assert!(ports.iter().all(|&p| p <= 2), "a junction where the pairs meet: {ports:?}");
+    assert_eq!(ports.iter().filter(|&&p| p == 1).count(), 4, "{ports:?}");
+}
+
+#[test]
 fn quad_drawn_through_points_carries_both_pairs_on() {
     let mut a = api();
     a.set_route_tangent(true);

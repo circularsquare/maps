@@ -365,14 +365,18 @@ export const flyoverSpeed = signal<DesignSpeed>(typeof saved.build?.fly === "num
 /** T-3169: the track bar's Advanced row (the two target speeds) is open. */
 export const buildAdvanced = signal(saved.build?.advanced === true);
 /** T-817: the track tool lays high-speed track, else regular. Double or quad (T-3126), never single. */
-export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tracks !== 1 && saved.build?.tram !== true);
+export const highSpeed = signal(saved.build?.hsr === true && saved.build?.tram !== true);
 /** T-2926: the track tool lays tram track (always double, ground level to start with), the third type beside
  * Regular and High speed. Drawn by hand it is the off-street kind (`TrackApi::set_route_kind(3)`). */
 export const tramTrack = signal(saved.build?.tram === true);
 /** T-2931: the track tool lays quad track (two pairs) instead of double; high-speed (T-3126) and tram (T-3166) too. */
 export const quadTrack = signal(saved.build?.tracks === 4);
+/** T-3262: the track count the player last picked. Single is kept here while High speed or Tram shows it as
+ * double, and comes back with Regular; it is what the browser remembers. */
+const countPicked = signal<1 | 2 | 4>(saved.build?.tracks === 1 || saved.build?.tracks === 4 ? saved.build.tracks : 2);
 export function setQuadTrack(on: boolean) {
   if (on === quadTrack.peek()) return;
+  countPicked.value = on ? 4 : 2;
   batch(() => {
     quadTrack.value = on;
     if (on) singleTrack.value = false;
@@ -381,15 +385,27 @@ export function setQuadTrack(on: boolean) {
 }
 /** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; never high-speed or tram. */
 export const singleTrack = signal(saved.build?.tracks === 1 && saved.build?.hsr !== true && saved.build?.tram !== true);
-export function setSingleTrack(on: boolean) {
-  if (on === singleTrack.peek()) return;
-  if (on && tramTrack.peek()) return;
+/** T-3262: picking single keeps the track type: on high-speed track it is refused (`say`, the caller's), and the
+ * count stays. Returns false when refused. */
+export function setSingleTrack(on: boolean): boolean {
+  if (on && (tramTrack.peek() || highSpeed.peek())) return false;
+  if (on === singleTrack.peek()) return true;
+  countPicked.value = on ? 1 : 2;
   batch(() => {
     singleTrack.value = on;
     if (on) quadTrack.value = false;
-    if (on && highSpeed.peek()) setTrackType(2);
+  });
+  return true;
+}
+export function setDoubleTrack() {
+  countPicked.value = 2;
+  batch(() => {
+    setQuadTrack(false);
+    setSingleTrack(false);
   });
 }
+/** the count the browser remembers (`build.tracks`) */
+export const trackCountPicked = (): 1 | 2 | 4 => countPicked.value;
 /** The design speed before High speed was picked, put back when Regular is picked again. */
 let designBeforeHsr: DesignSpeed | null = null;
 /** The level before Tram was picked, put back when another type is. */
@@ -428,6 +444,8 @@ export function setTrackType(t: TrackType) {
       highSpeed.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
+      // T-3262: single track picked before High speed or Tram showed it as double comes back
+      if (countPicked.peek() === 1) singleTrack.value = true;
     }
   });
 }
@@ -483,7 +501,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: quadTrack.value ? 4 : singleTrack.value ? 1 : 2, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

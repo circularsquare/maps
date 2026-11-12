@@ -91,6 +91,8 @@ export class StreetSnap {
   private seq = 0;
   private from: [number, number] | null = null;
   private spot: Spot | null = null;
+  /** T-3263: where the pointer went while the spot was being fitted or priced, asked for when it is done */
+  private next: { px: number; py: number; lng: number; lat: number; onTrack: boolean } | null = null;
   private timer = 0;
   private held = false;
   private on = false;
@@ -204,7 +206,7 @@ export class StreetSnap {
   }
 
   /** The pointer moved (screen px) to (lng, lat); `onTrack` where it is on tram track to end on. */
-  move(px: number, py: number, lng: number, lat: number, onTrack: boolean) {
+  move(px: number, py: number, lng: number, lat: number, onTrack: boolean, now = false) {
     if (!this.on) return;
     if (!this.from) {
       const p = this.roads.street({ lng, lat }, this.rail);
@@ -214,7 +216,17 @@ export class StreetSnap {
     this.ringAt = null;
     if (this.held) return;
     const s = this.spot;
-    if (s && Math.hypot(s.px - px, s.py - py) < SAME_PX && s.onTrack === onTrack) return;
+    if (s && Math.hypot(s.px - px, s.py - py) < SAME_PX && s.onTrack === onTrack) {
+      this.next = null;
+      return;
+    }
+    // T-3263: a spot being fitted or priced finishes, its ghost shown, and the newest pointer goes next: dropping
+    // it at every move left the ghost where the pointer last rested for as long as the pointer moved
+    if (!now && s && (s.phase === "fit" || s.phase === "preview")) {
+      this.next = { px, py, lng, lat, onTrack };
+      return;
+    }
+    this.next = null;
     this.drop(true);
     this.spot = { seq: ++this.seq, px, py, lng, lat, onTrack, t0: 0, phase: "rest", tol: 0, waiters: [] };
     this.timer = setTimeout(() => this.ask(), REST_MS) as unknown as number;
@@ -239,7 +251,8 @@ export class StreetSnap {
   /** The second click: waits for the route if it is still being found. */
   async click(px: number, py: number, lng: number, lat: number, onTrack: boolean): Promise<StreetClick> {
     if (!this.on || !this.from) return null;
-    this.move(px, py, lng, lat, onTrack);
+    // the click's own spot at once, whatever is still being worked out for an earlier one
+    this.move(px, py, lng, lat, onTrack, true);
     const s = this.spot;
     if (!s || s.phase === "off") return null;
     if (s.phase === "rest") {
@@ -281,6 +294,7 @@ export class StreetSnap {
   /** The spot dropped; with `keep` its ghost stays on the map until the next spot's replaces it. */
   private drop(keep = false) {
     clearTimeout(this.timer);
+    this.next = null;
     const s = this.spot;
     this.spot = null;
     if (s) {
@@ -307,6 +321,11 @@ export class StreetSnap {
     s.why = why;
     for (const w of s.waiters.splice(0)) w();
     this.redraw();
+    const n = this.next;
+    if (n && this.spot === s) {
+      this.next = null;
+      this.move(n.px, n.py, n.lng, n.lat, n.onTrack);
+    }
   }
 
   /** The red straight from the start to the pointer, saying `why`. */

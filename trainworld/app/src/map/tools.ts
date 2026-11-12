@@ -134,6 +134,9 @@ interface Placed {
   beside?: number | null;
   /** T-3137: the track of double track the start joins (`Snap.join`) */
   join?: [number, number];
+  /** T-3260: the way track leaves here (local units, unit length), for Ctrl's straight line: the end's heading
+   * of the segment placed last, else the first leg of a ghost from here; none from a start on open ground */
+  dir?: [number, number];
 }
 
 /** The longest piece of free-drawn track one click lays, straight-line km between its ends (T-1020:
@@ -689,9 +692,10 @@ export class Tools {
     this.ghostSpent = false;
     this.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
     this.hover = t === "line" ? null : this.snap(e.point.x, e.point.y, e.lngLat);
+    if (t === "track" && this.hover) this.hover = this.straight(this.hover);
     if (t === "track") this.streetMove(e.point.x, e.point.y);
     // T-1721: from any start, and before the first click for the ring
-    this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.snapped ? this.besideAt(e.point.x, e.point.y) : null;
+    this.hoverBeside = t === "track" && this.hover?.kind === "free" && !this.snapped && !this.straightOn() ? this.besideAt(e.point.x, e.point.y) : null;
     if (t === "track") this.real.move(e.point.x, e.point.y);
     if (t === "track" && this.held.length) this.releaseNear(e.point.x, e.point.y);
     if (t === "track" && this.start) this.requestPreview();
@@ -1019,7 +1023,7 @@ export class Tools {
       this.place();
       return;
     }
-    void this.segmentClick(e, s);
+    void this.segmentClick(e, this.straight(s));
   }
 
   /** Place the segment from the start to this click; with Shift held or keepPlacing on, the next
@@ -1092,6 +1096,8 @@ export class Tools {
     const [ex, ey] = rc && s.kind === "free" ? toLocal(...rc.route.last) : sc && s.kind === "free" ? toLocal(...sc.route.last) : [s.lx, s.ly];
     this.start = placedAt({ kind: "node", node: a.node }, ex, ey, rc ? rc.route.last : snapping.peek() ? this.real.ring(e.point.x, e.point.y) : null);
     this.start.beside = by?.edge ?? null; // a run beside track carries on beside it
+    const eh = p ? endHeading(p.verts, p.pts, p.arc, toLngLat, toLocal) : null;
+    if (eh) this.start.dir = [eh.ux, eh.uy];
     this.real.begin(this.start.ring);
     this.street.begin([this.start.lng, this.start.lat]);
     this.lastPreview = null;
@@ -1194,10 +1200,31 @@ export class Tools {
     const key = JSON.stringify(req);
     if (!this.wantKey || this.wantKey === this.previewKey) this.waitFrom(false);
     this.wantKey = key;
+    const from = this.start;
     this.client.preview(req, (a) => {
+      // T-3260: a ghost from a start on track leaves along its heading (its lead-in or tangent corner)
+      if (from === this.start && !from.dir && from.end.kind !== "free" && a.verts.length >= 8) {
+        const ux = a.verts[4] - a.verts[0], uy = a.verts[5] - a.verts[1], l = Math.hypot(ux, uy);
+        if (l > 1e-9) from.dir = [ux / l, uy / l];
+      }
       if (this.start && !this.snapped && this.wantKey === key) this.showPreview(a, key);
     });
     return true;
+  }
+
+  /** T-3260: Ctrl held while a segment is drawn on from track: the segment runs straight on from its start */
+  private straightOn(): boolean {
+    return this.noSnap && !!this.start?.dir && !this.real.active && !this.street.isOn;
+  }
+
+  /** T-3260: `s` with Ctrl held: open ground moved onto the straight line on from the start (either way, so a
+   * branch off the middle of track goes straight either way); anything else as it is */
+  private straight(s: Snap): Snap {
+    const st = this.start;
+    if (!st?.dir || s.kind !== "free" || !this.straightOn()) return s;
+    const [sx, sy] = toLocal(st.lng, st.lat), [ux, uy] = st.dir;
+    const t = (s.lx - sx) * ux + (s.ly - sy) * uy;
+    return { kind: "free", lx: sx + t * ux, ly: sy + t * uy };
   }
 
   /** T-2404: the pointer near a held segment, away from the start the newest one ends at: their
@@ -2167,6 +2194,8 @@ export class Tools {
       const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : this.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
       // T-1039: still working on the newest ghost or the click
       if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
+      // T-3260: Ctrl has no control on screen, so the tag says what it does
+      if (this.start.dir && !this.noSnap && !this.snapped && !touchInput.peek() && !mobileDevice()) rows.push(Object.assign(document.createElement("div"), { className: "muted", textContent: tr("tools.ctrlStraight") }));
       this.showTag(rows, false, ...at!);
     } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)

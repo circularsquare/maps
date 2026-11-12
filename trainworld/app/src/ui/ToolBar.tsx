@@ -8,10 +8,10 @@ import { distUnit, kmhFromShown, kmhToShown, length, levelLabel, levelName, mill
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
 import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
-import { linesByNum, world } from "../game/world";
+import { linesByNum, say, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper } from "./widgets";
@@ -108,9 +108,9 @@ function TrackBar() {
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
           <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
             {!tram && <button class={"btn icon" + (one ? " on" : "")} aria-label={t("toolBar.singleTrack")} aria-pressed={one} data-tip={t("toolBar.singleTrack")}
-              onClick={() => setSingleTrack(true)}><Icon.tracks1 /></button>}
+              onClick={() => setSingleTrack(true) || say(t("toolBar.singleHsr"), true)}><Icon.tracks1 /></button>}
             <button class={"btn icon" + (!q && !one ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={!q && !one} data-tip={t("toolBar.doubleTrack")}
-              onClick={() => { setQuadTrack(false); setSingleTrack(false); }}><Icon.tracks2 /></button>
+              onClick={setDoubleTrack}><Icon.tracks2 /></button>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrackTip")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
           </div>
