@@ -61,11 +61,9 @@ const TEXT: Record<string, () => string> = {
   // T-3321: what keeps double track from being rebuilt as single (`single_refusal` in sim/src/track/wasm/rebuild.rs)
   "NoSingle:HighSpeed": () => t("toolBar.singleHsr"),
   "NoSingle:Tram": () => t("issues.singleTram"),
-  "NoSingle:Quad": () => t("issues.singleQuad"),
   "NoSingle:Crossover": () => t("issues.singleCrossover"),
   "NoSingle:OneWay": () => t("issues.singleOneWay"),
   "NoSingle:Flyover": () => t("issues.singleFlyover"),
-  "NoSingle:Passing": () => t("issues.singlePassing"),
   TrackFamily: () => t("issues.trackFamily"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),

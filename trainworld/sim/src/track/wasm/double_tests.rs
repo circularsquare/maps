@@ -247,20 +247,52 @@ fn high_speed_and_tram_track_stay_double() {
     assert!(a.issue_kinds().contains("NoSingle:Tram"), "{}", a.issue_kinds());
 }
 
-/// Quad track: both pairs stay double, named.
-#[test]
-fn quad_track_stays_double() {
+//// The y of edge `e`'s middle.
+fn mid_y(a: &TrackApi, e: u32) -> f64 {
+    crate::track::geom::pos_at(a.w.net.edge_pieces(e), a.w.net.edge_len[e as usize] / 2.0).1
+}
+
+/// A built quad run, (0, 0) to (6000, 0) doubled up, with a station 1 km from each end on the drawn pair and a line
+/// between them.
+fn quad_run() -> (TrackApi, [u32; 2], u32) {
     let mut a = api();
     a.set_cash(1e6);
     assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
     assert_eq!(a.double_up(live(&a)[0]), 0, "{}", a.issue_kinds());
+    let mut st = [0; 2];
+    for (i, x) in [1000.0, 5000.0].into_iter().enumerate() {
+        assert_eq!(a.add_station(2, edge_at(&a, x, 0.0), x, 0.0, 200, format!("Q{i}")), 0, "{}", a.issues());
+        st[i] = node_near(&a, x, 0.0);
+    }
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &st, 2, 1, 0, 30.0, 180.0, 0, 0, "Quad".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    (a, st, line)
+}
+
+/// T-3339: quad track is two doubles. Picked whole it becomes two singles side by side, free, its stations
+/// single-track stations and its line still running; one pair picked leaves single beside double.
+#[test]
+fn quad_track_goes_single_pair_by_pair() {
+    let (mut a, st, line) = quad_run();
     let edges = live(&a);
-    assert!(edges.len() >= 2);
+    let (express, drawn): (Vec<u32>, Vec<u32>) = edges.iter().partition(|&&e| mid_y(&a, e) > 4.0);
+    assert!(!express.is_empty() && drawn.len() >= 3);
     let q = a.rebuild_quote(&edges, &[], 99, 0, 1);
-    assert_eq!(q[..2], [0.0, 0.0], "nothing for the quote yet: blueprint");
-    assert_eq!(a.set_edges_tracks(&edges, 1), 1, "{}", a.issue_kinds());
-    assert!(a.issue_kinds().contains("NoSingle:Quad"), "{}", a.issue_kinds());
-    assert!(tracks_of(&a, &edges).iter().all(|&t| t == 2));
+    assert_eq!((q[0], q[1] as usize, q[3]), (0.0, edges.len(), 0.0), "{q:?} {}", a.issue_kinds());
+    let cash = a.cash();
+    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 0, 1), 0, "{}", a.issue_kinds());
+    assert_eq!(a.cash(), cash);
+    assert!(tracks_of(&a, &edges).iter().all(|&t| t == 1));
+    assert!(st.iter().all(|&n| a.w.net.node_tracks(n) == 1));
+    assert!(a.w.svc.lines[line as usize].running && !a.w.net.line_broken[line as usize]);
+
+    let (mut a, _, line) = quad_run();
+    let express: Vec<u32> = live(&a).into_iter().filter(|&e| mid_y(&a, e) > 4.0).collect();
+    assert_eq!(a.rebuild_pieces(&express, &[], 99, 0, 1), 0, "{}", a.issue_kinds());
+    assert!(tracks_of(&a, &express).iter().all(|&t| t == 1));
+    assert!(live(&a).iter().filter(|&&e| mid_y(&a, e) < 4.0).all(|&e| a.w.net.edge_tracks[e as usize] == 2), "the drawn pair stays double");
+    assert!(a.w.svc.lines[line as usize].running && !a.w.net.line_broken[line as usize]);
 }
 
 /// A crossover at a piece's end keeps it double; the pieces with none go single.
@@ -335,21 +367,54 @@ fn a_flying_junction_keeps_its_track_double() {
     assert!(tracks_of(&a, &at_j).iter().all(|&t| t == 2));
 }
 
-/// A station with passing tracks keeps its track double while that would leave it single-track; with the
-/// track on one side only picked it keeps a double side and the piece goes.
+/// T-3339: a station with passing tracks keeps its double track along its platform and `PASSING_RUN_OUT` past each
+/// end; the pieces either side are split there and go single beyond. Free, nothing refused, the line runs, and on
+/// blueprint one undo puts the pieces back whole.
 #[test]
-fn passing_tracks_keep_their_station_double() {
-    let (mut a, st, _) = run(2);
-    assert_eq!(a.set_station_upgrade(&st[..1], crate::track::upgrades::PASSING, true), 0, "{}", a.issue_kinds());
-    let edges = live(&a);
-    assert_eq!(a.set_edges_tracks(&edges, 1), 0, "{}", a.issue_kinds());
-    assert_eq!(a.last_skipped(), 2, "the two pieces at the station");
-    assert!(a.issue_kinds().contains("NoSingle:Passing"), "{}", a.issue_kinds());
-    assert_eq!(a.w.net.node_tracks(st[0]), 2);
-    assert_eq!(edges.iter().filter(|&&e| a.w.net.edge_tracks[e as usize] == 1).count(), 1, "the piece past the other station");
-    assert_eq!(a.undo(), 0);
-    let one = *edges.iter().find(|&&e| [a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]].contains(&st[0])).unwrap();
-    assert_eq!(a.set_edges_tracks(&[one], 1), 0, "{}", a.issue_kinds());
-    assert_eq!(a.w.net.edge_tracks[one as usize], 1);
-    assert_eq!(a.w.net.node_tracks(st[0]), 2);
+fn a_station_with_passing_tracks_stays_the_double_passing_place() {
+    for built in [false, true] {
+        let (mut a, st, line) = run(2);
+        assert_eq!(a.set_station_upgrade(&st[..1], crate::track::upgrades::PASSING, true), 0, "{}", a.issue_kinds());
+        if built {
+            assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        }
+        let edges = live(&a);
+        assert_eq!(edges.len(), 3);
+        let cash = a.cash();
+        if built {
+            let q = a.rebuild_quote(&edges, &[], 99, 0, 1);
+            assert_eq!((q[0], q[1] as usize, q[2], q[3]), (0.0, 3, 0.0, 0.0), "{q:?} {}", a.issue_kinds());
+            assert_eq!(a.rebuild_pieces(&edges, &[], 99, 0, 1), 0, "{}", a.issue_kinds());
+        } else {
+            assert_eq!(a.set_edges_tracks(&edges, 1), 0, "{}", a.issue_kinds());
+        }
+        assert_eq!(a.last_skipped(), 0, "{built} {}", a.issue_kinds());
+        assert_eq!(a.cash(), cash, "free");
+        let net = &a.w.net;
+        let now = live(&a);
+        assert_eq!(now.len(), 5, "the two pieces at the station split");
+        let at_st: Vec<u32> = now.iter().copied().filter(|&e| net.edge_a[e as usize] == st[0] || net.edge_b[e as usize] == st[0]).collect();
+        assert_eq!(at_st.len(), 2);
+        for &e in &at_st {
+            assert_eq!(net.edge_tracks[e as usize], 2);
+            assert!((net.edge_len[e as usize] - (100.0 + super::rebuild::PASSING_RUN_OUT)).abs() < 1.0, "platform half and run-out: {}", net.edge_len[e as usize]);
+            assert_eq!(net.edge_built[e as usize], built);
+        }
+        assert!(now.iter().filter(|e| !at_st.contains(e)).all(|&e| net.edge_tracks[e as usize] == 1));
+        assert_eq!(net.node_tracks(st[0]), 2, "the passing place");
+        assert_eq!(net.node_tracks(st[1]), 1);
+        assert_eq!(net.station_data(st[0]).unwrap().upgrades & crate::track::upgrades::PASSING, crate::track::upgrades::PASSING);
+        assert!((!built || a.w.svc.lines[line as usize].running) && !net.line_broken[line as usize]);
+        if built {
+            assert!(!a.can_undo());
+        } else {
+            assert_eq!(a.undo(), 0);
+            assert_eq!(live(&a), edges);
+            assert!(tracks_of(&a, &edges).iter().all(|&t| t == 2));
+        }
+        // made single again: nothing left to do
+        if built {
+            assert_eq!(a.rebuild_pieces(&live(&a), &[], 99, 0, 1), 1);
+        }
+    }
 }

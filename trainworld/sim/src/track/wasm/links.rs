@@ -334,11 +334,14 @@ impl TrackApi {
         let plan = self.plan_edges(ids, None, None, Some(tracks), false, &[]);
         self.skipped = plan.refused.len() as u32;
         if plan.take.is_empty() {
+            self.release(&plan.fresh.0, &plan.fresh.1);
             self.money_short = None;
             self.issues = plan.issues;
             return 1;
         }
         let r = self.run(Op::Batch(plan.take));
+        // ids the edit did not take are given back (`release` skips live ones)
+        self.release(&plan.fresh.0, &plan.fresh.1);
         self.skipped = plan.refused.len() as u32;
         if r == 0 {
             self.issues = plan.issues;

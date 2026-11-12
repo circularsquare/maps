@@ -1401,14 +1401,19 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   0 (`rebuild_plan`'s `priced` leaves out a piece whose only change is its count); with a level or type change too,
   that change is paid as usual at the single track's price. Stations on it become single-track stations, uncharged
   (a station keeps a double-track platform while any of its track stays double, `node_tracks`). Lines keep running
-  over it at once, now with a shared `SingleTrack` section. Nothing that needs two tracks is taken away: the piece is
-  refused, with its reason (`Issue::NoSingle`), when it is high-speed track (unless made regular in the same rebuild)
-  or tram track, quad track (double track parallel at about 8 m beside its middle), has a crossover at either end,
-  meets a flying junction, has a one-way single piece joined to one of its two tracks at an end (a flyover's leg, a
-  lane beside double track), or ends at a station with passing tracks that would be left with single track only. A
-  two-way single piece joined to it is no reason: the join stays stored and counts again if the track is made double
-  again (`join_applies`). A piece refused for its count keeps its level and type too. Blueprint double track made
-  single (`set_edges_tracks` 1) is free and one undoable edit; built is final.
+  over it at once, now with a shared `SingleTrack` section. Nothing that cannot work on single track is taken away:
+  the piece is refused, with its reason (`Issue::NoSingle`), when it is high-speed track (unless made regular in the
+  same rebuild) or tram track, has a crossover at either end, meets a flying junction, or has a one-way single piece
+  joined to one of its two tracks at an end (a flyover's leg, a lane beside double track). A two-way single piece
+  joined to it is no reason: the join stays stored and counts again if the track is made double again
+  (`join_applies`). A piece refused for its count keeps its level and type too. Quad track is two doubles (T-3339,
+  Anita 2026-11-12): each picked pair goes single on its own, so quad picked whole becomes two singles side by side
+  and one pair picked leaves single beside double; a station on a pair becomes a single-track station. A station with
+  passing tracks (T-3339) stays a double-track passing place: each picked piece at it keeps double track along the
+  platform's reach and `PASSING_RUN_OUT` (20 m) past it, split there in the same edit (`passing_cuts`, `Op::Split`,
+  free), and goes single beyond; a piece too short to split that way (under 10 m of single left), one that will not
+  split there (a ramp), or one whose level or type changes in the same rebuild stays double whole, not refused.
+  Blueprint double track made single (`set_edges_tracks` 1) is free and one undoable edit; built is final.
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
   **Disabled blueprint** (T-333): a blueprint edge or station can be switched off (`off` on
