@@ -50,6 +50,16 @@ one-track, screenshots, flags...; stale: sideSwitch.ask/reversed, issues.buildin
 (her text OK); server deploy (her word); website about-page flag credit (notes/T-3328.md); smoke8800 light + dark;
 deploy.py with a new data version (gap packs); open-source repo.
 
+## Late 11-12 (~19:30 local)
+- 8800 = f90e7495 (schematic water + bigger centres, Settings tidy), pushed.
+- Maps-root screenshots: 361 old tracked PNGs `git rm`-staged (her TODO "clean up screenshots in maps root, those are
+  public facing"); the deletion commit waits for her OK (outside trainworld paths). Commit trainworld work with
+  `-- <paths>` only so the staged deletions don't ride along.
+- **t3367** a8e4cd16301a04643 (Sonnet, main tree, 6198): T-3367 running side off the new-world screen (v0.3.3).
+- **bus** aa9ad050e96732d35 (Sonnet, .tw-trees/bus, 6199): T-3366 drag a bus route from anywhere to add a waypoint.
+- **onelook** abebe6d27b2d052aa (main tree): one-way station selector round (see below).
+- She asked whether to start a new orchestrator now: I said yes, any time (this file is current).
+
 ## Running agents (all maps-37's)
 - **gaprun2** aa8d3bc594c20a4d8 (Opus, main tree + sole data/packs writer): T-3287 join ES,PT,FR,RO,BA,GR,HR,AL,KP
   running (python pid 21260, claim gaprun-join 6; ~3-3.5 h from ~16:40 local), then after-join steps (stale.py,
