@@ -70,7 +70,9 @@ Chinese take theirs, as Intl (ICU) writes them for the locale.
   the player's currency's ("£", "€", "¥", "₩"; `game/currency.ts` has the rates), and a T (trillion, 兆) follows B
   for yen and won. T-2860: 44 currencies in all (`CURRENCIES` is the picker's order: USD EUR GBP JPY CNY KRW CAD AUD
   INR MXN, then by code); a symbol ending in a letter carries its space ("CHF 2.90", "kr 20.00"); a player who has
-  not chosen starts on the currency of the first browser language with a region (`defaultCurrency`), else USD.
+  not chosen starts on the currency of the first browser language that says one (`defaultCurrency`): a language with a
+  region by its region (en-GB, es-MX), a plain ja, ko or zh by yen, won and yuan, zh-Hant by Taiwan's dollar (T-3316), the first such entry in the
+  list wins (`["ja", "en-US"]` is yen); any other plain language says nothing; USD when none does. Not on the account.
 - **Durations** (`duration`, `i18n/intl.ts` `formatDuration`): English "4m08s", "1h01m", "42s". Japanese 4分8秒,
   1時間1分, 42秒; zh-Hans 4分8秒, 1小时1分; zh-TW 4分8秒, 1小時1分. A zero last part is left off (1時間, and a
   whole minute 2分, 2分钟, 2分鐘). A language with no words in `DURATION_UNITS` writes English's.

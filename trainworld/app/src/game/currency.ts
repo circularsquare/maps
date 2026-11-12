@@ -94,12 +94,19 @@ for (const r of EURO.split(" ")) REGION[r] = "EUR";
 
 /** T-2860: the currency a player with no choice starts on: the region of the first of the browser's languages
  * that has one (es-MX gives MXN, en-GB GBP, de-DE EUR). A language with no region, like plain "es", says
- * nothing; never the city a game starts in. USD when nothing says. */
+ * nothing; never the city a game starts in. USD when nothing says.
+ * T-3316: except plain ja, ko and zh (no region), which start on yen, won and yuan: those browsers are
+ * set to one country's language and nothing else. The first entry that says anything wins, so
+ * ["ja", "en-US"] is yen and ["en", "ja"] is yen. Traditional script with no region (zh-Hant) is Taiwan's dollar,
+ * since most of its readers are in Taiwan. */
+const BARE: Record<string, Currency> = { ja: "JPY", ko: "KRW", zh: "CNY", "zh-hant": "TWD" };
 export function defaultCurrency(langs?: readonly string[]): Currency {
   const list = langs ?? (typeof navigator === "undefined" ? [] : navigator.languages?.length ? navigator.languages : [navigator.language ?? ""]);
   for (const l of list) {
-    const region = l.split(/[-_]/).slice(1).find((p) => /^[A-Za-z]{2}$/.test(p));
-    const c = region && REGION[region.toUpperCase()];
+    const parts = l.split(/[-_]/);
+    const region = parts.slice(1).find((p) => /^[A-Za-z]{2}$/.test(p));
+    const lang = parts[0].toLowerCase();
+    const c = region ? REGION[region.toUpperCase()] : BARE[parts[1]?.toLowerCase() === "hant" ? `${lang}-hant` : lang] ?? BARE[lang];
     if (c) return c;
   }
   return "USD";
