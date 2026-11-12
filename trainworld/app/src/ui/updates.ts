@@ -44,7 +44,6 @@ export const UPDATES: Update[] = [
       "updates.v031Search",
       "updates.v031Played",
       "updates.v031Button",
-      "updates.v031Hidden",
     ],
   },
   {
