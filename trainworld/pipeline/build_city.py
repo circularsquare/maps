@@ -329,8 +329,7 @@ CITIES = {
         # taken as straight-line: CAUPD-Baidu's 2024 home-work figure is 9.8 km (notes/T-291.md)
         "curve": {"mean_km": 10.2},
         "od_share": {"ZSPD": 0.85},  # Pudong's transfer passengers, judgement (notes/T-291.md)
-        # CAAC 2024 airport bulletin via the press (notes/T-291.md): passengers / 2
-        "boardings": {"ZSPD": (76789000 / 2, "2024, CAAC via press"), "ZSSS": (47972000 / 2, "2024, CAAC via press")},
+        # passengers: CAAC's 2025 bulletin through pipeline/airport_passengers.csv (T-2896)
         "region_name": "Shanghai",
         "latin_names": True,  # places.py: name:en, then name:zh-Latn-pinyin, then name (T-291)
     },

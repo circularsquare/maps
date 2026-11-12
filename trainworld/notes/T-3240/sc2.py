@@ -27,7 +27,7 @@ NAT = {"US": (0.0268, 0.0098), "JP": (None, 0.006), "DE": (0.024, 0.008), "PL": 
        "ES": (None, 0.008), "CN": (None, 0.005), "RU": (None, 0.005), "TR": (None, 0.004), "IT": (None, 0.0055), "IN": (None, None), "BR": (None, None)}
 
 
-def scenario(gamma=CFG["gamma"], gx=CFG["gamma_x"], cn=CFG["country_gamma"]["CN"], phase=CFG["phase_km"], damp=0.0, ex=EX0, nopull=False, cg=None, off=None):
+def scenario(gamma=CFG["gamma"], gx=CFG["gamma_x"], cn=CFG["country_gamma"]["CN"], phase=CFG["phase_km"], damp=0.0, ex=EX0, nopull=False, cg=None, off=None, near=None):
     if nopull:
         return T
     cg = dict(cg or {}); cg["CN"] = cn
@@ -36,6 +36,9 @@ def scenario(gamma=CFG["gamma"], gx=CFG["gamma_x"], cn=CFG["country_gamma"]["CN"
     full = np.where(same, np.expm1(gdom[None, :] * ex[None, :]), np.expm1(gx * ex[None, :])).astype(np.float32)
     full *= np.exp(-damp * ex)[:, None].astype(np.float32)
     W = full * on(d, *phase).astype(np.float32) + 1
+    for c, gn in (near or {}).items():
+        m = (cc == c).astype(np.float32)
+        W += (m[:, None] * m[None, :] * np.expm1(gn * ex)[None, :]).astype(np.float32)
     W[OFF if off is None else np.isin(cc, off)] = 1.
     k = dep / (dep + (T * (W - 1)).sum(1))
     return T * W * k[:, None].astype(np.float32)
@@ -59,7 +62,7 @@ def nat(M, c):
 if __name__ == "__main__":
     arg = lambda k, dflt: float(sys.argv[sys.argv.index(k) + 1]) if k in sys.argv else dflt
     ph = [float(v) for v in sys.argv[sys.argv.index("--phase") + 1].split(",")] if "--phase" in sys.argv else CFG["phase_km"]
-    M = scenario(arg("--gamma", CFG["gamma"]), arg("--gx", CFG["gamma_x"]), arg("--cn", CFG["country_gamma"]["CN"]), ph, arg("--damp", 0.), off=sys.argv[sys.argv.index("--off") + 1].split(",") if "--off" in sys.argv else None, cg={k: float(v) for k, v in (kv.split(":") for kv in sys.argv[sys.argv.index("--cg") + 1].split(","))} if "--cg" in sys.argv else None)
+    M = scenario(arg("--gamma", CFG["gamma"]), arg("--gx", CFG["gamma_x"]), arg("--cn", CFG["country_gamma"]["CN"]), ph, arg("--damp", 0.), off=sys.argv[sys.argv.index("--off") + 1].split(",") if "--off" in sys.argv else None, near={"PL": arg("--near", 0.)}, cg={k: float(v) for k, v in (kv.split(":") for kv in sys.argv[sys.argv.index("--cg") + 1].split(","))} if "--cg" in sys.argv else None)
     print(sys.argv[1:])
     for name, L in [("overshoot", OVER), ("fitted", FIT), ("across a border", XB), ("other", OTHER)]:
         print(name)
@@ -71,6 +74,7 @@ if __name__ == "__main__":
     for c, (c1, c3) in NAT.items():
         b1, b3, ba = nat(T, c); m1, m3, ma = nat(M, c)
         print(f"  {c}: 100-300 {b1:.4f} -> {m1:.4f} (ceil {c1}), 300+ {b3:.4f} -> {m3:.4f} (ceil {c3}), abroad {ba:.4f} -> {ma:.4f}")
+
 
 
 

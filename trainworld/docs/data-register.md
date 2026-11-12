@@ -290,14 +290,14 @@ split over 100 km (microdata by application).
 
 | Country | Schools | Universities | Medical | Airports |
 |---|---|---|---|---|
-| United States | U NCES CCD public schools (planned rows OSM until T-1019); N NCES PSS private, T-142 | U IPEDS (planned rows OSM until T-1019) | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share (planned rows Wikidata until T-1019) |
+| United States | U NCES CCD public schools (planned rows OSM until T-1019); N NCES PSS private, T-142 | U IPEDS (planned rows OSM until T-1019) | U OSM (relations skipped, T-203) | U FAA enplanements, DB1B connecting share (planned rows: Wikidata passengers until T-1019, DB1B connecting share from the next rebuild, T-2896) |
 | Canada | U Ontario school file (per province) | U COU and Ontario college files (per province, tor only); N partner campuses, T-282; planned rows tier 0 (UBC Vancouver's Wikidata item has no count; from its next rebuild it takes UBC's by occupant, T-3216); ? Universities Canada enrolment by university (national), T-3213 | U OSM | U StatCan 23-10-0253-01; connecting by judgement |
 | England | U GIAS | N HESA Table 1 by provider, T-382 | U OSM | U Wikidata; Heathrow 0.7 by judgement |
 | France | N ministry directory with pupils, T-385 | ? ministry students by site, T-505 | U OSM | U Wikidata; CDG 0.75 by judgement |
 | Germany | U tier 0 OSM (school files per Land) | ? Destatis 21311 by institution, T-505 | U OSM | U Wikidata |
-| Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (sized by rule, T-387) | U Wikidata; Narita 0.8 by judgement |
+| Japan | U KSJ P29 points, mesh children 0-14 | U tier 0 (short in some zones, T-462) | U OSM, beds almost never tagged (sized by rule, T-387) | U Wikidata (Haneda's and Narita's 2024 match the airports' published totals, T-2896); Narita 0.8 by judgement; ? MLIT's airport management survey (every airport's passengers, yearly), not opened |
 | Brazil | U tier 0 OSM; ? INEP school census, T-506 | U tier 0 | U OSM; ? CNES beds by establishment, T-506 | U GRU via the press, Congonhas Wikidata |
-| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U sha: CAAC bulletin via the press; the Jiangsu rows tier 0 (OurAirports, Wikidata patronage); N the bulletin itself, every airport (2025 edition: 270), T-897 |
+| China | U tier 0 OSM | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U from the next rebuild, every zone: CAAC's 2025 airport bulletin, its ranking table (268 airports, 266 with traffic, 1,529M passengers; matched to IATA by Wikidata's Chinese labels, `pipeline/airport_passengers.csv`), T-2896; until then sha the 2024 bulletin via the press, the rest Wikidata patronage (213 of 258 at 2022) |
 | South Korea | U tier 0 OSM | U tier 0 (3 of 217 sites with Wikidata counts) | U OSM, no beds tagged (sized by rule, T-387) | U Wikidata; Incheon 0.85 by judgement |
 | India | U tier 0 OSM; G UDISE+ enrolment (behind the portal) | U tier 0 | U OSM, one hospital with beds (sized by rule, T-387) | U the operator's total via the press |
 | Vietnam | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9) | U tier 0 | U OSM, beds by the World Bank rule below | U OurAirports sites with Wikidata patronage, O&D share 1 |
@@ -309,7 +309,12 @@ split over 100 km (microdata by application).
 | Spain, Italy, Austria, Belgium, Greece, Poland, Hungary, Netherlands, Portugal, Russia, Belarus, Ukraine, Turkey, Mexico, Sweden, Romania, Denmark, Switzerland, Serbia, Norway, Finland, Bulgaria, Czechia, Ireland, Albania, Wales, Scotland, Northern Ireland, the zones-only countries (Population above), the T-2695, T-2696 and T-2697 countries, Morocco, Algeria, Tunisia and Egypt (Population above), Israel and Palestine (Population above) | U tier 0 OSM (pupils = population x World Bank 0-14 share x 0.9); ? national school registers not looked for | U tier 0 (Wikidata students where tagged, scaled to the World Bank tertiary rate) | U OSM, beds by the World Bank rule below | U OurAirports sites in the pack with Wikidata patronage, O&D share 1 (Tirana: none inside the pack) |
 
 Everywhere: places and parks from OSM, water from OSM (TIGER and StatCan in the US and Canada),
-world market from the packs. U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,
+world market from the packs. Airports (T-2896): U OurAirports sites; U a national authority's count where
+`pipeline/airport_passengers.csv` has one (China only so far), else U Wikidata patronage (P3872, CC0) under
+the rule in demand-worldwide.md (whole years, 2020-22 avoided, from the next rebuild); G ACI World's
+airport traffic (paid; its free releases list only the top 20); N Eurostat `avia_paoa` (passengers by
+reporting airport, EU, EFTA and candidate countries, yearly), T-3270; skip Flightradar24 for
+passengers (flights and seats, not passengers; the market's air routes use it, not airport traffic). U hospital beds per 1,000 people from the World Bank (SH.MED.BEDS.ZS,
 CC BY 4.0, the country's latest year, cached in `pipeline/hospital_beds.json`; none for Taiwan,
 which takes the world figure) scale every pack's hospital beds (T-387). U attractions from
 Wikidata through QLever (CC0; visitors P1174 where given; one world file,

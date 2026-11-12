@@ -49,7 +49,9 @@ station buildings and T-2278's parking by income). The full rules are in demand.
   neighbouring cities. Where two cities meet, commuting across the line is damped to half (0.5;
   the US keeps its own: none inside a state, 0.23 across one). Errands, visits, school and doctor's trips cross the line
   as if it were not there: a place right on the Guangzhou - Foshan line gets about a quarter of its
-  visitors from the other side. These come with the next rebuild of the data.
+  visitors from the other side. Airport trips cross too: an airport in a county zone outside its
+  city (Wuhan's, Istanbul's) takes its passengers from the city, up to the airport's published
+  passengers and never more. These come with the next rebuild of the data.
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
   (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
   traveller's country (0.26 for the richest).

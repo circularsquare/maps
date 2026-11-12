@@ -181,7 +181,7 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   that solve); when an older member FAILs, every new pack parks (T-773). A unit's fixed list is
   cut to the packs registered when that unit runs, so a unit that parked earlier takes no later
   unit with it, and the market step leaves out commutes naming packs that left (T-997). Then `register.py
-  <shipped and changed> --market --trips` (or `market_zones.py --rows`
+  <shipped and changed> --market --trips` (its zone files over `--jobs` processes from 100 zones, T-2627) (or `market_zones.py --rows`
   when only parks happened), and a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
@@ -200,6 +200,29 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
 - **Clean up**: the region's `.osm.pbf` files and the OSM caches the runner made go once the
   region is done (`--keep-downloads` keeps them); caches already on disk before, and the small
   `.admin.fgb`, stay.
+
+### The light pass (T-3244)
+
+A demand change that needs no extract read and no joint solve (education, airports, the everyday kernel's
+inputs, the market's normalisers) reaches every shipped tier 0 pack through `pipeline/light_pass.py`, not a
+world run: the res-9 copies hold the joint solve's result and a merge keeps every zone's sums. From the maps
+root, overnight (its gate's rates test builds from sim/ once at its start; no sim/ landings while it starts):
+
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py step light_pass run --jobs 10
+
+Detached, as any data run. It holds the `packs` lock throughout (no world_run gate or join starts), claims
+its cores in cores.py, and runs in order: a hard-link backup of data/packs and data/work/res9 into
+`data/work/pre-T3244/`; `campus_outlines.py split` (each pack's universities and colleges with outlines,
+from the world bands `campus_outlines.py fetch` fetched beforehand, so a cache made before T-3214 gets
+outlines with no extract read); `wikidata_prefill.py` (200 ids a query); `merge_cells --through` with
+`--keep-going`, "tier0 {id} --education --airports" on the packs whose airport audit names an airport and
+"--education" on the rest; `cross_everyday --group auto`; `market_zones --full --workers N`; every zone's
+`localTrips`; the figures gate (`pack_gate.py --no-browser`) in N processes; `t2213_packs_load.py` against
+the baseline; `freeze.py`. Logs and times in `../artifacts/trainworld/light_pass/<batch>/`. A pack whose
+step failed stays res-9 in data/packs and the run stops after that step, listing them (`failed.txt`):
+`--from through --ids <failed.txt>`, then `--from cross`. `plan` prints the id lists and writes nothing.
+Hand packs (the US metros, lon, par, tor, sao, the Japan metros) are not plan rows and are left as they are.
+`seams.py` (T-2112) is not a step: its seamless list feeds only the joint gravity, and the pass solves nothing.
 
 ### Status, stopping and faults
 

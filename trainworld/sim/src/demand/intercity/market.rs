@@ -142,20 +142,21 @@ impl Market {
     #[inline(always)]
     pub(super) fn directed(&self, i: usize, j: usize, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let r = self.pr(i, j);
-        self.directed_by(r.b, r.rel, r.pull, g, t, a, ta, d)
+        self.directed_by(r.b, r.rel, r.pull, r.pull_near, g, t, a, ta, d)
     }
-    /// `directed` with the pair's border and income factors and its pull (`PairRule::pull`) given.
+    /// `directed` with the pair's border and income factors and its pulls (`PairRule::pull`, `pull_near`) given.
     #[inline(always)]
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn directed_by(&self, b: f64, rel: f64, pull: f64, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
+    pub(super) fn directed_by(&self, b: f64, rel: f64, pull: f64, pull_near: f64, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let ground = if g > 0. { g * self.rule.ground(d) * a } else { 0. };
         let tail = if t > 0. { t * self.rule.tail(d) * ta * rel } else { 0. };
-        b * self.pull_w(pull, d) * (ground + tail)
+        b * self.pull_w(pull, pull_near, d) * (ground + tail)
     }
-    /// T-3240: a pair's pull at `d` km, from its full strength less 1 (exactly 1 with none).
+    /// T-3240: a pair's pull at `d` km, from its full strength less 1, plus T-3254's unfaded local pull
+    /// (exactly 1 with neither).
     #[inline(always)]
-    pub(super) fn pull_w(&self, pull: f64, d: f64) -> f64 {
-        if pull > 0. { 1. + pull * self.rule.pull_on(d) } else { 1. }
+    pub(super) fn pull_w(&self, pull: f64, pull_near: f64, d: f64) -> f64 {
+        if pull > 0. || pull_near > 0. { 1. + pull * self.rule.pull_on(d) + pull_near } else { 1. }
     }
     /// A 6 km zone pair's trips a day each way: the mean of the two directions. Near places' zones
     /// at their own distance, far places' at their centres' (so their pairs add up to the places').
@@ -169,7 +170,7 @@ impl Market {
     /// them out once (T-780): the same figure to the bit.
     #[inline(always)]
     pub(super) fn eachway_with(&self, a: &Zone, b: &Zone, (gc, tc, d): (f64, f64, f64)) -> f64 {
-        let one = |r: PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * self.pull_w(r.pull, d) * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
+        let one = |r: PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * self.pull_w(r.pull, r.pull_near, d) * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
         (one(self.pr(a.place, b.place), a.g, a.t, b.a, b.ta) + one(self.pr(b.place, a.place), b.g, b.t, a.a, a.ta)) * 0.5
     }
     /// The ground and tail curves of zones a and b and their distance (`eachway_with`).
@@ -200,7 +201,7 @@ impl Market {
             return self.place_eachway(z.place, j) * share;
         }
         let (q, back) = (&self.places[j], self.pr(j, z.place));
-        (self.directed_by(r.b, r.rel, r.pull, z.g, z.t, q.a, q.ta, r.km) + self.directed_by(back.b, back.rel, back.pull, q.g, q.t, z.a, z.ta, r.km)) * 0.5
+        (self.directed_by(r.b, r.rel, r.pull, r.pull_near, z.g, z.t, q.a, q.ta, r.km) + self.directed_by(back.b, back.rel, back.pull, back.pull_near, q.g, q.t, z.a, z.ta, r.km)) * 0.5
     }
     /// The corridor of places i and j (either order): pairs a <= b numbered a then b.
     pub(super) fn corridor(&self, i: usize, j: usize) -> usize {
@@ -287,6 +288,7 @@ impl Market {
         let open_area: Vec<bool> = self.countries.iter().map(|c| OPEN_AREA.contains(&c.as_str())).collect();
         // T-3240: each country's pull gamma within it, and whether its residents see none
         let home_gamma: Vec<f64> = self.countries.iter().map(|c| rule.pull_gamma_of(c, c)).collect();
+        let near_gamma: Vec<f64> = self.countries.iter().map(|c| rule.pull_near_gamma_of(c, c)).collect();
         let off: Vec<bool> = self.countries.iter().map(|c| rule.pull_off.contains(c)).collect();
         let factors = |i: usize, j: usize| {
             let (p, q) = (&self.places[i], &self.places[j]);
@@ -310,7 +312,12 @@ impl Market {
             } else {
                 0.
             };
-            (b, rel, pull)
+            let pull_near = if q.px > 0. && p.country == q.country && near_gamma[q.country as usize] > 0. {
+                (near_gamma[q.country as usize] * q.px).exp_m1()
+            } else {
+                0.
+            };
+            (b, rel, pull, pull_near)
         };
         // (corridor order is this loop's order, so the lists come sorted; sized for every pair of places
         // with zones, nearly all of which have trips, so they never grow by doubling)
@@ -338,8 +345,8 @@ impl Market {
                 let t = if km < rule.near_km {
                     self.near.get(&(i as u32, j as u32)).copied().unwrap_or(0.)
                 } else {
-                    let ((bi, ri, ui), (bj, rj, uj)) = (factors(i, j), factors(j, i));
-                    (self.directed_by(bi, ri, ui, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, uj, q.g, q.t, p.a, p.ta, km)) * 0.5
+                    let ((bi, ri, ui, ni), (bj, rj, uj, nj)) = (factors(i, j), factors(j, i));
+                    (self.directed_by(bi, ri, ui, ni, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, uj, nj, q.g, q.t, p.a, p.ta, km)) * 0.5
                 };
                 if t > 0. {
                     at.push(tri(np, i, j) as u32);

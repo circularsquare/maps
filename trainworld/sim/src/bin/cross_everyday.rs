@@ -43,6 +43,9 @@ fn main() {
         let all: f64 = m.iter().sum::<f64>() / o.iter().sum::<f64>().max(1e-9);
         let by = names.iter().enumerate().map(|(s, n)| format!("{n} {:.0} ({:.2}%)", m[s], 100.0 * m[s] / o[s].max(1e-9))).collect::<Vec<_>>().join(", ");
         eprintln!("{}: {} zones with a kept share under 1; outings leaving {:.2}% ({by})", p.id, unit.kept[pi].len(), 100.0 * all);
+        if unit.air_outside[pi] > 0.0 {
+            eprintln!("{}: airports' outings from outside the pack {:.0} a day, {:.0} placed in other packs", p.id, unit.air_outside[pi], unit.air_moved[pi]);
+        }
     }
     let n = v["trips"].as_array().map_or(0, |a| a.len());
     let t: f64 = v["trips"].as_array().map_or(0.0, |a| a.iter().filter_map(|x| x.as_f64()).sum());

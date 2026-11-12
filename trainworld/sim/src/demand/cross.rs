@@ -12,7 +12,7 @@
 //! layer's `no_rail` does (straight walks: no pack's water routes span two packs). The regional
 //! layer carries those pairs.
 use super::{
-    everyday::{local_share, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
+    everyday::{local_share, AIRPORT_CLEAR_M, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
     kernel::{zones_from_pack, Params, Zones, CELL_KM2},
     pack,
 };
@@ -20,10 +20,28 @@ use crate::track::frame::Frame;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-/// The everyday purposes that cross a line, by `everyday` kind: errands, social, school,
-/// university, medical. Airports and attractions keep each site's own total, so none of theirs
-/// moves.
+/// The everyday purposes that cross a line by the draw over zones, by `everyday` kind: errands,
+/// social, school, university, medical. Attractions keep each site's own total, so none of theirs
+/// moves. Airports keep theirs in the pack and cross by their own draw (`AIR_SLOT`).
 pub const CROSS: [usize; 5] = [0, 1, 2, 3, 5];
+/// T-2896 (5): the pairs' slot for airport trips, after `CROSS`'s: each airport's outings of the
+/// people outside its pack (the pack's `airport.sites`, written by tier0's airports step) drawn
+/// over the other packs' cells as the everyday layer draws an airport's ends, the airport the
+/// draw's origin.
+pub const AIR_SLOT: usize = CROSS.len();
+const AIRPORT: usize = 4;
+/// Terminal cells (cells with airport trips) this close to an airport's point are its own.
+const TERMINAL_M: f64 = 4000.0;
+/// The everyday kind of a pair slot.
+pub fn slot_kind(slot: usize) -> usize {
+    if slot < CROSS.len() {
+        CROSS[slot]
+    } else {
+        AIRPORT
+    }
+}
+/// The kinds whose pairs the activity end's pack draws (the site): market_zones files them there.
+pub const SITE_KINDS: [usize; 3] = [2, 3, AIRPORT];
 /// Pairs this far apart, centre to centre, take part: where the everyday layer's `local_share`
 /// reaches nothing.
 pub const REACH_KM: f64 = 80.0;
@@ -40,7 +58,21 @@ const KEPT_WRITE: f64 = 0.9995;
 const SQ_M: f64 = 6000.0;
 
 fn site_anchored(slot: usize) -> bool {
-    matches!(CROSS[slot], 2 | 3)
+    SITE_KINDS.contains(&slot_kind(slot))
+}
+
+/// One airport of a solved pack, as its pack's header gives it.
+struct AirSite {
+    /// the airport's point in the pack's frame, then the unit's
+    x: f64,
+    y: f64,
+    wx: f64,
+    wy: f64,
+    /// outings a day of the people outside the pack, and their weight (people x exp(-d / 20 km))
+    outside: f64,
+    weight: f64,
+    /// its terminal cells and each one's share of its trips
+    cells: Vec<(u32, f64)>,
 }
 fn has_central(slot: usize) -> bool {
     CROSS[slot] < 2
@@ -80,6 +112,12 @@ pub struct CrossPack {
     csq: Vec<u32>,
     /// per zone, its cells
     members: Vec<Vec<u32>>,
+    /// T-2896 (5): the pack's airports, and per cell the airport trips' home and visitor end weight
+    /// in people (`EverydayApi::beside_with`'s half residents, quarter jobs, quarter leisure jobs,
+    /// each a share of the pack's residents so packs compare)
+    airports: Vec<AirSite>,
+    air_origin: Vec<f32>,
+    air_rate: f64,
 }
 
 impl CrossPack {
@@ -165,6 +203,34 @@ impl CrossPack {
         }
         let origin = (h["origin"]["lon"].as_f64().ok_or("no origin")?, h["origin"]["lat"].as_f64().ok_or("no origin")?);
         let country = h["country"].as_str().unwrap_or("US").to_uppercase();
+        let tj = sum(&jobs);
+        let air_origin: Vec<f32> = (0..n)
+            .map(|c| {
+                let l = if tl > 0.0 { 0.25 * leisure[c] as f64 / tl } else { 0.0 };
+                ((0.5 * pop[c] as f64 / tp.max(1e-9) + if tj > 0.0 { 0.25 * jobs[c] as f64 / tj } else { 0.0 } + l) * tp) as f32
+            })
+            .collect();
+        let air_rate = rate(AIRPORT) as f64;
+        let mut airports = vec![];
+        if let Some(sites) = h["airport"]["sites"].as_array().filter(|s| !s.is_empty()) {
+            let trips = w("airport_trips")?.unwrap_or_else(|| zeros.clone());
+            let fr = Frame::equirect(origin.0, origin.1);
+            for s in sites {
+                let (Some(lon), Some(lat), Some(outside), Some(weight)) = (s["lon"].as_f64(), s["lat"].as_f64(), s["outside_outings"].as_f64(), s["outside_weight"].as_f64()) else { continue };
+                if !(outside > 0.0) {
+                    continue;
+                }
+                let (x, y) = fr.from_lonlat(lon, lat);
+                let near: Vec<(u32, f64)> = (0..n)
+                    .filter(|&c| trips[c] > 0.0 && (city.x[c] as f64 - x).powi(2) + (city.y[c] as f64 - y).powi(2) <= TERMINAL_M * TERMINAL_M)
+                    .map(|c| (c as u32, trips[c] as f64))
+                    .collect();
+                let t: f64 = near.iter().map(|e| e.1).sum();
+                if t > 0.0 {
+                    airports.push(AirSite { x, y, wx: 0.0, wy: 0.0, outside, weight, cells: near.into_iter().map(|(c, v)| (c, v / t)).collect() });
+                }
+            }
+        }
         Ok(CrossPack {
             id: id.to_string(),
             country,
@@ -190,6 +256,9 @@ impl CrossPack {
             cwy: vec![],
             csq: vec![],
             members,
+            airports,
+            air_origin,
+            air_rate,
         })
     }
 
@@ -249,6 +318,10 @@ pub struct Unit {
     /// outings a day moved out of each pack's zones, by slot (before dropping small pairs)
     pub moved: Vec<[f64; 5]>,
     pub outings: Vec<[f64; 5]>,
+    /// T-2896 (5): per pack, its airports' outings of the people outside it, and of those the
+    /// outings the draw places in other packs (before the 40-80 km taper)
+    pub air_outside: Vec<f64>,
+    pub air_moved: Vec<f64>,
 }
 
 /// The border factor between two packs' countries: 1 inside a country, `borders.json`'s national
@@ -275,6 +348,9 @@ pub fn run(packs: &mut [CrossPack], borders: &Value, threads: usize) -> Unit {
             world.from_lonlat(lon, lat)
         };
         (p.wx, p.wy) = (0..p.z.n).map(|i| to_world(p.px[i], p.py[i])).unzip();
+        for a in p.airports.iter_mut() {
+            (a.wx, a.wy) = to_world(a.x, a.y);
+        }
         (p.cwx, p.cwy) = (0..p.x.len()).map(|c| to_world(p.x[c] as f64, p.y[c] as f64)).unzip();
         p.csq = (0..p.x.len())
             .map(|c| {
@@ -465,7 +541,16 @@ pub fn run(packs: &mut [CrossPack], borders: &Value, threads: usize) -> Unit {
             .collect();
         handles.into_iter().map(|h| h.join().unwrap()).collect()
     });
-    let mut unit = Unit { kept: vec![vec![]; packs.len()], flows: HashMap::new(), squares, moved: vec![[0f64; 5]; packs.len()], outings: vec![[0f64; 5]; packs.len()] };
+    let mut unit = Unit {
+        kept: vec![vec![]; packs.len()],
+        flows: HashMap::new(),
+        squares,
+        moved: vec![[0f64; 5]; packs.len()],
+        outings: vec![[0f64; 5]; packs.len()],
+        air_outside: vec![0.0; packs.len()],
+        air_moved: vec![0.0; packs.len()],
+    };
+    airport_draw(packs, &grid, &factor, &mut unit);
     for (kept, flows, moved, outings) in parts {
         for (pi, o, k) in kept {
             unit.kept[pi].push((o as u32, k));
@@ -486,6 +571,76 @@ pub fn run(packs: &mut [CrossPack], borders: &Value, threads: usize) -> Unit {
         k.sort_by_key(|e| e.0);
     }
     unit
+}
+
+/// T-2896 (5): each solved pack's airports' outings of the people outside the pack, over every other
+/// pack's cells within `REACH_KM` (none within `AIRPORT_CLEAR_M` of the airport), each cell weighed
+/// by its airport end weight x exp(-d / 20 km) x the border factor. The airport's people outside
+/// weigh `weight` (GHSL), so a cell gets `outside` x its weight over the larger of that and the
+/// cells' sum: where the neighbours are unbuilt or sea, their share is dropped, never handed to the
+/// built ones. Then the 40-80 km taper, as every purpose; walking shares at cell grain within
+/// `WALK_PAIR_KM`. `grid`: every zone in 10 km buckets of the unit's frame.
+fn airport_draw(packs: &[CrossPack], grid: &HashMap<(i32, i32), Vec<(u32, u32)>>, factor: &[Vec<f64>], unit: &mut Unit) {
+    let bucket_m = 10_000.0;
+    let reach_m = REACH_KM * 1000.0;
+    let reach = (reach_m / bucket_m).ceil() as i32 + 1;
+    let decay = DECAY[AIRPORT] as f64;
+    let clear = AIRPORT_CLEAR_M as f64;
+    let mut near: Vec<(u32, u32, f64, f64)> = vec![];
+    for (pi, p) in packs.iter().enumerate().filter(|(_, p)| p.solved) {
+        for a in &p.airports {
+            unit.air_outside[pi] += a.outside * p.air_rate;
+            near.clear();
+            let (bx, by) = ((a.wx / bucket_m).floor() as i32, (a.wy / bucket_m).floor() as i32);
+            let mut total = 0.0;
+            for gx in bx - reach..=bx + reach {
+                for gy in by - reach..=by + reach {
+                    let Some(list) = grid.get(&(gx, gy)) else { continue };
+                    for &(qi, j) in list {
+                        if qi as usize == pi {
+                            continue;
+                        }
+                        let q = &packs[qi as usize];
+                        let b = factor[pi][qi as usize];
+                        for &c in &q.members[j as usize] {
+                            let d = ((q.cwx[c as usize] - a.wx).powi(2) + (q.cwy[c as usize] - a.wy).powi(2)).sqrt();
+                            let o = q.air_origin[c as usize] as f64;
+                            if d > reach_m || d < clear || !(o > 0.0) {
+                                continue;
+                            }
+                            let w = b * o * (-d / decay).exp();
+                            total += w;
+                            near.push((qi, c, d, w));
+                        }
+                    }
+                }
+            }
+            if !(total > 0.0) {
+                continue;
+            }
+            let scale = a.outside * p.air_rate / total.max(a.weight);
+            for &(qi, c, d, w) in &near {
+                let q = &packs[qi as usize];
+                let t = scale * w;
+                unit.air_moved[pi] += t;
+                let t = t * local_share(d as f32) as f64;
+                if t < 1e-6 {
+                    continue;
+                }
+                for &(tc, f) in &a.cells {
+                    let walk = if d <= WALK_PAIR_KM * 1000.0 {
+                        let dm = ((q.cwx[c as usize] - p.cwx[tc as usize]).powi(2) + (q.cwy[c as usize] - p.cwy[tc as usize]).powi(2)).sqrt() as f32;
+                        q.no_rail(c as usize, p, tc as usize, dm) as f64
+                    } else {
+                        0.0
+                    };
+                    let e = unit.flows.entry((p.csq[tc as usize], q.csq[c as usize], AIR_SLOT as u8)).or_default();
+                    e.trips += t * f;
+                    e.walk += t * f * walk;
+                }
+            }
+        }
+    }
 }
 
 impl Unit {
@@ -538,12 +693,13 @@ impl Unit {
             "zone_m": SQ_M,
             "frame": "each pack's own equirectangular frame at its origin; a zone is [floor(x / 6000), floor(y / 6000)]",
             "kinds": CROSS.iter().map(|&k| KINDS[k]).collect::<Vec<_>>(),
-            "source": format!("bin/cross_everyday.rs (T-1163, T-1175): everyday outings drawn over every pack within {REACH_KM} km, those leaving the drawing pack; pairs under {MIN_TRIPS} a day spread over their square's others"),
+            "site_kinds": SITE_KINDS,
+            "source": format!("bin/cross_everyday.rs (T-1163, T-1175): everyday outings drawn over every pack within {REACH_KM} km, those leaving the drawing pack, and (T-2896) each airport's outings of the people outside its pack; pairs under {MIN_TRIPS} a day spread over their square's others"),
             "home_pack": pairs.iter().map(|x| sq(x.0).0).collect::<Vec<_>>(),
             "home_zone": pairs.iter().map(|x| [sq(x.0).1, sq(x.0).2]).collect::<Vec<_>>(),
             "act_pack": pairs.iter().map(|x| sq(x.1).0).collect::<Vec<_>>(),
             "act_zone": pairs.iter().map(|x| [sq(x.1).1, sq(x.1).2]).collect::<Vec<_>>(),
-            "kind": pairs.iter().map(|x| CROSS[x.2 as usize]).collect::<Vec<_>>(),
+            "kind": pairs.iter().map(|x| slot_kind(x.2 as usize)).collect::<Vec<_>>(),
             "trips": pairs.iter().map(|x| r(x.3, 1e3)).collect::<Vec<_>>(),
             "walk": pairs.iter().map(|x| r(x.4, 1e4)).collect::<Vec<_>>(),
             "kept": kept,

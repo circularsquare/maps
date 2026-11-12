@@ -92,7 +92,7 @@ compare('');
 // its constants from pipeline/market_pull.json and each row's excess from its table, on today's rows
 if (reg.market.rule.pull_gamma === undefined) {
   const cfg = JSON.parse(readFileSync(new URL('../pipeline/market_pull.json', import.meta.url), 'utf8'));
-  Object.assign(rule.REGISTRY.market.rule, { pull_gamma: cfg.gamma, pull_gamma_x: cfg.gamma_x, pull_phase_km: cfg.phase_km, pull_off: cfg.off, pull_country_gamma: cfg.country_gamma });
+  Object.assign(rule.REGISTRY.market.rule, { pull_gamma: cfg.gamma, pull_gamma_x: cfg.gamma_x, pull_phase_km: cfg.phase_km, pull_off: cfg.off, pull_country_gamma: cfg.country_gamma, pull_near_gamma: cfg.near_gamma });
   const pulled = Object.fromEntries(Object.entries(rows).map(([z, r]) => [z, cfg.places[z]?.[0] > 0 ? { ...r, px: cfg.places[z][0] } : r]));
   open(pulled);
   compare(' with the pull (market_pull.json on the rows as they are)');

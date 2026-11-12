@@ -83,7 +83,7 @@ fn sample_count(kind: usize, trips: f32) -> usize {
     super::lod::Sampling::FINE.count(FEW[kind], site_anchored(kind), trips)
 }
 /// No airport trip ends this close to a terminal (its own jobs are not its passengers' ends).
-const AIRPORT_CLEAR_M: f32 = 1500.0;
+pub(crate) const AIRPORT_CLEAR_M: f32 = 1500.0;
 /// T-196: the share of the social/leisure attraction that is parks (the pack's `park_draw`, OSM
 /// parks by area and residents nearby), taken evenly from the population and leisure-jobs halves.
 /// ATUS 2023: 7.6% of leisure outings (eating out, socialising, sport and recreation) end

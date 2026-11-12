@@ -2623,6 +2623,20 @@ fn long_trip_pull_by_destination_excess() {
     assert!((dd.m.pr(0, 1).pull - 0.4f64.exp_m1()).abs() < 1e-15 && dd.m.pr(0, 2).pull == 0.25f64.exp_m1());
     let off = IntercityApi::new(&with(&pull.replace(r#"["CC"]"#, r#"["AA"]"#), None)).unwrap();
     assert_eq!((off.m.pr(0, 1).pull, off.m.pr(0, 2).pull, off.m.pr(2, 1).pull), (0., 0., 0.25f64.exp_m1()));
+    // T-3254: a country's unfaded local pull, within it only, added at every distance; none for `off`
+    let local = format!(r#"{pull},"pull_near_gamma":{{"AA":0.3}}"#);
+    let nr = IntercityApi::new(&with(&local, None)).unwrap();
+    let n = &nr.m;
+    assert_eq!((n.pr(0, 1).pull_near, n.pr(0, 2).pull_near, n.pr(1, 0).pull_near, n.pr(0, 1).pull), (0.3f64.exp_m1(), 0., 0., 0.8f64.exp_m1()));
+    for (za, zb) in n.zones.iter().filter(|z| z.place == 0).flat_map(|a| n.zones.iter().filter(|z| z.place == 1).map(move |b| (a, b))) {
+        let d = n.zone_km(za, zb);
+        let w = 1. + 0.8f64.exp_m1() * ((d - 50.) / 100.).clamp(0., 1.) + 0.3f64.exp_m1();
+        let (x, y) = (n.directed(0, 1, za.g, za.t, zb.a, zb.ta, d), m0.directed(0, 1, za.g, za.t, zb.a, zb.ta, d));
+        assert!((x / y - w).abs() < 1e-12, "{d} km: {x} {y} {w}");
+    }
+    let local_off = IntercityApi::new(&with(&local.replace(r#"["CC"]"#, r#"["AA"]"#), None)).unwrap();
+    assert_eq!(local_off.m.pr(0, 1).pull_near, 0.);
+    assert!(IntercityApi::new(&with(&local.replace("0.3", "-0.3"), None)).is_err());
     // the rows carry the excess, and open as the same market
     let rows = serde_json::to_string(&world_rows(&with(pull, None)).unwrap()).unwrap();
     assert!(rows.contains(r#""px":1.0"#));

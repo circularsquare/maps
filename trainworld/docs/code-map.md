@@ -779,7 +779,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `enrich_all.py phl bos` adds the non-work inputs (everyday sectors, NCES schools, IPEDS
   universities, airports from FAA/BTS/OurAirports, medical and parks from OSM) to finished packs
   in place, about 0.5-2 minutes a city plus Overpass time (T-142). Wikidata's airport patronage
-  answers are kept in `data/work/wikidata_boardings.json` (T-1083; delete it to ask again).
+  answers are kept in `data/work/wikidata_boardings.v2.json` (T-1083, T-2896; delete it to ask again);
+  national counts that come first are in `pipeline/airport_passengers.csv` (T-2896).
 - `hospital_beds.py pool` writes `pipeline/hospital_beds.json`, the pooled hospital-size numbers
   and World Bank beds per 1,000 that `enrich_medical.py` reads (T-387); `check nyc` is the
   held-out check, `survey` every pack's beds under the rule. Rerun `pool` before re-enriching
@@ -816,6 +817,10 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `boundary.geojson`, the zones in more than one piece on land listed with the zones that touch each piece and the zones
   standing in the gap, into `artifacts/trainworld/split-zones.json`; slivers, water gaps and foreign exclaves ignored
   (the docstring has the rules); exit 1 when a piece of 20 km2 or more lies 2 km or more from the rest.
+- `light_pass.py run` (T-3244, world-run.md "The light pass"): the demand steps over every shipped tier 0
+  pack with no extract read or joint solve; `campus_outlines.py` (the world's universities and colleges
+  from Overpass in longitude bands, split per pack, read by `tier0.osm_education` for a cache without
+  outlines) and `wikidata_prefill.py` (the Wikidata caches, 200 ids a query) are two of its steps.
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the

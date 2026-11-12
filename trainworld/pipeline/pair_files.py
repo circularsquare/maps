@@ -18,6 +18,13 @@ import sys
 from pathlib import Path
 
 GLOB = {"joint": "*.joint_commutes.json", "everyday": "*.cross_everyday.json"}
+# The everyday kinds an everyday file's activity end's pack draws (school, university and, from
+# T-2896, airport): the file's own `site_kinds` where it has them.
+SITE_KINDS = (2, 3)
+
+
+def site_kinds(g):
+    return tuple(g.get("site_kinds", SITE_KINDS))
 NAME = "pair_files.index.json"
 FORMAT = 1
 INDEX = None  # another index file than <work>/NAME (a test's)
@@ -94,8 +101,8 @@ def unused(work, known):
         mine = {o for o, q in last.items() if q == p}
         if mine and set(f["homes"]) & known:
             g = json.loads(p.read_text(encoding="utf-8"))
-            ids = g["packs"]
-            if any((ids[a] if k in (2, 3) else ids[h]) in mine and ids[h] in known and ids[a] in known
+            ids, site = g["packs"], site_kinds(g)
+            if any((ids[a] if k in site else ids[h]) in mine and ids[h] in known and ids[a] in known
                    for h, a, k in zip(g["home_pack"], g["act_pack"], g["kind"])):
                 continue
         out[p] = f

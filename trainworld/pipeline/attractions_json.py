@@ -2,7 +2,8 @@
 
 Writes app/src/game/attractions.json from Wikidata through QLever (qlever.dev; query.wikidata.org
 rate-limits and times out on queries this size). An attraction is an item that is an instance of
-one of `KINDS` (or a subclass) or of a `DIRECT` class, with coordinates, and is none of `NOT`.
+one of `KINDS` (or a subclass) or of a `DIRECT` class, with coordinates, and is none of `NOT` (nor,
+for stations and airports, `NOT_WITH_SUBCLASSES`, a subclass of one, unless it is a museum).
 Its visitors a year are its latest visitor figure (P1174) where it has one, else its share of a
 budget (T-1766, `budget`): the outings of the people living within `POP_KM` of it (GHSL, 1 km
 world grid) and its country's tourists, shared by Wikipedia page views, one place's share of
@@ -195,7 +196,49 @@ def fetch(raw):
         raw["labels"] += rows
         raw["labelled"] = at + LABEL_BATCH
         keep(raw)
+    # T-2896 (4): the items' classes' superclasses among NOT and the kinds, so a subclass of a NOT
+    # class (dead-end railway station under railway station: Moscow Kiyevsky) is left out too
+    classes = sorted({qid(r["c"]) for r in raw["classes"]})
+    raw.setdefault("ancestors", [])
+    raw.setdefault("ancestored", 0)
+    tops = " ".join("wd:" + k for k in NOT.keys() | KINDS.keys() | CASINO.keys() | DIRECT.keys())
+    for at in range(raw["ancestored"], len(classes), LABEL_BATCH):
+        print(f"superclasses {at}...", end=" ", flush=True)
+        values = " ".join("wd:" + c for c in classes[at : at + LABEL_BATCH])
+        rows = run(f"SELECT DISTINCT ?c ?n WHERE {{ VALUES ?c {{ {values} }} VALUES ?n {{ {tops} }} ?c wdt:P279+ ?n }}")
+        print(len(rows), flush=True)
+        raw["ancestors"] += rows
+        raw["ancestored"] = at + LABEL_BATCH
+        keep(raw)
     return raw
+
+
+# The NOT classes whose subclasses are left out too: places people pass through. Every subclass of
+# the others was tried (T-2896) and took out real places by the hundred: national monuments under
+# protected area, ancient cities under human settlement, botanical gardens, abbeys once hospitals.
+NOT_WITH_SUBCLASSES = {"Q55488", "Q928830", "Q1248784"}
+# A museum in an old station building stays (Hong Kong Railway Museum, Skopje's city museum).
+MUSEUM = "Q33506"
+
+
+def not_classes(raw):
+    """{class: (the NOT classes it is, those among NOT_WITH_SUBCLASSES it falls under)}, and the set
+    of classes that are or fall under MUSEUM. A class under one of the kinds too inherits none: the
+    kinds' subclasses are what the query looks for."""
+    up = {}
+    for r in raw.get("ancestors", []):
+        up.setdefault(qid(r["c"]), set()).add(qid(r["n"]))
+    wanted = KINDS.keys() | CASINO.keys() | DIRECT.keys()
+    out, museums = {}, set()
+    for c in {qid(r["c"]) for r in raw["classes"]}:
+        anc = up.get(c, set())
+        if c == MUSEUM or MUSEUM in anc:
+            museums.add(c)
+        own = {c} & NOT.keys()
+        inherited = set() if anc & wanted or c in wanted else anc & NOT_WITH_SUBCLASSES
+        if own or inherited:
+            out[c] = (own, inherited)
+    return out, museums
 
 
 LABEL_BATCH = 2000
@@ -490,11 +533,13 @@ def build(raw):
             by[s]["labels"].setdefault(r.get("l_lang", ""), r["l"])
     kept, dropped = [], {"not": [], "figure": 0, "small": 0, "unnamed": 0}
     todo = []
+    nots, museums = not_classes(raw)
     for it in by.values():
         v, year = figure(it["figs"])
         if v is not None and v > MAX_FIGURE:
             v, year = None, 0
-        bad = it["classes"] & NOT.keys()
+        museum = bool(it["classes"] & museums)
+        it["not"] = bad = set().union(*(nots[c][0] | (set() if museum else nots[c][1]) for c in it["classes"] if c in nots))
         if v is not None:
             bad -= NOT_UNLESS_FIGURE
         if RUIN in it["kinds"]:
@@ -625,7 +670,7 @@ def report(rows, dropped, merged):
         print(f"  {cc or '--'} {n:6} {f:5} {v / 1e6:8.1f}")
     print("\nlargest dropped by class:")
     for it in sorted(dropped["not"], key=lambda it: -it["sl"])[:25]:
-        print(f"  {it['id']:>11} sl {it['sl']:4} {name_of(it['labels'])} {sorted(NOT[c] for c in it['classes'] & NOT.keys())}")
+        print(f"  {it['id']:>11} sl {it['sl']:4} {name_of(it['labels'])} {sorted(NOT[c] for c in it['not'])}")
     print("\nlargest merged away:")
     for it in merged[:25]:
         print(f"  {it['id']:>11} {it['v'] / 1e6:6.2f}M {it['name']}")

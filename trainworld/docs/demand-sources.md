@@ -248,8 +248,11 @@ passengers' ends), drawn with a 20 km exponential decay and normalised per airpo
 airport keeps its total before the 150 m exclusion and the 40-80 km taper. Two stratified
 destination samples a home cell, not sixteen: the destinations are a handful of airports, and
 each sample costs the same at opening. Airport staff are commuters already (LODES) and are not
-counted again. Trips to an airport in another pack (Springfield to Bradley, Washington to BWI)
-and connecting passengers are not modelled. Per city: [T-142](../notes/T-142.md).
+counted again. Connecting passengers are not modelled. In tier 0 packs (every world-run zone) the
+people outside the pack reach the airport across the zone line through `cross_everyday` (T-2896,
+docs/zones.md 4a); the hand-built US and Ontario packs do not send theirs yet (Springfield to
+Bradley, Washington to BWI). Figures outside the US and Ontario: docs/demand-worldwide.md
+"School, airport, medical and attractions". Per city: [T-142](../notes/T-142.md).
 
 **Medical visits (T-142, every city).** Patients and visitors at hospitals, clinics, doctors and
 dentists; staff are commuters already. `pipeline/enrich_medical.py <city>` takes OSM

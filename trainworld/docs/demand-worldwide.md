@@ -182,7 +182,8 @@ Tier 0 with district totals; notes/T-291.md has the tables.
   transport survey) taken as straight-line, as CAUPD-Baidu's yearly commute report (location data,
   about 45 cities) confirms; that report is the general source for other Chinese cities.
 - **Work from home**: 0.
-- **Airports**: CAAC's yearly airport bulletin (passengers / 2) in place of Wikidata.
+- **Airports**: CAAC's yearly airport bulletin (passengers / 2) in place of Wikidata, for every
+  Chinese zone (`pipeline/airport_passengers.csv`, the 2025 bulletin; T-2896).
 - **Names**: OSM `name:en`, then `name:zh-Latn-pinyin`, for places (two thirds of Shanghai's have
   one); the Chinese name stays a search alias.
 - **OSM is thinner** (one hospital with beds, few job places and medical sites for 25M people):
@@ -825,8 +826,23 @@ notes/T-420.md has the tables.
 
 - **School and university.** NCES and IPEDS are US-only. Abroad: national school registers where
   they exist, OSM school and university points with an enrolment estimate otherwise.
-- **Airport** (T-142): FAA enplanements are US-only; OurAirports is global but needs a passenger
-  figure.
+- **Airport** (T-142, T-2896): FAA enplanements are US-only; OurAirports is global but needs a
+  passenger figure. Outside the hand-built US and Ontario packs the figure is a national authority's
+  published count where `pipeline/airport_passengers.csv` has one (China: CAAC's 2025 bulletin, all
+  266 airports with traffic), else Wikidata's patronage (P3872): whole years only (no month or
+  part-of-traffic figures), the newest year outside 2020-22 from 2016 on, else the newest. The newer
+  of the two wins; one year in both takes the lower (her rule, 2026-11-12: at or a bit under
+  published figures, never over). Passengers / 2 are boardings. An airport in the national table is
+  taken even where OurAirports has no scheduled service. Its terminals snap to a cell within 3 km;
+  one that places nothing is warned of in the build log. The O&D share (passengers not connecting)
+  is the city's config, else `enrich_airports.HUB_OD_SHARE` (1 minus the published transfer share,
+  rounded down: Istanbul and Frankfurt 0.5, Munich 0.55, Amsterdam 0.6, Doha 0.25, Dubai 0.5,
+  Singapore 0.7 by judgement), else DB1B for a US airport (Atlanta 0.45), else 1.
+- **Airport trips across zone lines** (T-2896 item 5, Anita 2026-11-11). The pack keeps its share
+  of each airport's outings (GHSL people x exp(-d / 20 km) inside its boundary); the rest, the
+  people outside it, go to the neighbouring packs through `cross_everyday` (docs/zones.md 4a), so
+  Wuhan's airport in the Huangpi zone takes its passengers from Wuhan. Unbuilt land and sea keep
+  their share out (never handed to the built packs).
 - **Medical** (T-142, T-387; `enrich_medical.py`, numbers in `pipeline/hospital_beds.json`). OSM
   hospitals, clinics, doctors and dentists everywhere; a hospital draws 1,000 visits a year a bed.
   Beds are OSM's `beds` where tagged; else 0.588 x the square root of the site's floor area in m²
@@ -1055,7 +1071,8 @@ notes/T-420.md has the tables.
   From the world rebuild after 2026-11-11 (T-3240, regional.md 5.1 "The long-trip pull"), a
   destination's attraction is also times its pull, exp(0.6 x its Natural Earth rank above what its
   people predict, at most 3), faded in over 300-700 km (the tail's window), 0.25 for trips from abroad,
-  China's at 0.6 of 0.6, none for residents of the US, Japan, the UK, Korea, Russia and Turkey: a local
+  China's at 0.6 of 0.6, within Poland also exp(0.2 x the same) at every distance (its big-city pairs
+  under 300 km, T-3254), none for residents of the US, Japan, the UK, Korea, Russia and Turkey: a local
   factor (Anita, 2026-11-11), fitted at or under published figures, the lower where sources disagree
   (Anita, 2026-11-12: Madrid - Barcelona, Berlin - Munich, Paris - Lyon, Milan - Rome, Beijing - Shanghai
   and the national 300 km+ rates of France, Spain, Italy, Germany; T-3254), FR24's airport pairs for the

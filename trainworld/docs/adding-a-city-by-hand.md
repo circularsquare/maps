@@ -329,7 +329,7 @@ real pack in notes/T-287.md):
 | Water | TIGER AREAWATER and states | StatCan lakes and rivers; land = cartographic municipalities plus US states | OSM: `osm_water.source([extracts])` as the config's `water_source` (below) |
 | Schools | NCES | Ontario school information file (provincial; other provinces need their own) | OSM `amenity=school` sites; pupils = population x share aged 0-14 (World Bank) x 0.9, by the square root of site area; or a national register with pupils (`schools` hook, England's GIAS) |
 | Universities | IPEDS | Council of Ontario Universities headcounts and Ontario's college campus file, at points in `pipeline/ca_campuses.csv` | OSM `amenity=university|college`; Wikidata P2196 students by institution, split by site area; other sites by area at the median density; the total scaled to population x the national tertiary students a resident (World Bank SE.TER.ENRL, T-288) |
-| Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population |
+| Airports | FAA enplanements, DB1B connecting share | StatCan 23-10-0253-01 enplaned; connecting share by judgement (Pearson 0.75) | OurAirports + a national count (pipeline/airport_passengers.csv) or Wikidata patronage / 2; connecting share by judgement; pack share from GHSL population, the rest across the zone line (T-2896) |
 | Medical, parks, places | OSM (Overpass) | the same scripts, OSM from the extract | the same, from the extract |
 
 **Land use in the OSM signal and the `osm_signal` line (T-460).** Every tier 0 build counts OSM

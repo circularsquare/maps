@@ -21,6 +21,9 @@
  "country_gamma": {
   "CN": 0.6
  },
+ "near_gamma": {
+  "PL": 0.2
+ },
  "trim": {
   "radius_km": 300.0,
   "people": [

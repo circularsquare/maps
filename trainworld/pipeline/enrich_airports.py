@@ -46,7 +46,8 @@ SHARE_RADIUS_M = 300000.0
 MIN_DB1B_SAMPLE = 50       # sampled passengers (10% sample: about 500 a quarter)
 TERMINAL_RADIUS_M = 4000.0
 MIN_TERMINAL_M2 = 1500.0
-SNAP_M = 1000.0
+# T-2896 (3): Shijiazhuang's terminal is 1,423 m from the Gaocheng zone's nearest cell
+SNAP_M = 3000.0
 FAA = "https://www.faa.gov/airports/planning_capacity/passenger_allcargo_stats/passenger/arp-cy2024-commercial-service-enplanements.xlsx"
 OURAIRPORTS = "https://davidmegginson.github.io/ourairports-data/airports.csv"
 DB1B = "https://transtats.bts.gov/PREZIP/Origin_and_Destination_Survey_DB1BMarket_2024_2.zip"
@@ -100,37 +101,218 @@ def od_shares():
     return out
 
 
-def wikidata_boardings(iata):
-    """Global fallback: the latest Wikidata patronage (P3872, passengers both ways) / 2. Answers are
-    kept in data/work/wikidata_boardings.json (T-1083: a cold query waits up to 8 s an airport);
-    delete it to ask again."""
-    path = os.path.join(b.WORK, "wikidata_boardings.json")
+# T-2896 (2): which Wikidata patronage statement an airport takes. Years of the pandemic's
+# collapse in air travel lose to any other year from OLDEST_GOOD on; part-year figures never count.
+PANDEMIC = (2020, 2021, 2022)
+OLDEST_GOOD = 2016
+WIKIDATA_BATCH = 200
+# the rule's answers; a new name when the rule changes, so every code is asked again
+BOARDINGS_CACHE = "wikidata_boardings.v2.json"
 
-    def cached():
+
+def wikidata_rows(codes):
+    """Every non-deprecated Wikidata patronage statement (P3872, passengers both ways) of the
+    airports with these IATA codes (P238), up to WIKIDATA_BATCH a query: [{iata, v, t, prec, start,
+    end, part}], dates as ISO strings or None. `part` is set where a qualifier limits the figure to
+    a part of the traffic (P518 applies to part, P642 of)."""
+    codes = sorted({c for c in codes if c and re.fullmatch(r"[A-Z0-9]{3}", c)})
+    if not codes:
+        return []
+    assert len(codes) <= WIKIDATA_BATCH, len(codes)
+    q = f"""SELECT ?iata ?v ?t ?prec ?start ?end ?part WHERE {{
+      VALUES ?iata {{ {" ".join(f'"{c}"' for c in codes)} }}
+      ?a wdt:P238 ?iata; p:P3872 ?s. ?s ps:P3872 ?v; wikibase:rank ?rank.
+      FILTER(?rank != wikibase:DeprecatedRank)
+      OPTIONAL {{ ?s pqv:P585 ?tv. ?tv wikibase:timeValue ?t; wikibase:timePrecision ?prec }}
+      OPTIONAL {{ ?s pq:P580 ?start }} OPTIONAL {{ ?s pq:P582 ?end }}
+      OPTIONAL {{ ?s pq:P518|pq:P642 ?part }} }}"""
+    for attempt in range(6):
+        r = requests.post(WIKIDATA, data={"query": q, "format": "json"}, headers=b.UA, timeout=120)
+        if r.status_code in (429, 502, 503, 504) and attempt < 5:
+            import time
+            time.sleep(float(r.headers.get("Retry-After") or 0) or 5 * 2 ** attempt)
+            continue
+        r.raise_for_status()
+        break
+    val = lambda row, k: row[k]["value"] if k in row else None  # noqa: E731
+    return [dict(iata=val(x, "iata"), v=float(val(x, "v")), t=val(x, "t"), prec=int(val(x, "prec")) if "prec" in x else None,
+                 start=val(x, "start"), end=val(x, "end"), part=val(x, "part")) for x in r.json()["results"]["bindings"]]
+
+
+def statement_year(row):
+    """The calendar year a patronage statement covers, or None when it is not a whole year's: a
+    point in time of year precision, or of day precision on 1 January or 31 December (how annual
+    figures get entered); a start and end a year apart. Month figures (Hong Kong's 2024-12) and any
+    other day are part years."""
+    if row.get("part"):
+        return None
+    if row.get("start") and row.get("end"):
+        s, e = row["start"][:10].lstrip("+"), row["end"][:10].lstrip("+")
         try:
-            with open(path) as f:
-                return json.load(f)
-        except (OSError, ValueError):
-            return {}
-    have = cached()
-    if iata in have:
-        return tuple(have[iata])
-    q = f"""SELECT ?v ?t WHERE {{ ?a wdt:P238 "{iata}"; p:P3872 ?s. ?s ps:P3872 ?v.
-            OPTIONAL {{ ?s pq:P585 ?t }} }} ORDER BY DESC(?t) LIMIT 1"""
-    r = requests.get(WIKIDATA, params={"query": q, "format": "json"}, headers=b.UA, timeout=60)
-    r.raise_for_status()
-    rows = r.json()["results"]["bindings"]
-    out = (float(rows[0]["v"]["value"]) / 2.0, rows[0].get("t", {}).get("value")) if rows else (None, None)
-    try:  # builds run at once: read theirs again and write whole files; a busy file is skipped
-        have = cached() | {iata: out}
-        os.makedirs(b.WORK, exist_ok=True)
-        tmp = f"{path}.{os.getpid()}.part"
-        with open(tmp, "w") as f:
-            json.dump(have, f, indent=0, sort_keys=True)
-        os.replace(tmp, path)
-    except OSError as e:
-        print(f"  Wikidata answer for {iata} not cached: {e}", flush=True)
-    return out
+            import datetime as dt
+            days = (dt.date.fromisoformat(e) - dt.date.fromisoformat(s)).days
+        except ValueError:
+            return None
+        return int(s[:4]) if 360 <= days <= 370 else None
+    t, prec = row.get("t"), row.get("prec")
+    if not t:
+        return None
+    y, md = int(t.lstrip("+")[:4]), t.lstrip("+")[5:10]
+    if prec == 9:
+        return y
+    if prec == 11 and md in ("01-01", "12-31"):
+        return y
+    return None
+
+
+def pick(rows):
+    """One airport's statements -> (boardings a year, "<year>") or (None, None): the newest whole
+    year outside PANDEMIC from OLDEST_GOOD on, else the newest whole year at all; two figures for one
+    year take the lower (Anita, 2026-11-12: where sources disagree, the lower). Boardings are half the
+    passengers both ways."""
+    by_year = {}
+    for r in rows:
+        y = statement_year(r)
+        if y is not None and r["v"] > 0:
+            by_year[y] = min(by_year.get(y, r["v"]), r["v"])
+    if not by_year:
+        return None, None
+    good = [y for y in by_year if y not in PANDEMIC and y >= OLDEST_GOOD]
+    y = max(good) if good else max(by_year)
+    return by_year[y] / 2.0, str(y)
+
+
+def _cache_path():
+    return os.path.join(b.WORK, BOARDINGS_CACHE)
+
+
+def _cached():
+    try:
+        with open(_cache_path()) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def fill_wikidata_boardings(codes, batch=WIKIDATA_BATCH):
+    """Ask Wikidata for every IATA code in `codes` not yet in the cache (data/work/BOARDINGS_CACHE),
+    WIKIDATA_BATCH codes a query, and cache each code's `pick` (codes with no statement too). Returns
+    {code: (boardings, year)} for all of `codes`."""
+    want = sorted({c for c in codes if c})
+    todo = [c for c in want if c not in _cached()]
+    for i in range(0, len(todo), batch):
+        part = todo[i:i + batch]
+        rows = wikidata_rows(part)
+        got = {c: [] for c in part}
+        for r in rows:
+            got.setdefault(r["iata"], []).append(r)
+        new = {c: list(pick(rs)) for c, rs in got.items() if c in part}
+        try:  # builds run at once: read theirs again and write whole files; a busy file is skipped
+            have = _cached() | new
+            os.makedirs(b.WORK, exist_ok=True)
+            tmp = f"{_cache_path()}.{os.getpid()}.part"
+            with open(tmp, "w") as f:
+                json.dump(have, f, indent=0, sort_keys=True)
+            os.replace(tmp, _cache_path())
+        except OSError as e:
+            print(f"  Wikidata answers for {len(new)} codes not cached: {e}", flush=True)
+        if len(todo) > batch:
+            print(f"  Wikidata boardings: {min(i + batch, len(todo))} of {len(todo)} codes asked", flush=True)
+    have = _cached()
+    return {c: tuple(have.get(c, (None, None))) for c in want}
+
+
+def wikidata_boardings(iata):
+    """Global fallback: Wikidata patronage (P3872, passengers both ways) / 2, the statement `pick`
+    chooses: (boardings a year, "<year>") or (None, None). Answers are kept in
+    data/work/BOARDINGS_CACHE (T-1083); delete it to ask again."""
+    return fill_wikidata_boardings([iata])[iata]
+
+
+# T-2896 (1): passenger counts a national authority publishes for each of its airports
+# (pipeline/airport_passengers.csv: country, OurAirports ident, IATA, ICAO, the source's name,
+# passengers both ways, year, source). China: CAAC's 2025 bulletin.
+PUBLISHED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "airport_passengers.csv")
+_published = None
+
+
+def published():
+    """{OurAirports ident or IATA code: (boardings a year, year, source)} from PUBLISHED."""
+    global _published
+    if _published is None:
+        _published = {}
+        t = pd.read_csv(PUBLISHED, dtype=str, keep_default_na=False)
+        for r in t.itertuples():
+            v = (float(r.passengers) / 2.0, str(r.year), r.source)
+            for k in (r.ident, r.icao, r.iata):
+                if k:
+                    _published.setdefault(k, v)
+    return _published
+
+
+def published_idents():
+    t = pd.read_csv(PUBLISHED, dtype=str, keep_default_na=False)
+    return (set(t.ident) | set(t.icao)) - {""}
+
+
+def best_boardings(ap):
+    """An airport's boardings a year: (boardings, year, source) or (None, None, None). A national
+    authority's count (`published`) and Wikidata's `pick`: the newer year wins; one year in both takes
+    the lower (Anita, 2026-11-12: at or a bit under published figures, never over)."""
+    got = []
+    pub = published().get(ap["ident"]) or (published().get(ap["iata"]) if ap.get("iata") else None)
+    if pub:
+        got.append(pub)
+    if ap.get("iata"):
+        v, y = wikidata_boardings(ap["iata"])
+        if v:
+            got.append((v, y, "Wikidata P3872"))
+    if not got:
+        return None, None, None
+    newest = max(int(g[1]) for g in got)
+    return min((g for g in got if int(g[1]) == newest), key=lambda g: g[0])
+
+
+# T-2896: the share of a hub's passengers who start or end their air journey there (1 - the
+# operator's published transfer share, rounded down under Anita's undershoot rule, 2026-11-12;
+# notes/T-2896.md). A city's own `od_share` config comes first; US airports take DB1B's.
+HUB_OD_SHARE = {
+    "LTFM": 0.5,   # Istanbul: close to half connecting (2025)
+    "EDDF": 0.5,   # Frankfurt: 48.7% transfer (2025)
+    "EDDM": 0.55,  # Munich: 42% transfer (2025)
+    "EHAM": 0.6,   # Amsterdam: 36.6% transfer (2025, Royal Schiphol Group)
+    "OTHH": 0.25,  # Doha: 74% transfer (OAG via Gulf Times, 2025)
+    "OMDB": 0.5,   # Dubai: 47% connecting (OAG via Gulf Times, 2025)
+    "WSSS": 0.7,   # Singapore: no published share found; judgement as Heathrow's
+}
+
+
+def od_share_of(ap, cfg):
+    """(O&D share, where it came from) for a tier 0 airport: the city's config, HUB_OD_SHARE, DB1B
+    for a US airport (its 10% sample's cache only; the hand-built packs' rule), else 1."""
+    if ap["ident"] in cfg.get("od_share", {}):
+        return cfg["od_share"][ap["ident"]], "config"
+    if ap["ident"] in HUB_OD_SHARE:
+        return HUB_OD_SHARE[ap["ident"]], "hub table"
+    if ap.get("country") == "US" and ap.get("iata") and os.path.exists(os.path.join(b.WORK, "db1b_2024q2_od.json")):
+        start, connect = od_shares().get(ap["iata"], [0.0, 0.0])
+        if start + connect >= MIN_DB1B_SAMPLE:
+            return start / (start + connect), "DB1B 2024 Q2"
+    return 1.0, "none"
+
+
+def place_sites(index, sites, limit=None):
+    """An airport's sites (lat, lon, m2, ...) -> [(cell, share of the airport, snap m)] for the sites
+    with a cell within `limit` (SNAP_M), shares by footprint over the placed sites only, so an airport
+    keeps its total while any site places. Empty when none does (the caller warns)."""
+    limit = SNAP_M if limit is None else limit
+    placed = []
+    for s in sites:
+        c, snap = cell_of(index, s[0], s[1], limit)
+        if c is not None:
+            placed.append((c, s[2], snap))
+    m2 = sum(p[1] for p in placed)
+    return [(c, a / m2, snap) for c, a, snap in placed] if m2 > 0 else []
 
 
 def pack_share(cfg, lat, lon):
@@ -183,7 +365,8 @@ def cell_of(index, lat, lon, limit):
     def dist(c):
         la, lo = h3.cell_to_latlng(c)
         return float(metres(lat, lon, la, lo))
-    candidates = [c for c in h3.grid_disk(hid, 6) if h3.str_to_int(c) in index]
+    # res-9 centres are about 300 m apart: ring k reaches at least 0.26k km
+    candidates = [c for c in h3.grid_disk(hid, max(6, int(limit / 260.0) + 1)) if h3.str_to_int(c) in index]
     if not candidates:
         return None, None
     nearest = min(candidates, key=dist)
@@ -191,8 +374,11 @@ def cell_of(index, lat, lon, limit):
 
 
 def airports_in(boundary):
+    """OurAirports' airports with scheduled service in the boundary, and any a national count in
+    PUBLISHED names (CAAC lists ten that OurAirports does not mark scheduled)."""
     a = pd.read_csv(b.fetch(OURAIRPORTS, SUB + "ourairports-airports.csv"), low_memory=False, keep_default_na=False)
-    a = a[(a.scheduled_service == "yes") & a.type.isin(["large_airport", "medium_airport", "small_airport"])]
+    listed = published_idents()
+    a = a[((a.scheduled_service == "yes") & a.type.isin(["large_airport", "medium_airport", "small_airport"])) | a.ident.isin(listed)]
     rows = []
     shapely.prepare(boundary)  # T-425
     for r in a.itertuples():
@@ -250,10 +436,13 @@ def main(city="nyc"):
         for lat, lon, m2, name, osm in sites:
             cell, snap = cell_of(index, lat, lon, SNAP_M)
             if cell is None:
-                placed.append(dict(name=name, osm=osm, skipped="no cell within 1 km"))
+                placed.append(dict(name=name, osm=osm, skipped=f"no cell within {SNAP_M / 1000:g} km"))
                 continue
             trips[cell] += daily * m2 / total_m2
             placed.append(dict(name=name, osm=osm, m2=round(m2), share=m2 / total_m2, cell=int(cell), snap_m=snap))
+        if not any("cell" in p for p in placed):
+            print(f"  WARNING {code} {ap['name']}: {daily:,.0f} outings a day and no cell within {SNAP_M / 1000:g} km of any "
+                  f"terminal: nothing placed", flush=True)
         audit.append(ap | dict(boardings=boardings, source=source, db1b_start=start, db1b_connect=connect,
                                od_share=od_share, pack_share=share, daily_outings=daily, terminals=placed))
         print(f"  {code} {ap['name']}: {boardings:,.0f} boardings, O&D {od_share:.2f}, pack {share:.2f}, "

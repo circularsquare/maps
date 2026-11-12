@@ -5,6 +5,7 @@
     python pipeline/market_zones.py --rows       only the rows (after a zone left the registry)
     python pipeline/market_zones.py --parts [id ...]   only the land part fields (T-2213) into the zone files as they are
     ... --full    (with any of these) every row worked out again, not only those a change reaches
+    ... --workers N   the zone files over N processes (T-3244; about 1 GB each), the same files as one
 
 Writes `data/packs/<id>.market.json` per zone (seconds each), then runs the sim crate's `market_pack`,
 which adds up each zone's registry row and the trips between zones whose centres are under 250 km
@@ -62,7 +63,7 @@ def pull_rule():
     if not PULL.get("on"):
         return {}
     return {"pull_gamma": PULL["gamma"], "pull_gamma_x": PULL["gamma_x"], "pull_phase_km": PULL["phase_km"],
-            "pull_off": PULL["off"], "pull_country_gamma": PULL["country_gamma"]}
+            "pull_off": PULL["off"], "pull_country_gamma": PULL["country_gamma"], "pull_near_gamma": PULL.get("near_gamma", {})}
 SITE_M, ZONE_M = 600, 6000
 # T-378: a zone's airports are OurAirports' large and medium ones with scheduled service within
 # AIR_RADIUS_KM of its centre carrying AIR_MIN_PAX passengers a year (the biggest AIR_MAX); a route
@@ -178,6 +179,9 @@ class Field:
         a5, tb5 = self.a[0], self.tb[0]
         self.pa = [up(a5 * np.expm1(g_home * ex)), up(a5 * np.expm1(PULL["gamma_x"] * ex))]
         self.ptb = [up(tb5 * np.expm1(g_home * ex)), up(tb5 * np.expm1(PULL["gamma_x"] * ex))]
+        # T-3254: the unfaded local pull, for trips within a `near_gamma` country (intercity.rs `pull_near`)
+        g_near = np.array([PULL.get("near_gamma", {}).get(c, 0.0) for c in iso])[r5.country]
+        self.pn = [up(a5 * np.expm1(g_near * ex)), up(tb5 * np.expm1(g_near * ex))]
 
     def normalisers(self, lon, lat, country, inc_o):
         """A place's ground and tail normalisers over the field: the sums the two kinds of
@@ -203,8 +207,8 @@ class Field:
             p0, p1 = PULL["phase_km"]
             ph = np.clip((d - p0) / (p1 - p0), 0, 1)
             home = c == country
-            a = a + ph * np.where(home, cat(self.pa[0]), cat(self.pa[1]))
-            tb = tb + ph * np.where(home, cat(self.ptb[0]), cat(self.ptb[1]))
+            a = a + ph * np.where(home, cat(self.pa[0]), cat(self.pa[1])) + np.where(home, cat(self.pn[0]), 0.0)
+            tb = tb + ph * np.where(home, cat(self.ptb[0]), cat(self.ptb[1])) + np.where(home, cat(self.pn[1]), 0.0)
         on0, on1 = RULE["onset_km"]
         on = np.clip((d - on0) / (on1 - on0), 0, 1)
         t0, t1 = RULE["tail_onset_km"]
@@ -283,13 +287,16 @@ class Groups:
     """Commutes between the packs of a joint gravity group (T-463: Japan's first),
     data/work/<group>.joint_commutes.json from bin/joint_gravity.rs --packs: by 6 km square of each
     pack's own frame, matched here to the squares of the zone files' 6 km zones. With `only`, the
-    rows of those packs alone, from the files holding pairs that start there (T-1976)."""
-    def __init__(self, reg, only=None, work=None):
+    rows of those packs alone, from the files holding pairs that start there (T-1976). `rewritten`, the
+    packs whose zone files this run writes (default `only`; None for every pack), decides whose zone
+    keys come from cells (zone_keys): a chunk of a pooled run is `only`, the run's ids `rewritten`."""
+    def __init__(self, reg, only=None, work=None, rewritten="only"):
         self.reg = {c["id"]: c for c in reg["cities"]}
         self.rows, self.source, self.keys = {}, {}, {}
         work = work or ROOT / "data/work"
         only = None if only is None else set(only)
         self.only = only
+        self.rewritten = only if rewritten == "only" else None if rewritten is None else set(rewritten)
         want = (lambda h: True) if only is None else only.__contains__
         # each pair of packs from the newest file covering it (T-786: a country's file covers its own
         # packs' pairs and its fixed neighbours' pairs with them, not the neighbours' among themselves).
@@ -338,10 +345,12 @@ class Groups:
             if only is None or (f["homes"] & only and path in final):
                 g = json.loads(path.read_text(encoding="utf-8"))
                 ids, by = g["packs"], {}
+                import pair_files
+                site = pair_files.site_kinds(g)
                 for k in range(len(g["trips"])):
                     h, a, kind = ids[g["home_pack"][k]], ids[g["act_pack"][k]], g["kind"][k]
                     if want(h):
-                        by.setdefault(a if kind in (2, 3) else h, []).append(
+                        by.setdefault(a if kind in site else h, []).append(
                             (h, tuple(g["home_zone"][k]), a, tuple(g["act_zone"][k]), kind, g["trips"][k], g["walk"][k]))
                 source = g["source"]
             else:
@@ -373,7 +382,7 @@ class Groups:
         and market_pack refused it, T-2702)."""
         if cid not in self.keys:
             path = PACKS / f"{cid}.market.json"
-            if self.only is not None and cid not in self.only and path.exists():
+            if self.rewritten is not None and cid not in self.rewritten and path.exists():
                 self.keys[cid] = [tuple(k) for k in json.loads(path.read_text(encoding="utf-8"))["zones"]]
             else:
                 o = self.reg[cid]["origin"]
@@ -642,8 +651,60 @@ def parts_only(ids):
     return moved
 
 
+def build_one(cid, reg, F, air):
+    out = build(cid, reg, F, air)
+    path = PACKS / f"{cid}.market.json"
+    write(path, out)
+    return (f"{cid}: place {out['place']}, {out['country']}, income {out['inc']:.3f}, road {out['road']}, "
+            f"{len(out['sites'])} sites, {len(out['zones'])} zones, {len(out.get('commute_trips', []))} commutes, "
+            f"{path.stat().st_size / 1e6:.2f} MB")
+
+
+_W = {}  # a pool worker's registry, field and airports
+
+
+def _worker(reg, air, named):
+    root = os.environ.get("TW_RUN_ROOT")
+    if root:  # a scratch tree: the worker's own copy of the modules points there too (world_run step)
+        import world_run
+        world_run.Redirect(root).install()
+    _W.update(reg=reg, air=air, named=named, F=Field())
+
+
+def _chunk(ids):
+    global groups
+    groups = Groups(_W["reg"], ids, rewritten=_W["named"])
+    return [build_one(cid, _W["reg"], _W["F"], _W["air"]) for cid in ids]
+
+
+def pooled(ids, named, air, workers):
+    """The zone files over a process pool (T-3244): ids in chunks in registry order (neighbours share
+    joint files), each worker with its own field, each chunk its own Groups. Zone keys of a pack in the
+    run but not the chunk come from its cells, as a single run's do (the T-2702 trap), so the files are
+    the single run's byte for byte."""
+    from concurrent.futures import ProcessPoolExecutor
+    import time
+    t0 = time.time()
+    # big chunks: each chunk's Groups reads the joint and everyday files of its packs' units again
+    n = max(1, min(200, -(-len(ids) // (workers * 2))))
+    chunks = [ids[i:i + n] for i in range(0, len(ids), n)]
+    reg = shared_lock.read_json(REG)
+    # each worker a single thread: the pool is the parallelism
+    os.environ["OMP_NUM_THREADS"] = os.environ["OPENBLAS_NUM_THREADS"] = os.environ["MKL_NUM_THREADS"] = "1"
+    done = 0
+    with ProcessPoolExecutor(workers, initializer=_worker, initargs=(reg, air, named)) as pool:
+        for lines in pool.map(_chunk, chunks):
+            done += len(lines)
+            print("\n".join(lines) + f"\n  {done}/{len(ids)} zone files, {time.time() - t0:.0f} s", flush=True)
+
+
 def _main(args):
     global groups
+    workers = 1
+    if "--workers" in args:
+        i = args.index("--workers")
+        workers = int(args[i + 1])
+        args = args[:i] + args[i + 2:]
     if "--parts" in args:
         reg = shared_lock.read_json(REG)
         parts_only([a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]])
@@ -671,16 +732,13 @@ def _main(args):
                     out["sources"].append(AIR_SOURCE)
                 write(path, out)
         ids = []
-    if ids:
+    if ids and workers > 1 and len(ids) > workers:
+        pooled(ids, named, air, workers)
+    elif ids:
         F = Field()
         groups = Groups(reg, named)
-    for cid in ids:
-        out = build(cid, reg, F, air)
-        path = PACKS / f"{cid}.market.json"
-        write(path, out)
-        print(f"{cid}: place {out['place']}, {out['country']}, income {out['inc']:.3f}, road {out['road']}, "
-              f"{len(out['sites'])} sites, {len(out['zones'])} zones, {len(out.get('commute_trips', []))} commutes, "
-              f"{path.stat().st_size / 1e6:.2f} MB", flush=True)
+        for cid in ids:
+            print(build_one(cid, reg, F, air), flush=True)
     rows = ROOT / "data/work/market_rows.json"
     exe = simbin.exe(ROOT, "market_pack")
     reg = shared_lock.read_json(REG)

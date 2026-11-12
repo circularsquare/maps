@@ -38,9 +38,10 @@ census or registers then upgrade single inputs by replacing one function. What e
   Bank, SE.TER.ENRL / SP.POP.TOTL; T-288), so the counts and areas only spread it, no site past
   its cap (university_sizes, campus_fill: T-3216 parents' counts, T-3226 caps and sites left out).
   A site with an outline spreads its students over the cells under it (campus_spread, T-3214).
-- Airports: OurAirports scheduled-service airports in the boundary, boardings = Wikidata
-  patronage (P3872) / 2, O&D share 1 except the config's judgement values for hubs, pack share
-  from the GHSL population around the airport (exp(-d/20 km), as enrich_airports).
+- Airports: OurAirports scheduled-service airports in the boundary, boardings = a national count
+  (enrich_airports.PUBLISHED) or Wikidata patronage (P3872) / 2 (best_boardings), O&D share 1 except the config's judgement values for hubs, pack share
+  from the GHSL population around the airport (exp(-d/20 km), as enrich_airports); the rest goes in
+  the header's airport.sites for cross_everyday (T-2896).
 - Medical and parks: the shared scripts, OSM from the Geofabrik extract's cached features
   (osm_features, through canada.osm_caches); job places and schools read the same cache.
 - Water: the config's `water_source` (lon/lat polygons, as water.build_mask takes); for any country
@@ -1193,13 +1194,20 @@ def finish(city, kids=None):
 
 def osm_education(city, boundary, extract):
     """OSM schools, universities and colleges: (kind, name, lat, lon, site m2 or 0, wikidata, wkt),
-    wkt a university's or college's outline (T-3214), "" for points, schools and caches made
-    before it (those campuses stay at their point until the cache is made again)."""
+    wkt a university's or college's outline (T-3214), "" for points and schools. A cache made before
+    it keeps its schools and takes its universities and colleges from Overpass's answer in
+    data/raw/tier0/campus (campus_outlines.py, T-3244) when there is one, else stays at their points."""
     cache = raw(f"osm_education_{city}.csv.gz")
     if os.path.exists(cache):
         out = pd.read_csv(cache, keep_default_na=False)
         if "wkt" not in out.columns:
             out["wkt"] = ""
+            import campus_outlines
+            staged = campus_outlines.rows(city)
+            if staged is not None:
+                out = pd.concat([out[out.kind == "school"], staged], ignore_index=True)
+                print(f"  OSM education: schools from the cache, {len(staged):,} universities and colleges from "
+                      f"Overpass ({(staged.wkt != '').sum():,} outlines)", flush=True)
         return out
     import osm_features
     import overpass
@@ -1612,34 +1620,48 @@ def airports(city, boundary):
     stem, header, buf, cells = canada.pack_cells(city)
     index = {int(c): i for i, c in enumerate(cells)}
     trips = np.zeros(len(cells), "<f4")
-    audit = []
+    audit, sites_out = [], []
+    air.fill_wikidata_boardings([ap["iata"] for ap in aps])  # one query for the zone's airports
     for ap in aps:
-        given = cfg.get("boardings", {}).get(ap["ident"])  # a national figure in place of Wikidata's (T-291)
-        boardings, when = given if given else air.wikidata_boardings(ap["iata"]) if ap["iata"] else (None, None)
+        given = cfg.get("boardings", {}).get(ap["ident"])  # a city's own figure first (T-291)
+        if given:
+            boardings, when, source = given[0], given[1], "config"
+        else:  # a national authority's count or Wikidata's, the newer (T-2896)
+            boardings, when, source = air.best_boardings(ap)
         if not boardings:
-            audit.append(ap | dict(skipped="no Wikidata patronage"))
+            audit.append(ap | dict(skipped="no passenger count"))
             continue
         d = air.metres(ap["lat"], ap["lon"], lat, lon)
         wgt = pp * np.exp(-d / air.DECAY_M)
         share = float(wgt[ins].sum() / wgt.sum())
-        od = cfg.get("od_share", {}).get(ap["ident"], 1.0)
+        od, od_from = air.od_share_of(ap, cfg)
         daily = boardings * od * share / air.DAYS
         sites = found.get(ap["ident"]) or [(ap["lat"], ap["lon"], 1.0, "airport point", None)]
-        m2 = sum(s[2] for s in sites)
-        for la, lo, a, *_ in sites:
-            c, _ = air.cell_of(index, la, lo, air.SNAP_M)
-            if c is not None:
-                trips[c] += daily * a / m2
-        audit.append(ap | dict(boardings=boardings, when=when, od_share=od, pack_share=share, daily_outings=daily))
-        print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings ({'config' if given else 'Wikidata'} {when}), O&D {od:.2f}, pack {share:.2f}, "
+        placed = air.place_sites(index, sites)
+        for c, a, _ in placed:
+            trips[c] += daily * a
+        if not placed:
+            print(f"  WARNING {ap['ident']} {ap['name']}: {daily:,.0f} outings a day and no cell within "
+                  f"{air.SNAP_M / 1000:g} km of the airport or a terminal: nothing placed", flush=True)
+        else:  # T-2896 (5): what the airport's people outside the zone send, for cross_everyday
+            sites_out.append(dict(ident=ap["ident"], iata=ap["iata"], lat=ap["lat"], lon=ap["lon"],
+                                  outside_outings=boardings * od * (1.0 - share) / air.DAYS,
+                                  outside_weight=float(wgt[~ins].sum())))
+        audit.append(ap | dict(boardings=boardings, when=when, source=source, od_share=od, od_from=od_from, pack_share=share, daily_outings=daily,
+                               placed=len(placed), max_snap_m=max((p[2] for p in placed), default=None)))
+        print(f"  {ap['ident']} {ap['name']}: {boardings:,.0f} boardings ({source} {when}), O&D {od:.2f} ({od_from}), pack {share:.2f}, "
               f"{daily:,.0f} outings a day", flush=True)
     buf = packio.replace_cell_arrays(header, buf, {"airport_trips": trips})
     header["airport"] = dict(
         coverage="tier 0: OurAirports scheduled-service airports in the boundary", year=None,
-        airports=sum(1 for r in audit if "daily_outings" in r), outings=float(trips.sum(dtype=np.float64)), decay_m=air.DECAY_M,
+        airports=sum(1 for r in audit if r.get("placed")), outings=float(trips.sum(dtype=np.float64)), decay_m=air.DECAY_M,
         origin_mix="half residents, half visitors (jobs and leisure/hotel jobs, a quarter each)",
-        formula="daily outings = Wikidata patronage / 2 x O&D share (1, or judgement for hubs) x pack share (GHSL population x exp(-d/20 km)) / 366",
-        limitations="Wikidata patronage of mixed years; no connecting-share source", sources=[air.OURAIRPORTS, WIKIDATA])
+        formula="daily outings = passengers / 2 (a national authority's count, else Wikidata patronage; the newer year, "
+                "the lower within one) x O&D share (1, or judgement for hubs) x pack share (GHSL population x exp(-d/20 km)) / 366",
+        limitations="no connecting-share source", sources=[air.OURAIRPORTS, WIKIDATA, "pipeline/airport_passengers.csv"],
+        # per airport, the outings of the people outside the boundary (the pack share's rest) and their GHSL weight
+        # (people x exp(-d/20 km)): cross_everyday draws them over the neighbouring packs (T-2896)
+        sites=sites_out)
     canada.rewrite(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".airports.audit.json"), "w") as f:
         json.dump(audit, f, indent=1, default=str)
@@ -1660,8 +1682,13 @@ def medical_parks(city, els, names):
 if __name__ == "__main__":
     import sys
     args = [x for x in sys.argv[1:] if not x.startswith("--")]
-    if "--education" in sys.argv:  # schools and universities alone, on a res-9 pack (merge_cells --through, T-3214)
+    _edu, _air = "--education" in sys.argv, "--airports" in sys.argv
+    if _edu or _air:  # steps alone on a res-9 pack (merge_cells --through, T-3214, T-3244), both in one process
         _cfg = b.CITIES[args[0]]
-        education_osm(args[0], build_boundary(args[0], _cfg), worldbank(_cfg["iso2"])[1])
+        _bd = build_boundary(args[0], _cfg)
+        if _edu:
+            education_osm(args[0], _bd, worldbank(_cfg["iso2"])[1])
+        if _air:
+            airports(args[0], _bd)
     else:
         (finish if "--finish" in sys.argv else main)(args[0])

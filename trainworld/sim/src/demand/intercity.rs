@@ -85,6 +85,10 @@ struct Rule {
     pull_off: Vec<String>,
     #[serde(default)]
     pull_country_gamma: BTreeMap<String, f64>,
+    /// T-3254: a local factor: within each listed country, its places' attraction is also times
+    /// `exp(gamma x px)` at every distance (no fade), for trips under the pull's window (Poland's big-city pairs).
+    #[serde(default)]
+    pull_near_gamma: BTreeMap<String, f64>,
 }
 fn default_pull_phase() -> [f64; 2] {
     [50., 150.]
@@ -117,11 +121,12 @@ impl Rule {
             pull_phase_km: default_pull_phase(),
             pull_off: vec![],
             pull_country_gamma: BTreeMap::new(),
+            pull_near_gamma: BTreeMap::new(),
         }
     }
     fn ok(&self) -> bool {
         let v = [self.r, self.a, self.d0_km, self.eps, self.g, self.d1_km, self.th, self.eps_t, self.tho, self.border_eps, self.u_mean_us, self.u_ref_people, self.border, self.rt, self.near_km, self.min_trips, self.pull_gamma, self.pull_gamma_x];
-        v.iter().chain(&self.onset_km).chain(&self.tail_onset_km).chain(&self.pull_phase_km).chain(self.pull_country_gamma.values()).all(|x| x.is_finite() && *x >= 0.)
+        v.iter().chain(&self.onset_km).chain(&self.tail_onset_km).chain(&self.pull_phase_km).chain(self.pull_country_gamma.values()).chain(self.pull_near_gamma.values()).all(|x| x.is_finite() && *x >= 0.)
             && self.onset_km[1] > self.onset_km[0]
             && self.tail_onset_km[1] > self.tail_onset_km[0]
             && self.pull_phase_km[1] > self.pull_phase_km[0]
@@ -141,6 +146,14 @@ impl Rule {
             self.pull_gamma * self.pull_country_gamma.get(b).copied().unwrap_or(1.)
         } else {
             self.pull_gamma_x
+        }
+    }
+    /// T-3254: the unfaded local pull's gamma of a trip from a resident of `a` to a place in `b`; 0: none.
+    fn pull_near_gamma_of(&self, a: &str, b: &str) -> f64 {
+        if a != b || self.pull_off.iter().any(|c| c == a) {
+            0.
+        } else {
+            self.pull_near_gamma.get(b).copied().unwrap_or(0.)
         }
     }
     /// The tail's onset at `d` km: 0 under its first bound, 1 from its second.
@@ -664,6 +677,8 @@ struct PairRule {
     rel: f64,
     /// T-3240: the second place's pull on trips from the first at full strength, less 1 (0: none)
     pull: f64,
+    /// T-3254: its unfaded local pull, less 1 (0: none)
+    pull_near: f64,
     near: bool,
     km: f64,
     car: bool,
@@ -732,10 +747,10 @@ impl PairRule {
         if !self.car && self.fl.is_some() { self.fl.at(w) } else { split.at(w) }
     }
 }
-/// The ordered pair (i, j)'s border factor, the tail's income factor, j's pull on i's trips (less 1),
-/// near or not, and the distance between their centres (`pair_rule`'s first part).
+/// The ordered pair (i, j)'s border factor, the tail's income factor, j's pull and unfaded local pull on
+/// i's trips (each less 1), near or not, and the distance between their centres (`pair_rule`'s first part).
 #[inline]
-fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, i: usize, j: usize) -> (f64, f64, f64, bool, f64) {
+fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, i: usize, j: usize) -> (f64, f64, f64, f64, bool, f64) {
     let (p, q) = (&places[i], &places[j]);
     let km = if i == j {
         0.
@@ -748,12 +763,13 @@ fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: b
     let b = border_factor(rule, pc, p.inc, qc);
     let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
     let pull = if q.px > 0. { (rule.pull_gamma_of(pc, qc) * q.px).exp_m1() } else { 0. };
-    (b, rel, pull, km < rule.near_km, km)
+    let pull_near = if q.px > 0. { (rule.pull_near_gamma_of(pc, qc) * q.px).exp_m1() } else { 0. };
+    (b, rel, pull, pull_near, km < rule.near_km, km)
 }
 /// The ordered pair (i, j)'s rule (`PairRule`).
 fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, drives: &Drives, i: usize, j: usize) -> PairRule {
-    let (b, rel, pull, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
-    pair_mode_rule(places, countries, mp, drives, i, j, near, km, PairRule { b, rel, pull, near, km, ..PairRule::default() })
+    let (b, rel, pull, pull_near, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
+    pair_mode_rule(places, countries, mp, drives, i, j, near, km, PairRule { b, rel, pull, pull_near, near, km, ..PairRule::default() })
 }
 /// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart, into `r`: whether a car
 /// can go, the flight, the crossings, the routed drive, and the share of the trips not by rail that

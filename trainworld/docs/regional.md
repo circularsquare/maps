@@ -44,7 +44,11 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   attraction, ground and tail alike, is times `1 + (exp(gamma x px) - 1) x fade(300-700 km)`, the tail's own
   window: the pull fills the 300-700 km valley between the two curves and leaves trips under 300 km as they
   are (Berlin - Hamburg, Rome - Naples, Madrid - Valencia, Istanbul - Ankara were at or over their
-  published figures without it; Warsaw - Kraków and Warsaw - Tricity stay under theirs). `px`, its
+  published figures without it; Warsaw - Kraków and Warsaw - Tricity stay under theirs). A local factor,
+  `near_gamma` (T-3254, Anita 2026-11-12, "a very slight poland-only pull"): within Poland a place's
+  attraction is also times `1 + (exp(0.2 x px) - 1)` at every distance, unfaded, for its own residents
+  (Warsaw 1.7x), added to the pull above: Warsaw - Kraków 3.6k -> 5.1k a weekday both ways, under its
+  7.2k by rail alone in H1 2019. `px`, its
   *excess*, is how much more important the place is than its people say: the best Natural Earth 10m
   populated-places `scalerank` inside its zone's outline against the rank a place of its people has
   (`20.80 - 1.08 ln(people)`), clipped to 0-3. Trimmed for map balance: the cap of 3 shrinks on a log

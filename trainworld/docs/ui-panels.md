@@ -1126,7 +1126,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   being played. [Random] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Biggest is
   by points in the place, one per person, never a sandbox game (a note under the list says "Sandbox games aren't
   counted"), top 50 ranked as the leaderboards are; Most liked is
-  by likes, the newest first among equals, one per person, top 50. The place is the world, a city, a country (as
+  by likes, equals in random order (the panel's seed, kept while it is open, T-3258), one per person, top 50. The place is the world, a city, a country (as
   the country leaderboards have it) or a region: a realm (`game/realms.ts`, the names the map's realm buttons use)
   that is more than one country or part of one ("Benelux", "US west"). Typed, the picker finds every city, country
   and region; empty, it offers the world and the playing game's countries, regions and cities. A share is in a place

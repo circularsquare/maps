@@ -7,8 +7,9 @@
     python pipeline/merge_cells.py <id> --stats --floor 100   counts with the floor rule at 100 trip ends (0 off)
     python pipeline/merge_cells.py <id> --undo       put the res-9 pack back in data/packs (--force: also
                                                      when the merged pack changed after merging)
-    python pipeline/merge_cells.py <ids> --through "<module> {id} <args>" [--workers N] [--force]
+    python pipeline/merge_cells.py <ids> --through "<module> {id} <args>" [--workers N] [--force] [--keep-going]
                                                      per id: --undo, that step on the res-9 pack, merge
+                                                     (--keep-going: a failed id does not stop the others)
 
 A res-8 parent whose present children make under THRESHOLD trip ends a weekday merges; only the
 children inside one 2 km zone merge together (a parent cut by a zone edge gives one merged cell
@@ -569,10 +570,10 @@ def undo(city, force=False):
     print(f"{city}: res-9 pack back in data/packs")
 
 
-def through(ids, template, workers=1, force=False):
+def through(ids, template, workers=1, force=False, keep_going=False):
     """Per id: --undo, the step `template` names ("<module> {id} <args>", run through world_run.py
-    step), then merge again; on a failure no new id starts, and the failed pack's res-9 version stays in
-    data/packs. Returns the failed ids."""
+    step), then merge again; on a failure no new id starts (with keep_going the others go on), and the
+    failed pack's res-9 version stays in data/packs. Returns the failed ids."""
     import shlex
     import subprocess
     import threading
@@ -593,7 +594,8 @@ def through(ids, template, workers=1, force=False):
                                encoding="utf-8", errors="replace")
             out.append(f"$ {' '.join(st)}\n{r.stdout}{r.stderr}")
             if r.returncode:
-                stop.set()
+                if not keep_going:
+                    stop.set()
                 break
         ok = not r.returncode
         with lock:
@@ -604,7 +606,8 @@ def through(ids, template, workers=1, force=False):
     with ThreadPoolExecutor(workers) as pool:
         list(pool.map(one, ids))
     print(f"through: {len(ids)} ids, {len(failed)} failed {' '.join(failed)}"
-          + ("; stopped at the first failure, ids not yet started left as they were" if failed else ""), flush=True)
+          + ("; stopped at the first failure, ids not yet started left as they were" if failed and not keep_going
+             else "; each failed pack left res-9 in data/packs until it is run again" if failed else ""), flush=True)
     return failed
 
 
@@ -638,7 +641,7 @@ if __name__ == "__main__":
     if not ids:
         sys.exit(__doc__)
     if tmpl is not None:
-        sys.exit(1 if through(ids, tmpl, workers or 1, force="--force" in args) else 0)
+        sys.exit(1 if through(ids, tmpl, workers or 1, force="--force" in args, keep_going="--keep-going" in args) else 0)
     if child is not None and "--stats" not in args:
         sys.exit("--child is for --stats")
     if floor is not None and "--stats" not in args and floor != (FLOOR or 0):

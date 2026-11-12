@@ -437,8 +437,17 @@ from both sides, so the everyday draw does not stop at the line.
   and every other loaded pack's (the unit's fixed neighbours included) whose centres are within 80 km
   (where `local_share` reaches nothing). Social's three parts are each scaled to their pack's people,
   so packs compare. Inside a country a line takes no factor; a national border takes the commutes'
-  national factor (`borders.json`). Airports and attractions keep each site's own total and do not
-  cross.
+  national factor (`borders.json`). Attractions keep each site's own total and do not cross.
+- **Airports** (T-2896) keep their pack share in the pack (`airport_trips`, unchanged by this step).
+  The rest, each airport's outings of the people outside its pack (the header's `airport.sites`:
+  `outside_outings`, and `outside_weight`, those people x exp(-d / 20 km) by GHSL), is drawn over
+  every other loaded pack's cells within 80 km, none within 1.5 km of the airport, each weighed as
+  the everyday layer weighs an airport's ends (half residents, a quarter jobs, a quarter leisure
+  jobs, scaled to the pack's people) x exp(-d / 20 km) x the border factor. A cell gets
+  `outside_outings` x its weight / the larger of `outside_weight` and the cells' sum, so where the
+  neighbours are unbuilt or sea their share is dropped; then the 40-80 km taper. The airport is the
+  draw's end (kind 4 joins school and university in the file's `site_kinds`). A pack built before
+  T-2896 has no `sites` and sends none.
 - **Kept share.** The share of each zone's draw that stays in its own pack, by purpose, goes into
   the pack (and its res-9 copy) as per-zone arrays `everyday_kept_<purpose>`; the everyday layer
   multiplies a sample's budget by its fixed end's zone's share, so nobody makes more trips. A pack
