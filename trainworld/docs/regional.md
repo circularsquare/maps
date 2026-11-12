@@ -38,9 +38,9 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK, by the rows' `country`;
   `OPEN_AREA_BORDER`, T-809), else `0.26 x min(y_i / y_US, 1)^1.5` (the origin's income). Each
   6 km zone's two normalisers are computed offline at its centre.
-- **The long-trip pull** (T-3240, `pipeline/market_pull.json`; off, `"on": false`, until the world
-  rebuild after 2026-11-11 turns it on and rebuilds every pack's market file, so its packs, rows and
-  registry rule never mix with and without it): a destination place's
+- **The long-trip pull** (T-3240, `pipeline/market_pull.json`, `"on": true` from the 2026-11-12 world
+  rebuild, which rebuilt every pack's market file with it, so packs, rows and registry rule never mix
+  with and without it): a destination place's
   attraction, ground and tail alike, is times `1 + (exp(gamma x px) - 1) x fade(300-700 km)`, the tail's own
   window: the pull fills the 300-700 km valley between the two curves and leaves trips under 300 km as they
   are (Berlin - Hamburg, Rome - Naples, Madrid - Valencia, Istanbul - Ankara were at or over their

@@ -221,8 +221,8 @@ College, which in 2023 reported all twelve former community colleges at Hartford
 is not campus-level allocation: a multi-campus institution with one UNITID (Northern Virginia
 Community College, Montgomery College, Community College of Rhode Island) sits at one point.
 
-Adult homes use block population multiplied by the ACS tract age-18+ share. A provisional 60%
-typical-day attendance factor, 3.5 km distance-decay scale (T-637) and separate day/evening
+Adult homes use block population multiplied by the ACS tract age-18+ share. An 80% typical-day
+attendance factor everywhere (T-3218; UBC's daytime estimate is 0.83 of enrolment), 3.5 km distance-decay scale (T-637) and separate day/evening
 schedule. The purpose joins the same bubbles, fares, assignment, loads and
 crowding as other local trips as the model purpose University (shown with School as "School and
 university", T-192). Homes, attendance and timing are

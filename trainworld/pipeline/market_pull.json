@@ -1,6 +1,6 @@
 {
  "task": "T-3240",
- "on": false,
+ "on": true,
  "notes": "notes/T-3240.md; the rule in docs/regional.md 5.1; `places` written by pipeline/market_pull.py, the rest by hand",
  "source": "Natural Earth 10m populated places (simple) 5.1.2, scalerank (public domain); resort towns from Wikidata (CC0)",
  "gamma": 0.6,

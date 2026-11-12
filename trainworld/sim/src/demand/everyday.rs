@@ -26,7 +26,7 @@ pub const MIN_DISTANCE_M: f32 = 150.0;
 /// The defaults of `Params::everyday_rate` and `everyday_decay_m`. A pack's `everyday` block (its
 /// country's survey, T-509 stage 4) overrides the rates; the decay lengths are one worldwide set
 /// (T-637), which no pack overrides. An attraction's rate multiplies its visits.
-pub const RATE: [f32; KIND_COUNT] = [0.3, 0.2, 0.9, 0.6, 1.0, 0.04, 1.0];
+pub const RATE: [f32; KIND_COUNT] = [0.3, 0.2, 0.9, 0.8, 1.0, 0.04, 1.0];
 /// Attractions: the chance halves every 10 km.
 pub const DECAY: [f32; KIND_COUNT] = [1000.0, 1000.0, 1400.0, 3500.0, 20000.0, 2000.0, 14427.0];
 pub const KIND_COUNT: usize = 7;

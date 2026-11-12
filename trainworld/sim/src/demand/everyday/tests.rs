@@ -274,7 +274,8 @@ fn university_is_optional_independent_and_conserves_purpose_timing() {
     assert_eq!(a.purpose_count(), 4);
     assert_eq!(&a.info()[..9], &old.info());
     assert_eq!(&a.destinations[..old.destinations.len()], &old.destinations);
-    assert!((a.totals[3]-60.0).abs()<1e-4);
+    let uni_total: f32 = 100.0 * RATE[3];
+    assert!((a.totals[3]-uni_total as f64).abs()<1e-4);
     for k in a.start[3]..a.destinations.len() {
         if let Some((kind, home, campus, _, _)) = a.edge(k) {
             assert_eq!((kind,home,campus),(3,1,0));
@@ -284,12 +285,12 @@ fn university_is_optional_independent_and_conserves_purpose_timing() {
     for q in 0..5 { a.solve(q); }
     let selected=a.selection(1,&[0]);
     let uni=&selected[108..144];
-    assert!((uni[..30].iter().sum::<f32>()-120.0).abs()<1e-3);
-    assert!((uni[30..].iter().sum::<f32>()-120.0).abs()<1e-3);
+    assert!((uni[..30].iter().sum::<f32>()-2.0*uni_total).abs()<1e-3);
+    assert!((uni[30..].iter().sum::<f32>()-2.0*uni_total).abs()<1e-3);
     let outward_morning=(0..3).map(|m|uni[m*5]).sum::<f32>();
     let return_evening=(0..3).map(|m|uni[15+m*5+2]).sum::<f32>();
-    assert!((outward_morning/60.0-0.65).abs()<1e-5);
-    assert!((return_evening/60.0-0.42).abs()<1e-5);
+    assert!((outward_morning/uni_total-0.65).abs()<1e-5);
+    assert!((return_evening/uni_total-0.42).abs()<1e-5);
     let modes=a.cell_modes();
     for m in 0..3 {
         let total=(0..4).map(|kind|(0..5).map(|q|selected[kind*36+m*5+q]+selected[kind*36+15+m*5+q]).sum::<f32>()).sum::<f32>();
@@ -303,7 +304,7 @@ fn university_is_optional_independent_and_conserves_purpose_timing() {
     let only=EverydayApi::new(&no_school.to_string(),&b).unwrap();
     assert_eq!(only.purpose_count(),4);
     assert_eq!(only.totals[2],0.0);
-    assert!((only.totals[3]-60.0).abs()<1e-4);
+    assert!((only.totals[3]-uni_total as f64).abs()<1e-4);
     let (h,b)=university_fixture(149.0);
     assert_eq!(EverydayApi::new(&h,&b).unwrap().totals[3],0.0);
 }
