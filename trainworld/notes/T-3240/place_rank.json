@@ -1,0 +1,12107 @@
+{
+"sbv": [
+4,
+"Durazno",
+"Admin-1 capital"
+],
+"mld": [
+6,
+"Rocha",
+"Admin-1 capital"
+],
+"xan": [
+7,
+"Ben Gardane",
+"Populated place"
+],
+"xap": [
+7,
+"Tozeur",
+"Admin-1 capital"
+],
+"tun": [
+3,
+"Tunis",
+"Admin-0 capital"
+],
+"jeb": [
+7,
+"Béja",
+"Admin-1 capital"
+],
+"xas": [
+7,
+"Qasserine",
+"Populated place"
+],
+"xar": [
+10,
+"Sdid Bouzid",
+"Admin-1 capital"
+],
+"xav": [
+7,
+"El Kef",
+"Admin-1 capital"
+],
+"xaw": [
+10,
+"Mahdia",
+"Admin-1 capital"
+],
+"xao": [
+10,
+"Monastir",
+"Admin-1 capital"
+],
+"xaj": [
+7,
+"Nabeul",
+"Admin-1 capital"
+],
+"hot": [
+10,
+"Tây Ninh",
+"Admin-1 capital"
+],
+"dib": [
+10,
+"Luan Chau",
+"Admin-1 capital"
+],
+"thg": [
+6,
+"Thái Nguyên",
+"Admin-1 capital"
+],
+"huu": [
+10,
+"Lạng Sơn",
+"Admin-1 capital"
+],
+"thc": [
+10,
+"Sơn La",
+"Admin-1 capital"
+],
+"sog": [
+10,
+"Tuyên Quang",
+"Admin-1 capital"
+],
+"vac": [
+10,
+"Yên Bái",
+"Admin-1 capital"
+],
+"hiu": [
+10,
+"Hai Duong",
+"Admin-1 capital"
+],
+"dox": [
+10,
+"Thái Bình",
+"Admin-1 capital"
+],
+"tuy": [
+10,
+"Tuy Hòa",
+"Admin-1 capital"
+],
+"hoc": [
+2,
+"Ho Chi Minh City",
+"Admin-1 capital"
+],
+"trp": [
+7,
+"Quảng Trị",
+"Admin-1 capital"
+],
+"huy": [
+10,
+"Cao Lãnh",
+"Admin-1 capital"
+],
+"btr": [
+10,
+"Truc Giang",
+"Admin-1 capital"
+],
+"tcu": [
+10,
+"Tra Vinh",
+"Admin-1 capital"
+],
+"log": [
+10,
+"Vĩnh Long",
+"Admin-1 capital"
+],
+"cba": [
+10,
+"Cao Bằng",
+"Admin-1 capital"
+],
+"edi": [
+7,
+"Edirne",
+"Admin-1 capital"
+],
+"ino": [
+10,
+"Bilecik",
+"Admin-1 capital"
+],
+"adp": [
+6,
+"Adapazarı",
+"Populated place"
+],
+"ksa": [
+10,
+"Kastamonu",
+"Admin-1 capital"
+],
+"isr": [
+8,
+"Isparta",
+"Admin-1 capital"
+],
+"kse": [
+7,
+"Kırıkkale",
+"Populated place"
+],
+"aks": [
+10,
+"Nevşehir",
+"Admin-1 capital"
+],
+"atk": [
+7,
+"Samandagi",
+"Populated place"
+],
+"ato": [
+7,
+"Ordu",
+"Admin-1 capital"
+],
+"bfr": [
+7,
+"Bafra",
+"Populated place"
+],
+"tom": [
+10,
+"Tokat",
+"Admin-1 capital"
+],
+"orh": [
+6,
+"Trabzon",
+"Admin-1 capital"
+],
+"bnz": [
+10,
+"Bingöl",
+"Admin-1 capital"
+],
+"msm": [
+7,
+"Muş",
+"Admin-1 capital"
+],
+"cnm": [
+10,
+"Çankırı",
+"Admin-1 capital"
+],
+"nix": [
+7,
+"Ereğli",
+"Populated place"
+],
+"cok": [
+7,
+"Amasya",
+"Admin-1 capital"
+],
+"srz": [
+10,
+"Siirt",
+"Admin-1 capital"
+],
+"elz": [
+8,
+"Elâzığ",
+"Admin-1 capital"
+],
+"fee": [
+8,
+"Székesfehérvár",
+"Admin-1 capital"
+],
+"gyr": [
+7,
+"Győr",
+"Admin-1 capital"
+],
+"bny": [
+7,
+"Pécs",
+"Admin-1 capital"
+],
+"hee": [
+10,
+"Salgótarján",
+"Admin-1 capital"
+],
+"bck": [
+7,
+"Szeged",
+"Admin-1 capital"
+],
+"vlc": [
+8,
+"Drobeta-Turnu Severin",
+"Admin-1 capital"
+],
+"doj": [
+7,
+"Craiova",
+"Admin-1 capital"
+],
+"tem": [
+10,
+"Alexandria",
+"Admin-1 capital"
+],
+"prv": [
+7,
+"Ploiești",
+"Admin-1 capital"
+],
+"cls": [
+7,
+"Călărași",
+"Admin-1 capital"
+],
+"brx": [
+4,
+"Bern",
+"Admin-0 capital"
+],
+"vux": [
+7,
+"Lausanne",
+"Admin-1 capital"
+],
+"aag": [
+7,
+"Basel",
+"Admin-1 capital"
+],
+"luz": [
+7,
+"Luzern",
+"Admin-1 capital"
+],
+"vai": [
+10,
+"Sion",
+"Admin-1 capital"
+],
+"stg": [
+8,
+"Chur",
+"Admin-1 capital"
+],
+"tci": [
+7,
+"Lugano",
+"Populated place"
+],
+"tgu": [
+10,
+"Schaffhausen",
+"Admin-1 capital"
+],
+"zur": [
+2,
+"Zürich",
+"Admin-1 capital"
+],
+"osg": [
+6,
+"Linköping",
+"Admin-1 capital"
+],
+"skn": [
+4,
+"Malmö",
+"Admin-1 capital"
+],
+"sbx": [
+8,
+"Sibiu",
+"Admin-1 capital"
+],
+"clj": [
+6,
+"Cluj-Napoca",
+"Admin-1 capital"
+],
+"mmr": [
+7,
+"Baia Mare",
+"Admin-1 capital"
+],
+"bov": [
+7,
+"Brașov",
+"Admin-1 capital"
+],
+"mbg": [
+7,
+"Tirgu Mures",
+"Admin-1 capital"
+],
+"iai": [
+4,
+"Iași",
+"Admin-1 capital"
+],
+"glt": [
+8,
+"Galați",
+"Admin-1 capital"
+],
+"bcx": [
+7,
+"Bacău",
+"Admin-1 capital"
+],
+"thl": [
+10,
+"Phangnga",
+"Admin-1 capital"
+],
+"mnm": [
+7,
+"Chumphon",
+"Admin-1 capital"
+],
+"tug": [
+7,
+"Thung Song",
+"Populated place"
+],
+"mgp": [
+10,
+"Phatthalung",
+"Admin-1 capital"
+],
+"hty": [
+6,
+"Hat Yai",
+"Populated place"
+],
+"mlm": [
+10,
+"Lamphun",
+"Admin-1 capital"
+],
+"mne": [
+10,
+"Kamphaeng Phet",
+"Admin-1 capital"
+],
+"mph": [
+10,
+"Phichit",
+"Admin-1 capital"
+],
+"mnx": [
+10,
+"Phetchabun",
+"Admin-1 capital"
+],
+"meg": [
+10,
+"Supham Buri",
+"Admin-1 capital"
+],
+"mup": [
+7,
+"Lop Buri",
+"Admin-1 capital"
+],
+"muw": [
+6,
+"Nakhon Sawan",
+"Admin-1 capital"
+],
+"nog": [
+10,
+"Nakhon Nayok",
+"Admin-1 capital"
+],
+"mga": [
+10,
+"Nakhon Pathom",
+"Admin-1 capital"
+],
+"ban": [
+1,
+"Bangkok",
+"Admin-0 capital"
+],
+"mgt": [
+10,
+"Yasothon",
+"Admin-1 capital"
+],
+"mgo": [
+10,
+"Chachoengsao",
+"Admin-1 capital"
+],
+"mnh": [
+7,
+"Chanthaburi",
+"Admin-1 capital"
+],
+"mnk": [
+10,
+"Kalasin",
+"Admin-1 capital"
+],
+"mgm": [
+10,
+"Maha Sarakham",
+"Admin-1 capital"
+],
+"mno": [
+10,
+"Roi Et",
+"Admin-1 capital"
+],
+"mgi": [
+10,
+"Pattani",
+"Admin-1 capital"
+],
+"inh": [
+4,
+"Mbabane",
+"Admin-0 capital"
+],
+"rgi": [
+7,
+"Coimbra",
+"Admin-1 capital"
+],
+"cvd": [
+8,
+"Braga",
+"Admin-1 capital"
+],
+"baj": [
+7,
+"Badajoz",
+"Populated place"
+],
+"oet": [
+10,
+"Santarém",
+"Admin-1 capital"
+],
+"tme": [
+10,
+"Vila Real",
+"Admin-1 capital"
+],
+"aab": [
+7,
+"Arar",
+"Admin-1 capital"
+],
+"nox": [
+10,
+"Assen",
+"Admin-1 capital"
+],
+"ane": [
+10,
+"Arnhem",
+"Admin-1 capital"
+],
+"zul": [
+10,
+"Maastricht",
+"Admin-1 capital"
+],
+"noe": [
+10,
+"Zwolle",
+"Admin-1 capital"
+],
+"wed": [
+10,
+"Middelburg",
+"Admin-1 capital"
+],
+"nro": [
+10,
+"'s-Hertogenbosch",
+"Admin-1 capital"
+],
+"vea": [
+3,
+"Bergen",
+"Admin-1 capital"
+],
+"osl": [
+2,
+"Oslo",
+"Admin-0 capital"
+],
+"vef": [
+10,
+"Tønsberg",
+"Admin-1 capital"
+],
+"tnn": [
+7,
+"Tiraspol",
+"Admin-1 capital"
+],
+"mse": [
+3,
+"Maseru",
+"Admin-0 capital"
+],
+"owe": [
+7,
+"Orlu",
+"Populated place"
+],
+"vag": [
+6,
+"Göteborg",
+"Admin-1 capital"
+],
+"wex": [
+7,
+"Galway",
+"Admin-1 capital"
+],
+"bnt": [
+8,
+"Barletta",
+"Populated place"
+],
+"cbc": [
+10,
+"Campobasso",
+"Admin-1 region capital"
+],
+"vao": [
+10,
+"Aosta",
+"Admin-1 region capital"
+],
+"lum": [
+6,
+"Luxembourg",
+"Admin-0 capital"
+],
+"koe": [
+7,
+"Alor Setar",
+"Admin-1 capital"
+],
+"kua": [
+2,
+"Kuala Lumpur",
+"Admin-0 capital"
+],
+"brd": [
+10,
+"Teyateyaneng",
+"Admin-1 capital"
+],
+"spi": [
+7,
+"Dubrovnik",
+"Admin-1 capital"
+],
+"asd": [
+10,
+"Shibin el Kom",
+"Admin-1 capital"
+],
+"bah": [
+10,
+"Benha",
+"Admin-1 capital"
+],
+"alz": [
+10,
+"Zagazig",
+"Admin-1 capital"
+],
+"kay": [
+10,
+"Kafr el Sheikh",
+"Admin-1 capital"
+],
+"kuw": [
+2,
+"Kuwait City",
+"Admin-0 capital"
+],
+"evo": [
+7,
+"Agrinio",
+"Populated place"
+],
+"chl": [
+10,
+"Polygyros",
+"Admin-1 capital"
+],
+"evs": [
+7,
+"Xanthi",
+"Admin-1 capital"
+],
+"rml": [
+10,
+"Ramla",
+"Admin-1 capital"
+],
+"pim": [
+6,
+"Lahti",
+"Populated place"
+],
+"bod": [
+10,
+"Muineachan",
+"Admin-1 capital"
+],
+"syj": [
+7,
+"Esbjerg",
+"Populated place"
+],
+"cop": [
+2,
+"København",
+"Admin-0 capital"
+],
+"vet": [
+10,
+"Sorø",
+"Admin-1 capital"
+],
+"drs": [
+7,
+"Durrës",
+"Admin-1 capital"
+],
+"fie": [
+8,
+"Vlorë",
+"Admin-1 capital"
+],
+"ske": [
+7,
+"Shkodër",
+"Admin-1 capital"
+],
+"crr": [
+7,
+"Charleroi",
+"Populated place"
+],
+"hss": [
+10,
+"Hasselt",
+"Admin-1 capital"
+],
+"smo": [
+10,
+"Kampong Spoe",
+"Admin-1 capital"
+],
+"byx": [
+10,
+"Kampong Thum",
+"Admin-1 capital"
+],
+"prs": [
+10,
+"Prey Veng",
+"Admin-1 capital"
+],
+"tpe": [
+10,
+"Phnum Tbeng Meanchey",
+"Admin-1 capital"
+],
+"mmo": [
+10,
+"Kracheh",
+"Admin-1 capital"
+],
+"bnl": [
+10,
+"Lumphat",
+"Admin-1 capital"
+],
+"jie": [
+10,
+"Jijel",
+"Admin-1 capital"
+],
+"tiz": [
+10,
+"Tizi-Ouzou",
+"Admin-1 capital"
+],
+"bou": [
+10,
+"Bordj Bou Arréridj",
+"Admin-1 capital"
+],
+"msl": [
+10,
+"M'sila",
+"Admin-1 capital"
+],
+"glm": [
+10,
+"Guelma",
+"Admin-1 capital"
+],
+"aib": [
+10,
+"Oum el Bouaghi",
+"Admin-1 capital"
+],
+"pln": [
+7,
+"Pleven",
+"Admin-1 capital"
+],
+"vek": [
+7,
+"Turnovo",
+"Populated place"
+],
+"nmu": [
+7,
+"Namur",
+"Admin-1 capital"
+],
+"ins": [
+7,
+"Innsbruck",
+"Admin-1 capital"
+],
+"nrd": [
+10,
+"Eisenstadt",
+"Admin-1 capital"
+],
+"kyp": [
+3,
+"Nicosia",
+"Admin-0 capital"
+],
+"ram": [
+10,
+"Ramallah",
+"Admin-0 region capital"
+],
+"nzr": [
+9,
+"Nazran",
+"Admin-1 capital"
+],
+"zal": [
+4,
+"Angarsk",
+"Populated place"
+],
+"amt": [
+7,
+"Latacunga",
+"Admin-1 capital"
+],
+"ibx": [
+7,
+"Cayambe",
+"Populated place"
+],
+"yop": [
+7,
+"Arauca",
+"Admin-1 capital"
+],
+"fra": [
+2,
+"Frankfurt",
+"Populated place"
+],
+"use": [
+9,
+"Usti Nad Labem",
+"Admin-1 capital"
+],
+"krv": [
+7,
+"Pardubice",
+"Admin-1 capital"
+],
+"lut": [
+9,
+"Schwerin",
+"Admin-1 capital"
+],
+"slx": [
+9,
+"Panaji",
+"Admin-1 capital"
+],
+"tai": [
+1,
+"Taipei",
+"Admin-0 capital"
+],
+"mig": [
+8,
+"Puzi",
+"Populated place"
+],
+"yil": [
+8,
+"Yilan",
+"Admin-1 capital"
+],
+"zhb": [
+6,
+"Hsinchu",
+"Admin-1 capital"
+],
+"cri": [
+3,
+"Christchurch",
+"Admin-1 capital"
+],
+"ols": [
+7,
+"Winona",
+"Populated place"
+],
+"suo": [
+4,
+"International Falls",
+"Populated place"
+],
+"yeo": [
+4,
+"Billings",
+"Populated place"
+],
+"msu": [
+3,
+"Helena",
+"Admin-1 capital"
+],
+"css": [
+3,
+"Bismarck",
+"Admin-1 capital"
+],
+"adu": [
+3,
+"Boise",
+"Admin-1 capital"
+],
+"spo": [
+4,
+"Spokane",
+"Populated place"
+],
+"yau": [
+6,
+"Yakima",
+"Populated place"
+],
+"tst": [
+4,
+"Olympia",
+"Admin-1 capital"
+],
+"pho": [
+2,
+"Phoenix",
+"Admin-1 capital"
+],
+"cci": [
+6,
+"Douglas",
+"Populated place"
+],
+"yap": [
+4,
+"Flagstaff",
+"Populated place"
+],
+"snf": [
+1,
+"San Francisco",
+"Populated place"
+],
+"snd": [
+2,
+"San Diego",
+"Populated place"
+],
+"smu": [
+7,
+"Santa Rosa",
+"Populated place"
+],
+"snc": [
+4,
+"Santa Barbara",
+"Populated place"
+],
+"riv": [
+7,
+"El Centro",
+"Populated place"
+],
+"ken": [
+6,
+"Bakersfield",
+"Populated place"
+],
+"scy": [
+8,
+"Vallejo",
+"Populated place"
+],
+"mey": [
+6,
+"Grand Junction",
+"Populated place"
+],
+"der": [
+1,
+"Denver",
+"Admin-1 capital"
+],
+"lrm": [
+7,
+"Fort Collins",
+"Populated place"
+],
+"wah": [
+4,
+"Reno",
+"Populated place"
+],
+"doy": [
+6,
+"Carlsbad",
+"Populated place"
+],
+"sfc": [
+3,
+"Santa Fe",
+"Admin-1 capital"
+],
+"sjn": [
+6,
+"Los Alamos",
+"Populated place"
+],
+"lcu": [
+4,
+"Salem",
+"Admin-1 capital"
+],
+"des": [
+6,
+"Klamath Falls",
+"Populated place"
+],
+"uth": [
+6,
+"St. George",
+"Populated place"
+],
+"lra": [
+3,
+"Cheyenne",
+"Admin-1 capital"
+],
+"crg": [
+7,
+"Jonesboro",
+"Populated place"
+],
+"lnu": [
+6,
+"Cedar Rapids",
+"Populated place"
+],
+"plc": [
+3,
+"Des Moines",
+"Admin-1 capital"
+],
+"wod": [
+7,
+"Sioux City",
+"Populated place"
+],
+"sdw": [
+6,
+"Wichita",
+"Populated place"
+],
+"kac": [
+4,
+"Kansas City",
+"Populated place"
+],
+"swe": [
+4,
+"Topeka",
+"Admin-1 capital"
+],
+"grf": [
+7,
+"Dodge City",
+"Populated place"
+],
+"bcc": [
+7,
+"St. Joseph",
+"Populated place"
+],
+"lns": [
+6,
+"Lincoln",
+"Admin-1 capital"
+],
+"tut": [
+4,
+"Tulsa",
+"Populated place"
+],
+"gys": [
+7,
+"Muskogee",
+"Populated place"
+],
+"pyn": [
+7,
+"Shawnee",
+"Populated place"
+],
+"mic": [
+3,
+"Pierre",
+"Admin-1 capital"
+],
+"eaa": [
+4,
+"Baton Rouge",
+"Admin-1 capital"
+],
+"lfa": [
+6,
+"Lafayette",
+"Populated place"
+],
+"neo": [
+2,
+"New Orleans",
+"Populated place"
+],
+"mco": [
+6,
+"Waco",
+"Populated place"
+],
+"aus": [
+4,
+"Austin",
+"Admin-1 capital"
+],
+"smc": [
+6,
+"Tyler",
+"Populated place"
+],
+"mcl": [
+7,
+"Edinburg",
+"Populated place"
+],
+"cmu": [
+6,
+"Brownsville",
+"Populated place"
+],
+"nuc": [
+4,
+"Corpus Christi",
+"Populated place"
+],
+"snn": [
+3,
+"San Antonio",
+"Populated place"
+],
+"dll": [
+2,
+"Dallas",
+"Populated place"
+],
+"tyl": [
+6,
+"Wichita Falls",
+"Populated place"
+],
+"elo": [
+4,
+"El Paso",
+"Populated place"
+],
+"mdd": [
+6,
+"Odessa",
+"Populated place"
+],
+"lbo": [
+4,
+"Amarillo",
+"Populated place"
+],
+"hos": [
+1,
+"Houston",
+"Populated place"
+],
+"hfd": [
+6,
+"Hartford",
+"Admin-1 capital"
+],
+"nyc": [
+0,
+"New York",
+"Populated place"
+],
+"nhv": [
+7,
+"New Haven",
+"Populated place"
+],
+"pvd": [
+6,
+"Providence",
+"Admin-1 capital"
+],
+"spf": [
+8,
+"Springfield",
+"Populated place"
+],
+"bos": [
+2,
+"Boston",
+"Admin-1 capital"
+],
+"cec": [
+4,
+"Burlington",
+"Populated place"
+],
+"lct": [
+7,
+"Gadsden",
+"Populated place"
+],
+"mdo": [
+6,
+"Huntsville",
+"Populated place"
+],
+"pof": [
+8,
+"Winter Haven",
+"Populated place"
+],
+"brv": [
+7,
+"Titusville",
+"Populated place"
+],
+"mim": [
+1,
+"Miami",
+"Populated place"
+],
+"orl": [
+4,
+"Orlando",
+"Populated place"
+],
+"sst": [
+6,
+"Sarasota",
+"Populated place"
+],
+"mrc": [
+6,
+"Gainesville",
+"Populated place"
+],
+"sjh": [
+7,
+"St. Augustine",
+"Populated place"
+],
+"lny": [
+4,
+"Tallahassee",
+"Admin-1 capital"
+],
+"esa": [
+6,
+"Pensacola",
+"Populated place"
+],
+"whi": [
+8,
+"Dalton",
+"Populated place"
+],
+"atl": [
+1,
+"Atlanta",
+"Admin-1 capital"
+],
+"cmc": [
+4,
+"Savannah",
+"Populated place"
+],
+"muo": [
+7,
+"Macon",
+"Populated place"
+],
+"mem": [
+3,
+"Memphis",
+"Populated place"
+],
+"hit": [
+3,
+"Jackson",
+"Admin-1 capital"
+],
+"gev": [
+7,
+"Greenville",
+"Populated place"
+],
+"lxi": [
+7,
+"Aiken",
+"Populated place"
+],
+"piy": [
+6,
+"Peoria",
+"Populated place"
+],
+"cic": [
+1,
+"Chicago",
+"Populated place"
+],
+"frl": [
+6,
+"Jefferson City",
+"Admin-1 capital"
+],
+"wib": [
+8,
+"Rockford",
+"Populated place"
+],
+"alu": [
+7,
+"Muncie",
+"Populated place"
+],
+"vah": [
+6,
+"Evansville",
+"Populated place"
+],
+"tie": [
+7,
+"Kokomo",
+"Populated place"
+],
+"sjs": [
+8,
+"South Bend",
+"Populated place"
+],
+"lou": [
+6,
+"Louisville",
+"Populated place"
+],
+"mty": [
+7,
+"Paducah",
+"Populated place"
+],
+"mdk": [
+8,
+"London",
+"Populated place"
+],
+"way": [
+7,
+"Bowling Green",
+"Populated place"
+],
+"nsh": [
+8,
+"Rocky Mount",
+"Populated place"
+],
+"ire": [
+7,
+"Hickory",
+"Populated place"
+],
+"ral": [
+3,
+"Raleigh",
+"Admin-1 capital"
+],
+"cub": [
+4,
+"Wilmington",
+"Populated place"
+],
+"skc": [
+6,
+"Canton",
+"Populated place"
+],
+"lrn": [
+8,
+"Mansfield",
+"Populated place"
+],
+"lsc": [
+6,
+"Toledo",
+"Populated place"
+],
+"mtg": [
+6,
+"Dayton",
+"Populated place"
+],
+"cob": [
+6,
+"Columbus",
+"Admin-1 capital"
+],
+"slv": [
+7,
+"Bristol",
+"Populated place"
+],
+"ruh": [
+7,
+"Murfreesboro",
+"Populated place"
+],
+"mnv": [
+6,
+"Lynchburg",
+"Populated place"
+],
+"bke": [
+7,
+"Winchester",
+"Populated place"
+],
+"ric": [
+4,
+"Richmond",
+"Admin-1 capital"
+],
+"vig": [
+3,
+"Norfolk",
+"Populated place"
+],
+"out": [
+7,
+"Fond du Lac",
+"Populated place"
+],
+"mik": [
+3,
+"Milwaukee",
+"Populated place"
+],
+"dac": [
+6,
+"Madison",
+"Admin-1 capital"
+],
+"mtn": [
+6,
+"Wausau",
+"Populated place"
+],
+"rac": [
+7,
+"Racine",
+"Populated place"
+],
+"mgy": [
+7,
+"Morgantown",
+"Populated place"
+],
+"knw": [
+4,
+"Charleston",
+"Admin-1 capital"
+],
+"sus": [
+8,
+"Dover",
+"Admin-1 capital"
+],
+"wdc": [
+0,
+"Washington,  D.C.",
+"Admin-0 capital"
+],
+"bal": [
+4,
+"Baltimore",
+"Populated place"
+],
+"frt": [
+7,
+"Johnstown",
+"Populated place"
+],
+"srg": [
+8,
+"Saratoga Springs",
+"Populated place"
+],
+"pib": [
+3,
+"Pittsburgh",
+"Populated place"
+],
+"lze": [
+7,
+"Wilkes-Barre",
+"Populated place"
+],
+"lcs": [
+8,
+"Lancaster",
+"Populated place"
+],
+"lhg": [
+8,
+"Allentown",
+"Populated place"
+],
+"cud": [
+4,
+"Augusta",
+"Admin-1 capital"
+],
+"klz": [
+7,
+"Kalamazoo",
+"Populated place"
+],
+"byu": [
+7,
+"Cadillac",
+"Populated place"
+],
+"bwc": [
+4,
+"Sault Ste. Marie",
+"Populated place"
+],
+"mal": [
+7,
+"Málaga",
+"Populated place"
+],
+"jae": [
+7,
+"Jaén",
+"Populated place"
+],
+"cad": [
+6,
+"Cádiz",
+"Populated place"
+],
+"len": [
+8,
+"León",
+"Populated place"
+],
+"bar": [
+2,
+"Barcelona",
+"Admin-1 capital"
+],
+"anm": [
+2,
+"Anchorage",
+"Populated place"
+],
+"fab": [
+3,
+"Fairbanks",
+"Populated place"
+],
+"dov": [
+7,
+"Kherson",
+"Admin-1 capital"
+],
+"nea": [
+7,
+"Nizhyn",
+"Populated place"
+],
+"kml": [
+8,
+"Khmelnytskyy",
+"Admin-1 capital"
+],
+"stx": [
+8,
+"Drohobych",
+"Populated place"
+],
+"uzo": [
+8,
+"Uzhgorod",
+"Admin-1 capital"
+],
+"kvx": [
+7,
+"Cherkasy",
+"Admin-1 capital"
+],
+"kyi": [
+1,
+"Kyiv",
+"Admin-0 capital"
+],
+"sky": [
+8,
+"Bila Tserkva",
+"Populated place"
+],
+"sht": [
+6,
+"Sumy",
+"Admin-1 capital"
+],
+"kyv": [
+8,
+"Kryvyy Rih",
+"Populated place"
+],
+"sli": [
+7,
+"Kupyansk",
+"Populated place"
+],
+"dua": [
+1,
+"Dubai",
+"Admin-1 capital"
+],
+"asr": [
+7,
+"Oviedo",
+"Admin-1 capital"
+],
+"bro": [
+7,
+"Burgos",
+"Populated place"
+],
+"rom": [
+0,
+"Rome",
+"Admin-0 capital"
+],
+"gla": [
+3,
+"Glasgow",
+"Populated place"
+],
+"new": [
+6,
+"Newcastle",
+"Populated place"
+],
+"por": [
+7,
+"Portsmouth",
+"Populated place"
+],
+"bry": [
+7,
+"Bath",
+"Populated place"
+],
+"bop": [
+8,
+"Bournemouth",
+"Populated place"
+],
+"miu": [
+7,
+"Londonderry/Derry",
+"Populated place"
+],
+"ceh": [
+8,
+"Chester",
+"Populated place"
+],
+"sul": [
+8,
+"Swansea",
+"Populated place"
+],
+"cum": [
+8,
+"Carlisle",
+"Populated place"
+],
+"efe": [
+7,
+"Söke",
+"Populated place"
+],
+"kuy": [
+8,
+"Kütahya",
+"Admin-1 capital"
+],
+"bdm": [
+8,
+"Muğla",
+"Admin-1 capital"
+],
+"ons": [
+8,
+"Kahramanmaraş",
+"Admin-1 capital"
+],
+"akd": [
+8,
+"Icel",
+"Admin-1 capital"
+],
+"cug": [
+8,
+"Eumseong",
+"Populated place"
+],
+"ceo": [
+8,
+"Cheongju",
+"Admin-1 capital"
+],
+"won": [
+7,
+"Gangneung",
+"Populated place"
+],
+"cuc": [
+7,
+"Sokcho",
+"Populated place"
+],
+"seo": [
+1,
+"Seoul",
+"Admin-0 capital"
+],
+"iks": [
+7,
+"Gunsan",
+"Populated place"
+],
+"pog": [
+6,
+"Pohang",
+"Populated place"
+],
+"cno": [
+8,
+"Changwon",
+"Populated place"
+],
+"ess": [
+8,
+"Southend-on-Sea",
+"Populated place"
+],
+"bek": [
+8,
+"Reading",
+"Populated place"
+],
+"lei": [
+8,
+"Leicester",
+"Populated place"
+],
+"lee": [
+6,
+"Leeds",
+"Populated place"
+],
+"she": [
+8,
+"Sheffield",
+"Populated place"
+],
+"plt": [
+8,
+"Polatlı",
+"Populated place"
+],
+"erg": [
+7,
+"Zonguldak",
+"Admin-1 capital"
+],
+"kzl": [
+7,
+"Mardin",
+"Admin-1 capital"
+],
+"ipe": [
+7,
+"Van",
+"Admin-1 capital"
+],
+"sza": [
+8,
+"Nyíregyháza",
+"Admin-1 capital"
+],
+"tmi": [
+7,
+"Reșița",
+"Admin-1 capital"
+],
+"bih": [
+8,
+"Oradea",
+"Admin-1 capital"
+],
+"suv": [
+7,
+"Botoșani",
+"Admin-1 capital"
+],
+"buz": [
+8,
+"Buzău",
+"Admin-1 capital"
+],
+"ccl": [
+6,
+"Chiclayo",
+"Admin-1 capital"
+],
+"are": [
+4,
+"Arequipa",
+"Admin-1 capital"
+],
+"csc": [
+3,
+"Cusco",
+"Admin-1 capital"
+],
+"cyl": [
+7,
+"Sicuani",
+"Populated place"
+],
+"sbp": [
+6,
+"Juliaca",
+"Populated place"
+],
+"sbt": [
+4,
+"Chimbote",
+"Populated place"
+],
+"hau": [
+6,
+"Cerro de Pasco",
+"Admin-1 capital"
+],
+"viu": [
+8,
+"Huamachuco",
+"Populated place"
+],
+"tru": [
+3,
+"Trujillo",
+"Admin-1 capital"
+],
+"sbq": [
+6,
+"Tarapoto",
+"Populated place"
+],
+"hma": [
+6,
+"Ayacucho",
+"Admin-1 capital"
+],
+"lim": [
+1,
+"Lima",
+"Admin-0 capital"
+],
+"stp": [
+7,
+"San Ramon",
+"Populated place"
+],
+"hax": [
+7,
+"Pativilca",
+"Populated place"
+],
+"ynb": [
+8,
+"Yanbu al Bahr",
+"Populated place"
+],
+"aqu": [
+6,
+"Al Qunfudhah",
+"Populated place"
+],
+"atf": [
+8,
+"At Taif",
+"Populated place"
+],
+"zui": [
+8,
+"Eindhoven",
+"Populated place"
+],
+"trd": [
+3,
+"Trondheim",
+"Admin-1 capital"
+],
+"bay": [
+7,
+"Zvolen",
+"Populated place"
+],
+"brj": [
+4,
+"Bratislava",
+"Admin-0 capital"
+],
+"kip": [
+7,
+"Klaipėda",
+"Admin-1 capital"
+],
+"nar": [
+8,
+"Najran",
+"Admin-1 capital"
+],
+"waw": [
+8,
+"Al Quwayiyah",
+"Populated place"
+],
+"aka": [
+7,
+"Al Kharj",
+"Populated place"
+],
+"dam": [
+6,
+"Hofuf",
+"Populated place"
+],
+"pzr": [
+7,
+"Pec",
+"Populated place"
+],
+"bch": [
+8,
+"Maykop",
+"Admin-1 capital"
+],
+"vld": [
+7,
+"Vladikavkaz",
+"Admin-1 capital"
+],
+"pyt": [
+7,
+"Blagodarnyy",
+"Populated place"
+],
+"stv": [
+4,
+"Stavropol",
+"Admin-1 capital"
+],
+"kgr": [
+4,
+"Kaliningrad",
+"Admin-1 capital"
+],
+"mrs": [
+3,
+"Murmansk",
+"Admin-1 capital"
+],
+"knh": [
+6,
+"Kovda",
+"Populated place"
+],
+"jac": [
+8,
+"Slantsy",
+"Populated place"
+],
+"sai": [
+2,
+"St.  Petersburg",
+"Admin-1 capital"
+],
+"bya": [
+4,
+"Bryansk",
+"Admin-1 capital"
+],
+"iva": [
+6,
+"Ivanovo",
+"Admin-1 capital"
+],
+"dze": [
+7,
+"Dzerzhinsk",
+"Populated place"
+],
+"sov": [
+8,
+"Arzamas",
+"Populated place"
+],
+"tve": [
+4,
+"Tver",
+"Admin-1 capital"
+],
+"yar": [
+4,
+"Yaroslavl",
+"Admin-1 capital"
+],
+"yee": [
+8,
+"Yelets",
+"Populated place"
+],
+"vok": [
+7,
+"Yegoryevsk",
+"Populated place"
+],
+"kls": [
+7,
+"Vyazma",
+"Populated place"
+],
+"ses": [
+7,
+"Solnechnogorsk",
+"Populated place"
+],
+"kmu": [
+8,
+"Kolomna",
+"Populated place"
+],
+"ros": [
+4,
+"Rostov",
+"Admin-1 capital"
+],
+"tga": [
+8,
+"Taganrog",
+"Populated place"
+],
+"shs": [
+7,
+"Shakhty",
+"Populated place"
+],
+"bey": [
+7,
+"Belaya Kalitva",
+"Populated place"
+],
+"alk": [
+6,
+"Tula",
+"Admin-1 capital"
+],
+"noy": [
+7,
+"Yefremov",
+"Populated place"
+],
+"kmy": [
+7,
+"Kamyshin",
+"Populated place"
+],
+"stb": [
+7,
+"Starsy Oskol",
+"Populated place"
+],
+"res": [
+4,
+"Sochi",
+"Populated place"
+],
+"kvk": [
+7,
+"Tikhoretsk",
+"Populated place"
+],
+"srb": [
+7,
+"Saransk",
+"Admin-1 capital"
+],
+"tav": [
+6,
+"Tambov",
+"Admin-1 capital"
+],
+"bok": [
+7,
+"Mikhaylovka",
+"Populated place"
+],
+"tuk": [
+7,
+"Rayevskiy",
+"Populated place"
+],
+"mto": [
+4,
+"Magnitogorsk",
+"Populated place"
+],
+"msx": [
+6,
+"Zlatoust",
+"Populated place"
+],
+"vot": [
+4,
+"Vorkuta",
+"Populated place"
+],
+"kiv": [
+4,
+"Kirov",
+"Admin-1 capital"
+],
+"nvo": [
+6,
+"Serov",
+"Populated place"
+],
+"tli": [
+7,
+"Kamensk Uralskiy",
+"Populated place"
+],
+"veh": [
+4,
+"Nizhny Tagil",
+"Populated place"
+],
+"ors": [
+6,
+"Orsk",
+"Populated place"
+],
+"bgs": [
+7,
+"Buzuluk",
+"Populated place"
+],
+"syz": [
+8,
+"Chapayevsk",
+"Populated place"
+],
+"sam": [
+3,
+"Samara",
+"Admin-1 capital"
+],
+"naz": [
+8,
+"Naberezhnyye Chelny",
+"Populated place"
+],
+"zel": [
+7,
+"Kanash",
+"Populated place"
+],
+"alv": [
+7,
+"Almetyevsk",
+"Populated place"
+],
+"sug": [
+3,
+"Surgut",
+"Populated place"
+],
+"keo": [
+4,
+"Kemerovo",
+"Admin-1 capital"
+],
+"nok": [
+4,
+"Novokuznetsk",
+"Populated place"
+],
+"msk": [
+4,
+"Abakan",
+"Admin-1 capital"
+],
+"nov": [
+3,
+"Novosibirsk",
+"Admin-1 capital"
+],
+"krt": [
+7,
+"Kulunda",
+"Populated place"
+],
+"win": [
+6,
+"Nizwa",
+"Populated place"
+],
+"ryi": [
+6,
+"Kansk",
+"Populated place"
+],
+"nii": [
+6,
+"Lesosibirsk",
+"Populated place"
+],
+"sld": [
+4,
+"Bukachacha",
+"Populated place"
+],
+"bzi": [
+6,
+"Olovyannaya",
+"Populated place"
+],
+"cbb": [
+3,
+"Chita",
+"Admin-1 capital"
+],
+"sps": [
+6,
+"Ussuriysk",
+"Populated place"
+],
+"prz": [
+3,
+"Vladivostok",
+"Admin-1 capital"
+],
+"poy": [
+6,
+"Lesozavodsk",
+"Populated place"
+],
+"bbz": [
+6,
+"Birobidzhan",
+"Admin-1 capital"
+],
+"khd": [
+4,
+"Yuzhno Sakhalinsk",
+"Admin-1 capital"
+],
+"ens": [
+6,
+"Ensenada",
+"Populated place"
+],
+"loc": [
+4,
+"La Paz",
+"Admin-1 capital"
+],
+"pie": [
+7,
+"Piedras Negras",
+"Populated place"
+],
+"cao": [
+7,
+"Cuauhtémoc",
+"Populated place"
+],
+"ciu": [
+6,
+"Ciudad Juárez",
+"Populated place"
+],
+"toe": [
+4,
+"Torreón",
+"Populated place"
+],
+"dra": [
+6,
+"Durango",
+"Admin-1 capital"
+],
+"mzt": [
+3,
+"Mazatlán",
+"Populated place"
+],
+"cul": [
+4,
+"Culiacán",
+"Admin-1 capital"
+],
+"cae": [
+4,
+"Guaymas",
+"Populated place"
+],
+"noa": [
+4,
+"Nogales",
+"Populated place"
+],
+"zac": [
+7,
+"Zacatecas",
+"Admin-1 capital"
+],
+"mot": [
+1,
+"Monterrey",
+"Admin-1 capital"
+],
+"nue": [
+4,
+"Nuevo Laredo",
+"Populated place"
+],
+"cid": [
+7,
+"Tamuín",
+"Populated place"
+],
+"tmp": [
+3,
+"Tampico",
+"Populated place"
+],
+"rey": [
+7,
+"San Fernando",
+"Populated place"
+],
+"aut": [
+8,
+"Autlan",
+"Populated place"
+],
+"zit": [
+8,
+"Ciudad Hidalgo",
+"Populated place"
+],
+"ura": [
+7,
+"Uruapan",
+"Populated place"
+],
+"tei": [
+7,
+"Tuxpan",
+"Populated place"
+],
+"slz": [
+6,
+"Tehuantepec",
+"Populated place"
+],
+"sno": [
+7,
+"Puerto Escondido",
+"Populated place"
+],
+"ati": [
+8,
+"Atlixco",
+"Populated place"
+],
+"cml": [
+7,
+"Frontera",
+"Populated place"
+],
+"oco": [
+7,
+"Tenosique",
+"Populated place"
+],
+"pue": [
+2,
+"Puebla",
+"Admin-1 capital"
+],
+"ira": [
+7,
+"Salamanca",
+"Populated place"
+],
+"cel": [
+8,
+"Celaya",
+"Populated place"
+],
+"chr": [
+8,
+"Chilpancingo",
+"Admin-1 capital"
+],
+"igu": [
+7,
+"Taxco",
+"Populated place"
+],
+"acp": [
+3,
+"Acapulco",
+"Populated place"
+],
+"mex": [
+0,
+"Mexico City",
+"Admin-0 capital"
+],
+"sju": [
+8,
+"San Juan del Río",
+"Populated place"
+],
+"mix": [
+7,
+"Minatitlán",
+"Populated place"
+],
+"ori": [
+8,
+"Orizaba",
+"Populated place"
+],
+"xal": [
+8,
+"Xalapa",
+"Admin-1 capital"
+],
+"sab": [
+8,
+"San Cristobal de Las Casas",
+"Populated place"
+],
+"vif": [
+7,
+"Pijijiapan",
+"Populated place"
+],
+"mia": [
+3,
+"Mérida",
+"Admin-1 capital"
+],
+"fel": [
+7,
+"Felipe Carrillo Puerto",
+"Populated place"
+],
+"poi": [
+7,
+"Bitola",
+"Admin-1 capital"
+],
+"olz": [
+7,
+"Ełk",
+"Populated place"
+],
+"elb": [
+8,
+"Elbląg",
+"Admin-1 capital"
+],
+"ink": [
+8,
+"Inowrocław",
+"Populated place"
+],
+"kat": [
+7,
+"Katowice",
+"Admin-1 capital"
+],
+"opl": [
+8,
+"Opole",
+"Admin-1 capital"
+],
+"bez": [
+6,
+"Berezniki",
+"Populated place"
+],
+"mdw": [
+6,
+"Limerick",
+"Admin-1 capital"
+],
+"soh": [
+6,
+"Cork",
+"Admin-1 capital"
+],
+"mod": [
+8,
+"Modena",
+"Populated place"
+],
+"rgg": [
+7,
+"Catanzaro",
+"Admin-1 region capital"
+],
+"nap": [
+2,
+"Naples",
+"Admin-1 region capital"
+],
+"scu": [
+7,
+"Siracusa",
+"Populated place"
+],
+"alx": [
+8,
+"Asti",
+"Populated place"
+],
+"nvr": [
+8,
+"Novara",
+"Populated place"
+],
+"cmx": [
+8,
+"Como",
+"Populated place"
+],
+"udn": [
+7,
+"Trieste",
+"Admin-1 region capital"
+],
+"trv": [
+8,
+"Treviso",
+"Populated place"
+],
+"szu": [
+3,
+"Jiayuguan",
+"Populated place"
+],
+"lbg": [
+8,
+"Linxia",
+"Populated place"
+],
+"bei": [
+0,
+"Beijing",
+"Admin-0 capital"
+],
+"yxi": [
+8,
+"Sanming",
+"Populated place"
+],
+"hui": [
+8,
+"Huizhou",
+"Populated place"
+],
+"shn": [
+3,
+"Shantou",
+"Populated place"
+],
+"huv": [
+8,
+"Annecy",
+"Populated place"
+],
+"lor": [
+7,
+"Saint-Étienne",
+"Populated place"
+],
+"mcx": [
+6,
+"Machala",
+"Admin-1 capital"
+],
+"quv": [
+7,
+"Babahoyo",
+"Admin-1 capital"
+],
+"azo": [
+7,
+"Yaupi",
+"Populated place"
+],
+"stl": [
+8,
+"Salinas",
+"Populated place"
+],
+"rim": [
+6,
+"Riobamba",
+"Admin-1 capital"
+],
+"qui": [
+3,
+"Quito",
+"Admin-0 capital"
+],
+"roe": [
+8,
+"Sonsón",
+"Populated place"
+],
+"tuj": [
+7,
+"Tunja",
+"Admin-1 capital"
+],
+"brc": [
+7,
+"Socorro",
+"Populated place"
+],
+"esm": [
+7,
+"San Lorenzo",
+"Populated place"
+],
+"gio": [
+8,
+"Girardot",
+"Populated place"
+],
+"nei": [
+7,
+"Neiva",
+"Admin-1 capital"
+],
+"snv": [
+7,
+"Ipiales",
+"Populated place"
+],
+"vle": [
+8,
+"Mocoa",
+"Admin-1 capital"
+],
+"pei": [
+7,
+"Pereira",
+"Admin-1 capital"
+],
+"baa": [
+4,
+"Barranquilla",
+"Admin-1 capital"
+],
+"slg": [
+7,
+"El Banco",
+"Populated place"
+],
+"crs": [
+3,
+"Cartagena",
+"Admin-1 capital"
+],
+"pis": [
+8,
+"Magangué",
+"Populated place"
+],
+"vll": [
+8,
+"Valledupar",
+"Admin-1 capital"
+],
+"viv": [
+6,
+"Villavicencio",
+"Admin-1 capital"
+],
+"bif": [
+8,
+"Bielefeld",
+"Populated place"
+],
+"dor": [
+8,
+"Dortmund",
+"Populated place"
+],
+"dus": [
+7,
+"Düsseldorf",
+"Admin-1 capital"
+],
+"klh": [
+8,
+"Karlsruhe",
+"Populated place"
+],
+"mah": [
+7,
+"Mannheim",
+"Populated place"
+],
+"kss": [
+8,
+"Kassel",
+"Populated place"
+],
+"aui": [
+8,
+"Oldenburg",
+"Populated place"
+],
+"bun": [
+8,
+"Braunschweig",
+"Populated place"
+],
+"eru": [
+8,
+"Erfurt",
+"Admin-1 capital"
+],
+"krz": [
+8,
+"Karlovac",
+"Admin-1 capital"
+],
+"pri": [
+7,
+"Pula",
+"Populated place"
+],
+"bmb": [
+7,
+"Hof",
+"Populated place"
+],
+"auu": [
+8,
+"Augsburg",
+"Populated place"
+],
+"nur": [
+6,
+"Nürnberg",
+"Populated place"
+],
+"jic": [
+8,
+"České Budějovice",
+"Admin-1 capital"
+],
+"ere": [
+8,
+"Chemnitz",
+"Populated place"
+],
+"ose": [
+7,
+"Osijek",
+"Admin-1 capital"
+],
+"olo": [
+8,
+"Olomouc",
+"Admin-1 capital"
+],
+"kid": [
+7,
+"Narva",
+"Populated place"
+],
+"cga": [
+3,
+"Lhasa",
+"Admin-1 capital"
+],
+"dlh": [
+8,
+"Dali",
+"Populated place"
+],
+"jiq": [
+8,
+"Yangquan",
+"Populated place"
+],
+"shx": [
+8,
+"Shiyan",
+"Populated place"
+],
+"gch": [
+8,
+"Danjiangkou",
+"Populated place"
+],
+"qaj": [
+8,
+"Jingzhou",
+"Populated place"
+],
+"axx": [
+8,
+"Anlu",
+"Populated place"
+],
+"bhx": [
+7,
+"Chenzhou",
+"Populated place"
+],
+"jgy": [
+8,
+"Deyang",
+"Populated place"
+],
+"teo": [
+8,
+"Tengchong",
+"Populated place"
+],
+"gei": [
+4,
+"Gejiu",
+"Populated place"
+],
+"cui": [
+8,
+"Chuxiong",
+"Populated place"
+],
+"tch": [
+8,
+"Hengshui",
+"Populated place"
+],
+"xxx": [
+8,
+"Xuanhua",
+"Populated place"
+],
+"luo": [
+8,
+"Luohe",
+"Populated place"
+],
+"jnc": [
+7,
+"Chaoyang",
+"Populated place"
+],
+"waf": [
+8,
+"Wafangdian",
+"Populated place"
+],
+"zhc": [
+8,
+"Zhucheng",
+"Populated place"
+],
+"bin": [
+8,
+"Hangu",
+"Populated place"
+],
+"xyc": [
+8,
+"Xinyi",
+"Populated place"
+],
+"hja": [
+8,
+"Yangzhou",
+"Populated place"
+],
+"lha": [
+8,
+"Linhai",
+"Populated place"
+],
+"taz": [
+7,
+"Jiaojing",
+"Populated place"
+],
+"oky": [
+8,
+"Okayama",
+"Admin-1 capital"
+],
+"ymg": [
+8,
+"Shimonoseki",
+"Populated place"
+],
+"tbe": [
+6,
+"Baicheng",
+"Populated place"
+],
+"nna": [
+7,
+"Nongan",
+"Populated place"
+],
+"hnx": [
+7,
+"Linjiang",
+"Populated place"
+],
+"yax": [
+6,
+"Tumen",
+"Populated place"
+],
+"kgs": [
+6,
+"Kagoshima",
+"Admin-1 capital"
+],
+"kgw": [
+8,
+"Takamatsu",
+"Admin-1 capital"
+],
+"tks": [
+8,
+"Tokushima",
+"Admin-1 capital"
+],
+"mnz": [
+4,
+"Hailar",
+"Populated place"
+],
+"sgd": [
+8,
+"Shangdu",
+"Populated place"
+],
+"oro": [
+8,
+"Orongen Zizhiqi",
+"Populated place"
+],
+"jla": [
+4,
+"Ulan Hot",
+"Populated place"
+],
+"gyn": [
+6,
+"Erenhot",
+"Populated place"
+],
+"lhe": [
+6,
+"Wuhai",
+"Populated place"
+],
+"ada": [
+4,
+"Daqing",
+"Populated place"
+],
+"lnj": [
+3,
+"Qiqihar",
+"Populated place"
+],
+"bln": [
+7,
+"Suihua",
+"Populated place"
+],
+"biq": [
+4,
+"Bei'an",
+"Populated place"
+],
+"lik": [
+4,
+"Jixi",
+"Populated place"
+],
+"tym": [
+8,
+"Toyama",
+"Admin-1 capital"
+],
+"shg": [
+8,
+"Ōtsu",
+"Admin-1 capital"
+],
+"gnm": [
+8,
+"Maebashi",
+"Admin-1 capital"
+],
+"tyo": [
+0,
+"Tokyo",
+"Admin-0 capital"
+],
+"tcg": [
+8,
+"Utsunomiya",
+"Admin-1 capital"
+],
+"fks": [
+6,
+"Fukushima",
+"Admin-1 capital"
+],
+"msh": [
+8,
+"Simla",
+"Admin-1 capital"
+],
+"ned": [
+1,
+"New Delhi",
+"Admin-0 capital"
+],
+"rht": [
+8,
+"Rohtak",
+"Populated place"
+],
+"hix": [
+8,
+"Hisar",
+"Populated place"
+],
+"bhn": [
+8,
+"Bhiwani",
+"Populated place"
+],
+"amb": [
+8,
+"Ambala",
+"Populated place"
+],
+"bmu": [
+7,
+"Baramula",
+"Populated place"
+],
+"ddr": [
+8,
+"Silvassa",
+"Admin-1 capital"
+],
+"mum": [
+0,
+"Mumbai",
+"Admin-1 capital"
+],
+"bhs": [
+8,
+"Bhusawal",
+"Populated place"
+],
+"jor": [
+8,
+"Jorhat",
+"Populated place"
+],
+"coe": [
+8,
+"St.-Brieuc",
+"Populated place"
+],
+"vee": [
+8,
+"Poitier",
+"Admin-1 region capital"
+],
+"mie": [
+8,
+"Angers",
+"Populated place"
+],
+"pys": [
+8,
+"Biarritz",
+"Populated place"
+],
+"mar": [
+4,
+"Marseille",
+"Admin-1 region capital"
+],
+"pyi": [
+8,
+"Perpignan",
+"Populated place"
+],
+"hup": [
+8,
+"Tarbes",
+"Populated place"
+],
+"pum": [
+7,
+"Vichy",
+"Populated place"
+],
+"par": [
+0,
+"Paris",
+"Admin-0 capital"
+],
+"pas": [
+7,
+"Calais",
+"Populated place"
+],
+"dbs": [
+8,
+"Besançon",
+"Admin-1 region capital"
+],
+"pte": [
+3,
+"Punta Arenas",
+"Admin-1 capital"
+],
+"iqu": [
+3,
+"Iquique",
+"Admin-1 capital"
+],
+"anf": [
+3,
+"Antofagasta",
+"Admin-1 capital"
+],
+"coq": [
+4,
+"Copiapó",
+"Admin-1 capital"
+],
+"san": [
+0,
+"Santiago",
+"Admin-0 capital"
+],
+"qul": [
+7,
+"Los Andes",
+"Populated place"
+],
+"vlp": [
+3,
+"Valparaíso",
+"Admin-0 capital alt"
+],
+"tmc": [
+6,
+"Temuco",
+"Admin-1 capital"
+],
+"peo": [
+3,
+"Valdivia",
+"Admin-1 capital"
+],
+"cne": [
+3,
+"Concepción",
+"Admin-1 capital"
+],
+"cbe": [
+6,
+"Chillán",
+"Populated place"
+],
+"lol": [
+4,
+"Los Angeles",
+"Populated place"
+],
+"rag": [
+6,
+"Rancagua",
+"Admin-1 capital"
+],
+"tlc": [
+6,
+"Talca",
+"Admin-1 capital"
+],
+"ath": [
+1,
+"Athens",
+"Admin-0 capital"
+],
+"lri": [
+7,
+"Larissa",
+"Admin-1 capital"
+],
+"irl": [
+6,
+"Iraklio",
+"Admin-1 capital"
+],
+"bse": [
+8,
+"Beer Sheva",
+"Admin-1 capital"
+],
+"pir": [
+4,
+"Tampere",
+"Populated place"
+],
+"hop": [
+8,
+"Hoshiarpur",
+"Populated place"
+],
+"srr": [
+8,
+"Ajmer",
+"Populated place"
+],
+"htr": [
+8,
+"Hathras",
+"Populated place"
+],
+"khi": [
+8,
+"Sitapur",
+"Populated place"
+],
+"mro": [
+8,
+"Pilibhit",
+"Populated place"
+],
+"jgt": [
+8,
+"Budaun",
+"Populated place"
+],
+"fiz": [
+8,
+"Firozabad",
+"Populated place"
+],
+"mth": [
+8,
+"Mathura",
+"Populated place"
+],
+"bls": [
+8,
+"Bulandshahr",
+"Populated place"
+],
+"muz": [
+8,
+"Muzaffarnagar",
+"Populated place"
+],
+"dap": [
+8,
+"Gangtok",
+"Admin-1 capital"
+],
+"sty": [
+6,
+"Århus",
+"Populated place"
+],
+"seb": [
+8,
+"Subotica",
+"Populated place"
+],
+"imp": [
+6,
+"Imperatriz",
+"Populated place"
+],
+"tim": [
+3,
+"Caxias",
+"Populated place"
+],
+"cdx": [
+6,
+"Bacabal",
+"Populated place"
+],
+"sau": [
+4,
+"São Luís",
+"Admin-1 capital"
+],
+"saw": [
+8,
+"Santa Inês",
+"Populated place"
+],
+"brg": [
+6,
+"Bragança",
+"Populated place"
+],
+"brs": [
+6,
+"Breves",
+"Populated place"
+],
+"mab": [
+3,
+"Marabá",
+"Populated place"
+],
+"jip": [
+3,
+"Vilhena",
+"Populated place"
+],
+"doa": [
+6,
+"Dourados",
+"Populated place"
+],
+"cmb": [
+4,
+"Corumbá",
+"Populated place"
+],
+"ara": [
+6,
+"Araçatuba",
+"Populated place"
+],
+"tef": [
+6,
+"Teófilo Otoni",
+"Populated place"
+],
+"uba": [
+7,
+"Ubá",
+"Populated place"
+],
+"beo": [
+4,
+"Belo Horizonte",
+"Admin-1 capital"
+],
+"pou": [
+8,
+"Pouso Alegre",
+"Populated place"
+],
+"div": [
+7,
+"Divinópolis",
+"Populated place"
+],
+"cbd": [
+8,
+"Caratinga",
+"Populated place"
+],
+"bac": [
+8,
+"Barbacena",
+"Populated place"
+],
+"pod": [
+8,
+"Poços de Caldas",
+"Populated place"
+],
+"pox": [
+8,
+"Guaxupé",
+"Populated place"
+],
+"ubr": [
+6,
+"Uberaba",
+"Populated place"
+],
+"ube": [
+4,
+"Uberlândia",
+"Populated place"
+],
+"jna": [
+7,
+"Araçuaí",
+"Populated place"
+],
+"cbx": [
+4,
+"Cuiabá",
+"Admin-1 capital"
+],
+"tns": [
+6,
+"Santissima Trindade",
+"Populated place"
+],
+"smi": [
+6,
+"Santa Maria",
+"Populated place"
+],
+"poo": [
+2,
+"Porto Alegre",
+"Admin-1 capital"
+],
+"pel": [
+4,
+"Pelotas",
+"Populated place"
+],
+"cxi": [
+4,
+"Caxias do Sul",
+"Populated place"
+],
+"snz": [
+7,
+"Camaquã",
+"Populated place"
+],
+"cra": [
+6,
+"Criciúma",
+"Populated place"
+],
+"urg": [
+7,
+"Uruguaiana",
+"Populated place"
+],
+"psf": [
+6,
+"Passo Fundo",
+"Populated place"
+],
+"cav": [
+7,
+"Cascavel",
+"Populated place"
+],
+"fro": [
+8,
+"Palmas",
+"Populated place"
+],
+"loa": [
+6,
+"Londrina",
+"Populated place"
+],
+"pgu": [
+6,
+"Iguape",
+"Populated place"
+],
+"cur": [
+2,
+"Curitiba",
+"Admin-1 capital"
+],
+"gpu": [
+8,
+"Guarapuava",
+"Populated place"
+],
+"cpo": [
+8,
+"Rio Negro",
+"Populated place"
+],
+"ptg": [
+4,
+"Ponta Grossa",
+"Populated place"
+],
+"our": [
+8,
+"Telêmaco Borba",
+"Populated place"
+],
+"cca": [
+7,
+"Porto União",
+"Populated place"
+],
+"buu": [
+7,
+"Lajes",
+"Populated place"
+],
+"itj": [
+7,
+"Itajaí",
+"Populated place"
+],
+"joi": [
+6,
+"Joinville",
+"Populated place"
+],
+"sox": [
+7,
+"Granja",
+"Populated place"
+],
+"rus": [
+6,
+"Aracati",
+"Populated place"
+],
+"igt": [
+7,
+"Tauá",
+"Populated place"
+],
+"cni": [
+7,
+"Baturité",
+"Populated place"
+],
+"ter": [
+4,
+"Teresina",
+"Admin-1 capital"
+],
+"pnb": [
+6,
+"Parnaíba",
+"Populated place"
+],
+"mao": [
+4,
+"Maceió",
+"Admin-1 capital"
+],
+"arp": [
+6,
+"Arapiraca",
+"Populated place"
+],
+"ted": [
+6,
+"Nova Viçosa",
+"Populated place"
+],
+"pul": [
+7,
+"Tucano",
+"Populated place"
+],
+"gni": [
+6,
+"Santa Maria da Vitória",
+"Populated place"
+],
+"jeq": [
+6,
+"Jequié",
+"Populated place"
+],
+"vin": [
+4,
+"Vitória da Conquista",
+"Populated place"
+],
+"itb": [
+6,
+"Ilhéus",
+"Populated place"
+],
+"cco": [
+8,
+"Cachoeiro de Itapemirim",
+"Populated place"
+],
+"voa": [
+7,
+"Volta Redonda",
+"Populated place"
+],
+"rio": [
+0,
+"Rio de Janeiro",
+"Admin-1 capital"
+],
+"nit": [
+8,
+"Niterói",
+"Admin-1 capital"
+],
+"cbf": [
+8,
+"Cabo Frio",
+"Populated place"
+],
+"mce": [
+8,
+"Macaé",
+"Populated place"
+],
+"caz": [
+6,
+"Campos",
+"Populated place"
+],
+"mss": [
+6,
+"Mossoró",
+"Populated place"
+],
+"sje": [
+7,
+"Nova Cruz",
+"Populated place"
+],
+"wip": [
+3,
+"Winnipeg",
+"Admin-1 capital"
+],
+"rex": [
+3,
+"Regina",
+"Admin-1 capital"
+],
+"rer": [
+6,
+"Red Deer",
+"Populated place"
+],
+"pak": [
+8,
+"Hinton",
+"Populated place"
+],
+"llo": [
+7,
+"Athabasca",
+"Populated place"
+],
+"crb": [
+7,
+"Nelson",
+"Populated place"
+],
+"chw": [
+8,
+"Chilliwack",
+"Populated place"
+],
+"brr": [
+7,
+"Barrie",
+"Populated place"
+],
+"grt": [
+6,
+"Sudbury",
+"Populated place"
+],
+"kio": [
+7,
+"Kingston",
+"Populated place"
+],
+"wid": [
+6,
+"Windsor",
+"Populated place"
+],
+"tor": [
+1,
+"Toronto",
+"Admin-1 capital"
+],
+"lnn": [
+8,
+"London",
+"Populated place"
+],
+"kit": [
+8,
+"Kitchener",
+"Populated place"
+],
+"nob": [
+4,
+"Timmins",
+"Populated place"
+],
+"ota": [
+3,
+"Ottawa",
+"Admin-0 capital"
+],
+"rii": [
+8,
+"Rivière-du-Loup",
+"Populated place"
+],
+"shb": [
+6,
+"Trois-Rivières",
+"Populated place"
+],
+"say": [
+6,
+"Dolbeau",
+"Populated place"
+],
+"rou": [
+6,
+"Val d'Or",
+"Populated place"
+],
+"sre": [
+7,
+"Mont-Laurier",
+"Populated place"
+],
+"mon": [
+2,
+"Montréal",
+"Populated place"
+],
+"cpb": [
+4,
+"Sydney",
+"Populated place"
+],
+"rao": [
+8,
+"Kragujevac",
+"Populated place"
+],
+"juz": [
+7,
+"Novi Sad",
+"Admin-0 region capital"
+],
+"esc": [
+3,
+"Puerto Deseado",
+"Populated place"
+],
+"cof": [
+4,
+"Neuquén",
+"Admin-1 capital"
+],
+"ras": [
+4,
+"Rawson",
+"Admin-1 capital"
+],
+"men": [
+3,
+"Mendoza",
+"Admin-1 capital"
+],
+"srf": [
+6,
+"San Rafael",
+"Populated place"
+],
+"cla": [
+7,
+"Pires do Rio",
+"Populated place"
+],
+"agl": [
+7,
+"Goianésia",
+"Populated place"
+],
+"bra": [
+2,
+"Brasília",
+"Admin-0 capital"
+],
+"goi": [
+2,
+"Goiânia",
+"Admin-1 capital"
+],
+"rie": [
+7,
+"Rio Verde",
+"Populated place"
+],
+"bhb": [
+3,
+"Bahía Blanca",
+"Populated place"
+],
+"ger": [
+7,
+"Junín",
+"Populated place"
+],
+"zaa": [
+7,
+"Zárate",
+"Populated place"
+],
+"cvi": [
+8,
+"Chivilcoy",
+"Populated place"
+],
+"tnl": [
+6,
+"Olavarría",
+"Populated place"
+],
+"gen": [
+3,
+"Mar del Plata",
+"Populated place"
+],
+"cpm": [
+4,
+"Santa Rosa",
+"Admin-1 capital"
+],
+"gea": [
+6,
+"Viedma",
+"Admin-1 capital"
+],
+"rit": [
+6,
+"Río Cuarto",
+"Populated place"
+],
+"pbc": [
+8,
+"Villa Carlos Paz",
+"Populated place"
+],
+"cpv": [
+6,
+"Catamarca",
+"Admin-1 capital"
+],
+"drn": [
+6,
+"San Salvador de Jujuy",
+"Admin-1 capital"
+],
+"cph": [
+6,
+"La Rioja",
+"Admin-1 capital"
+],
+"orn": [
+6,
+"San Ramón de la Nueva Orán",
+"Populated place"
+],
+"cpt": [
+4,
+"Tucumán",
+"Admin-1 capital"
+],
+"cmt": [
+7,
+"Juan José Castelli",
+"Populated place"
+],
+"foo": [
+4,
+"Formosa",
+"Admin-1 capital"
+],
+"cps": [
+7,
+"Mercedes",
+"Populated place"
+],
+"ccd": [
+6,
+"Gualeguaychú",
+"Populated place"
+],
+"roa": [
+4,
+"Rosario",
+"Populated place"
+],
+"pbb": [
+8,
+"Paraná",
+"Admin-1 capital"
+],
+"lac": [
+4,
+"Santa Fe",
+"Admin-1 capital"
+],
+"sao": [
+0,
+"São Paulo",
+"Admin-1 capital"
+],
+"pig": [
+8,
+"Pindamonhangaba",
+"Populated place"
+],
+"ril": [
+8,
+"Rio Claro",
+"Populated place"
+],
+"sax": [
+6,
+"Santos",
+"Populated place"
+],
+"bed": [
+8,
+"Jaboticabal",
+"Populated place"
+],
+"brn": [
+8,
+"Bragança Paulista",
+"Populated place"
+],
+"jux": [
+8,
+"Jundiaí",
+"Populated place"
+],
+"soa": [
+8,
+"São José dos Campos",
+"Populated place"
+],
+"scr": [
+8,
+"Pirassununga",
+"Populated place"
+],
+"cam": [
+4,
+"Campinas",
+"Populated place"
+],
+"pia": [
+7,
+"Botucatu",
+"Populated place"
+],
+"mrl": [
+7,
+"Assis",
+"Populated place"
+],
+"prt": [
+8,
+"Presidente Prudente",
+"Populated place"
+],
+"itu": [
+8,
+"Tatuí",
+"Populated place"
+],
+"ctv": [
+7,
+"Novo Horizonte",
+"Populated place"
+],
+"frc": [
+6,
+"Franca",
+"Populated place"
+],
+"itp": [
+7,
+"Itapeva",
+"Populated place"
+],
+"obe": [
+8,
+"Eldorado",
+"Populated place"
+],
+"rec": [
+2,
+"Recife",
+"Admin-1 capital"
+],
+"cbo": [
+7,
+"Barreiros",
+"Populated place"
+],
+"vii": [
+7,
+"Timbaúba",
+"Populated place"
+],
+"srt": [
+8,
+"Arcoverde",
+"Populated place"
+],
+"get": [
+8,
+"Gent",
+"Admin-1 capital"
+],
+"bux": [
+6,
+"Burgas",
+"Admin-1 capital"
+],
+"plv": [
+7,
+"Khaskovo",
+"Admin-1 capital"
+],
+"sof": [
+3,
+"Sofia",
+"Admin-0 capital"
+],
+"vrx": [
+7,
+"Dobrich",
+"Admin-1 capital"
+],
+"moi": [
+8,
+"Wiener Neustadt",
+"Populated place"
+],
+"bnc": [
+7,
+"Lida",
+"Populated place"
+],
+"vik": [
+6,
+"Vitsyebsk",
+"Admin-1 capital"
+],
+"syd": [
+0,
+"Sydney",
+"Admin-1 capital"
+],
+"sun": [
+6,
+"Caloundra",
+"Populated place"
+],
+"zen": [
+3,
+"Sarajevo",
+"Admin-0 capital"
+],
+"lie": [
+8,
+"Liège",
+"Admin-1 capital"
+],
+"heb": [
+8,
+"Al Khalil",
+"Populated place"
+],
+"six": [
+3,
+"Victoria",
+"Admin-1 capital"
+],
+"hih": [
+6,
+"Wick",
+"Populated place"
+],
+"szi": [
+8,
+"Koszalin",
+"Populated place"
+],
+"tig": [
+6,
+"Hualien",
+"Admin-1 capital"
+],
+"tac": [
+4,
+"Taichung",
+"Admin-1 capital"
+],
+"weg": [
+3,
+"Wellington",
+"Admin-0 capital"
+],
+"auc": [
+1,
+"Auckland",
+"Admin-1 capital"
+],
+"whn": [
+6,
+"Whangarei",
+"Admin-1 capital"
+],
+"dun": [
+4,
+"Dunedin",
+"Admin-1 capital"
+],
+"hml": [
+4,
+"Hamilton",
+"Admin-1 capital"
+],
+"mip": [
+2,
+"Minneapolis",
+"Populated place"
+],
+"kuc": [
+7,
+"Lihue",
+"Populated place"
+],
+"hoo": [
+2,
+"Honolulu",
+"Admin-1 capital"
+],
+"hwa": [
+4,
+"Hilo",
+"Populated place"
+],
+"bvl": [
+6,
+"Pocatello",
+"Populated place"
+],
+"wht": [
+7,
+"Bellingham",
+"Populated place"
+],
+"sea": [
+2,
+"Seattle",
+"Populated place"
+],
+"ssa": [
+4,
+"Eureka",
+"Populated place"
+],
+"snq": [
+7,
+"Stockton",
+"Populated place"
+],
+"lsn": [
+0,
+"Los Angeles",
+"Populated place"
+],
+"tlr": [
+7,
+"Visalia",
+"Populated place"
+],
+"ssl": [
+7,
+"Merced",
+"Populated place"
+],
+"bte": [
+6,
+"Chico",
+"Populated place"
+],
+"elp": [
+4,
+"Colorado Springs",
+"Populated place"
+],
+"lav": [
+3,
+"Las Vegas",
+"Populated place"
+],
+"jck": [
+6,
+"Medford",
+"Populated place"
+],
+"web": [
+7,
+"Logan",
+"Populated place"
+],
+"btc": [
+7,
+"Texarkana",
+"Populated place"
+],
+"plk": [
+6,
+"Little Rock",
+"Admin-1 capital"
+],
+"sts": [
+2,
+"St. Louis",
+"Populated place"
+],
+"gry": [
+6,
+"Springfield",
+"Populated place"
+],
+"bcu": [
+7,
+"Columbia",
+"Populated place"
+],
+"doc": [
+3,
+"Omaha",
+"Populated place"
+],
+"okl": [
+3,
+"Oklahoma City",
+"Admin-1 capital"
+],
+"cdo": [
+4,
+"Shreveport",
+"Populated place"
+],
+"weu": [
+4,
+"Laredo",
+"Populated place"
+],
+"jeu": [
+7,
+"Port Arthur",
+"Populated place"
+],
+"bcn": [
+7,
+"Killeen",
+"Populated place"
+],
+"vio": [
+6,
+"Victoria",
+"Populated place"
+],
+"wor": [
+7,
+"Worcester",
+"Populated place"
+],
+"his": [
+6,
+"Concord",
+"Admin-1 capital"
+],
+"mtm": [
+4,
+"Montgomery",
+"Admin-1 capital"
+],
+"let": [
+6,
+"Key West",
+"Populated place"
+],
+"sci": [
+7,
+"Fort Pierce",
+"Populated place"
+],
+"los": [
+7,
+"Valdosta",
+"Populated place"
+],
+"adr": [
+7,
+"Athens",
+"Populated place"
+],
+"hrs": [
+6,
+"Biloxi",
+"Populated place"
+],
+"lcy": [
+7,
+"Tupelo",
+"Populated place"
+],
+"hry": [
+6,
+"Myrtle Beach",
+"Populated place"
+],
+"rin": [
+4,
+"Columbia",
+"Admin-1 capital"
+],
+"crc": [
+6,
+"Charleston",
+"Populated place"
+],
+"crt": [
+6,
+"Charlotte",
+"Populated place"
+],
+"sgo": [
+6,
+"Springfield",
+"Admin-1 capital"
+],
+"cmi": [
+7,
+"Urbana",
+"Populated place"
+],
+"lke": [
+7,
+"Waukegan",
+"Populated place"
+],
+"wia": [
+7,
+"Carbondale",
+"Populated place"
+],
+"cin": [
+3,
+"Cincinnati",
+"Populated place"
+],
+"onl": [
+7,
+"Jacksonville",
+"Populated place"
+],
+"ptc": [
+7,
+"Greenville",
+"Populated place"
+],
+"bub": [
+7,
+"Asheville",
+"Populated place"
+],
+"fot": [
+7,
+"Winston-Salem",
+"Populated place"
+],
+"smm": [
+7,
+"Akron",
+"Populated place"
+],
+"kxc": [
+4,
+"Knoxville",
+"Populated place"
+],
+"mdy": [
+7,
+"Jackson",
+"Populated place"
+],
+"phl": [
+2,
+"Philadelphia",
+"Populated place"
+],
+"ata": [
+7,
+"Atlantic City",
+"Populated place"
+],
+"abn": [
+6,
+"Albany",
+"Admin-1 capital"
+],
+"bmc": [
+6,
+"Ithaca",
+"Populated place"
+],
+"ono": [
+4,
+"Syracuse",
+"Populated place"
+],
+"buf": [
+3,
+"Buffalo",
+"Populated place"
+],
+"chq": [
+7,
+"Jamestown",
+"Populated place"
+],
+"mry": [
+4,
+"Rochester",
+"Populated place"
+],
+"yor": [
+7,
+"York",
+"Populated place"
+],
+"lck": [
+7,
+"Scranton",
+"Populated place"
+],
+"cey": [
+7,
+"State College",
+"Populated place"
+],
+"eri": [
+7,
+"Erie",
+"Populated place"
+],
+"wao": [
+7,
+"Ann Arbor",
+"Populated place"
+],
+"kec": [
+7,
+"Muskegon",
+"Populated place"
+],
+"gec": [
+7,
+"Flint",
+"Populated place"
+],
+"det": [
+2,
+"Detroit",
+"Populated place"
+],
+"alr": [
+7,
+"Almería",
+"Populated place"
+],
+"hue": [
+7,
+"Huelva",
+"Populated place"
+],
+"alb": [
+7,
+"Albacete",
+"Populated place"
+],
+"tle": [
+7,
+"Toledo",
+"Admin-1 capital"
+],
+"gul": [
+7,
+"Guadalajara",
+"Populated place"
+],
+"cax": [
+7,
+"Santander",
+"Admin-1 capital"
+],
+"sla": [
+7,
+"Salamanca",
+"Populated place"
+],
+"trr": [
+7,
+"Tarragona",
+"Populated place"
+],
+"xam": [
+7,
+"Bizerte",
+"Admin-1 capital"
+],
+"xax": [
+7,
+"Gabès",
+"Admin-1 capital"
+],
+"xaq": [
+7,
+"Qairouan",
+"Admin-1 capital"
+],
+"jok": [
+6,
+"Jönköping",
+"Admin-1 capital"
+],
+"sif": [
+7,
+"Dzhankoy",
+"Populated place"
+],
+"kcx": [
+7,
+"Kerch",
+"Populated place"
+],
+"mev": [
+7,
+"Rivne",
+"Admin-1 capital"
+],
+"ksm": [
+7,
+"Chernivtsi",
+"Admin-1 capital"
+],
+"tyn": [
+7,
+"Ivano-Frankivsk",
+"Admin-1 capital"
+],
+"tep": [
+7,
+"Ternopil",
+"Admin-1 capital"
+],
+"ivn": [
+7,
+"Lutsk",
+"Admin-1 capital"
+],
+"ole": [
+7,
+"Kirovohrad",
+"Admin-1 capital"
+],
+"iza": [
+7,
+"Izmayil",
+"Populated place"
+],
+"viy": [
+7,
+"Vinnytsya",
+"Admin-1 capital"
+],
+"zhy": [
+4,
+"Zhytomyr",
+"Admin-1 capital"
+],
+"nil": [
+6,
+"Zaporizhzhya",
+"Admin-1 capital"
+],
+"pov": [
+7,
+"Poltava",
+"Admin-1 capital"
+],
+"kek": [
+7,
+"Kremenchuk",
+"Populated place"
+],
+"rsa": [
+7,
+"Ras al Khaymah",
+"Admin-1 capital"
+],
+"abd": [
+3,
+"Abu Dhabi",
+"Admin-0 capital"
+],
+"mtr": [
+7,
+"Trang",
+"Admin-1 capital"
+],
+"caj": [
+7,
+"Yala",
+"Admin-1 capital"
+],
+"mni": [
+7,
+"Chiang Rai",
+"Admin-1 capital"
+],
+"mnl": [
+7,
+"Lampang",
+"Admin-1 capital"
+],
+"mnp": [
+7,
+"Nan",
+"Admin-1 capital"
+],
+"phx": [
+7,
+"Phayao",
+"Admin-1 capital"
+],
+"mep": [
+7,
+"Phitsanulok",
+"Admin-1 capital"
+],
+"mgu": [
+7,
+"Sukhothai",
+"Admin-1 capital"
+],
+"mud": [
+7,
+"Uttaradit",
+"Admin-1 capital"
+],
+"mgk": [
+7,
+"Kanchanaburi",
+"Admin-1 capital"
+],
+"mso": [
+7,
+"Mae Sot",
+"Populated place"
+],
+"kbi": [
+7,
+"Prachin Buri",
+"Admin-1 capital"
+],
+"phk": [
+7,
+"Ayutthaya",
+"Admin-1 capital"
+],
+"mnb": [
+7,
+"Saraburi",
+"Admin-1 capital"
+],
+"mpe": [
+7,
+"Phetchaburi",
+"Admin-1 capital"
+],
+"mpr": [
+7,
+"Hua Hin",
+"Populated place"
+],
+"mgr": [
+7,
+"Ratchaburi",
+"Admin-1 capital"
+],
+"knt": [
+7,
+"Sisaket",
+"Admin-1 capital"
+],
+"hlo": [
+7,
+"Hong Gai",
+"Admin-1 capital"
+],
+"bng": [
+7,
+"Si Racha",
+"Populated place"
+],
+"mgc": [
+7,
+"Chon Buri",
+"Admin-1 capital"
+],
+"mge": [
+7,
+"Aranyaprathet",
+"Populated place"
+],
+"kln": [
+7,
+"Rayong",
+"Admin-1 capital"
+],
+"mub": [
+7,
+"Buriram",
+"Admin-1 capital"
+],
+"muy": [
+7,
+"Chaiyaphum",
+"Admin-1 capital"
+],
+"phi": [
+7,
+"Bua Yai",
+"Populated place"
+],
+"mgs": [
+7,
+"Surin",
+"Admin-1 capital"
+],
+"mgl": [
+7,
+"Loei",
+"Admin-1 capital"
+],
+"muu": [
+7,
+"Nong Khai",
+"Admin-1 capital"
+],
+"mgx": [
+7,
+"Sakhon Nakhon",
+"Admin-1 capital"
+],
+"lao": [
+7,
+"Lao Chi",
+"Admin-1 capital"
+],
+"cmk": [
+7,
+"Hoa Binh",
+"Admin-1 capital"
+],
+"bvi": [
+7,
+"Sơn Tây",
+"Populated place"
+],
+"kim": [
+7,
+"Ninh Bình",
+"Admin-1 capital"
+],
+"hao": [
+2,
+"Hanoi",
+"Admin-0 capital"
+],
+"mkh": [
+7,
+"Nakhon Phanom",
+"Admin-1 capital"
+],
+"kya": [
+7,
+"Hà Tĩnh",
+"Admin-1 capital"
+],
+"buo": [
+7,
+"Buon Me Thuot",
+"Admin-1 capital"
+],
+"dax": [
+7,
+"Da Lat",
+"Admin-1 capital"
+],
+"phr": [
+7,
+"Phan Rang",
+"Admin-1 capital"
+],
+"dau": [
+7,
+"Hon Quan",
+"Populated place"
+],
+"kou": [
+7,
+"Kon Tum",
+"Admin-1 capital"
+],
+"qun": [
+7,
+"Quảng Ngãi",
+"Admin-1 capital"
+],
+"mew": [
+7,
+"Narathiwat",
+"Admin-1 capital"
+],
+"vun": [
+7,
+"Vung Tau",
+"Admin-1 capital"
+],
+"pha": [
+7,
+"Phan Thiet",
+"Admin-1 capital"
+],
+"cmo": [
+7,
+"Long Xuyen",
+"Admin-1 capital"
+],
+"cup": [
+7,
+"Châu Đốc",
+"Admin-1 capital"
+],
+"rah": [
+7,
+"Rạch Giá",
+"Admin-1 capital"
+],
+"cut": [
+7,
+"Mỹ Tho",
+"Admin-1 capital"
+],
+"bcl": [
+7,
+"Bạc Liêu",
+"Admin-1 capital"
+],
+"cma": [
+7,
+"Cà Mau",
+"Admin-1 capital"
+],
+"kea": [
+7,
+"Sóc Trăng",
+"Admin-1 capital"
+],
+"baq": [
+7,
+"Ha Giang",
+"Admin-1 capital"
+],
+"mur": [
+6,
+"Murcia",
+"Admin-1 capital"
+],
+"acr": [
+6,
+"La Coruña",
+"Populated place"
+],
+"gip": [
+7,
+"San Sebastián",
+"Populated place"
+],
+"nrh": [
+7,
+"Ayr",
+"Populated place"
+],
+"abe": [
+7,
+"Aberdeen",
+"Populated place"
+],
+"clc": [
+7,
+"Perth",
+"Populated place"
+],
+"hak": [
+7,
+"Middlesbrough",
+"Populated place"
+],
+"was": [
+7,
+"Coventry",
+"Populated place"
+],
+"dev": [
+7,
+"Exeter",
+"Populated place"
+],
+"cah": [
+7,
+"Cambridge",
+"Populated place"
+],
+"ead": [
+7,
+"Kingston upon Hull",
+"Populated place"
+],
+"cnw": [
+7,
+"Penzance",
+"Populated place"
+],
+"nor": [
+7,
+"York",
+"Populated place"
+],
+"mda": [
+7,
+"Blackpool",
+"Populated place"
+],
+"eao": [
+7,
+"Dumfries",
+"Populated place"
+],
+"ate": [
+7,
+"Balıkesir",
+"Admin-1 capital"
+],
+"cnk": [
+7,
+"Çanakkale",
+"Admin-1 capital"
+],
+"sly": [
+7,
+"Tekirdağ",
+"Admin-1 capital"
+],
+"kce": [
+7,
+"İzmit",
+"Admin-1 capital"
+],
+"blm": [
+7,
+"Bolu",
+"Admin-1 capital"
+],
+"afy": [
+7,
+"Afyon",
+"Admin-1 capital"
+],
+"pmu": [
+7,
+"Denizli",
+"Admin-1 capital"
+],
+"yun": [
+7,
+"Manisa",
+"Admin-1 capital"
+],
+"adm": [
+7,
+"Adıyaman",
+"Admin-1 capital"
+],
+"yes": [
+7,
+"Malatya",
+"Admin-1 capital"
+],
+"tsu": [
+7,
+"Tarsus",
+"Populated place"
+],
+"isn": [
+7,
+"İskenderun",
+"Populated place"
+],
+"sva": [
+7,
+"Sivas",
+"Admin-1 capital"
+],
+"pld": [
+7,
+"Erzurum",
+"Admin-1 capital"
+],
+"agm": [
+7,
+"Ağrı",
+"Admin-1 capital"
+],
+"dir": [
+7,
+"Diyarbakır",
+"Admin-1 capital"
+],
+"eat": [
+7,
+"Ipswich",
+"Populated place"
+],
+"nrw": [
+7,
+"Norwich",
+"Populated place"
+],
+"gum": [
+7,
+"Andong",
+"Populated place"
+],
+"jej": [
+7,
+"Jeju",
+"Admin-1 capital"
+],
+"eae": [
+7,
+"Brighton",
+"Populated place"
+],
+"oxf": [
+7,
+"Oxford",
+"Populated place"
+],
+"cea": [
+7,
+"Luton",
+"Populated place"
+],
+"not": [
+7,
+"Nottingham",
+"Populated place"
+],
+"sta": [
+7,
+"Stoke",
+"Populated place"
+],
+"kmn": [
+7,
+"Karaman",
+"Admin-1 capital"
+],
+"usa": [
+7,
+"Uşak",
+"Admin-1 capital"
+],
+"kik": [
+7,
+"Kilis",
+"Admin-1 capital"
+],
+"btm": [
+7,
+"Batman",
+"Admin-1 capital"
+],
+"bud": [
+2,
+"Budapest",
+"Admin-0 capital"
+],
+"boo": [
+7,
+"Miskolc",
+"Admin-1 capital"
+],
+"hju": [
+7,
+"Debrecen",
+"Admin-1 capital"
+],
+"jay": [
+7,
+"Szolnok",
+"Admin-1 capital"
+],
+"eak": [
+7,
+"Dover",
+"Populated place"
+],
+"alc": [
+7,
+"Alicante",
+"Populated place"
+],
+"cat": [
+7,
+"Castello",
+"Populated place"
+],
+"pok": [
+7,
+"Maribor",
+"Populated place"
+],
+"ags": [
+7,
+"Pitești",
+"Admin-1 capital"
+],
+"piu": [
+4,
+"Piura",
+"Admin-1 capital"
+],
+"mpo": [
+7,
+"Chulucanas",
+"Populated place"
+],
+"sbs": [
+6,
+"Tumbes",
+"Admin-1 capital"
+],
+"anh": [
+7,
+"Abancay",
+"Admin-1 capital"
+],
+"pbd": [
+7,
+"Puno",
+"Admin-1 capital"
+],
+"huz": [
+6,
+"Huaraz",
+"Admin-1 capital"
+],
+"cja": [
+6,
+"Cajamarca",
+"Admin-1 capital"
+],
+"jex": [
+7,
+"Jaén",
+"Populated place"
+],
+"moy": [
+7,
+"Moyobamba",
+"Admin-1 capital"
+],
+"utc": [
+7,
+"Chachapoyas",
+"Admin-1 capital"
+],
+"mbh": [
+4,
+"Iquitos",
+"Admin-1 capital"
+],
+"lgr": [
+7,
+"Nuevo Rocafuerte",
+"Populated place"
+],
+"lco": [
+7,
+"Huanta",
+"Populated place"
+],
+"ica": [
+3,
+"Ica",
+"Admin-1 capital"
+],
+"hac": [
+4,
+"Huancayo",
+"Admin-1 capital"
+],
+"ret": [
+4,
+"Ponta Delgada",
+"Admin-0 region capital"
+],
+"ala": [
+7,
+"Portimão",
+"Populated place"
+],
+"byd": [
+7,
+"Buraydah",
+"Admin-1 capital"
+],
+"hai": [
+7,
+"Hail",
+"Admin-1 capital"
+],
+"nrf": [
+7,
+"Leeuwarden",
+"Admin-1 capital"
+],
+"ove": [
+7,
+"Groningen",
+"Admin-1 capital"
+],
+"utr": [
+7,
+"Utrecht",
+"Admin-1 capital"
+],
+"stf": [
+7,
+"Moss",
+"Admin-1 capital"
+],
+"zil": [
+7,
+"Žilina",
+"Admin-1 capital"
+],
+"kok": [
+7,
+"Košice",
+"Admin-1 capital"
+],
+"pre": [
+7,
+"Prešov",
+"Admin-1 capital"
+],
+"kno": [
+7,
+"Kaunas",
+"Admin-1 capital"
+],
+"ria": [
+3,
+"Riga",
+"Admin-0 capital"
+],
+"hik": [
+7,
+"Teluk Intan",
+"Populated place"
+],
+"buk": [
+4,
+"George Town",
+"Admin-1 capital"
+],
+"kul": [
+7,
+"Sungai Petani",
+"Populated place"
+],
+"klu": [
+7,
+"Muar",
+"Populated place"
+],
+"sen": [
+7,
+"Seremban",
+"Admin-1 capital"
+],
+"baf": [
+7,
+"Raub",
+"Populated place"
+],
+"kur": [
+7,
+"Kuala Terengganu",
+"Admin-1 capital"
+],
+"sep": [
+6,
+"Tawau",
+"Populated place"
+],
+"bit": [
+7,
+"Bintulu",
+"Populated place"
+],
+"mii": [
+7,
+"Miri",
+"Populated place"
+],
+"eno": [
+4,
+"Middelburg",
+"Populated place"
+],
+"slj": [
+6,
+"Kimberley",
+"Admin-1 capital"
+],
+"geg": [
+4,
+"George",
+"Populated place"
+],
+"drk": [
+4,
+"Worcester",
+"Populated place"
+],
+"slb": [
+7,
+"Hermanus",
+"Populated place"
+],
+"lot": [
+7,
+"Brits",
+"Populated place"
+],
+"geu": [
+6,
+"Vryburg",
+"Populated place"
+],
+"ves": [
+7,
+"Potchefstroom",
+"Populated place"
+],
+"mtj": [
+4,
+"Welkom",
+"Populated place"
+],
+"mlh": [
+7,
+"Bethlehem",
+"Populated place"
+],
+"joh": [
+1,
+"Johannesburg",
+"Admin-0 capital"
+],
+"chf": [
+7,
+"Volksrust",
+"Populated place"
+],
+"mbo": [
+7,
+"Mbombela",
+"Admin-1 capital"
+],
+"ema": [
+7,
+"Middelburg",
+"Populated place"
+],
+"gob": [
+7,
+"Bethal",
+"Populated place"
+],
+"plo": [
+6,
+"Polokwane",
+"Admin-1 capital"
+],
+"gez": [
+7,
+"Tzaneen",
+"Populated place"
+],
+"joz": [
+7,
+"Ulundi",
+"Populated place"
+],
+"ald": [
+7,
+"Ladysmith",
+"Populated place"
+],
+"rae": [
+7,
+"Port Shepstone",
+"Populated place"
+],
+"ams": [
+1,
+"Amsterdam",
+"Admin-0 capital"
+],
+"lrc": [
+7,
+"Ksar El Kebir",
+"Populated place"
+],
+"tza": [
+7,
+"Taza",
+"Admin-1 capital"
+],
+"chu": [
+7,
+"Ouezzane",
+"Populated place"
+],
+"ket": [
+7,
+"Kenitra",
+"Admin-1 capital"
+],
+"sbw": [
+7,
+"Settat",
+"Admin-1 capital"
+],
+"err": [
+7,
+"Er Rachidia",
+"Populated place"
+],
+"mek": [
+7,
+"Meknes",
+"Admin-1 capital"
+],
+"cht": [
+7,
+"Tiznit",
+"Populated place"
+],
+"elj": [
+7,
+"El Jadida",
+"Populated place"
+],
+"drc": [
+7,
+"Bălți",
+"Admin-1 capital"
+],
+"clx": [
+7,
+"Cahul",
+"Admin-1 capital"
+],
+"nes": [
+3,
+"Port Elizabeth",
+"Populated place"
+],
+"bff": [
+4,
+"East London",
+"Populated place"
+],
+"nyn": [
+7,
+"Port St. Johns",
+"Populated place"
+],
+"top": [
+3,
+"Tomsk",
+"Admin-1 capital"
+],
+"nih": [
+6,
+"Nizhenvartovsk",
+"Populated place"
+],
+"cek": [
+7,
+"Cherkessk",
+"Admin-1 capital"
+],
+"buv": [
+7,
+"Zelenokumsk",
+"Populated place"
+],
+"vei": [
+6,
+"Velikiy Novgorod",
+"Admin-1 capital"
+],
+"olh": [
+7,
+"Volkhov",
+"Populated place"
+],
+"vyb": [
+6,
+"Vyborg",
+"Populated place"
+],
+"gak": [
+7,
+"Gatchina",
+"Populated place"
+],
+"sml": [
+4,
+"Smolensk",
+"Admin-1 capital"
+],
+"sez": [
+7,
+"Segezha",
+"Populated place"
+],
+"skh": [
+7,
+"Sharya",
+"Populated place"
+],
+"kst": [
+6,
+"Kostroma",
+"Admin-1 capital"
+],
+"chv": [
+4,
+"Vologda",
+"Admin-1 capital"
+],
+"lyd": [
+7,
+"Kaluga",
+"Admin-1 capital"
+],
+"naf": [
+7,
+"Obninsk",
+"Populated place"
+],
+"kus": [
+6,
+"Kursk",
+"Admin-1 capital"
+],
+"lix": [
+6,
+"Lipetsk",
+"Admin-1 capital"
+],
+"mos": [
+0,
+"Moscow",
+"Admin-0 capital"
+],
+"ngi": [
+7,
+"Noginsk",
+"Populated place"
+],
+"src": [
+7,
+"Serpukhov",
+"Populated place"
+],
+"ory": [
+6,
+"Orel",
+"Admin-1 capital"
+],
+"vog": [
+6,
+"Volgodonsk",
+"Populated place"
+],
+"vol": [
+3,
+"Volgograd",
+"Admin-1 capital"
+],
+"kry": [
+7,
+"Labinsk",
+"Populated place"
+],
+"anb": [
+6,
+"Novorossiysk",
+"Populated place"
+],
+"yed": [
+7,
+"Yeysk",
+"Populated place"
+],
+"pez": [
+4,
+"Penza",
+"Admin-1 capital"
+],
+"rya": [
+4,
+"Ryazan",
+"Admin-1 capital"
+],
+"kov": [
+6,
+"Vladimir",
+"Admin-1 capital"
+],
+"ish": [
+6,
+"Sterlitamak",
+"Populated place"
+],
+"dyu": [
+6,
+"Birsk",
+"Populated place"
+],
+"try": [
+7,
+"Troitsk",
+"Populated place"
+],
+"kgn": [
+6,
+"Kurgan",
+"Admin-1 capital"
+],
+"ukh": [
+6,
+"Ukhta",
+"Populated place"
+],
+"glz": [
+7,
+"Kirs",
+"Populated place"
+],
+"yos": [
+7,
+"Yoshkar Ola",
+"Admin-1 capital"
+],
+"yek": [
+3,
+"Yekaterinburg",
+"Admin-1 capital"
+],
+"spl": [
+6,
+"Izhevsk",
+"Admin-1 capital"
+],
+"ore": [
+4,
+"Orenburg",
+"Admin-1 capital"
+],
+"sec": [
+7,
+"Otradnyy",
+"Populated place"
+],
+"toy": [
+7,
+"Tolyatti",
+"Populated place"
+],
+"sar": [
+4,
+"Saratov",
+"Admin-1 capital"
+],
+"bly": [
+6,
+"Balakovo",
+"Populated place"
+],
+"bsk": [
+7,
+"Atkarsk",
+"Populated place"
+],
+"rjo": [
+7,
+"Chistopol",
+"Populated place"
+],
+"buy": [
+4,
+"Ulyanovsk",
+"Admin-1 capital"
+],
+"okt": [
+6,
+"Nyagan",
+"Populated place"
+],
+"svt": [
+7,
+"Uray",
+"Populated place"
+],
+"tvr": [
+7,
+"Cherlak",
+"Populated place"
+],
+"oms": [
+4,
+"Omsk",
+"Admin-1 capital"
+],
+"iss": [
+7,
+"Nazyvayevsk",
+"Populated place"
+],
+"isi": [
+7,
+"Ishim",
+"Populated place"
+],
+"tye": [
+4,
+"Tyumen",
+"Admin-1 capital"
+],
+"grl": [
+6,
+"Gorno Altaysk",
+"Admin-1 capital"
+],
+"siy": [
+6,
+"Rubtsovsk",
+"Populated place"
+],
+"pev": [
+3,
+"Barnaul",
+"Admin-1 capital"
+],
+"kme": [
+7,
+"Kamenna Obi",
+"Populated place"
+],
+"kuv": [
+7,
+"Kargat",
+"Populated place"
+],
+"wix": [
+6,
+"Salalah",
+"Populated place"
+],
+"wio": [
+6,
+"Suhar",
+"Populated place"
+],
+"mak": [
+6,
+"Makhachkala",
+"Admin-1 capital"
+],
+"urb": [
+7,
+"Derbent",
+"Populated place"
+],
+"jeo": [
+7,
+"Jeonju",
+"Admin-1 capital"
+],
+"mop": [
+7,
+"Mokpo",
+"Populated place"
+],
+"bco": [
+6,
+"Bacolod",
+"Populated place"
+],
+"cdi": [
+7,
+"Cadiz",
+"Populated place"
+],
+"mlv": [
+7,
+"Pagadian",
+"Populated place"
+],
+"oza": [
+7,
+"Ozamis",
+"Populated place"
+],
+"ciy": [
+7,
+"Tarlac",
+"Populated place"
+],
+"cbn": [
+7,
+"Cabanatuan",
+"Populated place"
+],
+"oln": [
+7,
+"Olongapo",
+"Populated place"
+],
+"snr": [
+7,
+"Dagupan",
+"Populated place"
+],
+"mai": [
+1,
+"Manila",
+"Admin-0 capital"
+],
+"ilg": [
+7,
+"Iligan",
+"Populated place"
+],
+"tcl": [
+7,
+"Ormac",
+"Populated place"
+],
+"bui": [
+7,
+"Butuan",
+"Populated place"
+],
+"cim": [
+7,
+"Tagum",
+"Populated place"
+],
+"sui": [
+7,
+"Surigao",
+"Populated place"
+],
+"gin": [
+7,
+"Gingoog",
+"Populated place"
+],
+"xaa": [
+6,
+"Ust-Kut",
+"Populated place"
+],
+"tys": [
+3,
+"Bratsk",
+"Populated place"
+],
+"uzh": [
+6,
+"Achinsk",
+"Populated place"
+],
+"irk": [
+3,
+"Irkutsk",
+"Admin-1 capital"
+],
+"sek": [
+4,
+"Blagoveshchensk",
+"Admin-1 capital"
+],
+"yak": [
+3,
+"Yakutsk",
+"Admin-1 capital"
+],
+"kms": [
+6,
+"Komsomolsk na Amure",
+"Admin-1 capital"
+],
+"khv": [
+4,
+"Khabarovsk",
+"Admin-1 capital"
+],
+"mxc": [
+4,
+"Mexicali",
+"Admin-1 capital"
+],
+"sti": [
+6,
+"Saltillo",
+"Admin-1 capital"
+],
+"moo": [
+6,
+"Monclova",
+"Populated place"
+],
+"chi": [
+3,
+"Chihuahua",
+"Admin-1 capital"
+],
+"guv": [
+7,
+"Guamúchil",
+"Populated place"
+],
+"aho": [
+6,
+"Los Mochis",
+"Populated place"
+],
+"hem": [
+4,
+"Hermosillo",
+"Admin-1 capital"
+],
+"fri": [
+7,
+"Juan Aldama",
+"Populated place"
+],
+"vir": [
+6,
+"Ciudad Victoria",
+"Admin-1 capital"
+],
+"mza": [
+4,
+"Colima",
+"Admin-1 capital"
+],
+"puv": [
+7,
+"Puerto Vallarta",
+"Populated place"
+],
+"oct": [
+7,
+"La Barca",
+"Populated place"
+],
+"zap": [
+7,
+"Ciudad Guzman",
+"Populated place"
+],
+"las": [
+7,
+"Lagos de Moreno",
+"Populated place"
+],
+"mox": [
+7,
+"Morelia",
+"Admin-1 capital"
+],
+"lar": [
+7,
+"Lázaro Cárdenas",
+"Populated place"
+],
+"zao": [
+7,
+"Zamora",
+"Populated place"
+],
+"oth": [
+6,
+"Chetumal",
+"Admin-1 capital"
+],
+"cme": [
+4,
+"Campeche",
+"Admin-1 capital"
+],
+"oax": [
+4,
+"Oaxaca",
+"Admin-1 capital"
+],
+"hec": [
+7,
+"Tlaxiaco",
+"Populated place"
+],
+"tec": [
+7,
+"Tehuacan",
+"Populated place"
+],
+"tez": [
+7,
+"Teziutlán",
+"Populated place"
+],
+"sie": [
+7,
+"Guanajuato",
+"Admin-1 capital"
+],
+"pau": [
+7,
+"Pachuca",
+"Admin-1 capital"
+],
+"tol": [
+7,
+"Toluca",
+"Admin-1 capital"
+],
+"poc": [
+7,
+"Poza Rica de Hidalgo",
+"Populated place"
+],
+"cox": [
+7,
+"Córdoba",
+"Populated place"
+],
+"sdr": [
+7,
+"Santiago Tuxtla",
+"Populated place"
+],
+"tup": [
+7,
+"Tuxpam",
+"Populated place"
+],
+"kax": [
+7,
+"Ticul",
+"Populated place"
+],
+"aba": [
+7,
+"Aba",
+"Populated place"
+],
+"tro": [
+4,
+"Gdańsk",
+"Admin-1 capital"
+],
+"msw": [
+7,
+"Wrocław",
+"Admin-1 capital"
+],
+"sze": [
+7,
+"Szczecin",
+"Admin-1 capital"
+],
+"zio": [
+7,
+"Zielona Góra",
+"Admin-1 capital"
+],
+"poz": [
+7,
+"Poznań",
+"Admin-1 capital"
+],
+"gru": [
+7,
+"Grudziądz",
+"Populated place"
+],
+"byg": [
+7,
+"Bydgoszcz",
+"Admin-1 capital"
+],
+"kic": [
+7,
+"Kielce",
+"Admin-1 capital"
+],
+"bio": [
+7,
+"Białystok",
+"Admin-1 capital"
+],
+"lbl": [
+7,
+"Lublin",
+"Admin-1 capital"
+],
+"rzs": [
+7,
+"Rzeszów",
+"Admin-1 capital"
+],
+"prm": [
+3,
+"Perm",
+"Admin-1 capital"
+],
+"ksn": [
+7,
+"Krasnokamsk",
+"Populated place"
+],
+"lau": [
+4,
+"Laayoune",
+"Admin-0 capital alt"
+],
+"gem": [
+6,
+"Goulimine",
+"Admin-1 capital"
+],
+"pep": [
+3,
+"Petropavlovsk-Kamchatsky",
+"Admin-1 capital"
+],
+"oue": [
+6,
+"Ad Dakhla",
+"Admin-1 capital"
+],
+"med": [
+2,
+"Medan",
+"Admin-1 capital"
+],
+"mdn": [
+7,
+"Padangsidempuan",
+"Populated place"
+],
+"tal": [
+6,
+"Sibolga",
+"Populated place"
+],
+"seg": [
+7,
+"Tebingtinggi",
+"Populated place"
+],
+"hlm": [
+4,
+"Ternate",
+"Populated place"
+],
+"aga": [
+7,
+"Bukittinggi",
+"Populated place"
+],
+"mlu": [
+7,
+"Amahai",
+"Populated place"
+],
+"mat": [
+7,
+"Mataram",
+"Admin-1 capital"
+],
+"lok": [
+7,
+"Praya",
+"Populated place"
+],
+"mxx": [
+7,
+"Baubau",
+"Populated place"
+],
+"bni": [
+7,
+"Luwuk",
+"Populated place"
+],
+"pso": [
+7,
+"Poso",
+"Populated place"
+],
+"mmi": [
+7,
+"Timika",
+"Populated place"
+],
+"mis": [
+7,
+"Drogheda",
+"Populated place"
+],
+"pma": [
+7,
+"Parma",
+"Populated place"
+],
+"rvn": [
+7,
+"Ravenna",
+"Populated place"
+],
+"bbp": [
+7,
+"Ferrara",
+"Populated place"
+],
+"cgr": [
+7,
+"Cagliari",
+"Admin-1 region capital"
+],
+"psx": [
+7,
+"Pisa",
+"Populated place"
+],
+"aez": [
+7,
+"Siena",
+"Populated place"
+],
+"sle": [
+7,
+"Salerno",
+"Populated place"
+],
+"avl": [
+7,
+"Benevento",
+"Populated place"
+],
+"bai": [
+7,
+"Bari",
+"Admin-1 region capital"
+],
+"fog": [
+7,
+"Foggia",
+"Populated place"
+],
+"lec": [
+7,
+"Lecce",
+"Populated place"
+],
+"tno": [
+7,
+"Taranto",
+"Populated place"
+],
+"mes": [
+7,
+"Messina",
+"Populated place"
+],
+"tra": [
+7,
+"Marsala",
+"Populated place"
+],
+"psc": [
+7,
+"Pescara",
+"Populated place"
+],
+"ano": [
+7,
+"Ancona",
+"Admin-1 region capital"
+],
+"pgi": [
+7,
+"Perugia",
+"Admin-1 region capital"
+],
+"bea": [
+7,
+"Bergamo",
+"Populated place"
+],
+"boz": [
+7,
+"Bolzano",
+"Populated place"
+],
+"trn": [
+7,
+"Trento",
+"Admin-1 region capital"
+],
+"ver": [
+7,
+"Verona",
+"Populated place"
+],
+"hnn": [
+7,
+"Longxi",
+"Populated place"
+],
+"koo": [
+7,
+"Pingliang",
+"Populated place"
+],
+"lgz": [
+4,
+"Wuwei",
+"Populated place"
+],
+"hzu": [
+7,
+"Guide",
+"Populated place"
+],
+"qie": [
+7,
+"Qinzhou",
+"Populated place"
+],
+"fsu": [
+7,
+"Pingxiang",
+"Populated place"
+],
+"yzo": [
+7,
+"Yishan",
+"Populated place"
+],
+"hpu": [
+7,
+"Beihai",
+"Populated place"
+],
+"jnj": [
+7,
+"Hechi",
+"Populated place"
+],
+"bji": [
+7,
+"Tongren",
+"Populated place"
+],
+"fej": [
+7,
+"Fengjie",
+"Populated place"
+],
+"puj": [
+7,
+"Shaowu",
+"Populated place"
+],
+"xnl": [
+7,
+"Longyan",
+"Populated place"
+],
+"xim": [
+4,
+"Xiamen",
+"Populated place"
+],
+"put": [
+7,
+"Putian",
+"Populated place"
+],
+"fax": [
+7,
+"Fuan",
+"Populated place"
+],
+"cti": [
+7,
+"Changting",
+"Populated place"
+],
+"jno": [
+7,
+"Nanping",
+"Populated place"
+],
+"joc": [
+7,
+"Ninde",
+"Populated place"
+],
+"taj": [
+7,
+"Jieshou",
+"Populated place"
+],
+"zoy": [
+7,
+"Tongling",
+"Populated place"
+],
+"mns": [
+7,
+"Maanshan",
+"Populated place"
+],
+"fuy": [
+7,
+"Fuyang",
+"Populated place"
+],
+"jne": [
+7,
+"Yangjiang",
+"Populated place"
+],
+"mxi": [
+7,
+"Meizhou",
+"Populated place"
+],
+"zix": [
+7,
+"Heyuan",
+"Populated place"
+],
+"qnc": [
+7,
+"Qingyuan",
+"Populated place"
+],
+"gay": [
+7,
+"Zhaoqing",
+"Populated place"
+],
+"hji": [
+7,
+"Lianxian",
+"Populated place"
+],
+"jia": [
+7,
+"Jiangmen",
+"Populated place"
+],
+"gau": [
+7,
+"Maoming",
+"Populated place"
+],
+"inm": [
+7,
+"Indramayu",
+"Populated place"
+],
+"sum": [
+7,
+"Sukabumi",
+"Populated place"
+],
+"cia": [
+7,
+"Cilacap",
+"Populated place"
+],
+"pax": [
+7,
+"Pati",
+"Populated place"
+],
+"pea": [
+7,
+"Pakalongan",
+"Populated place"
+],
+"teg": [
+7,
+"Tegal",
+"Populated place"
+],
+"yog": [
+4,
+"Surakarta",
+"Populated place"
+],
+"mln": [
+7,
+"Magelang",
+"Populated place"
+],
+"sra": [
+7,
+"Serang",
+"Populated place"
+],
+"jak": [
+0,
+"Jakarta",
+"Admin-0 capital"
+],
+"smb": [
+7,
+"Singkawang",
+"Populated place"
+],
+"bap": [
+4,
+"Bandar Lampung",
+"Admin-1 capital"
+],
+"mre": [
+7,
+"Perabumulih",
+"Populated place"
+],
+"den": [
+6,
+"Denpasar",
+"Admin-1 capital"
+],
+"bul": [
+7,
+"Singaraja",
+"Populated place"
+],
+"sue": [
+7,
+"Sumenep",
+"Admin-1 capital"
+],
+"baw": [
+7,
+"Banyuwangi",
+"Populated place"
+],
+"tub": [
+7,
+"Tuban",
+"Admin-1 capital"
+],
+"pro": [
+7,
+"Probolinggo",
+"Populated place"
+],
+"sur": [
+2,
+"Surabaya",
+"Admin-1 capital"
+],
+"mdu": [
+7,
+"Madiun",
+"Populated place"
+],
+"ked": [
+7,
+"Kediri",
+"Populated place"
+],
+"bli": [
+7,
+"Blitar",
+"Populated place"
+],
+"suy": [
+7,
+"Waingapu",
+"Populated place"
+],
+"skk": [
+7,
+"Maumere",
+"Populated place"
+],
+"luw": [
+7,
+"Makale",
+"Populated place"
+],
+"box": [
+7,
+"Watampone",
+"Populated place"
+],
+"waj": [
+4,
+"Parepare",
+"Populated place"
+],
+"pow": [
+7,
+"Majene",
+"Populated place"
+],
+"ise": [
+7,
+"Grenoble",
+"Populated place"
+],
+"loj": [
+6,
+"Loja",
+"Admin-1 capital"
+],
+"mir": [
+7,
+"Milagro",
+"Populated place"
+],
+"cbg": [
+7,
+"Chone",
+"Populated place"
+],
+"prj": [
+6,
+"Portoviejo",
+"Admin-1 capital"
+],
+"ccs": [
+7,
+"Yarumal",
+"Populated place"
+],
+"sux": [
+7,
+"Ayapel",
+"Populated place"
+],
+"mnr": [
+6,
+"Montería",
+"Admin-1 capital"
+],
+"rih": [
+7,
+"Riohacha",
+"Admin-1 capital"
+],
+"arn": [
+7,
+"Armenia",
+"Admin-1 capital"
+],
+"ibg": [
+6,
+"Ibagué",
+"Admin-1 capital"
+],
+"fle": [
+7,
+"San Vicente del Caguán",
+"Populated place"
+],
+"lve": [
+7,
+"Guapi",
+"Populated place"
+],
+"pit": [
+7,
+"Garzón",
+"Populated place"
+],
+"bna": [
+7,
+"Buenaventura",
+"Populated place"
+],
+"tlu": [
+7,
+"Tuluá",
+"Populated place"
+],
+"qub": [
+7,
+"Juradó",
+"Populated place"
+],
+"sbo": [
+6,
+"Santa Marta",
+"Admin-1 capital"
+],
+"scl": [
+7,
+"Sincelejo",
+"Admin-1 capital"
+],
+"ccu": [
+6,
+"Cúcuta",
+"Admin-1 capital"
+],
+"oca": [
+7,
+"Ocaña",
+"Populated place"
+],
+"tta": [
+7,
+"Tanta",
+"Admin-1 capital"
+],
+"isy": [
+7,
+"Ismaïlia",
+"Admin-1 capital"
+],
+"elm": [
+7,
+"El Mansura",
+"Admin-1 capital"
+],
+"dut": [
+7,
+"Dumyat",
+"Admin-1 capital"
+],
+"msr": [
+7,
+"Matruh",
+"Admin-1 capital"
+],
+"duu": [
+7,
+"Damanhûr",
+"Admin-1 capital"
+],
+"mks": [
+7,
+"Samalut",
+"Populated place"
+],
+"mrz": [
+7,
+"Mallawi",
+"Populated place"
+],
+"mrb": [
+7,
+"Beni Mazar",
+"Populated place"
+],
+"bnw": [
+7,
+"Beni Suef",
+"Admin-1 capital"
+],
+"mib": [
+7,
+"Rashid",
+"Populated place"
+],
+"adk": [
+7,
+"Qasr Farafra",
+"Populated place"
+],
+"kbu": [
+6,
+"Kom Ombo",
+"Populated place"
+],
+"qia": [
+7,
+"Qena",
+"Admin-1 capital"
+],
+"ggx": [
+7,
+"Girga",
+"Populated place"
+],
+"suh": [
+7,
+"Sohag",
+"Admin-1 capital"
+],
+"hud": [
+6,
+"Hurghada",
+"Admin-1 capital"
+],
+"shl": [
+7,
+"El Tur",
+"Admin-1 capital"
+],
+"rfa": [
+7,
+"El Arish",
+"Admin-1 capital"
+],
+"col": [
+6,
+"Cologne",
+"Populated place"
+],
+"stn": [
+7,
+"Münster",
+"Populated place"
+],
+"bic": [
+7,
+"Ulm",
+"Populated place"
+],
+"frr": [
+7,
+"Freiburg",
+"Populated place"
+],
+"gix": [
+7,
+"Gießen",
+"Populated place"
+],
+"bmx": [
+6,
+"Bremen",
+"Admin-1 capital"
+],
+"guh": [
+7,
+"Osnabrück",
+"Populated place"
+],
+"han": [
+7,
+"Hanover",
+"Admin-1 capital"
+],
+"gtt": [
+7,
+"Göttingen",
+"Populated place"
+],
+"gex": [
+7,
+"Gera",
+"Populated place"
+],
+"reb": [
+7,
+"Flensburg",
+"Populated place"
+],
+"luk": [
+7,
+"Lübeck",
+"Populated place"
+],
+"myn": [
+7,
+"Koblenz",
+"Populated place"
+],
+"sbr": [
+7,
+"Saarbrücken",
+"Admin-1 capital"
+],
+"plz": [
+7,
+"Pizen",
+"Admin-1 capital"
+],
+"rge": [
+7,
+"Regensburg",
+"Populated place"
+],
+"rse": [
+7,
+"Rosenheim",
+"Populated place"
+],
+"wur": [
+7,
+"Würzburg",
+"Populated place"
+],
+"ing": [
+7,
+"Ingolstadt",
+"Populated place"
+],
+"kjv": [
+7,
+"Jihlava",
+"Admin-1 capital"
+],
+"zli": [
+7,
+"Zlín",
+"Populated place"
+],
+"jio": [
+7,
+"Brno",
+"Admin-1 capital"
+],
+"but": [
+7,
+"Cottbus",
+"Populated place"
+],
+"ber": [
+1,
+"Berlin",
+"Admin-0 capital"
+],
+"mde": [
+7,
+"Magdeburg",
+"Admin-1 capital"
+],
+"lig": [
+7,
+"Leipzig",
+"Populated place"
+],
+"mok": [
+7,
+"Ostrava",
+"Admin-1 capital"
+],
+"tnr": [
+7,
+"Gar",
+"Populated place"
+],
+"gca": [
+7,
+"Turpan",
+"Populated place"
+],
+"qim": [
+7,
+"Quiemo",
+"Populated place"
+],
+"aty": [
+4,
+"Altay",
+"Populated place"
+],
+"bix": [
+7,
+"Tanjungpinang",
+"Populated place"
+],
+"puh": [
+7,
+"Hancheng",
+"Populated place"
+],
+"lwe": [
+7,
+"Weinan",
+"Populated place"
+],
+"scg": [
+7,
+"Shuozhou",
+"Populated place"
+],
+"xfu": [
+7,
+"Xinzhou",
+"Populated place"
+],
+"ceq": [
+7,
+"Jincheng",
+"Populated place"
+],
+"xai": [
+7,
+"Jiexiu",
+"Populated place"
+],
+"sbb": [
+7,
+"Changzhi",
+"Populated place"
+],
+"guu": [
+6,
+"Xinyang",
+"Populated place"
+],
+"zox": [
+7,
+"Jingmen",
+"Populated place"
+],
+"soz": [
+7,
+"Zicheng",
+"Populated place"
+],
+"axa": [
+7,
+"Shishou",
+"Populated place"
+],
+"xon": [
+7,
+"Xiaogan",
+"Populated place"
+],
+"xab": [
+7,
+"Puqi",
+"Populated place"
+],
+"yyg": [
+7,
+"Yunxian",
+"Populated place"
+],
+"lll": [
+7,
+"Jinshi",
+"Populated place"
+],
+"hch": [
+7,
+"Zhijiang",
+"Populated place"
+],
+"xat": [
+7,
+"Xiangtan",
+"Populated place"
+],
+"dni": [
+4,
+"Neijiang",
+"Populated place"
+],
+"yce": [
+6,
+"Fulin",
+"Populated place"
+],
+"lgo": [
+7,
+"Langzhong",
+"Populated place"
+],
+"dui": [
+7,
+"Rongzhag",
+"Populated place"
+],
+"mji": [
+7,
+"Simao",
+"Populated place"
+],
+"gnn": [
+7,
+"Wenshan",
+"Populated place"
+],
+"qln": [
+7,
+"Zhanyi",
+"Populated place"
+],
+"hie": [
+7,
+"Huize",
+"Populated place"
+],
+"suq": [
+7,
+"Chengde",
+"Populated place"
+],
+"cak": [
+7,
+"Cangzhou",
+"Populated place"
+],
+"lci": [
+7,
+"Baoding",
+"Populated place"
+],
+"hnh": [
+7,
+"Huanghua",
+"Populated place"
+],
+"dih": [
+7,
+"Dingzhou",
+"Populated place"
+],
+"jix": [
+7,
+"Nangong",
+"Populated place"
+],
+"wxx": [
+7,
+"Linqing",
+"Populated place"
+],
+"xgt": [
+7,
+"Xiangtai",
+"Populated place"
+],
+"huo": [
+7,
+"Puyang",
+"Populated place"
+],
+"tny": [
+7,
+"Hebi",
+"Populated place"
+],
+"xuc": [
+7,
+"Xuchang",
+"Populated place"
+],
+"snu": [
+7,
+"Zhoukou",
+"Populated place"
+],
+"deg": [
+7,
+"Dengzhou",
+"Populated place"
+],
+"kiu": [
+7,
+"Tieling",
+"Populated place"
+],
+"fea": [
+7,
+"Huanren",
+"Populated place"
+],
+"zug": [
+6,
+"Dandong",
+"Populated place"
+],
+"ysx": [
+7,
+"Yishui",
+"Populated place"
+],
+"snx": [
+7,
+"Shanxian",
+"Populated place"
+],
+"pii": [
+7,
+"Pingyi",
+"Populated place"
+],
+"pid": [
+7,
+"Pingdu",
+"Populated place"
+],
+"xna": [
+7,
+"Laiwu",
+"Populated place"
+],
+"big": [
+7,
+"Buizhou",
+"Populated place"
+],
+"dof": [
+7,
+"Liaocheng",
+"Populated place"
+],
+"jua": [
+7,
+"Rizhao",
+"Populated place"
+],
+"llg": [
+7,
+"Dezhou",
+"Populated place"
+],
+"lca": [
+7,
+"Linchuan",
+"Populated place"
+],
+"fng": [
+7,
+"Fengcheng",
+"Populated place"
+],
+"jsu": [
+7,
+"Jian",
+"Populated place"
+],
+"sgr": [
+7,
+"Shangrao",
+"Populated place"
+],
+"pya": [
+7,
+"Jingdezhen",
+"Populated place"
+],
+"hbb": [
+7,
+"Taizhou",
+"Populated place"
+],
+"syn": [
+7,
+"Shuyang",
+"Populated place"
+],
+"hio": [
+7,
+"Lianyungang",
+"Populated place"
+],
+"lnd": [
+7,
+"Lishui",
+"Populated place"
+],
+"keh": [
+7,
+"Quzhou",
+"Populated place"
+],
+"hij": [
+2,
+"Hiroshima",
+"Admin-1 region capital"
+],
+"smn": [
+7,
+"Matsue",
+"Admin-1 capital"
+],
+"ttr": [
+7,
+"Tottori",
+"Populated place"
+],
+"fyx": [
+7,
+"Songyuan",
+"Populated place"
+],
+"pah": [
+7,
+"Dunhua",
+"Populated place"
+],
+"mhe": [
+7,
+"Liuhe",
+"Populated place"
+],
+"jut": [
+7,
+"Shulan",
+"Populated place"
+],
+"fuk": [
+4,
+"Fukuoka",
+"Admin-1 region capital"
+],
+"kmm": [
+7,
+"Kumamoto",
+"Admin-1 capital"
+],
+"oit": [
+7,
+"Ōita",
+"Admin-1 capital"
+],
+"alf": [
+7,
+"Alxa Zuoqi",
+"Populated place"
+],
+"xln": [
+6,
+"Xilinhot",
+"Populated place"
+],
+"hoq": [
+4,
+"Tongliao",
+"Populated place"
+],
+"jaq": [
+6,
+"Jining",
+"Populated place"
+],
+"hna": [
+7,
+"Shuangyashan",
+"Populated place"
+],
+"wch": [
+7,
+"Shangzhi",
+"Populated place"
+],
+"fji": [
+7,
+"Fujin",
+"Populated place"
+],
+"rau": [
+7,
+"Tailai",
+"Populated place"
+],
+"nee": [
+6,
+"Heihe",
+"Populated place"
+],
+"hlu": [
+7,
+"Hailun",
+"Populated place"
+],
+"blx": [
+6,
+"Qitaihe",
+"Populated place"
+],
+"til": [
+6,
+"Yichun",
+"Populated place"
+],
+"sge": [
+7,
+"Shuangcheng",
+"Populated place"
+],
+"zag": [
+7,
+"Zhaodong",
+"Populated place"
+],
+"kes": [
+7,
+"Keshan",
+"Populated place"
+],
+"yla": [
+4,
+"Jiamusi",
+"Populated place"
+],
+"nnn": [
+6,
+"Mudangiang",
+"Populated place"
+],
+"ngo": [
+4,
+"Nagoya",
+"Admin-1 region capital"
+],
+"ngn": [
+4,
+"Nagano",
+"Admin-1 capital"
+],
+"szo": [
+7,
+"Shizuoka",
+"Admin-1 capital"
+],
+"tkc": [
+7,
+"Obihiro",
+"Populated place"
+],
+"ibr": [
+6,
+"Muroran",
+"Populated place"
+],
+"okh": [
+7,
+"Kitami",
+"Populated place"
+],
+"spk": [
+2,
+"Sapporo",
+"Admin-1 region capital"
+],
+"fki": [
+7,
+"Fukui",
+"Admin-1 capital"
+],
+"osa": [
+1,
+"Ōsaka",
+"Admin-1 region capital"
+],
+"wky": [
+7,
+"Wakayama",
+"Admin-1 capital"
+],
+"yns": [
+7,
+"Kōfu",
+"Admin-1 capital"
+],
+"nig": [
+6,
+"Niigata",
+"Admin-1 capital"
+],
+"ygt": [
+4,
+"Sakata",
+"Populated place"
+],
+"mrg": [
+7,
+"Sungaipenuh",
+"Populated place"
+],
+"kow": [
+7,
+"Sampit",
+"Populated place"
+],
+"kpu": [
+7,
+"Kualakapuas",
+"Populated place"
+],
+"dea": [
+7,
+"Pathankot",
+"Populated place"
+],
+"srs": [
+7,
+"Sirsa",
+"Populated place"
+],
+"pni": [
+7,
+"Panipat",
+"Populated place"
+],
+"knl": [
+7,
+"Karnal",
+"Populated place"
+],
+"kdp": [
+7,
+"Proddatur",
+"Populated place"
+],
+"nad": [
+7,
+"Nandyal",
+"Populated place"
+],
+"hin": [
+7,
+"Hindupur",
+"Populated place"
+],
+"tii": [
+7,
+"Tirupati",
+"Populated place"
+],
+"ong": [
+7,
+"Ongole",
+"Populated place"
+],
+"srk": [
+7,
+"Vizianagaram",
+"Populated place"
+],
+"rar": [
+7,
+"Rajahmundry",
+"Populated place"
+],
+"crx": [
+7,
+"Machilipatnam",
+"Populated place"
+],
+"khm": [
+7,
+"Khammam",
+"Populated place"
+],
+"rma": [
+7,
+"Karimnagar",
+"Populated place"
+],
+"nim": [
+7,
+"Nizamabad",
+"Populated place"
+],
+"koa": [
+7,
+"Kollam",
+"Populated place"
+],
+"koc": [
+4,
+"Kochi",
+"Populated place"
+],
+"pui": [
+7,
+"Puri",
+"Populated place"
+],
+"bga": [
+7,
+"Sambalpur",
+"Populated place"
+],
+"bsx": [
+7,
+"Raurkela",
+"Populated place"
+],
+"tik": [
+7,
+"Mandya",
+"Populated place"
+],
+"bgr": [
+7,
+"Kolar",
+"Populated place"
+],
+"shv": [
+7,
+"Shivamogga",
+"Populated place"
+],
+"rir": [
+7,
+"Raichur",
+"Populated place"
+],
+"bbd": [
+6,
+"Ballari",
+"Populated place"
+],
+"bbh": [
+7,
+"Bidar",
+"Populated place"
+],
+"mij": [
+7,
+"Sangli",
+"Populated place"
+],
+"pbh": [
+7,
+"Parbhani",
+"Populated place"
+],
+"mba": [
+7,
+"Malegaon",
+"Populated place"
+],
+"pru": [
+7,
+"Port Blair",
+"Admin-1 capital"
+],
+"gab": [
+7,
+"Tezpur",
+"Populated place"
+],
+"slc": [
+7,
+"Silchar",
+"Populated place"
+],
+"cux": [
+7,
+"Kohima",
+"Admin-1 capital"
+],
+"myl": [
+7,
+"Shillong",
+"Admin-1 capital"
+],
+"clv": [
+7,
+"Cherbourg",
+"Populated place"
+],
+"mob": [
+7,
+"Lorient",
+"Populated place"
+],
+"sbk": [
+7,
+"Le Mans",
+"Populated place"
+],
+"loi": [
+7,
+"Nantes",
+"Admin-1 region capital"
+],
+"doe": [
+7,
+"Agen",
+"Populated place"
+],
+"htc": [
+7,
+"Ajaccio",
+"Admin-1 region capital"
+],
+"vxx": [
+7,
+"Toulon",
+"Populated place"
+],
+"hea": [
+7,
+"Béziers",
+"Populated place"
+],
+"gar": [
+7,
+"Nîmes",
+"Populated place"
+],
+"yne": [
+7,
+"Nevers",
+"Populated place"
+],
+"cte": [
+7,
+"Dijon",
+"Admin-1 region capital"
+],
+"cex": [
+7,
+"Bourges",
+"Populated place"
+],
+"int": [
+7,
+"Tours",
+"Populated place"
+],
+"loe": [
+7,
+"Orléans",
+"Admin-1 region capital"
+],
+"sei": [
+4,
+"Le Havre",
+"Populated place"
+],
+"hte": [
+6,
+"Limoges",
+"Admin-1 region capital"
+],
+"maf": [
+7,
+"Troyes",
+"Populated place"
+],
+"som": [
+7,
+"Amiens",
+"Admin-1 region capital"
+],
+"hat": [
+7,
+"Mulhouse",
+"Populated place"
+],
+"mrt": [
+7,
+"Nancy",
+"Admin-1 region capital"
+],
+"mol": [
+7,
+"Metz",
+"Admin-1 capital"
+],
+"mlp": [
+7,
+"San Antonio",
+"Populated place"
+],
+"ker": [
+7,
+"Kerkira",
+"Admin-1 capital"
+],
+"lam": [
+6,
+"Kalamata",
+"Admin-1 capital"
+],
+"aci": [
+6,
+"Patra",
+"Admin-1 capital"
+],
+"les": [
+7,
+"Mitilini",
+"Admin-1 capital"
+],
+"grv": [
+7,
+"Katerini",
+"Admin-1 capital"
+],
+"sbm": [
+7,
+"Seres",
+"Admin-1 capital"
+],
+"klm": [
+7,
+"Ermoupoli",
+"Populated place"
+],
+"hif": [
+7,
+"Haifa",
+"Admin-1 capital"
+],
+"yiz": [
+7,
+"Nazareth",
+"Admin-1 capital"
+],
+"vop": [
+7,
+"Stralsund",
+"Populated place"
+],
+"hel": [
+2,
+"Helsinki",
+"Admin-0 capital"
+],
+"mkt": [
+7,
+"Abohar",
+"Populated place"
+],
+"pta": [
+7,
+"Patiala",
+"Populated place"
+],
+"swn": [
+7,
+"Bhilwara",
+"Populated place"
+],
+"plx": [
+7,
+"Pali",
+"Populated place"
+],
+"tok": [
+7,
+"Tonk",
+"Populated place"
+],
+"pip": [
+7,
+"Sikar",
+"Populated place"
+],
+"bka": [
+7,
+"Bikaner",
+"Populated place"
+],
+"sew": [
+7,
+"Bharatpur",
+"Populated place"
+],
+"umr": [
+7,
+"Alwar",
+"Populated place"
+],
+"tey": [
+7,
+"Fatehpur",
+"Populated place"
+],
+"faz": [
+7,
+"Faizabad",
+"Populated place"
+],
+"cua": [
+7,
+"Bahraich",
+"Populated place"
+],
+"gya": [
+7,
+"Mirzapur",
+"Populated place"
+],
+"bda": [
+7,
+"Jhansi",
+"Populated place"
+],
+"bhw": [
+7,
+"Shahjahanpur",
+"Populated place"
+],
+"cmn": [
+7,
+"Rampur",
+"Populated place"
+],
+"bae": [
+7,
+"Bareilly",
+"Populated place"
+],
+"bhr": [
+7,
+"Etawah",
+"Populated place"
+],
+"deh": [
+7,
+"Dehra Dun",
+"Admin-1 capital"
+],
+"kol": [
+0,
+"Kolkata",
+"Admin-1 capital"
+],
+"cch": [
+7,
+"Alipur Duar",
+"Populated place"
+],
+"cxx": [
+7,
+"Haldia",
+"Populated place"
+],
+"khg": [
+7,
+"Medinipur",
+"Populated place"
+],
+"maz": [
+7,
+"Siliguri",
+"Populated place"
+],
+"pus": [
+7,
+"Purnia",
+"Populated place"
+],
+"haj": [
+7,
+"Muzaffarpur",
+"Populated place"
+],
+"raf": [
+7,
+"Aurangabad",
+"Populated place"
+],
+"blh": [
+7,
+"Bilaspur",
+"Populated place"
+],
+"bup": [
+7,
+"Burhanpur",
+"Populated place"
+],
+"ujj": [
+7,
+"Ujjain",
+"Populated place"
+],
+"rtl": [
+7,
+"Ratlam",
+"Populated place"
+],
+"sga": [
+7,
+"Sagar",
+"Populated place"
+],
+"veo": [
+7,
+"Vellore",
+"Populated place"
+],
+"tiv": [
+7,
+"Tiruvannamalai",
+"Populated place"
+],
+"rja": [
+7,
+"Rajapalaiyam",
+"Populated place"
+],
+"cuo": [
+7,
+"Cuddalore",
+"Populated place"
+],
+"tnt": [
+7,
+"Karur",
+"Populated place"
+],
+"knc": [
+7,
+"Kanchipuram",
+"Populated place"
+],
+"ply": [
+7,
+"Tirunelveli",
+"Populated place"
+],
+"rak": [
+7,
+"Nagercoil",
+"Populated place"
+],
+"thj": [
+7,
+"Thanjavur",
+"Populated place"
+],
+"kmb": [
+7,
+"Kumbakonam",
+"Populated place"
+],
+"udm": [
+7,
+"Valparai",
+"Populated place"
+],
+"tiu": [
+7,
+"Tiruppur",
+"Populated place"
+],
+"vap": [
+7,
+"Daman",
+"Admin-1 capital"
+],
+"nvs": [
+7,
+"Navsari",
+"Populated place"
+],
+"bhj": [
+7,
+"Bhuj",
+"Populated place"
+],
+"bhv": [
+7,
+"Bhavnagar",
+"Populated place"
+],
+"ahm": [
+2,
+"Ahmedabad",
+"Populated place"
+],
+"lki": [
+7,
+"Itanagar",
+"Admin-1 capital"
+],
+"tla": [
+7,
+"Aizawl",
+"Admin-1 capital"
+],
+"mha": [
+7,
+"Agartala",
+"Admin-1 capital"
+],
+"fyn": [
+7,
+"Svendborg",
+"Populated place"
+],
+"noj": [
+7,
+"Frederikshavn",
+"Populated place"
+],
+"mnc": [
+6,
+"Coari",
+"Populated place"
+],
+"cpd": [
+7,
+"Chapadinha",
+"Populated place"
+],
+"phe": [
+7,
+"Pinheiro",
+"Populated place"
+],
+"pgo": [
+7,
+"Capitão Poço",
+"Populated place"
+],
+"cst": [
+7,
+"Castanhal",
+"Populated place"
+],
+"prx": [
+6,
+"Conceição do Araguaia",
+"Populated place"
+],
+"srm": [
+3,
+"Santarém",
+"Populated place"
+],
+"abt": [
+6,
+"Abaetetuba",
+"Populated place"
+],
+"poe": [
+4,
+"Porto Velho",
+"Admin-1 capital"
+],
+"arg": [
+6,
+"Araguaína",
+"Populated place"
+],
+"pam": [
+4,
+"Alvorada",
+"Populated place"
+],
+"see": [
+7,
+"Sete Lagoas",
+"Populated place"
+],
+"ipa": [
+7,
+"Ipatinga",
+"Populated place"
+],
+"vax": [
+7,
+"Lavras",
+"Populated place"
+],
+"ptd": [
+7,
+"Paracatu",
+"Populated place"
+],
+"mnt": [
+4,
+"Montes Claros",
+"Populated place"
+],
+"rod": [
+7,
+"Barra do Garças",
+"Populated place"
+],
+"bev": [
+7,
+"Bento Gonçalves",
+"Populated place"
+],
+"mrn": [
+7,
+"Maringá",
+"Populated place"
+],
+"umu": [
+7,
+"Campo Murao",
+"Populated place"
+],
+"jue": [
+6,
+"Juazeiro do Norte",
+"Populated place"
+],
+"ito": [
+7,
+"Itapipoca",
+"Populated place"
+],
+"txx": [
+7,
+"Crateús",
+"Populated place"
+],
+"pic": [
+6,
+"Picos",
+"Populated place"
+],
+"alo": [
+6,
+"Alagoinhas",
+"Populated place"
+],
+"jui": [
+6,
+"Juazeiro",
+"Populated place"
+],
+"bax": [
+4,
+"Barreiras",
+"Populated place"
+],
+"stt": [
+7,
+"Itaberaba",
+"Populated place"
+],
+"lih": [
+6,
+"Linhares",
+"Populated place"
+],
+"pts": [
+7,
+"Patos",
+"Populated place"
+],
+"lat": [
+7,
+"Estância",
+"Populated place"
+],
+"nrt": [
+6,
+"North Battleford",
+"Populated place"
+],
+"sak": [
+3,
+"Saskatoon",
+"Populated place"
+],
+"leb": [
+6,
+"Banff",
+"Populated place"
+],
+"mdc": [
+6,
+"Medicine Hat",
+"Populated place"
+],
+"woo": [
+4,
+"Fort McMurray",
+"Populated place"
+],
+"prc": [
+4,
+"Fort St. John",
+"Populated place"
+],
+"abb": [
+7,
+"Abbotsford",
+"Populated place"
+],
+"kel": [
+6,
+"Kelowna",
+"Populated place"
+],
+"mcp": [
+3,
+"Macapá",
+"Admin-1 capital"
+],
+"riu": [
+7,
+"Rimouski",
+"Populated place"
+],
+"que": [
+3,
+"Québec",
+"Admin-1 capital"
+],
+"gat": [
+7,
+"Pembroke",
+"Populated place"
+],
+"sit": [
+6,
+"Fredericton",
+"Admin-1 capital"
+],
+"hli": [
+3,
+"Halifax",
+"Admin-1 capital"
+],
+"sjo": [
+3,
+"St. John's",
+"Admin-1 capital"
+],
+"mca": [
+7,
+"Čačak",
+"Populated place"
+],
+"nib": [
+7,
+"Niš",
+"Populated place"
+],
+"aap": [
+7,
+"Anápolis",
+"Populated place"
+],
+"itm": [
+7,
+"Itumbiara",
+"Populated place"
+],
+"fom": [
+7,
+"Formosa",
+"Populated place"
+],
+"bue": [
+1,
+"Buenos Aires",
+"Admin-0 capital"
+],
+"lal": [
+7,
+"La Plata",
+"Admin-1 capital"
+],
+"lai": [
+6,
+"San Luis",
+"Admin-1 capital"
+],
+"cpc": [
+4,
+"Salta",
+"Admin-1 capital"
+],
+"cpl": [
+6,
+"Santiago del Estero",
+"Admin-1 capital"
+],
+"geb": [
+6,
+"Goya",
+"Populated place"
+],
+"soo": [
+7,
+"São José do Rio Preto",
+"Populated place"
+],
+"lir": [
+7,
+"Limeira",
+"Populated place"
+],
+"tat": [
+7,
+"Taubaté",
+"Populated place"
+],
+"bab": [
+6,
+"Bauru",
+"Populated place"
+],
+"pet": [
+4,
+"Petrolina",
+"Populated place"
+],
+"bge": [
+7,
+"Brugge",
+"Admin-1 capital"
+],
+"pay": [
+7,
+"Sisophon",
+"Populated place"
+],
+"ruk": [
+7,
+"Pursat",
+"Admin-1 capital"
+],
+"ste": [
+7,
+"Kampong Cham",
+"Admin-1 capital"
+],
+"rol": [
+7,
+"Kompong Chhnang",
+"Admin-1 capital"
+],
+"cuk": [
+7,
+"Kampot",
+"Admin-1 capital"
+],
+"bti": [
+7,
+"Takéo",
+"Admin-1 capital"
+],
+"tmm": [
+7,
+"Timimoun",
+"Populated place"
+],
+"sdb": [
+7,
+"Sidi bel Abbes",
+"Admin-1 capital"
+],
+"tlm": [
+7,
+"Tlimcen",
+"Admin-1 capital"
+],
+"bbv": [
+6,
+"Béchar",
+"Admin-1 capital"
+],
+"ela": [
+7,
+"Sefra",
+"Populated place"
+],
+"sik": [
+7,
+"Skikda",
+"Admin-1 capital"
+],
+"tmn": [
+3,
+"Tamanrasset",
+"Admin-1 capital"
+],
+"ele": [
+6,
+"Touggourt",
+"Populated place"
+],
+"oug": [
+6,
+"Ouargla",
+"Admin-1 capital"
+],
+"ass": [
+7,
+"Chlef",
+"Populated place"
+],
+"msc": [
+7,
+"Mascara",
+"Admin-1 capital"
+],
+"msa": [
+7,
+"Mostaganem",
+"Admin-1 capital"
+],
+"scb": [
+7,
+"Saïda",
+"Admin-1 capital"
+],
+"tre": [
+7,
+"Tiarat",
+"Admin-1 capital"
+],
+"bjx": [
+7,
+"Béjaïa",
+"Admin-1 capital"
+],
+"bbs": [
+7,
+"Blida",
+"Admin-1 capital"
+],
+"bia": [
+7,
+"Bouïra",
+"Admin-1 capital"
+],
+"mbj": [
+7,
+"Médéa",
+"Admin-1 capital"
+],
+"sks": [
+7,
+"Souk Ahras",
+"Populated place"
+],
+"tes": [
+7,
+"Tébessa",
+"Admin-1 capital"
+],
+"bla": [
+7,
+"Kyustendil",
+"Admin-1 capital"
+],
+"grx": [
+7,
+"Graz",
+"Admin-1 capital"
+],
+"kla": [
+7,
+"Klagenfurt",
+"Admin-1 capital"
+],
+"liw": [
+7,
+"Linz",
+"Admin-1 capital"
+],
+"pss": [
+7,
+"Passau",
+"Populated place"
+],
+"saz": [
+7,
+"Salzburg",
+"Admin-1 capital"
+],
+"bbo": [
+4,
+"Brest",
+"Admin-1 capital"
+],
+"gme": [
+6,
+"Homyel",
+"Admin-1 capital"
+],
+"mgv": [
+7,
+"Mahilyow",
+"Admin-1 capital"
+],
+"gdn": [
+7,
+"Hrodna",
+"Admin-1 capital"
+],
+"bys": [
+7,
+"Barysaw",
+"Populated place"
+],
+"daw": [
+3,
+"Darwin",
+"Admin-1 capital"
+],
+"roc": [
+4,
+"Busselton",
+"Populated place"
+],
+"uni": [
+3,
+"Canberra",
+"Admin-0 capital"
+],
+"gol": [
+4,
+"Gold Coast",
+"Populated place"
+],
+"grs": [
+4,
+"Griffith",
+"Populated place"
+],
+"wog": [
+6,
+"Wollongong",
+"Populated place"
+],
+"dbb": [
+4,
+"Orange",
+"Populated place"
+],
+"cer": [
+3,
+"Newcastle",
+"Populated place"
+],
+"pom": [
+4,
+"Armidale",
+"Populated place"
+],
+"sls": [
+7,
+"Wallaroo",
+"Populated place"
+],
+"mtb": [
+6,
+"Mount Gambier",
+"Populated place"
+],
+"ade": [
+3,
+"Adelaide",
+"Admin-1 capital"
+],
+"grr": [
+4,
+"Portland",
+"Populated place"
+],
+"grb": [
+4,
+"Bendigo",
+"Populated place"
+],
+"lab": [
+7,
+"Bairnsdale",
+"Populated place"
+],
+"mel": [
+1,
+"Melbourne",
+"Admin-1 capital"
+],
+"mck": [
+6,
+"Bowen",
+"Populated place"
+],
+"frs": [
+6,
+"Maryborough",
+"Populated place"
+],
+"bri": [
+3,
+"Brisbane",
+"Admin-1 capital"
+],
+"tow": [
+6,
+"Toowoomba",
+"Populated place"
+],
+"tos": [
+3,
+"Townsville",
+"Populated place"
+],
+"cis": [
+4,
+"Cairns",
+"Populated place"
+],
+"lnc": [
+4,
+"Devonport",
+"Populated place"
+],
+"cln": [
+3,
+"Hobart",
+"Admin-1 capital"
+],
+"brk": [
+7,
+"Tuzla",
+"Populated place"
+],
+"bja": [
+7,
+"Prijedor",
+"Populated place"
+],
+"pnc": [
+7,
+"Ponce",
+"Populated place"
+],
+"laz": [
+7,
+"Arrecife",
+"Populated place"
+],
+"nbl": [
+7,
+"Nablus",
+"Populated place"
+],
+"eai": [
+7,
+"Chiayi",
+"Admin-1 capital"
+],
+"zhn": [
+7,
+"Miaoli",
+"Admin-1 capital"
+],
+"kao": [
+3,
+"Kaohsiung",
+"Admin-1 capital"
+],
+"jec": [
+6,
+"Birmingham",
+"Populated place"
+],
+"mbi": [
+6,
+"Mobile",
+"Populated place"
+],
+"tap": [
+2,
+"Tampa",
+"Populated place"
+],
+"fac": [
+6,
+"Frankfort",
+"Admin-1 capital"
+],
+"guc": [
+6,
+"Greensboro",
+"Populated place"
+],
+"inc": [
+6,
+"Lansing",
+"Admin-1 capital"
+],
+"grn": [
+6,
+"Granada‎",
+"Populated place"
+],
+"muh": [
+6,
+"Khon Kaen",
+"Admin-1 capital"
+],
+"thn": [
+6,
+"Thanh Hóa",
+"Admin-1 capital"
+],
+"nah": [
+6,
+"Nam Định",
+"Populated place"
+],
+"vih": [
+6,
+"Vinh",
+"Admin-1 capital"
+],
+"bot": [
+6,
+"Đồng Hới",
+"Admin-1 capital"
+],
+"ceu": [
+6,
+"Ceuta",
+"Admin-1 capital"
+],
+"pne": [
+4,
+"Vigo",
+"Populated place"
+],
+"cie": [
+6,
+"Edinburgh",
+"Admin-0 region capital"
+],
+"liv": [
+6,
+"Liverpool",
+"Populated place"
+],
+"car": [
+6,
+"Cardiff",
+"Admin-0 region capital"
+],
+"slr": [
+6,
+"Şanlıurfa",
+"Admin-1 capital"
+],
+"nav": [
+6,
+"Pamplona",
+"Admin-1 capital"
+],
+"lis": [
+2,
+"Lisbon",
+"Admin-0 capital"
+],
+"pot": [
+6,
+"Porto",
+"Admin-1 capital"
+],
+"rot": [
+4,
+"The Hague",
+"Admin-0 capital alt"
+],
+"joo": [
+6,
+"Johor Bahru",
+"Admin-1 capital"
+],
+"emf": [
+6,
+"Vereeniging",
+"Populated place"
+],
+"psk": [
+4,
+"Pskov",
+"Admin-1 capital"
+],
+"pls": [
+3,
+"Archangel",
+"Admin-1 capital"
+],
+"xac": [
+6,
+"Novy Urengoy",
+"Populated place"
+],
+"syk": [
+6,
+"Syktyvkar",
+"Admin-1 capital"
+],
+"nos": [
+6,
+"Cheboksary",
+"Admin-1 capital"
+],
+"kny": [
+6,
+"Khanty Mansiysk",
+"Admin-1 capital"
+],
+"tsk": [
+6,
+"Tara",
+"Populated place"
+],
+"tbo": [
+6,
+"Tobolsk",
+"Populated place"
+],
+"wit": [
+3,
+"Muscat",
+"Admin-0 capital"
+],
+"uls": [
+6,
+"Ulsan",
+"Admin-1 capital"
+],
+"dae": [
+6,
+"Daegu",
+"Admin-1 capital"
+],
+"lgp": [
+6,
+"Legazpi",
+"Populated place"
+],
+"tuo": [
+6,
+"Tuguegarao",
+"Populated place"
+],
+"cto": [
+6,
+"Vigan",
+"Populated place"
+],
+"nik": [
+6,
+"Tulun",
+"Populated place"
+],
+"dzn": [
+4,
+"Kyzyl",
+"Admin-1 capital"
+],
+"kba": [
+4,
+"Ulan-Ude",
+"Admin-1 capital"
+],
+"skv": [
+6,
+"Svobodnyy",
+"Populated place"
+],
+"kre": [
+6,
+"Krasnokamensk",
+"Populated place"
+],
+"agu": [
+6,
+"Aguascalientes",
+"Admin-1 capital"
+],
+"cen": [
+6,
+"Villahermosa",
+"Admin-1 capital"
+],
+"cue": [
+6,
+"Cuernavaca",
+"Admin-1 capital"
+],
+"qur": [
+6,
+"Querétaro",
+"Admin-1 capital"
+],
+"tau": [
+6,
+"Tapachula",
+"Populated place"
+],
+"ssi": [
+6,
+"Sassari",
+"Populated place"
+],
+"tur": [
+6,
+"Turin",
+"Admin-1 region capital"
+],
+"ysn": [
+6,
+"Jyekundo",
+"Populated place"
+],
+"liu": [
+6,
+"Liuzhou",
+"Populated place"
+],
+"xgy": [
+6,
+"Xingyi",
+"Populated place"
+],
+"xxu": [
+6,
+"Anshun",
+"Populated place"
+],
+"hog": [
+6,
+"Zunyi",
+"Populated place"
+],
+"wau": [
+6,
+"Wanzhou",
+"Populated place"
+],
+"sxi": [
+6,
+"Huaibei",
+"Populated place"
+],
+"wuu": [
+6,
+"Wuhu",
+"Populated place"
+],
+"yad": [
+6,
+"Luan",
+"Populated place"
+],
+"whe": [
+6,
+"Bengbu",
+"Populated place"
+],
+"sso": [
+6,
+"Anqing",
+"Populated place"
+],
+"fos": [
+6,
+"Foshan",
+"Populated place"
+],
+"kuu": [
+6,
+"Bontang",
+"Populated place"
+],
+"mee": [
+2,
+"Medellín",
+"Admin-1 capital"
+],
+"bug": [
+6,
+"Bucaramanga",
+"Admin-1 capital"
+],
+"pop": [
+6,
+"Popayán",
+"Admin-1 capital"
+],
+"cai": [
+0,
+"Cairo",
+"Admin-0 capital"
+],
+"stu": [
+6,
+"Stuttgart",
+"Admin-1 capital"
+],
+"naq": [
+6,
+"Nagchu",
+"Populated place"
+],
+"kru": [
+6,
+"Chamdo",
+"Populated place"
+],
+"klx": [
+6,
+"Korla",
+"Populated place"
+],
+"kux": [
+6,
+"Kuqa",
+"Populated place"
+],
+"krm": [
+6,
+"Tacheng",
+"Populated place"
+],
+"szx": [
+6,
+"Shihezi",
+"Populated place"
+],
+"aku": [
+6,
+"Aksu",
+"Populated place"
+],
+"wag": [
+6,
+"Sanya",
+"Populated place"
+],
+"xiu": [
+6,
+"Haikou",
+"Admin-1 capital"
+],
+"hni": [
+6,
+"Hanzhong",
+"Populated place"
+],
+"cnc": [
+6,
+"Baoji",
+"Populated place"
+],
+"yoz": [
+6,
+"Tongchuan",
+"Populated place"
+],
+"lif": [
+6,
+"Linfen",
+"Populated place"
+],
+"ycx": [
+6,
+"Yuci",
+"Populated place"
+],
+"dat": [
+6,
+"Datong",
+"Populated place"
+],
+"tne": [
+6,
+"Jianmen",
+"Populated place"
+],
+"yic": [
+6,
+"Yichang",
+"Populated place"
+],
+"hah": [
+6,
+"Xiantao",
+"Populated place"
+],
+"xnz": [
+6,
+"Macheng",
+"Populated place"
+],
+"xsh": [
+6,
+"Huangshi",
+"Populated place"
+],
+"zhz": [
+6,
+"Zhuzhou",
+"Populated place"
+],
+"lgh": [
+6,
+"Yongzhou",
+"Populated place"
+],
+"hsa": [
+6,
+"Yiyang",
+"Populated place"
+],
+"wul": [
+6,
+"Changde",
+"Populated place"
+],
+"soy": [
+6,
+"Shaoyang",
+"Populated place"
+],
+"siw": [
+6,
+"Leshan",
+"Populated place"
+],
+"rne": [
+6,
+"Panzhihua",
+"Populated place"
+],
+"lzo": [
+6,
+"Guangyuan",
+"Populated place"
+],
+"lae": [
+6,
+"Luzhou",
+"Populated place"
+],
+"ybi": [
+6,
+"Yibin",
+"Populated place"
+],
+"zay": [
+6,
+"Zhaotang",
+"Admin-1 capital"
+],
+"lpx": [
+6,
+"Lijiang",
+"Populated place"
+],
+"hoa": [
+6,
+"Yuxi",
+"Populated place"
+],
+"dlx": [
+6,
+"Dali",
+"Populated place"
+],
+"hig": [
+6,
+"Qinhuangdao",
+"Populated place"
+],
+"gna": [
+6,
+"Langfang",
+"Populated place"
+],
+"qad": [
+6,
+"Zhangjiakou",
+"Populated place"
+],
+"tag": [
+6,
+"Tangshan",
+"Populated place"
+],
+"any": [
+6,
+"Anyang",
+"Populated place"
+],
+"syg": [
+6,
+"Jiaozuo",
+"Populated place"
+],
+"kai": [
+6,
+"Kaifeng",
+"Populated place"
+],
+"lgy": [
+6,
+"Shangqiu",
+"Populated place"
+],
+"yex": [
+6,
+"Pingdingshan",
+"Populated place"
+],
+"mux": [
+6,
+"Xinxiang",
+"Populated place"
+],
+"luy": [
+6,
+"Luoyang",
+"Populated place"
+],
+"ans": [
+4,
+"Anshan",
+"Populated place"
+],
+"dsh": [
+6,
+"Yingkow",
+"Populated place"
+],
+"lgi": [
+6,
+"Jinzhou",
+"Populated place"
+],
+"fux": [
+6,
+"Fuxin",
+"Populated place"
+],
+"pns": [
+6,
+"Benxi",
+"Populated place"
+],
+"scn": [
+6,
+"Fushun",
+"Admin-1 capital"
+],
+"rnc": [
+6,
+"Jining",
+"Populated place"
+],
+"kue": [
+6,
+"Weifang",
+"Populated place"
+],
+"diy": [
+6,
+"Taian",
+"Populated place"
+],
+"mua": [
+6,
+"Heze",
+"Populated place"
+],
+"lyg": [
+6,
+"Laiyang",
+"Populated place"
+],
+"ysi": [
+6,
+"Xinyu",
+"Populated place"
+],
+"gan": [
+6,
+"Ganzhou",
+"Populated place"
+],
+"xny": [
+6,
+"Jiujiang",
+"Populated place"
+],
+"chz": [
+6,
+"Changzhou",
+"Populated place"
+],
+"dny": [
+6,
+"Zhenjiang",
+"Populated place"
+],
+"nat": [
+6,
+"Nantong",
+"Populated place"
+],
+"toa": [
+6,
+"Jiaxing",
+"Populated place"
+],
+"wug": [
+6,
+"Huzhou",
+"Populated place"
+],
+"hag": [
+2,
+"Hangzhou",
+"Admin-1 capital"
+],
+"jih": [
+6,
+"Jinhua",
+"Populated place"
+],
+"yit": [
+6,
+"Liaoyuan",
+"Populated place"
+],
+"cgu": [
+6,
+"Siping",
+"Populated place"
+],
+"ehm": [
+6,
+"Matsuyama",
+"Admin-1 region capital"
+],
+"isk": [
+6,
+"Kanazawa",
+"Admin-1 capital"
+],
+"kmk": [
+6,
+"Asahikawa",
+"Populated place"
+],
+"akt": [
+6,
+"Akita",
+"Populated place"
+],
+"aom": [
+6,
+"Aomori",
+"Admin-1 capital"
+],
+"iwt": [
+6,
+"Morioka",
+"Admin-1 capital"
+],
+"kts": [
+6,
+"Sorong",
+"Populated place"
+],
+"kki": [
+6,
+"Kakinada",
+"Populated place"
+],
+"hnk": [
+6,
+"Warangal",
+"Populated place"
+],
+"brp": [
+6,
+"Brahmapur",
+"Populated place"
+],
+"via": [
+6,
+"Vijayapura",
+"Populated place"
+],
+"ltu": [
+6,
+"Latur",
+"Populated place"
+],
+"ngr": [
+6,
+"Ahmednagar",
+"Populated place"
+],
+"cnr": [
+6,
+"Chandrapur",
+"Populated place"
+],
+"amv": [
+6,
+"Amravati",
+"Populated place"
+],
+"dle": [
+6,
+"Dhule",
+"Populated place"
+],
+"bbr": [
+6,
+"Dibrugarh",
+"Populated place"
+],
+"hor": [
+6,
+"Imphal",
+"Admin-1 capital"
+],
+"ill": [
+6,
+"Rennes",
+"Admin-1 region capital"
+],
+"nic": [
+6,
+"Nice",
+"Populated place"
+],
+"tou": [
+6,
+"Toulouse",
+"Admin-1 region capital"
+],
+"lil": [
+6,
+"Lille",
+"Admin-1 region capital"
+],
+"bsr": [
+6,
+"Strasbourg",
+"Admin-1 region capital"
+],
+"coh": [
+4,
+"Coihaique",
+"Admin-1 capital"
+],
+"vam": [
+6,
+"Turku",
+"Admin-1 capital"
+],
+"giw": [
+6,
+"Udaipur",
+"Populated place"
+],
+"gor": [
+6,
+"Gorakhpur",
+"Populated place"
+],
+"gas": [
+6,
+"Barddhaman",
+"Populated place"
+],
+"krh": [
+6,
+"Krishnanagar",
+"Populated place"
+],
+"gaa": [
+6,
+"Gaya",
+"Populated place"
+],
+"prr": [
+6,
+"Porbandar",
+"Populated place"
+],
+"mny": [
+6,
+"Monterey",
+"Populated place"
+],
+"vou": [
+6,
+"Daytona Beach",
+"Populated place"
+],
+"rid": [
+6,
+"Augusta",
+"Populated place"
+],
+"mhn": [
+6,
+"Youngstown",
+"Populated place"
+],
+"hmt": [
+6,
+"Chattanooga",
+"Populated place"
+],
+"stm": [
+6,
+"Charlottesville",
+"Populated place"
+],
+"day": [
+6,
+"Harrisburg",
+"Admin-1 capital"
+],
+"sgn": [
+6,
+"Saginaw",
+"Populated place"
+],
+"elh": [
+6,
+"Sfax",
+"Populated place"
+],
+"sel": [
+3,
+"Sevastopol",
+"Admin-1 capital"
+],
+"mgh": [
+6,
+"Phuket",
+"Admin-1 capital"
+],
+"ple": [
+6,
+"Play Ku",
+"Admin-1 capital"
+],
+"nha": [
+6,
+"Nha Trang",
+"Admin-1 capital"
+],
+"quo": [
+6,
+"Qui Nhon",
+"Admin-1 capital"
+],
+"hux": [
+6,
+"Hue",
+"Admin-1 capital"
+],
+"can": [
+6,
+"Can Tho",
+"Admin-1 capital"
+],
+"goa": [
+6,
+"Governador Valadares",
+"Populated place"
+],
+"jud": [
+6,
+"Juiz de Fora",
+"Populated place"
+],
+"chx": [
+6,
+"Xapeco",
+"Populated place"
+],
+"vit": [
+4,
+"Vila Velha",
+"Populated place"
+],
+"joa": [
+6,
+"João Pessoa",
+"Admin-1 capital"
+],
+"cpi": [
+6,
+"Campina Grande",
+"Populated place"
+],
+"nof": [
+6,
+"Nova Friburgo",
+"Populated place"
+],
+"ant": [
+6,
+"Antwerpen",
+"Admin-1 capital"
+],
+"odu": [
+6,
+"Eskişehir",
+"Admin-1 capital"
+],
+"anl": [
+6,
+"Antalya",
+"Admin-1 capital"
+],
+"kys": [
+6,
+"Kayseri",
+"Admin-1 capital"
+],
+"per": [
+2,
+"Perth",
+"Admin-1 capital"
+],
+"rok": [
+4,
+"Rockhampton",
+"Populated place"
+],
+"gai": [
+6,
+"Gaziantep",
+"Admin-1 capital"
+],
+"vaa": [
+6,
+"Valladolid",
+"Admin-1 capital"
+],
+"upp": [
+6,
+"Uppsala",
+"Admin-1 capital"
+],
+"mna": [
+6,
+"Nakhon Si Thammarat",
+"Admin-1 capital"
+],
+"msn": [
+6,
+"Songkhla",
+"Admin-1 capital"
+],
+"meb": [
+6,
+"Ubon Ratchathani",
+"Admin-1 capital"
+],
+"tcn": [
+3,
+"Tacna",
+"Admin-1 capital"
+],
+"hal": [
+6,
+"Huancavelica",
+"Admin-1 capital"
+],
+"mea": [
+6,
+"Melilla",
+"Admin-1 capital"
+],
+"reu": [
+6,
+"Funchal",
+"Admin-0 region capital"
+],
+"mll": [
+6,
+"Palma",
+"Admin-1 capital"
+],
+"tbu": [
+4,
+"Tabuk",
+"Admin-1 capital"
+],
+"abx": [
+6,
+"Abha",
+"Admin-1 capital"
+],
+"sby": [
+6,
+"Jizan",
+"Admin-1 capital"
+],
+"swt": [
+6,
+"Vanhynsdorp",
+"Populated place"
+],
+"rue": [
+6,
+"Rustenburg",
+"Populated place"
+],
+"mfi": [
+6,
+"Mmabatho",
+"Admin-1 capital"
+],
+"cit": [
+6,
+"Klerksdorp",
+"Populated place"
+],
+"tha": [
+6,
+"Thohoyandou",
+"Populated place"
+],
+"nec": [
+6,
+"Vryheid",
+"Populated place"
+],
+"ths": [
+6,
+"Pietermaritzburg",
+"Admin-1 capital"
+],
+"tae": [
+6,
+"Tangier",
+"Admin-1 capital"
+],
+"agd": [
+6,
+"Agadir",
+"Admin-1 capital"
+],
+"kib": [
+6,
+"Umtata",
+"Populated place"
+],
+"pto": [
+4,
+"Petrozavodsk",
+"Admin-1 capital"
+],
+"vex": [
+6,
+"Velsk",
+"Populated place"
+],
+"ktc": [
+6,
+"Kotlas",
+"Populated place"
+],
+"vey": [
+6,
+"Velikiy Ustyug",
+"Populated place"
+],
+"blk": [
+6,
+"Belgorod",
+"Admin-1 capital"
+],
+"akh": [
+6,
+"Akhtubinsk",
+"Populated place"
+],
+"lgk": [
+6,
+"Elista",
+"Admin-1 capital"
+],
+"roi": [
+6,
+"Roxas",
+"Populated place"
+],
+"pup": [
+6,
+"Puerto Princesa",
+"Populated place"
+],
+"nay": [
+6,
+"Naga",
+"Populated place"
+],
+"ang": [
+6,
+"Angeles",
+"Populated place"
+],
+"btg": [
+6,
+"Batangas",
+"Populated place"
+],
+"ctb": [
+6,
+"Cotabato",
+"Populated place"
+],
+"clb": [
+6,
+"Calbayog",
+"Populated place"
+],
+"cay": [
+6,
+"Cagayan de Oro",
+"Populated place"
+],
+"chp": [
+6,
+"Ometepec",
+"Populated place"
+],
+"bej": [
+3,
+"Cancún",
+"Populated place"
+],
+"lod": [
+6,
+"Łódź",
+"Admin-1 capital"
+],
+"zar": [
+6,
+"Zaragoza",
+"Admin-1 capital"
+],
+"sil": [
+6,
+"Pematangsiantar",
+"Populated place"
+],
+"pek": [
+6,
+"Pekanbaru",
+"Admin-1 capital"
+],
+"ktm": [
+6,
+"Manado",
+"Admin-1 capital"
+],
+"kod": [
+6,
+"Kendari",
+"Admin-1 capital"
+],
+"ktu": [
+6,
+"Palu",
+"Admin-1 capital"
+],
+"pai": [
+6,
+"Nabire",
+"Populated place"
+],
+"mru": [
+6,
+"Merauke",
+"Populated place"
+],
+"gno": [
+6,
+"Genoa",
+"Admin-1 region capital"
+],
+"ace": [
+6,
+"Lhokseumawe",
+"Populated place"
+],
+"lru": [
+6,
+"Taiping",
+"Populated place"
+],
+"kix": [
+6,
+"Ipoh",
+"Admin-1 capital"
+],
+"kob": [
+6,
+"Kota Baharu",
+"Admin-1 capital"
+],
+"mlk": [
+6,
+"Malacca",
+"Admin-1 capital"
+],
+"kut": [
+6,
+"Kuantan",
+"Admin-1 capital"
+],
+"xuo": [
+6,
+"Xuanzhou",
+"Populated place"
+],
+"zhu": [
+6,
+"Zhuhai",
+"Populated place"
+],
+"sma": [
+6,
+"Samarinda",
+"Admin-1 capital"
+],
+"sna": [
+6,
+"Sandakan",
+"Populated place"
+],
+"kta": [
+6,
+"Kota Kinabalu",
+"Admin-1 capital"
+],
+"sib": [
+6,
+"Sibu",
+"Populated place"
+],
+"cir": [
+6,
+"Cirebon",
+"Populated place"
+],
+"tak": [
+6,
+"Tasikmalaya",
+"Populated place"
+],
+"ktb": [
+6,
+"Bengkulu",
+"Admin-1 capital"
+],
+"ktp": [
+6,
+"Pontianak",
+"Admin-1 capital"
+],
+"lmn": [
+6,
+"Kotabumi",
+"Populated place"
+],
+"lht": [
+6,
+"Lahat",
+"Populated place"
+],
+"bnx": [
+6,
+"Pangkalpinang",
+"Populated place"
+],
+"jem": [
+6,
+"Jember",
+"Populated place"
+],
+"bnj": [
+6,
+"Martapura",
+"Populated place"
+],
+"mra": [
+6,
+"Ruteng",
+"Populated place"
+],
+"tma": [
+6,
+"Tumaco",
+"Populated place"
+],
+"mrm": [
+6,
+"El Minya",
+"Admin-1 capital"
+],
+"ghy": [
+6,
+"El Kharga",
+"Admin-1 capital"
+],
+"xia": [
+2,
+"Xian",
+"Admin-1 capital"
+],
+"xaz": [
+6,
+"Xiangyang",
+"Populated place"
+],
+"cus": [
+6,
+"Suining",
+"Populated place"
+],
+"lyx": [
+6,
+"Lingyuan",
+"Populated place"
+],
+"hun": [
+6,
+"Weihai",
+"Populated place"
+],
+"yih": [
+6,
+"Yichun",
+"Populated place"
+],
+"yac": [
+6,
+"Yancheng",
+"Populated place"
+],
+"fya": [
+6,
+"Fuyang",
+"Populated place"
+],
+"koj": [
+6,
+"Jambi",
+"Admin-1 capital"
+],
+"nel": [
+6,
+"Nellore",
+"Populated place"
+],
+"krl": [
+6,
+"Kurnool",
+"Populated place"
+],
+"gnt": [
+6,
+"Guntur",
+"Populated place"
+],
+"tum": [
+6,
+"Tumakuru",
+"Populated place"
+],
+"dan": [
+6,
+"Davangere",
+"Populated place"
+],
+"blv": [
+6,
+"Belagavi",
+"Populated place"
+],
+"crm": [
+6,
+"La Rochelle",
+"Populated place"
+],
+"poj": [
+6,
+"Oulu",
+"Admin-1 capital"
+],
+"toh": [
+6,
+"Tuticorin",
+"Populated place"
+],
+"did": [
+6,
+"Dindigul",
+"Populated place"
+],
+"rix": [
+4,
+"Rio Branco",
+"Admin-1 capital"
+],
+"crz": [
+3,
+"Cruzeiro do Sul",
+"Populated place"
+],
+"alt": [
+4,
+"Colíder",
+"Populated place"
+],
+"sbn": [
+6,
+"Sinop",
+"Populated place"
+],
+"arj": [
+6,
+"Aracaju",
+"Admin-1 capital"
+],
+"bnd": [
+4,
+"Brandon",
+"Populated place"
+],
+"grp": [
+6,
+"Grand Prairie",
+"Populated place"
+],
+"moc": [
+6,
+"Moncton",
+"Populated place"
+],
+"tad": [
+6,
+"Bathurst",
+"Populated place"
+],
+"rog": [
+6,
+"Rio Grande",
+"Populated place"
+],
+"sfr": [
+6,
+"Resistencia",
+"Admin-1 capital"
+],
+"gns": [
+6,
+"Garanhuns",
+"Populated place"
+],
+"cru": [
+6,
+"Caruaru",
+"Populated place"
+],
+"adx": [
+6,
+"Adrar",
+"Admin-1 capital"
+],
+"tif": [
+6,
+"Tindouf",
+"Populated place"
+],
+"lgt": [
+6,
+"Laghouat",
+"Admin-1 capital"
+],
+"bkr": [
+6,
+"Biskra",
+"Admin-1 capital"
+],
+"dje": [
+6,
+"Djelfa",
+"Admin-1 capital"
+],
+"sbz": [
+6,
+"Sétif",
+"Admin-1 capital"
+],
+"bbq": [
+6,
+"Batna",
+"Admin-1 capital"
+],
+"arc": [
+6,
+"Arecibo",
+"Populated place"
+],
+"mcu": [
+6,
+"Macau",
+"Admin-0 region capital"
+],
+"tee": [
+6,
+"Santa Cruz de Tenerife",
+"Admin-1 capital"
+],
+"taa": [
+6,
+"Tainan",
+"Admin-1 capital"
+],
+"man": [
+4,
+"Manchester",
+"Populated place"
+],
+"yna": [
+4,
+"Nanchong",
+"Populated place"
+],
+"wol": [
+4,
+"Nanyang",
+"Populated place"
+],
+"lsx": [
+4,
+"Jinxi",
+"Populated place"
+],
+"zif": [
+4,
+"Yantai",
+"Populated place"
+],
+"szn": [
+4,
+"Zaozhuang",
+"Populated place"
+],
+"suz": [
+4,
+"Suzhou",
+"Populated place"
+],
+"xuz": [
+4,
+"Xuzhou",
+"Populated place"
+],
+"jil": [
+4,
+"Jilin",
+"Populated place"
+],
+"chd": [
+4,
+"Chandigarh",
+"Admin-1 capital"
+],
+"jau": [
+4,
+"Jammu",
+"Populated place"
+],
+"sol": [
+4,
+"Sholapur",
+"Populated place"
+],
+"chh": [
+4,
+"Aurangabad",
+"Populated place"
+],
+"nas": [
+4,
+"Nasik",
+"Populated place"
+],
+"guw": [
+4,
+"Dispur",
+"Admin-1 capital"
+],
+"jal": [
+4,
+"Jullundur",
+"Populated place"
+],
+"pry": [
+4,
+"Allahabad",
+"Populated place"
+],
+"moa": [
+4,
+"Moradabad",
+"Populated place"
+],
+"agr": [
+4,
+"Agra",
+"Populated place"
+],
+"ali": [
+4,
+"Aligarh",
+"Populated place"
+],
+"mer": [
+4,
+"Meerut",
+"Populated place"
+],
+"dhn": [
+4,
+"Dhanbad",
+"Populated place"
+],
+"gwa": [
+4,
+"Gwalior",
+"Populated place"
+],
+"vad": [
+4,
+"Vadodara",
+"Populated place"
+],
+"raj": [
+4,
+"Rajkot",
+"Populated place"
+],
+"pol": [
+3,
+"Portland",
+"Populated place"
+],
+"tuc": [
+4,
+"Tucson",
+"Populated place"
+],
+"fru": [
+4,
+"Fresno",
+"Populated place"
+],
+"alq": [
+4,
+"Albuquerque",
+"Populated place"
+],
+"jas": [
+4,
+"Jacksonville",
+"Populated place"
+],
+"ina": [
+4,
+"Indianapolis",
+"Admin-1 capital"
+],
+"xak": [
+4,
+"Sousse",
+"Admin-1 capital"
+],
+"hod": [
+4,
+"Lviv",
+"Admin-1 capital"
+],
+"ode": [
+4,
+"Odessa",
+"Admin-1 capital"
+],
+"dnp": [
+4,
+"Dnipro",
+"Admin-1 capital"
+],
+"kha": [
+4,
+"Kharkiv",
+"Admin-1 capital"
+],
+"lea": [
+4,
+"Haiphong",
+"Admin-1 capital"
+],
+"bir": [
+4,
+"Birmingham",
+"Populated place"
+],
+"bel": [
+4,
+"Belfast",
+"Admin-0 region capital"
+],
+"izm": [
+4,
+"İzmir",
+"Admin-1 capital"
+],
+"bur": [
+4,
+"Bursa",
+"Admin-1 capital"
+],
+"ilk": [
+4,
+"Samsun",
+"Admin-1 capital"
+],
+"kon": [
+4,
+"Konya",
+"Admin-1 capital"
+],
+"sey": [
+4,
+"Adana",
+"Admin-1 capital"
+],
+"cod": [
+4,
+"Córdoba",
+"Populated place"
+],
+"cns": [
+4,
+"Constanța",
+"Admin-1 capital"
+],
+"mnu": [
+4,
+"Surat Thani",
+"Admin-1 capital"
+],
+"mug": [
+4,
+"Chiang Mai",
+"Admin-1 capital"
+],
+"mut": [
+4,
+"Nakhon Ratchasima",
+"Admin-1 capital"
+],
+"cro": [
+4,
+"Pucallpa",
+"Admin-1 capital"
+],
+"biz": [
+4,
+"Bilbao",
+"Populated place"
+],
+"mei": [
+4,
+"Medina",
+"Admin-1 capital"
+],
+"osd": [
+4,
+"Ljubljana",
+"Admin-0 capital"
+],
+"doh": [
+4,
+"Doha",
+"Admin-0 capital"
+],
+"ouj": [
+4,
+"Oujda",
+"Admin-1 capital"
+],
+"sfx": [
+4,
+"Safi",
+"Admin-1 capital"
+],
+"crn": [
+4,
+"Podgorica",
+"Admin-0 capital"
+],
+"ceg": [
+4,
+"Nalchik",
+"Admin-1 capital"
+],
+"krc": [
+4,
+"Krasnodar",
+"Admin-1 capital"
+],
+"vor": [
+4,
+"Voronezh",
+"Admin-1 capital"
+],
+"che": [
+4,
+"Chelyabinsk",
+"Admin-1 capital"
+],
+"ask": [
+4,
+"Astrakhan",
+"Admin-1 capital"
+],
+"grz": [
+4,
+"Grozny",
+"Admin-1 capital"
+],
+"daj": [
+4,
+"Daejeon",
+"Admin-1 capital"
+],
+"gwn": [
+4,
+"Gwangju",
+"Admin-1 capital"
+],
+"bus": [
+4,
+"Busan",
+"Admin-1 capital"
+],
+"zam": [
+4,
+"Zamboanga",
+"Populated place"
+],
+"loy": [
+4,
+"Laoag",
+"Populated place"
+],
+"bgu": [
+4,
+"Baguio",
+"Admin-0 capital alt"
+],
+"gel": [
+4,
+"General Santos",
+"Populated place"
+],
+"xad": [
+4,
+"Norilsk",
+"Populated place"
+],
+"snl": [
+4,
+"San Luis Potosí",
+"Admin-1 capital"
+],
+"mts": [
+4,
+"Matamoros",
+"Populated place"
+],
+"leo": [
+4,
+"León",
+"Populated place"
+],
+"kra": [
+4,
+"Kraków",
+"Admin-1 capital"
+],
+"kto": [
+4,
+"Ambon",
+"Admin-1 capital"
+],
+"bim": [
+4,
+"Raba",
+"Populated place"
+],
+"koy": [
+4,
+"Jayapura",
+"Admin-1 capital"
+],
+"frn": [
+4,
+"Florence",
+"Admin-1 region capital"
+],
+"caw": [
+4,
+"Catania",
+"Populated place"
+],
+"psh": [
+4,
+"Pristina",
+"Admin-0 capital"
+],
+"acb": [
+4,
+"Banda Aceh",
+"Admin-1 capital"
+],
+"gnz": [
+4,
+"Zhangye",
+"Populated place"
+],
+"qnz": [
+4,
+"Tianshui",
+"Populated place"
+],
+"god": [
+4,
+"Dulan",
+"Populated place"
+],
+"yzu": [
+4,
+"Yulin",
+"Populated place"
+],
+"jgx": [
+4,
+"Bose",
+"Populated place"
+],
+"cnz": [
+4,
+"Wuzhou",
+"Populated place"
+],
+"zos": [
+4,
+"Liupanshui",
+"Populated place"
+],
+"qua": [
+4,
+"Quanzhou",
+"Populated place"
+],
+"hef": [
+4,
+"Hefei",
+"Admin-1 capital"
+],
+"yoq": [
+4,
+"Suzhou",
+"Populated place"
+],
+"xsa": [
+4,
+"Zhanjiang",
+"Populated place"
+],
+"zej": [
+4,
+"Shaoguan",
+"Populated place"
+],
+"ktl": [
+4,
+"Balikpapan",
+"Populated place"
+],
+"kuh": [
+4,
+"Kuching",
+"Admin-1 capital"
+],
+"bne": [
+4,
+"Tanjung Pandan",
+"Populated place"
+],
+"ktk": [
+4,
+"Kupang",
+"Admin-1 capital"
+],
+"ccx": [
+4,
+"Cuenca",
+"Admin-1 capital"
+],
+"miz": [
+4,
+"Manizales",
+"Admin-1 capital"
+],
+"pst": [
+4,
+"Pasto",
+"Admin-1 capital"
+],
+"aai": [
+4,
+"Suez",
+"Populated place"
+],
+"azh": [
+4,
+"Bur Said",
+"Admin-1 capital"
+],
+"fay": [
+4,
+"El Faiyum",
+"Admin-1 capital"
+],
+"asw": [
+4,
+"Aswan",
+"Admin-1 capital"
+],
+"asy": [
+4,
+"Asyut",
+"Admin-1 capital"
+],
+"drd": [
+4,
+"Dresden",
+"Admin-1 capital"
+],
+"yrk": [
+4,
+"Shache",
+"Populated place"
+],
+"yni": [
+4,
+"Yining",
+"Populated place"
+],
+"dwu": [
+4,
+"Shizuishan",
+"Populated place"
+],
+"yya": [
+4,
+"Yulin",
+"Populated place"
+],
+"hab": [
+4,
+"Ankang",
+"Populated place"
+],
+"wax": [
+4,
+"Houma",
+"Populated place"
+],
+"jnl": [
+4,
+"Yueyang",
+"Populated place"
+],
+"hgn": [
+4,
+"Hengyang",
+"Populated place"
+],
+"fue": [
+4,
+"Mianyang",
+"Populated place"
+],
+"xcn": [
+4,
+"Xichang",
+"Populated place"
+],
+"lgg": [
+4,
+"Baoshan",
+"Populated place"
+],
+"shi": [
+4,
+"Shijiazhuang",
+"Admin-1 capital"
+],
+"had": [
+4,
+"Handan",
+"Populated place"
+],
+"dal": [
+4,
+"Dalian",
+"Populated place"
+],
+"qin": [
+4,
+"Qingdao",
+"Populated place"
+],
+"lin": [
+4,
+"Linyi",
+"Populated place"
+],
+"hua": [
+4,
+"Huaiyin",
+"Populated place"
+],
+"wen": [
+4,
+"Wenzhou",
+"Populated place"
+],
+"nin": [
+4,
+"Ningbo",
+"Populated place"
+],
+"mzk": [
+4,
+"Miyazaki",
+"Admin-1 capital"
+],
+"oka": [
+4,
+"Naha",
+"Admin-1 region capital"
+],
+"kch": [
+4,
+"Kōchi",
+"Admin-1 capital"
+],
+"ktg": [
+4,
+"Gorontalo",
+"Populated place"
+],
+"hoh": [
+4,
+"Hohhot",
+"Admin-1 capital"
+],
+"nne": [
+4,
+"Chifeng",
+"Populated place"
+],
+"ksr": [
+4,
+"Kushiro",
+"Populated place"
+],
+"osh": [
+4,
+"Hakodate",
+"Populated place"
+],
+"sdj": [
+4,
+"Sendai",
+"Admin-1 region capital"
+],
+"sri": [
+4,
+"Srinagar",
+"Admin-1 capital"
+],
+"vij": [
+4,
+"Vijayawada",
+"Populated place"
+],
+"thi": [
+4,
+"Thiruvananthapuram",
+"Admin-1 capital"
+],
+"cck": [
+4,
+"Cuttack",
+"Populated place"
+],
+"dhr": [
+4,
+"Hubballi",
+"Populated place"
+],
+"mbe": [
+4,
+"Mangaluru",
+"Populated place"
+],
+"mys": [
+4,
+"Mysuru",
+"Populated place"
+],
+"klr": [
+4,
+"Kalaburagi",
+"Populated place"
+],
+"kav": [
+4,
+"Kolhapur",
+"Populated place"
+],
+"nde": [
+4,
+"Nanded",
+"Populated place"
+],
+"ako": [
+4,
+"Akola",
+"Populated place"
+],
+"bor": [
+4,
+"Bordeaux",
+"Admin-1 region capital"
+],
+"skp": [
+4,
+"Skopje",
+"Admin-0 capital"
+],
+"lud": [
+4,
+"Ludhiana",
+"Populated place"
+],
+"kot": [
+4,
+"Kota",
+"Populated place"
+],
+"jod": [
+4,
+"Jodhpur",
+"Populated place"
+],
+"luc": [
+4,
+"Lucknow",
+"Admin-1 capital"
+],
+"sah": [
+4,
+"Saharanpur",
+"Populated place"
+],
+"ran": [
+4,
+"Ranchi",
+"Admin-1 capital"
+],
+"grh": [
+4,
+"Bhagalpur",
+"Populated place"
+],
+"rai": [
+4,
+"Raipur",
+"Admin-1 capital"
+],
+"jab": [
+4,
+"Jabalpur",
+"Populated place"
+],
+"ind": [
+4,
+"Indore",
+"Populated place"
+],
+"pud": [
+4,
+"Puducherry",
+"Admin-1 capital"
+],
+"sae": [
+4,
+"Salem",
+"Populated place"
+],
+"tic": [
+4,
+"Tiruchirappalli",
+"Populated place"
+],
+"naa": [
+4,
+"Natal",
+"Admin-1 capital"
+],
+"ven": [
+4,
+"Venice",
+"Admin-1 region capital"
+],
+"raw": [
+4,
+"San Juan",
+"Admin-1 capital"
+],
+"soc": [
+4,
+"Sorocaba",
+"Populated place"
+],
+"rib": [
+4,
+"Ribeirão Preto",
+"Populated place"
+],
+"btt": [
+4,
+"Battambang",
+"Admin-1 capital"
+],
+"sip": [
+4,
+"Siem Reap",
+"Admin-1 capital"
+],
+"aac": [
+4,
+"Annaba",
+"Admin-1 capital"
+],
+"cnt": [
+4,
+"Constantine",
+"Admin-1 capital"
+],
+"gra": [
+4,
+"Las Palmas",
+"Admin-1 capital"
+],
+"mam": [
+4,
+"Manama",
+"Admin-0 capital"
+],
+"mgg": [
+5,
+"Magong",
+"Admin-1 capital"
+],
+"tky": [
+4,
+"Leh",
+"Admin-1 capital"
+],
+"bhu": [
+3,
+"Bhubaneswar",
+"Admin-1 capital"
+],
+"jam": [
+3,
+"Jamshedpur",
+"Populated place"
+],
+"moe": [
+3,
+"Montevideo",
+"Admin-0 capital"
+],
+"sca": [
+3,
+"Sacramento",
+"Admin-1 capital"
+],
+"slt": [
+3,
+"Salt Lake City",
+"Admin-1 capital"
+],
+"cle": [
+3,
+"Cleveland",
+"Populated place"
+],
+"nal": [
+3,
+"Nashville",
+"Admin-1 capital"
+],
+"hou": [
+3,
+"Reykjavík",
+"Admin-0 capital"
+],
+"sev": [
+3,
+"Seville",
+"Admin-1 capital"
+],
+"mgn": [
+3,
+"Bloemfontein",
+"Admin-0 capital"
+],
+"sos": [
+3,
+"Pretoria",
+"Admin-0 capital"
+],
+"fez": [
+3,
+"Fez",
+"Admin-1 capital"
+],
+"rab": [
+3,
+"Rabat",
+"Admin-0 capital"
+],
+"mae": [
+3,
+"Marrakesh",
+"Admin-1 capital"
+],
+"csi": [
+3,
+"Chișinău",
+"Admin-0 capital"
+],
+"niz": [
+3,
+"Nizhny Novgorod",
+"Admin-1 capital"
+],
+"ufa": [
+3,
+"Ufa",
+"Admin-1 capital"
+],
+"kaz": [
+3,
+"Kazan",
+"Admin-1 capital"
+],
+"ceb": [
+3,
+"Cebu",
+"Populated place"
+],
+"ili": [
+3,
+"Iloilo",
+"Populated place"
+],
+"dav": [
+3,
+"Davao",
+"Populated place"
+],
+"krs": [
+3,
+"Krasnoyarsk",
+"Admin-1 capital"
+],
+"tij": [
+3,
+"Tijuana",
+"Populated place"
+],
+"vec": [
+3,
+"Veracruz",
+"Populated place"
+],
+"tul": [
+3,
+"Tuxtla Gutiérrez",
+"Admin-1 capital"
+],
+"val": [
+3,
+"Valencia",
+"Admin-1 capital"
+],
+"pad": [
+3,
+"Padang",
+"Admin-1 capital"
+],
+"pae": [
+3,
+"Palermo",
+"Admin-1 region capital"
+],
+"vil": [
+3,
+"Vilnius",
+"Admin-0 capital"
+],
+"xin": [
+3,
+"Xining",
+"Admin-1 capital"
+],
+"lgx": [
+3,
+"Guilin",
+"Populated place"
+],
+"tin": [
+3,
+"Huainan",
+"Populated place"
+],
+"ktt": [
+3,
+"Tarakan",
+"Populated place"
+],
+"sem": [
+3,
+"Semarang",
+"Admin-1 capital"
+],
+"pal": [
+3,
+"Palembang",
+"Admin-1 capital"
+],
+"kom": [
+3,
+"Bandjarmasin",
+"Admin-1 capital"
+],
+"maa": [
+3,
+"Makassar",
+"Admin-1 capital"
+],
+"lyo": [
+3,
+"Lyon",
+"Admin-1 region capital"
+],
+"lux": [
+3,
+"Luxor",
+"Populated place"
+],
+"gdz": [
+3,
+"Zagreb",
+"Admin-0 capital"
+],
+"pos": [
+3,
+"Tallinn",
+"Admin-0 capital"
+],
+"yik": [
+3,
+"Hami",
+"Populated place"
+],
+"krx": [
+3,
+"Hotan",
+"Populated place"
+],
+"ksg": [
+3,
+"Kashgar",
+"Populated place"
+],
+"yin": [
+3,
+"Yinchuan",
+"Admin-1 capital"
+],
+"aya": [
+3,
+"Pingxiang",
+"Populated place"
+],
+"ngs": [
+3,
+"Nagasaki",
+"Admin-1 capital"
+],
+"vis": [
+3,
+"Vishakhapatnam",
+"Populated place"
+],
+"the": [
+3,
+"Thessaloniki",
+"Admin-1 capital"
+],
+"amr": [
+3,
+"Amritsar",
+"Populated place"
+],
+"var": [
+3,
+"Varanasi",
+"Populated place"
+],
+"asa": [
+3,
+"Asansol",
+"Populated place"
+],
+"dhd": [
+3,
+"Bhilai",
+"Populated place"
+],
+"bho": [
+3,
+"Bhopal",
+"Admin-1 capital"
+],
+"max": [
+3,
+"Madurai",
+"Populated place"
+],
+"coi": [
+3,
+"Coimbatore",
+"Populated place"
+],
+"lex": [
+3,
+"Leticia",
+"Admin-1 capital"
+],
+"mau": [
+3,
+"Manaus",
+"Admin-1 capital"
+],
+"cmd": [
+3,
+"Campo Grande",
+"Admin-1 capital"
+],
+"flr": [
+3,
+"Florianópolis",
+"Admin-1 capital"
+],
+"fei": [
+3,
+"Feira de Santana",
+"Populated place"
+],
+"cag": [
+3,
+"Calgary",
+"Populated place"
+],
+"bav": [
+3,
+"Boa Vista",
+"Admin-1 capital"
+],
+"thu": [
+3,
+"Thunder Bay",
+"Populated place"
+],
+"crw": [
+3,
+"Charlottetown",
+"Admin-1 capital"
+],
+"beg": [
+3,
+"Belgrade",
+"Admin-0 capital"
+],
+"gad": [
+3,
+"Bandar Seri Begawan",
+"Admin-0 capital"
+],
+"gue": [
+3,
+"Río Gallegos",
+"Admin-1 capital"
+],
+"cor": [
+3,
+"Córdoba",
+"Admin-1 capital"
+],
+"cpn": [
+3,
+"Posadas",
+"Admin-1 capital"
+],
+"tir": [
+3,
+"Tirana",
+"Admin-0 capital"
+],
+"phn": [
+3,
+"Phnom Penh",
+"Admin-0 capital"
+],
+"ora": [
+3,
+"Oran",
+"Populated place"
+],
+"ghd": [
+3,
+"Ghardaia",
+"Populated place"
+],
+"min": [
+3,
+"Minsk",
+"Admin-0 capital"
+],
+"sja": [
+3,
+"San Juan",
+"Admin-1 capital"
+],
+"mlt": [
+3,
+"Valletta",
+"Admin-0 capital"
+],
+"jer": [
+3,
+"Jerusalem",
+"Admin-0 capital"
+],
+"shz": [
+2,
+"Shenzhen",
+"Populated place"
+],
+"zib": [
+2,
+"Zibo",
+"Populated place"
+],
+"ank": [
+2,
+"Ankara",
+"Admin-0 capital"
+],
+"buc": [
+2,
+"Bucharest",
+"Admin-0 capital"
+],
+"jed": [
+2,
+"Jeddah",
+"Populated place"
+],
+"mec": [
+2,
+"Makkah",
+"Populated place"
+],
+"dur": [
+2,
+"Durban",
+"Populated place"
+],
+"gud": [
+2,
+"Guadalajara",
+"Admin-1 capital"
+],
+"war": [
+2,
+"Warsaw",
+"Admin-0 capital"
+],
+"dub": [
+2,
+"Dublin",
+"Admin-0 capital"
+],
+"mil": [
+2,
+"Milan",
+"Admin-1 region capital"
+],
+"lan": [
+2,
+"Lanzhou",
+"Admin-1 capital"
+],
+"nag": [
+2,
+"Nanning",
+"Admin-1 capital"
+],
+"gui": [
+2,
+"Guiyang",
+"Admin-1 capital"
+],
+"cho": [
+2,
+"Chongqing",
+"Admin-1 capital"
+],
+"fuz": [
+2,
+"Fuzhou",
+"Admin-1 capital"
+],
+"gua": [
+2,
+"Guangzhou",
+"Admin-1 capital"
+],
+"dog": [
+2,
+"Dongguan",
+"Populated place"
+],
+"bad": [
+2,
+"Bandung",
+"Admin-1 capital"
+],
+"guy": [
+2,
+"Guayaquil",
+"Admin-1 capital"
+],
+"cal": [
+2,
+"Cali",
+"Admin-1 capital"
+],
+"ale": [
+2,
+"Alexandria",
+"Populated place"
+],
+"ham": [
+2,
+"Hamburg",
+"Admin-1 capital"
+],
+"mun": [
+2,
+"Munich",
+"Admin-1 capital"
+],
+"pra": [
+2,
+"Prague",
+"Admin-0 capital"
+],
+"tay": [
+2,
+"Taiyuan",
+"Admin-1 capital"
+],
+"wuh": [
+2,
+"Wuhan",
+"Admin-1 capital"
+],
+"chs": [
+2,
+"Changsha",
+"Admin-1 capital"
+],
+"kun": [
+2,
+"Kunming",
+"Admin-1 capital"
+],
+"zhe": [
+2,
+"Zhengzhou",
+"Admin-1 capital"
+],
+"shy": [
+2,
+"Shenyeng",
+"Admin-1 capital"
+],
+"jin": [
+2,
+"Jinan",
+"Admin-1 capital"
+],
+"tia": [
+2,
+"Tianjin",
+"Admin-1 capital"
+],
+"nac": [
+2,
+"Nanchang",
+"Admin-1 capital"
+],
+"nan": [
+2,
+"Nanjing",
+"Admin-1 capital"
+],
+"chc": [
+2,
+"Changchun",
+"Admin-1 capital"
+],
+"bao": [
+2,
+"Baotou",
+"Populated place"
+],
+"har": [
+2,
+"Harbin",
+"Admin-1 capital"
+],
+"hyd": [
+2,
+"Hyderabad",
+"Admin-1 capital"
+],
+"pun": [
+2,
+"Pune",
+"Populated place"
+],
+"nau": [
+2,
+"Nagpur",
+"Populated place"
+],
+"tel": [
+2,
+"Tel Aviv",
+"Admin-0 capital alt"
+],
+"jai": [
+2,
+"Jaipur",
+"Admin-1 capital"
+],
+"kap": [
+2,
+"Kanpur",
+"Populated place"
+],
+"pat": [
+2,
+"Patna",
+"Admin-1 capital"
+],
+"chn": [
+2,
+"Chennai",
+"Admin-1 capital"
+],
+"sua": [
+2,
+"Surat",
+"Populated place"
+],
+"bee": [
+2,
+"Belém",
+"Admin-1 capital"
+],
+"for": [
+2,
+"Fortaleza",
+"Admin-1 capital"
+],
+"sal": [
+2,
+"Salvador",
+"Admin-1 capital"
+],
+"edm": [
+2,
+"Edmonton",
+"Admin-1 capital"
+],
+"bru": [
+2,
+"Brussels",
+"Admin-0 capital"
+],
+"alg": [
+2,
+"Algiers",
+"Admin-0 capital"
+],
+"mad": [
+1,
+"Madrid",
+"Admin-0 capital"
+],
+"gee": [
+1,
+"Geneva",
+"Admin-1 capital"
+],
+"sto": [
+1,
+"Stockholm",
+"Admin-0 capital"
+],
+"cas": [
+1,
+"Casablanca",
+"Admin-1 capital"
+],
+"uru": [
+1,
+"Ürümqi",
+"Admin-1 capital"
+],
+"chg": [
+1,
+"Chengdu",
+"Admin-1 capital"
+],
+"ben": [
+1,
+"Bengaluru",
+"Admin-1 capital"
+],
+"van": [
+1,
+"Vancouver",
+"Populated place"
+],
+"vie": [
+1,
+"Vienna",
+"Admin-0 capital"
+],
+"lon": [
+0,
+"London",
+"Admin-0 capital"
+],
+"ist": [
+0,
+"Istanbul",
+"Admin-1 capital"
+],
+"riy": [
+0,
+"Riyadh",
+"Admin-0 capital"
+],
+"cap": [
+0,
+"Cape Town",
+"Admin-0 capital"
+],
+"lag": [
+0,
+"Lagos",
+"Admin-0 capital alt"
+],
+"bog": [
+0,
+"Bogota",
+"Admin-0 capital"
+],
+"sha": [
+0,
+"Shanghai",
+"Admin-1 capital"
+],
+"sin": [
+0,
+"Singapore",
+"Admin-0 capital"
+],
+"hon": [
+0,
+"Hong Kong",
+"Admin-0 region capital"
+]
+}

@@ -1,0 +1,4702 @@
+{
+"task": "T-3240",
+"gamma": 0.8,
+"cap": 3.0,
+"phase_km": [
+50,
+150
+],
+"off": [
+"US",
+"JP",
+"GB",
+"KR"
+],
+"rank_fit": [
+20.801,
+-1.077
+],
+"source": "Natural Earth 10m populated places (simple), scalerank",
+"pull": {
+"aac": [
+6.5,
+4,
+"Annaba"
+],
+"aai": [
+5.66,
+4,
+"Suez"
+],
+"abb": [
+2.05,
+7,
+"Abbotsford"
+],
+"abd": [
+3.83,
+3,
+"Abu Dhabi"
+],
+"abn": [
+1.05,
+6,
+"Albany"
+],
+"abx": [
+1.45,
+6,
+"Abha"
+],
+"acb": [
+6.67,
+4,
+"Banda Aceh"
+],
+"aci": [
+1.94,
+6,
+"Patra"
+],
+"acp": [
+8.45,
+3,
+"Acapulco"
+],
+"ada": [
+2.8,
+4,
+"Daqing"
+],
+"ade": [
+7.53,
+3,
+"Adelaide"
+],
+"adk": [
+2.11,
+7,
+"Qasr Farafra"
+],
+"adu": [
+9.98,
+3,
+"Boise"
+],
+"adx": [
+2.04,
+6,
+"Adrar"
+],
+"agr": [
+1.81,
+4,
+"Agra"
+],
+"ahm": [
+3.76,
+2,
+"Ahmedabad"
+],
+"aho": [
+1.48,
+6,
+"Los Mochis"
+],
+"akh": [
+5.56,
+6,
+"Akhtubinsk"
+],
+"ako": [
+2.86,
+4,
+"Akola"
+],
+"ale": [
+4.48,
+2,
+"Alexandria"
+],
+"alf": [
+1.34,
+7,
+"Alxa Zuoqi"
+],
+"alg": [
+5.45,
+2,
+"Algiers"
+],
+"ali": [
+2.43,
+4,
+"Aligarh"
+],
+"alk": [
+1.07,
+6,
+"Tula"
+],
+"alq": [
+5.02,
+4,
+"Albuquerque"
+],
+"alt": [
+11.02,
+4,
+"Colíder"
+],
+"amr": [
+7.56,
+3,
+"Amritsar"
+],
+"ams": [
+11.02,
+1,
+"Amsterdam"
+],
+"anf": [
+11.02,
+3,
+"Antofagasta"
+],
+"ank": [
+6.31,
+2,
+"Ankara"
+],
+"anm": [
+11.02,
+2,
+"Anchorage"
+],
+"ans": [
+2.49,
+4,
+"Anshan"
+],
+"aqu": [
+1.21,
+6,
+"Al Qunfudhah"
+],
+"arc": [
+1.85,
+6,
+"Arecibo"
+],
+"are": [
+3.84,
+4,
+"Arequipa"
+],
+"arg": [
+1.68,
+6,
+"Araguaína"
+],
+"asa": [
+3.27,
+3,
+"Asansol"
+],
+"ask": [
+5.0,
+4,
+"Astrakhan"
+],
+"asw": [
+7.32,
+4,
+"Aswan"
+],
+"asy": [
+1.47,
+4,
+"Asyut"
+],
+"ath": [
+11.02,
+1,
+"Athens"
+],
+"atl": [
+10.91,
+1,
+"Atlanta"
+],
+"aty": [
+6.56,
+4,
+"Altay"
+],
+"auc": [
+11.02,
+1,
+"Auckland"
+],
+"aus": [
+2.42,
+4,
+"Austin"
+],
+"aya": [
+6.9,
+3,
+"Pingxiang"
+],
+"azh": [
+5.7,
+4,
+"Bur Said"
+],
+"baa": [
+2.21,
+4,
+"Barranquilla"
+],
+"bad": [
+3.14,
+2,
+"Bandung"
+],
+"bal": [
+1.9,
+4,
+"Baltimore"
+],
+"ban": [
+4.04,
+1,
+"Bangkok"
+],
+"bao": [
+11.02,
+2,
+"Baotou"
+],
+"bap": [
+4.5,
+4,
+"Bandar Lampung"
+],
+"bar": [
+4.78,
+2,
+"Barcelona"
+],
+"bav": [
+11.02,
+3,
+"Boa Vista"
+],
+"bax": [
+4.09,
+4,
+"Barreiras"
+],
+"bbo": [
+4.14,
+4,
+"Brest"
+],
+"bbv": [
+2.42,
+6,
+"Béchar"
+],
+"bbz": [
+4.41,
+6,
+"Birobidzhan"
+],
+"bee": [
+11.02,
+2,
+"Belém"
+],
+"beg": [
+5.92,
+3,
+"Belgrade"
+],
+"bei": [
+8.3,
+0,
+"Beijing"
+],
+"bej": [
+7.44,
+3,
+"Cancún"
+],
+"bel": [
+4.62,
+4,
+"Belfast"
+],
+"ben": [
+5.08,
+1,
+"Bengaluru"
+],
+"beo": [
+1.15,
+4,
+"Belo Horizonte"
+],
+"ber": [
+11.02,
+1,
+"Berlin"
+],
+"bez": [
+1.7,
+6,
+"Berezniki"
+],
+"bff": [
+4.07,
+4,
+"East London"
+],
+"bgu": [
+5.72,
+4,
+"Baguio"
+],
+"bhb": [
+11.02,
+3,
+"Bahía Blanca"
+],
+"bho": [
+4.39,
+3,
+"Bhopal"
+],
+"bhu": [
+8.88,
+3,
+"Bhubaneswar"
+],
+"bim": [
+5.2,
+4,
+"Raba"
+],
+"biq": [
+3.72,
+4,
+"Bei'an"
+],
+"bir": [
+2.05,
+4,
+"Birmingham"
+],
+"bit": [
+1.88,
+7,
+"Bintulu"
+],
+"biz": [
+4.47,
+4,
+"Bilbao"
+],
+"bkr": [
+1.64,
+6,
+"Biskra"
+],
+"blk": [
+1.22,
+6,
+"Belgorod"
+],
+"bly": [
+1.46,
+6,
+"Balakovo"
+],
+"bmc": [
+1.54,
+6,
+"Ithaca"
+],
+"bnd": [
+11.02,
+4,
+"Brandon"
+],
+"bne": [
+5.53,
+4,
+"Tanjung Pandan"
+],
+"bnx": [
+1.2,
+6,
+"Pangkalpinang"
+],
+"bog": [
+11.02,
+0,
+"Bogota"
+],
+"bor": [
+2.95,
+4,
+"Bordeaux"
+],
+"bos": [
+5.83,
+2,
+"Boston"
+],
+"bra": [
+8.61,
+2,
+"Brasília"
+],
+"brg": [
+1.69,
+6,
+"Bragança"
+],
+"bri": [
+4.67,
+3,
+"Brisbane"
+],
+"brj": [
+4.0,
+4,
+"Bratislava"
+],
+"brs": [
+1.42,
+6,
+"Breves"
+],
+"bru": [
+10.21,
+2,
+"Brussels"
+],
+"brx": [
+3.55,
+4,
+"Bern"
+],
+"bte": [
+1.53,
+6,
+"Chico"
+],
+"btg": [
+1.68,
+6,
+"Batangas"
+],
+"btt": [
+7.5,
+4,
+"Battambang"
+],
+"buc": [
+11.02,
+2,
+"Bucharest"
+],
+"bud": [
+8.95,
+2,
+"Budapest"
+],
+"bue": [
+5.02,
+1,
+"Buenos Aires"
+],
+"buf": [
+9.1,
+3,
+"Buffalo"
+],
+"buk": [
+2.91,
+4,
+"George Town"
+],
+"bur": [
+2.07,
+4,
+"Bursa"
+],
+"bus": [
+1.35,
+4,
+"Busan"
+],
+"buy": [
+3.44,
+4,
+"Ulyanovsk"
+],
+"bvl": [
+1.98,
+6,
+"Pocatello"
+],
+"bwc": [
+6.02,
+4,
+"Sault Ste. Marie"
+],
+"bya": [
+3.96,
+4,
+"Bryansk"
+],
+"bzi": [
+3.12,
+6,
+"Olovyannaya"
+],
+"cae": [
+4.47,
+4,
+"Guaymas"
+],
+"cag": [
+6.97,
+3,
+"Calgary"
+],
+"cai": [
+6.58,
+0,
+"Cairo"
+],
+"cal": [
+9.37,
+2,
+"Cali"
+],
+"cam": [
+1.93,
+4,
+"Campinas"
+],
+"cap": [
+11.02,
+0,
+"Cape Town"
+],
+"cas": [
+11.02,
+1,
+"Casablanca"
+],
+"caw": [
+3.94,
+4,
+"Catania"
+],
+"cbb": [
+11.02,
+3,
+"Chita"
+],
+"cbe": [
+1.73,
+6,
+"Chillán"
+],
+"cbx": [
+4.26,
+4,
+"Cuiabá"
+],
+"ccd": [
+1.17,
+6,
+"Gualeguaychú"
+],
+"cci": [
+1.9,
+6,
+"Douglas"
+],
+"cck": [
+4.13,
+4,
+"Cuttack"
+],
+"ccx": [
+5.3,
+4,
+"Cuenca"
+],
+"cdo": [
+5.03,
+4,
+"Shreveport"
+],
+"ceb": [
+3.49,
+3,
+"Cebu"
+],
+"cec": [
+5.83,
+4,
+"Burlington"
+],
+"ceg": [
+5.35,
+4,
+"Nalchik"
+],
+"cer": [
+11.02,
+3,
+"Newcastle"
+],
+"ceu": [
+8.23,
+6,
+"Ceuta"
+],
+"cga": [
+5.97,
+3,
+"Lhasa"
+],
+"chc": [
+5.69,
+2,
+"Changchun"
+],
+"chd": [
+1.66,
+4,
+"Chandigarh"
+],
+"che": [
+3.25,
+4,
+"Chelyabinsk"
+],
+"chg": [
+4.57,
+1,
+"Chengdu"
+],
+"chh": [
+2.63,
+4,
+"Aurangabad"
+],
+"chi": [
+8.13,
+3,
+"Chihuahua"
+],
+"chn": [
+2.7,
+2,
+"Chennai"
+],
+"cho": [
+3.06,
+2,
+"Chongqing"
+],
+"chp": [
+1.05,
+6,
+"Ometepec"
+],
+"chs": [
+4.56,
+2,
+"Changsha"
+],
+"chv": [
+4.66,
+4,
+"Vologda"
+],
+"chx": [
+1.1,
+6,
+"Xapeco"
+],
+"cic": [
+7.97,
+1,
+"Chicago"
+],
+"cie": [
+1.25,
+6,
+"Edinburgh"
+],
+"cin": [
+5.43,
+3,
+"Cincinnati"
+],
+"cis": [
+11.02,
+4,
+"Cairns"
+],
+"cit": [
+1.64,
+6,
+"Klerksdorp"
+],
+"cja": [
+1.16,
+6,
+"Cajamarca"
+],
+"cle": [
+6.34,
+3,
+"Cleveland"
+],
+"cln": [
+11.02,
+3,
+"Hobart"
+],
+"cmb": [
+11.02,
+4,
+"Corumbá"
+],
+"cmc": [
+4.5,
+4,
+"Savannah"
+],
+"cmd": [
+9.15,
+3,
+"Campo Grande"
+],
+"cme": [
+7.97,
+4,
+"Campeche"
+],
+"cmu": [
+1.92,
+6,
+"Brownsville"
+],
+"cne": [
+8.17,
+3,
+"Concepción"
+],
+"cns": [
+6.67,
+4,
+"Constanța"
+],
+"cnt": [
+4.84,
+4,
+"Constantine"
+],
+"cnz": [
+4.12,
+4,
+"Wuzhou"
+],
+"cod": [
+5.78,
+4,
+"Córdoba"
+],
+"cof": [
+5.1,
+4,
+"Neuquén"
+],
+"coh": [
+11.02,
+4,
+"Coihaique"
+],
+"coi": [
+3.71,
+3,
+"Coimbatore"
+],
+"cop": [
+11.02,
+2,
+"København"
+],
+"coq": [
+4.04,
+4,
+"Copiapó"
+],
+"cor": [
+6.37,
+3,
+"Córdoba"
+],
+"cpb": [
+11.02,
+4,
+"Sydney"
+],
+"cpc": [
+5.65,
+4,
+"Salta"
+],
+"cph": [
+2.0,
+6,
+"La Rioja"
+],
+"cpm": [
+11.02,
+4,
+"Santa Rosa"
+],
+"cpn": [
+11.02,
+3,
+"Posadas"
+],
+"cpt": [
+3.04,
+4,
+"Tucumán"
+],
+"cpv": [
+1.84,
+6,
+"Catamarca"
+],
+"crb": [
+2.01,
+7,
+"Nelson"
+],
+"cri": [
+11.02,
+3,
+"Christchurch"
+],
+"crn": [
+6.96,
+4,
+"Podgorica"
+],
+"cro": [
+9.0,
+4,
+"Pucallpa"
+],
+"crs": [
+7.41,
+3,
+"Cartagena"
+],
+"crw": [
+11.02,
+3,
+"Charlottetown"
+],
+"crz": [
+11.02,
+3,
+"Cruzeiro do Sul"
+],
+"csc": [
+11.02,
+3,
+"Cusco"
+],
+"csi": [
+10.61,
+3,
+"Chișinău"
+],
+"css": [
+11.02,
+3,
+"Bismarck"
+],
+"cub": [
+3.76,
+4,
+"Wilmington"
+],
+"cud": [
+3.58,
+4,
+"Augusta"
+],
+"cul": [
+4.1,
+4,
+"Culiacán"
+],
+"cur": [
+8.28,
+2,
+"Curitiba"
+],
+"cxi": [
+3.81,
+4,
+"Caxias do Sul"
+],
+"daj": [
+2.74,
+4,
+"Daejeon"
+],
+"dal": [
+1.17,
+4,
+"Dalian"
+],
+"dav": [
+5.44,
+3,
+"Davao"
+],
+"daw": [
+11.02,
+3,
+"Darwin"
+],
+"day": [
+1.49,
+6,
+"Harrisburg"
+],
+"dbb": [
+11.02,
+4,
+"Orange"
+],
+"der": [
+11.02,
+1,
+"Denver"
+],
+"des": [
+1.54,
+6,
+"Klamath Falls"
+],
+"det": [
+6.55,
+2,
+"Detroit"
+],
+"dhd": [
+7.0,
+3,
+"Bhilai"
+],
+"dhn": [
+2.02,
+4,
+"Dhanbad"
+],
+"dhr": [
+2.4,
+4,
+"Hubballi"
+],
+"dll": [
+3.97,
+2,
+"Dallas"
+],
+"dni": [
+2.12,
+4,
+"Neijiang"
+],
+"dnp": [
+3.06,
+4,
+"Dnipro"
+],
+"doc": [
+9.59,
+3,
+"Omaha"
+],
+"dog": [
+3.03,
+2,
+"Dongguan"
+],
+"doh": [
+2.24,
+4,
+"Doha"
+],
+"doy": [
+1.47,
+6,
+"Carlsbad"
+],
+"drd": [
+3.73,
+4,
+"Dresden"
+],
+"drk": [
+5.3,
+4,
+"Worcester"
+],
+"drn": [
+1.17,
+6,
+"San Salvador de Jujuy"
+],
+"drs": [
+1.23,
+7,
+"Durrës"
+],
+"dua": [
+11.02,
+1,
+"Dubai"
+],
+"dub": [
+11.02,
+2,
+"Dublin"
+],
+"dun": [
+11.02,
+4,
+"Dunedin"
+],
+"dur": [
+7.21,
+2,
+"Durban"
+],
+"dwu": [
+5.38,
+4,
+"Shizuishan"
+],
+"dyu": [
+1.26,
+6,
+"Birsk"
+],
+"dzn": [
+11.02,
+4,
+"Kyzyl"
+],
+"eaa": [
+3.24,
+4,
+"Baton Rouge"
+],
+"edm": [
+11.02,
+2,
+"Edmonton"
+],
+"elo": [
+5.17,
+4,
+"El Paso"
+],
+"elp": [
+4.26,
+4,
+"Colorado Springs"
+],
+"eno": [
+4.97,
+4,
+"Middelburg"
+],
+"ens": [
+1.54,
+6,
+"Ensenada"
+],
+"esc": [
+11.02,
+3,
+"Puerto Deseado"
+],
+"fab": [
+11.02,
+3,
+"Fairbanks"
+],
+"fac": [
+1.29,
+6,
+"Frankfort"
+],
+"fay": [
+4.08,
+4,
+"El Faiyum"
+],
+"fei": [
+9.12,
+3,
+"Feira de Santana"
+],
+"fez": [
+7.25,
+3,
+"Fez"
+],
+"flr": [
+8.29,
+3,
+"Florianópolis"
+],
+"fom": [
+1.32,
+7,
+"Formosa"
+],
+"foo": [
+7.06,
+4,
+"Formosa"
+],
+"for": [
+7.39,
+2,
+"Fortaleza"
+],
+"fra": [
+7.55,
+2,
+"Frankfurt"
+],
+"frc": [
+1.21,
+6,
+"Franca"
+],
+"frn": [
+3.23,
+4,
+"Florence"
+],
+"frs": [
+3.43,
+6,
+"Maryborough"
+],
+"fru": [
+4.06,
+4,
+"Fresno"
+],
+"fue": [
+1.93,
+4,
+"Mianyang"
+],
+"fuk": [
+1.13,
+4,
+"Fukuoka"
+],
+"fuz": [
+5.62,
+2,
+"Fuzhou"
+],
+"gad": [
+11.02,
+3,
+"Bandar Seri Begawan"
+],
+"gdz": [
+9.42,
+3,
+"Zagreb"
+],
+"gea": [
+1.69,
+6,
+"Viedma"
+],
+"geb": [
+1.68,
+6,
+"Goya"
+],
+"gee": [
+11.02,
+1,
+"Geneva"
+],
+"geg": [
+5.99,
+4,
+"George"
+],
+"gei": [
+3.63,
+4,
+"Gejiu"
+],
+"gel": [
+3.87,
+4,
+"General Santos"
+],
+"gem": [
+1.96,
+6,
+"Goulimine"
+],
+"gen": [
+8.81,
+3,
+"Mar del Plata"
+],
+"geu": [
+1.77,
+6,
+"Vryburg"
+],
+"ghd": [
+11.02,
+3,
+"Ghardaia"
+],
+"ghy": [
+1.57,
+6,
+"El Kharga"
+],
+"gla": [
+6.37,
+3,
+"Glasgow"
+],
+"glz": [
+1.08,
+7,
+"Kirs"
+],
+"gns": [
+1.51,
+6,
+"Garanhuns"
+],
+"gnz": [
+4.17,
+4,
+"Zhangye"
+],
+"goa": [
+1.58,
+6,
+"Governador Valadares"
+],
+"god": [
+9.91,
+4,
+"Dulan"
+],
+"goi": [
+10.08,
+2,
+"Goiânia"
+],
+"gol": [
+4.92,
+4,
+"Gold Coast"
+],
+"gra": [
+4.82,
+4,
+"Las Palmas"
+],
+"grb": [
+11.02,
+4,
+"Bendigo"
+],
+"grh": [
+2.33,
+4,
+"Bhagalpur"
+],
+"grl": [
+1.41,
+6,
+"Gorno Altaysk"
+],
+"grn": [
+1.06,
+6,
+"Granada‎"
+],
+"grp": [
+5.98,
+6,
+"Grand Prairie"
+],
+"grr": [
+6.56,
+4,
+"Portland"
+],
+"grs": [
+7.88,
+4,
+"Griffith"
+],
+"grt": [
+2.57,
+6,
+"Sudbury"
+],
+"grz": [
+5.62,
+4,
+"Grozny"
+],
+"gua": [
+1.89,
+2,
+"Guangzhou"
+],
+"gud": [
+5.18,
+2,
+"Guadalajara"
+],
+"gue": [
+11.02,
+3,
+"Río Gallegos"
+],
+"gui": [
+6.2,
+2,
+"Guiyang"
+],
+"gul": [
+1.34,
+7,
+"Guadalajara"
+],
+"guw": [
+3.0,
+4,
+"Dispur"
+],
+"guy": [
+7.9,
+2,
+"Guayaquil"
+],
+"gwa": [
+3.05,
+4,
+"Gwalior"
+],
+"gwn": [
+2.65,
+4,
+"Gwangju"
+],
+"gyn": [
+1.44,
+6,
+"Erenhot"
+],
+"hab": [
+2.85,
+4,
+"Ankang"
+],
+"hac": [
+4.17,
+4,
+"Huancayo"
+],
+"had": [
+2.61,
+4,
+"Handan"
+],
+"hag": [
+2.82,
+2,
+"Hangzhou"
+],
+"hal": [
+2.01,
+6,
+"Huancavelica"
+],
+"ham": [
+8.94,
+2,
+"Hamburg"
+],
+"hao": [
+3.39,
+2,
+"Hanoi"
+],
+"har": [
+5.63,
+2,
+"Harbin"
+],
+"hel": [
+11.02,
+2,
+"Helsinki"
+],
+"hem": [
+4.71,
+4,
+"Hermosillo"
+],
+"hgn": [
+2.45,
+4,
+"Hengyang"
+],
+"hih": [
+1.71,
+6,
+"Wick"
+],
+"hij": [
+9.45,
+2,
+"Hiroshima"
+],
+"hit": [
+8.02,
+3,
+"Jackson"
+],
+"hli": [
+11.02,
+3,
+"Halifax"
+],
+"hlm": [
+6.48,
+4,
+"Ternate"
+],
+"hma": [
+1.64,
+6,
+"Ayacucho"
+],
+"hml": [
+4.7,
+4,
+"Hamilton"
+],
+"hoc": [
+2.23,
+2,
+"Ho Chi Minh City"
+],
+"hod": [
+2.79,
+4,
+"Lviv"
+],
+"hoh": [
+2.06,
+4,
+"Hohhot"
+],
+"hon": [
+11.02,
+0,
+"Hong Kong"
+],
+"hoo": [
+11.02,
+2,
+"Honolulu"
+],
+"hoq": [
+2.43,
+4,
+"Tongliao"
+],
+"hos": [
+9.57,
+1,
+"Houston"
+],
+"hou": [
+11.02,
+3,
+"Reykjavík"
+],
+"hrs": [
+1.72,
+6,
+"Biloxi"
+],
+"hry": [
+1.18,
+6,
+"Myrtle Beach"
+],
+"htc": [
+1.1,
+7,
+"Ajaccio"
+],
+"hte": [
+1.44,
+6,
+"Limoges"
+],
+"hua": [
+2.83,
+4,
+"Huaiyin"
+],
+"hud": [
+2.24,
+6,
+"Hurghada"
+],
+"huz": [
+1.43,
+6,
+"Huaraz"
+],
+"hwa": [
+11.02,
+4,
+"Hilo"
+],
+"hyd": [
+3.07,
+2,
+"Hyderabad"
+],
+"iai": [
+3.98,
+4,
+"Iași"
+],
+"ibr": [
+1.79,
+6,
+"Muroran"
+],
+"ica": [
+11.02,
+3,
+"Ica"
+],
+"ili": [
+7.66,
+3,
+"Iloilo"
+],
+"ilk": [
+4.05,
+4,
+"Samsun"
+],
+"ina": [
+2.49,
+4,
+"Indianapolis"
+],
+"inc": [
+1.6,
+6,
+"Lansing"
+],
+"ind": [
+1.46,
+4,
+"Indore"
+],
+"inh": [
+4.03,
+4,
+"Mbabane"
+],
+"iqu": [
+11.02,
+3,
+"Iquique"
+],
+"irk": [
+11.02,
+3,
+"Irkutsk"
+],
+"irl": [
+1.4,
+6,
+"Iraklio"
+],
+"isi": [
+1.18,
+7,
+"Ishim"
+],
+"iss": [
+1.81,
+7,
+"Nazyvayevsk"
+],
+"ist": [
+9.99,
+0,
+"Istanbul"
+],
+"itb": [
+1.07,
+6,
+"Ilhéus"
+],
+"itm": [
+1.09,
+7,
+"Itumbiara"
+],
+"izm": [
+1.5,
+4,
+"İzmir"
+],
+"jab": [
+2.5,
+4,
+"Jabalpur"
+],
+"jai": [
+6.32,
+2,
+"Jaipur"
+],
+"jak": [
+5.37,
+0,
+"Jakarta"
+],
+"jal": [
+3.38,
+4,
+"Jullundur"
+],
+"jam": [
+4.84,
+3,
+"Jamshedpur"
+],
+"jas": [
+3.95,
+4,
+"Jacksonville"
+],
+"jau": [
+3.1,
+4,
+"Jammu"
+],
+"jck": [
+1.68,
+6,
+"Medford"
+],
+"jed": [
+5.49,
+2,
+"Jeddah"
+],
+"jeq": [
+1.26,
+6,
+"Jequié"
+],
+"jer": [
+11.02,
+3,
+"Jerusalem"
+],
+"jgx": [
+2.06,
+4,
+"Bose"
+],
+"jil": [
+2.67,
+4,
+"Jilin"
+],
+"jin": [
+5.25,
+2,
+"Jinan"
+],
+"jip": [
+11.02,
+3,
+"Vilhena"
+],
+"jla": [
+2.35,
+4,
+"Ulan Hot"
+],
+"jnl": [
+2.03,
+4,
+"Yueyang"
+],
+"jod": [
+3.2,
+4,
+"Jodhpur"
+],
+"joh": [
+6.71,
+1,
+"Johannesburg"
+],
+"jok": [
+1.57,
+6,
+"Jönköping"
+],
+"kac": [
+2.44,
+4,
+"Kansas City"
+],
+"kao": [
+4.07,
+3,
+"Kaohsiung"
+],
+"kap": [
+5.72,
+2,
+"Kanpur"
+],
+"kav": [
+2.39,
+4,
+"Kolhapur"
+],
+"kax": [
+1.29,
+7,
+"Ticul"
+],
+"kaz": [
+7.37,
+3,
+"Kazan"
+],
+"kba": [
+6.13,
+4,
+"Ulan-Ude"
+],
+"kch": [
+6.37,
+4,
+"Kōchi"
+],
+"kel": [
+1.39,
+6,
+"Kelowna"
+],
+"keo": [
+3.23,
+4,
+"Kemerovo"
+],
+"ker": [
+1.91,
+7,
+"Kerkira"
+],
+"kgn": [
+1.12,
+6,
+"Kurgan"
+],
+"kgr": [
+4.68,
+4,
+"Kaliningrad"
+],
+"kha": [
+2.55,
+4,
+"Kharkiv"
+],
+"khd": [
+11.02,
+4,
+"Yuzhno Sakhalinsk"
+],
+"khv": [
+5.81,
+4,
+"Khabarovsk"
+],
+"kid": [
+2.48,
+7,
+"Narva"
+],
+"kik": [
+1.63,
+7,
+"Kilis"
+],
+"kiv": [
+4.43,
+4,
+"Kirov"
+],
+"klm": [
+1.18,
+7,
+"Ermoupoli"
+],
+"klr": [
+2.1,
+4,
+"Kalaburagi"
+],
+"kme": [
+1.42,
+7,
+"Kamenna Obi"
+],
+"kmk": [
+1.48,
+6,
+"Asahikawa"
+],
+"kmn": [
+1.25,
+7,
+"Karaman"
+],
+"kms": [
+2.14,
+6,
+"Komsomolsk na Amure"
+],
+"knh": [
+3.31,
+6,
+"Kovda"
+],
+"knw": [
+5.37,
+4,
+"Charleston"
+],
+"kny": [
+6.34,
+6,
+"Khanty Mansiysk"
+],
+"kol": [
+6.9,
+0,
+"Kolkata"
+],
+"kom": [
+9.84,
+3,
+"Bandjarmasin"
+],
+"kon": [
+2.6,
+4,
+"Konya"
+],
+"kot": [
+3.47,
+4,
+"Kota"
+],
+"koy": [
+7.15,
+4,
+"Jayapura"
+],
+"kra": [
+3.3,
+4,
+"Kraków"
+],
+"krc": [
+3.52,
+4,
+"Krasnodar"
+],
+"kre": [
+5.66,
+6,
+"Krasnokamensk"
+],
+"krs": [
+8.09,
+3,
+"Krasnoyarsk"
+],
+"krt": [
+1.09,
+7,
+"Kulunda"
+],
+"kru": [
+1.16,
+6,
+"Chamdo"
+],
+"krx": [
+5.56,
+3,
+"Hotan"
+],
+"krz": [
+1.18,
+8,
+"Karlovac"
+],
+"ksg": [
+7.71,
+3,
+"Kashgar"
+],
+"ksn": [
+1.38,
+7,
+"Krasnokamsk"
+],
+"ksr": [
+11.02,
+4,
+"Kushiro"
+],
+"kst": [
+1.92,
+6,
+"Kostroma"
+],
+"ktc": [
+4.86,
+6,
+"Kotlas"
+],
+"ktg": [
+7.41,
+4,
+"Gorontalo"
+],
+"ktk": [
+5.8,
+4,
+"Kupang"
+],
+"ktl": [
+4.02,
+4,
+"Balikpapan"
+],
+"ktm": [
+1.09,
+6,
+"Manado"
+],
+"kto": [
+8.34,
+4,
+"Ambon"
+],
+"kts": [
+1.59,
+6,
+"Sorong"
+],
+"ktt": [
+11.02,
+3,
+"Tarakan"
+],
+"kua": [
+3.38,
+2,
+"Kuala Lumpur"
+],
+"kuc": [
+4.02,
+7,
+"Lihue"
+],
+"kuh": [
+4.41,
+4,
+"Kuching"
+],
+"kun": [
+5.39,
+2,
+"Kunming"
+],
+"kuu": [
+1.53,
+6,
+"Bontang"
+],
+"kuv": [
+1.19,
+7,
+"Kargat"
+],
+"kuw": [
+6.73,
+2,
+"Kuwait City"
+],
+"kxc": [
+3.94,
+4,
+"Knoxville"
+],
+"kyi": [
+11.02,
+1,
+"Kyiv"
+],
+"kyp": [
+8.62,
+3,
+"Nicosia"
+],
+"lab": [
+1.34,
+7,
+"Bairnsdale"
+],
+"lac": [
+3.69,
+4,
+"Santa Fe"
+],
+"lag": [
+11.02,
+0,
+"Lagos"
+],
+"lai": [
+1.66,
+6,
+"San Luis"
+],
+"lam": [
+1.6,
+6,
+"Kalamata"
+],
+"lan": [
+8.7,
+2,
+"Lanzhou"
+],
+"lau": [
+11.02,
+4,
+"Laayoune"
+],
+"lav": [
+5.13,
+3,
+"Las Vegas"
+],
+"laz": [
+2.4,
+7,
+"Arrecife"
+],
+"lbo": [
+3.86,
+4,
+"Amarillo"
+],
+"lcu": [
+4.11,
+4,
+"Salem"
+],
+"lea": [
+5.11,
+4,
+"Haiphong"
+],
+"leb": [
+2.96,
+6,
+"Banff"
+],
+"leo": [
+2.87,
+4,
+"León"
+],
+"les": [
+1.83,
+7,
+"Mitilini"
+],
+"lex": [
+11.02,
+3,
+"Leticia"
+],
+"lgg": [
+4.38,
+4,
+"Baoshan"
+],
+"lgk": [
+2.78,
+6,
+"Elista"
+],
+"lgt": [
+1.22,
+6,
+"Laghouat"
+],
+"lgx": [
+5.92,
+3,
+"Guilin"
+],
+"lgz": [
+2.66,
+4,
+"Wuwei"
+],
+"lht": [
+1.22,
+6,
+"Lahat"
+],
+"lik": [
+3.02,
+4,
+"Jixi"
+],
+"lim": [
+6.66,
+1,
+"Lima"
+],
+"lin": [
+1.52,
+4,
+"Linyi"
+],
+"lis": [
+9.07,
+2,
+"Lisbon"
+],
+"lix": [
+1.1,
+6,
+"Lipetsk"
+],
+"llo": [
+2.01,
+7,
+"Athabasca"
+],
+"lnc": [
+11.02,
+4,
+"Devonport"
+],
+"lnj": [
+5.65,
+3,
+"Qiqihar"
+],
+"lns": [
+1.08,
+6,
+"Lincoln"
+],
+"lny": [
+6.71,
+4,
+"Tallahassee"
+],
+"loc": [
+5.63,
+4,
+"La Paz"
+],
+"loj": [
+1.44,
+6,
+"Loja"
+],
+"lol": [
+9.28,
+4,
+"Los Angeles"
+],
+"lon": [
+11.02,
+0,
+"London"
+],
+"loy": [
+6.43,
+4,
+"Laoag"
+],
+"lra": [
+11.02,
+3,
+"Cheyenne"
+],
+"lru": [
+1.6,
+6,
+"Taiping"
+],
+"lsc": [
+1.18,
+6,
+"Toledo"
+],
+"lsn": [
+10.84,
+0,
+"Los Angeles"
+],
+"lsx": [
+2.5,
+4,
+"Jinxi"
+],
+"luc": [
+1.1,
+4,
+"Lucknow"
+],
+"lud": [
+2.02,
+4,
+"Ludhiana"
+],
+"lum": [
+1.4,
+6,
+"Luxembourg"
+],
+"lux": [
+4.92,
+3,
+"Luxor"
+],
+"lyo": [
+5.89,
+3,
+"Lyon"
+],
+"maa": [
+4.11,
+3,
+"Makassar"
+],
+"mab": [
+9.09,
+3,
+"Marabá"
+],
+"mad": [
+9.24,
+1,
+"Madrid"
+],
+"mae": [
+7.24,
+3,
+"Marrakesh"
+],
+"mai": [
+2.85,
+1,
+"Manila"
+],
+"mam": [
+3.34,
+4,
+"Manama"
+],
+"man": [
+1.76,
+4,
+"Manchester"
+],
+"mao": [
+3.71,
+4,
+"Maceió"
+],
+"mar": [
+2.46,
+4,
+"Marseille"
+],
+"mau": [
+5.27,
+3,
+"Manaus"
+],
+"max": [
+4.59,
+3,
+"Madurai"
+],
+"mbe": [
+3.9,
+4,
+"Mangaluru"
+],
+"mbh": [
+6.6,
+4,
+"Iquitos"
+],
+"mbi": [
+1.29,
+6,
+"Mobile"
+],
+"mck": [
+4.53,
+6,
+"Bowen"
+],
+"mco": [
+1.17,
+6,
+"Waco"
+],
+"mcp": [
+11.02,
+3,
+"Macapá"
+],
+"mcu": [
+1.65,
+6,
+"Macau"
+],
+"mcx": [
+1.3,
+6,
+"Machala"
+],
+"mdc": [
+3.63,
+6,
+"Medicine Hat"
+],
+"mdd": [
+1.47,
+6,
+"Odessa"
+],
+"mea": [
+7.29,
+6,
+"Melilla"
+],
+"mec": [
+10.92,
+2,
+"Makkah"
+],
+"med": [
+6.04,
+2,
+"Medan"
+],
+"mee": [
+7.46,
+2,
+"Medellín"
+],
+"mei": [
+2.52,
+4,
+"Medina"
+],
+"mel": [
+11.02,
+1,
+"Melbourne"
+],
+"mem": [
+9.13,
+3,
+"Memphis"
+],
+"men": [
+7.84,
+3,
+"Mendoza"
+],
+"mer": [
+2.06,
+4,
+"Meerut"
+],
+"mex": [
+8.01,
+0,
+"Mexico City"
+],
+"mey": [
+1.48,
+6,
+"Grand Junction"
+],
+"mgg": [
+11.02,
+5,
+"Magong"
+],
+"mgh": [
+1.53,
+6,
+"Phuket"
+],
+"mgn": [
+9.98,
+3,
+"Bloemfontein"
+],
+"mhn": [
+1.42,
+6,
+"Youngstown"
+],
+"mia": [
+6.78,
+3,
+"Mérida"
+],
+"mic": [
+11.02,
+3,
+"Pierre"
+],
+"mii": [
+1.3,
+7,
+"Miri"
+],
+"mik": [
+7.01,
+3,
+"Milwaukee"
+],
+"mil": [
+5.53,
+2,
+"Milan"
+],
+"mim": [
+10.76,
+1,
+"Miami"
+],
+"min": [
+5.04,
+3,
+"Minsk"
+],
+"mip": [
+7.67,
+2,
+"Minneapolis"
+],
+"miz": [
+5.09,
+4,
+"Manizales"
+],
+"mld": [
+1.33,
+6,
+"Rocha"
+],
+"mlt": [
+11.02,
+3,
+"Valletta"
+],
+"mmi": [
+1.12,
+7,
+"Timika"
+],
+"mnc": [
+2.18,
+6,
+"Coari"
+],
+"mnt": [
+4.1,
+4,
+"Montes Claros"
+],
+"mnu": [
+4.66,
+4,
+"Surat Thani"
+],
+"mny": [
+1.27,
+6,
+"Monterey"
+],
+"mnz": [
+3.78,
+4,
+"Hailar"
+],
+"moa": [
+2.91,
+4,
+"Moradabad"
+],
+"moc": [
+2.49,
+6,
+"Moncton"
+],
+"moe": [
+6.52,
+3,
+"Montevideo"
+],
+"mon": [
+6.32,
+2,
+"Montréal"
+],
+"moo": [
+1.98,
+6,
+"Monclova"
+],
+"mos": [
+9.64,
+0,
+"Moscow"
+],
+"mot": [
+11.02,
+1,
+"Monterrey"
+],
+"mrs": [
+11.02,
+3,
+"Murmansk"
+],
+"mru": [
+3.27,
+6,
+"Merauke"
+],
+"mry": [
+3.89,
+4,
+"Rochester"
+],
+"mse": [
+9.09,
+3,
+"Maseru"
+],
+"msk": [
+6.14,
+4,
+"Abakan"
+],
+"msn": [
+1.87,
+6,
+"Songkhla"
+],
+"msu": [
+11.02,
+3,
+"Helena"
+],
+"mtb": [
+5.24,
+6,
+"Mount Gambier"
+],
+"mtj": [
+5.47,
+4,
+"Welkom"
+],
+"mtm": [
+3.96,
+4,
+"Montgomery"
+],
+"mto": [
+4.08,
+4,
+"Magnitogorsk"
+],
+"mts": [
+7.18,
+4,
+"Matamoros"
+],
+"mug": [
+3.01,
+4,
+"Chiang Mai"
+],
+"mum": [
+6.37,
+0,
+"Mumbai"
+],
+"mun": [
+9.75,
+2,
+"Munich"
+],
+"mut": [
+2.95,
+4,
+"Nakhon Ratchasima"
+],
+"mxc": [
+3.56,
+4,
+"Mexicali"
+],
+"mys": [
+3.34,
+4,
+"Mysuru"
+],
+"mza": [
+6.07,
+4,
+"Colima"
+],
+"mzk": [
+4.37,
+4,
+"Miyazaki"
+],
+"mzt": [
+11.02,
+3,
+"Mazatlán"
+],
+"naa": [
+3.43,
+4,
+"Natal"
+],
+"nac": [
+5.35,
+2,
+"Nanchang"
+],
+"nag": [
+5.74,
+2,
+"Nanning"
+],
+"nal": [
+8.03,
+3,
+"Nashville"
+],
+"nan": [
+3.65,
+2,
+"Nanjing"
+],
+"nap": [
+7.0,
+2,
+"Naples"
+],
+"naq": [
+1.69,
+6,
+"Nagchu"
+],
+"nas": [
+2.41,
+4,
+"Nasik"
+],
+"nau": [
+7.29,
+2,
+"Nagpur"
+],
+"nav": [
+1.41,
+6,
+"Pamplona"
+],
+"nde": [
+3.9,
+4,
+"Nanded"
+],
+"ned": [
+2.41,
+1,
+"New Delhi"
+],
+"neo": [
+11.02,
+2,
+"New Orleans"
+],
+"nes": [
+6.8,
+3,
+"Port Elizabeth"
+],
+"ngn": [
+2.5,
+4,
+"Nagano"
+],
+"ngs": [
+8.16,
+3,
+"Nagasaki"
+],
+"nih": [
+1.66,
+6,
+"Nizhenvartovsk"
+],
+"nii": [
+3.01,
+6,
+"Lesosibirsk"
+],
+"nik": [
+4.4,
+6,
+"Tulun"
+],
+"nin": [
+1.27,
+4,
+"Ningbo"
+],
+"niz": [
+7.2,
+3,
+"Nizhny Novgorod"
+],
+"nne": [
+2.24,
+4,
+"Chifeng"
+],
+"noa": [
+6.13,
+4,
+"Nogales"
+],
+"nob": [
+11.02,
+4,
+"Timmins"
+],
+"nof": [
+1.31,
+6,
+"Nova Friburgo"
+],
+"nok": [
+4.01,
+4,
+"Novokuznetsk"
+],
+"nos": [
+1.12,
+6,
+"Cheboksary"
+],
+"nov": [
+5.3,
+3,
+"Novosibirsk"
+],
+"nrt": [
+6.85,
+6,
+"North Battleford"
+],
+"nuc": [
+7.45,
+4,
+"Corpus Christi"
+],
+"nue": [
+4.98,
+4,
+"Nuevo Laredo"
+],
+"nvo": [
+2.4,
+6,
+"Serov"
+],
+"nyc": [
+7.93,
+0,
+"New York"
+],
+"oax": [
+3.38,
+4,
+"Oaxaca"
+],
+"ode": [
+3.48,
+4,
+"Odessa"
+],
+"oka": [
+3.33,
+4,
+"Naha"
+],
+"okh": [
+1.05,
+7,
+"Kitami"
+],
+"okl": [
+8.11,
+3,
+"Oklahoma City"
+],
+"okt": [
+5.4,
+6,
+"Nyagan"
+],
+"oms": [
+3.61,
+4,
+"Omsk"
+],
+"ono": [
+4.09,
+4,
+"Syracuse"
+],
+"ora": [
+6.76,
+3,
+"Oran"
+],
+"ore": [
+5.27,
+4,
+"Orenburg"
+],
+"orl": [
+2.0,
+4,
+"Orlando"
+],
+"orn": [
+1.45,
+6,
+"San Ramón de la Nueva Orán"
+],
+"ors": [
+1.54,
+6,
+"Orsk"
+],
+"ory": [
+1.21,
+6,
+"Orel"
+],
+"osa": [
+4.19,
+1,
+"Ōsaka"
+],
+"osd": [
+4.59,
+4,
+"Ljubljana"
+],
+"osh": [
+9.91,
+4,
+"Hakodate"
+],
+"osl": [
+11.02,
+2,
+"Oslo"
+],
+"ota": [
+7.3,
+3,
+"Ottawa"
+],
+"oth": [
+1.32,
+6,
+"Chetumal"
+],
+"oue": [
+4.14,
+6,
+"Ad Dakhla"
+],
+"oug": [
+1.95,
+6,
+"Ouargla"
+],
+"ouj": [
+4.45,
+4,
+"Oujda"
+],
+"pad": [
+8.71,
+3,
+"Padang"
+],
+"pae": [
+8.75,
+3,
+"Palermo"
+],
+"pai": [
+1.17,
+6,
+"Nabire"
+],
+"pal": [
+5.48,
+3,
+"Palembang"
+],
+"pam": [
+5.11,
+4,
+"Alvorada"
+],
+"par": [
+11.02,
+0,
+"Paris"
+],
+"pat": [
+7.02,
+2,
+"Patna"
+],
+"pel": [
+5.67,
+4,
+"Pelotas"
+],
+"peo": [
+7.71,
+3,
+"Valdivia"
+],
+"pep": [
+11.02,
+3,
+"Petropavlovsk-Kamchatsky"
+],
+"per": [
+11.02,
+2,
+"Perth"
+],
+"pet": [
+4.31,
+4,
+"Petrolina"
+],
+"pev": [
+9.22,
+3,
+"Barnaul"
+],
+"pez": [
+3.59,
+4,
+"Penza"
+],
+"pgu": [
+1.33,
+6,
+"Iguape"
+],
+"phl": [
+4.77,
+2,
+"Philadelphia"
+],
+"phn": [
+4.79,
+3,
+"Phnom Penh"
+],
+"pho": [
+5.95,
+2,
+"Phoenix"
+],
+"pib": [
+4.79,
+3,
+"Pittsburgh"
+],
+"pim": [
+1.57,
+6,
+"Lahti"
+],
+"pir": [
+6.0,
+4,
+"Tampere"
+],
+"piu": [
+3.97,
+4,
+"Piura"
+],
+"piy": [
+1.25,
+6,
+"Peoria"
+],
+"plc": [
+8.61,
+3,
+"Des Moines"
+],
+"pls": [
+11.02,
+3,
+"Archangel"
+],
+"pnb": [
+1.21,
+6,
+"Parnaíba"
+],
+"pne": [
+4.11,
+4,
+"Vigo"
+],
+"poe": [
+5.64,
+4,
+"Porto Velho"
+],
+"pog": [
+1.12,
+6,
+"Pohang"
+],
+"poj": [
+1.99,
+6,
+"Oulu"
+],
+"pol": [
+4.69,
+3,
+"Portland"
+],
+"pom": [
+11.02,
+4,
+"Armidale"
+],
+"poo": [
+7.49,
+2,
+"Porto Alegre"
+],
+"pop": [
+1.61,
+6,
+"Popayán"
+],
+"pos": [
+11.02,
+3,
+"Tallinn"
+],
+"poy": [
+4.72,
+6,
+"Lesozavodsk"
+],
+"pra": [
+11.02,
+2,
+"Prague"
+],
+"prc": [
+11.02,
+4,
+"Fort St. John"
+],
+"prm": [
+7.81,
+3,
+"Perm"
+],
+"prr": [
+1.06,
+6,
+"Porbandar"
+],
+"pru": [
+1.26,
+7,
+"Port Blair"
+],
+"prx": [
+1.2,
+6,
+"Conceição do Araguaia"
+],
+"pry": [
+1.8,
+4,
+"Allahabad"
+],
+"prz": [
+8.89,
+3,
+"Vladivostok"
+],
+"psh": [
+4.74,
+4,
+"Pristina"
+],
+"psk": [
+7.24,
+4,
+"Pskov"
+],
+"pst": [
+5.91,
+4,
+"Pasto"
+],
+"pte": [
+11.02,
+3,
+"Punta Arenas"
+],
+"ptg": [
+8.32,
+4,
+"Ponta Grossa"
+],
+"pto": [
+9.69,
+4,
+"Petrozavodsk"
+],
+"pud": [
+3.7,
+4,
+"Puducherry"
+],
+"pue": [
+7.38,
+2,
+"Puebla"
+],
+"pun": [
+4.05,
+2,
+"Pune"
+],
+"pup": [
+1.11,
+6,
+"Puerto Princesa"
+],
+"pyn": [
+1.28,
+7,
+"Shawnee"
+],
+"qim": [
+2.68,
+7,
+"Quiemo"
+],
+"qnz": [
+2.92,
+4,
+"Tianshui"
+],
+"que": [
+9.69,
+3,
+"Québec"
+],
+"qui": [
+3.96,
+3,
+"Quito"
+],
+"quo": [
+1.33,
+6,
+"Qui Nhon"
+],
+"rab": [
+4.92,
+3,
+"Rabat"
+],
+"rai": [
+2.92,
+4,
+"Raipur"
+],
+"raj": [
+2.69,
+4,
+"Rajkot"
+],
+"ral": [
+6.2,
+3,
+"Raleigh"
+],
+"ran": [
+2.49,
+4,
+"Ranchi"
+],
+"ras": [
+11.02,
+4,
+"Rawson"
+],
+"raw": [
+5.96,
+4,
+"San Juan"
+],
+"rec": [
+7.64,
+2,
+"Recife"
+],
+"rer": [
+2.17,
+6,
+"Red Deer"
+],
+"res": [
+6.49,
+4,
+"Sochi"
+],
+"ret": [
+11.02,
+4,
+"Ponta Delgada"
+],
+"reu": [
+2.99,
+6,
+"Funchal"
+],
+"rex": [
+11.02,
+3,
+"Regina"
+],
+"ria": [
+9.91,
+3,
+"Riga"
+],
+"rib": [
+5.48,
+4,
+"Ribeirão Preto"
+],
+"ric": [
+3.68,
+4,
+"Richmond"
+],
+"rid": [
+1.88,
+6,
+"Augusta"
+],
+"rim": [
+1.65,
+6,
+"Riobamba"
+],
+"rin": [
+5.57,
+4,
+"Columbia"
+],
+"rio": [
+11.02,
+0,
+"Rio de Janeiro"
+],
+"riu": [
+1.74,
+7,
+"Rimouski"
+],
+"rix": [
+7.03,
+4,
+"Rio Branco"
+],
+"riy": [
+11.02,
+0,
+"Riyadh"
+],
+"roa": [
+2.69,
+4,
+"Rosario"
+],
+"roc": [
+8.17,
+4,
+"Busselton"
+],
+"rog": [
+4.59,
+6,
+"Rio Grande"
+],
+"rok": [
+11.02,
+4,
+"Rockhampton"
+],
+"rom": [
+11.02,
+0,
+"Rome"
+],
+"ros": [
+3.06,
+4,
+"Rostov"
+],
+"rot": [
+1.52,
+4,
+"The Hague"
+],
+"rou": [
+4.63,
+6,
+"Val d'Or"
+],
+"rus": [
+1.54,
+6,
+"Aracati"
+],
+"rya": [
+4.25,
+4,
+"Ryazan"
+],
+"ryi": [
+2.55,
+6,
+"Kansk"
+],
+"sae": [
+2.66,
+4,
+"Salem"
+],
+"sah": [
+3.72,
+4,
+"Saharanpur"
+],
+"sai": [
+4.93,
+2,
+"St.  Petersburg"
+],
+"sak": [
+11.02,
+3,
+"Saskatoon"
+],
+"sal": [
+9.2,
+2,
+"Salvador"
+],
+"sam": [
+7.16,
+3,
+"Samara"
+],
+"san": [
+11.02,
+0,
+"Santiago"
+],
+"sao": [
+8.33,
+0,
+"São Paulo"
+],
+"sar": [
+3.42,
+4,
+"Saratov"
+],
+"sau": [
+3.24,
+4,
+"São Luís"
+],
+"say": [
+2.16,
+6,
+"Dolbeau"
+],
+"sbn": [
+1.53,
+6,
+"Sinop"
+],
+"sbo": [
+1.07,
+6,
+"Santa Marta"
+],
+"sbq": [
+1.31,
+6,
+"Tarapoto"
+],
+"sbs": [
+1.48,
+6,
+"Tumbes"
+],
+"sbt": [
+8.09,
+4,
+"Chimbote"
+],
+"sbv": [
+4.41,
+4,
+"Durazno"
+],
+"sby": [
+1.65,
+6,
+"Jizan"
+],
+"sca": [
+5.3,
+3,
+"Sacramento"
+],
+"sdj": [
+2.26,
+4,
+"Sendai"
+],
+"sea": [
+6.48,
+2,
+"Seattle"
+],
+"sei": [
+3.91,
+4,
+"Le Havre"
+],
+"sek": [
+8.01,
+4,
+"Blagoveshchensk"
+],
+"sel": [
+11.02,
+3,
+"Sevastopol"
+],
+"sem": [
+2.64,
+3,
+"Semarang"
+],
+"seo": [
+3.08,
+1,
+"Seoul"
+],
+"sev": [
+5.97,
+3,
+"Seville"
+],
+"sey": [
+2.26,
+4,
+"Adana"
+],
+"sez": [
+2.55,
+7,
+"Segezha"
+],
+"sfc": [
+11.02,
+3,
+"Santa Fe"
+],
+"sfr": [
+1.65,
+6,
+"Resistencia"
+],
+"sfx": [
+4.55,
+4,
+"Safi"
+],
+"sgn": [
+1.56,
+6,
+"Saginaw"
+],
+"sha": [
+7.12,
+0,
+"Shanghai"
+],
+"shi": [
+1.07,
+4,
+"Shijiazhuang"
+],
+"shl": [
+2.73,
+7,
+"El Tur"
+],
+"shn": [
+1.23,
+3,
+"Shantou"
+],
+"shy": [
+4.04,
+2,
+"Shenyeng"
+],
+"shz": [
+1.95,
+2,
+"Shenzhen"
+],
+"sib": [
+1.55,
+6,
+"Sibu"
+],
+"sin": [
+11.02,
+0,
+"Singapore"
+],
+"sip": [
+4.11,
+4,
+"Siem Reap"
+],
+"sit": [
+2.25,
+6,
+"Fredericton"
+],
+"six": [
+11.02,
+3,
+"Victoria"
+],
+"siy": [
+1.83,
+6,
+"Rubtsovsk"
+],
+"sja": [
+8.2,
+3,
+"San Juan"
+],
+"sjn": [
+2.82,
+6,
+"Los Alamos"
+],
+"sjo": [
+11.02,
+3,
+"St. John's"
+],
+"skn": [
+3.14,
+4,
+"Malmö"
+],
+"skp": [
+3.62,
+4,
+"Skopje"
+],
+"skv": [
+4.6,
+6,
+"Svobodnyy"
+],
+"sla": [
+1.14,
+7,
+"Salamanca"
+],
+"sld": [
+11.02,
+4,
+"Bukachacha"
+],
+"sls": [
+3.0,
+7,
+"Wallaroo"
+],
+"slt": [
+6.57,
+3,
+"Salt Lake City"
+],
+"slz": [
+1.3,
+6,
+"Tehuantepec"
+],
+"sml": [
+5.77,
+4,
+"Smolensk"
+],
+"sna": [
+1.4,
+6,
+"Sandakan"
+],
+"snc": [
+6.15,
+4,
+"Santa Barbara"
+],
+"snd": [
+8.26,
+2,
+"San Diego"
+],
+"snf": [
+9.9,
+1,
+"San Francisco"
+],
+"snl": [
+3.2,
+4,
+"San Luis Potosí"
+],
+"snn": [
+4.72,
+3,
+"San Antonio"
+],
+"soc": [
+3.62,
+4,
+"Sorocaba"
+],
+"sof": [
+7.21,
+3,
+"Sofia"
+],
+"soh": [
+1.29,
+6,
+"Cork"
+],
+"sol": [
+3.85,
+4,
+"Sholapur"
+],
+"sos": [
+3.32,
+3,
+"Pretoria"
+],
+"spk": [
+10.39,
+2,
+"Sapporo"
+],
+"spo": [
+3.64,
+4,
+"Spokane"
+],
+"sps": [
+1.57,
+6,
+"Ussuriysk"
+],
+"src": [
+1.48,
+7,
+"Serpukhov"
+],
+"srf": [
+1.37,
+6,
+"San Rafael"
+],
+"sri": [
+3.08,
+4,
+"Srinagar"
+],
+"srm": [
+9.43,
+3,
+"Santarém"
+],
+"ssa": [
+8.8,
+4,
+"Eureka"
+],
+"ssi": [
+1.13,
+6,
+"Sassari"
+],
+"stf": [
+1.21,
+7,
+"Moss"
+],
+"stm": [
+1.62,
+6,
+"Charlottesville"
+],
+"sto": [
+11.02,
+1,
+"Stockholm"
+],
+"sts": [
+10.44,
+2,
+"St. Louis"
+],
+"stv": [
+3.84,
+4,
+"Stavropol"
+],
+"sua": [
+4.29,
+2,
+"Surat"
+],
+"sug": [
+11.02,
+3,
+"Surgut"
+],
+"sun": [
+1.64,
+6,
+"Caloundra"
+],
+"suo": [
+3.86,
+4,
+"International Falls"
+],
+"sur": [
+2.53,
+2,
+"Surabaya"
+],
+"svt": [
+1.31,
+7,
+"Uray"
+],
+"swe": [
+5.97,
+4,
+"Topeka"
+],
+"swt": [
+1.64,
+6,
+"Vanhynsdorp"
+],
+"syd": [
+11.02,
+0,
+"Sydney"
+],
+"syk": [
+2.35,
+6,
+"Syktyvkar"
+],
+"szn": [
+2.17,
+4,
+"Zaozhuang"
+],
+"szu": [
+7.84,
+3,
+"Jiayuguan"
+],
+"tac": [
+1.38,
+4,
+"Taichung"
+],
+"tad": [
+6.05,
+6,
+"Bathurst"
+],
+"tai": [
+6.97,
+1,
+"Taipei"
+],
+"tap": [
+9.02,
+2,
+"Tampa"
+],
+"tau": [
+1.48,
+6,
+"Tapachula"
+],
+"tay": [
+6.21,
+2,
+"Taiyuan"
+],
+"tbo": [
+5.64,
+6,
+"Tobolsk"
+],
+"tbu": [
+4.57,
+4,
+"Tabuk"
+],
+"tcn": [
+11.02,
+3,
+"Tacna"
+],
+"ted": [
+1.07,
+6,
+"Nova Viçosa"
+],
+"tel": [
+9.23,
+2,
+"Tel Aviv"
+],
+"ter": [
+3.9,
+4,
+"Teresina"
+],
+"the": [
+9.57,
+3,
+"Thessaloniki"
+],
+"thi": [
+1.41,
+4,
+"Thiruvananthapuram"
+],
+"thu": [
+11.02,
+3,
+"Thunder Bay"
+],
+"tia": [
+3.84,
+2,
+"Tianjin"
+],
+"tic": [
+3.12,
+4,
+"Tiruchirappalli"
+],
+"tif": [
+7.04,
+6,
+"Tindouf"
+],
+"tij": [
+5.55,
+3,
+"Tijuana"
+],
+"tim": [
+9.76,
+3,
+"Caxias"
+],
+"tin": [
+8.55,
+3,
+"Huainan"
+],
+"tir": [
+10.3,
+3,
+"Tirana"
+],
+"tky": [
+11.02,
+4,
+"Leh"
+],
+"tma": [
+1.9,
+6,
+"Tumaco"
+],
+"tmm": [
+2.46,
+7,
+"Timimoun"
+],
+"tmn": [
+11.02,
+3,
+"Tamanrasset"
+],
+"tmp": [
+10.38,
+3,
+"Tampico"
+],
+"tnl": [
+1.66,
+6,
+"Olavarría"
+],
+"tnr": [
+1.43,
+7,
+"Gar"
+],
+"tns": [
+1.4,
+6,
+"Santissima Trindade"
+],
+"toe": [
+3.22,
+4,
+"Torreón"
+],
+"top": [
+10.6,
+3,
+"Tomsk"
+],
+"tor": [
+9.23,
+1,
+"Toronto"
+],
+"tos": [
+11.02,
+3,
+"Townsville"
+],
+"tow": [
+3.25,
+6,
+"Toowoomba"
+],
+"trd": [
+11.02,
+3,
+"Trondheim"
+],
+"tro": [
+6.09,
+4,
+"Gdańsk"
+],
+"tru": [
+8.08,
+3,
+"Trujillo"
+],
+"try": [
+1.31,
+7,
+"Troitsk"
+],
+"tsk": [
+4.32,
+6,
+"Tara"
+],
+"tst": [
+7.35,
+4,
+"Olympia"
+],
+"tuc": [
+4.52,
+4,
+"Tucson"
+],
+"tul": [
+8.12,
+3,
+"Tuxtla Gutiérrez"
+],
+"tun": [
+3.97,
+3,
+"Tunis"
+],
+"tuo": [
+1.07,
+6,
+"Tuguegarao"
+],
+"tut": [
+3.97,
+4,
+"Tulsa"
+],
+"tve": [
+3.74,
+4,
+"Tver"
+],
+"tvr": [
+1.67,
+7,
+"Cherlak"
+],
+"tye": [
+4.16,
+4,
+"Tyumen"
+],
+"tyl": [
+1.18,
+6,
+"Wichita Falls"
+],
+"tyo": [
+4.76,
+0,
+"Tokyo"
+],
+"tys": [
+11.02,
+3,
+"Bratsk"
+],
+"ube": [
+4.0,
+4,
+"Uberlândia"
+],
+"ufa": [
+8.2,
+3,
+"Ufa"
+],
+"ukh": [
+4.79,
+6,
+"Ukhta"
+],
+"uni": [
+11.02,
+3,
+"Canberra"
+],
+"upp": [
+2.18,
+6,
+"Uppsala"
+],
+"uru": [
+11.02,
+1,
+"Ürümqi"
+],
+"uzh": [
+2.43,
+6,
+"Achinsk"
+],
+"vaa": [
+1.7,
+6,
+"Valladolid"
+],
+"vad": [
+2.21,
+4,
+"Vadodara"
+],
+"val": [
+4.64,
+3,
+"Valencia"
+],
+"vam": [
+1.8,
+6,
+"Turku"
+],
+"van": [
+11.02,
+1,
+"Vancouver"
+],
+"var": [
+2.67,
+3,
+"Varanasi"
+],
+"vea": [
+9.61,
+3,
+"Bergen"
+],
+"vec": [
+9.93,
+3,
+"Veracruz"
+],
+"veh": [
+3.5,
+4,
+"Nizhny Tagil"
+],
+"vei": [
+1.49,
+6,
+"Velikiy Novgorod"
+],
+"ven": [
+5.32,
+4,
+"Venice"
+],
+"vex": [
+5.71,
+6,
+"Velsk"
+],
+"vey": [
+4.38,
+6,
+"Velikiy Ustyug"
+],
+"vie": [
+11.02,
+1,
+"Vienna"
+],
+"vig": [
+6.4,
+3,
+"Norfolk"
+],
+"vih": [
+1.12,
+6,
+"Vinh"
+],
+"vij": [
+2.56,
+4,
+"Vijayawada"
+],
+"vil": [
+11.02,
+3,
+"Vilnius"
+],
+"vin": [
+4.87,
+4,
+"Vitória da Conquista"
+],
+"vio": [
+1.78,
+6,
+"Victoria"
+],
+"vir": [
+1.21,
+6,
+"Ciudad Victoria"
+],
+"vis": [
+4.84,
+3,
+"Vishakhapatnam"
+],
+"vit": [
+2.76,
+4,
+"Vila Velha"
+],
+"vlp": [
+9.7,
+3,
+"Valparaíso"
+],
+"vog": [
+1.43,
+6,
+"Volgodonsk"
+],
+"vol": [
+6.82,
+3,
+"Volgograd"
+],
+"vor": [
+4.03,
+4,
+"Voronezh"
+],
+"vot": [
+11.02,
+4,
+"Vorkuta"
+],
+"vou": [
+1.58,
+6,
+"Daytona Beach"
+],
+"vyb": [
+2.89,
+6,
+"Vyborg"
+],
+"wah": [
+5.45,
+4,
+"Reno"
+],
+"waj": [
+3.81,
+4,
+"Parepare"
+],
+"war": [
+8.69,
+2,
+"Warsaw"
+],
+"wax": [
+3.01,
+4,
+"Houma"
+],
+"wdc": [
+11.02,
+0,
+"Washington,  D.C."
+],
+"weg": [
+11.02,
+3,
+"Wellington"
+],
+"wen": [
+1.26,
+4,
+"Wenzhou"
+],
+"weu": [
+8.18,
+4,
+"Laredo"
+],
+"whn": [
+3.89,
+6,
+"Whangarei"
+],
+"wid": [
+1.31,
+6,
+"Windsor"
+],
+"win": [
+1.27,
+6,
+"Nizwa"
+],
+"wip": [
+9.22,
+3,
+"Winnipeg"
+],
+"wit": [
+6.73,
+3,
+"Muscat"
+],
+"wix": [
+1.84,
+6,
+"Salalah"
+],
+"wog": [
+1.49,
+6,
+"Wollongong"
+],
+"wol": [
+2.64,
+4,
+"Nanyang"
+],
+"woo": [
+11.02,
+4,
+"Fort McMurray"
+],
+"wuh": [
+3.07,
+2,
+"Wuhan"
+],
+"xaa": [
+6.56,
+6,
+"Ust-Kut"
+],
+"xac": [
+6.12,
+6,
+"Novy Urengoy"
+],
+"xad": [
+11.02,
+4,
+"Norilsk"
+],
+"xak": [
+5.69,
+4,
+"Sousse"
+],
+"xcn": [
+2.1,
+4,
+"Xichang"
+],
+"xia": [
+2.93,
+2,
+"Xian"
+],
+"xin": [
+6.96,
+3,
+"Xining"
+],
+"xsa": [
+2.63,
+4,
+"Zhanjiang"
+],
+"xuz": [
+1.72,
+4,
+"Xuzhou"
+],
+"yak": [
+11.02,
+3,
+"Yakutsk"
+],
+"yap": [
+5.6,
+4,
+"Flagstaff"
+],
+"yar": [
+3.83,
+4,
+"Yaroslavl"
+],
+"yau": [
+1.3,
+6,
+"Yakima"
+],
+"yek": [
+6.16,
+3,
+"Yekaterinburg"
+],
+"yeo": [
+9.42,
+4,
+"Billings"
+],
+"ygt": [
+4.38,
+4,
+"Sakata"
+],
+"yik": [
+8.25,
+3,
+"Hami"
+],
+"yin": [
+5.14,
+3,
+"Yinchuan"
+],
+"yla": [
+2.67,
+4,
+"Jiamusi"
+],
+"yna": [
+3.03,
+4,
+"Nanchong"
+],
+"yni": [
+2.23,
+4,
+"Yining"
+],
+"yoq": [
+2.83,
+4,
+"Suzhou"
+],
+"yrk": [
+2.91,
+4,
+"Shache"
+],
+"ysn": [
+1.94,
+6,
+"Jyekundo"
+],
+"yya": [
+2.42,
+4,
+"Yulin"
+],
+"yzu": [
+2.88,
+4,
+"Yulin"
+],
+"zal": [
+6.27,
+4,
+"Angarsk"
+],
+"zam": [
+5.23,
+4,
+"Zamboanga"
+],
+"zej": [
+2.6,
+4,
+"Shaoguan"
+],
+"zen": [
+7.89,
+3,
+"Sarajevo"
+],
+"zhe": [
+3.67,
+2,
+"Zhengzhou"
+],
+"zhy": [
+3.68,
+4,
+"Zhytomyr"
+],
+"zib": [
+6.09,
+2,
+"Zibo"
+],
+"zif": [
+1.75,
+4,
+"Yantai"
+],
+"zos": [
+3.39,
+4,
+"Liupanshui"
+],
+"zur": [
+11.02,
+2,
+"Zürich"
+]
+}
+}
