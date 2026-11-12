@@ -66,6 +66,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   it fails with "cannot find the path"). Also in `checks/`: `keep_hunks.py`, `mark_taking.py`.
 - Build number = `git rev-list --count`. If 8800 doesn't answer, restart `serve.py` detached.
 - Website Pages deploys can be slow: `gh run list --repo circularsquare/circularsquare.github.io`.
+- Resources, once a day for now (Anita 2026-11-11, T-3243): `venv\Scripts\python.exe trainworld/tools/ops/check_resources.py`
+  from the maps root, read-only, about 2 minutes. Every flagged line (OVER, HIGH, SOON, MISSING) goes in that day's
+  report to her with what docs/ops-checks.md says to do about it.
 
 ## Traps
 
