@@ -486,6 +486,9 @@ body.resizing, body.resizing * { user-select: none; }
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .memory-bad { color: var(--bad); }
+.shape-grid .slider { margin-top: 0; }
+.shape-grid .slider > span { min-width: 56px; }
+.shape-grid .slider + .slider .group > .btn { margin-top: -1px; }
 .memory-warn { margin: 6px 0 0; }
 .slider:has(> .group) { flex-wrap: wrap; }
 /* T-2942: the superholiday days belong to the day row above them */

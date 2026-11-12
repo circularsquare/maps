@@ -39,7 +39,6 @@ import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setSatellite, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint } from "./map/basemap";
 import { createMap } from "./map/mapView";
-import { startLite } from "./map/lite";
 import { startRealNetwork } from "./map/realNetwork";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
@@ -493,7 +492,6 @@ map.on("load", () => {
   effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value)); // T-2998
   effect(() => setRailRoadHint(map, tool.value === "track" && !tramTrack.value && snapRoads.value)); // T-3129
   startTerrainTint(map); // T-1270 stage 3
-  startLite(map); // T-1207
   startRealNetwork(map); // T-682
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)

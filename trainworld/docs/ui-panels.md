@@ -599,7 +599,7 @@ the third by default; its hover reads "How many bubbles are aggregated together"
 choice (3-color by default [T-1724], the old Mode mix, 2-color [T-833], the old Train share, which shows two colour pickers labelled 0% train and
 100% train, Purpose [T-2886] or Color blind [T-3005]; no hovers on any of it [T-804, T-1838]; both in [ui-demand-views.md](ui-demand-views.md) "Local trip bubbles"), Station circles with a Size slider (0.5-2x, 1x by default, the station ridership circles' radius; [T-1565], [ui-demand-views.md](ui-demand-views.md) "Station ridership circles"), Show (trains, station names [off by default, T-1729], "Track at capacity" [the capacity markers; hover "Marks where stations or track cannot smoothly handle scheduled train frequencies", T-1843], "Crowded trains" [T-1152, T-1843, T-2236: the Traffic view's red edges, on by default; hover "Stretches where trains carry more than their rated load at the busiest hour"; [ui-map.md](ui-map.md) "Track display"], flat junctions and crossings [no hover, T-1843], "Lines side by side" [T-1886: lines sharing track as bands beside each other, on by default, T-2346; [ui-map.md](ui-map.md) "Lines sharing track side by side"], map labels, Real network, Terrain [hover "Construction is more expensive in steep terrain", T-1843]), Riders on trains
 and platforms ("How full each train is", "How full each platform is", both on by default)
-[T-164], Stations up close (Faces and Sound, both on by default, no hovers [T-1843], and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], and "Rotate map with right drag" (off by default, Anita 2026-11-02: with no tilt it adds little; off turns the map back to north; [ui-map.md](ui-map.md) "Globe") [T-2031], and "Show zoom buttons" (on by default: a plus and a minus at the map's right edge, halfway down, one zoom step a click with the map's own easing, `ui/ZoomButtons.tsx`; no hover, just aria labels) [T-3268], Line shapes (below), Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units and performance, Game (normal or sandbox, T-728), then,
+[T-164], Stations up close (Faces and Sound, both on by default, no hovers [T-1843], and a Volume slider while Sound is on, the one volume for every sound, building and fare-change sounds included [T-1725]; [ui-map.md](ui-map.md) Life at stations) [T-686], Map (Flat or Globe, flat by default; hover "Zoomed in to a city, the globe becomes the flat map"; [ui-map.md](ui-map.md) "Globe") [T-033], then two sliders: Line width (50-200% of the drawn width of lines, track, casings and trains, 100% by default; station shapes and picking follow it; once double track parts into its two tracks up close, those keep their width on the ground) [T-1248] and Base map (contrast, 0-100%, 100% by default: below it every basemap colour but water and the land, so roads, parks, woods, buildings, boundaries and airfields, is mixed that much toward the land colour, in both themes, the basemap's labels fade toward transparent by it instead, text and halo alike, so a faded name never leaves a pale patch on water [T-1266]; the real network is left as it is, T-1291; `map/basemap.ts`) [T-1249], and "Rotate map with right drag" (off by default, Anita 2026-11-02: with no tilt it adds little; off turns the map back to north; [ui-map.md](ui-map.md) "Globe") [T-2031], and "Show zoom buttons" (on by default: a plus and a minus at the map's right edge, halfway down, one zoom step a click with the map's own easing, `ui/ZoomButtons.tsx`; no hover, just aria labels) [T-3268], Theme (Light or Dark, light by default, over Pink, Blue or Green) [T-039], Panel and text size, Units (US units, Currency), Performance (Use more cores, Run in background, Memory), Game (normal or sandbox, T-728), Default bullet shapes (below), then,
 when accounts are on, Account [T-1139]: who is logged in ("Logged in as alice", "Logged in with
 Google" or "Not logged in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
@@ -618,7 +618,8 @@ not reachable, too many from here, or a server whose `/noritetsu/config` lacks `
 sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].
 
-**Line shapes** [T-3319]: a row per mode, Train, Tram, Bus and Ferry, each a row of the three bullet shapes
+**Default bullet shapes** [T-3319, T-3329]: after the Game section, a row per mode, Train, Tram, Bus and Ferry, each a row of the three bullet shapes,
+the buttons touching in one compact grid (no gaps between rows or buttons)
 (circle, square, diamond; no hovers, aria labels only), the shape of that mode's lines that have none of their
 own ([ui-inspectors.md](ui-inspectors.md) "Line shapes"). Train and Tram start on the circle, Bus on the square,
 Ferry on the pill, as the bullets were before (the pill is not pickable, so no button is lit on Ferry until one is picked); a change redraws at once every line of the mode without its own.
@@ -635,21 +636,21 @@ station names and map controls follow the `--font` variable (`style.css`; `game/
 files), and station names and capacity tags are measured again once it has loaded. The map's own
 labels are glyph tiles and are Zen Maru Gothic.
 
-**Units and performance** [T-381]: "US units" (off by default) shows every distance, length and
+**Units** [T-381]: "US units" (off by default) shows every distance, length and
 speed in miles, mph and feet instead of kilometres, km/h and metres: panels, inspectors, hovers, the
 track, station and line tools' readouts, the placing rings, the scale bar of a station complex, and
 prices per mile. All go through the distance functions in `game/format.ts`; the game itself stays
-metric. "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
+metric. The Currency row follows.
+
+**Performance** [T-381, T-3329]: "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
 hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
-[architecture.md](architecture.md) "A hidden page") [T-826]. "Map detail" (Low, High; High by
-default; Low is the old lighter map's On and High its Off, the saved `lighterMap` values unchanged; hover "Show fewer roads and other details" [T-1838]) draws the basemap with fewer layers at a lower resolution when Low [T-1207].
-There is no Auto: it switched to Low for the rest of the page on one slow zoom, and a stored "auto" now reads
-as High [T-2840]. Low saves no resident memory (notes/T-2840.md). A **Memory** row follows (after the checkboxes, before Currency):
-"1.4 GB of about 8 GB", the memory the game takes now against the most it aims for here (`memBudget`: 8 GB, or 0.75 of a device
-that reports less; 6 where the browser does not say), red above 85% of it, refreshed every 2 s; hover "About 0.6 GB more per 1,000
-stations" [T-3329; `game/memoryEstimate.ts`]. The reading is 1.15 GB plus 1.76 times what the demand workers report (WASM and heap),
-within about 0.2 GB of the browser's own total over 22 runs (notes/T-3329.md).
+[architecture.md](architecture.md) "A hidden page") [T-826]. There is no Map detail choice: the map is always the full one
+(the lighter map and its Auto are gone, DECISIONS.md 2026-11-12; a stored Low is dropped). A **Memory** row ends the section:
+"1.4 GB / 8 GB", the memory the game takes now against the most it aims for here (`memBudget`: 8 GB, or 0.75 of a device
+that reports less; 6 where the browser does not say), red above 85% of it, refreshed every 2 s while Settings is open; hover, two lines,
+"About 0.5 GB more per 1,000 stations" and "8 GB limit is an estimate" [T-3329; `game/memoryEstimate.ts`]. The reading is 1.15 GB plus
+1.76 times what the demand workers report (WASM and heap), within about 0.2 GB of the browser's own total over 22 runs (notes/T-3329.md).
 
 **Game** [T-728], last before the account section: the game's mode, "Normal" or "Sandbox" (hover: what
 it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then

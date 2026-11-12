@@ -204,10 +204,7 @@ Web first, so it can be shared as a link.
   move as one with a flat pan in between (capacity tags and attraction marks instead follow their
   resources one by one every frame, station names too for any camera change but a flat pan,
   T-1614, T-1657, T-1621; zone loading bars are placed on every move, so they hold their spot through a zoom, T-1804); the platform crowds; the station sounds and faces sample
-  half as often; the Lines tab's live counts wait. The lighter map (`map/lite.ts`): the basemap
-  without buildings, the residential tint, minor roads, airfields, small rivers and minor names, no
-  hillshade, and a pixel ratio of at most 1; Settings has it as Map detail, Low (on) or High (off, the default). It had an
-  Auto, removed in T-2840: it went Low for the page on one slow zoom, and Low saves no resident memory; a stored "auto" reads as High.
+  half as often; the Lines tab's live counts wait.
 - **A hidden page** [T-826; notes/T-826.md]: the browser stops animation frames and slows the main
   thread's timers to once a second (once a minute after five hidden minutes); worker timers run on
   at nearly full rate. With "Run in background" off (the default) the clock freezes while hidden, so

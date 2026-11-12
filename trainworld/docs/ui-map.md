@@ -76,8 +76,7 @@ the terrain blocks the clock worker sends the page (track-and-service.md 6.4), o
 one image over the view and half its size again around it, rows even in mercator, each pixel the class of
 the lattice cell under it (the cells track is charged by, track-and-service.md 6.4; no smoothing, so each
 cell is a square), redrawn when the camera stops; above the hillshade, under the
-water, roads and labels; hidden below zoom 9, where a view is wider than the blocks the view brings in. The lighter map hides the hillshade but keeps
-`water_over_shade` while Terrain is on, so the tint stays off the water there too. Washed ground
+water, roads and labels; hidden below zoom 9, where a view is wider than the blocks the view brings in. The Terrain setting turns the hillshade and `water_over_shade` on and off together, so the tint stays off the water there too. Washed ground
 has no hover of its own; the track tool's tag names the class and its factor [T-1797].
 
 ## Zoom bands

@@ -108,9 +108,6 @@ export interface DisplaySettings {
   basemapContrast: number;
   /** T-1270: hills and mountains shaded on the basemap (map/basemap.ts `setHillshade`) */
   hillshade: boolean;
-  /** T-1207: the lighter map (fewer basemap layers, pixel ratio 1): on is Low, off is High (map/lite.ts).
-   * T-2840: there was an "auto" too; one stored reads as off. */
-  lighterMap: "on" | "off";
   /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
   rotateMap: boolean;
   /** T-3268: the plus and minus buttons at the map's right edge (ui/ZoomButtons.tsx) */
@@ -167,7 +164,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   lineWidth: 1,
   basemapContrast: 1,
   hillshade: false,
-  lighterMap: "off",
   rotateMap: false,
   zoomButtons: true,
   chartOtherLines: true,
@@ -226,8 +222,6 @@ if ((saved.v ?? 1) < 9) {
 if ((saved.v ?? 1) < 11) delete migratedDisplay.stationUse;
 // T-2346: lines side by side are on to start with; the old default (off) was stored, so it is dropped once
 if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
-// T-2840: Anita wants High for everyone who played before, a stored Low included; choosing Low after this sticks
-if ((saved.v ?? 1) < 13) delete migratedDisplay.lighterMap;
 // T-2860: the currency now starts from the browser's region; every earlier player has USD stored, chosen or not, so it is dropped once (a stored other currency stays)
 if ((saved.v ?? 1) < 14 && migratedDisplay.currency === "USD") delete migratedDisplay.currency;
 // T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
@@ -243,13 +237,15 @@ export const selection = signal<Selection>(null);
 export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
 const VIDEO_DISPLAY: Partial<DisplaySettings> = {
   trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none",
-  stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true, lighterMap: "off",
+  stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true,
 };
 
 // T-3319: each mode's stored shape kept where it is one, the rest from the defaults
 const storedShapes = (migratedDisplay.modeShapes ?? {}) as Partial<Record<Vehicle, unknown>>;
 const modeShapes = Object.fromEntries(Object.entries(MODE_SHAPES).map(([m, s]) => [m, isLineShape(storedShapes[m as Vehicle]) ? storedShapes[m as Vehicle] : s])) as Record<Vehicle, LineShape>;
-export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, modeShapes, trackColour,lighterMap: (migratedDisplay.lighterMap as string) === "on" ? "on" : "off", ...(VIDEO ? VIDEO_DISPLAY : {}) });
+// T-3329: Map detail is gone, High for everyone; a stored Low is dropped
+delete (migratedDisplay as Record<string, unknown>).lighterMap;
+export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, modeShapes, trackColour, ...(VIDEO ? VIDEO_DISPLAY : {}) });
 /** T-2867: the player chose to play without intercity trips after running out of memory: this tab, across its
  * reloads, and gone with it (one bad evening should not take them away for good) */
 const MARKET_DROPPED = "tw-no-intercity";

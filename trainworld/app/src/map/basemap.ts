@@ -313,7 +313,8 @@ export function loadBasemap(map: maplibregl.Map) {
     satInked = false;
     setSatellite(map, satelliteWanted);
     setBasemapShade(map, ...shadeAs);
-    applyLite(map);
+    setBasemapLabels(map, ...labelsAs);
+    setHillshade(map, hillshadeOn);
     repaintRoadHints(map);
   });
 }
@@ -425,11 +426,9 @@ function orderSatellite(map: maplibregl.Map, on: boolean) {
   }
 }
 
-/** Whether a basemap layer is drawn: the lighter map and the terrain setting take layers away. */
+/** Whether a basemap layer is drawn: the terrain setting takes the shading away. */
 function layerVisible(id: string) {
-  if (id === HILLSHADE) return hillshadeOn && !lite;
-  if (id === WATER_OVER_SHADE) return hillshadeOn;
-  return !(lite && LITE_HIDDEN.has(id));
+  return id === HILLSHADE || id === WATER_OVER_SHADE ? hillshadeOn : true;
 }
 
 /** The imagery's opacity is the Base map slider (0-1) over the drawn map at its 0% look, so 0% is Map mode's own
@@ -577,31 +576,7 @@ function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
 export function setBasemapLabels(map: maplibregl.Map, on: boolean, noCities = false) {
   labelsAs = [on, noCities];
   if (!styleUp(map)) return void (missed = true);
-  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on && !(noCities && CITY_LABELS.has(id)) && !(lite && LITE_HIDDEN.has(id)) ? "visible" : "none");
+  for (const id of basemapSymbols) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on && !(noCities && CITY_LABELS.has(id)) ? "visible" : "none");
 }
 let labelsAs: [boolean, boolean] = [true, false];
 
-/** T-1207: the Positron layers the lighter map leaves out: buildings, the residential tint, minor
- * roads and paths, airfields, small rivers' and minor places' and roads' names. */
-const LITE_HIDDEN = new Set([
-  "building", "landuse_residential", "highway_minor", "highway_path", "aeroway-taxiway", "aeroway-runway", "aeroway-area",
-  "waterway", "waterway_line_label", "airport", "highway-name-major", "label_other", "label_village", "water_name_line_label",
-]);
-let lite = false;
-
-/** T-1207: the lighter map's basemap on or off (the pixel ratio is map/lite.ts's). */
-export function setBasemapLite(map: maplibregl.Map, on: boolean) {
-  if (on === lite) return;
-  lite = on;
-  applyLite(map);
-}
-
-function applyLite(map: maplibregl.Map) {
-  if (!styleUp(map)) return void (missed = true);
-  for (const id of LITE_HIDDEN) {
-    if (!map.getLayer(id) || basemapSymbols.includes(id)) continue;
-    map.setLayoutProperty(id, "visibility", layerVisible(id) ? "visible" : "none");
-  }
-  setBasemapLabels(map, ...labelsAs);
-  setHillshade(map, hillshadeOn);
-}

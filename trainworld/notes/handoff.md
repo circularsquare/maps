@@ -35,7 +35,10 @@ overnight gap runs make it in, or sooner without them).
 - Uncommitted main tree: pipeline/world_plan.json (gaprun2's join; commit at its ship), TODO.md (hers).
 - Worktrees: tt2, schem3, hsr, hotfix031. Stray Vites 6164, 6167, 6130 (owners unknown) left alone.
 
-## v0.3.3 plan (proposed to her 11-12, awaiting OK)
+## v0.3.3 plan (her OK 11-12 ~19:00 local: "yeah we can target tomorrow daytime. i will be unavailable this evening")
+Settings tweaks for v0.3.3 given to t3329 a3bb12c205199e3b6 (snug "Default bullet shapes" grid after Game, Map detail
+dropped, Units / Performance split, memory "3.4 GB / 8 GB" + two-line hover in her words). She is away this evening:
+work on overnight; no deploys or publish without her.
 In: everything on master (two pairs stays hidden behind `?pairs`); T-3352 single high-speed/tram + T-3337 350 km/h
 (hsr tree); schematic T-3362/T-3364 + T-3358 rivers + bigger centres (schem3) if ready; gap zones A + NK (+ B, C if
 done). Held for v0.3.4: T-3346 stage 2 (changes figures) unless it lands clean (<2% rider moves).
