@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3254 [P2] Long-trip pull round 2 (2026-11-12, agent pull2 and earlier): refit under Anita's undershoot rule (gamma 0.6 fading in over 300-700 km, Russia and Turkey off, China at half), Poland's near pull 0.2 (Warsaw - Krakow 3.6k -> 5.1k, under 7.2k by rail); switched on for the 2026-11-12 light pass (ef16dd6f). notes/T-3240.md 7.
+- T-3269 [P2] Flags beside names in Community and the leaderboards (2026-11-12, agent flags): picked in account settings; server e98ae76 deployed 04:49Z, game cb3715e6 (shows from the next publish). notes/T-3269.md.
+- T-3268 [P2] Zoom buttons on the map with a Settings switch, and the account panel's Privacy · Terms spacing (2026-11-12, agent zoombtn): 4181e35f. notes/T-3268.md.
+- T-3259 [P2] Anita's account skips the 60-minute rule for likes (2026-11-12, agent commview): shonei-server 020ba08 with SHONEI_COMMUNITY_NO_WAIT, deployed 04:49Z. notes/T-3257.md.
+- T-3258 [P3] Community "Most liked" ties in random order (2026-11-12, agent commview): shonei-server 020ba08, deployed 04:49Z. notes/T-3257.md.
+- T-3267 [P2] Satellite: the Base map slider fades the imagery toward the theme's background (2026-11-12): 9ced7beb; Anita's light/dark test pending. notes/T-3249.md.
+- T-3249 [P2] Satellite map mode (2026-11-12, agent sat): a Map | Satellite switch in Settings on free imagery (GSI Japan, USGS US, Sentinel-2 elsewhere), 02187910. notes/T-3249.md.
 - T-3253 [P1] Option A's reach (2026-11-12, agent aimpact): before/after on seven games. Only a built high-speed line beside a fast ordinary line moves (Paris - Lyon HSR 0 -> 3,994 riders a day, fare income +38%); real networks and games with no HSR move under 0.3%; local rail shares under 0.01 points; nothing broke. A is consistent (one long-trip money weight in both choices), not simpler; cross-zone commuters now carry the mismatch. notes/T-3253.md.
 - T-3263 [P2] Road snap ghost lag (2026-11-12, agent buildfix): a pointer move no longer drops the road route being fitted or priced; it finishes and the newest spot goes next. With a slow track model, fitted ghosts while moving 0 -> 5-7 in 2 s. Lost clicks not reproduced. checks/t3260-track-bar.mjs; notes/T-3260.md
 - T-3262 [P2] Track count kept across track types (2026-11-12, agent buildfix): single shows as double on High speed or Tram and comes back with Regular; Single on High speed keeps High speed and says why. checks/t3260-track-bar.mjs; notes/T-3260.md
