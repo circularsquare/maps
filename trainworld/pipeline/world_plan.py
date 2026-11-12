@@ -252,7 +252,40 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Strip and the West Bank never one zone); people from CBS's 2022 census by statistical area and PCBS's
               # governorates, with the settlements cut out of the latter (T-2964, notes/T-2964.md)
               **{iso: {"contiguous": True, "plan_units": True, "module": "admin_totals", "task": "T-2964"}
-                 for iso in ("ISR", "PSE")}}
+                 for iso in ("ISR", "PSE")},
+              # North Korea's counties (geoBoundaries ADM2, the state's) as Korea's rule: no density floor (its mountain
+              # counties are 10-20 a km2), held to touching units; `fua_whole` 0.3M keeps Sariwon whole (T-3287)
+              "PRK": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "plan_units": True,
+                      "fua_whole": 300_000, "task": "T-3287"}}
+# T-3287 (Anita, 2026-11-12): blocs come out whole. In these countries a unit the density test leaves dead is a zone
+# anyway when it sits between built land (`gap_fill.pick`: the line between two towns of 50,000 within 300 km runs
+# 15 km over it, it holds such a town and touches built land, or built land holds 75% of its land border); a pick
+# that ends up a zone under ZONE_ALONE_MIN joins the built zone it borders longest, which is rebuilt (`gap_join`)
+GAP_FILL = {"ESP", "PRT", "FRA", "ROU", "BIH", "GRC", "HRV", "ALB", "AUT", "EST", "LVA", "LTU"}
+# north Scandinavia whole (Anita, 2026-11-12: "just to finish north scandinavia"): no density floor
+MIN_DENSITY = {"NOR": 0.0, "SWE": 0.0, "FIN": 0.0}
+# T-3287: thin zones along a route across land the reach rule leaves dead (Anita, 2026-11-12: "the south rim of
+# northwest ontario ... whatever paths people would most likely take between east and west coast"): the units listed
+# are cut along the strip within `km` of the route (gap_fill.corridor_split; the strip's part `<id>~r`), and the strip's
+# units are let through the reach test. The route is the Trans-Canada Highway 17 and the CP line by their towns:
+# Kenora, Dryden, Ignace, Thunder Bay, Nipigon, the Lake Superior shore, Wawa, Sault Ste. Marie, Blind River, Sudbury
+# Each route is one thin zone at most (its units grouped apart from the other route's, kept from CUT_OFF_MIN people):
+# Kenora to Thunder Bay, and Thunder Bay along the shore to Sudbury
+CORRIDORS = {"CAN": {"km": 40.0, "routes": [
+    [(-95.15, 49.77), (-94.49, 49.77), (-93.38, 49.85), (-92.84, 49.78), (-91.66, 49.42), (-90.47, 49.05),
+     (-89.90, 48.60), (-89.25, 48.38)],
+    [(-89.25, 48.38), (-88.26, 49.01), (-87.26, 48.81), (-87.10, 48.78), (-86.38, 48.72), (-85.28, 48.59),
+     (-84.77, 47.99), (-84.60, 46.95), (-84.33, 46.52), (-82.95, 46.18), (-81.77, 46.26), (-80.99, 46.49)]],
+    # the dead census subdivisions the strip touches (2026-11-12): Kenora, Thunder Bay and Algoma's unorganized
+    # territories and Rainy River's are cut along it; Dryden, Ignace, Nipigon, Red Rock, Schreiber, Terrace Bay, Marathon,
+    # White River, Wawa, Dubreuilville, Machin and six reserves lie inside it whole
+    "units": ["43193130B59318519941623", "43193130B10836844084573", "43193130B13118404500850", "43193130B61785075998460",
+              "43193130B69984546002098", "43193130B82952521247252", "43193130B42924532024338", "43193130B45497703865209",
+              "43193130B91029850103497", "43193130B80653515100926", "43193130B36713175673026", "43193130B98632825643607",
+              "43193130B7983969562126", "43193130B80322852382874", "43193130B87266657072897", "43193130B87034785591333",
+              "43193130B78372665169010", "43193130B78346030361483", "43193130B71107736820299", "43193130B45819320860410",
+              "43193130B44224298060618"]}}
+GAP_JOIN_KEYS = ("gap", "corridor")  # the picks gap_join may hand to a built zone
 # countries whose metros are GHS-FUAs over 1M as in Europe, planned alone by `metros --countries`
 # (T-1004: low-density US cities have urban centres under 1M); every other row stays as it is, and
 # a replan of the rest keeps these countries' rows
@@ -860,7 +893,19 @@ def state_units(iso):
             g = de_facto(iso, u.geom)
             if g is not None and not g.is_empty:
                 out.append((u.id, u.name, g))
-    return absorb(iso, out) + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
+    out = absorb(iso, out) + [(u.id, u.name, u.geom) for u in taken_units(st, iso)]
+    return corridor_units(iso, out)[0]
+
+
+def corridor_units(iso, units):
+    """([(id, name, geom)], corridor unit ids): the country's units with CORRIDORS' listed units cut along its strip
+    (T-3287), the same in the plan and in the builds (osm_units reads state_units)."""
+    c = CORRIDORS.get(iso)
+    if not c or not c["units"]:
+        return units, set()
+    import gap_fill
+    strip = gap_fill.corridor_strip(c["routes"], c["km"], FWD)
+    return gap_fill.corridor_split(units, set(c["units"]), strip)
 
 
 def fill_gaps(iso, units):
@@ -2703,6 +2748,42 @@ def cut_off(zunits, region, ids, dead=()):
                    and u.geom.distance(g) <= CUT_OFF_TOUCH_M for u in zunits)
 
 
+NE_PLACES = ROOT / "data/raw/world_field/ne_10m_populated_places_simple.zip"
+
+
+def gap_picks(iso, units, by, dead, free, held, pk):
+    """{unit id: [why]} of the country's units dead by density that sit between built land (T-3287, gap_fill.pick).
+    Built land: every pack, the units of plan rows and the country's free units; other land: other countries."""
+    import gap_fill
+    cand = [(d["unit"], by[d["unit"]].geom) for d in dead if "per_km2" in d and d["unit"] in by]
+    if not cand:
+        return {}
+    box = union_all([g for _, g in cand]).buffer(gap_fill.PAIR_KM * 1000)
+    built = [q["geom"] for q in pk.values() if q["geom"].intersects(box)]
+    built += [u.geom for u in units if (u.id in held or u.id in set(free)) and u.geom.intersects(box)]
+    if not _NE:
+        ne = countries()
+        _NE[:] = [ne, STRtree([h for _, h in ne])]
+    land = [h for c, h in _NE[0] if c != iso and h.intersects(box)]
+    towns = [t for t in gap_fill.natural_earth_towns(NE_PLACES, FWD) if box.contains(shapely.Point(t[3], t[4]))]
+    return gap_fill.pick(cand, built, towns, land, log=log)
+
+
+def gap_join(iso, ids, by, kept):
+    """The kept (built) zone row of the country whose units share the longest border with units `ids` (T-3287), or
+    None."""
+    g = union_all([by[i].geom for i in ids])
+    best = (0.0, None)
+    for r in kept:
+        mine = [by[i].geom for i in r["units"].get(iso, []) if i in by]
+        if not mine:
+            continue
+        km = g.boundary.intersection(union_all(mine).buffer(2500)).length / 1000
+        if km > best[0]:
+            best = (km, r)
+    return best[1]
+
+
 def carried_relax(units, iso, old):
     """A regrouped zone row's gate relaxations (T-1307): each CARRY_RELAX check that one of the `old`
     rows sharing any of its `units` had relaxed, with the reason of the one sharing the most (then the
@@ -2776,6 +2857,20 @@ def plan_zones(isos3, out_path=None, replan=False):
                 units = [u for u in units if u.id in geo]
                 for u in units:
                     u.geom = geo[u.id]
+        corridor = set()
+        if iso in CORRIDORS:  # T-3287: the units a route crosses, cut along its strip, as state_units does
+            cut, corridor = corridor_units(iso, [(u.id, u.name, u.geom) for u in units])
+            old_u = {u.id: u for u in units}
+            units = []
+            for uid, nm, g in cut:
+                src_u = old_u[uid.split("~r")[0]]
+                if uid in old_u:
+                    src_u.geom = g
+                    units.append(src_u)
+                else:
+                    units.append(Unit(uid, nm, iso, g, src_u.parents))
+            if corridor:
+                log(f"{iso}: {len(corridor)} corridor units along {len(CORRIDORS[iso]['routes'])} route(s) (T-3287)")
         took = took_all[iso]
         if took:
             units = units + took
@@ -2788,7 +2883,7 @@ def plan_zones(isos3, out_path=None, replan=False):
         src = doc["unit_sources"][iso]
         rule = ZONE_RULES.get(iso, {})
         floor, cap = rule.get("floor", ZONE_FLOOR), rule.get("cap", ZONE_CAP)
-        min_density = rule.get("min_density", ZONE_MIN_DENSITY)
+        min_density = rule.get("min_density", MIN_DENSITY.get(iso, ZONE_MIN_DENSITY))
         # a zone row the runner has moved on (built, gated, shipped, parked) keeps its units; only
         # planned ones are regrouped (T-788: Anita's 0.5M floor came mid-wave), all with `replan`
         old = {r["id"]: r for r in rows if r.get("kind") == "zone" and iso in r.get("units", {})
@@ -2829,13 +2924,19 @@ def plan_zones(isos3, out_path=None, replan=False):
             if u.id in held or (tot > 0 and u.free < UNIT_SHARE * tot) or u.free <= 0:
                 continue
             dens = u.free / (u.geom.area / 1e6)
-            if reach and near[u.id] < reach[1] and u.free < DEAD_KEEP * floor:
+            if reach and near[u.id] < reach[1] and u.free < DEAD_KEEP * floor and u.id not in corridor:
                 dead.append({"unit": u.id, "name": u.name, "people": round(u.free), "within_reach": round(near[u.id])})
             elif dens < min_density and u.free < DEAD_KEEP * floor and level is None:  # a group's own, below
                 dead.append({"unit": u.id, "name": u.name, "people": round(u.free), "per_km2": round(dens, 1)})
             else:
                 free.append(u.id)
         by = {u.id: u for u in units}
+        gap_ids, gap_why = {i for i in corridor if i in set(free)}, {i: ["on the corridor"] for i in corridor if i in set(free)}
+        if iso in GAP_FILL:  # T-3287: dead units between built land let through
+            gap_why.update(gap_picks(iso, units, by, dead, free, held, pk))
+            gap_ids |= set(gap_why)
+            dead = [d for d in dead if d["unit"] not in gap_why]
+            free += [i for i in gap_why if i not in free]
         # T-1088: unbuilt metro rows take the free units commuting into them
         metros = {r["id"]: r for r in rows if r.get("kind") != "zone" and iso in (r.get("units") or {})}
         grow = {k: r for k, r in metros.items() if r.get("status", "planned") == "planned"}
@@ -2945,10 +3046,36 @@ def plan_zones(isos3, out_path=None, replan=False):
                     dead.append({"unit": i, "name": by[i].name, "people": round(by[i].free), "scattered": True})
                     lines.append(f"  {by[i].name}: towns over {SCATTER_KM:g} km from the rest of its zone, dead space")
         lines += mend_zones(groups, zby, pk, cap)
+        if corridor:  # T-3287: a group holding corridor units, split by the route each unit lies nearest
+            routes = [shapely.transform(shapely.LineString(r), lambda a: np.column_stack(FWD.transform(a[:, 0], a[:, 1])))
+                      for r in CORRIDORS[iso]["routes"]]
+            for lead in [k for k, ids in groups.items() if any(i in corridor for i in ids)]:
+                parts = collections.defaultdict(list)
+                for i in groups[lead]:
+                    pt = zby[i].geom.representative_point()
+                    parts[min(range(len(routes)), key=lambda j: routes[j].distance(pt))].append(i)
+                if len(parts) > 1:
+                    groups.pop(lead)
+                    for p in parts.values():
+                        groups[max(p, key=lambda i: zby[i].free)] = p
+                    lines.append(f"  {zby[lead].name}: corridor units split by route into {len(parts)} zones (T-3287)")
         alone_min = ALONE_MIN.get(iso, ZONE_ALONE_MIN)
+        joined = {}
         if alone_min:  # T-897: no pack for an islet of a few hundred people that can join nothing
             for lead in [k for k, ids in groups.items() if sum(zby[i].free for i in ids) < alone_min]:
                 n = sum(zby[i].free for i in groups[lead])
+                mem = [m for g in groups[lead] for m in members[g]]
+                if corridor and any(m in corridor for m in mem) and n >= CUT_OFF_MIN:
+                    lines.append(f"  {zby[lead].name}: {n:,.0f} people, a corridor zone, kept (T-3287)")
+                    continue
+                if gap_ids and any(m in gap_ids for m in mem):  # T-3287: a gap too small for a zone joins a built one
+                    r = gap_join(iso, mem, by, kept)
+                    if r is not None:
+                        joined.setdefault(r["id"], []).extend(mem)
+                        groups.pop(lead)
+                        lines.append(f"  {zby[lead].name}: {n:,.0f} people, a gap under {alone_min:,}, joins the built zone "
+                                     f"{r['name']} ({r['id']}), which is rebuilt (T-3287)")
+                        continue
                 if n >= CUT_OFF_MIN and cut_off(zunits, region, groups[lead], {d["unit"] for d in dead}):
                     lines.append(f"  {zby[lead].name}: {n:,.0f} people, under {alone_min:,} but with no land neighbour "
                                  "in its region but dead space, kept (T-1999)")
@@ -3045,6 +3172,24 @@ def plan_zones(isos3, out_path=None, replan=False):
         gone = [r["id"] for r in old.values() if r["id"] not in {o["id"] for o in out}]
         if gone:
             log(f"  earlier zone rows with no successor, removed: {gone}")
+        joined_rows, joined_was = {}, {}  # T-3287: built zone rows grown by a gap, set planned to be rebuilt
+        for k, add in joined.items():
+            r = json.loads(json.dumps(next(x for x in rows if x["id"] == k)))
+            joined_was[k] = list(r["units"][iso])
+            us = [by[i] for i in r["units"][iso] if i in by] + [by[i] for i in add]
+            g = polygonal(union_all([u.geom for u in us]))
+            cut = [q["geom"] for pid, q in pk.items() if pid != k and q["geom"].intersects(g)]
+            ll = to_ll(polygonal(g.difference(union_all(cut))) if cut else g)
+            r["units"][iso] = r["units"][iso] + add
+            r["people"] = round(r["people"] + sum(by[i].free for i in add))
+            r["bbox"] = [round(v, 3) for v in ll.bounds]
+            r["extracts"] = extracts(ll, ex, kids)
+            r["status"] = "planned"
+            r.setdefault("source", {})["gap_join"] = {"task": "T-3287", "units": add, "names": [by[i].name for i in add]}
+            joined_rows[k] = (r, {"type": "Feature", "properties": {"id": k, "name": r["name"], "people": r["people"], "kind": "zone"},
+                                  "geometry": mapping(shapely.set_precision(ll, 1e-5))})
+            log(f"  {k} {r['name']} takes the gap {', '.join(by[i].name for i in add)} ({sum(by[i].free for i in add):,.0f} people), "
+                f"set planned to be rebuilt (T-3287)")
         rec = {"built": str(datetime.now().date()), "task": rule.get("task", "T-897" if iso in ZONE_RULES else "T-788"),
                "rule": f"free units at or over {min_density:g} people a km2 (or holding {DEAD_KEEP * floor:,.0f})"
                        + (f" with {reach[1]:,} people within {reach[0]:g} km of their centre (T-1191)" if reach else "")
@@ -3078,12 +3223,16 @@ def plan_zones(isos3, out_path=None, replan=False):
                                "units": [{"unit": u.id, "name": u.name, "people": round(u.pop)} for u in left]}
         if took:
             rec["taken"] = {"from": DE_FACTO_TAKE[iso], "task": "T-2344", "units": [u.id for u in took]}
+        if gap_why:
+            rec["gaps"] = {"task": "T-3287", "picks": gap_why, "joined": joined}
         changes.append({"iso": iso, "replan": replan, "old": {k: r["units"][iso] for k, r in old.items()},
-                        "metros": {k: grow[k]["units"][iso] for k in grown}, "grown": {k: v[0] for k, v in grown.items()},
-                        "out": out, "record": rec, "src": src,
-                        "feats": feats + [v[1] for v in grown.values()],
-                        "drop": set(old) | {f["properties"]["id"] for f in feats} | set(grown)})
-        rows[:] = [grown[r["id"]][0] if r["id"] in grown else r for r in rows if r["id"] not in old] + out
+                        "metros": {k: grow[k]["units"][iso] for k in grown},
+                        "grown": {**{k: v[0] for k, v in grown.items()}, **{k: v[0] for k, v in joined_rows.items()}},
+                        "joined": joined_was, "out": out, "record": rec, "src": src,
+                        "feats": feats + [v[1] for v in grown.values()] + [v[1] for v in joined_rows.values()],
+                        "drop": set(old) | {f["properties"]["id"] for f in feats} | set(grown) | set(joined_rows)})
+        grown_all = {**grown, **joined_rows}
+        rows[:] = [grown_all[r["id"]][0] if r["id"] in grown_all else r for r in rows if r["id"] not in old] + out
     assert all(plan_config.is_plan_row(r) or r.get("status") == "held" for r in rows if r.get("kind") == "zone")
     if out_path:  # a dry run: the plan and its extents beside each other, the real ones untouched
         doc, ext = json.loads(OUT.read_text(encoding="utf-8")), json.loads((WORK / "extents.geojson").read_text(encoding="utf-8"))
@@ -3117,6 +3266,10 @@ def splice(doc, ext, changes):
             r = now.get(k)
             moved = r is not None and r.get("status", "planned") != "planned" and not (c.get("replan") and k in c["old"])
             if r is None or moved or r["units"].get(iso) != us:
+                raise SystemExit(f"{iso}: row {k} changed since the plan was read; run again")
+        for k, us in c.get("joined", {}).items():  # T-3287: a built zone row a gap joins, whatever its status
+            r = now.get(k)
+            if r is None or r["units"].get(iso) != us:
                 raise SystemExit(f"{iso}: row {k} changed since the plan was read; run again")
         taken = {r["order"] for r in rows if r["id"] not in c["old"] and r.get("order") is not None}
         clash = [r["id"] for r in c["out"] if r["id"] not in c["old"] and (r["id"] in now or r["order"] in taken)]

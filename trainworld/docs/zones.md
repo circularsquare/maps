@@ -69,9 +69,18 @@ Russian-administered southern Kurils and uninhabited islets more than 50 km from
 **Whole countries** (Anita, 2026-10-19, T-719; built for Spain, T-723) are covered by zone rows in
 the world plan (`world_plan.py zones --countries ES`), built by the runner like metro rows. Every
 unit of the plan's unit level (NUTS-3 in Europe) that no plan row holds and no pack holds half of is
-a candidate. A unit under **20 people a km²** stays dead space for now unless it holds 0.8 of the
-zone floor (0.4M at 0.5M; `DEAD_KEEP`, T-903: Bergen, Trondheim, Oulu, Inverness); Spain's dead
-space is Soria, Teruel, Cuenca, Huesca, Zamora, Palencia, Ávila, Cáceres and Segovia. Units **under 100,000** join a
+a candidate. A unit under **20 people a km²** stays dead space unless it holds 0.8 of the
+zone floor (0.4M at 0.5M; `DEAD_KEEP`, T-903: Bergen, Trondheim, Oulu, Inverness), or it is a **gap**
+(Anita, 2026-11-12, T-3287: blocs whole, so long lines through them feel good). In the countries of
+`world_plan.GAP_FILL` (Spain, Portugal, France, Romania, Bosnia, Greece, Croatia, Albania, Austria, the
+Baltics) a dead unit is a gap when the straight line between two towns of **50,000** (Natural Earth's
+populated places) lying in built land, at most **300 km** apart, runs **15 km** or more over it; when it
+holds such a town and touches built land; or when built land holds **75%** of its land border and land is
+at least a fifth of its whole border (no islands); picks count as built land and the tests run again until
+none is new (`pipeline/gap_fill.py`). Gaps are zoned as any free unit; a gap zone under 50,000 joins the
+built zone it borders longest, which is set planned and rebuilt (Fokida and Evrytania into Evvoia's,
+Gjirokastër into Fier's). Norway, Sweden and Finland have no density floor (`MIN_DENSITY`: north
+Scandinavia whole, Anita 2026-11-12); only Jan Mayen is dead there. Units **under 100,000** join a
 zone of their own region (NUTS-2; elsewhere the first-level unit), smallest first: the one they
 travel with most (the longest border breaking ties) among those it would not make a ring with
 (T-1191; any, when all would), or for an island the most populous zone of
@@ -167,7 +176,12 @@ between**: a census subdivision whose own centre has fewer than **100,000** peop
 territories and the empty land between distant cities; and two zones whose people centres lie more
 than **150 km** apart never join (`join_km`: across dead space, any two zones' facing edges make
 them travel partners, Regina and Saskatoon's); a unit under 100,000 still joins its biggest partner
-however far, or small towns would stand as zones of 10,000-50,000. Canada's units are the plan's census subdivisions
+however far, or small towns would stand as zones of 10,000-50,000. **A corridor** (T-3287, Anita 2026-11-12: "the
+south rim of northwest ontario ... whatever paths people would most likely take between east and west coast"):
+`world_plan.CORRIDORS` names a route (Highway 17 and the CP line, Kenora - Thunder Bay - the Lake Superior shore -
+Sault Ste. Marie - Sudbury) and the dead subdivisions it crosses; each is cut along the strip within **40 km** of
+the route (the strip's part a unit `<id>~r`, the same in the plan and in builds through `state_units`) and the
+strip's units are let through the reach test, so the line east to west crosses no dead space. Canada's units are the plan's census subdivisions
 (`plan_units`; read afresh, Natural Earth's land would give the Great Lakes to the shore units).
 notes/T-1191.md. **Australia** takes Canada's rule on geoBoundaries LGAs, read afresh, with its zones on the
 `australia` module (census people by SA1); the interior, the north-west and Cape York are dead space. Sydney's metro
@@ -244,6 +258,10 @@ Sevastopol, Kerch). Ukraine's borders with Russia and Belarus take a factor of 0
 out (`LEFT_OUT`): a council with over half its area inside ISW and AEI's assessed line of control of 2026-09-29 is
 not zoned, one with less is zoned whole. The line only picks whole units (its terms are not an open licence); no
 edge of it is drawn or shipped. The Donetsk metro row stays held. notes/T-2344.md.
+
+**North Korea** (Anita, 2026-11-12, T-3287) is zoned on geoBoundaries ADM2 counties with Korea's rule (no density
+floor, `contiguous`, the state's units), `fua_whole` 0.3M keeping Sariwon one zone; its own realm; the border with
+South Korea closed (factor 0), China's the default.
 
 **Israel and Palestine** (Anita, 2026-11-10, T-2964) split on the Green Line as COD-AB PSE draws it, East Jerusalem with
 Palestine and the Golan with Israel. OSM's relations there are Israel's (its Jerusalem District holds East Jerusalem), so
