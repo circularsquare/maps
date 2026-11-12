@@ -139,7 +139,9 @@ class Run:
             self.step(name, self.tw("merge_cells", *ids, "--through", tmpl, "--workers", str(self.jobs), "--keep-going"),
                       check=False)
             log = (self.logs / f"{name}.log").read_text(encoding="utf-8", errors="replace")
-            failed += [ln.split()[1] for ln in log.splitlines() if ln.startswith("FAILED ")]
+            # the log is appended across reruns of a batch: a pack's last line decides
+            last = {ln.split()[1]: ln.split()[0] for ln in log.splitlines() if ln.startswith(("FAILED ", "DONE "))}
+            failed += [i for i in ids if last.get(i) == "FAILED"]
         (self.logs / "failed.txt").write_text(" ".join(failed))
         if failed:
             raise SystemExit(f"through: {len(failed)} packs failed, left res-9 in data/packs: {self.logs / 'failed.txt'}; "
@@ -213,7 +215,7 @@ class Run:
                            "--against", BASELINE, "--jobs", str(self.jobs)], check=False)
 
     def freeze(self):
-        self.step("freeze", self.tw("freeze"))
+        self.step("freeze", self.tw("freeze", "--locked"))  # this run holds the packs lock
 
     def go(self, start):
         sys.path.insert(0, str(HERE))

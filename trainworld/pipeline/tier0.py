@@ -1518,9 +1518,10 @@ def education_osm(city, boundary, kids):
     wd = wikidata_students(ids)
     parents = wikidata_parents([q for q in set(ids) if not wd.get(q, (None,))[0]])
     rows, left_out = university_sizes(uni, wd, parents)
-    n_count = int((rows.sized_by.str.startswith("count")).sum())
-    n_parent = int((rows.sized_by.str.startswith("parent")).sum())
-    n_cut = int(rows.sized_by.str.contains("cut").sum())
+    how = rows.sized_by.astype(str)  # an empty column (every site left out by name) is not str dtype
+    n_count = int(how.str.startswith("count").sum())
+    n_parent = int(how.str.startswith("parent").sum())
+    n_cut = int(how.str.contains("cut").sum())
     # T-288: the total from the national tertiary enrolment a resident; Wikidata counts and site
     # areas only spread it. Unscaled, London's counted institutions were dense central buildings
     # (1,925 students a hectare at the median), which put 50-150k students on suburban campuses.

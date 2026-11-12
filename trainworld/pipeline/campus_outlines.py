@@ -119,7 +119,9 @@ def bounds_of(city, packs=PACKS):
     with open(os.path.join(packs, f"{city}.boundary.geojson")) as f:
         fc = json.load(f)
     feats = fc["features"] if "features" in fc else [fc]
-    return shapely.union_all([shapely.geometry.shape(x["geometry"]) for x in feats]).bounds
+    # Each part's own box, not a union: some boundaries are invalid (Kolkata's raises a GEOS side conflict).
+    b = np.array([shapely.geometry.shape(x["geometry"]).bounds for x in feats])
+    return b[:, 0].min(), b[:, 1].min(), b[:, 2].max(), b[:, 3].max()
 
 
 def split(ids):
