@@ -32,8 +32,50 @@ in data/work/pre-T3244/ (delete once the new state is checked clean, e.g. after 
 To tell her: Atlanta's airport legs 0.98 -> 0.44 of published (DB1B O&D share).
 
 ## T-3273 rerun: DONE 08:23 local, committed 440a601f (archived); **8800 = 440a601f, smoke PASSED** (12 checks, 117 s)
-parentsplit resumed on T-3274 (Taiwan MoE tertiary figure, my call) + T-3275 (freed students onto building-sized
-sites): builds code only, hands back a pack list + one rerun command. Next free id T-3278 (T-3276/3277 to it).
+## Running agents (report to maps-5e), started 11-12 morning
+- satfade a5f4536449d4ca90a (Sonnet): T-3278 DONE, uncommitted (basemap.ts, docs/ui-map.md, notes/T-3249.md):
+  imagery opacity = slider, drawn map underneath at its 0% look; couldn't reproduce her solid grey in headless
+  Chrome. Commit with the next batch; she checks on 8800 after the snapbuild; archive after her look.
+- flags2 a97c6cd861102a368 (Opus): T-3279 DONE + archived, uncommitted in maps (flags.ts/json, Flag.tsx, flag.css,
+  tools/flags.mjs, 309 flag files, Leaderboard/Community/account edits, checks/t3279-flags.mjs). shonei-server
+  488e09a + e878c0f (48 new codes, trainworldFlagSet 2) committed, not deployed; until then the picker hides the new
+  codes. Strings to her: flagTip -> "Flag shown after your name on the leaderboards and in Community"; "New York City".
+  At the next publish: website about-page credit line (flag-icons, circle-flags MIT; prefecture flags Commons PD).
+- jpattract a970ecbf4714f9168 (Opus): T-3280 stage 1 DONE (notes/T-3280.md): resort towns missing from the
+  attraction list + attraction trips local only (halve per 10 km, no zone crossing); Hakone ~10x under, Atami ~5x.
+  Options A (recommended: 60-100 Japanese resort municipalities with prefecture visitor counts added to Japan's
+  long-trip destination weights, beta 2-4 fitted under rail counts, ~6 h, market-only pass over Japan) / B / C / D.
+  Asked her; resume jpattract to build on her yes. Ids T-3283/3284 unused.
+- lightrail a0244723dad581e04 (Sonnet, 6154): T-3285 light_rail in the real network layer + snapping, rebuild 118
+  realgraphs + Berlin (her yes); writes data/packs only after the light pass ends; closes T-3265.
+- stations a4afc595a574ff195 (Sonnet): T-3286 + T-3288 DONE + archived in worktree .tw-trees/stations (WASM).
+  Land after the light pass ends; main tree's docs/ui-map.md also has satfade's edit: commit main-tree work first.
+  Her check: map labels of a built complex (agent judged only the inspector list).
+- gaps ac5cdaf84781d40c7 (Opus, read-only): T-3287 design for her: gap regions (Agder, Baltics, eastern Ontario,
+  North Korea) and a contiguity rule, dry count, cost; review image t3287-gaps.png. Ids T-3293/3294.
+- transfer a03f13c66621b0720 (Opus, worktree .tw-trees/transfer, 6156): T-3295 trips won't change between two
+  stops of the same line at a near self-intersection, even with a passage (her TODO verbatim). Ids T-3298/3299.
+- dbltrack a24dfb160b1f47d8c (Sonnet, worktree .tw-trees/dbltrack, 6157): T-3296 rebuild single into double track.
+  Ids T-3300/3301.
+- lhtscope a9bf2515b4ef71c76 (Opus, read-only, 6158): T-3297 how hard a per-save left-hand traffic flip is; notes +
+  staged estimate for her.
+- Worktrees made from 32ac89b1: their registry/market-rows must be copied from the main tree before pages (told them).
+- Her Q: is the high-speed fare fix live? Answer: v0.3.1 has d5911dec (fares in the start country's dollars, long
+  trips take HSR again); option A eb23b84b and jpn7's Shinkansen (T-3272) are 8800 only, wait for the next publish.
+- Queued: T-3289 freight/all rail as a three-way real network setting (none, passenger, all) -> lightrail after T-3285.
+- shonei-server DEPLOYED 15:01Z 11-12 with her word, pushed (e878c0f): caps 45k accounts / 22.5k password / warn
+  30k, browsers 400k; place flags (trainworldFlagSet 2 live). Her calls 11-12: no Resend Pro; T-3276 left as is;
+  T-3280 option A -> jpattract resumed to build it (hands back a Japan market-only rerun).
+- Mine, uncommitted: her string edits (View a copy; "You can save it to keep it."; HSR notice shortened) and the
+  cursor tag's Ctrl line removed (tools.ts, en.json, context.json, DECISIONS). Commit with the light pass batch.
+
+## T-3274 + T-3275 rerun: RUNNING since 08:40 local
+parentsplit built both (uncommitted: tier0.py NATIONAL_TERTIARY TW 0.0468 from MoE; site_inside: a building inside a
+campus outline joins it or is left out). Rerun `--from through --ids artifacts/trainworld/t3274/packs_changed.txt`
+(1,041 packs), pid 27492, stdout artifacts/trainworld/t3274/light_pass.log, ~1.5 h. Expected: jiw 0.036, ina
+"Lecture Hall" 7,318 -> 33. After: commit, archive T-3274/3275, snapbuild, smoke, push, delete data/work/pre-T3244/.
+T-3276 filed (Georgia Gwinnett 25k: area-sized campuses in scaled packs; a lower cap moves 10-24% of students to
+near home worldwide, a demand-wide shift: asked her, I recommended leaving it). Next free id T-3302.
 Old text, for the record:
 parentsplit (Opus, a4fc96c86a876dea2, done) built pipeline/campus_pools.py (world table data/raw/tier0/campus/pools.json),
 tier0.university_sizes on it, wikidata_prefill builds it, open universities and university farms/forests out; all

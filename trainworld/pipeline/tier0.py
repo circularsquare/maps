@@ -467,12 +467,27 @@ def worldbank(iso2):
 
 
 WB_TERTIARY = "https://api.worldbank.org/v2/country/{iso2}/indicator/{ind}?format=json&date=2010:2025&per_page=100"
+# places UNESCO leaves out: (tertiary students a resident, year, source, url)
+NATIONAL_TERTIARY = {
+    "TW": (1_094_829 / 23_400_220, 2023, "Ministry of Education, students in universities and colleges in school year 112 "
+           "(2023-24), 1,094,829 (doctoral, master's, bachelor's and junior college), over the registered population "
+           "at end 2024, 23,400,220 (T-3274)", "https://stats.moe.gov.tw/files/analysis/113_st_report.pdf"),
+}
+
+
+def tertiary_source(iso2):
+    """(how the national figure is described, its url) for the header."""
+    if iso2 in NATIONAL_TERTIARY:
+        return NATIONAL_TERTIARY[iso2][2], NATIONAL_TERTIARY[iso2][3]
+    return "UNESCO via World Bank SE.TER.ENRL", WB_TERTIARY.format(iso2=iso2, ind="SE.TER.ENRL")
 
 
 def tertiary_share(iso2):
     """Tertiary students a resident, nationally: UNESCO's enrolment in tertiary education, all
     programmes (World Bank SE.TER.ENRL) over the population (SP.POP.TOTL) of the latest year with
-    both; (share, year), or (None, None) where UNESCO has no figure (T-288)."""
+    both, or NATIONAL_TERTIARY's; (share, year), or (None, None) where neither has a figure (T-288)."""
+    if iso2 in NATIONAL_TERTIARY:
+        return NATIONAL_TERTIARY[iso2][0], NATIONAL_TERTIARY[iso2][1]
     by = {}
     for ind in ("SE.TER.ENRL", "SP.POP.TOTL"):
         path = netget.cached_json(WB_TERTIARY.format(iso2=iso2, ind=ind), raw(f"worldbank_{iso2}_{ind}.json"), timeout=60)
@@ -1440,6 +1455,25 @@ def institution_of(q, counts, parents):
     return "", np.nan, "area"
 
 
+def site_inside(uni):
+    """Each site's smallest bigger site (index into `uni`) whose outline (column wkt) holds its
+    point, or -1."""
+    out = np.full(len(uni), -1)
+    if "wkt" not in uni.columns or not len(uni):
+        return out
+    k_poly = [k for k, w in enumerate(uni.wkt) if w]
+    if not k_poly:
+        return out
+    tree = shapely.STRtree(shapely.make_valid(shapely.from_wkt([uni.wkt.iloc[k] for k in k_poly])))
+    pt, g = tree.query(shapely.points(uni.lon.to_numpy(float), uni.lat.to_numpy(float)), predicate="within")
+    m2 = uni.m2.to_numpy(float)
+    best = np.full(len(uni), np.inf)
+    for p, k in zip(pt, np.asarray(k_poly)[g]):
+        if k != p and m2[p] < m2[k] < best[p]:
+            best[p], out[p] = m2[k], k
+    return out
+
+
 def university_sizes(uni, counts, parents, table=None, boundary=None):
     """Each university or college site's weight and the most students it may take (T-3226,
     T-3216, T-3273). `uni` the OSM sites (kind, name, lat, lon, m2, wikidata, ...), `counts`
@@ -1455,13 +1489,33 @@ def university_sizes(uni, counts, parents, table=None, boundary=None):
     each site's share is both its weight and its cap. Other
     sites with an area weigh their area at the median students a m² of the counted institutions
     (0.01 with none), capped at CAMPUS_AREA_SPREAD times the curve and CAMPUS_AREA_MAX; points
-    with no count are left out. Returns (the sites with columns inst, count, sized_by, weight and
-    cap, the sites left out by name)."""
+    with no count are left out. A site with no institution whose point lies in a bigger site's
+    outline is a building of that campus (T-3275: IU Indianapolis's "Lecture Hall", 0.4 ha, took
+    7,318 students as a campus of its own): it takes the outer site's institution, or with none is
+    left out, the outer site's area holding its land; and a site with none drawn around a counted
+    one is the same campus, of its institution. Returns (the sites with columns inst, count,
+    sized_by, weight and cap, the sites left out with column why)."""
     import campus_pools
     uni = uni.copy()
     inst, count, how, opened = campus_pools.assign(uni, counts, parents, table)
-    out = not_campus(uni.name) | opened
-    left_out, uni = uni[out], uni[~out].copy()
+    holder = site_inside(uni)
+    inside = np.zeros(len(uni), bool)
+    first, firstc = list(inst), list(count)
+    for k in np.nonzero(holder >= 0)[0]:
+        h = holder[k]
+        if first[k] and not first[h] and not opened[k]:  # the same campus drawn bigger around a counted one
+            inst[h], count[h], how[h] = first[k], firstc[k], f"around {uni.name.iloc[k] or first[k]}"
+    for k in np.nonzero((holder >= 0) & np.array([not q for q in inst], bool))[0]:
+        h = holder[k]
+        if inst[h] and not opened[h]:
+            inst[k], count[k], how[k] = inst[h], count[h], f"inside {uni.name.iloc[h] or inst[h]}"
+        else:
+            inside[k] = True
+    named_out = not_campus(uni.name)
+    out = named_out | opened | inside
+    why = np.where(named_out, "left out by name", np.where(opened, "an open university's", "inside a site with no count"))
+    left_out = uni[out].assign(why=why[out])
+    uni = uni[~out].copy()
     uni["inst"], uni["count"], uni["sized_by"] = [np.asarray(v, object)[~out] for v in (inst, count, how)]
     uni["count"] = uni["count"].astype(float)
     world = campus_pools.outside(boundary, set(uni.inst) - {""}, table) if table and boundary is not None else {}
@@ -1586,6 +1640,7 @@ def education_osm(city, boundary, kids):
     n_count = int(how.str.startswith("count").sum())
     n_parent = int(how.str.startswith("parent").sum())
     n_named = int(how.str.startswith("named").sum())
+    n_inside = int(how.str.startswith(("inside", "around")).sum())
     n_world = int(how.str.contains("for the world").sum())
     n_cut = int(how.str.contains("cut").sum())
     # T-288: the total from the national tertiary enrolment a resident; Wikidata counts and site
@@ -1636,30 +1691,34 @@ def education_osm(city, boundary, kids):
         "child_weight": float(children.sum()), "child_origin": f"population x {kids:.3f} (World Bank, ages 0-14)",
         "attendance_factor": 0.9, "sources": school_src}
     header["university"] = dict(
-        coverage="tier 0: OSM amenity=university|college less open and distance universities and research centres by name; Wikidata P2196 "
+        coverage="tier 0: OSM amenity=university|college less open and distance universities and research centres by name, a site inside "
+                 "a bigger one's outline its building (of its institution, else left out), one drawn around a counted site that "
+                 "site's; Wikidata P2196 "
                  "students by institution (or its counted parent's: part of, parent organisation, occupant, operator; or a counted site's "
                  "whose name the site's holds), less its counted members' and shared by area over its sites in the world, the pack's part cut to "
                  f"{CAMPUS_SIZE_SPREAD:.0f} times {CAMPUS_SIZE_C:.0f} x hectares^{CAMPUS_SIZE_POW} and to {CAMPUS_SITE_MAX:,.0f}, split over its sites "
                  f"by area; other sites by area at the counted ones' median students a m², at most {CAMPUS_AREA_SPREAD} times that curve and "
                  f"{CAMPUS_AREA_MAX:,.0f}; a mapped campus's students over the cells under its outline, "
                  f"{CAMPUS_BUILT_SHARE:.0%} by GHSL non-residential volume and the rest by area ({n_spread} sites; the others at their point)"
-                 + (f"; scaled to population x {ter:.4f} tertiary students a resident (UNESCO via World Bank SE.TER.ENRL, {ter_year}), "
+                 + (f"; scaled to population x {ter:.4f} tertiary students a resident ({tertiary_source(cfg['iso2'])[0]}, {ter_year}), "
                     f"no site past its cap (a count is one: {n_capped} sites at theirs), {uni_home:,.0f} students no site can take near home" if ter else ""),
         enrolled=float(uenr.sum(dtype=np.float64)), institutions=int(rows.inst[rows.inst != ""].nunique()), sites=int(n_u),
-        sized=dict(count=n_count, parent=n_parent, named=n_named, area=int(len(rows) - n_count - n_parent - n_named), cut=n_cut,
+        sized=dict(count=n_count, parent=n_parent, named=n_named, inside=n_inside,
+                   area=int(len(rows) - n_count - n_parent - n_named - n_inside), cut=n_cut,
                    world_share=n_world, left_out=int(len(left_out)), at_cap=n_capped), near_home=float(uni_home),
         location_match_share=1.0, adult_weight=float(adults.sum()), adult_origin=f"population x {1 - kids:.3f} (ages 15+, World Bank)",
         attendance_factor=0.6, decay_m=6000, limitations="Wikidata counts are of mixed years and definitions; sites without a count sized by area",
-        sources=["https://www.openstreetmap.org/copyright", WIKIDATA, WB_TERTIARY.format(iso2=cfg["iso2"], ind="SE.TER.ENRL")])
+        sources=["https://www.openstreetmap.org/copyright", WIKIDATA, tertiary_source(cfg["iso2"])[1]])
     canada.rewrite(stem, header, buf)
     with open(os.path.join(b.WORK, city + ".universities.audit.json"), "w") as f:
         json.dump([dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=s, weight=r.weight, cap=r.cap, sized_by=r.sized_by,
                         institution=r.inst, cells=n) for r, s, n in zip(rows.itertuples(), site_students, site_cells)]
-                  + [dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=0.0, sized_by="left out by name") for r in left_out.itertuples()],
+                  + [dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=0.0, sized_by=r.why) for r in left_out.itertuples()],
                   f, indent=1)
     print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f} ({near_home:,.0f} near home); universities: "
           f"{n_count} sites by their Wikidata count, {n_parent} by a parent's, {n_named} by a counted site's in their name, "
-          f"{len(rows) - n_count - n_parent - n_named} by area ({n_world} on a part of a world count, {n_cut} counts cut, {len(left_out)} sites left out by name), {raw_total:,.0f} students before "
+          f"{n_inside} inside or around a counted site, {len(rows) - n_count - n_parent - n_named - n_inside} by area ({n_world} on a part of "
+          f"a world count, {n_cut} counts cut, {len(left_out)} sites left out), {raw_total:,.0f} students before "
           f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year}; {n_capped} sites at their cap, "
                                                  f"{uni_home:,.0f} near home)" if ter else " (no national figure, unscaled)")
           + f"; {n_spread} campuses spread over their outlines", flush=True)

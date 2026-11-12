@@ -132,12 +132,18 @@ of its proxies where it has them. Measured by building Toronto from tier 0 again
   distance or online universities or their study centres (in the main languages and by short
   names: IGNOU, NOUN, UNED, 空中大學, 开放大学), research centres, or university farms and forests
   are left out, and so is every site of an institution whose Wikidata label names it an open
-  university (IGNOU, CNEA's Centro Atómico Ezeiza, Yilan's experimental forest; T-3226, T-3273). Every site has a cap from how
+  university (IGNOU, CNEA's Centro Atómico Ezeiza, Yilan's experimental forest; T-3226, T-3273).
+  A site with no count whose point lies in a bigger site's outline is a building of that campus:
+  of the outer site's institution, or left out when the outer one has none (its land is already
+  there); an uncounted outline drawn around a counted site is that site's (IU Indianapolis's
+  "Lecture Hall", 0.4 ha, had 7,318 students as a campus of its own; T-3275). Every site has a cap from how
   counted campuses' students go with their area (1,872 x hectares^0.31): a count is cut to 14
   times that and to 100,000 and then caps its sites, so a whole system's count on one campus
   (UNAM's 360,883 on CU) or a scaled-up count (IIT Bombay's 176,000) can't stand; a site sized
   by area takes at most 5.4 times that and 50,000. The total is population x the national tertiary students a resident
-  (UNESCO enrolment via the World Bank, SE.TER.ENRL over SP.POP.TOTL; T-288), and the counts and
+  (UNESCO enrolment via the World Bank, SE.TER.ENRL over SP.POP.TOTL; T-288; Taiwan, which the World
+  Bank leaves out, from its Ministry of Education: 1,094,829 students in school year 2023-24 over
+  23,400,220 people, 0.0468, `tier0.NATIONAL_TERTIARY`, T-3274), and the counts and
   areas only spread it (counts alone sized London at several times its students), none past its
   cap; students no site can take study near home, by adults, as schools' do. Why it may not
   carry over: students gather in university cities, so a national rate undercounts a city with

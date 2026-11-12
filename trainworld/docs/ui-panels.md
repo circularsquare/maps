@@ -1073,12 +1073,19 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   "Signed in as alice" (or with Google); under it, while the server keeps games, "3 games on your
   account · 1.2 MB of 64 MB" (hovers: "Your account keeps up to 50 games", "Backups count too")
   [T-988 stage 3]; then, when the games list carries `played` (seconds), "3 h 20 min played" and, when `/trainworld/me` says
-  `nameHidden`, a red "Your name is hidden from others. Pick another." [T-3230]; then **Flag** (T-3269, when
-  `/noritetsu/config` says `trainworldFlags`): a box showing the flag and its name ("No flag" by default); focused, it
-  lists No flag, the game's own few (Train, Earth, Pride, Transgender, the EU, the UN, Pirate, Checkered, Amsterdam,
-  Chicago, Washington, D.C.), then every country by its name in the player's language, and typing filters them; a pick
-  is saved at once. The list is `game/flags.json`, the round pictures `public/flags/` (circle-flags, MIT), both written
-  by `tools/flags.mjs`, which also writes the server's list. For a password account the recovery email ("No recovery
+  `nameHidden`, a red "Your name is hidden from others. Pick another." [T-3230]; then the **flag and display name**
+  (T-3269, T-3279, as City Circles' quiz; when `/noritetsu/config` says `trainworldFlags`): the flag, or an empty 4:3
+  outline while there is none, then the leaderboard name. The flag opens a picker over the page (300 px wide, up to
+  480 px tall, under the flag or above it when there is more room, free to reach past the panel): No flag (only while
+  one is picked), the country the player is probably in, then every country, then other places (the EU, Amsterdam,
+  Chicago, Washington, D.C., New York City and Japan's 47 prefectures, each with its country in grey), then the game's
+  own few last (Train, Earth, Pride, Transgender, the UN, Pirate, Checkered); a gap between groups, each by name in the
+  player's language. Typing filters (start of any word of the name or of a place's country, or the code); a pick is
+  saved at once; Esc or a click outside closes it. The probable country is the browser's time zone's
+  (`game/tzCountry.json`), else its first language's region. Codes from a newer flag list than the server's
+  (`flags.json` `set` against config `trainworldFlagSet`, 1 when absent) are left out of the picker. The list is
+  `game/flags.json`; the pictures `public/flags/`, all 4:3, and the server's list are written by `tools/flags.mjs`
+  (sources in notes/T-3269.md). For a password account the recovery email ("No recovery
   email" in red when there is none) with Save email, Remove and Change password, then Sign out and
   Delete account (asked first: "Delete your account? Its games, its leaderboard entries and its
   noritetsu rides go too. Games in this browser stay."; the browser's slots are then tied to no
@@ -1104,7 +1111,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 - **Leaderboards**: the trophy opens a centred modal: a picker (World, then up to two countries in
   this game, then its cities by points; typing searches cities and countries, a country by its name in
   the player's language or in English), the top 50 (rank, name, points short, the
-  exact figure in the hover; the person's flag before the name, its name in the hover), the player's own row under them when lower, "Nobody here yet." on an
+  exact figure in the hover; the person's flag after the name, 16 x 12 px, its name in the hover; a long name is cut, the flag never), the player's own row under them when lower, "Nobody here yet." on an
   empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24
   characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
   name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
@@ -1131,7 +1138,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   that is more than one country or part of one ("Benelux", "US west"). Typed, the picker finds every city, country
   and region; empty, it offers the world and the playing game's countries, regions and cities. A share is in a place
   when its game has points there, valued at their sum there. Twelve cards a page, each a shared schematic painted
-  small with its title in bold and the player's name after it in grey, their flag before the name (a share from before titles shows the name alone),
+  small with its title in bold and the player's name after it in grey, their flag after the name, smaller (12 x 9 px) to match it (a share from before titles shows the name alone, in bold, the flag after it at 16 x 12),
   its biggest city in the place, points, lines and stations (the game's own counts,
   bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with View
   (when the sharer let others open a copy), Copy link, Report and the heart.

@@ -1,16 +1,32 @@
-/* T-3269: a player's flag beside their name, and the account panel's picker */
-.flag { display: inline-block; flex: none; width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; border-radius: 50%;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
-/* no flag: an empty ring in the same place */
-.flag-none { box-shadow: inset 0 0 0 1px var(--rule); }
-.acct-flag { margin-top: 10px; }
-.acct-flag-row { display: flex; align-items: center; gap: 10px; }
-.acct-flag-pick { flex: 1; min-width: 0; position: relative; }
-.acct-flag-now { position: absolute; left: 7px; top: 50%; transform: translateY(-50%); display: flex; pointer-events: none; }
-.acct-flag-now .flag { margin: 0; }
-.acct-panel .acct-flag-pick input.new-game-find { padding-left: 27px; }
-/* the list opens over what is below, so the panel does not move */
-.acct-flag-hits { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 3; max-height: 220px; overflow-y: auto; background: var(--bg); }
-.acct-flag-hits li { justify-content: flex-start; }
-.acct-flag-hits li > span { display: flex; align-items: center; min-width: 0; }
-.acct-flag-hits li.picked { font-weight: 700; }
+/* T-3269, T-3279: a player's flag after their name, and the account panel's picker. Flags are 4:3. */
+.flag { display: inline-block; flex: none; width: 16px; height: 12px; border-radius: 2px; object-fit: cover; vertical-align: -1px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 14%, transparent); }
+/* beside small grey text */
+.flag.small { width: 12px; height: 9px; border-radius: 1.5px; vertical-align: 0; }
+/* no flag: an empty outline in the same place */
+.flag-none { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 40%, transparent); }
+
+/* a name, then its flag; a long name is cut short, the flag never */
+.named { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; vertical-align: bottom; }
+.named-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.named:has(.flag.small) { gap: 4px; }
+
+.acct-flag { margin: 0 0 8px; }
+.acct-flag-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.acct-flag-btn { flex: none; display: flex; padding: 3px; margin: -3px; border: 0; background: none; cursor: pointer; }
+.acct-flag-btn .flag { width: 20px; height: 15px; }
+.acct-flag-btn:hover .flag-none, .acct-flag-btn[aria-expanded="true"] .flag-none { box-shadow: inset 0 0 0 1px var(--accent); }
+.acct-flag-btn:hover .flag:not(.flag-none), .acct-flag-btn[aria-expanded="true"] .flag:not(.flag-none) { box-shadow: 0 0 0 1px var(--accent); }
+.acct-flag-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the picker: over the page, free to reach past the panel */
+.flag-pop { position: fixed; z-index: 20; width: 300px; display: flex; flex-direction: column; padding: 8px; background: var(--bg);
+  border: 1px solid var(--rule); box-shadow: 0 4px 16px rgb(0 0 0 / 18%); }
+.acct-panel .flag-pop input.new-game-find { flex: none; }
+.flag-pop ul { list-style: none; margin: 6px 0 0; padding: 0; overflow-y: auto; min-height: 0; flex: 1; }
+.flag-pop li { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 6px; cursor: pointer; }
+.flag-pop li.gap { margin-top: 10px; }
+.flag-pop li.on, .flag-pop li:hover { background: var(--tint); }
+.flag-pop li.picked { font-weight: 700; }
+.flag-pop-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flag-pop-where { margin-left: auto; flex: none; color: var(--muted); font-size: 0.9em; font-weight: 400; }

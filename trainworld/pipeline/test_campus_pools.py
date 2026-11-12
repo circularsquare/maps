@@ -84,5 +84,28 @@ class CampusPools(unittest.TestCase):
         self.assertAlmostEqual(float(rows.weight.iloc[0]), 10000.0)
 
 
+    def test_buildings_inside_a_site(self):
+        # T-3275: a building inside a counted campus joins it; inside an uncounted one it is left out
+        uni = sites([("university", "Big U", 0.5, 0.5, 1e6, "Q1"), ("university", "Lecture Hall", 0.5, 0.5, 4e3, ""),
+                     ("university", "Area College", 5.5, 5.5, 1e6, ""), ("university", "Physical Plant", 5.5, 5.5, 1e3, "")])
+        uni["wkt"] = [box(0, 0, 1, 1).wkt, box(0.49, 0.49, 0.51, 0.51).wkt, box(5, 5, 6, 6).wkt, ""]
+        rows, out = tier0.university_sizes(uni, COUNTS, PARENTS)
+        self.assertEqual(list(rows.inst), ["Q1", "Q1", ""])
+        self.assertTrue(rows.sized_by.iloc[1].startswith("inside"))
+        self.assertEqual(list(out.why), ["inside a site with no count"])
+        self.assertAlmostEqual(float(rows.weight.iloc[:2].sum()), 10000.0)
+        # an uncounted outline drawn around a counted site is the same campus
+        uni = sites([("university", "Campus", 0.5, 0.5, 2e6, ""), ("university", "Big U", 0.5, 0.5, 1e6, "Q1")])
+        uni["wkt"] = [box(0, 0, 1, 1).wkt, box(0.4, 0.4, 0.6, 0.6).wkt]
+        rows, _ = tier0.university_sizes(uni, COUNTS, PARENTS)
+        self.assertEqual(list(rows.inst), ["Q1", "Q1"])
+        self.assertAlmostEqual(float(rows.weight.sum()), 10000.0)
+
+    def test_taiwan_has_a_national_figure(self):
+        share, year = tier0.tertiary_share("TW")
+        self.assertAlmostEqual(share, 0.0468, places=4)
+        self.assertEqual(tier0.tertiary_source("TW")[1], "https://stats.moe.gov.tw/files/analysis/113_st_report.pdf")
+
+
 if __name__ == "__main__":
     unittest.main()

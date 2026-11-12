@@ -2194,8 +2194,6 @@ export class Tools {
       const rows: HTMLDivElement[] = pv ? placementTag(pv, buildLevel.peek(), !tramTrack.peek() ? TRACK_SPECS.regular : this.street.active ? TRACK_SPECS.streetTram : TRACK_SPECS.tram) : [document.createElement("div")];
       // T-1039: still working on the newest ghost or the click
       if (this.waiting()) rows[0].prepend(Object.assign(document.createElement("i"), { className: "spin row-dot" }));
-      // T-3260: Ctrl has no control on screen, so the tag says what it does
-      if (this.start.dir && !this.noSnap && !this.snapped && !touchInput.peek() && !mobileDevice()) rows.push(Object.assign(document.createElement("div"), { className: "muted", textContent: tr("tools.ctrlStraight") }));
       this.showTag(rows, false, ...at!);
     } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)

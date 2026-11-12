@@ -13,7 +13,7 @@
 import * as maplibregl from "maplibre-gl";
 import { signal } from "@preact/signals";
 import { SHADES, type ShadeColours } from "../game/shades";
-import { display, shade, type Shade } from "../game/ui";
+import { display, SAT_INK_FLIP, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
 import { busRoadFilter, railRoadFilter } from "./busRoads";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
@@ -93,8 +93,8 @@ function addUsgsProtocol() {
 }
 /** T-3249: the free satellite imagery, three raster sources stacked just above the background, each fetching only
  * inside its box: Sentinel-2 cloudless everywhere (10 m, soft past zoom 14), GSI's photos over Japan and USGS's NAIP
- * over the contiguous US on top of it. Each licence's credit is the source's attribution. The imagery is dimmed by
- * the Base map slider; the game's vector fills, shade and minor roads are hidden while it shows. */
+ * over the contiguous US on top of it. Each licence's credit is the source's attribution. The imagery's opacity is the
+ * Base map slider, over the drawn map at its 0% look (T-3278). */
 const SAT_SOURCES: { id: string; tiles: string; maxzoom: number; bounds?: [number, number, number, number]; attribution: string }[] = [
   { id: "sat-eox", tiles: "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", maxzoom: 14,
     attribution: 'Sentinel-2 cloudless by <a href="https://s2maps.eu" target="_blank">EOX IT Services GmbH</a> (Contains modified Copernicus Sentinel data 2024)' },
@@ -105,11 +105,12 @@ const SAT_SOURCES: { id: string; tiles: string; maxzoom: number; bounds?: [numbe
 ]; // i18n-ignore: attributions, as the data owners word them
 const SAT_RASTER = SAT_SOURCES.map((s) => s.id);
 const SAT_LABEL = "#f2f2f2";
-/** the paint the satellite view overrides on the layers it keeps, to put back when it goes off */
+/** the layers drawn over the imagery (main roads, boundaries, names), and the paint the satellite view overrides on
+ * them, to put back when the imagery gives way */
 let satKept: { id: string; kind: "road" | "bound" | "text"; weight?: number; was: Record<string, unknown> }[] = [];
-/** the basemap layers hidden while the imagery shows: every fill and shade, minor roads, anything else drawn */
-let satHide = new Set<string>();
 let satOn = false;
+/** the kept layers are in their imagery paint (the Base map slider at SAT_INK_FLIP or more) */
+let satInked = false;
 let satelliteWanted = false;
 
 /** Positron's place layers that name a settlement, each with a black dot icon. */
@@ -309,6 +310,7 @@ export function loadBasemap(map: maplibregl.Map) {
     if (!missed) return;
     missed = false;
     satOn = false;
+    satInked = false;
     setSatellite(map, satelliteWanted);
     setBasemapShade(map, ...shadeAs);
     applyLite(map);
@@ -382,10 +384,9 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
   return style;
 }
 
-/** T-3249: the imagery's sources and layers (hidden until Satellite is on), and which basemap layers give way to it. */
+/** T-3249: the imagery's sources and layers (hidden until Satellite is on), and which basemap layers stay above it. */
 function addSatellite(style: maplibregl.StyleSpecification) {
   satKept = [];
-  satHide = new Set();
   for (const layer of style.layers) {
     if ((layer as any).layout?.visibility === "none") continue;
     const paint = (layer as any).paint ?? {};
@@ -395,9 +396,7 @@ function addSatellite(style: maplibregl.StyleSpecification) {
     } else if (layer.type === "background") continue;
     else if (layer.type === "line" && ROADS[layer.id] && ROADS[layer.id] !== "other") satKept.push({ id: layer.id, kind: "road", weight: ROADS[layer.id] === "motorway" ? 0.26 : 0.18, was: { "line-opacity": paint["line-opacity"] } });
     else if (layer.type === "line" && layer.id.startsWith("boundary_")) satKept.push({ id: layer.id, kind: "bound", was: { "line-opacity": paint["line-opacity"] } });
-    else satHide.add(layer.id);
   }
-  satHide.add(HILLSHADE).add(WATER_OVER_SHADE);
   const at = style.layers.findIndex((l) => l.type === "background") + 1;
   const rasters: maplibregl.LayerSpecification[] = [];
   for (const s of SAT_SOURCES) {
@@ -407,45 +406,63 @@ function addSatellite(style: maplibregl.StyleSpecification) {
   style.layers.splice(at, 0, ...rasters);
 }
 
-/** Whether a basemap layer is drawn: the lighter map, the terrain setting and satellite each take layers away. */
+/** Satellite on: the imagery over every fill, minor road and casing of the drawn map, and the kept roads and boundaries
+ * over the imagery (just below the game's own layers). Off: each goes back before the layer it was before. */
+let satBack: [string, string | undefined][] = [];
+function orderSatellite(map: maplibregl.Map, on: boolean) {
+  if (on) {
+    const moved = new Set([...SAT_RASTER, ...satKept.filter((k) => k.kind !== "text").map((k) => k.id)]);
+    const live = (map.getStyle()?.layers ?? []).map((l) => l.id);
+    const next = (i: number) => live.slice(i + 1).find((id) => !moved.has(id));
+    const lastLine = live.reduce((a, id, i) => (moved.has(id) && !SAT_RASTER.includes(id) ? i : a), -1);
+    const above = next(lastLine);
+    satBack = [];
+    live.forEach((id, i) => { if (moved.has(id)) satBack.push([id, next(i)]); });
+    for (const [id] of satBack) map.moveLayer(id, above);
+  } else {
+    for (const [id, before] of satBack) if (map.getLayer(id)) map.moveLayer(id, before && map.getLayer(before) ? before : undefined);
+    satBack = [];
+  }
+}
+
+/** Whether a basemap layer is drawn: the lighter map and the terrain setting take layers away. */
 function layerVisible(id: string) {
-  if (satOn && satHide.has(id)) return false;
   if (id === HILLSHADE) return hillshadeOn && !lite;
   if (id === WATER_OVER_SHADE) return hillshadeOn;
   return !(lite && LITE_HIDDEN.has(id));
 }
 
-/** The imagery's opacity is the Base map contrast (0-1) over the theme's own land colour: 0 shows none of it, so a low
- * setting in the light theme is near white (T-3267). */
+/** The imagery's opacity is the Base map slider (0-1) over the drawn map at its 0% look, so 0% is Map mode's own
+ * 0% and 100% is the imagery alone (T-3267, T-3278). */
 function dimImagery(map: maplibregl.Map, contrast: number) {
   for (const id of SAT_RASTER) {
     if (!map.getLayer(id)) continue;
     map.setPaintProperty(id, "raster-opacity", contrast);
-    map.setPaintProperty(id, "raster-saturation", -0.3);
-    map.setPaintProperty(id, "raster-brightness-max", 0.85);
+    map.setPaintProperty(id, "raster-saturation", 0);
+    map.setPaintProperty(id, "raster-brightness-max", 1);
   }
 }
 
-/** The kept layers' paint for imagery: roads and boundaries faint white, names light with a dark halo (the
- * no-halo rule of T-1692 gives way over imagery). Painted again after every basemap repaint, which writes theirs. */
+/** The kept layers' paint for strong imagery: roads and boundaries faint white, names light with a dark halo (the
+ * no-halo rule of T-1692 gives way over imagery). Below SAT_INK_FLIP they keep the drawn map's own paint, which sits
+ * well on the faded image. Painted again after every basemap repaint, which writes theirs. */
 function paintSatellite(map: maplibregl.Map) {
-  // the map's ink follows the faded imagery (game/ui.ts `mapShade`): light roads and names over dark, dark over light
-  const darkInk = shadeAs[0] === "dark";
-  if (map.getLayer("background")) map.setPaintProperty("background", "background-color", SHADES[shade.peek()].land);
+  dimImagery(map, shadeAs[1]);
+  satInked = shadeAs[1] >= SAT_INK_FLIP;
+  if (!satInked) return;
   for (const k of satKept) {
     if (!map.getLayer(k.id)) continue;
     if (k.kind === "text") {
-      map.setPaintProperty(k.id, "text-color", darkInk ? SAT_LABEL : "#262626");
+      map.setPaintProperty(k.id, "text-color", SAT_LABEL);
       map.setPaintProperty(k.id, "text-opacity", 1);
-      map.setPaintProperty(k.id, "text-halo-color", darkInk ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.85)");
+      map.setPaintProperty(k.id, "text-halo-color", "rgba(0,0,0,0.8)");
       map.setPaintProperty(k.id, "text-halo-width", 1.4);
       map.setPaintProperty(k.id, "text-halo-blur", 0.5);
     } else {
-      map.setPaintProperty(k.id, "line-color", darkInk ? "#ffffff" : "#000000");
-      map.setPaintProperty(k.id, "line-opacity", (k.kind === "road" ? k.weight! : 0.3) * (darkInk ? 1 : 0.55));
+      map.setPaintProperty(k.id, "line-color", "#ffffff");
+      map.setPaintProperty(k.id, "line-opacity", k.kind === "road" ? k.weight! : 0.3);
     }
   }
-  dimImagery(map, shadeAs[1]);
 }
 
 /** T-3249: the satellite imagery on or off. */
@@ -455,12 +472,8 @@ export function setSatellite(map: maplibregl.Map, on: boolean) {
   if (on === satOn) return;
   satOn = on;
   for (const id of SAT_RASTER) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
-  for (const id of satHide) if (map.getLayer(id) && !basemapSymbols.includes(id)) map.setLayoutProperty(id, "visibility", layerVisible(id) ? "visible" : "none");
-  if (on) paintSatellite(map);
-  else {
-    for (const k of satKept) for (const [key, v] of Object.entries(k.was)) if (map.getLayer(k.id)) map.setPaintProperty(k.id, key as any, v);
-    setBasemapShade(map, ...shadeAs);
-  }
+  orderSatellite(map, on);
+  setBasemapShade(map, ...shadeAs);
 }
 
 /** Repaints the basemap in the light or dark theme and at a contrast (T-1249), without reloading
@@ -468,12 +481,21 @@ export function setSatellite(map: maplibregl.Map, on: boolean) {
 export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number) {
   shadeAs = [s, contrast];
   if (!styleUp(map)) return void (missed = true);
-  const land = SHADES[s].land;
+  // over imagery the drawn map underneath stays at its 0% look in the panels' own theme (names follow the slider as in
+  // Map mode); the slider is the imagery's opacity
+  const look = satOn ? shade.peek() : s;
+  const land = SHADES[look].land;
   repaintRoadHints(map);
+  // the kept layers go back to the drawn map's own paint before it is written again
+  if (satInked && !(satOn && contrast >= SAT_INK_FLIP)) {
+    for (const k of satKept) for (const [key, v] of Object.entries(k.was)) if (map.getLayer(k.id)) map.setPaintProperty(k.id, key as any, v);
+    satInked = false;
+  }
+  if (satOn && map.getLayer("background")) map.setPaintProperty("background", "background-color", land);
   for (const t of themed) {
     if (!map.getLayer(t.id)) continue;
-    const v = s === "dark" ? t.dark : t.light;
-    map.setPaintProperty(t.id, t.key as any, atContrast(v, t.how, land, contrast));
+    const v = look === "dark" ? t.dark : t.light;
+    map.setPaintProperty(t.id, t.key as any, atContrast(v, t.how, land, satOn && t.how !== "fade" ? 0 : contrast));
   }
   if (satOn) paintSatellite(map);
 }
