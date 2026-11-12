@@ -27,7 +27,10 @@ letters or digits), else that name. Each relation's ways, chained, are its shape
 finds no real-network track (trams, light rail), the track follows them. Trains an hour from
 `interval` tags, else realnet.OSM_TPH by kind, shared by a route master's patterns each way
 (`split_tph`); a suburban train with no route master and no ref every SUBURBAN_INTERVAL minutes.
-Run times from the distance at realnet.OSM_KMH; train lengths realnet.OSM_TRAIN_M. Levels, shared
+Run times from the distance at realnet.OSM_KMH; train lengths realnet.OSM_TRAIN_M. A light-rail
+route on main-line track (S-Bahn Berlin and Hamburg, OSM's `railway=light_rail` + `usage=main`;
+HEAVY_*) runs commuter trains at commuter speed, through the extract's own `lines`. The extract
+lists what it dropped, by reason (`dropped_routes`). Levels, shared
 track, terminals and pacing as for the hand-made ones (realcorridors.py, reallevels.py, the
 `realsave` bin).
 
@@ -67,6 +70,14 @@ MAX_SPACING_M = 15000.0
 MOSTLY = 0.5
 PASS_RUNNING = 0.9
 SUBURBAN_INTERVAL = "30"
+# T-3265: a light-rail route on main-line track (Berlin's and Hamburg's S-Bahn, Copenhagen's S-tog:
+# `railway=light_rail` with `usage` main or branch, or plain rail) with stops this far apart on
+# average and this many inside runs commuter trains at commuter speed; it keeps light rail's own
+# track and frequency. The stop count keeps out airport people movers that OSM tags usage=main,
+# and track tagged unelectrified (Chongqing's Bishan SkyShuttle) does not count: S-Bahns are electric.
+HEAVY_USAGE = {"main", "branch"}
+HEAVY_SPACING_M = 1000.0
+HEAVY_STOPS = 5
 # regions whose names in Han characters read as Mandarin (not Japan: kanji read otherwise)
 HANZI_REGIONS = {"cn", "hk", "tw"}
 
@@ -189,6 +200,12 @@ def cut(pack, rels, stops, ways, xy_of):
                 if ty == "r":
                     masters[r].append(rid)
     why = Counter()
+    gone = defaultdict(list)
+    heavy = []
+
+    def drop(reason, t):
+        why[reason] += 1
+        gone[reason].append(" ".join(x for x in (t.get("route", ""), t.get("ref", ""), pick_name(t, cc)) if x))
     keep, nodes = [], {}
     for rid, (t, ms) in rels.items():
         if t.get("type") != "route" or t.get("route") not in KINDS:
@@ -206,26 +223,29 @@ def cut(pack, rels, stops, ways, xy_of):
         if len(inside) < 2:
             continue
         if t.get("service") in SKIP_SERVICE or t.get("highspeed") == "yes":
-            why["service tag"] += 1
+            drop("service tag", t)
             continue
         if t.get("state") in SKIP_STATE or any(t.get(f"{x}:route") for x in ("disused", "proposed")) or \
                 re.search(r"out of service|disused|abandoned|closed", t.get("name:en", "") + " " + t.get("name", ""), re.I):
-            why["not running"] += 1
+            drop("not running", t)
             continue
         wt = [ways[r][0] for ty, r, role in ms if ty == "w" and r in ways and role in ("", "forward", "backward")]
         if wt and sum(x.get("highspeed") == "yes" for x in wt) > MOSTLY * len(wt):
-            why["high-speed track"] += 1
+            drop("high-speed track", t)
             continue
         if wt and sum(x.get("railway") == "preserved" or x.get("usage") == "tourism" for x in wt) > MOSTLY * len(wt):
-            why["heritage track"] += 1
+            drop("heritage track", t)
             continue
         if len(inside) < INSIDE_SHARE * len(st) and len(inside) < INSIDE_ENOUGH:
-            why["mostly outside"] += 1
+            drop("mostly outside", t)
             continue
         gap = [math.hypot((a[2][0] - b[2][0]) * k, a[2][1] - b[2][1]) * 111195 for a, b in zip(inside, inside[1:])]
         if sum(gap) / len(gap) > MAX_SPACING_M:
-            why["stops far apart"] += 1
+            drop("stops far apart", t)
             continue
+        if t.get("route") == "light_rail" and wt and len(inside) >= HEAVY_STOPS and sum(gap) / len(gap) >= HEAVY_SPACING_M and \
+                sum(x.get("railway") == "rail" or (x.get("usage") in HEAVY_USAGE and x.get("electrified") != "no") for x in wt) > MOSTLY * len(wt):
+            heavy.append(rid)
         keep.append(rid)
         for r, _, ll in st:
             nodes[r] = ll
@@ -256,7 +276,12 @@ def cut(pack, rels, stops, ways, xy_of):
         tg = stops[r][0] if r in stops else {}
         el.append({"type": "node", "id": r, "lon": lon, "lat": lat, "tags": {"name": pick_name(tg, cc)}})
     kinds = Counter(rels[r][0].get("route") for r in keep)
-    return {"elements": el, "shapes": shapes, "realauto": {"kept": len(keep), "kinds": dict(kinds), "dropped": dict(why)}}
+    # realnet's osm adapter takes these as its `lines` (a regex on "name | name:en | ref | r<id>")
+    lines = [[r"\| r(" + "|".join(str(r) for r in heavy) + r")$",
+              {"train_m": realnet.OSM_TRAIN_M["commuter"], "kmh": realnet.OSM_KMH["commuter"]}]] if heavy else []
+    return {"elements": el, "shapes": shapes, "lines": lines,
+            "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "dropped": dict(why),
+                         "dropped_routes": {k: sorted(v) for k, v in gone.items()}}}
 
 
 def chain(wlist, xy_of, k):

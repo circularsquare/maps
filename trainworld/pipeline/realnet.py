@@ -482,11 +482,13 @@ def load_osm(src, inside):
         t = r["tags"]
         return f"{t.get('name', '')} | {t.get('name:en', '')} | {t.get('ref', '')} | r{r['id']}"
 
+    ovs = list(src.get("lines", [])) + [tuple(x) for x in d.get("lines", [])]
+
     def override(r):
-        """A source's `lines`: [(regex on "name | name:en | ref | r<relation id>", {"tph": (peak,
-        midday, first), "kmh", "train_m", "operator"})], the first match, for relations with no
-        interval tags (Sendai)."""
-        return next((v for p, v in src.get("lines", []) if re.search(p, label(r))), {})
+        """A source's `lines`, then the file's own (realauto's light rail on main-line track,
+        T-3265): [(regex on "name | name:en | ref | r<relation id>", {"tph": (peak, midday,
+        first), "kmh", "train_m", "operator"})], the first match (Sendai's frequencies)."""
+        return next((v for p, v in ovs if re.search(p, label(r))), {})
     raw = []  # (relation, kind, [(member key, name, lon, lat)])
     for r in rels:
         t = r["tags"]

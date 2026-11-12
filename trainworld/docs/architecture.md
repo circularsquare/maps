@@ -528,7 +528,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (the 30 biggest metros by annual riders that have a pack), made with no hand work from noritetsu's OSM
   extract: route relations cut to the pack, intercity, high-speed and heritage trains left out, stations
   by name within 400 m, trains an hour from OSM's `interval` else a default by kind of line (a suburban
-  train with no line of its own every half hour), names in Latin letters where OSM has them (Cyrillic
+  train with no line of its own every half hour; a light-rail route on main-line track with 5 or more
+  stops at least 1 km apart, as OSM maps Berlin's S-Bahn, runs commuter trains at commuter speed on its
+  own track [T-3265]), names in Latin letters where OSM has them (Cyrillic
   transliterated, Chinese in pinyin), and a route whose line the track model cannot run (a terminal
   with more tracks than a node takes) left out (`pipeline/realnet.py ship` copies them from realnet's game
   files into `data/packs/real/`, `realauto.py ship` writes the app's list, and the build copies that folder). Between stations it follows the

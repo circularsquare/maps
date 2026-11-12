@@ -975,7 +975,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
 - `realauto.py` (T-3225): real networks with no hand work for the cities in `realauto.json`; `extract`
   cuts noritetsu's extract (read only) to each pack as the `osm` adapter's input, with each relation's
-  ways chained as its shape (`realnet.py geom` lays off-graph hops on them); `build [ids] [--jobs N]`
+  ways chained as its shape (`realnet.py geom` lays off-graph hops on them), the routes it dropped by
+  reason (`dropped_routes`) and its own `lines` overrides, which the `osm` adapter reads after the
+  source's (S-Bahn mapped as light rail, T-3265); `build [ids] [--jobs N]`
   runs net, geom, corridors, `realsave --shared --slow` and gamesave per city, builds a city again
   without the routes whose lines did not run (`auto_<id>_skip.json`), and writes a report per city
   (`auto_<id>.json`: stations, lines running, names in Latin letters, km off the graph, holds);
