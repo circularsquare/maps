@@ -38,6 +38,8 @@ in a window). Rivers: prototype FAILED (London 19/145 wrong bank); next would be
 (6-9 h): NOT started (not v0.3.3, not terrain); offer when she's back. UPDATE: she said run it, plus her idea "just not straighten lines if they are near rivers
 and/or would cause an issue by straightening": **rivers** ab661af6e3ab4da8f resumed for both (scratchpad, ~2 h, one
 river per picture). 8800 rebuild after the join's after-join steps. Smoke master f68a53d8 PASS 28.
+Rivers prototype 2 done (her idea works, figures in T-3358 task line, notes "Prototype 2"); build (6-8 h, Opus, fresh
+agent: rivers is at ~375k) waits for her go. Review image artifacts/trainworld/review/rivers-proto2-london.png.
 tr33 LANDED 64715623 (v0.3.3 changelog, 25 lines + headline; all 11 languages 2663/2663). Her review pending on the
 kept lines 18-25 and the headline shortened to 80 chars. V0_3_3_AT placeholder set at publish.
 **Order**: gaprun2's after-join terrain_fine step appends to data/work/terrain-fine (atomic); terrain's full world
