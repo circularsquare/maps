@@ -267,11 +267,12 @@ export function TypedValue(p: { label: string; type: { text: string; set: (v: nu
 }
 
 /** Buttons sharing borders, one of them on. */
-export function Segmented<T>(p: { options: [T, ComponentChildren][]; value: T; onChange: (v: T) => void }) {
+/** `tips`: a hover for the options that have one */
+export function Segmented<T>(p: { options: [T, ComponentChildren][]; value: T; onChange: (v: T) => void; tips?: (v: T) => string | undefined }) {
   return (
     <div class="group">
       {p.options.map(([v, label]) => (
-        <button class={"btn" + (v === p.value ? " on" : "")} onClick={() => p.onChange(v)}>
+        <button class={"btn" + (v === p.value ? " on" : "")} data-tip={p.tips?.(v)} onClick={() => p.onChange(v)}>
           {label}
         </button>
       ))}

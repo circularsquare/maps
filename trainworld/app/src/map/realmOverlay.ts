@@ -20,7 +20,7 @@ import { linking } from "../game/links";
 import { mapBlank } from "../game/loading";
 import { followStations, hiddenRealmAt, inactiveRealms, loadRealms, realmName, shownRealms, showRealm, zoneOutlines, zoneShown, type RealmSpot } from "../game/realms";
 import { SHADES } from "../game/shadeTable";
-import { selection, shade, tool } from "../game/ui";
+import { selection, mapShade, tool } from "../game/ui";
 import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
@@ -102,7 +102,7 @@ ${t("realmOverlay.tip")}`,
   };
 
   const paint = () => {
-    const c = SHADES[shade.peek()];
+    const c = SHADES[mapShade.peek()];
     shadeLayer.setColor(c.inactive, c.inactiveOpacity);
   };
   const visibility = () => {
@@ -163,7 +163,7 @@ ${t("realmOverlay.tip")}`,
     for (const [id, b] of buttons) if (!keep.has(id)) { render(null, b.el); b.el.remove(); buttons.delete(id); }
     place();
   });
-  const disposeShade = effect(() => { void shade.value; paint(); });
+  const disposeShade = effect(() => { void mapShade.value; paint(); });
   const disposeBlank = effect(() => { void mapBlank.value; visibility(); place(); });
   return () => {
     stopStations();

@@ -18,7 +18,7 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, buildLevel, display, isBuildTool, selection, shade, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -37,7 +37,7 @@ import { lineRunFactor } from "./game/regionMoney";
 import { stretchMoney } from "./game/stretchMoney";
 import { faresOf } from "./game/fareCurve";
 import { live } from "./map/live";
-import { setBasemapLabels, setBasemapShade, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint } from "./map/basemap";
+import { setBasemapLabels, setBasemapShade, setSatellite, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startLite } from "./map/lite";
 import { startRealNetwork } from "./map/realNetwork";
@@ -462,7 +462,8 @@ map.on("load", () => {
   // T-974: no city names behind the start menu; T-1567: no names at all behind its logo
   effect(() => setBasemapLabels(map, display.value.basemapLabels && !(choosing.value && START_LOGO), choosing.value));
   const contrast = computed(() => display.value.basemapContrast);
-  effect(() => setBasemapShade(map, shade.value, contrast.value));
+  effect(() => setBasemapShade(map, mapShade.value, contrast.value));
+  effect(() => setSatellite(map, display.value.satellite)); // T-3249
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883
   effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value)); // T-2998
@@ -474,7 +475,7 @@ map.on("load", () => {
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)
 // T-039: the network's casing and inks come from game/shades.ts at each draw
 effect(() => {
-  shade.value;
+  mapShade.value;
   overlay.invalidate();
   map.triggerRepaint();
 });

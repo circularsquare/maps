@@ -9,15 +9,15 @@
 
 import { effect } from "@preact/signals";
 import { SHADES, type ShadeColours } from "./shadeTable";
-import { shade } from "./ui";
+import { mapShade } from "./ui";
 
 export { outsidePaint, SHADES, type ShadeColours } from "./shadeTable";
 
 /** The current theme's map colours. */
-export const shadeColours = (): ShadeColours => SHADES[shade.peek()];
+export const shadeColours = (): ShadeColours => SHADES[mapShade.peek()];
 
 effect(() => {
-  const c = SHADES[shade.value], root = document.documentElement.style;
+  const c = SHADES[mapShade.value], root = document.documentElement.style;
   root.setProperty("--map-land", c.land);
   root.setProperty("--map-ink", c.mapInk);
   root.setProperty("--map-casing", c.casing);

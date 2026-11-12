@@ -38,7 +38,7 @@ import { BUBBLE_ALPHA, bubbleColour, purposeColour3, purposeSchemeOn, rgb, setBu
 import { openedZones } from "../game/openedZones";
 import { lineSetUp, startTier, type StartTier } from "../game/startDifficulty";
 import { PURPOSE_CLASS, purposeWords, type PurposeKey } from "../game/purposes";
-import { display, purposeFilter, selection, shade, shownDayPhrase } from "../game/ui";
+import { display, purposeFilter, selection, mapShade, shownDayPhrase } from "../game/ui";
 import type { CommutersOneWay, Selection } from "../game/types";
 import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
@@ -514,10 +514,10 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   effect(() => {
     display.value.bubbleSize;
     display.value.commuters;
-    shade.value;
+    mapShade.value;
     openedZones.value; // T-976: a zone opening turns its dot into a bubble
     lineSetUp.value; // T-2690: the dots' start tier colours go with the first line set up
-    setBubbleShade(shade.value);
+    setBubbleShade(mapShade.value);
     setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo);
     purposeFilter.value;
     anchorVersion.value; // the discs are measured from the draw anchor (T-317)

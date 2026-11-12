@@ -29,6 +29,8 @@ type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away" | "out" |
 const SCHEME_OPTIONS: [BubbleScheme, MessageKey][] = [["mode", "settingsTab.scheme3"], ["ramp", "settingsTab.scheme2"], ["purpose", "settingsTab.schemePurpose"], ["colorblind", "settingsTab.schemeColorblind"]];
 const DAY_OPTIONS: [DayShown, MessageKey][] = [["average", "settingsTab.average"], ["weekday", "settingsTab.weekday"], ["saturday", "settingsTab.sat"], ["sunday", "settingsTab.sun"]];
 type Projection = "flat" | "globe";
+type Ground = "map" | "satellite";
+const GROUND_OPTIONS: [Ground, MessageKey][] = [["map", "settingsTab.mapDrawn"], ["satellite", "settingsTab.satellite"]];
 const PROJECTION_OPTIONS: [Projection, MessageKey][] = [["flat", "settingsTab.flat"], ["globe", "settingsTab.globe"]];
 // Map detail (the saved key is still `lighterMap`): Low is the lighter map that was "on", High is "off"
 type LighterMap = "on" | "off";
@@ -153,6 +155,8 @@ export function SettingsTab() {
       <div class="h">{t("settingsTab.map")}</div>
       <div class="stack">
         <Segmented<Projection> options={worded(PROJECTION_OPTIONS)} value={d.projection === "globe" ? "globe" : "flat"} onChange={(v) => setDisplay("projection", v)} />
+        <Segmented<Ground> options={worded(GROUND_OPTIONS)} value={d.satellite ? "satellite" : "map"} onChange={(v) => setDisplay("satellite", v === "satellite")}
+          tips={(v) => (v === "satellite" ? t("settingsTab.satelliteTip") : undefined)} />
       </div>
       <Slider label={t("settingsTab.lineWidth")} min={0.5} max={2} step={0.05} value={d.lineWidth} percent set={(v) => setDisplay("lineWidth", v)} />
       <Slider label={t("settingsTab.basemap")} min={0} max={1} step={0.05} value={d.basemapContrast} percent

@@ -17,7 +17,7 @@ import * as maplibregl from "maplibre-gl";
 import { effect, signal } from "@preact/signals";
 import { Protocol } from "pmtiles";
 import { SHADES, type ShadeColours } from "../game/shadeTable";
-import { display, shade, snapping } from "../game/ui";
+import { display, mapShade, snapping } from "../game/ui";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { noritetsuBases, ringBox } from "../game/rings";
@@ -91,7 +91,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   let index: Promise<void> | null = null;
   let on = false;
   let painted: "light" | "dark" | null = null;
-  let opacity = SHADES[shade.peek()].realOpacity;
+  let opacity = SHADES[mapShade.peek()].realOpacity;
 
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
@@ -119,7 +119,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   const layerIds = () => [...everAdded].map((cc) => ID + cc).filter((id) => map.getLayer(id));
 
   const setShade = () => {
-    const s = shade.peek();
+    const s = mapShade.peek();
     if (s === painted || !styleUp(map)) return;
     painted = s;
     for (const id of layerIds()) map.setPaintProperty(id, "line-color", colour(SHADES[s]) as never);
@@ -138,7 +138,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       .slice(0, PER_PASS);
     if (!hits.length) return;
     const before = map.getLayer(REACH) ? REACH : firstSymbolId(map);
-    const colours = colour(SHADES[shade.peek()]);
+    const colours = colour(SHADES[mapShade.peek()]);
     for (const { cc } of hits) {
       added.add(cc);
       everAdded.add(cc);
@@ -160,7 +160,7 @@ export function startRealNetwork(map: maplibregl.Map) {
         before,
       );
     }
-    painted = shade.peek();
+    painted = mapShade.peek();
     if (hits.length === PER_PASS) map.once("idle", ensure);
   };
 
@@ -175,14 +175,14 @@ export function startRealNetwork(map: maplibregl.Map) {
         {
           id: REACH, type: "line", source: REACH,
           layout: { "line-cap": "round", "line-join": "round" },
-          paint: { "line-color": reachColour(SHADES[shade.peek()]) as never, "line-width": REACH_WIDTH as never, "line-opacity": REACH_OPACITY },
+          paint: { "line-color": reachColour(SHADES[mapShade.peek()]) as never, "line-width": REACH_WIDTH as never, "line-opacity": REACH_OPACITY },
         },
         firstSymbolId(map),
       );
       return;
     }
     src.setData(reachData(r));
-    map.setPaintProperty(REACH, "line-color", reachColour(SHADES[shade.peek()]) as never);
+    map.setPaintProperty(REACH, "line-color", reachColour(SHADES[mapShade.peek()]) as never);
   };
 
   const apply = () => {
@@ -199,7 +199,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
     on = display.value.realNetwork || snap;
-    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[shade.value].realOpacity;
+    opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[mapShade.value].realOpacity;
     apply();
   });
   map.on("moveend", ensure);

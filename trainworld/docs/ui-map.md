@@ -22,6 +22,8 @@ the shade outside the focused city, the save thumbnail's track) are one table,
 `game/shadeTable.ts`, whose named palette values at the top are the ones to retune by hand (read
 through `game/shades.ts`) [T-543].
 
+**Satellite** [T-3249]: Settings > Map has a Map | Satellite switch beside Flat / Globe, off by default and remembered with the other map settings; its hover says the imagery is low resolution outside Japan and the US. On, three raster layers sit just above the background (`map/basemap.ts`): Sentinel-2 cloudless 2024 from EOX everywhere (10 m, soft past zoom 14), GSI's photos over Japan (to zoom 18) and USGS NAIP over the contiguous US (to zoom 16) on top of it, each fetching only inside its box, each source's credit in the map's attribution control. USGS answers blank tiles for Canada and Mexico inside its box; a small protocol (`twusgs`) turns those into 404s so the Sentinel-2 layer shows. All fills, the hillshade and its water, buildings, minor roads and waterways are hidden; motorways and main roads stay as faint white lines (26% and 18%), boundaries faint white, place names light (#f2f2f2) with a dark halo (the no-halo rule gives way over imagery). The imagery is dimmed (saturation -0.3, brightness 0.85, opacity 0.3 + 0.55 x the Base map slider). The map's own ink (casings, real network, station circles, bubbles, the focus shade) uses the dark theme's colours whatever the theme (`mapShade` in `game/ui.ts`); panels, save pictures and Community thumbnails follow the theme as before and never include the base map. The vector tiles still load: labels and the road feeds read them.
+
 ## Real network (reference layer)
 
 Settings > Show > **Real world network**, on by default: faint lines (15% opaque in the light theme, T-727;

@@ -73,6 +73,45 @@ const VECTOR_SOURCE = "openmaptiles";
 const DEM_POLL_MS = 500;
 const TERRAIN_CREDIT = '<a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank">Terrain Tiles</a>';
 
+/** USGS answers 200 with a small blank tile for ground it has no imagery of (Canada and Mexico inside the box below);
+ * this protocol turns those into a 404, so the Sentinel-2 layer under shows there. */
+const USGS_PROTOCOL = "twusgs";
+const USGS_TILES = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile";
+const USGS_BLANK_BYTES = 3000;
+let usgsProtocolAdded = false;
+function addUsgsProtocol() {
+  if (usgsProtocolAdded) return;
+  usgsProtocolAdded = true;
+  maplibregl.addProtocol(USGS_PROTOCOL, async (params, abort) => {
+    const url = `${USGS_TILES}/${params.url.slice(USGS_PROTOCOL.length + 3)}`;
+    const res = await fetch(url, { signal: abort.signal });
+    if (!res.ok) throw new maplibregl.AJAXError(res.status, res.statusText, url, new Blob());
+    const data = await res.arrayBuffer();
+    if (data.byteLength < USGS_BLANK_BYTES) throw new maplibregl.AJAXError(404, "no imagery", url, new Blob());
+    return { data };
+  });
+}
+/** T-3249: the free satellite imagery, three raster sources stacked just above the background, each fetching only
+ * inside its box: Sentinel-2 cloudless everywhere (10 m, soft past zoom 14), GSI's photos over Japan and USGS's NAIP
+ * over the contiguous US on top of it. Each licence's credit is the source's attribution. The imagery is dimmed by
+ * the Base map slider; the game's vector fills, shade and minor roads are hidden while it shows. */
+const SAT_SOURCES: { id: string; tiles: string; maxzoom: number; bounds?: [number, number, number, number]; attribution: string }[] = [
+  { id: "sat-eox", tiles: "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", maxzoom: 14,
+    attribution: 'Sentinel-2 cloudless by <a href="https://s2maps.eu" target="_blank">EOX IT Services GmbH</a> (Contains modified Copernicus Sentinel data 2024)' },
+  { id: "sat-gsi", tiles: "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg", maxzoom: 18, bounds: [122.5, 20.3, 154.5, 46.3],
+    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">GSI Japan (地理院タイル)</a>' },
+  { id: "sat-usgs", tiles: `${USGS_PROTOCOL}://{z}/{y}/{x}`, maxzoom: 16, bounds: [-125, 24.3, -66.9, 49.5],
+    attribution: '<a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" target="_blank">USGS National Map</a>' },
+]; // i18n-ignore: attributions, as the data owners word them
+const SAT_RASTER = SAT_SOURCES.map((s) => s.id);
+const SAT_LABEL = "#f2f2f2";
+/** the paint the satellite view overrides on the layers it keeps, to put back when it goes off */
+let satKept: { id: string; kind: "road" | "bound" | "text"; weight?: number; was: Record<string, unknown> }[] = [];
+/** the basemap layers hidden while the imagery shows: every fill and shade, minor roads, anything else drawn */
+let satHide = new Set<string>();
+let satOn = false;
+let satelliteWanted = false;
+
 /** Positron's place layers that name a settlement, each with a black dot icon. */
 const CITY_LABELS = new Set(["label_city", "label_city_capital", "label_town", "label_village"]);
 
@@ -239,6 +278,7 @@ function addDemProtocol() {
 export function loadBasemap(map: maplibregl.Map) {
   demMap = map;
   addDemProtocol();
+  addUsgsProtocol();
   onRedraw((tiles) => { if (styleUp(map) && map.getSource(DEM)) map.refreshTiles(DEM, tiles); });
   const key = (c: { z: number; x: number; y: number }) => `${c.z}/${c.x}/${c.y}`;
   map.on("sourcedataloading", (e) => {
@@ -268,6 +308,8 @@ export function loadBasemap(map: maplibregl.Map) {
   map.on("style.load", () => {
     if (!missed) return;
     missed = false;
+    satOn = false;
+    setSatellite(map, satelliteWanted);
     setBasemapShade(map, ...shadeAs);
     applyLite(map);
     repaintRoadHints(map);
@@ -336,7 +378,84 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
       if (v !== undefined) paint[key] = atContrast(v, how, land, contrast);
     }
   }
+  addSatellite(style);
   return style;
+}
+
+/** T-3249: the imagery's sources and layers (hidden until Satellite is on), and which basemap layers give way to it. */
+function addSatellite(style: maplibregl.StyleSpecification) {
+  satKept = [];
+  satHide = new Set();
+  for (const layer of style.layers) {
+    if ((layer as any).layout?.visibility === "none") continue;
+    const paint = (layer as any).paint ?? {};
+    if (layer.type === "symbol") {
+      if ((layer as any).layout?.["text-field"] !== undefined)
+        satKept.push({ id: layer.id, kind: "text", was: { "text-halo-width": paint["text-halo-width"], "text-halo-color": paint["text-halo-color"], "text-halo-blur": paint["text-halo-blur"] } });
+    } else if (layer.type === "background") continue;
+    else if (layer.type === "line" && ROADS[layer.id] && ROADS[layer.id] !== "other") satKept.push({ id: layer.id, kind: "road", weight: ROADS[layer.id] === "motorway" ? 0.26 : 0.18, was: { "line-opacity": paint["line-opacity"] } });
+    else if (layer.type === "line" && layer.id.startsWith("boundary_")) satKept.push({ id: layer.id, kind: "bound", was: { "line-opacity": paint["line-opacity"] } });
+    else satHide.add(layer.id);
+  }
+  satHide.add(HILLSHADE).add(WATER_OVER_SHADE);
+  const at = style.layers.findIndex((l) => l.type === "background") + 1;
+  const rasters: maplibregl.LayerSpecification[] = [];
+  for (const s of SAT_SOURCES) {
+    style.sources[s.id] = { type: "raster", tiles: [s.tiles], tileSize: 256, maxzoom: s.maxzoom, attribution: s.attribution, ...(s.bounds ? { bounds: s.bounds } : {}) };
+    rasters.push({ id: s.id, type: "raster", source: s.id, layout: { visibility: "none" }, paint: {} });
+  }
+  style.layers.splice(at, 0, ...rasters);
+}
+
+/** Whether a basemap layer is drawn: the lighter map, the terrain setting and satellite each take layers away. */
+function layerVisible(id: string) {
+  if (satOn && satHide.has(id)) return false;
+  if (id === HILLSHADE) return hillshadeOn && !lite;
+  if (id === WATER_OVER_SHADE) return hillshadeOn;
+  return !(lite && LITE_HIDDEN.has(id));
+}
+
+/** The imagery's dimming at a Base map contrast (0-1): lower shows more of the dark ground under it. */
+function dimImagery(map: maplibregl.Map, contrast: number) {
+  for (const id of SAT_RASTER) {
+    if (!map.getLayer(id)) continue;
+    map.setPaintProperty(id, "raster-opacity", 0.3 + 0.55 * contrast);
+    map.setPaintProperty(id, "raster-saturation", -0.3);
+    map.setPaintProperty(id, "raster-brightness-max", 0.85);
+  }
+}
+
+/** The kept layers' paint for imagery: roads and boundaries faint white, names light with a dark halo (the
+ * no-halo rule of T-1692 gives way over imagery). Painted again after every basemap repaint, which writes theirs. */
+function paintSatellite(map: maplibregl.Map) {
+  for (const k of satKept) {
+    if (!map.getLayer(k.id)) continue;
+    if (k.kind === "text") {
+      map.setPaintProperty(k.id, "text-color", SAT_LABEL);
+      map.setPaintProperty(k.id, "text-halo-color", "rgba(0,0,0,0.8)");
+      map.setPaintProperty(k.id, "text-halo-width", 1.4);
+      map.setPaintProperty(k.id, "text-halo-blur", 0.5);
+    } else {
+      map.setPaintProperty(k.id, "line-color", "#ffffff");
+      map.setPaintProperty(k.id, "line-opacity", k.kind === "road" ? k.weight! : 0.3);
+    }
+  }
+  dimImagery(map, shadeAs[1]);
+}
+
+/** T-3249: the satellite imagery on or off. */
+export function setSatellite(map: maplibregl.Map, on: boolean) {
+  satelliteWanted = on;
+  if (!styleUp(map)) return void (missed = true);
+  if (on === satOn) return;
+  satOn = on;
+  for (const id of SAT_RASTER) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+  for (const id of satHide) if (map.getLayer(id) && !basemapSymbols.includes(id)) map.setLayoutProperty(id, "visibility", layerVisible(id) ? "visible" : "none");
+  if (on) paintSatellite(map);
+  else {
+    for (const k of satKept) for (const [key, v] of Object.entries(k.was)) if (map.getLayer(k.id)) map.setPaintProperty(k.id, key as any, v);
+    setBasemapShade(map, ...shadeAs);
+  }
 }
 
 /** Repaints the basemap in the light or dark theme and at a contrast (T-1249), without reloading
@@ -351,6 +470,7 @@ export function setBasemapShade(map: maplibregl.Map, s: Shade, contrast: number)
     const v = s === "dark" ? t.dark : t.light;
     map.setPaintProperty(t.id, t.key as any, atContrast(v, t.how, land, contrast));
   }
+  if (satOn) paintSatellite(map);
 }
 
 /**
@@ -369,9 +489,9 @@ function guardEnglishName(e: unknown): unknown {
 export function setHillshade(map: maplibregl.Map, on: boolean) {
   hillshadeOn = on;
   if (!styleUp(map)) return void (missed = true);
-  if (map.getLayer(HILLSHADE)) map.setLayoutProperty(HILLSHADE, "visibility", on && !lite ? "visible" : "none");
+  if (map.getLayer(HILLSHADE)) map.setLayoutProperty(HILLSHADE, "visibility", layerVisible(HILLSHADE) ? "visible" : "none");
   // kept on the lighter map too: the terrain tint (map/terrainTint.ts) sits under it, and water is never charged
-  if (map.getLayer(WATER_OVER_SHADE)) map.setLayoutProperty(WATER_OVER_SHADE, "visibility", on ? "visible" : "none");
+  if (map.getLayer(WATER_OVER_SHADE)) map.setLayoutProperty(WATER_OVER_SHADE, "visibility", layerVisible(WATER_OVER_SHADE) ? "visible" : "none");
 }
 let hillshadeOn = false;
 
@@ -453,7 +573,7 @@ function applyLite(map: maplibregl.Map) {
   if (!styleUp(map)) return void (missed = true);
   for (const id of LITE_HIDDEN) {
     if (!map.getLayer(id) || basemapSymbols.includes(id)) continue;
-    map.setLayoutProperty(id, "visibility", lite ? "none" : "visible");
+    map.setLayoutProperty(id, "visibility", layerVisible(id) ? "visible" : "none");
   }
   setBasemapLabels(map, ...labelsAs);
   setHillshade(map, hillshadeOn);

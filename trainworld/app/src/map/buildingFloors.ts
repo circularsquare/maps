@@ -17,7 +17,7 @@ import { buildingAtPack, buildingDraft, hallWaiting } from "../game/buildingView
 import { SHOP_COLOURS, HALL_CELL_M } from "../game/buildingLayout";
 import { BAD_RED, rgb, rgbf } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { shade } from "../game/ui";
+import { mapShade } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
 import type { BuildingInput } from "../game/types";
 import { world } from "../game/world";
@@ -38,7 +38,7 @@ const SHOP_GLYPH_PX = 9;
 const FLOOR_RGB: [number, number, number] = [249 / 255, 247 / 255, 243 / 255];
 /** the rim is this many station rims wide, half of it over the floor; wider in the dark theme, where
  * the stations' ink is a mid grey that a thinner rim loses against the floor */
-const rimOf = () => (shade.peek() === "dark" ? 2 : 1.5);
+const rimOf = () => (mapShade.peek() === "dark" ? 2 : 1.5);
 /** the stencil bit the floors mark (the track through the boxes uses the bits below it) */
 export const STENCIL_BIT = 0x80;
 /** corners a selected outline is drawn with at most (the tool allows 24) */

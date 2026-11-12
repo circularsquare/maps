@@ -12,7 +12,7 @@ import { ZONE_LOAD_ZOOM } from "../game/zones";
 import { perfOff } from "../perfFlags";
 import { mapBlank } from "../game/loading";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
-import { shade } from "../game/ui";
+import { mapShade } from "../game/ui";
 import { cityGeometry, footprintRings, OutlineEdges, outsideCity, outsideOutline, unionOutline } from "./boundaryGeometry";
 import { coarseOutlines, coarseWater } from "./coarseOutlines";
 import { smallDevice } from "../workers/deviceMemory";
@@ -41,12 +41,12 @@ export const shadePaint = () => ({ ...outsidePaint(shadeColours()) });
 /** Keeps layer `id`'s fill in the current theme's shade, from now on. */
 export function followShade(map: MlMap, id: string): () => void {
   const apply = () => {
-    const paint = outsidePaint(SHADES[shade.peek()]);
+    const paint = outsidePaint(SHADES[mapShade.peek()]);
     if (!styleUp(map) || !map.getLayer(id)) return;
     map.setPaintProperty(id, "fill-color", paint["fill-color"]);
     map.setPaintProperty(id, "fill-opacity", paint["fill-opacity"]);
   };
-  const stop = effect(() => { void shade.value; apply(); });
+  const stop = effect(() => { void mapShade.value; apply(); });
   map.on("style.load", apply);
   return () => (stop(), void map.off("style.load", apply));
 }

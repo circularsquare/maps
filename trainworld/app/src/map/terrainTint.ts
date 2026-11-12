@@ -7,7 +7,7 @@
 import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { computed, effect } from "@preact/signals";
-import { display, isBuildTool, shade, tool } from "../game/ui";
+import { display, isBuildTool, mapShade, tool } from "../game/ui";
 import { BLOCK_CELLS, HEX_ROW, HEX_SHIFT, HEX_WIDTH, mercLat, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
@@ -74,7 +74,7 @@ export function startTerrainTint(map: MlMap): () => void {
     // a hex under a pixel of the image has no shape to show: half the image, a quarter of the work
     const W = Math.max(1, Math.round(fine * HEX_WIDTH / (x1 - x0) < 1 ? fine / 2 : fine));
     const H = Math.max(1, Math.round(Math.min(MAX_PX, W * (y1 - y0) / (x1 - x0))));
-    const s = shade.peek();
+    const s = mapShade.peek();
     const key = [x0, y0, x1, y1, W, H, s, terrainVersion.peek()].join();
     setVisible(true);
     if (key === drawn) return;
@@ -149,7 +149,7 @@ export function startTerrainTint(map: MlMap): () => void {
   // blocks come in bursts as the view reaches new land: one redraw for a burst
   let soon = 0;
   const dispose = effect(() => {
-    void shown.value, terrainVersion.value, shade.value;
+    void shown.value, terrainVersion.value, mapShade.value;
     window.clearTimeout(soon);
     soon = window.setTimeout(redraw, shown.peek() ? 50 : 0);
   });

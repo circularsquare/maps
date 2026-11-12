@@ -13,7 +13,7 @@ import { demandView, type DemandView } from "../game/demand";
 import { mixOklab } from "../game/palette";
 import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
-import { display, shade, stopEditing, type StationUseMode } from "../game/ui";
+import { display, mapShade, stopEditing, type StationUseMode } from "../game/ui";
 import { world } from "../game/world";
 import { sizeCanvasLike } from "./gl";
 import type { Overlay } from "./overlay";
@@ -35,7 +35,7 @@ export const CIRCLE_COLOURS = {
   light: { entries: "#2456e0", transfers: "#169a50", fill: 0.2, casing: "#f3eee5" },
   dark: { entries: "#8aa6ff", transfers: "#52d68e", fill: 0.26, casing: "#292520" },
 };
-export const circleColours = () => CIRCLE_COLOURS[shade.peek()];
+export const circleColours = () => CIRCLE_COLOURS[mapShade.peek()];
 
 const mixed = new Map<string, string>();
 /** A circle's colour: the entries blue at no transfers, the transfers green at all of them, between
@@ -139,7 +139,7 @@ export class StationCircles {
       demandView.value;
       stationUse.value;
       complexes.value;
-      shade.value;
+      mapShade.value;
       stopEditing.value;
       void display.value.stationUse;
       void display.value.stationCircleSize;

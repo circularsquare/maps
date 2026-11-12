@@ -94,6 +94,8 @@ export interface DisplaySettings {
   runInBackground: boolean;
   /** T-033: the map as the flat map or as a globe (MapLibre's, flat again from zoom 12) */
   projection: "flat" | "globe";
+  /** T-3249: satellite imagery under the game instead of the drawn basemap (map/basemap.ts `setSatellite`) */
+  satellite: boolean;
   /** T-1248: the drawn width of lines and track as a multiple of their own, 0.5-2 */
   lineWidth: number;
   /** T-1249: the basemap's contrast, 0-1: below 1 everything but water and the land is mixed that
@@ -152,6 +154,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   moreCores: false,
   runInBackground: false,
   projection: "flat",
+  satellite: false,
   lineWidth: 1,
   basemapContrast: 1,
   hillshade: false,
@@ -256,7 +259,9 @@ export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null,
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
 export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
-effect(() => setBubbleShade(shade.value));
+/** T-3249: the shade the map's own ink is drawn in: always dark over satellite imagery, whatever the panels follow */
+export const mapShade = computed<Shade>(() => (display.value.satellite ? "dark" : shade.value));
+effect(() => setBubbleShade(mapShade.value));
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
  * remove what is clicked (T-096), pick a trip's two ends (T-195). */

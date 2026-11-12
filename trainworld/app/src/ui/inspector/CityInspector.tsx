@@ -11,7 +11,7 @@ import { zoneLoads } from "../../game/loading";
 import { t, tSeries } from "../../i18n";
 import { tPlace } from "../../i18n/places";
 import { BUBBLE_ALPHA, bubbleColour, setBubbleColours, setBubbleShade } from "../../game/palette";
-import { display, purposeFilter, shade, shownDayPhrase } from "../../game/ui";
+import { display, purposeFilter, mapShade, shownDayPhrase } from "../../game/ui";
 import { MIN_PAIR_TRIPS } from "../../map/intercityView";
 import { localModes } from "../../map/modeBar";
 import { goTo } from "../Search";
@@ -74,7 +74,7 @@ export function CityInspector({ id }: { id: string }) {
   const walk = lm?.walk ?? 0, none = lm?.none ?? 0;
   const rail = interRail + (lm?.train ?? 0);
   const d = display.value;
-  setBubbleShade(shade.value);
+  setBubbleShade(mapShade.value);
   setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
   const mix = bubbleColour(rail, walk, Math.max(0, interAll + localAll - rail - walk - none), none);
   const filter = purposeFilter.value;

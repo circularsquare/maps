@@ -26,7 +26,7 @@ import { compass, stationNameNear } from "../game/places";
 import { PURPOSE_CLASS, type PurposeFilter } from "../game/purposes";
 import { tripWords } from "../ui/inspector/tripText";
 import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
-import { display, purposeFilter, selection, shade, shownDayPhrase, tool } from "../game/ui";
+import { display, purposeFilter, selection, mapShade, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
 import { aggregate, discs, recolour, type Groups } from "./bubbles";
@@ -691,7 +691,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   effect(() => {
     colourKey.value;
     const d = display.peek();
-    setBubbleShade(shade.value);
+    setBubbleShade(mapShade.value);
     setBubbleColours(d.bubbleColours, d.rampFrom, d.rampTo);
     if (!purposeSchemeOn()) dropPurp();
     repaint();

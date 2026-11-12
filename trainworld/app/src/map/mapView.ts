@@ -76,6 +76,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
 function warnOnNetworkFailure(map: maplibregl.Map) {
   map.on("error", (e) => {
     const err = e.error, what = (e as { sourceId?: string }).sourceId ?? "a resource"; // i18n-ignore: console text
+    // T-3249: imagery tiles outside a source's coverage (sea off Japan) come back 404, as they should
+    if (err instanceof maplibregl.AJAXError && err.status === 404 && what.startsWith("sat-")) return;
     if (err instanceof maplibregl.AJAXError) {
       const text = `Map: ${what} did not load (${err.status || "failed"} ${err.statusText}: ${err.url})`; // i18n-ignore
       if (err.status === 0) console.warn(text);
