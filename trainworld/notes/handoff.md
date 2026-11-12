@@ -57,8 +57,16 @@ To tell her: Atlanta's airport legs 0.98 -> 0.44 of published (DB1B O&D share).
   stops of the same line at a near self-intersection, even with a passage (her TODO verbatim). Ids T-3298/3299.
 - dbltrack a24dfb160b1f47d8c (Sonnet, worktree .tw-trees/dbltrack, 6157): T-3296 rebuild single into double track.
   Ids T-3300/3301.
-- lhtscope a9bf2515b4ef71c76 (Opus, read-only, 6158): T-3297 how hard a per-save left-hand traffic flip is; notes +
-  staged estimate for her.
+- lhtscope (done): T-3297 estimate in notes/T-3297.md: sim already supports left-hand (Network::right_hand, lanes.rs);
+  app plumbing + drawing signs + new-game choice, ~5-7 h; her calls listed there (asked her).
+- haru ae9bb543ae404b5d5 (Opus, worktree .tw-trees/haru, 6159/6160): T-3302 Haru's two Tokyo saves don't load
+  (scratchpad harusaves\in). Ids T-3305/3306.
+- money a3df8170043e5a9f4 (Sonnet, worktree .tw-trees/money, 6161): T-3303 fare exploit (riders on board pay a fare
+  set mid-ride), T-3304 x100 money hover (her sentence verbatim), T-3307 own WebGL2 message. Ids T-3308/3309.
+- hsrprofit a73b4d35d12f852f8 (Sonnet, read-only, 6162/6163): T-3310 measure a Tokaido-style HSR line's profit on
+  live vs master; skill issue or balance?
+- Landed 11-12 ~10:20: b3dccf82 (flags 2, satellite fade, T-3274/3275 code + rerun registry, her strings), b6467f46
+  (stations: T-3286, T-3288; WASM). Not yet on 8800: snapbuild after the rerun's freeze.
 - Worktrees made from 32ac89b1: their registry/market-rows must be copied from the main tree before pages (told them).
 - Her Q: is the high-speed fare fix live? Answer: v0.3.1 has d5911dec (fares in the start country's dollars, long
   trips take HSR again); option A eb23b84b and jpn7's Shinkansen (T-3272) are 8800 only, wait for the next publish.
@@ -75,7 +83,7 @@ campus outline joins it or is left out). Rerun `--from through --ids artifacts/t
 (1,041 packs), pid 27492, stdout artifacts/trainworld/t3274/light_pass.log, ~1.5 h. Expected: jiw 0.036, ina
 "Lecture Hall" 7,318 -> 33. After: commit, archive T-3274/3275, snapbuild, smoke, push, delete data/work/pre-T3244/.
 T-3276 filed (Georgia Gwinnett 25k: area-sized campuses in scaled packs; a lower cap moves 10-24% of students to
-near home worldwide, a demand-wide shift: asked her, I recommended leaving it). Next free id T-3302.
+near home worldwide, a demand-wide shift: asked her, I recommended leaving it). Next free id T-3311.
 Old text, for the record:
 parentsplit (Opus, a4fc96c86a876dea2, done) built pipeline/campus_pools.py (world table data/raw/tier0/campus/pools.json),
 tier0.university_sizes on it, wikidata_prefill builds it, open universities and university farms/forests out; all
