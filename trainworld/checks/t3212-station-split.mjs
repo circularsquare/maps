@@ -155,6 +155,48 @@ try {
   // D and F at night, no trains about (for before and after to be compared)
   await page.evaluate(() => { const c = window.tw.clock, day = Math.floor(c.now() / 86400) + 1; c.setRunning(false); c.set((day + (day % 7 >= 5 ? 2 : 0)) * 86400 + 2.5 * 3600); });
   await page.waitForTimeout(1500);
+  // zoomed out, before double track parts: a split station must stay single-track thin (Anita 2026-11-11)
+  for (const z of [13, 14.5, 15.5, 16.3]) {
+    await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [M, z]);
+    // (the city's data loading card sits over the map's middle until it is in)
+    await page.waitForFunction(() => !document.querySelector('.loading-screen, .loading-card'), undefined, { timeout: 150000 }).catch(() => console.log('loading card still up'));
+    // (zoomed out the strokes are drawn simplified once that copy is made, T-1639: give it time)
+    await page.waitForTimeout(5000);
+    await shoot('zoomout-M', M, z);
+  }
+  // at zoom 14.5 the line's drawn width in px (the longest run of its colour across the track, per column):
+  // within 500 m of M outside its box, and halfway to A, against the double-track line C - D's (single track
+  // is drawn at 0.71 of a line, double at 1.24)
+  const widths = async (centre, lo, hi, colour) => {
+    await page.evaluate((c) => window.tw.map.jumpTo({ center: c, zoom: 14.5 }), centre);
+    await page.waitForTimeout(5000);
+    const png = await page.screenshot();
+    return page.evaluate(async ([b64, centre, lo, hi, colour, KM]) => {
+      const tw = window.tw, rect = tw.map.getCanvas().getBoundingClientRect();
+      const img = new Image();
+      await new Promise((r) => { img.onload = r; img.src = 'data:image/png;base64,' + b64; });
+      const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height;
+      const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(img, 0, 0);
+      const out = [];
+      for (let m = lo; m <= hi; m += 10) {
+        for (const side of [-1, 1]) {
+          const p = tw.map.project([centre[0] + side * m / 1000 * KM, centre[1]]), x = Math.round(p.x + rect.left), y0 = Math.round(p.y + rect.top);
+          if (x < rect.left || x >= rect.right) continue;
+          const d = cx.getImageData(x, y0 - 20, 1, 41).data;
+          let best = 0, cur = 0;
+          for (let k = 0; k < 41; k++) { const ok = Math.abs(d[k * 4] - colour[0]) < 40 && Math.abs(d[k * 4 + 1] - colour[1]) < 40 && Math.abs(d[k * 4 + 2] - colour[2]) < 40; best = ok ? Math.max(best, ++cur) : best; if (!ok) cur = 0; }
+          if (best) out.push(best);
+        }
+      }
+      return out.sort((a, b) => a - b);
+    }, [png.toString('base64'), centre, lo, hi, colour, KM]);
+  };
+  const pink = [217, 70, 122], blue = [47, 127, 208];
+  const nearM = await widths(M, 120, 500, pink), midAM = await widths([M[0] - 0.75 * KM, M[1]], 0, 100, pink), dbl = await widths([D[0] - 0.75 * KM, D[1]], 0, 100, blue);
+  const med = (v) => v[v.length >> 1] ?? 0;
+  out.thin = { nearMax: nearM[nearM.length - 1] ?? 0, mid: med(midAM), double: med(dbl) };
+  console.log(`line px at zoom 14.5: at most ${out.thin.nearMax} within 500 m of M (outside its box), ${out.thin.mid} halfway to A; double-track line ${out.thin.double}`);
+  if (tag !== 'before') check(out.thin.double > 0 && out.thin.nearMax < 0.8 * out.thin.double && out.thin.mid < 0.8 * out.thin.double, `zoomed out, single track by a split station stays thinner than double (${out.thin.nearMax} and ${out.thin.mid} against ${out.thin.double} px)`);
   await shoot('double', D, 17.7);
   await shoot('tram', F, 17.7);
   await shoot('empty-M', M, 17.7);

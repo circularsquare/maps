@@ -204,10 +204,14 @@ void main() {
   bool passing = (flags & 1024) != 0;
   if (passing && (u_pass_off <= 0.0 || u_casing > 0.0 || u_lane_mode == 1 || u_lane_mode == 3)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float lfm = turnback || (passing && u_lane_mode == 2) ? 1.0 : passing ? 0.0 : max(a_lane.x, a_lane.y), G = u_lanes.x, t = u_lanes.y;
+  // a station's split on single track (T-3212) widens only once double track's two tracks part
+  // (Anita: no thickening before the tracks show); further out it is single track's width
+  bool split = (flags & 8192) != 0;
+  float lfw = split ? lfm * t : lfm;
   bool bpShape = bpTrack || bpLine || ghost;
   float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0);
   float tw = tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0;
-  float tk = tram || turnback || passing ? 1.0 : mix(mix(${SINGLE_WIDTH.toFixed(2)}, ${DOUBLE_WIDTH.toFixed(2)}, lfm), 1.0, u_lanes.z);
+  float tk = tram || turnback || passing ? 1.0 : mix(mix(${SINGLE_WIDTH.toFixed(2)}, ${DOUBLE_WIDTH.toFixed(2)}, lfw), 1.0, u_lanes.z);
   float core = bpShape ? u_bp.x * tw * tk + 2.0 * u_bp.y : u_width.x * tw * tk;
   int id = gl_VertexID;
   float along = float(id & 1);
@@ -220,7 +224,7 @@ void main() {
   bool tBand = u_band_traffic == 1 && u_cap <= 0.0;
   float wmul = shared && u_cap > 0.0 ? 1.0 : a_wmul.x;
   float bandW = tBand ? 1.0 : 1.0 - bandOn * mix(a_band.z, a_band.w, along);
-  float grow = u_lanes.z * max(0.0, lfm * (G + lt) - core * (bpShape ? 1.0 : wmul));
+  float grow = u_lanes.z * max(0.0, lfw * (G + lt) - core * (bpShape ? 1.0 : wmul));
   float extra = sel ? u_width.y : 0.0;
   bool muted = u_kind == 1 && u_mute.x > 0.0 && !sel;
   if (muted) bandW *= u_mute.x;
@@ -251,10 +255,12 @@ void main() {
     // left; the band under both is the pair's width, or the traffic width behind them (Anita,
     // 2026-10-19)
     float gap = t * (G - lt);
-    float wl = lfm > 0.0 ? 0.5 * (max(core, G + lt) - gap) : mix(core, lt, t);
+    // (a split takes single track's widths and its tracks part with the gap, so it opens out of
+    // single track's width instead of jumping to the pair's)
+    float wl = lfm > 0.0 && !split ? 0.5 * (max(core, G + lt) - gap) : mix(core, lt, t);
     float half_ = 0.5 * (gap + wl);
-    lane_off = half_;
-    float band = max(core * (bpShape ? 1.0 : wmul), lfm * 2.0 * half_ + wl);
+    lane_off = split ? t * half_ : half_;
+    float band = max(core * (bpShape ? 1.0 : wmul), lfw * 2.0 * half_ + wl);
     bool casing = u_casing > 0.0;
     bool keep = u_lane_mode == 1
       ? !ghost && (casing ? !bpTrack : (u_kind == 1 && !blueprint) || (striped && u_kind == 0))
@@ -275,7 +281,7 @@ void main() {
   float faint = clamp(w, 0.05, 1.0);
   float floorPx = 1.0;
   if (u_kind == 0 && !(tram || turnback || passing)) {
-    floorPx = mix(1.0, ${DOUBLE_FLOOR_PX.toFixed(1)}, lfm * (1.0 - u_lanes.z));
+    floorPx = mix(1.0, ${DOUBLE_FLOOR_PX.toFixed(1)}, lfw * (1.0 - u_lanes.z));
     // a blueprint's middle and a ghost's inner layer sit between rails of their own
     if ((bpShape && u_casing <= 0.0 && !ghost) || (ghost && u_ghost_layer == 2)) floorPx = max(1.0, floorPx - 2.0 * u_bp.y);
   }
