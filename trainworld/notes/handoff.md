@@ -27,6 +27,17 @@ steps). maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; pro
 track is wider than a phone screen, so the view is solid line colour. Fixing: maxZoom 20 on touch devices only (my
 call). T-3368 committed 23c0335a (not on 8800 yet). Filed T-3368..T-3372 (T-3372 finer terrain, waits for her go).
 Next free id T-3373.
+**11-12 ~23:50 UTC, Anita away ~16 h** (back briefly in ~6 h, little time): "probably dont start new work unless its
+obvious, mosty just wanna finsh the 0.3.3 stuff and alsowork on terrain"; use all cores (cap set 16); usage low this
+week (no big change in behaviour). hsr landed f68a53d8 (T-3352 only). Running: **terrain** a13189d6a6022e348 (Opus,
+.tw-trees/terrain, Vite 6156): T-3372 blend the cap + hexes back + world rebuild into data/terrain-world-v2, publish
+waits for her (R2 prefix terrain-world/v2); in v0.3.3 if ready. **tr33** ab062aae567391a12 (Sonnet, .tw-trees/tr33,
+Vite 6157): v0.3.3 changelog entry (her text) + translation batch. gaprun2 (maps-37's): join ends ~19:30-20:00 local,
+batch B building beside it (claim gaprun-B), B gates after; answer "go gate" when relayed (no main-tree app/ writes
+in a window). Rivers: prototype FAILED (London 19/145 wrong bank); next would be a 1 h gap measurement then B
+(6-9 h): NOT started (not v0.3.3, not terrain); offer when she's back. 8800 rebuild after the join's after-join steps. Smoke master f68a53d8 PASS 28.
+**Order**: gaprun2's after-join terrain_fine step appends to data/work/terrain-fine (atomic); terrain's full world
+build (stage B) starts only after that, so v2 has the gap regions; maps-19 tells terrain when it's done.
 **Her answers 11-12 ~23:10 UTC**: high speed stays 320 (T-3337 dropped; DECISIONS/ARCHIVE fixed in main tree,
 uncommitted) -> **hsr320** a0b261a210d8228eb (Sonnet, .tw-trees/hsr, Vite 6155) strips T-3337 from the tree, then
 I land T-3352 (expect rebase conflicts with onelook in en.json/context.json/ToolBar/onetrack.rs; sim -> WASM rebuild).
