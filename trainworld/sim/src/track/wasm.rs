@@ -478,6 +478,22 @@ impl TrackApi {
         true
     }
 
+    /// T-3297: the running side of an empty network (a new game's). False, changing nothing, once
+    /// anything is drawn: what a player laid for one side (flyovers, single track joined to one
+    /// track) is wrong on the other.
+    pub fn set_right_hand(&mut self, right_hand: bool) -> bool {
+        let n = &self.w.net;
+        if (0..n.node_count() as u32).any(|i| n.node_ok(i)) || (0..n.line_count() as u32).any(|l| n.line_ok(l)) {
+            return false;
+        }
+        self.w.net.right_hand = right_hand;
+        true
+    }
+    /// T-3297: true when trains keep right (the saved running side).
+    pub fn right_hand(&self) -> bool {
+        self.w.net.right_hand
+    }
+
     /// Each region's local time (T-309, `localtime.rs`): the game clock's UTC offset (h), the
     /// reach of a zone's centre (m), then per registered zone its centre's lon, lat and UTC offset
     /// (h). Kept across loads; every line's periods follow it from now.
@@ -802,6 +818,7 @@ mod beside;
 mod crossings;
 mod links;
 mod oneway;
+mod flip;
 mod rebuild;
 mod lines;
 mod gap;
@@ -2118,6 +2135,8 @@ impl TrackApi {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod flip_tests;
 #[cfg(test)]
 mod bus_tests;
 #[cfg(test)]

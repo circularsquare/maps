@@ -651,7 +651,15 @@ it means). A normal game has "Switch to sandbox mode", which asks first ("Confir
 "Money cannot be turned back on in this game.", with Stay in normal mode
 and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campaign's
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
-not the browser's. In a normal game a
+not the browser's. First in the section, **Trains run on** Left or Right [T-3297; `ui/SideSwitch.tsx`]: picking
+the other side switches the whole game (world.md "Running side"), at once on a network with no track, else after
+a question ("Switch trains, trams and buses to the left? One-way track and flyover legs turn round to match, and
+lines move onto them. Anything that still doesn't work is listed after. Undo history is cleared.", Switch side and
+Keep this side). After a switch with anything to report, a list opens ("Switched to the left"): To fix (lines
+that can't get through their stops, junctions now crossing flat, one-way track no train can use) and Fixed (one-way
+track turned round, lines rerouted), each row a click that shows the place and selects the line, junction or track
+and closes the list; under the row "3 places to fix after the switch" (or "Nothing left to fix after the switch")
+with Show list, until another game opens. In a normal game a
 row "Tutorial" with a Start again button (restarts the [tutorial card](#tutorial-card))
 sits under the mode [T-1822, T-1835].
 
@@ -1060,6 +1068,11 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   with, so the player picks one on purpose [T-1302]. Picking a city makes it the start; picking another
   start in any other way blanks the list again [T-3225]. The game starts from that network, built and
   running; the hover "Start with Tokyo's real rail lines already built." shows once a network is picked.
+- **Trains run on** Left or Right [T-3297; `ui/SideSwitch.tsx`, `game/runningSide.ts`]: the game's running side, for
+  trains, trams and buses alike (world.md "Running side"). Until the player picks, it follows the start: the side
+  its country's railways keep to, a real network's its metro's, Right on the world map; a pick stays while the
+  start changes. Hover "Trams and buses too. Set from the country you start in." A real network started on the
+  other side than its save is switched as it opens.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
   high, bold, tinted) and centred in the sheet's last row, with Back at its left [T-1215]. If a real network cannot be downloaded, a
   line says so and the sheet stays.

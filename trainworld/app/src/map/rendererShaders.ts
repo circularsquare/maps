@@ -307,8 +307,8 @@ void main() {
   vec2 nrm = vec2(-dir.y, dir.x);
   vec4 c = along < 0.5 ? c0 : c1;
   vec2 off = nrm * side * w * 0.5 + dir * (along * 2.0 - 1.0) * w * 0.5;
-  // trains keep right (T-319): a line's strokes run in its run 0's direction, so its run 0 has the
-  // right-hand track (-nrm) and run 1 the left
+  // a line's strokes run in its run 0's direction (T-319); each of its two tracks takes the line's
+  // colour, so the stroke is the same whichever side trains keep to (the train shader's u_keep)
   float lv = along < 0.5 ? a_lane.x : a_lane.y;
   if (turnback) lv = 2.0 * lv - 1.0;
   if (passing) off += nrm * ((flags & 2048) != 0 ? 1.0 : -1.0) * mix(u_lane_mode == 2 ? lane_off : 0.0, u_pass_off, lv);
@@ -899,6 +899,7 @@ uniform vec2 u_lane;               // px from the centre line to a track's once 
 uniform float u_bands;             // px a band's shift of one line width is drawn, 0 none (T-1799)
 uniform float u_bands_m;           // and of a metre to its ribbon's middle (T-2132)
 uniform vec2 u_passing;            // T-2233: px from the centre line to a passing station's outer track, 1 drawn there
+uniform float u_keep;              // T-3297: 1 where trains keep right of their travel, -1 left
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
@@ -1013,7 +1014,7 @@ void main() {
   vec2 px = max(bus ? u_min_px * vec2(0.77 * BUS_LEN, 0.77) : boat ? u_min_px * vec2(1.0, 1.3) : tram ? u_min_px * vec2(0.75, 0.885) : u_min_px, vec2(cars * carM, bus ? 2.5 : boat ? 8.0 : tram ? 2.4 : 3.0) * kM * u_px_per_unit * (bus ? 1.2 : 1.0));
   if (u_detail) px.x = max(bus ? 2.8 * BUS_LEN * u_dpr : 2.0 * u_dpr, pitchM * (bus ? 1.2 : 1.0) * kM * u_px_per_unit - (tram ? 0.0 : max(1.5 * u_dpr, kM * u_px_per_unit)));
   // on its own track as double track parts (T-658): narrowing to its true 3 m, so two trains
-  // passing never touch, and keeping right of its direction of travel (T-319)
+  // passing never touch, and keeping to its side of its direction of travel (T-319, u_keep)
   vec4 lb = laneAt(L, carD);
   float lane = u_lane.y * lb.x;
   px.y = mix(px.y, (tram ? 2.4 : 3.0) * kM * u_px_per_unit, lane);
@@ -1032,7 +1033,7 @@ void main() {
   vec2 nrm = vec2(-sdir.y, sdir.x);
   // T-2182: its two ends each shifted by the band there, so a train easing sideways with its band
   // turns with it rather than sliding crabwise
-  float side = g_run == 0 ? -1.0 : 1.0;
+  float side = (g_run == 0 ? -1.0 : 1.0) * u_keep;
   vec4 lbb = laneAt(L, carD - h), lbf = laneAt(L, carD + h);
   float shB = shiftAt(lbb, side, acrossAt(carD - h, totalM)), shF = shiftAt(lbf, side, acrossAt(carD + h, totalM));
   if (shB != shF) {

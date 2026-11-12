@@ -307,6 +307,10 @@ export type ToClock =
   | { kind: "newGame"; name?: string; game?: NewGameSpec }
   /** T-728: make this normal game a sandbox, for good */
   | { kind: "sandbox" }
+  /** T-3297: every train, tram and bus to the other side (`TrackApi.flip_right_hand`), answered with "answer": the
+   * sites, two numbers each (sim `FLIP_*`: 1 single track turned round, an edge; 2 a line moved, 3 a line left
+   * broken; 4 a junction now crossing flat, 5 one-way track no train can use, a node) */
+  | { kind: "flipSide"; seq: number }
   /** T-729: the zones this game has opened, the whole list in order (game/openedZones.ts) */
   | { kind: "opened"; zones: string[] }
   /** T-1223: the zones demand holds fine, and T-2153 the last two builds' zones, for the save's header */
@@ -678,6 +682,8 @@ export interface ClockState {
   /** T-3202: the two-way single-track stretches trains of opposite directions keep off together on
    * screen (`TrackApi.guard_singles`) */
   singles?: Float64Array;
+  /** T-3297: the running side, false where trains keep left (`TrackApi.right_hand`); absent: right */
+  rightHand?: boolean;
   money: MoneyState;
   /** the renderer's buffers, built in the worker from the rest (T-063); the arrays are shared with
    * `render` */

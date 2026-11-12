@@ -204,6 +204,44 @@ impl Network {
         (join != 0 && self.join_applies(c)).then_some((join == 2) == self.right_hand)
     }
 
+    /// T-3297: the single track to reverse when the running side changes: every piece the player set
+    /// one way (1 or 2) on a run (single, non-crossover pieces through 2-end nodes of two such pieces)
+    /// that meets double track where a join counts (`join_applies`) at any of its ends. Joins are
+    /// ground left or right and stay; on the other side their tracks carry the other way, so such a
+    /// run's set way must turn round with them: a flyover's legs then still meet the tracks that run
+    /// their way, and the leg that crosses the main is again the one that ramps over it.
+    pub fn flip_reversals(&self) -> Vec<u32> {
+        let ne = self.edge_count();
+        let single = |e: u32| self.edge_ok(e) && self.edge_tracks[e as usize] == 1 && !self.edge_crossover[e as usize];
+        let mut parent: Vec<u32> = (0..ne as u32).collect();
+        fn root(parent: &mut [u32], mut e: u32) -> u32 {
+            while parent[e as usize] != e {
+                parent[e as usize] = parent[parent[e as usize] as usize];
+                e = parent[e as usize];
+            }
+            e
+        }
+        for i in 0..self.node_count() as u32 {
+            let p = &self.node_ports[i as usize];
+            if !self.node_ok(i) || p.n != 2 {
+                continue;
+            }
+            let (a, b) = (p.end[0] >> 1, p.end[1] >> 1);
+            if a != b && single(a) && single(b) {
+                let (ra, rb) = (root(&mut parent, a), root(&mut parent, b));
+                parent[ra as usize] = rb;
+            }
+        }
+        let mut meets = vec![false; ne];
+        for e in 0..ne as u32 {
+            if single(e) && (self.join_applies(e << 1) || self.join_applies(e << 1 | 1)) {
+                let r = root(&mut parent, e);
+                meets[r as usize] = true;
+            }
+        }
+        (0..ne as u32).filter(|&e| single(e) && matches!(self.edge_oneway[e as usize], 1 | 2) && meets[root(&mut parent, e) as usize]).collect()
+    }
+
     /// Whether a join at edge end `c` would count: a node with double track on the end's other side, a
     /// junction or (T-3190) the loose end of the double track itself.
     pub fn join_applies(&self, c: u32) -> bool {

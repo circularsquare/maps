@@ -20,6 +20,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { LineInput, WorldView } from "../game/types";
 import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
+import { halfFill } from "./halfDot";
 import { headingOnScreen } from "./stopHeading";
 import { headingChevron } from "./trackTagRows";
 import { queryClock } from "../workers/clockClient";
@@ -377,7 +378,7 @@ export class StopMarkers {
       m.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       const way = stop ? this.oneWay.get(id) : undefined;
       const heading = way === undefined ? null : headingOnScreen(this.overlay, n, id, way, this.index);
-      m.el.style.background = this.halfFill(heading);
+      m.el.style.background = halfFill(heading);
       if (heading === null) {
         if (m.chev) m.chev.style.display = "none";
       } else {
@@ -392,14 +393,6 @@ export class StopMarkers {
         m.el.remove();
         this.marks.delete(id);
       }
-  }
-
-  /** T-3041: a stop served one way is filled on one half only, split along the track, the half on the right
-   * of the way the train goes (`heading`, screen degrees, T-3122: the sim's); "" for any other marker. */
-  private halfFill(heading: number | null): string {
-    if (heading === null) return "";
-    // the right-hand normal on screen (y down) is (-dy, dx); a CSS gradient angle points (sin, -cos)
-    return `linear-gradient(${(heading + 180).toFixed(1)}deg, #fff 50%, var(--c) 50%)`;
   }
 
   /** The station whose marker is under a map point (CSS px), preferring stops, then the ones that

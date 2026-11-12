@@ -1090,6 +1090,9 @@ section + section > .changelog-head { margin-top: 16px; }
 .new-game-real { display: flex; align-items: center; gap: 8px; }
 .new-game-real .purpose-filter { margin-left: 0; min-width: 9em; font-size: inherit; }
 .new-game-real select { width: 100%; }
+/* T-3297: the list after a side switch, each row a click from its place */
+.side-sites { list-style: none; margin: 2px 0 6px; padding: 0; }
+.side-sites .btn.text { width: 100%; justify-content: flex-start; text-align: left; gap: 6px; }
 .new-game-find { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
 .new-game-hits { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); }
 .new-game-hits li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 8px; cursor: pointer; }

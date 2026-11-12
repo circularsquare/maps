@@ -23,7 +23,7 @@ import { demandByDay, demandView, platformTransfers, roughZones } from "../game/
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
-import { say, setEditSink, world, worldIsRows } from "../game/world";
+import { flipSites, rightHand, say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
@@ -482,6 +482,11 @@ export function postAchievements(got: Record<string, Omit<import("./saveFile").A
 /** Ask the clock worker an inspector question (T-031); null before the worker is there. */
 export function queryClock(q: Extract<ToClock, { kind: "query" }>["q"]): Promise<Float64Array | null> {
   return current ? current.query(q) : Promise.resolve(null);
+}
+
+/** T-3297: every train, tram and bus to the other side; the sites the flip fixed and left (`ToClock` "flipSide"). */
+export function flipSide(): Promise<Float64Array | null> {
+  return current ? current.flipSide() : Promise.resolve(null);
 }
 
 /** Which game the page opens (T-677). */
@@ -1025,6 +1030,7 @@ export class ClockClient {
     setMoneyState(msg.state.money);
     this.worldBefore = world.value;
     worldIsRows.value = !!msg.state.rows;
+    if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
     world.value = toWorld(msg.state);
     const es = this.earlyShares;
     this.earlyShares = null;
@@ -1149,6 +1155,8 @@ export class ClockClient {
         holdForGameLoad(msg.from === "new" ? "new" : msg.slot || saveSlotsState.peek().active || undefined);
         // Ids are renumbered by a load: nothing old may stay selected or half drawn.
         selection.value = null;
+        // T-3297: the last side switch's list is this game's only (a switch comes back as "rebuilt")
+        if (msg.reason !== "rebuilt") flipSites.value = null;
         tool.value = "select";
         lineDraft.value = { line: null, stops: [] };
         // T-715: the clock the hold above sent is the old game's, which the worker ignores
@@ -1316,6 +1324,13 @@ export class ClockClient {
       void p.then(() => { if (this.readsOut.get(key) === read) this.readsOut.delete(key); });
     }
     return p;
+  }
+
+  /** T-3297: `flipSide` above. */
+  flipSide(): Promise<Float64Array> {
+    const seq = ++this.seq;
+    this.post({ kind: "flipSide", seq });
+    return new Promise<Float64Array>((res) => this.queries.set(seq, res));
   }
 
   /** Send an edit; the promise resolves with the worker's answer. `early` "rows": a stop click's (T-2766), answered

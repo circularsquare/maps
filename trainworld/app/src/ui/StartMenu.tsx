@@ -32,7 +32,8 @@ declare const __TW_VERSION__: string | undefined;
 const VERSION = typeof __TW_VERSION__ === "string" ? __TW_VERSION__ : "dev";
 
 /** The game the URL chooses, or null for the menu: `?new=1` a new game that owns no slot (T-320),
- * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728);
+ * normal in New York unless `&mode=sandbox` or `&city=<zone id>` say otherwise (T-728), `&side=left|right` its
+ * running side (T-3297);
  * `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` the game opened last; `?slot=<key>` and
  * `?load=file|restore|new` the game the saves panel picked (T-1196). */
 export function choiceFromUrl(): GameChoice | null {
@@ -40,7 +41,8 @@ export function choiceFromUrl(): GameChoice | null {
   const on = (k: string) => q.get(k) === "1";
   if (on("new")) {
     const city = q.get("city");
-    return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: isCity(city) ? city! : HOME_CITY } };
+    const side = q.get("side");
+    return { fresh: true, newGame: true, game: { mode: q.get("mode") === "sandbox" ? "sandbox" : "normal", start: isCity(city) ? city! : HOME_CITY, ...(side === "left" || side === "right" ? { rightHand: side === "right" } : {}) } };
   }
   // T-1196: a page reloaded into the game picked in the saves panel; the switch leaves the address
   // bar, so a reload from there goes to the menu (or, `?paused=1`, the game opened last)

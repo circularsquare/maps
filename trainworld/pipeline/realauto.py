@@ -401,7 +401,7 @@ def build_one(city, exe):
              ("drop", py(os.path.abspath(__file__), "drop", city)),
              ("geom", py(os.path.join(HERE, "realnet.py"), "geom", city)),
              ("corridors", py(os.path.join(HERE, "realcorridors.py"), city, "--out", OUT)),
-             ("realsave", [str(exe), "--dir", OUT, "--city", city, "--out", OUT, "--shared", "--slow"]),
+             ("realsave", [str(exe), "--dir", OUT, "--city", city, "--out", OUT, "--shared", "--slow"] + (["--left"] if any(c["id"] == city and c.get("left") for c in listed()) else [])),
              ("gamesave", py(os.path.join(HERE, "realnet.py"), "gamesave", city))]
     times = {}
     for attempt in (0, 1):

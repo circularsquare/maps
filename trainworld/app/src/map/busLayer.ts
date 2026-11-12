@@ -34,6 +34,7 @@ import type { Overlay } from "./overlay";
 import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
 import { headingAtPlane } from "./halfDot";
+import { rightHand } from "../game/world";
 import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
@@ -261,10 +262,11 @@ uniform vec2 u_viewport;
 uniform vec2 u_r;            // a ring's outer radius and an end's half side, device px
 uniform vec3 u_rail_rgb;
 uniform float u_rings;       // 0: the ends only
+uniform float u_keep;        // T-3297: 1 where buses keep right, -1 left
 in vec4 a_stop;              // x, y, 1 a ring + 2 a blueprint's, the colour packed
 in vec2 a_way;               // the local direction a one-way stop's buses go, else 0
 out vec2 v_p;
-flat out vec2 v_nrm;         // T-3147: the right-hand side of the way, clip space; 0 for both ways
+flat out vec2 v_nrm;         // T-3147: the side of the way buses keep to (u_keep, T-3297), clip space; 0 for both ways
 flat out vec3 v_color;
 flat out float v_end;
 flat out float v_r;
@@ -286,7 +288,7 @@ void main() {
   if (ring && dot(a_way, a_way) > 0.0) {
     vec4 c1 = project(a_stop.xy + a_way);
     vec2 d = (c1.xy / c1.w - c0.xy / c0.w) * (u_viewport * 0.5);
-    if (length(d) > 1e-6) { d = normalize(d); v_nrm = vec2(d.y, -d.x); }
+    if (length(d) > 1e-6) { d = normalize(d); v_nrm = vec2(d.y, -d.x) * u_keep; }
   }
   float p = a_stop.w;
   v_color = bp ? u_rail_rgb : vec3(floor(p / 65536.0), mod(floor(p / 256.0), 256.0), mod(p, 256.0)) / 255.0;
@@ -446,7 +448,7 @@ export class BusLayer {
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
     this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha"]);
-    this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim"]);
+    this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep"]);
     this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
     this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb"]);
     this.arrowVao = gl.createVertexArray();
@@ -815,6 +817,7 @@ export class BusLayer {
     gl.uniform1f(p.u_rim, Math.max(1, 0.45 * bus));
     gl.bindVertexArray(vao);
     gl.uniform1f(p.u_rings, rings ? 1 : 0);
+    gl.uniform1f(p.u_keep, rightHand.peek() ? 1 : -1);
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
     gl.bindVertexArray(null);
   }

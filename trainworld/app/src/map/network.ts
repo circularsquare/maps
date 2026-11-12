@@ -196,6 +196,8 @@ export interface NetworkBuffers {
   conflicts?: Float64Array;
   /** T-3202, for the train guard: `ClockState.singles` */
   singles?: Float64Array;
+  /** T-3297: the side trains keep to, 1 right of their travel, -1 left (`ClockState.rightHand`); absent: 1 */
+  keep?: number;
   /** T-1029: the clock worker's number for this build, and `patch` when it was posted as changes to
    * the build numbered `patch.base` (`NetPatch`) */
   serial?: number;
@@ -932,7 +934,9 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
       const p = node.platform * k * (dead ? 1 : 0.5), T = TURNBACK_M * k;
       const s0 = atEnd ? D - p - T : p;
       const flags = node.stationBuilt ? 0 : F_FADED;
-      along(s0, s0 + T, -1, 1, flags);
+      // from the arrival track to the departure track: with trains keeping left, the other way across (T-3297)
+      const hand = s.rightHand === false ? -1 : 1;
+      along(s0, s0 + T, -hand, hand, flags);
       if (dead) along(s0, s0 + T, 1, -1, flags);
     }
   }
@@ -2002,6 +2006,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     pathLen,
     conflicts: s.conflicts,
     singles: s.singles,
+    keep: s.rightHand === false ? -1 : 1,
     turnbacks,
     ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
     ...(oneWayTrack.length ? { oneWayTrack: new Float32Array(oneWayTrack) } : {}),
@@ -2094,7 +2099,7 @@ function laneAt(n: NetworkBuffers, line: number, d: number): number {
 }
 
 /** A trip's state at game time `t` (`dep` absolute): null if it is not on the track. `dx, dy`:
- * run 0's direction there. `shiftM`: metres to the right of its direction of travel on double
+ * run 0's direction there. `shiftM`: metres to the side of its direction of travel it keeps to (`keep`) on double
  * track, where the renderer draws it on its own track (T-658, `NetworkRenderer.laneShiftM`); `bandM`:
  * metres a line width is drawn, where its line's band shifts it (T-1799, `NetworkRenderer.bandShiftM`),
  * by `band` per sample (the Traffic view's own, `NetworkRenderer.sampleBand`), and `bandOn` how far its
@@ -2147,7 +2152,7 @@ function trainLengthM(n: NetworkBuffers, line: number): number {
   return Math.min(cars * (raw < 0 ? -raw * 20 : raw < 1 ? raw * 20 : 20), n.lineTable[line * 4 + 2]);
 }
 
-/** Position and direction used by both train and car picking, `shiftM` to the right of travel. */
+/** Position and direction used by both train and car picking, `shiftM` to the side trains keep to (`keep`). */
 function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0, bandM = 0, band = n.sampleBand, bandOn = 0, passM = 0) {
   const [x, y] = lineAtX(n, line, d);
   const [bx, by] = lineAtX(n, line, d - 5), [fx, fy] = lineAtX(n, line, d + 5);
@@ -2163,8 +2168,8 @@ function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0
   }
   const bow = passM && n.samplePass && len > 1e-9 ? passBow(sampleValue(n, n.samplePass, line, d) / PASS_LEAD_M) : 0;
   if (bow > 0) {
-    // the outer track to the right of its travel, as the train shader's `shiftAt`
-    const k = passM * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) / len;
+    // the outer track on the side it keeps to, as the train shader's `shiftAt`
+    const k = passM * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) * (n.keep ?? 1) / len;
     ox += (-dy * k - ox) * bow;
     oy += (dx * k - oy) * bow;
   }
@@ -2187,11 +2192,11 @@ function bandAt(n: NetworkBuffers, b: Float32Array, line: number, d: number): [n
   return [b[si * 2] + (b[si * 2 + 2] - b[si * 2]) * f, b[si * 2 + 1] + (b[si * 2 + 3] - b[si * 2 + 1]) * f];
 }
 
-/** The shift to the right of travel (local y points south, so right of (dx, dy) is (-dy, dx)). */
+/** The shift to the side trains keep to, `keep` (local y points south, so right of (dx, dy) is (-dy, dx)). */
 function rightOf(n: NetworkBuffers, line: number, d: number, y: number, dx: number, dy: number, run: number, shiftM: number): [number, number] {
   const len = Math.hypot(dx, dy);
   if (!shiftM || len < 1e-9) return [0, 0];
-  const k = shiftM * laneAt(n, line, d) * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) / len;
+  const k = shiftM * laneAt(n, line, d) * kAtY(y, n.anchor ?? anchor()) * (run === 0 ? 1 : -1) * (n.keep ?? 1) / len;
   return [-dy * k, dx * k];
 }
 

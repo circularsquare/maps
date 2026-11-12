@@ -882,6 +882,56 @@ impl TrackWorld {
         Ok((Op::Batch(vec![inv2, inv]), t, der))
     }
 
+    /// T-3297: the whole network to the other running side, in place (ids kept): the single track
+    /// `Network::flip_reversals` names turned round, every line the flip leaves broken moved through
+    /// its same stops where it can be, and everything derived again. Not undoable: the history is
+    /// dropped, as what it holds was drawn for the other side. The pieces turned round, the lines
+    /// moved, and the lines left broken.
+    pub fn flip_right_hand(&mut self) -> (Vec<u32>, Vec<u32>, Vec<u32>) {
+        let was_broken = self.net.line_broken.clone();
+        let reversed = self.net.flip_reversals();
+        for &e in &reversed {
+            let w = &mut self.net.edge_oneway[e as usize];
+            *w = 3 - *w;
+        }
+        self.net.right_hand = !self.net.right_hand;
+        // junction capacity moves with the side: rates are settled again, not kept from the save
+        self.net.rates_from_save = false;
+        self.net.pace_from_save = false;
+        self.reload();
+        self.undo.clear();
+        self.redo.clear();
+        let (mut ops, mut moved, mut broken) = (vec![], vec![], vec![]);
+        let net = &self.net;
+        for l in 0..net.line_count() as u32 {
+            let li = l as usize;
+            if !net.line_ok(l) || !net.line_broken[li] || was_broken.get(li).copied().unwrap_or(false) {
+                continue;
+            }
+            let stops = net.line_stops(l);
+            let once = net.line_runs_once(l);
+            let path = net.route_hops(stops).ok().filter(|p| once || net.back_path_of(stops, p).is_some());
+            match (path, net.line_data(l)) {
+                (Some(path), Some(mut d)) => {
+                    d.path = path;
+                    ops.push(Op::Line { id: l, data: Some(d) });
+                    moved.push(l);
+                }
+                _ => broken.push(l),
+            }
+        }
+        if !ops.is_empty() {
+            if self.apply_and_derive(Op::Batch(ops)).is_ok() {
+                self.reload();
+            } else {
+                broken.append(&mut moved);
+            }
+            self.undo.clear();
+            self.redo.clear();
+        }
+        (reversed, moved, broken)
+    }
+
     /// T-3137: ops moving each rail line on track whose way the edit changed (`der.ways`) that it
     /// left broken (`broken`: as they were before) onto a path through its same stops that runs every
     /// track's way, as `TrackApi::set_edge_oneway` does; one with no such path stays broken.

@@ -20,6 +20,11 @@ import { DEMAND_INDEX, loopHalves } from "./types";
 export const world = signal<WorldView | null>(null);
 /** T-3159: the world just set is a stop click's rows alone (`ClockState.rows`); the network it goes with comes later */
 export const worldIsRows = { value: false };
+/** T-3297: the game's running side, false where trains, trams and buses keep left (`ClockState.rightHand`) */
+export const rightHand = signal(true);
+/** T-3297: the last side switch (ui/SideSwitch.tsx): the side it went to, and its sites as the sim gives them (`kind`
+ * as `FLIP_*`, `id` the edge, line or node); null in a game not switched since it opened */
+export const flipSites = signal<{ right: boolean; sites: { kind: number; id: number }[] } | null>(null);
 /** A short message for the player: why an edit was refused, what a construct cost. */
 export const notice = signal<{ text: string; bad: boolean; at: number } | null>(null);
 

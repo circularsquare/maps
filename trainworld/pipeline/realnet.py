@@ -8,7 +8,8 @@
     python pipeline/realnet.py route <city>     # each hop routed over the real-network graph (T-1303)
     python pipeline/realnet.py colours <city>   # each line's real colour into the network JSON (T-1770; `net` does it too)
     python pipeline/realnet.py corridors <city> # shared-track pieces and pairs (T-1305, pipeline/realcorridors.py)
-    (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR]
+    (sim) cargo run --release --features demand --bin realsave -- --city <city> [--out DIR] [--left]
+                                                # --left for lon, tyo, sdj (their metros keep left, T-3297)
     python pipeline/realnet.py gamesave <city>  # the `realsave` output as a game file, <city>_real.save
     python pipeline/realnet.py ship [city ...]   # the game files a sandbox starts from -> data/packs/real/<id>.save (T-731); the cities named, else all
 

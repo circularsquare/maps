@@ -176,7 +176,8 @@ export type GameMode = "normal" | "sandbox";
 
 /** How a new game starts (T-728): its mode, its start zone (none for the world map), and for a
  * sandbox the start zone's real network as save bytes (T-731). */
-export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffer }
+/** `rightHand` (T-3297): the running side picked, false for trains, trams and buses keeping left; absent: right */
+export interface NewGameSpec { mode: GameMode; start?: string; real?: ArrayBuffer; rightHand?: boolean }
 
 /**
  * Whether this build can open the save: it names the registry's world (or none, as legacy NYC

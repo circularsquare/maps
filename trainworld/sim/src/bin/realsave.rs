@@ -1,6 +1,9 @@
 //! T-007: New York's real network as a track-model save, and the snapshot demand would get from it.
 //!
-//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc] [--out DIR] [--shared]
+//!   cargo run --release --features demand --bin realsave -- [--dir data/work/realnet] [--city nyc] [--out DIR] [--shared] [--left]
+//!
+//! `--left` (T-3297): the network keeps left (a city whose metro runs on the left, `pipeline/realauto.json`'s
+//! `left`, `realnet.py`'s `LEFT`).
 //!
 //! `--shared` (T-1305) builds instead the network `pipeline/realcorridors.py` laid out in
 //! `<city>_real_corridors.json` ("model": lines sharing track, one or two pairs a piece, junctions
@@ -75,7 +78,7 @@ fn main() {
     let lines = net_j["lines"].as_array().unwrap();
     let geoms = geo_j["lines"].as_array().unwrap();
 
-    let mut net = Network::new(lon0, lat0, true);
+    let mut net = Network::new(lon0, lat0, !args.iter().any(|a| a == "--left"));
     let mut placed: Vec<(f64, f64)> = vec![];
     // per line: its node ids; per node: the station key it stands for
     let mut node_key: Vec<String> = vec![];

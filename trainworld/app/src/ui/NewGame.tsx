@@ -16,6 +16,8 @@ import { t, tCountry } from "../i18n";
 import { tPlace } from "../i18n/places";
 import realNetworks from "../game/realNetworks.json";
 import { patientFetch } from "../workers/patientFetch";
+import { startRightHand } from "../game/runningSide";
+import { SideSwitch } from "./SideSwitch";
 
 /** The suggested starts (T-728), easy starts (T-2690); Guangzhou for Toronto, for a start outside the West with
  * many cities near it (Anita, 2026-11-06). */
@@ -139,6 +141,8 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const [text, setText] = useState("");
   const [cursor, setCursor] = useState(0);
   const [real, setReal] = useState(false);
+  // T-3297: the running side the player picked, else (null) the start's
+  const [side, setSide] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // T-1132: the start from the player's location, the browser asking for it; a refusal or no answer only marks the button
@@ -157,6 +161,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   // T-3225: the real networks by name, for the sandbox's list
   const realCities = useMemo(() => [...REAL_NETWORKS].filter((id) => isCity(id)).map((id) => cityById(id))
     .sort((a, b) => shown(a).localeCompare(shown(b))), []);
+  const rightHand = side ?? startRightHand(startId, realOffered && real);
   const pick = (id: string | null) => {
     asked.current++;
     setHere("idle");
@@ -185,7 +190,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   };
   const go = async () => {
     if (busy) return;
-    const spec: NewGameSpec = { mode, start: startId ?? undefined };
+    const spec: NewGameSpec = { mode, start: startId ?? undefined, rightHand };
     if (realOffered && real) {
       setBusy(true);
       try {
@@ -255,6 +260,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           </select>
         </label>
       </div>}
+      <SideSwitch cls="new-game-real" right={rightHand} onPick={setSide} tip={t("sideSwitch.tip")} />
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
         <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: shown(city) }) : t("newGame.start")}</button>

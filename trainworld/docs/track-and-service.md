@@ -698,7 +698,7 @@ at the crossing: a ramp passing track less than a level from it, or two tracks a
 `lanes.rs`): an edge stays one piece to place, price and delete, and its tracks are lanes inside it,
 derived and never stored: single track one lane on the centre line (both ways, or one way as its
 way says, 6.1 "Track settings"), double track two lanes 2 m either side, each carrying one direction by the running
-side (keep right: the right lane looking from a to b carries a to b). `(edge, direction)` is the
+side (keeping right, the right lane looking from a to b carries a to b; keeping left, the left one, T-3297). `(edge, direction)` is the
 segment in SPEC 2.1's keyframes; on double track the direction names the lane. At a node, every
 edge end leaves along the node's heading or its reverse, and its lanes lie across the node around
 a slot of its own (its rank right to left on its side, 8 m apart), so each end's lanes stay

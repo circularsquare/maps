@@ -24,6 +24,7 @@ import { PurposeSelect } from "./DemandSelector";
 import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
 import { t, tNumber, type MessageKey } from "../i18n";
 import { LanguageSelect } from "./LanguageSelect";
+import { SideRow } from "./SideSwitch";
 
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
@@ -259,6 +260,7 @@ function GameMode() {
   return (
     <>
       <div class="h">{t("settingsTab.game")}</div>
+      <SideRow />
       <div class="game-mode">
         <span data-tip={sandbox ? t("settingsTab.sandboxTip") : undefined}>{sandbox ? t("settingsTab.sandbox") : t("settingsTab.normal")}</span>
         {!sandbox && <button class="btn text" data-mode-switch onClick={() => (ask.value = {

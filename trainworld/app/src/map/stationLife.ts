@@ -101,7 +101,7 @@ function platformSpot(net: NetworkBuffers | null, s: StationInput, board: BoardH
     const o = q * QUEUE_STRIDE, line = board.queues[o + 1], run = board.queues[o + 2], d = board.queues[o + 3];
     const [ax, ay] = lineAt(net, line, d - 5), [bx, by] = lineAt(net, line, d + 5);
     const along = (bx - ax) * (net.stationAxis?.[i * 2] ?? 1) + (by - ay) * (net.stationAxis?.[i * 2 + 1] ?? 0);
-    side = along * (run === 1 ? -1 : 1) >= 0 ? 1 : -1;
+    side = along * (run === 1 ? -1 : 1) * (net.keep ?? 1) >= 0 ? 1 : -1;
   }
   const P = pts.length / 2, line = new Float64Array(P * 2), across = new Float64Array(P * 2);
   for (let k = 0; k < P; k++) {

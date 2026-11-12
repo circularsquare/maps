@@ -1865,6 +1865,7 @@ function buildState(): ClockState {
     crossings,
     conflicts,
     singles,
+    rightHand: a.right_hand(),
     cash: a.cash(),
     builtCost,
     blueprintCost,
@@ -2749,6 +2750,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
   await openNetwork(net);
+  // T-3297: a real network started on the other side than its save keeps to
+  if (fresh?.rightHand !== undefined && fresh.rightHand !== api!.right_hand()) api!.flip_right_hand();
   api!.set_fleet(h.fleet ?? 0);
   api!.set_fleet_fast(h.fleetFast ?? 0);
   api!.set_fleet_bus(h.fleetBus ?? 0);
@@ -2829,6 +2832,7 @@ async function newGame(spec?: NewGameSpec) {
   newer = false;
   newerFile = null;
   api!.load(emptyTrack!);
+  api!.set_right_hand(spec?.rightHand ?? true);
   api!.set_cash(START_CASH);
   api!.set_fleet(0);
   api!.set_fleet_fast(0);
@@ -4124,6 +4128,7 @@ async function processMessage(msg: ToClock) {
         // a start on another clock than New York's starts again at its own morning
         if (startClock(empty) !== START_CLOCK) { await newGame(empty); return; }
         setNewGame(empty);
+        api!.set_right_hand(empty?.rightHand ?? true);
       }
       if (stored) {
         try {
@@ -4195,7 +4200,7 @@ async function processMessage(msg: ToClock) {
     failAnswer(msg);
   } finally {
     if (changes) todayGen++;
-    if (msg.kind === "edit" || (msg.kind === "saveSlot" && msg.action !== "save") || msg.kind === "import" || msg.kind === "newGame") trackVersion++;
+    if (msg.kind === "edit" || (msg.kind === "saveSlot" && msg.action !== "save") || msg.kind === "import" || msg.kind === "newGame" || msg.kind === "flipSide") trackVersion++;
   }
 };
 
@@ -4230,7 +4235,7 @@ function failAnswer(msg: ToClock) { // i18n-ignore
   if (msg.kind === "previewStation") send({ kind: "stationCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0 }); // i18n-ignore
   if (msg.kind === "previewCrossover") send({ kind: "crossoverCheck", seq: msg.seq, ok: false, issues: ["Internal"], cost: 0, parts: [] }); // i18n-ignore
   if (isPreview(msg)) send({ kind: "preview", seq: msg.seq, ok: false, cost: 0, lengthM: 0, mult: 0, issues: ["Internal"], verts: new Float64Array(0), pts: new Float32Array(0) });
-  if (msg.kind === "query") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
+  if (msg.kind === "query" || msg.kind === "flipSide") send({ kind: "answer", seq: msg.seq, data: new Float64Array(0) });
 }
 
 /** Once a wall second: autosave when due. */
@@ -4539,6 +4544,13 @@ async function handle(msg: ToClock) {
     api.set_cash(msg.cash);
     if (msg.fleet) { api.set_fleet(api.cars_needed()); api.set_fleet_fast(api.cars_needed_fast()); }
     sendMoney();
+  } else if (msg.kind === "flipSide") {
+    // T-3297: every train, tram and bus to the other side, in place (ids kept); what changes is every figure, so
+    // the game goes on as after a rebuilt model: the hour's accounts afresh, demand asked again
+    const data = api.flip_right_hand();
+    restart(gameNow(), "autosave", "rebuilt");
+    dirty = true;
+    send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "query") {
     const q = msg.q;
     if (q.what === "lineProfile") {

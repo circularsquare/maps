@@ -155,8 +155,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   touches one passing (10.5 px at zoom 15). The box is at least wide enough for a train on each outer
   track (about 36 px at zoom 15 against 11.25 for others); clicks, the selection outline and the
   rest take the same width. Not picked, no hover of their own.
-- **Close in, trains keep right** [T-319]: each line's run 0 is drawn on the right-hand track of its direction
-  and run 1 on the left. Under a line's two tracks is a band as wide as the pair or its traffic
+- **Close in, trains keep to their side** [T-319, T-3297]: each line's run 0 is drawn on the track on the
+  game's running side of its direction (the right, or the left where trains keep left) and run 1 on the other. Under a line's two tracks is a band as wide as the pair or its traffic
   width, whichever is wider, in the line colour mixed 60% towards the casing, over one casing
   band (Anita, 2026-10-19: the tracks over the traffic width). Bare track is two grey tracks as
   much thinner than 2.4 m as it is thinner than a line; blueprint track is two blueprint tracks,
@@ -503,8 +503,8 @@ number) and shows n as its symbol.
 - **A platform each side, close in** [T-658c]: on a double-track station, or one where single track splits (T-3212; flag 16 in the station
   buffer), as the two tracks part ("Lines and track") each direction's riders stand on their own
   platform, from the outer edge of its track out to the rim [T-1121], instead of filling half the box:
-  the + side's trains travel along the platform axis and keep right, so their track and their
-  platform are on the + side. At a station with passing tracks the platform is an island between
+  the + side is the right of the platform axis, so with trains keeping right those travelling along the
+  axis stand there, and with trains keeping left those travelling against it (T-3297). At a station with passing tracks the platform is an island between
   the running track and the outer track (where trains on both stop, T-2248), so its riders stand
   from the running track's outer edge to the outer track's inner edge [T-2249, `u_pass_in`]; from
   zoom 14 to where the tracks part, from the middle to the outer track. A single-track station is

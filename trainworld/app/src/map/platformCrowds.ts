@@ -139,8 +139,9 @@ export class PlatformCrowds {
   }
 }
 
-/** Each platform's station in the station buffer, and its side: + where its trains travel along
- * the station's drawn platform axis, - against it; and per station the sides with platforms. */
+/** Each platform's station in the station buffer, and its side: + where its trains keep right travelling along
+ * the station's drawn platform axis or keep left travelling against it (T-3297), - the other; and per station the
+ * sides with platforms. */
 function place(n: NetworkBuffers, b: BoardHour) {
   const index = new Map<number, number>();
   n.stationIds.forEach((id, i) => index.set(Number(id), i));
@@ -152,7 +153,7 @@ function place(n: NetworkBuffers, b: BoardHour) {
     if (s < 0) continue;
     const line = b.queues[base + 1], run = b.queues[base + 2], d = b.queues[base + 3];
     const [ax, ay] = lineAt(n, line, d - 5), [bx, by] = lineAt(n, line, d + 5);
-    const dot = ((bx - ax) * (n.stationAxis?.[s * 2] ?? 1) + (by - ay) * (n.stationAxis?.[s * 2 + 1] ?? 0)) * (run === 1 ? -1 : 1);
+    const dot = ((bx - ax) * (n.stationAxis?.[s * 2] ?? 1) + (by - ay) * (n.stationAxis?.[s * 2 + 1] ?? 0)) * (run === 1 ? -1 : 1) * (n.keep ?? 1);
     side[q] = dot >= 0 ? 1 : -1;
     sides[s] |= side[q] > 0 ? 1 : 2;
   }
