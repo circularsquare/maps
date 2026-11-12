@@ -36,7 +36,42 @@ const V0_3_1_AT = "2026-11-12T03:30:00Z";
 /** When v0.3.2 went out: set at publish. */
 const V0_3_2_AT = "2026-11-12T18:00:00Z";
 
+/** When v0.3.3 went out: set at publish. */
+const V0_3_3_AT = "2026-11-13T18:00:00Z";
+
 export const UPDATES: Update[] = [
+  {
+    version: "v0.3.3",
+    at: V0_3_3_AT,
+    line: "updates.v033Line",
+    changes: [
+      "updates.v033OneWay",
+      "updates.v033SingleTrack",
+      "updates.v033Timetables",
+      "updates.v033Follow",
+      "updates.v033Bullets",
+      "updates.v033LeftHand",
+      "updates.v033SBahn",
+      "updates.v033BusReroute",
+      "updates.v033RealTime",
+      "updates.v033Memory",
+      "updates.v033Screenshots",
+      "updates.v033Zones",
+      "updates.v033NorthKorea",
+      "updates.v033LongTrips",
+      "updates.v033Resorts",
+      "updates.v033Schematic",
+      "updates.v033StationNames",
+      "updates.v033Satellite",
+      "updates.v033Networks",
+      "updates.v033Tunnels",
+      "updates.v033ZoomButtons",
+      "updates.v033ZoneNames",
+      "updates.v033HsrFare",
+      "updates.v033Touch",
+      "updates.v033Fixes",
+    ],
+  },
   {
     version: "v0.3.2",
     at: V0_3_2_AT,
