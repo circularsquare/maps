@@ -36,7 +36,9 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
   then B and C. ~10 h. Messages me BEFORE each gate and waits for my "go gate": then no main-tree app/ writes.
   Found the panic was T-2776 (register race on evo's unregister), not stale pair files: I OK'd fixing T-2776 in
   market_zones.py (heal orphaned market packs under the lock, ~7 s per register), skipping the pair-file move,
-  withdrawing that DECISIONS rule. Smoke 28/28 on 6140.
+  withdrawing that DECISIONS rule. Smoke 28/28 on 6140. Committed 1595924e. Runs started ~14:35 local (A python
+  6460, KP python 43924). **GATE WINDOW ~15:20-17:30 local, "go gate" given: no main-tree app/ writes, no landings,
+  until gaprun2 says it ended.**
 - **onetrack** ae97500d3a62d1d0f (Opus, .tw-trees/onetrack, 6150): T-3332 one-track stations, 11-16 h, stages.
   Ids T-3354/3355.
 - **t3326** DONE stage 2, landed d78d1d16 (fbshots tree removed). Strings sent to her for ack. Left: server deploy
@@ -54,6 +56,23 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
   demand workers (+0.5 GB each), not file size; proposal B live Settings reading first, A saves-list estimate. Sent
   her the A/B question with strings. On her answer: resume it to build.
 - Committed since: 47324b04 T-3344 (closed), 08c27589 v0.3.2 changelog on master.
+
+## Her 8800 test + answers 11-12 ~15:10 local
+- Two-pair box doesn't show for her -> T-3356 P1, agent **quadfix** aebad7c10cd823406 (Opus): diagnose read-only now,
+  fix in .tw-trees/quadfix.
+- Pill shape out, "turn around" not "turn round" (rule added to CLAUDE.md Player text) -> T-3357: Sonnet agent in
+  the main tree AFTER the gate window (en.json `issues.buildingNoStation`, `sideSwitch.ask`, `sideSwitch.reversed`).
+- Memory: B live reading AND A estimate + warning, yes -> resume t3329 a3bb12c205199e3b6 after the gate window.
+  Limit (8/6 GB, red 85%) and strings still unanswered.
+- Schematic: city-turn fix yes, Japan shape yes, public Community saves fine "but efficient". Water continuity
+  (rivers as oval blobs) -> T-3358. t3345 af6237aa0c40ccfc1 resumed: water study now, then city-turn in .tw-trees/schem.
+  She asked what "bigger city centres" means (answered in chat).
+- Timetables: "Custom" for own rows; whole hours, averaging, Sat+Sun, text all yes; express behind local yes; three
+  modes (current / rows+weekends / exact: nudge, remove, add trains, Marey chart, conflicts highlighted with delay);
+  big train-by-station grid, hideable. t3346 resumed to revise. Stage 2 started: **tt2** a8e910f825e247d9e (Opus,
+  .tw-trees/tt2, 6160).
+- t1156-all-china.save is no reference (DECISIONS).
+- Worktrees now: onetrack, tt2, quadfix, schem, hotfix031 (5; over the usual 2-3, disk checked).
 
 ## Waiting on Anita
 - Schematic (T-3345 stage 1 done, notes/T-3345.md): approach 1 for country maps only as stage 2? the all-Japan shape

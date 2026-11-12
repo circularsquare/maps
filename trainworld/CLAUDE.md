@@ -30,6 +30,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.
+- American wording: "turn around", never the British "turn round" or "round" for "around" (Anita, 2026-11-12: "its a
+  pet peeve of mine").
 - Watch for an object or colour as the subject ("grey fills"), dropped words ("from street zooms"), and hovers that
   say what the player can see. A gesture with no visible control gets its instruction in a tag ("Click to close the
   loop"); ordinary controls get none.
