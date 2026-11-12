@@ -2546,3 +2546,5 @@
   "oneWay.reroutes": "A row under the one-way question, one per line whose route changes. line: the line's name, \"Line 4\".",
   "issues.oneWayNoWay": "Notice when track cannot be made one way because a line has no other route between its stations. line: the line's name, \"Line 4\"."
 }
+  "topBar.speedReal": "Name of the slowest game speed, where game time runs at real-world time. Shown on the third speed button and the slider; used as {speed} in \"{speed} speed\".",
+  "topBar.speedReal4": "Name of the game speed at four times real-world time. Same places as topBar.speedReal.",

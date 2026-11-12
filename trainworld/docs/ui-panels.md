@@ -280,9 +280,10 @@ wide so a longer date moves nothing [T-1868].
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
   scene is mixed 15% towards the background. Pause and three
-  speeds (1x, 4x, 16x; hovers "Normal speed", "4x speed", "16x speed" [T-1800]). **Double-click the 16x button** for a slider of 0.5x to 100x [T-1664]
-  (18 round stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye); the speed picked shows
-  as text on that button and stays until another speed button is pressed (not saved with the game).
+  speeds (1x, 4x, 16x; hovers "Normal speed", "4x speed", "16x speed" [T-1800]); the third button always shows its speed as text, "16x" by
+  default [T-3327]. **Double-click it** for a slider of real to 100x [T-1664]
+  (20 stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye; "real" is 1 game second per second, 1/60 of 1x, and "4real" is four times that);
+  the speed picked shows as text on that button and stays until another speed button is pressed (not saved with the game).
   **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
   `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders
   again (each reads "calculating..." meanwhile: its cluster's local result, or the

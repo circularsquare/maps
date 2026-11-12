@@ -3,7 +3,7 @@
 // component so a game minute re-renders only it. The sky and demand band are `MapSky`, on the map.
 
 import type { ComponentChildren } from "preact";
-import { clock, DEMAND_CAP, SLIDER_STOPS, SPEEDS } from "../game/clock";
+import { clock, DEMAND_CAP, REAL4_SPEED, REAL_SPEED, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
 import { RIDES_PER_PERSON, smallPct, WORLD_PEOPLE, WORLD_RIDES, worldTotals, worldView } from "../game/worldTotals";
@@ -194,10 +194,12 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
   return <div class="city" data-tip={tip ?? (id ? lines.join("\n") : undefined)}>{name}</div>;
 }
 
-const times = (x: number) => `${x}x`;
+/** A speed in times normal speed: "real" and "4real" for the two slowest (T-3327), else "16x". */
+const times = (x: number) =>
+  Math.abs(x - REAL_SPEED) < 1e-9 ? t("topBar.speedReal") : Math.abs(x - REAL4_SPEED) < 1e-9 ? t("topBar.speedReal4") : `${x}x`;
 
-/** T-1664: double-click the fastest button for a slider of speeds, 0.5x to 100x (the speed then shows on
- * the button); T-1665: while demand updates the clock is held at DEMAND_CAP, the chosen speed dimmed. */
+/** T-1664: double-click the fastest button for a slider of speeds, real to 100x (the third button always
+ * shows its speed as text); T-1665: while demand updates the clock is held at DEMAND_CAP, the chosen speed dimmed. */
 function Speed() {
   const running = clock.running.value;
   const speed = clock.speed.value;
@@ -219,12 +221,12 @@ function Speed() {
   const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
     const on = running && (custom !== null ? 2 : speed) === i;
     return (
-      <button class={"btn icon" + (on ? " on" : "") + (on && held ? " held" : "") + (i === 2 && custom !== null ? " rate" : "")} data-tip={on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
-        {i === 2 && custom !== null ? times(custom) : icon}
+      <button class={"btn icon" + (on ? " on" : "") + (on && held ? " held" : "") + (i === 2 ? " rate" : "")} data-tip={on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
+        {i === 2 ? times(custom ?? SPEEDS[2] / SPEEDS[0]) : icon}
       </button>
     );
   };
-  const stop = Math.max(0, SLIDER_STOPS.findIndex((s) => s >= chosen));
+  const stop = Math.max(0, SLIDER_STOPS.findIndex((s) => s >= chosen - 1e-9));
   return (
     <div class="group speed" ref={box}>
       <button class={"btn icon" + (!running ? " on" : "")} data-tip={t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
@@ -232,7 +234,7 @@ function Speed() {
       </button>
       {btn(0, <Icon.play1 />, t("topBar.normalSpeed"), { "data-guide": "play" })}
       {btn(1, <Icon.play2 />, t("topBar.speed", { speed: times(SPEEDS[1] / SPEEDS[0]) }))}
-      {btn(2, <Icon.play3 />, t("topBar.speedPick", { speed: times(custom ?? SPEEDS[2] / SPEEDS[0]) }), { onDblClick: () => setOpen((o) => !o) })}
+      {btn(2, null,t("topBar.speedPick", { speed: times(custom ?? SPEEDS[2] / SPEEDS[0]) }), { onDblClick: () => setOpen((o) => !o) })}
       {open && (
         <div class="slider speed-pop">
           <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label={t("topBar.clockSpeed")}

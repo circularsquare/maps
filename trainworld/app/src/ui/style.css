@@ -140,7 +140,7 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 /* T-1664: the speed slider opens under the fastest button; a slider speed shows on that button as text.
    T-1665: the chosen speed is dimmed while the clock is held at the demand cap. */
 .group.speed { position: relative; }
-.btn.icon.rate { width: auto; min-width: 28px; padding: 0 5px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.btn.icon.rate { width: 36px; padding: 0; font-size: 12px; font-variant-numeric: tabular-nums; }
 .btn.on.held { opacity: 0.55; }
 .slider.speed-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; margin: 0; width: 200px; padding: 8px 10px;
   background: var(--bg); border: 1px solid var(--rule); }

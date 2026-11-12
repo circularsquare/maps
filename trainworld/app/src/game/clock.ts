@@ -16,7 +16,10 @@ import type { Demand } from "./types";
 /** Game seconds per wall second for the three speed buttons. Provisional. */
 export const SPEEDS = [60, 240, 960] as const;
 /** T-1664: the slider's stops, in times normal speed (log-spaced to the eye) */
-export const SLIDER_STOPS = [0.5, 1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 30, 40, 50, 64, 80, 100] as const;
+/** T-3327: "real" is one game second per wall second (1/60 of normal speed); "4real" is four times that */
+export const REAL_SPEED = 1 / SPEEDS[0];
+export const REAL4_SPEED = 4 / SPEEDS[0];
+export const SLIDER_STOPS = [REAL_SPEED, REAL4_SPEED, 0.5, 1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 30, 40, 50, 64, 80, 100] as const;
 /** T-1665: the fastest the clock runs while demand is still being worked out, times normal speed */
 export const DEMAND_CAP = 4;
 

@@ -2546,3 +2546,5 @@
   "oneWay.reroutes": "{line} takes another way",
   "issues.oneWayNoWay": "{line} has no other way between its stations."
 }
+  "topBar.speedReal": "real",
+  "topBar.speedReal4": "4real",
