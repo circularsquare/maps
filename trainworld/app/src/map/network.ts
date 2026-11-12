@@ -16,7 +16,7 @@ import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
-import { acrossAt, endClear, SINGLE_SPLIT_LEAD_M, TURNBACK_M } from "./terminalBays";
+import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
@@ -109,7 +109,7 @@ export interface NetworkBuffers {
   /** per line id: r, g, b, 255 */
   lineColours: Uint8Array;
   /** per station: x, y, flags (1 transfer, 2 blueprint, 4 a line runs through, 8 switched off, 16
-   * on double track: a platform each side close in, T-658; ST_ROOM and ST_FLIP the complex's waiting
+   * on double track or single track that splits there (T-3212): a platform each side close in, T-658; ST_ROOM and ST_FLIP the complex's waiting
    * room drawn on this box, T-1528; ST_PARK park and ride here; ST_TERMINAL, T-1416; ST_BUFFER a
    * terminal at a track end, T-1527) */
   stations: Float32Array;
@@ -827,6 +827,48 @@ function lanePoints(pts: Float32Array, lanes: number): LanePoints {
   return { lpts: new Float32Array(out), lane: new Uint8Array(lane), src };
 }
 
+/**
+ * T-3212: single track's points with its splits at stations (`singleSplitEnds`), the edge `lenM`
+ * m long: a point at each split's platform end and every ~10 m along its ease, so the drawn ease
+ * is smooth (the stroke shader takes lanes straight between points).
+ */
+function splitPoints(pts: Float32Array, split: readonly SplitEnd[], lenM: number): LanePoints {
+  const n = pts.length / 3;
+  if (n < 2 || !(lenM > 0)) return { lpts: pts, lane: 0, src: null };
+  const at = new Float64Array(n);
+  for (let k = 1; k < n; k++) at[k] = at[k - 1] + Math.hypot(pts[k * 3] - pts[k * 3 - 3], pts[k * 3 + 1] - pts[k * 3 - 2]);
+  const len = at[n - 1];
+  if (!(len > 0)) return { lpts: pts, lane: 0, src: null };
+  // cuts in metres from a, as shares of the edge's length so they fall where the trains' samples do
+  const cutM: number[] = [];
+  for (const s of split) {
+    if (!Number.isFinite(s.p)) continue;
+    const steps = Math.max(1, Math.ceil(s.lead / 10));
+    for (let i = 0; i <= steps; i++) {
+      const x = s.p + (s.lead * i) / steps, m = s.a ? x : lenM - x;
+      if (m > 0 && m < lenM) cutM.push(m);
+    }
+  }
+  const value = (d: number) => Math.round(255 * splitValue(split, (d / len) * lenM, lenM));
+  const cuts = cutM.map((m) => (m / lenM) * len).sort((x, y) => x - y);
+  const out: number[] = [pts[0], pts[1], pts[2]], lane: number[] = [value(0)], src: number[] = [];
+  let c = 0;
+  for (let k = 0; k < n - 1; k++) {
+    for (; c < cuts.length && cuts[c] < at[k + 1] - 1e-6; c++) {
+      if (cuts[c] <= at[k] + 1e-6 || (c > 0 && cuts[c] - cuts[c - 1] < 1e-6)) continue;
+      const f = (cuts[c] - at[k]) / (at[k + 1] - at[k]);
+      for (let j = 0; j < 3; j++) out.push(pts[k * 3 + j] + (pts[k * 3 + 3 + j] - pts[k * 3 + j]) * f);
+      lane.push(value(cuts[c]));
+      src.push(k);
+    }
+    out.push(pts[k * 3 + 3], pts[k * 3 + 4], pts[k * 3 + 5]);
+    lane.push(value(at[k + 1]));
+    src.push(k);
+  }
+  if (lane.every((v) => v === lane[0])) return { lpts: pts, lane: lane[0], src: null };
+  return { lpts: new Float32Array(out), lane: new Uint8Array(lane), src };
+}
+
 
 /**
  * The crossovers the game assumes where a line turns back on double track (T-658d; SPEC 6.2: a
@@ -1256,6 +1298,8 @@ interface EdgeEntry extends LanePoints {
   b: number;
   flags: number;
   lanes: number;
+  /** T-3212: its `SplitEnd`s and length as a key, "" for none */
+  split: string;
   /** T-3117: `legShifts` for it, or null */
   shift: LegShift | null;
   strokes: Strokes;
@@ -1300,43 +1344,6 @@ interface LineSamples {
   lane: Float32Array;
   /** `sampleBand`'s, empty for a line on no shared track */
   band: Float32Array;
-  /** `singleSplits`, which `lane` was made with */
-  splits: number[];
-}
-
-const smooth01 = (x: number) => {
-  const t = Math.max(0, Math.min(1, x));
-  return t * t * (3 - 2 * t);
-};
-
-/**
- * T-3202: where a line's trains are drawn as on two tracks at a station on single track, which has
- * two for the drawing (trains of opposite directions meet there, as the capacity has it, and stand
- * side by side on their own sides): per such station on its path, the run 0 offsets of its platform
- * (a dead end's runs in from the end, T-3053), the lane easing in over SINGLE_SPLIT_LEAD_M either side.
- */
-function singleSplits(l: ClockState["lines"][number], at: ReadonlyMap<number, { node: ClockState["nodes"][number]; ends: number }>, edgeEnds: ReadonlyMap<number, ClockState["edges"][number]>, lens: readonly number[]): number[] {
-  const out: number[] = [];
-  if (l.bus || !l.path.length || !at.size) return out;
-  const L = lens.reduce((a, b) => a + b, 0);
-  let d = 0;
-  for (let k = 0; k <= l.path.length; k++) {
-    // the node at offset d: where entry k starts, or the last one ends
-    const p = l.path[Math.min(k, l.path.length - 1)], e = edgeEnds.get(p >> 1);
-    if (e) {
-      const node = k < l.path.length ? ((p & 1) ? e.b : e.a) : ((p & 1) ? e.a : e.b);
-      const st = at.get(node);
-      const single = (k > 0 && edgeEnds.get(l.path[k - 1] >> 1)?.tracks === 1) || (k < l.path.length && e.tracks === 1);
-      if (st && single) {
-        const pl = st.node.platform;
-        if (st.ends === 1 && k === 0) out.push(0, pl);
-        else if (st.ends === 1 && k === l.path.length) out.push(L - pl, L);
-        else out.push(d - pl / 2, d + pl / 2);
-      }
-    }
-    if (k < l.path.length) d += lens[k] ?? 0;
-  }
-  return out;
 }
 
 /**
@@ -1507,8 +1514,10 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   // T-3190: not where single track carries on one track of the double (a join that counts)
   const joinedAt = new Set<number>();
   for (const e of s.edges) if (e.tracks === 1) { if (e.join & 3) joinedAt.add(e.a); if ((e.join >> 2) & 3) joinedAt.add(e.b); }
+  // T-3212: single track splits into two through a station; where it does, double track meets two
+  const splits = singleSplitEnds(s.edges, s.nodes);
   // T-3171: also where double track is the only double at a junction of single track (a double branching off single)
-  const taperAt = (node: number) => singleAt.has(node) && (endCount.get(node) === 2 || doublesAt.get(node) === 1) && !joinedAt.has(node);
+  const taperAt = (node: number) => singleAt.has(node) && (endCount.get(node) === 2 || doublesAt.get(node) === 1) && !joinedAt.has(node) && !splits.stations.has(node) && !splits.full.has(node);
   const shifts = legShifts(s.edges, r.edgeParts!);
   /** per edge id: the points and lanes its track and lines are drawn with */
   const drawn = new Map<number, LanePoints>();
@@ -1522,15 +1531,17 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     builtEdge.set(e.id, e.built);
     const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
+    const split = e.tracks === 1 ? splits.ends.get(e.id) ?? null : null;
+    const splitKey = split ? `${e.lengthM}|` + split.map((x) => `${+x.a},${x.p},${x.lead}`).join("|") : "";
     let c = cache.edges.get(e.id);
     const shift = shifts.get(e.id) ?? null;
-    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && c.shift?.key === shift?.key && (c.given === given || sameFloats(c.pts, given))) {
+    if (c && c.a === e.a && c.b === e.b && c.flags === flags && c.lanes === lanes && c.split === splitKey && c.shift?.key === shift?.key && (c.given === given || sameFloats(c.pts, given))) {
       kept.add(e.id);
       if (c.given !== given) c = { ...c, given };
     } else {
       const own = given.slice();
       const sh = shift ? shiftedEnds(own, shift) : null;
-      const lp = lanePoints(sh ? sh.pts : own, lanes);
+      const lp = split ? splitPoints(sh ? sh.pts : own, split, e.lengthM) : lanePoints(sh ? sh.pts : own, lanes);
       const b = new StrokeBuilder(false, MIN_SEG_M), from: number[] = [];
       b.add(lp.lpts, TRACK, e.id, flags, false, 0, undefined, lp.lane, undefined, undefined, from);
       const ramps: number[] = [];
@@ -1539,7 +1550,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       // each stroke segment's segment of the edge's given points, for its speed
       const srcL = from.length === lp.lpts.length / 3 - 1 ? lp.src : from.map((k) => (lp.src ? lp.src[k] : k));
       const src = sh ? Array.from({ length: strokes.count }, (_, j) => sh.src[srcL ? srcL[j] : j] ?? 0) : srcL;
-      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, shift, ...lp, src, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
+      c = { given, pts: own, a: e.a, b: e.b, flags, lanes, split: splitKey, shift, ...lp, src, strokes, ramps, speedGiven: undefined, vmin: NaN, speed: new Float32Array(0), train: new Float32Array(strokes.count).fill(-1) };
     }
     if (c.speedGiven !== sg || (!sg && c.vmin !== e.vminKmh) || c.speed.length !== c.strokes.count) {
       const n = c.strokes.count, speed = new Float32Array(n), src = c.src;
@@ -1599,9 +1610,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     return w;
   };
   const leadOf = (node: number, edge: number) => (passingAt.has(node) ? passWay(node, edge).lead : PASS_LEAD_M);
-  // T-3202: stations on single track, with how many edges meet there (1, a dead end)
-  const singleStations = new Map<number, { node: ClockState["nodes"][number]; ends: number }>();
-  for (const n of s.nodes) if (n.platform > 0 && singleAt.has(n.id)) singleStations.set(n.id, { node: n, ends: endCount.get(n.id) ?? 0 });
   const passing: number[] = [];
   const nSamples = r.samples.length / 2;
   const samplePass = new Float32Array(passingAt.size ? nSamples : 0).fill(1e9);
@@ -1674,8 +1682,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const first = r.lineTable[l.id * 4], count = r.lineTable[l.id * 4 + 1], step = r.lineTable[l.id * 4 + 3];
     const lens = l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
     let sm = cache.samples.get(l.id);
-    const splits = singleSplits(l, singleStations, edgeEnds, lens);
-    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens) || !sameArray(sm.splits, splits)) {
+    if (!sm || sm.c !== c || sm.count !== count || sm.step !== step || !sameArray(sm.lens, lens)) {
       const firstStroke = c.firstStroke;
       // a bus has one centre line, not two tracks (T-1464)
       const rel = new Int32Array(count), lane = new Float32Array(count).fill(l.bus ? 0 : 1), bandOf = new Float32Array(c.band ? count * 2 : 0);
@@ -1684,7 +1691,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         const at = k * step;
         while (j < l.path.length - 1 && at > end) end += lens[++j];
         rel[k] = firstStroke[j] ?? -1;
-        // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers
+        // how far apart the tracks are there (T-658), along the edge's drawn points when it tapers or splits (T-3212)
         const p = l.path[j], dr = drawn.get(p >> 1), len = lens[j] ?? 0;
         if (dr) {
           const along = len > 0 ? Math.max(0, Math.min(1, 1 - (end - at) / len)) : 0;
@@ -1696,12 +1703,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           bandOf[k * 2] = v[0];
           bandOf[k * 2 + 1] = v[2];
         }
-        for (let q = 0; q < splits.length; q += 2) {
-          const out = Math.max(splits[q] - at, at - splits[q + 1], 0);
-          if (out < SINGLE_SPLIT_LEAD_M) lane[k] = Math.max(lane[k], 1 - smooth01(out / SINGLE_SPLIT_LEAD_M));
-        }
       }
-      sm = { c, count, step, lens, rel, lane, band: bandOf, splits };
+      sm = { c, count, step, lens, rel, lane, band: bandOf };
     }
     samplesSeen.set(l.id, sm);
     const stretchOf = c.strokes.stretch!;
@@ -1825,7 +1828,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 ? 16 : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 || splits.stations.has(n.id) ? 16 : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of

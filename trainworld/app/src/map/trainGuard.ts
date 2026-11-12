@@ -27,7 +27,7 @@
 // train due onto it while one coming the other way is on it, or is due on it first, stands at its stop
 // until that one has reached its own. The timetable already charges the stretch's wait as delay; this
 // only draws where it is spent. The two meet at a station, drawn there as on two tracks
-// (network.ts `singleSplits`, terminalBays.ts for a line's ends). `?perfOff=singleWait` turns it off.
+// (terminalBays.ts `singleSplitEnds`, its track split there, T-3212, and `terminalEnds` for a line's ends). `?perfOff=singleWait` turns it off.
 
 import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, type NetworkBuffers } from "./network";
 import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";

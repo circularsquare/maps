@@ -11,9 +11,95 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 
 /** Length of a turn-back crossover's diagonal, m (T-658d). */
 export const TURNBACK_M = 50;
-/** T-3202: a station on single track is drawn as two tracks along its platform (network.ts
- * `singleSplits`), parting from the single track over this far either side, m. */
+/** T-3202, T-3212: a station on single track is drawn as two tracks along its platform, parting
+ * from the single track over this far either side, m (`singleSplitEnds`). */
 export const SINGLE_SPLIT_LEAD_M = 60;
+
+/** T-3212: whether single track `e` is drawn splitting into two tracks at its end `end` (0 a, 1 b),
+ * at station `node`: two-way, no crossover or tram track, not joining one track of a double there. */
+export function splitsAt(e: ClockEdge, end: 0 | 1, node: ClockNode | undefined): boolean {
+  return !!node && node.platform > 0 && !node.kind && e.tracks === 1 && !e.oneWay && !e.crossover && e.kind < 2 && ((end ? e.join >> 2 : e.join) & 3) === 0;
+}
+
+/** One end's split along a single-track edge: two tracks for `p` m from that end (`a` true: the a
+ * end), easing to one over the `lead` m after (`p` may be below 0: a split carried on from the edge
+ * before, through a plain node; Infinity: two tracks all along). */
+export interface SplitEnd { a: boolean; p: number; lead: number }
+
+/** How far apart the tracks are, 0-1, `m` metres from the a end of an edge `len` m long. */
+export function splitValue(ends: readonly SplitEnd[], m: number, len: number): number {
+  let v = 0;
+  for (const s of ends) {
+    const x = s.a ? m : len - m;
+    const u = x <= s.p ? 1 : s.lead > 0 ? 1 - Math.min(1, (x - s.p) / s.lead) : 0;
+    v = Math.max(v, u * u * (3 - 2 * u));
+  }
+  return v;
+}
+
+/**
+ * T-3212: where single track is drawn splitting into two through a station (trains of opposite
+ * directions meet there and stand side by side): per edge id its `SplitEnd`s, the stations that
+ * split, and the plain nodes where a split runs on into double track (no taper drawn there). A
+ * station's split is its platform (a dead end's whole platform, else half each side) and
+ * SINGLE_SPLIT_LEAD_M of ease, carried on through plain nodes along two-way single track; one that
+ * reaches double track first stays two tracks all the way to it, one that reaches a junction first
+ * eases over what room there is.
+ */
+export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[]): { ends: Map<number, SplitEnd[]>; stations: Set<number>; full: Set<number> } {
+  const ends = new Map<number, SplitEnd[]>(), stations = new Set<number>(), full = new Set<number>();
+  const at = new Map<number, ClockEdge[]>();
+  for (const e of edges) for (const n of [e.a, e.b]) {
+    const v = at.get(n);
+    if (v) v.push(e);
+    else at.set(n, [e]);
+  }
+  const nodeOf = new Map<number, ClockNode>();
+  for (const n of nodes) nodeOf.set(n.id, n);
+  const plainSingle = (e: ClockEdge) => e.tracks === 1 && !e.oneWay && !e.crossover && e.kind < 2;
+  const joinedAt = (e: ClockEdge, node: number) => ((e.a === node ? e.join : e.join >> 2) & 3) !== 0;
+  for (const s of nodes) {
+    if (!(s.platform > 0) || s.kind) continue;
+    const here = at.get(s.id) ?? [];
+    const P = here.length === 1 ? s.platform : s.platform / 2, want = P + SINGLE_SPLIT_LEAD_M;
+    for (const e0 of here) {
+      if (!splitsAt(e0, e0.a === s.id ? 0 : 1, s)) continue;
+      stations.add(s.id);
+      const chain: { id: number; a: boolean; x0: number }[] = [];
+      const seen = new Set<number>();
+      let cur = e0, from = s.id, x0 = 0, lead = SINGLE_SPLIT_LEAD_M, all = false;
+      for (;;) {
+        seen.add(cur.id);
+        chain.push({ id: cur.id, a: cur.a === from, x0 });
+        const far = cur.a === from ? cur.b : cur.a, len = cur.lengthM, farNode = nodeOf.get(far);
+        if (x0 + len >= want) break;
+        // (a station there that splits too is two tracks at its node already)
+        if (farNode && farNode.platform > 0 && splitsAt(cur, cur.a === far ? 0 : 1, farNode)) break;
+        const next = (at.get(far) ?? []).filter((o) => o.id !== cur.id), ne = next.length === 1 && !(farNode && farNode.platform > 0) ? next[0] : null;
+        if (ne && !seen.has(ne.id) && plainSingle(ne) && !joinedAt(cur, far) && !joinedAt(ne, far)) {
+          x0 += len;
+          from = far;
+          cur = ne;
+          continue;
+        }
+        if (ne && ne.tracks === 2 && !joinedAt(cur, far)) {
+          all = true;
+          full.add(far);
+          break;
+        }
+        lead = Math.max(0, Math.min(lead, x0 + len - P));
+        break;
+      }
+      for (const c of chain) {
+        const v = ends.get(c.id);
+        const end: SplitEnd = { a: c.a, p: all ? Infinity : P - c.x0, lead };
+        if (v) v.push(end);
+        else ends.set(c.id, [end]);
+      }
+    }
+  }
+  return { ends, stations, full };
+}
 /** Places at a line's end: the arriving train's own track, or the other track (it crosses the
  * scissors on the way in). */
 export const BAY_OWN = 0, BAY_OTHER = 1;
@@ -50,7 +136,7 @@ export interface TerminalEnd {
   thru: boolean;
   /** a train turning on a through platform with no terminal leaves over the crossover behind it */
   cross: boolean;
-  /** T-3202: a station on single track, its two places the sides it is drawn split into: each
+  /** T-3202: a station on single track that splits (`splitsAt`), its two places the two tracks: each
    * arriving train takes the one free longest, so the one it meets there is on the other */
   single?: boolean;
 }
@@ -78,7 +164,7 @@ export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockN
       const edge = edgeOf.get(entry >> 1);
       if (!node || !node.platform || !edge) return null;
       const dead = endCount.get(node.id) === 1;
-      if (edge.tracks !== 2 && (edge.tracks !== 1 || l.bus)) return dead ? null : { group: -1, kind: 0, p: node.platform / 2, thru: true, cross: false };
+      if (edge.tracks !== 2 && (l.bus || !splitsAt(edge, edge.a === node.id ? 0 : 1, node))) return dead ? null : { group: -1, kind: 0, p: node.platform / 2, thru: true, cross: false };
       const key = `${node.id}|${edge.id}`;
       let group = groups.get(key);
       if (group === undefined) groups.set(key, (group = groups.size));

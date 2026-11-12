@@ -156,7 +156,16 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   much thinner than 2.4 m as it is thinner than a line; blueprint track is two blueprint tracks,
   each its own rails and middle. Single track stays one track on the centre line, 2.4 m wide;
   double track narrows into it over 40 m where the two meet at a plain node (`lanePoints` in
-  `map/network.ts`); at a junction a single-track branch leaves from the centre line. Quad
+  `map/network.ts`); at a junction a single-track branch leaves from the centre line. Through a
+  station, two-way single track splits into two tracks as double track's are [T-3212,
+  `singleSplitEnds` in `map/terminalBays.ts`]: two along the platform (half of it each side of a
+  through station, all of a dead end's), easing back to one over 60 m past each end, carried on
+  through plain nodes. Trains of opposite directions meet there (the capacity's passing points),
+  and stand on the two tracks; the station has a platform each side, as on double track. A split
+  that reaches double track within its 60 m stays two tracks to it, and double track meeting
+  single at such a station does not narrow; one that reaches a junction first eases over what
+  room there is. One-way single track, and single track joining one track of a double at the
+  station, stay one track. Quad
   track is four tracks 4 m apart; a crossover between double tracks is two double tracks in an
   X. Clicks and the hover reach half the pair's width from the centre line once it has grown.
 
@@ -482,7 +491,7 @@ number) and shows n as its symbol.
 - **Inside the white** [T-236], over the crowd fill: the track and line strokes run through the
   box (drawn where a stencil marks the white, no wider than 30% of it, without casing). No platform
   edges are drawn [T-1121].
-- **A platform each side, close in** [T-658c]: on a double-track station (flag 16 in the station
+- **A platform each side, close in** [T-658c]: on a double-track station, or one where single track splits (T-3212; flag 16 in the station
   buffer), as the two tracks part ("Lines and track") each direction's riders stand on their own
   platform, from the outer edge of its track out to the rim [T-1121], instead of filling half the box:
   the + side's trains travel along the platform axis and keep right, so their track and their
@@ -568,7 +577,7 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
 - **On its own track** [T-658b]: as double track parts into two (about zoom 17, "Lines and
   track"), a train moves from the centre line to the right-hand track of its direction of travel
   (2 m out once apart) and narrows from its pill width to its true 3 m, so two trains passing go
-  by side by side without touching. Where double track narrows to single the train drifts back
+  by side by side without touching. Where double track narrows to single, or a station's split joins again, the train drifts back
   to the centre over the taper (`sampleLane`, one value a 50 m sample). A train turning back
   stands on its arrival track and steps across to the other as its next trip starts. Clicks
   find it where it is drawn (`laneShiftM`). A train's two ends are each shifted by the lane and
@@ -618,8 +627,8 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   train for a dead end's other platform crosses the scissors on the way in, over the 50 m past the
   platform (or past its own length, if longer), and a train leaving from the arrival side's
   platform crosses on the way out; a train ending at a through platform without a terminal leaves
-  over the diagonal behind it instead of jumping across. A line ending at a station on single track
-  [T-3202] has two places there, the two sides it is drawn split into (below), the crossover 60 m
+  over the diagonal behind it instead of jumping across. A line ending at a station where single track
+  splits [T-3202, T-3212] has two places there, the split's two tracks, the crossover 60 m
   past where they join, and each arriving train takes the place free longest, so the train it meets
   there stands on the other. A train standing at such an end holds no one on its track; one due at a place still
   taken (its train standing there, or leaving and not yet off the platform, but not one standing
@@ -639,8 +648,8 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
   the same way go together (the train ahead holds them). Every train of a line on single track in
   view is looked at, wherever it is, since the one coming the other way is often far out of the
   view. Lag is made up and capped as above. At a station on single track a train is drawn on its
-  own side of the platform, as on double track once its tracks part, easing over from the middle
-  over 60 m either side (`network.ts` `singleSplits`), so two meeting there stand side by side.
+  own track of the split ("Close in, trains keep right"; its lane is the drawn track's, T-3212), so
+  two meeting there stand side by side.
   Drawing only: no figure moves. `?perfOff=singleWait` or `renderer.guard.singles` turns the wait off.
 - **Waiting at flat crossings** [T-1966, `map/trainGuard.ts`]: zoomed in to `CONFLICT_ZOOM` (14,
   where trains are drawn as cars at about their true length), trains in or near the view wait for
