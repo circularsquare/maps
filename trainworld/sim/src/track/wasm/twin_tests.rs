@@ -159,3 +159,30 @@ fn t3333_a_flip_keeps_both_pairs() {
     assert_eq!((a.line_pairs(l), a.line_twin(l)), (1, t as i32), "{:?}", a.line_pairs_why(l));
     assert!(a.w.svc.lines[l as usize].ok && a.w.svc.lines[t as usize].ok);
 }
+
+/// T-3356: a station beside a stop is any station of its complex on the pair beside, as a player
+/// places them (clicked a few tens of metres off level); one past the complex counts once linked.
+#[test]
+fn t3356_stations_beside_are_the_complex_on_the_other_pair() {
+    let (mut a, l, stops) = quad_line();
+    let west = station(&mut a, 500.0 + 35.0, QUAD_SPACING, "x");
+    let mid = station(&mut a, 2000.0 - 140.0, QUAD_SPACING, "x");
+    // 400 m on from East with 200 m platforms: 200 m between their ends, not one complex
+    let far = station(&mut a, 3500.0 - 400.0, QUAD_SPACING, "x");
+    assert!(a.w.net.complex_of(mid).contains(&stops[1]), "Mid's platforms overlap");
+    assert_eq!(a.w.net.station_beside(stops[0]), Some(west));
+    assert_eq!(a.w.net.station_beside(stops[1]), Some(mid));
+    assert_eq!(a.w.net.station_beside(stops[2]), None);
+    assert!(!a.line_pairs_ok(l));
+    assert_eq!(a.link_stations(stops[2], far), 0, "{}", a.issues());
+    assert_eq!(a.w.net.station_beside(stops[2]), Some(far), "linked into East's complex");
+    assert!(a.line_pairs_ok(l));
+    assert_eq!(a.set_line_pairs(l, true), 0, "{}", a.issues());
+    let t = a.line_twin(l) as u32;
+    assert_eq!(a.w.net.line_stops(t), &[west, mid, far]);
+    // a station of the complex on the same pair is never beside
+    let (mut b, _, s2) = quad_line();
+    let on = station(&mut b, 2000.0 + 230.0, 0.0, "x");
+    assert!(b.w.net.complex_of(s2[1]).contains(&on));
+    assert_eq!(b.w.net.station_beside(s2[1]), None);
+}

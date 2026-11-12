@@ -199,7 +199,7 @@ pub fn inside(c: &[P], x: P) -> bool {
 }
 
 /// Shortest distance between segments p0-p1 and q0-q1 (game/complexes.ts `segmentGap`).
-fn seg_gap(p0: P, p1: P, q0: P, q1: P) -> f64 {
+pub(crate) fn seg_gap(p0: P, p1: P, q0: P, q1: P) -> f64 {
     let (u, v, w) = (sub(p1, p0), sub(q1, q0), sub(p0, q0));
     let (a, b, c, d, e) = (u[0] * u[0] + u[1] * u[1], u[0] * v[0] + u[1] * v[1], v[0] * v[0] + v[1] * v[1], u[0] * w[0] + u[1] * w[1], v[0] * w[0] + v[1] * w[1]);
     let den = a * c - b * b;

@@ -949,8 +949,11 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Both pairs of quad track** (T-3333, Anita 2026-11-12; notes/T-3333.md; `track/twin.rs`, `wasm/twin.rs`): a rail
   line can run its trains on both pairs of quad track, a switch in its panel ("Run trains on two pairs of tracks",
   `set_line_pairs`), offered only where it can (`line_pairs_ok`) or while it is on. It can where every stop has a
-  station beside it on another track (`station_beside`: the nearest at its level and of its family, parallel, its node
-  4 to 16 m from the stop's, not a stop of the line) and those stations, joined in order the way any line's stops are
+  station beside it on another track (`station_beside`, T-3356, Anita: "if they are connected at all in a station
+  complex its fine"): the nearest station of the stop's complex (`complex_of`, the map's rule worked out in the sim:
+  centres within 100 m, platforms within 50 m, the player's links, one station building; any level) of its family,
+  whose node lies on a track beside the stop's (4 to 16 m off it and parallel there, looked for up to 8 pieces either
+  way), not a stop of the line; and those stations, joined in order the way any line's stops are
   (`route_hops`), make a route that `check_route` accepts, turns back as often as the line's, and is built wherever the
   line is (`twin_plan`). The route may share track with the line's own where the pairs meet (orchestrator's call), and
   capacity counts both there. The sim then keeps a **hidden twin**: an ordinary line (`LineData::twin`, `Twin::Of`) on

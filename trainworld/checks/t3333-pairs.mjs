@@ -1,5 +1,6 @@
 // T-3333: a line on quad track runs its trains on both pairs. A 6 km quad stretch, a line of three stations on the
-// drawn pair: no switch until every stop has a station beside it on the other pair; then the switch, ticked, makes
+// drawn pair: no switch until every stop has a station of its complex on the other pair (clicked there with the station
+// tool, off level as a player places them, T-3356); then the switch, ticked, makes
 // the hidden twin (one line in the Lines tab, the panel's trains the two pairs' together); a station beside a stop
 // taken away leaves the switch on, the line on one pair and a notice naming the stop; undo brings the twin back.
 // Pictures in artifacts/trainworld/t3333-*.png. From the maps root, on a Vite of your own
@@ -77,20 +78,37 @@ try {
   const hasSwitch = () => page.evaluate((s) => [...document.querySelectorAll('label.check')].some((x) => x.textContent.includes(s)), SWITCH);
   check(!(await hasSwitch()), 'no switch while the other pair has no stations');
 
-  // stations beside each stop on the other pair
-  const twins = await page.evaluate(async () => {
-    const tw = window.tw, cl = tw.client, { P, near, side } = window.__q, ids = [];
-    for (const dx of [-2000, 0, 2000]) {
-      const p = P(dx, window.__q.off * side), e = near(p.x, p.y);
-      const had = new Set([...tw.world.value.nodes.values()].filter((n) => n.platform > 0).map((n) => n.id));
-      await cl.edit({ op: 'addStation', at: { kind: 'edge', edge: e.id, x: p.x, y: p.y }, platform: 200, name: { '-2000': 'West', '0': 'Mid', '2000': 'East' }[dx] });
-      await new Promise((d) => setTimeout(d, 300));
-      ids.push([...tw.world.value.nodes.values()].find((n) => n.platform > 0 && !had.has(n.id))?.id);
-    }
-    return ids;
-  });
-  await wait(800);
-  check(await hasSwitch(), 'the switch shows once every stop has a station beside it');
+  // stations beside each stop on the other pair, clicked with the station tool as a player does (T-3356): a few px off
+  // level at zoom 16, 20-35 m along, which the first rule (nodes within 16 m) missed; any station of the stop's complex
+  // on the other pair counts
+  const rect = await page.evaluate(() => { const r = window.tw.map.getContainer().getBoundingClientRect(); return { left: r.left, top: r.top }; });
+  await page.evaluate(async () => { (await import('/src/game/ui.ts')).tool.value = 'station'; });
+  const twins = [];
+  for (const [dx, jit] of [[-2000, 24], [0, -28], [2000, 36]]) {
+    const xy = await page.evaluate(([dx]) => {
+      const tw = window.tw, { P, side } = window.__q, p = P(dx, window.__q.off * side);
+      const q = tw.packToLngLat(p.x, p.y), ll = Array.isArray(q) ? q : [q.lng, q.lat];
+      tw.map.jumpTo({ center: ll, zoom: 16 });
+      const s = tw.map.project(ll);
+      return { x: s.x, y: s.y };
+    }, [dx]);
+    await wait(700);
+    const had = await page.evaluate(() => [...window.tw.world.value.nodes.values()].filter((n) => n.platform > 0).map((n) => n.id));
+    await page.mouse.move(rect.left + xy.x + jit - 3, rect.top + xy.y - 2);
+    await page.mouse.move(rect.left + xy.x + jit, rect.top + xy.y);
+    await wait(500);
+    await page.mouse.click(rect.left + xy.x + jit, rect.top + xy.y);
+    await page.waitForFunction((n) => [...window.tw.world.value.nodes.values()].filter((x) => x.platform > 0).length > n, had.length, { timeout: 10000 }).catch(() => {});
+    twins.push(await page.evaluate((had) => [...window.tw.world.value.nodes.values()].find((n) => n.platform > 0 && !had.includes(n.id))?.id, had));
+  }
+  const apart = await page.evaluate(([stops, twins]) => {
+    const w = window.tw.world.value, R = 6371008.8, RAD = Math.PI / 180;
+    return stops.map((s, k) => { const a = w.nodes.get(s), b = w.nodes.get(twins[k]); return b ? Math.round(Math.hypot((a.lng - b.lng) * Math.cos(a.lat * RAD), a.lat - b.lat) * RAD * R) : null; });
+  }, [made.stops, twins]);
+  check(twins.every((t) => t !== undefined) && apart.every((d) => d !== null && d > 16), 'three stations clicked onto the other pair, each over 16 m from its stop', `${JSON.stringify(twins)} ${JSON.stringify(apart)} m`);
+  await page.evaluate(async (l) => { const ui = await import('/src/game/ui.ts'); ui.tool.value = 'select'; ui.selection.value = { kind: 'line', line: l }; }, L);
+  await wait(1200);
+  check(await hasSwitch(), 'the switch shows once every stop has a station of its complex beside it');
   const before = await page.evaluate((l) => window.tw.world.value.lineStats[l].trainsNeeded, L);
   await page.locator('label.check', { hasText: SWITCH }).click();
   await wait(1200);

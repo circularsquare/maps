@@ -14,7 +14,7 @@ A line can only run as many trains as its tightest spot allows. Every shared pie
 
 A line never runs more trains than its track can carry. The ones beyond that wait at the ends, and the panel warns. The fix is more track, a platform, a terminal, or fewer stops.
 
-**Quad track.** A line runs on one pair of tracks, the one its stations are on. Put a station on the other pair beside every stop and the line's panel offers to run its trains on both pairs. Then half the trains run on each pair, taking turns, so each pair carries half the line and it can run about twice as many trains. If a stop loses its station beside it, the line goes back to one pair until it has one again.
+**Quad track.** A line runs on one pair of tracks, the one its stations are on. Put a station on the other pair beside every stop, close enough to be part of the same station, and the line's panel offers to run its trains on both pairs. Then half the trains run on each pair, taking turns, so each pair carries half the line and it can run about twice as many trains. If a stop loses its station beside it, the line goes back to one pair until it has one again.
 
 A slower train ahead on shared track holds a faster one back. A fast line sharing track with a slow one gains less than its top speed suggests. Passing tracks at a station let it by.
 
