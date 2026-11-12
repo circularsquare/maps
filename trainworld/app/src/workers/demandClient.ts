@@ -99,6 +99,7 @@ import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
 import { lineFareMul, type Fares } from "../game/fareCurve";
+import { takesMarketless } from "../game/fareInEffect";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
@@ -4637,10 +4638,9 @@ class DemandClient {
         if (!d.view) return d;
         const est = ests[k].view!;
         const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
-        for (const { id } of fresh) {
-          const l = est.lines.get(id);
-          if (l) lines.set(id, { ...l, estimate: true });
-        }
+        // (T-3303: the zone in view's round, longer trips as last solved)
+        const takes = new Set(fresh.filter(({ id }) => { const l = est.lines.get(id); return !!l && takesMarketless(d.view!.lines.get(id), l); }).map((l) => l.id));
+        for (const id of takes) lines.set(id, { ...est.lines.get(id)!, estimate: true });
         for (const [id, v] of est.stations) if (!stations.has(id)) stations.set(id, v);
         let purposes = d.view.purposes;
         if (est.purposes) {
@@ -4648,7 +4648,7 @@ class DemandClient {
           for (const [key, p] of est.purposes) {
             const old = purposes.get(key);
             const pl = new Map(old?.lines), ps = new Map(old?.stations);
-            for (const { id } of fresh) { const l = p.lines.get(id); if (l) pl.set(id, l); }
+            for (const id of takes) { const l = p.lines.get(id); if (l) pl.set(id, l); }
             for (const [id, v] of p.stations) if (!ps.has(id) && !d.view.stations.has(id)) ps.set(id, v);
             purposes.set(key, { lines: pl, stations: ps });
           }
@@ -4772,7 +4772,10 @@ class DemandClient {
           const lines = new Map(d.view.lines), stations = new Map(d.view.stations);
           // lines the network no longer has go too
           for (const id of lines.keys()) if (!ids.has(id)) lines.delete(id);
-          for (const [id, l] of est.view!.lines) lines.set(id, l);
+          // T-3303: a result without the market keeps a shown line solved at other fares
+          const held = new Set<string>();
+          if (!c.market || c.local) for (const [id, l] of est.view!.lines) if (!takesMarketless(lines.get(id), l)) held.add(id);
+          for (const [id, l] of est.view!.lines) if (!held.has(id)) lines.set(id, l);
           for (const [id, v] of est.view!.stations) stations.set(id, v);
           let purposes = d.view.purposes;
           if (est.view!.purposes) {
@@ -4780,7 +4783,7 @@ class DemandClient {
             for (const [key, p] of est.view!.purposes) {
               const old = purposes.get(key);
               const pl = new Map(old?.lines), ps = new Map(old?.stations);
-              for (const [id, l] of p.lines) pl.set(id, l);
+              for (const [id, l] of p.lines) if (!held.has(id)) pl.set(id, l);
               for (const [id, v] of p.stations) ps.set(id, v);
               purposes.set(key, { lines: pl, stations: ps });
             }

@@ -366,7 +366,7 @@ read through its old route nodes, carried to the new network's by line and stati
 (`solve.ids`). Each is sent as a cluster result marked `local`, its cities the touched zones, after
 those zones' subzone sums (marked `local`, kept apart on the page until the whole solve's of the same
 round are all in, T-2532), so their bubbles follow the figures: the page
-puts its lines, their stations and those zones' views in (never the market's own figures) and
+puts its lines (not one shown at other fares, T-3303), their stations and those zones' views in (never the market's own figures) and
 clears the lines' pending label ("calculating...", ui-inspectors.md). A worker then waits for the page's `whole`, sent 8 s after the
 local results are shown, or at once when a worker solves nothing locally, so an edit following
 within that time is solved locally too; the whole solves follow as above and replace everything.

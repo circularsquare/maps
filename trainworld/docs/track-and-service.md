@@ -1649,7 +1649,10 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
 - **A fare edit pays when its riders show** (T-2266, `game/fareInEffect.ts`): the fare controls
   change at once, but a line's income keeps the fares its riders were solved with (`solvedFares`)
   until riders solved with the new ones show, whether the change raised or cut them; a solve
-  overtaken by a later edit never switches them. Nothing of this is saved: a loaded game solves its
+  overtaken by a later edit never switches them. A result that did not solve the regional market
+  (the local solve after an edit, a cluster without the market) holds its lines' longer trips as
+  last solved, so it never replaces a shown line solved at other fares: that line keeps its figures
+  and fares until the whole solve's final (T-3303). Nothing of this is saved: a loaded game solves its
   riders with its saved fares.
 - **The loan** (T-1661, T-2022, T-1906, `game/loan.ts`): one at a time, of $1B, $5B or $10B, at the
   bottom of the Money tab. It pays itself back in 60 equal daily payments, the same for every size:

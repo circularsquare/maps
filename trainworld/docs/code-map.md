@@ -564,7 +564,9 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   step, into artifacts/trainworld/t2123/; about four minutes),
   `t2266-fare-lag.mjs [url] [save] [out.json]` (the real save: fares to 10x then 5x while solving; income held
   at the old fares until riders solved with the new ones show, and ends at the new figure with every line priced
-  at 5x; port 6172, 2 demand workers, about 5 minutes; T-2266), `t2411-profit-map.mjs [url]` (the real save's
+  at 5x; port 6172, 2 demand workers, about 5 minutes; T-2266), `t3303-local-fares.mjs [url] [query]` (a fare edit's
+  local result keeps every shown line at its old fares until the whole solve's final; `perfOff=fareHold` FAILs it;
+  about 2 minutes), `t2411-profit-map.mjs [url]` (the real save's
   Profit view: each rail line's edges sum to its weekday fares and upkeep share, the stretches to the network,
   the hover's rows; pictures in artifacts/trainworld/profit/; port 6195, a few minutes; T-2420),
   `t2452-bus-views.mjs [url]` (t2195's real-ferries.save with three bus lines added: each bus and ferry line's
