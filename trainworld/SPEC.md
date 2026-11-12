@@ -381,7 +381,7 @@ worker writes it to IndexedDB in named browser slots (one writing tab per slot) 
 game, Open a file and opening a backup as a copy each start a new slot; no slot is ever written over with
 another game [T-743]. A game is normal or a sandbox (nothing refused for money, the cash hidden;
 a normal game can become one once, never back), starts in a city or on the world map, and a sandbox
-in one of seven cities can start from its real network [T-728, T-731; docs/ui-panels.md "Saved
+in one of 37 cities can start from its real network [T-728, T-731, T-3225; docs/ui-panels.md "Saved
 games"]. Each slot keeps backups reaching back about 10 minutes, an hour, a day and a week, and
 one from before the account's copy last replaced it, each restorable as a new slot [T-744,
 T-1826]. A save that fails for a full disk frees the demand caches and tries again, and a

@@ -1044,9 +1044,11 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   is picked: the game starts on the world map (its tutorial card begins with "Zoom into a city") with Homes on and every realm shown (zones.md
   "Realms"), so the zones' zoomed-out bubbles show and take a click as anywhere (ui-demand-views.md
   "Zoomed far out").
-- **Real world network** (unticked to begin with, so the player picks it on purpose [T-1302]): only for a sandbox in New York, London, Paris, Tokyo,
-  Seoul, Toronto or Sendai, the cities with a real network (`REAL_NETWORKS`; architecture.md 11). The
-  game starts from that network, built and running.
+- **Real world network** (a sandbox only): a list of every city with a real network, by name
+  (`game/realNetworks.json`, written by `pipeline/realauto.py ship`; architecture.md 11), blank to begin
+  with, so the player picks one on purpose [T-1302]. Picking a city makes it the start; picking another
+  start in any other way blanks the list again [T-3225]. The game starts from that network, built and
+  running; the hover "Start with Tokyo's real rail lines already built." shows once a network is picked.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
   high, bold, tinted) and centred in the sheet's last row, with Back at its left [T-1215]. If a real network cannot be downloaded, a
   line says so and the sheet stays.

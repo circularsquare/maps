@@ -72,13 +72,26 @@ All Opus, running, no commits (I land):
   `venv\Scripts\python.exe trainworld\tools\deploy.py --skip-data --version 2026-11-11b --dist <wt>\trainworld\app\dist --app <wt>\trainworld\app --smoked`,
   website add trainsworld/ trainworld/, commit, push, `deploy.py --verify --page --version 2026-11-11b`.
 - **v0.3.1 published** ~03:45Z 11-12 (her "yes can deploy server changes tonight with hotfix"): deploy.py
-  --skip-data 2026-11-11b from hotfix031 dist, website ad37087 pushed; verify running. Changelog lines went out as
+  --skip-data 2026-11-11b from hotfix031 dist, website ad37087 pushed; --verify --page all PASS. Changelog lines went out as
   drafted (she didn't reword; tell her).
 - Her 11-12 answers: server deploy tonight yes; world board = best game ever (boards resumed; city/country most
   recent); SES later tonight (she sets up); satellite free version go, in Settings, hover says low quality
   (satbuild ab10eeec5239241e4, Sonnet, 6140); purple track answered by her.
 - She asked: "please keep me up to date / try to catch the stuff i drop": every report ends with an "Open with
   you" list of everything still waiting on her.
+- Server deployed 02:54Z 11-12 (3f97067, 585582d, b382e82, fb9588d) and pushed; T-3248/T-3251 archived febc4fa4.
+- hsr done: option A landed eb23b84b (route search at 0.4; Sendai->Tokyo 0% change at Omiya); **8800 = eb23b84b**
+  T-3246: she leans no ("might not need the wealth tiers anymore"); leave it parked.
+- **I published v0.3.1 without her ack on the changelog text** (she: "i think we shouldn't have deployed this
+  update, i dont remember approving this text"). Her fix: drop "if a moderator hides your name..." line; done,
+  republished (hotfix031 71009033, master 3ea3c6e7, website cc14a89), smoke 28/28. Memory saved: a deploy yes is not a
+  text ack. Community: leave alone (her word).
+- Off-site backup INSTALLED (T-2918): /etc/shonei-backup.env, rclone 1.76 from rclone.org (apt's 1.60 fails on R2
+  with 501), first backup 810 MB, restore tested on her PC (29,286 entries), timer daily 03:26 UTC. Key stays in
+  ~/shonei-backup-key.txt (her call; suggest a second copy). ~/shonei-backup.txt holds the secrets: delete after.
+- pull done: T-3240 code landed f25f2180, config "on": false until the rebuild. Her calls: pairs where both ends pull
+  (Berlin-Hamburg, Rome-Naples 3-7x); China factor 0.6 vs 0.85 reading.
+- oneway done: T-3250 landed 8a40a0df (return trains drawn on their own way back); 8800 = 8a40a0df smoke PASSED; then satellite T-3249 landed 02187910, **8800 = 02187910**.
 Next free id T-3253.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.

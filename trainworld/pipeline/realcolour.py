@@ -183,11 +183,18 @@ def line_colours(cfg, lines):
         ad, route = s.get("adapter"), l["route"]
         c = None
         if ad == "gtfs":
-            c = cache.setdefault(l["feed"], gtfs_colours(s["folder"])).get(route)
+            if l["feed"] not in cache:
+                cache[l["feed"]] = gtfs_colours(s["folder"])
+            c = cache[l["feed"]].get(route)
         elif ad == "osm":
-            c = cache.setdefault(l["feed"], osm_colours(s["file"])).get(route)
-            c = c or nori_by_id("jp", route)
-            c = c or nori_by_name("jp", l["name"].split(" (")[0], None)
+            if l["feed"] not in cache:
+                cache[l["feed"]] = osm_colours(s["file"])
+            c = cache[l["feed"]].get(route)
+            # T-3225: an automatic city's region (realnet.auto_city); by name only in Japan, whose names jpnorm knows
+            cc = cfg.get("region", "jp")
+            c = c or nori_by_id(cc, route)
+            if cc == "jp":
+                c = c or nori_by_name("jp", l["name"].split(" (")[0], None)
         elif ad == "n02":
             c = nori_by_name("jp", l["name"], re.escape(l["operator"].replace("　", "")))
         elif ad == "trips":

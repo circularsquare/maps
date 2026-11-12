@@ -1077,6 +1077,10 @@ section + section > .changelog-head { margin-top: 16px; }
 .new-game-where { display: flex; flex-direction: column; gap: 6px; }
 .new-game-cities { display: flex; flex-wrap: wrap; gap: 6px; }
 .new-game-map { align-self: flex-start; }
+/* T-3225: the sandbox's list of real networks, its label before it */
+.new-game-real { display: flex; align-items: center; gap: 8px; }
+.new-game-real .purpose-filter { margin-left: 0; min-width: 9em; font-size: inherit; }
+.new-game-real select { width: 100%; }
 .new-game-find { width: 100%; min-width: 0; padding: 4px 6px; border: 1px solid var(--rule); background: var(--bg); color: var(--text); font: inherit; }
 .new-game-hits { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); }
 .new-game-hits li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 3px 8px; cursor: pointer; }

@@ -560,10 +560,14 @@ def load_osm(src, inside):
         runs = [(ks, np.concatenate([[0.0], np.cumsum(hop)]))]
         if n_rel[route] == 1:  # only one direction mapped: the trains run back the same way
             runs.append((ks[::-1], np.concatenate([[0.0], np.cumsum(hop[::-1])])))
+        # T-3225 (`split_tph`): a default rate is the route's, shared by its patterns each way, so a
+        # route master of six relations (three patterns) does not run three times the trains
+        share = 1.0 / max(1.0, n_rel[route] / 2) if src.get("split_tph") and not t.get("interval") else 1.0
         for ks, at in runs:
             dr = "0" if ks[0] <= ks[-1] else "1"
             acc = 0.0
             for h, n in enumerate(osm_interval_tph(t, kind, ov.get("tph"))):
+                n *= share
                 acc += n
                 k = int(acc)
                 acc -= k
@@ -1048,7 +1052,20 @@ def cmd_geom():
     net = json.load(open(CITIES[city]["out"]))
     st = net["stations"]
     shapes_by_route = {}
+    osm_shaped = set()
     for src in CITIES[city]["sources"]:
+        if src.get("adapter") == "osm":
+            # T-3225: realauto.py's extract keeps each relation's ways chained, one polyline a relation
+            shp = json.load(open(src["file"], encoding="utf-8")).get("shapes", {})
+            for r, polys in shp.items():
+                arr = []
+                for q in polys:
+                    q = np.array(q, float)
+                    arr.append(np.stack(to_xy(q[:, 0], q[:, 1], o), 1))
+                shapes_by_route[(src["name"], r)] = sorted(arr, key=len, reverse=True)
+                osm_shaped.add((src["name"], r))
+            print(f"{src['name']}: {sum(len(v) for v in shp.values())} relation shapes")
+            continue
         if src.get("adapter", "gtfs") != "gtfs":  # no shapes: straight hops
             continue
         name, folder = src["name"], src["folder"]
@@ -1090,8 +1107,12 @@ def cmd_geom():
                 nodes.append(p.tolist())
         for k in range(len(xy) - 1):
             i, j = idx[k], idx[k + 1]
-            if i is not None and j is not None and abs(j - i) >= 2:
-                seg = best[min(i, j):max(i, j) + 1]
+            seg = best[min(i, j):max(i, j) + 1] if i is not None and j is not None and abs(j - i) >= 2 else None
+            # an OSM relation's ways chained out of order make a hop far longer than it is
+            if seg is not None and (l["feed"], l["route"]) in osm_shaped and \
+                    np.hypot(*np.diff(seg, axis=0).T).sum() > 2.0 * np.hypot(*(xy[k + 1] - xy[k])) + 1000.0:
+                seg = None
+            if seg is not None:
                 if j < i:
                     seg = seg[::-1]
                 seg = simplify(seg, 15.0)
@@ -1352,8 +1373,37 @@ def cmd_gamesave():
     print(f"{len(raw):,} bytes raw, {os.path.getsize(p):,} gzipped, fleet {header['fleet']:,} cars -> {p}")
 
 
-# T-731: the cities a sandbox can start from their real network (the app's REAL_NETWORKS, ui/NewGame.tsx)
+# T-731: the cities a sandbox can start from their real network (the app's list, game/realNetworks.json,
+# which `realauto.py ship` writes)
 SHIPPED = ["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]
+
+
+def auto_city(pack, region):
+    """T-3225: a city built with no hand work (pipeline/realauto.py): one `osm` source, the extract
+    `realauto.py extract` cut to the pack; every file in OUT."""
+    return {"pack": pack, "region": region, "out": os.path.join(OUT, f"{pack}_real.json"),
+            "what": f"{pack}'s rail network from noritetsu's OSM extract, default frequencies (T-3225, automatic)",
+            "sources": [{"name": "osm", "adapter": "osm", "file": os.path.join(OUT, f"osm_{pack}.json"), "min_share": 0.05, "min_trips": 4,
+                         "split_tph": True}]}
+
+
+def _register_auto():
+    import realauto
+    reg = realauto.registry()
+    ids = [c["id"] for c in realauto.listed()]
+    # a city named on the command line but not listed can be built too (`realauto.py build <id>`)
+    ids += [a for a in sys.argv[2:3] if a in reg and a not in CITIES and a not in ids]
+    for c in ids:
+        if c in CITIES:
+            continue
+        cc = reg[c]["country"].lower()
+        CITIES[c] = auto_city(c, cc)
+        REGION[c] = cc
+    SHIPPED.extend(c["id"] for c in realauto.listed() if c.get("ship") and c["id"] not in SHIPPED)
+
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_register_auto()
 
 
 def cmd_ship():

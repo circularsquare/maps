@@ -14,13 +14,14 @@ import { startTier } from "../game/startDifficulty";
 import { newGameEnd, setStartAt } from "./locate";
 import { t, tCountry } from "../i18n";
 import { tPlace } from "../i18n/places";
+import realNetworks from "../game/realNetworks.json";
 
 /** The suggested starts (T-728), easy starts (T-2690); Guangzhou for Toronto, for a start outside the West with
  * many cities near it (Anita, 2026-11-06). */
 const START_CITIES = ["nyc", "lon", "par", "gua", "tyo"];
-/** The cities with a real network a sandbox can start from (`packs/real/<id>.save`,
- * pipeline/realnet.py ship). */
-const REAL_NETWORKS = new Set(["nyc", "lon", "par", "tyo", "seo", "tor", "sdj"]);
+/** The cities with a real network a sandbox can start from (`packs/real/<id>.save`; the list is
+ * written by pipeline/realauto.py ship). */
+const REAL_NETWORKS = new Set<string>(realNetworks);
 const MAX_HITS = 8;
 
 function countryOf(c: City): string {
@@ -152,9 +153,13 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
   const startId = located ? located.zone : start;
   const city = startId ? cityById(startId) : null;
   const realOffered = mode === "sandbox" && !!startId && REAL_NETWORKS.has(startId);
+  // T-3225: the real networks by name, for the sandbox's list
+  const realCities = useMemo(() => [...REAL_NETWORKS].filter((id) => isCity(id)).map((id) => cityById(id))
+    .sort((a, b) => shown(a).localeCompare(shown(b))), []);
   const pick = (id: string | null) => {
     asked.current++;
     setHere("idle");
+    setReal(false);
     setStart(id);
     setLocated(null);
     setText(id && !START_CITIES.includes(id) ? shown(cityById(id)) : "");
@@ -234,10 +239,21 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         <span class="new-game-or muted small">{t("newGame.or")}</span>
         <button class={"btn text new-game-map" + (!startId && !located ? " on" : "")} aria-pressed={!startId && !located} onClick={() => pick(null)}>{t("newGame.chooseOnMap")}</button>
       </div>
-      {realOffered && <label class="check new-game-real" data-tip={t("newGame.realTip", { city: shown(city!) })}>
-        <input type="checkbox" checked={real} onChange={(e) => setReal((e.target as HTMLInputElement).checked)} />
+      {/* T-3225: one list of every city with a real network; picking one makes it the start */}
+      {mode === "sandbox" && realCities.length > 0 && <div class="new-game-real" data-tip={realOffered && real ? t("newGame.realTip", { city: shown(city!) }) : undefined}>
         <span>{t("newGame.realNetwork")}</span>
-      </label>}
+        <label class={"purpose-filter" + (realOffered && real ? " on" : "")}>
+          <select aria-label={t("newGame.realNetwork")} value={realOffered && real ? startId! : ""} onChange={(e) => {
+            const id = (e.target as HTMLSelectElement).value;
+            if (!id) { setReal(false); return; }
+            pick(id);
+            setReal(true);
+          }}>
+            <option value="" />
+            {realCities.map((c) => <option value={c.id}>{shown(c)}</option>)}
+          </select>
+        </label>
+      </div>}
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
         <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: shown(city) }) : t("newGame.start")}</button>

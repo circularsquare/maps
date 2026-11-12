@@ -973,6 +973,15 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
   totals, rail share by home area); `calib.py score <run.json>` rescores. notes/T-509.md.
+- `realauto.py` (T-3225): real networks with no hand work for the cities in `realauto.json`; `extract`
+  cuts noritetsu's extract (read only) to each pack as the `osm` adapter's input, with each relation's
+  ways chained as its shape (`realnet.py geom` lays off-graph hops on them); `build [ids] [--jobs N]`
+  runs net, geom, corridors, `realsave --shared --slow` and gamesave per city, builds a city again
+  without the routes whose lines did not run (`auto_<id>_skip.json`), and writes a report per city
+  (`auto_<id>.json`: stations, lines running, names in Latin letters, km off the graph, holds);
+  `ship` ships the listed cities that passed and writes `app/src/game/realNetworks.json`. `realnet.py`
+  makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md.
+  Browser check: `checks/t3225-real-load.mjs` (every city from the new game sheet to playable).
 - `realgraph.py <cc ...> [--check] [--out DIR]` (T-727b): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
   extract, `ways.json` and `track_extra.json` (the ways tiles flag `x`, T-3043; read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
