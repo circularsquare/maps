@@ -27,6 +27,7 @@ import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClie
 import { newGameId, onTokenGone, type CloudContext } from "../workers/cloud";
 import { listSlots, writeSync } from "../workers/saveFile";
 import { t } from "../i18n";
+import { patientFetch, CLOUD_STALL_MS } from "../workers/patientFetch";
 
 export interface AccountView {
   id: string;
@@ -102,7 +103,7 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
   if (opts.auth !== false && s) headers.Authorization = "Bearer " + s.token; // i18n-ignore
   let r: Response;
   try {
-    r = await fetch(BASE + path, { method, headers, body: opts.form ?? (body === undefined ? undefined : JSON.stringify(body)) });
+    r = await patientFetch(BASE + path, { method, headers, body: opts.form ?? (body === undefined ? undefined : JSON.stringify(body)) }, CLOUD_STALL_MS);
   } catch {
     throw new ApiError(t("account.unreachable"), 0);
   }
@@ -121,7 +122,7 @@ export async function api<T>(method: string, path: string, body?: unknown, opts:
  * `max` bytes (read no further than that). */
 export async function fetchBytes(path: string, max: number): Promise<Uint8Array> {
   let r: Response;
-  try { r = await fetch(BASE + path); } catch { throw new ApiError(t("account.unreachable"), 0); }
+  try { r = await patientFetch(BASE + path); } catch { throw new ApiError(t("account.unreachable"), 0); }
   if (!r.ok || !r.body) throw new ApiError(t("account.answered", { status: r.status }), r.status);
   const reader = r.body.getReader(), parts: Uint8Array[] = [];
   let n = 0;

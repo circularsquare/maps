@@ -73,7 +73,7 @@ import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { addressLimited, deviceGB, heapStep, mobileDevice, smallDevice } from "./deviceMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
-import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
+import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
@@ -102,6 +102,7 @@ import { lineFareMul, type Fares } from "../game/fareCurve";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { BUILD, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
+import { patientFetch } from "./patientFetch";
 
 /**
  * Crowding rounds after the free-flow estimate (T-022, notes/T-022.md). Each lands as its own
@@ -1538,6 +1539,27 @@ class DemandClient {
   }
   /** T-2756: when each pack download in flight started (before its headers came), for the status tag's slow-connection line */
   private downloadsOpen = new Map<object, number>();
+  /** T-3313: the last worker panic or replacement, for a feedback report */
+  lastTrouble = "";
+  /** T-3313: where the pool stands, one line for a feedback report: the newest solve's age and how far it got,
+   * the last step, the oldest download in flight and what is still being fetched (seconds) */
+  diagnosis(): string {
+    const now = performance.now(), s = (t: number | undefined) => (t === undefined ? "-" : Math.round((now - t) / 1000) + "s");
+    const c = this.cur, v = demandView.peek(), oldest = this.oldestDownload();
+    const open = [...this.downloads].filter(([, d]) => d.end === undefined).map(([f, d]) => `${f} ${Math.round(d.got / 1024)}k ${s(d.at)}`);
+    const parts = [
+      `status ${this.status.slice(0, 120)}`,
+      c ? `solve v${c.version} came ${s(c.arrivedAt)} ago, sent ${c.sentAt ? s(c.sentAt) : "not yet"}, rounds ${c.roundAt?.length ?? 0}, final ${c.results.every((r) => r) ? "yes" : "no"}` : "no solve", // i18n-ignore
+      `shown v${v?.version ?? "-"}${v?.final ? " final" : ""}`, // i18n-ignore
+      this.waiting ? `network waiting ${s(this.waiting.arrivedAt)}` : "", // i18n-ignore
+      `step ${s(lastStep())} ago`, // i18n-ignore
+      oldest === null ? "" : `oldest download ${s(oldest)}`, // i18n-ignore
+      open.length ? `downloading ${open.slice(0, 6).join(", ")}` : "",
+      `workers ${this.workers.length}, replaced ${this.respawns}`, // i18n-ignore
+      this.lastTrouble ? `last trouble ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
+    ];
+    return parts.filter(Boolean).join("; ");
+  }
   /** the oldest pack download in flight's start, performance.now(), or null */
   oldestDownload(): number | null {
     let o: number | null = null;
@@ -1545,7 +1567,7 @@ class DemandClient {
     return o;
   }
   private async fetchPackFile(file: string, high: boolean): Promise<Uint8Array> {
-    const r = await fetch(file === MARKET_ROWS ? file : dataUrl(file), high ? { priority: "high" } as RequestInit : undefined);
+    const r = await patientFetch(file === MARKET_ROWS ? file : dataUrl(file), high ? { priority: "high" } as RequestInit : undefined);
     if (!r.ok) throw new Error(`${r.status} ${r.url}`);
     const d: Download = { got: 0, total: Number(r.headers.get("Content-Length")) || 0, at: performance.now() };
     this.downloads.set(file, d);
@@ -2612,6 +2634,7 @@ class DemandClient {
    * (T-1205): an idle worker restarted to give back its memory, which counts toward neither. */
   private workerDied(i: number, why: string, planned = false, download = false) {
     if (this.failed) return;
+    if (!planned) this.lastTrouble = `worker ${i}${download ? " download" : ""}: ${why}`; // i18n-ignore
     if (!planned && !download && this.computeN > 1 && isMemoryFailure(why)) return this.memoryShort(i, why);
     const panicked = [...this.respawn.values()].some((r) => !r.planned);
     if (!planned && !download && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
@@ -4848,6 +4871,8 @@ function madeDays(): DemandDay[] {
 }
 
 let client: DemandClient | null = null;
+/** T-3313: the pool's state for a feedback report ("" before it starts) */
+export const demandDiagnosis = () => client?.diagnosis() ?? "";
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
 const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";

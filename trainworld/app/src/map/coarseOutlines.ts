@@ -8,6 +8,7 @@ import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../g
 import { M_PER_DEG } from "../game/frame";
 import { atZero, cellSays, cellsSayInside, distanceTo, type Footprint } from "../workers/cityReach";
 import { smallDevice } from "../workers/deviceMemory";
+import { patientFetch } from "../workers/patientFetch";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
 export type OutlineFile = { q: number; zones: Record<string, number[][]>; water?: Record<string, number[][]> };
@@ -125,7 +126,7 @@ const RETRY_MS = [1_000, 4_000, 10_000, 30_000, 60_000];
 async function fetchText(url: string): Promise<string> {
   for (let k = 0; ; k++) {
     try {
-      const r = await fetch(url);
+      const r = await patientFetch(url);
       if (!r.ok) throw new Error(`${r.status} ${r.url}`);
       return await r.text();
     } catch (error) {

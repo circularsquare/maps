@@ -536,6 +536,22 @@ export class ClockClient {
   private waiting: [ToClock, Transferable[]][] = [];
   private seq = 0;
   private pending = new Map<number, (a: EditAnswer) => void>();
+  /** T-3313: the edits and reads not answered yet, and when each went (the worker answers them in order) */
+  private sent = new Map<number, { what: string; at: number }>();
+  /** T-3313: when the last hour of trips came, and the worker's last error, for a feedback report */
+  private tripsAt = NaN;
+  private lastTrouble = "";
+  /** T-3313: one line for a feedback report: the oldest unanswered edit or read and its age, how many wait
+   * behind it, the last trips' age, the last error (seconds) */
+  diagnosis(): string {
+    const now = performance.now(), first = this.sent.values().next().value;
+    return [
+      first ? `oldest unanswered ${first.what} ${Math.round((now - first.at) / 1000)}s, ${this.sent.size} waiting` : "nothing unanswered", // i18n-ignore
+      `trips ${Number.isNaN(this.tripsAt) ? "none yet" : Math.round((now - this.tripsAt) / 1000) + "s ago"}`, // i18n-ignore
+      `status ${clockWorkerStatus.peek()}`,
+      this.lastTrouble ? `last error ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
+    ].filter(Boolean).join("; ");
+  }
   private stations = new Newest<{ at: StationAt; platform: number }, [ok: boolean, issues: string[], cost: number]>();
   private crossovers = new Newest<{ edge: number; x: number; y: number }, [a: CrossoverAnswer]>();
   private previews = new Newest<(seq: number) => ToClock, [a: PreviewAnswer]>();
@@ -1039,9 +1055,11 @@ export class ClockClient {
         break;
       case "error":
         console.warn("clock worker:", msg.message);
+        this.lastTrouble = msg.message;
         break;
       case "recovered":
         console.error("clock worker:", msg.detail);
+        this.lastTrouble = msg.detail;
         if (msg.down) clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
         say(workerText(msg.notice), true);
         break;
@@ -1179,6 +1197,7 @@ export class ClockClient {
       case "answer": {
         const f = this.queries.get(msg.seq);
         this.queries.delete(msg.seq);
+        this.sent.delete(msg.seq);
         f?.(msg.data);
         break;
       }
@@ -1188,11 +1207,13 @@ export class ClockClient {
           if (this.boardLog.length > 40) this.boardLog.shift();
           accountVersion.value++;
         }
+        this.tripsAt = performance.now();
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
         break;
       case "edited": {
         const f = this.pending.get(msg.seq);
         this.pending.delete(msg.seq);
+        this.sent.delete(msg.seq);
         this.editLog.push({ worker: msg.ms, stateMs: this.lastStateMs });
         if (this.editLog.length > 40) this.editLog.shift();
         // T-531: the world before and after this edit's state say where its money went
@@ -1278,6 +1299,7 @@ export class ClockClient {
     if (same && same.posts === this.posts) return same.p;
     const seq = ++this.seq;
     this.post({ kind: "query", seq, q });
+    this.sent.set(seq, { what: q.what, at: performance.now() });
     const p = new Promise<Float64Array>((res) => this.queries.set(seq, res));
     if (key) {
       const read = { posts: this.posts, p };
@@ -1298,6 +1320,7 @@ export class ClockClient {
       return new Promise((res) => this.pending.set(seq, (a) => { this.stopsOut--; this.lastStopAt = performance.now(); res(a); }));
     }
     this.post(early ? { kind: "edit", seq, op, early } : { kind: "edit", seq, op });
+    this.sent.set(seq, { what: op.op, at: performance.now() });
     return new Promise((res) => this.pending.set(seq, res));
   }
 

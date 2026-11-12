@@ -15,6 +15,8 @@ import {
   replyFeedback, sendFeedback, session, type FeedbackRow, type FeedbackThread,
 } from "../game/account";
 import { loadFailure } from "../game/loading";
+import { stateReport } from "../game/diagnostics";
+import { display } from "../game/ui";
 import { language, t, tDate } from "../i18n";
 import { Modal } from "./Modal";
 import { showPassingNote } from "./PassingNote";
@@ -51,6 +53,10 @@ function reportContext(): Record<string, string> {
   };
   const failure = loadFailure.peek();
   if (failure) ctx.lastFailure = failure.slice(0, 1000);
+  // T-3313: where the clock worker and the demand pool stood, and the money's currency (another device can
+  // start on another one)
+  ctx.state = stateReport();
+  ctx.currency = display.peek().currency;
   return ctx;
 }
 

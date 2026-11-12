@@ -607,6 +607,10 @@ out, delete; [Account and leaderboards](#account-and-leaderboards)), and Submit 
 ("Email (optional)") and Message, and Send feedback. It POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
+Beside the message the report carries the browser, memory, language, the last load failure, the currency, and
+`state` [T-3313, `game/diagnostics.ts`]: the clock worker's oldest unanswered edit or read and the last hour of trips,
+and the demand pool's newest solve, last step and oldest download, each with its age, so a report of figures that
+stopped says where they stuck.
 Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's upper left under the edit note, "sent! thank you for feedback" (plain text as the edit note's, 5 s; `showPassingNote` in `ui/PassingNote.tsx`) [T-1709, T-2166]; a failure says why (no server for this copy,
 not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
 sent yet") and keeps the text. Station ridership

@@ -307,7 +307,10 @@ Web first, so it can be shared as a link.
   (`game/boundaries.ts`). The clock worker is ready without any water mask: masks, outlines, place
   lists and boundaries are fetched per zone as the view, track or a search needs them (T-302,
   T-400, T-404; docs/zones.md 6).
-  A pack download that fails is tried again after 0.5, 1.5 and 4 s, and a city pack's header is
+  A download the game waits on gives up after 45 s with no headers or no byte of its body (the
+  account's calls 120 s, an upload counting toward the wait; `workers/patientFetch.ts`, T-3313), so a
+  connection that died without an error fails like any other instead of holding every solve or sync
+  behind it. A pack download that fails is tried again after 0.5, 1.5 and 4 s, and a city pack's header is
   read again after its .bin and both fetched again if it changed (a pack rewritten mid-load). A
   zone whose pack still cannot be downloaded is left out (not needed, waited for or held for),
   its failure shows on the status tag while it is in view, and it is tried again after 10, 30 and

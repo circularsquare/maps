@@ -331,3 +331,49 @@ fn a_change_just_before_a_new_level_moves_no_train() {
     edit_at(&mut w, 2.0 * 86400.0 + 19.9 * 3600.0, "before the evening", |w| counts(w, id, [12, 4, 3]));
 }
 
+
+/// T-3313 ("after I raised the train count, every train on the map vanished at its terminal"): a raised count,
+/// within the track's room or far past it, on double track or single, keeps the line running. Two to four
+/// hours after the edit, in one level's stretch, trains are drawn at every sample, at least as many as
+/// before it, and every train that ends a trip takes another (none leaves service).
+#[test]
+fn a_raised_count_keeps_every_train_running() {
+    for tracks in [2u8, 1] {
+        for (from, to) in [(3u32, 4u32), (3, 6), (4, 12), (6, 40), (2, 3)] {
+            let (mut w, ns) = corridor(if tracks == 1 { 4 } else { 7 });
+            if tracks == 1 {
+                for e in 0..w.net.edge_count() as u32 {
+                    if let Some(mut d) = w.net.edge_data(e) {
+                        d.tracks = 1;
+                        w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+                    }
+                }
+            }
+            let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);
+            counts(&mut w, id, [from, from, from]);
+            let what = format!("{tracks} track(s), {from} to {to}");
+            let drawn = |w: &TrackWorld, t: f64| places(w, t).len();
+            let before = (0..12).map(|k| drawn(&w, MIDDAY - 3600.0 + k as f64 * 300.0)).min().unwrap();
+            assert!(before > 0, "{what}: no train before the edit");
+            let b = w.svc.before_edit(&w.net, MIDDAY);
+            counts(&mut w, id, [to, to, to]);
+            w.svc.note_changes(&w.net, &b, MIDDAY);
+            let (t0, t1) = (MIDDAY + 2.0 * 3600.0, MIDDAY + 4.0 * 3600.0);
+            w.svc.prune_eras(&w.net, t0);
+            let (mut t, mut most) = (t0, 0);
+            while t < t1 {
+                let n = drawn(&w, t);
+                most = most.max(n);
+                assert!(n >= before, "{what}: {n} trains drawn at +{:.0} min, {before} before the edit", (t - MIDDAY) / 60.0);
+                t += 300.0;
+            }
+            // on double track the raise within its room shows as more trains
+            if tracks == 2 && to <= 12 {
+                assert!(most > before, "{what}: still at most {most} trains drawn, {before} before the edit");
+            }
+            for x in w.svc.trips(&w.net, t0, t1 - 3600.0) {
+                assert!(x.next.is_some(), "{what}: a train leaves service at +{:.0} min: {x:?}", (x.end - MIDDAY) / 60.0);
+            }
+        }
+    }
+}

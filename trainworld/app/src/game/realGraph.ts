@@ -3,6 +3,8 @@
 // pipeline/realgraph.py (its docstring has the layout) into data/packs/realgraph/, served beside
 // the packs and copied by a production build (vite.config.ts). The track tool's router reads it.
 
+import { patientFetch } from "../workers/patientFetch";
+
 export interface RealGraph {
   cc: string;
   /** junctions, degrees */
@@ -34,7 +36,7 @@ export function realGraph(cc: string, base: string): Promise<RealGraph | null> {
   let p = loaded.get(cc);
   if (!p) {
     p = (async () => {
-      const r = await fetch(new URL(`${cc}.rgr`, base));
+      const r = await patientFetch(new URL(`${cc}.rgr`, base).href);
       if (!r.ok || !r.body) return null;
       const raw = await new Response(r.body.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer();
       return decodeRealGraph(cc, raw);

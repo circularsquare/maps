@@ -112,6 +112,7 @@ import { netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/d
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
+import { setClockDiagnosis } from "./game/diagnostics";
 
 // The mode colours are the network's, not the theme's (T-084): the top bar's split uses them. They
 // follow the bubble scheme (T-833).
@@ -284,6 +285,7 @@ startOpenFit(); // T-895
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
+setClockDiagnosis(() => client.diagnosis()); // T-3313: for feedback reports
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();
 // T-2142: a new game starts paused, a sandbox too (the tutorial's last step is the play button); a

@@ -9,6 +9,7 @@ import { CITIES, cityNear, zoneBox, type City, type CityId } from "./cities";
 import { normalise } from "./search";
 import { dataUrl } from "./dataBase";
 import { M_PER_DEG, M_PER_DEG_LAT } from "./frame";
+import { patientFetch } from "../workers/patientFetch";
 
 export interface Place {
   name: string;
@@ -33,7 +34,7 @@ export const places = signal<ReadonlyMap<CityId, Place[]>>(new Map());
 function load(id: CityId): Promise<Place[]> {
   let p = files.get(id);
   if (!p) {
-    p = fetch(dataUrl(`${id}.places.json`)).then(async (r) => {
+    p = patientFetch(dataUrl(`${id}.places.json`)).then(async (r) => {
       if (!r.ok) throw new Error(`${r.status} ${r.url}`);
       const f = (await r.json()) as PlaceFile;
       const list = f.places.map(([name, k, lng, lat, pop, others]): Place => ({

@@ -9,6 +9,7 @@
 import { t } from "../i18n";
 import { backupBeforeReplace, changeCloudDeletes, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
+import { patientFetch, CLOUD_STALL_MS } from "./patientFetch";
 
 /** What a page needs to reach the account: the server, the session and this browser's device id.
  * `on`: the server keeps games (`/noritetsu/config`'s `trainworldGames`); records are still tied
@@ -84,7 +85,7 @@ async function call(ctx: CloudContext, method: string, path: string, body?: Body
   else if (body !== undefined) { headers["Content-Type"] = "application/json"; payload = JSON.stringify(body); }
   let r: Response;
   try {
-    r = await fetch(ctx.base + path, { method, headers, body: payload, cache: "no-store" });
+    r = await patientFetch(ctx.base + path, { method, headers, body: payload, cache: "no-store" }, CLOUD_STALL_MS);
   } catch {
     return { status: 0 };
   }

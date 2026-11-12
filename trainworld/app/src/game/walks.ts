@@ -14,6 +14,7 @@ import type { StationInput } from "./types";
 import { zoneAt } from "./zones";
 import { dataUrl } from "./dataBase";
 import { fetchRange } from "../workers/rangeFetch";
+import { patientFetch } from "../workers/patientFetch";
 
 // A step onto water, or a diagonal past a water corner, costs WATER_COST land steps (T-1164).
 const ORTH = 70, DIAG = 99, INF = 0x7fffffff, WATER_COST = 3, RING = 512;
@@ -41,7 +42,7 @@ function loadGrid(id: CityId) {
   if (loading.has(id)) return;
   const p = (async () => {
     const base = dataUrl(id);
-    const head = await (await fetch(base + ".json")).json();
+    const head = await (await patientFetch(base + ".json")).json();
     const wb = head.routes?.walk;
     const row = head.arrays?.find((a: { name: string }) => a.name === "walk_row");
     const xs = head.arrays?.find((a: { name: string }) => a.name === "walk_x");

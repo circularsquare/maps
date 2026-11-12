@@ -13,6 +13,7 @@ import { carUsdPerKm, curveWeight, fareWeight, incomeGroups } from "./income";
 import { AVERAGE_DAY, BACK_DAY, OUT_DAY } from "./days";
 import { PERIODS } from "./periods";
 import type { MarketEnd, MarketPeriod } from "./trip";
+import { patientFetch } from "../workers/patientFetch";
 
 /** A place's market row, the fields read here. */
 export interface MarketRow {
@@ -180,7 +181,7 @@ const DRIVES_RETRY_MS = [500, 1500, 4000, 10000];
 export function fetchMarketDrives(): Promise<Uint8Array | null> {
   const once = async (attempt: number): Promise<Uint8Array | null> => {
     try {
-      const r = await fetch(dataUrl("market-drives.bin"));
+      const r = await patientFetch(dataUrl("market-drives.bin"));
       if (r.status === 404) return null;
       if (!r.ok) throw new Error(`market drives: ${r.status}`);
       return new Uint8Array(await r.arrayBuffer());
@@ -200,7 +201,7 @@ export function fetchMarketDrives(): Promise<Uint8Array | null> {
 /** Fetch the rows once (the same file the demand pool sends its workers), with the drives. */
 export function loadMarketRows(): Promise<boolean> {
   return (loading ??= Promise.all([
-    fetch(new URL("./market-rows.json", import.meta.url).href).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`market rows: ${r.status}`)))),
+    patientFetch(new URL("./market-rows.json", import.meta.url).href).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`market rows: ${r.status}`)))),
     fetchMarketDrives(),
   ]).then(([j, d]) => (setMarketDrives(d), setMarketRows(j), true), (err) => { console.error(err); loading = null; return false; }));
 }

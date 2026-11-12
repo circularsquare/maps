@@ -15,6 +15,7 @@ import { newGameEnd, setStartAt } from "./locate";
 import { t, tCountry } from "../i18n";
 import { tPlace } from "../i18n/places";
 import realNetworks from "../game/realNetworks.json";
+import { patientFetch } from "../workers/patientFetch";
 
 /** The suggested starts (T-728), easy starts (T-2690); Guangzhou for Toronto, for a start outside the West with
  * many cities near it (Anita, 2026-11-06). */
@@ -125,7 +126,7 @@ function usePinnedTop(sheet: RefObject<HTMLElement | null>) {
 
 /** The real network's save for a start city (T-731). */
 async function realNetwork(id: string): Promise<ArrayBuffer> {
-  const r = await fetch(dataUrl(`real/${id}.save`));
+  const r = await patientFetch(dataUrl(`real/${id}.save`));
   if (!r.ok) throw new Error(`${r.status}`);
   return r.arrayBuffer();
 }

@@ -5,6 +5,7 @@
 
 import type { FeatureCollection, MultiPolygon, Polygon } from "geojson";
 import { dataUrl } from "./dataBase";
+import { patientFetch } from "../workers/patientFetch";
 
 export type Boundary = FeatureCollection<Polygon | MultiPolygon>;
 
@@ -13,7 +14,7 @@ const cache = new Map<string, Promise<Boundary>>();
 export function cityBoundary(id: string): Promise<Boundary> {
   let p = cache.get(id);
   if (!p) {
-    p = fetch(dataUrl(`${id}.boundary.geojson`)).then(async (r) => {
+    p = patientFetch(dataUrl(`${id}.boundary.geojson`)).then(async (r) => {
       if (!r.ok) throw new Error(`${r.status} ${r.url}`);
       return (await r.json()) as Boundary;
     });

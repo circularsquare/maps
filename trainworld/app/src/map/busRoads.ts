@@ -8,6 +8,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { EXTENT, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
 import { DRIVE_CLASSES, PEDESTRIAN, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
+import { patientFetch } from "../workers/patientFetch";
 
 /** The roads a bus or tram drives (T-3172: any road in the data): `DRIVE_CLASSES` (streets, service ways of
  * every kind, tracks, bus guideways), pedestrian streets, and motorways (T-2469: most long bridges and
@@ -97,7 +98,7 @@ export async function roadTileTemplate(map: MlMap): Promise<string | null> {
     if (tiles?.length) return tiles[0];
     const url = live?.url ?? spec?.url;
     if (!url) return null;
-    const json = await (await fetch(url)).json();
+    const json = await (await patientFetch(url)).json();
     return json.tiles?.[0] ?? null;
   } catch {
     return null;
@@ -148,7 +149,7 @@ export class BusRoads {
     try {
       const tpl = await this.url();
       if (tpl) {
-        const r = await fetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
+        const r = await patientFetch(tpl.replace("{z}", "14").replace("{x}", String(tx)).replace("{y}", String(ty)));
         if (r.status === 200) rl = joinRoads(decodeRoads(await r.arrayBuffer(), this.keep), metresPerUnit((ty + 0.5) * EXTENT));
         else if (r.status === 404 || r.status === 204) rl = { extent: EXTENT, lines: [] };
       }
