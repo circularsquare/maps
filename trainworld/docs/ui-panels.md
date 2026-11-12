@@ -550,7 +550,7 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | U, O | start a new bus line, a new ferry line (`BUS_KEY`, `FERRY_KEY`) | any tab |
 | M | swap the map for the network diagram, and back (`DIAGRAM_KEY`, `diagram/view.ts`) | any tab |
 | T | explore a trip; the tab stays | any tab |
-| D | demand bubbles: None, Homes, Destinations, Total and round again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
+| D | demand bubbles: None, Homes, Destinations, Total and then None again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
 | E, Delete | E enables the picked blueprints when any is off and disables them when all are on (`SWITCH_PICK_KEY`, T-2338; the Enable hover, and the Disable hover while all are on, name it); Delete removes them | select tool |
 | Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
@@ -618,10 +618,10 @@ not reachable, too many from here, or a server whose `/noritetsu/config` lacks `
 sent yet") and keeps the text. Station ridership
 circles are a row on the map instead, under the demand buttons [T-1448].
 
-**Line shapes** [T-3319]: a row per mode, Train, Tram, Bus and Ferry, each a row of the four bullet shapes
-(circle, square, diamond, pill; no hovers, aria labels only), the shape of that mode's lines that have none of their
+**Line shapes** [T-3319]: a row per mode, Train, Tram, Bus and Ferry, each a row of the three bullet shapes
+(circle, square, diamond; no hovers, aria labels only), the shape of that mode's lines that have none of their
 own ([ui-inspectors.md](ui-inspectors.md) "Line shapes"). Train and Tram start on the circle, Bus on the square,
-Ferry on the pill, as the bullets were before; a change redraws at once every line of the mode without its own.
+Ferry on the pill, as the bullets were before (the pill is not pickable, so no button is lit on Ferry until one is picked); a change redraws at once every line of the mode without its own.
 
 **Panel and text size** [T-247]: 80% to 120% in 5% steps, 90% by default (T-703), no reset button. It
 zooms the dock, top bar, map buttons, search, loading card, tool notes and dialogs, and sizes the
@@ -645,7 +645,11 @@ hover says it takes effect after a reload ([architecture.md](architecture.md) 7)
 [architecture.md](architecture.md) "A hidden page") [T-826]. "Map detail" (Low, High; High by
 default; Low is the old lighter map's On and High its Off, the saved `lighterMap` values unchanged; hover "Show fewer roads and other details" [T-1838]) draws the basemap with fewer layers at a lower resolution when Low [T-1207].
 There is no Auto: it switched to Low for the rest of the page on one slow zoom, and a stored "auto" now reads
-as High [T-2840]. Low saves no resident memory (notes/T-2840.md).
+as High [T-2840]. Low saves no resident memory (notes/T-2840.md). A **Memory** row follows (after the checkboxes, before Currency):
+"1.4 GB of about 8 GB", the memory the game takes now against the most it aims for here (`memBudget`: 8 GB, or 0.75 of a device
+that reports less; 6 where the browser does not say), red above 85% of it, refreshed every 2 s; hover "About 0.6 GB more per 1,000
+stations" [T-3329; `game/memoryEstimate.ts`]. The reading is 1.15 GB plus 1.76 times what the demand workers report (WASM and heap),
+within about 0.2 GB of the browser's own total over 22 runs (notes/T-3329.md).
 
 **Game** [T-728], last before the account section: the game's mode, "Normal" or "Sandbox" (hover: what
 it means). A normal game has "Switch to sandbox mode", which asks first ("Confirm?", then
@@ -654,11 +658,11 @@ and Switch to sandbox mode) [T-822]; a sandbox has no way back, so a later campa
 or a hard start's achievements cannot be had for free. The mode is the game's, kept in its save,
 not the browser's. First in the section, **Trains run on** Left or Right [T-3297; `ui/SideSwitch.tsx`]: picking
 the other side switches the whole game (world.md "Running side"), at once on a network with no track, else after
-a question ("Switch trains, trams and buses to the left? One-way track and flyover legs turn round to match, and
+a question ("Switch trains, trams and buses to the left? One-way track and flyover legs turn around to match, and
 lines move onto them. Anything that still doesn't work is listed after. Undo history is cleared.", Switch side and
 Keep this side). After a switch with anything to report, a list opens ("Switched to the left"): To fix (lines
 that can't get through their stops, junctions now crossing flat, one-way track no train can use) and Fixed (one-way
-track turned round, lines rerouted), each row a click that shows the place and selects the line, junction or track
+track turned around, lines rerouted), each row a click that shows the place and selects the line, junction or track
 and closes the list; under the row "3 places to fix after the switch" (or "Nothing left to fix after the switch")
 with Show list, until another game opens. In a normal game a
 row "Tutorial" with a Start again button (restarts the [tutorial card](#tutorial-card))
@@ -966,6 +970,13 @@ keeps what it had and earns no more.
     browser. Still on your account until the server can be reached." and the deletion is sent at the
     next load.
 
+**Memory a game takes** [T-3329]: a line under the facts of every card with stations, "About 2.5 GB of memory", from the
+station count (1.8 GB plus 0.65 GB per 1,000 stations plus 0.5 GB per solving worker past the first; within about 0.2 GB on
+the real-network saves). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
+shows it in red and its Open (saves panel and start menu, not the versions list) first asks "This game needs about 5 GB of
+memory and this device has about 4. It may not load." with Open anyway and Cancel. Elsewhere the line is plain and nothing asks.
+This is separate from the refusal [T-1197], which judges a save by its zones and still blocks a game no worker can hold.
+
 ### Card actions
 
 - **Rename** [T-1247]: the pencil or a double click on a card's name (any card) puts a box in its
@@ -1072,7 +1083,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
 - **Trains run on** Left or Right [T-3297; `ui/SideSwitch.tsx`, `game/runningSide.ts`]: the game's running side, for
   trains, trams and buses alike (world.md "Running side"). Until the player picks, it follows the start: the side
   its country's railways keep to, a real network's its metro's, Right on the world map; a pick stays while the
-  start changes. Hover "Trams and buses too. Set from the country you start in." A real network started on the
+  start changes. No hover. A real network started on the
   other side than its save is switched as it opens.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
   high, bold, tinted) and centred in the sheet's last row, with Back at its left [T-1215]. If a real network cannot be downloaded, a
@@ -1279,7 +1290,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   [T-895; `startOpenFit` in `ui/locate.ts`, `fitNextGame` in `workers/clockClient.ts`]. Once the
   player has moved the camera since the pick (a drag, the wheel, a pinch, a rotation, the arrow keys, a
   search pick or a Cities tab double click), the game being entered fits it no more, so the player can
-  look round while it loads [T-2477; `enterGame` in `ui/locate.ts`].
+  look around while it loads [T-2477; `enterGame` in `ui/locate.ts`].
 - URL switches that already say which game skip it: `?new=1` (a new game owning no slot; normal
   in New York, or `&mode=sandbox` and `&city=<zone id>`),
   `?synth=1`, `?demandTest=1`, `?paused=1` and `?continue=1` (the game opened last).
@@ -1312,7 +1323,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
   by, the train chugs, the ears bob; paused under reduced motion; the card alone has it, T-2693
   follow-up); a pill drawn as the map draws a train (a rim in a darker shade of the theme's accent
-  round a fill of it) runs round a 13 px ring leading the status tag's text and the diagram tag (a CSS
+  around a fill of it) runs around a 13 px ring leading the status tag's text and the diagram tag (a CSS
   turn of 1.1 s, nothing per frame; paused under reduced motion); a small ring turning (`.spin`, 1.2 s a turn, 8 px, grey) in place
   of each line's crowding dot per demand level in the line panel until the line has figures
   (while no final result is shown or a solve is updating it; not after a failure or over dead

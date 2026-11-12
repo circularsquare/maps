@@ -94,6 +94,9 @@ export class Overlay {
   /** The camera is moving (MapLibre's movestart to moveend): DOM placers re-place at most every
    * `MOVING_PLACE_MS` meanwhile (`placeDue`), and once more on the frame after it stops (T-1207). */
   moving = false;
+  /** Runs after each draw, set while the camera follows a train (map/cameraFollow.ts); every frame is then
+   * drawn, as while the camera moves. */
+  afterDraw: (() => void) | null = null;
   /** MapLibre frames drawn while the camera moves: their gaps, ms (unused since the lighter map's Auto went, T-2840). */
   onMovingFrame: ((gapMs: number) => void) | null = null;
   private lastMapFrame = 0;
@@ -216,6 +219,7 @@ export class Overlay {
     if (this.lastFrame && clock.ticking && now - this.lastFrame < 1000) this.frameGap.push(now - this.lastFrame);
     this.lastFrame = now;
     this.frames++;
+    this.afterDraw?.();
   }
 
   /** The snapshot drawn by the network renderer with a flat camera of its own into the bottom left of
@@ -304,7 +308,7 @@ export class Overlay {
     }
     // Nothing visible moves faster than this: the next draw waits (T-1640). The game minute still
     // turns on time, and the camera moving or a snapshot drawing take every frame.
-    const still = this.throttle && !this.moving && !this.snap && this.renderer.net ? this.stillWait() : 0;
+    const still = this.throttle && !this.moving && !this.snap && !this.afterDraw && this.renderer.net ? this.stillWait() : 0;
     if (this.focused && still <= FULL_RATE_MS) return this.frameNow();
     if (this.slowTimer) return;
     if (this.focused) {

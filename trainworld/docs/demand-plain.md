@@ -92,7 +92,7 @@ train is twice as dear as driving it gets 1 in 9 of the trips, three times as de
 same cost, half; half as dear, 8 in 9. The car is judged the same way, so the two sides mirror each
 other. Because it goes by times rather than minutes, 10 minutes matter a lot on a short trip and
 little on a long one. Past 3 times as dear the train's share falls away, and from 4 times nobody
-takes it, so a pointless detour line gets nobody (the same for the car the other way round).
+takes it, so a pointless detour line gets nobody (the same for the car the other way around).
 
 Walking the whole way takes its share first, by minutes: a walk 10 minutes cheaper than the
 alternatives takes about 73% of the trips. Rail and the car split the rest.
@@ -209,7 +209,7 @@ counted in the totals, by no mode. Car ferries don't count as roads.
 - Car: between places up to 1,500 km apart, the drive is routed over a world map of roads, hills
   and water (motorways fast, mountain roads slow, lakes and inlets driven round); farther, 15 minutes
   plus the drive at 85 km/h on a road 1.25 times the straight line. Each neighbourhood has its own
-  detour to the other city, so from the end of a lake the car goes round a short way and from across
+  detour to the other city, so from the end of a lake the car goes around a short way and from across
   its widest part a long way (Toronto to Buffalo). Plus fuel and tolls for each km of road
   (the two cities' countries' pump price at 8.5 litres a 100 km, and motorway tolls where they go by
   distance: about $0.10 a km in the US, $0.23 in Japan, $0.32 in France) and parking, shared by two

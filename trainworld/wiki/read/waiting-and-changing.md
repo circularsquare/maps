@@ -12,7 +12,7 @@ Stations within 300 m of each other are close enough to change on foot. A passag
 
 People don't get off a line to catch the same line back the way they came. On a full line they wait at their own station.
 
-A line that bends back close to itself can be changed onto across the bend. People get off, walk over to its other stop and ride on from there when that beats riding round. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they got off.
+A line that bends back close to itself can be changed onto across the bend. People get off, walk over to its other stop and ride on from there when that beats riding around. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they got off.
 
 If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
 

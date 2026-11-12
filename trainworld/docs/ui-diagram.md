@@ -76,7 +76,7 @@ pitches to one side of the place, at a pitch of pill length a pitch. A line's st
 ribbon crosses the axis; a line ending there has its last run carried on, or cut back, to the axis; a
 line running beside the axis within 1.25 pitches lies under the pill's edge. So a pill is always a
 straight capsule on its lines, white with the ink outline in both themes, two pitches across; in the dark
-theme a thin edge of the map's ink (0.16 of a stroke) runs round the outline, so the
+theme a thin edge of the map's ink (0.16 of a stroke) runs around the outline, so the
 ring shows on the dark background (T-2272). A **local stop** is drawn small, its fill half a stroke across
 each side of its axis and its outline 0.24 of a stroke (about 1.2 pitches across): a station one line stops
 at, or one a line passes without stopping while the lines stopping are all of one colour; a line's end
@@ -101,7 +101,7 @@ that arrive after a layout), between blocks as inside them.
 - **The region**: on a grid of one pitch, every cell within 5 pitches of a line's casing or a pill; then grown by
   50 pitches and shrunk by 50 again (never inside the 5), so gaps and bays under about 100 pitches close and the
   outline keeps well clear of the lines instead of hugging them (T-2488, T-2491); then every gap
-  the network encloses filled. So each zone with stations is a closed outline round its own stations and lines, with
+  the network encloses filled. So each zone with stations is a closed outline around its own stations and lines, with
   no holes.
 - **The zones**: each cell takes the zone of the pill nearest it through the region (steps of a cell, straight or
   diagonal, from the cells under each pill), so every station is on its own zone's side and a line leaving a zone
@@ -152,7 +152,7 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   ends) is not drawn. A narrow arc at an end of what is drawn (all its crossings under 150 m each side) that crosses
   another line is left out, and an arc left ending free with no crossing goes with it; a river narrow wherever it is
   crossed is drawn only where it crosses no other line, else not at all. So **no band is drawn in pieces**.
-- **How wide** (T-2528): a band is the river's real width (its median along each arc) at the drawing's scale round it,
+- **How wide** (T-2528): a band is the river's real width (its median along each arc) at the drawing's scale around it,
   the scale field: at each place, the nearest 16 stations' own scales (their local maps', drawn over real), a geometric
   mean weighted by exp(-d^2 / 2 R^2), R 1.5 km or the fourth nearest's distance, so it changes smoothly from place to
   place. Smoothed along the river over 1.5 km either side, then at least half the river's widest drawn stretch times
@@ -173,11 +173,11 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   costing 10 pitches of length and a 90 degree one 30), dearer within a pitch of a casing, near the river's course
   carried into the drawing through the nearest stations' local maps (T-2488's border lines), within 24 pitches of it.
   It may cross other lines: each pitch inside a casing costs 10 pitches of length, inside a hop the river crosses
-  elsewhere 60, inside a pill 150, so it crosses a line where going round costs more (T-2516: a band that runs on
+  elsewhere 60, inside a pill 150, so it crosses a line where going around costs more (T-2516: a band that runs on
   smoothly reads better than one winding through the gaps, and the drawing often puts a river's two banks on the wrong
-  sides of a line). Where that way crosses lines, the run is tried the other way round too, and the one crossing
+  sides of a line). Where that way crosses lines, the run is tried the other way around too, and the one crossing
   fewer taken. So **a band crosses each hop that crosses that river once**, save where it has to cross its own hop
-  again, and other lines where the drawing leaves no way round.
+  again, and other lines where the drawing leaves no way around.
 - **Ends**: a mouth goes into the drawn sea of the body it meets: to the nearest cell of that body's drawn sea, at
   least a pitch past the band's edge from the coast, within 80 pitches of where its place on the ground is carried. A
   mouth at a sea not drawn near (Newark Bay) goes on by water on the ground (the coarse grid's water, the shortest way
@@ -213,11 +213,11 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
   it. So does land it carries the cell to across the sea (a run of 2 km and 30% of the way on the ground) nearest a
   station of the far shore within 8 km that is not among the cell's voters (T-2528: that shore is drawn where its own
   stations are; Connecticut's maps carried the middle of Long Island Sound, drawn wider than the Sound at their scale,
-  onto Long Island, drawing it as land with lakes). Every pill and the 2.5 pitches round it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
-  pitches, so inlets and notches under about 8 pitches across go, the land round the pills kept).
+  onto Long Island, drawing it as land with lakes). Every pill and the 2.5 pitches around it is land. Smoothed (a 3 by 3 majority, twice; then opened and closed by 4
+  pitches, so inlets and notches under about 8 pitches across go, the land around the pills kept).
 - **Straits**: then a cell is sea where it meets a cell nearest another station, and the two nearest stations are on
   different land masses, or the straight way between them on the ground crosses at least 2 km of sea in one run and
-  30% of its length; only a pill and half a pitch (and half a cell) round it stays land. So **land masses are drawn
+  30% of its length; only a pill and half a pitch (and half a cell) around it stays land. So **land masses are drawn
   apart** wherever the drawing leaves room between their stations, and a bay or strait the drawing squeezes (Tokyo Bay)
   stays open as a channel.
 - Sea under 60 square pitches (but a strait) and land without a station under 30 dropped, and land without a station
@@ -251,7 +251,7 @@ pill, so they clear its own line); east, west, north and south
 - **One side along a run**: a station inside a piece's straight leg prefers the side of the leg with
   fewer other stations' pills within 6 pitches (east, else north, when even).
 - **Two distances**: at the pill, or 1.5 pitches further out (over a line beside it). An interchange
-  may also go 3 or 4.5 pitches out where lines meet all round it, but never over 32 px out.
+  may also go 3 or 4.5 pitches out where lines meet all around it, but never over 32 px out.
 - **Kept off**: a line's middle by half a pitch plus a px; other pills and passages (each at its drawn size); names already
   placed (`BoxGrid`, in px); and no name nearer another station's pill than its own. The box tested
   runs from the pill (or the lifted point) to the far side of the name.
@@ -400,7 +400,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   1.25 times its real distance at that scale apart along its real bearing, and 12 pitches between land masses: in A
   and B when nearer (weight 3; in A only within one block), and in the blocks' stage each pair of units is held to
   its pairs' lengths and bearings (weight 1 in all). So straits and bays get room before land does: Japan's four main
-  islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water round them, while a
+  islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water around them, while a
   small piece of land with few stations keeps the lonely and local hops' short targets (Anita, 2026-11-05: peninsulas
   need not be big).
 - **Lonely hops** (T-2289): a station is in a city when 3 others lie within 2.5 km of it in reality, a city
@@ -474,7 +474,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 - **Order**: on each piece one stroke per line, lines sharing a stroke on each of its edges sharing one,
   left to right by `lineBands.ts`' pairwise rule on
   the diagram's own places (follow two lines ahead to where they part, the one turning left goes left;
-  else look back), with a fixed order where three or more go round in a circle.
+  else look back), with a fixed order where three or more go around in a circle.
 - **A rebuild** starts from the last layout's B places by node key, skipping A, with 10 B rounds held
   to the last layout at 0.05 in place of A's 0.01: a new complex starts
   at its placed neighbours plus its real offset at the hop's scale, or failing any at its real place
@@ -557,7 +557,7 @@ none of this runs.
   beside unmasked ones the ground's sea calls water run at least half its width (the square root of its area). That is
   another country's coast where its masks stop (Korea and China round all Japan), which would show as land ending in
   straight lines; land the masks hold whole stays, of any size and with or without a station (Pennsylvania past the
-  Delaware, Sado, Kunashir, Governors Island). Each station's pill and 1.5 pitches round it (at least half a pitch more than a cell) are land of its
+  Delaware, Sado, Kunashir, Governors Island). Each station's pill and 1.5 pitches around it (at least half a pitch more than a cell) are land of its
   own zone; a station still off its own land has its land carried to it a pill wide, from at most 8 pitches. Cleaned (a
   3 by 3 majority; water under 40 square pitches and land with no station under 30 dropped, before the bands below and
   again after them).

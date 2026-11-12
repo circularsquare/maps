@@ -1,6 +1,6 @@
 # Station buildings
 
-Draw an outline round some stations and they become one building. Every station whose platform touches the outline belongs, at any level, built or not. Touching means inside it or within 8 m of an edge.
+Draw an outline around some stations and they become one building. Every station whose platform touches the outline belongs, at any level, built or not. Touching means inside it or within 8 m of an edge.
 
 The stations join into one complex, so people can change between any two of them on foot. Each keeps its own place on the map and its own walkers.
 

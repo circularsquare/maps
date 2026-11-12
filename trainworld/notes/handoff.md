@@ -97,6 +97,32 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
   batch); quad station T-3363 folded into T-3348; future station editor direction relayed to aabb (DECISIONS).
   One-track look: she wants it a bit wider (more depth on the platform side, her mock in my scratchpad images\4.png):
   resume onelook abebe6d27b2d052aa in the MAIN tree after onetrack lands.
+- 16:20 landed 5f41930e quadfix, 91162cad onetrack (save 18), f095231b gap batch A + NK registered; smoke PASS 28;
+  snapbuild f095231b + push running; then "go join" to gaprun2 aa8d3bc594c20a4d8 (handed back at clean pause; resume
+  by SendMessage; its kit + steps in notes/T-3287.md Stage 4).
+- Main-tree app agents now: **onelook** (wider one-track look, two-pairs box behind `?pairs`, blueprint track drawn
+  over blueprint stations), **t3357** a475d39b77ea321ab (Sonnet: pill out, "turn around", side hover dropped, T-3361
+  follow a train), **t3329** (memory B + A). Commit each as it reports, smoke, snapbuild.
+- 8800 = f095231b (city-turn, two-pair complex fix, one-track stations, gap A + NK registered but not joined),
+  pushed. "go join" sent to gaprun2 ~16:40.
+- **schem2** ad078e33a689dbd26 in .tw-trees/schem3 (6175): landing T-3362 Florida strip + T-3364 sea only where the
+  ground has it (my call), then T-3358 rivers. Bigger centres (p 0.8 vs 1.2) waits for her pick:
+  review/schematic-centres-london.png.
+- ~16:50 her calls: one-track strings acknowledged; bigger centres yes (p 0.8; told schem2, job 3 after rivers);
+  AA/BB 2.2x, no platforms on doubling, tracks per line and stop, direction colours red/blue in the station picture,
+  plan for many parallel tracks; she's tired and confused about what quad IS -> T-3365 design (**t3365**
+  a68eaf5cfd85988df, Opus, read-only, short plain notes for another day). AA/BB waits for T-3365.
+  T-3365 DONE (notes/T-3365.md, review/track-model.png): quad not stored today (two doubles found by distance, four
+  different distances), icons mean different things; model: simple = doubles, advanced = every track has a way; quad
+  becomes one remembered thing (8-12 h) before AA/BB; 5 calls sent her for another day.
+- onelook DONE, committed 74657141 (wider one-track look, blueprint track over blueprint boxes, two-pairs behind
+  ?pairs). DECISIONS line for hiding is in the uncommitted DECISIONS (commit with the next round). Not yet on 8800.
+- **tt1 tree READY to land** (T-3346 stage 1, agent finished): schedule panel Simple mode, departures board, chart,
+  group chart; sim query station_departures (WASM rebuild on land); check 16/16, smoke 28. Overlaps main-tree app/
+  edits (widgets.tsx, style.css, en.json, context.json, LineInspector): land AFTER t3357 and t3329 report and are
+  committed. One line to change when tt2 lands second (notes "Stage 1 as built"). 5 strings sent her.
+- T-3348 AA/BB design DONE (notes/T-3348.md; 27-39 h, 5 stages; her model + per-direction stops; 7 calls sent her;
+  review/aabb-station.png, aabb-layout.png).
 - **aabb** a12d41a05c626764b (Opus, read-only): T-3348 AA/BB quad design for her (her model: double in the middle + two one-way
   singles outside, smart extension, station outer/inner/both). notes/T-3348.md.
 - T-3364 Nottingham-as-island (sea drawn round an inland network) added to schem2's read-only jobs.

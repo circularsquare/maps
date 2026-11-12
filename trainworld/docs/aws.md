@@ -12,7 +12,7 @@ Design, sizes and costs: notes/T-1064.md.
 
 1. **Only long data builds go on AWS** (Anita, 2026-10-23). No servers, no hosting, no publishing.
 2. **Only `tools/aws/*.py` create or destroy.** Raw `aws ... create-*/run-instances/terminate-*/
-   delete-*/s3 rm/s3 sync` are refused by the hook; never work round it (boto3 one-liners, a
+   delete-*/s3 rm/s3 sync` are refused by the hook; never work around it (boto3 one-liners, a
    script of your own, another shell). If the scripts cannot do something, add it to them, with the
    same tag checks, and say so in your report.
 3. **Ours means tagged `owner=anita` and `project=anitabuilder`.** Every resource is tagged at

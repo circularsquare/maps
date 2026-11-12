@@ -2,7 +2,8 @@
 // their own panel (ui/SavesPanel.tsx).
 
 import type { ComponentChildren } from "preact";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
+import { budgetGB, gbText, liveGB } from "../game/memoryEstimate";
 import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
 import { exact } from "../game/format";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
@@ -204,6 +205,7 @@ export function SettingsTab() {
           </Check>
         )}
       </div>
+      <MemoryRow />
       <CurrencyRow />
       <div class="slider" data-tip={t("settingsTab.mapDetailTip")}>
         <span>{t("settingsTab.mapDetail")}</span>
@@ -220,6 +222,18 @@ export function SettingsTab() {
       <Credits />
     </>
   );
+}
+
+/** T-3329: the memory the game takes now against what it aims to stay under here; red from 85% of that. */
+function MemoryRow() {
+  const [used, setUsed] = useState(liveGB);
+  useEffect(() => { const id = setInterval(() => setUsed(liveGB()), 2000); return () => clearInterval(id); }, []);
+  if (used === null) return null;
+  const budget = budgetGB();
+  return <div class="slider" data-tip={t("settingsTab.memoryTip")}>
+    <span>{t("settingsTab.memory")}</span>
+    <span class={"num" + (used > 0.85 * budget ? " memory-bad" : "")}>{t("settingsTab.memoryValue", { used: gbText(used), budget: gbText(budget) })}</span>
+  </div>;
 }
 
 /** T-2798: the currency money is shown in, a select as the purpose's; the game counts US$ whatever it says. */

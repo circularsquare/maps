@@ -337,7 +337,7 @@ riders counters keep their own smoothing (Live feel).
 ## A selected station
 
 [T-519] Selecting a station leaves the demand views as they were: the bubbles, the zoomed-out
-overview and the airport badges stay, and the bubbles are cut away round the station (T-189). Its
+overview and the airport badges stay, and the bubbles are cut away around the station (T-189). Its
 inspector lists no commuters or inter-city riders [T-1812].
 
 ## Inter-city trips

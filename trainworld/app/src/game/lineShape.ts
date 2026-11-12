@@ -3,10 +3,13 @@
 
 import type { Vehicle } from "./vehicle";
 
-export type LineShape = "circle" | "square" | "diamond" | "pill";
-export const LINE_SHAPES: readonly LineShape[] = ["circle", "square", "diamond", "pill"];
+/** What a player can pick. A saved "pill" (T-3357) is not one, so it reads as no choice. */
+export type PickShape = "circle" | "square" | "diamond";
+/** What can be drawn: the pill is only the ferry's default look. */
+export type LineShape = PickShape | "pill";
+export const LINE_SHAPES: readonly PickShape[] = ["circle", "square", "diamond"];
 
-export const isLineShape = (v: unknown): v is LineShape => typeof v === "string" && (LINE_SHAPES as readonly string[]).includes(v);
+export const isLineShape = (v: unknown): v is PickShape => typeof v === "string" && (LINE_SHAPES as readonly string[]).includes(v);
 
 /** Each mode's shape until the player sets another in Settings: the bullets as they were before shapes
  * could be chosen (T-1464 a bus's rounded square, T-2194 a ferry's pill). */

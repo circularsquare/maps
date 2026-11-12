@@ -260,7 +260,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           </select>
         </label>
       </div>}
-      <SideSwitch cls="new-game-real" right={rightHand} onPick={setSide} tip={t("sideSwitch.tip")} />
+      <SideSwitch cls="new-game-real" right={rightHand} onPick={setSide} />
       {error && <p class="callout bad">{error}</p>}
       <div class="pane-foot new-game-foot">
         <button class="btn text start-new new-game-start" disabled={busy} onClick={() => void go()}>{city ? t("newGame.startInCity", { city: shown(city) }) : t("newGame.start")}</button>

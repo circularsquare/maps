@@ -12,7 +12,8 @@ import { live } from "../../map/live";
 import { tripAt } from "../../map/network";
 import { capacity, tripLoad } from "../../game/boarding";
 import { nameBeforeNoun, vehicleCars, vehicleOf, type Vehicle } from "../../game/vehicle";
-import { Chip, Row } from "../widgets";
+import { following, toggleFollow } from "../../map/cameraFollow";
+import { Chip, Icon, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
 
@@ -38,6 +39,11 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
       <div class="title">
         <Chip line={l} size="lg" />
         <span class="name">{t("trainInspector.title", { name: nameBeforeNoun(l.name, vehicleOf(st)), vehicle: vehicleOf(st) })}</span>
+        <button class={"btn icon" + (following.value ? " on" : "")} aria-pressed={following.value} onClick={toggleFollow}
+          data-tip={t(following.value ? "trainInspector.unfollow" : "trainInspector.follow", { vehicle: vehicleOf(st) })}
+          aria-label={t(following.value ? "trainInspector.unfollow" : "trainInspector.follow", { vehicle: vehicleOf(st) })}>
+          <Icon.follow />
+        </button>
       </div>
       <div class="sub muted">{t("trainInspector.towards", { name: name.get(stops[head]) ?? "" })}</div>
       {at ? (

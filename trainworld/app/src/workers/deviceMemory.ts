@@ -39,6 +39,18 @@ export function deviceGB(): number | undefined {
   return dm ?? (mobileDevice() ? 4 : undefined);
 }
 
+/** T-1205: what a game may take in all: about 8 GB (Anita, T-1199), less on a device with less
+ * (`deviceGB` reports at most 8). Shown by Settings' Memory row and the saves' memory warning (T-3329). */
+export function memBudget(): number {
+  if (addressLimited()) return 1.5 * 2 ** 30; // T-2867: what a 32-bit browser's workers can share
+  const dm = deviceGB();
+  return (dm === undefined ? 6 : dm >= 8 ? 8 : dm * 0.75) * 2 ** 30;
+}
+
+/** T-3329: whether the browser says how much memory the device has (Chrome, Edge) or the budget is known for
+ * another reason (a 32-bit browser). Elsewhere the budget is a guess and nothing warns against it. */
+export const budgetKnown = (): boolean => addressLimited() || (navigator as Navigator & { deviceMemory?: number }).deviceMemory !== undefined;
+
 /** A phone or tablet, or a device of 4 GB or less: one solving worker and no focus pool, and the map's lean
  * ways (T-2794: its pixel ratio capped, the outlines kept compact) */
 export function smallDevice(): boolean {

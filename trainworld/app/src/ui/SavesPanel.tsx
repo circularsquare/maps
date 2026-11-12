@@ -19,6 +19,8 @@ import { exportGame, exportSlot, importGame, leaveToMenu, newGame, manageSaveSlo
 import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
 import { accountList, accountOnly, addToAccount, cardOf, deleteVersions, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
+import { estimateGB, gbText, overBudget } from "../game/memoryEstimate";
+import { useMemoryGuard } from "./MemoryWarn";
 import { tiedTo, type CloudContext } from "../workers/cloud";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
@@ -103,6 +105,7 @@ export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveS
         <span data-tip={t("savesPanel.cash", { amount: money(slot.cash! * 1e6) })}><Money dollars={slot.cash! * 1e6} /></span>
       </>}
     </div>}
+    {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
   </>;
 }
 
@@ -181,8 +184,9 @@ const openTip = () => t("savesPanel.openTip");
 function SlotActions({ slot, playing, writable, copying, onCopy, onDelete }: { slot: SaveSlot; playing: boolean; writable: boolean; copying: boolean; onCopy: () => void; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
   const newer = saveSlotsState.value.newer;
+  const guard = useMemoryGuard(slot.stations);
   const saveTip = writable ? t("savesPanel.saveTip") : newer ? t("savesPanel.saveNewer") : /another device/.test(saveSlotsState.value.reason ?? "") ? t("savesPanel.saveOtherDevice") : t("savesPanel.saveOtherTab");
-  return (
+  return (<>
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
       {playing ? <>
@@ -195,10 +199,11 @@ function SlotActions({ slot, playing, writable, copying, onCopy, onDelete }: { s
         <button class="btn icon save-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")}
           onClick={async () => { setMsg(""); if (!await exportSlot(slot)) setMsg(t("savesPanel.readFailed")); }}><Icon.download /></button>
         <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
-        <button class="btn text save-open" data-tip={openTip()} onClick={() => { manageSaveSlot("open", slot.key); savesOpen.value = false; }}>{t("savesPanel.open")}</button>
+        <button class="btn text save-open" data-tip={openTip()} onClick={() => guard.ask(() => { manageSaveSlot("open", slot.key); savesOpen.value = false; })}>{t("savesPanel.open")}</button>
       </>}
     </div>
-  );
+    {guard.warning}
+  </>);
 }
 
 /** One saved game in this browser. */
@@ -484,20 +489,22 @@ function AccountCard({ slot, now }: { slot: SaveSlot; now: number }) {
 function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => void }) {
   const [msg, setMsg] = useState("");
   const g = accountList.value?.games.find((x) => "account:" + x.id === slot.key);
-  return (
+  const guard = useMemoryGuard(g?.facts?.stations);
+  return (<>
     <div class="save-actions">
       {msg && <span class="small bad">{msg}</span>}
       <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.delete")} onClick={onDelete}><Icon.bin /></button>
-      <button class="btn text save-open" data-tip={openTip()} onClick={async () => {
+      <button class="btn text save-open" data-tip={openTip()} onClick={() => guard.ask(async () => {
         if (!g) return;
         setMsg("");
         const key = await downloadAccountGame(g);
         if (!key) { setMsg(t("savesPanel.downloadFailed")); return; }
         manageSaveSlot("open", key);
         savesOpen.value = false;
-      }}>{t("savesPanel.open")}</button>
+      })}>{t("savesPanel.open")}</button>
     </div>
-  );
+    {guard.warning}
+  </>);
 }
 
 /** T-988: a slot whose game is also on the account signed in. */

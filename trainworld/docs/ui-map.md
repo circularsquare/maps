@@ -58,7 +58,7 @@ show: by the time a tile is drawn, `water_over_shade` covers them. Pricing never
 much of the world (SRTM in Asia: towers, raised roads and radar speckle read as hills in dense
 centres), so from tile zoom 10 (`FLAT_MIN_Z`) a tile that meets loaded terrain blocks goes to a worker
 (`map/demFlat.ts`, `workers/demFlat.worker.ts`) and comes back with its heights over flat-class ground
-blurred (sigma 400 m, the 3 x 3 tiles round it giving the blur its reach), blended by how flat the
+blurred (sigma 400 m, the 3 x 3 tiles around it giving the blur its reach), blended by how flat the
 ground is: each class cell the share of flat cells within two cells of it, bilinear between cell
 centres, so a lone hilly cell in flat ground is mostly drawn flat. What the shade shows as relief is
 then what the track pays for. A tile waits up to 1.5 s for the terrain blocks under it (only blocks with a
@@ -73,7 +73,7 @@ blueprint), hills (both classes) and mountains get a faint brown wash, stronger 
 brown at 8%, 15%, 24%; dark: a lighter tan at 6%, 11%, 18%); flat ground is bare. It is drawn from
 the terrain blocks the clock worker sends the page (track-and-service.md 6.4), one "terrain" message a block
 (`game/terrain.ts`), so it shows exactly what is charged, and nothing where no block is loaded. `map/terrainTint.ts` draws
-one image over the view and half its size again round it, rows even in mercator, each pixel the class of
+one image over the view and half its size again around it, rows even in mercator, each pixel the class of
 the lattice cell under it (the cells track is charged by, track-and-service.md 6.4; no smoothing, so each
 cell is a square), redrawn when the camera stops; above the hillshade, under the
 water, roads and labels; hidden below zoom 9, where a view is wider than the blocks the view brings in. The lighter map hides the hillshade but keeps
@@ -198,7 +198,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   ramp (1.6 x the distance to the edge, minus 0.5 px) so the gap keeps its width at every angle and
   a gap falling between two pixel columns still leaves them 70% casing, and the caps no fatter than
   the sides, so curves made of short segments do not pinch it (T-2183, T-2223, `v_aa`); one casing
-  round them all (every casing is drawn before any colour). A band is shifted along its own
+  around them all (every casing is drawn before any colour). A band is shifted along its own
   segment's normal, so line and track strokes keep no segment under 8 plane m (`MIN_SEG_M` in
   network.ts, T-2258) unless it is all of its edge: a point closer than that to the last one kept
   is dropped, the edge's last point moving the segment before it.
@@ -206,7 +206,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   part, looking ahead in the lower-numbered line's direction, else looking back, else the lower
   number on the left of that line's travel; an edge's order is by how many of the others each line
   is left of, which is the pairwise order wherever that is one. So bands cross only at a node where
-  the two routes part or meet, or where three or more lines' partings go round in a circle (some
+  the two routes part or meet, or where three or more lines' partings go around in a circle (some
   pair has to cross). **Tracks side by side** (corridors, T-1799 stage 3, T-1848; `map/corridors.ts`)
   are one ribbon too, decided per place, not per edge: every edge with lines is sampled every 25 m
   (`SAMPLE_M`), and a sample records the other edges running the same way (within about 25 degrees)
@@ -237,7 +237,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   lines and 50 m more per line beyond, at most 800 m (`SMOOTH_M`, `SMOOTH_PER_LINE_M`,
   `SMOOTH_MAX_M`), every line of the two ribbons there taking the same length so a ribbon moves as
   one; changes closer than that are added together into one curve (each knot a mix of the pieces
-  round it, the Traffic view's widths mixed by the same weights). Where it sits: a change at a node
+  around it, the Traffic view's widths mixed by the same weights). Where it sits: a change at a node
   between ribbons of different sizes starts at the node on the side with fewer lines, counted on the
   line's own edges first and then in the ribbons (lines part leaving side by side and close up as
   they curve out, merge the other way; T-1799 stage 4), except that where the ribbon on that side
@@ -307,7 +307,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     the line's colour and so in that line's order: a line above it covers them, and they lie over only
     the lines beneath (T-2184; T-2347, Anita: the dashes stay as they are, but in the line's draw order),
     and the band darkens; track at
-    capacity keeps its red band, which goes round the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
+    capacity keeps its red band, which goes around the whole ribbon (T-1799 stage 2). The hover adds "Track at capacity at high
     demand" in red, or "Peak load 132% at 08:00" (that busiest hour, the line's local time) with the
     load on its crowding colour, the line panel's crowding dots' (`crowdColour` in `game/palette.ts`). The Settings switch "Crowded trains" (on by default) shows or hides both marks
     and their hover lines.
@@ -496,7 +496,7 @@ number) and shows n as its symbol.
   `stationShape`, `stationPath`). Blueprint stations are drawn as blueprint track is (T-2930): a light blue
   fill (#a9cdf3) in a dark blue rim (#2f62b3), so they read as blueprint beside white built ones.
 - **Overlapping platforms are one shape** [T-217]: every dark shape first, then every white inside
-  its rim, so one outline runs round the whole (a blueprint's rim and fill are its blue).
+  its rim, so one outline runs around the whole (a blueprint's rim and fill are its blue).
 - **Inside the white** [T-236], over the crowd fill: the track and line strokes run through the
   box (drawn where a stencil marks the white, no wider than 30% of it, without casing). No platform
   edges are drawn [T-1121].
@@ -693,7 +693,7 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
 - **No figures yet** [T-230, T-324]: a running line demand has no riders for (just after an edit
   changed its stops) is drawn striped in the line colour and white, never solid, and its tag says
   "Calculating demand".
-- **Selected** [T-242]: drawn over every other train, unchanged, inside a halo round the whole
+- **Selected** [T-242]: drawn over every other train, unchanged, inside a halo around the whole
   consist: an outline in the map ink (dark, light in the dark theme), a band in the casing's colour
   (white, near-black in the dark theme), a ring of the train's shape 6 px out in the ink and a soft
   glow, so it reads even at zoom 11-13 [T-543]. A click tries the selected train first. It is followed onto its

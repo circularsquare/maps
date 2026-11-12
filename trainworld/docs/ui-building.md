@@ -382,7 +382,7 @@ tag over a point states what these do there. Loops are described under each tool
 | Left click, a lone point | Nothing | Remove it | none |
 | Right click, the last point | Delete it | Nothing | Nothing |
 | Right click, a lone point | Delete it | none | none |
-| Right click, a middle point | Loop back to it and save | Turn the line round a loop of track if it offers one, else "Can't loop back here" | Nothing |
+| Right click, a middle point | Loop back to it and save | Turn the line around a loop of track if it offers one, else "Can't loop back here" | Nothing |
 | Right click, the first point | Close the loop and save | Close into a circle if it offers one | Nothing |
 | Right click, a point of a ring | Open the ring there | Open the ring there | none |
 | Right click, a point of a route that loops back | Stop looping back | Stop looping back (a turned line) | none |
@@ -463,7 +463,7 @@ lighter; at most 16 of each.
   route is a loop line (track-and-service.md 6.7); Edit route on one reopens it closed.
 - **Loop back** (T-3109, T-3063): a right click on a point partway along, two points or more from the active end,
   joins the active end back to it by road and makes the line or saves the route ("Right click to loop back here"):
-  the bus runs out, round the loop one way and back the way it came. The route is sent as a loop whose last legs are
+  the bus runs out, around the loop one way and back the way it came. The route is sent as a loop whose last legs are
   its first ones run backward (`bus::loop_back_at`, track-and-service.md 6.7); Edit route folds it back to the way
   out and the loop, its last point a copy of the one it joins. The joining point acts as a closed route's first
   point: a click finishes, a drag moves both copies, and deleting it or Backspace takes the closing leg off. A right
@@ -558,8 +558,8 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
   the line ends at that port ("Right click to open the loop"); taking out a port of a ring of three leaves an open
   line of two. The tag's port count and the price count the first port once.
 - **Loop back** (T-3118): a right click on a port partway along, two ports or more from the active end, joins the
-  active end back to it and makes the line ("Right click to loop back here"): the boats run out, round the loop and
-  back. The ports are sent out, round and back again (`[A, B, C, D, B, A]`, a loop calling at the way out's ports
+  active end back to it and makes the line ("Right click to loop back here"): the boats run out, around the loop and
+  back. The ports are sent out, around and back again (`[A, B, C, D, B, A]`, a loop calling at the way out's ports
   twice; the sim takes it as any loop), and Edit route folds them back to `[A, B, C, D, B]`. A right click on any
   port of it stops it looping back ("Right click to stop looping back"). The touch Loop button works here as in the
   bus tool. In the panel's port list a loop keeps its order (no dragging); taking out its first or last port
@@ -595,7 +595,7 @@ switch on, the track tool follows the real network the layer draws.
   times its length, so a subway click follows the subway and an intercity route keeps off it;
   high-speed track (flag 8 in the graph) at 0.8 times its length, so London to Paris keeps to HS1
   and the LGV by Lille (493 km) over the shorter classic line by Amiens [T-838]; otherwise a metre
-  costs a metre. The length shown and built is the real one. A long way round is allowed: the
+  costs a metre. The length shown and built is the real one. A long way around is allowed: the
   player sees it in the ghost before clicking [T-839]. A
   region's graph is fetched when the view, a click or the search first reaches it (a border
   junction loads the neighbour's file, joined by OSM node id). The search stops after 2 s or 3
@@ -1010,7 +1010,7 @@ running line's trains stop at then wins over one they do; then the nearest.
   the last answer stands with only the stops changed (T-648). A click on a marker adds or removes a stop and
   nothing else (T-3109, trains and trams alike): on a station that is no stop it is one edit (`insertStop`): the
   worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then, and never turns
-  the line round a loop (`TrackApi::add_stop`, T-3140, track-and-service.md "Only the right click turns an end"); on a stop it
+  the line around a loop (`TrackApi::add_stop`, T-3140, track-and-service.md "Only the right click turns an end"); on a stop it
   takes out every visit of it (`setStops`), and a loop that loses its first stop closes again on its new first stop.
   A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
   or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
@@ -1042,10 +1042,10 @@ running line's trains stop at then wins over one they do; then the nearest.
   back (`openLoop`). The closing stop's cross
   in the stop list also opens it ("Open the loop"). New stops on a loop go between its first stop and the
   closing one (`best_insert`); on a turned line's stem, on both passes.
-- **Loops at an end** (T-3021; track-and-service.md 6.3 "Turning round a loop at an end"): the stop
+- **Loops at an end** (T-3021; track-and-service.md 6.3 "Turning around a loop at an end"): the stop
   before a loop of track at an end of the line (the last stop at or before where the loop rejoins
   the line; the end stop itself when the loop has no stop of its line) says "Right click to loop back here"
-  (tier 7) and the right click turns the line round it, one way (`turnEnd`). On a line so turned the same
+  (tier 7) and the right click turns the line around it, one way (`turnEnd`). On a line so turned the same
   stop says "Right click to stop looping back here" (tier 8) and the right click opens it (`openLoop`). The stop
   list shows a turned line one row per station (`game/turnedLine.ts`, T-3025; ui-inspectors.md), its stops being
   edited or not (T-3109): a cross takes a station out on every pass, the turn's row has a button that opens the

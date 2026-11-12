@@ -13,6 +13,8 @@ import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } fr
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
+import { overBudget } from "../game/memoryEstimate";
+import { MemoryWarn } from "./MemoryWarn";
 import { blockKeysOutside } from "./keys";
 import { NewGameSheet } from "./NewGame";
 import { StartLogo } from "./StartLogo";
@@ -121,6 +123,8 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
   // T-3061: the device check is a guess (browsers round a device's memory down), so it warns and offers to load anyway
   // T-3073: `go(true)` loads it without inter-city trips; any other pick here has them again
   const [warned, setWarned] = useState<{ text: string; go: (lite?: boolean) => void } | null>(null);
+  // T-3329: a game bigger than the device can give asks before it opens
+  const [memWarn, setMemWarn] = useState<{ key: string; stations: number } | null>(null);
   const open = async (key: string) => {
     await Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
     // T-988: an account game is downloaded into a new slot first
@@ -197,12 +201,13 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
             const s = g.top.kind === "slot" ? g.top.slot : cardOf(g.top.game);
             return <li key={g.origin} data-origin={g.origin} class={g.others.length ? "has-versions" : undefined}>
               <div class="start-slot">
-                <button class="start-save" data-slot={s.key} onClick={() => void open(s.key)}>
+                <button class="start-save" data-slot={s.key} onClick={() => { if (overBudget(s.stations)) setMemWarn({ key: s.key, stations: s.stations! }); else void open(s.key); }}>
                   <SlotThumb slot={s} />
                   <span class="save-info"><SlotTitle slot={s} /><SlotFacts slot={s} now={now} /></span>
                 </button>
                 <button class="btn icon start-delete" data-tip={t("startMenu.delete")} aria-label={t("startMenu.deleteGame", { name: s.name })} onClick={() => setRemoving(g.origin)}><Icon.bin /></button>
               </div>
+              {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)} />}
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
                 <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => void remove(groupHeads(g))} onKeep={() => setRemoving(null)} />

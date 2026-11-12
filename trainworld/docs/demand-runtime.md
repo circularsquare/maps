@@ -385,7 +385,7 @@ nearest first, while the window's stations are at most 9% of those the market se
 whichever is more. Each pair is
 searched towards its end in the window alone: a pair starting there and ending outside is priced on
 the route costs the other way, a leg ending outside (a trip home, or the trip out of a pair kept
-under its home) is assigned as the leg the other way turned round onto the same lines. It is solved
+under its home) is assigned as the leg the other way turned around onto the same lines. It is solved
 in one pass a period at the crowding the touched cities' last round ended on, then held to the
 trains' room with them; the old market part gives the same pairs' old loads in one pass at its last
 crowding (`window_loads`), and the result's loads are the frozen market's less those plus the

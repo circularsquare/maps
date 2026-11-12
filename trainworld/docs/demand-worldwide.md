@@ -532,7 +532,7 @@ notes/T-420.md has the tables.
   layers, T-279, T-2424, docs/regional.md 5.1) is routed once per pair of places on a world 1/60
   degree lattice from GRIP4 road density, round water the lattice has no road over, times each
   zone's own detour towards the other place, so a coastal line round a lake (Toronto to Buffalo)
-  competes with a car that goes round too, zone by zone; a car crosses water only on a fixed link
+  competes with a car that goes around too, zone by zone; a car crosses water only on a fixed link
   or a car ferry OSM maps, at a ferry's high base and per-km price. Why it
   may not carry over: the scale ties every city to New York's speed fit; shortest-distance routes
   undercount more where drivers keep to a sparse motorway grid (Los Angeles, Houston) and less in

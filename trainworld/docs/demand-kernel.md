@@ -116,8 +116,8 @@ levels:
    nodes plus one node per stop per direction per line (T-069). On a circle line (T-798,
    `Network::line_wrap`) each direction's last node rides on to its first, costing the stand at
    the first stop, and nobody boards at the last: a rider rides through the first stop the short
-   way round without changing; on a one-way loop (T-2981) run 1 has no train due anywhere (its span is
-   0), so the long way round is the only ride. At each station, useful lines
+   way around without changing; on a one-way loop (T-2981) run 1 has no train due anywhere (its span is
+   0), so the long way around is the only ride. At each station, useful lines
    share their departure frequency: boarding costs the wait (half the combined headway, in plain
    minutes: T-585) plus their frequency-weighted downstream cost.
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
@@ -168,9 +168,9 @@ levels:
    junction onto the line on round the other side, or back down the trunk where the line ends at
    the junction. **After a walk to another stop of the line they left** (within 300 m, or in the
    same complex) a rider boards it only away from where they rode: not towards the stop they
-   walked from or any stop behind it along their ride (a circle's the nearer way round), either
+   walked from or any stop behind it along their ride (a circle's the nearer way around), either
    way otherwise (T-3295, 2026-11-12). Across the bend of a line that loops back near itself they
-   walk over and ride on, or back round the bend from the far side, where that beats riding
+   walk over and ride on, or back around the bend from the far side, where that beats riding
    round; a walk to the next stop or the last one never rides the line back. A station whose
    strategy boards a departure barred to some arrival has a change node for those arrivals (one
    per line and the barred departures' next stops, at most two, else the whole line), with its own strategy over the

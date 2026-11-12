@@ -194,7 +194,7 @@ air by hours on the train: notes/T-712.md.
   (`route=ferry` with `motor_vehicle` or `motorcar` yes): 90 minutes (check-in, the wait for a
   sailing, loading and unloading) plus the crossing at 30 km/h, and a fare of $80 plus 50 cents a
   km per car, shared by the two, so a ferry is clearly worse than a bridge (the path uses it where
-  that costs less than going round). Where the car is carried over water by the market's own
+  that costs less than going around). Where the car is carried over water by the market's own
   crossings (T-712, `crossing_cost`) it pays the crossing's fare per car (shared by the two) and its
   minutes beyond the straight drive: the Channel, $150 and 60 minutes, between a place in Great
   Britain (the UK less Northern Ireland, which is on Ireland's landmass, T-2423) and one elsewhere;

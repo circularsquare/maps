@@ -289,7 +289,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   drawing (quad included), placing stations or doubling up. The player draws crossing track between
   the pairs where lines should change over. A line whose stops lie on two pairs with no way between
   them is refused like any stops no track joins in order (`LinePath`: "No track joins these
-  stations in this order."), unless a longer way round exists, which it then takes. Crossovers in
+  stations in this order."), unless a longer way around exists, which it then takes. Crossovers in
   saves stay and work.
 - **High-speed track** (T-817, design notes/T-817.md): the third setting, double or quad, never single (T-3126; 4 m apart, quad is two high-speed doubles 8 m apart, priced twice the double), except a flyover's one-way legs (T-3170, "Flyovers" below).
   An edge flag (`EdgeData::hsr`, `TrackApi::set_route_hsr`), so a station placed on open ground
@@ -785,7 +785,7 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   two directions are two streams; no track section joins across the turn. Unused blueprint
   extensions add no active platform capacity. All of it is wire kind 3, so the hint is "build a
   terminal" without one and "turn some trains at another station" with one.
-- a loop line (T-798): a circle's first stop is a stop on the way round (dwell + 60 s on its arrival
+- a loop line (T-798): a circle's first stop is a stop on the way around (dwell + 60 s on its arrival
   platform, the move from its last path entry into its first a junction move, sections joined across
   it); the hold there to the headway is not counted. A balloon's first stop turns as any
   line's end. The loop itself is plain track, so a balloon has no turnback limit (about 34 an hour
@@ -1050,22 +1050,22 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   **Loops** (T-798, notes/T-797.md): a line whose last stop is its first (three stops or more) is a
   loop; nothing else stores it. A **circle** carries straight on through its first stop A (its last
   path entry and first are a through move); a **balloon** turns back there (e.g. out along a stem,
-  round a loop, back down the stem). The route search's closing hop arrives on the side that carries
+  around a loop, back down the stem). The route search's closing hop arrives on the side that carries
   on round when that takes at most `CARRY_SLACK_S` (300 s) more track time than the quickest way in,
   else the quickest way (a balloon, T-3021); a reroute after a deletion never turns a circle into a
   balloon (the closing turn counts as a reversal).
-  **Turning round a loop at an end** (T-3021, notes/T-2988.md): where track leads on from an end
+  **Turning around a loop at an end** (T-3021, notes/T-2988.md): where track leads on from an end
   stop, never turning back, round and onto the line's own path headed back toward the other end, the
-  line can be turned round it (`TrackApi::turn_end`, one edit): its stops become the way out, then
+  line can be turned around it (`TrackApi::turn_end`, one edit): its stops become the way out, then
   the stops at or before the point it rejoins again in reverse (the end stop not repeated), closing
   at the first stop, set one way. So the loop runs one way and the stem both ways. From an open line
   either end may be turned (the line is reversed for its first end); the closing hop may then carry
-  on round a loop at the other end too, a circle; a balloon's first stop's end can be turned later
+  on around a loop at the other end too, a circle; a balloon's first stop's end can be turned later
   the same way, its stops from the first after the rejoin. Offered only when a rough round trip
   (track time, dwells and turnarounds) comes out at most `TURN_SLACK_S` (120 s) or 10% longer than
   the line's now, with no more reversals; the search is one Dijkstra per end, cut off at that budget.
   **Only the right click turns an end** (T-3140, `TrackApi::add_stop`, the line tool's click): a click puts
-  the station in where `insert_stop` puts it and never turns the line round a loop or sets it one way, so
+  the station in where `insert_stop` puts it and never turns the line around a loop or sets it one way, so
   a line clicked onto a loop runs out onto it and back (both ways). A balloon's stem still grows past its
   turning stop (`best_slot` tries the station before the first stop and after the last there), so a loop
   turned early keeps working as the stem is clicked. A stem with a loop at each end becomes a circle round
@@ -1077,7 +1077,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   a reversal partway. A circle run both ways, or with two such turns, is left as it is.
   **A loop stops at every pass** (T-3122, `every_pass`): after every stop edit of a loop line (and for
   every loop line of a save as it loads), each pass of its path over a station it stops at is a stop,
-  except one that would come straight before or after a stop at the same station (a turn round a loop
+  except one that would come straight before or after a stop at the same station (a turn around a loop
   with no stop of its own: one stop there). The path is kept. So a turned line's stem is served both
   ways, a circle whose way back runs down the stem stops there, and taking a station out takes every
   visit. `open_loop` takes a loop back to the stops up to where
@@ -1087,7 +1087,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   panel, `TrackApi::set_line_one_way`): run 1 carries no trains. Its lattice's `off` is infinite, so it has
   no departures, trips, account or boarding (its span is 0: demand sees no train due, T-842), and it takes
   no capacity (`LineSvc::live_runs`); the round trip is one lap (run 0 and the closing stand), the fleet
-  any count, the running cost one way's train-km. Riders going the other way ride round the long way or
+  any count, the running cost one way's train-km. Riders going the other way ride around the long way or
   take another mode. A train line starts both ways, a new bus or ferry line one way (`set_bus_line`,
   `set_ferry_line`); the flag stays on an open line, which ignores it, so it carries over opening and
   closing. The direction is the one drawn: no reverse state (redrawing reverses it); arrows on the map
@@ -1320,7 +1320,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   | Class | Flat | Hills (low) | Hills (high) | Mountains |
   |---|---|---|---|---|
   | Mean 30 m slope over a cell | under 2.5° | 2.5-5.5° | 5.5-11° | 11° and over |
-  | Ground round it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
+  | Ground around it (the cap) | under 1.25° | 1.25-2.5° | 2.5-5° | 5° and over |
   | Surcharge at -1 to +3 (`TERRAIN_SURCHARGE`) | +0 | +0.5 | +1.2 | +3 |
   | US$M a km at ground level (0.5 +) | 37.5 | 75 | 127.5 | 262.5 |
   | US$M a km on a +1 viaduct (1.0 +) | 75 | 112.5 | 165 | 300 |
@@ -1330,7 +1330,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   by `pipeline/zone_terrain.py` from the intermediate in `data/work/terrain-fine/`
   (`terrain_fine.py`): the mean slope of the 30 m pixels over each cell of a world lattice of 1/960
   degree (about 115 m north-south), classed, a 3 x 3 majority filter (drops single-cell specks, keeps
-  a valley floor two cells wide), then capped at the class of the ground round it: the slope between
+  a valley floor two cells wide), then capped at the class of the ground around it: the slope between
   the 1/240 degree mean elevations, about 920 m apart (second row), since 30 m bare earth still
   carries towers and raised roads that would read as hills in dense centres. Before any of that, tower
   fields are cut out of the 30 m surface (`terrain_fine.tower_ground`, T-1881): built-up land (GHSL
@@ -1996,11 +1996,11 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   stop's `cover` is two stretches, the first and last of the ring. A drawn route out and back along one road
   and closed is a loop all the same.
 - **Looping back** (T-3109, T-3063; `bus::loop_back_at`): a loop whose last points are its first ones in reverse,
-  with three stretches or more between where they meet, runs out, round the loop at its far end and back the way it
+  with three stretches or more between where they meet, runs out, around the loop at its far end and back the way it
   came: it is a loop as above (a circle, one way by default), its way out run twice. A place on the way out is on
   both passes (`Poly::project_passes`): a station within reach of the way out is a stop on the way out and on the
   way back, and a stop placed by hand there (`on_route_at`) is a stop on both passes and goes from both when taken
-  out; so is a stop placed by hand on a route drawn out and back along one road without the loop-back gesture, on each run of stretches within 25 m of the nearest one (`Poly::near_passes`, T-3131, also on a loop whose way out and back are drawn so, T-3210; stations still take the one nearest pass), and two stops of a one-way loop within 25 m of each other that the route leaves by opposite headings are one place, served both ways (`route_stop_ways`); one on the loop is a stop once, served the way the bus goes round (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
+  out; so is a stop placed by hand on a route drawn out and back along one road without the loop-back gesture, on each run of stretches within 25 m of the nearest one (`Poly::near_passes`, T-3131, also on a loop whose way out and back are drawn so, T-3210; stations still take the one nearest pass), and two stops of a one-way loop within 25 m of each other that the route leaves by opposite headings are one place, served both ways (`route_stop_ways`); one on the loop is a stop once, served the way the bus goes around (both ways when the line runs both ways). The app sends the route so (ui-building.md "Loop back").
 - **Saves**: a trailing `LBS2` block holds each bus line's route (points and their bits) and whether it
   is constructed; an `LBS1` block (T-1464) loads with every stretch straight. A trailing `LBP1` block
   (T-2885) lists the lines with a stop spacing of their own, a trailing `LBH1` block (T-2891) those with stops

@@ -138,7 +138,7 @@ purpose filter the purpose drawn is ringed in the bar.
   purpose split hidden. The label stays
   until the riders that count the change land: its cluster's local result after the
   edit (T-1733, intercity lines too; their longer trips as last solved, or for an edit of 20 minutes'
-  run or more those in a window of zones round it re-solved, T-1735) or the whole final [T-1665,
+  run or more those in a window of zones around it re-solved, T-1735) or the whole final [T-1665,
   `game/lineFigures.ts`], and only a result solved for a network made after the change [T-2658]: each
   network demand is given carries the world version it was made at (`networkWorld`, and `finalWorld`
   for the whole final shown, in game/demand.ts), and the label stays while the result shown is older
@@ -338,7 +338,7 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   right aligned, each ellipsized (`tipEnds`, `endNames`) [T-2772], then, for a level of more than one period with trains, a line for each in time
   order: "10:00-16:00 load: 118%" [T-1523, T-1672, T-1797, T-2271, T-2334]; in the tutorial, where at most half
   the intervals are past 100%, "Only a short stretch is crowded. More trains would run mostly empty, and may
-  cost more than they earn." last [T-2263]; the dot's hover reaches 6 px round it (5 px on the
+  cost more than they earn." last [T-2263]; the dot's hover reaches 6 px around it (5 px on the
   name's side) [T-2271]; riders left at the platform by trains at crush are the
   station panel's and the trouble list's, not the dots'; the trains steppers take Shift-click for 5 and Ctrl-click for 20 (their hover says so)
   [T-516]; under the table a **Trains** row with a Normal / High speed switch [T-817, T-1784], each
@@ -401,7 +401,7 @@ The stops (above Schedule while being edited [T-670]),
   24 hours as bullets and, when there are more, a "+" whose hover names the rest [T-549]; a **loop**
   shows each station once, its bar going on past the first and last stops and curving round to
   the right at both ends (its last stop, the first again, stays while stops are edited, holding
-  "Open the loop") [T-1391]; a line **turned round a loop** (T-3021) shows one row per station, (with related lines too, the side bend drawn over its columns): the stem straight, the first pass's time on each row, the loop's stations after it, the loop as a bend at the side leaving the turning station and coming back in at its last one with a white chevron, a hook past an end whose loop has no station; a stem with a loop past each end, each with stations, reads from the stop order alone and shows a bend above and one below (T-3050); a station where the trains turn back (a reversal, or a balloon's closing stop) is never read as on a loop, so an out-and-back list shows as the plain line [T-3099]; the same rows while its stops are edited, so no list shows every visit in order [T-3109]; no self-transfer bullet; boardings summed over the passes; a stop served one way (`LineStats.oneWayAt`, the same as the map's half dots, on any line) has its dot filled on one half only [T-3025, T-3040, T-3041, T-3122]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
+  "Open the loop") [T-1391]; a line **turned around a loop** (T-3021) shows one row per station, (with related lines too, the side bend drawn over its columns): the stem straight, the first pass's time on each row, the loop's stations after it, the loop as a bend at the side leaving the turning station and coming back in at its last one with a white chevron, a hook past an end whose loop has no station; a stem with a loop past each end, each with stations, reads from the stop order alone and shows a bend above and one below (T-3050); a station where the trains turn back (a reversal, or a balloon's closing stop) is never read as on a loop, so an out-and-back list shows as the plain line [T-3099]; the same rows while its stops are edited, so no list shows every visit in order [T-3109]; no self-transfer bullet; boardings summed over the passes; a stop served one way (`LineStats.oneWayAt`, the same as the map's half dots, on any line) has its dot filled on one half only [T-3025, T-3040, T-3041, T-3122]; each stop is a white dot with a 2 px ring in map ink, 12 px across (14 at
   a transfer stop) as in the related lines view, centred on the 6 px bar [T-1886]; the plain list's bar and dots are painted half a pixel off the pixel grid (`--soft` in `style.css`) as the related view's SVG is, so both views have the same soft edges and ring weight [T-2623]; the pointer on a row lights that station on the map and
   leaves the selection alone (every line's list, T-3089); a click on a stop's dot (a 20 px target, ringed red on hover) takes it out keeping the path
   and Shift-click between the ends ends the line there, as in the group view (hover "Click to remove
@@ -523,7 +523,7 @@ The round trip split into running, dwell, turning and waiting,
   second is left out when every station is an end station, and a button is disabled once none is
   missing, its hover saying so ("The end stations already have parking") [T-2692]. A refusal
   shakes the button and the notice says why. A **loop** [T-798] has a Direction row first, a segmented
-  One way (hover "Round the way it was drawn") or Both ways [T-2981], then its lap (one way round, both ways the longer way's)
+  One way (hover "The way the route was drawn") or Both ways [T-2981], then its lap (one way around, both ways the longer way's)
   in place of the round trip, split the same way, with no turning row for a circle and "Turning at
   the end" for a balloon; its average speed is once round over the lap (a balloon's less its
   turning); run both ways, its trains steppers move by 2 and the count's hover says how many run each way; the
@@ -587,7 +587,7 @@ line panel's own remove button works as before.
   the page is open) and Copy line, which opens a row of the group's bullets; a click on one copies
   that line (hover "Copy 4") into the group.
 - **Rows**: one place (station complex, `stopKey`) each. They start from the line with most stops in
-  its path order, north up as the line panel's stops (T-1894); each other line is matched to them by place, turned round if it runs the other
+  its path order, north up as the line panel's stops (T-1894); each other line is matched to them by place, turned around if it runs the other
   way, and its own places go in as one block: between the rows it leaves and rejoins, or above its
   first shared row or below its last, whichever leaves the shorter bar running beside them. So a
   branch hangs off the row where it leaves and its stops stay together. A line sharing no place goes
@@ -720,6 +720,14 @@ has rows for ports, new boats and the ferry route (free).
   model hands it to the next departure there (`Trip::next`), the selection moves to that trip as it
   leaves, so inspector and highlight carry on. A train leaving service stays selected where it
   finished ("This train finished its trip and left service").
+- **The camera follows a train** [T-3361, `map/cameraFollow.ts`]: an icon button beside the train panel's title (hover
+  "Follow train", "Follow bus" and so on; "Stop following" while on, lit) keeps the map centred on the train as it
+  moves; a double click on a train on the map starts it too (no zoom, a finger's double tap included). It runs from
+  the overlay's `afterDraw` hook, which is set only while following (no other per-frame cost), and every frame is
+  drawn meanwhile, as while the camera moves. The first move is a 350 ms glide; after it the centre is set each draw.
+  Scroll and pinch zoom turn about the centre while following. It ends on a drag or arrow key, a second press,
+  closing the panel or picking anything else, zooming out to where trains are not drawn, trains switched off, or the
+  train leaving service; a hand-over to the next trip (above) keeps it.
 
 ## Stations tab and the station inspector
 
@@ -762,8 +770,9 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   group diagram at 0.7 too), and its hover adds "Not running" (`game/lineRunning.ts`, one set read
   by `Chip` and `lineBullet`; `checks/t1792-idle-bullets.mjs`) [T-1792, T-1907]. The GPU map layers draw no symbol bullets.
 - **Line shapes** [T-3319, `game/lineShapeState.ts`, `bulletDraw` in `ui/bullet.ts`]: a bullet is a circle, a
-  square (rounded, corner 18% of its side), a diamond or a pill (at least 1.5 times as wide as tall); a longer
-  symbol widens each the same way, a diamond into a hexagon with the diamond's slopes. So the four look one size
+  square (rounded, corner 18% of its side) or a diamond, and the ferry's default a pill (at least 1.5 times as wide
+  as tall; not pickable, T-3357: a saved "pill" reads as no choice, so the line takes its mode's); a longer
+  symbol widens each the same way, a diamond into a hexagon with the diamond's slopes. So the shapes look one size
   side by side, a square's side is 0.94 of a circle's height and a diamond 1.14 times it, reaching past the bullet's
   box above and below (rows of bullets clip only sideways); its corners are rounded by a stroke in its colour. A
   line's shape is its own when the player gave it one in the line editor, else its mode's from Settings (train and

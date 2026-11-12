@@ -70,7 +70,7 @@ import {
   lineLoadsFor,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { addressLimited, deviceGB, heapStep, mobileDevice, smallDevice } from "./deviceMemory";
+import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevice } from "./deviceMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
@@ -479,13 +479,6 @@ const MEM_RETRY_MS = 5_000;
 const MEM_OTHER = 0.6 * 2 ** 30;
 const MEM_WORKER = 0.7 * 2 ** 30;
 const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
-/** T-1205: what a game may take in all: about 8 GB (Anita, T-1199), less on a device with less
- * (`deviceGB` reports at most 8) */
-function memBudget(): number {
-  if (addressLimited()) return 1.5 * 2 ** 30; // T-2867: what a 32-bit browser's workers can share
-  const dm = deviceGB();
-  return (dm === undefined ? 6 : dm >= 8 ? 8 : dm * 0.75) * 2 ** 30;
-}
 const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
 const SOLVE_MS = { base: 1000, perStop: 3.5 };
 /** T-1479 (T-890): a game load's solve stage, from its network reaching demand's packs open to the card
@@ -4882,6 +4875,8 @@ let client: DemandClient | null = null;
 /** T-3313: the pool's state for a feedback report ("" before it starts) */
 export const demandDiagnosis = () => client?.diagnosis() ?? "";
 export const demandStuckSince = () => client?.stuckSince() ?? null;
+/** T-3329: MB the demand workers hold (each one's WASM and JS heap, the aux worker too); null before the pool starts */
+export const demandWorkersMB = (): number | null => client ? client.memory().reduce((a, m) => a + m.wasm + m.heap, 0) : null;
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
 const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";

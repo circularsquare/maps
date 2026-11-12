@@ -215,7 +215,7 @@ replan is followed by a zones replan. Built metros keep their extents.
 **Built cities are not fixed** (Anita, 2026-10-20): the belt step leaves them alone, but a whole-country rebuild may
 still cut down or grow a metro built earlier when that makes the country's zones fit together better.
 **Remnants** (orchestrator, 2026-10-24, T-1191, under "built cities are not fixed"). Where there is no
-commuting table, an unbuilt metro row takes the remnants round it before zoning, in two steps:
+commuting table, an unbuilt metro row takes the remnants around it before zoning, in two steps:
 first the rest of any city it mostly holds (with `group_level`, a si, gun or gu of which the row has
 at least half the people: Gwangsan-gu's rest with Gwangju), repeated so a piece beyond can follow;
 then each free unit under **100,000** whose biggest gravity travel partner is the row as it then

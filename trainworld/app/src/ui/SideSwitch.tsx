@@ -14,9 +14,9 @@ import { Chip, Segmented } from "./widgets";
 import { t } from "../i18n";
 
 /** The two sides as a pair of buttons with the row's label. */
-export function SideSwitch({ right, onPick, tip, cls = "slider" }: { right: boolean; onPick: (right: boolean) => void; tip?: string; cls?: string }) {
+export function SideSwitch({ right, onPick, cls = "slider" }: { right: boolean; onPick: (right: boolean) => void; cls?: string }) {
   return (
-    <div class={cls + " side-switch"} data-tip={tip}>
+    <div class={cls + " side-switch"}>
       <span>{t("sideSwitch.label")}</span>
       <Segmented<"left" | "right"> options={[["left", t("sideSwitch.left")], ["right", t("sideSwitch.right")]]} value={right ? "right" : "left"} onChange={(v) => onPick(v === "right")} />
     </div>
