@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 441e3071-8b6e-4109-9ab2-1339e17b92be, name maps-5e [3a1e06], since 2026-11-12 04:41 UTC
-Updated: 2026-11-12 ~06:50 UTC (01:50 local; she is asleep; maps-18 wound down at ~06:10 UTC)
+Updated: 2026-11-12 11:15 UTC (06:15 local; she is asleep)
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first. maps-18's 11-11/12 log is in git history (handoff.md at
 348ef2c2).
@@ -19,27 +19,31 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. maps-18's 11-11/12 log
   ~/cloudflare-ops-token.txt. **Daily**: tools/ops/check_resources.py; look at the noritetsu rule's hit rate in the next one.
 
 ## 8800 and master
-- 8800 = dd7b6fab (rebuild batch), smoke PASSED (12 checks, 167 s).
-- Master: ef16dd6f (T-3218 attendance 0.8 in sim, WASM rebuilt in the main tree; market_pull.json "on": true). Not
-  on 8800; snapbuild after the light pass.
+- **8800 = 6a325b9c** (the light pass's data), smoke PASSED against 8800 (12 checks, 113 s at 4 cores; real save
+  12.58M rail trips a day).
+- Master 6a325b9c, pushed 06:25 local.
 
-## World rebuild light pass (her go: overnight 11-12, 10 cores); maps-5e owns it
-Checklist: (1) campus band fetch pid 45568 (log artifacts/trainworld/t3244/campus_fetch.log, 21/40 at 01:18 local,
-overpass 502/504s; failed bands: rerun `world_run.py step campus_outlines fetch`): WAITING; (2) pull "on": true:
-done ef16dd6f; (3) T-3218 0.8: done ef16dd6f; (4) no sim/ landings during the run (hsrsave works in a worktree).
-T-2112 seams not a step; T-2627 done.
-Command (maps root, detached): `venv\Scripts\python.exe -I trainworld\pipeline\world_run.py step light_pass run --jobs 10`
-(runbook docs/world-run.md "The light pass"; ~2-2.5 h; logs artifacts/trainworld/light_pass/<batch>/; failed packs:
-`--from through --ids <failed.txt>`, then `--from cross`). Baselines artifacts/trainworld/t3244/baseline/ (gate
-baseline: 346 packs FAIL today, 345 joint_borders; report only new FAILs).
-After it: campus figures (keep T-3218?), UBC (T-3213/3214), Atlanta legs 0.98 -> 0.44 of published (DB1B O&D share;
-tell her); close T-3240/3244/2896/3214/3216/3226/3218 as their checks pass; snapbuild 8800; smoke.
-Side effects already there: rbprep's sample appended to data/raw/tier0/wikidata_parents.json; staged campus parts
-for van/hfd/mex/rio.
+## World rebuild light pass: DONE (her go, overnight 11-12)
+Batch 20261112-025728, 3,919 tier 0 packs, ~3 h wall at 10 cores (T-3244 archived with times). Fixed on the way:
+an invalid boundary in campus split, an empty university column in tier0, appended logs counted as failures, freeze
+deadlocked on the run's own packs lock (now `--locked`). Gate: 346 FAIL as before + 1 new (jiw university_rate 0.36,
+T-3273); load: all 3,983 load, 3,481 with other legs. Frozen as data/frozen/20261112-060723. Backup of the old packs
+in data/work/pre-T3244/ (delete once the new state is checked clean, e.g. after T-3273's rerun and a smoke).
+To tell her: Atlanta's airport legs 0.98 -> 0.44 of published (DB1B O&D share).
 
-## Running agents (report to maps-5e)
-- hsrsave a3bf5409c401bf570 (Sonnet, worktree .tw-trees/hsrsave, Vite 6150, 3 cores): T-3272 real saves mark
-  high-speed lines; writes rebuilt saves to scratch only; I copy them into data/ after the light pass, then land.
+## T-3273 rerun: DONE 08:23 local, committed 440a601f (archived); **8800 = 440a601f, smoke PASSED** (12 checks, 117 s)
+parentsplit resumed on T-3274 (Taiwan MoE tertiary figure, my call) + T-3275 (freed students onto building-sized
+sites): builds code only, hands back a pack list + one rerun command. Next free id T-3278 (T-3276/3277 to it).
+Old text, for the record:
+parentsplit (Opus, a4fc96c86a876dea2, done) built pipeline/campus_pools.py (world table data/raw/tier0/campus/pools.json),
+tier0.university_sizes on it, wikidata_prefill builds it, open universities and university farms/forests out; all
+uncommitted (notes/T-3273.md). Rerun: `world_run.py step light_pass run --jobs 10 --from campus --ids
+artifacts/trainworld/t3273/packs_changed.txt` (828 packs), runner pid 42656, stdout artifacts/trainworld/t3273/light_pass.log,
+~1.5 h. Expected: Galveston 94k -> 0, Kennesaw Marietta 99.9k -> 7.1k, IU Indy 79k -> 14k, jiw 26k -> 6.5k (still
+0.090, just over the band: T-3274 Taiwan national tertiary figure from its MoE, my call, not hers: the same rule
+every World Bank country already has; resume parentsplit for it with T-3275 and one more Taiwan + affected rerun); T-3275 filed (freed students land on
+area-sized single buildings in scaled packs: ina "Lecture Hall" 7.3k). After: commit, snapbuild 8800, smoke, then
+delete data/work/pre-T3244/.
 
 ## Waiting on Anita (morning)
 - Test satellite at 10/40/100% light and dark.
@@ -55,7 +59,7 @@ for van/hfd/mex/rio.
 - Longer-term TODO items not filed: leaderboard map view, brainstorm, intercity-only mode, more languages, offline,
   advanced quad track.
 
-Next free id T-3273.
+Next free id T-3278.
 
 ## Her calls 11-10/12 (for the record; detail in DECISIONS and ARCHIVE)
 11-12: option A stays; wealth tiers parked; Community Biggest left alone; China pull 0.6; Poland slight; undershoot
