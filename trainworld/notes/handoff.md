@@ -25,7 +25,8 @@ as maps-37 did: ES/PT/FR/RO/BA/GR/HR/AL/KP packs on 8800 may be half-joined; reb
 steps). maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; prototype waits for her go);
 **zoomgone** abe181740cc6aae87 (Sonnet, main tree, Vite 6151): T-3368 didn't reproduce as vanishing; at z21-22 one
 track is wider than a phone screen, so the view is solid line colour. Fixing: maxZoom 20 on touch devices only (my
-call). T-3368 committed 23c0335a (not on 8800 yet). Filed T-3368..T-3371. Next free id T-3372.
+call). T-3368 committed 23c0335a (not on 8800 yet). Filed T-3368..T-3372 (T-3372 finer terrain, waits for her go).
+Next free id T-3373.
 **Her answers 11-12 ~23:10 UTC**: high speed stays 320 (T-3337 dropped; DECISIONS/ARCHIVE fixed in main tree,
 uncommitted) -> **hsr320** a0b261a210d8228eb (Sonnet, .tw-trees/hsr, Vite 6155) strips T-3337 from the tree, then
 I land T-3352 (expect rebase conflicts with onelook in en.json/context.json/ToolBar/onetrack.rs; sim -> WASM rebuild).
