@@ -33,7 +33,20 @@ const V0_3_AT = "2026-11-11T17:15:00Z";
 /** When v0.3.1 went out: set at publish. */
 const V0_3_1_AT = "2026-11-12T03:30:00Z";
 
+/** When v0.3.2 went out: set at publish. */
+const V0_3_2_AT = "2026-11-12T18:00:00Z";
+
 export const UPDATES: Update[] = [
+  {
+    version: "v0.3.2",
+    at: V0_3_2_AT,
+    line: "updates.v032Line",
+    changes: [
+      "updates.v032FareWait",
+      "updates.v032FareCap",
+      "updates.v032Downloads",
+    ],
+  },
   {
     version: "v0.3.1",
     at: V0_3_1_AT,
