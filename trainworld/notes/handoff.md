@@ -13,6 +13,17 @@ Previous: line when its last agent has reported. Checked at takeover: 8800 = f90
 one ahead of origin; gaprun join pid 21260 alive, started 15:38 local (so done ~19:00 local); tt2m worktree
 (11db958c, written 16:51 local) is in use by someone, leave it; schem3's tree is gone (landed).
 
+**maps-19 state (11-12 ~22:45 UTC)**: committed e0bb2de1 (T-3367), dc2eb030 (onelook's one-way station round; cargo
+558/743 pass), feb0616b (bus tree landed, T-3366; tree removed). Unpushed. Strings so far all acknowledged by her.
+**hsr tree HELD**: she objected to T-3337 350 km/h ("this is an actual design decision, you need to ask me first";
+rule added to CLAUDE.md). Asked her: keep 350, or back to 320 (then strip T-3337 from the tree and land T-3352 alone).
+hsr's TASKS/ARCHIVE/DECISIONS lines sit uncommitted in the main tree. Stage shared files with scratchpad
+`stage_lines.py <repo> <path> <marker>...` (per line; markers like 'T-3366 '). tt2 (T-3346 stage 2) not landing for
+v0.3.3; its write-up committed in notes/T-3346.md. Changelog draft for her: notes/v033-changelog-draft.md.
+maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; prototype waits for her go), **zoomgone**
+(Sonnet, T-3368 investigate only, Vite 6151), **icons** (Sonnet, main tree, station-type icons 15% bigger, her ask,
+Vite 6153). After those: smoke on master, rebuild 8800. Filed T-3368..T-3371. Next free id T-3372.
+
 ## Her focus now
 **v0.3.3 only** (Anita 11-12: "just wanna focus on 0.3.3 for now and reduce scope of things im thinking about").
 AA/BB (T-3348) and the track model (T-3365) are PARKED with her answers recorded in their notes and DECISIONS: do not
@@ -98,7 +109,7 @@ deploy.py with a new data version (gap packs); open-source repo.
 - Parked: T-3348 AA/BB (27-39 h, waits for T-3365 cleanup 13-17 h). P3: T-3335, T-3343 (stage 2 closes), T-3353,
   T-3354, T-3320, T-3322, T-3325, T-3264.
 
-Next free id T-3366.
+Next free id: see the maps-19 state line at the top.
 
 ## Her calls 11-12 (detail in DECISIONS, ARCHIVE, notes)
 Areas: single-track joins, one-track stations, timetables design, schematic (she reviews), open source. Flags: all 17

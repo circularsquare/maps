@@ -22,10 +22,11 @@ export function compass(h: number): "east" | "north" | "west" | "south" {
   return a < Math.PI / 4 || a >= 7 * Math.PI / 4 ? "east" : a < 3 * Math.PI / 4 ? "north" : a < 5 * Math.PI / 4 ? "west" : "south";
 }
 
-/** A track pair with a bracket beside the track(s) that have a platform. */
+/** A track pair with a bracket beside the track(s) that have a platform. Drawn 18.4 px, 15% over the 16 px
+ * default of an icon; it is vector, so the strokes stay sharp. */
 function Sides({ left, right }: { left: boolean; right: boolean }) {
   return (
-    <svg class="tracks" viewBox="0 0 20 20">
+    <svg class="tracks" viewBox="0 0 20 20" style={{ width: "18.4px", height: "18.4px" }}>
       <path d="M7 3v14M13 3v14" />
       {left && <path d="M4.5 6.5h-1.5v7h1.5" />}
       {right && <path d="M15.5 6.5h1.5v7h-1.5" />}

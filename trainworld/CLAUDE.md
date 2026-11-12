@@ -18,8 +18,9 @@ The orchestrator also reads `docs/orchestrator.md`.
 ## What waits for her word
 
 Publishing the game and the website push; every server deploy (never overnight); adding a complicating factor to
-demand; a choice that changes what the game is; anything the spec marks **open**; a big task's design before it is
-built. Everything else you decide, record in DECISIONS.md if someone might revisit it, and tell her after: rail
+demand; a choice that changes what the game is; a change to what players can build or how fast or far things go,
+even when a player asked or a rail fact backs it (a request alone is no reason: 350 km/h high speed, Anita
+2026-11-12); anything the spec marks **open**; a big task's design before it is built. Everything else you decide, record in DECISIONS.md if someone might revisit it, and tell her after: rail
 facts, sensible defaults, visible calls, zone and region names. A slip gets a fix, not a new standing process.
 
 ## Player text
