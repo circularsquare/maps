@@ -462,7 +462,7 @@ map.on("load", () => {
   // T-974: no city names behind the start menu; T-1567: no names at all behind its logo
   effect(() => setBasemapLabels(map, display.value.basemapLabels && !(choosing.value && START_LOGO), choosing.value));
   const contrast = computed(() => display.value.basemapContrast);
-  effect(() => setBasemapShade(map, mapShade.value, contrast.value));
+  effect(() => { shade.value; setBasemapShade(map, mapShade.value, contrast.value); });
   effect(() => setSatellite(map, display.value.satellite)); // T-3249
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883

@@ -259,8 +259,9 @@ export const dockLayout = signal<DockLayout>({ dockW: saved.dock?.dockW ?? null,
 const savedTheme = OLD_THEME[saved.theme as string] ?? saved.theme;
 export const theme = signal<Theme>(THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "pink");
 export const shade = signal<Shade>(saved.shade === "dark" ? "dark" : "light");
-/** T-3249: the shade the map's own ink is drawn in: always dark over satellite imagery, whatever the panels follow */
-export const mapShade = computed<Shade>(() => (display.value.satellite ? "dark" : shade.value));
+/** T-3249, T-3267: the shade the map's own ink is drawn in: the dark theme's over satellite imagery shown at half strength or more, the panels' own below it (a faded image reads as the theme's background) */
+export const SAT_INK_FLIP = 0.5;
+export const mapShade = computed<Shade>(() => (display.value.satellite && (shade.value === "dark" || display.value.basemapContrast >= SAT_INK_FLIP) ? "dark" : shade.value));
 effect(() => setBubbleShade(mapShade.value));
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,

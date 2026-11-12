@@ -415,11 +415,12 @@ function layerVisible(id: string) {
   return !(lite && LITE_HIDDEN.has(id));
 }
 
-/** The imagery's dimming at a Base map contrast (0-1): lower shows more of the dark ground under it. */
+/** The imagery's opacity is the Base map contrast (0-1) over the theme's own land colour: 0 shows none of it, so a low
+ * setting in the light theme is near white (T-3267). */
 function dimImagery(map: maplibregl.Map, contrast: number) {
   for (const id of SAT_RASTER) {
     if (!map.getLayer(id)) continue;
-    map.setPaintProperty(id, "raster-opacity", 0.3 + 0.55 * contrast);
+    map.setPaintProperty(id, "raster-opacity", contrast);
     map.setPaintProperty(id, "raster-saturation", -0.3);
     map.setPaintProperty(id, "raster-brightness-max", 0.85);
   }
@@ -428,16 +429,20 @@ function dimImagery(map: maplibregl.Map, contrast: number) {
 /** The kept layers' paint for imagery: roads and boundaries faint white, names light with a dark halo (the
  * no-halo rule of T-1692 gives way over imagery). Painted again after every basemap repaint, which writes theirs. */
 function paintSatellite(map: maplibregl.Map) {
+  // the map's ink follows the faded imagery (game/ui.ts `mapShade`): light roads and names over dark, dark over light
+  const darkInk = shadeAs[0] === "dark";
+  if (map.getLayer("background")) map.setPaintProperty("background", "background-color", SHADES[shade.peek()].land);
   for (const k of satKept) {
     if (!map.getLayer(k.id)) continue;
     if (k.kind === "text") {
-      map.setPaintProperty(k.id, "text-color", SAT_LABEL);
-      map.setPaintProperty(k.id, "text-halo-color", "rgba(0,0,0,0.8)");
+      map.setPaintProperty(k.id, "text-color", darkInk ? SAT_LABEL : "#262626");
+      map.setPaintProperty(k.id, "text-opacity", 1);
+      map.setPaintProperty(k.id, "text-halo-color", darkInk ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.85)");
       map.setPaintProperty(k.id, "text-halo-width", 1.4);
       map.setPaintProperty(k.id, "text-halo-blur", 0.5);
     } else {
-      map.setPaintProperty(k.id, "line-color", "#ffffff");
-      map.setPaintProperty(k.id, "line-opacity", k.kind === "road" ? k.weight! : 0.3);
+      map.setPaintProperty(k.id, "line-color", darkInk ? "#ffffff" : "#000000");
+      map.setPaintProperty(k.id, "line-opacity", (k.kind === "road" ? k.weight! : 0.3) * (darkInk ? 1 : 0.55));
     }
   }
   dimImagery(map, shadeAs[1]);
