@@ -35,7 +35,11 @@ waits for her (R2 prefix terrain-world/v2); in v0.3.3 if ready. **tr33** ab062aa
 Vite 6157): v0.3.3 changelog entry (her text) + translation batch. gaprun2 (maps-37's): join ends ~19:30-20:00 local,
 batch B building beside it (claim gaprun-B), B gates after; answer "go gate" when relayed (no main-tree app/ writes
 in a window). Rivers: prototype FAILED (London 19/145 wrong bank); next would be a 1 h gap measurement then B
-(6-9 h): NOT started (not v0.3.3, not terrain); offer when she's back. 8800 rebuild after the join's after-join steps. Smoke master f68a53d8 PASS 28.
+(6-9 h): NOT started (not v0.3.3, not terrain); offer when she's back. UPDATE: she said run it, plus her idea "just not straighten lines if they are near rivers
+and/or would cause an issue by straightening": **rivers** ab661af6e3ab4da8f resumed for both (scratchpad, ~2 h, one
+river per picture). 8800 rebuild after the join's after-join steps. Smoke master f68a53d8 PASS 28.
+tr33 LANDED 64715623 (v0.3.3 changelog, 25 lines + headline; all 11 languages 2663/2663). Her review pending on the
+kept lines 18-25 and the headline shortened to 80 chars. V0_3_3_AT placeholder set at publish.
 **Order**: gaprun2's after-join terrain_fine step appends to data/work/terrain-fine (atomic); terrain's full world
 build (stage B) starts only after that, so v2 has the gap regions; maps-19 tells terrain when it's done.
 **Her answers 11-12 ~23:10 UTC**: high speed stays 320 (T-3337 dropped; DECISIONS/ARCHIVE fixed in main tree,
