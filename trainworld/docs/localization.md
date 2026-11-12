@@ -96,8 +96,10 @@ the line above, so the scan stops counting it.
 
 ## City names
 
-The registry's cities (rows with no `kind`; zones keep their Latin names) show in Japanese and Chinese by their
-Wikidata labels: `i18n/place-names.json`, `{ id: { q, ja, "zh-Hans", "zh-TW" } }`, read through
+The registry's cities (rows with no `kind`) and zones show in Japanese and Chinese by their
+Wikidata labels: cities in `i18n/place-names.json`, zones (T-3318) in `i18n/place-names-zones.json` (`place_names.mjs
+--zones`; `tPlace` fetches that file the first time a ja or zh name is asked for, and a zone shows Latin until it
+arrives). Both are `{ id: { q, ja, "zh-Hans", "zh-TW" } }`, read through
 `tPlace(id, latinName)` (`i18n/places.ts`) where a city's name is shown. A missing label, an unmatched city
 (`q: null`) and every other language show the Latin name. Labels: ja's own; zh-Hans from zh-hans, zh-cn, then zh
 (through OpenCC to Simplified); zh-TW from zh-tw, zh-hant, then zh-Hans through OpenCC s2twp. A city is matched to the
@@ -105,7 +107,8 @@ item with the most sitelinks among those Wikidata's search finds for its name th
 of its centre.
 
 `node trainworld/tools/place_names.mjs --opencc <opencc-js folder>` adds the cities not yet in the file (rerun it
-after a join), `--relabel` fetches every known item's labels again, `--redo id,...` matches those ids again. A
+after a join, with and without `--zones`; `HAND_LABELS` in the tool sets names by hand: Osaka's metro is 関西, the
+Ruhr zone ルール地方), `--relabel` fetches every known item's labels again, `--redo id,...` matches those ids again. A
 wrong match is fixed by writing the right item into its `q` and running with `--relabel`. Search in the new game
 sheet and the map search box find a city by its shown name as well as its Latin one (`cityMatch` in `game/search.ts`;
 `isRegistryCity` stays on the Latin name). Every place a city's name is worded (hovers, the status tag, saves panel,

@@ -652,7 +652,12 @@ def build_lines(src, trips, xy, cxy=(0.0, 0.0)):
             cnt = Counter(canon)
         total = sum(cnt.values())
         kept = []
-        for c, n in cnt.most_common():
+        # a pattern takes the trips of the patterns with its ends and only stops of its own, so that a stop OSM
+        # leaves out of one direction's relation (Sendai's Toshogu, T-3318) does not make the shorter pattern the
+        # line and drop the stop; equal totals go to the longer
+        def weight(c):
+            return cnt[c] + sum(m for k, m in cnt.items() if k != c and k[0] == c[0] and k[-1] == c[-1] and set(k) < set(c))
+        for c, n in sorted(cnt.items(), key=lambda kv: (-weight(kv[0]), -len(kv[0]))):
             if n < max(min_share * total, min_trips) or any(is_piece(c, k) for k in kept):
                 continue
             # the same ends and nearly the same stops as a busier pattern: a variant of it (a stop

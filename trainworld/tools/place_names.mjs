@@ -5,6 +5,7 @@
 //   node trainworld/tools/place_names.mjs --opencc <opencc-js folder>            add the cities not yet in the file
 //   node trainworld/tools/place_names.mjs --opencc <dir> --relabel               also fetch every known item's labels again
 //   node trainworld/tools/place_names.mjs --opencc <dir> --redo nyc,lon          match these ids again from scratch (`all`: every city)
+//   --zones                                                                      the same for the zones, into place-names-zones.json
 //
 // Rerun after a join (registry.json rewritten); ids the registry no longer has are dropped. A wrong match is fixed by
 // adding the right item to PINNED and rerunning with --redo <id>. An entry with `q: null` is a city no item matched; it
@@ -21,7 +22,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REGISTRY = join(ROOT, "app/src/game/registry.json");
 const ZONE_NAMES = join(ROOT, "app/src/game/zone-names.json");
-const OUT = join(ROOT, "app/src/i18n/place-names.json");
+const ZONES = process.argv.includes("--zones");
+// zones are 3,500 rows, so they live in a file of their own that the app loads only for Japanese and Chinese
+const OUT = join(ROOT, ZONES ? "app/src/i18n/place-names-zones.json" : "app/src/i18n/place-names.json");
 const UA = "trainworld-l10n/1.0 (rail game city names; batch label fetch)";
 /** A Wikidata item matches a registry city when one of its coordinates is this close to the city's centre. */
 const NEAR_KM = 60;
@@ -32,6 +35,14 @@ const WEAK_LINKS = 20;
 /** Matches set by hand, where the rule picks a bigger unit of the same name over the city: Puebla's state (the city's
  * label is "Heroica Puebla de Zaragoza"), Puducherry's union territory, Siwan's district. */
 const PINNED = { pue: "Q125293", pud: "Q639421", maj: "Q2234098" };
+
+/** Names set by hand where the metro's name is a region, not the city its centre lies in (the registry's "Osaka" is
+ * Keihanshin, four prefectures, shown as Kansai; Hyogo's players read 大阪 as another prefecture). Wins over Wikidata. */
+const HAND_LABELS = {
+  osa: { ja: "関西", "zh-Hans": "关西", "zh-TW": "關西" },
+  dor: { ja: "ルール地方", "zh-Hans": "鲁尔区", "zh-TW": "魯爾區" },
+  luo: { ja: "漯河", "zh-Hans": "漯河", "zh-TW": "漯河" }, // place_names_check.py cannot read 漯 (Luo), T-3324
+};
 
 const args = process.argv.slice(2);
 const opt = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
@@ -158,7 +169,7 @@ const old = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : {};
 const CC = await opencc();
 if (!CC) console.warn("no --opencc: zh-TW is only Wikidata's own, and a bare zh label is kept as written");
 
-const cities = registry.cities.filter((c) => c.kind !== "zone").map((c) => ({ id: c.id, raw: c.name, name: hand[c.id]?.name ?? cleanName(c.name), center: c.center }));
+const cities = registry.cities.filter((c) => (c.kind === "zone") === ZONES).map((c) => ({ id: c.id, raw: c.name, name: hand[c.id]?.name ?? cleanName(c.name), center: c.center }));
 const todo = cities.filter((c) => redo.has("all") || redo.has(c.id) || !(c.id in old));
 console.log(`${cities.length} cities in the registry, ${todo.length} to match`);
 
@@ -214,6 +225,7 @@ for (const c of cities) {
     const n = names(L.get(q) ?? {}, CC, c.name);
     out[c.id] = { q, ...Object.fromEntries(Object.entries(n).filter(([, v]) => v)) };
   } else out[c.id] = q ? old[c.id] : { q: null };
+  if (HAND_LABELS[c.id]) out[c.id] = { ...out[c.id], ...HAND_LABELS[c.id] };
   if (q) matched++;
 }
 
