@@ -34,18 +34,26 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
 - **gaprun2** aa8d3bc594c20a4d8 (Opus, main tree + data/packs sole writer): T-3287 continues from gaprun's recipe
   (notes/T-3287.md): smoke, retire 10 pair files, check crn-me/poi-mk, rerun batch A + KP (6 cores), gates, join,
   then B and C. ~10 h. Messages me BEFORE each gate and waits for my "go gate": then no main-tree app/ writes.
+  Found the panic was T-2776 (register race on evo's unregister), not stale pair files: I OK'd fixing T-2776 in
+  market_zones.py (heal orphaned market packs under the lock, ~7 s per register), skipping the pair-file move,
+  withdrawing that DECISIONS rule. Smoke 28/28 on 6140.
 - **onetrack** ae97500d3a62d1d0f (Opus, .tw-trees/onetrack, 6150): T-3332 one-track stations, 11-16 h, stages.
   Ids T-3354/3355.
-- **t3326** a819255edd5716af0 (Sonnet, .tw-trees/fbshots, 6155): T-3326 stage 2 app form + inbox thumbnails.
-  Strings drafted ("Attach screenshots" etc., in notes/T-3326.md) go to her when it reports.
+- **t3326** DONE stage 2, landed d78d1d16 (fbshots tree removed). Strings sent to her for ack. Left: server deploy
+  (her word; asked 11-12), translations in the v0.3.3 batch.
 - **t3351** a0db4967a90cee41a (Sonnet, main tree app/ briefly, 6126): copying six flags in; told to finish app/
   writes within ~40 min of 14:15.
 - **t3344** a5e962a7f0196cdfa (Sonnet, main tree, 6123): browser check of the join fix (WASM already includes it),
   then closes T-3344. Filed T-3353 [P3] second-single geometry.
-- **t3352** a7db66e57cfea54da (Sonnet, read-only): T-3352 scope, single track for high-speed and tram (her TODO
-  11-12); builds after T-3332 lands.
-- **t3329** a3bb12c205199e3b6 (Sonnet, read-only, 6121): T-3329 save size vs memory, propose a display. Quiet since
-  ~13:00: ask after it if no report by ~15:00.
+- **t3352** a7db66e57cfea54da DONE scope (notes/T-3352.md): 7-10 h, no save change, after T-3332 (same files). My
+  calls, told her: single HSR/tram at 0.6x the kind's price (also fixes auto flyover legs priced as regular), single
+  street tram allowed, two-way single HSR allowed, Select bar retypes single, tram stops no loop by default, One way on
+  single tram. Build in a tree after onetrack lands (resume t3352 or fresh Sonnet).
+- t3351 DONE a15deda8 (six flags). Server set 3 = 336 codes (b2ab066).
+- **t3329** a3bb12c205199e3b6 DONE measure (notes/T-3329.md, 09dc97ab): memory follows zones/stations reached times
+  demand workers (+0.5 GB each), not file size; proposal B live Settings reading first, A saves-list estimate. Sent
+  her the A/B question with strings. On her answer: resume it to build.
+- Committed since: 47324b04 T-3344 (closed), 08c27589 v0.3.2 changelog on master.
 
 ## Waiting on Anita
 - Schematic (T-3345 stage 1 done, notes/T-3345.md): approach 1 for country maps only as stage 2? the all-Japan shape

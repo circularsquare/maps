@@ -29,6 +29,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -664,6 +665,25 @@ def assign_places(reg):
     reg["market"]["rule"]["min_trips"] = 0.01
 
 
+_NAMED = re.compile(rb'"(?:commute|everyday)_place"\s*:\s*\[([0-9,\s]*)\]')
+
+
+def naming_gone(reg):
+    """T-2776: registered zones whose market packs name a place no registered zone holds (a zone just
+    unregistered whose heal has not run yet). Rewritten in the same call, under the registry lock, or
+    market_pack composes no zone for that place and refuses them ("invalid commute between zones").
+    A regex over the raw files: 7 s for 4,000 packs, against 46 s parsing them."""
+    held = {c.get("place") for c in reg["cities"]}
+    out = []
+    for c in reg["cities"]:
+        p = PACKS / f"{c['id']}.market.json"
+        if p.exists():
+            named = {int(q) for m in _NAMED.finditer(p.read_bytes()) for q in m.group(1).split(b",") if q.strip()}
+            if named - held:
+                out.append(c["id"])
+    return out
+
+
 def write(path, out):
     part = path.with_suffix(".json.part")
     part.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
@@ -776,6 +796,11 @@ def _main(args):
         ids = []  # T-540: only the market rows, after a zone left the registry
     else:
         ids = [a for a in args if not a.startswith("--")] or [c["id"] for c in reg["cities"]]
+    if not air_only and len(ids) < len(reg["cities"]):
+        extra = [i for i in naming_gone(reg) if i not in set(ids)]
+        if extra:
+            print(f"market packs naming a place no zone holds, rewritten too (T-2776): {' '.join(extra)}", flush=True)
+            ids = ids + extra
     named = None if air_only or len(ids) == len(reg["cities"]) else set(ids)
     air = airports_by_zone(reg, named) if ids or air_only else {}
     for cid, a in air.items():

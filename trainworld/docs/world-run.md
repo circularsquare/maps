@@ -163,7 +163,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   checks are its reason. Whenever the runner takes packs out of the registry, every registered
   market pack still naming their places is rewritten, however far away (`market_zones.py <ids>`,
   T-1743, T-1986; reading all 2,000 market packs takes about 30 s), or the next `market_pack`
-  refuses them. The browser check serves the main tree's app/, so whoever runs a batch
+  refuses them. That heal runs after the registry lock is let go, so `market_zones.py` itself also adds every
+  zone naming a place no registered zone holds to the zones it rewrites, under the lock (T-2776, a scan of
+  about 9 s): a register racing another region's unregister no longer parks. The browser check serves the main tree's app/, so whoever runs a batch
   says who may rebuild app/ (its WASM) while it runs.
 
 ### Joint gravity, freeze and clean up
