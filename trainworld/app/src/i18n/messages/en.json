@@ -301,6 +301,7 @@
   "busDraw.rightOpen": "Right click to open loop",
   "busDraw.loopClosed": "The loop is closed. Right click any point to open it.",
   "busDraw.dragMove": "Drag to move",
+  "busDraw.dragAdd": "Drag to add a point",
   "busDraw.rightDelete": "Right click to delete",
   "busDraw.roadCost": "{distance} of road, {cost}{more, select, true { more} other {}}",
   "busDraw.stops": "{count, plural, one {# stop} other {# stops}}",

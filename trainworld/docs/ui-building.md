@@ -447,6 +447,10 @@ lighter; at most 16 of each.
   pan), and the legs either side are searched again on every move; Escape during the drag puts it
   back. Over a point the tag says what a click there does ("Click to delete", or finishing; nothing over a lone point),
   "Drag to move", and what a right click does where it does something, and the network's hover is left out.
+  A press on the route's path between points (within 7 px, 12 with a finger) dragged the same 3 px puts a new point
+  there that follows the pointer (T-3366): the legs either side are searched again as for any point, Escape
+  during the drag removes it, Ctrl+Z takes it out and a click on it deletes it. Over the path the tag leads with
+  "Drag to add a point"; a click without a drag still adds a point at the active end.
   With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
   not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
   does a right click's work there (the phone buzzes) and the lift adds nothing; a tap on a point is a click on it.
@@ -485,9 +489,9 @@ lighter; at most 16 of each.
   the route (final for a constructed route, which pays any longer road). A new bus line is planned
   until Construct. While the tool is open on a line, that line's current route is drawn muted (the map
   ink at half strength, no stops) under the draft, so the draft reads as the new one (T-3084;
-  `BusLayer.setMuted`). A press on one of the selected bus line's clicked points or stops that moves
-  3 px with no tool on opens Edit route and carries on as a drag of the draft (a stop becomes a point
-  of the route where it stands); the game's route changes only when the edit is saved, as one undo step
+  `BusLayer.setMuted`). A press on one of the selected bus line's clicked points or stops, or on its
+  path between them (T-3366), that moves 3 px with no tool on opens Edit route and carries on as a drag of the
+  draft (a stop becomes a point of the route where it stands, the path gets a new point); the game's route changes only when the edit is saved, as one undo step
   (none for a constructed route). Ctrl+Z and Ctrl+Y (or Ctrl+Shift+Z) in the tool step the draft's
   points back and forward and leave the game's own undo alone.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with

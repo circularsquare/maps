@@ -301,6 +301,7 @@
   "busDraw.rightOpen": "Hover tag row over any point of a closed bus loop: a right click (or a held finger) opens the loop there, the route then ending at this point.",
   "busDraw.loopClosed": "Shown when the player clicks the map to add a point to a bus route that is a loop, or that runs out, around a loop and back. A right click on any of its points opens it.",
   "busDraw.dragMove": "Hover tag row over a bus route handle.",
+  "busDraw.dragAdd": "Hover tag row over the path of a bus route being drawn or edited, between its points: a drag there adds a point.",
   "busDraw.rightDelete": "Hover tag row over a bus route handle.",
   "busDraw.roadCost": "Hover tag row in the bus line tool. distance: \"4.2 km\"; cost: money, \"$3.1M\"; more: true when redrawing a built route (the cost is the extra road only).",
   "busDraw.stops": "Hover tag row in the bus line tool: stops on the route. count: 6.",
