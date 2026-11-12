@@ -820,7 +820,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
 - `light_pass.py run` (T-3244, world-run.md "The light pass"): the demand steps over every shipped tier 0
   pack with no extract read or joint solve; `campus_outlines.py` (the world's universities and colleges
   from Overpass in longitude bands, split per pack, read by `tier0.osm_education` for a cache without
-  outlines) and `wikidata_prefill.py` (the Wikidata caches, 200 ids a query) are two of its steps.
+  outlines) and `wikidata_prefill.py` (the Wikidata caches, 200 ids a query) are two of its steps; the
+  latter ends with `campus_pools.py build`, the world table of institutions' counts, campuses and labels
+  that `tier0.university_sizes` shares each count over (T-3273).
 - `merge_cells.py <ids> | --all` is every pack's last step (T-044): sparse res-9 cells into their
   res-8 parent within a zone, touching sparse children of busier parents together (T-466), and
   sparse cells still alone into a touching merged cell across the parent's edge (T-510), the

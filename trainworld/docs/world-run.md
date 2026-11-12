@@ -214,7 +214,8 @@ Detached, as any data run. It holds the `packs` lock throughout (no world_run ga
 its cores in cores.py, and runs in order: a hard-link backup of data/packs and data/work/res9 into
 `data/work/pre-T3244/`; `campus_outlines.py split` (each pack's universities and colleges with outlines,
 from the world bands `campus_outlines.py fetch` fetched beforehand, so a cache made before T-3214 gets
-outlines with no extract read); `wikidata_prefill.py` (200 ids a query); `merge_cells --through` with
+outlines with no extract read); `wikidata_prefill.py` (200 ids a query, the bands' ids too, then
+`campus_pools.py build`, the world table each institution's count is shared over, T-3273); `merge_cells --through` with
 `--keep-going`, "tier0 {id} --education --airports" on the packs whose airport audit names an airport and
 "--education" on the rest; `cross_everyday --group auto`; `market_zones --full --workers N`; every zone's
 `localTrips`; the figures gate (`pack_gate.py --no-browser`) in N processes; `t2213_packs_load.py` against

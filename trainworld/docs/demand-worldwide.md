@@ -119,9 +119,20 @@ of its proxies where it has them. Measured by building Toronto from tier 0 again
   12-19% too many people in London's central boroughs before scaling (T-288).
 - **Universities** are OSM campuses with Wikidata student counts, which few OSM campuses carry,
   so most are sized by area. A campus item with no count takes its institution's (part of, parent
-  organisation, occupant or operator: UBC Vancouver's is UBC's 71,201), whole, campuses outside the
-  pack not taken off (T-3216). Sites named as open or distance universities or research centres
-  are left out (IGNOU, CNEA's Centro Atómico Ezeiza; T-3226). Every site has a cap from how
+  organisation, occupant or operator: UBC Vancouver's is UBC's 71,201; T-3216), and a campus with
+  no count whose name holds a counted institution's Wikidata label takes that one's (two words or
+  four CJK characters at least, a label no sister institution's name also holds, within 500 km of
+  one of its tagged sites: Ming Chuan's untagged Taipei campus); of several, the smallest count. An
+  institution's count is shared over all its campuses in the world (`campus_pools.py`, from the
+  worldwide campus bands; T-3273), by area, every campus but the main one (its own tagged site,
+  else its biggest) at most 1,872 x hectares^0.31 and the rest on the main, so no count is placed
+  twice and a branch takes a branch's share (UBC Okanagan 8,625, Vancouver 62,342). A counted
+  member's count comes off its parents' (a system's count holds its universities': the Texas A&M
+  System's is used up, so Galveston, linked only to the system, takes none). Sites named as open,
+  distance or online universities or their study centres (in the main languages and by short
+  names: IGNOU, NOUN, UNED, 空中大學, 开放大学), research centres, or university farms and forests
+  are left out, and so is every site of an institution whose Wikidata label names it an open
+  university (IGNOU, CNEA's Centro Atómico Ezeiza, Yilan's experimental forest; T-3226, T-3273). Every site has a cap from how
   counted campuses' students go with their area (1,872 x hectares^0.31): a count is cut to 14
   times that and to 100,000 and then caps its sites, so a whole system's count on one campus
   (UNAM's 360,883 on CU) or a scaled-up count (IIT Bombay's 176,000) can't stand; a site sized

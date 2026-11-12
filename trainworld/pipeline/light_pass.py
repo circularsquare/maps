@@ -9,7 +9,8 @@ Steps, in order (each its own process and log in ../artifacts/trainworld/light_p
              pack file, so a link keeps the old file at no space; the small merge stamps are copied)
   campus     campus_outlines.py split: each pack's universities and colleges with outlines (the bands must
              be fetched: `campus_outlines.py fetch`)
-  wikidata   wikidata_prefill.py: student counts, parents and airport figures, 200 ids a query
+  wikidata   wikidata_prefill.py: student counts, parents, labels and airport figures, 200 ids a query,
+             then campus_pools.py build (each institution's count shared over its campuses in the world)
   through    merge_cells --through, --keep-going, N workers: "tier0 {id} --education --airports" for the
              packs whose airport audit names an airport, "tier0 {id} --education" for the rest
   cross      cross_everyday.py --group auto with N threads (universities cross zone lines)

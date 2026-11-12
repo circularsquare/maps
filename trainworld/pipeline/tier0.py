@@ -147,13 +147,26 @@ CAMPUS_AREA_SPREAD = 5.4
 CAMPUS_AREA_MAX = 50_000.0
 CAMPUS_SITE_MAX = 100_000.0
 CAMPUS_POINT_HA = 1.0                 # a counted point's area for the curve (counted points: median 1,602 students)
-# OSM sites tagged university or college that hold few students: open and distance universities
-# (their students study from home) and research centres (judgement, T-3226)
+# OSM sites tagged university or college that hold few students: open, distance, correspondence and
+# online universities and their study centres (their students study from home), in the main
+# languages and by the big ones' short names, research centres, and university farms and forests
+# (Yilan's 50,000 on its experimental forest) (judgement, T-3226, T-3273; Wikidata's classes
+# don't mark the open universities: NOUN and IGNOU are plain universities there)
+OPEN_UNIVERSITY = re.compile(
+    r"open universit|universitas terbuka|universiti terbuka|universidad abierta|universidade aberta|universit[ée] ouverte|"
+    r"open universiteit|uniwersytet otwarty|fernuni|fernhochschule|t[ée]l[ée]universit|t[ée]luq|universit[àa] telematica|"
+    r"distance (?:education|learning)|a distancia|a dist[âa]ncia|[àa] distance|uzaktan|a[çc][ıi]k[öo][ğg]retim|"
+    r"online universit|virtual universit|universidad virtual|universidade virtual|cyber universit|"
+    r"\b(?:ignou|noun|aiou|uned|upbjj)\b|payame? ?noor|"
+    r"空中大[學学]|开放大学|開放大學|广播电视大学|廣播電視大學|函授|放送大[学學]|通信教育|"
+    r"방송통신대|사이버대학|원격대학|المفتوحة|پیام نور|اوپن یونیورسٹی|मुक्त विश्वविद्यालय|উন্মুক্ত বিশ্ববিদ্যালয়|"
+    r"มหาวิทยาลัยเปิด|สุโขทัยธรรมาธิราช|открытый университет|відкритий університет|дистанцион|дистанційн|заочн|"
+    r"ανοι[κχ]τό πανεπιστήμιο|האוניברסיטה הפתוחה", re.I)
 NOT_CAMPUS = re.compile(
-    r"open universit|universitas terbuka|universidad abierta|universidade aberta|universit[ée] ouverte|"
-    r"open universiteit|fernuni|distance (education|learning)|a distancia|[àa] distance|uzaktan|a[çc][ıi]k[öo][ğg]retim|"
-    r"centro at[óo]mico|atomic|nuclear research|research (centre|center|institute|station)|centre de recherche|"
-    r"centro de investigaci|instituto de investigaci|forschungszentrum|national laborator", re.I)
+    OPEN_UNIVERSITY.pattern + r"|centro at[óo]mico|atomic|nuclear research|research (?:centre|center|institute|station)|"
+    r"centre de recherche|centro de investigaci|instituto de investigaci|forschungszentrum|national laborator|"
+    r"university farm|experimental (?:forest|farm)|research (?:forest|farm)|experiment station|arboretum|"
+    r"實驗林|实验林|林場|林场|農場|农场|演習林|試驗場|试验场", re.I)
 DEFAULT_CURVE_POW = 1.4               # between Toronto's fit (1.2) and London's (1.5-1.85); only the length is fitted (T-360)
 ZONE_M = 2000.0
 INTRAZONAL_KM = 1.04                  # the game's same-zone distance
@@ -1318,6 +1331,29 @@ def wikidata_parents(qids):
     return {q: have[q] for q in qids if q in have}
 
 
+def wikidata_labels(qids):
+    """{QID: [its labels in every language, distinct]} (T-3273: campus_pools finds an institution's
+    untagged campuses by name and its open universities by label)."""
+    path = raw("wikidata_labels.json")
+    have = {}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            have = json.load(f)
+    need = sorted(q for q in set(qids) if re.fullmatch(r"Q\d+", q or "") and q not in have)
+    for i in range(0, len(need), 200):
+        part = need[i:i + 200]
+        q = "SELECT ?item ?l WHERE { VALUES ?item { " + " ".join(f"wd:{x}" for x in part) + " } ?item rdfs:label ?l. }"
+        r = netget.request(WIKIDATA, method="post", data={"query": q, "format": "json"}, timeout=120,
+                           waits=(10, 30, 60, 120, 300, 600))
+        got = {}
+        for row in r.json()["results"]["bindings"]:
+            got.setdefault(row["item"]["value"].rsplit("/", 1)[1], set()).add(row["l"]["value"])
+        for qid in part:
+            have[qid] = sorted(got.get(qid, ()))
+    have = _merge_cache(path, have, need)
+    return {q: have[q] for q in qids if q in have}
+
+
 def school_site_pupils(pupils, sizes, cell=None, cap=SCHOOL_SITE_MAX, cell_cap=SCHOOL_CELL_MAX):
     """Pupils per site in proportion to sizes, no site over cap and no cell's sites together over
     cell_cap (one compound mapped as several schools): the excess to the other sites in proportion
@@ -1386,33 +1422,49 @@ def campus_spread(wkt, m2, index, nres_of):
     return u, np.bincount(inv, weights=w)
 
 
-def university_sizes(uni, counts, parents):
+def not_campus(name):
+    """Sites named as an open, distance or online university or a research centre (NOT_CAMPUS)."""
+    return pd.Series(name).fillna("").astype(str).str.contains(NOT_CAMPUS).to_numpy()
+
+
+def institution_of(q, counts, parents):
+    """(institution, its count, how) of a site's Wikidata id: the id when it has a count, else its
+    smallest counted parent (T-3216), else ("", nan, "area")."""
+    own = (counts.get(q) or (None,))[0] if q else None
+    if own:
+        return q, float(own), "count"
+    ps = (parents.get(q) or {}) if q else {}
+    if ps:
+        p = min(ps, key=ps.get)
+        return p, float(ps[p]), f"parent {p}"
+    return "", np.nan, "area"
+
+
+def university_sizes(uni, counts, parents, table=None, boundary=None):
     """Each university or college site's weight and the most students it may take (T-3226,
-    T-3216). `uni` the OSM sites (kind, name, m2, wikidata, ...), `counts` wikidata_students'
-    answer, `parents` wikidata_parents' for the ids with no count. A site named as an open or
-    distance university or a research centre (NOT_CAMPUS) is left out. An institution is a counted
-    id, or for an id with none its smallest counted parent; its count is cut to CAMPUS_SIZE_SPREAD
-    times the curve of its sites in the pack together and to CAMPUS_SITE_MAX, and split over those
-    sites by area (points by their number): that share is both the site's weight and its cap. Other
+    T-3216, T-3273). `uni` the OSM sites (kind, name, lat, lon, m2, wikidata, ...), `counts`
+    wikidata_students' answer, `parents` wikidata_parents'. A site named as an open or distance
+    university or a research centre (NOT_CAMPUS) is left out. An institution is
+    `campus_pools.assign`'s: `institution_of`'s, or with `table` (campus_pools.load) a counted one
+    whose name the site's holds, the smallest; a site of an open university (by its Wikidata
+    label) is left out too. With `table` and `boundary`, an institution in the table takes its
+    count for the world, less its counted members' and what `campus_pools.allot` gives its campuses
+    outside the pack, split over its sites here by hectares (points CAMPUS_POINT_HA each), each but
+    its main campus at most the curve; otherwise its whole count, by hectares. That part is cut to
+    CAMPUS_SIZE_SPREAD times the curve of its sites in the pack together and to CAMPUS_SITE_MAX:
+    each site's share is both its weight and its cap. Other
     sites with an area weigh their area at the median students a m² of the counted institutions
     (0.01 with none), capped at CAMPUS_AREA_SPREAD times the curve and CAMPUS_AREA_MAX; points
     with no count are left out. Returns (the sites with columns inst, count, sized_by, weight and
     cap, the sites left out by name)."""
+    import campus_pools
     uni = uni.copy()
-    out = uni.name.str.contains(NOT_CAMPUS, na=False).to_numpy()
+    inst, count, how, opened = campus_pools.assign(uni, counts, parents, table)
+    out = not_campus(uni.name) | opened
     left_out, uni = uni[out], uni[~out].copy()
-    inst, count, how = [], [], []
-    for q in uni.wikidata:
-        own = counts.get(q, (None,))[0] if q else None
-        ps = parents.get(q, {}) if q and not own else {}
-        if own:
-            inst.append(q), count.append(float(own)), how.append("count")
-        elif ps:
-            p = min(ps, key=ps.get)
-            inst.append(p), count.append(float(ps[p])), how.append(f"parent {p}")
-        else:
-            inst.append(""), count.append(np.nan), how.append("area")
-    uni["inst"], uni["count"], uni["sized_by"] = inst, count, how
+    uni["inst"], uni["count"], uni["sized_by"] = [np.asarray(v, object)[~out] for v in (inst, count, how)]
+    uni["count"] = uni["count"].astype(float)
+    world = campus_pools.outside(boundary, set(uni.inst) - {""}, table) if table and boundary is not None else {}
     m2 = uni.m2.to_numpy(float)
     ha = np.where(m2 > 0, m2 / 1e4, CAMPUS_POINT_HA)
     weight = np.full(len(uni), np.nan)
@@ -1423,12 +1475,23 @@ def university_sizes(uni, counts, parents):
     for key, idx in uni[counted].groupby("inst").indices.items():
         i = np.nonzero(counted)[0][idx]
         c = float(uni["count"].to_numpy()[i[0]])
+        share = c * ha[i] / ha[i].sum()
+        if key in world:
+            pool, far, main = world[key]
+            part = max(pool - far, 0.0)
+            caps = CAMPUS_SIZE_C * ha[i] ** CAMPUS_SIZE_POW  # a branch: at most the curve (campus_pools.allot)
+            if main is not None:
+                lat, lon = uni.lat.to_numpy(float)[i], uni.lon.to_numpy(float)[i]
+                caps[np.argmin((lat - main[0]) ** 2 + ((lon - main[1]) * np.cos(np.radians(main[0]))) ** 2)] = np.inf
+            share = campus_fill(part, ha[i], caps)[0]
+            if abs(part - c) >= 0.5:
+                sized_by[i] = [s + f", {share.sum():,.0f} of {pool:,.0f} for the world" for s in sized_by[i]]
+            c = float(share.sum())
         n = min(c, CAMPUS_SITE_MAX, CAMPUS_SIZE_SPREAD * CAMPUS_SIZE_C * ha[i].sum() ** CAMPUS_SIZE_POW)
         if n < c:
             sized_by[i] = [s + f", cut to {n:,.0f}" for s in sized_by[i]]
-        share = m2[i] / m2[i].sum() if m2[i].sum() > 0 else np.full(len(i), 1.0 / len(i))
-        weight[i] = cap[i] = n * share
-        if m2[i].sum() > 0:
+        weight[i] = cap[i] = share * (n / c) if c > 0 else 0.0
+        if m2[i].sum() > 0 and n > 0:
             dens.append(n / m2[i].sum())
     uni["sized_by"] = sized_by
     # students a m² of the counted institutions, the area-sized sites' level (T-432: the national
@@ -1517,10 +1580,13 @@ def education_osm(city, boundary, kids):
     ids = uni.wikidata[uni.wikidata != ""].tolist()
     wd = wikidata_students(ids)
     parents = wikidata_parents([q for q in set(ids) if not wd.get(q, (None,))[0]])
-    rows, left_out = university_sizes(uni, wd, parents)
+    import campus_pools
+    rows, left_out = university_sizes(uni, wd, parents, campus_pools.load(), boundary)
     how = rows.sized_by.astype(str)  # an empty column (every site left out by name) is not str dtype
     n_count = int(how.str.startswith("count").sum())
     n_parent = int(how.str.startswith("parent").sum())
+    n_named = int(how.str.startswith("named").sum())
+    n_world = int(how.str.contains("for the world").sum())
     n_cut = int(how.str.contains("cut").sum())
     # T-288: the total from the national tertiary enrolment a resident; Wikidata counts and site
     # areas only spread it. Unscaled, London's counted institutions were dense central buildings
@@ -1571,7 +1637,8 @@ def education_osm(city, boundary, kids):
         "attendance_factor": 0.9, "sources": school_src}
     header["university"] = dict(
         coverage="tier 0: OSM amenity=university|college less open and distance universities and research centres by name; Wikidata P2196 "
-                 "students by institution (or its counted parent's: part of, parent organisation, occupant, operator), cut to "
+                 "students by institution (or its counted parent's: part of, parent organisation, occupant, operator; or a counted site's "
+                 "whose name the site's holds), less its counted members' and shared by area over its sites in the world, the pack's part cut to "
                  f"{CAMPUS_SIZE_SPREAD:.0f} times {CAMPUS_SIZE_C:.0f} x hectares^{CAMPUS_SIZE_POW} and to {CAMPUS_SITE_MAX:,.0f}, split over its sites "
                  f"by area; other sites by area at the counted ones' median students a m², at most {CAMPUS_AREA_SPREAD} times that curve and "
                  f"{CAMPUS_AREA_MAX:,.0f}; a mapped campus's students over the cells under its outline, "
@@ -1579,8 +1646,8 @@ def education_osm(city, boundary, kids):
                  + (f"; scaled to population x {ter:.4f} tertiary students a resident (UNESCO via World Bank SE.TER.ENRL, {ter_year}), "
                     f"no site past its cap (a count is one: {n_capped} sites at theirs), {uni_home:,.0f} students no site can take near home" if ter else ""),
         enrolled=float(uenr.sum(dtype=np.float64)), institutions=int(rows.inst[rows.inst != ""].nunique()), sites=int(n_u),
-        sized=dict(count=n_count, parent=n_parent, area=int(len(rows) - n_count - n_parent), cut=n_cut, left_out=int(len(left_out)),
-                   at_cap=n_capped), near_home=float(uni_home),
+        sized=dict(count=n_count, parent=n_parent, named=n_named, area=int(len(rows) - n_count - n_parent - n_named), cut=n_cut,
+                   world_share=n_world, left_out=int(len(left_out)), at_cap=n_capped), near_home=float(uni_home),
         location_match_share=1.0, adult_weight=float(adults.sum()), adult_origin=f"population x {1 - kids:.3f} (ages 15+, World Bank)",
         attendance_factor=0.6, decay_m=6000, limitations="Wikidata counts are of mixed years and definitions; sites without a count sized by area",
         sources=["https://www.openstreetmap.org/copyright", WIKIDATA, WB_TERTIARY.format(iso2=cfg["iso2"], ind="SE.TER.ENRL")])
@@ -1591,8 +1658,8 @@ def education_osm(city, boundary, kids):
                   + [dict(name=r.name, wikidata=r.wikidata, m2=r.m2, students=0.0, sized_by="left out by name") for r in left_out.itertuples()],
                   f, indent=1)
     print(f"schools: {len(sch):,} sites, {enr.sum():,.0f} pupils of {pupils:,.0f} ({near_home:,.0f} near home); universities: "
-          f"{n_count} sites by their Wikidata count, {n_parent} by a parent's, {len(rows) - n_count - n_parent} by area "
-          f"({n_cut} counts cut, {len(left_out)} sites left out by name), {raw_total:,.0f} students before "
+          f"{n_count} sites by their Wikidata count, {n_parent} by a parent's, {n_named} by a counted site's in their name, "
+          f"{len(rows) - n_count - n_parent - n_named} by area ({n_world} on a part of a world count, {n_cut} counts cut, {len(left_out)} sites left out by name), {raw_total:,.0f} students before "
           f"scaling, {uenr.sum():,.0f} after" + (f" ({ter:.4f} a resident, {ter_year}; {n_capped} sites at their cap, "
                                                  f"{uni_home:,.0f} near home)" if ter else " (no national figure, unscaled)")
           + f"; {n_spread} campuses spread over their outlines", flush=True)
