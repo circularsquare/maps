@@ -8,7 +8,7 @@ A fast line that shares track with a slow one in the same direction catches it u
 
 **Quad track helps.** Quad track is two separate double tracks, so an express on its own pair keeps its speed.
 
-**Passing tracks.** A station with [[station-upgrades|passing tracks]] changes who waits. The slow train that stops there waits for the fast ones to pass, and the fast line keeps its speed. A slow train leaves {{sim/src/track/overtake.rs:PASS_CLEAR_S|0}} seconds after the last fast train has passed, unless the wait would hold up its own next train. Several passing stations in a row pass trains the same way, as often as each line's headways make them meet.
+**Passing tracks.** A station with [[station-upgrades|passing tracks]] changes who waits. The slow train that stops there waits for the fast ones to pass, and the fast line keeps its speed. A slow train leaves {{sim/src/track/overtake.rs:PASS_CLEAR_S|0}} seconds after the last fast train has passed. It waits no longer than the gap between two fast trains, since the next one would catch it just the same, and never so long that it holds up its own next train. Several passing stations in a row pass trains the same way, as often as each line's headways make them meet.
 
 The loss counts like any other delay: it lengthens the round trip, so the line needs more trains for the same headway, and the average speed falls. It shows up in the trip times riders see ([[perceived-minutes]]). It does not fill track, so it is not a place trains queue ([[line-capacity]]).
 

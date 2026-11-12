@@ -24,6 +24,9 @@ const PHASES: usize = 24;
 /// The longest cycle of departures worked out (s), and the most slower headways one may span.
 const CYCLE_MAX_S: f64 = 7200.0;
 const CYCLE_MAX_K: usize = 12;
+/// A line running less often than this is timetabled as if it ran this often (s): a sweep's trains
+/// number the longer headway over the shorter, so a rate near zero would take it minutes (T-3238).
+const HEADWAY_MAX_S: f64 = 4.0 * 3600.0;
 /// Results kept per plan, by the two lines' rates.
 const MEMO: usize = 8;
 
@@ -181,7 +184,7 @@ impl Plan {
         if !(tf > 0.0 && ts > 0.0) {
             return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0 };
         }
-        let (hf, hs) = (3600.0 / tf, 3600.0 / ts);
+        let (hf, hs) = ((3600.0 / tf).min(HEADWAY_MAX_S), (3600.0 / ts).min(HEADWAY_MAX_S));
         let c = cycle(hs, hf);
         let mut best: Option<(f64, Outcome)> = None;
         for k in 0..PHASES {
@@ -197,6 +200,7 @@ impl Plan {
     /// The best relative phase at these headways (s) and, per slower train of an hour or more of
     /// whole cycles, its wait at each point: for checks.
     pub fn trains_at(&self, hs: f64, hf: f64) -> (Outcome, Vec<Vec<f64>>) {
+        let (hs, hf) = (hs.min(HEADWAY_MAX_S), hf.min(HEADWAY_MAX_S));
         let o = self.best(3600.0 / hf, 3600.0 / hs);
         let c = cycle(hs, hf);
         self.sweep(hs, hf, o.offset, (3600.0 / c).ceil().max(1.0) * c)
@@ -206,8 +210,11 @@ impl Plan {
     /// point by point, every train keeps the spacing behind the one ahead (only `PASS_CLEAR_S` behind
     /// a slower one stepping aside at a passing station), and at each passing station a slower train
     /// waits for each faster one that would come within the spacing of it before its next passing
-    /// point, unless that would hold it past its own headway less the spacing (it would block the
-    /// next one). The outcome over the trains reaching the start in `[0, c)`, after a warm-up.
+    /// point, unless that would hold it past its own headway minus the spacing (it would block the
+    /// next one) or past one faster headway and the lead (T-3238: the next faster train then catches
+    /// it as surely as this one did, so waiting longer only grows the round trip with the slower
+    /// headway, and a line with fewer trains than such waits never settled, its rate halving each
+    /// round toward zero). The outcome over the trains reaching the start in `[0, c)`, after a warm-up.
     fn sweep(&self, hs: f64, hf: f64, x: f64, c: f64) -> (Outcome, Vec<Vec<f64>>) {
         let n = self.points.len();
         let warm = self.points[n - 1].slow[0] + 2.0 * hs.max(hf);
@@ -253,7 +260,7 @@ impl Plan {
                         if xa + lead <= t.dep {
                             continue;
                         }
-                        if xa + run_f >= t.dep + run_s + self.spacing || xa + lead - normal > hs - self.spacing {
+                        if xa + run_f >= t.dep + run_s + self.spacing || xa + lead - normal > (hs - self.spacing).min(hf + lead) {
                             break;
                         }
                         t.dep = xa + lead;

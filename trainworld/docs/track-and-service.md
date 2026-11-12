@@ -828,8 +828,11 @@ stations every trip; other lines at their rates. At every place either run stops
 `PASS_CLEAR_S`, 60 s, behind a slower train stepping aside at a passing point); at each passing point
 a slower train waits for every faster train that would otherwise come within `s` of it before its next
 passing point, leaving 60 s after the last of them passes and late enough to be `s` behind it at the
-next place either run stops (T-2245), unless the wait would pass its own headway less `s` (it would
-block the next one; the faster one then follows it). The faster line's trains are placed at the one of
+next place either run stops (T-2245), unless the wait would pass its own headway minus `s` (it would
+block the next one) or one faster headway plus that lead (T-3238: the next faster train would catch it
+just the same, and a wait growing with its own headway left a line with fewer trains than such waits
+no rate its fleet could run); the faster one then follows it. A headway over 4 hours is timetabled as
+4 hours (`HEADWAY_MAX_S`), so a rate near zero cannot make the sweep's trains unbounded. The faster line's trains are placed at the one of
 24 offsets a faster headway that gives the least waiting, loss and time the slower trains are held
 behind faster ones an hour (`Plan::outcome`; time held behind is not charged, and is nil at the best
 offset on the test line). Averaged over the cycle, the slower line's wait at each passing point is a

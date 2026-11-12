@@ -237,3 +237,29 @@ fn passing_spots_are_the_slower_lines_stops_inside() {
     let alone = line(&mut w, &q, [6.0, 0.0, 0.0]);
     assert!(passing_spots(&w.net, &w.svc.lines, alone).is_empty());
 }
+
+/// T-3238: a local with two trains behind an express too frequent for it ever to get clear before
+/// the next passing station. It once waited out its whole headway at each of five passing stations,
+/// so its round trip grew with its headway, no rate fitted its fleet, and the settle halved its
+/// rate every round toward zero while each plan's sweep grew with the headway (a Tokyo save that
+/// never loaded). Now it waits for one express at most per station and keeps a rate its two
+/// trains run, and the settle takes well under a second.
+#[test]
+fn a_rare_local_behind_a_frequent_express_settles() {
+    let (mut w, n, local, express) = shinkansen();
+    set_passing(&mut w, &n[1..6], true);
+    let t = std::time::Instant::now();
+    w.apply(Op::TrainCounts { id: express, trains: Some([24, 24, 0]), tph: [12.0, 12.0, 0.0] }).unwrap();
+    w.apply(Op::TrainCounts { id: local, trains: Some([2, 2, 0]), tph: [1.0, 1.0, 0.0] }).unwrap();
+    let took = t.elapsed().as_secs_f64();
+    for lev in 0..2 {
+        let (tph, trip) = (w.net.line_tph[local as usize][lev] as f64, w.svc.lines[local as usize].round_trip[lev]);
+        let hf = 3600.0 / w.net.line_tph[express as usize][lev] as f64;
+        let holds: f64 = w.svc.lines[local as usize].runs[0].stop_holds[lev].iter().sum();
+        eprintln!("level {lev}: local {tph:.3}/h, round trip {:.0} min, holds {holds:.0} s; express every {hf:.0} s; {took:.2} s", trip / 60.0);
+        assert!(tph > 0.5, "level {lev}: the local keeps running: {tph}/h");
+        assert!((tph * trip / 3600.0 - 2.0).abs() < 0.05, "level {lev}: its two trains run the rate: {tph}/h over {trip} s");
+        assert!(holds < 5.0 * (hf + 600.0), "level {lev}: no wait past an express headway and its lead: {holds} s");
+    }
+    assert!(took < 5.0, "the settle took {took:.1} s");
+}
