@@ -261,7 +261,7 @@ CITIES["jpn"] = {
 }
 # the same, cut to Japan's seven city packs (+10 km): seven networks no line joins, so demand solves
 # each on its own (T-737's second save)
-CITIES["jpn7"] = {**CITIES["jpn"], "out": os.path.join(WORK, "jpn7_real.json"), "boundary": ["tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"],
+CITIES["jpn7"] = {**CITIES["jpn"], "out": os.path.join(OUT, "jpn7_real.json"), "boundary": ["tyo", "osa", "ngo", "fuk", "spk", "sdj", "hij"],
                   "boundary_km": 10.0, "what": "Japan's rail in its seven city packs from N02 (T-737, rough)",
                   "sources": [dict(CITIES["jpn"]["sources"][0])]}
 CAR_M = 20.0

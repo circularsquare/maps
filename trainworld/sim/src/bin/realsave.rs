@@ -20,7 +20,8 @@
 //! Writes `nyc_real.twt2` (the network part of a save, uncompressed, in the game's Mercator frame
 //! with its settled rates, T-3233; the lines get whole trains
 //! from the real trains per hour when the network is derived, T-1146, unless the network JSON gives
-//! a line `trains`, and `hsr` for high-speed track and trains, T-1625) and
+//! a line `trains`, and `hsr` for high-speed track, T-1625; a line over half on high-speed track runs high-speed
+//! trains, T-3272) and
 //! `nyc_real_track.json`: the stations and lines with the run times the track model gives them,
 //! packed as `DemandApi::set_network` takes them (the clock worker's snapshot), for `calib`.
 
@@ -107,9 +108,25 @@ fn main() {
             node_key.push(st["key"].as_str().unwrap().to_string());
             node_names.push(name);
         }
+        // T-3272: an edge is high-speed track when every line on it is a high-speed line (`hsr` in the
+        // network JSON)
+        let n_edges = m["edges"].as_array().unwrap().len();
+        let (mut on_hsr, mut on_other) = (vec![false; n_edges], vec![false; n_edges]);
+        for (li, l) in lines.iter().enumerate() {
+            if m["lines"][li].is_null() {
+                continue;
+            }
+            let hsr = l["hsr"].as_bool().unwrap_or(false);
+            for v in m["lines"][li]["path"].as_array().unwrap() {
+                let e = (v.as_u64().unwrap() >> 1) as usize;
+                if hsr { on_hsr[e] = true } else { on_other[e] = true }
+            }
+        }
         let mut edge_ids = vec![];
         let mut refused = 0;
-        for ed in m["edges"].as_array().unwrap() {
+        for (ei, ed) in m["edges"].as_array().unwrap().iter().enumerate() {
+            let edge_hsr = on_hsr[ei] && !on_other[ei];
+            let design = if edge_hsr { design_radius(320.0) } else { R_CAP };
             let (a, b) = (ed["a"].as_u64().unwrap() as u32, ed["b"].as_u64().unwrap() as u32);
             let mut pis = vec![];
             let node_level = |n: u32| m["nodes"][n as usize]["level"].as_i64().unwrap() as i8;
@@ -147,7 +164,7 @@ fn main() {
                 line.extend(inner.iter().copied());
                 line.push(lb);
                 let t = std::time::Instant::now();
-                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, R_CAP, lv_a) };
+                let r = if inner.is_empty() { None } else { trace::trace(&line, false, TRACE_TOL_M, TRACE_MIN_RADIUS, design, lv_a) };
                 trace_s += t.elapsed().as_secs_f64();
                 let mid: Vec<Pi> = match r {
                     Some(t) => {
@@ -272,7 +289,7 @@ fn main() {
                 pis = seq.into_iter().map(|(_, p)| p).collect();
             }
             let e = net.alloc_edge();
-            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: true, day: 0, oneway: 0, join: [0; 2] })).is_err() {
+            if net.set_edge(e, Some(EdgeData { a, b, tracks: 2, pis, built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::from_hsr(edge_hsr), sep: true, day: 0, oneway: 0, join: [0; 2] })).is_err() {
                 refused += 1;
             }
             edge_ids.push(e);
@@ -412,12 +429,33 @@ fn main() {
         let name = names::tidy_line(&name, "").unwrap_or(name);
         // the line's real colour ("#rrggbb", `pipeline/realcolour.py`), else the palette
         let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: hsr, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 }));
+        let r = net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 }));
         if r.is_ok() {
             n_lines_ok += 1;
         }
         line_ids.push((li, id));
     }
+    // T-3272: the game's own rule for a line on high-speed track (clock.worker's `hsrShare`): a line
+    // runs high-speed trains when over half its length is on high-speed track
+    let mut n_fast = 0;
+    for &(_, id) in &line_ids {
+        let (mut all, mut hsr) = (0.0, 0.0);
+        for &p in net.line_path(id) {
+            let Some(e) = net.edge_data(p >> 1) else { continue };
+            let m: f64 = e.pis.windows(2).map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y)).sum();
+            all += m;
+            if e.kind == TrackKind::from_hsr(true) {
+                hsr += m;
+            }
+        }
+        if all > 0.0 && hsr > all * 0.5 {
+            let mut d = net.line_data(id).unwrap();
+            d.fast = true;
+            net.set_line(id, Some(d)).unwrap();
+            n_fast += 1;
+        }
+    }
+    eprintln!("lines with over half their length on high-speed track, set to high-speed trains: {n_fast}");
     // T-3233: a real terminus has the tracks to turn trains on both its platforms, so every dead-end
     // station is given a terminal (without one it turns one train at a time, T-2986)
     let mut terminals = 0;

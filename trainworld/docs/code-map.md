@@ -976,7 +976,7 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   its N02 adapter, all of Japan's lines (cities `jpn`, `jpn7`: T-737's stress saves): each line is
   cut where MLIT's passing count changes, each piece gets cars and whole trains from its count,
   Shinkansen run on high-speed track, and `n02_trim.json` holds the cuts and omissions game runs
-  asked for (T-1625, notes/T-1625.md; `realsave` reads `trains` and `hsr` from the network JSON). `calib.py
+  asked for (T-1625, notes/T-1625.md; `realsave` reads `trains` and `hsr` from the network JSON, in both its builds, and gives high-speed trains to every line with over half its length on high-speed track, the game's own rule for a new line, T-3272). `calib.py
   targets <city>` writes the city's targets (`data/work/calib/<city>/`), `calib.py run <city>
   [--set k=v,..] [--params p.json] [--tag t]` runs the sim's `calib` bin (a weekday, commutes and
   everyday, 3 crowding rounds, about 22 s for New York) and scores it (station entries, operator
