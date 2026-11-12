@@ -49,11 +49,17 @@ export interface SheetLinesOptions {
    * borders, when the zone's whole outline is drawn (T-2639) */
   trackKm: number;
   wholeShare: number;
+  /** past the carried map's edge, water runs on only from water of at least seaOutArea square pitches, each edge cell
+   * taking the majority of the edge within edgeR pitches (T-3364) */
+  seaOutArea: number;
+  edgeR: number;
+  /** land placed past the edge narrower than this share of the grid's longer side, beside water placed there, is water */
+  outLand: number;
 }
 
 export const SHEET_LINES: SheetLinesOptions = {
-  dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 8, carryCountry: 12, wUp: 8, carryTol: 1e-4,
-  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24, trackKm: 30, wholeShare: 0.5,
+  dial: 0.5, wGeo: 2, seaKeep: 0.8, seaR: 40, lamLand: 5, lamWater: 0.004, carryCity: 12, carryCountry: 12, wUp: 8, carryTol: 1e-4,
+  cellsCity: 4e6, cellsCountry: 12e6, bendMax: 8, allZones: false, borderTol: 24, trackKm: 30, wholeShare: 0.5, seaOutArea: 3000, edgeR: 12, outLand: 0.05,
 };
 
 /** the stations laid out on the sheet and the map carried with them */
@@ -285,6 +291,8 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
   // the masks hold whole stays, stations or not (Pennsylvania past the Delaware, Sado, Governors Island)
   const { cut: dropped, km2: cutKm2 } = cutLand(C);
   const labAt = (x: number, y: number) => {
+    // off the raster nothing is known: taken as off the map (T-3364), not as water
+    if (x < R.x0 || y < R.y0 || x >= R.x0 + R.w * R.rr || y >= R.y0 + R.h * R.rr) return OUT;
     const m = massAt(R, x, y);
     if (!m || dropped[m - 1]) return 0;
     const j = Math.floor((y - R.y0) / R.rr);
@@ -338,6 +346,89 @@ export function sheetMap(lines: SheetLines, g: DiagramGraph, shapes: ZoneShape[]
         nearT[c] = nearAt(ux, uy);
       }
     }
+  }
+  // past the carried map's edge (T-3364): a cell takes the nearest cell on it, water only from a piece of water of at
+  // least seaOutArea square pitches (the sea, a bay, a big lake), so a network far from the sea is not drawn ringed by
+  // sea while a coast runs on past the edge
+  if (withWater) {
+    // each water cell on the map's edge: in a big piece (2) or not (1), a search from it stopping at bigN cells or at a
+    // cell already known big
+    const qq = new Int32Array(NC), kind = new Uint8Array(NC), bigN = Math.max(1, Math.ceil(o.seaOutArea / (hd * hd)));
+    const edge = (v: number) => { const i = v % GW; return (i > 0 && D[v - 1] === OUT) || (i < GW - 1 && D[v + 1] === OUT) || (v >= GW && D[v - GW] === OUT) || (v + GW < NC && D[v + GW] === OUT); };
+    for (let s0 = 0; s0 < NC; s0++) {
+      if (D[s0] !== 0 || kind[s0] || !edge(s0)) continue;
+      let head = 0, tail = 0, big = false;
+      (qq[tail++] = s0), (kind[s0] = 3);
+      const take = (u: number) => { if (D[u] !== 0) return; if (kind[u] === 2) big = true; else if (!kind[u]) (kind[u] = 3), (qq[tail++] = u); };
+      while (head < tail && !big && tail < bigN) {
+        const v = qq[head++], i = v % GW;
+        if (i > 0) take(v - 1);
+        if (i < GW - 1) take(v + 1);
+        if (v >= GW) take(v - GW);
+        if (v + GW < NC) take(v + GW);
+      }
+      const k = big || tail >= bigN ? 2 : 1;
+      for (let t = 0; t < tail; t++) kind[qq[t]] = k;
+    }
+    // the nearest cell on the map by a chamfer sweep (3 a side, 4 a diagonal: within 8% of straight-line, so a diagonal
+    // edge of the map is not outweighed by a straight one, as stepping cell by cell would)
+    // an edge cell's wetness is the majority of the edge cells within edgeR pitches of it, so a point of land or a
+    // river meeting the edge between stretches of the other kind does not run on as a strip
+    const wetO = new Uint8Array(NC), dd = qq, W1 = GW + 1, sW = new Int32Array(W1 * (GH + 1)), sA = new Int32Array(W1 * (GH + 1));
+    for (let j = 0; j < GH; j++) {
+      let rw = 0, ra = 0;
+      for (let i = 0; i < GW; i++) {
+        const c = j * GW + i;
+        if (D[c] !== OUT && edge(c)) { ra++; if (D[c] === 0 && kind[c] === 2) rw++; }
+        sW[(j + 1) * W1 + i + 1] = sW[j * W1 + i + 1] + rw;
+        sA[(j + 1) * W1 + i + 1] = sA[j * W1 + i + 1] + ra;
+      }
+    }
+    const R = Math.max(1, Math.round(o.edgeR / hd)), box = (S: Int32Array, i0: number, j0: number, i1: number, j1: number) => S[j1 * W1 + i1] - S[j0 * W1 + i1] - S[j1 * W1 + i0] + S[j0 * W1 + i0];
+    for (let c = 0; c < NC; c++) {
+      if (D[c] === OUT) { dd[c] = 0x3fffffff; continue; }
+      dd[c] = 0;
+      if (!edge(c)) { wetO[c] = D[c] === 0 && kind[c] === 2 ? 1 : 0; continue; }
+      const i = c % GW, j = (c - i) / GW, i0 = Math.max(0, i - R), j0 = Math.max(0, j - R), i1 = Math.min(GW, i + R + 1), j1 = Math.min(GH, j + R + 1);
+      wetO[c] = 2 * box(sW, i0, j0, i1, j1) > box(sA, i0, j0, i1, j1) ? 1 : 0;
+    }
+    const relax = (c: number, u: number, w: number) => { if (dd[u] + w < dd[c]) (dd[c] = dd[u] + w), (wetO[c] = wetO[u]); };
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const c = j * GW + i;
+      if (!dd[c]) continue;
+      if (i > 0) relax(c, c - 1, 3);
+      if (j > 0) { relax(c, c - GW, 3); if (i > 0) relax(c, c - GW - 1, 4); if (i < GW - 1) relax(c, c - GW + 1, 4); }
+    }
+    for (let j = GH - 1; j >= 0; j--) for (let i = GW - 1; i >= 0; i--) {
+      const c = j * GW + i;
+      if (!dd[c]) continue;
+      if (i < GW - 1) relax(c, c + 1, 3);
+      if (j < GH - 1) { relax(c, c + GW, 3); if (i < GW - 1) relax(c, c + GW + 1, 4); if (i > 0) relax(c, c + GW - 1, 4); }
+    }
+    // land so placed narrower than outLand of the grid's longer side, beside water so placed, is water: a stretch of
+    // land on the edge between seas would otherwise run on as a straight strip into open sea. On blocks of cells,
+    // eight blocks or more to that width (an opening; chamfer units 3 a block)
+    {
+      const Wd = o.outLand * Math.max(GW, GH), bs = Math.max(1, Math.floor(Wd / 8)), BW = Math.ceil(GW / bs), BH = Math.ceil(GH / bs), NB = BW * BH;
+      const landN = new Int32Array(NB), allN = new Int32Array(NB), seaB = new Uint8Array(NB);
+      for (let c = 0; c < NC; c++) {
+        const b = Math.floor(Math.floor(c / GW) / bs) * BW + Math.floor((c % GW) / bs), wet = D[c] === OUT ? wetO[c] : +(D[c] === 0);
+        allN[b]++;
+        if (!wet) landN[b]++;
+        else if (D[c] === OUT) seaB[b] = 1;
+      }
+      const landB = new Uint8Array(NB);
+      for (let b = 0; b < NB; b++) landB[b] = 2 * landN[b] > allN[b] ? 1 : 0;
+      const rB = Math.round((3 * Wd) / 2 / bs), dIn = chamfer(landB, BW, BH, false, 60000), core = new Uint8Array(NB);
+      for (let b = 0; b < NB; b++) core[b] = landB[b] && dIn[b] > rB ? 1 : 0;
+      const dOut = chamfer(core, BW, BH, true, 60000), dSea = chamfer(seaB, BW, BH, true, 60000);
+      for (let c = 0; c < NC; c++) {
+        if (D[c] !== OUT || wetO[c]) continue;
+        const b = Math.floor(Math.floor(c / GW) / bs) * BW + Math.floor((c % GW) / bs);
+        if (dOut[b] > rB && dSea[b] <= rB) wetO[c] = 1;
+      }
+    }
+    for (let c = 0; c < NC; c++) if (D[c] === OUT) D[c] = wetO[c] ? 0 : NOZ;
   }
   const t1 = performance.now();
   const cellOf = (x: number, y: number) => { const i = Math.floor((x - qx0) / hd), j = Math.floor((y - qy0) / hd); return i < 0 || j < 0 || i >= GW || j >= GH ? -1 : j * GW + i; };

@@ -116,6 +116,11 @@ export interface SheetOptions {
   /** on a map 600 km across or more, each cell's turn is pulled toward none with this weight times its share of land
    * near lines, and the sheet's own turn is measured from the hops, so a city keeps its orientation (T-3345; 0: off) */
   turnHold: number;
+  /** bigger city centres (T-3345): each station's ask times (the median distance to the 4th nearest station over its
+   * own) to the power zoomP, kept within zoomMin to zoomMax, so a crowded core gets more room and a lonely branch less */
+  zoomP: number;
+  zoomMin: number;
+  zoomMax: number;
 }
 
 export const SHEET: SheetOptions = {
@@ -126,7 +131,7 @@ export const SHEET: SheetOptions = {
   islandKm2: 300, islandQ: 0.75, islandBoost: 2, aIsland: 80,
   nCity: 512, nCountry: 1024, cityRaster: 50, refN: 256, floorCountry: 1.2, flat: 1.15, flatCountry: 1.4, drawn: 12, coarse: 16, nearMax: 0, drift: 0, coastCity: 1, coastCountry: 4, uniform: false,
   schedule: "e-2:10:0.3,raise,e-2:6:0.3,e0:5:0.3,s12", scheduleFar: "e-2:10:0.3,raise,e-2:6:0.3,raise,e-2:4:0.3,e0:5:0.3,s12", // i18n-ignore: solver schedules
-  settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6, turnHold: 16,
+  settle: 0.5, tighten: true, aa: 0, aaReset: true, galEvery: 1, tightFrom: 0.4, tolMove: 1e-3, itMove: 4, tol: 1e-3, maxIt: 6, turnHold: 16, zoomP: 0.8, zoomMin: 0.6, zoomMax: 3,
 };
 
 /** what the sheet reads of the ground: the zones' water masks, the graph's frame in mercator, the sea and land masses */
@@ -453,6 +458,10 @@ export function rubberSheet(g: DiagramGraph, ground: SheetGround, o: SheetOption
       for (let k = 0; k < cnt; k++) tmp[k] = ((strokes[i] + strokes[bj[k]]) / 2 + o.gap) / bd[k];
       const sRoom = cnt ? (E < 6e5 ? o.core : o.coreCountry) * median(tmp.subarray(0, cnt)) : 0;
       sSt[i] = Math.max(sDial, sRoom);
+    }
+    if (o.zoomP > 0 && n > 4) {
+      const ref = median(Float64Array.from(d4));
+      for (let i = 0; i < n; i++) sSt[i] *= Math.min(o.zoomMax, Math.max(o.zoomMin, Math.pow(ref / Math.max(30, d4[i]), o.zoomP)));
     }
   }
   const sFloor = Math.pow(0.25, o.dial) * (9 / medT) * (E < 6e5 ? 1 : o.floorCountry), lf = Math.log(sFloor);

@@ -41,6 +41,9 @@ const COVERED = 8, PARTS = 16, STRAIT = 2;
 /** the sea far from the stations (T-2540): a grid of at least FAR_M cells, at most FAR_CELLS, over the coarse tiles and
  * FAR_PAD past them, each place no mask covers taking the nearest known cell's */
 const FAR_M = 1000, FAR_CELLS = 1_500_000, FAR_PAD = 100_000;
+/** land the far grid only guesses (no known cell under it) narrower than this across is sea, metres (T-3362: a mask's
+ * coast cell at the known area's edge ran on as a straight strip of land across the open sea) */
+const GUESS_LAND_M = 40_000;
 const EARTH_R = 6371008.8, RAD = Math.PI / 180;
 /** T-2550 (`dropIslands`): an island with no station under ISLE_SHARE of the land within ISLE_M of its middle is left
  * out; a station on water takes the land found nearest, in steps of ISLE_STEP out to ISLE_FIND, metres */
@@ -327,11 +330,21 @@ export function groundSea(g: DiagramGraph, masks: WaterMask[], frame: MercFrame)
         if (wide) (far[c] = 1), q.push(c);
       }
     }
+    const known = q.length;
     for (let k = 0; k < q.length; k++) {
       const c = q[k], i = c % FW, v = far[c];
       for (const nc of [i > 0 ? c - 1 : -1, i < FW - 1 ? c + 1 : -1, c - FW, c + FW]) if (nc >= 0 && nc < NF && far[nc] === 2) (far[nc] = v), q.push(nc);
     }
     if (!q.length) far.fill(0);
+    else {
+      // guessed land narrower than GUESS_LAND_M is sea: the land opened by a disc of half that (chamfer units, 3 a cell)
+      const r = Math.round((3 * GUESS_LAND_M) / 2 / fh), land = new Uint8Array(NF);
+      for (let c = 0; c < NF; c++) land[c] = far[c] === 0 ? 1 : 0;
+      const dIn = chamfer(land, FW, FH, false, 60000), core2 = new Uint8Array(NF);
+      for (let c = 0; c < NF; c++) core2[c] = land[c] && dIn[c] > r ? 1 : 0;
+      const dOut = chamfer(core2, FW, FH, true, 60000);
+      for (let k = known; k < q.length; k++) { const c = q[k]; if (land[c] && dOut[c] > r) far[c] = 1; }
+    }
     const farAt = (x: number, y: number) => {
       const i = Math.min(FW - 1, Math.max(0, Math.floor((x - fx0) / fh))), j = Math.min(FH - 1, Math.max(0, Math.floor((y - fy0) / fh)));
       return j * FW + i;

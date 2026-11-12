@@ -193,6 +193,8 @@ worker finds the sea on the ground (the coarse and far grids and the land masses
 - **The sea everywhere** (T-2540): past the coarse grid, a far grid (1 km a cell, coarser for a big network, at most
   1.5 million cells; 100 km past the coarse grid) holds the masks' water at least three of its cells wide; a place no
   mask covers takes the nearest known cell's (so open sea far from the stations is sea, and land between them land).
+  Land so guessed (no known cell under it) narrower than 40 km across is sea (T-3362: a mask's coast cell at the edge
+  of what is known ran on along its row as a strip of land across the open sea, east of Palm Beach).
 - **Land masses**: land on the ground connected round the water that parts it is one land mass. The sea parts land,
   and so does water at least about 600 m wide (three coarse cells) all the way across; rivers narrow upstream, so they
   part nothing, while straits and channels between seas do (the Tsugaru, Kanmon and Seto straits).
@@ -504,7 +506,10 @@ sheet is posted as a `sheet` message too, which the page keeps as `window.twShee
 the sheet (a tenth), the lines and the carry (seven tenths) and the map. With `?sheet=0` the page sends no `sheet` and
 none of this runs.
 
-- **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), spread as a smooth field
+- **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), times its **centre
+  zoom** (T-3345, Anita, 2026-11-12: "ok can do bigger centers, looks nice"): the median distance to the 4th nearest
+  station over its own, to the power 0.8, kept within 0.6 to 3, so a crowded core is drawn about twice as big per km as
+  its lonely branches (London 1.45 to 1.98, New York 1.79 to 2.03); spread as a smooth field
   with a floor (falling away from the networks on a big map, below), doubling at most every 40 drawn pitches; a land mass of at most 300 km2 with a station is one size all over.
 - **The cut** (a map 600 km across or more; T-2609): empty bands across the whole map are drawn narrow, so the land
   between far-apart networks (the Plains between Denver and Chicago) condenses to a band the lines cross. A network
@@ -545,7 +550,7 @@ none of this runs.
 - **The carry**: a field of moves on the sheet's finest lattice, smooth by least squares, links on land stiff (5) and on
   water nearly free (0.004), met at each station (its place on its own land carried to its drawn place, weight 1). A
   station whose drawn place does not lie on its own land in the carried map is met 8 times harder, and the field solved
-  again, until none is (up to 8 rounds on a city map, 12 on a country's). So water takes the difference between
+  again, until none is (up to 12 rounds; a city map's 8 left one station of New York with a line to Binghamton off its land once the centres grew, T-3345). So water takes the difference between
   neighbouring land masses' moves, and every station is on its own land. Solved by conjugate gradients with a multigrid
   whose prolongation follows the matrix (black box multigrid), made once and again only where a solve does not settle.
   The solve runs in WASM (`sim/src/diagram.rs`, in the track module, which the diagram worker loads), with the same
@@ -553,7 +558,12 @@ none of this runs.
   module that does not load) solves in JavaScript.
 - **The map**: a grid over the drawing (at most 4 million cells on a city map, 12 million on a country's) takes, cell by
   cell through the carried map's triangles, the ground under it: water, or the zone the land is in (the zones' outlines
-  the page sends). A land mass with no station on it that the masks' edge cuts across counts as water: its masked cells
+  the page sends). **Past the carried map's edge** (and where it reaches past the sheet's raster) nothing is known, so
+  with the water on each cell takes the nearest cell on the map (by chamfer distance), water only from a piece of water
+  of at least 3,000 square pitches (the sea, a bay, a big lake), each edge cell taking the majority of the edge within
+  12 pitches; then land so placed narrower than 5% of the grid's longer side, beside water so placed, is water. So a
+  coast runs on past the edge and a network far from the sea is not drawn ringed by sea (T-3364, Anita on a
+  Nottingham game: "it looks lke nottingham is on a round island"; before, every such cell was sea). A land mass with no station on it that the masks' edge cuts across counts as water: its masked cells
   beside unmasked ones the ground's sea calls water run at least half its width (the square root of its area). That is
   another country's coast where its masks stop (Korea and China round all Japan), which would show as land ending in
   straight lines; land the masks hold whole stays, of any size and with or without a station (Pennsylvania past the
