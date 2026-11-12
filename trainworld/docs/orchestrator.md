@@ -29,9 +29,10 @@ not once per message (Anita, 2026-11-09).
 ## TODO.md and asks
 
 - File only TODO.md's short-term section. The other sections are hers unless she points at an item.
-- **Triage player reports by reach** before starting one: roughly how many players it touches. A fix only a handful
-  would ever see (one real network's stop order, a rare corner) is filed P3 for later, not started, while the task
-  list is long (Anita, 2026-11-12, on Sendai's Senzan Line). Say the reach guess in the task line.
+- **Triage player reports** (tw-feedback, Anita 2026-11-12): a literal bug that would touch a decent number of
+  players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
+  her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
+  the task list is long (Sendai's Senzan Line). Say the reach guess in the task line.
 - Asks that outlive the session go in `notes/for-anita.md` (answered blocks archived, not kept); the rest in the
   final message's For you block.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
