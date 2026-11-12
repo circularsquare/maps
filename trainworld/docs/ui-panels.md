@@ -1081,10 +1081,11 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   with, so the player picks one on purpose [T-1302]. Picking a city makes it the start; picking another
   start in any other way blanks the list again [T-3225]. The game starts from that network, built and
   running; the hover "Start with Tokyo's real rail lines already built." shows once a network is picked.
-- **Trains run on** Left or Right [T-3297; `ui/SideSwitch.tsx`, `game/runningSide.ts`]: the game's running side, for
-  trains, trams and buses alike (world.md "Running side"). Until the player picks, it follows the start: the side
-  its country's railways keep to, a real network's its metro's, Right on the world map; a pick stays while the
-  start changes. No hover. A real network started on the
+- **No running side control** [T-3367; `game/runningSide.ts`]: the sheet never asks. The game's running side, for
+  trains, trams and buses alike (world.md "Running side"), follows the start: the side its country's railways keep
+  to, a real network's its metro's; on the world map (and a location outside every zone) the player's own country
+  from the browser's time zone, else its language's region (`homeCountry`, no permission prompt), else Right. Settings'
+  "Trains run on" changes it later. A real network started on the
   other side than its save is switched as it opens.
 - **Start in Tokyo** (the zone picked or located) or **Start**, bigger than the other buttons (36 px
   high, bold, tinted) and centred in the sheet's last row, with Back at its left [T-1215]. If a real network cannot be downloaded, a

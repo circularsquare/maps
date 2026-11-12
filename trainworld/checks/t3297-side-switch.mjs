@@ -1,12 +1,11 @@
-// T-3297: the running side a player picks and switches.
-//   1. The new game sheet: Trains keep follows the start (New York Right, Tokyo and London Left, Paris Left by
-//      France's railways, a real Tokyo network Left, Shanghai's real network Right although China's railways keep
-//      left), and a pick stays while the start changes.
+// T-3297: the running side a player switches (T-3367: the new game sheet has no control; the side each start gets
+// is checked by t3367-side-default.mjs).
+//   1. The new game sheet shows no side control.
 //   2. A sandbox keeping right with a flyover branch and a line over it; Settings' Trains keep Left asks, then
 //      switches: the game keeps left (`rightHand`, the drawn `keep`), the flyover's legs run the other way, neither
 //      junction has a flat badge, the line runs, the list opens with its rows (the legs and the line under Fixed,
 //      nothing to fix), and a row's click shows the place; switching back puts the legs as they were.
-//   3. A sandbox from the real Singapore network keeps Left, as the sheet says, whichever side its save keeps.
+//   3. A sandbox from the real Singapore network keeps Left whichever side its save keeps.
 // Pictures in artifacts/trainworld/t3297-side-*.png.
 // From the maps root (or the tree's), on a Vite of your own (node trainworld/checks/dev-nowatch.mjs 6169):
 //   node trainworld/checks/t3297-side-switch.mjs [dev url]
@@ -25,33 +24,14 @@ await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSO
 const errors = [];
 collectErrors(page, errors);
 const shot = (name) => page.screenshot({ path: join(ARTIFACTS, `t3297-side-${name}.png`) });
-const lit = () => page.evaluate(() => {
-  const on = document.querySelector('.new-game .side-switch .btn.on');
-  return on ? on.textContent.trim() : null;
-});
 
 try {
   // ---- 1. the new game sheet
   await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
   await page.waitForSelector('.new-game, .start-new', { timeout: 120000 });
   if (!(await page.$('.new-game'))) await page.click('button.start-new');
-  await page.waitForSelector('.new-game .side-switch');
-  const sideFor = async (pickIt) => { await pickIt(); await page.waitForTimeout(150); return lit(); };
-  const city = (id) => () => page.click(`.new-game button[data-city="${id}"]`);
-  check(await sideFor(city('nyc')) === 'Right', 'New York: Right');
-  check(await sideFor(city('tyo')) === 'Left', 'Tokyo: Left');
-  check(await sideFor(city('lon')) === 'Left', 'London: Left');
-  check(await sideFor(city('par')) === 'Left', 'Paris: Left (French railways keep left)');
-  await shot('sheet-paris');
-  check(await sideFor(() => page.click('.new-game-map')) === 'Right', 'the world map: Right');
-  await page.click('.new-game button[data-mode="sandbox"]');
-  const real = (id) => () => page.selectOption('.new-game-real select', id);
-  check(await sideFor(real('tyo')) === 'Left', 'the real Tokyo network: Left');
-  check(await sideFor(real('sha')) === 'Right', 'the real Shanghai network: Right (its metro keeps right)');
-  // a pick stays
-  await page.click('.new-game .side-switch .btn:not(.on)');
-  const picked = await lit();
-  check(await sideFor(city('nyc')) === picked, 'a pick stays while the start changes', `${picked}`);
+  // T-3367: the sheet has no side control; the sides each start gets are checked by t3367-side-default.mjs
+  check(!(await page.$('.new-game .side-switch')), 'the new game sheet has no running side control');
 
   // ---- 2. a game with a flyover, switched
   await page.goto(`${BASE}?debug=1&new=1&mode=sandbox&paused=1&demandWorkers=1&v=${Date.now()}`);
@@ -104,8 +84,8 @@ try {
     return { title: d?.querySelector('h2')?.textContent ?? '', rows: [...(d?.querySelectorAll('.side-sites li') ?? [])].map((li) => li.textContent.trim()), nothing: !!d?.querySelector('p.muted') };
   });
   check(list.title === 'Switched to the left', 'the list opens', list.title);
-  check(list.nothing && list.rows.filter((r) => /One-way track turned round/.test(r)).length === built.legs.length && list.rows.some((r) => /Branch rerouted/.test(r)),
-    'nothing to fix; the legs turned round and the line rerouted under Fixed', list.rows.join(' | '));
+  check(list.nothing && list.rows.filter((r) => /One-way track turned around/.test(r)).length === built.legs.length && list.rows.some((r) => /Branch rerouted/.test(r)),
+    'nothing to fix; the legs turned around and the line rerouted under Fixed', list.rows.join(' | '));
   const after = await state();
   check(after.keep === -1 && after.flat === 0 && after.status !== 'broken', 'keeping left, still no flat badge, the line runs', JSON.stringify(after).slice(0, 160));
   check(after.legs.every((l) => { const b = before.legs.find((x) => x.id === l.id); return b && l.set === 3 - b.set; }), 'every leg runs the other way, ids kept', JSON.stringify([before.legs, after.legs]));
@@ -132,11 +112,9 @@ try {
   await page.goto(`${BASE}?debug=1&v=${Date.now()}`);
   await page.waitForSelector('.new-game, .start-new', { timeout: 120000 });
   if (!(await page.$('.new-game'))) await page.click('button.start-new');
-  await page.waitForSelector('.new-game .side-switch');
   await page.click('.new-game button[data-mode="sandbox"]');
   await page.selectOption('.new-game-real select', 'sin');
   await page.waitForTimeout(150);
-  const sheetSide = await lit();
   await page.click('.new-game-start');
   await page.waitForFunction(() => window.tw?.world?.value?.edges?.length > 0 && window.tw.renderer?.net, undefined, { timeout: 240000 });
   await page.waitForTimeout(2000);
@@ -144,7 +122,7 @@ try {
     const tw = window.tw, w = tw.world.value;
     return { keep: tw.renderer.net.keep ?? 1, lines: w.save.lines.length, broken: Object.values(w.lineStats).filter((s) => s.status === 'broken').length };
   });
-  check(sheetSide === 'Left' && sin.keep === -1 && sin.lines > 0 && sin.broken === 0, 'the real Singapore network starts keeping left, as the sheet says, whichever side its save keeps', JSON.stringify(sin));
+  check(sin.keep === -1 && sin.lines > 0 && sin.broken === 0, 'the real Singapore network starts keeping left, whichever side its save keeps', JSON.stringify(sin));
   const bad = errors.filter((e) => !/favicon|404/.test(String(e)));
   check(bad.length === 0, 'no console errors', bad.slice(0, 3).join(' | '));
 } catch (e) {

@@ -1,5 +1,5 @@
-// T-3297: the running side, one per game for trains, trams and buses: picked on the new game sheet (set from the start
-// country, game/runningSide.ts), and switched in Settings once the game has track, after a question, with a list of
+// T-3297: the running side, one per game for trains, trams and buses: set when the game starts, without asking (from the
+// start country, game/runningSide.ts), and switched in Settings once the game has track, after a question, with a list of
 // what the switch fixed and what it left to fix, each row a click from the place.
 
 import type { ComponentChildren } from "preact";
@@ -14,9 +14,9 @@ import { Chip, Segmented } from "./widgets";
 import { t } from "../i18n";
 
 /** The two sides as a pair of buttons with the row's label. */
-export function SideSwitch({ right, onPick, cls = "slider" }: { right: boolean; onPick: (right: boolean) => void; cls?: string }) {
+export function SideSwitch({ right, onPick }: { right: boolean; onPick: (right: boolean) => void }) {
   return (
-    <div class={cls + " side-switch"}>
+    <div class="slider side-switch">
       <span>{t("sideSwitch.label")}</span>
       <Segmented<"left" | "right"> options={[["left", t("sideSwitch.left")], ["right", t("sideSwitch.right")]]} value={right ? "right" : "left"} onChange={(v) => onPick(v === "right")} />
     </div>

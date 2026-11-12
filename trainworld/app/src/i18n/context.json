@@ -1858,7 +1858,7 @@
   "sideSwitch.fixed": "Heading in the after-switch list: places the game fixed by itself.",
   "sideSwitch.flat": "Row in the after-switch list (To fix): a junction where trains now cross each other's track; a click shows it.",
   "sideSwitch.keep": "No button of the switch-side question: the game stays on its side.",
-  "sideSwitch.label": "Label before two buttons, Left and Right, on the new game sheet and in Settings: which side of a double track trains (and trams and buses) run on, as in left-hand or right-hand traffic.",
+  "sideSwitch.label": "Label before two buttons, Left and Right, in Settings: which side of a double track trains (and trams and buses) run on, as in left-hand or right-hand traffic.",
   "sideSwitch.left": "Button after sideSwitch.label: trains keep to the left-hand track.",
   "sideSwitch.moved": "Row in the after-switch list (Fixed): a line given a new route through its same stops. name: the line's name, \"Red\".",
   "sideSwitch.oneTrack": "Row in the after-switch list (Fixed): a station with its platform on one track kept it on the same track, which now carries trains the other way. name: the station's name, \"Mid\".",

@@ -1,9 +1,17 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a67ba911-f213-4096-86ff-b9c1620cbea0, name maps-37 [07bc40], since 2026-11-12 17:54 UTC
-Updated: 2026-11-12 ~23:45 UTC (~18:45 local; she is awake, focused on v0.3.3). Context past 500k: ready for a takeover.
+Orchestrator: session 5c59ad2f-75a3-4536-8e9d-b38d3213ab6f, name maps-19 [f2de49], since 2026-11-12 21:52 UTC
+Previous: session a67ba911-f213-4096-86ff-b9c1620cbea0, name maps-37 [07bc40], handed over 2026-11-12 21:52 UTC, finishing in-flight work
+Updated: 2026-11-12 21:52 UTC (16:52 local). maps-37's own times below ran ~2 h ahead (its "23:45 UTC" was ~21:45).
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.md in git history.
+
+**Takeover split (maps-37 and maps-19, 11-12 21:55 UTC)**: maps-19 is the only lander: commits, landings, 8800,
+pushes, "go gate" answers, data/packs scheduling. maps-37 starts nothing and relays each report from its six
+agents (gaprun2, tt2, hsr, onelook, t3367, bus); a follow-up becomes a fresh maps-19 agent. maps-37 deletes the
+Previous: line when its last agent has reported. Checked at takeover: 8800 = f90e7495 (.tw-snap), master e949385b
+one ahead of origin; gaprun join pid 21260 alive, started 15:38 local (so done ~19:00 local); tt2m worktree
+(11db958c, written 16:51 local) is in use by someone, leave it; schem3's tree is gone (landed).
 
 ## Her focus now
 **v0.3.3 only** (Anita 11-12: "just wanna focus on 0.3.3 for now and reduce scope of things im thinking about").

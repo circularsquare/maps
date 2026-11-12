@@ -1,4 +1,4 @@
-// T-3297: which side a new game's trains, trams and buses keep to, before the player picks: the side its start
+// T-3297: which side a new game's trains, trams and buses keep to: the side its start
 // country's railways run on, or for a real network the side its metro runs on (the shipped saves are built so,
 // pipeline/realauto.json's `left`, realnet.py's `--left`). Sources and the calls: notes/T-3297.md.
 
@@ -28,10 +28,11 @@ export function countryRightHand(country: string | null | undefined): boolean {
   return !country || !LEFT_RAIL.has(country);
 }
 
-/** A new game's running side before the player picks: the start's country's railways, a real network's metro;
- * right with no start (the world map). */
-export function startRightHand(start: string | null | undefined, real: boolean): boolean {
-  if (!start || !isCity(start)) return true;
+/** A new game's running side (the player is never asked, T-3367): the start's country's railways, a real network's
+ * metro; with no start (the world map) the player's own country (`home`, ISO alpha-2 from `homeCountry`), right when
+ * that is unknown too. */
+export function startRightHand(start: string | null | undefined, real: boolean, home?: string | null): boolean {
+  if (!start || !isCity(start)) return home ? countryRightHand(home.toUpperCase()) : true;
   if (real) return !REAL_LEFT.has(start);
   return countryRightHand(cityById(start).country);
 }
