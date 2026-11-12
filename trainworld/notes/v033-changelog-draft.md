@@ -28,15 +28,16 @@ carries everything landed on master since v0.3 (3a442a6e). Held out: two pairs o
 single track on quad / beside passing stations; turn single into double; flags; CJK browsers' currency; money
 rates x100.
 
-## Not mentioned in her edits (kept or cut? asked 2026-11-12)
+## From the first draft, kept (Anita 2026-11-12: "the stuff i didnt mention we can keep")
 - satellite map (Settings, Map | Satellite)
 - 30 more real world networks in sandbox
 - real world networks follow real tunnels and bridges, and start already running
 - zoom buttons
 - zone names in Chinese and Japanese
-- terrain drawn as squares again
 - high speed fare default 1.25x (was 1.5x)
+- the map zooms in only to 20 on touch screens (her OK)
 - fixes: trains on single track no longer drawn passing through each other; trains on a line's way back drawn on
   the right track; platforms lengthen past track joints; riders can change back onto a line that bends back near
   itself; a notice to reload when figures stop updating; clearer messages for old Safari and browsers without WebGL2
-- new since the draft: the map zooms in only to 20 on touch screens (T-3368)
+
+Also dropped: terrain drawn as squares again.
