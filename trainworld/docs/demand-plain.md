@@ -223,7 +223,9 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   dollar (the fare line above) times 0.4, since time on a long trip is worth more than on a local
   one; more for the poorest third, less for the richest (about 1.5 and 0.75 times in the US).
   Richer people take more long trips. Each group picks its own way, and the
-  shares are added up.
+  shares are added up. Which trains they take is worked out once for all three, at 0.4 (their
+  average), so a high-speed line wins a long trip when it saves more minutes than its extra fare
+  costs at that rate; commutes between cities share that choice of trains.
 - Train: a trip between cities is planned, so its first train's wait is half the time between
   trains, but at most 5 minutes plus a sixth of it, and at most 30 minutes, and the "no train for
   hours" extra does not apply: 5 at a train every 10 minutes, 15 at an hourly train, 25 at one

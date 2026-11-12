@@ -103,18 +103,23 @@ const curveUnit = (scales: Record<string, number> | undefined): number => {
   const start = scales?.[START];
   return start !== undefined && Number.isFinite(start) && start > 0 ? start : 1;
 };
-/** T-3239: perceived minutes a dollar of the curve as set costs the regional market's riders, as every
- * country at its default scale weighs it: the weight its route search charges fares at. */
-export const marketFareWeight = (scales: Record<string, number> | undefined): number => curveWeight() / curveUnit(scales);
-/** T-1286: per country, where not 1, the factor the regional market weighs fares from there at, over
- * `marketFareWeight`: its scale over its default's. */
+/** T-3239: perceived minutes a dollar of the curve as set costs a local trip's riders, as every country
+ * at its default scale weighs it. */
+export const marketCurveWeight = (scales: Record<string, number> | undefined): number => curveWeight() / curveUnit(scales);
+/** T-3239 (Anita's option A): the regional market's own weight, which its route search charges fares
+ * at: a longer trip's, `LONG_TRIP_MONEY` of a local one's (every country's three income groups average
+ * 0.40 by their trips). Commutes and outings between zones share that route search. */
+export const marketFareWeight = (scales: Record<string, number> | undefined): number => marketCurveWeight(scales) * LONG_TRIP_MONEY;
+/** T-1286: per country, the factor over `marketFareWeight` that the regional market's commutes weigh
+ * fares from there at, a local trip's: its scale over its default's, over `LONG_TRIP_MONEY` (a longer
+ * trip's group factor carries that again). Every country with an income figure, which every market
+ * row's country is (checks/t3239-hsr-market-route.mjs). */
 export function fareFactors(scales: Record<string, number> | undefined): Record<string, number> {
   const out: Record<string, number> = {};
-  const keys = Object.keys(scales ?? {}), unit = curveUnit(scales);
-  for (const c of relative(scales) ? new Set([...Object.keys(GDP), ...keys]) : keys) {
+  const unit = curveUnit(scales);
+  for (const c of new Set([...Object.keys(GDP), ...Object.keys(scales ?? {})])) {
     if (c === START || c === EVERY) continue;
-    const f = (fareScale(c, scales) * unit) / incomeScale(c);
-    if (Math.abs(f - 1) > 1e-6) out[c] = f;
+    out[c] = (fareScale(c, scales) * unit) / incomeScale(c) / LONG_TRIP_MONEY;
   }
   return out;
 }

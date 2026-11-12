@@ -16,7 +16,7 @@ Places closer than {{sim/src/demand/intercity.rs:NEAR_KM|0}} km pair up zone by 
 
 Walking is not on the menu. The three are compared in the usual way ([[how-people-choose]]), and a long trip softens the comparison: ten minutes matter less on a long trip.
 
-**Money counts less here.** People take longer trips knowing the price, so a dollar is worth fewer minutes than on a local trip. It also depends on income: richer people mind a dollar less. Each country's people are split into three income groups, and each group chooses on its own.
+**Money counts less here.** People take longer trips knowing the price, so a dollar is worth fewer minutes than on a local trip. It also depends on income: richer people mind a dollar less. Each country's people are split into three income groups, and each group chooses on its own between the car, the plane and your trains. Which of your trains they take is picked once for all three groups, at their average, so a high-speed line's extra fare counts less on a long trip than on a commute.
 
 **Commutes and outings across a zone line** are not part of this. They choose the way local trips do ([[how-people-choose]]).
 
