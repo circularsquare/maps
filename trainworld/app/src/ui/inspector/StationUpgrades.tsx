@@ -55,7 +55,9 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   const housed = inBuilding([s.id]);
   return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
-      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))).map((u) => (
+      {/* T-3332: a one-track station has no terminal and no passing tracks */}
+      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
+        && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
       ))}
       <PassageButton s={s} />
@@ -97,7 +99,7 @@ function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: Up
 export function TerminalButton({ s }: { s: StationInput }) {
   const u = UPGRADE_TEXT.find((x) => x.bit === UPGRADE.terminal)!;
   const prices = useClockQuery({ what: "upgradeCost", node: s.num }, [s.num, s.level, s.built], (d) => Array.from(d));
-  if (s.tram || s.port) return null;
+  if (s.tram || s.port || (s.one && !hasUpgrade(s.upgrades, UPGRADE.terminal))) return null;
   return <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} />;
 }
 

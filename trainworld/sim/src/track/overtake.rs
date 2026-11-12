@@ -85,7 +85,7 @@ pub struct Plan {
 /// its entry `j0`, or None where the slower run stops at no passing station strictly inside.
 #[allow(clippy::too_many_arguments)]
 pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run, i0: usize, i1: usize, j0: usize, spacing: f64) -> Option<Plan> {
-    let stops = |run: &Run, k: usize| run.stop_idx.iter().position(|&x| x as usize == k);
+    let stops = |run: &Run, k: usize| run.stop_idx.iter().position(|&x| x as usize == k).filter(|&j| !run.passes(j));
     let mut any = false;
     for k in i0 + 1..=i1 {
         any |= stops(sr, j0 + k - i0).is_some() && passing_at(net, fr.nodes[k]);
@@ -302,7 +302,7 @@ pub fn passing_spots(net: &Network, lines: &[LineSvc], l: u32) -> Vec<u32> {
         let sr = &lines[s.line as usize].runs[s.run as usize];
         for k in s.i0 + 1..=s.i1 {
             let n = fr.nodes[k];
-            if sr.stop_idx.contains(&((s.j0 + k - s.i0) as u32)) && !out.contains(&n) && net.is_station(n) && net.node_upgrades[n as usize] & upgrades::PASSING == 0 && net.node_tracks(n) > 1 {
+            if sr.stop_idx.iter().position(|&x| x == (s.j0 + k - s.i0) as u32).is_some_and(|j| !sr.passes(j)) && !out.contains(&n) && net.is_station(n) && !net.one_track(n) && net.node_upgrades[n as usize] & upgrades::PASSING == 0 && net.node_tracks(n) > 1 {
                 out.push(n);
             }
         }

@@ -188,17 +188,24 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         }
     }
     let n = s + rn_station.len();
+    let nr = rn_line.len();
+    let phi = |r: usize| if net.span.len() == super::super::network::PERIODS * nr { net.span[p.period * nr + r] } else { 1.0 };
+    // T-3332: a stop its trains pass on the other track (`phi` negative): they ride on through it, and
+    // nobody boards, alights or changes there
+    let pass = |r: usize| phi(r) < 0.0;
     let mut edges: Vec<(u32, u32, f32, u32)> = vec![];
     for (r, &st) in rn_station.iter().enumerate() {
         let node = (s + r) as u32;
         let l = rn_line[r] as usize;
         if rn_next[r] != NONE {
-            if !rn_wrap[r] {
+            if !rn_wrap[r] && !pass(r) {
                 edges.push((st, node, board_cost(net.line_headway_min[l][p.period], st_wait[st as usize], change_f_of(&st_bld, st as usize), p), NONE));
             }
             edges.push((node, rn_next[r], rn_ride[r], node));
         }
-        edges.push((node, st, 0.0, NONE));
+        if !pass(r) {
+            edges.push((node, st, 0.0, NONE));
+        }
     }
     // walking transfers: from each route node (having ridden) to the stations nearby, and to every
     // other station of its complex however far (T-161), from its platform to the other station's
@@ -231,6 +238,9 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     // a passage (T-1281) walks the straight line, on moving walkways
     let passage = |a: u32, b: u32| !net.st_passage.is_empty() && net.st_passage.binary_search(&[a.min(b), a.max(b)]).is_ok();
     for (r, &st) in rn_station.iter().enumerate() {
+        if pass(r) {
+            continue;
+        }
         let (x, y) = (net.st_x[st as usize] + rn_dx[r], net.st_y[st as usize] + rn_dy[r]);
         for &b in &near[st as usize] {
             let d = ((net.st_x[b as usize] - x).powi(2) + (net.st_y[b as usize] - y).powi(2)).sqrt();
@@ -251,8 +261,6 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     let mut rev_off = vec![0u32; n + 1];
     for x in &incoming { rev_off[x.0 as usize + 1] += 1; }
     for i in 0..n { rev_off[i + 1] += rev_off[i]; }
-    let nr = rn_line.len();
-    let phi = |r: usize| if net.span.len() == super::super::network::PERIODS * nr { net.span[p.period * nr + r] } else { 1.0 };
     // a share that rounds to 0 is no service at that stop (T-842)
     let rn_tph = rn_line.iter().enumerate().map(|(r, &l)| {
         let h = net.line_headway_min[l as usize][p.period];

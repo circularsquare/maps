@@ -5,7 +5,7 @@
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import { ask, selection, tool } from "../game/ui";
-import { flipSites, rightHand, world } from "../game/world";
+import { flipSites, rightHand, stationsById, world } from "../game/world";
 import type { Selection, WorldView } from "../game/types";
 import { flipSide } from "../workers/clockClient";
 import { locateLine, locateNodes } from "./locate";
@@ -25,7 +25,7 @@ export function SideSwitch({ right, onPick, tip, cls = "slider" }: { right: bool
 
 /** One place the last switch fixed or left: `kind` as the sim's `FLIP_*`, `id` its edge, line or node. */
 interface Site { kind: number; id: number }
-const FIXED = new Set([1, 2]);
+const FIXED = new Set([1, 2, 6]);
 
 /** Settings' row: the game's side; picking the other asks first once there is track, then shows the list. */
 export function SideRow() {
@@ -79,6 +79,12 @@ function row(w: WorldView, s: Site): { label: ComponentChildren; go: () => void 
     return { label: t("sideSwitch.reversed"), go: () => { locateNodes([e.a, e.b]); pick({ kind: "track", edge: e.id }); } };
   }
   if (!w.nodes.has(s.id)) return null;
+  // T-3332: a one-track station keeps its platform's track, which now carries the other way
+  if (s.kind === 6) {
+    const st = stationsById(w).get(String(s.id));
+    if (!st) return null;
+    return { label: t("sideSwitch.oneTrack", { name: st.name }), go: () => { locateNodes([s.id]); pick({ kind: "station", station: String(s.id) }); } };
+  }
   return {
     label: t(s.kind === 4 ? "sideSwitch.flat" : "sideSwitch.unusable"),
     go: () => { locateNodes([s.id]); if (s.kind === 4) pick({ kind: "junction", node: s.id }); },

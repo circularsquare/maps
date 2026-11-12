@@ -26,7 +26,7 @@ pub fn edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -
 }
 
 pub fn station(w: &mut TrackWorld, n: u32, platform: u16) {
-    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 }) }).unwrap();
+    w.apply(Op::Station { node: n, data: Some(StationData { platform, name: format!("S{n}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 }) }).unwrap();
 }
 
 /// T-2986: a terminal at every station that is a dead end, so its lines turn on both platforms (a

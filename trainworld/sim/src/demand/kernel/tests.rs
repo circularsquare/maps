@@ -212,6 +212,37 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
     assert_eq!((loads.rn_board[1], loads.rn_alight[5]), (40.0, 40.0));
 }
 
+/// T-3332: a line 0-1-2 whose westbound trains pass 1 on the other track (`span` -1 there): nobody
+/// boards or alights there westbound and 2 to 0 rides through; 2 to 1 and 1 to 0 have no ride on this
+/// line alone (riding it back the other way is no route), where eastbound 0 to 1 still does.
+#[test]
+fn a_passed_stop_boards_and_alights_nobody() {
+    let p = common_test_params();
+    let mut net = Network {
+        st_x: vec![0.0, 3000.0, 6000.0], st_y: vec![0.0; 3],
+        line_name: vec![String::new()], line_off: vec![0, 3], line_stops: vec![0, 1, 2],
+        hop_min: vec![2.0, 2.0, 0.0], hop_back: vec![0.0, 1.5, 1.5], line_speed_kmh: vec![0.0],
+        line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![],
+    };
+    // route nodes: run 0 = 0..3 (stations 0, 1, 2), run 1 = 3..6 (2, 1, 0)
+    net.span = (0..network::PERIODS).flat_map(|_| (0..6).map(|r| if r == 4 { -1.0 } else { 1.0 })).collect();
+    let g = build_graph(&net, &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    let mut od = vec![0.0; s * s];
+    od[2 * s + 1] = 10.0;
+    od[1 * s] = 20.0;
+    od[2 * s] = 30.0;
+    let loads = assign(&g, &sk, &od);
+    assert_eq!((loads.rn_board[4], loads.rn_alight[4]), (0.0, 0.0), "nobody at the passed stop");
+    assert!((sk.r[2 * s] - (2.5 + 3.0)).abs() < 1e-4, "2 to 0 rides through: {}", sk.r[2 * s]);
+    assert!(!(sk.r[2 * s + 1] < 1e3) && !(sk.r[s] < 1e3), "no ride 2 to 1 or 1 to 0: {} {}", sk.r[2 * s + 1], sk.r[s]);
+    assert!((sk.r[1] - (2.5 + 2.0)).abs() < 1e-4, "0 to 1 eastbound: {}", sk.r[1]);
+    assert!((loads.seg[4] - 30.0).abs() < 1e-3, "the westbound riders stay aboard through 1: {:?}", loads.seg);
+    assert_eq!(loads.rn_alight[5], 30.0);
+}
+
 #[test]
 fn everyday_rates_by_name() {
     let mut p = Params::default();

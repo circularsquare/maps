@@ -977,6 +977,12 @@ impl TrackWorld {
             let w = &mut self.net.edge_oneway[e as usize];
             *w = 3 - *w;
         }
+        // T-3332: a one-track station keeps its platform on its track, which now carries the other way
+        for n in 0..self.net.node_count() as u32 {
+            if self.net.one_side(n).is_some() {
+                self.net.node_one[n as usize] = 3 - self.net.node_one[n as usize];
+            }
+        }
         self.net.right_hand = !self.net.right_hand;
         // junction capacity moves with the side: rates are settled again, not kept from the save
         self.net.rates_from_save = false;
@@ -1054,7 +1060,14 @@ impl TrackWorld {
     fn check(&self, t: &super::net::Touch, der: &super::net::Derived) -> Vec<Issue> {
         let alive: Vec<u32> = der.edges.iter().copied().filter(|&e| self.net.edge_ok(e)).collect();
         let mut issues = self.net.validate(&alive, &der.nodes, &[]);
-        for &l in &t.lines {
+        let mut lines = t.lines.clone();
+        // T-3332: a one-track station set or turned round is checked against the lines stopping there
+        if t.stations.iter().any(|&n| self.net.one_track(n)) {
+            lines.extend((0..self.net.line_count() as u32).filter(|&l| self.net.line_ok(l) && self.net.line_stops(l).iter().any(|&s| self.net.one_track(s) && t.stations.contains(&s))));
+            lines.sort_unstable();
+            lines.dedup();
+        }
+        for l in lines {
             if self.net.line_ok(l) && self.net.line_path(l).iter().all(|&p| self.net.edge_ok(path_edge(p))) {
                 if let Err(i) = self.net.check_line(l) {
                     issues.push(i);

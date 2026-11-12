@@ -223,7 +223,15 @@ export interface StationStyle {
   hidden?: boolean;
   /** the least half width of a box with passing tracks (ST_PASSING, T-2233) */
   passHalfPx?: number;
+  /** T-3332: a one-track station on double track is a thin bar over its track with a bulge at the middle
+   * on the platform's side: the bar's middle off the centre line (c), its half width (hb) and how far the
+   * bulge sticks out past the bar (depth), CSS px */
+  one?: { c: number; hb: number; depth: number };
 }
+
+/** T-3332: a one-track station's bulge is this share of the bar's half length long (each way), and at
+ * least this many of its own width and depth. STATION_VS and SEL_FS read the same numbers. */
+export const ONE_BULGE_SHARE = 0.16, ONE_BULGE_MIN = 1.2;
 
 /** A box is this share of the width that covers a plain line and its rim at BOX_WIDTH_ZOOM
  * (T-239, Anita: "a bit too fat still, maybe 25% narrower"; T-652, "about 50% wider", hard to see
@@ -271,6 +279,9 @@ export interface StationShape {
    * from (x, y)), CSS px; the band is `halfWidth` either side of it, with flat ends. Absent: a
    * straight box (bridges) */
   pts?: Float32Array;
+  /** T-3332: a one-track station's bulge, a second box in the shape's frame: its middle across, half
+   * length and half width (the bar's `halfWidth` plus half its depth) */
+  bulge?: { cy: number; hl: number; hw: number };
 }
 
 /** A shape's centre line in its own frame, PLATFORM_POINTS points: `pts`, or a straight line along it. */
@@ -313,7 +324,7 @@ export function polyFrame(q: ArrayLike<number>, a: number, b: number): [number, 
  * length and width are both fixed on the ground, so it has one shape at every zoom (T-204), and
  * the same width for every station (T-239).
  */
-export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, passing = false): StationShape {
+export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, passing = false, one = 0): StationShape {
   const mx = x + sh.mx, my = y + sh.my;
   const [cx, cy] = project(mx, my), [ex, ey] = project(mx + sh.ax, my + sh.ay), [qx, qy] = project(mx - sh.ay, my + sh.ax);
   const len = Math.hypot(ex - cx, ey - cy), nl = Math.hypot(qx - cx, qy - cy);
@@ -323,7 +334,10 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const axisLoc = Math.hypot(sh.ax, sh.ay);
   const [ox, oy] = axisLoc > 1e-9 ? [0, 0] : project(mx + 1, my);
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
-  const hw = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0, st.boxes && passing ? st.passHalfPx ?? 0 : 0);
+  const full = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0, st.boxes && passing ? st.passHalfPx ?? 0 : 0);
+  // T-3332: a one-track station (`one` the side, 1 or -1): a thin bar with a bulge on that side, as
+  // STATION_VS draws it
+  const o = st.boxes && one ? st.one : undefined, hw = o ? o.hb : full;
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
   const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle
@@ -333,15 +347,17 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   for (let i = 0; st.boxes && i < PLATFORM_POINTS; i++) {
     const [px, py] = project(x + line[i * 2], y + line[i * 2 + 1]);
     pts[i * 2] = (px - cx) * ux + (py - cy) * uy;
-    pts[i * 2 + 1] = (px - cx) * nx + (py - cy) * ny;
+    pts[i * 2 + 1] = (px - cx) * nx + (py - cy) * ny + (o ? one * o.c : 0);
     if (i) total += Math.hypot(pts[i * 2] - pts[i * 2 - 2], pts[i * 2 + 1] - pts[i * 2 - 1]);
   }
+  const halfLength = Math.max(total / 2, hw);
   return {
     x: cx, y: cy, ux, uy, nx, ny,
-    halfLength: Math.max(total / 2, hw),
+    halfLength,
     halfWidth: hw,
     dot: st.boxes ? 0 : Math.max(st.radius[transfer ? 1 : 0], cover),
     ...(st.boxes ? { pts } : {}),
+    ...(o ? { bulge: { cy: one * 0.5 * o.depth, hl: Math.max(ONE_BULGE_SHARE * halfLength, ONE_BULGE_MIN * (o.hb + o.depth)), hw: o.hb + 0.5 * o.depth } } : {}),
   };
 }
 
@@ -365,8 +381,12 @@ export function stationCoords(s: StationShape, px: number, py: number): [number,
 export function stationDistance(s: StationShape, px: number, py: number): number {
   if (s.dot > 0) return Math.hypot(px - s.x, py - s.y) - s.dot;
   const [a, b] = stationCoords(s, px, py);
-  const dx = Math.abs(a) - s.halfLength, dy = Math.abs(b) - s.halfWidth;
-  return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0);
+  const box = (hl: number, hw: number, cy: number) => {
+    const dx = Math.abs(a) - hl, dy = Math.abs(b - cy) - hw;
+    return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0);
+  };
+  const d = box(s.halfLength, s.halfWidth, 0);
+  return s.bulge ? Math.min(d, box(s.bulge.hl, s.bulge.hw, s.bulge.cy)) : d;
 }
 
 export function insideStation(s: StationShape, x: number, y: number, padding = 0) {
@@ -385,6 +405,9 @@ export const ST_PASSING = 1024;
 export const ST_BUILDING = 2048;
 /** a tram stop (T-2926): its dot is smaller */
 export const ST_TRAM = 4096;
+/** T-3332: a one-track station on double track, drawn as the half of the box on its track's side: the
+ * + side of the platform's axis, or with ST_ONE_NEG the other */
+export const ST_ONE = 8192, ST_ONE_NEG = 16384;
 /** Passing tracks' outer pair (T-2233): this far from the centre line on the ground, m (the
  * running tracks are 2 m out), and joining the running track over this much past the platform's end. */
 export const PASS_TRACK_M = 6, PASS_LEAD_M = 100;
@@ -582,11 +605,34 @@ export function stationPath(s: StationShape, grow = 0): string {
       side.push([nx * m, ny * m]);
     }
     const ext = hl - total / 2, d0 = dir(0), d1 = dir(P - 2);
-    for (let i = 0; i < P; i++) {
+    // T-3332: a one-track station's bulge on its side: that side's offset steps out by `depth` over
+    // the bulge's length, round the middle
+    const bg = s.bulge, depth = bg ? 2 * (bg.hw - s.halfWidth) : 0, bl = bg ? bg.hl + grow : 0, bside = bg && bg.cy < 0 ? -1 : 1;
+    const arc = (i: number) => (i * total) / (P - 1) - total / 2;
+    const place = (i: number): [number, number] => {
       const e = i === 0 ? -ext : i === P - 1 ? ext : 0, d = i === 0 ? d0 : d1;
-      const cx = q[i * 2] + (e ? d[0] * e : 0), cy = q[i * 2 + 1] + (e ? d[1] * e : 0);
-      left.push(xy(cx + side[i][0] * hw, cy + side[i][1] * hw));
-      right.unshift(xy(cx - side[i][0] * hw, cy - side[i][1] * hw));
+      return [q[i * 2] + (e ? d[0] * e : 0), q[i * 2 + 1] + (e ? d[1] * e : 0)];
+    };
+    const emit = (cx: number, cy: number, n: [number, number], extra: number) => {
+      const hl2 = hw + (extra && bside > 0 ? extra : 0), hr2 = hw + (extra && bside < 0 ? extra : 0);
+      left.push(xy(cx + n[0] * hl2, cy + n[1] * hl2));
+      right.unshift(xy(cx - n[0] * hr2, cy - n[1] * hr2));
+    };
+    for (let i = 0; i < P; i++) {
+      const [cx, cy] = place(i);
+      if (bg) {
+        // the bulge's two corners fall between points i - 1 and i (or i and i + 1): add them on the segment
+        for (const edge of [-bl, bl]) {
+          if (i > 0 && arc(i - 1) < edge && edge <= arc(i)) {
+            const r = (edge - arc(i - 1)) / (arc(i) - arc(i - 1)), [px, py] = place(i - 1);
+            const n: [number, number] = [side[i - 1][0] + (side[i][0] - side[i - 1][0]) * r, side[i - 1][1] + (side[i][1] - side[i - 1][1]) * r];
+            const before = edge < 0 ? 0 : depth, after = edge < 0 ? depth : 0;
+            emit(px + (cx - px) * r, py + (cy - py) * r, n, before);
+            emit(px + (cx - px) * r, py + (cy - py) * r, n, after);
+          }
+        }
+      }
+      emit(cx, cy, side[i], bg && Math.abs(arc(i)) < bl ? depth : 0);
     }
     return `M${left.concat(right).join("L")}Z`;
   }

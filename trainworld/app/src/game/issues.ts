@@ -64,6 +64,9 @@ const TEXT: Record<string, () => string> = {
   "NoSingle:Crossover": () => t("issues.singleCrossover"),
   "NoSingle:OneWay": () => t("issues.singleOneWay"),
   "NoSingle:Flyover": () => t("issues.singleFlyover"),
+  // T-3332: one-track stations
+  OneTrackStop: () => t("issues.oneTrackStop"),
+  OneTrackHere: () => t("issues.oneTrackHere"),
   TrackFamily: () => t("issues.trackFamily"),
   NothingToConstruct: () => t("issues.nothingToConstruct"),
   TerrainMissing: () => t("issues.terrainMissing"),

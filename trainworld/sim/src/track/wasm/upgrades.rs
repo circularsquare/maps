@@ -16,6 +16,10 @@ impl TrackApi {
         let (mut ops, mut built) = (vec![], false);
         for &node in nodes {
             let Some(mut d) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+            // T-3332: a one-track station has no terminal and no passing tracks
+            if on && d.one != 0 && bit & (upgrades::TERMINAL | upgrades::PASSING) != 0 {
+                return self.refuse(Issue::OneTrackHere { node });
+            }
             let ups = if on { d.upgrades | bit } else { d.upgrades & !bit };
             if ups != d.upgrades {
                 built |= d.built;

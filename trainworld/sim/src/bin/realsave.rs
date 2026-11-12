@@ -107,7 +107,7 @@ fn main() {
             let raw = st["name"].as_str().unwrap();
             let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
             let platform = st["platform"].as_u64().unwrap() as u16;
-            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
             node_key.push(st["key"].as_str().unwrap().to_string());
             node_names.push(name);
         }
@@ -368,7 +368,7 @@ fn main() {
             let s = &stations[stops[k]];
             let raw = s["name"].as_str().unwrap();
             let name = names::tidy_station(raw).unwrap_or_else(|| raw.to_string());
-            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
+            net.set_station(id, Some(StationData { platform, name: name.clone(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
             node_key.push(s["key"].as_str().unwrap().to_string());
             node_names.push(name);
             nodes.push(id);

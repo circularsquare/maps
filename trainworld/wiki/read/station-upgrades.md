@@ -4,7 +4,7 @@ A station has four things you can add, from the row of icons in its panel. You b
 
 **Terminal.** Trains turning here, at the end of a line or reversing partway, use both platforms. Without one they use a single platform, and the next train waits for the one there to leave. It costs 1 km of double track at the station's level, which is US$37.5M on the ground ([levels and tunnels](levels-and-tunnels.md)). See [line capacity](line-capacity.md) for what it does to trains an hour.
 
-**Passing tracks.** A second platform track each way. Trains that stop use the outer one, and trains that don't use the inner one, or a second train can stop. A slower line that stops here waits for faster ones to pass, so an express can overtake a local ([slower trains](slower-trains.md)). It costs the platform plus 0.4 km of double track at the station's level, more on high-speed track and over water. It only works on double track.
+**Passing tracks.** A second platform track each way. Trains that stop use the outer one, and trains that don't use the inner one, or a second train can stop. A slower line that stops here waits for faster ones to pass, so an express can overtake a local ([slower trains](slower-trains.md)). It costs the platform plus 0.4 km of double track at the station's level, more on high-speed track and over water. It only works on double track, at a station with platforms on both tracks.
 
 **Park and ride.** A drive to or from the station counts 10 minutes less ([walking to stations](walking-to-stations.md)). It costs US$20M. A P shows after the station's name.
 

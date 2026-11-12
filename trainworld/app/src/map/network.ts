@@ -17,7 +17,7 @@ import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
-import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
+import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
 
@@ -943,6 +943,14 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
   return b.build();
 }
 
+/** T-3332: which side of a platform's axis (ax, ay), local units with y down, a one-track station's track
+ * is on, from its trains' heading (rad, counter-clockwise from east) and the running side: 1 the + side
+ * ((-ay, ax)), where trains along the axis keep right, -1 the other. */
+function oneSideAlong(heading: number, left: boolean, ax: number, ay: number): number {
+  const along = Math.cos(heading) * ax - Math.sin(heading) * ay >= 0;
+  return along !== left ? 1 : -1;
+}
+
 /** Length of a single-lead junction's crossover, m (T-3161). */
 const SINGLE_LEAD_M = 40;
 
@@ -1846,16 +1854,18 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     if (!c || c.platform !== n.platform || c.lat !== n.lat || c.first !== first || !sameArray(c.ways, ids) || !ids.every((id) => kept.has(id))) {
       // the platform along its track, curved as it is (T-189); local units are metres / cos(lat)
       const perM = 1 / Math.cos(n.lat * Math.PI / 180);
-      const sh = ids.length
+      const sh: PlatformShape = ids.length
         ? platformShape(ids.map((id) => way(n.id, id)), first, n.platform / 2 * perM)
         : { mx: 0, my: 0, ax: n.platform / 2 * perM, ay: 0, phi: 0 };
       c = { platform: n.platform, lat: n.lat, first, ways: ids, ax: sh.ax, ay: sh.ay, shape: [sh.mx, sh.my, sh.phi, PLATFORM_HALF_M * perM], line: platformPoints(sh) };
     }
+    // T-3332: a one-track station on double track: the half of the box on its track's side
+    const oneSide = n.one === 1 && n.oneHeading !== undefined ? oneSideAlong(n.oneHeading, s.rightHand === false, c.ax, c.ay) : 0;
     stationsSeen.set(n.id, c);
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | (edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 || splits.stations.has(n.id) ? 16 : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 && !oneSide) || splits.stations.has(n.id) ? 16 : 0) | (oneSide ? ST_ONE | (oneSide < 0 ? ST_ONE_NEG : 0) : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of

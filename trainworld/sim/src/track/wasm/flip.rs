@@ -12,6 +12,8 @@ pub const FLIP_MOVED: f64 = 2.0;
 pub const FLIP_BROKEN: f64 = 3.0;
 pub const FLIP_FLAT: f64 = 4.0;
 pub const FLIP_UNUSABLE: f64 = 5.0;
+/// T-3332: a one-track station whose trains now run the other way (node).
+pub const FLIP_ONE_TRACK: f64 = 6.0;
 
 #[wasm_bindgen]
 impl TrackApi {
@@ -24,12 +26,14 @@ impl TrackApi {
         let live = |n: u32| net.node_ok(n);
         let flat_before: Vec<bool> = (0..net.node_count() as u32).map(|n| live(n) && junction_crosses(net, n)).collect();
         let unusable_before: Vec<bool> = (0..net.node_count() as u32).map(|n| live(n) && net.node_unusable(n) != 0).collect();
+        let one_track: Vec<u32> = (0..net.node_count() as u32).filter(|&n| net.one_side(n).is_some()).collect();
         let (reversed, moved, broken) = self.w.flip_right_hand();
         let net = &self.w.net;
         let mut out = vec![];
         out.extend(reversed.iter().flat_map(|&e| [FLIP_REVERSED, e as f64]));
         out.extend(moved.iter().flat_map(|&l| [FLIP_MOVED, l as f64]));
         out.extend(broken.iter().flat_map(|&l| [FLIP_BROKEN, l as f64]));
+        out.extend(one_track.iter().flat_map(|&n| [FLIP_ONE_TRACK, n as f64]));
         for n in 0..net.node_count() as u32 {
             if !net.node_ok(n) {
                 continue;

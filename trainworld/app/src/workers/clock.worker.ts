@@ -3717,6 +3717,7 @@ function apply(op: EditOp): Applied {
     case "stationUpgrade":
       return { r: a.set_station_upgrade(new Uint32Array(op.nodes), op.bit, op.on) };
     case "addStation":
+      a.set_station_one(op.at.one ? new Float64Array([op.at.one.x, op.at.one.y]) : new Float64Array(0));
       return op.at.kind === "node"
         ? { r: a.add_station(1, op.at.node, 0, 0, op.platform, op.name) }
         : op.at.kind === "edge"
@@ -3728,6 +3729,10 @@ function apply(op: EditOp): Applied {
       return { r: a.double_up(op.edge) };
     case "oneWay":
       return { r: a.set_edge_oneway(op.edge, op.dir) };
+    case "stationTracks":
+      return { r: a.set_station_tracks(op.node, op.one) };
+    case "reverseStation":
+      return { r: a.reverse_station(op.node) };
     case "stationProps": {
       // the name a complex's station shows is not its own: sent back unchanged it is no typing (T-3288)
       const own = a.node_name(op.node);
@@ -4600,6 +4605,7 @@ async function handle(msg: ToClock) {
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
     const at = msg.at;
+    api.set_station_one(at.one ? new Float64Array([at.one.x, at.one.y]) : new Float64Array(0));
     const r = at.kind === "node" ? api.preview_station(1, at.node, 0, 0, msg.platform)
       : at.kind === "edge" ? api.preview_station(2, at.edge, at.x, at.y, msg.platform)
       : (api.set_route_kind(at.tram ? 3 : 0), api.set_route_hsr(!!at.hsr), api.preview_free_station(freeEnds(at), at.quad ? 4 : 2, msg.platform));

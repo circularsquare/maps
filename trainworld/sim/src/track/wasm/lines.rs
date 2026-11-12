@@ -423,16 +423,29 @@ impl TrackApi {
         ls.runs[0].turn.iter().enumerate().filter(|x| *x.1).map(|x| x.0 as f64).collect()
     }
 
-    /// T-3122: the stations a line serves one way only, `[node, heading]` each: its trains pass
-    /// there only heading `heading` (radians, world frame). A station it passes going the other way
+    /// T-3122: the stations a line serves one way only, `[node, heading]` each: its trains stop
+    /// there only heading `heading` (radians, world frame), on a one-way loop or at a one-track
+    /// station on double track (T-3332). A station it passes going the other way
     /// too, or turns back at, is served both ways and left out (a loop stops at every pass, and a
     /// pass it skips is one straight after a stop there: a terminal whose loop has no stop), as is
     /// every stop of a line run both ways. The one answer to "which way does this line stop here" for
     /// the map's half dots, the stop list and the hover's chevrons. A bus or ferry loop run one way
     /// answers the same way with the stop's id in place of the node (`route_stop_ways`, T-3142).
     pub fn line_stop_ways(&self, line: u32) -> Vec<f64> {
-        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok && l.one_way) else { return vec![] };
+        let Some(ls) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
         let net = &self.w.net;
+        // T-3332: a line run both ways stops one way at a one-track station on double track, the
+        // way its platform's trains run
+        let one_way_at = |n: u32| net.one_side(n).map(|s| [n as f64, net.node_heading[n as usize] + if s == 0 { 0.0 } else { PI }]);
+        if !ls.one_way {
+            if ls.is_bus() || !ls.stops.iter().any(|&n| net.one_side(n).is_some()) {
+                return vec![];
+            }
+            let mut out: Vec<u32> = ls.stops.iter().copied().filter(|&n| net.one_side(n).is_some()).collect();
+            out.sort_unstable();
+            out.dedup();
+            return out.into_iter().filter_map(one_way_at).flatten().collect();
+        }
         if let Some(plan) = ls.bus.as_ref() {
             let l = line as usize;
             let pts = net.line_bus.get(l).and_then(|b| b.as_ref()).map(|r| &r.points).or_else(|| net.line_ferry.get(l).and_then(|f| f.as_ref()).map(|r| &r.points));
@@ -452,6 +465,9 @@ impl TrackApi {
                 continue;
             }
             let arr = if i > 0 { segs[i - 1] } else { segs[segs.len() - 1] };
+            if net.one_side(node).is_some_and(|w| side(arr, false) != Some(w)) {
+                continue;
+            }
             let out = side(segs[i], true);
             let way = if out.is_none() || side(arr, false) == out { None } else { out };
             match ways.iter_mut().find(|w| w.0 == node) {

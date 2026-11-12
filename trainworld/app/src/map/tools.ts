@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -48,7 +48,7 @@ import { laneState } from "./renderer";
 import type { Level } from "../game/types";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview, TAPER_M } from "./network";
-import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom } from "./stationGeometry";
+import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom, type PlatformShape } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
@@ -658,6 +658,22 @@ export class Tools {
       }
     }
     return out;
+  }
+
+  /** T-3332: with the station bar's one-track icon on, the pointer (sim x, y): the platform goes on the
+   * track nearer it */
+  private oneAt(): { one?: { x: number; y: number } } {
+    const p = this.pointer;
+    return stationOneTrack.peek() && p ? { one: lngLatToPack(p.lng, p.lat) } : {};
+  }
+
+  /** T-3332: which side of a platform shape's axis the pointer is on for a one-track ghost on double
+   * track (`oneSideShape`'s side), 0 for a platform on both tracks or on single track */
+  private oneSideAt(lx: number, ly: number, sh: PlatformShape, double: boolean): number {
+    const p = this.pointer;
+    if (!stationOneTrack.peek() || !double || !p) return 0;
+    const [px, py] = toLocal(p.lng, p.lat);
+    return Math.sign(-sh.ay * (px - lx) + sh.ax * (py - ly)) || 1;
   }
 
   private pack(lx: number, ly: number) {
@@ -1373,7 +1389,9 @@ export class Tools {
     this.named = null;
     const name = await (ahead ?? this.nameFor(e.point.x, e.point.y));
     const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...this.pack(p.lx, p.ly) }, platform: this.platFor(p), name });
-    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
+    const one = this.oneAt();
+    const stationAt1 = (p: Exclude<Snap, { kind: "free" }>) => { const o = stationAt(p); return { ...o, at: { ...o.at, ...one } }; };
+    const r = await firstAccepted(tries, async (p) => { const a = await edit(stationAt1(p), true, true); return a.ok ? null : a.issues; }, (p) => this.roomSnap(p), () => false);
     this.dropPending(pend);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
@@ -1752,7 +1770,7 @@ export class Tools {
   }
 
   /** T-2763: the box of the ghost last drawn, kept for a click to stand in for the station it places */
-  private lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number } | null = null;
+  private lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number } | null = null;
   /** T-2763: stations clicked and not yet in the world (the worker takes 0.3 to 3 s on a big network),
    * drawn where they were clicked; the worker's answer takes them away, and a refusal leaves none */
   private pendingSt: { b: NonNullable<Tools["lastBox"]>; el: SVGSVGElement }[] = [];
@@ -1774,7 +1792,7 @@ export class Tools {
   private placePending() {
     for (const { b, el } of this.pendingSt) {
       const style = { ...this.overlay.renderer.stationStyle, boxes: true };
-      const shape = stationShape(b.lx, b.ly, platformShape(b.ways, 0, b.plat / 2 * b.perM), PLATFORM_HALF_M * b.perM, (x, y) => this.screen(x, y), style, false);
+      const shape = stationShape(b.lx, b.ly, platformShape(b.ways, 0, b.plat / 2 * b.perM), PLATFORM_HALF_M * b.perM, (x, y) => this.screen(x, y), style, false, false, b.side);
       placeAt(el, shape.x, shape.y, 0, 0, false);
       el.firstElementChild!.setAttribute("d", stationPath(shape));
     }
@@ -1803,19 +1821,22 @@ export class Tools {
     const ways:ArrayLike<number>[]=h.kind==="edge"
       ? pts ? waysFrom(pts,h.lx,h.ly) : []
       : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
-    // on quad track the pair clicked only (T-1687)
-    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null);
+    // on quad track the pair clicked only (T-1687); T-3332: a one-track station's half on double track
+    const double=candidates.some((id)=>w.edges.find((x)=>x.id===id)?.tracks===2);
+    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null,undefined,double);
   }
 
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
    * on quad. */
-  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = this.platFor(this.stationSpot())) {
-    this.lastBox={lx,ly,ways,perM,plat};
+  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = this.platFor(this.stationSpot()), double = false) {
     const sh=platformShape(ways,0,plat/2*perM);
+    // T-3332: a platform on one track of double track: its half of the box, on the pointer's side
+    const side=this.oneSideAt(lx,ly,sh,double);
+    this.lastBox={lx,ly,ways,perM,plat,side};
     // always the full box at its true length, whatever the zoom (T-311): the map's own style
     // draws dots below STATION_BOX_ZOOM
     const style={...this.overlay.renderer.stationStyle,boxes:true};
-    const shape=stationShape(lx,ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+    const shape=stationShape(lx,ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false,false,side);
     this.ghost ??= this.svgMark(["path"], false);
     this.ring.style.display="none";
     this.ghost.style.display="";
@@ -1905,7 +1926,8 @@ export class Tools {
       guess=near&&was ? {...was,key,held:true} : {key,spot:null,ok:true,why:"",held:true};
     }
     this.guess=guess;
-    const atOf=(s:Spot)=>s.kind==="node"?{kind:"node" as const,node:s.node}:{kind:"edge" as const,edge:s.edge,...this.pack(s.lx,s.ly)};
+    const one=this.oneAt();
+    const atOf=(s:Spot)=>s.kind==="node"?{kind:"node" as const,node:s.node,...one}:{kind:"edge" as const,edge:s.edge,...this.pack(s.lx,s.ly),...one};
     // a track the worker refused a few px away is not asked again, so while the pointer moves each
     // new spot's answer gets further down the list
     const trial=(s:Spot)=>{
@@ -1962,7 +1984,7 @@ export class Tools {
   /** the spots the pointer's candidates (`alts`) are tried at, and the world and platform they were tried in */
   private altsKey(h: Spot | null = this.hover as Spot | null) {
     const spots=this.alts.length?this.alts:h?[h]:[];
-    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${buildTramPlatform.peek()}:${world.peek()?.version}`;
+    return spots.map((h)=>`${h.kind==="node"?`n${h.node}`:`e${h.edge}`}:${h.lx.toFixed(1)}:${h.ly.toFixed(1)}`).join("|")+`:${buildPlatform.peek()}:${buildTramPlatform.peek()}:${stationOneTrack.peek()}:${world.peek()?.version}`;
   }
 
   /** the worker's answer for the pointer's candidates, else the layout's guess */

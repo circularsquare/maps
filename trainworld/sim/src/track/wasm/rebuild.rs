@@ -607,6 +607,34 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
     out
 }
 
+/// T-3332: a one-track station on single track made double becomes an ordinary station, its platforms on
+/// both tracks (on double track made single it stays one-track: a stop where trains cannot pass). Put into
+/// `ops`' own op for the station where it has one.
+fn one_track_ops(net: &Network, cand: &[u32], w: Want, ops: &mut Vec<Op>) {
+    for &e in cand {
+        let Some(d) = net.edge_data(e).filter(|d| single_ok(d, w)) else { continue };
+        for n in [d.a, d.b] {
+            if !net.one_track(n) {
+                continue;
+            }
+            let mut found = false;
+            for op in ops.iter_mut() {
+                if let Op::Station { node, data: Some(s) } = op {
+                    if *node == n {
+                        s.one = 0;
+                        found = true;
+                    }
+                }
+            }
+            if !found {
+                if let Some(s) = net.station_data(n) {
+                    ops.push(Op::Station { node: n, data: Some(StationData { one: 0, ..s }) });
+                }
+            }
+        }
+    }
+}
+
 /// What changes with a piece's family (T-3088): each station on track that changes family gets a
 /// platform its new kind allows (cut to a tram stop's longest, or out to a rail station's shortest),
 /// and each line on it loses high-speed trains (rail only) and takes the new kind's dwell and
@@ -810,7 +838,8 @@ impl TrackApi {
                 break;
             }
             let mut all: Vec<Op> = gs.iter().flat_map(|g| g.1.iter().cloned()).collect();
-            let extra = family_ops(&self.w.net, &cand, wb);
+            let mut extra = family_ops(&self.w.net, &cand, wb);
+            one_track_ops(&self.w.net, &cand, wb, &mut extra);
             all.extend(extra.iter().cloned());
             let (issues, flats) = match try_ops(&mut self.w, all.clone()) {
                 Ok(()) => {

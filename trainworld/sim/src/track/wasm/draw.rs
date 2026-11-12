@@ -935,7 +935,7 @@ impl TrackApi {
 
     #[allow(clippy::too_many_arguments)]
     pub(super) fn station_at(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16, name: String, dry: bool) -> u32 {
-        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 };
+        let mut st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0 };
         // On quad track only the pair clicked gets the station (T-1687); one level with it on the
         // pair beside lends its name, so the two read as one station.
         if kind == 1 {
@@ -1036,7 +1036,7 @@ impl TrackApi {
             self.release(&nn, &ne);
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
         };
-        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0 };
+        let st = StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0 };
         // on quad, the drawn pair's only (T-1687)
         let r = self.station_ops(Some(&route), &[(e, s)], &st, dry);
         if r != 0 || dry {
@@ -1062,8 +1062,24 @@ impl TrackApi {
             },
             None => None,
         };
+        // T-3332: a one-track station, its platform on the track nearer the point set
+        let mut ones = vec![0u8; at.len()];
+        if let Some(pt) = self.station_one {
+            for (k, &(e, s)) in at.iter().enumerate() {
+                match self.one_at(e, s, pt) {
+                    Some(one) => ones[k] = one,
+                    None => {
+                        if let Some(inv) = sketched {
+                            self.w.unsketch(inv);
+                        }
+                        return self.refuse(Issue::OneTrackHere { node: if e == u32::MAX { s as u32 } else { u32::MAX } });
+                    }
+                }
+            }
+        }
         let (mut nodes, mut edges) = (vec![], vec![]);
-        for &(e, s) in at {
+        for (&(e, s), &one) in at.iter().zip(&ones) {
+            let st = &StationData { one, ..st.clone() };
             if e == u32::MAX {
                 // an existing node, `s` its id; at a loose end the platform runs its whole length
                 // back along the track, so the joints within it go first as they do for a split (T-860)
@@ -1114,6 +1130,40 @@ impl TrackApi {
             self.issues.retain(|i| !matches!(i, Issue::Geom { .. } | Issue::NodeHeading { .. }));
         }
         r
+    }
+
+    /// T-3332: the next station placed has its platform on one track, the one nearer `p` (x, y) on
+    /// double track; empty `p` for platforms on both tracks, as before.
+    pub fn set_station_one(&mut self, p: &[f64]) {
+        self.station_one = (p.len() >= 2).then(|| [p[0], p[1]]);
+    }
+
+    /// `StationData::one` for a one-track station at chainage `s` of edge `e` (`e` MAX: on node `s`)
+    /// whose platform is on the track nearer `pt`; None where one cannot go: anywhere but track
+    /// running through with the same tracks both sides, or on one-way single track.
+    fn one_at(&self, e: u32, s: f64, pt: [f64; 2]) -> Option<u8> {
+        let net = &self.w.net;
+        let (x, y, th, tracks) = if e == u32::MAX {
+            let n = s as u32;
+            if !self.one_fits(n) {
+                return None;
+            }
+            (net.node_x[n as usize], net.node_y[n as usize], net.node_heading[n as usize], net.node_tracks(n))
+        } else {
+            let t = net.edge_tracks[e as usize];
+            if t == 1 && net.edge_way(e) != 0 {
+                return None;
+            }
+            let (x, y, th) = geom::pos_at(net.edge_pieces(e), s);
+            (x, y, th, t)
+        };
+        if tracks == 1 {
+            return Some(1);
+        }
+        // the lane left of the heading carries trains against it on right-hand track
+        let left = th.cos() * (pt[1] - y) - th.sin() * (pt[0] - x) > 0.0;
+        let along = left != net.right_hand;
+        Some(crate::track::net::one_for_travel(if along { th } else { th + std::f64::consts::PI }))
     }
 
     /// The joint a station at chainage `s` of edge `e` goes on (T-1964): one within a split's 5 m

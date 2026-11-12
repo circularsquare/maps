@@ -39,6 +39,7 @@ const CUT_FS = `#version 300 es
 precision highp float;
 uniform vec2 u_size;     // half length, half width
 uniform float u_dot;
+uniform vec3 u_bulge;    // a one-track station's bulge (T-3332): middle across, half length, half width (0 none)
 uniform vec2 u_q[${PLATFORM_POINTS}]; // the centre line in the frame, CSS px (T-254)
 uniform float u_outline;
 uniform float u_glow;
@@ -46,7 +47,9 @@ in vec2 v_p;
 out vec4 o;
 ${SHAPE_GLSL}
 void main() {
-  float d = u_dot > 0.0 ? length(v_p) - u_dot : boxSdf(polyFrame(v_p, u_q), u_size);
+  vec2 pf = polyFrame(v_p, u_q);
+  float d = u_dot > 0.0 ? length(v_p) - u_dot : boxSdf(pf, u_size);
+  if (u_dot <= 0.0 && u_bulge.z > 0.0) d = min(d, boxSdf(vec2(pf.x, pf.y - u_bulge.x), u_bulge.yz));
   o = vec4(0.0, 0.0, 0.0, 1.0 - clamp((d - u_outline) / u_glow, 0.0, 1.0));
 }`;
 
@@ -615,7 +618,7 @@ export class DemandOverlay {
     const gl = this.gl;
     if (!this.cutProg) {
       this.cutProg = compile(gl, CUT_VS, CUT_FS);
-      this.cutU = uniforms(gl, this.cutProg, ["u_css", "u_c", "u_u", "u_n", "u_box", "u_size", "u_dot", "u_q", "u_outline", "u_glow"]);
+      this.cutU = uniforms(gl, this.cutProg, ["u_css", "u_c", "u_u", "u_n", "u_box", "u_size", "u_dot", "u_bulge", "u_q", "u_outline", "u_glow"]);
     }
     const u = this.cutU;
     gl.useProgram(this.cutProg);
@@ -633,7 +636,7 @@ export class DemandOverlay {
         lo = Math.min(lo, q[i * 2 + 1]); hi = Math.max(hi, q[i * 2 + 1]);
         ax = Math.max(ax, Math.abs(q[i * 2]));
       }
-      const r = s.halfWidth + reach + Math.max(0, s.halfLength - ax);
+      const r = Math.max(s.halfWidth, s.bulge ? s.bulge.hw + Math.abs(s.bulge.cy) : 0) + reach + Math.max(0, Math.max(s.halfLength, s.bulge?.hl ?? 0) - ax);
       const box: [number, number, number] = s.dot > 0
         ? [s.dot + reach, -s.dot - reach, s.dot + reach]
         : [ax + r, lo - r, hi + r];
@@ -644,6 +647,7 @@ export class DemandOverlay {
       gl.uniform3f(u.u_box, ...box);
       gl.uniform2f(u.u_size, s.halfLength, s.halfWidth);
       gl.uniform1f(u.u_dot, s.dot);
+      gl.uniform3f(u.u_bulge, s.bulge?.cy ?? 0, s.bulge?.hl ?? 0, s.bulge?.hw ?? 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);

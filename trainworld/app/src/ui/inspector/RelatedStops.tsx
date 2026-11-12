@@ -108,6 +108,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
     if (!same) setGeo({ ys, width, pad });
   });
   const pick = (n: number) => { const o = byNum.get(n); if (o) selection.value = { kind: "line", line: o.id }; };
+  const oneWay = w.lineStats[l.id]?.oneWayAt ?? {}, halfId = `rs-half-${l.num}`;
 
   // crossing bars: the bullets after a row's name (all of them, up to TALL_MAX, where more than two
   // stretch the row's mark, T-1786), or the first two lines crossing a side line's row
@@ -138,6 +139,7 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   return (
     <div class="related" style={{ "--c": colour, "--gw": W + "px", "--spine": lay.spineX + "px", paddingTop: geo.pad[0] + "px", paddingBottom: geo.pad[1] + "px" }}>
       <svg class="related-draw" width={W} height={listH + geo.pad[0] + geo.pad[1]}>
+        <defs><linearGradient id={halfId}><stop offset="50%" stop-color={colour} /><stop offset="50%" stop-color="#fff" /></linearGradient></defs>
         <g transform={`translate(0 ${geo.pad[0]})`}>
         {lay.rows.map((r, i) => bars[i].map((n, k) => (
           <line x1={1} x2={W - 1} y1={r.y + barOffset(k, bars[i].length)} y2={r.y + barOffset(k, bars[i].length)}
@@ -157,7 +159,9 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
         {lay.loopEnds.map((d) => <path d={d} fill="none" stroke={colour} stroke-width={BAR} />)}
         {lay.pills.map((p) => {
           const r = lay.rows[p.row], n = bars[p.row].length, h = pillHeight(n, p.big), w = Math.min(h, 10);
-          return <rect class={p.passed ? "pill passed" : "pill"} x={p.x0 - w / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + w + 2} height={h + 2} rx={w / 2 + 1} data-tip={p.tip} />;
+          // a stop the line serves one way (T-3041, T-3122, T-3332): half filled, as the plain list's dot
+          const one = r.lStop >= 0 && !p.passed && oneWay[l.stops[turnRows ? turnRows[r.lStop]?.i ?? -1 : r.lStop] ?? ""] !== undefined;
+          return <rect class={p.passed ? "pill passed" : "pill"} style={one ? { fill: `url(#${halfId})` } : undefined} x={p.x0 - w / 2 - 1} y={r.y - h / 2 - 1} width={p.x1 - p.x0 + w + 2} height={h + 2} rx={w / 2 + 1} data-tip={p.tip} />;
         })}
         </g>
       </svg>

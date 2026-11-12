@@ -28,6 +28,10 @@ pub struct Run {
     /// this run's unfolded offsets; 0 where it does not reverse).
     pub turn: Vec<bool>,
     pub jump: Vec<f64>,
+    /// Per stop: trains pass it without stopping, on the other track from its one platform (T-3332,
+    /// `Network::run_passes`). It keeps its place in every per-stop array, timed as the train passes
+    /// (`arr` and `dep` alike), so the runs' stops stay the line's; empty for none.
+    pub pass: Vec<bool>,
     /// Bare track ends where trains reverse between stops (T-797 B3): index into `nodes`, where
     /// the train's middle stands on arrival and how far on it leaves from, as `stop_s`/`jump`.
     /// Not stops: the profile stands the turnaround there and leaves them out of `arr`/`dep`.
@@ -75,6 +79,13 @@ pub struct LineSvc {
     pub bus: Option<super::bus::Plan>,
     /// A ferry line (T-2193): run like a bus line (`bus` holds its ports as stops), every stop a port.
     pub ferry: bool,
+}
+
+impl Run {
+    /// Trains pass stop `j` without stopping (T-3332).
+    pub fn passes(&self, j: usize) -> bool {
+        self.pass.get(j).copied().unwrap_or(false)
+    }
 }
 
 impl LineSvc {
@@ -455,6 +466,12 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     }
     let turns = net.stop_reversals(&run.segs);
     run.stop_idx = super::net::match_stops(&run.nodes, &stops, &turns)?.into_iter().map(|k| k as u32).collect();
+    if stops.iter().any(|&s| net.one_side(s).is_some()) {
+        run.pass = net.run_passes(&run.segs, &run.stop_idx, net.line_loop(l) == LoopKind::Circle);
+        if !run.pass.contains(&true) {
+            run.pass.clear();
+        }
+    }
     let node_s: Vec<f64> = run.stop_idx.iter().map(|&i| run.node_s[i as usize]).collect();
     let bare: Vec<usize> = net.path_reversals(&run.segs).into_iter().filter(|&k| net.bare_end(run.nodes[k])).collect();
     // Where trains stand still, in path order: a reversal's train takes at most half the gap to
@@ -514,22 +531,34 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
 }
 
 /// `profile::run` over a run's stops and the bare track ends it reverses at, standing `turn` at
-/// each end; `arr`/`dep` keep the stops only.
+/// each end, leaving out the stops it passes (T-3332); `arr`/`dep` keep every stop, a passed one
+/// timed as the train goes by.
 fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
     let Some((s, jump, stand, keep)) = with_ends(run, dw, turn) else {
         return profile::run_with(&run.limits, &run.stop_s, &run.jump, dw, holds, &run.hops);
     };
     let mut p = profile::run_with(&run.limits, &s, &jump, &stand, holds, &run.hops);
-    let pick = |v: &[f64]| v.iter().zip(&keep).filter(|x| *x.1).map(|x| *x.0).collect::<Vec<f64>>();
-    (p.arr, p.dep) = (pick(&p.arr), pick(&p.dep));
+    let n = run.stop_s.len();
+    let (mut arr, mut dep) = (vec![0.0; n], vec![0.0; n]);
+    for (i, k) in keep.iter().enumerate() {
+        if let (Some(j), Some(&a), Some(&d)) = (*k, p.arr.get(i), p.dep.get(i)) {
+            (arr[j], dep[j]) = (a, d);
+        }
+    }
+    for j in (0..n).filter(|&j| run.passes(j)) {
+        let t = profile::time_at(&p.phases, run.stop_s[j]);
+        (arr[j], dep[j]) = (t, t);
+    }
+    (p.arr, p.dep) = (arr, dep);
     p
 }
 
-/// A run's stops with the bare track ends it reverses at put in: offsets, jumps, standing times
-/// and whether each is a stop. None for a run with no such ends.
+/// A run's stops with the bare track ends it reverses at put in and the stops it passes left out:
+/// offsets, jumps, standing times and the stop each is (None for an end). None for a run with
+/// neither.
 #[allow(clippy::type_complexity)]
-fn with_ends(run: &Run, dw: &[f64], turn: f64) -> Option<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<bool>)> {
-    if run.ends.is_empty() {
+fn with_ends(run: &Run, dw: &[f64], turn: f64) -> Option<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<Option<usize>>)> {
+    if run.ends.is_empty() && run.pass.is_empty() {
         return None;
     }
     let n = run.stop_s.len() + run.ends.len();
@@ -540,22 +569,25 @@ fn with_ends(run: &Run, dw: &[f64], turn: f64) -> Option<(Vec<f64>, Vec<f64>, Ve
             s.push(run.ends[e].1);
             jump.push(run.ends[e].2);
             stand.push(turn);
-            keep.push(false);
+            keep.push(None);
             e += 1;
+        }
+        if run.passes(j) {
+            continue;
         }
         s.push(run.stop_s[j]);
         jump.push(run.jump[j]);
         stand.push(dw.get(j).copied().unwrap_or(0.0));
-        keep.push(true);
+        keep.push(Some(j));
     }
     Some((s, jump, stand, keep))
 }
 
 /// Scheduled standing time per stop: the dwell, or the turnaround where trains reverse (T-797);
-/// none at the ends.
+/// none at the ends or where trains pass (T-3332).
 fn stand_times(run: &Run, dwell: f64, turn: f64) -> Vec<f64> {
     let n = run.stop_s.len();
-    (0..n).map(|i| if i == 0 || i + 1 == n { 0.0 } else if run.turn[i] { turn } else { dwell }).collect()
+    (0..n).map(|i| if i == 0 || i + 1 == n || run.passes(i) { 0.0 } else if run.turn[i] { turn } else { dwell }).collect()
 }
 
 fn build_line(net: &Network, l: u32) -> LineSvc {

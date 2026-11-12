@@ -174,6 +174,14 @@ pub struct EdgeData {
     pub join: [u8; 2],
 }
 
+/// T-3332: `StationData::one` for trains travelling heading `th`: 1 eastward (northward where the
+/// track runs due north-south), else 2. Stored against this fixed axis, as a renumbered edge can
+/// turn a node's heading round.
+pub fn one_for_travel(th: f64) -> u8 {
+    let along = if th.cos().abs() > 1e-6 { th.cos() > 0.0 } else { th.sin() > 0.0 };
+    if along { 1 } else { 2 }
+}
+
 /// T-2871: a track piece's, station's or line's build day: 0 until constructed, this for anything
 /// built before recording began (an older save), else the game day + 2 (`Network::today`).
 pub const DAY_UNKNOWN: u32 = 1;
@@ -204,6 +212,10 @@ pub struct StationData {
     pub berth: Option<[f64; 2]>,
     /// T-2871: when first constructed, as `EdgeData::day`.
     pub day: u32,
+    /// T-3332: a platform on one track only, 0 for both. On double track it serves one way, 1 trains
+    /// running along the node's axis (`Network::axis`), 2 against it, and trains the other way run past;
+    /// on single track (either value) it is a stop with no passing loop.
+    pub one: u8,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -341,6 +353,12 @@ pub enum Issue {
     LinePath { line: u32 },
     /// One-way single track (T-3094) that a line cannot go round: it has no other way between its stations.
     OneWayNoWay { line: u32 },
+    /// T-3332: a line stops at a one-track station only on runs that pass it on the other track, or
+    /// ends there arriving on the other track.
+    OneTrackStop { line: u32, node: u32 },
+    /// T-3332: a one-track station placed or switched where it cannot go: anywhere but track running
+    /// through with the same tracks both sides, or on one-way single track.
+    OneTrackHere { node: u32 },
     LineSchedule { line: u32 },
     /// A split point on a ramp, too near a node, or outside the edge.
     SplitPoint { edge: u32 },
@@ -432,6 +450,8 @@ pub struct Network {
     pub node_off: Vec<bool>,
     /// The station's upgrades (`StationData::upgrades`).
     pub node_upgrades: Vec<u8>,
+    /// `StationData::one` (T-3332).
+    pub node_one: Vec<u8>,
     /// A port's berth (`StationData::berth`, T-2193); None for every other node.
     pub node_berth: Vec<Option<[f64; 2]>>,
     pub node_ports: Vec<Ports>,
@@ -787,6 +807,7 @@ impl Network {
             node_day: vec![],
             node_off: vec![],
             node_upgrades: vec![],
+            node_one: vec![],
             node_berth: vec![],
             node_ports: vec![],
             node_moves: vec![],
@@ -1027,6 +1048,7 @@ impl Network {
         self.node_day.push(0);
         self.node_off.push(false);
         self.node_upgrades.push(0);
+        self.node_one.push(0);
         self.node_berth.push(None);
         self.node_ports.push(Ports::default());
         self.node_moves.push(Moves::default());
@@ -1131,7 +1153,7 @@ impl Network {
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize], one: self.node_one[n as usize] })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -1226,7 +1248,7 @@ impl Network {
         if self.node_berth[n].is_some() {
             PORT_COST
         } else {
-            cost::station_cost_k(self.node_kind(n as u32), self.node_level[n], self.node_platform[n], self.node_tracks(n as u32), wet())
+            cost::station_cost_k(self.node_kind(n as u32), self.node_level[n], self.node_platform[n], self.station_tracks(n as u32), wet())
         }
     }
     /// A bus route's road length, m (its drawn length, times `bus::ROAD_FACTOR` where it is straight).
@@ -1308,6 +1330,49 @@ impl Network {
     pub fn node_tracks(&self, n: u32) -> u8 {
         let p = &self.node_ports[n as usize];
         p.ends().iter().map(|&c| self.edge_tracks[(c >> 1) as usize]).max().unwrap_or(2)
+    }
+    /// Tracks a station's platforms are on, for its price: 1 for a one-track station (T-3332).
+    pub fn station_tracks(&self, n: u32) -> u8 {
+        if self.node_one[n as usize] != 0 { 1 } else { self.node_tracks(n) }
+    }
+    /// T-3332: a station with its platform on one track only (`StationData::one`).
+    pub fn one_track(&self, n: u32) -> bool {
+        self.node_ok(n) && self.node_platform[n as usize] > 0 && self.node_one[n as usize] != 0
+    }
+    /// T-3332: a one-track station where trains cannot pass: on single track.
+    pub fn no_passing(&self, n: u32) -> bool {
+        self.one_track(n) && self.node_tracks(n) == 1
+    }
+    /// Whether the node's heading points along the axis a one-track station's way is stored against
+    /// (`one_for_travel`).
+    pub fn axis_along_heading(&self, n: u32) -> bool {
+        one_for_travel(self.node_heading[n as usize]) == 1
+    }
+    /// T-3332: a one-track station on double track: the side (`port_side`) the trains it serves
+    /// arrive from (a train arriving from side 0 runs along the heading). None for any other node.
+    pub fn one_side(&self, n: u32) -> Option<u8> {
+        if !self.one_track(n) || self.node_tracks(n) < 2 || self.node_ports[n as usize].n != 2 {
+            return None;
+        }
+        Some(if (self.node_one[n as usize] == 1) == self.axis_along_heading(n) { 0 } else { 1 })
+    }
+    /// `StationData::one` for a one-track station at `n` serving trains that arrive from `side`.
+    pub fn one_for_side(&self, n: u32, side: u8) -> u8 {
+        if (side == 0) == self.axis_along_heading(n) { 1 } else { 2 }
+    }
+    /// T-3332: per stop of a run over `segs` (`stop_idx` into its nodes), whether its trains pass it
+    /// on the other track from its platform. At a run's first stop it is the track a train arriving
+    /// to turn there comes in on (the one it leaves by, the other way), or for a circle the one it
+    /// comes round on.
+    pub fn run_passes(&self, segs: &[u32], stop_idx: &[u32], circle: bool) -> Vec<bool> {
+        let node_at = |k: usize| if k == 0 { self.path_nodes(segs[0]).0 } else { self.path_nodes(segs[k - 1]).1 };
+        let arrive = |p: u32| self.port_side(path_edge(p), 1 - path_dir(p));
+        stop_idx.iter().map(|&k| {
+            let k = k as usize;
+            let Some(want) = self.one_side(node_at(k)) else { return false };
+            let side = if k > 0 { arrive(segs[k - 1]) } else if circle { segs.last().and_then(|&p| arrive(p)) } else { self.port_side(path_edge(segs[0]), path_dir(segs[0])) };
+            side != Some(want)
+        }).collect()
     }
     /// High-speed track meets the node (T-2231: passing tracks there are priced as it).
     pub fn node_hsr(&self, n: u32) -> bool {
@@ -1519,6 +1584,7 @@ impl Network {
                 self.node_built[i] = false;
                 self.node_off[i] = false;
                 self.node_upgrades[i] = 0;
+                self.node_one[i] = 0;
                 self.node_berth[i] = None;
             }
             Some(d) => {
@@ -1529,6 +1595,7 @@ impl Network {
                 self.node_built[i] = d.built;
                 self.node_off[i] = d.off && !d.built;
                 self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;
+                self.node_one[i] = d.one.min(2);
                 self.node_berth[i] = d.berth;
             }
         }
@@ -2391,14 +2458,50 @@ impl Network {
             return Err(Issue::LineStops { line: l });
         }
         let turns = self.stop_reversals(path);
-        if match_stops(&nodes, stops, &turns).is_none() {
+        let Some(at) = match_stops(&nodes, stops, &turns) else {
             return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
-        }
+        };
         // the return run goes round one-way track when the path back is against it (T-3094)
-        if !once && self.back_path_of(stops, path).is_none() {
-            return Err(Issue::LinePath { line: l });
+        let back = if once { None } else {
+            match self.back_path_of(stops, path) {
+                Some(b) => Some(b),
+                None => return Err(Issue::LinePath { line: l }),
+            }
+        };
+        if stops.iter().any(|&s| self.one_side(s).is_some()) {
+            self.check_one_track(l, stops, path, &at, back.as_deref())?;
         }
         Ok(nodes)
+    }
+
+    /// T-3332: a line's stops at one-track stations on double track: each stopped at by at least one of
+    /// its runs, and its ends (a loop's first stop too) arrived at on the platform's track.
+    fn check_one_track(&self, l: u32, stops: &[u32], path: &[u32], at: &[usize], back: Option<&[u32]>) -> Result<(), Issue> {
+        let circle = self.loop_kind(stops, path) == LoopKind::Circle;
+        let idx: Vec<u32> = at.iter().map(|&k| k as u32).collect();
+        let fwd = self.run_passes(path, &idx, circle);
+        let rev = match back {
+            Some(b) => {
+                let nodes: Vec<u32> = std::iter::once(self.path_nodes(b[0]).0).chain(b.iter().map(|&p| self.path_nodes(p).1)).collect();
+                let rs: Vec<u32> = stops.iter().rev().copied().collect();
+                let ra = match_stops(&nodes, &rs, &self.stop_reversals(b)).ok_or(Issue::LinePath { line: l })?;
+                let mut r = self.run_passes(b, &ra.into_iter().map(|k| k as u32).collect::<Vec<_>>(), circle);
+                r.reverse();
+                Some(r)
+            }
+            None => None,
+        };
+        let n = stops.len();
+        let turns = self.stop_reversals(path);
+        for j in 0..n {
+            // a turn back partway arrives on the same track both ways
+            let end = j == 0 || j + 1 == n || turns.contains(&at[j]);
+            let passed = fwd[j] && rev.as_ref().map_or(true, |r| r[j]);
+            if passed || (end && (fwd[j] || rev.as_ref().is_some_and(|r| r[j]))) {
+                return Err(Issue::OneTrackStop { line: l, node: stops[j] });
+            }
+        }
+        Ok(())
     }
 
     /// Whether a path turns back between entries `a` and `b`: it arrives at their node and leaves
@@ -2485,8 +2588,8 @@ impl Network {
             if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] && self.node_berth[n].is_some() {
                 add(12, 0, 0, false, 0, 1.0, PORT_COST);
             } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
-                let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
-                add(1, level, tracks, wet, 0, 1.0, cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], tracks, wet));
+                let (tracks, wet) = (self.station_tracks(n as u32), is_wet());
+                add(1, level, tracks, wet, 0, 1.0, cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet));
                 let ups = self.node_upgrades[n];
                 if ups != 0 {
                     add(8, level, 0, wet, 0, ups.count_ones() as f64, self.station_upgrades_price(n as u32, ups, wet));
@@ -2558,9 +2661,9 @@ impl Network {
             let level = self.node_level[n];
             if self.node_platform[n] > 0 && !self.node_built[n] {
                 let price = if self.node_berth[n].is_some() { PORT_COST } else {
-                    let (tracks, wet) = (self.node_tracks(n as u32), is_wet());
+                    let wet = is_wet();
                     let ups = self.node_upgrades[n];
-                    cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], tracks, wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }
+                    cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }
                 };
                 row(1, n, n, price, !self.node_off[n]);
             }

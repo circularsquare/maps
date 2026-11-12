@@ -236,9 +236,11 @@ impl Network {
             return Err(Why::NotRail);
         }
         let mut twin = Vec::with_capacity(stops.len());
+        // T-3332: a twin serves the same ways: a one-track station's is one-track the same way
+        let ways = |n: u32| if !self.one_track(n) { 0 } else if self.one_side(n).is_some() { self.node_one[n as usize] } else { 3 };
         for (k, &s) in stops.iter().enumerate() {
             match self.station_beside(s) {
-                Some(t) if !stops.contains(&t) => twin.push(t),
+                Some(t) if !stops.contains(&t) && ways(t) == ways(s) => twin.push(t),
                 _ => return Err(Why::Stop(k)),
             }
         }

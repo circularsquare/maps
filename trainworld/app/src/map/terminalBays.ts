@@ -16,9 +16,10 @@ export const TURNBACK_M = 50;
 export const SINGLE_SPLIT_LEAD_M = 60;
 
 /** T-3212: whether single track `e` is drawn splitting into two tracks at its end `end` (0 a, 1 b),
- * at station `node`: two-way, no crossover or tram track, not joining one track of a double there. */
+ * at station `node`: two-way, no crossover or tram track, not joining one track of a double there,
+ * and no one-track station, where trains cannot pass (T-3332). */
 export function splitsAt(e: ClockEdge, end: 0 | 1, node: ClockNode | undefined): boolean {
-  return !!node && node.platform > 0 && !node.kind && e.tracks === 1 && !e.oneWay && !e.crossover && e.kind < 2 && ((end ? e.join >> 2 : e.join) & 3) === 0;
+  return !!node && node.platform > 0 && !node.kind && !node.one && e.tracks === 1 && !e.oneWay && !e.crossover && e.kind < 2 && ((end ? e.join >> 2 : e.join) & 3) === 0;
 }
 
 /** One end's split along a single-track edge: two tracks for `p` m from that end (`a` true: the a
@@ -59,7 +60,7 @@ export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly Clo
   const plainSingle = (e: ClockEdge) => e.tracks === 1 && !e.oneWay && !e.crossover && e.kind < 2;
   const joinedAt = (e: ClockEdge, node: number) => ((e.a === node ? e.join : e.join >> 2) & 3) !== 0;
   for (const s of nodes) {
-    if (!(s.platform > 0) || s.kind) continue;
+    if (!(s.platform > 0) || s.kind || s.one) continue;
     const here = at.get(s.id) ?? [];
     const P = here.length === 1 ? s.platform : s.platform / 2, want = P + SINGLE_SPLIT_LEAD_M;
     for (const e0 of here) {

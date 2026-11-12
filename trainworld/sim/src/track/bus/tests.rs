@@ -21,7 +21,7 @@ fn a_route_that_loops_back_stops_both_ways_on_its_way_out() {
     let mut net = Network::new(-73.985, 40.758, true);
     let n = net.alloc_node();
     net.set_node(n, Some(NodeData { x: 500.0, y: 40.0, level: 0, flying: false })).unwrap();
-    net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
+    net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
     let pts = [[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [2000.0, 1000.0], [2000.0, 0.0], [0.0, 0.0]];
     assert_eq!(loop_back_at(&pts), Some(1));
     assert_eq!(loop_back_at(&[[0.0, 0.0], [2000.0, 0.0], [3000.0, 0.0], [3000.0, 1000.0], [0.0, 0.0]]), None, "a plain loop");

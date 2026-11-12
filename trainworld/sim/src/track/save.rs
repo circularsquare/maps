@@ -65,7 +65,7 @@ pub const BLOCKS: [&[u8; 4]; 24] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 17;
+pub const LEVEL: u32 = 18;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -169,9 +169,11 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.i(net.node_level[i] as i64);
         let plat = net.node_platform[i];
         // T-1281: a station's upgrades in bits 4 to 6, which older readers ignore; T-2683: bit 8 is
-        // a name the player typed (masked off as an upgrade there)
+        // a name the player typed (masked off as an upgrade there); T-3332: bits 9 and 10 a one-track
+        // station's way (`StationData::one`)
         let ups = if plat > 0 { net.node_upgrades[i] as u64 } else { 0 };
-        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2 | ((plat > 0 && net.node_off[i] && !net.node_built[i]) as u64) << 3 | ups << 4 | ((plat > 0 && net.node_named[i]) as u64) << 8);
+        let one = if plat > 0 { net.node_one[i] as u64 } else { 0 };
+        w.u(net.node_flying[i] as u64 | ((plat > 0) as u64) << 1 | ((plat > 0 && net.node_built[i]) as u64) << 2 | ((plat > 0 && net.node_off[i] && !net.node_built[i]) as u64) << 3 | ups << 4 | ((plat > 0 && net.node_named[i]) as u64) << 8 | one << 9);
         if plat > 0 {
             w.u(plat as u64);
             w.s(&net.node_name[i]);
@@ -646,7 +648,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8 })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -1018,7 +1020,7 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0 })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
         }
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] })).unwrap();
@@ -1161,7 +1163,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (17, 24), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (18, 24), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

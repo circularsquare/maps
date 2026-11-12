@@ -265,14 +265,15 @@ pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
 }
 
 /// A line's `phi`, `[(period * 2 + run) * n + stop]` with each run's stops in its travel order (the
-/// boarding account's layout), from its steady pattern `lat`.
+/// boarding account's layout), from its steady pattern `lat`; -1 at a stop the run passes on the other
+/// track (T-3332), where demand boards and alights nobody.
 pub fn line_span(ls: &LineSvc, lat: &Lattice) -> Vec<f32> {
     let n = ls.stops.len();
     let mut out = vec![0.0f32; PERIODS * 2 * n];
     for r in 0..2 {
         for (k, deps) in stop_deps(ls, lat, r).iter().enumerate() {
             for (q, phi) in stop_phi(deps).into_iter().enumerate() {
-                out[(q * 2 + r) * n + k] = phi;
+                out[(q * 2 + r) * n + k] = if ls.runs[r].passes(k) { -1.0 } else { phi };
             }
         }
     }
@@ -297,6 +298,9 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
     }
     add(lat.lead.to_bits());
     for r in 0..2 {
+        for (k, _) in ls.runs[r].pass.iter().enumerate().filter(|x| *x.1) {
+            add(k as u64 | 1 << 40);
+        }
         for lev in 0..LEVELS {
             for &v in ls.runs[r].prof[lev].dep.iter() {
                 add(v.to_bits());

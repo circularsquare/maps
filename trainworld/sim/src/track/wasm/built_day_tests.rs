@@ -25,7 +25,7 @@ fn built_edge(a: &mut TrackApi, from: u32, to: u32) -> u32 {
 }
 
 fn station(name: &str, built: bool) -> StationData {
-    StationData { platform: 200, name: name.into(), named: false, built, off: false, upgrades: 0, berth: None, day: 0 }
+    StationData { platform: 200, name: name.into(), named: false, built, off: false, upgrades: 0, berth: None, day: 0, one: 0 }
 }
 
 fn plain_line(stops: Vec<u32>, path: Vec<u32>) -> LineData {

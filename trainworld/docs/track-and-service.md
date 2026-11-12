@@ -585,7 +585,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   removal goes without it, the trim, the kept pieces and the joins at removed stations left out.
   The map draws it there, at its true length and bent as the track is, from
   zoom 14 ([ui-map.md](ui-map.md) "Stations"). Platform length caps train length (20 m cars).
-  Platform tracks = the route's tracks. Riders change between stations up to 300 m apart on foot,
+  Platform tracks = the route's tracks, unless the station is a one-track station (below). Riders change between stations up to 300 m apart on foot,
   and platforms within 100 m of each other count as one station (4.4). Stations whose platforms
   come within 50 m form a station complex, which a click on a station selects as one (T-249) and
   the station ridership circles show as one (8, T-146, T-1449); the player can join any two stations up to 1 km
@@ -594,6 +594,27 @@ Full design, numbers and sources: `notes/T-008.md`.
   Riders change between any two stations of a complex on foot, however far apart (4.4, T-161),
   through a passage along the straight line at 2 m/s. A **station building** joins stations too
   (below).
+- **One-track stations** (T-3332, notes/T-3332.md; `StationData::one`, `wasm/onetrack.rs`): a station's
+  platform on one track only, picked with the 1-line / 2-line icons in the station bar (remembered in
+  the browser) and switched in the station panel. On double track (each pair of quad) the platform is on
+  the track nearer the pointer, so it serves one way: trains running that way stop, trains the other way
+  run past on the other track (a **pass**: `Run::pass`, kept in every per-stop array, timed as the train
+  goes by, no dwell; capacity gives the other track no platform). A line through it both ways stops the
+  way it can; a line ending there, turning back there or a one-way loop must arrive on the platform's
+  track, and a line every run of which passes it is refused (`OneTrackStop`). The half dots and chevrons
+  show the way (`line_stop_ways`). Stored as the way along a fixed axis (`one_for_travel`: 1 eastward,
+  north where the track runs due north-south, 2 the other way; save node flag bits 9-10, save level 18),
+  not the physical side, so the running side picks the track and a running-side switch turns the way
+  round to keep the platform on its track (listed after the switch). On double track it is drawn as a thin bar
+  over its track with a small bulge at the middle on the platform's side, so it does not read as a box. On two-way single track it is a
+  stop where trains cannot pass: drawn as plain single track (no T-3212 split) and the single-track
+  section runs on through it (6.2). Placed only on track running through, the same tracks both sides,
+  not one-way single (`OneTrackHere`). Priced as a single-track station; switching a built one to both
+  tracks pays the difference, to one track is free with nothing back; a blueprint one switches free and
+  undoes. A one-track station has no terminal and no passing tracks (they go when it switches). Single
+  track rebuilt double makes it an ordinary station; double rebuilt single keeps it one-track (no
+  passing). Its twin on the other pair of quad (6.3) must serve the same way. Demand: a pass boards,
+  alights and changes nobody (`span` -1 for that route node, demand-kernel.md 4.3).
 - **Station buildings** (T-2217, `track/building.rs`, `wasm/buildings.rs`, `game/buildings.ts`;
   design notes/T-2208.md 3): an outline of 3 to 24 corners the player draws round stations. Its
   members are every station whose platform touches it, at any level, constructed or not: the
@@ -742,19 +763,20 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
   160, 16 at 320 (T-517). Tram track (both kinds) holds 60 s + v / 0.6 (41 an hour at the street
   tram's 60 km/h), its platform dwell + 60 s (48 an hour at the 15 s dwell), its own crossings
   and junction moves 45 s (T-3125, Anita 2026-11-10)
-- single-track section between passing points: run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions (a line with one train, on track no other line uses, has no train to keep the margin from and takes the run time alone; T-3201): a headway each way of
+- single-track section between passing points (every station but a one-track one, T-3332): run time + 240 s (`SINGLE_TRACK_MARGIN_S`, T-3112), counting both directions (a line with one train, on track no other line uses, has no train to keep the margin from and takes the run time alone; T-3201): a headway each way of
   about 10 minutes over 1 km, 12 over 2 km, 14 over 5 km, 20 over 10 km; single track that
   runs one way (set, or by its run's joins, 6.1) takes the track-section rule above, per direction
   (T-3094, T-3137)
 - platform track: dwell + 60 s per stopping train, 40 s per passing one, turnaround + 60 s
   for a short-turn ending at a through station (15 an hour at the default 3 minutes). A
-  single-track platform shares both directions. With **passing tracks** (T-2231) a stopping train
+  single-track platform shares both directions. A one-track station on double track (T-3332) has the
+  platform on its one track; trains on the other track hold nothing there. With **passing tracks** (T-2231) a stopping train
   holds one of two platform tracks, (dwell + 60 s) / 2 pooled, and a train that does not stop
   holds none.
 - turning at a station (T-3107, Anita 2026-11-10: a dead end and a through station are the same to
   the game; no player text mentions a dead end): a train ending its line there or reversing partway
   holds one place for max(turnaround + 60 s, 240 s), pooled over the places the station has
-  (`capacity::turn_places`, `upgrades::pooled_turn_s`). Without a terminal that is one platform track
+  (`capacity::turn_places`, `upgrades::pooled_turn_s`). A one-track station has one place. Without a terminal that is one platform track
   of each pair: 15 an hour at the default 3 minutes. With a **terminal** it is every platform track:
   30 an hour a pair at 3 minutes and at 2 (never counted quicker than 240 s, so no turnaround
   setting beats 30). A quad station has two pairs, so it takes twice as many. The turn holds no platform and

@@ -433,7 +433,8 @@ fn build_sections(net: &Network, lines: &[LineSvc], cand: &[u32], in_k: &dyn Fn(
                 }
                 let (Some(a), Some(b)) = (kidx(key_of(net, p)), kidx(key_of(net, q))) else { continue };
                 let (te, tf) = (directed(net, path_edge(p)), directed(net, path_edge(q)));
-                let join = if te && tf { sig[a as usize] == sig[b as usize] } else { !te && !tf && net.node_platform[node] == 0 };
+                // (single track runs on through a station with no passing loop, T-3332)
+                let join = if te && tf { sig[a as usize] == sig[b as usize] } else { !te && !tf && (net.node_platform[node] == 0 || net.no_passing(node as u32)) };
                 if join {
                     uf.union(a, b);
                 }
@@ -522,7 +523,7 @@ pub(super) fn active_node_tracks(net: &Network, node: u32) -> u8 {
 /// through station turn alike): with a terminal every platform track, without one a single track
 /// of each pair. A track end with no station has one.
 pub(super) fn turn_places(net: &Network, n: u32) -> u8 {
-    if net.node_platform[n as usize] == 0 { return 1; }
+    if net.node_platform[n as usize] == 0 || net.one_track(n) { return 1; }
     let tracks = active_node_tracks(net, n);
     if net.node_upgrades[n as usize] & upgrades::TERMINAL != 0 { tracks } else { tracks.div_ceil(2).max(1) }
 }
@@ -571,9 +572,10 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                     turn_at(net, n, l, r as u8, at, &mut term);
                     continue;
                 }
-                if net.node_platform[n as usize] > 0 {
-                    let prev = run.segs[k - 1];
-                    let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
+                let prev = run.segs[k - 1];
+                let side_in = net.port_side(path_edge(prev), 1 - path_dir(prev)).unwrap_or(0);
+                // T-3332: the track beside a one-track station's platform is plain track
+                if net.node_platform[n as usize] > 0 && net.one_side(n).is_none_or(|s| s == side_in) {
                     let track = if active_node_tracks(net, n) == 1 { 0 } else { side_in };
                     // T-2231: passing tracks give each direction two platform tracks, a stop pooled
                     // over them, and a train that does not stop runs past on its own track
@@ -600,7 +602,9 @@ fn build_nodes(net: &Network, lines: &[LineSvc], cand: &[u32], in_n: &dyn Fn(u32
                 let tracks = active_node_tracks(net, n);
                 let track = if tracks == 1 { 0 } else { side_in };
                 let at = run.stop_s.last().unwrap() - hold_back(lines, l);
-                plat.push((n, track, l as u32, r as u8, -1, at, dwell + net.node_margin_s(n as u32), false));
+                if net.one_side(n).is_none_or(|s| s == side_in) {
+                    plat.push((n, track, l as u32, r as u8, -1, at, dwell + net.node_margin_s(n as u32), false));
+                }
                 if net.node_ports[n as usize].n >= 3 && !net.node_flying[n as usize] {
                     let (pa, pb) = net.move_at(n, p, q);
                     moves.push((n, pa, pb, l as u32, r as u8, run.node_s[k_last] - hold_back(lines, l)));

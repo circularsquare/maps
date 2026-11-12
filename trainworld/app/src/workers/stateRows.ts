@@ -235,6 +235,9 @@ export class StateRows {
     const ni = a.nodes_info();
     const offStations = new Set<number>(a.off_stations());
     const namedStations = new Set<number>(a.named_stations());
+    // T-3332: one-track stations, 1 on double track, 2 on single
+    const ot = a.one_track_stations(), ones = new Map<number, 1 | 2>();
+    for (let k = 0; k + 1 < ot.length; k += 2) ones.set(ot[k], ot[k + 1] as 1 | 2);
     const out: ClockNode[] = [];
     const kept = this.nodeRows;
     const seen = new Set<number>();
@@ -248,13 +251,16 @@ export class StateRows {
       // T-2194: a port has no track, so no platform line
       const port = platform > 0 && a.is_port(id);
       const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
+      const one = ones.get(id) ?? 0, oneHeading = one === 1 ? a.station_one_heading(id) : undefined;
       const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || !!r.crosses !== crosses || (r.unusable ?? 0) !== unusable || r.platform !== platform
-        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind) {
+        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind
+        || (r.one ?? 0) !== one || r.oneHeading !== oneHeading) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
         const berth = port ? a.port_berth(id) : null;
         r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
+          ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}),
           ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
       }

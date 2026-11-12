@@ -36,6 +36,7 @@ import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
 import { PurposeSplit } from "./PurposeSplit";
 import { StationUpgrades, TerminalButton } from "./StationUpgrades";
+import { PlatformTracks } from "../ToolBar";
 
 /** Open station `m` on its own, in station view, from its complex (T-246, T-249). */
 function openStation(m: string) {
@@ -375,6 +376,12 @@ function StationDetails({ s, lines, props }: {
             if (to === s.length) return false;
             return props(to);
           }} />
+        </li>}
+        {/* T-3332: platforms on one track or both; one on double track turns round */}
+        {!s.port && <li>
+          <span class="grow">{tr("stationInspector.platformTracks")}</span>
+          {s.one === 1 && <button class="btn text" onClick={() => void edit({ op: "reverseStation", node: s.num })}>{tr("trackInspector.reverse")}</button>}
+          <PlatformTracks one={!!s.one} onPick={(one) => void edit({ op: "stationTracks", node: s.num, one })} />
         </li>}
         {s.built && m && (
           <Row label={tr("trackInspector.upkeep")}>

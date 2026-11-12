@@ -58,6 +58,9 @@ export interface StationInput {
   port?: [number, number];
   /** a tram stop: tram track's own 20-80 m platform (T-2926) */
   tram?: true;
+  /** T-3332: a one-track station: 1 on double track (`oneHeading` its trains' way, rad, counter-clockwise from east), 2 on single track, where trains cannot pass */
+  one?: 1 | 2;
+  oneHeading?: number;
 }
 
 export interface LineInput {

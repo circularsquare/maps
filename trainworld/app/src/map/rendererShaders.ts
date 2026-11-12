@@ -7,7 +7,7 @@ import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
 import { TURNBACK_M } from "./terminalBays";
-import { PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { ONE_BULGE_MIN, ONE_BULGE_SHARE, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
 const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
@@ -479,7 +479,10 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and y axes point, as
                          // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
-flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249)
+flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249);
+                         // a one-track station (T-3332): +-(10 + how far its band's middle is off the centre line, px), + or - its side
+uniform vec3 u_one;      // T-3332: a one-track station's bar: its middle off the centre line, half width, and how far its bulge sticks out, px
+flat out float v_bulge;  // a one-track station's bulge depth, px, 0 none
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
 flat out float v_hot;
@@ -502,6 +505,7 @@ void main() {
   v_hot = 0.0;
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
+  v_bulge = 0.0;
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
@@ -570,10 +574,19 @@ void main() {
     // never shorter than it is wide: the end stretches carry on
     float ext = hl - 0.5 * total;
     v_size = vec3(hl, hw, 0.0);
-    lo = mn.y - hw - ext - 1.0;
-    hi = mx.y + hw + ext + 1.0;
-    xl = mn.x - hw - ext - 1.0;
-    xh = mx.x + hw + ext + 1.0;
+    // T-3332: a one-track station: a thin bar on its track with a bulge at the middle on its side (the
+    // fragment shader moves the band and adds the bulge; the quad keeps room for both)
+    float room = hw;
+    if ((flags & ${ST_ONE}) != 0) {
+      v_size.y = u_one.y;
+      v_bulge = u_one.z;
+      v_lane = ((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * (10.0 + u_one.x);
+      room = u_one.x + u_one.y + u_one.z;
+    }
+    lo = mn.y - room - ext - 1.0;
+    hi = mx.y + room + ext + 1.0;
+    xl = mn.x - room - ext - 1.0;
+    xh = mx.x + room + ext + 1.0;
     // a terminal's buffer stop end is drawn thick (T-1416, T-1527, the fragment shader)
     if ((flags & ${ST_TERMINAL}) != 0 && (flags & ${ST_BUFFER}) != 0) {
       v_size.z = 3.0;
@@ -604,6 +617,7 @@ void main() {
       xl = -l - 1.0;
       xh = l + 1.0;
       v_lane = 0.0;
+      v_bulge = 0.0;
       v_crowd = vec4(vec2(max(a_crowd.x, a_crowd.y)), vec2(max(a_crowd.z, a_crowd.w)));
     }
   }
@@ -631,6 +645,7 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;
 flat out float v_lane;
+flat out float v_bulge;
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the bridges between hovered stations (T-730)
 uniform highp int u_hot_n;
 flat out float v_hot;
@@ -640,6 +655,7 @@ void main() {
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
   v_lane = 0.0;
+  v_bulge = 0.0;
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = vec4(0.0);
   v_alpha = a_bflag.y > 0.5 ? 0.6 : 1.0;
@@ -683,6 +699,7 @@ flat in float v_alpha;
 flat in vec4 v_crowd;
 flat in vec4 v_scr;
 flat in float v_lane;
+flat in float v_bulge;
 flat in float v_hot;
 ${CENTRE_VARS("in")}
 ${CENTRE_GLSL}
@@ -702,8 +719,15 @@ void main() {
         : centrePoint(v_inst, i, v_at.xy, v_at.zw, v_scr.xz, v_scr.yw);
     }
     f = polyFrame(v_p, q);
+    // T-3332: a one-track station's band, off the centre line towards its side
+    if (abs(v_lane) > 2.5) f.y -= sign(v_lane) * (abs(v_lane) - 10.0);
   }
   float d = v_dot > 0.0 ? length(v_p) - v_dot : boxSdf(f, v_size.xy);
+  // T-3332: the bulge on a one-track station's side, a box from the bar's inner edge out
+  if (v_dot <= 0.0 && v_bulge > 0.0) {
+    float bl = max(${ONE_BULGE_SHARE} * v_size.x, ${ONE_BULGE_MIN} * (v_size.y + v_bulge));
+    d = min(d, boxSdf(vec2(f.x, f.y - sign(v_lane) * 0.5 * v_bulge), vec2(bl, v_size.y + 0.5 * v_bulge)));
+  }
   float inner = clamp(0.5 - d - u_ring, 0.0, 1.0);
   // T-1416, T-1527: a terminal's buffer stop, the platform's -axis end where the track ends, is a
   // dark bar wider than the box so it shows past a train standing in it; v_size.z 1 a waiting
@@ -749,14 +773,17 @@ void main() {
     // close in on double track (T-658) each side's riders stand on their own platform, from its
     // track out to the rim: the + side's trains travel along the axis, keeping right, so their
     // track and platform are on the + side
-    float tl = u_lanes.y * min(v_lane, 1.0);
+    // a one-track station (T-3332): its one platform's riders over the whole of its half box
+    bool one = abs(v_lane) > 2.5;
+    vec4 cr = !one ? v_crowd : v_lane < 0.0 ? v_crowd.yyww : v_crowd.xxzz;
+    float tl = one ? 0.0 : u_lanes.y * min(v_lane, 1.0);
     float yin = tl * (0.5 + 0.5 * ${LANE_SHARE.toFixed(1)} * u_lanes.z) * u_lanes.x;
     // at a passing station (T-2249) on the island between the running track and the outer one,
     // where trains on both stop
-    float yout = v_lane > 1.5 && u_pass_in > 0.0 ? max(u_pass_in, yin + 1.0) : 1e9;
-    float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(yout - p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
-    float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(yout + p.y + 0.5, 0.0, 1.0) * clamp(v_crowd.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
-    o = vec4((v_crowd.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (v_crowd.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);
+    float yout = v_lane > 1.5 && v_lane < 2.5 && u_pass_in > 0.0 ? max(u_pass_in, yin + 1.0) : 1e9;
+    float ap = inner * clamp(p.y - yin + 0.5, 0.0, 1.0) * clamp(yout - p.y + 0.5, 0.0, 1.0) * clamp(cr.x * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    float am = inner * clamp(0.5 - p.y - yin, 0.0, 1.0) * clamp(yout + p.y + 0.5, 0.0, 1.0) * clamp(cr.y * reach - abs(p.x) + 0.5, 0.0, 1.0);
+    o = vec4((cr.z > 0.5 ? u_bad : u_crowd_rgb) * ap + (cr.w > 0.5 ? u_bad : u_crowd_rgb) * am, ap + am);
   }
 }`;
 
@@ -791,15 +818,19 @@ void main() {
     int k = i * ${SEL_STRIDE};
     vec4 a = texelFetch(u_shapes, ivec2(k, 0), 0);
     vec4 b = texelFetch(u_shapes, ivec2(k + 1, 0), 0);
-    float dotR = texelFetch(u_shapes, ivec2(k + 2, 0), 0).x;
+    vec4 c2 = texelFetch(u_shapes, ivec2(k + 2, 0), 0);
+    float dotR = c2.x;
     vec2 r = p - a.xy;
     if (dotR > 0.0) { d = min(d, length(r) - dotR); continue; }
     // nowhere nearer than its middle's distance less its half length and width: skip the line
-    if (length(r) - b.z - b.w > d) continue;
+    if (length(r) - max(b.z, c2.z) - max(b.w, c2.w + abs(c2.y)) > d) continue;
     // its own centre line (T-254)
     ${Array.from({ length: QV }, (_, i) => `vec4 t${i} = texelFetch(u_shapes, ivec2(k + ${3 + i}, 0), 0);`).join("\n    ")}
     ${qUnpack("t")}
-    d = min(d, boxSdf(polyFrame(vec2(dot(r, a.zw), dot(r, b.xy)), q), b.zw));
+    vec2 pf = polyFrame(vec2(dot(r, a.zw), dot(r, b.xy)), q);
+    d = min(d, boxSdf(pf, b.zw));
+    // T-3332: a one-track station's bulge: its middle across (y), half length (z), half width (w)
+    if (c2.w > 0.0) d = min(d, boxSdf(vec2(pf.x, pf.y - c2.y), c2.zw));
   }
   float line = clamp(u_outline + 0.5 - d, 0.0, 1.0);
   float t = clamp((d - u_outline) / u_glow, 0.0, 1.0);
