@@ -207,7 +207,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
   tracks.) **Single track** is the track bar's other count (regular track only): cheaper, one
   track for both directions unless it runs one way (below), with sections split at stations; a
-  single-track station has one shared platform track and gets no passing loop.
+  single-track station has one shared platform track and gets no passing loop. Built or blueprint single track can be rebuilt as double ("Rebuilding constructed track", 6.4).
 - **Single track meeting double track** (T-3137, notes/T-3137.md "C2 as built"): where a single-track
   piece's end meets double track at a junction, it **joins one of the double's two tracks**
   (`EdgeData.join` per end: 0 none, 1 the left track looking out from the node along the piece, 2 the
@@ -1383,6 +1383,32 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the pick as far as it changes (its track and road crossings over that stretch), as if built new at the new
   settings, with nothing back for the old (`TrackWorld::apply_priced` sets the charge), plus the trains the lines
   then need. The Select tool's bar does it ([ui-building.md](ui-building.md) "The Select tool").
+  **Single track as double** (T-3296, Anita 2026-11-12; `Want.tracks`, `single_ok` in `rebuild.rs`, `rebuild_pieces`'s
+  `tracks` 2): the same pick makes every single-track piece of regular rail that runs both ways double in place (same
+  centre line, ids, stations and lines; its stored way and joins are cleared). A piece set to run one way, high-speed
+  track (single only as a flyover's leg), a crossover and a piece the track model refuses (a crossing the second lane
+  would make, a curve too tight) stay single and are refused as in any rebuild. Stations on the doubled track become
+  double-track stations (platforms both sides, priced as such, `node_tracks`), and the quote charges every built station
+  at an end of a doubled piece. The price is the full price of the double track and those stations, nothing back for
+  the single, as for a level. The ends need nothing of their own: a doubled stretch meets the single track beside it
+  in a plain joint (no join, so that single runs both ways unless its other end's join says otherwise, as drawing a
+  double beside single makes it), and a junction keeps its single legs' joins. Capacity and timetables take the new
+  track at once (no `SingleTrack` section, so no 240 s margin). Single track made double on blueprint
+  (`set_edges_tracks` 2) is free and one undoable edit; built is final as every rebuild is.
+  **Double track as single** (T-3321, Anita 2026-11-12: "maybe that direction can be free"; `double_ok`,
+  `single_refusal` in `rebuild.rs`, `tracks` 1): the same pick makes every double piece of regular rail single in
+  place, both ways (no stored way, no joins), free: built track costs nothing and nothing is refunded, so the quote is
+  0 (`rebuild_plan`'s `priced` leaves out a piece whose only change is its count); with a level or type change too,
+  that change is paid as usual at the single track's price. Stations on it become single-track stations, uncharged
+  (a station keeps a double-track platform while any of its track stays double, `node_tracks`). Lines keep running
+  over it at once, now with a shared `SingleTrack` section. Nothing that needs two tracks is taken away: the piece is
+  refused, with its reason (`Issue::NoSingle`), when it is high-speed track (unless made regular in the same rebuild)
+  or tram track, quad track (double track parallel at about 8 m beside its middle), has a crossover at either end,
+  meets a flying junction, has a one-way single piece joined to one of its two tracks at an end (a flyover's leg, a
+  lane beside double track), or ends at a station with passing tracks that would be left with single track only. A
+  two-way single piece joined to it is no reason: the join stays stored and counts again if the track is made double
+  again (`join_applies`). A piece refused for its count keeps its level and type too. Blueprint double track made
+  single (`set_edges_tracks` 1) is free and one undoable edit; built is final.
   An unused blueprint extension leaves a constructed line's endpoint stopping position, run
   time and capacity unchanged. Planned lines preview the full planned station geometry (T-108).
   **Disabled blueprint** (T-333): a blueprint edge or station can be switched off (`off` on

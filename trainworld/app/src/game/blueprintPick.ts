@@ -197,10 +197,10 @@ export async function doubleUpPicked(pieces: number[]) {
  * elevation all of it is on (null when mixed or ramped). */
 export const pickedState = computed(() => {
   const w = world.value, p = bpPicked.value;
-  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0, tram: 0 };
+  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0, tram: 0, ones: 0, twos: 0 };
   const edges = new Map(w.edges.map((e) => [e.id, e]));
   const stations = stationsByNum(w);
-  let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0, tram = 0;
+  let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0, tram = 0, ones = 0, twos = 0;
   let level: Level | null | undefined;
   for (const id of p.edges) {
     const e = edges.get(id);
@@ -211,9 +211,10 @@ export const pickedState = computed(() => {
     level = level === undefined || level === l ? l : null;
     if (canBeHsr(e)) e.hsr ? hsr++ : regular++;
     else if (e.kind && !e.crossover) tram++;
+    if (!e.crossover && !e.kind) e.tracks === 1 ? ones++ : twos++;
   }
   for (const id of p.stations) (stations.get(id)?.off ? off++ : on++);
-  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular, tram };
+  return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular, tram, ones, twos };
 });
 
 /** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_kind`, and T-3059's rebuild for built track): double, no crossover.
@@ -284,6 +285,22 @@ export async function kindPicked(kind: "regular" | "hsr" | "tram") {
 }
 
 const TO = { regular: "blueprintPick.toRegular", hsr: "blueprintPick.toHsr", tram: "blueprintPick.toTram" } as const;
+
+/** T-3296, T-3321: the picked blueprint track made single or double track, one undoable edit and free
+ * (`TrackApi::set_edges_tracks`). Pieces that cannot stay and are counted, with why where the track model says. */
+export async function tracksPicked(tracks: 1 | 2) {
+  const p = bpPicked.peek();
+  if (p.built || !p.edges.length) return;
+  const a = await edit({ op: "edgesTracks", edges: p.edges, tracks }, true);
+  const n = p.edges.length, skipped = a.skipped ?? 0, to = t(tracks === 1 ? "blueprintPick.toSingle" : "blueprintPick.toDouble");
+  const why = describeIssues(a.issues);
+  if (!a.ok) {
+    say(why || t("blueprintPick.cannotGo", { n, to }), true);
+    return;
+  }
+  if (skipped) say([t("blueprintPick.setSome", { done: n - skipped, n, to, skipped }), why].filter(Boolean).join(" "));
+  else say(t("blueprintPick.setAll", { n, to }));
+}
 
 /** T-829: remove every picked piece in one edit: blueprint at once (one undo), constructed or
  * changing a line after a yes, as for one piece (game/remove.ts). */

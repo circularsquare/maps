@@ -7,8 +7,8 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
-import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked } from "../game/blueprintPick";
-import { type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip } from "../game/rebuild";
+import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
+import { type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -18,7 +18,7 @@ import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
 import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/blueprintStretches";
 import { locateNodes } from "./locate";
 import { redo, undo } from "../game/fareUndo";
-import { Icon, LevelButtons } from "./widgets";
+import { Icon, LevelButtons, TrackCountButtons } from "./widgets";
 import { SWITCH_PICK_KEY } from "./toolKeys";
 import { TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
@@ -245,6 +245,14 @@ export function BlueprintBar() {
   const typeOn = (k: RebuildKind) => s.built && rebuildKind.value ? rebuildKind.value === k
     : k === "tram" ? trams > 0 && s.hsr + s.regular === 0 : trams === 0 && (k === "hsr" ? s.regular : s.hsr) === 0;
   const pickType = (k: RebuildKind) => { if (s.built) rebuildKind.value = k; else void kindPicked(k); };
+  // T-3321: the track count as the track tool's icons, the pick's own count on (none when it has both); picking
+  // what the rail track has already keeps it
+  const ownTracks = s.ones && !s.twos ? 1 : s.twos && !s.ones ? 2 : null;
+  const chosenTracks = s.built ? rebuildTracks.value ?? ownTracks : ownTracks;
+  const pickTracks = (n: 1 | 2) => {
+    if (s.built) rebuildTracks.value = n === ownTracks ? null : n;
+    else if (n !== ownTracks) void tracksPicked(n);
+  };
   // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
   const keys = tool.value === "blueprint";
   const switchKey = SWITCH_PICK_KEY.toUpperCase();
@@ -266,6 +274,7 @@ export function BlueprintBar() {
           <button class={"btn" + (typeOn("tram") ? " on" : "")} onClick={() => pickType("tram")}>{t("toolBar.tram")}</button>
         </div>
       )}
+      {s.ones + s.twos > 0 && <TrackCountButtons value={chosenTracks} onPick={pickTracks} />}
       {s.built && (
         <button class="btn text" data-tip={rebuildTip(q)} disabled={!q || (!q.changed.length && !q.stations && !q.refused.length)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
       )}

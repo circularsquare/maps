@@ -30,7 +30,7 @@ function soundOf(i: Intent): BuildSound | null {
     case "setTrainCount": case "setHeadway": case "lineCars": case "lineFast": case "lineOneWay": case "lineLimit":
     case "setStops": case "insertStop": case "dropStop": case "endLineAt": case "stopPassed": case "orderStops": case "sortStops": case "turnEnd": case "openLoop": case "removeLine": case "copyLine": case "lineGroup":
     case "busSpacing": case "busHand": case "busHandStop": // T-2940: a bus line's stops, as a train line's
-    case "doubleUp": case "addPoint": case "edgeLevel": case "edgesLevel": case "edgesKind": case "flying":
+    case "doubleUp": case "addPoint": case "edgeLevel": case "edgesLevel": case "edgesKind": case "edgesTracks": case "flying":
       return "pop";
     case "rebuild": return null; // sounds once the worker has accepted it (afterEditSound)
     default:

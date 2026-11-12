@@ -364,6 +364,20 @@ export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPi
   );
 }
 
+/** The track count's 1-line and 2-line icon buttons, `value` on (null: neither), the track tool's (T-2931, with its
+ * quad button as `children`) and the Select tool's bar's (T-3321). `single` false hides the 1-line one. */
+export function TrackCountButtons({ value, onPick, single = true, children }: { value: 1 | 2 | null; onPick: (n: 1 | 2) => void; single?: boolean; children?: ComponentChildren }) {
+  return (
+    <div class="group tb-count" role="group" aria-label={t("toolBar.trackCount")}>
+      {single && <button class={"btn icon" + (value === 1 ? " on" : "")} aria-label={t("toolBar.singleTrack")} aria-pressed={value === 1} data-tip={t("toolBar.singleTrack")}
+        onClick={() => onPick(1)}><Icon.tracks1 /></button>}
+      <button class={"btn icon" + (value === 2 ? " on" : "")} aria-label={t("toolBar.doubleTrack")} aria-pressed={value === 2} data-tip={t("toolBar.doubleTrack")}
+        onClick={() => onPick(2)}><Icon.tracks2 /></button>
+      {children}
+    </div>
+  );
+}
+
 /** T-2601: a button label that changes with its state, both laid in one cell so the button keeps
  * the wider one's width either way (a changing width wrapped the row, T-2525). */
 export function SwapLabel({ on, off, onText }: { on: boolean; off: string; onText: string }) {

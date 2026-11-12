@@ -821,6 +821,20 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   every button 36 px at least: the tool's icon before the count, one elevation button showing the
   pick's level that opens the seven above the bar, and the four actions as icons with their hovers.
   It sits under the tool notes that share the corner [T-1263].
+- **Track count** [T-3296, T-3321 (Anita 2026-11-12: "same as for placing new track, just the little 1 ilne or 2
+  lines"); `TrackCountButtons` in widgets.tsx, `tracksPicked`, `rebuildTracks`; `TrackApi::set_edges_tracks`,
+  `rebuild_pieces`]: the track bar's 1-line and 2-line icons (same buttons and hovers, "Single track" and "Double
+  track"), after the track type buttons, shown while the pick holds rail track that is not a crossover. The one for
+  what the pick's rail track is now is on; neither when it holds both. For blueprint, picking the other makes every
+  piece that can change single or double at once, free, one undoable edit, with the notice ("5 pieces set to single
+  track."; "3 of 5 pieces set to double track. 2 could not change.", then why where the track model names it, "Passing
+  tracks need double track."). For a built pick it is a choice like the level buttons (picking the pick's own count
+  again drops the choice) and Rebuild spends: the hover, question and notice say "double track" or "single track"
+  ("Rebuild 3.1 km to single track"). Double costs the full price of the double track and of the stations on it as
+  double-track stations; single is free, so the hover's second line is "Free" and the question "Rebuild 3.1 km of
+  built track to single track? It's free. Nothing is refunded for what is there now." Under "N of M pieces can't change"
+  the hover says what keeps double track double. Either edit is final. Rules in
+  [track-and-service.md](track-and-service.md) "Rebuilding constructed track".
 - **Level** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
   on that level, one undoable edit: each piece's corners as the track inspector's "Level" buttons
   do for one, and every node all of whose track is picked (a joint, a loose end, a

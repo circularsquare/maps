@@ -3618,7 +3618,7 @@ function hsrShare(a: TrackApi, line: number): number {
   return all > 0 ? fast / all : 0;
 }
 
-type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number };
+type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number; why?: string[] };
 
 /** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
  * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo
@@ -3669,8 +3669,14 @@ function apply(op: EditOp): Applied {
       const r = a.set_edges_kind(new Uint32Array(op.edges), op.kind);
       return { r, skipped: a.last_skipped() };
     }
+    case "edgesTracks": {
+      const r = a.set_edges_tracks(new Uint32Array(op.edges), op.tracks);
+      const skipped = a.last_skipped();
+      // T-3321: why some stayed, for the notice
+      return { r, skipped, why: r === 0 && skipped ? issues() : undefined };
+    }
     case "rebuild": {
-      const r = a.rebuild_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations), op.level ?? 99, op.kind);
+      const r = a.rebuild_pieces(new Uint32Array(op.edges), new Uint32Array(op.stations), op.level ?? 99, op.kind, op.tracks);
       return { r, skipped: a.last_skipped() };
     }
     case "removeEdge":
@@ -3911,6 +3917,18 @@ function buildingQuoteAnswer(id: number | null, corners: number[]): Float64Array
 }
 
 /** The "doubleUp" query's answer (protocol.ts). */
+/** T-3321: the "rebuildQuote" query's answer: the quote's length, `TrackApi::rebuild_quote`'s quote, then the
+ * kinds of why pieces are refused as character codes, joined by newlines. */
+function rebuildQuoteAnswer(edges: number[], stations: number[], level: number | null, kind: number, tracks: number): Float64Array {
+  const q = api!.rebuild_quote(new Uint32Array(edges), new Uint32Array(stations), level ?? 99, kind, tracks);
+  const kinds = api!.issue_kinds();
+  const out = new Float64Array(1 + q.length + kinds.length);
+  out[0] = q.length;
+  out.set(q, 1);
+  for (let i = 0; i < kinds.length; i++) out[1 + q.length + i] = kinds.charCodeAt(i);
+  return out;
+}
+
 function doubleUpAnswer(edge: number): Float64Array {
   const price = api!.preview_double_up(edge);
   if (price >= 0) return new Float64Array([price]);
@@ -4344,7 +4362,7 @@ async function handle(msg: ToClock) {
       api.set_now(gameNow());
       api.set_edit_lead(clk.rate * serviceLeadS());
     }
-    const { r, fault, line, node, skipped, charge: charged, trainCharge } = apply(msg.op);
+    const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = apply(msg.op);
     api.set_edit_lead(0); // a refused edit leaves it set
     if (import.meta.env.DEV && panicAfterEdit) { panicAfterEdit = false; panicNow(); }
     const tB = performance.now();
@@ -4352,7 +4370,7 @@ async function handle(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     dirty = edited = true; editAt = Date.now();
     if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());
@@ -4525,7 +4543,7 @@ async function handle(msg: ToClock) {
       : q.what === "lineTrips" ? api.line_trips(q.line, q.t0, q.t1)
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
-      : q.what === "rebuildQuote" ? Float64Array.from(api.rebuild_quote(new Uint32Array(q.edges), new Uint32Array(q.stations), q.level ?? 99, q.kind))
+      : q.what === "rebuildQuote" ? rebuildQuoteAnswer(q.edges, q.stations, q.level, q.kind, q.tracks)
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
       : q.what === "blueprintPieces" ? Float64Array.from(api.blueprint_piece_costs())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])

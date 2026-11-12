@@ -727,7 +727,7 @@ fn street_tram_crosses_water_at_ground_level_and_others_are_raised() {
     assert_ne!(a.set_edge_pis(s, &[bx_of(&a) + 1250.0, base(&a).1 + 30.0, 0.0, 0.0]), 0);
     // rebuilt as tram track it would have the same problem, as itself it has none
     assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
-    let q = a.rebuild_quote(&edges, &[], 99, 3);
+    let q = a.rebuild_quote(&edges, &[], 99, 3, 0);
     assert_eq!((q[1], q[3]), (0.0, 1.0), "{q:?} {}", a.issue_kinds());
     assert!(a.issue_kinds().contains("GroundOverWater"), "{}", a.issue_kinds());
     assert_eq!(a.w.net.edge_kind[s as usize], TrackKind::StreetTram);

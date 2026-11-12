@@ -77,10 +77,13 @@ export type EditOp =
   /** several blueprint pieces made high-speed or regular track, one undoable edit (T-1898); single
    * track, crossovers and constructed track are left out, counted in `skipped` */
   | { op: "edgesKind"; edges: EdgeId[]; kind: 1 | 2 | 3 }
-  /** constructed track and stations changed in place to `level` (null: kept) and a track type (0 kept, 1 regular,
-   * 2 high speed, 3 tram: T-3088), final and paid at the full new price (T-3059); pieces the track model refuses
-   * are left as they are, counted in `skipped` */
-  | { op: "rebuild"; edges: EdgeId[]; stations: NodeId[]; level: Level | null; kind: 0 | 1 | 2 | 3 }
+  /** blueprint track made single (T-3321) or double (T-3296), one undoable edit; pieces that cannot are counted in
+   * `skipped`, and the answer's issues then say why */
+  | { op: "edgesTracks"; edges: EdgeId[]; tracks: 1 | 2 }
+  /** constructed track and stations changed in place to `level` (null: kept), a track type (0 kept, 1 regular,
+   * 2 high speed, 3 tram: T-3088) and a track count (0 kept, 1 single and free: T-3321, 2 double: T-3296), final and
+   * paid at the full new price (T-3059); pieces the track model refuses are left as they are, counted in `skipped` */
+  | { op: "rebuild"; edges: EdgeId[]; stations: NodeId[]; level: Level | null; kind: 0 | 1 | 2 | 3; tracks: 0 | 1 | 2 }
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
@@ -322,7 +325,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWay"; edge: number; dir: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWay"; edge: number; dir: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number; tracks: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */

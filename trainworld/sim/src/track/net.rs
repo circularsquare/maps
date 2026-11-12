@@ -352,6 +352,9 @@ pub enum Issue {
     Alongside { edge: u32 },
     /// Doubling up high-speed track, which has no quad form (T-817).
     HighSpeed { edge: u32 },
+    /// T-3321: double track that cannot be rebuilt as single, and the thing that needs it double
+    /// (`rebuild.rs` `single_refusal`).
+    NoSingle { edge: u32, why: &'static str },
     /// Construct with nothing left to construct (T-849).
     NothingToConstruct,
     /// A station building (T-2217, `building.rs`) with fewer than 3 or more than 24 corners, two

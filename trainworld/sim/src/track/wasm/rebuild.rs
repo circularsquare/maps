@@ -24,6 +24,8 @@ pub(super) struct Plan {
 struct Want<'a> {
     level: Option<i8>,
     kind: Option<TrackKind>,
+    /// T-3296: 2 makes single track double.
+    tracks: Option<u8>,
     stations: &'a [u32],
     /// T-3241: nodes that move although some of their track is outside the pick (sorted).
     ext: &'a [u32],
@@ -344,15 +346,114 @@ fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool, famili
 
 /// A piece whose track type can change: plain double track (single track and crossovers have no high-speed or
 /// tram form).
-fn kind_ok(d: &EdgeData) -> bool {
-    !d.crossover && d.tracks == 2
+fn kind_ok(d: &EdgeData, w: Want) -> bool {
+    !d.crossover && (d.tracks == 2 || single_ok(d, w))
+}
+
+/// T-3296: single track that becomes double: plain rail track that runs both ways. A piece set or joined to
+/// run one way (a flyover's leg, a lane beside double track) stays single, and so does high-speed track, which
+/// is single only as such a leg.
+fn single_ok(d: &EdgeData, w: Want) -> bool {
+    w.tracks == Some(2) && d.tracks == 1 && !d.crossover && d.kind == TrackKind::Regular && d.oneway != 1 && d.oneway != 2
+}
+
+/// T-3321: double track that becomes single: regular rail once the plan's track type is on it (high-speed and tram
+/// track are never single, but for a flyover's legs). What else keeps a piece double is `single_refusal`'s.
+fn double_ok(d: &EdgeData, w: Want) -> bool {
+    w.tracks == Some(1) && d.tracks == 2 && !d.crossover && w.kind.unwrap_or(d.kind) == TrackKind::Regular
+}
+
+/// Whether `d` is fit for the plan's track count: it has it already, or can change to it.
+fn tracks_ok(d: &EdgeData, w: Want) -> bool {
+    w.tracks.map_or(true, |t| d.tracks == t || single_ok(d, w) || double_ok(d, w))
+}
+
+/// T-3321: what keeps picked double piece `e` from becoming single track with the rest of the pick (`pick`,
+/// sorted), as `Issue::NoSingle`'s `why`; None when it can. `kind` is the track type it would have. Anything that
+/// needs two tracks is refused, never taken away: high-speed and tram track, quad track (a pair beside it,
+/// `near` holds the candidates), a crossover at either end, a one-way single piece joined to one of its two tracks
+/// (a flyover's leg, a lane beside double track), a flying junction, and a station with passing tracks that would
+/// be left with single track only. A two-way single piece joined to it is no reason: its join is kept and counts
+/// again if the track is made double again (`Network::join_applies`).
+fn single_refusal(net: &Network, e: u32, kind: TrackKind, pick: &[u32], near: &[u32]) -> Option<&'static str> {
+    if kind.is_hsr() {
+        return Some("HighSpeed");
+    }
+    if kind.spec().family != 0 {
+        return Some("Tram");
+    }
+    if quad_pair(net, e, near) {
+        return Some("Quad");
+    }
+    for which in 0..2u32 {
+        let n = net.end_node(e, which);
+        let p = &net.node_ports[n as usize];
+        let Some(me) = p.find(e, which) else { continue };
+        if net.node_flying[n as usize] && p.n >= 3 {
+            return Some("Flyover");
+        }
+        for k in 0..p.n as usize {
+            let (c, f) = (p.end[k], p.end[k] >> 1);
+            if f == e {
+                continue;
+            }
+            if net.edge_crossover[f as usize] {
+                return Some("Crossover");
+            }
+            if net.edge_tracks[f as usize] == 1 && p.side[k] != p.side[me] && net.join_away(c).is_some() && net.edge_way(f) != 0 {
+                return Some("OneWay");
+            }
+        }
+        let passing = net.node_platform[n as usize] > 0 && net.station_data(n).is_some_and(|s| s.upgrades & crate::track::upgrades::PASSING != 0);
+        if passing && p.ends().iter().all(|&c| net.edge_tracks[(c >> 1) as usize] == 1 || pick.binary_search(&(c >> 1)).is_ok()) {
+            return Some("Passing");
+        }
+    }
+    None
+}
+
+/// T-3321: double track running beside `e` at quad spacing (the other pair of quad track), among `near`: at the
+/// middle of `e`, within a quarter of `QUAD_SPACING` of it and parallel, as `twin_at` finds a pair.
+fn quad_pair(net: &Network, e: u32, near: &[u32]) -> bool {
+    let (x, y, th) = geom::pos_at(net.edge_pieces(e), net.edge_len[e as usize] / 2.0);
+    let k = net.k_at(y);
+    let pad = QUAD_SPACING * 1.25 * k + 1.0;
+    near.iter().any(|&f| {
+        if f == e || net.edge_tracks[f as usize] != 2 || net.edge_crossover[f as usize] {
+            return false;
+        }
+        if !net.edge_pieces(f).iter().any(|p| { let q = p.bbox(); q[0] - pad <= x && q[2] + pad >= x && q[1] - pad <= y && q[3] + pad >= y }) {
+            return false;
+        }
+        let (sf, dist) = net.project(f, x, y);
+        (QUAD_SPACING * 0.75 * k..=QUAD_SPACING * 1.25 * k).contains(&dist) && (th - geom::pos_at(net.edge_pieces(f), sf).2).sin().abs() < 0.03
+    })
+}
+
+/// T-3321: the live edges with a piece whose box comes within `QUAD_SPACING` and a quarter of the pieces `ids`' boxes.
+fn edges_near(net: &Network, ids: &[u32]) -> Vec<u32> {
+    let mut b = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+    for &e in ids {
+        for p in net.edge_pieces(e) {
+            let q = p.bbox();
+            b = [b[0].min(q[0]), b[1].min(q[1]), b[2].max(q[2]), b[3].max(q[3])];
+        }
+    }
+    if b[0] > b[2] {
+        return vec![];
+    }
+    let pad = QUAD_SPACING * 1.25 * net.k_at((b[1] + b[3]) / 2.0) + 1.0;
+    let b = [b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad];
+    (0..net.edge_count() as u32)
+        .filter(|&f| net.edge_ok(f) && net.edge_pieces(f).iter().any(|p| { let q = p.bbox(); q[0] <= b[2] && q[2] >= b[0] && q[1] <= b[3] && q[3] >= b[1] }))
+        .collect()
 }
 
 /// The family (rail or tram) `e` has once the plan's pieces `cand` have changed.
 fn family_after(net: &Network, cand: &[u32], w: Want, e: u32) -> u8 {
     let k = net.edge_kind[e as usize];
     match w.kind {
-        Some(to) if cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d)) => to.spec().family,
+        Some(to) if cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d, w)) => to.spec().family,
         _ => k.spec().family,
     }
 }
@@ -375,6 +476,9 @@ fn cornerless(net: &Network, e: u32) -> bool {
 fn edge_op(net: &Network, w: Want, e: u32) -> Option<Op> {
     let mut d = net.edge_data(e)?;
     let mut changed = false;
+    // judged on the piece as it is: a type change and a track count change go together
+    let (to_double, to_single) = (single_ok(&d, w), double_ok(&d, w));
+    let retype = w.kind.filter(|&k| kind_ok(&d, w) && d.kind != k);
     if let Some(level) = w.level {
         if !d.pis.iter().chain(d.thru.iter()).all(|p| p.level == level) {
             for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
@@ -383,11 +487,15 @@ fn edge_op(net: &Network, w: Want, e: u32) -> Option<Op> {
             changed = true;
         }
     }
-    if let Some(k) = w.kind {
-        if kind_ok(&d) && d.kind != k {
-            d.kind = k;
-            changed = true;
-        }
+    if to_double || to_single {
+        d.tracks = if to_double { 2 } else { 1 };
+        d.oneway = 0;
+        d.join = [0; 2];
+        changed = true;
+    }
+    if let Some(k) = retype {
+        d.kind = k;
+        changed = true;
     }
     changed.then_some(Op::Edge { id: e, data: Some(d) })
 }
@@ -524,7 +632,7 @@ fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)],
 fn family_ops(net: &Network, cand: &[u32], w: Want) -> Vec<Op> {
     let Some(to) = w.kind else { return vec![] };
     let spec = to.spec();
-    let moved = |e: u32| cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d)) && net.edge_kind[e as usize].spec().family != spec.family;
+    let moved = |e: u32| cand.binary_search(&e).is_ok() && net.edge_data(e).is_some_and(|d| kind_ok(&d, w)) && net.edge_kind[e as usize].spec().family != spec.family;
     let mut ops = vec![];
     let mut seen = vec![];
     for &e in cand {
@@ -635,17 +743,28 @@ impl TrackApi {
     /// T-3241: a level change takes the stations on the picked track with it, picked or not, and a station
     /// at an end of the pick ramps on the track beyond it (`beyond`); one whose ramp has no room there stays,
     /// and the picked piece ramps to it as before.
-    pub(super) fn plan_edges(&mut self, ids: &[u32], level: Option<i8>, kind: Option<TrackKind>, built_ok: bool, picked_stations: &[u32]) -> Plan {
+    pub(super) fn plan_edges(&mut self, ids: &[u32], level: Option<i8>, kind: Option<TrackKind>, tracks: Option<u8>, built_ok: bool, picked_stations: &[u32]) -> Plan {
         let mut stations = picked_stations.to_vec();
         stations.sort_unstable();
-        let w = Want { level, kind, stations: &stations, ext: &[] };
+        let w = Want { level, kind, tracks, stations: &stations, ext: &[] };
         let net = &self.w.net;
         let mut want: Vec<u32> = ids.iter().copied().filter(|&e| net.edge_ok(e)).collect();
         want.sort_unstable();
         want.dedup();
+        // T-3321: double pieces that something keeps double, and the first reason, for when nothing else is refused
+        let mut keep: Vec<(u32, &'static str)> = vec![];
+        if tracks == Some(1) {
+            let doubles: Vec<u32> = want.iter().copied().filter(|&e| net.edge_tracks[e as usize] == 2 && !net.edge_crossover[e as usize]).collect();
+            let near = edges_near(net, &doubles);
+            keep = doubles.iter().filter_map(|&e| single_refusal(net, e, kind.unwrap_or(net.edge_kind[e as usize]), &want, &near).map(|why| (e, why))).collect();
+        }
         let mut cand = want.clone();
+        // a piece that cannot take the track count asked for is refused whole, level and type included
         cand.retain(|&e| {
-            (built_ok || !net.edge_built[e as usize]) && !net.edge_crossover[e as usize] && (level.is_some() || net.edge_data(e).is_some_and(|d| kind_ok(&d)))
+            (built_ok || !net.edge_built[e as usize])
+                && !net.edge_crossover[e as usize]
+                && keep.binary_search_by_key(&e, |k| k.0).is_err()
+                && net.edge_data(e).is_some_and(|d| tracks_ok(&d, w) && (level.is_some() || kind.is_none() || kind_ok(&d, w)))
         });
         let mut refused: Vec<u32> = want.iter().copied().filter(|e| cand.binary_search(e).is_err()).collect();
         let mut root = refused.clone();
@@ -690,13 +809,13 @@ impl TrackApi {
                 both.sort_unstable();
                 both.dedup();
                 let n0 = cand.len();
-                let wb = Want { level, kind, stations: &both, ext: &bey.nodes };
+                let wb = Want { level, kind, tracks, stations: &both, ext: &bey.nodes };
                 prune(&self.w.net, &mut cand, wb, &mut refused, &mut root, &mut clash_at);
                 if cand.len() == n0 {
                     break;
                 }
             }
-            let wb = Want { level, kind, stations: &both, ext: &bey.nodes };
+            let wb = Want { level, kind, tracks, stations: &both, ext: &bey.nodes };
             let gs = groups(&self.w.net, &cand, wb, &bey);
             if gs.is_empty() {
                 break;
@@ -824,6 +943,14 @@ impl TrackApi {
                 last_issues = vec![Issue::Geom { edge: e, issue: GeomIssue::RampTooShort(0) }];
             }
         }
+        // T-3321: what keeps double track double is named beside the track model's problems
+        let mut whys: Vec<&str> = vec![];
+        for &(edge, why) in &keep {
+            if !whys.contains(&why) {
+                whys.push(why);
+                last_issues.push(Issue::NoSingle { edge, why });
+            }
+        }
         let beyond: Vec<(u32, u32, f64)> = bey.runs.iter().filter(|r| moved_node(r.station)).flat_map(|r| r.edges.iter().copied()).collect();
         let moved: Vec<u32> = both.iter().copied().filter(|&n| moved_node(n)).collect();
         Plan { take, refused, root, issues: last_issues, beyond, moved }
@@ -831,7 +958,7 @@ impl TrackApi {
 
     /// The edges and stations of a rebuild pick that are constructed (a blueprint piece is not rebuilt
     /// but built: Construct), the level (None: kept) and the track type (None: kept) the numbers name.
-    fn rebuild_pick(&self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> (Vec<u32>, Vec<u32>, Option<i8>, Option<TrackKind>) {
+    fn rebuild_pick(&self, edges: &[u32], stations: &[u32], level: i32, kind: i32, tracks: i32) -> (Vec<u32>, Vec<u32>, Option<i8>, Option<TrackKind>, Option<u8>) {
         let net = &self.w.net;
         let edges = edges.iter().copied().filter(|&e| net.edge_ok(e) && net.edge_built[e as usize]).collect();
         let stations = stations.iter().copied().filter(|&n| net.node_ok(n) && net.node_platform[n as usize] > 0 && net.node_built[n as usize]).collect();
@@ -841,14 +968,15 @@ impl TrackApi {
             3 => Some(TrackKind::Tram),
             _ => None,
         };
-        (edges, stations, (-3..=3).contains(&level).then_some(level as i8), kind)
+        (edges, stations, (-3..=3).contains(&level).then_some(level as i8), kind, matches!(tracks, 1 | 2).then_some(tracks as u8))
     }
 
-    /// What a rebuild changes: its plan, the edges it changes, and the stations it charges for (those in
-    /// the pick or moving with it whose level or track type changes, and any whose track changes family).
-    fn rebuild_plan(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> (Plan, Vec<u32>, Vec<u32>) {
-        let (edges, stations, level, kind) = self.rebuild_pick(edges, stations, level, kind);
-        let plan = self.plan_edges(&edges, level, kind, true, &stations);
+    /// What a rebuild changes: its plan, the edges it changes, those of them it charges for (all but double
+    /// track only made single, T-3321), and the stations it charges for (those in the pick or moving with it
+    /// whose level or track type changes, any whose track changes family, and those on track made double).
+    fn rebuild_plan(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32, tracks: i32) -> (Plan, Vec<u32>, Vec<u32>, Vec<u32>) {
+        let (edges, stations, level, kind, tracks) = self.rebuild_pick(edges, stations, level, kind, tracks);
+        let plan = self.plan_edges(&edges, level, kind, tracks, true, &stations);
         let net = &self.w.net;
         // an edge with no corners has no level of its own: its nodes' levels are its profile; the track
         // beyond the pick that a station's ramp takes is charged for the stretch that changes
@@ -872,7 +1000,7 @@ impl TrackApi {
             .take
             .iter()
             .filter_map(|op| match op {
-                Op::Edge { id, data: Some(d) } if d.kind != net.edge_kind[*id as usize] => Some(*id),
+                Op::Edge { id, data: Some(d) } if d.kind != net.edge_kind[*id as usize] || d.tracks > net.edge_tracks[*id as usize] => Some(*id),
                 _ => None,
             })
             .collect();
@@ -888,9 +1016,48 @@ impl TrackApi {
         ends.sort_unstable();
         ends.dedup();
         charged.extend(ends.into_iter().filter(|&n| net.node_platform[n as usize] > 0 && net.node_built[n as usize] && refamily(n)));
+        // T-3296: a station on track that becomes double is a double-track station, priced as one
+        let doubled: Vec<u32> = plan
+            .take
+            .iter()
+            .filter_map(|op| match op {
+                Op::Edge { id, data: Some(d) } if d.tracks > net.edge_tracks[*id as usize] => Some(*id),
+                _ => None,
+            })
+            .collect();
+        charged.extend(
+            doubled
+                .iter()
+                .flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]])
+                .filter(|&n| net.node_platform[n as usize] > 0 && net.node_built[n as usize]),
+        );
         charged.sort_unstable();
         charged.dedup();
-        (plan, changed, charged)
+        // T-3321: double track made single and nothing else is free (no level or type change, no node of it moved)
+        let moved_ends: Vec<u32> = plan
+            .take
+            .iter()
+            .filter_map(|op| match op {
+                Op::Node { id, data: Some(_) } => Some(*id),
+                _ => None,
+            })
+            .collect();
+        let mut free: Vec<u32> = plan
+            .take
+            .iter()
+            .filter_map(|op| match op {
+                Op::Edge { id, data: Some(d) } if d.tracks < net.edge_tracks[*id as usize] => {
+                    let old = net.edge_data(*id)?;
+                    let same = EdgeData { tracks: old.tracks, oneway: old.oneway, join: old.join, ..d.clone() } == old;
+                    let still = !moved_ends.contains(&net.edge_a[*id as usize]) && !moved_ends.contains(&net.edge_b[*id as usize]);
+                    (same && still).then_some(*id)
+                }
+                _ => None,
+            })
+            .collect();
+        free.sort_unstable();
+        let priced: Vec<u32> = changed.iter().copied().filter(|e| free.binary_search(e).is_err()).collect();
+        (plan, changed, priced, charged)
     }
 }
 
@@ -927,19 +1094,21 @@ fn stretch_price(net: &Network, e: u32, from: u32, m: f64) -> f64 {
 impl TrackApi {
     /// What rebuilding constructed track in place would do (T-3059), nothing applied: the picked
     /// constructed `edges` and `stations` on `level` (outside -3 to 3: kept) and as track type `kind`
-    /// (1 regular, 2 high speed, 3 tram, else kept). Returns `[price US$M, edges changed, stations charged,
+    /// (1 regular, 2 high speed, 3 tram, else kept) and, with `tracks` 2 (T-3296), single track made double
+    /// (a piece that runs one way, or is not regular rail, stays single and is refused), or with `tracks` 1
+    /// (T-3321) double track made single, free (`single_refusal` names what keeps a piece double). Returns `[price US$M, edges changed, stations charged,
     /// edges refused, of those refused for their own sake, ...the refused ids (those first), ...the changed
     /// ids]`; the price is the full price of the changed track and stations built new, nothing back for the
     /// old (`issue_kinds()` says why the last refusal was). A refused piece not refused for its own sake
     /// would change family alone (T-3088). T-3241: then, for the track outside the pick that the ramps of
     /// the stations at its ends take, `edge, the node its change starts at, metres changed` each (in the
     /// price, not among the changed ids).
-    pub fn rebuild_quote(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> Vec<f64> {
-        let (plan, changed, charged) = self.rebuild_plan(edges, stations, level, kind);
+    pub fn rebuild_quote(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32, tracks: i32) -> Vec<f64> {
+        let (plan, changed, priced, charged) = self.rebuild_plan(edges, stations, level, kind, tracks);
         let price = if plan.take.is_empty() {
             0.0
         } else {
-            self.w.trial_light(Op::Batch(plan.take.clone()), |w| full_price(w, &changed, &charged, &plan.beyond)).map_or(0.0, |r| r.1)
+            self.w.trial_light(Op::Batch(plan.take.clone()), |w| full_price(w, &priced, &charged, &plan.beyond)).map_or(0.0, |r| r.1)
         };
         self.money_short = None;
         self.issues = plan.issues;
@@ -956,8 +1125,8 @@ impl TrackApi {
     /// (no undo), paid at the full price of what changed. The edges and stations keep their ids, so
     /// lines, names and upgrades stay. Pieces the track model refuses are left as they are and counted in
     /// `last_skipped`. 1 when nothing changed or the cash is short (`money_short`).
-    pub fn rebuild_pieces(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> u32 {
-        let (plan, changed, charged) = self.rebuild_plan(edges, stations, level, kind);
+    pub fn rebuild_pieces(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32, tracks: i32) -> u32 {
+        let (plan, _, priced, charged) = self.rebuild_plan(edges, stations, level, kind, tracks);
         self.skipped = plan.refused.len() as u32;
         if plan.take.is_empty() {
             self.money_short = None;
@@ -969,7 +1138,7 @@ impl TrackApi {
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
         let beyond = plan.beyond;
-        let r = self.w.apply_priced(Op::Batch(plan.take), cash, true, &|w| trains_to_buy(w, fleet), Some(&|w: &TrackWorld| full_price(w, &changed, &charged, &beyond)));
+        let r = self.w.apply_priced(Op::Batch(plan.take), cash, true, &|w| trains_to_buy(w, fleet), Some(&|w: &TrackWorld| full_price(w, &priced, &charged, &beyond)));
         self.settle(r, &before)
     }
 }

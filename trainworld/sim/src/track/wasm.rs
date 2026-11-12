@@ -1954,6 +1954,7 @@ fn issue_kind(i: &Issue) -> String {
         ),
         Issue::Crossing { overlap: true, .. } => "CrossingOverlap".into(),
         Issue::OneWayNoWay { line } => format!("OneWayNoWay:{line}"),
+        Issue::NoSingle { why, .. } => format!("NoSingle:{why}"),
         other => {
             let d = format!("{other:?}");
             d.split(|c: char| c == ' ' || c == '{' || c == '(').next().unwrap_or("").to_string()
@@ -2185,6 +2186,8 @@ mod station_sweep_tests;
 mod t1898_tests;
 #[cfg(test)]
 mod rebuild_tests;
+#[cfg(test)]
+mod double_tests;
 #[cfg(test)]
 mod tram_tests;
 #[cfg(test)]

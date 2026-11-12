@@ -46,11 +46,11 @@ fn the_whole_run_rebuilds_as_a_viaduct_for_its_full_price() {
     let (mut a, st, line) = run();
     let edges = live(&a);
     let names: Vec<String> = st.iter().map(|&n| a.w.net.station_data(n).unwrap().name).collect();
-    let q = a.rebuild_quote(&edges, &st, 1, 0);
+    let q = a.rebuild_quote(&edges, &st, 1, 0, 0);
     assert!(q[0] > 0.0 && q[1] as usize == edges.len() && q[2] == 2.0 && q[3] == 0.0, "{q:?} {}", a.issues());
     assert_eq!(q.len(), 5 + edges.len(), "the changed edges follow the (no) refused ones");
     let (cash, built) = (a.cash(), a.built_cost());
-    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0, 0), 0, "{}", a.issues());
     assert_eq!(a.last_skipped(), 0);
     assert!((cash - a.cash() - q[0]).abs() < 1e-9, "charged {} quoted {}", cash - a.cash(), q[0]);
     assert!((a.last_charge() - q[0]).abs() < 1e-9);
@@ -70,7 +70,7 @@ fn the_whole_run_rebuilds_as_a_viaduct_for_its_full_price() {
     assert!(a.w.svc.lines[line as usize].running && !a.w.net.line_broken[line as usize]);
     assert!(!a.can_undo(), "final");
     // rebuilt again as it is: nothing to do, nothing charged
-    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0), 1);
+    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0, 0), 1);
     assert_eq!(a.last_skipped(), 0);
 }
 
@@ -79,11 +79,11 @@ fn the_whole_run_rebuilds_as_a_viaduct_for_its_full_price() {
 fn a_cheaper_rebuild_still_pays_the_full_new_price() {
     let (mut a, st, _) = run();
     let edges = live(&a);
-    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0, 0), 0, "{}", a.issues());
     let cash = a.cash();
-    let q = a.rebuild_quote(&edges, &st, 0, 0);
+    let q = a.rebuild_quote(&edges, &st, 0, 0, 0);
     assert!(q[0] > 0.0, "{q:?}");
-    assert_eq!(a.rebuild_pieces(&edges, &st, 0, 0), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 0, 0, 0), 0, "{}", a.issues());
     assert!((cash - a.cash() - q[0]).abs() < 1e-9);
 }
 
@@ -92,9 +92,9 @@ fn the_whole_run_rebuilds_as_high_speed() {
     let (mut a, st, line) = run();
     let edges = live(&a);
     let cash = a.cash();
-    let q = a.rebuild_quote(&edges, &st, 99, 2);
+    let q = a.rebuild_quote(&edges, &st, 99, 2, 0);
     assert!(q[0] > 0.0 && q[1] as usize == edges.len() && q[2] == 2.0, "{q:?}");
-    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 2), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 2, 0), 0, "{}", a.issues());
     assert!((cash - a.cash() - q[0]).abs() < 1e-9);
     for &e in &edges {
         assert!(a.w.net.edge_kind[e as usize].is_hsr() && a.w.net.edge_built[e as usize]);
@@ -103,7 +103,7 @@ fn the_whole_run_rebuilds_as_high_speed() {
     assert_eq!(a.line_stops(line), st);
     assert!(a.w.svc.lines[line as usize].running);
     // and back
-    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 1), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 1, 0), 0, "{}", a.issues());
     assert!(edges.iter().all(|&e| !a.w.net.edge_kind[e as usize].is_hsr()));
 }
 
@@ -112,7 +112,7 @@ fn the_whole_run_rebuilds_as_high_speed() {
 fn level_and_type_change_together() {
     let (mut a, st, _) = run();
     let edges = live(&a);
-    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 2), 0, "{}", a.issues());
+    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 2, 0), 0, "{}", a.issues());
     for &e in &edges {
         assert!(a.w.net.edge_kind[e as usize].is_hsr());
         assert!(levels(&a, e).iter().all(|&l| l == -1));
@@ -125,10 +125,10 @@ fn stations_on_the_picked_track_move_with_it_unpicked() {
     let (mut a, st, line) = run();
     let edges = live(&a);
     let cash = a.cash();
-    let q = a.rebuild_quote(&edges, &[], 1, 0);
+    let q = a.rebuild_quote(&edges, &[], 1, 0, 0);
     assert_eq!((q[3], q[2]), (0.0, 2.0), "nothing refused, both stations charged: {q:?} {}", a.issue_kinds());
     assert_eq!(a.cash(), cash, "a quote spends nothing");
-    assert_eq!(a.rebuild_pieces(&edges, &[], 1, 0), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &[], 1, 0, 0), 0, "{}", a.issue_kinds());
     assert!((cash - a.cash() - q[0]).abs() < 1e-9);
     assert!(edges.iter().all(|&e| levels(&a, e).iter().all(|&l| l == 1)));
     assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == 1), "stations moved");
@@ -176,7 +176,7 @@ fn a_piece_between_two_stations_takes_them_and_ramps_beyond() {
         let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
         let outer: Vec<u32> = live(&a).into_iter().filter(|&e| e != mid).collect();
         assert!(a.w.net.edge_data(mid).unwrap().pis.is_empty(), "a piece with no corners, as drawn");
-        let q = a.rebuild_quote(&[mid], &[], level as i32, 0);
+        let q = a.rebuild_quote(&[mid], &[], level as i32, 0, 0);
         assert_eq!((q[1], q[2], q[3]), (1.0, 2.0, 0.0), "{level}: the piece and two stations, nothing refused: {q:?} {}", a.issue_kinds());
         let bey = beyond_of(&q);
         let ramp = 100.0 + 2.0 + 200.0 * (level as f64).abs();
@@ -186,7 +186,7 @@ fn a_piece_between_two_stations_takes_them_and_ramps_beyond() {
             assert!((m - ramp).abs() < 0.5, "{level}: the ramp ends {m} m past the station, wanted about {ramp}");
         }
         let cash = a.cash();
-        assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0), 0, "{}", a.issue_kinds());
+        assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0, 0), 0, "{}", a.issue_kinds());
         assert_eq!(a.last_skipped(), 0);
         assert!((cash - a.cash() - q[0]).abs() < 1e-9, "charged {} quoted {}", cash - a.cash(), q[0]);
         let net = &a.w.net;
@@ -250,10 +250,10 @@ fn no_room_beyond_a_station_before_a_junction() {
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
     assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
     let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
-    let q = a.rebuild_quote(&[mid], &[], -2, 0);
+    let q = a.rebuild_quote(&[mid], &[], -2, 0, 0);
     assert_eq!((q[1], q[3]), (0.0, 1.0), "{q:?}");
     assert!(a.issue_kinds().contains("RampTooShort"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0), 1);
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0, 0), 1);
     assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == 0));
 }
 
@@ -285,12 +285,12 @@ fn a_short_piece_beyond_carries_the_ramp_on_through_a_joint() {
     let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&s1) && ends_of(&a, e).contains(&n3000)).unwrap();
     let short = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&n3000) && ends_of(&a, e).contains(&joint)).unwrap();
     let long = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&joint) && e != short).unwrap();
-    let q = a.rebuild_quote(&[mid], &[], -2, 0);
+    let q = a.rebuild_quote(&[mid], &[], -2, 0, 0);
     assert_eq!(q[3], 0.0, "{q:?} {}", a.issue_kinds());
     let bey = beyond_of(&q);
     assert!(bey.iter().any(|&(e, f, m)| e == short && f == n3000 && (m - 150.0).abs() < 0.5), "{bey:?}");
     assert!(bey.iter().any(|&(e, f, m)| e == long && f == joint && (m - 402.0).abs() < 0.5), "{bey:?}");
-    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0, 0), 0, "{}", a.issue_kinds());
     assert_eq!((a.w.net.node_level[n3000 as usize], a.w.net.node_level[joint as usize], a.w.net.node_level[s1 as usize]), (-2, -2, -2));
     flat_at(&a, short, -2);
     all_valid(&a);
@@ -324,7 +324,7 @@ fn a_ramp_beyond_finds_a_straight_and_keeps_the_shape() {
             assert!(ends_of(&a, curve).contains(&st[1]));
             let info = |a: &TrackApi, e: u32| a.edges_info().chunks(10).find(|c| c[0] as u32 == e).unwrap().to_vec();
             let (before, shape) = (info(&a, curve), a.w.net.edge_pieces(curve).to_vec());
-            let q = a.rebuild_quote(&[mid], &[], level as i32, 0);
+            let q = a.rebuild_quote(&[mid], &[], level as i32, 0, 0);
             assert_eq!(q[3], 0.0, "{hsr} {level}: {q:?} {}", a.issue_kinds());
             let bey = beyond_of(&q);
             let on_curve = bey.iter().find(|x| x.0 == curve).unwrap().2;
@@ -336,7 +336,7 @@ fn a_ramp_beyond_finds_a_straight_and_keeps_the_shape() {
             } else {
                 assert!(on_curve > 650.0 && on_curve < 1100.0, "{hsr} {level}: on the straight after the curve, {on_curve}");
             }
-            assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0), 0, "{}", a.issue_kinds());
+            assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0, 0), 0, "{}", a.issue_kinds());
             let after = info(&a, curve);
             assert!((after[5] - before[5]).abs() < 0.05, "{hsr} {level}: length {} to {}", before[5], after[5]);
             assert_eq!(after[7], before[7], "{hsr} {level}: the speed limit stays");
@@ -380,10 +380,10 @@ fn a_terminus_moves_and_a_short_stub_beyond_moves_whole() {
     let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&t)).unwrap();
     let stub = *live(&a).iter().find(|&&e| e != mid).unwrap();
     let end = ends_of(&a, stub).into_iter().find(|&n| n != s).unwrap();
-    let q = a.rebuild_quote(&[mid], &[], -1, 0);
+    let q = a.rebuild_quote(&[mid], &[], -1, 0, 0);
     assert_eq!((q[2], q[3]), (2.0, 0.0), "{q:?} {}", a.issue_kinds());
     assert_eq!(beyond_of(&q).len(), 1, "only the stub; nothing beyond the terminus");
-    assert_eq!(a.rebuild_pieces(&[mid], &[], -1, 0), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -1, 0, 0), 0, "{}", a.issue_kinds());
     assert_eq!((a.w.net.node_level[t as usize], a.w.net.node_level[s as usize], a.w.net.node_level[end as usize]), (-1, -1, -1));
     flat_at(&a, stub, -1);
     all_valid(&a);
@@ -484,9 +484,9 @@ fn flat_at(a: &TrackApi, e: u32, l: i8) {
 fn a_run_at_ground_and_on_bridges_goes_down_whole() {
     let (mut a, st, line) = wet_run(false);
     let edges = run_edges(&a);
-    let q = a.rebuild_quote(&edges, &st, -1, 0);
+    let q = a.rebuild_quote(&edges, &st, -1, 0, 0);
     assert_eq!(q[3], 0.0, "nothing refused: {q:?} {}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 0), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 0, 0), 0, "{}", a.issue_kinds());
     assert_eq!(a.last_skipped(), 0);
     let before: Vec<Vec<i8>> = edges.iter().map(|&e| levels(&a, e)).collect();
     all_down_but(&a, &edges, &[], &[], &before);
@@ -505,13 +505,13 @@ fn a_run_at_ground_and_on_bridges_goes_down_whole() {
 fn one_refused_piece_does_not_leave_the_rest_ramping_at_every_node() {
     let (mut a, st, line) = wet_run(true);
     let edges = run_edges(&a);
-    let q = a.rebuild_quote(&edges, &st, -1, 0);
+    let q = a.rebuild_quote(&edges, &st, -1, 0, 0);
     let refused: Vec<u32> = q[5..5 + q[3] as usize].iter().map(|&e| e as u32).collect();
     let x = |n: u32| a.w.net.node_x[n as usize] - a.from_lonlat(-73.985, 40.758)[0];
     let crossing = |e: u32| x(a.w.net.edge_a[e as usize]) < 2500.0 && x(a.w.net.edge_b[e as usize]) > 2500.0;
     assert!(refused.len() == 1 && crossing(refused[0]), "only the piece over the tunnel: {refused:?} {}", a.issue_kinds());
     let before: Vec<Vec<i8>> = edges.iter().map(|&e| levels(&a, e)).collect();
-    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 0), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &st, -1, 0, 0), 0, "{}", a.issue_kinds());
     assert_eq!(a.last_skipped() as usize, refused.len());
     all_down_but(&a, &edges, &refused, &[], &before);
     assert!(a.w.svc.lines[line as usize].running);
@@ -524,10 +524,10 @@ fn a_station_left_out_goes_down_with_its_track() {
         let (mut a, st, line) = wet_run(false);
         let edges = run_edges(&a);
         let picked = [st[1 - left_out]];
-        let q = a.rebuild_quote(&edges, &picked, -1, 0);
+        let q = a.rebuild_quote(&edges, &picked, -1, 0, 0);
         assert_eq!((q[2], q[3]), (2.0, 0.0), "both stations charged, nothing refused: {q:?} {}", a.issue_kinds());
         let before: Vec<Vec<i8>> = edges.iter().map(|&e| levels(&a, e)).collect();
-        assert_eq!(a.rebuild_pieces(&edges, &picked, -1, 0), 0, "{}", a.issue_kinds());
+        assert_eq!(a.rebuild_pieces(&edges, &picked, -1, 0, 0), 0, "{}", a.issue_kinds());
         assert_eq!(a.last_skipped(), 0);
         all_down_but(&a, &edges, &[], &[], &before);
         assert_eq!(a.w.net.node_level[st[left_out] as usize], -1);
@@ -541,7 +541,7 @@ fn a_short_purse_refuses_the_rebuild() {
     let (mut a, st, _) = run();
     let edges = live(&a);
     a.set_cash(0.001);
-    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0), 1);
+    assert_eq!(a.rebuild_pieces(&edges, &st, 1, 0, 0), 1);
     assert!(a.money_short.is_some());
     assert!(edges.iter().all(|&e| levels(&a, e).iter().all(|&l| l == 0)));
 }
@@ -554,8 +554,8 @@ fn blueprint_pieces_are_not_rebuilt() {
     let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0];
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     let edges = live(&a);
-    assert_eq!(a.rebuild_pieces(&edges, &[], 1, 0), 1);
-    assert_eq!(a.rebuild_quote(&edges, &[], 1, 0)[..5], [0.0, 0.0, 0.0, 0.0, 0.0]);
+    assert_eq!(a.rebuild_pieces(&edges, &[], 1, 0, 0), 1);
+    assert_eq!(a.rebuild_quote(&edges, &[], 1, 0, 0)[..5], [0.0, 0.0, 0.0, 0.0, 0.0]);
 }
 
 /// T-3088: the run and its stations rebuilt as tram track. The stations become tram stops cut to the
@@ -566,10 +566,10 @@ fn a_rail_run_rebuilds_as_tram_and_back() {
     let (mut a, st, line) = run();
     let edges = live(&a);
     assert!(!a.line_tram(line) && a.cars_needed() > 0);
-    let q = a.rebuild_quote(&edges, &st, 99, 3);
+    let q = a.rebuild_quote(&edges, &st, 99, 3, 0);
     assert!(q[0] > 0.0 && q[1] as usize == edges.len() && q[2] == 2.0 && q[3] == 0.0, "{q:?} {}", a.issue_kinds());
     let cash = a.cash();
-    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 3), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 3, 0), 0, "{}", a.issue_kinds());
     assert!(cash - a.cash() > q[0] + 1.0, "the quote, and the trams the line needs: {} {}", cash - a.cash(), q[0]);
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram && a.w.net.edge_built[e as usize]));
     assert_eq!(live(&a), edges);
@@ -584,7 +584,7 @@ fn a_rail_run_rebuilds_as_tram_and_back() {
     assert!(a.w.svc.lines[l].running && !a.w.net.line_broken[l]);
     assert!(a.trams_needed() > 0 && a.cars_needed() == 0 && a.fleet_tram() >= a.trams_needed());
     // and back to rail: a tram stop's 80 m is long enough for a train
-    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 1), 0, "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &st, 99, 1, 0), 0, "{}", a.issue_kinds());
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Regular));
     assert!(!a.line_tram(line) && a.w.svc.lines[l].running);
     assert_eq!((a.w.net.line_dwell[l], a.w.net.line_turn[l]), (30.0, 180.0));
@@ -600,10 +600,10 @@ fn part_of_a_run_cannot_change_family() {
     let part: Vec<u32> = edges.iter().copied().filter(|&e| a.w.net.edge_a[e as usize] == st[0] || a.w.net.edge_b[e as usize] == st[0]).collect();
     assert_eq!(part.len(), 2);
     let meets = *part.iter().find(|&&e| [a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]].iter().all(|&n| a.w.net.node_ports[n as usize].n == 2)).unwrap();
-    let q = a.rebuild_quote(&part, &st[..1], 99, 3);
+    let q = a.rebuild_quote(&part, &st[..1], 99, 3, 0);
     assert_eq!((q[1], q[3], q[4], q[5]), (0.0, 2.0, 1.0, meets as f64), "{q:?}: the piece that meets the rail is the red one");
     assert!(a.issue_kinds().contains("TrackFamily"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&part, &st[..1], 99, 3), 1);
+    assert_eq!(a.rebuild_pieces(&part, &st[..1], 99, 3, 0), 1);
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Regular));
 }
 
@@ -621,10 +621,10 @@ fn a_tram_curve_too_tight_for_trains_stays_tram() {
     let edges = live(&a);
     assert_eq!(edges.len(), 2);
     let curve = *edges.iter().find(|&&e| !a.w.net.edge_data(e).unwrap().pis.is_empty()).unwrap();
-    let q = a.rebuild_quote(&edges, &[], 99, 1);
+    let q = a.rebuild_quote(&edges, &[], 99, 1, 0);
     assert_eq!((q[1], q[3], q[4], q[5]), (0.0, 2.0, 1.0, curve as f64), "{q:?} {}", a.issue_kinds());
     assert!(a.issue_kinds().contains("RadiusTooSmall"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1), 1);
+    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1, 0), 1);
     assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
 }
 

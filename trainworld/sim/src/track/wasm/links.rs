@@ -308,7 +308,7 @@ impl TrackApi {
                 return 1;
             }
         };
-        let plan = self.plan_edges(ids, None, Some(kind), false, &[]);
+        let plan = self.plan_edges(ids, None, Some(kind), None, false, &[]);
         self.skipped = plan.refused.len() as u32;
         if plan.take.is_empty() {
             self.money_short = None;
@@ -317,6 +317,32 @@ impl TrackApi {
         }
         let r = self.run(Op::Batch(plan.take));
         self.skipped = plan.refused.len() as u32;
+        r
+    }
+
+    /// Make blueprint track `tracks` 2 (single made double, T-3296) or 1 (double made single, T-3321), shape and
+    /// level unchanged, by the rules of rebuilding built track (`rebuild_pieces`). Pieces that cannot (single
+    /// track that runs one way or is not regular rail; double track `single_refusal` keeps double), constructed
+    /// track and pieces the track model refuses stay and are counted in `last_skipped`; pieces that have the
+    /// count already are not. One undoable edit, free. Returns 1 when nothing changed. Either way the issues
+    /// say why pieces stayed, if any did.
+    pub fn set_edges_tracks(&mut self, ids: &[u32], tracks: u8) -> u32 {
+        if tracks != 1 && tracks != 2 {
+            self.issues = vec![];
+            return 1;
+        }
+        let plan = self.plan_edges(ids, None, None, Some(tracks), false, &[]);
+        self.skipped = plan.refused.len() as u32;
+        if plan.take.is_empty() {
+            self.money_short = None;
+            self.issues = plan.issues;
+            return 1;
+        }
+        let r = self.run(Op::Batch(plan.take));
+        self.skipped = plan.refused.len() as u32;
+        if r == 0 {
+            self.issues = plan.issues;
+        }
         r
     }
 
@@ -332,7 +358,7 @@ impl TrackApi {
     /// tried last one by one with their ends kept. Pieces already on the level are not counted. 1 when
     /// nothing changed (the issues of the last refusal, if any).
     pub fn set_edges_level(&mut self, ids: &[u32], level: i8) -> u32 {
-        let plan = self.plan_edges(ids, Some(level), None, false, &[]);
+        let plan = self.plan_edges(ids, Some(level), None, None, false, &[]);
         self.skipped = plan.refused.len() as u32;
         if plan.take.is_empty() {
             self.money_short = None;
