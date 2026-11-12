@@ -5,7 +5,7 @@
 // grey), then the game's own few last. Typing filters; a pick saves at once and the outline becomes the flag. The
 // leaderboard rows and Community cards show the flag after the name (smaller after the small grey name on a card). A
 // server without `trainworldFlagSet` gets no prefecture or New York City in the picker.
-// Screenshots: artifacts/trainworld/t3279/{account,picker-top,picker-places,picker-end,board,community}-{light,dark}.png
+// Screenshots: artifacts/trainworld/t3279/{account,picker-top,picker-places,picker-spain,picker-indonesia,picker-end,board,community}-{light,dark}.png
 //   node trainworld/checks/t3279-flags.mjs [app url]     (from the maps root; needs a Vite: dev-nowatch.mjs <port>)
 import { spawn, spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
@@ -89,7 +89,7 @@ try {
     if (!u.ok) throw new Error(`share ${game}: ${u.status} ${await u.text()}`);
   }
   const cfg = await (await fetch(SERVER + 'noritetsu/config')).json();
-  ok(cfg.trainworldFlags === true && cfg.trainworldFlagSet === 2, `the server takes flag list 2 (${JSON.stringify({ flags: cfg.trainworldFlags, set: cfg.trainworldFlagSet })})`);
+  ok(cfg.trainworldFlags === true && cfg.trainworldFlagSet === 3, `the server takes flag list 3 (${JSON.stringify({ flags: cfg.trainworldFlags, set: cfg.trainworldFlagSet })})`);
 
   // ---- the page, signed in as the first player, in Tokyo
   const { ctx, close } = await launchChrome({ prefix: 'tw-t3279-', size: [1300, 900], deviceScaleFactor: 2, timezoneId: 'Asia/Tokyo', locale: 'en-US' });
@@ -156,7 +156,7 @@ try {
     ok(names[0] === 'Japan', `first: the time zone's country (${names.slice(0, 3)})`);
     ok(at('Afghanistan') === 1 && names[1].endsWith('|') && at('Zimbabwe') > at('Japan', 1), 'then every country A to Z, after a gap');
     const places = names.slice(at('Zimbabwe') + 1, at('Train'));
-    ok(names[at('Zimbabwe') + 1].endsWith('|') && places.length === 52 && places.some((x) => x.startsWith('Tokyo')) && places.some((x) => x.startsWith('New York City')) && places.some((x) => x.startsWith('European Union')), `then 52 other places, Tokyo and New York City among them (${places.slice(0, 6)})`);
+    ok(names[at('Zimbabwe') + 1].endsWith('|') && places.length === 79 && places.some((x) => x.startsWith('Tokyo')) && places.some((x) => x.startsWith('New York City')) && places.some((x) => x.startsWith('European Union')), `then 79 other places, Tokyo and New York City among them (${places.slice(0, 6)})`);
     ok(JSON.stringify(names.slice(at('Train')).map((x) => x.replace(' |', ''))) === JSON.stringify(['Train', 'Earth', 'Pride', 'Transgender', 'United Nations', 'Pirate', 'Checkered']), `the game's own few last (${names.slice(at('Train'))})`);
     ok(names.filter((x) => x.startsWith('Japan')).length === 2 && !names.includes('No flag'), 'Japan at the top and in its place; no "No flag" while none is picked');
     const tokyoWhere = await page.evaluate(() => [...document.querySelectorAll('.flag-pop li')].find((li) => li.querySelector('.flag-pop-name').textContent === 'Tokyo')?.querySelector('.flag-pop-where')?.textContent);
@@ -188,6 +188,18 @@ try {
     await page.fill('.flag-pop input', 'japan');
     names = await pickerNames();
     ok(names[0] === 'Japan' && names.length === 48 && names[1].endsWith('|'), `"japan": Japan, then its 47 prefectures (${names.length})`);
+    await page.fill('.flag-pop input', 'spain');
+    names = await pickerNames();
+    ok(names[0] === 'Spain' && names.length === 18 && ['Catalonia', 'Basque Country', 'Galicia', 'Valencia', 'Andalusia', 'Madrid', 'Canary Islands'].every((n) => names.some((x) => x.startsWith(n))), `"spain": Spain, then its 17 regions (${names.length})`);
+    await shots('picker-spain', '.acct-panel, .flag-pop');
+    await page.fill('.flag-pop input', 'indonesia');
+    await shots('picker-indonesia', '.acct-panel, .flag-pop');
+    await page.fill('.flag-pop input', 'spain');
+    for (const [q, n] of [['portugal', 5], ['indonesia', 4], ['france', 4]]) {
+      await page.fill('.flag-pop input', q);
+      names = await pickerNames();
+      ok(names.length === n, `"${q}": the country and ${n - 1} places (${names})`);
+    }
     await page.fill('.flag-pop input', 'tokyo');
     await page.press('.flag-pop input', 'Enter');
     await until(() => page.evaluate(() => !!document.querySelector('.acct-flag-btn img.flag')));
@@ -245,7 +257,7 @@ try {
     await page.waitForSelector('.flag-pop li');
     names = await pickerNames();
     const oldPlaces = names.slice(at('Zimbabwe') + 1, names.findIndex((x) => x.startsWith('Train')));
-    ok(!names.some((x) => /^(Tokyo|Osaka|New York City|Hokkaido)/.test(x)) && names.some((x) => x.startsWith('Amsterdam')), `an older server: no prefectures or New York City (${oldPlaces.length} other places)`);
+    ok(!names.some((x) => /^(Tokyo|Osaka|New York City|Hokkaido|Catalonia|Lisbon|Jakarta|Brittany)/.test(x)) && names.some((x) => x.startsWith('Amsterdam')), `an older server: no prefectures or New York City (${oldPlaces.length} other places)`);
     ok(await page.evaluate(() => !!document.querySelector('.acct-flag-btn img.flag')), 'the flag it already has still shows');
   } finally {
     await close();
