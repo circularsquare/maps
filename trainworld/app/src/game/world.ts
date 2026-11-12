@@ -109,7 +109,8 @@ export const pendingTrains = signal<ReadonlyMap<LineId, [number, number, number]
 
 /** A line's trains on the entire line per demand level, as the player last set them. */
 export function trainsShown(id: LineId): [number, number, number] | null {
-  return pendingTrains.value.get(id) ?? (world.value?.lineStats[id]?.trainsNeeded as [number, number, number] | undefined) ?? null;
+  const w = world.value, st = w?.lineStats[id];
+  return pendingTrains.value.get(id) ?? (st ? pairStats(w!, st).trainsNeeded as [number, number, number] : null);
 }
 
 /** Step a line's trains for one demand level, `by` from what it shows now (T-229). Clicks while an
@@ -152,7 +153,8 @@ export function trainCap(st: Pick<LineStats, "loop" | "oneWay">, tripS: number, 
 /** The step of a line's train count: 2 on a loop run both ways, whose trains are half each way (T-798). */
 export function trainStep(id: LineId): number {
   const st = world.value?.lineStats[id];
-  return st && loopHalves(st) ? 2 : 1;
+  // T-3333: a line on both pairs runs as many on each
+  return st && (loopHalves(st) || st.pairs === 1) ? 2 : 1;
 }
 
 /** T-625: a train count or headway edit refused for want of cash: the line, the levels it changed,
@@ -200,7 +202,7 @@ function folded<V>(pending: Signal<ReadonlyMap<LineId, V>>, send: (id: LineId, v
 }
 
 const sendTrainCounts = folded(pendingTrains, async (id, trains) => {
-  const had = world.peek()?.lineStats[id]?.trainsNeeded;
+  const w = world.peek(), st = w?.lineStats[id], had = st && pairStats(w!, st).trainsNeeded;
   const a = await edit({ op: "setTrainCount", line: num(id), trains }, false, true);
   noteAnswer(id, a, trains, had);
   return a.ok;
@@ -267,7 +269,8 @@ export const pendingHeadway = signal<ReadonlyMap<LineId, [number, number, number
 export function headwayShown(id: LineId): [number, number, number] | null {
   const p = pendingHeadway.value;
   if (p.has(id)) return p.get(id) ?? null;
-  return world.value?.lineStats[id]?.autoS ?? null;
+  const w = world.value, st = w?.lineStats[id];
+  return st ? pairStats(w!, st).autoS : null;
 }
 
 /** The headway limits (0 is no service) and the step from one headway to the next (T-1872): to the
@@ -486,12 +489,37 @@ export const stationNames = (w: WorldView) => stopsOf(w).names;
 export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => new Map(s.stations.map((x) => [x.num, x])));
 export const linesById = (w: WorldView) => lookup(w, "lines", (s) => new Map(s.lines.map((l) => [l.id, l])));
 export const linesByNum = (w: WorldView) => lookup(w, "lineNums", (s) => new Map(s.lines.map((l) => [l.num, l])));
-/** The lines that stop at each station, in line order. */
+/** T-3333: the lines a player sees listed: every line but the hidden twins of lines run on both pairs of
+ * quad track (which every sum still counts). */
+export const listedLines = (w: WorldView) => lookup(w, "listed", (s) => (s.lines.some((l) => l.twinOf) ? s.lines.filter((l) => !l.twinOf) : s.lines));
+/** The lines that stop at each station, in line order; at a twin's stations, the line it runs for (T-3333). */
 export const linesAtMap = (w: WorldView) => lookup(w, "linesAt", (s) => {
   const at = new Map<string, LineInput[]>();
-  for (const l of s.lines) for (const st of new Set(l.stops)) (at.get(st) ?? at.set(st, []).get(st)!).push(l);
+  const byId = new Map(s.lines.map((l) => [l.id, l]));
+  for (const t of s.lines) {
+    const l = t.twinOf ? byId.get(t.twinOf) : t;
+    if (!l) continue;
+    for (const st of new Set(t.stops)) {
+      const v = at.get(st) ?? at.set(st, []).get(st)!;
+      if (!v.includes(l)) v.push(l);
+    }
+  }
   return at;
 });
 
 export const lineById = (id: LineId) => (world.value ? linesById(world.value).get(id) : undefined);
 export const linesAt = (station: string) => (world.value ? linesAtMap(world.value).get(station) : undefined) ?? [];
+
+const paired = new WeakMap<LineStats, { twin: LineStats; v: LineStats }>();
+/** T-3333: a line run on both pairs of quad track as its panel shows it: its hidden twin's trains added
+ * to its own and the headway the two keep together (each pair runs twice as long). Its edits take the
+ * same whole-line figures (`TrackApi.set_train_counts`, `set_auto_headway`). Other lines as they are. */
+export function pairStats(w: WorldView, st: LineStats): LineStats {
+  const tw = st.twin ? w.lineStats[st.twin] : undefined;
+  if (!tw) return st;
+  const had = paired.get(st);
+  if (had && had.twin === tw) return had.v;
+  const v: LineStats = { ...st, trainsNeeded: [0, 1, 2].map((k) => st.trainsNeeded[k] + tw.trainsNeeded[k]) as [number, number, number], autoS: st.autoS ? st.autoS.map((h) => h / 2) as [number, number, number] : null };
+  paired.set(st, { twin: tw, v });
+  return v;
+}

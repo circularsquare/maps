@@ -25,7 +25,7 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { flipSites, rightHand, say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry, perfOff } from "../perfFlags";
@@ -253,12 +253,17 @@ function toWorld(s: ClockState): WorldView {
     });
   if (sameObjects(stations, lastStations)) stations = lastStations;
   else lastStations = stations;
+  // T-3333: a line run on both pairs and its hidden twin keep a row each, so every sum counts both; the twin
+  // is marked for the lists to leave out, its line for its panel to add it in
+  const twinOfLine = new Map<number, number>(), twins = new Map<string, string>();
+  for (const l of s.lines) if (l.twinOf !== undefined) { twinOfLine.set(l.twinOf, l.id); twins.set(String(l.id), String(l.twinOf)); }
   let lines: LineInput[] = s.lines.map((l) => {
     let v = lineViews.get(l);
     if (!v) lineViews.set(l, v = {
       id: String(l.id), num: l.id, letter: l.letter || letterOf(l.name), symbol: l.letter, name: l.name, colour: l.colour, stops: l.stops.map(String),
       ...(l.group ? { group: l.group, groupName: l.groupName, groupSymbol: l.groupSymbol, groupColour: l.groupColour } : {}),
       tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
+      ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
     });
     return v;
   });
@@ -266,12 +271,15 @@ function toWorld(s: ClockState): WorldView {
   else lastLines = lines;
   const lineStats: Record<string, LineStats> = {};
   for (const l of s.lines) {
-    const had = statsViews.get(l);
-    if (had) {
+    const had = statsViews.get(l), twin = twinOfLine.has(l.id) ? String(twinOfLine.get(l.id)) : undefined;
+    if (had && had.twin === twin) {
       lineStats[String(l.id)] = had;
       continue;
     }
-    statsViews.set(l, lineStats[String(l.id)] = {
+    statsViews.set(l, lineStats[String(l.id)] = { ...statsOf(l), ...(twin ? { twin } : {}) });
+  }
+  function statsOf(l: ClockLine): LineStats {
+    return {
       status: l.running ? "running" : l.ok || (!l.broken && l.stops.length < 2) ? "planned" : "broken",
       km: l.lengthM / 1000,
       fromStartS: l.fromStart[0] ?? [],
@@ -300,8 +308,10 @@ function toWorld(s: ClockState): WorldView {
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,
       limit: l.limit,
+      ...(l.pairs ? { pairs: l.pairs } : {}),
+      ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
       ...(l.bus ? { bus: l.bus } : {}),
-    });
+    };
   }
   const edges = edgesOf(s);
   // the last map while the rows are the same, so the snap's node grid (map/snapIndex.ts) stays
@@ -323,6 +333,7 @@ function toWorld(s: ClockState): WorldView {
     }),
     save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
     lineStats,
+    twins,
     edges,
     nodes,
     money: {

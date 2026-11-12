@@ -152,6 +152,8 @@ export type EditOp =
   | { op: "lineCars"; line: number; cars: number }
   | { op: "lineFast"; line: number; fast: boolean }
   | { op: "lineOneWay"; line: number; oneWay: boolean }
+  /** T-3333: run the line's trains on both pairs of quad track, or on one */
+  | { op: "linePairs"; line: number; on: boolean }
   /** T-2987: a rail line's speed limit in km/h, 0 for none */
   | { op: "lineLimit"; line: number; kmh: number }
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
@@ -332,7 +334,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWay"; edge: number; dir: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number; tracks: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWay"; edge: number; dir: number } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number; tracks: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] } | { what: "linePairs"; line: number };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -554,6 +556,12 @@ export interface ClockLine {
   oneWay: boolean;
   /** T-2987: the line's speed limit, km/h; 0 for none (`TrackApi::line_limit`) */
   limit: number;
+  /** T-3333: the switch to run on both pairs of quad track is on: 1 it runs on both (its counts,
+   * rates and headways are one pair's, its hidden twin runs the other), 2 on one pair for now
+   * (`TrackApi::line_pairs`) */
+  pairs?: 1 | 2;
+  /** T-3333: a hidden twin, the line it runs the other pair for (`TrackApi::line_twin_of`) */
+  twinOf?: number;
   /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces
    * (a bus line's `path` is empty, its `stops` its `bus.stops`' ids) */
   bus?: ClockBus;

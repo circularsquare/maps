@@ -13,7 +13,7 @@ import { lineDemand, stationDemand } from "./demand";
 import { places, type Place } from "./placeList";
 import { compass } from "./places";
 import type { LineInput, StationId } from "./types";
-import { world } from "./world";
+import { listedLines, world } from "./world";
 
 export type SearchHit =
   | {
@@ -103,7 +103,7 @@ export function search(query: string): SearchHit[] {
   const w = world.peek();
   if (w) {
     const linesAt = new Map<StationId, LineInput[]>();
-    for (const l of w.save.lines) for (const s of new Set(l.stops)) linesAt.set(s, [...(linesAt.get(s) ?? []), l]);
+    for (const l of listedLines(w)) for (const s of new Set(l.stops)) linesAt.set(s, [...(linesAt.get(s) ?? []), l]);
     // stations, grouped by complex and name
     const cx = complexes.peek();
     const groups = new Map<string, typeof w.save.stations>();
@@ -124,7 +124,7 @@ export function search(query: string): SearchHit[] {
         weight: lines.length * 1e9 + boardings,
       });
     }
-    for (const l of w.save.lines) {
+    for (const l of listedLines(w)) {
       const byName = matchScore(normalise(l.name), q);
       const score = normalise(l.letter) === q ? 0 : byName;
       if (score < 0) continue;

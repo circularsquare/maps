@@ -251,6 +251,9 @@ pub struct LineData {
     pub one_way: bool,
     /// T-2987: the player's speed limit for the line's trains, km/h; 0 none. Applies to rail lines only.
     pub limit: u16,
+    /// T-3333: the line runs on both pairs of quad track (`Parent`), or is the hidden twin that runs
+    /// the other pair for one (`Of`).
+    pub twin: super::twin::Twin,
 }
 
 /// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
@@ -482,6 +485,8 @@ pub struct Network {
     pub line_hand: Vec<bool>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
+    /// T-3333: `LineData::twin`.
+    pub line_twin: Vec<super::twin::Twin>,
     pub line_name: Vec<String>,
     pub line_symbol: Vec<String>,
     pub next_line_number: u32,
@@ -822,6 +827,7 @@ impl Network {
             line_hand: vec![],
             line_one_way: vec![],
             line_limit: vec![],
+            line_twin: vec![],
             line_name: vec![],
             line_symbol: vec![],
             next_line_number: 1,
@@ -984,6 +990,18 @@ impl Network {
         })
     }
 
+    /// The ids the next `n` `alloc_line` calls would hand out, without taking them (T-3333: an edit
+    /// planning new lines as ops).
+    pub fn spare_line_ids(&self, n: usize) -> Vec<u32> {
+        let mut out: Vec<u32> = self.line_free.iter().rev().copied().take(n).collect();
+        let mut next = self.line_alive.len() as u32;
+        while out.len() < n {
+            out.push(next);
+            next += 1;
+        }
+        out
+    }
+
     /// Give back ids handed out by `alloc_*` that no op claimed (a refused or trial edit).
     pub fn release_node(&mut self, id: u32) {
         if !self.node_ok(id) && (id as usize) < self.node_count() && !self.node_free.contains(&id) {
@@ -1064,6 +1082,7 @@ impl Network {
         self.line_hand.push(false);
         self.line_one_way.push(false);
         self.line_limit.push(0);
+        self.line_twin.push(Default::default());
     }
     fn claim_node(&mut self, id: u32) {
         while self.node_alive.len() <= id as usize {
@@ -1139,6 +1158,7 @@ impl Network {
                 hand: self.line_hand[i],
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
+                twin: self.line_twin[i],
             }
         })
     }
@@ -1578,6 +1598,7 @@ impl Network {
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
+                self.line_twin[i] = if d.bus.is_some() || d.ferry.is_some() { Default::default() } else { d.twin };
                 self.line_bus[i] = d.bus;
                 self.line_ferry[i] = d.ferry;
                 self.line_group[i] = d.group;
@@ -1594,6 +1615,7 @@ impl Network {
                 self.line_hand[i] = false;
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
+                self.line_twin[i] = Default::default();
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;
@@ -2324,8 +2346,12 @@ impl Network {
         if let Some(r) = self.line_ferry.get(l as usize).and_then(|f| f.as_ref()) {
             return super::ferry::check(self, l, self.line_stops(l), r).map(|_| vec![]);
         }
-        let path = self.line_path(l);
-        let stops = self.line_stops(l);
+        self.check_route(l, self.line_stops(l), self.line_path(l), self.line_runs_once(l))
+    }
+
+    /// `check_line` for a rail line's stops and path not yet on a line (`once`: it runs its path once
+    /// round, one way); `l` names the line in the issue (T-3333: a twin is checked before it is made).
+    pub fn check_route(&self, l: u32, stops: &[u32], path: &[u32], once: bool) -> Result<Vec<u32>, Issue> {
         if stops.len() < 2 && path.is_empty() {
             if stops.iter().all(|&s| self.node_ok(s) && self.node_platform[s as usize] > 0) { return Ok(stops.to_vec()); }
             return Err(Issue::LineStops { line: l });
@@ -2369,7 +2395,7 @@ impl Network {
             return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
         }
         // the return run goes round one-way track when the path back is against it (T-3094)
-        if !self.line_runs_once(l) && self.back_path(l).is_none() {
+        if !once && self.back_path_of(stops, path).is_none() {
             return Err(Issue::LinePath { line: l });
         }
         Ok(nodes)

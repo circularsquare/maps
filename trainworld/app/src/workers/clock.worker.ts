@@ -3866,6 +3866,8 @@ function apply(op: EditOp): Applied {
       return { r: a.set_line_fast(op.line, op.fast) };
     case "lineOneWay":
       return { r: a.set_line_one_way(op.line, op.oneWay) };
+    case "linePairs":
+      return { r: a.set_line_pairs(op.line, op.on) };
     case "lineLimit":
       return { r: a.set_line_limit(op.line, op.kmh) };
     case "lineGroup":
@@ -4589,6 +4591,7 @@ async function handle(msg: ToClock) {
       : q.what === "blueprintQuote" ? Float64Array.from(api.blueprint_cost_items())
       : q.what === "blueprintPieces" ? Float64Array.from(api.blueprint_piece_costs())
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
+      : q.what === "linePairs" ? new Float64Array([api.line_pairs_ok(q.line) ? 1 : 0, ...api.line_pairs_why(q.line)])
       : q.what === "buildingQuote" ? buildingQuoteAnswer(q.id, q.corners)
       : q.what === "lineWaits" ? api.line_waits(q.line, q.level)
       // T-2232: [station, its passing tracks' price] pairs

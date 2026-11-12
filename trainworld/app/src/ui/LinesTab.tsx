@@ -10,7 +10,7 @@ import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
 import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
-import { edit, renameLine, stationsById } from "../game/world";
+import { listedLines, edit, pairStats, renameLine, stationsById } from "../game/world";
 import { closedGroups, groupName, lineGroups, toggleGroup } from "../game/lineGroups";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { GroupPill } from "./GroupPill";
@@ -18,7 +18,7 @@ import type { WorldView } from "../game/types";
 import { cityById } from "../game/cities";
 import { listWorld, scopedLists, stationZone } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { crowdClass, crowdLevel, dayNote, endNames, PERIOD_STRIDE, pendingOf, pendingRiders, periodLoad, profitKnown, runningToday, today, todayLoaded, useToday, type LineToday } from "../game/today";
+import { crowdClass, crowdLevel, dayNote, endNames, PERIOD_STRIDE, pendingOf, pendingRiders, periodLoad, profitKnown, runningToday, today, todayLoaded, upkeepToday, useToday, type LineToday } from "../game/today";
 import { lineReversed } from "../game/northUp";
 import { kindIn, lineCountry } from "../game/holidays";
 import { DAY_KINDS } from "../game/days";
@@ -71,14 +71,14 @@ function RidersToday({ l }: { l: LineInput }) {
 
 /** T-735, T-867, T-2475: a line's expected profit today: a whole day's fares of its kind of day now
  * minus a day's running cost and its share of upkeep. */
-const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d && profitKnown(l) ? d.dayFares - runningToday(l, st) - st.upkeep : 0);
+const lineNet = (d: LineToday | undefined, l: LineInput, st: LineStats) => (d && profitKnown(l) ? d.dayFares - runningToday(l, st) - upkeepToday(l, st) : 0);
 function MoneyToday({ l, st }: { l: LineInput; st: LineStats }) {
   const d = today.value.get(l.id);
   // T-2536: no figure before the first profit with trains (the upkeep alone is not a profit)
   if (!d || !profitKnown(l)) return <span class="val w-linemoney" />;
-  const run = runningToday(l, st), net = d.dayFares - run - st.upkeep;
+  const run = runningToday(l, st), up = upkeepToday(l, st), net = d.dayFares - run - up;
   return (
-    <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, st.bus?.ferry ? "boats" : st.tram ? "trams" : !!st.bus, dayNote(l, st))}>
+    <span class="val w-linemoney" data-tip={lineMoneyTip(d.dayFares, run, up, st.bus?.ferry ? "boats" : st.tram ? "trams" : !!st.bus, dayNote(l, st))}>
       <Money dollars={net} />
     </span>
   );
@@ -151,7 +151,7 @@ export function LinesTab() {
   // T-1677, T-2279: every running train line's crowding by period on its own kind of day, for the
   // trains cells, asked again when the network or the boarding account changes: one ask per kind of
   // day, a fixed six so the hooks hold
-  const crowdLines = (w?.save.lines ?? []).filter((l) => w!.lineStats[l.id]?.status === "running");
+  const crowdLines = (w ? listedLines(w) : []).filter((l) => w!.lineStats[l.id]?.status === "running");
   const acct = accountVersion.value;
   const kindOf = (l: LineInput) => kindIn(lineCountry(l.stops), Math.floor(lineSeconds(w!.lineStats[l.id]) / 86400));
   const byKind = DAY_KINDS.map((k) => crowdLines.filter((l) => kindOf(l) === k).map((l) => l.num));
@@ -176,12 +176,12 @@ export function LinesTab() {
     try { await createLine(); } finally { setCreating(false); }
   };
   // a line that is not running has no train count and no riders: it sorts as zero
-  const trains = (id: string) => (w.lineStats[id]?.status === "running" ? w.lineStats[id].trainsNeeded[levOf(id)] : 0);
+  const trains = (id: string) => (w.lineStats[id]?.status === "running" ? pairStats(w, w.lineStats[id]).trainsNeeded[levOf(id)] : 0);
   // T-1813: while the player's hand order holds, no sort
   const hand = handOrder.value.lines;
   const key = hand.length ? null : lineSort.value.key, dir = lineSort.value.dir;
   // T-332: only the viewed place unless the world is chosen
-  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id), key === "near");
+  const sc = scopedLists(w.save.stations, listedLines(w), (k, id) => (k === "line" && (sel?.kind === "line" || sel?.kind === "train") && sel.line === id), key === "near");
   // T-670: on the whole world, a city column once lines start in two or more cities (a line's city is where its first stop is)
   const cityOf = new Map<string, string>();
   if (sc.zone === null) {
@@ -194,7 +194,7 @@ export function LinesTab() {
   const showCity = new Set([...cityOf.values()].filter(Boolean)).size >= 2;
   // T-1791: a group is one row, sorted by its lines' figures added up; it shows, with all its
   // lines, when any of them is in the viewed place
-  const groups = lineGroups(w.save.lines);
+  const groups = lineGroups(listedLines(w));
   const groupOf = new Map<string, number>();
   for (const [g, ls] of groups) for (const l of ls) groupOf.set(l.id, g);
   type Item = { ls: LineInput[]; g: number; name: string };
@@ -213,7 +213,7 @@ export function LinesTab() {
   };
   const shownIds = new Set(sc.lines.map((l) => l.id));
   // every line's item, the viewed place's or not, so a hand order made here keeps the others' places
-  const allItems = itemsOf(w.save.lines);
+  const allItems = itemsOf(listedLines(w));
   const sum = (ls: LineInput[], f: (l: LineInput) => number) => ls.reduce((n, l) => n + f(l), 0);
   const riders = (ls: LineInput[]) => sum(ls, (l) => tod.get(l.id)?.riders ?? 0);
   const net = (ls: LineInput[]) => sum(ls, (l) => lineNet(tod.get(l.id), l, w.lineStats[l.id]));
@@ -359,7 +359,7 @@ export function LinesTab() {
           <>
             <RidersToday l={l} />
             <MoneyToday l={l} st={st} />
-            <TrainsNow line={l.id} n={st.trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />
+            <TrainsNow line={l.id} n={pairStats(w, st).trainsNeeded[levOf(l.id)]} period={periodOf(l)} at={periodAt(lineSeconds(st))} bus={!!st.bus} ferry={!!st.bus?.ferry} tram={!!st.tram} v={crowdOf(l)} lev={demandAt(lineSeconds(st))} stops={l.stops.length} flip={lineReversed(l, w, !!st.loop)} ends={endNames(l)} />
           </>
         )}
         {key === "near" && <Near m={sc.lineDist.get(l.id)} />}
@@ -409,9 +409,9 @@ export function LinesTab() {
         </span>
         <ScopeToggle />
       </div>
-      {items.length === 0 && <p class="muted">{w.save.lines.length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
+      {items.length === 0 && <p class="muted">{listedLines(w).length === 0 ? t("linesTab.none") : t("linesTab.noneHere")}</p>}
       <div class={"lines-box" + (showCity ? " with-city" : "") + (key === "near" ? " near-on" : "")}>
-      {w.save.lines.length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
+      {listedLines(w).length > 0 && <SortHead sort={lineSort} hand={hand.length ? () => setHandOrder("lines", []) : undefined} cols={[
         { key: "name", label: t("linesTab.colName"), tip: t("linesTab.sortName"), first: 1 },
         ...(showCity ? [{ key: "city" as const, label: t("linesTab.colCity"), tip: t("linesTab.sortCity"), first: 1 as const, cls: "w-city", left: true }] : []),
         { key: "riders", label: t("linesTab.colRiders"), tip: t("linesTab.sortRiders"), first: -1, cls: "w-riders" },

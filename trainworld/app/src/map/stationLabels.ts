@@ -28,7 +28,7 @@ import { buildingMembersById } from "../game/buildingView";
 import { buildingFrame } from "../game/buildingLayout";
 import { insideOutline } from "../game/buildings";
 import { groundScale, packToLngLat } from "../game/coords";
-import { world } from "../game/world";
+import { listedLines, world } from "../game/world";
 import { FLOOR_ZOOM } from "./buildingFloors";
 
 /** a station building's name goes in its cross-hall from here in (the floor's full zoom) */
@@ -156,7 +156,7 @@ export class StationLabels {
     // user of this world) and the player's links count (T-209); so do the draw anchor, since the
     // names' positions are in its local units (T-307).
     const cx = complexes.peek();
-    const plan = this.names.plan(stations, w.save.lines, cx, anchor().version);
+    const plan = this.names.plan(stations, listedLines(w), cx, anchor().version);
     // a station building's name and outline (T-2219)
     const bk = (w.save.buildings ?? []).map((b) => `${b.id}:${b.name}:${b.corners.join(",")}`).join("|");
     if (bk !== this.bldSeen && !plan) {
@@ -271,7 +271,7 @@ export class StationLabels {
 
   /** `?patch=check`: the labels and shadow features against the names worked out from nothing. */
   private check(w: WorldView) {
-    const want = labelGroups(w.save.stations, linesAt(w.save.lines), complexes.peek());
+    const want = labelGroups(w.save.stations, linesAt(listedLines(w)), complexes.peek());
     const feats = this.shadow.features;
     let bad = this.labels.length !== want.length || feats.length !== want.length || this.shadowKeys.length !== want.length ? "lengths" : "";
     for (let i = 0; !bad && i < want.length; i++) {

@@ -31,6 +31,9 @@ export function lineMode(id: string): Vehicle {
 
 /** Line `id`'s bullet shape: its own, else its mode's. Read while rendering, so a bullet redraws on a change. */
 export function shapeOf(id: string): LineShape {
+  // T-3333: a hidden twin wears its line's
+  const p = world.peek()?.twins.get(id);
+  if (p) return shapeOf(p);
   return lineShapes.value[id] ?? modeShape(lineMode(id));
 }
 

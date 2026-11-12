@@ -10,7 +10,7 @@ import { t } from "../i18n";
 import { computed, signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { clock, lineSeconds } from "./clock";
-import { stationsById, world } from "./world";
+import { linesById, stationsById, world } from "./world";
 import { queryClock } from "../workers/clockClient";
 import { accountVersion, type CrowdedStretch } from "./boarding";
 import { demandView } from "./demand";
@@ -183,8 +183,17 @@ export function runningToday(l: LineInput, st: LineStats): number {
     cost += tph[lev] * (st.oneWay ? 1 : 2) * st.km * perKm * m.economy *(Math.min(h + 1, t) - Math.max(h, t0));
   }
   // T-2669: at its countries' prices, as the clock worker drains it
-  return cost * lineRunFactor(l.num);
+  return cost * lineRunFactor(l.num) + twinsToo(st, runningToday);
 }
+
+/** T-3333: a line run on both pairs adds its hidden twin's figure (`today` has the two folded, `foldTwins`). */
+function twinsToo(st: LineStats, f: (l: LineInput, st: LineStats) => number): number {
+  const w = world.peek(), tl = st.twin && w ? linesById(w).get(st.twin) : undefined, ts = tl && w!.lineStats[tl.id];
+  return tl && ts ? f(tl, ts) : 0;
+}
+
+/** A line's share of upkeep a day, US$, its hidden twin's added in (T-3333). */
+export const upkeepToday = (l: LineInput, st: LineStats): number => st.upkeep + twinsToo(st, (_, s) => s.upkeep);
 
 /** T-2536: whether a line's profit has been worked out: it runs trains (or buses, boats) and a demand
  * result with an entry for it has landed. Before that its figures are only the upkeep. */
@@ -255,6 +264,22 @@ export function readToday(d: Float64Array): Map<string, LineToday> {
   return out;
 }
 
+/** T-3333: a line run on both pairs counts its hidden twin's riders, trains and fares as its own: the
+ * twin's stop k is the station beside the line's stop k. The twins' entries go. */
+export function foldTwins(days: Map<string, LineToday>, twins: ReadonlyMap<string, string>) {
+  for (const [t, p] of twins) {
+    const a = days.get(p), b = days.get(t);
+    if (b) {
+      days.delete(t);
+      days.set(p, a ? {
+        riders: a.riders + b.riders, stops: a.stops.map((x, k) => x + (b.stops[k] ?? 0)), fares: a.fares + b.fares, dayFares: a.dayFares + b.dayFares,
+        fullTrains: a.fullTrains + b.fullTrains, trains: a.trains + b.trains, leftBehind: a.leftBehind + b.leftBehind, trainsNow: a.trainsNow + b.trainsNow, fullNow: a.fullNow + b.fullNow,
+        crowdLoad: Math.max(a.crowdLoad, b.crowdLoad),
+      } : b);
+    }
+  }
+}
+
 /** Boardings in the past 24 hours per station id (stations with a counted line), summed once per answer. */
 export const stationsToday = computed(() => {
   const out = new Map<string, number>();
@@ -292,6 +317,7 @@ function ask(force = false) {
     const w = world.peek();
     readFor = new Map((w?.save.lines ?? []).map((l) => [l.id, l.stops]));
     const next = readToday(d), prev = today.peek();
+    if (w?.twins.size) foldTwins(next, w.twins);
     // A line's account is worked out again a while after its stops change (new riders, T-164);
     // until then its counts may be per the old stops. The ones moved to the new stops stand meanwhile.
     const pend = linesPending.peek();

@@ -11,7 +11,7 @@ import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
 import { lineReversed } from "../../game/northUp";
-import { crowdLevel, dayNote, endNames, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today } from "../../game/today";
+import { crowdLevel, dayNote, endNames, hasTrains, PERIOD_STRIDE, pendingOf, pendingRiders, profitKnown, runningToday, today, upkeepToday } from "../../game/today";
 import { accountVersion, capacity } from "../../game/boarding";
 import { onRails, vehicleCars, vehicleOf, type Vehicle } from "../../game/vehicle";
 import { lineSeconds } from "../../game/clock";
@@ -126,7 +126,9 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
   const k = loop ? 2 : 1;
   if (!auto) {
     const over = limit !== null && counts[lev] > 0 && counts[lev] - trip / limit.s > 0.01;
-    const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d];
+    // T-3333: a line on both pairs: its hidden twin's trains an hour too
+    const twin = st.twin ? world.value?.save.lines.find((x) => x.id === st.twin) : undefined;
+    const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d] + (twin?.tph[d] ?? 0);
     // T-3165: one train more than the track lets run, so one is held and the held messages show
     const cap = trainCap(st, trip, limit?.s ?? null);
     const full = counts[lev] >= cap;
@@ -308,9 +310,9 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
         <Row label={t("schedule.riders")}>{count(shown ?? d.riders)}</Row>
         {!pending && extra}
         {profitKnown(l) ? (
-          <li data-tip={lineMoneyTip(d.dayFares, run, st.upkeep, v === "boat" ? "boats" : v === "tram" ? "trams" : v === "bus", dayNote(l, st))}>
+          <li data-tip={lineMoneyTip(d.dayFares, run, upkeepToday(l, st), v === "boat" ? "boats" : v === "tram" ? "trams" : v === "bus", dayNote(l, st))}>
             <span class="grow">{t("schedule.profit")}</span>
-            <span class="val"><Money dollars={d.dayFares - run - st.upkeep} /></span>
+            <span class="val"><Money dollars={d.dayFares - run - upkeepToday(l, st)} /></span>
           </li>
         ) : hasTrains(l) && <Row label={t("schedule.profit")}><span class="muted">{t("schedule.calculating")}</span></Row>}
         {load !== null && (

@@ -17,7 +17,7 @@ import { tPlace } from "../i18n/places";
 
 import { stationZone } from "./listScope";
 import { moneyState } from "./money";
-import { readToday, runningToday } from "./today";
+import { foldTwins, readToday, runningToday, upkeepToday } from "./today";
 import { weekdayOf } from "./days";
 import { stationsById, world } from "./world";
 import { RIDES_PER_PERSON, sumModes } from "./worldTotals";
@@ -339,7 +339,9 @@ export const demandFigures = computed(() => {
   for (const { l, st } of run) {
     const dm = v.lines.get(l.id);
     if (!dm || !lineFiguresIn(v, l.id, l.stops.length)) { covered = false; continue; }
-    if (!line || dm.ridersPerDay > line.v!) line = { of: l.name, v: dm.ridersPerDay };
+    // T-3333: a line on both pairs counts its hidden twin's riders as its own; the twin is not a line of its own
+    const riders = dm.ridersPerDay + (st.twin ? v.lines.get(st.twin)?.ridersPerDay ?? 0 : 0);
+    if (!l.twinOf && (!line || riders > line.v!)) line = { of: l.name, v: riders };
     const s = longestRide(l, st, dm.loads, dm.board);
     if (s >= SLEEPER_S && (!sleeper || s / 3600 > sleeper.v!)) sleeper = { of: l.name, v: s / 3600 };
   }
@@ -400,11 +402,12 @@ effect(() => {
     const w = world.peek();
     if (!raw || !w || gamesLoaded.peek() !== g) return;
     const t = readToday(raw);
+    if (w.twins.size) foldTwins(t, w.twins);
     let best: Detail | null = null, pearl: Detail | null = null;
     for (const { l, st } of runningLines(w)) {
       const d = t.get(l.id);
       if (!d) continue;
-      const net = d.fares - runningToday(l, st) - st.upkeep;
+      const net = d.fares - runningToday(l, st) - upkeepToday(l, st);
       if (!best || net > best.v!) best = { of: l.name, v: net };
       const m = st.km * 1000;
       if (net > 0 && m >= PEARLS_M && (!pearl || m > pearl.v!)) pearl = { of: l.name, v: m };

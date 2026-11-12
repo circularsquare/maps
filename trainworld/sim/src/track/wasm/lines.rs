@@ -14,7 +14,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0 }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -488,8 +488,10 @@ impl TrackApi {
     }
 
     /// Allocate whole trains to the entire line, across both directions.
+    /// T-3333: a line run on both pairs takes the whole line's counts, half for each pair.
     pub fn set_train_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
         let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let [high, medium, low] = if pairs_split(&self.w.net, id) { [high, medium, low].map(|x| x.div_ceil(2)) } else { [high, medium, low] };
         if d.auto.is_some() {
             return self.run(Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) });
         }
@@ -499,9 +501,11 @@ impl TrackApi {
     /// T-625: the line's counts follow a headway in seconds per level (0 = no service): the
     /// fewest trains that keep it over the round trip, worked out again after every edit. Switching
     /// to headways keeps the trains the line has (T-752).
+    /// T-3333: a line run on both pairs takes the whole line's headways, each pair running twice as
+    /// long.
     pub fn set_auto_headway(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
         if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
-        let auto = [high, medium, low];
+        let auto = if pairs_split(&self.w.net, id) { [high, medium, low].map(|h| h * 2) } else { [high, medium, low] };
         let svc = self.w.svc.lines.get(id as usize);
         let trip = svc.map_or([0.0; 3], |s| s.round_trip);
         let trains = match (self.w.net.line_auto[id as usize], self.w.net.line_trains[id as usize]) {
@@ -710,4 +714,9 @@ fn route_stop_ways(net: &Network, pts: &[[f64; 2]], plan: &crate::track::bus::Pl
         }
     }
     out.into_iter().filter_map(|(i, h)| h.map(|h| [stops[i].id as f64, h])).flatten().collect()
+}
+
+/// T-3333: line `l` runs on both pairs, so its stored counts and headways are one pair's.
+fn pairs_split(net: &Network, l: u32) -> bool {
+    net.line_twin_of(l) == (crate::track::twin::Twin::Parent { split: true })
 }

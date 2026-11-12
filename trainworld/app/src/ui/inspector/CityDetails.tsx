@@ -18,7 +18,7 @@ import { stationsToday, today, useToday } from "../../game/today";
 import { selection, shownDay, shownDayOn, shownDayPhrase } from "../../game/ui";
 import { builtCities } from "../../game/worldTotals";
 import { AVERAGE_DAY } from "../../game/days";
-import { stationsById, world } from "../../game/world";
+import { listedLines, stationsById, world } from "../../game/world";
 import type { LineInput, StationInput } from "../../game/types";
 import { figures, moneyTip, net, pointsTip } from "../Cities";
 import { goalTip } from "../GoalTicks";
@@ -50,7 +50,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
   // T-1892: the same counts as the Cities tab's hover and Trips column, and the lines that stop here
   const w = world.value;
   const stations = builtCities().get(city.id) ?? 0;
-  const lines = w ? cityScope(city.id, stationsById(w), w.save.lines).length : 0;
+  const lines = w ? cityScope(city.id, stationsById(w), listedLines(w)).length : 0;
   return (
     <>
     <ul class="rows">
@@ -100,7 +100,7 @@ export function CityNetwork({ city }: { city: City }) {
   const w = world.value;
   if (!w) return null;
   const byId = stationsById(w);
-  const scope = cityScope(city.id, byId, w.save.lines);
+  const scope = cityScope(city.id, byId, listedLines(w));
   if (!scope.length) return null;
   const t = today.value, known = t.size > 0;
   const lineRows = scope
@@ -110,7 +110,7 @@ export function CityNetwork({ city }: { city: City }) {
   // one row per complex (as the Stations tab), named after its member with most lines
   const cx = complexes.value, by = stationsToday.value;
   const linesAt = new Map<string, number>();
-  for (const l of w.save.lines) for (const s of new Set(l.stops)) linesAt.set(s, (linesAt.get(s) ?? 0) + 1);
+  for (const l of listedLines(w)) for (const s of new Set(l.stops)) linesAt.set(s, (linesAt.get(s) ?? 0) + 1);
   const seen = new Set<string>();
   const stationRows: { lead: StationInput; n: number }[] = [];
   for (const s of w.save.stations) {

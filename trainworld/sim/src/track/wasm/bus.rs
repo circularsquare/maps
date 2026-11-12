@@ -26,7 +26,7 @@ impl TrackApi {
         }
         let data = LineData {
             name, symbol: String::new(), colour, stops: vec![], path: vec![], tph: [0.0; 3], trains: Some([0; 3]), auto: Some([high, medium, low]),
-            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: true, limit: 0,
+            dwell_s, turnaround_s, cars: 1, fast: false, bus: Some(BusRoute::new(pts, kinds, false)), ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: true, limit: 0, twin: Default::default(),
         };
         self.run(Op::Line { id, data: Some(data) })
     }

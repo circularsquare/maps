@@ -28,7 +28,7 @@ import { lineFares } from "./fareInEffect";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
+import { pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
@@ -50,7 +50,7 @@ export function setMoneyState(m: MoneyState) {
  * the cars its busiest level needs beyond the cars the network owns, and the edit is refused when
  * that comes to more than the cash. A sandbox is never refused. */
 export function trainShortfall(id: LineId, trains: readonly number[]): { need: number; have: number } | null {
-  const st = world.peek()?.lineStats[id];
+  const w = world.peek(), raw = w?.lineStats[id], st = raw && pairStats(w!, raw);
   if (!st) return null;
   const more = Math.max(...trains) - Math.max(...st.trainsNeeded);
   return more > 0 ? carShortfall(id, more * (st.bus ? 1 : st.cars)) : null;

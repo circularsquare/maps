@@ -278,6 +278,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   node) goes on the pair clicked only (T-1687); a second click on the other pair adds its station
   there. A station placed level with one on the pair beside (`twin_at`; its node within half that
   platform of the spot beside) takes that station's name, so the two are one complex with one label.
+  A line with such a station beside every stop can run its trains on both pairs (6.3 "Both pairs of quad
+  track", T-3333).
   A station's name the player typed is flagged (`StationData::named`, bit 8 of its node flags in the save,
   set by `set_station_props` when the name changes; the twin copies it): load's tidying of capitals
   skips it, and a building's default name prefers such a member [T-2683].
@@ -944,6 +946,30 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   this), so run times, round trip, fleet for headway lines, capacity and demand all follow; the stop-time hover
   names it as "the trains". Saved in the `LSL1` block (count, then line index and km/h), save level 13; old saves load
   with none. Bus and ferry lines ignore it.
+- **Both pairs of quad track** (T-3333, Anita 2026-11-12; notes/T-3333.md; `track/twin.rs`, `wasm/twin.rs`): a rail
+  line can run its trains on both pairs of quad track, a switch in its panel ("Run trains on two pairs of tracks",
+  `set_line_pairs`), offered only where it can (`line_pairs_ok`) or while it is on. It can where every stop has a
+  station beside it on another track (`station_beside`: the nearest at its level and of its family, parallel, its node
+  4 to 16 m from the stop's, not a stop of the line) and those stations, joined in order the way any line's stops are
+  (`route_hops`), make a route that `check_route` accepts, turns back as often as the line's, and is built wherever the
+  line is (`twin_plan`). The route may share track with the line's own where the pairs meet (orchestrator's call), and
+  capacity counts both there. The sim then keeps a **hidden twin**: an ordinary line (`LineData::twin`, `Twin::Of`) on
+  those stations with the line's look, cars, train kind, speed limit, dwell and turnaround, made, brought up to date or
+  removed inside every checked edit (`TrackWorld::twin_ops`, after the way reroutes; undo restores both). Each runs one
+  pair's trains: on the switch the line's counts halve (an odd count rounds up, so the two pairs' together are even),
+  its headways double and its rates halve (`Twin::Parent { split: true }`); `set_train_counts` and
+  `set_auto_headway` take the whole line's figures and store one pair's. The twin's departures leave half a headway
+  after the line's at every level (`pin_twin_phases`, after the spacing). When an edit leaves the line unable to run on
+  both (a stop's station beside removed, the other pair unbuilt), the switch stays on, the twin goes and the line runs
+  the whole line's trains on its own pair (`split: false`), and its panel says why (`line_pairs_why`: the stop with no
+  station beside it, the stops no track joins on the other pair, a route that turns elsewhere, an unbuilt pair) until
+  an edit lets it run on both again. Off: the twin goes and the line takes the whole line's trains. Capacity,
+  timetables, boarding, money and demand see two lines; demand's stations within 100 m are one, so riders see one line
+  at the combined frequency. The app keeps both rows (every sum counts the twin) and leaves the twin out of every list
+  (`listedLines`); a click on its train or track selects the line; the line's panel shows the two pairs' trains, headway,
+  past 24 hours, running cost and upkeep together (`pairStats`, `foldTwins`, `upkeepToday`). Saved in the `LTW1` block
+  (count, then line index and kind: 1 on one pair for now, 2 on both, 3 a twin with its line's index), save level 17;
+  old saves load with none.
 - **Lines**: ordered stops, plus the exact path between them stored as edges with a direction, so
   new track never reroutes a line by itself. Splitting an edge rewrites the paths through it;
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not,

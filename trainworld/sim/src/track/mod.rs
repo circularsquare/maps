@@ -61,6 +61,7 @@ pub mod spacing;
 pub mod span;
 pub mod streets;
 pub mod trace;
+pub mod twin;
 pub mod upgrades;
 /// The clock worker's API; left out of the demand workers' module (feature `track-api`, T-051).
 #[cfg(feature = "track-api")]

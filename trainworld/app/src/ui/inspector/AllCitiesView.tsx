@@ -7,7 +7,7 @@ import { pointsShort } from "../../game/points";
 import { splitTip } from "../../game/splitTip";
 import { stationZone } from "../../game/listScope";
 import { builtCities } from "../../game/worldTotals";
-import { stationsById, world } from "../../game/world";
+import { listedLines, stationsById, world } from "../../game/world";
 import { WORLD_HOME } from "../../workers/saveFile";
 import { allCitiesName, allCitiesTotals, moneyTip, net } from "../Cities";
 import { locateAllCities } from "../locate";
@@ -22,7 +22,7 @@ export function AllCitiesView() {
   const split = t.modes?.split ?? null, f = t.money;
   // the city view's Lines, over every city: lines with a stop at a station in one of them
   const built = builtCities(), byId = stationsById(w);
-  const lines = w.save.lines.filter((l) => l.stops.some((s) => { const st = byId.get(s); return !!st && st.built && built.has(stationZone(st)!); })).length;
+  const lines = listedLines(w).filter((l) => l.stops.some((s) => { const st = byId.get(s); return !!st && st.built && built.has(stationZone(st)!); })).length;
   return (
     <>
       <div class="title">

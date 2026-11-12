@@ -6,6 +6,7 @@ use super::capacity::ResKind;
 use super::net::{path_edge, EdgeData, Issue, LineData, Network, NodeData, StationData};
 use super::params::*;
 use super::service::{Service, ServiceDirty};
+use super::twin::Twin;
 
 /// A line's trains, rates and stop-to-stop times (by run, then level), as demand reads them.
 type DemandView = (Option<[u32; 3]>, [f32; 3], [Vec<Vec<f64>>; 2]);
@@ -152,6 +153,7 @@ impl TrackWorld {
         if !self.net.phases_placed {
             let all: Vec<u32> = (0..self.net.line_count() as u32).collect();
             self.place_departures(&all);
+            self.pin_twin_phases();
             self.net.phases_placed = true;
         }
     }
@@ -765,6 +767,7 @@ impl TrackWorld {
         direct.dedup();
         // T-1925: the lines the edit changed take departure slots among the others
         self.place_departures(&direct);
+        self.pin_twin_phases();
         let mut resources = vec![];
         for (r, res) in self.svc.cap.res.iter().enumerate() {
             let on_track = (res.edge != u32::MAX && der.edges.binary_search(&res.edge).is_ok())
@@ -863,23 +866,103 @@ impl TrackWorld {
     /// moved through their same stops in the same edit (`way_reroutes`).
     fn apply_rerouted(&mut self, op: Op, rerouted: bool) -> Result<(Op, super::net::Touch, super::net::Derived), Vec<Issue>> {
         let broken = rerouted.then(|| self.net.line_broken.clone());
-        let (inv, mut t, mut der) = self.apply_and_derive(op)?;
+        let (mut inv, mut t, mut der) = self.apply_and_derive(op)?;
         let ops = match &broken {
             Some(b) if !der.ways.is_empty() => self.way_reroutes(&der, b),
             _ => vec![],
         };
-        if ops.is_empty() {
-            return Ok((inv, t, der));
+        if !ops.is_empty() {
+            if let Ok((inv2, t2, der2)) = self.apply_and_derive(Op::Batch(ops)) {
+                merge_derived(&mut t, &mut der, t2, der2);
+                inv = Op::Batch(vec![inv2, inv]);
+            }
         }
-        let Ok((inv2, t2, der2)) = self.apply_and_derive(Op::Batch(ops)) else { return Ok((inv, t, der)) };
-        for (v, w) in [(&mut t.nodes, t2.nodes), (&mut t.edges, t2.edges), (&mut t.stations, t2.stations), (&mut t.lines, t2.lines), (&mut t.schedules, t2.schedules), (&mut der.edges, der2.edges), (&mut der.nodes, der2.nodes), (&mut der.ways, der2.ways)] {
-            v.extend(w);
-            v.sort_unstable();
-            v.dedup();
+        // T-3333: lines run on both pairs follow the edit in it, as the reroutes do
+        let ops = if rerouted { self.twin_ops() } else { vec![] };
+        if !ops.is_empty() {
+            if let Ok((inv2, t2, der2)) = self.apply_and_derive(Op::Batch(ops)) {
+                merge_derived(&mut t, &mut der, t2, der2);
+                inv = Op::Batch(vec![inv2, inv]);
+            }
         }
-        t.paths_changed |= t2.paths_changed;
-        der.crossings.extend(der2.crossings);
-        Ok((Op::Batch(vec![inv2, inv]), t, der))
+        Ok((inv, t, der))
+    }
+
+    /// T-3333: ops keeping each line run on both pairs of quad track in step with its hidden twin
+    /// (`twin.rs`): a parent that can run on both is split into one pair's trains and its twin made
+    /// or brought up to date; one that can no longer runs alone with the whole line's trains and loses
+    /// its twin; a twin whose parent is gone or switched off goes.
+    fn twin_ops(&self) -> Vec<Op> {
+        let net = &self.net;
+        if net.line_twin.iter().all(|t| *t == Twin::None) {
+            return vec![];
+        }
+        let mut ops = vec![];
+        let mut kept: Vec<u32> = vec![];
+        let mut made = 0;
+        for l in 0..net.line_count() as u32 {
+            let Twin::Parent { split } = net.line_twin_of(l) else { continue };
+            let Some(mut d) = net.line_data(l) else { continue };
+            let twin = net.twin_line(l);
+            match net.twin_plan(l) {
+                Ok((stops, path)) => {
+                    if !split {
+                        super::twin::halve(&mut d);
+                        d.twin = Twin::Parent { split: true };
+                        ops.push(Op::Line { id: l, data: Some(d.clone()) });
+                    }
+                    let was = twin.and_then(|t| net.line_data(t));
+                    let mut want = super::twin::twin_data(l, &d, stops, path, was.as_ref().filter(|_| split));
+                    match twin {
+                        Some(t) => {
+                            kept.push(t);
+                            if let Some(w) = &was {
+                                want.day = w.day;
+                            }
+                            if was.as_ref() != Some(&want) {
+                                ops.push(Op::Line { id: t, data: Some(want) });
+                            }
+                        }
+                        None => {
+                            let id = net.spare_line_ids(made + 1)[made];
+                            made += 1;
+                            ops.push(Op::Line { id, data: Some(want) });
+                        }
+                    }
+                }
+                Err(_) if split => {
+                    super::twin::double(&mut d);
+                    d.twin = Twin::Parent { split: false };
+                    ops.push(Op::Line { id: l, data: Some(d) });
+                }
+                Err(_) => {}
+            }
+        }
+        for t in 0..net.line_count() as u32 {
+            if net.line_ok(t) && net.is_twin(t) && !kept.contains(&t) {
+                ops.push(Op::Line { id: t, data: None });
+            }
+        }
+        ops
+    }
+
+    /// T-3333: each twin's departures half a headway after its parent's, level by level, so the two
+    /// pairs' trains take even turns (the spacing places them as separate lines, which share nothing).
+    fn pin_twin_phases(&mut self) {
+        let n = self.net.line_count();
+        if !self.net.line_twin.iter().any(|t| matches!(t, Twin::Of(_))) {
+            return;
+        }
+        self.net.line_phase.resize(self.net.line_phase.len().max(n), [0.0; LEVELS]);
+        for t in 0..n {
+            let Twin::Of(p) = self.net.line_twin_of(t as u32) else { continue };
+            if !self.net.line_ok(t as u32) || !self.net.line_ok(p) {
+                continue;
+            }
+            let pp = self.net.line_phase_of(p);
+            let tph = self.net.line_tph[p as usize];
+            self.net.line_phase[t] = std::array::from_fn(|lev| if tph[lev] > 0.0 { pp[lev] + 1800.0 / tph[lev] } else { pp[lev] });
+        }
     }
 
     /// T-3297: the whole network to the other running side, in place (ids kept): the single track
@@ -926,6 +1009,13 @@ impl TrackWorld {
             } else {
                 broken.append(&mut moved);
             }
+            self.undo.clear();
+            self.redo.clear();
+        }
+        // T-3333: lines on both pairs follow the flip, as after any edit
+        let tw = self.twin_ops();
+        if !tw.is_empty() && self.apply_and_derive(Op::Batch(tw)).is_ok() {
+            self.reload();
             self.undo.clear();
             self.redo.clear();
         }
@@ -1142,6 +1232,17 @@ impl TrackWorld {
 }
 
 /// Two problems are the same one, ignoring where exactly a moved crossing now is.
+/// What a second batch inside one edit touched and derived, put with the first's.
+fn merge_derived(t: &mut super::net::Touch, der: &mut super::net::Derived, t2: super::net::Touch, der2: super::net::Derived) {
+    for (v, w) in [(&mut t.nodes, t2.nodes), (&mut t.edges, t2.edges), (&mut t.stations, t2.stations), (&mut t.lines, t2.lines), (&mut t.schedules, t2.schedules), (&mut der.edges, der2.edges), (&mut der.nodes, der2.nodes), (&mut der.ways, der2.ways)] {
+        v.extend(w);
+        v.sort_unstable();
+        v.dedup();
+    }
+    t.paths_changed |= t2.paths_changed;
+    der.crossings.extend(der2.crossings);
+}
+
 fn same_issue(a: &Issue, b: &Issue) -> bool {
     match (a, b) {
         (Issue::Crossing { e1, e2, overlap, .. }, Issue::Crossing { e1: f1, e2: f2, overlap: o2, .. }) => (e1, e2, overlap) == (f1, f2, o2),

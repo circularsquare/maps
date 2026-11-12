@@ -13,6 +13,14 @@ import { JunctionInspector } from "./JunctionInspector";
 import { StationInspector } from "./StationInspector";
 import { TrackInspector } from "./TrackInspector";
 import { TrainInspector } from "./TrainInspector";
+import { effect } from "@preact/signals";
+import { world } from "../../game/world";
+
+// T-3333: a hidden twin's line picked (its train's chip, its track) is shown as the line it runs for
+effect(() => {
+  const s = selection.value, p = s?.kind === "line" ? world.value?.twins.get(s.line) : undefined;
+  if (p) selection.value = { kind: "line", line: p };
+});
 
 export function Inspector() {
   const s = selection.value;

@@ -10,7 +10,7 @@ import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { leadOf, nameSource } from "../game/complexLead";
 import type { EditOp } from "../workers/protocol";
-import { edit } from "../game/world";
+import { listedLines, edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
@@ -194,7 +194,7 @@ export function StationsTab() {
   const hand = handOrder.value.stations;
   const key = hand.length ? null : stationSort.value.key, dir = stationSort.value.dir;
   const d = display.value;
-  const sc = scopedLists(w.save.stations, w.save.lines, (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
+  const sc = scopedLists(w.save.stations, listedLines(w), (k, id) => k === "station" && sel?.kind === "station" && sel.station === id);
   // re-sorted each game hour (the past 24 hours), or as the split for the map's mode arrives
   const riders = (r: StationRow) => untracked(() => stationRiders(r.members, d.stationUse)) ?? 0;
   const split = d.stationUse === "origins" || d.stationUse === "transfers";
@@ -204,13 +204,13 @@ export function StationsTab() {
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
     || natural(a.lead.name, b.lead.name) * (key === "name" ? dir : 1);
   const inOrder = (rows: StationRow[]) => (hand.length ? byHand(rows.sort(order), (r) => r.members, hand) : rows.sort(order));
-  const st = inOrder(stationRows(sc.stations, w.save.stations, w.save.lines, sc.stationDist, apart.value));
+  const st = inOrder(stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value));
   // T-1813: a row dragged into the gap above or below another goes there; the order then covers
   // every station, the viewed place's or not
   const dropRow = (d: Drag) => {
     const from = st.find((r) => r.members[0] === d.id), to = st.find((r) => r.members[0] === d.over);
     if (!from || !to || from === to) return;
-    const all = inOrder(stationRows(w.save.stations, w.save.stations, w.save.lines, sc.stationDist)).flatMap((r) => r.members);
+    const all = inOrder(stationRows(w.save.stations, w.save.stations, listedLines(w), sc.stationDist)).flatMap((r) => r.members);
     const rest = all.filter((id) => !from.members.includes(id));
     const anchor = d.after ? to.members[to.members.length - 1] : to.members[0];
     const i = rest.indexOf(anchor) + (d.after ? 1 : 0);

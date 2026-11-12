@@ -78,6 +78,9 @@ export interface LineInput {
   /** T-1813: the group's bullet text and colour set by hand, absent or "" for none */
   groupSymbol?: string;
   groupColour?: string;
+  /** T-3333: the hidden twin of a line run on both pairs of quad track, the line it runs the other pair
+   * for: in every sum, never in a list (`listedLines`) */
+  twinOf?: LineId;
 }
 
 /** A stretch of track between two nodes (SPEC 6.2). */
@@ -221,6 +224,13 @@ export interface LineStats {
   oneWay: boolean;
   /** T-2987: the player's speed limit for the line's trains, km/h; 0 for none */
   limit: number;
+  /** T-3333: the switch to run on both pairs of quad track is on: 1 it runs on both (the figures here
+   * are its own pair's; its hidden twin, `twin`, runs the other, and its panel adds the two), 2 on one
+   * pair for now */
+  pairs?: 1 | 2;
+  twin?: LineId;
+  /** T-3333: a hidden twin, the line it runs the other pair for */
+  twinOf?: LineId;
   /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
    * never in the save's stations); absent for a rail line */
   bus?: import("../workers/protocol").ClockBus;
@@ -277,6 +287,8 @@ export interface WorldView {
   fullTrack: Map<EdgeId, { rho: number; tph: number }>[];
   save: Save;
   lineStats: Record<LineId, LineStats>;
+  /** T-3333: each hidden twin's line (twin id to line id) */
+  twins: Map<LineId, LineId>;
   edges: TrackEdge[];
   nodes: Map<NodeId, TrackNode>;
   money: MoneyStats;
