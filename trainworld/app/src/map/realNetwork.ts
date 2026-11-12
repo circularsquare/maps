@@ -6,7 +6,7 @@
 // The lines come from noritetsu's per-region vector tiles (`noritetsu/dist/data/<region>.pmtiles`, one
 // `track` layer: k kind, r rank 0 main or 1 other, p confirmed by a passenger route, n no line runs over
 // it, x such track of a named line the model left out (T-3043), c colour; nm and w only from zoom 10). The tiles carry no line type, so the classes are what they
-// do carry: metro (subway), main line (rail, rank 0), other rail a line runs over (rank 1, T-3043). Trams, light rail, monorails, funiculars, narrow gauge, heritage and track no line runs over are
+// do carry: metro (subway), main line (rail, rank 0), other rail a line runs over (rank 1, T-3043), and light rail (S-Bahn, Stadtbahn, DLR; the tiles carry no usage, so all of it, T-3285). Trams, monorails, funiculars, narrow gauge, heritage and track no line runs over are
 // left out. A region's source is added when the view first touches it, from zoom 6 up.
 //
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
@@ -37,7 +37,7 @@ const ID = "tw-real-";
 const kind = (k: string) => ["==", ["get", "k"], k];
 const METRO = kind("subway");
 const MAIN = ["all", kind("rail"), ["==", ["get", "r"], 0]];
-const SHOWN = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail")]];
+const SHOWN = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail"), kind("light_rail")]];
 
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];

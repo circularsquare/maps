@@ -8,7 +8,7 @@
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
 line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps exactly the ways the
 game's real-network layer draws (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
-build_tiles.py, then SHOWN): subway and rail, each with some line in ways.json running over it (T-3043). The track tool snaps only to these
+build_tiles.py, then SHOWN): subway, rail and light rail, each with some line in ways.json running over it (T-3043). The track tool snaps only to these
 (DECISIONS 2026-10-19, T-727). Short groups of other track that join drawn track at two points or
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
 `gap_fillers`); they are not drawn, so a click never starts on one.
@@ -48,7 +48,7 @@ NORI = HERE.parents[1] / "noritetsu"
 OUT = HERE.parent / "data" / "packs" / "realgraph"
 VERSION = 1
 THIN_M = 3.0
-KIND = {"rail": 0, "subway": 2}
+KIND = {"rail": 0, "light_rail": 0, "subway": 2}  # light rail routes as main-line family (T-3285)
 URBAN = {"light_rail", "subway", "tram", "monorail", "funicular"}
 # T-816: track the layer leaves out that may still fill a gap in it; the longest group of such ways
 # that goes in, km
@@ -235,6 +235,8 @@ def build(cc, boxes):
         if rw not in KIND:
             continue
         rank = rank_of(rw, tags)
+        if rw == "light_rail" and rank == 0:
+            rank = 1  # other rail in the layer's classes, whatever its usage tag says
         pax = wid in on_route
         shown = wid in on_line
         if rank >= 2 and pax:
