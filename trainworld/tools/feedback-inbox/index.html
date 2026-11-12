@@ -56,6 +56,9 @@ dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 
 dt { color: var(--dim); }
 dd { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow-y: auto; }
 a { color: var(--mine); }
+#pics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#pics a { display: block; line-height: 0; }
+#pics img { display: block; width: 96px; height: 96px; object-fit: cover; border: 1px solid var(--line); }
 #shot img { display: block; max-width: 100%; border: 1px solid var(--line); margin-top: 8px; }
 .note { font-size: 13px; color: var(--dim); margin: 8px 0; }
 .bad { color: var(--bad); }
@@ -157,7 +160,7 @@ function el(tag, props, ...kids) {
   return n;
 }
 
-let key = storedKey(), rows = [], selected = location.hash.slice(1), tag = "all", current = null, shotURL = null;
+let key = storedKey(), rows = [], selected = location.hash.slice(1), tag = "all", current = null, shotURL = null, picURLs = [];
 
 async function api(method, path, body) {
   const r = await fetch(BASE + path, {
@@ -284,8 +287,10 @@ function renderThread() {
     t.owner ? null : el("div", { class: "note", text: "No account or browser key: the player can't see a reply here. Email them if you want to answer." }),
     el("div", { id: "reply" }, reply, send),
     el("div", { id: "shot" }),
+    el("div", { id: "pics" }),
   ].filter(Boolean));
   if (t.shot) loadShot(t.id);
+  if (t.images && t.images.length) loadPics(t);
 }
 
 // ---- Translation (T-3031): Chrome's on-device LanguageDetector and Translator (Chrome 138+). Nothing leaves
@@ -362,6 +367,24 @@ async function loadShot(id) {
     shotURL = URL.createObjectURL(blob);
     $("shot").replaceChildren(el("div", { class: "note", text: "Screenshot" }), el("img", { src: shotURL, alt: "Screenshot the player attached" }));
   } catch (e) { fail(e); }
+}
+
+// T-3326: the pictures the player attached, as small thumbnails that open the full image in a new tab
+let picRun = 0;
+async function loadPics(t) {
+  const run = ++picRun;
+  picURLs.forEach((u) => URL.revokeObjectURL(u));
+  picURLs = [];
+  for (const im of t.images) {
+    try {
+      const blob = await (await api("GET", `trainworld/inbox/thread/${t.id}/image/${im.n}`)).blob();
+      if (!current || current.id !== t.id) return;
+      const u = URL.createObjectURL(blob);
+      picURLs.push(u);
+      $("pics").append(el("a", { href: u, target: "_blank", rel: "noopener", title: `Screenshot ${im.n}, ${Math.round(im.bytes / 1024)} KB` },
+        el("img", { src: u, alt: `Screenshot ${im.n} the player attached` })));
+    } catch (e) { fail(e); }
+  }
 }
 
 async function open(id) {

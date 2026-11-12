@@ -612,6 +612,7 @@ Beside the message the report carries the browser, memory, language, the last lo
 `state` [T-3313, `game/diagnostics.ts`]: the clock worker's oldest unanswered edit or read and the last hour of trips,
 and the demand pool's newest solve, last step and oldest download, each with its age, so a report of figures that
 stopped says where they stuck.
+Screenshots [T-3326, `game/feedbackImages.ts`]: against a server whose config has `trainworldFeedbackImages` above 0, an "Attach screenshots" button, a count ("n/4") and thumbnails with a remove button sit under the message. Up to 4, from the picker, a paste (Ctrl/Cmd+V) or a file dropped on the form; PNG, JPEG or WebP only. Each is shrunk to 1920 px on its long edge and encoded as WebP (JPEG where the browser cannot) under the server's 1.5 MB, then sent with the message. Replies take none. The inbox page shows them as small thumbnails that open the full image.
 Signed in, the session rides along so the report names the account [T-1719]. A send that works closes the panel and shows a passing note at the map's upper left under the edit note, "sent! thank you for feedback" (plain text as the edit note's, 5 s; `showPassingNote` in `ui/PassingNote.tsx`) [T-1709, T-2166]; a failure says why (no server for this copy,
 not reachable, too many from here, or a server whose `/noritetsu/config` lacks `trainworldFeedback`: "Feedback can't be
 sent yet") and keeps the text. Station ridership

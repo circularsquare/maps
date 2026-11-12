@@ -11,9 +11,10 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
-  ApiError, canListFeedback, deleteFeedback, feedbackThreadsOn, feedbackUnread, getFeedbackThread, listFeedback, markFeedbackRead,
+  ApiError, canListFeedback, deleteFeedback, feedbackImagesMax, feedbackThreadsOn, feedbackUnread, getFeedbackThread, listFeedback, markFeedbackRead,
   replyFeedback, sendFeedback, session, type FeedbackRow, type FeedbackThread,
 } from "../game/account";
+import { acceptedType, dropImage, imageField, ImageTooBig, MAX_IMAGES, prepareImage, type FeedbackImage } from "../game/feedbackImages";
 import { loadFailure } from "../game/loading";
 import { stateReport } from "../game/diagnostics";
 import { display } from "../game/ui";
@@ -65,6 +66,9 @@ function failText(e: unknown): string {
     if (e.code === "too-many") return t("feedbackPanel.tooManyThreads");
     if (e.code === "long") return t("feedbackPanel.threadLong");
     if (e.code === "full") return t("feedbackPanel.full");
+    if (e.code === "too-many-images") return t("feedbackPanel.tooManyImages");
+    if (e.code === "bad-image") return t("feedbackPanel.badImage");
+    if (e.code === "image-too-big" || e.status === 413) return t("feedbackPanel.imageTooBig");
     if (e.status === 0) return e.message.startsWith("This copy") ? e.message : t("feedbackPanel.unreachable");
     if (e.status === 429) return t("feedbackPanel.tooMany");
     return e.message;
@@ -98,13 +102,46 @@ export function FeedbackPanel() {
   const [kind, setKind] = useState("");
   const [state, setState] = useState<"" | "sending">("");
   const [msg, setMsg] = useState("");
+  const [images, setImages] = useState<FeedbackImage[]>([]);
+  const [over, setOver] = useState(false);
+  const live = useRef<FeedbackImage[]>([]);
+  live.current = images;
+  useEffect(() => () => live.current.forEach(dropImage), []);
   const close = () => { feedbackOpen.value = false; };
   const threads = feedbackThreadsOn();
+  const room = feedbackImagesMax();
+  const picker = useRef<HTMLInputElement>(null);
+  // T-3326: pasted, dropped or picked files all come here; what does not fit or is not an image is said once
+  const addFiles = async (files: File[]) => {
+    if (!room) return;
+    const pics = files.filter((f) => acceptedType(f.type));
+    const cap = Math.min(room, MAX_IMAGES);
+    const take = pics.slice(0, Math.max(0, cap - live.current.length));
+    let note = "";
+    if (files.length && !pics.length) note = t("feedbackPanel.badImage");
+    else if (pics.length > take.length || pics.length < files.length && !take.length) note = t("feedbackPanel.tooManyImages");
+    const made: FeedbackImage[] = [];
+    for (const f of take) {
+      try { made.push(await prepareImage(f)); } catch (e) { note = e instanceof ImageTooBig ? t("feedbackPanel.imageTooBig") : t("feedbackPanel.badImage"); }
+    }
+    if (made.length) setImages((cur) => [...cur, ...made].slice(0, cap));
+    setMsg(note);
+  };
+  const removeImage = (im: FeedbackImage) => { dropImage(im); setImages((cur) => cur.filter((x) => x !== im)); setMsg(""); };
+  const onPaste = (e: ClipboardEvent) => {
+    if (!room) return;
+    const files = Array.from(e.clipboardData?.files ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
+    if (!e.clipboardData?.getData("text/plain")) e.preventDefault();
+    void addFiles(files);
+  };
   const send = async () => {
     if (!message.trim()) { setMsg(t("feedbackPanel.empty")); return; }
     setState("sending"); setMsg("");
     try {
-      await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), context: reportContext(), kind: kind || undefined });
+      const pics = room ? await Promise.all(images.map(imageField)) : [];
+      await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), context: reportContext(), kind: kind || undefined, images: pics });
+      images.forEach(dropImage); setImages([]);
       setMessage(""); setKind(""); setState("");
       close();
       showPassingNote(t("feedbackPanel.thanks"));
@@ -114,13 +151,31 @@ export function FeedbackPanel() {
     }
   };
   return <Modal open={feedbackOpen.value} onClose={close} title={t("feedbackPanel.title")} cls="acct-panel fb-panel">
-    <form class="acct-form" onSubmit={(e) => { e.preventDefault(); if (state !== "sending") void send(); }}>
+    <form class={"acct-form" + (over ? " fb-over" : "")} onSubmit={(e) => { e.preventDefault(); if (state !== "sending") void send(); }}
+      onPaste={onPaste}
+      onDragOver={room ? (e) => { if (e.dataTransfer?.types.includes("Files")) { e.preventDefault(); setOver(true); } } : undefined}
+      onDragLeave={room ? () => setOver(false) : undefined}
+      onDrop={room ? (e) => { setOver(false); const fs = Array.from(e.dataTransfer?.files ?? []); if (fs.length) { e.preventDefault(); void addFiles(fs); } } : undefined}>
       <input name="name" placeholder={t("feedbackPanel.namePlaceholder")} aria-label={t("feedbackPanel.nameLabel")} autocomplete="name" maxLength={100}
         value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
       <input name="email" type="email" placeholder={t("feedbackPanel.emailPlaceholder")} aria-label={t("feedbackPanel.emailLabel")} autocomplete="email" maxLength={200}
         value={contact} onInput={(e) => setContact((e.target as HTMLInputElement).value)} />
       <textarea name="message" placeholder={t("feedbackPanel.messageLabel")} aria-label={t("feedbackPanel.messageLabel")} rows={6} maxLength={4000}
         value={message} onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)} />
+      {room > 0 && <div class="fb-shots">
+        <div class="fb-shot-bar">
+          <button type="button" class="btn text" disabled={images.length >= room} onClick={() => picker.current?.click()}>{t("feedbackPanel.attach")}</button>
+          <span class="fb-shot-count">{t("feedbackPanel.imageCount", { n: images.length })}</span>
+          <input ref={picker} type="file" class="fb-file" accept="image/png,image/jpeg,image/webp" multiple tabIndex={-1} aria-hidden="true"
+            onChange={(e) => { const el = e.target as HTMLInputElement; const fs = Array.from(el.files ?? []); el.value = ""; void addFiles(fs); }} />
+        </div>
+        {images.length > 0 && <ul class="fb-thumbs">
+          {images.map((im, i) => <li key={im.id}>
+            <img src={im.url} alt={t("feedbackPanel.imageAlt", { n: i + 1 })} />
+            <button type="button" class="fb-thumb-x" aria-label={t("feedbackPanel.imageRemove")} onClick={() => removeImage(im)}>×</button>
+          </li>)}
+        </ul>}
+      </div>}
       {threads && <div class="fb-tags" role="group" aria-label={t("feedbackPanel.tagsLabel")}>
         {TAGS.map(([id, key]) => (
           <button type="button" class={"btn text" + (kind === id ? " on" : "")} aria-pressed={kind === id} onClick={() => setKind(kind === id ? "" : id)}>{t(key)}</button>

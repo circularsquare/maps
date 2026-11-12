@@ -37,7 +37,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldFlags?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; /** T-3326: how many screenshots a new feedback takes; absent or 0 on a server that drops them */ trainworldFeedbackImages?: number; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldFlags?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
 export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean; /** T-3269: the flag beside the name, game/flags.ts */ flag?: string }
 export interface BoardRow { rank: number; name: string; value: number; flag?: string }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -142,7 +142,7 @@ export async function fetchBytes(path: string, max: number): Promise<Uint8Array>
 
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
-export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string>; kind?: string }) {
+export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string>; kind?: string; images?: { type: string; data: string }[] }) {
   if (!BASE) throw new ApiError(t("account.noServer"), 0);
   // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
   const cfg = accountConfig.peek();
@@ -151,7 +151,7 @@ export async function sendFeedback(f: { name: string; contact: string; message: 
   // refuse the key header in its CORS preflight)
   const threads = cfg?.trainworldFeedbackThreads === true;
   if (threads && !session.peek() && !readFeedbackKey()) makeFeedbackKey();
-  await api("POST", "trainworld/feedback", { kind: threads && f.kind ? f.kind : "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context },
+  await api("POST", "trainworld/feedback", { kind: threads && f.kind ? f.kind : "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context, ...(threads && f.images?.length ? { images: f.images } : {}) },
     { headers: threads ? keyHeaders() : undefined });
 }
 
@@ -183,6 +183,8 @@ function makeFeedbackKey(): string {
   return readFeedbackKey();
 }
 const keyHeaders = (): Record<string, string> => { const k = readFeedbackKey(); return k ? { "X-Feedback-Key": k } : {}; };
+/** T-3326: how many screenshots the form may attach: what the server says, else none. */
+export const feedbackImagesMax = () => (feedbackThreadsOn() ? Math.max(0, Math.min(4, accountConfig.value?.trainworldFeedbackImages ?? 0)) : 0);
 /** Whether this browser can have earlier feedback to list: a session or a key. */
 export const canListFeedback = () => feedbackThreadsOn() && !!(session.value || readFeedbackKey());
 
