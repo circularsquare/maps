@@ -669,6 +669,90 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
     assert!((sk.r[s] - (1.25 + 20.0 + 2.0)).abs() < 1e-3, "{}", sk.r[s]);
 }
 
+/// T-3295: a line that bends back near itself, P(0)-A(1)-...-B(5)-T(6), A and B `gap` metres apart
+/// and every other pair of stations far apart, 12 tph, 3 minutes a hop outside the bend and 6
+/// round it.
+fn bent_line(gap: f32) -> Network {
+    let st: [(f32, f32); 7] = [(-3000.0, -1500.0), (0.0, 0.0), (3000.0, -1500.0), (5000.0, gap / 2.0), (3000.0, gap + 1500.0), (0.0, gap), (-3000.0, gap + 1500.0)];
+    Network {
+        st_x: st.iter().map(|s| s.0).collect(), st_y: st.iter().map(|s| s.1).collect(),
+        line_name: vec![String::new()], line_off: vec![0, 7], line_stops: (0..7).collect(),
+        hop_min: vec![3.0, 6.0, 6.0, 6.0, 6.0, 3.0, 0.0], hop_back: vec![], line_speed_kmh: vec![0.0],
+        line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], catches: vec![], st_bus: vec![], st_tram: vec![],
+    }
+}
+
+/// T-3295: off a line that bends back near itself, riders walk across the bend and take the same
+/// line on from its other stop, either way along it, where that beats riding round; through a
+/// passage too, past the walking limit. Route nodes: run 0 is 0..7 by stop, run 1 7..14 (stop
+/// 6 - i at 7 + i).
+#[test]
+fn a_line_bent_back_near_itself_is_changed_onto_across_the_bend() {
+    let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    let g = build_graph(&bent_line(200.0), &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    let walk = p.xfer_min(200.0) * p.w_xfer;
+    // P to T: 2.5 waiting, 3 to A, the walk, 2.5 and the change's 2, 3 to T; round the bend 32.5
+    let across = 2.5 + 3.0 + walk + 2.5 + p.transfer_min + 3.0;
+    assert!(across < 32.5);
+    assert!((sk.r[6] - across).abs() < 1e-3, "P to T {} against {across}", sk.r[6]);
+    assert!((sk.r[6 * s] - across).abs() < 1e-3, "T to P {} against {across}", sk.r[6 * s]);
+    // P to stop 4: across, then the line back the other way one stop of 6 (round, 23.5)
+    let back = across - 3.0 + 6.0;
+    assert!(back < 23.5);
+    assert!((sk.r[4] - back).abs() < 1e-3, "P to 4 {} against {back}", sk.r[4]);
+    // P to stop 3 rides round (2.5 + 3 + 12); stop 2 too
+    assert!((sk.r[3] - 17.5).abs() < 1e-3, "{}", sk.r[3]);
+    let mut od = vec![0.0; s * s];
+    od[6] = 100.0;
+    od[4] = 10.0;
+    od[6 * s] = 50.0;
+    let loads = assign(&g, &sk, &od);
+    let (b_on, b_back, a_back) = (5, 8, 12);
+    assert_eq!((loads.rn_board[b_on], loads.rn_board[b_back], loads.rn_board[a_back]), (100.0, 10.0, 50.0));
+    assert_eq!(loads.seg[2] + loads.seg[3], 0.0, "nobody rides round the bend");
+    let r = super::super::trip::routes(&g, &sk, &p, 0, 6, 0.005);
+    assert_eq!(r.len(), 1);
+    let legs = &r[0].1;
+    let kinds: Vec<_> = legs.iter().map(|l| (l.kind, l.st_from, l.st_to)).collect();
+    assert_eq!(kinds, vec![(1, 0, 1), (2, 1, 5), (1, 5, 6)], "ride to A, walk to B, ride on");
+
+    // 600 m apart: too far to walk, so round the bend; linked by a passage, across it
+    let mut net = bent_line(600.0);
+    let sk = skims(&build_graph(&net, &p), &p);
+    assert!((sk.r[6] - 32.5).abs() < 1e-3, "{}", sk.r[6]);
+    net.st_group = vec![0, 1, 2, 3, 4, 1, 6];
+    net.st_passage = vec![[1, 5]];
+    let sk = skims(&build_graph(&net, &p), &p);
+    let across = 2.5 + 3.0 + 600.0 / upgrades::PASSAGE_MPS / 60.0 * p.w_xfer + 2.5 + p.transfer_min + 3.0;
+    assert!((sk.r[6] - across).abs() < 1e-3, "{} against {across}", sk.r[6]);
+}
+
+/// T-3295: a walk off a line to another of its stops never rides back over the line: X(0)-Y(1)
+/// 200 m apart, then Z(2) and W(3) far on, 12 tph, 2 minutes a stop. Riders Z -> W whose trains
+/// leave riders behind for 20 minutes wait for them, rather than ride back to Y, walk to X and
+/// board there (20.0), nor does a rider off the line at Y walk to Z's side to ride back.
+#[test]
+fn a_walk_off_a_line_never_rides_it_back() {
+    let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    let mut net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[2.0]);
+    (net.st_x, net.st_y) = (vec![0.0, 200.0, 2200.0, 4200.0], vec![0.0; 4]);
+    let mut g = build_graph(&net, &p);
+    let s = g.n_st;
+    let z_on = 2;
+    g.rn_left[z_on] = 20.0;
+    let sk = skims(&g, &p);
+    let direct = 2.5 + 20.0 + 2.0;
+    assert!((sk.r[2 * s + 3] - direct).abs() < 1e-3, "{} against {direct}", sk.r[2 * s + 3]);
+    let mut od = vec![0.0; s * s];
+    od[2 * s + 3] = 100.0;
+    let loads = assign(&g, &sk, &od);
+    assert_eq!(loads.board.iter().sum::<f32>(), 100.0, "one boarding each");
+    assert_eq!(loads.rn_board[z_on], 100.0);
+}
+
 #[test]
 fn common_lines_use_expected_ride_cost_and_respect_fare_and_crowding() {
     let p = common_test_params();

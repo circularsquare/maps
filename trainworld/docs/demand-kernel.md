@@ -164,9 +164,14 @@ levels:
    line turning back at a stop it passed before) its departures towards other stops are open, at
    the cost of any change (T-1268, Anita 2026-10-25): off a lollipop's loop a rider changes at the
    junction onto the line on round the other side, or back down the trunk where the line ends at
-   the junction. A walk from another station boards none of the line it left. A station whose
+   the junction. **After a walk to another stop of the line they left** (within 300 m, or in the
+   same complex) a rider boards it only away from where they rode: not towards the stop they
+   walked from or any stop behind it along their ride (a circle's the nearer way round), either
+   way otherwise (T-3295, 2026-11-12). Across the bend of a line that loops back near itself they
+   walk over and ride on, or back round the bend from the far side, where that beats riding
+   round; a walk to the next stop or the last one never rides the line back. A station whose
    strategy boards a departure barred to some arrival has a change node for those arrivals (one
-   per line, and per pair of stops for a line passing it twice), with its own strategy over the
+   per line and the barred departures' next stops, at most two, else the whole line), with its own strategy over the
    departures left; one with no other departure has none, and the alighting there leads nowhere
    for this destination. A rider may still ride out on one line and back on another (another line
    from the stop upstream, or one parallel to the full line), as any change is allowed. A rider leaving

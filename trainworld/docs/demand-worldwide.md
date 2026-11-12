@@ -729,7 +729,8 @@ notes/T-420.md has the tables.
   capped at 60 minutes. Riders left behind wait at their station: nobody changes onto the line
   they left back towards the stop they came from, so nobody rides a full line the other way to
   board upstream (Anita, T-575; a line passing a station twice may be changed onto there towards
-  other stops, T-1268), though
+  other stops, T-1268, and one looping back near itself across the bend, never back towards the
+  stop walked from, T-3295), though
   Tokyo riders do (gyaku-nori), and riding out on another line and back stays open. Why it may
   not carry over: crush loads differ (Tokyo's worst lines run at twice the rated load, 320 a car,
   and Mumbai packs more, pushers included, so "full" comes later; London and Chinese metros reach

@@ -12,7 +12,9 @@ Stations within 300 m of each other are close enough to change on foot. A passag
 
 People don't get off a line to catch the same line back the way they came. On a full line they wait at their own station.
 
+A line that bends back close to itself can be changed onto across the bend. People get off, walk over to its other stop and ride on from there when that beats riding round. A passage between the two stops lets them do it from further apart. They never walk to another of its stops to ride back towards where they got off.
+
 If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
 
 Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most 30 minutes, and it has no extra for long gaps. Commutes and outings between cities wait as local trips do.
-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, also `planned_board_cost`, `change_f` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS`
+In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, also `planned_board_cost`, `change_f`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS`

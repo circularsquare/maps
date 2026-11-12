@@ -1042,6 +1042,9 @@ pub(super) struct Search<'a> {
     pub(super) banned_off: Vec<u32>,
     pub(super) banned: Vec<u32>,
     pub(super) banned_all: Vec<bool>,
+    /// T-3295: per route node, its stop's place in its line's list, its way along it (1 out, -1
+    /// back) and, for a circle, its number of stops (0 otherwise), for `walk_ban`.
+    pub(super) at: Vec<(i32, i32, i32)>,
     /// T-2652: the leaf stations (`leaves`; per station its place there, `NONE` if none): one
     /// line's departures, no walk in or out, every arrival barred that line whole. Only their own
     /// route nodes' offers reach them and nothing is reached from them, so their strategies are
@@ -1160,6 +1163,19 @@ impl Search<'_> {
             }
             banned_off[a + 1] = banned.len() as u32;
         }
+        // a line's route nodes are its stops out, then back in reverse (`build_graph`)
+        let mut at = vec![(0, 1, 0); nr];
+        let mut r0 = 0;
+        while r0 < nr {
+            let r1 = r0 + g.rn_line[r0..].iter().take_while(|&&l| l == g.rn_line[r0]).count();
+            let len = (r1 - r0) / 2;
+            let circle = if g.rn_next[r0 + len - 1] != NONE { len as i32 } else { 0 };
+            for k in 0..len {
+                at[r0 + k] = (k as i32, 1, circle);
+                at[r0 + len + k] = ((len - 1 - k) as i32, -1, circle);
+            }
+            r0 = r1;
+        }
         let rev_cost: Vec<f32> = g.rev_edge.iter().map(|&e| g.adj_cost[e as usize]).collect();
         let boards = |r: usize| edge_ix[r] != NONE && g.rn_tph[r] > 0.0;
         let rn = (0..nr)
@@ -1247,6 +1263,7 @@ impl Search<'_> {
             banned_off,
             banned,
             banned_all,
+            at,
         }
     }
 
@@ -1503,12 +1520,12 @@ impl Search<'_> {
     /// Nobody changes onto the line they left towards the stop they came from (T-575), or towards
     /// the one their train goes on to; a line passing `v` again leaves it for other stops, so a rider
     /// off a lollipop's loop may change at its junction onto the line on round (T-1268). A walk from
-    /// another station boards none of the line.
+    /// another station takes the line only away from where they rode (`walk_ban`, T-3295).
     pub(super) fn ban(&self, a: usize, v: usize) -> Option<(u32, [u32; 2])> {
         let g = self.g;
         let line = g.rn_line[a];
         if !self.lines.contains(&line) { return None; }
-        if g.rn_station[a] as usize != v { return Some((line, WHOLE)); }
+        if g.rn_station[a] as usize != v { return self.walk_ban(a, v, line); }
         let boarded = self.banned[self.banned_off[a] as usize..self.banned_off[a + 1] as usize].iter().any(|&r| self.board[r as usize >> 6] >> (r & 63) & 1 == 1);
         if !boarded {
             None
@@ -1516,6 +1533,46 @@ impl Search<'_> {
             Some((line, WHOLE))
         } else {
             Some((line, ban_of(&self.pst, &self.nst, a)))
+        }
+    }
+
+    /// `ban` for a rider walking to `v` off route node `a` of `line` (T-3295): barred are the
+    /// line's departures whose next stop is the one they left or behind it along the way they rode
+    /// (a circle's the nearer way round), so a walk never rides the line back over itself, and
+    /// open the rest: across the bend of a line that loops back near itself, on either way. Keyed
+    /// by the barred departures' next stops; past two of them, the whole line.
+    fn walk_ban(&self, a: usize, v: usize, line: u32) -> Option<(u32, [u32; 2])> {
+        let (g, s) = (self.g, self.s);
+        let (i, d, _) = self.at[a];
+        let (mut key, mut open, mut boarded) = ([NONE; 2], false, false);
+        for e in g.adj_off[v] as usize..g.adj_off[v + 1] as usize {
+            let r = g.adj_to[e] as usize - s;
+            if g.rn_line[r] != line || g.rn_tph[r] == 0.0 { continue; }
+            let (j, dir, circle) = self.at[r];
+            let mut ahead = (j + dir - i) * d;
+            if circle > 0 {
+                ahead = ahead.rem_euclid(circle);
+                if 2 * ahead > circle { ahead -= circle; }
+            }
+            if ahead > 0 {
+                open = true;
+                continue;
+            }
+            boarded |= self.board[r >> 6] >> (r & 63) & 1 == 1;
+            let x = self.nst[r];
+            if x == NONE || key[1] != NONE && !key.contains(&x) {
+                key = WHOLE;
+            } else if key != WHOLE && !key.contains(&x) {
+                key[(key[0] != NONE) as usize] = x;
+            }
+        }
+        if !boarded {
+            None
+        } else if !open || key == WHOLE {
+            Some((line, WHOLE))
+        } else {
+            let k = if key[1] == NONE { [key[0]; 2] } else { [key[0].min(key[1]), key[0].max(key[1])] };
+            Some((line, k))
         }
     }
 
