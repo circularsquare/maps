@@ -1102,6 +1102,14 @@ notes/T-420.md has the tables.
   (New York - Philadelphia about 2.5-6x plausible, notes/T-379.md, T-438). Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
   NTS England, Japan's Inter-Regional Travel Survey) and its cross-border counts; another open
   area, or a factor per country pair, where they disagree (with country tailoring).
+- **Resort towns** (T-3280, docs/regional.md 5.1 "Resort towns"; Anita 2026-11-12, a local factor for Japan).
+  79 Japanese resort municipalities' published visitors a year, each visit a day counting as 4 people, join the
+  ground attraction of their sites; fitted under Hakone's and Atami's rail counts. Why it may not carry over:
+  the counts are prefectures' own (mostly summed visits, a site visited twice counted twice; Yamanashi and
+  Nagasaki unique persons; Nagano a sum of its spots), so towns are not counted alike; only listed towns get
+  it, so an unlisted resort (Kaga, Wajima, Misasa, Onna) keeps the people rule; nothing outside Japan has a
+  table. Check: a resort station's riders against the game's on a drawn line (Hakone-Yumoto, Atami), and
+  another country's tourism counts by municipality before a table of its own.
 - **Attraction inside a pack** (T-377). `population + 2 x jobs` rescaled to the pack's people, so
   a pack counts as many people as the world field around it, its jobs only moving where in it trips
   end. Where Kontur and a pack's census differ (the Northeast's near pairs rose 2-7% on the switch

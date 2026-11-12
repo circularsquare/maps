@@ -56,6 +56,53 @@ if not PULL.get("on"):
     # off until the world rebuild turns it on: a pack built with it beside packs built without would mix two
     # markets (the registry's rule, its normalisers and its row's excess must all agree)
     PULL = {**PULL, "places": {}, "gamma": 0.0, "gamma_x": 0.0}
+# T-3280: resort towns' visitors a year (pipeline/market_tourism.py); `beta` visits a day count as one person in a
+# destination's ground attraction (docs/regional.md 5.1 "Resort towns")
+TOURISM = json.loads((Path(__file__).parent / "market_tourism.json").read_text(encoding="utf-8"))
+if not TOURISM.get("on"):
+    TOURISM = {**TOURISM, "towns": [], "beta": 0.0}
+
+
+def town_shapes():
+    """Each resort town's outline (shapely) and point, from TOURISM."""
+    from shapely.geometry import Polygon, MultiPolygon
+    out = []
+    for t in TOURISM["towns"]:
+        g = MultiPolygon([Polygon(r[0], r[1:]) for r in t["shape"]])
+        out.append((t, g))
+    return out
+
+
+def town_people(t):
+    """A town's long-trip attraction in people: its visits a day times beta."""
+    return TOURISM["beta"] * t["visitors"] / 365.0
+
+
+def site_tourism(cid, lon, lat, jobs):
+    """T-3280: each site's share of the resort towns' attraction (`town_people`), for the towns whose point lies in
+    this pack's outline: a town's sites inside its outline by their jobs (where its hotels and shops are), else
+    its nearest site."""
+    import shapely
+    out = np.zeros(len(lon))
+    towns = town_shapes()
+    p = PACKS / f"{cid}.boundary.geojson"
+    if not towns or not p.exists() or not len(lon):
+        return out
+    from shapely.geometry import shape
+    g = json.loads(p.read_text(encoding="utf-8"))
+    own = shapely.union_all([shape(f.get("geometry", f)).buffer(0) for f in (g["features"] if g.get("type") == "FeatureCollection" else [g])])
+    for t, outline in towns:
+        if not own.contains(shapely.Point(t["lon"], t["lat"])):
+            continue
+        inside = shapely.contains_xy(outline, lon, lat)
+        w = np.where(inside, jobs, 0.0)
+        if w.sum() <= 0:
+            w = np.where(inside, 1.0, 0.0)
+        if w.sum() <= 0:
+            w = np.zeros(len(lon))
+            w[int(np.argmin(W.km(t["lon"], t["lat"], lon, lat)))] = 1.0
+        out += town_people(t) * w / w.sum()
+    return out
 
 
 def pull_rule():
@@ -164,10 +211,17 @@ class Field:
         r5, r4, r3 = wf.r5, wf.r4, wf.r3
         inc = np.minimum(r5.gdp / self.y_us, 1)
         up = lambda x5: [x5, np.add.reduceat(x5, r4.start), np.add.reduceat(np.add.reduceat(x5, r4.start), r3.start)]
-        self.a = up(r5.pop * inc ** RULE["eps"])
+        self.index = {int(c): i for i, c in enumerate(r5.h)}
+        # T-3280: the resort towns' attraction in the r5 cell of each town's point, so every origin's ground
+        # normaliser counts what the packs' zones add (`site_tourism`); the tail's weight takes none
+        tw5 = np.zeros(len(r5.pop))
+        for t in TOURISM["towns"]:
+            i = self.index.get(h3.str_to_int(h3.latlng_to_cell(t["lat"], t["lon"], 5)))
+            if i is not None:
+                tw5[i] += town_people(t)
+        self.a = up((r5.pop + tw5) * inc ** RULE["eps"])
         self.tb = up(r5.pop * inc ** RULE["eps"] * (np.maximum(r5.pop, 1) / RULE["u_ref_people"]) ** RULE["TH"])
         self.inc = [np.minimum(lv.gdp / self.y_us, 1) for lv in (r5, r4, r3)]
-        self.index = {int(c): i for i, c in enumerate(r5.h)}
         self.open = np.array([c["iso2"] in OPEN_AREA for c in wf.countries])
         # T-3240: the pull's part of each cell's two weights, at full strength (attraction x (pull - 1)), for a
         # trip within its country (its country's gamma) and one across a border; a cell takes the excess of
@@ -452,6 +506,11 @@ def build(cid, reg, F, air):
            "px": PULL["places"].get(cid, [0.0])[0],
            "sources": ["the zone pack's cells (600 m squares)", "the world field (T-375: Kontur 2023, Natural Earth, World Bank GDP per head)",
                        "pipeline/longhaul.json (T-376)", "pipeline/market_pull.json (T-3240)"]}
+    tw = site_tourism(cid, slon, slat, s[:, 3])
+    if tw.any():
+        # T-3280: each 6 km zone's resort-town attraction in people (intercity build.rs adds it to the zone's own)
+        out["zone_tw"] = [round(float(v), 3) for v in np.bincount(zi, tw, len(keys))]
+        out["sources"].append("pipeline/market_tourism.json (T-3280)")
     if site_parts is not None:
         out.update(part_fields(site_parts, zi, len(keys), head))
     out.update(air.get(cid, {}))

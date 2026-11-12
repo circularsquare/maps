@@ -248,6 +248,15 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
             gc.jobs.push(attr as f32);
             cell_zone.push(first + z);
         }
+        // T-3280: resort towns' attraction, people counted as the world field counts them (times income)
+        if !zin.zone_tw.is_empty() {
+            if zin.zone_tw.len() != nz || zin.zone_tw.iter().any(|v| !v.is_finite() || *v < 0.) {
+                return Err(format!("place {place}: invalid resort attraction"));
+            }
+            for k in 0..nz {
+                mz[first + k].a += zin.zone_tw[k] * s_inc;
+            }
+        }
         for k in 0..nz {
             let z = &mut mz[first + k];
             let w = (z.pop + z.w_attr).max(1e-12) as f32;

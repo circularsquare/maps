@@ -52,6 +52,10 @@ station buildings and T-2278's parking by income). The full rules are in demand.
   visitors from the other side. Airport trips cross too: an airport in a county zone outside its
   city (Wuhan's, Istanbul's) takes its passengers from the city, up to the airport's published
   passengers and never more. These come with the next rebuild of the data.
+  A longer trip goes to a place by its people and jobs; in Japan, about 80 resort towns (Hakone,
+  Atami, Kusatsu, Beppu and the like) also count 4 people for every visitor a day in their published
+  tourism figures, so Tokyo's day trips and weekends away go to Hakone and Izu (Hakone about 9,100 a
+  weekday each way, eight times before). These come with the next rebuild of Japan's data.
   A longer trip into another country is damped too: to half inside the EU, Schengen and the UK
   (London - Paris about 30,000 a weekday), and much more elsewhere, the more so the poorer the
   traveller's country (0.26 for the richest).

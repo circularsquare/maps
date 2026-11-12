@@ -63,6 +63,22 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   disagree (Anita, 2026-11-12; notes/T-3240.md section 7). The normalisers carry it over the world field (each r5 cell its place's excess, by
   outline), so each origin's departures are kept and only where they go changes. `pipeline/market_pull.py`
   rebuilds the excess table, `pipeline/market_resorts.py` the resort list.
+- **Resort towns** (T-3280, Anita 2026-11-12, a local factor for Japan): 79 Japanese resort municipalities
+  (hot spring, mountain, lake and heritage towns: Hakone, Atami, Ito, Kusatsu, Karuizawa, Nikko, Beppu,
+  Noboribetsu and the like) carry their published visitors a year (`pipeline/market_tourism.csv`, each row its
+  prefecture's tourism report and year, mostly 2023). A town's visits a day times **beta 4** count as that
+  many more people in the ground attraction (`a_j`) of the pack's sites inside its N03 outline, shared by their
+  jobs (`market_zones.py` `site_tourism`, a zone file's `zone_tw`, added by intercity `build.rs` times the
+  income factor); the tail's attraction takes none. The world field counts the same people in the r5 cell of
+  each town's point, so every origin's normalisers carry it: departures are kept and only where they go moves
+  (Shinjuku's zone -0.8%, Tokyo - Osaka -0.1%). Beta is fitted under the rail counts: Hakone's five zones
+  1,090 -> 9,144 trips a weekday each way against the Hakone Tozan's about 22,500 riders a day (8.22M in
+  FY2017, so at most about 11,000 arrivals), Atami 1,746 -> 3,498 against JR East's 7,506 non-season boardings
+  a day there (FY2023); beta 5 would put Hakone at its bound. Trips from abroad see the towns too (one rule);
+  their zone files are not rebuilt for it, so their departures run up to 0.06% over (Jeju) until their next
+  rebuild. Counts are mostly summed visits (延べ), the
+  same basis as Hakone's and Atami's, which beta was fitted on. `pipeline/market_tourism.py` rebuilds the
+  outlines from the table. Measured: notes/T-3280.md "Stage 2".
 - **Pairs**: places whose centres are under **250 km** apart pair 6 km zone to 6 km zone at their
   own distance; farther places pair at the distance between the places' centres, so their 6 km
   pairs add up to the places' trips exactly, each end's share by its zones' departures over the

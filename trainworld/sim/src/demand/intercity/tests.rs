@@ -599,6 +599,29 @@ fn rows_of_some_places_are_those_of_every_place() {
     assert_ne!(only(&[0], &[packs[0].clone(), packs[3].clone()]), row(0));
 }
 #[test]
+fn resort_towns_join_a_zones_ground_attraction() {
+    // T-3280: a zone's resort attraction (`zone_tw`, people) joins its ground attraction times income; trips to
+    // its place rise, departures (over the normalisers) and the tail's attraction do not
+    let packs = world_packs();
+    let mut with = packs.clone();
+    with[0] = with[0].replacen(r#","cell_pop""#, r#","zone_tw":[0,50000,0],"cell_pop""#, 1);
+    with[2] = with[2].replacen(r#","cell_pop""#, r#","zone_tw":[0,20000],"cell_pop""#, 1);
+    let rows = |p: &[String]| world_rows(&composition(p, None)).unwrap();
+    let (a, b) = (rows(&packs), rows(&with));
+    let r = |v: &[Row], p: usize| v.iter().find(|r| r.place == p).unwrap().clone();
+    let (a0, b0, a2, b2) = (r(&a, 0), r(&b, 0), r(&a, 2), r(&b, 2));
+    assert!((b0.a - a0.a - 50000.).abs() < 1e-6 * a0.a, "{} {}", a0.a, b0.a);
+    assert!((b2.a - a2.a - 20000. * 0.6f64.powf(0.7)).abs() < 1e-6 * a2.a, "{} {}", a2.a, b2.a);
+    assert_eq!((b0.g, b0.t, b0.ta, b0.dep), (a0.g, a0.t, a0.ta, a0.dep));
+    // place 1 sends more to place 0, 100 km off (near: its row's list)
+    let near = |row: &Row, p: u32| row.near.iter().find(|n| n.0 == p).unwrap().1;
+    assert!(near(&r(&b, 1), 0) > near(&r(&a, 1), 0));
+    // a bad length is refused
+    let mut bad = packs.clone();
+    bad[0] = bad[0].replacen(r#","cell_pop""#, r#","zone_tw":[1,2],"cell_pop""#, 1);
+    assert!(world_rows(&composition(&bad, None)).is_err());
+}
+#[test]
 fn world_rows_add_up_and_open_as_the_game_opens_them() {
     let packs = world_packs();
     let rows = rows_json(&packs);

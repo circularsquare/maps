@@ -298,6 +298,9 @@ struct ZoneRaw {
     /// T-3240: the place's pull excess (`Rule`'s pull)
     #[serde(default)]
     px: f64,
+    /// T-3280: each 6 km zone's resort-town attraction in people (none where the pack holds no resort town)
+    #[serde(default)]
+    zone_tw: Vec<f64>,
     /// commutes from this place: home zone, work place, work zone (that place's own), commuters a day
     #[serde(default)]
     commute_home: Vec<u32>,
@@ -438,6 +441,7 @@ struct ZoneIn {
     site_park: Vec<f32>,
     cell_pop: Col,
     px: f64,
+    zone_tw: Vec<f64>,
     commute_home: Ix,
     commute_place: Ix,
     commute_work: Ix,
@@ -481,6 +485,7 @@ impl From<ZoneRaw> for ZoneIn {
             site_park: tight(z.site_park),
             cell_pop: Col::of(z.cell_pop),
             px: z.px,
+            zone_tw: z.zone_tw,
             commute_home: Ix::of(z.commute_home),
             commute_place: Ix::of(z.commute_place),
             commute_work: Ix::of(z.commute_work),
