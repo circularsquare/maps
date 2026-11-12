@@ -1,7 +1,22 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 2ba1fd73-4c91-45ba-b838-fe8f908d4b21, name maps-18 [8ecfe1], since 2026-11-11 11:10
-Updated: 2026-11-11 11:35 (v0.3 code frozen at bea8551a; translation review running; publish next)
+Updated: 2026-11-11 evening (v0.3 live; four agents on her evening reports T-3238..T-3241)
+
+## Evening 11-11 (her reports after getting home; she playtests in ~30 min)
+All Opus, running, no commits (I land):
+- savehang ad817a3b885049e5e, 6131: T-3238 Tokyo save hangs at "Calculating demand" since v0.3. Save asked for
+  (from @hayas_e via her); drop it in artifacts/trainworld/t3238/ and message savehang.
+- hsr ac7bbae715f8aaa77, 6132: T-3239 HSR loses to the parallel line; diagnose, bugs fixed, tuning to her.
+- longdist a67ad780a46aa7d9b, 6133: T-3240 long-distance demand low? + how it was fitted (her question); read-only.
+- rebuildstn aaa1701764040009e, 6134: T-3241 rebuild a piece between two stations to a new level; her call: stations
+  move with it, ramps on the track beyond them.
+- longdist: T-3240 diagnosed (notes/T-3240.md): totals right, big-city pairs 250-700 km outside the US 2-6x low;
+  proposal option 3 (size pull + tail refit, world rebuild, 4-8 h) waits on her. Resumed for T-3242: long-trip lists
+  name zones by market regionName ("Jinchengjiang region" for Hechi), 1,384 zones; fix to zoneName().
+- hsr: found the regional route search weighs fares 7-12x too heavy (curveWeight in India units vs start-country
+  dollars since T-1906); fixing in demand.worker.ts + income.ts.
+Next free id T-3243.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
@@ -108,7 +123,7 @@ then community on (5), push maps master.
   (3) both. Her pick: (1) now (agent meet), (2) queued as T-3219.
 - Queued: T-3160 [P3] memory leftovers, the stop list row's ~20 ms re-render (T-3159 follow-up, not filed).
 - T-3156 aws guard false positive: do with her around. T-3138 left-hand running needs her design. T-3150 rays parked.
-- Next free id **T-3238**. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
+- Next free id: see the top. stoprow: T-3232 DONE, landed 5b74f5e3 (row 94-445 ms -> 2-6 ms); 8800 = 5b74f5e3, smoke PASSED.
 
 ## Waiting on Anita
 - The publish yes (publish + website push + community on) at the moment it is ready.

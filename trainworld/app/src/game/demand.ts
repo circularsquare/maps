@@ -7,7 +7,7 @@
 
 import { t } from "../i18n";
 import { computed, signal } from "@preact/signals";
-import { activeCity, REGISTRY, viewedZone, type CityId } from "./cities";
+import { activeCity, CITIES, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
 import type { TripLengths } from "./tripLengths";
@@ -418,12 +418,17 @@ export interface PurposeTrips {
   returning: number[][];
 }
 
+/** T-3242: a place's name is its zone's shown name (zone-names.json, T-825), so the long-trip lists
+ * name it as the map does; the market's own name is the pipeline's, kept for a place with no zone. */
+const SHOWN = new Map(CITIES.filter(c => c.place >= 0).map(c => [c.place, c.name]));
 /** Registered places in pipeline/intercity.py order: the indices in the arrays below. */
-export const INTERCITY_PLACES = REGISTRY.market.places.map(p => p.name);
+export const INTERCITY_PLACES = REGISTRY.market.places.map((p, i) => SHOWN.get(i) ?? p.name);
 /** The places as the player reads them. `own` is the place the selection itself lies in: the trips
  * that stay within it are all 40 km or longer (the market has none shorter). */
 export function intercityPlaceName(place: number, own = -1): string {
-  const name = REGISTRY.market.places[place]?.regionName ?? "";
+  const p = REGISTRY.market.places[place];
+  const shown = SHOWN.get(place);
+  const name = !p ? "" : shown !== undefined && p.regionName.startsWith(p.name) ? shown + p.regionName.slice(p.name.length) : p.regionName;
   return place === own ? t("demand.otherPlaces", { name }) : name;
 }
 
