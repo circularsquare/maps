@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3272 [P2] Real saves mark high-speed lines (2026-11-12, agent hsrsave): a line over half on high-speed track runs high-speed trains, as for a player's line; only jpn7 had any (its network predated T-1625), rebuilt with 14 Shinkansen routes, 491 -> 585 lines (T-1625's services too; jpn7 baselines move). The OSM-built saves carry no high-speed routes. 730ec633; DECISIONS 2026-11-12.
 - T-3254 [P2] Long-trip pull round 2 (2026-11-12, agent pull2 and earlier): refit under Anita's undershoot rule (gamma 0.6 fading in over 300-700 km, Russia and Turkey off, China at half), Poland's near pull 0.2 (Warsaw - Krakow 3.6k -> 5.1k, under 7.2k by rail); switched on for the 2026-11-12 light pass (ef16dd6f). notes/T-3240.md 7.
 - T-3269 [P2] Flags beside names in Community and the leaderboards (2026-11-12, agent flags): picked in account settings; server e98ae76 deployed 04:49Z, game cb3715e6 (shows from the next publish). notes/T-3269.md.
 - T-3268 [P2] Zoom buttons on the map with a Settings switch, and the account panel's Privacy · Terms spacing (2026-11-12, agent zoombtn): 4181e35f. notes/T-3268.md.
