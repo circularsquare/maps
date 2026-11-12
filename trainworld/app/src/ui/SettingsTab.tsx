@@ -12,7 +12,9 @@ import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { mobileDevice } from "../workers/deviceMemory";
-import { Check, Icon, Segmented, Stepper } from "./widgets";
+import { Check, Icon, Segmented, ShapePicker, Stepper } from "./widgets";
+import { SHAPE_MODES } from "../game/lineShape";
+import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
 import { accountState } from "../game/account";
@@ -25,6 +27,7 @@ import { LanguageSelect } from "./LanguageSelect";
 
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
+const MODE_NAME: Record<Vehicle, MessageKey> = { train: "settingsTab.shapeTrain", tram: "settingsTab.shapeTram", bus: "settingsTab.shapeBus", boat: "settingsTab.shapeFerry" };
 type DayShown = "average" | "weekday" | "saturday" | "sunday" | "away" | "out" | "back";
 const SCHEME_OPTIONS: [BubbleScheme, MessageKey][] = [["mode", "settingsTab.scheme3"], ["ramp", "settingsTab.scheme2"], ["purpose", "settingsTab.schemePurpose"], ["colorblind", "settingsTab.schemeColorblind"]];
 const DAY_OPTIONS: [DayShown, MessageKey][] = [["average", "settingsTab.average"], ["weekday", "settingsTab.weekday"], ["saturday", "settingsTab.sat"], ["sunday", "settingsTab.sun"]];
@@ -170,6 +173,13 @@ export function SettingsTab() {
           {t("settingsTab.zoomButtons")}
         </Check>
       </div>
+      <div class="h">{t("settingsTab.lineShapes")}</div>
+      {SHAPE_MODES.map((m) => (
+        <div class="slider">
+          <span>{t(MODE_NAME[m])}</span>
+          <ShapePicker value={d.modeShapes[m]} onChange={(s) => setDisplay("modeShapes", { ...display.peek().modeShapes, [m]: s })} />
+        </div>
+      ))}
       <div class="h">{t("settingsTab.theme")}</div>
       <div class="stack">
         <Segmented options={SHADE_NAMES.map((s) => [s, t(SHADE_NAME[s])] as [Shade, string])} value={shade.value} onChange={(v) => (shade.value = v)} />

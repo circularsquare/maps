@@ -11,6 +11,8 @@ import { mobileDevice } from "../workers/deviceMemory";
 import { DEFAULT_RAMP, setBubbleColours, setBubbleShade, type BubbleScheme } from "./palette";
 import type { PurposeFilter } from "./purposes";
 import { LEVELS, type BubbleEnd, type Level, type Selection } from "./types";
+import { isLineShape, MODE_SHAPES, type LineShape } from "./lineShape";
+import type { Vehicle } from "./vehicle";
 
 export type Tab = "build" | "lines" | "stations" | "money" | "cities" | "settings";
 /** Tabs a remembered choice can name. */
@@ -118,6 +120,8 @@ export interface DisplaySettings {
   /** T-2838: a phone or tablet calculates trips between cities too (the market opens); per browser, since it is
    * about the device. Read at each solve, so it applies from the next one. */
   mobileIntercity: boolean;
+  /** T-3319: the bullet shape of each mode's lines that have none of their own (game/lineShapeState.ts) */
+  modeShapes: Record<Vehicle, LineShape>;
 }
 
 /** T-247: the UI scale setting's steps */
@@ -168,6 +172,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   zoomButtons: true,
   chartOtherLines: true,
   mobileIntercity: false,
+  modeShapes: { ...MODE_SHAPES },
 };
 
 const STORE = "trainworld-ui";
@@ -241,7 +246,10 @@ const VIDEO_DISPLAY: Partial<DisplaySettings> = {
   stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true, lighterMap: "off",
 };
 
-export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, trackColour, lighterMap: (migratedDisplay.lighterMap as string) === "on" ? "on" : "off", ...(VIDEO ? VIDEO_DISPLAY : {}) });
+// T-3319: each mode's stored shape kept where it is one, the rest from the defaults
+const storedShapes = (migratedDisplay.modeShapes ?? {}) as Partial<Record<Vehicle, unknown>>;
+const modeShapes = Object.fromEntries(Object.entries(MODE_SHAPES).map(([m, s]) => [m, isLineShape(storedShapes[m as Vehicle]) ? storedShapes[m as Vehicle] : s])) as Record<Vehicle, LineShape>;
+export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, modeShapes, trackColour,lighterMap: (migratedDisplay.lighterMap as string) === "on" ? "on" : "off", ...(VIDEO ? VIDEO_DISPLAY : {}) });
 /** T-2867: the player chose to play without intercity trips after running out of memory: this tab, across its
  * reloads, and gone with it (one bad evening should not take them away for good) */
 const MARKET_DROPPED = "tw-no-intercity";

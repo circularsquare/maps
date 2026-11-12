@@ -242,7 +242,8 @@ purpose filter the purpose drawn is ringed in the bar.
   carries a plus button, hover "New line, starting at the stations on this track (N)") starts the
   line with the stations at the track's two ends, else empty.
 - **The line editor** [T-670, T-672]: a double click on the badge, a click on it, a double click on the
-  name or the pencil open one editor under the title: the name box (focused), a Symbol box and the
+  name or the pencil open one editor under the title: the name box (focused), a Symbol box, a Shape row
+  (the four shapes in the line's colour, "Line shapes" below) and the
   colour picker (`ui/ColourPicker.tsx`: a saturation and brightness area, a hue strip, a hex box with the colour beside it, the palette swatches). Leaving the name box
   keeps the name and leaves the editor open; Enter in it, the check button (hover "Done") that
   replaces the pencil, a click anywhere outside the title and editor, or Esc closes it (Esc in the name box
@@ -743,7 +744,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   boardings column.
 - **Line bullets** [T-521]: one component (`Chip` in `ui/widgets.tsx`), drawn the same everywhere.
   Hovering one gives the line's name and a click selects the line, except in the selected line's
-  own panel (its title bullet opens the colour and symbol editor) and on a search row that is the
+  own panel (its title bullet opens the line editor) and on a search row that is the
   line itself. The map's tags draw the same bullet as plain DOM (`lineBullet`). In both, the
   circle and the symbol are one SVG (`ui/bullet.ts`, T-705, T-745): the symbol is SVG text placed
   from its ink box (measured on a canvas at 240 px and scaled), its baseline on a whole device pixel
@@ -760,6 +761,20 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   bullet faded lightly, everywhere it is drawn: 0.7 opacity and a little greyed (its column in a
   group diagram at 0.7 too), and its hover adds "Not running" (`game/lineRunning.ts`, one set read
   by `Chip` and `lineBullet`; `checks/t1792-idle-bullets.mjs`) [T-1792, T-1907]. The GPU map layers draw no symbol bullets.
+- **Line shapes** [T-3319, `game/lineShapeState.ts`, `bulletDraw` in `ui/bullet.ts`]: a bullet is a circle, a
+  square (rounded, corner 18% of its side), a diamond or a pill (at least 1.5 times as wide as tall); a longer
+  symbol widens each the same way, a diamond into a hexagon with the diamond's slopes. So the four look one size
+  side by side, a square's side is 0.94 of a circle's height and a diamond 1.14 times it, reaching past the bullet's
+  box above and below (rows of bullets clip only sideways); its corners are rounded by a stroke in its colour. A
+  line's shape is its own when the player gave it one in the line editor, else its mode's from Settings (train and
+  tram a circle, bus a square, ferry a pill by default; ui-panels.md "Line shapes"); picking the mode's shape in
+  the editor gives the line back to its mode, so it follows Settings again, and the editor's button for the mode's
+  shape has the hover "Default for train lines, set in Settings". Its own shape is saved with the game (the
+  header's `shapes`, by line id; older saves have none), outside the undo history as the hand order is; a copied
+  line takes its source's, a new line none. The shape is every `Chip` and `lineBullet` (the Lines tab, the line,
+  group, station, train and track panels, the Stations tab, search, the trouble list, the edit note, the map's
+  hovers and the network diagram's) and the group view's hovers; the group pill and the track on the map keep
+  their own look.
 - **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
   before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".

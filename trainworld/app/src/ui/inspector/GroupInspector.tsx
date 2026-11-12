@@ -10,7 +10,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { stopKey } from "../../game/complexView";
 import { BAR, CHIP, CHIP_GAP, CHIP_W, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
-import { bulletText } from "../bullet";
+import { bulletDraw, bulletText } from "../bullet";
+import { shapeOf } from "../../game/lineShapeState";
 import { groupAllStops, groupBullet, groupHover, groupLabel, groupName, lineGroups } from "../../game/lineGroups";
 import { byHand, handOrder } from "../../game/handOrder";
 import { LINE_PALETTE } from "../../game/palette";
@@ -139,7 +140,7 @@ export function GroupInspector({ group }: { group: number }) {
   const at = stationsById(w);
   const ups = ls.map((l) => drawnReversed(at.get(l.stops[0]), at.get(l.stops[l.stops.length - 1]), l.stops.length > 2 && l.stops[0] === l.stops[l.stops.length - 1]));
   // T-2016: each line's bullet width, so a two-character pill sits as snugly beside its neighbours
-  const chipW = ls.map((l) => bulletText(l.letter, "sm")?.w ?? CHIP_W);
+  const chipW = ls.map((l) => { const b = bulletText(l.letter, "sm"); return b ? bulletDraw(b, shapeOf(l.id)).w : CHIP_W; });
   const sig = JSON.stringify([all, ins, [...crossN], ups, chipW]);
   if (kept?.sig !== sig) kept = { sig, lay: groupLayout(ins, { all, transfer: (k) => (crossN.get(k) ?? 0) > 0, crossings: (k) => crossN.get(k) ?? 0, reversed: (k) => ups[k], chipW: (k) => chipW[k] }) };
   const lay = kept.lay;
@@ -259,7 +260,7 @@ export function GroupInspector({ group }: { group: number }) {
                   const st = w.lineStats[l.id];
                   const n = l.stops.length;
                   const rail = !!st && !st.bus;
-                  const B = tipBullet(l.letter, l.colour);
+                  const B = tipBullet(l.letter, l.colour, shapeOf(l.id));
                   const [x0, x1] = hitOf(k, r), x = lay.xs[k][r];
                   const hit = <rect class="hit" x={x0} y={row.y - row.h / 2} width={x1 - x0} height={row.h} />;
                   if (!c.stop) {

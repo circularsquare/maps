@@ -22,6 +22,7 @@ import { keyIsTheirs } from "./keys";
 import { locateLine, locateStation, playerMovedCamera } from "./locate";
 import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
+import { shapeOf } from "../game/lineShapeState";
 import { t } from "../i18n";
 
 /** T-400: a search showing fewer results than this asks for more zones' place lists. */
@@ -215,5 +216,5 @@ function Row({ hit, pickLine }: { hit: SearchHit; pickLine: (l: LineInput) => vo
 /** A station's line chips, one per look (same badge and colour), at most four, so the name keeps
  * its room. */
 function chips(lines: LineInput[]): LineInput[] {
-  return [...new Map(lines.map((l) => [l.letter + l.colour, l])).values()].slice(0, 4);
+  return [...new Map(lines.map((l) => [l.letter + l.colour + shapeOf(l.id), l])).values()].slice(0, 4);
 }

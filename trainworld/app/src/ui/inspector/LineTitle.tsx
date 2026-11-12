@@ -1,5 +1,5 @@
 // A line panel's title, rail, bus and ferry alike (T-2373): the badge and name, the editor for the
-// name, symbol and colour (T-670) with the colour a drag shows before the edit lands (T-672), and the
+// name, symbol, shape (T-3319) and colour (T-670) with the colour a drag shows before the edit lands (T-672), and the
 // group row.
 
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -11,7 +11,8 @@ import { t as tr } from "../../i18n";
 import { ColourPicker } from "../ColourPicker";
 import { locateLine } from "../locate";
 import { scrollerOf } from "../scroller";
-import { Chip, Icon } from "../widgets";
+import { Chip, Icon, ShapePicker } from "../widgets";
+import { lineMode, modeShape, setLineShape, shapeOf } from "../../game/lineShapeState";
 import { LineGroup } from "./LineGroup";
 import { NameEdit } from "./NameEdit";
 
@@ -125,6 +126,11 @@ export function LineTitle({ l, t }: { l: LineInput; t: LineTitleState }) {
       {t.editing && (
         <div class="line-identity" data-line-edit>
           <label>{tr("lineTitle.symbol")} <input aria-label={tr("lineTitle.symbolLabel")} {...t.symbolBox} /></label>
+          <div class="line-shape">
+            <span>{tr("lineTitle.shape")}</span>
+            <ShapePicker value={shapeOf(l.id)} colour={t.shown} onChange={(s) => setLineShape(l.id, s)}
+              tips={(s) => (s === modeShape(lineMode(l.id)) ? tr("lineTitle.shapeDefault", { mode: lineMode(l.id) }) : undefined)} />
+          </div>
           <ColourPicker value={l.colour} presets={LINE_PALETTE} onPreview={t.dragColour} onCommit={t.commitColour} />
         </div>
       )}

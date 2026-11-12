@@ -10,10 +10,10 @@
 //   pixel ratio and the CSS zoom the bullet is drawn at) and the circle moved with it, less than half
 //   a device pixel.
 // Measured once per font, symbol, size and scale. Used by ui/widgets.tsx's Chip and, as plain DOM,
-// by map/trackTagRows.ts's lineBullet.
+// by map/trackTagRows.ts's lineBullet. Its outline is the line's shape (T-3319, `bulletDraw`).
 
 import { signal } from "@preact/signals";
-import { world } from "../game/world";
+import type { LineShape } from "../game/lineShape";
 
 export type BulletSize = "" | "sm" | "lg";
 /** The chip's font size, height and side padding by size, as style.css sets them. */
@@ -37,6 +37,9 @@ export interface BulletText {
   y: number;
   /** the circle's top, within half a device pixel of 0, so the ink is centred in it */
   top: number;
+  /** the ink box's width and half its height, which a diamond is sized round (T-3319) */
+  iw: number;
+  ih: number;
 }
 
 let ctx: CanvasRenderingContext2D | null = null;
@@ -109,7 +112,8 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   const w = Math.max(h, m.width * k + 2 * PAD[size]);
   const y = h / 2 + ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2) * k;
   const snapped = scale > 0 ? Math.round(y * scale) / scale : y;
-  const v: BulletText = { w, h, x: w / 2 - ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) * k, y: snapped, top: snapped - y };
+  const v: BulletText = { w, h, x: w / 2 - ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) * k, y: snapped, top: snapped - y,
+    iw: (m.actualBoundingBoxRight + m.actualBoundingBoxLeft) * k, ih: ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / 2) * k };
   const ok = [v.w, v.x, v.y, v.top].every(Number.isFinite) && m.width > 0;
   // a face still loading would be measured in the fallback: kept until it loads, then measured again
   // (T-1021: a CJK symbol measured once a draw while its face loaded, 0.5 ms each)
@@ -175,46 +179,73 @@ const queued = new Map<string, [string, BulletSize, number]>();
 let measuring = false;
 const next = (f: (d?: IdleDeadline) => void) => (typeof requestIdleCallback === "function" ? requestIdleCallback(f, { timeout: 500 }) : setTimeout(f, 16));
 
-/** T-1464, T-1475: a bus line's bullet is a rounded square, a rail line's a circle (or pill): the
- * corner radius of a bus bullet as a share of its side, which the map's end squares use too. */
+/** T-1464, T-1475: a square bullet's corner radius as a share of its side, which the map's bus end
+ * squares use too. */
 export const BUS_CORNER = 0.18;
-export const bulletRadius = (h: number, square: boolean) => (square ? h * BUS_CORNER : h / 2);
-
-/** Whether line `id` is a bus line, read as the world stands now (a ferry line is too: its row is a bus row). */
-export const isBusLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus;
-/** T-2194: whether line `id` is a ferry line, whose bullet is a pill. */
-export const isFerryLine = (id: string): boolean => !!world.peek()?.lineStats[id]?.bus?.ferry;
-
-/** T-2194: a ferry line's bullet: at least this many times as wide as it is tall, fully rounded. */
+/** T-3319: a square's side and a diamond's height as shares of a circle's, so the three look one size
+ * side by side (a square of the circle's height looks bigger, a diamond of it smaller); the diamond
+ * reaches past the bullet's box above and below. */
+const SQUARE_SIDE = 0.94, DIAMOND_SIDE = 1.14;
+/** T-2194: a pill is at least this many times as wide as it is tall, fully rounded. */
 const PILL_W = 1.5;
-/** A bullet's box as drawn: a pill widens a narrow one, its text centred in it. */
-export function bulletShape<B extends { w: number; h: number; x: number }>(b: B, pill: boolean): B {
-  if (!pill || b.w >= PILL_W * b.h) return b;
-  const w = PILL_W * b.h;
-  return { ...b, w, x: b.x + (w - b.w) / 2 };
+
+/** A bullet as drawn in its shape: the SVG's size, the text's origin, and the outline, a rounded rect or
+ * a path whose stroke (in the fill colour) rounds its corners. */
+export interface BulletDraw {
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  rect?: { y: number; w: number; h: number; r: number };
+  path?: { d: string; stroke: number };
+}
+
+export function bulletDraw(b: BulletText, shape: LineShape): BulletDraw {
+  const { h, top } = b;
+  if (shape === "square") {
+    const s = SQUARE_SIDE * h, w = Math.max(s, b.w - (h - s));
+    return { w, h, x: b.x + (w - b.w) / 2, y: b.y, rect: { y: top + (h - s) / 2, w, h: s, r: s * BUS_CORNER } };
+  }
+  if (shape === "diamond") {
+    // a symbol too wide for the diamond stretches it into a hexagon with the same slopes
+    const d = DIAMOND_SIDE * h, r = 0.06 * h, w = Math.max(d, b.iw + 2 * (b.ih + 0.12 * h));
+    const cy = top + h / 2, a = d / 2 - r, xs = [r, d / 2, w - d / 2, w - r].map((v) => v.toFixed(2));
+    const up = (cy - a).toFixed(2), down = (cy + a).toFixed(2), mid = cy.toFixed(2);
+    return { w, h, x: b.x + (w - b.w) / 2, y: b.y, path: { d: `M${xs[0]} ${mid}L${xs[1]} ${up}L${xs[2]} ${up}L${xs[3]} ${mid}L${xs[2]} ${down}L${xs[1]} ${down}Z`, stroke: 2 * r } };
+  }
+  const w = shape === "pill" ? Math.max(b.w, PILL_W * h) : b.w;
+  return { w, h, x: b.x + (w - b.w) / 2, y: b.y, rect: { y: top, w, h, r: h / 2 } };
 }
 
 const SVG = "http://www.w3.org/2000/svg";
 
-/** The bullet as a DOM node (for the map's tags, which are not Preact and not zoomed); `square` for
- * a bus line's (`isBusLine`), `pill` for a ferry line's. */
-export function bulletNode(text: string, size: BulletSize, square = false, pill = false): Node {
+/** The bullet as a DOM node (for the map's tags and hovers, which are not Preact and not zoomed). */
+export function bulletNode(text: string, size: BulletSize, shape: LineShape = "circle"): Node {
   const b0 = bulletText(text, size);
   if (!b0) {
     const s = document.createElement("span");
     s.textContent = text;
     return s;
   }
-  const b = bulletShape(b0, pill);
+  const b = bulletDraw(b0, shape);
   const svg = document.createElementNS(SVG, "svg");
   svg.style.width = b.w + "px";
   svg.style.height = b.h + "px";
-  const r = document.createElementNS(SVG, "rect");
-  for (const [a, v] of [["y", b.top], ["width", b.w], ["height", b.h], ["rx", bulletRadius(b.h, square && !pill)]] as const) r.setAttribute(a, String(v));
+  let outline: Element;
+  if (b.path) {
+    outline = document.createElementNS(SVG, "path");
+    outline.setAttribute("d", b.path.d);
+    outline.setAttribute("stroke-width", String(b.path.stroke));
+  } else {
+    outline = document.createElementNS(SVG, "rect");
+    const q = b.rect!;
+    for (const [a, v] of [["y", q.y], ["width", q.w], ["height", q.h], ["rx", q.r]] as const) outline.setAttribute(a, String(v));
+  }
   const t = document.createElementNS(SVG, "text");
   t.setAttribute("x", String(b.x));
   t.setAttribute("y", String(b.y));
   t.textContent = text;
-  svg.append(r, t);
+  svg.append(outline, t);
   return svg;
 }
+

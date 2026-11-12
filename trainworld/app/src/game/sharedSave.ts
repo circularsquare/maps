@@ -15,6 +15,7 @@
 // caught and the model replaced (clock.worker.ts `afterLoadPanic`), and the copy loads into a new slot, so nothing
 // of the viewer's is touched whatever happens.
 
+import { isLineShape } from "./lineShape";
 import { encodeSave, isRetiredTrackFormat, isThisWorld, SAVE_FORMAT, SAVE_HEADER_FIELDS, SAVE_MAGIC, type SaveHeader } from "../workers/saveFile";
 
 /** shonei-server's MaxTwCommunitySave and MaxTwCommunitySaveUnpacked */
@@ -68,6 +69,7 @@ const FIELDS: Record<keyof SaveHeader, (v: unknown) => boolean> = {
   regions: opt(rec((r) => plain(r) && opt(entries)(r.ledger) && opt(entries)(r.hours))),
   stars: opt(rec(num)), goals: opt(rec(rec(num))),
   notes: opt(rec((n) => Array.isArray(n) && n.length === 2 && num(n[0]) && str(n[1]))),
+  shapes: opt(rec(isLineShape)),
   mode: opt((m) => m === "normal" || m === "sandbox"), start: opt(str), opened: opt(arr(str)),
   demandFine: opt(arr(str)), demandBuilt: opt(arr(arr(str))), newCars: opt(num), level: opt(num),
   guide: opt(plain), achievements: opt(rec((a) => plain(a) && num(a.at) && opt(str)(a.of) && opt(num)(a.v) && opt(arr(str))(a.in))),

@@ -2003,7 +2003,7 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   ferry is a bus row with `ferry` set): the route dashed in the line's colour on a continuous casing,
   half a rail line's width, under the track; a solid stroke from each port's landing to its berth; no
   corridor. Ports draw as stations. Boats are pointed hulls 35 m by 8 m in the line's colour, run 0's
-  bow ahead (`BOAT_CAR`, network.ts). A ferry line's bullet is a pill.
+  bow ahead (`BOAT_CAR`, network.ts). A ferry line's bullet is a pill by default (ui-inspectors.md "Line shapes").
 - **The boat fleet** is in the game header (`fleetFerry`, absent for none), as `fleetBus`.
 
 - **Ports** are stations of their own kind (`Network::is_port`): a node with no track, at level 0,

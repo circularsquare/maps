@@ -10,6 +10,7 @@ import { clock } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
 import { setHandOrderSink, takeHandOrder } from "../game/handOrder";
+import { setLineShapeSink, takeLineShapes } from "../game/lineShapeState";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
 import { fitView, holdForGameLoad, loadCannotFinish, markAlive } from "../game/loading";
@@ -687,6 +688,7 @@ export class ClockClient {
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
     const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: this.game });
+    setLineShapeSink((line, shape) => this.post({ kind: "lineShape", line, shape }));
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
@@ -1104,6 +1106,9 @@ export class ClockClient {
         stationsAheadSink?.(msg.frame, msg.xy, msg.fine, msg.built, msg.home);
         break;
       case "home":
+      case "lineShapes":
+        takeLineShapes(msg.shapes);
+        break;
         home.value = msg.home;
         break;
       case "netAhead":

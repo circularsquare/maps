@@ -4,7 +4,8 @@
 import { t, tRich } from "../i18n";
 import type { ComponentChild, ComponentChildren } from "preact";
 import { distance, levelLabel, moneyShort, speed } from "../game/format";
-import { bulletNode, isBusLine, isFerryLine } from "../ui/bullet";
+import { bulletNode } from "../ui/bullet";
+import { shapeOf } from "../game/lineShapeState";
 import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
 import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
@@ -191,7 +192,7 @@ export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
   c.className = (small ? "chip sm" : "chip") + (idleLines.peek().has(l.id) ? " idle" : "");
   c.style.setProperty("--c", l.colour);
   c.style.setProperty("--ct", inkOn(l.colour));
-  c.append(bulletNode(l.letter, small ? "sm" : "", isBusLine(l.id), isFerryLine(l.id)));
+  c.append(bulletNode(l.letter, small ? "sm" : "", shapeOf(l.id)));
   return c;
 }
 

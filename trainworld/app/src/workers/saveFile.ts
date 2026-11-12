@@ -18,6 +18,7 @@
 import registry from "../game/registry.json";
 import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
+import type { LineShape } from "../game/lineShape";
 
 export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
@@ -107,6 +108,9 @@ export interface SaveHeader {
   /** T-706: each line's station note (semitones above C5) and the city it was chosen in, kept for the
    * line's life and after it so the others keep theirs; absent in older saves (map/stationLife.ts) */
   notes?: Record<string, [number, string]>;
+  /** T-3319: the bullet shape of each line the player gave one, by line id; absent for none (older saves
+   * too), every line then taking its mode's from Settings */
+  shapes?: Record<string, LineShape>;
   /** T-728: absent in older saves, read as "normal" */
   mode?: GameMode;
   /** T-728: the zone the game started in; absent for a start on the world map and in older saves */
@@ -152,7 +156,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 /** T-1826: every header field this build reads, so a field added to `SaveHeader` must be listed. */
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
-  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, mode: true, start: true,
+  fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, stars: true, goals: true, notes: true, shapes: true, mode: true, start: true,
   opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true, copy: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */

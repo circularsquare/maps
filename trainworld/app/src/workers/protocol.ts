@@ -10,6 +10,7 @@
 
 import type { BuildingInput, EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
+import type { LineShape } from "../game/lineShape";
 import type { Loan } from "../game/loan";
 import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
@@ -312,6 +313,8 @@ export type ToClock =
   | { kind: "demandFine"; zones: string[]; built: string[][] }
   /** T-1813: the Lines (0) or Stations (1) tab's hand order, ids first first; empty for none */
   | { kind: "listOrder"; list: 0 | 1; ids: number[] }
+  /** T-3319: a line's own bullet shape, null for its mode's; outside the undo history */
+  | { kind: "lineShape"; line: string; shape: LineShape | null }
   /** `restore`: `key` is a backup's (T-744) */
   | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
@@ -796,6 +799,8 @@ export type FromClock =
   | { kind: "opened"; zones: string[] | null; start?: string }
   /** T-1813: the loaded game's hand order of lines and of stations, sent with "opened" */
   | { kind: "listOrder"; lines: number[]; stations: number[] }
+  /** T-3319: the game's line shapes (`SaveHeader.shapes`), sent with "opened" and after a new line or a copy */
+  | { kind: "lineShapes"; shapes: Record<string, LineShape> }
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
   | { kind: "home"; home: string | null }
   /** the save file, for the player to keep */

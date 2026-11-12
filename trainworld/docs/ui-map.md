@@ -458,7 +458,8 @@ panel names it (the nearest station's, else "Bus stop") and lists the lines that
 selecting that line; the map draws nothing selected. A bus is one
 short narrow car, one rigid straight body that points along the route (never bending or turning sideways in a corner), drawn at its minimum screen size from a distance (0.45 of a train's length and 0.69 of its width, T-2957) and 1.2 times
 its real size close up, and standing at every stop, street stops included (T-1798). A bus line's badge is a rounded square everywhere (corner 18% of its side, the
-map's end squares too), a rail line's a circle. A new bus line is named "Bus n" (the next free
+map's end squares too), a rail line's a circle, unless the player picks another shape for the line or its mode
+([ui-inspectors.md](ui-inspectors.md) "Line shapes", T-3319). A new bus line is named "Bus n" (the next free
 number) and shows n as its symbol.
 ## Stations
 
