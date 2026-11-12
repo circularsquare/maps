@@ -107,7 +107,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   A demand rule change updates `docs/demand-worldwide.md`.
 - **Every demand task has a "done when"**: numbers that end it, plus "would a player see something obviously wrong?".
   Once met, stop. Performance tasks get a looser one.
-- **General sources**: global datasets or a method any census can feed; a one-city source only if very easy. Look
+- **General sources**: global datasets or a method any census can feed; a one-city source only if very easy.
+  Local demand factors (by country, region or city kind) are allowed again where a worldwide rule misses a real gap
+  and published figures show it; a place that already looks right (the US intercity) keeps the worldwide rule
+  (Anita, 2026-11-11). Look
   outward for how other games and map makers solve it; write what you find in notes or research/.
 - **Performance**: quantify impact, do the big ones first. An approximation is welcome when a player couldn't tell;
   say what the lie is in DECISIONS.md.

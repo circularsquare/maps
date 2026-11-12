@@ -16,7 +16,7 @@ All Opus, running, no commits (I land):
   name zones by market regionName ("Jinchengjiang region" for Hechi), 1,384 zones; fix to zoneName().
 - hsr: found the regional route search weighs fares 7-12x too heavy (curveWeight in India units vs start-country
   dollars since T-1906); fixing in demand.worker.ts + income.ts.
-- T-3242 landed f0526a6e. Hidden-name text in her words 69ea44e9. **8800 = f0526a6e.**
+- T-3242 landed f0526a6e. Hidden-name text in her words 69ea44e9.
 - **shonei-server deployed 11-12 01:49 UTC** (22f4293 + 464b5af + e3b8890, her word): config trainworldCommunitySearch
   true. NOT pushed (ask her). Box at the deploy: disk 14% of 38G, 202 players, 769 MB of games, 40 shares.
 - Her calls 11-11 evening: T-3212 go (mock "looks great"); T-3225 go, 30 biggest first; import later; "subwayworld"
@@ -24,7 +24,13 @@ All Opus, running, no commits (I land):
 - split ae432976a77e94311, 6135: T-3212 single-track station split.
 - realauto ab4cded9673c3da54, 6136: T-3225 automatic real networks, 30 biggest.
 - resources a3f2749cb82c5595e: T-3243 resources inventory + tools/ops script + docs/ops-checks.md (read-only).
-Next free id T-3244.
+- T-3239 landed d5911dec (market route search fare units); **8800 = d5911dec**. hsr done; its proposal (A: longer
+  trips choose routes at the long-trip money weight 0.4, keep 1.5x; B: default 1.2-1.25x; C: leave) waits on her;
+  a live hotfix of the bug is her call.
+- Her calls 11-11 late: local demand factors allowed again (CLAUDE.md, DECISIONS); T-3240 prelim go and queue: crude
+  fit of the GDP-per-head exponent, big-city/small-capital pull, US as is. longdist resumed for it (~275k context).
+- rbspeed a4daa57313ae10e1c: T-3244 rebuild speed survey. rbqueue a6b54e7dbe0397d9e: T-3245 rebuild ride-alongs.
+Next free id T-3246.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
