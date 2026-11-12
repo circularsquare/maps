@@ -228,7 +228,8 @@ wide so a longer date moves nothing [T-1868].
   running costs drain [T-284, T-722], in tabular figures in a box of fixed width after the train share,
   so nothing beside it moves as it changes [T-305, T-310, T-1865]. In a sandbox the box says
   "Sandbox" in the muted colour, with the money since day 1 (the cash minus the $10B start) and
-  today's fares and running costs in its hover [T-728].
+  today's fares and running costs in its hover [T-728]. The hover ends with a line saying money
+  rates are multiplied by 100 (`moneyTab.scaleTip`, T-3304).
 - **The clock** [T-861], all of it the local time where the player is looking [T-309]: the time
   (figure style) and the date (normal style) on one line 6 px apart, "13:24 Mon Feb
   24" (hover "Monday, February 24, year 1, day 29"), [T-1868]. The date never carries the year; its hover
@@ -647,7 +648,7 @@ sits under the mode [T-1822, T-1835].
 ## Finances tab (id `money`)
 
 Cash (always the whole network's; in a sandbox "Since day 1" instead, the cash minus the $10B start,
-T-728); then, in this order, yesterday and today, the fare controls, History, trains and the loan
+T-728; the Cash row's label and the Yesterday and Today headings have the 100x hover, T-3304); then, in this order, yesterday and today, the fare controls, History, trains and the loan
 [T-1660, T-1691]. Yesterday and today: fares, running trains, upkeep, "Loan" (the loan's payments,
 hover "Paid back over 60 game days in equal payments")
 while a loan is out or was paid yesterday (the network's only, never a region's) [T-2022], new trains,
@@ -1411,7 +1412,10 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   tag's "Demand could not load". A page that finds the flag set in sessionStorage at its start
   (set when a game starts loading, cleared when the load ends, fails or the page is left) was
   reloaded by the browser mid-load, as iOS does on running out of memory: it starts no game and shows
-  the memory sentence with Try again.
+  the memory sentence with Try again. A browser with no WebGL2 (MapLibre cannot start; `hasWebgl2`,
+  `map/webgl2.ts`, asked at the top of main.ts) gets its own screen before anything else starts: one
+  sentence saying to turn on hardware acceleration or update the browser, and no button, since a retry
+  or a way on cannot help [T-3307].
 - A card that sees nothing move (no demand worker message other than a query's answer, no pack
   bytes, no game or network from the clock worker) for 3 minutes, or 10 with a bar up, gives way
   to that screen ("No demand figures arrived in 3 minutes"); a hidden or frozen page counts no

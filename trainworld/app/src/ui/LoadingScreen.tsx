@@ -9,7 +9,7 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, startup } from "../game/loading";
+import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, noWebgl2, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
 import { marketOff } from "../game/ui";
@@ -20,6 +20,15 @@ import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
   if (startup.value !== "failed") return null;
+  // T-3307: no WebGL2: what to do about it, and no button (a retry or a way on cannot help)
+  if (noWebgl2.value) {
+    const text = t("loadText.noWebgl2");
+    return <div class="loading-screen" role="alertdialog" aria-label={text}>
+      <div class="loading-box failed">
+        <p class="big">{text}</p>
+      </div>
+    </div>;
+  }
   const game = gameFailed.value;
   const why = loadFailure.value ?? "";
   const text = loadFailText(why);

@@ -99,7 +99,8 @@ import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, lastLoadDied, loadCannotFinish, startGameWait, waitKey } from "./game/loading";
+import { choosing, lastLoadDied, loadCannotFinish, loadNoWebgl2, startGameWait, waitKey } from "./game/loading";
+import { hasWebgl2 } from "./map/webgl2";
 import { outOfMemoryText } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
 import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/StartMenu";
@@ -138,6 +139,11 @@ effect(() => clock.setBackground(display.value.runInBackground));
 if (params.get("paused") === "1") clock.setRunning(false);
 // T-149, T-172: the clock is held until the viewed city's demand has its first estimate
 startLoadingGate();
+// T-3307: MapLibre cannot start without WebGL2; say what to do, start nothing (the throw ends this module)
+if (!hasWebgl2()) {
+  loadNoWebgl2();
+  throw new Error("WebGL2 is not available"); // i18n-ignore: stops the page's setup; the player reads the failure screen
+}
 // T-677: which game opens. A URL switch may say (ui/StartMenu.tsx); otherwise the start menu goes up
 // once the page is set up, and the workers start with the pick (`startWorkers` below), the map
 // already drawn under it.

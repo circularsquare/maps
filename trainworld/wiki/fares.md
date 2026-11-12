@@ -2,7 +2,7 @@
 
 One fare curve covers the whole network. It says what a trip of a given length costs, and you set it in the Money tab.
 
-**The curve** is three points: a base fare for a trip of no length, then a fare at {{app/src/game/fareCurve.ts:NODE_KM[1]|0}} km and one at {{app/src/game/fareCurve.ts:NODE_KM[2]|0}} km. Between points it runs in straight lines, and past the last it keeps the same slope. A point can't be cheaper than the one before, so a fare never falls as a trip gets longer and never goes under the base.
+**The curve** is three points: a base fare for a trip of no length, then a fare at {{app/src/game/fareCurve.ts:NODE_KM[1]|0}} km and one at {{app/src/game/fareCurve.ts:NODE_KM[2]|0}} km. Between points it runs in straight lines, and past the last it keeps the same slope. A point can't be cheaper than the one before, so a fare never falls as a trip gets longer and never goes under the base. No point can go over {{app/src/game/fareCurve.ts:FARE_MAX|0}} (US$, before a country's scale).
 
 A new game starts with a base of US${{app/src/game/fareDefault.ts:START_BASE_US}} where you start in the US. The fare at {{app/src/game/fareCurve.ts:NODE_KM[1]|0}} km is about {{app/src/game/fareCurve.ts:START_NODES[1][1]/START_NODES[0][1]|1}} times the base, and at {{app/src/game/fareCurve.ts:NODE_KM[2]|0}} km about {{app/src/game/fareCurve.ts:START_NODES[2][1]/START_NODES[0][1]|1}} times.
 

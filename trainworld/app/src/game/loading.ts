@@ -286,6 +286,15 @@ export function loadCannotFinish(why: string, game = false) {
   else loadFailed(why);
 }
 
+/** T-3307: this browser has no WebGL2, so the map cannot start. The failure screen says what to do and has no
+ * button: nothing it could retry or skip would help. */
+export const noWebgl2 = signal(false);
+export function loadNoWebgl2() {
+  noWebgl2.value = true;
+  gameFailed.value = true;
+  loadFailed("WebGL2 is not available"); // i18n-ignore: console and the failure's reason only, the screen has its own text
+}
+
 /** Carry on without demand after a failed startup (the loading screen's second button). */
 export function continueWithoutDemand() {
   clock?.setHeld(false);

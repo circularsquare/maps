@@ -1486,7 +1486,9 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   follows one curve of trip length for the network, set in the Money tab [T-883, T-1112, T-1143,
   `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
   past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
-  never cheaper, so no fare is below the base or falls with distance. **Fares by country**
+  never cheaper, so no fare is below the base or falls with distance, and none (nor the transfer fare)
+is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into every money sum;
+`tidyNodes` holds it, so a loaded save is held too). **Fares by country**
   (T-1277, T-1906, `app/src/game/income.ts`): each country charges the curve times its fare scale,
   by default its `incomeScale`: since T-2670 (Anita, 2026-11-06, notes/T-2668.md option N; T-1521 had
   India's income to the 0.7) the US's 11.6 times (its GDP per head at market rates over the US's)^0.5 in

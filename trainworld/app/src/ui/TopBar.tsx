@@ -179,10 +179,10 @@ function Cash() {
   const today = live.today;
   const tip = today ? t("topBar.cashTip", { fares: withFullSymbol(money(today.fares * 1e6)), running: withFullSymbol(money(-today.running * 1e6)), upkeep: withFullSymbol(money(-(today.upkeep ?? 0) * 1e6)) }) : undefined;
   // T-728: a sandbox shows no cash; the hover has the money since the start
-  if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={[t("topBar.infiniteMoney"), t("topBar.sinceDay1", { amount: money((live.cash - START_CASH) * 1e6) }), ...(tip ? [tip] : [])].join("\n")}>{t("topBar.sandbox")}</div>;
+  if (m?.mode === "sandbox") return <div class="cash sandbox" data-tip={[t("topBar.infiniteMoney"), t("topBar.sinceDay1", { amount: money((live.cash - START_CASH) * 1e6) }), ...(tip ? [tip] : []), t("moneyTab.scaleTip")].join("\n")}>{t("topBar.sandbox")}</div>;
   // T-1865: after the split, in a box of fixed width (style.css .cash), so nothing beside it moves
   const shown = m ? moneyCash(live.cash * 1e6) : "";
-  return <div class={"cash num" + (usingUsd() ? "" : " cash-wide") + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? tip : undefined}>{shown}</div>;
+  return <div class={"cash num" + (usingUsd() ? "" : " cash-wide") + (shown.startsWith("−") ? " money-neg" : "")} data-tip={m ? [...(tip ? [tip] : []), t("moneyTab.scaleTip")].join("\n") : undefined}>{shown}</div>;
 }
 
 /** The city's name, the whole of it and its points (T-684, T-694: the past 24 game hours') on hover. */

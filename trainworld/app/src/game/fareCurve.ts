@@ -53,7 +53,7 @@ export function transferFare(f: { transfer?: number } | undefined): number {
 /** A transfer fare the player set, in the curve's units: not below 0, to a hundredth of a cent
  * (as the curve's fares, so a fare typed in a country with a scale reads back as typed). */
 export function tidyTransfer(v: number): number {
-  return Number.isFinite(v) ? Math.max(0, Math.round(v * 1e4) / 1e4) : 0;
+  return Number.isFinite(v) ? capFare(Math.round(v * 1e4) / 1e4) : 0;
 }
 
 /** T-1626: a high-speed line's fares are the curve's times this unless the player sets another.
@@ -114,6 +114,11 @@ export const START_NODES: FareNode[] = [[0, 0.0862], [20, 0.2241], [100, 0.7757]
 /** Nodes keep at least this far apart, km (so f32 keeps them in order in the sim). */
 export const NODE_GAP_KM = 0.1;
 export const MAX_KM = 5000;
+/** T-3303: the most a node of the curve (or the transfer fare) can charge, curve US$: 400 times a US start's
+ * $2.50 base. A typed 90 billion otherwise reached every money sum and the demand solve as it was. */
+export const FARE_MAX = 1000;
+/** A fare held between 0 and `FARE_MAX`; not a number is 0. */
+const capFare = (v: number): number => (Number.isNaN(v) ? 0 : Math.min(FARE_MAX, Math.max(0, v)));
 
 export function lineNodes(base: number, perKm: number): FareNode[] {
   return NODE_KM.map((k) => [k, base + perKm * k]);
@@ -159,8 +164,8 @@ export function tidyNodes(nodes: FareNode[]): FareNode[] {
   out[0][0] = 0;
   out[1][0] = Math.min(MAX_KM - NODE_GAP_KM, Math.max(NODE_GAP_KM, cents(out[1][0])));
   out[2][0] = Math.min(MAX_KM, Math.max(out[1][0] + NODE_GAP_KM, cents(out[2][0])));
-  out[0][1] = Math.max(0, fine(out[0][1]));
-  for (let i = 1; i < 3; i++) out[i][1] = Math.max(out[i - 1][1], fine(out[i][1]));
+  out[0][1] = capFare(fine(out[0][1]));
+  for (let i = 1; i < 3; i++) out[i][1] = Math.max(out[i - 1][1], capFare(fine(out[i][1])));
   return out;
 }
 

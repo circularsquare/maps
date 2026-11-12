@@ -238,14 +238,14 @@ export function MoneyTab() {
       <ul class="rows">
         {m.mode === "sandbox"
           // T-728: a sandbox's cash is not shown; its money since the start is
-          ? <Row label={<span data-tip={t("moneyTab.sinceDay1Tip")}>{t("moneyTab.sinceDay1")}</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
-          : <Row label={t("moneyTab.cash")} bold><LiveCash /></Row>}
+          ? <Row label={<span data-tip={t("moneyTab.sinceDay1Tip") + "\n" + t("moneyTab.scaleTip")}>{t("moneyTab.sinceDay1")}</span>} bold><Money dollars={(liveMoney.value.cash - START_CASH) * 1e6} /></Row>
+          : <Row label={<span data-tip={t("moneyTab.scaleTip")}>{t("moneyTab.cash")}</span>} bold><LiveCash /></Row>}
       </ul>
       <table class="ledger">
         <tr>
           <th style={{ textAlign: "left" }}><ScopeToggle tip={regionSplit()} /></th>
-          <th>{t("moneyTab.yesterday")}</th>
-          <th>{t("moneyTab.today")}</th>
+          <th data-tip={t("moneyTab.scaleTip")}>{t("moneyTab.yesterday")}</th>
+          <th data-tip={t("moneyTab.scaleTip")}>{t("moneyTab.today")}</th>
         </tr>
         <tr>
           <td>{t("moneyTab.fares")}</td>
