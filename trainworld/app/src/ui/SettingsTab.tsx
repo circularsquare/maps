@@ -6,7 +6,7 @@ import { useState } from "preact/hooks";
 import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
 import { exact } from "../game/format";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
-import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type Shade, type Theme } from "../game/ui";
+import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES, uiScale, type RealNetworkShown, type Shade, type Theme } from "../game/ui";
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
@@ -31,6 +31,7 @@ const DAY_OPTIONS: [DayShown, MessageKey][] = [["average", "settingsTab.average"
 type Projection = "flat" | "globe";
 type Ground = "map" | "satellite";
 const GROUND_OPTIONS: [Ground, MessageKey][] = [["map", "settingsTab.mapDrawn"], ["satellite", "settingsTab.satellite"]];
+const REAL_OPTIONS: [RealNetworkShown, MessageKey][] = [["none", "settingsTab.realNone"], ["passenger", "settingsTab.realPassenger"], ["all", "settingsTab.realAll"]];
 const PROJECTION_OPTIONS: [Projection, MessageKey][] = [["flat", "settingsTab.flat"], ["globe", "settingsTab.globe"]];
 // Map detail (the saved key is still `lighterMap`): Low is the lighter map that was "on", High is "off"
 type LighterMap = "on" | "off";
@@ -126,13 +127,13 @@ export function SettingsTab() {
         <Check checked={d.basemapLabels} onChange={(v) => setDisplay("basemapLabels", v)}>
           {t("settingsTab.mapLabels")}
         </Check>
-        <Check checked={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}>
-          {t("settingsTab.realNetwork")}
-        </Check>
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
           <span data-tip={t("settingsTab.terrainTip")}>{t("settingsTab.terrain")}</span>
         </Check>
       </div>
+      <div class="h">{t("settingsTab.realNetwork")}</div>
+      <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}
+        tips={(v) => (v === "all" ? t("settingsTab.realAllTip") : undefined)} />
       <div class="h">{t("settingsTab.riders")}</div>
       <div class="checks">
         <Check checked={d.trainLoad} onChange={(v) => setDisplay("trainLoad", v)}>

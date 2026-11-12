@@ -26,7 +26,7 @@ through `game/shades.ts`) [T-543].
 
 ## Real network (reference layer)
 
-Settings > Show > **Real world network**, on by default: faint lines (15% opaque in the light theme, T-727;
+Settings > **Real world network**, a choice of None, Passenger (the default) and All [T-3289; a stored on is Passenger]: faint lines (15% opaque in the light theme, T-727;
 30% in the dark one, in lighter colours, T-1291) where railways run in the real world, for
 reference, view only, whatever the Base map slider says [T-1291]; 40% (T-697) while the track tool snaps to them (the
 Build tab's snap switch, [ui-building.md](ui-building.md)), which also shows them with the setting off (`map/realNetwork.ts`, T-682). They sit above the basemap's
@@ -34,7 +34,7 @@ roads and under its labels, so under our own network (which is drawn on the over
 everything). Three classes by colour and width, in both themes (`realMain`, `realOther`, `realMetro`
 in `game/shadeTable.ts`): main line, other passenger rail, metro. Light rail is drawn as other rail: the tiles carry no usage, so
 S-Bahn and S-tog track come with Stadtbahn, US light rail, the DLR and Metrolink [T-3285]. Trams, monorails,
-funiculars, narrow gauge, heritage lines and track no line runs over are not drawn. Lines appear
+funiculars, narrow gauge, heritage lines and track no line runs over are drawn only under All, which shows every feature the tiles carry; yards, sidings and freight-only track are not in the tiles (dropped when they are built), so there is no freight. Snapping goes only to passenger track, so while it is on the layer shows only that, whatever the setting says. Lines appear
 from zoom 6 [T-2748: from zoom 4 a view of Europe drew 41 regions' tiles, most of a frame's cost on
 the map a new game picks a city on]; each region's tiles are added when the view first touches it, nearest first, and
 nothing is fetched while it is hidden. The lines are noritetsu's per-region tiles (OSM and

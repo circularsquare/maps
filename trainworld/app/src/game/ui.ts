@@ -26,6 +26,9 @@ const OLD_THEME: Record<string, Theme> = { cream: "pink", sky: "blue", matcha: "
 export type StationUseMode = "none" | "origins" | "transfers" | "total";
 export type MapRow = "bubbles" | "stations" | "track";
 
+/** T-3289: which real-world track the reference layer draws: none, passenger rail (with light rail), or everything the tiles carry */
+export type RealNetworkShown = "none" | "passenger" | "all";
+
 export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
   trackColour: "line" | "traffic" | "height" | "speed" | "profit";
@@ -42,7 +45,7 @@ export interface DisplaySettings {
   lineBands: boolean;
   basemapLabels: boolean;
   /** T-682: faint real-world rail lines from noritetsu's tiles, under the network (map/realNetwork.ts) */
-  realNetwork: boolean;
+  realNetwork: RealNetworkShown;
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
@@ -132,7 +135,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   lineBands: true,
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
-  realNetwork: true,
+  realNetwork: "passenger",
   stationUse: "none",
   foldedRows: [],
   trainLoad: true,
@@ -203,6 +206,8 @@ const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRider
 if ((saved.v ?? 1) < 3) delete migratedDisplay.uiScale;
 // T-727: the real network became a default (faint), and the old default (off) was stored
 if ((saved.v ?? 1) < 4) delete migratedDisplay.realNetwork;
+// T-3289: the checkbox became a choice of none, passenger or all; a stored true is passenger
+if (typeof (migratedDisplay.realNetwork as unknown) === "boolean") migratedDisplay.realNetwork = (migratedDisplay.realNetwork as unknown) ? "passenger" : "none";
 // T-812: the ramp's default went from pink-green to the mode red and blue; the old default was stored
 if ((saved.v ?? 1) < 5) delete migratedDisplay.rampFrom, delete migratedDisplay.rampTo;
 // T-833: Train share became the default colouring, and the old default (Mode mix) was stored
@@ -232,7 +237,7 @@ export const selection = signal<Selection>(null);
  * nothing is stored, so the player's own come back on the next ordinary load. */
 export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
 const VIDEO_DISPLAY: Partial<DisplaySettings> = {
-  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: false,
+  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none",
   stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true, lighterMap: "off",
 };
 

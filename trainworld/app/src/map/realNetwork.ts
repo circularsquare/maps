@@ -7,7 +7,7 @@
 // `track` layer: k kind, r rank 0 main or 1 other, p confirmed by a passenger route, n no line runs over
 // it, x such track of a named line the model left out (T-3043), c colour; nm and w only from zoom 10). The tiles carry no line type, so the classes are what they
 // do carry: metro (subway), main line (rail, rank 0), other rail a line runs over (rank 1, T-3043), and light rail (S-Bahn, Stadtbahn, DLR; the tiles carry no usage, so all of it, T-3285). Trams, monorails, funiculars, narrow gauge, heritage and track no line runs over are
-// left out. A region's source is added when the view first touches it, from zoom 6 up.
+// left out, unless Settings says All (T-3289). A region's source is added when the view first touches it, from zoom 6 up.
 //
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
 // regions.json (8800 serves it; the dev server proxies the path, vite.config.ts), else Cloudflare R2,
@@ -37,7 +37,9 @@ const ID = "tw-real-";
 const kind = (k: string) => ["==", ["get", "k"], k];
 const METRO = kind("subway");
 const MAIN = ["all", kind("rail"), ["==", ["get", "r"], 0]];
-const SHOWN = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail"), kind("light_rail")]];
+const PASSENGER = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail"), kind("light_rail")]];
+/** "All" draws every feature the tiles carry: track no line runs over, trams, monorails, funiculars, narrow gauge, heritage (yards and freight-only track are not in the tiles) */
+const EVERYTHING = ["has", "k"];
 
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
@@ -92,6 +94,7 @@ export function startRealNetwork(map: maplibregl.Map) {
   let on = false;
   let painted: "light" | "dark" | null = null;
   let opacity = SHADES[mapShade.peek()].realOpacity;
+  let filter: unknown = PASSENGER;
 
   /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
   const load = () =>
@@ -145,6 +148,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       // MapLibre's restored style after a lost context already has them (T-953)
       if (map.getLayer(ID + cc)) {
         map.setLayoutProperty(ID + cc, "visibility", "visible");
+        map.setFilter(ID + cc, filter as never);
         map.setPaintProperty(ID + cc, "line-opacity", opacity);
         map.setPaintProperty(ID + cc, "line-color", colours as never);
         continue;
@@ -153,7 +157,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       map.addLayer(
         {
           id: ID + cc, type: "line", source: ID + cc, "source-layer": "track", minzoom: MIN_ZOOM,
-          filter: SHOWN as never,
+          filter: filter as never,
           layout: { "line-cap": "round", "line-join": "round" },
           paint: { "line-color": colours as never, "line-width": WIDTH as never, "line-opacity": opacity },
         },
@@ -190,6 +194,7 @@ export function startRealNetwork(map: maplibregl.Map) {
     if (styleUp(map))
       for (const id of layerIds()) {
         map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+        map.setFilter(id, filter as never);
         map.setPaintProperty(id, "line-opacity", opacity);
       }
     showReach();
@@ -198,7 +203,10 @@ export function startRealNetwork(map: maplibregl.Map) {
     // snapping shows the layer even when Settings has it off: nothing unseen is snapped to
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
-    on = display.value.realNetwork || snap;
+    const shown = display.value.realNetwork;
+    // snapping goes only to passenger track, so while it is on only that is drawn
+    filter = shown === "all" && !snap ? EVERYTHING : PASSENGER;
+    on = shown !== "none" || snap;
     opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[mapShade.value].realOpacity;
     apply();
   });
