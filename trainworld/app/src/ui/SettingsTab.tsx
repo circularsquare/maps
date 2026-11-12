@@ -214,8 +214,8 @@ export function SettingsTab() {
       <FeedbackButton />
       <FeedbackPanel />
       <div class="donate">
-        <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.kofi")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
-        <span class="muted">{t("settingsTab.donate")}</span>
+        <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.donateTip")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
+        <span class="muted" data-tip={t("settingsTab.donateTip")}>{t("settingsTab.donate")}</span>
       </div>
       <Credits />
     </>
