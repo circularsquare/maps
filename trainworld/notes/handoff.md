@@ -70,13 +70,48 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
 - Timetables: "Custom" for own rows; whole hours, averaging, Sat+Sun, text all yes; express behind local yes; three
   modes (current / rows+weekends / exact: nudge, remove, add trains, Marey chart, conflicts highlighted with delay);
   big train-by-station grid, hideable. t3346 revised (Simple / Detailed / Exact; first-come conflicts resolved by the
-  sim; stages 1-5 44-63 h, Exact 24-34 h more); calls 1-3 + strings sent to her; review/timetable-exact.png. Stage 2 started: **tt2** a8e910f825e247d9e (Opus,
+  sim; stages 1-5 44-63 h, Exact 24-34 h more). Her round 3 (in notes/T-3346.md top + DECISIONS): plan and stages
+  good, nudge 1 min / Shift 15 s / Ctrl 10 min, first come first served, arrows on the selected train, chart scaled by
+  distance, text acked. Stage 1 (panel, Opus) held until onetrack or quadfix lands (5 Opus agents and 5 trees now). Stage 2 started: **tt2** a8e910f825e247d9e (Opus,
   .tw-trees/tt2, 6160).
 - T-3358 water study done (notes/T-3345.md "T-3358"): rivers traced as short arcs between junctions, each drawn
   alone and short ones dropped (London 115 arcs -> 29 drawn). Approaches: 1 join arcs into courses (3-4 h, my pick),
   2 route rivers as their own paths off parallel lines (8-12 h, central London), 3 thin bands for uncrossed rivers.
-  Sent her review/schematic-water-london.png. t3345 now on city-turn in .tw-trees/schem.
+  Sent her review/schematic-water-london.png. t3345 now on city-turn in .tw-trees/schem. Her answer: option 1 yes,
+  2 and 3 not needed; priority is stations never on water and on the correct side of each river ("topological
+  correctness is important"): told t3345 to measure, fix, and add a standing check, in the schem tree after city-turn.
+- **schem tree READY to land** (t3345 finished, context 580k, done): city-turn fix for maps >= 600 km, sheet.ts +
+  docs/ui-diagram.md, one-city maps bit-identical, ARCHIVE + DECISIONS in main tree. Land after the gate window, then
+  smoke. River work NOT landed: joining rivers alone raises wrong-bank stations (NYC 6 -> 24, Berlin 27 -> 39); next is
+  side-keeping inside the fit (4-6 h), code + check t3358-river-sides.mjs in t3345's scratchpad river-wip/.
+  **schem2** ad078e33a689dbd26 (Opus, Vite 6175): now T-3362 Miami strip diagnosis + bigger-centres mocks (read-only);
+  after schem lands, message it + make it a tree for the river side-keeping. T-3360 bus/ferry settings later.
+- **onetrack tree READY to land** (T-3332 done, onetrack agent finished): save level 18, sim 554 / demand 739,
+  t3332-onetrack 13/13, smoke 28/28. Main-tree ARCHIVE/DECISIONS/TASKS done, T-3354 [P3] filed. Possible conflict
+  with quadfix in sim/src/track/twin.rs (twin_plan vs station_beside). Shots copied to artifacts/trainworld/t3332-*.png,
+  review/onetrack-station.png. Seven strings + test + drawing check go to her once on 8800. Then T-3352 (resume t3352
+  a7db66e57cfea54da, Sonnet) in a new tree.
+- **onelook** abebe6d27b2d052aa (Sonnet, in .tw-trees/onetrack, 6185): one-track station drawn thinner with a bulge
+  on the platform side, per her mockup (my scratchpad images\3.png). Land onetrack only after it reports.
+- 11-12 ~16:00: v0.3.3 ships with two pairs HIDDEN (needs a flag hiding the box; give to onelook or the T-3357
+  batch); quad station T-3363 folded into T-3348; future station editor direction relayed to aabb (DECISIONS).
+  One-track look: she wants it a bit wider (more depth on the platform side, her mock in my scratchpad images\4.png):
+  resume onelook abebe6d27b2d052aa in the MAIN tree after onetrack lands.
+- **aabb** a12d41a05c626764b (Opus, read-only): T-3348 AA/BB quad design for her (her model: double in the middle + two one-way
+  singles outside, smart extension, station outer/inner/both). notes/T-3348.md.
+- T-3364 Nottingham-as-island (sea drawn round an inland network) added to schem2's read-only jobs.
+- **tt1** a2276e5f4caba2ed9 (Opus, .tw-trees/tt1, 6180): T-3346 stage 1 panel (Simple mode, board, chart).
+- **quadfix tree READY to land** (T-3356 fixed; agent aebad7c10cd823406 done): partner = nearest station of the
+  stop's complex on the track beside (sim computes complexes itself, `Network::complex_of`), sim 547 / demand 731,
+  t3333-pairs 16/16, smoke 27/28 (t1053 from copied registry, reverted). Sim change: WASM rebuild on land. Shots
+  t3356-before/after.png. Quad station = T-3363 (3-4 h): resume quadfix agent after onetrack lands, in a new tree.
+- Landing order after the gate window: schem, onetrack, quadfix (twin.rs hunks separate), then tt2/tt1 as they
+  report; smoke; snapbuild; push.
 - t1156-all-china.save is no reference (DECISIONS).
+- Her TODO short-term 11-12 ~15:00 filed: T-3359 China snap (dropped: she tested it fine on 8800; agent stopped),
+  T-3360 schematic bus/ferry settings and T-3362 Miami land strip (both after T-3345 stage 2,
+  fresh agent; t3345 is deep in context), T-3361 follow a train, and the running-side hover drop folded into T-3357.
+  After the gate window: one Sonnet in the main tree for T-3357 + T-3361; t3329 resumed for the memory build.
 - Later 11-12: two-pair partner = any station in the same complex (not 4-16 m); "place quad track station" and
   one-track stations (T-3332) must ship together with two pairs (v0.3.3 waits for T-3332): told quadfix to scope/build
   the quad station. Server deploy: HOLD until v0.3.3 ("if it doesnt do anything now"). Memory limit 8/6 GB red 85% OK.
@@ -103,7 +138,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
 - Before v0.3.3: translation batch for all new strings; website about-page flag credit line (notes/T-3328.md);
   server deploy first.
 
-Next free id T-3354 (T-3354/3355 given to onetrack; use T-3356 next).
+Next free id T-3364.
 
 ## Her calls 11-12 (detail in DECISIONS and ARCHIVE)
 With maps-37: next areas "single-track join fix and one-track stations, and timetables design", schematic as a stab

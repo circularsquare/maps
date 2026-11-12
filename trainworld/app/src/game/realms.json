@@ -24,6 +24,7 @@
       "Amur", "Buryatia", "Chukotka", "Jewish", "Kamchatka", "Khabarovsk", "Magadan", "Primorsky", "Sakha", "Sakhalin", "Zabaykalsky"] } },
     { "id": "japan", "name": "Japan", "countries": ["JP"] },
     { "id": "korea", "name": "South Korea", "countries": ["KR"] },
+    { "id": "north-korea", "name": "North Korea", "countries": ["KP"] },
     { "id": "vietnam", "name": "Vietnam", "countries": ["VN"] },
     { "id": "thailand", "name": "Thailand", "countries": ["TH"] },
     { "id": "singapore", "name": "Singapore", "countries": ["SG"] },

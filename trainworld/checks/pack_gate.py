@@ -327,7 +327,11 @@ def outline_figures(header, a, outline):
 
 
 def ghsl_inside(moll):
+    import shapely
     import world_plan
+    if not moll.is_valid:
+        # an outline that self-touches once projected (kja, T-3287): GEOS refuses containment on it
+        moll = shapely.make_valid(moll)
     _, _, p = world_plan.Pop().inside(moll)
     return float(p.sum())
 

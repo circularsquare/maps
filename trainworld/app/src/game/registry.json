@@ -29382,6 +29382,226 @@
       {
         "name": "Ramallah",
         "regionName": "Ramallah region"
+      },
+      {
+        "name": "P'yŏngyang",
+        "regionName": "P'yŏngyang region"
+      },
+      {
+        "name": "Hamhung City",
+        "regionName": "Hamhung City region"
+      },
+      {
+        "name": "Chongjin City",
+        "regionName": "Chongjin City region"
+      },
+      {
+        "name": "Phyongsan",
+        "regionName": "Phyongsan region"
+      },
+      {
+        "name": "Sunchon City",
+        "regionName": "Sunchon City region"
+      },
+      {
+        "name": "Sinchon",
+        "regionName": "Sinchon region"
+      },
+      {
+        "name": "Tanchon City",
+        "regionName": "Tanchon City region"
+      },
+      {
+        "name": "Huichon City",
+        "regionName": "Huichon City region"
+      },
+      {
+        "name": "Sinuiju City",
+        "regionName": "Sinuiju City region"
+      },
+      {
+        "name": "Wonsan City",
+        "regionName": "Wonsan City region"
+      },
+      {
+        "name": "Splitsko-dalmatinska županija",
+        "regionName": "Splitsko-dalmatinska županija region"
+      },
+      {
+        "name": "Banja Luka",
+        "regionName": "Banja Luka region"
+      },
+      {
+        "name": "Foča",
+        "regionName": "Foča region"
+      },
+      {
+        "name": "Kusong City",
+        "regionName": "Kusong City region"
+      },
+      {
+        "name": "Kanggye City",
+        "regionName": "Kanggye City region"
+      },
+      {
+        "name": "Haeju City",
+        "regionName": "Haeju City region"
+      },
+      {
+        "name": "Kaechon City",
+        "regionName": "Kaechon City region"
+      },
+      {
+        "name": "Samsu",
+        "regionName": "Samsu region"
+      },
+      {
+        "name": "Kim Chaek City",
+        "regionName": "Kim Chaek City region"
+      },
+      {
+        "name": "Jongju City",
+        "regionName": "Jongju City region"
+      },
+      {
+        "name": "Pyongwon",
+        "regionName": "Pyongwon region"
+      },
+      {
+        "name": "Paechon",
+        "regionName": "Paechon region"
+      },
+      {
+        "name": "Kujang",
+        "regionName": "Kujang region"
+      },
+      {
+        "name": "Fier",
+        "regionName": "Fier region"
+      },
+      {
+        "name": "Evvoia",
+        "regionName": "Evvoia region"
+      },
+      {
+        "name": "Kangdong",
+        "regionName": "Kangdong region"
+      },
+      {
+        "name": "Hoeryong City",
+        "regionName": "Hoeryong City region"
+      },
+      {
+        "name": "Phyonggang",
+        "regionName": "Phyonggang region"
+      },
+      {
+        "name": "Sariwon",
+        "regionName": "Sariwon region"
+      },
+      {
+        "name": "Hwangju",
+        "regionName": "Hwangju region"
+      },
+      {
+        "name": "Nampo City",
+        "regionName": "Nampo City region"
+      },
+      {
+        "name": "Kaesong City",
+        "regionName": "Kaesong City region"
+      },
+      {
+        "name": "Kumya",
+        "regionName": "Kumya region"
+      },
+      {
+        "name": "Pyongsong City",
+        "regionName": "Pyongsong City region"
+      },
+      {
+        "name": "Ávila",
+        "regionName": "Ávila region"
+      },
+      {
+        "name": "Zamora",
+        "regionName": "Zamora region"
+      },
+      {
+        "name": "Palencia",
+        "regionName": "Palencia region"
+      },
+      {
+        "name": "Cáceres",
+        "regionName": "Cáceres region"
+      },
+      {
+        "name": "Cuenca",
+        "regionName": "Cuenca region"
+      },
+      {
+        "name": "Huesca",
+        "regionName": "Huesca region"
+      },
+      {
+        "name": "Jongju City",
+        "regionName": "Jongju City region"
+      },
+      {
+        "name": "Pyongwon",
+        "regionName": "Pyongwon region"
+      },
+      {
+        "name": "Kujang",
+        "regionName": "Kujang region"
+      },
+      {
+        "name": "Phyonggang",
+        "regionName": "Phyonggang region"
+      },
+      {
+        "name": "Sariwon",
+        "regionName": "Sariwon region"
+      },
+      {
+        "name": "Hwangju",
+        "regionName": "Hwangju region"
+      },
+      {
+        "name": "Kaesong City",
+        "regionName": "Kaesong City region"
+      },
+      {
+        "name": "Pyongsong City",
+        "regionName": "Pyongsong City region"
+      },
+      {
+        "name": "Alentejo Central",
+        "regionName": "Alentejo Central region"
+      },
+      {
+        "name": "Alto Alentejo",
+        "regionName": "Alto Alentejo region"
+      },
+      {
+        "name": "Terras de Trás-os-Montes",
+        "regionName": "Terras de Trás-os-Montes region"
+      },
+      {
+        "name": "Creuse",
+        "regionName": "Creuse region"
+      },
+      {
+        "name": "Lozère",
+        "regionName": "Lozère region"
+      },
+      {
+        "name": "Tulcea",
+        "regionName": "Tulcea region"
+      },
+      {
+        "name": "Tulcea",
+        "regionName": "Tulcea region"
       }
     ],
     "rule": {
@@ -37557,32 +37777,6 @@
       "country": "SK",
       "localTrips": 1581567.0,
       "realm": "central-europe"
-    },
-    {
-      "id": "spi",
-      "name": "Splitsko-dalmatinska županija",
-      "kind": "zone",
-      "origin": {
-        "lon": 16.4696,
-        "lat": 43.5161
-      },
-      "center": [
-        16.4696,
-        43.5161
-      ],
-      "zoom": 10.5,
-      "utcOffset": 1,
-      "market": -1,
-      "box": [
-        14.542,
-        42.372,
-        18.559,
-        44.557
-      ],
-      "place": 1121,
-      "country": "HR",
-      "localTrips": 2122374.0,
-      "realm": "balkans"
     },
     {
       "id": "cns",
@@ -107400,32 +107594,6 @@
       "realm": "france"
     },
     {
-      "id": "fie",
-      "name": "Fier",
-      "kind": "zone",
-      "origin": {
-        "lon": 19.554,
-        "lat": 40.727
-      },
-      "center": [
-        19.554,
-        40.727
-      ],
-      "zoom": 10.5,
-      "utcOffset": 1,
-      "market": -1,
-      "box": [
-        19.24,
-        39.626,
-        21.082,
-        41.414
-      ],
-      "place": 6010,
-      "country": "AL",
-      "localTrips": 2820342.0,
-      "realm": "balkans"
-    },
-    {
       "id": "ske",
       "name": "Shkodër",
       "kind": "zone",
@@ -107761,32 +107929,6 @@
       "place": 6023,
       "country": "BA",
       "localTrips": 3461819.0,
-      "realm": "balkans"
-    },
-    {
-      "id": "bja",
-      "name": "Banja Luka",
-      "kind": "zone",
-      "origin": {
-        "lon": 17.1974,
-        "lat": 44.7721
-      },
-      "center": [
-        17.1974,
-        44.7721
-      ],
-      "zoom": 10.5,
-      "utcOffset": 1,
-      "market": -1,
-      "box": [
-        15.69,
-        44.178,
-        18.751,
-        45.295
-      ],
-      "place": 6024,
-      "country": "BA",
-      "localTrips": 2340939.0,
       "realm": "balkans"
     },
     {
@@ -110673,32 +110815,6 @@
       "place": 6137,
       "country": "GR",
       "localTrips": 2746682.0,
-      "realm": "gr-cy"
-    },
-    {
-      "id": "evo",
-      "name": "Evvoia",
-      "kind": "zone",
-      "origin": {
-        "lon": 23.6077,
-        "lat": 38.4684
-      },
-      "center": [
-        23.6077,
-        38.4684
-      ],
-      "zoom": 10.5,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        20.517,
-        37.93,
-        24.709,
-        39.292
-      ],
-      "place": 6138,
-      "country": "GR",
-      "localTrips": 1673420.0,
       "realm": "gr-cy"
     },
     {
@@ -132513,6 +132629,1109 @@
       "country": "PS",
       "localTrips": 3177929.0,
       "realm": "levant"
+    },
+    {
+      "id": "pyo",
+      "name": "P'yŏngyang",
+      "origin": {
+        "lon": 125.7419,
+        "lat": 39.0105
+      },
+      "center": [
+        125.7419,
+        39.0105
+      ],
+      "zoom": 11.2,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.312,
+        38.679,
+        126.245,
+        39.298
+      ],
+      "place": 7341,
+      "country": "KP"
+    },
+    {
+      "id": "hmh",
+      "name": "Hamhung City",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.622,
+        "lat": 39.8399
+      },
+      "center": [
+        127.622,
+        39.8399
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.637,
+        39.354,
+        128.226,
+        40.323
+      ],
+      "place": 7342,
+      "country": "KP"
+    },
+    {
+      "id": "chj",
+      "name": "Chongjin City",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.7894,
+        "lat": 41.7902
+      },
+      "center": [
+        129.7894,
+        41.7902
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        129.161,
+        41.431,
+        130.723,
+        42.722
+      ],
+      "place": 7343,
+      "country": "KP"
+    },
+    {
+      "id": "phy",
+      "name": "Phyongsan",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.395,
+        "lat": 38.3354
+      },
+      "center": [
+        126.395,
+        38.3354
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.668,
+        37.997,
+        127.052,
+        39.191
+      ],
+      "place": 7344,
+      "country": "KP"
+    },
+    {
+      "id": "sny",
+      "name": "Sunchon City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.9306,
+        "lat": 39.4292
+      },
+      "center": [
+        125.9306,
+        39.4292
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.742,
+        39.201,
+        127.203,
+        40.368
+      ],
+      "place": 7345,
+      "country": "KP"
+    },
+    {
+      "id": "sch",
+      "name": "Sinchon",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.4861,
+        "lat": 38.3531
+      },
+      "center": [
+        125.4861,
+        38.3531
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.627,
+        38.035,
+        125.833,
+        38.745
+      ],
+      "place": 7346,
+      "country": "KP"
+    },
+    {
+      "id": "tco",
+      "name": "Tanchon City",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.9105,
+        "lat": 40.4219
+      },
+      "center": [
+        128.9105,
+        40.4219
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        127.855,
+        39.965,
+        129.192,
+        41.204
+      ],
+      "place": 7347,
+      "country": "KP"
+    },
+    {
+      "id": "hut",
+      "name": "Huichon City",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.2762,
+        "lat": 40.171
+      },
+      "center": [
+        126.2762,
+        40.171
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.585,
+        39.867,
+        127.992,
+        41.191
+      ],
+      "place": 7348,
+      "country": "KP"
+    },
+    {
+      "id": "sjc",
+      "name": "Sinuiju City",
+      "kind": "zone",
+      "origin": {
+        "lon": 124.4,
+        "lat": 40.1083
+      },
+      "center": [
+        124.4,
+        40.1083
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.164,
+        39.773,
+        125.647,
+        40.69
+      ],
+      "place": 7349,
+      "country": "KP"
+    },
+    {
+      "id": "woa",
+      "name": "Wonsan City",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.4299,
+        "lat": 39.1618
+      },
+      "center": [
+        127.4299,
+        39.1618
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.646,
+        38.345,
+        128.116,
+        39.437
+      ],
+      "place": 7350,
+      "country": "KP"
+    },
+    {
+      "id": "spi",
+      "name": "Splitsko-dalmatinska županija",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.4696,
+        "lat": 43.5161
+      },
+      "center": [
+        16.4696,
+        43.5161
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.541,
+        42.373,
+        18.559,
+        45.142
+      ],
+      "place": 7351,
+      "country": "HR"
+    },
+    {
+      "id": "bja",
+      "name": "Banja Luka",
+      "kind": "zone",
+      "origin": {
+        "lon": 17.1974,
+        "lat": 44.7721
+      },
+      "center": [
+        17.1974,
+        44.7721
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.686,
+        43.744,
+        18.751,
+        45.295
+      ],
+      "place": 7352,
+      "country": "BA"
+    },
+    {
+      "id": "foc",
+      "name": "Foča",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.771,
+        "lat": 43.507
+      },
+      "center": [
+        18.771,
+        43.507
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.527,
+        42.584,
+        19.648,
+        44.191
+      ],
+      "place": 7353,
+      "country": "BA"
+    },
+    {
+      "id": "kso",
+      "name": "Kusong City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.2577,
+        "lat": 39.983
+      },
+      "center": [
+        125.2577,
+        39.983
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.328,
+        39.25,
+        125.457,
+        40.383
+      ],
+      "place": 7354,
+      "country": "KP"
+    },
+    {
+      "id": "kgg",
+      "name": "Kanggye City",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.5935,
+        "lat": 40.9697
+      },
+      "center": [
+        126.5935,
+        40.9697
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.412,
+        40.333,
+        127.176,
+        41.829
+      ],
+      "place": 7355,
+      "country": "KP"
+    },
+    {
+      "id": "hej",
+      "name": "Haeju City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.6965,
+        "lat": 38.043
+      },
+      "center": [
+        125.6965,
+        38.043
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.93,
+        37.658,
+        125.987,
+        38.339
+      ],
+      "place": 7356,
+      "country": "KP"
+    },
+    {
+      "id": "key",
+      "name": "Kaechon City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.8931,
+        "lat": 39.7059
+      },
+      "center": [
+        125.8931,
+        39.7059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.311,
+        39.406,
+        126.158,
+        39.882
+      ],
+      "place": 7357,
+      "country": "KP"
+    },
+    {
+      "id": "sms",
+      "name": "Samsu",
+      "kind": "zone",
+      "origin": {
+        "lon": 128.1798,
+        "lat": 41.402
+      },
+      "center": [
+        128.1798,
+        41.402
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.885,
+        40.393,
+        129.085,
+        42.114
+      ],
+      "place": 7358,
+      "country": "KP"
+    },
+    {
+      "id": "kie",
+      "name": "Kim Chaek City",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.1899,
+        "lat": 40.6731
+      },
+      "center": [
+        129.1899,
+        40.6731
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.907,
+        40.555,
+        129.83,
+        41.65
+      ],
+      "place": 7359,
+      "country": "KP"
+    },
+    {
+      "id": "peh",
+      "name": "Paechon",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.2989,
+        "lat": 37.9899
+      },
+      "center": [
+        126.2989,
+        37.9899
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.752,
+        37.723,
+        126.463,
+        38.257
+      ],
+      "place": 7362,
+      "country": "KP"
+    },
+    {
+      "id": "fie",
+      "name": "Fier",
+      "kind": "zone",
+      "origin": {
+        "lon": 19.554,
+        "lat": 40.727
+      },
+      "center": [
+        19.554,
+        40.727
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        19.24,
+        39.626,
+        21.082,
+        41.414
+      ],
+      "place": 7364,
+      "country": "AL"
+    },
+    {
+      "id": "evo",
+      "name": "Evvoia",
+      "kind": "zone",
+      "origin": {
+        "lon": 23.6077,
+        "lat": 38.4684
+      },
+      "center": [
+        23.6077,
+        38.4684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.517,
+        37.93,
+        24.709,
+        39.292
+      ],
+      "place": 7365,
+      "country": "GR"
+    },
+    {
+      "id": "kgd",
+      "name": "Kangdong",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.1011,
+        "lat": 39.144
+      },
+      "center": [
+        126.1011,
+        39.144
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.931,
+        38.893,
+        127.096,
+        39.581
+      ],
+      "place": 7366,
+      "country": "KP"
+    },
+    {
+      "id": "hoe",
+      "name": "Hoeryong City",
+      "kind": "zone",
+      "origin": {
+        "lon": 129.7492,
+        "lat": 42.4331
+      },
+      "center": [
+        129.7492,
+        42.4331
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        128.776,
+        41.543,
+        130.286,
+        43.028
+      ],
+      "place": 7367,
+      "country": "KP"
+    },
+    {
+      "id": "nmp",
+      "name": "Nampo City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.4025,
+        "lat": 38.7348
+      },
+      "center": [
+        125.4025,
+        38.7348
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.071,
+        38.61,
+        125.653,
+        39.018
+      ],
+      "place": 7371,
+      "country": "KP"
+    },
+    {
+      "id": "kyx",
+      "name": "Kumya",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.2464,
+        "lat": 39.5452
+      },
+      "center": [
+        127.2464,
+        39.5452
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.675,
+        39.185,
+        127.601,
+        39.624
+      ],
+      "place": 7373,
+      "country": "KP"
+    },
+    {
+      "id": "avi",
+      "name": "Ávila",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.6971,
+        "lat": 40.6552
+      },
+      "center": [
+        -4.6971,
+        40.6552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.762,
+        40.063,
+        -1.751,
+        42.165
+      ],
+      "place": 7375,
+      "country": "ES"
+    },
+    {
+      "id": "zax",
+      "name": "Zamora",
+      "kind": "zone",
+      "origin": {
+        "lon": -5.7388,
+        "lat": 41.5103
+      },
+      "center": [
+        -5.7388,
+        41.5103
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.059,
+        41.099,
+        -5.204,
+        42.273
+      ],
+      "place": 7376,
+      "country": "ES"
+    },
+    {
+      "id": "pci",
+      "name": "Palencia",
+      "kind": "zone",
+      "origin": {
+        "lon": -4.5306,
+        "lat": 42.0072
+      },
+      "center": [
+        -4.5306,
+        42.0072
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -5.057,
+        41.74,
+        -3.865,
+        43.08
+      ],
+      "place": 7377,
+      "country": "ES"
+    },
+    {
+      "id": "cce",
+      "name": "Cáceres",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.3803,
+        "lat": 39.4649
+      },
+      "center": [
+        -6.3803,
+        39.4649
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -7.566,
+        39.013,
+        -4.929,
+        40.505
+      ],
+      "place": 7378,
+      "country": "ES"
+    },
+    {
+      "id": "cbh",
+      "name": "Cuenca",
+      "kind": "zone",
+      "origin": {
+        "lon": -2.1385,
+        "lat": 40.0725
+      },
+      "center": [
+        -2.1385,
+        40.0725
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -3.194,
+        39.208,
+        0.318,
+        41.373
+      ],
+      "place": 7379,
+      "country": "ES"
+    },
+    {
+      "id": "hes",
+      "name": "Huesca",
+      "kind": "zone",
+      "origin": {
+        "lon": -0.4026,
+        "lat": 42.134
+      },
+      "center": [
+        -0.4026,
+        42.134
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        -0.959,
+        41.329,
+        0.796,
+        42.943
+      ],
+      "place": 7380,
+      "country": "ES"
+    },
+    {
+      "id": "jon",
+      "name": "Jongju City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.2136,
+        "lat": 39.697
+      },
+      "center": [
+        125.2136,
+        39.697
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        124.928,
+        39.391,
+        126.106,
+        40.467
+      ],
+      "place": 7381,
+      "country": "KP"
+    },
+    {
+      "id": "pyg",
+      "name": "Pyongwon",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.591,
+        "lat": 39.3044
+      },
+      "center": [
+        125.591,
+        39.3044
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.181,
+        38.939,
+        125.857,
+        39.508
+      ],
+      "place": 7382,
+      "country": "KP"
+    },
+    {
+      "id": "kja",
+      "name": "Kujang",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.0303,
+        "lat": 39.8668
+      },
+      "center": [
+        126.0303,
+        39.8668
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.29,
+        39.511,
+        126.363,
+        40.149
+      ],
+      "place": 7383,
+      "country": "KP"
+    },
+    {
+      "id": "pyx",
+      "name": "Phyonggang",
+      "kind": "zone",
+      "origin": {
+        "lon": 127.2949,
+        "lat": 38.4152
+      },
+      "center": [
+        127.2949,
+        38.4152
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.759,
+        38.14,
+        128.389,
+        38.941
+      ],
+      "place": 7384,
+      "country": "KP"
+    },
+    {
+      "id": "srw",
+      "name": "Sariwon",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.7642,
+        "lat": 38.5128
+      },
+      "center": [
+        125.7642,
+        38.5128
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.611,
+        38.393,
+        126.114,
+        38.665
+      ],
+      "place": 7385,
+      "country": "KP"
+    },
+    {
+      "id": "hwn",
+      "name": "Hwangju",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.6334,
+        "lat": 38.7437
+      },
+      "center": [
+        125.6334,
+        38.7437
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.497,
+        38.59,
+        125.952,
+        38.953
+      ],
+      "place": 7386,
+      "country": "KP"
+    },
+    {
+      "id": "ksc",
+      "name": "Kaesong City",
+      "kind": "zone",
+      "origin": {
+        "lon": 126.5574,
+        "lat": 37.9722
+      },
+      "center": [
+        126.5574,
+        37.9722
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        126.36,
+        37.743,
+        126.993,
+        38.25
+      ],
+      "place": 7387,
+      "country": "KP"
+    },
+    {
+      "id": "pyc",
+      "name": "Pyongsong City",
+      "kind": "zone",
+      "origin": {
+        "lon": 125.8703,
+        "lat": 39.2509
+      },
+      "center": [
+        125.8703,
+        39.2509
+      ],
+      "zoom": 10.5,
+      "utcOffset": 9,
+      "market": -1,
+      "box": [
+        125.7,
+        39.167,
+        126.016,
+        39.433
+      ],
+      "place": 7388,
+      "country": "KP"
+    },
+    {
+      "id": "aen",
+      "name": "Alentejo Central",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.9224,
+        "lat": 38.5661
+      },
+      "center": [
+        -7.9224,
+        38.5661
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.935,
+        37.3,
+        -6.908,
+        39.045
+      ],
+      "place": 7389,
+      "country": "PT"
+    },
+    {
+      "id": "atj",
+      "name": "Alto Alentejo",
+      "kind": "zone",
+      "origin": {
+        "lon": -7.163,
+        "lat": 38.8771
+      },
+      "center": [
+        -7.163,
+        38.8771
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -8.368,
+        38.733,
+        -6.84,
+        40.343
+      ],
+      "place": 7390,
+      "country": "PT"
+    },
+    {
+      "id": "trs",
+      "name": "Terras de Trás-os-Montes",
+      "kind": "zone",
+      "origin": {
+        "lon": -6.7622,
+        "lat": 41.8173
+      },
+      "center": [
+        -6.7622,
+        41.8173
+      ],
+      "zoom": 10.5,
+      "utcOffset": 0,
+      "market": -1,
+      "box": [
+        -7.392,
+        41.175,
+        -6.164,
+        42.011
+      ],
+      "place": 7391,
+      "country": "PT"
+    },
+    {
+      "id": "ces",
+      "name": "Creuse",
+      "kind": "zone",
+      "origin": {
+        "lon": 1.8753,
+        "lat": 46.1683
+      },
+      "center": [
+        1.8753,
+        46.1683
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        1.346,
+        45.645,
+        2.638,
+        46.474
+      ],
+      "place": 7392,
+      "country": "FR"
+    },
+    {
+      "id": "loz",
+      "name": "Lozère",
+      "kind": "zone",
+      "origin": {
+        "lon": 3.5041,
+        "lat": 44.5238
+      },
+      "center": [
+        3.5041,
+        44.5238
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        2.956,
+        44.091,
+        4.024,
+        44.994
+      ],
+      "place": 7393,
+      "country": "FR"
+    },
+    {
+      "id": "tce",
+      "name": "Tulcea",
+      "kind": "zone",
+      "origin": {
+        "lon": 28.8077,
+        "lat": 45.1684
+      },
+      "center": [
+        28.8077,
+        45.1684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        27.969,
+        44.597,
+        29.794,
+        45.486
+      ],
+      "place": 7395,
+      "country": "RO"
     }
   ]
 }
