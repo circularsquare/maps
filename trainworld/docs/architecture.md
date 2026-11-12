@@ -521,8 +521,14 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
   saved (T-728); the original slot `autosave` is only ever an old one.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
-  Toronto and Sendai (`pipeline/realnet.py ship` copies them from realnet's game
-  files into `data/packs/real/`, and the build copies that folder). Between stations it follows the
+  Toronto and Sendai, made by hand from timetables, and [T-3225] the cities in `pipeline/realauto.json`
+  (the 30 biggest metros by annual riders that have a pack), made with no hand work from noritetsu's OSM
+  extract: route relations cut to the pack, intercity, high-speed and heritage trains left out, stations
+  by name within 400 m, trains an hour from OSM's `interval` else a default by kind of line (a suburban
+  train with no line of its own every half hour), names in Latin letters where OSM has them (Cyrillic
+  transliterated, Chinese in pinyin), and a route whose line the track model cannot run (a terminal
+  with more tracks than a node takes) left out (`pipeline/realnet.py ship` copies them from realnet's game
+  files into `data/packs/real/`, `realauto.py ship` writes the app's list, and the build copies that folder). Between stations it follows the
   real track [T-1303]: each hop routed over the real-network graph (the track tool's router and fit,
   run when the saves are built, never in the game); lines on the same real track share double-track
   pairs, as many as their trains need [T-1305]; a hop with no real track near (trams, monorails, people
@@ -709,7 +715,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
     a game the account deleted, under a tombstone, never comes back under its id (410): a kept
     copy gets a new id. A game opened unchanged after another device deleted it is kept in this
     browser only.
-  - **The account's backups** (up to four a game, made by the server) are listed among the card's
+  - **The account's backups** (up to three a game, made by the server) are listed among the card's
     other versions and opened as a new version of the game through Open a file's path, the origin
     passed with it (`restoreAccountBackup`, the start menu's `fileChoice`); the route names a
     backup by place, so the page checks its `X-Rev`.
