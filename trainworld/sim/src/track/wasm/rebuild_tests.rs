@@ -119,31 +119,274 @@ fn level_and_type_change_together() {
     }
 }
 
-/// A pick that leaves a station out cannot move the track beside it to a level the platform is not on:
-/// those pieces are named by the quote, drawn by the app, and left as they are by the rebuild.
+/// T-3241: a pick of track that leaves its stations out still takes them to the new level, and charges them.
 #[test]
-fn pieces_that_cannot_change_are_named_and_left_alone() {
+fn stations_on_the_picked_track_move_with_it_unpicked() {
     let (mut a, st, line) = run();
     let edges = live(&a);
     let cash = a.cash();
     let q = a.rebuild_quote(&edges, &[], 1, 0);
-    let refused: Vec<u32> = q[5..5 + q[3] as usize].iter().map(|&e| e as u32).collect();
-    assert!(q[3] > 0.0 && q[3] as usize == refused.len(), "{q:?}");
-    assert!(refused.iter().all(|e| edges.contains(e)));
+    assert_eq!((q[3], q[2]), (0.0, 2.0), "nothing refused, both stations charged: {q:?} {}", a.issue_kinds());
     assert_eq!(a.cash(), cash, "a quote spends nothing");
+    assert_eq!(a.rebuild_pieces(&edges, &[], 1, 0), 0, "{}", a.issue_kinds());
+    assert!((cash - a.cash() - q[0]).abs() < 1e-9);
+    assert!(edges.iter().all(|&e| levels(&a, e).iter().all(|&l| l == 1)));
+    assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == 1), "stations moved");
     assert_eq!(a.w.net.station_data(st[0]).unwrap().name, "S0");
-    let before: Vec<Vec<i8>> = edges.iter().map(|&e| levels(&a, e)).collect();
-    let r = a.rebuild_pieces(&edges, &[], 1, 0);
-    assert_eq!(a.last_skipped() as usize, refused.len(), "the same pieces");
-    for (i, &e) in edges.iter().enumerate() {
-        if refused.contains(&e) {
-            assert_eq!(levels(&a, e), before[i], "{e} left as it was");
+    assert!(a.w.svc.lines[line as usize].running);
+}
+
+/// Heights along `e` from node `from` every 10 m, in levels: (metres from `from`, level).
+fn profile_from(a: &TrackApi, e: u32, from: u32) -> Vec<(f64, f64)> {
+    let (vert, len) = (a.w.net.edge_vert(e), a.w.net.edge_len[e as usize]);
+    let flip = a.w.net.edge_a[e as usize] != from;
+    let mut out = vec![];
+    let mut s = 0.0;
+    while s <= len + 1e-6 {
+        let at = if flip { len - s } else { s };
+        out.push((s, crate::track::geom::height_at(vert, at.clamp(0.0, len)) / LEVEL_H));
+        s += 10.0;
+    }
+    out
+}
+
+/// The quote's stretches beyond the pick: (edge, the node it starts at, metres).
+fn beyond_of(q: &[f64]) -> Vec<(u32, u32, f64)> {
+    q[5 + q[3] as usize + q[1] as usize..].chunks(3).map(|c| (c[0] as u32, c[1] as u32, c[2])).collect()
+}
+
+fn ends_of(a: &TrackApi, e: u32) -> [u32; 2] {
+    [a.w.net.edge_a[e as usize], a.w.net.edge_b[e as usize]]
+}
+
+/// No track rule broken anywhere.
+fn all_valid(a: &TrackApi) {
+    let nodes: Vec<u32> = (0..a.w.net.node_count() as u32).filter(|&n| a.w.net.node_ok(n)).collect();
+    assert_eq!(a.w.net.validate(&live(a), &nodes, &[]), vec![]);
+}
+
+/// T-3241, the players' case (a 4.3 km piece between Roissy-en-Brie and Ozoir-la-Ferriere to -2): the one
+/// piece between two stations rebuilt to -2, and to +1, the stations not picked. Both stations go to the level
+/// with it, platforms flat, and each ramps on the piece beyond it, starting just past its platform; nothing is
+/// refused, the line runs, and the price is the piece, the two stations and the stretches beyond as built new.
+#[test]
+fn a_piece_between_two_stations_takes_them_and_ramps_beyond() {
+    for level in [-2i8, 1] {
+        let (mut a, st, line) = run();
+        let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
+        let outer: Vec<u32> = live(&a).into_iter().filter(|&e| e != mid).collect();
+        assert!(a.w.net.edge_data(mid).unwrap().pis.is_empty(), "a piece with no corners, as drawn");
+        let q = a.rebuild_quote(&[mid], &[], level as i32, 0);
+        assert_eq!((q[1], q[2], q[3]), (1.0, 2.0, 0.0), "{level}: the piece and two stations, nothing refused: {q:?} {}", a.issue_kinds());
+        let bey = beyond_of(&q);
+        let ramp = 100.0 + 2.0 + 200.0 * (level as f64).abs();
+        assert_eq!(bey.len(), 2, "{bey:?}");
+        for &(e, from, m) in &bey {
+            assert!(outer.contains(&e) && st.contains(&from) && ends_of(&a, e).contains(&from), "{bey:?}");
+            assert!((m - ramp).abs() < 0.5, "{level}: the ramp ends {m} m past the station, wanted about {ramp}");
+        }
+        let cash = a.cash();
+        assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0), 0, "{}", a.issue_kinds());
+        assert_eq!(a.last_skipped(), 0);
+        assert!((cash - a.cash() - q[0]).abs() < 1e-9, "charged {} quoted {}", cash - a.cash(), q[0]);
+        let net = &a.w.net;
+        // the stretches beyond: the platform's end and the ramp, at the new level's rate (a ramp is charged
+        // at its dearer end), not the rest of those pieces at ground
+        let part = q[0] - net.edge_cost[mid as usize] - st.iter().map(|&n| net.station_build_price(n)).sum::<f64>();
+        let want = 2.0 * ramp / 1000.0 * BASE_COST_PER_KM * LEVEL_MULT[(level + 3) as usize];
+        assert!((part - want).abs() < 0.1, "{level}: the stretches beyond cost {part}, wanted {want}");
+        assert!(st.iter().all(|&n| net.node_level[n as usize] == level), "{level}: both stations moved");
+        flat_at(&a, mid, level);
+        for &(e, from, _) in &bey {
+            let far = ends_of(&a, e).into_iter().find(|&n| n != from).unwrap();
+            assert_eq!(net.node_level[far as usize], 0, "the far end stays");
+            for (s, h) in profile_from(&a, e, from) {
+                if s <= 102.0 {
+                    assert!((h - level as f64).abs() < 1e-9, "{level}: flat at the platform, {s} m: {h}");
+                }
+                if s >= ramp + 0.5 {
+                    assert!(h.abs() < 1e-9, "{level}: back at ground by {s} m: {h}");
+                }
+            }
+        }
+        all_valid(&a);
+        assert_eq!(a.line_stops(line), st);
+        assert!(a.w.svc.lines[line as usize].running && !a.w.net.line_broken[line as usize]);
+    }
+}
+
+/// The same pick as a blueprint: the level button does the same, free and undoable.
+#[test]
+fn the_level_button_takes_blueprint_stations_and_ramps_beyond() {
+    let mut a = api();
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let mut st = vec![];
+    for x in [1000.0, 7000.0] {
+        let e = live(&a).into_iter().find(|&e| a.w.net.node_x[a.w.net.edge_a[e as usize] as usize] < x && a.w.net.node_x[a.w.net.edge_b[e as usize] as usize] > x).unwrap();
+        assert_eq!(a.add_station(2, e, x, 0.0, 200, "S".into()), 0, "{}", a.issues());
+        st.push((0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap());
+    }
+    let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
+    let cash = a.cash();
+    assert_eq!(a.set_edges_level(&[mid], -2), 0, "{}", a.issue_kinds());
+    assert_eq!(a.last_skipped(), 0);
+    assert_eq!(a.cash(), cash);
+    assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == -2));
+    flat_at(&a, mid, -2);
+    all_valid(&a);
+    assert_eq!(a.undo(), 0);
+    assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == 0));
+    assert!(live(&a).iter().all(|&e| a.w.net.edge_data(e).unwrap().pis.is_empty()), "the ramps' corners gone with the undo");
+}
+
+/// The piece beyond a station is too short for its ramp and ends at a junction: the station stays, so the
+/// picked piece (no corners to ramp on) cannot change, and the refusal says there is no room to change level.
+#[test]
+fn no_room_beyond_a_station_before_a_junction() {
+    let (mut a, st, _) = run();
+    let tail = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&st[1]) && !ends_of(&a, e).contains(&st[0])).unwrap();
+    let ends = [2.0, tail as f64, 7300.0, 0.0, 0.0, 0.0, 0.0, 9500.0, 1500.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
+    assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+    let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
+    let q = a.rebuild_quote(&[mid], &[], -2, 0);
+    assert_eq!((q[1], q[3]), (0.0, 1.0), "{q:?}");
+    assert!(a.issue_kinds().contains("RampTooShort"), "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0), 1);
+    assert!(st.iter().all(|&n| a.w.net.node_level[n as usize] == 0));
+}
+
+/// A short piece beyond the station runs on through a plain joint: it and the joint go to the level whole,
+/// and the ramp is on the piece after, from the joint.
+#[test]
+fn a_short_piece_beyond_carries_the_ramp_on_through_a_joint() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let free = |x: f64| [0.0, 0.0, x, 0.0, 0.0];
+    let node_at = |a: &TrackApi, x: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - x).abs() < 0.5).unwrap();
+    let route = |a: &mut TrackApi, from: [f64; 5], x: f64| {
+        let ends: Vec<f64> = from.iter().copied().chain(free(x)).collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issue_kinds());
+    };
+    route(&mut a, free(0.0), 3000.0);
+    let n3000 = node_at(&a, 3000.0);
+    route(&mut a, [1.0, n3000 as f64, 0.0, 0.0, 0.0], 3150.0);
+    let joint = node_at(&a, 3150.0);
+    route(&mut a, [1.0, joint as f64, 0.0, 0.0, 0.0], 6000.0);
+    assert_eq!(a.add_station(1, n3000, 0.0, 0.0, 200, "S0".into()), 0, "{}", a.issue_kinds());
+    let e0 = live(&a).into_iter().find(|&e| ends_of(&a, e).contains(&n3000) && !ends_of(&a, e).contains(&joint)).unwrap();
+    assert_eq!(a.add_station(2, e0, 500.0, 0.0, 200, "S1".into()), 0, "{}", a.issue_kinds());
+    let s1 = node_at(&a, 500.0);
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &[s1, n3000], 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issue_kinds());
+    assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+    assert_eq!(a.w.net.node_ports[joint as usize].n, 2, "a plain joint");
+    let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&s1) && ends_of(&a, e).contains(&n3000)).unwrap();
+    let short = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&n3000) && ends_of(&a, e).contains(&joint)).unwrap();
+    let long = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&joint) && e != short).unwrap();
+    let q = a.rebuild_quote(&[mid], &[], -2, 0);
+    assert_eq!(q[3], 0.0, "{q:?} {}", a.issue_kinds());
+    let bey = beyond_of(&q);
+    assert!(bey.iter().any(|&(e, f, m)| e == short && f == n3000 && (m - 150.0).abs() < 0.5), "{bey:?}");
+    assert!(bey.iter().any(|&(e, f, m)| e == long && f == joint && (m - 402.0).abs() < 0.5), "{bey:?}");
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -2, 0), 0, "{}", a.issue_kinds());
+    assert_eq!((a.w.net.node_level[n3000 as usize], a.w.net.node_level[joint as usize], a.w.net.node_level[s1 as usize]), (-2, -2, -2));
+    flat_at(&a, short, -2);
+    all_valid(&a);
+    assert!(a.w.svc.lines[line as usize].running);
+}
+
+/// Track beyond the station that curves: the ramp goes on the first straight it fits on (before the curve
+/// for one level, after it for two), the shape and the speed limit of that piece stay as they were, on
+/// ordinary and on high-speed track.
+#[test]
+fn a_ramp_beyond_finds_a_straight_and_keeps_the_shape() {
+    for hsr in [false, true] {
+        for level in [-1i8, -2] {
+            let mut a = api();
+            a.set_cash(1e6);
+            a.set_route_hsr(hsr);
+            // west to east, then a 300 m curve at x = 1500 up to the north-east
+            let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 1777.0, 0.0];
+            assert_eq!(a.add_route(&ends, &[1500.0, 0.0, 300.0, 0.0], 2, false), 0, "{}", a.issues());
+            let mut st = vec![];
+            for x in [400.0, 1000.0] {
+                let e = live(&a).into_iter().find(|&e| a.w.net.node_x[a.w.net.edge_a[e as usize] as usize] < x && a.w.net.node_x[a.w.net.edge_b[e as usize] as usize] > x).unwrap();
+                assert_eq!(a.add_station(2, e, x, 0.0, 200, "S".into()), 0, "{}", a.issues());
+                st.push((0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && (a.w.net.node_x[n as usize] - x).abs() < 0.5).unwrap());
+            }
+            let line = a.new_line_id();
+            assert_eq!(a.set_line_with_trains(line, &st, 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issue_kinds());
+            assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+            let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).iter().all(|n| st.contains(n))).unwrap();
+            let curve = *live(&a).iter().find(|&&e| !a.w.net.edge_data(e).unwrap().pis.is_empty()).unwrap();
+            assert!(ends_of(&a, curve).contains(&st[1]));
+            let info = |a: &TrackApi, e: u32| a.edges_info().chunks(10).find(|c| c[0] as u32 == e).unwrap().to_vec();
+            let (before, shape) = (info(&a, curve), a.w.net.edge_pieces(curve).to_vec());
+            let q = a.rebuild_quote(&[mid], &[], level as i32, 0);
+            assert_eq!(q[3], 0.0, "{hsr} {level}: {q:?} {}", a.issue_kinds());
+            let bey = beyond_of(&q);
+            let on_curve = bey.iter().find(|x| x.0 == curve).unwrap().2;
+            assert_eq!(a.w.net.edge_kind[curve as usize].is_hsr(), hsr);
+            let top = if hsr { V_HSR } else { V_TOP };
+            let slow = |p: &[crate::track::geom::Piece]| p.iter().filter(|p| p.v_curve() < top - 0.01).count();
+            if level == -1 {
+                assert!((on_curve - 302.0).abs() < 0.5, "{hsr} {level}: on the straight before the curve, {on_curve}");
+            } else {
+                assert!(on_curve > 650.0 && on_curve < 1100.0, "{hsr} {level}: on the straight after the curve, {on_curve}");
+            }
+            assert_eq!(a.rebuild_pieces(&[mid], &[], level as i32, 0), 0, "{}", a.issue_kinds());
+            let after = info(&a, curve);
+            assert!((after[5] - before[5]).abs() < 0.05, "{hsr} {level}: length {} to {}", before[5], after[5]);
+            assert_eq!(after[7], before[7], "{hsr} {level}: the speed limit stays");
+            assert_eq!(slow(a.w.net.edge_pieces(curve)), slow(&shape), "{hsr} {level}: no new curve under the track's top speed");
+            let mut s = 0.0;
+            while s < before[5] {
+                let (p, n) = (crate::track::geom::pos_at(&shape, s), crate::track::geom::pos_at(a.w.net.edge_pieces(curve), s));
+                assert!((p.0 - n.0).hypot(p.1 - n.1) < 0.25, "{hsr} {level}: the shape moved at {s}");
+                s += 10.0;
+            }
+            for (s, h) in profile_from(&a, curve, st[1]) {
+                if s <= 102.0 {
+                    assert!((h - level as f64).abs() < 1e-9, "{hsr} {level}: flat at the platform, {s} m: {h}");
+                }
+                if s >= on_curve + 0.5 {
+                    assert!(h.abs() < 1e-9, "{hsr} {level}: back at ground by {s} m: {h}");
+                }
+            }
+            all_valid(&a);
+            assert!(a.w.svc.lines[line as usize].running);
         }
     }
-    assert!(a.w.net.node_level[st[0] as usize] == 0 && a.w.net.node_level[st[1] as usize] == 0, "stations stay");
-    if r == 0 {
-        assert!(cash > a.cash());
-    }
+}
+
+/// A station at the end of the track just moves; a short piece from a station to a loose end moves whole.
+#[test]
+fn a_terminus_moves_and_a_short_stub_beyond_moves_whole() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let node_at = |a: &TrackApi, x: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - x).abs() < 0.5).unwrap();
+    let t = node_at(&a, 0.0);
+    assert_eq!(a.add_station(1, t, 0.0, 0.0, 200, "T".into()), 0, "{}", a.issues());
+    let e = live(&a)[0];
+    assert_eq!(a.add_station(2, e, 3850.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
+    let s = node_at(&a, 3850.0);
+    let line = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(line, &[t, s], 2, 1, 0, 30.0, 180.0, 0, 0, "Test".into()), 0, "{}", a.issue_kinds());
+    assert_eq!(a.construct_all(), 0, "{}", a.issue_kinds());
+    let mid = *live(&a).iter().find(|&&e| ends_of(&a, e).contains(&t)).unwrap();
+    let stub = *live(&a).iter().find(|&&e| e != mid).unwrap();
+    let end = ends_of(&a, stub).into_iter().find(|&n| n != s).unwrap();
+    let q = a.rebuild_quote(&[mid], &[], -1, 0);
+    assert_eq!((q[2], q[3]), (2.0, 0.0), "{q:?} {}", a.issue_kinds());
+    assert_eq!(beyond_of(&q).len(), 1, "only the stub; nothing beyond the terminus");
+    assert_eq!(a.rebuild_pieces(&[mid], &[], -1, 0), 0, "{}", a.issue_kinds());
+    assert_eq!((a.w.net.node_level[t as usize], a.w.net.node_level[s as usize], a.w.net.node_level[end as usize]), (-1, -1, -1));
+    flat_at(&a, stub, -1);
+    all_valid(&a);
     assert!(a.w.svc.lines[line as usize].running);
 }
 
@@ -274,22 +517,20 @@ fn one_refused_piece_does_not_leave_the_rest_ramping_at_every_node() {
     assert!(a.w.svc.lines[line as usize].running);
 }
 
-/// The same run with one station left out of the pick: only pieces at that station may be refused.
+/// The same run with one station left out of the pick: it goes down with its track all the same (T-3241).
 #[test]
-fn a_station_left_out_refuses_only_the_pieces_at_it() {
+fn a_station_left_out_goes_down_with_its_track() {
     for left_out in [0, 1] {
         let (mut a, st, line) = wet_run(false);
         let edges = run_edges(&a);
         let picked = [st[1 - left_out]];
         let q = a.rebuild_quote(&edges, &picked, -1, 0);
-        let refused: Vec<u32> = q[5..5 + q[3] as usize].iter().map(|&e| e as u32).collect();
-        let at_station = |e: u32| a.w.net.edge_a[e as usize] == st[left_out] || a.w.net.edge_b[e as usize] == st[left_out];
-        assert!(refused.iter().all(|&e| at_station(e)), "only the pieces at the left-out station: {refused:?} {}", a.issue_kinds());
+        assert_eq!((q[2], q[3]), (2.0, 0.0), "both stations charged, nothing refused: {q:?} {}", a.issue_kinds());
         let before: Vec<Vec<i8>> = edges.iter().map(|&e| levels(&a, e)).collect();
         assert_eq!(a.rebuild_pieces(&edges, &picked, -1, 0), 0, "{}", a.issue_kinds());
-        assert_eq!(a.last_skipped() as usize, refused.len());
-        all_down_but(&a, &edges, &refused, &[st[left_out]], &before);
-        assert_eq!(a.w.net.node_level[st[left_out] as usize], 0);
+        assert_eq!(a.last_skipped(), 0);
+        all_down_but(&a, &edges, &[], &[], &before);
+        assert_eq!(a.w.net.node_level[st[left_out] as usize], -1);
         assert!(a.w.svc.lines[line as usize].running);
     }
 }

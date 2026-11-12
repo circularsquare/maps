@@ -12,6 +12,11 @@ pub(super) struct Plan {
     /// track outside the pick, and cannot change family alone.
     pub root: Vec<u32>,
     pub issues: Vec<Issue>,
+    /// T-3241: track outside the pick that changes, taking the ramps of the stations at the pick's
+    /// ends: each edge, the node its change starts at, and how far along it the change reaches, m.
+    pub beyond: Vec<(u32, u32, f64)>,
+    /// Stations that move with the pick (picked or not).
+    pub moved: Vec<u32>,
 }
 
 /// The settings a plan puts on its pieces.
@@ -20,6 +25,321 @@ struct Want<'a> {
     level: Option<i8>,
     kind: Option<TrackKind>,
     stations: &'a [u32],
+    /// T-3241: nodes that move although some of their track is outside the pick (sorted).
+    ext: &'a [u32],
+}
+
+/// T-3241: a ramp beyond a station starts this far past the platform's end, m.
+const PAST_PLATFORM: f64 = 2.0;
+/// T-3241: the most pieces a station's ramp runs on through, joint after joint.
+const BEYOND_PIECES: usize = 8;
+
+/// T-3241: a station at an end of a level change's pick goes to the new level with it, and the ramp goes on
+/// the track beyond it, outside the pick.
+#[derive(Default)]
+struct Beyond {
+    /// Every station that moves with the pick (sorted): at its ends, with its track or at a dead end, and
+    /// inside it.
+    stations: Vec<u32>,
+    /// The nodes that move with track outside the pick (sorted): the stations with a ramp beyond them,
+    /// and the joints and loose ends that track runs through.
+    nodes: Vec<u32>,
+    runs: Vec<Run>,
+    /// Stations whose ramp has no room beyond them, with the piece it has none on.
+    no_room: Vec<(u32, u32)>,
+}
+
+/// One station's ramp beyond the pick.
+struct Run {
+    station: u32,
+    /// The picked piece at the station.
+    anchor: u32,
+    ops: Vec<Op>,
+    /// The joints and loose ends that move.
+    nodes: Vec<u32>,
+    /// The edges changed: each, the node its change starts at, and how far along it that reaches, m.
+    edges: Vec<(u32, u32, f64)>,
+}
+
+impl Beyond {
+    fn anchor_of_edge(&self, e: u32) -> Option<u32> {
+        self.runs.iter().find(|r| r.edges.iter().any(|x| x.0 == e)).map(|r| r.anchor)
+    }
+    fn anchor_of_node(&self, n: u32) -> Option<u32> {
+        self.runs.iter().find(|r| r.station == n || r.nodes.contains(&n)).map(|r| r.anchor)
+    }
+}
+
+fn floor_mm(v: f64) -> f64 {
+    ((v / QUANT) + 1e-6).floor() * QUANT
+}
+
+/// How far from the start two height profiles of one alignment differ: the chainage past which they agree.
+fn changed_to(old: &[[f64; 2]], new: &[[f64; 2]], len: f64) -> f64 {
+    let mut at: Vec<f64> = old.iter().chain(new.iter()).map(|p| p[0]).chain([0.0, len]).collect();
+    at.sort_by(f64::total_cmp);
+    at.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+    let differ = |s: f64| (geom::height_at(old, s) - geom::height_at(new, s)).abs() > 1e-6;
+    match (0..at.len()).rev().find(|&i| differ(at[i])) {
+        Some(i) => at.get(i + 1).copied().unwrap_or(len).min(len),
+        None => 0.0,
+    }
+}
+
+/// `e` leaving node `p`, which goes to level `l` (its platform reaching `reach` along `e`), ramping back to
+/// the edge's own levels as soon past `reach` as its shape allows, the far end kept (its platform reaching
+/// `reach_m`): the edge's new data and how far along it the change reaches from `p`, m. A ramp is centred
+/// between two vertices of different levels, so it is held either by the edge's corners on level `l` up to
+/// some corner, or by two new vertices on a straight with no turn (as a bridge's are, track/bridge.rs), the
+/// one that changes the least track. The shape stays as it is. None where no ramp fits.
+fn ramp_in(net: &Network, e: u32, p: u32, l: i8, reach: f64, reach_m: f64) -> Option<(EdgeData, f64)> {
+    let mut d = net.edge_data(e)?;
+    let flip = net.edge_a[e as usize] != p;
+    let mut old = net.edge_vertices(e);
+    if flip {
+        old.reverse();
+    }
+    let f0 = net.fit(&old);
+    if f0.pieces.is_empty() {
+        return None;
+    }
+    let n = old.len();
+    let bad = |g: &geom::Fit| g.issues.len() > f0.issues.len() || g.issues.iter().any(|i| matches!(i, GeomIssue::RampTooShort(_) | GeomIssue::LevelRange(_)));
+    let judge = |v: &[Pi], moved: bool| -> Option<f64> {
+        let g = net.fit(v);
+        if bad(&g) || (g.len - f0.len).abs() > 0.05 {
+            return None;
+        }
+        if moved {
+            let mut s = 0.0;
+            while s < f0.len {
+                let (a, b) = (geom::pos_at(&f0.pieces, s), geom::pos_at(&g.pieces, s));
+                if (a.0 - b.0).hypot(a.1 - b.1) > 0.25 {
+                    return None;
+                }
+                s += 25.0;
+            }
+        }
+        let flat = (geom::height_at(&g.vert, 0.0) - l as f64 * LEVEL_H).abs() < 1e-6 && !geom::on_ramp(&g.vert, 0.0, reach + 1.0);
+        if !flat || (reach_m > 0.0 && geom::on_ramp(&g.vert, g.len - reach_m - 1.0, g.len)) {
+            return None;
+        }
+        Some(changed_to(&f0.vert, &g.vert, g.len))
+    };
+    let mut base = old.clone();
+    base[0].level = l;
+    let mut best: Option<(f64, Vec<Pi>)> = None;
+    let mut take = |v: Vec<Pi>, moved: bool| {
+        if let Some(c) = judge(&v, moved) {
+            if best.as_ref().map_or(true, |b| c < b.0 - 1e-6) {
+                best = Some((c, v));
+            }
+        }
+    };
+    // the corners up to the j-th on the new level, the ramp centred on the leg after
+    for j in 0..n - 1 {
+        let mut v = base.clone();
+        for p in &mut v[1..=j] {
+            p.level = l;
+        }
+        take(v, false);
+    }
+    // two new vertices holding the ramp on a straight, from just past the platform or a curve's end
+    if d.thru.is_empty() {
+        let radius = if d.kind.is_hsr() { quant(design_radius(V_HSR * 3.6)) } else { 0.0 };
+        for (j, q) in f0.pieces.iter().enumerate() {
+            if q.k != 0.0 {
+                continue;
+            }
+            let i = f0.piece_at_vertex[j] as usize;
+            if old[i].level != old[i + 1].level {
+                continue;
+            }
+            let u = (q.s0 + 1.0).max(reach + PAST_PLATFORM);
+            let w = u + RAMP_PER_LEVEL * (l as f64 - old[i].level as f64).abs() + 0.01;
+            if w > q.s0 + q.len - 1.0 {
+                continue;
+            }
+            let at = |s: f64, level: i8| {
+                let (x, y, _) = q.at(s - q.s0);
+                Pi::new(quant(x), quant(y), radius, level)
+            };
+            let mut v: Vec<Pi> = base[..=i].to_vec();
+            for p in &mut v[1..] {
+                p.level = l;
+            }
+            v.push(at(u, l));
+            v.push(at(w, old[i].level));
+            v.extend_from_slice(&old[i + 1..]);
+            // the corners either side keep the curve their legs gave them
+            for k in [i, i + 3] {
+                if k > 0 && k < v.len() - 1 && v[k].radius == 0.0 {
+                    let src = if k == i { i } else { i + 1 };
+                    if f0.radius[src] > 0.0 {
+                        v[k].radius = floor_mm(f0.radius[src]);
+                    }
+                }
+            }
+            take(v, true);
+        }
+    }
+    let (c, mut v) = best?;
+    if flip {
+        v.reverse();
+    }
+    d.pis = v[1..v.len() - 1].to_vec();
+    Some((d, c))
+}
+
+/// `e` whole on level `l`.
+fn whole_at(net: &Network, e: u32, l: i8) -> Option<EdgeData> {
+    let mut d = net.edge_data(e)?;
+    for p in d.pis.iter_mut().chain(d.thru.iter_mut()) {
+        p.level = l;
+    }
+    Some(d)
+}
+
+/// Where the level of `cand` changes to `l` (not across families), the stations at its ends and the
+/// track beyond them that takes their ramps (T-3241). A station whose track is all picked, or that ends
+/// the track, just moves. Else the track beyond it ramps back to its own level as soon past the platform
+/// as it can, on the next piece or, where that is too short, on through plain joints (`BEYOND_PIECES`),
+/// those pieces and joints moving whole. Track running on to another station that moves, or back into the
+/// pick, moves whole; a loose end with no room for the ramp moves with it. A station with no room for its
+/// ramp (a junction or another station too close, constructed track in a blueprint pick) stays.
+fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool, families: bool) -> Beyond {
+    let mut out = Beyond::default();
+    let Some(l) = level else { return out };
+    if families {
+        return out;
+    }
+    let picked = |e: u32| cand.binary_search(&e).is_ok();
+    let mut ends: Vec<u32> = cand
+        .iter()
+        .flat_map(|&e| [net.edge_a[e as usize], net.edge_b[e as usize]])
+        .filter(|&n| {
+            let i = n as usize;
+            net.node_platform[i] > 0 && net.node_berth[i].is_none() && net.node_level[i] != l && (built_ok || !net.node_built[i])
+        })
+        .collect();
+    ends.sort_unstable();
+    ends.dedup();
+    let usable = |e: u32| net.edge_ok(e) && !net.edge_crossover[e as usize] && (built_ok || !net.edge_built[e as usize]) && !picked(e);
+    let plain = |n: u32| {
+        let i = n as usize;
+        net.node_ports[i].n == 2 && net.node_platform[i] == 0 && net.node_berth[i].is_none()
+    };
+    let other = |e: u32, n: u32| if net.edge_a[e as usize] == n { net.edge_b[e as usize] } else { net.edge_a[e as usize] };
+    let node_op = |n: u32| net.node_data(n).filter(|d| d.level != l).map(|d| Op::Node { id: n, data: Some(NodeData { level: l, ..d }) });
+    for &s in &ends {
+        let at: Vec<u32> = net.node_ports[s as usize].ends().iter().map(|&c| c >> 1).collect();
+        let Some(anchor) = at.iter().copied().find(|&e| picked(e)) else { continue };
+        let rest: Vec<u32> = at.iter().copied().filter(|&e| !picked(e)).collect();
+        let e0 = match rest.as_slice() {
+            [] => {
+                out.stations.push(s);
+                continue;
+            }
+            [e] => *e,
+            _ => continue,
+        };
+        // the pieces beyond, through plain joints, and what the last one ends at
+        let mut chain: Vec<(u32, u32)> = vec![];
+        let (mut p, mut e) = (s, e0);
+        let (mut joins, mut loose) = (false, false);
+        while usable(e) && chain.len() < BEYOND_PIECES {
+            chain.push((e, p));
+            let m = other(e, p);
+            if ends.binary_search(&m).is_ok() {
+                joins = true;
+                break;
+            }
+            if !plain(m) {
+                loose = net.node_ports[m as usize].n == 1 && net.node_platform[m as usize] == 0;
+                break;
+            }
+            let next = net.node_ports[m as usize].ends().iter().map(|&c| c >> 1).find(|&x| x != e).unwrap_or(e);
+            if picked(next) {
+                joins = true;
+                break;
+            }
+            p = m;
+            e = next;
+        }
+        let Some(&(first, _)) = chain.first() else {
+            out.no_room.push((s, e0));
+            continue;
+        };
+        let mut run = Run { station: s, anchor, ops: vec![], nodes: vec![], edges: vec![] };
+        // the first `upto` pieces whole on the new level, with the joints between them and, where
+        // `last_node`, the node after the last
+        let all_whole = |run: &mut Run, upto: usize, last_node: bool| {
+            for (k, &(e, p)) in chain[..upto].iter().enumerate() {
+                run.ops.extend(whole_at(net, e, l).map(|d| Op::Edge { id: e, data: Some(d) }));
+                run.edges.push((e, p, net.edge_len[e as usize]));
+                let m = other(e, p);
+                if k + 1 < upto || last_node {
+                    run.ops.extend(node_op(m));
+                    run.nodes.push(m);
+                }
+            }
+        };
+        if joins {
+            // on to another station that moves, or back into the pick (whose node there moves with the
+            // pick's own ops): no ramp, all of it moves
+            all_whole(&mut run, chain.len(), false);
+            let (e, p) = chain[chain.len() - 1];
+            let m = other(e, p);
+            if ends.binary_search(&m).is_err() {
+                run.nodes.push(m);
+            }
+            out.runs.push(run);
+            out.stations.push(s);
+            continue;
+        }
+        // the first piece of the chain the ramp fits on, those before it moving whole
+        let mut found = false;
+        for k in 0..chain.len() {
+            let (e, p) = chain[k];
+            let m = other(e, p);
+            let reach = if k == 0 { net.platform_reach(s) } else { 0.0 };
+            let reach_m = if net.node_platform[m as usize] > 0 { net.platform_reach(m) } else { 0.0 };
+            if let Some((d, c)) = ramp_in(net, e, p, l, reach, reach_m) {
+                all_whole(&mut run, k, true);
+                run.ops.push(Op::Edge { id: e, data: Some(d) });
+                run.edges.push((e, p, c));
+                found = true;
+                break;
+            }
+        }
+        if !found && loose {
+            all_whole(&mut run, chain.len(), true);
+            found = true;
+        }
+        if found {
+            out.runs.push(run);
+            out.stations.push(s);
+        } else {
+            out.no_room.push((s, first));
+        }
+    }
+    // two stations whose track beyond runs into each other share it: one op for each piece and joint
+    let (mut seen_e, mut seen_n): (Vec<u32>, Vec<u32>) = (vec![], vec![]);
+    for r in &mut out.runs {
+        r.ops.retain(|op| match op {
+            Op::Edge { id, .. } => !seen_e.contains(id),
+            Op::Node { id, .. } => !seen_n.contains(id),
+            _ => true,
+        });
+        r.edges.retain(|x| !seen_e.contains(&x.0));
+        seen_e.extend(r.edges.iter().map(|x| x.0));
+        seen_n.extend(r.ops.iter().filter_map(|op| if let Op::Node { id, .. } = op { Some(*id) } else { None }));
+    }
+    out.stations.sort_unstable();
+    out.nodes = out.runs.iter().flat_map(|r| std::iter::once(r.station).chain(r.nodes.iter().copied())).collect();
+    out.nodes.sort_unstable();
+    out.nodes.dedup();
+    out
 }
 
 /// A piece whose track type can change: plain double track (single track and crossovers have no high-speed or
@@ -38,8 +358,11 @@ fn family_after(net: &Network, cand: &[u32], w: Want, e: u32) -> u8 {
 }
 
 /// Whether node `n` moves to the new level with `cand`: all its track is among them, and a constructed
-/// station on it is in the pick.
+/// station on it is in the pick; or it moves with track beyond the pick (T-3241).
 fn movable(net: &Network, cand: &[u32], w: Want, n: u32) -> bool {
+    if w.ext.binary_search(&n).is_ok() {
+        return true;
+    }
     net.node_ports[n as usize].ends().iter().all(|&c| cand.binary_search(&(c >> 1)).is_ok())
         && (!(net.node_platform[n as usize] > 0 && net.node_built[n as usize]) || w.stations.binary_search(&n).is_ok())
 }
@@ -120,18 +443,22 @@ fn prune(net: &Network, cand: &mut Vec<u32>, w: Want, refused: &mut Vec<u32>, ro
 
 /// The picked edges an edit's problems put the blame on: the piece named, the pieces of the pick at
 /// the node named, or for a piece outside the pick, the picked pieces at its ends. Of two picked
-/// pieces that cross, the later one.
-fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)]) -> Vec<u32> {
+/// pieces that cross, the later one. A problem on track beyond the pick that a station's ramp takes is the
+/// picked piece's at that station (T-3241).
+fn culprits(net: &Network, cand: &[u32], issues: &[Issue], flats: &[(u32, u32)], bey: &Beyond) -> Vec<u32> {
     let picked = |e: u32| cand.binary_search(&e).is_ok();
     let mut out = vec![];
     let at_node = |n: u32, out: &mut Vec<u32>| {
         if net.node_ok(n) {
             out.extend(net.node_ports[n as usize].ends().iter().map(|&c| c >> 1).filter(|&e| picked(e)));
+            out.extend(bey.anchor_of_node(n));
         }
     };
     let edge = |e: u32, out: &mut Vec<u32>| {
         if picked(e) {
             out.push(e);
+        } else if let Some(a) = bey.anchor_of_edge(e) {
+            out.push(a);
         } else if net.edge_ok(e) {
             at_node(net.edge_a[e as usize], out);
             at_node(net.edge_b[e as usize], out);
@@ -240,8 +567,9 @@ fn family_ops(net: &Network, cand: &[u32], w: Want) -> Vec<Op> {
     ops
 }
 
-/// The pieces of `cand` joined through moving nodes, each with its ops (the nodes' included).
-fn groups(net: &Network, cand: &[u32], w: Want) -> Vec<(Vec<u32>, Vec<Op>)> {
+/// The pieces of `cand` joined through moving nodes, each with its ops (the nodes' included, and those of
+/// the track beyond a station at its ends, T-3241).
+fn groups(net: &Network, cand: &[u32], w: Want, bey: &Beyond) -> Vec<(Vec<u32>, Vec<Op>)> {
     let mut up: Vec<usize> = (0..cand.len()).collect();
     fn root(up: &mut [usize], mut i: usize) -> usize {
         while up[i] != i {
@@ -279,9 +607,16 @@ fn groups(net: &Network, cand: &[u32], w: Want) -> Vec<(Vec<u32>, Vec<Op>)> {
         out[g].1.extend(edge_op(net, w, cand[i]));
     }
     for &n in &nodes {
-        let first = net.node_ports[n as usize].ends()[0] >> 1;
-        let g = of_root[&root(&mut up, cand.binary_search(&first).unwrap())];
+        // a node moving with track beyond the pick has track of the pick's too: it is an end of a piece
+        let Some(i) = net.node_ports[n as usize].ends().iter().find_map(|&c| cand.binary_search(&(c >> 1)).ok()) else { continue };
+        let g = of_root[&root(&mut up, i)];
         out[g].1.extend(node_op(n));
+    }
+    for r in &bey.runs {
+        if let Ok(i) = cand.binary_search(&r.anchor) {
+            let g = of_root[&root(&mut up, i)];
+            out[g].1.extend(r.ops.iter().cloned());
+        }
     }
     out.retain(|g| !g.1.is_empty());
     out
@@ -296,10 +631,14 @@ impl TrackApi {
     /// leave the pick, so the rest still change whole and ramp only to them. Pieces with corners
     /// refused that way are tried last on their own, ends kept. Problems that name no piece fall back
     /// to trying the groups of pieces joined through moving nodes one by one.
+    ///
+    /// T-3241: a level change takes the stations on the picked track with it, picked or not, and a station
+    /// at an end of the pick ramps on the track beyond it (`beyond`); one whose ramp has no room there stays,
+    /// and the picked piece ramps to it as before.
     pub(super) fn plan_edges(&mut self, ids: &[u32], level: Option<i8>, kind: Option<TrackKind>, built_ok: bool, picked_stations: &[u32]) -> Plan {
         let mut stations = picked_stations.to_vec();
         stations.sort_unstable();
-        let w = Want { level, kind, stations: &stations };
+        let w = Want { level, kind, stations: &stations, ext: &[] };
         let net = &self.w.net;
         let mut want: Vec<u32> = ids.iter().copied().filter(|&e| net.edge_ok(e)).collect();
         want.sort_unstable();
@@ -333,14 +672,37 @@ impl TrackApi {
         // pieces refused by the track model, to try alone with their ends kept
         let mut todo: Vec<u32> = vec![];
         let mut clash_at = None;
+        // T-3241: the stations moving with the pick and the track beyond them, worked out again each round
+        let mut bey = Beyond::default();
+        let mut both: Vec<u32> = stations.clone();
+        // stations with no room for their ramp beyond, and the problems a ramp beyond was refused for
+        let mut no_room: Vec<(u32, u32)> = vec![];
+        let mut why: Vec<(u32, Vec<Issue>)> = vec![];
         for round in 0.. {
-            prune(&self.w.net, &mut cand, w, &mut refused, &mut root, &mut clash_at);
-            let gs = groups(&self.w.net, &cand, w);
+            loop {
+                bey = beyond(&self.w.net, &cand, level, built_ok, families);
+                for x in &bey.no_room {
+                    if !no_room.contains(x) {
+                        no_room.push(*x);
+                    }
+                }
+                both = stations.iter().chain(bey.stations.iter()).copied().collect();
+                both.sort_unstable();
+                both.dedup();
+                let n0 = cand.len();
+                let wb = Want { level, kind, stations: &both, ext: &bey.nodes };
+                prune(&self.w.net, &mut cand, wb, &mut refused, &mut root, &mut clash_at);
+                if cand.len() == n0 {
+                    break;
+                }
+            }
+            let wb = Want { level, kind, stations: &both, ext: &bey.nodes };
+            let gs = groups(&self.w.net, &cand, wb, &bey);
             if gs.is_empty() {
                 break;
             }
             let mut all: Vec<Op> = gs.iter().flat_map(|g| g.1.iter().cloned()).collect();
-            let extra = family_ops(&self.w.net, &cand, w);
+            let extra = family_ops(&self.w.net, &cand, wb);
             all.extend(extra.iter().cloned());
             let (issues, flats) = match try_ops(&mut self.w, all.clone()) {
                 Ok(()) => {
@@ -352,7 +714,15 @@ impl TrackApi {
             if !issues.is_empty() {
                 last_issues = issues.clone();
             }
-            let blamed = culprits(&self.w.net, &cand, &issues, &flats);
+            let blamed = culprits(&self.w.net, &cand, &issues, &flats, &bey);
+            if !bey.runs.is_empty() && !issues.is_empty() {
+                let own = culprits(&self.w.net, &cand, &issues, &flats, &Beyond::default());
+                for r in &bey.runs {
+                    if blamed.binary_search(&r.anchor).is_ok() && own.binary_search(&r.anchor).is_err() {
+                        why.push((r.station, issues.clone()));
+                    }
+                }
+            }
             if !blamed.is_empty() && round < 200 {
                 cand.retain(|e| blamed.binary_search(e).is_err());
                 if families {
@@ -435,7 +805,28 @@ impl TrackApi {
                 last_issues = vec![Issue::TrackFamily { node }];
             }
         }
-        Plan { take, refused, root, issues: last_issues }
+        let moved_node = |n: u32| take.iter().any(|op| matches!(op, Op::Node { id, data: Some(_) } if *id == n));
+        // a station that stayed for want of room for its ramp beyond says so, rather than that its
+        // platform would be on the ramp the picked piece then needs
+        let stayed = last_issues.iter().find_map(|i| match *i {
+            Issue::PlatformNotLevel { node } if !moved_node(node) => Some(node),
+            _ => None,
+        });
+        if let Some(n) = stayed {
+            if let Some((_, is)) = why.iter().rev().find(|x| x.0 == n) {
+                last_issues = is.clone();
+            } else if let Some(&(_, e)) = no_room.iter().find(|x| x.0 == n) {
+                last_issues = vec![Issue::Geom { edge: e, issue: GeomIssue::RampTooShort(0) }];
+            }
+        } else if last_issues.is_empty() && !refused.is_empty() {
+            // a piece with no corners refused at a station that could not move has no problem of its own
+            if let Some(&(_, e)) = no_room.iter().find(|x| !moved_node(x.0)) {
+                last_issues = vec![Issue::Geom { edge: e, issue: GeomIssue::RampTooShort(0) }];
+            }
+        }
+        let beyond: Vec<(u32, u32, f64)> = bey.runs.iter().filter(|r| moved_node(r.station)).flat_map(|r| r.edges.iter().copied()).collect();
+        let moved: Vec<u32> = both.iter().copied().filter(|&n| moved_node(n)).collect();
+        Plan { take, refused, root, issues: last_issues, beyond, moved }
     }
 
     /// The edges and stations of a rebuild pick that are constructed (a blueprint piece is not rebuilt
@@ -454,12 +845,14 @@ impl TrackApi {
     }
 
     /// What a rebuild changes: its plan, the edges it changes, and the stations it charges for (those in
-    /// the pick whose level or track type changes, and any whose track changes family).
+    /// the pick or moving with it whose level or track type changes, and any whose track changes family).
     fn rebuild_plan(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> (Plan, Vec<u32>, Vec<u32>) {
         let (edges, stations, level, kind) = self.rebuild_pick(edges, stations, level, kind);
         let plan = self.plan_edges(&edges, level, kind, true, &stations);
         let net = &self.w.net;
-        // an edge with no corners has no level of its own: its nodes' levels are its profile
+        // an edge with no corners has no level of its own: its nodes' levels are its profile; the track
+        // beyond the pick that a station's ramp takes is charged for the stretch that changes
+        let outside = |e: u32| plan.beyond.iter().any(|x| x.0 == e);
         let mut changed: Vec<u32> = vec![];
         for op in &plan.take {
             match op {
@@ -468,8 +861,13 @@ impl TrackApi {
                 _ => {}
             }
         }
+        changed.retain(|&e| !outside(e));
         changed.sort_unstable();
         changed.dedup();
+        let mut stations = stations;
+        stations.extend(plan.moved.iter().copied().filter(|&n| net.node_built[n as usize]));
+        stations.sort_unstable();
+        stations.dedup();
         let retyped: Vec<u32> = plan
             .take
             .iter()
@@ -496,9 +894,33 @@ impl TrackApi {
     }
 }
 
-/// The full price of building `edges` and `stations` new as they stand, US$M.
-fn full_price(w: &TrackWorld, edges: &[u32], stations: &[u32]) -> f64 {
-    edges.iter().map(|&e| w.net.edge_cost[e as usize]).sum::<f64>() + stations.iter().map(|&n| w.net.station_build_price(n)).sum::<f64>()
+/// The full price of building `edges` and `stations` new as they stand, and of the constructed stretches
+/// `beyond` (edge, the node it starts at, metres), US$M.
+fn full_price(w: &TrackWorld, edges: &[u32], stations: &[u32], beyond: &[(u32, u32, f64)]) -> f64 {
+    edges.iter().map(|&e| w.net.edge_cost[e as usize]).sum::<f64>()
+        + stations.iter().map(|&n| w.net.station_build_price(n)).sum::<f64>()
+        + beyond.iter().map(|&(e, from, m)| stretch_price(&w.net, e, from, m)).sum::<f64>()
+}
+
+/// T-3241: what the first `m` metres of constructed edge `e` from node `from` cost built new as they stand,
+/// US$M: its track over that stretch (as `track_cost_t` prices the whole edge) and the road crossings on it.
+fn stretch_price(net: &Network, e: u32, from: u32, m: f64) -> f64 {
+    let i = e as usize;
+    if !net.edge_ok(e) || !net.edge_built[i] {
+        return 0.0;
+    }
+    let len = net.edge_len[i];
+    if m >= len - 1e-6 {
+        return net.edge_cost[i];
+    }
+    // the stretch as [0, m] of a copy shifted so that it starts at 0
+    let off = if net.edge_a[i] == from { 0.0 } else { len - m };
+    let vert: Vec<[f64; 2]> = net.edge_vert(e).iter().map(|p| [p[0] - off, p[1]]).collect();
+    let water: Vec<[f64; 2]> = net.edge_water(e).iter().map(|p| [p[0] - off, p[1] - off]).collect();
+    let terrain: Vec<[f64; 3]> = net.edge_terrain(e).iter().map(|p| [p[0] - off, p[1] - off, p[2]]).collect();
+    let track = crate::track::cost::track_cost_t(m, &vert, &water, &terrain, net.edge_tracks[i], net.edge_kind[i]);
+    let roads: Vec<[f64; 2]> = net.edge_roads(e).iter().copied().filter(|c| c[0] >= off && c[0] <= off + m).collect();
+    track + crate::track::roads::charge(net.edge_vert(e), &roads).1
 }
 
 #[wasm_bindgen]
@@ -509,19 +931,24 @@ impl TrackApi {
     /// edges refused, of those refused for their own sake, ...the refused ids (those first), ...the changed
     /// ids]`; the price is the full price of the changed track and stations built new, nothing back for the
     /// old (`issue_kinds()` says why the last refusal was). A refused piece not refused for its own sake
-    /// would change family alone (T-3088).
+    /// would change family alone (T-3088). T-3241: then, for the track outside the pick that the ramps of
+    /// the stations at its ends take, `edge, the node its change starts at, metres changed` each (in the
+    /// price, not among the changed ids).
     pub fn rebuild_quote(&mut self, edges: &[u32], stations: &[u32], level: i32, kind: i32) -> Vec<f64> {
         let (plan, changed, charged) = self.rebuild_plan(edges, stations, level, kind);
         let price = if plan.take.is_empty() {
             0.0
         } else {
-            self.w.trial_light(Op::Batch(plan.take.clone()), |w| full_price(w, &changed, &charged)).map_or(0.0, |r| r.1)
+            self.w.trial_light(Op::Batch(plan.take.clone()), |w| full_price(w, &changed, &charged, &plan.beyond)).map_or(0.0, |r| r.1)
         };
         self.money_short = None;
         self.issues = plan.issues;
         let mut out = vec![price, changed.len() as f64, charged.len() as f64, plan.refused.len() as f64, plan.root.len() as f64];
         let rest = plan.refused.iter().filter(|e| plan.root.binary_search(e).is_err());
         out.extend(plan.root.iter().chain(rest).chain(changed.iter()).map(|&e| e as f64));
+        for &(e, from, m) in &plan.beyond {
+            out.extend([e as f64, from as f64, m]);
+        }
         out
     }
 
@@ -541,7 +968,8 @@ impl TrackApi {
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
-        let r = self.w.apply_priced(Op::Batch(plan.take), cash, true, &|w| trains_to_buy(w, fleet), Some(&|w: &TrackWorld| full_price(w, &changed, &charged)));
+        let beyond = plan.beyond;
+        let r = self.w.apply_priced(Op::Batch(plan.take), cash, true, &|w| trains_to_buy(w, fleet), Some(&|w: &TrackWorld| full_price(w, &changed, &charged, &beyond)));
         self.settle(r, &before)
     }
 }

@@ -38,6 +38,29 @@ import { curveLabels, CurveLabelPool } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
+
+/** The part of an edge's polyline (x, y, z triples, a to b) within `frac` of its length from its a end
+ * (`fromA`) or its b end. */
+function stretchOf(pts: Float32Array, fromA: boolean, frac: number): Float32Array {
+  const n = pts.length / 3;
+  if (frac >= 1 || n < 2) return pts;
+  const at = (i: number) => (fromA ? i : n - 1 - i) * 3;
+  let total = 0;
+  for (let i = 1; i < n; i++) total += Math.hypot(pts[at(i)] - pts[at(i - 1)], pts[at(i) + 1] - pts[at(i - 1) + 1]);
+  const want = total * Math.max(0, frac), out: number[] = [pts[at(0)], pts[at(0) + 1], pts[at(0) + 2]];
+  let s = 0;
+  for (let i = 1; i < n; i++) {
+    const p = at(i - 1), q = at(i), d = Math.hypot(pts[q] - pts[p], pts[q + 1] - pts[p + 1]);
+    if (s + d >= want) {
+      const t = d > 0 ? (want - s) / d : 0;
+      out.push(pts[p] + (pts[q] - pts[p]) * t, pts[p + 1] + (pts[q + 1] - pts[p + 1]) * t, pts[p + 2] + (pts[q + 2] - pts[p + 2]) * t);
+      break;
+    }
+    out.push(pts[q], pts[q + 1], pts[q + 2]);
+    s += d;
+  }
+  return new Float32Array(out);
+}
 /** T-1260: a finger held this long without moving more than HOLD_SLOP_PX draws a box (ms) */
 const HOLD_MS = 450;
 const HOLD_SLOP_PX = 8;
@@ -212,6 +235,12 @@ export class BlueprintBox {
       for (const e of edges) {
         const a = n.edgePts.get(e);
         if (a) pts.push(a);
+      }
+      // T-3241: the track beyond the pick that the stations' ramps take, as far as it changes
+      const q = rebuildQuote.peek(), w = world.peek();
+      if (q && w && !bpHover.peek().length) for (const b of q.beyond) {
+        const a = n.edgePts.get(b.edge), e = w.edges.find((x) => x.id === b.edge);
+        if (a && e && e.lengthM > 0) pts.push(stretchOf(a, e.a === b.from, b.m / e.lengthM));
       }
       this.overlay.renderer.setHighlight(strokesFromEdges(pts));
     }

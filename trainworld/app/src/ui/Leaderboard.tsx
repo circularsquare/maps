@@ -2,7 +2,7 @@
 // the achievements (`LeaderboardButton`, T-2179). Points only (Anita, 2026-10-23): the world board, then one per city, this
 // game's cities first and then the others that have rows. T-3116 country boards (`country_<cc>`, a game's city points summed over the country) sit in the same picker, found by the country's name. The top 50, the player's own row under
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
-// leaderboards. Each person once per board, with their best normal game (shonei-server's trainworld.go).
+// leaderboards. Each person once per board, with their most recently sent normal game there (T-3248; shonei-server's trainworld.go).
 
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { normalise } from "../game/search";

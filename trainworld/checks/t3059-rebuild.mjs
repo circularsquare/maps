@@ -1,13 +1,13 @@
 // T-3059: rebuilding built track in place. On a new game in New York: a straight 8 km run with a station at
-// each end and one in the middle, built, with a line over it. Checks: a quote names the pieces a rebuild would
-// refuse (a pick without the middle station cannot ramp to it) and a rebuild leaves them alone; high speed on
+// each end and one in the middle, built, with a line over it. Checks: a pick of the track without its stations
+// takes them to the new level (T-3241); one piece to the middle station ramps on the piece beyond it; high speed on
 // one piece changes only that piece; a viaduct rebuild of the whole run charges exactly its quote, keeps every
 // station's id and name and the line's stops, leaves the line running and clears undo; then the same through
 // the Select tool's bar: the level button, the Rebuild hover's price, the confirm and its yes. T-3088: the run,
 // its stations and its line rebuilt as tram track (tram stops, a tram line, still running), through the bar's
 // Tram button, and back to rail. T-3087: a run drawn at ground across the East River and Roosevelt Island (pieces
 // at 0 and on bridges at +1) rebuilt to -1 is at -1 everywhere, with nothing refused. Screenshots
-// artifacts/trainworld/t3059-*.png (the refused piece outlined in red).
+// artifacts/trainworld/t3059-*.png. The two-station case and a refusal drawn red: t3241-rebuild-stations.mjs.
 // From the maps root, on a Vite of your own:
 //   node trainworld/checks/t3059-rebuild.mjs [dev url]
 // About two minutes.
@@ -39,8 +39,9 @@ const snap = () => page.evaluate(() => {
 const quote = (edges, stations, level, kind) => page.evaluate(async ([edges, stations, level, kind]) => {
   const { queryClock } = await import('/src/workers/clockClient.ts');
   const d = await queryClock({ what: 'rebuildQuote', edges, stations, level, kind });
-  const refused = d[3];
-  return { price: d[0], changed: Array.from(d.subarray(5 + refused), Number), stations: d[2], refused: Array.from(d.subarray(5, 5 + refused), Number), red: d[4] };
+  const refused = d[3], end = 5 + refused + d[1], beyond = [];
+  for (let k = end; k + 2 < d.length; k += 3) beyond.push({ edge: d[k], from: d[k + 1], m: d[k + 2] });
+  return { price: d[0], changed: Array.from(d.subarray(5 + refused, end), Number), stations: d[2], refused: Array.from(d.subarray(5, 5 + refused), Number), red: d[4], beyond };
 }, [edges, stations, level, kind]);
 const rebuild = (op) => page.evaluate((op) => window.tw.client.edit({ op: 'rebuild', ...op }), op);
 
@@ -75,19 +76,14 @@ try {
   const names0 = s0.stations.map((s) => `${s.num}:${s.name}`).sort();
   const line0 = s0.lines[0];
 
-  // a pick without the stations cannot ramp to their platforms: named by the quote, left alone by the rebuild
-  const q1 = await quote(edges, [], 1, 0);
-  check(q1.refused.length > 0, 'a viaduct pick without its stations names pieces it would refuse', JSON.stringify(q1));
-  check(q1.refused.every((e) => edges.includes(e)), 'the refused pieces are in the pick');
-  const r1 = await rebuild({ edges, stations: [], level: 1, kind: 0 });
+  // T-3241: a pick without the stations takes them with it all the same, and charges them
+  const q1 = await quote(edges, [], -1, 0);
+  check(!q1.refused.length && q1.stations === 3, 'a tunnel pick without its stations takes all three with it', JSON.stringify(q1));
+  const r1 = await rebuild({ edges, stations: [], level: -1, kind: 0 });
   const s1 = await snap();
-  check(r1.skipped === q1.refused.length, 'the rebuild skips the pieces the quote named', `skipped ${r1.skipped}, quoted ${q1.refused.length}`);
-  for (const id of q1.refused) {
-    const was = s0.edges.find((e) => e.id === id), now = s1.edges.find((e) => e.id === id);
-    check(now.lo === was.lo && now.hi === was.hi, `refused piece ${id} stays as it was`, `${was.lo}..${was.hi} to ${now.lo}..${now.hi}`);
-  }
-  if (r1.ok) check(s1.cash < s0.cash, 'what did change was charged');
-  else check(s1.cash === s0.cash, 'a rebuild that changes nothing charges nothing');
+  check(r1.ok && r1.skipped === 0, 'the rebuild skips nothing', JSON.stringify(r1.issues));
+  check(s1.edges.filter((e) => e.built).every((e) => e.lo === -1 && e.hi === -1), 'every piece is in a tunnel', JSON.stringify(s1.edges.map((e) => [e.id, e.lo, e.hi])));
+  check(Math.abs(s0.cash - s1.cash - q1.price * 1e6) < 2, 'the cash taken is the quote', `taken ${s0.cash - s1.cash}, quoted ${q1.price * 1e6}`);
 
   // high speed on one piece
   const one = edges[0];
@@ -108,7 +104,8 @@ try {
     tw.map.jumpTo({ center: [c[0] + 0.001, c[1]], zoom: 12.4 });
   }, C);
   await page.waitForTimeout(1500);
-  // first a pick that leaves a station out, to see the refused piece drawn
+  // first a pick of one piece ending at the middle station (T-3241): that station goes up with it and ramps
+  // on the piece beyond, drawn in the pick's band as far as it changes
   const partial = edges.slice(0, Math.max(1, edges.length - 1));
   await page.evaluate(async ([partial]) => {
     const pick = await import('/src/game/blueprintPick.ts');
@@ -117,9 +114,11 @@ try {
   await page.locator('.blueprint-bar .btn.lv', { hasText: '+1' }).first().click();
   await page.waitForTimeout(1200);
   const tipPartial = await page.locator('.blueprint-bar button', { hasText: 'Rebuild' }).getAttribute('data-tip');
-  console.log('hover with some pieces refused:', JSON.stringify(tipPartial));
-  check(/can't change|can’t change/.test(tipPartial ?? ''), 'the Rebuild hover counts the pieces that cannot change');
-  await page.screenshot({ path: join(ARTIFACTS, 't3059-refused.png') });
+  console.log('hover for one piece:', JSON.stringify(tipPartial));
+  check(!/change/.test(tipPartial ?? '') && /\$/.test(tipPartial ?? ''), 'the Rebuild hover has a price and nothing refused', tipPartial ?? '');
+  const qPartial = await quote(partial, [], 1, 0);
+  check(!qPartial.refused.length && qPartial.beyond.length === 1 && Math.abs(qPartial.beyond[0].m - 482) < 5,'the ramp goes on the piece beyond the station', JSON.stringify(qPartial.beyond));
+  await page.screenshot({ path: join(ARTIFACTS, 't3059-partial.png') });
 
   const s3 = await snap();
   await page.evaluate(async ([edges, stations]) => {

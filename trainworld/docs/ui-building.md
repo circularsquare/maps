@@ -813,7 +813,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   on that level, one undoable edit: each piece's corners as the track inspector's "Level" buttons
   do for one, and every node all of whose track is picked (a joint, a loose end, a
   junction, a blueprint station with its platform), so a picked run has no ramps at its joints. A
-  node with other track keeps its elevation and the picked piece ramps to it. Pieces that cannot
+  node with other track keeps its elevation and the picked piece ramps to it, except a blueprint
+  station: it goes with the pick and ramps on the blueprint track beyond it (T-3241,
+  [track-and-service.md](track-and-service.md) "Rebuilding constructed track"). Pieces that cannot
   change are left as they are: a crossover, a piece with no corners whose two ends cannot both
   move, and pieces the track model refuses there (a ramp with no room, a crossing between levels)
   or that would make a flat crossing not there before; those are tried group by group (pieces
@@ -827,17 +829,20 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   track tool's word), but they only choose (the chosen ones are solid; nothing is chosen at first), and a
   **Rebuild** button (wrench icon and word) spends: it is greyed until a choice is made. The track and the
   stations keep their ids, so every line keeps its stops and path, stations keep their names and upgrades, and
-  nothing is deleted. The level is set as for blueprint (corners, and every node all of whose track is picked, a
-  picked station's node and platform edges with them; a node with unpicked track keeps its level and the piece
-  ramps to it), and the track type for double track only; rail made tram takes its stations (cut to 80 m tram
-  stops) and lines (now tram lines) with it, and tram made rail the other way. A piece the track model refuses
-  (no room to ramp to unpicked track, a station left out of the pick, a crossing, a curve too tight for trains,
-  tram track meeting rail) is **refused**: the quote names it, the map outlines it in red over the pick's band,
+  nothing is deleted. The level is set as for blueprint (corners, and every node all of whose track is picked; a
+  node with unpicked track keeps its level and the piece ramps to it), and the track type for double track only;
+  rail made tram takes its stations (cut to 80 m tram stops) and lines (now tram lines) with it, and tram made
+  rail the other way. Every station on the picked track takes the new level, picked or not, and one at an end of
+  the pick ramps on the track beyond it, outside the pick (T-3241, the rule in
+  [track-and-service.md](track-and-service.md) "Rebuilding constructed track"): that stretch is drawn in the
+  pick's band as far as it changes, and counted in the hover's length, the question and the price. A piece the
+  track model refuses (no room to ramp to unpicked track or beyond a station, a crossing, a curve too tight for
+  trains, tram track meeting rail) is **refused**: the quote names it, the map outlines it in red over the pick's band,
   and the hover and the question count it ("3 of 12 pieces can't change"); it stays as it was, and the rest
   ramps to it (T-3087). Pieces that stay only because they cannot change family alone are counted but not drawn
   red. When nothing can change, Rebuild asks nothing and says why (the track model's refusal, such as "Tram track
   and train track can't join. They can cross."). The price is the full price of the changed track, and of the
-  stations whose level or type changed, built new at the new settings, with nothing back for what was there
+  stations whose level or type changed (picked or not), built new at the new settings, with nothing back for what was there
   (Anita, 2026-11-10: "full new price, that feels more fair"); trains the longer round trips need are bought as
   for any edit. The hover shows the length and what it becomes, then the price; the question
   ("Rebuild 3.1 km of built track and 2 built stations to level +1 for $412M? Nothing is refunded for what

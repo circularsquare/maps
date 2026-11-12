@@ -30,6 +30,9 @@ export interface RebuildQuote {
   refused: number[];
   /** of those, the ones refused for their own sake, drawn red; the rest would only change family alone (T-3088) */
   red: number[];
+  /** T-3241: track outside the pick that the ramps of the stations at its ends take: the edge, the node the
+   * change starts at, and how far along the edge it reaches, m */
+  beyond: { edge: number; from: number; m: number }[];
 }
 
 /** The quote for the pick and choices now; null with nothing chosen, or while it is being worked out. */
@@ -50,13 +53,16 @@ effect(() => {
   }
   void queryClock({ what: "rebuildQuote", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0 }).then((d) => {
     if (mine !== seq || !d) return;
-    const refused = d[3], red = d[4];
+    const refused = d[3], red = d[4], end = 5 + refused + d[1];
+    const beyond: RebuildQuote["beyond"] = [];
+    for (let k = end; k + 2 < d.length; k += 3) beyond.push({ edge: d[k], from: d[k + 1], m: d[k + 2] });
     rebuildQuote.value = {
       price: d[0],
-      changed: Array.from(d.subarray(5 + refused), Number),
+      changed: Array.from(d.subarray(5 + refused, end), Number),
       stations: d[2],
       refused: Array.from(d.subarray(5, 5 + refused), Number),
       red: Array.from(d.subarray(5, 5 + red), Number),
+      beyond,
     };
   });
 });
@@ -77,13 +83,18 @@ export function lengthOf(ids: number[]): number {
   return w.edges.reduce((s, e) => s + (set.has(e.id) ? e.lengthM : 0), 0);
 }
 
+/** The track a quote changes, m: the changed edges and the stretches beyond the pick (T-3241). */
+export function quoteLength(q: RebuildQuote): number {
+  return lengthOf(q.changed) + q.beyond.reduce((s, b) => s + b.m, 0);
+}
+
 /** The Rebuild button's hover: the length and what it becomes, the price, and how many pieces cannot change. */
 export function rebuildTip(q: RebuildQuote | null): string {
   const s = pickedState.peek(), n = s.edges + s.stations;
   if (!q) return t("rebuild.pickTip");
   if (!q.changed.length && !q.stations) return q.refused.length ? t("rebuild.cantChange", { all: true, one: n === 1, n: q.refused.length, total: n }) : t("rebuild.pickTip");
   return [
-    t("rebuild.tip", { length: distance(lengthOf(q.changed)), to: rebuildTo(rebuildLevel.peek(), rebuildKind.peek()) }),
+    t("rebuild.tip", { length: distance(quoteLength(q)), to: rebuildTo(rebuildLevel.peek(), rebuildKind.peek()) }),
     money(q.price * 1e6),
     ...(q.refused.length ? [t("rebuild.cantChange", { all: false, one: false, n: q.refused.length, total: n })] : []),
   ].join("\n");
@@ -102,7 +113,7 @@ export function rebuildPicked() {
   }
   const n = p.edges.length + p.stations.length, to = rebuildTo(level, kind);
   const what = tList([
-    q.changed.length ? t("blueprintPick.trackOf", { length: distance(lengthOf(q.changed)), built: true }) : "",
+    q.changed.length ? t("blueprintPick.trackOf", { length: distance(quoteLength(q)), built: true }) : "",
     q.stations ? t("blueprintPick.stationsPicked", { n: q.stations, built: true }) : "",
   ].filter(Boolean));
   const go = async () => {

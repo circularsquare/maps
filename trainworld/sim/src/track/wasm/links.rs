@@ -323,7 +323,8 @@ impl TrackApi {
     /// Put several blueprint edges on one level (T-815), one undoable edit. Each piece's corners go
     /// to the level as `set_edge_level` does for one, and so does every node all of whose track is
     /// among them (a joint, a loose end, a junction, a blueprint station), so a picked run has no
-    /// ramp at its joints; a node with other track keeps its level and the piece ramps to it.
+    /// ramp at its joints; a node with other track keeps its level and the piece ramps to it, but a
+    /// blueprint station goes with the pick and ramps on the track beyond (T-3241, `plan_edges`).
     /// Pieces that cannot change are left out and counted in `last_skipped`: constructed track, a
     /// crossover's diagonal, a piece with no corners whose ends cannot both move, and pieces the
     /// track model refuses on that level or that would make a flat crossing not there now. Those

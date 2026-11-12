@@ -235,7 +235,7 @@ price, its target max speed 320 by default; track caps trains at 160 km/h, high-
 places stations (on track only [T-1820]), and makes lines, all as
 **blueprints** that are free to edit and undo, then pays to **construct** them. The track and station tools' options sit in a bar on the map while the tool is on, and each click mode but plain selecting has its colour as an aura round the map [T-2282, T-2284]. A segment is one
 piece of track [T-244]; the Select tool picks many at once, blueprint or else constructed, to
-disable, re-level or remove together, and rebuild constructed track in place at another level or track type, rail to tram and back included, for its full new price [T-333, T-815, T-829, T-3059, T-3088]. Quad track is regular, high-speed or tram, drawn or doubled up from a double of that kind [T-3126, T-3166]. A station clicked on quad track goes on the pair clicked only; the game
+disable, re-level or remove together, and rebuild constructed track in place at another level or track type, rail to tram and back included, for its full new price; a level change takes the stations on the track with it, those at the pick's ends ramping on the track beyond [T-333, T-815, T-829, T-3059, T-3088, T-3241]. Quad track is regular, high-speed or tram, drawn or doubled up from a double of that kind [T-3126, T-3166]. A station clicked on quad track goes on the pair clicked only; the game
 adds no crossovers, so the player draws crossing track where lines should change pairs (saves keep
 their crossovers) [T-338, T-733, T-1687, T-1688]. Single
 track is in the Build tab's Tracks row again [T-3093]; single track can run one way, set in the track inspector, and a line that goes both ways over a one-way piece takes its own way back [T-3094]. With the ramp switch on, a new junction a double regular or high-speed route makes on double track is laid as a real flyover of one-way legs where it fits, its curves laid out for a flyover target max speed the player picks (80 km/h by default; faster takes more room) [T-3092, T-3169, T-3170]. Each line has
@@ -390,8 +390,9 @@ or uploaded here [T-1826]; closing the page asks first only while a change canno
 on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
-a world leaderboard and one per city, each person once per board with their best game; a game that
-was ever a sandbox is never listed [T-972, T-973; docs/ui-panels.md "Account and leaderboards"].
+a world leaderboard and one per city, each person once per board with the current figures of the game
+they played most recently there (not their best ever, so a demand change never leaves an unreachable
+score up); a game that was ever a sandbox is never listed [T-972, T-973, T-3248; docs/ui-panels.md "Account and leaderboards"].
 Games synced between devices and sharing by link come later (T-988 to T-990).
 [docs/architecture.md](docs/architecture.md) 11.
 

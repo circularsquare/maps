@@ -67,7 +67,7 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 .share { border-top: 1px solid var(--line); padding: 12px 0; }
 .share .head .name { overflow-wrap: anywhere; }
 .share canvas { display: block; width: 100%; height: 460px; background: #fbf5ef; border: 1px solid var(--line); touch-action: none; cursor: grab; margin-top: 8px; }
-#nameTools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
+#nameTools, #cutTools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
 #nameQ { padding: 4px 8px; width: min(320px, 100%); }
 .nrow { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0; }
 .nrow .name { font-weight: 600; overflow-wrap: anywhere; }
@@ -91,6 +91,16 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
       <button type="button" id="tabThreads" class="on">Feedback</button>
       <button type="button" id="tabCommunity" hidden>Community<span class="count" id="tabCount" hidden></span></button>
       <button type="button" id="tabNames">Names</button>
+      <button type="button" id="tabBoards">Leaderboards</button>
+    </div>
+    <div id="boards" hidden>
+      <p class="note" id="cutNow"></p>
+      <div id="cutTools">
+        <label>Hide games last sent before <input id="cutDate" type="date"></label>
+        <button type="button" id="cutSet">Set cutoff</button>
+        <button type="button" id="cutClear">Clear cutoff</button>
+      </div>
+      <p class="note" id="cutWould"></p>
     </div>
     <div id="names" hidden>
       <div id="nameTools">
@@ -445,15 +455,42 @@ function setTab(name) {
   $("tabCommunity").classList.toggle("on", name === "community");
   $("tabThreads").classList.toggle("on", name === "threads");
   $("tabNames").classList.toggle("on", name === "names");
+  $("tabBoards").classList.toggle("on", name === "boards");
   $("community").hidden = name !== "community";
   $("names").hidden = name !== "names";
+  $("boards").hidden = name !== "boards";
   $("threadsView").hidden = name !== "threads";
   if (name === "community") loadShares();
   if (name === "names") loadNames();
+  if (name === "boards") loadCutoff();
 }
 $("tabThreads").addEventListener("click", () => setTab("threads"));
 $("tabCommunity").addEventListener("click", () => setTab("community"));
 $("tabNames").addEventListener("click", () => setTab("names"));
+$("tabBoards").addEventListener("click", () => setTab("boards"));
+
+// ---- Leaderboards (T-3248): a cutoff for stale rows after a big demand change. Games last sent before it count
+// on no board; nothing is deleted, so a game played again comes back, and Clear cutoff brings them all back.
+const INBOX_B = "trainworld/inbox/boards";
+const cutUnix = () => { const v = $("cutDate").value; return v ? Math.floor(new Date(v + "T00:00").getTime() / 1000) : 0; };
+function showCutoff(out) {
+  $("cutNow").textContent = (out.since ? `Cutoff: ${when(out.since)}. ` : "No cutoff. ") + `${out.people} player${out.people === 1 ? " has" : "s have"} a row.`;
+  $("cutWould").textContent = out.would === undefined ? "" : `With this cutoff ${out.would} of ${out.people} would keep a row.`;
+}
+async function loadCutoff() {
+  const d = new Date();
+  $("cutDate").max = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  try {
+    const t = cutUnix();
+    showCutoff(await (await api("GET", INBOX_B + (t ? "?since=" + t : ""))).json());
+  } catch (e) { fail(e); }
+}
+async function setCutoff(since) {
+  try { showCutoff(await (await api("POST", INBOX_B, { since })).json()); } catch (e) { fail(e); }
+}
+$("cutDate").addEventListener("change", loadCutoff);
+$("cutSet").addEventListener("click", () => { const t = cutUnix(); if (t) setCutoff(t); });
+$("cutClear").addEventListener("click", () => { $("cutDate").value = ""; setCutoff(0); });
 $("ping").addEventListener("click", () => setTab("community"));
 
 // ---- Names (T-3227): display names in public use. Hide name shows "player" instead, everywhere; the account,
