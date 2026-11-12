@@ -24,7 +24,6 @@ impl TrackApi {
     }
 
     fn route_op_plain(&mut self, ends: &[f64], pis: &[f64], tracks: u8) -> Result<(Op, Vec<Pi>, Vec<u32>, Vec<u32>), Issue> {
-        let tracks = if self.route_kind.spec().family != 0 && tracks == 1 { 2 } else { tracks };
         if let Some(eb) = self.route_beside.take() {
             if let Some((b_ends, b_pis, on_line, run)) = pis.is_empty().then(|| self.beside_ends(ends, eb)).flatten() {
                 // a start on the line leaves along it; one coming in keeps its lead-in
@@ -633,7 +632,6 @@ impl TrackApi {
     /// speed limit km/h, then the polyline as x, y, height (m) triples]. `issue_kinds()` holds
     /// the problems when not ok.
     pub fn preview_route(&mut self, ends: &[f64], pis: &[f64], tracks: u8, flying: bool) -> Vec<f64> {
-        let tracks = if self.route_kind.spec().family != 0 && tracks == 1 { 2 } else { tracks };
         self.preview_lanes.clear();
         self.preview_speeds.clear();
         self.preview_marks.clear();
@@ -774,8 +772,8 @@ impl TrackApi {
         self.route_street = lonlat.chunks_exact(2).map(|p| f.from_lonlat(p[0], p[1])).collect();
     }
 
-    pub(super) fn route_kind_of(&self, tracks: u8) -> TrackKind {
-        if self.route_kind.spec().family != 0 { self.route_kind } else { TrackKind::from_hsr(self.route_hsr && (tracks == 2 || tracks == 4)) }
+    pub(super) fn route_kind_of(&self, _tracks: u8) -> TrackKind {
+        if self.route_kind.spec().family != 0 { self.route_kind } else { TrackKind::from_hsr(self.route_hsr) }
     }
 
     /// T-1615: whether routes after this ramp over or under track they would cross flat.

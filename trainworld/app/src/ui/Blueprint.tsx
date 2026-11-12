@@ -28,6 +28,8 @@ import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
 const KINDS: MessageKey[] = ["blueprint.kindTrack", "blueprint.kindStations", "blueprint.kindJunctions", "blueprint.kindFlyovers", "blueprint.kindFlatCrossings", "blueprint.kindTrains", "blueprint.kindTerrain", "blueprint.kindRoadCrossings", "blueprint.kindStationUpgrades", "blueprint.kindPassages", "blueprint.kindBusRoutes", "blueprint.kindBuses"];
 /** a quote row's track count for high-speed track (sim `HSR_ROW`, T-817) */
 const HSR_ROW = 3;
+/** a single-track row of high-speed, tram or street tram is that kind's row plus this (sim `SINGLE_ROW_OFFSET`, T-3352) */
+const SINGLE_ROW_OFFSET = 3;
 /** and for tram track (sim `TRAM_ROW`, T-2926), priced by the tram table */
 const TRAM_ROW = 4;
 /** and for street tram track (sim `STREET_TRAM_ROW`, T-2927) */
@@ -52,8 +54,8 @@ function rowName(r: BlueprintItem) {
   if (r.kind === TRAM_CARS) return t("blueprint.newTramCars", { count: r.quantity });
   if (r.kind === 9) return counted("passage", r.quantity);
   if (r.kind === 7) return counted("roadCrossing", r.quantity);
-  if (r.kind === 0 && r.tracks === TRAM_ROW) return t("blueprint.lengthLevelTram", { distance: distance(r.quantity), level: levelWords(r) });
-  if (r.kind === 0 && r.tracks === STREET_TRAM_ROW) return t("blueprint.lengthLevelStreetTram", { distance: distance(r.quantity), level: levelWords(r) });
+  if (r.kind === 0 && (r.tracks === TRAM_ROW || r.tracks === TRAM_ROW + SINGLE_ROW_OFFSET)) return t("blueprint.lengthLevelTram", { distance: distance(r.quantity), level: levelWords(r) });
+  if (r.kind === 0 && (r.tracks === STREET_TRAM_ROW || r.tracks === STREET_TRAM_ROW + SINGLE_ROW_OFFSET)) return t("blueprint.lengthLevelStreetTram", { distance: distance(r.quantity), level: levelWords(r) });
   if (r.kind === 0) return t("blueprint.lengthLevel", { distance: distance(r.quantity), level: levelWords(r) });
   return t("blueprint.withLevel", { what: counted(NOUN[r.kind] || "item", r.quantity), level: levelWords(r) });
 }
@@ -81,7 +83,9 @@ function rowTip(r: BlueprintItem) {
   let base: string;
   const water = r.wet ? WATER : 1;
   const wet = () => { if (r.wet) factors.push([t("blueprint.overWater"), "", WATER]); };
-  const mult = (l: Level) => (r.kind === 0 && r.tracks === TRAM_ROW ? kindLevelMult("tram", l) : r.kind === 0 && r.tracks === STREET_TRAM_ROW ? kindLevelMult("streetTram", l) : MULT[l]);
+  const one = r.kind === 0 && r.tracks >= SINGLE_ROW_OFFSET + HSR_ROW;
+  const row = one ? r.tracks - SINGLE_ROW_OFFSET : r.tracks;
+  const mult = (l: Level) => (r.kind === 0 && row === TRAM_ROW ? kindLevelMult("tram", l) : r.kind === 0 && row === STREET_TRAM_ROW ? kindLevelMult("streetTram", l) : MULT[l]);
   const lvl = (l: Level) => { if (mult(l) !== 1) factors.push([levelName(l), "", mult(l)]); };
   if (r.kind === 0) {
     const [shown] = lenKm(n / 1000);
@@ -91,15 +95,15 @@ function rowTip(r: BlueprintItem) {
     // "Cost factor × 3"
     // (tram track pays a share of each, T-2928, T-3004)
     const adds: [string, number][] = [];
-    const spec = r.tracks === STREET_TRAM_ROW ? TRACK_SPECS.streetTram : r.tracks === TRAM_ROW ? TRACK_SPECS.tram : TRACK_SPECS.regular;
+    const spec = row === STREET_TRAM_ROW ? TRACK_SPECS.streetTram : row === TRAM_ROW ? TRACK_SPECS.tram : TRACK_SPECS.regular;
     if (r.ground > 0) adds.push([TERRAIN_NAMES[r.ground] ?? t("blueprint.roughGround"), (TERRAIN_SURCHARGES[r.ground] ?? 0) * spec.terrain]);
     if (r.wet) adds.push([t("blueprint.overWater"), WATER_SURCHARGE * spec.water]);
     if (adds.length) {
       factors.push([levelName(level), "=", mult(level)], ...adds.map(([a, m]): [string, string, number] => [a, "+", m]));
       factors.push([t("blueprint.costFactor"), "", adds.reduce((s, [, m]) => s + m, mult(level))]);
     } else lvl(level);
-    if (r.tracks === 1) factors.push([t("blueprint.singleTrack"), "", SINGLE_TRACK]);
-    if (r.tracks === HSR_ROW) factors.push([t("blueprint.hsrTrack"), "", HSR_TRACK]);
+    if (r.tracks === 1 || one) factors.push([t("blueprint.singleTrack"), "", SINGLE_TRACK]);
+    if (row === HSR_ROW) factors.push([t("blueprint.hsrTrack"), "", HSR_TRACK]);
   } else if (r.kind === 1) {
     const b = STATION_FIXED_M + STATION_M[level];
     base = t("blueprint.baseCostStation", { price: mil(b), level: lowerWord(levelName(level)) });

@@ -334,14 +334,14 @@ fn t3170_high_speed_flyover() {
         let m = &b.w.net;
         assert_eq!(alive(&b).into_iter().filter(|&e| m.edge_tracks[e as usize] == 1 && m.edge_kind[e as usize].is_hsr() && m.edge_oneway[e as usize] != 0).count(), singles.len());
     }
-    // high-speed track is still never two-way single
+    // T-3352: two-way single high-speed track is allowed
     let mut a = api();
     a.set_route_hsr(true);
     assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(3000.0, 0.0)), &[], 2, false), 0);
     let e = alive(&a)[0];
     let mut d = a.w.net.edge_data(e).unwrap();
     d.tracks = 1;
-    assert!(a.w.net.set_edge(e, Some(d)).is_err());
+    assert!(a.w.net.set_edge(e, Some(d)).is_ok());
 }
 
 /// T-3120: a flyover needs no main behind the point clicked, and its length along the main is
@@ -443,4 +443,26 @@ fn t3121_low_target_speed_tightens_curves() {
     }
     let r = radii(5.0);
     assert!(r.iter().all(|&r| r <= design_radius(DESIGN_MIN_KMH) + 0.01 && r >= MIN_RADIUS), "{r:?}");
+}
+
+/// T-3352: a flying junction built by hand of single high-speed track: a high-speed double, a single high-speed leg joined
+/// to one of its tracks, set one way, at a level above the main so it crosses nothing flat.
+#[test]
+fn t3352_a_hand_built_high_speed_flyover_leg() {
+    let mut a = api();
+    a.set_route_hsr(true);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+    let e = *alive(&a).iter().find(|&&e| a.w.net.project(e, 1000.0, 0.0).1 < 1.0).unwrap();
+    a.set_route_join(&[1000.0, 2.0, f64::NAN, f64::NAN]);
+    assert_eq!(a.add_route(&ends([2.0, e as f64, 1000.0, 0.0, 0.0], free(3000.0, 1200.0)), &[], 1, false), 0, "{}", a.issues());
+    let leg = *alive(&a).iter().find(|&&l| a.w.net.edge_tracks[l as usize] == 1).unwrap();
+    assert!(a.w.net.edge_kind[leg as usize].is_hsr());
+    for dir in [1, 2, 3, 0] {
+        assert_eq!(a.set_edge_oneway(leg, dir), 0, "{dir} {}", a.issues());
+        assert!(a.w.net.edge_kind[leg as usize].is_hsr() && a.w.net.edge_tracks[leg as usize] == 1);
+    }
+    let bytes = a.save();
+    let mut b = api();
+    assert!(b.load(&bytes), "{}", b.issues());
+    assert_eq!(b.save(), bytes);
 }

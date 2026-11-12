@@ -221,30 +221,25 @@ fn single_with_a_level_pays_the_single_price_at_the_level() {
     assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1));
 }
 
-/// High-speed track is refused (and named) unless it is made regular too; tram track is refused.
+/// T-3352: high-speed and tram track go single and back double, keeping their type; single regular track
+/// becomes high-speed.
 #[test]
-fn high_speed_and_tram_track_stay_double() {
-    let (mut a, _, _) = run_of(2, 1);
+fn high_speed_and_tram_track_go_single_and_back() {
+    for (kind, which) in [(1u8, TrackKind::HighSpeed), (3, TrackKind::Tram)] {
+        let (mut a, _, _) = run_of(2, kind);
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let edges = live(&a);
+        assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == which));
+        assert_eq!(a.rebuild_pieces(&edges, &[], 99, 0, 1), 0, "{}", a.issue_kinds());
+        assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1 && a.w.net.edge_kind[e as usize] == which));
+        assert_eq!(a.rebuild_pieces(&edges, &[], 99, 0, 2), 0, "{}", a.issue_kinds());
+        assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 2 && a.w.net.edge_kind[e as usize] == which));
+    }
+    let (mut a, _, _) = run(1);
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let edges = live(&a);
-    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize].is_hsr()));
-    let q = a.rebuild_quote(&edges, &[], 99, 0, 1);
-    assert_eq!((q[1], q[3]), (0.0, edges.len() as f64), "{q:?}");
-    assert!(a.issue_kinds().contains("NoSingle:HighSpeed"), "{}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 0, 1), 1);
-    assert!(a.issue_kinds().contains("NoSingle:HighSpeed"), "{}", a.issue_kinds());
-    // with Regular picked too it goes
-    let q = a.rebuild_quote(&edges, &[], 99, 1, 1);
-    assert!(q[0] > 0.0 && q[3] == 0.0, "the type change is paid: {q:?} {}", a.issue_kinds());
-    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 1, 1), 0, "{}", a.issue_kinds());
-    assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1 && a.w.net.edge_kind[e as usize] == TrackKind::Regular));
-
-    let (mut a, _, _) = run_of(2, 3);
-    let edges = live(&a);
-    assert!(edges.iter().all(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
-    assert_eq!(a.set_edges_tracks(&edges, 1), 1);
-    assert_eq!(a.last_skipped() as usize, edges.len());
-    assert!(a.issue_kinds().contains("NoSingle:Tram"), "{}", a.issue_kinds());
+    assert_eq!(a.rebuild_pieces(&edges, &[], 99, 2, 0), 0, "{}", a.issue_kinds());
+    assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1 && a.w.net.edge_kind[e as usize].is_hsr()));
 }
 
 //// The y of edge `e`'s middle.

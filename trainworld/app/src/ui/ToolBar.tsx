@@ -107,8 +107,8 @@ function TrackBar() {
         <div class="tb-row">
           <div class="tb-wide"><Segmented<TrackType> options={trackTypes()} value={tt} onChange={setTrackType} /></div>
           <button class="btn tb-narrow tb-type" aria-label={t("toolBar.trackType")} aria-expanded={open === "type"} onClick={() => toggle("type")}>{typeLabel(tt)}</button>
-          <TrackCountButtons value={q ? null : one ? 1 : 2} single={!tram}
-            onPick={(n) => n === 1 ? setSingleTrack(true) || say(t("toolBar.singleHsr"), true) : setDoubleTrack()}>
+          <TrackCountButtons value={q ? null : one ? 1 : 2}
+            onPick={(n) => n === 1 ? setSingleTrack(true) : setDoubleTrack()}>
             <button class={"btn icon" + (q ? " on" : "")} aria-label={t("toolBar.quadTrack")} aria-pressed={q} data-tip={t("toolBar.quadTrackTip")}
               onClick={() => setQuadTrack(true)}><Icon.tracks4 /></button>
           </TrackCountButtons>

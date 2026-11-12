@@ -109,12 +109,9 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   The second row: **Regular** or **High speed** track [T-255, T-817], the
   selection bar's words, then three icon buttons, **Single track** (one line), **Double track** (two lines)
   and **Quad track** (four lines) [T-2931, T-3093]. Single is 0.6x the cost and the single-track upkeep shown;
-  quad is two double tracks' price (2x the cost and upkeep shown). Single is never high speed:
-  picking it on High speed keeps High speed and double and says "High-speed track can't be single track. Pick
-  Regular first." [T-3262]; quad can be high speed [T-3126]; picking single clears quad. Tram has
-  Double and Quad only [T-3166]: quad tram is off-street tram track, so picking it turns Snap to streets off,
-  and turning that on picks Double again. The count picked is kept across the type: single picked on Regular
-  shows as double on High speed or Tram and comes back with Regular [T-3262]. A browser remembers the
+  quad is two double tracks' price (2x the cost and upkeep shown). Single goes with every type, High speed and Tram too [T-3352]
+  (0.6x of the type's price); quad can be high speed [T-3126]; picking single clears quad. Quad tram is off-street tram track, so
+  picking it turns Snap to streets off, and turning that on picks Double again. A browser remembers the
   count picked (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
   Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength

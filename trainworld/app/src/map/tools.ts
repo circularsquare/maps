@@ -405,7 +405,7 @@ export class Tools {
     const edgePx = station ? SNAP_EDGE_PX : TRACK_EDGE_PX;
     // T-3162: single track picked beside double track drawn as two tracks: each of the two is a branch point across
     // its whole drawn width, so the pair's outer edge is the reach there
-    const laneL = !station && tool.peek() === "track" && singleTrack.peek() && !tramTrack.peek() ? laneState(this.map.getZoom()) : null;
+    const laneL = !station && tool.peek() === "track" && singleTrack.peek() ? laneState(this.map.getZoom()) : null;
     const laneReach = laneL && laneL.t > 0 ? Math.max(edgePx, (laneL.gap * (laneL.t + laneL.share)) / 2) : edgePx;
     const doubleIds = laneReach > edgePx ? this.doubleEnds(w).ids : null;
     let best = TRACK_NODE_PX * TRACK_NODE_PX, hit: Snap | null = null;
@@ -500,7 +500,7 @@ export class Tools {
    * at a loose end (both tracks into the one).
    */
   private joinPoint(hit: Spot, px: number, py: number): { join?: [number, number]; dot?: [number, number]; merge?: boolean } | undefined {
-    if (tool.peek() !== "track" || !singleTrack.peek() || tramTrack.peek()) return undefined;
+    if (tool.peek() !== "track" || !singleTrack.peek()) return undefined;
     const lanes = laneState(this.map.getZoom()), t = lanes.t, w = world.peek(), n = this.overlay.renderer.net;
     if (!w || !n) return undefined;
     const doubles = this.doubleEnds(w);
@@ -1098,7 +1098,7 @@ export class Tools {
     if (a.ok && a.early) {
       // T-2404: its state held while the pointer moves, its edges stand in where no ghost of it can
       if (p) this.overlay.renderer.keepPreviewAsPlaced();
-      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() && !tramTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
+      else for (const pts of a.held ?? []) this.overlay.renderer.addPlaced(strokesFromPreview(pts, false, undefined, true, undefined, singleTrack.peek() ? 0 : 255, highSpeed.peek(), tramTrack.peek()));
       if (a.held) this.held.push(...a.held);
       if (a.node !== undefined) this.earlyNode = a.node;
     }
@@ -1152,7 +1152,7 @@ export class Tools {
   /** T-3137: a single-track route's `RouteAsk.join`, from the start's and `at`'s `Snap.join`; nothing when neither has one */
   private joinReq(at: Snap | null): { join?: [number | null, number | null, number | null, number | null] } {
     const a = this.start?.join, b = at && at.kind !== "free" ? at.join : undefined;
-    if (!singleTrack.peek() || tramTrack.peek() || (!a && !b)) return {};
+    if (!singleTrack.peek() || (!a && !b)) return {};
     const p = (j?: [number, number]): [number | null, number | null] => {
       if (!j) return [null, null];
       const q = this.pack(j[0], j[1]);
@@ -1180,7 +1180,7 @@ export class Tools {
     const to = at && at.kind !== "free" ? this.endOf(at) : free(r.last);
     // T-3129: rail on roads is an ordinary route through the fitted corners, as the real snap's
     if (!tramTrack.peek()) return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: false, ramp: autoRamp.peek(), ...this.joinReq(at) };
-    return { from: this.start!.end, to, pis: r.pis, single: false, quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
+    return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first

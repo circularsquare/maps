@@ -1,7 +1,7 @@
 // T-3260..T-3263: the track tool's count, Ctrl's straight line, the road snap's ghost while the pointer moves,
 // and quad track on roads. On a new New York game in headless Chrome, the real mouse and keyboard:
-//  A (T-3262) the track bar: Single on Regular, then High speed shows double, Regular gives single back; Quad
-//    stays through High speed and Tram; Single on High speed keeps High speed and double and says why; the
+//  A (T-3262, T-3352) the track bar: Single stays on Regular, High speed and Tram; Quad
+//    stays through High speed and Tram; Single goes with High speed and Tram (T-3352); the
 //    count picked survives a reload.
 //  B (T-3260) a segment, then the next with Ctrl held: the ghost's end is on the straight line on from the first
 //    (under 1 m off), the placed piece is straight; without Ctrl the same pointer curves; the tag says "Hold Ctrl
@@ -45,14 +45,14 @@ try {
   await btn('Single track').click();
   await type('High speed').click();
   let s = await state();
-  check(s.type === 'hsr' && !s.single && !s.quad, 'A: Single then High speed: high speed, shown double', JSON.stringify(s));
+  check(s.type === 'hsr' && s.single && !s.quad, 'A: Single then High speed: single high speed (T-3352)', JSON.stringify(s));
   await type('Regular').click();
   s = await state();
-  check(s.type === 2 && s.single, 'A: Regular again: single comes back', JSON.stringify(s));
+  check(s.type === 2 && s.single, 'A: Regular again: still single', JSON.stringify(s));
   await type('Tram').click();
-  await type('Regular').click();
   s = await state();
-  check(s.type === 2 && s.single, 'A: through Tram and back: still single', JSON.stringify(s));
+  check(s.type === 'tram' && s.single, 'A: Tram: single tram', JSON.stringify(s));
+  await type('Regular').click();
   await btn('Quad track').click();
   await type('High speed').click();
   s = await state();
@@ -64,9 +64,7 @@ try {
   await btn('Double track').click();
   await btn('Single track').click();
   s = await state();
-  const said = await notice();
-  check(s.type === 'hsr' && !s.single && !s.quad, 'A: Single on High speed keeps High speed and double', JSON.stringify(s));
-  check(/can't be single track/.test(said), 'A: and says why', said);
+  check(s.type === 'hsr' && s.single && !s.quad, 'A: Single on High speed keeps High speed and is single', JSON.stringify(s));
   await page.screenshot({ path: join(OUT, 'check-a-hsr-single.png') });
   await type('Regular').click();
   await btn('Single track').click();

@@ -205,7 +205,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
   apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
-  tracks.) **Single track** is the track bar's other count (regular track only): cheaper, one
+  tracks.) **Single track** is the track bar's other count (any track type, T-3352; high-speed track costs 0.9x double and upkeep 0.9x, single tram 0.6x its price): cheaper, one
   track for both directions unless it runs one way (below), with sections split at stations; a
   single-track station has one shared platform track and gets no passing loop. Built or blueprint single track can be rebuilt as double ("Rebuilding constructed track", 6.4).
 - **Single track meeting double track** (T-3137, notes/T-3137.md "C2 as built"): where a single-track
@@ -227,7 +227,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **The way single track runs** (T-3094, T-3137): every single-track piece runs both ways or one way
   (`Network::edge_way`: 0, 1 a to b, 2 b to a). The player's `EdgeData.oneway` decides where set (1 a to
   b, 2 b to a, 3 both ways; saves hold it in edge flag bits 11-12, older saves read 0 = not set; never
-  set on double track, a crossover, high-speed or tram track, and cleared when the piece stops being
+  set on double track, a crossover, and cleared when the piece stops being
   single). Otherwise the piece takes the way of its **run** (`lanes.rs` `derive_ways`, again on every
   edit for each run it touches, and on load): the single-track pieces through nodes where only two of
   them meet. Each run end votes: a join gives the way trains keep to on that track (the right track
@@ -291,25 +291,24 @@ Full design, numbers and sources: `notes/T-008.md`.
   them is refused like any stops no track joins in order (`LinePath`: "No track joins these
   stations in this order."), unless a longer way around exists, which it then takes. Crossovers in
   saves stay and work.
-- **High-speed track** (T-817, design notes/T-817.md): the third setting, double or quad, never single (T-3126; 4 m apart, quad is two high-speed doubles 8 m apart, priced twice the double), except a flyover's one-way legs (T-3170, "Flyovers" below).
+- **High-speed track** (T-817, design notes/T-817.md): the third setting, single, double or quad (T-3352: single high-speed is 0.6 x 1.5 of double, one way or two; T-3126; 4 m apart, quad is two high-speed doubles 8 m apart, priced twice the double), a flyover's legs are one-way single high-speed (T-3170, "Flyovers" below), and a flying junction can be built by hand of the same.
   An edge flag (`EdgeData::hsr`, `TrackApi::set_route_hsr`), so a station placed on open ground
   with it set lays high-speed track too. It costs `HSR_COST` (1.5x) double track's price at the
   same level (6.4); stations, junctions and flyovers on it cost as on double track. It meets
   ordinary track at plain nodes like any two pieces; a split keeps the flag on both halves, and
   two pieces join under a platform only when both are high speed or both are not (`unjoin_near`).
-  Blueprint double track switches between regular, high speed and tram, shape and level kept, with the Select
+  Blueprint track, single or double, switches between regular, high speed and tram, shape and level kept, with the Select
   tool's bar (T-1898, T-3108, `TrackApi::set_edges_kind`, the planner rebuilding built track uses): rail and tram
-  change as whole joined stretches with their stations and lines; single track, crossovers, constructed track
+  change as whole joined stretches with their stations and lines; crossovers, constructed track
   and pieces the track model refuses stay as they are. It doubles up into high-speed quad like any double (T-3166). Its cap is 320 km/h, which only a line's high-speed
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
   `TRACK_SPECS` in params.rs holds every kind's figures; `game/trackKinds.ts` copies them for the app).
-  Always double or quad (T-3166: quad is two tram doubles 8 m apart, off-street, so priced 0.5x at ground twice over;
-  never single), curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
+  Single, double or quad (T-3352: single tram is 0.6x its price and upkeep, a stop on it is one platform with no passing loop; T-3166: quad is two tram doubles 8 m apart, off-street, so priced 0.5x at ground twice over), curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
   T-2927), 0.5x (off street) of the 75M a km, viaducts and tunnels 0.4 under rail's, plus a quarter of what hills
   and mountains add (`TRAM_TERRAIN`, T-3004), and it pays no road crossings. The track bar's
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
-  switch, track count and target speed do not apply. Tram track and train track never meet at a node
+  switch and target speed do not apply. Tram track and train track never meet at a node
   (`TrackFamily`: "Tram track and train track can't join. They can cross."), so while one is picked the other's
   track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 120 s.
   A stop is a station with a 20 to 80 m platform (default 40, remembered apart from rail's), at a flat US$2M
@@ -1453,8 +1452,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   that change is paid as usual at the single track's price. Stations on it become single-track stations, uncharged
   (a station keeps a double-track platform while any of its track stays double, `node_tracks`). Lines keep running
   over it at once, now with a shared `SingleTrack` section. Nothing that cannot work on single track is taken away:
-  the piece is refused, with its reason (`Issue::NoSingle`), when it is high-speed track (unless made regular in the
-  same rebuild) or tram track, has a crossover at either end, meets a flying junction, or has a one-way single piece
+  the piece is refused, with its reason (`Issue::NoSingle`), when it has a crossover at either end, meets a flying junction, or has a one-way single piece
   joined to one of its two tracks at an end (a flyover's leg, a lane beside double track). A two-way single piece
   joined to it is no reason: the join stays stored and counts again if the track is made double again
   (`join_applies`). A piece refused for its count keeps its level and type too. Quad track is two doubles (T-3339,

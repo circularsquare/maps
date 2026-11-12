@@ -31,7 +31,7 @@ const snap = () => page.evaluate(() => {
   const w = window.tw.world.value;
   return {
     cash: w.save.cash,
-    edges: w.edges.map((e) => ({ id: Number(e.id), built: e.built, tracks: e.tracks, y: w.nodes.get(e.a)?.y })),
+    edges: w.edges.map((e) => ({ id: Number(e.id), built: e.built, tracks: e.tracks, hsr: !!e.hsr, y: w.nodes.get(e.a)?.y })),
     lines: w.save.lines.map((l) => ({ num: Number(l.num), stops: l.stops.map(Number), status: w.lineStats[l.id]?.status })),
   };
 });
@@ -195,7 +195,7 @@ try {
   check(bpTracks(s).every((t) => t === 2), 'Ctrl+Z brings the double track back', JSON.stringify(bpTracks(s)));
   await pick([], false);
 
-  // blueprint high-speed double: refused, with its reason
+  // blueprint high-speed double goes single and keeps its type (T-3352)
   const hs = await build([-5000, 5000], 6000, false, true);
   check(hs.ok && !hs.refused.length, 'a blueprint high-speed run is drawn', hs.refused.join(' | '));
   s = await snap();
@@ -208,7 +208,7 @@ try {
   const said = await notice();
   console.log('notice:', said);
   s = await snap();
-  check(/High-speed track can't be single track/.test(said) && s.edges.filter((e) => hids.includes(e.id)).every((e) => e.tracks === 2), 'high-speed track stays double and says why', said);
+  check(s.edges.filter((e) => hids.includes(e.id)).every((e) => e.tracks === 1 && e.hsr), 'high-speed track goes single and stays high speed', said);
   await pick([], false);
 
   // the bar in the dark theme, a built double pick with single chosen

@@ -596,13 +596,13 @@ pub fn track_cost_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terrain: &[
 /// A track type's upkeep over double ground rail: 0.6x single, then the kind's `upkeep` (1.5x high speed,
 /// which is always double).
 pub fn track_factor(tracks: u8, kind: TrackKind) -> f64 {
-    if tracks == 1 { SINGLE_TRACK_COST } else { kind.spec().upkeep }
+    if tracks == 1 { SINGLE_TRACK_COST * kind.spec().upkeep } else { kind.spec().upkeep }
 }
 
 /// What the preview's multiplier is measured against: single track's 0.6, and the kind's own price scale
 /// (high speed's 1.5), so the multiplier is the level's figure from the kind's table.
 pub fn price_scale(tracks: u8, kind: TrackKind) -> f64 {
-    if tracks == 1 { SINGLE_TRACK_COST } else { kind.spec().price_scale }
+    if tracks == 1 { SINGLE_TRACK_COST * kind.spec().price_scale } else { kind.spec().price_scale }
 }
 
 /// Visit each priced interval on flat ground: charged level, water, ramp, metres, US$M.
@@ -627,8 +627,8 @@ pub fn track_cost_parts_t(len: f64, vert: &[[f64; 2]], water: &[[f64; 2]], terra
     }
     cuts.sort_by(|a, b| a.total_cmp(b));
     cuts.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
-    // single track has no special kind: the flag is ignored there
-    let spec = if tracks == 1 { TrackKind::Regular.spec() } else { kind.spec() };
+    // T-3352: single track is 0.6x its kind's price
+    let spec = kind.spec();
     let track_f = if tracks == 1 { SINGLE_TRACK_COST } else { 1.0 };
     for w in cuts.windows(2) {
         let (u, v) = (w[0].max(0.0), w[1].min(len));
@@ -747,8 +747,8 @@ mod tests {
         assert!((track_cost(1000.0, &flat0, &[], 2, TrackKind::HighSpeed) - 56.25).abs() < 1e-9);
         let v1 = [[0.0, 8.0], [1000.0, 8.0]];
         assert!((track_cost(1000.0, &v1, &[[250.0, 750.0]], 2, TrackKind::HighSpeed) - 253.125).abs() < 1e-9);
-        // single track has no high-speed form: the flag is ignored there
-        assert!((track_cost(1000.0, &flat0, &[], 1, TrackKind::HighSpeed) - 22.5).abs() < 1e-9);
+        // T-3352: single high-speed track is 0.6 x 1.5
+        assert!((track_cost(1000.0, &flat0, &[], 1, TrackKind::HighSpeed) - 33.75).abs() < 1e-9);
     }
 
     #[test]

@@ -40,8 +40,8 @@ fn tram_track_is_drawn_double_priced_by_its_table_and_saved() {
     assert_eq!(route(&mut plain, (0.0, 0.0), (3000.0, 0.0), 2), 0);
     let mut a = api();
     a.set_route_kind(3);
-    // single is asked for and comes out as double tram track; quad is two tram doubles (T-3166)
-    assert_eq!(route(&mut a, (0.0, 0.0), (3000.0, 0.0), 1), 0, "{}", a.issues());
+    // quad is two tram doubles (T-3166)
+    assert_eq!(route(&mut a, (0.0, 0.0), (3000.0, 0.0), 2), 0, "{}", a.issues());
     let single = live(&a);
     assert_eq!(route(&mut a, (0.0, 2000.0), (3000.0, 2000.0), 4), 0, "{}", a.issues());
     let edges = live(&a);
@@ -331,4 +331,30 @@ fn a_street_staircase_traces_for_street_tram_track() {
     let flat: Vec<f64> = t.pis.iter().flat_map(|p| [p.x, p.y, p.radius, p.level as f64]).collect();
     assert_eq!(route_pis(&mut a, (0.0, 0.0), &flat, (ex, ey)), 0, "{}", a.issues());
     assert!(live(&a).iter().any(|&e| a.w.net.edge_kind[e as usize] == TrackKind::Tram));
+}
+
+/// T-3352: single tram and single high-speed track are drawn single, priced at 0.6x their kind, saved and loaded.
+#[test]
+fn single_tram_and_high_speed_track_are_drawn_priced_and_saved() {
+    for (kind, hsr) in [(3u8, false), (0, true)] {
+        let mut dbl = api();
+        dbl.set_route_kind(kind);
+        dbl.set_route_hsr(hsr);
+        assert_eq!(route(&mut dbl, (0.0, 0.0), (3000.0, 0.0), 2), 0, "{}", dbl.issues());
+        let mut a = api();
+        a.set_route_kind(kind);
+        a.set_route_hsr(hsr);
+        assert_eq!(route(&mut a, (0.0, 0.0), (3000.0, 0.0), 1), 0, "{}", a.issues());
+        let edges = live(&a);
+        assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1 && (a.w.net.edge_kind[e as usize].is_hsr() == hsr) && (a.w.net.edge_kind[e as usize].spec().family == (kind == 3) as u8)));
+        assert!((a.blueprint_cost() - 0.6 * dbl.blueprint_cost()).abs() < 0.05, "{} against {}", a.blueprint_cost(), dbl.blueprint_cost());
+        let bytes = a.save();
+        let mut b = api();
+        assert!(b.load(&bytes), "{}", b.issues());
+        assert_eq!(b.save(), bytes);
+        // a stop or station on it
+        let e = edge_at(&a, 1500.0, 0.0);
+        let platform = if kind == 3 { 40 } else { 200 };
+        assert_eq!(a.add_station(2, e, 1500.0, 0.0, platform, "S".into()), 0, "{}", a.issues());
+    }
 }

@@ -131,8 +131,9 @@ fn set_edges_kind_changes_double_blueprint_only() {
     }
     assert_eq!(a.construct(&[ids[2]], &[]), 0, "{}", a.issues());
     assert_eq!(a.set_edges_kind(&ids, 2), 0, "{}", a.issues());
-    assert_eq!(a.last_skipped(), 2);
-    assert!(a.w.net.edge_kind[ids[0] as usize].is_hsr() && !a.w.net.edge_kind[ids[1] as usize].is_hsr() && !a.w.net.edge_kind[ids[2] as usize].is_hsr());
+    // T-3352: single blueprint track changes too; only the constructed piece is skipped
+    assert_eq!(a.last_skipped(), 1);
+    assert!(a.w.net.edge_kind[ids[0] as usize].is_hsr() && a.w.net.edge_kind[ids[1] as usize].is_hsr() && !a.w.net.edge_kind[ids[2] as usize].is_hsr());
     // already high speed: nothing to do, nothing skipped among the double blueprint
     assert_eq!(a.set_edges_kind(&ids[..1], 2), 1);
     assert_eq!(a.last_skipped(), 0);

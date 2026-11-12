@@ -364,21 +364,21 @@ fn beyond(net: &Network, cand: &[u32], level: Option<i8>, built_ok: bool, famili
 
 /// A piece whose track type can change: plain double track (single track and crossovers have no high-speed or
 /// tram form).
-fn kind_ok(d: &EdgeData, w: Want) -> bool {
-    !d.crossover && (d.tracks == 2 || single_ok(d, w))
+fn kind_ok(d: &EdgeData, _w: Want) -> bool {
+    !d.crossover
 }
 
 /// T-3296: single track that becomes double: plain rail track that runs both ways. A piece set or joined to
 /// run one way (a flyover's leg, a lane beside double track) stays single, and so does high-speed track, which
 /// is single only as such a leg.
 fn single_ok(d: &EdgeData, w: Want) -> bool {
-    w.tracks == Some(2) && d.tracks == 1 && !d.crossover && d.kind == TrackKind::Regular && d.oneway != 1 && d.oneway != 2
+    w.tracks == Some(2) && d.tracks == 1 && !d.crossover && d.oneway != 1 && d.oneway != 2
 }
 
 /// T-3321: double track that becomes single: regular rail once the plan's track type is on it (high-speed and tram
 /// track are never single, but for a flyover's legs). What else keeps a piece double is `single_refusal`'s.
 fn double_ok(d: &EdgeData, w: Want) -> bool {
-    w.tracks == Some(1) && d.tracks == 2 && !d.crossover && w.kind.unwrap_or(d.kind) == TrackKind::Regular
+    w.tracks == Some(1) && d.tracks == 2 && !d.crossover
 }
 
 /// Whether `d` is fit for the plan's track count: it has it already, or can change to it.
@@ -393,13 +393,7 @@ fn tracks_ok(d: &EdgeData, w: Want) -> bool {
 /// is no reason: its join is kept and counts again if the track is made double again (`Network::join_applies`).
 /// T-3339: quad track is two doubles, each of which may go single; a station with passing tracks keeps its double
 /// track instead (`passing_cuts`).
-fn single_refusal(net: &Network, e: u32, kind: TrackKind) -> Option<&'static str> {
-    if kind.is_hsr() {
-        return Some("HighSpeed");
-    }
-    if kind.spec().family != 0 {
-        return Some("Tram");
-    }
+fn single_refusal(net: &Network, e: u32, _kind: TrackKind) -> Option<&'static str> {
     for which in 0..2u32 {
         let n = net.end_node(e, which);
         let p = &net.node_ports[n as usize];

@@ -343,7 +343,7 @@ export class RealSnap {
 
   /** the lane the stand-in ghosts draw: single track close in (T-3134), tram track is double */
   private lane() {
-    return singleTrack.peek() && !tramTrack.peek() ? 0 : 255;
+    return singleTrack.peek() ? 0 : 255;
   }
 
   private answer(m: FromRouter) {

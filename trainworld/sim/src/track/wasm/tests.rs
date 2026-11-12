@@ -2111,6 +2111,7 @@ fn high_speed_track_costs_half_again_and_is_saved() {
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     let hsr = a.hsr_edges();
     assert!(!hsr.is_empty() && hsr == live_edges(&a));
+    let rows_ok = |a: &mut TrackApi| a.blueprint_cost_items().chunks_exact(7).filter(|r| r[0] == 0.0).all(|r| r[2] == HSR_ROW as f64 || r[2] == (HSR_ROW + SINGLE_ROW_OFFSET) as f64);
     assert!((a.blueprint_cost() - HSR_COST * plain.blueprint_cost()).abs() < 1e-6, "{} against {}", a.blueprint_cost(), plain.blueprint_cost());
     assert!((pv[1] - a.blueprint_cost()).abs() < 1e-6, "previewed {} built {}", pv[1], a.blueprint_cost());
     // the preview's multiplier is level and water only, as for single track
@@ -2118,13 +2119,14 @@ fn high_speed_track_costs_half_again_and_is_saved() {
     let rows = a.blueprint_cost_items();
     assert!(rows.chunks_exact(7).filter(|r| r[0] == 0.0).all(|r| r[2] == HSR_ROW as f64));
     assert!((rows.chunks_exact(7).map(|r| r[6]).sum::<f64>() - a.blueprint_cost()).abs() < 1e-6);
-    // single track drawn with the setting on is ordinary track; quad is two high-speed doubles (T-3126)
+    // T-3352: single track drawn with the setting on is high-speed too; quad is two high-speed doubles (T-3126)
     let e: Vec<f64> = free(0.0, 2000.0).iter().chain(free(3000.0, 2000.0).iter()).copied().collect();
     assert_eq!(a.add_route(&e, &[], 1, false), 0, "{}", a.issues());
-    assert_eq!(a.hsr_edges(), hsr);
+    assert!(a.hsr_edges().len() > hsr.len());
+    assert!(rows_ok(&mut a));
     let e: Vec<f64> = free(0.0, 4000.0).iter().chain(free(3000.0, 4000.0).iter()).copied().collect();
     assert_eq!(a.add_route(&e, &[], 4, false), 0, "{}", a.issues());
-    assert!(a.hsr_edges().len() >= hsr.len() + 2 && a.hsr_edges().iter().all(|&e| a.w.net.edge_tracks[e as usize] == 2));
+    assert!(a.hsr_edges().len() >= hsr.len() + 3);
     // saved with flag 64 and loaded as it was; a save without it loads with none
     let bytes = a.save();
     let mut b = api();

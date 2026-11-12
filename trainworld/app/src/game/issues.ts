@@ -59,8 +59,6 @@ const TEXT: Record<string, () => string> = {
   Alongside: () => t("issues.alongside"),
   HighSpeed: () => t("issues.highSpeed"),
   // T-3321: what keeps double track from being rebuilt as single (`single_refusal` in sim/src/track/wasm/rebuild.rs)
-  "NoSingle:HighSpeed": () => t("toolBar.singleHsr"),
-  "NoSingle:Tram": () => t("issues.singleTram"),
   "NoSingle:Crossover": () => t("issues.singleCrossover"),
   "NoSingle:OneWay": () => t("issues.singleOneWay"),
   "NoSingle:Flyover": () => t("issues.singleFlyover"),

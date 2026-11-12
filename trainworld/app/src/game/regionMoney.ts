@@ -110,7 +110,7 @@ export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: num
   if (!e.built || e.crossover) return 0;
   // T-1931: the dearest structure the edge touches, as the track model counts it
   const rate = e.levelMin <= -2 ? m.upkeepBoredKm : e.levelMin === -1 ? m.upkeepCutKm : e.levelMax > 0 ? m.upkeepViaductKm : m.upkeepTrackKm;
-  return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : e.hsr ? m.upkeepHsr : e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].upkeep : 1) * m.economy;
+  return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : 1) * (e.hsr ? m.upkeepHsr : e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].upkeep : 1) * m.economy;
 }
 /** T-1464: a bus route's road km by region, each stretch between two stops half to each stop's
  * region (the drawn stops' ground distances, scaled to the road length). */

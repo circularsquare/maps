@@ -1340,8 +1340,9 @@ impl Network {
         self.node_ok(n) && self.node_platform[n as usize] > 0 && self.node_one[n as usize] != 0
     }
     /// T-3332: a one-track station where trains cannot pass: on single track.
+    /// T-3352: so is a tram stop on single track, drawn and run as one platform with no loop.
     pub fn no_passing(&self, n: u32) -> bool {
-        self.one_track(n) && self.node_tracks(n) == 1
+        self.node_ok(n) && self.node_tracks(n) == 1 && (self.one_track(n) || (self.node_platform[n as usize] > 0 && self.node_kind(n).spec().family != 0))
     }
     /// Whether the node's heading points along the axis a one-track station's way is stored against
     /// (`one_for_travel`).
@@ -1497,9 +1498,8 @@ impl Network {
             if d.a == d.b {
                 return Err(Issue::EdgeLoop { edge: id });
             }
-            // T-3170: high-speed track is double, or one-way single as a real flyover's leg
-            let hsr_ok = d.tracks == 2 || (d.tracks == 1 && d.oneway != 0);
-            if (d.tracks != 1 && d.tracks != 2) || (d.kind.spec().family != 0 && (d.tracks != 2 || d.crossover)) || (d.kind.is_hsr() && (!hsr_ok || d.crossover)) {
+            // T-3352: high-speed and tram track may be single; neither has a crossover
+            if (d.tracks != 1 && d.tracks != 2) || (d.kind.spec().family != 0 && d.crossover) || (d.kind.is_hsr() && d.crossover) {
                 return Err(Issue::Tracks { edge: id });
             }
             for (node, which) in [(d.a, 0u32), (d.b, 1u32)] {
@@ -2570,7 +2570,8 @@ impl Network {
                 cost::track_cost_parts_t(self.edge_len[e], self.edge_vert(e as u32), self.edge_water(e as u32), self.edge_terrain(e as u32), tracks, kind, |level, wet, _ramp, class, m, c| {
                     // T-1839: the whole price, keyed by terrain class (0 where it does not count)
                     let class = if cost::terrain_surcharge(level, class) == 0.0 { 0 } else { class };
-                    add(0, level, if kind.is_hsr() { HSR_ROW } else if kind == TrackKind::Tram { TRAM_ROW } else if kind == TrackKind::StreetTram { STREET_TRAM_ROW } else { tracks }, wet, class, m, c);
+                    let row = if kind.is_hsr() { HSR_ROW } else if kind == TrackKind::Tram { TRAM_ROW } else if kind == TrackKind::StreetTram { STREET_TRAM_ROW } else { tracks };
+                    add(0, level, if tracks == 1 && row > 2 { row + SINGLE_ROW_OFFSET } else { row }, wet, class, m, c);
                 });
                 // kind 7: roads crossed at ground level (T-1929), a count
                 let (n, c) = roads::charge(self.edge_vert(e as u32), self.edge_roads(e as u32));

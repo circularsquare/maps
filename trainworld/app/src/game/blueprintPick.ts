@@ -211,7 +211,7 @@ export const pickedState = computed(() => {
     level = level === undefined || level === l ? l : null;
     if (canBeHsr(e)) e.hsr ? hsr++ : regular++;
     else if (e.kind && !e.crossover) tram++;
-    if (!e.crossover && !e.kind) e.tracks === 1 ? ones++ : twos++;
+    if (!e.crossover) e.tracks === 1 ? ones++ : twos++;
   }
   for (const id of p.stations) (stations.get(id)?.off ? off++ : on++);
   return { edges: p.edges.length, stations: p.stations.length, off, on, built: !!p.built, lengthM, level: level ?? null, hsr, regular, tram, ones, twos };
@@ -219,7 +219,7 @@ export const pickedState = computed(() => {
 
 /** T-1898: track that can be high-speed or regular (`TrackApi::set_edges_kind`, and T-3059's rebuild for built track): double, no crossover.
  * Tram track (`tram` in `pickedState`) can become either, and rail tram (T-3088, T-3108). */
-const canBeHsr = (e: TrackEdge) => e.tracks === 2 && !e.crossover && !e.kind;
+const canBeHsr = (e: TrackEdge) => !e.crossover && !e.kind;
 
 /** Every blueprint piece switched off, for the Build tab. */
 export const offTotals = computed(() => {

@@ -63,7 +63,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         removeLabel={t("trackInspector.remove", { kind: e.crossover ? "crossover" : e.built ? "track" : "blueprint" })} removeTip="" />
       <Built built={e.built} />
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
-      {e.tracks === 1 && !e.crossover && !e.hsr && !e.kind && (
+      {e.tracks === 1 && !e.crossover && (
         <Actions>
           {/* T-3137: the switch shows the way it runs, taken by itself included; off where the run gives a way pins both ways */}
           <span data-tip={e.oneWay && !e.setWay ? t("trackInspector.oneWayAutoTip") : undefined}>

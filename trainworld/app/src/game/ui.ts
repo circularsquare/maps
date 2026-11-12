@@ -395,12 +395,10 @@ export function setQuadTrack(on: boolean) {
     if (on && tramTrack.peek()) snapStreets.value = false; // quad tram is off-street track (T-3166)
   });
 }
-/** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; never high-speed or tram. */
-export const singleTrack = signal(saved.build?.tracks === 1 && saved.build?.hsr !== true && saved.build?.tram !== true);
-/** T-3262: picking single keeps the track type: on high-speed track it is refused (`say`, the caller's), and the
- * count stays. Returns false when refused. */
+/** T-3093: the track tool lays single track (0.6x the cost), beside double and quad; with any track type. */
+export const singleTrack = signal(saved.build?.tracks === 1);
+/** T-3352: single track goes with every track type. */
 export function setSingleTrack(on: boolean): boolean {
-  if (on && (tramTrack.peek() || highSpeed.peek())) return false;
   if (on === singleTrack.peek()) return true;
   countPicked.value = on ? 1 : 2;
   batch(() => {
@@ -432,7 +430,6 @@ export function setTrackType(t: TrackType) {
   if ((t === "hsr" && was) || (t === "tram" && wasTram) || (t === 2 && !was && !wasTram)) return;
   batch(() => {
     if (t === "tram") {
-      singleTrack.value = false;
       if (quadTrack.peek()) snapStreets.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
@@ -448,7 +445,6 @@ export function setTrackType(t: TrackType) {
       levelBeforeTram = null;
     }
     if (t === "hsr") {
-      singleTrack.value = false;
       designBeforeHsr = designSpeed.peek();
       highSpeed.value = true;
       designSpeed.value = DESIGN_SPEEDS[DESIGN_SPEEDS.length - 1];
@@ -456,8 +452,6 @@ export function setTrackType(t: TrackType) {
       highSpeed.value = false;
       if (was && designBeforeHsr !== null) designSpeed.value = designBeforeHsr;
       designBeforeHsr = null;
-      // T-3262: single track picked before High speed or Tram showed it as double comes back
-      if (countPicked.peek() === 1) singleTrack.value = true;
     }
   });
 }

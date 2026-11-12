@@ -102,6 +102,8 @@ pub const HSR_ROW: u8 = 3;
 pub const TRAM_ROW: u8 = 4;
 /// and for street tram track (T-2927)
 pub const STREET_TRAM_ROW: u8 = 5;
+/// T-3352: a single-track row of those kinds is the kind's row plus this
+pub const SINGLE_ROW_OFFSET: u8 = 3;
 pub const WATER_COST: f64 = 2.0;
 /// 200 m station with two platform tracks: the part every station has wherever it is (platforms,
 /// halls, systems), plus its structure's part by level, index `level + 3`: 50 + 25 a level down,
