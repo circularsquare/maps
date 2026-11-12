@@ -441,6 +441,9 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
 - `t1053-load-check.mjs [port]`: on its own Vite with a scratch registry lacking wnd, nlc and lit,
   a new game's save and the real save naming them load with Hartford in their place (T-1053, about
   a minute).
+- `t3302-player-saves.mjs [url]`: the player saves kept in `checks/fixtures/` (two Tokyo games that hung
+  v0.3.0's load, T-3238) each load within 2 minutes with every line, reach a demand final, answer a train
+  count edit, run the clock and export (T-3302, about 3 minutes, port 6159 by default).
 - Node, no browser: `t133-picking-check` (picking order), `t671-station-snap-check` (the station tool's choice among overlapping tracks, the layout's guess and the room snap; given a dev server URL it also runs `t671-ghost-hover`, the ghost's first frame against the worker on the real save in headless Chrome), `save_net.py <save> <out>` (a game save's network bytes
   for Rust tests on a real save, given as `T1895_NET`: T-1895's ignored `beside_sweep_real_save`
   counts drawing-beside previews that cross the track followed, by start kind), `t1870-station-follow <url>` (browser: the station ghost against the pointer along a straight, a curve, joints, a junction and a station at zooms 13, 14 and 16, a few minutes), `t1964-station-joints <url>` (browser: the station tool on every plain joint of two routes drawn as the track tool draws, about a minute), `t144-check` (station geometry, line
