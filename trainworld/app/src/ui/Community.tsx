@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedCopy, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -217,12 +217,12 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
   const reasons: [ReportReason, string][] = [["offensive", t("community.offensive")], ["fake-score", t("community.fakeScore")], ["other", t("community.somethingElse")]];
   const likeLabel = row.liked ? t("community.unlike") : t("community.like");
   const [opening, setOpening] = useState(false);
-  // T-3115: a new game of the viewer's own, named after whose network it is; the page reloads into it
-  const openCopy = async () => {
+  // T-3257: the page reloads into the network, kept nowhere until saved, under a name saying whose it is
+  const openView = async () => {
     setMsg("");
     setOpening(true);
-    const why = await openSharedCopy(row, copyName(row) || (row.city ? cityName(row.city) : "") || t("savesPanel.copyMark"));
-    if (why) { setMsg(why); setOpening(false); }
+    const why = await openSharedView(row, copyName(row) || (row.city ? cityName(row.city) : "") || t("savesPanel.copyMark"));
+    if (why !== "") { setMsg(why ?? ""); setOpening(false); }
   };
   return <div class="cm-detail">
     <div class="cm-detail-head">
@@ -234,7 +234,7 @@ function Detail({ row, onBack, onChange }: { row: ShareRow; onBack: () => void; 
       </div>
       <div class="cm-detail-acts">
         {row.mine && <button type="button" class="btn text cm-share-again" onClick={() => setMsg(shareAgain(row))}><Icon.share />{t("community.again")}</button>}
-        {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openCopy()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
+        {row.copy && <button type="button" class="btn text cm-open-copy" disabled={opening} onClick={() => void openView()}><Icon.copy />{opening ? t("leaderboard.loading") : t("community.openCopy")}</button>}
         <CopyLink id={row.id} />
         {!row.mine && (reported
           ? <span class="small muted">{t("community.reported")}</span>

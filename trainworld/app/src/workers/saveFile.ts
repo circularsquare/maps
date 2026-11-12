@@ -819,7 +819,8 @@ export async function readDemandAhead<T>(save: string): Promise<T | null> {
  * new game, picked in the saves panel. The page reloads to free the last game's memory; the clock
  * worker takes this from storage as it starts. */
 export type PendingLoad =
-  | { kind: "import"; bytes: Uint8Array; name: string; from: string; /** T-2037: an account backup's game */ origin?: string; edit?: number }
+  | { kind: "import"; bytes: Uint8Array; name: string; from: string; /** T-2037: an account backup's game */ origin?: string; edit?: number;
+    /** T-3257: a network viewed from Community, held in no slot until saved under `name` */ view?: boolean }
   | { kind: "restore"; key: string; from: string }
   | { kind: "new"; spec: NewGameSpec; name?: string };
 const PENDING = "pending-load";

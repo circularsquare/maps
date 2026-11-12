@@ -25,7 +25,7 @@ import { liveMoney, moneyState } from "../game/money";
 import { pointsPast24h, pointsPerDay, pointsShort } from "../game/points";
 import { Icon } from "./widgets";
 import { perfOff } from "../perfFlags";
-import { saveSlotsState } from "../workers/clockClient";
+import { manageSaveSlot, saveSlotsState } from "../workers/clockClient";
 import { START_CASH } from "../workers/saveFile";
 import { CACHE_VERSION } from "../workers/demandCache";
 import { savesOpen } from "./SavesPanel";
@@ -264,6 +264,11 @@ const joinWhere = (place: string, day: string) => tSpaced(place && day ? t("topB
 function SaveNotice() {
   const state = saveSlotsState.value;
   if (state.writable) return null;
+  // T-3257: a network viewed from Community is kept nowhere until saved
+  if (state.viewing) return <div class="save-notice" role="status">
+    <span>{t("topBar.viewing", { name: state.viewing.name })}</span>
+    <button class="btn" onClick={() => manageSaveSlot("save")}>{t("topBar.viewSave")}</button>
+  </div>;
   return <div class="save-notice" role="status">
     <span>{state.reason ?? t("topBar.autosaveOff")}</span>
     <button class="btn" onClick={() => { savesOpen.value = true; }}>{t("topBar.saves")}</button>

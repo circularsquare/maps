@@ -34,7 +34,7 @@ function Ask() {
   useLayoutEffect(() => { if (q) cancel.current?.focus(); }, [q]);
   if (!q) return null;
   return (
-    <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => ask.value = null} onKeyDown={e => {
+    <dialog class="confirmation" ref={dialog} aria-labelledby="confirmation-title" aria-describedby="confirmation-text" onCancel={() => { ask.value = null; q.stay?.(); }} onKeyDown={e => {
       e.stopPropagation();
       if (e.key !== "Tab") return;
       const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
@@ -54,7 +54,7 @@ function Ask() {
         </ul>
       ) : null}
       <div class="confirmation-actions">
-        <button class="btn text" ref={cancel} onClick={() => (ask.value = null)}>
+        <button class="btn text" ref={cancel} onClick={() => { ask.value = null; q.stay?.(); }}>
           {q.no}
         </button>
         <button class="btn text danger" onClick={() => { ask.value = null; q.run(); }}>

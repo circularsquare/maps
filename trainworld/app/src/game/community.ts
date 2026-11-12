@@ -10,7 +10,7 @@ import { effect, signal } from "@preact/signals";
 import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, session, slotOfGame } from "./account";
 import { diagramForShare } from "../diagram/view";
 import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from "../diagram/shared";
-import { exportForShare, manageSaveSlot, openCopy, saveSlotsState } from "../workers/clockClient";
+import { exportForShare, manageSaveSlot, openView, saveSlotsState } from "../workers/clockClient";
 import { copyFromShare, CopyRefused, forShare, MAX_SHARED_SAVE } from "./sharedSave";
 import { t, tDate } from "../i18n";
 import { accountList } from "./accountGames";
@@ -72,9 +72,10 @@ export async function fetchShare(id: string): Promise<ShareRow> {
   catch (e) { throw plain(e, "share"); }
 }
 
-/** Open a copy of a share's save as a new game of this player's: downloaded, checked (game/sharedSave.ts), then the
- * page reloads into it. `name` names the new slot. Resolves with a reason to show, "" once the reload is under way. */
-export async function openSharedCopy(row: ShareRow, name: string): Promise<string> {
+/** View a share's save as a game (T-3257): downloaded, checked (game/sharedSave.ts), then the page reloads into it,
+ * kept nowhere until the player saves it, as `name`. Resolves with a reason to show, "" once the reload is under way,
+ * null when the player chose to stay on the network they were viewing. */
+export async function openSharedView(row: ShareRow, name: string): Promise<string | null> {
   let bytes: Uint8Array;
   try {
     const gz = await fetchBytes(`trainworld/community/${encodeURIComponent(row.id)}/${row.rev}/save`, MAX_SHARED_SAVE);
@@ -87,7 +88,7 @@ export async function openSharedCopy(row: ShareRow, name: string): Promise<strin
     if (err.status === 429) return t("community.errBusy");
     return err.message;
   }
-  try { return await openCopy(bytes, name); }
+  try { return await openView(bytes, name); }
   catch { return t("community.errCopyBad"); }
 }
 

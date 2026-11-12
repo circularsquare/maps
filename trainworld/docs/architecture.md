@@ -506,7 +506,10 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   hidden; a game running in the background keeps saving once a wall minute [T-826]. On start the player picks a slot or New game on the start menu [T-677]; `?continue=1`
   opens the slot opened last. `?new=1` starts a game that reads no slot and owns none, and
   does not autosave until Make a copy gives it one [T-320]; `?synth=1` and `?demandTest=1`
-  load the last game but never autosave it.
+  load the last game but never autosave it. A network viewed from Community (T-3257) comes as a
+  `pending-load` import marked `view`: the worker loads it into no slot (`intoView`, `viewing` its
+  name), nothing autosaves it, and Save (`saveView`, the copy path) gives it a slot under that name.
+  The page asks before anything replaces it (`leaveViewed` in `switchGame` and `leaveToMenu`).
 - **No slot is written over with another game** [T-743]: New game (the start menu's beside saved
   games, and the saves panel's), Open a file and a backup's Open as a copy each put the game in a
   new slot, after saving the game being played, which keeps its slot. A new game's slot is named

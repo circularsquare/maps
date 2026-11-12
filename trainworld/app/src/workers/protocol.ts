@@ -811,7 +811,8 @@ export type FromClock =
   | { kind: "unsaved"; on: boolean }
   /** `backups`: the active slot's (T-744), newest first; `newer`: a newer build saved the game in
    * hand, which is not written here (T-1826) */
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean }
+  /** `viewing` (T-3257): the game in hand is a network viewed from Community, in no slot: its card, `key` "" */
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean; viewing?: SaveSlot }
   | { kind: "error"; message: string }
   /** T-988: the server refused the session's token (the main thread signs out) */
   | { kind: "accountGone" }

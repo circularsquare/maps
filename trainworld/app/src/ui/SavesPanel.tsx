@@ -84,11 +84,11 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
 
 /** When a saved game was saved (with `mark` after it), its day and cities, its lines, stations and
  * cash; also the start menu's (T-677). */
-export function SlotFacts({ slot, now, autosaved, mark }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren }) {
+export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren; /** T-3257: a viewed network, never saved */ unsaved?: boolean }) {
   const when = savedWhen(slot.at, now, !!autosaved);
-  const cities = cityList(slot.cities ?? []), played = gameSeconds(slot.key);
+  const cities = cityList(slot.cities ?? []), played = slot.key ? gameSeconds(slot.key) : undefined;
   return <>
-    <div class="small muted save-when"><span data-tip={t("savesPanel.lastSaved", { date: fullDate(slot.at) })}>{when}</span>{mark}</div>
+    <div class="small muted save-when">{unsaved ? <span>{t("savesPanel.notSaved")}</span> : <span data-tip={t("savesPanel.lastSaved", { date: fullDate(slot.at) })}>{when}</span>}{mark}</div>
     <div class="small muted num">
       <span data-tip={t("savesPanel.gameDay", { day: slot.day })}>{t("savesPanel.day", { day: slot.day })}</span>
       {cities ? <> · {cities}</> : null}
@@ -219,6 +219,31 @@ function SlotCard({ slot, playing, now, writable, renaming, onRename, onRenamed 
         {!playing && <Elsewhere slot={slot} />}
       </div>
     </div>
+  );
+}
+
+/** T-3257: the network being viewed from Community, in no slot: its picture and facts, Download and Save (Save makes
+ * it a saved game of the player's, the Playing card from then on). */
+function ViewCard({ slot, now }: { slot: SaveSlot; now: number }) {
+  return (
+    <li class="on save-view" data-slot="">
+      <div class="save-card">
+        <SlotThumb slot={slot} />
+        <div class="save-info">
+          <div class="save-slot-title">
+            <span class="save-name"><SlotTitle slot={slot} /></span>
+            <span class="save-playing small">{t("savesPanel.viewingMark")}</span>
+          </div>
+          <SlotFacts slot={slot} now={now} unsaved />
+        </div>
+      </div>
+      <div class="save-versions"><div class="save-foot">
+        <div class="save-actions">
+          <button class="btn icon save-download" data-tip={t("savesPanel.download")} aria-label={t("savesPanel.download")} onClick={exportGame}><Icon.download /></button>
+          <button class="btn text save-now" data-tip={t("savesPanel.viewSaveTip")} onClick={() => manageSaveSlot("save")}>{t("savesPanel.save")}</button>
+        </div>
+      </div></div>
+    </li>
   );
 }
 
@@ -409,17 +434,18 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
   const removeGroup = async (g: GameGroup) => setRemoved(await removeVersions(groupHeads(g)));
   return (
     <>
-      {!saves.writable && saves.reason && <p class="callout bad">{saves.reason}</p>}
+      {!saves.writable && saves.reason && !saves.viewing && <p class="callout bad">{saves.reason}</p>}
       {saves.error && <p class="callout bad">{saves.error}</p>}
       {removed && <p class="callout bad save-delete-failed">{removed}</p>}
       <div class="save-files">
         <button class="btn text save-new" onClick={onNewGame}>{t("savesPanel.newGame")}</button>
         <button class="btn text" data-tip={t("savesPanel.openFileTip")} onClick={pick}>{t("savesPanel.openFile")}</button>
         {/* a test page's game has no card to copy it from */}
-        {!saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip={t("savesPanel.copy")} aria-label={t("savesPanel.copy")} disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
+        {!saves.viewing && !saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip={t("savesPanel.copy")} aria-label={t("savesPanel.copy")} disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
         {startup.value === "ready" && <MainMenuButton />}
       </div>
       <ul class="save-slots">
+        {saves.viewing && <ViewCard slot={saves.viewing} now={shownNow} />}
         {groups.map((g) => {
           const top = g.top, slot = top.kind === "slot" ? top.slot : cardOf(top.game), playing = slot.key === saves.active;
           return <li key={g.origin} data-origin={g.origin} {...(top.kind === "slot" ? { "data-slot": slot.key } : { "data-account": top.game.id })} class={playing ? "on" : ""}>

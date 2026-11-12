@@ -316,6 +316,12 @@ let storageReady = true;
 /** `?new=1`, `?synth=1`, `?demandTest=1` (T-320): no slot is written until "Save as a copy" gives
  * the game a slot of its own; a `?new=1` game has no active slot ("") and reads none */
 let testPage = false;
+/** T-3257: the game in hand is a network viewed from Community: it has no slot and nothing writes it until Save
+ * gives it one under this name, after which it is a game like any other; null otherwise */
+let viewing: string | null = null;
+/** T-3257: the viewed game's card for the saves panel (its picture and facts), drawn when it opens and again each
+ * time the panel asks */
+let viewCard: SlotSummary | null = null;
 let saveFailure: string | undefined;
 /** while the game is being swapped for another slot's (T-743): nothing autosaves */
 let switching = false;
@@ -417,16 +423,19 @@ async function publishSlots(error?: string) {
   noteUnsaved();
   const reason: MessageKey | string | undefined = newer ? NEWER : saveFailure || (!storageReady ? "clockWorker.noStorage"
     : taken ? "clockWorker.otherDevice"
-    : !activeLease ? testPage ? "clockWorker.testPage"
+    : !activeLease ? viewing !== null ? "clockWorker.viewing" : testPage ? "clockWorker.testPage"
       : leaseTaken ? "clockWorker.otherTabSaved"
       : navigator.locks ? "clockWorker.otherTabOpened"
       : "clockWorker.noLocks" : undefined);
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}) });
+  const view = viewing !== null ? { viewing: { ...viewCard, key: "", name: viewing, at: 0, day: Math.floor(gameNow() / 86400) } } : {};
+  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}), ...view });
 }
 /** T-1829: the playing slot's name as last listed, kept should the database be cleared under it */
 let activeName: { key: string; name: string } | null = null;
 
 async function flushBeforeSwitch() {
+  // T-3257: a viewed game is let go unsaved (the page asked the player first)
+  if (viewing !== null) return;
   // T-1826: a newer game's slot is left as it was; only a change made here would be lost
   if (newer && !edited) return;
   if (dirty && (!activeLease || cloudTaken === activeSlot || newer)) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
@@ -462,6 +471,7 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   activeLease?.release();
   activeSlot = key;
   hold(lease);
+  viewing = viewCard = null;
   unwritten = key;
   newSlotName = { key, name };
   saveFailure = undefined;
@@ -470,6 +480,33 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   if (newer && newerFile) await keepAsLoaded(key);
   else if (!writeNow || !await autosave()) await publishSlots();
   slotChanges?.postMessage({ key });
+}
+
+/** T-3257: a network viewed from Community replaces the game in hand (saved first) and is held in no slot: it plays
+ * as any game, and nothing writes it until Save (`saveView`) gives it a slot named `name`. */
+async function intoView(name: string, load: () => Promise<unknown>) {
+  await flushBeforeSwitch();
+  switching = true;
+  loadingInto = ""; // the "loaded" it sends names no slot
+  try { await load(); } finally { switching = false; loadingInto = null; }
+  heldNew();
+  activeLease?.release();
+  hold(null);
+  activeSlot = "";
+  activeName = null;
+  unwritten = null;
+  newSlotName = null;
+  saveFailure = undefined;
+  dirty = edited = false;
+  viewing = name;
+  viewCard = await slotSummary().catch(() => null);
+  await publishSlots();
+}
+
+/** T-3257: Save on a viewed game: a slot of its own under the view's name, a game like any other from then on. */
+async function saveView() {
+  await manageSlot({ kind: "saveSlot", action: "create", name: viewing ?? undefined });
+  if (viewing === null) send({ kind: "savedByHand", at: savedAt });
 }
 
 /** T-1826: a newer build's file opened into slot `key` is written there as it was loaded, so nothing
@@ -658,9 +695,9 @@ async function openOnAccount(ctx: CloudContext) {
 
 /** T-1196: a pending file or backup's bytes and the name of the slot it goes into; null if the backup
  * has gone */
-async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string; version?: { origin?: string; edit: number; at: number } } | null> {
+async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ bytes: Uint8Array; name: string; version?: { origin?: string; edit: number; at: number }; view?: boolean } | null> {
   // i18n-ignore: a stored name or a developer diagnostic
-  if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game", version: p.origin ? { origin: p.origin, edit: p.edit ?? Date.now(), at: p.edit ?? Date.now() } : undefined };
+  if (p.kind === "import") return { bytes: p.bytes, name: p.name || "Loaded game", version: p.origin ? { origin: p.origin, edit: p.edit ?? Date.now(), at: p.edit ?? Date.now() } : undefined, ...(p.view ? { view: true } : {}) };
   const from = backupSlot(p.key);
   if (!from) return null;
   const backup = await readStored(p.key), slot = await readStored(from);
@@ -2556,6 +2593,7 @@ async function keepOtherTabs(key: string) {
 /** T-1251: the slot written now, autosave on or off. A tab without the slot's lease takes it from
  * the tab holding it, whose autosave then stops; an empty new game is written too. */
 async function saveByHand() {
+  if (viewing !== null) return void await saveView();
   try {
     if (testPage || !activeSlot) throw new Error("This test page keeps no saved game. Make a copy to keep it.");
     if (newer) throw new Error(NEWER);
@@ -2581,7 +2619,11 @@ async function saveByHand() {
 
 async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
   try {
-    if (msg.action === "refresh") { await publishSlots(); return; }
+    if (msg.action === "refresh") {
+      if (viewing !== null) viewCard = await slotSummary().catch(() => viewCard);
+      await publishSlots();
+      return;
+    }
     if (msg.action === "save") { await saveByHand(); return; }
     if (msg.action === "create") {
       const key = "slot-" + crypto.randomUUID();
@@ -2601,6 +2643,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         activeLease?.release();
         activeSlot = key;
         hold(lease);
+        viewing = viewCard = null;
         saveFailure = undefined;
         // T-1826: the copy is this build's game, without what only the newer build read
         newer = false;
@@ -2623,6 +2666,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         activeLease?.release();
         activeSlot = key;
         hold(lease);
+        viewing = viewCard = null;
         heldFrom(stored);
         saveFailure = undefined;
         dirty = false;
@@ -3996,7 +4040,8 @@ async function processMessage(msg: ToClock) {
       if (incoming) {
         try {
           const g = incoming;
-          await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true, g.version);
+          if (g.view) await intoView(g.name, () => loadGame(g.bytes, "file"));
+          else await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true, g.version);
           return;
         } catch (err) {
           if (isPanic(err)) send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: SAVE_PANIC, why: afterLoadPanic(err), game });

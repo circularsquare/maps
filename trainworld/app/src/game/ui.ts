@@ -280,9 +280,9 @@ export function closeNetworkView() {
   if (NETWORK_VIEWS.has(selection.peek()?.kind ?? "")) selection.value = null;
 }
 /** A question waiting in a centered modal (T-096/T-113: removing something
- * constructed): `run` on the yes button, nothing on the no button or Esc. `lines`: a row each
+ * constructed): `run` on the yes button, `stay` (if any) on the no button or Esc. `lines`: a row each
  * under the text, after the line's bullet (T-859: what a removal does to lines). */
-export const ask = signal<{ text: string; yes: string; no: string; run: () => void; lines?: { line: number; text: string }[] } | null>(null);
+export const ask = signal<{ text: string; yes: string; no: string; run: () => void; stay?: () => void; lines?: { line: number; text: string }[] } | null>(null);
 /** The selected line whose stops the map tool is editing. */
 export const lineDraft = signal<{ line: number | null; stops: number[] }>({ line: null, stops: [] });
 /** Stop editing is on (T-233): the line tool with a line to edit. The map then hides the demand

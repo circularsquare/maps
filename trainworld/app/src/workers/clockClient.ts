@@ -21,7 +21,7 @@ import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon
 import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
-import { designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
+import { ask, designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
@@ -348,17 +348,28 @@ export function exportForShare(): Promise<Uint8Array | null> {
     current!.post({ kind: "export", share: true });
   });
 }
-/** T-3115: open a copy of a shared network (bytes `game/sharedSave.ts` checked) in a new slot: the game in hand
- * is saved and the page reloads into the copy, as Load from file does; from the start menu, with no game in hand,
- * the copy waits in storage for the reloaded page. A reason to show when it cannot go. */
-export async function openCopy(bytes: Uint8Array, name: string): Promise<string> {
+/** T-3257: view a shared network (bytes `game/sharedSave.ts` checked): the game in hand is saved and the page reloads
+ * into the network, held in no slot until the player saves it as `name` (T-3115 opened it as a copy in a new slot);
+ * from the start menu, with no game in hand, it waits in storage for the reloaded page. A reason to show when it
+ * cannot go, "" once it goes, null when the player chose to stay on a viewed game. */
+export async function openView(bytes: Uint8Array, name: string): Promise<string | null> {
   const why = await saveRefusal({ bytes });
   if (why && !why.soft) return why.text;
-  const pending: PendingLoad = { kind: "import", bytes, name, from: saveSlotsState.peek().active };
-  if (current?.running) { switchGame({ load: "file" }, pending); return ""; }
+  if (!await leaveViewed()) return null;
+  const pending: PendingLoad = { kind: "import", bytes, name, from: saveSlotsState.peek().active, view: true };
+  if (current?.running) { switchNow({ load: "file" }, pending); return ""; }
   if (!await writePending(pending)) return t("clockClient.noStorage");
   location.replace(pageWith({ load: "file" }));
   return "";
+}
+/** T-3257: before a viewed network (never saved) gives way to another game or the start menu, the player is asked;
+ * true to go on. True at once for any other game. */
+export function leaveViewed(): Promise<boolean> {
+  const v = saveSlotsState.peek().viewing;
+  if (!v || !current?.running) return Promise.resolve(true);
+  return new Promise((done) => {
+    ask.value = { text: t("clockClient.leaveView", { name: v.name }), yes: t("clockClient.leaveViewYes"), no: t("clockClient.leaveViewNo"), run: () => done(true), stay: () => done(false) };
+  });
 }
 /** A save's bytes downloaded as "trainsworld-<name>-day-<day>.save". */
 function downloadSave(bytes: Uint8Array, name: string, day: number, slot?: string) {
@@ -424,6 +435,9 @@ export function pageWith(params: Record<string, string>): string {
  * last one held (its demand workers' memory never shrinks while they live: 2.5 GB each after all of
  * China). The game in hand is saved first; if it cannot be, the player is told and stays. */
 export function switchGame(params: Record<string, string>, pending?: PendingLoad) {
+  void leaveViewed().then((go) => { if (go) switchNow(params, pending); });
+}
+function switchNow(params: Record<string, string>, pending?: PendingLoad) {
   current?.leave(pending, () => location.replace(pageWith(params)));
 }
 /** The page reloads to the start menu; a page already at that address (it came without a game switch) is reloaded, since replacing it with itself would not be (T-1852). */
@@ -436,7 +450,7 @@ function toStartMenu() {
  * before the reload, and only if the game could be saved. */
 export function leaveToMenu(then: () => void) {
   const go = () => { then(); toStartMenu(); };
-  if (current) current.leave(undefined, go);
+  if (current) void leaveViewed().then((ok) => { if (ok) current?.leave(undefined, go); });
   else go();
 }
 /** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
@@ -1131,13 +1145,13 @@ export class ClockClient {
         break;
       case "exported": {
         if (msg.share) { shareExport?.(msg.bytes); break; }
-        const { slots, active } = saveSlotsState.value;
-        downloadSave(msg.bytes, slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
+        const { slots, active, viewing } = saveSlotsState.value;
+        downloadSave(msg.bytes, viewing?.name || slots.find((s) => s.key === active)?.name || this.cityId, msg.day, active);
         break;
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)

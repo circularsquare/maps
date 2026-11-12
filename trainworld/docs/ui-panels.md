@@ -1128,8 +1128,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   when its game has points there, valued at their sum there. Twelve cards a page, each a shared schematic painted
   small with its title in bold and the player's name after it in grey (a share from before titles shows the name alone),
   its biggest city in the place, points, lines and stations (the game's own counts,
-  bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with Open a copy
-  (when offered), Copy link, Report and the heart.
+  bus and ferry included, as the saves list shows them). A card opens the drawing to pan and zoom, with View
+  (when the sharer let others open a copy), Copy link, Report and the heart.
 - **Search** (T-3224): a box at the right end of the tabs' row (on a phone, beside the place picker), placeholder
   "Search", shown only when `/noritetsu/config` says `trainworldCommunitySearch`. Sent as the list's `q` once typing
   pauses 350 ms; matches the title or the sharer's display name, any case, accents folded, in the chosen tab and
@@ -1153,13 +1153,23 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **The link**: `<the game's address>?share=<id>` opens the game (start menu or not) with Community on that share;
   works with no account. The switch leaves the address bar at once. A hidden, banned or deleted share's link
   says "This network isn't shared anymore." over the Random page, the same for each.
-- **Open a copy** downloads the share's save, checks it (`game/sharedSave.ts`: sizes capped before and while
+- **View** [T-3257] downloads the share's save, checks it (`game/sharedSave.ts`: sizes capped before and while
   unpacking, the header walked with limits and each field's type checked, unknown fields dropped, the file
-  re-encoded from what passed) and loads it into a new slot named "<title> - <their display name>" (either alone when the other is missing); the game in hand
-  is saved first, and none of the viewer's games is written. A save this build cannot open says "This copy doesn't
-  open in this version of the game." (another world, a retired or newer format), a damaged one "This copy can't be
-  opened."; a load that fails after that is reported as any loaded file's is, and the page falls back to the game
-  it had.
+  re-encoded from what passed) and loads it as a **viewed game**, named "<title> - <their display name>" (either
+  alone when the other is missing); the game in hand is saved first, and none of the viewer's games is written. A
+  viewed game is in no slot: it plays and edits as any game, but nothing autosaves it, it is not on the account, and
+  the saves panel shows it as its own card at the top (below). Save (the card's, the top bar notice's, or Ctrl+S)
+  makes it a saved game under that name, the Playing card from then on. Until then, anything that would replace it
+  (another game opened, a file, a backup, New game, View on another share, the main menu door) first asks (headed
+  "Confirm?") "Guangzhou - kanocifer won't be saved." with Leave without saving (red) and Stay; closing or reloading the
+  tab asks (the browser's own question) only once the player has changed something, as for any unsaved change. A
+  save this build cannot open says "This copy doesn't open in this version of the game." (another world, a retired
+  or newer format), a damaged one "This copy can't be opened."; a load that fails after that is reported as any
+  loaded file's is, and the page falls back to the game it had.
+- **The viewed game's card** (saves panel, above the others): its picture and facts as any card, "Not saved" where
+  the others say when they were saved, the mark Viewing where the game being played says Playing, then only
+  Download (hover "Download as a file") and Save (hover "Keep it in your saved games (Ctrl+S)"). The top bar says
+  "Guangzhou - kanocifer isn't saved." with Save. Its play time counts from its Save, as a slot's does.
 - **A copy never ranks**: its header carries `copy` (the share's id), the saves list marks it Copy (hover "Never on
   the leaderboards"), it sends no figures and no achievement counts, and sharing it tells the server it is a
   sandbox, so it shows tagged Sandbox and only in Random. It plays as a normal game otherwise.
