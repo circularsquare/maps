@@ -39,6 +39,21 @@ impl TrackApi {
         self.station_one_op(node, first)
     }
 
+    /// T-3332: put a station on double track on the one track that serves trains going `heading` (radians,
+    /// world frame), from both tracks or from the other track: one undoable edit, charged as
+    /// `set_station_tracks` is. A line stopping there that cannot take it refuses the change.
+    pub fn set_station_way(&mut self, node: u32, heading: f64) -> u32 {
+        let Some(old) = self.w.net.station_data(node).filter(|d| d.berth.is_none()) else { return self.refuse(Issue::NoSuchNode { node }) };
+        if !self.one_fits(node) || self.w.net.node_tracks(node) != 2 {
+            return self.refuse(Issue::OneTrackHere { node });
+        }
+        let way = crate::track::net::one_for_travel(heading);
+        if old.one == way {
+            return 0;
+        }
+        self.station_one_op(node, StationData { one: way, upgrades: old.upgrades & !(upgrades::TERMINAL | upgrades::PASSING), ..old })
+    }
+
     /// T-3332: turn a one-track station on double track round: its platform to the other track, so its
     /// trains are those running the other way. Free, undoable; refused where a line stopping there
     /// cannot take it.
@@ -48,6 +63,19 @@ impl TrackApi {
             return 0;
         }
         self.station_one_op(node, StationData { one: 3 - old.one, ..old })
+    }
+
+    /// T-3332: what a constructed one-track station pays, US$M, going to platforms on both tracks (the
+    /// price difference, as `set_station_tracks` charges it); 0 for any other node.
+    pub fn station_tracks_cost(&self, node: u32) -> f64 {
+        let net = &self.w.net;
+        if !net.one_track(node) {
+            return 0.0;
+        }
+        let i = node as usize;
+        let wet = net.water_mask.is_water(net.node_x[i], net.node_y[i]);
+        let price = |tracks: u8| crate::track::cost::station_cost_k(net.node_kind(node), net.node_level[i], net.node_platform[i], tracks, wet);
+        (price(net.node_tracks(node)) - price(1)).max(0.0)
     }
 
     /// T-3332: the station's platforms are on one track: 0 both, 1 one track on double track

@@ -816,7 +816,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
     The panel has no Trip from here button (the T key starts a trip from any tab) and no
     commuters, "where they live or work" or inter-city trips sections [T-1812].
 - **Station view** (one station opened alone) has its level under the name ("Level +1"), then in place of the
-  complex's lines and map the station's own lines, platform settings, and
+  complex's lines and map the station's own lines, platform settings (on double track a row of three buttons, platform on the left track, on both or on the right track, as the map shows the station with its axis pointing up the screen; hover "One way station (eastbound)" or "Two way station" with the price or "Free" under it; on single track two buttons, with or without a passing loop) [T-3332], and
   **Waiting now** [T-164, T-238]: each line and direction ("To Norwood-205 St") with the riders on the
   platform now in red; under it, in red, how many full trains left riders behind this hour and the
   longest wait, or else the riders arriving this hour and the longest wait. The counts drop the

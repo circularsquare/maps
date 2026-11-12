@@ -111,7 +111,15 @@ try {
   await select({ kind: 'station', station: String(I.Mid) });
   await look(0, 0, 16.2);
   const panel = await page.evaluate(() => document.querySelector('.inspector, aside')?.innerText ?? document.body.innerText);
-  check(/Platform tracks/.test(panel) && /Reverse direction/.test(panel), 'the station panel has the switch and Reverse direction');
+  check(/Station type/.test(panel) && !/Reverse direction/.test(panel), 'the station panel has the selector and no Reverse direction button');
+  const sel = await page.evaluate(() => [...document.querySelectorAll('.inspector .tb-count button, aside .tb-count button')].map((b) => b.getAttribute('aria-label') + '|' + b.getAttribute('data-tip')));
+  check(sel.length === 3 && sel.some((x) => x.startsWith("One way station (eastbound)")) && sel.some((x) => x.startsWith("One way station (westbound)")) && sel.some((x) => x.startsWith("Two way station")), "three buttons: one way eastbound, two way, one way westbound", JSON.stringify(sel));
+  const heading = () => page.evaluate((id) => window.tw.world.value.save.stations.find((s) => s.num === id)?.oneHeading, I.Mid);
+  const press = async (label) => { await page.evaluate((l) => [...document.querySelectorAll(".tb-count button")].find((b) => b.getAttribute("aria-label")?.startsWith(l))?.click(), label); await wait(900); };
+  await press("One way station (westbound)");
+  check(Math.cos(await heading()) < -0.99, "the westbound button moves the platform to the other track");
+  await press("One way station (eastbound)");
+  check(Math.cos(await heading()) > 0.99, "the eastbound button moves it back");
   await shot('5-panel');
   const rev = await edit({ op: 'reverseStation', node: I.Mid });
   const after = await page.evaluate((id) => window.tw.world.value.save.stations.find((s) => s.num === id)?.oneHeading, I.Mid);
@@ -135,7 +143,7 @@ try {
   await wait(1500);
   await shot('7-ghost');
   const bar = await page.evaluate(() => [...document.querySelectorAll('.station-bar button')].map((b) => b.getAttribute('aria-label')));
-  check(bar.includes('Platform on one track') && bar.includes('Platforms on both tracks'), 'the station bar has the two icons', JSON.stringify(bar));
+  check(bar.includes('One way station') && bar.includes('Two way station'), 'the station bar has the two icons', JSON.stringify(bar));
   await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.stationOneTrack.value = false; ui.tool.value = 'select'; });
 
   const bad = errors.filter((e) => !/favicon|404/.test(String(e)));

@@ -179,12 +179,12 @@ function StationBar() {
 }
 
 /** T-3332: a station's platforms on one track or on both, the station bar's and the station panel's. */
-export function PlatformTracks({ one, onPick, children }: { one: boolean; onPick: (one: boolean) => void; children?: ComponentChildren }) {
+export function PlatformTracks({ one, onPick, oneTip, bothTip, children }: { one: boolean; onPick: (one: boolean) => void; oneTip?: string; bothTip?: string; children?: ComponentChildren }) {
   return (
     <div class="group tb-count" role="group" aria-label={t("toolBar.platformTracks")}>
-      <button class={"btn icon" + (one ? " on" : "")} aria-label={t("toolBar.oneTrackStation")} aria-pressed={one} data-tip={t("toolBar.oneTrackStation")}
+      <button class={"btn icon" + (one ? " on" : "")} aria-label={oneTip ?? t("toolBar.oneTrackStation")} aria-pressed={one} data-tip={oneTip ?? t("toolBar.oneTrackStation")}
         onClick={() => onPick(true)}><Icon.tracks1 /></button>
-      <button class={"btn icon" + (!one ? " on" : "")} aria-label={t("toolBar.bothTracksStation")} aria-pressed={!one} data-tip={t("toolBar.bothTracksStation")}
+      <button class={"btn icon" + (!one ? " on" : "")} aria-label={bothTip ?? t("toolBar.bothTracksStation")} aria-pressed={!one} data-tip={bothTip ?? t("toolBar.bothTracksStation")}
         onClick={() => onPick(false)}><Icon.tracks2 /></button>
       {children}
     </div>

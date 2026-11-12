@@ -7,7 +7,7 @@ import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
 import { TURNBACK_M } from "./terminalBays";
-import { ONE_BULGE_MIN, ONE_BULGE_SHARE, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
 const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
@@ -482,7 +482,7 @@ flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and
 flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249);
                          // a one-track station (T-3332): +-(10 + how far its band's middle is off the centre line, px), + or - its side
 uniform vec3 u_one;      // T-3332: a one-track station's bar: its middle off the centre line, half width, and how far its bulge sticks out, px
-flat out float v_bulge;  // a one-track station's bulge depth, px, 0 none
+flat out vec2 v_bulge;   // a one-track station's bulge: how far it sticks out and its half length, px, 0 none
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
 flat out float v_hot;
@@ -505,7 +505,7 @@ void main() {
   v_hot = 0.0;
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
-  v_bulge = 0.0;
+  v_bulge = vec2(0.0);
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = a_crowd;
   int flags = int(a_st.z + 0.5);
@@ -579,7 +579,7 @@ void main() {
     float room = hw;
     if ((flags & ${ST_ONE}) != 0) {
       v_size.y = u_one.y;
-      v_bulge = u_one.z;
+      v_bulge = vec2(u_one.z, ${ONE_BULGE_K.toFixed(2)} * hl);
       v_lane = ((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * (10.0 + u_one.x);
       room = u_one.x + u_one.y + u_one.z;
     }
@@ -617,7 +617,7 @@ void main() {
       xl = -l - 1.0;
       xh = l + 1.0;
       v_lane = 0.0;
-      v_bulge = 0.0;
+      v_bulge = vec2(0.0);
       v_crowd = vec4(vec2(max(a_crowd.x, a_crowd.y)), vec2(max(a_crowd.z, a_crowd.w)));
     }
   }
@@ -645,7 +645,7 @@ flat out float v_alpha;
 flat out vec4 v_crowd;
 flat out vec4 v_scr;
 flat out float v_lane;
-flat out float v_bulge;
+flat out vec2 v_bulge;
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the bridges between hovered stations (T-730)
 uniform highp int u_hot_n;
 flat out float v_hot;
@@ -655,7 +655,7 @@ void main() {
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
   v_dot = 0.0;
   v_lane = 0.0;
-  v_bulge = 0.0;
+  v_bulge = vec2(0.0);
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
   v_crowd = vec4(0.0);
   v_alpha = a_bflag.y > 0.5 ? 0.6 : 1.0;
@@ -699,7 +699,7 @@ flat in float v_alpha;
 flat in vec4 v_crowd;
 flat in vec4 v_scr;
 flat in float v_lane;
-flat in float v_bulge;
+flat in vec2 v_bulge;
 flat in float v_hot;
 ${CENTRE_VARS("in")}
 ${CENTRE_GLSL}
@@ -724,9 +724,9 @@ void main() {
   }
   float d = v_dot > 0.0 ? length(v_p) - v_dot : boxSdf(f, v_size.xy);
   // T-3332: the bulge on a one-track station's side, a box from the bar's inner edge out
-  if (v_dot <= 0.0 && v_bulge > 0.0) {
-    float bl = max(${ONE_BULGE_SHARE} * v_size.x, ${ONE_BULGE_MIN} * (v_size.y + v_bulge));
-    d = min(d, boxSdf(vec2(f.x, f.y - sign(v_lane) * 0.5 * v_bulge), vec2(bl, v_size.y + 0.5 * v_bulge)));
+  if (v_dot <= 0.0 && v_bulge.x > 0.0) {
+    float bl = v_bulge.y;
+    d = min(d, boxSdf(vec2(f.x, f.y - sign(v_lane) * 0.5 * v_bulge.x), vec2(bl, v_size.y + 0.5 * v_bulge.x)));
   }
   float inner = clamp(0.5 - d - u_ring, 0.0, 1.0);
   // T-1416, T-1527: a terminal's buffer stop, the platform's -axis end where the track ends, is a

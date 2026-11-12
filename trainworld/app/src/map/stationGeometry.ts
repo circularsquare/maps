@@ -229,9 +229,9 @@ export interface StationStyle {
   one?: { c: number; hb: number; depth: number };
 }
 
-/** T-3332: a one-track station's bulge is this share of the bar's half length long (each way), and at
- * least this many of its own width and depth. STATION_VS and SEL_FS read the same numbers. */
-export const ONE_BULGE_SHARE = 0.16, ONE_BULGE_MIN = 1.2;
+/** T-3332: a one-track station's bulge is this share of the platform's half length each way, so it is part of the box:
+ * the platform is fixed on the ground, so the bulge keeps its place against the box at every zoom. STATION_VS and the CPU twin use the same number. */
+export const ONE_BULGE_K = 0.18;
 
 /** A box is this share of the width that covers a plain line and its rim at BOX_WIDTH_ZOOM
  * (T-239, Anita: "a bit too fat still, maybe 25% narrower"; T-652, "about 50% wider", hard to see
@@ -357,7 +357,7 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
     halfWidth: hw,
     dot: st.boxes ? 0 : Math.max(st.radius[transfer ? 1 : 0], cover),
     ...(st.boxes ? { pts } : {}),
-    ...(o ? { bulge: { cy: one * 0.5 * o.depth, hl: Math.max(ONE_BULGE_SHARE * halfLength, ONE_BULGE_MIN * (o.hb + o.depth)), hw: o.hb + 0.5 * o.depth } } : {}),
+    ...(o ? { bulge: { cy: one * 0.5 * o.depth, hl: ONE_BULGE_K * halfLength, hw: o.hb + 0.5 * o.depth } } : {}),
   };
 }
 

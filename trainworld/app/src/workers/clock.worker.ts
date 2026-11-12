@@ -3731,6 +3731,8 @@ function apply(op: EditOp): Applied {
       return { r: a.set_edge_oneway(op.edge, op.dir) };
     case "stationTracks":
       return { r: a.set_station_tracks(op.node, op.one) };
+    case "stationWay":
+      return { r: a.set_station_way(op.node, op.heading) };
     case "reverseStation":
       return { r: a.reverse_station(op.node) };
     case "stationProps": {
@@ -4577,6 +4579,7 @@ async function handle(msg: ToClock) {
       : q.what === "edgePis" ? api.edge_pis(q.edge)
       : q.what === "flyover" ? new Float64Array([api.flyover_cost(q.node)])
       : q.what === "upgradeCosts" ? new Float64Array(q.nodes.map((n) => api!.station_upgrade_cost(n, q.bit)))
+      : q.what === "tracksCost" ? new Float64Array([api.station_tracks_cost(q.node)])
       : q.what === "upgradeCost" ?new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "platformCost" ? new Float64Array([api.platform_cost(new Uint32Array(q.nodes), q.platform)])
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)

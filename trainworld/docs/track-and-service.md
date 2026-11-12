@@ -595,8 +595,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   through a passage along the straight line at 2 m/s. A **station building** joins stations too
   (below).
 - **One-track stations** (T-3332, notes/T-3332.md; `StationData::one`, `wasm/onetrack.rs`): a station's
-  platform on one track only, picked with the 1-line / 2-line icons in the station bar (remembered in
-  the browser) and switched in the station panel. On double track (each pair of quad) the platform is on
+  platform on one track only (a **one way station**; both tracks is a **two way station**), picked with the two icons in the station bar (remembered in
+  the browser) and switched in the station panel's three buttons (left track, both, right track; hover names the way trains stop, as eastbound). On double track (each pair of quad) the platform is on
   the track nearer the pointer, so it serves one way: trains running that way stop, trains the other way
   run past on the other track (a **pass**: `Run::pass`, kept in every per-stop array, timed as the train
   goes by, no dwell; capacity gives the other track no platform). A line through it both ways stops the
@@ -606,12 +606,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   north where the track runs due north-south, 2 the other way; save node flag bits 9-10, save level 18),
   not the physical side, so the running side picks the track and a running-side switch turns the way
   round to keep the platform on its track (listed after the switch). On double track it is drawn as a thin bar
-  over its track with a small bulge at the middle on the platform's side, so it does not read as a box. On two-way single track it is a
+  over its track with a small bulge at the middle on the platform's side, so it does not read as a box; the bulge is 0.18 of the platform half length each way, so it keeps its place against the box at every zoom. On two-way single track it is a
   stop where trains cannot pass: drawn as plain single track (no T-3212 split) and the single-track
   section runs on through it (6.2). Placed only on track running through, the same tracks both sides,
   not one-way single (`OneTrackHere`). Priced as a single-track station; switching a built one to both
-  tracks pays the difference, to one track is free with nothing back; a blueprint one switches free and
-  undoes. A one-track station has no terminal and no passing tracks (they go when it switches). Single
+  tracks pays the difference (the button's hover says "Costs $X", or "Free"), to one track is free with nothing back; a blueprint one switches free and
+  undoes; a built station's switch plays the upgrade sound. A one-track station has no terminal and no passing tracks (they go when it switches). Single
   track rebuilt double makes it an ordinary station; double rebuilt single keeps it one-track (no
   passing). Its twin on the other pair of quad (6.3) must serve the same way. Demand: a pass boards,
   alights and changes nobody (`span` -1 for that route node, demand-kernel.md 4.3).

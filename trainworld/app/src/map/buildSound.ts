@@ -48,6 +48,10 @@ function afterEditSound(op: EditOp, a: EditAnswer) {
     case "stationUpgrade": case "link":
       if (op.on) playBuild(a.charge > 0 ? "construct" : "pop");
       break;
+    case "stationTracks": case "stationWay": case "reverseStation":
+      // T-3332: a built station's change is construction, whatever it charges; a blueprint's is a pop
+      playBuild(world.peek()?.save.stations.find((x) => x.num === op.node)?.built ? "construct" : "pop");
+      break;
   }
 }
 
