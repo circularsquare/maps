@@ -14,6 +14,7 @@ import { t, tRich, tNumber } from "../i18n";
 import { playedText } from "../game/gameTime";
 import { Leaderboard } from "./Leaderboard";
 import { Community, ShareDialog } from "./Community";
+import { FlagSetting } from "./Flag";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
 import "./account.css";
@@ -126,6 +127,7 @@ function SignedIn({ a }: { a: AccountView }) {
     <AccountGames />
     <AccountPlayed />
     <NameHidden />
+    <FlagSetting />
     <MergeQuestion />
     {password && <form class="acct-form acct-sec" onSubmit={(e) => { e.preventDefault(); saveEmail(e.currentTarget, val(e.currentTarget, "email").trim()); }}>
       <input name="email" type="email" placeholder={t("accountPanel.recoveryEmail")} aria-label={t("accountPanel.recoveryEmail")} autocomplete="email" defaultValue={a.pendingEmail || a.email || ""} key={a.pendingEmail || a.email} />

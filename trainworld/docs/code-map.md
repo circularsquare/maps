@@ -131,7 +131,9 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.
 - Account (T-972, T-973): `account.ts` (the optional anita.garden account, noritetsu's, and the
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
-  shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`.
+  shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`. T-3269, the flag beside
+  a name: `flags.ts` and its list `flags.json`, `ui/Flag.tsx` (the picture and the account panel's picker),
+  `public/flags/` written by `tools/flags.mjs`.
   T-2887, Community: `community.ts` (share, lists, like, report, the `?share=` link, View), `ui/Community.tsx` (the
   modal, the Share button and dialog), `diagram/shared.ts` (a schematic in the server's drawing format and back),
   `sharedSave.ts` (T-3115: a save going up with a share, and a stranger's checked before the loader); Anita's side is

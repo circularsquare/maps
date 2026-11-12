@@ -17,6 +17,7 @@ import { moneyState } from "../game/money";
 import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
 import { CommunityButton } from "./Community";
+import { Flag } from "./Flag";
 import { Icon } from "./widgets";
 
 export const WORLD = "points";
@@ -29,7 +30,7 @@ const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) {
   return <li class={mine ? "me" : ""}>
     <span class="lb-rank num">{r.rank}</span>
-    <span class="lb-name">{r.name}</span>
+    <span class="lb-name"><Flag code={r.flag} />{r.name}</span>
     <span class="lb-value num" data-tip={t("leaderboard.valueTip", { points: exact(r.value), world: board === WORLD, city: board === WORLD ? "" : board.startsWith(COUNTRY) ? countryLabel(board.slice(COUNTRY.length)) : cityName(board.slice(WORLD.length + 1)) }) + "\n" + t("leaderboard.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM })}>{t("leaderboard.value", { points: pointsShort(r.value) })}</span>
   </li>;
 }

@@ -18,6 +18,7 @@ import { fitView, type DecodedShare } from "../diagram/shared";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { CityPick, WORLD, type MorePlaces } from "./Leaderboard";
+import { Flag } from "./Flag";
 import { LoadBar } from "./LoadingScreen";
 import { Modal } from "./Modal";
 import { Icon } from "./widgets";
@@ -103,8 +104,8 @@ function Likes({ row }: { row: ShareRow }) {
 
 /** T-3144: the title in bold, then the sharer's name in grey; a share from before titles has the name alone */
 function Heading({ row }: { row: ShareRow }) {
-  if (!row.title) return <strong>{row.name || t("community.anon")}</strong>;
-  return <span class="cm-heading"><strong>{row.title}</strong>{row.name && <span class="cm-by">{row.name}</span>}</span>;
+  if (!row.title) return <strong><Flag code={row.flag} />{row.name || t("community.anon")}</strong>;
+  return <span class="cm-heading"><strong>{row.title}</strong>{row.name && <span class="cm-by"><Flag code={row.flag} />{row.name}</span>}</span>;
 }
 
 function Card({ row, onOpen }: { row: ShareRow; onOpen: () => void }) {

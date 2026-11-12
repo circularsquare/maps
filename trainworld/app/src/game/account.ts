@@ -36,9 +36,9 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean }
-export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean }
-export interface BoardRow { rank: number; name: string; value: number }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldFlags?: boolean }
+export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean; /** T-3269: the flag beside the name, game/flags.ts */ flag?: string }
+export interface BoardRow { rank: number; name: string; value: number; flag?: string }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
 
 /** The most cities a game sends (shonei-server's MaxTwCities): its best ones. */
