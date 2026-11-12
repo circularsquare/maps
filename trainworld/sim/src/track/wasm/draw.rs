@@ -1266,7 +1266,9 @@ pub(super) const BRANCH_CLEAR: f64 = 20.0;
 /// where it makes a junction of a plain joint, single track's end there takes the track beside it
 /// the same way, as (edge end, join). Every lateral position is 200 m out, as `derive_node` ranks ends.
 fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bool) -> (u8, Vec<(u32, u8)>) {
-    if !r.double || r.dirs.is_empty() || r.dirs.len() > 2 || out.len() < 2 {
+    // T-3344: a double drawn at a node of single ends joins those with a set way (`ends_before_double`)
+    let singles_first = !single && !r.double;
+    if !(r.double || singles_first) || r.dirs.is_empty() || r.dirs.len() > 2 || out.len() < 2 {
         return (0, vec![]);
     }
     let (dx, dy) = (out[1].x - r.x, out[1].y - r.y);
@@ -1320,7 +1322,7 @@ fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bo
         beside(mine, &there.iter().filter(|t| t.3).map(|t| (t.1, t.2)).collect::<Vec<_>>())
     };
     let mut theirs = vec![];
-    if !split && r.new_junction && there.iter().any(|t| !t.3 && t.2) {
+    if !split && !singles_first && r.new_junction && there.iter().any(|t| !t.3 && t.2) {
         for t in there.iter().filter(|t| t.3) {
             let e = (t.0 >> 1) as usize;
             if net.edge_tracks[e] != 1 || net.edge_crossover[e] || net.edge_join[e][(t.0 & 1) as usize] != 0 {
@@ -1334,7 +1336,28 @@ fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bo
             }
         }
     }
+    if singles_first && !split {
+        theirs = ends_before_double(net, &there);
+    }
     (own, theirs)
+}
+
+/// A double drawn out of a node where single ends already are: each single on the far side whose
+/// way the player set joins the track that carries it, as `set_edge_oneway` does, so the double
+/// does not send trains against the way. An end with no way stays unjoined; the next single drawn
+/// there joins it by lateral place (`end_joins`' `theirs`).
+fn ends_before_double(net: &Network, there: &[(u32, f64, bool, bool)]) -> Vec<(u32, u8)> {
+    there
+        .iter()
+        .filter(|t| {
+            let e = (t.0 >> 1) as usize;
+            !t.3 && !t.2 && net.edge_tracks[e] == 1 && !net.edge_crossover[e] && net.edge_join[e][(t.0 & 1) as usize] == 0
+        })
+        .filter_map(|t| match net.edge_oneway[(t.0 >> 1) as usize] {
+            w @ 1..=2 => Some((t.0, crate::track::lanes::join_for((w == 1) == (t.0 & 1 == 0), net.right_hand))),
+            _ => None,
+        })
+        .collect()
 }
 
 fn branch_end(net: &Network, end: End, toward: (f64, f64)) -> Result<(End, Option<(f64, f64)>), Issue> {

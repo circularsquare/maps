@@ -486,3 +486,60 @@ fn t3171_double_off_single_no_badge_trunk_both_ways() {
     assert!(!junction_crosses(&a.w.net, j));
     assert!(singles(&a).iter().all(|&e| a.w.net.edge_way(e) == 0 && a.w.net.edge_join[e as usize] == [0; 2]));
 }
+
+// ---- T-3344: a double drawn at a node where single ends already are
+
+/// The end of piece `e` at node `n`, as an edge end (`edge << 1 | end`).
+fn end_at(a: &TrackApi, e: u32, n: u32) -> u32 {
+    e << 1 | (a.w.net.end_node(e, 1) == n) as u32
+}
+
+/// A single set one way, then a double drawn on from its end: the single joins the double's track
+/// that carries its way, and its way stays.
+#[test]
+fn t3344_double_after_a_one_way_single_joins_the_track_of_its_way() {
+    for right_hand in [true, false] {
+        for into in [true, false] {
+            let mut a = api(right_hand);
+            assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(3000.0, 0.0)), &[], 1, false), 0);
+            let n = node_near(&a, 3000.0, 0.0);
+            let s = singles(&a)[0];
+            let way = if (a.w.net.end_node(s, 1) == n) == into { 1 } else { 2 };
+            assert_eq!(a.set_edge_oneway(s, way), 0, "{}", a.issues());
+            assert_eq!(a.add_route(&ends(at_node(&a, n), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+            let (net, c) = (&a.w.net, end_at(&a, s, n));
+            assert!(net.join_applies(c));
+            assert_eq!(a.edge_oneway(s), way, "the set way stays");
+            assert_eq!(net.join_away(c), Some(!into), "right hand {right_hand}, into {into}");
+            assert_eq!(net.edge_way(s), way);
+        }
+    }
+}
+
+/// A single with no way set stays unjoined when a double is drawn on from its end.
+#[test]
+fn t3344_a_lone_single_then_a_double_stays_unjoined() {
+    let mut a = api(true);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(3000.0, 0.0)), &[], 1, false), 0);
+    let n = node_near(&a, 3000.0, 0.0);
+    assert_eq!(a.add_route(&ends(at_node(&a, n), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+    assert!(singles(&a).iter().all(|&e| a.w.net.edge_join[e as usize] == [0; 2] && a.w.net.edge_way(e) == 0));
+}
+
+/// A single in, the double out, then a second single beside the first: both end up on a track each.
+#[test]
+fn t3344_second_single_after_the_double_joins_both_tracks() {
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(1000.0, -300.0), free(3000.0, 0.0)), &[], 1, false), 0);
+        let n = node_near(&a, 3000.0, 0.0);
+        assert_eq!(a.add_route(&ends(at_node(&a, n), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+        assert_eq!(a.add_route(&ends(at_node(&a, n), free(500.0, 400.0)), &[], 1, false), 0, "{}", a.issues());
+        let s = singles(&a);
+        let net = &a.w.net;
+        let j: Vec<u8> = s.iter().map(|&e| net.edge_join[e as usize][(net.end_node(e, 1) == n) as usize]).collect();
+        assert!(j.iter().all(|&j| j != 0) && j[0] != j[1], "right hand {right_hand}: joins {j:?}");
+        let ways: Vec<u8> = s.iter().map(|&e| net.edge_way(e)).collect();
+        assert!(ways.iter().all(|&w| w != 0), "ways {ways:?}");
+    }
+}
