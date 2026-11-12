@@ -302,7 +302,7 @@ async function checkZone(page, errors, id, C, out, result) {
   await page.evaluate(() => { const d = document.querySelector('#debug'); if (d) d.style.display = 'none'; window.tw.display.value = { ...window.tw.display.value, commuters: true, commuterEnd: 'home' }; });
   // the no-rail split: wait until the top bar has the city's own figures
   say(id, 'waiting for its split');
-  await page.waitForFunction(name => /Train[\s\S]*Walking[\s\S]*Driving/.test(document.querySelector('.split-row')?.getAttribute('data-tip') ?? '') && (document.querySelector('.split-row')?.getAttribute('data-tip') ?? '').includes(name) && !/–/.test(document.querySelector('.split-row .pct')?.textContent ?? '–'), C.name, { timeout: 300000 });
+  await page.waitForFunction(name => /(Train|Transit)[\s\S]*Walking[\s\S]*Driving/.test(document.querySelector('.split-row')?.getAttribute('data-tip') ?? '') && (document.querySelector('.split-row')?.getAttribute('data-tip') ?? '').includes(name) && !/–/.test(document.querySelector('.split-row .pct')?.textContent ?? '–'), C.name, { timeout: 300000 });
   await settle(page, () => window.twDemand.view()?.final, undefined, 6000);
   await idle(page, 6000);
   result.noRail = { topBar: await topBar(page), cities: await page.evaluate(id => window.twDemand.cities().get(id) ?? null, id) };

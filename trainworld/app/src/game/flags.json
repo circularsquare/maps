@@ -1,5 +1,5 @@
 {
-  "note": "T-3269, T-3279: the flags a player can show beside their name, in the picker's order: countries, other places, the rest. tools/flags.mjs draws or copies the pictures into public/flags/ (4:3) and writes shonei-server's trainworld_flags.json from this file; rerun it and redeploy the server after a change. `set` is the server's flag list version that first accepts the code (config trainworldFlagSet); the picker hides newer ones. Sources and licences: notes/T-3269.md.",
+  "note": "T-3269, T-3279, T-3328: the flags a player can show beside their name, in the picker's order: countries, other places, the rest. tools/flags.mjs draws or copies the pictures into public/flags/ (4:3) and writes shonei-server's trainworld_flags.json from this file; rerun it and redeploy the server after a change. `set` is the server's flag list version that first accepts the code (config trainworldFlagSet); the picker hides newer ones. Sources and licences: notes/T-3269.md.",
   "countries": ["ad", "ae", "af", "ag", "ai", "al", "am", "ao", "aq", "ar", "as", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "bj", "bl", "bm", "bn", "bo", "bq", "br", "bs", "bt", "bv", "bw", "by", "bz", "ca", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "cr", "cu", "cv", "cw", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "ee", "eg", "eh", "er", "es", "et", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mf", "mg", "mh", "mk", "ml", "mm", "mn", "mo", "mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw", "mx", "my", "mz", "na", "nc", "ne", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "so", "sr", "ss", "st", "sv", "sx", "sy", "sz", "tc", "td", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tr", "tt", "tv", "tw", "tz", "ua", "ug", "um", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "xk", "ye", "yt", "za", "zm", "zw"],
   "places": [
     { "code": "eu" },
@@ -53,7 +53,28 @@
     { "code": "jp-44", "country": "jp", "set": 2, "name": "Oita", "ja": "大分県", "zh-Hans": "大分县", "zh-TW": "大分縣", "commons": "Flag of Oita Prefecture.svg" },
     { "code": "jp-45", "country": "jp", "set": 2, "name": "Miyazaki", "ja": "宮崎県", "zh-Hans": "宫崎县", "zh-TW": "宮崎縣", "commons": "Flag of Miyazaki Prefecture.svg" },
     { "code": "jp-46", "country": "jp", "set": 2, "name": "Kagoshima", "ja": "鹿児島県", "zh-Hans": "鹿儿岛县", "zh-TW": "鹿兒島縣", "commons": "Flag of Kagoshima Prefecture.svg" },
-    { "code": "jp-47", "country": "jp", "set": 2, "name": "Okinawa", "ja": "沖縄県", "zh-Hans": "冲绳县", "zh-TW": "沖繩縣", "commons": "Flag of Okinawa Prefecture.svg" }
+    { "code": "jp-47", "country": "jp", "set": 2, "name": "Okinawa", "ja": "沖縄県", "zh-Hans": "冲绳县", "zh-TW": "沖繩縣", "commons": "Flag of Okinawa Prefecture.svg" },
+    { "code": "es-ct", "country": "es", "set": 3, "name": "Catalonia", "ja": "カタルーニャ州", "zh-Hans": "加泰罗尼亚", "zh-TW": "加泰隆尼亞", "icons": true },
+    { "code": "es-pv", "country": "es", "set": 3, "name": "Basque Country", "ja": "バスク州", "zh-Hans": "巴斯克", "zh-TW": "巴斯克", "icons": true },
+    { "code": "es-ga", "country": "es", "set": 3, "name": "Galicia", "ja": "ガリシア州", "zh-Hans": "加利西亚", "zh-TW": "加里西亞", "icons": true },
+    { "code": "es-vc", "country": "es", "set": 3, "name": "Valencia", "ja": "バレンシア州", "zh-Hans": "巴伦西亚", "zh-TW": "巴倫西亞", "commons": "Flag of the Land of Valencia (official).svg" },
+    { "code": "es-an", "country": "es", "set": 3, "name": "Andalusia", "ja": "アンダルシア州", "zh-Hans": "安达卢西亚", "zh-TW": "安達魯西亞" },
+    { "code": "es-md", "country": "es", "set": 3, "name": "Madrid", "ja": "マドリード州", "zh-Hans": "马德里", "zh-TW": "馬德里", "commons": "Flag of the Community of Madrid.svg" },
+    { "code": "es-cn", "country": "es", "set": 3, "name": "Canary Islands", "ja": "カナリア諸島", "zh-Hans": "加那利群岛", "zh-TW": "加那利群島", "commons": "Flag of the Canary Islands.svg" },
+    { "code": "es-ib", "country": "es", "set": 3, "name": "Balearic Islands", "ja": "バレアレス諸島", "zh-Hans": "巴利阿里群岛", "zh-TW": "巴利阿里群島", "commons": "Flag of the Balearic Islands.svg" },
+    { "code": "es-as", "country": "es", "set": 3, "name": "Asturias", "ja": "アストゥリアス州", "zh-Hans": "阿斯图里亚斯", "zh-TW": "阿斯圖里亞斯", "commons": "Flag of Asturias.svg" },
+    { "code": "es-cm", "country": "es", "set": 3, "name": "Castile-La Mancha", "ja": "カスティーリャ＝ラ・マンチャ州", "zh-Hans": "卡斯蒂利亚-拉曼恰", "zh-TW": "卡斯提亞-拉曼恰", "commons": "Flag of Castile-La Mancha.svg" },
+    { "code": "es-ex", "country": "es", "set": 3, "name": "Extremadura", "ja": "エストレマドゥーラ州", "zh-Hans": "埃斯特雷马杜拉", "zh-TW": "埃斯特雷馬杜拉", "commons": "Flag of Extremadura, Spain (with coat of arms).svg" },
+    { "code": "es-mc", "country": "es", "set": 3, "name": "Murcia", "ja": "ムルシア州", "zh-Hans": "穆尔西亚", "zh-TW": "穆爾西亞", "commons": "Flag of the Region of Murcia.svg" },
+    { "code": "es-nc", "country": "es", "set": 3, "name": "Navarre", "ja": "ナバーラ州", "zh-Hans": "纳瓦拉", "zh-TW": "納瓦拉" },
+    { "code": "lisbon", "country": "pt", "set": 3, "name": "Lisbon", "ja": "リスボン", "zh-Hans": "里斯本", "zh-TW": "里斯本" },
+    { "code": "porto", "country": "pt", "set": 3, "name": "Porto", "ja": "ポルト", "zh-Hans": "波尔图", "zh-TW": "波多" },
+    { "code": "pt-30", "country": "pt", "set": 3, "name": "Madeira", "ja": "マデイラ諸島", "zh-Hans": "马德拉", "zh-TW": "馬德拉" },
+    { "code": "pt-20", "country": "pt", "set": 3, "name": "Azores", "ja": "アゾレス諸島", "zh-Hans": "亚速尔群岛", "zh-TW": "亞速爾群島", "commons": "Flag of the Azores.svg" },
+    { "code": "id-jk", "country": "id", "set": 3, "name": "Jakarta", "ja": "ジャカルタ", "zh-Hans": "雅加达", "zh-TW": "雅加達" },
+    { "code": "fr-bre", "country": "fr", "set": 3, "name": "Brittany", "ja": "ブルターニュ", "zh-Hans": "布列塔尼", "zh-TW": "布列塔尼" },
+    { "code": "fr-cor", "country": "fr", "set": 3, "name": "Corsica", "ja": "コルシカ島", "zh-Hans": "科西嘉", "zh-TW": "科西嘉" },
+    { "code": "paris", "country": "fr", "set": 3, "name": "Paris", "ja": "パリ", "zh-Hans": "巴黎", "zh-TW": "巴黎" }
   ],
   "more": [
     { "code": "train" },

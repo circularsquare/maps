@@ -1,5 +1,5 @@
-// T-3269, T-3279: the flags beside players' names, all 4:3 (640 x 480). From the list in app/src/game/flags.json:
-// countries, the EU and the UN from flag-icons (MIT); Japanese prefectures from Wikimedia Commons (public domain,
+// T-3269, T-3279, T-3328: the flags beside players' names, all 4:3 (640 x 480). From the list in app/src/game/flags.json:
+// countries, the EU, the UN and three Spanish regions (`icons`) from flag-icons (MIT); Japanese prefectures and the Spanish, Portuguese and Indonesian places from Wikimedia Commons (public domain or CC0,
 // fitted to 4:3 by cropping the sides); Earth and Pirate from circle-flags (MIT) with the circle taken off; the rest
 // drawn here. Writes app/public/flags/<code>.svg, both licences beside them, shonei-server's trainworld_flags.json
 // (the codes it accepts) and app/src/game/tzCountry.json (time zone to country, for the picker's first country, from
@@ -94,6 +94,68 @@ const drawn = {
   // blue, white, orange upright; the seal, simplified to a blue ring round a disc, in the white
   nyc: svg(rect("#003884", 0, 0, 214, 480) + rect("#fff", 213, 0, 214, 480) + rect("#ff6319", 426, 0, 214, 480)
     + `<circle cx="320" cy="240" r="70" fill="none" stroke="#003884" stroke-width="12"/><circle cx="320" cy="240" r="40" fill="#003884"/>`),
+  // Andalusia: green, white, green (the official flag has the arms on the white; Commons' drawing of them is CC BY-SA)
+  "es-an": stripes(["#00843d", "#fff", "#00843d"]),
+  // Madeira: blue, gold, blue upright with the red Cross of the Order of Christ on the gold (simplified; Commons' file is CC BY-SA)
+  "pt-30": svg(rect("#00247d", 0, 0, 640, 480) + rect("#ffcc00", 150, 0, 340, 480)
+    + `<path fill="#d80027" d="M270 130h100v100h100v100H370v100H270V330H170V230h100z"/><path fill="#fff" d="M308 168h24v100h100v24H332v100h-24V292H208v-24h100z"/>`),
+  // Brittany, Gwenn-ha-du: five black and four white stripes, ermine spots in a white canton (Commons' file is CC BY-SA)
+  "fr-bre": svg(rect("#fff", 0, 0, 640, 480) + Array.from({ length: 5 }, (_, i) => rect("#000", 0, r1((i * 2 * 480) / 9), 640, r1(480 / 9) + 0.5)).join("")
+    + rect("#fff", 0, 0, 249, 267) + `<path fill="#000" d="${[[42, 36], [104, 36], [166, 36], [228, 36], [73, 98], [135, 98], [197, 98], [42, 160], [104, 160], [166, 160], [228, 160]]
+    .filter(([x]) => x < 240).map(([x, y]) => `M${x} ${y + 40}l-6-26h12zM${x} ${y - 6}m-9 6a9 9 0 1 0 18 0a9 9 0 1 0-18 0`).join("")}"/>`),
+  // Paris: Commons' own flag, a blue left half and a red right half (a square there, cropped here)
+  paris: svg(rect("#ed2939", 0, 0, 640, 480) + rect("#002395", 0, 0, 320, 480)),
+  // Corsica: the Moor's head in profile, a white band on his brow, on white (simplified from the CC0 drawing)
+  "fr-cor": svg(rect("#fff", 0, 0, 640, 480) + `<path fill="#000" d="M300 70c70-26 150 8 150 90 0 36-14 60-30 80l24 58-62 30-14 56H300l-12-50c-60-12-92-60-92-122 0-60 34-120 104-142z"/>`
+    + `<path fill="#fff" d="M200 140c36-22 148-28 244 12l-6 36c-94-38-196-30-244-4z"/><path fill="#000" d="M356 196l22-14 4 24z"/>`),
+  // Lisbon and Porto: eight triangles from the centre, black and white (Lisbon) or green and white (Porto), the city arms
+  // on the middle (Commons' drawings of the arms are 1 to 2 MB, so the arms are simplified here)
+  lisbon: svg(rect("#fff", 0, 0, 640, 480) + `<path fill="#000" d="M320 240L0 0h320zM320 240L640 0v240zM320 240L640 480H320zM320 240L0 480V240z"/>`
+    + `<path fill="none" stroke="#fff" stroke-width="30" d="M200 330A140 140 0 0 1 200 150M440 330A140 140 0 0 0 440 150"/>`
+    + `<path fill="#e8b400" stroke="#000" stroke-width="5" d="M244 170h152v82q0 44-76 74-76-30-76-74z"/><path fill="#2a8a45" d="M244 262q19 12 38 0t38 0 38 0 38 0v8q0 8-12 22-64 20-140 0-4-14-4-22z"/>`
+    + `<path fill="#000" d="M300 200h40v36h-40z"/><path fill="#e8b400" stroke="#000" stroke-width="4" d="M262 150l12-24 18 14 28-24 28 24 18-14 12 24z"/>`),
+  porto: svg(rect("#fff", 0, 0, 640, 480) + `<path fill="#447a4b" d="M320 240L0 0h320zM320 240L640 0v240zM320 240L640 480H320zM320 240L0 480V240z"/>`
+    + `<path fill="none" stroke="#fff" stroke-width="30" d="M200 330A140 140 0 0 1 200 150M440 330A140 140 0 0 0 440 150"/>`
+    + `<path fill="#2a3bf0" stroke="#aaa" stroke-width="5" d="M244 170h152v82q0 44-76 74-76-30-76-74z"/><path fill="#c9a227" d="M278 190h26v18h16v-18h16v18h16v-18h26v80h-100z"/><path fill="#c0201f" d="M310 238h20v32h-20z"/>`
+    + `<path fill="#2a8a45" d="M244 282q19 12 38 0t38 0 38 0 38 0q0 22-76 44-76-22-76-44z"/><path fill="#999" stroke="#555" stroke-width="4" d="M262 150l12-24 18 14 28-24 28 24 18-14 12 24z"/>`),
+  // Navarre: red, a gold crown over a red shield with gold chains (simplified)
+  "es-nc": svg(rect("#d8101a", 0, 0, 640, 480) + `<path fill="#e8b400" d="M262 170l12-44 24 20 22-34 22 34 24-20 12 44z"/>`
+    + `<path fill="#d8101a" stroke="#e8b400" stroke-width="10" d="M268 190h104v110q0 36-52 52-52-16-52-52z"/><path fill="none" stroke="#e8b400" stroke-width="9" d="M280 206l80 130M360 206l-80 130M320 200v140M276 270h88"/><circle cx="320" cy="270" r="12" fill="#2a8a45"/>`),
+  // Jakarta: the arms on white, a yellow-edged blue shield with a white monument and a red band for its name (simplified)
+  "id-jk": svg(rect("#fff", 0, 0, 640, 480) + `<path fill="#f8c300" d="M218 108h204v26l-10 10v100q0 66-92 104-92-38-92-104V144l-10-10z"/>`
+    + `<path fill="#fff" d="M236 124h168v16l-10 8v96q0 52-74 86-74-34-74-86v-96l-10-8z"/><rect x="236" y="124" width="168" height="18" fill="#fff"/><rect x="248" y="126" width="144" height="12" fill="#d8101a"/>`
+    + `<path fill="#0b4ea2" d="M248 156h144v82q0 46-72 80-72-34-72-80z"/><path fill="#fff" d="M314 170h12v110h-12z"/><path fill="#fff" d="M296 280h48v14h-48z"/>`),
+  // T-3351: the four Spanish communities and two Indonesian provinces whose Commons files are CC BY / BY-SA or heavy, redrawn
+  // from the official descriptions with plain shapes (the arms become a small crowned shield, or a simple emblem)
+  // Aragon: four red bars on gold, a small quartered shield under a crown on the hoist side
+  "es-ar": svg(Array.from({ length: 9 }, (_, i) => rect(i % 2 ? "#da121a" : "#fcdd09", 0, r1((i * 480) / 9), 640, r1(480 / 9) + 1)).join("")
+    + `<g transform="translate(180 270) scale(1.35) translate(-180 -270)"><clipPath id="a"><path d="M130 200h100v80q0 50-50 70-50-20-50-70z"/></clipPath><path fill="#fcdd09" stroke="#7a6500" stroke-width="4" d="M134 190l8-30 18 14 20-26 20 26 18-14 8 30z"/>`
+    + `<g clip-path="url(#a)"><path fill="#fff" d="M130 200h100v150H130z"/><path fill="#0072bc" d="M180 200h50v75h-50z"/><path fill="#fcdd09" d="M180 275h50v75h-50z"/>`
+    + `<path fill="#da121a" d="M130 258h50v14h-50zM148 200h14v75h-14zM130 330h50v12h-50zM190 275h6v75h-6zM204 275h6v75h-6zM218 275h6v75h-6z"/><path fill="#fff" d="M200 215h10v50h-10zM192 228h26v10h-26z"/></g>`
+    + `<path fill="none" stroke="#333" stroke-width="5" d="M130 200h100v80q0 50-50 70-50-20-50-70z"/></g>`),
+  // Cantabria: white over red, the arms in the middle: a crown on a blue and red shield with a grey disc
+  "es-cb": svg(rect("#fff", 0, 0, 640, 240) + rect("#da121a", 0, 240, 640, 240)
+    + `<g transform="translate(320 270) scale(1.35) translate(-320 -270)"><path fill="#da121a" stroke="#7a1a1a" stroke-width="4" d="M278 196l-6-40 22 14 26-34 26 34 22-14-6 40z"/><path fill="#fcdd09" d="M278 192h84v16h-84z"/>`
+    + `<path fill="#0072bc" d="M272 208h96v62h-96z"/><path fill="#da121a" d="M272 270h96v18q0 50-48 70-48-20-48-70z"/><circle cx="320" cy="304" r="30" fill="#c8c8c8" stroke="#888" stroke-width="3"/>`
+    + `<path fill="#fff" d="M290 244h60v10h-60zM304 222h10v22h-10z"/><path fill="none" stroke="#333" stroke-width="5" d="M272 208h96v80q0 50-48 70-48-20-48-70z"/></g>`),
+  // Castile and Leon: quarters, a gold castle on red and a purple lion on white
+  "es-cl": svg(rect("#da121a", 0, 0, 640, 480) + rect("#fff", 320, 0, 320, 240) + rect("#fff", 0, 240, 320, 240)
+    + [[160, 120], [480, 360]].map(([x, y]) => `<g transform="translate(${x} ${y}) scale(1.45)"><path fill="#fcdd09" stroke="#7a6500" stroke-width="4" d="M-56-14h20v-18h14v18h14v-34h12v-14h12v14h12v34h14v-18h14v18h20v78H-56z"/>`
+      + `<path fill="#0072bc" d="M-10 28h20v36h-20zM-44 0h10v18h-10zM34 0h10v18H34z"/></g>`).join("")
+    + [[480, 120], [160, 360]].map(([x, y]) => `<g transform="translate(${x} ${y}) scale(1.12)" fill="#7b2f6b" stroke="#7b2f6b" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="6" cy="10" rx="28" ry="42" transform="rotate(-14 6 10)" stroke="none"/>`
+      + `<circle cx="-12" cy="-48" r="30" stroke="none"/><circle cx="43" cy="-34" r="9" stroke="none"/><path fill="none" stroke-width="17" d="M-18-14L-54-40M-6-4L-52-14M10 44L-8 82M30 44L46 80"/><path fill="none" stroke-width="9" d="M26 34C64 28 58-10 42-32"/><path stroke="none" d="M-34-60l-6-18 16 6zM-40-44l-24 4 18 10z"/></g>`).join("")),
+  // La Rioja: red, white, green, yellow, a small blue shield under a crown on the white and green
+  "es-ri": svg(rect("#da291c", 0, 0, 640, 120) + rect("#fff", 0, 120, 640, 120) + rect("#6abf2a", 0, 240, 640, 120) + rect("#ffc22d", 0, 360, 640, 120)
+    + `<g transform="translate(320 230) scale(1.3) translate(-320 -230)"><path fill="#da121a" stroke="#7a1a1a" stroke-width="4" d="M282 138l-6-36 22 12 22-28 22 28 22-12-6 36z"/><path fill="#fcdd09" d="M282 134h76v14h-76z"/>`
+    + `<path fill="#0a6ebd" d="M276 152h88v82q0 54-44 72-44-18-44-72z"/><path fill="#6abf2a" d="M276 250q22-20 44-6t44-6q0 40-44 62-44-18-44-50z"/>`
+    + `<path fill="#da121a" d="M296 170h10v34h-10zM288 180h26v9h-26z"/><path fill="#fcdd09" d="M330 176h24v36h-24zM330 170h6v6h-6zM348 170h6v6h-6z"/><path fill="none" stroke="#333" stroke-width="5" d="M276 152h88v82q0 54-44 72-44-18-44-72z"/></g>`),
+  // Bali: orange with a blue pentagon holding a gold tiered temple roof under a star
+  "id-ba": svg(rect("#ff9955", 0, 0, 640, 480) + `<path fill="#4a90d9" stroke="#2f6aa8" stroke-width="5" d="${[0, 1, 2, 3, 4].map((i) => `${r1(320 + 120 * Math.sin((i * 2 * Math.PI) / 5))} ${r1(250 - 120 * Math.cos((i * 2 * Math.PI) / 5))}`).join("L").replace(/^/, "M")}Z"/>`
+    + `<path fill="#f0b800" d="${star(320, 170, 14, 5, 0.4)}"/><path fill="#e0a400" d="M318 186h4v14h-4zM304 200h32l-6 18h-20zM292 220h56l-8 20h-40zM280 242h80l-10 24h-60zM292 268h56v46h-56z"/><path fill="#4a90d9" d="M310 284h20v30h-20z"/><path fill="#e0a400" d="M268 306h104v14H268z"/>`),
+  // Yogyakarta: dark blue, a red disc in a gold wreath under a gold star, a white tower and gold wings, a white ribbon
+  "id-yo": svg(rect("#00004f", 0, 0, 640, 480) + `<path fill="#f8c300" d="${star(320, 92, 42, 5, 0.4)}"/><circle cx="320" cy="262" r="136" fill="none" stroke="#f8c300" stroke-width="22" stroke-dasharray="14 5"/>`
+    + `<circle cx="320" cy="262" r="112" fill="#e32b24"/><path fill="none" stroke="#f8c300" stroke-width="12" stroke-linecap="round" d="M300 270C250 250 240 200 252 168M340 270C390 250 400 200 388 168M300 296C240 280 224 230 232 196M340 296C400 280 416 230 408 196"/>`
+    + `<path fill="#fff" d="M314 160h12l10 150h-32z"/><path fill="#f8c300" d="M298 310h44v22h-44z"/><path fill="#fff" stroke="#999" stroke-width="3" d="M240 372h160l-14 34H254z"/>`),
   // Hiroshima: the white emblem, a crescent open to the upper right, on deep rose
   "jp-34": svg(rect("#ab3748", 0, 0, 640, 480)
     + `<circle cx="320" cy="240" r="132" fill="#fff"/><circle cx="352" cy="208" r="92" fill="#ab3748"/>`),
@@ -110,6 +172,7 @@ for (const m of [...list.places, ...list.more]) {
   if (m.code === "eu" || m.code === "un") { fromIcons(m.code); codes.push(m.code); }
   else if (m.code === "earth") put(m.code, unround("other/earth.svg", "#0052b4"));
   else if (m.code === "pirate") put(m.code, unround("other/jolly_roger.svg", "#333"));
+  else if (m.icons) { fromIcons(m.code); codes.push(m.code); }
   else if (m.commons) put(m.code, fit(await commonsFile(m.commons)));
   else if (drawn[m.code]) put(m.code, drawn[m.code]);
   else throw new Error(`no picture for ${m.code}`);

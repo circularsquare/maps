@@ -1,0 +1,16 @@
+node_modules/
+__pycache__/
+*.pyc
+.vite/
+
+# built by `npm run wasm` and `npm run build`
+trainworld/sim/target/
+trainworld/app/src/wasm/
+trainworld/app/dist/
+
+# game data (6 GB; the dev server fetches it from anita.garden when this folder is missing) and pipeline scratch
+trainworld/data/
+
+# output of the browser checks, and the Python venv the pipeline expects at the repo root
+artifacts/
+venv/

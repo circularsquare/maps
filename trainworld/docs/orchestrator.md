@@ -58,6 +58,10 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 
 - Game: notes/T-924.md "Commands" (`tools/deploy.py --dry-run --version X`, then `--smoked`, website push, `--verify`).
   Every publish gets a version and an entry in `app/src/ui/updates.ts`.
+- Open-source copy (T-2913, notes/T-2913.md): synced at each game publish under the same word (Anita, 2026-11-12):
+  `venv\Scripts\python.exe trainworld/tools/opensource/export.py` from the maps root, then `git push` in
+  ..\trainsworld-export. A PR is applied in maps by an agent (`gh pr diff`, `git apply`), checked like agent work,
+  committed with the contributor as co-author once she has seen it, and closed with a link after the next sync.
 - Old R2 versions: only through `python trainworld/tools/r2_purge.py <versions> [--yes]` (allowed by a permission
   rule; it refuses the live version, the newest 3 and anything not dated). Never a bare `rclone purge`.
 - shonei-server: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call; then `git push` separately.
