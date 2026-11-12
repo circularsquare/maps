@@ -1,0 +1,4438 @@
+{
+ "task": "T-3240",
+ "on": false,
+ "notes": "notes/T-3240.md; the rule in docs/regional.md 5.1; `places` written by pipeline/market_pull.py, the rest by hand",
+ "source": "Natural Earth 10m populated places (simple) 5.1.2, scalerank (public domain); resort towns from Wikidata (CC0)",
+ "gamma": 0.8,
+ "gamma_x": 0.25,
+ "cap": 3.0,
+ "phase_km": [
+  50.0,
+  150.0
+ ],
+ "off": [
+  "US",
+  "JP",
+  "GB",
+  "KR"
+ ],
+ "country_gamma": {
+  "CN": 0.6
+ },
+ "trim": {
+  "radius_km": 300.0,
+  "people": [
+   500000.0,
+   5000000.0
+  ]
+ },
+ "resorts": {
+  "excess": 1.5,
+  "share": 0.1,
+  "pop_unknown": 10000.0
+ },
+ "hand": {
+  "tky": [
+   0.0,
+   "Leh: Natural Earth's rank is for map balance; 60,000 people beyond the mountains"
+  ]
+ },
+ "rank_fit": [
+  20.801,
+  -1.0773
+ ],
+ "places": {
+  "aac": [
+   2.339,
+   "rank 4 (Annaba)"
+  ],
+  "aai": [
+   2.168,
+   "rank 4 (Suez)"
+  ],
+  "aay": [
+   1.5,
+   "resorts 90% of its people"
+  ],
+  "abb": [
+   0.895,
+   "rank 7 (Abbotsford)"
+  ],
+  "abd": [
+   1.679,
+   "rank 3 (Abu Dhabi)"
+  ],
+  "abe": [
+   0.351,
+   "resorts 2% of its people"
+  ],
+  "abn": [
+   0.066,
+   "rank 6 (Albany)"
+  ],
+  "abx": [
+   0.464,
+   "rank 6 (Abha)"
+  ],
+  "acb": [
+   2.373,
+   "rank 4 (Banda Aceh)"
+  ],
+  "aci": [
+   0.829,
+   "rank 6 (Patra)"
+  ],
+  "acp": [
+   2.667,
+   "rank 3 (Acapulco)"
+  ],
+  "ada": [
+   1.285,
+   "rank 4 (Daqing)"
+  ],
+  "ade": [
+   1.577,
+   "rank 3 (Adelaide); trimmed from 2.52, 1.68M within 300 km"
+  ],
+  "adk": [
+   0.932,
+   "rank 7 (Qasr Farafra)"
+  ],
+  "adu": [
+   0.953,
+   "rank 3 (Boise); trimmed from 2.88, 1.04M within 300 km"
+  ],
+  "adx": [
+   0.085,
+   "rank 6 (Adrar); trimmed from 0.89, 0.53M within 300 km"
+  ],
+  "aez": [
+   0.382,
+   "resorts 3% of its people"
+  ],
+  "agr": [
+   0.739,
+   "rank 4 (Agra)"
+  ],
+  "ahm": [
+   1.657,
+   "rank 2 (Ahmedabad)"
+  ],
+  "aho": [
+   0.494,
+   "rank 6 (Los Mochis)"
+  ],
+  "ahu": [
+   0.857,
+   "resorts 6% of its people"
+  ],
+  "akd": [
+   1.5,
+   "resorts 61% of its people"
+  ],
+  "akh": [
+   2.144,
+   "rank 6 (Akhtubinsk)"
+  ],
+  "ako": [
+   1.315,
+   "rank 4 (Akola)"
+  ],
+  "akt": [
+   0.469,
+   "resorts 3% of its people"
+  ],
+  "ala": [
+   1.5,
+   "resorts 97% of its people"
+  ],
+  "alc": [
+   1.5,
+   "resorts 37% of its people"
+  ],
+  "ale": [
+   1.874,
+   "rank 2 (Alexandria)"
+  ],
+  "alf": [
+   0.362,
+   "rank 7 (Alxa Zuoqi)"
+  ],
+  "alg": [
+   2.12,
+   "rank 2 (Algiers)"
+  ],
+  "ali": [
+   1.111,
+   "rank 4 (Aligarh)"
+  ],
+  "alk": [
+   0.087,
+   "rank 6 (Tula)"
+  ],
+  "alo": [
+   0.027,
+   "rank 6 (Alagoinhas)"
+  ],
+  "alq": [
+   1.867,
+   "rank 4 (Albuquerque); trimmed from 2.02, 2.10M within 300 km"
+  ],
+  "alt": [
+   0.795,
+   "rank 4 (Colíder); trimmed from 3.00, 0.92M within 300 km"
+  ],
+  "amr": [
+   2.528,
+   "rank 3 (Amritsar)"
+  ],
+  "ams": [
+   3.0,
+   "rank 1 (Amsterdam)"
+  ],
+  "anb": [
+   1.5,
+   "resorts 12% of its people"
+  ],
+  "anf": [
+   0.25,
+   "rank 3 (Antofagasta); trimmed from 3.00, 0.61M within 300 km"
+  ],
+  "ank": [
+   2.303,
+   "rank 2 (Ankara)"
+  ],
+  "anl": [
+   1.5,
+   "resorts 153% of its people"
+  ],
+  "ans": [
+   1.138,
+   "rank 4 (Anshan)"
+  ],
+  "aqu": [
+   0.241,
+   "rank 6 (Al Qunfudhah)"
+  ],
+  "arc": [
+   0.772,
+   "rank 6 (Arecibo)"
+  ],
+  "are": [
+   1.681,
+   "rank 4 (Arequipa)"
+  ],
+  "arg": [
+   0.652,
+   "rank 6 (Araguaína)"
+  ],
+  "arv": [
+   0.085,
+   "resorts 1% of its people"
+  ],
+  "arw": [
+   1.5,
+   "resorts 48% of its people"
+  ],
+  "asa": [
+   1.482,
+   "rank 3 (Asansol)"
+  ],
+  "ask": [
+   1.269,
+   "rank 4 (Astrakhan); trimmed from 2.01, 1.32M within 300 km"
+  ],
+  "asr": [
+   0.148,
+   "resorts 1% of its people"
+  ],
+  "asw": [
+   2.488,
+   "rank 4 (Aswan)"
+  ],
+  "asy": [
+   0.484,
+   "rank 4 (Asyut)"
+  ],
+  "ata": [
+   1.5,
+   "resorts 78% of its people"
+  ],
+  "ate": [
+   1.5,
+   "resorts 22% of its people"
+  ],
+  "ath": [
+   3.0,
+   "rank 1 (Athens)"
+  ],
+  "atl": [
+   2.987,
+   "rank 1 (Atlanta)"
+  ],
+  "aty": [
+   0.378,
+   "rank 4 (Altay); trimmed from 2.35, 0.67M within 300 km"
+  ],
+  "auc": [
+   2.29,
+   "rank 1 (Auckland); trimmed from 3.00, 2.90M within 300 km"
+  ],
+  "aui": [
+   0.916,
+   "resorts 6% of its people"
+  ],
+  "aus": [
+   1.102,
+   "rank 4 (Austin)"
+  ],
+  "aut": [
+   0.477,
+   "resorts 3% of its people"
+  ],
+  "aya": [
+   2.414,
+   "rank 3 (Pingxiang)"
+  ],
+  "azh": [
+   2.175,
+   "rank 4 (Bur Said)"
+  ],
+  "baa": [
+   0.993,
+   "rank 4 (Barranquilla)"
+  ],
+  "bad": [
+   1.43,
+   "rank 2 (Bandung)"
+  ],
+  "bal": [
+   0.8,
+   "rank 4 (Baltimore)"
+  ],
+  "ban": [
+   1.745,
+   "rank 1 (Bangkok)"
+  ],
+  "bao": [
+   3.0,
+   "rank 2 (Baotou)"
+  ],
+  "bap": [
+   1.88,
+   "rank 4 (Bandar Lampung)"
+  ],
+  "bar": [
+   1.956,
+   "rank 2 (Barcelona)"
+  ],
+  "bav": [
+   0.054,
+   "rank 3 (Boa Vista); trimmed from 3.00, 0.52M within 300 km"
+  ],
+  "bax": [
+   1.761,
+   "rank 4 (Barreiras)"
+  ],
+  "bbo": [
+   1.775,
+   "rank 4 (Brest)"
+  ],
+  "bbp": [
+   0.221,
+   "resorts 1% of its people"
+  ],
+  "bbv": [
+   1.105,
+   "rank 6 (Béchar)"
+  ],
+  "bbz": [
+   1.855,
+   "rank 6 (Birobidzhan)"
+  ],
+  "bdm": [
+   1.5,
+   "resorts 86% of its people"
+  ],
+  "bdz": [
+   0.016,
+   "resorts 0% of its people"
+  ],
+  "bee": [
+   3.0,
+   "rank 2 (Belém)"
+  ],
+  "beg": [
+   2.223,
+   "rank 3 (Belgrade)"
+  ],
+  "bei": [
+   2.645,
+   "rank 0 (Beijing)"
+  ],
+  "bej": [
+   2.509,
+   "rank 3 (Cancún)"
+  ],
+  "bel": [
+   1.914,
+   "rank 4 (Belfast)"
+  ],
+  "ben": [
+   2.032,
+   "rank 1 (Bengaluru)"
+  ],
+  "beo": [
+   0.175,
+   "rank 4 (Belo Horizonte)"
+  ],
+  "ber": [
+   3.0,
+   "rank 1 (Berlin)"
+  ],
+  "bez": [
+   0.663,
+   "rank 6 (Berezniki)"
+  ],
+  "bff": [
+   1.755,
+   "rank 4 (East London)"
+  ],
+  "bge": [
+   1.5,
+   "resorts 36% of its people"
+  ],
+  "bgu": [
+   2.179,
+   "rank 4 (Baguio)"
+  ],
+  "bhb": [
+   0.338,
+   "rank 3 (Bahía Blanca); trimmed from 3.00, 0.65M within 300 km"
+  ],
+  "bho": [
+   1.85,
+   "rank 3 (Bhopal)"
+  ],
+  "bhu": [
+   2.73,
+   "rank 3 (Bhubaneswar)"
+  ],
+  "bim": [
+   2.06,
+   "rank 4 (Raba)"
+  ],
+  "biq": [
+   1.641,
+   "rank 4 (Bei'an)"
+  ],
+  "bir": [
+   0.898,
+   "rank 4 (Birmingham)"
+  ],
+  "bit": [
+   0.786,
+   "rank 7 (Bintulu)"
+  ],
+  "bix": [
+   0.309,
+   "resorts 2% of its people"
+  ],
+  "biz": [
+   1.872,
+   "rank 4 (Bilbao)"
+  ],
+  "bkr": [
+   0.615,
+   "rank 6 (Biskra)"
+  ],
+  "blk": [
+   0.244,
+   "rank 6 (Belgorod)"
+  ],
+  "bly": [
+   0.475,
+   "rank 6 (Balakovo)"
+  ],
+  "bmc": [
+   0.539,
+   "rank 6 (Ithaca)"
+  ],
+  "bnd": [
+   1.249,
+   "rank 4 (Brandon); trimmed from 3.00, 1.30M within 300 km"
+  ],
+  "bne": [
+   2.137,
+   "rank 4 (Tanjung Pandan)"
+  ],
+  "bnt": [
+   0.164,
+   "resorts 1% of its people"
+  ],
+  "bnx": [
+   0.226,
+   "rank 6 (Pangkalpinang)"
+  ],
+  "bod": [
+   0.468,
+   "resorts 3% of its people"
+  ],
+  "bog": [
+   3.0,
+   "rank 0 (Bogota)"
+  ],
+  "bol": [
+   1.161,
+   "resorts 8% of its people"
+  ],
+  "bop": [
+   1.5,
+   "resorts 56% of its people"
+  ],
+  "bor": [
+   1.351,
+   "rank 4 (Bordeaux)"
+  ],
+  "bos": [
+   2.205,
+   "rank 2 (Boston)"
+  ],
+  "bot": [
+   0.06,
+   "rank 6 (Đồng Hới)"
+  ],
+  "bra": [
+   2.692,
+   "rank 2 (Brasília)"
+  ],
+  "brg": [
+   0.653,
+   "rank 6 (Bragança)"
+  ],
+  "bri": [
+   1.927,
+   "rank 3 (Brisbane)"
+  ],
+  "brj": [
+   1.732,
+   "rank 4 (Bratislava)"
+  ],
+  "brs": [
+   0.439,
+   "rank 6 (Breves)"
+  ],
+  "bru": [
+   2.904,
+   "rank 2 (Brussels)"
+  ],
+  "brx": [
+   1.583,
+   "rank 4 (Bern)"
+  ],
+  "bry": [
+   1.397,
+   "resorts 9% of its people"
+  ],
+  "bse": [
+   0.177,
+   "resorts 1% of its people"
+  ],
+  "bte": [
+   0.528,
+   "rank 6 (Chico)"
+  ],
+  "btg": [
+   0.649,
+   "rank 6 (Batangas)"
+  ],
+  "btt": [
+   2.519,
+   "rank 4 (Battambang)"
+  ],
+  "buc": [
+   3.0,
+   "rank 2 (Bucharest)"
+  ],
+  "bud": [
+   2.739,
+   "rank 2 (Budapest)"
+  ],
+  "bue": [
+   2.016,
+   "rank 1 (Buenos Aires)"
+  ],
+  "buf": [
+   2.761,
+   "rank 3 (Buffalo)"
+  ],
+  "buk": [
+   1.335,
+   "rank 4 (George Town)"
+  ],
+  "bur": [
+   0.909,
+   "rank 4 (Bursa)"
+  ],
+  "bus": [
+   0.377,
+   "rank 4 (Busan)"
+  ],
+  "bux": [
+   1.5,
+   "resorts 10% of its people"
+  ],
+  "buy": [
+   1.545,
+   "rank 4 (Ulyanovsk)"
+  ],
+  "bvl": [
+   1.5,
+   "rank 6 (Pocatello); resorts 12% of its people"
+  ],
+  "bwc": [
+   2.244,
+   "rank 4 (Sault Ste. Marie)"
+  ],
+  "bya": [
+   1.721,
+   "rank 4 (Bryansk)"
+  ],
+  "byu": [
+   0.493,
+   "resorts 3% of its people"
+  ],
+  "bzi": [
+   0.922,
+   "rank 6 (Olovyannaya); trimmed from 1.42, 1.01M within 300 km"
+  ],
+  "cad": [
+   0.125,
+   "resorts 1% of its people"
+  ],
+  "cae": [
+   1.873,
+   "rank 4 (Guaymas)"
+  ],
+  "cag": [
+   2.428,
+   "rank 3 (Calgary)"
+  ],
+  "cai": [
+   2.354,
+   "rank 0 (Cairo)"
+  ],
+  "cal": [
+   2.797,
+   "rank 2 (Cali)"
+  ],
+  "cam": [
+   0.823,
+   "rank 4 (Campinas)"
+  ],
+  "cap": [
+   3.0,
+   "rank 0 (Cape Town)"
+  ],
+  "car": [
+   1.193,
+   "resorts 8% of its people"
+  ],
+  "cas": [
+   3.0,
+   "rank 1 (Casablanca)"
+  ],
+  "cat": [
+   0.216,
+   "resorts 1% of its people"
+  ],
+  "caw": [
+   1.714,
+   "rank 4 (Catania)"
+  ],
+  "cbb": [
+   0.753,
+   "rank 3 (Chita); trimmed from 3.00, 0.89M within 300 km"
+  ],
+  "cbc": [
+   0.234,
+   "resorts 2% of its people"
+  ],
+  "cbe": [
+   0.682,
+   "rank 6 (Chillán)"
+  ],
+  "cbx": [
+   1.813,
+   "rank 4 (Cuiabá)"
+  ],
+  "ccd": [
+   0.197,
+   "rank 6 (Gualeguaychú)"
+  ],
+  "cci": [
+   0.803,
+   "rank 6 (Douglas)"
+  ],
+  "cck": [
+   1.774,
+   "rank 4 (Cuttack)"
+  ],
+  "ccx": [
+   2.086,
+   "rank 4 (Cuenca)"
+  ],
+  "cdo": [
+   2.02,
+   "rank 4 (Shreveport)"
+  ],
+  "ceb": [
+   1.563,
+   "rank 3 (Cebu)"
+  ],
+  "cec": [
+   2.205,
+   "rank 4 (Burlington)"
+  ],
+  "ceg": [
+   2.097,
+   "rank 4 (Nalchik)"
+  ],
+  "cer": [
+   3.0,
+   "rank 3 (Newcastle)"
+  ],
+  "cet": [
+   0.545,
+   "resorts 4% of its people"
+  ],
+  "ceu": [
+   2.635,
+   "rank 6 (Ceuta)"
+  ],
+  "cga": [
+   2.037,
+   "rank 3 (Lhasa); trimmed from 2.23, 2.39M within 300 km"
+  ],
+  "chc": [
+   2.173,
+   "rank 2 (Changchun)"
+  ],
+  "chd": [
+   0.637,
+   "rank 4 (Chandigarh)"
+  ],
+  "che": [
+   1.474,
+   "rank 4 (Chelyabinsk)"
+  ],
+  "chg": [
+   1.9,
+   "rank 1 (Chengdu)"
+  ],
+  "chh": [
+   1.207,
+   "rank 4 (Aurangabad)"
+  ],
+  "chi": [
+   1.918,
+   "rank 3 (Chihuahua); trimmed from 2.62, 2.18M within 300 km"
+  ],
+  "chn": [
+   1.241,
+   "rank 2 (Chennai)"
+  ],
+  "cho": [
+   1.399,
+   "rank 2 (Chongqing)"
+  ],
+  "chp": [
+   0.064,
+   "rank 6 (Ometepec)"
+  ],
+  "chs": [
+   1.898,
+   "rank 2 (Changsha)"
+  ],
+  "chv": [
+   1.922,
+   "rank 4 (Vologda)"
+  ],
+  "chx": [
+   0.121,
+   "rank 6 (Xapeco)"
+  ],
+  "cic": [
+   2.594,
+   "rank 1 (Chicago)"
+  ],
+  "cie": [
+   0.277,
+   "rank 6 (Edinburgh)"
+  ],
+  "cin": [
+   2.115,
+   "rank 3 (Cincinnati)"
+  ],
+  "cit": [
+   0.619,
+   "rank 6 (Klerksdorp)"
+  ],
+  "cja": [
+   0.19,
+   "rank 6 (Cajamarca)"
+  ],
+  "clc": [
+   0.09,
+   "resorts 1% of its people"
+  ],
+  "cle": [
+   2.308,
+   "rank 3 (Cleveland)"
+  ],
+  "cln": [
+   0.143,
+   "rank 3 (Hobart); trimmed from 3.00, 0.56M within 300 km"
+  ],
+  "clv": [
+   0.607,
+   "resorts 4% of its people"
+  ],
+  "cmb": [
+   1.403,
+   "rank 4 (Corumbá); trimmed from 3.00, 1.47M within 300 km"
+  ],
+  "cmc": [
+   1.879,
+   "rank 4 (Savannah)"
+  ],
+  "cmd": [
+   2.064,
+   "rank 3 (Campo Grande); trimmed from 2.77, 2.44M within 300 km"
+  ],
+  "cme": [
+   2.59,
+   "rank 4 (Campeche); trimmed from 2.59, 3.65M within 300 km"
+  ],
+  "cmu": [
+   0.813,
+   "rank 6 (Brownsville)"
+  ],
+  "cne": [
+   2.626,
+   "rank 3 (Concepción)"
+  ],
+  "cnk": [
+   0.015,
+   "resorts 0% of its people"
+  ],
+  "cno": [
+   0.115,
+   "resorts 1% of its people"
+  ],
+  "cns": [
+   2.373,
+   "rank 4 (Constanța)"
+  ],
+  "cnt": [
+   1.97,
+   "rank 4 (Constantine)"
+  ],
+  "cnz": [
+   1.771,
+   "rank 4 (Wuzhou)"
+  ],
+  "cod": [
+   2.192,
+   "rank 4 (Córdoba)"
+  ],
+  "coe": [
+   1.121,
+   "resorts 7% of its people"
+  ],
+  "cof": [
+   2.036,
+   "rank 4 (Neuquén)"
+  ],
+  "coi": [
+   1.64,
+   "rank 3 (Coimbatore)"
+  ],
+  "cop": [
+   3.0,
+   "rank 2 (København)"
+  ],
+  "coq": [
+   1.111,
+   "rank 4 (Copiapó); trimmed from 1.74, 1.17M within 300 km"
+  ],
+  "cor": [
+   2.314,
+   "rank 3 (Córdoba)"
+  ],
+  "cpb": [
+   1.363,
+   "rank 4 (Sydney); trimmed from 3.00, 1.42M within 300 km"
+  ],
+  "cpc": [
+   2.166,
+   "rank 4 (Salta)"
+  ],
+  "cph": [
+   0.866,
+   "rank 6 (La Rioja)"
+  ],
+  "cpn": [
+   2.701,
+   "rank 3 (Posadas); trimmed from 3.00, 3.98M within 300 km"
+  ],
+  "cpt": [
+   1.391,
+   "rank 4 (Tucumán)"
+  ],
+  "cpv": [
+   0.764,
+   "rank 6 (Catamarca)"
+  ],
+  "crb": [
+   0.875,
+   "rank 7 (Nelson)"
+  ],
+  "crc": [
+   0.545,
+   "resorts 4% of its people"
+  ],
+  "cri": [
+   0.677,
+   "rank 3 (Christchurch); trimmed from 3.00, 0.84M within 300 km"
+  ],
+  "crm": [
+   0.507,
+   "resorts 3% of its people"
+  ],
+  "crn": [
+   2.426,
+   "rank 4 (Podgorica)"
+  ],
+  "cro": [
+   2.373,
+   "rank 4 (Pucallpa); trimmed from 2.75, 3.09M within 300 km"
+  ],
+  "crs": [
+   2.504,
+   "rank 3 (Cartagena)"
+  ],
+  "crw": [
+   1.738,
+   "rank 3 (Charlottetown); trimmed from 3.00, 1.90M within 300 km"
+  ],
+  "csc": [
+   2.641,
+   "rank 3 (Cusco); trimmed from 3.00, 3.80M within 300 km"
+  ],
+  "csi": [
+   2.953,
+   "rank 3 (Chișinău)"
+  ],
+  "css": [
+   0.56,
+   "rank 3 (Bismarck); trimmed from 3.00, 0.77M within 300 km"
+  ],
+  "cto": [
+   0.049,
+   "rank 6 (Vigan)"
+  ],
+  "cub": [
+   1.655,
+   "rank 4 (Wilmington)"
+  ],
+  "cud": [
+   1.596,
+   "rank 4 (Augusta)"
+  ],
+  "cul": [
+   1.764,
+   "rank 4 (Culiacán)"
+  ],
+  "cum": [
+   0.259,
+   "resorts 2% of its people"
+  ],
+  "cur": [
+   2.642,
+   "rank 2 (Curitiba)"
+  ],
+  "cxi": [
+   1.672,
+   "rank 4 (Caxias do Sul)"
+  ],
+  "cxx": [
+   0.085,
+   "resorts 1% of its people"
+  ],
+  "dad": [
+   0.039,
+   "resorts 0% of its people"
+  ],
+  "daj": [
+   1.262,
+   "rank 4 (Daejeon)"
+  ],
+  "dal": [
+   0.193,
+   "rank 4 (Dalian)"
+  ],
+  "dav": [
+   2.118,
+   "rank 3 (Davao)"
+  ],
+  "day": [
+   0.498,
+   "rank 6 (Harrisburg)"
+  ],
+  "dbb": [
+   3.0,
+   "rank 4 (Orange)"
+  ],
+  "den": [
+   0.052,
+   "resorts 0% of its people"
+  ],
+  "der": [
+   3.0,
+   "rank 1 (Denver)"
+  ],
+  "des": [
+   0.543,
+   "rank 6 (Klamath Falls)"
+  ],
+  "det": [
+   2.35,
+   "rank 2 (Detroit)"
+  ],
+  "dev": [
+   0.164,
+   "resorts 1% of its people"
+  ],
+  "dhd": [
+   2.432,
+   "rank 3 (Bhilai)"
+  ],
+  "dhn": [
+   0.879,
+   "rank 4 (Dhanbad)"
+  ],
+  "dhr": [
+   1.095,
+   "rank 4 (Hubballi)"
+  ],
+  "div": [
+   0.117,
+   "resorts 1% of its people"
+  ],
+  "dll": [
+   1.724,
+   "rank 2 (Dallas)"
+  ],
+  "dni": [
+   0.937,
+   "rank 4 (Neijiang)"
+  ],
+  "dnp": [
+   1.397,
+   "rank 4 (Dnipro)"
+  ],
+  "doc": [
+   2.825,
+   "rank 3 (Omaha)"
+  ],
+  "dog": [
+   1.387,
+   "rank 2 (Dongguan)"
+  ],
+  "doh": [
+   1.01,
+   "rank 4 (Doha)"
+  ],
+  "doy": [
+   0.483,
+   "rank 6 (Carlsbad)"
+  ],
+  "drd": [
+   1.646,
+   "rank 4 (Dresden)"
+  ],
+  "drk": [
+   2.086,
+   "rank 4 (Worcester)"
+  ],
+  "drn": [
+   0.201,
+   "rank 6 (San Salvador de Jujuy)"
+  ],
+  "drs": [
+   0.255,
+   "rank 7 (Durrës)"
+  ],
+  "dua": [
+   3.0,
+   "rank 1 (Dubai)"
+  ],
+  "dub": [
+   3.0,
+   "rank 2 (Dublin)"
+  ],
+  "dur": [
+   2.469,
+   "rank 2 (Durban)"
+  ],
+  "dwu": [
+   2.103,
+   "rank 4 (Shizuishan)"
+  ],
+  "dyu": [
+   0.284,
+   "rank 6 (Birsk)"
+  ],
+  "dzn": [
+   0.882,
+   "rank 4 (Kyzyl); trimmed from 3.00, 0.98M within 300 km"
+  ],
+  "eaa": [
+   1.468,
+   "rank 4 (Baton Rouge)"
+  ],
+  "ead": [
+   1.409,
+   "resorts 9% of its people"
+  ],
+  "eae": [
+   1.5,
+   "resorts 49% of its people"
+  ],
+  "eak": [
+   1.5,
+   "resorts 61% of its people"
+  ],
+  "eao": [
+   0.553,
+   "resorts 4% of its people"
+  ],
+  "eat": [
+   1.5,
+   "resorts 13% of its people"
+  ],
+  "edi": [
+   0.056,
+   "resorts 0% of its people"
+  ],
+  "edm": [
+   2.603,
+   "rank 2 (Edmonton); trimmed from 3.00, 3.69M within 300 km"
+  ],
+  "efe": [
+   1.5,
+   "resorts 20% of its people"
+  ],
+  "eiv": [
+   1.5,
+   "resorts 47% of its people"
+  ],
+  "elo": [
+   2.054,
+   "rank 4 (El Paso)"
+  ],
+  "elp": [
+   1.812,
+   "rank 4 (Colorado Springs)"
+  ],
+  "eno": [
+   2.004,
+   "rank 4 (Middelburg)"
+  ],
+  "ens": [
+   0.696,
+   "rank 6 (Ensenada); resorts 5% of its people"
+  ],
+  "eru": [
+   0.408,
+   "resorts 3% of its people"
+  ],
+  "ese": [
+   0.146,
+   "resorts 1% of its people"
+  ],
+  "ess": [
+   1.5,
+   "resorts 11% of its people"
+  ],
+  "fac": [
+   0.316,
+   "rank 6 (Frankfort)"
+  ],
+  "fay": [
+   1.757,
+   "rank 4 (El Faiyum)"
+  ],
+  "fei": [
+   2.763,
+   "rank 3 (Feira de Santana)"
+  ],
+  "fez": [
+   2.476,
+   "rank 3 (Fez)"
+  ],
+  "fie": [
+   0.444,
+   "resorts 3% of its people"
+  ],
+  "fin": [
+   0.919,
+   "resorts 6% of its people"
+  ],
+  "fki": [
+   0.587,
+   "resorts 4% of its people"
+  ],
+  "fks": [
+   0.164,
+   "resorts 1% of its people"
+  ],
+  "fli": [
+   1.5,
+   "resorts 15% of its people"
+  ],
+  "flr": [
+   2.644,
+   "rank 3 (Florianópolis)"
+  ],
+  "fom": [
+   0.343,
+   "rank 7 (Formosa)"
+  ],
+  "foo": [
+   2.19,
+   "rank 4 (Formosa); trimmed from 2.44, 2.68M within 300 km"
+  ],
+  "for": [
+   2.501,
+   "rank 2 (Fortaleza)"
+  ],
+  "fra": [
+   2.527,
+   "rank 2 (Frankfurt)"
+  ],
+  "frc": [
+   0.243,
+   "rank 6 (Franca)"
+  ],
+  "frn": [
+   1.465,
+   "rank 4 (Florence)"
+  ],
+  "frs": [
+   1.54,
+   "rank 6 (Maryborough)"
+  ],
+  "fru": [
+   1.753,
+   "rank 4 (Fresno)"
+  ],
+  "fud": [
+   0.289,
+   "resorts 2% of its people"
+  ],
+  "fue": [
+   0.819,
+   "rank 4 (Mianyang)"
+  ],
+  "fuk": [
+   0.154,
+   "rank 4 (Fukuoka)"
+  ],
+  "fuz": [
+   2.158,
+   "rank 2 (Fuzhou)"
+  ],
+  "gad": [
+   2.328,
+   "rank 3 (Bandar Seri Begawan); trimmed from 3.00, 2.99M within 300 km"
+  ],
+  "gar": [
+   0.167,
+   "resorts 1% of its people"
+  ],
+  "gda": [
+   0.708,
+   "resorts 5% of its people"
+  ],
+  "gdz": [
+   2.804,
+   "rank 3 (Zagreb)"
+  ],
+  "gea": [
+   0.654,
+   "rank 6 (Viedma)"
+  ],
+  "geb": [
+   0.649,
+   "rank 6 (Goya)"
+  ],
+  "gee": [
+   3.0,
+   "rank 1 (Geneva)"
+  ],
+  "geg": [
+   2.238,
+   "rank 4 (George)"
+  ],
+  "gei": [
+   1.612,
+   "rank 4 (Gejiu)"
+  ],
+  "gel": [
+   1.691,
+   "rank 4 (General Santos)"
+  ],
+  "gem": [
+   0.842,
+   "rank 6 (Goulimine)"
+  ],
+  "gen": [
+   1.607,
+   "rank 3 (Mar del Plata); trimmed from 2.72, 1.72M within 300 km"
+  ],
+  "geu": [
+   0.714,
+   "rank 6 (Vryburg)"
+  ],
+  "ghd": [
+   3.0,
+   "rank 3 (Ghardaia)"
+  ],
+  "ghy": [
+   0.56,
+   "rank 6 (El Kharga)"
+  ],
+  "gir": [
+   1.5,
+   "resorts 16% of its people"
+  ],
+  "gla": [
+   2.315,
+   "rank 3 (Glasgow)"
+  ],
+  "glz": [
+   0.101,
+   "rank 7 (Kirs)"
+  ],
+  "gno": [
+   1.5,
+   "resorts 57% of its people"
+  ],
+  "gns": [
+   0.513,
+   "rank 6 (Garanhuns)"
+  ],
+  "gnz": [
+   1.784,
+   "rank 4 (Zhangye)"
+  ],
+  "goa": [
+   0.571,
+   "rank 6 (Governador Valadares)"
+  ],
+  "goi": [
+   2.888,
+   "rank 2 (Goiânia)"
+  ],
+  "gol": [
+   1.991,
+   "rank 4 (Gold Coast)"
+  ],
+  "gra": [
+   1.966,
+   "rank 4 (Las Palmas)"
+  ],
+  "grb": [
+   3.0,
+   "rank 4 (Bendigo)"
+  ],
+  "grh": [
+   1.059,
+   "rank 4 (Bhagalpur)"
+  ],
+  "grl": [
+   0.426,
+   "rank 6 (Gorno Altaysk)"
+  ],
+  "grn": [
+   0.701,
+   "rank 6 (Granada‎); resorts 5% of its people"
+  ],
+  "grr": [
+   2.351,
+   "rank 4 (Portland)"
+  ],
+  "grs": [
+   2.581,
+   "rank 4 (Griffith)"
+  ],
+  "grt": [
+   1.151,
+   "rank 6 (Sudbury); trimmed from 1.18, 1.21M within 300 km"
+  ],
+  "grz": [
+   2.159,
+   "rank 4 (Grozny)"
+  ],
+  "gua": [
+   0.799,
+   "rank 2 (Guangzhou)"
+  ],
+  "gud": [
+   2.055,
+   "rank 2 (Guadalajara)"
+  ],
+  "gui": [
+   2.28,
+   "rank 2 (Guiyang)"
+  ],
+  "gul": [
+   0.363,
+   "rank 7 (Guadalajara)"
+  ],
+  "guw": [
+   1.374,
+   "rank 4 (Dispur)"
+  ],
+  "guy": [
+   2.583,
+   "rank 2 (Guayaquil)"
+  ],
+  "gwa": [
+   1.394,
+   "rank 4 (Gwalior)"
+  ],
+  "gwn": [
+   1.217,
+   "rank 4 (Gwangju)"
+  ],
+  "gyn": [
+   0.452,
+   "rank 6 (Erenhot)"
+  ],
+  "hab": [
+   1.308,
+   "rank 4 (Ankang)"
+  ],
+  "hac": [
+   1.785,
+   "rank 4 (Huancayo)"
+  ],
+  "had": [
+   1.201,
+   "rank 4 (Handan)"
+  ],
+  "hag": [
+   1.297,
+   "rank 2 (Hangzhou)"
+  ],
+  "hak": [
+   1.303,
+   "resorts 9% of its people"
+  ],
+  "hal": [
+   0.873,
+   "rank 6 (Huancavelica)"
+  ],
+  "ham": [
+   2.739,
+   "rank 2 (Hamburg)"
+  ],
+  "hao": [
+   1.525,
+   "rank 2 (Hanoi)"
+  ],
+  "har": [
+   2.16,
+   "rank 2 (Harbin)"
+  ],
+  "hea": [
+   1.151,
+   "resorts 8% of its people"
+  ],
+  "hel": [
+   2.914,
+   "rank 2 (Helsinki); trimmed from 3.00, 4.68M within 300 km"
+  ],
+  "hem": [
+   1.936,
+   "rank 4 (Hermosillo)"
+  ],
+  "hgn": [
+   1.122,
+   "rank 4 (Hengyang)"
+  ],
+  "hih": [
+   1.5,
+   "rank 6 (Wick); resorts 12% of its people"
+  ],
+  "hij": [
+   2.808,
+   "rank 2 (Hiroshima)"
+  ],
+  "hit": [
+   2.603,
+   "rank 3 (Jackson)"
+  ],
+  "hle": [
+   0.039,
+   "resorts 0% of its people"
+  ],
+  "hli": [
+   1.657,
+   "rank 3 (Halifax); trimmed from 3.00, 1.78M within 300 km"
+  ],
+  "hlm": [
+   1.169,
+   "rank 4 (Ternate); trimmed from 2.34, 1.23M within 300 km"
+  ],
+  "hma": [
+   0.622,
+   "rank 6 (Ayacucho)"
+  ],
+  "hml": [
+   1.935,
+   "rank 4 (Hamilton)"
+  ],
+  "hoc": [
+   1.0,
+   "rank 2 (Ho Chi Minh City)"
+  ],
+  "hod": [
+   1.283,
+   "rank 4 (Lviv)"
+  ],
+  "hoh": [
+   0.904,
+   "rank 4 (Hohhot)"
+  ],
+  "hon": [
+   3.0,
+   "rank 0 (Hong Kong)"
+  ],
+  "hoo": [
+   1.383,
+   "rank 2 (Honolulu); trimmed from 3.00, 1.45M within 300 km"
+  ],
+  "hoq": [
+   1.112,
+   "rank 4 (Tongliao)"
+  ],
+  "hos": [
+   2.823,
+   "rank 1 (Houston)"
+  ],
+  "hou": [
+   0.649,
+   "rank 3 (Reykjavík); trimmed from 3.00, 0.23M within 300 km; resorts 4% of its people"
+  ],
+  "hrs": [
+   0.68,
+   "rank 6 (Biloxi)"
+  ],
+  "hry": [
+   0.897,
+   "rank 6 (Myrtle Beach); resorts 6% of its people"
+  ],
+  "htc": [
+   0.919,
+   "rank 7 (Ajaccio); resorts 6% of its people"
+  ],
+  "hte": [
+   0.458,
+   "rank 6 (Limoges)"
+  ],
+  "hua": [
+   1.3,
+   "rank 4 (Huaiyin)"
+  ],
+  "hud": [
+   1.5,
+   "rank 6 (Hurghada); resorts 113% of its people"
+  ],
+  "huv": [
+   0.234,
+   "resorts 2% of its people"
+  ],
+  "huz": [
+   0.447,
+   "rank 6 (Huaraz)"
+  ],
+  "hwa": [
+   1.316,
+   "rank 4 (Hilo); trimmed from 3.00, 1.37M within 300 km"
+  ],
+  "hyd": [
+   1.402,
+   "rank 2 (Hyderabad)"
+  ],
+  "iai": [
+   1.725,
+   "rank 4 (Iași)"
+  ],
+  "ibr": [
+   0.73,
+   "rank 6 (Muroran)"
+  ],
+  "ica": [
+   3.0,
+   "rank 3 (Ica)"
+  ],
+  "ili": [
+   2.545,
+   "rank 3 (Iloilo)"
+  ],
+  "ilk": [
+   1.747,
+   "rank 4 (Samsun)"
+  ],
+  "ill": [
+   0.984,
+   "resorts 7% of its people"
+  ],
+  "ina": [
+   1.142,
+   "rank 4 (Indianapolis)"
+  ],
+  "inc": [
+   0.584,
+   "rank 6 (Lansing)"
+  ],
+  "ind": [
+   0.473,
+   "rank 4 (Indore)"
+  ],
+  "inh": [
+   1.742,
+   "rank 4 (Mbabane)"
+  ],
+  "iqu": [
+   1.029,
+   "rank 3 (Iquique); trimmed from 3.00, 1.10M within 300 km"
+  ],
+  "irk": [
+   2.014,
+   "rank 3 (Irkutsk); trimmed from 3.00, 2.35M within 300 km"
+  ],
+  "irl": [
+   0.424,
+   "rank 6 (Iraklio)"
+  ],
+  "isi": [
+   0.203,
+   "rank 7 (Ishim)"
+  ],
+  "iso": [
+   1.5,
+   "resorts 34% of its people"
+  ],
+  "iss": [
+   0.74,
+   "rank 7 (Nazyvayevsk)"
+  ],
+  "ist": [
+   2.877,
+   "rank 0 (Istanbul)"
+  ],
+  "isy": [
+   0.218,
+   "resorts 1% of its people"
+  ],
+  "itb": [
+   0.082,
+   "rank 6 (Ilhéus)"
+  ],
+  "itj": [
+   1.5,
+   "resorts 18% of its people"
+  ],
+  "itm": [
+   0.104,
+   "rank 7 (Itumbiara)"
+  ],
+  "izm": [
+   0.505,
+   "rank 4 (İzmir)"
+  ],
+  "jab": [
+   1.148,
+   "rank 4 (Jabalpur)"
+  ],
+  "jai": [
+   2.305,
+   "rank 2 (Jaipur)"
+  ],
+  "jak": [
+   2.101,
+   "rank 0 (Jakarta)"
+  ],
+  "jal": [
+   1.524,
+   "rank 4 (Jullundur)"
+  ],
+  "jam": [
+   1.972,
+   "rank 3 (Jamshedpur)"
+  ],
+  "jas": [
+   1.718,
+   "rank 4 (Jacksonville)"
+  ],
+  "jau": [
+   1.416,
+   "rank 4 (Jammu)"
+  ],
+  "jck": [
+   0.646,
+   "rank 6 (Medford)"
+  ],
+  "jed": [
+   2.129,
+   "rank 2 (Jeddah)"
+  ],
+  "jeq": [
+   0.292,
+   "rank 6 (Jequié)"
+  ],
+  "jer": [
+   3.0,
+   "rank 3 (Jerusalem)"
+  ],
+  "jgx": [
+   0.905,
+   "rank 4 (Bose)"
+  ],
+  "jil": [
+   1.225,
+   "rank 4 (Jilin)"
+  ],
+  "jin": [
+   2.073,
+   "rank 2 (Jinan)"
+  ],
+  "jip": [
+   0.596,
+   "rank 3 (Vilhena); trimmed from 3.00, 0.79M within 300 km"
+  ],
+  "jla": [
+   1.069,
+   "rank 4 (Ulan Hot)"
+  ],
+  "jnl": [
+   0.883,
+   "rank 4 (Yueyang)"
+  ],
+  "jod": [
+   1.453,
+   "rank 4 (Jodhpur)"
+  ],
+  "joh": [
+   2.379,
+   "rank 1 (Johannesburg)"
+  ],
+  "jok": [
+   0.56,
+   "rank 6 (Jönköping)"
+  ],
+  "kac": [
+   1.116,
+   "rank 4 (Kansas City)"
+  ],
+  "kao": [
+   1.754,
+   "rank 3 (Kaohsiung)"
+  ],
+  "kap": [
+   2.179,
+   "rank 2 (Kanpur)"
+  ],
+  "kav": [
+   1.087,
+   "rank 4 (Kolhapur)"
+  ],
+  "kax": [
+   0.315,
+   "rank 7 (Ticul)"
+  ],
+  "kaz": [
+   2.497,
+   "rank 3 (Kazan)"
+  ],
+  "kba": [
+   1.55,
+   "rank 4 (Ulan-Ude); trimmed from 2.27, 1.64M within 300 km"
+  ],
+  "kce": [
+   0.146,
+   "resorts 1% of its people"
+  ],
+  "kch": [
+   2.314,
+   "rank 4 (Kōchi)"
+  ],
+  "kcx": [
+   1.5,
+   "resorts 52% of its people"
+  ],
+  "kel": [
+   0.408,
+   "rank 6 (Kelowna)"
+  ],
+  "ken": [
+   0.048,
+   "rank 6 (Bakersfield)"
+  ],
+  "keo": [
+   1.466,
+   "rank 4 (Kemerovo)"
+  ],
+  "ker": [
+   0.81,
+   "rank 7 (Kerkira)"
+  ],
+  "kgn": [
+   0.145,
+   "rank 6 (Kurgan)"
+  ],
+  "kgr": [
+   1.929,
+   "rank 4 (Kaliningrad)"
+  ],
+  "kgs": [
+   0.189,
+   "resorts 1% of its people"
+  ],
+  "kgw": [
+   0.158,
+   "resorts 1% of its people"
+  ],
+  "kha": [
+   1.172,
+   "rank 4 (Kharkiv)"
+  ],
+  "khv": [
+   1.987,
+   "rank 4 (Khabarovsk); trimmed from 2.20, 2.30M within 300 km"
+  ],
+  "kid": [
+   1.136,
+   "rank 7 (Narva)"
+  ],
+  "kik": [
+   0.614,
+   "rank 7 (Kilis)"
+  ],
+  "kip": [
+   0.643,
+   "resorts 4% of its people"
+  ],
+  "kiv": [
+   1.861,
+   "rank 4 (Kirov)"
+  ],
+  "klm": [
+   0.212,
+   "rank 7 (Ermoupoli)"
+  ],
+  "klr": [
+   0.927,
+   "rank 4 (Kalaburagi)"
+  ],
+  "kme": [
+   0.435,
+   "rank 7 (Kamenna Obi)"
+  ],
+  "kmk": [
+   0.49,
+   "rank 6 (Asahikawa)"
+  ],
+  "kmn": [
+   0.282,
+   "rank 7 (Karaman)"
+  ],
+  "kms": [
+   0.949,
+   "rank 6 (Komsomolsk na Amure)"
+  ],
+  "knh": [
+   0.448,
+   "rank 6 (Kovda); trimmed from 1.50, 0.70M within 300 km"
+  ],
+  "knn": [
+   0.09,
+   "resorts 1% of its people"
+  ],
+  "knw": [
+   2.101,
+   "rank 4 (Charleston)"
+  ],
+  "kny": [
+   1.029,
+   "rank 6 (Khanty Mansiysk); trimmed from 2.31, 1.10M within 300 km"
+  ],
+  "kol": [
+   2.415,
+   "rank 0 (Kolkata)"
+  ],
+  "kom": [
+   2.858,
+   "rank 3 (Bandjarmasin)"
+  ],
+  "kon": [
+   1.196,
+   "rank 4 (Konya)"
+  ],
+  "kop": [
+   1.5,
+   "resorts 15% of its people"
+  ],
+  "kot": [
+   1.555,
+   "rank 4 (Kota)"
+  ],
+  "koy": [
+   1.824,
+   "rank 4 (Jayapura); trimmed from 2.46, 2.03M within 300 km"
+  ],
+  "kpk": [
+   0.518,
+   "resorts 3% of its people"
+  ],
+  "kra": [
+   1.492,
+   "rank 4 (Kraków)"
+  ],
+  "krc": [
+   1.572,
+   "rank 4 (Krasnodar)"
+  ],
+  "kre": [
+   1.664,
+   "rank 6 (Krasnokamensk); trimmed from 2.17, 1.79M within 300 km"
+  ],
+  "krs": [
+   2.311,
+   "rank 3 (Krasnoyarsk); trimmed from 2.61, 2.95M within 300 km"
+  ],
+  "krt": [
+   0.113,
+   "rank 7 (Kulunda)"
+  ],
+  "kru": [
+   0.181,
+   "rank 6 (Chamdo)"
+  ],
+  "krx": [
+   2.144,
+   "rank 3 (Hotan)"
+  ],
+  "krz": [
+   0.207,
+   "rank 8 (Karlovac)"
+  ],
+  "ksg": [
+   2.553,
+   "rank 3 (Kashgar)"
+  ],
+  "ksn": [
+   0.405,
+   "rank 7 (Krasnokamsk)"
+  ],
+  "ksr": [
+   2.95,
+   "rank 4 (Kushiro); trimmed from 3.00, 4.81M within 300 km"
+  ],
+  "kss": [
+   0.17,
+   "resorts 1% of its people"
+  ],
+  "kst": [
+   0.818,
+   "rank 6 (Kostroma)"
+  ],
+  "ktc": [
+   0.58,
+   "rank 6 (Kotlas); trimmed from 1.98, 0.78M within 300 km"
+  ],
+  "ktg": [
+   2.503,
+   "rank 4 (Gorontalo)"
+  ],
+  "ktk": [
+   2.198,
+   "rank 4 (Kupang)"
+  ],
+  "ktl": [
+   1.739,
+   "rank 4 (Balikpapan)"
+  ],
+  "ktm": [
+   0.111,
+   "rank 6 (Manado)"
+  ],
+  "kto": [
+   1.373,
+   "rank 4 (Ambon); trimmed from 2.65, 1.43M within 300 km"
+  ],
+  "kts": [
+   0.569,
+   "rank 6 (Sorong); trimmed from 0.58, 0.77M within 300 km"
+  ],
+  "ktt": [
+   2.0,
+   "rank 3 (Tarakan); trimmed from 3.00, 2.32M within 300 km"
+  ],
+  "kua": [
+   1.523,
+   "rank 2 (Kuala Lumpur)"
+  ],
+  "kuc": [
+   1.006,
+   "rank 7 (Lihue); trimmed from 1.74, 1.08M within 300 km"
+  ],
+  "kuh": [
+   1.856,
+   "rank 4 (Kuching)"
+  ],
+  "kun": [
+   2.106,
+   "rank 2 (Kunming)"
+  ],
+  "kut": [
+   0.131,
+   "resorts 1% of its people"
+  ],
+  "kuu": [
+   0.533,
+   "rank 6 (Bontang)"
+  ],
+  "kuv": [
+   0.22,
+   "rank 7 (Kargat)"
+  ],
+  "kuw": [
+   2.383,
+   "rank 2 (Kuwait City)"
+  ],
+  "kxc": [
+   1.715,
+   "rank 4 (Knoxville)"
+  ],
+  "kyi": [
+   3.0,
+   "rank 1 (Kyiv)"
+  ],
+  "kyp": [
+   2.692,
+   "rank 3 (Nicosia)"
+  ],
+  "lab": [
+   0.364,
+   "rank 7 (Bairnsdale)"
+  ],
+  "lac": [
+   1.63,
+   "rank 4 (Santa Fe)"
+  ],
+  "lag": [
+   3.0,
+   "rank 0 (Lagos)"
+  ],
+  "lai": [
+   0.632,
+   "rank 6 (San Luis)"
+  ],
+  "lam": [
+   0.585,
+   "rank 6 (Kalamata)"
+  ],
+  "lan": [
+   2.704,
+   "rank 2 (Lanzhou)"
+  ],
+  "lau": [
+   1.358,
+   "rank 4 (Laayoune); trimmed from 3.00, 1.42M within 300 km"
+  ],
+  "lav": [
+   2.043,
+   "rank 3 (Las Vegas)"
+  ],
+  "laz": [
+   1.5,
+   "rank 7 (Arrecife); resorts 124% of its people"
+  ],
+  "lbo": [
+   1.179,
+   "rank 4 (Amarillo); trimmed from 1.69, 1.24M within 300 km"
+  ],
+  "lcu": [
+   1.767,
+   "rank 4 (Salem)"
+  ],
+  "lea": [
+   2.039,
+   "rank 4 (Haiphong)"
+  ],
+  "leb": [
+   1.358,
+   "rank 6 (Banff)"
+  ],
+  "leo": [
+   1.32,
+   "rank 4 (León)"
+  ],
+  "les": [
+   0.755,
+   "rank 7 (Mitilini)"
+  ],
+  "let": [
+   0.119,
+   "resorts 1% of its people"
+  ],
+  "lgg": [
+   1.846,
+   "rank 4 (Baoshan)"
+  ],
+  "lgk": [
+   1.278,
+   "rank 6 (Elista)"
+  ],
+  "lgt": [
+   0.245,
+   "rank 6 (Laghouat)"
+  ],
+  "lgx": [
+   2.222,
+   "rank 3 (Guilin)"
+  ],
+  "lgz": [
+   1.223,
+   "rank 4 (Wuwei)"
+  ],
+  "lht": [
+   0.249,
+   "rank 6 (Lahat)"
+  ],
+  "lic": [
+   1.176,
+   "resorts 8% of its people"
+  ],
+  "lik": [
+   1.382,
+   "rank 4 (Jixi)"
+  ],
+  "lim": [
+   2.371,
+   "rank 1 (Lima)"
+  ],
+  "lin": [
+   0.521,
+   "rank 4 (Linyi)"
+  ],
+  "lir": [
+   0.521,
+   "resorts 3% of its people"
+  ],
+  "lis": [
+   2.756,
+   "rank 2 (Lisbon)"
+  ],
+  "liv": [
+   1.084,
+   "resorts 7% of its people"
+  ],
+  "lix": [
+   0.114,
+   "rank 6 (Lipetsk)"
+  ],
+  "llo": [
+   0.871,
+   "rank 7 (Athabasca)"
+  ],
+  "lnc": [
+   0.143,
+   "rank 4 (Devonport); trimmed from 3.00, 0.56M within 300 km"
+  ],
+  "lnj": [
+   2.165,
+   "rank 3 (Qiqihar)"
+  ],
+  "lns": [
+   0.091,
+   "rank 6 (Lincoln)"
+  ],
+  "lny": [
+   2.379,
+   "rank 4 (Tallahassee)"
+  ],
+  "loc": [
+   1.767,
+   "rank 4 (La Paz); trimmed from 2.16, 1.94M within 300 km"
+  ],
+  "loi": [
+   0.792,
+   "resorts 5% of its people"
+  ],
+  "loj": [
+   0.456,
+   "rank 6 (Loja)"
+  ],
+  "lol": [
+   2.785,
+   "rank 4 (Los Angeles)"
+  ],
+  "lon": [
+   3.0,
+   "rank 0 (London)"
+  ],
+  "loy": [
+   2.326,
+   "rank 4 (Laoag)"
+  ],
+  "lra": [
+   0.171,
+   "rank 3 (Cheyenne); trimmed from 3.00, 0.57M within 300 km"
+  ],
+  "lru": [
+   0.591,
+   "rank 6 (Taiping)"
+  ],
+  "lsc": [
+   0.212,
+   "rank 6 (Toledo)"
+  ],
+  "lsn": [
+   2.979,
+   "rank 0 (Los Angeles)"
+  ],
+  "lsx": [
+   1.143,
+   "rank 4 (Jinxi)"
+  ],
+  "luc": [
+   0.118,
+   "rank 4 (Lucknow)"
+  ],
+  "lud": [
+   0.882,
+   "rank 4 (Ludhiana)"
+  ],
+  "luk": [
+   1.5,
+   "resorts 15% of its people"
+  ],
+  "lum": [
+   0.418,
+   "rank 6 (Luxembourg)"
+  ],
+  "lut": [
+   0.115,
+   "resorts 1% of its people"
+  ],
+  "lux": [
+   1.992,
+   "rank 3 (Luxor)"
+  ],
+  "lyo": [
+   2.217,
+   "rank 3 (Lyon)"
+  ],
+  "maa": [
+   1.768,
+   "rank 3 (Makassar)"
+  ],
+  "mab": [
+   2.757,
+   "rank 3 (Marabá); trimmed from 2.76, 4.15M within 300 km"
+  ],
+  "mad": [
+   2.779,
+   "rank 1 (Madrid)"
+  ],
+  "mae": [
+   2.474,
+   "rank 3 (Marrakesh)"
+  ],
+  "mah": [
+   0.027,
+   "resorts 0% of its people"
+  ],
+  "mai": [
+   1.311,
+   "rank 1 (Manila)"
+  ],
+  "mal": [
+   1.5,
+   "resorts 33% of its people"
+  ],
+  "mam": [
+   1.508,
+   "rank 4 (Manama)"
+  ],
+  "man": [
+   0.705,
+   "rank 4 (Manchester)"
+  ],
+  "mao": [
+   1.64,
+   "rank 4 (Maceió)"
+  ],
+  "mar": [
+   1.124,
+   "rank 4 (Marseille)"
+  ],
+  "mau": [
+   2.078,
+   "rank 3 (Manaus)"
+  ],
+  "max": [
+   1.904,
+   "rank 3 (Madurai)"
+  ],
+  "mbe": [
+   1.7,
+   "rank 4 (Mangaluru)"
+  ],
+  "mbh": [
+   0.369,
+   "rank 4 (Iquitos); trimmed from 2.36, 0.66M within 300 km"
+  ],
+  "mbi": [
+   0.315,
+   "rank 6 (Mobile)"
+  ],
+  "mck": [
+   0.123,
+   "rank 6 (Bowen); trimmed from 1.89, 0.38M within 300 km; resorts 1% of its people"
+  ],
+  "mcn": [
+   1.5,
+   "resorts 11% of its people"
+  ],
+  "mco": [
+   0.2,
+   "rank 6 (Waco)"
+  ],
+  "mcp": [
+   1.208,
+   "rank 3 (Macapá); trimmed from 3.00, 1.26M within 300 km"
+  ],
+  "mct": [
+   1.5,
+   "resorts 12% of its people"
+  ],
+  "mcu": [
+   0.628,
+   "rank 6 (Macau)"
+  ],
+  "mcx": [
+   0.325,
+   "rank 6 (Machala)"
+  ],
+  "mdc": [
+   1.613,
+   "rank 6 (Medicine Hat)"
+  ],
+  "mdd": [
+   0.485,
+   "rank 6 (Odessa)"
+  ],
+  "mdt": [
+   0.097,
+   "resorts 1% of its people"
+  ],
+  "mdw": [
+   0.378,
+   "rank 6 (Limerick); resorts 3% of its people"
+  ],
+  "mea": [
+   2.482,
+   "rank 6 (Melilla)"
+  ],
+  "mec": [
+   2.988,
+   "rank 2 (Makkah)"
+  ],
+  "med": [
+   2.249,
+   "rank 2 (Medan)"
+  ],
+  "mee": [
+   2.511,
+   "rank 2 (Medellín)"
+  ],
+  "mei": [
+   1.156,
+   "rank 4 (Medina)"
+  ],
+  "mel": [
+   3.0,
+   "rank 1 (Melbourne)"
+  ],
+  "mem": [
+   2.764,
+   "rank 3 (Memphis)"
+  ],
+  "men": [
+   2.573,
+   "rank 3 (Mendoza)"
+  ],
+  "mer": [
+   0.905,
+   "rank 4 (Meerut)"
+  ],
+  "mex": [
+   2.6,
+   "rank 0 (Mexico City)"
+  ],
+  "mey": [
+   0.486,
+   "rank 6 (Grand Junction)"
+  ],
+  "mfi": [
+   0.036,
+   "rank 6 (Mmabatho)"
+  ],
+  "mgc": [
+   0.195,
+   "resorts 1% of its people"
+  ],
+  "mgg": [
+   3.0,
+   "rank 5 (Magong)"
+  ],
+  "mgh": [
+   0.535,
+   "rank 6 (Phuket)"
+  ],
+  "mgn": [
+   2.875,
+   "rank 3 (Bloemfontein)"
+  ],
+  "mhn": [
+   0.44,
+   "rank 6 (Youngstown)"
+  ],
+  "mia": [
+   2.393,
+   "rank 3 (Mérida)"
+  ],
+  "mic": [
+   0.723,
+   "rank 3 (Pierre); trimmed from 3.00, 0.87M within 300 km"
+  ],
+  "mif": [
+   0.18,
+   "resorts 1% of its people"
+  ],
+  "mii": [
+   0.327,
+   "rank 7 (Miri)"
+  ],
+  "mik": [
+   2.435,
+   "rank 3 (Milwaukee)"
+  ],
+  "mil": [
+   2.139,
+   "rank 2 (Milan)"
+  ],
+  "mim": [
+   2.97,
+   "rank 1 (Miami)"
+  ],
+  "min": [
+   2.021,
+   "rank 3 (Minsk)"
+  ],
+  "mip": [
+   2.547,
+   "rank 2 (Minneapolis)"
+  ],
+  "miu": [
+   0.563,
+   "resorts 4% of its people"
+  ],
+  "miz": [
+   2.034,
+   "rank 4 (Manizales)"
+  ],
+  "mld": [
+   1.5,
+   "rank 6 (Rocha); resorts 36% of its people"
+  ],
+  "mll": [
+   1.5,
+   "resorts 50% of its people"
+  ],
+  "mlp": [
+   0.378,
+   "resorts 3% of its people"
+  ],
+  "mlt": [
+   3.0,
+   "rank 3 (Valletta)"
+  ],
+  "mmi": [
+   0.145,
+   "rank 7 (Timika)"
+  ],
+  "mnc": [
+   0.976,
+   "rank 6 (Coari)"
+  ],
+  "mnj": [
+   0.624,
+   "resorts 4% of its people"
+  ],
+  "mnr": [
+   0.046,
+   "rank 6 (Montería)"
+  ],
+  "mnt": [
+   1.763,
+   "rank 4 (Montes Claros)"
+  ],
+  "mnu": [
+   1.923,
+   "rank 4 (Surat Thani)"
+  ],
+  "mnw": [
+   0.091,
+   "resorts 1% of its people"
+  ],
+  "mny": [
+   0.3,
+   "rank 6 (Monterey)"
+  ],
+  "mnz": [
+   1.332,
+   "rank 4 (Hailar); trimmed from 1.66, 1.39M within 300 km"
+  ],
+  "moa": [
+   1.333,
+   "rank 4 (Moradabad)"
+  ],
+  "mob": [
+   0.528,
+   "resorts 4% of its people"
+  ],
+  "moc": [
+   1.142,
+   "rank 6 (Moncton)"
+  ],
+  "moe": [
+   2.344,
+   "rank 3 (Montevideo)"
+  ],
+  "mon": [
+   2.306,
+   "rank 2 (Montréal)"
+  ],
+  "moo": [
+   0.852,
+   "rank 6 (Monclova)"
+  ],
+  "mos": [
+   2.833,
+   "rank 0 (Moscow)"
+  ],
+  "mot": [
+   3.0,
+   "rank 1 (Monterrey)"
+  ],
+  "mow": [
+   0.135,
+   "resorts 1% of its people"
+  ],
+  "mra": [
+   0.025,
+   "rank 6 (Ruteng)"
+  ],
+  "mri": [
+   1.116,
+   "resorts 7% of its people"
+  ],
+  "mrl": [
+   1.315,
+   "resorts 9% of its people"
+  ],
+  "mrs": [
+   0.448,
+   "rank 3 (Murmansk); trimmed from 3.00, 0.70M within 300 km"
+  ],
+  "mry": [
+   1.699,
+   "rank 4 (Rochester)"
+  ],
+  "mse": [
+   2.76,
+   "rank 3 (Maseru)"
+  ],
+  "msk": [
+   2.269,
+   "rank 4 (Abakan)"
+  ],
+  "msn": [
+   0.786,
+   "rank 6 (Songkhla)"
+  ],
+  "msu": [
+   0.306,
+   "rank 3 (Helena); trimmed from 3.00, 0.63M within 300 km"
+  ],
+  "mtb": [
+   1.577,
+   "rank 6 (Mount Gambier); trimmed from 2.07, 1.68M within 300 km"
+  ],
+  "mtj": [
+   2.124,
+   "rank 4 (Welkom)"
+  ],
+  "mtm": [
+   1.721,
+   "rank 4 (Montgomery)"
+  ],
+  "mto": [
+   1.758,
+   "rank 4 (Magnitogorsk)"
+  ],
+  "mts": [
+   2.463,
+   "rank 4 (Matamoros)"
+  ],
+  "mug": [
+   1.378,
+   "rank 4 (Chiang Mai)"
+  ],
+  "mum": [
+   2.315,
+   "rank 0 (Mumbai)"
+  ],
+  "mun": [
+   2.847,
+   "rank 2 (Munich)"
+  ],
+  "mut": [
+   1.354,
+   "rank 4 (Nakhon Ratchasima)"
+  ],
+  "mxc": [
+   1.588,
+   "rank 4 (Mexicali)"
+  ],
+  "mys": [
+   1.508,
+   "rank 4 (Mysuru)"
+  ],
+  "mza": [
+   2.254,
+   "rank 4 (Colima)"
+  ],
+  "mzk": [
+   1.844,
+   "rank 4 (Miyazaki)"
+  ],
+  "mzt": [
+   2.815,
+   "rank 3 (Mazatlán); trimmed from 3.00, 4.34M within 300 km"
+  ],
+  "naa": [
+   1.542,
+   "rank 4 (Natal)"
+  ],
+  "nac": [
+   2.096,
+   "rank 2 (Nanchang)"
+  ],
+  "nag": [
+   2.185,
+   "rank 2 (Nanning)"
+  ],
+  "nah": [
+   0.05,
+   "rank 6 (Nam Định)"
+  ],
+  "nal": [
+   2.603,
+   "rank 3 (Nashville)"
+  ],
+  "nan": [
+   1.62,
+   "rank 2 (Nanjing)"
+  ],
+  "nap": [
+   2.433,
+   "rank 2 (Naples)"
+  ],
+  "naq": [
+   0.654,
+   "rank 6 (Nagchu)"
+  ],
+  "nas": [
+   1.102,
+   "rank 4 (Nasik)"
+  ],
+  "nau": [
+   2.483,
+   "rank 2 (Nagpur)"
+  ],
+  "nav": [
+   0.431,
+   "rank 6 (Pamplona)"
+  ],
+  "nde": [
+   1.703,
+   "rank 4 (Nanded)"
+  ],
+  "ned": [
+   1.101,
+   "rank 1 (New Delhi)"
+  ],
+  "neo": [
+   3.0,
+   "rank 2 (New Orleans)"
+  ],
+  "nes": [
+   2.396,
+   "rank 3 (Port Elizabeth)"
+  ],
+  "new": [
+   1.434,
+   "resorts 10% of its people"
+  ],
+  "ney": [
+   1.5,
+   "resorts 11% of its people"
+  ],
+  "ngn": [
+   1.144,
+   "rank 4 (Nagano)"
+  ],
+  "ngo": [
+   0.04,
+   "resorts 0% of its people"
+  ],
+  "ngs": [
+   2.624,
+   "rank 3 (Nagasaki)"
+  ],
+  "nic": [
+   1.5,
+   "resorts 47% of its people"
+  ],
+  "nig": [
+   0.068,
+   "resorts 0% of its people"
+  ],
+  "nih": [
+   0.637,
+   "rank 6 (Nizhenvartovsk)"
+  ],
+  "nii": [
+   1.379,
+   "rank 6 (Lesosibirsk)"
+  ],
+  "nik": [
+   1.301,
+   "rank 6 (Tulun); trimmed from 1.85, 1.36M within 300 km"
+  ],
+  "nin": [
+   0.299,
+   "rank 4 (Ningbo)"
+  ],
+  "niz": [
+   2.468,
+   "rank 3 (Nizhny Novgorod)"
+  ],
+  "nne": [
+   1.006,
+   "rank 4 (Chifeng)"
+  ],
+  "noa": [
+   2.266,
+   "rank 4 (Nogales)"
+  ],
+  "nob": [
+   0.373,
+   "rank 4 (Timmins); trimmed from 3.00, 0.67M within 300 km"
+  ],
+  "nof": [
+   0.337,
+   "rank 6 (Nova Friburgo)"
+  ],
+  "noj": [
+   0.464,
+   "resorts 3% of its people"
+  ],
+  "nok": [
+   1.737,
+   "rank 4 (Novokuznetsk)"
+  ],
+  "nor": [
+   1.491,
+   "resorts 10% of its people"
+  ],
+  "nos": [
+   0.137,
+   "rank 6 (Cheboksary)"
+  ],
+  "nov": [
+   2.086,
+   "rank 3 (Novosibirsk)"
+  ],
+  "nrh": [
+   1.5,
+   "rank 7 (Ayr); resorts 19% of its people"
+  ],
+  "nrt": [
+   0.565,
+   "rank 6 (North Battleford); trimmed from 2.41, 0.77M within 300 km"
+  ],
+  "nrw": [
+   1.5,
+   "resorts 11% of its people"
+  ],
+  "nuc": [
+   2.509,
+   "rank 4 (Corpus Christi)"
+  ],
+  "nue": [
+   2.006,
+   "rank 4 (Nuevo Laredo)"
+  ],
+  "nvo": [
+   1.097,
+   "rank 6 (Serov)"
+  ],
+  "nyc": [
+   2.588,
+   "rank 0 (New York)"
+  ],
+  "oax": [
+   1.523,
+   "rank 4 (Oaxaca)"
+  ],
+  "ode": [
+   1.558,
+   "rank 4 (Odessa)"
+  ],
+  "odu": [
+   0.057,
+   "rank 6 (Eskişehir)"
+  ],
+  "oet": [
+   0.533,
+   "resorts 4% of its people"
+  ],
+  "oit": [
+   0.133,
+   "resorts 1% of its people"
+  ],
+  "oka": [
+   1.403,
+   "rank 4 (Naha); trimmed from 1.50, 1.47M within 300 km"
+  ],
+  "okh": [
+   0.063,
+   "rank 7 (Kitami)"
+  ],
+  "okl": [
+   2.616,
+   "rank 3 (Oklahoma City)"
+  ],
+  "okt": [
+   0.015,
+   "rank 6 (Nyagan); trimmed from 2.11, 0.51M within 300 km"
+  ],
+  "oms": [
+   1.604,
+   "rank 4 (Omsk)"
+  ],
+  "ono": [
+   1.76,
+   "rank 4 (Syracuse)"
+  ],
+  "ora": [
+   2.389,
+   "rank 3 (Oran)"
+  ],
+  "ore": [
+   2.078,
+   "rank 4 (Orenburg)"
+  ],
+  "orl": [
+   0.865,
+   "rank 4 (Orlando)"
+  ],
+  "orn": [
+   0.469,
+   "rank 6 (San Ramón de la Nueva Orán)"
+  ],
+  "ors": [
+   0.538,
+   "rank 6 (Orsk)"
+  ],
+  "ory": [
+   0.24,
+   "rank 6 (Orel)"
+  ],
+  "osa": [
+   1.79,
+   "rank 1 (Ōsaka)"
+  ],
+  "osd": [
+   1.906,
+   "rank 4 (Ljubljana)"
+  ],
+  "osh": [
+   2.868,
+   "rank 4 (Hakodate)"
+  ],
+  "osl": [
+   3.0,
+   "rank 2 (Oslo)"
+  ],
+  "ota": [
+   2.485,
+   "rank 3 (Ottawa)"
+  ],
+  "oth": [
+   0.345,
+   "rank 6 (Chetumal)"
+  ],
+  "oug": [
+   0.838,
+   "rank 6 (Ouargla)"
+  ],
+  "ouj": [
+   1.866,
+   "rank 4 (Oujda)"
+  ],
+  "pad": [
+   2.706,
+   "rank 3 (Padang)"
+  ],
+  "pae": [
+   2.711,
+   "rank 3 (Palermo)"
+  ],
+  "pai": [
+   0.193,
+   "rank 6 (Nabire)"
+  ],
+  "pal": [
+   2.127,
+   "rank 3 (Palembang)"
+  ],
+  "pam": [
+   0.754,
+   "rank 4 (Alvorada); trimmed from 2.04, 0.89M within 300 km"
+  ],
+  "par": [
+   3.0,
+   "rank 0 (Paris)"
+  ],
+  "pas": [
+   0.639,
+   "resorts 4% of its people"
+  ],
+  "pat": [
+   2.435,
+   "rank 2 (Patna)"
+  ],
+  "pel": [
+   2.168,
+   "rank 4 (Pelotas)"
+  ],
+  "peo": [
+   2.095,
+   "rank 3 (Valdivia); trimmed from 2.55, 2.50M within 300 km"
+  ],
+  "per": [
+   2.031,
+   "rank 2 (Perth); trimmed from 3.00, 2.38M within 300 km"
+  ],
+  "pet": [
+   1.827,
+   "rank 4 (Petrolina)"
+  ],
+  "pev": [
+   2.776,
+   "rank 3 (Barnaul)"
+  ],
+  "pez": [
+   1.597,
+   "rank 4 (Penza)"
+  ],
+  "pgu": [
+   0.352,
+   "rank 6 (Iguape)"
+  ],
+  "phl": [
+   1.954,
+   "rank 2 (Philadelphia)"
+  ],
+  "phn": [
+   1.958,
+   "rank 3 (Phnom Penh)"
+  ],
+  "pho": [
+   2.229,
+   "rank 2 (Phoenix)"
+  ],
+  "pib": [
+   1.958,
+   "rank 3 (Pittsburgh)"
+  ],
+  "pim": [
+   0.562,
+   "rank 6 (Lahti)"
+  ],
+  "pir": [
+   2.24,
+   "rank 4 (Tampere)"
+  ],
+  "piu": [
+   1.722,
+   "rank 4 (Piura)"
+  ],
+  "piy": [
+   0.282,
+   "rank 6 (Peoria)"
+  ],
+  "plc": [
+   2.691,
+   "rank 3 (Des Moines)"
+  ],
+  "pls": [
+   0.52,
+   "rank 3 (Archangel); trimmed from 3.00, 0.75M within 300 km"
+  ],
+  "plt": [
+   0.032,
+   "rank 8 (Polatlı)"
+  ],
+  "pnb": [
+   0.233,
+   "rank 6 (Parnaíba)"
+  ],
+  "pne": [
+   1.768,
+   "rank 4 (Vigo)"
+  ],
+  "poe": [
+   0.605,
+   "rank 4 (Porto Velho); trimmed from 2.16, 0.80M within 300 km"
+  ],
+  "pog": [
+   0.137,
+   "rank 6 (Pohang)"
+  ],
+  "poi": [
+   0.191,
+   "resorts 1% of its people"
+  ],
+  "poj": [
+   1.5,
+   "rank 6 (Oulu); trimmed from 0.86, 0.59M within 300 km; resorts 58% of its people"
+  ],
+  "pol": [
+   1.93,
+   "rank 3 (Portland)"
+  ],
+  "pom": [
+   1.907,
+   "rank 4 (Armidale); trimmed from 3.00, 2.16M within 300 km"
+  ],
+  "poo": [
+   2.518,
+   "rank 2 (Porto Alegre)"
+  ],
+  "pop": [
+   0.593,
+   "rank 6 (Popayán)"
+  ],
+  "por": [
+   0.188,
+   "resorts 1% of its people"
+  ],
+  "pos": [
+   3.0,
+   "rank 3 (Tallinn)"
+  ],
+  "pot": [
+   0.547,
+   "resorts 4% of its people"
+  ],
+  "poy": [
+   1.94,
+   "rank 6 (Lesozavodsk)"
+  ],
+  "pra": [
+   3.0,
+   "rank 2 (Prague)"
+  ],
+  "pri": [
+   1.154,
+   "resorts 8% of its people"
+  ],
+  "prm": [
+   2.569,
+   "rank 3 (Perm)"
+  ],
+  "prr": [
+   0.07,
+   "rank 6 (Porbandar)"
+  ],
+  "prx": [
+   0.224,
+   "rank 6 (Conceição do Araguaia)"
+  ],
+  "pry": [
+   0.736,
+   "rank 4 (Allahabad)"
+  ],
+  "prz": [
+   2.732,
+   "rank 3 (Vladivostok)"
+  ],
+  "psc": [
+   0.143,
+   "resorts 1% of its people"
+  ],
+  "psh": [
+   1.946,
+   "rank 4 (Pristina)"
+  ],
+  "psk": [
+   2.474,
+   "rank 4 (Pskov)"
+  ],
+  "pst": [
+   2.221,
+   "rank 4 (Pasto)"
+  ],
+  "ptg": [
+   2.648,
+   "rank 4 (Ponta Grossa)"
+  ],
+  "pto": [
+   2.839,
+   "rank 4 (Petrozavodsk)"
+  ],
+  "pud": [
+   1.637,
+   "rank 4 (Puducherry)"
+  ],
+  "pue": [
+   2.498,
+   "rank 2 (Puebla)"
+  ],
+  "pun": [
+   1.75,
+   "rank 2 (Pune)"
+  ],
+  "pup": [
+   0.13,
+   "rank 6 (Puerto Princesa)"
+  ],
+  "puv": [
+   1.5,
+   "resorts 41% of its people"
+  ],
+  "pvd": [
+   0.228,
+   "resorts 2% of its people"
+  ],
+  "pyi": [
+   0.902,
+   "resorts 6% of its people"
+  ],
+  "pyn": [
+   0.307,
+   "rank 7 (Shawnee)"
+  ],
+  "pys": [
+   1.5,
+   "resorts 13% of its people"
+  ],
+  "qnz": [
+   1.341,
+   "rank 4 (Tianshui)"
+  ],
+  "que": [
+   2.839,
+   "rank 3 (Québec)"
+  ],
+  "qui": [
+   1.722,
+   "rank 3 (Quito)"
+  ],
+  "quo": [
+   0.359,
+   "rank 6 (Qui Nhon)"
+  ],
+  "rab": [
+   1.992,
+   "rank 3 (Rabat)"
+  ],
+  "rae": [
+   0.127,
+   "resorts 1% of its people"
+  ],
+  "rai": [
+   1.339,
+   "rank 4 (Raipur)"
+  ],
+  "raj": [
+   1.236,
+   "rank 4 (Rajkot)"
+  ],
+  "ral": [
+   2.28,
+   "rank 3 (Raleigh)"
+  ],
+  "ran": [
+   1.141,
+   "rank 4 (Ranchi)"
+  ],
+  "raw": [
+   2.231,
+   "rank 4 (San Juan)"
+  ],
+  "reb": [
+   1.5,
+   "resorts 14% of its people"
+  ],
+  "rec": [
+   2.542,
+   "rank 2 (Recife)"
+  ],
+  "rer": [
+   0.97,
+   "rank 6 (Red Deer)"
+  ],
+  "res": [
+   2.338,
+   "rank 4 (Sochi)"
+  ],
+  "rex": [
+   0.943,
+   "rank 3 (Regina); trimmed from 3.00, 1.03M within 300 km"
+  ],
+  "rgg": [
+   0.133,
+   "resorts 1% of its people"
+  ],
+  "rgi": [
+   0.844,
+   "resorts 6% of its people"
+  ],
+  "ria": [
+   2.867,
+   "rank 3 (Riga)"
+  ],
+  "rib": [
+   2.126,
+   "rank 4 (Ribeirão Preto)"
+  ],
+  "ric": [
+   1.628,
+   "rank 4 (Richmond)"
+  ],
+  "rid": [
+   0.791,
+   "rank 6 (Augusta)"
+  ],
+  "rim": [
+   0.623,
+   "rank 6 (Riobamba)"
+  ],
+  "rin": [
+   2.148,
+   "rank 4 (Columbia)"
+  ],
+  "rio": [
+   3.0,
+   "rank 0 (Rio de Janeiro)"
+  ],
+  "riu": [
+   0.691,
+   "rank 7 (Rimouski)"
+  ],
+  "riv": [
+   0.26,
+   "resorts 2% of its people"
+  ],
+  "rix": [
+   0.273,
+   "rank 4 (Rio Branco); trimmed from 2.44, 0.62M within 300 km"
+  ],
+  "riy": [
+   3.0,
+   "rank 0 (Riyadh)"
+  ],
+  "roa": [
+   1.235,
+   "rank 4 (Rosario)"
+  ],
+  "roc": [
+   2.031,
+   "rank 4 (Busselton); trimmed from 2.63, 2.38M within 300 km"
+  ],
+  "rok": [
+   0.221,
+   "rank 4 (Rockhampton); trimmed from 3.00, 0.41M within 300 km; resorts 1% of its people"
+  ],
+  "rom": [
+   3.0,
+   "rank 0 (Rome)"
+  ],
+  "ros": [
+   1.397,
+   "rank 4 (Rostov)"
+  ],
+  "rot": [
+   0.64,
+   "rank 4 (The Hague); resorts 4% of its people"
+  ],
+  "rsa": [
+   0.207,
+   "resorts 1% of its people"
+  ],
+  "rst": [
+   0.026,
+   "resorts 0% of its people"
+  ],
+  "rus": [
+   0.54,
+   "rank 6 (Aracati)"
+  ],
+  "rvn": [
+   1.5,
+   "resorts 17% of its people"
+  ],
+  "rya": [
+   1.808,
+   "rank 4 (Ryazan)"
+  ],
+  "ryi": [
+   1.169,
+   "rank 6 (Kansk)"
+  ],
+  "sae": [
+   1.225,
+   "rank 4 (Salem)"
+  ],
+  "sah": [
+   1.641,
+   "rank 4 (Saharanpur)"
+  ],
+  "sai": [
+   1.995,
+   "rank 2 (St.  Petersburg)"
+  ],
+  "sak": [
+   1.062,
+   "rank 3 (Saskatoon); trimmed from 3.00, 1.13M within 300 km"
+  ],
+  "sal": [
+   2.773,
+   "rank 2 (Salvador)"
+  ],
+  "sam": [
+   2.46,
+   "rank 3 (Samara)"
+  ],
+  "san": [
+   3.0,
+   "rank 0 (Santiago)"
+  ],
+  "sao": [
+   2.65,
+   "rank 0 (São Paulo)"
+  ],
+  "sar": [
+   1.538,
+   "rank 4 (Saratov)"
+  ],
+  "sau": [
+   1.47,
+   "rank 4 (São Luís)"
+  ],
+  "say": [
+   0.962,
+   "rank 6 (Dolbeau)"
+  ],
+  "sbn": [
+   0.531,
+   "rank 6 (Sinop)"
+  ],
+  "sbo": [
+   0.089,
+   "rank 6 (Santa Marta)"
+  ],
+  "sbq": [
+   0.337,
+   "rank 6 (Tarapoto)"
+  ],
+  "sbr": [
+   0.24,
+   "resorts 2% of its people"
+  ],
+  "sbs": [
+   0.493,
+   "rank 6 (Tumbes)"
+  ],
+  "sbt": [
+   2.613,
+   "rank 4 (Chimbote)"
+  ],
+  "sbv": [
+   1.855,
+   "rank 4 (Durazno)"
+  ],
+  "sby": [
+   0.629,
+   "rank 6 (Jizan)"
+  ],
+  "sca": [
+   2.085,
+   "rank 3 (Sacramento)"
+  ],
+  "scr": [
+   0.596,
+   "resorts 4% of its people"
+  ],
+  "sdj": [
+   1.018,
+   "rank 4 (Sendai)"
+  ],
+  "sdx": [
+   1.067,
+   "resorts 7% of its people"
+  ],
+  "sea": [
+   2.337,
+   "rank 2 (Seattle)"
+  ],
+  "sei": [
+   1.703,
+   "rank 4 (Le Havre)"
+  ],
+  "sek": [
+   2.499,
+   "rank 4 (Blagoveshchensk); trimmed from 2.60, 3.40M within 300 km"
+  ],
+  "sel": [
+   1.979,
+   "rank 3 (Sevastopol); trimmed from 3.00, 2.28M within 300 km"
+  ],
+  "sem": [
+   1.215,
+   "rank 3 (Semarang)"
+  ],
+  "seo": [
+   1.406,
+   "rank 1 (Seoul)"
+  ],
+  "sep": [
+   0.053,
+   "rank 6 (Tawau)"
+  ],
+  "sev": [
+   2.234,
+   "rank 3 (Seville)"
+  ],
+  "sey": [
+   1.016,
+   "rank 4 (Adana)"
+  ],
+  "sez": [
+   0.12,
+   "rank 7 (Segezha); trimmed from 1.17, 0.55M within 300 km"
+  ],
+  "sfc": [
+   1.435,
+   "rank 3 (Santa Fe); trimmed from 3.00, 1.50M within 300 km"
+  ],
+  "sfr": [
+   0.628,
+   "rank 6 (Resistencia)"
+  ],
+  "sfx": [
+   1.895,
+   "rank 4 (Safi)"
+  ],
+  "sgn": [
+   0.557,
+   "rank 6 (Saginaw)"
+  ],
+  "sgo": [
+   0.028,
+   "rank 6 (Springfield)"
+  ],
+  "sha": [
+   2.454,
+   "rank 0 (Shanghai)"
+  ],
+  "shi": [
+   0.088,
+   "rank 4 (Shijiazhuang)"
+  ],
+  "shl": [
+   1.5,
+   "rank 7 (El Tur); resorts 108% of its people"
+  ],
+  "shn": [
+   0.263,
+   "rank 3 (Shantou)"
+  ],
+  "shy": [
+   1.746,
+   "rank 2 (Shenyeng)"
+  ],
+  "shz": [
+   0.837,
+   "rank 2 (Shenzhen)"
+  ],
+  "sib": [
+   0.55,
+   "rank 6 (Sibu)"
+  ],
+  "sif": [
+   1.447,
+   "resorts 10% of its people"
+  ],
+  "sin": [
+   3.0,
+   "rank 0 (Singapore)"
+  ],
+  "sio": [
+   0.225,
+   "resorts 2% of its people"
+  ],
+  "sip": [
+   1.767,
+   "rank 4 (Siem Reap)"
+  ],
+  "sit": [
+   1.015,
+   "rank 6 (Fredericton)"
+  ],
+  "six": [
+   3.0,
+   "rank 3 (Victoria)"
+  ],
+  "siy": [
+   0.756,
+   "rank 6 (Rubtsovsk)"
+  ],
+  "sja": [
+   2.443,
+   "rank 3 (San Juan); trimmed from 2.63, 3.26M within 300 km"
+  ],
+  "sjh": [
+   0.328,
+   "resorts 2% of its people"
+  ],
+  "sjn": [
+   1.295,
+   "rank 6 (Los Alamos)"
+  ],
+  "ske": [
+   0.537,
+   "resorts 4% of its people"
+  ],
+  "skn": [
+   1.432,
+   "rank 4 (Malmö)"
+  ],
+  "skp": [
+   1.609,
+   "rank 4 (Skopje)"
+  ],
+  "skv": [
+   1.324,
+   "rank 6 (Svobodnyy); trimmed from 1.91, 1.38M within 300 km"
+  ],
+  "sla": [
+   0.16,
+   "rank 7 (Salamanca)"
+  ],
+  "sld": [
+   0.922,
+   "rank 4 (Bukachacha); trimmed from 3.00, 1.01M within 300 km"
+  ],
+  "sls": [
+   1.374,
+   "rank 7 (Wallaroo)"
+  ],
+  "slt": [
+   2.353,
+   "rank 3 (Salt Lake City)"
+  ],
+  "sly": [
+   0.075,
+   "resorts 0% of its people"
+  ],
+  "slz": [
+   0.331,
+   "rank 6 (Tehuantepec)"
+  ],
+  "sml": [
+   2.19,
+   "rank 4 (Smolensk)"
+  ],
+  "smr": [
+   0.872,
+   "resorts 6% of its people"
+  ],
+  "sna": [
+   0.418,
+   "rank 6 (Sandakan)"
+  ],
+  "snc": [
+   2.27,
+   "rank 4 (Santa Barbara)"
+  ],
+  "snd": [
+   2.639,
+   "rank 2 (San Diego)"
+  ],
+  "snf": [
+   2.865,
+   "rank 1 (San Francisco)"
+  ],
+  "snl": [
+   1.453,
+   "rank 4 (San Luis Potosí)"
+  ],
+  "snn": [
+   1.941,
+   "rank 3 (San Antonio)"
+  ],
+  "soa": [
+   0.092,
+   "resorts 1% of its people"
+  ],
+  "soc": [
+   1.609,
+   "rank 4 (Sorocaba)"
+  ],
+  "sof": [
+   2.469,
+   "rank 3 (Sofia)"
+  ],
+  "soh": [
+   0.322,
+   "rank 6 (Cork)"
+  ],
+  "sol": [
+   1.684,
+   "rank 4 (Sholapur)"
+  ],
+  "som": [
+   1.06,
+   "resorts 7% of its people"
+  ],
+  "sos": [
+   1.5,
+   "rank 3 (Pretoria)"
+  ],
+  "spi": [
+   0.389,
+   "resorts 3% of its people"
+  ],
+  "spk": [
+   2.926,
+   "rank 2 (Sapporo)"
+  ],
+  "spo": [
+   1.614,
+   "rank 4 (Spokane)"
+  ],
+  "sps": [
+   0.564,
+   "rank 6 (Ussuriysk)"
+  ],
+  "src": [
+   0.492,
+   "rank 7 (Serpukhov)"
+  ],
+  "sre": [
+   0.349,
+   "resorts 2% of its people"
+  ],
+  "srf": [
+   0.391,
+   "rank 6 (San Rafael)"
+  ],
+  "sri": [
+   1.404,
+   "rank 4 (Srinagar)"
+  ],
+  "srm": [
+   1.039,
+   "rank 3 (Santarém); trimmed from 2.80, 1.11M within 300 km"
+  ],
+  "ssa": [
+   2.719,
+   "rank 4 (Eureka)"
+  ],
+  "ssi": [
+   0.562,
+   "rank 6 (Sassari); resorts 4% of its people"
+  ],
+  "ssk": [
+   1.101,
+   "resorts 7% of its people"
+  ],
+  "stf": [
+   0.235,
+   "rank 7 (Moss)"
+  ],
+  "stm": [
+   0.6,
+   "rank 6 (Charlottesville)"
+  ],
+  "sto": [
+   2.906,
+   "rank 1 (Stockholm); trimmed from 3.00, 4.65M within 300 km"
+  ],
+  "sts": [
+   2.932,
+   "rank 2 (St. Louis)"
+  ],
+  "stu": [
+   0.072,
+   "resorts 0% of its people"
+  ],
+  "stv": [
+   1.682,
+   "rank 4 (Stavropol)"
+  ],
+  "sua": [
+   1.819,
+   "rank 2 (Surat)"
+  ],
+  "sug": [
+   1.264,
+   "rank 3 (Surgut); trimmed from 3.00, 1.32M within 300 km"
+  ],
+  "sul": [
+   1.5,
+   "resorts 41% of its people"
+  ],
+  "sun": [
+   0.617,
+   "rank 6 (Caloundra)"
+  ],
+  "suo": [
+   1.688,
+   "rank 4 (International Falls)"
+  ],
+  "sur": [
+   1.159,
+   "rank 2 (Surabaya)"
+  ],
+  "sus": [
+   0.279,
+   "resorts 2% of its people"
+  ],
+  "svt": [
+   0.341,
+   "rank 7 (Uray)"
+  ],
+  "swe": [
+   2.233,
+   "rank 4 (Topeka)"
+  ],
+  "swt": [
+   0.618,
+   "rank 6 (Vanhynsdorp)"
+  ],
+  "syd": [
+   3.0,
+   "rank 0 (Sydney)"
+  ],
+  "syi": [
+   1.5,
+   "resorts 40% of its people"
+  ],
+  "syk": [
+   0.325,
+   "rank 6 (Syktyvkar); trimmed from 1.07, 0.64M within 300 km"
+  ],
+  "sze": [
+   0.061,
+   "resorts 0% of its people"
+  ],
+  "szi": [
+   0.365,
+   "resorts 2% of its people"
+  ],
+  "szn": [
+   0.967,
+   "rank 4 (Zaozhuang)"
+  ],
+  "szo": [
+   0.248,
+   "resorts 2% of its people"
+  ],
+  "szu": [
+   2.1,
+   "rank 3 (Jiayuguan); trimmed from 2.57, 2.51M within 300 km"
+  ],
+  "taa": [
+   0.113,
+   "resorts 1% of its people"
+  ],
+  "tac": [
+   0.405,
+   "rank 4 (Taichung)"
+  ],
+  "tad": [
+   1.073,
+   "rank 6 (Bathurst); trimmed from 2.25, 1.14M within 300 km"
+  ],
+  "tai": [
+   2.427,
+   "rank 1 (Taipei)"
+  ],
+  "tap": [
+   2.75,
+   "rank 2 (Tampa)"
+  ],
+  "tau": [
+   0.489,
+   "rank 6 (Tapachula)"
+  ],
+  "tay": [
+   2.284,
+   "rank 2 (Taiyuan)"
+  ],
+  "tba": [
+   0.191,
+   "resorts 1% of its people"
+  ],
+  "tbo": [
+   1.482,
+   "rank 6 (Tobolsk); trimmed from 2.16, 1.56M within 300 km"
+  ],
+  "tbu": [
+   1.425,
+   "rank 4 (Tabuk); trimmed from 1.90, 1.49M within 300 km"
+  ],
+  "tcn": [
+   2.283,
+   "rank 3 (Tacna); trimmed from 3.00, 2.88M within 300 km"
+  ],
+  "ted": [
+   0.175,
+   "rank 6 (Nova Viçosa); resorts 1% of its people"
+  ],
+  "tee": [
+   0.148,
+   "resorts 1% of its people"
+  ],
+  "tel": [
+   2.778,
+   "rank 2 (Tel Aviv)"
+  ],
+  "ter": [
+   1.7,
+   "rank 4 (Teresina)"
+  ],
+  "the": [
+   2.823,
+   "rank 3 (Thessaloniki)"
+  ],
+  "thi": [
+   0.428,
+   "rank 4 (Thiruvananthapuram)"
+  ],
+  "ths": [
+   0.051,
+   "rank 6 (Pietermaritzburg)"
+  ],
+  "tia": [
+   1.68,
+   "rank 2 (Tianjin)"
+  ],
+  "tic": [
+   1.424,
+   "rank 4 (Tiruchirappalli)"
+  ],
+  "tif": [
+   0.051,
+   "rank 6 (Tindouf); trimmed from 2.44, 0.52M within 300 km"
+  ],
+  "tij": [
+   2.143,
+   "rank 3 (Tijuana)"
+  ],
+  "tim": [
+   2.848,
+   "rank 3 (Caxias)"
+  ],
+  "tin": [
+   2.683,
+   "rank 3 (Huainan)"
+  ],
+  "tir": [
+   2.916,
+   "rank 3 (Tirana)"
+  ],
+  "tky": [
+   0.0,
+   "rank 4 (Leh); by hand: Leh: Natural Earth's rank is for map balance; 60,000 people beyond the mountains"
+  ],
+  "tma": [
+   0.806,
+   "rank 6 (Tumaco)"
+  ],
+  "tmi": [
+   0.116,
+   "resorts 1% of its people"
+  ],
+  "tmm": [
+   0.085,
+   "rank 7 (Timimoun); trimmed from 1.12, 0.53M within 300 km"
+  ],
+  "tmp": [
+   2.924,
+   "rank 3 (Tampico)"
+  ],
+  "tnl": [
+   0.631,
+   "rank 6 (Olavarría)"
+  ],
+  "tno": [
+   0.157,
+   "resorts 1% of its people"
+  ],
+  "tns": [
+   0.421,
+   "rank 6 (Santissima Trindade)"
+  ],
+  "toe": [
+   1.462,
+   "rank 4 (Torreón)"
+  ],
+  "top": [
+   2.905,
+   "rank 3 (Tomsk); trimmed from 2.95, 4.65M within 300 km"
+  ],
+  "tor": [
+   2.778,
+   "rank 1 (Toronto)"
+  ],
+  "tos": [
+   0.285,
+   "rank 3 (Townsville); trimmed from 3.00, 0.62M within 300 km"
+  ],
+  "tow": [
+   1.473,
+   "rank 6 (Toowoomba)"
+  ],
+  "tro": [
+   2.257,
+   "rank 4 (Gdańsk)"
+  ],
+  "trr": [
+   1.271,
+   "resorts 8% of its people"
+  ],
+  "tru": [
+   2.611,
+   "rank 3 (Trujillo)"
+  ],
+  "try": [
+   0.334,
+   "rank 7 (Troitsk)"
+  ],
+  "tsk": [
+   1.828,
+   "rank 6 (Tara)"
+  ],
+  "tst": [
+   2.493,
+   "rank 4 (Olympia)"
+  ],
+  "tuc": [
+   1.886,
+   "rank 4 (Tucson)"
+  ],
+  "tul": [
+   2.618,
+   "rank 3 (Tuxtla Gutiérrez)"
+  ],
+  "tun": [
+   1.722,
+   "rank 3 (Tunis)"
+  ],
+  "tuo": [
+   0.084,
+   "rank 6 (Tuguegarao)"
+  ],
+  "tut": [
+   1.723,
+   "rank 4 (Tulsa)"
+  ],
+  "tve": [
+   1.648,
+   "rank 4 (Tver)"
+  ],
+  "tvr": [
+   0.644,
+   "rank 7 (Cherlak)"
+  ],
+  "tye": [
+   1.783,
+   "rank 4 (Tyumen)"
+  ],
+  "tyl": [
+   0.204,
+   "rank 6 (Wichita Falls)"
+  ],
+  "tyo": [
+   1.949,
+   "rank 0 (Tokyo)"
+  ],
+  "tys": [
+   0.543,
+   "rank 3 (Bratsk); trimmed from 3.00, 0.76M within 300 km"
+  ],
+  "ube": [
+   1.732,
+   "rank 4 (Uberlândia)"
+  ],
+  "ubr": [
+   0.016,
+   "rank 6 (Uberaba)"
+  ],
+  "udn": [
+   0.206,
+   "resorts 1% of its people"
+  ],
+  "ufa": [
+   2.63,
+   "rank 3 (Ufa)"
+  ],
+  "uni": [
+   3.0,
+   "rank 3 (Canberra)"
+  ],
+  "upp": [
+   0.974,
+   "rank 6 (Uppsala)"
+  ],
+  "uru": [
+   3.0,
+   "rank 1 (Ürümqi)"
+  ],
+  "uzh": [
+   1.11,
+   "rank 6 (Achinsk)"
+  ],
+  "vaa": [
+   0.664,
+   "rank 6 (Valladolid)"
+  ],
+  "vad": [
+   0.993,
+   "rank 4 (Vadodara)"
+  ],
+  "vag": [
+   0.221,
+   "resorts 1% of its people"
+  ],
+  "val": [
+   1.919,
+   "rank 3 (Valencia)"
+  ],
+  "vam": [
+   0.733,
+   "rank 6 (Turku)"
+  ],
+  "van": [
+   3.0,
+   "rank 1 (Vancouver)"
+  ],
+  "var": [
+   1.23,
+   "rank 3 (Varanasi)"
+  ],
+  "vea": [
+   2.299,
+   "rank 3 (Bergen); trimmed from 2.83, 2.92M within 300 km"
+  ],
+  "vec": [
+   2.87,
+   "rank 3 (Veracruz)"
+  ],
+  "ved": [
+   0.655,
+   "resorts 4% of its people"
+  ],
+  "veh": [
+   1.565,
+   "rank 4 (Nizhny Tagil)"
+  ],
+  "vei": [
+   0.497,
+   "rank 6 (Velikiy Novgorod)"
+  ],
+  "ven": [
+   2.089,
+   "rank 4 (Venice)"
+  ],
+  "veu": [
+   1.5,
+   "resorts 37% of its people"
+  ],
+  "vey": [
+   0.681,
+   "rank 6 (Velikiy Ustyug); trimmed from 1.85, 0.84M within 300 km"
+  ],
+  "vie": [
+   3.0,
+   "rank 1 (Vienna)"
+  ],
+  "vig": [
+   2.32,
+   "rank 3 (Norfolk)"
+  ],
+  "vih": [
+   0.138,
+   "rank 6 (Vinh)"
+  ],
+  "vij": [
+   1.175,
+   "rank 4 (Vijayawada)"
+  ],
+  "vil": [
+   3.0,
+   "rank 3 (Vilnius)"
+  ],
+  "vin": [
+   1.98,
+   "rank 4 (Vitória da Conquista)"
+  ],
+  "vio": [
+   0.72,
+   "rank 6 (Victoria)"
+  ],
+  "vir": [
+   0.239,
+   "rank 6 (Ciudad Victoria)"
+  ],
+  "vis": [
+   1.971,
+   "rank 3 (Vishakhapatnam)"
+  ],
+  "vit": [
+   1.271,
+   "rank 4 (Vila Velha)"
+  ],
+  "vlp": [
+   2.84,
+   "rank 3 (Valparaíso)"
+  ],
+  "vog": [
+   0.445,
+   "rank 6 (Volgodonsk)"
+  ],
+  "vol": [
+   2.4,
+   "rank 3 (Volgograd)"
+  ],
+  "vop": [
+   1.5,
+   "resorts 10% of its people"
+  ],
+  "vor": [
+   1.741,
+   "rank 4 (Voronezh)"
+  ],
+  "vou": [
+   0.569,
+   "rank 6 (Daytona Beach)"
+  ],
+  "vrx": [
+   1.5,
+   "resorts 47% of its people"
+  ],
+  "vxx": [
+   1.5,
+   "resorts 25% of its people"
+  ],
+  "vyb": [
+   1.329,
+   "rank 6 (Vyborg)"
+  ],
+  "wag": [
+   0.056,
+   "resorts 0% of its people"
+  ],
+  "wah": [
+   2.119,
+   "rank 4 (Reno)"
+  ],
+  "waj": [
+   1.673,
+   "rank 4 (Parepare)"
+  ],
+  "war": [
+   2.703,
+   "rank 2 (Warsaw)"
+  ],
+  "wax": [
+   1.376,
+   "rank 4 (Houma)"
+  ],
+  "wdc": [
+   3.0,
+   "rank 0 (Washington,  D.C.)"
+  ],
+  "wed": [
+   1.31,
+   "resorts 9% of its people"
+  ],
+  "weg": [
+   1.726,
+   "rank 3 (Wellington); trimmed from 3.00, 1.88M within 300 km"
+  ],
+  "wen": [
+   0.289,
+   "rank 4 (Wenzhou)"
+  ],
+  "weu": [
+   2.627,
+   "rank 4 (Laredo)"
+  ],
+  "wew": [
+   1.5,
+   "resorts 43% of its people"
+  ],
+  "wex": [
+   0.264,
+   "resorts 2% of its people"
+  ],
+  "whn": [
+   1.699,
+   "rank 6 (Whangarei)"
+  ],
+  "wid": [
+   0.339,
+   "rank 6 (Windsor)"
+  ],
+  "win": [
+   0.295,
+   "rank 6 (Nizwa)"
+  ],
+  "wio": [
+   0.025,
+   "rank 6 (Suhar)"
+  ],
+  "wip": [
+   1.249,
+   "rank 3 (Winnipeg); trimmed from 2.78, 1.30M within 300 km"
+  ],
+  "wit": [
+   2.383,
+   "rank 3 (Muscat)"
+  ],
+  "wog": [
+   0.502,
+   "rank 6 (Wollongong)"
+  ],
+  "wol": [
+   1.212,
+   "rank 4 (Nanyang)"
+  ],
+  "won": [
+   0.154,
+   "resorts 1% of its people"
+  ],
+  "wuh": [
+   1.403,
+   "rank 2 (Wuhan)"
+  ],
+  "xaa": [
+   0.221,
+   "rank 6 (Ust-Kut); trimmed from 2.35, 0.59M within 300 km"
+  ],
+  "xaj": [
+   1.5,
+   "resorts 10% of its people"
+  ],
+  "xak": [
+   2.173,
+   "rank 4 (Sousse)"
+  ],
+  "xao": [
+   1.5,
+   "resorts 15% of its people"
+  ],
+  "xcn": [
+   0.925,
+   "rank 4 (Xichang)"
+  ],
+  "xia": [
+   1.342,
+   "rank 2 (Xian)"
+  ],
+  "xin": [
+   2.425,
+   "rank 3 (Xining)"
+  ],
+  "xsa": [
+   1.211,
+   "rank 4 (Zhanjiang)"
+  ],
+  "xuz": [
+   0.68,
+   "rank 4 (Xuzhou)"
+  ],
+  "yae": [
+   1.5,
+   "resorts 35% of its people"
+  ],
+  "yap": [
+   2.152,
+   "rank 4 (Flagstaff)"
+  ],
+  "yar": [
+   1.678,
+   "rank 4 (Yaroslavl)"
+  ],
+  "yau": [
+   0.324,
+   "rank 6 (Yakima)"
+  ],
+  "yed": [
+   1.5,
+   "resorts 15% of its people"
+  ],
+  "yek": [
+   2.273,
+   "rank 3 (Yekaterinburg)"
+  ],
+  "ygt": [
+   1.846,
+   "rank 4 (Sakata)"
+  ],
+  "yik": [
+   2.098,
+   "rank 3 (Hami); trimmed from 2.64, 2.50M within 300 km"
+  ],
+  "yin": [
+   2.047,
+   "rank 3 (Yinchuan)"
+  ],
+  "yla": [
+   1.227,
+   "rank 4 (Jiamusi)"
+  ],
+  "ymg": [
+   0.112,
+   "resorts 1% of its people"
+  ],
+  "yna": [
+   1.384,
+   "rank 4 (Nanchong)"
+  ],
+  "yni": [
+   1.001,
+   "rank 4 (Yining)"
+  ],
+  "yoq": [
+   1.301,
+   "rank 4 (Suzhou)"
+  ],
+  "yrk": [
+   1.336,
+   "rank 4 (Shache)"
+  ],
+  "ysn": [
+   0.826,
+   "rank 6 (Jyekundo)"
+  ],
+  "yum": [
+   1.238,
+   "resorts 8% of its people"
+  ],
+  "yun": [
+   0.108,
+   "resorts 1% of its people"
+  ],
+  "yya": [
+   1.103,
+   "rank 4 (Yulin)"
+  ],
+  "yzu": [
+   1.322,
+   "rank 4 (Yulin)"
+  ],
+  "zal": [
+   1.661,
+   "rank 4 (Angarsk); trimmed from 2.30, 1.79M within 300 km"
+  ],
+  "zam": [
+   2.067,
+   "rank 4 (Zamboanga)"
+  ],
+  "zej": [
+   1.194,
+   "rank 4 (Shaoguan)"
+  ],
+  "zen": [
+   2.583,
+   "rank 3 (Sarajevo)"
+  ],
+  "zhb": [
+   0.149,
+   "resorts 1% of its people"
+  ],
+  "zhe": [
+   1.624,
+   "rank 2 (Zhengzhou)"
+  ],
+  "zhy": [
+   1.628,
+   "rank 4 (Zhytomyr)"
+  ],
+  "zib": [
+   2.258,
+   "rank 2 (Zibo)"
+  ],
+  "zif": [
+   0.7,
+   "rank 4 (Yantai)"
+  ],
+  "zos": [
+   1.528,
+   "rank 4 (Liupanshui)"
+  ],
+  "zur": [
+   3.0,
+   "rank 2 (Zürich)"
+  ]
+ }
+}

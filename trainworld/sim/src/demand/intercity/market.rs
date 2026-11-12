@@ -142,14 +142,20 @@ impl Market {
     #[inline(always)]
     pub(super) fn directed(&self, i: usize, j: usize, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let r = self.pr(i, j);
-        self.directed_by(r.b, r.rel, g, t, a, ta, d)
+        self.directed_by(r.b, r.rel, r.pull, g, t, a, ta, d)
     }
-    /// `directed` with the pair's border and income factors given.
+    /// `directed` with the pair's border and income factors and its pull (`PairRule::pull`) given.
     #[inline(always)]
-    pub(super) fn directed_by(&self, b: f64, rel: f64, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn directed_by(&self, b: f64, rel: f64, pull: f64, g: f64, t: f64, a: f64, ta: f64, d: f64) -> f64 {
         let ground = if g > 0. { g * self.rule.ground(d) * a } else { 0. };
         let tail = if t > 0. { t * self.rule.tail(d) * ta * rel } else { 0. };
-        b * (ground + tail)
+        b * self.pull_w(pull, d) * (ground + tail)
+    }
+    /// T-3240: a pair's pull at `d` km, from its full strength less 1 (exactly 1 with none).
+    #[inline(always)]
+    pub(super) fn pull_w(&self, pull: f64, d: f64) -> f64 {
+        if pull > 0. { 1. + pull * self.rule.pull_on(d) } else { 1. }
     }
     /// A 6 km zone pair's trips a day each way: the mean of the two directions. Near places' zones
     /// at their own distance, far places' at their centres' (so their pairs add up to the places').
@@ -162,16 +168,16 @@ impl Market {
     /// `eachway` with the curves at the pair's distance given (`curves`), so a run of far zones works
     /// them out once (T-780): the same figure to the bit.
     #[inline(always)]
-    pub(super) fn eachway_with(&self, a: &Zone, b: &Zone, (gc, tc): (f64, f64)) -> f64 {
-        let one = |r: PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
+    pub(super) fn eachway_with(&self, a: &Zone, b: &Zone, (gc, tc, d): (f64, f64, f64)) -> f64 {
+        let one = |r: PairRule, g: f64, t: f64, at: f64, ta: f64| r.b * self.pull_w(r.pull, d) * ((if g > 0. { g * gc * at } else { 0. }) + if t > 0. { t * tc * ta * r.rel } else { 0. });
         (one(self.pr(a.place, b.place), a.g, a.t, b.a, b.ta) + one(self.pr(b.place, a.place), b.g, b.t, a.a, a.ta)) * 0.5
     }
-    /// The ground and tail curves of zones a and b (`eachway_with`).
+    /// The ground and tail curves of zones a and b and their distance (`eachway_with`).
     #[inline(always)]
-    pub(super) fn curves(&self, a: &Zone, b: &Zone) -> (f64, f64) {
+    pub(super) fn curves(&self, a: &Zone, b: &Zone) -> (f64, f64, f64) {
         let r = self.pr(a.place, b.place);
         let d = if r.near { self.zone_km(a, b) } else { r.km };
-        (self.rule.ground(d), self.rule.tail(d))
+        (self.rule.ground(d), self.rule.tail(d), d)
     }
     /// Two places' trips a day each way: near ones from the rows (every zone pair added up),
     /// far ones from their centres.
@@ -194,7 +200,7 @@ impl Market {
             return self.place_eachway(z.place, j) * share;
         }
         let (q, back) = (&self.places[j], self.pr(j, z.place));
-        (self.directed_by(r.b, r.rel, z.g, z.t, q.a, q.ta, r.km) + self.directed_by(back.b, back.rel, q.g, q.t, z.a, z.ta, r.km)) * 0.5
+        (self.directed_by(r.b, r.rel, r.pull, z.g, z.t, q.a, q.ta, r.km) + self.directed_by(back.b, back.rel, back.pull, q.g, q.t, z.a, z.ta, r.km)) * 0.5
     }
     /// The corridor of places i and j (either order): pairs a <= b numbered a then b.
     pub(super) fn corridor(&self, i: usize, j: usize) -> usize {
@@ -279,6 +285,9 @@ impl Market {
         let rule = &self.rule;
         let general: Vec<f64> = self.places.iter().map(|p| rule.border * p.inc.powf(rule.border_eps)).collect();
         let open_area: Vec<bool> = self.countries.iter().map(|c| OPEN_AREA.contains(&c.as_str())).collect();
+        // T-3240: each country's pull gamma within it, and whether its residents see none
+        let home_gamma: Vec<f64> = self.countries.iter().map(|c| rule.pull_gamma_of(c, c)).collect();
+        let off: Vec<bool> = self.countries.iter().map(|c| rule.pull_off.contains(c)).collect();
         let factors = |i: usize, j: usize| {
             let (p, q) = (&self.places[i], &self.places[j]);
             let b = if p.country == q.country {
@@ -295,7 +304,13 @@ impl Market {
             } else {
                 1.
             };
-            (b, rel)
+            // as `pair_trip_rule`'s
+            let pull = if q.px > 0. && !off[p.country as usize] {
+                ((if p.country == q.country { home_gamma[q.country as usize] } else { rule.pull_gamma_x }) * q.px).exp_m1()
+            } else {
+                0.
+            };
+            (b, rel, pull)
         };
         // (corridor order is this loop's order, so the lists come sorted; sized for every pair of places
         // with zones, nearly all of which have trips, so they never grow by doubling)
@@ -323,8 +338,8 @@ impl Market {
                 let t = if km < rule.near_km {
                     self.near.get(&(i as u32, j as u32)).copied().unwrap_or(0.)
                 } else {
-                    let ((bi, ri), (bj, rj)) = (factors(i, j), factors(j, i));
-                    (self.directed_by(bi, ri, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, q.g, q.t, p.a, p.ta, km)) * 0.5
+                    let ((bi, ri, ui), (bj, rj, uj)) = (factors(i, j), factors(j, i));
+                    (self.directed_by(bi, ri, ui, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, uj, q.g, q.t, p.a, p.ta, km)) * 0.5
                 };
                 if t > 0. {
                     at.push(tri(np, i, j) as u32);

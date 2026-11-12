@@ -1,0 +1,12064 @@
+{
+"task": "T-3240",
+"source": "Wikidata (CC0) P31 seaside resort, resort town, tourist resort; English Wikipedia's Seaside resorts category tree; population Wikidata P1082",
+"towns": [
+{
+"q": "Q1000107",
+"name": "Kijkduin en Ockenburgh",
+"lon": 4.22222,
+"lat": 52.06889,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1000312",
+"name": "Sandgate, Kent",
+"lon": 1.1454,
+"lat": 51.074,
+"via": "wikipedia",
+"pop": 4928.0
+},
+{
+"q": "Q1000656",
+"name": "Felixstowe",
+"lon": 1.3514,
+"lat": 51.9639,
+"via": "wikipedia",
+"pop": 24330.0
+},
+{
+"q": "Q1001134",
+"name": "Hilton Head Island, South Carolina",
+"lon": -80.75694444,
+"lat": 32.17888889,
+"via": "wikipedia",
+"pop": 37661.0
+},
+{
+"q": "Q1001901",
+"name": "Marsa Alam",
+"lon": 34.9,
+"lat": 25.06666667,
+"via": "wikipedia",
+"pop": 1918.0
+},
+{
+"q": "Q1002133",
+"name": "Dunbar",
+"lon": -2.516901,
+"lat": 56.002725,
+"via": "wikipedia",
+"pop": 9030.0
+},
+{
+"q": "Q1003196",
+"name": "Sheerness",
+"lon": 0.76,
+"lat": 51.441,
+"via": "wikipedia",
+"pop": 13252.0
+},
+{
+"q": "Q1004306",
+"name": "Nida, Lithuania",
+"lon": 21.00555556,
+"lat": 55.30333333,
+"via": "wikipedia",
+"pop": 2385.0
+},
+{
+"q": "Q1004438",
+"name": "Kaş",
+"lon": 29.64166667,
+"lat": 36.2,
+"via": "wikipedia",
+"pop": 58600.0
+},
+{
+"q": "Q1004900",
+"name": "Güllük",
+"lon": 27.6017,
+"lat": 37.24,
+"via": "wikipedia",
+"pop": 6688.0
+},
+{
+"q": "Q1005338",
+"name": "Villa Argentina",
+"lon": -55.78333333,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 1274.0
+},
+{
+"q": "Q1005765",
+"name": "Playa Hermosa, Uruguay",
+"lon": -55.30222222,
+"lat": -34.83361111,
+"via": "wikipedia",
+"pop": 1456.0
+},
+{
+"q": "Q1006155",
+"name": "Piriápolis",
+"lon": -55.28333333,
+"lat": -34.9,
+"via": "wikipedia",
+"pop": 12144.0
+},
+{
+"q": "Q1006408",
+"name": "Sesimbra",
+"lon": -9.09963889,
+"lat": 38.44372222,
+"via": "wikipedia",
+"pop": 52465.0
+},
+{
+"q": "Q1006418",
+"name": "Mira, Portugal",
+"lon": -8.73333333,
+"lat": 40.43333333,
+"via": "wikipedia",
+"pop": 12465.0
+},
+{
+"q": "Q1007088",
+"name": "Helensburgh",
+"lon": -4.7333,
+"lat": 56.0166,
+"via": "wikipedia",
+"pop": 13640.0
+},
+{
+"q": "Q10084",
+"name": "Vlissingen",
+"lon": 3.56666667,
+"lat": 51.45,
+"via": "wikipedia",
+"pop": 44358.0
+},
+{
+"q": "Q1008934",
+"name": "Palma Nova",
+"lon": 2.53708889,
+"lat": 39.5209,
+"via": "wikipedia",
+"pop": 7073.0
+},
+{
+"q": "Q100901596",
+"name": "Schellbronn",
+"lon": 8.741944444,
+"lat": 48.816944444,
+"via": "wikidata",
+"pop": 1503.0
+},
+{
+"q": "Q1009298",
+"name": "Swanage",
+"lon": -1.96,
+"lat": 50.608,
+"via": "wikipedia",
+"pop": 9426.0
+},
+{
+"q": "Q1009405",
+"name": "Bundoran",
+"lon": -8.2838,
+"lat": 54.4754,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1009497",
+"name": "El Chorro, Uruguay",
+"lon": -54.81111111,
+"lat": -34.90277778,
+"via": "wikipedia",
+"pop": 1168.0
+},
+{
+"q": "Q1009696",
+"name": "Pinares – Las Delicias",
+"lon": -54.96805556,
+"lat": -34.91722222,
+"via": "wikipedia",
+"pop": 9819.0
+},
+{
+"q": "Q1010266",
+"name": "Kinghorn",
+"lon": -3.17,
+"lat": 56.07,
+"via": "wikipedia",
+"pop": 2840.0
+},
+{
+"q": "Q1010378",
+"name": "Sauce de Portezuelo",
+"lon": -55.14027778,
+"lat": -34.875,
+"via": "wikipedia",
+"pop": 741.0
+},
+{
+"q": "Q1010384",
+"name": "Kiyú – Ordeig",
+"lon": -56.72694444,
+"lat": -34.70027778,
+"via": "wikipedia",
+"pop": 897.0
+},
+{
+"q": "Q1011039",
+"name": "Sunny Beach",
+"lon": 27.70833333,
+"lat": 42.69305556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1011096",
+"name": "Deal, Kent",
+"lon": 1.4006,
+"lat": 51.2226,
+"via": "wikipedia",
+"pop": 20342.0
+},
+{
+"q": "Q1011112",
+"name": "Saint-Lunaire",
+"lon": -2.1075,
+"lat": 48.6353,
+"via": "wikipedia",
+"pop": 2768.0
+},
+{
+"q": "Q1011488",
+"name": "Nuweiba",
+"lon": 34.659094444,
+"lat": 29.033969444,
+"via": "wikidata",
+"pop": 2898.0
+},
+{
+"q": "Q1011521",
+"name": "Burntisland",
+"lon": -3.2325,
+"lat": 56.05944444,
+"via": "wikipedia",
+"pop": 6590.0
+},
+{
+"q": "Q1011787",
+"name": "Girvan",
+"lon": -4.856,
+"lat": 55.238,
+"via": "wikipedia",
+"pop": 6450.0
+},
+{
+"q": "Q1011996",
+"name": "Peguera",
+"lon": 2.45046944,
+"lat": 39.53763056,
+"via": "wikipedia",
+"pop": 4095.0
+},
+{
+"q": "Q1012006",
+"name": "Cruden Bay",
+"lon": -1.852485,
+"lat": 57.417254,
+"via": "wikipedia",
+"pop": 1640.0
+},
+{
+"q": "Q1012054",
+"name": "North Berwick",
+"lon": -2.717,
+"lat": 56.058,
+"via": "wikipedia",
+"pop": 7840.0
+},
+{
+"q": "Q1012476",
+"name": "Youghal",
+"lon": -7.84562,
+"lat": 51.95167,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1012874",
+"name": "Karasu, Sakarya",
+"lon": 30.69361111,
+"lat": 41.10361111,
+"via": "wikipedia",
+"pop": 75.887
+},
+{
+"q": "Q1012894",
+"name": "Finike",
+"lon": 30.15,
+"lat": 36.3,
+"via": "wikipedia",
+"pop": 48131.0
+},
+{
+"q": "Q1012901",
+"name": "Burhaniye",
+"lon": 26.95,
+"lat": 39.5,
+"via": "wikipedia",
+"pop": 60799.0
+},
+{
+"q": "Q1013077",
+"name": "Porto Cristo",
+"lon": 3.33333333,
+"lat": 39.55,
+"via": "wikipedia",
+"pop": 9534.0
+},
+{
+"q": "Q1013119",
+"name": "Mielno",
+"lon": 16.06083333,
+"lat": 54.26,
+"via": "wikipedia",
+"pop": 2836.0
+},
+{
+"q": "Q1013185",
+"name": "Lopar, Croatia",
+"lon": 14.73,
+"lat": 44.83,
+"via": "wikipedia",
+"pop": 1107.0
+},
+{
+"q": "Q1016169",
+"name": "Largs",
+"lon": -4.87,
+"lat": 55.795,
+"via": "wikipedia",
+"pop": 11260.0
+},
+{
+"q": "Q1016278",
+"name": "Burhave",
+"lon": 8.3625,
+"lat": 53.5744,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1016920",
+"name": "Dornoch",
+"lon": -4.03,
+"lat": 57.88,
+"via": "wikipedia",
+"pop": 1330.0
+},
+{
+"q": "Q1018597",
+"name": "Byron Bay",
+"lon": 153.615,
+"lat": -28.64305556,
+"via": "wikipedia",
+"pop": 6330.0
+},
+{
+"q": "Q1018756",
+"name": "Saltcoats",
+"lon": -4.7896,
+"lat": 55.6352,
+"via": "wikipedia",
+"pop": 12640.0
+},
+{
+"q": "Q1018772",
+"name": "Kızkalesi",
+"lon": 34.15,
+"lat": 36.46666667,
+"via": "wikipedia",
+"pop": 1698.0
+},
+{
+"q": "Q1019180",
+"name": "Westward Ho!",
+"lon": -4.246,
+"lat": 51.039,
+"via": "wikidata",
+"pop": 2112.0
+},
+{
+"q": "Q1020217",
+"name": "Minehead",
+"lon": -3.481,
+"lat": 51.204,
+"via": "wikipedia",
+"pop": 11752.0
+},
+{
+"q": "Q1020251",
+"name": "Dunoon",
+"lon": -4.9262,
+"lat": 55.9509,
+"via": "wikipedia",
+"pop": 7830.0
+},
+{
+"q": "Q1020391",
+"name": "La Coronilla",
+"lon": -53.51666667,
+"lat": -33.9,
+"via": "wikipedia",
+"pop": 707.0
+},
+{
+"q": "Q1020753",
+"name": "Rosarito",
+"lon": -117.05611111,
+"lat": 32.34222222,
+"via": "wikipedia",
+"pop": 100660.0
+},
+{
+"q": "Q1020776",
+"name": "Cabo San Lucas",
+"lon": -109.9153,
+"lat": 22.8947,
+"via": "wikipedia",
+"pop": 202694.0
+},
+{
+"q": "Q1020826",
+"name": "Quarteira",
+"lon": -8.103,
+"lat": 37.069,
+"via": "wikipedia",
+"pop": 24420.0
+},
+{
+"q": "Q1021167",
+"name": "Troon",
+"lon": -4.66,
+"lat": 55.54,
+"via": "wikipedia",
+"pop": 14710.0
+},
+{
+"q": "Q1021579",
+"name": "Velipojë",
+"lon": 19.43,
+"lat": 41.86472222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1021818",
+"name": "Edremit, Balıkesir",
+"lon": 27.02,
+"lat": 39.59222222,
+"via": "wikipedia",
+"pop": 154487.0
+},
+{
+"q": "Q1022275",
+"name": "Necochea",
+"lon": -58.73333333,
+"lat": -38.55,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1022281",
+"name": "Chernomorets",
+"lon": 27.65,
+"lat": 42.45,
+"via": "wikipedia",
+"pop": 2163.0
+},
+{
+"q": "Q1022285",
+"name": "Saints Constantine and Helena",
+"lon": 28.00833333,
+"lat": 43.22916667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1022288",
+"name": "Ravda",
+"lon": 27.68333333,
+"lat": 42.65,
+"via": "wikipedia",
+"pop": 3781.0
+},
+{
+"q": "Q1022954",
+"name": "St. Clair Shores, Michigan",
+"lon": -82.90027778,
+"lat": 42.49555556,
+"via": "wikipedia",
+"pop": 58874.0
+},
+{
+"q": "Q1023960",
+"name": "Ferragudo",
+"lon": -8.521,
+"lat": 37.124,
+"via": "wikipedia",
+"pop": 1973.0
+},
+{
+"q": "Q1024702",
+"name": "Renesse",
+"lon": 3.77305556,
+"lat": 51.73222222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1024720",
+"name": "Cayeux-sur-Mer",
+"lon": 1.4958,
+"lat": 50.1817,
+"via": "wikipedia",
+"pop": 2316.0
+},
+{
+"q": "Q1024734",
+"name": "Surfers Paradise",
+"lon": 153.4166,
+"lat": -28,
+"via": "wikipedia",
+"pop": 26412.0
+},
+{
+"q": "Q1024895",
+"name": "Cabo Polonio",
+"lon": -53.77805,
+"lat": -34.4061,
+"via": "wikidata",
+"pop": 128.0
+},
+{
+"q": "Q1025352",
+"name": "Cadzand",
+"lon": 3.40805556,
+"lat": 51.36777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1025353",
+"name": "Cadzand-Bad",
+"lon": 3.3889,
+"lat": 51.3783,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1025503",
+"name": "Withernsea",
+"lon": 0.0382,
+"lat": 53.7285,
+"via": "wikipedia",
+"pop": 6028.0
+},
+{
+"q": "Q1026062",
+"name": "Gurzuf",
+"lon": 34.2875,
+"lat": 44.55277778,
+"via": "wikipedia",
+"pop": 9412.0
+},
+{
+"q": "Q1026133",
+"name": "Cala Bona",
+"lon": 3.39027778,
+"lat": 39.61277778,
+"via": "wikipedia",
+"pop": 1331.0
+},
+{
+"q": "Q1026167",
+"name": "Cala Vadella",
+"lon": 1.22388889,
+"lat": 38.91305556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1026520",
+"name": "Juan-les-Pins",
+"lon": 7.10944444,
+"lat": 43.57111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1026673",
+"name": "Ventnor",
+"lon": -1.2084,
+"lat": 50.5976,
+"via": "wikipedia",
+"pop": 5565.0
+},
+{
+"q": "Q1026748",
+"name": "Golden Sands",
+"lon": 28.0268417,
+"lat": 43.2911076,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1027679",
+"name": "Portrush",
+"lon": -6.65222,
+"lat": 55.20474,
+"via": "wikipedia",
+"pop": 6150.0
+},
+{
+"q": "Q1028367",
+"name": "Ras Muhammad National Park",
+"lon": 34.2097,
+"lat": 27.7694,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q10283933",
+"name": "Fort Santo António (Tavira)",
+"lon": -7.62111111,
+"lat": 37.12138889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q10284021",
+"name": "Fort São João da Barra",
+"lon": -7.59277778,
+"lat": 37.13944444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q10323868",
+"name": "Manta Rota",
+"lon": -7.519,
+"lat": 37.168,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1033978",
+"name": "Canvey Island",
+"lon": 0.5725,
+"lat": 51.525,
+"via": "wikipedia",
+"pop": 38327.0
+},
+{
+"q": "Q1034146",
+"name": "Cap Ferrat",
+"lon": 7.32916667,
+"lat": 43.6875,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q10347150",
+"name": "Pederneira",
+"lon": -9.071,
+"lat": 39.606,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q103824105",
+"name": "Carmen Beach",
+"lon": -85.150527777,
+"lat": 9.630816666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q103939283",
+"name": "Sallatunturi",
+"lon": 28.765596,
+"lat": 66.7595471,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1046217",
+"name": "Carvoeiro (Lagoa)",
+"lon": -8.46666667,
+"lat": 37.1,
+"via": "wikipedia",
+"pop": 2721.0
+},
+{
+"q": "Q1047597",
+"name": "Casino Estoril",
+"lon": -9.3975,
+"lat": 38.70694444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q104778506",
+"name": "Mboro Plage",
+"lon": -16.908333333,
+"lat": 15.185,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1049525",
+"name": "Turkish Riviera",
+"lon": 31.63027778,
+"lat": 36.675,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1055949",
+"name": "Cerro San Antonio, Piriápolis",
+"lon": -55.27388889,
+"lat": -34.87833333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1056077",
+"name": "Cerro de las Ánimas",
+"lon": -55.31959444,
+"lat": -34.75205,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q10604863",
+"name": "Nynäs havsbad",
+"lon": 17.948333333,
+"lat": 58.891666666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1062726",
+"name": "Chapelle du Rosaire de Vence",
+"lon": 7.11277778,
+"lat": 43.7275,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1063084",
+"name": "Charco del Palo",
+"lon": -13.45,
+"lat": 29.08333333,
+"via": "wikipedia",
+"pop": 144.0
+},
+{
+"q": "Q106548590",
+"name": "Bruce's Beach",
+"lon": -118.41555556,
+"lat": 33.89444444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q106960762",
+"name": "Laboma Beach Resort",
+"lon": -0.1335096,
+"lat": 5.5639315,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q107001344",
+"name": "Nungwi Beach",
+"lon": 39.296,
+"lat": -5.726,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1072583",
+"name": "Chihuahua, Uruguay",
+"lon": -55.08888889,
+"lat": -34.875,
+"via": "wikipedia",
+"pop": 142.0
+},
+{
+"q": "Q1073686",
+"name": "Chincoteague, Virginia",
+"lon": -75.36777778,
+"lat": 37.93472222,
+"via": "wikipedia",
+"pop": 3344.0
+},
+{
+"q": "Q10744969",
+"name": "Beydağları Coastal National Park",
+"lon": 30.51055556,
+"lat": 36.59444444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q107611428",
+"name": "Mio e Tuo",
+"lon": 10.978185947,
+"lat": 42.719558531,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q108062021",
+"name": "Saint John's Point, County Down",
+"lon": -5.659284,
+"lat": 54.226113,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1082831",
+"name": "Osor, Croatia",
+"lon": 14.39296,
+"lat": 44.6939,
+"via": "wikipedia",
+"pop": 26.0
+},
+{
+"q": "Q10836873",
+"name": "Yalıköy, Istanbul",
+"lon": 28.29444444,
+"lat": 41.47722222,
+"via": "wikipedia",
+"pop": 1506.0
+},
+{
+"q": "Q108417426",
+"name": "Q108417426",
+"lon": 138.516944444,
+"lat": 37.356944444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q108803397",
+"name": "Panteón 5 de Diciembre",
+"lon": -105.2247,
+"lat": 20.6198,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q108803697",
+"name": "Malibu Historic District",
+"lon": -118.67638889,
+"lat": 34.03694444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q108934016",
+"name": "Leisure Bay",
+"lon": 30.238927777,
+"lat": -31.0187,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1089446",
+"name": "Venus, Romania",
+"lon": 28.59555556,
+"lat": 43.845,
+"via": "wikipedia",
+"pop": 42.0
+},
+{
+"q": "Q10907465",
+"name": "Nanliao Seaside Resort",
+"lon": 120.9175,
+"lat": 24.838,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1092393",
+"name": "Vrbnik",
+"lon": 14.66666667,
+"lat": 45.08333333,
+"via": "wikipedia",
+"pop": 1190.0
+},
+{
+"q": "Q109316844",
+"name": "Kamayahama Beach",
+"lon": 139.96,
+"lat": 40.098888888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q109393097",
+"name": "Geriş, Bodrum",
+"lon": 27.28,
+"lat": 37.08,
+"via": "wikipedia",
+"pop": 3659.0
+},
+{
+"q": "Q109516089",
+"name": "Atican Beach Resort",
+"lon": 3.5969254,
+"lat": 6.4249576,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q109597322",
+"name": "Q109597322",
+"lon": 139.919444444,
+"lat": 40.035972222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q109597325",
+"name": "Q109597325",
+"lon": 139.894611111,
+"lat": 39.206333333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q109637800",
+"name": "La Sirena Beach",
+"lon": -53.746,
+"lat": -34.229,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q109813840",
+"name": "Ocean Park, Santa Monica",
+"lon": -118.48138889,
+"lat": 34.02194444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q110486593",
+"name": "Atchugarry Museum of Contemporary Art",
+"lon": -54.8206,
+"lat": -34.866,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11124206",
+"name": "Italian Riviera",
+"lon": 8.75472222,
+"lat": 44.39333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11139948",
+"name": "Shalun Seaside Resort",
+"lon": 121.408195606,
+"lat": 25.186439862,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11145023",
+"name": "Sant Antoni de Portmany",
+"lon": 1.30055556,
+"lat": 38.98083333,
+"via": "wikipedia",
+"pop": 24937.0
+},
+{
+"q": "Q111491950",
+"name": "Atlantic City Boardwalk",
+"lon": -74.45083333,
+"lat": 39.34972222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q111691613",
+"name": "Q111691613",
+"lon": -58.438123282,
+"lat": -34.544630872,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11171297",
+"name": "Lido di Ostia",
+"lon": 12.27893889,
+"lat": 41.73324444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q111888",
+"name": "Riccione",
+"lon": 12.65,
+"lat": 44,
+"via": "wikipedia",
+"pop": 34400.0
+},
+{
+"q": "Q112843985",
+"name": "Q112843985",
+"lon": -71.631498174,
+"lat": -33.626433436,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11304",
+"name": "L'Escala",
+"lon": 3.139,
+"lat": 42.114,
+"via": "wikipedia",
+"pop": 10374.0
+},
+{
+"q": "Q11304625",
+"name": "Southern Beach Chigasaki",
+"lon": 139.403833,
+"lat": 35.318278,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11305639",
+"name": "Q11305639",
+"lon": 141.18388889,
+"lat": 43.14947222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11306070",
+"name": "Q11306070",
+"lon": 140.84788889,
+"lat": 43.19841667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11343285",
+"name": "Moon Beach",
+"lon": 127.803,
+"lat": 26.451111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q113546467",
+"name": "Sayeman Beach Resort",
+"lon": 91.9840863,
+"lat": 21.4141449,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11354762",
+"name": "Mikuni Sunset Beach",
+"lon": 136.134778,
+"lat": 36.222556,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1136332",
+"name": "Costa Calma",
+"lon": -14.22805556,
+"lat": 28.16194444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11367222",
+"name": "Q11367222",
+"lon": 131.448611111,
+"lat": 33.995388888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11368527",
+"name": "Q11368527",
+"lon": 135.279444444,
+"lat": 35.521388888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11369337",
+"name": "Q11369337",
+"lon": 140.629972222,
+"lat": 36.505111111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11371766",
+"name": "Q11371766",
+"lon": 135.334611,
+"lat": 34.438028,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11387802",
+"name": "Q11387802",
+"lon": 140.103333333,
+"lat": 42.008333333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q114131152",
+"name": "Teluk Dalam Resort",
+"lon": 100.558442,
+"lat": 4.247152,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11430492",
+"name": "Sotoura Beach",
+"lon": 138.9722,
+"lat": 34.674923,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11438304",
+"name": "Ōiso Beach",
+"lon": 139.323056,
+"lat": 35.310556,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11438437",
+"name": "Q11438437",
+"lon": 140.57777,
+"lat": 36.164436,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1146682",
+"name": "San Agustin, Las Palmas",
+"lon": -15.54527778,
+"lat": 27.77111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q114877604",
+"name": "Parker House (Sea Girt, New Jersey)",
+"lon": -74.02888889,
+"lat": 40.13638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11489004",
+"name": "Goza Shirahama Beach",
+"lon": 136.762611,
+"lat": 34.274028,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11492",
+"name": "Mataró",
+"lon": 2.45,
+"lat": 41.53333333,
+"via": "wikipedia",
+"pop": 131683.0
+},
+{
+"q": "Q11504013",
+"name": "Shin-Maiko Beach",
+"lon": 134.553156,
+"lat": 34.772272,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1150931",
+"name": "Côte Bleue",
+"lon": 5.189,
+"lat": 43.333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1150954",
+"name": "Côte d'Argent",
+"lon": -1.25,
+"lat": 44.58333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11516446",
+"name": "Ariakehama",
+"lon": 133.641208,
+"lat": 34.137817,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11517729",
+"name": "Asari Swimming Beach",
+"lon": 141.06883333,
+"lat": 43.17597222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11526655",
+"name": "Higashi Otaru Swimming Beach",
+"lon": 141.03941667,
+"lat": 43.17911111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11544904",
+"name": "Jirō-Kurō Beach",
+"lon": 136.832417,
+"lat": 34.284361,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q115505474",
+"name": "Oberbärenburg",
+"lon": 13.7127316,
+"lat": 50.7945663,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11566381",
+"name": "Q11566381",
+"lon": 131.939027777,
+"lat": 33.051722222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11569909",
+"name": "Katase Higashihama Beach",
+"lon": 139.487194,
+"lat": 35.307778,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11569920",
+"name": "Katase Nishihama–kugenuma Beach",
+"lon": 139.478056,
+"lat": 35.310556,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11569928",
+"name": "Kataonami Beach",
+"lon": 135.089389,
+"lat": 34.260583,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11580024",
+"name": "Shirahama Beach",
+"lon": 129.661027777,
+"lat": 33.124138888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11587943",
+"name": "Q11587943",
+"lon": 135.089389,
+"lat": 34.260583,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11588009",
+"name": "Iso beach",
+"lon": 130.575,
+"lat": 31.615,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11589651",
+"name": "Q11589651",
+"lon": 135.296389,
+"lat": 35.515667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11603310",
+"name": "Q11603310",
+"lon": 135.200944,
+"lat": 34.341306,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11612145",
+"name": "Q11612145",
+"lon": 130.204972222,
+"lat": 32.069611111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11613614",
+"name": "Q11613614",
+"lon": 135.0405,
+"lat": 34.627972222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11616620",
+"name": "Q11616620",
+"lon": 135.575330555,
+"lat": 35.493127777,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11625249",
+"name": "Q11625249",
+"lon": 140.853222222,
+"lat": 43.199833333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11648229",
+"name": "Q11648229",
+"lon": 140.934722222,
+"lat": 37.876388888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11650253",
+"name": "Q11650253",
+"lon": 141.16555556,
+"lat": 43.14472222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1165029",
+"name": "Le Pouliguen",
+"lon": -2.4292,
+"lat": 47.2778,
+"via": "wikipedia",
+"pop": 4173.0
+},
+{
+"q": "Q1165419",
+"name": "Saint-Pierre-en-Port",
+"lon": 0.4969,
+"lat": 49.8072,
+"via": "wikipedia",
+"pop": 826.0
+},
+{
+"q": "Q11657369",
+"name": "Ajigaura Beach",
+"lon": 140.6156,
+"lat": 36.3874,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11669345",
+"name": "Takayama Foreigners Beach Retreat",
+"lon": 141.080639,
+"lat": 38.294472,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q116730005",
+"name": "Atlantis The Royal, Dubai",
+"lon": 55.12778889,
+"lat": 25.13813611,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11674135",
+"name": "Q11674135",
+"lon": 136.030972,
+"lat": 36.09075,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11676366",
+"name": "Q11676366",
+"lon": 136.071111111,
+"lat": 36.134527777,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q116767",
+"name": "Crawfordsburn",
+"lon": -5.73111111,
+"lat": 54.65833333,
+"via": "wikipedia",
+"pop": 587.0
+},
+{
+"q": "Q11690499",
+"name": "Chłapowo, Pomeranian Voivodeship",
+"lon": 18.37027778,
+"lat": 54.80416667,
+"via": "wikipedia",
+"pop": 1223.0
+},
+{
+"q": "Q116965144",
+"name": "La Rotonda",
+"lon": 10.981411521,
+"lat": 42.717133867,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q117246910",
+"name": "Q117246910",
+"lon": 139.2117451,
+"lat": 34.3359803,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q117251388",
+"name": "Q117251388",
+"lon": 139.2064009,
+"lat": 34.3279917,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q117251607",
+"name": "Q117251607",
+"lon": 139.2086814,
+"lat": 34.3302318,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q117252530",
+"name": "Q117252530",
+"lon": 139.2221875,
+"lat": 34.3236875,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11763015",
+"name": "Lubiatowo, Pomeranian Voivodeship",
+"lon": 17.86194444,
+"lat": 54.7975,
+"via": "wikipedia",
+"pop": 152.0
+},
+{
+"q": "Q11790843",
+"name": "New Brighton, Merseyside",
+"lon": -3.049,
+"lat": 53.432,
+"via": "wikipedia",
+"pop": 15149.0
+},
+{
+"q": "Q11800749",
+"name": "Ostrowo, Puck County",
+"lon": 18.245,
+"lat": 54.82527778,
+"via": "wikipedia",
+"pop": 747.0
+},
+{
+"q": "Q11813236",
+"name": "Garden Bay",
+"lon": 34.354891666,
+"lat": 27.916841666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q11822",
+"name": "Roses, Spain",
+"lon": 3.18305556,
+"lat": 42.26305556,
+"via": "wikipedia",
+"pop": 20365.0
+},
+{
+"q": "Q118480518",
+"name": "Los Veranos Canopy Tour",
+"lon": -105.300289,
+"lat": 20.475393,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q11883965",
+"name": "Nallikari",
+"lon": 25.412777777,
+"lat": 65.031944444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1193749",
+"name": "Redcar",
+"lon": -1.069,
+"lat": 54.618,
+"via": "wikipedia",
+"pop": 37073.0
+},
+{
+"q": "Q11959",
+"name": "Alicante",
+"lon": -0.48305556,
+"lat": 38.34527778,
+"via": "wikipedia",
+"pop": 366221.0
+},
+{
+"q": "Q119952600",
+"name": "Los Arcos National Marine Park",
+"lon": -105.292249,
+"lat": 20.545182,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q12060999",
+"name": "Kilchattan Bay",
+"lon": -5.024,
+"lat": 55.751,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q120634798",
+"name": "Q120634798",
+"lon": 132.497166666,
+"lat": 34.318027777,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1210193",
+"name": "Dikwella",
+"lon": 80.68333333,
+"lat": 5.96666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q121027181",
+"name": "Pier Sixty-Six, Fort Lauderdale, Florida",
+"lon": -80.11444444,
+"lat": 26.10166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q12110",
+"name": "Arenys de Mar",
+"lon": 2.55027778,
+"lat": 41.58194444,
+"via": "wikipedia",
+"pop": 17042.0
+},
+{
+"q": "Q12113675",
+"name": "Costinești",
+"lon": 28.63333333,
+"lat": 43.95,
+"via": "wikipedia",
+"pop": 3121.0
+},
+{
+"q": "Q12114",
+"name": "Canet de Mar",
+"lon": 2.58333333,
+"lat": 41.58333333,
+"via": "wikipedia",
+"pop": 15198.0
+},
+{
+"q": "Q121856388",
+"name": "Q121856388",
+"lon": 134.994722222,
+"lat": 34.538611111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12199863",
+"name": "Port Ghalib",
+"lon": 34.637222222,
+"lat": 25.534166666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12199865",
+"name": "Marina",
+"lon": 29.046289,
+"lat": 30.816745,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12271631",
+"name": "Alen mak",
+"lon": 28.019808,
+"lat": 43.258413,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12277181",
+"name": "Q12277181",
+"lon": 20.796944444,
+"lat": 41.084444444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12294060",
+"name": "Q12294060",
+"lon": 28.018034,
+"lat": 43.24339,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12298984",
+"name": "Chayka",
+"lon": 28.03153,
+"lat": 43.260706,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12299137",
+"name": "Q12299137",
+"lon": 27.928888888,
+"lat": 43.120833333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12324327",
+"name": "Les Colombières",
+"lon": 7.51661944,
+"lat": 43.78738611,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1238749",
+"name": "Gulf of Gökova",
+"lon": 28.16194444,
+"lat": 36.99916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q124050849",
+"name": "Q124050849",
+"lon": 138.774564233,
+"lat": 34.654380816,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1240972",
+"name": "Highcliffe",
+"lon": -1.6959,
+"lat": 50.7414,
+"via": "wikipedia",
+"pop": 3673.0
+},
+{
+"q": "Q1243187",
+"name": "Artificial caves of Alapraia",
+"lon": -9.37722222,
+"lat": 38.70638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1246055",
+"name": "Dornumersiel",
+"lon": 7.47122,
+"lat": 53.67345,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1246231",
+"name": "Labadee",
+"lon": -72.24555556,
+"lat": 19.78638889,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1247822",
+"name": "Burnham-on-Sea",
+"lon": -2.9989,
+"lat": 51.2378,
+"via": "wikipedia",
+"pop": 19576.0
+},
+{
+"q": "Q12503600",
+"name": "Pasir Putih",
+"lon": 113.835277777,
+"lat": -7.708888888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12540",
+"name": "Calella",
+"lon": 2.6575,
+"lat": 41.61277778,
+"via": "wikipedia",
+"pop": 20864.0
+},
+{
+"q": "Q12590",
+"name": "Malgrat de Mar",
+"lon": 2.75,
+"lat": 41.65,
+"via": "wikipedia",
+"pop": 19714.0
+},
+{
+"q": "Q125960021",
+"name": "Playa Remanso",
+"lon": -85.846222222,
+"lat": 11.222455555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12598678",
+"name": "Bugok",
+"lon": 128.492181,
+"lat": 35.544414,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q125996",
+"name": "Soma Bay",
+"lon": 33.99055556,
+"lat": 26.84722222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q12613619",
+"name": "Ilgwang Beach",
+"lon": 129.2336709,
+"lat": 35.2609778,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1263457",
+"name": "Hornsea",
+"lon": -0.17,
+"lat": 53.91361111,
+"via": "wikipedia",
+"pop": 8791.0
+},
+{
+"q": "Q1266785",
+"name": "Durankulak",
+"lon": 28.51666667,
+"lat": 43.7,
+"via": "wikipedia",
+"pop": 262.0
+},
+{
+"q": "Q126898",
+"name": "Antibes",
+"lon": 7.1239,
+"lat": 43.5808,
+"via": "wikipedia",
+"pop": 77637.0
+},
+{
+"q": "Q1269925",
+"name": "Malinska-Dubašnica",
+"lon": 14.52694444,
+"lat": 45.12027778,
+"via": "wikipedia",
+"pop": 3212.0
+},
+{
+"q": "Q1269942",
+"name": "Punat",
+"lon": 14.6289,
+"lat": 45.0147,
+"via": "wikipedia",
+"pop": 1900.0
+},
+{
+"q": "Q12761168",
+"name": "Čanj",
+"lon": 18.998,
+"lat": 42.164,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1277227",
+"name": "Povljana",
+"lon": 15.1156,
+"lat": 44.3467,
+"via": "wikipedia",
+"pop": 669.0
+},
+{
+"q": "Q128499",
+"name": "Yalta",
+"lon": 34.17,
+"lat": 44.49944444,
+"via": "wikipedia",
+"pop": 72013.0
+},
+{
+"q": "Q128716",
+"name": "Sarzeau",
+"lon": -2.7686,
+"lat": 47.5281,
+"via": "wikipedia",
+"pop": 9212.0
+},
+{
+"q": "Q128783",
+"name": "Quiberon",
+"lon": -3.1192,
+"lat": 47.4842,
+"via": "wikipedia",
+"pop": 4876.0
+},
+{
+"q": "Q1289570",
+"name": "Santa Regina, Colonia",
+"lon": -57.19583333,
+"lat": -34.43472222,
+"via": "wikipedia",
+"pop": 166.0
+},
+{
+"q": "Q1292926",
+"name": "Montalivet-les-Bains",
+"lon": -1.15,
+"lat": 45.38,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q129702437",
+"name": "Q129702437",
+"lon": -81.063305555,
+"lat": -5.007444444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q12977",
+"name": "Lloret de Mar",
+"lon": 2.83333333,
+"lat": 41.7,
+"via": "wikipedia",
+"pop": 43000.0
+},
+{
+"q": "Q12988",
+"name": "Knokke-Heist",
+"lon": 3.28333333,
+"lat": 51.33333333,
+"via": "wikipedia",
+"pop": 33097.0
+},
+{
+"q": "Q12996",
+"name": "Ostend",
+"lon": 2.91944444,
+"lat": 51.22583333,
+"via": "wikipedia",
+"pop": 71557.0
+},
+{
+"q": "Q13016329",
+"name": "Bang Pu",
+"lon": 100.730037833,
+"lat": 13.504818833,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q130275004",
+"name": "Baja Sardinia",
+"lon": 9.4783,
+"lat": 41.1401,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q130354333",
+"name": "Somone",
+"lon": -17.075694444,
+"lat": 14.485722222,
+"via": "wikidata",
+"pop": 8762.0
+},
+{
+"q": "Q130363588",
+"name": "Ideal Beach Resort, Mahabalipuram",
+"lon": 80.2062008,
+"lat": 12.6494591,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1303777",
+"name": "José Ignacio, Uruguay",
+"lon": -54.63333333,
+"lat": -34.84638889,
+"via": "wikipedia",
+"pop": 148.0
+},
+{
+"q": "Q1304376",
+"name": "Vila Nova de Milfontes",
+"lon": -8.781,
+"lat": 37.725,
+"via": "wikipedia",
+"pop": 5660.0
+},
+{
+"q": "Q13140",
+"name": "San Benedetto del Tronto",
+"lon": 13.88333333,
+"lat": 42.95,
+"via": "wikipedia",
+"pop": 46957.0
+},
+{
+"q": "Q131400093",
+"name": "Wynn Al Marjan Island",
+"lon": 55.755,
+"lat": 25.6875,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q13149",
+"name": "Nerja",
+"lon": -3.87888889,
+"lat": 36.74694444,
+"via": "wikipedia",
+"pop": 22132.0
+},
+{
+"q": "Q131491",
+"name": "Brighton",
+"lon": -0.1375,
+"lat": 50.82083333,
+"via": "wikipedia",
+"pop": 134293.0
+},
+{
+"q": "Q13150",
+"name": "Torrox",
+"lon": -3.95,
+"lat": 36.75,
+"via": "wikipedia",
+"pop": 22523.0
+},
+{
+"q": "Q131600",
+"name": "Dinard",
+"lon": -2.06,
+"lat": 48.63,
+"via": "wikipedia",
+"pop": 10772.0
+},
+{
+"q": "Q131850340",
+"name": "Marfisa Beach 26",
+"lon": 12.248091666,
+"lat": 44.662658333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q131994823",
+"name": "al-Aḥyāʾ",
+"lon": 33.715,
+"lat": 27.3157,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1320695",
+"name": "Grand Hotel (Mackinac Island)",
+"lon": -84.62583333,
+"lat": 45.85111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q13274",
+"name": "Krk (town)",
+"lon": 14.56666667,
+"lat": 45.01666667,
+"via": "wikipedia",
+"pop": 6816.0
+},
+{
+"q": "Q132790",
+"name": "Biarritz",
+"lon": -1.56,
+"lat": 43.48,
+"via": "wikipedia",
+"pop": 26206.0
+},
+{
+"q": "Q13280",
+"name": "Cres",
+"lon": 14.40805556,
+"lat": 44.96,
+"via": "wikipedia",
+"pop": 3079.0
+},
+{
+"q": "Q13282",
+"name": "Cres (town)",
+"lon": 14.40805556,
+"lat": 44.96,
+"via": "wikipedia",
+"pop": 2716.0
+},
+{
+"q": "Q133054932",
+"name": "Marina Vallarta",
+"lon": -105.2531,
+"lat": 20.664,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q13318",
+"name": "Imperia",
+"lon": 8.03333333,
+"lat": 43.88333333,
+"via": "wikipedia",
+"pop": 42060.0
+},
+{
+"q": "Q13320",
+"name": "Savona",
+"lon": 8.48111111,
+"lat": 44.30805556,
+"via": "wikipedia",
+"pop": 58194.0
+},
+{
+"q": "Q133540584",
+"name": "Es Canar",
+"lon": 1.57805556,
+"lat": 39.00194444,
+"via": "wikipedia",
+"pop": 1689.0
+},
+{
+"q": "Q13369",
+"name": "Rimini",
+"lon": 12.56833333,
+"lat": 44.05944444,
+"via": "wikipedia",
+"pop": 149211.0
+},
+{
+"q": "Q134291",
+"name": "Mersin",
+"lon": 34.62722222,
+"lat": 36.79444444,
+"via": "wikipedia",
+"pop": 1040507.0
+},
+{
+"q": "Q134311669",
+"name": "Hard Rock Hotel Riviera Maya",
+"lon": -87.21538528,
+"lat": 20.50697139,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q134412878",
+"name": "The Ritz-Carlton, San Juan",
+"lon": -66.01298056,
+"lat": 18.44354056,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1344290",
+"name": "Ölüdeniz",
+"lon": 29.1425,
+"lat": 36.57083333,
+"via": "wikipedia",
+"pop": 5967.0
+},
+{
+"q": "Q134464297",
+"name": "Fairmont El San Juan Hotel",
+"lon": -66.01829333,
+"lat": 18.44326583,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q134506101",
+"name": "Pacific Sands Beach Resort",
+"lon": -125.872684,
+"lat": 49.106045,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1345652",
+"name": "Mirissa",
+"lon": 80.45972222,
+"lat": 5.94583333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q134689253",
+"name": "Mesnil-Val-Plage",
+"lon": 1.330833333,
+"lat": 50.043888888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q134877885",
+"name": "Sint-André",
+"lon": 2.657222,
+"lat": 51.125556,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q13491",
+"name": "Palamós",
+"lon": 3.12916667,
+"lat": 41.85,
+"via": "wikipedia",
+"pop": 18933.0
+},
+{
+"q": "Q1349520",
+"name": "Moraira",
+"lon": 0.1345,
+"lat": 38.688,
+"via": "wikipedia",
+"pop": 1612.0
+},
+{
+"q": "Q134996543",
+"name": "Hotel Zone (Cancún)",
+"lon": -86.74611111,
+"lat": 21.13444444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q135005446",
+"name": "Hard Rock Hotel & Casino Athens",
+"lon": 23.7414,
+"lat": 37.8865,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q135102207",
+"name": "Q135102207",
+"lon": -70.68661,
+"lat": -26.57689,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135109080",
+"name": "Dominicus",
+"lon": -68.8329904,
+"lat": 18.3470157,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q13521",
+"name": "Sant Feliu de Guíxols",
+"lon": 3.03333333,
+"lat": 41.78333333,
+"via": "wikipedia",
+"pop": 23141.0
+},
+{
+"q": "Q1352711",
+"name": "Westkapelle",
+"lon": 3.4406,
+"lat": 51.5294,
+"via": "wikidata",
+"pop": 2590.0
+},
+{
+"q": "Q135398957",
+"name": "Quend-Plage",
+"lon": 1.548055555,
+"lat": 50.323055555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135424221",
+"name": "Seine Bight",
+"lon": -88.366049447,
+"lat": 16.578732326,
+"via": "wikidata",
+"pop": 1895.0
+},
+{
+"q": "Q135444",
+"name": "Millisle",
+"lon": -5.529,
+"lat": 54.608,
+"via": "wikipedia",
+"pop": 2318.0
+},
+{
+"q": "Q135466877",
+"name": "Küdür Peninsula",
+"lon": 27.27321,
+"lat": 37.12471,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q135616",
+"name": "Yeysk",
+"lon": 38.27333333,
+"lat": 46.71111111,
+"via": "wikipedia",
+"pop": 81099.0
+},
+{
+"q": "Q13571265",
+"name": "De Haan",
+"lon": 3.03444,
+"lat": 51.275,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135744",
+"name": "Galveston, Texas",
+"lon": -94.795,
+"lat": 29.30138889,
+"via": "wikipedia",
+"pop": 53695.0
+},
+{
+"q": "Q135747036",
+"name": "Groenendijk",
+"lon": 2.701666666,
+"lat": 51.140555555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135910532",
+"name": "Les Grandes Dalles",
+"lon": 0.511944,
+"lat": 49.818611,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135910535",
+"name": "Grainval",
+"lon": 0.347222,
+"lat": 49.746667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135910596",
+"name": "Brighton les Pins",
+"lon": 1.514722,
+"lat": 50.195,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135910600",
+"name": "Bois de Cise",
+"lon": 1.425556,
+"lat": 50.088056,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q135911313",
+"name": "Three Polish Emissaries",
+"lon": -9.39743,
+"lat": 38.704141,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q136088949",
+"name": "Bagni Colombo",
+"lon": 8.505256711,
+"lat": 44.327758826,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136128853",
+"name": "Bust of Lucian Blaga",
+"lon": -9.39744722,
+"lat": 38.70404722,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q136448888",
+"name": "Bombardment of Mar del Plata",
+"lon": -57.55,
+"lat": -38,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q13644944",
+"name": "Llansteffan",
+"lon": -4.3910444,
+"lat": 51.772129,
+"via": "wikipedia",
+"pop": 887.0
+},
+{
+"q": "Q136497895",
+"name": "Preussenhof Beach and Spa Hotel Zinnowitz",
+"lon": 13.914204341,
+"lat": 54.0810672,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136512578",
+"name": "Prince von Preussen Zinnowitz",
+"lon": 13.913788903,
+"lat": 54.081258208,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136665177",
+"name": "Hotel Luise von Preussen Zinnowitz",
+"lon": 13.913836672,
+"lat": 54.080701454,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136681106",
+"name": "Q136681106",
+"lon": -76.72829,
+"lat": -12.556574,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136824391",
+"name": "Hôtel de la Plage (Sainte-Anne-la-Palud)",
+"lon": -4.268805555,
+"lat": 48.133805555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q136889010",
+"name": "Q136889010",
+"lon": -76.654774532,
+"lat": -12.683822856,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q137641861",
+"name": "Cipriani Towers",
+"lon": -54.917,
+"lat": -34.942,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1376790",
+"name": "Cape Charles, Virginia",
+"lon": -76.01416667,
+"lat": 37.2675,
+"via": "wikipedia",
+"pop": 1178.0
+},
+{
+"q": "Q137697697",
+"name": "Costa Giardino",
+"lon": 13.95,
+"lat": 42.75,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q137777690",
+"name": "Leeupoort",
+"lon": 27.639444444,
+"lat": -24.911944444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q137968996",
+"name": "Hacienda Iguana Golf & Beach Resort",
+"lon": -86.0519803,
+"lat": 11.4139496,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1380189",
+"name": "Olympus (Lycia)",
+"lon": 30.4725,
+"lat": 36.39611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1383404",
+"name": "Fayed",
+"lon": 32.298611111,
+"lat": 30.326111111,
+"via": "wikidata",
+"pop": 21808.0
+},
+{
+"q": "Q1394271",
+"name": "Tangalooma, Queensland",
+"lon": 153.37583333,
+"lat": -27.17666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q139499560",
+"name": "Q139499560",
+"lon": 13.880462032,
+"lat": 42.963686662,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q139560345",
+"name": "Rancho Santana",
+"lon": -86.0853713,
+"lat": 11.441725,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q139761253",
+"name": "Kumarakanda",
+"lon": 80.12777778,
+"lat": 6.11277778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q140042751",
+"name": "Q140042751",
+"lon": 55.588227,
+"lat": -21.372677,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q140075",
+"name": "Gold Coast, Queensland",
+"lon": 153.3344,
+"lat": -27.9983,
+"via": "wikipedia",
+"pop": 607665.0
+},
+{
+"q": "Q1401243",
+"name": "Partenit",
+"lon": 34.33972222,
+"lat": 44.57638889,
+"via": "wikipedia",
+"pop": 6472.0
+},
+{
+"q": "Q140250",
+"name": "Zagarzazú",
+"lon": -58.33333333,
+"lat": -33.96666667,
+"via": "wikipedia",
+"pop": 245.0
+},
+{
+"q": "Q140680840",
+"name": "Nibiru (tourist resort)",
+"lon": 28.6434,
+"lat": 43.9646,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q140984047",
+"name": "Cavalière (Var)",
+"lon": 6.426111111,
+"lat": 43.151944444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1416014",
+"name": "Veulettes-sur-Mer",
+"lon": 0.5969,
+"lat": 49.8478,
+"via": "wikipedia",
+"pop": 267.0
+},
+{
+"q": "Q14206902",
+"name": "Tiger Bay",
+"lon": 34.365412299,
+"lat": 27.929011691,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14211728",
+"name": "el-Dahhar",
+"lon": 33.820719444,
+"lat": 27.2531,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14211730",
+"name": "el-Saqala",
+"lon": 33.83635,
+"lat": 27.223038888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14215969",
+"name": "Nabq Bay",
+"lon": 34.43261,
+"lat": 28.0407,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14216233",
+"name": "New Hurghada",
+"lon": 33.83,
+"lat": 27.141388888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14216992",
+"name": "Old Sharm",
+"lon": 34.296569444,
+"lat": 27.864569444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14218642",
+"name": "Ras Nasrani",
+"lon": 34.41669,
+"lat": 27.96506,
+"via": "wikidata",
+"pop": 474.0
+},
+{
+"q": "Q14218645",
+"name": "Ras Umm Sid",
+"lon": 34.315833333,
+"lat": 27.848888888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14221956",
+"name": "Tower Bay",
+"lon": 34.32565,
+"lat": 27.882469444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q14223188",
+"name": "White Knight",
+"lon": 34.398130555,
+"lat": 27.96045,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1424908",
+"name": "Alnmouth",
+"lon": -1.6124,
+"lat": 55.3879,
+"via": "wikipedia",
+"pop": 443.0
+},
+{
+"q": "Q14254772",
+"name": "Sharm el-Naqa",
+"lon": 33.963055555,
+"lat": 26.898333333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1431148",
+"name": "Mackinac Island",
+"lon": -84.63055556,
+"lat": 45.86111111,
+"via": "wikipedia",
+"pop": 492.0
+},
+{
+"q": "Q1434531",
+"name": "Salin-de-Giraud",
+"lon": 4.73,
+"lat": 43.414,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1437932",
+"name": "Foros, Crimea",
+"lon": 33.78583333,
+"lat": 44.39222222,
+"via": "wikipedia",
+"pop": 1889.0
+},
+{
+"q": "Q14409075",
+"name": "Villa Aujourd'hui",
+"lon": 7.1198,
+"lat": 43.551,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1441449",
+"name": "Côte de Lumière",
+"lon": -1.82,
+"lat": 46.53,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1449",
+"name": "Genoa",
+"lon": 8.93388889,
+"lat": 44.40722222,
+"via": "wikipedia",
+"pop": 558745.0
+},
+{
+"q": "Q145508",
+"name": "Preila",
+"lon": 21.06805556,
+"lat": 55.37333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q145739",
+"name": "Zambujeira do Mar",
+"lon": -8.78416667,
+"lat": 37.52527778,
+"via": "wikipedia",
+"pop": 912.0
+},
+{
+"q": "Q1469841",
+"name": "Fromentine",
+"lon": -2.137,
+"lat": 46.891,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q147606",
+"name": "Fort-Mahon-Plage",
+"lon": 1.5697,
+"lat": 50.3419,
+"via": "wikipedia",
+"pop": 1363.0
+},
+{
+"q": "Q1477163",
+"name": "Grange-over-Sands",
+"lon": -2.915,
+"lat": 54.19,
+"via": "wikipedia",
+"pop": 4277.0
+},
+{
+"q": "Q147938",
+"name": "Tsarevo",
+"lon": 27.85111111,
+"lat": 42.17083333,
+"via": "wikipedia",
+"pop": 5417.0
+},
+{
+"q": "Q1482884",
+"name": "Tróia Peninsula",
+"lon": -8.87222222,
+"lat": 38.46555556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q14891",
+"name": "Suhl",
+"lon": 10.693055555,
+"lat": 50.610555555,
+"via": "wikidata",
+"pop": 33976.0
+},
+{
+"q": "Q1493229",
+"name": "Højen",
+"lon": 10.52416667,
+"lat": 57.72805556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1495042",
+"name": "Villa La Léopolda",
+"lon": 7.321187,
+"lat": 43.709381,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q149551",
+"name": "Seahill",
+"lon": -5.764948,
+"lat": 54.664037,
+"via": "wikipedia",
+"pop": 1018.0
+},
+{
+"q": "Q149899",
+"name": "Ahlbeck, Heringsdorf",
+"lon": 14.18333333,
+"lat": 53.93333333,
+"via": "wikipedia",
+"pop": 3395.0
+},
+{
+"q": "Q15118385",
+"name": "Lido di Roma",
+"lon": 12.27777778,
+"lat": 41.73166667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q15129669",
+"name": "St. Niels",
+"lon": 8.3168,
+"lat": 54.9076,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1515881",
+"name": "Tigullio",
+"lon": 9.2833,
+"lat": 44.3,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1521754",
+"name": "Makadi Bay",
+"lon": 33.89666667,
+"lat": 26.99111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q15224497",
+"name": "Holiday Beach (Haikou)",
+"lon": 110.38916667,
+"lat": 20.07916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q152405",
+"name": "Side, Turkey",
+"lon": 31.38888889,
+"lat": 36.76666667,
+"via": "wikipedia",
+"pop": 13596.0
+},
+{
+"q": "Q15241149",
+"name": "La Pausa",
+"lon": 7.46638056,
+"lat": 43.76302222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q152443",
+"name": "Carolinensiel",
+"lon": 7.8025,
+"lat": 53.692222222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q15253636",
+"name": "Mismaloya",
+"lon": -105.292625,
+"lat": 20.531018,
+"via": "wikipedia",
+"pop": 561.0
+},
+{
+"q": "Q1526733",
+"name": "Termas del Daymán",
+"lon": -57.909583333,
+"lat": -31.457583333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q15276986",
+"name": "Sharm International Hospital",
+"lon": 34.2998,
+"lat": 27.8816,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q15304084",
+"name": "Campo Bahia",
+"lon": -39.01083333,
+"lat": -16.24472222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1533347",
+"name": "Long Beach Island",
+"lon": -74.181619,
+"lat": 39.639835,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1552958",
+"name": "Guazú-Virá",
+"lon": -55.61666667,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 607.0
+},
+{
+"q": "Q15551",
+"name": "Sitges",
+"lon": 1.823,
+"lat": 41.237,
+"via": "wikipedia",
+"pop": 32609.0
+},
+{
+"q": "Q1555482",
+"name": "Chornomorske",
+"lon": 32.7025,
+"lat": 45.50194444,
+"via": "wikipedia",
+"pop": 11581.0
+},
+{
+"q": "Q15617870",
+"name": "Q15617870",
+"lon": -54.1031,
+"lat": -34.5682,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q156658",
+"name": "Nakhodka",
+"lon": 132.86666667,
+"lat": 42.81666667,
+"via": "wikipedia",
+"pop": 133859.0
+},
+{
+"q": "Q1568095",
+"name": "Punta Cana",
+"lon": -68.369444444,
+"lat": 18.558611111,
+"via": "wikidata",
+"pop": 138919.0
+},
+{
+"q": "Q1569280",
+"name": "Hailuoto",
+"lon": 24.71666667,
+"lat": 65.01666667,
+"via": "wikipedia",
+"pop": 912.0
+},
+{
+"q": "Q157065",
+"name": "Kerch",
+"lon": 36.47111111,
+"lat": 45.36194444,
+"via": "wikipedia",
+"pop": 151103.0
+},
+{
+"q": "Q1573684",
+"name": "Hammam-Lif",
+"lon": 10.33333333,
+"lat": 36.73333333,
+"via": "wikipedia",
+"pop": 42518.0
+},
+{
+"q": "Q15758",
+"name": "Anapa",
+"lon": 37.3167,
+"lat": 44.8944,
+"via": "wikipedia",
+"pop": 84804.0
+},
+{
+"q": "Q15775",
+"name": "Gelendzhik",
+"lon": 38.0725,
+"lat": 44.575,
+"via": "wikipedia",
+"pop": 80534.0
+},
+{
+"q": "Q1580425",
+"name": "Laguna del Sauce",
+"lon": -55.06027778,
+"lat": -34.82527778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q158491",
+"name": "Feodosia",
+"lon": 35.37916667,
+"lat": 45.03416667,
+"via": "wikipedia",
+"pop": 64493.0
+},
+{
+"q": "Q1585499",
+"name": "Harlesiel",
+"lon": 7.808611111,
+"lat": 53.709111111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1588602",
+"name": "Kilkee",
+"lon": -9.647,
+"lat": 52.679,
+"via": "wikipedia",
+"pop": 1325.0
+},
+{
+"q": "Q159457",
+"name": "Faro, Portugal",
+"lon": -7.935,
+"lat": 37.01611111,
+"via": "wikipedia",
+"pop": 64560.0
+},
+{
+"q": "Q1602858",
+"name": "Saint-Palais-sur-Mer",
+"lon": -1.0869,
+"lat": 45.6439,
+"via": "wikipedia",
+"pop": 3840.0
+},
+{
+"q": "Q1616324",
+"name": "Egmond aan Zee",
+"lon": 4.6242,
+"lat": 52.6186,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1619026",
+"name": "St. Severin, Keitum",
+"lon": 8.36388889,
+"lat": 54.90194444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q162065",
+"name": "Dishoek",
+"lon": 3.5236,
+"lat": 51.4714,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1625366",
+"name": "Holywood, County Down",
+"lon": -5.845,
+"lat": 54.636,
+"via": "wikipedia",
+"pop": 11257.0
+},
+{
+"q": "Q163108",
+"name": "Saint-Malo",
+"lon": -2.0261,
+"lat": 48.6494,
+"via": "wikipedia",
+"pop": 47439.0
+},
+{
+"q": "Q16336843",
+"name": "Q16336843",
+"lon": -38.622488888,
+"lat": -3.984955555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1638389",
+"name": "Holambra",
+"lon": -47.06,
+"lat": -22.62,
+"via": "wikidata",
+"pop": 15718.0
+},
+{
+"q": "Q1640242",
+"name": "Seaford, East Sussex",
+"lon": 0.1,
+"lat": 50.77,
+"via": "wikipedia",
+"pop": 23864.0
+},
+{
+"q": "Q164690",
+"name": "Heiligendamm",
+"lon": 11.83333333,
+"lat": 54.15,
+"via": "wikipedia",
+"pop": 217.0
+},
+{
+"q": "Q1648341",
+"name": "Azenhas do Mar",
+"lon": -9.46,
+"lat": 38.84055556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1648408",
+"name": "Brotas",
+"lon": -48.126944444,
+"lat": -22.283888888,
+"via": "wikidata",
+"pop": 24501.0
+},
+{
+"q": "Q16509810",
+"name": "Millennial olive tree of Roquebrune Cap-Martin",
+"lon": 7.46333056,
+"lat": 43.76434444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1655185",
+"name": "Marske-by-the-Sea",
+"lon": -1.019,
+"lat": 54.591,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1658544",
+"name": "Port-Cros",
+"lon": 6.395372,
+"lat": 43.001219,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q166941",
+"name": "Plougasnou",
+"lon": -3.7881,
+"lat": 48.6964,
+"via": "wikipedia",
+"pop": 3192.0
+},
+{
+"q": "Q1674028",
+"name": "Gorriti Island",
+"lon": -54.97166667,
+"lat": -34.9525,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1684143",
+"name": "Jaureguiberry, Uruguay",
+"lon": -55.40277778,
+"lat": -34.785,
+"via": "wikipedia",
+"pop": 942.0
+},
+{
+"q": "Q16901481",
+"name": "Thalsevana Holiday Resort",
+"lon": 80.04861111,
+"lat": 9.81591667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q16931067",
+"name": "Le Clos du Peyronnet",
+"lon": 7.523221,
+"lat": 43.785544,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q16933301",
+"name": "Porto Rafael",
+"lon": 9.3643773,
+"lat": 41.1933179,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q170478",
+"name": "Bournemouth",
+"lon": -1.88,
+"lat": 50.72,
+"via": "wikipedia",
+"pop": 187503.0
+},
+{
+"q": "Q17068300",
+"name": "Maritim Jolie Ville Resort",
+"lon": 34.325,
+"lat": 27.912,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q17144712",
+"name": "Space Sharm",
+"lon": 34.3209,
+"lat": 27.9203,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q17176380",
+"name": "Club des Pins",
+"lon": 2.8843,
+"lat": 36.7698,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q171810",
+"name": "Alanya",
+"lon": 32,
+"lat": 36.55,
+"via": "wikipedia",
+"pop": 364180.0
+},
+{
+"q": "Q17183204",
+"name": "Makena Beach & Golf Resort",
+"lon": -156.4402778,
+"lat": 20.65388889,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1722363",
+"name": "Kalkan",
+"lon": 29.41111111,
+"lat": 36.26666667,
+"via": "wikipedia",
+"pop": 3748.0
+},
+{
+"q": "Q172267",
+"name": "Bodrum",
+"lon": 27.43333333,
+"lat": 37.03333333,
+"via": "wikipedia",
+"pop": 175000.0
+},
+{
+"q": "Q173705",
+"name": "Grasse",
+"lon": 6.9167,
+"lat": 43.6667,
+"via": "wikipedia",
+"pop": 50970.0
+},
+{
+"q": "Q17393",
+"name": "Concarneau",
+"lon": -3.9178,
+"lat": 47.8761,
+"via": "wikipedia",
+"pop": 20845.0
+},
+{
+"q": "Q1743602",
+"name": "Koktebel",
+"lon": 35.24055556,
+"lat": 44.96,
+"via": "wikipedia",
+"pop": 3301.0
+},
+{
+"q": "Q1746597",
+"name": "Pacific City, Oregon",
+"lon": -123.95388889,
+"lat": 45.20583333,
+"via": "wikipedia",
+"pop": 1109.0
+},
+{
+"q": "Q1749947",
+"name": "Punta del Diablo",
+"lon": -53.53888889,
+"lat": -34.04583333,
+"via": "wikipedia",
+"pop": 2014.0
+},
+{
+"q": "Q1755020",
+"name": "Tynemouth",
+"lon": -1.423,
+"lat": 55.017,
+"via": "wikipedia",
+"pop": 68202.0
+},
+{
+"q": "Q1760210",
+"name": "Santo Antônio do Pinhal",
+"lon": -45.662777777,
+"lat": -22.826944444,
+"via": "wikidata",
+"pop": 7314.0
+},
+{
+"q": "Q17636479",
+"name": "Las Vegas, Uruguay",
+"lon": -55.65,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1767162",
+"name": "Turgutreis",
+"lon": 27.26666667,
+"lat": 37.01666667,
+"via": "wikipedia",
+"pop": 5912.0
+},
+{
+"q": "Q176878",
+"name": "Adler, Russia",
+"lon": 39.91666667,
+"lat": 43.43333333,
+"via": "wikipedia",
+"pop": 76534.0
+},
+{
+"q": "Q1770146",
+"name": "Barry Island",
+"lon": -3.27483,
+"lat": 51.392,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q177298",
+"name": "Erdek",
+"lon": 27.79138889,
+"lat": 40.39805556,
+"via": "wikipedia",
+"pop": 32963.0
+},
+{
+"q": "Q178029",
+"name": "Dyuni",
+"lon": 27.705,
+"lat": 42.37166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1783599",
+"name": "Konyaaltı",
+"lon": 30.48111111,
+"lat": 36.83888889,
+"via": "wikipedia",
+"pop": 182112.0
+},
+{
+"q": "Q178382",
+"name": "Jūrmala",
+"lon": 23.722111111,
+"lat": 56.9665,
+"via": "wikidata",
+"pop": 52926.0
+},
+{
+"q": "Q178447",
+"name": "Yalıkavak",
+"lon": 27.29257,
+"lat": 37.10352,
+"via": "wikipedia",
+"pop": 6495.0
+},
+{
+"q": "Q1784611",
+"name": "Penha, Santa Catarina",
+"lon": -48.64583333,
+"lat": -26.76888889,
+"via": "wikipedia",
+"pop": 36995.0
+},
+{
+"q": "Q1789772",
+"name": "Weissenhäusser Strand",
+"lon": 10.765,
+"lat": 54.305,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1790776",
+"name": "Ksamil",
+"lon": 20,
+"lat": 39.76666667,
+"via": "wikipedia",
+"pop": 2731.0
+},
+{
+"q": "Q1796356",
+"name": "Königshafen",
+"lon": 8.41443,
+"lat": 55.04012,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1797525",
+"name": "Kıyıköy",
+"lon": 28.09611111,
+"lat": 41.63527778,
+"via": "wikipedia",
+"pop": 2443.0
+},
+{
+"q": "Q1799011",
+"name": "La Pedrera, Rocha",
+"lon": -54.125,
+"lat": -34.59166667,
+"via": "wikipedia",
+"pop": 315.0
+},
+{
+"q": "Q179934",
+"name": "Trassenheide",
+"lon": 13.86666667,
+"lat": 54.1,
+"via": "wikipedia",
+"pop": 884.0
+},
+{
+"q": "Q180233",
+"name": "Pori",
+"lon": 21.8,
+"lat": 61.48333333,
+"via": "wikipedia",
+"pop": 83010.0
+},
+{
+"q": "Q1806462",
+"name": "Las Grutas",
+"lon": -65.08666667,
+"lat": -40.80833333,
+"via": "wikipedia",
+"pop": 4487.0
+},
+{
+"q": "Q180717",
+"name": "Sousse",
+"lon": 10.63333333,
+"lat": 35.83333333,
+"via": "wikipedia",
+"pop": 221530.0
+},
+{
+"q": "Q1812807",
+"name": "Westgate-on-Sea",
+"lon": 1.33805556,
+"lat": 51.38138889,
+"via": "wikipedia",
+"pop": 7517.0
+},
+{
+"q": "Q1813",
+"name": "Saint-Tropez",
+"lon": 6.639621,
+"lat": 43.273296,
+"via": "wikipedia",
+"pop": 3582.0
+},
+{
+"q": "Q1813948",
+"name": "Prestatyn",
+"lon": -3.405,
+"lat": 53.331,
+"via": "wikipedia",
+"pop": 18890.0
+},
+{
+"q": "Q1815363",
+"name": "Detroit International Riverfront",
+"lon": -83.04361111,
+"lat": 42.3275,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1816571",
+"name": "Sint Maartenszee",
+"lon": 4.6897,
+"lat": 52.7925,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1821460",
+"name": "Rotes Kliff Lighthouse",
+"lon": 8.337812,
+"lat": 54.965662,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q18223456",
+"name": "Guazuvirá Nuevo",
+"lon": -55.63888889,
+"lat": -34.76222222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1823635",
+"name": "Lidi di Comacchio",
+"lon": 12.23683806,
+"lat": 44.71504111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1823668",
+"name": "Lido di Dante",
+"lon": 12.317,
+"lat": 44.387,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q182432",
+"name": "Lanzarote",
+"lon": -13.635,
+"lat": 29.035,
+"via": "wikipedia",
+"pop": 163467.0
+},
+{
+"q": "Q182822",
+"name": "French Riviera",
+"lon": 6.665,
+"lat": 43.32,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q18378745",
+"name": "Boossa",
+"lon": 80.15777778,
+"lat": 6.07333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q18428693",
+"name": "Metaponto",
+"lon": 16.81,
+"lat": 40.37444444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1850556",
+"name": "Loutraki",
+"lon": 22.97666667,
+"lat": 37.975,
+"via": "wikipedia",
+"pop": 12212.0
+},
+{
+"q": "Q1854554",
+"name": "Southwold",
+"lon": 1.68,
+"lat": 52.327,
+"via": "wikipedia",
+"pop": 950.0
+},
+{
+"q": "Q1860807",
+"name": "St Helens, Isle of Wight",
+"lon": -1.1123,
+"lat": 50.6979,
+"via": "wikipedia",
+"pop": 1243.0
+},
+{
+"q": "Q1863492",
+"name": "Oeiras e São Julião da Barra",
+"lon": -9.3083,
+"lat": 38.6972,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q187284",
+"name": "Hurghada",
+"lon": 33.81166667,
+"lat": 27.25777778,
+"via": "wikipedia",
+"pop": 214247.0
+},
+{
+"q": "Q1874",
+"name": "Odesa",
+"lon": 30.7325,
+"lat": 46.48416667,
+"via": "wikipedia",
+"pop": 1010537.0
+},
+{
+"q": "Q1882406",
+"name": "Mablethorpe",
+"lon": 0.261,
+"lat": 53.3409,
+"via": "wikipedia",
+"pop": 12668.0
+},
+{
+"q": "Q1882784",
+"name": "Lara, Antalya",
+"lon": 30.8129,
+"lat": 36.8492,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q188950",
+"name": "Demre",
+"lon": 29.98277778,
+"lat": 36.24722222,
+"via": "wikipedia",
+"pop": 25893.0
+},
+{
+"q": "Q1891624",
+"name": "Punta Colorada",
+"lon": -55.25861111,
+"lat": -34.90111111,
+"via": "wikipedia",
+"pop": 413.0
+},
+{
+"q": "Q1892930",
+"name": "Trabocchi Coast",
+"lon": 14.4334,
+"lat": 42.2535,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q189384",
+"name": "Zempin",
+"lon": 13.96666667,
+"lat": 54.06666667,
+"via": "wikipedia",
+"pop": 872.0
+},
+{
+"q": "Q1902824",
+"name": "Schoorl aan Zee",
+"lon": 4.63555556,
+"lat": 52.69694444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q191141",
+"name": "Sète",
+"lon": 3.6975,
+"lat": 43.4053,
+"via": "wikipedia",
+"pop": 45337.0
+},
+{
+"q": "Q191754",
+"name": "Hendaye",
+"lon": -1.77,
+"lat": 43.36,
+"via": "wikipedia",
+"pop": 18102.0
+},
+{
+"q": "Q191759",
+"name": "Ventimiglia",
+"lon": 7.60833333,
+"lat": 43.79027778,
+"via": "wikipedia",
+"pop": 22851.0
+},
+{
+"q": "Q191765",
+"name": "Anglet",
+"lon": -1.5183,
+"lat": 43.485,
+"via": "wikipedia",
+"pop": 43271.0
+},
+{
+"q": "Q1921294",
+"name": "Foça",
+"lon": 26.76666667,
+"lat": 38.66666667,
+"via": "wikipedia",
+"pop": 32264.0
+},
+{
+"q": "Q192574",
+"name": "Hyères",
+"lon": 6.1316,
+"lat": 43.1199,
+"via": "wikipedia",
+"pop": 55858.0
+},
+{
+"q": "Q1929363",
+"name": "Playa del Inglés",
+"lon": -15.57408,
+"lat": 27.75948,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q193226",
+"name": "Sarandë",
+"lon": 20.01,
+"lat": 39.875,
+"via": "wikidata",
+"pop": 22613.0
+},
+{
+"q": "Q193241",
+"name": "Nesebar",
+"lon": 27.724724,
+"lat": 42.659507,
+"via": "wikidata",
+"pop": 18384.0
+},
+{
+"q": "Q193305",
+"name": "Estoril",
+"lon": -9.39833333,
+"lat": 38.70416667,
+"via": "wikipedia",
+"pop": 26399.0
+},
+{
+"q": "Q193704",
+"name": "Saint-Briac-sur-Mer",
+"lon": -2.1328,
+"lat": 48.6211,
+"via": "wikipedia",
+"pop": 2258.0
+},
+{
+"q": "Q193780",
+"name": "Almuñécar",
+"lon": -3.68333333,
+"lat": 36.73333333,
+"via": "wikipedia",
+"pop": 27544.0
+},
+{
+"q": "Q194141",
+"name": "Draguignan",
+"lon": 6.4667,
+"lat": 43.5403,
+"via": "wikipedia",
+"pop": 40826.0
+},
+{
+"q": "Q1941746",
+"name": "Santa Ponsa",
+"lon": 2.46935,
+"lat": 39.5048,
+"via": "wikipedia",
+"pop": 12056.0
+},
+{
+"q": "Q195003",
+"name": "Port El Kantaoui",
+"lon": 10.598,
+"lat": 35.894,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1952591",
+"name": "Mumbles (district)",
+"lon": -3.9992,
+"lat": 51.573,
+"via": "wikipedia",
+"pop": 16600.0
+},
+{
+"q": "Q1956378",
+"name": "Q1956378",
+"lon": 18.1325,
+"lat": 57.485277777,
+"via": "wikidata",
+"pop": 126.0
+},
+{
+"q": "Q1959795",
+"name": "Biarritz station",
+"lon": -1.5458,
+"lat": 43.4592,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q1965562",
+"name": "Sukko",
+"lon": 37.41666667,
+"lat": 44.8,
+"via": "wikipedia",
+"pop": 3939.0
+},
+{
+"q": "Q1967418",
+"name": "Kyrylivka",
+"lon": 35.36666667,
+"lat": 46.37,
+"via": "wikipedia",
+"pop": 3464.0
+},
+{
+"q": "Q1969389",
+"name": "Loo Microdistrict",
+"lon": 39.587777777,
+"lat": 43.701666666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1970117",
+"name": "Salinas, Uruguay",
+"lon": -55.83333333,
+"lat": -34.78333333,
+"via": "wikipedia",
+"pop": 11284.0
+},
+{
+"q": "Q1973774",
+"name": "Newcastle, County Down",
+"lon": -5.89,
+"lat": 54.215,
+"via": "wikipedia",
+"pop": 8298.0
+},
+{
+"q": "Q19794656",
+"name": "Q19794656",
+"lon": 129.090177,
+"lat": 37.594105,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q1984071",
+"name": "Neßmersiel",
+"lon": 7.35336,
+"lat": 53.67091,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q199094",
+"name": "Zierenberg",
+"lon": 9.3,
+"lat": 51.366666666,
+"via": "wikidata",
+"pop": 6155.0
+},
+{
+"q": "Q1993655",
+"name": "Kiten, Burgas Province",
+"lon": 27.774225,
+"lat": 42.23468,
+"via": "wikipedia",
+"pop": 1031.0
+},
+{
+"q": "Q200459",
+"name": "Póvoa de Varzim",
+"lon": -8.76083333,
+"lat": 41.38,
+"via": "wikipedia",
+"pop": 63408.0
+},
+{
+"q": "Q201516",
+"name": "Miami Beach",
+"lon": -80.1325,
+"lat": 25.813888888,
+"via": "wikidata",
+"pop": 82890.0
+},
+{
+"q": "Q2015327",
+"name": "Kopalino",
+"lon": 17.85111111,
+"lat": 54.78944444,
+"via": "wikipedia",
+"pop": 163.0
+},
+{
+"q": "Q2016002",
+"name": "İztuzu Beach",
+"lon": 28.62,
+"lat": 36.79222222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2016656",
+"name": "Krapets",
+"lon": 28.566161,
+"lat": 43.625107,
+"via": "wikidata",
+"pop": 232.0
+},
+{
+"q": "Q2020203",
+"name": "Rhyl",
+"lon": -3.48,
+"lat": 53.321,
+"via": "wikipedia",
+"pop": 27060.0
+},
+{
+"q": "Q20218088",
+"name": "Boca de Tomatlán",
+"lon": -105.31388889,
+"lat": 20.51194444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2024069",
+"name": "Hoylake",
+"lon": -3.18,
+"lat": 53.39,
+"via": "wikipedia",
+"pop": 5315.0
+},
+{
+"q": "Q2024098",
+"name": "Tylösand",
+"lon": 12.73333333,
+"lat": 56.65,
+"via": "wikipedia",
+"pop": 399.0
+},
+{
+"q": "Q202445",
+"name": "Cabourg",
+"lon": -0.116292,
+"lat": 49.287981,
+"via": "wikipedia",
+"pop": 3725.0
+},
+{
+"q": "Q203349",
+"name": "Poole",
+"lon": -1.98333333,
+"lat": 50.71666667,
+"via": "wikipedia",
+"pop": 144800.0
+},
+{
+"q": "Q2035277",
+"name": "São Martinho do Porto",
+"lon": -9.134,
+"lat": 39.513,
+"via": "wikipedia",
+"pop": 3111.0
+},
+{
+"q": "Q2039004",
+"name": "New Quay",
+"lon": -4.36,
+"lat": 52.214,
+"via": "wikipedia",
+"pop": 891.0
+},
+{
+"q": "Q2043641",
+"name": "Byala, Varna Province",
+"lon": 27.88333333,
+"lat": 42.88333333,
+"via": "wikipedia",
+"pop": 2470.0
+},
+{
+"q": "Q204645",
+"name": "Giens Peninsula",
+"lon": 6.14083333,
+"lat": 43.03388889,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q204648",
+"name": "Port-Vendres",
+"lon": 3.1058,
+"lat": 42.5189,
+"via": "wikipedia",
+"pop": 4018.0
+},
+{
+"q": "Q2047414",
+"name": "Palanga",
+"lon": 21.06666667,
+"lat": 55.91666667,
+"via": "wikipedia",
+"pop": 18132.0
+},
+{
+"q": "Q2049615",
+"name": "Seascale",
+"lon": -3.483333,
+"lat": 54.395,
+"via": "wikipedia",
+"pop": 1707.0
+},
+{
+"q": "Q205132",
+"name": "Zinnowitz",
+"lon": 13.91138889,
+"lat": 54.07638889,
+"via": "wikipedia",
+"pop": 4114.0
+},
+{
+"q": "Q205207",
+"name": "Helen's Bay",
+"lon": -5.735,
+"lat": 54.67,
+"via": "wikipedia",
+"pop": 1390.0
+},
+{
+"q": "Q205942",
+"name": "Yalova",
+"lon": 29.27,
+"lat": 40.65833333,
+"via": "wikipedia",
+"pop": 133109.0
+},
+{
+"q": "Q2061038",
+"name": "Riviera Maya",
+"lon": -87.07305556,
+"lat": 20.63138889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q206189",
+"name": "Koreiz",
+"lon": 34.08722222,
+"lat": 44.43305556,
+"via": "wikipedia",
+"pop": 5975.0
+},
+{
+"q": "Q20629",
+"name": "Morsum",
+"lon": 8.41666667,
+"lat": 54.86666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q206345",
+"name": "Massandra",
+"lon": 34.18333333,
+"lat": 44.51666667,
+"via": "wikipedia",
+"pop": 7817.0
+},
+{
+"q": "Q20646",
+"name": "Tinnum",
+"lon": 8.33333333,
+"lat": 54.9,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q20648",
+"name": "Archsum",
+"lon": 8.38333333,
+"lat": 54.86666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q20649",
+"name": "Munkmarsch",
+"lon": 8.35,
+"lat": 54.91666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2065223",
+"name": "Port Grimaud",
+"lon": 6.580278,
+"lat": 43.272139,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2065632",
+"name": "Paço de Arcos",
+"lon": -9.294,
+"lat": 38.695,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2066091",
+"name": "Yachats, Oregon",
+"lon": -124.10222222,
+"lat": 44.31277778,
+"via": "wikipedia",
+"pop": 994.0
+},
+{
+"q": "Q20689",
+"name": "Denghoog",
+"lon": 8.32916667,
+"lat": 54.94041667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q20701",
+"name": "Landschaft Sylt",
+"lon": 8.33333333,
+"lat": 54.95,
+"via": "wikipedia",
+"pop": 4433.0
+},
+{
+"q": "Q207080",
+"name": "Villefranche-sur-Mer",
+"lon": 7.3125,
+"lat": 43.705,
+"via": "wikipedia",
+"pop": 5008.0
+},
+{
+"q": "Q20749",
+"name": "Sankt Peter-Ording",
+"lon": 8.65111111,
+"lat": 54.30416667,
+"via": "wikipedia",
+"pop": 3749.0
+},
+{
+"q": "Q20755",
+"name": "Sylt Airport",
+"lon": 8.34055556,
+"lat": 54.91333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q207584",
+"name": "Brignoles",
+"lon": 6.0615,
+"lat": 43.4058,
+"via": "wikipedia",
+"pop": 17850.0
+},
+{
+"q": "Q20767",
+"name": "Keitum",
+"lon": 8.36666667,
+"lat": 54.6,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q20771",
+"name": "Wyk auf Föhr",
+"lon": 8.56666667,
+"lat": 54.7,
+"via": "wikipedia",
+"pop": 4109.0
+},
+{
+"q": "Q20772",
+"name": "Eidum",
+"lon": 8.28666667,
+"lat": 54.90944444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2077402",
+"name": "Aldeburgh",
+"lon": 1.6,
+"lat": 52.15,
+"via": "wikipedia",
+"pop": 2423.0
+},
+{
+"q": "Q20788",
+"name": "Nieblum",
+"lon": 8.489,
+"lat": 54.692088888,
+"via": "wikidata",
+"pop": 553.0
+},
+{
+"q": "Q20789",
+"name": "Wenningstedt-Braderup",
+"lon": 8.31666667,
+"lat": 54.91666667,
+"via": "wikipedia",
+"pop": 1398.0
+},
+{
+"q": "Q207967",
+"name": "Le Cannet",
+"lon": 7.0194,
+"lat": 43.5769,
+"via": "wikipedia",
+"pop": 41938.0
+},
+{
+"q": "Q20798",
+"name": "Utersum",
+"lon": 8.4,
+"lat": 54.716666666,
+"via": "wikidata",
+"pop": 416.0
+},
+{
+"q": "Q207998",
+"name": "Fethiye",
+"lon": 29.12305556,
+"lat": 36.65138889,
+"via": "wikipedia",
+"pop": 182200.0
+},
+{
+"q": "Q20825649",
+"name": "Lac-Marois",
+"lon": -74.131111111,
+"lat": 45.8575,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q208262",
+"name": "Eastbourne",
+"lon": 0.28,
+"lat": 50.77,
+"via": "wikipedia",
+"pop": 101689.0
+},
+{
+"q": "Q208296",
+"name": "Cromer",
+"lon": 1.302,
+"lat": 52.931,
+"via": "wikipedia",
+"pop": 7543.0
+},
+{
+"q": "Q2084249",
+"name": "Courtown",
+"lon": -6.229,
+"lat": 52.645,
+"via": "wikipedia",
+"pop": 1421.0
+},
+{
+"q": "Q208715",
+"name": "Monastir, Tunisia",
+"lon": 10.81944444,
+"lat": 35.76944444,
+"via": "wikipedia",
+"pop": 93306.0
+},
+{
+"q": "Q2088015",
+"name": "Bandon, Oregon",
+"lon": -124.41666667,
+"lat": 43.11666667,
+"via": "wikipedia",
+"pop": 3321.0
+},
+{
+"q": "Q209021",
+"name": "Deauville",
+"lon": 0.08,
+"lat": 49.36,
+"via": "wikipedia",
+"pop": 3539.0
+},
+{
+"q": "Q209338",
+"name": "Oxnard, California",
+"lon": -119.1825,
+"lat": 34.19138889,
+"via": "wikipedia",
+"pop": 202063.0
+},
+{
+"q": "Q2097392",
+"name": "Newbiggin-by-the-Sea",
+"lon": -1.515,
+"lat": 55.183,
+"via": "wikipedia",
+"pop": 5950.0
+},
+{
+"q": "Q20990",
+"name": "Juodkrantė",
+"lon": 21.11666667,
+"lat": 55.55,
+"via": "wikipedia",
+"pop": 720.0
+},
+{
+"q": "Q2099003",
+"name": "Fomento (resort)",
+"lon": -57.25416667,
+"lat": -34.43472222,
+"via": "wikipedia",
+"pop": 146.0
+},
+{
+"q": "Q209908",
+"name": "Marmaris",
+"lon": 28.27083333,
+"lat": 36.85333333,
+"via": "wikipedia",
+"pop": 97818.0
+},
+{
+"q": "Q21008",
+"name": "Sylt (municipality)",
+"lon": 8.3,
+"lat": 54.91666667,
+"via": "wikipedia",
+"pop": 14106.0
+},
+{
+"q": "Q210098",
+"name": "Rapallo",
+"lon": 9.23333333,
+"lat": 44.35,
+"via": "wikipedia",
+"pop": 29103.0
+},
+{
+"q": "Q21039",
+"name": "Rantum",
+"lon": 8.3,
+"lat": 54.85,
+"via": "wikipedia",
+"pop": 561.0
+},
+{
+"q": "Q21042",
+"name": "Nebel, Germany",
+"lon": 8.355,
+"lat": 54.65305556,
+"via": "wikipedia",
+"pop": 883.0
+},
+{
+"q": "Q210421",
+"name": "Trégastel",
+"lon": -3.4989,
+"lat": 48.8114,
+"via": "wikipedia",
+"pop": 2524.0
+},
+{
+"q": "Q21060",
+"name": "Ouddorp",
+"lon": 3.9346,
+"lat": 51.8082,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2107666",
+"name": "Mechelinki",
+"lon": 18.51222222,
+"lat": 54.60888889,
+"via": "wikipedia",
+"pop": 438.0
+},
+{
+"q": "Q2108379",
+"name": "San Clemente del Tuyú",
+"lon": -56.71666667,
+"lat": -36.36666667,
+"via": "wikipedia",
+"pop": 12126.0
+},
+{
+"q": "Q21160",
+"name": "List auf Sylt",
+"lon": 8.436182,
+"lat": 55.020026,
+"via": "wikidata",
+"pop": 1595.0
+},
+{
+"q": "Q211622",
+"name": "Beaulieu-sur-Mer",
+"lon": 7.33,
+"lat": 43.705,
+"via": "wikipedia",
+"pop": 3874.0
+},
+{
+"q": "Q2117512",
+"name": "Puerto Rico de Gran Canaria",
+"lon": -15.71111111,
+"lat": 27.78805556,
+"via": "wikipedia",
+"pop": 20487.0
+},
+{
+"q": "Q211952",
+"name": "Kuşadası",
+"lon": 27.25972222,
+"lat": 37.85972222,
+"via": "wikipedia",
+"pop": 130835.0
+},
+{
+"q": "Q212620",
+"name": "Arromanches-les-Bains",
+"lon": -0.6211,
+"lat": 49.34,
+"via": "wikipedia",
+"pop": 413.0
+},
+{
+"q": "Q212964",
+"name": "Pléneuf-Val-André",
+"lon": -2.5469,
+"lat": 48.5917,
+"via": "wikipedia",
+"pop": 3988.0
+},
+{
+"q": "Q213154",
+"name": "Aberystwyth",
+"lon": -4.08166667,
+"lat": 52.41444444,
+"via": "wikipedia",
+"pop": 10707.0
+},
+{
+"q": "Q213481",
+"name": "La Baule-Escoublac",
+"lon": -2.3908,
+"lat": 47.2867,
+"via": "wikipedia",
+"pop": 16912.0
+},
+{
+"q": "Q213682",
+"name": "Miskhor",
+"lon": 34.087777777,
+"lat": 44.430555555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2142275",
+"name": "Rockaway Beach, Oregon",
+"lon": -123.93722222,
+"lat": 45.62444444,
+"via": "wikipedia",
+"pop": 1441.0
+},
+{
+"q": "Q2148317",
+"name": "Rhossili",
+"lon": -4.2869,
+"lat": 51.56856,
+"via": "wikipedia",
+"pop": 215.0
+},
+{
+"q": "Q2150764",
+"name": "Portballintrae",
+"lon": -6.545792,
+"lat": 55.21403,
+"via": "wikipedia",
+"pop": 601.0
+},
+{
+"q": "Q215155",
+"name": "Fréjus",
+"lon": 6.737,
+"lat": 43.433,
+"via": "wikipedia",
+"pop": 59719.0
+},
+{
+"q": "Q215177",
+"name": "Skagen",
+"lon": 10.58333333,
+"lat": 57.71666667,
+"via": "wikipedia",
+"pop": 7394.0
+},
+{
+"q": "Q2152435",
+"name": "Miramar, Buenos Aires",
+"lon": -57.83333333,
+"lat": -38.26666667,
+"via": "wikipedia",
+"pop": 34391.0
+},
+{
+"q": "Q216280",
+"name": "Frontignan",
+"lon": 3.7561,
+"lat": 43.4483,
+"via": "wikipedia",
+"pop": 24136.0
+},
+{
+"q": "Q21653632",
+"name": "Tsujidō Beach",
+"lon": 139.443508,
+"lat": 35.319261,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q21654350",
+"name": "Hirizo Beach",
+"lon": 138.825778,
+"lat": 34.607333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q21665581",
+"name": "California, Norfolk",
+"lon": 1.721,
+"lat": 52.672,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2167192",
+"name": "Tamariu",
+"lon": 3.21,
+"lat": 41.92,
+"via": "wikipedia",
+"pop": 297.0
+},
+{
+"q": "Q216790",
+"name": "Hanko, Finland",
+"lon": 22.96583333,
+"lat": 59.82833333,
+"via": "wikipedia",
+"pop": 7620.0
+},
+{
+"q": "Q2169018",
+"name": "Caves of Nerja",
+"lon": -3.84583333,
+"lat": 36.76166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q217047",
+"name": "Kemer",
+"lon": 30.55,
+"lat": 36.6,
+"via": "wikipedia",
+"pop": 45082.0
+},
+{
+"q": "Q2176067",
+"name": "Kąty Rybackie",
+"lon": 19.22972222,
+"lat": 54.33944444,
+"via": "wikipedia",
+"pop": 707.0
+},
+{
+"q": "Q217720",
+"name": "Çeşme",
+"lon": 26.30305556,
+"lat": 38.32444444,
+"via": "wikipedia",
+"pop": 48167.0
+},
+{
+"q": "Q21783529",
+"name": "Arapya",
+"lon": 27.83555556,
+"lat": 42.19083333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q21957164",
+"name": "Callala Beach",
+"lon": 150.7,
+"lat": -35.00338889,
+"via": "wikipedia",
+"pop": 777.0
+},
+{
+"q": "Q220090",
+"name": "Grünwald",
+"lon": 11.531694444,
+"lat": 48.048305555,
+"via": "wikidata",
+"pop": 11175.0
+},
+{
+"q": "Q220668",
+"name": "Roquebrune-Cap-Martin",
+"lon": 7.4631,
+"lat": 43.7628,
+"via": "wikipedia",
+"pop": 12037.0
+},
+{
+"q": "Q22082836",
+"name": "2016 Hurghada attack",
+"lon": 33.81166667,
+"lat": 27.25777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q221377",
+"name": "Viareggio",
+"lon": 10.23333333,
+"lat": 43.86666667,
+"via": "wikipedia",
+"pop": 60579.0
+},
+{
+"q": "Q221746",
+"name": "Brignogan-Plages",
+"lon": -4.3247,
+"lat": 48.6653,
+"via": "wikipedia",
+"pop": 732.0
+},
+{
+"q": "Q221749",
+"name": "Torrevieja",
+"lon": -0.68333333,
+"lat": 37.97777778,
+"via": "wikipedia",
+"pop": 98533.0
+},
+{
+"q": "Q2218396",
+"name": "Göcek, Fethiye",
+"lon": 28.94444444,
+"lat": 36.75694444,
+"via": "wikipedia",
+"pop": 4636.0
+},
+{
+"q": "Q2219211",
+"name": "San Antonio, Rocha",
+"lon": -54.07916667,
+"lat": -34.55083333,
+"via": "wikipedia",
+"pop": 6.0
+},
+{
+"q": "Q2222751",
+"name": "Santa Ana, Colonia",
+"lon": -57.6,
+"lat": -34.42,
+"via": "wikipedia",
+"pop": 573.0
+},
+{
+"q": "Q2222760",
+"name": "Grosse Pointe Shores, Michigan",
+"lon": -82.87666667,
+"lat": 42.43666667,
+"via": "wikipedia",
+"pop": 2647.0
+},
+{
+"q": "Q2223003",
+"name": "Santa Lucía del Este",
+"lon": -55.53333333,
+"lat": -34.78333333,
+"via": "wikipedia",
+"pop": 453.0
+},
+{
+"q": "Q2223279",
+"name": "Santa Teresita, Buenos Aires",
+"lon": -56.68333333,
+"lat": -36.55,
+"via": "wikipedia",
+"pop": 15213.0
+},
+{
+"q": "Q222854",
+"name": "2 Mai",
+"lon": 28.58333333,
+"lat": 43.78333333,
+"via": "wikipedia",
+"pop": 2594.0
+},
+{
+"q": "Q2230829",
+"name": "Gąski, Koszalin County",
+"lon": 15.9225,
+"lat": 54.23583333,
+"via": "wikipedia",
+"pop": 457.0
+},
+{
+"q": "Q2230943",
+"name": "East Wittering",
+"lon": -0.87377,
+"lat": 50.76942,
+"via": "wikipedia",
+"pop": 4658.0
+},
+{
+"q": "Q223353",
+"name": "Opatija",
+"lon": 14.3,
+"lat": 45.33333333,
+"via": "wikipedia",
+"pop": 10619.0
+},
+{
+"q": "Q223392",
+"name": "Güzelçamlı",
+"lon": 27.23333333,
+"lat": 37.71666667,
+"via": "wikipedia",
+"pop": 7760.0
+},
+{
+"q": "Q2239914",
+"name": "Portstewart",
+"lon": -6.711,
+"lat": 55.18,
+"via": "wikipedia",
+"pop": 7854.0
+},
+{
+"q": "Q2249093",
+"name": "Lozenets",
+"lon": 27.806211,
+"lat": 42.20869,
+"via": "wikidata",
+"pop": 640.0
+},
+{
+"q": "Q2249559",
+"name": "Çınarcık",
+"lon": 29.12027778,
+"lat": 40.64222222,
+"via": "wikipedia",
+"pop": 34076.0
+},
+{
+"q": "Q2249597",
+"name": "San Quintín, Baja California",
+"lon": -115.9425,
+"lat": 30.56027778,
+"via": "wikipedia",
+"pop": 4754.0
+},
+{
+"q": "Q225581",
+"name": "Pervalka",
+"lon": 21.09444444,
+"lat": 55.41388889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2260597",
+"name": "Kuźnica, Pomeranian Voivodeship",
+"lon": 18.56666667,
+"lat": 54.73333333,
+"via": "wikipedia",
+"pop": 532.0
+},
+{
+"q": "Q226221",
+"name": "Venice Lido",
+"lon": 12.360595,
+"lat": 45.40062,
+"via": "wikipedia",
+"pop": 14481.0
+},
+{
+"q": "Q226408",
+"name": "Saint-Quay-Portrieux",
+"lon": -2.8278,
+"lat": 48.6475,
+"via": "wikipedia",
+"pop": 3224.0
+},
+{
+"q": "Q227064",
+"name": "Zoutelande",
+"lon": 3.483333333,
+"lat": 51.5,
+"via": "wikidata",
+"pop": 1509.0
+},
+{
+"q": "Q2287115",
+"name": "Livadiya, Crimea",
+"lon": 34.14388889,
+"lat": 44.47083333,
+"via": "wikipedia",
+"pop": 1156.0
+},
+{
+"q": "Q2291322",
+"name": "Ostende, Buenos Aires",
+"lon": -56.85,
+"lat": -37.1,
+"via": "wikipedia",
+"pop": 6073.0
+},
+{
+"q": "Q2294711",
+"name": "Slovene Riviera",
+"lon": 13.73333333,
+"lat": 45.55,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q22977429",
+"name": "Binic-Étables-sur-Mer",
+"lon": -2.8722,
+"lat": 48.6166,
+"via": "wikipedia",
+"pop": 7041.0
+},
+{
+"q": "Q23051",
+"name": "Swansea",
+"lon": -3.95,
+"lat": 51.61666667,
+"via": "wikipedia",
+"pop": 246700.0
+},
+{
+"q": "Q2317841",
+"name": "La Lucila del Mar",
+"lon": -56.68305556,
+"lat": -36.66,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2324275",
+"name": "Monte Hermoso",
+"lon": -61.3,
+"lat": -38.98333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q232782",
+"name": "Portofino",
+"lon": 9.20777778,
+"lat": 44.30388889,
+"via": "wikipedia",
+"pop": 355.0
+},
+{
+"q": "Q2332298",
+"name": "Saltburn-by-the-Sea",
+"lon": -0.9732,
+"lat": 54.5828,
+"via": "wikipedia",
+"pop": 5958.0
+},
+{
+"q": "Q2335573",
+"name": "Sørland",
+"lon": 12.6978,
+"lat": 67.6656,
+"via": "wikipedia",
+"pop": 601.0
+},
+{
+"q": "Q23581795",
+"name": "Kızılada, Fethiye",
+"lon": 29.0465,
+"lat": 36.65772,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2368326",
+"name": "Nikita, Crimea",
+"lon": 34.23527778,
+"lat": 44.51111111,
+"via": "wikipedia",
+"pop": 2313.0
+},
+{
+"q": "Q237253",
+"name": "Great Yarmouth",
+"lon": 1.7331,
+"lat": 52.6078,
+"via": "wikipedia",
+"pop": 28979.0
+},
+{
+"q": "Q2379299",
+"name": "Goring-by-Sea",
+"lon": -0.42436,
+"lat": 50.8122,
+"via": "wikipedia",
+"pop": 7990.0
+},
+{
+"q": "Q23825727",
+"name": "Scratby",
+"lon": 1.712399,
+"lat": 52.680664,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q239017",
+"name": "Magaluf",
+"lon": 2.5375,
+"lat": 39.511,
+"via": "wikipedia",
+"pop": 5506.0
+},
+{
+"q": "Q2392166",
+"name": "Hargen aan Zee",
+"lon": 4.63916667,
+"lat": 52.71444444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q239496",
+"name": "Sheringham",
+"lon": 1.213,
+"lat": 52.94,
+"via": "wikipedia",
+"pop": 7088.0
+},
+{
+"q": "Q2398820",
+"name": "Nieuwvliet-Bad",
+"lon": 3.45166667,
+"lat": 51.3925,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q239943",
+"name": "Perros-Guirec",
+"lon": -3.4422,
+"lat": 48.8142,
+"via": "wikipedia",
+"pop": 7336.0
+},
+{
+"q": "Q2413665",
+"name": "Brushani",
+"lon": 21.955,
+"lat": 41.400833333,
+"via": "wikidata",
+"pop": 2.0
+},
+{
+"q": "Q2415663",
+"name": "Petoskey, Michigan",
+"lon": -84.95527778,
+"lat": 45.37333333,
+"via": "wikipedia",
+"pop": 5877.0
+},
+{
+"q": "Q241631",
+"name": "Şile",
+"lon": 29.61277778,
+"lat": 41.17638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q24204476",
+"name": "La Réserve de Beaulieu & Spa",
+"lon": 7.33532,
+"lat": 43.70562,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q24204478",
+"name": "Cheval Blanc St-Tropez",
+"lon": 6.62666667,
+"lat": 43.26694444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q243713",
+"name": "Saint-Jean-Cap-Ferrat",
+"lon": 7.3333,
+"lat": 43.6833,
+"via": "wikipedia",
+"pop": 1531.0
+},
+{
+"q": "Q2437344",
+"name": "Knokke",
+"lon": 3.28777778,
+"lat": 51.34638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2439624",
+"name": "Selsey",
+"lon": -0.78977,
+"lat": 50.73502,
+"via": "wikipedia",
+"pop": 10923.0
+},
+{
+"q": "Q2445354",
+"name": "Tossens",
+"lon": 8.26944,
+"lat": 53.5686,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q244709",
+"name": "La Turbie",
+"lon": 7.4017,
+"lat": 43.7464,
+"via": "wikipedia",
+"pop": 3045.0
+},
+{
+"q": "Q2452513",
+"name": "Villa Ephrussi de Rothschild",
+"lon": 7.32847222,
+"lat": 43.69666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2459653",
+"name": "Varvara, Burgas Province",
+"lon": 27.9,
+"lat": 42.11666667,
+"via": "wikipedia",
+"pop": 244.0
+},
+{
+"q": "Q24639697",
+"name": "Mumbles",
+"lon": -3.985,
+"lat": 51.568,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2467715",
+"name": "Sinemorets",
+"lon": 27.98333333,
+"lat": 42.06666667,
+"via": "wikipedia",
+"pop": 437.0
+},
+{
+"q": "Q2469984",
+"name": "Gourock",
+"lon": -4.8173176,
+"lat": 55.953763,
+"via": "wikipedia",
+"pop": 10350.0
+},
+{
+"q": "Q2472581",
+"name": "Selimpaşa",
+"lon": 28.367,
+"lat": 41.054,
+"via": "wikipedia",
+"pop": 24664.0
+},
+{
+"q": "Q2483189",
+"name": "Valeria del Mar",
+"lon": -56.8833,
+"lat": -37.1333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q24871035",
+"name": "Sea Park Ōhama",
+"lon": 133.26791667,
+"lat": 34.33958333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q24876269",
+"name": "Setoda Sunset Beach",
+"lon": 133.07230556,
+"lat": 34.28016667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2489758",
+"name": "Białogóra",
+"lon": 17.95666667,
+"lat": 54.81555556,
+"via": "wikipedia",
+"pop": 359.0
+},
+{
+"q": "Q24937625",
+"name": "Q24937625",
+"lon": -57.55978,
+"lat": -38.09367,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2493899",
+"name": "Brean",
+"lon": -3.011,
+"lat": 51.3,
+"via": "wikipedia",
+"pop": 670.0
+},
+{
+"q": "Q2497435",
+"name": "Fevik",
+"lon": 8.67586,
+"lat": 58.37852,
+"via": "wikipedia",
+"pop": 0.0
+},
+{
+"q": "Q25040948",
+"name": "St. Anthony's College, Mijas",
+"lon": -4.68555556,
+"lat": 36.5525,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2509973",
+"name": "Holuba Zatoka",
+"lon": 33.98888889,
+"lat": 44.41972222,
+"via": "wikipedia",
+"pop": 625.0
+},
+{
+"q": "Q2510445",
+"name": "Baltim",
+"lon": 31.09166667,
+"lat": 31.59916667,
+"via": "wikipedia",
+"pop": 51280.0
+},
+{
+"q": "Q25129",
+"name": "Langeoog",
+"lon": 7.47972222,
+"lat": 53.74833333,
+"via": "wikipedia",
+"pop": 1341.0
+},
+{
+"q": "Q25130",
+"name": "Spiekeroog",
+"lon": 7.69694444,
+"lat": 53.77194444,
+"via": "wikipedia",
+"pop": 648.0
+},
+{
+"q": "Q25135",
+"name": "Wangerooge",
+"lon": 7.89916667,
+"lat": 53.79083333,
+"via": "wikipedia",
+"pop": 1048.0
+},
+{
+"q": "Q2527921",
+"name": "Julianadorp aan Zee",
+"lon": 4.7222,
+"lat": 52.9039,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2532526",
+"name": "Dzhubga",
+"lon": 38.7,
+"lat": 44.3,
+"via": "wikipedia",
+"pop": 7024.0
+},
+{
+"q": "Q2536094",
+"name": "Koggala",
+"lon": 80.3225,
+"lat": 5.99027778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2536534",
+"name": "Harbor Springs, Michigan",
+"lon": -84.99194444,
+"lat": 45.43166667,
+"via": "wikipedia",
+"pop": 1274.0
+},
+{
+"q": "Q2538061",
+"name": "Pogorzelica, Gmina Rewal",
+"lon": 15.12027778,
+"lat": 54.1025,
+"via": "wikipedia",
+"pop": 187.0
+},
+{
+"q": "Q254829",
+"name": "Collioure",
+"lon": 3.0814,
+"lat": 42.5267,
+"via": "wikipedia",
+"pop": 2756.0
+},
+{
+"q": "Q2570578",
+"name": "Silloth",
+"lon": -3.381,
+"lat": 54.869,
+"via": "wikipedia",
+"pop": 2749.0
+},
+{
+"q": "Q2575441",
+"name": "Whitley Bay",
+"lon": -1.4443,
+"lat": 55.0456,
+"via": "wikipedia",
+"pop": 38323.0
+},
+{
+"q": "Q2584915",
+"name": "Westcliff-on-Sea",
+"lon": 0.697,
+"lat": 51.5359,
+"via": "wikipedia",
+"pop": 21108.0
+},
+{
+"q": "Q2588142",
+"name": "Poddąbie",
+"lon": 16.98722222,
+"lat": 54.6225,
+"via": "wikipedia",
+"pop": 29.0
+},
+{
+"q": "Q2597663",
+"name": "Aheloy",
+"lon": 27.6481,
+"lat": 42.6489,
+"via": "wikipedia",
+"pop": 2596.0
+},
+{
+"q": "Q2597695",
+"name": "Emona, Bulgaria",
+"lon": 27.88333333,
+"lat": 42.71666667,
+"via": "wikipedia",
+"pop": 71.0
+},
+{
+"q": "Q2597701",
+"name": "Kranevo",
+"lon": 28.05,
+"lat": 43.33333333,
+"via": "wikipedia",
+"pop": 1103.0
+},
+{
+"q": "Q2599157",
+"name": "Turunç",
+"lon": 28.246,
+"lat": 36.773,
+"via": "wikipedia",
+"pop": 1797.0
+},
+{
+"q": "Q260096",
+"name": "San Luis, Uruguay",
+"lon": -55.58333333,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 3847.0
+},
+{
+"q": "Q2617965",
+"name": "Golfe-Juan",
+"lon": 7.07416667,
+"lat": 43.5673,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2624434",
+"name": "Seaside, Oregon",
+"lon": -123.91388889,
+"lat": 45.99555556,
+"via": "wikipedia",
+"pop": 7115.0
+},
+{
+"q": "Q26253111",
+"name": "Snäckgärdsbaden",
+"lon": 18.333333333,
+"lat": 57.673055555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2626084",
+"name": "Malinska",
+"lon": 14.53333333,
+"lat": 45.13333333,
+"via": "wikipedia",
+"pop": 816.0
+},
+{
+"q": "Q2626632",
+"name": "Martil",
+"lon": -5.26666667,
+"lat": 35.61666667,
+"via": "wikipedia",
+"pop": 95896.0
+},
+{
+"q": "Q2639895",
+"name": "Calella de Palafrugell",
+"lon": 3.18333333,
+"lat": 41.88777778,
+"via": "wikipedia",
+"pop": 634.0
+},
+{
+"q": "Q2654892",
+"name": "Saly",
+"lon": -17.016527777,
+"lat": 14.442472222,
+"via": "wikidata",
+"pop": 41811.0
+},
+{
+"q": "Q2655385",
+"name": "Shkorpilovtsi",
+"lon": 27.878,
+"lat": 42.963,
+"via": "wikipedia",
+"pop": 683.0
+},
+{
+"q": "Q2666312",
+"name": "Licenciado Gustavo Díaz Ordaz International Airport",
+"lon": -105.25416667,
+"lat": 20.68,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2666727",
+"name": "Kekova",
+"lon": 29.87777778,
+"lat": 36.18055556,
+"via": "wikipedia",
+"pop": 0.0
+},
+{
+"q": "Q2670662",
+"name": "Hemsby",
+"lon": 1.69115,
+"lat": 52.69764,
+"via": "wikipedia",
+"pop": 3567.0
+},
+{
+"q": "Q2671865",
+"name": "Praia da Luz",
+"lon": -8.73111111,
+"lat": 37.08666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q26772254",
+"name": "Kristiansand",
+"lon": 7.9956,
+"lat": 58.14671,
+"via": "wikipedia",
+"pop": 67920.0
+},
+{
+"q": "Q267946",
+"name": "Playa de las Américas",
+"lon": -16.7325,
+"lat": 28.0675,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2680599",
+"name": "Miholašćica",
+"lon": 14.37045,
+"lat": 44.80324,
+"via": "wikipedia",
+"pop": 31.0
+},
+{
+"q": "Q2683168",
+"name": "Vilamoura",
+"lon": -8.11527778,
+"lat": 37.07777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q268361",
+"name": "Cervo, Liguria",
+"lon": 8.11666667,
+"lat": 43.91666667,
+"via": "wikipedia",
+"pop": 1086.0
+},
+{
+"q": "Q2687297",
+"name": "Gilleleje",
+"lon": 12.31666667,
+"lat": 56.11666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2688863",
+"name": "Neskowin, Oregon",
+"lon": -123.97611111,
+"lat": 45.12083333,
+"via": "wikipedia",
+"pop": 205.0
+},
+{
+"q": "Q268955",
+"name": "Diano Marina",
+"lon": 8.08333333,
+"lat": 43.91666667,
+"via": "wikipedia",
+"pop": 5542.0
+},
+{
+"q": "Q2692673",
+"name": "Risør (town)",
+"lon": 9.23421,
+"lat": 58.72058,
+"via": "wikipedia",
+"pop": 4586.0
+},
+{
+"q": "Q2695652",
+"name": "Bloemendaal aan Zee",
+"lon": 4.546111111,
+"lat": 52.4025,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q26964800",
+"name": "Blue Beach Resort, Gaza",
+"lon": 34.45399567,
+"lat": 31.545514736,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2696654",
+"name": "Groote Keeten",
+"lon": 4.7114,
+"lat": 52.8633,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q269732",
+"name": "Fécamp",
+"lon": 0.38,
+"lat": 49.76,
+"via": "wikipedia",
+"pop": 17313.0
+},
+{
+"q": "Q270151",
+"name": "Deiva Marina",
+"lon": 9.51666667,
+"lat": 44.21666667,
+"via": "wikipedia",
+"pop": 1268.0
+},
+{
+"q": "Q270189",
+"name": "Lerici",
+"lon": 9.91111111,
+"lat": 44.07638889,
+"via": "wikipedia",
+"pop": 9425.0
+},
+{
+"q": "Q270217",
+"name": "Monterosso al Mare",
+"lon": 9.65416667,
+"lat": 44.14583333,
+"via": "wikipedia",
+"pop": 1350.0
+},
+{
+"q": "Q270295",
+"name": "Riomaggiore",
+"lon": 9.75,
+"lat": 44.1,
+"via": "wikipedia",
+"pop": 1326.0
+},
+{
+"q": "Q270328",
+"name": "Vernazza",
+"lon": 9.68333333,
+"lat": 44.13333333,
+"via": "wikipedia",
+"pop": 729.0
+},
+{
+"q": "Q2715972",
+"name": "Porto Rotondo",
+"lon": 9.5469,
+"lat": 41.0278,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q271925",
+"name": "Sozopol",
+"lon": 27.7,
+"lat": 42.41666667,
+"via": "wikipedia",
+"pop": 4484.0
+},
+{
+"q": "Q2720289",
+"name": "Las Toninas",
+"lon": -56.7,
+"lat": -36.48333333,
+"via": "wikipedia",
+"pop": 5278.0
+},
+{
+"q": "Q272320",
+"name": "Trouville-sur-Mer",
+"lon": 0.0825,
+"lat": 49.3683,
+"via": "wikipedia",
+"pop": 4619.0
+},
+{
+"q": "Q272565",
+"name": "Çamyuva",
+"lon": 30.55972222,
+"lat": 36.56111111,
+"via": "wikipedia",
+"pop": 5549.0
+},
+{
+"q": "Q272583",
+"name": "Çandarlı",
+"lon": 26.9327,
+"lat": 38.9377,
+"via": "wikipedia",
+"pop": 7722.0
+},
+{
+"q": "Q2729387",
+"name": "Huisduinen",
+"lon": 4.725,
+"lat": 52.9533,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q272995",
+"name": "Çıralı",
+"lon": 30.47305556,
+"lat": 36.39666667,
+"via": "wikipedia",
+"pop": 6000.0
+},
+{
+"q": "Q273059",
+"name": "Cascais",
+"lon": -9.41666667,
+"lat": 38.7,
+"via": "wikipedia",
+"pop": 214124.0
+},
+{
+"q": "Q27332",
+"name": "Kampen (Sylt)",
+"lon": 8.33333333,
+"lat": 54.95,
+"via": "wikipedia",
+"pop": 489.0
+},
+{
+"q": "Q2737863",
+"name": "Reñaca",
+"lon": -71.545027,
+"lat": -32.969389,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q274825",
+"name": "Ouistreham",
+"lon": -0.26,
+"lat": 49.28,
+"via": "wikipedia",
+"pop": 9212.0
+},
+{
+"q": "Q274910",
+"name": "Étables-sur-Mer",
+"lon": -2.8338,
+"lat": 48.6272,
+"via": "wikipedia",
+"pop": 3180.0
+},
+{
+"q": "Q275639",
+"name": "Cinque Terre",
+"lon": 9.71666667,
+"lat": 44.11944444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q277598",
+"name": "Nusa Dua",
+"lon": 115.2275,
+"lat": -8.8025,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2785552",
+"name": "Castricum aan Zee",
+"lon": 4.6114,
+"lat": 52.5561,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q279000",
+"name": "South Shields",
+"lon": -1.43,
+"lat": 54.995,
+"via": "wikipedia",
+"pop": 75337.0
+},
+{
+"q": "Q2796278",
+"name": "Dymchurch",
+"lon": 1,
+"lat": 51.027,
+"via": "wikipedia",
+"pop": 3536.0
+},
+{
+"q": "Q27998",
+"name": "Westerland, Germany",
+"lon": 8.3075,
+"lat": 54.91,
+"via": "wikipedia",
+"pop": 9032.0
+},
+{
+"q": "Q28003118",
+"name": "Colonia Marina",
+"lon": -57.009354,
+"lat": -37.31068,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q28013",
+"name": "Hörnum",
+"lon": 8.2875,
+"lat": 54.7575,
+"via": "wikipedia",
+"pop": 830.0
+},
+{
+"q": "Q28040229",
+"name": "La Platja d'Argelers",
+"lon": 3.043361,
+"lat": 42.55667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2816015",
+"name": "Ağva",
+"lon": 29.85,
+"lat": 41.13333333,
+"via": "wikipedia",
+"pop": 2190.0
+},
+{
+"q": "Q2826929",
+"name": "Agnes Water, Queensland",
+"lon": 151.9032,
+"lat": -24.2125,
+"via": "wikipedia",
+"pop": 2729.0
+},
+{
+"q": "Q2836663",
+"name": "Mar Azul, Argentina",
+"lon": -56.93333333,
+"lat": -37.25,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q28380886",
+"name": "Bozburun Peninsula",
+"lon": 28.013557,
+"lat": 36.594853,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q28419476",
+"name": "Hurghada Grand Aquarium",
+"lon": 33.8217,
+"lat": 27.1337,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q28501259",
+"name": "Q28501259",
+"lon": -89.4634743,
+"lat": 15.852094,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q28528260",
+"name": "Hanuwantiya",
+"lon": 76.587589,
+"lat": 22.144428,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2859835",
+"name": "Arc 1600",
+"lon": 6.793028,
+"lat": 45.595361,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2859839",
+"name": "Arc 2000",
+"lon": 6.83184,
+"lat": 45.57208,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q286510",
+"name": "El Gouna",
+"lon": 33.67916667,
+"lat": 27.385,
+"via": "wikipedia",
+"pop": 15000.0
+},
+{
+"q": "Q28690844",
+"name": "Q28690844",
+"lon": 127.92511111,
+"lat": 26.52627778,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q2881532",
+"name": "Balsa (Roman town)",
+"lon": -7.6938629,
+"lat": 37.0855497,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2895643",
+"name": "Benagil",
+"lon": -8.42583333,
+"lat": 37.0875,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q290936",
+"name": "Étretat",
+"lon": 0.21,
+"lat": 49.71,
+"via": "wikipedia",
+"pop": 1102.0
+},
+{
+"q": "Q291295",
+"name": "Fenwick Island, Delaware",
+"lon": -75.05138889,
+"lat": 38.46222222,
+"via": "wikipedia",
+"pop": 343.0
+},
+{
+"q": "Q2915909",
+"name": "Ras Sedr",
+"lon": 32.70555556,
+"lat": 29.59166667,
+"via": "wikipedia",
+"pop": 1725.0
+},
+{
+"q": "Q2921491",
+"name": "Katwijk aan Zee",
+"lon": 4.3953,
+"lat": 52.2031,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q29245",
+"name": "Hastings",
+"lon": 0.58333333,
+"lat": 50.855,
+"via": "wikipedia",
+"pop": 91053.0
+},
+{
+"q": "Q292728",
+"name": "Îles d'Hyères",
+"lon": 6.4045,
+"lat": 43.01,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2932434",
+"name": "Cabo Corrientes, Jalisco",
+"lon": -105.69444444,
+"lat": 20.40888889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2936442",
+"name": "Canoa Quebrada",
+"lon": -37.692778,
+"lat": -4.528333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q29513942",
+"name": "Al-Sahaba Mosque (Sharm el-Sheikh)",
+"lon": 34.2952,
+"lat": 27.8665,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2971106",
+"name": "Château de l'Horizon",
+"lon": 7.062222,
+"lat": 43.554644,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2971194",
+"name": "Chevre d'or",
+"lon": 7.362,
+"lat": 43.727,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2971213",
+"name": "Château de la Croë",
+"lon": 7.13413,
+"lat": 43.54605,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q2980788",
+"name": "Hopton-on-Sea",
+"lon": 1.73,
+"lat": 52.539,
+"via": "wikipedia",
+"pop": 2939.0
+},
+{
+"q": "Q2990384",
+"name": "Rezovo",
+"lon": 28.01666667,
+"lat": 41.98333333,
+"via": "wikipedia",
+"pop": 58.0
+},
+{
+"q": "Q2990510",
+"name": "Tyulenovo",
+"lon": 28.58333333,
+"lat": 43.48333333,
+"via": "wikipedia",
+"pop": 75.0
+},
+{
+"q": "Q2990848",
+"name": "Bozhurets",
+"lon": 28.29247222,
+"lat": 43.42383333,
+"via": "wikipedia",
+"pop": 88.0
+},
+{
+"q": "Q2995690",
+"name": "Contis",
+"lon": -1.32083333,
+"lat": 44.09222222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3010645",
+"name": "Côte d'amour",
+"lon": -2.36,
+"lat": 47.29,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3010652",
+"name": "Côte de Beauté",
+"lon": -1.11,
+"lat": 45.65,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3010655",
+"name": "Côte de Jade",
+"lon": -2.245,
+"lat": 47.135,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3011922",
+"name": "Kneippbyn",
+"lon": 18.2457,
+"lat": 57.6096,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3026056",
+"name": "Lubenice",
+"lon": 14.3316,
+"lat": 44.88784,
+"via": "wikipedia",
+"pop": 6.0
+},
+{
+"q": "Q3029661",
+"name": "Rockanje",
+"lon": 4.0689,
+"lat": 51.8706,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q304218",
+"name": "Kessingland",
+"lon": 1.723,
+"lat": 52.419,
+"via": "wikipedia",
+"pop": 4242.0
+},
+{
+"q": "Q305677",
+"name": "Abastumani",
+"lon": 42.833083333,
+"lat": 41.752194444,
+"via": "wikidata",
+"pop": 664.0
+},
+{
+"q": "Q30623523",
+"name": "Sea Bright–Monmouth Beach Seawall",
+"lon": -73.974343,
+"lat": 40.358927,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3063980",
+"name": "Sovietske",
+"lon": 34.18805556,
+"lat": 44.53138889,
+"via": "wikipedia",
+"pop": 679.0
+},
+{
+"q": "Q3076348",
+"name": "Fontana Rosa",
+"lon": 7.51361111,
+"lat": 43.78555556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q307775",
+"name": "Özdere",
+"lon": 27.12833333,
+"lat": 38.0175,
+"via": "wikipedia",
+"pop": 1471.0
+},
+{
+"q": "Q309123",
+"name": "Courseulles-sur-Mer",
+"lon": -0.4564,
+"lat": 49.3336,
+"via": "wikipedia",
+"pop": 4268.0
+},
+{
+"q": "Q3095036",
+"name": "Gammarth",
+"lon": 10.28666667,
+"lat": 36.90972222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3101088",
+"name": "Les Issambres",
+"lon": 6.7028,
+"lat": 43.3475,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3107",
+"name": "Sylt",
+"lon": 8.33333333,
+"lat": 54.9,
+"via": "wikipedia",
+"pop": 18118.0
+},
+{
+"q": "Q310751",
+"name": "El-Quseir",
+"lon": 34.275997222,
+"lat": 26.109072222,
+"via": "wikidata",
+"pop": 24344.0
+},
+{
+"q": "Q3108740",
+"name": "Glenelg, South Australia",
+"lon": 138.51392753,
+"lat": -34.98055097,
+"via": "wikipedia",
+"pop": 3440.0
+},
+{
+"q": "Q3110534",
+"name": "Chapel St Leonards",
+"lon": 0.3365,
+"lat": 53.223,
+"via": "wikipedia",
+"pop": 3434.0
+},
+{
+"q": "Q3117059",
+"name": "Grosse Pointe",
+"lon": -82.90638889,
+"lat": 42.39666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q311849",
+"name": "Warnemünde",
+"lon": 12.08333333,
+"lat": 54.16666667,
+"via": "wikipedia",
+"pop": 5937.0
+},
+{
+"q": "Q31189722",
+"name": "Sığacık",
+"lon": 26.78333333,
+"lat": 38.18333333,
+"via": "wikipedia",
+"pop": 3883.0
+},
+{
+"q": "Q3122473",
+"name": "Guéréo",
+"lon": -17.095972222,
+"lat": 14.526666666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q313975",
+"name": "Bansin",
+"lon": 14.15,
+"lat": 53.96666667,
+"via": "wikipedia",
+"pop": 2503.0
+},
+{
+"q": "Q3146296",
+"name": "Hôtel du Palais",
+"lon": -1.55639,
+"lat": 43.486698,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q316447",
+"name": "Wissant",
+"lon": 1.6636,
+"lat": 50.8861,
+"via": "wikipedia",
+"pop": 835.0
+},
+{
+"q": "Q3193",
+"name": "Poel",
+"lon": 11.433333333,
+"lat": 54.0,
+"via": "wikidata",
+"pop": 2486.0
+},
+{
+"q": "Q319536",
+"name": "Aberdyfi",
+"lon": -4.044,
+"lat": 52.544,
+"via": "wikipedia",
+"pop": 682.0
+},
+{
+"q": "Q319710",
+"name": "Abersoch",
+"lon": -4.506,
+"lat": 52.823,
+"via": "wikipedia",
+"pop": 2602.0
+},
+{
+"q": "Q3197870",
+"name": "Klimno",
+"lon": 14.62089,
+"lat": 45.1553,
+"via": "wikipedia",
+"pop": 130.0
+},
+{
+"q": "Q31997052",
+"name": "Playa San Francisco",
+"lon": -55.28333333,
+"lat": -34.9,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3206530",
+"name": "La Baule-les-Pins",
+"lon": -2.3711,
+"lat": 47.2852,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q321010",
+"name": "Ustka",
+"lon": 16.85,
+"lat": 54.58333333,
+"via": "wikipedia",
+"pop": 14321.0
+},
+{
+"q": "Q3211306",
+"name": "Q3211306",
+"lon": -1.14694,
+"lat": 45.7181,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q321792",
+"name": "Travemünde",
+"lon": 10.86666667,
+"lat": 53.96666667,
+"via": "wikipedia",
+"pop": 13913.0
+},
+{
+"q": "Q3218",
+"name": "Insel Hiddensee",
+"lon": 13.105546944,
+"lat": 54.568008055,
+"via": "wikidata",
+"pop": 912.0
+},
+{
+"q": "Q3220035",
+"name": "Lazarevskoye Microdistrict",
+"lon": 39.33805556,
+"lat": 43.91111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3224809",
+"name": "Moulin de Mougins",
+"lon": 7.00138889,
+"lat": 43.59611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3230548",
+"name": "Les Andalouses",
+"lon": -0.892425,
+"lat": 35.7061,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q323084",
+"name": "Port de Pollença",
+"lon": 3.08138889,
+"lat": 39.9075,
+"via": "wikipedia",
+"pop": 7600.0
+},
+{
+"q": "Q323164",
+"name": "Le Touquet",
+"lon": 1.595,
+"lat": 50.5186,
+"via": "wikipedia",
+"pop": 4224.0
+},
+{
+"q": "Q3233272",
+"name": "Altınoluk",
+"lon": 26.73935,
+"lat": 39.58234,
+"via": "wikipedia",
+"pop": 6832.0
+},
+{
+"q": "Q3233854",
+"name": "Kargıpınarı",
+"lon": 34.41666667,
+"lat": 36.66666667,
+"via": "wikipedia",
+"pop": 13603.0
+},
+{
+"q": "Q3233906",
+"name": "Tömük",
+"lon": 34.38333333,
+"lat": 36.66666667,
+"via": "wikipedia",
+"pop": 11600.0
+},
+{
+"q": "Q3234549",
+"name": "Les Petites Dalles",
+"lon": 0.528,
+"lat": 49.821,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q323598",
+"name": "Villers-sur-Mer",
+"lon": -0.005,
+"lat": 49.3214,
+"via": "wikipedia",
+"pop": 2440.0
+},
+{
+"q": "Q32390",
+"name": "Salthill",
+"lon": -9.07505556,
+"lat": 53.261,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3246511",
+"name": "Jersey Shore",
+"lon": -74.052,
+"lat": 40.048,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q32623",
+"name": "Tramways de Royan",
+"lon": -1.12264,
+"lat": 45.65151,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q326268",
+"name": "Sharm El Sheikh International Airport",
+"lon": 34.39472222,
+"lat": 27.97722222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3273932",
+"name": "Khostinsky city district",
+"lon": 39.8,
+"lat": 43.6,
+"via": "wikipedia",
+"pop": 97325.0
+},
+{
+"q": "Q328104",
+"name": "Blankenberge",
+"lon": 3.11666667,
+"lat": 51.3,
+"via": "wikipedia",
+"pop": 20349.0
+},
+{
+"q": "Q328427",
+"name": "Le Grau-du-Roi",
+"lon": 4.1372,
+"lat": 43.5381,
+"via": "wikipedia",
+"pop": 8588.0
+},
+{
+"q": "Q329034",
+"name": "Duhnen",
+"lon": 8.64555556,
+"lat": 53.88277778,
+"via": "wikipedia",
+"pop": 910.0
+},
+{
+"q": "Q329437",
+"name": "Balchik",
+"lon": 28.16166667,
+"lat": 43.42694444,
+"via": "wikipedia",
+"pop": 9454.0
+},
+{
+"q": "Q33093648",
+"name": "Bersaba",
+"lon": -55.21,
+"lat": 5.506111111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3317432",
+"name": "Zorritos",
+"lon": -80.679737,
+"lat": -3.680531,
+"via": "wikidata",
+"pop": 7363.0
+},
+{
+"q": "Q3324072",
+"name": "Moriani-Plage",
+"lon": 9.53008,
+"lat": 42.37438,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q33292",
+"name": "Berdiansk",
+"lon": 36.78888889,
+"lat": 46.75555556,
+"via": "wikipedia",
+"pop": 106311.0
+},
+{
+"q": "Q3331644",
+"name": "Myrtle Beach Pavilion",
+"lon": -78.8816,
+"lat": 33.6925,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q33325231",
+"name": "Baba Beach",
+"lon": 8.20434,
+"lat": 44.03191,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q33345",
+"name": "Yevpatoria",
+"lon": 33.36805556,
+"lat": 45.19388889,
+"via": "wikipedia",
+"pop": 105549.0
+},
+{
+"q": "Q333559",
+"name": "Granville, Manche",
+"lon": -1.593931,
+"lat": 48.837401,
+"via": "wikipedia",
+"pop": 12510.0
+},
+{
+"q": "Q3336041",
+"name": "Narbonne plage",
+"lon": 3.168268,
+"lat": 43.158666,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3339278",
+"name": "Ngaparou",
+"lon": -17.058361111,
+"lat": 14.463888888,
+"via": "wikidata",
+"pop": 13744.0
+},
+{
+"q": "Q334301",
+"name": "Berck",
+"lon": 1.5933,
+"lat": 50.4089,
+"via": "wikipedia",
+"pop": 12951.0
+},
+{
+"q": "Q334669",
+"name": "Ückeritz",
+"lon": 14.05,
+"lat": 54.01666667,
+"via": "wikipedia",
+"pop": 1020.0
+},
+{
+"q": "Q3348478",
+"name": "Observatoire Oceanologique de Villefranche",
+"lon": 7.30666667,
+"lat": 43.69638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q33525262",
+"name": "Zandvoort",
+"lon": 4.53306,
+"lat": 52.37125,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q33532",
+"name": "Gandia",
+"lon": -0.18333333,
+"lat": 38.96666667,
+"via": "wikipedia",
+"pop": 83135.0
+},
+{
+"q": "Q3359425",
+"name": "Queenscliff, Victoria",
+"lon": 144.65,
+"lat": -38.26666667,
+"via": "wikipedia",
+"pop": 1516.0
+},
+{
+"q": "Q3363559",
+"name": "Paramé",
+"lon": -1.97916667,
+"lat": 48.66027778,
+"via": "wikipedia",
+"pop": 8811.0
+},
+{
+"q": "Q33790615",
+"name": "Buarcos",
+"lon": -8.877,
+"lat": 40.166,
+"via": "wikipedia",
+"pop": 8602.0
+},
+{
+"q": "Q339535",
+"name": "Hammamet, Tunisia",
+"lon": 10.61666667,
+"lat": 36.4,
+"via": "wikipedia",
+"pop": 97579.0
+},
+{
+"q": "Q3395616",
+"name": "Trefor, Gwynedd",
+"lon": -4.426,
+"lat": 52.993,
+"via": "wikipedia",
+"pop": 1067.0
+},
+{
+"q": "Q33962",
+"name": "Sanremo",
+"lon": 7.775,
+"lat": 43.8175,
+"via": "wikipedia",
+"pop": 52787.0
+},
+{
+"q": "Q3396822",
+"name": "Llandanwg",
+"lon": -4.124,
+"lat": 52.835,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3398409",
+"name": "Port Vauban",
+"lon": 7.12694444,
+"lat": 43.58666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3398844",
+"name": "Porthdinllaen",
+"lon": -4.568,
+"lat": 52.942,
+"via": "wikipedia",
+"pop": 2.0
+},
+{
+"q": "Q3399361",
+"name": "Portobello, Edinburgh",
+"lon": -3.114,
+"lat": 55.953,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3399956",
+"name": "Ogmore-by-Sea",
+"lon": -3.635,
+"lat": 51.464,
+"via": "wikipedia",
+"pop": 878.0
+},
+{
+"q": "Q3400141",
+"name": "Morfa Nefyn",
+"lon": -4.549,
+"lat": 52.932,
+"via": "wikipedia",
+"pop": 1229.0
+},
+{
+"q": "Q3402580",
+"name": "Fairbourne",
+"lon": -4.053,
+"lat": 52.697,
+"via": "wikipedia",
+"pop": 1031.0
+},
+{
+"q": "Q3403473",
+"name": "Pendine",
+"lon": -4.56393,
+"lat": 51.74719,
+"via": "wikipedia",
+"pop": 279.0
+},
+{
+"q": "Q3403830",
+"name": "Clarach Bay",
+"lon": -4.079,
+"lat": 52.436,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3404798",
+"name": "Porthgain",
+"lon": -5.181,
+"lat": 51.948,
+"via": "wikipedia",
+"pop": 897.0
+},
+{
+"q": "Q3405190",
+"name": "Saundersfoot",
+"lon": -4.7,
+"lat": 51.711,
+"via": "wikipedia",
+"pop": 2352.0
+},
+{
+"q": "Q341027",
+"name": "Ahtopol",
+"lon": 27.95,
+"lat": 42.1,
+"via": "wikipedia",
+"pop": 1030.0
+},
+{
+"q": "Q3438572",
+"name": "Seaburn",
+"lon": -1.367,
+"lat": 54.933,
+"via": "wikipedia",
+"pop": 4000.0
+},
+{
+"q": "Q344561",
+"name": "İğneada",
+"lon": 27.98611111,
+"lat": 41.87611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q345339",
+"name": "Łeba",
+"lon": 17.55,
+"lat": 54.78333333,
+"via": "wikipedia",
+"pop": 3228.0
+},
+{
+"q": "Q3460614",
+"name": "Sables-d'Or-les-Pins",
+"lon": -2.40666667,
+"lat": 48.64083333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3462334",
+"name": "Saint-Gilles",
+"lon": 55.26916667,
+"lat": -21.04888889,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3462860",
+"name": "Saint-Marc-sur-Mer",
+"lon": -2.2783327,
+"lat": 47.240055,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3472167",
+"name": "Hampton Beach, New Hampshire",
+"lon": -70.81166667,
+"lat": 42.91444444,
+"via": "wikipedia",
+"pop": 2598.0
+},
+{
+"q": "Q3472599",
+"name": "Santa Cruz Beach Boardwalk",
+"lon": -122.01777778,
+"lat": 36.96416667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3473294",
+"name": "Twin Rocks, Oregon",
+"lon": -123.94472222,
+"lat": 45.59777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3474013",
+"name": "Gleneden Beach, Oregon",
+"lon": -124.03416667,
+"lat": 44.88111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3481814",
+"name": "Nauthólsvík",
+"lon": -21.9285,
+"lat": 64.1212,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3485106",
+"name": "Sion-sur-l'Océan",
+"lon": -1.9442,
+"lat": 46.7219,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3491533",
+"name": "Karwia",
+"lon": 18.21,
+"lat": 54.83083333,
+"via": "wikipedia",
+"pop": 960.0
+},
+{
+"q": "Q3492833",
+"name": "Dhadna",
+"lon": 56.35555556,
+"lat": 25.5225,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3495335",
+"name": "St Leonards-on-Sea",
+"lon": 0.5525,
+"lat": 50.85555556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3498300",
+"name": "Riviera delle Palme (Marche)",
+"lon": 13.88333333,
+"lat": 42.95,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3505418",
+"name": "Igreja da Misericórdia de Tavira",
+"lon": -7.6507086,
+"lat": 37.1258805,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3529950",
+"name": "Tiuccia",
+"lon": 8.73837,
+"lat": 42.06645,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3534843",
+"name": "Weligama",
+"lon": 80.42944444,
+"lat": 5.97388889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3541271",
+"name": "Tréboul",
+"lon": -4.35,
+"lat": 48.1,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3546930",
+"name": "Tête de Chien",
+"lon": 7.402825,
+"lat": 43.73046667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558499",
+"name": "Villa Cypris",
+"lon": 7.47777778,
+"lat": 43.75166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558508",
+"name": "Villa Cyrnos",
+"lon": 7.47611111,
+"lat": 43.7525,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558616",
+"name": "Villa Kerylos",
+"lon": 7.33388889,
+"lat": 43.70319444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558617",
+"name": "Villa La Mauresque",
+"lon": 7.329167,
+"lat": 43.6875,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558622",
+"name": "Villa La Reine Jeanne",
+"lon": 6.3439,
+"lat": 43.1525,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3558636",
+"name": "Villa Le Trident",
+"lon": 6.9408,
+"lat": 43.5078,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3571932",
+"name": "Yasmine Hammamet",
+"lon": 10.541106,
+"lat": 36.374683,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3601134",
+"name": "ARA Santa Fe (S-21)",
+"lon": -36.37555556,
+"lat": -54.18305556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3610219",
+"name": "Karaburun, Arnavutköy",
+"lon": 28.68194444,
+"lat": 41.34583333,
+"via": "wikipedia",
+"pop": 1903.0
+},
+{
+"q": "Q3632910",
+"name": "Q3632910",
+"lon": 10.877,
+"lat": 42.7612,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3641485",
+"name": "Boccadasse",
+"lon": 8.97333,
+"lat": 44.3897,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3647274",
+"name": "Burgau, Portugal",
+"lon": -8.77456,
+"lat": 37.07358,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3657864",
+"name": "Capriccioli",
+"lon": 9.552902,
+"lat": 41.079424,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3657968",
+"name": "Elenite",
+"lon": 27.81,
+"lat": 42.70416667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q366398",
+"name": "Merville-Franceville-Plage",
+"lon": -0.20329,
+"lat": 49.2775,
+"via": "wikipedia",
+"pop": 2231.0
+},
+{
+"q": "Q366420",
+"name": "Lion-sur-Mer",
+"lon": -0.3175,
+"lat": 49.3019,
+"via": "wikipedia",
+"pop": 2486.0
+},
+{
+"q": "Q3671511",
+"name": "San Nicolo dell'isola di Sestri Levante",
+"lon": 9.3898,
+"lat": 44.268,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3690921",
+"name": "Copanello",
+"lon": 16.56638889,
+"lat": 38.76833333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3694625",
+"name": "Corso Italia (Genoa)",
+"lon": 8.967383,
+"lat": 44.391321,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q369592",
+"name": "Neptun, Romania",
+"lon": 28.60527778,
+"lat": 43.86611111,
+"via": "wikipedia",
+"pop": 771.0
+},
+{
+"q": "Q369657",
+"name": "Gorleston-on-Sea",
+"lon": 1.7235,
+"lat": 52.5757,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q370495",
+"name": "Dahab",
+"lon": 34.50472222,
+"lat": 28.49305556,
+"via": "wikipedia",
+"pop": 4479.0
+},
+{
+"q": "Q3709246",
+"name": "Fripp Island, South Carolina",
+"lon": -80.48888889,
+"lat": 32.31805556,
+"via": "wikipedia",
+"pop": 963.0
+},
+{
+"q": "Q371830",
+"name": "İçmeler",
+"lon": 28.2167,
+"lat": 36.8083,
+"via": "wikipedia",
+"pop": 6543.0
+},
+{
+"q": "Q372840",
+"name": "Tavira",
+"lon": -7.65,
+"lat": 37.11666667,
+"via": "wikipedia",
+"pop": 26167.0
+},
+{
+"q": "Q372922",
+"name": "Sines",
+"lon": -8.86444444,
+"lat": 37.95472222,
+"via": "wikipedia",
+"pop": 14238.0
+},
+{
+"q": "Q373813",
+"name": "Albufeira",
+"lon": -8.24583333,
+"lat": 37.08972222,
+"via": "wikipedia",
+"pop": 44168.0
+},
+{
+"q": "Q375314",
+"name": "Folkestone",
+"lon": 1.17944444,
+"lat": 51.07916667,
+"via": "wikipedia",
+"pop": 47356.0
+},
+{
+"q": "Q377932",
+"name": "Mers-les-Bains",
+"lon": 1.3886,
+"lat": 50.0681,
+"via": "wikipedia",
+"pop": 2540.0
+},
+{
+"q": "Q379447",
+"name": "Igreja de Santa Maria do Castelo (Tavira)",
+"lon": -7.6519,
+"lat": 37.1253,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q380514",
+"name": "Canet-en-Roussillon",
+"lon": 3.0078,
+"lat": 42.7067,
+"via": "wikipedia",
+"pop": 13227.0
+},
+{
+"q": "Q3815477",
+"name": "Palacio de los Deportes de Torrevieja",
+"lon": -0.6754,
+"lat": 37.9956,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3816021",
+"name": "Ayaş, Mersin",
+"lon": 34.18333333,
+"lat": 36.48333333,
+"via": "wikipedia",
+"pop": 2340.0
+},
+{
+"q": "Q382602",
+"name": "Omišalj",
+"lon": 14.55416667,
+"lat": 45.21194444,
+"via": "wikipedia",
+"pop": 2992.0
+},
+{
+"q": "Q38266985",
+"name": "Q38266985",
+"lon": 139.87088889,
+"lat": 39.06416667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q38277589",
+"name": "Iwa Beach",
+"lon": 139.14019444,
+"lat": 35.16219444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q3832087",
+"name": "Lido di Panzano",
+"lon": 13.5433,
+"lat": 45.7847,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q383352",
+"name": "Loctudy",
+"lon": -4.1681,
+"lat": 47.8344,
+"via": "wikipedia",
+"pop": 4075.0
+},
+{
+"q": "Q383363",
+"name": "Camaret-sur-Mer",
+"lon": -4.5956,
+"lat": 48.2767,
+"via": "wikipedia",
+"pop": 2494.0
+},
+{
+"q": "Q383369",
+"name": "Wimereux",
+"lon": 1.61,
+"lat": 50.77,
+"via": "wikipedia",
+"pop": 6256.0
+},
+{
+"q": "Q3845225",
+"name": "Mar de las Pampas",
+"lon": -57.02555556,
+"lat": -37.32416667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q3847642",
+"name": "Krasnokamianka, Crimea",
+"lon": 34.28888889,
+"lat": 44.56388889,
+"via": "wikipedia",
+"pop": 1074.0
+},
+{
+"q": "Q3848105",
+"name": "Marina di Ginosa",
+"lon": 16.89083333,
+"lat": 40.42916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q385191",
+"name": "Hurghada International Airport",
+"lon": 33.79916667,
+"lat": 27.17805556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q385621",
+"name": "Studland",
+"lon": -1.9504,
+"lat": 50.6422,
+"via": "wikipedia",
+"pop": 406.0
+},
+{
+"q": "Q385923",
+"name": "Alcúdia",
+"lon": 3.11916667,
+"lat": 39.8525,
+"via": "wikipedia",
+"pop": 21907.0
+},
+{
+"q": "Q3866895",
+"name": "Mudeford",
+"lon": -1.743,
+"lat": 50.728,
+"via": "wikipedia",
+"pop": 4977.0
+},
+{
+"q": "Q3869768",
+"name": "Naama Bay",
+"lon": 34.332422,
+"lat": 27.910528,
+"via": "wikipedia",
+"pop": 2145.0
+},
+{
+"q": "Q387047",
+"name": "Malibu, California",
+"lon": -118.695,
+"lat": 34.035,
+"via": "wikipedia",
+"pop": 10654.0
+},
+{
+"q": "Q3879857",
+"name": "Q3879857",
+"lon": 8.967224,
+"lat": 44.390721,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q388147",
+"name": "Novyi Svit",
+"lon": 34.91277778,
+"lat": 44.82916667,
+"via": "wikipedia",
+"pop": 1248.0
+},
+{
+"q": "Q388544",
+"name": "Şarköy",
+"lon": 27.10638889,
+"lat": 40.60388889,
+"via": "wikipedia",
+"pop": 32565.0
+},
+{
+"q": "Q3887476",
+"name": "Katsiveli",
+"lon": 33.97111111,
+"lat": 44.39611111,
+"via": "wikipedia",
+"pop": 541.0
+},
+{
+"q": "Q3888245",
+"name": "Sanatorne",
+"lon": 33.81305556,
+"lat": 44.39833333,
+"via": "wikipedia",
+"pop": 229.0
+},
+{
+"q": "Q3888494",
+"name": "Berehove, Yalta Municipality, Crimea",
+"lon": 33.86833333,
+"lat": 44.40777778,
+"via": "wikipedia",
+"pop": 390.0
+},
+{
+"q": "Q3890332",
+"name": "Vidradne, Crimea",
+"lon": 34.21694444,
+"lat": 44.50583333,
+"via": "wikipedia",
+"pop": 730.0
+},
+{
+"q": "Q3891214",
+"name": "Voskhod, Yalta Municipality",
+"lon": 34.18472222,
+"lat": 44.51472222,
+"via": "wikipedia",
+"pop": 481.0
+},
+{
+"q": "Q3891224",
+"name": "Vynohradne",
+"lon": 34.14166667,
+"lat": 44.47833333,
+"via": "wikipedia",
+"pop": 1508.0
+},
+{
+"q": "Q3891445",
+"name": "Ponyzivka",
+"lon": 33.95694444,
+"lat": 44.39638889,
+"via": "wikipedia",
+"pop": 220.0
+},
+{
+"q": "Q3893568",
+"name": "Tırtar, Erdemli",
+"lon": 34.23055556,
+"lat": 36.5375,
+"via": "wikipedia",
+"pop": 2657.0
+},
+{
+"q": "Q3894036",
+"name": "Oreanda",
+"lon": 34.13666667,
+"lat": 44.45861111,
+"via": "wikipedia",
+"pop": 837.0
+},
+{
+"q": "Q3894275",
+"name": "Kurpaty",
+"lon": 34.12666667,
+"lat": 44.44472222,
+"via": "wikipedia",
+"pop": 138.0
+},
+{
+"q": "Q3894361",
+"name": "Parkove",
+"lon": 33.91583333,
+"lat": 44.40388889,
+"via": "wikipedia",
+"pop": 410.0
+},
+{
+"q": "Q389921",
+"name": "Kilyos",
+"lon": 29.0375,
+"lat": 41.24916667,
+"via": "wikipedia",
+"pop": 3940.0
+},
+{
+"q": "Q391138",
+"name": "Plouescat",
+"lon": -4.1733,
+"lat": 48.6578,
+"via": "wikipedia",
+"pop": 3554.0
+},
+{
+"q": "Q3920538",
+"name": "S'Agaró",
+"lon": 3.05678,
+"lat": 41.7915,
+"via": "wikipedia",
+"pop": 1699.0
+},
+{
+"q": "Q392757",
+"name": "Šventoji, Lithuania",
+"lon": 21.0812,
+"lat": 56.0298,
+"via": "wikipedia",
+"pop": 2631.0
+},
+{
+"q": "Q393944",
+"name": "Agios Georgios, Corfu",
+"lon": 19.68333333,
+"lat": 39.75,
+"via": "wikipedia",
+"pop": 3677.0
+},
+{
+"q": "Q39420",
+"name": "Sochi",
+"lon": 39.72027778,
+"lat": 43.58527778,
+"via": "wikipedia",
+"pop": 445149.0
+},
+{
+"q": "Q39480",
+"name": "Porthcawl",
+"lon": -3.69,
+"lat": 51.48,
+"via": "wikipedia",
+"pop": 16134.0
+},
+{
+"q": "Q397600",
+"name": "Omiš",
+"lon": 16.68333333,
+"lat": 43.43333333,
+"via": "wikipedia",
+"pop": 14139.0
+},
+{
+"q": "Q397984",
+"name": "Aguas Dulces",
+"lon": -53.78333333,
+"lat": -34.27638889,
+"via": "wikipedia",
+"pop": 724.0
+},
+{
+"q": "Q39984",
+"name": "Cannes",
+"lon": 7.0128,
+"lat": 43.5513,
+"via": "wikipedia",
+"pop": 74350.0
+},
+{
+"q": "Q4012651",
+"name": "Villa Zanelli",
+"lon": 8.45666667,
+"lat": 44.29277778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q40194",
+"name": "Mazatlán",
+"lon": -106.41666667,
+"lat": 23.21666667,
+"via": "wikipedia",
+"pop": 441975.0
+},
+{
+"q": "Q402177",
+"name": "Benllech",
+"lon": -4.2257,
+"lat": 53.3216,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q402819",
+"name": "Ahrenshoop",
+"lon": 12.42,
+"lat": 54.38138889,
+"via": "wikipedia",
+"pop": 642.0
+},
+{
+"q": "Q403028",
+"name": "Ahungalla",
+"lon": 80.02,
+"lat": 6.32,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q405120",
+"name": "Kavarna",
+"lon": 28.33833333,
+"lat": 43.43305556,
+"via": "wikipedia",
+"pop": 9838.0
+},
+{
+"q": "Q405153",
+"name": "Primorsko",
+"lon": 27.76666667,
+"lat": 42.26666667,
+"via": "wikipedia",
+"pop": 3108.0
+},
+{
+"q": "Q405881",
+"name": "Ain Sokhna",
+"lon": 32.334444444,
+"lat": 29.645,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q406639",
+"name": "Shabla",
+"lon": 28.53333333,
+"lat": 43.53333333,
+"via": "wikipedia",
+"pop": 2623.0
+},
+{
+"q": "Q406649",
+"name": "Obzor",
+"lon": 27.88333333,
+"lat": 42.81666667,
+"via": "wikipedia",
+"pop": 2159.0
+},
+{
+"q": "Q406657",
+"name": "Sveti Vlas",
+"lon": 27.76666667,
+"lat": 42.71666667,
+"via": "wikipedia",
+"pop": 6535.0
+},
+{
+"q": "Q407372",
+"name": "Pomorie",
+"lon": 27.640546,
+"lat": 42.556907,
+"via": "wikidata",
+"pop": 14195.0
+},
+{
+"q": "Q408765",
+"name": "Airlie Beach, Queensland",
+"lon": 148.715,
+"lat": -20.2744,
+"via": "wikipedia",
+"pop": 1312.0
+},
+{
+"q": "Q4119083",
+"name": "Divnomorskoye",
+"lon": 38.7,
+"lat": 44.3,
+"via": "wikipedia",
+"pop": 6813.0
+},
+{
+"q": "Q4197",
+"name": "Cuxhaven",
+"lon": 8.69444444,
+"lat": 53.86111111,
+"via": "wikipedia",
+"pop": 49443.0
+},
+{
+"q": "Q4198716",
+"name": "Izobilne, Alushta",
+"lon": 34.35444444,
+"lat": 44.70166667,
+"via": "wikipedia",
+"pop": 2333.0
+},
+{
+"q": "Q424411",
+"name": "Akyaka, Ula",
+"lon": 28.31666667,
+"lat": 37.05,
+"via": "wikipedia",
+"pop": 3047.0
+},
+{
+"q": "Q4249953",
+"name": "Limonlu, Mersin",
+"lon": 34.23333333,
+"lat": 36.55,
+"via": "wikipedia",
+"pop": 3037.0
+},
+{
+"q": "Q4252909",
+"name": "Lazarevsky city district",
+"lon": 39.5,
+"lat": 43.8,
+"via": "wikipedia",
+"pop": 77199.0
+},
+{
+"q": "Q4262671",
+"name": "Adlersky city district",
+"lon": 39.91611111,
+"lat": 43.43361111,
+"via": "wikipedia",
+"pop": 125715.0
+},
+{
+"q": "Q426540",
+"name": "Martinšćica",
+"lon": 14.35158,
+"lat": 44.81943,
+"via": "wikipedia",
+"pop": 103.0
+},
+{
+"q": "Q4272804",
+"name": "The Breakers (hotel)",
+"lon": -80.03805556,
+"lat": 26.71388889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q427330",
+"name": "Salobreña",
+"lon": -3.58694444,
+"lat": 36.74666667,
+"via": "wikipedia",
+"pop": 12760.0
+},
+{
+"q": "Q427792",
+"name": "Penarth",
+"lon": -3.175,
+"lat": 51.4358,
+"via": "wikipedia",
+"pop": 22595.0
+},
+{
+"q": "Q428459",
+"name": "Figueira da Foz",
+"lon": -8.85,
+"lat": 40.15,
+"via": "wikipedia",
+"pop": 62125.0
+},
+{
+"q": "Q4285877",
+"name": "Matsesta Microdistrict",
+"lon": 39.79315283,
+"lat": 43.547055,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q43138366",
+"name": "Torre de Maro",
+"lon": -3.82993,
+"lat": 36.7537,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q4394363",
+"name": "Riverchapel",
+"lon": -6.233883,
+"lat": 52.63659,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q4409519",
+"name": "Sahl Hasheesh",
+"lon": 33.88916667,
+"lat": 27.04916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q446232",
+"name": "Petten",
+"lon": 4.6583,
+"lat": 52.7678,
+"via": "wikidata",
+"pop": 371.0
+},
+{
+"q": "Q448047",
+"name": "Alupka",
+"lon": 34.04305556,
+"lat": 44.41972222,
+"via": "wikipedia",
+"pop": 9063.0
+},
+{
+"q": "Q4500275",
+"name": "Khosta Microdistrict",
+"lon": 39.86808333,
+"lat": 43.51152222,
+"via": "wikipedia",
+"pop": 20000.0
+},
+{
+"q": "Q455464",
+"name": "Noordwijk",
+"lon": 4.45,
+"lat": 52.23333333,
+"via": "wikipedia",
+"pop": 44062.0
+},
+{
+"q": "Q457820",
+"name": "Sangatte",
+"lon": 1.756666666,
+"lat": 50.946666666,
+"via": "wikidata",
+"pop": 4668.0
+},
+{
+"q": "Q46001",
+"name": "Alushta",
+"lon": 34.39777778,
+"lat": 44.66722222,
+"via": "wikipedia",
+"pop": 29641.0
+},
+{
+"q": "Q462526",
+"name": "Barneville-Carteret",
+"lon": -1.755,
+"lat": 49.381,
+"via": "wikipedia",
+"pop": 2223.0
+},
+{
+"q": "Q464641",
+"name": "Barther Oie",
+"lon": 12.72777778,
+"lat": 54.40861111,
+"via": "wikipedia",
+"pop": 0.0
+},
+{
+"q": "Q464936",
+"name": "Xanthos",
+"lon": 29.31861111,
+"lat": 36.35611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q467020",
+"name": "Sospel",
+"lon": 7.4492,
+"lat": 43.8781,
+"via": "wikipedia",
+"pop": 3791.0
+},
+{
+"q": "Q467459",
+"name": "La Grande-Motte",
+"lon": 4.0858,
+"lat": 43.5614,
+"via": "wikipedia",
+"pop": 8440.0
+},
+{
+"q": "Q4694946",
+"name": "Ahangama",
+"lon": 80.36666667,
+"lat": 5.98333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q46995077",
+"name": "Mönchgut",
+"lon": 13.69,
+"lat": 54.31,
+"via": "wikidata",
+"pop": 1316.0
+},
+{
+"q": "Q47004269",
+"name": "Val'Quirico",
+"lon": -98.290660555,
+"lat": 19.192734444,
+"via": "wikidata",
+"pop": 18.0
+},
+{
+"q": "Q47048",
+"name": "Oulu",
+"lon": 25.47194444,
+"lat": 65.01416667,
+"via": "wikipedia",
+"pop": 217469.0
+},
+{
+"q": "Q47164",
+"name": "Santa Monica, California",
+"lon": -118.48138889,
+"lat": 34.02194444,
+"via": "wikipedia",
+"pop": 93076.0
+},
+{
+"q": "Q471963",
+"name": "Torre del Mar",
+"lon": -4.08333333,
+"lat": 36.75,
+"via": "wikipedia",
+"pop": 22819.0
+},
+{
+"q": "Q4734035",
+"name": "Almyrida",
+"lon": 24.20075556,
+"lat": 35.44908056,
+"via": "wikidata",
+"pop": 170.0
+},
+{
+"q": "Q473875",
+"name": "Le Tréport",
+"lon": 1.37,
+"lat": 50.06,
+"via": "wikipedia",
+"pop": 4378.0
+},
+{
+"q": "Q4742271",
+"name": "Amelia Island Plantation",
+"lon": -81.44972222,
+"lat": 30.55611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q474773",
+"name": "Roquebrune-sur-Argens",
+"lon": 6.63,
+"lat": 43.43,
+"via": "wikipedia",
+"pop": 15442.0
+},
+{
+"q": "Q475116",
+"name": "La Floresta, Uruguay",
+"lon": -55.67583333,
+"lat": -34.755,
+"via": "wikipedia",
+"pop": 3146.0
+},
+{
+"q": "Q476066",
+"name": "Locquirec",
+"lon": -3.6436,
+"lat": 48.6931,
+"via": "wikipedia",
+"pop": 1555.0
+},
+{
+"q": "Q4795739",
+"name": "Arpaçbahşiş",
+"lon": 34.35,
+"lat": 36.65,
+"via": "wikipedia",
+"pop": 6792.0
+},
+{
+"q": "Q4802027",
+"name": "Arugam Bay",
+"lon": 81.83333333,
+"lat": 6.85,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q4821348",
+"name": "Kadriye",
+"lon": 31.00833333,
+"lat": 36.88333333,
+"via": "wikipedia",
+"pop": 9126.0
+},
+{
+"q": "Q482508",
+"name": "Springdale",
+"lon": -112.999722222,
+"lat": 37.184444444,
+"via": "wikidata",
+"pop": 514.0
+},
+{
+"q": "Q4834182",
+"name": "Altınkum",
+"lon": 27.28888889,
+"lat": 37.35611111,
+"via": "wikipedia",
+"pop": 5167.0
+},
+{
+"q": "Q484799",
+"name": "Marbella",
+"lon": -4.88333333,
+"lat": 36.51666667,
+"via": "wikipedia",
+"pop": 159786.0
+},
+{
+"q": "Q4848791",
+"name": "Baja Mar",
+"lon": -116.8572,
+"lat": 32.0167,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q4874147",
+"name": "Bay View Association",
+"lon": -84.93027778,
+"lat": 45.38555556,
+"via": "wikipedia",
+"pop": 183.0
+},
+{
+"q": "Q4874682",
+"name": "Bayocean, Oregon",
+"lon": -123.9523544,
+"lat": 45.5276032,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q487981",
+"name": "Benidorm",
+"lon": -0.13138889,
+"lat": 38.53416667,
+"via": "wikipedia",
+"pop": 77327.0
+},
+{
+"q": "Q488004",
+"name": "Palm Springs",
+"lon": -116.530277777,
+"lat": 33.823888888,
+"via": "wikidata",
+"pop": 44575.0
+},
+{
+"q": "Q488314",
+"name": "Alsfeld",
+"lon": 9.271111111,
+"lat": 50.751111111,
+"via": "wikidata",
+"pop": 15279.0
+},
+{
+"q": "Q488924",
+"name": "Oceanside, California",
+"lon": -117.32583333,
+"lat": 33.21166667,
+"via": "wikipedia",
+"pop": 174068.0
+},
+{
+"q": "Q488948",
+"name": "Sola, Norway",
+"lon": 5.62861111,
+"lat": 58.88,
+"via": "wikipedia",
+"pop": 29541.0
+},
+{
+"q": "Q4890663",
+"name": "Bentota",
+"lon": 80,
+"lat": 6.42,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q490398",
+"name": "Peenemünde",
+"lon": 13.76666667,
+"lat": 54.13333333,
+"via": "wikipedia",
+"pop": 430.0
+},
+{
+"q": "Q490434",
+"name": "Ventura, California",
+"lon": -119.22777778,
+"lat": 34.275,
+"via": "wikipedia",
+"pop": 110763.0
+},
+{
+"q": "Q490453",
+"name": "Eckernförde",
+"lon": 9.83777778,
+"lat": 54.47416667,
+"via": "wikipedia",
+"pop": 21599.0
+},
+{
+"q": "Q491203",
+"name": "Haeundae Beach",
+"lon": 129.160539102,
+"lat": 35.158552435,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q4914523",
+"name": "Bintan Resorts",
+"lon": 104.3378,
+"lat": 1.1635,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q49259",
+"name": "Virginia Beach, Virginia",
+"lon": -75.97777778,
+"lat": 36.85,
+"via": "wikipedia",
+"pop": 459470.0
+},
+{
+"q": "Q492735",
+"name": "Fuengirola",
+"lon": -4.625,
+"lat": 36.54166667,
+"via": "wikipedia",
+"pop": 85211.0
+},
+{
+"q": "Q492737",
+"name": "Torremolinos",
+"lon": -4.50027222,
+"lat": 36.62178611,
+"via": "wikipedia",
+"pop": 71329.0
+},
+{
+"q": "Q492748",
+"name": "Estepona",
+"lon": -5.14722222,
+"lat": 36.42638889,
+"via": "wikipedia",
+"pop": 79621.0
+},
+{
+"q": "Q49321669",
+"name": "Q49321669",
+"lon": 120.167777777,
+"lat": 22.961111111,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q494617",
+"name": "Glücksburg",
+"lon": 9.55,
+"lat": 54.83361111,
+"via": "wikipedia",
+"pop": 6317.0
+},
+{
+"q": "Q494631",
+"name": "Sassnitz",
+"lon": 13.64111111,
+"lat": 54.51638889,
+"via": "wikipedia",
+"pop": 8879.0
+},
+{
+"q": "Q4967576",
+"name": "Brighton, Oregon",
+"lon": -123.92277778,
+"lat": 45.67222222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q497138",
+"name": "Darłowo",
+"lon": 16.40972222,
+"lat": 54.42083333,
+"via": "wikipedia",
+"pop": 13081.0
+},
+{
+"q": "Q497179",
+"name": "Nazaré, Portugal",
+"lon": -9.07055556,
+"lat": 39.60111111,
+"via": "wikipedia",
+"pop": 15158.0
+},
+{
+"q": "Q497795",
+"name": "Cape May County, New Jersey",
+"lon": -74.86,
+"lat": 39.08,
+"via": "wikipedia",
+"pop": 95263.0
+},
+{
+"q": "Q497928",
+"name": "Atlantic County, New Jersey",
+"lon": -74.64,
+"lat": 39.47,
+"via": "wikipedia",
+"pop": 274534.0
+},
+{
+"q": "Q4983456",
+"name": "Buckroe Beach",
+"lon": -76.29333333,
+"lat": 37.04305556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q498639",
+"name": "Wenduine",
+"lon": 3.082,
+"lat": 51.299,
+"via": "wikipedia",
+"pop": 2000.0
+},
+{
+"q": "Q499861",
+"name": "Neustadt in Holstein",
+"lon": 10.815833333,
+"lat": 54.107222222,
+"via": "wikidata",
+"pop": 15962.0
+},
+{
+"q": "Q5018263",
+"name": "Cala Tarida",
+"lon": 1.23611111,
+"lat": 38.93972222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q502424",
+"name": "Monmouth County, New Jersey",
+"lon": -74.15,
+"lat": 40.29,
+"via": "wikipedia",
+"pop": 643615.0
+},
+{
+"q": "Q5024916",
+"name": "Camalú",
+"lon": -116.05722222,
+"lat": 30.83777778,
+"via": "wikipedia",
+"pop": 11272.0
+},
+{
+"q": "Q5025012",
+"name": "Camaya Coast",
+"lon": 120.4212,
+"lat": 14.4536,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5025038",
+"name": "Camber Sands",
+"lon": 0.79608333,
+"lat": 50.93319444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q502564",
+"name": "Ocean County, New Jersey",
+"lon": -74.25,
+"lat": 39.87,
+"via": "wikipedia",
+"pop": 637229.0
+},
+{
+"q": "Q503759",
+"name": "Wustrow (Fischland)",
+"lon": 12.4,
+"lat": 54.35,
+"via": "wikipedia",
+"pop": 1134.0
+},
+{
+"q": "Q503862",
+"name": "Naantali",
+"lon": 22.03333333,
+"lat": 60.46666667,
+"via": "wikipedia",
+"pop": 19999.0
+},
+{
+"q": "Q5039578",
+"name": "Cariló",
+"lon": -56.89972222,
+"lat": -37.16666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q504740",
+"name": "Laboe",
+"lon": 10.23083333,
+"lat": 54.40888889,
+"via": "wikipedia",
+"pop": 5605.0
+},
+{
+"q": "Q5049832",
+"name": "Castle of Tavira",
+"lon": -7.6513,
+"lat": 37.1252,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q506700",
+"name": "Ueckermünde",
+"lon": 14.04444444,
+"lat": 53.73888889,
+"via": "wikipedia",
+"pop": 8651.0
+},
+{
+"q": "Q508135",
+"name": "Corniglia",
+"lon": 9.70861111,
+"lat": 44.11972222,
+"via": "wikipedia",
+"pop": 239.0
+},
+{
+"q": "Q508472",
+"name": "Port de Sóller",
+"lon": 2.69361111,
+"lat": 39.79861111,
+"via": "wikipedia",
+"pop": 2485.0
+},
+{
+"q": "Q5091844",
+"name": "Cherating",
+"lon": 103.38697222,
+"lat": 4.12927778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5122415",
+"name": "Cité de l'Océan et du Surf",
+"lon": -1.5723,
+"lat": 43.4622,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5133180",
+"name": "Clifton Beach",
+"lon": 67.04,
+"lat": 24.78,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q51353880",
+"name": "Mermaid Beach House Collection",
+"lon": 92.0359922,
+"lat": 21.3267631,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5139802",
+"name": "Cocolobo Cay Club",
+"lon": -80.23444444,
+"lat": 25.3975,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q514390",
+"name": "Simeiz",
+"lon": 33.99,
+"lat": 44.40583333,
+"via": "wikipedia",
+"pop": 2703.0
+},
+{
+"q": "Q514493",
+"name": "Otterndorf",
+"lon": 8.899736111,
+"lat": 53.808111111,
+"via": "wikidata",
+"pop": 7690.0
+},
+{
+"q": "Q5147109",
+"name": "Colletta di Castelbianco",
+"lon": 8.0658,
+"lat": 44.1111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5147203",
+"name": "Collieston",
+"lon": -1.93333333,
+"lat": 57.35,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5158617",
+"name": "Conchas Chinas",
+"lon": -105.24222222,
+"lat": 20.58861111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q516605",
+"name": "Sandown",
+"lon": -1.1541,
+"lat": 50.6551,
+"via": "wikipedia",
+"pop": 7129.0
+},
+{
+"q": "Q517053",
+"name": "De Koog",
+"lon": 4.76277778,
+"lat": 53.09777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5172151",
+"name": "Coronado",
+"lon": -79.91415,
+"lat": 8.54272,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5175310",
+"name": "Cote d'Azur, Syria",
+"lon": 35.74583333,
+"lat": 35.58555556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q517653",
+"name": "Illingen",
+"lon": 7.052511111,
+"lat": 49.376438888,
+"via": "wikidata",
+"pop": 15932.0
+},
+{
+"q": "Q517783",
+"name": "Pinamar",
+"lon": -56.85,
+"lat": -37.1,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q518586",
+"name": "Dalyan",
+"lon": 28.6425,
+"lat": 36.83416667,
+"via": "wikipedia",
+"pop": 5639.0
+},
+{
+"q": "Q519047",
+"name": "Tellaro",
+"lon": 9.92916667,
+"lat": 44.05972222,
+"via": "wikipedia",
+"pop": 559.0
+},
+{
+"q": "Q5192822",
+"name": "Cuixmala",
+"lon": -104.97723,
+"lat": 19.396082,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5202778",
+"name": "Côte des Landes",
+"lon": -1.3,
+"lat": 44.2,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q522601",
+"name": "Bad Bibra",
+"lon": 11.58368,
+"lat": 51.20641,
+"via": "wikidata",
+"pop": 2498.0
+},
+{
+"q": "Q523490",
+"name": "Binz",
+"lon": 13.6,
+"lat": 54.4,
+"via": "wikipedia",
+"pop": 5293.0
+},
+{
+"q": "Q5242387",
+"name": "Dawlish Warren",
+"lon": -3.444,
+"lat": 50.598,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q525686",
+"name": "Werder (Havel)",
+"lon": 12.935,
+"lat": 52.378055555,
+"via": "wikidata",
+"pop": 27064.0
+},
+{
+"q": "Q52607",
+"name": "Mar del Plata",
+"lon": -57.55,
+"lat": -38,
+"via": "wikipedia",
+"pop": 593337.0
+},
+{
+"q": "Q526534",
+"name": "Gearhart, Oregon",
+"lon": -123.91722222,
+"lat": 46.02888889,
+"via": "wikipedia",
+"pop": 1793.0
+},
+{
+"q": "Q527391",
+"name": "Bridlington",
+"lon": -0.19222222,
+"lat": 54.08305556,
+"via": "wikipedia",
+"pop": 35026.0
+},
+{
+"q": "Q527467",
+"name": "Colwyn Bay",
+"lon": -3.7,
+"lat": 53.29,
+"via": "wikidata",
+"pop": 10369.0
+},
+{
+"q": "Q528893",
+"name": "Olimp, Romania",
+"lon": 28.60583333,
+"lat": 43.88388889,
+"via": "wikipedia",
+"pop": 170.0
+},
+{
+"q": "Q530331",
+"name": "Tučepi",
+"lon": 17.05,
+"lat": 43.26666667,
+"via": "wikipedia",
+"pop": 1819.0
+},
+{
+"q": "Q5316733",
+"name": "Durrat Al-Arus",
+"lon": 38.957777777,
+"lat": 21.940277777,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5316840",
+"name": "Durău",
+"lon": 25.92164,
+"lat": 46.99808,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q53273",
+"name": "Lignano Sabbiadoro",
+"lon": 13.11666667,
+"lat": 45.68333333,
+"via": "wikipedia",
+"pop": 6842.0
+},
+{
+"q": "Q5365445",
+"name": "Ellinor Village, Florida",
+"lon": -81.04083333,
+"lat": 29.28,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q536844",
+"name": "Rerik",
+"lon": 11.61666667,
+"lat": 54.1,
+"via": "wikipedia",
+"pop": 2199.0
+},
+{
+"q": "Q537149",
+"name": "Grand-Hôtel du Cap-Ferrat",
+"lon": 7.33138889,
+"lat": 43.67638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q541348",
+"name": "Southsea",
+"lon": -1.07,
+"lat": 50.785,
+"via": "wikipedia",
+"pop": 18514.0
+},
+{
+"q": "Q541628",
+"name": "Scharbeutz",
+"lon": 10.74555556,
+"lat": 54.02138889,
+"via": "wikipedia",
+"pop": 11668.0
+},
+{
+"q": "Q541654",
+"name": "Sellin",
+"lon": 13.69166667,
+"lat": 54.38333333,
+"via": "wikipedia",
+"pop": 2465.0
+},
+{
+"q": "Q541750",
+"name": "Timmendorfer Strand",
+"lon": 10.7825,
+"lat": 53.99444444,
+"via": "wikipedia",
+"pop": 8276.0
+},
+{
+"q": "Q54264",
+"name": "Newport, Rhode Island",
+"lon": -71.3119,
+"lat": 41.4917,
+"via": "wikipedia",
+"pop": 25163.0
+},
+{
+"q": "Q542671",
+"name": "Woolacombe",
+"lon": -4.207,
+"lat": 51.172,
+"via": "wikidata",
+"pop": 697.0
+},
+{
+"q": "Q543184",
+"name": "Prerow",
+"lon": 12.56777778,
+"lat": 54.44694444,
+"via": "wikipedia",
+"pop": 1324.0
+},
+{
+"q": "Q543232",
+"name": "Heringsdorf",
+"lon": 14.16666667,
+"lat": 53.96666667,
+"via": "wikipedia",
+"pop": 7274.0
+},
+{
+"q": "Q543542",
+"name": "Portimão",
+"lon": -8.53833333,
+"lat": 37.13694444,
+"via": "wikipedia",
+"pop": 59845.0
+},
+{
+"q": "Q5445551",
+"name": "Ferryside",
+"lon": -4.3693,
+"lat": 51.7678,
+"via": "wikipedia",
+"pop": 846.0
+},
+{
+"q": "Q545655",
+"name": "Los Titanes, Canelones",
+"lon": -55.58333333,
+"lat": -34.78333333,
+"via": "wikipedia",
+"pop": 277.0
+},
+{
+"q": "Q5464522",
+"name": "Folkestone Harbour",
+"lon": 1.189632,
+"lat": 51.079475,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5475521",
+"name": "Four Seasons Resort Bora Bora",
+"lon": -151.7073,
+"lat": -16.472,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5475525",
+"name": "Four Seasons Resort Lanai",
+"lon": -156.89638889,
+"lat": 20.74166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5475526",
+"name": "Four Seasons Resort Maui",
+"lon": -156.44166667,
+"lat": 20.68027778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q54766",
+"name": "Falkenberg",
+"lon": 12.49111111,
+"lat": 56.90527778,
+"via": "wikipedia",
+"pop": 29671.0
+},
+{
+"q": "Q5500102",
+"name": "Free State of Galveston",
+"lon": -94.82583333,
+"lat": 29.28111111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q551218",
+"name": "Battle of Listerdyb",
+"lon": 8.45233333,
+"lat": 55.0735,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5512800",
+"name": "GADA 601",
+"lon": -57.52553056,
+"lat": -37.89182222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5520516",
+"name": "Ganavan",
+"lon": -5.471,
+"lat": 56.434,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q553014",
+"name": "Moriya Beach",
+"lon": 140.26223,
+"lat": 35.13757,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q554295",
+"name": "Wassenach",
+"lon": 7.279166666,
+"lat": 50.433055555,
+"via": "wikidata",
+"pop": 1305.0
+},
+{
+"q": "Q5551226",
+"name": "Deutsche Schule Lissabon",
+"lon": -9.1636,
+"lat": 38.7586,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q55630790",
+"name": "Punta Islita",
+"lon": -85.397,
+"lat": 9.859,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q55672207",
+"name": "Stabilimento \"Spiaggia d'Oro\"",
+"lon": 8.020648434,
+"lat": 43.87666378,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q558878",
+"name": "Tenby",
+"lon": -4.705,
+"lat": 51.67333333,
+"via": "wikipedia",
+"pop": 4087.0
+},
+{
+"q": "Q5601499",
+"name": "Greatstone-on-Sea",
+"lon": 0.964,
+"lat": 50.97,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q56069",
+"name": "Punta del Este",
+"lon": -54.95,
+"lat": -34.96666667,
+"via": "wikipedia",
+"pop": 9277.0
+},
+{
+"q": "Q5610561",
+"name": "Grosse Pointe Yacht Club",
+"lon": -82.87205,
+"lat": 42.43488,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q561233",
+"name": "Strande",
+"lon": 10.166666666,
+"lat": 54.433333333,
+"via": "wikidata",
+"pop": 1421.0
+},
+{
+"q": "Q56247877",
+"name": "Stabilimento balneare di Mondello",
+"lon": 13.32711,
+"lat": 38.202613,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q56347114",
+"name": "Q56347114",
+"lon": 140.987527777,
+"lat": 38.219,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5636620",
+"name": "Habaraduwa",
+"lon": 80.30944444,
+"lat": 5.99861111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5653859",
+"name": "ARA San Juan (S-42)",
+"lon": -59.77277778,
+"lat": -45.94972222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q565620",
+"name": "Kühlungsborn",
+"lon": 11.75,
+"lat": 54.13333333,
+"via": "wikipedia",
+"pop": 8100.0
+},
+{
+"q": "Q5703703",
+"name": "Argentino Hotel",
+"lon": -55.27934,
+"lat": -34.86347,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q570568",
+"name": "Graal-Müritz",
+"lon": 12.25,
+"lat": 54.25,
+"via": "wikipedia",
+"pop": 4167.0
+},
+{
+"q": "Q572006",
+"name": "Putbus",
+"lon": 13.474903122,
+"lat": 54.354531454,
+"via": "wikidata",
+"pop": 4488.0
+},
+{
+"q": "Q5739586",
+"name": "Cala Llonga",
+"lon": 1.51833333,
+"lat": 38.95388889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q57591",
+"name": "Jupiter, Romania",
+"lon": 28.60694444,
+"lat": 43.85277778,
+"via": "wikipedia",
+"pop": 30.0
+},
+{
+"q": "Q5770703",
+"name": "Q5770703",
+"lon": -5.747972231,
+"lat": 43.582120098,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5778585",
+"name": "Bahía de Banderas",
+"lon": -105.382233,
+"lat": 20.649491,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q581032",
+"name": "Kumbağ",
+"lon": 27.45833333,
+"lat": 40.86944444,
+"via": "wikipedia",
+"pop": 2685.0
+},
+{
+"q": "Q58134",
+"name": "Rostrevor",
+"lon": -6.201,
+"lat": 54.101,
+"via": "wikipedia",
+"pop": 2800.0
+},
+{
+"q": "Q581879",
+"name": "Forster, New South Wales",
+"lon": 152.51166667,
+"lat": -32.18055556,
+"via": "wikipedia",
+"pop": 14187.0
+},
+{
+"q": "Q582146",
+"name": "Las Flores, Maldonado",
+"lon": -55.33194444,
+"lat": -34.8125,
+"via": "wikipedia",
+"pop": 416.0
+},
+{
+"q": "Q5847601",
+"name": "Cerro Pan de Azúcar Native Wildlife Breeding Station",
+"lon": -55.251,
+"lat": -34.815,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q585137",
+"name": "La Barra",
+"lon": -54.85277778,
+"lat": -34.91388889,
+"via": "wikipedia",
+"pop": 1229.0
+},
+{
+"q": "Q5856425",
+"name": "Isla de Lobos Lighthouse",
+"lon": -54.88338889,
+"lat": -35.02452778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5856500",
+"name": "Punta del Este Lighthouse",
+"lon": -54.95161111,
+"lat": -34.96880556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q586387",
+"name": "Eforie",
+"lon": 28.63333333,
+"lat": 44.06666667,
+"via": "wikipedia",
+"pop": 8630.0
+},
+{
+"q": "Q587439",
+"name": "Pustkowo, Gryfice County",
+"lon": 14.96888889,
+"lat": 54.06805556,
+"via": "wikipedia",
+"pop": 135.0
+},
+{
+"q": "Q587765",
+"name": "Cleethorpes",
+"lon": -0.02155,
+"lat": 53.5533,
+"via": "wikipedia",
+"pop": 38996.0
+},
+{
+"q": "Q588146",
+"name": "Shanklin",
+"lon": -1.175,
+"lat": 50.63333333,
+"via": "wikipedia",
+"pop": 9120.0
+},
+{
+"q": "Q58822566",
+"name": "Q58822566",
+"lon": 3.0992,
+"lat": 43.1072,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5911378",
+"name": "Hotel Club Akumal Caribe",
+"lon": -87.3146,
+"lat": 20.397,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5911850",
+"name": "Hotel Pez Espada",
+"lon": -4.50777778,
+"lat": 36.60611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q5912358",
+"name": "Nuestra Señora de la Candelaria, Punta del Este",
+"lon": -54.95027778,
+"lat": -34.96888889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q593271",
+"name": "Bellows Air Force Station",
+"lon": -157.711,
+"lat": 21.3691,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q59347080",
+"name": "Coraya Bay",
+"lon": 34.6062,
+"lat": 25.6027,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q5952749",
+"name": "Hyams Beach",
+"lon": 150.69191,
+"lat": -35.10025,
+"via": "wikipedia",
+"pop": 137.0
+},
+{
+"q": "Q595329",
+"name": "Phaselis",
+"lon": 30.55222222,
+"lat": 36.52361111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q59596746",
+"name": "Nieuwpoort-Bad",
+"lon": 2.716006,
+"lat": 51.147731,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q598016",
+"name": "Balneário Camboriú",
+"lon": -48.63555556,
+"lat": -26.99527778,
+"via": "wikipedia",
+"pop": 151674.0
+},
+{
+"q": "Q598658",
+"name": "Tangalle",
+"lon": 80.78333333,
+"lat": 6.01666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q598662",
+"name": "Costa de Caparica",
+"lon": -9.237,
+"lat": 38.645,
+"via": "wikipedia",
+"pop": 13968.0
+},
+{
+"q": "Q601728",
+"name": "Mundesley",
+"lon": 1.438,
+"lat": 52.876,
+"via": "wikipedia",
+"pop": 2778.0
+},
+{
+"q": "Q602960",
+"name": "Benidorm Island",
+"lon": -0.13027778,
+"lat": 38.50222222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6032919",
+"name": "Ingoldmells",
+"lon": 0.335609,
+"lat": 53.192047,
+"via": "wikipedia",
+"pop": 1928.0
+},
+{
+"q": "Q606485",
+"name": "Shëngjin",
+"lon": 19.593888888,
+"lat": 41.813611111,
+"via": "wikidata",
+"pop": 8091.0
+},
+{
+"q": "Q6078304",
+"name": "Playa Blanca",
+"lon": -73.141501,
+"lat": -37.0623947,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q608095",
+"name": "Kaunos",
+"lon": 28.62138889,
+"lat": 36.82638889,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q608194",
+"name": "Boscombe",
+"lon": -1.84,
+"lat": 50.725,
+"via": "wikipedia",
+"pop": 20719.0
+},
+{
+"q": "Q6092225",
+"name": "Port d'Alcúdia",
+"lon": 3.13291,
+"lat": 39.84182,
+"via": "wikipedia",
+"pop": 5196.0
+},
+{
+"q": "Q6098733",
+"name": "Butterfly Valley, Fethiye",
+"lon": 29.12733,
+"lat": 36.4968,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6103275",
+"name": "Iç Ada, Antalya",
+"lon": 29.7434,
+"lat": 36.1233,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q617188",
+"name": "Hunstanton",
+"lon": 0.48,
+"lat": 52.93,
+"via": "wikipedia",
+"pop": 4370.0
+},
+{
+"q": "Q618045",
+"name": "Margate",
+"lon": 1.3838,
+"lat": 51.385,
+"via": "wikipedia",
+"pop": 61223.0
+},
+{
+"q": "Q61816",
+"name": "Le Crotoy",
+"lon": 1.6258,
+"lat": 50.2167,
+"via": "wikipedia",
+"pop": 1958.0
+},
+{
+"q": "Q61825",
+"name": "Besigheim",
+"lon": 9.141388888,
+"lat": 48.998888888,
+"via": "wikidata",
+"pop": 12159.0
+},
+{
+"q": "Q6184933",
+"name": "Jersey Shore Council",
+"lon": -74.3006,
+"lat": 39.7826,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q619264",
+"name": "Castlerock",
+"lon": -6.783333,
+"lat": 55.15,
+"via": "wikipedia",
+"pop": 1155.0
+},
+{
+"q": "Q620101",
+"name": "Biarritz Pays Basque Airport",
+"lon": -1.52333333,
+"lat": 43.46833333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q622122",
+"name": "Mossautal",
+"lon": 8.931527777,
+"lat": 49.644861111,
+"via": "wikidata",
+"pop": 2426.0
+},
+{
+"q": "Q622764",
+"name": "Himarë (town)",
+"lon": 19.74666667,
+"lat": 40.10138889,
+"via": "wikipedia",
+"pop": 4596.0
+},
+{
+"q": "Q623310",
+"name": "Nieuwpoort, Belgium",
+"lon": 2.75,
+"lat": 51.11666667,
+"via": "wikipedia",
+"pop": 11488.0
+},
+{
+"q": "Q625750",
+"name": "Araminda",
+"lon": -55.553,
+"lat": -34.783,
+"via": "wikipedia",
+"pop": 494.0
+},
+{
+"q": "Q626342",
+"name": "Trébeurden",
+"lon": -3.5669,
+"lat": 48.7703,
+"via": "wikipedia",
+"pop": 3821.0
+},
+{
+"q": "Q628201",
+"name": "Coney Island",
+"lon": -73.9825,
+"lat": 40.575,
+"via": "wikipedia",
+"pop": 24711.0
+},
+{
+"q": "Q628382",
+"name": "Göhren, Rügen",
+"lon": 13.73333333,
+"lat": 54.33333333,
+"via": "wikipedia",
+"pop": 1388.0
+},
+{
+"q": "Q628962",
+"name": "Puck, Poland",
+"lon": 18.4,
+"lat": 54.7,
+"via": "wikipedia",
+"pop": 10868.0
+},
+{
+"q": "Q629231",
+"name": "Quend",
+"lon": 1.6372,
+"lat": 50.3172,
+"via": "wikipedia",
+"pop": 1280.0
+},
+{
+"q": "Q629415",
+"name": "Heikendorf",
+"lon": 10.20805556,
+"lat": 54.37222222,
+"via": "wikipedia",
+"pop": 8295.0
+},
+{
+"q": "Q629427",
+"name": "Caister-on-Sea",
+"lon": 1.733,
+"lat": 52.651,
+"via": "wikipedia",
+"pop": 8617.0
+},
+{
+"q": "Q629468",
+"name": "Sierksdorf",
+"lon": 10.766666666,
+"lat": 54.066666666,
+"via": "wikidata",
+"pop": 1461.0
+},
+{
+"q": "Q631074",
+"name": "Boltenhagen",
+"lon": 11.21666667,
+"lat": 53.96666667,
+"via": "wikipedia",
+"pop": 2445.0
+},
+{
+"q": "Q63373719",
+"name": "Moretti",
+"lon": 2.859,
+"lat": 36.757,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q63406630",
+"name": "Q63406630",
+"lon": 129.97086,
+"lat": 33.45491,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q634653",
+"name": "Dierhagen",
+"lon": 12.36055556,
+"lat": 54.29138889,
+"via": "wikipedia",
+"pop": 1475.0
+},
+{
+"q": "Q6353436",
+"name": "Kalkudah",
+"lon": 79.71666667,
+"lat": 8.11666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6365764",
+"name": "Kanwatheertha Beach Resort",
+"lon": 75.0,
+"lat": 12.5,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q636651",
+"name": "Brodersby",
+"lon": 9.9788,
+"lat": 54.6357,
+"via": "wikidata",
+"pop": 698.0
+},
+{
+"q": "Q639614",
+"name": "Ardmore, County Waterford",
+"lon": -7.7218,
+"lat": 51.9511,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q64019547",
+"name": "Abu Soma",
+"lon": 33.9455,
+"lat": 26.8187,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q641879",
+"name": "Thiessow",
+"lon": 13.71574,
+"lat": 54.27725,
+"via": "wikidata",
+"pop": 354.0
+},
+{
+"q": "Q642506",
+"name": "Kavos",
+"lon": 20.11666667,
+"lat": 39.38333333,
+"via": "wikipedia",
+"pop": 643.0
+},
+{
+"q": "Q643634",
+"name": "Hirschhorn",
+"lon": 8.897222222,
+"lat": 49.446388888,
+"via": "wikidata",
+"pop": 3460.0
+},
+{
+"q": "Q644",
+"name": "Sharm El Sheikh",
+"lon": 34.3275,
+"lat": 27.915,
+"via": "wikipedia",
+"pop": 13616.0
+},
+{
+"q": "Q644728",
+"name": "Argelès-sur-Mer",
+"lon": 3.0235,
+"lat": 42.5449,
+"via": "wikipedia",
+"pop": 10616.0
+},
+{
+"q": "Q645198",
+"name": "Oxwich",
+"lon": -4.171,
+"lat": 51.559,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q646255",
+"name": "Argentino, Uruguay",
+"lon": -55.45527778,
+"lat": -34.78583333,
+"via": "wikipedia",
+"pop": 474.0
+},
+{
+"q": "Q6465070",
+"name": "La Salina, Baja California",
+"lon": -116.87833333,
+"lat": 32.06,
+"via": "wikipedia",
+"pop": 47.0
+},
+{
+"q": "Q6471233",
+"name": "Bačvice",
+"lon": 16.453038,
+"lat": 43.5027896,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q6474594",
+"name": "Lake",
+"lon": -111.393,
+"lat": 44.6669,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q6486177",
+"name": "Langland Bay",
+"lon": -4,
+"lat": 51.56666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6487",
+"name": "Antalya",
+"lon": 30.70333333,
+"lat": 36.88694444,
+"via": "wikipedia",
+"pop": 2426356.0
+},
+{
+"q": "Q6492098",
+"name": "Las Caletas",
+"lon": -105.38194444,
+"lat": 20.50472222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6494175",
+"name": "Last Chance",
+"lon": -111.402,
+"lat": 44.3667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q64948969",
+"name": "Asteras Vouliagmenis",
+"lon": 23.77121,
+"lat": 37.80523,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q6506",
+"name": "Varna, Bulgaria",
+"lon": 27.91666667,
+"lat": 43.21666667,
+"via": "wikipedia",
+"pop": 322683.0
+},
+{
+"q": "Q650981",
+"name": "Băile Herculane",
+"lon": 22.4175,
+"lat": 44.877222222,
+"via": "wikidata",
+"pop": 3787.0
+},
+{
+"q": "Q6516884",
+"name": "Yeşilöz, Alanya",
+"lon": 32.19472222,
+"lat": 36.38805556,
+"via": "wikipedia",
+"pop": 1289.0
+},
+{
+"q": "Q651860",
+"name": "Embu das Artes",
+"lon": -46.851944444,
+"lat": -23.648888888,
+"via": "wikidata",
+"pop": 259788.0
+},
+{
+"q": "Q652146",
+"name": "Lubmin",
+"lon": 13.61416667,
+"lat": 54.13305556,
+"via": "wikipedia",
+"pop": 2259.0
+},
+{
+"q": "Q652518",
+"name": "Bernières-sur-Mer",
+"lon": -0.4206,
+"lat": 49.3331,
+"via": "wikipedia",
+"pop": 2437.0
+},
+{
+"q": "Q65258578",
+"name": "Ōnawa Park",
+"lon": 139.081306,
+"lat": 35.045972,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q65272696",
+"name": "Atami Sun Beach",
+"lon": 139.076694444,
+"lat": 35.098083333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q65291491",
+"name": "Nagahama Coastal Park",
+"lon": 139.069055555,
+"lat": 35.055972222,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q653244",
+"name": "Schweigen-Rechtenbach",
+"lon": 7.956146944,
+"lat": 49.052926111,
+"via": "wikidata",
+"pop": 1339.0
+},
+{
+"q": "Q653761",
+"name": "Niechorze",
+"lon": 15.075,
+"lat": 54.09444444,
+"via": "wikipedia",
+"pop": 940.0
+},
+{
+"q": "Q6538114",
+"name": "Leysdown-on-Sea",
+"lon": 0.91667,
+"lat": 51.4,
+"via": "wikipedia",
+"pop": 936.0
+},
+{
+"q": "Q654107",
+"name": "Koserow",
+"lon": 14,
+"lat": 54.05,
+"via": "wikipedia",
+"pop": 1522.0
+},
+{
+"q": "Q65426060",
+"name": "Q65426060",
+"lon": 13.573009,
+"lat": 53.1099383,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q65442901",
+"name": "Sainte-Cécile-Plage",
+"lon": 1.579722,
+"lat": 50.574167,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q654993",
+"name": "Breege",
+"lon": 13.354444444,
+"lat": 54.612222222,
+"via": "wikidata",
+"pop": 583.0
+},
+{
+"q": "Q655818",
+"name": "Buziaș",
+"lon": 21.6,
+"lat": 45.65,
+"via": "wikidata",
+"pop": 6834.0
+},
+{
+"q": "Q656483",
+"name": "Pornichet",
+"lon": -2.3389,
+"lat": 47.2775,
+"via": "wikipedia",
+"pop": 12800.0
+},
+{
+"q": "Q65766984",
+"name": "Blériot-Plage",
+"lon": 1.8203367,
+"lat": 50.9561176,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q659095",
+"name": "West Wittering",
+"lon": -0.89564,
+"lat": 50.78064,
+"via": "wikipedia",
+"pop": 2657.0
+},
+{
+"q": "Q659484",
+"name": "Sanary-sur-Mer",
+"lon": 5.8014,
+"lat": 43.118,
+"via": "wikipedia",
+"pop": 18538.0
+},
+{
+"q": "Q65963165",
+"name": "Turnberry",
+"lon": -4.8327291,
+"lat": 55.310867,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q660758",
+"name": "Tino (island)",
+"lon": 9.85055556,
+"lat": 44.02722222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q660806",
+"name": "Karlshagen",
+"lon": 13.81666667,
+"lat": 54.11666667,
+"via": "wikipedia",
+"pop": 3046.0
+},
+{
+"q": "Q661619",
+"name": "Weymouth, Dorset",
+"lon": -2.45472222,
+"lat": 50.60972222,
+"via": "wikipedia",
+"pop": 53046.0
+},
+{
+"q": "Q662717",
+"name": "Damp",
+"lon": 10.020833333,
+"lat": 54.581944444,
+"via": "wikidata",
+"pop": 1542.0
+},
+{
+"q": "Q662789",
+"name": "Salou",
+"lon": 1.144,
+"lat": 41.077,
+"via": "wikipedia",
+"pop": 31491.0
+},
+{
+"q": "Q664950",
+"name": "Loddin",
+"lon": 14.01666667,
+"lat": 54.03333333,
+"via": "wikipedia",
+"pop": 864.0
+},
+{
+"q": "Q6653058",
+"name": "Littlestone-on-Sea",
+"lon": 0.96415,
+"lat": 50.98075,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6667",
+"name": "Cerbère",
+"lon": 3.1656,
+"lat": 42.4442,
+"via": "wikipedia",
+"pop": 1209.0
+},
+{
+"q": "Q66818674",
+"name": "Lido Cluana",
+"lon": 13.7311571,
+"lat": 43.3076047,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q6682541",
+"name": "Los Cabos Corridor",
+"lon": -109.7898,
+"lat": 22.9701,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q669688",
+"name": "Skadovsk",
+"lon": 32.91666667,
+"lat": 46.11666667,
+"via": "wikipedia",
+"pop": 17344.0
+},
+{
+"q": "Q670079",
+"name": "Clevedon",
+"lon": -2.854,
+"lat": 51.438,
+"via": "wikipedia",
+"pop": 21404.0
+},
+{
+"q": "Q670675",
+"name": "Criel-sur-Mer",
+"lon": 1.3183,
+"lat": 50.0167,
+"via": "wikipedia",
+"pop": 2527.0
+},
+{
+"q": "Q6707738",
+"name": "Lydstep",
+"lon": -4.767222,
+"lat": 51.650556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q670939",
+"name": "Albena",
+"lon": 28.08111111,
+"lat": 43.36916667,
+"via": "wikipedia",
+"pop": 0.0
+},
+{
+"q": "Q671272",
+"name": "Calpe",
+"lon": 0.0461,
+"lat": 38.6444,
+"via": "wikipedia",
+"pop": 27616.0
+},
+{
+"q": "Q671348",
+"name": "Worthing",
+"lon": -0.37138889,
+"lat": 50.81472222,
+"via": "wikipedia",
+"pop": 109120.0
+},
+{
+"q": "Q674954",
+"name": "De Panne",
+"lon": 2.58333333,
+"lat": 51.1,
+"via": "wikipedia",
+"pop": 11129.0
+},
+{
+"q": "Q679158",
+"name": "Ein Bokek",
+"lon": 35.3625,
+"lat": 31.2,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q680029",
+"name": "Armação de Pêra",
+"lon": -8.361,
+"lat": 37.102,
+"via": "wikipedia",
+"pop": 6003.0
+},
+{
+"q": "Q6809962",
+"name": "Tavira Island",
+"lon": -7.666,
+"lat": 37.087,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q68103",
+"name": "Interlaken",
+"lon": 7.86487,
+"lat": 46.68715,
+"via": "wikidata",
+"pop": 6123.0
+},
+{
+"q": "Q6824504",
+"name": "Lake St. Clair Metropark",
+"lon": -82.7993,
+"lat": 42.57569,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q683125",
+"name": "Ustronie Morskie",
+"lon": 15.75,
+"lat": 54.21666667,
+"via": "wikipedia",
+"pop": 2417.0
+},
+{
+"q": "Q683550",
+"name": "Urville-Nacqueville",
+"lon": -1.7375,
+"lat": 49.6747,
+"via": "wikipedia",
+"pop": 2067.0
+},
+{
+"q": "Q686844",
+"name": "Ulupınar, Kemer",
+"lon": 30.4325,
+"lat": 36.4536,
+"via": "wikipedia",
+"pop": 1178.0
+},
+{
+"q": "Q687905",
+"name": "Ocean City, Maryland",
+"lon": -75.06972222,
+"lat": 38.39138889,
+"via": "wikipedia",
+"pop": 6844.0
+},
+{
+"q": "Q6906958",
+"name": "La Mano de Punta del Este",
+"lon": -54.93718056,
+"lat": -34.95786389,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q6911498",
+"name": "Morfa Bychan",
+"lon": -4.164,
+"lat": 52.914,
+"via": "wikipedia",
+"pop": 524.0
+},
+{
+"q": "Q693017",
+"name": "Sainte-Maxime",
+"lon": 6.635,
+"lat": 43.309,
+"via": "wikipedia",
+"pop": 14118.0
+},
+{
+"q": "Q6944752",
+"name": "Mwnt",
+"lon": -4.63878,
+"lat": 52.13684,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q696374",
+"name": "Schönberg",
+"lon": 10.371944444,
+"lat": 54.395555555,
+"via": "wikidata",
+"pop": 6159.0
+},
+{
+"q": "Q697215",
+"name": "Sylt-Ost",
+"lon": 8.36666667,
+"lat": 54.86666667,
+"via": "wikipedia",
+"pop": 5833.0
+},
+{
+"q": "Q6990066",
+"name": "Nellcôte",
+"lon": 7.322115,
+"lat": 43.702617,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q699220",
+"name": "Nienhagen",
+"lon": 11.966666666,
+"lat": 54.166666666,
+"via": "wikidata",
+"pop": 2221.0
+},
+{
+"q": "Q7036906",
+"name": "Nilaveli",
+"lon": 81.2,
+"lat": 8.68333333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7064981",
+"name": "Novo Sancti Petri",
+"lon": -6.16555556,
+"lat": 36.34666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7068694",
+"name": "Nuevo Nayarit",
+"lon": -105.3,
+"lat": 20.7,
+"via": "wikipedia",
+"pop": 1301.0
+},
+{
+"q": "Q7076104",
+"name": "Ocean View, Virginia",
+"lon": -76.24638889,
+"lat": 36.95,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q70925",
+"name": "Carnac",
+"lon": -3.0794,
+"lat": 47.5847,
+"via": "wikipedia",
+"pop": 4194.0
+},
+{
+"q": "Q71044",
+"name": "Larmor-Plage",
+"lon": -3.3831,
+"lat": 47.7072,
+"via": "wikipedia",
+"pop": 8418.0
+},
+{
+"q": "Q7122307",
+"name": "Pacific Beach Club",
+"lon": -117.98444444,
+"lat": 33.64583333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7128410",
+"name": "Palmižana",
+"lon": 16.391696,
+"lat": 43.159887,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q7134581",
+"name": "Paraggi",
+"lon": 9.20888889,
+"lat": 44.31111111,
+"via": "wikipedia",
+"pop": 16.0
+},
+{
+"q": "Q7161927",
+"name": "Pembrey",
+"lon": -4.28333333,
+"lat": 51.68333333,
+"via": "wikipedia",
+"pop": 2154.0
+},
+{
+"q": "Q7202401",
+"name": "Platja d'en Bossa",
+"lon": 1.40666667,
+"lat": 38.88611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7203170",
+"name": "Playacar",
+"lon": -87.08333333,
+"lat": 20.61666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q72134512",
+"name": "Q72134512",
+"lon": -71.6510128,
+"lat": -33.3295763,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q7228116",
+"name": "Ponte Vedra Inn and Club",
+"lon": -81.37888889,
+"lat": 30.24194444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7230620",
+"name": "Port Eynon",
+"lon": -4.22,
+"lat": 51.545,
+"via": "wikipedia",
+"pop": 603.0
+},
+{
+"q": "Q7231066",
+"name": "Port de Sant Miguel",
+"lon": 1.44,
+"lat": 39.07944444,
+"via": "wikipedia",
+"pop": 185.0
+},
+{
+"q": "Q7258831",
+"name": "Puerto Salina",
+"lon": -116.88472222,
+"lat": 32.05472222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q727560",
+"name": "Cap Skirring",
+"lon": -16.738833333,
+"lat": 12.38775,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q7294653",
+"name": "Ras El Bar",
+"lon": 31.840555555,
+"lat": 31.525,
+"via": "wikidata",
+"pop": 8635.0
+},
+{
+"q": "Q7315768",
+"name": "Resort of Kamchiya",
+"lon": 27.88340833,
+"lat": 43.03323056,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q732028",
+"name": "Silivri",
+"lon": 28.24777778,
+"lat": 41.07361111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q732548",
+"name": "Lagos, Portugal",
+"lon": -8.67277778,
+"lat": 37.10277778,
+"via": "wikipedia",
+"pop": 31049.0
+},
+{
+"q": "Q7338851",
+"name": "Riviera, Varna Province",
+"lon": 28.04166667,
+"lat": 43.275,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q734453",
+"name": "Pevensey",
+"lon": 0.3381,
+"lat": 50.8206,
+"via": "wikipedia",
+"pop": 3307.0
+},
+{
+"q": "Q7354451",
+"name": "Rock Harbor (Michigan)",
+"lon": -88.57916667,
+"lat": 48.08916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7356425",
+"name": "Roda, Greece",
+"lon": 19.78333333,
+"lat": 39.78333333,
+"via": "wikipedia",
+"pop": 483.0
+},
+{
+"q": "Q736439",
+"name": "Ramsgate",
+"lon": 1.416,
+"lat": 51.336,
+"via": "wikipedia",
+"pop": 41907.0
+},
+{
+"q": "Q737888",
+"name": "Portmeirion",
+"lon": -4.09916667,
+"lat": 52.91305556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7380631",
+"name": "Rusalka, Bulgaria",
+"lon": 28.5,
+"lat": 43.41666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q740845",
+"name": "Olhão",
+"lon": -7.84166667,
+"lat": 37.025,
+"via": "wikipedia",
+"pop": 45396.0
+},
+{
+"q": "Q7413471",
+"name": "San Bernardo del Tuyú",
+"lon": -56.68333333,
+"lat": -36.7,
+"via": "wikipedia",
+"pop": 8133.0
+},
+{
+"q": "Q7416042",
+"name": "Sandbridge, Virginia",
+"lon": -75.94416667,
+"lat": 36.74611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7416352",
+"name": "Sandilands, Lincolnshire",
+"lon": 0.284717,
+"lat": 53.29962,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q742065",
+"name": "Volastra",
+"lon": 9.73018,
+"lat": 44.1152,
+"via": "wikipedia",
+"pop": 132.0
+},
+{
+"q": "Q7430678",
+"name": "Sceale Bay",
+"lon": 134.188,
+"lat": -33.018,
+"via": "wikidata",
+"pop": 55.0
+},
+{
+"q": "Q743521",
+"name": "Scarborough, North Yorkshire",
+"lon": -0.4,
+"lat": 54.2825,
+"via": "wikipedia",
+"pop": 61749.0
+},
+{
+"q": "Q7442007",
+"name": "Seaton Carew",
+"lon": -1.188819,
+"lat": 54.662774,
+"via": "wikipedia",
+"pop": 6018.0
+},
+{
+"q": "Q7442342",
+"name": "Sebasco Harbor Resort",
+"lon": -69.8625,
+"lat": 43.7671,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7457920",
+"name": "Severn Beach",
+"lon": -2.6657,
+"lat": 51.5612,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q745989",
+"name": "Dún Laoghaire",
+"lon": -6.14,
+"lat": 53.3,
+"via": "wikipedia",
+"pop": 23857.0
+},
+{
+"q": "Q748363",
+"name": "Balaklava",
+"lon": 33.6,
+"lat": 44.5,
+"via": "wikipedia",
+"pop": 37819.0
+},
+{
+"q": "Q748863",
+"name": "Melcombe Regis",
+"lon": -2.45369,
+"lat": 50.61882,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7493669",
+"name": "Mochras",
+"lon": -4.14997,
+"lat": 52.81665,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7501313",
+"name": "Shore Region",
+"lon": -74.078,
+"lat": 39.945,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q752505",
+"name": "Tinetto",
+"lon": 9.85126389,
+"lat": 44.02350833,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q752535",
+"name": "Valras-Plage",
+"lon": 3.2917,
+"lat": 43.2478,
+"via": "wikipedia",
+"pop": 4432.0
+},
+{
+"q": "Q752922",
+"name": "Entrecasteaux",
+"lon": 6.2425,
+"lat": 43.5167,
+"via": "wikipedia",
+"pop": 1118.0
+},
+{
+"q": "Q753550",
+"name": "Dąbki, West Pomeranian Voivodeship",
+"lon": 16.31638889,
+"lat": 54.38111111,
+"via": "wikipedia",
+"pop": 285.0
+},
+{
+"q": "Q755106",
+"name": "Rehoboth Beach, Delaware",
+"lon": -75.07611111,
+"lat": 38.72083333,
+"via": "wikipedia",
+"pop": 1108.0
+},
+{
+"q": "Q755608",
+"name": "Bethany Beach, Delaware",
+"lon": -75.05527778,
+"lat": 38.53944444,
+"via": "wikipedia",
+"pop": 954.0
+},
+{
+"q": "Q755722",
+"name": "Dewey Beach, Delaware",
+"lon": -75.07472222,
+"lat": 38.69277778,
+"via": "wikipedia",
+"pop": 353.0
+},
+{
+"q": "Q7568401",
+"name": "South Seas Island Resort",
+"lon": -82.19083333,
+"lat": 26.52527778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7568502",
+"name": "South Sinai Hospital",
+"lon": 34.30446,
+"lat": 27.861453,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7570467",
+"name": "Southern Shore Region",
+"lon": -74.4955,
+"lat": 39.4171,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q757114",
+"name": "Palmaria (island)",
+"lon": 9.84386667,
+"lat": 44.04283611,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7593902",
+"name": "St Kilda Beach, Victoria",
+"lon": 144.982,
+"lat": -37.864,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7676887",
+"name": "Tajpur, West Bengal",
+"lon": 87.610122,
+"lat": 21.644694,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q768681",
+"name": "Orzechowo, Pomeranian Voivodeship",
+"lon": 16.92222222,
+"lat": 54.59833333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q770885",
+"name": "Bergen aan Zee",
+"lon": 4.63333333,
+"lat": 52.66666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7732312",
+"name": "The Entrance, New South Wales",
+"lon": 151.49611111,
+"lat": -33.34722222,
+"via": "wikipedia",
+"pop": 4244.0
+},
+{
+"q": "Q773853",
+"name": "Venice, Los Angeles",
+"lon": -118.45916667,
+"lat": 33.99083333,
+"via": "wikipedia",
+"pop": 40825.0
+},
+{
+"q": "Q776556",
+"name": "Ryde",
+"lon": -1.1618,
+"lat": 50.7271,
+"via": "wikipedia",
+"pop": 24100.0
+},
+{
+"q": "Q7767437",
+"name": "The Sunrise Coast",
+"lon": 1.7,
+"lat": 52.4,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7774970",
+"name": "The Wildwoods",
+"lon": -74.809,
+"lat": 38.995,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7796731",
+"name": "Thorpeness",
+"lon": 1.61471,
+"lat": 52.179333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7809675",
+"name": "Tisvildeleje",
+"lon": 12.07444444,
+"lat": 56.05916667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q7830",
+"name": "Sudak",
+"lon": 34.9725,
+"lat": 44.85138889,
+"via": "wikipedia",
+"pop": 17268.0
+},
+{
+"q": "Q7830339",
+"name": "Towyn",
+"lon": -3.54,
+"lat": 53.302,
+"via": "wikipedia",
+"pop": 7864.0
+},
+{
+"q": "Q784483",
+"name": "Jurata",
+"lon": 18.71666667,
+"lat": 54.66666667,
+"via": "wikipedia",
+"pop": 356.0
+},
+{
+"q": "Q7911832",
+"name": "Vallarta Botanical Garden",
+"lon": -105.2926,
+"lat": 20.4658,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q791614",
+"name": "Baška, Croatia",
+"lon": 14.75,
+"lat": 44.96666667,
+"via": "wikipedia",
+"pop": 1656.0
+},
+{
+"q": "Q793383",
+"name": "Ayvalık",
+"lon": 26.69444444,
+"lat": 39.31666667,
+"via": "wikipedia",
+"pop": 71063.0
+},
+{
+"q": "Q797565",
+"name": "Babakale, Ayvacık",
+"lon": 26.06416667,
+"lat": 39.47916667,
+"via": "wikipedia",
+"pop": 505.0
+},
+{
+"q": "Q798526",
+"name": "Aqualandia",
+"lon": -0.0924,
+"lat": 38.5451,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q8023103",
+"name": "Wilson Island (Queensland)",
+"lon": 151.91562778,
+"lat": -23.30446389,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q803714",
+"name": "Baie des Anges",
+"lon": 7.22166667,
+"lat": 43.62083333,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q8045003",
+"name": "Xpu Há",
+"lon": -87.265105,
+"lat": 20.4745889,
+"via": "wikipedia",
+"pop": 1.0
+},
+{
+"q": "Q8053377",
+"name": "Yeşilovacık",
+"lon": 33.66666667,
+"lat": 36.2,
+"via": "wikipedia",
+"pop": 2815.0
+},
+{
+"q": "Q805405",
+"name": "Ballycastle, County Antrim",
+"lon": -6.258,
+"lat": 55.205,
+"via": "wikipedia",
+"pop": 5628.0
+},
+{
+"q": "Q8054078",
+"name": "Ynyslas",
+"lon": -4.052,
+"lat": 52.512,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q805484",
+"name": "Balneario Buenos Aires",
+"lon": -54.79166667,
+"lat": -34.88888889,
+"via": "wikipedia",
+"pop": 4612.0
+},
+{
+"q": "Q805486",
+"name": "Balneario Iporá",
+"lon": -55.95648,
+"lat": -31.66828,
+"via": "wikidata",
+"pop": 313.0
+},
+{
+"q": "Q806451",
+"name": "Bang Saen",
+"lon": 100.93333333,
+"lat": 13.26666667,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q806551",
+"name": "Bangor, County Down",
+"lon": -5.67,
+"lat": 54.66,
+"via": "wikipedia",
+"pop": 61011.0
+},
+{
+"q": "Q808782",
+"name": "Barra de Valizas",
+"lon": -53.79583333,
+"lat": -34.33611111,
+"via": "wikipedia",
+"pop": 462.0
+},
+{
+"q": "Q808783",
+"name": "Barra del Chuy",
+"lon": -53.38888889,
+"lat": -33.75555556,
+"via": "wikipedia",
+"pop": 905.0
+},
+{
+"q": "Q809009",
+"name": "Barry, Vale of Glamorgan",
+"lon": -3.27,
+"lat": 51.405,
+"via": "wikipedia",
+"pop": 53369.0
+},
+{
+"q": "Q81398",
+"name": "Acapulco",
+"lon": -99.8825,
+"lat": 16.86361111,
+"via": "wikipedia",
+"pop": 658609.0
+},
+{
+"q": "Q815388",
+"name": "Belek",
+"lon": 31.05833333,
+"lat": 36.86388889,
+"via": "wikipedia",
+"pop": 73260.0
+},
+{
+"q": "Q81598",
+"name": "Gulf of Antalya",
+"lon": 31,
+"lat": 36.5,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q816012",
+"name": "Bello Horizonte",
+"lon": -55.64388889,
+"lat": -34.77222222,
+"via": "wikipedia",
+"pop": 1132.0
+},
+{
+"q": "Q81643",
+"name": "Manavgat",
+"lon": 31.43333333,
+"lat": 36.78333333,
+"via": "wikipedia",
+"pop": 252941.0
+},
+{
+"q": "Q817173",
+"name": "Yport",
+"lon": 0.3139,
+"lat": 49.7386,
+"via": "wikipedia",
+"pop": 652.0
+},
+{
+"q": "Q81909",
+"name": "Royan",
+"lon": -1.03,
+"lat": 45.62,
+"via": "wikipedia",
+"pop": 19425.0
+},
+{
+"q": "Q819190",
+"name": "Harhoog",
+"lon": 8.3826,
+"lat": 54.8907,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q819267",
+"name": "Palavas-les-Flots",
+"lon": 3.9314,
+"lat": 43.5303,
+"via": "wikipedia",
+"pop": 6133.0
+},
+{
+"q": "Q8194546",
+"name": "Karuizawa",
+"lon": 138.5969968,
+"lat": 36.3482938,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q82334",
+"name": "Filey",
+"lon": -0.28888889,
+"lat": 54.20972222,
+"via": "wikipedia",
+"pop": 7083.0
+},
+{
+"q": "Q823531",
+"name": "St Kilda, Victoria",
+"lon": 144.982,
+"lat": -37.864,
+"via": "wikipedia",
+"pop": 19490.0
+},
+{
+"q": "Q82490",
+"name": "Lyme Regis",
+"lon": -2.9353,
+"lat": 50.725,
+"via": "wikipedia",
+"pop": 3742.0
+},
+{
+"q": "Q827561",
+"name": "Ameca River",
+"lon": -105.281,
+"lat": 20.6725,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q828572",
+"name": "Cambrils",
+"lon": 1.05833333,
+"lat": 41.06666667,
+"via": "wikipedia",
+"pop": 37042.0
+},
+{
+"q": "Q828753",
+"name": "Coronado, California",
+"lon": -117.1725,
+"lat": 32.67805556,
+"via": "wikipedia",
+"pop": 20192.0
+},
+{
+"q": "Q829211",
+"name": "Beruwala",
+"lon": 79.98333333,
+"lat": 6.46666667,
+"via": "wikipedia",
+"pop": 164969.0
+},
+{
+"q": "Q829711",
+"name": "Saint-Valery-en-Caux",
+"lon": 0.71,
+"lat": 49.861,
+"via": "wikipedia",
+"pop": 3851.0
+},
+{
+"q": "Q836965",
+"name": "Władysławowo",
+"lon": 18.31555556,
+"lat": 54.83388889,
+"via": "wikipedia",
+"pop": 9613.0
+},
+{
+"q": "Q837211",
+"name": "Scheveningen",
+"lon": 4.27305556,
+"lat": 52.10805556,
+"via": "wikipedia",
+"pop": 61384.0
+},
+{
+"q": "Q837588",
+"name": "Veules-les-Roses",
+"lon": 0.8003,
+"lat": 49.8742,
+"via": "wikipedia",
+"pop": 510.0
+},
+{
+"q": "Q838210",
+"name": "Lorne, Victoria",
+"lon": 143.96666667,
+"lat": -38.53333333,
+"via": "wikipedia",
+"pop": 1327.0
+},
+{
+"q": "Q838576",
+"name": "Colleville-Montgomery",
+"lon": -0.3,
+"lat": 49.2833,
+"via": "wikipedia",
+"pop": 2586.0
+},
+{
+"q": "Q839805",
+"name": "Myrtle Beach, South Carolina",
+"lon": -78.86972222,
+"lat": 33.73027778,
+"via": "wikipedia",
+"pop": 35682.0
+},
+{
+"q": "Q840258",
+"name": "Büyükçekmece",
+"lon": 28.5775,
+"lat": 41.02,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q840668",
+"name": "La Jolla",
+"lon": -117.27694444,
+"lat": 32.84,
+"via": "wikipedia",
+"pop": 42808.0
+},
+{
+"q": "Q842129",
+"name": "Sohail Castle",
+"lon": -4.629,
+"lat": 36.525,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q842224",
+"name": "El Campello",
+"lon": -0.40111111,
+"lat": 38.4275,
+"via": "wikipedia",
+"pop": 31419.0
+},
+{
+"q": "Q843759",
+"name": "Cap Aurora",
+"lon": 28.60305556,
+"lat": 43.84972222,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q845024",
+"name": "Saint-Aubin-sur-Mer, Calvados",
+"lon": -0.3886,
+"lat": 49.3292,
+"via": "wikipedia",
+"pop": 2101.0
+},
+{
+"q": "Q845424",
+"name": "Peniscola",
+"lon": 0.4075,
+"lat": 40.35916667,
+"via": "wikipedia",
+"pop": 8774.0
+},
+{
+"q": "Q845623",
+"name": "Weston-super-Mare",
+"lon": -2.97805556,
+"lat": 51.34777778,
+"via": "wikipedia",
+"pop": 76143.0
+},
+{
+"q": "Q847295",
+"name": "Dalaman",
+"lon": 28.8,
+"lat": 36.76666667,
+"via": "wikipedia",
+"pop": 41351.0
+},
+{
+"q": "Q848132",
+"name": "Houlgate",
+"lon": -0.08,
+"lat": 49.3,
+"via": "wikipedia",
+"pop": 1834.0
+},
+{
+"q": "Q848718",
+"name": "Saint-Maximin-la-Sainte-Baume",
+"lon": 5.8614,
+"lat": 43.4532,
+"via": "wikipedia",
+"pop": 17896.0
+},
+{
+"q": "Q848804",
+"name": "Narlıkuyu",
+"lon": 34.11666667,
+"lat": 36.45,
+"via": "wikipedia",
+"pop": 2452.0
+},
+{
+"q": "Q848876",
+"name": "Beycik, Kemer",
+"lon": 30.42416667,
+"lat": 36.50416667,
+"via": "wikipedia",
+"pop": 502.0
+},
+{
+"q": "Q848973",
+"name": "Hel, Poland",
+"lon": 18.80805556,
+"lat": 54.61166667,
+"via": "wikipedia",
+"pop": 2975.0
+},
+{
+"q": "Q84957520",
+"name": "Noordwijk aan Zee",
+"lon": 4.433333333,
+"lat": 52.244444444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q852778",
+"name": "Whitby",
+"lon": -0.61555556,
+"lat": 54.48666667,
+"via": "wikipedia",
+"pop": 13130.0
+},
+{
+"q": "Q853012",
+"name": "Bexhill-on-Sea",
+"lon": 0.47111111,
+"lat": 50.84166667,
+"via": "wikipedia",
+"pop": 43754.0
+},
+{
+"q": "Q853258",
+"name": "Puerto Vallarta",
+"lon": -105.22222222,
+"lat": 20.64583333,
+"via": "wikipedia",
+"pop": 224166.0
+},
+{
+"q": "Q854646",
+"name": "Mamaia",
+"lon": 28.62277778,
+"lat": 44.24638889,
+"via": "wikipedia",
+"pop": 441.0
+},
+{
+"q": "Q855464",
+"name": "Biarritz, Uruguay",
+"lon": -55.50861111,
+"lat": -34.79194444,
+"via": "wikipedia",
+"pop": 179.0
+},
+{
+"q": "Q8611",
+"name": "La Spezia",
+"lon": 9.81666667,
+"lat": 44.1,
+"via": "wikipedia",
+"pop": 92119.0
+},
+{
+"q": "Q862217",
+"name": "Villerville",
+"lon": 0.1294,
+"lat": 49.4017,
+"via": "wikipedia",
+"pop": 620.0
+},
+{
+"q": "Q865021",
+"name": "Birchington",
+"lon": 1.305,
+"lat": 51.377,
+"via": "wikipedia",
+"pop": 10395.0
+},
+{
+"q": "Q86682750",
+"name": "Hôtel Belles Rives",
+"lon": 7.11555,
+"lat": 43.5649,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q86738098",
+"name": "Haragama Obama Beach",
+"lon": 140.968472222,
+"lat": 37.828194444,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q867592",
+"name": "Taba, Egypt",
+"lon": 34.89444444,
+"lat": 29.49166667,
+"via": "wikipedia",
+"pop": 800.0
+},
+{
+"q": "Q868647",
+"name": "Southport",
+"lon": -3.00527778,
+"lat": 53.6475,
+"via": "wikipedia",
+"pop": 91703.0
+},
+{
+"q": "Q868650",
+"name": "Erquy",
+"lon": -2.463,
+"lat": 48.6325,
+"via": "wikipedia",
+"pop": 3974.0
+},
+{
+"q": "Q874676",
+"name": "Camiers",
+"lon": 1.6144,
+"lat": 50.5667,
+"via": "wikipedia",
+"pop": 2582.0
+},
+{
+"q": "Q877744",
+"name": "Le Portel",
+"lon": 1.5744,
+"lat": 50.7075,
+"via": "wikipedia",
+"pop": 8768.0
+},
+{
+"q": "Q8826",
+"name": "Palma de Mallorca",
+"lon": 2.65,
+"lat": 39.56666667,
+"via": "wikipedia",
+"pop": 434786.0
+},
+{
+"q": "Q884930",
+"name": "Blokhus",
+"lon": 9.58416667,
+"lat": 57.25222222,
+"via": "wikipedia",
+"pop": 466.0
+},
+{
+"q": "Q886640",
+"name": "Zingst",
+"lon": 12.66666667,
+"lat": 54.41666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q88725452",
+"name": "Escarpas do Lago",
+"lon": -46.015666666,
+"lat": -20.641055555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q890621",
+"name": "Bognor Regis",
+"lon": -0.67639,
+"lat": 50.78237,
+"via": "wikipedia",
+"pop": 25020.0
+},
+{
+"q": "Q893173",
+"name": "La Paloma, Rocha",
+"lon": -54.16666667,
+"lat": -34.65,
+"via": "wikipedia",
+"pop": 6007.0
+},
+{
+"q": "Q896119",
+"name": "Bozburun",
+"lon": 28.06666667,
+"lat": 36.68333333,
+"via": "wikipedia",
+"pop": 2182.0
+},
+{
+"q": "Q896813",
+"name": "Kampen Lighthouse",
+"lon": 8.340836,
+"lat": 54.946197,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q8969",
+"name": "Cancún",
+"lon": -86.8475,
+"lat": 21.16055556,
+"via": "wikipedia",
+"pop": 888797.0
+},
+{
+"q": "Q905474",
+"name": "Jarosławiec, West Pomeranian Voivodeship",
+"lon": 16.54611111,
+"lat": 54.54055556,
+"via": "wikipedia",
+"pop": 410.0
+},
+{
+"q": "Q9071",
+"name": "Capitán de Corbeta Carlos A. Curbelo International Airport",
+"lon": -55.09444444,
+"lat": -34.85555556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q910050",
+"name": "Flayosc",
+"lon": 6.3975,
+"lat": 43.535,
+"via": "wikipedia",
+"pop": 4673.0
+},
+{
+"q": "Q911746",
+"name": "Saturn, Romania",
+"lon": 28.58888889,
+"lat": 43.82666667,
+"via": "wikipedia",
+"pop": 84.0
+},
+{
+"q": "Q911885",
+"name": "Taba Heights",
+"lon": 34.798611111,
+"lat": 29.386388888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q913649",
+"name": "Wijk aan Zee",
+"lon": 4.593611111,
+"lat": 52.493888888,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q913691",
+"name": "Jaywick",
+"lon": 1.1174,
+"lat": 51.7795,
+"via": "wikipedia",
+"pop": 4665.0
+},
+{
+"q": "Q916750",
+"name": "Palaiokastritsa",
+"lon": 19.71666667,
+"lat": 39.68333333,
+"via": "wikipedia",
+"pop": 220.0
+},
+{
+"q": "Q917594",
+"name": "Portinatx",
+"lon": 1.517744,
+"lat": 39.112355,
+"via": "wikipedia",
+"pop": 756.0
+},
+{
+"q": "Q917970",
+"name": "Manarola",
+"lon": 9.75,
+"lat": 44.1,
+"via": "wikipedia",
+"pop": 398.0
+},
+{
+"q": "Q919630",
+"name": "Porto Cervo",
+"lon": 9.6,
+"lat": 41.31666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q922511",
+"name": "La Aguada y Costa Azul",
+"lon": -54.15,
+"lat": -34.63333333,
+"via": "wikipedia",
+"pop": 1373.0
+},
+{
+"q": "Q922739",
+"name": "Broadstairs",
+"lon": 1.43944,
+"lat": 51.35888,
+"via": "wikipedia",
+"pop": 24903.0
+},
+{
+"q": "Q924252",
+"name": "Milas",
+"lon": 27.78333333,
+"lat": 37.31666667,
+"via": "wikipedia",
+"pop": 139446.0
+},
+{
+"q": "Q924884",
+"name": "Depoe Bay, Oregon",
+"lon": -124.06222222,
+"lat": 44.80722222,
+"via": "wikipedia",
+"pop": 1515.0
+},
+{
+"q": "Q927704",
+"name": "Manzanita, Oregon",
+"lon": -123.935,
+"lat": 45.71666667,
+"via": "wikipedia",
+"pop": 603.0
+},
+{
+"q": "Q927739",
+"name": "Llangrannog",
+"lon": -4.4631,
+"lat": 52.1587,
+"via": "wikipedia",
+"pop": 703.0
+},
+{
+"q": "Q927965",
+"name": "Guardamar del Segura",
+"lon": -0.655,
+"lat": 38.08972222,
+"via": "wikipedia",
+"pop": 18564.0
+},
+{
+"q": "Q9285742",
+"name": "Hamata",
+"lon": 35.378888888,
+"lat": 24.28595,
+"via": "wikidata",
+"pop": 150.0
+},
+{
+"q": "Q929286",
+"name": "Herne Bay",
+"lon": 1.13,
+"lat": 51.37,
+"via": "wikipedia",
+"pop": 38385.0
+},
+{
+"q": "Q92988654",
+"name": "Staley Springs",
+"lon": -111.4352352,
+"lat": 44.6601999,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q92990132",
+"name": "Box Canyon",
+"lon": -111.4055102,
+"lat": 44.3788069,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q92997666",
+"name": "Flat Rock",
+"lon": -111.3363408,
+"lat": 44.5004766,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q930204",
+"name": "Wells-next-the-Sea",
+"lon": 0.85,
+"lat": 52.95,
+"via": "wikipedia",
+"pop": 2148.0
+},
+{
+"q": "Q93265633",
+"name": "West Beach Promenade",
+"lon": -0.1487,
+"lat": 38.5361,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q932700",
+"name": "La Faute-sur-Mer",
+"lon": -1.322777777,
+"lat": 46.331944444,
+"via": "wikidata",
+"pop": 665.0
+},
+{
+"q": "Q9335929",
+"name": "Shark’s Bay",
+"lon": 34.38495,
+"lat": 27.951230555,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q934628",
+"name": "Zaliznyi Port",
+"lon": 32.29083333,
+"lat": 46.125,
+"via": "wikipedia",
+"pop": 1528.0
+},
+{
+"q": "Q9348465",
+"name": "Sutton-on-Sea",
+"lon": 0.280105,
+"lat": 53.311245,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q935589",
+"name": "Villajoyosa",
+"lon": -0.23277778,
+"lat": 38.50527778,
+"via": "wikipedia",
+"pop": 37449.0
+},
+{
+"q": "Q935702",
+"name": "Oban",
+"lon": -5.472,
+"lat": 56.412,
+"via": "wikipedia",
+"pop": 8490.0
+},
+{
+"q": "Q936239",
+"name": "Vama Veche",
+"lon": 28.56666667,
+"lat": 43.75,
+"via": "wikipedia",
+"pop": 367.0
+},
+{
+"q": "Q939049",
+"name": "Prestwick",
+"lon": -4.61416,
+"lat": 55.495551,
+"via": "wikipedia",
+"pop": 14720.0
+},
+{
+"q": "Q939243",
+"name": "Yumurtalık",
+"lon": 35.79222222,
+"lat": 36.76777778,
+"via": "wikipedia",
+"pop": 18587.0
+},
+{
+"q": "Q93955328",
+"name": "Ōno beach",
+"lon": 136.825,
+"lat": 34.938333333,
+"via": "wikidata",
+"pop": null
+},
+{
+"q": "Q939758",
+"name": "Kalajoki",
+"lon": 23.95,
+"lat": 64.26666667,
+"via": "wikipedia",
+"pop": 12155.0
+},
+{
+"q": "Q941328",
+"name": "Alaçatı",
+"lon": 26.37416667,
+"lat": 38.28138889,
+"via": "wikipedia",
+"pop": 10523.0
+},
+{
+"q": "Q941967",
+"name": "Peniche, Portugal",
+"lon": -9.36666667,
+"lat": 39.35,
+"via": "wikipedia",
+"pop": 27753.0
+},
+{
+"q": "Q943708",
+"name": "Solís",
+"lon": -55.38333333,
+"lat": -34.79305556,
+"via": "wikipedia",
+"pop": 467.0
+},
+{
+"q": "Q946799",
+"name": "Hammam Chott",
+"lon": 10.35833333,
+"lat": 36.72166667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q947051",
+"name": "Datça",
+"lon": 27.6869,
+"lat": 36.7283,
+"via": "wikipedia",
+"pop": 22261.0
+},
+{
+"q": "Q952273",
+"name": "Parque del Plata",
+"lon": -55.71666667,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 13142.0
+},
+{
+"q": "Q955969",
+"name": "Sun Valley",
+"lon": -114.342777777,
+"lat": 43.680555555,
+"via": "wikidata",
+"pop": 1783.0
+},
+{
+"q": "Q958144",
+"name": "Didim",
+"lon": 27.2678,
+"lat": 37.3756,
+"via": "wikipedia",
+"pop": 85055.0
+},
+{
+"q": "Q958170",
+"name": "San Terenzo",
+"lon": 9.89583333,
+"lat": 44.08611111,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q961143",
+"name": "Tupã",
+"lon": -50.513888888,
+"lat": -21.935,
+"via": "wikidata",
+"pop": 65433.0
+},
+{
+"q": "Q96376497",
+"name": "Dodanduwa",
+"lon": 80.14555556,
+"lat": 6.09666667,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q96399502",
+"name": "Place des Lices (Saint-Tropez)",
+"lon": 6.64113889,
+"lat": 43.27,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q96411772",
+"name": "Türkbükü",
+"lon": 27.37611111,
+"lat": 37.13,
+"via": "wikipedia",
+"pop": 2556.0
+},
+{
+"q": "Q964785",
+"name": "Whitstable",
+"lon": 1.026,
+"lat": 51.361,
+"via": "wikipedia",
+"pop": 30195.0
+},
+{
+"q": "Q967166",
+"name": "Hythe, Kent",
+"lon": 1.084,
+"lat": 51.0716,
+"via": "wikipedia",
+"pop": 14980.0
+},
+{
+"q": "Q967925",
+"name": "Popenguine-Ndayane",
+"lon": -17.11375,
+"lat": 14.563027777,
+"via": "wikidata",
+"pop": 12743.0
+},
+{
+"q": "Q969539",
+"name": "Punta Rubia",
+"lon": -54.1142,
+"lat": -34.5703,
+"via": "wikidata",
+"pop": 94.0
+},
+{
+"q": "Q97351905",
+"name": "Atlantis Sanya",
+"lon": 109.73888889,
+"lat": 18.35777778,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q975080",
+"name": "Porquerolles",
+"lon": 6.21666667,
+"lat": 43,
+"via": "wikipedia",
+"pop": 200.0
+},
+{
+"q": "Q975553",
+"name": "Punta Ballena",
+"lon": -55.04055556,
+"lat": -34.88888889,
+"via": "wikipedia",
+"pop": 1888.0
+},
+{
+"q": "Q97633171",
+"name": "Águila Aqueduct",
+"lon": -3.85,
+"lat": 36.75805556,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q977764",
+"name": "Fuengirola Mosque",
+"lon": -4.62686111,
+"lat": 36.53119444,
+"via": "wikipedia",
+"pop": null
+},
+{
+"q": "Q977991",
+"name": "Skegness",
+"lon": 0.34277778,
+"lat": 53.14361111,
+"via": "wikipedia",
+"pop": 21127.0
+},
+{
+"q": "Q980084",
+"name": "Nairn",
+"lon": -3.869,
+"lat": 57.586,
+"via": "wikipedia",
+"pop": 10022.0
+},
+{
+"q": "Q980728",
+"name": "Domburg",
+"lon": 3.49638889,
+"lat": 51.5625,
+"via": "wikipedia",
+"pop": 1660.0
+},
+{
+"q": "Q984184",
+"name": "Marindia",
+"lon": -55.82361111,
+"lat": -34.77083333,
+"via": "wikipedia",
+"pop": 5359.0
+},
+{
+"q": "Q984189",
+"name": "Neptunia, Uruguay",
+"lon": -55.86666667,
+"lat": -34.78333333,
+"via": "wikipedia",
+"pop": 9146.0
+},
+{
+"q": "Q984283",
+"name": "Grzybowo, West Pomeranian Voivodeship",
+"lon": 15.48333333,
+"lat": 54.15,
+"via": "wikipedia",
+"pop": 1966.0
+},
+{
+"q": "Q984544",
+"name": "Traverse City, Michigan",
+"lon": -85.62222222,
+"lat": 44.76805556,
+"via": "wikipedia",
+"pop": 15678.0
+},
+{
+"q": "Q984692",
+"name": "Puimayen",
+"lon": -53.4,
+"lat": -33.76666667,
+"via": "wikipedia",
+"pop": 1346.0
+},
+{
+"q": "Q984693",
+"name": "Playa Verde",
+"lon": -55.31388889,
+"lat": -34.82638889,
+"via": "wikipedia",
+"pop": 543.0
+},
+{
+"q": "Q984723",
+"name": "Las Toscas, Canelones",
+"lon": -55.73333333,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 5425.0
+},
+{
+"q": "Q984724",
+"name": "La Esmeralda, Uruguay",
+"lon": -53.69902778,
+"lat": -34.15202778,
+"via": "wikipedia",
+"pop": 245.0
+},
+{
+"q": "Q984779",
+"name": "Pinamar – Pinepark",
+"lon": -55.85583333,
+"lat": -34.7775,
+"via": "wikipedia",
+"pop": 8727.0
+},
+{
+"q": "Q984838",
+"name": "Santa Ana, Canelones",
+"lon": -55.469,
+"lat": -34.79,
+"via": "wikipedia",
+"pop": 840.0
+},
+{
+"q": "Q984843",
+"name": "Los Pinos, Uruguay",
+"lon": -57.245,
+"lat": -34.435,
+"via": "wikipedia",
+"pop": 318.0
+},
+{
+"q": "Q984848",
+"name": "Costa Azul",
+"lon": -55.65,
+"lat": -34.76666667,
+"via": "wikipedia",
+"pop": 1776.0
+},
+{
+"q": "Q984849",
+"name": "Playa Grande, Uruguay",
+"lon": -55.29944444,
+"lat": -34.85,
+"via": "wikipedia",
+"pop": 1681.0
+},
+{
+"q": "Q984941",
+"name": "Cuchilla Alta",
+"lon": -55.49444444,
+"lat": -34.79444444,
+"via": "wikipedia",
+"pop": 1000.0
+},
+{
+"q": "Q985519",
+"name": "Lagoa, Portugal",
+"lon": -8.45,
+"lat": 37.13333333,
+"via": "wikipedia",
+"pop": 22975.0
+},
+{
+"q": "Q986007",
+"name": "Lowestoft",
+"lon": 1.75,
+"lat": 52.48,
+"via": "wikipedia",
+"pop": 47726.0
+},
+{
+"q": "Q986325",
+"name": "Safaga",
+"lon": 33.934444444,
+"lat": 26.751666666,
+"via": "wikidata",
+"pop": 55299.0
+},
+{
+"q": "Q986733",
+"name": "Cullera",
+"lon": -0.25166667,
+"lat": 39.16388889,
+"via": "wikipedia",
+"pop": 24702.0
+},
+{
+"q": "Q987051",
+"name": "San Rafael – El Placer",
+"lon": -54.89527778,
+"lat": -34.92555556,
+"via": "wikipedia",
+"pop": 3146.0
+},
+{
+"q": "Q987058",
+"name": "El Tesoro, Maldonado",
+"lon": -54.87305556,
+"lat": -34.90638889,
+"via": "wikipedia",
+"pop": 2888.0
+},
+{
+"q": "Q987073",
+"name": "Ocean Park, Uruguay",
+"lon": -55.14027778,
+"lat": -34.875,
+"via": "wikipedia",
+"pop": 891.0
+},
+{
+"q": "Q987098",
+"name": "Punta Negra, Uruguay",
+"lon": -55.22083333,
+"lat": -34.89027778,
+"via": "wikipedia",
+"pop": 914.0
+},
+{
+"q": "Q988116",
+"name": "Ortaca",
+"lon": 28.76444444,
+"lat": 36.83888889,
+"via": "wikipedia",
+"pop": 48373.0
+},
+{
+"q": "Q988747",
+"name": "Cannon Beach, Oregon",
+"lon": -123.95944444,
+"lat": 45.88194444,
+"via": "wikipedia",
+"pop": 1489.0
+},
+{
+"q": "Q989883",
+"name": "Büyükada",
+"lon": 29.12,
+"lat": 40.85777778,
+"via": "wikipedia",
+"pop": 7335.0
+},
+{
+"q": "Q989988",
+"name": "Playa del Carmen",
+"lon": -87.0755,
+"lat": 20.6281425,
+"via": "wikipedia",
+"pop": 304942.0
+},
+{
+"q": "Q990061",
+"name": "Cala Millor",
+"lon": 3.38361111,
+"lat": 39.60055556,
+"via": "wikipedia",
+"pop": 5445.0
+},
+{
+"q": "Q990112",
+"name": "Littlehampton",
+"lon": -0.54083333,
+"lat": 50.80944444,
+"via": "wikipedia",
+"pop": 32291.0
+},
+{
+"q": "Q990176",
+"name": "Dagomys",
+"lon": 39.65166667,
+"lat": 43.65638889,
+"via": "wikipedia",
+"pop": 17841.0
+},
+{
+"q": "Q990830",
+"name": "Dziwnów",
+"lon": 14.76691,
+"lat": 54.02819,
+"via": "wikidata",
+"pop": 2451.0
+},
+{
+"q": "Q991055",
+"name": "Milford Haven",
+"lon": -5.04274,
+"lat": 51.71418,
+"via": "wikipedia",
+"pop": 14798.0
+},
+{
+"q": "Q991574",
+"name": "Villa Gesell",
+"lon": -56.98333333,
+"lat": -37.25,
+"via": "wikipedia",
+"pop": 29593.0
+},
+{
+"q": "Q991661",
+"name": "Callantsoog",
+"lon": 4.6967,
+"lat": 52.8372,
+"via": "wikidata",
+"pop": 2680.0
+},
+{
+"q": "Q991680",
+"name": "Mar de Ajó",
+"lon": -56.68777778,
+"lat": -36.72027778,
+"via": "wikipedia",
+"pop": 25520.0
+},
+{
+"q": "Q992317",
+"name": "Acharavi",
+"lon": 19.81666667,
+"lat": 39.78333333,
+"via": "wikipedia",
+"pop": 1100.0
+},
+{
+"q": "Q992364",
+"name": "Dikili",
+"lon": 26.88333333,
+"lat": 39.06666667,
+"via": "wikipedia",
+"pop": 44172.0
+},
+{
+"q": "Q992627",
+"name": "Gökova",
+"lon": 28.36583333,
+"lat": 37.05416667,
+"via": "wikipedia",
+"pop": 2172.0
+},
+{
+"q": "Q992675",
+"name": "Manantiales, Uruguay",
+"lon": -54.825,
+"lat": -34.90555556,
+"via": "wikipedia",
+"pop": 364.0
+},
+{
+"q": "Q993688",
+"name": "Köyceğiz",
+"lon": 28.68888889,
+"lat": 36.97138889,
+"via": "wikipedia",
+"pop": 38425.0
+},
+{
+"q": "Q994086",
+"name": "Kamen bryag",
+"lon": 28.551111,
+"lat": 43.458032,
+"via": "wikidata",
+"pop": 66.0
+},
+{
+"q": "Q9980",
+"name": "Zandvoort",
+"lon": 4.53333333,
+"lat": 52.36666667,
+"via": "wikipedia",
+"pop": 17168.0
+},
+{
+"q": "Q998325",
+"name": "Rada Tilly",
+"lon": -67.53333333,
+"lat": -45.93333333,
+"via": "wikipedia",
+"pop": 9098.0
+},
+{
+"q": null,
+"name": "Capri and Anacapri (by hand: in neither source)",
+"lon": 14.2425,
+"lat": 40.5507,
+"pop": 13900.0,
+"via": "hand"
+}
+],
+"extra": [
+{
+"q": null,
+"name": "Capri and Anacapri (by hand: in neither source)",
+"lon": 14.2425,
+"lat": 40.5507,
+"pop": 13900.0,
+"via": "hand"
+}
+]
+}

@@ -49,6 +49,20 @@ ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "app/src/game/registry.json"
 PACKS = ROOT / "data/packs"
 RULE = json.loads((Path(__file__).parent / "longhaul.json").read_text(encoding="utf-8"))
+# T-3240: the long-trip pull, its constants and each place's excess (pipeline/market_pull.py)
+PULL = json.loads((Path(__file__).parent / "market_pull.json").read_text(encoding="utf-8"))
+if not PULL.get("on"):
+    # off until the world rebuild turns it on: a pack built with it beside packs built without would mix two
+    # markets (the registry's rule, its normalisers and its row's excess must all agree)
+    PULL = {**PULL, "places": {}, "gamma": 0.0, "gamma_x": 0.0}
+
+
+def pull_rule():
+    """The pull's constants as the registry's `market.rule` carries them (intercity.rs `Rule`); none while off."""
+    if not PULL.get("on"):
+        return {}
+    return {"pull_gamma": PULL["gamma"], "pull_gamma_x": PULL["gamma_x"], "pull_phase_km": PULL["phase_km"],
+            "pull_off": PULL["off"], "pull_country_gamma": PULL["country_gamma"]}
 SITE_M, ZONE_M = 600, 6000
 # T-378: a zone's airports are OurAirports' large and medium ones with scheduled service within
 # AIR_RADIUS_KM of its centre carrying AIR_MIN_PAX passengers a year (the biggest AIR_MAX); a route
@@ -118,6 +132,28 @@ OPEN_AREA = {"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "
 OPEN_AREA_BORDER = 0.5
 
 
+def cell_excess(r5):
+    """T-3240: each H3 r5 cell's pull excess, its place's (market_pull.json `places`) where the place's
+    outline holds the cell's centre, else 0."""
+    import shapely
+    from shapely.geometry import shape
+    ex = np.zeros(len(r5.lon))
+    geoms, val = [], []
+    for z, (e, _why) in PULL["places"].items():
+        p = PACKS / f"{z}.boundary.geojson"
+        if e > 0 and p.exists():
+            g = json.loads(p.read_text(encoding="utf-8"))
+            for f in (g["features"] if g.get("type") == "FeatureCollection" else [g]):
+                geoms.append(shape(f.get("geometry", f)).buffer(0))
+                val.append(e)
+    if geoms:
+        # the points in the tree, so each outline is the query, prepared once
+        tree = shapely.STRtree(shapely.points(r5.lon, r5.lat))
+        k, cell = tree.query(np.array(geoms), predicate="contains")
+        ex[cell] = np.array(val)[k]
+    return ex
+
+
 class Field:
     """The world field with the ground attraction and the tail's destination weight per cell, the
     tail's summed from r5 cells upward (notes/T-376.md "For stage 3")."""
@@ -132,6 +168,16 @@ class Field:
         self.inc = [np.minimum(lv.gdp / self.y_us, 1) for lv in (r5, r4, r3)]
         self.index = {int(c): i for i, c in enumerate(r5.h)}
         self.open = np.array([c["iso2"] in OPEN_AREA for c in wf.countries])
+        # T-3240: the pull's part of each cell's two weights, at full strength (attraction x (pull - 1)), for a
+        # trip within its country (its country's gamma) and one across a border; a cell takes the excess of
+        # the place whose outline holds its centre
+        ex = cell_excess(r5)
+        iso = np.array([c["iso2"] for c in wf.countries])
+        g_home = np.array([PULL["gamma"] * PULL["country_gamma"].get(c, 1.0) for c in iso])[r5.country]
+        self.off = np.array([c in PULL["off"] for c in iso])
+        a5, tb5 = self.a[0], self.tb[0]
+        self.pa = [up(a5 * np.expm1(g_home * ex)), up(a5 * np.expm1(PULL["gamma_x"] * ex))]
+        self.ptb = [up(tb5 * np.expm1(g_home * ex)), up(tb5 * np.expm1(PULL["gamma_x"] * ex))]
 
     def normalisers(self, lon, lat, country, inc_o):
         """A place's ground and tail normalisers over the field: the sums the two kinds of
@@ -152,6 +198,13 @@ class Field:
         general = RULE["border"] * inc_o ** RULE["border_eps"]
         b = np.where(c == country, 1.0,
                      np.where(self.open[c] & self.open[country], max(OPEN_AREA_BORDER, general), general))
+        if not self.off[country]:
+            # T-3240: the destinations' pull, faded in over its window (intercity.rs `Rule::pull_on`)
+            p0, p1 = PULL["phase_km"]
+            ph = np.clip((d - p0) / (p1 - p0), 0, 1)
+            home = c == country
+            a = a + ph * np.where(home, cat(self.pa[0]), cat(self.pa[1]))
+            tb = tb + ph * np.where(home, cat(self.ptb[0]), cat(self.ptb[1]))
         on0, on1 = RULE["onset_km"]
         on = np.clip((d - on0) / (on1 - on0), 0, 1)
         t0, t1 = RULE["tail_onset_km"]
@@ -387,8 +440,9 @@ def build(cid, reg, F, air):
            "zones": [list(k) for k in keys], "zone_ng": [float(f"{v:.7g}") for v in ng], "zone_nt": [float(f"{v:.7g}") for v in nt],
            "sites": [r + [int(z)] for r, z in zip(sites, zi)], "site_park": parks,
            "cell_pop": [round(float(v)) for v in cell],
+           "px": PULL["places"].get(cid, [0.0])[0],
            "sources": ["the zone pack's cells (600 m squares)", "the world field (T-375: Kontur 2023, Natural Earth, World Bank GDP per head)",
-                       "pipeline/longhaul.json (T-376)"]}
+                       "pipeline/longhaul.json (T-376)", "pipeline/market_pull.json (T-3240)"]}
     if site_parts is not None:
         out.update(part_fields(site_parts, zi, len(keys), head))
     out.update(air.get(cid, {}))
@@ -537,6 +591,7 @@ def assign_places(reg):
             places.append({"name": c["name"], "regionName": c["name"] + " region"})
             c["place"] = len(places) - 1
     reg["market"]["rule"] = {k: v for k, v in RULE.items() if k not in ("task", "date", "form", "notes")}
+    reg["market"]["rule"].update(pull_rule())
     reg["market"]["rule"]["near_km"] = 250.0
     reg["market"]["rule"]["min_trips"] = 0.01
 

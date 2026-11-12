@@ -35,11 +35,14 @@ export interface MarketRow {
   air: [number, number[]][];
   /** perceived minutes to park, mean over the place's zones */
   park: number;
+  /** T-3240: its pull excess (absent: 0) */
+  px?: number;
 }
 
 interface Rule {
   R: number; A: number; onset_km: [number, number]; d0_km: number; G: number; D1_km: number; eps: number; eps_t: number;
   tail_onset_km: [number, number]; border_eps: number; border: number; Rt: number; near_km: number;
+  pull_gamma?: number; pull_gamma_x?: number; pull_phase_km?: [number, number]; pull_off?: string[]; pull_country_gamma?: Record<string, number>;
 }
 const RULE = REGISTRY.market.rule as Rule;
 
@@ -383,12 +386,22 @@ function border(p: MarketRow, q: MarketRow): number {
   if (p.country === q.country) return 1;
   return OPEN_AREA.has(p.country) && OPEN_AREA.has(q.country) ? Math.max(OPEN_AREA_BORDER, general) : general;
 }
+/** T-3240: q's pull on trips from p at `d` km (intercity.rs `PairRule::pull`, `Market::pull_w`). */
+function pullOf(p: MarketRow, q: MarketRow, d: number): number {
+  const px = q.px ?? 0;
+  if (!(px > 0) || RULE.pull_off?.includes(p.country)) return 1;
+  const g = p.country === q.country ? (RULE.pull_gamma ?? 0) * (RULE.pull_country_gamma?.[q.country] ?? 1) : (RULE.pull_gamma_x ?? 0);
+  const full = Math.expm1(g * px);
+  if (!(full > 0)) return 1;
+  const [p0, p1] = RULE.pull_phase_km ?? [50, 150];
+  return 1 + full * Math.min(1, Math.max(0, (d - p0) / (p1 - p0)));
+}
 /** Trips a day from place p to q's attraction at `d` km (`Market::directed`). */
 function directed(p: MarketRow, q: MarketRow, d: number): number {
   const rel = income(p) > 0 ? Math.min(income(q) / income(p), 1) ** RULE.eps_t : 1;
   const gr = p.g > 0 ? p.g * ground(d) * q.a : 0;
   const tl = p.t > 0 ? p.t * tail(d) * q.ta * rel : 0;
-  return border(p, q) * (gr + tl);
+  return border(p, q) * pullOf(p, q, d) * (gr + tl);
 }
 /** Two places' longer trips a weekday each way: near ones from the rows, far ones by the rule at
  * their centres (`place_eachway`). */

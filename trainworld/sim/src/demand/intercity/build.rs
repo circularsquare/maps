@@ -314,6 +314,10 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         pl.zone = zin.zone.clone();
         pl.air = air;
         pl.park = park;
+        if !zin.px.is_finite() || zin.px < 0. {
+            return Err(format!("place {place}: invalid pull excess"));
+        }
+        pl.px = zin.px;
     }
     for (g, c) in group_cities.into_iter().enumerate() {
         let (kz, kplace) = ride_zones(&c);
@@ -367,6 +371,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
                 pl.zone = r.zone.clone();
                 pl.air = r.air.iter().filter(|a| a.0.is_finite() && a.0 >= 0.).map(|a| (a.0, sorted(a.1.clone()))).collect();
                 pl.park = if r.park.is_finite() { r.park.max(0.) } else { 0. };
+                pl.px = if r.px.is_finite() { r.px.max(0.) } else { 0. };
                 pl.fw = if r.fw.is_finite() && r.fw > 0. { r.fw } else { 0. };
                 pl.cu = if r.cu.is_finite() && r.cu > 0. { r.cu } else { 0. };
                 (pl.gr, pl.ng) = income_groups(&r.fg)?;
@@ -768,6 +773,7 @@ pub fn world_rows_for(header: &str, only: Option<&[bool]>) -> Result<Vec<Row>, S
             commute: commute.into_iter().collect(),
             air: pl.air.clone(),
             park: pl.park,
+            px: pl.px,
             fw: 0.,
             cu: 0.,
             fg: vec![],

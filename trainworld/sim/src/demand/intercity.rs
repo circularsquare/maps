@@ -71,6 +71,23 @@ struct Rule {
     rt: f64,
     near_km: f64,
     min_trips: f64,
+    /// T-3240 (pipeline/market_pull.json): a destination place's attraction, ground and tail alike, times
+    /// `exp(gamma x px)`, `px` its excess (its row's), faded in over `pull_phase_km`; `gamma` is
+    /// `pull_gamma` times `pull_country_gamma`'s factor for the country within it, `pull_gamma_x` across a
+    /// border; none for residents of `pull_off`. Absent: no pull.
+    #[serde(default)]
+    pull_gamma: f64,
+    #[serde(default)]
+    pull_gamma_x: f64,
+    #[serde(default = "default_pull_phase")]
+    pull_phase_km: [f64; 2],
+    #[serde(default)]
+    pull_off: Vec<String>,
+    #[serde(default)]
+    pull_country_gamma: BTreeMap<String, f64>,
+}
+fn default_pull_phase() -> [f64; 2] {
+    [50., 150.]
 }
 impl Rule {
     /// A closed world's rule (the old single pack): the ground curve at the pack's trip rate, no
@@ -95,15 +112,36 @@ impl Rule {
             rt: 0.,
             near_km: NEAR_KM,
             min_trips: MIN_TRIPS,
+            pull_gamma: 0.,
+            pull_gamma_x: 0.,
+            pull_phase_km: default_pull_phase(),
+            pull_off: vec![],
+            pull_country_gamma: BTreeMap::new(),
         }
     }
     fn ok(&self) -> bool {
-        let v = [self.r, self.a, self.d0_km, self.eps, self.g, self.d1_km, self.th, self.eps_t, self.tho, self.border_eps, self.u_mean_us, self.u_ref_people, self.border, self.rt, self.near_km, self.min_trips];
-        v.iter().chain(&self.onset_km).chain(&self.tail_onset_km).all(|x| x.is_finite() && *x >= 0.)
+        let v = [self.r, self.a, self.d0_km, self.eps, self.g, self.d1_km, self.th, self.eps_t, self.tho, self.border_eps, self.u_mean_us, self.u_ref_people, self.border, self.rt, self.near_km, self.min_trips, self.pull_gamma, self.pull_gamma_x];
+        v.iter().chain(&self.onset_km).chain(&self.tail_onset_km).chain(&self.pull_phase_km).chain(self.pull_country_gamma.values()).all(|x| x.is_finite() && *x >= 0.)
             && self.onset_km[1] > self.onset_km[0]
             && self.tail_onset_km[1] > self.tail_onset_km[0]
+            && self.pull_phase_km[1] > self.pull_phase_km[0]
             && self.u_mean_us > 0.
             && self.u_ref_people > 0.
+    }
+    /// T-3240: the pull's fade at `d` km: 0 under its window, 1 from its end.
+    #[inline(always)]
+    fn pull_on(&self, d: f64) -> f64 {
+        ((d - self.pull_phase_km[0]) / (self.pull_phase_km[1] - self.pull_phase_km[0])).clamp(0., 1.)
+    }
+    /// T-3240: the gamma of a trip from a resident of country `a` to a place in `b`; 0: no pull.
+    fn pull_gamma_of(&self, a: &str, b: &str) -> f64 {
+        if self.pull_off.iter().any(|c| c == a) {
+            0.
+        } else if a == b {
+            self.pull_gamma * self.pull_country_gamma.get(b).copied().unwrap_or(1.)
+        } else {
+            self.pull_gamma_x
+        }
     }
     /// The tail's onset at `d` km: 0 under its first bound, 1 from its second.
     #[inline(always)]
@@ -244,6 +282,9 @@ struct ZoneRaw {
     /// people of each site's H3 r5 cell (the tail's density)
     #[serde(default)]
     cell_pop: Vec<f64>,
+    /// T-3240: the place's pull excess (`Rule`'s pull)
+    #[serde(default)]
+    px: f64,
     /// commutes from this place: home zone, work place, work zone (that place's own), commuters a day
     #[serde(default)]
     commute_home: Vec<u32>,
@@ -383,6 +424,7 @@ struct ZoneIn {
     sites: Sites,
     site_park: Vec<f32>,
     cell_pop: Col,
+    px: f64,
     commute_home: Ix,
     commute_place: Ix,
     commute_work: Ix,
@@ -425,6 +467,7 @@ impl From<ZoneRaw> for ZoneIn {
             sites,
             site_park: tight(z.site_park),
             cell_pop: Col::of(z.cell_pop),
+            px: z.px,
             commute_home: Ix::of(z.commute_home),
             commute_place: Ix::of(z.commute_place),
             commute_work: Ix::of(z.commute_work),
@@ -473,6 +516,9 @@ pub struct Row {
     air: Vec<(f64, Vec<u32>)>,
     #[serde(default)]
     park: f64,
+    /// T-3240: its pull excess (`Rule`'s pull); absent: 0
+    #[serde(default, skip_serializing_if = "is_zero")]
+    px: f64,
     /// T-1277: perceived minutes a fare dollar costs people leaving here (the app adds it to the
     /// row from its country's income, game/income.ts); 0 or absent: `FARE_MIN_PER_USD`. Never
     /// written to market-rows.json
@@ -546,6 +592,8 @@ struct Place {
     ng: u8,
     /// T-1374: how touristy it is (`touristy`), 0 with no pack open
     tour: f32,
+    /// T-3240: its pull excess (its row's or pack's)
+    px: f64,
 }
 /// T-1431: the most income groups a place's travellers come in.
 pub const GROUPS: usize = 3;
@@ -614,6 +662,8 @@ impl Cost {
 struct PairRule {
     b: f64,
     rel: f64,
+    /// T-3240: the second place's pull on trips from the first at full strength, less 1 (0: none)
+    pull: f64,
     near: bool,
     km: f64,
     car: bool,
@@ -682,10 +732,10 @@ impl PairRule {
         if !self.car && self.fl.is_some() { self.fl.at(w) } else { split.at(w) }
     }
 }
-/// The ordered pair (i, j)'s border factor, the tail's income factor, near or not, and the
-/// distance between their centres (`pair_rule`'s first part).
+/// The ordered pair (i, j)'s border factor, the tail's income factor, j's pull on i's trips (less 1),
+/// near or not, and the distance between their centres (`pair_rule`'s first part).
 #[inline]
-fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, i: usize, j: usize) -> (f64, f64, bool, f64) {
+fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, i: usize, j: usize) -> (f64, f64, f64, bool, f64) {
     let (p, q) = (&places[i], &places[j]);
     let km = if i == j {
         0.
@@ -694,14 +744,16 @@ fn pair_trip_rule(places: &[Place], countries: &[String], rule: &Rule, ground: b
     } else {
         ((p.x - q.x).hypot(p.y - q.y) / 1000.) as f64
     };
-    let b = border_factor(rule, &countries[p.country as usize], p.inc, &countries[q.country as usize]);
+    let (pc, qc) = (&countries[p.country as usize], &countries[q.country as usize]);
+    let b = border_factor(rule, pc, p.inc, qc);
     let rel = if p.inc > 0. { (q.inc / p.inc).min(1.).powf(rule.eps_t) } else { 1. };
-    (b, rel, km < rule.near_km, km)
+    let pull = if q.px > 0. { (rule.pull_gamma_of(pc, qc) * q.px).exp_m1() } else { 0. };
+    (b, rel, pull, km < rule.near_km, km)
 }
 /// The ordered pair (i, j)'s rule (`PairRule`).
 fn pair_rule(places: &[Place], countries: &[String], rule: &Rule, ground: bool, mp: &Params, drives: &Drives, i: usize, j: usize) -> PairRule {
-    let (b, rel, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
-    pair_mode_rule(places, countries, mp, drives, i, j, near, km, PairRule { b, rel, near, km, ..PairRule::default() })
+    let (b, rel, pull, near, km) = pair_trip_rule(places, countries, rule, ground, i, j);
+    pair_mode_rule(places, countries, mp, drives, i, j, near, km, PairRule { b, rel, pull, near, km, ..PairRule::default() })
 }
 /// `pair_rule`'s modes for the ordered pair (i, j), near or not, `km` apart, into `r`: whether a car
 /// can go, the flight, the crossings, the routed drive, and the share of the trips not by rail that

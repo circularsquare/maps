@@ -38,6 +38,22 @@ Generate **total** all-mode trips, then let the player's network earn rail's sha
   area (the EU 27, Norway, Iceland, Switzerland, Liechtenstein and the UK, by the rows' `country`;
   `OPEN_AREA_BORDER`, T-809), else `0.26 x min(y_i / y_US, 1)^1.5` (the origin's income). Each
   6 km zone's two normalisers are computed offline at its centre.
+- **The long-trip pull** (T-3240, `pipeline/market_pull.json`; off, `"on": false`, until the world
+  rebuild after 2026-11-11 turns it on and rebuilds every pack's market file, so its packs, rows and
+  registry rule never mix with and without it): a destination place's
+  attraction, ground and tail alike, is times `1 + (exp(gamma x px) - 1) x fade(50-150 km)`. `px`, its
+  *excess*, is how much more important the place is than its people say: the best Natural Earth 10m
+  populated-places `scalerank` inside its zone's outline against the rank a place of its people has
+  (`20.80 - 1.08 ln(people)`), clipped to 0-3. Trimmed for map balance: the cap of 3 shrinks on a log
+  scale from 5M people within 300 km of the centre (own included) to none at 0.5M (Darwin, Anchorage,
+  Reykjavík go to 0, Auckland to 2.3); Leh is set to 0 by hand. Beach and resort towns
+  (`pipeline/market_resorts.json`: Wikidata's seaside resorts and resort towns and Wikipedia's
+  seaside-resorts categories) give their place at least `1.5 x min(1, their people's share / 0.1)`.
+  `gamma` is 0.8 within a country (China's 0.6 of that, 0.48), 0.25 across a border (fitted on FR24
+  airport pairs: notes/T-3240.md); residents of the US, Japan, the UK and Korea see no pull (their pairs
+  fit without). The normalisers carry it over the world field (each r5 cell its place's excess, by
+  outline), so each origin's departures are kept and only where they go changes. `pipeline/market_pull.py`
+  rebuilds the excess table, `pipeline/market_resorts.py` the resort list.
 - **Pairs**: places whose centres are under **250 km** apart pair 6 km zone to 6 km zone at their
   own distance; farther places pair at the distance between the places' centres, so their 6 km
   pairs add up to the places' trips exactly, each end's share by its zones' departures over the

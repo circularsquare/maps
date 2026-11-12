@@ -2585,3 +2585,52 @@ fn t2653_ab() {
     }
     super::pass::ST_BY_ZONE_OFF.store(false, Relaxed);
 }
+
+/// T-3240: the long-trip pull. Place 1 (100 km from 0, its country) and place 2 (abroad) have an
+/// excess of 1; a destination's attraction is times `exp(gamma x 1)` faded in over 50-150 km, the
+/// border's gamma abroad, none for residents of an `off` country, and nothing changes without the rule.
+#[test]
+fn long_trip_pull_by_destination_excess() {
+    let packs: Vec<String> = world_packs().iter().enumerate().map(|(p, s)| if p == 1 || p == 2 { s.replacen(r#""zone":"#, r#""px":1.0,"zone":"#, 1) } else { s.clone() }).collect();
+    let with = |extra: &str, rows: Option<&str>| {
+        let rule = RULE.replace(r#""min_trips":0.01}"#, &format!(r#""min_trips":0.01{extra}}}"#));
+        let rows = rows.map_or(String::new(), |r| format!(r#","rows":{r}"#));
+        format!(r#"{{"world":{{"frame":{{"kind":"equirect","lon":0,"lat":50}},"rule":{rule},"places":5{rows}}},"zones":[{}]}}"#, packs.join(","))
+    };
+    let pull = r#","pull_gamma":0.8,"pull_gamma_x":0.25,"pull_phase_km":[50,150],"pull_off":["CC"],"pull_country_gamma":{"DD":0.5}"#;
+    let none = IntercityApi::new(&with("", None)).unwrap();
+    let on = IntercityApi::new(&with(pull, None)).unwrap();
+    let (m0, m) = (&none.m, &on.m);
+    // without the rule's constants an excess changes nothing, to the bit
+    let plain = IntercityApi::new(&composition(&world_packs(), None)).unwrap();
+    assert_eq!(none.corridor_trips().iter().map(|v| v.to_bits()).collect::<Vec<_>>(), plain.corridor_trips().iter().map(|v| v.to_bits()).collect::<Vec<_>>());
+    assert_eq!((m.pr(0, 1).pull, m.pr(0, 2).pull, m.pr(1, 0).pull, m.pr(2, 0).pull), (0.8f64.exp_m1(), 0.25f64.exp_m1(), 0., 0.));
+    // a zone pair at its own distance: the pull's share of the window
+    for (za, zb) in m.zones.iter().filter(|z| z.place == 0).flat_map(|a| m.zones.iter().filter(|z| z.place == 1).map(move |b| (a, b))) {
+        let d = m.zone_km(za, zb);
+        let w = 1. + 0.8f64.exp_m1() * ((d - 50.) / 100.).clamp(0., 1.);
+        let (x, y) = (m.directed(0, 1, za.g, za.t, zb.a, zb.ta, d), m0.directed(0, 1, za.g, za.t, zb.a, zb.ta, d));
+        assert!(y > 0. && (x / y - w).abs() < 1e-12, "{d} km: {x} {y} {w}");
+        // the way back has no pull (place 0 has no excess)
+        assert_eq!(m.directed(1, 0, zb.g, zb.t, za.a, za.ta, d).to_bits(), m0.directed(1, 0, zb.g, zb.t, za.a, za.ta, d).to_bits());
+    }
+    // far places at full strength, abroad at the border's gamma
+    let (p, q) = (&m.places[0], &m.places[2]);
+    let km = m.pr(0, 2).km;
+    assert!((m.directed(0, 2, p.g, p.t, q.a, q.ta, km) / m0.directed(0, 2, p.g, p.t, q.a, q.ta, km) - 0.25f64.exp()).abs() < 1e-12);
+    // a country's own gamma, and residents of an `off` country see none
+    let dd = IntercityApi::new(&with(&pull.replace(r#""DD":0.5"#, r#""AA":0.5"#), None)).unwrap();
+    assert!((dd.m.pr(0, 1).pull - 0.4f64.exp_m1()).abs() < 1e-15 && dd.m.pr(0, 2).pull == 0.25f64.exp_m1());
+    let off = IntercityApi::new(&with(&pull.replace(r#"["CC"]"#, r#"["AA"]"#), None)).unwrap();
+    assert_eq!((off.m.pr(0, 1).pull, off.m.pr(0, 2).pull, off.m.pr(2, 1).pull), (0., 0., 0.25f64.exp_m1()));
+    // the rows carry the excess, and open as the same market
+    let rows = serde_json::to_string(&world_rows(&with(pull, None)).unwrap()).unwrap();
+    assert!(rows.contains(r#""px":1.0"#));
+    let w = IntercityApi::new(&with(pull, Some(&rows))).unwrap();
+    for (a, b) in w.corridor_trips().iter().zip(on.corridor_trips()) {
+        assert!((a - b).abs() <= 1e-9 * b.max(1.), "{a} {b}");
+    }
+    assert!(on.m.cw.daily > none.m.cw.daily);
+    // a bad rule does not open
+    assert!(IntercityApi::new(&with(&pull.replace("[50,150]", "[150,50]"), None)).is_err());
+}
