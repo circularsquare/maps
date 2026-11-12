@@ -103,11 +103,14 @@ worth more than a local one's, about US DOT's guidance, $14.10 an hour locally a
 road and $47.20 by air or high-speed rail). A group makes longer trips in proportion to
 (its income over the mean)^0.7, the rule's `eps`. A zone pair's choice is worked out for each group
 and added up by their trips; the place pair's split between car and plane likewise. Rail's fare is
-the player's curve as set at India's (51, so it weighs as every country's fares do at their
-default scales; a trip pays the curve times its starting country's scale) [T-1277], each trip's
-fare weighed again by its group's factor and by its origin's fare scale over that country's income
-scale where the player set one (on the expected fare km of each station pair's strategy as
-searched, so routes stay as the curve gives them) [T-1286]. Commutes and outings between zones keep
+the player's curve as set, at the minutes a curve dollar costs every country's riders at their
+default scales (`marketFareWeight`: India's 51 a dollar of India's units, over the start country's
+income scale in a game from T-1906 on, whose curve is in that country's dollars: 4.38 in a US start,
+6.96 in a Japan start; a trip pays the curve times its starting country's scale) [T-1277, T-3239].
+The route search charges fares at that weight, as a local trip's. Each trip's fare is weighed again
+by its group's factor and by its origin's fare scale over its default where the player set one (on
+the expected fare km of each station pair's strategy as searched, so routes stay as the curve gives
+them) [T-1286]. Commutes and outings between zones keep
 one group, the car's money at 3 minutes a dollar and the fare at their home's weight. All of it is damped by the trip's length as the local walking share is
 ([demand-mode.md](demand-mode.md) 4.3, T-495): 0.10 x sqrt(60 / T) per perceived minute, T the
 car's perceived minutes over the zone pair's distance, even across a sea where no car goes (so

@@ -97,15 +97,24 @@ export function tidyOwn(country: string, v: number, scales: Record<string, numbe
 /** T-2679: a player's scale as the worker keeps it: as set, so a multiple of the reference country
  * (`storedScale`) holds exactly. */
 export const keepOwn = (v: number): number => Math.min(1000, Math.max(0.001, v));
-/** T-1286: per country, its scale over its income's where not 1: the factor the regional market
- * weighs fares from there at. In a game from T-1906 on that is every country in the income table. */
+/** T-3239: what a curve dollar is in `FARE_BASELINE`'s units: a game from T-1906 on keeps its curve in
+ * its start country's dollars, every country charging its income scale over the start's (`START`). */
+const curveUnit = (scales: Record<string, number> | undefined): number => {
+  const start = scales?.[START];
+  return start !== undefined && Number.isFinite(start) && start > 0 ? start : 1;
+};
+/** T-3239: perceived minutes a dollar of the curve as set costs the regional market's riders, as every
+ * country at its default scale weighs it: the weight its route search charges fares at. */
+export const marketFareWeight = (scales: Record<string, number> | undefined): number => curveWeight() / curveUnit(scales);
+/** T-1286: per country, where not 1, the factor the regional market weighs fares from there at, over
+ * `marketFareWeight`: its scale over its default's. */
 export function fareFactors(scales: Record<string, number> | undefined): Record<string, number> {
   const out: Record<string, number> = {};
-  const keys = Object.keys(scales ?? {});
+  const keys = Object.keys(scales ?? {}), unit = curveUnit(scales);
   for (const c of relative(scales) ? new Set([...Object.keys(GDP), ...keys]) : keys) {
     if (c === START || c === EVERY) continue;
-    const f = fareScale(c, scales) / incomeScale(c);
-    if (f !== 1) out[c] = f;
+    const f = (fareScale(c, scales) * unit) / incomeScale(c);
+    if (Math.abs(f - 1) > 1e-6) out[c] = f;
   }
   return out;
 }

@@ -16,7 +16,15 @@ All Opus, running, no commits (I land):
   name zones by market regionName ("Jinchengjiang region" for Hechi), 1,384 zones; fix to zoneName().
 - hsr: found the regional route search weighs fares 7-12x too heavy (curveWeight in India units vs start-country
   dollars since T-1906); fixing in demand.worker.ts + income.ts.
-Next free id T-3243.
+- T-3242 landed f0526a6e. Hidden-name text in her words 69ea44e9. **8800 = f0526a6e.**
+- **shonei-server deployed 11-12 01:49 UTC** (22f4293 + 464b5af + e3b8890, her word): config trainworldCommunitySearch
+  true. NOT pushed (ask her). Box at the deploy: disk 14% of 38G, 202 players, 769 MB of games, 40 shares.
+- Her calls 11-11 evening: T-3212 go (mock "looks great"); T-3225 go, 30 biggest first; import later; "subwayworld"
+  dropped (a player's mix-up); resources checklist, run daily for now.
+- split ae432976a77e94311, 6135: T-3212 single-track station split.
+- realauto ab4cded9673c3da54, 6136: T-3225 automatic real networks, 30 biggest.
+- resources a3f2749cb82c5595e: T-3243 resources inventory + tools/ops script + docs/ops-checks.md (read-only).
+Next free id T-3244.
 
 Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
