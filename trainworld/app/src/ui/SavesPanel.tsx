@@ -105,7 +105,7 @@ export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveS
         <span data-tip={t("savesPanel.cash", { amount: money(slot.cash! * 1e6) })}><Money dollars={slot.cash! * 1e6} /></span>
       </>}
     </div>}
-    {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
+    {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")} data-tip={t("savesPanel.memoryTip", { gb: gbText(estimateGB(slot.stations)) })}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
   </>;
 }
 

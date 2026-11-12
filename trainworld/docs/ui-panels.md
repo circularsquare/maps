@@ -970,7 +970,7 @@ keeps what it had and earns no more.
     browser. Still on your account until the server can be reached." and the deletion is sent at the
     next load.
 
-**Memory a game takes** [T-3329]: a line under the facts of every card with stations, "About 2.5 GB of memory", from the
+**Memory a game takes** [T-3329]: a line under the facts of every card with stations, just "2.5 GB" (hover "Uses about 2.5 GB of memory"), from the
 station count (1.8 GB plus 0.65 GB per 1,000 stations plus 0.5 GB per solving worker past the first; within about 0.2 GB on
 the real-network saves). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
 shows it in red and its Open (saves panel and start menu, not the versions list) first asks "This game needs about 5 GB of

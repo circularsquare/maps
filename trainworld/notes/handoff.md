@@ -117,6 +117,18 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
   becomes one remembered thing (8-12 h) before AA/BB; 5 calls sent her for another day.
 - onelook DONE, committed 74657141 (wider one-track look, blueprint track over blueprint boxes, two-pairs behind
   ?pairs). DECISIONS line for hiding is in the uncommitted DECISIONS (commit with the next round). Not yet on 8800.
+- ~17:30 her focus: v0.3.3 only ("reduce scope of things im thinking about"). T-3365 answers recorded (notes top,
+  DECISIONS), parked with AA/BB: don't raise them again until she does. Strings acked (one-track, follow, around,
+  board, memory). Memory card: just "3.1 GB" + hover "Uses about 3.1 GB of memory", refresh slower if costly (t3329
+  resumed). ac72df8d smoked 28/28; snapbuild ac72df8d + push running.
+- **hsr** a7db66e57cfea54da (Sonnet, .tw-trees/hsr, 6197): T-3352 single HSR/tram (my calls per its scope), then
+  T-3337 HSR 350.
+- v0.3.3 plan proposed to her (see final message): in = everything on master + T-3352/T-3337 + schematic fixes if
+  ready + gap A/NK (B, C if done); timetable stage 2 maybe v0.3.4; then translation batch, changelog, server deploy,
+  about-page credit, smoke8800, deploy with a new data version, open-source repo.
+- Committed 92ff0df9: T-3329 memory (B + A), T-3361 follow a train, T-3357 pill/around/hover. Strings to her.
+  Landing tt1 (bg) then smoke on my Vite 6139, snapbuild, push. The join (gaprun2) owns data/packs meanwhile: use
+  snapbuild-frozen if the join is mid-write? (smoke reads packs; joins rewrite market/joint files).
 - **tt1 tree READY to land** (T-3346 stage 1, agent finished): schedule panel Simple mode, departures board, chart,
   group chart; sim query station_departures (WASM rebuild on land); check 16/16, smoke 28. Overlaps main-tree app/
   edits (widgets.tsx, style.css, en.json, context.json, LineInspector): land AFTER t3357 and t3329 report and are
