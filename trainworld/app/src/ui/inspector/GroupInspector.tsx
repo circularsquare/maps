@@ -30,6 +30,7 @@ import { tipBullet } from "../tip";
 import { Chip, Icon } from "../widgets";
 import { NameEdit } from "./NameEdit";
 import { TwoRows } from "./LineInspector";
+import { GroupChartButton } from "./SchedulePanel";
 import { t, tSeries } from "../../i18n";
 import { mobileDevice } from "../../workers/deviceMemory";
 
@@ -217,6 +218,7 @@ export function GroupInspector({ group }: { group: number }) {
         <button class={"btn icon mini related-toggle" + (copying ? " on" : "")} data-tip={t("groupInspector.copy")} aria-label={t("groupInspector.copy")} aria-pressed={copying} onClick={() => setCopying(!copying)}>
           <Icon.copy />
         </button>
+        <GroupChartButton ls={byNum} />
       </div>
       {copying && (
         <div class="group-copy">

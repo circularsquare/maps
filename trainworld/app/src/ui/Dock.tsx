@@ -22,6 +22,7 @@ import { SettingsTab } from "./SettingsTab";
 import { NewReplyDot, replyTip } from "./FeedbackPanel";
 import { HelpPanel } from "./HelpPanel";
 import { MareyPanel } from "./inspector/MareyChart";
+import { SchedulePanel } from "./inspector/SchedulePanel";
 import { startAccountUi } from "./AccountPanel";
 import { Icon } from "./widgets";
 import { tabKeyName } from "./toolKeys";
@@ -154,6 +155,7 @@ export function Dock() {
       <SavesPanel />
       <HelpPanel />
       <MareyPanel />
+      <SchedulePanel />
       <section class={"pane" + (cur === "build" ? " build-pane" : "")} ref={paneRef}
         onScrollCapture={(e) => { if (!restoring.current) scrolls.current[cur] = (e.target as HTMLElement).scrollTop; }}>
         <Pane />

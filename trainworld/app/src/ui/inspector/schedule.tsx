@@ -186,9 +186,10 @@ function LevelName({ v, d, stops, flip, pending, ends, vehicle }: { v: Float64Ar
 }
 
 /** The Schedule heading, its Trains (Buses, Boats) or Headway switch, and the table of levels. `crowd`:
- * the line's periods for the crowding dots (a rail line's); `copy`: the copy and paste buttons. */
-export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto = true, copy }: {
-  l: LineInput; st: LineStats; now: Demand; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren;
+ * the line's periods for the crowding dots (a rail line's); `copy`: the copy and paste buttons;
+ * `label`: the heading's words in place of "Schedule" (the schedule panel's "Set by", T-3346). */
+export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto = true, copy, label }: {
+  l: LineInput; st: LineStats; now: Demand; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren; label?: string;
 }) {
   const v = vehicleOf(st);
   const auto = headwayShown(l.id);
@@ -197,8 +198,8 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
   const w = world.value, flip = !!w && lineReversed(l, w, !!st.loop);
   return (
     <>
-      <div class="h">
-        {t("schedule.title")}
+      <div class={label ? "h set-by" : "h"}>
+        {label ?? t("schedule.title")}
         {canAuto && copy}
         {canAuto && (
           <span class="right">

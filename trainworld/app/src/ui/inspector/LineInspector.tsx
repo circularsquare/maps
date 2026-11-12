@@ -39,6 +39,7 @@ import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, schedul
 import { drawnReversed } from "../../game/northUp";
 import { turnedLine, type TurnRow } from "../../game/turnedLine";
 import { MareyButton } from "./MareyChart";
+import { ScheduleButton } from "./SchedulePanel";
 import { LineProfile } from "./LineProfile";
 import { LineTopSpeed } from "./LineTopSpeed";
 import type { EditOp } from "../../workers/protocol";
@@ -115,7 +116,7 @@ function heldFrom(v: Float64Array, vehicle: Vehicle): Held[] {
 
 /** What limits a line per level (T-679, `Limit`); null where nothing does. From the tail of
  * `TrackApi.line_held`. */
-function limitsFrom(v: Float64Array, vehicle: Vehicle): (Limit | null)[] {
+export function limitsFrom(v: Float64Array, vehicle: Vehicle): (Limit | null)[] {
   const st = stationsNow();
   return DEMANDS.map((_, lev) => {
     const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
@@ -640,6 +641,7 @@ export function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) 
       <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c, whole, vehicleOf(st)) }) + cut : tr("lineInspector.pasteNone")}
         onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
       {!st.bus && <MareyButton st={st} />}
+      {!st.bus && <ScheduleButton l={l} st={st} />}
     </span>
   );
 }

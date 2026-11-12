@@ -28,7 +28,6 @@ import { clipPath, gradePasses, sharedStretches, type Pass, type Shared } from "
 export const mareyOpen = signal(false);
 
 const W_PX = 600, GUTTER = 92, PAD_R = 18, TOP = 8, AXIS = 22;
-const PLOT_W = W_PX - GUTTER - PAD_R;
 /** the window's share before now */
 const BEFORE = 0.25;
 const HOUR = 3600, QUARTER = 900;
@@ -105,7 +104,7 @@ const tripsOf = (d: Float64Array): Trip[] => Array.from({ length: d.length / 4 }
 
 /** What the chart draws besides the line's own trains (T-2660): the lines over its track and the
  * at-grade crossings of its path, by the network build. */
-interface Links { shared: Map<number, Shared[]>; passes: Pass[] }
+export interface Links { shared: Map<number, Shared[]>; passes: Pass[] }
 
 /** A flat junction or crossing on the line's path that another line uses or crosses (`TrackApi.line_marks`). */
 interface Flat { crossing: boolean; s: number; tip: string }
@@ -126,7 +125,8 @@ function flatsFrom(d: Float64Array, stopS: number[]): Flat[] {
 }
 
 interface Drawn { id: string; d: string }
-interface Run { key: string; href: string; x: number; colour?: string; tip: string }
+/** `own`: another line drawn at full strength, a line of the charted group (T-3346) */
+interface Run { key: string; href: string; x: number; colour?: string; own?: boolean; tip: string }
 interface Mark { x: number; y: number; colour: string; tip: string }
 
 /** The scrolled part of the chart: the time ticks and every train, built once per answer and moved
@@ -139,7 +139,7 @@ function TripLayer({ width, height, ticks, defs, stands, others, passes, runs, o
       <defs>{defs.map((p) => <path id={p.id} d={p.d} />)}</defs>
       {ticks.map((x) => <line class="marey-tick" x1={x} x2={x} y1={TOP} y2={height - AXIS} />)}
       {stands.map((s) => <line class="marey-stand" x1={s[0]} x2={s[1]} y1={s[2]} y2={s[2]} />)}
-      {others.map((r) => <use class="run other" href={r.href} x={r.x} style={{ "--run": r.colour }} />)}
+      {others.map((r) => <use class={r.own ? "run" : "run other"} href={r.href} x={r.x} style={{ "--run": r.colour }} />)}
       {others.map((r) => <use class="run-hit" href={r.href} x={r.x} data-tip={r.tip} onPointerEnter={() => onHover(r.key)} onPointerLeave={() => onHover(null)} />)}
       {passes.map((m) => <circle class="marey-pass" cx={m.x} cy={m.y} r={2.5} style={{ "--run": m.colour }} data-tip={m.tip} />)}
       {runs.map((r) => <use class="run" href={r.href} x={r.x} />)}
@@ -148,11 +148,15 @@ function TripLayer({ width, height, ticks, defs, stands, others, passes, runs, o
   );
 }
 
-function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links | null }) {
+/** The chart of line `l`, `width` px wide. T-3346: `plotH` sets the height of its stops' span
+ * (else by its stop count), and `group`'s lines are drawn where they share its track whether or not
+ * other lines are shown, at full strength. */
+export function MareyBody({ l, st, links, width = W_PX, plotH, group }: { l: LineInput; st: LineStats; links: Links | null; width?: number; plotH?: number; group?: ReadonlySet<number> }) {
   const r0 = DEBUG ? performance.now() : 0;
   const w = world.value!;
   const net = live.overlay?.renderer.net ?? null;
   const [zoom, setZoom] = useState(0);
+  const PLOT_W = width - GUTTER - PAD_R;
   const span = Math.min(MAX_SPAN, Math.max(MIN_SPAN, defaultSpan(l, st) * ZOOM_STEP ** zoom));
   const q = span / 4;
   // fetched a quarter window either side of the window, again as now enters the next quarter
@@ -162,7 +166,7 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
   const answer = useClockQuery({ what: "lineTrips", line: l.num, t0: base, t1: base + 6 * q }, [l.num, w.version, base, span],
     (d) => ({ line: l.num, base, span, trips: tripsOf(d) }));
   const showOthers = display.value.chartOtherLines;
-  const otherKey = showOthers && links ? [...new Set([...links.shared.keys(), ...links.passes.map((p) => p.o)])].join(",") : "";
+  const otherKey = links ? [...new Set([...links.shared.keys(), ...links.passes.map((p) => p.o)])].filter((o) => showOthers || group?.has(o)).join(",") : "";
   const otherNums = useMemo(() => (otherKey ? otherKey.split(",").map(Number) : []), [otherKey]);
   const [otherAnswer, setOtherAnswer] = useState<{ base: number; span: number; byLine: Map<number, Trip[]> } | null>(null);
   useEffect(() => {
@@ -183,7 +187,7 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
   const n = l.stops.length;
   const flip = drawnReversed(byId.get(l.stops[0]), byId.get(l.stops[n - 1]), !!st.loop);
   const d0 = st.stopS[0][0] ?? 0, d1 = st.stopS[0][n - 1] ?? 1;
-  const H = Math.max(120, Math.min(340, n * 20));
+  const H = plotH ?? Math.max(120, Math.min(340, n * 20));
   const yOf = (d: number) => {
     const f = d1 > d0 ? (d - d0) / (d1 - d0) : 0;
     return TOP + (flip ? 1 - f : f) * H;
@@ -250,7 +254,7 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
           const first = pr.run === 0 ? ol.stops[0] : ol.stops[m - 1], last = pr.run === 0 ? ol.stops[m - 1] : ol.stops[0];
           const arrive = t.dep + reachTau(pr.pts, stops[stops.length - 1] ?? 0);
           runs.push({
-            key: `o${o}-${i}`, href: `#${id}-o${t.p}`, x: (t.dep - answer.base) * k, colour: ol.colour,
+            key: `o${o}-${i}`, href: `#${id}-o${t.p}`, x: (t.dep - answer.base) * k, colour: ol.colour, own: group?.has(o),
             tip: tr("mareyChart.otherTip", { line: ol.name, from: names.get(first) ?? "", leave: local(t.dep), to: names.get(last) ?? "", arrive: local(arrive) }),
           });
         }
@@ -265,7 +269,7 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
       });
     }
     return { defs, runs, marks };
-  }, [otherAnswer, answer, net, links, w.version, flip, H, k]);
+  }, [otherAnswer, answer, net, links, w.version, flip, H, k, group]);
 
   // the time ticks over the fetched span, on the line's local clock
   const fetchedBase = answer?.base ?? base;
@@ -311,8 +315,8 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
     (g.__mareyRender ??= []).push(performance.now() - r0);
   });
   return (
-    <div class="marey-chart" style={{ width: W_PX + "px", height: height + "px", "--run": l.colour }} onWheel={onWheel}>
-      <svg class="marey-base" width={W_PX} height={height}>
+    <div class="marey-chart" style={{ width: width + "px", height: height + "px", "--run": l.colour }} onWheel={onWheel}>
+      <svg class="marey-base" width={width} height={height}>
         {labels.map(({ i, y }) => (
           <text class="marey-stop" x={GUTTER - 8} y={y + 4}>{fit(names.get(l.stops[i]) ?? "")}</text>
         ))}
@@ -332,7 +336,7 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
         <div class="marey-scroll" style={{ transform: `translateX(${offset.toFixed(1)}px)` }}>
           {layer}
           <svg class="marey-lit" width={6 * q * k} height={height}>
-            {lit && <use class={"run on" + (lit.colour ? " other" : "")} href={lit.href} x={lit.x} style={lit.colour ? { "--run": lit.colour } : undefined} />}
+            {lit && <use class={"run on" + (lit.colour && !lit.own ? " other" : "")} href={lit.href} x={lit.x} style={lit.colour ? { "--run": lit.colour } : undefined} />}
           </svg>
         </div>
         <svg class="marey-over" width={PLOT_W} height={height}>
@@ -348,6 +352,20 @@ function MareyBody({ l, st, links }: { l: LineInput; st: LineStats; links: Links
   );
 }
 
+/** Where other lines meet line `l`'s chart: their stretches on its track and their flat crossings of
+ * its path, by the network build and the line's ends only (the stats object is new on every state
+ * message). */
+export function useChartLinks(l: LineInput | undefined, st: LineStats | undefined): Links | null {
+  const w = world.value;
+  const net = live.overlay?.renderer.net ?? null;
+  const n = l?.stops.length ?? 0;
+  const d0 = st?.stopS[0][0] ?? 0, d1 = st?.stopS[0][n - 1] ?? 0;
+  return useMemo<Links | null>(() => {
+    if (!net || !l || n < 2) return null;
+    return { shared: sharedStretches(net, l.num, d0, d1), passes: gradePasses(net, l.num, d0, d1) };
+  }, [net, l?.num, w?.version, d0, d1]);
+}
+
 /** The chart's panel beside the dock, for the selected rail line while `mareyOpen`. */
 export function MareyPanel() {
   const open = mareyOpen.value;
@@ -355,21 +373,14 @@ export function MareyPanel() {
   const w = world.value;
   const l = open && w && sel?.kind === "line" ? linesById(w).get(sel.line) : undefined;
   const st = l && w ? w.lineStats[l.id] : undefined;
-  const net = live.overlay?.renderer.net ?? null;
-  const n = l?.stops.length ?? 0;
-  const d0 = st?.stopS[0][0] ?? 0, d1 = st?.stopS[0][n - 1] ?? 0;
-  // by the network build and the line's ends only: the stats object is new on every state message
-  const links = useMemo<Links | null>(() => {
-    if (!net || !l || n < 2) return null;
-    return { shared: sharedStretches(net, l.num, d0, d1), passes: gradePasses(net, l.num, d0, d1) };
-  }, [net, l?.num, w?.version, d0, d1]);
+  const links = useChartLinks(l, st);
   // no rail line selected: closed, so it does not come back by itself on the next line
   useEffect(() => { if (open && w && (!sel || sel.kind !== "line" || w.lineStats[sel.line]?.bus)) mareyOpen.value = false; }, [open, sel, w]);
   useEffect(() => {
     if (!open) return;
-    // before main.ts's Escape, which would clear the selection too
+    // before main.ts's Escape, which would clear the selection too; a centred panel over it takes its own
     const key = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector("dialog[open]")) return;
       mareyOpen.value = false;
       e.preventDefault();
       e.stopImmediatePropagation();

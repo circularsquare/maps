@@ -108,6 +108,32 @@ impl TrackApi {
             })
             .collect()
     }
+    /// T-3346: the departures board. Line `line`'s trains leaving station node `node` in
+    /// `[t0, t1)`, game seconds: per departure its run, the stop's index in that run and the time
+    /// it leaves (its trip's `draw` plus its profile's `dep` there), sorted by time. A run's last
+    /// stop is never a departure; a stop the run passes twice is two.
+    pub fn station_departures(&self, line: u32, node: u32, t0: f64, t1: f64) -> Vec<f64> {
+        let svc = &self.w.svc;
+        let Some(ls) = svc.lines.get(line as usize).filter(|l| l.ok && !l.is_bus()) else { return vec![] };
+        // The one place this reads a trip's timetable: stage 2 makes it `ls.prof_of(run, level, t.var)`.
+        let prof = |t: &crate::track::service::Trip| &ls.runs[t.run as usize].prof[t.level as usize];
+        let mut out: Vec<(f64, u8, usize)> = vec![];
+        for t in svc.line_trips(&self.w.net, line as usize, t0, t1) {
+            let p = prof(&t);
+            let n = ls.runs[t.run as usize].stop_idx.len();
+            for k in 0..n.saturating_sub(1) {
+                if ls.stop_node(t.run as usize, k) != Some(node) {
+                    continue;
+                }
+                let at = t.draw + p.dep.get(k).copied().unwrap_or(0.0);
+                if at >= t0 && at < t1 {
+                    out.push((at, t.run, k));
+                }
+            }
+        }
+        out.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+        out.iter().flat_map(|&(at, r, k)| [r as f64, k as f64, at]).collect()
+    }
     /// The junction inspector (T-031): a junction's edge ends and the moves running lines make
     /// through it. Flat: `[ports, then per port: edge, end (0 a, 1 b), dx, dy (unit vector from the
     /// node to the track 1 km out, or its far end), moves, then per move: in port, out port, trains an hour x3

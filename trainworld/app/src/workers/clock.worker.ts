@@ -1491,7 +1491,7 @@ const STOP_QUERIES = new Set(["stopTiers", "stopGap", "insertStop", "passedStati
 const STOP_KINDS = new Set<ToClock["kind"]>(["income", "points", "regionShares", "chargeShares", "clock"]);
 /** demand's results and the clock: money, riders and trips, none of which a blueprint changes */
 const HELD_KINDS = new Set<ToClock["kind"]>(["income", "points", "regionShares", "riders", "transfers", "epoch", "clock"]);
-const HELD_QUERIES = new Set(["today", "lineAccount", "linePeriods", "linesPeriods", "lineWaits", "lineTrips", "lineHeld"]);
+const HELD_QUERIES = new Set(["today", "lineAccount", "linePeriods", "linesPeriods", "lineWaits", "lineTrips", "stationDeps", "lineHeld"]);
 /** T-2404: the blueprint edges the last edit made or changed, local x, y, z each, for the client's
  * stand-ins while their state is held (read from the track model, not kept: one may be gone) */
 function heldEdges(): Float32Array[] {
@@ -4590,6 +4590,8 @@ async function handle(msg: ToClock) {
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       // T-2603: the line's timetable chart, four numbers a trip (`TrackApi.line_trips`)
       : q.what === "lineTrips" ? api.line_trips(q.line, q.t0, q.t1)
+      // T-3346: a station's departures board, three numbers a departure (`TrackApi.station_departures`)
+      : q.what === "stationDeps" ? api.station_departures(q.line, q.node, q.t0, q.t1)
       : q.what === "removal" ? new Float64Array(api.removal_lines(new Uint32Array(q.edges), new Uint32Array(q.stations)))
       : q.what === "busQuote" ? busQuoteLL(api, q.line, q.route)
       : q.what === "rebuildQuote" ? rebuildQuoteAnswer(q.edges, q.stations, q.level, q.kind, q.tracks)

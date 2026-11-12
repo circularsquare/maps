@@ -293,7 +293,8 @@ purpose filter the purpose drawn is ringed in the bar.
   length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
   counts rounded up to even; paste is off until something is copied, its hover naming the line
   copied from; a third, on a running line, opens the **timetable chart** (below, hover "Show timetable chart" /
-  "Hide timetable chart", pressed while open); each level's count or headway is set on its own, a new line's included (T-2123 took
+  "Hide timetable chart", pressed while open); a fourth, on a running line, opens the **schedule panel** (hover "Detailed
+  schedule", [ui-panels.md](ui-panels.md#schedule-panel), T-3346); each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Trains a click on the count types it (Enter or leaving applies, Escape cancels, a loop's rounded up to even) [T-3152]. A count is raised to at most one train (a loop's two) more than the whole trains the line's track lets run at that level (the round trip over its shortest headway, `limits`; a loop's even, one at least; `trainCap`) and 1000, so one train is held and the held messages, the issue and the red headway show: a plus or a typed number at or past that is refused with the shake and the refusal knock, a typed number above it sets the cap and shakes, and the plus's hover says what limits the line. Lowering is free. When a game loads, a count past the cap is lowered to it (`game/capLoad.ts`); a cap that falls later, from a track edit, leaves the count, red with the held-out alert, until it is lowered [T-3165]; with Headway the headway column holds a stepper (steps to
   the whole minute above or below, so 5.37 min goes to 6 or 5 and 5 min to 6 or 4; none, or 1 to 240
@@ -477,7 +478,8 @@ Each trip the map draws (`TrackApi.line_trips`, the same departures, ends and ha
 directions alike, curved as its run profile goes (speeding up, slowing, standing at stops), then a
 dashed line at the terminal while its train stands for its next departure. Hover on a trip thickens it
 and names its ends: "Leaves Ash 08:12", "Reaches Gum 08:28". It follows the selected line; it closes
-with its button, the close button, Esc, or when no rail line is selected.
+with its button, the close button, Esc (unless a centred panel is open over it, which takes the Esc), or when no
+rail line is selected. The schedule panel draws the same chart at its own width ([ui-panels.md](ui-panels.md#schedule-panel)).
 
 **Other lines** [T-2660]: every other rail line that runs over the line's track has its trains drawn
 on the stretches they share, mapped onto this line's distance through the track both use (direction
@@ -585,7 +587,8 @@ line panel's own remove button works as before.
   hand order where there is one (T-1813).
 - **Stops header**: the all-stops switch (hover "Show all stops" / "Show fewer stops", kept while
   the page is open) and Copy line, which opens a row of the group's bullets; a click on one copies
-  that line (hover "Copy 4") into the group.
+  that line (hover "Copy 4") into the group. With two or more of its lines running on rail, a chart icon
+  (hover "Timetable chart") opens the group's chart in the schedule panel ([ui-panels.md](ui-panels.md#schedule-panel), T-3346).
 - **Rows**: one place (station complex, `stopKey`) each. They start from the line with most stops in
   its path order, north up as the line panel's stops (T-1894); each other line is matched to them by place, turned around if it runs the other
   way, and its own places go in as one block: between the rows it leaves and rejoins, or above its

@@ -229,6 +229,40 @@ svg .stroke2 { stroke-width: 2; }
 .marey-flat-mark path { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
 .marey-past { fill: var(--bg); fill-opacity: 0.5; stroke: none; pointer-events: none; }
 .marey-now { stroke: var(--accent); stroke-width: 1.5; }
+/* T-3346: the schedule panel (SchedulePanel.tsx), centred like Community */
+.saves-panel.sched-panel { width: min(1040px, calc(100vw - 40px)); }
+.saves-head.sp-title h2 { display: flex; align-items: center; gap: 8px; flex: none; min-width: 0; }
+.sp-title .sp-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-title .sp-word { color: var(--muted); font-weight: 400; font-size: 14px; }
+.sp-title .sp-mode { margin-left: 14px; }
+.sp-title .sp-close { margin-left: auto; }
+.sp-body { display: flex; gap: 32px; align-items: flex-start; }
+.sp-left { flex: 0 0 300px; min-width: 0; }
+.sp-left .h:first-child { margin-top: 6px; }
+.sp-left .h.set-by { font-weight: 400; color: var(--muted); align-items: center; }
+.sp-left .h.set-by .right { margin-left: 12px; color: var(--text); }
+.sp-right, .sp-group { flex: 1; min-width: 0; }
+.sp-tabs { display: flex; align-items: center; gap: 8px; margin: 6px 0 10px; }
+.sp-tabs .sp-others { margin-left: auto; color: var(--muted); }
+.sp-tabs .sp-others.on { background: var(--tint); color: var(--text); }
+.sp-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-width: 0; }
+.sp-tools select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+/* the departures board: hour rows, each direction's minutes in its own column */
+.sp-view { display: flex; flex-direction: column; }
+.sp-board { flex: 1; min-height: 0; overflow-y: auto; font-variant-numeric: tabular-nums; }
+.sp-row { display: grid; grid-template-columns: 34px repeat(var(--runs), minmax(0, 1fr)); column-gap: 12px; min-height: 24px; align-items: center; }
+.sp-row.sp-heads { position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.sp-dir { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-hour { align-self: stretch; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--text) 6%, var(--bg)); }
+.sp-heads .sp-hour { background: none; }
+.sp-mins { display: flex; flex-wrap: wrap; column-gap: 10px; padding: 2px 0; }
+.sp-row.now { background: var(--tint); }
+.sp-row.now .sp-hour { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); }
+@media (max-width: 720px) {
+  .sp-body { flex-direction: column; gap: 8px; }
+  .sp-left { flex: none; width: 100%; }
+  .sp-right { width: 100%; }
+}
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
 .help-panel dd { margin: 0; }
