@@ -69,9 +69,19 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
   She asked what "bigger city centres" means (answered in chat).
 - Timetables: "Custom" for own rows; whole hours, averaging, Sat+Sun, text all yes; express behind local yes; three
   modes (current / rows+weekends / exact: nudge, remove, add trains, Marey chart, conflicts highlighted with delay);
-  big train-by-station grid, hideable. t3346 resumed to revise. Stage 2 started: **tt2** a8e910f825e247d9e (Opus,
+  big train-by-station grid, hideable. t3346 revised (Simple / Detailed / Exact; first-come conflicts resolved by the
+  sim; stages 1-5 44-63 h, Exact 24-34 h more); calls 1-3 + strings sent to her; review/timetable-exact.png. Stage 2 started: **tt2** a8e910f825e247d9e (Opus,
   .tw-trees/tt2, 6160).
+- T-3358 water study done (notes/T-3345.md "T-3358"): rivers traced as short arcs between junctions, each drawn
+  alone and short ones dropped (London 115 arcs -> 29 drawn). Approaches: 1 join arcs into courses (3-4 h, my pick),
+  2 route rivers as their own paths off parallel lines (8-12 h, central London), 3 thin bands for uncrossed rivers.
+  Sent her review/schematic-water-london.png. t3345 now on city-turn in .tw-trees/schem.
 - t1156-all-china.save is no reference (DECISIONS).
+- Later 11-12: two-pair partner = any station in the same complex (not 4-16 m); "place quad track station" and
+  one-track stations (T-3332) must ship together with two pairs (v0.3.3 waits for T-3332): told quadfix to scope/build
+  the quad station. Server deploy: HOLD until v0.3.3 ("if it doesnt do anything now"). Memory limit 8/6 GB red 85% OK.
+  Bigger city centres: try, as a mock after city-turn, plus distortion a notch higher ("a tad low"). Screenshot text
+  acknowledged.
 - Worktrees now: onetrack, tt2, quadfix, schem, hotfix031 (5; over the usual 2-3, disk checked).
 
 ## Waiting on Anita
@@ -82,7 +92,7 @@ Read trainworld/CLAUDE.md and docs/orchestrator.md first. Earlier log: handoff.m
 - Timetables (T-3346, revised to her panel idea; notes/T-3346.md, mock artifacts/trainworld/t3346-panel-mock.png):
   her 6 calls (averaging into the 5 periods, no warning; whole hours, 6 rows/day; Sat+Sun together; meets stage 6;
   express behind local; the draft strings). Then stage 1 (panel + board + chart) and stage 2 (per-train waits).
-- Text acks: T-3326's strings after stage 2.
+- Text acks: none open (T-3326 acked 11-12).
 - Later: T-3264 trains drawn through each other (mock).
 
 ## Queued (filed)
