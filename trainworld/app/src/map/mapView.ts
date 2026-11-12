@@ -13,8 +13,11 @@ import { watchGraphics } from "../game/loading";
 import { effect } from "@preact/signals";
 import { mapBearing } from "./live";
 import { cappedPixelRatio } from "../workers/deviceMemory";
+import { touchInput } from "./touch";
 
 maplibregl.setWorkerUrl(workerUrl);
+
+const TOUCH_MAX_ZOOM = 20;
 
 /** T-310, T-3044: a reload does not restore the exact view. If there is a remembered view (or an old
  * link's hash), the map starts at the registry centre and zoom of the city or zone it is in; with
@@ -56,6 +59,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   map.keyboard.disableRotation();
   map.touchPitch.disable();
   followRotation(map);
+  // T-3368: past zoom 20 a track is wider than a phone screen (drawn to scale), so a finger stops there
+  effect(() => { map.setMaxZoom(touchInput.value ? TOUCH_MAX_ZOOM : 22); });
   warnOnNetworkFailure(map);
   watchGraphics(map.getCanvas()); // T-2794
   wheelGapsByEventTime(map);

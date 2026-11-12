@@ -94,6 +94,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   double track opens into its two tracks ("Lines and track").
 - Station names and capacity dots hide below zoom 12 [T-101]; reversal icons hide with the
   stations below zoom 9 [T-1772].
+- **Zoom limit** [T-3368; `map/mapView.ts`]: the map zooms to 22, but after a finger press (`touchInput`) to 20, since past that a track drawn to scale is wider than a phone screen.
 
 ## Lines and track
 

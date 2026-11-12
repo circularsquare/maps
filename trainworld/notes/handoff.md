@@ -20,9 +20,12 @@ rule added to CLAUDE.md). Asked her: keep 350, or back to 320 (then strip T-3337
 hsr's TASKS/ARCHIVE/DECISIONS lines sit uncommitted in the main tree. Stage shared files with scratchpad
 `stage_lines.py <repo> <path> <marker>...` (per line; markers like 'T-3366 '). tt2 (T-3346 stage 2) not landing for
 v0.3.3; its write-up committed in notes/T-3346.md. Changelog draft for her: notes/v033-changelog-draft.md.
-maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; prototype waits for her go), **zoomgone**
-(Sonnet, T-3368 investigate only, Vite 6151), **icons** (Sonnet, main tree, station-type icons 15% bigger, her ask,
-Vite 6153). After those: smoke on master, rebuild 8800. Filed T-3368..T-3371. Next free id T-3372.
+Icons 15% bigger committed 7a8894cc; smoke PASS 28 on it; pushed; **8800 = 7a8894cc** (plain snapbuild during the join,
+as maps-37 did: ES/PT/FR/RO/BA/GR/HR/AL/KP packs on 8800 may be half-joined; rebuild 8800 after gaprun2's after-join
+steps). maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; prototype waits for her go);
+**zoomgone** abe181740cc6aae87 (Sonnet, main tree, Vite 6151): T-3368 didn't reproduce as vanishing; at z21-22 one
+track is wider than a phone screen, so the view is solid line colour. Fixing: maxZoom 20 on touch devices only (my
+call). Filed T-3368..T-3371. Next free id T-3372.
 
 ## Her focus now
 **v0.3.3 only** (Anita 11-12: "just wanna focus on 0.3.3 for now and reduce scope of things im thinking about").
