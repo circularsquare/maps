@@ -1295,10 +1295,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   bytes that are not a block, is a failure like any other, never flat. A download gives up after 60 s; a
   failed one still needed by the view or by track on the map is fetched again 2 s later, doubling to
   30 s (the status tag says so, ui-panels.md). Blocks stay in the track model while an edge stands on
-  them or the view has them; the rest beyond the newest 300 are dropped. Track is charged by hex (T-2890): a point takes the class of the lattice cell
-  under the centre of its hex (`cost::hex_centre`), pointy-topped hexes regular on the mercator plane, 1/768
-  of a degree of longitude across (`TERRAIN_HEX`, about 110 m at 40 N), the same hexes the build tools'
-  wash draws, so a hex that looks like hills is charged as hills. Each edge keeps
+  them or the view has them; the rest beyond the newest 300 are dropped. Track is charged by cell: a point takes the class of the lattice cell it is in (1/960 of a degree, about 115 m; the data itself changes class only every 4 cells, 1/240 of a degree), the same cells the build tools' wash draws as squares, so a square that looks like hills is charged as hills. Each edge keeps
   its spans of rough ground (`Network::edge_terrain`, sampled every 25 m, `TERRAIN_STEP`); a block
   landing reprices only the track inside its box. The track tool's tag gives the roughest class a
   segment crosses where it is charged with its surcharge ("Mountains +3.0x", T-1394, T-1890), and
