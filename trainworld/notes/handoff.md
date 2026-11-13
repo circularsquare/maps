@@ -92,6 +92,12 @@ buildings). Master NOT pushed since e6ff5783 (push needs her word again; the che
 publish, delete: data\work\pre-T3287\prejoinB, prejoinC, preSG, preSG-extra (~3.2 GB) and gaprun2's kit sim copy
 (`setup_sim.py <kit> remove`, kit in a67ba911 scratchpad\gaprun2). No agents running.
 
+**11-13 morning, her playtest**: all good ("new regions look great, following train looks great"). Two late asks,
+she waits ~30 min for them, else publish without: **stupkeep** acf9cce0e0666ec35 (Sonnet, .tw-trees/stupkeep, Vite
+6165): one-platform stations pay 60% upkeep; **busdrag** aa6353f9ed3210a5c (Sonnet, .tw-trees/busdrag, Vite 6166):
+Edit route starts in plain drag mode, click an endpoint to extend, Escape back. Master pushed 620474dd. Then publish
+(deploys need "yes" to that exact action in her latest message).
+
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
 Singapore unfinished: notes/T-3287.md "Stage 6" has every PID, log and restart command; check the logs and finish
