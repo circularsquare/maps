@@ -295,6 +295,7 @@
   "busDraw.tagPath": "이어지는 도로 없음",
   "busDraw.twoPoints": "버스 노선을 그리려면 지점을 두 개 이상 클릭해 주세요.",
   "busDraw.dragAdd": "드래그해서 점 추가",
+  "busDraw.clickExtend": "클릭해서 경로 연장",
   "busInspector.changeTip": "경로 변경",
   "busInspector.changeTipBuilt": "경로 변경. 기존 경로 비용은 환불되지 않아요",
   "busInspector.changing": "열차로 환승",

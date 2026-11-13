@@ -477,11 +477,16 @@ lighter; at most 16 of each.
 - **Finishing** makes the line (selects it and asks its name) or saves the edited route: a click on
   the active end, a double click on empty ground (its first click places the last point), Enter, or the button in
   the tool's bar at the map's bottom left ("Make line", "Save route"; beside it Cancel, as Escape).
-  **Escape** drops a new route's points (a second Escape leaves the tool), and leaves an edit with
-  the route as it was. A click on the active end of a single point does nothing.
+  **Escape** drops a new route's points (a second Escape leaves the tool); in an edit it leaves the extend mode
+  first (below), then leaves the edit with the route as it was. A click on the active end of a single point does nothing.
 - **Edit route** in the bus panel reopens the tool on the line's route with its clicked points and
   the road stretches between them as they were (a straight one from an older save is searched again,
-  red if it still finds no road), the last point active; the same button, now **Save
+  red if it still finds no road). It opens in plain editing: no leg follows the pointer and a click on empty
+  ground adds nothing, but points and the path drag, a click on a point deletes it, and the other gestures
+  below work. A click on the route's end (its last point; the tag says "Click to extend the route", the cursor is
+  a pointer) enters the **extend mode**, which is how a new line always starts: the leg from that end follows the
+  pointer, clicks add points, and a click on the end again finishes. **Escape** in the extend mode goes back to plain
+  editing (T-3366 follow-up, Anita 2026-11-13); the same button, now **Save
   route**, saves it. Finishing an edit that changed nothing closes it untouched; otherwise it redraws
   the route (final for a constructed route, which pays any longer road). A new bus line is planned
   until Construct. While the tool is open on a line, that line's current route is drawn muted (the map

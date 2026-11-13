@@ -295,6 +295,7 @@
   "busDraw.tagPath": "找不到连通的道路",
   "busDraw.twoPoints": "至少点击两个点来画公交线路。",
   "busDraw.dragAdd": "拖动添加一个点",
+  "busDraw.clickExtend": "点击延长路线",
   "busInspector.changeTip": "修改路线",
   "busInspector.changeTipBuilt": "修改路线。原路线的费用不会退还",
   "busInspector.changing": "换乘列车",

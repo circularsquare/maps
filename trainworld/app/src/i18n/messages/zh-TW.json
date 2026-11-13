@@ -295,6 +295,7 @@
   "busDraw.tagPath": "找不到道路路徑",
   "busDraw.twoPoints": "請至少按兩個點，才能畫出公車路線。",
   "busDraw.dragAdd": "拖曳新增一個點",
+  "busDraw.clickExtend": "按一下延長路線",
   "busInspector.changeTip": "修改路線",
   "busInspector.changeTipBuilt": "修改路線。原本的路線不會退款",
   "busInspector.changing": "轉乘列車",

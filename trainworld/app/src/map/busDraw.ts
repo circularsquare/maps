@@ -131,6 +131,9 @@ export class BusDraw {
   private legs: Leg[] = [];
   /** new points go before the first (true) or after the last */
   private head = false;
+  /** the extend mode: a leg follows the pointer and a click adds a point. A new line is always in it; an edit
+   * starts without and enters it by a click on the route's end (Escape leaves it). */
+  private extend = true;
   readonly roads: BusRoads;
   /** changes whenever the corners or their legs do */
   private rev = 0;
@@ -248,6 +251,7 @@ export class BusDraw {
     }
     this.rev++;
     this.head = false;
+    this.extend = line === null;
     this.line = line;
     this.dirty = false;
     this.orig = [...this.pts];
@@ -298,7 +302,7 @@ export class BusDraw {
 
   /** where a leg to the pointer goes: none while the pointer is on a handle or a point is dragged */
   private hoverPt(): Pt | null {
-    if (this.looped()) return null;
+    if (this.looped() || !this.extend) return null;
     if (touchInput.peek()) return this.touchAt;
     return this.over >= 0 || this.drag ? null : this.at;
   }
@@ -900,7 +904,7 @@ export class BusDraw {
     this.roads.look(this.at);
     this.over = this.drag ? this.drag.i : this.handleAt(e.point.x, e.point.y);
     this.overPath = this.over < 0 && !this.drag && !touchInput.peek() ? this.pathAt(e.point.x, e.point.y) : null;
-    const cur = this.over >= 0 ? "grab" : "crosshair";
+    const cur = this.over >= 0 ? (this.opensExtend(this.over) ? "pointer" : "grab") : this.extend ? "crosshair" : "";
     if (this.map.getCanvas().style.cursor !== cur) this.map.getCanvas().style.cursor = cur;
     this.ask();
     this.place();
@@ -914,22 +918,34 @@ export class BusDraw {
       // a double click acts on empty ground (T-3149); where its first click took a point out, the second does nothing
       const skip = this.firstEdited;
       this.firstEdited = false;
-      if (skip) return;
+      if (skip || !this.extend) return;
       if (i < 0 ? this.pts.length >= 2 : this.pts.length >= 2 && (this.isSeam(i) || (!this.looped() && i === this.endIndex()))) void this.finish();
       return;
     }
-    this.firstEdited = i >= 0 && this.pts.length >= 2 && !(this.isSeam(i) || (!this.looped() && i === this.endIndex()));
+    this.firstEdited = i >= 0 && this.pts.length >= 2 && !(this.isSeam(i) || (!this.looped() && i === this.endIndex())) && !this.opensExtend(i);
     if (i >= 0) return this.handleClick(i);
+    if (!this.extend) return;
     void this.add({ lng: e.lngLat.lng, lat: e.lngLat.lat });
   }
 
-  /** A click on a point (T-3109): the active end, or where a loop closes, finishes; any other point is deleted. */
+  /** In an edit that is not extending, the route's end: a click there starts extending. */
+  private opensExtend(i: number): boolean {
+    return !this.extend && !this.looped() && this.pts.length >= 2 && i === this.endIndex();
+  }
+
+  /** A click on a point (T-3109): the active end, or where a loop closes, finishes; any other point is deleted.
+   * Not extending, a click on the end starts extending instead. */
   private handleClick(i: number) {
     const n = this.pts.length;
     if (n < 2) return;
     if (loopTap.peek()) {
       loopTap.value = false;
       return this.rightClick(i);
+    }
+    if (this.opensExtend(i)) {
+      this.extend = true;
+      this.touchAt = null;
+      return this.changed();
     }
     if (this.isSeam(i) || (!this.looped() && i === this.endIndex())) return void this.finish();
     void this.remove(i);
@@ -1034,7 +1050,7 @@ export class BusDraw {
   /** Add a point at the active end where the click lands on a road the route reaches (T-2467): waits
    * for the roads there if they are still loading, then adds it or says why not. */
   private async add(p: Pt) {
-    if (this.busy) return;
+    if (this.busy || !this.extend) return;
     if (this.looped()) return void say(t("busDraw.loopClosed"), true);
     const end = this.endPt(), head = this.head;
     if (end) {
@@ -1083,6 +1099,12 @@ export class BusDraw {
   key(e: KeyboardEvent): boolean {
     if (e.key === "Escape") {
       if (this.cancelDrag()) return true;
+      if (this.extend && this.line !== null) {
+        this.extend = false;
+        this.touchAt = null;
+        this.changed();
+        return true;
+      }
       // Esc places a new line, as it ends a track chain (T-2924); an edited route goes back as it was
       if (this.line === null && this.pts.length >= 2) void this.finish();
       else if (this.line !== null || this.pts.length === 0) this.host.exit();
@@ -1130,6 +1152,7 @@ export class BusDraw {
       const i = this.handleAt(e.point.x, e.point.y, SAME_TAP_PX);
       if (i >= 0) return this.handleClick(i);
     }
+    if (!this.extend) return;
     this.touchAt = p;
     this.changed();
   }
@@ -1316,7 +1339,7 @@ export class BusDraw {
     const h = this.drag ? -1 : this.over;
     if (h >= 0 && at && !touchInput.peek()) {
       const finishes = this.pts.length >= 2 && (this.isSeam(h) || (!this.looped() && h === this.endIndex()));
-      const first = this.pts.length < 2 ? [] : [row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"))];
+      const first = this.pts.length < 2 ? [] : this.opensExtend(h) ? [row(t("busDraw.clickExtend"))] : [row(finishes ? t(this.line === null ? "busDraw.clickMake" : "busDraw.clickSave") : t("busDraw.clickDelete"))];
       const right = { open: "busDraw.rightOpen", stop: "busDraw.rightStopLooping", delete: "busDraw.rightDelete", close: "busDraw.rightClose", loopBack: "busDraw.rightLoopBack" } as const;
       const a = this.rightAction(h);
       return show([...first, row(t("busDraw.dragMove")), ...(a ? [row(t(right[a]))] : [])]);

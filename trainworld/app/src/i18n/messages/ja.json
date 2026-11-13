@@ -295,6 +295,7 @@
   "busDraw.tagPath": "道路がつながりません",
   "busDraw.twoPoints": "バス路線を描くには、2点以上クリックしてください。",
   "busDraw.dragAdd": "ドラッグで点を追加",
+  "busDraw.clickExtend": "クリックで経路を延長",
   "busInspector.changeTip": "経路を変更",
   "busInspector.changeTipBuilt": "経路を変更（元の経路の建設費は戻りません）",
   "busInspector.changing": "列車との乗り換え",

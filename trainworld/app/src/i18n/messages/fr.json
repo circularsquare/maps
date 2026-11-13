@@ -295,6 +295,7 @@
   "busDraw.tagPath": "Aucun chemin routier trouvé",
   "busDraw.twoPoints": "Cliquez sur au moins deux points pour tracer une ligne de bus.",
   "busDraw.dragAdd": "Glisser pour ajouter un point",
+  "busDraw.clickExtend": "Cliquer pour prolonger l’itinéraire",
   "busInspector.changeTip": "Modifier le tracé",
   "busInspector.changeTipBuilt": "Modifier le tracé. L’ancien tracé n’est pas remboursé",
   "busInspector.changing": "Changent pour le train",

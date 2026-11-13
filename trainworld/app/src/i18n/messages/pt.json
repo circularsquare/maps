@@ -295,6 +295,7 @@
   "busDraw.tagPath": "Nenhum caminho por ruas encontrado",
   "busDraw.twoPoints": "Clique em pelo menos dois pontos para desenhar uma linha de ônibus.",
   "busDraw.dragAdd": "Arraste para adicionar um ponto",
+  "busDraw.clickExtend": "Clique para estender a rota",
   "busInspector.changeTip": "Alterar a rota",
   "busInspector.changeTipBuilt": "Alterar a rota. A rota antiga não é reembolsada",
   "busInspector.changing": "Baldeação para o trem",

@@ -295,6 +295,7 @@
   "busDraw.tagPath": "No road path found",
   "busDraw.twoPoints": "Click at least two points to draw a bus line.",
   "busDraw.dragAdd": "Drag to add a point",
+  "busDraw.clickExtend": "Click to extend the route",
   "busInspector.changeTip": "Change the route",
   "busInspector.changeTipBuilt": "Change the route. The old route is not refunded",
   "busInspector.changing": "Changing to trains",

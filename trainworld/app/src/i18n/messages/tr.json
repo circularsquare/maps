@@ -295,6 +295,7 @@
   "busDraw.tagPath": "Yol bulunamadı",
   "busDraw.twoPoints": "Otobüs hattı çizmek için en az iki noktaya tıkla.",
   "busDraw.dragAdd": "Nokta eklemek için sürükle",
+  "busDraw.clickExtend": "Güzergâhı uzatmak için tıkla",
   "busInspector.changeTip": "Güzergâhı değiştir",
   "busInspector.changeTipBuilt": "Güzergâhı değiştir. Eski güzergâh için iade yapılmaz",
   "busInspector.changing": "Trene aktarma",

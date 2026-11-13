@@ -295,6 +295,7 @@
   "busDraw.tagPath": "No hi ha cap camí per carrers",
   "busDraw.twoPoints": "Fes clic com a mínim a dos punts per dibuixar una línia d’autobús.",
   "busDraw.dragAdd": "Arrossega per afegir un punt",
+  "busDraw.clickExtend": "Fes clic per allargar el recorregut",
   "busInspector.changeTip": "Canvia la ruta",
   "busInspector.changeTipBuilt": "Canvia la ruta. L’antiga no es reemborsa",
   "busInspector.changing": "Transbords al tren",

@@ -295,6 +295,7 @@
   "busDraw.tagPath": "Путь по дорогам не найден",
   "busDraw.twoPoints": "Нажмите хотя бы две точки, чтобы нарисовать автобусную линию.",
   "busDraw.dragAdd": "Перетащите, чтобы добавить точку",
+  "busDraw.clickExtend": "Нажмите, чтобы продлить маршрут",
   "busInspector.changeTip": "Изменить маршрут",
   "busInspector.changeTipBuilt": "Изменить маршрут. Стоимость старого маршрута не возвращается",
   "busInspector.changing": "Пересадка на поезда",
