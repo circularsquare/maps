@@ -21,9 +21,11 @@ Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to
   she said yes "once 3.3 is done"; confirm that day).
 
 ## Master, 8800
-- **Master a486b159** (6 ahead of origin; push at the next commit). **8800 = 7a8894cc** (stale: rebuild after gaprun3's
-  after-join step 1, i.e. after market-drives.bin is replaced and the freeze; the batch A/KP packs on 8800 may be
-  half-joined).
+- **Master c1e52978, pushed; smoke PASS 28 (terrain v2 + batch A).** **8800 = c1e52978 from freeze 20261112-204835**
+  (snapbuild-frozen; serves terrain v2, checked on Chongqing's block). gaprun3 step 1 done (build_inputs 0 flags,
+  smoke 28, real save 12,581,681 vs 12,581,682, freeze 20261112-204835). B gated 19/19 (tlk relaxed, ute
+  origin moved to Utena by hand), window ended 21:33; backup prejoinB; **B join running from ~21:35 local, 12 jobs,
+  1.5-2 h: nothing else writes data/packs or data/terrain**. zone_terrain --force done (4,024 files, new method).
 - Landed this session: e0bb2de1 T-3367 running side off new-world screen; dc2eb030 one-way station round (T-3332);
   feb0616b T-3366 bus drag; 7a8894cc station-type icons +15%; 23c0335a T-3368 touch zoom cap 20; f68a53d8 T-3352 single
   high-speed/tram (T-3337 350 km/h DROPPED, she keeps 320); 64715623 v0.3.3 changelog + translations (11 languages);
