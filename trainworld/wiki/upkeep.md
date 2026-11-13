@@ -15,7 +15,7 @@ A piece's upkeep is its length, times the rate of the dearest structure on it, t
 
 A piece of track pays the dearest thing it touches, so a ramp down into a tunnel makes the whole piece a tunnel. High-speed track is {{sim/src/track/params.rs:HSR_COST}} times that. Quad track pays twice.
 
-A station costs ${{sim/src/track/params.rs:UPKEEP_STATION*ECONOMY/1000|0}}k a day at ground level or above, and ${{sim/src/track/params.rs:UPKEEP_STATION_UNDER*ECONOMY/1000|0}}k underground. Junctions and flyovers cost nothing on top.
+A station costs ${{sim/src/track/params.rs:UPKEEP_STATION*ECONOMY/1000|0}}k a day at ground level or above, and ${{sim/src/track/params.rs:UPKEEP_STATION_UNDER*ECONOMY/1000|0}}k underground. A station with a platform on one track only (a one way station, or a stop on single track without a passing loop) pays {{sim/src/track/params.rs:UPKEEP_ONE_PLATFORM_SHARE*100|0}}% of that. Junctions and flyovers cost nothing on top.
 
 A tunnel costs more to keep up as well as more to [[levels-and-tunnels|build]]. Upkeep is the same in every country. The cost of running trains changes with the country.
 

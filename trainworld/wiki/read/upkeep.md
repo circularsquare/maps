@@ -15,7 +15,7 @@ A piece's upkeep is its length, times the rate of the dearest structure on it, t
 
 A piece of track pays the dearest thing it touches, so a ramp down into a tunnel makes the whole piece a tunnel. High-speed track is 1.5 times that. Quad track pays twice.
 
-A station costs $50k a day at ground level or above, and $200k underground. Junctions and flyovers cost nothing on top.
+A station costs $50k a day at ground level or above, and $200k underground. A station with a platform on one track only (a one way station, or a stop on single track without a passing loop) pays 60% of that. Junctions and flyovers cost nothing on top.
 
 A tunnel costs more to keep up as well as more to [build](levels-and-tunnels.md). Upkeep is the same in every country. The cost of running trains changes with the country.
 

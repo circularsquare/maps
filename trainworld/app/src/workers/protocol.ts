@@ -382,6 +382,8 @@ export interface MoneyState {
   upkeepStation: number;
   /** T-2619: an underground station's (-1 to -3); `upkeepStation` is any other's */
   upkeepStationUnder: number;
+  /** a one-platform station's share of either station figure */
+  upkeepOnePlatform: number;
   upkeepSingle: number;
   upkeepHsr: number;
   /** T-867: the network's upkeep a game day, US$M (track and stations), the route-km and stations
@@ -491,6 +493,8 @@ export interface ClockNode {
   one?: 1 | 2;
   /** T-3332: the heading of a one-track station's trains on double track, rad, counter-clockwise from east */
   oneHeading?: number;
+  /** one platform track (a one way station, or a stop on single track with no passing loop): pays `upkeepOnePlatform` of the station upkeep */
+  onePlatform?: true;
   name: string;
   /** the player typed the name (T-2683) */
   named?: true;

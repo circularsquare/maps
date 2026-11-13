@@ -92,6 +92,13 @@ impl TrackApi {
         net.one_side(node).map_or(f64::NAN, |s| net.node_heading[node as usize] + if s == 0 { 0.0 } else { std::f64::consts::PI })
     }
 
+    /// The constructed-or-not stations with one platform track (`Network::one_platform`), for the
+    /// upkeep the app shows.
+    pub fn one_platform_stations(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.node_count() as u32).filter(|&n| net.one_platform(n)).collect()
+    }
+
     /// T-3332: the one-track stations, `[node, one]` each (`StationData::one`), for the map's drawing.
     pub fn one_track_stations(&self) -> Vec<f64> {
         let net = &self.w.net;

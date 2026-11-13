@@ -61,6 +61,8 @@ export interface StationInput {
   /** T-3332: a one-track station: 1 on double track (`oneHeading` its trains' way, rad, counter-clockwise from east), 2 on single track, where trains cannot pass */
   one?: 1 | 2;
   oneHeading?: number;
+  /** one platform track: pays a share of the station upkeep (`MoneyState.upkeepOnePlatform`) */
+  onePlatform?: true;
 }
 
 export interface LineInput {

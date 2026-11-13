@@ -115,6 +115,8 @@ impl TrackApi {
             BOAT_PRICE, RUN_COST_BOAT_KM, UPKEEP_PORT, PORT_COST,
             // T-2619: an underground station's upkeep a day US$ (index 8 is any other station's)
             UPKEEP_STATION_UNDER,
+            // a one-platform station's share of either station figure
+            UPKEEP_ONE_PLATFORM_SHARE,
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each

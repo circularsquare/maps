@@ -132,8 +132,8 @@ function busKmByRegion(w: WorldView, line: string): Map<string, number> {
 /** T-867: a constructed station's upkeep a game day, US$; T-2619: dearer below ground, as the
  * track model counts it (`cost::station_upkeep`). */
 /** a station's upkeep a day: a tram stop's is its own figure (T-2926) */
-export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, s: { level: number; tram?: boolean }) =>
-  s.tram ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level);
+export const stationUpkeepOf = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "upkeepOnePlatform" | "economy">, s: { level: number; tram?: boolean; onePlatform?: boolean }) =>
+  s.tram ? TRAM_STOP_UPKEEP * m.economy : stationUpkeep(m, s.level) * (s.onePlatform ? m.upkeepOnePlatform : 1);
 export const stationUpkeep = (m: Pick<MoneyState, "upkeepStation" | "upkeepStationUnder" | "economy">, level: number) =>
   (level < 0 ? m.upkeepStationUnder : m.upkeepStation) * m.economy;
 

@@ -260,3 +260,26 @@ fn a_twin_serves_the_same_way() {
     assert_eq!(a.line_pairs(l), 1, "the same way now: {:?}", a.line_pairs_why(l));
     assert!(a.line_twin(l) >= 0);
 }
+
+/// Anita 2026-11-13: a station with one platform track (a one way station, or a stop on single track with no
+/// passing loop) pays 0.6x the upkeep of a two way station, at grade and underground.
+#[test]
+fn a_one_platform_station_pays_six_tenths_upkeep() {
+    use crate::track::params::{UPKEEP_ONE_PLATFORM_SHARE as SHARE, UPKEEP_STATION as ST, UPKEEP_STATION_UNDER as UG};
+    let (two, [_, mid2, _]) = run(true, 2, None, true);
+    let (mut one, [_, mid1, _]) = run(true, 2, Some(-10.0), true);
+    let (mut single, [_, mid_s, _]) = run(true, 1, None, true);
+    let up = |a: &TrackApi, n: u32| station_upkeep(&a.w.net, n as usize);
+    assert!((up(&two, mid2) - ST * ECONOMY / 1e6).abs() < 1e-9);
+    assert!((up(&one, mid1) - SHARE * up(&two, mid2)).abs() < 1e-9);
+    assert!((up(&single, mid_s) - SHARE * up(&two, mid2)).abs() < 1e-9, "single track, no loop");
+    // a passing loop is two platforms again
+    assert_eq!(single.set_station_upgrade(&[mid_s], crate::track::upgrades::PASSING, true), 0, "{}", single.issue_kinds());
+    assert!((up(&single, mid_s) - up(&two, mid2)).abs() < 1e-9, "single track with a passing loop");
+    // underground
+    let mut two = two;
+    two.w.net.node_level[mid2 as usize] = -1;
+    one.w.net.node_level[mid1 as usize] = -1;
+    assert!((up(&two, mid2) - UG * ECONOMY / 1e6).abs() < 1e-9);
+    assert!((up(&one, mid1) - SHARE * up(&two, mid2)).abs() < 1e-9);
+}

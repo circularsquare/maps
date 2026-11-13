@@ -171,6 +171,9 @@ pub const UPKEEP_CUT_KM: f64 = 1000.0;
 pub const UPKEEP_BORED_KM: f64 = 1300.0;
 pub const UPKEEP_STATION: f64 = 500.0;
 pub const UPKEEP_STATION_UNDER: f64 = 2000.0;
+/// A station with one platform track (a one way station, or a stop on single track with no passing
+/// loop) pays this share of either station figure (Anita, 2026-11-13); `Network::one_platform`.
+pub const UPKEEP_ONE_PLATFORM_SHARE: f64 = 0.6;
 /// The economy runs at 100x (T-081; Anita, 2026-10-09, as Subway Builder does): fares and running
 /// costs per game day are this many times the real figures, so a line pays back in about a game
 /// week. Construction and train prices stay real. The one constant: running costs here, fares in

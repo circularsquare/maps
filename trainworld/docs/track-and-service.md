@@ -1519,7 +1519,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   (a ramp into a tunnel makes the whole edge a tunnel's rate; a -1 to -2 edge pays bored). Times
   its price factor (`track_factor`: high-speed 1.5x, single 0.6x; quad is two double-track edges,
   so twice). A constructed station pays US$200k underground (its level -1 to -3, where its price takes
-  the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619); crossovers, junctions and flyovers
+  the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619), either one times
+  `UPKEEP_ONE_PLATFORM_SHARE` (0.6, Anita 2026-11-13) when its platform is on one track only: a one way
+  station, or a stop on single track without a passing loop (`Network::one_platform`; the app reads the set
+  from `one_platform_stations`); crossovers, junctions and flyovers
   nothing on top; blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_VIADUCT_KM`, `UPKEEP_CUT_KM`,
   `UPKEEP_BORED_KM`, `UPKEEP_STATION`, `UPKEEP_STATION_UNDER`, real US$350, 500, 1,000, 1,300, 500 and
   2,000 times `ECONOMY`; `cost::track_upkeep_km`, `cost::station_upkeep`, `TrackApi::upkeep`; the app

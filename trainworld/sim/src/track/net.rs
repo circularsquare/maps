@@ -1339,6 +1339,11 @@ impl Network {
     pub fn one_track(&self, n: u32) -> bool {
         self.node_ok(n) && self.node_platform[n as usize] > 0 && self.node_one[n as usize] != 0
     }
+    /// A station whose platform is on one track: a one way station, or any stop on single track (a
+    /// passing loop makes its tracks double). It pays `UPKEEP_ONE_PLATFORM_SHARE` of the upkeep.
+    pub fn one_platform(&self, n: u32) -> bool {
+        self.node_ok(n) && self.node_platform[n as usize] > 0 && (self.node_one[n as usize] != 0 || (self.node_tracks(n) == 1 && self.node_upgrades[n as usize] & crate::track::upgrades::PASSING == 0))
+    }
     /// T-3332: a one-track station where trains cannot pass: on single track.
     /// T-3352: so is a tram stop on single track, drawn and run as one platform with no loop.
     pub fn no_passing(&self, n: u32) -> bool {

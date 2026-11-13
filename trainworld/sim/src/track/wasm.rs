@@ -279,7 +279,8 @@ fn bus_upkeep(n: &Network, l: u32) -> Option<f64> {
     n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| n.bus_road_m(l) / 1000.0 * UPKEEP_BUS_KM * ECONOMY / 1e6)
 }
 fn station_upkeep(n: &Network, i: usize) -> f64 {
-    n.node_kind(i as u32).spec().station_upkeep.unwrap_or_else(|| super::cost::station_upkeep(n.node_level[i])) * ECONOMY / 1e6
+    let share = if n.one_platform(i as u32) { UPKEEP_ONE_PLATFORM_SHARE } else { 1.0 };
+    n.node_kind(i as u32).spec().station_upkeep.unwrap_or_else(|| super::cost::station_upkeep(n.node_level[i]) * share) * ECONOMY / 1e6
 }
 
 fn pis_from(flat: &[f64]) -> Vec<Pi> {
