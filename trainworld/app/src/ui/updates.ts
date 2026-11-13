@@ -16,6 +16,8 @@ export interface Update {
   /** those of `changes` that make something harder, each with the key of its new figure, which is filled into the
    * line's `{figure}` and shown red (T-3133; only the figure is red, Anita 2026-11-11) */
   nerfs?: Partial<Record<MessageKey, MessageKey>>;
+  /** sub-items, shown indented under their parent item of `changes`; a sub key is not also in `changes` */
+  sub?: Partial<Record<MessageKey, MessageKey[]>>;
 }
 
 /** When v0.1 went out: set at publish. */
@@ -45,6 +47,8 @@ export const UPDATES: Update[] = [
     at: V0_3_3_AT,
     line: "updates.v033Line",
     changes: [
+      "updates.v033Satellite",
+      "updates.v033OpenSource",
       "updates.v033OneWay",
       "updates.v033SingleTrack",
       "updates.v033Timetables",
@@ -57,12 +61,11 @@ export const UPDATES: Update[] = [
       "updates.v033Memory",
       "updates.v033Screenshots",
       "updates.v033Zones",
-      "updates.v033NorthKorea",
       "updates.v033LongTrips",
       "updates.v033Resorts",
       "updates.v033Schematic",
+      "updates.v033Terrain",
       "updates.v033StationNames",
-      "updates.v033Satellite",
       "updates.v033Networks",
       "updates.v033Tunnels",
       "updates.v033ZoomButtons",
@@ -70,6 +73,10 @@ export const UPDATES: Update[] = [
       "updates.v033HsrFare",
       "updates.v033Fixes",
     ],
+    sub: {
+      "updates.v033Zones": ["updates.v033NorthKorea"],
+      "updates.v033LongTrips": ["updates.v033Airports"],
+    },
   },
   {
     version: "v0.3.2",

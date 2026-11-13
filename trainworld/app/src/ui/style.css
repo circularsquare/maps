@@ -1108,6 +1108,7 @@ a.btn { text-decoration: none; }
 .changelog-head span { font-weight: 400; }
 section + section > .changelog-head { margin-top: 16px; }
 .changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.changelog-list ul { margin: 3px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
 .changelog-list .nerf { color: var(--bad); }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
