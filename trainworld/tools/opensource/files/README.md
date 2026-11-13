@@ -5,6 +5,10 @@ the game works out who rides your trains and who takes the car. It runs in the b
 
 The game is at https://anita.garden/trainsworld/. This repository is its source.
 
+Most of the code was written by Claude (Anthropic's AI model), working with Anita, who designs the game, plays it
+and reviews the changes. For now, most of the text (the game's own text, the docs and this README) was written by
+Claude too.
+
 The page is TypeScript with MapLibre and Preact. The simulation and the demand model are Rust compiled to
 WebAssembly. The city data is built by Python scripts, and the game fetches the built data when it runs.
 
