@@ -86,6 +86,12 @@ Sentosa dropped by osm_units.py (keeps only pieces with residents). My call (B):
 built-up over ~0.2 km2", rebuilds and re-gates sin, then join SG, realauto ship, after-join, freeze. Gate window OPEN
 (app/ held) until gaprun3 says it ended.
 
+**~01:45 local: T-3287 DONE.** C + Singapore committed d5397d04; **8800 = d5397d04 from freeze 20261113-013559**
+(everything for v0.3.3 is on it). T-3287 and T-772 archived. T-3376 filed (Jurong Island 128k jobs, likely tanks as
+buildings). Master NOT pushed since e6ff5783 (push needs her word again; the check refused one without it). After
+publish, delete: data\work\pre-T3287\prejoinB, prejoinC, preSG, preSG-extra (~3.2 GB) and gaprun2's kit sim copy
+(`setup_sim.py <kit> remove`, kit in a67ba911 scratchpad\gaprun2). No agents running.
+
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
 Singapore unfinished: notes/T-3287.md "Stage 6" has every PID, log and restart command; check the logs and finish
