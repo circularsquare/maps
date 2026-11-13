@@ -12,9 +12,12 @@ start new work unless its obvious, mosty just wanna finsh the 0.3.3 stuff and al
 Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to her; few: file).
 
 ## Live, server, ops
-- **Live = v0.3.2** (tw/release-031 6425f2f5, .tw-trees/hotfix031; data 2026-11-11b; website 966f101).
-- **Server** shonei-server e878c0f deployed. Committed, NOT pushed or deployed, HOLD until v0.3.3 (her word): 7a635f7 +
-  e5a132a (T-3326 feedback screenshots), 306fbe3 + c3403aa + b2ab066 (flag set 3), the play-stats browser cap.
+- **Live = v0.3.3** (published 2026-11-13 ~14:00Z from master b2897ae2; data 2026-11-13; website eb1e1bf, about page
+  has the flag credit; `--verify --page` all PASS). Terrain v2 on R2 (terrain-world/v2, 19,342 files).
+- **Server** shonei-server b2ab066 deployed 13:19Z and pushed (feedback screenshots, flag set 3, play-stats cap).
+- **Open source LIVE**: https://github.com/circularsquare/trainsworld (public, synced to maps b2897ae2 as d96e62c).
+  Each later publish: export.py, then `git push` in ..\trainsworld-export (docs/orchestrator.md).
+- Old R2 data versions on R2: 2026-11-10d, 2026-11-11, 2026-11-11b (purge the oldest with r2_purge.py when wanted).
 - **Ops**: check_resources.py daily (last 11-12 16:04Z; note it now probes terrain v2, which fails until v2 is
   uploaded); feedback.py inbox.
 - **Open source**: her 7 calls agreed (DECISIONS 11-12). After v0.3.3 publishes: re-export (export.py), then on her OK
@@ -97,6 +100,11 @@ she waits ~30 min for them, else publish without: **stupkeep** acf9cce0e0666ec35
 6165): one-platform stations pay 60% upkeep; **busdrag** aa6353f9ed3210a5c (Sonnet, .tw-trees/busdrag, Vite 6166):
 Edit route starts in plain drag mode, click an endpoint to extend, Escape back. Master pushed 620474dd. Then publish
 (deploys need "yes" to that exact action in her latest message).
+
+**v0.3.3 PUBLISHED ~14:00Z 11-13** (above). Late additions landed: 89cc6f49 one-platform upkeep 60% (her word; hover
+left as is), 231c0215 bus Edit route plain mode + click end to extend (T-3370's ask; "text acknowledged" for "Click to
+extend the route"). Post material for her: research/v033-highlights.md, artifacts/trainworld/review/v033-zones-*.png.
+Cleaned: pre-T3287 backups (7.7 GB), gaprun2's sim copy. No agents running.
 
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
