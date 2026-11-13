@@ -107,6 +107,7 @@ PRODUCTS = {
     "nres_v": ("GHS_BUILT_V_GLOBE_R2023A", "GHS_BUILT_V_NRES_E{epoch}_GLOBE_R2023A_54009_100"),
     "nres_s": ("GHS_BUILT_S_GLOBE_R2023A", "GHS_BUILT_S_NRES_E{epoch}_GLOBE_R2023A_54009_100"),
     "tot_v": ("GHS_BUILT_V_GLOBE_R2023A", "GHS_BUILT_V_E{epoch}_GLOBE_R2023A_54009_100"),
+    "tot_s": ("GHS_BUILT_S_GLOBE_R2023A", "GHS_BUILT_S_E{epoch}_GLOBE_R2023A_54009_100"),  # osm_units' built-up pieces (T-3375)
 }
 MOLL_X0, MOLL_Y0, TILE_M, PIX_M = -18041000.0, 9000000.0, 1_000_000.0, 100.0
 WORLDBANK = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.ZS;SP.POP.0014.TO.ZS?source=2&format=json&date=2015:2025&per_page=100"

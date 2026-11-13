@@ -41,6 +41,11 @@ SEA_PAD = 0.25         # degrees around the plan's box over which the OSM sea is
 # and Rotterdam's 66,000 ditches and canals (2.3M vertices) stalled the match for over 20 minutes
 WET_MIN_KM2 = 0.1
 MIN_PART_KM2 = 0.05  # outline pieces smaller than this are slivers left by the coastline clip
+# T-3375: a piece with nobody in it stays when it holds this much GHSL built surface (all buildings, 2020, 100 m):
+# Singapore's Jurong Island (refineries, 3.65 km2 built) and Sentosa (resorts, 0.65 km2; GHSL counts most of it
+# residential, 0.07 km2 non-residential) have no residents but are city; its empty islets (Southern Group 0.02
+# km2, Changi Bay's reclaimed strips 0.11) and nature reserves have next to none.
+BUILT_KEEP_M2 = 200_000
 OSM = os.path.join(b.RAW, "osm")
 # the real packs, which a new outline is cut along: from this file, not b.ROOT, which a scratch
 # tree's redirect has already moved by the time this module loads (world_run's Redirect.KEEP)
@@ -223,10 +228,11 @@ def match(units, admin, lat0):
     return out
 
 
-def _people_many(parts):
-    """GHSL people (2020, 100 m) in each lon/lat polygon: the pixels of the window ghsl_window would
-    give its bounds, centres inside it. One read for all (T-888: a read per part, the whole tile
-    unzipped each time, took 4-15 minutes over an archipelago's islets)."""
+def _people_many(parts, kind="pop"):
+    """GHSL people (2020, 100 m) in each lon/lat polygon, or another of tier0's GHSL products (`kind`,
+    such as "tot_s", built surface in m2): the pixels of the window ghsl_window would give its bounds,
+    centres inside it. One read for all (T-888: a read per part, the whole tile unzipped each time, took
+    4-15 minutes over an archipelago's islets)."""
     import math
     import tier0
     if not parts:
@@ -241,7 +247,7 @@ def _people_many(parts):
         Y0 = tier0.MOLL_Y0 - math.floor((tier0.MOLL_Y0 - max(ys)) / P) * P
         wins.append((X0, Y0, math.ceil((max(xs) - X0) / P), math.ceil((Y0 - min(ys)) / P)))
     b4 = np.array([p.bounds for p in parts])
-    arr, BX, BY = tier0.ghsl_window("pop", (b4[:, 0].min(), b4[:, 1].min(), b4[:, 2].max(), b4[:, 3].max()), pad_m=2 * P)
+    arr, BX, BY = tier0.ghsl_window(kind, (b4[:, 0].min(), b4[:, 1].min(), b4[:, 2].max(), b4[:, 3].max()), pad_m=2 * P)
     iy, ix = np.nonzero(arr > 0)  # row-major, so each part's pixels sum in ghsl_window's order
     val = arr[iy, ix]
     lon, lat = inv.transform(BX + (ix + 0.5) * P, BY - (iy + 0.5) * P)
@@ -389,19 +395,28 @@ def build(cid, row, sources):
     whole = line_cut(row, whole, units)
     whole = cut_packs(whole, {cid, row.get("test_of")})
     parts = sorted([p for p in shapely.get_parts(whole) if p.geom_type == "Polygon"], key=lambda p: -p.area)
-    big = [km2(p, lat0) >= MIN_PART_KM2 for p in parts[1:]]
-    people = iter(_people_many([p for p, k in zip(parts[1:], big) if k]))
-    keep, dropped = parts[:1], []
-    for p, k in zip(parts[1:], big):
-        if k and next(people) >= 1:
+    big = [p for p in parts[1:] if km2(p, lat0) >= MIN_PART_KM2]
+    people = _people_many(big)
+    empty = [p for p, n in zip(big, people) if n < 1]
+    built = dict(zip(map(id, empty), _people_many(empty, "tot_s")))
+    keep, dropped, by_built = parts[:1], [], []
+    for p in parts[1:]:
+        if id(p) in built and built[id(p)] >= BUILT_KEEP_M2:
+            by_built.append(p)
+            keep.append(p)
+        elif km2(p, lat0) >= MIN_PART_KM2 and id(p) not in built:
             keep.append(p)
         else:
             dropped.append(p)
     whole = shapely.MultiPolygon(keep)
+    for p in by_built:
+        c = p.representative_point()
+        print(f"  {cid}: kept a piece with nobody in it, {km2(p, lat0):.1f} km2, {built[id(p)] / 1e6:.2f} km2 built "
+              f"(at {c.x:.3f}, {c.y:.3f})", flush=True)
     print(f"{cid}: {len(units)} plan units, {sum(1 for i, _ in picks if i)} matched to OSM; {len(chosen)} OSM units, "
           f"{len(geoms) - len(chosen)} plan polygons; outline "
-          f"{len(keep)} parts ({len(dropped)} dropped, {sum(km2(p, lat0) for p in dropped):.2f} km2), "
-          f"{km2(whole, lat0):,.0f} km2", flush=True)
+          f"{len(keep)} parts ({len(by_built)} of them built-up with nobody in them; {len(dropped)} dropped, "
+          f"{sum(km2(p, lat0) for p in dropped):.2f} km2), {km2(whole, lat0):,.0f} km2", flush=True)
     stem = os.path.join(b.WORK, cid)
     os.makedirs(b.WORK, exist_ok=True)
     for path, doc in ((stem + ".units.geojson", {"type": "FeatureCollection", "features": out_units}),

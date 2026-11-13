@@ -325,7 +325,9 @@ sources. Each field comes from the row or a rule:
   (T-610); a NUTS-3 unit's polygon may not ship (non-commercial terms), so its gap takes the
   geoBoundaries units lying mostly inside it instead, at the finest level with an open licence
   (T-925, data-register.md). Units are clipped to the OSM coastline, holes filled, the outline cut along every
-  existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped. Units with
+  existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped, unless a piece with nobody
+  in it holds 0.2 km2 of GHSL built surface (all buildings, 2020, `BUILT_KEEP_M2`; T-3375: Singapore's Jurong Island
+  and Sentosa, which have no residents; an empty islet or a reserve has next to none). Units with
   their OSM names go to `data/work/<id>.units.geojson`, the outline to `.outline.geojson`;
   `osm_units.py <id>` writes them and prints each unit's match.
 - **From the row**: origin, region name, `utc_offset`, `iso2`, the extracts (also the water
