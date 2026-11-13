@@ -22,7 +22,7 @@ function dataFallback(): Plugin {
       server.middlewares.use(async (req: any, res: any, next: () => void) => {
         const url: string = req.url ?? "";
         let target: string;
-        if (url.startsWith("/packs/terrain-world/")) target = `${ORIGIN}/trainworld/terrain-world/v1/${url.slice("/packs/terrain-world/".length)}`;
+        if (url.startsWith("/packs/terrain-world/")) target = `${ORIGIN}/trainworld/terrain-world/v2/${url.slice("/packs/terrain-world/".length)}`;
         else if (url.startsWith("/packs/")) target = `${ORIGIN}/trainworld/${version}/${url.slice("/packs/".length)}`;
         else if (url.startsWith("/noritetsu/")) target = `${ORIGIN}${url}`;
         else return next();

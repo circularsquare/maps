@@ -1,8 +1,8 @@
-// T-3266: track is charged the terrain class of the grid cell drawn under it. In a new game on the Tyrol's
+// T-2890, T-3372: track is charged the terrain class of the hex drawn under it. In a new game on the Tyrol's
 // mixed ground: (1) short straight blueprint segments, the metres the blueprint breakdown charges per
-// class against the same 25 m samples classed by a lookup in the page's grids; (2) pixels of the tint's
-// image against the class of the cell at that pixel. Dev server only (it imports the app's module).
-// Usage: node trainworld/checks/t3266-cells.mjs [url] (default http://localhost:6170/)
+// class against the same 25 m samples classed by the map's own hex lookup; (2) pixels of the tint's
+// image against the class of the hex at that pixel. Dev server only (it imports the app's module).
+// Usage: node trainworld/checks/t3372-hex.mjs [url] (default http://localhost:6170/)
 
 import { collectErrors, launchChrome } from './lib.mjs';
 
@@ -11,7 +11,7 @@ const sep = BASE.includes('?') ? '&' : '?';
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) failed++; };
 
-const { ctx, close } = await launchChrome({ prefix: 'tw-t3266-' });
+const { ctx, close } = await launchChrome({ prefix: 'tw-t3372-' });
 try {
   const page = await ctx.newPage();
   const errors = [];
@@ -32,9 +32,8 @@ try {
   await page.waitForTimeout(1000);
 
   const priced = await page.evaluate(async () => {
-    const tw = window.tw, T = await import('/src/game/terrain.ts');
-    const hexClass = (lon, lat) => { for (const g of T.terrainGrids.values()) { const c = Math.floor((lon + 180) * g.perDeg) - g.col0, r = Math.floor((lat + 90) * g.perDeg) - g.row0; if (c >= 0 && r >= 0 && c < g.w && r < g.h) return T.classAt(g, r * g.w + c); } return 0; };
-    let seed = 3266;
+    const tw = window.tw, { hexClass } = await import('/src/game/terrain.ts');
+    let seed = 2890;
     const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
     const quoted = async () => {
       const q = await tw.client.query({ what: 'blueprintQuote' }), by = [0, 0, 0, 0];
@@ -68,15 +67,14 @@ try {
     return { segments, samples, exact, skipped, mixed, issues, misses: misses.slice(0, 5) };
   });
   check(priced.segments >= 100, `${priced.segments} segments priced, ${priced.samples} points sampled, ${priced.mixed} crossing more than one class (${priced.skipped} on water or refused, skipped ${JSON.stringify(priced.issues)})`);
-  check(priced.exact === priced.segments, `every segment charges the classes of the cells drawn under it: ${priced.exact} of ${priced.segments}${priced.misses.length ? ' ' + JSON.stringify(priced.misses) : ''}`);
+  check(priced.exact === priced.segments, `every segment charges the classes of the hexes drawn under it: ${priced.exact} of ${priced.segments}${priced.misses.length ? ' ' + JSON.stringify(priced.misses) : ''}`);
 
   // the image itself, pixel by pixel, against the lookup
   for (const zoom of [15, 13]) {
     await page.evaluate((zoom) => window.tw.map.jumpTo({ center: [11.385, 47.2735], zoom }), zoom);
     await page.waitForTimeout(3500);
     const drawn = await page.evaluate(async () => {
-      const T = await import('/src/game/terrain.ts');
-      const hexClass = (lon, lat) => { for (const g of T.terrainGrids.values()) { const c = Math.floor((lon + 180) * g.perDeg) - g.col0, r = Math.floor((lat + 90) * g.perDeg) - g.row0; if (c >= 0 && r >= 0 && c < g.w && r < g.h) return T.classAt(g, r * g.w + c); } return 0; };
+      const { hexClass } = await import('/src/game/terrain.ts');
       const src = window.tw.map.getSource('terrain-tint');
       const img = await createImageBitmap(await (await fetch(src.url)).blob());
       const c = new OffscreenCanvas(img.width, img.height), g = c.getContext('2d');
@@ -99,7 +97,7 @@ try {
       }
       return { checked, ok, counts, W, H };
     });
-    check(drawn.ok === drawn.checked, `z${zoom}: ${drawn.ok} of ${drawn.checked} pixels of the image (${drawn.W}x${drawn.H}) show their cell's class ${JSON.stringify(drawn.counts)}`);
+    check(drawn.ok === drawn.checked, `z${zoom}: ${drawn.ok} of ${drawn.checked} pixels of the image (${drawn.W}x${drawn.H}) show their hex's class ${JSON.stringify(drawn.counts)}`);
   }
   check(errors.length === 0, `no page errors${errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''}`);
 } finally {

@@ -632,7 +632,7 @@ def main():
     # A browser that may not store the game's data asks the edge again on every visit.
     try:
         # A GET for one byte: a HEAD skips the cache and the header the cache adds.
-        req = urllib.request.Request("https://data.anita.garden/trainworld/terrain-world/v1/index.bin", headers={"Range": "bytes=0-0", **UA})
+        req = urllib.request.Request("https://data.anita.garden/trainworld/terrain-world/v2/index.bin", headers={"Range": "bytes=0-0", **UA})
         with urllib.request.urlopen(req, timeout=30) as r:
             cc, cs = r.headers.get("cache-control", ""), r.headers.get("cf-cache-status", "?")
         rows.append(Row("cache", "data.anita.garden browser caching", None, None, "", None, f"Cache-Control: {cc} ({cs})",

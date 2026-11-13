@@ -1,15 +1,14 @@
 // T-1270 stage 3: the terrain classes as a faint brown wash while a build tool is on and Terrain is
-// shown, drawn from the blocks the clock worker has sent (game/terrain.ts), cell by cell as the price
-// reads them, so what is shown is what is charged. One image over the view and a margin around it,
-// redrawn when the camera stops: its rows are even in mercator, each looking up the cell at its
-// latitude, since the grid is on a degree lattice and a degree box is no mercator quad. Flat ground is
-// left bare.
+// shown, drawn from the blocks the clock worker has sent (game/terrain.ts), hex by hex
+// as the price reads them (T-2890), so what is shown is what is charged. One image over the view and
+// a margin around it, redrawn when the camera stops: its rows are even in mercator, the plane the
+// hexes are regular on. Flat ground is left bare.
 
 import * as maplibregl from "maplibre-gl";
 import type { Map as MlMap } from "maplibre-gl";
 import { computed, effect } from "@preact/signals";
 import { display, isBuildTool, mapShade, tool } from "../game/ui";
-import { BLOCK_CELLS, mercLat, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
+import { BLOCK_CELLS, HEX_ROW, HEX_SHIFT, HEX_WIDTH, mercLat, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 
@@ -70,8 +69,10 @@ export function startTerrainTint(map: MlMap): () => void {
     const top = maplibregl.MercatorCoordinate.fromLngLat([0, 85]).y, bottom = maplibregl.MercatorCoordinate.fromLngLat([0, -85]).y;
     const x0 = nw.x - dx, x1 = se.x + dx, y0 = Math.max(top, nw.y - dy), y1 = Math.min(bottom, se.y + dy);
     const lonW = x0 * 360 - 180, lonE = x1 * 360 - 180;
-    // about a screen pixel to an image pixel, so with linear resampling a cell's edge is a thin soft line at any zoom
-    const W = Math.max(1, Math.round(Math.min(MAX_PX, box.clientWidth * (1 + 2 * MARGIN))));
+    // about a screen pixel to an image pixel, so with linear resampling a hex's edge is a smooth diagonal at any zoom (T-2902)
+    const fine = Math.min(MAX_PX, box.clientWidth * (1 + 2 * MARGIN));
+    // a hex under a pixel of the image has no shape to show: half the image, a quarter of the work
+    const W = Math.max(1, Math.round(fine * HEX_WIDTH / (x1 - x0) < 1 ? fine / 2 : fine));
     const H = Math.max(1, Math.round(Math.min(MAX_PX, W * (y1 - y0) / (x1 - x0))));
     const s = mapShade.peek();
     const key = [x0, y0, x1, y1, W, H, s, terrainVersion.peek()].join();
@@ -82,29 +83,45 @@ export function startTerrainTint(map: MlMap): () => void {
     const [red, green, blue] = WASH[s].rgb;
     const alpha = WASH[s].alpha.map((a) => Math.round(a * 255));
     const px = new Uint8ClampedArray(W * H * 4);
-    // per canvas column, its world cell column and the block's key prefix
-    const worldCols = 360 * BLOCK_CELLS;
-    const colCell = new Int32Array(W), colBlock = new Int32Array(W);
-    for (let x = 0; x < W; x++) {
-      const c = Math.floor((lonW + (lonE - lonW) * (x + 0.5) / W + 180) * BLOCK_CELLS);
-      const col = ((c % worldCols) + worldCols) % worldCols;
-      colBlock[x] = Math.floor(col / BLOCK_CELLS);
-      colCell[x] = col - colBlock[x] * BLOCK_CELLS;
+    // the hex rows the image can reach, and per row the key prefix of its block and the row inside it
+    const rMin = Math.floor(y0 / HEX_ROW) - 1, rows = Math.ceil(y1 / HEX_ROW) + 1 - rMin + 1;
+    const rowKey = new Int32Array(rows), rowCell = new Int32Array(rows);
+    for (let j = 0; j < rows; j++) {
+      const lat = mercLat((rMin + j) * HEX_ROW), la = Math.max(0, Math.min(179, Math.floor(lat + 90)));
+      rowKey[j] = la * 360;
+      rowCell[j] = Math.floor((lat + 90) * BLOCK_CELLS) - la * BLOCK_CELLS;
     }
+    const colScale = HEX_WIDTH * 180 * BLOCK_CELLS, colShift = HEX_SHIFT * 360 * BLOCK_CELLS, worldCols = 360 * BLOCK_CELLS;
+    // each pixel wears the class of its hex's centre, as track there is charged
+    const xScale = (x1 - x0) / W / HEX_WIDTH, xStart = (x0 - HEX_SHIFT) / HEX_WIDTH + xScale * 0.5;
     let any = false;
+    let lastKey = -1, lastGrid: ClassGrid | undefined;
     for (let y = 0; y < H; y++) {
-      const lat = mercLat(y0 + (y1 - y0) * (y + 0.5) / H), la = Math.max(0, Math.min(179, Math.floor(lat + 90)));
-      const rowBase = (Math.floor((lat + 90) * BLOCK_CELLS) - la * BLOCK_CELLS) * BLOCK_CELLS;
-      let lastBlock = -1, lastGrid: ClassGrid | undefined;
+      const rf = (y0 + (y1 - y0) * (y + 0.5) / H) / HEX_ROW;
+      let lastQ = NaN, lastR = NaN, lastK = 0;
+      const half = rf / 2;
       for (let x = 0; x < W; x++) {
-        if (colBlock[x] !== lastBlock) lastBlock = colBlock[x], lastGrid = terrainGrids.get(la * 360 + lastBlock);
-        const g = lastGrid;
-        if (!g) continue;
-        const i = rowBase + colCell[x];
-        const k = (g.cls[i >> 2] >> ((i & 3) << 1)) & 3;
+        const qf = xStart + x * xScale - half, sf = -qf - rf;
+        let q = Math.floor(qf + 0.5), r = Math.floor(rf + 0.5);
+        const s = Math.floor(sf + 0.5), dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s - sf);
+        if (dq > dr && dq > ds) q = -r - s;
+        else if (dr > ds) r = -q - s;
+        let k = lastK;
+        if (q !== lastQ || r !== lastR) {
+          k = 0;
+          const j = r - rMin, col = (((Math.floor((2 * q + r) * colScale + colShift)) % worldCols) + worldCols) % worldCols;
+          const lo = Math.floor(col / BLOCK_CELLS), key = rowKey[j] + lo;
+          if (key !== lastKey) lastKey = key, lastGrid = terrainGrids.get(key);
+          const g = lastGrid;
+          if (g) {
+            const i = rowCell[j] * BLOCK_CELLS + col - lo * BLOCK_CELLS;
+            k = (g.cls[i >> 2] >> ((i & 3) << 1)) & 3;
+          }
+          lastQ = q, lastR = r, lastK = k;
+        }
         if (k) {
-          const o = (y * W + x) * 4;
-          px[o] = red, px[o + 1] = green, px[o + 2] = blue, px[o + 3] = alpha[k];
+          const i = (y * W + x) * 4;
+          px[i] = red, px[i + 1] = green, px[i + 2] = blue, px[i + 3] = alpha[k];
           any = true;
         }
       }

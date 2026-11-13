@@ -17,7 +17,7 @@ const TERRAIN_OVER = process.env.TW_TERRAIN ? resolve(process.env.TW_TERRAIN) : 
 /** T-2901: the terrain classes of the world's land, one file per degree block (pipeline/world_terrain.py), at
  * `packs/terrain-world/`; TW_TERRAIN_WORLD: another copy. A build holds them as hard links (0.7 GB, 19k files), and
  * tools/deploy.py publishes them on their own, not with each release. */
-const TERRAIN_WORLD = process.env.TW_TERRAIN_WORLD ? resolve(process.env.TW_TERRAIN_WORLD) : resolve(here, "../data/terrain-world");
+const TERRAIN_WORLD = process.env.TW_TERRAIN_WORLD ? resolve(process.env.TW_TERRAIN_WORLD) : resolve(here, "../data/terrain-world-v2");
 /** T-1285: the world's coarse water (pipeline/world_water.py), served at `packs/world.water`; TW_WORLD_WATER: another copy. */
 const WORLD_WATER = process.env.TW_WORLD_WATER ? resolve(process.env.TW_WORLD_WATER) : join(TERRAIN, "world.water");
 /** T-279: the market's routed drives (pipeline/market_drives.py), served at `packs/market-drives.bin`; TW_MARKET_DRIVES: another copy. */

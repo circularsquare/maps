@@ -6,7 +6,8 @@ GEDTM30's 30 m bare-earth pixels over each cell of the world lattice of PER_DEG 
 1 rolling, 2 hilly, 3 mountain; no data counts flat), then a 3 x 3 majority filter (ties keep the
 cell's own class), which drops single-cell specks of the 30 m noise so a route's price does not flicker
 cell to cell but keeps a valley floor two cells (about 230 m) wide, then capped by the coarse ground
-round it (COARSE_THRESH_DEG, against towers and raised roads). THRESH_Q was set so the world's mix
+round it (COARSE_THRESH_DEG on the 1/240 degree slope taken bilinearly at the cell's centre, against
+towers and raised roads; T-3372). THRESH_Q was set so the world's mix
 of classes over the zones stayed what the 460 m classes had (notes/T-1854.md). Every zone's grid sits
 on the one lattice, so where boxes overlap the grids agree.
 
@@ -58,7 +59,8 @@ THRESH_Q = (10, 22, 44)
 # the 1,243 zones that had them and are zones still, which the thresholds keep (Anita, 2026-10-30)
 TARGET_MIX = (0.5888, 0.1617, 0.1081, 0.1414)
 # a fine cell's class is at most the class of the ground round it at 1/240 degree (the slope between
-# neighbouring mean elevations, about 920 m apart, by COARSE_THRESH_DEG): 30 m bare earth still carries
+# neighbouring mean elevations, about 920 m apart, taken bilinearly at the fine cell's centre, by
+# COARSE_THRESH_DEG): 30 m bare earth still carries
 # towers and raised roads, which read as hills in dense centres (uncapped, 47% of central Tokyo was
 # rolling or hilly); set as low as keeps Tokyo, Nagoya and Shanghai's centres flat (notes/T-1854.md)
 COARSE_PER_DEG = 240
@@ -186,23 +188,36 @@ class Fine:
                 out[a0 - r0:a1 - r0, b0 - c0:b1 - c0] = b[a0 - br:a1 - br, b0 - bc:b1 - bc]
         return out
 
-    def coarse(self, c0: int, r0: int, cw: int, ch: int, thresh=None) -> np.ndarray:
-        """Classes by COARSE_THRESH_DEG of the slope between 1/240 degree mean elevations, on the fine
-        cells c0.., r0.. (each coarse cell covers 4 x 4 of them)."""
-        f = PER_DEG // COARSE_PER_DEG
-        k0, j0 = c0 // f - 1, r0 // f - 1
-        k1, j1 = (c0 + cw - 1) // f + 2, (r0 + ch - 1) // f + 2
-        e = self.elev(k0, j0, k1 - k0, j1 - j0).astype(np.float32)
+    def coarse_slope(self, k0: int, j0: int, kw: int, jh: int) -> np.ndarray:
+        """Slope in degrees between neighbouring 1/240 degree mean elevations, at the coarse cells
+        k0.., j0.. (no data 0)."""
+        e = self.elev(k0 - 1, j0 - 1, kw + 2, jh + 2).astype(np.float32)
         e[e == -32768] = np.nan
-        lat = (j0 + np.arange(j1 - j0) + 0.5) / COARSE_PER_DEG - 90
+        lat = (j0 - 1 + np.arange(jh + 2) + 0.5) / COARSE_PER_DEG - 90
         dy = M_PER_DEG_LAT / COARSE_PER_DEG
         dx = (M_PER_DEG_LON / COARSE_PER_DEG * np.cos(np.radians(lat)))[:, None]
         gy, gx = np.gradient(e)
         s = np.degrees(np.arctan(np.hypot(gx / dx, gy / dy)))
-        cls = np.digitize(np.nan_to_num(s, nan=0.0), thresh or COARSE_THRESH_DEG).astype(np.uint8)
-        rows = (r0 + np.arange(ch)) // f - j0
-        cols = (c0 + np.arange(cw)) // f - k0
-        return cls[rows[:, None], cols[None, :]]
+        return np.nan_to_num(s, nan=0.0)[1:-1, 1:-1]
+
+    def coarse(self, c0: int, r0: int, cw: int, ch: int, thresh=None) -> np.ndarray:
+        """Classes by COARSE_THRESH_DEG of the coarse slope (`coarse_slope`) taken bilinearly at each
+        fine cell's centre, on the fine cells c0.., r0.. (T-3372: the cap's borders follow the ground
+        at the fine cells instead of making 460 m squares)."""
+        f = PER_DEG // COARSE_PER_DEG
+        k0, j0 = c0 // f - 1, r0 // f - 1
+        k1, j1 = (c0 + cw - 1) // f + 2, (r0 + ch - 1) // f + 2
+        s = self.coarse_slope(k0, j0, k1 - k0, j1 - j0)
+        # a fine cell's centre in coarse cell units, from the centre of coarse cell k0 (j0)
+        v = (r0 + np.arange(ch) + 0.5) / f - 0.5 - j0
+        u = (c0 + np.arange(cw) + 0.5) / f - 0.5 - k0
+        jv, ku = np.floor(v).astype(int), np.floor(u).astype(int)
+        fv, fu = (v - jv)[:, None].astype(np.float32), (u - ku)[None, :].astype(np.float32)
+        a, b = s[jv[:, None], ku[None, :]], s[jv[:, None], ku[None, :] + 1]
+        c, d = s[jv[:, None] + 1, ku[None, :]], s[jv[:, None] + 1, ku[None, :] + 1]
+        top = a + (b - a) * fu
+        sl = top + (c + (d - c) * fu - top) * fv
+        return np.digitize(sl, thresh or COARSE_THRESH_DEG).astype(np.uint8)
 
 
 def lattice_box(w: float, s: float, e: float, n: float) -> tuple[int, int, int, int]:

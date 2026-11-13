@@ -84,7 +84,10 @@ def build(root: str, out: str, jobs: int) -> None:
             if (k + 1) % 1000 == 0 or k == len(keys) - 1:
                 print(f"{k + 1}/{len(keys)} blocks, {n} files, {size / 1e6:.1f} MB, {time.time() - t0:.0f} s", flush=True)
     head = b"TWI1" + struct.pack("<hHhHI", SOUTH, ROWS, WEST, COLS, n)
-    (Path(out) / "index.bin").write_bytes(head + np.packbits(bits.reshape(-1), bitorder="little").tobytes())
+    # replaced, never rewritten in place: builds hold it as a hard link (docs/world-run.md)
+    tmp = Path(out) / "index.bin.part"
+    tmp.write_bytes(head + np.packbits(bits.reshape(-1), bitorder="little").tobytes())
+    os.replace(tmp, Path(out) / "index.bin")
     print(f"done: {n} files, {none} with no data, {size / 1e9:.3f} GB, {time.time() - t0:.0f} s")
 
 

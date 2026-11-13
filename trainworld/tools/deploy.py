@@ -4,7 +4,7 @@
     python trainworld/tools/deploy.py --version 2026-10-22 --smoked  do it, then stop before git
     python trainworld/tools/deploy.py --verify --version 2026-10-22  check the published copy
     python trainworld/tools/deploy.py --stage DIR --data-base URL    the website half into DIR, for a local test
-    python trainworld/tools/deploy.py --terrain-world [--dry-run]   the terrain blocks to R2 (T-2901), once per data version
+    python trainworld/tools/deploy.py --terrain-world [--terrain-dir dir] [--dry-run]   the terrain blocks to R2 (T-2901), once per data version
 
 Run from the maps root. Nothing here commits or pushes; it prints the git commands.
 
@@ -22,7 +22,7 @@ same-origin with the page. The page finds its data with game/dataBase.ts: the `t
 script writes into the published index.html, else `packs/` beside the page (every local build).
 
 The terrain blocks (T-2901). 19k small files, about 0.7 GB, under one fixed prefix on R2 that is not the
-release's (`r2:anitamaps/trainworld/terrain-world/v1/`), so they go up once and not with every release. The build
+release's (`r2:anitamaps/trainworld/terrain-world/v2/` since T-3372), so they go up once and not with every release. The build
 holds them as hard links in `packs/terrain-world/`; a release leaves them out, the page finds them through the
 `tw-terrain` meta, and a release is refused while the prefix on R2 is not complete.
 
@@ -68,7 +68,7 @@ STAGE = os.path.join(MAPS, "artifacts", "trainworld", "publish")
 REMOTE = "r2:anitamaps/trainworld"
 PUBLIC = "https://data.anita.garden/trainworld"
 # T-2901: the terrain blocks' fixed prefix, shared by every release; a new data version gets a new vN
-TERRAIN_PREFIX = "terrain-world/v1"
+TERRAIN_PREFIX = "terrain-world/v2"
 # T-1707: the game lives at /trainsworld/; the old /trainworld/ folder keeps only redirect pages
 SITE_DIR = "trainsworld"
 OLD_DIR = "trainworld"
@@ -93,9 +93,9 @@ def files_under(root):
             yield os.path.relpath(p, root).replace("\\", "/"), p
 
 
-def terrain_world_files(dist):
-    """The build's terrain blocks: (published name, path) pairs."""
-    root = os.path.join(dist, "packs", "terrain-world")
+def terrain_world_files(dist, root=None):
+    """The build's terrain blocks (or those in `root`): (published name, path) pairs."""
+    root = root or os.path.join(dist, "packs", "terrain-world")
     return list(files_under(root)) if os.path.isdir(root) else []
 
 
@@ -396,17 +396,19 @@ def verify(version, page):
     return ok
 
 
-def upload_terrain_world(dist, dry):
-    """T-2901: the blocks to their fixed prefix. rclone skips what is already there, so a rerun finishes a cut-off upload."""
-    files = terrain_world_files(dist)
+def upload_terrain_world(dist, dry, root=None):
+    """T-2901: the blocks to their fixed prefix, from the build or from `root` (T-3372: a new version's data folder,
+    before any build holds it). rclone skips what is already there, so a rerun finishes a cut-off upload."""
+    root = root or os.path.join(dist, "packs", "terrain-world")
+    files = terrain_world_files(dist, root)
     if not any(r == "index.bin" for r, _ in files) or blocks_listed(files) != len(files) - 1:
-        print(f"no complete terrain blocks in {dist}: rebuild with pipeline/world_terrain.py done")
+        print(f"no complete terrain blocks in {root}: rebuild with pipeline/world_terrain.py done")
         return 1
     size = sum(os.path.getsize(p) for _, p in files)
     dest = f"{REMOTE}/{TERRAIN_PREFIX}"
-    print(f"{len(files)} files, {size / 1e9:.2f} GB -> {dest}")
+    print(f"{len(files)} files, {size / 1e9:.2f} GB from {root} -> {dest}")
     # .terrain files are gzip the game inflates itself, so no Content-Encoding (as .rgr)
-    rc = run(RCLONE + ["copy", os.path.join(dist, "packs", "terrain-world"), dest], dry)
+    rc = run(RCLONE + ["copy", root, dest], dry)
     if rc:
         print(f"rclone exited {rc}")
     elif not dry:
@@ -429,11 +431,12 @@ def main():
     ap.add_argument("--stage", help="write the website half into this folder instead (local test), nothing uploaded")
     ap.add_argument("--data-base", help="with --stage: the data URL the page reads")
     ap.add_argument("--terrain-world", action="store_true", help="upload the terrain blocks to their fixed prefix (T-2901), then stop")
+    ap.add_argument("--terrain-dir", help="with --terrain-world: upload this folder of blocks instead of the build's")
     a = ap.parse_args()
     v = a.version
 
     if a.terrain_world:
-        sys.exit(upload_terrain_world(a.dist, a.dry_run))
+        sys.exit(upload_terrain_world(a.dist, a.dry_run, a.terrain_dir))
 
     if a.verify:
         sys.exit(0 if verify(v, a.page) else 1)

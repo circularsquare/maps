@@ -1,6 +1,6 @@
 # Terrain
 
-Hills make track dearer. The map is cut into small squares and each one is flat, low hills, high hills or mountains.
+Hills make track dearer. The map is cut into hexes and each one is flat, low hills, high hills or mountains.
 
 Rough ground adds to the [[levels-and-tunnels|level's price multiplier]]:
 
@@ -19,7 +19,7 @@ Stations, junctions and crossings pay nothing extra for the ground, and [[upkeep
 
 Over [[water]] the ground underneath doesn't count: only the water does.
 
-A square that looks like hills on the map is charged as hills.
+A hex that looks like hills on the map is charged as hills.
 
 Exact rule: `docs/track-and-service.md` "Construction prices", the Terrain item, which also has how the hills are measured.
-In the code: **main** `sim/src/track/cost.rs` `terrain_surcharge`, also `terrain_spans` `sim/src/track/params.rs` `TERRAIN_SURCHARGE`, `TERRAIN_MIN_LEVEL`
+In the code: **main** `sim/src/track/cost.rs` `terrain_surcharge`, also `hex_centre`, `terrain_spans` `sim/src/track/params.rs` `TERRAIN_SURCHARGE`, `TERRAIN_MIN_LEVEL`

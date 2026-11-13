@@ -23,8 +23,42 @@ export interface ClassGrid { perDeg: number; col0: number; row0: number; w: numb
 /** The class of cell `i` (row-major) of a grid. */
 export const classAt = (g: ClassGrid, i: number) => (g.cls[i >> 2] >> ((i & 3) << 1)) & 3;
 
+/** T-2890: a terrain hex's width across its flats, in world widths on the mercator plane (sim
+ * `TERRAIN_HEX`), and the spacing of its rows. Track is charged the class of its hex's centre, so the
+ * map's tint draws these hexes; `hexCentre` must match sim `cost::hex_centre`. */
+export const HEX_WIDTH = 1 / (360 * 768);
+export const HEX_ROW = HEX_WIDTH * Math.sqrt(3) / 2;
+/** How far east the lattice is shifted (sim `TERRAIN_HEX_SHIFT`), so no hex centre is on a cell edge. */
+export const HEX_SHIFT = 1 / (360 * 15360);
+
+/** The nearest hex to a point of the mercator plane, as axial `[q, r]`, row `r` counted from the top. */
+export function hexOfMercator(x: number, y: number): [number, number] {
+  const rf = y / HEX_ROW, qf = (x - HEX_SHIFT) / HEX_WIDTH - rf / 2, sf = -qf - rf;
+  let q = Math.round(qf), r = Math.round(rf);
+  const s = Math.round(sf), dq = Math.abs(q - qf), dr = Math.abs(r - rf), ds = Math.abs(s - sf);
+  if (dq > dr && dq > ds) q = -r - s;
+  else if (dr > ds) r = -q - s;
+  return [q, r];
+}
+
+const mercY = (lat: number) => 0.5 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / (2 * Math.PI);
 /** The latitude of a mercator y, degrees. */
 export const mercLat = (y: number) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
+
+/** Longitude and latitude of the centre of the hex a point is in. */
+export function hexCentre(lon: number, lat: number): [number, number] {
+  const [q, r] = hexOfMercator((lon + 180) / 360, mercY(lat));
+  return [(HEX_WIDTH * (q + r / 2) + HEX_SHIFT) * 360 - 180, mercLat(HEX_ROW * r)];
+}
+
+/** The class charged at a point: that of its hex's centre (sim `Terrain::class_at`). */
+export function hexClass(lon: number, lat: number): number {
+  const [hl, ha] = hexCentre(lon, lat);
+  const g = terrainGrids.get(blockKey(hl, ha));
+  if (!g) return 0;
+  const c = Math.floor((hl + 180) * g.perDeg) - g.col0, r = Math.floor((ha + 90) * g.perDeg) - g.row0;
+  return c >= 0 && r >= 0 && c < g.w && r < g.h ? classAt(g, r * g.w + c) : 0;
+}
 
 /** The blocks the clock worker sent, by `blockKey` (its "terrain" message), so the map's tint and
  * hillshade show what the price reads. Kept across games: the lattice is the world's. */

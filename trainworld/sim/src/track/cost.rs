@@ -434,6 +434,28 @@ pub struct Terrain {
     wanted: Arc<Mutex<HashSet<i32>>>,
 }
 
+/// Longitude and latitude of the centre of the terrain hex a point is in (T-2890): pointy-topped
+/// hexes, regular on the mercator plane, so the map draws them as regular hexes. Must match the
+/// app's `hexCentre` (`game/terrain.ts`), which draws each hex in the class of its centre.
+pub fn hex_centre(lon: f64, lat: f64) -> (f64, f64) {
+    use std::f64::consts::PI;
+    let row = TERRAIN_HEX * 3f64.sqrt() / 2.0;
+    let x = (lon + 180.0) / 360.0 - TERRAIN_HEX_SHIFT;
+    let y = 0.5 - (PI / 4.0 + lat.to_radians() / 2.0).tan().ln() / (2.0 * PI);
+    let rf = y / row;
+    let qf = x / TERRAIN_HEX - rf / 2.0;
+    let sf = -qf - rf;
+    let (mut q, mut r, s) = (qf.round(), rf.round(), sf.round());
+    let (dq, dr, ds) = ((q - qf).abs(), (r - rf).abs(), (s - sf).abs());
+    if dq > dr && dq > ds {
+        q = -r - s;
+    } else if dr > ds {
+        r = -q - s;
+    }
+    let (cx, cy) = (TERRAIN_HEX * (q + r / 2.0) + TERRAIN_HEX_SHIFT, row * r);
+    (cx * 360.0 - 180.0, (PI * (1.0 - 2.0 * cy)).sinh().atan().to_degrees())
+}
+
 impl Terrain {
     /// A block's grid: its key from its south-west cell.
     pub fn add(&mut self, grid: Arc<ClassGrid>) {
@@ -465,8 +487,9 @@ impl Terrain {
         None
     }
 
-    /// The class charged at a point: that of the grid cell it is in.
+    /// The class charged at a point: that of its hex's centre (T-2890).
     pub fn class_at(&self, lon: f64, lat: f64) -> u8 {
+        let (lon, lat) = hex_centre(lon, lat);
         self.grid(block_key(lon, lat)).and_then(|g| g.at(wrap_lon(lon), lat)).unwrap_or(0)
     }
 
@@ -483,7 +506,7 @@ impl Terrain {
     }
 }
 
-/// A longitude into -180..180, as track can run just past the antimeridian.
+/// A longitude into -180..180, as hex centres can stray just past the antimeridian.
 fn wrap_lon(lon: f64) -> f64 {
     (lon + 180.0).rem_euclid(360.0) - 180.0
 }
@@ -506,6 +529,7 @@ pub fn terrain_spans(len: f64, at: impl Fn(f64) -> (f64, f64), t: &Terrain, out:
     let (mut key, mut grid) = (-1, None);
     for j in 0..n {
         let (lon, lat) = at((j as f64 + 0.5) * step);
+        let (lon, lat) = hex_centre(lon, lat);
         let k = block_key(lon, lat);
         if k != key {
             key = k;
@@ -537,6 +561,7 @@ pub fn terrain_blocks(len: f64, at: impl Fn(f64) -> (f64, f64), out: &mut HashSe
     let mut last = -1;
     for j in 0..n {
         let (lon, lat) = at((j as f64 + 0.5) * step);
+        let (lon, lat) = hex_centre(lon, lat);
         let k = block_key(lon, lat);
         if k != last {
             last = k;
@@ -838,6 +863,19 @@ mod tests {
         let mut classes = vec![];
         track_cost_parts_t(1000.0, &at(0.0), &[], &half, 2, TrackKind::Regular, |_, _, _, c, m, _| classes.push((c, m)));
         assert_eq!(classes, vec![(0, 500.0), (1, 500.0)]);
+    }
+
+    #[test]
+    fn a_terrain_hex_has_one_centre() {
+        // T-2890: every point of a hex finds the same centre, and that centre is its own, within a
+        // hex's reach of the point
+        let hex_deg = TERRAIN_HEX * 360.0;
+        for i in 0..4000 {
+            let (lon, lat) = (-170.0 + i as f64 * 0.0817, -60.0 + i as f64 * 0.0291);
+            let (cl, ca) = hex_centre(lon, lat);
+            assert_eq!((cl, ca), hex_centre(cl, ca), "at {lon}, {lat}");
+            assert!((cl - lon).abs() <= hex_deg && (ca - lat).abs() <= hex_deg, "at {lon}, {lat}: {cl}, {ca}");
+        }
     }
 
     #[test]

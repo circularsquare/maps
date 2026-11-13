@@ -23,7 +23,7 @@ const hold = (ms) => new Promise((d) => setTimeout(d, ms));
 
 /** the classes of a block file */
 function block(la, lo) {
-  let b = readFileSync(new URL(`../data/terrain-world/${la}_${lo}.terrain`, import.meta.url));
+  let b = readFileSync(new URL(`../data/terrain-world-v2/${la}_${lo}.terrain`, import.meta.url));
   if (b[0] === 0x1f && b[1] === 0x8b) b = gunzipSync(b);
   const [w, h] = [b.readUInt32LE(4), b.readUInt32LE(8)], [c0, r0] = [b.readInt32LE(12), b.readInt32LE(16)], per = b.readUInt32LE(20);
   const cls = new Uint8Array(w * h);
