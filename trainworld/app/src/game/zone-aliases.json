@@ -1242,7 +1242,6 @@
 "mnd": ["Mukdahan", "มุกดาหาร", "เทศบาลเมืองมุกดาหาร"],
 "mpe": ["Cha-am", "ชะอำ", "เทศบาลเมืองชะอำ", "Phetchaburi", "เพชรบุรี", "เทศบาลเมืองเพชรบุรี"],
 "mpr": ["Hua Hin", "หัวหิน", "เทศบาลนครหัวหิน", "Prachuap Khiri Khan", "ประจวบคีรีขันธ์", "เทศบาลเมืองประจวบคีรีขันธ์"],
-"sin": ["Republic of Singapore"],
 "mug": ["Chiang Mai", "เชียงใหม่", "เทศบาลนครเชียงใหม่", "Mae Ai", "แม่อาย", "เทศบาลตำบลแม่อาย"],
 "mnm": ["Chumphon", "ชุมพร", "เทศบาลเมืองชุมพร"],
 "knt": ["Si Sa Ket", "ศรีสะเกษ", "เทศบาลเมืองศรีสะเกษ"],
@@ -3444,5 +3443,6 @@
 "vim": ["Daugavpils", "Rēzekne", "Valmiera", "Ogre"],
 "kuz": ["Liepāja", "Ventspils"],
 "tlk": ["Skien", "Porsgrunn"],
-"ute": ["Utena", "Visaginas", "Sniečkus"]
+"ute": ["Utena", "Visaginas", "Sniečkus"],
+"sin": ["Republic of Singapore"]
 }

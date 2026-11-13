@@ -29686,6 +29686,30 @@
       {
         "name": "Utenos apskritis",
         "regionName": "Utenos apskritis region"
+      },
+      {
+        "name": "Dryden",
+        "regionName": "Dryden region"
+      },
+      {
+        "name": "Algoma, Unorganized, North Pa",
+        "regionName": "Algoma, Unorganized, North Pa region"
+      },
+      {
+        "name": "Dryden",
+        "regionName": "Dryden region"
+      },
+      {
+        "name": "Algoma, Unorganized, North Pa",
+        "regionName": "Algoma, Unorganized, North Pa region"
+      },
+      {
+        "name": "Singapore",
+        "regionName": "Singapore region"
+      },
+      {
+        "name": "Singapore",
+        "regionName": "Singapore region"
       }
     ],
     "rule": {
@@ -29951,7 +29975,7 @@
       "zoom": 11.2,
       "utcOffset": -5,
       "market": -1,
-      "localTrips": 19595433.0,
+      "localTrips": 19595565.0,
       "box": [
         -80.274,
         43.032,
@@ -59665,7 +59689,7 @@
       ],
       "place": 3676,
       "country": "CA",
-      "localTrips": 13105828.0,
+      "localTrips": 13105716.0,
       "realm": "canada"
     },
     {
@@ -59691,7 +59715,7 @@
       ],
       "place": 3677,
       "country": "CA",
-      "localTrips": 4123910.0,
+      "localTrips": 4124581.0,
       "realm": "canada"
     },
     {
@@ -59717,7 +59741,7 @@
       ],
       "place": 3678,
       "country": "CA",
-      "localTrips": 3290248.0,
+      "localTrips": 3288399.0,
       "realm": "canada"
     },
     {
@@ -59743,7 +59767,7 @@
       ],
       "place": 3680,
       "country": "CA",
-      "localTrips": 3107356.0,
+      "localTrips": 3108103.0,
       "realm": "canada"
     },
     {
@@ -59769,7 +59793,7 @@
       ],
       "place": 3682,
       "country": "CA",
-      "localTrips": 2502994.0,
+      "localTrips": 2502929.0,
       "realm": "canada"
     },
     {
@@ -59795,7 +59819,7 @@
       ],
       "place": 3683,
       "country": "CA",
-      "localTrips": 2452456.0,
+      "localTrips": 2452300.0,
       "realm": "canada"
     },
     {
@@ -59821,7 +59845,7 @@
       ],
       "place": 3684,
       "country": "CA",
-      "localTrips": 1922279.0,
+      "localTrips": 1922707.0,
       "realm": "canada"
     },
     {
@@ -59847,7 +59871,7 @@
       ],
       "place": 3685,
       "country": "CA",
-      "localTrips": 1354739.0,
+      "localTrips": 1354968.0,
       "realm": "canada"
     },
     {
@@ -59873,7 +59897,7 @@
       ],
       "place": 3686,
       "country": "CA",
-      "localTrips": 1099870.0,
+      "localTrips": 1099860.0,
       "realm": "canada"
     },
     {
@@ -59899,7 +59923,7 @@
       ],
       "place": 3687,
       "country": "CA",
-      "localTrips": 921882.0,
+      "localTrips": 921818.0,
       "realm": "canada"
     },
     {
@@ -59925,7 +59949,7 @@
       ],
       "place": 3688,
       "country": "CA",
-      "localTrips": 1155884.0,
+      "localTrips": 1156035.0,
       "realm": "canada"
     },
     {
@@ -59951,7 +59975,7 @@
       ],
       "place": 3689,
       "country": "CA",
-      "localTrips": 1067423.0,
+      "localTrips": 1067386.0,
       "realm": "canada"
     },
     {
@@ -59977,7 +60001,7 @@
       ],
       "place": 3690,
       "country": "CA",
-      "localTrips": 962038.0,
+      "localTrips": 962062.0,
       "realm": "canada"
     },
     {
@@ -60003,7 +60027,7 @@
       ],
       "place": 3691,
       "country": "CA",
-      "localTrips": 879413.0,
+      "localTrips": 878044.0,
       "realm": "canada"
     },
     {
@@ -60029,7 +60053,7 @@
       ],
       "place": 3693,
       "country": "CA",
-      "localTrips": 516163.0,
+      "localTrips": 516247.0,
       "realm": "canada"
     },
     {
@@ -60055,7 +60079,7 @@
       ],
       "place": 3694,
       "country": "CA",
-      "localTrips": 438466.0,
+      "localTrips": 438575.0,
       "realm": "canada"
     },
     {
@@ -60081,7 +60105,7 @@
       ],
       "place": 3695,
       "country": "CA",
-      "localTrips": 438879.0,
+      "localTrips": 439154.0,
       "realm": "canada"
     },
     {
@@ -60107,7 +60131,7 @@
       ],
       "place": 3696,
       "country": "CA",
-      "localTrips": 418871.0,
+      "localTrips": 418892.0,
       "realm": "canada"
     },
     {
@@ -60133,7 +60157,7 @@
       ],
       "place": 3698,
       "country": "CA",
-      "localTrips": 360915.0,
+      "localTrips": 359081.0,
       "realm": "canada"
     },
     {
@@ -60158,7 +60182,7 @@
       ],
       "place": 3699,
       "country": "CA",
-      "localTrips": 7946277.0,
+      "localTrips": 7947180.0,
       "realm": "canada"
     },
     {
@@ -60184,7 +60208,7 @@
       ],
       "place": 3700,
       "country": "CA",
-      "localTrips": 518612.0,
+      "localTrips": 518609.0,
       "realm": "canada"
     },
     {
@@ -60210,7 +60234,7 @@
       ],
       "place": 3702,
       "country": "CA",
-      "localTrips": 429146.0,
+      "localTrips": 429213.0,
       "realm": "canada"
     },
     {
@@ -60235,7 +60259,7 @@
       ],
       "place": 3703,
       "country": "CA",
-      "localTrips": 4672195.0,
+      "localTrips": 4671673.0,
       "realm": "canada"
     },
     {
@@ -60260,7 +60284,7 @@
       ],
       "place": 3704,
       "country": "CA",
-      "localTrips": 4155713.0,
+      "localTrips": 4154838.0,
       "realm": "canada"
     },
     {
@@ -60286,7 +60310,7 @@
       ],
       "place": 3705,
       "country": "CA",
-      "localTrips": 1431588.0,
+      "localTrips": 1433195.0,
       "realm": "canada"
     },
     {
@@ -60312,7 +60336,7 @@
       ],
       "place": 3706,
       "country": "CA",
-      "localTrips": 1427452.0,
+      "localTrips": 1427844.0,
       "realm": "canada"
     },
     {
@@ -60338,7 +60362,7 @@
       ],
       "place": 3707,
       "country": "CA",
-      "localTrips": 1023346.0,
+      "localTrips": 1023227.0,
       "realm": "canada"
     },
     {
@@ -60364,7 +60388,7 @@
       ],
       "place": 3708,
       "country": "CA",
-      "localTrips": 688858.0,
+      "localTrips": 688751.0,
       "realm": "canada"
     },
     {
@@ -60390,7 +60414,7 @@
       ],
       "place": 3709,
       "country": "CA",
-      "localTrips": 551203.0,
+      "localTrips": 551260.0,
       "realm": "canada"
     },
     {
@@ -60416,7 +60440,7 @@
       ],
       "place": 3710,
       "country": "CA",
-      "localTrips": 412567.0,
+      "localTrips": 412609.0,
       "realm": "canada"
     },
     {
@@ -60442,7 +60466,7 @@
       ],
       "place": 3711,
       "country": "CA",
-      "localTrips": 375162.0,
+      "localTrips": 374954.0,
       "realm": "canada"
     },
     {
@@ -60468,7 +60492,7 @@
       ],
       "place": 3712,
       "country": "CA",
-      "localTrips": 328324.0,
+      "localTrips": 328233.0,
       "realm": "canada"
     },
     {
@@ -60494,7 +60518,7 @@
       ],
       "place": 3713,
       "country": "CA",
-      "localTrips": 221091.0,
+      "localTrips": 221000.0,
       "realm": "canada"
     },
     {
@@ -60546,7 +60570,7 @@
       ],
       "place": 3715,
       "country": "CA",
-      "localTrips": 1822013.0,
+      "localTrips": 1822025.0,
       "realm": "canada"
     },
     {
@@ -60572,7 +60596,7 @@
       ],
       "place": 3716,
       "country": "CA",
-      "localTrips": 872211.0,
+      "localTrips": 872208.0,
       "realm": "canada"
     },
     {
@@ -60598,7 +60622,7 @@
       ],
       "place": 3717,
       "country": "CA",
-      "localTrips": 984951.0,
+      "localTrips": 986486.0,
       "realm": "canada"
     },
     {
@@ -60624,7 +60648,7 @@
       ],
       "place": 3718,
       "country": "CA",
-      "localTrips": 878758.0,
+      "localTrips": 878974.0,
       "realm": "canada"
     },
     {
@@ -60676,7 +60700,7 @@
       ],
       "place": 3721,
       "country": "CA",
-      "localTrips": 423809.0,
+      "localTrips": 423821.0,
       "realm": "canada"
     },
     {
@@ -60702,7 +60726,7 @@
       ],
       "place": 3722,
       "country": "CA",
-      "localTrips": 486064.0,
+      "localTrips": 486140.0,
       "realm": "canada"
     },
     {
@@ -60728,7 +60752,7 @@
       ],
       "place": 3724,
       "country": "CA",
-      "localTrips": 1829282.0,
+      "localTrips": 1829305.0,
       "realm": "canada"
     },
     {
@@ -60754,7 +60778,7 @@
       ],
       "place": 3725,
       "country": "CA",
-      "localTrips": 452002.0,
+      "localTrips": 451990.0,
       "realm": "canada"
     },
     {
@@ -60780,7 +60804,7 @@
       ],
       "place": 3730,
       "country": "CA",
-      "localTrips": 2533283.0,
+      "localTrips": 2533878.0,
       "realm": "canada"
     },
     {
@@ -64445,31 +64469,6 @@
       "realm": "thailand"
     },
     {
-      "id": "sin",
-      "name": "Singapore",
-      "origin": {
-        "lon": 103.9026,
-        "lat": 1.3952
-      },
-      "center": [
-        103.9026,
-        1.3952
-      ],
-      "zoom": 11.2,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        103.621,
-        1.236,
-        104.052,
-        1.49
-      ],
-      "place": 3909,
-      "country": "SG",
-      "localTrips": 18211166.0,
-      "realm": "singapore"
-    },
-    {
       "id": "mug",
       "name": "Mueang Chiang Mai",
       "kind": "zone",
@@ -64856,7 +64855,7 @@
       ],
       "place": 3928,
       "country": "CA",
-      "localTrips": 3074600.0,
+      "localTrips": 3075623.0,
       "realm": "canada"
     },
     {
@@ -64882,7 +64881,7 @@
       ],
       "place": 3929,
       "country": "CA",
-      "localTrips": 375987.0,
+      "localTrips": 377019.0,
       "realm": "canada"
     },
     {
@@ -64934,7 +64933,7 @@
       ],
       "place": 3932,
       "country": "CA",
-      "localTrips": 2857725.0,
+      "localTrips": 2857740.0,
       "realm": "canada"
     },
     {
@@ -64960,7 +64959,7 @@
       ],
       "place": 3933,
       "country": "CA",
-      "localTrips": 553497.0,
+      "localTrips": 553518.0,
       "realm": "canada"
     },
     {
@@ -64986,7 +64985,7 @@
       ],
       "place": 3935,
       "country": "CA",
-      "localTrips": 311496.0,
+      "localTrips": 311548.0,
       "realm": "canada"
     },
     {
@@ -134402,6 +134401,83 @@
       "country": "LT",
       "localTrips": 340557.0,
       "realm": "baltic"
+    },
+    {
+      "id": "dry",
+      "name": "Dryden",
+      "kind": "zone",
+      "origin": {
+        "lon": -92.8353,
+        "lat": 49.7713
+      },
+      "center": [
+        -92.8353,
+        49.7713
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -95.182,
+        47.916,
+        -85.301,
+        50.251
+      ],
+      "place": 7419,
+      "country": "CA",
+      "localTrips": 69728.0,
+      "realm": "canada"
+    },
+    {
+      "id": "ago",
+      "name": "Algoma, Unorganized, North Pa",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.38,
+        "lat": 48.72
+      },
+      "center": [
+        -86.38,
+        48.72
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -88.461,
+        46.213,
+        -81.917,
+        49.058
+      ],
+      "place": 7420,
+      "country": "CA",
+      "localTrips": 46241.0,
+      "realm": "canada"
+    },
+    {
+      "id": "sin",
+      "name": "Singapore",
+      "origin": {
+        "lon": 103.9026,
+        "lat": 1.3952
+      },
+      "center": [
+        103.9026,
+        1.3952
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        103.587,
+        1.191,
+        104.052,
+        1.49
+      ],
+      "place": 7422,
+      "country": "SG",
+      "localTrips": 17748332.0,
+      "realm": "singapore"
     }
   ]
 }
