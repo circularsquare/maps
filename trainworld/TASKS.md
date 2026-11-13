@@ -357,7 +357,6 @@ Tasks that land only when a pack or country is rebuilt, grouped by that rebuild,
 
 ### Europe's next rebuild (T-1189's Europe replan ran without these, T-2302, 2026-11-05)
 - T-617 [P3] Rebuild gla, lis and pot on T-610's unit matching. notes/someday.md
-- T-772 [P3] Dead-space units holding cities (Valladolid, Agder...); Anita: low priority. notes/someday.md
 - T-785 [P3] France's countryside zones on the France module's sources. notes/someday.md
 - T-771 [P3] A Spain module from the ministry's phone trip tables and INE's grid. notes/someday.md
 - T-2083 [P3] Eurostat's Census 2021 1 km grid as population for every built EU country (GHSL is good there; small gain). research/next-countries-data.md
