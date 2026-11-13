@@ -14,7 +14,8 @@ Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to
 ## Live, server, ops
 - **Live = v0.3.3** (published 2026-11-13 ~14:00Z from master b2897ae2; data 2026-11-13; website eb1e1bf, about page
   has the flag credit; `--verify --page` all PASS). Terrain v2 on R2 (terrain-world/v2, 19,342 files).
-- **Server** shonei-server b2ab066 deployed 13:19Z and pushed (feedback screenshots, flag set 3, play-stats cap).
+- **Server** shonei-server 8391326 deployed 16:28Z 11-13 and pushed (adds twstats' 15-minute playtime ring; before it
+  b2ab066: feedback screenshots, flag set 3, play-stats cap).
 - **Open source LIVE**: https://github.com/circularsquare/trainsworld (public, synced to maps b2897ae2 as d96e62c).
   Each later publish: export.py, then `git push` in ..\trainsworld-export (docs/orchestrator.md).
 - Old R2 data versions on R2: 2026-11-10d, 2026-11-11, 2026-11-11b (purge the oldest with r2_purge.py when wanted).
