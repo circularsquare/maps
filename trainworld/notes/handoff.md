@@ -26,7 +26,7 @@ steps). maps-19 agents: **rivers** done (T-3358 brainstorm, notes/T-3358.md; pro
 **zoomgone** abe181740cc6aae87 (Sonnet, main tree, Vite 6151): T-3368 didn't reproduce as vanishing; at z21-22 one
 track is wider than a phone screen, so the view is solid line colour. Fixing: maxZoom 20 on touch devices only (my
 call). T-3368 committed 23c0335a (not on 8800 yet). Filed T-3368..T-3372 (T-3372 finer terrain, waits for her go).
-Next free id T-3373.
+Next free id T-3374 (T-3373 filed: demand workers sharing memory, design first, not started).
 **11-12 ~23:50 UTC, Anita away ~16 h** (back briefly in ~6 h, little time): "probably dont start new work unless its
 obvious, mosty just wanna finsh the 0.3.3 stuff and alsowork on terrain"; use all cores (cap set 16); usage low this
 week (no big change in behaviour). hsr landed f68a53d8 (T-3352 only). Running: **terrain** a13189d6a6022e348 (Opus,
@@ -38,6 +38,20 @@ in a window). Rivers: prototype FAILED (London 19/145 wrong bank); next would be
 (6-9 h): NOT started (not v0.3.3, not terrain); offer when she's back. UPDATE: she said run it, plus her idea "just not straighten lines if they are near rivers
 and/or would cause an issue by straightening": **rivers** ab661af6e3ab4da8f resumed for both (scratchpad, ~2 h, one
 river per picture). 8800 rebuild after the join's after-join steps. Smoke master f68a53d8 PASS 28.
+Terrain stage A done + C (hexes, v2 paths) in tree: blended cap (bilinear coarse slope at each cell), grid gone,
+Tokyo/Nagoya/Shanghai centres still flat, zone mix within 1 point; quotes +0.7% Tyrol, +1.4% Garda, +7.5% Ligurian, +1.9%
+Chongqing (single routes up to +106%: flat squares in steep valleys gone; I accepted as a correction, flag to her).
+B (world build) RUNNING into data/terrain-world-v2 from data/work/terrain-fine-world (not gaprun2's folder, no wait
+needed), log data/work/t3372-world.log. Preview checks passed (hex 141/141, real save Built +0.066%, smoke 28).
+Publish (her word): `python trainworld/tools/deploy.py --terrain-world --terrain-dir trainworld/data/terrain-world-v2`.
+Fresh per-zone files in data/work/t3372-zones, swap into data/terrain after gaprun2's after-join steps.
+**gaprun2 ~19:05 local**: join A + KP shipped 46 rows (3,961 shipped); final register's --trips hit the 30-min step
+limit (market part done), rerunning `world_run.py step zones --trips` (python 17772, artifacts/trainworld/t3287/trips.log,
+holds the registry lock); terrain_fine running (python 15588), then zone_terrain, market_drives, build_inputs, smoke,
+real save. A FREEZE (freeze.py) is owed after trips + after-join, before any publish. Then hand back.
+**gaprun2 handover**: maps-37 (past 600k) has gaprun2 hand back at its next clean pause (after-join steps done,
+before batch B's gates), state in notes/T-3287.md; then maps-19 starts a fresh agent for batches B and C (Opus,
+data) and maps-37 deletes its Previous: line.
 Rivers prototype 2 done (her idea works, figures in T-3358 task line, notes "Prototype 2"); build (6-8 h, Opus, fresh
 agent: rivers is at ~375k) waits for her go. Review image artifacts/trainworld/review/rivers-proto2-london.png.
 tr33 LANDED 64715623 (v0.3.3 changelog, 25 lines + headline; all 11 languages 2663/2663). Her review pending on the
