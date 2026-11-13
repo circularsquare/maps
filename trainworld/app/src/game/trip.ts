@@ -302,16 +302,15 @@ export interface MarketPeriod {
   baseFarePerceived: number;
   minPerUsd: number;
   why: MarketNoRail;
+  /** the longer trips' station pairs and routes while `rail` > 0, else every kind's (T-3374) */
   pairs: TripPair[];
   routes: TripRoute[];
   cut: number;
   /** T-1229: the everyday outings across a zone line between the two ends, legs a day both ways
-   * (the home's and the return), by train and walked the whole way; the rest go by car. Their
-   * train riders are in `pairs` and `routes` with the longer trips'. */
+   * (the home's and the return), by train and walked the whole way; the rest go by car. */
   everyday: { legs: number; rail: number; walk: number };
   /** T-880: the commutes between zones with homes at the commuting end (the near end for Homes,
-   * the far end for Destinations), legs a day both ways and by train; the rest drive. Their train
-   * riders are in `pairs` and `routes` too. */
+   * the far end for Destinations), legs a day both ways and by train; the rest drive. */
   commute: { legs: number; rail: number };
   /** T-1902: the car and the plane as one figure, as the choice weighs them against the train, over
    * the same zone pairs and riders as `railPerceived`; NaN none */
@@ -400,7 +399,9 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   const everyday = { legs: sum((p) => p.everyday.legs), rail: sum((p) => p.everyday.rail), walk: sum((p) => p.everyday.walk) };
   const commute = { legs: sum((p) => p.commute.legs), rail: sum((p) => p.commute.rail) };
   const top = ps.reduce((a, b) => (b.trips > a.trips ? b : a));
-  const riders = (p: MarketPeriod) => p.rail + p.everyday.rail + p.commute.rail;
+  // T-3374: an answer's routes are its longer trips' while any of them ride, else every kind's; so
+  // are the merged ones
+  const riders = rail > 0 ? (p: MarketPeriod) => p.rail : (p: MarketPeriod) => p.rail + p.everyday.rail + p.commute.rail;
   const { pairs, routes, cut } = mergeRoutes(ps.filter((p) => riders(p) > 0).map((p) => ({ pairs: p.pairs, routes: p.routes, weight: riders(p) })), label);
   return {
     ...top, trips, rail, everyday, commute, air: sum((p) => p.air), car: sum((p) => p.car),

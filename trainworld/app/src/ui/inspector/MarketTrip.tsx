@@ -400,7 +400,10 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const sc = fareScale(start >= 0 ? marketRow(start)?.country : undefined, moneyState.value?.fares.scales);
   const fare = main ? (sc * (t.baseFarePerceived + main.legs.reduce((s, l) => s + l.farePerceived, 0))) / t.minPerUsd : 0;
   const periodLow = lowerWord(period);
-  const repTip = tr("marketTrip.repTip", { period: periodLow, picked: tripPeriod.value !== null });
+  // T-3374: the routes are the longer trips' while any ride, else every kind's (the sim's
+  // `market_trip`); with commutes or outings beside them the period is the one with most trips of all
+  const pooled = others && !(t.rail > 0);
+  const repTip = tr("marketTrip.repTip", { period: periodLow, picked: tripPeriod.value !== null || others });
   // T-991: an end that is not open has no trips worked out, but the distance and the car are known
   // from the places' centres; with no distance at all, neither is shown
   const known = t.km > 0;
@@ -442,7 +445,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       {pair && <PairModes pair={pair} near={ends.near} far={one} day={day} />}
       {!closed && cLegs >= 0.5 && <CommuteModes legs={cLegs} rail={cRail} day={day} who={commuters} />}
       {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
-      <div class="h">{tr("tripText.byTrain")}<span class="right muted small" data-tip={others ? tr("marketTrip.trainOthersTip", { period: periodLow, picked: tripPeriod.value !== null }) : repTip}>{others ? period : tr("marketTrip.interCityPeriod", { period: periodLow })}</span></div>
+      <div class="h">{tr("tripText.byTrain")}<span class="right muted small" data-tip={pooled ? tr("marketTrip.trainOthersTip", { period: periodLow, picked: tripPeriod.value !== null }) : repTip}>{pooled ? period : tr("marketTrip.interCityPeriod", { period: periodLow })}</span></div>
       {t.why || !main || !tm ? <p class="muted">{noStation || tr("marketTrip.noRail", { why: t.why || "noRail" })}</p> : (
         <>
           <Legs t={t} r={main} />

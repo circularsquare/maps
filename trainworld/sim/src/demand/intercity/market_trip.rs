@@ -115,8 +115,9 @@ impl IntercityApi {
     /// commuting end and work at the other, as `selection` counts them: legs a day and rail legs
     /// (the rest drive); then (T-1902) the modes but rail as rail's choice weighs them together
     /// (the reference less ln(rest) over the scale), trip weighted over the same pairs and income
-    /// groups as rail's cost (-1 none). The trips, rail, plane and car above are the longer trips alone; the
-    /// station pairs and routes carry every kind of rail rider.
+    /// groups as rail's cost (-1 none). The trips, rail, plane and car above are the longer trips alone; so
+    /// are the station pairs and routes while any longer trip goes by rail, else they carry the
+    /// commutes' and everyday outings' rail riders (T-3374).
     ///
     /// Then per station pair, most rail riders first, `MT_PAIR_LEN` numbers: a route node at the
     /// access station and at the egress one (-1 none), the perceived minutes to the first and from
@@ -238,8 +239,10 @@ impl IntercityApi {
         let sh = share_out(day as usize, LONGER, q) as f64;
         let (mut all, mut rail, mut air, mut car) = (0f64, 0f64, 0f64, 0f64);
         let (mut rc, mut rc_w, mut cc, mut cc_w, mut ref_c, mut km, mut served, mut n) = (0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64, 0f64);
-        // (access, egress) -> rail trips, rail trips x access minutes, x egress minutes
+        // (access, egress) -> rail trips, rail trips x access minutes, x egress minutes: the longer
+        // trips' in `by`, the commutes' and everyday outings' in `by_o`
         let mut by: HashMap<(u32, u32), (f64, f64, f64)> = HashMap::new();
+        let mut by_o: HashMap<(u32, u32), (f64, f64, f64)> = HashMap::new();
         let mut terms: Vec<(u32, u32, f64)> = vec![];
         let mut fares: Vec<f32> = vec![];
         let beta = p.beta as f64;
@@ -344,7 +347,7 @@ impl IntercityApi {
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;
-                    let e = by.entry((sa, sb)).or_default();
+                    let e = by_o.entry((sa, sb)).or_default();
                     e.0 += x;
                     e.1 += x * weigh(home, sa);
                     e.2 += x * weigh(&self.access_ew[az], sb);
@@ -376,7 +379,7 @@ impl IntercityApi {
             if sum > 0. {
                 for &(sa, sb, v) in &terms {
                     let x = rail_legs * v / sum;
-                    let e = by.entry((sa, sb)).or_default();
+                    let e = by_o.entry((sa, sb)).or_default();
                     e.0 += x;
                     e.1 += x * weigh_c(home, sa);
                     e.2 += x * weigh_c(&self.access_cw[wz], sb);
@@ -388,7 +391,21 @@ impl IntercityApi {
         h[21] = e_walk;
         h[22] = c_all;
         h[23] = c_rail;
-        let rail_all = rail + e_rail + c_rail;
+        // T-3374: the station pairs and routes are the longer trips' whenever any of them ride, as
+        // the rows beside them (effective time, the car on the same trips) are; short commutes
+        // across a zone line otherwise outnumber them and show as the cities' route. With no
+        // longer trip by rail, every kind's.
+        let rail_all = if rail > 0. {
+            rail
+        } else {
+            for (k, v) in by_o {
+                let e = by.entry(k).or_default();
+                e.0 += v.0;
+                e.1 += v.1;
+                e.2 += v.2;
+            }
+            rail + e_rail + c_rail
+        };
         h[2] = all;
         h[3] = rail;
         h[4] = air;

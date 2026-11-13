@@ -1038,17 +1038,19 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   trips** head with their count), a Train / Plane / Car bar and rows (no Train when no period
   offers rail); then, where the two ends have commutes between zones [T-880], **Commutes** with
   its legs a day and a Train / Car bar and rows (`CPair`'s choice in the solve; from a selection
-  the commuters living there, or working there, between two places both ways), their train
-  riders in the routes below; then,
+  the commuters living there, or working there, between two places both ways); then,
   where the two ends have everyday outings across a zone line [T-1229], **Everyday trips** with
   its legs a day and a Train / Walking / Car bar and rows (errands, visits, school and medical
   trips as the market chooses them, the walkers rail takes out; between two places both ways, from
-  a selection the outings of its homes, or arriving at its activities), their train trips in the
-  routes below with the inter-city ones, the block absent while no network reaches the market; from a
+  a selection the outings of its homes, or arriving at its activities), the block absent while no
+  network reaches the market; from a
   selection or a 6 km area with one far place, **Between the two places**, the whole places'
   trips both ways as the solve split them (the corridor's, commutes left out), so a selection no
   station reaches is not read as the corridor; By train (the period with most trips, "Inter-city,
-  midday") with the main route ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
+  midday"; with commutes or outings beside them, the period with most trips of every kind) with
+  the main route of the inter-city riders [T-3374: short commutes across a zone line otherwise
+  outnumber them and showed as the cities' route; only when no inter-city trip goes by train are
+  the routes the commutes' and outings' riders, headed by the period alone] ("To Astor Pl" and "From Stratford" carry the areas' felt minutes
   to and from the stations, muted, since the market knows no single walk), Fare, Time (station to
   station), then [T-1902] "Trips possible by train" (the share of the trips on pairs with a
   station in reach at both ends; no hover), Effective time (the pairs' felt cost, averaged over the
