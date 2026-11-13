@@ -2590,7 +2590,6 @@
   "updates.v033ZoomButtons": "botões de zoom",
   "updates.v033ZoneNames": "nomes de zonas em chinês e japonês",
   "updates.v033HsrFare": "tarifa de alta velocidade começa em 1,25x, antes 1,5x",
-  "updates.v033Touch": "em telas de toque o zoom vai só até 20",
   "updates.v033Fixes": "corrigido: trens em via única desenhados atravessando um ao outro, a volta de uma linha desenhada na via errada, plataformas que paravam nas emendas de via, passageiros que não conseguiam voltar para uma linha que dobra perto de si mesma, números parados sem aviso, mensagens pouco claras para Safari antigo e navegadores sem WebGL2",
   "upgrades.parking": "Estacionamento",
   "upgrades.parkingDoes": "Chegar a esta estação de longe parece 10 minutos mais curto.",

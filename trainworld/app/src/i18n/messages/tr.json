@@ -2590,7 +2590,6 @@
   "updates.v033ZoomButtons": "yakınlaştırma düğmeleri",
   "updates.v033ZoneNames": "bölge adları Çince ve Japonca",
   "updates.v033HsrFare": "yüksek hızlı tren ücreti varsayılan olarak 1,25x, eskiden 1,5x",
-  "updates.v033Touch": "dokunmatik ekranlarda yakınlaştırma en fazla 20’ye kadar",
   "updates.v033Fixes": "düzeltildi: tek hattaki trenler birbirinin içinden geçiyor gibi çiziliyordu, hattın dönüş yolu yanlış raya çiziliyordu, peronlar ray eklerinde bitiyordu, yolcular kendine yakın dönen bir hatta geri aktarma yapamıyordu, rakamlar uyarısız donuyordu, eski Safari ve WebGL2’siz tarayıcılarda hata iletileri belirsizdi",
   "upgrades.parking": "Otopark",
   "upgrades.parkingDoes": "Bu istasyona uzaktan gelmek 10 dakika daha kısa hissettirir.",

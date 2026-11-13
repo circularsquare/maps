@@ -2538,7 +2538,6 @@
   "updates.v033ZoomButtons": "zoom buttons",
   "updates.v033ZoneNames": "zone names in Chinese and Japanese",
   "updates.v033HsrFare": "high speed fare now starts at 1.25x, was 1.5x",
-  "updates.v033Touch": "touch screens zoom in only to 20",
   "updates.v033Fixes": "fixed trains on single track drawn passing through each other, trains on a line's way back drawn on the wrong track, platforms stopping at track joints, riders unable to change back onto a line that bends back near itself, figures stopping without a notice, and unclear errors in old Safari and browsers without WebGL2",
   "updates.v032Line": "update v0.3.2: fares hotfix",
   "updates.v032FareWait": "fixed a new fare paying out on long trips before riders had answered it",

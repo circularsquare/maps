@@ -2590,7 +2590,6 @@
   "updates.v033ZoomButtons": "botons de zoom",
   "updates.v033ZoneNames": "noms de zones en xinès i japonès",
   "updates.v033HsrFare": "la tarifa d’alta velocitat comença a 1,25x, abans 1,5x",
-  "updates.v033Touch": "en pantalles tàctils el zoom arriba només fins a 20",
   "updates.v033Fixes": "arreglat: trens en via única dibuixats travessant-se, la tornada d’una línia dibuixada a la via equivocada, andanes que s’aturaven a les unions de via, passatgers que no podien tornar a una línia que gira a prop d’ella mateixa, xifres aturades sense avís, missatges poc clars per a Safari antic i navegadors sense WebGL2",
   "upgrades.parking": "Aparcament",
   "upgrades.parkingDoes": "Venir a aquesta estació des de lluny sembla 10 minuts més curt.",

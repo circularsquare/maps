@@ -2590,7 +2590,6 @@
   "updates.v033ZoomButtons": "Zoom-Tasten",
   "updates.v033ZoneNames": "Zonennamen auf Chinesisch und Japanisch",
   "updates.v033HsrFare": "Fahrpreis für Hochgeschwindigkeit jetzt standardmäßig 1,25x, vorher 1,5x",
-  "updates.v033Touch": "Auf Touchscreens nur bis Stufe 20 hineinzoomen",
   "updates.v033Fixes": "Behoben: Züge auf eingleisigen Strecken wurden ineinander gezeichnet, der Rückweg einer Linie auf dem falschen Gleis, Bahnsteige endeten an Gleisstößen, Fahrgäste konnten nicht zurück auf eine Linie umsteigen, die in der Nähe zurückknickt, stehengebliebene Zahlen kamen ohne Hinweis, Fehlermeldungen für altes Safari und Browser ohne WebGL2 waren unklar",
   "upgrades.parking": "Parkplatz",
   "upgrades.parkingDoes": "Die Anreise zu dieser Station aus der Ferne fühlt sich 10 Minuten kürzer an.",

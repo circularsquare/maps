@@ -68,7 +68,6 @@ export const UPDATES: Update[] = [
       "updates.v033ZoomButtons",
       "updates.v033ZoneNames",
       "updates.v033HsrFare",
-      "updates.v033Touch",
       "updates.v033Fixes",
     ],
   },

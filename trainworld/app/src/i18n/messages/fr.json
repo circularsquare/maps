@@ -2590,7 +2590,6 @@
   "updates.v033ZoomButtons": "boutons de zoom",
   "updates.v033ZoneNames": "noms de zones en chinois et en japonais",
   "updates.v033HsrFare": "tarif grande vitesse à 1,25x par défaut, contre 1,5x avant",
-  "updates.v033Touch": "sur écran tactile, le zoom s’arrête à 20",
   "updates.v033Fixes": "corrigé : trains sur voie unique dessinés en se traversant, retour d’une ligne dessiné sur la mauvaise voie, quais qui s’arrêtaient aux jonctions de voie, voyageurs qui ne pouvaient pas reprendre une ligne qui revient près d’elle-même, chiffres figés sans avertissement, messages peu clairs pour Safari ancien et les navigateurs sans WebGL2",
   "upgrades.parking": "Parking",
   "upgrades.parkingDoes": "Venir de loin jusqu’à cette station paraît 10 minutes plus court.",

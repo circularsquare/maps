@@ -2538,7 +2538,6 @@
   "updates.v033ZoomButtons": "Changelog item: the map has zoom buttons (plus and minus).",
   "updates.v033ZoneNames": "Changelog item: zone names are shown in Chinese and Japanese too.",
   "updates.v033HsrFare": "Changelog item: the default high-speed fare is now 1.25 times the normal fare (it was 1.5 times).",
-  "updates.v033Touch": "Changelog item: on touch screens the map zooms in only to zoom level 20, where a track still fits on a phone screen.",
   "updates.v033Fixes": "Changelog item: a list of bug fixes: trains on single track were drawn passing through each other; trains on a line's way back were drawn on the wrong track; platforms did not lengthen past track joints; riders could not change back onto a line that bends back near itself; figures could stop updating with no notice; error messages for old Safari and browsers without WebGL2 were unclear. WebGL2 is a browser graphics feature.",
   "updates.v032Line": "The start menu's one line about update v0.3.2, a small fix release. Casual, lowercase, at most 80 characters in English. \"hotfix\": a quick fix release; keep it short, a loanword is fine where players use one.",
   "updates.v032FareWait": "Changelog item: a bug fix. When the player raised a fare, the game charged the new fare on long trips (between cities) straight away, before the riders' choices had been worked out again at that fare, so a big raise paid out far too much. Now the new fare is charged only once riders have reacted to it.",
