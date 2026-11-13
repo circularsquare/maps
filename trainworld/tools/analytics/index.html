@@ -87,6 +87,17 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <div id="chartwrap"><svg id="chart" viewBox="0 0 820 300" role="img" aria-label="Browsers, new browsers and accounts per UTC day"></svg><div id="tip"></div></div>
   <div class="sub" id="chartnote"></div>
 
+  <h2>Hours played per day (UTC)</h2>
+  <div id="dayHours"></div>
+  <div class="sub" id="dayHoursNote"></div>
+
+  <h2>Time played per 15 minutes (UTC)</h2>
+  <div class="toggles">
+    <div class="seg" id="qseg"><button data-v="series" class="on">Last 14 days</button><button data-v="avg">Average day</button></div>
+  </div>
+  <div id="quarters"></div>
+  <div class="sub" id="quartersNote"></div>
+
   <h2>Total time played per browser</h2>
   <div id="ptBrowsers"></div>
   <div class="sub" id="ptNoteB"></div>
@@ -398,6 +409,83 @@ function renderChart(list) {
   $("chartnote").textContent = `${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Days before 2026-11-07 have no browser counts. Accounts are the signed-in accounts that played that day.` + (hasAcc ? "" : " Accounts: not deployed yet.");
 }
 
+// ---- columns: hours played per day, and minutes played per 15 minutes (a 14-day series or an average day)
+function renderColumns(id, vals, unit, labelAt, tipAt, color, h, every) {
+  const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
+  const max = niceMax(Math.max(...vals, 0.001));
+  const n = vals.length, bw = (w - m.l - m.r) / n;
+  const y = (v) => m.t + (1 - v / max) * (h - m.t - m.b);
+  let s = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = (max * k) / 4;
+    s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
+    s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  s += `<text x="${m.l - 6}" y="10" text-anchor="end">${unit}</text>`;
+  vals.forEach((v, i) => {
+    const x0 = m.l + i * bw, bh = y(0) - y(v);
+    s += `<g class="bar" data-tip="${tipAt(i)}"><rect x="${x0}" y="${m.t}" width="${bw}" height="${h - m.t - m.b}" fill="transparent"/>` +
+      `<rect x="${x0 + (bw > 4 ? 1 : 0)}" y="${y(v)}" width="${Math.max(bw - (bw > 4 ? 2 : 0), 0.5)}" height="${Math.max(bh, v ? 1 : 0)}" fill="${color}"/></g>`;
+    if (i % every === 0) s += `<text x="${x0 + bw / 2}" y="${h - 8}" text-anchor="middle">${labelAt(i)}</text>`;
+  });
+  const box = $(id);
+  box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${unit}">${s}</svg>`;
+  box.onmousemove = (ev) => {
+    const bar = ev.target.closest(".bar");
+    if (!bar) { barTip.style.display = "none"; return; }
+    barTip.textContent = bar.dataset.tip;
+    barTip.style.display = "block";
+    barTip.style.left = Math.min(ev.clientX + 12, window.innerWidth - barTip.offsetWidth - 8) + "px";
+    barTip.style.top = (ev.clientY + 12) + "px";
+  };
+  box.onmouseleave = () => { barTip.style.display = "none"; };
+}
+
+function renderDayHours(data) {
+  const list = data.days;
+  if (!list.length) { $("dayHours").innerHTML = ""; return; }
+  const n = list.length;
+  renderColumns("dayHours", list.map((d) => d.minutes / 60), "hours played",
+    (i) => list[i].day.slice(5), (i) => `${list[i].day}: ${hrs(list[i].minutes)} played, ${fmt(list[i].plays)} plays`,
+    "var(--plays)", 240, Math.max(1, Math.ceil(n / 10)));
+  const tot = list.reduce((t, d) => t + d.minutes, 0);
+  $("dayHoursNote").textContent = `${hrs(tot)} played over ${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Today is partial.`;
+}
+
+let qView = "series";
+$("qseg").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button"); if (!b || !lastData) return;
+  qView = b.dataset.v;
+  for (const x of document.querySelectorAll("#qseg button")) x.classList.toggle("on", x === b);
+  renderQuarters(lastData);
+});
+const hhmm = (q) => String(Math.floor(q / 4)).padStart(2, "0") + ":" + String((q % 4) * 15).padStart(2, "0");
+function renderQuarters(data) {
+  const q = data.quarters;
+  if (!q || !Array.isArray(q.minutes) || !q.minutes.length) {
+    $("quarters").innerHTML = `<div class="sub">not deployed yet</div>`; $("quartersNote").textContent = "";
+    return;
+  }
+  const mins = q.minutes, n = mins.length;
+  const stamp = (i) => new Date((q.start + i * 900) * 1000).toISOString();
+  if (qView === "series") {
+    renderColumns("quarters", mins, "minutes played",
+      (i) => stamp(i).slice(5, 10), (i) => `${stamp(i).slice(0, 10)} ${stamp(i).slice(11, 16)} UTC: ${fmt(Math.round(mins[i]))} min played`,
+      "var(--plays)", 240, 96 * 2);
+    $("quartersNote").textContent = `Minutes played in each 15 minutes since ${stamp(0).slice(0, 16).replace("T", " ")} UTC. Kept for 14 days; the server started counting when it was deployed.`;
+  } else {
+    // mean minutes per 15 minutes of the day over the buckets since the server had any data
+    const first = mins.findIndex((v) => v > 0);
+    const sum = Array(96).fill(0), cnt = Array(96).fill(0);
+    for (let i = Math.max(first, 0); i < n; i++) { const k = Math.floor(((q.start + i * 900) % 86400) / 900); sum[k] += mins[i]; cnt[k]++; }
+    const avg = sum.map((v, k) => (cnt[k] ? v / cnt[k] : 0));
+    renderColumns("quarters", avg, "minutes played",
+      (k) => hhmm(k), (k) => `${hhmm(k)} UTC: ${avg[k].toFixed(1)} min played on average, over ${cnt[k]} days`,
+      "var(--plays)", 240, 8);
+    $("quartersNote").textContent = "Average minutes played in each 15 minutes of the UTC day, over the days since the server started counting. A day with no play in that slot counts as 0.";
+  }
+}
+
 // ---- histograms: equal-width bars per bin (the bins themselves are uneven), height is total time played
 const hrs = (m) => (m >= 600 ? fmt(Math.round(m / 60)) : (m / 60).toFixed(1)) + " h";
 const barTip = document.body.appendChild(Object.assign(document.createElement("div"), { id: "bartip" }));
@@ -460,7 +548,7 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
-    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderLangs(data); renderPlaytime(data);
+    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderLangs(data); renderPlaytime(data); renderDayHours(data); renderQuarters(data);
     if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
     $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
   } catch (e) {
