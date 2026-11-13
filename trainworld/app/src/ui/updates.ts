@@ -39,7 +39,7 @@ const V0_3_1_AT = "2026-11-12T03:30:00Z";
 const V0_3_2_AT = "2026-11-12T18:00:00Z";
 
 /** When v0.3.3 went out: set at publish. */
-const V0_3_3_AT = "2026-11-13T18:00:00Z";
+const V0_3_3_AT = "2026-11-13T14:30:00Z";
 
 export const UPDATES: Update[] = [
   {
