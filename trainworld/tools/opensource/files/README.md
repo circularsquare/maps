@@ -40,6 +40,11 @@ offline, run `TW_DATA=off npm run dev` and fill `trainworld/data/` yourself.
 
 The basemap tiles come from OpenFreeMap and need no key.
 
+A fork you host on your own site can read the same published data straight from
+https://data.anita.garden/trainworld/<version>/ (the data host allows any site to read it). A build names its data
+address in `index.html` (`tw-data`). Please keep to the published versions, and if your fork gets a lot of players,
+host your own copy of the data.
+
 You can build packs yourself with the scripts in `trainworld/pipeline/`, but a world run needs 30 GB of raw
 downloads (OpenStreetMap extracts, GHSL, national censuses) and hours of compute. Treat the pipeline as a
 reference for how the numbers are made unless you are adding a place. `trainworld/docs/adding-a-country.md` and
