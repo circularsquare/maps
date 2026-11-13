@@ -81,6 +81,11 @@ Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to
   12-15 with a second pass; straightness unchanged). Build 6-8 h (fresh Opus in a tree) waits for her go.
 - T-3373 filed (demand workers sharing zone data; design first), not started.
 
+**~01:10 local**: sin gated with the mainland west (Tuas, Pioneer, Lim Chu Kang, Marina South) but Jurong Island and
+Sentosa dropped by osm_units.py (keeps only pieces with residents). My call (B): gaprun3 adds "keep pieces with GHSL
+built-up over ~0.2 km2", rebuilds and re-gates sin, then join SG, realauto ship, after-join, freeze. Gate window OPEN
+(app/ held) until gaprun3 says it ended.
+
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
 Singapore unfinished: notes/T-3287.md "Stage 6" has every PID, log and restart command; check the logs and finish
