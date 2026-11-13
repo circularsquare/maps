@@ -51,7 +51,6 @@ export const UPDATES: Update[] = [
       "updates.v033OpenSource",
       "updates.v033OneWay",
       "updates.v033SingleTrack",
-      "updates.v033Timetables",
       "updates.v033Follow",
       "updates.v033Bullets",
       "updates.v033LeftHand",

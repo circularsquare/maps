@@ -1232,6 +1232,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 [T-3346 stage 1, `ui/inspector/SchedulePanel.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
 
+- **Hidden for players** unless the address has `?timetables` (v0.3.3, Anita 2026-11-13): no icon opens it, line or group.
 - **A line's**: opened from the fourth icon by a running rail line's schedule heading (a station timetable,
   hover "Detailed schedule"); a centred modal in the saved games panel's frame, about 1040 px wide; closed by its
   close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the

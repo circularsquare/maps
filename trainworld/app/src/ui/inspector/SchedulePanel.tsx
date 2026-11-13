@@ -271,9 +271,12 @@ export function SchedulePanel() {
   return <>{body}</>;
 }
 
+/** The schedule panel is hidden for players (v0.3.3, Anita 2026-11-13) unless the address has `?timetables`. */
+const TIMETABLES_SHOWN = typeof location !== "undefined" && new URLSearchParams(location.search).has("timetables");
+
 /** The line panel's icon beside its schedule: the schedule panel. */
 export function ScheduleButton({ l, st }: { l: LineInput; st: LineStats }) {
-  if (!charted(st, l)) return null;
+  if (!TIMETABLES_SHOWN || !charted(st, l)) return null;
   const tip = t("schedulePanel.open");
   return <button class="btn icon mini" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "line", line: l.id })}><Icon.timetable /></button>;
 }
@@ -281,7 +284,7 @@ export function ScheduleButton({ l, st }: { l: LineInput; st: LineStats }) {
 /** The group view's icon: the group's chart, for a group of two or more running rail lines. */
 export function GroupChartButton({ ls }: { ls: readonly LineInput[] }) {
   const w = world.value;
-  if (!w || ls.filter((l) => charted(w.lineStats[l.id], l)).length < 2 || !ls[0].group) return null;
+  if (!TIMETABLES_SHOWN || !w || ls.filter((l) => charted(w.lineStats[l.id], l)).length < 2 || !ls[0].group) return null;
   const tip = t("schedulePanel.groupChart");
   return <button class="btn icon mini related-toggle" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "group", group: ls[0].group! })}><Icon.marey /></button>;
 }

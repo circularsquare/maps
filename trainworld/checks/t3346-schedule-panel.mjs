@@ -20,7 +20,7 @@ try {
   const page = await chrome.ctx.newPage();
   await page.addInitScript(() => { try { if (!sessionStorage.getItem('t3346')) { sessionStorage.setItem('t3346', '1'); localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', v: 14 })); } } catch {} });
   collectErrors(page, errors);
-  await page.goto(`${BASE}?debug=1&new=1&opened=all&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.goto(`${BASE}?timetables&debug=1&new=1&opened=all&paused=1&demandWorkers=1&v=${Date.now()}`);
   await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
   await importSave(page, await readFile(REAL_SAVE));
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 4, undefined, { timeout: 120000 });
