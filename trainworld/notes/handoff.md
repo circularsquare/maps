@@ -23,7 +23,14 @@ Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to
 ## Master, 8800
 - **Master c1e52978, pushed; smoke PASS 28 (terrain v2 + batch A).** **8800 = c1e52978 from freeze 20261112-204835**
   (snapbuild-frozen; serves terrain v2, checked on Chongqing's block). gaprun3 step 1 done (build_inputs 0 flags,
-  smoke 28, real save 12,581,681 vs 12,581,682, freeze 20261112-204835). B gated 19/19 (tlk relaxed, ute
+  smoke 28, real save 12,581,681 vs 12,581,682, freeze 20261112-204835). **Update ~22:50 local**: B shipped (650a3caf), after-join all passed, freeze 20261112-223751; **8800 = 650a3caf from
+  that freeze**. Batch C gate given ("go gate" ~22:50): hold main-tree app/ until gaprun3 says the window ended. Master
+  c83e5bf7 NOT pushed: the permission check refused the push this time (pushed several times already this session).
+  **Her answers ~23:00 local**: drop the changelog touch-zoom line (updates.v033Touch: remove from updates.ts, en.json,
+  context.json and all 22 language files, AFTER C's gate window ends); terrain +8% accepted, v2 publish waits till she's
+  back; rivers build GO -> **rivers2** a85c231bd34d5f479 (Opus, .tw-trees/rivers, Vite 6158), she reviews before landing.
+  Fixes line unanswered: kept as the full list.
+  Earlier: B gated 19/19 (tlk relaxed, ute
   origin moved to Utena by hand), window ended 21:33; backup prejoinB; **B join running from ~21:35 local, 12 jobs,
   1.5-2 h: nothing else writes data/packs or data/terrain**. zone_terrain --force done (4,024 files, new method).
 - Landed this session: e0bb2de1 T-3367 running side off new-world screen; dc2eb030 one-way station round (T-3332);
