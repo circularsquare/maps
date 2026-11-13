@@ -354722,7 +354722,7 @@
    "id": "inn",
    "name": "Innlandet",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -354758,7 +354758,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 501.7,
@@ -354769,7 +354768,15 @@
      "nocar": 2.4,
      "everyday": 1.1
     },
-    "built": "2026-11-12T17:54:34"
+    "built": "2026-11-12T17:54:34",
+    "gate": {
+     "warn": [
+      "area_km2 51883.41928741531",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:50",
+    "shipped": "2026-11-12T22:23:52"
    }
   },
   {
@@ -354777,7 +354784,7 @@
    "id": "nod",
    "name": "Nordland",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -354817,7 +354824,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 2978.2,
@@ -354828,7 +354834,17 @@
      "nocar": 2.4,
      "everyday": 1.5
     },
-    "built": "2026-11-12T18:45:54"
+    "built": "2026-11-12T18:45:54",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.2789217585048789",
+      "area_km2 111287.03076997423",
+      "top_zone_jobs_share 0.13785979935104498",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:51",
+    "shipped": "2026-11-12T22:23:53"
    }
   },
   {
@@ -354836,7 +354852,7 @@
    "id": "age",
    "name": "Agder",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -354872,7 +354888,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 560.3,
@@ -354883,7 +354898,12 @@
      "nocar": 2.2,
      "everyday": 1.4
     },
-    "built": "2026-11-12T18:56:11"
+    "built": "2026-11-12T18:56:11",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:51",
+    "shipped": "2026-11-12T22:23:53"
    }
   },
   {
@@ -354891,7 +354911,7 @@
    "id": "meo",
    "name": "Møre og Romsdal",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -354927,7 +354947,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 426.6,
@@ -354938,7 +354957,14 @@
      "nocar": 1.1,
      "everyday": 0.7
     },
-    "built": "2026-11-12T19:03:40"
+    "built": "2026-11-12T19:03:40",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 1.27512246201697"
+     ]
+    },
+    "gated": "2026-11-12T21:24:52",
+    "shipped": "2026-11-12T22:23:54"
    }
   },
   {
@@ -354946,7 +354972,7 @@
    "id": "tlk",
    "name": "Telemark",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "NOR"
@@ -354982,7 +355008,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 357.4,
@@ -354993,7 +355018,19 @@
      "nocar": 3.5,
      "everyday": 1.8
     },
-    "built": "2026-11-12T17:50:44"
+    "built": "2026-11-12T17:50:44",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.20681948966374483",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-12T21:08:33",
+    "gated": "2026-11-12T21:33:16",
+    "shipped": "2026-11-12T22:23:54"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "Telemark 0.17M, under 0.2M at 0.207: the top cell is Heroya industrial park in Porsgrunn (Hydro and Yara), one big employer beside Skien"
    }
   },
   {
@@ -355001,7 +355038,7 @@
    "id": "das",
    "name": "Dalarnas län",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -355043,7 +355080,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 931.0,
@@ -355054,7 +355090,15 @@
      "nocar": 3.2,
      "everyday": 1.5
     },
-    "built": "2026-11-12T19:29:27"
+    "built": "2026-11-12T19:29:27",
+    "gate": {
+     "warn": [
+      "area_km2 126777.71658991232",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:52",
+    "shipped": "2026-11-12T22:23:55"
    }
   },
   {
@@ -355062,7 +355106,7 @@
    "id": "vab",
    "name": "Västerbottens län",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -355100,7 +355144,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 1201.9,
@@ -355111,7 +355154,15 @@
      "nocar": 3.1,
      "everyday": 1.7
     },
-    "built": "2026-11-12T19:30:21"
+    "built": "2026-11-12T19:30:21",
+    "gate": {
+     "warn": [
+      "area_km2 164177.73577401944",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:53",
+    "shipped": "2026-11-12T22:23:55"
    }
   },
   {
@@ -355119,7 +355170,7 @@
    "id": "vrm",
    "name": "Värmlands län",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -355155,7 +355206,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 216.4,
@@ -355166,7 +355216,12 @@
      "nocar": 1.8,
      "everyday": 1.0
     },
-    "built": "2026-11-12T19:11:44"
+    "built": "2026-11-12T19:11:44",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:53",
+    "shipped": "2026-11-12T22:23:56"
    }
   },
   {
@@ -355174,7 +355229,7 @@
    "id": "kae",
    "name": "Kalmar län",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -355210,7 +355265,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 176.9,
@@ -355221,7 +355275,12 @@
      "nocar": 2.0,
      "everyday": 1.0
     },
-    "built": "2026-11-12T19:11:00"
+    "built": "2026-11-12T19:11:00",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:54",
+    "shipped": "2026-11-12T22:23:56"
    }
   },
   {
@@ -355229,7 +355288,7 @@
    "id": "got",
    "name": "Gotlands län",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "SWE"
@@ -355265,7 +355324,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 40.9,
@@ -355276,7 +355334,16 @@
      "nocar": 1.9,
      "everyday": 1.4
     },
-    "built": "2026-11-12T19:12:12"
+    "built": "2026-11-12T19:12:12",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.16690247114398893",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:54",
+    "shipped": "2026-11-12T22:23:57"
    }
   },
   {
@@ -355284,7 +355351,7 @@
    "id": "phs",
    "name": "Pohjois-Savo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FIN"
@@ -355328,8 +355395,25 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
-    "run_batch": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 3027.9,
+     "stations": 1.2,
+     "places": 3.7,
+     "routes": 390.0,
+     "merge": 31.0,
+     "nocar": 4.1,
+     "everyday": 1.4
+    },
+    "built": "2026-11-12T20:28:03",
+    "gate": {
+     "warn": [
+      "area_km2 90282.53049695131",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:55",
+    "shipped": "2026-11-12T22:23:57"
    }
   },
   {
@@ -355337,7 +355421,7 @@
    "id": "ksu",
    "name": "Keski-Suomi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FIN"
@@ -355375,8 +355459,22 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
-    "run_batch": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 674.1,
+     "stations": 2.1,
+     "places": 4.3,
+     "routes": 169.3,
+     "merge": 5.4,
+     "nocar": 4.7,
+     "everyday": 2.3
+    },
+    "built": "2026-11-12T19:44:49",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:55",
+    "shipped": "2026-11-12T22:23:58"
    }
   },
   {
@@ -355384,7 +355482,7 @@
    "id": "ete",
    "name": "Etelä-Pohjanmaa",
    "kind": "zone",
-   "status": "built",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FIN"
@@ -355420,7 +355518,6 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
     "run_batch": "20261112-173900",
     "steps": {
      "build": 177.1,
@@ -355431,7 +355528,12 @@
      "nocar": 4.3,
      "everyday": 1.6
     },
-    "built": "2026-11-12T19:35:08"
+    "built": "2026-11-12T19:35:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:56",
+    "shipped": "2026-11-12T22:23:58"
    }
   },
   {
@@ -355439,7 +355541,7 @@
    "id": "lpp",
    "name": "Lappi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "FIN"
@@ -355475,8 +355577,26 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900",
-    "run_batch": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 1162.4,
+     "stations": 1.6,
+     "places": 3.3,
+     "routes": 84.7,
+     "merge": 5.1,
+     "nocar": 2.3,
+     "everyday": 1.8
+    },
+    "built": "2026-11-12T19:51:26",
+    "gate": {
+     "warn": [
+      "area_km2 98478.59421368847",
+      "top_zone_jobs_share 0.1838711988345833",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:56",
+    "shipped": "2026-11-12T22:23:59"
    }
   },
   {
@@ -355484,7 +355604,7 @@
    "id": "lox",
    "name": "Lõuna-Eesti",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "EST"
@@ -355522,7 +355642,22 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 401.9,
+     "stations": 1.4,
+     "places": 5.8,
+     "routes": 139.0,
+     "merge": 6.2,
+     "nocar": 3.0,
+     "everyday": 1.4
+    },
+    "built": "2026-11-12T20:37:25",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:57",
+    "shipped": "2026-11-12T22:23:59"
    }
   },
   {
@@ -355530,7 +355665,7 @@
    "id": "lst",
    "name": "Lääne-Eesti",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "EST"
@@ -355566,7 +355701,25 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 473.5,
+     "stations": 2.1,
+     "places": 5.3,
+     "routes": 44.9,
+     "merge": 2.3,
+     "nocar": 2.8,
+     "everyday": 1.7
+    },
+    "built": "2026-11-12T20:36:58",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12971959222207102",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-12T21:24:57",
+    "shipped": "2026-11-12T22:24:00"
    }
   },
   {
@@ -355574,7 +355727,7 @@
    "id": "vim",
    "name": "Vidzeme",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "LVA"
@@ -355612,7 +355765,24 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 175.5,
+     "stations": 1.9,
+     "places": 5.7,
+     "routes": 168.2,
+     "merge": 4.0,
+     "nocar": 1.6,
+     "everyday": 0.7
+    },
+    "built": "2026-11-12T20:43:25",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10173758107950215"
+     ]
+    },
+    "gated": "2026-11-12T21:24:58",
+    "shipped": "2026-11-12T22:24:00"
    }
   },
   {
@@ -355620,7 +355790,7 @@
    "id": "kuz",
    "name": "Kurzeme",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "LVA"
@@ -355656,7 +355826,22 @@
     ]
    },
    "run": {
-    "claim": "20261112-173900"
+    "run_batch": "20261112-173900",
+    "steps": {
+     "build": 102.9,
+     "stations": 2.1,
+     "places": 4.5,
+     "routes": 61.0,
+     "merge": 3.6,
+     "nocar": 3.4,
+     "everyday": 1.7
+    },
+    "built": "2026-11-12T20:40:28",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:24:58",
+    "shipped": "2026-11-12T22:24:01"
    }
   },
   {
@@ -355664,7 +355849,7 @@
    "id": "ute",
    "name": "Utenos apskritis",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "europe",
    "countries": [
     "LTU"
@@ -355672,8 +355857,8 @@
    "iso2": "LT",
    "people": 117569,
    "origin": [
-    26.4264,
-    55.5983
+    25.5997,
+    55.4978
    ],
    "tz": "Europe/Vilnius",
    "utc_offset": 2,
@@ -355697,10 +355882,26 @@
     "zone": "T-723",
     "unit_names": [
      "Utenos apskritis"
-    ]
+    ],
+    "origin_by_hand": "T-3287: Utena, the county seat and its biggest town, which names the zone (the lead unit's densest pixel was in Visaginas, 50 km east)"
    },
    "run": {
-    "claim": "20261112-173900"
+    "run_batch": "20261112-212632",
+    "built": "2026-11-12T21:31:51",
+    "steps": {
+     "build": 58.9,
+     "stations": 0.7,
+     "places": 1.9,
+     "routes": 23.3,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.7
+    },
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-12T21:33:16",
+    "shipped": "2026-11-12T22:24:01"
    }
   },
   {

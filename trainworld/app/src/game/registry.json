@@ -29602,6 +29602,90 @@
       {
         "name": "Tulcea",
         "regionName": "Tulcea region"
+      },
+      {
+        "name": "Innlandet",
+        "regionName": "Innlandet region"
+      },
+      {
+        "name": "Telemark",
+        "regionName": "Telemark region"
+      },
+      {
+        "name": "Nordland",
+        "regionName": "Nordland region"
+      },
+      {
+        "name": "Agder",
+        "regionName": "Agder region"
+      },
+      {
+        "name": "Møre og Romsdal",
+        "regionName": "Møre og Romsdal region"
+      },
+      {
+        "name": "Dalarnas län",
+        "regionName": "Dalarnas län region"
+      },
+      {
+        "name": "Västerbottens län",
+        "regionName": "Västerbottens län region"
+      },
+      {
+        "name": "Värmlands län",
+        "regionName": "Värmlands län region"
+      },
+      {
+        "name": "Kalmar län",
+        "regionName": "Kalmar län region"
+      },
+      {
+        "name": "Gotlands län",
+        "regionName": "Gotlands län region"
+      },
+      {
+        "name": "Pohjois-Savo",
+        "regionName": "Pohjois-Savo region"
+      },
+      {
+        "name": "Keski-Suomi",
+        "regionName": "Keski-Suomi region"
+      },
+      {
+        "name": "Etelä-Pohjanmaa",
+        "regionName": "Etelä-Pohjanmaa region"
+      },
+      {
+        "name": "Lappi",
+        "regionName": "Lappi region"
+      },
+      {
+        "name": "Lõuna-Eesti",
+        "regionName": "Lõuna-Eesti region"
+      },
+      {
+        "name": "Lääne-Eesti",
+        "regionName": "Lääne-Eesti region"
+      },
+      {
+        "name": "Vidzeme",
+        "regionName": "Vidzeme region"
+      },
+      {
+        "name": "Kurzeme",
+        "regionName": "Kurzeme region"
+      },
+      {
+        "name": "Utenos apskritis",
+        "regionName": "Utenos apskritis region"
+      },
+      {
+        "name": "Telemark",
+        "regionName": "Telemark region"
+      },
+      {
+        "name": "Utenos apskritis",
+        "regionName": "Utenos apskritis region"
       }
     ],
     "rule": {
@@ -32338,7 +32422,7 @@
         60.241
       ],
       "place": 179,
-      "localTrips": 7255416.0,
+      "localTrips": 7254457.0,
       "country": "SE",
       "realm": "nordic"
     },
@@ -32513,7 +32597,7 @@
         61.11
       ],
       "place": 193,
-      "localTrips": 4799733.0,
+      "localTrips": 4784453.0,
       "country": "NO",
       "realm": "nordic"
     },
@@ -32538,7 +32622,7 @@
         60.86
       ],
       "place": 195,
-      "localTrips": 4695525.0,
+      "localTrips": 4694476.0,
       "country": "FI",
       "realm": "nordic"
     },
@@ -38373,7 +38457,7 @@
       ],
       "place": 1197,
       "country": "NO",
-      "localTrips": 843172.0,
+      "localTrips": 843133.0,
       "realm": "nordic"
     },
     {
@@ -38399,7 +38483,7 @@
       ],
       "place": 1198,
       "country": "NO",
-      "localTrips": 703030.0,
+      "localTrips": 697941.0,
       "realm": "nordic"
     },
     {
@@ -38425,7 +38509,7 @@
       ],
       "place": 1202,
       "country": "EE",
-      "localTrips": 1899216.0,
+      "localTrips": 1888508.0,
       "realm": "baltic"
     },
     {
@@ -38451,7 +38535,7 @@
       ],
       "place": 1203,
       "country": "EE",
-      "localTrips": 363634.0,
+      "localTrips": 359878.0,
       "realm": "baltic"
     },
     {
@@ -38477,7 +38561,7 @@
       ],
       "place": 1204,
       "country": "LT",
-      "localTrips": 2429667.0,
+      "localTrips": 2423757.0,
       "realm": "baltic"
     },
     {
@@ -38503,7 +38587,7 @@
       ],
       "place": 1207,
       "country": "SE",
-      "localTrips": 5863202.0,
+      "localTrips": 5860344.0,
       "realm": "nordic"
     },
     {
@@ -38529,7 +38613,7 @@
       ],
       "place": 1208,
       "country": "SE",
-      "localTrips": 4506604.0,
+      "localTrips": 4505428.0,
       "realm": "nordic"
     },
     {
@@ -38555,7 +38639,7 @@
       ],
       "place": 1211,
       "country": "SE",
-      "localTrips": 1525247.0,
+      "localTrips": 1522274.0,
       "realm": "nordic"
     },
     {
@@ -38581,7 +38665,7 @@
       ],
       "place": 1212,
       "country": "LV",
-      "localTrips": 3013440.0,
+      "localTrips": 2974839.0,
       "realm": "baltic"
     },
     {
@@ -38659,7 +38743,7 @@
       ],
       "place": 1261,
       "country": "NO",
-      "localTrips": 1310859.0,
+      "localTrips": 1303652.0,
       "realm": "nordic"
     },
     {
@@ -38685,7 +38769,7 @@
       ],
       "place": 1262,
       "country": "FI",
-      "localTrips": 1151311.0,
+      "localTrips": 1145438.0,
       "realm": "nordic"
     },
     {
@@ -65290,7 +65374,7 @@
       ],
       "place": 3967,
       "country": "FI",
-      "localTrips": 84207.0,
+      "localTrips": 84116.0,
       "realm": "nordic"
     },
     {
@@ -109644,7 +109728,7 @@
       ],
       "place": 6091,
       "country": "FI",
-      "localTrips": 2048776.0,
+      "localTrips": 2042039.0,
       "realm": "nordic"
     },
     {
@@ -109670,7 +109754,7 @@
       ],
       "place": 6092,
       "country": "FI",
-      "localTrips": 1486395.0,
+      "localTrips": 1483435.0,
       "realm": "nordic"
     },
     {
@@ -109696,7 +109780,7 @@
       ],
       "place": 6093,
       "country": "FI",
-      "localTrips": 1291686.0,
+      "localTrips": 1291670.0,
       "realm": "nordic"
     },
     {
@@ -109722,7 +109806,7 @@
       ],
       "place": 6094,
       "country": "FI",
-      "localTrips": 481344.0,
+      "localTrips": 467707.0,
       "realm": "nordic"
     },
     {
@@ -111906,7 +111990,7 @@
       ],
       "place": 6181,
       "country": "LT",
-      "localTrips": 2860070.0,
+      "localTrips": 2854233.0,
       "realm": "baltic"
     },
     {
@@ -111932,7 +112016,7 @@
       ],
       "place": 6182,
       "country": "LT",
-      "localTrips": 2314413.0,
+      "localTrips": 2314107.0,
       "realm": "baltic"
     },
     {
@@ -112270,7 +112354,7 @@
       ],
       "place": 6195,
       "country": "NO",
-      "localTrips": 3197814.0,
+      "localTrips": 3194492.0,
       "realm": "nordic"
     },
     {
@@ -113388,7 +113472,7 @@
       ],
       "place": 6238,
       "country": "SE",
-      "localTrips": 3735079.0,
+      "localTrips": 3723221.0,
       "realm": "nordic"
     },
     {
@@ -113414,7 +113498,7 @@
       ],
       "place": 6239,
       "country": "SE",
-      "localTrips": 1036937.0,
+      "localTrips": 1029092.0,
       "realm": "nordic"
     },
     {
@@ -133824,6 +133908,500 @@
       "country": "RO",
       "realm": "ro-md",
       "localTrips": 414362.0
+    },
+    {
+      "id": "inn",
+      "name": "Innlandet",
+      "kind": "zone",
+      "origin": {
+        "lon": 10.6866,
+        "lat": 60.7858
+      },
+      "center": [
+        10.6866,
+        60.7858
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.305,
+        59.822,
+        12.908,
+        62.716
+      ],
+      "place": 7396,
+      "country": "NO",
+      "localTrips": 1040066.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "nod",
+      "name": "Nordland",
+      "kind": "zone",
+      "origin": {
+        "lon": 14.4225,
+        "lat": 67.291
+      },
+      "center": [
+        14.4225,
+        67.291
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.83,
+        64.921,
+        31.217,
+        71.204
+      ],
+      "place": 7398,
+      "country": "NO",
+      "localTrips": 1247782.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "age",
+      "name": "Agder",
+      "kind": "zone",
+      "origin": {
+        "lon": 8.008,
+        "lat": 58.1525
+      },
+      "center": [
+        8.008,
+        58.1525
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        6.346,
+        57.942,
+        9.401,
+        59.691
+      ],
+      "place": 7399,
+      "country": "NO",
+      "localTrips": 856053.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "meo",
+      "name": "Møre og Romsdal",
+      "kind": "zone",
+      "origin": {
+        "lon": 6.3634,
+        "lat": 62.4704
+      },
+      "center": [
+        6.3634,
+        62.4704
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        5.364,
+        61.905,
+        9.405,
+        63.523
+      ],
+      "place": 7400,
+      "country": "NO",
+      "localTrips": 667058.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "das",
+      "name": "Dalarnas län",
+      "kind": "zone",
+      "origin": {
+        "lon": 15.629,
+        "lat": 60.617
+      },
+      "center": [
+        15.629,
+        60.617
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.937,
+        59.835,
+        19.325,
+        65.137
+      ],
+      "place": 7401,
+      "country": "SE",
+      "localTrips": 2560803.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "vab",
+      "name": "Västerbottens län",
+      "kind": "zone",
+      "origin": {
+        "lon": 20.3009,
+        "lat": 63.8168
+      },
+      "center": [
+        20.3009,
+        63.8168
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        14.284,
+        63.387,
+        24.197,
+        69.079
+      ],
+      "place": 7402,
+      "country": "SE",
+      "localTrips": 1401195.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "vrm",
+      "name": "Värmlands län",
+      "kind": "zone",
+      "origin": {
+        "lon": 13.5087,
+        "lat": 59.3818
+      },
+      "center": [
+        13.5087,
+        59.3818
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        11.655,
+        58.707,
+        14.512,
+        61.075
+      ],
+      "place": 7403,
+      "country": "SE",
+      "localTrips": 764625.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "kae",
+      "name": "Kalmar län",
+      "kind": "zone",
+      "origin": {
+        "lon": 16.6352,
+        "lat": 57.7529
+      },
+      "center": [
+        16.6352,
+        57.7529
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        15.303,
+        56.176,
+        17.185,
+        58.161
+      ],
+      "place": 7404,
+      "country": "SE",
+      "localTrips": 635281.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "got",
+      "name": "Gotlands län",
+      "kind": "zone",
+      "origin": {
+        "lon": 18.3003,
+        "lat": 57.6405
+      },
+      "center": [
+        18.3003,
+        57.6405
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        17.922,
+        56.887,
+        19.385,
+        58.418
+      ],
+      "place": 7405,
+      "country": "SE",
+      "localTrips": 153452.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "phs",
+      "name": "Pohjois-Savo",
+      "kind": "zone",
+      "origin": {
+        "lon": 27.6973,
+        "lat": 62.9023
+      },
+      "center": [
+        27.6973,
+        62.9023
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        25.999,
+        60.648,
+        31.627,
+        65.54
+      ],
+      "place": 7406,
+      "country": "FI",
+      "localTrips": 2018859.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "ksu",
+      "name": "Keski-Suomi",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.743,
+        "lat": 62.2445
+      },
+      "center": [
+        25.743,
+        62.2445
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        22.77,
+        61.59,
+        26.82,
+        64.112
+      ],
+      "place": 7407,
+      "country": "FI",
+      "localTrips": 919319.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "ete",
+      "name": "Etelä-Pohjanmaa",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.8322,
+        "lat": 62.7941
+      },
+      "center": [
+        22.8322,
+        62.7941
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.471,
+        61.961,
+        24.624,
+        63.517
+      ],
+      "place": 7408,
+      "country": "FI",
+      "localTrips": 523920.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "lpp",
+      "name": "Lappi",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.7305,
+        "lat": 66.503
+      },
+      "center": [
+        25.7305,
+        66.503
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.503,
+        65.57,
+        30.063,
+        70.111
+      ],
+      "place": 7409,
+      "country": "FI",
+      "localTrips": 473052.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "lox",
+      "name": "Lõuna-Eesti",
+      "kind": "zone",
+      "origin": {
+        "lon": 26.7248,
+        "lat": 58.3786
+      },
+      "center": [
+        26.7248,
+        58.3786
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.036,
+        57.491,
+        27.854,
+        59.841
+      ],
+      "place": 7410,
+      "country": "EE",
+      "localTrips": 1108783.0,
+      "realm": "baltic"
+    },
+    {
+      "id": "lst",
+      "name": "Lääne-Eesti",
+      "kind": "zone",
+      "origin": {
+        "lon": 22.4862,
+        "lat": 58.2552
+      },
+      "center": [
+        22.4862,
+        58.2552
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        21.773,
+        57.761,
+        25.342,
+        59.323
+      ],
+      "place": 7411,
+      "country": "EE",
+      "localTrips": 390263.0,
+      "realm": "baltic"
+    },
+    {
+      "id": "vim",
+      "name": "Vidzeme",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.2728,
+        "lat": 57.3143
+      },
+      "center": [
+        25.2728,
+        57.3143
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.299,
+        55.656,
+        28.275,
+        58.104
+      ],
+      "place": 7412,
+      "country": "LV",
+      "localTrips": 1473862.0,
+      "realm": "baltic"
+    },
+    {
+      "id": "kuz",
+      "name": "Kurzeme",
+      "kind": "zone",
+      "origin": {
+        "lon": 21.0168,
+        "lat": 56.5032
+      },
+      "center": [
+        21.0168,
+        56.5032
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        20.934,
+        56.051,
+        23.586,
+        57.778
+      ],
+      "place": 7413,
+      "country": "LV",
+      "localTrips": 786767.0,
+      "realm": "baltic"
+    },
+    {
+      "id": "tlk",
+      "name": "Telemark",
+      "kind": "zone",
+      "origin": {
+        "lon": 9.6219,
+        "lat": 59.1222
+      },
+      "center": [
+        9.6219,
+        59.1222
+      ],
+      "zoom": 10.5,
+      "utcOffset": 1,
+      "market": -1,
+      "box": [
+        7.06,
+        58.751,
+        9.932,
+        60.207
+      ],
+      "place": 7415,
+      "country": "NO",
+      "localTrips": 482844.0,
+      "realm": "nordic"
+    },
+    {
+      "id": "ute",
+      "name": "Utenos apskritis",
+      "kind": "zone",
+      "origin": {
+        "lon": 25.5997,
+        "lat": 55.4978
+      },
+      "center": [
+        25.5997,
+        55.4978
+      ],
+      "zoom": 10.5,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        24.621,
+        55.012,
+        26.868,
+        55.963
+      ],
+      "place": 7416,
+      "country": "LT",
+      "localTrips": 340557.0,
+      "realm": "baltic"
     }
   ]
 }
