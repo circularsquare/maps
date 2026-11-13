@@ -30,6 +30,9 @@ Feedback triage rule: docs/orchestrator.md (bugs touching many: look; design: to
   context.json and all 22 language files, AFTER C's gate window ends); terrain +8% accepted, v2 publish waits till she's
   back; rivers build GO -> **rivers2** a85c231bd34d5f479 (Opus, .tw-trees/rivers, Vite 6158), she reviews before landing.
   Fixes line unanswered: kept as the full list.
+  **She's home (~23:40 local)**: pushed master (e6ff5783, her OK); "terrain looks great"; touch line dropped e6ff5783;
+  RIVERS PAUSED (she wanted the river straightened, disliked prototype 2's look): rivers2 stopped, tree removed,
+  5d1dcc3c. Batch C join (CA) running, claim gaprun-joinC 12, then after-join + freeze, then 8800 rebuild.
   Earlier: B gated 19/19 (tlk relaxed, ute
   origin moved to Utena by hand), window ended 21:33; backup prejoinB; **B join running from ~21:35 local, 12 jobs,
   1.5-2 h: nothing else writes data/packs or data/terrain**. zone_terrain --force done (4,024 files, new method).
