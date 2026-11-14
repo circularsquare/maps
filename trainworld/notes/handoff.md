@@ -1,4 +1,4 @@
-# Orchestrator handoff, trainworld
+﻿# Orchestrator handoff, trainworld
 
 Orchestrator: session 5c59ad2f-75a3-4536-8e9d-b38d3213ab6f, name maps-19 [f2de49], since 2026-11-12 21:52 UTC
 Updated: 2026-11-13 00:50 UTC (19:50 local). maps-37 has closed (its agents all reported or handed over).
@@ -112,8 +112,13 @@ station on one-way single track; Ctrl+F search debounced and cheaper), 8800 = f8
 Server 8391326 deployed (15-min playtime ring). Running: **perdir** a92d9f9a4be8320b3 (Opus, .tw-trees/perdir, Vite
 6170): T-3348 stage 1, per-direction stops, ahead of the quad package (her go: "hopefully we can get it in. if not,
 oh well"), her case = a double split into two one-way legs with a station each (reports/t3348-split-legs.png).
+**perdir finished the sim half**: tree .tw-trees/perdir (tw/perdir) holds per-direction stops in the sim, tests and
+check pass, NOT landed (demand still counts the return run at the listed station; the map shows no stop marker at the
+return station; removing it breaks the line without a named refusal). Demand plan 2-3 h in notes/T-3348.md "Stage 1
+as built" (resume perdir a92d9f9a4be8320b3 for it). Its DECISIONS line sits uncommitted in the main tree: commit it
+with the landing. Also found: a leg whose way is only inferred turns two-way once a station splits it (file a task).
 Filed today: T-3377 mods, T-3378 BRT, T-3379-81 single-track bugs, T-3382 where people play, T-3383 single-track
-wait wording, T-3384 waypoints, T-3385 Jieyang freeze (her save in reports/t3385-asia.save). Next free id T-3386.
+wait wording, T-3384 waypoints, T-3385 Jieyang freeze (her save in reports/t3385-asia.save). Next free id T-3387.
 
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
