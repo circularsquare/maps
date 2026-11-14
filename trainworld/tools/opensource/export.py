@@ -204,6 +204,15 @@ def main():
             print("nothing changed since the last sync")
             return
         msg = f"sync to maps {sha} ({datetime.date.today().isoformat()}).\n\nSource commit {full}."
+        # contributors credited in maps since the last sync are credited on the sync commit too (CONTRIBUTING.md)
+        last = subprocess.run(["git", "log", "-1", "--format=%b"], cwd=out, capture_output=True, text=True).stdout
+        prev = re.search(r"Source commit ([0-9a-f]{40})", last)
+        if prev:
+            bodies = git("log", "--format=%b", f"{prev.group(1)}..{full}").stdout.decode()
+            credits = sorted({l.strip() for l in bodies.splitlines()
+                              if l.strip().lower().startswith("co-authored-by:") and "anthropic.com" not in l})
+            if credits:
+                msg += "\n\n" + "\n".join(credits)
     else:
         msg = (f"trainsworld: first public copy, from the private maps tree at {sha} ({datetime.date.today().isoformat()}).\n\n"
                f"Source commit {full}. History stays private.")
