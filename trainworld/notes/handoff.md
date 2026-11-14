@@ -117,6 +117,11 @@ check pass, NOT landed (demand still counts the return run at the listed station
 return station; removing it breaks the line without a named refusal). Demand plan 2-3 h in notes/T-3348.md "Stage 1
 as built" (resume perdir a92d9f9a4be8320b3 for it). Its DECISIONS line sits uncommitted in the main tree: commit it
 with the landing. Also found: a leg whose way is only inferred turns two-way once a station splits it (file a task).
+**Contributor PRs** (circularsquare/trainsworld): #1 Renkon bus one-way streets, #2 peanutmow settle + outline
+speedups, #3 CinnamonVII partly built line runs. #2: her go to pull in and test in full -> **pr2** a90891ce404ffab61
+(Opus, .tw-trees/pr2, Vites 6171-6172, task T-3387): verdict + draft review comment. Landing a PR: apply in a tree,
+check, land with the contributor as co-author (`Co-Authored-By: <name> <their GitHub noreply email>`), sync the export,
+close the PR with a link to the sync commit (docs/orchestrator.md). Next free id T-3388.
 Filed today: T-3377 mods, T-3378 BRT, T-3379-81 single-track bugs, T-3382 where people play, T-3383 single-track
 wait wording, T-3384 waypoints, T-3385 Jieyang freeze (her save in reports/t3385-asia.save). Next free id T-3387.
 
