@@ -63,6 +63,10 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   `venv\Scripts\python.exe trainworld/tools/opensource/export.py` from the maps root, then `git push` in
   ..\trainsworld-export. A PR is applied in maps by an agent (`gh pr diff`, `git apply`), checked like agent work,
   committed with the contributor as co-author once she has seen it, and closed with a link after the next sync.
+  Replies on a PR (Anita, 2026-11-13) are written for a person, whether or not the PR looks LLM-written: thanks
+  first, plain words, what we took and what we didn't with the main reason for each, short; internals only where
+  they need them to act. Offer rather than ask ("if you share the save, we can ..."), never a request of their time.
+  She sees each reply before it is posted.
 - Old R2 versions: only through `python trainworld/tools/r2_purge.py <versions> [--yes]` (allowed by a permission
   rule; it refuses the live version, the newest 3 and anything not dated). Never a bare `rclone purge`.
 - shonei-server: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call; then `git push` separately.
