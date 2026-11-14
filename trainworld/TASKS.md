@@ -70,6 +70,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
+- T-3387 [P2] Contributor PR #2 (peanutmow): settle and outline speedups. Taking, 2026-11-13, pr2. notes/T-3387.md
 - T-2761 [P3] Highlight tracks that cross each other where some have stations and some don't (Anita 2026-11-07: "its probably an accident, but might not be an accident"). Open; after the post.
 - T-2809 [P3] Per-line money history (T-2787) is in rail line panels only: bus lines (BusInspector) have no plot, and upkeep is not in the plotted figure (it is not kept per line per day). The bus lines' ids would need their days in `lineDays` too; check `regionLines` covers them.
 - T-2880 [P3] The market part's own network update rebuilds its served pairs from nothing whenever `served_comp` differs (about 13 s of a North America whole solve, 13.8-19 s on a dropped stop, T-2830), even when only the component numbers moved and the same zones are joined (`same_joins` from T-2878 tells; on the captured North America edit it did). Skipping the rebuild then should be bit-identical and save those seconds of every whole solve after such an edit. Found by T-2878; not started.
