@@ -107,6 +107,14 @@ left as is), 231c0215 bus Edit route plain mode + click end to extend (T-3370's 
 extend the route"). Post material for her: research/v033-highlights.md, artifacts/trainworld/review/v033-zones-*.png.
 Cleaned: pre-T3287 backups (7.7 GB), gaprun2's sim copy. No agents running.
 
+**11-13 afternoon** (usage nearly gone for the weekend; she's mostly code-frozen): landed f8119117 (one-platform
+station on one-way single track; Ctrl+F search debounced and cheaper), 8800 = f8119117 from freeze 20261113-013559.
+Server 8391326 deployed (15-min playtime ring). Running: **perdir** a92d9f9a4be8320b3 (Opus, .tw-trees/perdir, Vite
+6170): T-3348 stage 1, per-direction stops, ahead of the quad package (her go: "hopefully we can get it in. if not,
+oh well"), her case = a double split into two one-way legs with a station each (reports/t3348-split-legs.png).
+Filed today: T-3377 mods, T-3378 BRT, T-3379-81 single-track bugs, T-3382 where people play, T-3383 single-track
+wait wording, T-3384 waypoints, T-3385 Jieyang freeze (her save in reports/t3385-asia.save). Next free id T-3386.
+
 ## Morning 11-13 (her plan: restart VS Code, playtest, then prepare to deploy)
 A VS Code restart ends this session and its subagents (gaprun3). Detached pythons survive. If gaprun3 is gone with
 Singapore unfinished: notes/T-3287.md "Stage 6" has every PID, log and restart command; check the logs and finish
