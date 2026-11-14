@@ -1,4 +1,4 @@
-﻿# Orchestrator handoff, trainworld
+# Orchestrator handoff, trainworld
 
 Orchestrator: session 5c59ad2f-75a3-4536-8e9d-b38d3213ab6f, name maps-19 [f2de49], since 2026-11-12 21:52 UTC
 Updated: 2026-11-13 00:50 UTC (19:50 local). maps-37 has closed (its agents all reported or handed over).
