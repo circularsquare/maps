@@ -1013,7 +1013,7 @@
   "issues.singleCrossover": "Why double track with a crossover at its end can't be rebuilt as single track.",
   "issues.singleOneWay": "Why double track can't be rebuilt as single track: a one-way single track (a flyover's leg) joins one of its two tracks. \"its\": the selected track's.",
   "issues.oneTrackStop": "Why a line or a station change is refused: a station with its platform on one track of a double track is served only by trains going one way, and the line would stop there only going the other way, or end there arriving on the other track.",
-  "issues.oneTrackHere": "Why a station with its platform on one track can't go here: it needs plain track running through the station (not a track end, not one-way single track).",
+  "issues.oneTrackHere": "Why a station with its platform on one track can't go here: it needs plain track running through the station (not a track end, not a junction).",
   "issues.singleFlyover": "Why double track at a flying junction can't be rebuilt as single track.",
   "issues.trackFamily": "Refusal when drawing joins tram track to train track, or the other way around. They may cross each other at the same level.",
   "issues.nothingToConstruct": "Refusal of Construct.",

@@ -607,8 +607,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   round to keep the platform on its track (listed after the switch). On double track it is drawn as a thin bar
   over its track with a small bulge at the middle on the platform's side, so it does not read as a box; the bulge is 0.18 of the platform half length each way, so it keeps its place against the box at every zoom. On two-way single track it is a
   stop where trains cannot pass: drawn as plain single track (no T-3212 split) and the single-track
-  section runs on through it (6.2). Placed only on track running through, the same tracks both sides,
-  not one-way single (`OneTrackHere`). Priced as a single-track station; switching a built one to both
+  section runs on through it (6.2); on one-way single track it is the one platform that track's
+  station naturally is (players, 2026-11-13). Placed only on track running through, the same tracks
+  both sides (`OneTrackHere`). Priced as a single-track station; switching a built one to both
   tracks pays the difference (the button's hover says "Costs $X", or "Free"), to one track is free with nothing back; a blueprint one switches free and
   undoes; a built station's switch plays the upgrade sound. A one-track station has no terminal and no passing tracks (they go when it switches). Single
   track rebuilt double makes it an ordinary station; double rebuilt single keeps it one-track (no

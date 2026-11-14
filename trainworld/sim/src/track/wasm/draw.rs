@@ -1138,7 +1138,7 @@ impl TrackApi {
 
     /// `StationData::one` for a one-track station at chainage `s` of edge `e` (`e` MAX: on node `s`)
     /// whose platform is on the track nearer `pt`; None where one cannot go: anywhere but track
-    /// running through with the same tracks both sides, or on one-way single track.
+    /// running through with the same tracks both sides.
     fn one_at(&self, e: u32, s: f64, pt: [f64; 2]) -> Option<u8> {
         let net = &self.w.net;
         let (x, y, th, tracks) = if e == u32::MAX {
@@ -1149,10 +1149,7 @@ impl TrackApi {
             (net.node_x[n as usize], net.node_y[n as usize], net.node_heading[n as usize], net.node_tracks(n))
         } else {
             let t = net.edge_tracks[e as usize];
-            if t == 1 && net.edge_way(e) != 0 {
-                return None;
-            }
-            let (x, y, th) = geom::pos_at(net.edge_pieces(e), s);
+            let (x, y, th)= geom::pos_at(net.edge_pieces(e), s);
             (x, y, th, t)
         };
         if tracks == 1 {

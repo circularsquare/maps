@@ -185,14 +185,18 @@ fn on_single_track_it_is_a_stop_with_no_passing() {
     assert_eq!(platform_users(&b, mid).len(), 2);
 }
 
-/// One-way single track takes no one-track station; neither does a junction.
+/// One-way single track takes a one-track station, one platform being its natural station (players,
+/// 2026-11-13).
 #[test]
-fn not_on_one_way_single_track() {
+fn on_one_way_single_track() {
     let (mut a, [_, mid, _]) = run(true, 1, None, false);
     let e = a.w.net.node_ports[mid as usize].ends()[0] >> 1;
     assert_eq!(a.set_edge_oneway(e, 1), 0, "{}", a.issue_kinds());
-    assert_ne!(a.set_station_tracks(mid, true), 0);
-    assert!(a.issue_kinds().contains("OneTrackHere"));
+    assert_ne!(a.w.net.edge_way(e), 0);
+    assert_eq!(a.set_station_tracks(mid, true), 0, "{}", a.issue_kinds());
+    assert_eq!(a.station_one(mid), 2, "one platform, no passing");
+    assert_eq!(a.set_station_tracks(mid, false), 0, "{}", a.issue_kinds());
+    assert_eq!(a.station_one(mid), 0);
 }
 
 /// Rebuilt: double to single keeps it one-track (no passing); single to double makes it an ordinary

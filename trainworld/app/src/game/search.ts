@@ -95,23 +95,43 @@ const PLACE_WEIGHT: Record<string, number> = {
 };
 export const MAX_HITS = 8;
 
-/** The best matches for `query`, best first. */
+/** Station names normalised, kept: a big save has tens of thousands, searched on every key. */
+const normalised = new Map<string, string>();
+const norm = (s: string) => {
+  let n = normalised.get(s);
+  if (n === undefined) {
+    if (normalised.size > 200_000) normalised.clear();
+    normalised.set(s, (n = normalise(s)));
+  }
+  return n;
+};
+
+/** The best matches for `query`, best first. A result's city is looked up only for those kept: a
+ * short query matches most stations of a big save. */
 export function search(query: string): SearchHit[] {
   const q = normalise(query);
   if (!q) return [];
-  const scored: { hit: SearchHit; score: number; weight: number }[] = [];
+  const scored: { hit: SearchHit; score: number; weight: number; cityOf?: () => string }[] = [];
   const w = world.peek();
   if (w) {
-    const linesAt = new Map<StationId, LineInput[]>();
-    for (const l of listedLines(w)) for (const s of new Set(l.stops)) linesAt.set(s, [...(linesAt.get(s) ?? []), l]);
     // stations, grouped by complex and name
     const cx = complexes.peek();
     const groups = new Map<string, typeof w.save.stations>();
     for (const s of w.save.stations) {
-      const score = matchScore(normalise(s.name), q);
-      if (score < 0) continue;
-      const k = `${cx.of.get(s.id) ?? s.id}|${normalise(s.name)}`;
-      groups.set(k, [...(groups.get(k) ?? []), s]);
+      const name = norm(s.name);
+      if (matchScore(name, q) < 0) continue;
+      const k = `${cx.of.get(s.id) ?? s.id}|${name}`;
+      const g = groups.get(k);
+      if (g) g.push(s);
+      else groups.set(k, [s]);
+    }
+    const linesAt = new Map<StationId, LineInput[]>();
+    if (groups.size) {
+      for (const l of listedLines(w)) for (const s of new Set(l.stops)) {
+        const at = linesAt.get(s);
+        if (at) at.push(l);
+        else linesAt.set(s, [l]);
+      }
     }
     for (const g of groups.values()) {
       const lines = [...new Map(g.flatMap((s) => linesAt.get(s.id) ?? []).map((l) => [l.id, l])).values()];
@@ -119,9 +139,10 @@ export function search(query: string): SearchHit[] {
       const lng = g.reduce((t, s) => t + s.lng, 0) / g.length, lat = g.reduce((t, s) => t + s.lat, 0) / g.length;
       const boardings = g.reduce((t, s) => t + (stationDemand(s.id)?.boardings ?? 0), 0);
       scored.push({
-        hit: { kind: "station", name: target.name, ids: g.map((s) => s.id), target: target.id, lng, lat, lines, built: g.some((s) => s.built), city: cityById(zoneAt(lng, lat)) },
-        score: matchScore(normalise(target.name), q),
+        hit: { kind: "station", name: target.name, ids: g.map((s) => s.id), target: target.id, lng, lat, lines, built: g.some((s) => s.built), city: "" },
+        score: matchScore(norm(target.name), q),
         weight: lines.length * 1e9 + boardings,
+        cityOf: () => cityById(zoneAt(lng, lat)),
       });
     }
     for (const l of listedLines(w)) {
@@ -144,18 +165,31 @@ export function search(query: string): SearchHit[] {
       }
       if (score < 0 || isRegistryCity(p)) continue;
       scored.push({
-        hit: { kind: "place", name: p.name, place: p, lng: p.lng, lat: p.lat, city: cityById(p.city) },
+        hit: { kind: "place", name: p.name, place: p, lng: p.lng, lat: p.lat, city: "" },
         score, weight: (PLACE_WEIGHT[p.kind] ?? 0) + p.pop,
+        cityOf: () => cityById(p.city),
       });
     }
   scored.sort((a, b) => a.score - b.score || KIND_ORDER[a.hit.kind] - KIND_ORDER[b.hit.kind] || b.weight - a.weight
     || numeric(a.hit.name, b.hit.name));
-  const hits = scored.slice(0, MAX_HITS).map((s) => s.hit);
+  const hits = scored.slice(0, MAX_HITS).map((s) => {
+    if (s.cityOf && (s.hit.kind === "station" || s.hit.kind === "place")) s.hit.city = s.cityOf();
+    return s.hit;
+  });
   tagTwins(hits);
   return hits;
 }
 
-const cityById = (id: string) => { const c = CITIES.find((x) => x.id === id); return c ? tPlace(c.id, c.name) : ""; };
+let cityIndex = new Map<string, City>(), cityIndexed = -1;
+const cityById = (id: string) => {
+  if (cityIndexed !== CITIES.length) {
+    cityIndex = new Map();
+    for (const x of CITIES) if (!cityIndex.has(x.id)) cityIndex.set(x.id, x);
+    cityIndexed = CITIES.length;
+  }
+  const c = cityIndex.get(id);
+  return c ? tPlace(c.id, c.name) : "";
+};
 
 const aliasKeys = new Map<string, string[]>();
 /** How well a registry city or zone matches the normalised query `q` by its name or an alias

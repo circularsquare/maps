@@ -114,8 +114,8 @@ impl TrackApi {
         if d.built { self.run_charged(op) } else { self.run(op) }
     }
 
-    /// A one-track station can go on node `node`: through track with the same tracks both sides, not
-    /// one-way single track.
+    /// A one-track station can go on node `node`: through track with the same tracks both sides
+    /// (one-way single track included: its natural station, one platform, players asked 2026-11-13).
     pub(super) fn one_fits(&self, node: u32) -> bool {
         let net = &self.w.net;
         let p = &net.node_ports[node as usize];
@@ -124,6 +124,6 @@ impl TrackApi {
         }
         let (e0, e1) = (p.end[0] >> 1, p.end[1] >> 1);
         let t = net.edge_tracks[e0 as usize];
-        t == net.edge_tracks[e1 as usize] && (t == 2 || (net.edge_way(e0) == 0 && net.edge_way(e1) == 0))
+        t == net.edge_tracks[e1 as usize] && (t == 1 || t == 2)
     }
 }

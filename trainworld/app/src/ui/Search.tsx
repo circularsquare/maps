@@ -7,7 +7,7 @@
 // every other state change) and, with no build tool on, selects the station or line; with a tool
 // on it only moves the camera, so a half-drawn route or a line being edited carries on there.
 
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
 import { realmOfPlace, showRealm, showZoneRealm } from "../game/realms";
@@ -69,6 +69,9 @@ export function goTo(hit: SearchHit) {
   if (selecting) selection.value = { kind: "line", line: hit.line.id };
 }
 
+/** How long the typing rests before the box searches, ms. */
+const SEARCH_SETTLE_MS = 150;
+
 export function Search() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -78,9 +81,20 @@ export function Search() {
   const input = useRef<HTMLInputElement>(null);
   // a request to focus the box once it is drawn (it is not in the page while collapsed)
   const focusNext = useRef(false);
-  void world.value; // results follow the network
+  // the query searched: typing settles first, as a big save's search takes a while
+  const [searched, setSearched] = useState("");
+  useEffect(() => {
+    if (!query.trim()) {
+      setSearched(query);
+      return;
+    }
+    const timer = setTimeout(() => setSearched(query), SEARCH_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [query]);
+  const w = world.value; // results follow the network
   void places.value; // and the place lists as they arrive (fetched on first focus, T-177)
-  const hits = open ? search(query) : [];
+  const hits = useMemo(() => (open ? search(searched) : []), [open, searched, w?.save.stations, w?.save.lines, places.value]);
+  const settled = searched === query;
   const cur = Math.min(at, Math.max(0, hits.length - 1));
   // T-400: few results from the lists in so far: the next nearest zones' lists, until enough or all
   const wanting = open && query.trim().length >= 3 && hits.length < WANT;
@@ -144,7 +158,8 @@ export function Search() {
       setAt((cur + (e.key === "ArrowDown" ? 1 : n - 1)) % n);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      pick(hits[cur]);
+      // typed faster than the search settles: the text in the box, searched now
+      pick(settled ? hits[cur] : search(query)[0]);
     }
   };
 
@@ -173,7 +188,7 @@ export function Search() {
         onKeyDown={onKey} />
       {open && query.trim() && (
         <ul class="map-search-results" id="map-search-results" role="listbox">
-          {hits.length === 0 && <li class="muted none">{t("search.none")}</li>}
+          {hits.length === 0 && settled && <li class="muted none">{t("search.none")}</li>}
           {hits.map((hit, i) => (
             <li id={`map-search-${i}`} role="option" aria-selected={i === cur} class={i === cur ? "on" : ""}
               onMouseDown={(e) => e.preventDefault()} onMouseMove={() => i !== cur && setAt(i)} onClick={() => pick(hit)}>
