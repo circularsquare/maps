@@ -20,6 +20,13 @@ let view = 'board';         // 'board' | 'requests'
 const expanded = new Set(); // request groups showing their reports
 let lastGroup = null;       // the group last opened, kept in the URL hash
 let groupForm = null;       // {gid, kind: 'accept' | 'merge' | 'dismiss' | 'comment'}
+const notesOpen = new Set(); // task rows showing their notes
+let flashTask = null;       // the task a link just landed on, highlighted briefly
+let flashUntil = 0;
+let ARCHIVE = null;         // archive.json, loaded the first time a closed task is opened
+let ARCHIVED = new Set();   // closed task numbers, from data.json
+const NOTES_CACHE = {};     // notes name -> {state: 'loading' | 'ok' | 'missing', text}
+let hashApplied = false;    // the URL hash is read once data.json is in (a task id needs it)
 
 function el(tag, attrs, ...kids) {
   const e = document.createElement(tag);
@@ -95,9 +102,19 @@ async function load(failed) {
     const r = await fetch(`requests.json?t=${Date.now()}`, { cache: 'no-store' });
     if (r.ok) REQ = await r.json();
   } catch (e) { /* a build from before stage 3: no requests yet */ }
+  ARCHIVED = new Set(DATA.archived || []);
+  ARCHIVE = null;
+  for (const k of Object.keys(NOTES_CACHE)) delete NOTES_CACHE[k];
+  const first = !hashApplied;
+  if (first) { hashApplied = true; applyHash(); }
+  if (panel && panel.kind === 'closed') loadArchive();
   setBuilt(failed ? `Built ${clock(DATA.built)}, ${failed}` : `Built ${clock(DATA.built)}`, !!failed);
   fillUpdates();
   render();
+  if (first && panel && panel.task) {
+    const row = $(`#panel [data-task="${panel.task}"]`);
+    if (row) row.scrollIntoView({ block: 'center' });
+  }
 }
 
 function setBuilt(text, bad) {
@@ -211,7 +228,7 @@ function describe(a) {
 
 function queuedList(actions) {
   return el('div', { class: 'queued-box' }, actions.map((a) => el('div', { class: 'queued-item', 'data-action': a.id },
-    el('div', { class: 'what' }, describe(a)),
+    el('div', { class: 'what' }, rich(describe(a))),
     a.comment ? el('div', { class: 'why' }, a.comment) : null,
     el('div', { class: 'when' }, `Queued ${clock(a.at)} · `,
       el('button', { class: 'link', type: 'button', onclick: () => withdraw(a.id) }, 'Withdraw')))));
@@ -276,7 +293,7 @@ function renderStrip() {
   const rows = live.agents.map((a) => el('tr', {},
     el('td', {}, el('b', {}, a.name)),
     el('td', { class: 'id' }, taskLink(a.task)),
-    el('td', {}, a.doing || ''),
+    el('td', {}, rich(a.doing || '')),
     el('td', { class: 'time' }, ago(a.started))));
   strip.append(el('div', { class: 'block agents' },
     el('h2', {}, live.orchestrator ? `Agents (orchestrator ${live.orchestrator})` : 'Agents'),
@@ -309,15 +326,11 @@ function renderStrip() {
 
 function taskLink(text) {
   const id = (String(text || '').match(/T-\d+/) || [])[0];
-  if (!id || !DATA.tasks[id]) return text || '';
-  return el('button', { class: 'link', type: 'button', onclick: () => showTask(id) }, text);
+  if (!id || !knownTask(id)) return text || '';
+  return el('button', { class: 'link', type: 'button', onclick: () => goTask(id) }, text);
 }
 
-function showTask(id) {
-  openPanel({ kind: 'line', slug: DATA.tasks[id].line });
-  const row = $(`#panel [data-task="${id}"]`);
-  if (row) row.scrollIntoView({ block: 'center' });
-}
+function showTask(id) { goTask(id); }
 
 function renderGrid() {
   const q = query();
@@ -391,6 +404,8 @@ function renderPanel() {
   else if (panel && panel.kind === 'queue') kids = queuePanel();
   else if (panel && panel.kind === 'add') kids = addPanel();
   else if (panel && panel.kind === 'ack') kids = ackPanel();
+  else if (panel && panel.kind === 'closed') kids = closedPanel(panel.id);
+  else if (panel && panel.kind === 'notes') kids = notesPanel(panel.name);
   if (!kids) { box.hidden = true; box.replaceChildren(); return; }
   box.replaceChildren(...kids.filter(Boolean));
   box.hidden = false;
@@ -517,7 +532,7 @@ function linePanel(line) {
     head(line.name),
     el('div', { class: 'meta' }, meta),
     upd ? el('div', { class: 'meta' }, `Part of the ${upd.name.toLowerCase()}`) : null,
-    el('p', { class: 'about' }, line.about),
+    el('p', { class: 'about' }, rich(line.about)),
     editable ? el('div', { class: 'controls' },
       el('button', { class: 'btn', type: 'button', disabled: !prev, onclick: () => move(line, 'up') }, 'Move up'),
       el('button', { class: 'btn', type: 'button', disabled: !next, onclick: () => move(line, 'down') }, 'Move down'),
@@ -547,8 +562,8 @@ function taskRow(t, key, q) {
     const parts = ['waits on '];
     waits.forEach((w, i) => {
       if (i) parts.push(', ');
-      if (/^T-\d+$/.test(w)) parts.push(DATA.tasks[w] ? taskLink(w) : `${w} (closed)`);
-      else parts.push(w);
+      if (/^T-\d+$/.test(w)) parts.push(taskLink(w), DATA.tasks[w] ? '' : ' (closed)');
+      else parts.push(rich(w));
     });
     notes.push(parts);
   }
@@ -578,12 +593,27 @@ function taskRow(t, key, q) {
         el('button', { class: 'btn plain', type: 'button', onclick: () => { opened.delete(t.id); delete drafts[`${k}:comment`]; renderPanel(); } }, 'Cancel')) : null,
     ];
   }
-  return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : ''), style: colour(key), 'data-task': t.id },
+  const showing = t.notes && notesOpen.has(t.id);
+  if (t.notes) {
+    where.append(...(notes.length ? [' · '] : []), el('button', { class: 'link', type: 'button', onclick: () => {
+      if (showing) notesOpen.delete(t.id); else notesOpen.add(t.id);
+      renderPanel();
+    } }, showing ? 'Hide notes' : 'Show notes'));
+  }
+  const flash = flashTask === t.id && Date.now() < flashUntil;
+  // the row's parts in order; the notes sit right above the answer box so she can read and answer in one place
+  return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : '') + (flash ? ' flash' : ''), style: colour(key), 'data-task': t.id },
     el('div', { class: 'top' }, el('b', {}, t.id), t.pri ? ` ${t.pri}` : ' no priority'),
-    el('div', { class: 'text' }, t.text),
+    taskBody(t),
     where,
+    showing ? notesBlock(t.notes, t.id) : null,
     pend.length ? queuedList(pend) : null,
     tools);
+}
+
+/** what a task says; tomorrow's task fields (need from Anita, context, goal) go here */
+function taskBody(t) {
+  return el('div', { class: 'text' }, rich(t.text));
 }
 
 function queuePanel() {
@@ -648,7 +678,7 @@ function renderWarnings() {
   w.hidden = !list.length;
   if (!list.length) return;
   w.querySelector('summary').textContent = `Problems reading the task files (${list.length})`;
-  w.querySelector('ul').replaceChildren(...list.map((s) => el('li', {}, s)));
+  w.querySelector('ul').replaceChildren(...list.map((s) => el('li', {}, rich(s))));
 }
 
 // ---------- player requests ----------
@@ -662,11 +692,288 @@ function groupTitle(gid) {
   return g ? g.title : gid;
 }
 
-function setHash() {
-  let h = '';
-  if (view === 'requests') h = lastGroup ? `#requests/${lastGroup}` : '#requests';
-  else if (panel && panel.kind === 'line') h = `#${panel.slug}`;
-  history.replaceState(null, '', h || location.pathname + location.search);
+function hashNow() {
+  if (panel && panel.kind === 'line' && panel.task) return `#task/${panel.task}`;
+  if (panel && panel.kind === 'closed') return `#task/${panel.id}`;
+  if (panel && panel.kind === 'notes') return `#notes/${panel.name}`;
+  if (view === 'requests') return lastGroup ? `#requests/${lastGroup}` : '#requests';
+  if (panel && panel.kind === 'line') return `#${panel.slug}`;
+  return '';
+}
+
+/** push: a jump Back should undo (a link to a task or notes); otherwise the hash is just kept current */
+function setHash(push) {
+  const h = hashNow();
+  if (h === location.hash || (!h && !location.hash)) return;
+  const url = h || location.pathname + location.search;
+  if (push) history.pushState(null, '', url); else history.replaceState(null, '', url);
+}
+
+function applyHash() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  panel = null;
+  view = 'board';
+  if (hash === 'requests' || hash.startsWith('requests/')) {
+    view = 'requests';
+    const g = hash.split('/')[1];
+    if (g) { expanded.add(g); lastGroup = g; }
+  } else if (hash.startsWith('task/')) {
+    const id = hash.slice(5);
+    if (DATA && DATA.tasks[id]) { panel = { kind: 'line', slug: DATA.tasks[id].line, task: id }; flash(id); }
+    else panel = { kind: 'closed', id };
+  } else if (hash.startsWith('notes/')) panel = { kind: 'notes', name: hash.slice(6) };
+  else if (hash) panel = { kind: 'line', slug: hash };
+  if (panel && panel.kind === 'closed') loadArchive();
+}
+
+// ---------- links to tasks and notes, and the notes view ----------
+
+// T-1840, T 1840, T1840 (and T-1840's); notes paths as tasks cite them
+const LINK_RE = /(notes\/(?:archive\/[\w-]+\/)?(?:[\w.-]+?\.md|T-\d+\/))|\bT[- ]?(\d{2,5})(?!\d)/g;
+
+function knownTask(id) {
+  return !!(DATA && (DATA.tasks[id] || ARCHIVED.has(parseInt(id.slice(2), 10))));
+}
+
+/** text with task ids and notes paths as links; anything that resolves to nothing stays plain */
+function rich(text) {
+  const s = String(text == null ? '' : text);
+  if (!DATA) return s;
+  const out = [];
+  let at = 0;
+  for (const m of s.matchAll(LINK_RE)) {
+    let node = null;
+    if (m[1]) {
+      const name = notesName(m[1]);
+      if (name) node = el('button', { class: 'link', type: 'button', onclick: () => goNotes(name) }, m[1]);
+    } else {
+      const id = `T-${parseInt(m[2], 10)}`;
+      if (knownTask(id)) node = el('button', { class: 'link', type: 'button', onclick: () => goTask(id) }, m[0]);
+    }
+    if (!node) continue;
+    if (m.index > at) out.push(s.slice(at, m.index));
+    out.push(node);
+    at = m.index + m[0].length;
+  }
+  if (at < s.length) out.push(s.slice(at));
+  return out;
+}
+
+/** "notes/archive/t1000-1499/T-1114.md" or "T-3390.md" -> its key in the notes index, or null */
+function notesName(path) {
+  const idx = DATA.notes_index || {};
+  const p = String(path).replace(/^\.?\/?(notes\/)?/, '').replace(/#.*$/, '');
+  const base = p.endsWith('/') ? p.split('/').slice(-2).join('/') : p.split('/').pop();
+  return idx[base] ? base : null;
+}
+
+function flash(id) {
+  flashTask = id;
+  flashUntil = Date.now() + 1800;
+}
+
+function goTask(id) {
+  if (DATA.tasks[id]) {
+    view = 'board';
+    panel = { kind: 'line', slug: DATA.tasks[id].line, task: id };
+    confirm = null;
+    flash(id);
+    setHash(true);
+    render();
+    const row = $(`#panel [data-task="${id}"]`);
+    if (row) row.scrollIntoView({ block: 'center' });
+  } else {
+    panel = { kind: 'closed', id };
+    setHash(true);
+    loadArchive();
+    render();
+    $('#panel').scrollTop = 0;
+  }
+}
+
+function goNotes(name) {
+  panel = { kind: 'notes', name };
+  setHash(true);
+  render();
+  $('#panel').scrollTop = 0;
+}
+
+async function loadArchive() {
+  if (ARCHIVE) return;
+  try {
+    const r = await fetch(`archive.json?t=${Date.now()}`, { cache: 'no-store' });
+    ARCHIVE = r.ok ? await r.json() : {};
+  } catch (e) {
+    ARCHIVE = {};
+  }
+  renderPanel();
+}
+
+function closedPanel(id) {
+  const k = [head(id)];
+  if (!ARCHIVE) return k.concat(el('p', { class: 'meta' }, 'Loading'));
+  const a = ARCHIVE[id];
+  if (!a) return k.concat(el('p', { class: 'meta' }, 'Not in the task files'));
+  const m = a.text.match(/\{L:([\w-]+)\}/);
+  const line = m && DATA.lines.find((l) => l.slug === m[1]);
+  return k.concat(
+    el('div', { class: 'meta' }, `Closed, in ${a.file}`, line ? ' · ' : null,
+      line ? el('button', { class: 'link', type: 'button', onclick: () => openPanel({ kind: 'line', slug: line.slug }) }, line.name) : null),
+    el('div', { class: 'task-row closed', style: colour('done') }, el('div', { class: 'text' }, rich(a.text.replace(/\{(L|waits|after):[^}]*\}\s*/g, '')))),
+    a.notes ? el('h3', {}, 'Notes') : null,
+    a.notes ? notesBlock(a.notes, id) : null);
+}
+
+function notesPanel(name) {
+  return [head(name), notesBlock(name, null)];
+}
+
+/** the notes file, rendered; a file several tasks share (someday.md) shows only this task's part, with the rest a click away */
+function notesBlock(name, taskId) {
+  const c = NOTES_CACHE[name];
+  if (!c) { loadNotes(name); return el('div', { class: 'notes meta' }, 'Loading notes'); }
+  if (c.state === 'loading') return el('div', { class: 'notes meta' }, 'Loading notes');
+  if (c.state === 'missing') return el('div', { class: 'notes meta' }, 'Notes file not found');
+  let text = c.text;
+  let part = false;
+  const shared = taskId && !name.startsWith(taskId + '.') && !name.startsWith(taskId + '-') && !name.startsWith(taskId + '/');
+  if (shared) {
+    const mine = excerpt(text, taskId);
+    if (mine) { text = mine; part = true; }
+  }
+  return el('div', { class: 'notes' },
+    el('div', { class: 'notes-src' }, part ? `From ${name} · ` : `${name} · `,
+      el('button', { class: 'link', type: 'button', onclick: () => goNotes(name) }, part ? 'Show the whole file' : 'Open on its own')),
+    md(text));
+}
+
+/** the list item or section about one task in a shared notes file, else null */
+function excerpt(text, id) {
+  const lines = text.split('\n');
+  const rx = new RegExp(`^(\\s*[-*]\\s+|#+\\s+)${id}\\b`);
+  const i = lines.findIndex((l) => rx.test(l));
+  if (i < 0) return null;
+  const headLevel = (lines[i].match(/^(#+)\s/) || [])[1];
+  const out = [lines[i]];
+  for (let j = i + 1; j < lines.length; j++) {
+    const l = lines[j];
+    if (headLevel ? new RegExp(`^#{1,${headLevel.length}}\\s`).test(l) : (/^\s*[-*]\s+T-\d+/.test(l) || /^#+\s/.test(l) || (!l.trim() && !/^\s+\S/.test(lines[j + 1] || '')))) break;
+    out.push(l);
+  }
+  return out.join('\n');
+}
+
+async function loadNotes(name) {
+  NOTES_CACHE[name] = { state: 'loading' };
+  const entry = (DATA.notes_index || {})[name];
+  const paths = Array.isArray(entry) ? entry : entry ? [entry] : [];
+  try {
+    const texts = [];
+    for (const p of paths) {
+      const r = await fetch(`../twnotes/${p.split('/').map(encodeURIComponent).join('/')}`, { cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      const t = await r.text();
+      texts.push(paths.length > 1 ? `# ${p.split('/').pop()}\n\n${t}` : t);
+    }
+    NOTES_CACHE[name] = paths.length ? { state: 'ok', text: texts.join('\n\n') } : { state: 'missing' };
+  } catch (e) {
+    NOTES_CACHE[name] = { state: 'missing' };
+  }
+  if (view === 'requests') renderRequests();
+  renderPanel();
+}
+
+// A small markdown reader for the notes: headings, lists, tables, quotes, code, bold, links. It builds DOM nodes
+// (never HTML strings), so nothing in a note can run as markup.
+function md(src) {
+  const lines = src.replace(/\r/g, '').split('\n');
+  const out = [];
+  let i = 0;
+  const isBlockStart = (l) => /^\s*```/.test(l) || /^#{1,6}\s/.test(l) || /^\s*([-*+]|\d+[.)])\s+/.test(l) || /^\s*>/.test(l) || /^\s*\|/.test(l);
+  while (i < lines.length) {
+    const l = lines[i];
+    if (!l.trim()) { i++; continue; }
+    if (/^\s*```/.test(l)) {
+      const code = [];
+      for (i++; i < lines.length && !/^\s*```/.test(lines[i]); i++) code.push(lines[i]);
+      i++;
+      out.push(el('pre', {}, el('code', {}, code.join('\n'))));
+      continue;
+    }
+    const h = l.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { out.push(el('div', { class: `md-h md-h${Math.min(h[1].length, 3)}` }, inline(h[2]))); i++; continue; }
+    if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(l)) { out.push(el('hr')); i++; continue; }
+    if (/^\s*\|/.test(l) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+      const cells = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+      const head = cells(l);
+      const body = [];
+      for (i += 2; i < lines.length && /^\s*\|/.test(lines[i]); i++) body.push(cells(lines[i]));
+      out.push(el('div', { class: 'md-table' }, el('table', {},
+        el('thead', {}, el('tr', {}, head.map((c) => el('th', {}, inline(c))))),
+        el('tbody', {}, body.map((r) => el('tr', {}, r.map((c) => el('td', {}, inline(c)))))))));
+      continue;
+    }
+    if (/^\s*>/.test(l)) {
+      const q = [];
+      for (; i < lines.length && /^\s*>/.test(lines[i]); i++) q.push(lines[i].replace(/^\s*>\s?/, ''));
+      out.push(el('blockquote', {}, md(q.join('\n'))));
+      continue;
+    }
+    if (/^\s*([-*+]|\d+[.)])\s+/.test(l)) {
+      const stack = [];
+      let last = null;
+      for (; i < lines.length; i++) {
+        const x = lines[i];
+        const m = x.match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        if (m) {
+          const ind = m[1].replace(/\t/g, '    ').length;
+          const ordered = /\d/.test(m[2]);
+          while (stack.length && stack[stack.length - 1].ind > ind) stack.pop();
+          if (!stack.length || ind > stack[stack.length - 1].ind) {
+            const list = el(ordered ? 'ol' : 'ul');
+            if (stack.length && last) last.append(list); else out.push(list);
+            stack.push({ ind, list });
+          }
+          last = el('li', {}, inline(m[3]));
+          stack[stack.length - 1].list.append(last);
+        } else if (x.trim() && /^\s+\S/.test(x) && last) {
+          last.append(' ', ...inline(x.trim()));
+        } else if (!x.trim() && /^\s*([-*+]|\d+[.)])\s+|^\s{2,}\S/.test(lines[i + 1] || '')) {
+          continue;
+        } else break;
+      }
+      continue;
+    }
+    const para = [];
+    for (; i < lines.length && lines[i].trim() && !(para.length && isBlockStart(lines[i])); i++) para.push(lines[i].trim());
+    out.push(el('p', {}, inline(para.join(' '))));
+  }
+  return out;
+}
+
+const INLINE_RE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)\s]+\))|(\*[^*\s][^*]*\*)/g;
+
+function inline(text) {
+  const out = [];
+  let at = 0;
+  for (const m of text.matchAll(INLINE_RE)) {
+    if (m.index > at) out.push(...rich(text.slice(at, m.index)));
+    const t = m[0];
+    if (m[1]) out.push(el('code', {}, t.slice(1, -1)));
+    else if (m[2]) out.push(el('b', {}, inline(t.slice(2, -2))));
+    else if (m[4]) out.push(el('i', {}, inline(t.slice(1, -1))));
+    else {
+      const [, label, url] = t.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
+      if (/^https?:\/\//i.test(url)) out.push(el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label));
+      else if (/\.md(#.*)?$|\/$/.test(url) && notesName(url)) {
+        const name = notesName(url);
+        out.push(el('button', { class: 'link', type: 'button', onclick: () => goNotes(name) }, label));
+      } else out.push(...rich(label));
+    }
+    at = m.index + t.length;
+  }
+  if (at < text.length) out.push(...rich(text.slice(at)));
+  return out;
 }
 
 function showView(v) {
@@ -781,14 +1088,14 @@ function reportItem(r) {
   const meta = [KIND[r.kind] || r.kind, stamp(r.time), r.name, r.lang].filter(Boolean).join(' · ');
   return el('div', { class: 'report' },
     el('div', { class: 'rmeta' }, meta, r.pictures ? ` · ${r.pictures} ${r.pictures === 1 ? 'picture' : 'pictures'}` : ''),
-    el('div', { class: 'rtext' }, r.text || ''));
+    el('div', { class: 'rtext' }, rich(r.text || '')));
 }
 
 function pasteItem(p) {
   const link = safeLink(p.link);
   return el('div', { class: 'report' },
     el('div', { class: 'rmeta' }, [p.source || 'Other', stamp(p.at)].join(' · '), link ? ' · ' : null, link),
-    el('div', { class: 'rtext' }, p.text || ''));
+    el('div', { class: 'rtext' }, rich(p.text || '')));
 }
 
 function matchInfo(g) {
@@ -798,7 +1105,7 @@ function matchInfo(g) {
   if (m.line) parts.push(el('button', { class: 'link', type: 'button', onclick: () => openPanel({ kind: 'line', slug: m.line }) }, lineName(m.line)));
   if (m.task) {
     if (parts.length) parts.push(', ');
-    parts.push(DATA.tasks[m.task] ? taskLink(m.task) : `${m.task} (closed)`);
+    parts.push(taskLink(m.task), DATA.tasks[m.task] ? '' : ' (closed)');
   }
   return el('span', {}, 'On the board: ', parts);
 }
@@ -820,7 +1127,7 @@ function groupCard(g, isOpen) {
       el('span', { class: 'gcount' }, isOpen ? `${n} ${n === 1 ? 'report' : 'reports'}`
         : `${STATE[g.state] || g.state}${g.decided_at ? ` ${day(String(g.decided_at).slice(0, 10))}` : ''}, ${n} ${n === 1 ? 'report' : 'reports'}`)),
     el('div', { class: 'gmeta' }, reach || null, reach ? ' · ' : null, matchInfo(g)),
-    g.summary ? el('p', { class: 'gsummary' }, g.summary) : null,
+    g.summary ? el('p', { class: 'gsummary' }, rich(g.summary)) : null,
     pend.length ? queuedList(pend) : null,
     el('div', { class: 'controls small' },
       isOpen && INBOX.ok ? [
@@ -929,12 +1236,15 @@ document.addEventListener('keydown', (e) => {
 new ResizeObserver(() => {
   document.documentElement.style.setProperty('--head', `${$('#top').offsetHeight}px`);
 }).observe($('#top'));
-const hash = decodeURIComponent(location.hash.slice(1));
-if (hash === 'requests' || hash.startsWith('requests/')) {
-  view = 'requests';
-  const g = hash.split('/')[1];
-  if (g) { expanded.add(g); lastGroup = g; }
-} else if (hash) panel = { kind: 'line', slug: hash };
+window.addEventListener('popstate', () => {
+  if (!DATA) return;
+  applyHash();
+  render();
+  if (panel && panel.task) {
+    const row = $(`#panel [data-task="${panel.task}"]`);
+    if (row) row.scrollIntoView({ block: 'center' });
+  }
+});
 setInterval(() => DATA && renderStrip(), 60000);
 // the orchestrator marks actions handled as it applies them; then the files have changed too
 setInterval(async () => {

@@ -8,6 +8,8 @@ data/work/
 # the board: players' names and messages, Anita's comments, derived data (maps is public)
 board/data.json
 board/requests.json
+board/archive.json
+notes/board-pad.md
 notes/board-reports.jsonl
 notes/board-requests.json
 notes/board-inbox.jsonl

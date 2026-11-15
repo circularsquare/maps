@@ -11,7 +11,7 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   .tw-trees/stop-freeze-034, built on the v0.3.3 release b2897ae2): fixes freezes when editing stops on large saves
   (T-3385; hidden stop rows fed negative measurements). Website 3205539 + her later "intercity" 74f6a57. v0.3.3 went out
   11-13 ~14:00Z (data 2026-11-13; terrain v2 on R2 at terrain-world/v2).
-- **Master 6feec4b4, pushed, in sync** (11-15): her v0.3.4 fix 0bb9fcfa; her freeze diagnostics 43b3acbe (off unless
+- **Master 7c47580f** (the board, unpushed); before it 6feec4b4, pushed (11-15): her v0.3.4 fix 0bb9fcfa; her freeze diagnostics 43b3acbe (off unless
   `?diagnostics=1`; T-3385 archived); v0.3.4 changelog translated 6feec4b4 (live v0.3.4 shows those two lines in
   English until the next publish). Typecheck and i18n clean.
 - Uncommitted on purpose: perdir's DECISIONS line (2026-11-13, T-3348 stage 1): commit it when per-direction stops land.
@@ -32,12 +32,19 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   modified, uncommitted, outside trainworld: her commit). **Board inbox watch**: Monitor on
   `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min max, re-arm on expiry); on "batch ready",
   `watch.py pending`, apply (notes/T-3391.md "Stage 2" table), `watch.py handled <ids> --by <name> --note "..."`.
-  A new orchestrator arms it at takeover. Agent board (Opus, id a75091c86d0c851a1) on T-3393 stage 3 since 16:10Z.
+  A new orchestrator arms it at takeover. T-3393 (player requests, paste box) built too; whole board committed
+  7c47580f (not pushed). Board data files with player text are gitignored (trainworld/.gitignore). No agents running.
+  Agent board (id a75091c86d0c851a1, 365k tokens) knows the board code: resume it for board follow-ups.
   Format they share: notes/T-3389.md "Format (decided)".
   notes/board-live.json is the orchestrator's: update it when agents start or finish.
 - Anita 11-15: "its sunday so im not gonna use usage for anything else today. lets start it up, and when we run out,
   we run out, and ill resume tomorrow morning right away at the same point." Board only today, no player bugs.
   Crash: "crash is fixed, i think. people are saying its nice :)".
+
+- Agent board resumed 17:55Z for task-id links everywhere and an inline notes view (registers `twnotes` on 8800).
+- Tomorrow (her words, "thats something we should do tmr"): T-3394, every task as title / need from Anita /
+  context / goal / other info. Proposed shape: indented sub-bullets under each task line in TASKS.md (grep -A finds
+  them); likely one Sonnet agent per area reading each task's notes. Waits on her pick.
 
 ## Parked work in trees
 - .tw-trees/perdir (tw/perdir from f8119117): T-3348 stage 1, per-direction stops, sim half built and tested (her

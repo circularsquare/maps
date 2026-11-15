@@ -268,6 +268,45 @@ select.small {
 .queued-item .why { color: var(--muted); }
 .queued-item .when { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
+/* a task a link landed on */
+.task-row.flash { animation: flash 1.8s ease-out; }
+@keyframes flash {
+  from { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+  to { background: transparent; }
+}
+.task-row.closed { margin-top: 10px; }
+
+/* notes, rendered */
+.notes {
+  margin: 6px 0 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.notes.meta { font-size: 12px; }
+.notes-src { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.notes p, .notes ul, .notes ol, .notes pre, .notes blockquote, .notes .md-table { margin: 0 0 8px; }
+.notes ul, .notes ol { padding-left: 20px; }
+.notes li { margin: 2px 0; }
+.notes li > ul, .notes li > ol { margin: 2px 0 0; }
+.notes .md-h { font-weight: 700; margin: 12px 0 6px; }
+.notes .md-h1 { font-size: 15px; }
+.notes .md-h2 { font-size: 14px; }
+.notes .md-h3 { font-size: 13px; }
+.notes > .md-h:first-of-type { margin-top: 0; }
+.notes code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--soft); padding: 0 3px; border-radius: 3px; }
+.notes pre { background: var(--soft); padding: 6px 8px; border-radius: 4px; overflow-x: auto; }
+.notes pre code { background: none; padding: 0; white-space: pre; }
+.notes blockquote { border-left: 3px solid var(--line); padding-left: 8px; color: var(--muted); }
+.notes hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+.notes .md-table { overflow-x: auto; }
+.notes table { border-collapse: collapse; font-size: 12px; }
+.notes th, .notes td { border: 1px solid var(--line); padding: 3px 6px; text-align: left; vertical-align: top; }
+.notes a { color: var(--accent); }
+
 /* the two views */
 #views { display: inline-flex; }
 #views button { border-radius: 0; }

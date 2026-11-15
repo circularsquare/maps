@@ -217,6 +217,7 @@ def main():
     unsorted = {"slug": UNSORTED, "name": "Not sorted yet", "about": "Tasks with no line yet.",
                 "area": "ops", "update": None, "done": None, "tasks": []}
 
+    notes_index = index_notes()
     seen, task_out = set(), {}
     for t in tasks:
         if t["id"] in seen:
@@ -234,6 +235,7 @@ def main():
         (by_slug[slug] if slug else unsorted)["tasks"].append(t["id"])
         t["line"] = slug or UNSORTED
         del t["lines"], t["taking"]
+        t["notes"] = task_notes(t["id"], t["text"], notes_index)
         task_out[t["id"]] = t
 
     out_lines = []
@@ -262,12 +264,60 @@ def main():
         "cores": cores(),
         "warnings": warnings,
     }
+    archive = archive_entries(notes_index)
+    data["archived"] = sorted(int(k[2:]) for k in archive if k not in task_out)
+    data["notes_index"] = notes_index
     req = requests_data(now, warnings)
     write_json(args.out, data)
     write_json(str(Path(args.out).with_name("requests.json")), req)
+    write_json(str(Path(args.out).with_name("archive.json")), archive)
     shown = sum(1 for ln in out_lines if ln["status"])
     print(f"{len(task_out)} tasks, {len(out_lines)} lines ({shown} shown), "
           f"{len(unsorted['tasks'])} not sorted, {len(req['groups'])} request groups, {len(warnings)} warnings")
+
+
+NOTES = TW / "notes"
+NOTES_MENTION = re.compile(r"notes/(?:archive/[\w-]+/)?([\w.-]+?\.md|T-\d+/)")
+
+
+def index_notes():
+    """Notes the board can show, by name as tasks cite them: "T-3390.md", "someday.md", or "T-1114/" (a folder:
+    its .md files). Values are paths under notes/ (served as twnotes); a current note wins over an archived one."""
+    index = {}
+    places = [NOTES] + sorted(p for p in (NOTES / "archive").glob("*") if p.is_dir())
+    for place in reversed(places):              # current last, so it overwrites
+        for p in place.iterdir():
+            rel = p.relative_to(NOTES).as_posix()
+            if p.is_file() and p.suffix == ".md":
+                index[p.name] = rel
+            elif p.is_dir() and re.fullmatch(r"T-\d+", p.name):
+                files = sorted(f.relative_to(NOTES).as_posix() for f in p.rglob("*.md"))
+                if files:
+                    index[p.name + "/"] = files
+    return index
+
+
+def task_notes(tid, text, index):
+    """The task's notes: its own file if the text cites it (T-<id>.md, T-<id>-*.md or the T-<id>/ folder), else the
+    first notes file it cites (another task's, someday.md), else T-<id>.md if one exists."""
+    cited = [m for m in NOTES_MENTION.findall(text) if m in index]
+    own = [m for m in cited if re.match(re.escape(tid) + r"(\.md|/|-)", m)]
+    for name in own + cited + [f"{tid}.md", f"{tid}/"]:
+        if name in index:
+            return name
+    return None
+
+
+def archive_entries(index):
+    """Closed tasks from ARCHIVE.md and ARCHIVE-to-2026-10-19.md, newest file first: {id: {text, file, notes}}."""
+    out = {}
+    for name in ("ARCHIVE.md", "ARCHIVE-to-2026-10-19.md"):
+        for raw in (read(TW / name) or "").splitlines():
+            m = TASK_RE.match(raw)
+            if m and m.group(1) not in out:
+                tid, text = m.group(1), raw[2:].strip()
+                out[tid] = {"text": text, "file": name, "notes": task_notes(tid, text, index)}
+    return out
 
 
 def write_json(path, obj):
