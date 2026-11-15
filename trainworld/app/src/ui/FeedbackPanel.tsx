@@ -38,7 +38,8 @@ export function browserOf(ua: string): string {
   const m = /(Edg|OPR|Firefox|FxiOS|CriOS|Chrome|Version)\/(\d+)/.exec(ua);
   if (!m) return ua.slice(0, 120);
   const name = ({ Edg: "Edge", OPR: "Opera", FxiOS: "Firefox", CriOS: "Chrome", Version: /Safari/.test(ua) ? "Safari" : "Browser" } as Record<string, string>)[m[1]] ?? m[1];
-  return name + " " + m[2];
+  const version = name === "Safari" ? /Version\/([\d.]+)/.exec(ua)?.[1] ?? m[2] : m[2];
+  return name + " " + version;
 }
 
 /** T-2826: what a report carries beside the message: the game version, the browser, whether the device

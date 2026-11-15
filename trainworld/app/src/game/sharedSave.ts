@@ -16,6 +16,7 @@
 // of the viewer's is touched whatever happens.
 
 import { isLineShape } from "./lineShape";
+import { decompressGzip } from "../workers/gzip";
 import { encodeSave, isRetiredTrackFormat, isThisWorld, SAVE_FORMAT, SAVE_HEADER_FIELDS, SAVE_MAGIC, type SaveHeader } from "../workers/saveFile";
 
 /** shonei-server's MaxTwCommunitySave and MaxTwCommunitySaveUnpacked */
@@ -31,22 +32,7 @@ export class CopyRefused extends Error {
 
 /** `gz` unpacked, or null when it is not gzip or unpacks past `cap` bytes */
 async function gunzipCapped(gz: Uint8Array, cap: number): Promise<Uint8Array | null> {
-  const reader = new Blob([gz as BlobPart]).stream().pipeThrough(new DecompressionStream("gzip")).getReader();
-  const parts: Uint8Array[] = [];
-  let n = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      n += value.length;
-      if (n > cap) { void reader.cancel().catch(() => {}); return null; }
-      parts.push(value);
-    }
-  } catch { return null; }
-  const out = new Uint8Array(n);
-  let at = 0;
-  for (const p of parts) { out.set(p, at); at += p.length; }
-  return out;
+  try { return await decompressGzip(gz, cap); } catch { return null; }
 }
 
 const plain = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);

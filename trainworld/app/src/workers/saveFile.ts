@@ -18,6 +18,7 @@
 import registry from "../game/registry.json";
 import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
+import { compressGzip, decompressGzip } from "./gzip";
 import type { LineShape } from "../game/lineShape";
 
 export const SAVE_MAGIC = "TWG1";
@@ -245,11 +246,6 @@ export function currentZones(h: SaveHeader, now: (id: string) => string | null =
   return out;
 }
 
-async function pipe(bytes: Uint8Array, s: CompressionStream | DecompressionStream): Promise<Uint8Array> {
-  const out = new Response(new Blob([bytes as BlobPart]).stream().pipeThrough(s));
-  return new Uint8Array(await out.arrayBuffer());
-}
-
 /**
  * Which frame a network's bytes are in, from their magic (T-308): TWT6 is the world's Mercator,
  * TWT5 the Northeast conic, TWT4 the legacy equirectangular frame. A load converts
@@ -274,14 +270,14 @@ export async function encodeSave(h: SaveHeader, track: Uint8Array): Promise<Uint
   new DataView(raw.buffer).setUint32(4, json.length, true);
   raw.set(json, 8);
   raw.set(track, 8 + json.length);
-  return pipe(raw, new CompressionStream("gzip"));
+  return compressGzip(raw);
 }
 
 /** The compressed file -> header and network bytes; throws a player-readable reason. */
 export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader; track: Uint8Array }> {
   let raw: Uint8Array;
   try {
-    raw = await pipe(file, new DecompressionStream("gzip"));
+    raw = await decompressGzip(file);
   } catch {
     throw new Error("This file is not a trainsworld save.");
   }

@@ -3,6 +3,7 @@
 // sixteenths of a px. No water, borders or city names: the format has none.
 
 import type { Drawing } from "./draw";
+import { compressGzip } from "../workers/gzip";
 import { levelAt, type LevelNames, type NamePlan } from "./names";
 
 export interface SharedDrawing {
@@ -86,8 +87,7 @@ export function encodeShared(d: Drawing, plan: NamePlan, tier: number): SharedDr
 
 async function gzipJson(v: unknown): Promise<{ blob: Blob; raw: number }> {
   const raw = new TextEncoder().encode(JSON.stringify(v));
-  const stream = new Blob([raw]).stream().pipeThrough(new CompressionStream("gzip"));
-  return { blob: await new Response(stream).blob(), raw: raw.length };
+  return { blob: new Blob([await compressGzip(raw)]), raw: raw.length };
 }
 
 /** the upload's gzipped JSON, with as many name levels as fit; null when not even the lines alone do */
