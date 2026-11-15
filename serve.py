@@ -13,7 +13,8 @@ few words for the front page.  Register a map while it is being worked on and re
 it is not.  The running server re-reads served.json on every request, so add and remove take
 effect on the next page load without a restart.
 
-A page can also start one of the scripts listed in ACTIONS below (diskmap's rescan button).
+A page can also start one of the scripts listed in ACTIONS below (diskmap's rescan button),
+and append to one of the INBOXES (the trainworld board's).
 
 It speaks HTTP Range, which plain `python -m http.server` does not.  A .pmtiles archive is
 read through range requests, and without them the map loads with a basemap and nothing on
@@ -48,9 +49,68 @@ NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 # {"running", "line" (its latest output line), "code" (exit code once done)}.  Only these run.
 # The POST must carry an X-Maps-Run header, which a page on another site cannot send without
 # a CORS preflight this server never grants.
-ACTIONS = {("diskmap", "rescan"): "diskmap/scan.py"}
+ACTIONS = {("diskmap", "rescan"): "diskmap/scan.py",
+           ("twboard", "rebuild"): "trainworld/board/build.py"}
 RUNS = {}           # (name, action) -> {"proc", "line", "code"}
 RUNS_LOCK = threading.Lock()
+
+# Append-only files a page may write to (the trainworld board's inbox for the orchestrator).
+# POST /<name>/_inbox with a JSON object appends it as one line, with "at" added, and "id" too
+# unless it is a {"handled": <id>} line.  Nothing here ever rewrites or truncates the file.
+# GET gives {"pending": [actions with no handled line, send-now markers left out],
+# "last_at", "sent_at"}.  The POST needs X-Maps-Run, as for ACTIONS.
+INBOXES = {"twboard": "trainworld/notes/board-inbox.jsonl"}
+INBOX_LOCK = threading.Lock()
+INBOX_MAX = 64 * 1024
+INBOX_LAST_ID = [0]
+
+
+def inbox_read(path):
+    """The inbox's lines as dicts; a half-written or bad line is skipped."""
+    rows = []
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    obj = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(obj, dict):
+                    rows.append(obj)
+    except FileNotFoundError:
+        pass
+    return rows
+
+
+def inbox_state(path):
+    rows = inbox_read(path)
+    handled = {str(r["handled"]) for r in rows if "handled" in r}
+    pending, last_at, sent_at = [], None, None
+    for r in rows:
+        if "handled" in r or "id" not in r:
+            continue
+        if r.get("type") == "send-now":
+            sent_at = r.get("at")
+            continue
+        last_at = r.get("at")
+        if str(r["id"]) not in handled:
+            pending.append(r)
+    return {"pending": pending, "last_at": last_at, "sent_at": sent_at}
+
+
+def inbox_append(path, obj):
+    """Append one line; returns the stored object."""
+    now = time.time()
+    obj = dict(obj)
+    obj["at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+    if "handled" not in obj:
+        ms = max(int(now * 1000), INBOX_LAST_ID[0] + 1)     # unique and increasing
+        INBOX_LAST_ID[0] = ms
+        obj["id"] = f"a{ms}"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    return obj
 
 
 def load():
@@ -178,7 +238,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return {"running": False, "line": "", "code": None}
         return {"running": run["code"] is None, "line": run["line"], "code": run["code"]}
 
+    def inbox(self):
+        """The inbox file if this request is for /<name>/_inbox of a listed name, else None."""
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) == 3 and parts[2] == "_inbox" and parts[1] in INBOXES:
+            return HERE / INBOXES[parts[1]]
+        return None
+
+    def post_inbox(self, path):
+        if not self.headers.get("X-Maps-Run"):
+            return self.send_error(403)
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return self.send_error(400)
+        if size > INBOX_MAX:
+            return self.send_error(413)
+        try:
+            obj = json.loads(self.rfile.read(size).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return self.send_error(400, "not JSON")
+        if not isinstance(obj, dict) or not obj:
+            return self.send_error(400, "not a JSON object")
+        with INBOX_LOCK:
+            stored = inbox_append(path, obj)
+        self.send_json(200, stored)
+
     def do_POST(self):
+        path = self.inbox()
+        if path:
+            return self.post_inbox(path)
         key = self.action()
         if key not in ACTIONS:
             return self.send_error(404)
@@ -199,6 +288,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if urllib.parse.urlsplit(self.path).path == "/":
             return self.send_front_page(True)
+        path = self.inbox()
+        if path:
+            with INBOX_LOCK:
+                state = inbox_state(path)
+            return self.send_json(200, state)
         key = self.action()
         if key in ACTIONS:
             with RUNS_LOCK:
