@@ -2594,6 +2594,8 @@
   "updates.v033ZoneNames": "nomes de zonas em chinês e japonês",
   "updates.v033HsrFare": "tarifa de alta velocidade começa em 1,25x, antes 1,5x",
   "updates.v033Fixes": "corrigido: trens em via única desenhados atravessando um ao outro, a volta de uma linha desenhada na via errada, plataformas que paravam nas emendas de via, passageiros que não conseguiam voltar para uma linha que dobra perto de si mesma, números parados sem aviso, mensagens pouco claras para Safari antigo e navegadores sem WebGL2",
+  "updates.v034Line": "atualização v0.3.4: corrigido um travamento ao editar paradas em jogos grandes",
+  "updates.v034Fixes": "corrigido um travamento do navegador ao remover paradas, principalmente em jogos grandes",
   "upgrades.parking": "Estacionamento",
   "upgrades.parkingDoes": "Chegar a esta estação de longe parece 10 minutos mais curto.",
   "upgrades.parkingDoesAll": "Chegar a qualquer estação deste complexo de longe parece 10 minutos mais curto.",

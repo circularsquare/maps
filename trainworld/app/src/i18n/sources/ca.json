@@ -2594,6 +2594,8 @@
   "updates.v033ZoneNames": "zone names in Chinese and Japanese",
   "updates.v033HsrFare": "high speed fare now starts at 1.25x, was 1.5x",
   "updates.v033Fixes": "fixed trains on single track drawn passing through each other, trains on a line's way back drawn on the wrong track, platforms stopping at track joints, riders unable to change back onto a line that bends back near itself, figures stopping without a notice, and unclear errors in old Safari and browsers without WebGL2",
+  "updates.v034Line": "update v0.3.4: fixed a freeze when editing stops on large saves",
+  "updates.v034Fixes": "fixed a browser freeze when removing stops, especially on large saves",
   "upgrades.parking": "Parking lot",
   "upgrades.parkingDoes": "Traveling to this station from far away feels 10 minutes shorter.",
   "upgrades.parkingDoesAll": "Traveling to any station in this complex from far away feels 10 minutes shorter.",

@@ -2594,6 +2594,8 @@
   "updates.v033ZoneNames": "區域名稱有中文和日文",
   "updates.v033HsrFare": "高速票價預設改為1.25倍（原為1.5倍）",
   "updates.v033Fixes": "修復：單線上的列車畫成互相穿過、路線回程畫在錯誤的軌道上、月台在軌道接縫處停住、乘客無法換回在附近折返的路線、數據停止更新卻沒有提示、舊版Safari和不支援WebGL2的瀏覽器的錯誤提示不清楚",
+  "updates.v034Line": "更新 v0.3.4：修正在大型存檔中編輯停靠站時當機的問題",
+  "updates.v034Fixes": "修正刪除停靠站時瀏覽器當機的問題，大型存檔尤其明顯",
   "upgrades.parking": "停車場",
   "upgrades.parkingDoes": "從遠處前往這座車站，感覺少花10分鐘。",
   "upgrades.parkingDoesAll": "從遠處前往這個轉乘站的任何一座車站，感覺少花10分鐘。",
