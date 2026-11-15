@@ -765,7 +765,17 @@ function pricesOf(p: ArrayLike<number>) {
 }
 let prices = pricesOf([2.5, 2, 100, 9]);
 
+let freezePort: MessagePort | undefined;
+let freezeMemory: WebAssembly.Memory | undefined;
+let freezeTimer: ReturnType<typeof setInterval> | undefined;
+function freezeCheckpoint(event: string, detail: unknown = null) {
+  if (!freezePort) return;
+  try { freezePort.postMessage({ event, detail, wasmMB: freezeMemory ? Math.round(freezeMemory.buffer.byteLength / 1048576) : undefined }); }
+  catch { /* diagnostics must not affect the game */ }
+}
 function send(msg: FromClock, transfer: Transferable[] = []) {
+  if (msg.kind === "edited") freezeCheckpoint("edited", { seq: msg.seq, ok: msg.ok, ms: msg.ms });
+  if (msg.kind === "error") freezeCheckpoint("error", msg.message);
   postMessage(msg, { transfer });
 }
 
@@ -2919,8 +2929,10 @@ function sendRows(): boolean {
  * again, which was about half the edit's time on New York's real network.
  * `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
 function sendState(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false) {
+  freezeCheckpoint("build-state-start");
   const t0 = performance.now();
   const s = buildState();
+  freezeCheckpoint("build-state-end", { ms: performance.now() - t0 });
   const t1 = performance.now();
   if (effectiveAt !== undefined) s.effectiveAt = effectiveAt;
   if (!trips) s.noTrips = true;
@@ -3670,6 +3682,12 @@ function newLineShape(op: EditOp, line: number) {
 }
 
 function apply(op: EditOp): Applied {
+  freezeCheckpoint("apply-start", { op: op.op });
+  const start = performance.now();
+  try { return applyInner(op); }
+  finally { freezeCheckpoint("apply-end", { op: op.op, ms: performance.now() - start }); }
+}
+function applyInner(op: EditOp): Applied {
   const a = api!;
   a.set_game_day(Math.floor(gameNow() / 86400)); // T-2871: what this edit constructs is dated today
   switch (op.op) {
@@ -4005,6 +4023,12 @@ function tripsNow(e: number) {
 }
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
+  if (msg.kind === "freezeTrace") {
+    freezePort?.close(); freezePort = msg.port;
+    if (freezeTimer === undefined) freezeTimer = setInterval(() => freezeCheckpoint("pulse"), 1000);
+    freezeCheckpoint("pulse");
+    return;
+  }
   if (msg.kind === "epoch" && parked > 0) return tripsNow(msg.epoch);
   if (msg.kind === "view") {
     // outside the queue, so the fetch starts at once; a mask is installed between messages
@@ -4063,7 +4087,7 @@ async function processMessage(msg: ToClock) {
     });
     ready = (async () => {
       const t0 = performance.now();
-      await initWasm(() => init(), "clock worker"); // i18n-ignore
+      freezeMemory = (await initWasm(() => init(), "clock worker")).memory; // i18n-ignore
       if (msg.heapStep) set_heap_step(msg.heapStep);
       const model = newModel();
       loadHolidays();
@@ -4306,6 +4330,14 @@ async function masksFor(op: EditOp) {
 }
 
 async function handle(msg: ToClock) {
+  const watched = msg.kind === "edit" || msg.kind === "query";
+  const detail = msg.kind === "edit" ? { kind: msg.kind, seq: msg.seq, op: msg.op.op }
+    : msg.kind === "query" ? { kind: msg.kind, seq: msg.seq, q: msg.q.what, line: "line" in msg.q ? msg.q.line : undefined } : null;
+  if (watched) freezeCheckpoint("handle-start", detail);
+  try { return await handleMessage(msg); }
+  finally { if (watched) freezeCheckpoint("handle-end", detail); }
+}
+async function handleMessage(msg: ToClock) {
   if (!api) return;
   if (settle()) sendMoney();
   // an edit's new departures start now; trains already running keep their places (T-206)

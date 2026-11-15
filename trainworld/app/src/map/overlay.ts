@@ -14,6 +14,7 @@
 
 import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
+import { tracePhase } from "../game/freezeTrace";
 import { watchGraphics } from "../game/loading";
 import type { DrawOptions, NetworkRenderer } from "./renderer";
 import { anchor, EARTH_C, toLocal } from "./geo";
@@ -146,7 +147,7 @@ export class Overlay {
           if (this.moving && this.lastMapFrame) this.onMovingFrame?.(t - this.lastMapFrame);
           this.lastMapFrame = this.moving ? t : 0;
           this.draw();
-          for (const f of this.afterMapFrame) f();
+          for (let i = 0; i < this.afterMapFrame.length; i++) tracePhase(`map-frame-hook-${i}`, this.afterMapFrame[i]);
           // the view may have changed what moves: zoomed in to the trains, say
           if (this.slowTimer && !this.rafId) this.replan();
         },
@@ -202,6 +203,9 @@ export class Overlay {
 
   /** Draw now with the camera MapLibre last drew. */
   draw() {
+    return tracePhase("map-overlay", () => this.drawFrame());
+  }
+  private drawFrame() {
     if (!this.cam || !this.renderer.net) return;
     const a = performance.now();
     const gl = this.gl;

@@ -197,6 +197,7 @@ export type EditOp =
   | { op: "redo" };
 
 export type ToClock =
+  | { kind: "freezeTrace"; port: MessagePort }
   /** `pack`: the city pack's URL without extension (".../packs/nyc"), absolute. `fresh`: start a
    * new game even if there is an autosave (`?new=1`). `testPage`: the page is a check or stress
    * page (`?new=1`, `?synth=1`, `?demandTest=1`, T-320): it never writes a slot until the player

@@ -327,6 +327,12 @@ Web first, so it can be shared as a link.
   10 with a bar.
   `checks/every-pack-opens.mjs --broken` serves a broken city pack and market pack.
   `game/loading.ts`; timings in notes/T-172.md, frame times in notes/T-180.md.
+- **Freeze diagnostics** [T-3385]: `?diagnostics=1` opts this browser into a local recorder, kept on
+  after reload until **Stop recording** or `?diagnostics=0`. A separate worker keeps bounded edit
+  checkpoints and page/clock heartbeat gaps in IndexedDB, so a reload can export the lead-up from
+  **Download diagnostics**. Nothing is uploaded. Background throttling and sleep can also produce
+  heartbeat gaps. `game/freezeTrace.ts`, `workers/freezeTrace.worker.ts`; use and limits in
+  [notes/T-3385.md](../notes/T-3385.md), check `checks/t3385-diagnostics.mjs`.
 - **A Rust panic in the track model** [T-1007] leaves its wasm-bindgen borrow held, so the clock
   worker makes a new `TrackApi` and opens the network of the last load or edit in it as a load
   does (an edit's panic always goes back to before the edit; any other uses the live network when it

@@ -5,6 +5,7 @@
 // (workers/protocol.ts); a refused edit puts its reasons, in plain words, in `notice`.
 
 import { t } from "../i18n";
+import { editTrace, trace, tracing } from "./freezeTrace";
 import { signal, type Signal } from "@preact/signals";
 import type { EditOp } from "../workers/protocol";
 import { breakDeleteRun } from "./deleteHint";
@@ -78,6 +79,12 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
 export async function edit(op: EditOp, quiet = false, silent = false, early: boolean | "rows" = false): Promise<EditAnswer> {
+  if (tracing()) {
+    const snapshot = world.peek();
+    trace("edit-click", { edit: editTrace(op), version: snapshot?.version,
+      lines: snapshot?.save.lines.length, stations: snapshot?.save.stations.length,
+      lineStops: "line" in op ? snapshot?.save.lines.find((l) => l.num === op.line)?.stops.slice(0, 256) : undefined });
+  }
   breakDeleteRun();
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };

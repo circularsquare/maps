@@ -12,6 +12,7 @@ import { selection } from "../../game/ui";
 import { t } from "../../i18n";
 import { linesByNum, stationNames, world } from "../../game/world";
 import { useClockQuery } from "../useClockQuery";
+import { tracePhase } from "../../game/freezeTrace";
 
 /** The other lines at a row whose bullets show after its name, in the order they show. */
 export type RowTransfers = (stop: number, drawn: ReadonlySet<number>) => LineInput[];
@@ -19,7 +20,7 @@ export type RowTransfers = (stop: number, drawn: ReadonlySet<number>) => LineInp
 /** T-1391: a stop row whose name, time and bullets do not all fit drops its time (`data-tight`),
  * measured after every render and when the list's width changes. */
 export function useTightTimes(ref: RefObject<HTMLElement | null>) {
-  const fit = () => {
+  const fit = () => tracePhase("stop-row-fit", () => {
     const el = ref.current;
     if (!el) return;
     const rows = Array.from(el.querySelectorAll<HTMLElement>(":scope > li"));
@@ -29,7 +30,7 @@ export function useTightTimes(ref: RefObject<HTMLElement | null>) {
       return !!g && !!g.querySelector(".t") && g.scrollWidth > g.clientWidth + 0.5;
     });
     for (const li of tight) li.dataset.tight = "";
-  };
+  });
   useLayoutEffect(fit);
   useEffect(() => {
     const el = ref.current;
@@ -89,27 +90,27 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   const byNum = linesByNum(w), names = stationNames(w);
   const stopName = (line: number, stop: number) => names.get(byNum.get(line)?.stops[line === l.num && turnRows ? turnRows[stop]?.i ?? -1 : stop] ?? "") ?? "";
   const addAt = (line: number, stop: number) => { const s = byNum.get(line)?.stops[stop]; return s && adder ? adder(s) : null; };
-  const lay = relatedLayout(groups, {
+  const lay = tracePhase("stop-diagram-layout", () => relatedLayout(groups, {
     line: l.num, stopS: turnRows ? turnRows.map((r) => stopS[r.i] - (r.lead ? lap : 0)) : stopS, width: geo.width, loop, flip, sideStop: (line, stop) => addAt(line, stop) !== null,
     rowY: (i) => geo.ys[i] ?? i * 25 + 12.5,
     lineName: (n) => byNum.get(n)?.name ?? "",
     stopName,
-  });
+  }));
   const listH = geo.ys.length ? geo.ys[geo.ys.length - 1] + 13 : lay.rows.length ? lay.rows[lay.rows.length - 1].y + 13 : 0;
   const pad: [number, number] = [Math.ceil(Math.max(0, -lay.extent[0])), Math.ceil(Math.max(0, lay.extent[1] - listH))];
   // the rows' centres as laid out, for the drawing (a row is 25 px, 24 on a phone); rows that are
   // not the drawing's (stations passed, while stops are edited) are skipped
-  useLayoutEffect(() => {
+  useLayoutEffect(() => tracePhase("stop-diagram-measure", () => {
     const el = ul.current;
     if (!el) return;
-    // A stop hidden while its edit is pending has no layout box. Measuring it as zero feeds
-    // negative positions back into the diagram's padding on every render.
+    // An optimistic stop removal hides its row until the worker answers. Hidden rows have
+    // offsetTop 0: subtracting the list's padded top feeds negative positions back into padding.
     const ys = Array.from(el.querySelectorAll<HTMLElement>(":scope > li[data-r]"), (c, i) =>
       c.offsetHeight ? c.offsetTop - el.offsetTop + c.offsetHeight / 2 : geo.ys[i] ?? i * 25 + 12.5);
     const width = el.parentElement?.clientWidth ?? 340;
     const same = width === geo.width && ys.length === geo.ys.length && ys.every((y, i) => Math.abs(y - geo.ys[i]) <= 0.5) && pad[0] === geo.pad[0] && pad[1] === geo.pad[1];
     if (!same) setGeo({ ys, width, pad });
-  });
+  }));
   const pick = (n: number) => { const o = byNum.get(n); if (o) selection.value = { kind: "line", line: o.id }; };
   const oneWay = w.lineStats[l.id]?.oneWayAt ?? {}, halfId = `rs-half-${l.num}`;
 

@@ -4,6 +4,7 @@
 // with `onNetworkSnapshot` (the demand pool, T-026).
 
 import { t, tDate, type MessageKey } from "../i18n";
+import { attachClockTrace, editTrace, trace, tracing } from "../game/freezeTrace";
 import { effect, signal } from "@preact/signals";
 import type { DiagramGraph } from "../diagram/graph";
 import { clock } from "../game/clock";
@@ -671,6 +672,7 @@ export class ClockClient {
   private spawnWorker() {
     const w = new Worker(new URL("./clock.worker.ts", import.meta.url), { type: "module" });
     this.worker = w;
+    attachClockTrace(w);
     this.booted = false;
     w.onmessage = (e: MessageEvent<FromClock>) => this.arrive(e.data);
     w.onerror = (e) => {
@@ -896,6 +898,7 @@ export class ClockClient {
   private posts = 0;
   private readsOut = new Map<string, { posts: number; p: Promise<Float64Array> }>();
   post(msg: ToClock, transfer: Transferable[] = []) {
+    if (tracing() && msg.kind === "edit") trace("clock-post", { seq: msg.seq, edit: editTrace(msg.op) });
     this.posts++;
     if (this.worker && this.booted) this.worker.postMessage(msg, transfer);
     else this.waiting.push([msg, transfer]);
@@ -981,6 +984,8 @@ export class ClockClient {
   /** A state expected to freeze the page past BUSY_MS here (a big network, or one redrawn at a new
    * draw anchor) waits a frame with the busy tag up; every message after it waits behind it. */
   private arrive(msg: FromClock) {
+    if (msg.kind === "edited") trace("clock-answer", { seq: msg.seq, ok: msg.ok, ms: msg.ms });
+    if (msg.kind === "error") trace("clock-error", msg.message);
     if (this.deferred) { this.deferred.push(msg); return; }
     if (msg.kind === "state" && !this.stateBusy) {
       const st = msg.state;
@@ -1061,6 +1066,13 @@ export class ClockClient {
   }
 
   private receive(msg: FromClock) {
+    const watched = tracing() && (msg.kind === "state" || msg.kind === "trips");
+    if (watched) trace("receive-start", { kind: msg.kind });
+    const start = performance.now();
+    try { return this.receiveMessage(msg); }
+    finally { if (watched) trace("receive-end", { kind: msg.kind, ms: performance.now() - start }); }
+  }
+  private receiveMessage(msg: FromClock) {
     // T-648: the worker posts a state's trips right after it, before anything else. The state waits
     // for them, so its world, network and trips are taken in one task: no frame draws the old trips
     // on the new run profiles (trains jumped, or stayed a frame on a line that had lost its service),
