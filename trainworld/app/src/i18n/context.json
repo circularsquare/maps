@@ -2515,6 +2515,8 @@
   "updates.v03NerfJunctions": "Changelog item for a change that makes play harder: at a flat junction (tracks crossing at the same level), each crossing train blocks it for 120 seconds, where it was 90 seconds before. Building a flyover avoids this. {figure} is updates.v03NerfJunctionsFigure, shown in red.",
   "updates.v03NerfJunctionsFigure": "The new time in updates.v03NerfJunctions, shown in red inside that sentence: 120 seconds.",
   "updates.v03Fixes": "Changelog item: bug fixes in general.",
+  "updates.v034Line": "Start-menu announcement for a small hotfix. Casual, lowercase, at most 80 characters. Editing a line's stops could freeze the browser.",
+  "updates.v034Fixes": "Hotfix changelog: removing a stop could freeze the browser because the stop list's diagram repeatedly grew its padding. Most noticeable on large saved games.",
   "updates.v033Line": "The start menu's one line about update v0.3.3, a big release. Casual, lowercase, at most 80 characters in English. The trailing ... means there is more in the changelog. Headline items: stations where trains run one way, timetables, single track for high-speed and tram lines.",
   "updates.v033OneWay": "Changelog item: stations can be made one way (trains stop in one direction only), on single track or double track lines. Keep her casual lowercase voice and the exclamation mark.",
   "updates.v033SingleTrack": "Changelog item: high-speed and tram lines can use single track (one track shared by trains in both directions).",

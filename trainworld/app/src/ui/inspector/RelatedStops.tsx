@@ -102,7 +102,10 @@ export function RelatedStops({ l, stopS, colour, loop, flip, lRow, after, adder,
   useLayoutEffect(() => {
     const el = ul.current;
     if (!el) return;
-    const ys = Array.from(el.querySelectorAll<HTMLElement>(":scope > li[data-r]"), (c) => c.offsetTop - el.offsetTop + c.offsetHeight / 2);
+    // A stop hidden while its edit is pending has no layout box. Measuring it as zero feeds
+    // negative positions back into the diagram's padding on every render.
+    const ys = Array.from(el.querySelectorAll<HTMLElement>(":scope > li[data-r]"), (c, i) =>
+      c.offsetHeight ? c.offsetTop - el.offsetTop + c.offsetHeight / 2 : geo.ys[i] ?? i * 25 + 12.5);
     const width = el.parentElement?.clientWidth ?? 340;
     const same = width === geo.width && ys.length === geo.ys.length && ys.every((y, i) => Math.abs(y - geo.ys[i]) <= 0.5) && pad[0] === geo.pad[0] && pad[1] === geo.pad[1];
     if (!same) setGeo({ ys, width, pad });
