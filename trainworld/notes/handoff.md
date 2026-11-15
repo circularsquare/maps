@@ -1,8 +1,8 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 5c59ad2f-75a3-4536-8e9d-b38d3213ab6f, name maps-19 [f2de49], since 2026-11-12 21:52 UTC
-Updated: 2026-11-15 (maps-19 winding down; Anita starts a fresh orchestrator, first job a reorganisation of how work
-is tracked: "this project has definitely scaled past my clumsy todo list")
+Orchestrator: session 7186e3f8-2ac6-4929-90c0-cf653363ab62, name maps-b8 [a8e864], since 2026-11-15 15:22 UTC
+(Took over from maps-19, session 5c59ad2f, already gone at 15:22 UTC with nothing in flight, so no wait.)
+Updated: 2026-11-15 15:22 UTC (first jobs from TODO.md short term: the crash, then a kanban view of the work)
 
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
@@ -25,6 +25,20 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   of a partly built line: low priority) unanswered; she'll look Monday. Reply practice: docs/orchestrator.md.
 - No agents running, no core claims. Data: nothing running; newest freeze 20261113-013559.
 
+## In flight (maps-b8)
+- T-3390 done by agent lines (Opus, id a75a19621b6669315): 58 lines in LINES.md, every task tagged, 11 done tasks
+  archived; 35 close candidates wait on her in notes/T-3390.md "For Anita". Unfiled TODO.md items listed there too.
+- T-3391 and T-3392 (board stages 1-2) built; serve.py restarted 16:08Z with the inbox endpoint (root serve.py is
+  modified, uncommitted, outside trainworld: her commit). **Board inbox watch**: Monitor on
+  `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min max, re-arm on expiry); on "batch ready",
+  `watch.py pending`, apply (notes/T-3391.md "Stage 2" table), `watch.py handled <ids> --by <name> --note "..."`.
+  A new orchestrator arms it at takeover. Agent board (Opus, id a75091c86d0c851a1) on T-3393 stage 3 since 16:10Z.
+  Format they share: notes/T-3389.md "Format (decided)".
+  notes/board-live.json is the orchestrator's: update it when agents start or finish.
+- Anita 11-15: "its sunday so im not gonna use usage for anything else today. lets start it up, and when we run out,
+  we run out, and ill resume tomorrow morning right away at the same point." Board only today, no player bugs.
+  Crash: "crash is fixed, i think. people are saying its nice :)".
+
 ## Parked work in trees
 - .tw-trees/perdir (tw/perdir from f8119117): T-3348 stage 1, per-direction stops, sim half built and tested (her
   split-legs case runs both ways). Missing: demand per run (2-3 h, plan in that tree's notes/T-3348.md "Stage 1 as
@@ -33,12 +47,14 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
 - .tw-trees/hotfix, hotfix031: old release trees, removable.
 
 ## Next (her call; she's planning a reorganisation first)
-1. Her reorganisation of how work is tracked; then per-direction stops' demand half (she wants to continue it).
+1. T-3389, her board (TODO.md "first thing"): design proposal in notes/T-3389.md sent to her 11-15 15:30Z, waiting on
+   her picks (own board vs beads, area list). Then per-direction stops' demand half (she wants to continue it).
+   TODO.md's "continue trying to find fix for crash" looks like the T-3385 freeze v0.3.4 fixed; asked her.
 2. P2 bugs from players: T-3379 single-to-double kink, T-3380 delete ghost on single, T-3381 complex name in the
    corner notice, T-3383 "busy single track" wording (+ the 24m00s check), T-3386 inferred one-way lost at a station.
 3. T-3376 industrial jobs (Jurong 128k vs ~27k real; "semi high prio"), T-3388 London edits take 4 s.
 4. Later/design: T-3378 BRT and bus balance, T-3377 mods (levels 2-4), T-3382 where people play, T-3384 waypoints,
-   T-3375 zero-resident units beside a metro, T-3358 rivers (paused by her). Next free id T-3389.
+   T-3375 zero-resident units beside a metro, T-3358 rivers (paused by her). Next free id T-3390.
 
 ## Anita's standing asks
 - Every publish and server deploy needs her "yes" to that exact action; none overnight.

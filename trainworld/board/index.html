@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainworld board</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="board.css">
+</head>
+<body>
+<header id="top">
+  <h1>Trainworld board</h1>
+  <span id="views">
+    <button id="v-board" type="button" aria-pressed="true">Board</button>
+    <button id="v-requests" type="button" aria-pressed="false">Player requests</button>
+  </span>
+  <input id="search" type="search" placeholder="Search lines and tasks" autocomplete="off" spellcheck="false">
+  <select id="update">
+    <option value="">All lines</option>
+  </select>
+  <button id="refresh" type="button">Refresh</button>
+  <span id="built"></span>
+  <span id="actions">
+    <span id="nosave" hidden>Changes can't be saved until serve.py is restarted</span>
+    <button id="add" type="button" hidden>Add item</button>
+    <button id="ack" type="button" hidden>Text acknowledged</button>
+    <button id="queued" type="button" hidden></button>
+    <button id="send" type="button" hidden>Send now</button>
+  </span>
+</header>
+<section id="strip"></section>
+<div id="grid-wrap"><div id="grid"></div></div>
+<section id="requests" hidden></section>
+<details id="warnings" hidden><summary></summary><ul></ul></details>
+<aside id="panel" hidden></aside>
+<script src="board.js"></script>
+</body>
+</html>

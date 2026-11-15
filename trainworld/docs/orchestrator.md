@@ -36,6 +36,17 @@ not once per message (Anita, 2026-11-09).
 - Asks that outlive the session go in `notes/for-anita.md` (answered blocks archived, not kept); the rest in the
   final message's For you block.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
+- **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
+  acknowledged, new items, comments) land in `notes/board-inbox.jsonl`. At takeover start the watch with Monitor
+  (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py`; it prints a line when a batch is
+  ready (her Send now, or 3 idle minutes). `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
+  moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.
+  Line format and how each type applies: notes/T-3391.md "Stage 2".
+- **Player requests on the board**: once a day (and when she pastes reports), `venv\Scripts\python.exe
+  trainworld/board/requests.py fetch`, then `requests.py sort-brief` to a scratch file and hand it to a sorting agent
+  (Sonnet) with the procedure in notes/T-3391.md "Stage 3"; it adds to `notes/board-requests.json`. Her Accept, Merge,
+  Dismiss and Comment on a group arrive through the inbox like any action: file or fold the task, set the group's
+  `state` and `decided_at`, then mark the action handled. A paste is handled once a sort has put it in a group.
 - The one or two images she should look at now: copy to `artifacts/trainworld/review/` (short names, older copies
   deleted) and give her that full path.
 

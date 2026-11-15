@@ -5,3 +5,10 @@ app/dist/
 data/raw/
 data/packs/
 data/work/
+# the board: players' names and messages, Anita's comments, derived data (maps is public)
+board/data.json
+board/requests.json
+notes/board-reports.jsonl
+notes/board-requests.json
+notes/board-inbox.jsonl
+notes/board-live.json

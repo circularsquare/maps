@@ -45,6 +45,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 | `docs/` | The spec in detail, one file per area (indexes: `interface.md`, `demand.md`); `adding-a-country.md`, `world-run.md`, `data-register.md`, `code-map.md` | agents |
 | `wiki/` | Pages for a curious player; how to edit: `wiki/RULES.md` | agents |
 | `TASKS.md` | Open work, by priority | agents |
+| `LINES.md` | Anita's lines: the conceptual units tasks group into, by area | agents |
 | `DECISIONS.md`, `ARCHIVE.md` | Dated choices and why; finished tasks, newest first. Older: `*-to-2026-10-19.md` | agents, add only |
 | `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator), `for-anita.md` | agents |
 | `checks/` | Standing checks, `smoke.mjs` first | agents |
@@ -67,6 +68,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   outcome, notes link.
 - **Tasks**: `- T-012 [P2] short title. State, owner if taken, notes link.` P1 now, P2 this milestone, P3 later;
   "Someday" tasks are real open tasks. Use only the ids your brief gives you. Add `taking, <date>` before starting.
+  Every open task carries `{L:<slug>}` from `LINES.md` right after its priority, plus `{waits:Anita}` or
+  `{after:<task id or phrase>}` when it waits; a new task joins an existing line or adds one; set a line's `done:`
+  when its last task closes.
 - **Done** means it runs, the spec matches, any decision is recorded, and the line has moved to the top of
   ARCHIVE.md. Then grep TASKS.md and notes/for-anita.md for the id, close a parent whose last stage this was, and
   name any other open task your work also did. New work found on the way is a new task.
