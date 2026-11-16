@@ -191,7 +191,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 }
 .bar span { display: block; height: 100%; flex: 1; }
 .bar:has(+ .pri-bar) { border-radius: 2px 2px 0 0; }
-.bar.pri-bar { height: 2px; margin-top: 0; border-radius: 0 0 2px 2px; }
+.bar.pri-bar { height: 1px; margin-top: 0; border-radius: 0; }
 .card .queued { font-size: 12px; color: var(--accent); margin-top: 2px; }
 
 /* side panel */
@@ -518,3 +518,47 @@ select.small[data-pri="P2"], select[data-pri="P2"] { background: var(--p2); colo
 select.small[data-pri="P3"], select[data-pri="P3"] { background: var(--p3); color: var(--p3-ink); border-color: var(--p3); }
 select.small[data-pri="P4"], select[data-pri="P4"] { background: var(--p4); color: var(--p4-ink); border-color: var(--p4); }
 select[data-pri] option { background: var(--card); color: var(--text); }
+
+/* the fold for a task's priority and line selects */
+button.link.fold { display: inline-flex; align-items: center; gap: 2px; }
+button.link.fold .ic { width: 12px; height: 12px; transition: transform 0.12s; }
+button.link.fold.open .ic { transform: rotate(90deg); }
+
+/* pictures named in tasks and notes */
+.thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; }
+.thumb {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--soft);
+  cursor: zoom-in;
+  line-height: 0;
+  overflow: hidden;
+}
+.thumb img { display: block; max-height: 84px; max-width: 180px; }
+.thumb:hover { border-color: var(--accent); }
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82);
+  cursor: zoom-out;
+}
+.lightbox img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; background: #fff; border-radius: 4px; }
+.lb-cap { color: #ddd; font-size: 12px; }
+
+/* the lines between board columns: drag to resize */
+.rowhead, .cell { position: relative; }
+.col-edge { position: absolute; top: 0; bottom: 0; right: -4px; width: 7px; cursor: col-resize; z-index: 3; touch-action: none; }
+.col-edge:hover, body.col-dragging .col-edge:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.colhead .col-edge { right: 0; }   /* the next header (sticky, same layer) would cover an edge that reached into it */
+body.col-dragging { cursor: col-resize; user-select: none; }

@@ -410,15 +410,16 @@ function renderGrid() {
   const perCol = {};
   for (const line of VIEW) if (shown.has(line.slug)) perCol[line.status] = (perCol[line.status] || 0) + 1;
 
-  grid.append(el('div', { class: 'colhead', style: 'background: var(--bg)' }));
-  for (const col of DATA.columns) {
+  const last = DATA.columns.length;   // columns 0 (the area names) .. last; a drag edge on the right of all but the last
+  grid.append(el('div', { class: 'colhead', style: 'background: var(--bg)' }, colGrip(0)));
+  DATA.columns.forEach((col, i) => {
     grid.append(el('div', { class: 'colhead', style: colour(col.key) },
-      col.name, perCol[col.key] ? el('span', { class: 'n' }, ` ${perCol[col.key]}`) : null));
-  }
+      col.name, perCol[col.key] ? el('span', { class: 'n' }, ` ${perCol[col.key]}`) : null, i + 1 < last ? colGrip(i + 1) : null));
+  });
   for (const area of DATA.areas) {
-    grid.append(el('div', { class: 'rowhead' }, area.name));
-    for (const col of DATA.columns) {
-      const cell = el('div', { class: 'cell', 'data-area': area.slug, 'data-status': col.key });
+    grid.append(el('div', { class: 'rowhead' }, area.name, colGrip(0)));
+    for (const [i, col] of DATA.columns.entries()) {
+      const cell = el('div', { class: 'cell', 'data-area': area.slug, 'data-status': col.key }, i + 1 < last ? colGrip(i + 1) : null);
       for (const line of VIEW) {
         if (line.area !== area.slug || line.status !== col.key || !shown.has(line.slug)) continue;
         cell.append(card(line, shown.get(line.slug)));
@@ -426,6 +427,52 @@ function renderGrid() {
       grid.append(cell);
     }
   }
+  applyColWidths();
+}
+
+// Column widths: dragging the line between two columns moves width from one to the other, so the board keeps its
+// width. Kept as fr weights (the widths in px when she let go) in localStorage, so they follow the window's size.
+const COLW_KEY = 'twboard.colw';
+let COLW = null;
+try { const w = JSON.parse(localStorage.getItem(COLW_KEY)); if (Array.isArray(w) && w.every((x) => x > 0)) COLW = w; } catch (e) { /* default widths */ }
+function applyColWidths() {
+  const grid = $('#grid');
+  const ok = COLW && DATA && COLW.length === DATA.columns.length + 1;
+  grid.style.gridTemplateColumns = ok ? COLW.map((w) => `minmax(0, ${w}fr)`).join(' ') : '';
+}
+function colGrip(i) {
+  return el('div', { class: 'col-edge', title: 'Drag to resize, double-click to reset', ondblclick: () => {
+    COLW = null;
+    try { localStorage.removeItem(COLW_KEY); } catch (e) { /* not remembered */ }
+    applyColWidths();
+  }, onpointerdown: (e) => {
+    e.preventDefault();
+    const grid = $('#grid');
+    const heads = [...grid.querySelectorAll('.colhead')];
+    const start = heads.map((h) => h.getBoundingClientRect().width);
+    const x0 = e.clientX;
+    const MIN = i === 0 ? 70 : 90;
+    const edge = e.currentTarget;
+    edge.setPointerCapture(e.pointerId);
+    document.body.classList.add('col-dragging');
+    const move = (ev) => {
+      const pair = start[i] + start[i + 1];
+      const a = Math.max(MIN, Math.min(pair - 90, start[i] + ev.clientX - x0));
+      const w = start.slice();
+      w[i] = a;
+      w[i + 1] = pair - a;
+      COLW = w.map((x) => Math.round(x));
+      applyColWidths();
+    };
+    const up = () => {
+      edge.removeEventListener('pointermove', move);
+      edge.removeEventListener('pointerup', up);
+      document.body.classList.remove('col-dragging');
+      try { if (COLW) localStorage.setItem(COLW_KEY, JSON.stringify(COLW)); } catch (err) { /* not remembered */ }
+    };
+    edge.addEventListener('pointermove', move);
+    edge.addEventListener('pointerup', up);
+  } });
 }
 
 function card(line, hits) {

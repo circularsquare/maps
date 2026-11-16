@@ -78,6 +78,16 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 .nrow .sub { flex: 1 1 260px; }
 .nrow button { margin-left: auto; }
 .share .reasons { font-size: 13px; color: var(--dim); margin-top: 4px; }
+/* on the Feedback tab the page fills the window: the list and the open report scroll on their own, the top stays put */
+@media (min-width: 761px) {
+  main:has(#threadsView:not([hidden])) { height: 100vh; display: flex; flex-direction: column; padding-bottom: 10px; }
+  main:has(#threadsView:not([hidden])) #app:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #threadsView:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #threadsView #panes { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  #threadsView #list, #threadsView #thread { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  #threadsView #thread { padding-right: 6px; }
+  main:has(#threadsView:not([hidden])) footer { margin-top: 8px; }
+}
 </style>
 </head>
 <body>
@@ -388,6 +398,7 @@ async function loadPics(t) {
 }
 
 async function open(id) {
+  if (selected !== id) $("thread").scrollTop = 0;
   selected = id;
   try { history.replaceState(null, "", "#" + id); } catch { /* fine */ }
   renderList();

@@ -14,7 +14,8 @@ it is not.  The running server re-reads served.json on every request, so add and
 effect on the next page load without a restart.
 
 A page can also start one of the scripts listed in ACTIONS below (diskmap's rescan button),
-and append to one of the INBOXES or save to one of the PADS (the trainworld board's).
+and append to one of the INBOXES or save to one of the PADS (the trainworld board's), and read
+pictures from one of the IMAGES folders.
 
 It speaks HTTP Range, which plain `python -m http.server` does not.  A .pmtiles archive is
 read through range requests, and without them the map loads with a basemap and nothing on
@@ -77,6 +78,12 @@ PAD_LOCK = threading.Lock()
 # which the agents' CLI shares (a lock file); 409 with the current item when "rev" is not the item's.
 CHANGELOGS = {"twboard": "trainworld/changelog/next.json"}
 PAD_MAX = 256 * 1024
+
+# Read-only pictures for a page (the board's thumbnails of screenshots named in tasks and notes):
+# GET /<name>/_img/<path> sends <folder>/<path> if it is a png, jpg or webp file inside <folder>.
+# No directory listing, nothing outside the folder, nothing else.
+IMAGES = {"twboard": "artifacts"}
+IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
 
 def inbox_read(path):
@@ -327,6 +334,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return HERE / PADS[parts[1]]
         return None
 
+    def image(self):
+        """True if this request is for /<name>/_img/... of a listed name (answered here, file or 404)."""
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) < 4 or parts[2] != "_img" or parts[1] not in IMAGES:
+            return False
+        base = (HERE / IMAGES[parts[1]]).resolve()
+        rel = urllib.parse.unquote("/".join(parts[3:]))
+        try:
+            path = (base / rel).resolve()
+        except (OSError, ValueError):
+            path = None
+        kind = IMAGE_TYPES.get(path.suffix.lower()) if path else None
+        if not kind or base not in path.parents or not path.is_file():
+            self.send_error(404)
+            return True
+        try:
+            body = path.read_bytes()
+        except OSError:
+            self.send_error(404)
+            return True
+        self.send_response(200)
+        self.send_header("Content-Type", kind)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+        return True
+
     def changelog(self):
         parts = urllib.parse.urlsplit(self.path).path.split("/")
         if len(parts) == 3 and parts[2] == "_changelog" and parts[1] in CHANGELOGS:
@@ -409,6 +443,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if urllib.parse.urlsplit(self.path).path == "/":
             return self.send_front_page(True)
+        if self.image():
+            return
         path = self.changelog()
         if path:
             sys.path.insert(0, str(HERE / "trainworld" / "tools"))
