@@ -374,9 +374,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails
   - Context: Player report (board group "Sharing a large network fails"): share did not work, perhaps from the size. Reach: few.
   - Goal: Find the share size limit and either raise it or say what to do when a network is too big.
-- T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
-  - Context: Your scratch pad 2026-11-16: "some people have noted that long distance train use doesn't actually seem to depend on feeders anymore. i've noticed this too which is kinda concerning, im pretty sure this used to not be the case. why is this?"
-  - Goal: Find why long-distance rail use no longer depends on feeder lines, and whether it is a bug or a rule change; fix a bug, take a rule to you.
+- T-3426 [P2] {L:route-choice} {waits:Anita} Long-distance trips ignore feeders
+  - Need from Anita: Land the access fix (each walk or ride to a station counts on its own, so feeders never make rail dearer)? Recommended yes.
+  - Context: Your scratch pad 2026-11-16 asked why. Since T-718 (10-19) walks to several stations were averaged, adding ln(n)/0.1 felt minutes, so a feeder stop near the terminal made rail dearer. With the fix: New York-Philadelphia 2,355 / 6,171 / 10,237 longer rail trips as feeders are added (was falling to 1,668), Beijing-Tianjin 4.2k / 9.5k / 12.4k, real save longer trips by rail 4.8k to 91k, all rail +0.8%, ceiling tests unchanged.
+  - Goal: Feeders always help long-distance rail. Fix ready in .tw-trees/feeders.
+  - Other: Changelog draft: "feeder lines helped long-distance trips again: a metro or bus stop beside an inter-city station no longer counted against the train". notes/T-3426.md
 - T-3428 [P3] {L:jobs-places} Missing data at Shenzhen Bay Port and Tide Park (taking, 2026-11-16, agent shenzhen)
   - Context: Your scratch pad 2026-11-16: "people reported missing data in shenzhen bay port/tide park"
   - Goal: Find what is missing there (homes, jobs, places, zones) and why; fix it if small, else say what a fix takes.
