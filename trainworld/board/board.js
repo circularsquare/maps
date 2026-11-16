@@ -44,6 +44,50 @@ function el(tag, attrs, ...kids) {
 }
 const colour = (key) => `--c: var(--s-${key})`;
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+// small line icons, 16 px box, drawn in currentColor
+const ICONS = {
+  need: [['circle', { cx: 8, cy: 8, r: 7, fill: 'currentColor', stroke: 'none' }],
+    ['path', { d: 'M8 4.2v4.6', style: 'stroke: var(--icon-on, #fff)', 'stroke-width': 1.9 }],
+    ['circle', { cx: 8, cy: 11.4, r: 1.05, style: 'fill: var(--icon-on, #fff)', stroke: 'none' }]],
+  context: [['rect', { x: 3, y: 3, width: 10, height: 10, rx: 1.5 }]],
+  goal: [['path', { d: 'M2.5 8h10M9 4.5 12.5 8 9 11.5' }]],
+  other: [['circle', { cx: 3.5, cy: 8, r: 1.3, fill: 'currentColor', stroke: 'none' }],
+    ['circle', { cx: 8, cy: 8, r: 1.3, fill: 'currentColor', stroke: 'none' }],
+    ['circle', { cx: 12.5, cy: 8, r: 1.3, fill: 'currentColor', stroke: 'none' }]],
+  eye: [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }]],
+  'eye-off': [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }],
+    ['path', { d: 'M2.5 13.5 13.5 2.5' }]],
+  undo: [['path', { d: 'M5.5 3.5 2.5 6.5l3 3' }], ['path', { d: 'M2.5 6.5h7a3.5 3.5 0 0 1 0 7H6' }]],
+};
+function icon(name) {
+  const s = document.createElementNS(SVG_NS, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 16 16', width: 14, height: 14, fill: 'none', stroke: 'currentColor',
+    'stroke-width': 1.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', class: `ic ic-${name}` })) s.setAttribute(k, v);
+  for (const [tag, attrs] of ICONS[name]) {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    s.append(e);
+  }
+  return s;
+}
+
+/** a priority as a small pill in its colour (P1 strongest) */
+function priBadge(p) {
+  return p && PRI_RANK[p] ? el('span', { class: `pri ${p.toLowerCase()}` }, p) : el('span', { class: 'pri none' }, 'no priority');
+}
+/** text with its P1..P4 shown as pills, the rest as rich text */
+function withPri(text) {
+  return String(text).split(/\b(P[1-4])\b/).flatMap((part, i) => (i % 2 ? [priBadge(part)] : [].concat(rich(part))));
+}
+/** a priority select tinted in the chosen priority's colour */
+function tintPri(sel) {
+  const set = () => { sel.dataset.pri = sel.value; };
+  set();
+  sel.addEventListener('change', set);
+  return sel;
+}
+
 function ago(iso) {
   const t = Date.parse(iso);
   if (!isFinite(t)) return '';
@@ -236,7 +280,7 @@ function describe(a) {
 
 function queuedList(actions) {
   return el('div', { class: 'queued-box' }, actions.map((a) => el('div', { class: 'queued-item', 'data-action': a.id },
-    el('div', { class: 'what' }, rich(describe(a))),
+    el('div', { class: 'what' }, a.type === 'priority' || a.type === 'accept' ? withPri(describe(a)) : rich(describe(a))),
     a.comment ? el('div', { class: 'why' }, a.comment) : null,
     el('div', { class: 'when' }, `Queued ${clock(a.at)} · `,
       el('button', { class: 'link', type: 'button', onclick: () => withdraw(a.id) }, 'Withdraw')))));
@@ -302,47 +346,44 @@ function renderStrip() {
   const live = DATA.live;
   const strip = $('#strip');
   strip.replaceChildren();
+  const row = (label, ...kids) => el('div', { class: 'srow' }, el('span', { class: 'slab' }, label), el('div', { class: 'sitems' }, ...kids));
 
-  const rows = live.agents.map((a) => el('tr', {},
-    el('td', {}, el('b', {}, a.name)),
-    el('td', { class: 'id' }, taskLink(a.task)),
-    el('td', {}, rich(a.doing || '')),
-    el('td', { class: 'time' }, ago(a.started))));
-  strip.append(el('div', { class: 'block agents' },
-    el('h2', {}, live.orchestrator ? `Agents (orchestrator ${live.orchestrator})` : 'Agents'),
-    rows.length ? el('table', {}, rows) : el('div', { class: 'quiet' }, 'None running')));
-
-  const runs = live.runs.map((r) => el('tr', {},
-    el('td', {}, el('b', {}, r.name)),
-    el('td', {}, r.doing || ''),
-    el('td', { class: 'time' }, ago(r.started))));
-  strip.append(el('div', { class: 'block' },
-    el('h2', {}, 'Long runs'),
-    runs.length ? el('table', {}, runs) : el('div', { class: 'quiet' }, 'None')));
-
-  const c = DATA.cores;
-  const claims = (c && c.claims) || [];
-  strip.append(el('div', { class: 'block' },
-    el('h2', {}, 'Cores'),
-    c && c.cap != null ? el('div', {}, `${c.claimed} of ${c.cap} claimed`) : el('div', { class: 'quiet' }, 'Ledger not readable'),
-    claims.length ? el('table', {}, claims.map((x) => el('tr', {},
-      el('td', {}, x.name), el('td', {}, String(x.cores)), el('td', { class: 'time' }, x.age)))) : null));
+  // agents on the same task doing the same thing share one item
+  const groups = [];
+  for (const a of live.agents) {
+    const doing = a.doing || a.what || '';
+    const g = groups.find((x) => x.task === a.task && x.doing === doing && x.tree === a.tree);
+    if (g) g.names.push(a.name);
+    else groups.push({ task: a.task, doing, tree: a.tree, started: a.started, names: [a.name] });
+  }
+  strip.append(row(live.orchestrator ? `Agents, ${live.orchestrator}` : 'Agents',
+    groups.length ? groups.map((g) => el('span', { class: 'sitem agent' },
+      el('b', {}, g.names.join(', ')), ' ', taskLink(g.task),
+      g.doing ? el('span', { class: 'doing' }, ' ', rich(g.doing)) : null,
+      g.tree ? el('span', { class: 'time' }, ` in ${g.tree}`) : null,
+      g.started ? el('span', { class: 'time' }, ` ${ago(g.started)}`) : null))
+      : el('span', { class: 'quiet' }, 'None running')));
 
   const wt = DATA.worktrees || [];
   if (wt.length) {
-    strip.append(el('div', { class: 'block wt' }, el('h2', {}, 'Worktrees'),
-      el('div', { class: 'wt-list' }, wt.map((w) => el('span', { class: 'wt-item' },
-        el('b', {}, w.main ? 'main' : w.name), ' ', el('span', { class: 'mono' }, w.branch),
-        w.date ? el('span', { class: 'time' }, ` ${ago(w.date)}`) : null)))));
+    strip.append(row('Worktrees', wt.map((w) => el('span', { class: 'sitem' },
+      el('b', {}, w.main ? 'main' : w.name), ' ', el('span', { class: 'mono' }, w.branch),
+      w.date ? el('span', { class: 'time' }, ` ${ago(w.date)}`) : null))));
   }
 
   const b = live.builds || {};
-  const kv = el('div', { class: 'kv' });
-  const add = (k, v) => { if (v) kv.append(el('span', {}, k), el('span', { class: 'mono' }, v)); };
-  add('master', DATA.head || b.master);
-  add('8800', b['8800']);
-  add('live', b.live);
-  strip.append(el('div', { class: 'block' }, el('h2', {}, 'Builds'), kv));
+  const builds = [['master', DATA.head || b.master], ['8800', b['8800']], ['live', b.live]].filter(([, v]) => v)
+    .map(([k, v]) => el('span', { class: 'sitem' }, el('span', { class: 'time' }, `${k} `), el('span', { class: 'mono' }, v)));
+  const c = DATA.cores;
+  const claims = (c && c.claims) || [];
+  const runs = live.runs.map((r) => el('span', { class: 'sitem' }, el('b', {}, r.name), r.doing ? ` ${r.doing}` : '',
+    el('span', { class: 'time' }, ` ${ago(r.started)}`)));
+  strip.append(el('div', { class: 'srow' },
+    el('span', { class: 'slab' }, 'Builds'), el('div', { class: 'sitems' }, builds,
+      el('span', { class: 'slab inline' }, 'Long runs'), runs.length ? runs : el('span', { class: 'sitem quiet' }, 'none'),
+      el('span', { class: 'slab inline' }, 'Cores'),
+      c && c.cap != null ? el('span', { class: 'sitem' }, `${c.claimed} of ${c.cap} claimed`) : el('span', { class: 'sitem quiet' }, 'ledger not readable'),
+      claims.map((x) => el('span', { class: 'sitem' }, el('b', {}, x.name), ` ${x.cores}`, el('span', { class: 'time' }, ` ${x.age}`))))));
 }
 
 function taskLink(text) {
@@ -591,7 +632,7 @@ function linePanel(line) {
     editable ? confirmRow(`${k}:area`) : null,
     mine.length ? queuedList(mine) : null,
     INBOX.ok ? el('div', { class: 'compose' },
-      textBox(`${k}:comment`, 'Comment on this line'),
+      textBox(`${k}:comment`, 'Comment on this line', 1),
       el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:comment`, { type: 'comment', line: line.slug }) }, 'Add comment')) : null,
     ...(groups.length ? groups : [el('p', { class: 'meta' }, 'No open tasks')]),
   ];
@@ -619,31 +660,12 @@ function taskRow(t, key, q) {
     notes.push(parts);
   }
   if (t.section) notes.push([`listed under ${t.section}`]);
-  const where = el('div', { class: 'where' });
+  const where = el('span', { class: 'where' });
   notes.forEach((n, i) => where.append(...(i ? [' · '] : []), ...n));
 
   const k = `task:${t.id}`;
   const pend = pendingFor(null, t.id);
   const waitsOnYou = t.waits.includes('Anita') && !pend.some((a) => a.type === 'answer');
-  let tools = null;
-  if (INBOX.ok) {
-    const priOpts = (t.pri ? [] : [{ value: '', label: 'none' }]).concat(PRIS.map((p) => ({ value: p, label: p })));
-    tools = [
-      el('div', { class: 'controls small' },
-        changeSelect(`${k}:pri`, 'Priority', queuedTo(pend, 'priority', t.pri || ''), priOpts, (to) => ({ type: 'priority', task: t.id, from: t.pri, to })),
-        changeSelect(`${k}:line`, 'Line', queuedTo(pend, 'move-task', t.line), lineOptions(t.line), (to) => ({ type: 'move-task', task: t.id, from: t.line, to })),
-        opened.has(t.id) ? null : el('button', { class: 'link', type: 'button', onclick: () => { opened.add(t.id); renderPanel(); } }, 'Comment')),
-      confirmRow(`${k}:pri`),
-      confirmRow(`${k}:line`),
-      waitsOnYou ? el('div', { class: 'compose' },
-        textBox(`${k}:answer`, 'Your answer', 3),
-        el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'answer', task: t.id }) }, 'Save answer')) : null,
-      opened.has(t.id) ? el('div', { class: 'compose' },
-        textBox(`${k}:comment`, `Comment on ${t.id}`),
-        el('button', { class: 'btn', type: 'button', onclick: async () => { await submit(`${k}:comment`, { type: 'comment', task: t.id, line: t.line }); if (!drafts[`${k}:comment`]) { opened.delete(t.id); renderPanel(); } } }, 'Add comment'),
-        el('button', { class: 'btn plain', type: 'button', onclick: () => { opened.delete(t.id); delete drafts[`${k}:comment`]; renderPanel(); } }, 'Cancel')) : null,
-    ];
-  }
   const showing = t.notes && notesOpen.has(t.id);
   if (t.notes) {
     where.append(...(notes.length ? [' · '] : []), el('button', { class: 'link', type: 'button', onclick: () => {
@@ -651,26 +673,47 @@ function taskRow(t, key, q) {
       renderPanel();
     } }, showing ? 'Hide notes' : 'Show notes'));
   }
+  // one small line: where it stands, then her controls
+  const small = el('div', { class: 'controls small' }, where);
+  let after = [];
+  if (INBOX.ok) {
+    const priOpts = (t.pri ? [] : [{ value: '', label: 'none' }]).concat(PRIS.map((p) => ({ value: p, label: p })));
+    const pri = changeSelect(`${k}:pri`, 'Priority', queuedTo(pend, 'priority', t.pri || ''), priOpts, (to) => ({ type: 'priority', task: t.id, from: t.pri, to }));
+    tintPri(pri.querySelector('select'));
+    small.append(el('span', { class: 'tools' }, pri,
+      changeSelect(`${k}:line`, 'Line', queuedTo(pend, 'move-task', t.line), lineOptions(t.line), (to) => ({ type: 'move-task', task: t.id, from: t.line, to })),
+      opened.has(t.id) ? null : el('button', { class: 'link', type: 'button', onclick: () => { opened.add(t.id); renderPanel(); } }, 'Comment')));
+    after = [
+      waitsOnYou ? el('div', { class: 'compose' },
+        textBox(`${k}:answer`, 'Your answer', 2),
+        el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'answer', task: t.id }) }, 'Save answer')) : null,
+      opened.has(t.id) ? el('div', { class: 'compose' },
+        textBox(`${k}:comment`, `Comment on ${t.id}`),
+        el('button', { class: 'btn', type: 'button', onclick: async () => { await submit(`${k}:comment`, { type: 'comment', task: t.id, line: t.line }); if (!drafts[`${k}:comment`]) { opened.delete(t.id); renderPanel(); } } }, 'Add comment'),
+        el('button', { class: 'btn plain', type: 'button', onclick: () => { opened.delete(t.id); delete drafts[`${k}:comment`]; renderPanel(); } }, 'Cancel')) : null,
+    ];
+  }
   const flash = flashTask === t.id && Date.now() < flashUntil;
+  const pc = t.pri && PRI_RANK[t.pri] ? `; --pc: var(--${t.pri.toLowerCase()})` : '';
   // the row's parts in order; the notes sit right above the answer box so she can read and answer in one place
-  return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : '') + (flash ? ' flash' : ''), style: colour(key), 'data-task': t.id },
-    el('div', { class: 'top' }, el('b', {}, t.id), t.pri ? ` ${t.pri}` : ' no priority',
-      t.fields ? el('span', { class: 'title' }, rich(t.text)) : null),
+  return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : '') + (flash ? ' flash' : ''), style: colour(key) + pc, 'data-task': t.id },
+    el('div', { class: 'top' }, el('b', { class: 'tid' }, t.id), priBadge(t.pri), el('span', { class: t.fields ? 'title' : 'text' }, rich(t.text))),
     taskBody(t),
-    where,
+    small,
+    INBOX.ok ? confirmRow(`${k}:pri`) : null,
+    INBOX.ok ? confirmRow(`${k}:line`) : null,
     showing ? notesBlock(t.notes, t.id) : null,
     pend.length ? queuedList(pend) : null,
-    tools);
+    after);
 }
 
-/** what a task says; tomorrow's task fields (need from Anita, context, goal) go here */
+/** a task's fields, each led by an icon in place of its label */
 const FIELD_LABELS = [['need', 'Need from Anita'], ['context', 'Context'], ['goal', 'Goal'], ['other', 'Other']];
 function taskBody(t) {
-  if (t.fields) {
-    return el('div', { class: 'fields' }, FIELD_LABELS.filter(([k]) => t.fields[k]).map(([k, label]) =>
-      el('div', { class: `field-row ${k}` }, el('span', { class: 'lab' }, label), el('span', { class: 'val' }, rich(t.fields[k])))));
-  }
-  return el('div', { class: 'text' }, rich(t.text));
+  if (!t.fields) return null;
+  const rows = FIELD_LABELS.filter(([k]) => t.fields[k]).map(([k, label]) =>
+    el('div', { class: `field-row ${k}` }, el('span', { class: 'lab', title: label, 'aria-label': label }, icon(k)), el('span', { class: 'val' }, rich(t.fields[k]))));
+  return rows.length ? el('div', { class: 'fields' }, rows) : null;
 }
 
 function queuePanel() {
@@ -1448,7 +1491,7 @@ function groupFormBox(g) {
         el('label', { class: 'field' }, el('span', {}, 'Area'), sel('area', areaOptions(), area, true)),
         el('label', { class: 'field' }, el('span', {}, 'Line'),
           sel('line', [{ value: 'new', label: 'New line' }].concat(linesHere.map((l) => ({ value: l.slug, label: l.name }))), lineVal)),
-        el('label', { class: 'field' }, el('span', {}, 'Priority'), sel('pri', PRIS.map((p) => ({ value: p, label: p })), pri))),
+        el('label', { class: 'field' }, el('span', {}, 'Priority'), tintPri(sel('pri', PRIS.map((p) => ({ value: p, label: p })), pri)))),
       el('div', { class: 'confirm' }, why,
         el('button', { class: 'btn', type: 'button', onclick: () => send({ type: 'accept', area: pick('area', area), line: pick('line', lineVal), priority: pick('pri', pri) }) }, 'Queue accept'),
         cancel));
@@ -1575,27 +1618,25 @@ function clItem(it) {
   });
   area.value = clDraft(it);
   const mine = CL.conflict[id];
+  const when = new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' });
   return el('div', { class: `cl-item${it.hidden ? ' is-hidden' : ''}`, 'data-item': id },
-    el('div', { class: 'cl-head' },
-      it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'meta' }, 'No task'),
-      it.hidden ? el('span', { class: 'cl-badge' }, 'Hidden') : null,
-      el('span', { class: 'cl-state' }, CL.status[id] || '')),
-    area,
+    el('div', { class: 'cl-row' },
+      it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'cl-task meta' }, 'no task'),
+      area,
+      el('span', { class: 'cl-by' }, `added by ${it.by || 'an agent'}, ${when}`, it.edited ? ', reworded' : ''),
+      el('span', { class: 'cl-state' }, CL.status[id] || ''),
+      it.edited ? el('button', { class: 'icon-btn', type: 'button', title: `Use the agent's wording: ${it.text}`, 'aria-label': 'Use the agent\'s wording',
+        onclick: () => { delete drafts[`cl:${id}`]; clSave(id, { edited: null }); } }, icon('undo')) : el('span', { class: 'icon-btn ghost' }),
+      el('button', { class: 'icon-btn eye', type: 'button', 'aria-pressed': String(!it.hidden),
+        title: it.hidden ? 'Hidden from the update. Click to show it' : 'In the update. Click to hide it',
+        'aria-label': it.hidden ? 'Show in the update' : 'Hide from the update',
+        onclick: () => clSave(id, { hidden: !it.hidden }) }, icon(it.hidden ? 'eye-off' : 'eye'))),
     mine ? el('div', { class: 'cl-conflict' },
       el('p', { class: 'meta' }, 'This item changed while you were editing, so it shows the new wording. What you typed:'),
       el('textarea', { class: 'input', rows: 2, readonly: true }, mine),
       el('div', { class: 'controls' },
         el('button', { class: 'btn', type: 'button', onclick: () => { drafts[`cl:${id}`] = mine; CL.conflict[id] = null; clSave(id); } }, 'Use my wording'),
-        el('button', { class: 'btn plain', type: 'button', onclick: () => { CL.conflict[id] = null; renderChangelog(); } }, 'Discard'))) : null,
-    el('div', { class: 'cl-foot' },
-      el('span', { class: 'meta' }, `Added by ${it.by || 'an agent'}, ${new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}`),
-      it.edited ? el('span', { class: 'meta' }, 'Reworded') : null,
-      el('span', { class: 'cl-sp' }),
-      it.edited ? el('button', { class: 'btn plain', type: 'button',
-        title: `The agent wrote: ${it.text}`,
-        onclick: () => { delete drafts[`cl:${id}`]; clSave(id, { edited: null }); } }, 'Use the agent\'s wording') : null,
-      el('button', { class: 'btn', type: 'button', onclick: () => clSave(id, { hidden: !it.hidden }) },
-        it.hidden ? 'Show in the update' : 'Hide from the update')));
+        el('button', { class: 'btn plain', type: 'button', onclick: () => { CL.conflict[id] = null; renderChangelog(); } }, 'Discard'))) : null);
 }
 
 function drawChangelog() {

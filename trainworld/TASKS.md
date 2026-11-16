@@ -352,9 +352,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
-- T-3425 [P1] {L:board} A more compact board (taking, 2026-11-16, agent boardui)
-  - Context: Your 11-16 asks: the agents, worktrees and builds strip packed across lines; field labels inline as icons; priority coloured everywhere with a bar under each task; tighter spacing.
-  - Goal: The same board in noticeably less height, with each priority one colour.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.

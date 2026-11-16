@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3425 [P1] {L:board} A more compact board (2026-11-16): strip of agents, worktrees and builds packed one row each (389 to 94 px tall); task fields inline behind icons; priority one colour everywhere (pill, bar under each task, tinted select); changelog items one line each with an eye toggle; tighter spacing. notes/T-3391.md.
 - T-3420 [P2] {L:map-look} Hide lines and track levels (2026-11-16): built to her design. An eye button on the Lines tab shows an eye per line and group, "Show all" appears in reserved space when any is hidden; Settings "Show levels" hides levels with the +3 to -3 buttons, and clicks pass over hidden pieces. Hidden lines run as before and are saved; hidden levels last while the page is open. Line bundles left as next in the notes. notes/T-3420.md.
 - T-202 [P3] {L:route-choice} Rethink the 100 m station merge (2026-11-16): closed on Anita's word; notes/T-161.md had already decided the merge stays. notes/someday.md.
 - T-2385 [P3] {L:route-choice} Far-end reach for everyday trips (2026-11-16): closed on Anita's word; T-1920 moved 0.04% of far rail riders in New York. notes/T-1920.md.
