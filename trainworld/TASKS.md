@@ -344,9 +344,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3435 [P2] {L:buses} Long-distance ferries recalibrated (taking, 2026-11-16, agent ferries)
   - Context: Your scratch pad 2026-11-16: "long distance ferries kinda suck, probably need to make the "ferry fan" mechanism a bit more prominent especially for super long ferries. do a general recalibraiton of like how our ferries currently are relative to irl ferries... are they like NYC ferries? consider splitting ferries into 2 types, one for longer, not sure what would make sense / be realistic / get realistic usage"
   - Goal: A study and proposal for you: how our ferries compare with real ones (short city ferries and long routes), what the ferry fan does now, and whether a second, long-distance ferry type makes sense. Nothing built before you pick.
-- T-3436 [P3] {L:map-look} Outline-only line bullet (taking, 2026-11-16, agent bullet)
-  - Context: Your scratch pad 2026-11-16: "someone requested outline for bullet (this is potentially confusing given thats how line groups look, but oh well, people can do it and just be confused ig. perhaps we can have the outline bullet have its outline be just a tiny bit thicker than for a line group, mybe like 0.8px diff" Player request (board group "Outline-only line symbol").
-  - Goal: An outline bullet among the line shapes, its outline about 0.8 px thicker than a line group's.
 - T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (taking, 2026-11-16, agent bugs3)
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
