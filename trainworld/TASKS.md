@@ -382,7 +382,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours, and nothing new without the player's save.
   - Goal: Reproduce it (the player's save is the next step), fix it, add a check.
   - Other: notes/T-3150.md
-- T-3101 [P3] {L:single-track} One-way track follow-ups
+- T-3101 [P3] {L:single-track} One-way track follow-ups (taking, 2026-11-16, agent bug-e)
   - Context: From T-3094 (one-way track): the Select bar lacks switch and reverse for a picked single-track run, and the track panel misses a line that only uses a piece on its way back.
   - Goal: Select bar switch and reverse work on single-track runs, and the lists count return-only lines.
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
@@ -634,18 +634,15 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: You said yes 2026-10-30 and "its fine to put this in after release". The design is written and the terrain rebuild landed.
   - Goal: Terrain cells are hexagons on our own lattice.
   - Other: About a day. notes/T-1881.md.
-- T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged (taking, 2026-11-16, agent bug-d)
-  - Context: track-and-service.md says lines with no shared track stay unchanged to the bit; this is not yet true. Waits for t1854b to leave sim/src/track.
-  - Goal: netdiff.mjs shows 0 changed Tokyo lines after the Ceuta edit.
-  - Other: notes/T-1850.md
 - T-1867 [P3] {L:map-look} {waits:Anita} Smooth spread for a destination's homes
   - Need from Anita: Look at the T-1874 result in game, then say whether to draw the smooth spread.
   - Context: Draw a destination's everyday homes as the smooth spread their samples stand for (drawing only). T-1874 has landed.
   - Goal: The homes drawing matches the spread.
   - Other: notes/T-1866.md
-- T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings (taking, 2026-11-16, agent bug-e)
-  - Context: `t671-ghost-hover` fails on the real save: 14 of 84 hovers, where the page says a spot fits and the worker refuses.
-  - Goal: Page and worker agree on new blueprint near flat crossings.
+- T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings
+  - Context: `t671-ghost-hover` fails on the real save: 14 of 84 hovers, all on new blueprint of 3 short pieces with a flat crossing just past the second joint. The page only looks for crossings on the hovered piece, and the worker refuses the end spot as too short where the page joins the pieces.
+  - Goal: Page and worker agree on new blueprint near flat crossings (check passes, at most 5% corrected).
+  - Other: notes/T-1875.md
 - T-1876 [P3] {L:jobs-places} Australian jobs from the 2016 census
   - Context: Australia uses tier 0's job proxy; 2021's place of work was taken in lockdown.
   - Goal: Jobs by destination zone from the 2016 Working Population Profile (ABS DataPacks, CC BY 4.0).
@@ -857,9 +854,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
-- T-3448 [P2] {L:schematic} Player's NYC schematic broken into islands (taking, 2026-11-16, agent schem)
-  - Context: Player report via you, 2026-11-16: their New York schematic (Peekskill and Spring Valley to Montauk) shows land as dozens of small patches around stations, Manhattan and Brooklyn lines packed tight on a diagonal with overlapping pills, and a large faded "New Haven" label. Your saves look very different; maybe their save covers a larger area. Screenshot: artifacts/trainworld/player_nyc_schematic_2026-11-16.png. Reach: likely many (any large-area save).
-  - Goal: Cause found and fixed if small, or the cause written up for a design call. Your board note 11-16: cities squished too much is a pressing local issue in general.
+- T-3448 [P2] {L:schematic} {waits:Anita} Player's NYC schematic broken into islands
+  - Need from Anita: Pick how to draw a network spread over thousands of km: one diagram per region, around the camera (recommended, about 3-5 hours; also covers T-3409, a schematic of one city), or a finer sheet near dense cities (a day or more); and ask the player whether their game has lines far from New York.
+  - Context: Reproduced by adding a 3-station line far away (Los Angeles, London, Tokyo) to the real New York save: the sheet's cells grow with the map, so the city is sheared onto a diagonal, and where its zones' water masks fail to load it is drawn as sea with land only at the stations. Mask fetches now go 32 at a time with a retry (dc184b11). The player (left) and the repro (right): artifacts/trainworld/review/nyc-schematic-far.png.
+  - Goal: A New York game with a far-off network draws New York as it does alone. Your board note 11-16: cities squished too much is a pressing local issue in general.
+  - Other: notes/T-3448.md
 - T-3345 [P2] {L:schematic} Better schematic
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
@@ -884,10 +883,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Not started yet.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
-- T-3252 [P2] {L:line-rates} Real Tokyo line 99 loses rate on every edit (taking, 2026-11-16, agent bug-d)
-  - Context: The line loses about 16% of its rate per edit (0.95/h to 0.005/h over 55 edits) because the even share reads rates the pacing already lowered.
-  - Goal: A line's rate stays put across edits.
-  - Other: notes/T-3238.md
 - T-3079 [P2] {L:stops} Exact stop ordering back
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
   - Goal: Exact stop ordering is an option beside normal stop editing, styled like your stop-picking notes in T-3444 (numbered circles per track).

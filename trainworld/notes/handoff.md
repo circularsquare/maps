@@ -30,6 +30,11 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
 - 16:41: bug-b landed T-1072 (sim; wasm rebuilt); bug-c landed T-691; sweep closed 4; master 717476c4 pushed. 348 open.
   Running: bug-a (T-3429 refusal message), bug-d a9e69f3784d4ceef7 (T-3252, T-1863; tree bug-d, port 6151),
   bug-e a6ade6052ca9999d7 (T-3042, T-1875, T-3101; tree bug-e, port 6161), schem.
+- 17:03: bug-a landed T-3429 (sim); shenzhen committed 404768f5 and T-3428 archived; smoke PASS; 8800 = 404768f5 on
+  LIVE data (no freeze); pushed. Shenzhen left six python scan processes (its scratchpad shenzhen/scan_all.py, ~3
+  cores); its stop was refused by the permission check, so not stopped by me either: ask Anita. Its proposal for her
+  call: a coastal-only gap scan (~2 h, 3 cores) then rebuilds (Lingang, Binhai, Macau, HK, Dubai, Singapore, Incheon,
+  Osaka Bay): overnight material.
 - sweep a30f41793d9dfc434 (Sonnet, no tree): closing already-done/untrue/duplicate tasks below T-1500 (no waits, no taking).
 - shenzhen (16:36, interim): shz rebuilt and joined (45 packs gated), no longer writing data/packs (8800 may use live
   data again); join's market step timed out (1801 s) so no new freeze; market files checked fine. Its uncommitted files
