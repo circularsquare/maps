@@ -905,7 +905,9 @@ delays on resources used by count schedules. Each level settles on its own (leve
 capacity): a level whose fleets already match their counts within 0.0001 trains is not stepped,
 so its rates and run times stay the same to the bit (T-415). On an edit, a line within 0.0001
 trains of its fleet is left as it is while the rest of its level steps (T-1787: on shared track
-each line moved re-times its neighbours), and the step's 1% probe reads each round trip's rise
+each line moved re-times its neighbours), and only lines that share track with what the edit changed,
+directly or through others, are stepped at all: the rest keep their rates and run times to the bit
+(T-1863). The step's 1% probe reads each round trip's rise
 from the capacity solve alone, as the change in the line's hold delays, so the run profiles are
 worked out once a round instead of twice. A save carries the settled rates to the bit, so a load
 settles from them with an edit's settle and changes nothing; a save without them (older ones, or
@@ -1162,8 +1164,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   saved with the settled rates in `LPC1`, so a load keeps it rather than pacing again, T-3233; the
   spacing places where it stands, 6.3 "Departures"). A headway line there counts with its
   set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
-  it evenly: each that could run more often keeps the even share of their trains an hour together,
-  so the queue is no one line's. So two branches of different lengths take even turns at the merge
+  it evenly: each that could run more often keeps the even share of their trains an hour together
+  (a line left at its own headway counts at the rate it now runs, so the share is the same on every
+  edit and a line's rate does not fade, T-3252), so the queue is no one line's. So two branches of different lengths take even turns at the merge
   all day, for at most 3% fewer trains an hour on the faster.
   A loop's lap is a run and its closing stand; its round trip is twice the longer lap, and its count
   is even, half each way (the stepper moves by 2, headway mode doubles each way's count, an odd

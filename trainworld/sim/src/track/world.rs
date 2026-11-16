@@ -118,6 +118,9 @@ pub struct TrackWorld {
     redo: Vec<Op>,
     /// T-752: a line switching between counts and headways, whose counts this edit's settle keeps
     switching: Option<u32>,
+    /// T-1863: the lines an edit's settle may step: those sharing track, directly or through others,
+    /// with what the edit changed. None settles every line off its fleet (a load, a bulk edit).
+    settle_scope: Option<Vec<bool>>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -130,7 +133,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None };
         w.reload();
         w
     }
@@ -213,6 +216,33 @@ impl TrackWorld {
         affected.sort_unstable();
         affected.dedup();
         affected
+    }
+
+    /// T-1863: `seeds` and every line that shares a capacity resource with one of them, or with such a
+    /// line in turn.
+    fn sharing_closure(&self, seeds: &[u32]) -> Vec<bool> {
+        let n = self.net.line_count();
+        let mut hit = vec![false; n];
+        for &l in seeds {
+            if (l as usize) < n { hit[l as usize] = true; }
+        }
+        let cap = &self.svc.cap;
+        loop {
+            let mut grew = false;
+            for r in 0..cap.res.len() {
+                let us = cap.users_of(r);
+                if us.iter().any(|u| (u.line as usize) < n && hit[u.line as usize]) {
+                    for u in us {
+                        if (u.line as usize) < n && !hit[u.line as usize] {
+                            hit[u.line as usize] = true;
+                            grew = true;
+                        }
+                    }
+                }
+            }
+            if !grew { break; }
+        }
+        hit
     }
 
     /// T-2973: count lines (a whole-line fleet) meeting at a merge, with or through each other,
@@ -312,7 +342,21 @@ impl TrackWorld {
                     let count: Vec<(usize, f64)> = hs.iter().filter(|x| !x.2).map(|x| (x.1, x.0)).collect();
                     let rate: f64 = count.iter().map(|&(l, _)| self.net.line_tph[l][lev] as f64).sum();
                     if count.len() > 1 && rate > 0.0 {
-                        let even = 3600.0 * count.len() as f64 / rate;
+                        // `rate` is read after the pacing already slowed these lines, so the even
+                        // headway is the one at which the lines, each no faster than its own, run
+                        // that much together: the same one again on the next edit, where 3600 k / rate
+                        // grew by what the lines left at their own headway ran under it (T-3252)
+                        let (mut lo, mut hi) = (0.0f64, count.iter().map(|x| x.1).fold(3600.0 * count.len() as f64 / rate, f64::max));
+                        for _ in 0..60 {
+                            let mid = 0.5 * (lo + hi);
+                            let together: f64 = count.iter().map(|&(l, h)| {
+                                let own = 3600.0 / h.max(mid);
+                                // a line not paced yet may run less than its own headway, for the track's sake
+                                if self.net.line_pace_of(l as u32)[lev] > 0.0 { own } else { own.min(self.net.line_tph[l][lev] as f64) }
+                            }).sum();
+                            if together > rate { lo = mid } else { hi = mid }
+                        }
+                        let even = hi;
                         for &(l, h) in &count {
                             if h < even * (1.0 - PACE_SLACK) {
                                 pace[l][lev] = pace[l][lev].max(even as f32);
@@ -445,6 +489,7 @@ impl TrackWorld {
             let keep = &mut kept_now;
             keep.iter_mut().for_each(|k| *k = [false; LEVELS]);
             let worst = self.svc.cap.bottlenecks(self.net.line_count());
+            let scope = self.settle_scope.as_deref();
             for (j, &id) in ids.iter().enumerate() {
                 let counts = self.net.line_trains[id as usize].unwrap();
                 for lev in 0..LEVELS {
@@ -471,8 +516,8 @@ impl TrackWorld {
                     // with the rest of its level: on shared track each line moved re-times its
                     // neighbours. A held line is stepped, as the fill shares full track by what each
                     // fleet would run.
-                    off[j][lev] = (full || sign != 0) && !keep[j][lev];
-                    if sign != 0 && !held && !keep[j][lev] { active[lev] = true; }
+                    off[j][lev] = (full || sign != 0) && !keep[j][lev] && scope.map_or(true, |s| s[id as usize]);
+                    if sign != 0 && !held && !keep[j][lev] && scope.map_or(true, |s| s[id as usize]) { active[lev] = true; }
                 }
             }
             if !active.contains(&true) { break; }
@@ -759,7 +804,11 @@ impl TrackWorld {
         if let Some(before) = before {
             // T-752: a switch between counts and headways never buys or sells a train
             self.switching = switch;
+            let mut seeds = lines.clone();
+            seeds.extend(svc.rebuilt.iter().chain(&svc.recomputed).chain(&svc.shared).copied());
+            self.settle_scope = Some(self.sharing_closure(&seeds));
             let counts = self.settle_train_counts(false);
+            self.settle_scope = None;
             self.switching = None;
             for id in counts {
                 // T-1805: what the settle moved on other lines counts for demand once it shows
