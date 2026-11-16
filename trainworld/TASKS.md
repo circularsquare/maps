@@ -164,7 +164,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
   - Other: notes/T-1635.md
-- T-3399 [P2] {L:new-countries} Central America and Venezuela first (taking, 2026-11-16, agent countries)
+- T-3399 [P2] {L:new-countries} {after:your word to start the run} Central America and Venezuela first
   - Context: You asked (2026-11-16) for Guatemala to Panama and Venezuela before any other new region.
   - Goal: Those eight countries are built and shipped.
   - Other: docs/adding-a-country.md; research/next-countries-data.md

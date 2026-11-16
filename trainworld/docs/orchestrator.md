@@ -17,6 +17,9 @@ not once per message (Anita, 2026-11-09).
   built. An agent that compacts was given too much.
 - **Thanks**: a short thanks when an agent's work is done, in your own reply; a SendMessage resumes the agent and it
   reports again. Resume the same agent for follow-ups.
+- **Your own cycling** (Anita 2026-11-16): at about 400k tokens (the stop hook says so), finish anything mid-landing,
+  bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld` (a new
+  Windows Terminal tab running /takeover), then wind down per /handoff once the new one messages you. Don't wait for her.
 - **Cycling**: an agent past about 500k tokens with real work left writes its state to its notes and a fresh one
   continues. Overnight, while she sleeps, agents and you keep going past that (Anita, 2026-11-05).
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
