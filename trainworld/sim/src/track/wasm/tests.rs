@@ -1710,6 +1710,19 @@ fn the_first_stop_closes_and_opens_a_loop() {
     assert_eq!(b.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == ns[0]).unwrap()[1], 5.0, "the ring leads round");
 }
 
+/// T-3042: a junction a looped route passes twice is one mark, at its first pass.
+#[test]
+fn a_junction_passed_twice_is_one_mark() {
+    let mut a = api();
+    let (w, [s0, m, _, k]) = super::super::tests::balloon_fixture();
+    a.w = w;
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &[s0, m, k, m, s0], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    let marks = a.line_marks(id);
+    assert_eq!(marks.len(), 6, "{marks:?}");
+    assert_eq!((marks[0], marks[1]), (4.0, 1.0), "the junction, after the second stop");
+}
+
 /// T-244: the corners of a stroke, and the same stroke as one edge (set directly).
 const CLICKS: [(f64, f64); 4] = [(1500.0, 300.0), (2600.0, -400.0), (4800.0, 1200.0), (6200.0, 900.0)];
 fn stroke(level_of: &dyn Fn(usize) -> i8) -> (Vec<f64>, Vec<f64>) {

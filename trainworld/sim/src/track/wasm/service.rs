@@ -407,6 +407,8 @@ impl TrackApi {
             (0..svc.lines.len()).filter(|&o| o != line as usize && svc.lines[o].ok && uses(&svc.lines[o].runs[0])).map(|o| o as f64).collect()
         };
         let mut marks: Vec<(f64, [f64; 5], Vec<f64>)> = vec![];
+        // a looped route passes a junction or crossing twice: drawn once, at its first pass
+        let mut seen_nodes = std::collections::HashSet::new();
         for k in 1..run.nodes.len().saturating_sub(1) {
             let n = run.nodes[k];
             let i = n as usize;
@@ -414,22 +416,26 @@ impl TrackApi {
                 continue;
             }
             let s = run.node_s[k];
-            if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] {
+            if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] || !seen_nodes.insert(n) {
                 continue;
             }
             let (g, f) = place(s);
             marks.push((s, [4.0, g as f64, f, net.node_x[i], net.node_y[i]], others(&|r| r.nodes.contains(&n))));
         }
         for c in net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))) {
+            let mut best: Option<(f64, Vec<f64>)> = None;
             for (own, s_own, other) in [(c.e1, c.s1, c.e2), (c.e2, c.s2, c.e1)] {
                 let Some(j) = run.segs.iter().position(|&p| path_edge(p) == own) else { continue };
                 let len = net.edge_len[own as usize];
                 let s = run.seg_off[j] + if path_dir(run.segs[j]) == 0 { s_own } else { len - s_own };
-                if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] {
+                if s <= stop_s[0] || s >= stop_s[stop_s.len() - 1] || best.as_ref().is_some_and(|b| b.0 <= s) {
                     continue;
                 }
+                best = Some((s, others(&|r| r.segs.iter().any(|&p| path_edge(p) == other))));
+            }
+            if let Some((s, lines)) = best {
                 let (g, f) = place(s);
-                marks.push((s, [5.0, g as f64, f, c.x, c.y], others(&|r| r.segs.iter().any(|&p| path_edge(p) == other))));
+                marks.push((s, [5.0, g as f64, f, c.x, c.y], lines));
             }
         }
         marks.sort_by(|a, b| a.0.total_cmp(&b.0));

@@ -184,8 +184,10 @@ function samePaths(a: readonly ClockState["lines"][number][], b: readonly ClockS
   for (let i = 0; i < a.length; i++) {
     const x = a[i], y = b[i];
     if (x === y) continue;
-    if (x.id !== y.id || x.path.length !== y.path.length) return false;
+    const xb = x.back ?? [], yb = y.back ?? [];
+    if (x.id !== y.id || x.path.length !== y.path.length || xb.length !== yb.length) return false;
     for (let k = 0; k < x.path.length; k++) if (x.path[k] !== y.path[k]) return false;
+    for (let k = 0; k < xb.length; k++) if (xb[k] !== yb[k]) return false;
   }
   return true;
 }
@@ -204,7 +206,8 @@ function edgesOf(s: ClockState): TrackEdge[] {
       edgeLines = new Map<number, string[]>();
       for (const l of s.lines) {
         let ids = lineEdgeIds.get(l);
-        if (!ids) lineEdgeIds.set(l, ids = [...new Set(l.path.map((p) => p >> 1))]);
+        // T-3101: a way back that takes other track counts too
+        if (!ids) lineEdgeIds.set(l, ids = [...new Set(l.path.concat(l.back ?? []).map((p) => p >> 1))]);
         const id = String(l.id);
         for (const p of ids) {
           const v = edgeLines.get(p);

@@ -192,7 +192,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     const own = new Set(st.path.map((p) => p >> 1));
     for (const e of new Set(st.back.map((p) => p >> 1))) if (!own.has(e)) backLines.set(e, [...(backLines.get(e) ?? []), l.id]);
   }
-  const linesOf = (e: WorldView["edges"][number]) => (backLines.has(e.id) ? [...e.lines, ...backLines.get(e.id)!] : e.lines);
+  const linesOf = (e: WorldView["edges"][number]) => (backLines.has(e.id) ? [...e.lines, ...backLines.get(e.id)!.filter((id) => !e.lines.includes(id))] : e.lines);
   // upkeep: each built edge between the running lines on it by trains a day
   const bareUpkeep = new Map<number, number>();
   for (const e of w.edges) {
