@@ -358,7 +358,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Need from Anita: A Fast ferry kind per line (65 km/h, about US$25M a boat, US$100 a boat-km), after T-2216? Recommended yes, ferry fan unchanged.
   - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
   - Goal: Long ferries carry riders near real routes: T-2216 first, then a fast ferry kind if you agree.
-  - Other: notes/T-3435.md
+  - Other: Folded in T-437 (Long trip modes: car cost, Channel, ferries). notes/T-3435.md
 - T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
@@ -438,7 +438,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-2755 [P3] {L:world-map} Real rail network at far zoom
   - Context: You asked for level of detail later, low priority. The real network now starts at zoom 6 because picking lagged at zoom 4.
   - Goal: Show it again from zoom 4 or further out using simplified, merged far-zoom geometry.
-  - Other: Ties in with T-2750, one merged source. notes/T-2748.md
+  - Other: Folded in T-2750 (Real network as fewer sources). Ties in with T-2750, one merged source. notes/T-2748.md
 - T-2754 [P3] {L:terrain} Water depth for the cross section
   - Context: Your note 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio". The cross section draws a fixed 4 m band.
   - Goal: The cross section shows real sea, lake and river depth from a global source.
@@ -447,10 +447,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: At zoom 4, placing labels takes 6-7 ms on each move event.
   - Goal: Cull zones by the view bounds first, or keep a biggest-first list per tenth of zoom.
   - Other: notes/T-2748.md
-- T-2750 [P3] {L:world-map} Real network as fewer sources
-  - Context: One source and layer per noritetsu region (41 over Europe) was most of a frame's cost at zoom 4.
-  - Goal: A merged pmtiles, world or by continent, cuts the draw calls.
-  - Other: Needs a noritetsu build change. notes/T-2748.md
 - T-2698 [P2] {L:world-map} Start cameras on the city
   - Context: 112 metros start more than 5 km from the OSM city of the same name (Oklahoma City 31 km, Perth 28, Atlanta 23).
   - Goal: Move each start onto the nearest same-named OSM place.
@@ -576,7 +572,7 @@ Anita's notes 2026-11-05 late morning (verbatim in notes/todo-2026-11-05b.md; br
 - T-2589 [P3] {L:schematic-speed} Network diagram sheet speed
   - Context: Two speedups landed 2026-11-06. All Japan takes 38 s in the page and New York 9.3 s.
   - Goal: All Japan well under 15 s and New York under 4 s.
-  - Other: Most of what is left is the layout on a country map, about 13 s of Japan's 41. notes/T-2589.md
+  - Other: Folded in T-2592 (Diagram sheet map step speed). Most of what is left is the layout on a country map, about 13 s of Japan's 41. notes/T-2589.md
 - T-2590 [P3] {L:schematic-layout} Delete the old diagram layout
   - Context: The sheet is the default now. The old layout (`?sheet=0`), its drawing code and the checks built on it can go.
   - Goal: The old layout and its checks are gone, once the sheet has been played a while.
@@ -585,10 +581,6 @@ Anita's notes 2026-11-05 late morning (verbatim in notes/todo-2026-11-05b.md; br
   - Context: On the diagram sheet, where no zone has a mask, the far grid still guesses toward sea.
   - Goal: Land beyond the built zones draws as land.
   - Other: Found by njwater (T-2591). notes/T-2591.md
-- T-2592 [P3] {L:schematic-speed} Diagram sheet map step speed
-  - Context: The map step takes 2.4 s on New York and 5.1 s on all Japan. Limiting it to the area near the network saves little.
-  - Goal: A faster map step: the thin passes' distance transforms and the grid triangles are what is left.
-  - Other: notes/T-2589.md
 - T-2538 [P3] {L:schematic-layout} Diagram routing loses crossings B kept
   - Context: After T-2534, all Japan outside dense places keeps 0.76 of B's crossings but draws 0.49: stations slide along a bent piece past the crossing.
   - Goal: Drawn crossings stay close to what B kept.
@@ -657,10 +649,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Idea from 2026-11-04: a small plot of load by hour of day in the crowding hover, if peak load per hour is cheap to keep.
   - Goal: The crowding hover shows load by hour.
   - Other: notes/todo-2026-11-04a.md
-- T-2321 [P3] {L:schematic-layout} Diagram pill overlaps in all Japan
-  - Context: Follow-up to T-2289: all Japan has 3 more pill overlaps and 4 pairs closer than their spacing. A gap pass changed nothing.
-  - Goal: No new overlaps or close pairs in all Japan.
-  - Other: notes/T-2289.md
 - T-2293 [P3] {L:schematic-layout} Near stations on the wrong side in diagram
   - Context: Follow-up to T-2290: 10 to 18 near pairs per city are still drawn on the wrong side of each other, mostly parallel lines a kilometre apart.
   - Goal: Far fewer wrong-side pairs; a side term in the separation is the likely way.
@@ -735,7 +723,7 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
 - T-2242 [P3] {L:schematic-layout} Tokyo diagram close pairs
   - Context: Left over from T-2205: Tokyo has 7 close pairs, mostly key nodes. Rebuilds leave 13 because of the 0.3 hop cap.
   - Goal: Fewer close pairs in Tokyo, fresh and after rebuilds.
-  - Other: notes/T-2205.md
+  - Other: Folded in T-2321 (Diagram pill overlaps in all Japan). notes/T-2205.md
 - T-2262 [P3] {L:map-look} Float32 positions jitter far from origin
   - Context: On Japan saves, positions lose 1-2 m in x far from the frame origin. It shows as jitter at street zoom.
   - Goal: Store positions relative to a nearby origin.
@@ -768,14 +756,10 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: Jamaica Bay is not sea on the ground, the Boso side of Tokyo Bay is partly land, and the sea ends in a straight cut 40 pitches past the network box.
   - Goal: Those three look right when zoomed out.
   - Other: notes/T-2497.md
-- T-2518 [P3] {L:schematic-rivers} Diagram river drawing time
-  - Context: After T-2516, all Japan's rivers take about 4.2 s (was 1.2), New York 0.9-1.4 s, in the layout worker after each rebuild.
-  - Goal: Faster river drawing; goes with T-2498.
-  - Other: notes/T-2516.md
 - T-2498 [P3] {L:schematic-rivers} Diagram water time
   - Context: The ground's water takes 4.9 s for all Japan (0.7 s New York) and is redone after every rebuild that moves a station.
   - Goal: Keep water per tile in mercator so an edit redoes only its tiles.
-  - Other: notes/T-2169.md
+  - Other: Folded in T-2518 (Diagram river drawing time). notes/T-2169.md
 - T-2148 [P3] {L:money} Save size from money history
   - Context: Saves keep every day of every region's ledger, about 30 bytes a region-day. A big world game could near the 4 MB account cap.
   - Goal: If saves get big, days older than 90 fold into weeks.
@@ -914,10 +898,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes.
   - Goal: Workers share the data or split zones between them, and the long-session growth is checked; costs go to you before building.
   - Other: notes/T-3329.md and notes/T-3071.md.
-- T-3384 [P3] {L:stops} Waypoints on lines
-  - Context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
-  - Goal: Lines can have waypoints, design first.
-  - Other: Goes with T-3079, exact stop spacing.
 - T-3382 [P3] {L:twstats} Where people play in twstats
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
   - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
@@ -987,7 +967,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3079 [P2] {L:stops} Exact stop spacing back
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
   - Goal: Exact stop spacing is an option beside normal stop editing.
-  - Other: Goes with T-3384, waypoints.
+  - Other: Folded in T-3384 (Waypoints on lines). Goes with T-3384, waypoints.
 - T-3002 [P3] {L:trams} Shorter tram ramps
   - Context: You asked 2026-11-10 whether tram ramps could be shorter. Researched, not built.
   - Goal: Tram ramps are shorter, if realistic.
@@ -1346,10 +1326,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Destinations are fixed. Parked by you.
   - Goal: Destinations shift as the network grows.
   - Other: Notes: notes/someday.md
-- T-437 [P3] {L:islands} Long trip modes: car cost, Channel, ferries
-  - Context: The long car's cost, the Channel and ferries need a look.
-  - Goal: Long-trip modes behave sensibly.
-  - Other: notes/someday.md
 - T-427 [P3] {L:solve-speed} Longer-trip answers only for zones with trips
   - Context: Someday: send longer-trip answers only for zones that have trips.
   - Goal: Answers are sent only for zones with trips.
@@ -1504,11 +1480,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-651 [P3] {L:map-look} Unopened zones look fully red
   - Context: Unopened zones look fully red zoomed out.
   - Goal: They show their walk split.
-  - Other: notes/someday.md
-- T-602 [P3] {L:map-look} Walk split for unloaded zones
-  - Context: The data half of T-651.
-  - Goal: Unloaded zones have a walk split.
-  - Other: notes/someday.md
+  - Other: Folded in T-602 (Walk split for unloaded zones). notes/someday.md
 - T-678 [P3] {L:map-look} Day and night tint on the base map
   - Context: T-676 is done.
   - Goal: The base map tints by time of day.

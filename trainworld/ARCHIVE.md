@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3384 [P3] {L:stops} Waypoints on lines (2026-11-16): folded into T-3079. Its context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
+- T-2321 [P3] {L:schematic-layout} Diagram pill overlaps in all Japan (2026-11-16): folded into T-2242. Its context: Follow-up to T-2289: all Japan has 3 more pill overlaps and 4 pairs closer than their spacing. A gap pass changed nothing.
+- T-437 [P3] {L:islands} Long trip modes: car cost, Channel, ferries (2026-11-16): folded into T-3435. Its context: The long car's cost, the Channel and ferries need a look.
+- T-2592 [P3] {L:schematic-speed} Diagram sheet map step speed (2026-11-16): folded into T-2589. Its context: The map step takes 2.4 s on New York and 5.1 s on all Japan. Limiting it to the area near the network saves little.
+- T-2518 [P3] {L:schematic-rivers} Diagram river drawing time (2026-11-16): folded into T-2498. Its context: After T-2516, all Japan's rivers take about 4.2 s (was 1.2), New York 0.9-1.4 s, in the layout worker after each rebuild.
+- T-602 [P3] {L:map-look} Walk split for unloaded zones (2026-11-16): folded into T-651. Its context: The data half of T-651.
+- T-2750 [P3] {L:world-map} Real network as fewer sources (2026-11-16): folded into T-2755. Its context: One source and layer per noritetsu region (41 over Europe) was most of a frame's cost at zoom 4.
 - T-3438 [P3] {L:translations} Changshu shows its English name in Chinese (2026-11-16): already fixed by T-3318 (fd613794): cau reads 常熟 in ja and zh.
 - T-3437 [P3] {L:translations} Hyogo shows as Osaka (2026-11-16): already fixed by T-3318 (fd613794): osa reads Kansai in ja and zh; checks/t3318-zone-names.mjs passes.
 - T-2906 [P3] {L:map-look} More hairstyles (2026-11-16): ponytail and wavy hairstyles; wavy weighted by region (Japan 2%, US 15%, Nigeria 17% of faces).
