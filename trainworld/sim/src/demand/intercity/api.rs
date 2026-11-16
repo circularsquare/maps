@@ -101,29 +101,26 @@ pub(super) fn ride_zones(city: &City) -> (Zones, Vec<(usize, f32, f32)>) {
     }
     (z, places)
 }
-/// T-373: a site's access weights at logit scale `beta`, by station, added into `out` times
-/// `share`: its walks as the mean of their exp(-beta x cost), nested with its rides at the
-/// station choice's scale `theta`.
-pub(super) fn add_access(out: &mut BTreeMap<usize, f32>, walks: &[(usize, f32)], rides: &[Ride], beta: f32, theta: f32, share: f32) {
-    let (beta, theta) = (beta as f64, theta as f64);
-    let n = walks.len() as f64;
-    let mean: f64 = walks.iter().map(|w| (-beta * w.1 as f64).exp() / n).sum();
-    if rides.is_empty() {
-        for &(st, c) in walks {
-            *out.entry(st).or_default() += share * ((-beta * c as f64).exp() / n) as f32;
-        }
-        return;
-    }
-    let cw = if walks.is_empty() { f64::INFINITY } else { -mean.ln() / beta };
-    let c0 = rides.iter().map(|r| r.1 as f64).fold(cw, f64::min);
-    let aw = if walks.is_empty() { 0. } else { (-theta * (cw - c0)).exp() };
-    let sum = aw + rides.iter().map(|r| (-theta * (r.1 as f64 - c0)).exp()).sum::<f64>();
-    let total = (-beta * (c0 - sum.ln() / theta)).exp() / sum;
+/// T-373: a site's access weights by station, added into `out` times `share`: each way to a
+/// station (its walks and its rides) as exp(-`theta` x cost), the station choice's scale, so a
+/// second usable station helps a little and a dear ride adds little (T-3426: a mean over the walks
+/// made every extra station within a walk cost the others ln(n) / beta perceived minutes).
+/// `at_beta` turns a zone's sums into the weights the logsums read.
+pub(super) fn add_access(out: &mut BTreeMap<usize, f32>, walks: &[(usize, f32)], rides: &[Ride], theta: f32, share: f32) {
+    let theta = theta as f64;
     for &(st, c) in walks {
-        *out.entry(st).or_default() += share * (total * aw * (-beta * c as f64).exp() / n / mean) as f32;
+        *out.entry(st).or_default() += share * (-theta * c as f64).exp() as f32;
     }
     for r in rides {
-        *out.entry(r.0 as usize).or_default() += share * (total * (-theta * (r.1 as f64 - c0)).exp()) as f32;
+        *out.entry(r.0 as usize).or_default() += share * (-theta * r.1 as f64).exp() as f32;
+    }
+}
+/// T-3426: a zone's access sums at the station choice's scale `theta` (`add_access`) as weights
+/// exp(-`beta` x minutes), the scale the logsums read them at (`rail_mix_by`).
+pub(super) fn at_beta(m: &mut BTreeMap<usize, f32>, beta: f32, theta: f32) {
+    let p = (beta / theta) as f64;
+    for v in m.values_mut() {
+        *v = (*v as f64).powf(p) as f32;
     }
 }
 /// An access list's stations: its `ACCESS_TOP` best, then (T-1506) up to `ACCESS_MAX` in all, the

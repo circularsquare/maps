@@ -165,8 +165,8 @@ by their whole cost, access and egress included, at the station choice's scale f
 distance (0.33 a perceived minute from 12 km, so nearly every pair), softened past 60 minutes by
 sqrt(60 / T) with T the car's perceived minutes (`rel_soft`: 0.19 at 3 hours by car, 0.12 at 8),
 so a long trip spreads over more of its stations, and rail is priced at that logsum before the
-damped mode choice. Each zone's access weights (built at 0.10, 5.3) are taken to
-that scale by raising them to the power of the scale over 0.10. Rail's resulting share against
+damped mode choice. Each zone's access weights (summed at 0.33, 5.3) are taken to the pair's
+scale by raising them to the power of that scale over 0.33. Rail's resulting share against
 air by hours on the train: notes/T-712.md.
 
 - *Car*: the rule is 15 minutes plus 1.25 times the great-circle distance at 85 km/h, plus the
@@ -271,10 +271,13 @@ costs `p_ride` 15 + 2.66 x the drive (T-916) + at the station a cost that depend
 - **Inter-city trips**: at the home end as a commute's; at the far end a drop-off only
   (`d_drop`), since the traveller has no car there.
 
-A site's access at each end is its walks (the mean of their weights at 0.10 a minute) nested
-with its zone's rides at the station choice's scale from 12 km (0.33 per
-minute, T-718), so a
-ride dearer than the walk adds little, and a site beyond every walk is reached by its rides alone.
+A site's access at each end is every way it has to a station, each walk and each of its zone's
+rides counted on its own at the station choice's scale from 12 km (0.33 per minute, T-718,
+T-3426), as the local layers price them: a second station within a walk helps a little and never
+makes rail dearer, so a feeder's stop beside a zone that already walks to the inter-city station
+costs it nothing; a ride dearer than the walk adds little, and a site beyond every walk is reached
+by its rides alone. A zone's weight for a station is its sites' weights summed by their share of
+the zone's homes (or jobs at the far end).
 Zones that only a ride reaches are served (5.1), so a lone intercity station draws on everyone
 within the ride's reach. Player-built feeder lines take part in regional routing.
 

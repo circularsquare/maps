@@ -469,22 +469,47 @@ fn compact_pack_accepts_metadata_and_rejects_malformed_sites() {
         assert!(IntercityApi::new(bad).is_err(), "accepted {bad}");
     }
 }
-/// T-373: rides nest with a site's walks, so a dear ride adds little and a cheap one a lot.
+/// T-373, T-3426: a site's ways to a station add up at the station choice's scale, so a dear ride
+/// adds little and a cheap one a lot.
 #[test]
 fn rides_nest_with_walks() {
     let total = |walks: &[(usize, f32)], rides: &[Ride]| {
         let mut m = BTreeMap::new();
-        add_access(&mut m, walks, rides, 0.025, 0.2, 1.);
+        add_access(&mut m, walks, rides, 0.2, 1.);
         m.values().sum::<f32>()
     };
     let walks = [(0, 20.), (1, 30.)];
     let alone = total(&walks, &[]);
-    assert!((alone - ((-0.5f32).exp() + (-0.75f32).exp()) / 2.).abs() < 1e-6);
+    assert!((alone - ((-4f32).exp() + (-6f32).exp())).abs() < 1e-6);
     let dear = total(&walks, &[(2, 60., 0., 0.)]);
     assert!(dear > alone && dear < alone * 1.01, "{alone} {dear}");
     let cheap = total(&walks, &[(2, 10., 0., 0.)]);
-    assert!(cheap > (-0.25f32).exp(), "{cheap}");
-    assert!((total(&[], &[(2, 20., 0., 0.)]) - (-0.5f32).exp()).abs() < 1e-6);
+    assert!(cheap > (-2f32).exp(), "{cheap}");
+    assert!((total(&[], &[(2, 20., 0., 0.)]) - (-4f32).exp()).abs() < 1e-6);
+}
+/// T-3426: a feeder's station within the same walk never makes rail dearer: a site 10 minutes from
+/// the inter-city station (30 minutes on to the far end) gains a metro stop 5 minutes away whose
+/// way on, with the change, takes 45.
+#[test]
+fn another_station_never_makes_rail_dearer() {
+    let inf = f32::INFINITY;
+    let sk = Skims { s: 3, n: 3, r: vec![0., inf, 30., inf, 0., 45., inf, inf, 0.], walk: vec![], walk_max: vec![], slot: vec![], next: vec![], board: vec![], order: vec![], change: vec![], entry: vec![] };
+    let p = Params::default();
+    let theta = p.band_unsoftened(p.n_bands() - 1);
+    let list = |walks: &[(usize, f32)]| {
+        let mut m = BTreeMap::new();
+        add_access(&mut m, walks, &[], theta, 1.);
+        at_beta(&mut m, p.beta, theta);
+        m.into_iter().collect::<Vec<_>>()
+    };
+    let mut terms = vec![];
+    for car in [60f32, 200., 600.] {
+        let th = p.soften(theta, car);
+        let (one, _) = rail_logsum(&sk.r, sk.s, 0., &list(&[(0, 10.)]), &[(2, 1.)], p.beta, th, &mut terms);
+        let (two, _) = rail_logsum(&sk.r, sk.s, 0., &list(&[(0, 10.), (1, 5.)]), &[(2, 1.)], p.beta, th, &mut terms);
+        assert!((one - 40.).abs() < 1e-3, "{one}");
+        assert!(two <= one && two > one - 5., "the car at {car}: {one} alone, {two} with the metro stop");
+    }
 }
 /// T-128: a pack that names its frame measures zone distances on the ground; one without keeps
 /// its plane.

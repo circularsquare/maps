@@ -611,7 +611,8 @@ notes/T-420.md has the tables.
   commutes between zones at the home end, inter-city trips at both ends with only a drop-off
   (`d_drop`) at the far end, which stands for a taxi or a pick-up; where taxis are cheap and common
   (much of Asia and Latin America) the far end is easier than this, and where long trips end at a
-  rental car or a long walk it is harder. The
+  rental car or a long walk it is harder. Its walks and rides count station by station at the
+  station choice's scale, as the local layers' do (T-3426); nothing in that is per country. The
   weights are fitted on New York only (T-372: 53-66% of commuter rail riders ride there). Check: the share of rail riders
   reaching the station by car or bus per sampler city (UK NTS for London, Metrolinx surveys for
   Toronto) against the model's home-end ride share (rail trips at the ride access entries, `Subzones::ride`).

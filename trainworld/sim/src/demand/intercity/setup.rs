@@ -373,17 +373,24 @@ impl IntercityApi {
                     let cost = walk.min(self.base.walk_easy_min) * self.base.w_walk + (walk - self.base.walk_easy_min).max(0.) * self.base.w_walk_far;
                     walks.push((acc.st[i] as usize, cost));
                 }
-                add_access(&mut weights[z], &walks, home, self.base.beta, theta, w);
-                add_access(&mut work[z], &walks, far, self.base.beta, theta, jw);
+                add_access(&mut weights[z], &walks, home, theta, w);
+                add_access(&mut work[z], &walks, far, theta, jw);
                 if commuting {
-                    add_access(&mut cw_home[z], &walks, home, beta_c, theta, w);
-                    add_access(&mut cw_walk[z], &walks, &[], beta_c, theta, w);
-                    add_access(&mut cw_work[z], &walks, &[], beta_c, theta, cjw);
+                    add_access(&mut cw_home[z], &walks, home, theta, w);
+                    add_access(&mut cw_walk[z], &walks, &[], theta, w);
+                    add_access(&mut cw_work[z], &walks, &[], theta, cjw);
                 }
                 if outings {
-                    add_access(&mut ew[z], &walks, &[], beta_c, theta, jw);
+                    add_access(&mut ew[z], &walks, &[], theta, jw);
                 }
             }
+        }
+        let beta = self.base.beta;
+        for mm in weights.iter_mut().chain(work.iter_mut()) {
+            at_beta(mm, beta, theta);
+        }
+        for mm in cw_home.iter_mut().chain(cw_walk.iter_mut()).chain(cw_work.iter_mut()).chain(ew.iter_mut()) {
+            at_beta(mm, beta_c, theta);
         }
         let lists = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> { maps.into_iter().map(|mm| access_list(mm, positive, &comp, &on_train)).collect() };
         self.access = lists(weights, false);
