@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1502 [P3] {L:money} Bus money shares by route points (2026-11-16): a bus route's money splits by its own points (about 200 m pieces); routes without points keep stop halves. notes/T-1502.md.
+- T-3401 [P3] {L:accounts-server} Sign in on the landing page (2026-11-16): the new game sheet has the Sign in icon too (returning players already had it). notes/T-3401.md.
 - T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips (2026-11-16): the airport badge hover counts no-route trips in its total and bar.
 - T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown (2026-11-16): the intercity explorer's rail effective time has the city explorer's breakdown hover (not seen rendered on an intercity trip).
 - T-3416 [P3] {L:small-fixes} Very long line group name locks the name (2026-11-16): a long group bullet shrinks with an ellipsis and long line names wrap, so the panel buttons stay in reach.

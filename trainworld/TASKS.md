@@ -871,10 +871,6 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
   - Context: You want a mode where a city's real network runs as a rival to win riders from. After T-1305.
   - Goal: The mode exists.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1502 [P3] {L:money} Bus money shares by route points (taking, 2026-11-16, agent b6)
-  - Context: regionMoney.ts shares a route's road km by chords between stops, which is rough on a winding route.
-  - Goal: Shares follow the route's own points.
-  - Other: notes/T-1465.md
 - T-1446 [P3] {L:community} Share a game by link, read only
   - Context: You said yes.
   - Goal: A link opens a shared game read only.
@@ -893,17 +889,16 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
   - Goal: Indonesian is added first, then the others in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3401 [P3] {L:accounts-server} Sign in on the landing page (taking, 2026-11-16, agent b6)
-  - Context: Your TODO 2026-11-15: "should probably show sign in on the landing page, even before the new game button... do we do that?"
-  - Goal: Check what the start screen shows, answer you, add sign in if missing.
-- T-3402 [P3] {L:community} Community page switcher on all views (taking, 2026-11-16, agent b6)
+- T-3402 [P3] {L:community} {waits:Anita} Community page switcher on all views
+  - Need from Anita: Say when to deploy shonei-server (committed, not deployed) so Random pages too; the game side is on master.
   - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
   - Goal: All three views have a page switcher and a total count.
 - T-3406 [P3] {L:small-fixes} {waits:Anita} Waiting now split by direction
   - Need from Anita: Which place did you mean? The station panel already splits waiting by line and direction; recommended: the complex platform hover and complex row, as "N toward <end station>" per side.
   - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows.
   - Goal: A station shows waiting riders per direction.
-- T-3407 [P3] {L:money} Money plot in the save's local time (taking, 2026-11-16, agent b6)
+- T-3407 [P3] {L:money} {waits:Anita} Money plot in the save's local time
+  - Need from Anita: Use the first-built city's time zone when a game has no start city (Choose on map), and skip the finances control since booked days can't be re-cut? Recommended yes.
   - Context: Your TODO 2026-11-15: money plot times do not match local time. You want the first-built city's time zone, changeable in the finances pane.
   - Goal: Plot times follow the save's time zone, with a way to change it.
 - T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
