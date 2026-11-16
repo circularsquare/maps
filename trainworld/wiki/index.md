@@ -29,6 +29,7 @@ How trips and track money work, in plain words. Agents: open `wiki/read/<page>.m
 - [[train-speed]]: What limits how fast a train goes, and how does it speed up?
 - [[line-capacity]]: How many trains can a line run, and what happens when track or a platform is full?
 - [[slower-trains]]: What happens when a fast line shares track with a slow one?
+- [[train-length-and-cars]]: How long are trains, what do cars cost to buy and to run?
 - [[station-upgrades]]: What do terminals, passing tracks, park and ride and waiting rooms do and cost?
 - [[fares]]: How is a fare worked out, and who gets it?
 - [[points-and-goals]]: How are points and goals earned, and how is money split by region?

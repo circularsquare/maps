@@ -302,11 +302,14 @@ name, which every join rewrites; the game shows its own (T-825, `app/src/game/zo
   biggest city, or a well-known name for the whole ("Dodecanese", "Cyclades", "Teesside"). English
   exonyms where English uses one (Florence, Venice, Geneva, Corfu). A US zone whose shown name another
   zone has, or a planned row will have, carries its state ("Columbus, GA", "Rome, GA"), as US county
-  names in the plan do ("Polk County, FL").
+  names in the plan do ("Polk County, FL"); a Chinese one carries its province, the smaller zone only
+  ("Taizhou, Jiangsu" beside Taizhou; "Wei County, Hebei"). A county whose name is one syllable is "Wei County";
+  a county zone takes its prefecture city's name only where the zone is that city ("Jiuquan", "Zhangye").
 - **Automatically**, a zone with no hand-set name drops a bracketed part ("[The Hague]"), a
   trailing parenthesis ("Halle (Saale)") and NUTS's " CC" ("Devon CC").
 - **Hand-set names** live in `app/src/game/zone-names.json` (zone id to `name` and extra `aliases`),
-  which no pipeline step writes. A newly joined country's zones need a look against this rule.
+  which no pipeline step writes. A newly joined country's zones need a look against this rule (China's checked
+  2026-11-16, T-847: no two Chinese zones show the same name).
 - **Aliases** are every other name search finds a zone by: the hand-set ones, the registry's name
   and its parts, and the six biggest cities and towns (20,000 people or more) in the zone's place list with
   their OSM other names (`app/src/game/zone-aliases.json`, written by `pipeline/zone_aliases.py`
