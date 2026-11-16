@@ -114,7 +114,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A zone with a GHSL urban centre is named after the biggest such centre.
   - Other: notes/T-1984.md
 - T-2070 [P2] {L:world-tooling} {after:next multi-region run} Confirm read-ahead on a real multi-region run
-  - Context: The read-ahead (T-1980) is untested on a real multi-region run; the chunked gate (T-1978) is confirmed on Mexico.
+  - Context: The read-ahead (T-1980) is untested on a real multi-region run; the chunked gate (T-1978) is confirmed on Mexico. T-592 (read the next extract while this one gates and joins) was the same read-ahead, built as T-1980.
   - Goal: Region k+1's download starts while region k builds, and no two `read` steps overlap.
   - Other: See notes/T-2070.md.
 - T-1981 [P2] {L:world-tooling} {waits:Anita} Joint solve thread scaling
@@ -165,10 +165,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
   - Goal: The re-gate checks only what a joint solve can change.
   - Other: See notes/T-928.md section 4.
-- T-1309 [P3] {L:region-redraws} Look at 384 new Chinese zone names
-  - Context: The planner's county names show for these zones.
-  - Goal: Names are reviewed and fixed where poor.
-  - Other: docs/zones.md "Names"
 - T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: Whole files load with no console error and smoke stays clean.
@@ -229,9 +225,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: PR 2 merged or closed once peanutmow sends a revised settle part.
   - Other: notes/T-3387.md
 - T-3388 [P2] {L:edit-speed} London edits take about 4 s
-  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load.
-  - Goal: An edit on London takes well under 4 s, with settles ending where they do now.
-  - Other: notes/T-3387.md
+  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235).
+  - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
+  - Other: notes/T-3387.md; notes/T-3233.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
   - Goal: Tracks that cross where only some have stations get a highlight.
@@ -380,10 +376,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3235 [P3] {L:edit-speed} London train-count edits settle for 3.5 s
-  - Context: Every train-count edit on London's real network spends about 3.5 s settling (8-10 s in the browser), because pacing flips about 240 lines each round.
-  - Goal: Such edits settle in well under a second; this needs hysteresis in `pace_merges`, which moves rates.
-  - Other: notes/T-3233.md
 - T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal
   - Context: t1965-follow fails on master (43 of 950 frames): two on-time lines at one double-track terminal drawn over each other. A fix clears it to 4 frames but breaks t2980.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
@@ -538,12 +530,9 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your TODO 2026-11-09: three people tried anita.garden/trainsworlds, trainworlds and trainsimworld.
   - Goal: Those three addresses redirect to the game. Goes out with the next website publish.
 - T-2912 [P1] {L:accounts-server} Security review follow-through
-  - Context: The review is done and the admin page, hover script and server fixes landed (24c3d6dd, T-2914, T-2917).
-  - Goal: Nothing catastrophic is hackable; review recorded.
+  - Context: The review is done and the admin page, hover script and server fixes landed (24c3d6dd, T-2914, T-2917). Not yet checked: the production box (firewall, the real secret line, Go version) and the old jsonbin key on the website.
+  - Goal: The production box and the website's old key checked; review recorded.
   - Other: notes/T-2912.md
-- T-2918 [P3] {L:accounts-server} Server backups off the provider
-  - Context: Hetzner daily backups exist. The off-site copy to the shonei-backups bucket is installed and ran (811 MB, 2026-11-12).
-  - Goal: shonei-server README no longer says "not installed yet".
 - T-2901 [P2] {L:terrain} Terrain worldwide
   - Context: Stages 1-3 are done: blocks are on R2 and the game reads them. Stage 4 removes the old zone terrain after a release has run on blocks.
   - Goal: Zone terrain removed, with the 553 wrongly flat zones fixed by the blocks.
@@ -552,13 +541,9 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Design is done and your questions are answered. The server part is built behind SHONEI_COMMUNITY=1; the game part is next. You parked it from the next release.
   - Goal: Players can share a map, browse others and like them.
   - Other: notes/T-2887.md
-- T-2877 [P3] {L:translations} Prefer English station names for English speakers
-  - Context: Your idea 2026-11-09: English names for English speakers or non-local players, with a setting to pick local or English. Not urgent.
-  - Goal: A setting defaults station names to English or local by the player's language.
-  - Other: Goes with T-2586, place names in the player's language.
 - T-2586 [P3] {L:translations} Place names in the player's language
-  - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata.
-  - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists.
+  - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata. Station names too: English for English speakers or non-local players (your idea 2026-11-09, T-2877).
+  - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists. A setting picks English or local station names.
   - Other: Starts after T-2585. Traditional Chinese is Taiwan's (zh-TW).
 Anita's notes 2026-11-05 evening (verbatim in notes/todo-2026-11-05c.md; briefs quote it word for word):
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
@@ -701,10 +686,6 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: You said yes 2026-10-30 and "its fine to put this in after release". The design is written and the terrain rebuild landed.
   - Goal: Terrain cells are hexagons on our own lattice.
   - Other: About a day. notes/T-1881.md.
-- T-1861 [P3] {L:edit-speed} Track placement on all-Japan feels slow
-  - Context: You found placement on the all-Japan save a little unresponsive; steady movement is fixed, but a click waits 0.1-0.85 s on the boarding account.
-  - Goal: A click on the Japan save answers quickly, and `preview_route` takes less than 40-190 ms.
-  - Other: notes/T-2404.md, "What is left".
 - T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged
   - Context: track-and-service.md says lines with no shared track stay unchanged to the bit; this is not yet true. Waits for t1854b to leave sim/src/track.
   - Goal: netdiff.mjs shows 0 changed Tokyo lines after the Ceuta edit.
@@ -1283,14 +1264,10 @@ T-203, T-548 and T-235 re-enrich the nine US metro packs. Also T-1345's LODES lu
   - Other: notes/someday.md
 
 ### Korea's next rebuild, and Toronto's (tor was only re-solved in T-1239)
-- T-564 [P3] {L:census-totals} {after:Korea rebuild} Korea's registration as a tier 0 hook
-  - Context: Canada's DA population is done (T-1239); Korea's jobs by tract of work are not.
-  - Goal: Korea's resident registration as a tier 0 hook.
-  - Other: notes/T-555.md
 - T-1243 [P3] {L:census-totals} {after:Korea rebuild} Korea's registration counts for plan rows
-  - Context: Plan rows need resident registration counts by si-gun-gu.
-  - Goal: Those counts in the plan rows.
-  - Other: notes/someday.md
+  - Context: Plan rows need resident registration counts by si-gun-gu; the same counts would be Korea's tier 0 hook (T-564; Canada's DA population is done, T-1239).
+  - Goal: Those counts in the plan rows and as Korea's tier 0 hook.
+  - Other: notes/someday.md; notes/T-555.md
 Also T-1344's Toronto (T-282, T-357) and Seoul (T-504) items, T-1345's Toronto airport (T-283).
 
 ### Russia's build (held)
@@ -1301,13 +1278,9 @@ Also T-1344's Toronto (T-282, T-357) and Seoul (T-504) items, T-1345's Toronto a
 
 ### The next data batch on every pack
 - T-926 [P3] {L:world-rebuild} {after:next data batch} Drop the unread nocar layer
-  - Context: The nocar layer is in the packs and Credits but nothing reads it.
-  - Goal: The layer gone from packs and Credits.
+  - Context: The nocar layer is in the packs and Credits but nothing reads it. The nocar step also still runs in `world_run` and `everyday_rates` (T-878).
+  - Goal: The layer gone from packs and Credits, and the nocar step gone from `world_run` and `everyday_rates`.
   - Other: notes/someday.md; also T-1114's pipeline G (closed)
-- T-878 [P3] {L:world-rebuild} {after:next data batch} Drop the nocar build step
-  - Context: The nocar step still runs in world_run and everyday_rates.
-  - Goal: The step removed, with T-926.
-  - Other: notes/someday.md
 Also T-1114's pipeline G (the nocar layer), in Code health.
 
 ### Any pack's next rebuild (lands pack by pack)
@@ -1367,10 +1340,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Each row spends about 8 s more than needed (h3, GHSL reuse, extra processes).
   - Goal: Each row builds about 8 s faster.
   - Other: See notes/someday.md.
-- T-592 [P3] {L:world-tooling} Read next extract while gating
-  - Context: The next region's extract is read only after this one gates and joins.
-  - Goal: It is read while this one gates and joins.
-  - Other: See notes/someday.md.
 - T-570 [P3] {L:car-free} Regional car-free homes from DHS and census
   - Context: Car-free homes only have country figures.
   - Goal: Regional shares from DHS and open census small areas.
@@ -1384,8 +1353,9 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Goal: Each planned city fits its own curve at build time.
   - Other: Notes: notes/someday.md
 - T-847 [P3] {L:region-redraws} Check zone names in newly joined countries
-  - Context: Each newly joined country's zone names need a look.
+  - Context: Each newly joined country's zone names need a look. This includes the 384 new Chinese zones, whose planner county names show (T-1309).
   - Goal: Names are reviewed.
+  - Other: docs/zones.md "Names"
 - T-1027 [P3] {L:region-redraws} Coarse zone outlines overlap
   - Context: Outlines overlap after simplification.
   - Goal: Simplified outlines do not overlap.
@@ -1429,7 +1399,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 
 ### Demand
 - T-2385 [P3] {L:route-choice} Far-end reach for everyday trips
-  - Context: A far cell past `pair_walk_max` can still count rail. T-1920 moved 0.04% of far rail riders in New York, so low value.
+  - Context: A far cell past `pair_walk_max` can still count rail. T-1920 moved 0.04% of far rail riders in New York, so low value. Close candidate: 0.04% moved in New York.
   - Goal: Decide if the far-end reach is worth doing.
   - Other: Notes: notes/T-1920.md
 - T-1345 [P3] {L:ridership-checks} One-city calibration checks
@@ -1494,7 +1464,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Goal: Trips home are chosen from the work end.
   - Other: Notes: notes/someday.md
 - T-202 [P3] {L:route-choice} Rethink the 100 m station merge
-  - Context: Complexes now exist, so the 100 m merge may be redundant.
+  - Context: Complexes now exist, so the 100 m merge may be redundant. notes/T-161.md found the merge already holds a platform chain together and decided it stays; nothing moved.
   - Goal: Decide whether the merge stays.
   - Other: Notes: notes/someday.md
 - T-265 [P3] {L:demand-ideas} Signals simulated by clumps of shared track
@@ -1605,11 +1575,11 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Goal: Rounds start from the previous solve if you agree.
   - Other: notes/T-434.md
 - T-361 [P3] {L:memory} One demand engine per city
-  - Context: There are two demand engines per city.
+  - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
   - Goal: One demand engine per city.
   - Other: notes/T-361.md
 - T-354 [P3] {L:memory} Pack copies per worker
-  - Context: Each worker holds its own pack copies, and the final publish spreads them.
+  - Context: Each worker holds its own pack copies, and the final publish spreads them. T-3373 shares the zone data; the pack copy may go with it.
   - Goal: Pack copies are shared and the publish is trimmed.
   - Other: notes/T-354.md
 - T-359 [P3] {L:loading} Bare start card waits 2 s for New York

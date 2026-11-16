@@ -1,6 +1,14 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-592 [P3] {L:world-tooling} Read next extract while gating (2026-11-16, agent tidy): folded into T-2070; the read-ahead was built as T-1980.
+- T-1309 [P3] {L:region-redraws} Look at 384 new Chinese zone names (2026-11-16, agent tidy): folded into T-847. docs/zones.md "Names".
+- T-3235 [P3] {L:edit-speed} London train-count edits settle for 3.5 s (2026-11-16, agent tidy): folded into T-3388; hysteresis in `pace_merges` is the likely fix. notes/T-3233.md.
+- T-878 [P3] {L:world-rebuild} Drop the nocar build step (2026-11-16, agent tidy): folded into T-926. notes/someday.md.
+- T-2877 [P3] {L:translations} Prefer English station names for English speakers (2026-11-16, agent tidy): folded into T-2586.
+- T-564 [P3] {L:census-totals} Korea's registration as a tier 0 hook (2026-11-16, agent tidy): folded into T-1243. notes/T-555.md.
+- T-2918 [P3] {L:accounts-server} Server backups off the provider (2026-11-16, agent tidy): done; the off-site copy to the shonei-backups bucket is installed and ran (811 MB, 2026-11-12), and shonei-server's docs no longer say "not installed yet". shonei-server/deploy/README.md.
+- T-1861 [P3] {L:edit-speed} Track placement on all-Japan feels slow (2026-11-16, agent tidy): done by T-2699 (boarding-account step p50 311 to 6.6 ms, max 3.9 s to 87 ms) and T-2700 (`preview_route` 1.6 ms); not re-measured on the Japan save by hand. notes/T-2404.md, notes/T-2699.md.
 - T-3394 [P1] {L:board} Every task as title, need from Anita, context, goal, other (2026-11-16): her shape ("currently it is mostly a block of text"), pilot then rollout by nine agents; 421 open tasks rewritten in one apply (tools/restructure_tasks.py), every old line kept verbatim in notes/tasks-before-T-3394.md; the board shows the fields; CLAUDE.md Tasks rule and TASKS.md headers updated. T-3395 and T-3397 (another session's) left in the old shape. notes/T-3394.md.
 - T-3213 [P2] {L:jobs-places} UBC demand looks low (2026-11-16): closed on Anita's word ("3213 yes we can close"). Options A, C and D shipped 11-12 (T-3214, T-3216, T-3218); B is T-3215 with the world rebuild (T-3245); E (a new daytime pull for campuses) declined. notes/T-3213.md.
 - T-688 [P3] {L:route-choice} A distance decay inside the 2 km zone for very short trips (2026-11-16): dropped on Anita's word ("can drop, especially since people have trams now"). notes/someday.md.
