@@ -37,6 +37,15 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
   Osaka Bay): overnight material.
 - 17:30: bug-d landed T-3252 + T-1863 (sim); schem landed the mask download fix dc184b11, T-3448 waits on her
   (A/B/C; review/nyc-schematic-far.png). Running: bug-e, bug-f a7d62b4a99930fbfd (T-2698, T-2757; tree bug-f, port 6171).
+- 17:56 (Anita back 17:31; her answers): feeders LANDED c9db1359 (T-3426 archived; follow-up T-3454 feedsample
+  aca180a7fbc3e6ae7, Opus, tree t3454-base reverts the fix for "before"). T-3448 decided: one schematic per region,
+  regions joined by rail draw as one, nearest first then all: agent regions ac47cdc31cb8469fc (Opus, tree regions,
+  6181); option B queued as T-3453. T-3410 folded into T-3079 (waypoints). T-1791 yes, hover only: agent hover
+  a8e322d9d6dcef870 (tree hover, 6191). Shenzhen scans stopped on her OK. serve.py committed 15a54121 on her OK.
+  Coastal gap scan queued as T-3455 for an overnight run on her word. Also from her pad: T-3450 Shiga (agent names
+  acde25cc42203d034, Opus), T-3451 workflow review DONE (Fable, notes/T-3451.md; her calls pending), T-3452 code
+  tour DONE (notes/code-tour.md, review/code-tour.png). bug-e landed T-3042 (+T-3101 part), bug-f landed T-2698.
+  8800 = 943dfbb3.
 - sweep a30f41793d9dfc434 (Sonnet, no tree): closing already-done/untrue/duplicate tasks below T-1500 (no waits, no taking).
 - shenzhen (16:36, interim): shz rebuilt and joined (45 packs gated), no longer writing data/packs (8800 may use live
   data again); join's market step timed out (1801 s) so no new freeze; market files checked fine. Its uncommitted files

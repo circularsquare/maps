@@ -502,6 +502,26 @@
       "by": "bug-e",
       "at": "2026-11-16T17:35:28Z",
       "rev": 1
+    },
+    {
+      "id": "c051",
+      "text": "feeder lines help long-distance trips again: a metro or bus stop beside an inter-city station no longer counts against the train",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3426",
+      "by": "maps-d7",
+      "at": "2026-11-16T17:56:06Z",
+      "rev": 1
+    },
+    {
+      "id": "c052",
+      "text": "a stop's hover in the line group view shows its boardings in the past 24 hours",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1791",
+      "by": "hover",
+      "at": "2026-11-16T17:56:13Z",
+      "rev": 1
     }
   ]
 }

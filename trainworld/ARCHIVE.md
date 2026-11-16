@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3452 [P2] {L:cleanup} Code tour for Anita (2026-11-16): tour delivered: notes/code-tour.md with artifacts/trainworld/review/code-tour.png and an odd-things list.
+- T-3451 [P2] {L:board} Review of our task and agent workflow (2026-11-16): review delivered: notes/T-3451.md; her calls on its recommendations pending.
+- T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (2026-11-16): landed on Anita's word: each walk or ride to a station counts on its own in the regional market (no mean), so feeders never make rail dearer; real save longer trips by rail 4.8k -> 91k, all rail +0.8%, ceiling tests unchanged. Follow-up T-3454. notes/T-3426.md.
 - T-2698 [P2] {L:world-map} Start cameras on the city (2026-11-16): 124 metros more than 5 km off moved their start camera (registry center only) onto the same-named OSM place, up to 35 km (08861980); pipeline/register.py still writes center from origin, so a re-register moves it back. notes/T-2698.md.
 - T-3042 [P3] {L:stops} Draw a flat junction once in the stop list (2026-11-16): fixed: each junction or self-crossing on a route is marked once, at its first pass (5a15e44d). notes/T-3042.md.
 - T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged (2026-11-16): fixed: an edit's settle steps only lines sharing a capacity resource with what changed; edits on unshared Tokyo lines now change 0 others. notes/T-3252.md.

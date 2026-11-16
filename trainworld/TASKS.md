@@ -353,11 +353,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3426 [P2] {L:route-choice} {waits:Anita} Long-distance trips ignore feeders
-  - Need from Anita: Land the access fix (each walk or ride to a station counts on its own, so feeders never make rail dearer)? Recommended yes.
-  - Context: Your scratch pad 2026-11-16 asked why. Since T-718 (10-19) walks to several stations were averaged, adding ln(n)/0.1 felt minutes, so a feeder stop near the terminal made rail dearer. With the fix: New York-Philadelphia 2,355 / 6,171 / 10,237 longer rail trips as feeders are added (was falling to 1,668), Beijing-Tianjin 4.2k / 9.5k / 12.4k, real save longer trips by rail 4.8k to 91k, all rail +0.8%, ceiling tests unchanged.
-  - Goal: Feeders always help long-distance rail. Fix ready in .tw-trees/feeders.
-  - Other: Changelog draft: "feeder lines helped long-distance trips again: a metro or bus stop beside an inter-city station no longer counted against the train". notes/T-3426.md
+- T-3454 [P2] {L:route-choice} Feeder effect by trip length, at real coverage
+  - Context: You asked 2026-11-16 after T-3426: sample a couple of short, medium and long pairs, show where the fix changes most, and fit against real numbers with a semi-realistic number of feeders (roughly real-world coverage), not 2-3 test lines.
+  - Goal: A table of short, medium and long pairs, before and after, with real-like feeder coverage and real figures, and which change most.
+- T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan
+  - Context: From T-3428 (Shenzhen Bay): reclaimed coast left out of units. You said yes 2026-11-16 to queue it overnight: a coastal-only gap scan (~2 h, 3 cores), then rebuild flagged rows; likely Shanghai Lingang, Tianjin Binhai, Macau, Hong Kong, Dubai, Singapore, Incheon, Osaka Bay.
+  - Goal: Coastal gaps found and the flagged rows rebuilt in an overnight run.
+  - Other: notes/T-3428.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
@@ -775,10 +777,9 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
   - Context: You said yes.
   - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-1791 [P3] {L:small-fixes} {waits:Anita} Boardings in the line group view
-  - Need from Anita: Do you want boardings in the group view? Recommended: past 24 hours per stop, in the stop's hover only.
-  - Context: Line groups stage 4 only; stages 1-3 landed and the view has no numbers. The line panel shows boardings per stop.
-  - Goal: Boardings show in the group view, if wanted.
+- T-1791 [P3] {L:small-fixes} Boardings in the line group view (taking, 2026-11-16, agent hover)
+  - Context: Line groups stage 4. You said yes 2026-11-16 to past 24 hours of boardings per stop, in the stop's hover only. The line panel already shows boardings per stop.
+  - Goal: A stop's hover in the group view shows its boardings over the past 24 hours.
   - Other: notes/T-1791.md
 - T-3398 [P3] {L:translations} The next languages
   - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
@@ -851,16 +852,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3450 [P2] {L:translations} Shiga shows as 志賀 in Japanese (taking, 2026-11-16, agent names)
   - Context: Player report via your scratch pad 2026-11-16: Shiga is 滋賀, not 志賀. Zone shg's Wikidata id is Q2278690 (Shiga town, 志賀町), not the prefecture, so the name lookup picked a same-named place. You asked how it happened and whether others went wrong the same way.
   - Goal: shg fixed, every zone's Wikidata match checked for the same kind of error, and a check that catches it.
-- T-3451 [P2] {L:board} Review of our task and agent workflow (taking, 2026-11-16, agent workflow)
-  - Context: Your scratch pad 2026-11-16: a Fable agent to review the kanban, task organisation and subagent workflow, research what the current best practice is, and research this project; it may spawn subagents. No earlier review was found (notes/T-3389.md "What exists" looked at board tools only).
-  - Goal: A short report of what to change, with reasons, for you to pick from.
-- T-3452 [P2] {L:cleanup} Code tour for Anita (taking, 2026-11-16, agent tour)
-  - Context: Your scratch pad 2026-11-16: a high-level tour of how the codebase is laid out, for you, and a chance to spot silly things.
-  - Goal: A readable tour with a diagram, viewable on the board, plus a list of odd things found.
-- T-3448 [P2] {L:schematic} {waits:Anita} Player's NYC schematic broken into islands
-  - Need from Anita: Pick how to draw a network spread over thousands of km: one diagram per region, around the camera (recommended, about 3-5 hours; also covers T-3409, a schematic of one city), or a finer sheet near dense cities (a day or more); and ask the player whether their game has lines far from New York.
-  - Context: Reproduced by adding a 3-station line far away (Los Angeles, London, Tokyo) to the real New York save: the sheet's cells grow with the map, so the city is sheared onto a diagonal, and where its zones' water masks fail to load it is drawn as sea with land only at the stations. Mask fetches now go 32 at a time with a retry (dc184b11). The player (left) and the repro (right): artifacts/trainworld/review/nyc-schematic-far.png.
-  - Goal: A New York game with a far-off network draws New York as it does alone. Your board note 11-16: cities squished too much is a pressing local issue in general.
+- T-3448 [P2] {L:schematic} One schematic per region, so cities keep a fine grid (taking, 2026-11-16, agent regions)
+  - Context: A player's New York schematic was squashed onto a diagonal and broken into islands: with lines far away (Los Angeles, Tokyo) the sheet's cells grow with the whole map. Mask fetches now go 32 at a time with a retry (dc184b11). You 2026-11-16: keep the grid fine; one diagram per region if that does it; draw the one around the camera first, show it, then keep drawing the farther ones until all are drawn (the schematic should draw everything); regions joined by rail draw as one. Player (left) and repro (right): artifacts/trainworld/review/nyc-schematic-far.png.
+  - Goal: A New York game with far-off lines draws New York as it does alone, and every region gets drawn. Also covers T-3409 (a schematic of one city).
+  - Other: notes/T-3448.md
+- T-3453 [P3] {L:schematic} Finer schematic grid near dense cities
+  - Context: Option B of T-3448, queued by you 2026-11-16 for later: make the sheet's grid finer wherever stations are dense, whatever the map's size; would also help cities squished too much. A redesign of the sheet's land and water grid, a day or more.
+  - Goal: Dense cities get room on any map size.
   - Other: notes/T-3448.md
 - T-3345 [P2] {L:schematic} Better schematic
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
@@ -889,7 +887,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3079 [P2] {L:stops} Exact stop ordering back
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
   - Goal: Exact stop ordering is an option beside normal stop editing, styled like your stop-picking notes in T-3444 (numbered circles per track).
-  - Other: Folded in T-3384 (Waypoints on lines). Renamed from "spacing" on your board note 11-16. UI notes: notes/T-3444.md
+  - Other: Folded in T-3384 (Waypoints on lines) and T-3410 (pass through or turn at a one-way station: you 11-16, "better solved with waypoints, so we dont have to add an additional thing to the UI"). Renamed from "spacing" on your board note 11-16. UI notes: notes/T-3444.md
 - T-3002 [P3] {L:trams} Shorter tram ramps
   - Context: You asked 2026-11-10 whether tram ramps could be shorter. Researched, not built.
   - Goal: Tram ramps are shorter, if realistic.
@@ -927,10 +925,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
   - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece.
   - Goal: The track panel has the same rebuild, and the hover suggests Select for several.
-- T-3410 [P3] {L:stops} {waits:Anita} Tram passes through or turns at a one-way station
-  - Need from Anita: Where does the choice go, on the station or on each line's stop? Recommended: on the line's stop, as a pass-through way or reverse.
-  - Context: Your TODO 2026-11-15, for sensible pathing on single track. Today the router decides the turn itself; a new choice changes what players can build.
-  - Goal: Choose pass through (and which way) or reverse at a one-way station.
 
 ## Held features
 
