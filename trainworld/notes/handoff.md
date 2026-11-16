@@ -1,8 +1,8 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 76388cba-0327-41aa-a4e4-4e7d7376bf41, name maps-7e [2cdf3c], since 2026-11-16 13:13 UTC
-(Took over from maps-b8, session 7186e3f8, already gone at 13:13 UTC, paused with nothing in flight, so no wait.)
-Updated: 2026-11-16 15:32 UTC (handoff current; ready to cycle)
+Orchestrator: session f7c8626c-6b89-4b09-983c-732243e787e9, name maps-d7 [e8137b], since 2026-11-16 15:36 UTC
+Previous: session 76388cba-0327-41aa-a4e4-4e7d7376bf41, name maps-7e [2cdf3c], handed over 2026-11-16 15:36 UTC, finishing in-flight work
+Updated: 2026-11-16 15:36 UTC (she is starting a new orchestrator now)
 
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
@@ -37,21 +37,21 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   b5 a2cfa4b348a666bad (ferry/bus fixes T-3400, T-3419, T-3370), lint ab8cc3eadbb592dd4 (T-3443), c1 a7d543ca2406b54e8
   (checks/calib), c2 a88de27a9451b413c (loading; then start batch D from C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\picker\plan2.md), c3 a3a3eb40021a0bccf (label/frame costs),
   e1 a90d0ff7fa52b0379 (edit cost), sc ac2e02d431120b572 (schematic; looks-changes stop at screenshots for her), doc ab9e2a1110a3b25f6,
-  glyph = agent ac05a6a819c58f9ad in .tw-trees/glyph (T-3442: warnings on the 8800 start screen with saves),
-  pick2 a4b7e53eb725fe978 (T-3406, T-3407, her picks), feeders af151363ff713e9bf (T-3426: calibrate against real corridors
+  T-3442 glyph fix landed 15:36. pick2 a4b7e53eb725fe978 (T-3406, T-3407, her picks), feeders af151363ff713e9bf (T-3426: calibrate against real corridors
   before landing; fix in .tw-trees/feeders), shenzhen a05e93ee1c13bd90f (T-3428 shz rebuild + Pearl River join writing
   data/packs: 8800 rebuilds use snap8800.py <hash> 20261113-013559 until it reports).
 - Held: picker plan2 batch R (realnet rebuilds), B8 world_run scripts (after T-3399), B10 track panels (after T-3444).
 - T-3399 ready: powershell -File trainworld\tools\country\start_hidden.ps1 C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\countries\tonight.cmd (waits for locks,
   ~10 cores, ~4 h + 1.5 h stage 2; NO-STAGE2 in the kit folder skips gla/lis/pot); log artifacts/trainworld/t3399-tonight.log.
-  Needs her OK for 10 cores. Countries' plan edits are uncommitted in the main tree (world_plan.py/.json, zone-names.json,
+  She OK'd it 15:33 UTC: start in her evening, not now ("it is only 10:30am"). Countries' plan edits are uncommitted in the main tree (world_plan.py/.json, zone-names.json,
   realms.json, data-register.md, notes/T-3399.md): commit them when the run starts.
-- shonei-server 4b8bb1d (T-3402) + 372a8ce (T-3440) committed, not deployed or pushed: asked her to OK both together.
-  noritetsu/dist account.js + privacy.html (T-993 text) uncommitted, hers.
+- shonei-server deployed 15:34 UTC on her yes (T-3402 paging + T-3440 size caps; service active). NOT pushed: a push
+  needs her word (asked). noritetsu/dist account.js + privacy.html (T-993 text, her "Your cloud saved trainsworld games...")
+  uncommitted, hers.
 - 8800 = b6c40df5 (frozen data). master pushed b6c40df5; later commits unpushed (push regularly).
 - Permission rules she approved are in maps/.claude/settings.json; routine commands: snap8800.py, restart_serve.py,
   git -C <maps> commit/add/push, agent-tree.mjs. Avoid git checkout/reset/branch -D, ad-hoc kills, PowerShell steps.
-- Waiting on her: T-3426 recalibration table; T-2396 (explained to her 15:30); deploy OK; T-3399 cores OK;
+- Waiting on her: T-3426 recalibration table; T-2396 (still unclear to her: explain with a screenshot, or close); shonei-server push;
   T-3442 if the glyph agent needs more; T-3435 fast ferry (later); per-direction refusal wording (stage 4).
 
 ## Earlier (maps-b8)

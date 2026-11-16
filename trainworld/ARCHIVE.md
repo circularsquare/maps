@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (2026-11-16): the world map labels Nunavut in Canadian syllabics, which no shipped font range had; nine Noto Sans ranges added, so the start screen loads clean. notes/T-3442.md.
+- T-3440 [P3] {L:accounts-server} Sharing a large network fails (2026-11-16): every size cap answers "too big" and the caps are doubled; server deployed 2026-11-16 15:34 UTC (372a8ce) on Anita's word; players get the game side with the next publish. notes/T-3440.md.
+- T-3402 [P3] {L:community} Community page switcher on all views (2026-11-16): the community pager shows on all views with a total; server deployed 2026-11-16 15:34 UTC (shonei-server 4b8bb1d) on Anita's word. notes/T-3402.md.
 - T-993 [P3] {L:accounts-server} Account delete text should mention leaderboards (2026-11-16): the account delete panel and privacy page say trainsworld games, scores, shares and feedback go too (noritetsu/dist, uncommitted for Anita).
 - T-3384 [P3] {L:stops} Waypoints on lines (2026-11-16): folded into T-3079. Its context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
 - T-2321 [P3] {L:schematic-layout} Diagram pill overlaps in all Japan (2026-11-16): folded into T-2242. Its context: Follow-up to T-2289: all Japan has 3 more pill overlaps and 4 pairs closer than their spacing. A gap pass changed nothing.
