@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3477 [P3] {L:track-drawing} Select box drifts from the selection when zooming (2026-11-16): closed without code: Anita 2026-11-16: the select box works as intended on zoom; the report could not be matched.
 - T-2912 [P1] {L:accounts-server} Security review follow-through (2026-11-16): review fixes landed earlier; production checked 11-16 (only 22/80/443 open, secret set, Go 1.26.10, ssh keys only), jsonbin key dead (Anita: zero bins and keys), box rebooted onto kernel 7.0.0-43 after a fresh backup. notes/T-2912.md.
 - T-3470 [P2] {L:edit-speed} Take PR 7, reused scratch buffers for profile builds (2026-11-16): PR 7 (peanutmow, scratch buffers for profile builds) applied; figures identical to the bit on NYC, London and the 240-line save; big240 loads 22.4 s to 11.0 s, London 1.54 s to 1.23 s; notes/T-3470.md.
 - T-3467 [P2] {L:board} Roadmap on the board's changelog tab (2026-11-16): The board's Changelog tab has a Roadmap above the next update: a column per planned version, items added, edited, deleted and dragged within and between versions, versions added, renamed, deleted; saved to trainworld/changelog/roadmap.json through serve.py /_roadmap; not in game. notes/T-3466.md.

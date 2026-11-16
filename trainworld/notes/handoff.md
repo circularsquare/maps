@@ -1,62 +1,46 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a02dbdc8-1ab4-4517-95dd-2f768d109806, name "Takeover trainworld orchestration" (per maps-d7; message by session id), since 2026-11-16 18:38 UTC
-Previous: session f7c8626c-6b89-4b09-983c-732243e787e9, name maps-d7 [e8137b], handed over 2026-11-16 18:38 UTC, finishing in-flight work
-Updated: 2026-11-16 18:38 UTC
+Orchestrator: session a02dbdc8-1ab4-4517-95dd-2f768d109806, name "Takeover trainworld orchestration" (message by session id), since 2026-11-16 18:38 UTC
+Previous: session f7c8626c-6b89-4b09-983c-732243e787e9, name maps-d7 [e8137b], handed over 2026-11-16 18:38 UTC, finishing in-flight work (only feedsample's note and TASKS fields left to commit; told it may commit)
+Updated: 2026-11-16 20:40 UTC (a02dbdc8 at ~390k tokens: starting its successor; my running agents below are the successor's to adopt)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
 ## State
-- Live = v0.3.5 (maps bfe58c54, published 11-15). Data 2026-11-13 freeze 20261113-013559 on R2.
-- master and origin = e240791c+ (pushed; T-3459 edit after). 8800 = cefc5ac1 on live data/packs (has feeders; lacks T-1791
-  hover and later). Rebuild 8800 at HEAD once the next batch lands (she has finished playtesting).
-- Uncommitted on purpose in the main tree: T-3399's country plan edits (pipeline/world_plan.py/.json, realms.json,
-  zone-names.json, docs/data-register.md, notes/T-3399.md): commit when T-3399 starts. Also not ours: TODO.md (hers),
-  notes/T-3395.md, T-3397.md, jordan-save-investigation-2026-11-15.md, tools/ops/archive_bad_saves.py (saves session).
-- Board inbox watch: Monitor on `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min, re-arm); armed by the new orchestrator 18:38.
-- Server shonei-server: T-3402 + T-3440 deployed and pushed 11-16.
+- Live = v0.3.5 (maps bfe58c54, published 11-15). The next publish is v0.4.0 (Anita 20:23: big, with Central America and Detailed mode scheduling).
+- 8800 = origin = 45b7808c. master = 441d4a25, ahead and unpushed: timetable restyle T-3469, points wording, touchrule T-1764, Community count dropped, board bars. Next: land the agents below as they pass, then one smoke on master, push, snap8800 (snap_wasm emoji crash fixed in 45b7808c).
+- Translation batch needed before v0.4.0: points keys cities.pointsPast, cities.pointsPastAll, topBar.pointsPast, cities.sortPoints, leaderboard.valueTip, cities.pointsRule, leaderboard.pointsRule (docs/localization.md passes), plus any keys the agents below add.
+- Uncommitted on purpose in the main tree: T-3399's country plan edits (pipeline/world_plan.py/.json, realms.json, zone-names.json, docs/data-register.md, notes/T-3399.md): commit when T-3399 starts. Not ours: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md, tools/ops/archive_bad_saves.py. notes/T-3395.md is savesafe's (untracked, commit with T-3395).
+- Board inbox watch: Monitor on `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min, re-arm).
+- shonei-server: T-3395 stage 1 (37217ea, 4623fde, 094b830) and stage 3 (85e2945) committed, not pushed or deployed. Deploy stages 1+3 in daytime on her yes once savecheck passes stage 1 and stage 3 is checked.
+- Production box rebooted 19:45 onto kernel 7.0.0-43 (T-2912 done). jsonbin retired (memory note).
+- Landing gotchas this session: agent-tree land refuses root files (serve.py): git diff the tree's serve.py to a patch (add a trailing newline), apply in main, checkout in the tree, then land; a contributor's co-author needs a hand commit (land adds only the Claude trailer). Changelog items need --area (track, demand, scheduling, fares, schematic, community, performance, other, bug; --fix for lighter).
 
-## Running agents (mine)
-- helpflag aba4e2e9f3bb3a8d4 (Sonnet, .tw-trees/helpflag): T-2398 world_run step --help: done, check passes; land after maps-d7 finishes.
-- cleanup ac16d7ecaad5a6eb7 (Opus, .tw-trees/cleanup): T-3459 done (212 notes scripts deleted, docs fixed); land after maps-d7.
-- touchrule ad892057e8cf3781d (Sonnet, .tw-trees/touchrule): T-1764 done, smoke 28/28; checker touchcheck ae668a2055bcb2407 (6145/6146) running.
-- changelog a04e4119ccbf7788a (Opus, .tw-trees/changelog, 6143): T-3466 changelog icons, then T-3467 roadmap (her pad 18:58).
-- weekendscore ace2b666427cd1078 (.tw-trees/weekendscore): T-3465 forecast weekday points; checker passed the mechanics, 2 stale strings fixed after. Ready to land. LANDING: checkout next.json in the tree, add its changelog item fresh in main ("points now come from a forecast weekday and update as soon as you change your network"); retranslate cities.pointsPast, cities.pointsPastAll, topBar.pointsPast, cities.sortPoints, leaderboard.valueTip.
-- prsurvey a46ce6d26ffe265b8 (Opus, read-only): open PRs 1/7/12/13 and T-3373 options -> notes/pr-survey-2026-11-16.md (her 19:01 ask). Her calls 19:08: PR 1 only as an option; PR 13 vs T-3346 my call (pull pieces or reject).
-- pr7 a6de192a893e47c70 (Sonnet, .tw-trees/pr7): T-3470 done, identical figures, 240-line load 22.4 s -> 11.0 s; changelog c055 already in main. Checker PASS (3.85M fuzzed builds, 76 WASM snapshots identical). Ready to land. Commit with "Co-Authored-By: Alice <alice@herkula.info>" (GitHub peanutmow). Note weekendscore's tree also uses id c055: add its item fresh in main at landing.
-- ttstyle a5748c5a59486ff83 (Opus, .tw-trees/ttstyle, 6149): T-3469 timetable restyle; screenshots to Anita before landing.
-- changelog: T-3466 done (icons, groups; group names and T-3465 points strings acknowledged by Anita 19:23, icons approved). LANDING: agent checks out next.json in its tree; after land run scratchpad\changelog\apply_areas.py trainworld/changelog/next.json from the maps root; 8800 serve.py restart for the board menu. T-3468 pages done too. No changelog items for T-3466/3468/3467 (Anita 19:26); agent removes them from apply_areas.py. Now on T-3467.
-- Queued after landings: T-3472 long-session memory check, then T-3473 (PR 12 speedups, after T-3470), then T-3373 A then B (her 19:18 call). T-3474 partly built lines, low priority. PR replies (1, 12, 13) to draft for her.
-- T-2912 done 19:46: production rebooted onto kernel 7.0.0-43 after a fresh backup, all healthy.
-- savesafe a992a8c39662ee3cc (Opus, shonei-server, commits there, no deploy): T-3395 stage 1 server validation, quarantine, pinned intact copy; stage 2-3 design to Anita.
-- changelog: T-3466, T-3468, T-3467 all done (roadmap at changelog/roadmap.json via serve.py /twboard/_roadmap). Her open question: keep the "other" area (plain dot)?
-- maps-d7 landed T-3448 (ec4b53eb) and T-3450 (694a624b), unpushed, no smoke yet: mine to smoke, push, rebuild 8800 once it's done with feedsample. Filed T-3462, T-3463 from its findings.
-
-## Running agents (maps-d7, it lands these; flow-board and flow-tools already landed in ba9430b9)
-- names acde25cc42203d034 (Opus, main tree, i18n place-name files): T-3450 Shiga and a Wikidata match guard; told
-  to hand-check only prominent places.
-- regions ac47cdc31cb8469fc (Opus, .tw-trees/regions, 6181): T-3448 one schematic per region.
-- feedsample aca180a7fbc3e6ae7 (Opus, .tw-trees/t3454-base reverts c9db1359 for "before", 6196/6197): T-3454.
-- flow-board a6ef6e2aa7e353ca5 (Sonnet): asks on the board (notes/asks.json), Someday -> P4, P4 not counted.
-- flow-tools afb0d935b17ce763c (Sonnet): tools/tasks.py start/done/close/check; agent-tree JSON handling; T-3395 format.
-- Landing: restore app/src/game/*.json in a tree before agent-tree land (until flow-tools automates it).
+## Running agents (mine, the successor's to adopt)
+- ttstyle2 a9f5ba644ea623cd6 (Opus, .tw-trees/ttstyle2, 6149): T-3475 timetable hover highlight, chart leads with the table's direction (reverse dimmed), vertical bullets centred. Timetables hidden behind ?timetables: land without a checker.
+- ferry45 a49ebbc59481d527b (Sonnet, .tw-trees/ferry45, 6155): T-3435 ferries 32 -> 45 km/h (her call). Needs a checker before landing.
+- crowddot a4726042dad524e70 (Sonnet, .tw-trees/crowddot, 6157): T-3476 crowding dot fill as a plain average, ring unchanged. Show her the before/after.
+- savesafe2 ae548dbe1fab00e93 (Opus, .tw-trees/savesafe2, 6156): T-3395 stage 2, game side (strings proposed in notes/T-3395.md). Needs a checker.
+- savecheck a2132c3f7caec1b0c (Opus, 6153): checker for T-3395 stage 1 (above all: a good save never refused). Then check stage 3 too.
+- newgame a5fcacce9edc5fc19 (Opus, .tw-trees/newgame, 6160): T-3478 new game from a game goes via the menu, T-3479 click the terrain notice to retry.
+- memcheck aab5014326634c569 (Opus, 6154): T-3472 long-session memory check, plus base memory before any city (her ask); feeds T-3373 A then B.
+- prsurvey a46ce6d26ffe265b8 (read-only): PR 16 "Branch lines" appended to notes/pr-survey-2026-11-16.md.
+- Agents that finished can't be resumed by SendMessage after a while ("No transcript found"): brief a fresh one.
 
 ## Waiting on Anita
-- Auto-starting the next orchestrator (T-3451 rec 6 replaced by her question): see the latest chat; nothing built.
-- T-3399 Central America + Venezuela, T-3455 overnight scan: she will say when (18:45 "you dont have to mention it again"); don't list them in reports.
+- Server deploy of T-3395 stages 1+3 (ask once the checks pass, daytime).
+- T-3399 Central America + Venezuela, T-3455 overnight scan: she will say when; don't list them in reports.
 
 ## Her standing asks this week
 - Small isolated fixes, open-task count down, merge duplicates; bug investigations give up if hard.
-- Quad paused (waits on T-3444). Pack rebuilds (region redraws, data fixes) batch into overnight runs.
-- No windows on her screen: background processes hidden (start_hidden.ps1, CREATE_NO_WINDOW).
-- Manual agent checking only for prominent cases; prefer automatic checks (11-16, on T-3450).
+- No asking about changelog lines: she reviews them all at once on the board. No changelog items about the changelog itself.
+- Corrupted saves (T-3395) are priority. Optimization today: T-3472 then T-3473 (PR 12 CPU speedups, measured) then T-3373 A then B; C only if it helps noticeably.
+- Quad paused (waits on T-3444). Pack rebuilds batch into overnight runs.
+- No windows on her screen: background processes hidden.
 - Every publish, deploy and server push needs her yes to that exact action; none overnight.
 
-## Playtest
-- 18:31 Anita on 8800 (cefc5ac1, feeders): "looks pretty good", score unchanged, long-distance lines bigger. Hold lifted.
-- A permission-allowlist addition (14 read-only rules) was refused to me by the permission check: list in chat 18:33; hers to add.
-
 ## Next
-- Land the five agents above as they report; smoke after each batch; 8800 rebuild; push.
-- Then more small fixes from P2/P3 bugs (ready, no waits); her review calls on T-3451 recs as they come.
+- When cores free up (her 20:34): world build tooling ahead of coming world builds. Start with T-2298 (gate from a frozen app copy) and T-2399 (gate browser check fails silently); then T-1080, T-2627/T-2777, T-2070, T-930, T-2095, T-1992, T-2326.
+- PR replies for 1, 7, 12, 13 (and 16 after the survey) to draft for her: 7 taken with credit, 13 reused at T-3346 stage 4, 12's partly built lines as T-3474, the rest left out (DECISIONS 2026-11-16).
+- T-3474 partly built lines (low priority).

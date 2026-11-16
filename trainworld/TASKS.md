@@ -202,7 +202,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
 - T-3388 [P2] {L:edit-speed} London edits take about 4 s
-  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235).
+  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235). Player ank (via you, 11-16): 246M points, 3.0 of 8 GB, about 5 s per track piece, "use more cores" changed nothing.
   - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
   - Other: notes/T-3387.md; notes/T-3233.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
@@ -254,7 +254,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
-- T-3472 [P2] {L:memory} Long-session memory check
+- T-3472 [P2] {L:memory} Long-session memory check (taking, 2026-11-16, agent memcheck)
   - Context: 7.4 GB in Firefox after 43 minutes is more than the workers' copies explain. Needed before T-3373.
   - Goal: Memory over a 45-minute session on a big save, split by worker and main thread, with what grows named.
 - T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured
@@ -263,6 +263,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
+- T-3475 [P2] {L:timetables} Timetable hover and one direction on the chart (taking, 2026-11-16, agent ttstyle)
+  - Context: You, 2026-11-16 after T-3469: hovering a train should highlight it on the timetable and the Marey chart (fade the others if it can be done cheaply, else lighten the hovered one); the chart shows both directions while the table shows one, so show the table's direction, the reverse dimmed in the background, for related lines too; the letters in vertical line bullets are not centred.
+  - Goal: Hover highlights one train in both, the chart leads with the table's direction, and vertical bullets are centred.
+- T-3476 [P2] {L:map-look} Crowding dot fill as a plain average (taking, 2026-11-16, agent crowddot)
+  - Context: You, 2026-11-16 on the board: the line's crowding dot often shows orange when only a few segments are red and most are green, because of a skew in the averaging; the outer ring already shows the peak load.
+  - Goal: The dot's fill is the straight average of its segments' crowding colours, no skew; the ring unchanged.
+- T-3478 [P2] {L:loading} New game from an open game waits silently (taking, 2026-11-16, agent newgame)
+  - Context: You, 2026-11-16: in an open game, New game then start on the map seemed to leave you in the old game for about 30 s, while a "terrain failed to download, will try again in 30 s" notice showed; then it opened the map pick as expected. Likely meets anyone starting a new game from a game.
+  - Goal: New game from a game saves and goes to the menu first, then loads the new one; a failure ends on the menu, never silently in the old game.
+- T-3479 [P3] {L:loading} Retry a failed terrain download now (taking, 2026-11-16, agent newgame)
+  - Context: You, 2026-11-16: the "terrain failed to download" notice waits 30 s before retrying.
+  - Goal: Clicking the notice retries at once.
 - T-3458 [P3] {L:cleanup} Fewer code comments
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
@@ -362,11 +374,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
   - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md
-- T-3435 [P3] {L:buses} {waits:Anita} Long-distance ferries
-  - Need from Anita: A Fast ferry kind per line (65 km/h, about US$25M a boat, US$100 a boat-km), after T-2216? Recommended yes, ferry fan unchanged.
-  - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
-  - Goal: Long ferries carry riders near real routes: T-2216 first, then a fast ferry kind if you agree.
-  - Other: Folded in T-437 (Long trip modes: car cost, Channel, ferries). notes/T-3435.md
+- T-3435 [P3] {L:buses} {waits:Anita} Faster ferries (taking, 2026-11-16, agent ferry45)
+  - Need from Anita: Raise every ferry from 32 to about 46 km/h (25 knots, what NYC Ferry's boats cruise at), costs unchanged? Recommended yes, with T-2216 first for routes like Seattle-Victoria.
+  - Context: You, 2026-11-16 on the board: rather than a separate fast ferry, make current ferries faster overall ("what is the niche of a slow ferry... slow ferries have like almost no traffic everywhrere i build them"). Study: boats are 320 seats at 32 km/h; Hong Kong-Macau gets 1,800 of about 19,000; Seattle-Victoria 0 because trips between landmasses with no car or plane under 250 km are never offered (T-2216).
+  - Goal: One ferry kind at the faster speed, with ferry riders checked on a few routes before and after.
+  - Other: Folded in T-437. notes/T-3435.md
 - T-3431 [P2] {L:buses} {after:T-2216} Seattle to Victoria ferry gets no riders and shows no route
   - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
   - Goal: The ferry carries trips once T-2216 solves island pairs; check this line then.
@@ -937,8 +949,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent savesafe)
-  - Context: Jordan's cloud saves had truncated gzip streams, and the server only checks the first four bytes of an upload, so backup rotation can throw away the last good copy.
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent savesafe2)
+  - Context: Stage 1 is done (server, not deployed): uploads get the full check, damaged ones are refused and kept aside, and each game's last intact copy is pinned outside backup rotation. Stages 2 (the game's slots, sync and restore, about 3 h) and 3 (the recurring scan, about 2 h) wait for your go on their design in the notes.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
