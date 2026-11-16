@@ -228,6 +228,8 @@ export type ToClock =
   /** T-1196: the page reloads into another game: save the one in hand, keep `pending` (the game the
    * reloaded page opens, when not a slot) and let go of the slot; answered with "left" */
   | { kind: "leave"; pending?: PendingLoad }
+  /** T-3479: fetch the terrain and water that failed again now (the status tag clicked) */
+  | { kind: "retryGround" }
   /** the view's bounds in degrees after a move (T-302): water masks near it are fetched ahead, but
    * not those of `skip`, the zones of realms not shown (T-975) */
   | { kind: "view"; w: number; s: number; e: number; n: number; skip?: string[] }

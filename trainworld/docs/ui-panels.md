@@ -1377,8 +1377,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   before the game's network is in (T-1539).
 - **Another game replaces this one by reloading the page into it** [T-1196]: Open, Open a file,
   Open as a copy and New game in the saves panel save the game in hand, let go of its slot, then
-  reload with `?slot=<key>` or `?load=file|restore|new` (a file, a backup or a new game's spec waits in
-  browser storage for the reloaded page's clock worker). Demand's workers never give memory back
+  reload with `?slot=<key>` or `?load=file|restore` (a file, a backup or a new game's spec waits in
+  browser storage for the reloaded page's clock worker). New game reloads to the start menu
+  (`?next=new`), which starts it as its own New game does, so a start that fails ends on the menu
+  (T-3478); a new game whose spec is missing from storage still starts, never the game left. Leaving
+  never waits on a download: a game still opening is let go as it is in storage, and an edit waiting
+  for its ground is left out of the save. Demand's workers never give memory back
   while they live (about 2.5 GB each after all of China), so this is the one way the last game's
   memory goes. The switch leaves the address bar, so reloading from there opens the start menu.
 - **A game too big for the device is refused** [T-1197; `game/memoryCheck.ts`]: before a saved game
@@ -1449,8 +1453,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   case below, the status says "Downloading terrain…" with the spinner once a terrain download has
   been on its way 1.5 s (the clock worker's terrain classes, water masks or world water, or the hill
   shading's tiles while Terrain is on), and "Terrain could not load" with no spinner while one of the
-  clock worker's failed, hover "Check your internet connection. It is tried again within 30 s."
-  (it is: 2 s after the failure, doubling to 30 s, while the view or the blueprint still needs it). Both
+  clock worker's failed, hover "Check your internet connection. Click to try again, or wait up to 30 s."
+  (it is: 2 s after the failure, doubling to 30 s, while the view or the blueprint still needs it). A click
+  on the failed tag tries at once and starts the wait over at 2 s (T-3479). Both
   show also after demand stopped, and neither while the loading card is up. Construct waits for the
   ground under the blueprint and is refused while it could not load (track-and-service.md 6.4).
 - **Bubbles on their way** [T-1493]: with Homes, Destinations or Total on, a zone in view that has its

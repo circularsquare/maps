@@ -32,6 +32,8 @@ let startAt: { center: [number, number]; zoom: number } | null = null;
 export function setStartAt(at: { center: [number, number]; zoom: number } | null) {
   startAt = at;
 }
+/** T-3478: the start from the player's location picked, kept for `viewStart` after a reload. */
+export const startAtPicked = () => startAt;
 
 /** Move the camera to a new game's start: the city's registry view, or the world map; a start from
  * the player's location goes to that location instead. */

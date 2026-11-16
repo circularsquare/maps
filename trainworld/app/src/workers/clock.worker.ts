@@ -549,6 +549,8 @@ let cloudQueue: Promise<unknown> = Promise.resolve();
 const cloudTimers = new Map<string, ReturnType<typeof setTimeout>>();
 /** the game's first load is done: the claim can follow */
 let initDone = false;
+/** T-3478: the first load is opening a file or backup picked before the reload, which is in no slot until it opens */
+let initIncoming = false;
 function cloudRun(f: () => Promise<unknown>): Promise<unknown> {
   cloudQueue = cloudQueue.then(f).catch(() => {});
   return cloudQueue;
@@ -723,9 +725,12 @@ async function pendingGame(p: Exclude<PendingLoad, { kind: "new" }>): Promise<{ 
 
 /** T-1196: the page reloads into another game, which frees all of this one's memory: the game in
  * hand is saved and its slot let go (the reloaded page's worker takes the next) */
-async function leave(msg: Extract<ToClock, { kind: "leave" }>) {
+async function leave(msg: Extract<ToClock, { kind: "leave" }>, opening = false) {
   try {
-    if (!testPage) await flushBeforeSwitch();
+    // T-3478: a game still opening has nothing changed to save (its edits wait behind the load), and
+    // its model may hold an empty network between steps, so it is let go as it is in storage
+    if (opening) switching = true;
+    else if (!testPage) await flushBeforeSwitch();
     if (msg.pending && !await writePending(msg.pending)) throw new Error("Browser storage is unavailable. Download this game as a file to keep it.");
     activeLease?.release();
     activeLease = null;
@@ -1200,6 +1205,14 @@ function sendGround() {
   send({ kind: "ground", pending: groundPending.size, failed: groundFailed.size });
 }
 
+/** T-3479: the status tag clicked: what failed is fetched again now, and the wait before the next try starts over */
+function retryGroundNow() {
+  if (groundTimer) clearTimeout(groundTimer);
+  groundTimer = 0;
+  groundWait = 0;
+  retryGround();
+}
+
 function retryGroundLater() {
   if (groundTimer) return;
   groundWait = Math.min(GROUND_RETRY_MS[1], groundWait ? groundWait * 2 : GROUND_RETRY_MS[0]);
@@ -1624,7 +1637,8 @@ async function masksBeforeLoad(net: Uint8Array) {
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
 async function openNetwork(net: Uint8Array) {
   await worldWaterIntoModel();
-  await terrainIndexIntoModel();
+  // T-3478: a stalled index holds the open no longer than its blocks may; the blocks follow when it lands
+  await Promise.race([terrainIndexIntoModel(), new Promise((r) => setTimeout(r, LOAD_TERRAIN_WAIT_MS))]);
   await masksBeforeLoad(net);
   if (!api!.load(net)) throw new Error("This save is damaged.");
   await masksForLoaded(net);
@@ -4183,6 +4197,10 @@ onmessage = (e: MessageEvent<ToClock>) => {
     return;
   }
   if (msg.kind === "epoch" && parked > 0) return tripsNow(msg.epoch);
+  if (msg.kind === "retryGround") return retryGroundNow();
+  // T-3478: leaving never waits on a download: not on a game still opening (unless it is a picked file,
+  // which would be lost), nor on an edit parked for its ground, whose network is at rest
+  if (msg.kind === "leave" && (parked > 0 || (ready && !initDone && !initIncoming))) return void leave(msg, !initDone);
   if (msg.kind === "view") {
     // outside the queue, so the fetch starts at once; a mask is installed between messages
     const midLat = (msg.s + msg.n) / 2, wide = (msg.e - msg.w) * M_PER_DEG * Math.cos(midLat * Math.PI / 180) > VIEW_SPAN_M;
@@ -4265,7 +4283,11 @@ async function processMessage(msg: ToClock) {
         msg.game = pending.spec;
       } else if (pending) {
         incoming = await pendingGame(pending);
+        initIncoming = !!incoming;
         msg.slot = pending.from;
+      } else if (msg.pending && msg.game) {
+        // T-3478: a new game whose spec is gone from storage is still a new game, never the game left for it
+        msg.newSlot = newGameName(await listSlots().catch(() => []), msg.game);
       }
       if (msg.fresh) {
         // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game

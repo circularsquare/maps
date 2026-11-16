@@ -108,7 +108,7 @@ try {
   const ground = await page.evaluate(async () => (await import('/src/game/terrain.ts')).groundNet.value);
   check(failedTag, `blocked: the tag says "Terrain could not load" (${JSON.stringify(await tag())}, ${JSON.stringify(ground)})`);
   const t1 = await tag();
-  check(t1?.tip === 'Check your internet connection. It is tried again within 30 s.', `its hover (${t1?.tip})`);
+  check(t1?.tip === 'Check your internet connection. Click to try again, or wait up to 30 s.', `its hover (${t1?.tip})`);
   check(!t1?.spinner, 'no spinner on the failure');
   await shot('t2613-failed.png');
   const cash0 = await page.evaluate(() => window.tw.world.value.money.builtValue);

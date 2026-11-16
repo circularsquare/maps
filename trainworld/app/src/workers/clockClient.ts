@@ -434,14 +434,20 @@ export async function backupChoice(key: string, from: string): Promise<GameChoic
   if (!await writePending({ kind: "restore", key, from })) return t("clockClient.noStorage");
   return { pending: true };
 }
-/** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. */
-export function newGame(game?: NewGameSpec, name = "") {
+/** Start a new game in a new slot (T-743), named after its start (T-728) unless `name` is given. T-3478: the
+ * game in hand is saved and the page goes to the start menu (`?next=new`), which starts the new game as its
+ * own New game does, so a start that fails ends there, never in the game left. */
+export function newGame(game?: NewGameSpec, name = "", at?: { center: [number, number]; zoom: number } | null) {
   const spec = game ?? { mode: "normal" };
-  switchGame({ load: "new", mode: spec.mode, ...(spec.start ? { city: spec.start } : {}), ...(spec.real ? { real: "1" } : {}) }, { kind: "new", spec, name });
+  switchGame({ next: "new", mode: spec.mode, ...(spec.start ? { city: spec.start } : {}), ...(spec.real ? { real: "1" } : {}), ...(at ? { at: [...at.center, at.zoom].join(",") } : {}) }, { kind: "new", spec, name });
+}
+/** T-3479: fetch the terrain that failed again now. */
+export function retryGround() {
+  current?.post({ kind: "retryGround" });
 }
 
 /** T-1196: the URL switches that say which game a page opens (ui/StartMenu.tsx `choiceFromUrl`) */
-export const CHOICE_PARAMS = ["new", "city", "mode", "synth", "demandTest", "continue", "slot", "load", "real"];
+export const CHOICE_PARAMS = ["new", "city", "mode", "synth", "demandTest", "continue", "slot", "load", "real", "next", "at"];
 /** This page's URL with `params` in place of its game switches; none: the start menu (`?paused=1`, a
  * check's paused clock, stays with a game and goes with the menu). */
 export function pageWith(params: Record<string, string>): string {

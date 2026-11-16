@@ -2014,7 +2014,7 @@
   "statusTag.freedMemory": "Recomputing after freeing memory",
   "statusTag.slowConnection": "Internet connection seems slow",
   "statusTag.terrainDownloading": "Downloading terrain…",
-  "statusTag.terrainFailTip": "Check your internet connection. It is tried again within 30 s.",
+  "statusTag.terrainFailTip": "Check your internet connection. Click to try again, or wait up to 30 s.",
   "statusTag.terrainFailed": "Terrain could not load",
   "stopMarkers.station": "Station",
   "stopMarkers.remove": "Click to remove the stop",

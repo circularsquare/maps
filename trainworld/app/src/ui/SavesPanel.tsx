@@ -24,7 +24,7 @@ import { useMemoryGuard } from "./MemoryWarn";
 import { tiedTo, type CloudContext } from "../workers/cloud";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
-import { viewStart } from "./locate";
+import { startAtPicked } from "./locate";
 import { Modal } from "./Modal";
 import { CommunityButton, ShareButton } from "./Community";
 import { refreshMyShares } from "../game/community";
@@ -529,7 +529,7 @@ export function SavesPanel() {
   return (
     <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <><CommunityButton /><HeadMark /></>}>
       {sheet
-        ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game); viewStart(game.start, game.mode); savesOpen.value = false; }} />
+        ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game, "", startAtPicked()); savesOpen.value = false; }} />
         : <Saves onNewGame={() => setSheet(true)} />}
     </Modal>
   );

@@ -2011,7 +2011,7 @@
   "statusTag.freedMemory": "A line in the hover of the small status tag on the map's top row: the game restarted its background calculators to give back memory, so it is calculating the trips of the whole game again before it can answer anything.",
   "statusTag.slowConnection": "A line in the hover of the small loading tag on the map's top row, added when its downloads (city data or terrain) are taking much longer than they do on a fast connection.",
   "statusTag.terrainDownloading": "Small tag on the map's top row while the terrain data downloads.",
-  "statusTag.terrainFailTip": "Hover on the small tag when the terrain data failed to download. s is seconds.",
+  "statusTag.terrainFailTip": "Hover on the small tag when the terrain data failed to download; a click on the tag tries the download again at once. s is seconds.",
   "statusTag.terrainFailed": "Small tag on the map's top row when the terrain data failed to download.",
   "stopMarkers.station": "Hover tag title over a stop marker when the station has no name.",
   "stopMarkers.oneWay": "Hover tag row over a manually placed bus stop that the line serves in one direction only (a half-filled marker), above the row that offers its removal.",
