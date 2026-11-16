@@ -268,8 +268,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Bring the North America answer close to NYC.
   - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
 - T-2757 [P2] {L:solve-speed} Questions wait after a worker memory restart
-  - Context: After a demand worker restarts (T-1205), every question waits for the whole re-solve, minutes on a big game.
-  - Goal: Questions answer quickly after a restart, by restarting one worker at a time or showing the earlier result.
+  - Context: After a memory restart (T-1205) every question waits for the whole re-solve, minutes on a big game. Each worker holds only its share of the day's periods, so one restarted worker cannot be skipped and a one-at-a-time restart still re-solves its share while questions need all of them. Looked at 2026-11-16, needs a design call.
+  - Goal: Questions answer within a second of a restart, from the result already shown, with nothing in the figures changing.
   - Other: notes/T-2756.md
 - T-1730 [P3] {L:solve-speed} Browser check of edits after a local refine
   - Context: Two cases from T-1609 were never checked in the browser. They need a new browser driver; the 723-zone save takes a 50 s whole solve.
@@ -382,9 +382,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours, and nothing new without the player's save.
   - Goal: Reproduce it (the player's save is the next step), fix it, add a check.
   - Other: notes/T-3150.md
-- T-3101 [P3] {L:single-track} One-way track follow-ups (taking, 2026-11-16, agent bug-e)
-  - Context: From T-3094 (one-way track): the Select bar lacks switch and reverse for a picked single-track run, and the track panel misses a line that only uses a piece on its way back.
-  - Goal: Select bar switch and reverse work on single-track runs, and the lists count return-only lines.
+- T-3101 [P3] {L:single-track} One-way track follow-ups
+  - Context: The track panel's line list now counts a line that only uses a piece on its way back (fixed in tree bug-e, waiting to land). The Select bar still lacks switch and reverse for a picked single-track run: one confirmation and undo for several pieces, and the words, need a call.
+  - Goal: Select bar switch and reverse work on single-track runs.
+  - Other: notes/T-3101.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
 - T-2624 [P2] {L:solve-speed} Lines in view wait on a whole solve
   - Context: After a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
@@ -409,10 +410,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your note 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio". The cross section draws a fixed 4 m band.
   - Goal: The cross section shows real sea, lake and river depth from a global source.
   - Other: Sources to try: GEBCO, HydroLAKES.
-- T-2698 [P2] {L:world-map} Start cameras on the city
-  - Context: 112 metros start more than 5 km from the OSM city of the same name (Oklahoma City 31 km, Perth 28, Atlanta 23).
-  - Goal: Move each start onto the nearest same-named OSM place.
-  - Other: artifacts/trainworld/t2690/scores.json has both points. T-2690 found it.
 - T-2701 [P3] {L:edit-speed} Rebuild only near the drawn track
   - Context: After a run, the follow-up rebuild is still whole-network (North America 0.4-1.1 s). Your idea: only rebuild near the track being drawn.
   - Goal: The drawn network, state rows, strokes and grids update only near the change.
@@ -471,9 +468,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan.
   - Goal: The 37 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
   - Other: plan in notes/T-3012.md; rows in artifacts/trainworld/split-zones.json
-- T-3042 [P3] {L:stops} Draw a flat junction once in the stop list (taking, 2026-11-16, agent bug-e)
-  - Context: Your note 2026-11-10: the same flat junction shows twice on a looped line, once per pass.
-  - Goal: One indicator per junction, drawn on the upper one.
 - T-3052 [P2] {L:rebuild-track} {after:T-3060} Rebuild built track with new properties
   - Context: You asked 2026-11-10 to change built track's height or kind from an edit button. Design approved: change pieces in place, from the Select bar, with price and confirm.
   - Goal: Built track changes level or kind in place, keeping stations and lines.
@@ -854,6 +848,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
+- T-3450 [P2] {L:translations} Shiga shows as 志賀 in Japanese (taking, 2026-11-16, agent names)
+  - Context: Player report via your scratch pad 2026-11-16: Shiga is 滋賀, not 志賀. Zone shg's Wikidata id is Q2278690 (Shiga town, 志賀町), not the prefecture, so the name lookup picked a same-named place. You asked how it happened and whether others went wrong the same way.
+  - Goal: shg fixed, every zone's Wikidata match checked for the same kind of error, and a check that catches it.
+- T-3451 [P2] {L:board} Review of our task and agent workflow (taking, 2026-11-16, agent workflow)
+  - Context: Your scratch pad 2026-11-16: a Fable agent to review the kanban, task organisation and subagent workflow, research what the current best practice is, and research this project; it may spawn subagents. No earlier review was found (notes/T-3389.md "What exists" looked at board tools only).
+  - Goal: A short report of what to change, with reasons, for you to pick from.
+- T-3452 [P2] {L:cleanup} Code tour for Anita (taking, 2026-11-16, agent tour)
+  - Context: Your scratch pad 2026-11-16: a high-level tour of how the codebase is laid out, for you, and a chance to spot silly things.
+  - Goal: A readable tour with a diagram, viewable on the board, plus a list of odd things found.
 - T-3448 [P2] {L:schematic} {waits:Anita} Player's NYC schematic broken into islands
   - Need from Anita: Pick how to draw a network spread over thousands of km: one diagram per region, around the camera (recommended, about 3-5 hours; also covers T-3409, a schematic of one city), or a finer sheet near dense cities (a day or more); and ask the player whether their game has lines far from New York.
   - Context: Reproduced by adding a 3-station line far away (Los Angeles, London, Tokyo) to the real New York save: the sheet's cells grow with the map, so the city is sheared onto a diagonal, and where its zones' water masks fail to load it is drawn as sea with land only at the stations. Mask fetches now go 32 at a time with a retry (dc184b11). The player (left) and the repro (right): artifacts/trainworld/review/nyc-schematic-far.png.

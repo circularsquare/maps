@@ -35,6 +35,8 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
   cores); its stop was refused by the permission check, so not stopped by me either: ask Anita. Its proposal for her
   call: a coastal-only gap scan (~2 h, 3 cores) then rebuilds (Lingang, Binhai, Macau, HK, Dubai, Singapore, Incheon,
   Osaka Bay): overnight material.
+- 17:30: bug-d landed T-3252 + T-1863 (sim); schem landed the mask download fix dc184b11, T-3448 waits on her
+  (A/B/C; review/nyc-schematic-far.png). Running: bug-e, bug-f a7d62b4a99930fbfd (T-2698, T-2757; tree bug-f, port 6171).
 - sweep a30f41793d9dfc434 (Sonnet, no tree): closing already-done/untrue/duplicate tasks below T-1500 (no waits, no taking).
 - shenzhen (16:36, interim): shz rebuilt and joined (45 packs gated), no longer writing data/packs (8800 may use live
   data again); join's market step timed out (1801 s) so no new freeze; market files checked fine. Its uncommitted files

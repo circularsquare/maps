@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2698 [P2] {L:world-map} Start cameras on the city (2026-11-16): 124 metros more than 5 km off moved their start camera (registry center only) onto the same-named OSM place, up to 35 km (08861980); pipeline/register.py still writes center from origin, so a re-register moves it back. notes/T-2698.md.
+- T-3042 [P3] {L:stops} Draw a flat junction once in the stop list (2026-11-16): fixed: each junction or self-crossing on a route is marked once, at its first pass (5a15e44d). notes/T-3042.md.
 - T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged (2026-11-16): fixed: an edit's settle steps only lines sharing a capacity resource with what changed; edits on unshared Tokyo lines now change 0 others. notes/T-3252.md.
 - T-3252 [P2] {L:line-rates} Real Tokyo line 99 loses rate on every edit (2026-11-16): fixed: the even-share headway is solved so the merged lines run what they run now, so a line's rate no longer shrinks per edit (Tokyo line 99 settles at 0.719/h, was falling to 0.0088/h). notes/T-3252.md.
 - T-3428 [P3] {L:jobs-places} Missing data at Shenzhen Bay Port and Tide Park (2026-11-16): osm_units adds reclaimed coastal land closed in by units and sea to its neighbour; shz rebuilt and the Guangdong group rejoined: the Shenzhen Bay block 18 -> 58 cells (30.6k -> 124.8k people), Tide Park 0 -> 17 cells. The join's market trips register timed out (not redone), so no freeze. notes/T-3428.md.

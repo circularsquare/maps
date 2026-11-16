@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 
 INBOX = Path(__file__).resolve().parents[1] / "notes" / "board-inbox.jsonl"
+sys.stdout.reconfigure(encoding="utf-8")   # her text has CJK; Windows consoles default to cp1252
 
 
 def rows(path):

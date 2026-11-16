@@ -472,6 +472,36 @@
       "by": "bug-d",
       "at": "2026-11-16T17:21:12Z",
       "rev": 1
+    },
+    {
+      "id": "c048",
+      "text": "moved the starting view of 124 cities onto the city centre",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2698",
+      "by": "bug-f",
+      "at": "2026-11-16T17:32:29Z",
+      "rev": 1
+    },
+    {
+      "id": "c049",
+      "text": "a flat junction on a looped line shows once in its stop list, not once per pass",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3042",
+      "by": "bug-e",
+      "at": "2026-11-16T17:35:28Z",
+      "rev": 1
+    },
+    {
+      "id": "c050",
+      "text": "the track panel lists a line that only uses a piece on its way back",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3101",
+      "by": "bug-e",
+      "at": "2026-11-16T17:35:28Z",
+      "rev": 1
     }
   ]
 }
