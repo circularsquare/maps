@@ -739,6 +739,7 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
   dry plan (docs/adding-a-country.md 3): FLAG lines for scattered rows, far origins, zones under
   50,000 and big FUAs' centres split between rows; NOTE lines for built neighbours within 50 km,
   reused ids' old terrain files and empty far islets; a picture of the rows. Exit 1 on a FLAG.
+- `market_check.py [--cells] [--save f] [--against f]` (Python, T-2775): every registered market pack read before and after a join; exit 1 on a bad array, index or zone list.
 - `state_gaps.py <ISO3,...> [--min N]` (Python, T-2695, T-2702): geoBoundaries units of the plan level that no row
   names and the zones did not leave dead, with their people outside every registered pack (units held by another
   side and metros-only countries skipped). `ghsl_blobs.py <ISO3,...>` (Python, T-2695): zone origins on a GHS-POP village blob (a 1 km pixel of

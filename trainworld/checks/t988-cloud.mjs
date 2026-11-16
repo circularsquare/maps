@@ -84,7 +84,7 @@ async function open(d, query = '') {
     p.on('pageerror', (e) => errors.push(`${d.name}: ${e.message}`));
     p.on('console', (m) => { if (m.type() === 'error' && !NOISE.test(m.text()) && !/127\.0\.0\.1:8083|Failed to load resource/.test(m.text())) errors.push(`${d.name}: ${m.text()}`); });
   }
-  await p.goto(`${APP}?${Q}${query}&v=${Date.now()}`);
+  await p.goto(`${APP}?${Q}${query}&v=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 120000 });
   return p;
 }
 const inGame = (p) => p.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });

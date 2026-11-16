@@ -22,6 +22,7 @@ output go in `artifacts/trainworld/`. `<kit>` is your own scratchpad folder; `<t
 | `restore.py <task> <stage> [--go]` | puts a backup back (lists without `--go`) |
 | `setbuilt.py <ids> [<check> "<reason>"] [--dry]` | parked rows back to built, optionally relaxing one gate check; `--hold "<reason>"` holds planned or parked rows instead (no run or join takes them) |
 | `stale.py [--cmd <file>]` | market packs naming a place with no pack; writes the .cmd that rewrites them |
+| `checks/market_check.py [--save f] [--against f] [--cells]` | every registered market pack read: array lengths, commute and outing indexes, zones against the file's own sites (and cells); run before and after a join, about 2 minutes, exit 1 on any problem |
 | `start_hidden.ps1 <cmd>` | starts a .cmd detached, no window; prints its PID and its children |
 | `waitany.ps1 <pid,pid>` | waits for any of the PIDs to exit |
 
