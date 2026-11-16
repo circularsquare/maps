@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips (2026-11-16): the airport badge hover counts no-route trips in its total and bar.
+- T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown (2026-11-16): the intercity explorer's rail effective time has the city explorer's breakdown hover (not seen rendered on an intercity trip).
+- T-3416 [P3] {L:small-fixes} Very long line group name locks the name (2026-11-16): a long group bullet shrinks with an ellipsis and long line names wrap, so the panel buttons stay in reach.
+- T-3414 [P3] {L:small-fixes} Space between issues panel and its toggle (2026-11-16): the issues list sits 4 px above its toggle.
 - T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve (2026-11-16): measured, not shipped: 20-45% faster solves, but 20-70 lines drift over 2% (up to 68%) and an undo does not restore figures. notes/T-436.md.
 - T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move (2026-11-16): measured, not built: the fastest train moves 0.77-12 px a frame wherever trains show, so a lower frame rate would look jerky; per-frame work (the train guard, 1.1 ms) is the better lever. notes/T-076.md.
 - T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move (2026-11-16): snap ring, ghost and tag recompute when the draw anchor moves; tags hidden on the globe's far side. notes/T-1778.md.

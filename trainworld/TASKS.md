@@ -643,7 +643,8 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Goal: A rule for untagged ferries over 50 km, or a decision to leave it.
   - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
-- T-2396 [P3] {L:small-fixes} Dock tab area keeps one height (taking, 2026-11-16, agent b1)
+- T-2396 [P3] {L:small-fixes} {waits:Anita} Dock tab area keeps one height
+  - Need from Anita: Shrink the tab area to its content on the Build tab only, so the inspector gets the room (its top edge then jumps only entering or leaving Build)? Recommended yes.
   - Context: After T-2282, the shorter Build tab leaves the inspector no more room.
   - Goal: The inspector gets the room the Build tab leaves.
   - Other: notes/T-2267.md section 3.5
@@ -679,9 +680,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Idea: lines that run close and swap sides on the ground drawn as one parallel bundle with a fixed order.
   - Goal: Build it only if a real save shows the problem.
   - Other: Follow-up to T-2290.
-- T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips (taking, 2026-11-16, agent b1)
-  - Context: The hover leaves "No route" trips out of its count and bar.
-  - Goal: The hover counts them.
 - T-2320 [P3] {L:stops} {after:Anita asks} Drag stops into another order
   - Context: T-2275 left this out since a reordered list mostly makes trains double back (DECISIONS 2026-11-04).
   - Goal: Stops can be dragged into a new order, if you want it.
@@ -901,10 +899,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3402 [P3] {L:community} Community page switcher on all views (taking, 2026-11-16, agent b6)
   - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
   - Goal: All three views have a page switcher and a total count.
-- T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown (taking, 2026-11-16, agent b1)
-  - Context: The city trip explorer's effective time hover explains the breakdown as an equation. The intercity one has none.
-  - Goal: The intercity hover shows the same breakdown.
-- T-3406 [P3] {L:small-fixes} Waiting now split by direction (taking, 2026-11-16, agent b1)
+- T-3406 [P3] {L:small-fixes} {waits:Anita} Waiting now split by direction
+  - Need from Anita: Which place did you mean? The station panel already splits waiting by line and direction; recommended: the complex platform hover and complex row, as "N toward <end station>" per side.
   - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows.
   - Goal: A station shows waiting riders per direction.
 - T-3407 [P3] {L:money} Money plot in the save's local time (taking, 2026-11-16, agent b6)
@@ -916,12 +912,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3413 [P3] {L:community} Save lineage: original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.
-- T-3414 [P3] {L:small-fixes} Space between issues panel and its toggle (taking, 2026-11-16, agent b1)
-  - Context: Your TODO 2026-11-15: about 4 px between the issues panel and its toggle.
-  - Goal: 4 px of space.
-- T-3416 [P3] {L:small-fixes} Very long line group name locks the name (taking, 2026-11-16, agent b1)
-  - Context: Your TODO 2026-11-15: a really long line group name can stop you changing it. Check line names too. It is a bug.
-  - Goal: Long group and line names stay editable.
 - T-3423 [P3] {L:small-fixes} Line groups inside line groups
   - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
   - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
