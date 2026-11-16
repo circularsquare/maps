@@ -3,9 +3,11 @@
 // is posted as one of three:
 //   "whole": new arrays, with room after the last segment for later edits;
 //   "same":  no arrays, the segments are exactly the last network's;
-//   "patch": the segments that did not move, kept where they are in the page's arrays, and only the
-//            ranges of new ones (`ranges`: start, count pairs), which the page writes over what was
-//            there. A segment moving (one inserted or removed before it) makes the set whole.
+//   "patch": the segments that did not change, kept in the page's arrays, and only the ranges of new
+//            ones (`ranges`: start, count pairs), which the page writes over what was there. Runs
+//            that moved (a segment inserted or removed before them, T-1509) are copied within the
+//            page's arrays (`moves`: from, to, count triples, in an order that overwrites no run
+//            before it is moved), so a line gaining or losing a segment posts only its own.
 // The page has to hold the whole arrays (picking, the pick grids, the renderer all read them), so
 // posting only the new runs and rebuilding the rest there would move the copy to the main thread.
 // A patch writes only where the last network has segments that the new one does not, and the new
@@ -86,6 +88,8 @@ export interface StrokePost {
   buffers: ArrayBufferLike[];
   /** patch: start, count pairs of the new segments */
   ranges: Int32Array;
+  /** patch: from, to, count triples of the old segments that moved, to be copied in this order */
+  moves: Int32Array;
 }
 
 /** The worker's side: what the page holds, and what to post of a set so that it ends with the pieces. */
@@ -102,15 +106,26 @@ export class StrokeSender {
     const none = new Int32Array(0);
     if (runs && this.room[kind] > 0) {
       if (count === oldCount && (count === 0 || (runs.length === 3 && runs[0] === 0 && runs[1] === count && runs[2] === 0)))
-        return { mode: "same", strokes: bare(kind, count), buffers: [], ranges: none };
-      // every segment kept is where it was; the rest is new
-      let kept = 0, fresh = 0, ok = count <= this.room[kind];
-      for (let k = 0; k < runs.length && ok; k += 3) {
+        return { mode: "same", strokes: bare(kind, count), buffers: [], ranges: none, moves: none };
+      // a segment kept is where it was or moved as a run; the rest is new
+      let kept = 0, fresh = 0;
+      const right: number[][] = [], left: number[][] = [];
+      // the safe order of moves below holds while the kept runs keep their order
+      let ordered = true, behind = -1;
+      for (let k = 0; k < runs.length; k += 3) {
         if (runs[k + 2] < 0) fresh += runs[k + 1];
-        else if (runs[k + 2] === runs[k]) kept += runs[k + 1];
-        else ok = false;
+        else {
+          if (runs[k + 2] < behind) ordered = false;
+          behind = runs[k + 2] + runs[k + 1];
+          kept += runs[k + 1];
+          if (runs[k + 2] < runs[k]) right.push([runs[k + 2], runs[k], runs[k + 1]]);
+          else if (runs[k + 2] > runs[k]) left.push([runs[k + 2], runs[k], runs[k + 1]]);
+        }
       }
-      if (ok && kept > 0) {
+      if (ordered && count <= this.room[kind] && kept > 0) {
+        // runs keep their order, so moving the ones that go right from the last, and those that go
+        // left from the first, overwrites no run still to be moved
+        const moves = Int32Array.from([...right.reverse(), ...left].flat());
         const ranges: number[] = [];
         for (let k = 0; k < runs.length; k += 3) if (runs[k + 2] < 0) ranges.push(runs[k], runs[k + 1]);
         const { s, whole } = allocate(kind, fresh, fresh);
@@ -123,7 +138,7 @@ export class StrokeSender {
           at += n;
         }
         s.count = count;
-        return { mode: "patch", strokes: s, buffers: FIELDS[kind].map((f) => whole[f].buffer), ranges: Int32Array.from(ranges) };
+        return { mode: "patch", strokes: s, buffers: FIELDS[kind].map((f) => whole[f].buffer), ranges: Int32Array.from(ranges), moves };
       }
     }
     const cap = count + Math.max(count >> 3, MIN_ROOM);
@@ -131,7 +146,7 @@ export class StrokeSender {
     let at = 0;
     for (const p of pieces) if (p.strokes.count) put(kind, whole, p, (at += p.strokes.count) - p.strokes.count);
     this.room[kind] = cap;
-    return { mode: "whole", strokes: s, buffers: FIELDS[kind].map((f) => whole[f].buffer), ranges: none };
+    return { mode: "whole", strokes: s, buffers: FIELDS[kind].map((f) => whole[f].buffer), ranges: none, moves: none };
   }
 }
 
@@ -148,7 +163,7 @@ export interface StrokeMerge {
  * with the new segments written by `write`. Null when it cannot be (the page then asks for the whole
  * state): nothing has been written then.
  */
-export function planStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: Strokes, mode: StrokeMode, ranges: Int32Array): StrokeMerge | null {
+export function planStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: Strokes, mode: StrokeMode, ranges: Int32Array, moves: Int32Array = new Int32Array(0)): StrokeMerge | null {
   if (mode === "whole") return { strokes: msg, write() {} };
   if (!prev) return null;
   if (mode === "same") return msg.count === prev.count ? { strokes: { ...prev }, write() {} } : null;
@@ -159,16 +174,25 @@ export function planStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: St
     reach = ranges[k] + ranges[k + 1];
     fresh += ranges[k + 1];
   }
-  // segments past the page's own are all new
-  if (count > prev.count && !(ranges.length && ranges[ranges.length - 2] <= prev.count && reach === count)) return null;
+  let kept = 0;
+  for (let k = 0; k + 2 < moves.length; k += 3) {
+    if (moves[k] < 0 || moves[k + 2] <= 0 || moves[k] + moves[k + 2] > prev.count || moves[k + 1] < 0 || moves[k + 1] + moves[k + 2] > count) return null;
+    kept += moves[k + 2];
+  }
+  // without moves, segments past the page's own are all new
+  if (!kept && count > prev.count && !(ranges.length && ranges[ranges.length - 2] <= prev.count && reach === count)) return null;
   const out: Record<string, unknown> = { count };
   const writes: (() => void)[] = [];
   for (const f of FIELDS[kind]) {
     const a = prev[f] as TypedArray | undefined, tail = msg[f] as TypedArray | undefined, w = WIDTH[f];
     if (!a || !tail || a.byteOffset !== 0 || a.length !== prev.count * w || tail.length !== fresh * w || a.buffer.byteLength < count * w * a.BYTES_PER_ELEMENT) return null;
-    const v = new (a.constructor as new (b: ArrayBufferLike, o: number, n: number) => TypedArray)(a.buffer, 0, count * w);
+    const Ctor = a.constructor as new (b: ArrayBufferLike, o: number, n: number) => TypedArray;
+    const v = new Ctor(a.buffer, 0, count * w);
     out[f] = v;
+    // the moves read and write beyond `v` when the set shrinks or grows
+    const big = moves.length ? new Ctor(a.buffer, 0, Math.max(count, prev.count) * w) : v;
     writes.push(() => {
+      for (let k = 0; k + 2 < moves.length; k += 3) big.copyWithin(moves[k + 1] * w, moves[k] * w, (moves[k] + moves[k + 2]) * w);
       for (let k = 0, from = 0; k < ranges.length; from += ranges[k + 1], k += 2) v.set(tail.subarray(from * w, (from + ranges[k + 1]) * w), ranges[k] * w);
     });
   }
@@ -176,8 +200,8 @@ export function planStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: St
 }
 
 /** `planStrokes`, then its write. */
-export function mergeStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: Strokes, mode: StrokeMode, ranges = new Int32Array(0)): Strokes | null {
-  const m = planStrokes(kind, prev, msg, mode, ranges);
+export function mergeStrokes(kind: StrokeKind, prev: Strokes | undefined, msg: Strokes, mode: StrokeMode, ranges: Int32Array = new Int32Array(0), moves: Int32Array = new Int32Array(0)): Strokes | null {
+  const m = planStrokes(kind, prev, msg, mode, ranges, moves);
   m?.write();
   return m?.strokes ?? null;
 }

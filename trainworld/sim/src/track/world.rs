@@ -543,6 +543,17 @@ impl TrackWorld {
     pub fn can_redo(&self) -> bool {
         !self.redo.is_empty()
     }
+    /// T-1073: whether the edit an undo (or redo) would apply changes only train counts or headways.
+    pub fn step_is_service(&self, redo: bool) -> bool {
+        fn only_counts(op: &Op) -> bool {
+            match op {
+                Op::TrainCounts { .. } | Op::AutoTrains { .. } => true,
+                Op::Batch(ops) => !ops.is_empty() && ops.iter().all(only_counts),
+                _ => false,
+            }
+        }
+        (if redo { self.redo.last() } else { self.undo.last() }).is_some_and(only_counts)
+    }
 
     /// Apply, validate, recompute. On problems nothing changes and the problems come back.
     pub fn apply(&mut self, op: Op) -> Result<EditResult, Vec<Issue>> {

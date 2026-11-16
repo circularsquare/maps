@@ -56,3 +56,17 @@ fn a_count_change_with_a_lead_takes_effect_then_and_saves_with_its_eras() {
     assert!(b.w.svc.eras.iter().all(|e| e.is_empty()));
     assert_eq!(b.save(), save::encode(&b.w.net));
 }
+
+/// T-1073: an undo or redo of a train count says it is a service edit, and one of a track edit does not.
+#[test]
+fn undo_and_redo_of_a_count_change_are_service_edits() {
+    let (mut a, id) = line_api();
+    assert!(!a.step_is_service(true));
+    assert_eq!(a.set_train_counts(id, 3, 2, 2), 0, "{}", a.issues());
+    assert!(a.step_is_service(false));
+    assert!(!a.step_is_service(true));
+    assert_eq!(a.undo(), 0, "{}", a.issues());
+    assert!(a.step_is_service(true));
+    assert_eq!(a.redo(), 0, "{}", a.issues());
+    assert!(a.step_is_service(false));
+}

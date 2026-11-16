@@ -3165,12 +3165,13 @@ function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers
   const out: NetworkBuffers = { ...n };
   delete out.strokePieces;
   const t0 = performance.now();
-  const modes = {} as Record<StrokeKind, StrokeMode>, ranges = {} as Record<StrokeKind, Int32Array>;
+  const modes = {} as Record<StrokeKind, StrokeMode>, ranges = {} as Record<StrokeKind, Int32Array>, moves = {} as Record<StrokeKind, Int32Array>;
   for (const kind of ["track", "lines"] as const) {
     const r = sender.post(kind, pieces[kind], n[kind].count, whole ? null : n.patch![kind], whole ? 0 : kind === "track" ? n.patch!.oldTrack : n.patch!.oldLines);
     out[kind] = r.strokes;
     modes[kind] = r.mode;
     ranges[kind] = r.ranges;
+    moves[kind] = r.moves;
   }
   timing.strokes = performance.now() - t0;
   timing.modes = (["whole", "same", "patch"] as const).indexOf(modes.track) * 10 + (["whole", "same", "patch"] as const).indexOf(modes.lines);
@@ -3193,7 +3194,7 @@ function netForPost(n: NetworkBuffers, scratch?: NetworkBuffers): NetworkBuffers
     out.edgePts = mine;
     for (const k of SAME_FIELDS) { const v = n[k]; if (v) keepPostedField(out, k, v); }
   } else {
-    const patch = { ...n.patch!, same: [] as string[], modes, ranges };
+    const patch = { ...n.patch!, same: [] as string[], modes, ranges, moves };
     for (const k of SAME_FIELDS) {
       const v = n[k];
       if (!v) continue;
@@ -4546,7 +4547,9 @@ async function handleMessage(msg: ToClock) {
     // T-2763: blueprint track taken out carries no train, as a segment put in (T-1780)
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
-    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway";
+    // T-1073: so is an undo or redo of one
+    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway"
+      || ((msg.op.op === "undo" || msg.op.op === "redo") && api.step_is_service(msg.op.op === "redo"));
     if (service) {
       api.set_now(gameNow());
       api.set_edit_lead(clk.rate * serviceLeadS());

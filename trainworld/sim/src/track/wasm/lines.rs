@@ -554,6 +554,11 @@ impl TrackApi {
     pub fn can_redo(&self) -> bool {
         self.w.can_redo()
     }
+    /// T-1073: the next undo (or redo) only changes train counts or headways, so it takes effect a
+    /// moment ahead like the edit it undoes.
+    pub fn step_is_service(&self, redo: bool) -> bool {
+        self.w.step_is_service(redo)
+    }
     pub fn undo(&mut self) -> u32 {
         self.step(false)
     }

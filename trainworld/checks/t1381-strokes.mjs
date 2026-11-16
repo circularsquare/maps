@@ -1,7 +1,7 @@
 // T-1381: the track and line strokes as the clock worker posts them (map/strokePost.ts) against the
 // strokes laid end to end whole, after random series of edits: a piece (an edge's or a line's strokes)
 // added at the end, inserted, replaced by one of the same size (it stays where it is) or another,
-// removed, moved, the last few replaced (blueprint track), nothing changed, many added at once (past
+// removed, moved (the runs after an insert or removal are copied within the page's arrays, T-1509), the last few replaced (blueprint track), nothing changed, many added at once (past
 // the room after the last segment), everything removed, and a state the page dropped (the next is
 // whole). Each post goes through a real structured clone with its buffers transferred, and the
 // segments of every earlier network that the posts since did not write over must still be intact.
@@ -90,13 +90,18 @@ for (const kind of ['track', 'lines']) {
       const post = sender.post(kind, pieces, n, runs, last ? last.count : 0);
       seen[kind][post.mode]++;
       const cloned = structuredClone(post.strokes, { transfer: [...new Set(post.buffers)] });
-      const got = mergeStrokes(kind, merged ?? undefined, cloned, post.mode, post.ranges);
+      const got = mergeStrokes(kind, merged ?? undefined, cloned, post.mode, post.ranges, post.moves);
       steps++;
       const whole = strokesOfPieces(kind, pieces);
       const why = !got ? `mergeStrokes gave null for ${post.mode}` : differs(got, whole);
       if (why) { fails++; if (fails <= 10) console.log(`FAIL ${kind} seed ${seed} step ${step} (${post.mode}): ${why}`); break; }
       // the networks before this one are as they were, but where this post wrote
-      if (post.mode === 'patch') for (const h of history) h.dirty.push(...post.ranges);
+      if (post.mode === 'patch') {
+        // T-1509: and where the runs that moved were put
+        const written = [...post.ranges];
+        for (let k = 0; k + 2 < post.moves.length; k += 3) written.push(post.moves[k + 1], post.moves[k + 2]);
+        for (const h of history) h.dirty.push(...written);
+      }
       history.push({ got, whole, dirty: [] });
       const bad = history.slice(-8, -1).map((h) => differs(h.got, h.whole, h.dirty)).find(Boolean);
       if (bad) { fails++; if (fails <= 10) console.log(`FAIL ${kind} seed ${seed} step ${step} (${post.mode}): an earlier network changed: ${bad}`); break; }
@@ -124,6 +129,9 @@ const refusals = {
   'ranges overlapping': () => planStrokes('lines', own, { ...tailOf(4), count: 10 }, 'patch', ranges(0, 2, 1, 2)),
   'an empty range': () => planStrokes('lines', own, { ...tailOf(1), count: 10 }, 'patch', ranges(2, 0, 4, 1)),
   'a tail of another length': () => planStrokes('lines', own, { ...tailOf(3), count: 12 }, 'patch', ranges(10, 2)),
+  'a move from past the end': () => planStrokes('lines', own, { ...tailOf(1), count: 10 }, 'patch', ranges(0, 1), ranges(9, 0, 2)),
+  'a move to past the end': () => planStrokes('lines', own, { ...tailOf(1), count: 10 }, 'patch', ranges(0, 1), ranges(2, 9, 2)),
+  'an empty move': () => planStrokes('lines', own, { ...tailOf(1), count: 10 }, 'patch', ranges(0, 1), ranges(2, 3, 0)),
   'room for fewer segments': () => planStrokes('lines', own, { ...tailOf(2990), count: 3000 }, 'patch', ranges(10, 2990)),
 };
 // ... and one that fits is taken

@@ -227,6 +227,8 @@ export interface NetPatch {
    * (no arrays), or only the new segments, at `ranges` (start, count pairs; `mergeNet` makes them whole) */
   modes: Record<StrokeKind, StrokeMode>;
   ranges: Record<StrokeKind, Int32Array>;
+  /** patch: from, to, count triples of the runs of the last network's segments that moved (T-1509) */
+  moves?: Record<StrokeKind, Int32Array>;
 }
 
 /** T-2258: the shortest segment of built track and line strokes, plane m. The shader shifts a band
@@ -1456,7 +1458,7 @@ export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service
     if (!v) return false;
     pts.set(id, v);
   }
-  const track = planStrokes("track", prev.track, n.track, p.modes.track, p.ranges.track), lines = planStrokes("lines", prev.lines, n.lines, p.modes.lines, p.ranges.lines);
+  const track = planStrokes("track", prev.track, n.track, p.modes.track, p.ranges.track, p.moves?.track), lines = planStrokes("lines", prev.lines, n.lines, p.modes.lines, p.ranges.lines, p.moves?.lines);
   if (!track || !lines) return false;
   // nothing is written into the last network's arrays unless the whole network can be merged
   track.write();
