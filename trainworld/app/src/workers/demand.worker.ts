@@ -32,6 +32,7 @@ import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/in
 import type { CorridorTable } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { addIntercity } from "./demandSums";
+import { VIEW_TOLERANCE, sameView } from "./demandView";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
@@ -231,15 +232,6 @@ function withinNoise(was: DemandNetwork, now: DemandNetwork): boolean {
   for (let k = 0; k < was.tph.length; k++) if (!(Math.abs(was.tph[k] - now.tph[k]) <= NOISE_TRAINS * Math.abs(was.tph[k]))) return false;
   return true;
 }
-const VIEW_TOLERANCE = 0.01;
-/** T-1733: trains an hour (and the share of riders with a train due, which follows them) move by a
- * few percent on far lines when a line is built (all of Japan: 2.7% on an Osaka line for a Tokyo
- * line, which made Osaka a third of the local solve); within this a zone keeps its figures until
- * the whole solve */
-const TRAINS_TOLERANCE = 0.05;
-/** T-1764: `span` is a share (0 to 1) in steps of 0.05, one train more or less in a period's day; a
- * single step, 0.05000001 in float32, is the same view, so a far line's step does not touch its zones */
-const SPAN_TOLERANCE = 0.06;
 /** T-1733: the page's `whole` for this version: the edit's local results are shown (and a moment
  * has passed for the next edit), so the whole solve may start */
 let wholeGo = -1;
@@ -294,36 +286,6 @@ function nodeMap(a: NonNullable<typeof lastNet>, b: NonNullable<typeof lastNet>)
     oa += n;
   });
   return out;
-}
-/** T-1733: whether two views give a population the same inputs (so its state solved on one holds
- * for the other); their route nodes in the whole network may differ */
-/** each value replaced by the order it first appears in */
-function canonical(a: Uint32Array): Uint32Array {
-  const seen = new Map<number, number>();
-  return a.map((v) => { let k = seen.get(v); if (k === undefined) seen.set(v, (k = seen.size)); return k; });
-}
-function sameView(x: PopView, y: PopView): boolean {
-  return viewDiff(x, y) === null;
-}
-function viewDiff(x: PopView, y: PopView): string | null {
-  if (x === y) return null;
-  if (x.pads.length !== y.pads.length || x.pads.some((v, k) => v !== y.pads[k])) return "pads";
-  const a = x.net as unknown as Record<string, unknown>, b = y.net as unknown as Record<string, unknown>;
-  for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) {
-    let u = a[k], v = b[k];
-    // a station of no complex is numbered past every complex (`packService`): the same grouping
-    // under other numbers is the same input
-    if (k === "complex" && u instanceof Uint32Array && v instanceof Uint32Array) [u, v] = [canonical(u), canonical(v)];
-    if (ArrayBuffer.isView(u) && ArrayBuffer.isView(v)) {
-      const p = u as unknown as ArrayLike<number>, w = v as unknown as ArrayLike<number>;
-      if (p.length !== w.length) return `${k} length ${p.length} ${w.length}`; // i18n-ignore: debug diff
-      // run times, trains an hour and the like move by float noise and by small knock-on changes
-      // when a line is added beside them (0.1% seen): within VIEW_TOLERANCE they count as the same
-      const tol = !(u instanceof Float32Array) || k === "stXY" || k === "catchXY" ? 0 : k === "tph" ? TRAINS_TOLERANCE : k === "span" ? SPAN_TOLERANCE : VIEW_TOLERANCE;
-      for (let i = 0; i < p.length; i++) if (p[i] !== w[i] && Math.abs(p[i] - w[i]) > tol * Math.max(1, Math.abs(p[i]))) return `${k}[${i}] ${p[i]} ${w[i]}`;
-    } else if (JSON.stringify(u) !== JSON.stringify(v)) return `${k} ${JSON.stringify(u)?.slice(0, 80)} ${JSON.stringify(v)?.slice(0, 80)}`;
-  }
-  return null;
 }
 /** T-1735: a window's reach by rail from the stations an edit changed, at most (`set_window`); the
  * stations it may hold bound it first on a big market */
