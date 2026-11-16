@@ -22,6 +22,7 @@ const expanded = new Set(); // request groups showing their reports
 let lastGroup = null;       // the group last opened, kept in the URL hash
 let groupForm = null;       // {gid, kind: 'accept' | 'merge' | 'dismiss' | 'comment'}
 const notesOpen = new Set(); // task rows showing their notes
+const toolsOpen = new Set(); // task rows showing their priority and line selects
 let flashTask = null;       // the task a link just landed on, highlighted briefly
 let flashUntil = 0;
 let ARCHIVE = null;         // archive.json, loaded the first time a closed task is opened
@@ -59,6 +60,7 @@ const ICONS = {
   'eye-off': [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }],
     ['path', { d: 'M2.5 13.5 13.5 2.5' }]],
   undo: [['path', { d: 'M5.5 3.5 2.5 6.5l3 3' }], ['path', { d: 'M2.5 6.5h7a3.5 3.5 0 0 1 0 7H6' }]],
+  chev: [['path', { d: 'M6 4l4 4-4 4' }]],
 };
 function icon(name) {
   const s = document.createElementNS(SVG_NS, 'svg');
@@ -675,16 +677,23 @@ function taskRow(t, key, q) {
       renderPanel();
     } }, showing ? 'Hide notes' : 'Show notes'));
   }
-  // one small line: where it stands, then her controls
+  // one small line: where it stands, then her controls; the priority and line selects stay folded until she opens them
   const small = el('div', { class: 'controls small' }, where);
   let after = [];
   if (INBOX.ok) {
-    const priOpts = (t.pri ? [] : [{ value: '', label: 'none' }]).concat(PRIS.map((p) => ({ value: p, label: p })));
-    const pri = changeSelect(`${k}:pri`, 'Priority', queuedTo(pend, 'priority', t.pri || ''), priOpts, (to) => ({ type: 'priority', task: t.id, from: t.pri, to }));
-    tintPri(pri.querySelector('select'));
-    small.append(el('span', { class: 'tools' }, pri,
-      changeSelect(`${k}:line`, 'Line', queuedTo(pend, 'move-task', t.line), lineOptions(t.line), (to) => ({ type: 'move-task', task: t.id, from: t.line, to })),
-      opened.has(t.id) ? null : el('button', { class: 'link', type: 'button', onclick: () => { opened.add(t.id); renderPanel(); } }, 'Comment')));
+    const toolsShown = toolsOpen.has(t.id) || !!(confirm && confirm.key.startsWith(`${k}:`));
+    const sep = () => (where.childNodes.length ? ' · ' : '');
+    if (!opened.has(t.id)) where.append(sep(), el('button', { class: 'link', type: 'button', onclick: () => { opened.add(t.id); renderPanel(); } }, 'Comment'));
+    where.append(sep(), el('button', { class: 'link fold' + (toolsShown ? ' open' : ''), type: 'button', 'aria-expanded': String(toolsShown),
+      onclick: () => { if (toolsShown) { toolsOpen.delete(t.id); if (confirm && confirm.key.startsWith(`${k}:`)) confirm = null; } else toolsOpen.add(t.id); renderPanel(); } },
+    'Priority and line', icon('chev')));
+    if (toolsShown) {
+      const priOpts = (t.pri ? [] : [{ value: '', label: 'none' }]).concat(PRIS.map((p) => ({ value: p, label: p })));
+      const pri = changeSelect(`${k}:pri`, 'Priority', queuedTo(pend, 'priority', t.pri || ''), priOpts, (to) => ({ type: 'priority', task: t.id, from: t.pri, to }));
+      tintPri(pri.querySelector('select'));
+      small.append(el('span', { class: 'tools' }, pri,
+        changeSelect(`${k}:line`, 'Line', queuedTo(pend, 'move-task', t.line), lineOptions(t.line), (to) => ({ type: 'move-task', task: t.id, from: t.line, to }))));
+    }
     after = [
       waitsOnYou ? el('div', { class: 'compose' },
         textBox(`${k}:answer`, 'Your answer', 2),
@@ -713,6 +722,7 @@ function taskRow(t, key, q) {
 const FIELD_LABELS = [['need', 'Need from Anita'], ['context', 'Context'], ['goal', 'Goal'], ['other', 'Other']];
 function taskBody(t) {
   if (!t.fields) return null;
+  imgDir = 'trainworld/';
   const rows = FIELD_LABELS.filter(([k]) => t.fields[k]).map(([k, label]) =>
     el('div', { class: `field-row ${k}` }, el('span', { class: 'lab', title: label, 'aria-label': label }, icon(k)), el('span', { class: 'val' }, rich(t.fields[k]))));
   return rows.length ? el('div', { class: 'fields' }, rows) : null;
@@ -1002,10 +1012,71 @@ function knownTask(id) {
   return !!(DATA && (DATA.tasks[id] || ARCHIVED.has(parseInt(id.slice(2), 10))));
 }
 
-/** text with task ids and notes paths as links; anything that resolves to nothing stays plain */
+// An image path in any text the board shows becomes a thumbnail (served from maps/artifacts by serve.py's /_img).
+// "artifacts/..." (also ../artifacts, maps/artifacts, C:\...\artifacts\) is exact; a bare or relative name ("b.png" after
+// "artifacts/trainworld/t1191/a.png") is tried in the folder of the last exact one, and stays text if nothing is there.
+const IMG_RE = /(?<![\w*.\/\\-])((?:[\w.:-]+[\\/])*?artifacts[\\/])?([\w][\w.-]*(?:[\\/][\w.-]+)*\.(?:png|jpe?g|webp))(?![\w\/\\])/gi;
+let imgDir = 'trainworld/';  // where a bare image name is looked for: the folder of the last exact path seen
+function images(text) {
+  const out = [];
+  let at = 0;
+  for (const m of text.matchAll(IMG_RE)) {
+    const rest = m[2].replace(/\\/g, '/');
+    let src;
+    if (m[1]) {
+      src = rest;
+      imgDir = rest.includes('/') ? rest.slice(0, rest.lastIndexOf('/') + 1) : '';
+    } else src = imgDir + rest;
+    if (m.index > at) out.push(text.slice(at, m.index));
+    out.push(thumb(src, m[0]));
+    at = m.index + m[0].length;
+  }
+  if (!out.length) return null;
+  if (at < text.length) out.push(text.slice(at));
+  return out;
+}
+function imgUrl(src) { return '_img/' + src.split('/').map(encodeURIComponent).join('/'); }
+/** the path as a link, and a small picture of it at the end of its paragraph (list item, cell, field); both open it
+ * large. If the file isn't there, the plain text comes back and no picture shows. */
+function thumb(src, text) {
+  const open = (e) => { e.stopPropagation(); showImage(src); };
+  const link = el('button', { class: 'link img-link', type: 'button', title: `artifacts/${src}`, onclick: open }, text);
+  const img = el('img', { src: imgUrl(src), alt: text, loading: 'lazy' });
+  const pic = el('button', { class: 'thumb', type: 'button', title: `artifacts/${src}`, onclick: open }, img);
+  img.addEventListener('error', () => { pic.remove(); if (link.isConnected || link.parentNode) link.replaceWith(document.createTextNode(text)); });
+  // once the surrounding text is built, the picture joins its block's strip
+  queueMicrotask(() => {
+    const block = link.parentNode && link.parentElement.closest('p, li, td, th, .val, .text, .title, .rtext, .gsummary, .notes, div');
+    if (!block) return;
+    let strip = [...block.children].find((c) => c.classList.contains('thumbs'));
+    if (!strip) {
+      strip = el('span', { class: 'thumbs' });
+      const sub = block.tagName === 'LI' ? [...block.children].find((c) => c.tagName === 'UL' || c.tagName === 'OL') : null;
+      block.insertBefore(strip, sub || null);
+    }
+    if (!img.complete || img.naturalWidth) strip.append(pic);
+  });
+  return link;
+}
+function showImage(src) {
+  const close = () => { box.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const box = el('div', { class: 'lightbox', onclick: close },
+    el('img', { src: imgUrl(src), alt: src }),
+    el('div', { class: 'lb-cap' }, `artifacts/${src}`));
+  document.addEventListener('keydown', onKey);
+  document.body.append(box);
+}
+
+/** text with task ids and notes paths as links and image paths as thumbnails; anything that resolves to nothing stays plain */
 function rich(text) {
   const s = String(text == null ? '' : text);
   if (!DATA) return s;
+  const parts = images(s);
+  if (parts) return parts.flatMap((p) => (typeof p === 'string' ? richLinks(p) : [p]));
+  return richLinks(s);
+}
+function richLinks(s) {
   const out = [];
   let at = 0;
   for (const m of s.matchAll(LINK_RE)) {
@@ -1158,6 +1229,7 @@ async function loadNotes(name, quiet) {
 // A small markdown reader for the notes: headings, lists, tables, quotes, code, bold, links. It builds DOM nodes
 // (never HTML strings), so nothing in a note can run as markup.
 function md(src) {
+  imgDir = 'trainworld/';
   const lines = src.replace(/\r/g, '').split('\n');
   const out = [];
   let i = 0;
@@ -1267,12 +1339,17 @@ function inline(text) {
   for (const m of text.matchAll(INLINE_RE)) {
     if (m.index > at) out.push(...rich(text.slice(at, m.index)));
     const t = m[0];
-    if (m[1]) out.push(el('code', {}, t.slice(1, -1)));
+    if (m[1]) { const pic = images(t.slice(1, -1)); out.push(pic && pic.length === 1 ? pic[0] : el('code', {}, t.slice(1, -1))); }
     else if (m[2]) out.push(el('b', {}, inline(t.slice(2, -2))));
     else if (m[4]) out.push(el('i', {}, inline(t.slice(1, -1))));
     else {
       const [, label, url] = t.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
-      if (/^https?:\/\//i.test(url)) out.push(el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label));
+      const pic = /^https?:/i.test(url) ? null : images(url);
+      if (pic && pic.length === 1) {
+        const prev = out[out.length - 1];
+        if (typeof prev === 'string' && prev.endsWith('!')) out[out.length - 1] = prev.slice(0, -1);   // ![alt](x.png)
+        out.push(pic[0]);
+      } else if (/^https?:\/\//i.test(url)) out.push(el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label));
       else if (/\.md(#.*)?$|\/$/.test(url) && notesName(url)) {
         const name = notesName(url);
         out.push(el('button', { class: 'link', type: 'button', onclick: () => goNotes(name) }, label));
@@ -1698,6 +1775,8 @@ window.addEventListener('pagehide', () => padFlush(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) padFlush(true); });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && panel) openPanel(null);
+  // Anita presses Ctrl+S out of habit; edits here save on their own, so the browser's Save as is never wanted.
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) e.preventDefault();
 });
 new ResizeObserver(() => {
   document.documentElement.style.setProperty('--head', `${$('#top').offsetHeight}px`);
