@@ -8,6 +8,7 @@
   --soft: #f0f0f0;
   --accent: #4a6f94;
   --s-progress: #3d7dca;
+  --s-upnext: #1f9399;
   --s-you: #d9822b;
   --s-high: #2f9a55;
   --s-low: #9ccbaa;
@@ -29,6 +30,7 @@
     --soft: #222222;
     --accent: #8fb0cf;
     --s-progress: #5a9be6;
+    --s-upnext: #3bb0b5;
     --s-you: #e6994a;
     --s-high: #46b56d;
     --s-low: #4f7f5e;
@@ -127,8 +129,8 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 #grid-wrap { overflow-x: auto; }
 #grid {
   display: grid;
-  grid-template-columns: 120px repeat(6, minmax(150px, 1fr));
-  min-width: 1050px;
+  grid-template-columns: 120px repeat(7, minmax(150px, 1fr));
+  min-width: 1200px;
 }
 .colhead {
   position: sticky;
@@ -192,6 +194,8 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 }
 .bar span { display: block; height: 100%; flex: 1; }
 .bar.pri-bar { height: 2px; margin-top: 1px; border-radius: 1px; }
+.card.task .ttl { margin-top: 1px; font-size: 13px; overflow-wrap: anywhere; }
+.card.task .sub { margin-top: 2px; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card .queued { font-size: 12px; color: var(--accent); margin-top: 2px; }
 
 /* side panel */

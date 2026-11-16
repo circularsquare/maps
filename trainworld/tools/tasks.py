@@ -3,6 +3,8 @@
   venv\Scripts\python.exe trainworld/tools/tasks.py done <id> --outcome "..." [--notes notes/T-x.md]
   venv\Scripts\python.exe trainworld/tools/tasks.py close <id> --reason "..." [--notes notes/T-x.md]
   venv\Scripts\python.exe trainworld/tools/tasks.py check
+upnext add <ids> [--at N] / remove <ids> / list: the board's "Up next" queue (board-live.json "upnext"); start, done and close drop
+their ids from it.
 start: adds "(taking, <date>, agent <name>)" to each head line and the agent to notes/board-live.json.
 done / close: moves the task block to the top of ARCHIVE.md, sets the line's done: in LINES.md when it was the
 line's last open task, and drops the agent from board-live.json when it has no other taken task.
@@ -82,6 +84,60 @@ class Root:
         return out
 
 
+def drop_upnext(b, ids):
+    """Remove ids from the queue in board dict b; returns the ids that were there."""
+    q = b.get("upnext") or []
+    gone = [t for t in q if t in ids]
+    if gone:
+        b["upnext"] = [t for t in q if t not in ids]
+    return gone
+
+
+def open_ids(r):
+    text, _ = read(r.tasks)
+    return {m.group(1) for m in (HEAD.match(l) for l in text.split("\n")) if m}
+
+
+def cmd_upnext(r, a):
+    b = r.board()
+    q = list(b.get("upnext") or [])
+    if a.action == "list":
+        print("\n".join(f"{i}. {t}" for i, t in enumerate(q, 1)) or "queue is empty")
+        return 0
+    ids = []
+    for t in a.ids:
+        t = t.strip()
+        if t and t not in ids:
+            ids.append(t)
+    if a.action == "add":
+        have = open_ids(r)
+        new = []
+        for t in ids:
+            if t not in have:
+                print(f"{t}: not an open task, skipped")
+            elif t in q:
+                print(f"{t}: already queued, skipped")
+            else:
+                new.append(t)
+        if not new:
+            return 1
+        at = len(q) if a.at is None else max(0, min(len(q), a.at - 1))
+        q[at:at] = new
+        print(f"queued {', '.join(new)} at {at + 1}")
+    else:
+        gone = [t for t in ids if t in q]
+        for t in ids:
+            if t not in q:
+                print(f"{t}: not queued")
+        if not gone:
+            return 1
+        q = [t for t in q if t not in gone]
+        print(f"removed {', '.join(gone)}")
+    b["upnext"] = q
+    r.save_board(b)
+    return 0
+
+
 def cmd_start(r, a):
     text, eol = read(r.tasks)
     lines = text.split("\n")
@@ -117,7 +173,10 @@ def cmd_start(r, a):
         mine["what"] = a.what
     if a.tree:
         mine["tree"] = a.tree
+    gone = drop_upnext(b, marked)
     r.save_board(b)
+    if gone:
+        print(f"up next: dropped {', '.join(gone)}")
     print(f"board: {a.agent} on {mine['task']}")
     return 0
 
@@ -190,7 +249,10 @@ def finish(r, a, how):
         else:
             b["agents"].remove(mine)
             print(f"board: {ag} dropped")
-    if agents:
+    gone = drop_upnext(b, {a.id})
+    if gone:
+        print("up next: dropped " + a.id)
+    if agents or gone:
         r.save_board(b)
     print(f"Still to do by hand: grep TASKS.md for {a.id}; close a parent whose last stage this was; "
           "name other open tasks it also did; DECISIONS.md if a choice was made.")
@@ -299,11 +361,15 @@ def main():
     c.add_argument("id")
     c.add_argument("--reason", required=True)
     c.add_argument("--notes")
+    u = sub.add_parser("upnext")
+    u.add_argument("action", choices=["add", "remove", "list"])
+    u.add_argument("ids", nargs="*")
+    u.add_argument("--at", type=int, help="1-based place in the queue (default: the end)")
     sub.add_parser("check")
     a = ap.parse_args()
     r = Root(a.root)
     code = {"start": lambda: cmd_start(r, a), "done": lambda: finish(r, a, "done"),
-            "close": lambda: finish(r, a, "close"), "check": lambda: cmd_check(r, a)}[a.cmd]()
+            "close": lambda: finish(r, a, "close"), "check": lambda: cmd_check(r, a), "upnext": lambda: cmd_upnext(r, a)}[a.cmd]()
     sys.exit(code)
 
 

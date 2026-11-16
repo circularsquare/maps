@@ -34,6 +34,7 @@ AREAS = [
 # that "done" is only for lines with no open tasks.
 COLUMNS = [
     ("progress", "In progress"),
+    ("upnext", "Up next"),         # the queue in board-live.json; no line takes it as its column
     ("you", "Waiting on you"),
     ("high", "Ready (high)"),
     ("low", "Ready (low)"),
@@ -320,6 +321,7 @@ def main():
         "updates": [{"key": k, "name": n} for k, n in UPDATES.items()],
         "lines": out_lines,
         "tasks": task_out,
+        "upnext": [i for i in (live.get("upnext") or []) if i in task_out],
         "live": {"updated": live.get("updated"), "orchestrator": live.get("orchestrator"),
                  "builds": live.get("builds") or {}, "agents": agents, "runs": live.get("runs") or []},
         "cores": cores(),

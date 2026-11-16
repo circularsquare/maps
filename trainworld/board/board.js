@@ -440,6 +440,7 @@ function renderGrid() {
     if (m !== null) shown.set(line.slug, m);
   }
   const perCol = {};
+  perCol.upnext = upnextTasks(q, update).length;
   for (const line of VIEW) if (shown.has(line.slug)) perCol[line.status] = (perCol[line.status] || 0) + 1;
   const asks = (DATA.asks || []).filter((a) => !q || a.text.toLowerCase().includes(q));
   if (asks.length && !update) perCol.you = (perCol.you || 0) + asks.length;
@@ -462,6 +463,11 @@ function renderGrid() {
     grid.append(el('div', { class: 'rowhead' }, area.name, colGrip(0)));
     for (const [i, col] of DATA.columns.entries()) {
       const cell = el('div', { class: 'cell', 'data-area': area.slug, 'data-status': col.key }, i + 1 < last ? colGrip(i + 1) : null);
+      if (col.key === 'upnext') {
+        for (const t of upnextTasks(q, update)) if (upnextArea(t) === area.slug) cell.append(taskCard(t));
+        grid.append(cell);
+        continue;
+      }
       for (const line of VIEW) {
         if (line.area !== area.slug || line.status !== col.key || !shown.has(line.slug)) continue;
         cell.append(card(line, shown.get(line.slug)));
@@ -542,6 +548,20 @@ function askPanel(id) {
       el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'ask-answer', ask: id }) }, 'Send answer'),
       el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'ask-answer', ask: id, dismiss: true }, true) }, 'Dismiss')) : null,
   ];
+}
+
+// The "Up next" queue (notes/board-live.json, kept by tools/tasks.py upnext): one card per task, in queue order.
+function upnextTasks(q, update) {
+  return (DATA.upnext || []).map((id) => DATA.tasks[id]).filter((t) => t && (!q || taskHits(t, q)) &&
+    (!update || (DATA.lines.find((l) => l.slug === t.line) || {}).update === update));
+}
+function upnextArea(t) { return (DATA.lines.find((l) => l.slug === t.line) || {}).area || 'ops'; }
+function taskCard(t) {
+  const line = DATA.lines.find((l) => l.slug === t.line);
+  return el('button', { class: 'card task', type: 'button', style: colour('upnext'), 'data-task': t.id, onclick: () => goTask(t.id) },
+    el('div', { class: 'row' }, el('div', { class: 'name' }, t.id), priBadge(t.pri)),
+    el('div', { class: 'ttl' }, t.text),
+    line ? el('div', { class: 'sub' }, line.name) : null);
 }
 
 function card(line, hits) {
