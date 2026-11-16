@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3427 [P2] {L:edit-speed} A setting to stop recalculating trips while paused (2026-11-16): "Recalculate trips while paused" in Settings, Performance, on by default; off, edits while paused wait and play solves once; a quiet tag says so. notes/T-3427.md.
 - T-3381 [P2] {L:station-placement} Corner notice shows a generated station name (2026-11-16): fixed: the blueprint notice and the constructed notice name the complex. notes/T-3381.md.
 - T-3422 [P2] {L:rebuild-track} Trains run over blueprint flyover (2026-11-16): fixed: a line needs its return legs built to run, and Construct line builds and prices them (old saves: a line with a blueprint return leg stops until it is built). Covers aejormor's "trains use unbuilt track". notes/T-3422.md.
 - T-3403 [P2] {L:map-look} Profit map mode on single track splits (2026-11-16): fixed: run 1's fares and half the running cost go on the return stretches; seen on a single-track loop, flyover by the same code. notes/T-3403.md.
