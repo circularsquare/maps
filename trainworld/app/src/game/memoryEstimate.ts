@@ -5,7 +5,8 @@
 // memoryCheck.ts judges a save before it loads from its zones and must stay cautious; this is the plain figure.
 
 import { poolSize, demandWorkersMB } from "../workers/demandClient";
-import { budgetKnown, deviceGB, memBudget } from "../workers/deviceMemory";
+import { addressLimited, budgetKnown, deviceGB, memBudget } from "../workers/deviceMemory";
+import { t } from "../i18n";
 
 const GB = 2 ** 30;
 /** GB all of the browser's processes take with a small saved game open, one solving worker */
@@ -37,6 +38,19 @@ export const overBudget = (stations: number | undefined): boolean => budgetKnown
 
 /** GB the device has, for the warning: the browser's own figure, else the budget (a 32-bit browser). */
 export const deviceGBOrBudget = (): number => (deviceGB() !== undefined && budgetKnown() ? deviceGB()! : budgetGB());
+
+/** T-3494: how far the budget is the device\'s own figure. "cap": the browser reports 8 GB, the most it ever reports,
+ * so the device has 8 or more; "known": a lower figure it reported, or a 32-bit browser\'s limit; "unknown": the
+ * browser does not say (Safari, Firefox; a phone or tablet is assumed 4 GB), so the budget is only a guess and
+ * is not shown as a total. Display only: `memBudget` does not read it. */
+export type BudgetKind = "cap" | "known" | "unknown";
+export function budgetKind(): BudgetKind {
+  if (!budgetKnown()) return "unknown";
+  return !addressLimited() && (deviceGB() ?? 0) >= 8 ? "cap" : "known";
+}
+
+/** T-3494: the device\'s memory for the saves warning, as far as the browser says it ("8 GB or more", "about 4 GB") */
+export const deviceText = (): string => budgetKind() === "cap" ? t("savesPanel.haveCap", { gb: gbText(deviceGBOrBudget()) }) : t("savesPanel.haveAbout", { gb: gbText(deviceGBOrBudget()) });
 
 /** One decimal, none when it is a whole number or from 10 up ("2.4", "8", "12") */
 export const gbText = (n: number): string => (n < 10 ? String(Math.round(n * 10) / 10) : n.toFixed(0));

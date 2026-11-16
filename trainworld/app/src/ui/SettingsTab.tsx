@@ -3,7 +3,7 @@
 
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { budgetGB, gbText, liveGB } from "../game/memoryEstimate";
+import { budgetGB, budgetKind, gbText, liveGB } from "../game/memoryEstimate";
 import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
 import { exact } from "../game/format";
 import { awayNear, rushRun, whenAway, whenBack, whenOut } from "../game/days";
@@ -241,10 +241,12 @@ function MemoryRow() {
   const [used, setUsed] = useState(liveGB);
   useEffect(() => { const id = setInterval(() => setUsed(liveGB()), 2000); return () => clearInterval(id); }, []);
   if (used === null) return null;
-  const budget = budgetGB();
-  return <div class="slider" data-tip={t("settingsTab.memoryTip", { budget: gbText(budget) })}>
+  const budget = budgetGB(), kind = budgetKind();
+  // T-3494: with no device figure from the browser the total is a guess, so only the game's own use shows
+  const vars = { used: gbText(used), budget: gbText(budget) };
+  return <div class="slider" data-tip={t(kind === "cap" ? "settingsTab.memoryTipCap" : kind === "known" ? "settingsTab.memoryTip" : "settingsTab.memoryTipUnknown")}>
     <span>{t("settingsTab.memory")}</span>
-    <span class={"num" + (used > 0.85 * budget ? " memory-bad" : "")}>{t("settingsTab.memoryValue", { used: gbText(used), budget: gbText(budget) })}</span>
+    <span class={"num" + (kind !== "unknown" && used > 0.85 * budget ? " memory-bad" : "")}>{t(kind === "cap" ? "settingsTab.memoryValueCap" : kind === "unknown" ? "settingsTab.memoryValueUnknown" : "settingsTab.memoryValue", vars)}</span>
   </div>;
 }
 
