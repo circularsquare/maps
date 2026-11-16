@@ -850,8 +850,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   cells still under `FLOOR` (50) trip ends join their zone part's nearest busier cell (T-850b);
   `--stats --floor N` counts another floor.
 - `nocar.py <ids> | --all` (not read by demand since T-854) adds `nocar` (people in households with no car, per cell; T-511) to
-  the res-9 copy and the merged pack, append-only; rerun it after anything that rebuilds a pack
-  (its sources: docs/data-register.md "Car ownership"); `--plan` prints every planned country's
+  the res-9 copy and the merged pack, append-only; only `world_run.py` still runs it, and nothing
+  needs it rerun by hand (T-926 drops the step and the layer; its sources: docs/data-register.md
+  "Car ownership"); `--plan` prints every planned country's
   share and source, writing nothing.
 - `everyday_rates.py <ids> | --all` writes the `everyday` header block (the country's survey
   outing rates by purpose, T-509 stage 4; table `SURVEYS`, worldwide median otherwise; the

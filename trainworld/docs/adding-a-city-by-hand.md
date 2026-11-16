@@ -128,11 +128,10 @@ Every other step reads and writes the res-9 pack: to rerun one on a merged pack,
 `merge_cells.py wor --through "routes {id} --stage walk"` (any module and its arguments; it undoes, runs
 the step, merges again; `--workers N` for many ids). Routes and the enrichments refuse a merged pack,
 and `--undo` refuses one some step has changed since merging (T-1261). `merge_cells.py --all` remerges every registered pack.
-Then `nocar.py wor` (homes without a car, T-511; demand has not read it since T-854, so it may be skipped;
-docs/data-register.md "Car ownership") and
-`everyday_rates.py wor` (the country's everyday rates, T-509; a worldwide median without a survey),
-seconds each; both write the merged pack and its res-9 copy, so rerun them after any step that
-rebuilds the pack. The market's zone file (`market_zones.py`, section 7) is made after the merge.
+Then `everyday_rates.py wor` (the country's everyday rates, T-509; a worldwide median without a survey),
+seconds; it writes the merged pack and its res-9 copy, so rerun it after any step that rebuilds the
+pack. `nocar.py` is not needed: demand has not read its layer since T-854 (T-926 drops it).
+The market's zone file (`market_zones.py`, section 7) is made after the merge.
 
 A state new to the game also fetches its 2020 redistricting summary file (`<st>2020.pl.zip`, T-234);
 `pipeline/group_quarters.py` keeps a small block table from it (`data/raw/pl2020_p5_<fips>.csv.gz`).
