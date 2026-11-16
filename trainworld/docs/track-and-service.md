@@ -1706,8 +1706,7 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   period's share of passenger-km, each hour's as above (when riders set out), counted within the
   hour as its fares are paid, and divided between regions by the region of each ride's boarding stop.
 - **Points** (T-684, T-694, `app/src/game/points.ts`): a measure per region of how good its
-  network is: the points it earned in the past 24 whole game hours (fewer while the hour ledger is
-  younger), recomputed once a game hour; never a running total. 20 a rail trip and 1 a
+  network is: the points its network earns on a forecast weekday, from the current solve (`pointsPerDay`'s weekday row, `pointsScore`), so an edit moves it as soon as the solve answers and the clock, weekends and holidays never do; before the first solve, what it earned in the past 24 whole game hours; never a running total. 20 a rail trip and 1 a
   passenger-km, not scaled by the economy, unlocking nothing yet. A trip is a rider's whole rail
   journey (changes of line and walks between stations within it included), counted in the region
   it starts in: each region's rail trips a day are the solve's (its own demand's, plus half of each

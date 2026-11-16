@@ -267,8 +267,7 @@ when it shrinks [T-028, T-631], and running costs are US$4 a train-km plus US$2 
 track and stations cost upkeep whether trains run or not, US$35k a km of double track on the ground (US$50k on a viaduct, 100k in cut and cover, 130k in a bored tunnel, T-1931) and US$50k a station a game
 day, US$200k for one underground (-1 to -3) [T-2619], draining evenly; a line's profit takes off its share, each piece's split by the trains a day of the lines
 using it [T-867]. The fare is a curve of trip length through three points, never falling with distance: in the Money tab the player drags the points on a graph to set fares, or sets a base fare at 0 km and, for each of the two stretches after it, its end distance and its rate per km (at least $0) [T-626, T-1112, T-1143, T-1201]. Each country charges the curve times its fare scale: by default its income's, (its GDP per head at market rates over the start country's)^0.5, or the player's own, set in the Money tab as a multiple of the reference country's fares (the first country built in, or one the player picks; switching it changes no fare); a trip pays its starting country's [T-2021, T-1277, T-1554, T-1906, T-2670, T-2679]. A new game's curve is set once for the country it starts in: $2.50, $6.50 and $22.50 at 0, 20 and 100 km in the US, those times the country's scale elsewhere (Japan $1.30, $3.40 and $12). Rides on a line with high-speed trains pay the curve's part above the base times a multiplier, 1.5 unless the player sets another in the Money tab; ferry lines do the same with their own, 1.00 by default [T-1626, T-2194, T-2195]. A fare change shows in the Money tab at once, but a line's income keeps the fares its riders were solved with until riders solved with the new ones show [T-2266]. Each line's fare income takes a share of the network's base fares, half by its boardings and half by its passenger-km, at most one base a boarding [T-2104]. The player may take one loan at a time, of $1B, $5B or $10B, repaid in 60 equal daily payments at 1% interest a game day ($22.2M a day for $1B), and refused while a payment is more than the recent daily profit [T-1661, T-2022, T-1906]. Prices and fares in full: track-and-service.md 6.4.
-**Points** measure each city's network: what it earned in the past 24 game hours, recomputed
-once a game hour, at 20 a rail trip (a rider's whole journey, changes included, counted in the
+**Points** measure each city's network: what its network earns on a forecast weekday (the current solve's, so an edit moves it as soon as the solve answers; the clock, weekends and holidays never do), at 20 a rail trip (a rider's whole journey, changes included, counted in the
 city it starts in) and 1 a passenger-km; not a running total, and they unlock nothing yet [T-684,
 T-694]. A city's goals are train shares of 10%, 20%, 30% and 40%, each kept once reached: the 10%
 one is a star in the Cities list [T-685], 10% and 20% are ticks on the trips bar in the city view, and all are listed there as
@@ -392,8 +391,8 @@ on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
 a world leaderboard and one per city and country, each person once per board. A game counts at its
-current figures, never its best ever, so a demand change never leaves an unreachable score up, and
-on each board a person's row is their best game there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248; docs/ui-panels.md "Account and leaderboards"].
+current figures, the forecast weekday's points, never its best ever, so a demand change never leaves an unreachable score up, and
+on each board a person's row is their best game there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248, T-3465; docs/ui-panels.md "Account and leaderboards"].
 Games synced between devices and sharing by link come later (T-988 to T-990).
 [docs/architecture.md](docs/architecture.md) 11.
 

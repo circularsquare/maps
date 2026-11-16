@@ -9,7 +9,7 @@ import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
 import { SEARCH_MAX, TITLE_MAX, communityOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
-import { pointsPast24h, pointsShort } from "../game/points";
+import { pointsScore, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
 import { diagramShareProgress, diagramTheme } from "../diagram/view";
 import { paint, widened } from "../diagram/draw";
@@ -295,7 +295,7 @@ function Browse() {
     fetchShares(view, city, seed, search, paged ? page * PAGE : 0).then((l) => { if (live) { setRows(l.rows); setCount(l.count); } }, (e) => { if (live) setError((e as Error).message); });
     return () => { live = false; };
   }, [view, city, seed, search, signedIn, shareTick.value, paged ? page : 0]);
-  const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  const mine = [...pointsScore.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const lands = [...new Set(mine.map((id) => zoneCountry(id)?.toLowerCase() ?? "").filter(Boolean))];
   const areas = [...new Set(mine.map(regionOf).filter((r): r is string => !!r))];
   const change = (r: ShareRow) => { setPicked(r); setRows((all) => all && all.map((x) => (x.id === r.id ? r : x))); };

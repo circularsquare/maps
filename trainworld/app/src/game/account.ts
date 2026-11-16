@@ -8,7 +8,7 @@
 // forgets it), so a dev page or a check makes no request that could fail. Everything waits for
 // `/noritetsu/config` to say `trainworld`: an older server, or none, keeps every icon hidden.
 //
-// While signed in, each normal game's points (the past 24 game hours, the Cities tab's) are sent at
+// While signed in, each normal game's points (the forecast weekday's, the Cities tab's) are sent at
 // most every two wall minutes when they change, joined or not, so a board is current the moment its
 // player joins. A game owns a random id per browser slot (`GAMES_KEY`), or its account game's id
 // (T-988); a sandbox sends only the fact, once, which the server keeps for good. A slot deleted here
@@ -19,7 +19,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
-import { pointsPast24h } from "./points";
+import { pointsScore } from "./points";
 import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
@@ -372,12 +372,12 @@ export async function gameForShare(): Promise<string | null> {
   return e.id;
 }
 
-/** The game's figures now: points in the past 24 game hours in all, and its best cities. */
+/** The game's figures now: weekday points (T-3465, `pointsScore`) in all, and its best cities. */
 function figures(): { day: number; points: number; cities: Record<string, number> } | null {
   const m = moneyState.peek();
   const hour = m?.hours.at(-1)?.hour;
   if (!m || hour === undefined) return null;
-  const per = [...pointsPast24h.peek()].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]);
+  const per = [...pointsScore.peek()].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]);
   // the server refuses a figure over 1e12 (twMaxPoints), which would leave a bigger game stuck on its last accepted one
   const cap = (v: number) => Math.min(Math.round(v), 1e12);
   const points = cap(per.reduce((a, [, v]) => a + v, 0));

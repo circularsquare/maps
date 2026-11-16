@@ -2,7 +2,7 @@
 
 Each region gets a score for how good its network is, and goals to reach.
 
-**Points.** A region's points are what it earned over the past day of game time. They are never a running total, so a region whose network gets worse loses points. A rail trip earns {{app/src/game/points.ts:POINTS_PER_TRIP|0}} and each passenger-km earns {{app/src/game/points.ts:POINTS_PER_KM|0}}. They unlock nothing yet.
+**Points.** A region's points are what its network earns on a typical weekday, worked out from the trips riders want now. They change as soon as you change your network, and weekends, holidays and the clock never move them. They are never a running total, so a region whose network gets worse loses points. A rail trip earns {{app/src/game/points.ts:POINTS_PER_TRIP|0}} and each passenger-km earns {{app/src/game/points.ts:POINTS_PER_KM|0}}. They unlock nothing yet.
 
 A trip is a rider's whole rail journey, however many lines it uses, and counts in the region it starts in. Passenger-km count where riders get on. A region whose riders all board in another region's stations scores no trips.
 
@@ -13,4 +13,4 @@ A trip is a rider's whole rail journey, however many lines it uses, and counts i
 Money is settled as the game runs, not once an hour, so cash moves smoothly. A day runs midnight to midnight in the start zone's local time.
 
 Exact rule: `docs/track-and-service.md` "Regions, points and stars" for points and stars and the regional split of money, "Fares and the ledgers" for how a day and an hour settle.
-In the code: **main** `app/src/game/points.ts` `POINTS_PER_TRIP`, `GOAL_SHARES`, `railTripsByRegion`, `pointsPast24h` `app/src/game/regionMoney.ts` `lineShares`
+In the code: **main** `app/src/game/points.ts` `POINTS_PER_TRIP`, `GOAL_SHARES`, `railTripsByRegion`, `pointsScore` `app/src/game/regionMoney.ts` `lineShares`

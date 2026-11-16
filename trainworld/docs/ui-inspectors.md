@@ -26,7 +26,7 @@ title, rows: **Train share** (the
 zone's, as the top bar gives it; hover the top bar's split hover, [ui-panels.md](ui-panels.md#the-top-bar)), and for a zone with a built station
 **Stations** (built ones, the Cities tab's count), **Lines** (lines with a stop in the zone) and
 **Train trips** ("12.3M/day", the Cities tab's Trips figure for the day shown, hover the whole figure
-"per weekday" and so on) [T-1892], then **Points** (the past 24 game hours, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
+"per weekday" and so on) [T-1892], then **Points** (the forecast weekday's, hover as the Cities tab's), **Profit** ("$389M a day", the Cities
 tab's figure and hover, losses red) and **Goals reached** (each goal reached, the star's as a small
 star before "10%", then "20%" and on; hover when it was reached; "None" before the first)
 [T-1437]. Then what a bubble click showed before ([ui-demand-views.md](ui-demand-views.md)): **Trips
@@ -91,8 +91,7 @@ that the Lines tab's Money cell is blank, the line panel's Profit row reads "cal
 absent when it has none, and the line is left out of the group and Lines totals, so the upkeep alone is never
 shown as the line's loss. Deleting a rail or bus line with no stops asks nothing; one with stops asks "Delete <name>? Track
 and stations stay." [T-2535]. The line panel's block has no heading, only the rule above it. The points (Cities
-tab, top bar, leaderboard) say "in past 24h" too: they are a sum of the last 24 whole game
-hours, moving once an hour. They are counted by the clock worker from the boarding
+tab, top bar, leaderboard) are not these: they are the forecast weekday's (T-3465, "on a weekday"). The past 24 hours are counted by the clock worker from the boarding
 account's departures (`TrackApi.past_day`: the rest of yesterday from the time of day now, on
 yesterday's kind of day, then today so far on today's; a stop's boardings in a stretch are the
 riders arrived by its last departure in it less those still waiting, less the same at the

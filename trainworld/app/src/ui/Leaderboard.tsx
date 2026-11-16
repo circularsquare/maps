@@ -14,7 +14,7 @@ import { exact } from "../game/format";
 import { t, tCountry } from "../i18n";
 import { countryName } from "../i18n/intl";
 import { moneyState } from "../game/money";
-import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPast24h, pointsShort } from "../game/points";
+import { POINTS_PER_KM, POINTS_PER_TRIP, pointsScore, pointsShort } from "../game/points";
 import { Modal } from "./Modal";
 import { CommunityButton } from "./Community";
 import { Named } from "./Flag";
@@ -117,7 +117,7 @@ function Boards() {
   useEffect(() => { if (!st.at || Date.now() - st.at > 60_000) void fetchBoards(); }, [st.at]);
   const key = st.key, d = st.data && st.data.board === key ? st.data : null;
   // this game's cities, its most points first; then every other city with a board
-  const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  const mine = [...pointsScore.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const others = Object.keys(st.list).filter((k) => k.startsWith(WORLD + "_")).map((k) => k.slice(WORLD.length + 1))
     .filter((id) => !mine.includes(id)).sort((a, b) => collate(cityName(a), cityName(b)));
   const lands = [...new Set([...mine.map((id) => zoneCountry(id)?.toLowerCase() ?? ""), ...Object.keys(st.list).filter((k) => k.startsWith(COUNTRY)).map((k) => k.slice(COUNTRY.length))].filter(Boolean))];

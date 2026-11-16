@@ -1,4 +1,4 @@
-// Points (T-684; SPEC 6): a measure per region, what it earned in the past 24 game hours at 20 a
+// Points (T-684; SPEC 6): a measure per region, what its network earns on a forecast weekday at 20 a
 // rail trip and 1 a passenger-km (T-694). A trip is a rider's whole rail journey, however many
 // lines it uses, and counts in the region it starts in.
 //
@@ -182,4 +182,13 @@ export const pointsPerDay = computed<Map<string, number[]>>(() => {
   }
   for (const r of out.values()) r[AVERAGE_DAY] = (5 * r[0] + r[1] + r[2]) / 7;
   return out;
+});
+
+/** T-3465: each region's points, the score shown and sent everywhere: its forecast weekday's, from the current solve, so an
+ * edit moves it as soon as the solve answers and neither the clock, a weekend nor a holiday does. Until a solve exists,
+ * what the region earned in the past 24 game hours. */
+export const pointsScore = computed<Map<string, number>>(() => {
+  const out = new Map<string, number>();
+  for (const [z, r] of pointsPerDay.value) if (z && r[0] > 0) out.set(z, Math.round(r[0]));
+  return out.size ? out : pointsPast24h.value;
 });

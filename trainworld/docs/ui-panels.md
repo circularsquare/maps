@@ -805,9 +805,8 @@ all cities view ([ui-inspectors.md](ui-inspectors.md#the-all-cities-view)) and t
 (hover: its station count), its mode split bar as the top bar draws it (the same colours and the
 same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
-construction, left out of the figure, when there were any; losses red), and its points, those of the
-past 24 game hours, changing once a game hour, to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure, points a day with the
-riders now on the day shown, and the rule) [T-684, T-694]. A star after the name marks a region
+construction, left out of the figure, when there were any; losses red), and its points, its forecast
+weekday's, changing as soon as the solve answers [T-3465], to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure "on a weekday", and the rule) [T-684, T-694]. A star after the name marks a region
 whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
 region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
 list keeps about six characters of each name (60 px): below that the star goes first, then the
@@ -1140,8 +1139,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   Don't add asks "Are you sure? Games kept only in this browser are lost if its storage is
   cleared." with Keep them here only and Add them ("Keep it here only", "Add it" for one). Added
   games go up at once; kept ones are never asked about again and carry the crossed cloud.
-- **Scores**: while signed in, each normal game in a browser slot sends its points (the past 24
-  game hours, the All cities row's figure) and its best 64 cities' points, when they change and at
+- **Scores**: while signed in, each normal game in a browser slot sends its points (the forecast weekday's, the All cities row's figure, T-3465) and its best 64 cities' points, when they change and at
   most every 2 wall minutes (at once on the first send and when the page is hidden), joined or not.
   A `?new=1` page or one whose slot is open elsewhere sends nothing. Each slot has a random game id
   in localStorage (`trainworld.score-games.v1`), or the id of its game on the account when it has
