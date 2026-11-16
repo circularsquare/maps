@@ -103,13 +103,16 @@ arrives). Both are `{ id: { q, ja, "zh-Hans", "zh-TW" } }`, read through
 `tPlace(id, latinName)` (`i18n/places.ts`) where a city's name is shown. A missing label, an unmatched city
 (`q: null`) and every other language show the Latin name. Labels: ja's own; zh-Hans from zh-hans, zh-cn, then zh
 (through OpenCC to Simplified); zh-TW from zh-tw, zh-hant, then zh-Hans through OpenCC s2twp. A city is matched to the
-item with the most sitelinks among those Wikidata's search finds for its name that have a coordinate within 60 km
-of its centre.
+item with the most sitelinks among those Wikidata's search finds for its shown name that have a coordinate within 60 km
+of its centre; a town inside the unit named for the place, a museum or camp, and a former country never count, and an
+item named otherwise than the place is now shown is matched again (T-3450, `tools/place_names_rules.mjs`;
+`checks/place_names_match.mjs` fails on any such match).
 
 `node trainworld/tools/place_names.mjs --opencc <opencc-js folder>` adds the cities not yet in the file (rerun it
 after a join, with and without `--zones`; `HAND_LABELS` in the tool sets names by hand: Osaka's metro is 関西, the
 Ruhr zone ルール地方), `--relabel` fetches every known item's labels again, `--redo id,...` matches those ids again. A
-wrong match is fixed by writing the right item into its `q` and running with `--relabel`. Search in the new game
+wrong match the rules miss is fixed by adding the right item to `PINNED` in `place_names_rules.mjs` and running with
+`--redo <id>`. Search in the new game
 sheet and the map search box find a city by its shown name as well as its Latin one (`cityMatch` in `game/search.ts`;
 `isRegistryCity` stays on the Latin name). Every place a city's name is worded (hovers, the status tag, saves panel,
 guide, records, bubble tags, diagram labels) reads it through `tPlace`; an achievement record keeps the Latin name and

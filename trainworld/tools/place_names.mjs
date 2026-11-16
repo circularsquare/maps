@@ -7,8 +7,12 @@
 //   node trainworld/tools/place_names.mjs --opencc <dir> --redo nyc,lon          match these ids again from scratch (`all`: every city)
 //   --zones                                                                      the same for the zones, into place-names-zones.json
 //
-// Rerun after a join (registry.json rewritten); ids the registry no longer has are dropped. A wrong match is fixed by
-// adding the right item to PINNED and rerunning with --redo <id>. An entry with `q: null` is a city no item matched; it
+// Rerun after a join (registry.json rewritten); ids the registry no longer has are dropped. An entry whose item no longer
+// carries the name the game shows (zone-names.json renamed the zone) is matched again. Every new match is vetted by
+// place_names_rules.mjs vet() (T-3450): a town inside the unit named for the place gives way to the unit (Shiga's old
+// town 志賀町 to Shiga Prefecture), and a museum, camp or former country is dropped. checks/place_names_match.mjs runs the
+// same rules over the files. A wrong match the rules miss is fixed by adding the right item to PINNED
+// (place_names_rules.mjs) and rerunning with --redo <id>. An entry with `q: null` is a city no item matched; it
 // shows its Latin name and is not searched again unless named in --redo.
 // --opencc: npm install --prefix <scratch>/opencc opencc-js, then <scratch>/opencc/node_modules/opencc-js. Without it,
 // zh-TW falls back no further than Wikidata's zh-tw and zh-hant labels.
@@ -18,6 +22,7 @@
 import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { NEAR_KM, PLACE_CLASSES, NOT_PLACE_CLASSES, PINNED, HAND_LABELS, sparql, point, km, cleanName, fold, textsOf, labelFits, near, namesOf, factsOf, unitLabels, vet } from "./place_names_rules.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REGISTRY = join(ROOT, "app/src/game/registry.json");
@@ -25,24 +30,8 @@ const ZONE_NAMES = join(ROOT, "app/src/game/zone-names.json");
 const ZONES = process.argv.includes("--zones");
 // zones are 3,500 rows, so they live in a file of their own that the app loads only for Japanese and Chinese
 const OUT = join(ROOT, ZONES ? "app/src/i18n/place-names-zones.json" : "app/src/i18n/place-names.json");
-const UA = "trainworld-l10n/1.0 (rail game city names; batch label fetch)";
-/** A Wikidata item matches a registry city when one of its coordinates is this close to the city's centre. */
-const NEAR_KM = 60;
-/** Only places count: human settlements and administrative units (not a stadium, an air base or a team). */
-const PLACE_CLASSES = "wd:Q486972 wd:Q56061";
 /** A match by name with fewer sitelinks than this is checked against the places near the centre. */
 const WEAK_LINKS = 20;
-/** Matches set by hand, where the rule picks a bigger unit of the same name over the city: Puebla's state (the city's
- * label is "Heroica Puebla de Zaragoza"), Puducherry's union territory, Siwan's district. */
-const PINNED = { pue: "Q125293", pud: "Q639421", maj: "Q2234098" };
-
-/** Names set by hand where the metro's name is a region, not the city its centre lies in (the registry's "Osaka" is
- * Keihanshin, four prefectures, shown as Kansai; Hyogo's players read 大阪 as another prefecture). Wins over Wikidata. */
-const HAND_LABELS = {
-  osa: { ja: "関西", "zh-Hans": "关西", "zh-TW": "關西" },
-  dor: { ja: "ルール地方", "zh-Hans": "鲁尔区", "zh-TW": "魯爾區" },
-  luo: { ja: "漯河", "zh-Hans": "漯河", "zh-TW": "漯河" }, // place_names_check.py cannot read 漯 (Luo), T-3324
-};
 
 const args = process.argv.slice(2);
 const opt = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
@@ -57,40 +46,6 @@ async function opencc() {
   return { toTW: CC.Converter({ from: "cn", to: "twp" }), toCN: CC.Converter({ from: "t", to: "cn" }) };
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function get(url, init = {}) {
-  for (let attempt = 0; ; attempt++) {
-    const r = await fetch(url, { ...init, headers: { "User-Agent": UA, ...(init.headers ?? {}) } });
-    if (r.ok) return r.json();
-    if ((r.status === 429 || r.status >= 500) && attempt < 5) {
-      await sleep(Number(r.headers.get("retry-after")) * 1000 || 5000 * (attempt + 1));
-      continue;
-    }
-    throw new Error(`${r.status} ${url.slice(0, 120)}`);
-  }
-}
-
-/** The same cleaning as app/src/game/zoneNames.ts cleanName, so the name searched is the name shown. */
-function cleanName(raw) {
-  const s = raw.replace(/\s*\[[^\]]*\]/g, "").replace(/\s*\([^)]*\)\s*$/, "").replace(/ CC\b/g, "").replace(/\s+/g, " ").trim();
-  return s || raw;
-}
-
-async function sparql(query) {
-  const j = await get("https://query.wikidata.org/sparql", {
-    method: "POST",
-    headers: { Accept: "application/sparql-results+json", "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ query }).toString(),
-  });
-  await sleep(1500);
-  return j.results.bindings;
-}
-
-const point = (b) => {
-  const m = b.coord && /Point\(([-\d.eE]+) ([-\d.eE]+)\)/.exec(b.coord.value);
-  return m ? [Number(m[1]), Number(m[2])] : null;
-};
-
 /** Items with a coordinate whose English label or alias is one of `texts`: { text: [{ id, coord, links }] }, 80 texts a query. */
 async function byName(texts) {
   const out = new Map();
@@ -100,14 +55,16 @@ async function byName(texts) {
   VALUES ?n { ${batch.map((t) => `${JSON.stringify(t)}@en ${JSON.stringify(t)}@mul`).join(" ")} }
   ?item rdfs:label|skos:altLabel ?n ; wdt:P625 ?coord .
   OPTIONAL { ?item wikibase:sitelinks ?links }
+  BIND(EXISTS { ?item wdt:P576 [] } AS ?gone)
   FILTER EXISTS { ?item wdt:P31/wdt:P279* ?cls VALUES ?cls { ${PLACE_CLASSES} } }
+  FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* ?no VALUES ?no { ${NOT_PLACE_CLASSES} } }
 }`);
     for (const b of rows) {
       const p = point(b);
       if (!p) continue;
       const n = b.n.value;
       if (!out.has(n)) out.set(n, []);
-      out.get(n).push({ id: b.item.value.split("/").pop(), coord: p, links: Number(b.links?.value ?? 0) });
+      out.get(n).push({ id: b.item.value.split("/").pop(), coord: p, links: Number(b.links?.value ?? 0), gone: b.gone?.value === "true" });
     }
     console.log(`names ${Math.min(i + 80, texts.length)}/${texts.length}`);
   }
@@ -132,11 +89,6 @@ async function labels(ids) {
     }
   }
   return out;
-}
-
-function km([lon1, lat1], [lon2, lat2]) {
-  const r = Math.PI / 180, a = Math.sin(((lat2 - lat1) * r) / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(((lon2 - lon1) * r) / 2) ** 2;
-  return 12742 * Math.asin(Math.sqrt(a));
 }
 
 /** "圣保罗 (巴西)" and "圣保罗（巴西）" as 圣保罗: a label's own disambiguation. */
@@ -169,16 +121,23 @@ const old = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : {};
 const CC = await opencc();
 if (!CC) console.warn("no --opencc: zh-TW is only Wikidata's own, and a bare zh label is kept as written");
 
-const cities = registry.cities.filter((c) => (c.kind === "zone") === ZONES).map((c) => ({ id: c.id, raw: c.name, name: hand[c.id]?.name ?? cleanName(c.name), center: c.center }));
-const todo = cities.filter((c) => redo.has("all") || redo.has(c.id) || !(c.id in old));
+const cities = registry.cities.filter((c) => (c.kind === "zone") === ZONES).map((c) => ({ id: c.id, raw: c.name, name: hand[c.id]?.name ?? cleanName(c.name), center: c.center, box: c.box, country: c.country }));
+let todo = cities.filter((c) => redo.has("all") || redo.has(c.id) || !(c.id in old));
+const log = [];
+// an item that no longer carries the name the game shows (the zone was renamed since it was matched) is matched again
+const kept = cities.filter((c) => !todo.includes(c) && old[c.id]?.q && !PINNED[c.id] && !HAND_LABELS[c.id]);
+if (kept.length) {
+  const known = await namesOf([...new Set(kept.map((c) => old[c.id].q))], console.log);
+  const stale = kept.filter((c) => !known.get(old[c.id].q).some((n) => labelFits(n, textsOf(c))));
+  for (const c of stale) log.push(`${c.id}\t${c.name}\t${old[c.id].q}\tnamed otherwise, matched again`);
+  todo = todo.concat(stale);
+}
 console.log(`${cities.length} cities in the registry, ${todo.length} to match`);
 
 // match: the items whose English label or alias is the name (or its part before a comma, "and" or " - "), keep the
-// best-linked one near the centre
-const textsOf = (c) => [...new Set([c.name, cleanName(c.raw), c.name.split(/,| and | - /)[0].trim()])].filter(Boolean);
+// best-linked one near the centre; one that still exists before one dissolved
 const found = await byName([...new Set(todo.flatMap(textsOf))]);
 const chosen = new Map();
-const log = [];
 const note = (c, best, how) => log.push(`${c.id}\t${c.name}\t${best?.id ?? "-"}\t${best ? `${Math.round(best.d)} km, ${best.links} links${how}` : "no item near"}`);
 const weak = new Map();
 for (const c of todo) {
@@ -186,36 +145,60 @@ for (const c of todo) {
   let best = null;
   for (const text of textsOf(c)) for (const e of found.get(text) ?? []) {
     const d = km(e.coord, c.center);
-    if (d > NEAR_KM) continue;
-    if (!best || e.links > best.links || (e.links === best.links && d < best.d)) best = { ...e, d };
+    if (!near(e.coord, c)) continue;
+    if (!best || (best.gone && !e.gone) || (best.gone === e.gone && (e.links > best.links || (e.links === best.links && d < best.d)))) best = { ...e, d };
   }
-  if (best && best.links >= WEAK_LINKS) { chosen.set(c.id, best.id); note(c, best, ""); }
+  if (best && !best.gone && best.links >= WEAK_LINKS) { chosen.set(c.id, best.id); note(c, best, ""); }
   else weak.set(c, best);
 }
-// none, or only a little-known item ("Bogota" for Bogotá, "New York" for New York City): the best-linked place near the
-// centre whose English label or alias is the name or starts with it, ignoring case and accents; an exact one first
-const fold = (s) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+// none, or only a little-known or dissolved item ("Bogota" for Bogotá, "New York" for New York City): the best-linked
+// place near the centre whose English label or alias is the name or starts with it, ignoring case and accents; one that
+// still exists first, then an exact one
 for (const [c, first] of weak) {
-  const rows = await sparql(`SELECT ?item ?label ?links ?coord WHERE {
+  const rows = await sparql(`SELECT ?item ?label ?links ?coord ?gone WHERE {
   SERVICE wikibase:around { ?item wdt:P625 ?coord . bd:serviceParam wikibase:center "Point(${c.center[0]} ${c.center[1]})"^^geo:wktLiteral . bd:serviceParam wikibase:radius "${NEAR_KM / 2}" . }
   ?item wikibase:sitelinks ?links FILTER(?links >= 5)
   ?item rdfs:label|skos:altLabel ?label FILTER(LANG(?label) IN ("en", "mul"))
+  BIND(EXISTS { ?item wdt:P576 [] } AS ?gone)
   FILTER EXISTS { ?item wdt:P31/wdt:P279* ?cls VALUES ?cls { ${PLACE_CLASSES} } }
+  FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* ?no VALUES ?no { ${NOT_PLACE_CLASSES} } }
 }`);
   const texts = textsOf(c).map(fold);
   let best = null;
   for (const b of rows) {
-    const label = fold(b.label.value), links = Number(b.links.value);
+    const label = fold(b.label.value), links = Number(b.links.value), live = b.gone?.value !== "true";
     const exact = texts.includes(label);
     if (!exact && !texts.some((t) => label.startsWith(t + " "))) continue;
-    if (!best || exact > best.exact || (exact === best.exact && links > best.links)) best = { id: b.item.value.split("/").pop(), links, exact, label: b.label.value, d: km(point(b), c.center) };
+    const cand = { id: b.item.value.split("/").pop(), links, exact, live, label: b.label.value, d: km(point(b), c.center) };
+    if (!best || (cand.live - best.live || cand.exact - best.exact || cand.links - best.links) > 0) best = cand;
   }
-  if (!best || (first && first.links >= best.links)) { chosen.set(c.id, first?.id ?? null); note(c, first, ""); }
+  const firstWins = first && (!best || (first.gone !== best.live ? !first.gone : first.links >= best.links));
+  if (!best || firstWins) { chosen.set(c.id, first?.id ?? null); note(c, first, ""); }
   else { chosen.set(c.id, best.id); note(c, best, `, by label "${best.label}"`); }
 }
 const qOf = (c) => (chosen.has(c.id) ? chosen.get(c.id) : old[c.id].q);
 const fetchLabels = cities.filter((c) => qOf(c) && (chosen.has(c.id) || relabel)).map(qOf);
 const L = await labels([...new Set(fetchLabels)]);
+
+// vet each new match (place_names_rules.mjs vet): a town inside the unit named for the place gives way to the unit; a
+// museum, camp, former country or far item is dropped
+const vetting = todo.filter((c) => chosen.get(c.id) && !PINNED[c.id]);
+if (vetting.length) {
+  const ids = [...new Set(vetting.map((c) => chosen.get(c.id)))];
+  const F = await factsOf(ids, console.log);
+  const U = await unitLabels(F, vetting.map((c) => [chosen.get(c.id), c]), console.log);
+  const swapped = [];
+  for (const c of vetting) {
+    const q = chosen.get(c.id);
+    const faults = vet(q, c, names(L.get(q) ?? {}, CC, c.name), F.get(q), U);
+    if (!faults.length) continue;
+    const swap = faults.find((f) => f.better);
+    chosen.set(c.id, swap ? swap.better : null);
+    if (swap) swapped.push(swap.better);
+    log.push(`${c.id}\t${c.name}\t${swap?.better ?? "-"}\t${q} refused: ${faults.map((f) => f.fault + (f.detail ? ` ${f.detail}` : "")).join("; ")}`);
+  }
+  for (const [q, v] of await labels(swapped.filter((q) => !L.has(q)))) L.set(q, v);
+}
 
 const out = {};
 let matched = 0;
