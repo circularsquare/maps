@@ -53,6 +53,7 @@ const FIELDS: Record<keyof SaveHeader, (v: unknown) => boolean> = {
     && ["income", "hsr", "ferry", "bus", "transfer"].every((k) => opt(num)(v[k])),
   ledger: entries, hours: opt(entries),
   regions: opt(rec((r) => plain(r) && opt(entries)(r.ledger) && opt(entries)(r.hours))),
+  lineDays: opt(rec(arr(num))),
   stars: opt(rec(num)), goals: opt(rec(rec(num))),
   notes: opt(rec((n) => Array.isArray(n) && n.length === 2 && num(n[0]) && str(n[1]))),
   shapes: opt(rec(isLineShape)), hidden: opt(arr(str)),

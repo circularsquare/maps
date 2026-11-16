@@ -46,7 +46,11 @@ the labels, no y axis. Under the plot a 10 px strip of each length's mode shares
 (the plot or the strip): the length band under the pointer shaded, and its trips ("Trips of 10-15 km per day",
 then each mode's share and count, No route and Plane only where the band has some, "All", and "To other places"
 where some are), the bands breaking at 0.5, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500 and
-1,000 km ("Trips under 0.5 km per day", "Trips over 1,000 km per day"). Then the top three destinations. While the
+1,000 km ("Trips under 0.5 km per day", "Trips over 1,000 km per day"). A switch in the heading, **Mode** or
+**Purpose** [T-2790], stacks the same trips by purpose instead, in the purpose colours and the filter's order (Work at
+the bottom, Inter-city trips, being the trips to other places, on top; University with School); its hover lists each
+purpose that shows as 0.1% or more, then "All". The choice stays from one zone to the next until the game closes.
+Then the top three destinations. While the
 zone still loads (its bar on the map, T-421), To other places and the destinations wait, "Calculating demand" in
 their place; its Trips within and its graph show as soon as it has figures of its own (a round of its cluster
 during a load, T-2453), "Calculating demand" alone before that [T-2500]. Then, for

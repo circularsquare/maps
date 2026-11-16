@@ -3,6 +3,7 @@
 // other places binned the same way by the distance between the two places.
 
 import type { DemandDay } from "./days";
+import { EVERYDAY_KEYS, PURPOSES, shownKey, type PurposeKey } from "./purposes";
 
 /** One value per bin, in mode order. */
 export interface ModeBins { trips: Float64Array; rail: Float64Array; walk: Float64Array; none: Float64Array; drive: Float64Array }
@@ -16,11 +17,15 @@ export interface TripLengths {
   n: ModeBins;
   /** the same trips' straight-line km a day per bin */
   km: ModeBins;
+  /** T-2790: the same trips per bin by purpose as shown (work the commutes, university with
+   * school), which add up to `n.trips` bin by bin; a purpose with no trips may be missing */
+  purposes: Partial<Record<PurposeKey, Float64Array>>;
 }
 
 /** The bins from eight blocks (trips, rail, walking, no way, then their km) added up; driving is
- * the trips less the other three, as the split has it. */
-export function tripLengthsOf(version: number, day: DemandDay, edges: Float32Array, sum: Float64Array): TripLengths {
+ * the trips less the other three, as the split has it. `work`: the commutes' trips per bin; `kinds`:
+ * one block of bins per everyday purpose, in `EVERYDAY_KEYS`' order. */
+export function tripLengthsOf(version: number, day: DemandDay, edges: Float32Array, sum: Float64Array, work: Float64Array, kinds: Float64Array): TripLengths {
   const nb = edges.length + 1;
   const modes = (o: number): ModeBins => {
     const b = (k: number) => sum.slice((o + k) * nb, (o + k + 1) * nb);
@@ -28,7 +33,13 @@ export function tripLengthsOf(version: number, day: DemandDay, edges: Float32Arr
     const drive = trips.map((t, i) => t - rail[i] - walk[i] - none[i]);
     return { trips, rail, walk, none, drive };
   };
-  return { version, day, edges, n: modes(0), km: modes(4) };
+  const purposes: TripLengths["purposes"] = { work };
+  EVERYDAY_KEYS.forEach((key, k) => {
+    if ((k + 1) * nb > kinds.length) return;
+    const to = (purposes[shownKey(key)] ??= new Float64Array(nb));
+    for (let b = 0; b < nb; b++) to[b] += kinds[k * nb + b];
+  });
+  return { version, day, edges, n: modes(0), km: modes(4), purposes };
 }
 
 // ---------------------------------------------------------------- the graph's layers
@@ -43,12 +54,19 @@ export const FAR_EDGES_KM = [400, 500, 700, 1000, 1500, 2000, 3000, 5000];
  * start at 0 and have no end). */
 const FIRST_LO_KM = 0.125, LAST_HI_KM = 10000;
 
-/** A zone's trips a day by length, within the zone and to other places together, per mode. */
-export interface LengthLayers {
+/** T-2790: the graph's layers by purpose, bottom to top: the purposes as the filter orders them,
+ * inter-city trips last. */
+export const PURPOSE_LAYERS: readonly PurposeKey[] = PURPOSES.map((p) => p.key);
+
+/** A zone's trips a day by length, within the zone and to other places together, per layer: by
+ * mode (`LAYERS`) or by purpose (`PURPOSE_LAYERS`). */
+export interface LengthLayers<K extends string = Layer> {
+  /** the layers, bottom to top */
+  keys: readonly K[];
   /** upper edges of the bins, km: the kernel's, then `FAR_EDGES_KM` */
   edges: number[];
-  /** trips a day per bin, one array per layer (`LAYERS`) */
-  n: Record<Layer, Float64Array>;
+  /** trips a day per bin, one array per layer */
+  n: Record<K, Float64Array>;
   /** of each bin's trips, those to and from other places */
   far: Float64Array;
 }
@@ -60,11 +78,8 @@ export interface FarTrips { km: number; trips: number; rail: number; air: number
  * route as the kernel gives them; each corridor at its places' distance, its rail with the train,
  * its car trips with driving, its flights as planes. */
 export function lengthLayers(local: TripLengths | null, far: FarTrips[]): LengthLayers {
-  const kernel = local ? Array.from(local.edges, (e) => Math.round(e * 1000) / 1000) : KERNEL_EDGES_KM;
-  const edges = [...kernel, ...FAR_EDGES_KM];
-  const nb = edges.length + 1;
-  const n = Object.fromEntries(LAYERS.map((l) => [l, new Float64Array(nb)])) as Record<Layer, Float64Array>;
-  const farN = new Float64Array(nb);
+  const L = emptyLayers(LAYERS, local);
+  const { edges, n, far: farN } = L;
   if (local) {
     for (let i = 0; i < local.n.trips.length; i++) {
       n.train[i] += local.n.rail[i];
@@ -81,7 +96,35 @@ export function lengthLayers(local: TripLengths | null, far: FarTrips[]): Length
     n.drive[b] += Math.max(0, f.trips - f.rail - f.air);
     farN[b] += f.trips;
   }
-  return { edges, n, far: farN };
+  return L;
+}
+
+/** T-2790: the same trips by purpose: the local bins by purpose, each corridor at its places'
+ * distance as inter-city trips. */
+export function purposeLayers(local: TripLengths | null, far: FarTrips[]): LengthLayers<PurposeKey> {
+  const L = emptyLayers(PURPOSE_LAYERS, local);
+  if (local) {
+    for (const key of PURPOSE_LAYERS) {
+      const v = local.purposes[key];
+      if (v) for (let i = 0; i < v.length; i++) L.n[key][i] += v[i];
+    }
+  }
+  for (const f of far) {
+    if (!(f.trips > 0)) continue;
+    const b = binOf(L.edges, f.km);
+    L.n.longer[b] += f.trips;
+    L.far[b] += f.trips;
+  }
+  return L;
+}
+
+/** Layers `keys` with no trips yet, on the kernel's bins and `FAR_EDGES_KM`. */
+function emptyLayers<K extends string>(keys: readonly K[], local: TripLengths | null): LengthLayers<K> {
+  const kernel = local ? Array.from(local.edges, (e) => Math.round(e * 1000) / 1000) : KERNEL_EDGES_KM;
+  const edges = [...kernel, ...FAR_EDGES_KM];
+  const nb = edges.length + 1;
+  const n = Object.fromEntries(keys.map((l) => [l, new Float64Array(nb)])) as Record<K, Float64Array>;
+  return { keys, edges, n, far: new Float64Array(nb) };
 }
 
 /** sim `LEN_EDGES_KM`, for a graph with no local bins yet */
@@ -103,14 +146,16 @@ export const binRange = (edges: number[], i: number): [number, number] =>
   [i === 0 ? FIRST_LO_KM : edges[i - 1], i < edges.length ? edges[i] : LAST_HI_KM];
 
 /** The trips of every layer in bins `from` to `to - 1`, and those to other places. */
-export function binSums(L: LengthLayers, from: number, to: number): Record<Layer, number> & { all: number; far: number } {
-  const out = { train: 0, walk: 0, drive: 0, none: 0, plane: 0, all: 0, far: 0 };
+export function binSums<K extends string>(L: LengthLayers<K>, from: number, to: number): Record<K, number> & { all: number; far: number } {
+  const layers = Object.fromEntries(L.keys.map((l) => [l, 0])) as Record<K, number>;
+  let far = 0;
   for (let i = from; i < to; i++) {
-    for (const l of LAYERS) out[l] += L.n[l][i];
-    out.far += L.far[i];
+    for (const l of L.keys) layers[l] += L.n[l][i];
+    far += L.far[i];
   }
-  out.all = out.train + out.walk + out.drive + out.none + out.plane;
-  return out;
+  let all = 0;
+  for (const l of L.keys) all += layers[l];
+  return Object.assign(layers, { all, far });
 }
 
 /** Trips this long or longer (flights, most of them) are drawn together over the axis's last
@@ -138,9 +183,9 @@ const drawnRange = (edges: number[], i: number): [number, number] => {
 
 /** The axis's span, log10 km: from the first bin to the end of the last bin with trips (at least
  * 100 km), so a zone with nothing far keeps its local trips wide. */
-export function axisSpan(L: LengthLayers): [number, number] {
+export function axisSpan<K extends string>(L: LengthLayers<K>): [number, number] {
   let last = 0;
-  for (let i = 0; i <= L.edges.length; i++) if (LAYERS.some((l) => L.n[l][i] > 0)) last = i;
+  for (let i = 0; i <= L.edges.length; i++) if (L.keys.some((l) => L.n[l][i] > 0)) last = i;
   return [Math.log10(FIRST_LO_KM), Math.log10(Math.max(100, drawnRange(L.edges, last)[1]))];
 }
 
@@ -153,21 +198,21 @@ export const SMOOTH_DECADES = 0.05;
  * its width on the log axis, then blurred by a normal curve of `SMOOTH_DECADES`, reflected at both
  * ends of the axis so no trip is lost past them.
  */
-export function layerCurves(L: LengthLayers, u0: number, u1: number, n: number, sigma = SMOOTH_DECADES): { u: Float64Array; y: Record<Layer, Float64Array> } {
+export function layerCurves<K extends string>(L: LengthLayers<K>, u0: number, u1: number, n: number, sigma = SMOOTH_DECADES): { u: Float64Array; y: Record<K, Float64Array> } {
   const u = Float64Array.from({ length: n }, (_, k) => u0 + ((u1 - u0) * k) / (n - 1));
-  const y = Object.fromEntries(LAYERS.map((l) => [l, new Float64Array(n)])) as Record<Layer, Float64Array>;
+  const y = Object.fromEntries(L.keys.map((l) => [l, new Float64Array(n)])) as Record<K, Float64Array>;
   const nb = L.edges.length + 1;
   for (let i = 0; i < nb; i++) {
     const [lo, hi] = drawnRange(L.edges, i);
     const a = Math.log10(lo), b = Math.min(Math.log10(hi), u1);
     if (!(b > a)) continue;
-    const per = LAYERS.map((l) => L.n[l][i] / (b - a));
+    const per = L.keys.map((l) => L.n[l][i] / (b - a));
     if (!per.some((v) => v > 0)) continue;
     for (let k = 0; k < n; k++) {
       // the bin's step blurred, at u and at its mirror images in either end
       const w = stepBlur(a, b, u[k], sigma) + stepBlur(a, b, 2 * u0 - u[k], sigma) + stepBlur(a, b, 2 * u1 - u[k], sigma);
       if (w < 1e-9) continue;
-      LAYERS.forEach((l, j) => { y[l][k] += per[j] * w; });
+      L.keys.forEach((l, j) => { y[l][k] += per[j] * w; });
     }
   }
   return { u, y };

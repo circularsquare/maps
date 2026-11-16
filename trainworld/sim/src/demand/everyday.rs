@@ -2533,6 +2533,29 @@ impl EverydayApi {
         }
         out
     }
+    /// T-2790: `trip_lengths_day`'s trips block kept per purpose: one block of `N_LEN` per purpose,
+    /// in `RATE`'s order, adding up to that block bin by bin. Read off the sums made once per zone,
+    /// so it costs the same in any zone.
+    pub fn trip_lengths_kinds_day(&self, day: u32, mask: u32) -> Vec<f64> {
+        let nk = self.totals.len();
+        let mut out = vec![0f64; nk * N_LEN];
+        for q in 0..PERIODS {
+            if mask >> q & 1 == 0 {
+                continue;
+            }
+            let Some(st) = self.per.get(q).and_then(|v| v.as_ref()) else { continue };
+            if st.part.0 != 0 {
+                continue;
+            }
+            for k in 0..nk {
+                let w = load_factor(day as usize, everyday(k), q) as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64;
+                for b in 0..N_LEN {
+                    out[k * N_LEN + b] += w * self.lens[k * 6 * N_LEN + b];
+                }
+            }
+        }
+        out
+    }
     /// Riders in period `q` boarding at each route node after changing lines, every purpose (T-1530).
     pub fn transfers_in(&self, q: usize) -> Vec<f32> {
         let Some(Some(st)) = self.per.get(q) else { return vec![] };
