@@ -1,0 +1,95 @@
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index 5bfbad62..b554ff13 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -1385,6 +1385,12 @@ impl DemandApi {
+ 
+     /// The free-flow first estimate for period `q` (SPEC 4.4). False if there is no network.
+     pub fn solve(&mut self, q: usize) -> bool {
++        self.solve_from(q, None)
++    }
++
++    /// T-436 (measurement): `solve`, its pass priced on `at` (every population's loads, as
++    /// `crowd_with_external` takes them) instead of free flow; `None` is `solve`.
++    pub(crate) fn solve_from(&mut self, q: usize, at: Option<&[f32]>) -> bool {
+         let t0 = now_ms();
+         let Some(svc) = &self.svc else { return false };
+         if q >= PERIODS {
+@@ -1398,6 +1404,16 @@ impl DemandApi {
+         put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+         let no_crowding = vec![1.0; g.rn_ride.len()];
+         set_crowding(&mut g, &no_crowding);
++        let (fac, uniform, seen) = match at {
++            None => (no_crowding, true, vec![]),
++            Some(t) => {
++                let Some((fac, left)) = round_costs(&g, &net, &p, t) else { return false };
++                set_crowding(&mut g, &fac);
++                g.rn_left = left;
++                let seen = t[..g.rn_line.len()].to_vec();
++                (fac, false, seen)
++            }
++        };
+         let xi = xfer_index(&g);
+         let mut xfer = vec![0.0; xi.len];
+         let (rail, rail_walk, avg, pairs, sub, rail_d, len) = if self.sz.is_some() {
+@@ -1408,7 +1424,7 @@ impl DemandApi {
+         let walk0 = if self.part.0 == 0 { walk0 } else { 0.0 };
+         let unr0 = if self.part.0 == 0 { self.unr_all * p.period_share as f64 } else { 0.0 };
+         let unr = unr0 - sub.unr_rail();
+-        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, len, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer, part: self.part });
++        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, len, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac, uniform, seen, xi, xfer, part: self.part });
+         true
+     }
+ 
+@@ -2356,6 +2372,8 @@ impl DemandApi {
+ #[cfg(test)]
+ mod tests;
+ #[cfg(test)]
++mod t436;
++#[cfg(test)]
+ mod bus_tests;
+ #[cfg(test)]
+ mod tram_tests;
+diff --git a/trainworld/sim/src/demand/everyday.rs b/trainworld/sim/src/demand/everyday.rs
+index 8bddd8c9..27641c5b 100644
+--- a/trainworld/sim/src/demand/everyday.rs
++++ b/trainworld/sim/src/demand/everyday.rs
+@@ -2097,6 +2097,10 @@ impl EverydayApi {
+         Ok(())
+     }
+     pub fn solve(&mut self, q: usize) -> bool {
++        self.solve_from(q, None)
++    }
++    /// T-436 (measurement): `DemandApi::solve_from`.
++    pub(crate) fn solve_from(&mut self, q: usize, at: Option<&[f32]>) -> bool {
+         if q >= PERIODS {
+             return false;
+         }
+@@ -2117,6 +2121,16 @@ impl EverydayApi {
+         put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_km, &self.engine.fare_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+         let fac = vec![1.0; g.rn_ride.len()];
+         set_crowding(&mut g, &fac);
++        let (fac, uniform, seen) = match at {
++            None => (fac, true, vec![]),
++            Some(t) => {
++                let Some((fac, left)) = round_costs(&g, &net, &p, t) else { return false };
++                set_crowding(&mut g, &fac);
++                g.rn_left = left;
++                let seen = t[..g.rn_line.len()].to_vec();
++                (fac, false, seen)
++            }
++        };
+         let xi = xfer_index(&g);
+         let (probability, loads, parts, xfer, walk_lost, rail_d, unr_lost) = self.pass(&g, &p, q, &xi);
+         let part = self.engine.part;
+@@ -2137,8 +2151,8 @@ impl EverydayApi {
+             round: 0,
+             ms: now_ms() - t,
+             fac,
+-            uniform: true,
+-            seen: vec![],
++            uniform,
++            seen,
+             trips,
+             rail,
+             walk,

@@ -132,6 +132,166 @@
       "by": "bullet",
       "at": "2026-11-16T14:27:35Z",
       "rev": 1
+    },
+    {
+      "id": "c014",
+      "text": "fixed lines and track disappearing when zoomed in on some computers",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3430",
+      "by": "bugs3",
+      "at": "2026-11-16T14:37:36Z",
+      "rev": 1
+    },
+    {
+      "id": "c015",
+      "text": "rail line panels have a small chart of fares minus running costs for each of the last 7 days",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2787",
+      "by": "unhold",
+      "at": "2026-11-16T14:40:45Z",
+      "rev": 1
+    },
+    {
+      "id": "c016",
+      "text": "the city view's trips by length graph can switch between mode and purpose",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2790",
+      "by": "unhold",
+      "at": "2026-11-16T14:40:45Z",
+      "rev": 1
+    },
+    {
+      "id": "c017",
+      "text": "lines through two one-way tracks with a station on each stop at both, one each way, and riders board each way at its own station",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3348",
+      "by": "perdir2",
+      "at": "2026-11-16T14:49:14Z",
+      "rev": 1
+    },
+    {
+      "id": "c018",
+      "text": "right click on the map now ends track drawing",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3441",
+      "by": "b2",
+      "at": "2026-11-16T14:49:18Z",
+      "rev": 1
+    },
+    {
+      "id": "c019",
+      "text": "fixed high-speed track looking ordinary while you drag a node or a selection",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1949",
+      "by": "b2",
+      "at": "2026-11-16T14:49:20Z",
+      "rev": 1
+    },
+    {
+      "id": "c020",
+      "text": "fixed the track snap ring and ghost sitting in the wrong place after the map re-centers",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1778",
+      "by": "b2",
+      "at": "2026-11-16T14:49:22Z",
+      "rev": 1
+    },
+    {
+      "id": "c021",
+      "text": "stations placed within 5 m of the end of a track now go on the end",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3412",
+      "by": "bugs2",
+      "at": "2026-11-16T14:52:36Z",
+      "rev": 1
+    },
+    {
+      "id": "c022",
+      "text": "high speed track drawn with clicked corners now keeps the speed you set",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3421",
+      "by": "bugs2",
+      "at": "2026-11-16T14:52:38Z",
+      "rev": 1
+    },
+    {
+      "id": "c023",
+      "text": "bus routes now split their money between regions by the route's own points",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1502",
+      "by": "b6",
+      "at": "2026-11-16T14:57:44Z",
+      "rev": 1
+    },
+    {
+      "id": "c024",
+      "text": "the community list pages through every shared network, with a total count",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3402",
+      "by": "b6",
+      "at": "2026-11-16T14:57:45Z",
+      "rev": 1
+    },
+    {
+      "id": "c025",
+      "text": "added a sign in button to the new game screen",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3401",
+      "by": "b6",
+      "at": "2026-11-16T15:00:47Z",
+      "rev": 1
+    },
+    {
+      "id": "c026",
+      "text": "the issues list now has a little space above its toggle",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3414",
+      "by": "b1",
+      "at": "2026-11-16T15:01:41Z",
+      "rev": 1
+    },
+    {
+      "id": "c027",
+      "text": "a very long line group name no longer pushes its buttons out of the panel, so it can still be renamed",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3416",
+      "by": "b1",
+      "at": "2026-11-16T15:01:42Z",
+      "rev": 1
+    },
+    {
+      "id": "c028",
+      "text": "the intercity trip explorer's effective time for the train now has a hover that shows how it adds up",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3404",
+      "by": "b1",
+      "at": "2026-11-16T15:01:43Z",
+      "rev": 1
+    },
+    {
+      "id": "c029",
+      "text": "the airport badge hover now counts trips with no route, in its total and its bar",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2288",
+      "by": "b1",
+      "at": "2026-11-16T15:01:44Z",
+      "rev": 1
     }
   ]
 }

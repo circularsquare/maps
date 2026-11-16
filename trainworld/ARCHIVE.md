@@ -1,6 +1,16 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve (2026-11-16): measured, not shipped: 20-45% faster solves, but 20-70 lines drift over 2% (up to 68%) and an undo does not restore figures. notes/T-436.md.
+- T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move (2026-11-16): measured, not built: the fastest train moves 0.77-12 px a frame wherever trains show, so a lower frame rate would look jerky; per-frame work (the train guard, 1.1 ms) is the better lever. notes/T-076.md.
+- T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move (2026-11-16): snap ring, ghost and tag recompute when the draw anchor moves; tags hidden on the globe's far side. notes/T-1778.md.
+- T-1949 [P3] {L:track-drawing} Drag previews draw high-speed track as ordinary (2026-11-16): node and blueprint-box drag previews draw high-speed track as high speed. notes/T-1949.md.
+- T-3441 [P3] {L:track-drawing} Right-click on empty space leaves track mode (2026-11-16): right click on the map ends the run, a second leaves the tool; right drags still pan. notes/T-3441.md.
+- T-3421 [P2] {L:track-speed} Longer ramps for lines faster than 160 km/h (2026-11-16): cause was clicked corners left at the 160 km/h radius; they now take the target speed's radius (200: 2,806 m, 250: 4,385 m, 320: 7,183 m). Ramps have no speed limit, so they stay 200 m a level. notes/T-3421.md.
+- T-3412 [P2] {L:station-placement} Snap a station onto a nearby corner (2026-11-16): a station clicked within 5 m of a bare end goes on the end (joints already snapped); junctions, hairpins and ramps still refuse. notes/T-3412.md.
+- T-3430 [P2] {L:map-look} Lines vanish past a zoom level on a Chromebook (2026-11-16): fixed: from zoom 14 the stroke cache drew two layers into one multisampled buffer and some GPUs lost the first; each layer now has its own buffer. Not tried on a real Chromebook. notes/T-3430.md.
+- T-2790 [P2] {L:small-fixes} Trip lengths by purpose (2026-11-16): back in the game: the trips-by-length graph switches between mode and purpose. notes/T-2790.md.
+- T-2787 [P2] {L:money} Per-line money history (2026-11-16): back in the game: a rail line panel charts fares minus running costs for the last 7 days (the 11-08 hold reverted). notes/T-2787.md.
 - T-2377 [P3] {L:cleanup} Cut trainworld CLAUDE.md (2026-11-16): done in effect: trainworld/CLAUDE.md is 1,762 words against a goal of about 2,400, and the orchestrator text lives in docs/orchestrator.md.
 - T-3156 [P3] {L:checks} AWS guard refuses a harmless command (2026-11-16): done: guard.py now allows the command it refused (checked by agent picker).
 - T-3436 [P3] {L:map-look} Outline-only line bullet (2026-11-16): an outline shape among the line bullets (circle, square, diamond, outline), its ring 2.8 px against a line group's 2 px.

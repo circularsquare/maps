@@ -349,18 +349,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
   - Goal: Long ferries carry riders near real routes: T-2216 first, then a fast ferry kind if you agree.
   - Other: notes/T-3435.md
-- T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (taking, 2026-11-16, agent bugs3)
+- T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
-- T-3430 [P2] {L:map-look} Lines vanish past a zoom level on a Chromebook (taking, 2026-11-16, agent bugs3)
-  - Context: Two player reports (board group g039 "Tracks vanish when zoomed in"), one on an Acer R753T Chromebook. Other low-end devices may be affected.
-  - Goal: Find the zoom-dependent drawing limit that drops lines on weak GPUs and fix it, or say what it needs.
+  - Other: Not reproduced 2026-11-16 (bugs3): every order works on a one-way loop; the refusal is right when the next station has no way back. Needs the player's save; a clearer "no way back" message is an option. notes/T-3429.md
 - T-3431 [P2] {L:buses} Seattle to Victoria ferry gets no riders and shows no route
   - Context: Player report 2026-11-16 (board group "Ferry has no riders and no route"). T-3400 (no boats at low demand) may explain part of it.
   - Goal: Reproduce; the ferry runs and carries the trips a sensible ferry would.
 - T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia
   - Context: Player report 2026-11-16 (board group g004): two lines built between them, the trip explorer finds no inter-city trip. Needs a repro first. May share a cause with T-3426 (feeders).
   - Goal: Reproduce; inter-city trips between the two show up on a built line.
+  - Other: Not reproduced 2026-11-16 (bugs3); needs the player's save; may share a cause with T-3426. notes/T-3432.md
 - T-3433 [P3] {L:airports} Kobe Airport demand is offset from the terminal
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: The airport's trips start at the terminal.
@@ -379,9 +378,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails
   - Context: Player report (board group "Sharing a large network fails"): share did not work, perhaps from the size. Reach: few.
   - Goal: Find the share size limit and either raise it or say what to do when a network is too big.
-- T-3441 [P3] {L:track-drawing} Right-click on empty space leaves track mode (taking, 2026-11-16, agent b2)
-  - Context: Player report (board group "Right-click leaves track mode"); Anita 2026-11-16: "right click on empty space". Reach: few.
-  - Goal: Right-clicking empty map while laying track ends track mode.
 - T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
   - Context: Your scratch pad 2026-11-16: "some people have noted that long distance train use doesn't actually seem to depend on feeders anymore. i've noticed this too which is kinda concerning, im pretty sure this used to not be the case. why is this?"
   - Goal: Find why long-distance rail use no longer depends on feeder lines, and whether it is a bug or a rule change; fix a bug, take a rule to you.
@@ -548,7 +544,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
   - Goal: The new level and kind show as a preview before the player pays.
-- T-3036 [P3] {L:track-drawing} Debug overlay for street gaps (taking, 2026-11-16, agent b2)
+- T-3036 [P3] {L:track-drawing} {after:track rework} Debug overlay for street gaps
   - Context: A `?roadgaps=1` overlay would ring unjoined street ends, so a gap you see can be checked against the street graph.
   - Goal: The overlay exists, and short alley links join streets.
   - Other: About half a day. notes/T-3034.md.
@@ -705,13 +701,9 @@ Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md
   - Context: Today "The platform would be on a ramp." stands; 1,012 of 6,851 spots refused for a ramp.
   - Goal: A station clicked near a ramp's end slides clear of it.
   - Other: notes/T-1964.md.
-- T-1948 [P3] {L:track-drawing} Node drag lead-in capped too short (taking, 2026-11-16, agent b2)
+- T-1948 [P3] {L:track-drawing} {after:track rework} Node drag lead-in capped too short
   - Context: A 1 km straight dragged 108 m sideways gets a 4,400 m curve where about 9,000 m fits.
   - Goal: The drag uses the whole leg when the far end is a track end.
-  - Other: Found in T-1898.
-- T-1949 [P3] {L:track-drawing} Drag previews draw high-speed track as ordinary (taking, 2026-11-16, agent b2)
-  - Context: Node and pick drag previews pass no `hsr`, so they look like ordinary track.
-  - Goal: Previews show high-speed track correctly.
   - Other: Found in T-1898.
 - T-2046 [P3] {L:solve-speed} Slow first Homes/Destinations switch after zooming in
   - Context: In Seoul on the Tokyo, Seoul, Fukuoka, Busan save, the first switch waits about 6 s. Cause not found, maybe a headless stall.
@@ -930,10 +922,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3416 [P3] {L:small-fixes} Very long line group name locks the name (taking, 2026-11-16, agent b1)
   - Context: Your TODO 2026-11-15: a really long line group name can stop you changing it. Check line names too. It is a bug.
   - Goal: Long group and line names stay editable.
-- T-3421 [P2] {L:track-speed} Longer ramps for lines faster than 160 km/h (taking, 2026-11-16, agent bugs2)
-  - Context: High-speed trains slow to 160 km/h on ramps at the default slope. You, 2026-11-16: "a ramp at current default slope can keep its 160km/h limit. but high speed ramps should just default to be longer. or like ramps in general should default to being longer if the line target is > 160km/h". Also yes to wide curves on clicked corners above 160.
-  - Goal: Ramps and clicked corners drawn with a target above 160 km/h default to lengths and radii that keep the target speed.
-  - Other: notes/T-3421.md
 - T-3423 [P3] {L:small-fixes} Line groups inside line groups
   - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
   - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
@@ -1012,7 +1000,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design agreed, then built in stages (about 44-63 h before Exact).
   - Other: notes/T-3346.md
 - T-3348 [P3] {L:quad-track} Quad platforms
-  - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Design written; stage 1 is parked in tree tw/perdir.
+  - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4.
   - Goal: Quad stations with per-direction stops, in five stages.
   - Other: 27-39 h. notes/T-3348.md.
 - T-3320 [P3] {L:real-networks} Berlin RE5 dropped off the graph
@@ -1066,10 +1054,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Where transfer pulses (T-554) are large, the drawn platform crowd is too big: Jamaica at 08:34 shows about 1,958 while the train leaves with 1,501.
   - Goal: The drawn crowd matches the riders.
   - Other: Found in T-1785. artifacts/trainworld/t1785/
-- T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move (taking, 2026-11-16, agent b2)
-  - Context: The snap ring and ghost sit wrong until the pointer moves, and some placers show on the globe's far side.
-  - Goal: Both fixed.
-  - Other: notes/T-1777.md "Left".
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
@@ -1097,21 +1081,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
   - Context: Your TODO 2026-11-15, for sensible pathing on single track.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
-- T-3412 [P2] {L:station-placement} Snap a station onto a nearby corner (taking, 2026-11-16, agent bugs2)
-  - Context: The refusal now says what it needs (5 m of track each side; landed 2026-11-16). You said yes 2026-11-16 to snapping onto the nearby joint instead of refusing (joints with 3+ track ends stay refused).
-  - Goal: A station placed within 5 m of a corner lands on the corner. About 2-3 h.
-  - Other: notes/T-3412.md
 - T-3419 [P3] {L:buses} Waiting rooms at ferry ports
   - Context: Your TODO 2026-11-15: waiting rooms for ferries should be allowed.
   - Goal: Ferry ports can have waiting rooms.
 
 ## Held features
-- T-2787 [P2] {L:money} Per-line money history (taking, 2026-11-16, agent unhold)
-  - Context: Built in c18d2fa1 and held out of the release 2026-11-08. You, 2026-11-16: "we can do this now-ish, no need to hold off".
-  - Goal: In the game on master for the next release. Follow-up is T-2809.
-- T-2790 [P2] {L:small-fixes} Trip lengths by purpose (taking, 2026-11-16, agent unhold)
-  - Context: Built in commit b167196a and held out of the release 2026-11-08. You, 2026-11-16: "yes we can put this into a release".
-  - Goal: In the game on master for the next release.
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
@@ -1531,10 +1505,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Opening a big save searches every station's walk round water.
   - Goal: A big save opens without searching every station.
   - Other: notes/someday.md
-- T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move (taking, 2026-11-16, agent perf)
-  - Context: Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second. You said yes 2026-11-16.
-  - Goal: Frame rate drops when the fastest train moves under half a pixel a frame, roughly halving the cost.
-  - Other: Measure the visible step first. notes/T-076.md
 - T-168 [P3] {L:solve-speed} Add a viewed city without a whole re-solve
   - Context: Someday: adding a newly viewed city re-solves the whole network.
   - Goal: A new city is added without re-solving everything.
@@ -1543,10 +1513,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Someday: each worker first solve is slower in the browser than native.
   - Goal: Browser first solves match native.
   - Other: notes/someday.md
-- T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve (taking, 2026-11-16, agent perf)
-  - Context: Starting rounds from the last solve should be faster, but figures would then depend on edit history. You, 2026-11-16: "lets measure and if it doesnt produce any results that would feel crazy to a player, and it improves performance/speed, we should do".
-  - Goal: Measure speed and how far figures drift with edit history; ship it if it is faster and nothing a player would notice moves.
-  - Other: notes/T-434.md
 - T-361 [P3] {L:memory} {after:T-3373} One demand engine per city
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
   - Goal: One demand engine per city.
