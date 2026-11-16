@@ -341,6 +341,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3443 [P3] {L:checks} Set up the linters T-3415 recommends (taking, 2026-11-16, agent lint)
+  - Context: T-3415's report: four tsc flags (22 errors), clippy relaxed with -D warnings (two loops that never loop in transition_tests.rs), ruff F and E9 for the pipeline.
+  - Goal: All three pass clean, run from one checks/lint.cmd.
+  - Other: notes/T-3415.md
 - T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (taking, 2026-11-16, agent b4)
   - Context: You, 2026-11-16: "if i inspect elemetn it shows some "unable to load glyph" warnings and failed to load resource which also seems font related".
   - Goal: No glyph or font load errors in the console on a normal load; missing glyph ranges served or not requested.
@@ -1107,9 +1111,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: After T-1146, the engine's fixed-rate path (capacity.rs, `LineData.trains`, `Op::Schedule`, wasm `set_line`/`set_schedule`) can go; about 30 sim tests pin it.
   - Goal: The path is gone and the tests use train counts.
   - Other: See notes/T-1183.md.
-- T-3415 [P3] {L:checks} Set up linters (taking, 2026-11-16, agent b9)
-  - Context: Your TODO 2026-11-15: "research linters that would be good to set up (mostly just for us but also for prs)".
-  - Goal: A short report on which linters to set up.
 
 ## Waits on a rebuild
 - T-3270 [P3] {L:airports} {after:next world rebuild} Eurostat airport passengers for Europe
