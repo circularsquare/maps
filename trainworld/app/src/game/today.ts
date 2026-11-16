@@ -19,7 +19,7 @@ import { moneyState } from "./money";
 import { lineRunFactor } from "./regionMoney";
 import { clockTime, trainKind } from "./format";
 import { hourSpan, PERIODS, periodAt } from "./periods";
-import { crowdColour } from "./palette";
+import { crowdColour, rgb } from "./palette";
 import { tipEnds, tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
@@ -76,21 +76,20 @@ function peaksAt(v: ArrayLike<number>, stops: number): number {
   return s >= 1 && (v.length === n * (PERIOD_STRIDE + 2 * stops + 3 * s) || v.length === n * (PERIOD_STRIDE + s)) ? v.length - n * s : -1;
 }
 
-/** T-2279: the power the stretches' loads past 100% are averaged at. Above 1 the mean leans to the
- * fullest: one stretch packed to crush among 20 grades as 118% (1.5 - 1 over the cube root of 20). */
-export const CROWD_MEAN_POWER = 2;
-
-/** T-2279: a line's load from its stretches' loads (shares of the rated load): 100% plus the power
- * mean of each one's load past 100% (`CROWD_MEAN_POWER`), so it is the fullest stretch's load when
- * every stretch is that full and less as fewer are. */
+/** T-2279, T-3476: a line's load from its stretches' loads (shares of the rated load): their straight
+ * mean. */
 export function stretchLoad(per: ArrayLike<number>): number {
-  let peak = 0, sum = 0;
-  for (let k = 0; k < per.length; k++) {
-    peak = Math.max(peak, per[k]);
-    if (per[k] > 1) sum += (per[k] - 1) ** CROWD_MEAN_POWER;
-  }
-  if (peak <= 1) return peak;
-  return 1 + (sum / per.length) ** (1 / CROWD_MEAN_POWER);
+  let sum = 0;
+  for (let k = 0; k < per.length; k++) sum += per[k];
+  return per.length ? sum / per.length : 0;
+}
+
+/** T-3476: the crowding dot's fill: the straight mean of the stretches' crowding colours (red, green and
+ * blue each), every stretch counting the same since the bar draws them equal. */
+export function stretchColour(per: ArrayLike<number>): string {
+  const sum = [0, 0, 0];
+  for (let k = 0; k < per.length; k++) rgb(crowdColour(per[k])).forEach((c, i) => (sum[i] += c));
+  return "#" + sum.map((c) => Math.round(c / Math.max(1, per.length)).toString(16).padStart(2, "0")).join("");
 }
 
 /** T-2279: the Lines list's trains cell's load in period `p` from a line's `line_periods` numbers
@@ -104,11 +103,11 @@ export function periodLoad(v: ArrayLike<number>, p: number, stops: number): numb
 /** T-477, T-515, T-2236, T-2334: one demand level's crowding from a line's `line_periods` numbers
  * `v`, as the line panel's dot and the Lines list's trains cell show it: the busiest hour's load on
  * each stretch over the level's periods, as a share of the rated load, graded over the stretches by
- * `stretchLoad` (`load`, the dot's fill) and at the fullest (`peak`, its ring), and the hover: the
+ * `stretchColour` (`fill`, the dot's fill) and at the fullest (`peak`, its ring), and the hover: the
  * peak, a bar of the stretches between their stations, and each period's load where the level has
  * several. T-2661: `flip` (`lineReversed`) draws the bar last stretch first, so it reads west to east.
  * Null when the level runs no trains. */
-export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false, ends?: readonly [string, string], vehicle: Vehicle = "train"): { load: number; peak: number; tip: string } | null {
+export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip = false, ends?: readonly [string, string], vehicle: Vehicle = "train"): { fill: string; peak: number; tip: string } | null {
   const at = peaksAt(v, stops), s = stops - 1;
   if (at < 0) return null;
   let trains = 0, peak = 0;
@@ -136,7 +135,7 @@ export function crowdLevel(v: ArrayLike<number>, d: Demand, stops: number, flip 
 ${flip ? tipEnds(ends[1], ends[0]) : tipEnds(ends[0], ends[1])}` : "")
     + (lines.length > 1 ? lines.map((x) => `\n${x}`).join("") : "")
     + (short ? "\n" + t("today.shortStretch", { vehicle }) : "");
-  return { load: stretchLoad(per), peak, tip };
+  return { fill: stretchColour(per), peak, tip };
 }
 
 /** T-2772: the names of a line's first and last station, for the ends of `crowdLevel`'s bar; undefined when unknown */

@@ -154,9 +154,9 @@ purpose filter the purpose drawn is ringed in the bar.
   ([ui-map.md](ui-map.md) "Edit note").
 - **Trains to add** [T-472, T-1677, T-2236]: a row's train count (the trains its level needs now, the bare
   number under the "Trains" header [T-532]) is coloured by the line's load in the period now on today's kind of
-  day, otherwise muted (a 0 is muted and has no hover): the stretch mean of the period's intervals, as the line
-  panel's dot grades a level (`periodLoad` in `game/today.ts`, from `linesPeriods` for each line's own kind of
-  day) [T-2279, T-2335]; before those numbers come, the busiest hour's mean load on the line's fullest stretch
+  day, otherwise muted (a 0 is muted and has no hover): the straight mean of the period's intervals' loads
+  (`periodLoad` in `game/today.ts`, from `linesPeriods` for each line's own kind of
+  day) [T-2279, T-2335, T-3476]; before those numbers come, the busiest hour's mean load on the line's fullest stretch
   (`period_peaks` in `sim/src/track/boarding.rs`, the last of `Boarding::window`'s numbers per line, `crowdLoad`).
   Grades (`CROWD_GRADES`, the colour scale's steps): past 100% from 100.5%, orange from 130%, red from 140%;
   orange and red colour the count (`crowdClass`). The hover is the line panel's dot hover for the same level on
@@ -337,9 +337,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   load past the rated load, as in Trains to add [T-2236]: each interval's load is the busiest hour's mean load
   of the trains on it (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
   and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`); the dot's
-  fill is 100% plus the power-3 mean over every interval of its load past 100% (`stretchLoad`,
-  notes/T-2279.md) and its 1 px ring 1 px outside it (a gap between) the fullest interval's load, so one
-  packed interval among many reads yellow inside a crimson ring [T-2279, T-2335]; its colour
+  fill is the straight mean of the intervals' crowding colours (red, green and blue each; every interval counts
+  the same, `stretchColour`) and its 1 px ring 1 px outside it (a gap between) the fullest interval's load, so one
+  packed interval among many reads mostly green inside a crimson ring [T-2279, T-2335, T-3476]; each colour
   running smoothly with that load: green to 70%, yellow-green at 80%, yellow at 100%, orange at 130%, red at
   140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
   the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,

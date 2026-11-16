@@ -178,7 +178,7 @@ function LevelName({ v, d, stops, flip, pending, ends, vehicle }: { v: Float64Ar
   const c = v ? crowdLevel(v, d, stops, flip, ends, vehicle) : null;
   return (
     <span data-tip={c ? `${levelTimes(d)}\n${c.tip}` : levelTimes(d)}>
-      {c ? <i class="crowd-dot" style={{ background: crowdColour(c.load), outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
+      {c ? <i class="crowd-dot" style={{ background: c.fill, outlineColor: crowdColour(c.peak) }} data-guide={d === "high" ? "crowd" : undefined} />
         : pending && <Spinner class="row-dot" tip={t("schedule.waitingDemand")} />}
       {demandLabel(d)}
     </span>
