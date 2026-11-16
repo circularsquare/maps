@@ -7,7 +7,7 @@
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
 import { t } from "../i18n";
-import { backupBeforeReplace, changeCloudDeletes, deleteSlot, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeSlot, writeSync, type GameMode, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
+import { backupBeforeReplace, changeCloudDeletes, checkSave, checkSlot, deleteSlot, markDamaged, rescueGood, leaseSlot, listSlots, readCloudDeletes, readStored, readSync, stampOrigins, writeSlot, writeSync, type GameMode, type SaveCheck, type SaveSlot, type StoredSave, type SyncRecord, type ThumbPanel } from "./saveFile";
 import { accountEditOf, assignOrigins, editOf, syncedEditOf, withoutForkTime } from "./versions";
 import { patientFetch, CLOUD_STALL_MS } from "./patientFetch";
 
@@ -25,10 +25,13 @@ export interface GameFacts {
   origin?: string; edit?: number;
 }
 /** One of a game's account backups (newest first in `backups`): no picture or facts, only its bytes. */
-export interface AccountBackup { rev: number; savedAt: number; bytes: number; writer: string }
+export interface AccountBackup { rev: number; savedAt: number; bytes: number; writer: string; /** T-3395 */ check?: string }
 export interface AccountGame {
   id: string; name: string; rev: number; writer: string; writerAt: number; savedAt: number;
   facts?: Partial<GameFacts>; saveBytes: number; pictureRev?: number; backups?: AccountBackup[];
+  /** T-3395 (a server with `trainworldSaveCheck`): the server's check of the current rev, absent for a rev
+   * stored before it; and the newest rev that passed, kept whatever the backups do, absent when none has */
+  check?: string; pinned?: AccountBackup;
 }
 export interface AccountList { games: AccountGame[]; tombstones: { id: string; at: number }[]; used: number; limit: number; maxGames: number; /** T-3230: seconds the account has played; absent until the server says */ played?: number }
 
@@ -44,6 +47,7 @@ export const WHY_OFFLINE = "Offline"; // i18n-ignore: stored with the slot; show
 export const WHY_UNREACHABLE = "The server could not be reached"; // i18n-ignore: stored with the slot; shown through whyText
 export const WHY_FULL = "Your account is full. Delete a game to make room."; // i18n-ignore: stored with the slot; shown through whyText
 export const WHY_TOO_BIG = "This game is too big to keep on your account."; // i18n-ignore: stored with the slot; shown through whyText
+export const WHY_DAMAGED = "This copy is damaged, so your account kept the last good one"; // i18n-ignore: stored with the slot; shown through whyText
 
 /** A stored upload failure (one of the WHY_ texts above, or any other) as the page shows it. */
 export function whyText(why: string): string {
@@ -52,6 +56,7 @@ export function whyText(why: string): string {
     case WHY_UNREACHABLE: return t("cloud.unreachable");
     case WHY_FULL: return t("cloud.full");
     case WHY_TOO_BIG: return t("cloud.tooBig");
+    case WHY_DAMAGED: return t("cloud.damaged");
     default: return why;
   }
 }
@@ -127,12 +132,24 @@ export async function gamePicture(ctx: CloudContext, id: string): Promise<string
   return "data:image/png;base64," + btoa(bin);
 }
 
+/** T-3395: account games whose copy failed the check when downloaded here, by id: the rev that failed. */
+export const damagedGames = new Map<string, number>();
+let damagedSeen: () => void = () => {};
+export function onDamagedGame(f: () => void) { damagedSeen = f; }
+
 export interface Fetched { stored: StoredSave; id: string; rev: number; savedAt: number }
-/** An account game as a slot's record, from its bytes, facts and picture; null if it cannot be read. */
+/** An account game as a slot's record, from its bytes, facts and picture; null if it cannot be read, or
+ * fails the check (T-3395: then `damagedGames` has it, and nothing is written over a slot). */
 export async function fetchGame(ctx: CloudContext, g: AccountGame): Promise<Fetched | null> {
   const a = await call(ctx, "GET", `trainworld/games/${g.id}`, undefined, "bytes");
   if (a.status !== 200 || !a.bytes) return null;
   const rev = Number(a.headers?.get("X-Rev")) || g.rev, savedAt = Number(a.headers?.get("X-Saved-At")) || g.savedAt;
+  if (await checkSave(a.bytes) === "damaged") {
+    damagedGames.set(g.id, rev);
+    damagedSeen();
+    return null;
+  }
+  if (damagedGames.delete(g.id)) damagedSeen();
   const f = g.facts ?? {};
   const thumb = g.pictureRev ? await gamePicture(ctx, g.id) : undefined;
   const stored: StoredSave = {
@@ -177,6 +194,14 @@ export async function fetchBackup(ctx: CloudContext, id: string, rev: number): P
     if (a.status === 200 && a.bytes && Number(a.headers?.get("X-Rev")) === rev) return a.bytes;
   }
   return null;
+}
+
+/** T-3395: game `id`'s pinned copy (the newest rev that passed the server's check), checked here too;
+ * null if there is none or it cannot be downloaded. */
+export async function fetchPinned(ctx: CloudContext, id: string): Promise<Uint8Array | null> {
+  const a = await call(ctx, "GET", `trainworld/games/${id}/pinned`, undefined, "bytes");
+  if (a.status !== 200 || !a.bytes || await checkSave(a.bytes) === "damaged") return null;
+  return a.bytes;
 }
 
 /** Delete a game from the account (its backups and figures go too); true once it is gone. */
@@ -238,6 +263,16 @@ export const factsOf = (s: StoredSave): GameFacts => ({
  * "skip": nothing to send (the slot went, or is not tied). */
 export type Upload = "ok" | "elsewhere" | "failed" | "skip";
 
+/** T-3395: each slot's copy as last checked here (its `at` and size), so a copy is unpacked once */
+const checked = new Map<string, { at: number; size: number; check: SaveCheck }>();
+async function checkCopy(key: string, stored: StoredSave): Promise<SaveCheck> {
+  const c = checked.get(key);
+  if (c && c.at === stored.at && c.size === stored.bytes.length) return c.check;
+  const check = await checkSave(stored.bytes);
+  if (check !== "unchecked") checked.set(key, { at: stored.at, size: stored.bytes.length, check });
+  return check;
+}
+
 /** Upload slot `key` as stored now. A "moved" (this device's own write whose answer was lost) is sent
  * again on the account's rev; a game deleted on the account is kept as a new account game. */
 export async function upload(ctx: CloudContext, key: string, force = false): Promise<Upload> {
@@ -245,8 +280,23 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
   for (let attempt = 0; attempt < 3; attempt++) {
     const [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
     if (!stored || !tiedTo(rec, ctx)) return "skip";
+    // T-3395: a copy known to be damaged is never sent (the same bytes again would only be refused)
+    if (stored.damaged || rec.refused === stored.at) {
+      if (rec.error !== WHY_DAMAGED) await writeSync(key, { ...rec, error: WHY_DAMAGED });
+      return "failed";
+    }
     if (stored.bytes.length > MAX_SAVE) {
       await writeSync(key, { ...rec, error: WHY_TOO_BIG });
+      return "failed";
+    }
+    // T-3395: checked here before anything is sent, whatever the server (one from before its check stores
+    // what it is given): a damaged copy is marked and never sent; one that could not be checked waits
+    const check = await checkCopy(key, stored);
+    if (check === "unchecked") return "failed";
+    if (check === "damaged") {
+      await markDamaged(key, stored.at);
+      await rescueGood(key);
+      await writeSync(key, { ...rec, error: WHY_DAMAGED });
       return "failed";
     }
     const fd = new FormData();
@@ -260,10 +310,16 @@ export async function upload(ctx: CloudContext, key: string, force = false): Pro
     if (!now) return "skip";
     if (a.status === 200 && a.json) {
       // a slot written again while this went up stays changed here, and goes next time
-      await writeSync(key, { ...now, rev: a.json.rev, syncedAt: stored.at, edit: editOf(stored), upAt: Date.now(), okAt: a.json.savedAt * 1000, gaveWay: undefined, error: undefined });
+      await writeSync(key, { ...now, rev: a.json.rev, syncedAt: stored.at, edit: editOf(stored), upAt: Date.now(), okAt: a.json.savedAt * 1000, gaveWay: undefined, error: undefined, refused: undefined });
       return "ok";
     }
     const code = a.json?.code;
+    if (a.status === 422 && code === "damaged") {
+      // T-3395: the account kept its copy; this slot is left as it is, and checked here
+      await writeSync(key, { ...now, error: WHY_DAMAGED, refused: stored.at });
+      await checkSlot(key);
+      return "failed";
+    }
     if (a.status === 409 && code === "elsewhere") return "elsewhere";
     if (a.status === 409 && code === "moved" && typeof a.json?.rev === "number") { await writeSync(key, { ...now, rev: a.json.rev }); continue; }
     if (a.status === 410) { await writeSync(key, { ...now, id: newGameId(), rev: 0, syncedAt: 0 }); continue; }

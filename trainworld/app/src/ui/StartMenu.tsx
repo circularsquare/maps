@@ -27,7 +27,7 @@ import { Icon } from "./widgets";
 import { Changelog } from "./Changelog";
 import { CommunityButton } from "./Community";
 import { dismissUpdate, updateToShow } from "./updates";
-import { accountBackupFile, accountList, accountOnly, cardOf, deleteOwed, deleteVersions, downloadAccountGame, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
+import { accountBackupFile, accountList, accountOnly, cardOf, damagedAccount, deleteOwed, deleteVersions, downloadAccountGame, downloadFailure, pinnedFile, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t } from "../i18n";
 
 declare const __TW_VERSION__: string | undefined;
@@ -139,7 +139,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
     const g = key.startsWith("account:") ? accountList.peek()?.games.find((x) => "account:" + x.id === key) : null;
     if (g) {
       const k = await downloadAccountGame(g);
-      if (!k) { setRefused(t("startMenu.downloadFailed")); return; }
+      if (!k) { setRefused(downloadFailure(g.id, t("startMenu.downloadFailed"))); return; }
       key = k;
     }
     const why = await saveRefusal({ key }, true);
@@ -168,7 +168,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
   const now = Date.now();
   // T-2037: one card per game, its version with the latest player change on top
   const backups = useBackups(slots.map((s) => s.key), slots.length);
-  const groups = groupVersions(slots, accountOnly(slots), backups, "", accountList.value?.games ?? []);
+  const groups = groupVersions(slots, accountOnly(slots), backups, "", accountList.value?.games ?? [], damagedAccount.value);
   const wait = () => Promise.race([settling, new Promise((r) => setTimeout(r, SETTLE_WAIT_MS))]);
   const chose = (c: GameChoice | string | { warn: string }) => { if (typeof c === "string") return c; if ("warn" in c) return c.warn; pick(c); return ""; };
   const actions = (g: GameGroup): VersionActions => ({
@@ -177,7 +177,12 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
       if (v.kind === "account") { await open("account:" + v.game.id); return ""; }
       await wait();
       if (v.kind === "backup") return chose(await backupChoice(v.backup.key, v.slot.key));
-      const file = await accountBackupFile(v.game.id, g.top.kind === "slot" ? g.top.slot.name : g.top.game.name, v.backup);
+      const name = g.top.kind === "slot" ? g.top.slot.name : g.top.game.name;
+      if (v.kind === "pinned") {
+        const pinned = await pinnedFile(v.game.id, name);
+        return pinned ? chose(await fileChoice(pinned, { origin: g.origin, edit: v.game.pinned!.savedAt * 1000 })) : t("startMenu.backupDownloadFailed");
+      }
+      const file = await accountBackupFile(v.game.id, name, v.backup);
       return file ? chose(await fileChoice(file, { origin: g.origin, edit: v.backup.savedAt * 1000 })) : t("startMenu.backupDownloadFailed");
     },
     remove: async (v) => { await remove([v]); return ""; },

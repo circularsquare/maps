@@ -1,5 +1,9 @@
 import { gzip, Inflate } from "pako";
 
+/** T-3395: the error a stream that does not unpack to its end throws; any other (a failed allocation,
+ * the output cap) says nothing about the bytes. */
+export const GZIP_DAMAGED = "Incomplete or damaged gzip stream."; // i18n-ignore: internal codec error
+
 /** Worker-only strict gzip, including the end marker and checksum. Safari 16's native streams
  * can finish without emitting all their bytes (WebKit 254021), so saves use the bundled codec. */
 export function decompressGzip(bytes: Uint8Array, maxBytes = Infinity): Uint8Array<ArrayBuffer> {
@@ -11,7 +15,7 @@ export function decompressGzip(bytes: Uint8Array, maxBytes = Infinity): Uint8Arr
     if (size > maxBytes) throw new Error("Gzip output is too large."); // i18n-ignore: internal codec error
     parts.push(part);
   };
-  if (!stream.push(bytes, true) || stream.err || !stream.ended) throw new Error("Incomplete or damaged gzip stream."); // i18n-ignore: internal codec error
+  if (!stream.push(bytes, true) || stream.err || !stream.ended) throw new Error(GZIP_DAMAGED);
   const out = new Uint8Array(size);
   let at = 0;
   for (const part of parts) { out.set(part, at); at += part.length; }

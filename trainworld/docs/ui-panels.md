@@ -1026,7 +1026,13 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
   backups of each of its account games (time only; a cloud, hover "A backup on your account").
   Opening a backup makes a new slot under the game's name, another version of it. Nothing opened
   writes over another version. A failed download says "This game could not be downloaded." or
-  "This backup could not be downloaded.".
+  "This backup could not be downloaded.", and one whose copy is damaged "This save is damaged.".
+- **A damaged game** [T-3395; architecture.md "Damaged saves"]: its card's facts end in a red line,
+  "This copy is damaged, so your account kept the last good one" when the account refused it, else
+  "This save is damaged." (also the playing card's crossed-cloud hover for the first). Its other
+  versions start open, the first row "Last undamaged copy · Saved Nov 14 at 15:31 · Day 26 · 164
+  stations" with "Open a copy" (a new slot, as a backup opens); with none, a muted line under the
+  card's foot, "No undamaged copy of this game is left".
 - **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
   top bar and the callout say "This game was saved by a newer version. Reload the page to
   update."; Save refuses with the same words (its hover too). Download's hover is "Download as a

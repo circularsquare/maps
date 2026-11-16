@@ -19,6 +19,7 @@ import registry from "../game/registry.json";
 import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
 import { compressGzip, decompressGzip } from "./gzip";
+import { GZIP_DAMAGED } from "./gzipCore";
 import type { LineShape } from "../game/lineShape";
 
 export const SAVE_MAGIC = "TWG1";
@@ -280,25 +281,70 @@ export async function encodeSave(h: SaveHeader, track: Uint8Array): Promise<Uint
   return compressGzip(raw);
 }
 
-/** The compressed file -> header and network bytes; throws a player-readable reason. */
+/** T-3395: the message key a damaged save's load throws (a gzip that does not unpack to its end, a header
+ * cut short, a network that does not decode), apart from a file that is no save at all. */
+export const SAVE_DAMAGED = "clockWorker.saveDamaged";
+const errorText = (err: unknown) => String((err as Error | null)?.message ?? err);
+/** T-3395: whether an error is `SAVE_DAMAGED`'s. */
+export const isDamagedError = (err: unknown): boolean => errorText(err).includes(SAVE_DAMAGED);
+/** T-3395: the start of the error a save that could not be checked throws (the codec worker did not load,
+ * memory ran out): nothing is known about its bytes, so it is never called damaged; the cause follows. */
+export const SAVE_UNCHECKED = "The save could not be read"; // i18n-ignore: internal, shown through loadFailKey
+/** T-3395: whether an error is `SAVE_UNCHECKED`'s. */
+export const isUncheckedError = (err: unknown): boolean => errorText(err).includes(SAVE_UNCHECKED);
+const NOT_SAVE = "This file is not a trainsworld save.";
+const NEWER_SAVE = "This save is from a newer version of the game.";
+
+/** The compressed file -> header and network bytes; throws a player-readable reason (`SAVE_DAMAGED`, a key,
+ * for a damaged save). */
 export async function decodeSave(file: Uint8Array): Promise<{ header: SaveHeader; track: Uint8Array }> {
   let raw: Uint8Array;
   try {
     raw = await decompressGzip(file);
-  } catch {
-    throw new Error("This file is not a trainsworld save.");
+  } catch (err) {
+    // T-3395: a gzip stream that does not unpack (Safari's cut-short saves) is a damaged save; a codec that
+    // failed for another reason (its worker, memory) has not read the bytes
+    if (!(file.length >= 2 && file[0] === 0x1f && file[1] === 0x8b)) throw new Error(NOT_SAVE);
+    throw new Error(errorText(err).includes(GZIP_DAMAGED) ? SAVE_DAMAGED : `${SAVE_UNCHECKED}: ${errorText(err)}`);
   }
-  if (raw.length < 8 || new TextDecoder().decode(raw.subarray(0, 4)) !== SAVE_MAGIC) throw new Error("This file is not a trainsworld save.");
+  if (raw.length < 8 || new TextDecoder().decode(raw.subarray(0, 4)) !== SAVE_MAGIC) throw new Error(NOT_SAVE);
   const n = new DataView(raw.buffer, raw.byteOffset).getUint32(4, true);
+  if (8 + n > raw.length) throw new Error(SAVE_DAMAGED);
   let header: SaveHeader;
   try {
     header = JSON.parse(new TextDecoder().decode(raw.subarray(8, 8 + n)));
-  } catch {
-    throw new Error("This save is damaged.");
+  } catch (err) {
+    throw new Error(err instanceof SyntaxError ? SAVE_DAMAGED : `${SAVE_UNCHECKED}: ${errorText(err)}`);
   }
-  if (header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error("This file is not a trainsworld save.");
-  if (header.format > SAVE_FORMAT) throw new Error("This save is from a newer version of the game.");
+  if (!header || typeof header !== "object" || header.game !== "anitabuilder" || typeof header.format !== "number") throw new Error(NOT_SAVE);
+  if (header.format > SAVE_FORMAT) throw new Error(NEWER_SAVE);
   return { header, track: raw.slice(8 + n) };
+}
+
+/** T-3395: what a strict read of a save finds: "intact" (it unpacks to its end with its checksum, its
+ * header reads and, where the track model is at hand, its network decodes), "damaged", "other" (no
+ * save, or one from a newer or retired version: kept as it is, never called damaged), or "unchecked"
+ * (the check itself failed: the codec worker did not load, memory ran out; nothing is marked, try later). */
+export type SaveCheck = "intact" | "damaged" | "other" | "unchecked";
+let networkCheck: ((track: Uint8Array) => boolean) | null = null;
+/** T-3395: the clock worker's network decode (`TrackApi`). The main thread has no track model, so its check
+ * is the gzip and the header, which is what a cut-short save fails. */
+export function setNetworkCheck(f: (track: Uint8Array) => boolean) { networkCheck = f; }
+export async function checkSave(bytes: Uint8Array): Promise<SaveCheck> {
+  let track: Uint8Array;
+  try {
+    ({ track } = await decodeSave(bytes));
+  } catch (err) {
+    if (isDamagedError(err)) return "damaged";
+    const why = errorText(err);
+    return why === NOT_SAVE || why === NEWER_SAVE ? "other" : "unchecked";
+  }
+  if (!networkCheck || isRetiredTrackFormat(track)) return "intact";
+  try {
+    return networkCheck(track) ? "intact" : "damaged";
+  } catch {
+    return "unchecked"; // a trap in the decode (memory) says nothing about the bytes
+  }
 }
 
 // ---------------------------------------------------------------- IndexedDB
@@ -337,6 +383,9 @@ export const WHOLE_PANEL = "*";
 
 export interface StoredSave extends Partial<SlotSummary> {
   bytes: Uint8Array;
+  /** T-3395: these bytes failed the check (a load, or the account refusing them); the next write of the
+   * slot drops it */
+  damaged?: true;
   /** Date.now() when written */
   at: number;
   day: number;
@@ -350,7 +399,7 @@ export interface StoredSave extends Partial<SlotSummary> {
   edit?: number;
 }
 
-export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-2569: an account card whose picture is still being fetched */ loading?: boolean; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-2569: an account card whose picture is still being fetched */ loading?: boolean; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; /** T-3395 */ damaged?: boolean; }
 
 /** T-988: a slot's tie to a game on the account (`sync:<slot>`, deleted with the slot). Absent, or
  * without `acct`, for a slot tied to no account (a game made while signed out). The slot has changed
@@ -376,6 +425,8 @@ export interface SyncRecord {
   local?: boolean;
   /** why the last upload failed */
   error?: string;
+  /** T-3395: the slot's `at` whose bytes the account refused as damaged: not sent again until the slot changes */
+  refused?: number;
 }
 export const ORIGINAL_SLOT = "autosave";
 export const ORIGINAL_NAME = "Original game"; // i18n-ignore: a slot's saved name
@@ -531,7 +582,7 @@ export async function listSlots(): Promise<SaveSlot[]> {
     const s = saves[i];
     if (!s) return [];
     if (syncs[i]) seeSync(key, syncs[i]);
-    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, ...(s.copy ? { copy: true } : {}), cloud: syncs[i], origin: s.origin, edit: s.edit }];
+    return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, ...(s.copy ? { copy: true } : {}), ...(s.damaged ? { damaged: true } : {}), cloud: syncs[i], origin: s.origin, edit: s.edit }];
   }).sort((a, b) => b.at - a.at);
 }
 
@@ -626,14 +677,19 @@ export async function renameSlot(key: string, name: string): Promise<void> {
   await done;
 }
 
+const UNREADABLE_PREFIX = "unreadable-";
+/** T-743, T-3395: where slot `slot`'s copy written at `at` is kept aside when it cannot be read (out of the
+ * slot list, the tiers and their trimming); deleted with the slot. */
+export const unreadableKey = (slot: string, at: number) => `${UNREADABLE_PREFIX}${at}:${slot}`;
+
 export async function deleteSlot(key: string): Promise<void> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   await req(s.delete(key));
   await req(s.delete(SYNC_PREFIX + key));
   await req(s.delete(AHEAD_PREFIX + key));
-  // and its demand cache (T-328) and backups (T-744)
-  for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`))) s.delete(k);
+  // and its demand cache (T-328), backups (T-744) and copies kept aside as unreadable (T-743, T-3395)
+  for (const k of await req(s.getAllKeys())) if (typeof k === "string" && (k.startsWith(`${DEMAND_PREFIX}${key}:`) || k.startsWith(`${BACKUP_PREFIX}${key}:`) || (k.startsWith(UNREADABLE_PREFIX) && k.endsWith(":" + key)))) s.delete(k);
   await done;
   syncSeen.delete(key);
 }
@@ -672,9 +728,12 @@ export function newGameName(slots: { name: string }[], spec: NewGameSpec): strin
 // T-744, T-1826: a slot's backups, the slot's record without its picture: four tiers
 // `backup:<slot>:t0` to `:t3`, reaching back about 10 minutes, an hour, a day and a week, and
 // `backup:<slot>:pull`, the slot as it was before the account's copy last replaced it. Backups from
-// before T-1826 (`:0`, `:1`) are listed until the next tier write folds them in.
+// before T-1826 (`:0`, `:1`) are listed until the next tier write folds them in. T-3395: `backup:<slot>:good`,
+// the newest copy known to pass the check, outside the tiers and `BACKUP_CAP`; a damaged copy never
+// becomes a backup.
 const BACKUP_PREFIX = "backup:";
 const TIERS = ["t0", "t1", "t2", "t3"];
+const GOOD = "good";
 /** T-1826: wall ms. Tier 0 takes the slot at most once a step; the backup it held moves down to
  * tier i+1 only when it is at least step i+1 newer than the one there, else it goes. So tier 0 is up
  * to 10 min old, tier 1 up to about 1 h 10 min, tier 2 about a day, tier 3 about a week. */
@@ -682,7 +741,7 @@ export const BACKUP_STEPS = [10 * 60_000, 3600_000, 86400_000, 7 * 86400_000];
 /** T-1826: the most a slot's tier backups hold, bytes; past it the oldest tiers are dropped (tier 0
  * is always kept). About 100 KB a save is usual. */
 export const BACKUP_CAP = 8 << 20;
-export interface SlotBackup { key: string; at: number; day: number; /** the slot before the account's copy replaced it */ pull?: boolean; /** T-2037 */ stations?: number; edit?: number }
+export interface SlotBackup { key: string; at: number; day: number; /** the slot before the account's copy replaced it */ pull?: boolean; /** T-3395: the newest copy that passed the check */ good?: boolean; /** T-2037 */ stations?: number; edit?: number }
 const backupKey = (slot: string, tier: string) => `${BACKUP_PREFIX}${slot}:${tier}`;
 
 export async function listBackups(slot: string): Promise<SlotBackup[]> {
@@ -691,7 +750,7 @@ export async function listBackups(slot: string): Promise<SlotBackup[]> {
   const out: SlotBackup[] = [];
   for (const key of keys) {
     const b = (await req(s.get(key))) as StoredSave | undefined;
-    if (b) out.push({ key, at: b.at, day: b.day, stations: b.stations, edit: b.edit, ...(key.endsWith(":pull") ? { pull: true } : {}) });
+    if (b) out.push({ key, at: b.at, day: b.day, stations: b.stations, edit: b.edit, ...(key.endsWith(":pull") ? { pull: true } : {}), ...(key.endsWith(":" + GOOD) ? { good: true } : {}) });
   }
   return out.sort((a, b) => b.at - a.at);
 }
@@ -711,19 +770,27 @@ export function planBackups<T extends { at: number }>(tiers: (T | null)[], add: 
   return out;
 }
 
-/** An autosave's backup, written when tier 0 is a step old (`planBackups`), in one transaction. */
+/** An autosave's backup, written when tier 0 is a step old (`planBackups`), in one transaction. `v` is a
+ * copy this build just wrote (`compressGzip` has read back every byte), so it is also the slot's good copy
+ * (T-3395) whenever tier 0 takes it or there is none. */
 export async function writeBackup(slot: string, v: StoredSave, steps: number[] = BACKUP_STEPS): Promise<boolean> {
   try {
     const s = await store("readwrite");
     const done = committed(s.transaction);
     const get = async (tier: string) => ((await req(s.get(backupKey(slot, tier)))) as StoredSave | undefined) ?? null;
+    const { thumb: _, ...rest } = v;
+    const hasGood = (await req(s.getKey(backupKey(slot, GOOD)))) !== undefined;
     let tiers = [await get("t0")];
-    if (tiers[0] && v.at - tiers[0].at < steps[0]) { await done; return true; }
+    if (tiers[0] && v.at - tiers[0].at < steps[0]) {
+      if (!hasGood) s.put(rest, backupKey(slot, GOOD));
+      await done;
+      return true;
+    }
     for (const t of TIERS.slice(1)) tiers.push(await get(t));
     const legacy = [await get("0"), await get("1")].filter((b): b is StoredSave => !!b).sort((a, b) => b.at - a.at);
     if (legacy.length && tiers.every((t) => !t)) tiers = [legacy[0], legacy[1] ?? null, null, null];
-    const { thumb: _, ...rest } = v;
     const plan = planBackups(tiers, rest, steps) ?? tiers;
+    if (plan[0] === rest || !hasGood) s.put(rest, backupKey(slot, GOOD));
     for (let i = 1, sum = plan[0]?.bytes.length ?? 0; i < plan.length; i++) {
       sum += plan[i]?.bytes.length ?? 0;
       if (sum > BACKUP_CAP) plan[i] = null;
@@ -739,21 +806,68 @@ export async function writeBackup(slot: string, v: StoredSave, steps: number[] =
 }
 
 /** T-1826: before anything replaces slot `key` with another copy (the account's), the slot as it
- * was, under `backup:<slot>:pull`. Nothing is written when the slot is empty or already holds `next`. */
+ * was, under `backup:<slot>:pull`. Nothing is written when the slot is empty or already holds `next`.
+ * T-3395: the slot is checked first: a damaged one is kept aside (`unreadableKey`, as a failed load keeps
+ * it, T-743), never as a backup; an intact one newer than the good copy is the good copy too; one that
+ * could not be checked is the pull backup as before. */
 export async function backupBeforeReplace(key: string, next: { at: number; bytes: Uint8Array }): Promise<boolean> {
   try {
+    const old = await readStored(key);
+    if (!old || (old.at === next.at && old.bytes.length === next.bytes.length)) return true;
+    // checked before the transaction, which an await on anything but storage would end
+    const check = old.damaged ? "damaged" : await checkSave(old.bytes);
+    const { thumb: _, damaged: _d, ...rest } = old;
     const s = await store("readwrite");
     const done = committed(s.transaction);
-    const old = (await req(s.get(key))) as StoredSave | undefined;
-    if (old && !(old.at === next.at && old.bytes.length === next.bytes.length)) {
-      const { thumb: _, ...rest } = old;
-      await req(s.put(rest, backupKey(key, "pull")));
+    if (check === "damaged") s.put(old, unreadableKey(key, old.at));
+    else {
+      s.put(rest, backupKey(key, "pull"));
+      const good = (await req(s.get(backupKey(key, GOOD)))) as StoredSave | undefined;
+      if (check === "intact" && (!good || good.at < old.at)) s.put(rest, backupKey(key, GOOD));
     }
     await done;
     return true;
   } catch {
     return false;
   }
+}
+
+/** T-3395: slot `key` marked damaged, if it still holds the copy written at `at` (nothing else in it changes). */
+export async function markDamaged(key: string, at: number): Promise<void> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    const old = (await req(s.get(key))) as StoredSave | undefined;
+    if (old && old.at === at && !old.damaged) s.put({ ...old, damaged: true }, key);
+    await done;
+  } catch { /* marked at its next check */ }
+}
+
+/** T-3395: for a slot found damaged, its newest backup that passes the check kept as its good copy (when
+ * there was none newer); true when the slot has a good copy after. */
+export async function rescueGood(key: string): Promise<boolean> {
+  try {
+    for (const b of await listBackups(key)) {
+      if (b.good) return true;
+      const copy = await readStored(b.key);
+      if (!copy || copy.damaged || await checkSave(copy.bytes) !== "intact") continue;
+      const { damaged: _, ...rest } = copy;
+      return await writeStored(backupKey(key, GOOD), rest);
+    }
+  } catch { /* storage unavailable */ }
+  return false;
+}
+
+/** T-3395: slot `key` checked: a damaged one is marked so and its good copy found (`rescueGood`). */
+export async function checkSlot(key: string): Promise<SaveCheck | null> {
+  const stored = await readStored(key).catch(() => null);
+  if (!stored) return null;
+  const check = await checkSave(stored.bytes);
+  if (check === "damaged") {
+    await markDamaged(key, stored.at);
+    await rescueGood(key);
+  }
+  return check;
 }
 
 export function isBackupOf(key: string, slot: string): boolean {

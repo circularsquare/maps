@@ -120,7 +120,9 @@ try {
     await sf.deleteSlot(key);
     return { list, at: now.at };
   }, home);
-  report('a pull from the account leaves a backup', pulled.at === 2000 && pulled.list.length === 1 && pulled.list[0].pull && pulled.list[0].at === 1000, `(${JSON.stringify(pulled)})`);
+  // T-3395: a whole pull newer than the slot's good copy (none here) is its good copy too
+  const pulls = pulled.list.filter((b) => !b.good);
+  report('a pull from the account leaves a backup', pulled.at === 2000 && pulls.length === 1 && pulls[0].pull && pulls[0].at === 1000 && pulled.list.some((b) => b.good && b.at === 1000), `(${JSON.stringify(pulled)})`);
 
   // ---- 3a. a change autosave will write: no question on close
   await fares(a, 3.1);

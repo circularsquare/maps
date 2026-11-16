@@ -5,7 +5,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { accountOpen, accountState, cloudContext, deviceId, forgetScoreSlots, session, signOut } from "./account";
-import { answerMerge, changedHere, downloadGame, ELSEWHERE_MS, fetchBackup, gamePicture, listGames, owe, owedDeletes, removeSlot, sendDeletes, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
+import { answerMerge, changedHere, damagedGames, downloadGame, ELSEWHERE_MS, fetchBackup, fetchPinned, gamePicture, listGames, onDamagedGame, owe, owedDeletes, removeSlot, sendDeletes, settle, stampAll, tiedTo, untied, type AccountBackup, type AccountGame, type AccountList } from "../workers/cloud";
 import { deleteSlot, leaseSlot, listSlots, readStored, readSync, type SaveSlot } from "../workers/saveFile";
 import type { Version } from "../workers/versions";
 import { t } from "../i18n";
@@ -23,6 +23,10 @@ export const mergeAsk = signal<SaveSlot[] | null>(null);
 export const slotsChanged = signal(0);
 /** The start menu's sync left deletions owed to the account (it could not be reached). */
 export const deleteOwed = signal(false);
+
+/** T-3395: the account games whose copy failed the check when downloaded on this page, by id. */
+export const damagedAccount = signal<ReadonlySet<string>>(new Set());
+onDamagedGame(() => { damagedAccount.value = new Set(damagedGames.keys()); });
 
 /** Whether the account's games are in use on this page (signed in, a server that keeps them). */
 export const gamesOn = () => !!cloudContext()?.on;
@@ -47,9 +51,12 @@ export function cardOf(g: AccountGame): SaveSlot {
   return {
     loading: !!g.pictureRev && !thumb && !picturesTried.value[k],
     key: "account:" + g.id, name: g.name, at: typeof f.at === "number" ? f.at : g.savedAt * 1000, day: f.day ?? 0, thumb, panels: thumb ? f.panels : undefined, shade: f.shade,
-    cities: f.cities ?? [], lines: f.lines, stations: f.stations, cash: f.cash, mode: f.mode,
+    cities: f.cities ?? [], lines: f.lines, stations: f.stations, cash: f.cash, mode: f.mode, ...(damagedAccount.value.has(g.id) ? { damaged: true } : {}),
   };
 }
+
+/** What a failed download of account game `id` says: damaged (T-3395), or `fallback`. */
+export const downloadFailure = (id: string, fallback: string) => damagedAccount.peek().has(id) ? t("clockWorker.saveDamaged") : fallback;
 
 async function pictures(list: AccountList, slots: SaveSlot[]) {
   const ctx = cloudContext();
@@ -205,6 +212,23 @@ export async function accountBackupFile(id: string, name: string, b: AccountBack
   if (!ctx?.on) return null;
   const bytes = await fetchBackup(ctx, id, b.rev);
   return bytes ? new File([bytes as BlobPart], `${name}.save`) : null;
+}
+
+/** T-3395: game `id`'s pinned copy (its last undamaged copy) as a file named `name`, or null. */
+export async function pinnedFile(id: string, name: string): Promise<File | null> {
+  const ctx = cloudContext();
+  if (!ctx?.on) return null;
+  const bytes = await fetchPinned(ctx, id);
+  return bytes ? new File([bytes as BlobPart], `${name}.save`) : null;
+}
+
+/** T-3395: the pinned copy opened as a new version of game `origin` (as an account backup is), saved
+ * `savedAt` (unix seconds); the damaged copy stays as it is. False if it could not be downloaded. */
+export async function restorePinned(id: string, name: string, origin: string, savedAt: number): Promise<boolean> {
+  const file = await pinnedFile(id, name);
+  if (!file) return false;
+  await importGame(file, { origin, edit: savedAt * 1000 });
+  return true;
 }
 
 /** An account backup opened as a new version of game `origin` under its name (T-2037), the game in

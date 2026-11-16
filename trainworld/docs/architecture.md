@@ -539,8 +539,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   the account's) takes the name of the game it backs up and is a version of that game (T-2037,
   "Versions of one game" below). A tab without its slot's lock must make a copy before leaving a changed
   game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
-  read on start stays as it is (its bytes also under `unreadable-<time>`) and the new game gets a
-  slot of its own ("Game N"). The start menu's New game always takes a new slot, even with nothing
+  read on start stays as it is (its bytes also under `unreadable-<time>:<slot>`, deleted with the slot) and the new game gets a
+  slot of its own ("Game N"), with no sync record, so nothing of it is uploaded over the account's
+  copy; one that fails as damaged is marked so ("Damaged saves" below). The start menu's New game always takes a new slot, even with nothing
   saved (T-728); the original slot `autosave` is only ever an old one.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
   Toronto and Sendai, made by hand from timetables, and [T-3225] the cities in `pipeline/realauto.json`
@@ -577,12 +578,30 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   about 1 h 10 min), a day and a week of wall time, and backups only follow changes. Past 8 MB in
   all for a slot's tiers the oldest are dropped (tier 0 always stays; a save is usually about
   100 KB). Before the account's copy replaces a slot (`writeFetched`: a newer copy taken in, after
-  giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`.
+  giving way, or the slot's side of a fork) the slot as it was goes to `backup:<slot>:pull`, unless it
+  fails the save check (then it goes to `unreadable-<at>:<slot>`, never into a backup, and is deleted with the slot) [T-3395].
+  `backup:<slot>:good` is the newest copy known to pass the check, outside the tiers and the 8 MB
+  trim: each tier 0 write (or any backup write while it is missing) puts the autosave there too, and a
+  pull that passes and is newer replaces it. It is listed only for a damaged slot.
   Backups from before T-1826 (`:0`, `:1`) seed the tiers at the next backup write. Each slot's
   backups, and the account's of each of its game's account games, are listed among the card's other
   versions (T-2037; ui-panels.md "Saved games"); opening one makes a new slot, a version of the same
   game. A backup keeps the slot's `origin` and `edit`. Deleting a slot deletes them. `?backupMs=`
   sets the 10-minute step for checks, the others scaled with it.
+- **Damaged saves** [T-3395; `checkSave` in workers/saveFile.ts]: the check unpacks the gzip to its end
+  with its checksum, reads the header and, in the clock worker only (the main thread has no track
+  model), decodes the network (`TrackApi.save_stations`). A gzip that fails, a header cut short or a
+  network that does not decode is damaged ("This save is damaged."); no save at all, or one from a newer or
+  retired version, is not, and is left as it is. A check that itself fails (the codec worker does not load,
+  memory runs out) is "unchecked": nothing is marked, kept aside or uploaded, the slot is backed up as before,
+  and a later check tries again; a file opened that way says the load failed (or ran out of memory). A slot found damaged (its load failed so, or the account
+  refused it) is marked `damaged` on its record, bytes unchanged, until it is next written; its newest
+  backup that passes becomes its good copy (`rescueGood`). A damaged slot is never uploaded. Its card
+  says it is damaged, and its other versions start open with the last undamaged copy first: the newer of
+  its good copy and the account's pinned copy (`GET .../pinned`, shonei-server's docs/trainworld-api.md),
+  opened as a new version of the game ("Open a copy") like a backup, the damaged slot kept. With
+  neither, the card says "No undamaged copy of this game is left", except for an account game whose
+  current rev has no `check` (stored before the server's check: its missing pin says nothing yet).
 - **Versions of one game** [T-2037, T-2030; `workers/versions.ts`]: every slot record carries
   `origin`, the id of the game it descends from, and `edit`, the wall time of the latest player
   change in its bytes (an edit, a list order, sandbox: wherever the clock worker marks `edited`; the
@@ -712,11 +731,18 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
     T-2030), at most every 2 wall minutes (`GAP_MS`), a timer sending what the gap held back; the
     page hiding sends at once (best effort) on the same terms. The clock's own saves go up with the
     next player change. A save over 4 MB is never sent (the server closes the connection past 4.6 MB).
+    Every upload checks the slot's bytes first (`checkSave`, once per written copy; in the clock worker with
+    the network decode), whatever the server: a damaged copy is marked and never sent, with the note "This
+    copy is damaged, so your account kept the last good one"; one that could not be checked waits for the
+    next try. A 422 `damaged` (a server with `trainworldSaveCheck`, for damage only its check sees, such as
+    a network cut inside a whole gzip sent from the main thread) leaves the slot as it is: its record keeps
+    the refused copy's `at` (`refused`) and the same note, that copy is never sent again, and the slot is
+    checked here [T-3395].
   - **On load**: the start menu settles every slot it can lock before the worker starts
     (`settleOnStart`), and the worker again on start and on `online` (`settleSlot`): a slot with a
     player change here goes up; one without (the clock's saves at most) takes a newer account copy
-    (slot record from the server's facts and picture, nothing decoded; what it held goes to its
-    `pull` backup); one the account deleted (a tombstone) is deleted if it has no player change
+    (slot record from the server's facts and picture; its bytes pass the check first, else the slot is
+    left as it is and the game is listed as damaged, T-3395; what it held goes to its `pull` backup); one the account deleted (a tombstone) is deleted if it has no player change
     here, else kept as a new account game; deletions made here while offline are sent. The game
     opened is claimed (`claim`); a slot with no player change here behind the account is replaced
     in place (`loadGame` through the game's message queue).

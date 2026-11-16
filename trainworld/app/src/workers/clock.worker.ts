@@ -42,7 +42,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
@@ -1640,7 +1640,7 @@ async function openNetwork(net: Uint8Array) {
   // T-3478: a stalled index holds the open no longer than its blocks may; the blocks follow when it lands
   await Promise.race([terrainIndexIntoModel(), new Promise((r) => setTimeout(r, LOAD_TERRAIN_WAIT_MS))]);
   await masksBeforeLoad(net);
-  if (!api!.load(net)) throw new Error("This save is damaged.");
+  if (!api!.load(net)) throw new Error(SAVE_DAMAGED);
   await masksForLoaded(net);
   await terrainForLoaded();
   // T-1929: the roads under the blueprint, so its quote has them before Construct waits for them
@@ -1672,7 +1672,7 @@ async function masksForLoaded(net: Uint8Array) {
   if (!missing.length) return;
   a.load(emptyTrack!);
   await ensureMasks(missing);
-  if (!a.load(net)) throw new Error("This save is damaged.");
+  if (!a.load(net)) throw new Error(SAVE_DAMAGED);
 }
 
 // ---------------------------------------------------------------- state for the main thread
@@ -4260,6 +4260,8 @@ async function processMessage(msg: ToClock) {
       const t0 = performance.now();
       freezeMemory = (await initWasm(() => init(), "clock worker")).memory; // i18n-ignore
       if (msg.heapStep) set_heap_step(msg.heapStep);
+      // T-3395: the save check here also decodes the network (TWT4-6; anything else is left to the load)
+      setNetworkCheck((track) => !/^TWT[456]$/.test(new TextDecoder().decode(track.subarray(0, 4))) || TrackApi.save_stations(track).length >= 3);
       const model = newModel();
       loadHolidays();
       emptyTrack = model.save();
@@ -4347,7 +4349,11 @@ async function processMessage(msg: ToClock) {
           // T-2820: first, so a panic's stopped model is out of the way of everything below
           const panicked = isPanic(err) ? afterLoadPanic(err) : null;
           // Keep the unreadable save aside, and its slot as it is: the new game gets a slot of its own (T-743).
-          await writeStored("unreadable-" + stored.at, stored);
+          await writeStored(unreadableKey(activeSlot, stored.at), stored);
+          // T-3395: a damaged slot is marked so (never uploaded) and its last good copy found; the new game
+          // below has a new slot and no sync record, so nothing of it is written over the game
+          const damaged = isDamagedError(err);
+          if (damaged && activeLease) { await markDamaged(activeSlot, stored.at); await rescueGood(activeSlot); }
           if (activeLease) {
             activeLease.release();
             activeSlot = "slot-" + crypto.randomUUID();
@@ -4358,7 +4364,7 @@ async function processMessage(msg: ToClock) {
             await publishSlots();
           }
           if (panicked !== null) send({ kind: "loaded", from: "new", clock: START_CLOCK, error: SAVE_PANIC, why: panicked, frame: frameSpec(), game });
-          else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), loadFailKey(String(err))), frame: frameSpec(), game });
+          else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), damaged ? SAVE_DAMAGED : loadFailKey(String(err))), frame: frameSpec(), game });
         }
       }
       keep();

@@ -18,11 +18,11 @@ import { startup } from "../game/loading";
 import { exportGame, exportSlot, importGame, leaveToMenu, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
-import { accountList, accountOnly, addToAccount, cardOf, deleteVersions, downloadAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup } from "../game/accountGames";
+import { accountList, accountOnly, addToAccount, cardOf, damagedAccount, deleteVersions, downloadAccountGame, downloadFailure, elsewhereAt, refreshAccountGames, restoreAccountBackup, restorePinned } from "../game/accountGames";
 import { estimateGB, gbText, overBudget } from "../game/memoryEstimate";
 import { useMemoryGuard } from "./MemoryWarn";
-import { tiedTo, type CloudContext } from "../workers/cloud";
-import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
+import { tiedTo, whyText, WHY_DAMAGED, type CloudContext } from "../workers/cloud";
+import { groupHeads, groupVersions, isLastGood, type GameGroup, type Version } from "../workers/versions";
 import { Icon } from "./widgets";
 import { startAtPicked } from "./locate";
 import { Modal } from "./Modal";
@@ -106,6 +106,9 @@ export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveS
       </>}
     </div>}
     {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")} data-tip={t("savesPanel.memoryTip", { gb: gbText(estimateGB(slot.stations)) })}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
+    {/* T-3395: the account refused this copy as damaged, or it failed to load as damaged */}
+    {slot.cloud?.error === WHY_DAMAGED ? <div class="small bad save-damaged">{whyText(WHY_DAMAGED)}</div>
+      : slot.damaged ? <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div> : null}
   </>;
 }
 
@@ -139,7 +142,8 @@ function CloudMark({ slot, panel }: { slot: SaveSlot; panel?: boolean }) {
 function AccountMark({ slot, now }: { slot: SaveSlot; now: number }) {
   const ctx = useGamesOn(), c = slot.cloud;
   if (!ctx || !tiedTo(c, ctx) || c.gaveWay) return null;
-  if (c.error || !c.okAt) return <span class="save-cloud save-account warn" data-tip={c.error ? t("savesPanel.notSyncedWhy", { why: c.error.replace(/([^.])$/, "$1.") }) : t("savesPanel.notSynced")}><Icon.cloudOff /></span>;
+  const tip = c.error === WHY_DAMAGED ? whyText(c.error) : c.error ? t("savesPanel.notSyncedWhy", { why: c.error.replace(/([^.])$/, "$1.") }) : t("savesPanel.notSynced");
+  if (c.error || !c.okAt) return <span class="save-cloud save-account warn" data-tip={tip}><Icon.cloudOff /></span>;
   return <span class="save-cloud save-account" data-tip={t("savesPanel.syncedAt", { time: atTime(c.okAt, now) })}><Icon.cloud /></span>;
 }
 
@@ -276,9 +280,10 @@ function versionFacts(v: Version): { day?: number; stations?: number; tip?: stri
     case "account": return { day: v.game.facts?.day, stations: v.game.facts?.stations, cloud: t("savesPanel.accountCopy") };
     case "backup": return { day: v.backup.day, stations: v.backup.stations, tip: v.backup.pull ? t("savesPanel.backupPulled") : t("savesPanel.backupHere") };
     case "accountBackup": return { tip: t("savesPanel.backupAccount"), cloud: t("savesPanel.backupAccount") };
+    case "pinned": return { cloud: t("savesPanel.backupAccount") };
   }
 }
-const versionId = (v: Version) => v.kind === "slot" ? v.slot.key : v.kind === "account" ? "account:" + v.game.id : v.kind === "backup" ? v.backup.key : `account-backup:${v.game.id}:${v.backup.rev}`; // i18n-ignore (id)
+const versionId = (v: Version) => v.kind === "slot" ? v.slot.key : v.kind === "account" ? "account:" + v.game.id : v.kind === "backup" ? v.backup.key : v.kind === "pinned" ? `account-pinned:${v.game.id}` : `account-backup:${v.game.id}:${v.backup.rev}`; // i18n-ignore (id)
 
 /** "1 other version", "11 other versions". */
 export const otherVersions = (n: number) => t("savesPanel.otherVersions", { count: n });
@@ -293,8 +298,9 @@ export function VersionsLine({ group, now, act, children }: { group: GameGroup; 
   const [asking, setAsking] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const n = group.others.length;
-  if (!n && !children) return null;
-  const open = versionsShown.value.has(group.origin);
+  if (!n && !children && !group.noneLeft) return null;
+  // T-3395: a damaged game's versions start open, its last undamaged copy first
+  const open = versionsShown.value.has(group.origin) !== !!group.damaged;
   const toggle = () => {
     const s = new Set(versionsShown.peek());
     if (!s.delete(group.origin)) s.add(group.origin);
@@ -306,18 +312,20 @@ export function VersionsLine({ group, now, act, children }: { group: GameGroup; 
       {n > 0 && <button class={"save-versions-line small" + (open ? " open" : "")} aria-expanded={open} onClick={toggle}><Icon.chevron />{otherVersions(n)}</button>}
       {children}
     </div>
+    {group.noneLeft && <div class="small muted save-none-left">{t("savesPanel.noneLeft")}</div>}
     {open && <ul class="save-version-list">
       {group.others.map((v) => {
-        const id = versionId(v), f = versionFacts(v), deletable = v.kind === "slot" || v.kind === "account";
+        const id = versionId(v), f = versionFacts(v), deletable = v.kind === "slot" || v.kind === "account", lastGood = isLastGood(v);
         const where = v.kind === "account" ? "account" : v.kind === "slot" && onAccount(v.slot) ? "both" : "browser";
         return <li key={id} data-version={id} data-kind={v.kind}>
           <div class="save-version">
             <span class="small muted num" data-tip={f.tip}>
+              {lastGood && t("savesPanel.lastGood") + " · "}
               {savedWhen(v.at, now)}{f.day !== undefined && <> · {t("savesPanel.day", { day: f.day })}</>}{f.stations !== undefined && <> · {stationsText(f.stations)}</>}
               {f.cloud && <span class="save-cloud" data-tip={f.cloud}><Icon.cloud /></span>}
             </span>
             {deletable && <button class="btn icon save-delete" data-tip={t("savesPanel.delete")} aria-label={t("savesPanel.deleteVersionLabel")} onClick={() => setAsking(id)}><Icon.bin /></button>}
-            <button class="btn text save-version-open" onClick={() => void run(act.open(v))}>{t("savesPanel.open")}</button>
+            <button class="btn text save-version-open" onClick={() => void run(act.open(v))}>{lastGood ? t("savesPanel.openCopy") : t("savesPanel.open")}</button>
           </div>
           {asking === id && <div class="callout bad">
             <p>{t("savesPanel.deleteVersionQuestion", { where })}</p>
@@ -411,7 +419,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
   const shownNow = Math.max(now, at);
   // T-2037: one card per game
   const backups = useBackups(saves.slots.map((s) => s.key), Math.floor(Math.max(0, ...saves.slots.map((s) => s.at)) / 60_000));
-  const groups = groupVersions(saves.slots, ctx ? accountOnly(saves.slots) : [], backups, saves.active, ctx ? accountList.value?.games ?? [] : []);
+  const groups = groupVersions(saves.slots, ctx ? accountOnly(saves.slots) : [], backups, saves.active, ctx ? accountList.value?.games ?? [] : [], damagedAccount.value);
   const shut = () => { savesOpen.value = false; return ""; };
   const actions = (g: GameGroup): VersionActions => ({
     open: async (v) => {
@@ -419,11 +427,12 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
       if (v.kind === "backup") { manageSaveSlot("restore", v.backup.key); return shut(); }
       if (v.kind === "account") {
         const key = await downloadAccountGame(v.game);
-        if (!key) return t("savesPanel.downloadFailed");
+        if (!key) return downloadFailure(v.game.id, t("savesPanel.downloadFailed"));
         manageSaveSlot("open", key);
         return shut();
       }
       const name = g.top.kind === "slot" ? g.top.slot.name : g.top.game.name;
+      if (v.kind === "pinned") return await restorePinned(v.game.id, name, g.origin, v.game.pinned!.savedAt) ? shut() : t("savesPanel.backupDownloadFailed");
       return await restoreAccountBackup(v.game.id, name, g.origin, v.backup) ? shut() : t("savesPanel.backupDownloadFailed");
     },
     remove: (v) => removeVersions([v]),
@@ -498,7 +507,7 @@ function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => vo
         if (!g) return;
         setMsg("");
         const key = await downloadAccountGame(g);
-        if (!key) { setMsg(t("savesPanel.downloadFailed")); return; }
+        if (!key) { setMsg(downloadFailure(g.id, t("savesPanel.downloadFailed"))); return; }
         manageSaveSlot("open", key);
         savesOpen.value = false;
       })}>{t("savesPanel.open")}</button>
