@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1791 [P3] {L:small-fixes} Boardings in the line group view (2026-11-16): a stop's hover in the group view ends with "{count} boardings in past 24h" (the line panel's string), per line at shared stops. notes/T-1791.md.
 - T-3452 [P2] {L:cleanup} Code tour for Anita (2026-11-16): tour delivered: notes/code-tour.md with artifacts/trainworld/review/code-tour.png and an odd-things list.
 - T-3451 [P2] {L:board} Review of our task and agent workflow (2026-11-16): review delivered: notes/T-3451.md; her calls on its recommendations pending.
 - T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (2026-11-16): landed on Anita's word: each walk or ride to a station counts on its own in the regional market (no mean), so feeders never make rail dearer; real save longer trips by rail 4.8k -> 91k, all rail +0.8%, ceiling tests unchanged. Follow-up T-3454. notes/T-3426.md.

@@ -58,6 +58,10 @@ not once per message (Anita, 2026-11-09).
 
 ## Landing, commits, 8800
 
+Risky changes (sim, saves, demand numbers, money) get a checker before landing (Anita 2026-11-16, T-3451): a fresh
+Sonnet agent given the task's Goal and the diff, not the first agent's report, that tries to break it in the running
+game; one round, pass or fail with evidence. Labels, text and docs skip it.
+
 `node trainworld/checks/smoke.mjs [url]` from the maps root runs Node checks, then a new game and the real save in
 headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your own Vite.
 1. Smoke on your dev server. Landing a tree or a batch: skip your own smoke when the agent's ran on the final state;

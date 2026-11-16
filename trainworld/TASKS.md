@@ -707,9 +707,12 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: The touch rule already re-solves only the line zone (Tokyo 0.1 s against 8 s whole), and the local result was within 83 riders of the whole.
   - Goal: A city line edit ends with the local solve, no whole solve.
   - Other: notes/T-2188.md
-- T-2198 [P3] {L:passing-tracks} Mark where faster trains lose time
-  - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list.
-  - Goal: The loss is marked on the map or in the trouble list.
+- T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
+  - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
+  - Goal: The loss shows in the detailed crowding panel.
+- T-3456 [P3] {L:map-look} Detailed crowding panel
+  - Context: You 2026-11-16: clicking a crowding bubble opens a panel showing in detail how crowded the line is per segment. T-2198 (where faster trains lose time) goes in it too.
+  - Goal: Clicking a crowding bubble opens a per-segment crowding panel for its line.
   - Other: notes/T-2198.md
 - T-2199 [P3] {L:trains-drawn} Trains drawn late at a full merge
   - Context: At 100% in the T-2185 merge test, 9-15 trains were drawn up to 5-10 min late, all on one line. At 92% the worst was 2 min.
@@ -777,10 +780,6 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
   - Context: You said yes.
   - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-1791 [P3] {L:small-fixes} Boardings in the line group view (taking, 2026-11-16, agent hover)
-  - Context: Line groups stage 4. You said yes 2026-11-16 to past 24 hours of boardings per stop, in the stop's hover only. The line panel already shows boardings per stop.
-  - Goal: A stop's hover in the group view shows its boardings over the past 24 hours.
-  - Other: notes/T-1791.md
 - T-3398 [P3] {L:translations} The next languages
   - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
   - Goal: Indonesian is added first, then the others in order.
@@ -1245,11 +1244,11 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Thin zones show noisy everyday trips between draws.
   - Goal: Everyday trips are steady between draws.
   - Other: Notes: notes/someday.md
-- T-560 [P3] {L:demand-ideas} Crush load per country
+- T-560 [P4] {L:demand-ideas} Crush load per country
   - Context: Crush load is one value for all countries.
   - Goal: Crush load follows published stock figures per country.
   - Other: Notes: notes/someday.md
-- T-873 [P3] {L:demand-ideas} Train empties fully mid-line
+- T-873 [P4] {L:demand-ideas} Train empties fully mid-line
   - Context: The boarding account lets a train empty fully mid-line.
   - Goal: The boarding account no longer empties trains mid-line.
   - Other: Notes: notes/someday.md
@@ -1332,7 +1331,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Other: notes/someday.md
 
 ### Interface
-- T-750 [P3] {L:real-networks} Add a real network to a running sandbox
+- T-750 [P4] {L:real-networks} Add a real network to a running sandbox
   - Context: You want it, not urgent.
   - Goal: A city's real network can be added to a running game.
   - Other: notes/someday.md

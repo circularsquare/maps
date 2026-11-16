@@ -7,8 +7,9 @@ The orchestrator also reads `docs/orchestrator.md`.
 
 ## Talking to Anita
 
-- **Reports go to the orchestrator** and are short: what changed and where, check results, anything for Anita
-  (marked as hers). Detail goes in notes/.
+- **Reports go to the orchestrator** and are short, about 15 lines (each report stays in the orchestrator's context
+  for the rest of its session): what changed and where, check results, strings, anything for Anita (marked as hers).
+  Detail goes in notes/.
 - **She doesn't read the code.** Quote the value or list in the message, or name the place on 8800, never a file
   to open.
 - **Estimates in hours of real agent time**, checked against similar past tasks (T-3137 C1, guessed at days, took
@@ -74,7 +75,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   one-line fields in this order: `  - Need from Anita:` (exactly when the head has `{waits:Anita}`: one sentence she can
   act on, with the recommended answer if there is one), `  - Context:` (where things stand and why), `  - Goal:` (what
   done is, with the deciding number), `  - Other:` (optional; the notes link last). Very short, written to her; leave
-  out what you're unsure of (Anita 2026-11-16). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later;
+  out what you're unsure of (Anita 2026-11-16). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board);
   "Someday" tasks are real open tasks. Use only the ids your brief gives you. Add `(taking, <date>, agent <name>)`
   after the title before starting (`checks/mark_taking.py`); update a task by rewriting its fields, never by
   appending to the head line.
