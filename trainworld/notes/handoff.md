@@ -1,15 +1,15 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session f7c8626c-6b89-4b09-983c-732243e787e9, name maps-d7 [e8137b], since 2026-11-16 15:36 UTC
-Updated: 2026-11-16 18:05 UTC
+Updated: 2026-11-16 18:37 UTC (maps-d7 at 404k tokens: starting its successor; my three running agents below land via me unless the successor adopts them)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
 ## State
 - Live = v0.3.5 (maps bfe58c54, published 11-15). Data 2026-11-13 freeze 20261113-013559 on R2.
-- master 516d0dd5, pushed to cefc5ac1 (push after the next batch). 8800 = cefc5ac1 on live data/packs (Shenzhen
-  rebuilt 11-16; no newer freeze: the Guangdong join's market trips register timed out, not redone).
+- master and origin = e240791c+ (pushed; T-3459 edit after). 8800 = cefc5ac1 on live data/packs (has feeders; lacks T-1791
+  hover and later). Rebuild 8800 at HEAD once the next batch lands (she has finished playtesting).
 - Uncommitted on purpose in the main tree: T-3399's country plan edits (pipeline/world_plan.py/.json, realms.json,
   zone-names.json, docs/data-register.md, notes/T-3399.md): commit when T-3399 starts. Also not ours: TODO.md (hers),
   notes/T-3395.md, T-3397.md, jordan-save-investigation-2026-11-15.md, tools/ops/archive_bad_saves.py (saves session).
@@ -37,6 +37,10 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 - No windows on her screen: background processes hidden (start_hidden.ps1, CREATE_NO_WINDOW).
 - Manual agent checking only for prominent cases; prefer automatic checks (11-16, on T-3450).
 - Every publish, deploy and server push needs her yes to that exact action; none overnight.
+
+## Playtest
+- 18:31 Anita on 8800 (cefc5ac1, feeders): "looks pretty good", score unchanged, long-distance lines bigger. Hold lifted.
+- A permission-allowlist addition (14 read-only rules) was refused to me by the permission check: list in chat 18:33; hers to add.
 
 ## Next
 - Land the five agents above as they report; smoke after each batch; 8800 rebuild; push.
