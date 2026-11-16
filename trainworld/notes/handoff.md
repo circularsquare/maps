@@ -27,6 +27,9 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
 - T-3449 landed 16:33 (board.js cec4dba4; tree removed). serve.py holds its /twboard/_paste endpoint and the window fix,
   live (serve restarted 16:29) but UNCOMMITTED: the permission check refused committing serve.py three times; ask her.
   T-2724 closed on her word; T-3358 rivers back to P2 ready (she called rivers and squished cities the pressing issues).
+- 16:41: bug-b landed T-1072 (sim; wasm rebuilt); bug-c landed T-691; sweep closed 4; master 717476c4 pushed. 348 open.
+  Running: bug-a (T-3429 refusal message), bug-d a9e69f3784d4ceef7 (T-3252, T-1863; tree bug-d, port 6151),
+  bug-e a6ade6052ca9999d7 (T-3042, T-1875, T-3101; tree bug-e, port 6161), schem.
 - sweep a30f41793d9dfc434 (Sonnet, no tree): closing already-done/untrue/duplicate tasks below T-1500 (no waits, no taking).
 - shenzhen (16:36, interim): shz rebuilt and joined (45 packs gated), no longer writing data/packs (8800 may use live
   data again); join's market step timed out (1801 s) so no new freeze; market files checked fine. Its uncommitted files

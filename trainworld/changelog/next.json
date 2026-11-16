@@ -452,6 +452,16 @@
       "by": "bug-b",
       "at": "2026-11-16T16:36:59Z",
       "rev": 1
+    },
+    {
+      "id": "c046",
+      "text": "a line stop with no way back on one-way track is refused with a message that says so",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3429",
+      "by": "bug-a",
+      "at": "2026-11-16T16:46:53Z",
+      "rev": 1
     }
   ]
 }

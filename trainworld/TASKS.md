@@ -339,10 +339,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
   - Goal: Long ferries carry riders near real routes: T-2216 first, then a fast ferry kind if you agree.
   - Other: Folded in T-437 (Long trip modes: car cost, Channel, ferries). notes/T-3435.md
-- T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station
-  - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
-  - Goal: Reproduce; the next station is accepted where the track allows it.
-  - Other: Not reproduced 2026-11-16 (bugs3): every order works on a one-way loop; the refusal is right when the next station has no way back. Needs the player's save; a clearer "no way back" message is an option. notes/T-3429.md
 - T-3431 [P2] {L:buses} {after:T-2216} Seattle to Victoria ferry gets no riders and shows no route
   - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
   - Goal: The ferry carries trips once T-2216 solves island pairs; check this line then.
@@ -478,7 +474,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan.
   - Goal: The 37 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
   - Other: plan in notes/T-3012.md; rows in artifacts/trainworld/split-zones.json
-- T-3042 [P3] {L:stops} Draw a flat junction once in the stop list
+- T-3042 [P3] {L:stops} Draw a flat junction once in the stop list (taking, 2026-11-16, agent bug-e)
   - Context: Your note 2026-11-10: the same flat junction shows twice on a looped line, once per pass.
   - Goal: One indicator per junction, drawn on the upper one.
 - T-3052 [P2] {L:rebuild-track} {after:T-3060} Rebuild built track with new properties
@@ -641,7 +637,7 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: You said yes 2026-10-30 and "its fine to put this in after release". The design is written and the terrain rebuild landed.
   - Goal: Terrain cells are hexagons on our own lattice.
   - Other: About a day. notes/T-1881.md.
-- T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged
+- T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged (taking, 2026-11-16, agent bug-d)
   - Context: track-and-service.md says lines with no shared track stay unchanged to the bit; this is not yet true. Waits for t1854b to leave sim/src/track.
   - Goal: netdiff.mjs shows 0 changed Tokyo lines after the Ceuta edit.
   - Other: notes/T-1850.md
@@ -650,7 +646,7 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: Draw a destination's everyday homes as the smooth spread their samples stand for (drawing only). T-1874 has landed.
   - Goal: The homes drawing matches the spread.
   - Other: notes/T-1866.md
-- T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings
+- T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings (taking, 2026-11-16, agent bug-e)
   - Context: `t671-ghost-hover` fails on the real save: 14 of 84 hovers, where the page says a spot fits and the worker refuses.
   - Goal: Page and worker agree on new blueprint near flat crossings.
 - T-1876 [P3] {L:jobs-places} Australian jobs from the 2016 census
@@ -891,7 +887,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Not started yet.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
-- T-3252 [P2] {L:line-rates} Real Tokyo line 99 loses rate on every edit
+- T-3252 [P2] {L:line-rates} Real Tokyo line 99 loses rate on every edit (taking, 2026-11-16, agent bug-d)
   - Context: The line loses about 16% of its rate per edit (0.95/h to 0.005/h over 55 edits) because the even share reads rates the pacing already lowered.
   - Goal: A line's rate stays put across edits.
   - Other: notes/T-3238.md

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (2026-11-16): the refusal was right (the next station had no way back); it now says "No way back from this station on one-way track." instead of "No track joins these stations in this order." The player's own save was not seen. notes/T-3429.md.
 - T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains (2026-11-16): fixed: a running train keeps its place on the ground (piece, pass, metres) and is put back there on the new route, so the other direction's trains no longer jump. notes/T-1072.md.
 - T-570 [P3] {L:car-free} Regional car-free homes from DHS and census (2026-11-16): no longer true: demand stopped reading car ownership in T-854 (SPEC "No car ownership"), so regional figures feed nothing; the unread layer is dropped by T-926. notes/T-562.md.
 - T-571 [P3] {L:car-free} National no-car figures for larger countries (2026-11-16): no longer true: demand stopped reading car ownership in T-854 (SPEC "No car ownership"); the nocar layer is dropped by T-926. notes/T-562.md.
