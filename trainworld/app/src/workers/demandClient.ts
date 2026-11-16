@@ -113,6 +113,7 @@ import { patientFetch } from "./patientFetch";
  * round and New York's real network under 10%.
  */
 const ROUNDS = 3;
+const PROGRESS_GAP_MS = 100;
 /**
  * A load's solve is done, for the loading bar, once this round is published: the free-flow
  * estimate (T-172; a city opened by a pan or a station reaching it). The crowding rounds then
@@ -2008,7 +2009,16 @@ class DemandClient {
     if (!this.progressTimer) this.progressTimer = setTimeout(() => { this.progressTimer = 0; this.progress(); }, 100) as unknown as number;
   }
 
+  private progressAt = -Infinity;
+  /** At most every PROGRESS_GAP_MS: a big load calls this on every message, about 830 times in 30 s on Japan
+   * (T-1172), and a call that comes too soon runs once the gap is over. */
   private progress() {
+    const t0 = performance.now();
+    if (t0 - this.progressAt < PROGRESS_GAP_MS) {
+      if (!this.progressTimer) this.progressTimer = setTimeout(() => { this.progressTimer = 0; this.progress(); }, PROGRESS_GAP_MS - (t0 - this.progressAt) + 1) as unknown as number;
+      return;
+    }
+    this.progressAt = t0;
     this.jobProgress();
     this.zoneProgress();
   }

@@ -65,3 +65,18 @@ export function screenBounds(map: MlMap, box: readonly [number, number, number, 
     bottom: Math.min(h - edge, Math.max(...corners.map((p) => p.y))),
   };
 }
+
+export interface LabelFont { ctx: CanvasRenderingContext2D; h: number }
+let fontCtx: CanvasRenderingContext2D | null | undefined;
+/** The size of a map name from the canvas, not from the page: the first read of a new element's
+ * offsetWidth forces a layout of every name (T-1505, T-2749). Null where the canvas cannot say. */
+export function labelFont(plane: HTMLElement): LabelFont | null {
+  if (fontCtx === undefined) fontCtx = document.createElement("canvas").getContext("2d");
+  if (!fontCtx) return null;
+  const cs = getComputedStyle(plane);
+  const ui = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ui")) || 1;
+  fontCtx.font = `${12 * ui}px ${cs.fontFamily}`;
+  const m = fontCtx.measureText("Hg");
+  const h = parseFloat(cs.lineHeight) || m.fontBoundingBoxAscent + m.fontBoundingBoxDescent;
+  return Number.isFinite(h) && h > 0 ? { ctx: fontCtx, h: Math.round(h) } : null;
+}

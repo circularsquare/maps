@@ -20,7 +20,7 @@ import { anchor, toLocal } from "./geo";
 import type { Overlay } from "./overlay";
 import { PlaceThrottle } from "./moving";
 import { perfOff } from "../perfFlags";
-import { BoxGrid, MIN_LABEL_ZOOM, TRAM_NAME_ZOOM, labelPadding } from "./labelLayout";
+import { BoxGrid, MIN_LABEL_ZOOM, labelFont, type LabelFont, TRAM_NAME_ZOOM, labelPadding } from "./labelLayout";
 import { styleUp } from "./styleReady";
 import { plainBoxHalfPx } from "./stationGeometry";
 import { afterPaint } from "../game/busy";
@@ -336,10 +336,17 @@ export class StationLabels {
       l.hidden = true;
     };
     // measure every new label first, then move them: reads between writes force a layout each
+    let metrics: LabelFont | null | undefined;
     for (const l of this.labels) {
       if (!l.w) {
-        l.w = l.el.offsetWidth;
-        l.h = l.el.offsetHeight;
+        if (metrics === undefined) metrics = labelFont(this.plane);
+        if (metrics) {
+          l.w = Math.round(metrics.ctx.measureText((l.el.textContent ?? "").trim()).width);
+          l.h = metrics.h;
+        } else {
+          l.w = l.el.offsetWidth;
+          l.h = l.el.offsetHeight;
+        }
       }
     }
     // clear of a platform box, which widens as the map zooms in (T-204), or of a transfer dot (T-313)
