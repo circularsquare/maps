@@ -341,6 +341,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3445 [P3] {L:track-speed} {after:a terrain rework decision} Ramp length sets the speed limit
+  - Context: You, 2026-11-16: "do want ramps with speed limit eventually. plan is that current ramp length should keep max speed of 160, longer ramps should allow higher max speeds, shorter ramps should restrain to lower max speeds. cuz people complain about wanting mroe ramps. but hold off on introducing it now, also hold off on changing any ramp max speed behavior at all actually. we will wait on thinking about a more general terrain rework that encompasses the idea of taking into account real terrain / real elevation."
+  - Goal: Held until you decide on a terrain rework; then ramps cap speed by length (today's 200 m a level keeps 160 km/h).
+  - Other: Today ramps have no speed limit (T-3421, notes/T-3421.md).
 - T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework
   - Need from Anita: A design discussion when you are ready; nothing is built before it.
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
@@ -860,13 +864,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Need from Anita: Say when to deploy shonei-server (committed, not deployed) so Random pages too; the game side is on master.
   - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
   - Goal: All three views have a page switcher and a total count.
-- T-3406 [P3] {L:small-fixes} {waits:Anita} Waiting now split by direction
-  - Need from Anita: Which place did you mean? The station panel already splits waiting by line and direction; recommended: the complex platform hover and complex row, as "N toward <end station>" per side.
-  - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows.
+- T-3406 [P3] {L:small-fixes} Waiting now split by direction (taking, 2026-11-16, agent pick2)
+  - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows. You picked the complex platform hover and complex row, "N toward <end station>" per side (2026-11-16).
   - Goal: A station shows waiting riders per direction.
-- T-3407 [P3] {L:money} {waits:Anita} Money plot in the save's local time
-  - Need from Anita: Use the first-built city's time zone when a game has no start city (Choose on map), and skip the finances control since booked days can't be re-cut? Recommended yes.
-  - Context: Your TODO 2026-11-15: money plot times do not match local time. You want the first-built city's time zone, changeable in the finances pane.
+- T-3407 [P3] {L:money} Money plot in the save's local time (taking, 2026-11-16, agent pick2)
+  - Context: Your TODO 2026-11-15: money plot times do not match local time. You want the first-built city's time zone, changeable in the finances pane. You agreed 2026-11-16: the first-built city's time zone when there is no start city; no finances control.
   - Goal: Plot times follow the save's time zone, with a way to change it.
 - T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
   - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
