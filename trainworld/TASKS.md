@@ -263,18 +263,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
-- T-3475 [P2] {L:timetables} Timetable hover and one direction on the chart (taking, 2026-11-16, agent ttstyle)
-  - Context: You, 2026-11-16 after T-3469: hovering a train should highlight it on the timetable and the Marey chart (fade the others if it can be done cheaply, else lighten the hovered one); the chart shows both directions while the table shows one, so show the table's direction, the reverse dimmed in the background, for related lines too; the letters in vertical line bullets are not centred.
-  - Goal: Hover highlights one train in both, the chart leads with the table's direction, and vertical bullets are centred.
-- T-3476 [P2] {L:map-look} Crowding dot fill as a plain average (taking, 2026-11-16, agent crowddot)
-  - Context: You, 2026-11-16 on the board: the line's crowding dot often shows orange when only a few segments are red and most are green, because of a skew in the averaging; the outer ring already shows the peak load.
-  - Goal: The dot's fill is the straight average of its segments' crowding colours, no skew; the ring unchanged.
 - T-3478 [P2] {L:loading} New game from an open game waits silently (taking, 2026-11-16, agent newgame)
   - Context: You, 2026-11-16: in an open game, New game then start on the map seemed to leave you in the old game for about 30 s, while a "terrain failed to download, will try again in 30 s" notice showed; then it opened the map pick as expected. Likely meets anyone starting a new game from a game.
   - Goal: New game from a game saves and goes to the menu first, then loads the new one; a failure ends on the menu, never silently in the old game.
 - T-3479 [P3] {L:loading} Retry a failed terrain download now (taking, 2026-11-16, agent newgame)
   - Context: You, 2026-11-16: the "terrain failed to download" notice waits 30 s before retrying.
   - Goal: Clicking the notice retries at once.
+- T-3481 [P2] {L:map-look} Long straight lines drawn across the map (taking, 2026-11-16, agent lines)
+  - Context: You, 2026-11-16, with a Tokyo screenshot (artifacts/trainworld/board/20261116-155303-da96.png): "heres a bug that people ahve reported on the discord occaasionally. straight lines everywhere." Dozens of track-styled lines run from central Tokyo off the screen in every direction.
+  - Goal: The cause found and fixed, or written down with a repro if it is hard (give up early).
+- T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting
+  - Context: You, 2026-11-16: "for the bus routes lets add it as a setting, default off. i feel bad. and some people might want it... we can pull it in if thats easy. its not that many lines of code." From Renkon's open-source PR 1; a both-ways line or a loop still drives a one-way street backwards.
+  - Goal: PR 1 brought in behind a setting that is off by default, credited to Renkon, with bus routes unchanged while it is off.
 - T-3458 [P3] {L:cleanup} Fewer code comments
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
@@ -374,10 +374,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
   - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
   - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md
-- T-3435 [P3] {L:buses} {waits:Anita} Faster ferries (taking, 2026-11-16, agent ferry45)
-  - Need from Anita: Raise every ferry from 32 to about 46 km/h (25 knots, what NYC Ferry's boats cruise at), costs unchanged? Recommended yes, with T-2216 first for routes like Seattle-Victoria.
-  - Context: You, 2026-11-16 on the board: rather than a separate fast ferry, make current ferries faster overall ("what is the niche of a slow ferry... slow ferries have like almost no traffic everywhrere i build them"). Study: boats are 320 seats at 32 km/h; Hong Kong-Macau gets 1,800 of about 19,000; Seattle-Victoria 0 because trips between landmasses with no car or plane under 250 km are never offered (T-2216).
-  - Goal: One ferry kind at the faster speed, with ferry riders checked on a few routes before and after.
+- T-3435 [P3] {L:buses} Faster ferries (first pass done, 2026-11-16, agent ferry45)
+  - Context: You, 2026-11-16: make current ferries faster rather than adding a fast kind. First pass done: every ferry cruises at 45 km/h instead of 32, costs and seats unchanged; Hong Kong-Macau riders 2,553 to 5,908, Helsinki-Tallinn 18,217 to 19,011, city routes barely move. Long routes still lose money at the default service.
+  - Goal: A later pass on long-distance ferries (fares or service, more speed for long routes), with T-2216 first for routes like Seattle-Victoria.
   - Other: Folded in T-437. notes/T-3435.md
 - T-3431 [P2] {L:buses} {after:T-2216} Seattle to Victoria ferry gets no riders and shows no route
   - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
@@ -393,9 +392,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3454 [P2] {L:route-choice} Feeder effect by trip length, at real coverage (taking, 2026-11-16, agent feedsample)
-  - Context: You asked 2026-11-16 after T-3426: sample a couple of short, medium and long pairs, show where the fix changes most, and fit against real numbers with a semi-realistic number of feeders (roughly real-world coverage), not 2-3 test lines.
-  - Goal: A table of short, medium and long pairs, before and after, with real-like feeder coverage and real figures, and which change most.
 - T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan
   - Context: From T-3428 (Shenzhen Bay): reclaimed coast left out of units. You said yes 2026-11-16 to queue it overnight: a coastal-only gap scan (~2 h, 3 cores), then rebuild flagged rows; likely Shanghai Lingang, Tianjin Binhai, Macau, Hong Kong, Dubai, Singapore, Incheon, Osaka Bay.
   - Goal: Coastal gaps found and the flagged rows rebuilt in an overnight run.
