@@ -5,6 +5,7 @@
 // column sits right above where its train's path starts. The times are the profiles the chart draws
 // (as the departures board's check reads them). notes/T-3346.md "Stage 1 as built".
 
+import { signal, type Signal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { clock } from "../../game/clock";
@@ -94,9 +95,12 @@ function sourcesOf(axis: LineInput, others: readonly LineInput[]): Src[] {
   return out;
 }
 
+/** A train's name shared with the chart (MareyBody's `hot`): its line, profile and departure. */
+const trainKey = (line: number, p: number, dep: number) => `${line}@${p}@${dep}`;
+
 /** One train's column: its bullet, its time at the first row it has, its cells by row shown (NaN
  * blank, PASS run through). */
-interface Col { bullet: LineInput; t: number; cells: Float64Array }
+interface Col { bullet: LineInput; t: number; cells: Float64Array; key: string }
 
 /** The day's trains of `srcs` from `day0`, as columns per direction (0 the axis's run 0 way, rows
  * in that order), each sorted by time. */
@@ -142,7 +146,7 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
         for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r])) cells[r] = PASS;
         const t0 = cells[lo];
         if (t0 < day0 || t0 >= day0 + DAY) continue;
-        out[dir].push({ bullet: src.bullet, t: t0, cells });
+        out[dir].push({ bullet: src.bullet, t: t0, cells, key: trainKey(src.line.num, p, dep) });
       }
     });
     for (const cs of out) cs.sort((a, b) => a.t - b.t);
@@ -213,13 +217,45 @@ const fits = (l: LineInput) => [...l.letter].reduce((s, ch) => s + ((ch.codePoin
  * colour, as printed timetables head a train with its service's name. */
 function Bullet({ l }: { l: LineInput }) {
   if (fits(l)) return <Chip line={l} size="sm" plain />;
-  return <span class="tt-strip" style={{ "--c": l.colour, "--ct": inkOn(l.colour) }}>{[...l.letter].slice(0, STRIP_MAX).join("")}</span>;
+  return <span class="tt-strip" style={{ "--c": l.colour, "--ct": inkOn(l.colour) }}>{[...l.letter].slice(0, STRIP_MAX).map((ch) => <span>{ch}</span>)}</span>;
+}
+
+/** A train's column of times, its centre `x` px from the day's start. */
+function Column({ c, x, cls, shift, dark }: { c: Col; x: number; cls: string; shift: number; dark: boolean }) {
+  return (
+    <div class={"tt-col" + cls} data-k={c.key} style={{ left: GUTTER + x - COL / 2 + "px", width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>
+      {Array.from(c.cells, (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}
+    </div>
+  );
+}
+
+/** The hovered train, over a veil that fades the rest: its bullet (`part` "head") or its times. One
+ * element's change per hover, whatever the number of columns. */
+function Lit({ part, hot, at, cols, xs, shift, dark, now }: {
+  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; xs: Float64Array; shift: number; dark: boolean; now: number;
+}) {
+  const i = hot.value === null ? undefined : at.get(hot.value);
+  if (i === undefined) return null;
+  const c = cols[i];
+  return (
+    <>
+      <div class="tt-veil" />
+      {part === "head"
+        ? <span class="tt-bullet on" style={{ left: GUTTER + xs[i] - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
+        : <Column c={c} x={xs[i]} cls={" on" + (c.t < now ? " past" : "")} shift={shift} dark={dark} />}
+    </>
+  );
 }
 
 /** A time as printed in the table, local: "742", "1008". */
 function printed(t: number, shift: number): string {
   const m = ((Math.floor((t + shift) / 60) % 1440) + 1440) % 1440;
   return String(Math.floor(m / 60)) + String(m % 60).padStart(2, "0");
+}
+
+/** The chart under the table, the only part of the table's tree that redraws on a hover. */
+function Chart({ hot, ...rest }: { hot: Signal<string | null> } & Omit<Parameters<typeof MareyBody>[0], "hot" | "onHot">) {
+  return <MareyBody {...rest} hot={hot.value} onHot={(k) => { hot.value = k; }} />;
 }
 
 /** The timetable of `axis` (its stops as rows) with `others`' trains where they run on its
@@ -245,6 +281,15 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
   const cols = both?.[dir] ?? [];
   const scale = useMemo(() => scaleOf(cols), [cols]);
   const xs = useMemo(() => placed(cols, scale, day0), [cols, scale, day0]);
+  // the train under the pointer, here or on the chart: read only by the parts that draw it, so a
+  // hover redraws neither the table nor the chart's trains
+  const hot = useMemo(() => signal<string | null>(null), []);
+  const colAt = useMemo(() => new Map(cols.map((c, i) => [c.key, i])), [cols]);
+  const onOver = (e: PointerEvent) => {
+    const k = (e.target as Element).closest?.("[data-k]")?.getAttribute("data-k") ?? null;
+    if (hot.value !== k) hot.value = k;
+  };
+  const onOut = () => { hot.value = null; };
   if (DEBUG) (window as unknown as { __tt?: unknown }).__tt = { cols: cols.length, hourPx: scale * HOUR, drift: drift(cols, scale), h0: ((Math.round((day0 + shift) / HOUR) % 24) + 24) % 24 };
   const width = Math.max(DAY * scale, cols.length ? xs[xs.length - 1] + COL : 0) + COL;
 
@@ -305,31 +350,29 @@ export function TrainTable({ axis, st, others = [], links, group, plotH, tools }
         {tools}
       </div>
       <div class="tt-scroll" ref={scroller} onScroll={onScroll} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
-        <div class="tt-inner" style={{ width: GUTTER + width + "px", height: HEAD + rowsH + "px" }}>
+        <div class="tt-inner" style={{ width: GUTTER + width + "px", height: HEAD + rowsH + "px" }} onPointerOver={onOver} onPointerLeave={onOut}>
           <div class="tt-head" style={{ height: HEAD + "px" }}>
             <div class="tt-corner" style={{ width: GUTTER + "px" }} />
             {marks.map((s) => (
               <span class={"tt-hour" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }}>{markText(h0, s)}</span>
             ))}
             {shown.map((c, i) => (
-              <span class="tt-bullet" style={{ left: GUTTER + xs[a + i] - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
+              <span class="tt-bullet" data-k={c.key} style={{ left: GUTTER + xs[a + i] - COL / 2 + "px", width: COL + "px", top: MARK_H + "px" }}><Bullet l={c.bullet} /></span>
             ))}
+            <Lit part="head" hot={hot} at={colAt} cols={cols} xs={xs} shift={shift} dark={dark} now={now} />
           </div>
           <div class="tt-body" style={{ height: rowsH + "px", "--row": ROW + "px" }}>
             <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames.map((s) => <span>{s}</span>)}</div>
             <span class="tt-now" style={{ left: GUTTER + (now - day0) * scale + "px" }} />
             {marks.map((s) => <span class={"tt-hour-rule" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }} />)}
-            {shown.map((c, i) => (
-              <div class={"tt-col" + (c.t < now ? " past" : "")} style={{ left: GUTTER + xs[a + i] - COL / 2 + "px", width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>
-                {Array.from(c.cells, (v) => <span class={v === PASS ? "pass" : undefined}>{v === PASS ? "|" : Number.isFinite(v) ? printed(v, shift) : ""}</span>)}
-              </div>
-            ))}
+            {shown.map((c, i) => <Column c={c} x={xs[a + i]} cls={c.t < now ? " past" : ""} shift={shift} dark={dark} />)}
+            <Lit part="body" hot={hot} at={colAt} cols={cols} xs={xs} shift={shift} dark={dark} now={now} />
           </div>
         </div>
       </div>
       <div class="tt-chart" onWheel={onWheel}>
         {vw > 0 && scale > 0 && (
-          <MareyBody key={axis.num} l={axis} st={st} links={links} width={vw + PAD_R} plotH={plotH} group={group}
+          <Chart hot={hot} key={axis.num} l={axis} st={st} links={links} width={vw + PAD_R} plotH={plotH} group={group} dir={dir}
             view={{ t0: day0 + left / scale, span: plotW / scale }} />
         )}
       </div>

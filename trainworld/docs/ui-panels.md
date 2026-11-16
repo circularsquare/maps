@@ -1230,7 +1230,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 ## Schedule panel
 
-[T-3346 stage 1, T-3469; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
+[T-3346 stage 1, T-3469, T-3475; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
 
 - **Hidden for players** unless the address has `?timetables` (v0.3.3, Anita 2026-11-13): no icon opens it, line or group.
 - **A line's**: opened from the fourth icon by a running rail line's schedule heading (a station timetable,
@@ -1260,7 +1260,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   (trains leaving seconds apart push one regardless).
 - **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") under the timetable,
   its stops 240 px tall, scaled by distance, its time axis the table's: the table's scroll moves it, the wheel over
-  it scrolls both, and it does not zoom.
+  it scrolls both, and it does not zoom. It draws the table's direction in front and the other direction dimmed
+  behind, every line of a group alike (another line's way by most of the track it shares). Hovering a train, its
+  column or its path, lights it in both and fades the rest (a veil over the table, the chart's trains at 35%).
 - **A group's**: from the group view's chart icon, for a group with two or more running rail lines. Heading the
   group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width, the longest line
   (by length) down the side, each other line's trains in the table at the stations it shares with it (a line

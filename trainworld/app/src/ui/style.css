@@ -221,6 +221,11 @@ svg .stroke2 { stroke-width: 2; }
 /* T-2660: other lines' trains, quieter than the line's own; flat junctions and crossings as dashed rules */
 .marey-chart .run.other { stroke-width: 1; stroke-opacity: 0.55; }
 .marey-chart .run.other.on { stroke-width: 2.4; stroke-opacity: 1; }
+/* T-3475: under a timetable, the way it doesn't show dimmed behind, and the rest faded while a train is hovered */
+.marey-chart .run.back { stroke-width: 1.2; stroke-opacity: 0.3; }
+.marey-chart .run.other.back { stroke-width: 1; stroke-opacity: 0.2; }
+.marey-layer { will-change: opacity; }
+.marey-chart.hot .marey-layer { opacity: 0.35; }
 .marey-pass { --run-ink: var(--run); fill: var(--run-ink); stroke: var(--bg); stroke-width: 1; }
 :root[data-shade="dark"] .marey-pass { --run-ink: color-mix(in srgb, var(--run) 65%, #fff); }
 .marey-flat { stroke: var(--text); stroke-opacity: 0.4; stroke-dasharray: 4 3; }
@@ -272,7 +277,8 @@ svg .stroke2 { stroke-width: 2; }
 .tt-hour { position: absolute; top: 2px; padding-left: 3px; color: var(--muted); border-left: 1px solid var(--shade); line-height: 10px; white-space: nowrap; }
 .tt-hour.full { color: var(--text); font-weight: 700; border-left-color: var(--rule); }
 .tt-bullet { position: absolute; display: flex; justify-content: center; }
-.tt-strip { display: block; width: 15px; padding: 2px 0; border-radius: 3px; background: var(--c); color: var(--ct); font-size: 10px; font-weight: 700; line-height: 11px; text-align: center; writing-mode: vertical-rl; text-orientation: upright; }
+.tt-strip { display: block; width: 15px; padding: 2px 0; border-radius: 3px; background: var(--c); color: var(--ct); font-size: 10px; font-weight: 700; line-height: 11px; text-align: center; }
+.tt-strip span { display: block; }
 .tt-body { position: relative; background-image: repeating-linear-gradient(to bottom, transparent 0 calc(5 * var(--row) - 1px), var(--rule) calc(5 * var(--row) - 1px) calc(5 * var(--row))); }
 .tt-names { position: sticky; left: 0; z-index: 2; background: var(--bg); background-image: inherit; }
 .tt-names span { display: block; height: var(--row); line-height: var(--row); padding-right: 8px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -283,7 +289,9 @@ svg .stroke2 { stroke-width: 2; }
 .tt-col .pass { color: var(--muted); }
 .tt-col.past { opacity: 0.5; }
 .tt-now { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--accent); }
-.tt-col:hover { background: var(--shade); opacity: 1; }
+.tt-veil { position: absolute; inset: 0; z-index: 1; background: var(--bg); opacity: 0.65; pointer-events: none; }
+.tt-col.on, .tt-bullet.on { z-index: 1; pointer-events: none; }
+.tt-col.on { background: var(--shade); opacity: 1; }
 .tt-chart { margin-top: 6px; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
