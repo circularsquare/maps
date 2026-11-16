@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3379 [P2] {L:single-track} Single track joined to a double drew a kink (2026-11-16): fixed, drawing only: a joined single piece shorter than the ease now fades back to its centre line. notes/T-3379.md.
+- T-3380 [P2] {L:single-track} Delete preview on single track drawn two tracks wide (2026-11-16): fixed, one track wide now. notes/T-3380.md.
+- T-3411 [P2] {L:single-track} One-platform station on one-way single track (2026-11-16): allowed at the end of single track too (the only refusal reproduced; mid-run already worked). notes/T-3411.md.
+- T-3386 [P2] {L:single-track} Inferred one-way lost at a station (2026-11-16): fixed; a station inside a run no longer makes it two-way (a station at a bare end still does). notes/T-3386.md.
+- T-3383 [P2] {L:single-track} "Busy single track" in the line panel (2026-11-16): "Waiting at busy single track" and "On the single track near X" where most waiting is on single track; the 24m00s was an ordinary overloaded delay, not a cap. notes/T-3383.md.
 - T-3425 [P1] {L:board} A more compact board (2026-11-16): strip of agents, worktrees and builds packed one row each (389 to 94 px tall); task fields inline behind icons; priority one colour everywhere (pill, bar under each task, tinted select); changelog items one line each with an eye toggle; tighter spacing. notes/T-3391.md.
 - T-3420 [P2] {L:map-look} Hide lines and track levels (2026-11-16): built to her design. An eye button on the Lines tab shows an eye per line and group, "Show all" appears in reserved space when any is hidden; Settings "Show levels" hides levels with the +3 to -3 buttons, and clicks pass over hidden pieces. Hidden lines run as before and are saved; hidden levels last while the page is open. Line bundles left as next in the notes. notes/T-3420.md.
 - T-202 [P3] {L:route-choice} Rethink the 100 m station merge (2026-11-16): closed on Anita's word; notes/T-161.md had already decided the merge stays. notes/someday.md.

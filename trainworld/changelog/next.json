@@ -11,6 +11,96 @@
       "by": "visibility",
       "at": "2026-11-16T13:32:56Z",
       "rev": 1
+    },
+    {
+      "id": "c002",
+      "text": "fixed a sideways jog where a short single track joins one track of a double",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3379",
+      "by": "bugs1",
+      "at": "2026-11-16T13:47:15Z",
+      "rev": 1
+    },
+    {
+      "id": "c003",
+      "text": "fixed the delete preview showing single track two tracks wide",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3380",
+      "by": "bugs1",
+      "at": "2026-11-16T13:47:16Z",
+      "rev": 1
+    },
+    {
+      "id": "c004",
+      "text": "one platform stations can go at the end of single track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3411",
+      "by": "bugs1",
+      "at": "2026-11-16T13:47:17Z",
+      "rev": 1
+    },
+    {
+      "id": "c005",
+      "text": "fixed a station turning one-way single track into two-way track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3386",
+      "by": "bugs1",
+      "at": "2026-11-16T13:47:18Z",
+      "rev": 1
+    },
+    {
+      "id": "c006",
+      "text": "the line panel says single track when trains wait on single track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3383",
+      "by": "bugs1",
+      "at": "2026-11-16T13:47:19Z",
+      "rev": 1
+    },
+    {
+      "id": "c007",
+      "text": "a station built next to another in a complex now shows the shared name in the notice",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3381",
+      "by": "bugs2",
+      "at": "2026-11-16T13:50:47Z",
+      "rev": 1
+    },
+    {
+      "id": "c008",
+      "text": "fixed lines running over flyover legs that were still blueprint; construct line now builds the way back too",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3422",
+      "by": "bugs2",
+      "at": "2026-11-16T13:50:48Z",
+      "rev": 1
+    },
+    {
+      "id": "c009",
+      "text": "the profit map now shows the other leg of single track and flyover splits",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3403",
+      "by": "bugs2",
+      "at": "2026-11-16T13:50:49Z",
+      "rev": 1
+    },
+    {
+      "id": "c010",
+      "text": "the too close to the end of the track message now says what it needs",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3412",
+      "by": "bugs2",
+      "at": "2026-11-16T13:50:50Z",
+      "rev": 1
     }
   ]
 }
