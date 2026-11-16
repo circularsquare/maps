@@ -204,6 +204,9 @@ export function SettingsTab() {
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           {t("settingsTab.runInBackground")}
         </Check>
+        <Check checked={d.recalcWhilePaused} onChange={(v) => setDisplay("recalcWhilePaused", v)}>
+          {t("settingsTab.recalcWhilePaused")}
+        </Check>
         {mobileDevice() && (
           <Check checked={d.mobileIntercity} onChange={(v) => setDisplay("mobileIntercity", v)}>
             <span data-tip={t("settingsTab.mobileIntercityTip")}>{t("settingsTab.mobileIntercity")}</span>

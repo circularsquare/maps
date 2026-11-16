@@ -68,6 +68,7 @@ import {
   demandAskTurn,
   editsSettling,
   lineLoadsFor,
+  demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevice } from "./deviceMemory";
@@ -3513,6 +3514,7 @@ class DemandClient {
   submitNetwork(snap: NetworkSnapshot) {
     let svc = serviceFromSnapshot(snap);
     const key = keyOf(svc);
+    if (this.pauseHolds(snap, key)) return;
     // the first network after a whole-game load is the one the clock waits for (T-149)
     const gameLoad = takeGameLoadHold();
     if (gameLoad) this.hold = {};
@@ -3577,6 +3579,34 @@ class DemandClient {
     // already if it was found ahead of the network, T-1539)
     if (this.hold && this.cacheOn && !(early?.shown && svc === early.svc)) void this.tryCache(svc);
     else if (this.hold && this.cacheShown()) this.checkHold(); // (T-2560: shown ahead of the network)
+  }
+
+  // --- T-3427: edits made while paused, solved once the game runs ---
+
+  /** the newest network held while paused, or null */
+  private pausedSnap: NetworkSnapshot | null = null;
+  private pauseWatch: (() => void) | null = null;
+
+  /** Whether `snap` waits for the game to run ("Recalculate trips while paused" off and the game paused).
+   * A game's own load never waits, nor a network demand reads the same as the one in hand. */
+  private pauseHolds(snap: NetworkSnapshot, key: string): boolean {
+    const waits = !display.peek().recalcWhilePaused && !clock.running.peek();
+    if (!waits || gameLoadArmed() || this.failed || key === this.lastKey) {
+      this.pausedSnap = null;
+      demandHeld.value = false;
+      return false;
+    }
+    this.pausedSnap = snap;
+    demandHeld.value = true;
+    this.pauseWatch ??= effect(() => {
+      if (!display.value.recalcWhilePaused && !clock.running.value) return;
+      const s = this.pausedSnap;
+      this.pausedSnap = null;
+      demandHeld.value = false;
+      // (outside the effect, so the solve's own signal reads are not tracked here)
+      if (s) queueMicrotask(() => { if (!gameLoadArmed()) this.submitNetwork(s); });
+    });
+    return true;
   }
 
   // --- T-1539: a loading save's cached result, shown before its network arrives ---

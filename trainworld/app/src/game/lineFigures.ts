@@ -6,7 +6,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { editStamp, lineStopped, quietEdits, resetEdits, wideCovered, wideEdits } from "./editCap";
-import { demandBehindFrom, demandUpdating, finalWorld, networkWorld } from "./demand";
+import { demandBehindFrom, demandHeld, demandUpdating, finalWorld, networkWorld } from "./demand";
 import { demandStopped, loadProgress } from "./loading";
 import { openedZones } from "./openedZones";
 import { world } from "./world";
@@ -68,7 +68,8 @@ export function startLineFigures() {
   effect(() => {
     const stamp = editStamp.value;
     const t = setTimeout(() => {
-      if (editStamp.peek() !== stamp || demandUpdating.peek()) return;
+      // (T-3427: edits held while paused are solved once the game runs)
+      if (editStamp.peek() !== stamp || demandUpdating.peek() || demandHeld.peek()) return;
       resetEdits();
       if (demandBehindFrom.peek() === null) wideCovered();
     }, FORGET_EDITS_MS);
@@ -110,7 +111,7 @@ export function startLineFigures() {
     linesPending.value = set;
     // T-2658: an edit no network came for (nothing demand reads changed) leaves the figures as they are
     setTimeout(() => {
-      if (!demandUpdating.peek() && networkWorld.peek() < w.version) settleAll(w.version);
+      if (!demandUpdating.peek() && !demandHeld.peek() && networkWorld.peek() < w.version) settleAll(w.version);
     }, NO_SOLVE_MS);
   });
 

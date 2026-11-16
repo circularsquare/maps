@@ -214,6 +214,14 @@ Web first, so it can be shared as a link.
   hour, and the demand level effects that follow the minute) catches up at the first frame back.
   Hours that pass hidden pay their fares evenly within the hour (no boarding hour was worked out for
   them), with the same whole-hour totals. Station faces and sounds stop while hidden either way.
+- **Editing while paused** [T-3427; `workers/demandClient.ts` `pauseHolds`]: with "Recalculate trips while
+  paused" off (Settings, on by default) and the game paused, the clock worker's network snapshots stop at the
+  demand client, the newest kept; edits still apply, draw and cost as usual. Pressing play (or turning the
+  setting back on) sends the newest one, so one solve covers every edit made meanwhile. A game's own load and a
+  network demand reads the same as the one in hand are never held. Meanwhile the shown figures are from before
+  the edits: edited lines keep their pending label, the status tag says "Trips recalculate when you unpause"
+  with no bar, and the edit note's profit estimate (`game/profitEstimate.ts`) still shows. A save made then
+  holds the edits; its demand cache is the older network's, so loading it solves afresh.
 
 ### Workers
 

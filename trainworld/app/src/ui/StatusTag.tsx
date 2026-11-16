@@ -3,7 +3,7 @@
 // Its hover says more. T-2693: a thin bar in every case (see `share` below); no ring since T-2728.
 
 import { computed, effect, signal } from "@preact/signals";
-import { demandBehindFrom, demandScope, demandStep, demandSolving, demandWork, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
+import { demandBehindFrom, demandHeld, demandScope, demandStep, demandSolving, demandWork, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
@@ -186,6 +186,8 @@ export function StatusTag() {
     : !demandView.value ? (demandIdle.value ? null : t("statusTag.loadingDataDots")) // T-318: nothing to load over dead space
     // T-1493: the zone in view has figures but its bubbles are still on their way
     : bubblesWaiting.value ? t("statusTag.loadingDataDots")
+    // T-3427: edits made while paused, held for the game to run ("Recalculate trips while paused" off)
+    : demandHeld.value ? t("statusTag.heldPaused")
     // T-2523: a click whose answer waits says what the game is working on
     : clickWait.value ? waitText(clickWait.value)
     : behindDays.value >= 1 ? t("statusTag.behind", { count: behindDays.value })
@@ -196,6 +198,11 @@ export function StatusTag() {
     // T-2622: the clock capped for an edit whose figures elsewhere are not in, the zone in view final
     : clock.capped.value ? t("statusTag.calculatingAfterChange") : null;
   if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); return null; }
+  // T-3427: edits held while paused: nothing is working, so a hover and no bar
+  if (demandHeld.value && busy === t("statusTag.heldPaused")) {
+    trackWait(null); stopWaitTimer(); tickSlow(false);
+    return <div class="status-tag" role="status" data-tip={t("statusTag.heldPausedTip")}><span class="demand-busy">{busy}</span></div>;
+  }
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
   const onMap = !onTerrain && busy === mapWait;
   const base = onMap ? "" : onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")

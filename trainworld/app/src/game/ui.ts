@@ -97,6 +97,9 @@ export interface DisplaySettings {
   moreCores: boolean;
   /** T-826: the clock keeps running while the page is hidden (game/clock.ts) */
   runInBackground: boolean;
+  /** T-3427: edits made while the game is paused start a demand solve; off, one solve covers them once
+   * the game runs (workers/demandClient.ts `pauseHolds`) */
+  recalcWhilePaused: boolean;
   /** T-033: the map as the flat map or as a globe (MapLibre's, flat again from zoom 12) */
   projection: "flat" | "globe";
   /** T-3249: satellite imagery under the game instead of the drawn basemap (map/basemap.ts `setSatellite`) */
@@ -159,6 +162,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   currency: defaultCurrency(),
   moreCores: false,
   runInBackground: false,
+  recalcWhilePaused: true,
   projection: "flat",
   satellite: false,
   lineWidth: 1,
