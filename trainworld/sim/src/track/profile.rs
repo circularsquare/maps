@@ -98,8 +98,37 @@ fn push(out: &mut Vec<Phase>, t: f64, s: f64, v: f64, a: f64) {
     out.push(Phase { t, s, v, a });
 }
 
+struct Sink<'a>(Option<&'a mut Vec<Phase>>);
+
+impl Sink<'_> {
+    fn push(&mut self, t: f64, s: f64, v: f64, a: f64) {
+        if let Some(out) = self.0.as_deref_mut() {
+            push(out, t, s, v, a);
+        }
+    }
+}
+
+#[derive(Default)]
+struct Scratch {
+    cuts: Vec<f64>,
+    iv: Vec<(f64, f64, f64)>,
+    fw: Vec<f64>,
+    bend: Vec<f64>,
+}
+
+thread_local! {
+    static SCRATCH: std::cell::RefCell<Scratch> = Default::default();
+}
+
+fn with_scratch<T>(f: impl FnOnce(&mut Scratch) -> T) -> T {
+    let mut s = SCRATCH.with(|c| std::mem::take(&mut *c.borrow_mut()));
+    let out = f(&mut s);
+    SCRATCH.with(|c| *c.borrow_mut() = s);
+    out
+}
+
 /// Accelerate from offset x0 (speed² u2) to x1.
-fn accel(out: &mut Vec<Phase>, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
+fn accel(out: &mut Sink, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
     if x1 <= x0 + 1e-12 {
         return t;
     }
@@ -112,7 +141,7 @@ fn accel(out: &mut Vec<Phase>, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
         reach += (end - from) / (2.0 * a);
         let e = x1.min(x0 + reach);
         let v1 = acc_v2(u2, e - x0).sqrt();
-        push(out, t, s, v0, a);
+        out.push(t, s, v0, a);
         t += (v1 - v0) / a;
         if x1 <= x0 + reach {
             return t;
@@ -126,24 +155,27 @@ fn accel(out: &mut Vec<Phase>, mut t: f64, x0: f64, x1: f64, u2: f64) -> f64 {
 }
 
 /// Brake from x0 to x1, ending at speed² w2.
-fn brake(out: &mut Vec<Phase>, t: f64, x0: f64, x1: f64, w2: f64) -> f64 {
+fn brake(out: &mut Sink, t: f64, x0: f64, x1: f64, w2: f64) -> f64 {
     if x1 <= x0 + 1e-12 {
         return t;
     }
     let v0 = (w2 + 2.0 * BRAKE * (x1 - x0)).sqrt();
     let v1 = w2.max(0.0).sqrt();
-    push(out, t, x0, v0, -BRAKE);
+    out.push(t, x0, v0, -BRAKE);
     t + (v0 - v1) / BRAKE
 }
 
 /// From standstill at the first interval's start to standstill at the last one's end, through
 /// intervals `(x0, x1, v_limit)`. Returns the end time.
-fn segment(iv: &[(f64, f64, f64)], mut t: f64, out: &mut Vec<Phase>) -> f64 {
+fn segment(iv: &[(f64, f64, f64)], fw: &mut Vec<f64>, bend: &mut Vec<f64>, mut t: f64, out: &mut Sink) -> f64 {
     let m = iv.len();
     if m == 0 {
         return t;
     }
-    let mut fw = vec![0.0; m];
+    fw.clear();
+    fw.resize(m, 0.0);
+    bend.clear();
+    bend.resize(m, 0.0);
     let mut f = 0.0f64;
     for k in 0..m {
         let v2 = iv[k].2 * iv[k].2;
@@ -151,7 +183,6 @@ fn segment(iv: &[(f64, f64, f64)], mut t: f64, out: &mut Vec<Phase>) -> f64 {
         fw[k] = u;
         f = acc_v2(u, iv[k].1 - iv[k].0).min(v2);
     }
-    let mut bend = vec![0.0; m];
     let mut b = 0.0f64;
     for k in (0..m).rev() {
         let v2 = iv[k].2 * iv[k].2;
@@ -167,7 +198,7 @@ fn segment(iv: &[(f64, f64, f64)], mut t: f64, out: &mut Vec<Phase>) -> f64 {
         if s_fv <= s_bv {
             t = accel(out, t, xa, s_fv, u2);
             if s_bv > s_fv {
-                push(out, t, s_fv, vl, 0.0);
+                out.push(t, s_fv, vl, 0.0);
                 t += (s_bv - s_fv) / vl;
             }
             t = brake(out, t, s_bv, xb, w2);
@@ -210,8 +241,11 @@ pub fn limit_at(limits: &[[f64; 2]], s: f64) -> f64 {
 }
 
 /// Elementary intervals over `[a, b]`: the limits, lowered inside slow zones `(z0, z1, v)`.
-fn intervals(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)]) -> Vec<(f64, f64, f64)> {
-    let mut cuts = vec![a, b];
+fn intervals(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)]) {
+    let cuts = &mut sc.cuts;
+    cuts.clear();
+    cuts.push(a);
+    cuts.push(b);
     for l in limits {
         if l[0] > a && l[0] < b {
             cuts.push(l[0]);
@@ -226,7 +260,8 @@ fn intervals(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)]) -> 
     }
     cuts.sort_by(|x, y| x.total_cmp(y));
     cuts.dedup_by(|x, y| (*x - *y).abs() < 1e-9);
-    let mut out: Vec<(f64, f64, f64)> = Vec::with_capacity(cuts.len());
+    let out = &mut sc.iv;
+    out.clear();
     for w in cuts.windows(2) {
         let m = 0.5 * (w[0] + w[1]);
         let mut v = limit_at(limits, m);
@@ -240,27 +275,30 @@ fn intervals(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)]) -> 
             _ => out.push((w[0], w[1], v)),
         }
     }
-    out
 }
 
 /// One hop from a stop at `a` to a stop at `b`, with slow zones and intermediate standstills
 /// `(s, stand seconds)` (sorted). Returns the arrival time.
-fn hop(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], mut t: f64, out: &mut Vec<Phase>) -> f64 {
+fn hop(sc: &mut Scratch, limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], mut t: f64, out: &mut Sink) -> f64 {
     let mut from = a;
     for &(s, stand) in mids {
-        t = segment(&intervals(limits, from, s, zones), t, out);
+        t = {
+            intervals(sc, limits, from, s, zones);
+            segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out)
+        };
         if stand > 0.0 {
-            push(out, t, s, 0.0, 0.0);
+            out.push(t, s, 0.0, 0.0);
             t += stand;
         }
         from = s;
     }
-    segment(&intervals(limits, from, b, zones), t, out)
+    intervals(sc, limits, from, b, zones);
+    segment(&sc.iv, &mut sc.fw, &mut sc.bend, t, out)
 }
 
-fn hop_time(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)], scratch: &mut Vec<Phase>) -> f64 {
-    scratch.clear();
-    hop(limits, a, b, zones, mids, 0.0, scratch)
+fn hop_time(limits: &[[f64; 2]], a: f64, b: f64, zones: &[(f64, f64, f64)], mids: &[(f64, f64)]) -> f64 {
+    let mut none = Sink(None);
+    with_scratch(|sc| hop(sc, limits, a, b, zones, mids, 0.0, &mut none))
 }
 
 /// Each hop's motion with no holds, standstill to standstill, timed from 0, and its duration:
@@ -273,7 +311,10 @@ pub fn hops(limits: &[[f64; 2]], stops: &[f64], jump: &[f64]) -> Hops {
     let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
     Hops((0..stops.len().saturating_sub(1)).map(|i| {
         let mut out = vec![];
-        let d = hop(limits, leave(i), stops[i + 1], &[], &[], 0.0, &mut out);
+        let d = {
+            let mut sink = Sink(Some(&mut out));
+            with_scratch(|sc| hop(sc, limits, leave(i), stops[i + 1], &[], &[], 0.0, &mut sink))
+        };
         (out, d)
     }).collect())
 }
@@ -299,7 +340,6 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
     let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
     p.dwell = dw[1..n - 1].iter().sum();
     let mut per_hop: Vec<Vec<Hold>> = vec![vec![]; n - 1];
-    let mut scratch = Vec::new();
     // spread holds: one lowered speed over their span, the same in every hop they cover
     let mut hop_zones: Vec<Vec<(f64, f64, f64)>> = vec![vec![]; n - 1];
     for h in holds.iter().filter(|h| h.span > 0.0 && h.delay >= HOLD_MIN_S) {
@@ -317,19 +357,19 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             p.hold += h.delay;
             continue;
         };
-        let base: f64 = parts.iter().map(|&(i, ..)| hop_time(limits, leave(i), stops[i + 1], &hop_zones[i], &[], &mut scratch)).sum();
-        let extra = |vc: f64, scratch: &mut Vec<Phase>| {
+        let base: f64 = parts.iter().map(|&(i, ..)| hop_time(limits, leave(i), stops[i + 1], &hop_zones[i], &[])).sum();
+        let extra = |vc: f64| {
             parts
                 .iter()
                 .map(|&(i, z0, z1)| {
                     let mut z = hop_zones[i].clone();
                     z.push((z0, z1, vc));
-                    hop_time(limits, leave(i), stops[i + 1], &z, &[], scratch)
+                    hop_time(limits, leave(i), stops[i + 1], &z, &[])
                 })
                 .sum::<f64>()
                 - base
         };
-        let most = extra(FOLLOW_CRAWL_MIN_V, &mut scratch);
+        let most = extra(FOLLOW_CRAWL_MIN_V);
         let vc = if most <= h.delay {
             // too much to run off: the rest waits at the stop before the span
             dw[i_first] += h.delay - most;
@@ -338,7 +378,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             let (mut lo, mut hi) = (FOLLOW_CRAWL_MIN_V, limits.iter().map(|l| l[1]).fold(V_TOP, f64::max));
             for _ in 0..50 {
                 let mid = 0.5 * (lo + hi);
-                let e = extra(mid, &mut scratch);
+                let e = extra(mid);
                 if (e - h.delay).abs() < 0.05 {
                     (lo, hi) = (mid, mid);
                     break;
@@ -382,18 +422,20 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         let mut zones: Vec<(f64, f64, f64)> = std::mem::take(&mut hop_zones[i]);
         let mut mids: Vec<(f64, f64)> = vec![];
         for h in &per_hop[i] {
-            let base = hop_time(limits, a, b, &zones, &mids, &mut scratch);
+            let base = hop_time(limits, a, b, &zones, &mids);
             let mut with_stop = mids.clone();
             let k = with_stop.partition_point(|m| m.0 < h.s);
             with_stop.insert(k, (h.s, 0.0));
-            let loss = hop_time(limits, a, b, &zones, &with_stop, &mut scratch) - base;
+            let loss = hop_time(limits, a, b, &zones, &with_stop) - base;
             let z0 = (h.s - CRAWL_ZONE_M).max(mids.iter().map(|m| m.0).filter(|&s| s < h.s).fold(a, f64::max) + 1.0);
-            let crawl = |vc: f64, scratch: &mut Vec<Phase>| {
-                let mut z = zones.clone();
-                z.push((z0, h.s, vc));
-                hop_time(limits, a, b, &z, &mids, scratch) - base
+            let mut z = zones.clone();
+            z.push((z0, h.s, 0.0));
+            let last = z.len() - 1;
+            let mut crawl = |vc: f64| {
+                z[last].2 = vc;
+                hop_time(limits, a, b, &z, &mids) - base
             };
-            if h.delay >= loss || z0 >= h.s - 1.0 || crawl(0.5, &mut scratch) < h.delay {
+            if h.delay >= loss || z0 >= h.s - 1.0 || crawl(0.5) < h.delay {
                 with_stop[k].1 = (h.delay - loss).max(0.0);
                 mids = with_stop;
             } else {
@@ -401,7 +443,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
                 let (mut lo, mut hi) = (0.5, limits.iter().map(|l| l[1]).fold(V_TOP, f64::max));
                 for _ in 0..40 {
                     let mid = 0.5 * (lo + hi);
-                    let extra = crawl(mid, &mut scratch);
+                    let extra = crawl(mid);
                     if (extra - h.delay).abs() < 0.1 {
                         (lo, hi) = (mid, mid);
                         break;
@@ -423,7 +465,10 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
                 }
                 t += d;
             }
-            None => t = hop(limits, a, b, &zones, &mids, t, &mut out),
+            None => {
+                let mut sink = Sink(Some(&mut out));
+                t = with_scratch(|sc| hop(sc, limits, a, b, &zones, &mids, t, &mut sink));
+            }
         }
         p.arr.push(t);
         if i + 1 < n - 1 {
