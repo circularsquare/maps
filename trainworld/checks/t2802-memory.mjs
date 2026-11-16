@@ -1,7 +1,7 @@
 // T-2802: where an emulated phone's memory goes, by process and by JS context (the page and each worker), through
 // a new game's load and the tutorial's first line. Run against a scratch production build (the dev server's own
 // weight misleads; notes/T-2802.md says how):
-//   TW_CORES=4 LABEL=before [LOWEND=1] [DUMP=1] node trainworld/checks/t2802-memory.mjs http://127.0.0.1:6211/
+//   TW_CORES=4 LABEL=before [LOWEND=1] [DESKTOP=1] [DUMP=1] node trainworld/checks/t2802-memory.mjs http://127.0.0.1:6211/
 // The flow is t2794-mobile-memory.mjs's: start menu, "Start in New York", demand's final, camera moves, then a
 // three-station line with the clock running 45 s. Every second: Chrome's private bytes by process type, and each
 // context's V8 heap (used) and ArrayBuffer backing stores (WASM memories included) from Runtime.getHeapUsage over a
@@ -15,6 +15,8 @@ import { ARTIFACTS, GL, launchChrome, collectErrors, playwright } from './lib.mj
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:6211/';
 const LABEL = process.env.LABEL ?? 'run', QS = process.env.QS ?? '', NOGC = !!process.env.NOGC;
+// DESKTOP=1 (T-3160): a 1400 x 900 desktop window, no phone emulation, 3 solving workers (DW= to change)
+const DESKTOP = !!process.env.DESKTOP, DW = process.env.DW ?? (DESKTOP ? '3' : '1');
 const OUT = join(ARTIFACTS, 't2802');
 const MB = 1048576;
 const PORT = 9300 + Math.floor(Math.random() * 500);
@@ -131,7 +133,7 @@ await mkdir(OUT, { recursive: true });
 const { devices } = await playwright();
 const phone = { ...devices['Pixel 7'], deviceScaleFactor: 3 };
 delete phone.defaultBrowserType;
-const options = { size: [phone.viewport.width, phone.viewport.height], ...phone };
+const options = DESKTOP ? { size: [1400, 900] } : { size: [phone.viewport.width, phone.viewport.height], ...phone };
 delete options.viewport;
 const chrome = await launchChrome({ prefix: 'tw-t2802-', args: [...GL, `--remote-debugging-port=${PORT}`, ...(process.env.LOWEND ? ['--enable-low-end-device-mode'] : [])], ...options });
 const raw = await rawCdp(PORT);
@@ -168,12 +170,12 @@ try {
     console.log('    used+backing+wasm', r.ctx.map(([n, u, b, w]) => `${n} ${u}+${b}+${w}`).join(', '));
     if (process.env.DUMP && !NOGC) dumps[where] = await memoryDump(cdp, where);
   };
-  await page.goto(`${BASE}?debug=1&demandWorkers=1${QS}&v=${Date.now()}`);
+  await page.goto(`${BASE}?debug=1&demandWorkers=${DW}${QS}&v=${Date.now()}`);
   await page.waitForSelector('.start-menu .new-game', { timeout: 180000 });
   await page.waitForTimeout(3000);
   await measure('menu');
   stage = 'load';
-  await page.tap('.start-menu .new-game .start-new');
+  await (DESKTOP ? page.click('.start-menu .new-game .start-new') : page.tap('.start-menu .new-game .start-new'));
   const ready = page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client && !document.querySelector('.start-menu') && document.querySelector('.guide'), undefined, { timeout: 240000 });
   if ((await Promise.race([ready, crashed])) === 'crash') throw new Error('page crashed during load');
   stage = 'demand';
@@ -221,7 +223,7 @@ try {
 } finally {
   sampling = false;
   await sampler;
-  await writeFile(join(OUT, `${LABEL}.json`), JSON.stringify({ label: LABEL, qs: QS, lowend: !!process.env.LOWEND, peak, stages, dumps, timeline, errors }, null, 1));
+  await writeFile(join(OUT, `${LABEL}.json`), JSON.stringify({ label: LABEL, qs: QS, desktop: DESKTOP, lowend: !!process.env.LOWEND, peak, stages, dumps, timeline, errors }, null, 1));
   raw.close();
   await chrome.close();
 }

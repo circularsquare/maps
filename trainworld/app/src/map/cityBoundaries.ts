@@ -14,7 +14,8 @@ import { mapBlank } from "../game/loading";
 import { outsidePaint, SHADES, shadeColours } from "../game/shades";
 import { mapShade } from "../game/ui";
 import { cityGeometry, footprintRings, OutlineEdges, outsideCity, outsideOutline, unionOutline } from "./boundaryGeometry";
-import { coarseOutlines, coarseWater } from "./coarseOutlines";
+import { coarseOutlines, coarseWater, packedOutlines, type PackedOutlines } from "./coarseOutlines";
+import { CoarseEdges, coarseTopology, type CoarseTopology } from "./coarseEdges";
 import { smallDevice } from "../workers/deviceMemory";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
@@ -34,6 +35,22 @@ const OUTLINE_MIN_ZOOM = Math.max(5, ZONE_LOAD_ZOOM);
 /** zones' outlines sent to the map in one task (T-1026) */
 const OUTLINES_A_TASK = 100;
 const empty: FeatureCollection = { type: "FeatureCollection", features: [] };
+/** T-3491: the coarse outlines' shared borders from a worker that ends with its answer; on the main thread if none
+ * starts */
+function topologyOf(p: PackedOutlines): Promise<CoarseTopology> {
+  return new Promise((done) => {
+    let w: Worker;
+    const here = () => { w?.terminate(); done(coarseTopology(p)); };
+    try {
+      w = new Worker(new URL("../workers/outlineTopo.worker.ts", import.meta.url), { type: "module" });
+    } catch {
+      return here();
+    }
+    w.onmessage = (e: MessageEvent<CoarseTopology>) => { w.terminate(); done(e.data); };
+    w.onerror = (e) => { console.warn("Outline worker failed", e.message); here(); };
+    w.postMessage(p);
+  });
+}
 const everywhere = outsideCity({ type: "MultiPolygon", coordinates: [] });
 /** The one shade of "not the zone in view": outside the focused zone, and (T-350) a zone still
  * loading; the theme's own (game/shades.ts, T-543). */
@@ -136,8 +153,10 @@ export function startCityBoundaries(map: MlMap): () => void {
   // the outlines drawn, shared borders once; the source is set again as each zone arrives
   const edges = new OutlineEdges();
   const asked = new Set<string>();
-  // zones drawn from the coarse file (T-800) until their own boundary arrives
+  // zones drawn from the coarse file (T-800) until their own boundary arrives: on a small device in `edges`, near
+  // the view; elsewhere every zone in `coarseEdges` (T-3491)
   const coarse = new Set<string>();
+  let coarseEdges: CoarseEdges | null = null;
   // T-871: only the zones within a view's width of the screen are drawn, so a redraw costs what is
   // near, not every outline fetched on a long pan
   let around = new Set<string>();
@@ -152,7 +171,10 @@ export function startCityBoundaries(map: MlMap): () => void {
   let want = new Map<string, Feature>(), sent = new Map<string, Feature>();
   let pushing = 0;
   const drawn = () => {
-    const lines = edges.lines(activeCity.peek(), perfOff("zoneZoom") ? undefined : around);
+    // T-3491: none behind the start menu, where the layer is hidden
+    const only = mapBlank.peek() ? new Set<string>() : perfOff("zoneZoom") ? undefined : around;
+    const lines = edges.lines(activeCity.peek(), only);
+    if (coarseEdges) lines.features.push(...coarseEdges.lines(activeCity.peek(), only));
     want = new Map(lines.features.map((f) => [f.properties!.id as string, f]));
     return lines;
   };
@@ -169,7 +191,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (add.length === OUTLINES_A_TASK) pushing = window.setTimeout(push);
   };
   const redraw = () => {
-    if (!edges.size || !map.getSource(OUTLINES)) return;
+    if ((!edges.size && !coarseEdges) || !map.getSource(OUTLINES)) return;
     drawn();
     if (!pushing) push();
   };
@@ -199,16 +221,13 @@ export function startCityBoundaries(map: MlMap): () => void {
       if (alive) follow();
       return;
     }
-    let n = 0;
-    // in slices of about 30 ms, so startup never waits on one long task
-    for (const [id, g] of zones) {
-      if (!alive) return;
-      if (!edges.has(id)) {
-        edges.add(id, g);
-        coarse.add(id);
-      }
-      if (++n % 40 === 0) await new Promise((done) => setTimeout(done));
-    }
+    const packed = await packedOutlines();
+    if (!packed || !alive) return;
+    const t = await topologyOf(packed);
+    if (!alive) return;
+    coarseEdges = new CoarseEdges(packed, t);
+    // the zones whose own outline came first
+    for (const id of asked) if (edges.has(id)) coarseEdges.set(id, false);
     redraw();
   });
   const near = () => {
@@ -232,6 +251,7 @@ export function startCityBoundaries(map: MlMap): () => void {
       geometry(id).then((g) => {
         if (!alive) return;
         if (coarse.delete(id)) edges.remove(id);
+        coarseEdges?.set(id, false);
         edges.add(id, g);
         redrawSoon();
       }, (error) => { asked.delete(id); console.warn("City outline unavailable", error); });
@@ -283,7 +303,7 @@ export function startCityBoundaries(map: MlMap): () => void {
     if (!styleUp(map)) return;
     for (const id of [SHADE, OUTLINES, INNER, OUTER]) if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visibility);
   };
-  const disposeBlank = effect(() => { void mapBlank.value; showUnlessBlank(); });
+  const disposeBlank = effect(() => { void mapBlank.value; showUnlessBlank(); redraw(); });
   map.on("style.load", add);
   map.on("moveend", follow);
   if (map.isStyleLoaded()) add();

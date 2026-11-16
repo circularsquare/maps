@@ -7,7 +7,6 @@ import { dataUrl } from "../game/dataBase";
 import { setOutlineLookup, zonesTouching, ZONE_REACH_M, type CityId } from "../game/cities";
 import { M_PER_DEG } from "../game/frame";
 import { atZero, cellSays, cellsSayInside, distanceTo, type Footprint } from "../workers/cityReach";
-import { smallDevice } from "../workers/deviceMemory";
 import { patientFetch } from "../workers/patientFetch";
 
 /** `water` (T-1145): each coastal zone's sea, a little into its own land, for the focused zone's shade */
@@ -80,9 +79,9 @@ function polygons(rings: ArrayLike<number>[], q: number): MultiPolygon {
   };
 }
 
-/** T-2794: the outlines on a small device. Every zone's rings stay as the file's deltas in typed arrays (about
- * 8 MB in all) and become a MultiPolygon when asked for, the last few kept, where the decoded polygons of the
- * whole world take over 50 MB of a phone's page. */
+/** T-2794, T-3491: the outlines. Every zone's rings stay as the file's deltas in typed arrays (about 8 MB in all)
+ * and become a MultiPolygon when asked for, the last few kept, where the decoded polygons of the whole world take
+ * over 50 MB of a page. */
 class CompactOutlines implements Outlines {
   private recent = new Map<string, MultiPolygon>();
   constructor(private rings: Map<string, Int32Array[]>, private q: number) {}
@@ -99,7 +98,7 @@ class CompactOutlines implements Outlines {
     if (!r) return undefined;
     g = polygons(r, this.q);
     this.recent.set(id, g);
-    if (this.recent.size > 16) this.recent.delete(this.recent.keys().next().value as string);
+    if (this.recent.size > 64) this.recent.delete(this.recent.keys().next().value as string);
     return g;
   }
   keys() { return this.rings.keys(); }
@@ -140,14 +139,10 @@ async function load(): Promise<{ zones: Outlines; water: Outlines; packed: Packe
   const out: { zones: Outlines; water: Outlines; packed: PackedOutlines | null } = { zones: new Map(), water: new Map(), packed: null };
   try {
     const { q, zones, water } = JSON.parse(await fetchText(dataUrl("outlines.json"))) as OutlineFile;
+    // T-3491: compact on every device; the decoded world took 61 MB of a desktop page
     out.packed = packedIn = pack(zones, q);
-    if (smallDevice()) {
-      out.zones = compact(out.packed);
-      out.water = compact(pack(water, q));
-    } else {
-      out.zones = new Map(Object.entries(zones).map(([id, rings]) => [id, polygons(rings, q)]));
-      out.water = new Map(Object.entries(water ?? {}).map(([id, rings]) => [id, polygons(rings, q)]));
-    }
+    out.zones = compact(out.packed);
+    out.water = compact(pack(water, q));
     placeBy((id) => out.zones.get(id)?.coordinates.flatMap((p) => p.map((r) => Float64Array.from(r.flat()))));
   } catch (error) {
     console.warn("Coarse zone outlines unavailable", error);
