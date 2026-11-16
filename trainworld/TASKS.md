@@ -341,7 +341,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
-- T-3435 [P2] {L:buses} Long-distance ferries recalibrated (taking, 2026-11-16, agent ferries)
+- T-3435 [P3] {L:buses} Long-distance ferries recalibrated (taking, 2026-11-16, agent ferries)
   - Context: Your scratch pad 2026-11-16: "long distance ferries kinda suck, probably need to make the "ferry fan" mechanism a bit more prominent especially for super long ferries. do a general recalibraiton of like how our ferries currently are relative to irl ferries... are they like NYC ferries? consider splitting ferries into 2 types, one for longer, not sure what would make sense / be realistic / get realistic usage"
   - Goal: A study and proposal for you: how our ferries compare with real ones (short city ferries and long routes), what the ferry fan does now, and whether a second, long-distance ferry type makes sense. Nothing built before you pick.
 - T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (taking, 2026-11-16, agent bugs3)
@@ -362,6 +362,21 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
+- T-3437 [P3] {L:translations} Hyogo shows as Osaka
+  - Context: Player report (board group "Place names wrong"), Japanese: picking Hyogo prefecture shows Osaka. Reach: few.
+  - Goal: Hyogo's zone and place name read Hyogo.
+- T-3438 [P3] {L:translations} Changshu shows its English name in Chinese
+  - Context: Player report (board group "Place names wrong"): the Chinese name of Changshu is 常熟 but the game shows Changshu. Reach: few.
+  - Goal: Changshu shows 常熟 in Chinese; check other zones with the same gap.
+- T-3439 [P3] {L:translations} Arnavutkoy shown as a city, not an Istanbul district
+  - Context: Player report (board group "Place names wrong"), Turkish: Arnavutkoy reads as a separate city. Reach: few.
+  - Goal: Arnavutkoy is named as an Istanbul district, or Anita says leave it.
+- T-3440 [P3] {L:accounts-server} Sharing a large network fails
+  - Context: Player report (board group "Sharing a large network fails"): share did not work, perhaps from the size. Reach: few.
+  - Goal: Find the share size limit and either raise it or say what to do when a network is too big.
+- T-3441 [P3] {L:track-drawing} Right-click on empty space leaves track mode
+  - Context: Player report (board group "Right-click leaves track mode"); Anita 2026-11-16: "right click on empty space". Reach: few.
+  - Goal: Right-clicking empty map while laying track ends track mode.
 - T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
   - Context: Your scratch pad 2026-11-16: "some people have noted that long distance train use doesn't actually seem to depend on feeders anymore. i've noticed this too which is kinda concerning, im pretty sure this used to not be the case. why is this?"
   - Goal: Find why long-distance rail use no longer depends on feeder lines, and whether it is a bug or a rule change; fix a bug, take a rule to you.
