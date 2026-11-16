@@ -583,7 +583,6 @@
   "community.stop": "Teilen beenden",
   "community.stopped": "Nicht mehr geteilt",
   "community.title": "Community",
-  "community.total": "{count, plural, one {# Netz} other {# Netze}}",
   "community.unlike": "Like zurücknehmen",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} von hier} work {{count} {words} {when} hierher} other {{count} {words} {when} von und nach hier}}",
   "commuterView.exploreTrip": "Klicke, um diese Reise zu erkunden",

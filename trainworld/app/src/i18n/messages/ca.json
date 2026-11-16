@@ -583,7 +583,6 @@
   "community.stop": "Retira",
   "community.stopped": "Ja no es comparteix",
   "community.title": "Comunitat",
-  "community.total": "{count, plural, one {# xarxa} other {# xarxes}}",
   "community.unlike": "Treu el m’agrada",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} que surten d’aquí} work {{count} {words} {when} que arriben aquí} other {{count} {words} {when} que surten d’aquí o hi arriben}}",
   "commuterView.exploreTrip": "Fes clic per explorar aquest desplaçament",

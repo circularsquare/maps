@@ -583,7 +583,6 @@
   "community.stop": "Paylaşmayı bırak",
   "community.stopped": "Artık paylaşılmıyor",
   "community.title": "Topluluk",
-  "community.total": "{count, plural, one {# ağ} other {# ağ}}",
   "community.unlike": "Beğeniyi geri al",
   "commuterView.bubble": "{end, select, home {Buradan {when} {count} {words}} work {Buraya {when} {count} {words}} other {Buraya ve buradan {when} {count} {words}}}",
   "commuterView.exploreTrip": "Bu yolculuğu keşfetmek için tıkla",

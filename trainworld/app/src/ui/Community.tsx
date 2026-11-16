@@ -325,7 +325,7 @@ function Browse() {
     {view === "top" && !error && rows && <p class="small muted cm-note-foot">{t("community.sandboxNote")}</p>}
     {rows && list.length > 0 && <div class="cm-pager">
       <button type="button" class="btn icon" aria-label={t("community.prev")} data-tip={t("community.prev")} disabled={page === 0} onClick={() => setPage(page - 1)}><Icon.goBack /></button>
-      <span class="small muted num">{page + 1} / {pages} · {t("community.total", { count: total })}</span>
+      <span class="small muted num">{page + 1} / {pages}</span>
       <button type="button" class="btn icon" aria-label={t("community.next")} data-tip={t("community.next")} disabled={page + 1 >= pages} onClick={() => setPage(page + 1)}><Icon.goOut /></button>
     </div>}
   </>;

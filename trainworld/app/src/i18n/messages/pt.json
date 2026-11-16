@@ -583,7 +583,6 @@
   "community.stop": "Parar de compartilhar",
   "community.stopped": "Não está mais compartilhada",
   "community.title": "Comunidade",
-  "community.total": "{count, plural, one {# rede} other {# redes}}",
   "community.unlike": "Descurtir",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} saindo daqui} work {{count} {words} {when} chegando aqui} other {{count} {words} {when} de e para aqui}}",
   "commuterView.exploreTrip": "Clique para explorar este deslocamento",

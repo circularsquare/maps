@@ -2642,7 +2642,6 @@
   "community.back": "Back",
   "community.prev": "Previous page",
   "community.next": "Next page",
-  "community.total": "{count, plural, one {# network} other {# networks}}",
   "community.errSend": "This network could not be sent. Send feedback if it keeps happening.",
   "community.errTooSmall": "Build at least 2 lines and 8 stations first.",
   "community.errNeedName": "Pick a name to show with your network.",

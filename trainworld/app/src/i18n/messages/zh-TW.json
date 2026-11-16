@@ -583,7 +583,6 @@
   "community.stop": "停止分享",
   "community.stopped": "已停止分享",
   "community.title": "社群",
-  "community.total": "{count, plural, other {#個路網}}",
   "community.unlike": "收回讚",
   "commuterView.bubble": "{end, select, home {{when}有{count}{words}從這裡出發} work {{when}有{count}{words}前往這裡} other {{when}有{count}{words}進出這裡}}",
   "commuterView.exploreTrip": "按一下查看這趟旅次",

@@ -583,7 +583,6 @@
   "community.stop": "Убрать из сообщества",
   "community.stopped": "Больше не опубликовано",
   "community.title": "Сообщество",
-  "community.total": "{count, plural, one {# сеть} few {# сети} many {# сетей} other {# сети}}",
   "community.unlike": "Убрать лайк",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} отсюда} work {{count} {words} {when} сюда} other {{count} {words} {when} сюда и отсюда}}",
   "commuterView.exploreTrip": "Нажмите, чтобы изучить эти поездки",
