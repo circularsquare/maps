@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Harita",
   "settingsTab.mapLabels": "Harita yazıları",
   "settingsTab.memory": "Bellek",
-  "settingsTab.memoryTip": "Her 1.000 istasyon için yaklaşık 0,6 GB daha\n{budget} GB sınırı bir tahmindir",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "Şehirler arası yolculukları hesapla",
   "settingsTab.mobileIntercityTip": "açıksa, 4 GB altı belleği olan telefonlarda oyun çökebilir",

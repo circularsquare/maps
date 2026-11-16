@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "地圖",
   "settingsTab.mapLabels": "地圖標籤",
   "settingsTab.memory": "記憶體",
-  "settingsTab.memoryTip": "每1,000個車站約增加0.6 GB\n{budget} GB的上限是估計值",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "計算城際旅次",
   "settingsTab.mobileIntercityTip": "啟用後，記憶體小於4 GB的手機上遊戲可能會當機",

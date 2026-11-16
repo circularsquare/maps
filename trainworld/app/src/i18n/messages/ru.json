@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Карта",
   "settingsTab.mapLabels": "Подписи карты",
   "settingsTab.memory": "Память",
-  "settingsTab.memoryTip": "Около 0,6 ГБ на каждые 1000 станций\nЛимит {budget} ГБ приблизительный",
   "settingsTab.memoryValue": "{used} ГБ / {budget} ГБ",
   "settingsTab.mobileIntercity": "Считать междугородние поездки",
   "settingsTab.mobileIntercityTip": "если включить, игра может вылетать на телефонах с памятью меньше 4 ГБ",

@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "地图",
   "settingsTab.mapLabels": "地图标注",
   "settingsTab.memory": "内存",
-  "settingsTab.memoryTip": "每1,000个车站约增加0.6 GB\n{budget} GB的上限是估计值",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "计算城际出行",
   "settingsTab.mobileIntercityTip": "启用后，内存小于4 GB的手机上游戏可能会崩溃",

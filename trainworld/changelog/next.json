@@ -18,16 +18,16 @@
     {
       "id": "c002",
       "text": "fixed a sideways jog where a short single track joins one track of a double",
-      "edited": null,
+      "edited": "fixed a sideways shift where a short single track joins one track of a double",
       "hidden": false,
       "task": "T-3379",
       "by": "bugs1",
       "at": "2026-11-16T13:47:15Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:47:41Z"
     },
     {
       "id": "c003",
@@ -87,15 +87,15 @@
       "id": "c007",
       "text": "a station built next to another in a complex now shows the shared name in the notice",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3381",
       "by": "bugs2",
       "at": "2026-11-16T13:50:47Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:46:51Z"
     },
     {
       "id": "c008",
@@ -129,15 +129,15 @@
       "id": "c010",
       "text": "the too close to the end of the track message now says what it needs",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3412",
       "by": "bugs2",
       "at": "2026-11-16T13:50:50Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:47:17Z"
     },
     {
       "id": "c011",
@@ -316,27 +316,27 @@
       "id": "c024",
       "text": "the community list pages through every shared network, with a total count",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3402",
       "by": "b6",
       "at": "2026-11-16T14:57:45Z",
-      "rev": 2,
+      "rev": 3,
       "area": "community",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:48:15Z"
     },
     {
       "id": "c025",
       "text": "added a sign in button to the new game screen",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3401",
       "by": "b6",
       "at": "2026-11-16T15:00:47Z",
-      "rev": 2,
+      "rev": 3,
       "area": "community",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:48:07Z"
     },
     {
       "id": "c026",
@@ -566,15 +566,15 @@
       "id": "c043",
       "text": "a station refused on a tight old curve now says the track curves too tightly for a station",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-691",
       "by": "bug-c",
       "at": "2026-11-16T16:19:49Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:46:59Z"
     },
     {
       "id": "c044",
@@ -648,15 +648,15 @@
       "id": "c049",
       "text": "a flat junction on a looped line shows once in its stop list, not once per pass",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3042",
       "by": "bug-e",
       "at": "2026-11-16T17:35:28Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-16T22:47:11Z"
     },
     {
       "id": "c050",
@@ -858,6 +858,30 @@
       "rev": 1,
       "area": "schematic",
       "fix": true
+    },
+    {
+      "id": "c066",
+      "text": "the game used about 170 MB less memory on desktop, most of it zone outlines now stored compactly",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3491",
+      "by": "phonemem",
+      "at": "2026-11-16T22:50:29Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c067",
+      "text": "the memory readout shows 8 GB+ where the browser only reports its 8 GB maximum, shows just the game's own use where the browser reports nothing, and its hover says what the figure counts",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3494",
+      "by": "memtext",
+      "at": "2026-11-16T22:51:29Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
     }
   ]
 }

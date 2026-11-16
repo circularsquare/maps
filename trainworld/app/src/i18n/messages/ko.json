@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "지도",
   "settingsTab.mapLabels": "지도 라벨",
   "settingsTab.memory": "메모리",
-  "settingsTab.memoryTip": "역 1,000개마다 약 0.6 GB 늘어요\n한도 {budget} GB는 추정치예요",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "도시 간 이동 계산",
   "settingsTab.mobileIntercityTip": "켜면 RAM 4GB 미만 휴대폰에서 게임이 튕길 수 있어요",

@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Carte",
   "settingsTab.mapLabels": "Noms sur la carte",
   "settingsTab.memory": "Mémoire",
-  "settingsTab.memoryTip": "Environ 0,6 Go de plus par 1 000 stations\nLa limite de {budget} Go est une estimation",
   "settingsTab.memoryValue": "{used} Go / {budget} Go",
   "settingsTab.mobileIntercity": "Calculer les déplacements interurbains",
   "settingsTab.mobileIntercityTip": "si activé, le jeu peut planter sur les téléphones de moins de 4 Go de RAM",

@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Mapa",
   "settingsTab.mapLabels": "Etiquetes del mapa",
   "settingsTab.memory": "Memòria",
-  "settingsTab.memoryTip": "Uns 0,6 GB més per cada 1.000 estacions\nEl límit de {budget} GB és una estimació",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "Calcula els desplaçaments entre ciutats",
   "settingsTab.mobileIntercityTip": "si l’actives, el joc es pot penjar en mòbils amb menys de 4 GB de RAM",

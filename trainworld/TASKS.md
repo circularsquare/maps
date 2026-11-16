@@ -237,12 +237,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
   - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
   - Goal: The water mask loads on that save, or the failure is understood and filed.
-- T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting
+- T-3464 [P2] {L:world-map} {waits:Anita} Freight and abandoned rail in the All setting
   - Context: You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
-  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The tile rebuild goes in an overnight batch.
-- T-3469 [P2] {L:timetables} Timetable restyle like real printed timetables (taking, 2026-11-16, agent ttstyle)
-  - Context: You, 2026-11-16 on the board: the current look is "kinda generic"; you want the feel of real timetables, Shinkansen tables as inspiration (artifacts/trainworld/board/20261116-141216-e91c.png): smaller font than elsewhere, very compact, related lines' bullets above, many high-throughput lines as "a massive expansive dense timetable. awe inspiring. lots of colors", the Marey diagram below, aligned. "only big nerds are gonna look at this stuff and i think this is what they wanna see."
-  - Goal: The schedule panel's departures read as a dense printed timetable with the chart aligned below, shown to you before it lands.
+  - Need from Anita: yes to downloading fresh Geofabrik extracts for the 118 regions (one at a time, each deleted after use), starting with one region to look at first.
+  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36 and was tried on Chicago; the worldwide build (about 1.5-3 h on 2 cores plus downloads, 150-400 MB) goes in an overnight batch, then R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
+  - Other: notes/T-3464.md
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
@@ -252,15 +251,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
-- T-3491 [P1] {L:memory} Zone outlines stored compactly on the page (taking, 2026-11-16, agent phonemem)
-  - Context: From T-3472: the page holds zone outlines in a loose form, about 150 MB in every game, which matters most on phones.
-  - Goal: The outlines take a small fraction of that, with the map drawing the same.
-  - Other: notes/T-3472.md
 - T-3492 [P2] {L:memory} Give back idle solving workers' memory
   - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
   - Goal: An idle worker's spare memory goes back, with no solve slower than now.
   - Other: notes/T-3472.md
-- T-3493 [P2] {L:memory} Peaks from data the page throws away
+- T-3493 [P2] {L:memory} Peaks from data the page throws away (taking, 2026-11-16, agent phonemem)
   - Context: From T-3472: the page briefly holds up to 1.2 GB of data it is about to discard, which can push a phone or small laptop over.
   - Goal: The biggest peaks found and cut.
   - Other: notes/T-3472.md
@@ -950,8 +945,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent savesafe2)
-  - Context: Stage 1 is done (server, not deployed): uploads get the full check, damaged ones are refused and kept aside, and each game's last intact copy is pinned outside backup rotation. Stage 2 is built (the game, not published): a damaged save says so, is never uploaded, written over a slot or kept as a backup, and Saved games offers its last undamaged copy, opened as a copy. Stage 3 (the recurring scan, about 2 h) is next; until it runs, games stored before the check have no pin.
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent scancheck)
+  - Context: Stage 1 (server) passed its checker, not deployed. Stage 2 (the game) landed 7cd2f5ac and is on 8800, not published; it must not ship before the stage 1 server is deployed. Stage 3 (the recurring scan, shonei-server 85e2945) is built and being checked; then the server deploy of stages 1 and 3 waits for your yes, in daytime.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule

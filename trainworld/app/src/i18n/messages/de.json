@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Karte",
   "settingsTab.mapLabels": "Beschriftung",
   "settingsTab.memory": "Speicher",
-  "settingsTab.memoryTip": "Etwa 0,6 GB mehr pro 1.000 Stationen\nDas Limit von {budget} GB ist eine Schätzung",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "Fernreisen berechnen",
   "settingsTab.mobileIntercityTip": "Bei Aktivierung kann das Spiel auf Handys mit unter 4 GB RAM abstürzen",

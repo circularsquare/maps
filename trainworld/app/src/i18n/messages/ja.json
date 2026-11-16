@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "地図",
   "settingsTab.mapLabels": "地図の文字",
   "settingsTab.memory": "メモリ",
-  "settingsTab.memoryTip": "駅1,000か所ごとに約0.6 GB増えます\n上限の{budget} GBは推定です",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "都市間の移動を計算する",
   "settingsTab.mobileIntercityTip": "メモリが4 GB未満のスマートフォンでは、有効にするとゲームが落ちることがあります",

@@ -1,42 +1,34 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 00d74e61-e552-47a6-ba40-ee320d38eba1, name not shown by ListAgents (message by session id), since 2026-11-16 20:41 UTC
-Updated: 2026-11-16 22:11 UTC (a02dbdc8 finished: all its agents landed or reported; its Previous line removed)
+Updated: 2026-11-16 22:21 UTC
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first.
 
 ## State
 - Live = v0.3.5 (maps bfe58c54, published 11-15). The next publish is v0.4.0 (Anita 20:23: big, with Central America and Detailed mode scheduling).
-- 8800 = origin = 45b7808c. master = 441d4a25, ahead and unpushed: timetable restyle T-3469, points wording, touchrule T-1764, Community count dropped, board bars. Next: land the agents below as they pass, then one smoke on master, push, snap8800 (snap_wasm emoji crash fixed in 45b7808c).
-- Translation batch needed before v0.4.0: points keys cities.pointsPast, cities.pointsPastAll, topBar.pointsPast, cities.sortPoints, leaderboard.valueTip, cities.pointsRule, leaderboard.pointsRule (docs/localization.md passes), plus any keys the agents below add.
-- Uncommitted on purpose in the main tree: T-3399's country plan edits (pipeline/world_plan.py/.json, realms.json, zone-names.json, docs/data-register.md, notes/T-3399.md): commit when T-3399 starts. Not ours: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md, tools/ops/archive_bad_saves.py. notes/T-3395.md is savesafe's (untracked, commit with T-3395).
-- Board inbox watch: Monitor on `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min, re-arm).
-- shonei-server: T-3395 stage 1 (37217ea, 4623fde, 094b830) and stage 3 (85e2945) committed, not pushed or deployed. Deploy stages 1+3 in daytime on her yes once savecheck passes stage 1 and stage 3 is checked.
-- Resource check ran 20:43: Resend daily cap hit daily (ask a-2026-11-16-2), website repo 1.1 GB (over the 1 GB GitHub recommends), R2 storage 22.6 GB (only 2026-11-10d is purgeable, about 5 GB, not worth breaking old tabs), R2 Class B month projected $22 (last 24 h is low: the cache fix took), plays/day 51% of ptMaxPlaysDay, games store 80% in 20 days.
-- Production box rebooted 19:45 onto kernel 7.0.0-43 (T-2912 done). jsonbin retired (memory note).
-- Landing gotchas this session: agent-tree land refuses root files (serve.py): git diff the tree's serve.py to a patch (add a trailing newline), apply in main, checkout in the tree, then land; a contributor's co-author needs a hand commit (land adds only the Claude trailer). Changelog items need --area (track, demand, scheduling, fares, schematic, community, performance, other, bug; --fix for lighter).
+- 8800 = origin = master = 04d59c74 (22:20; smoke 29/29 on master): timetable restyle and hover, points wording, touch rule, ferries 45 km/h (save level 19), crowding dot (30% skew), new game via menu + terrain retry, T-3395 stage 2 saves, gate fixes, Up next board column, globe connector fix (T-3481).
+- master ba9d6e83 ahead of 8800/origin: phonemem stage 1 (outlines), memtext readout (T-3494, strings await her ack). Rebuild 8800 with the next batch.
+- Before v0.4.0 ships: the stage 1 server (T-3395) deployed and knowing save level 19; translation batch (points keys cities.pointsPast, cities.pointsPastAll, topBar.pointsPast, cities.sortPoints, leaderboard.valueTip, cities.pointsRule, leaderboard.pointsRule, plus T-3395 stage 2 and T-3479 keys, and T-3494's settingsTab.memoryTip/memoryTipCap/memoryTipUnknown/memoryValueCap/memoryValueUnknown and savesPanel.memoryWarn/haveCap/haveAbout; docs/localization.md).
+- Uncommitted on purpose in the main tree: T-3399's country plan edits (pipeline/world_plan.py/.json, realms.json, zone-names.json, docs/data-register.md incl. hkborder's Hong Kong/Macau commuting row, notes/T-3399.md): commit when T-3399 starts. Not ours: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md, tools/ops/archive_bad_saves.py, changelog/roadmap.json (board-written).
+- Board inbox watch: Monitor on `venv/Scripts/python.exe -u trainworld/board/watch.py` (30 min, re-arm). Up next queue: `tasks.py upnext list|add|remove` (board-live.json "upnext").
+- shonei-server: T-3395 stage 1 (37217ea, 4623fde, 094b830) and stage 3 (85e2945) committed, not pushed or deployed. savecheck PASSED stage 1 (risks, not fails: one user's burst of big saves queues everyone ~12 s; 128 MB unpack cap may be close, needs a read-only look at the box's index, ask her). Stage 3 not yet checked. The server must know save level 19 before deploy.
+- Resource check ran 20:43 (she leaves all as is). Next one 11-17.
+- Sessions started by next_orchestrator.py before 22:10 counted as child sessions (no transcript, not messageable); the launcher now clears inherited CLAUDE* vars and sets CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1. This session (00d74e61) is still unreachable by SendMessage.
+- Landing gotchas: agent-tree land refuses root files (serve.py): patch them over by hand; a contributor's co-author needs a hand commit; changelog items in a tree can collide by id with main's: drop the tree's next.json and re-add with changelog.py in main; tree names are lowercase.
 
 ## Running agents (mine, 00d74e61)
-- lines2 (Opus, .tw-trees/lines, 6171): T-3481 with the player's save (artifacts/trainworld/t3481/player-bangkok-tokyo-newyork-day459.save); lead: joins across cities in a 3-city game.
-- gatefix: T-2298 and T-2399 done and archived, waiting in .tw-trees/gatefix to land once Previous is gone (tooling only, no checker needed; its full smoke passed 29/29). Then T-2627/T-2777 (same world_run.py) after it lands; T-1080, T-2095, T-1992 when cores free.
-
-## Running agents (a02dbdc8's, reporting to it)
-- ttstyle2: landed by a02dbdc8 (T-3475), not yet smoked on master.
-- ferry45: T-3435 landed a689218f; ferrycheck PASS (123 saves: non-ferry saves byte-identical, 5 ferry saves faster only, round trip identical, level-18 build opens a level-19 save read-only). Save level 19: the server must know it before this game ships.
-- crowddot: landed by a02dbdc8 (T-3476), not yet smoked on master. Anita 21:03 too green: crowdskew landed 27377dd2 (CROWD_SKEW = 0.3 in game/today.ts; tunable if she asks).
-- savesafe2: T-3395 stage 2 landed 7cd2f5ac by a02dbdc8 (its changelog item re-added in main as c064) after re-check PASS (317 saves intact on both checks and both servers). Known gap until the stage 1 server is deployed: a save whose network is cut inside a whole gzip can still go up from the start menu to the old server (rare: only if the game writes an unreadable network). Ship the game with stage 2 only after the server deploy. Not yet smoked on master.
-- savecheck: T-3395 stage 1 PASS (220 good saves all intact incl. fresh exports and a full-feature sandbox; ~44,000 damaged copies all refused or same-bytes; pin and quarantine right through rotation and delete; ~700 MB peak). Risks, not fails: one user's burst of big saves queues everyone (~12 s, no timeout); 128 MB unpack cap may be close (production's biggest unpack to 76 MB: check their compressed sizes against the 4 MB upload cap, needs a read-only look at the box's index, ask her); damage before compression after LBD1 still passes. Stage 3 (85e2945) not yet checked. Server must also know save level 19 (ferries) before deploy.
-- newgame: T-3478, T-3479 landed by a02dbdc8 (checker passed; retry feedback fixed), not yet smoked on master.
-- memcheck: T-3472 done, archived (notes/T-3472.md). No leak: all-China in Chrome 7.1 GB settled, 7.4-8.0 GB by minute 5, then flat; 3 solving workers hold 1.3 GB each (4.2 GB of 7.1), never shrinking. Base: 1.0 GB at the start menu, 1.6 GB in a one-city game. Could not reproduce ank's 5 s per track piece (0.1-0.3 s on all-China). T-3373 unblocked: A (3 -> 1 worker saves ~2.9 GB) and B act on the 4.2 GB. To file: zone outlines stored compactly on the page (~150 MB in every game); give back solving workers' empty memory (~0.7 GB on all-China, e.g. restart an idle worker); find the page's discarded-data peaks (up to 1.2 GB).
-- prsurvey a46ce6d26ffe265b8 (read-only): PR 16 "Branch lines" appended to notes/pr-survey-2026-11-16.md.
-- Agents that finished can't be resumed by SendMessage after a while ("No transcript found"): brief a fresh one.
-
-- Anita 21:20 (via a02dbdc8): crowding dot 30% skew OK; T-3395 stage 2 strings and the T-3479 terrain tag hover acknowledged; no board light/dark switch (she uses the Windows setting).
+- memA a80653544bfb18cb5 (Opus, .tw-trees/mema, 6175): T-3373 stage A, fewer solving workers capped by memory.
+- phonemem aba6e34aa7a8ac631 (Opus, .tw-trees/phonemem, 6176): stage 1 landed 3d480e46 (desktop outlines compact: start menu 1,090 -> 769 MB, one-city game 1,491 -> 1,295; phone unchanged ~595 MB, notes/T-3160.md). Now stage 2: T-3493 solve-time buffer swell (232 MB), realm-shade worker, clock worker outline copy.
+- scancheck (Opus, no tree): checker for T-3395 stage 3 (shonei-server 85e2945), incl. whether the server accepts save level 19.
+- freight (Sonnet, .tw-trees/freight, 6177): T-3464 freight and abandoned rail in All; one test area, full tile rebuild goes in an overnight batch.
+- Both memory agents briefed with her 22:12 words: approximations allowed when the accuracy loss is measured and small (DECISIONS 2026-11-16).
+- prsurvey (a02dbdc8's) surveyed PR 16 "Branch lines" into notes/pr-survey-2026-11-16.md: reply not drafted yet.
+- Old trees to clear when sure: shenzhen (8 h), tt2 (4 days), ttstyle (superseded by ttstyle2), safari-save-035 (release branch: keep unless she says).
 
 ## Waiting on Anita
-- The old session a02dbdc8 is not reachable by SendMessage: sessions started by next_orchestrator.py inherited CLAUDECODE and counted themselves child sessions, never registering as peers (no ~/.claude/sessions/<pid>.json). Fixed in next_orchestrator.py (uncommitted); this session is unreachable too until the next cycle. She relayed to its tab 21:00.
-- Server deploy of T-3395 stages 1+3 (ask once the checks pass, daytime).
+- Server deploy of T-3395 stages 1+3 (ask once stage 3 is checked, daytime).
 - T-3399 Central America + Venezuela, T-3455 overnight scan: she will say when; don't list them in reports.
 
 ## Her standing asks this week

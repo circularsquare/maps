@@ -1872,7 +1872,6 @@
   "settingsTab.mapDrawn": "Mapa",
   "settingsTab.mapLabels": "Etiquetas del mapa",
   "settingsTab.memory": "Memoria",
-  "settingsTab.memoryTip": "Unos 0,6 GB más por cada 1000 estaciones\nEl límite de {budget} GB es una estimación",
   "settingsTab.memoryValue": "{used} GB / {budget} GB",
   "settingsTab.mobileIntercity": "Calcula desplazamientos interurbanos",
   "settingsTab.mobileIntercityTip": "si lo activas, el juego puede fallar en teléfonos con menos de 4 GB de RAM",
