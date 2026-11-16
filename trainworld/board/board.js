@@ -1064,10 +1064,15 @@ function knownTask(id) {
 // "artifacts/trainworld/t1191/a.png") is tried in the folder of the last exact one, and stays text if nothing is there.
 const IMG_RE = /(?<![\w*.\/\\-])((?:[\w.:-]+[\\/])*?artifacts[\\/])?([\w][\w.-]*(?:[\\/][\w.-]+)*\.(?:png|jpe?g|webp))(?![\w\/\\])/gi;
 let imgDir = 'trainworld/';  // where a bare image name is looked for: the folder of the last exact path seen
+const DIR_RE = /(?<![\w*.\/\\-])(?:[\w.:-]+[\\/])*?artifacts[\\/]((?:[\w][\w.-]*[\\/])*)(?![\w.-])/gi;
 function images(text) {
   const out = [];
   let at = 0;
+  // a bare folder path ("artifacts/trainworld/t2625/") sets the folder for the bare names after it
+  const dirs = [...text.matchAll(DIR_RE)].map((d) => ({ end: d.index + d[0].length, dir: d[1].replace(/\\/g, '/') }));
+  let di = 0;
   for (const m of text.matchAll(IMG_RE)) {
+    while (di < dirs.length && dirs[di].end <= m.index) imgDir = dirs[di++].dir;
     const rest = m[2].replace(/\\/g, '/');
     let src;
     if (m[1]) {
@@ -1078,10 +1083,37 @@ function images(text) {
     out.push(thumb(src, m[0]));
     at = m.index + m[0].length;
   }
+  while (di < dirs.length) imgDir = dirs[di++].dir;
   if (!out.length) return null;
   if (at < text.length) out.push(text.slice(at));
   return out;
 }
+// Ctrl+V of a clipboard image into any board textarea: saved by serve.py's /_paste, its path typed in at the caret
+document.addEventListener('paste', async (e) => {
+  const area = e.target;
+  if (!(area instanceof HTMLTextAreaElement) || area.readOnly) return;
+  const file = [...(e.clipboardData ? e.clipboardData.items : [])].find((i) => i.kind === 'file' && /^image\/(png|jpeg|webp)$/.test(i.type));
+  if (!file) return;
+  e.preventDefault();
+  const blob = file.getAsFile();
+  const note = el('span', { class: 'meta paste-note' }, 'Adding image');
+  area.after(note);
+  const done = (msg, ms) => { note.textContent = msg; setTimeout(() => note.remove(), ms); };
+  try {
+    const r = await fetch('_paste', { method: 'POST', headers: { 'X-Maps-Run': '1', 'Content-Type': blob.type }, body: blob });
+    if (!r.ok) throw new Error(r.status === 413 ? 'too big (10 MB)' : r.status);
+    const { path } = await r.json();
+    const at = area.selectionStart, end = area.selectionEnd, v = area.value;
+    const pre = at && !/\s$/.test(v.slice(0, at)) ? '\n' : '';
+    const ins = pre + path + '\n';
+    area.value = v.slice(0, at) + ins + v.slice(end);
+    area.selectionStart = area.selectionEnd = at + ins.length;
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+    done('Image added', 2000);
+  } catch (err) {
+    done(`Image not added: ${err.message || err}`, 5000);
+  }
+});
 function imgUrl(src) { return '_img/' + src.split('/').map(encodeURIComponent).join('/'); }
 /** the path as a link, and a small picture of it at the end of its paragraph (list item, cell, field); both open it
  * large. If the file isn't there, the plain text comes back and no picture shows. */

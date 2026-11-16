@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3449 [P2] {L:board} Paste images on the board (2026-11-16): Ctrl+V of an image into the scratch pad or any comment box saves it under artifacts/trainworld/board/ (serve.py POST /twboard/_paste, 10 MB, PNG/JPEG/WebP) and types its path, which shows as a thumbnail; a folder path in notes sets where later bare image names are found, so T-2625's pictures show.
+- T-1681 [P3] {L:single-track} Doubling up refused in the real save (2026-11-16): not reproducible: all 1,647 double pieces of the real save scanned, none refused for a platform crossing (584 refusals, all right: track alongside, tight curve, node heading). notes/T-1681.md.
+- T-691 [P3] {L:station-placement} Wrong refusal reason on two real-save edges (2026-11-16): a station refused because a split piece keeps an imported curve already under 25 m now says "The track curves too tightly here for a station."; where stations may go is unchanged (6d1f541f). notes/T-691.md.
+- T-2724 [P3] {L:schematic} Network diagram at continent scale (2026-11-16): closed on Anita's word: "the continent-scale mostly looks fine right now. the pressing issues are local. such as disconnected rivers. and also cities getting squished too much." notes/T-2625.md.
 - T-499 [P3] {L:edit-speed} Stop edits send lines whole (2026-11-16): closed as already done by T-1029 (delta rows) and T-1509 (line strokes patched with moves). notes/T-499.md.
 - T-2983 [P3] {L:edit-speed} Bus stop edits stall the clock worker (2026-11-16): closed: a switch costs about 90-110 ms on a quiet machine and the larger figures were not reproduced. notes/T-2983.md.
 - T-1509 [P3] {L:edit-speed} Line edits post all strokes to the page (2026-11-16): line edits post only the runs that moved (60 seeds pass in t1381-strokes); not measured on Japan; landed b4fd4d98. notes/T-1509.md.

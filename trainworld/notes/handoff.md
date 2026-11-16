@@ -12,6 +12,24 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
   maps-d7 agents: lintfix aaef44c2544b34f27 (lint tree mid-rebase: resolve, then I run rebase --continue and land),
   tidy adfe01689f8db5dd4 (archive pick2/sc/doc/c2/c1 tasks; find where c1's market_check.py went).
   c2 offered picker plan2 batch D (demand workers): held, not small fixes.
+- 16:08 all of maps-7e's trees landed except feeders and shenzhen (c3 9d3cd02d, lint b22b9a13, c1 a1d5b113, e1
+  b4fd4d98); tidy archived 20 (353 open). Smoke PASS on master b4fd4d98; master ab041040 pushed; 8800 = ab041040
+  (frozen 20261113-013559), swapped 16:10. .tw-trees/c1 remove failed (something holds files): retry later.
+- Running (maps-d7): bug-a ac57e25e3f3cf585b (T-3429 T-3353 T-3354 T-1681), bug-b adc9785ca19e09c3a (T-3431 T-1072
+  T-3410 T-1791), bug-c a02274cc2e5549664 (T-3150 T-702 T-691 T-2148), each in .tw-trees/<name>, ports 6111/6121/6131.
+  Before landing: restore the four app/src/game json files in the tree (they copied the main tree's).
+- serve.py: the board rebuild runs with CREATE_NO_WINDOW (it was the python window she saw); serve restarted 15:54.
+  Committing serve.py was refused by the permission check twice: uncommitted, ask her. Watcher also caught
+  a scheduled task outside trainworld: graffiti's scripts/backup_paint.bat ("npm run backup-paint", Task Scheduler)
+  opens a cmd window at 11:15 local; tell her, it's not ours to change.
+- schem a4c88ef4ea564313f (Opus, .tw-trees/schem, port 6141): T-3448 player's NYC schematic in islands (filed
+  16:21 from a report she passed via maps-4a). bug-c: nothing fixed (T-691 resumed for station refusal wording).
+- board-img a5fe89768a22556f7 (Sonnet, .tw-trees/board-img): T-3449 paste images on the board; edits serve.py in its
+  tree, while main has my uncommitted serve.py window fix: land with the keep-hunks/patch procedure, then restart serve.
+  T-2724 closed on her word; T-3358 rivers back to P2 ready (she called rivers and squished cities the pressing issues).
+- T-3426 feeders: table relayed 16:10 (fix brings most corridors closer to real, NY-Philadelphia overshoots on
+  commute legs); maps-7e put "land as is?" to Anita; land on her yes, then file the two follow-ups in notes/T-3426.md.
+- Anita 16:00: away working on other stuff, no frequent reports until she says she's back.
 - Handed to maps-d7: feeders T-3426 (land only after Anita sees the recalibration table; maps-7e forwards it),
   shenzhen T-3428 (its report forwarded; 8800 rebuilds frozen at 20261113-013559 until then), T-3399 (Anita 15:38 UTC, her 10:30am:
   "i will let you know when its time for that, otherwise dont worry about it": wait for her word; commit the plan

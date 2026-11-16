@@ -343,7 +343,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
   - Other: Not reproduced 2026-11-16 (bugs3): every order works on a one-way loop; the refusal is right when the next station has no way back. Needs the player's save; a clearer "no way back" message is an option. notes/T-3429.md
-- T-3431 [P2] {L:buses} Seattle to Victoria ferry gets no riders and shows no route
+- T-3431 [P2] {L:buses} Seattle to Victoria ferry gets no riders and shows no route (taking, 2026-11-16, agent bug-b)
   - Context: Player report 2026-11-16 (board group "Ferry has no riders and no route"). T-3400 (no boats at low demand) may explain part of it.
   - Goal: Reproduce; the ferry runs and carries the trips a sensible ferry would.
 - T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia
@@ -385,7 +385,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 - T-3150 [P3] {L:small-fixes} Long straight rays across the map
-  - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours.
+  - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours, and nothing new without the player's save.
   - Goal: Reproduce it (the player's save is the next step), fix it, add a check.
   - Other: notes/T-3150.md
 - T-3101 [P3] {L:single-track} One-way track follow-ups
@@ -407,11 +407,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-2662 [P3] {L:timetables} Passing dots on the timetable chart at a flat junction
   - Context: The chart draws passing dots at junctions as well as flat crossings; only the crossing path has been checked.
   - Goal: A player-built flat junction shows its dots at the right times.
-- T-2724 [P3] {L:schematic} {waits:Anita} Network diagram at continent scale
-  - Need from Anita: Look at the T-2625 pictures, then say whether far land should shrink further.
-  - Context: Far land is still drawn about 4.5x smaller than the networks; shrinking it more needs a looser fold guard where nothing is drawn.
-  - Goal: Far land drawn smaller while networks keep their size, with no folded cell.
-  - Other: notes/T-2625.md
 - T-2755 [P3] {L:world-map} Real rail network at far zoom
   - Context: You asked for level of detail later, low priority. The real network now starts at zoom 6 because picking lagged at zoom 4.
   - Goal: Show it again from zoom 4 or further out using simplified, merged far-zoom geometry.
@@ -713,8 +708,9 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Goal: Keep water per tile in mercator so an edit redoes only its tiles.
   - Other: Folded in T-2518 (Diagram river drawing time). notes/T-2169.md
 - T-2148 [P3] {L:money} Save size from money history
-  - Context: Saves keep every day of every region's ledger, about 30 bytes a region-day. A big world game could near the 4 MB account cap.
+  - Context: Saves keep every day of every region's ledger (gzipped with the rest), about 30 bytes a region-day, and no real save has more than a day of it to measure. Folding old days into weeks changes what the money charts show.
   - Goal: If saves get big, days older than 90 fold into weeks.
+  - Other: notes/T-2148.md.
 Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026-11-03d.md, her shots in artifacts/trainworld/anita-2026-11-03d/):
 - T-2209 [P3] {L:buses} Ferry routes in narrow canals
   - Context: Amsterdam's grachten route is not found at 2.5 m cells, so it goes by the Amstel; 1-4% of Venice and Amsterdam routes under 5 m are affected.
@@ -766,9 +762,6 @@ Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
 Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted: riders before you pay ("people can just build it and find out"), growth near good stations (confusing), flights or freight you run.
 Anita's TODO.md short term, filed 2026-10-27 (morning). Her priorities: memory per zone and worker high; rest of the world after the finer demand calibration.
 Anita's TODO.md short term, filed 2026-10-28 (afternoon).
-- T-1681 [P3] {L:single-track} Doubling up refused in the real save
-  - Context: 122 of 1,093 double-track pieces are refused with PlatformCrossing.
-  - Goal: Know whether the refusals are right, or place the twin station elsewhere.
 Anita's TODO.md short term, filed 2026-10-27 (night).
 - T-1736 [P3] {L:solve-consistency} Last whole solve differs from a fresh solve
   - Context: After 40 minutes of edits on Japan, Okayama differs by about 2e-9 of its figures.
@@ -797,7 +790,7 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
   - Context: You said yes.
   - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-1791 [P3] {L:small-fixes} Boardings in the line group view
+- T-1791 [P3] {L:small-fixes} Boardings in the line group view (taking, 2026-11-16, agent bug-b)
   - Context: Line groups stage 4 only; stages 1-3 landed. Boardings in the group view were left out of stage 2.
   - Goal: Boardings show in the group view, if wanted.
   - Other: notes/T-1791.md
@@ -857,18 +850,21 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
   - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019.
   - Goal: Buses lay on top where they fit without changing the layout, drawn much thinner than rail.
-- T-3358 [P3] {L:schematic-rivers} {after:Anita raises rivers again} Schematic river continuity
+- T-3358 [P2] {L:schematic-rivers} Schematic river continuity
   - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
   - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.
-  - Other: Do not restart until you raise rivers again. notes/T-3358.md
+  - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
-  - Context: The way is stored against a fixed axis, which flips when a drag turns the track through due north-south.
+  - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Goal: The platform stays put through the turn.
   - Other: About 1 h. notes/T-3332.md.
 - T-3353 [P3] {L:single-track} Second single from a double's end refused
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
+- T-3448 [P2] {L:schematic} Player's NYC schematic broken into islands (taking, 2026-11-16, agent schem)
+  - Context: Player report via you, 2026-11-16: their New York schematic (Peekskill and Spring Valley to Montauk) shows land as dozens of small patches around stations, Manhattan and Brooklyn lines packed tight on a diagonal with overlapping pills, and a large faded "New Haven" label. Your saves look very different; maybe their save covers a larger area. Screenshot: artifacts/trainworld/player_nyc_schematic_2026-11-16.png. Reach: likely many (any large-area save).
+  - Goal: Cause found and fixed if small, or the cause written up for a design call. Your board note 11-16: cities squished too much is a pressing local issue in general.
 - T-3345 [P2] {L:schematic} Better schematic
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
@@ -897,10 +893,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: The line loses about 16% of its rate per edit (0.95/h to 0.005/h over 55 edits) because the even share reads rates the pacing already lowered.
   - Goal: A line's rate stays put across edits.
   - Other: notes/T-3238.md
-- T-3079 [P2] {L:stops} Exact stop spacing back
+- T-3079 [P2] {L:stops} Exact stop ordering back
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
-  - Goal: Exact stop spacing is an option beside normal stop editing.
-  - Other: Folded in T-3384 (Waypoints on lines). Goes with T-3384, waypoints.
+  - Goal: Exact stop ordering is an option beside normal stop editing, styled like your stop-picking notes in T-3444 (numbered circles per track).
+  - Other: Folded in T-3384 (Waypoints on lines). Renamed from "spacing" on your board note 11-16. UI notes: notes/T-3444.md
 - T-3002 [P3] {L:trams} Shorter tram ramps
   - Context: You asked 2026-11-10 whether tram ramps could be shorter. Researched, not built.
   - Goal: Tram ramps are shorter, if realistic.
@@ -932,11 +928,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-691 [P3] {L:station-placement} Wrong refusal reason on two real-save edges
-  - Context: A station on edges 997 and 1130 is refused with a track-drawing reason.
-  - Goal: The refusal gives the station's own reason.
-  - Other: Found in T-671. notes/T-691.md.
-- T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains
+- T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains (taking, 2026-11-16, agent bug-b)
   - Context: Trains keep offsets along the run, so they jump by the length added or removed.
   - Goal: Trains match by place on the ground instead.
   - Other: notes/T-1071.md "Limits".
@@ -946,7 +938,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
   - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece.
   - Goal: The track panel has the same rebuild, and the hover suggests Select for several.
-- T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
+- T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station (taking, 2026-11-16, agent bug-b)
   - Context: Your TODO 2026-11-15, for sensible pathing on single track.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
 
@@ -1437,9 +1429,9 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Goal: Those two are built.
   - Other: notes/someday.md
 - T-702 [P3] {L:station-placement} Station ghost leftovers on overlapping lines
-  - Context: Ghosts linger on overlapping imported lines.
-  - Goal: No leftover ghosts.
-  - Other: notes/someday.md
+  - Context: On the real save's bundles of overlapping lines, 11 of 80 slides along them still make the ghost jump; the worker refuses some spots for reasons the page cannot see (T-691).
+  - Goal: Fewer than 1 in 20 slides jump.
+  - Other: notes/T-695.md (Left).
 - T-755 [P3] {L:track-drawing} No ramp room at Lake Hamana
   - Context: The traced Tokaido Shinkansen has no room for ramps there.
   - Goal: The trace builds at Lake Hamana.
