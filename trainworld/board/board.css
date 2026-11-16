@@ -13,11 +13,11 @@
   --s-low: #9ccbaa;
   --s-after: #9a85c4;
   --s-done: #a3a3a3;
-  /* priority, one colour each wherever it shows; P1 strongest. --pN-ink is text on it */
-  --p1: #c8283f; --p1-ink: #ffffff;
-  --p2: #e8798a; --p2-ink: #3a0a12;
-  --p3: #f3bcc5; --p3-ink: #5a1a24;
-  --p4: #e6dadc; --p4-ink: #555555;
+  /* priority, one colour each wherever it shows: red, orange, yellow, green. --pN-ink is text on it */
+  --p1: #d63a3a; --p1-ink: #ffffff;
+  --p2: #ec8a1e; --p2-ink: #2a1400;
+  --p3: #e9b90c; --p3-ink: #2a2200;
+  --p4: #4fa356; --p4-ink: #0b200e;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -34,10 +34,10 @@
     --s-low: #4f7f5e;
     --s-after: #8f7cbf;
     --s-done: #6b6b6b;
-    --p1: #ff5c72; --p1-ink: #1a0006;
-    --p2: #b8485a; --p2-ink: #ffffff;
-    --p3: #6e3540; --p3-ink: #f0d0d6;
-    --p4: #3d3335; --p4-ink: #bbbbbb;
+    --p1: #ff6464; --p1-ink: #1a0000;
+    --p2: #f59a3a; --p2-ink: #1f1000;
+    --p3: #e8c440; --p3-ink: #1f1a00;
+    --p4: #5fbf68; --p4-ink: #0b200e;
   }
 }
 
@@ -180,6 +180,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 .card .row { display: flex; align-items: baseline; gap: 8px; }
 .card .name { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
 .card .count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+/* a line card's bars: one segment per open task, status above (3 px), priority right under it (2 px) */
 .bar {
   display: flex;
   height: 3px;
@@ -188,7 +189,9 @@ a.task:hover, button.link:hover { text-decoration: underline; }
   overflow: hidden;
   background: var(--soft);
 }
-.bar span { display: block; height: 100%; }
+.bar span { display: block; height: 100%; flex: 1; }
+.bar:has(+ .pri-bar) { border-radius: 2px 2px 0 0; }
+.bar.pri-bar { height: 2px; margin-top: 0; border-radius: 0 0 2px 2px; }
 .card .queued { font-size: 12px; color: var(--accent); margin-top: 2px; }
 
 /* side panel */
@@ -230,7 +233,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
 .task-row {
   position: relative;
   border-left: 3px solid var(--c);
-  padding: 2px 0 7px 8px;
+  padding: 2px 0 6px 8px;
   margin-bottom: 5px;
   overflow-wrap: anywhere;
 }
@@ -241,8 +244,8 @@ a.task:hover, button.link:hover { text-decoration: underline; }
   left: 8px;
   right: 0;
   bottom: 0;
-  height: 3px;
-  border-radius: 2px;
+  height: 2px;
+  border-radius: 1px;
   background: var(--pc, var(--soft));
 }
 .task-row.closed::after { display: none; }

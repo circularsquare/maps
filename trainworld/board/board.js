@@ -430,11 +430,13 @@ function card(line, hits) {
   let count;
   if (line.status === 'done') count = line.done ? `Done ${day(line.done)}` : 'Done';
   else count = hits > 0 ? `${hits} match` : `${line.open} open`;
-  const bar = el('div', { class: 'bar' });
-  for (const col of DATA.columns) {
-    const n = line.counts[col.key];
-    if (n) bar.append(el('span', { style: `flex: ${n}; background: var(--s-${col.key})` }));
-  }
+  // one segment per open task in both bars, in the same order, so each task's status sits right above its priority
+  const colRank = Object.fromEntries(DATA.columns.map((c, i) => [c.key, i]));
+  const ts = line.tasks.map((id) => DATA.tasks[id]).filter(Boolean)
+    .sort((a, b) => colRank[a.status] - colRank[b.status] || (PRI_RANK[a.pri] || 9) - (PRI_RANK[b.pri] || 9) || num(a.id) - num(b.id));
+  const statusBar = el('div', { class: 'bar' }, ts.map((t) => el('span', { style: `background: var(--s-${t.status})` })));
+  const priBar = el('div', { class: 'bar pri-bar' }, ts.map((t) => el('span', { style: `background: ${PRI_RANK[t.pri] ? `var(--${t.pri.toLowerCase()})` : 'var(--soft)'}` })));
+  const bar = ts.length ? [statusBar, priBar] : null;
   const q = pendingFor(line.slug).length;
   const isOpen = panel && panel.kind === 'line' && panel.slug === line.slug;
   return el('button', {
