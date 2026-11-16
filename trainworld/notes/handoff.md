@@ -33,17 +33,30 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
 - Resumed her plan for the week ("lets limit work to straight-forward bug investigation (can give up if seems hard)
   and kanban. also track visibility"). All marked taking in TASKS.md; agents told not to edit TASKS/ARCHIVE this
   round (the restructure is pending), so I archive their done tasks after the apply.
-- T-3394 rollout: nine Sonnet agents (r-track ae2d709cd87d8bec6, r-sched af20713845444111c, r-schem add08d4ba3de24723,
-  r-ops a72d91039ed58903c, r-demA a32b133e0373b684b, r-demB aa1d58c0dc4945475, r-demC aa3bfcd2e27d2a0ec, r-perfA a69d34ee2a470b366,
-  r-perfB aedb1e81ed16780da), line sets as in the paused plan below. Snapshot and block files in my scratchpad
-  rollout\ (C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\rollout).
-  When all nine report: one apply with --keep-old notes/tasks-before-T-3394.md; refused blocks back to their agent;
-  then the CLAUDE.md Tasks rule, TASKS.md and Someday headers, orchestrator.md filing; retags.
+- T-3394 done 13:19 UTC: 421 tasks rewritten, committed a01647b5 (rules and headers too; T-3395, T-3397 left in the
+  old shape for the saves session). Agent tidy (Sonnet) checking the rollout agents' duplicate/done flags: folds
+  duplicates, archives done ones, lists close candidates for her.
 - bugs1 (Sonnet, a32d9d2d77d3e0ce0), tree .tw-trees/single, port 6111: T-3379, T-3380, T-3411, T-3386, T-3383.
 - bugs2 (Sonnet, ace743905b76bc49b), tree .tw-trees/fixes, port 6112: T-3381, T-3422, T-3421, T-3403, T-3412.
 - visibility (Opus, a34f8356acf49ce26), main tree app/, port 6113: T-3420 to her design.
 - changelog (Sonnet, acd06534dca27974c), trainworld/board, port 6114: T-3424 changelog on the board + column resize.
 - Board inbox Monitor armed 13:14 UTC (30 min, re-arm).
+- T-3424 changelog done (04c57e5d), serve.py restarted 13:22 UTC (root serve.py change uncommitted: hers to commit).
+- boardui (Opus, aadbdd4ca61ecc4cb, from 13:35 UTC): T-3425 plus her changelog asks (added-by small and gray, eye toggle, single lines), compact board, field icons, priority colours and bars (her 11-16 words in the task).
+- Removed old release trees hotfix, hotfix031, stop-freeze-034 (branches kept). Left: single, fixes (today's
+  bugs), safari-save-035 (live v0.3.5), perdir (T-3348 demand half, 2-3 h), tt2 (T-3346 stage 2, a 30/10 case
+  fails; fix 4-6 h and moves figures). Asked her about perdir and tt2.
+- perdir2 (Opus, a03ef01f35349ee0b) finishing T-3348 stage 1 in .tw-trees/perdir (merge master, demand half, port 6115). Her: "we can wrpa it up". tt2 stays parked (her 11-16).
+- T-3420 visibility committed eba36357; 8800 rebuilt at 9e425a7d 13:40 UTC (no smoke needed), serve.py committed 9e425a7d; she OK'd committing board serve.py changes (docs/orchestrator.md).
+- 13:51 UTC: bugs1's tree landed (single-track fixes, five tasks archived); pushed master 68b66618. bugs2 asked to
+  verify T-3381/T-3403 in a browser and translate splitPoint before landing. visibility resumed with her changes
+  (no bus/ferry buttons on Lines, checkbox toggles, no Show all, Show buses and ferries). boardui resumed (green to
+  red priority colours, 2 px prio bars aligned under 3 px status bars on cards). 8800 is behind master (bugs1).
+- 14:00 UTC from her scratch pad: feeders (Opus af151363ff713e9bf) T-3426 why long-distance ignores feeders; recalc (Opus
+  a1637a38c84316a48, tree .tw-trees/recalc, port 6117) T-3427 paused-recalc toggle; shenzhen (Sonnet a05e93ee1c13bd90f) T-3428;
+  sorter (Sonnet a13482c6fae73b967) sorting 26 new player reports into board groups. Board priorities red to green committed.
+- Anita 11-16: "feel free to be pushing this regulrly" (in docs/orchestrator.md).
+- Anita 11-16: "we dont have to be economical. it's a new week." T-202, T-2385 closed; T-354, T-361 after T-3373.
 
 ## Earlier (maps-b8)
 - T-3390 done by agent lines (Opus, id a75a19621b6669315): 58 lines in LINES.md, every task tagged, 11 done tasks

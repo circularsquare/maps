@@ -352,6 +352,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
+  - Context: Your scratch pad 2026-11-16: "some people have noted that long distance train use doesn't actually seem to depend on feeders anymore. i've noticed this too which is kinda concerning, im pretty sure this used to not be the case. why is this?"
+  - Goal: Find why long-distance rail use no longer depends on feeder lines, and whether it is a bug or a rule change; fix a bug, take a rule to you.
+- T-3427 [P2] {L:edit-speed} A setting to stop recalculating trips while paused (taking, 2026-11-16, agent recalc)
+  - Context: Your scratch pad 2026-11-16: "a bunch of people requested an editing mode where it doesnt try to recalc while we're editing. this should be a toggleable thing i guess. perhaps ilke "recalculate trips while game is paused". default on. people can turn it off to not overload their computer"
+  - Goal: A Settings toggle, on by default; off, edits while paused don't start trip recalculation until the game runs again.
+- T-3428 [P3] {L:jobs-places} Missing data at Shenzhen Bay Port and Tide Park (taking, 2026-11-16, agent shenzhen)
+  - Context: Your scratch pad 2026-11-16: "people reported missing data in shenzhen bay port/tide park"
+  - Goal: Find what is missing there (homes, jobs, places, zones) and why; fix it if small, else say what a fix takes.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
