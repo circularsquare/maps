@@ -165,8 +165,16 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   T-1743, T-1986; reading all 2,000 market packs takes about 30 s), or the next `market_pack`
   refuses them. That heal runs after the registry lock is let go, so `market_zones.py` itself also adds every
   zone naming a place no registered zone holds to the zones it rewrites, under the lock (T-2776, a scan of
-  about 9 s): a register racing another region's unregister no longer parks. The browser check serves the main tree's app/, so whoever runs a batch
-  says who may rebuild app/ (its WASM) while it runs.
+  about 9 s): a register racing another region's unregister no longer parks. The browser check serves a copy of app/ made after the
+  registration (T-2298; `world_run.freeze_app`, a temp folder with node_modules and data as junctions, removed when the
+  gate's Vite stops), so a WASM or UI landing in the tree mid-gate changes nothing under it; the next chunk's copy takes
+  the new app. Nothing needs holding still for it.
+  **When the browser check breaks** (T-2399): after the first 3 rows (of more than 3) have failed the same way with none
+  passing (`pack_gate.BROWSER_SAME_FAIL`; the same way is the failed checks and the error's first line, ids and numbers
+  taken out), the rest of the chunk is not run; and a chunk of 3 or more rows all failing one way is a run fault, not
+  parks: the rows stay `built`. `checks/smoke.mjs` runs the same check on one small zone (`mcu`, Macau;
+  `SMOKE_ZONE`, `SMOKE_NO_ZONE`; `pack_gate.py <id> --browser-only` by hand, BASE the Vite), so run smoke after an app change
+  and before a world run.
 
 ### Joint gravity, freeze and clean up
 
@@ -245,7 +253,7 @@ Hand packs (the US metros, lon, par, tor, sao, the Japan metros) are not plan ro
   `app` junction is made again to this tree's and noted in the report's problems, T-779; checked
   at the start, before and after each gate, and before each joint solve), and a gate or re-gate
   that leaves a row with no result file (the gate itself died; a pack's own error is a FAIL in its
-  result). The rows stay `built`, the region's downloads stay on disk and a joint group is
+  result), and a browser check that failed the same way on 3 or more rows of a chunk. The rows stay `built`, the region's downloads stay on disk and a joint group is
   restored; fix the fault and run again. The
   runner exits with code 2 and the report's `fault` says what happened.
 - **A scratch tree** (`--root data/work/<task>/trainworld`, with `data/raw` a junction to this

@@ -292,6 +292,14 @@ try {
   if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));
   const base = given ?? vite.url;
   console.log(`      browser checks on ${base}`);
+  // T-2399: the world run's browser check (city-browser.mjs, through pack_gate) on one small shipped zone, so an app
+  // change that breaks it shows here and not as a gate that waits 300 s a zone and parks them
+  if (!served && !process.env.SMOKE_NO_ZONE) {
+    const zone = process.env.SMOKE_ZONE ?? 'mcu';
+    const z = spawnSync(join(MAPS, 'venv', 'Scripts', 'python.exe'), ['-I', join(HERE, 'pack_gate.py'), zone, '--browser-only', '--out', join(tmpdir(), 'tw-smoke-zone')],
+      { cwd: MAPS, encoding: 'utf8', env: { ...process.env, BASE: base.replace(/\/$/, ''), WORKERS: '1' } });
+    report('gate browser check on ' + zone, z.status === 0, z.status === 0 ? '' : tail((z.stdout || '') + (z.stderr || '')));
+  }
   await browserChecks(base);
 } catch (e) {
   report('smoke check ran', false, e.message.split('\n')[0]);

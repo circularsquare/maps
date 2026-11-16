@@ -2,9 +2,11 @@
 // do not reload the page mid-check. Modules are read once, when first asked for: restart it after
 // editing the app.
 //   node trainworld/checks/dev-nowatch.mjs <port>      (pick a port 6100-6199 nobody else uses)
+// TW_APP_DIR serves a copy of app/ instead (the world run's gate freezes one, T-2298); the copy needs node_modules
+// and a sibling `data` folder, since vite.config.ts reads ../data/packs.
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-const root = fileURLToPath(new URL('../app', import.meta.url)).replace(/\\/g, '/');
+const root = (process.env.TW_APP_DIR ?? fileURLToPath(new URL('../app', import.meta.url))).replace(/\\/g, '/');
 const port = Number(process.argv[2] ?? process.env.PORT);
 if (!port) { console.error('usage: node checks/dev-nowatch.mjs <port>'); process.exit(2); }
 const require = createRequire(root + '/package.json');

@@ -102,6 +102,15 @@ class RunFault(Exception):
     """A fault of the run, not of a row (T-764, T-773): the run stops and parks nothing for it."""
 
 
+def browser_fault(results):
+    """T-2399: the message when 3 or more gated rows' browser checks all failed the same way (results: {id: the
+    gate's result}), which says the app or the check is broken, not the rows; None otherwise."""
+    sigs = {i: (r.get("browser") or {}).get("sig") for i, r in results.items()}
+    if len(sigs) >= 3 and all(sigs.values()) and len(set(sigs.values())) == 1:
+        return f"the browser check failed the same way on all {len(sigs)} rows ({next(iter(sigs.values()))}), so the app or the check is at fault"
+    return None
+
+
 class Slots:
     """A run's build slots (T-1978). A taker marked `first` keeps builds from starting until it has
     its slots: a builder gives its slot back and takes the next at once, so a gate would wait out
@@ -370,6 +379,7 @@ class Run:
         self.streak = (None, 0)  # T-775: the last park's reason, as compared, and how many in a row
         self.stopping = False
         self.vite = None
+        self.frozen = None  # the gate's copy of app/ (freeze_app, T-2298)
         self.everyday = None  # the gate's rates test, built once a run (build_everyday)
         self.report = {"batch": self.batch, "root": str(self.root), "jobs": self.jobs, "rows": {}, "regions": []}
 
@@ -1299,6 +1309,11 @@ class Run:
             self.unregister(ids)
             raise RunFault(f"the gate {'crashed' if not ok else 'ended'} with no result for {' '.join(none)} "
                            f"({str(tail)[-300:]}); the region's rows stay built for the next run (see {L}.gate.log)")
+        # T-2399: a browser check failing the same way on every row (3 or more) is the check or the app, not the rows
+        fault = browser_fault({i: json.loads((gd / f"{i}.json").read_text(encoding="utf-8")) for i in ids}) if self.browser else None
+        if fault:
+            self.unregister(ids)
+            raise RunFault(f"{fault}; the rows stay built for the next run (see {L}.gate.log, and run checks/smoke.mjs)")
         shipped = []
         for i in ids:
             p = gd / f"{i}.json"
@@ -1334,8 +1349,9 @@ class Run:
         self.check_port()
         log = open(f"{L}.vite.log", "a", encoding="utf-8")
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+        env = dict(os.environ, TW_APP_DIR=str(self.freeze_app(L)))
         self.vite = subprocess.Popen(["node", str(REAL / "checks/dev-nowatch.mjs"), str(self.port)], cwd=str(MAPS),
-                                     stdout=log, stderr=subprocess.STDOUT, creationflags=flags)
+                                     stdout=log, stderr=subprocess.STDOUT, creationflags=flags, env=env)
         base = f"http://localhost:{self.port}"
         for _ in range(120):
             try:
@@ -1352,6 +1368,38 @@ class Run:
                 time.sleep(1)
         raise SystemExit(f"Vite on {self.port} did not answer in 2 minutes")
 
+    def freeze_app(self, L):
+        """T-2298: the gate's Vite serves a copy of app/ made now (after the rows are registered, so it holds
+        their registry entries), so a WASM or UI landing in the tree mid-gate cannot change the page under the
+        browser check (72 of Russia's rows parked on a half-rebuilt sim). The copy's node_modules and its
+        sibling data are junctions: vite.config.ts reads ../data/packs, terrain and the rest from there."""
+        import tempfile
+        self.drop_frozen()
+        src = self.root / "app"
+        top = Path(tempfile.mkdtemp(prefix="tw-frozen-"))
+        shutil.copytree(src, top / "app", ignore=shutil.ignore_patterns("node_modules", "dist"))
+        for name, target in (("app/node_modules", src / "node_modules"), ("data", self.root / "data")):
+            target = target.resolve()
+            if os.name == "nt":
+                r = subprocess.run(["cmd", "/c", "mklink", "/J", str(top / name), str(target)], capture_output=True, text=True)
+                if r.returncode:
+                    raise RunFault(f"could not link {name} into the gate's app copy: {r.stdout}{r.stderr}")
+            else:
+                os.symlink(target, top / name, target_is_directory=True)
+        self.frozen = top
+        print(f"    the gate's app/ is frozen at {top / 'app'}", flush=True)
+        return top / "app"
+
+    def drop_frozen(self):
+        """Remove the frozen copy: the links first (rmdir, never rmtree through them), then the rest."""
+        top, self.frozen = self.frozen, None
+        if top is None:
+            return
+        for name in ("app/node_modules", "data"):
+            with contextlib.suppress(OSError):
+                os.rmdir(top / name) if os.name == "nt" else os.unlink(top / name)
+        shutil.rmtree(top, ignore_errors=True)
+
     def stop_vite(self):
         """The runner's own Vite only: its PID and its children."""
         if self.vite and self.vite.poll() is None:
@@ -1361,6 +1409,7 @@ class Run:
                 self.vite.terminate()
             self.vite.wait(timeout=30)
         self.vite = None
+        self.drop_frozen()
 
     # ---------------------------------------------------------------- joint gravity and the market
 

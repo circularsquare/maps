@@ -3,6 +3,7 @@ by numeric thresholds, so a city is built with no agent judgement.
 
     python checks/pack_gate.py <id> [<id> ...] [--all] [--browser] [--no-rust] [--log <id>=<build log>]
                                [--since <snapshot.json>] [--out <dir>] [--work <dir of joint reports>]
+    python checks/pack_gate.py <id> --browser-only        the browser check alone (BASE: the Vite); exit 1 on a fail
     python checks/pack_gate.py snapshot <snapshot.json>   every pack's arrays hashed, before a build
     python checks/pack_gate.py fleet                      checks/pack_gate_fleet.json from the results in --out
     python checks/pack_gate.py stations <id> --extracts a,b   the pack's station file, from the extracts' caches
@@ -855,6 +856,23 @@ def browser_parts(rows):
     return big + [p for p in (rest[n * size:(n + 1) * size] for n in range(k)) if p]
 
 
+# T-2399: this many rows' browser checks in, none passed and all failing the same way, the rest are not run
+# (an app change that breaks the check made every zone wait 300 s, twice, and Jakarta's parked)
+BROWSER_SAME_FAIL = int(os.environ.get("BROWSER_SAME_FAIL", 3))
+
+
+def failure_signature(res, ids):
+    """How a browser result failed, with row ids and numbers taken out, so the same fault on different rows compares
+    equal; None for a pass."""
+    if res.get("pass"):
+        return None
+    bad = [k["name"] for k in res.get("checks", []) if not k["ok"]]
+    why = "" if bad else str(res.get("error") or "no result").strip().split("\n")[0]
+    for i in sorted(ids, key=len, reverse=True):
+        why = why.replace(i, "<id>")
+    return re.sub(r"\d+(\.\d+)?", "#", f"failed: {bad} {why}".strip())
+
+
 def _kill_tree(p):
     if os.name == "nt":
         subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"], capture_output=True)
@@ -878,7 +896,17 @@ def browser_run(rows, out_dir, stall_s=None, script=None):
     queue = [(p, len(p) == 1) for p in browser_parts(rows)]
     running, said, n = [], {}, 0
     # each row's result printed as it lands, so the gate's log keeps growing for the runner's quiet watch (T-1308)
-    seen, beat = set(), time.time()
+    seen, beat, stopped = set(), time.time(), None
+
+    def same_failure(rows, seen):
+        sigs = set()
+        for r in rows:
+            if r["id"] in seen:
+                with open(r["json"], encoding="utf-8") as fh:
+                    got = json.load(fh)
+                sigs.add(failure_signature({"pass": all(c["ok"] for c in got.get("checks", [])) and bool(got.get("checks")) and not got.get("error"),
+                                            "checks": got.get("checks", []), "error": got.get("error")}, [x["id"] for x in rows]))
+        return next(iter(sigs)) if len(sigs) == 1 and None not in sigs else None
 
     def finish(s, stalled=False):
         s["log"].seek(0)
@@ -901,7 +929,7 @@ def browser_run(rows, out_dir, stall_s=None, script=None):
                 json.dump(part, fh, ensure_ascii=False)
             env = dict(os.environ, ROWS=lst, WORKERS=os.environ.get("WORKERS", "1"))
             log = open(os.path.join(out_dir, f"browser-{os.getpid()}-{n}.log"), "w+", encoding="utf-8", errors="replace")
-            p = subprocess.Popen(["node", script or os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
+            p = subprocess.Popen(["node", script or os.environ.get("TW_BROWSER_SCRIPT") or os.path.join(HERE, "city-browser.mjs")], cwd=maps, env=env,
                                  stdout=log, stderr=subprocess.STDOUT)
             running.append({"part": part, "alone": alone, "lst": lst, "log": log, "p": p, "n": n, "size": -1, "still": time.time()})
             n += 1
@@ -944,6 +972,14 @@ def browser_run(rows, out_dir, stall_s=None, script=None):
         if time.time() - beat > 300:
             beat = time.time()
             print(f"  browser: {len(seen)} of {len(rows)} rows in", flush=True)
+        if len(rows) > BROWSER_SAME_FAIL and len(seen) >= BROWSER_SAME_FAIL and (sig := same_failure(rows, seen)):
+            for s in running:
+                _kill_tree(s["p"])
+                finish(s)
+            running.clear()
+            queue.clear()
+            print(f"  browser: the first {len(seen)} rows all failed the same way ({sig}); the rest are not run", flush=True)
+            stopped = sig
     out = {}
     for r in rows:
         got = {}
@@ -958,6 +994,11 @@ def browser_run(rows, out_dir, stall_s=None, script=None):
             res["tries"] = got["tries"]
         if not res["pass"] and all(c["ok"] for c in checks):  # died after passing checks (T-788)
             res["error"] = (got.get("error") or said.get(r["id"]) or "no result")[-400:]
+        sig = failure_signature(dict(res, error=got.get("error") or said.get(r["id"])), [x["id"] for x in rows])
+        if stopped and not os.path.exists(r["json"]):
+            res, sig = {"pass": False, "checks": [], "error": f"not run: {stopped}"}, stopped
+        if sig:
+            res["sig"] = sig  # the gate reads this: every row failing one way is a fault of the run (T-2399)
         out[r["id"]] = res
     return out
 
@@ -1168,6 +1209,26 @@ def fleet(out_dir):
     print(f"{len(ranges)} ranges -> {FLEET}")
 
 
+def browser_only(ids, reg, logs, out):
+    """The browser check on the packs and nothing else, to see that the check itself works on the app as it is
+    (checks/smoke.mjs runs it on one small zone). Exits 1 when any fails."""
+    rows = []
+    for city in ids:
+        got = prepare(city, reg[city], logs)
+        if isinstance(got, dict):
+            print(f"FAIL browser {city}: {got.get('verdict')} before the browser check: "
+                  f"{[c['name'] for c in got.get('checks', []) if c['status'] == 'FAIL']}")
+            raise SystemExit(1)
+        f, header, a = got
+        rows.append(browser_row(city, header, a, f, reg[city], out)[0])
+    bad = 0
+    for city, res in browser_run(rows, out).items():
+        ok = res["pass"]
+        bad += not ok
+        print(f"{'PASS' if ok else 'FAIL'} browser {city}: {len(res['checks'])} checks" + ("" if ok else f" ({res.get('sig')}; {res.get('error', '')[-200:]})"))
+    raise SystemExit(1 if bad else 0)
+
+
 def main(argv):
     def opt(flag, default=None):
         return argv[argv.index(flag) + 1] if flag in argv else default
@@ -1185,6 +1246,8 @@ def main(argv):
     if not ids:
         raise SystemExit(__doc__)
     logs = dict(x.split("=", 1) for i, x in enumerate(argv) if i and argv[i - 1] == "--log")
+    if "--browser-only" in argv:  # T-2399: the browser check alone, for smoke.mjs; BASE names the Vite
+        return browser_only([i for i in ids if i in reg], reg, logs, out)
     rates = None if "--no-rust" in argv else everyday_rates(ids)
     opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out, "work": opt("--work")}
     lines = []
