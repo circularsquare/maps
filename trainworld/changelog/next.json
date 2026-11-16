@@ -522,6 +522,26 @@
       "by": "hover",
       "at": "2026-11-16T17:56:13Z",
       "rev": 1
+    },
+    {
+      "id": "c053",
+      "text": "fixed about a hundred place names in japanese and chinese that named a different place, like shiga showing as 志賀 instead of 滋賀",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3450",
+      "by": "names",
+      "at": "2026-11-16T18:32:08Z",
+      "rev": 1
+    },
+    {
+      "id": "c054",
+      "text": "the schematic of a game with lines far apart draws each city at its own scale, nearest first, instead of squashing them all onto one coarse grid",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3448",
+      "by": "regions",
+      "at": "2026-11-16T18:45:42Z",
+      "rev": 1
     }
   ]
 }

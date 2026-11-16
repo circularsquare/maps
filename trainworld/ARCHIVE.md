@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3448 [P2] {L:schematic} One schematic per region, so cities keep a fine grid (2026-11-16): each region (stations joined by lines; nearby groups within 500 km and a 1,200 km box) gets its own sheet at its own scale, drawn nearest first; New York with a far LA line draws pixel-identical to New York alone (ec4b53eb). A rail-connected continent stays one region (T-3453). notes/T-3448.md.
+- T-2398 [P3] {L:world-tooling} world_run step --help runs the step (2026-11-16): step <name> --help/-h prints the script docstring from pipeline/world_run.py step_help before any import or run, for every step; checks/step_help.py runs all 105 steps and checks the tree is unchanged.
 - T-1791 [P3] {L:small-fixes} Boardings in the line group view (2026-11-16): a stop's hover in the group view ends with "{count} boardings in past 24h" (the line panel's string), per line at shared stops. notes/T-1791.md.
 - T-3452 [P2] {L:cleanup} Code tour for Anita (2026-11-16): tour delivered: notes/code-tour.md with artifacts/trainworld/review/code-tour.png and an odd-things list.
 - T-3451 [P2] {L:board} Review of our task and agent workflow (2026-11-16): review delivered: notes/T-3451.md; her calls on its recommendations pending.

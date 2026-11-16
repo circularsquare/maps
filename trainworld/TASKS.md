@@ -69,10 +69,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The gate serves the main tree's app/, so a WASM rebuild mid-gate parked 72 of Russia's rows with a misleading "Nn" error.
   - Goal: The gate runs from a frozen copy of app/, or stops and reruns the chunk when the WASM changes.
   - Other: See notes/T-2295.md.
-- T-2398 [P3] {L:world-tooling} world_run step --help runs the step
-  - Context: `step seams --help` ran seams for real and rewrote borders.json (restored from HEAD).
-  - Goal: `--help` on a step prints help and never runs it.
-  - Other: See notes/T-2295.md.
 - T-2399 [P3] {L:world-tooling} Gate browser check fails silently on UI changes
   - Context: An app change made the gate's browser check wait 300 s on every zone and park Jakarta's zones.
   - Goal: A smoke check runs city-browser.mjs on one shipped zone, and a gate failing the same way on every row stops as a run fault.
@@ -864,12 +860,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
   - Other: A design call, 4-6 h. notes/T-3344.md.
 - T-3450 [P2] {L:translations} Shiga shows as 志賀 in Japanese (taking, 2026-11-16, agent names)
-  - Context: Player report via your scratch pad 2026-11-16: Shiga is 滋賀, not 志賀. Zone shg's Wikidata id is Q2278690 (Shiga town, 志賀町), not the prefecture, so the name lookup picked a same-named place. You asked how it happened and whether others went wrong the same way.
+  - Context: Fixed, waiting on the orchestrator's close. Shiga matched the old town 志賀町 inside the prefecture; renamed zones kept their old name's label (Kingsport showed サリヴァン郡). 96 zones and 2 cities corrected; the tool now refuses such matches and checks/place_names_match.mjs fails on them.
   - Goal: shg fixed, every zone's Wikidata match checked for the same kind of error, and a check that catches it.
-- T-3448 [P2] {L:schematic} One schematic per region, so cities keep a fine grid (taking, 2026-11-16, agent regions)
-  - Context: A player's New York schematic was squashed onto a diagonal and broken into islands: with lines far away (Los Angeles, Tokyo) the sheet's cells grow with the whole map. Mask fetches now go 32 at a time with a retry (dc184b11). You 2026-11-16: keep the grid fine; one diagram per region if that does it; draw the one around the camera first, show it, then keep drawing the farther ones until all are drawn (the schematic should draw everything); regions joined by rail draw as one. Player (left) and repro (right): artifacts/trainworld/review/nyc-schematic-far.png.
-  - Goal: A New York game with far-off lines draws New York as it does alone, and every region gets drawn. Also covers T-3409 (a schematic of one city).
-  - Other: notes/T-3448.md
+  - Other: notes/T-3450.md
 - T-3453 [P3] {L:schematic} Finer schematic grid near dense cities
   - Context: Option B of T-3448, queued by you 2026-11-16 for later: make the sheet's grid finer wherever stations are dense, whatever the map's size; would also help cities squished too much. A redesign of the sheet's land and water grid, a day or more.
   - Goal: Dense cities get room on any map size.
