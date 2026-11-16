@@ -353,6 +353,8 @@ select.small {
 .notes a { color: var(--accent); }
 
 /* the two views */
+#p4[aria-pressed="true"] { border-color: var(--p4); color: var(--p4); }
+.card.ask .name { font-weight: 600; }
 #views { display: inline-flex; }
 #views button { border-radius: 0; }
 #views button:first-child { border-radius: 4px 0 0 4px; }

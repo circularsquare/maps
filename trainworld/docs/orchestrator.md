@@ -21,10 +21,19 @@ not once per message (Anita, 2026-11-09).
   continues. Overnight, while she sleeps, agents and you keep going past that (Anita, 2026-11-05).
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
   agent quiet for about 45 minutes. Keep the work moving (the `takeover` skill) within the ledger's core cap.
-- **Worktrees**, used sparingly (T-792): for a code agent whose edits would collide, or one that changes the WASM
-  interface while others run pages. `node trainworld/checks/agent-tree.mjs new <name>` makes `maps/.tw-trees/<name>`
-  on branch `tw/<name>`; the agent runs from that folder and edits TASKS/ARCHIVE/DECISIONS in the main tree only.
-  About 1.2 GB each; two or three at most.
+- **Worktrees**: one per code agent (T-792), so edits never collide and WASM changes stay apart.
+  `node trainworld/checks/agent-tree.mjs new <name>` makes `maps/.tw-trees/<name>` on branch `tw/<name>` and copies
+  the main tree's uncommitted `app/src/game/*.json` into it; the agent runs from that folder and edits
+  TASKS/ARCHIVE/DECISIONS in the main tree only. `land` puts those copies back before it commits, unless the agent
+  edited one itself (it warns). About 1.2 GB each: remove a tree when its agent is done.
+- **Bookkeeping by command** (T-3451): `venv\Scripts\python.exe trainworld/tools/tasks.py` from the maps root.
+  `start <ids> --agent <name> [--model m --tree t --what "..."]` adds the taking marks and the agent to
+  `notes/board-live.json`. `done <id> --outcome "..." [--notes notes/T-x.md]` and `close <id> --reason "..."` move the
+  task to the top of ARCHIVE.md, set the line's `done:` in LINES.md when it was its last open task, and drop the
+  agent from the board when it has no other taken task. `check` lists badly formed task lines, tags naming a line not
+  in LINES.md, taking marks with no agent on the board, board agents with no mark, duplicate ids and a handoff over
+  80 lines; run it at the end of a round. Still by hand: grep TASKS.md and notes/asks.json for the id, a parent
+  whose last stage closed, DECISIONS.md. Builds and runs in `board-live.json` stay yours.
 
 ## TODO.md and asks
 
@@ -36,8 +45,7 @@ not once per message (Anita, 2026-11-09).
   players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
   her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
   the task list is long (Sendai's Senzan Line). Say the reach guess in the task line.
-- Asks that outlive the session go in `notes/for-anita.md` (answered blocks archived, not kept); the rest in the
-  final message's For you block.
+- Asks that outlive the session, task or not, go in `notes/asks.json` (`[{id, text, since, by}]`, `since` a date, `id` like `a-2026-11-16-1`); the board shows them oldest first under Waiting on you. Her answer or dismissal arrives in the inbox as `ask-answer`: act on it, remove the entry, mark it handled. The final message's For you block repeats them.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
 - **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
@@ -102,7 +110,7 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 ## Tools
 
 - Run trainworld's `.cmd` scripts from PowerShell with the maps root as the working directory (from another folder
-  it fails with "cannot find the path"). Also in `checks/`: `keep_hunks.py`, `mark_taking.py`.
+  it fails with "cannot find the path"). Also in `checks/`: `keep_hunks.py`; `mark_taking.py` is superseded by `tools/tasks.py start`.
 - Build number = `git rev-list --count`. Restart 8800's `serve.py` any time with
   `venv\Scripts\python.exe trainworld/tools/ops/restart_serve.py` (allowed without a prompt; Anita 2026-11-16: "serve.py
   restarts are totally fine. they only affect me").

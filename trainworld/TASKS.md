@@ -3,9 +3,9 @@
 Open agent work: a head line per task with short Need / Context / Goal / Other fields under it; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`. Each task's
 `{L:<slug>}` tag names its line in `LINES.md`, Anita's view of the work by area.
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
-Lower-priority tasks are under **Someday** at the end, with one-sentence fields. They are open tasks
-(Anita 2026-10-26): count them when asked what is open, and work on them when nothing above can go
-ahead; pull one back up when it becomes next. Anita's shortlist of candidates: `notes/for-anita.md`. Notes of archived
+Lower-priority tasks are under **Someday** at the end, with one-sentence fields. They are all P4: they don't
+count as open (Anita 2026-11-16); work on them when nothing above can go
+ahead; pull one back up when it becomes next. Notes of archived
 tasks (except those an open task or the handoff cites) live in `notes/archive/` by task id, in the folders `t0001-0499/`,
 `t0500-0999/`, `t1000-1499/`, `t1500-1999/` and `t2000-2499/` (older ARCHIVE.md and DECISIONS.md links say
 `notes/T-###.md`: look there).
@@ -353,7 +353,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3454 [P2] {L:route-choice} Feeder effect by trip length, at real coverage
+- T-3454 [P2] {L:route-choice} Feeder effect by trip length, at real coverage (taking, 2026-11-16, agent feedsample)
   - Context: You asked 2026-11-16 after T-3426: sample a couple of short, medium and long pairs, show where the fix changes most, and fit against real numbers with a semi-realistic number of feeders (roughly real-world coverage), not 2-3 test lines.
   - Goal: A table of short, medium and long pairs, before and after, with real-like feeder coverage and real figures, and which change most.
 - T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan
@@ -929,7 +929,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
+  - Context: Jordan's cloud saves had truncated gzip streams, and the server only checks the first four bytes of an upload, so backup rotation can throw away the last good copy.
+  - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
+  - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
@@ -1097,150 +1100,150 @@ Short fields; the full context is in each task's notes file.
 ### Quick wins
 Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no data rebuild. Grouped by the files they touch, so one agent can take a batch. None found in the sim's track code.
 #### Pipeline (between runs: the runner's files are in use while one runs)
-- T-612 [P3] {L:world-tooling} Delete parked rows' pack files
+- T-612 [P4] {L:world-tooling} Delete parked rows' pack files
   - Context: Runner keeps pack files of parked rows after their reason is recorded.
   - Goal: Files are deleted once the reason is recorded.
-- T-766 [P3] {L:world-tooling} Record each extract's PBF snapshot time
+- T-766 [P4] {L:world-tooling} Record each extract's PBF snapshot time
   - Context: world_run does not note when each PBF extract was taken.
   - Goal: Each extract's snapshot time is recorded.
   - Other: See notes/someday.md.
-- T-386 [P3] {L:world-tooling} tier0 signals log whole-area totals
+- T-386 [P4] {L:world-tooling} tier0 signals log whole-area totals
   - Context: tier0 logs signal totals inside the boundary only.
   - Goal: Totals cover what is needed.
   - Other: See notes/T-291.md.
-- T-943 [P3] {L:world-tooling} Speed up market_zones at register
+- T-943 [P4] {L:world-tooling} Speed up market_zones at register
   - Context: Its Python part takes 28 of 33 s at a gate's register.
   - Goal: The register is much faster.
   - Other: See notes/someday.md.
-- T-986 [P3] {L:world-tooling} Region list upkeep
+- T-986 [P4] {L:world-tooling} Region list upkeep
   - Context: The region list needs updating for newly built countries.
   - Goal: New countries appear in the list.
   - Other: See notes/someday.md.
 
 ### World and countries
-- T-1344 [P3] {L:census-totals} One-city data sources, nine folded tasks
+- T-1344 [P4] {L:census-totals} One-city data sources, nine folded tasks
   - Context: Paris, London, Toronto, Seoul and Mumbai each have a local source we haven't used.
   - Goal: Take one when it's cheap or its pack is rebuilt.
   - Other: notes/T-1344.md
-- T-967 [P3] {L:world-tooling} Keep region caches until the join
+- T-967 [P4] {L:world-tooling} Keep region caches until the join
   - Context: Caches are dropped before the join; fetching ahead is T-1980.
   - Goal: Region caches stay until the join.
   - Other: See notes/someday.md.
-- T-968 [P3] {L:world-tooling} Parallelise the join's per-pack loops
+- T-968 [P4] {L:world-tooling} Parallelise the join's per-pack loops
   - Context: The join's per-pack loops and the gate's register run in one process.
   - Goal: They run across processes.
   - Other: See notes/someday.md.
-- T-969 [P3] {L:world-tooling} Gate figures in the build workers
+- T-969 [P4] {L:world-tooling} Gate figures in the build workers
   - Context: The serial gate computes figures the build workers could.
   - Goal: Workers make the gate figures.
   - Other: See notes/someday.md.
-- T-970 [P3] {L:world-tooling} Cut build cost per row
+- T-970 [P4] {L:world-tooling} Cut build cost per row
   - Context: Each row spends about 8 s more than needed (h3, GHSL reuse, extra processes).
   - Goal: Each row builds about 8 s faster.
   - Other: See notes/someday.md.
-- T-563 [P3] {L:demand-ideas} Fit a planned city's own curve
+- T-563 [P4] {L:demand-ideas} Fit a planned city's own curve
   - Context: Archetype A planned cities use a shared curve.
   - Goal: Each planned city fits its own curve at build time.
   - Other: Notes: notes/someday.md
-- T-1027 [P3] {L:region-redraws} Coarse zone outlines overlap
+- T-1027 [P4] {L:region-redraws} Coarse zone outlines overlap
   - Context: Outlines overlap after simplification.
   - Goal: Simplified outlines do not overlap.
   - Other: notes/someday.md
-- T-462 [P3] {L:region-redraws} Japan zone tooling fixes
+- T-462 [P4] {L:region-redraws} Japan zone tooling fixes
   - Context: Fixes to Japan zone tooling came out of T-420.
   - Goal: The fixes are made.
   - Other: notes/someday.md
-- T-505 [P3] {L:jobs-places} University students by institution
+- T-505 [P4] {L:jobs-places} University students by institution
   - Context: France and Germany have no students by institution.
   - Goal: Student counts per institution for both.
   - Other: notes/T-505.md
-- T-506 [P3] {L:jobs-places} Brazil's school census and DATASUS
+- T-506 [P4] {L:jobs-places} Brazil's school census and DATASUS
   - Context: Tier 0 Brazil lacks school and health data.
   - Goal: The school census and DATASUS added.
   - Other: notes/T-506.md
-- T-507 [P3] {L:census-totals} Nigeria from GRID3
+- T-507 [P4] {L:census-totals} Nigeria from GRID3
   - Context: Nigeria's data could come from GRID3.
   - Goal: Nigeria built on GRID3.
   - Other: notes/T-507.md
-- T-508 [P3] {L:jobs-places} Overture Places where OSM is thin
+- T-508 [P4] {L:jobs-places} Overture Places where OSM is thin
   - Context: OSM's completeness is under 0.3 in some places.
   - Goal: Overture Places fill those gaps.
   - Other: notes/T-508.md
-- T-383 [P3] {L:world-tooling} Shared cell-to-unit table
+- T-383 [P4] {L:world-tooling} Shared cell-to-unit table
   - Context: Each measurement script builds its own cell-to-unit table.
   - Goal: One cached table per pack is shared.
   - Other: See notes/T-383.md.
-- T-060 [P3] {L:loading} City packs on R2, compressed copy
+- T-060 [P4] {L:loading} City packs on R2, compressed copy
   - Context: City packs on R2 still lack a compressed .bin copy and the header in JS.
   - Goal: City packs load a compressed copy.
   - Other: notes/someday.md
-- T-321 [P3] {L:demand-ideas} Local time across offsets
+- T-321 [P4] {L:demand-ideas} Local time across offsets
   - Context: Ledger days and market trips ignore time zone offsets.
   - Goal: They handle offsets.
   - Other: Notes: notes/T-321.md
 
 ### Demand
-- T-1345 [P3] {L:ridership-checks} One-city calibration checks
+- T-1345 [P4] {L:ridership-checks} One-city calibration checks
   - Context: Eight of the twelve checks are left (T-216, T-240, T-273, T-043, T-283, T-058, T-497, T-522); the rest were done or dropped.
   - Goal: Each remaining check is run or dropped.
   - Other: Notes: notes/T-1345.md
-- T-263 [P3] {L:attractions} Stadium events
+- T-263 [P4] {L:attractions} Stadium events
   - Context: Attractions' stage 3, low priority (your 2026-10-24 call). Holiday sightseeing goes with T-264.
   - Goal: Stadium events as an attraction.
   - Other: notes/T-263.md
-- T-632 [P3] {L:route-choice} Walking feels too strong
+- T-632 [P4] {L:route-choice} Walking feels too strong
   - Context: Walking feels too strong to play against. Parked: you said to try later.
   - Goal: Walking feels balanced against trains.
   - Other: Notes: notes/T-632.md
-- T-634 [P3] {L:route-choice} Bike or short-trip mode
+- T-634 [P4] {L:route-choice} Bike or short-trip mode
   - Context: No mode sits before walking. Japan: Tokyo commute rail is 35% against 52%, partly for want of bike access to stations (notes/T-509.md sections 14-15).
   - Goal: A bike or short-trip mode, once walking is refit on surveys.
   - Other: Notes: notes/someday.md
-- T-461 [P3] {L:jobs-places} Japan's jobs total and public service
+- T-461 [P4] {L:jobs-places} Japan's jobs total and public service
   - Context: Japan's jobs total and public service are off.
   - Goal: Both fixed.
   - Other: notes/someday.md
-- T-454 [P3] {L:demand-ideas} Destinations that respond to the network
+- T-454 [P4] {L:demand-ideas} Destinations that respond to the network
   - Context: Destinations are fixed. Parked by you.
   - Goal: Destinations shift as the network grows.
   - Other: Notes: notes/someday.md
-- T-427 [P3] {L:solve-speed} Longer-trip answers only for zones with trips
+- T-427 [P4] {L:solve-speed} Longer-trip answers only for zones with trips
   - Context: Someday: send longer-trip answers only for zones that have trips.
   - Goal: Answers are sent only for zones with trips.
   - Other: notes/T-377.md
-- T-390 [P3] {L:route-choice} Walked and drove split per station
+- T-390 [P4] {L:route-choice} Walked and drove split per station
   - Context: Everyday and regional trips have no per-station walked/drove split.
   - Goal: Each station shows its split.
   - Other: Notes: notes/someday.md
-- T-296 [P3] {L:demand-ideas} Weekends overcount commuters in far zones
+- T-296 [P4] {L:demand-ideas} Weekends overcount commuters in far zones
   - Context: A station's far-zone rows overcount commuters on weekends.
   - Goal: Far-zone rows show weekend trips fairly.
   - Other: Notes: notes/T-296.md
-- T-298 [P3] {L:demand-ideas} Inspectors mix commutes into longer trips
+- T-298 [P4] {L:demand-ideas} Inspectors mix commutes into longer trips
   - Context: Inspectors blend commutes between zones into longer trips.
   - Goal: Inspectors keep commutes separate.
   - Other: Notes: notes/someday.md
-- T-270 [P3] {L:demand-ideas} Driving across rivers and into centres too cheap
+- T-270 [P4] {L:demand-ideas} Driving across rivers and into centres too cheap
   - Context: Drives across rivers and into dense centres lack tolls.
   - Goal: Those drives cost more.
   - Other: Notes: notes/someday.md
-- T-059 [P3] {L:demand-ideas} Trips home chosen from the work end
+- T-059 [P4] {L:demand-ideas} Trips home chosen from the work end
   - Context: Homes are not chosen from the work end.
   - Goal: Trips home are chosen from the work end.
   - Other: Notes: notes/someday.md
-- T-265 [P3] {L:demand-ideas} Signals simulated by clumps of shared track
+- T-265 [P4] {L:demand-ideas} Signals simulated by clumps of shared track
   - Context: Signals are not simulated per shared-track clump.
   - Goal: Signals follow clumps of shared track.
   - Other: Notes: notes/someday.md
-- T-187 [P3] {L:demand-ideas} Trip chains of work, leisure, home
+- T-187 [P4] {L:demand-ideas} Trip chains of work, leisure, home
   - Context: Trips are not chained. Not a priority, you said.
   - Goal: Trips chain work, leisure and home.
   - Other: Notes: notes/someday.md
-- T-1240 [P3] {L:solve-speed} Leaner sample index for coarse zones
+- T-1240 [P4] {L:solve-speed} Leaner sample index for coarse zones
   - Context: Someday: a smaller per-cell sample index for coarse zones.
   - Goal: Coarse zones use a leaner index.
   - Other: notes/someday.md
-- T-1241 [P3] {L:demand-ideas} Everyday station noise in thin zones
+- T-1241 [P4] {L:demand-ideas} Everyday station noise in thin zones
   - Context: Thin zones show noisy everyday trips between draws.
   - Goal: Everyday trips are steady between draws.
   - Other: Notes: notes/someday.md
@@ -1252,80 +1255,80 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: The boarding account lets a train empty fully mid-line.
   - Goal: The boarding account no longer empties trains mid-line.
   - Other: Notes: notes/someday.md
-- T-738 [P3] {L:airports} Flight data for long-distance demand
+- T-738 [P4] {L:airports} Flight data for long-distance demand
   - Context: Your idea: use flight data for long-distance demand.
   - Goal: Long-distance demand uses flight data, or the idea is dropped.
   - Other: notes/someday.md
 
 ### Performance
-- T-1173 [P3] {L:loading} Clock worker loads for 5.7 s on China
+- T-1173 [P4] {L:loading} Clock worker loads for 5.7 s on China
   - Context: The clock worker takes 5.7 s to load on the China save.
   - Goal: The clock worker loads the China save faster.
-- T-1230 [P3] {L:loading} Clock worker first boarding hour is slow
+- T-1230 [P4] {L:loading} Clock worker first boarding hour is slow
   - Context: The clock worker's first boarding hour after a result takes 1.3 s.
   - Goal: That first hour takes much less than 1.3 s.
   - Other: notes/someday.md
-- T-898 [P3] {L:loading} City pack opening is slow for big loads
+- T-898 [P4] {L:loading} City pack opening is slow for big loads
   - Context: Opening a city pack is the floor of a big load, 7 s a worker for Japan.
   - Goal: Pack opening takes much less than 7 s a worker on Japan.
   - Other: notes/someday.md
-- T-1040 [P3] {L:edit-speed} Long piece ghost takes 100-300 ms
+- T-1040 [P4] {L:edit-speed} Long piece ghost takes 100-300 ms
   - Context: A long piece's ghost is a full trial edit, 100-300 ms.
   - Goal: A long piece's ghost previews faster.
   - Other: notes/someday.md
-- T-1031 [P3] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
+- T-1031 [P4] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
   - Context: The first ghost of each run takes 0.5-0.7 s.
   - Goal: The first ghost appears as fast as later ones.
   - Other: notes/someday.md
-- T-879 [P3] {L:frame-rate} Long tasks when panning zoomed out
+- T-879 [P4] {L:frame-rate} Long tasks when panning zoomed out
   - Context: Someday: long tasks remain when panning zoomed out.
   - Goal: Panning zoomed out has no long tasks.
   - Other: notes/someday.md
-- T-875 [P3] {L:solve-speed} Evening period from midday choices
+- T-875 [P4] {L:solve-speed} Evening period from midday choices
   - Context: Someday: derive the evening period from midday choices.
   - Goal: Evening is solved from midday choices.
   - Other: notes/someday.md
-- T-876 [P3] {L:solve-speed} Fold tiny far-zone station rows
+- T-876 [P4] {L:solve-speed} Fold tiny far-zone station rows
   - Context: Someday: fold tiny far-zone station rows into a remainder.
   - Goal: Tiny rows are folded into one remainder.
   - Other: notes/someday.md
-- T-877 [P3] {L:solve-speed} Market air lists once per airport
+- T-877 [P4] {L:solve-speed} Market air lists once per airport
   - Context: Someday: store the market rows air lists once per airport.
   - Goal: Air lists are stored once per airport.
   - Other: notes/someday.md
-- T-777 [P3] {L:solve-speed} Market rows per country
+- T-777 [P4] {L:solve-speed} Market rows per country
   - Context: Someday: load market rows per country instead of the whole file.
   - Goal: Market rows load per country.
   - Other: notes/someday.md
-- T-758 [P3] {L:edit-speed} Track derive takes 4.9 s on Japan
+- T-758 [P4] {L:edit-speed} Track derive takes 4.9 s on Japan
   - Context: The track derive with water masks takes 4.9 s for Japan.
   - Goal: The derive takes much less than 4.9 s.
   - Other: notes/someday.md
-- T-281 [P3] {L:loading} Big saves search every station's walk
+- T-281 [P4] {L:loading} Big saves search every station's walk
   - Context: Opening a big save searches every station's walk round water.
   - Goal: A big save opens without searching every station.
   - Other: notes/someday.md
-- T-168 [P3] {L:solve-speed} Add a viewed city without a whole re-solve
+- T-168 [P4] {L:solve-speed} Add a viewed city without a whole re-solve
   - Context: Someday: adding a newly viewed city re-solves the whole network.
   - Goal: A new city is added without re-solving everything.
   - Other: notes/someday.md
-- T-414 [P3] {L:solve-speed} First worker solve slower in the browser
+- T-414 [P4] {L:solve-speed} First worker solve slower in the browser
   - Context: Someday: each worker first solve is slower in the browser than native.
   - Goal: Browser first solves match native.
   - Other: notes/someday.md
-- T-361 [P3] {L:memory} {after:T-3373} One demand engine per city
+- T-361 [P4] {L:memory} {after:T-3373} One demand engine per city
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
   - Goal: One demand engine per city.
   - Other: notes/T-361.md
-- T-354 [P3] {L:memory} {after:T-3373} Pack copies per worker
+- T-354 [P4] {L:memory} {after:T-3373} Pack copies per worker
   - Context: Each worker holds its own pack copies, and the final publish spreads them. T-3373 shares the zone data; the pack copy may go with it.
   - Goal: Pack copies are shared and the publish is trimmed.
   - Other: notes/T-354.md
-- T-344 [P3] {L:loading} Zone loading bar sticks near 99%
+- T-344 [P4] {L:loading} Zone loading bar sticks near 99%
   - Context: Rare, and not reproduced on a Tokyo save 2026-11-16. Likely cause: a zone opened but never solved when the view jumps to dead space first.
   - Goal: The bar finishes when loading does.
   - Other: notes/T-344.md
-- T-346 [P3] {L:loading} Cached reload hides fresh estimates
+- T-346 [P4] {L:loading} Cached reload hides fresh estimates
   - Context: A cached reload shows no fresh estimates by design (T-328). Showing them needs the cache to say which views it holds, and touches the core of solve publishing.
   - Goal: A reload shows the fresh solve's estimates.
   - Other: notes/someday.md
@@ -1335,82 +1338,82 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: You want it, not urgent.
   - Goal: A city's real network can be added to a running game.
   - Other: notes/someday.md
-- T-685 [P3] {L:achievements} City stamps at 10% rail share
+- T-685 [P4] {L:achievements} City stamps at 10% rail share
   - Context: Stars are done; drawn stamps for 10% rail share remain.
   - Goal: Stamps are drawn and awarded.
   - Other: notes/T-684.md
-- T-651 [P3] {L:map-look} Unopened zones look fully red
+- T-651 [P4] {L:map-look} Unopened zones look fully red
   - Context: Unopened zones look fully red zoomed out.
   - Goal: They show their walk split.
   - Other: Folded in T-602 (Walk split for unloaded zones). notes/someday.md
-- T-678 [P3] {L:map-look} Day and night tint on the base map
+- T-678 [P4] {L:map-look} Day and night tint on the base map
   - Context: T-676 is done.
   - Goal: The base map tints by time of day.
   - Other: notes/T-676.md
-- T-803 [P3] {L:map-look} More station faces by time of day
+- T-803 [P4] {L:map-look} More station faces by time of day
   - Context: Your idea.
   - Goal: More faces by time of day.
   - Other: notes/someday.md
-- T-984 [P3] {L:world-map} Region outlines fetched per region
+- T-984 [P4] {L:world-map} Region outlines fetched per region
   - Context: Outlines load all at once today.
   - Goal: Outlines fetch per region.
   - Other: notes/T-975.md
-- T-956 [P3] {L:map-look} Homes bubbles stay drawn in WebKit
+- T-956 [P4] {L:map-look} Homes bubbles stay drawn in WebKit
   - Context: WebKit keeps Homes bubbles after Homes is off. Seen only in Playwright's Windows WebKit; real Safari is unknown, and neither is installed here.
   - Goal: Bubbles clear when Homes is off.
   - Other: notes/someday.md
-- T-166 [P3] {L:map-look} Riders by purpose at a station
+- T-166 [P4] {L:map-look} Riders by purpose at a station
   - Context: Idea.
   - Goal: A station's riders by purpose show on the map.
   - Other: notes/someday.md
-- T-057 [P3] {L:translations} Kana and kanji in Zen Maru Gothic
+- T-057 [P4] {L:translations} Kana and kanji in Zen Maru Gothic
   - Context: Basemap Japanese text uses a default font.
   - Goal: Kana and kanji draw in Zen Maru Gothic.
   - Other: notes/someday.md
 
 ### Track and trains
-- T-623 [P3] {L:station-placement} Station cut in an arc shifts the ramp
+- T-623 [P4] {L:station-placement} Station cut in an arc shifts the ramp
   - Context: A station cut inside an arc still shifts the ramp.
   - Goal: The ramp stays put.
   - Other: notes/someday.md
-- T-666 [P3] {L:track-drawing} Automatic bridge refused near a tight turn
+- T-666 [P4] {L:track-drawing} Automatic bridge refused near a tight turn
   - Context: Refused near a short first arc or tight turn.
   - Goal: The bridge is built there.
   - Other: notes/someday.md
-- T-668 [P3] {L:track-drawing} Dragging a bridged segment over water
+- T-668 [P4] {L:track-drawing} Dragging a bridged segment over water
   - Context: Dragging a bridged segment refuses ground over water.
   - Goal: The drag works over water.
-- T-248 [P3] {L:track-drawing} Construct and level a whole run
+- T-248 [P4] {L:track-drawing} Construct and level a whole run
   - Context: Construct and level act on one piece, not a run between junctions.
   - Goal: They act on the whole run.
   - Other: notes/someday.md
-- T-1936 [P3] {L:edit-speed} Run profiles with many holds are slow
+- T-1936 [P4] {L:edit-speed} Run profiles with many holds are slow
   - Context: `profile::run_with` works a hop out again for each hold, costing the shared New York save about 10% on edits.
   - Goal: One pass over a hop's holds, so waits sit at every station slower trains stop at.
   - Other: notes/T-1936.md
-- T-1937 [P3] {L:passing-tracks} Departure spacing ignores flat crossings
+- T-1937 [P4] {L:passing-tracks} Departure spacing ignores flat crossings
   - Context: Other-route users at a flat crossing carry no place on their run, so lines meeting only there are not spread.
   - Goal: They get their crossing offset and count in spacing::place.
-- T-340 [P3] {L:quad-track} {after:T-3444} Quad track end-node stations and express side
+- T-340 [P4] {L:quad-track} {after:T-3444} Quad track end-node stations and express side
   - Context: Quad track's rest: end-node stations and the express pair side.
   - Goal: Those two are built.
   - Other: notes/someday.md
-- T-702 [P3] {L:station-placement} Station ghost leftovers on overlapping lines
+- T-702 [P4] {L:station-placement} Station ghost leftovers on overlapping lines
   - Context: On the real save's bundles of overlapping lines, 11 of 80 slides along them still make the ghost jump; the worker refuses some spots for reasons the page cannot see (T-691).
   - Goal: Fewer than 1 in 20 slides jump.
   - Other: notes/T-695.md (Left).
-- T-755 [P3] {L:track-drawing} No ramp room at Lake Hamana
+- T-755 [P4] {L:track-drawing} No ramp room at Lake Hamana
   - Context: The traced Tokaido Shinkansen has no room for ramps there.
   - Goal: The trace builds at Lake Hamana.
   - Other: notes/someday.md
-- T-763 [P3] {L:edit-speed} Penn Station to Emeryville preview takes 3 s
+- T-763 [P4] {L:edit-speed} Penn Station to Emeryville preview takes 3 s
   - Context: Penn Station-Emeryville takes 3-3.6 s from rest to preview.
   - Goal: That route previews in well under 3 s.
   - Other: notes/someday.md
-- T-914 [P3] {L:track-drawing} Snapped route Schiphol to Amsterdam Centraal refused
+- T-914 [P4] {L:track-drawing} Snapped route Schiphol to Amsterdam Centraal refused
   - Context: The snapped route is refused over water.
   - Goal: The route is accepted.
   - Other: notes/someday.md
-- T-430 [P3] {L:track-drawing} Straight-then-arc fallback for tight clicks
+- T-430 [P4] {L:track-drawing} Straight-then-arc fallback for tight clicks
   - Context: Only if wanted.
   - Goal: Tight clicks fall back to a straight then an arc.

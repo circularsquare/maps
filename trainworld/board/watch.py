@@ -7,7 +7,8 @@
 A batch is ready when something is pending and she pressed Send now after the last batch was
 reported, or a pad-send (the scratch pad's Send for filing) is new, or nothing new has come from
 her for --idle seconds (180). The watch prints only then,
-for the Monitor tool. The line format and the action types are in notes/T-3391.md.
+for the Monitor tool. The line format and the action types (reorder, area, priority, move-task, answer,
+ask-answer, text-ack, add, comment, ...) are in notes/T-3391.md.
 """
 import argparse
 import datetime as dt

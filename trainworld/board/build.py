@@ -142,6 +142,28 @@ def parse_lines(text):
     return out, warnings
 
 
+def read_asks(path, warnings):
+    """notes/asks.json: [{id, text, since, by}], the orchestrator's asks that are not tasks; oldest first."""
+    text = read(path)
+    if not text:
+        return []
+    try:
+        raw = json.loads(text)
+        if not isinstance(raw, list):
+            raise ValueError("not a list")
+    except ValueError:
+        warnings.append("asks.json does not parse")
+        return []
+    out, seen = [], set()
+    for a in raw:
+        if not isinstance(a, dict) or not a.get("id") or not a.get("text") or a["id"] in seen:
+            warnings.append(f"asks.json: skipped an entry with no id or text, or a repeated id: {str(a)[:60]}")
+            continue
+        seen.add(a["id"])
+        out.append({"id": str(a["id"]), "text": str(a["text"]), "since": str(a.get("since") or ""), "by": str(a.get("by") or "")})
+    return sorted(out, key=lambda a: a["since"] or "9")
+
+
 def task_status(t, busy):
     if t["id"] in busy or t["taking"]:
         return "progress"
@@ -217,6 +239,7 @@ def main():
     ap.add_argument("--tasks", default=str(TW / "TASKS.md"))
     ap.add_argument("--lines", default=str(TW / "LINES.md"))
     ap.add_argument("--live", default=str(TW / "notes" / "board-live.json"))
+    ap.add_argument("--asks", default=str(TW / "notes" / "asks.json"))
     ap.add_argument("--out", default=str(HERE / "data.json"))
     args = ap.parse_args()
     now = dt.datetime.now(dt.timezone.utc)
@@ -259,6 +282,8 @@ def main():
             continue
         seen.add(t["id"])
         t["status"] = task_status(t, busy)
+        # a P4 task nobody is on and nobody waits on is parked: it is left out of the open counts
+        t["p4"] = t["pri"] == "P4" and t["status"] in ("low", "after")
         t["agent"] = busy.get(t["id"])
         slug = t["lines"][0] if t["lines"] else None
         if len(t["lines"]) > 1:
@@ -276,12 +301,14 @@ def main():
     for ln in list(by_slug.values()) + ([unsorted] if unsorted["tasks"] else []):
         counts = {k: 0 for k, _ in COLUMNS}
         for tid in ln["tasks"]:
-            counts[task_out[tid]["status"]] += 1
+            if not task_out[tid]["p4"]:       # P4 (Someday) is not open; the page counts it back in on request
+                counts[task_out[tid]["status"]] += 1
         ln["counts"] = counts
-        ln["open"] = len(ln["tasks"])
+        ln["open"] = sum(counts.values())
+        ln["done_recent"] = recent(ln["done"], now)
         status = next((k for k in LINE_ORDER if counts[k]), None)
         if status is None:
-            status = "done" if recent(ln["done"], now) else None
+            status = "done" if ln["done_recent"] else None
         ln["status"] = status          # None: an old done line, or one with no tasks; not shown
         out_lines.append(ln)
 
@@ -297,6 +324,7 @@ def main():
                  "builds": live.get("builds") or {}, "agents": agents, "runs": live.get("runs") or []},
         "cores": cores(),
         "worktrees": worktrees(),
+        "asks": read_asks(args.asks, warnings),
         "warnings": warnings,
     }
     archive = archive_entries(notes_index)

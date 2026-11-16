@@ -1,0 +1,14 @@
+[
+  {
+    "id": "ask-orch-start",
+    "text": "Next orchestrator: should I open a new terminal tab running /takeover myself (my pick), or never restart and let the session compact?",
+    "since": "2026-11-16T18:05Z",
+    "by": "maps-d7"
+  },
+  {
+    "id": "ask-feeders-words",
+    "text": "Player wording for the feeders fix: \"long-distance trips were treating every extra nearby station as a small penalty, so a metro stop next to your inter-city station could make the train less popular. now each way to reach a station counts on its own, so feeder lines only ever help.\" OK?",
+    "since": "2026-11-16T18:05Z",
+    "by": "maps-d7"
+  }
+]

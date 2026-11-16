@@ -8,6 +8,10 @@ const POLL_MS = 15000;
 const $ = (sel) => document.querySelector(sel);
 
 let DATA = null;
+let SHOWP4 = false;          // P4 (Someday) tasks are left out of every open count unless this is on
+try { SHOWP4 = localStorage.getItem('twb-showp4') === '1'; } catch (e) { /* not remembered */ }
+/** a task the board counts and lists: all but parked P4 ones, unless Show P4 is on or its panel is the one open */
+function counted(t) { return !!t && (SHOWP4 || !t.p4 || (panel && panel.kind === 'line' && panel.task === t.id)); }
 let VIEW = null;            // the lines as the board shows them: data.json plus her queued moves
 let INBOX = { ok: false, pending: [], pads: [], last_at: null, sent_at: null };
 let panel = null;           // {kind: 'line', slug} | {kind: 'queue'} | {kind: 'pad'} | {kind: 'ack'}
@@ -246,6 +250,15 @@ function buildView() {
       slots.forEach((i, k) => { order[i] = want[k]; });
     }
   }
+  if (SHOWP4) {
+    for (const l of lines) {
+      const counts = Object.fromEntries(DATA.columns.map((c) => [c.key, 0]));
+      for (const id of l.tasks) counts[DATA.tasks[id].status] += 1;
+      l.counts = counts;
+      l.open = l.tasks.length;
+      l.status = ['progress', 'you', 'high', 'low', 'after'].find((k) => counts[k]) || (l.done_recent ? 'done' : null);
+    }
+  }
   VIEW = order.map((s) => bySlug.get(s));
 }
 
@@ -258,6 +271,12 @@ function areaName(slug) {
   return a ? a.name : slug;
 }
 
+function askText(id) {
+  const a = (DATA.asks || []).find((x) => x.id === id);
+  const t = a ? a.text : id;
+  return t.length > 70 ? t.slice(0, 70) + '...' : t;
+}
+
 function describe(a) {
   switch (a.type) {
     case 'reorder': return `Move ${lineName(a.line)} ${a.dir === 'down' ? 'down' : 'up'}`;
@@ -265,6 +284,7 @@ function describe(a) {
     case 'priority': return `Change ${a.task} to ${a.to}`;
     case 'move-task': return `Move ${a.task} to ${lineName(a.to)}`;
     case 'answer': return `Answer on ${a.task}: ${a.text}`;
+    case 'ask-answer': return a.dismiss && !a.text ? `Dismiss ask: ${askText(a.ask)}` : `${a.dismiss ? 'Answer and dismiss' : 'Answer'} ask: ${askText(a.ask)}: ${a.text}`;
     case 'text-ack': return a.text ? `Text acknowledged: ${a.text}` : 'Text acknowledged';
     case 'add': {
       const where = [a.area ? areaName(a.area) : '', a.line ? lineName(a.line) : ''].filter(Boolean).join(', ');
@@ -303,7 +323,7 @@ function lineMatch(line, q, update) {
   if (update && line.update !== update) return null;
   if (!q) return -1;
   const own = line.name.toLowerCase().includes(q) || line.about.toLowerCase().includes(q) || line.slug.includes(q);
-  const n = line.tasks.filter((id) => taskHits(DATA.tasks[id], q)).length;
+  const n = line.tasks.filter((id) => counted(DATA.tasks[id]) && taskHits(DATA.tasks[id], q)).length;
   if (!own && !n) return null;
   return n;
 }
@@ -409,6 +429,8 @@ function renderGrid() {
   }
   const perCol = {};
   for (const line of VIEW) if (shown.has(line.slug)) perCol[line.status] = (perCol[line.status] || 0) + 1;
+  const asks = (DATA.asks || []).filter((a) => !q || a.text.toLowerCase().includes(q));
+  if (asks.length && !update) perCol.you = (perCol.you || 0) + asks.length;
 
   const last = DATA.columns.length;   // columns 0 (the area names) .. last; a drag edge on the right of all but the last
   grid.append(el('div', { class: 'colhead', style: 'background: var(--bg)' }, colGrip(0)));
@@ -416,6 +438,14 @@ function renderGrid() {
     grid.append(el('div', { class: 'colhead', style: colour(col.key) },
       col.name, perCol[col.key] ? el('span', { class: 'n' }, ` ${perCol[col.key]}`) : null, i + 1 < last ? colGrip(i + 1) : null));
   });
+  if (asks.length && !update) {
+    grid.append(el('div', { class: 'rowhead' }, 'Asks, not tasks', colGrip(0)));
+    for (const [i, col] of DATA.columns.entries()) {
+      const cell = el('div', { class: 'cell', 'data-area': 'asks', 'data-status': col.key }, i + 1 < last ? colGrip(i + 1) : null);
+      if (col.key === 'you') for (const a of asks) cell.append(askCard(a));
+      grid.append(cell);
+    }
+  }
   for (const area of DATA.areas) {
     grid.append(el('div', { class: 'rowhead' }, area.name, colGrip(0)));
     for (const [i, col] of DATA.columns.entries()) {
@@ -475,13 +505,40 @@ function colGrip(i) {
   } });
 }
 
+function askCard(a) {
+  const isOpen = panel && panel.kind === 'ask' && panel.id === a.id;
+  const q = INBOX.pending.filter((p) => p.type === 'ask-answer' && p.ask === a.id).length;
+  return el('button', {
+    class: 'card ask' + (isOpen ? ' open' : ''), type: 'button', 'data-ask': a.id, style: colour('you'),
+    onclick: () => openPanel(isOpen ? null : { kind: 'ask', id: a.id }),
+  }, el('div', { class: 'row' }, el('div', { class: 'name' }, a.text), el('div', { class: 'count' }, a.since ? day(a.since) : '')),
+  q ? el('div', { class: 'queued' }, `${q} queued`) : null);
+}
+
+function askPanel(id) {
+  const a = (DATA.asks || []).find((x) => x.id === id);
+  if (!a) return [head('Ask'), el('p', { class: 'meta' }, 'This ask is gone: it was answered or removed.')];
+  const k = `ask:${id}`;
+  const mine = INBOX.pending.filter((p) => p.type === 'ask-answer' && p.ask === id);
+  return [
+    head('Ask'),
+    el('div', { class: 'meta' }, [a.by ? `From ${a.by}` : '', a.since ? `since ${day(a.since)}` : ''].filter(Boolean).join(', ')),
+    el('p', { class: 'about' }, rich(a.text)),
+    mine.length ? queuedList(mine) : null,
+    INBOX.ok ? el('div', { class: 'compose' },
+      textBox(`${k}:answer`, 'Your answer', 2),
+      el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'ask-answer', ask: id }) }, 'Send answer'),
+      el('button', { class: 'btn', type: 'button', onclick: () => submit(`${k}:answer`, { type: 'ask-answer', ask: id, dismiss: true }, true) }, 'Dismiss')) : null,
+  ];
+}
+
 function card(line, hits) {
   let count;
   if (line.status === 'done') count = line.done ? `Done ${day(line.done)}` : 'Done';
   else count = hits > 0 ? `${hits} match` : `${line.open} open`;
   // one segment per open task in both bars, in the same order, so each task's status sits right above its priority
   const colRank = Object.fromEntries(DATA.columns.map((c, i) => [c.key, i]));
-  const ts = line.tasks.map((id) => DATA.tasks[id]).filter(Boolean)
+  const ts = line.tasks.map((id) => DATA.tasks[id]).filter(counted)
     .sort((a, b) => colRank[a.status] - colRank[b.status] || (PRI_RANK[a.pri] || 9) - (PRI_RANK[b.pri] || 9) || num(a.id) - num(b.id));
   const statusBar = el('div', { class: 'bar' }, ts.map((t) => el('span', { style: `background: var(--s-${t.status})` })));
   const priBar = el('div', { class: 'bar pri-bar' }, ts.map((t) => el('span', { style: `background: ${PRI_RANK[t.pri] ? `var(--${t.pri.toLowerCase()})` : 'var(--soft)'}` })));
@@ -521,6 +578,7 @@ function renderPanel() {
   const scroll = box.scrollTop;
   let kids = null;
   if (panel && panel.kind === 'line') kids = linePanel(VIEW.find((l) => l.slug === panel.slug));
+  else if (panel && panel.kind === 'ask') kids = askPanel(panel.id);
   else if (panel && panel.kind === 'queue') kids = queuePanel();
   else if (panel && panel.kind === 'pad') kids = padPanel();
   else if (panel && panel.kind === 'ack') kids = ackPanel();
@@ -656,7 +714,8 @@ function linePanel(line) {
   const q = query();
 
   const byStatus = {};
-  for (const id of line.tasks) (byStatus[DATA.tasks[id].status] ||= []).push(DATA.tasks[id]);
+  let parked = 0;
+  for (const id of line.tasks) { if (counted(DATA.tasks[id])) (byStatus[DATA.tasks[id].status] ||= []).push(DATA.tasks[id]); else parked += 1; }
   const groups = [];
   for (const col of DATA.columns) {
     const ts = byStatus[col.key];
@@ -676,6 +735,7 @@ function linePanel(line) {
     el('div', { class: 'meta' }, meta),
     upd ? el('div', { class: 'meta' }, `Part of the ${upd.name.toLowerCase()}`) : null,
     el('p', { class: 'about' }, rich(line.about)),
+    parked ? el('div', { class: 'meta' }, `${parked} P4 ${parked === 1 ? 'task' : 'tasks'} hidden (Show P4 in the top bar)`) : null,
     editable ? el('div', { class: 'controls' },
       el('button', { class: 'btn', type: 'button', disabled: !prev, onclick: () => move(line, 'up') }, 'Move up'),
       el('button', { class: 'btn', type: 'button', disabled: !next, onclick: () => move(line, 'down') }, 'Move down'),
@@ -1845,6 +1905,13 @@ $('#v-board').addEventListener('click', () => showView('board'));
 $('#v-requests').addEventListener('click', () => showView('requests'));
 $('#v-changelog').addEventListener('click', () => showView('changelog'));
 $('#update').addEventListener('change', () => DATA && renderGrid());
+$('#p4').addEventListener('click', () => {
+  SHOWP4 = !SHOWP4;
+  try { localStorage.setItem('twb-showp4', SHOWP4 ? '1' : '0'); } catch (e) { /* not remembered */ }
+  $('#p4').setAttribute('aria-pressed', String(SHOWP4));
+  render();
+});
+$('#p4').setAttribute('aria-pressed', String(SHOWP4));
 $('#refresh').addEventListener('click', rebuild);
 $('#pad').addEventListener('click', () => openPanel(panel && panel.kind === 'pad' ? null : { kind: 'pad' }));
 $('#ack').addEventListener('click', () => openPanel({ kind: 'ack' }));

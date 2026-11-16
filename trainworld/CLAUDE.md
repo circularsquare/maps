@@ -52,7 +52,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 | `TASKS.md` | Open work, by priority | agents |
 | `LINES.md` | Anita's lines: the conceptual units tasks group into, by area | agents |
 | `DECISIONS.md`, `ARCHIVE.md` | Dated choices and why; finished tasks, newest first. Older: `*-to-2026-10-19.md` | agents, add only |
-| `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator), `for-anita.md` | agents |
+| `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator), `asks.json` (orchestrator) | agents |
 | `checks/` | Standing checks, `smoke.mjs` first | agents |
 | `research/` | Background reports with sources | agents |
 | `TODO.md` | Anita's own list | Anita only; agents never edit it |
@@ -76,14 +76,15 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   act on, with the recommended answer if there is one), `  - Context:` (where things stand and why), `  - Goal:` (what
   done is, with the deciding number), `  - Other:` (optional; the notes link last). Very short, written to her; leave
   out what you're unsure of (Anita 2026-11-16). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board);
-  "Someday" tasks are real open tasks. Use only the ids your brief gives you. Add `(taking, <date>, agent <name>)`
-  after the title before starting (`checks/mark_taking.py`); update a task by rewriting its fields, never by
+  Someday tasks are P4 and don't count as open. Use only the ids your brief gives you. Mark a task taken
+  before starting and archive it when done with `venv\Scripts\python.exe trainworld/tools/tasks.py start <ids> --agent <name>`
+  / `done <id> --outcome "..."` (agents may use both; `check` lists malformed lines); update a task by rewriting its fields, never by
   appending to the head line.
   Every open task carries `{L:<slug>}` from `LINES.md` right after its priority, plus `{waits:Anita}` or
   `{after:<task id or phrase>}` when it waits; a new task joins an existing line or adds one; set a line's `done:`
   when its last task closes.
 - **Done** means it runs, the spec matches, any decision is recorded, and the line has moved to the top of
-  ARCHIVE.md. Then grep TASKS.md and notes/for-anita.md for the id, close a parent whose last stage this was, and
+  ARCHIVE.md. Then grep TASKS.md for the id, close a parent whose last stage this was, and
   name any other open task your work also did. New work found on the way is a new task.
 - **Shared files**: re-read right before editing, small edits, never rewrite TASKS, DECISIONS or ARCHIVE wholesale.
 - **notes/** is the agents': move, merge, delete. Check outputs go in `../artifacts/trainworld/`. A notes link that

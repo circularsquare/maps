@@ -9,10 +9,14 @@
 // stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
 // changed sim/ rebuilds the main tree's WASM before it returns. `new` and `land` warn (T-2631) when the
 // tree's app/src/game/*.json differ from master's committed or the main tree's working copies.
+// `new` also copies the main tree's uncommitted app/src/game/*.json into the tree (the packs were built for
+// them) and records which in the tree's git dir; `land` puts back, before landing, any of those the agent did not
+// edit itself, so they never ride along.
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const git = (cwd, ...args) => execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 // The main tree, also when this copy of the script sits in an agent's tree.
@@ -59,7 +63,7 @@ function changes(dir) {
 // market rows, realms ...); a tree whose copies differ runs with packs its json does not match, and a refused
 // market pack is only a console warning. Warns, never stops: the tree may have changed one on purpose.
 const GAME_JSON = 'trainworld/app/src/game';
-function warnGameJson(dir, when) {
+function warnGameJson(dir, when, copied = []) {
   const rels = git(maps, 'ls-tree', '--name-only', 'master', `${GAME_JSON}/`).split('\n').filter((f) => f.endsWith('.json'));
   const behind = [];
   for (const rel of rels) {
@@ -73,7 +77,7 @@ function warnGameJson(dir, when) {
     const main = path.join(maps, rel);
     const live = fs.existsSync(main) ? lf(fs.readFileSync(main)) : null;
     const notes = [];
-    if (committed && !have.equals(lf(committed))) notes.push("differs from master's committed copy");
+    if (committed && !copied.includes(rel) && !have.equals(lf(committed))) notes.push("differs from master's committed copy");
     if (live && !have.equals(live)) notes.push("differs from the main tree's working copy");
     if (notes.length) behind.push(`${path.basename(rel)} ${notes.join(' and ')}`);
   }
@@ -81,6 +85,35 @@ function warnGameJson(dir, when) {
   console.warn(`WARNING: ${when}, app/src/game json in ${path.basename(dir)} is out of step with master:\n  ${behind.join('\n  ')}\n` +
     `The tree shares master's data/packs, so a page here may refuse a market pack ("demand: market pack X would not open") and run with no regional market; smoke fails on that.\n` +
     `Unless you changed these on purpose, copy the main tree's version of each (the packs were built for it).`);
+}
+
+// The main tree's uncommitted game json, copied into a new tree. The record lives in the tree's git dir (never
+// committed): the files copied and a hash of each copy, so land can tell a copy from the agent's own edit.
+const copiedFile = (dir) => path.join(git(dir, 'rev-parse', '--absolute-git-dir'), 'tw-copied-game-json.json');
+const sha = (p) => createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+function copyGameJson(dir) {
+  const dirty = git(maps, 'status', '--porcelain', '--', GAME_JSON).split('\n').filter(Boolean)
+    .map((l) => l.replace(/^\s*[A-Z?]+\s+/, '')).filter((f) => f.endsWith('.json') && fs.existsSync(path.join(maps, f)));
+  const record = {};
+  for (const rel of dirty) {
+    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+    fs.copyFileSync(path.join(maps, rel), path.join(dir, rel));
+    record[rel] = sha(path.join(dir, rel));
+  }
+  fs.writeFileSync(copiedFile(dir), JSON.stringify(record, null, 2));
+  if (dirty.length) console.log(`copied the main tree's uncommitted game json into the tree (land puts them back):\n  ${dirty.join('\n  ')}`);
+  return dirty;
+}
+function restoreGameJson(dir) {
+  let record = {};
+  try { record = JSON.parse(fs.readFileSync(copiedFile(dir), 'utf8')); } catch { return; }
+  for (const [rel, hash] of Object.entries(record)) {
+    const mine = path.join(dir, rel);
+    if (!fs.existsSync(mine)) continue;
+    if (sha(mine) === hash) { gitLoud(dir, 'checkout', 'HEAD', '--', rel); console.log(`put back ${rel} (a copy from the main tree, not an edit)`); }
+    else console.warn(`WARNING: ${rel} was edited in the tree after the copy, so it lands with the work`);
+  }
+  fs.rmSync(copiedFile(dir), { force: true });
 }
 
 const [cmd, name, ...rest] = process.argv.slice(2);
@@ -103,7 +136,8 @@ if (cmd === 'new') {
   if (fs.existsSync(wasm)) fs.cpSync(wasm, path.join(dir, 'trainworld', 'app', 'src', 'wasm'), { recursive: true });
   console.log(`\n${dir}\nbranch ${branch} from ${git(dir, 'rev-parse', '--short', 'HEAD')}`);
   console.log(`Rust builds into the tree's own trainworld/sim/target (first wasm build a few minutes).`);
-  warnGameJson(dir, 'new');
+  const copied = copyGameJson(dir);
+  warnGameJson(dir, 'new', copied);
 } else if (cmd === 'list') {
   if (!fs.existsSync(trees)) { console.log('no trees'); process.exit(0); }
   for (const n of fs.readdirSync(trees)) {
@@ -119,6 +153,7 @@ if (cmd === 'new') {
   const message = rest.join(' ').trim();
   if (!message) fail('land needs a commit message');
   if (!fs.existsSync(dir)) fail(`no tree ${dir}`);
+  restoreGameJson(dir);
   const { tw, other } = changes(dir);
   if (other.length) fail(`changes outside trainworld/, land them by hand:\n  ${other.join('\n  ')}`);
   if (!tw.length) fail('nothing to land');
