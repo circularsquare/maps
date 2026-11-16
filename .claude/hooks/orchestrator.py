@@ -1,7 +1,7 @@
 """Hooks for orchestrator continuity: the live handoff file each project keeps in notes/handoff.md.
 
     session-start  prints this session's id and where each project's handoff stands
-    stop           warns once per 100k tokens past 500k that it is time for a fresh session
+    stop           warns once per 100k tokens past 400k that it is time for a fresh session
     agent-guard    stops a handed-over orchestrator from starting new agents
 
 The skills that use this are .claude/skills/takeover and .claude/skills/handoff.
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 MAPS = Path(__file__).resolve().parents[2]
-CYCLE_AT = 500_000
+CYCLE_AT = 400_000   # Anita 2026-11-16: orchestrators start their successor at ~400k
 BAND = 100_000
 STATE_DIR = Path(os.environ.get("TEMP", MAPS / ".claude")) / "claude-orchestrator"
 
@@ -94,14 +94,15 @@ def stop(data):
     state.write_text(str(band))
     k = tokens // 1000
     print(json.dumps({
-        "systemMessage": f"Context is at {k}k tokens. A good point to start a fresh session "
-                         "(/takeover <project> there, if this one is orchestrating).",
+        "systemMessage": f"Context is at {k}k tokens. If this session orchestrates, it starts its successor now.",
         "hookSpecificOutput": {
             "hookEventName": "Stop",
-            "additionalContext": f"Context is at {k}k tokens, past the ~500k cycling point. If you are "
-                                 "orchestrating, bring notes/handoff.md current (/handoff) so Anita can start "
-                                 "a fresh orchestrator whenever she likes. A guideline: if cycling now "
-                                 "would be worse (mid-landing, say), finish that first.",
+            "additionalContext": f"Context is at {k}k tokens, past the ~400k cycling point. If you are "
+                                 "orchestrating: finish anything mid-landing, bring notes/handoff.md current "
+                                 "(/handoff), then start your successor yourself with "
+                                 "`venv\\Scripts\\python.exe trainworld/tools/ops/next_orchestrator.py <project>` "
+                                 "from the maps root (a new Windows Terminal tab running /takeover), and wind down "
+                                 "per /handoff once it messages you (Anita 2026-11-16).",
         },
     }))
 

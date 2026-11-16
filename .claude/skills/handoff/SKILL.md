@@ -14,7 +14,7 @@ part of this is clearly unhelpful for your project or situation, adapt it and sa
 A small edit to the relevant line whenever something changes that a successor would need:
 an agent launched or landed, a long run started or finished, a commit, a publish, a new standing
 ask from Anita, a change of plan. One or two lines each time; rewrite a section only when it has
-drifted. Also run this skill when the stop hook says context is past ~500k, and when Anita asks.
+drifted. Also run this skill when the stop hook says context is past ~400k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks.
 
 ## Shape
 
