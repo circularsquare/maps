@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-993 [P3] {L:accounts-server} Account delete text should mention leaderboards (2026-11-16): the account delete panel and privacy page say trainsworld games, scores, shares and feedback go too (noritetsu/dist, uncommitted for Anita).
 - T-3384 [P3] {L:stops} Waypoints on lines (2026-11-16): folded into T-3079. Its context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
 - T-2321 [P3] {L:schematic-layout} Diagram pill overlaps in all Japan (2026-11-16): folded into T-2242. Its context: Follow-up to T-2289: all Japan has 3 more pill overlaps and 4 pairs closer than their spacing. A gap pass changed nothing.
 - T-437 [P3] {L:islands} Long trip modes: car cost, Channel, ferries (2026-11-16): folded into T-3435. Its context: The long car's cost, the Channel and ferries need a look.

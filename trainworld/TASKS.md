@@ -380,7 +380,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3440 [P3] {L:accounts-server} Sharing a large network fails (taking, 2026-11-16, agent sv)
+- T-3440 [P3] {L:accounts-server} {waits:Anita} Sharing a large network fails
+  - Need from Anita: Deploy shonei-server with it (372a8ce, with T-3402)? Every size cap now answers "too big", and the caps are doubled.
   - Context: Player report (board group "Sharing a large network fails"): share did not work, perhaps from the size. Reach: few.
   - Goal: Find the share size limit and either raise it or say what to do when a network is too big.
 - T-3426 [P2] {L:route-choice} {waits:Anita} Long-distance trips ignore feeders
@@ -849,9 +850,6 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
   - Context: You said yes.
   - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-993 [P3] {L:accounts-server} Account delete text should mention leaderboards (taking, 2026-11-16, agent sv)
-  - Context: noritetsu's delete question says only "Local saves will stay." The account is shared with trainsworld (T-972).
-  - Goal: The text says trainsworld leaderboard entries go too, and the privacy page mentions trainsworld.
 - T-1791 [P3] {L:small-fixes} Boardings in the line group view
   - Context: Line groups stage 4 only; stages 1-3 landed. Boardings in the group view were left out of stage 2.
   - Goal: Boardings show in the group view, if wanted.
