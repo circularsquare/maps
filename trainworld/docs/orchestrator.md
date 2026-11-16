@@ -67,7 +67,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
    first). Check the staged diff of shared docs right before: an agent's half-written paragraph rode along once.
    Commit at the end of a round or when a snapshot build needs it, folding small changes together; push maps master
    regularly (Anita 2026-11-16: "feel free to be pushing this regulrly").
-3. Rebuild 8800: `cmd /c "trainworld\checks\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"` from the maps root
+3. Rebuild 8800: `venv\Scripts\python.exe trainworld/tools/ops/snap8800.py <hash> [<freeze>] --log <scratch>\snapbuild.log`
+   from the maps root (allowed without a prompt, like the orchestrator's other routine commands: Anita 2026-11-16)
    (`snapbuild-frozen.cmd <hash> <freeze>` while a country run owns `data/packs`). It checks out `.tw-snap` at the
    commit, builds into `dist-new` and swaps it in. Never two at once. No smoke needed for a 8800 rebuild.
 4. Before a publish only: `checks/smoke8800.cmd` (light then dark; logs `artifacts/trainworld/smoke8800-*.log`).
