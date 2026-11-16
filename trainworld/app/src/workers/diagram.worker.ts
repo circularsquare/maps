@@ -7,7 +7,8 @@
 // go with the drawing. The city names far out (diagram/cityNames.ts, T-2438) are made after the names from the zone
 // outlines and names the page sends, each zone once; outlines arriving after a layout redo that layout's borders and city
 // names alone. The carry is solved in the track module's WASM (T-2589; the page's `?perfOff=carryWasm` the same in
-// JavaScript).
+// JavaScript). The page sends one graph per region (diagram/regions.ts, T-3448); the layouts it still draws are kept here
+// by seq, each given its borders and city names as outlines arrive.
 
 import type { DiagramGraph } from "../diagram/graph";
 import type { DiagramLayout } from "../diagram/layout";
@@ -30,7 +31,7 @@ export type ZoneFrame = [number, number, number];
 /** a zone's cities and towns (villages where it has none) as mercator x, y (0 to 1), with their widths */
 export type ZoneTowns = { name: string; width: number; x: number; y: number; big: boolean }[];
 export type ToDiagram =
-  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; zones?: ZoneOutlines; frame: ZoneFrame; water: boolean; sheet: { packs: string; zones: string[]; carryJs?: boolean } }
+  | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; zones?: ZoneOutlines; frame: ZoneFrame; water: boolean; sheet: { packs: string; zones: string[]; carryJs?: boolean }; keep?: number[] }
   | { kind: "zones"; zones: ZoneOutlines }
   | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
 export type FromDiagram =
@@ -46,7 +47,10 @@ const towns = new Map<string, ZoneTowns>();
 /** a layout on the sheet (T-2567): its lines and carried map, the graph with real places, whether the sea is drawn,
  * and the map from real places to the sheet's graph */
 type OnSheet = { lines: SheetLines; real: DiagramGraph; water: boolean; rivers: RealWater | null; toSheet: (x: number, y: number) => [number, number] };
-let shown: { seq: number; graph: DiagramGraph; layout: DiagramLayout; d: Drawing; fontPx: number; frame: ZoneFrame; sheet: OnSheet } | null = null;
+type Shown = { seq: number; graph: DiagramGraph; layout: DiagramLayout; d: Drawing; fontPx: number; frame: ZoneFrame; sheet: OnSheet };
+/** the layouts the page still draws, by seq: one per region (T-3448), each given its borders and city names as outlines and
+ * place lists arrive */
+const shown = new Map<number, Shown>();
 
 /** the zones the page has sent, in the graph's frame */
 function shapesOf(frame: ZoneFrame): ZoneShape[] {
@@ -88,14 +92,17 @@ self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   if (m.kind === "zones" || m.kind === "towns") {
     if (m.kind === "zones") keep(m.zones);
     else for (const t of m.towns) towns.set(t.id, t.list);
-    const s = shown, b = s && (m.kind === "towns" ? s.d.borders : borders(s.d, s.frame, s.sheet));
-    if (b) (self as unknown as Worker).postMessage({ kind: "borders", seq: s!.seq, borders: b, cities: cities(s!.graph, s!.layout, b, s!.fontPx, s!.frame, s!.sheet) } satisfies FromDiagram);
-    // the zones are part of the carried map, its water drawn again with them
-    if (b && m.kind === "zones" && s!.d.water) (self as unknown as Worker).postMessage({ kind: "water", seq: s!.seq, water: s!.d.water } satisfies FromDiagram);
+    for (const s of shown.values()) {
+      const b = m.kind === "towns" ? s.d.borders : borders(s.d, s.frame, s.sheet);
+      if (b) (self as unknown as Worker).postMessage({ kind: "borders", seq: s.seq, borders: b, cities: cities(s.graph, s.layout, b, s.fontPx, s.frame, s.sheet) } satisfies FromDiagram);
+      // the zones are part of the carried map, its water drawn again with them
+      if (b && m.kind === "zones" && s.d.water) (self as unknown as Worker).postMessage({ kind: "water", seq: s.seq, water: s.d.water } satisfies FromDiagram);
+    }
     return;
   }
   if (m.kind !== "graph") return;
   keep(m.zones ?? []);
+  if (m.keep) for (const seq of [...shown.keys()]) if (!m.keep.includes(seq)) shown.delete(seq);
   return onSheet(m, m.sheet, m.frame);
 };
 
@@ -114,9 +121,9 @@ async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: st
   progress(0);
   const got = await masksFor(at.packs, at.zones);
   const t1 = performance.now(), key = groundKey(m.graph, frame, got.length);
-  if (seaKnown?.key !== key) seaKnown = { key, sea: groundSea(m.graph, got, frame) };
+  const sea = kept(seaKnown, key, () => groundSea(m.graph, got, frame));
   const t2 = performance.now();
-  const sheet = rubberSheet(m.graph, { masks: got, frame, sea: seaKnown.sea });
+  const sheet = rubberSheet(m.graph, { masks: got, frame, sea });
   const t3 = performance.now();
   progress(0.1);
   const lines = sheetLines(m.graph, sheet, SHEET_LINES, (s) => progress(0.1 + 0.7 * s)), g = lines.graph, layout = lines.layout, K = lines.k, warp = sheetWarp(sheet);
@@ -128,8 +135,7 @@ async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: st
   let rivers: RealWater | null = null;
   const cellM = riverCellM(m.graph);
   if (m.water && cellM) {
-    if (sheetRivers?.key !== key) sheetRivers = { key, real: realWater(m.graph, got, frame, seaKnown.sea, cellM) };
-    rivers = sheetRivers.real;
+    rivers = kept(sheetRivers, key, () => realWater(m.graph, got, frame, sea, cellM));
   }
   const t5r = performance.now();
   progress(0.9);
@@ -138,7 +144,7 @@ async function onSheet(m: Extract<ToDiagram, { kind: "graph" }>, at: { packs: st
   if (map.water) d.water = map.water;
   if (outlines.size) (d.borders = map.borders), (names.cities = cities(g, layout, map.borders, m.names.fontPx, frame, on));
   const t6 = performance.now();
-  shown = { seq: m.seq, graph: g, layout, d, fontPx: m.names.fontPx, frame, sheet: on };
+  shown.set(m.seq, { seq: m.seq, graph: g, layout, d, fontPx: m.names.fontPx, frame, sheet: on });
   const { raster: _, ...posted } = sheet;
   (self as unknown as Worker).postMessage({ kind: "sheet", seq: m.seq, sheet: posted, ms: { masks: t1 - t0, ground: t2 - t1, sheet: t3 - t2, lines: t4 - t3, rivers: t5r - t5, map: t6 - t5r }, lines: { ...lines.info, map: map.info } } satisfies FromDiagram);
   (self as unknown as Worker).postMessage({ kind: "layout", seq: m.seq, graph: m.graph, layout, drawing: d, names, ms: { drawing: t5 - t4, names: 0, borders: t6 - t5, cities: 0 } } satisfies FromDiagram);
@@ -184,10 +190,21 @@ function maskOf(packs: string, id: string): Promise<WaterMask | null> {
   }
   return p;
 }
-/** the sea on the ground, kept while the stations' places and the hops' tracks are the same */
-let seaKnown: { key: string; sea: GroundSea } | null = null;
+/** the sea on the ground, kept while the stations' places and the hops' tracks are the same (a few, one per region) */
+const seaKnown = new Map<string, GroundSea>();
 /** on the sheet, the narrow rivers on the ground (a finer river finder than the water's, T-2580) */
-let sheetRivers: { key: string; real: RealWater } | null = null;
+const sheetRivers = new Map<string, RealWater>();
+/** ground kept for this many graphs at most, the oldest dropped */
+const GROUND_KEPT = 4;
+function kept<T>(m: Map<string, T>, key: string, make: () => T): T {
+  let v = m.get(key);
+  if (v === undefined) {
+    v = make();
+    m.set(key, v);
+    while (m.size > GROUND_KEPT) m.delete(m.keys().next().value!);
+  }
+  return v;
+}
 /** zones' masks fetched at once at most: a sheet over a continent meets hundreds of zones, and that many fetches at once
  * fail in the browser (ERR_INSUFFICIENT_RESOURCES), leaving random zones with no water (T-3448) */
 const MASK_FETCHES = 32;

@@ -33,6 +33,7 @@ import { setBandCheck, setBandMode } from "../map/lineBands";
 import { besideSamples } from "../map/corridors";
 import { packCross } from "../map/markData";
 import { bandEdges, diagramGraph } from "../diagram/graph";
+import { nodeLngLat, regionGroups } from "../diagram/regions";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces, type PackedOutlines } from "../map/coarseOutlines";
 import { buildComplexes, type Complexes } from "../game/complexes";
@@ -3058,9 +3059,11 @@ let diagramIn: { lines: ClockLine[]; edges: ClockEdge[]; pts: ReadonlyMap<number
 /** T-2261: the graph's points are float32 local units, so they are made from the kept float64 mercator points, from an
  * origin of the network's own (its box's middle on a 1 degree grid), never the draw anchor: the same network gives the
  * same graph whatever the camera has done. Each edge's converted points are kept while its mercator ones and the origin
- * are, so the graph's arc lengths stay cached. */
-const diagramPts = new Map<number, { m: Float64Array; from: string; d: Float32Array }>();
-function diagramFrame(pts: ReadonlyMap<number, Float32Array>): { pts: Map<number, Float32Array>; at: Anchor } {
+ * are, so the graph's arc lengths stay cached (per origin: a network of several regions has one each, T-3448). */
+let diagramPts = new Map<number, { m: Float64Array; d: Map<string, Float32Array> }>();
+/** a region's graph also has the track (not on its lines) within this of its stations' box, m */
+const REGION_TRACK_M = 50_000;
+function diagramFrame(pts: ReadonlyMap<number, Float32Array>, keep: Map<number, { m: Float64Array; d: Map<string, Float32Array> }>): { pts: Map<number, Float32Array>; at: Anchor } {
   const a = anchor();
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const merc = new Map<number, Float64Array>();
@@ -3077,30 +3080,68 @@ function diagramFrame(pts: ReadonlyMap<number, Float32Array>): { pts: Map<number
   const lng = merc.size ? Math.round(((x0 + x1) / 2) * 360 - 180) : a.lng;
   const lat = merc.size ? Math.round((Math.asin(Math.tanh(2 * Math.PI * (0.5 - (y0 + y1) / 2))) * 180) / Math.PI) : a.lat;
   const at = makeAnchor(lng, lat, 0), from = `${lng},${lat}`;
-  const out = new Map<number, Float32Array>(), keep = new Map<number, { m: Float64Array; from: string; d: Float32Array }>();
+  const out = new Map<number, Float32Array>();
   for (const [id, m] of merc) {
-    let c = diagramPts.get(id);
-    if (!c || c.m !== m || c.from !== from) {
-      const d = new Float32Array(m.length);
+    const had = diagramPts.get(id);
+    let c = keep.get(id);
+    if (!c || c.m !== m) keep.set(id, (c = { m, d: new Map() }));
+    let d = c.d.get(from) ?? (had?.m === m ? had.d.get(from) : undefined);
+    if (!d) {
+      d = new Float32Array(m.length);
       for (let k = 0; k < m.length; k += 3) (d[k] = (m[k] - at.merc[0]) * EARTH_C), (d[k + 1] = (m[k + 1] - at.merc[1]) * EARTH_C), (d[k + 2] = m[k + 2]);
-      c = { m, from, d };
     }
-    keep.set(id, c);
-    out.set(id, c.d);
+    c.d.set(from, d);
+    out.set(id, d);
   }
-  diagramPts.clear();
-  for (const [id, c] of keep) diagramPts.set(id, c);
   return { pts: out, at };
 }
-/** the graph, after the network state it is of; the beside table is the one the bands just built */
+/** the graph, after the network state it is of; the beside table is the one the bands just built. T-3448: a network of
+ * several regions (diagram/regions.ts) gets a graph per region, each from an origin of its own, so a city far from the
+ * rest gets the graph it gets alone (float32 points thousands of km from the origin move stations and passes). */
 function postDiagram() {
   if (!diagramIn) return;
   const t0 = performance.now();
-  const { lines, edges } = diagramIn;
-  const { pts, at } = diagramFrame(diagramIn.pts);
-  const beside = besideSamples(bandEdges(lines), pts, new Map(edges.map((e) => [e.id, e])));
-  const graph = diagramGraph(lines, edges, pts, complexOfNodes(), beside, at);
-  send({ kind: "diagramGraph", graph, ms: performance.now() - t0 }, [graph.key.buffer, graph.x.buffer, graph.y.buffer, graph.ea.buffer, graph.eb.buffer, graph.first.buffer, graph.on.buffer]);
+  const { lines, edges } = diagramIn, ends = new Map(edges.map((e) => [e.id, e])), keep: typeof diagramPts = new Map();
+  const build = (ls: ClockLine[], pts0: ReadonlyMap<number, Float32Array>) => {
+    const { pts, at } = diagramFrame(pts0, keep);
+    return diagramGraph(ls, edges, pts, complexOfNodes(), besideSamples(bandEdges(ls), pts, ends), at);
+  };
+  const whole = build(lines, diagramIn.pts), groups = regionGroups(whole);
+  let graphs = [whole];
+  if (groups.length > 1) {
+    // each region: its lines, their track, and other track within REGION_TRACK_M of its stations' box (as a network of that
+    // region alone has), so its origin is the one it has alone
+    const { lng, lat } = nodeLngLat(whole), a = anchor(), pad = REGION_TRACK_M / EARTH_C / Math.cos((whole.origin[1] * Math.PI) / 180);
+    const regionOf = new Int32Array(whole.key.length), boxes = groups.map((nodes, r) => {
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const i of nodes) {
+        regionOf[i] = r;
+        const [x, y] = toMerc01(lng[i], lat[i]);
+        (b[0] = Math.min(b[0], x - pad)), (b[1] = Math.min(b[1], y - pad)), (b[2] = Math.max(b[2], x + pad)), (b[3] = Math.max(b[3], y + pad));
+      }
+      return b;
+    });
+    const lineRegion = new Map<number, number>();
+    for (const l of whole.lines) if (l.chain.length) lineRegion.set(l.id, regionOf[l.chain[0]]);
+    const ls: ClockLine[][] = groups.map(() => []), pts = groups.map(() => new Map<number, Float32Array>());
+    for (const l of lines) {
+      const r = lineRegion.get(l.id);
+      if (r === undefined) continue;
+      ls[r].push(l);
+      for (const p of l.path) {
+        const q = diagramIn.pts.get(p >> 1);
+        if (q) pts[r].set(p >> 1, q);
+      }
+    }
+    for (const [id, q] of diagramIn.pts) {
+      if (q.length < 3) continue;
+      const m = edgeMerc.get(id), x = m ? m[0] : a.merc[0] + q[0] / EARTH_C, y = m ? m[1] : a.merc[1] + q[1] / EARTH_C;
+      boxes.forEach((b, r) => { if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && !pts[r].has(id)) pts[r].set(id, q); });
+    }
+    graphs = groups.map((_, r) => build(ls[r], pts[r]));
+  }
+  diagramPts = keep;
+  send({ kind: "diagramGraph", graphs, ms: performance.now() - t0 }, graphs.flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));
 }
 
 // ---------------------------------------------------------------- posting only what changed (T-1029)

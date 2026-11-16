@@ -803,7 +803,8 @@ export type FromClock =
   | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; bays?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
   /** T-2159: the network diagram's graph, after a network state while the diagram is shown */
-  | { kind: "diagramGraph"; graph: DiagramGraph; ms: number }
+  /** one graph per region of the network (T-3448), each in a frame of its own */
+  | { kind: "diagramGraph"; graphs: DiagramGraph[]; ms: number }
   /** money changed without a network change (an hour settled, fares set) */
   | { kind: "money"; money: MoneyState }
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall

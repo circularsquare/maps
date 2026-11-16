@@ -327,7 +327,10 @@ at least half of the shorter one's track on that hop is track both run on (inter
 its own (T-2405). Each line carries its colour and whether it runs high-speed trains. Each edge also carries its
 track on the ground, as the first line on it runs it between the two complexes, kept to within 15 m (`hop`, for the
 water's crossings, T-2169).
-Places are metres east and north of the network's middle.
+Places are metres east and north of the network's middle. A network of several regions (Regions, below) is posted as a
+graph per region, each built from an origin of its own (its track's box middle on a 1 degree grid), so a city's graph is
+the one it has alone: float32 points thousands of km from one shared origin moved stations by up to 0.1 m and changed
+which platforms a line passes.
 
 ## The layout
 
@@ -492,8 +495,8 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 ## The rubber sheet
 
-**The diagram's layout (T-2568, T-2567, T-2580).** The page
-sends the worker, with each graph, the zones whose boxes meet the sheet's box (the stations' box and the sheet's margin,
+**The diagram's layout (T-2568, T-2567, T-2580).** One sheet per region (Regions, below). The page
+sends the worker, with each region's graph, the zones whose boxes meet the sheet's box (the stations' box and the sheet's margin,
 the larger of 8 km and 8% of its diagonal, a quarter more for the scale; `sheetZoneBox`, T-2591), so the ground the sheet
 reads is a mask's wherever a zone has one, and the worker reads their water masks, finds the sea on
 the ground (as Water does, kept between graphs) and solves the rubber sheet (`diagram/sheet.ts`, notes/T-2566.md,
@@ -609,3 +612,25 @@ the sheet (a tenth), the lines and the carry (seven tenths) and the map.
   degrees, with no stair steps** (checks/t2580-sheet-water.mjs). The sea and rivers are drawn only with the water button
   on; the borders always.
 - **City names** take the towns' places through the sheet.
+
+## Regions
+
+**T-3448** (`diagram/regions.ts`; Anita, 2026-11-16: "lets do one diagram per region if that lets us keep the grid
+fine ... it is generally understood that the schematic map should draw everything"). The sheet's cells and ground grow
+with its map, so on one sheet for New York and Los Angeles New York got 4 km cells and was squashed onto a diagonal. The
+network is split into regions, each laid out on a sheet of its own, so a city keeps the grid it gets alone.
+
+- **Which stations are one region**: those joined by the player's lines (the graph's edges; track with no line on it
+  draws nothing, so it joins nothing). Separate regions join, nearest first, where their nearest stations are within
+  500 km and the joined box stays within 1,200 km on a side (New York and Philadelphia, not New York and Chicago); and
+  any two whose boxes overlap join, whatever the distance (a region inside another's box could not be placed apart
+  from it where its geography puts it). A rail-connected network across a continent is one region, on one sheet with
+  the coarse grid as before (T-3453 is a finer grid near dense cities).
+- **Order**: the region with the station nearest the map's centre is laid out first and shown at once; then the
+  others, nearest first, each drawn as it comes, until all are. A region the same as last time (its graph and names)
+  is not laid out again after an edit elsewhere; while a region is being laid out again its old drawing stays up.
+- **Placing**: each region keeps its own drawing, brought to the first region's pitch, placed in the direction its
+  middle lies from the others' on the world map (mercator, no wrap: Tokyo east of New York), as close as keeps every
+  two regions' boxes, the drawn sea included, at least 24 pitches apart. So far regions sit nearer than their real
+  distance. The region the view is on stays where it is when others arrive or move.
+- One drawing to the rest of the page: clicks, hovers, names, the saved picture and a share see the regions as one.

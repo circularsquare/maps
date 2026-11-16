@@ -593,7 +593,7 @@ export class ClockClient {
   /** the renderer's hooks, set by main.ts */
   onState: (s: ClockState) => void = () => {};
   /** T-2159: the network diagram's graph, while the diagram is shown (diagram/view.ts) */
-  onDiagram: (g: DiagramGraph) => void = () => {};
+  onDiagram: (graphs: DiagramGraph[]) => void = () => {};
   /** `board`: the boarding account's hour (T-164, game/boarding.ts), once demand has riders */
   onTrips: (epoch: number, version: number, trips: Float32Array, board?: Float32Array, ends?: Float32Array, nexts?: Float32Array, bays?: Float32Array) => void = () => {};
   /** the boarding account's last hours: ms in the worker for the hour, lines worked out again
@@ -1129,7 +1129,7 @@ export class ClockClient {
         setMoneyState(msg.money);
         break;
       case "diagramGraph":
-        this.onDiagram(msg.graph);
+        this.onDiagram(msg.graphs);
         break;
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };

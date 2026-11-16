@@ -272,7 +272,7 @@ boundaries fitted at 0, 45 and 90 degrees, each shared border once, T-2464), `wa
 ground from the zones' water masks: the sea and land masses (`groundSea`, which the layout reads first, T-2541),
 rivers thinned to centre lines, their crossings with the hops' tracks),
 `water.ts` (the type of the drawn water; the old drawing of rivers and sea in the layout, `waterSea.ts` and
-`borders.ts`' pill regions were deleted in T-2590), `sheet.ts` (the rubber sheet, the diagram's default: a quadtree lattice
+`borders.ts`' pill regions were deleted in T-2590), `regions.ts` (the network's regions, one sheet each, and their drawings put together and placed, T-3448; the clock worker builds a graph per region), `sheet.ts` (the rubber sheet, the diagram's default: a quadtree lattice
 stretched by multigrid so the network has room, `rubberSheet` and `sheetWarp`, T-2568; the cut T-2609 and the floor's fall from the networks T-2625), `sheetLines.ts` (the layout's
 octilinear stages run from the sheet, the map carried with the stations, and its sea and zone borders, `sheetLines` and
 `sheetMap`, T-2567; its carry's solve in WASM through `carryWasm.ts`, T-2589), `sheetThin.ts` (the sheet's map before its coasts are traced: thin water and land drawn again as

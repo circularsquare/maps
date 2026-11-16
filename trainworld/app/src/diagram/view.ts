@@ -19,6 +19,7 @@ import type { MultiPolygon } from "geojson";
 import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
 import { sheetZoneBox } from "./sheet";
+import { cameraOrder, mergeParts, placeParts, regionSig, type Part, type Placed } from "./regions";
 import { placesOfZone } from "../game/placeList";
 import { EARTH_C, makeAnchor, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
@@ -109,11 +110,22 @@ export function diagramTheme() {
   return { bg, ink: v("--net-ink", "#2b2b2b"), pill: "#ffffff", selected: v("--accent", "#d9788e"), text, place: placeNameInk(shade.peek()), font: s.fontFamily, edge: lightness(bg) < 0.5 ? text : undefined, border: BORDER_COLOUR, wire: SHADES[shade.peek()].tramWire, water: !diagramWater.peek() ? undefined : /^#[0-9a-f]{6}$/i.test(bg) ? mixOklab(bg, SHADES[shade.peek()].water, WATER_SHARE) : SHADES[shade.peek()].water };
 }
 
-/** the graph node nearest a place on the ground, of `among` if given */
-function nearest(g: DiagramGraph, lng: number, lat: number, among?: Iterable<number>): number {
-  const [lx, ly] = toLocal(lng, lat, makeAnchor(g.origin[0], g.origin[1], 0)), mx = (lx - g.mid[0]) / g.k, my = -(ly - g.mid[1]) / g.k;
-  return nearestOf(g.x, g.y, mx, my, among ?? g.key.keys());
+/** the node nearest a place on the ground, of `among` if given: each region's nodes measured in its own frame (T-3448) */
+function nearestNode(s: Shown, lng: number, lat: number, among?: Iterable<number>): number {
+  const at = s.parts.map(({ graph: g }) => {
+    const [lx, ly] = toLocal(lng, lat, makeAnchor(g.origin[0], g.origin[1], 0));
+    return [(lx - g.mid[0]) / g.k, -(ly - g.mid[1]) / g.k];
+  });
+  let best = -1, bd = Infinity;
+  for (const k of among ?? s.graph.key.keys()) {
+    const p = s.partOf[k], g = s.parts[p].graph, i = k - s.base[p], d = (g.x[i] - at[p][0]) ** 2 + (g.y[i] - at[p][1]) ** 2;
+    if (d < bd) (bd = d), (best = k);
+  }
+  return best;
 }
+
+/** a region laid out (T-3448): its sig, the seq it came with, its stations' keys and whether its water was asked for */
+type LaidOut = Part & { seq: number; sig: string; keys: Set<number>; water: boolean };
 
 /** of `among`, the node whose place in `xs`, `ys` is nearest (x, y); -1 for none */
 function nearestOf(xs: ArrayLike<number>, ys: ArrayLike<number>, x: number, y: number, among: Iterable<number>): number {
@@ -225,9 +237,13 @@ interface Shown {
   stops: number[][];
   /** a station id to its node, every member of a complex */
   nodeOf: Map<string, number>;
+  /** the regions drawn (T-3448), per node its region, and each region's first node */
+  parts: LaidOut[];
+  partOf: Int32Array;
+  base: number[];
 }
 
-function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64Array, y: Float64Array): Shown {
+function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64Array, y: Float64Array, parts: LaidOut[], partOf: Int32Array, base: number[]): Shown {
   const drawnOf = new Map<number, number[]>(), stopping: number[][] = Array.from(graph.key, () => []), stops: number[][] = [];
   d.lineOf.forEach((li, i) => {
     const l = graph.lines[li];
@@ -245,7 +261,7 @@ function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64
     const id = String(key), c = cx.of.get(id);
     for (const m of c === undefined ? [id] : cx.members[c]) nodeOf.set(m, i);
   });
-  return { graph, d, names, x, y, drawnOf, stopping, stops, nodeOf };
+  return { graph, d, names, x, y, drawnOf, stopping, stops, nodeOf, parts, partOf, base };
 }
 
 /** the drawn lines a selection stands for, and its station's node; null where it has none here */
@@ -299,7 +315,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   tag.style.display = "none";
   mapEl.appendChild(tag);
   let worker: Worker | null = null;
-  let busy = false, waiting: DiagramGraph | null = null, seq = 0;
+  let busy = false, seq = 0;
   let shown: Shown | null = null;
   let cx = 0, cy = 0, scale = 0, placed = false;
   /** the drawn line under the pointer, drawn over the rest */
@@ -312,25 +328,95 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (tagShown) (tag.style.display = "none"), (tagShown = false);
     if (hot >= 0) (hot = -1), draw();
   };
-  let lastGraph: DiagramGraph | null = null;
-  const send = (g: DiagramGraph) => {
-    lastGraph = g;
-    if (busy) {
-      waiting = g;
-      return;
+  let lastGraphs: DiagramGraph[] | null = null;
+  // T-3448: the network by region (regions.ts), each laid out on its own sheet, the region round the camera first and then
+  // the others, nearest first, each drawn as it comes; a region the same as last time is not laid out again
+  type Planned = { sig: string; graph: DiagramGraph; names: DiagramNames; frame: ZoneFrame; box: [number, number, number, number] };
+  /** the regions of the network as it is now, in the order they are laid out */
+  let plan: Planned[] = [];
+  /** the regions still to lay out */
+  let queue: Planned[] = [];
+  /** the regions laid out, by their sig: the plan's, and old ones drawn until the region that replaces them is */
+  const parts = new Map<string, LaidOut>();
+  /** per layout asked for, its region's sig and whether its water was asked for */
+  const sigOfSeq = new Map<number, { sig: string; water: boolean }>();
+  const send = (graphs: DiagramGraph[]) => {
+    lastGraphs = graphs;
+    const c = live.map?.getCenter(), water = diagramWater.peek();
+    plan = [];
+    for (const g of c ? cameraOrder(graphs, c.lng, c.lat) : graphs) {
+      const zf = zoneFrame(g);
+      // a region with no station in the save has nothing to draw
+      if (!zf) continue;
+      const names = namesOf(g);
+      plan.push({ sig: regionSig(g, names.text, names.width, ""), graph: g, names, frame: zf.frame, box: zf.box });
     }
-    const zf = zoneFrame(g);
-    // a graph with no station in the save has nothing to draw
-    if (!zf) return void (busy = false);
+    queue = plan.filter((p) => { const had = parts.get(p.sig); return !had || (water && !had.water); });
+    lastBoxes = plan.map((p) => p.box);
+    if (!queue.length) compose();
+    pump();
+  };
+  const pump = () => {
+    if (busy) return;
+    const next = queue.shift();
+    if (!next) return void giveShare(shown);
+    busy = true;
     // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591)
-    const sheet = { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) };
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, frame: zf.frame, zones: newZones(zf.box), water: diagramWater.peek(), sheet } satisfies ToDiagram);
+    const sheet = { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(next.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) };
+    sigOfSeq.set(++seq, { sig: next.sig, water: diagramWater.peek() });
+    worker!.postMessage({ kind: "graph", graph: next.graph, names: next.names, seq, frame: next.frame, zones: newZones(next.box), water: diagramWater.peek(), sheet, keep: [...parts.values()].map((p) => p.seq) } satisfies ToDiagram);
+  };
+  /** the parts drawn and how each is placed, as last composed */
+  let drawnParts: LaidOut[] = [], drawnAt: Placed[] = [];
+  /** the regions laid out put together and shown: the plan's, then old ones whose stations a region still to come has
+   * and none laid out has */
+  const compose = () => {
+    const inPlan = new Set(plan.map((p) => p.sig)), list: LaidOut[] = [];
+    for (const p of plan) {
+      const got = parts.get(p.sig);
+      if (got) list.push(got);
+    }
+    const waitingFor = plan.filter((p) => !parts.has(p.sig));
+    for (const [sig, q] of parts) {
+      if (inPlan.has(sig)) continue;
+      const covered = list.some((p) => p.graph.key.some((k) => q.keys.has(k)));
+      if (!covered && waitingFor.some((p) => p.graph.key.some((k) => q.keys.has(k)))) list.push(q);
+      else parts.delete(sig);
+    }
+    if (!list.length) return;
+    // the view stays on the region it is on: that region is placed as it is laid out, the others round it
+    let anchor = 0;
+    const was = shown;
+    if (was && placed) {
+      const k = nearestOf(was.x, was.y, cx, cy, was.graph.key.keys());
+      const old = drawnParts[was.partOf[k]], t = drawnAt[was.partOf[k]], key = was.graph.key[k];
+      const i = list.findIndex((p) => p.keys.has(key));
+      if (i >= 0) {
+        anchor = i;
+        if (old && t) (cx = (cx - t.ox) / t.s), (cy = (cy - t.oy) / t.s), (scale *= t.s);
+      }
+    }
+    if (anchor) list.unshift(...list.splice(anchor, 1));
+    const at = placeParts(list, 0), m = mergeParts(list, at);
+    drawnParts = list;
+    drawnAt = at;
+    shown = indexShown(m.graph, m.d, m.names, m.x, m.y, list, m.partOf, m.base);
+    focusKey = null;
+    hot = -1;
+    diagramProgress.value = null;
+    diagramReady.value = true;
+    if (!placed) place();
+    draw();
+  };
+  /** the part a message from the worker is for */
+  const partOfSeq = (s: number): LaidOut | undefined => {
+    for (const p of parts.values()) if (p.seq === s) return p;
+    return undefined;
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
-  let outlineMap: ReadonlyMap<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
+  let outlineMap: ReadonlyMap<string, MultiPolygon> | null = null, lastBoxes: [number, number, number, number][] = [];
   const zonesSent = new Set<string>();
   const newZones = (box: [number, number, number, number]): ZoneOutlines => {
-    lastBox = box;
     const out: ZoneOutlines = [];
     if (!outlineMap) return out;
     for (const c of zonesTouching(...box)) {
@@ -347,8 +433,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     if (!m.size) return;
     outlineMap = m;
     // outlines in after a layout: that layout's borders alone
-    if (worker && lastBox) {
-      const zones = newZones(lastBox);
+    if (worker && lastBoxes.length) {
+      const zones = lastBoxes.flatMap((b) => newZones(b));
       if (zones.length) worker.postMessage({ kind: "zones", zones } satisfies ToDiagram);
     }
   });
@@ -367,7 +453,6 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       }) };
     })).then((towns) => worker?.postMessage({ kind: "towns", towns } satisfies ToDiagram));
   };
-  let shownSeq = -1;
   // T-2887: shares waiting for a layout of the network as it is now; with the diagram down the clock worker posts the
   // graph just for them
   let forShare: ((s: Shown | null) => void)[] = [], shareTimer = 0;
@@ -382,14 +467,17 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   };
   sharer = () => new Promise((done) => {
     const reply = (s: Shown | null) => done(s && { d: s.d, names: s.names });
-    if (diagramShown.peek() && shown && !busy && !waiting) return reply(shown);
+    if (diagramShown.peek() && shown && !busy && !queue.length) return reply(shown);
     forShare.push(reply);
     if (forShare.length > 1) return;
     shareTimer = window.setTimeout(() => giveShare(null), SHARE_WAIT_MS);
     if (!diagramShown.peek()) client.post({ kind: "diagram", on: true });
   });
-  client.onDiagram = (g) => {
+  client.onDiagram = (gs) => {
     if (!diagramShown.peek() && !forShare.length) return;
+    // for checks (t2261-graph-anchor.mjs): the graphs as the clock worker posts them, counted
+    const w = window as unknown as { twGraphs?: { n: number; graphs: DiagramGraph[] } };
+    w.twGraphs = { n: (w.twGraphs?.n ?? 0) + 1, graphs: gs };
     if (!worker) {
       worker = new Worker(new URL("../workers/diagram.worker.ts", import.meta.url), { type: "module" });
       worker.addEventListener("error", (e) => { if (!e.message) noteStaleBuild(); giveShare(null); }); // no message: its script did not load
@@ -400,7 +488,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           return;
         }
         if (e.data.kind === "water") {
-          if (shown && e.data.seq === shownSeq && diagramWater.peek()) (shown.d.water = e.data.water), draw();
+          const p = partOfSeq(e.data.seq);
+          if (p && diagramWater.peek()) (p.d.water = e.data.water), compose();
           return;
         }
         if (e.data.kind === "sheet") {
@@ -409,30 +498,24 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           return;
         }
         if (e.data.kind === "borders") {
-          if (shown && e.data.seq === shownSeq) (shown.d.borders = e.data.borders), (shown.names.cities = e.data.cities), draw();
+          const p = partOfSeq(e.data.seq);
+          if (p) (p.d.borders = e.data.borders), (p.names.cities = e.data.cities), compose();
           wantTowns(e.data.cities?.want);
           return;
         }
         busy = false;
-        const { graph, layout, drawing: d, names } = e.data;
-        shownSeq = e.data.seq;
-        shown = indexShown(graph, d, names, layout.x, layout.y);
-        focusKey = null;
-        hot = -1;
-        diagramProgress.value = null;
-        diagramReady.value = true;
+        const { graph, layout, drawing: d, names } = e.data, asked = sigOfSeq.get(e.data.seq);
+        sigOfSeq.delete(e.data.seq);
+        if (asked) parts.set(asked.sig, { graph, x: layout.x, y: layout.y, d, names, seq: e.data.seq, sig: asked.sig, keys: new Set(graph.key), water: asked.water });
+        compose();
+        const s = shown;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
-        if (!placed) place();
-        draw();
+        if (s) (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, regions: drawnParts.length, ms: { ...layout.ms, ...e.data.ms }, complexes: s.graph.key.length, pieces: layout.pieces.length, names: s.names.at.map((l, i) => [s.names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearestNode(shown!, lng, lat); (cx = shown!.x[i]), (cy = shown!.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, box: () => [...shown!.d.box], pitch: () => shown!.d.pitch };
         wantTowns(names.cities?.want);
-        const next = waiting;
-        waiting = null;
-        if (next) send(next);
-        else giveShare(shown);
+        pump();
       };
     }
-    send(g);
+    send(gs);
   };
   /** the node of the station with this name, the one most lines stop at; -1 for none */
   const nodeNamed = (name: string): number => {
@@ -477,7 +560,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const c = live.map?.getCenter();
     const on = selectedOn(s, selection.peek());
     const among = on ? selectedNodes(s, on) : undefined;
-    const best = c ? nearest(s.graph, c.lng, c.lat, among) : among?.[0] ?? 0;
+    const best = c ? nearestNode(s, c.lng, c.lat, among) : among?.[0] ?? 0;
     cx = s.x[best] ?? 0;
     cy = s.y[best] ?? 0;
     moved = false;
@@ -548,7 +631,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const on = diagramWater.value;
     try { localStorage.setItem(WATER_STORE, on ? "1" : "0"); } catch { /* this visit only */ }
     if (!on) return void draw();
-    if (shown && !shown.d.water && lastGraph) send(lastGraph);
+    if (shown && lastGraphs && [...parts.values()].some((p) => !p.water)) send(lastGraphs);
   });
   effect(() => {
     const m = diagramWidth.value;
