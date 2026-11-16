@@ -51,6 +51,8 @@ not once per message (Anita, 2026-11-09).
   (Sonnet) with the procedure in notes/T-3391.md "Stage 3"; it adds to `notes/board-requests.json`. Her Accept, Merge,
   Dismiss and Comment on a group arrive through the inbox like any action: file or fold the task, set the group's
   `state` and `decided_at`, then mark the action handled. A paste is handled once a sort has put it in a group.
+  Groups that are clearly already done or duplicates are dismissed or merged without her (Anita, 2026-11-16: "just
+  don't auto address plyer requests where we have to make an actual new design decision"); say which in the report.
 - The one or two images she should look at now: copy to `artifacts/trainworld/review/` (short names, older copies
   deleted) and give her that full path.
 
