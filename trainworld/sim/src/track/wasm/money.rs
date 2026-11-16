@@ -209,6 +209,12 @@ impl TrackApi {
         for l in 0..w.len() as u32 {
             if weight(l) <= 0.0 || !n.line_ok(l) { continue }
             let mut stops = n.line_stops(l).to_vec();
+            // T-3348: and the platforms each run stops at
+            if let Some(ls) = self.w.svc.lines.get(l as usize).filter(|s| !s.is_bus()) {
+                for r in 0..2 {
+                    stops.extend((0..ls.runs[r].stop_idx.len()).filter_map(|k| ls.stop_node(r, k)));
+                }
+            }
             stops.sort_unstable();
             stops.dedup();
             for s in stops {

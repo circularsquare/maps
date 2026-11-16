@@ -1628,3 +1628,33 @@ fn t2365_commute_lengths_of_real_packs() {
             a.z.n, a.gr.total, t / a.gr.total - 1.0, km / t, a.gr.mean_km, a.walk_all, band(0.0, 1.0), band(1.0, 2.0), band(2.0, 5.0), band(5.0, 10.0), band(10.0, 20.0), band(20.0, 1e9));
     }
 }
+
+
+/// T-3348: the reverse runs' stops (`set_back_stops`) reach the kernel: line 0's reverse run stops at
+/// a platform of its own 150 m off its stop 10, and riders board it there; none given, the graph is
+/// as before.
+#[test]
+fn reverse_stops_reach_the_graph() {
+    let (mut api, mut xy, n, stops, times, tph, cars) = small();
+    let beside = (xy.len() / 2) as u32;
+    xy.extend([2000.0, 150.0]);
+    let mut back = stops.clone();
+    back[10] = beside;
+    api.set_back_stops(&back);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    let svc = api.svc.as_ref().unwrap();
+    let b = svc.st_map[beside as usize];
+    let net = DemandApi::period_net(svc, 0);
+    assert_eq!((net.back_stops.len(), net.back_stop(10)), (stops.len(), b));
+    let g = kernel::build_graph(&net, &Params::default());
+    // line 0's 17 stops: its reverse run reaches stop 10 at route node 17 + 6
+    assert_eq!((g.rn_station[10], g.rn_station[17 + 6]), (svc.st_map[10], b));
+    assert!(api.solve(0));
+    let (board, rail) = (api.board(0), api.summary(0)[2]);
+    assert!(board[17 + 6] > 0.0 && board[10] > 0.0, "{} {}", board[10], board[17 + 6]);
+    api.set_back_stops(&[]);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    assert!(DemandApi::period_net(api.svc.as_ref().unwrap(), 0).back_stops.is_empty());
+    assert!(api.solve(0));
+    println!("rail trips, period 0: {rail:.1} with the platform beside, {:.1} without", api.summary(0)[2]);
+}

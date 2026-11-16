@@ -230,8 +230,9 @@ interface Service {
   fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
-  /** `wrapS`: a circle's stand at its first stop, riding on round (T-798) */
-  lines: { id: string; stops: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
+  /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
+   * where a stop's way back is at a platform beside it (T-3348, `SnapshotLine.backStops`) */
+  lines: { id: string; stops: string[]; back?: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
   /** T-2410: stations no line stops at, left out of `stations`: their positions only reach zones
@@ -342,7 +343,10 @@ function topOf(keys: ArrayLike<number>, vals: ArrayLike<number>, top = Infinity)
 /** Each route node's stop and line: stop k of a line is node o + k on run 0 and o + 2n - 1 - k on run 1. */
 function routeNodes(layout: Solve["layout"]): RouteNodes {
   const at: RouteNodes = [];
-  for (const { id, o, n, stops } of layout) for (let k = 0; k < n; k++) at[o + k] = at[o + 2 * n - 1 - k] = { station: stops[k], line: id, k, o, n };
+  for (const { id, o, n, stops, back } of layout) for (let k = 0; k < n; k++) {
+    at[o + k] = { station: stops[k], line: id, k, o, n };
+    at[o + 2 * n - 1 - k] = { station: back?.[k] ?? stops[k], line: id, k, o, n };
+  }
   return at;
 }
 /** `members`' indices in the solve's station list, those it has */
@@ -352,8 +356,8 @@ const stationIndices = (solve: Solve, members: string[]) => members.map((m) => s
 interface Solve {
   version: number;
   svc: Service;
-  /** per line, the first route node and stop count */
-  layout: { id: string; o: number; n: number; stops: string[] }[];
+  /** per line, the first route node and stop count; `back`: run 1's stations where they differ (T-3348) */
+  layout: { id: string; o: number; n: number; stops: string[]; back?: string[] }[];
   results: (Result | null)[];
   byRound: (Result | null)[][];
   published: number;
@@ -554,14 +558,14 @@ function solveEstimate(stops: number | null, toFinal: boolean | "all" = false): 
  * starts no solve (it would set every population on its network, and the line after it could not be
  * solved locally) */
 function serviceFromSnapshot(s: NetworkSnapshot): Service {
-  const used = new Set(perfOff("alone") ? s.stations.map((st) => String(st.id)) : s.lines.flatMap((l) => l.stops.map(String)));
+  const used = new Set(perfOff("alone") ? s.stations.map((st) => String(st.id)) : s.lines.flatMap((l) => [...l.stops, ...(l.backStops ?? [])].map(String)));
   const alone = s.stations.filter((st) => !used.has(String(st.id))).map((st): [number, number] => [st.x, st.y]);
   const passages = (s.passages ?? []).filter(([a, b]) => used.has(String(a)) && used.has(String(b)));
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
   };
@@ -596,6 +600,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     // T-2926: tram lines, only where there are any (`DemandApi.set_tram_lines`)
     ...(lines.some((l) => l.tram) ? { tram: Uint8Array.from(lines, (l) => (l.tram ? 1 : 0)) } : {}),
   };
+  // T-3348: run 1's stations, only where a line has a platform beside for its way back
+  const backOf = (l: (typeof lines)[number]) => (l.back?.length === l.stops.length && l.back.every((s) => index.has(s)) ? l.back : null);
+  if (lines.some((l) => backOf(l))) net.back = new Uint32Array(nStops);
   // T-1626, T-2195: a high-speed, ferry or bus line's route nodes charge its multiplier, only where one is not 1
   const muls = lines.map((l) => lineFareMul({ fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
   if (muls.some((m) => m !== 1)) {
@@ -612,8 +619,10 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
   let a = 0;
   for (const l of lines) {
     const n = l.stops.length;
-    layout.push({ id: l.id, o: 2 * a, n, stops: l.stops });
+    const back = net.back ? backOf(l) : null;
+    layout.push({ id: l.id, o: 2 * a, n, stops: l.stops, ...(back ? { back } : {}) });
     l.stops.forEach((s, k) => (net.stops[a + k] = index.get(s)!));
+    if (net.back) (back ?? l.stops).forEach((s, k) => (net.back![a + k] = index.get(s)!));
     for (let lev = 0; lev < 3; lev++) {
       const at = (run: number) => 6 * a + (run * 3 + lev) * n;
       const h0 = l.hopS[0]?.[lev] ?? [], d0 = l.dwellS[0]?.[lev] ?? [];
@@ -4183,7 +4192,10 @@ class DemandClient {
     const inside = new Set(members);
     const nodes: number[] = [];
     const at = routeNodes(solve.layout);
-    for (const { o, n, stops } of solve.layout) for (let k = 0; k < n; k++) if (inside.has(stops[k])) nodes.push(o + k, o + 2 * n - 1 - k);
+    for (const { o, n, stops, back } of solve.layout) for (let k = 0; k < n; k++) {
+      if (inside.has(stops[k])) nodes.push(o + k);
+      if (inside.has(back?.[k] ?? stops[k])) nodes.push(o + 2 * n - 1 - k);
+    }
     if (nodes.length === 0) return null;
     const parts = await this.transferParts(t, nodes);
     if (!parts) return null;

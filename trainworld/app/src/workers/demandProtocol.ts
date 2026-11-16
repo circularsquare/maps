@@ -37,6 +37,9 @@ export interface DemandNetwork {
   lineN: Uint32Array;
   /** station index of every stop, line after line */
   stops: Uint32Array;
+  /** T-3348 (`DemandApi.set_back_stops`): parallel to `stops`, the station run 1 stops at there (the
+   * stop's own where it is the same); absent where every line stops alike both ways */
+  back?: Uint32Array;
   /**
    * Riding seconds, 6 per stop: for each line, per run (0 = stops in order, 1 = reversed) and
    * demand level (high, medium, low), `n` values indexed by stop k in the line's own order.

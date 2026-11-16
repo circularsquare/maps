@@ -2001,6 +2001,10 @@ impl EverydayApi {
     pub fn set_bus(&mut self, catch_n: &[u32], catch_xy: &[f32]) {
         self.engine.set_bus(catch_n, catch_xy);
     }
+    /// `DemandApi::set_back_stops` (T-3348).
+    pub fn set_back_stops(&mut self, back: &[u32]) {
+        self.engine.set_back_stops(back);
+    }
     pub fn set_network(
         &mut self,
         xy: &[f32],

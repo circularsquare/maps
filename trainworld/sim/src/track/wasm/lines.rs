@@ -441,7 +441,10 @@ impl TrackApi {
             if ls.is_bus() || !ls.stops.iter().any(|&n| net.one_side(n).is_some()) {
                 return vec![];
             }
-            let mut out: Vec<u32> = ls.stops.iter().copied().filter(|&n| net.one_side(n).is_some()).collect();
+            // T-3348: a stop whose two runs stop at platforms of their own is served both ways
+            let n = ls.stops.len();
+            let split = |k: usize| ls.stop_node(0, k) != ls.stop_node(1, n - 1 - k);
+            let mut out: Vec<u32> = (0..n).filter(|&k| !split(k)).map(|k| ls.stops[k]).filter(|&n| net.one_side(n).is_some()).collect();
             out.sort_unstable();
             out.dedup();
             return out.into_iter().filter_map(one_way_at).flatten().collect();

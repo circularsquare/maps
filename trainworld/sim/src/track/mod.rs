@@ -52,6 +52,7 @@ pub mod names;
 pub mod net;
 pub mod overtake;
 pub mod params;
+pub mod perdir;
 pub mod profile;
 pub mod related;
 pub mod roads;

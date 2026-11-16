@@ -28,6 +28,10 @@ impl IntercityApi {
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();
     }
+    /// `DemandApi::set_back_stops` (T-3348).
+    pub fn set_back_stops(&mut self, back: &[u32]) {
+        self.back_in = back.to_vec();
+    }
     /// `DemandApi::set_bus` (T-1464), the points as longitude and latitude, as `set_network_ll`
     /// takes the stations.
     pub fn set_bus_ll(&mut self, catch_n: &[u32], catch_ll: &[f64]) {

@@ -49,6 +49,8 @@ interface Heavy {
   path: number[];
   /** T-3117: the return run's path where it is not `path` backward (`TrackApi.line_back_path`), else empty */
   back: number[];
+  /** T-3348: the return run's stations where one differs from `stops` (`TrackApi.line_back_stops`), else empty */
+  backStops: number[];
   fromStart: number[][];
   stopS: [number[], number[]];
   stretchSpeeds: number[];
@@ -353,7 +355,7 @@ export class StateRows {
         upkeep,
         id, name: heavy.name, letter: heavy.letter, group: heavy.group, groupName: heavy.groupName, groupSymbol: heavy.groupSymbol, groupColour: heavy.groupColour, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
         lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(auto), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
-        stops: heavy.stops, path: heavy.path, ...(heavy.back.length ? { back: heavy.back } : {}),
+        stops: heavy.stops, path: heavy.path, ...(heavy.back.length ? { back: heavy.back } : {}), ...(heavy.backStops.length ? { backStops: heavy.backStops } : {}),
         fromStart: heavy.fromStart,
         stopS: heavy.stopS,
         fast,
@@ -470,6 +472,7 @@ export class StateRows {
       stops: [...a.line_stops(id)],
       path: [...a.line_path(id)],
       back: [...a.line_back_path(id)],
+      backStops: [...a.line_back_stops(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),
       stopS: [[...a.line_stop_s(id, 0)], [...a.line_stop_s(id, 1)]],
       stretchSpeeds: ok ? [...a.line_stretch_speeds(id)] : [],

@@ -426,7 +426,15 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     let path = net.line_path(l);
     let running = net.line_constructed(l);
     let mut run = Run::default();
-    run.segs = if rev { net.back_path(l)? } else { path.to_vec() };
+    // T-3348: each run's own stop nodes, run 1's in its order
+    let stops = if rev {
+        let (stops, segs) = net.back_run(l)?;
+        run.segs = segs;
+        stops
+    } else {
+        run.segs = path.to_vec();
+        net.fwd_stops_of(net.line_stops(l), path)
+    };
     let mut s = 0.0;
     run.nodes.push(net.path_nodes(run.segs[0]).0);
     run.node_s.push(0.0);
@@ -459,10 +467,6 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     run.len = s;
     if let Some(f) = raw.first_mut() {
         f[0] = 0.0;
-    }
-    let mut stops: Vec<u32> = net.line_stops(l).to_vec();
-    if rev {
-        stops.reverse();
     }
     let turns = net.stop_reversals(&run.segs);
     run.stop_idx = super::net::match_stops(&run.nodes, &stops, &turns)?.into_iter().map(|k| k as u32).collect();
@@ -605,7 +609,9 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     if ls.stops.len() < 2 { return ls; }
     ls.kind = net.line_loop(l);
     ls.one_way = ls.is_loop() && net.line_one_way[l as usize];
-    let min_plat = net.line_stops(l).iter().map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
+    // T-3348: the platforms each run stops at
+    let ways = net.way_stops(net.line_stops(l), net.line_path(l)).unwrap_or_default();
+    let min_plat = net.line_stops(l).iter().chain(&ways.0).chain(&ways.1).map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;
     ls.cars = if want == 0 { fit } else { want.min(fit) };

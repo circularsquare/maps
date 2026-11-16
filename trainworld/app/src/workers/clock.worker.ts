@@ -3448,7 +3448,7 @@ function buildSnapshot(): NetworkSnapshot {
     const ferry = a.is_ferry(id);
     const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
-    const span = a.line_span(id);
+    const span = a.line_span(id), back = a.line_back_stops(id);
     for (let run = 0; run < 2; run++) {
       hopS.push([]);
       dwellS.push([]);
@@ -3459,7 +3459,7 @@ function buildSnapshot(): NetworkSnapshot {
       }
     }
     lines.push({
-      id, name: a.line_name(id), stops: [...a.line_stops(id)], tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
+      id, name: a.line_name(id), stops: [...a.line_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),

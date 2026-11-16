@@ -119,6 +119,8 @@ export function splitClusters(n: DemandNetwork, cities: { id: CityId; box: Box }
     for (let i = 1; i < parent.length; i++) join(0, i);
   } else {
     for (let l = 0; l < L; l++) for (let k = lineOff[l] + 1; k < lineOff[l + 1]; k++) join(n.stops[k - 1], n.stops[k]);
+    // T-3348: a way back's platform beside a stop is the line's too
+    if (n.back) for (let k = 0; k < n.stops.length; k++) join(n.stops[k], n.back[k]);
     if (n.complex && n.complex.length === S) {
       const first = new Map<number, number>();
       for (let s = 0; s < S; s++) {
@@ -285,7 +287,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     if (b > a) spans.push([l, a, b]);
   }
   const S = n.stXY.length / 2, used = new Uint8Array(S);
-  for (const [l, a, b] of spans) for (let k = a; k <= b; k++) used[n.stops[lineOff[l] + k]] = 1;
+  for (const [l, a, b] of spans) for (let k = a; k <= b; k++) { used[n.stops[lineOff[l] + k]] = 1; if (n.back) used[n.back[lineOff[l] + k]] = 1; }
   const stations: number[] = [];
   for (let s = 0; s < S; s++) if (used[s]) stations.push(s);
   const { stLocal, stXY, complex } = stationsOf(n, stations);
@@ -294,10 +296,12 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
   const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
   const tph = new Float32Array(3 * spans.length), cars = new Float32Array(spans.length);
   const nodeGlobal = new Uint32Array(2 * nStops), pads: number[] = [];
+  const back = n.back ? new Uint32Array(nStops) : null;
   let o = 0;
   spans.forEach(([l, a, b], i) => {
     const m = n.lineN[l], g = lineOff[l], p = b - a + 1;
     for (let k = 0; k < p; k++) stops[o + k] = stLocal[n.stops[g + a + k]];
+    if (back) for (let k = 0; k < p; k++) back[o + k] = stLocal[n.back![g + a + k]];
     for (let r = 0; r < 6; r++) {
       times.set(n.times.subarray(6 * g + r * m + a, 6 * g + r * m + b + 1), 6 * o + r * p);
       // run 0 ends at the span's last stop, run 1 at its first; a whole circle keeps its ride on
@@ -317,7 +321,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     cars[i] = n.cars[l];
     o += p;
   });
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))), ...ferryOf(n, spans.map(([l]) => l)) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span: spanOf(n, nodeGlobal), ...catchesOf(n, spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k))), ...ferryOf(n, spans.map(([l]) => l)) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
 }
 
@@ -355,6 +359,11 @@ function fareWOf(n: DemandNetwork, nodeGlobal: Uint32Array): { fareW?: Float32Ar
   return w.some((v) => v !== 1) ? { fareW: w } : {};
 }
 
+/** T-3348: a view's run 1 stations, where any differs from its stop */
+function backOf(back: Uint32Array | null, stops: Uint32Array): { back?: Uint32Array } {
+  return back && back.some((s, k) => s !== stops[k]) ? { back } : {};
+}
+
 /** T-2196: the whole network's ferry flags for `lines`, where any of them is a ferry. */
 function ferryOf(n: DemandNetwork, lines: number[]): { ferry?: Uint8Array } {
   if (!n.ferry || !lines.some((l) => n.ferry![l])) return {};
@@ -377,10 +386,12 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
   const tph = new Float32Array(3 * lines.length), cars = new Float32Array(lines.length);
   const nodeGlobal = new Uint32Array(2 * nStops);
+  const back = n.back ? new Uint32Array(nStops) : null;
   let o = 0;
   lines.forEach((l, i) => {
     const m = n.lineN[l], g = lineOff[l];
     for (let k = 0; k < m; k++) stops[o + k] = stLocal[n.stops[g + k]];
+    if (back) for (let k = 0; k < m; k++) back[o + k] = stLocal[n.back![g + k]];
     times.set(n.times.subarray(6 * g, 6 * (g + m)), 6 * o);
     // route nodes: each line's 2m nodes in a row, its runs' stops (`hopKm` alike)
     hopKm.set(n.hopKm.subarray(2 * g, 2 * (g + m)), 2 * o);
@@ -390,10 +401,10 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     o += m;
   });
   const span = spanOf(n, nodeGlobal);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.transfer ? `|x${n.fare.transfer}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.ferry ? [net.ferry] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   const levelSig = [0, 1, 2].map((lev) => {

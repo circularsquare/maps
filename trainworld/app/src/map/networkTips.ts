@@ -153,7 +153,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
   const out: TipLine[] = [s.name];
   // T-305: the lines serving the station (zoomed out too, where every station is its own dot since
   // T-313), as bullets (T-559)
-  const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id)).map((l) => [l.letter + l.colour + shapeOf(l.id), l])).values()];
+  const serving = [...new Map(w.save.lines.filter((l) => l.stops.includes(id) || w.lineStats[l.id]?.backStops?.includes(id)).map((l) => [l.letter + l.colour + shapeOf(l.id), l])).values()];
   if (serving.length) out.push(lineBullets(serving, (l) => stopHeading(ov, w, l, id)));
   if (!s.built) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {
@@ -169,7 +169,7 @@ export function stationTip(ov: Overlay, w: WorldView, i: number): TipLine[] | nu
  * are each station's, so none). */
 export function complexTip(ov: Overlay, w: WorldView, ids: readonly string[], name: string): TipLine[] {
   const at = new Set(ids), out: TipLine[] = [name];
-  const serving = [...new Map(w.save.lines.filter((l) => l.stops.some((s) => at.has(s))).map((l) => [l.letter + l.colour + shapeOf(l.id), l])).values()];
+  const serving = [...new Map(w.save.lines.filter((l) => l.stops.some((s) => at.has(s)) || w.lineStats[l.id]?.backStops?.some((s) => at.has(s))).map((l) => [l.letter + l.colour + shapeOf(l.id), l])).values()];
   if (serving.length) out.push(lineBullets(serving));
   if (!w.save.stations.some((s) => at.has(s.id) && s.built)) out.push(t("networkTips.blueprint"));
   else if (display.peek().stationUse !== "none") {

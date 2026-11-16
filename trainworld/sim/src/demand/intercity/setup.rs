@@ -511,6 +511,7 @@ impl IntercityApi {
             catches,
             st_bus,
             st_tram: vec![],
+            back: demand_back(&st_map, stops, &self.back_in),
             st_x,
             st_y,
             st_map: st_map.clone(),

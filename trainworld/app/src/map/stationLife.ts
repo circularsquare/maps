@@ -194,13 +194,14 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
     if (!inView.size) return;
     const lines = new Map<string, VisLine>();
     for (const l of w.save.lines) {
-      if (w.lineStats[l.id]?.bus || !l.stops.some((id) => inView.has(id))) continue; // a bus uses no platform (T-1464)
+      if (w.lineStats[l.id]?.bus || !(l.stops.some((id) => inView.has(id)) || w.lineStats[l.id]?.backStops?.some((id) => inView.has(id)))) continue; // a bus uses no platform (T-1464)
       const run0: { k: number; s: StationInput }[] = [], run1: { k: number; s: StationInput }[] = [];
+      // T-3348: the return run stops at its own platforms where they differ
+      const back = w.lineStats[l.id]?.backStops;
       l.stops.forEach((id, k) => {
-        const s = inView.get(id);
-        if (!s) return;
-        run0.push({ k, s });
-        run1.push({ k: l.stops.length - 1 - k, s });
+        const s = inView.get(id), b = back ? inView.get(back[k]) : s;
+        if (s) run0.push({ k, s });
+        if (b) run1.push({ k: l.stops.length - 1 - k, s: b });
       });
       lines.set(l.id, { line: l, num: Number(l.id), runs: [run0, run1] });
     }

@@ -373,7 +373,7 @@ export interface DayInput {
   version: number;
   round: number;
   final: boolean;
-  layout: { id: string; o: number; n: number; stops: string[] }[];
+  layout: { id: string; o: number; n: number; stops: string[]; back?: string[] }[];
   res: DayResult[];
   dayTable: number[];
   peakHourFactor: number[];
@@ -412,9 +412,10 @@ function purposeDemand(layout: DayInput["layout"], res: DayResult[]): Map<Purpos
     const members = membersOf(key);
     if (!res.some((r) => members.some((m) => r.parts?.keys.includes(m)))) continue;
     const lines: PurposeDemand["lines"] = new Map(), stations: PurposeDemand["stations"] = new Map();
-    for (const { id, o, n, stops } of layout) {
+    for (const { id, o, n, stops, back } of layout) {
       const boardings = stops.map(() => 0);
       const loads: Float32Array[] = [];
+      const stAt = (s: string) => { let sd = stations.get(s); if (!sd) stations.set(s, (sd = { boardings: 0, alightings: 0 })); return sd; };
       res.forEach((r) => {
         const seg = new Float32Array(2 * (n - 1));
         loads.push(seg);
@@ -427,10 +428,17 @@ function purposeDemand(layout: DayInput["layout"], res: DayResult[]): Map<Purpos
           for (let k = 0; k < n; k++) {
             const a = base + o + k, b = base + o + 2 * n - 1 - k;
             boardings[k] += p.board[a] + p.board[b];
-            let sd = stations.get(stops[k]);
-            if (!sd) stations.set(stops[k], (sd = { boardings: 0, alightings: 0 }));
-            sd.boardings += p.board[a] + p.board[b];
-            sd.alightings += p.alight[a] + p.alight[b];
+            // T-3348: run 1 may stop at a platform beside the stop
+            const sa = stAt(stops[k]), sb = stAt(back?.[k] ?? stops[k]);
+            if (sa === sb) {
+              sa.boardings += p.board[a] + p.board[b];
+              sa.alightings += p.alight[a] + p.alight[b];
+            } else {
+              sa.boardings += p.board[a];
+              sa.alightings += p.alight[a];
+              sb.boardings += p.board[b];
+              sb.alightings += p.alight[b];
+            }
           }
           for (let k = 0; k < n - 1; k++) {
             seg[k] += p.seg[base + o + k];
@@ -570,7 +578,7 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
   };
   // T-1530: the day's block of each period's transfers in (`xferIn`, every kind of day's)
   const withXfer = res.length > 0 && res.every((r) => r.xferIn?.length === DEMAND_DAYS.length * r.board.length);
-  for (const { id, o, n, stops } of input.layout) {
+  for (const { id, o, n, stops, back } of input.layout) {
     const boardings = stops.map(() => 0);
     let fullest = 0;
     const loads: Float32Array[] = [], board: Float32Array[] = [], alight: Float32Array[] = [], arrive: Float32Array[] = [];
@@ -583,10 +591,22 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
         // stop k is route node o + k on run 0 and o + n + (n - 1 - k) on run 1
         const a = o + k, b = o + 2 * n - 1 - k;
         boardings[k] += r.board[a] + r.board[b];
-        const sd = st(stops[k]);
-        sd.boardings += r.board[a] + r.board[b];
-        sd.alightings += r.alight[a] + r.alight[b];
-        if (withXfer) { const x = day * r.board.length; sd.transfers = (sd.transfers ?? 0) + r.xferIn![x + a] + r.xferIn![x + b]; }
+        // T-3348: run 1 may stop at a platform beside the stop
+        const sa = st(stops[k]), sb = st(back?.[k] ?? stops[k]), x = day * r.board.length;
+        if (sa === sb) {
+          sa.boardings += r.board[a] + r.board[b];
+          sa.alightings += r.alight[a] + r.alight[b];
+          if (withXfer) sa.transfers = (sa.transfers ?? 0) + r.xferIn![x + a] + r.xferIn![x + b];
+        } else {
+          sa.boardings += r.board[a];
+          sa.alightings += r.alight[a];
+          sb.boardings += r.board[b];
+          sb.alightings += r.alight[b];
+          if (withXfer) {
+            sa.transfers = (sa.transfers ?? 0) + r.xferIn![x + a];
+            sb.transfers = (sb.transfers ?? 0) + r.xferIn![x + b];
+          }
+        }
       }
       const seg = new Float32Array(2 * (n - 1));
       for (let k = 0; k < n - 1; k++) {

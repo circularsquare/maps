@@ -549,6 +549,9 @@ export interface ClockLine {
   /** T-3117: the return run's path, last stop to first, where it is not `path` run backward (round
    * one-way track: a flyover's other leg) */
   back?: number[];
+  /** T-3348: the return run's stations, first stop to last, where one is a platform beside the
+   * line's own stop on the return run's track */
+  backStops?: number[];
   /** run 0, per demand level: arrival at each stop from the start, s */
   fromStart: number[][];
   stopS: [number[], number[]];
@@ -927,6 +930,9 @@ export interface SnapshotLine {
   name: string;
   /** station ids in order, first to last (run 0); run 1 is the same stops reversed */
   stops: number[];
+  /** T-3348: run 1's stations in `stops` order, where a stop's way back is at a platform beside it
+   * (`TrackApi.line_back_stops`, one-way track); absent where every stop is the same both ways */
+  backStops?: number[];
   /** trains an hour at high, medium, low demand (SPEC 6.3; periods in sim/src/track/params.rs) */
   tph: [number, number, number];
   /**

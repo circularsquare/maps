@@ -1751,7 +1751,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       if (sm.band.length) sampleBand.set(sm.band, first * 2);
       if (passingAt.size && !l.bus) {
         // (a return run's own stops go on a scratch list: the outer tracks are drawn from its path's)
-        const mine = linePassing(back ? { ...l, path: path as number[], stops: l.stops.slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
+        // (T-3348: the return run stops at its own platforms where they differ)
+        const mine = linePassing(back ? { ...l, path: path as number[], stops: (l.backStops ?? l.stops).slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
         for (let k = 0; k < count && mine.length; k++) {
           let v = 1e9;
           for (let j = 0; j < mine.length; j += 4) {
@@ -1799,7 +1800,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   }
   cache.edges = edgesSeen;
   const served = new Map<number, number>();
-  for (const l of s.lines) for (const st of new Set(l.stops)) served.set(st, (served.get(st) ?? 0) + 1);
+  for (const l of s.lines) for (const st of new Set([...l.stops, ...(l.backStops ?? [])])) served.set(st, (served.get(st) ?? 0) + 1);
   // whether a line runs through each node, so a station's box covers it (one line width since T-190)
   const lined = new Set<number>();
   for (const e of s.edges) if (onEdge.get(e.id)?.length) lined.add(e.a).add(e.b);

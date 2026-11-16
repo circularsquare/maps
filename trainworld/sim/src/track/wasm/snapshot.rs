@@ -202,10 +202,20 @@ impl TrackApi {
     pub fn line_back_path(&self, id: u32) -> Vec<u32> {
         let n = &self.w.net;
         let rail = n.line_bus.get(id as usize).map_or(true, |b| b.is_none()) && n.line_ferry.get(id as usize).map_or(true, |f| f.is_none());
-        if !n.line_ok(id) || !rail || n.line_runs_once(id) || n.line_path(id).iter().all(|&p| n.dir_ok(p ^ 1)) {
+        if !n.line_ok(id) || !rail || n.line_runs_once(id) {
             return vec![];
         }
-        n.back_path(id).unwrap_or_default()
+        let back = n.back_path(id).unwrap_or_default();
+        // T-3348: a return run to a one-track station beside may leave the path on two-way track too
+        if back.iter().eq(n.line_path(id).iter().rev().map(|p| p ^ 1).collect::<Vec<_>>().iter()) { vec![] } else { back }
+    }
+    /// T-3348: the stations the return run stops at, first stop to last (the order of `line_stops`),
+    /// where one is not the line's own stop (a platform on its own track beside it); else empty.
+    pub fn line_back_stops(&self, id: u32) -> Vec<u32> {
+        let Some(ls) = self.w.svc.lines.get(id as usize).filter(|l| l.ok && !l.is_bus()) else { return vec![] };
+        let n = ls.runs[1].stop_idx.len();
+        let back: Vec<u32> = (0..n).rev().filter_map(|k| ls.stop_node(1, k)).collect();
+        if back.len() != ls.stops.len() || back == ls.stops { vec![] } else { back }
     }
     /// Where each stop is along a run's path, m (the train's middle when standing).
     pub fn line_stop_s(&self, line: u32, run: usize) -> Vec<f64> {

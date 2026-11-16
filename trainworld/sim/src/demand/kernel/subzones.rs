@@ -156,6 +156,12 @@ pub fn access_options(zones: &Zones, net: &Network, p: &Params, places: &[(usize
                 st_lines[s as usize].push(l as u32);
             }
         }
+        // T-3348: a reverse run's own platforms are this line's stations too
+        for s in net.back_only(l) {
+            if !st_lines[s as usize].contains(&(l as u32)) {
+                st_lines[s as usize].push(l as u32);
+            }
+        }
     }
     let grid = StationGrid::new(net, p.ride_max_m, p.ride_max_m);
     let max2 = p.ride_max_m * p.ride_max_m;
@@ -227,6 +233,9 @@ pub fn on_train(net: &Network) -> Vec<bool> {
             continue;
         }
         for &s in stops {
+            out[s as usize] = true;
+        }
+        for s in net.back_only(l) {
             out[s as usize] = true;
         }
     }

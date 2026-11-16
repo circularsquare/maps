@@ -72,6 +72,10 @@ pub struct Network {
     pub st_bus: Vec<bool>,
     /// Per station, whether only tram lines serve it (T-2926): a cell keeps at most `TRAM_SLOTS` of them among its nearest. Empty: none is.
     pub st_tram: Vec<bool>,
+    /// T-3348: per stop (parallel to `line_stops`), the station the reverse run stops at, where a
+    /// line's two directions stop at different platforms (one-way track): the platform on the
+    /// return run's own track. Empty: every reverse stop at the listed stop's station.
+    pub back_stops: Vec<u32>,
 }
 
 /// A bus stop's stretch of route (T-1464): its demand station and the stretch as points in the
@@ -102,6 +106,11 @@ impl Network {
     #[inline]
     pub fn tram_only(&self, s: usize) -> bool {
         self.st_tram.get(s).copied().unwrap_or(false)
+    }
+    /// T-3348: the station the reverse run stops at for stop `k` (`back_stops`).
+    #[inline]
+    pub fn back_stop(&self, k: usize) -> u32 {
+        self.back_stops.get(k).copied().unwrap_or(self.line_stops[k])
     }
     /// Whether line `l` is a bus line (T-1577): the snapshot gives a bus the cars of `BUS_CARS`, so its
     /// crush load is a bus's, whatever its stops are (a short bus between two train stations has no
@@ -221,6 +230,7 @@ pub fn synth_network() -> Network {
         catches: vec![],
         st_bus: vec![],
         st_tram: vec![],
+        back_stops: vec![],
     };
     for &(name, kind, pts) in LINES {
         let mut stops: Vec<u32> = vec![];
@@ -283,6 +293,11 @@ impl Network {
     }
     pub fn stops(&self, l: usize) -> &[u32] {
         &self.line_stops[self.line_off[l] as usize..self.line_off[l + 1] as usize]
+    }
+    /// T-3348: the stations line `l`'s reverse run stops at that are not its listed stops' (`back_stops`).
+    pub fn back_only(&self, l: usize) -> impl Iterator<Item = u32> + '_ {
+        let r = if self.back_stops.is_empty() { 0..0 } else { self.line_off[l] as usize..self.line_off[l + 1] as usize };
+        r.filter(|&k| self.back_stops[k] != self.line_stops[k]).map(|k| self.back_stops[k])
     }
 
     /// Run time per hop from straight-line distance x 1.15 (curves) at the line's average speed.

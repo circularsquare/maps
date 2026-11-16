@@ -1172,13 +1172,20 @@ fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Op
     // a loop takes new stops between its first stop and its closing one (T-798); a balloon also
     // past the stop it turns back at, which the new stop then is (T-3122: its stem grows)
     let slots = if closed(old) { 1..=old.len() - 1 } else { 0..=old.len() };
-    let mut tries: Vec<Vec<u32>> = slots.rev().map(|slot| {
-        let mut stops = old.to_vec();
-        stops.insert(slot, station);
-        stops
-    }).collect();
-    if closed(old) && route_memo(net, old, memo).is_some_and(|p| net.loop_kind(old, &p) == LoopKind::Balloon) {
-        tries.push(std::iter::once(station).chain(old.iter().copied()).chain(std::iter::once(station)).collect());
+    let balloon = closed(old) && route_memo(net, old, memo).is_some_and(|p| net.loop_kind(old, &p) == LoopKind::Balloon);
+    // T-3348: a station serving one way may go in as another of its group serving one way, which
+    // ever runs best (the clicked one first, so it wins a tie); the return run finds its own
+    let stations: Vec<u32> = std::iter::once(station).chain(net.way_others(station).into_iter().filter(|s| !old.contains(s))).collect();
+    let mut tries: Vec<Vec<u32>> = vec![];
+    for &station in &stations {
+        tries.extend(slots.clone().rev().map(|slot| {
+            let mut stops = old.to_vec();
+            stops.insert(slot, station);
+            stops
+        }));
+        if balloon {
+            tries.push(std::iter::once(station).chain(old.iter().copied()).chain(std::iter::once(station)).collect());
+        }
     }
     for stops in tries {
         if let Some(path) = route_memo(net, &stops, memo) {
@@ -2220,6 +2227,8 @@ mod double_tests;
 mod onetrack_tests;
 #[cfg(test)]
 mod tram_tests;
+#[cfg(test)]
+mod perdir_tests;
 #[cfg(test)]
 mod gap_tests;
 /// T-2414: close crossings, ends near water and islands.

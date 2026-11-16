@@ -159,10 +159,13 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
             let len = b - a;
             for i in 0..len {
                 let k = if dir == 0 { a + i } else { b - 1 - i };
-                let st = net.line_stops[k] as usize;
+                // T-3348: the reverse run may stop at a platform beside the listed stop, its own
+                // station's (so at that station's position)
+                let st = if dir == 0 { net.line_stops[k] } else { net.back_stop(k) } as usize;
+                let listed = st as u32 == net.line_stops[k];
                 rn_station.push(st as u32);
                 rn_line.push(l as u32);
-                let (dx, dy) = if platforms { (net.stop_x[k] - net.st_x[st], net.stop_y[k] - net.st_y[st]) } else { (0.0, 0.0) };
+                let (dx, dy) = if platforms && listed { (net.stop_x[k] - net.st_x[st], net.stop_y[k] - net.st_y[st]) } else { (0.0, 0.0) };
                 // under a metre is the merge's rounding, not a walk
                 let (dx, dy) = if dx.hypot(dy) < 1.0 { (0.0, 0.0) } else { (dx, dy) };
                 st_spread[st] |= dx != 0.0 || dy != 0.0;

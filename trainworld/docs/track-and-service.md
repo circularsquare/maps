@@ -614,7 +614,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   undoes; a built station's switch plays the upgrade sound. A one-track station has no terminal and no passing tracks (they go when it switches). Single
   track rebuilt double makes it an ordinary station; double rebuilt single keeps it one-track (no
   passing). Its twin on the other pair of quad (6.3) must serve the same way. Demand: a pass boards,
-  alights and changes nobody (`span` -1 for that route node, demand-kernel.md 4.3).
+  alights and changes nobody (`span` -1 for that route node, demand-kernel.md 4.3). A station of the
+  same complex, or within 300 m, on the other way's track makes the pass a stop there instead (6.3
+  "Per-direction stops").
 - **Station buildings** (T-2217, `track/building.rs`, `wasm/buildings.rs`, `game/buildings.ts`;
   design notes/T-2208.md 3): an outline of 3 to 24 corners the player draws round stations. Its
   members are every station whose platform touches it, at any level, constructed or not: the
@@ -1005,6 +1007,24 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
+- **Per-direction stops** (T-3348 stage 1, notes/T-3348.md; `track/perdir.rs`): a line stops at a station, and
+  each run stops at the platform on its own track. Where a stop between the ends serves one way only (on one-way
+  single track, or a one-track station) and a run goes the other way, that run stops instead at the nearest
+  station of the stop's complex, else within 300 m (the walk riders change on), whose platform its trains pass on
+  their own track running roughly its way (within 60 degrees), not already a stop of the line (`way_stops`). The
+  line still lists one stop; its return run goes round by the other station (`back_run_of`, which the T-3094 way
+  back now is); ends and stops where trains turn back keep their own. Run 0 takes another station only where its
+  path passes it. Nothing is saved: an edit works it out again (lines with such a stop are rebuilt on every
+  edit, `back_lines`). Capacity, boarding, money and the stop ways read each run's own stations; a stop served
+  both ways this way has no half dot. A click adding a station that serves one way (`best_slot`) also tries the
+  others of its group that do, and keeps the one whose route costs least (the clicked one on a tie), so a click on
+  either leg of a split adds the one the line runs out along. So a double split into two one-way singles with a
+  station on each (Anita's case, 2026-11-13) is one stop, each way on its own leg. Demand follows: the snapshot
+  gives a line's return-run stations where they differ (`backStops`, `TrackApi::line_back_stops`), demand's
+  return-run route node stands at that station (`demand::Network::back_stops`, `set_back_stops`), so its riders
+  board and alight there and it counts as the line's station for access; the figures credit each run's riders
+  to its own station. The map draws the return run's station as a stop of the line, and a station a run stops
+  at this way can be taken out only with the line's stop (`StationInUse`, as a listed stop).
 
 #### Line groups
 
