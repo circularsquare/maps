@@ -168,7 +168,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: Whole files load with no console error and smoke stays clean.
   - Other: notes/T-1635.md
-- T-3399 [P2] {L:new-countries} Central America and Venezuela first
+- T-3399 [P2] {L:new-countries} Central America and Venezuela first (taking, 2026-11-16, agent countries)
   - Context: You asked (2026-11-16) for Guatemala to Panama and Venezuela before any other new region.
   - Goal: Those eight countries are built and shipped.
   - Other: docs/adding-a-country.md; research/next-countries-data.md
@@ -341,9 +341,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
-- T-3435 [P3] {L:buses} Long-distance ferries recalibrated (taking, 2026-11-16, agent ferries)
-  - Context: Your scratch pad 2026-11-16: "long distance ferries kinda suck, probably need to make the "ferry fan" mechanism a bit more prominent especially for super long ferries. do a general recalibraiton of like how our ferries currently are relative to irl ferries... are they like NYC ferries? consider splitting ferries into 2 types, one for longer, not sure what would make sense / be realistic / get realistic usage"
-  - Goal: A study and proposal for you: how our ferries compare with real ones (short city ferries and long routes), what the ferry fan does now, and whether a second, long-distance ferry type makes sense. Nothing built before you pick.
+- T-3435 [P3] {L:buses} {waits:Anita} Long-distance ferries
+  - Need from Anita: A Fast ferry kind per line (65 km/h, about US$25M a boat, US$100 a boat-km), after T-2216? Recommended yes, ferry fan unchanged.
+  - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
+  - Goal: Long ferries carry riders near real routes: T-2216 first, then a fast ferry kind if you agree.
+  - Other: notes/T-3435.md
 - T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (taking, 2026-11-16, agent bugs3)
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
