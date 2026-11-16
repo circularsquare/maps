@@ -18,6 +18,7 @@ import { LOT_STRIDE } from "./facilityPlace";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
 import { floorAt } from "./buildingFloors";
 import { buildingMembersById } from "../game/buildingView";
+import { hidden, levelHidden, pickSkip } from "./visibility";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -155,6 +156,8 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
     maxShift = had[0] + (had[1] * mPx) / slot;
   }
   let near: Int32Array | null = null, nearCount = 0;
+  // T-3420: what the player hid is passed over
+  const skip = pickSkip.get(seg);
   // the nearest banded segment within the slop, when none is under the pointer
   let bestI = -1, bestD = Infinity;
   // `only`: the caller's own candidates, highest first (the blueprint's few segments, T-630)
@@ -176,6 +179,7 @@ export function topSeg(ov: Overlay, seg: Float32Array, count: number, px: number
   for (let k = near ? 0 : count - 1, end = near ? nearCount : -1; k !== end; k += near ? 1 : -1) {
     const i = near ? near[k] : k;
     if (accept && !accept(i)) continue;
+    if (skip?.(i)) continue;
     // a line drawn wider than the slop is hit anywhere on it (T-227)
     const half = wide && widePx ? Math.max(slop, 0.5 * wide[i] * widePx) : slop;
     const reach = half + 1;
@@ -397,6 +401,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       // drawn where the guard holds it (T-1965)
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i);
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
+      if (hidden.lines.has(Math.floor(prof / 6))) continue; // T-3420
       const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM, r.tripBays ?? undefined, i * BAY_STRIDE);
       if (!at) continue;
       if (r.detailedTrains) {
@@ -466,6 +471,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   if (lineHit && !(current?.kind === "line" && current.line === lineHit)) return { kind: "line", line: lineHit };
 
   for (let i = n.junctionIds.length - 1; i >= 0; i--) {
+    if (hidden.levels) { const l = hidden.nodeLevel(n.junctionIds[i]); if (l !== undefined && levelHidden(l)) continue; }
     ov.toScreenInto(n.junctions[i * 2], n.junctions[i * 2 + 1], SCRATCH, 0);
     const d = (SCRATCH[0] - px) ** 2 + (SCRATCH[1] - py) ** 2;
     if (d < best) {

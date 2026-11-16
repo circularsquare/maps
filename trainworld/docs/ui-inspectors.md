@@ -211,6 +211,18 @@ purpose filter the purpose drawn is ringed in the bar.
   view (below), a double click fits the map to all its lines'
   stops. A group edit is one undo step and wakes no demand; the hand order is outside the undo
   history, as a sort is.
+- **Hiding lines** [T-3420, `game/lineVisibility.ts`, `map/visibility.ts`]: an eye button beside the scope toggle
+  (hover "Hide lines", lit while on) shows an eye at the start of every row: a line's hides it on the map ("Hide line",
+  crossed out and muted while hidden, "Show line"), a group's hides all its lines ("Hide group"; muted while some are
+  hidden and crossed out when all are; "Show group" shows them all). A hidden line's bullet and name are faded in the
+  list whether the eyes show or not. "Show all", a text button left of the eye, shows every line again; it is always
+  laid out and seen only while a listed line is hidden, so the row never moves. Hiding is a view setting: a hidden
+  line runs, earns and is counted as before, keeps its row, its panel and the schematic; on the map its strokes, its
+  trains and a bus or ferry line's route and stops are not drawn and picks pass over them (the track under it stays),
+  and a hidden line's twin (T-3333) goes with it. Where lines run side by side its band's slot stays empty. The hidden
+  lines are saved with the game (the header's `hidden`, outside the undo history); a new line or a copy is shown. The
+  eyes' button is kept while the page is open. Settings' Show levels hides track levels the same way
+  ([ui-panels.md](ui-panels.md) "Settings").
 - **A group's bullet** [T-1813, `ui/GroupPill.tsx`]: a pill with a see-through body, a 2 px
   outline and bold text in one colour, reading the group's name with a trailing " line" or " main
   line" taken off, any case ("Tokaido Main Line" reads "Tokaido"; "Line 1" stays), and likewise a

@@ -256,6 +256,8 @@ let achievements: Map<string, Achieved> | null = new Map();
 let lineNotes = new Map<string, [number, string]>();
 /** T-3319: the bullet shape of each line the player gave one, by line id (game/lineShapeState.ts) */
 let lineShapes = new Map<string, LineShape>();
+/** T-3420: the lines the player hid on the map, by line id (game/lineVisibility.ts) */
+let hiddenLines = new Set<string>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
 let newLineCars = NEW_LINE_CARS;
 /** T-2926: a new tram line's sections, and the most a tram has (an 80 m platform) */
@@ -2394,7 +2396,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2777,6 +2779,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   achievements = h.achievements ? new Map(Object.entries(h.achievements)) : null;
   lineNotes = new Map(Object.entries(h.notes ?? {}));
   lineShapes = shapesFrom(h.shapes);
+  hiddenLines = new Set(Array.isArray(h.hidden) ? h.hidden.filter((x) => typeof x === "string") : []);
   newLineCars = h.newCars ?? NEW_LINE_CARS;
   guide = h.mode === "sandbox" ? undefined : h.guide;
   home = h.home;
@@ -2857,6 +2860,7 @@ async function newGame(spec?: NewGameSpec) {
   achievements = new Map();
   lineNotes = new Map();
   lineShapes = new Map();
+  hiddenLines = new Set();
   newLineCars = NEW_LINE_CARS;
   restart(startClock(spec), "new");
 }
@@ -2885,6 +2889,7 @@ function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt
   sendHome();
   send({ kind: "listOrder", lines: [...api!.list_order(0)], stations: [...api!.list_order(1)] });
   send({ kind: "lineShapes", shapes: Object.fromEntries(lineShapes) });
+  send({ kind: "hiddenLines", lines: [...hiddenLines] });
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: loadingInto ?? activeSlot, reason });
   convertedOnLoad = false;
   sendState();
@@ -3671,10 +3676,21 @@ function savedShapes(): Pick<SaveHeader, "shapes"> {
   return Object.keys(shapes).length ? { shapes } : {};
 }
 
+/** T-3420: the header's hidden lines, of the lines there are */
+function savedHidden(): Pick<SaveHeader, "hidden"> {
+  if (!hiddenLines.size) return {};
+  const info = api!.lines_info(), alive = new Set<string>();
+  for (let i = 0; i < info.length; i += 22) alive.add(String(info[i]));
+  const hidden = [...hiddenLines].filter((id) => alive.has(id));
+  return hidden.length ? { hidden } : {};
+}
+
 /** T-3319: a new line takes no shape left by a deleted line whose id it reuses; a copy takes its source's. */
 function newLineShape(op: EditOp, line: number) {
   if (op.op !== "addLine" && op.op !== "addBusLine" && op.op !== "addFerryLine" && op.op !== "copyLine") return;
   const id = String(line), from = op.op === "copyLine" ? lineShapes.get(String(op.line)) : undefined;
+  // T-3420: a new line or a copy is shown, whatever a deleted line of its id was
+  if (hiddenLines.delete(id)) send({ kind: "hiddenLines", lines: [...hiddenLines] });
   if (from === lineShapes.get(id)) return;
   if (from) lineShapes.set(id, from);
   else lineShapes.delete(id);
@@ -4352,6 +4368,9 @@ async function handleMessage(msg: ToClock) {
   } else if (msg.kind === "lineShape") {
     if (msg.shape) lineShapes.set(msg.line, msg.shape);
     else lineShapes.delete(msg.line);
+    dirty = edited = true; editAt = Date.now();
+  } else if (msg.kind === "hideLines") {
+    hiddenLines = new Set(msg.lines);
     dirty = edited = true; editAt = Date.now();
   } else if (msg.kind === "listOrder") {
     api.set_list_order(msg.list, new Uint32Array(msg.ids));

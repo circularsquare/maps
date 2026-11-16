@@ -331,6 +331,8 @@ export type ToClock =
   | { kind: "listOrder"; list: 0 | 1; ids: number[] }
   /** T-3319: a line's own bullet shape, null for its mode's; outside the undo history */
   | { kind: "lineShape"; line: string; shape: LineShape | null }
+  /** T-3420: the line ids the player hid on the map; outside the undo history */
+  | { kind: "hideLines"; lines: string[] }
   /** `restore`: `key` is a backup's (T-744) */
   | { kind: "saveSlot"; action: "refresh" | "save" | "create" | "open" | "rename" | "delete" | "restore"; key?: string; name?: string }
   /** inspector queries (T-031), answered with "answer": a junction's moves
@@ -833,6 +835,8 @@ export type FromClock =
   | { kind: "listOrder"; lines: number[]; stations: number[] }
   /** T-3319: the game's line shapes (`SaveHeader.shapes`), sent with "opened" and after a new line or a copy */
   | { kind: "lineShapes"; shapes: Record<string, LineShape> }
+  /** T-3420: the game's hidden lines (`SaveHeader.hidden`), sent with "opened" and after a new line takes a hidden one's id */
+  | { kind: "hiddenLines"; lines: string[] }
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */
   | { kind: "home"; home: string | null }
   /** the save file, for the player to keep */

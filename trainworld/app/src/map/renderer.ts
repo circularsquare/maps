@@ -35,6 +35,7 @@ import { backBaseOf, F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Str
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
+import { codeHidden, hidden as vis, levelHidden, pickSkip } from "./visibility";
 
 /** The render epoch moves to the start of each game hour. */
 export const EPOCH_S = 3600;
@@ -203,7 +204,7 @@ interface StrokeVao {
   res?: { del: () => void }[];
 }
 
-type TexName = "phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane";
+type TexName = "phases" | "meta" | "samples" | "lines" | "colours" | "fill" | "cars" | "stretch" | "stationLine" | "lane" | "slevel";
 
 /** `a_wmul` for `n` plain segments: width 1, no Traffic view band shift (T-1799) */
 function plainWmul(n: number): Float32Array {
@@ -339,7 +340,7 @@ export class NetworkRenderer {
   private profitTex: WebGLTexture | null = null;
   private profitN = 0;
   private profitData: Float32Array | null = null;
-  private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null };
+  private tex: Record<TexName, WebGLTexture | null> = { phases: null, meta: null, samples: null, lines: null, colours: null, fill: null, cars: null, stretch: null, stationLine: null, lane: null, slevel: null };
   /** The boarding account's hour the trip buffer holds (T-164), or null before demand has riders. */
   board: BoardHour | null = null;
   private crowds = new PlatformCrowds(0);
@@ -465,7 +466,7 @@ export class NetworkRenderer {
     for (const sel of this.stationStyle.hidden ? [true] : [true, false]) {
       let best = -1, bestD = Infinity;
       for (let i = n.stationCount - 1; i >= 0; i--) {
-        if (this.drawnSelected(i) !== sel) continue;
+        if (this.drawnSelected(i) !== sel || this.stationHidden(i)) continue;
         const annexed = !dots && (n.stations[i * 3 + 2] & ST_ROOM) !== 0;
         if (reach) {
           // an annex reaches about two box widths past the box (T-1416)
@@ -711,7 +712,7 @@ export class NetworkRenderer {
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
@@ -721,7 +722,7 @@ export class NetworkRenderer {
     this.selProg = compile(gl, SEL_VS, SEL_FS);
     this.selU = uniforms(gl, this.selProg, ["u_bbox", "u_css", "u_shapes", "u_count", "u_dpr", "u_height", "u_ink", "u_outline", "u_glow"]);
     this.selTex = this.texture(this.selData, "rgba32f", SEL_MAX * SEL_STRIDE, []);
-    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing", "u_keep"]);
+    this.trainU = uniforms(gl, this.trainProg, [...PROJECT_UNIFORMS, "u_viewport", "u_time", "u_px_per_unit", "u_min_px", "u_phases", "u_meta", "u_samples", "u_lines", "u_back_base", "u_line_colours", "u_fill", "u_bad", "u_detail", "u_dpr", "u_cars", "u_loads", "u_stretch", "u_sel_line", "u_sel_n", "u_sel_set", "u_dim", "u_sel_trip", "u_pass", "u_ink", "u_band", "u_psi0", "u_lane_tex", "u_lane", "u_hollow", "u_bands", "u_bands_m", "u_passing", "u_keep", "u_level_hide", "u_slevel"]);
     this.timer = new GpuTimer(gl);
     this.tripBuf = gl.createBuffer();
     this.endBuf = gl.createBuffer();
@@ -1274,7 +1275,8 @@ export class NetworkRenderer {
     for (let i = 0; i < n.stationCount && !this.passing; i++) this.passing = (n.stations[i * 3 + 2] & ST_PASSING) !== 0;
     if (hadTraffic || passChanged || !(same.has("sampleLane") && same.has("sampleBand") && this.tex.lane)) this.putLane(n);
     put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
-    put("colours", "lineColours", () => [n.lineColours, "rgba8", LINES_W]);
+    put("colours", "lineColours", () => [this.shownColours(n), "rgba8", LINES_W]);
+    this.hiddenFor = null;
     put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
     const cars = n.lineCars ?? new Float32Array(Math.max(1, n.lineTable.length / 4)).fill(8);
     this.maxCars = Math.max(1, ...cars);
@@ -1406,6 +1408,56 @@ export class NetworkRenderer {
    * answered), drawn as a stand-in from its edges */
   addPlaced(s: Strokes) {
     if (s.count) this.placed.push(this.strokes(s, this.placedRes));
+  }
+  /** T-3420: the network and the `vis.v` the line colours' alphas, the station flags and the picks' skips were set for */
+  private hiddenFor: NetworkBuffers | null = null;
+  private hiddenV = -1;
+  /** per station: on a hidden level */
+  private stationHid = new Uint8Array(0);
+  /** T-3420: the line colours with a hidden line's alpha 0 (the stroke and train shaders read it) */
+  private shownColours(n: NetworkBuffers): Uint8Array {
+    if (!vis.lines.size) return n.lineColours;
+    const c = n.lineColours.slice();
+    for (const l of vis.lines) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
+    return c;
+  }
+  /** Whether station `i` is on a hidden level (T-3420). */
+  stationHidden(i: number): boolean {
+    return this.stationHid[i] === 1;
+  }
+  /** T-3420: per train sample, its height in levels (its line stroke's start), for the cars on a hidden level */
+  private sampleLevels(n: NetworkBuffers): Float32Array {
+    const m = Math.max(1, n.samples.length / 2), out = new Float32Array(m), s = n.sampleStroke;
+    let last = 0;
+    for (let k = 0; k < m; k++) {
+      const i = s ? s[k] : -1;
+      if (i >= 0 && i < n.lines.count) last = Math.floor(n.lines.level[i] / 256) / 32 - 4;
+      out[k] = last;
+    }
+    return out;
+  }
+  /** T-3420: what the player hid, put into the line colours, the station flags, the picks and the trains' heights */
+  private applyHidden(n: NetworkBuffers) {
+    this.hiddenFor = n;
+    this.hiddenV = vis.v;
+    if (this.tex.colours) this.putTexture("colours", this.shownColours(n), "rgba8", LINES_W);
+    this.stationHid = new Uint8Array(n.stationCount);
+    if (vis.levels) for (let i = 0; i < n.stationCount; i++) {
+      const l = vis.stationLevel(n.stationIds[i]);
+      if (l !== undefined && levelHidden(l)) this.stationHid[i] = 1;
+    }
+    this.selDrawnKey = "";
+    if (vis.levels) this.putTexture("slevel", this.sampleLevels(n), "r32f", TEX_W);
+    else if (this.tex.slevel) { for (const r of this.texRes.slevel ?? []) r.del(); this.texRes.slevel = []; this.tex.slevel = null; }
+    const L = n.lines, T = n.track;
+    if (vis.lines.size || vis.levels) {
+      pickSkip.set(L.seg, (i) => vis.lines.has(L.colour[i]) || codeHidden(L.level[i]));
+      if (vis.levels) pickSkip.set(T.seg, (i) => codeHidden(T.level[i]));
+      else pickSkip.delete(T.seg);
+    } else {
+      pickSkip.delete(L.seg);
+      pickSkip.delete(T.seg);
+    }
   }
   /** T-2763: edges the player just removed, not drawn until the network without them is set (or `unhideEdges`). */
   private hide: [number, number] = [-2, -2];
@@ -1613,6 +1665,7 @@ export class NetworkRenderer {
     this.releaseStaged(time);
     const n = this.net;
     if (!n) return;
+    if (this.hiddenFor !== n || this.hiddenV !== vis.v) this.applyHidden(n);
     const uTime = this.sync(time);
     this.bubbles.hide();
     // the network's buffers are relative to the anchor they were built at (T-307)
@@ -1664,7 +1717,7 @@ export class NetworkRenderer {
     const cache = this.strokeCache && !this.gl.isContextLost() && Math.max(vp[0], vp[1]) <= this.cacheMax ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any;
     if (!view) this.busesShown = buses;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0], shadeColours());
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0, vis.v], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
@@ -1685,6 +1738,7 @@ export class NetworkRenderer {
     gl.uniform1i(u.u_sel_edge, opt.selEdge);
     gl.uniform2i(u.u_hot, opt.hotLine ?? -1, opt.hotEdge ?? -1);
     gl.uniform2i(u.u_hide, this.hide[0], this.hide[1]);
+    gl.uniform1i(u.u_level_hide, vis.levels);
     // T-2058: the other lines thinner, faded and solid
     const mute = MUTE && (opt.dimOthers ?? 1) < 1 ? MUTE : null;
     gl.uniform1f(u.u_dim, mute ? 1 : opt.dimOthers ?? 1);
@@ -2151,6 +2205,12 @@ export class NetworkRenderer {
       gl.uniform1f(this.trainU.u_bands_m, this.bandMPx * dpr);
       gl.uniform2f(this.trainU.u_passing, pass ? pass.off * dpr : 0, pass ? 1 : 0);
       gl.uniform1f(this.trainU.u_keep, this.net?.keep ?? 1);
+      // T-3420: cars on a hidden level, by their sample's height
+      gl.uniform1i(this.trainU.u_level_hide, vis.levels);
+      if (vis.levels && !this.tex.slevel) this.putTexture("slevel", this.sampleLevels(n), "r32f", TEX_W);
+      gl.activeTexture(gl.TEXTURE13);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex.slevel);
+      gl.uniform1i(this.trainU.u_slevel, 13);
       gl.bindVertexArray(this.trainVao);
       // every train but the selected; then the selected one's halo, round the whole consist as one
       // pill; then the selected train over it (T-242)
@@ -2327,11 +2387,11 @@ export class NetworkRenderer {
 
   /** Which stations and bridges are drawn selected (`a_sel`, `a_bflag`), when that changed. */
   private syncSelection(n: NetworkBuffers) {
-    const key = `${this.selectedStation}/${this.selectedAlsoKey}`;
+    const key = `${this.selectedStation}/${this.selectedAlsoKey}/${vis.v}`;
     if (key === this.selDrawnKey) return;
     this.selDrawnKey = key;
     const flags = new Float32Array(Math.max(1, n.stationCount));
-    for (let i = 0; i < n.stationCount; i++) flags[i] = this.drawnSelected(i) ? 1 : 0;
+    for (let i = 0; i < n.stationCount; i++) flags[i] = this.stationHidden(i) ? -1 : this.drawnSelected(i) ? 1 : 0;
     if (this.stationSelBuf) this.rewrite(this.stationSelBuf, flags);
     // a bridge or connector is selected with both its stations, and faded when either is a blueprint
     const pairFlags = (idx: ArrayLike<number>) => {

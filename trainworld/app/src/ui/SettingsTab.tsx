@@ -13,7 +13,8 @@ import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { mobileDevice } from "../workers/deviceMemory";
-import { Check, Icon, Segmented, ShapePicker, Stepper } from "./widgets";
+import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
+import { hiddenLevels, toggleLevel } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -132,6 +133,11 @@ export function SettingsTab() {
         <Check checked={d.hillshade} onChange={(v) => setDisplay("hillshade", v)}>
           <span data-tip={t("settingsTab.terrainTip")}>{t("settingsTab.terrain")}</span>
         </Check>
+      </div>
+      {/* T-3420: every level lit; a click hides that level's track, lines, stations and trains while the page is open */}
+      <div class="level-show">
+        <span>{t("settingsTab.showLevels")}</span>
+        <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />
       </div>
       <div class="h">{t("settingsTab.realNetwork")}</div>
       <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}

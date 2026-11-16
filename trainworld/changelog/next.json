@@ -1,0 +1,16 @@
+{
+  "release": "next",
+  "line": "",
+  "items": [
+    {
+      "id": "c001",
+      "text": "added hiding lines on the map from the lines list, and hiding track levels in settings",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3420",
+      "by": "visibility",
+      "at": "2026-11-16T13:32:56Z",
+      "rev": 1
+    }
+  ]
+}

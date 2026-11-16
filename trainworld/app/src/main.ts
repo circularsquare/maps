@@ -28,6 +28,8 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
+import { hiddenLevels, hiddenLines, levelBits } from "./game/lineVisibility";
+import { setHidden } from "./map/visibility";
 import "./game/capLoad";
 import { removeThing, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
@@ -428,9 +430,22 @@ effect(() => {
 });
 const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || netFirst(x, y) ? undefined : demandClick?.(x, y, add));
 
+// T-3420: the lines and levels the player hid; a hidden line's twin with it (T-3333)
+const hiddenNums = computed(() => {
+  const ids = hiddenLines.value, w = world.value, out = new Set<number>();
+  for (const id of ids) out.add(Number(id));
+  if (w && ids.size) for (const [twin, of] of w.twins) if (ids.has(of)) out.add(Number(twin));
+  return out;
+});
+effect(() => {
+  const w = world.value;
+  const stations = new Map((w?.save.stations ?? []).map((s) => [s.id, s.level]));
+  const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), (id) => stations.get(id), (id) => w?.nodes.get(id)?.level);
+  if (changed) overlay.invalidate();
+});
 // Bus lines are drawn from the world's routes (T-1464, map/busLayer.ts)
 effect(() => {
-  if (renderer.buses.set(world.value)) overlay.invalidate();
+  if (renderer.buses.set(world.value, hiddenNums.value)) overlay.invalidate();
 });
 // T-3084: while a bus line's route is redrawn, its current route is drawn muted under the draft
 effect(() => {

@@ -472,12 +472,13 @@ export class BusLayer {
   }
 
   /** Take the world's bus lines; true when what is drawn changed. */
-  set(w: WorldView | null): boolean {
+  set(w: WorldView | null, hide: ReadonlySet<number> = new Set()): boolean {
     const next: BusSource[] = [];
     if (w) {
       for (const l of w.save.lines) {
         const b = w.lineStats[l.id]?.bus;
-        if (!b || b.routeLL.length < 4) continue;
+        // T-3420: a line the player hid is not drawn
+        if (!b || b.routeLL.length < 4 || hide.has(l.num)) continue;
         const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [], transfers: number[] = [];
         // a ferry's stops are its ports, drawn as the stations they are
         if (!b.ferry) for (const s of b.stops) {

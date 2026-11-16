@@ -6,6 +6,7 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
+import { LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
 import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
@@ -144,6 +145,7 @@ uniform float u_band;        // T-1799: how far lines sharing track are drawn si
 uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' width (a_wmul.yz)
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
 uniform float u_band_m;     // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
+uniform int u_level_hide;   // T-3420: the levels not drawn, a bit each from level -3; a line not drawn has its colour's alpha 0
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -168,6 +170,7 @@ out float v_along;          // T-2184: px along the stroke's run, so dashes keep
 flat out vec4 v_inner;      // T-2184: a band's red edges over its neighbours: its colour's half width, the red's and the rim's px, strength; 0 none
 flat out float v_aa;        // T-2183: a band's colour's half width (px), its sides smoothed so the gap between bands keeps its width; 0 none
 ${SEL_GLSL}
+${LEVEL_SHOWN_GLSL}
 void main() {
   v_inner = vec4(0.0);
   v_aa = 0.0;
@@ -181,6 +184,15 @@ void main() {
   v_wire_hw = 0.0;
   v_dash = u_full_pass == 1 ? u_full_dash : 0.0;
   if (int(a_edge) == u_hide.x || int(a_edge) == u_hide.y) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // T-3420: a line the player hid, and track and lines on a hidden level, a ramp fading toward it
+  if (u_kind == 1 && texelFetch(u_line_colours, ivec2(int(a_colour) % ${LINES_W}, int(a_colour) / ${LINES_W}), 0).a < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  float shown0 = 1.0, shown1 = 1.0;
+  if (u_level_hide != 0 && u_kind != 2) {
+    float hq = floor(a_level / 256.0);
+    shown0 = levelShown(hq / 32.0 - 4.0);
+    shown1 = levelShown((a_level - hq * 256.0) / 32.0 - 4.0);
+    if (max(shown0, shown1) <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  }
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
   bool placement = (flags & 32) != 0;
@@ -330,7 +342,7 @@ void main() {
   // segments overlap at every joint and see-through blueprint would show a bead there. Lines
   // that do not run (faded) stay see-through.
   bool bp = blueprint && !placement;
-  v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0);
+  v_alpha = (!placement && !bp && (flags & 2) != 0 ? 0.55 : 1.0) * faint * (u_kind == 1 && !sel ? u_dim : 1.0) * (along < 0.5 ? shown0 : shown1);
   // the height at this end (levelCode in network.ts), its colour blended between the whole levels either side
   float lq0 = floor(a_level / 256.0);
   float lh = clamp(3.0 - ((along < 0.5 ? lq0 : a_level - lq0 * 256.0) / 32.0 - 4.0), 0.0, 6.0);
@@ -466,7 +478,7 @@ uniform float u_pixel;
 in vec3 a_st;
 in vec2 a_axis;          // half the platform along its track at its middle, local units
 in vec4 a_shape;         // the platform's middle from the node (xy), half the turn along it (z, not read), half its true width (w), local units
-in float a_sel;          // 1 drawn selected
+in float a_sel;          // 1 drawn selected, -1 not drawn (on a hidden level, T-3420)
 in vec4 a_crowd;         // riders waiting (T-219): how full the platform's + and - side is (0-1),
                          // and whether that side is full (zw)
 in vec2 a_dcrowd;        // zoomed out (T-228): the station's fullest platform side, 0-1, and 1 if
@@ -504,6 +516,8 @@ vec2 centreAt(vec2 q[${PLATFORM_POINTS}], float t) {
 void main() {
   v_hot = 0.0;
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
+  // T-3420: a station on a hidden level
+  if (a_sel < -0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   v_dot = 0.0;
   v_bulge = vec2(0.0);
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
@@ -931,6 +945,8 @@ uniform float u_bands;             // px a band's shift of one line width is dra
 uniform float u_bands_m;           // and of a metre to its ribbon's middle (T-2132)
 uniform vec2 u_passing;            // T-2233: px from the centre line to a passing station's outer track, 1 drawn there
 uniform float u_keep;              // T-3297: 1 where trains keep right of their travel, -1 left
+uniform int u_level_hide;          // T-3420: the levels not drawn (the strokes' u_level_hide), and per sample its height in levels
+uniform highp sampler2D u_slevel;
 out float v_alpha;
 in vec2 a_load;               // this trip's first load in u_loads or -1, seconds to its last stop
 in vec4 a_stand;              // its stand at the terminal (T-1785): from, until - epoch (s), the next
@@ -938,6 +954,7 @@ in vec4 a_stand;              // its stand at the terminal (T-1785): from, until
 in vec4 a_bay;                // where it stands at its ends (T-2980, terminalBays.ts \`assignBays\`)
 ${SEL_GLSL}
 ${POS_GLSL}
+${LEVEL_SHOWN_GLSL}
 out vec2 v_uv;
 flat out float v_k;
 out vec2 v_px;
@@ -1010,6 +1027,8 @@ void main() {
   // the selected train is drawn last, over the others, with its halo under it (T-242)
   bool chosen = u_sel_trip.x >= 0.0 && abs(a_trip.x - u_sel_trip.x) < 0.5 && abs(a_trip.y - u_sel_trip.y) < 0.01;
   if ((u_pass == 0) == chosen || !trainDist(L, d, line)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // T-3420: a hidden line's trains
+  if (texelFetch(u_line_colours, ivec2(line % ${LINES_W}, line / ${LINES_W}), 0).a < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rawCars = texelFetch(u_cars, tc(line, ${LINES_W}), 0).x;
   // a tram (T-2926): its sections as a whole number plus a half; 2.4 m across, sections end to end
   bool tram = rawCars >= 1.0 && fract(rawCars) > 0.25;
@@ -1037,6 +1056,11 @@ void main() {
   d = centre;
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
+  // T-3420: a car on a hidden level
+  if (u_level_hide != 0) {
+    int sl = int(L.x + clamp(floor(clamp(carD, 0.0, L.z) / max(L.w, 1e-6)), 0.0, max(L.y - 1.0, 0.0)));
+    if (levelShown(texelFetch(u_slevel, tc(sl, ${TEX_W}), 0).x) < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  }
   vec2 p = lineAtX(L, carD);
   // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
   float kM = cosh(u_psi0 - p.y * ${PSI_PER_UNIT.toExponential(9)});
