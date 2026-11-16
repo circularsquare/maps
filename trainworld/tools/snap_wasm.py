@@ -22,6 +22,8 @@ DEMAND = ["wasm-pack", "build", "../sim", "--target", "web", "--profile", "wasm"
 
 
 def main():
+    # wasm-pack prints emoji; a stdout redirected to a log on Windows is cp1252 and would raise on them.
+    sys.stdout.reconfigure(errors="replace")
     if len(sys.argv) != 3:
         sys.exit(__doc__)
     track_dir, demand_dir = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
