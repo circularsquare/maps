@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1882 [P3] {L:checks} Terrain check may be out of date (2026-11-16): t1270-terrain updated to today's prices and quote layout; passes.
+- T-3322 [P3] {L:fares} Fare lag check fails on master (taking, 2026-11-16, agent b3) (2026-11-16): check and docs agree: a 10x line shows only as a whole final; real save passes.
+- T-3371 [P3] {L:checks} Track bar check fails on master (2026-11-16): t3260-track-bar expects no Ctrl hint, per her 11-12 decision; docs match.
 - T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour (2026-11-16): decided, no code: a copied line keeps its source's colour (it is a variant of the same line). DECISIONS 2026-11-16. notes/T-2332.md.
 - T-2575 [P3] {L:cleanup} Fetch regions.json once (2026-11-16): regions.json is fetched once by the page and handed to the route worker. notes/T-2575.md.
 - T-2189 [P3] {L:small-fixes} Edit note forgets slow edits (2026-11-16): the edit note gives up after 5 minutes of demand doing nothing, capped at 20 minutes from the edit. notes/T-2189.md.

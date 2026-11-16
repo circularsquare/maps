@@ -393,10 +393,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
   - Other: Commands in notes/T-3318.md.
-- T-3322 [P3] {L:fares} Fare lag check fails on master (taking, 2026-11-16, agent b3) (taking, 2026-11-16, agent b3)
-  - Context: The check "the 10x curve was never used" fails: an edit during a solve waits for it. Either the check or docs/track-and-service.md is out of date.
-  - Goal: Check and doc agree and the check passes.
-  - Other: notes/T-3303.md
 - T-3308 [P3] {L:translations} Blank page in Chinese compatibility browsers (taking, 2026-11-16, agent b7)
   - Context: 360, QQ and Sogou browsers in compatibility mode run the page as IE, so it stays blank with no message.
   - Goal: A nomodule script in index.html tells them in Chinese to switch to speed mode.
@@ -686,9 +682,9 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: T-2275 left this out since a reordered list mostly makes trains double back (DECISIONS 2026-11-04).
   - Goal: Stops can be dragged into a new order, if you want it.
 Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md):
-- T-2043 [P3] {L:checks} Old cloud check needs updating (taking, 2026-11-16, agent b3)
+- T-2043 [P3] {L:checks} Old cloud check needs updating
   - Context: checks/t988-cloud.mjs expects a fork slot the page now splits off in place (T-2037); it needs a local shonei-server.
-  - Goal: The check matches the current slot behaviour and passes.
+  - Goal: Steps 4 and 7 on of t988-cloud.mjs follow the T-2037 sync rules (steps 1-3, 5-6 pass since 2026-11-16; about 1.5 h, rules in the notes).
   - Other: See notes/T-2043.md.
 - T-1916 [P3] {L:single-track} Drawing beside track still crosses it
   - Context: In the real-save sweep, 32 of about 85,000 previews cross the track followed, and 46 starts are refused beside a parallel line.
@@ -737,9 +733,6 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
 - T-1879 [P3] {L:region-redraws} Metro rule for 1M+ cities GHSL misses
   - Context: Adelaide was made one zone by hand; GHSL urban centres miss some 1M+ cities.
   - Goal: A rule makes such cities one zone.
-- T-1882 [P3] {L:checks} Terrain check may be out of date (taking, 2026-11-16, agent b3)
-  - Context: checks/t1270-terrain.mjs's quote-rows check may no longer match the layout since T-1839.
-  - Goal: The check is run, then fixed or archived.
 - T-2141 [P3] {L:map-look} Tight and loose ribbons by zoom
   - Context: T-2132's hold keeps a ribbon across gaps up to 50 m at every zoom, so a close ribbon can sit up to 25 m off its track.
   - Goal: Mix a held and an unheld profile by line width on screen, if the offset shows.
@@ -953,9 +946,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3371 [P3] {L:checks} Track bar check fails on master (taking, 2026-11-16, agent b3)
-  - Context: t3260-track-bar part B fails: the track ghost tag no longer says "Hold Ctrl to draw straight".
-  - Goal: Either the check is fixed (line dropped on purpose) or the hint is restored.
 - T-3370 [P3] {L:buses} Bus route drag follow-ups (taking, 2026-11-16, agent b5)
   - Context: Hide the network hover over the route path in Edit route, and check dragging by touch.
   - Goal: Both done, with docs/ui-building.md fixed.
@@ -1074,7 +1064,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
-- T-2573 [P3] {L:checks} Worker check misses the walker rule (taking, 2026-11-16, agent b3)
+- T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: checks/t409-worker-check.mjs shows rail pairs with no walking share even by walkable Boston/Providence cells.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
   - Other: See notes/T-2527.md.
