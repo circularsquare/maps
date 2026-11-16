@@ -2,7 +2,7 @@
 
 Orchestrator: session 76388cba-0327-41aa-a4e4-4e7d7376bf41, name maps-7e [2cdf3c], since 2026-11-16 13:13 UTC
 (Took over from maps-b8, session 7186e3f8, already gone at 13:13 UTC, paused with nothing in flight, so no wait.)
-Updated: 2026-11-16 13:13 UTC (resuming her plan for the week: T-3394 rollout, T-3424 board changelog, easy bugs, T-3420 visibility)
+Updated: 2026-11-16 15:32 UTC (handoff current; ready to cycle)
 
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
@@ -29,34 +29,30 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   of a partly built line: low priority) unanswered; she'll look Monday. Reply practice: docs/orchestrator.md.
 - No agents running, no core claims. Data: nothing running; newest freeze 20261113-013559.
 
-## In flight (maps-7e, from 2026-11-16 13:15 UTC)
-- Resumed her plan for the week ("lets limit work to straight-forward bug investigation (can give up if seems hard)
-  and kanban. also track visibility"). All marked taking in TASKS.md; agents told not to edit TASKS/ARCHIVE this
-  round (the restructure is pending), so I archive their done tasks after the apply.
-- T-3394 done 13:19 UTC: 421 tasks rewritten, committed a01647b5 (rules and headers too; T-3395, T-3397 left in the
-  old shape for the saves session). Agent tidy (Sonnet) checking the rollout agents' duplicate/done flags: folds
-  duplicates, archives done ones, lists close candidates for her.
-- bugs1 (Sonnet, a32d9d2d77d3e0ce0), tree .tw-trees/single, port 6111: T-3379, T-3380, T-3411, T-3386, T-3383.
-- bugs2 (Sonnet, ace743905b76bc49b), tree .tw-trees/fixes, port 6112: T-3381, T-3422, T-3421, T-3403, T-3412.
-- visibility (Opus, a34f8356acf49ce26), main tree app/, port 6113: T-3420 to her design.
-- changelog (Sonnet, acd06534dca27974c), trainworld/board, port 6114: T-3424 changelog on the board + column resize.
-- Board inbox Monitor armed 13:14 UTC (30 min, re-arm).
-- T-3424 changelog done (04c57e5d), serve.py restarted 13:22 UTC (root serve.py change uncommitted: hers to commit).
-- boardui (Opus, aadbdd4ca61ecc4cb, from 13:35 UTC): T-3425 plus her changelog asks (added-by small and gray, eye toggle, single lines), compact board, field icons, priority colours and bars (her 11-16 words in the task).
-- Removed old release trees hotfix, hotfix031, stop-freeze-034 (branches kept). Left: single, fixes (today's
-  bugs), safari-save-035 (live v0.3.5), perdir (T-3348 demand half, 2-3 h), tt2 (T-3346 stage 2, a 30/10 case
-  fails; fix 4-6 h and moves figures). Asked her about perdir and tt2.
-- perdir2 (Opus, a03ef01f35349ee0b) finishing T-3348 stage 1 in .tw-trees/perdir (merge master, demand half, port 6115). Her: "we can wrpa it up". tt2 stays parked (her 11-16).
-- T-3420 visibility committed eba36357; 8800 rebuilt at 9e425a7d 13:40 UTC (no smoke needed), serve.py committed 9e425a7d; she OK'd committing board serve.py changes (docs/orchestrator.md).
-- 13:51 UTC: bugs1's tree landed (single-track fixes, five tasks archived); pushed master 68b66618. bugs2 asked to
-  verify T-3381/T-3403 in a browser and translate splitPoint before landing. visibility resumed with her changes
-  (no bus/ferry buttons on Lines, checkbox toggles, no Show all, Show buses and ferries). boardui resumed (green to
-  red priority colours, 2 px prio bars aligned under 3 px status bars on cards). 8800 is behind master (bugs1).
-- 14:00 UTC from her scratch pad: feeders (Opus af151363ff713e9bf) T-3426 why long-distance ignores feeders; recalc (Opus
-  a1637a38c84316a48, tree .tw-trees/recalc, port 6117) T-3427 paused-recalc toggle; shenzhen (Sonnet a05e93ee1c13bd90f) T-3428;
-  sorter (Sonnet a13482c6fae73b967) sorting 26 new player reports into board groups. Board priorities red to green committed.
-- Anita 11-16: "feel free to be pushing this regulrly" (in docs/orchestrator.md).
-- Anita 11-16: "we dont have to be economical. it's a new week." T-202, T-2385 closed; T-354, T-361 after T-3373.
+## In flight (maps-7e, updated 2026-11-16 15:32 UTC)
+- Her plan: today "get the number of open tasks down, by handling straight forward tasks" (413 -> 377 by 15:30);
+  tonight T-3399 Central America + Venezuela, then gla/lis/pot rebuilds (Lisbon/Glasgow gaps); tomorrow small tasks or
+  the fare-setting system. Complex track work waits for T-3444 (her track rework notes; "later"). Quad work paused.
+- Running agents (each in .tw-trees/<name>, landed with agent-tree.mjs land; i18n JSON conflicts merge by key):
+  b5 a2cfa4b348a666bad (ferry/bus fixes T-3400, T-3419, T-3370), lint ab8cc3eadbb592dd4 (T-3443), c1 a7d543ca2406b54e8
+  (checks/calib), c2 a88de27a9451b413c (loading; then start batch D from C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\picker\plan2.md), c3 a3a3eb40021a0bccf (label/frame costs),
+  e1 a90d0ff7fa52b0379 (edit cost), sc ac2e02d431120b572 (schematic; looks-changes stop at screenshots for her), doc ab9e2a1110a3b25f6,
+  glyph = agent ac05a6a819c58f9ad in .tw-trees/glyph (T-3442: warnings on the 8800 start screen with saves),
+  pick2 a4b7e53eb725fe978 (T-3406, T-3407, her picks), feeders af151363ff713e9bf (T-3426: calibrate against real corridors
+  before landing; fix in .tw-trees/feeders), shenzhen a05e93ee1c13bd90f (T-3428 shz rebuild + Pearl River join writing
+  data/packs: 8800 rebuilds use snap8800.py <hash> 20261113-013559 until it reports).
+- Held: picker plan2 batch R (realnet rebuilds), B8 world_run scripts (after T-3399), B10 track panels (after T-3444).
+- T-3399 ready: powershell -File trainworld\tools\country\start_hidden.ps1 C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\countries\tonight.cmd (waits for locks,
+  ~10 cores, ~4 h + 1.5 h stage 2; NO-STAGE2 in the kit folder skips gla/lis/pot); log artifacts/trainworld/t3399-tonight.log.
+  Needs her OK for 10 cores. Countries' plan edits are uncommitted in the main tree (world_plan.py/.json, zone-names.json,
+  realms.json, data-register.md, notes/T-3399.md): commit them when the run starts.
+- shonei-server 4b8bb1d (T-3402) + 372a8ce (T-3440) committed, not deployed or pushed: asked her to OK both together.
+  noritetsu/dist account.js + privacy.html (T-993 text) uncommitted, hers.
+- 8800 = b6c40df5 (frozen data). master pushed b6c40df5; later commits unpushed (push regularly).
+- Permission rules she approved are in maps/.claude/settings.json; routine commands: snap8800.py, restart_serve.py,
+  git -C <maps> commit/add/push, agent-tree.mjs. Avoid git checkout/reset/branch -D, ad-hoc kills, PowerShell steps.
+- Waiting on her: T-3426 recalibration table; T-2396 (explained to her 15:30); deploy OK; T-3399 cores OK;
+  T-3442 if the glyph agent needs more; T-3435 fast ferry (later); per-direction refusal wording (stage 4).
 
 ## Earlier (maps-b8)
 - T-3390 done by agent lines (Opus, id a75a19621b6669315): 58 lines in LINES.md, every task tagged, 11 done tasks
