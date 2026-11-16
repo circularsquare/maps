@@ -2668,6 +2668,7 @@
   "widgets.less": "Less {label}",
   "widgets.level": "Level {level}",
   "widgets.more": "More {label}",
+  "widgets.outline": "Outline",
   "widgets.square": "Square",
   "widgets.type": "Type {label}",
   "world.busStop": "Bus stop",

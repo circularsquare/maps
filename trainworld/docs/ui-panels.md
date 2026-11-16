@@ -620,7 +620,7 @@ circles are a row on the map instead, under the demand buttons [T-1448].
 
 **Default bullet shapes** [T-3319, T-3329]: after the Game section, a row per mode, Train, Tram, Bus and Ferry, each a row of the three bullet shapes,
 the buttons touching in one compact grid (no gaps between rows or buttons)
-(circle, square, diamond; no hovers, aria labels only), the shape of that mode's lines that have none of their
+(circle, square, diamond, outline; no hovers, aria labels only), the shape of that mode's lines that have none of their
 own ([ui-inspectors.md](ui-inspectors.md) "Line shapes"). Train and Tram start on the circle, Bus on the square,
 Ferry on the pill, as the bullets were before (the pill is not pickable, so no button is lit on Ferry until one is picked); a change redraws at once every line of the mode without its own.
 

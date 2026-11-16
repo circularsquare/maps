@@ -2668,6 +2668,7 @@
   "widgets.less": "Menys: {label}",
   "widgets.level": "Nivell {level}",
   "widgets.more": "Més: {label}",
+  "widgets.outline": "Contorn",
   "widgets.square": "Quadrat",
   "widgets.type": "Escriu el valor: {label}",
   "world.busStop": "Parada d’autobús",

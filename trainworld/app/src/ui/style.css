@@ -553,6 +553,9 @@ body.resizing, body.resizing * { user-select: none; }
 .shape-icon path { stroke: var(--c, currentColor); stroke-linejoin: round; }
 .group.shapes .btn { display: grid; place-items: center; min-width: 32px; }
 .chip > svg text { fill: currentColor; }
+/* T-3436: the outline bullet is a ring in the line's colour with its letter in it */
+.chip > svg rect.ring, .shape-icon rect.ring { fill: none; stroke: var(--c, currentColor); }
+.chip.ring > svg text { fill: var(--c); }
 /* T-1792: a line with no trains at its level now */
 .chip.idle { opacity: 0.7; filter: grayscale(0.3); }
 .chip.link { cursor: pointer; }

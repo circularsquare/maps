@@ -2591,6 +2591,7 @@
   "widgets.less": "Screen reader name of the minus button of a number stepper. label: what the stepper sets, lowercase, e.g. \"fare scale\".",
   "widgets.level": "Screen reader name of a track level button. level: its label, e.g. \"+1\" or \"0\".",
   "widgets.more": "Screen reader name of the plus button of a number stepper. label: what the stepper sets, lowercase, e.g. \"fare scale\".",
+  "widgets.outline": "Screen-reader label of a shape button for a line's badge (line editor, Settings): a circle with only its outline drawn.",
   "widgets.square": "Screen-reader label of a shape button for a line's badge (line editor, Settings): a square with rounded corners.",
   "widgets.type": "Screen reader name of the number of a stepper, which opens a box for typing the value. label: what the stepper sets, lowercase, e.g. \"fare scale\".",
   "world.busStopNear": "Default name of a bus stop. name: the nearest station's name, \"Canal St\".",

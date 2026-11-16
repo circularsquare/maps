@@ -4,10 +4,10 @@
 import type { Vehicle } from "./vehicle";
 
 /** What a player can pick. A saved "pill" (T-3357) is not one, so it reads as no choice. */
-export type PickShape = "circle" | "square" | "diamond";
+export type PickShape = "circle" | "square" | "diamond" | "outline";
 /** What can be drawn: the pill is only the ferry's default look. */
 export type LineShape = PickShape | "pill";
-export const LINE_SHAPES: readonly PickShape[] = ["circle", "square", "diamond"];
+export const LINE_SHAPES: readonly PickShape[] = ["circle", "square", "diamond", "outline"];
 
 export const isLineShape = (v: unknown): v is PickShape => typeof v === "string" && (LINE_SHAPES as readonly string[]).includes(v);
 

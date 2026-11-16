@@ -189,7 +189,7 @@ export function roadFact(ground: ArrayLike<number> | undefined, groundKm: number
 /** One line bullet: the markup and CSS of ui/widgets.tsx's Chip (a tag is plain DOM, not Preact). */
 export function lineBullet(l: LineInput, small = false): HTMLSpanElement {
   const c = document.createElement("span");
-  c.className = (small ? "chip sm" : "chip") + (idleLines.peek().has(l.id) ? " idle" : "");
+  c.className = (small ? "chip sm" : "chip") + (shapeOf(l.id) === "outline" ? " ring" : "") + (idleLines.peek().has(l.id) ? " idle" : "");
   c.style.setProperty("--c", l.colour);
   c.style.setProperty("--ct", inkOn(l.colour));
   c.append(bulletNode(l.letter, small ? "sm" : "", shapeOf(l.id)));

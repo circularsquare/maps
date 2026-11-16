@@ -2668,6 +2668,7 @@
   "widgets.less": "{label}を減らす",
   "widgets.level": "高さ{level}",
   "widgets.more": "{label}を増やす",
+  "widgets.outline": "輪郭",
   "widgets.square": "四角",
   "widgets.type": "{label}を入力",
   "world.busStop": "バス停",

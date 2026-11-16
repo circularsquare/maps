@@ -2668,6 +2668,7 @@
   "widgets.less": "Moins : {label}",
   "widgets.level": "Niveau {level}",
   "widgets.more": "Plus : {label}",
+  "widgets.outline": "Contour",
   "widgets.square": "Carré",
   "widgets.type": "Saisir : {label}",
   "world.busStop": "Arrêt de bus",

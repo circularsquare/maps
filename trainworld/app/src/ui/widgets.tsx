@@ -170,7 +170,7 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
   const b0 = bulletTextSoon(line.letter, size, zoom.value), b = b0 && bulletDraw(b0, shape);
   const idle = isIdleLine(line.id);
   return (
-    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (shape === "square" ? " square" : "") + (idle ? " idle" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
+    <span ref={zoom.ref} class={"chip " + size + (plain ? "" : " link") + (shape === "square" ? " square" : "") + (shape === "outline" ? " ring" : "") + (idle ? " idle" : "")} style={{ "--c": line.colour, "--ct": inkOn(line.colour), visibility: gone ? "hidden" : undefined }}
       data-tip={plain ? undefined : (tip ?? line.name) + (idle ? "\n" + IDLE_TIP : "")} onClick={click}>
       {b ? (
         <svg style={{ width: b.w + "px", height: b.h + "px" }}>
@@ -188,7 +188,7 @@ export function ShapeIcon({ shape }: { shape: LineShape }) {
   return <svg class="shape-icon" style={{ width: b.w + "px", height: b.h + "px" }} aria-hidden="true"><BulletOutline b={b} /></svg>;
 }
 
-const SHAPE_NAME: Record<PickShape, MessageKey> = { circle: "widgets.circle", square: "widgets.square", diamond: "widgets.diamond" };
+const SHAPE_NAME: Record<PickShape, MessageKey> = { circle: "widgets.circle", square: "widgets.square", diamond: "widgets.diamond", outline: "widgets.outline" };
 
 /** T-3319: a row of the bullet shapes to pick from, drawn in `colour` (the text's when absent); `tips` for a hover on some. */
 export function ShapePicker({ value, onChange, colour, tips }: { value: LineShape; onChange: (s: PickShape) => void; colour?: string; tips?: (s: PickShape) => string | undefined }) {
@@ -205,7 +205,8 @@ export function ShapePicker({ value, onChange, colour, tips }: { value: LineShap
 
 /** T-3319: a bullet's outline in its shape (ui/bullet.ts `bulletDraw`). */
 const BulletOutline = ({ b }: { b: BulletDraw }) =>
-  b.path ? <path d={b.path.d} stroke-width={b.path.stroke} /> : <rect y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} />;
+  b.path ? <path d={b.path.d} stroke-width={b.path.stroke} /> : b.rect!.ring !== undefined ? <rect class="ring" x={b.rect!.x} y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} stroke-width={b.rect!.ring} />
+  : <rect y={b.rect!.y} width={b.rect!.w} height={b.rect!.h} rx={b.rect!.r} />;
 
 /** The CSS zoom an element is drawn at (the panels are zoomed by the UI scale, T-247): the UI scale
  * until it is in the page, then what the browser reports, so a bullet's baseline lands on a whole

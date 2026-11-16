@@ -2668,6 +2668,7 @@
   "widgets.less": "{label} 감소",
   "widgets.level": "레벨 {level}",
   "widgets.more": "{label} 증가",
+  "widgets.outline": "윤곽선",
   "widgets.square": "사각형",
   "widgets.type": "{label} 입력",
   "world.busStop": "버스 정류장",

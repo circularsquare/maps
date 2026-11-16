@@ -2668,6 +2668,7 @@
   "widgets.less": "Menos {label}",
   "widgets.level": "Nivel {level}",
   "widgets.more": "Más {label}",
+  "widgets.outline": "Contorno",
   "widgets.square": "Cuadrado",
   "widgets.type": "Escribe {label}",
   "world.busStop": "Parada de autobús",

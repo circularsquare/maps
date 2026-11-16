@@ -785,7 +785,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   group diagram at 0.7 too), and its hover adds "Not running" (`game/lineRunning.ts`, one set read
   by `Chip` and `lineBullet`; `checks/t1792-idle-bullets.mjs`) [T-1792, T-1907]. The GPU map layers draw no symbol bullets.
 - **Line shapes** [T-3319, `game/lineShapeState.ts`, `bulletDraw` in `ui/bullet.ts`]: a bullet is a circle, a
-  square (rounded, corner 18% of its side) or a diamond, and the ferry's default a pill (at least 1.5 times as wide
+  square (rounded, corner 18% of its side), a diamond or an outline (T-3436: a circle drawn as a ring in the line colour with its letter in it, stroke 2.8 px, a line group pill's 2 px plus 0.8), and the ferry's default a pill (at least 1.5 times as wide
   as tall; not pickable, T-3357: a saved "pill" reads as no choice, so the line takes its mode's); a longer
   symbol widens each the same way, a diamond into a hexagon with the diamond's slopes. So the shapes look one size
   side by side, a square's side is 0.94 of a circle's height and a diamond 1.14 times it, reaching past the bullet's

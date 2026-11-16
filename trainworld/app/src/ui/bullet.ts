@@ -186,6 +186,8 @@ export const BUS_CORNER = 0.18;
  * side by side (a square of the circle's height looks bigger, a diamond of it smaller); the diamond
  * reaches past the bullet's box above and below. */
 const SQUARE_SIDE = 0.94, DIAMOND_SIDE = 1.14;
+/** T-3436: the outline bullet's stroke is a line group's (GroupPill's 2 px border) plus this, so the two read apart. */
+const GROUP_RING = 2, OUTLINE_EXTRA = 0.8;
 /** T-2194: a pill is at least this many times as wide as it is tall, fully rounded. */
 const PILL_W = 1.5;
 
@@ -196,7 +198,7 @@ export interface BulletDraw {
   h: number;
   x: number;
   y: number;
-  rect?: { y: number; w: number; h: number; r: number };
+  rect?: { x?: number; y: number; w: number; h: number; r: number; ring?: number };
   path?: { d: string; stroke: number };
 }
 
@@ -212,6 +214,11 @@ export function bulletDraw(b: BulletText, shape: LineShape): BulletDraw {
     const cy = top + h / 2, a = d / 2 - r, xs = [r, d / 2, w - d / 2, w - r].map((v) => v.toFixed(2));
     const up = (cy - a).toFixed(2), down = (cy + a).toFixed(2), mid = cy.toFixed(2);
     return { w, h, x: b.x + (w - b.w) / 2, y: b.y, path: { d: `M${xs[0]} ${mid}L${xs[1]} ${up}L${xs[2]} ${up}L${xs[3]} ${mid}L${xs[2]} ${down}L${xs[1]} ${down}Z`, stroke: 2 * r } };
+  }
+  if (shape === "outline") {
+    // an outline-only circle (or pill): inset by half the stroke so it fills the same box as a circle
+    const sw = GROUP_RING + OUTLINE_EXTRA;
+    return { w: b.w, h, x: b.x, y: b.y, rect: { x: sw / 2, y: top + sw / 2, w: b.w - sw, h: h - sw, r: (h - sw) / 2, ring: sw } };
   }
   const w = shape === "pill" ? Math.max(b.w, PILL_W * h) : b.w;
   return { w, h, x: b.x + (w - b.w) / 2, y: b.y, rect: { y: top, w, h, r: h / 2 } };
@@ -239,6 +246,11 @@ export function bulletNode(text: string, size: BulletSize, shape: LineShape = "c
   } else {
     outline = document.createElementNS(SVG, "rect");
     const q = b.rect!;
+    if (q.ring !== undefined) {
+      outline.setAttribute("class", "ring");
+      outline.setAttribute("x", String(q.x));
+      outline.setAttribute("stroke-width", String(q.ring));
+    }
     for (const [a, v] of [["y", q.y], ["width", q.w], ["height", q.h], ["rx", q.r]] as const) outline.setAttribute(a, String(v));
   }
   const t = document.createElementNS(SVG, "text");

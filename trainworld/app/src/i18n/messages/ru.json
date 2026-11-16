@@ -2668,6 +2668,7 @@
   "widgets.less": "Уменьшить: {label}",
   "widgets.level": "Уровень {level}",
   "widgets.more": "Увеличить: {label}",
+  "widgets.outline": "Контур",
   "widgets.square": "Квадрат",
   "widgets.type": "Ввести: {label}",
   "world.busStop": "Автобусная остановка",

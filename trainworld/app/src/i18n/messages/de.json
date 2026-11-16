@@ -2668,6 +2668,7 @@
   "widgets.less": "Weniger {label}",
   "widgets.level": "Ebene {level}",
   "widgets.more": "Mehr {label}",
+  "widgets.outline": "Kontur",
   "widgets.square": "Quadrat",
   "widgets.type": "{label} eingeben",
   "world.busStop": "Bushaltestelle",
