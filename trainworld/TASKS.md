@@ -164,7 +164,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
   - Goal: The re-gate checks only what a joint solve can change.
   - Other: See notes/T-928.md section 4.
-- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads
+- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads (taking, 2026-11-16, agent b4)
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: Whole files load with no console error and smoke stays clean.
   - Other: notes/T-1635.md
@@ -376,7 +376,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails
   - Context: Player report (board group "Sharing a large network fails"): share did not work, perhaps from the size. Reach: few.
   - Goal: Find the share size limit and either raise it or say what to do when a network is too big.
-- T-3441 [P3] {L:track-drawing} Right-click on empty space leaves track mode
+- T-3441 [P3] {L:track-drawing} Right-click on empty space leaves track mode (taking, 2026-11-16, agent b2)
   - Context: Player report (board group "Right-click leaves track mode"); Anita 2026-11-16: "right click on empty space". Reach: few.
   - Goal: Right-clicking empty map while laying track ends track mode.
 - T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
@@ -389,7 +389,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
   - Other: Commands in notes/T-3318.md.
-- T-3322 [P3] {L:fares} Fare lag check fails on master
+- T-3322 [P3] {L:fares} Fare lag check fails on master (taking, 2026-11-16, agent b3) (taking, 2026-11-16, agent b3)
   - Context: The check "the 10x curve was never used" fails: an edit during a solve waits for it. Either the check or docs/track-and-service.md is out of date.
   - Goal: Check and doc agree and the check passes.
   - Other: notes/T-3303.md
@@ -545,7 +545,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
   - Goal: The new level and kind show as a preview before the player pays.
-- T-3036 [P3] {L:track-drawing} Debug overlay for street gaps
+- T-3036 [P3] {L:track-drawing} Debug overlay for street gaps (taking, 2026-11-16, agent b2)
   - Context: A `?roadgaps=1` overlay would ring unjoined street ends, so a gap you see can be checked against the street graph.
   - Goal: The overlay exists, and short alley links join streets.
   - Other: About half a day. notes/T-3034.md.
@@ -644,7 +644,7 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Goal: A rule for untagged ferries over 50 km, or a decision to leave it.
   - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
-- T-2396 [P3] {L:small-fixes} Dock tab area keeps one height
+- T-2396 [P3] {L:small-fixes} Dock tab area keeps one height (taking, 2026-11-16, agent b1)
   - Context: After T-2282, the shorter Build tab leaves the inspector no more room.
   - Goal: The inspector gets the room the Build tab leaves.
   - Other: notes/T-2267.md section 3.5
@@ -673,21 +673,21 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Follow-up to T-2290: 10 to 18 near pairs per city are still drawn on the wrong side of each other, mostly parallel lines a kilometre apart.
   - Goal: Far fewer wrong-side pairs; a side term in the separation is the likely way.
   - Other: notes/T-2293.md, notes/T-2290.md
-- T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour
+- T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour (taking, 2026-11-16, agent b4)
   - Context: A copied line keeps its source's colour. A bus or ferry line takes its colour at the first click, before its route is drawn.
   - Goal: Re-pick the colour as `lineColour.ts` does, if wanted (a shared colour on a copy may be intended).
 - T-2292 [P3] {L:schematic-layout} {after:a real save shows it} Diagram bundle for lines that swap sides
   - Context: Idea: lines that run close and swap sides on the ground drawn as one parallel bundle with a fixed order.
   - Goal: Build it only if a real save shows the problem.
   - Other: Follow-up to T-2290.
-- T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips
+- T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips (taking, 2026-11-16, agent b1)
   - Context: The hover leaves "No route" trips out of its count and bar.
   - Goal: The hover counts them.
 - T-2320 [P3] {L:stops} {after:Anita asks} Drag stops into another order
   - Context: T-2275 left this out since a reordered list mostly makes trains double back (DECISIONS 2026-11-04).
   - Goal: Stops can be dragged into a new order, if you want it.
 Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md):
-- T-2043 [P3] {L:checks} Old cloud check needs updating
+- T-2043 [P3] {L:checks} Old cloud check needs updating (taking, 2026-11-16, agent b3)
   - Context: checks/t988-cloud.mjs expects a fork slot the page now splits off in place (T-2037); it needs a local shonei-server.
   - Goal: The check matches the current slot behaviour and passes.
   - Other: See notes/T-2043.md.
@@ -702,11 +702,11 @@ Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md
   - Context: Today "The platform would be on a ramp." stands; 1,012 of 6,851 spots refused for a ramp.
   - Goal: A station clicked near a ramp's end slides clear of it.
   - Other: notes/T-1964.md.
-- T-1948 [P3] {L:track-drawing} Node drag lead-in capped too short
+- T-1948 [P3] {L:track-drawing} Node drag lead-in capped too short (taking, 2026-11-16, agent b2)
   - Context: A 1 km straight dragged 108 m sideways gets a 4,400 m curve where about 9,000 m fits.
   - Goal: The drag uses the whole leg when the far end is a track end.
   - Other: Found in T-1898.
-- T-1949 [P3] {L:track-drawing} Drag previews draw high-speed track as ordinary
+- T-1949 [P3] {L:track-drawing} Drag previews draw high-speed track as ordinary (taking, 2026-11-16, agent b2)
   - Context: Node and pick drag previews pass no `hsr`, so they look like ordinary track.
   - Goal: Previews show high-speed track correctly.
   - Other: Found in T-1898.
@@ -742,7 +742,7 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
 - T-1879 [P3] {L:region-redraws} Metro rule for 1M+ cities GHSL misses
   - Context: Adelaide was made one zone by hand; GHSL urban centres miss some 1M+ cities.
   - Goal: A rule makes such cities one zone.
-- T-1882 [P3] {L:checks} Terrain check may be out of date
+- T-1882 [P3] {L:checks} Terrain check may be out of date (taking, 2026-11-16, agent b3)
   - Context: checks/t1270-terrain.mjs's quote-rows check may no longer match the layout since T-1839.
   - Goal: The check is run, then fixed or archived.
 - T-2141 [P3] {L:map-look} Tight and loose ribbons by zoom
@@ -809,7 +809,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: The touch rule already re-solves only the line zone (Tokyo 0.1 s against 8 s whole), and the local result was within 83 riders of the whole.
   - Goal: A city line edit ends with the local solve, no whole solve.
   - Other: notes/T-2188.md
-- T-2189 [P3] {L:small-fixes} Edit note forgets slow edits
+- T-2189 [P3] {L:small-fixes} Edit note forgets slow edits (taking, 2026-11-16, agent b4)
   - Context: The edit note gives up after 5 minutes (`GIVE_UP_MS`). Tokyo's real save settled in 352-361 s and showed no note.
   - Goal: Raise the limit and keep the level-of-detail hold (T-2180) short.
 - T-2198 [P3] {L:passing-tracks} Mark where faster trains lose time
@@ -878,7 +878,7 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
   - Context: You want a mode where a city's real network runs as a rival to win riders from. After T-1305.
   - Goal: The mode exists.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1502 [P3] {L:money} Bus money shares by route points
+- T-1502 [P3] {L:money} Bus money shares by route points (taking, 2026-11-16, agent b6)
   - Context: regionMoney.ts shares a route's road km by chords between stops, which is rough on a winding route.
   - Goal: Shares follow the route's own points.
   - Other: notes/T-1465.md
@@ -900,19 +900,19 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
   - Goal: Indonesian is added first, then the others in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3401 [P3] {L:accounts-server} Sign in on the landing page
+- T-3401 [P3] {L:accounts-server} Sign in on the landing page (taking, 2026-11-16, agent b6)
   - Context: Your TODO 2026-11-15: "should probably show sign in on the landing page, even before the new game button... do we do that?"
   - Goal: Check what the start screen shows, answer you, add sign in if missing.
-- T-3402 [P3] {L:community} Community page switcher on all views
+- T-3402 [P3] {L:community} Community page switcher on all views (taking, 2026-11-16, agent b6)
   - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
   - Goal: All three views have a page switcher and a total count.
-- T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown
+- T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown (taking, 2026-11-16, agent b1)
   - Context: The city trip explorer's effective time hover explains the breakdown as an equation. The intercity one has none.
   - Goal: The intercity hover shows the same breakdown.
-- T-3406 [P3] {L:small-fixes} Waiting now split by direction
+- T-3406 [P3] {L:small-fixes} Waiting now split by direction (taking, 2026-11-16, agent b1)
   - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows.
   - Goal: A station shows waiting riders per direction.
-- T-3407 [P3] {L:money} Money plot in the save's local time
+- T-3407 [P3] {L:money} Money plot in the save's local time (taking, 2026-11-16, agent b6)
   - Context: Your TODO 2026-11-15: money plot times do not match local time. You want the first-built city's time zone, changeable in the finances pane.
   - Goal: Plot times follow the save's time zone, with a way to change it.
 - T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
@@ -921,10 +921,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3413 [P3] {L:community} Save lineage: original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.
-- T-3414 [P3] {L:small-fixes} Space between issues panel and its toggle
+- T-3414 [P3] {L:small-fixes} Space between issues panel and its toggle (taking, 2026-11-16, agent b1)
   - Context: Your TODO 2026-11-15: about 4 px between the issues panel and its toggle.
   - Goal: 4 px of space.
-- T-3416 [P3] {L:small-fixes} Very long line group name locks the name
+- T-3416 [P3] {L:small-fixes} Very long line group name locks the name (taking, 2026-11-16, agent b1)
   - Context: Your TODO 2026-11-15: a really long line group name can stop you changing it. Check line names too. It is a bug.
   - Goal: Long group and line names stay editable.
 - T-3421 [P2] {L:track-speed} Longer ramps for lines faster than 160 km/h (taking, 2026-11-16, agent bugs2)
@@ -978,7 +978,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3371 [P3] {L:checks} Track bar check fails on master
+- T-3371 [P3] {L:checks} Track bar check fails on master (taking, 2026-11-16, agent b3)
   - Context: t3260-track-bar part B fails: the track ghost tag no longer says "Hold Ctrl to draw straight".
   - Goal: Either the check is fixed (line dropped on purpose) or the hint is restored.
 - T-3370 [P3] {L:buses} Bus route drag follow-ups
@@ -1063,7 +1063,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Where transfer pulses (T-554) are large, the drawn platform crowd is too big: Jamaica at 08:34 shows about 1,958 while the train leaves with 1,501.
   - Goal: The drawn crowd matches the riders.
   - Other: Found in T-1785. artifacts/trainworld/t1785/
-- T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move
+- T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move (taking, 2026-11-16, agent b2)
   - Context: The snap ring and ghost sit wrong until the pointer moves, and some placers show on the globe's far side.
   - Goal: Both fixed.
   - Other: notes/T-1777.md "Left".
@@ -1113,11 +1113,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
-- T-2575 [P3] {L:cleanup} Fetch regions.json once
+- T-2575 [P3] {L:cleanup} Fetch regions.json once (taking, 2026-11-16, agent b4)
   - Context: regions.json (1.5 MB) is fetched twice, by the page and the realRoute worker.
   - Goal: The worker's `cover` message carries the boxes, so the file is fetched once.
   - Other: See notes/T-2512.md.
-- T-2573 [P3] {L:checks} Worker check misses the walker rule
+- T-2573 [P3] {L:checks} Worker check misses the walker rule (taking, 2026-11-16, agent b3)
   - Context: checks/t409-worker-check.mjs shows rail pairs with no walking share even by walkable Boston/Providence cells.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
   - Other: See notes/T-2527.md.
@@ -1132,7 +1132,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 25 pages done (uncommitted) and figures come from code via JSON markers.
   - Goal: Candidates in the notes are covered and retired docs removed. Next: fix markers if trams rename V_TOP, V_HSR, LEVEL_MULT, track_factor.
   - Other: See notes/T-2854.md.
-- T-2380 [P3] {L:cleanup} Retire intercity.json
+- T-2380 [P3] {L:cleanup} Retire intercity.json (taking, 2026-11-16, agent b4)
   - Context: data/work/intercity.json is read only by two ignored sim tests and joint_gravity's no-`--packs` mode.
   - Goal: The file and that mode are gone.
 - T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items
@@ -1556,7 +1556,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: A bare start's card waits 2 s for New York in one worker.
   - Goal: The card appears without the 2 s wait.
   - Other: notes/someday.md
-- T-344 [P3] {L:loading} Zone loading bar sticks near 99%
+- T-344 [P3] {L:loading} Zone loading bar sticks near 99% (taking, 2026-11-16, agent b4)
   - Context: A zone's loading bar can stick near 99%.
   - Goal: The bar finishes when loading does.
   - Other: notes/T-344.md
