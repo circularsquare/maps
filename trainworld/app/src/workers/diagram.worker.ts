@@ -188,7 +188,22 @@ function maskOf(packs: string, id: string): Promise<WaterMask | null> {
 let seaKnown: { key: string; sea: GroundSea } | null = null;
 /** on the sheet, the narrow rivers on the ground (a finer river finder than the water's, T-2580) */
 let sheetRivers: { key: string; real: RealWater } | null = null;
-const masksFor = async (packs: string, zones: string[]) => (await Promise.all(zones.map((id) => maskOf(packs, id).catch(() => null)))).filter((w): w is WaterMask => !!w);
+/** zones' masks fetched at once at most: a sheet over a continent meets hundreds of zones, and that many fetches at once
+ * fail in the browser (ERR_INSUFFICIENT_RESOURCES), leaving random zones with no water (T-3448) */
+const MASK_FETCHES = 32;
+async function masksFor(packs: string, zones: string[]): Promise<WaterMask[]> {
+  const got: (WaterMask | null)[] = new Array(zones.length).fill(null);
+  let next = 0;
+  const fetcher = async () => {
+    while (next < zones.length) {
+      const k = next++;
+      // one more try a second later: a failed mask is dropped from the cache, so this fetches it again
+      got[k] = await maskOf(packs, zones[k]).catch(() => new Promise<void>((r) => setTimeout(r, 1000)).then(() => maskOf(packs, zones[k]))).catch(() => null);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(MASK_FETCHES, zones.length) }, fetcher));
+  return got.filter((w): w is WaterMask => !!w);
+}
 function groundKey(g: DiagramGraph, frame: ZoneFrame, masks: number): string {
   let sum = 0;
   for (let i = 0; i < g.key.length; i += 7) sum += g.x[i] * 3 + g.y[i];
