@@ -251,7 +251,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
 - T-3459 [P3] {L:cleanup} Remove dead outputs and leftovers
-  - Context: From the code tour: pipeline/nocar.py still writes no-car households that demand stopped reading at T-854 (docs still say to rerun it); mock/ is an old design mock on MapLibre 5.24; registry market places 8 and 11-13 unused since T-1113; 351 scripts in notes/.
+  - Context: From the code tour: pipeline/nocar.py still writes no-car households that demand stopped reading at T-854 (docs still say to rerun it); registry market places 8 and 11-13 unused since T-1113; 351 scripts in notes/.
   - Goal: Each is deleted or its docs fixed, with packs and smoke unchanged.
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
