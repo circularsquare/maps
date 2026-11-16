@@ -1,9 +1,9 @@
 # Tasks
 
-Open agent work, one line a task; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`. Each task's
+Open agent work: a head line per task with short Need / Context / Goal / Other fields under it; detail in `notes/T-###.md`. Format and rules in `CLAUDE.md`. Each task's
 `{L:<slug>}` tag names its line in `LINES.md`, Anita's view of the work by area.
 P1 = now or blocking, P2 = this milestone, P3 = later. Finished or abandoned tasks move to `ARCHIVE.md`.
-Lower-priority tasks are under **Someday** at the end, one short line each. They are open tasks
+Lower-priority tasks are under **Someday** at the end, with one-sentence fields. They are open tasks
 (Anita 2026-10-26): count them when asked what is open, and work on them when nothing above can go
 ahead; pull one back up when it becomes next. Anita's shortlist of candidates: `notes/for-anita.md`. Notes of archived
 tasks (except those an open task or the handoff cites) live in `notes/archive/` by task id, in the folders `t0001-0499/`,
@@ -14,502 +14,1702 @@ tasks (except those an open task or the handoff cites) live in `notes/archive/` 
 
 ## World and countries
 Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline: notes/T-535.md "Stages".
-- T-2715 [P3] {L:schematic-layout} On the sheet, a drawn-grid cell (2.44 pitches on all Japan) can hold two stations of different zones, so one is on the other zone's side: 1 case, Imari (sag) beside Matsuura (ngs), stations 6367 and 6368. Fix by splitting the cell there or painting the pair's border between them; or leave. Found by T-2637 (`checks/t2580-sheet-water.mjs` reports it).
-- T-2001 [P3] {L:region-redraws} Other geoBoundaries files that dissolve same-named units into one far-flung feature, as Malaysia's ADM3 (T-1738's `world_plan.GB_SPLIT_FAR`): Portugal's ADM3, Indonesia's ADM2 (check before Indonesia), Sierra Leone's ADM3. List: `gbscan.py` in t1738b's kit, notes/T-1738.md 11. Open. notes/T-2001.md.
-- T-2578 [P3] {L:borders} The Mexico-US border takes the national default factor 0.05, though Tijuana-San Diego and Juarez-El Paso are very busy crossings: a pair factor in borders.json (as MY-SG's 0.5), checked against the joint solve's flows and published crossing counts. notes/T-2436.md. Open.
-- T-2003 [P3] {L:borders} The joint gravity is symmetric, so a one-way border flow comes out both ways: Johor Bahru to Singapore 169,000 commutes a day at the MY-SG factor 0.5 (news estimates 250,000-400,000) but Singapore to Johor Bahru 160,000 as well (few in fact). A direction factor per border pair (borders.json), or leave it: a player sees the volume, rarely the direction. Open. notes/T-1738.md 11.
-- T-2054 [P3] {L:world-tooling} The join makes no terrain grids and no routed drives for new zones, so 250 zones (Cambodia to Indonesia) priced track on flat ground and 542 (Vietnam on) took the drive rule until T-1738's Philippines run built them by hand (playbook 8, `checks/build_inputs.py`). Open. notes/T-1738.md 13. notes/T-2054.md.
-- T-2106 [P3] {L:census-totals} Indonesia's and the Philippines' other zones on census totals: the zone rules name `admin_totals` since T-2038, but only the rebuilt rows carry it. Open. notes/T-1738.md 15. notes/T-2106.md.
-- T-2107 [P3] {L:census-totals} Cambodia's other provinces on the 2019 census: COD-AB KHM (2018) lacks five districts made since and Tbong Khmum's seven are renumbered, so config `KH` covers only the north-west (`only`); fold the new districts into the old polygons by their communes or find newer polygons, then widen `only` and rebuild. Open. notes/T-1738.md 15. notes/T-2107.md.
-- T-2002 [P3] {L:census-totals} A preflight check for GHSL phantom people (T-2000): a plan row with 1 km pixels over about 20,000 people and no GHS-UCDB urban centre, or rural units whose people per built-up m2 stand far above their region's, as a FLAG naming the units. Open.
-- T-2099 [P3] {L:census-totals} A pack's shore clip leaves out GHSL people on stilt villages and coastal pixels whose cells lie outside the outline: pti's cells hold 80-90% of GHSL's people of Jolo, Bongao and Siasi (Pandami 54%), and with census totals (T-2084) that share of the census goes too (pti 1.63M of its units' 1.89M). Open. notes/T-2084.md 2. notes/T-2099.md.
-- T-2108 [P3] {L:jobs-places} New Zealand's jobs from Stats NZ's Business Demography employee counts by SA2 (`2024_Business_Demography_employee_count_by_SA2`, ArcGIS Online, CC BY 4.0) in place of the tier 0 proxy; its people are on the 2023 census by SA2 since T-2077. Open. research/next-countries-data.md.
-- T-2094 [P3] {L:region-redraws} world_plan's other distances are Mollweide metres, 0.67-1.9x the ground away from longitude 0 (Cook Strait 34 km measures 22, Oamaru-Dunedin 93 measures 176): `WATER_GAP_KM`, `ARCHIPELAGO_KM`, `SCATTER_KM` and the shared-border km in the merge log. `reach_people` and `join_km` are great-circle since T-1738. Open. notes/T-1738.md 14. notes/T-2094.md.
-- T-2095 [P3] {L:world-tooling} The first `register --market` of New Zealand's run (2 rows, 03:18 on 2026-11-03, after the Philippines' join) rebuilt all 2,342 places' market rows in 159 s; the next register, 4 minutes later, did 5 in 0.5 s. Open. notes/T-1738.md 14. notes/T-2095.md.
-- T-2251 [P3] {L:region-redraws} uji Ujiarpur (0.21M, Bihar) is a 170 km2 remnant south-west of its own town: its origin and gate centre lie inside haj Hajipur's shown outline, so a jump to Ujiarpur town focuses Hajipur and the zone shown as Ujiarpur holds none of it. Open. notes/T-2111.md "Checks". notes/T-2251.md.
-- T-2112 [P3] {L:borders} `seams.py` (borders.json's seamless pairs, a line through one continuous city up to factor 1, T-1192) is a manual step no join runs, so every country built since (Southeast Asia, Australia, New Zealand, India) has its pack lines at the plain 0.5, Kerala's coast metros and Delhi's edge zones included. Open. notes/T-2111.md. notes/T-2112.md.
-- T-2298 [P3] {L:world-tooling} The gate's Vite serves the main tree's app/, so a landing with a WASM rebuild mid-gate parks every row checked meanwhile ("no page errors", a minified "Nn" thrown 20-odd times a page: 72 of Russia's rows, 2026-11-04; T-2691 found "Nn" is a basemap tile fetch that failed, now a warning, so those rows may have been network trouble, not the landing). Serve the gate from a frozen copy of app/ (as `TW_SIM_DIR` freezes sim/), or have the runner stop the gate when app/'s WASM changes and rerun the chunk. Open. notes/T-2295.md.
-- T-2398 [P3] {L:world-tooling} `world_run.py step <name> --help` runs the step instead of printing help: `step seams --help` ran seams for real and rewrote borders.json's seamless list (put back from HEAD, 2026-11-04). Make `step` pass `--help` through only to scripts that parse it, else print the step's docstring and stop. Open. notes/T-2295.md.
-- T-2399 [P3] {L:world-tooling} The gate's browser check broke silently with an app change: from 861369d9 (T-2365, 13:42 on 2026-11-04) the top bar's split hover is a grid and `city-browser.mjs` waited 300 s for "Train " on every zone, parking Jakarta's jak and sra (regex fixed by countries3, 17:10). A smoke check that runs `city-browser.mjs` on one shipped zone would catch the next such change at landing; and a gate whose browser check fails the same way on every row could stop as a run fault (T-775 needs three parks in a row). Open. notes/T-2341.md.
-- T-2299 [P3] {L:region-redraws} A preflight check for origins off their town: an origin whose 1 km pixel is far below its zone's densest, or outside every GHS-UCDB centre in a zone that holds one (Konya, Erzurum, Veliky Novgorod, Tobolsk, Lesosibirsk all parked on 0 riders, 2026-11-04); and `source.unit_names` cut at 25 characters. Open. notes/T-2294.md, notes/T-2295.md. notes/T-2299.md.
-- T-2326 [P3] {L:world-tooling} The cloud wave's seed should carry `data/work/world_field.*` and a sea-polygon fallback as standard (routes need world_field since T-2213; osmdata.openstreetmap.de did not answer on 2026-11-04, and wave.sh cannot add files once a machine is up): fold replan2's mkseed.py (scratch replan2) into tools/aws for launch.py's wave kind. notes/T-1189.md. Open.
-- T-2296 [P3] {L:census-totals} Plan zones on census totals where an `admin_totals` config exists: Turkey's plan was grouped on GHSL, which holds 0.84M in Adana's four urban ilce against 2.01M registered (Yuregir 56k against 449k), so sey Adana ships as a 2.3M zone over the cap and yum Ceyhan at 0.22M under the floor, and Adana's UCDB centre missed the metro list. Open. notes/T-2294.md. notes/T-2296.md.
-- T-2297 [P3] {L:census-totals} Russia's 2021 census (VPN-2021) by municipal district and okrug on rosstat.gov.ru as an `admin_totals` config for Russia's rows (GHSL alone since T-2295; nothing checks it): find the table and a polygon file whose codes join (OKTMO; geoBoundaries ADM2 has none), `admin_totals.py check RU`, then rebuild rows moving over 10%. Not opened yet. notes/T-2295.md.
-- T-2598 [P3] {L:jobs-places} Brazil jobs by municipio from RAIS (the formal-jobs register), the data register's "?" in Brazil's jobs cell (T-2437): check access and whether it beats OSM jobs outside sao. notes/T-2437.md. Open.
-- T-2558 [P3] {L:jobs-places} Mexico everyday trips from DENUE's SCIAN codes as an `everyday` hook (errands 46 and 81, leisure 71 and 72), the data register's "P3 task to file" (T-2081). notes/T-2080.md. Open.
-- T-1994 [P3] {L:region-redraws} A city centre reunited by `world_plan.FUA_WHOLE` sheds outlying pieces that then stay as they are, under the floor if need be (on a China replan: Fuding 0.47M and Zhenping 0.82M against China's 1M floor). Let a shed piece regroup by the merge rule without rejoining the city zone it left. Only matters on a replan or a new country with such a city. From T-1984. notes/T-1984.md.
-- T-1995 [P3] {L:region-redraws} A city zone under the FUA_WHOLE line is named after its most populous unit, a suburb at times (Newcastle's is "Lake Macquarie"; Australia's display names came by hand in zone-names.json). Name a zone holding a GHSL urban centre of CITY_POP after the biggest such centre, as FUA_WHOLE zones are. From T-1984. notes/T-1984.md.
-- T-2070 [P2] {L:world-tooling} {after:next multi-region run} Confirm the read ahead (T-1980) on a real multi-region run (India, an Australia rerun; Brazil's rows chained its five extracts into one region, T-2437): region k+1's download line while region k builds, no two `read` steps at once; what to read is in notes/T-2040.md "What only a real run shows". The chunked gate (T-1978) is confirmed on Mexico's run, 2026-11-05 (notes/T-2436.md "T-2070"). Open. notes/T-2070.md.
-- T-1981 [P2] {L:world-tooling} {waits:Anita} Measure the joint solve's thread scaling (CPU poll during the next country's join, and one unit at 6 and 12 threads): solves are 17-30 min a country, 2.4 h for China. Then decide night joins at 12-15 cores, or (Anita's call, it changes results slightly) a rerun's unit starting from its last factors. From T-1974, waits on Anita's go. Open. notes/T-1981.md.
-- T-1988 [P3] {L:airports} A market pack's `air_direct` (the places its airports fly to directly) is as of its last write, so it misses zones registered since: 79 of 151 sampled packs differ from a fresh build in that field only (Vietnam's, Australia's, Europe's). From T-1976. notes/T-1976.md. Open. notes/T-1988.md.
-- T-1992 [P3] {L:world-tooling} A cold `zone_outlines` run (empty cache) takes 4.4-5.1 min at 4 jobs where T-1977 aimed at 3; 860-960 CPU-s of it is zone_water's 368 windows (owner_cells 37%, the reach buffers 21%, owners' points 8%). Open; notes/T-1977.md. notes/T-1992.md.
-- T-1738 [P2] {L:new-countries} Southeast Asia, what is left: Myanmar (Yangon, Mandalay, ADM3; OSM thin), Laos and Timor-Leste (no plan rows or unit source yet). Shipped 2026-10-28 to 11-03: Vietnam, Thailand, Singapore, Cambodia, Malaysia, Brunei, Indonesia and the Philippines (516 rows). docs/adding-a-country.md; notes/T-1738.md 5.
-- T-1765 [P3] {L:region-redraws} Zones whose origin was set (before T-1762) on the densest pixel anywhere in the zone, over 25 km outside the unit they lead with; Canada's five, Kerkyra, Siedlecki, Starogardzki and China's eleven city zones were rebuilt and shipped 2026-10-29 (2b8cdda6, b50802f3). Left: China's other 61 (county towns: Guyang 235 km, Nehe 145, Huzhu 129, Lancang 123). Open. notes/T-1765.md.
-- T-1375 [P3] {L:region-redraws} The zone ring cut halves a ring by people round the centre it wraps, so a thin arm (Whistler and Pemberton, joined to the Fraser Valley zone round Vancouver's row) splits the ring's real body instead (Abbotsford 0.17M and Chilliwack-Mission 0.19M, T-1239): try shedding the arm that alone makes the wrap before halving; a Canada replan after. Open; notes/T-1239.md section 1.
-- T-1376 [P3] {L:region-redraws} Les Îles-de-la-Madeleine (lel, 12,000 people, an island zone of Canada) parks in its build: `enrich_parks` finds under 85% of its park draw on a cell (beach and dune parks off the populated cells). Allow a small island zone through (as T-897's one-park islets) or leave it dead space. Open; notes/T-1239.md.
-- T-2300 [P3] {L:region-redraws} Taiwan's tig ("Taitung", 1.29M, T-1189's replan) is the Central Range with both foothills: Hualien and Taitung's coast, Puli, Douliu, Pingtung's plain and Kaohsiung's hill districts, joined by shape across regions because the mountain townships fill the hull (compact 0.69-0.82). Open. notes/T-1189.md "Taiwan". notes/T-2300.md.
-- T-1193 [P2] {L:borders} T-1178 stage 2, what is left: rerun the solve units holding a pack in T-1192's seamless list outside mainland China (GB's Bristol group, Italy's Milan-Como, Puerto Rico; check whether Taiwan's ran with China's joins in T-1184 and T-1185), T-1261 is done; rerunning `pipeline/seams.py` first if ids changed; check Guangzhou-Foshan's commuters across near 1.3-1.5M. notes/T-1178.md.
-- T-1334 [P3] {L:region-redraws} Other coastal districts dropped as Kwai Tsing was (T-1144)? List each built outline's OSM relations at its picked admin level with 0.25-0.5 of their land inside a plan unit and not picked (a coarse unit polygon missing reclaimed land or islands, the leftover under the 10% fill); rebuild any populated ones. Open.
-- T-1080 [P2] {L:world-tooling} A world run at home can fail extract reads on Windows' commit limit (74.5 GB here): each parallel GDAL reader in `osm_features` commits a 6 GB node index, so with a join, a big profile and browsers up, Wisconsin's and Nebraska's reads failed "Failed to open dataset" with 31 GB of RAM free (T-1078). Open; notes/T-1004.md "Wave 2". notes/T-1080.md.
-- T-930 [P2] {L:world-tooling} The join's re-gate re-checks only what a joint solve can change (mean commute, top zone share, joint borders, other packs unchanged) instead of every figure of every member: the GB join for hih (2026-10-22) spent 9.8 of its 31 minutes there. Open; notes/T-928.md section 4.
-- T-1309 [P3] {L:region-redraws} 384 new Chinese zones show the planner's county name: a look at their names (docs/zones.md "Names"). Open.
-- T-1635 [P3] {L:loading} On the live page a pack's whole-file fetch right after its Range reads (sed.bin) can fail once with `net::ERR_CACHE_OPERATION_NOT_SUPPORTED` (immutable Cache-Control); the client's retry gets it 0.9 s later, but it logs a console error and smoke counts it. Fetch whole files with `cache: "no-store"` or skip the Range reads when the whole file follows. Open. notes/T-1635.md.
-- T-3399 [P2] {L:new-countries} Central America from Guatemala to Panama (Guatemala, Belize, El Salvador, Honduras, Nicaragua, Costa Rica, Panama) and Venezuela, before any other new region (Anita 2026-11-16, of T-3245: "lets prioritize cenrtal america (like guatemala to panama) and venezuela over whatever other regions we were gonna add next, since they were requestedd"; her 0.4 list: "adding central america maybe?"). docs/adding-a-country.md; sources in research/next-countries-data.md and docs/data-register.md. Open.
+- T-2715 [P3] {L:schematic-layout} Two zones share one grid cell at Imari
+  - Context: On the sheet, one drawn-grid cell holds Imari (sag) and Matsuura (ngs) stations, so one sits on the other zone's side.
+  - Goal: Split the cell or paint the border between the pair, or leave it (1 case in all Japan).
+  - Other: notes/T-2637.md
+- T-2001 [P3] {L:region-redraws} More geoBoundaries files with merged far-flung units
+  - Context: Malaysia's ADM3 had same-named units dissolved into one far-flung feature. Portugal ADM3, Indonesia ADM2 and Sierra Leone ADM3 may do the same.
+  - Goal: Each of those files is checked and split where needed.
+  - Other: notes/T-2001.md
+- T-2578 [P3] {L:borders} Mexico-US border factor too low
+  - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
+  - Goal: A pair factor in borders.json, checked against published crossing counts.
+  - Other: notes/T-2436.md
+- T-2003 [P3] {L:borders} One-way border flows come out both ways
+  - Context: The gravity model is symmetric: Singapore to Johor Bahru gets 160,000 commutes a day, almost as many as the real one-way flow of 169,000.
+  - Goal: A direction factor per border pair, or a decision to leave it.
+  - Other: notes/T-1738.md section 11
+- T-2054 [P3] {L:world-tooling} Terrain and drives missing for new zones
+  - Context: The join builds no terrain grids or routed drives for new zones, so 250 zones priced track on flat ground and 542 used the drive rule until the Philippines run built them by hand.
+  - Goal: Every zone a join adds gets terrain grids and routed drives automatically.
+  - Other: See notes/T-2054.md.
+- T-2106 [P3] {L:census-totals} Other zones on census totals, Indonesia and Philippines
+  - Context: Since T-2038 the zone rules use census totals (admin_totals), but only the rebuilt rows carry them.
+  - Goal: Indonesia's and the Philippines' remaining rows rebuilt on census totals.
+  - Other: notes/T-1738.md 15; notes/T-2106.md
+- T-2107 [P3] {L:census-totals} Cambodia's other provinces on the 2019 census
+  - Context: The Cambodia config (KH) covers only the north-west because the old district polygons lack five new districts and renumber Tbong Khmum's seven.
+  - Goal: New districts folded into the old polygons (or newer polygons found), then the rest of Cambodia rebuilt.
+  - Other: notes/T-1738.md 15; notes/T-2107.md
+- T-2002 [P3] {L:census-totals} Preflight flag for GHSL phantom people
+  - Context: GHSL (the satellite population grid) sometimes puts people where none live (T-2000).
+  - Goal: A preflight check flags plan rows with 1 km pixels over about 20,000 people and no urban centre, naming the units.
+- T-2099 [P3] {L:census-totals} Shore clip drops people on stilt villages
+  - Context: Packs clip at the shore, so GHSL people on stilt villages and coastal pixels go missing: Jolo, Bongao and Siasi keep only 80-90%.
+  - Goal: Stilt and coastal pixels count in the pack, so the census total (T-2084) is not cut short (pti 1.63M of 1.89M today).
+  - Other: notes/T-2084.md 2; notes/T-2099.md
+- T-2108 [P3] {L:jobs-places} New Zealand jobs from Stats NZ employee counts
+  - Context: New Zealand's jobs use the tier 0 proxy; its people are already on the 2023 census (T-2077).
+  - Goal: Jobs by SA2 from Stats NZ's Business Demography employee counts (CC BY 4.0).
+  - Other: research/next-countries-data.md
+- T-2094 [P3] {L:region-redraws} Mollweide distances in world_plan are off
+  - Context: Water gap, archipelago, scatter and shared-border distances are Mollweide metres, 0.67-1.9x the ground away from longitude 0.
+  - Goal: Those distances are great-circle, like reach_people and join_km.
+  - Other: notes/T-2094.md
+- T-2095 [P3] {L:world-tooling} First market register is slow
+  - Context: The first `register --market` after a join rebuilt all 2,342 places in 159 s; the next one took 0.5 s.
+  - Goal: The first register after a join costs seconds, not minutes.
+  - Other: See notes/T-2095.md.
+- T-2251 [P3] {L:region-redraws} Ujiarpur zone is a remnant
+  - Context: Ujiarpur (Bihar) is a 170 km2 piece south-west of its town; its origin lies inside Hajipur's outline, so jumping to it focuses Hajipur.
+  - Goal: Ujiarpur's zone holds its own town and the jump lands on it.
+  - Other: notes/T-2251.md
+- T-2112 [P3] {L:borders} seams.py is a manual step
+  - Context: No join runs seams.py, so every country built since Southeast Asia has its pack lines at the plain 0.5, including Kerala's coast and Delhi's edge zones.
+  - Goal: Seamless pairs are applied for the newer countries.
+  - Other: notes/T-2112.md
+- T-2298 [P3] {L:world-tooling} Gate checks break when WASM is rebuilt
+  - Context: The gate serves the main tree's app/, so a WASM rebuild mid-gate parked 72 of Russia's rows with a misleading "Nn" error.
+  - Goal: The gate runs from a frozen copy of app/, or stops and reruns the chunk when the WASM changes.
+  - Other: See notes/T-2295.md.
+- T-2398 [P3] {L:world-tooling} world_run step --help runs the step
+  - Context: `step seams --help` ran seams for real and rewrote borders.json (restored from HEAD).
+  - Goal: `--help` on a step prints help and never runs it.
+  - Other: See notes/T-2295.md.
+- T-2399 [P3] {L:world-tooling} Gate browser check fails silently on UI changes
+  - Context: An app change made the gate's browser check wait 300 s on every zone and park Jakarta's zones.
+  - Goal: A smoke check runs city-browser.mjs on one shipped zone, and a gate failing the same way on every row stops as a run fault.
+  - Other: See notes/T-2341.md.
+- T-2299 [P3] {L:region-redraws} Check for origins off their town
+  - Context: Konya, Erzurum and three other zones were parked on 0 riders because their origin sat off the town. Unit names are also cut at 25 characters.
+  - Goal: A preflight check flags such origins and the name cut.
+  - Other: notes/T-2299.md
+- T-2326 [P3] {L:world-tooling} Cloud wave seed lacks world_field
+  - Context: Cloud waves need data/work/world_field.* and a sea-polygon fallback, but wave.sh cannot add files once a machine is up.
+  - Goal: The wave seed carries both files as standard.
+  - Other: See notes/T-1189.md.
+- T-2296 [P3] {L:census-totals} Plan zones on census totals where configured
+  - Context: Turkey's plan was grouped on GHSL, which holds 0.84M in Adana's four urban districts against 2.01M registered, so sey Adana ships over the cap and yum Ceyhan under the floor.
+  - Goal: Zone grouping uses census totals wherever an admin_totals config exists, and Adana's centre makes the metro list.
+  - Other: notes/T-2294.md; notes/T-2296.md
+- T-2297 [P3] {L:census-totals} Russia on the 2021 census
+  - Context: Russia's rows use GHSL alone (T-2295) and nothing checks them. Not opened yet.
+  - Goal: Municipal totals from Rosstat's 2021 census as an admin_totals config, rows moving over 10% rebuilt.
+  - Other: Needs a polygon file whose codes join (OKTMO); geoBoundaries has none. notes/T-2295.md
+- T-2598 [P3] {L:jobs-places} Brazil jobs from RAIS
+  - Context: The data register has a "?" for Brazil's jobs (T-2437).
+  - Goal: Know whether RAIS (the formal-jobs register) is accessible and beats OSM jobs outside Sao Paulo.
+  - Other: notes/T-2437.md
+- T-2558 [P3] {L:jobs-places} Mexico everyday trips from DENUE
+  - Context: The data register lists this as a task to file (T-2081).
+  - Goal: An everyday-trips hook for Mexico from DENUE codes: errands 46 and 81, leisure 71 and 72.
+  - Other: notes/T-2080.md
+- T-1994 [P3] {L:region-redraws} Pieces shed by FUA_WHOLE stay stranded
+  - Context: A city reunited by FUA_WHOLE sheds outlying pieces that stay as they are, even under the floor (Fuding, Zhenping in China).
+  - Goal: A shed piece regroups by the merge rule without rejoining the city.
+  - Other: notes/T-1984.md
+- T-1995 [P3] {L:region-redraws} Name FUA_WHOLE zones after the biggest centre
+  - Context: A zone is named after its most populous unit, sometimes a suburb (Newcastle shows as Lake Macquarie).
+  - Goal: A zone with a GHSL urban centre is named after the biggest such centre.
+  - Other: notes/T-1984.md
+- T-2070 [P2] {L:world-tooling} {after:next multi-region run} Confirm read-ahead on a real multi-region run
+  - Context: The read-ahead (T-1980) is untested on a real multi-region run; the chunked gate (T-1978) is confirmed on Mexico.
+  - Goal: Region k+1's download starts while region k builds, and no two `read` steps overlap.
+  - Other: See notes/T-2070.md.
+- T-1981 [P2] {L:world-tooling} {waits:Anita} Joint solve thread scaling
+  - Need from Anita: Say go to measuring during the next country's join, and whether warm-started reruns are acceptable (they change results slightly).
+  - Context: Solves take 17-30 min a country, 2.4 h for China.
+  - Goal: Thread scaling is measured at 6 and 12 threads, then night joins at 12-15 cores or warm-started reruns are chosen.
+  - Other: See notes/T-1981.md.
+- T-1988 [P3] {L:airports} Stale air_direct in market packs
+  - Context: air_direct is as of each pack's last write, so it misses zones registered since: 79 of 151 sampled packs differ.
+  - Goal: Packs get a fresh air_direct.
+  - Other: notes/T-1988.md
+- T-1992 [P3] {L:world-tooling} Cold zone_outlines run is slow
+  - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
+  - Goal: A cold run is near 3 min.
+  - Other: See notes/T-1992.md.
+- T-1738 [P2] {L:new-countries} Southeast Asia: Myanmar, Laos, Timor-Leste
+  - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet.
+  - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
+  - Other: notes/T-1738.md section 5
+- T-1765 [P3] {L:region-redraws} Origins on the densest pixel, far from town
+  - Context: Zones whose origin was set on the densest pixel over 25 km outside their unit. Canada, Greece, Poland and China's city zones were fixed on 2026-10-29.
+  - Goal: China's other 61 county-town zones (Guyang 235 km off) are rebuilt.
+  - Other: notes/T-1765.md
+- T-1375 [P3] {L:region-redraws} Zone ring cut splits the wrong body
+  - Context: A thin arm (Whistler and Pemberton) wraps the Vancouver ring and makes the ring cut split Abbotsford and Chilliwack-Mission instead.
+  - Goal: Try shedding the arm that makes the wrap before halving; replan Canada after.
+  - Other: notes/T-1239.md section 1
+- T-1376 [P3] {L:region-redraws} Madeleine Islands zone fails the park check
+  - Context: Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell.
+  - Goal: Let a small island zone through, or leave it as dead space.
+  - Other: notes/T-1239.md
+- T-2300 [P3] {L:region-redraws} Taiwan's Taitung zone spans the mountains
+  - Context: tig (1.29M) is the Central Range with both foothills, joined by shape because mountain townships fill the hull.
+  - Goal: Taiwan's zones follow the coasts and plains sensibly.
+  - Other: notes/T-1189.md section Taiwan
+- T-1193 [P2] {L:borders} Rerun seamless solves outside mainland China
+  - Context: T-1178 stage 2: packs in the seamless list (Bristol group, Milan-Como, Puerto Rico, maybe Taiwan) need their solve rerun.
+  - Goal: Those solves rerun; Guangzhou-Foshan commuters land near 1.3-1.5M.
+  - Other: notes/T-1178.md
+- T-1334 [P3] {L:region-redraws} Other coastal districts dropped like Kwai Tsing
+  - Context: Kwai Tsing was dropped because a coarse unit polygon missed reclaimed land. Others may be missing too.
+  - Goal: Dropped coastal districts are listed and any populated ones rebuilt.
+- T-1080 [P2] {L:world-tooling} World run fails on Windows commit limit
+  - Context: Parallel GDAL readers in `osm_features` each commit a 6 GB node index, so reads failed with 31 GB RAM free (Wisconsin, Nebraska).
+  - Goal: Reads no longer fail "Failed to open dataset" on this machine with a join and browsers open.
+  - Other: See notes/T-1080.md.
+- T-930 [P2] {L:world-tooling} Join re-gate only checks what changed
+  - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
+  - Goal: The re-gate checks only what a joint solve can change.
+  - Other: See notes/T-928.md section 4.
+- T-1309 [P3] {L:region-redraws} Look at 384 new Chinese zone names
+  - Context: The planner's county names show for these zones.
+  - Goal: Names are reviewed and fixed where poor.
+  - Other: docs/zones.md "Names"
+- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads
+  - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
+  - Goal: Whole files load with no console error and smoke stays clean.
+  - Other: notes/T-1635.md
+- T-3399 [P2] {L:new-countries} Central America and Venezuela first
+  - Context: You asked (2026-11-16) for Guatemala to Panama and Venezuela before any other new region.
+  - Goal: Those eight countries are built and shipped.
+  - Other: docs/adding-a-country.md; research/next-countries-data.md
 
 ## Demand
-- T-3310 [P2] {L:fares} {waits:Anita} Do high-speed lines still lose money after the fare fix? Player reports via Anita 2026-11-12 ("shinkansen losing money"). Measure a built Tokyo - Osaka high-speed line (riders, fares, running costs, upkeep, payback) on v0.3.1 and master, find which cost dominates, say whether it is demand, price or cost and whether a balance change or player skill is the answer. Measurement only, no code. Measured 2026-11-12 (hsrprofit): v0.3.1 and master identical; skill (train length, frequency) plus the 1.5x default sitting above the best fare; waits on Anita for the default multiplier. notes/T-3310.md.
-- T-3298 [P2] {L:route-choice} Trips walk across town to a train station rather than take a tram there and change, player report (Caio, feedback 1794440480-9c44ca08, version mwc9777k, 2026-11-11/12): tram A -> B, train B -> C, the explorer shows A -> C as a walk to B and the train, "doesn't happen all the time". Not T-3295's cause (that was a walk onto the same line; this is a change between two lines). Look first at: whether the tram stop and the train station are one demand station, within 300 m or one complex (a tram stop placed on the street beyond 300 m gets no change at all); the walk's weight against the tram's wait, ride and the change's 2 minutes; the access list (K nearest stations, `TRAM_SLOTS`, kernel/access.rs) keeping the far train station as a walk-in. Needs a scene; no screenshot from the player yet. Open.
-- T-3246 [P2] {L:wealth-split} Income groups for local trips, Anita 2026-11-11: "would it be a performance cost to have wealth tiers apply to local trips? would be nice, i think." T-1431 measured about 2.4x the solve time for three groups in the local layers; look for a cheaper form (a money-weight spread in one search, two groups, groups only past some trip length). Estimate first (first one, agent hsr: mode choice by group over one route search about 1.1-1.3x the local solve; a second route search for two groups only in games with a line charging a multiplier, about 1.2-1.4x there; guesses beside T-1431's measured 72%, notes/T-3239.md "Cost of groups in route choice"). Open. Folded in T-1519 (three groups as the market's, about 2.4x the local solve). Her TODO 2026-11-15: "maybe actually we do add the wealth split. tehre are a lot of people still complaining about people choosing local over express ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player".
-- T-3247 [P2] {L:attractions} {after:next world rebuild} Beach towns and attractions, Anita 2026-11-11: "we can sorta do that. capri included i guess. perhaps on a local scale we should also maybe add beaches as attractions if they are not there? and maybe search for other sources that list attractions that we might be able to use?" Two parts: beach and resort towns (Capri included) get long-trip pull with T-3240; beaches as local attractions where missing, and a survey of attraction sources (global, open licence). General tourist spots are out of scope for now (her word). With the world rebuild. notes/T-3247.md.
-- T-3215 [P3] {L:jobs-places} {after:Canada rebuild} Canada's planned rows (van mon cag edm) take census jobs and home-end commuters by tract, as a tier 0 jobs hook like England's BRES (T-3213 option B; UBC 6,360 -> ~12,500 jobs, SFU 3,400 -> ~10,000). Needs those rebuilds and a Canada re-join. notes/T-3213.md. Open.
-- T-2093 [P3] {L:ridership-checks} The rest of T-2088's ridership check. Part 1 done 2026-11-03: Osaka, Nagoya, Fukuoka, Sapporo and Hiroshima from the jpn7 save (`t2088-ridership.mjs jpn7`, S12 circles matched by station position; all 0.35-0.52 of S12, jpn7 itself about 0.72-0.75 of the dedicated saves; notes/T-2088.md). Open. notes/T-2093.md.
-- T-1753 [P3] {L:ridership-checks} Rapid and express patterns for Tokyo's long suburban lines in the real save (about +2%); needs an open timetable source (ODPT needs an account). notes/T-1750.md. Open.
-- T-1503 [P3] {L:demand-ideas} Superholiday rush days on networks past about 8,000 stations take the longer trips unleaned (the lean's S x S table over 256 MB, `LEAN_OD_BYTES`, T-1373): a sparse or per-destination table if a network that big plays. notes/T-264.md Since T-1545 the table is gone (the lean is a column per station in the pass's window), so lifting the gate costs only time: a walk a destination a pass.
-- T-1599 [P3] {L:ridership-checks} {waits:Anita} T-1508's option 2, deferred (T-1603 is done): look at a built Beijing - Shanghai high-speed line at player scale (riders a day, does it feel too empty to a player?). Waits on Anita. notes/T-1508.md. Open. notes/T-1599.md.
-- T-1233 [P2] {L:ridership-checks} {after:Guangdong market packs} T-1177 leftovers: run `checks/t1177-cross-everyday.mjs` with `IDS=gua,fos` once Guangdong's market packs carry the pairs (compare each purpose's local legs plus the pairs with the old totals); the explorer's Everyday trips block shows only while a network reaches the market. Open; notes/T-1177.md. notes/T-1233.md.
+- T-3310 [P2] {L:fares} {waits:Anita} High-speed lines still lose money?
+  - Need from Anita: Pick the default fare multiplier for high-speed lines (now 1.5x, above the best fare).
+  - Context: Player reports "shinkansen losing money". Measured 2026-11-12: same on v0.3.1 and master; player skill (train length, frequency) and the 1.5x default explain it.
+  - Goal: A decision on the default multiplier; no code in this task.
+  - Other: notes/T-3310.md
+- T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
+  - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
+  - Goal: A tram-then-train trip changes at the station instead of walking across town.
+  - Other: Not the cause of T-3295 (walk onto the same line). Notes: notes/T-3298.md
+- T-3246 [P2] {L:wealth-split} Income groups for local trips
+  - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
+  - Goal: A cheaper way to give local trips income groups, after an estimate.
+  - Other: Options: one search with a money-weight spread, two groups, or groups only past some trip length. Folds in T-1519. notes/T-3239.md "Cost of groups in route choice"
+- T-3247 [P2] {L:attractions} {after:next world rebuild} Beach towns and attractions
+  - Context: Your 2026-11-11 note: "we can sorta do that. capri included i guess. perhaps on a local scale we should also maybe add beaches as attractions if they are not there?"
+  - Goal: Beach and resort towns get long-trip pull (with T-3240), beaches are local attractions where missing, and attraction sources are surveyed.
+  - Other: Rides with the world rebuild. General tourist spots stay out for now. notes/T-3247.md
+- T-3215 [P3] {L:jobs-places} {after:Canada rebuild} Canada's planned rows take census jobs
+  - Context: The four Canadian plan rows (van mon cag edm) use the tier 0 jobs proxy.
+  - Goal: Census jobs and home-end commuters by tract, like England's BRES (T-3213 option B).
+  - Other: UBC goes from 6,360 to about 12,500 jobs, SFU from 3,400 to about 10,000. Needs the Canada rebuild. notes/T-3213.md
+- T-2093 [P3] {L:ridership-checks} Rest of the Japan ridership check
+  - Context: Part 1 is done (2026-11-03): five cities from the jpn7 save came out 0.35-0.52 of S12.
+  - Goal: The remaining cities are checked against S12.
+  - Other: Notes: notes/T-2093.md
+- T-1753 [P3] {L:ridership-checks} Rapid and express service on Tokyo suburban lines
+  - Context: Real save has no rapid or express patterns for the long lines (about +2%). ODPT, the timetable source, needs an account.
+  - Goal: Tokyo long lines carry rapid and express patterns.
+  - Other: Notes: notes/T-1750.md
+- T-1503 [P3] {L:demand-ideas} Superholiday rush on networks past 8,000 stations
+  - Context: Past about 8,000 stations the longer trips go unleaned. The old table is gone since T-1545, so lifting the gate only costs time.
+  - Goal: Networks that big get the lean on longer trips too.
+  - Other: Notes: notes/T-264.md
+- T-1599 [P3] {L:ridership-checks} {waits:Anita} Does a built Beijing-Shanghai line feel too empty?
+  - Need from Anita: Look at a built Beijing to Shanghai high-speed line and say whether its riders a day feel too empty.
+  - Context: Deferred option 2 of T-1508. T-1603 is done.
+  - Goal: You judge the line at player scale.
+  - Other: Notes: notes/T-1599.md
+- T-1233 [P2] {L:ridership-checks} {after:Guangdong market packs} Cross-city trips check for Guangdong
+  - Context: Waits until Guangdong market packs carry the city pairs. Then run the T-1177 cross-everyday check on gua and fos.
+  - Goal: Each purpose's local legs plus pairs match the old totals.
+  - Other: Notes: notes/T-1233.md
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-3387 [P2] {L:open-source} {after:contributor's revision} Contributor PR #2 (peanutmow): settle and outline speedups. Tested 2026-11-13 (pr2): part 1 (outline keys, plus our vertex-number release) landed 19a7f1e2 with peanutmow as co-author; parts 2-3 (cheap settle rounds, pacing only after rest) not taken (change settles that rest after 9-30 rounds, leave stale holds, reload differs, LPC1 can go stale). Reply posted 2026-11-13 (her reworded version), synced as 2454e88 crediting peanutmow; PR left open for a revision of the settle part. notes/T-3387.md
-- T-3388 [P2] {L:edit-speed} Edits on the real London network take about 4 s (found by pr2 on master, 2026-11-13): each edit runs three paced re-settles of 6-12 rounds at 100-250 ms a round (143 of 171 lines paced); a save with no settled rates has a 70 s full settle on load. Profile a round (capacity clone, profile rebuilds) and cut it without changing where settles end. notes/T-3387.md has the timings.
-- T-2761 [P3] {L:track-drawing} Highlight tracks that cross each other where some have stations and some don't (Anita 2026-11-07: "its probably an accident, but might not be an accident"). Open; after the post.
-- T-2809 [P3] {L:money} {after:T-2787} Per-line money history (T-2787) is in rail line panels only: bus lines (BusInspector) have no plot, and upkeep is not in the plotted figure (it is not kept per line per day). The bus lines' ids would need their days in `lineDays` too; check `regionLines` covers them.
-- T-2880 [P3] {L:solve-speed} The market part's own network update rebuilds its served pairs from nothing whenever `served_comp` differs (about 13 s of a North America whole solve, 13.8-19 s on a dropped stop, T-2830), even when only the component numbers moved and the same zones are joined (`same_joins` from T-2878 tells; on the captured North America edit it did). Skipping the rebuild then should be bit-identical and save those seconds of every whole solve after such an edit. Found by T-2878; not started.
-- T-2879 [P3] {L:solve-speed} Idea, Anita 2026-11-09: "if we can like put in the 2 crowding round first and then improve it to 3 crowding rounds without losign much overall time, thatd be fine. but i dont wanna just move to 2 round. i think 3 is a nice point." Show two rounds as an early result, then refine to three. Later; measured numbers in notes/T-2830.md.
-- T-2858 [P3] {L:edit-speed} T-2830's unmeasured parts: the same edit waits on a real connection, a laptop or 8-thread machine, Firefox and Safari, and North America's cached reload. Scripts in `../artifacts/trainworld/t2830/scripts/`. Open.
-- T-2866 [P2] {L:feedback} Follow-ups of the feedback panel (T-2853, built 2026-11-09, agent feedbackpanel): the 19 `feedbackPanel.*` strings of T-2853 (4 tag keys, 15 thread keys) in ja, zh-Hans, zh-TW and es have had back-translation and review (done 2026-11-09; 5 strings reworded); the panel at phone width was checked only in desktop Chrome at the phone's size, so a real touch device (the `pointer: coarse` taller buttons) is untested; the dot and note have no sound or title for sighted-only users beyond the 8 px dot. Deploy order: shonei-server first with SHONEI_FEEDBACK_THREADS=1 and the admin key in shonei.env, then the game.
-- T-2868 [P3] {L:memory} 32-bit browsers: declare a maximum on the demand module's memory there, so a grow does not move it (from T-2867: a bare worker reached 1,008 MB with a maximum, 688 MB without, in 32-bit Firefox). Would let bigger games fit. notes/T-2867.md. Open.
-- T-2869 [P3] {L:region-redraws} Zone edges at sea: port islands off Jakarta are in no zone, so the zone border shows a gap around them (Anita 2026-11-09: "not a real issue... eventually would be nice to fill in these gaps"). Open; someday.
-- T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline or playback of what was built (a player's ask, Anita 2026-11-09). The data is recorded by T-2871: `TrackApi.edge_built_days`, `station_built_days`, `line_built_days` (a game day, -1 built before recording began, show from the start; -2 not constructed). No UI yet; not to be built until she asks.
-- T-2843 [P3] {L:cleanup} Anita 2026-11-09: "general code review?... also find implicit state machines." Report done (notes/T-2843.md); state machine A built in T-2848. Open: B demand health, C who may write the save slot (next).
-- T-3160 [P3] {L:memory} Phone memory, what T-2802 left (notes/T-2802.md "What is left"): MapLibre's worker holding up to about 90 MB of committed heap after the basemap's tiles parse; about 75 MB of Blink buffers no JS context points at (Chrome's native heap profiler next); the page's 41-58 MB of ArrayBuffers unnamed; about 110 MB of WebGL and canvas memory in the renderer. Emulated phone now about 600 MB at the first line (normal mode), 580 low-end, peak 825 / 613. Also: about 70 `page.evaluate` calls in 50 checks return the map from `jumpTo` and the like, which Playwright serialises (about 1 GB of garbage over five jumps); harmless but slow.
-- T-2778 [P3] {L:frame-rate} Video mode (and likely plain zooming out): a noticeable hitch at about state scale on Anita's machine, also at ?pace=2, which video2 could not reproduce headed on its Vite (T-2774). Open.
-- T-2767 [P3] {L:edit-speed} A station placed on built track takes 1.9-3.7 s in the worker (buffers 2.1 s: the split piece makes every line over it lay strokes again); keep a line's strokes when only an edge id changes (T-2763 proposal 2). Open.
-- T-2768 [P3] {L:edit-speed} Deleting a built station takes 0.4-3.9 s (all 109 lines' run profiles rebuilt); rebuild only the touched lines in buildState (T-2763 proposal 1). Open.
-- T-2762 [P3] {L:solve-speed} A bubble's longer-trips answer on North America still takes ~300 ms a worker after T-2747 (NYC 60 ms): one NA bubble reaches ~26,000 far zones; `selection_rail_day` reruns the all-mode selection per market part, and each zone's `zone_row` walks every open zone. A rail-only pass per part and a `zone_row` cache in the shared `Market`. notes/T-2747.md. Open.
-- T-2759 [P3] {L:loading} A cold new NYC game on slow 4G fetched nyc.bin a second time (1.11 MB, 24 s; T-2758's find, cause unknown: a range request or a second worker). notes/T-2758.md. Open.
-- T-2757 [P2] {L:solve-speed} After a memory restart of the demand workers (T-1205) every question waits for the whole game's re-solve (T-2756's find; minutes on a big game on a busy machine): a selection's far end, a city or station click, nearby zones' bubbles. Restart one worker at a time, or answer from the result shown meanwhile. notes/T-2756.md. Open.
-- T-1730 [P3] {L:solve-speed} T-1609 follow-up: a browser check that an edit right after a local refine solves the cluster whole (the refined periods are marked `~local`), and that a zone going coarse is refined locally too; neither was run. notes/T-1609.md. Open.
-- T-1610 [P2] {L:solve-speed} T-1206 leftovers: a clicked station's or bubble's far ends and purposes in a zone still rough wait for its refine (the 8 px ring) instead of reading coarse samples; the fine set's budget corrected by the workers' reported WASM after each solve (now T-1197's rate alone). notes/T-1223.md. Open.
-- T-1629 [P2] {L:solve-speed} T-1206 stage 5, split from T-1611 (which did the memory alone): the coarse zones' bias measured with the fine set moving, on the Paris and Shanghai save. notes/T-1206.md, notes/T-1223.md. Open.
-- T-1633 [P3] {L:solve-consistency} T-1605's small kind: about 1 all-China cold load in 26 moves one line's commute figures by 0.0016 riders a day (line 118, coarse zones in western Liaoning), invisible. Pin it from a load that records opens; leads: what a reopened coarse zone shares with its earlier copy or the thread (`STATION_WALKS`, skims cache), `RandomState` keys advancing with history. Open; notes/T-1605.md.
-- T-1634 [P3] {L:solve-consistency} Every all-China load closes about 40 reached zones at ~13 s and reopens them a second later in every worker (`sweep` running before the loaded network's reach is complete): wasted downloads and opening, and a load history that varies. Keep reached zones open while the reach is being worked out. Open; notes/T-1605.md.
-- T-1560 [P3] {L:solve-speed} T-1169 stage 5, design only: city zones dealt between solving workers instead of periods (each worker its share of the zones for all five periods, loads added on the page each round as T-1543 adds parts), the route to the whole world. Open. notes/T-1560.md.
-- T-1354 [P2] {L:solve-consistency} The market's corridor figures depend on which market packs were open at a worker's first composition (T-1204): on the real save two workers' tables were ten rows apart, so a page's longer trips depend on the order packs arrived. Make them depend on the world's rows alone, or recompute when a pack adds a near pair. Open; notes/T-1174.md. notes/T-1354.md.
-- T-1366 [P3] {L:memory} The demand pool's memory cap (T-1205) never adds a solving worker back in a page: a big game's zones opened for a while (or a big game then New York from the menu) leave it at 1-2 workers, solves slower. Grow it back when the projected memory has room for one more, with a margin against flapping (a spawn, reopen and re-dealt periods, as `shrink` in reverse). Open; notes/T-1205.md.
-- T-1367 [P3] {L:memory} After zones or a market close, a demand worker's heap still holds them (frees deferred while busy, the old market parts the kept clusters reference) until its next solve, so T-1205's restart waits for one (all-China: heap at rest 2,041 MB after three zones closed, 1,502 at load with the same items open). Open; notes/T-1205.md. notes/T-1367.md.
-- T-1505 [P3] {L:edit-speed} After T-1380, a station edit that makes a new name label still spends 100-140 ms at 6x in `StationLabels.place` (likely the layout forced by reading the new label's width, unproven): measure the width without forcing a layout, or place only the names near the edit. Open; notes/T-1029.md "What is left".
-- T-1509 [P3] {L:edit-speed} A line whose length or drawing order changes (stops dropped, a line made, undo of either) still posts the line strokes whole to the page (about 35 MB on Japan, 4 of 12 edits of the T-1381 series), since the segments after it move; keep the lines' order stable or post the moved runs (map/strokePost.ts). Open; notes/T-1029.md "What is left".
-- T-1211 [P3] {L:edit-speed} The page's DOM makes every layout cost: 2,200 elements (875 station names on the map), a forced layout 22-37 ms at 1x; the Lines tab opens in 360-400 ms at 6x, the saves panel 534 ms (`showModal`), the Stations tab still 0.6-0.7 s at 4x with 80 rows (`Chips` measuring). Open; notes/T-1200.md. notes/T-1211.md.
-- T-921 [P3] {L:solve-speed} Performance: commute zone pairs under 1 person a day dealt in chunks (T-874's deal with the chunk in people a day, `c = 1 x period share`, so every period deals the same pairs): New York solve 34.3 to 29.6 s (-14%), stations under 0.8%, ceilings unchanged. Measured in notes/T-909.md option 1. Open.
-- T-2136 [P3] {L:memory} The page's world corridor table: 5.9M rows on the real save, 118 MB since T-2485 made its columns narrower (16-bit places, commute legs only where any) and had one worker send it; it grows with the square of the world's places. Left: keep no full table on the page (per-place totals, and a place's rows asked of the market's worker when the city view, inspector, or achievements need them). notes/T-2122.md, notes/T-2136.md, notes/T-2485.md. Open.
-- T-2496 [P3] {L:memory} A solving demand worker's WASM on the real save is 367 MB, heap 233 at rest and 314 at a solve's peak, and two workers hold the same packs: account for it per structure in Rust (a native test on the real save's packs: the zones' layers, the composed market, the 34 MB corridor figures, each period's state), then trim what a solve keeps between periods. Rust, tell maps-17 first. Estimate 50-150 MB a worker if there is slack. notes/T-2485.md. Open.
+- T-3387 [P2] {L:open-source} {after:contributor's revision} Contributor PR 2: settle and outline speedups
+  - Context: Part 1 (outline keys) landed with peanutmow credited. Parts 2-3 were not taken because they leave stale holds. PR is open for a revision.
+  - Goal: PR 2 merged or closed once peanutmow sends a revised settle part.
+  - Other: notes/T-3387.md
+- T-3388 [P2] {L:edit-speed} London edits take about 4 s
+  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load.
+  - Goal: An edit on London takes well under 4 s, with settles ending where they do now.
+  - Other: notes/T-3387.md
+- T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
+  - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
+  - Goal: Tracks that cross where only some have stations get a highlight.
+- T-2809 [P3] {L:money} {after:T-2787} Bus lines in the money history
+  - Context: The per-line money history (T-2787) covers rail line panels only. Bus lines have no plot, and upkeep is not in the figure.
+  - Goal: Bus lines show a money history too.
+- T-2880 [P3] {L:solve-speed} Skip needless rebuild of served pairs
+  - Context: The market part rebuilds its served pairs (about 13 s of a North America whole solve) even when only component numbers moved.
+  - Goal: Skip the rebuild when the same zones are joined, with identical results.
+  - Other: About 13 s saved per whole solve after such an edit. Found by T-2878 (same_joins check).
+- T-2879 [P3] {L:solve-speed} Show two crowding rounds, then three
+  - Context: Your words 2026-11-09: you like three rounds and do not want to move to just two.
+  - Goal: Two rounds appear as an early result, then refine to three without losing much overall time.
+  - Other: notes/T-2830.md
+- T-2858 [P3] {L:edit-speed} Edit speed on other machines and browsers
+  - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
+  - Goal: Those cases are measured and any slow one is filed.
+  - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
+- T-2866 [P2] {L:feedback} Feedback panel follow-ups
+  - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
+  - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.
+- T-2868 [P3] {L:memory} Memory cap for 32-bit browsers
+  - Context: In 32-bit Firefox the demand module's memory moves when it grows; a declared maximum reached 1,008 MB against 688 MB without.
+  - Goal: The demand module declares a maximum on 32-bit browsers, so bigger games fit.
+  - Other: notes/T-2867.md
+- T-2869 [P3] {L:region-redraws} Zone edges leave gaps at sea
+  - Context: Port islands off Jakarta sit in no zone, so the border shows a gap. You said it is not a real issue but would be nice to fill.
+  - Goal: Gaps around such islands are filled.
+- T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
+  - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
+  - Goal: Build it only when you ask.
+- T-2843 [P3] {L:cleanup} Code review and state machines
+  - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
+  - Goal: State machines B and C are built.
+  - Other: See notes/T-2843.md.
+- T-3160 [P3] {L:memory} Phone memory left over from T-2802
+  - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest.
+  - Goal: Phone memory comes down by trimming the biggest unexplained pieces.
+  - Other: notes/T-2802.md, "What is left".
+- T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode
+  - Context: You see a hitch at about state scale, also at ?pace=2; video2 could not reproduce it (T-2774).
+  - Goal: Find the cause and remove the hitch.
+- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s
+  - Context: Placing a station on built track takes 1.9-3.7 s in the worker, mostly because every line over it lays its strokes again.
+  - Goal: The same edit keeps each line's strokes when only an edge id changes.
+  - Other: notes/T-2763.md has the proposal.
+- T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line
+  - Context: Deleting a built station takes 0.4-3.9 s because all 109 lines' run profiles are rebuilt.
+  - Goal: Only the touched lines are rebuilt.
+  - Other: Proposal 1 in notes/T-2763.md.
+- T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
+  - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
+  - Goal: Bring the North America answer close to NYC.
+  - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
+- T-2759 [P3] {L:loading} Cold new NYC game fetches nyc.bin twice
+  - Context: On slow 4G a cold new NYC game fetched nyc.bin a second time (1.11 MB, 24 s); the cause is unknown.
+  - Goal: nyc.bin is fetched once per cold start.
+  - Other: notes/T-2758.md
+- T-2757 [P2] {L:solve-speed} Questions wait after a worker memory restart
+  - Context: After a demand worker restarts (T-1205), every question waits for the whole re-solve, minutes on a big game.
+  - Goal: Questions answer quickly after a restart, by restarting one worker at a time or showing the earlier result.
+  - Other: notes/T-2756.md
+- T-1730 [P3] {L:solve-speed} Browser check of edits after a local refine
+  - Context: Two cases from T-1609 were never checked in the browser.
+  - Goal: An edit right after a local refine solves the cluster whole, and a zone going coarse is refined locally.
+  - Other: notes/T-1609.md
+- T-1610 [P2] {L:solve-speed} Clicked zone waits for its refine
+  - Context: A clicked station or bubble in a rough zone waits for refinement instead of reading coarse samples (T-1206 leftover).
+  - Goal: Clicks in rough zones answer from coarse samples at once.
+  - Other: notes/T-1223.md
+- T-1629 [P2] {L:solve-speed} Measure coarse zone bias with the fine set moving
+  - Context: Left over from T-1206 stage 5, split from T-1611.
+  - Goal: The coarse zones bias is measured on the Paris and Shanghai save.
+  - Other: notes/T-1206.md
+- T-1633 [P3] {L:solve-consistency} Tiny figure drift on China load
+  - Context: About 1 in 26 all-China cold loads moves one line (118) by 0.0016 riders a day. Invisible to players.
+  - Goal: Find the carried-over state and make loads identical.
+  - Other: notes/T-1605.md
+- T-1634 [P3] {L:solve-consistency} All-China load closes and reopens zones
+  - Context: Every all-China load closes about 40 reached zones at about 13 s and reopens them a second later, wasting downloads.
+  - Goal: Reached zones stay open while the reach is worked out.
+  - Other: notes/T-1605.md
+- T-1560 [P3] {L:solve-speed} Deal city zones between solving workers
+  - Context: Design only: zones dealt to workers instead of periods, the route to the whole world (T-1169 stage 5).
+  - Goal: A design is written for dealing zones between workers.
+  - Other: notes/T-1560.md
+- T-1354 [P2] {L:solve-consistency} Market corridor figures depend on pack order
+  - Context: Which market packs were open at a worker start changes its corridor table; on the real save two tables were ten rows apart.
+  - Goal: Longer trips depend only on the world rows, whatever order packs arrive.
+  - Other: notes/T-1354.md, notes/T-1174.md
+- T-1366 [P3] {L:memory} Demand workers never grow back
+  - Context: After the memory cap trims the solving workers, a page stays at 1-2 workers and solves slower.
+  - Goal: The pool adds a worker back when projected memory has room, without flapping.
+  - Other: notes/T-1205.md
+- T-1367 [P3] {L:memory} Demand worker heap keeps closed zones
+  - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
+  - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
+  - Other: notes/T-1367.md
+- T-1505 [P3] {L:edit-speed} Station name labels cost 100-140 ms
+  - Context: A station edit that makes a new name label spends 100-140 ms in `StationLabels.place` at 6x, probably from a forced layout.
+  - Goal: A new name label places without a measurable pause.
+  - Other: notes/T-1029.md, "What is left".
+- T-1509 [P3] {L:edit-speed} Line edits post all strokes to the page
+  - Context: Changing a line's length or order posts the line strokes whole (about 35 MB on Japan, 4 of 12 edits).
+  - Goal: Such edits post only the runs that moved.
+  - Other: notes/T-1029.md, "What is left".
+- T-1211 [P3] {L:edit-speed} Page DOM makes layouts slow
+  - Context: The page has 2,200 elements; a forced layout takes 22-37 ms, and the Lines, saves and Stations panels open in 0.4-0.7 s.
+  - Goal: Those panels open fast, with far fewer elements forcing layouts.
+  - Other: notes/T-1200.md and notes/T-1211.md.
+- T-921 [P3] {L:solve-speed} Deal tiny commute pairs in chunks
+  - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
+  - Goal: The chunked deal is in, with ceilings unchanged.
+  - Other: Measured in notes/T-909.md option 1.
+- T-2136 [P3] {L:memory} World corridor table is 118 MB
+  - Context: The page holds a 5.9M-row world corridor table, 118 MB on the real save, growing with the square of the places.
+  - Goal: The page keeps no full table; it asks a market's worker for a place's rows.
+  - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
+- T-2496 [P3] {L:memory} Demand worker WASM is 367 MB
+  - Context: A solving worker's WASM is 367 MB on the real save, and two workers hold the same packs.
+  - Goal: Memory is counted per structure in Rust, then trimmed; likely 50-150 MB a worker.
+  - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
-- T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai's real network so the Senzan Line stops at Toshogu (from T-3318): the fix is in `realnet.py build_lines`, the commands are in notes/T-3318.md; writes data/work/realnet and data/packs/real/sdj.save. Open, parked by Anita 2026-11-12 (few players open Sendai), wait for a later batch of real-network rebuilds; a left-running save needs `realsave --left` and a rebuilt binary (data/work/target).
-- T-3322 [P3] {L:fares} `checks/t2266-fare-lag.mjs` "the 10x curve was never used" FAILs on master (and with T-3303's fix off): a fare edit made while a solve runs waits for it, so the overtaken 10x solve's own final shows, priced at 10x (no over-pay). Either the check's assumption or docs/track-and-service.md "a solve overtaken by a later edit never switches them" is out of date; decide which and fix that one. notes/T-3303.md.
-- T-3308 [P3] {L:translations} Chinese browsers (360, QQ, Sogou) in compatibility mode run the page as IE: ES modules do not load, so the page stays blank with no message. A `<script nomodule>` in index.html saying to switch to speed mode (Chinese text; the i18n bundle is not loaded there). Found by money (T-3307).
-- T-3255 [P3] {L:real-networks} Real networks, T-3225 follow-ups: Moscow keeps 106 of 361 lines and Saint Petersburg loses 28 (suburban trains into terminals past a node's 8 ends; fix in realshared's terminal layout); frequencies default where OSM has no interval (open GTFS by the pack's box, survey option 5); the city view's real-share bar has measured shares for the hand-made seven only; pinyin from unidecode misreads some characters (pypinyin); Moscow and Saint Petersburg trams draw dark grey (no OSM colour). notes/T-3225.md section 6.
-- T-3256 [P3] {L:real-networks} Big automatic real networks load slowly: Berlin 165 s, Osaka 145 s, Moscow 124 s to playable against London's 104 s (3 cores, headless); lines draw in 15-18 s, the rest is demand's first solve. notes/T-3225.md.
-- T-3236 [P3] {L:real-networks} London's real save is fixed up on every load: `stop_every_pass` adds a stop to line 150 (SWR, 24 -> 25 stops), so each load does one more full derive and settle (0.7 s natively, a few s in the browser). realsave should save after `stop_every_pass`; reshipping London moves its settled rates. Also London's `svc.update_all` is 0.53 s a derive (NYC 0.08). notes/T-3234.md. Open.
-- T-3235 [P3] {L:edit-speed} Every train-count edit on London's real network spends about 3.5 s in the settle natively (8-10 s in the browser; New York 70 ms): T-2973's three pace rounds never settle there because pacing flips about 240 lines in and out of step each round. Needs hysteresis in `pace_merges`, which moves rates. notes/T-3233.md. Open.
-- T-3231 [P3] {L:trains-drawn} t1965-follow.mjs fails on master too (43 of 950 frames drawn through each other, 8800 at cc510cc1, 2026-11-11): mostly two lines both standing on time at the same double-track terminal, drawn over each other. Found by agent meet (T-3202); not from its change. Diagnosed (two holes in the place hold); a fix clears t1965 to 4 frames but breaks t2980's one-platform test, not landed; agent meet stopped 2026-11-11. notes/T-3231.md.
-- T-3150 [P3] {L:small-fixes} Player report: long straight rays across the map from one point, Discord 2026-11-11 (artifacts/trainworld/t3150-player-rays.png, San Francisco at a far zoom, many thin white lines fanning out from near downtown across the bay and beyond): "I deleted a parallel line and replaced it with quad track im pretty sure / I think its the passageways glitching / I deleted a couple station groups and it went away". Anita: "someone reported a visual glitch. should look into it". Likely live v0.2.1: reproduce there and on master, fix, and add a check. Not reproduced in about 2 hours (agent rays, 2026-11-11): the player's save is the next step; what was tried and the suspects in notes/T-3150.md. Parked (Anita 2026-11-11: "fine to give up on rays, ill let you know if i can reproduce it"). Anita 2026-11-16: players report it more; she has never seen it; keep it open.
-- T-3101 [P3] {L:single-track} One-way track follow-ups (T-3094): the Select bar's switch and reverse for a picked run of single track (all pieces set in drawn order); the track panel's lines list, a removal's line effects and `lines_on_edge` leave out a line that only its return run uses on a piece (its way back round one-way track, `Network::back_lines`).
+- T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
+  - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
+  - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
+  - Other: Commands in notes/T-3318.md.
+- T-3322 [P3] {L:fares} Fare lag check fails on master
+  - Context: The check "the 10x curve was never used" fails: an edit during a solve waits for it. Either the check or docs/track-and-service.md is out of date.
+  - Goal: Check and doc agree and the check passes.
+  - Other: notes/T-3303.md
+- T-3308 [P3] {L:translations} Blank page in Chinese compatibility browsers
+  - Context: 360, QQ and Sogou browsers in compatibility mode run the page as IE, so it stays blank with no message.
+  - Goal: A nomodule script in index.html tells them in Chinese to switch to speed mode.
+  - Other: Found by money (T-3307).
+- T-3255 [P3] {L:real-networks} Real network follow-ups from the Moscow and Saint Petersburg runs
+  - Context: Moscow keeps 106 of 361 lines and Saint Petersburg loses 28; frequencies default where OSM has no interval; some pinyin and tram colours are wrong.
+  - Goal: Terminal layout keeps the suburban lines, with the smaller gaps fixed or filed.
+  - Other: notes/T-3225.md section 6.
+- T-3256 [P3] {L:real-networks} Big real networks load slowly
+  - Context: Berlin takes 165 s, Osaka 145 s and Moscow 124 s to playable, against London at 104 s. Most of it is demand's first solve.
+  - Goal: Big real networks load closer to London's time.
+  - Other: notes/T-3225.md.
+- T-3236 [P3] {L:real-networks} London's real save is fixed up on every load
+  - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
+  - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
+  - Other: Reshipping London moves its settled rates. notes/T-3234.md.
+- T-3235 [P3] {L:edit-speed} London train-count edits settle for 3.5 s
+  - Context: Every train-count edit on London's real network spends about 3.5 s settling (8-10 s in the browser), because pacing flips about 240 lines each round.
+  - Goal: Such edits settle in well under a second; this needs hysteresis in `pace_merges`, which moves rates.
+  - Other: notes/T-3233.md
+- T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal
+  - Context: t1965-follow fails on master (43 of 950 frames): two on-time lines at one double-track terminal drawn over each other. A fix clears it to 4 frames but breaks t2980.
+  - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
+  - Other: notes/T-3231.md
+- T-3150 [P3] {L:small-fixes} Long straight rays across the map
+  - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours.
+  - Goal: Reproduce it (the player's save is the next step), fix it, add a check.
+  - Other: notes/T-3150.md
+- T-3101 [P3] {L:single-track} One-way track follow-ups
+  - Context: From T-3094 (one-way track): the Select bar lacks switch and reverse for a picked single-track run, and the track panel misses a line that only uses a piece on its way back.
+  - Goal: Select bar switch and reverse work on single-track runs, and the lists count return-only lines.
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
-- T-2624 [P2] {L:solve-speed} Traffic on the zone in view's lines after a trains-only edit held behind a whole solve: T-2605's aside worker shows the zone's figures and bubbles in about 3 s, but lines already shown keep their figures until the whole final (about 40-120 s on Anita's North America save), since the zone's riders alone read about 25% low (Salt Lake City 50,400 against 67,800). Recommended: the aside worker also solves the shown network, and those lines show shown riders plus the zone's change (others' riders taken as unchanged); the other way, solving the other zones the line reaches too, still misses the market. notes/T-2605.md.
-- T-2627 [P3] {L:world-tooling} The join's market step runs under world_run's 1800 s limit, but its local trips over all 3,545 zones took 26 min on a busy machine (T-2595, notes/T-2595.md; Brazil's whole step 1058 s): raise or drop the limit for that step, or speed up the local trips, before a bigger join hits it. Open.
-- T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none (T-2663; changes demand, Anita decides first). Named OSM `tourism=attraction|museum|theme_park|zoo|aquarium` and `historic=castle|fort|monument|archaeological_site` in built packs, over 100 m from a Wikidata row and not linked to one, join the list sized by the same budget (one edition's views where no article). Anita 2026-11-06: yes, "though i think it snot super urgent, *adding* demand is not really a prolem post release": after the release work. Done when: people in packs with no attraction under 20% (from 52%); China, India, Brazil, the Philippines, Vietnam and Nigeria each at 1+ per million people and 0.5+ visits a year per resident; Shenzhen, Kunming and Guilin 5+ each; Europe's and Japan's totals within 10%; no OSM-only place over 2M a year. No pack rebuild; an OSM pass of a few hours. Open. notes/T-2663.md section 5.
-- T-2662 [P3] {L:timetables} Timetable chart: check the passing dots at a flat junction (T-2660). The dots come from the guard's junction move pairs (`gradePasses` in ui/inspector/mareyShare.ts) as well as flat crossings; only the crossing path was checked (two lines built crossing at grade), since neither the NYC nor the London real save has a flat conflict. Done when a player-built flat junction where another line's move crosses the charted line's shows its dots at the junction rule, at the times that line's trains pass. Open.
-- T-2724 [P3] {L:schematic} {waits:Anita} Network diagram at continent scale, the next step after T-2625: far land is still drawn ~4.5x smaller than the networks; drawing it smaller still needs a looser fold guard only where nothing is drawn, while networks keep their ask (a 0.185 share was reached with p 0.6 and a looser guard, but the West's networks shrank and one cell folded). Wait for Anita's look at T-2625's pictures first. notes/T-2625.md. Open.
-- T-2755 [P3] {L:world-map} Real rail network with level of detail, so it can show again from zoom 4 or further out (Anita 2026-11-07: "for real rail network lets do from zoom 6 for now, but later low prio lets work on getting LOD in so that we can show it at farther zoom levels."): T-2748 moved its start from z4 to z6 for picking lag (85 -> 44 layers over Europe); simplified, merged far-zoom geometry (main lines only, fewer sources; ties in with T-2750). notes/T-2748.md. Open.
-- T-2754 [P3] {L:terrain} Water depth for the cross section and anywhere else it helps (Anita 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio"): no doc or task mentions bathymetry today; the cross section draws a fixed 4 m band (T-2734). Find a global source (GEBCO for sea; lakes from a depth set like HydroLAKES; rivers by width) and draw the real bed. Open.
-- T-2749 [P3] {L:world-map} The zoomed-out map's labels on each move (T-2748's find): `placeLabels` in map/intercityView.ts takes 6-7 ms every move event at zoom 4, projecting zones biggest first until 8 labels fit; cull by the view's bounds first, or keep the biggest-first list per tenth of zoom. notes/T-2748.md "Ideas". Open.
-- T-2750 [P3] {L:world-map} The real network as fewer sources (T-2748's find): one MapLibre source and layer per noritetsu region, 41 at once over Europe, was most of a frame's cost at zoom 4 (now drawn from zoom 6); a merged pmtiles (world or by continent) would cut the draw calls wherever the lines show. Needs a noritetsu build change. notes/T-2748.md. Open.
-- T-2698 [P2] {L:world-map} Start cameras on the city (agent difficulty's find, T-2690): 112 metros' registry centres sit more than 5 km from the OSM city of the same name (Oklahoma City 31 km at Norman, Perth 28 at Joondalup, Rotterdam 22 at The Hague, Atlanta 23, Liège 21, Beijing 13); move them onto the nearest same-named OSM place (not OSM's metro label points: Sydney's is 38 km west); artifacts/trainworld/t2690/scores.json has both points. Open.
-- T-2701 [P3] {L:edit-speed} A local rebuild when the pointer rests (Anita's idea via T-2404: "maybe only rebuilding stuff in the immediate vicinity of the track being drawn would help?"): the follow-up after a run is still whole-network (North America 0.4-1.1 s); make the drawn network, state rows, strokes and grids update only near the change. notes/T-2404.md has the table of what can be local. Open.
-- T-2725 [P3] {L:census-totals} Colombia's other 42 rows on DANE's municipio totals: config CO and the zone rule take `admin_totals` since T-2712, but only tiq pis lve seq were rebuilt on it. Run `admin_totals.py dry CO` and rebuild the rows moving over 10%. Open. notes/T-2702.md.
-- T-2726 [P3] {L:region-redraws} {after:each country's rebuild} Small units still in no row after T-2702 (`checks/state_gaps.py`): Fernando de Noronha 3k, Con Dao 6k, Lakshadweep's Agatti, Kiltan, Chetlat 12k, Korea's Misu-dong 7k and islets under 5k, Chukotka 35k (its first-level unit crosses the 180th meridian, so `world_plan.gb_units` drops it and its units had no parent). Fold them in at each country's next rebuild. Open. notes/T-2702.md.
-- T-2775 [P3] {L:world-tooling} A market check before and after a join: every registered market pack's commutes and outings checked as `market_pack` checks them (places held, zone indices in range), and each pack a join will fix compared with the zones its cells give today; a `checks/` script from notes/T-2702.md's `commscan2.py`. T-2702's join failed its market step on thl's 11-04 file (158 zones against 159). Open.
-- T-2777 [P3] {L:world-tooling} `world_run.py join --market-only` (or a printed restart line): redo a failed join's market and trips step with the join's own id list (every solved member and fixed neighbour), and say in docs/world-run.md that a join's cost is its groups', not its rows' (T-2702: 4 Mexican rows solved all Mexico, 55 min). Open. notes/T-2702.md.
-- T-2713 [P3] {L:borders} Border pair factors for the open twin towns (T-2695 to T-2697 left every new pair at the national 0.05): BR|UY (Rivera and Santana do Livramento, one town), BR|CO (Leticia and Tabatinga), BH|SA (the King Fahd causeway), AE|OM (Al Ain and Buraimi). As MY|SG: a figure from a published crossing count, else judgement. notes/T-2695.md.
-- T-2714 [P3] {L:census-totals} Census totals for T-2695 to T-2697's countries, which ship on GHSL alone: `admin_totals` configs for Peru (2017 by district), Chile (2024 by comuna), Ecuador (2022 by canton), Saudi Arabia (2022 by region, COD-PS SAU), Oman (2020 by wilayat), polygons and several totals already in religiondots/data/geo/<cc>/; and finer UAE units than geoBoundaries' seven emirates (Abu Dhabi with Al Ain is one zone of 3.2M). notes/T-2695.md.
-- T-2920 [P4] {L:stops} Stop order stages 2-4, notes/T-2895.md: mark refused or reversing gaps before the drop; stop twice at one station; touch. Open. Her TODO 2026-11-15: "split single track station ... should allow 2 stopsin same station complex on same lien / set certrain tracks as available for bypassing?".
-- T-2984 [P2] {L:borders} Border factors for named pack pairs, inside a country and across one (T-2964): the Gaza Strip with the West Bank at 0 (both PS: today the pack line's 0.5 applies, and everyday outings across a line inside a country take no factor at all, `bin/cross_everyday.rs`), and, if Anita wants it, Jerusalem's two halves (jer IL, ram PS) above the IL|PS factor. borders.json's `seamless` works only inside one country and is rewritten by seams.py: a separate hand list read by `joint_gravity.rs` and `demand/cross.rs`. Needed before Gaza's row (gaz, held: Anita 2026-11-10 left Gaza out for now) is ever built. Open.
-- T-2985 [P3] {L:census-totals} Israel's people on CBS's end-2024 register by locality (`bycode2024`, data.gov.il; religiondots has bycode2023) over the 2022 census's statistical areas (shares within each locality), for the 2-3 years of growth since the census that admin_totals IL leaves out (T-2964). Open.
-- T-2969 [P3] {L:region-redraws} {after:Egypt replan} Egypt: Kharga oasis (New Valley) is in the Juhayna zone (ghy) with a Sohag valley markaz across 200 km of desert (compact 0.94, its people centre just inside `join_km` 150); a zone of its own (about 0.1M, as Dakhla Oasis) on Egypt's next replan. notes/T-2897.md. Open.
-- T-2966 [P3] {L:region-redraws} {after:each country's replan} `reach_from_people` for the reach countries built before (Brazil's Altamira 145,000 and Itaituba 118,000, Saudi Arabia's Sharurah 133,000, South Africa's Dawid Kruiper 121,000 are dead space), on their next replan. notes/T-2897.md. Open.
-- T-2967 [P3] {L:census-totals} Egypt by kism and markaz: fold the 19 COD-AB polygons and 32 newer CAPMAS kism. notes/T-2897.md. Open.
-- T-2968 [P3] {L:census-totals} Tunisia: COD-PS TUN 2020 by delegation, unused (N in the data register). notes/T-2897.md. Open.
-- T-3011 [P3] {L:region-redraws} Cairo's zone borders off the Nile, Anita 2026-11-10: "the region border doesnt seem to line up with the river / islands in cairo, it seems like ours is a bit too far east, which would be distracting for people playing here. not super high prio ... if easy we shoud try to fix. unclear to me why we're even drawing a border here tbh. the river should just be part of cairo here." Check the source polygons' alignment (COD-AB vs geoBoundaries vs OSM river) and whether Gezira, Zamalek and the river belong in Cairo's metro row. Open.
-- T-3033 [P2] {L:region-redraws} Rebuild the 37 split rows (T-3012 stage 3), after the tram release: plan unit-list edits for those rows and their receiving neighbours only (never `zones --replan`), `world_run.py run --rows`, one join per country (18), about 4 core-hours plus gates; then `checks/split_zones.py`. Row list in artifacts/trainworld/split-zones.json, plan in notes/T-3012.md. Open. Its parent T-3012 is closed.
-- T-3042 [P3] {L:stops} One flat-junction mark per spot in the stop list, Anita 2026-11-10: "supe rminor here, we dont need to include it in next build, but the same flat junction has 2 indicators. we should draw it as one indicator (the top one, in this case) cuz theres only one spot on the diagram where it shows up, really". On a looped line the turn station's flat junction ("Flat junction near Moore Av / No other line uses it") shows on both passes' gaps; draw it once, on the upper one. Open.
-- T-3052 [P2] {L:rebuild-track} {after:T-3060} Rebuild built track with new properties, design first. Anita 2026-11-10: "i guess we should also build out a feature that just lets us demolish an already constructed track and change its property. like its height. i think a way this could work is like, we select tool some already constructed track, we click like an "edit" button, and then it lets us place blueprints to bsically demolish the line and rebuild it as like different elevation, or different track type (regular/high speed, even though converting to high speed probably wont actualyl make it high speed cuz of curvature). and its just a blueprint. when we construct the blueprint it instantly demolishes the track and rebuilds it with the new setting, and rebuilds the stations, and runs the same lines over it. can just file this for after". Scoped, notes/T-3052.md: change the built pieces in place (same ids, so stations and lines stay) from the Select bar with a price and confirm; stages T-3059 (sim + bar, changes the WASM interface), T-3060 (preview). Design approved 2026-11-10 (full new price, no undo; T-3059 line).
-- T-3069 [P2] {L:trams} Trams that snap to real rail (light rail), Anita 2026-11-10, of a player's request: "someone requested trams that can snap to real rail networks. i guess this is basically light rail. i dont see any reason not to do this so sure. it wont be much cheaper but people want it. we should probably replace the "snap to street"  icon with a dedicated icon wher eit looks like its snapping to a straight street with like dashed road mraking in the middle. doesnt have to go in next mini update." Let the real-rail snap work while building tram track (T-3045-T-3049 made the snap toggles exclusive), and draw a new street-snap icon. Open. Folded in from T-2929 (trams stage 3): real start networks as Tram kind, a both-ways junction helper, placing stops every N m. Her TODO 2026-11-15: "snap to irl track for tram / standardize snap icons across the rail types".
-- T-3070 [P3] {L:demand-ideas} Trips between two destinations (non-home-based), design first, a demand change for Anita. Anita 2026-11-10, of a player's "airport has homes": "do we have a framework for destination -> destination trips? i think this might be best way to do it (so there are slightly more destinations than homes) (can also help for work -> leisure trips)". Airports already do this (demand-sources.md "Airport ground trips": the far end is half homes, a quarter jobs, a quarter leisure jobs); everyday outings are home-based only ("Activity chains ... remain later work"). Scope: which purposes (work -> errands/lunch, leisure -> leisure), rates from the travel surveys, cost in the kernel. Open.
-- T-3077 [P2] {L:world-rebuild} {after:next data batch} Precomputed inter-city trips per city for the world map hover before a solve (T-3074's second half; Anita 2026-11-10: "we should like precompute and save this so that it displays normally"). Plan in notes/T-3074.md: a sim tool sums the market's corridor table per zone place, scaled from one solved run, written as `interTrips` in registry.json by `pipeline/zones.py` `local_trips()` beside `localTrips`. Needs a registry rebuild and upload; fold into the next data batch (with T-3033). Open.
-- T-3060 [P2] {L:rebuild-track} Rebuild preview, stage 2 of T-3052: draw the new level and kind before spending, station-only level change. Design approved with T-3059; after it. Open.
-- T-3036 [P3] {L:track-drawing} A `?roadgaps=1` debug overlay: red rings on unjoined street ends, so a gap Anita sees can be checked against what the street graph holds (about half a day; notes/T-3034.md). Also: alley and parking-aisle pieces under 15 m between two streets as links, open block rings closed. Open.
-- T-3027 [P3] {L:track-speed} Slopes slow trains, design first. Anita 2026-11-10 (TODO.md): "maybe make it so slopes slow down trains?? how might we do this without pissing some people off. someone requested this, mentioning that the track cross section view could potentially be used." Open.
-- T-2983 [P3] {L:edit-speed} Bus stop edits stall the clock worker (follow-up to T-2953, agent busfix 2026-11-10): per Auto/Manual switch the worker spends 0.2-0.5 s, the first switch of a session 1.4-2.5 s (a boarding re-count over about 25 batches). T-2953 shares repeated panel reads; left: cache "today" and "linesPeriods" per world version in the worker, skip the state-buffer rebuild when only a bus line's stops changed, and the first-switch re-count. Open.
-- T-2906 [P3] {L:map-look} Anita's TODO 2026-11-09: "should probably add some more hairstyles, like ponytail, wavy. maybe bias to wavy for black and white people, bias away for asian". Open.
-- T-2907 [P3] {L:accounts-server} Anita's TODO 2026-11-09: "redirect anita.garden/trainsworlds , trainworlds, trainsimworld (not sure what this is, but for some reason 3 people tried to go to this)". Website repo: goes out with the next publish.
-- T-2912 [P1] {L:accounts-server} Security review, Anita 2026-11-09: "we might also wanna do a security survey to like make sure our game isnt hackable anywhere that would be catastrophic for users". Review done (agent security); notes/T-2912.md. Reviewed, notes/T-2912.md. Admin page fix 24c3d6dd. T-2914 hover script fix (agent securefix), T-2917 server and account fixes (agent serverfix).
-- T-2918 [P3] {L:accounts-server} Server backups, Anita 2026-11-09: "we should maybe also think briefly about backup plans if something happens to the server". Hetzner daily backups exist per deploy notes; think about an off-provider copy. The off-site copy (shonei-server deploy/shonei-backup.*, README "Off-site backup") was not installed at 02:07 UTC 2026-11-12 (T-3243); by 03:17 the `shonei-backups` bucket, timer and env file were there and the first run uploaded 811 MB (`shonei-backup ok`). shonei-server 585582d's README still says "not installed yet" and needs that line taken out.
-- T-2901 [P2] {L:terrain} Anita 2026-11-09: "oh also the ymentioned terrain so we should probably add terrain worldwide, not just in the regions we have demand data for." Scope first. Stages 1-3 done, stage 4 open; notes/T-2901.md. Scoped, notes/T-2901.md: per-block files, about US$1.50 of AWS. Anita 2026-11-09: "ok! lets do aws terrain rebuild. doing it as blocks makes sense. ok can upload to r2." Stages 1-3 done 2026-11-09: blocks in data/terrain-world/, the game reads them (0a8a91f7), on R2 under terrain-world/v1 (19,342 files). The zone rebuild is no longer needed, since prices come from the blocks. Left: stage 4, remove zone terrain (zone_terrain.py's zone build, world_run.py copies, build_inputs row, data/terrain, then data/work/terrain-fine/), after a release has run on blocks. The rebuild also fixes 553 zones with over 10% of land wrongly flat.
-- T-2887 [P2] {L:community} Community feature, design first, Anita's TODO 2026-11-09: "improve schematic, see other peoples schematics (ability to upload to a database and seerandom other ppls and "like" them or something), / see top point coutn saves in particular cities, or a sample of random cool ones that are like some of the best, in their cities / i guess for the database we could also juts use to-scale network screenshots rather than generated schematics. maybe allow the option for either (when choosing to shrae ur save) / i guess this feature can be called like community. maybe accessed via... save menu? not sure. also accessed via leaderboards ig." Design done, notes/T-2887.md. PARKED, Anita 2026-11-09: "lets not have this in the next release, i think, there is more stuff ot think about before it is ready, and for you to tell me about that i need to answer, i guess tell me when we get to it roughly". Decided: drawing data, not screenshots; people enter their maps voluntarily. Stage 1 asked for 11-09 evening, all her questions answered (notes/T-2887.md); server part running, agent communityserver, behind SHONEI_COMMUNITY=1; game part next.
-- T-2877 [P3] {L:translations} Anita 2026-11-09: "auto prefer english names for station placenames, if the person is english speaking or from a coutnry that is non local, i guess. add setting to default to local or english?" Not urgent. Goes with T-2586. Open.
-- T-2586 [P3] {L:translations} Localization stage 3: place names in the player's language where data has them and it is cheap (Anita 2026-11-06: "placenames shown in players language if we have them, and if its cheap"): basemap name:ja/zh labels, the place-list aliases Japan/China/Taiwan/Hong Kong already keep, zone names via Wikidata; no world rebuild of place lists. Traditional Chinese is Taiwan's (zh-TW). Anita's TODO.md, 2026-11-06: "also we should try to get placenames translated but that is also lower prio, and we might not want to do it if it costs a lot of resources". After T-2585. Open.
+- T-2624 [P2] {L:solve-speed} Lines in view wait on a whole solve
+  - Context: After a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
+  - Goal: Shown lines update in seconds after an edit, with figures close to the final solve.
+  - Other: Recommended: the aside worker also solves the shown network, and lines show their riders plus the zone change. notes/T-2605.md
+- T-2627 [P3] {L:world-tooling} Join market step hits its time limit
+  - Context: The step's limit is 1800 s, but local trips over 3,545 zones took 26 min on a busy machine.
+  - Goal: The limit is raised or dropped, or local trips are sped up.
+  - Other: See notes/T-2595.md.
+- T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none
+  - Context: You said 2026-11-06: "though i think it snot super urgent, *adding* demand is not really a prolem post release". Wikidata leaves many places with no attraction.
+  - Goal: Packs with no attraction fall under 20% (from 52%), and China, India, Brazil, the Philippines, Vietnam and Nigeria reach 1+ per million people.
+  - Other: An OSM pass of a few hours, no pack rebuild. notes/T-2663.md section 5
+- T-2662 [P3] {L:timetables} Passing dots on the timetable chart at a flat junction
+  - Context: The chart draws passing dots at junctions as well as flat crossings; only the crossing path has been checked.
+  - Goal: A player-built flat junction shows its dots at the right times.
+- T-2724 [P3] {L:schematic} {waits:Anita} Network diagram at continent scale
+  - Need from Anita: Look at the T-2625 pictures, then say whether far land should shrink further.
+  - Context: Far land is still drawn about 4.5x smaller than the networks; shrinking it more needs a looser fold guard where nothing is drawn.
+  - Goal: Far land drawn smaller while networks keep their size, with no folded cell.
+  - Other: notes/T-2625.md
+- T-2755 [P3] {L:world-map} Real rail network at far zoom
+  - Context: You asked for level of detail later, low priority. The real network now starts at zoom 6 because picking lagged at zoom 4.
+  - Goal: Show it again from zoom 4 or further out using simplified, merged far-zoom geometry.
+  - Other: Ties in with T-2750, one merged source. notes/T-2748.md
+- T-2754 [P3] {L:terrain} Water depth for the cross section
+  - Context: Your note 2026-11-07: "i thought our terrain had water depth. lets try to bring that back in eventually but its not high prio". The cross section draws a fixed 4 m band.
+  - Goal: The cross section shows real sea, lake and river depth from a global source.
+  - Other: Sources to try: GEBCO, HydroLAKES.
+- T-2749 [P3] {L:world-map} Zoomed-out map labels cost time on every move
+  - Context: At zoom 4, placing labels takes 6-7 ms on each move event.
+  - Goal: Cull zones by the view bounds first, or keep a biggest-first list per tenth of zoom.
+  - Other: notes/T-2748.md
+- T-2750 [P3] {L:world-map} Real network as fewer sources
+  - Context: One source and layer per noritetsu region (41 over Europe) was most of a frame's cost at zoom 4.
+  - Goal: A merged pmtiles, world or by continent, cuts the draw calls.
+  - Other: Needs a noritetsu build change. notes/T-2748.md
+- T-2698 [P2] {L:world-map} Start cameras on the city
+  - Context: 112 metros start more than 5 km from the OSM city of the same name (Oklahoma City 31 km, Perth 28, Atlanta 23).
+  - Goal: Move each start onto the nearest same-named OSM place.
+  - Other: artifacts/trainworld/t2690/scores.json has both points. T-2690 found it.
+- T-2701 [P3] {L:edit-speed} Rebuild only near the drawn track
+  - Context: After a run, the follow-up rebuild is still whole-network (North America 0.4-1.1 s). Your idea: only rebuild near the track being drawn.
+  - Goal: The drawn network, state rows, strokes and grids update only near the change.
+  - Other: notes/T-2404.md has the table of what can be local.
+- T-2725 [P3] {L:census-totals} Colombia's other rows on census totals
+  - Context: Colombia's config and zone rule take census totals since T-2712, but only tiq pis lve seq were rebuilt.
+  - Goal: The other 42 rows run through admin_totals.py dry CO, and those moving over 10% are rebuilt.
+  - Other: notes/T-2702.md
+- T-2726 [P3] {L:region-redraws} {after:each country's rebuild} Small units still in no zone
+  - Context: Fernando de Noronha, Con Dao, Lakshadweep, Misu-dong and Chukotka (35k, crosses the 180th meridian) are in no row.
+  - Goal: Each is folded in at its country's next rebuild.
+  - Other: notes/T-2702.md
+- T-2775 [P3] {L:world-tooling} Market check around a join
+  - Context: T-2702's join failed its market step on thl's file (158 zones against 159).
+  - Goal: A `checks/` script verifies every market pack before and after a join.
+  - Other: See notes/T-2702.md.
+- T-2777 [P3] {L:world-tooling} Restart a failed join's market step
+  - Context: A failed join's market and trips step can't be redone alone; T-2702 re-solved all Mexico for 4 rows (55 min).
+  - Goal: `world_run.py join --market-only` redoes it with the join's id list, and docs/world-run.md says a join costs its groups.
+  - Other: See notes/T-2702.md.
+- T-2713 [P3] {L:borders} Border factors for open twin towns
+  - Context: Rivera/Santana do Livramento, Leticia/Tabatinga, the King Fahd causeway and Al Ain/Buraimi sit at the national 0.05.
+  - Goal: Each pair has a factor from a crossing count or judgement.
+  - Other: notes/T-2695.md
+- T-2714 [P3] {L:census-totals} Census totals for Peru, Chile, Ecuador, Saudi, Oman, UAE
+  - Context: These countries (T-2695 to T-2697) ship on GHSL alone.
+  - Goal: Census-totals configs for each, and finer UAE units than the seven emirates (Abu Dhabi with Al Ain is one 3.2M zone).
+  - Other: Polygons and several totals are in religiondots/data/geo/. notes/T-2695.md
+- T-2920 [P4] {L:stops} Stop order stages 2 to 4
+  - Context: Remaining: mark refused or reversing gaps before the drop, stop twice at one station, touch. Your TODO 2026-11-15 asks for two stops in one station complex on the same line.
+  - Goal: Stages 2-4 of stop ordering built.
+  - Other: notes/T-2895.md.
+- T-2984 [P2] {L:borders} Border factors for named pack pairs
+  - Context: Gaza and the West Bank should be 0 and Jerusalem's halves higher than IL|PS; today the pack line's 0.5 applies.
+  - Goal: A separate hand list is read by joint_gravity.rs and demand/cross.rs; needed before Gaza is built.
+- T-2985 [P3] {L:census-totals} Israel's people on the end-2024 register
+  - Context: The census totals for Israel (T-2964) leave out 2-3 years of growth since the 2022 census.
+  - Goal: People from CBS's end-2024 locality register spread over the census statistical areas.
+  - Other: Religiondots has the 2023 version.
+- T-2969 [P3] {L:region-redraws} {after:Egypt replan} Kharga oasis needs its own zone
+  - Context: Kharga is in the Juhayna zone with a Sohag valley markaz 200 km of desert away.
+  - Goal: Kharga gets a zone of about 0.1M on Egypt's next replan.
+  - Other: notes/T-2897.md
+- T-2966 [P3] {L:region-redraws} {after:each country's replan} Reach-country dead space
+  - Context: Altamira, Itaituba, Sharurah and Dawid Kruiper (118,000-145,000 people each) are dead space in countries built before reach_from_people.
+  - Goal: Those countries use reach_from_people on their next replan.
+  - Other: notes/T-2897.md
+- T-2967 [P3] {L:census-totals} Egypt by kism and markaz
+  - Context: COD-AB has 19 polygons, CAPMAS has 32 newer kism.
+  - Goal: The two folded together for Egypt's census totals.
+  - Other: notes/T-2897.md
+- T-2968 [P3] {L:census-totals} Tunisia by delegation
+  - Context: COD-PS TUN 2020 by delegation is unused (N in the data register).
+  - Goal: Tunisia on delegation-level census totals.
+  - Other: notes/T-2897.md
+- T-3011 [P3] {L:region-redraws} Cairo border misses the Nile
+  - Context: You said (2026-11-10) the border is too far east of the river and islands, and the river should just be part of Cairo.
+  - Goal: Cairo's zone lines up with the Nile and keeps Gezira and Zamalek.
+- T-3033 [P2] {L:region-redraws} Rebuild the 37 split rows
+  - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan.
+  - Goal: The 37 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
+  - Other: plan in notes/T-3012.md; rows in artifacts/trainworld/split-zones.json
+- T-3042 [P3] {L:stops} Draw a flat junction once in the stop list
+  - Context: Your note 2026-11-10: the same flat junction shows twice on a looped line, once per pass.
+  - Goal: One indicator per junction, drawn on the upper one.
+- T-3052 [P2] {L:rebuild-track} {after:T-3060} Rebuild built track with new properties
+  - Context: You asked 2026-11-10 to change built track's height or kind from an edit button. Design approved: change pieces in place, from the Select bar, with price and confirm.
+  - Goal: Built track changes level or kind in place, keeping stations and lines.
+  - Other: Stages T-3059 (sim and bar) and T-3060 (preview). notes/T-3052.md.
+- T-3069 [P2] {L:trams} Trams that snap to real rail
+  - Context: A player asked for trams on real rail, which is light rail. You said sure 2026-11-10, with a new street-snap icon.
+  - Goal: Tram track can snap to real rail, and the street-snap icon is new.
+  - Other: Folds in T-2929 (trams stage 3). Your TODO 2026-11-15 also wants snap icons standardized.
+- T-3070 [P3] {L:demand-ideas} Trips between two destinations
+  - Context: Your 2026-11-10: "do we have a framework for destination -> destination trips?" Airports already do this; everyday trips are home-based only. A demand change, design first.
+  - Goal: A design for destination to destination trips, for you to approve.
+  - Other: Notes: none yet
+- T-3077 [P2] {L:world-rebuild} {after:next data batch} Inter-city trips on the world map hover
+  - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
+  - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
+  - Other: Needs a registry rebuild and upload; fold into the next data batch with T-3033. notes/T-3074.md
+- T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
+  - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
+  - Goal: The new level and kind show as a preview before the player pays.
+- T-3036 [P3] {L:track-drawing} Debug overlay for street gaps
+  - Context: A `?roadgaps=1` overlay would ring unjoined street ends, so a gap you see can be checked against the street graph.
+  - Goal: The overlay exists, and short alley links join streets.
+  - Other: About half a day. notes/T-3034.md.
+- T-3027 [P3] {L:track-speed} Slopes slow trains
+  - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section.
+  - Goal: A design for slope slowing, then built if you agree.
+- T-2983 [P3] {L:edit-speed} Bus stop edits stall the clock worker
+  - Context: Each Auto/Manual switch costs the clock worker 0.2-0.5 s, and the first of a session 1.4-2.5 s.
+  - Goal: A bus stop switch costs the worker almost nothing.
+  - Other: Follow-up to T-2953.
+- T-2906 [P3] {L:map-look} More hairstyles
+  - Context: Your TODO 2026-11-09: "should probably add some more hairstyles, like ponytail, wavy. maybe bias to wavy for black and white people, bias away for asian".
+  - Goal: Ponytail and wavy hair added, with the bias you described.
+- T-2907 [P3] {L:accounts-server} Redirect mistyped trainworld addresses
+  - Context: Your TODO 2026-11-09: three people tried anita.garden/trainsworlds, trainworlds and trainsimworld.
+  - Goal: Those three addresses redirect to the game. Goes out with the next website publish.
+- T-2912 [P1] {L:accounts-server} Security review follow-through
+  - Context: The review is done and the admin page, hover script and server fixes landed (24c3d6dd, T-2914, T-2917).
+  - Goal: Nothing catastrophic is hackable; review recorded.
+  - Other: notes/T-2912.md
+- T-2918 [P3] {L:accounts-server} Server backups off the provider
+  - Context: Hetzner daily backups exist. The off-site copy to the shonei-backups bucket is installed and ran (811 MB, 2026-11-12).
+  - Goal: shonei-server README no longer says "not installed yet".
+- T-2901 [P2] {L:terrain} Terrain worldwide
+  - Context: Stages 1-3 are done: blocks are on R2 and the game reads them. Stage 4 removes the old zone terrain after a release has run on blocks.
+  - Goal: Zone terrain removed, with the 553 wrongly flat zones fixed by the blocks.
+  - Other: notes/T-2901.md.
+- T-2887 [P2] {L:community} Community: share and browse saves
+  - Context: Design is done and your questions are answered. The server part is built behind SHONEI_COMMUNITY=1; the game part is next. You parked it from the next release.
+  - Goal: Players can share a map, browse others and like them.
+  - Other: notes/T-2887.md
+- T-2877 [P3] {L:translations} Prefer English station names for English speakers
+  - Context: Your idea 2026-11-09: English names for English speakers or non-local players, with a setting to pick local or English. Not urgent.
+  - Goal: A setting defaults station names to English or local by the player's language.
+  - Other: Goes with T-2586, place names in the player's language.
+- T-2586 [P3] {L:translations} Place names in the player's language
+  - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata.
+  - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists.
+  - Other: Starts after T-2585. Traditional Chinese is Taiwan's (zh-TW).
 Anita's notes 2026-11-05 evening (verbatim in notes/todo-2026-11-05c.md; briefs quote it word for word):
 Anita's notes 2026-11-04 ~09:30 (verbatim in notes/todo-2026-11-04b.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04i.md; briefs quote it word for word):
 Anita's notes 2026-11-05 late morning (verbatim in notes/todo-2026-11-05b.md; briefs quote it word for word):
-- T-2589 [P3] {L:schematic-speed} Network diagram sheet speed. Stage 1 done 2026-11-06 (sheetspeed): the same arithmetic faster in JS, in the page New York 10.9 s to 9.3 s, all Japan 49 s to 38 s. Stage 2 done 2026-11-06 (sheetwasm): the carry's solve in WASM (`sim/src/diagram.rs`), bit for bit the JS, about twice as fast (all Japan's carry in the page 20.5 to 11.2 s, New York's 3.9 to 2.2 s; `?perfOff=carryWasm` the JS). Left, aim (all Japan well under 15 s, New York under 4 s) not met: the layout on a country map (about 13 s of all Japan's 41; its sweeps never meet their tolerance, so any speedup changes the drawing a little; waits on the smoothing work in layout.ts), the map (T-2592), the sheet and ground (about 5 s). notes/T-2589.md. Open.
-- T-2590 [P3] {L:schematic-layout} Delete the old network diagram layout now the sheet is the default (`?sheet=0`: layout A and the blocks stage, `borders.ts` pill regions, `water.ts` and `waterSea.ts` drawing) and the checks built on it (diagram-game.mjs, t2169-game.mjs run on sheet=0; t2160/t2161), once the sheet has been played a while. Takes in T-2582 (blocks take in intercity branches). notes/T-2580.md. Open.
-- T-2593 [P3] {L:schematic-rivers} Network diagram sheet at the edge of the built world: where no zone has a mask at all, `waterReal.ts`'s far grid still guesses toward sea, so land past the built zones may draw as sea. Found by njwater (T-2591). notes/T-2591.md. Open.
-- T-2592 [P3] {L:schematic-speed} The sheet's map step: 2.4 s on New York and 5.1 s on all Japan in the page after T-2589 stage 1 (was 2.9 and 5.5). Limiting it to the area near the network saves little without changing the whole view (New York's drawn grid is barely bigger than its stations' box; Japan's islands fill theirs): what is left is the thin passes' distance transforms and the grid's triangles over 4 or 12 million cells. notes/T-2589.md. Open.
-- T-2538 [P3] {L:schematic-layout} Network diagram: the routing and separation still lose crossings B kept (after T-2534, all Japan outside dense places 0.76 after B, 0.49 drawn): stations slide along a bent piece's legs past the crossing (most stay kept loosely, a station early or late). notes/T-2534.md. Open.
-- T-2539 [P3] {L:schematic-layout} Network diagram: t2407's rebuild check moves more since T-2534 (median city station beyond its block 0.071/0.112/0.103 -> 0.186/0.155/0.106 hops; the mock's new line crosses city lines and pulls them to it); decide whether the limit or the rebuild's crossing weights change. notes/T-2534.md. Open.
-- T-2551 [P3] {L:schematic-rivers} Network diagram: New York's core river bands wind where the layout scatters a river's crossings (from T-2517, not done in T-2541); also t2405 finds hidden stretches on the LIRR by Jamaica (Jamaica - Rosedale and St. Albans) on one New York graph or the other as the layout shifts (T-2541: the save 3; T-2550: the save 0, the game capture 6). All Japan's "every drawn river is one band" passes again with T-2550. notes/T-2541.md, notes/T-2550.md. Open.
+- T-2589 [P3] {L:schematic-speed} Network diagram sheet speed
+  - Context: Two speedups landed 2026-11-06. All Japan takes 38 s in the page and New York 9.3 s.
+  - Goal: All Japan well under 15 s and New York under 4 s.
+  - Other: Most of what is left is the layout on a country map, about 13 s of Japan's 41. notes/T-2589.md
+- T-2590 [P3] {L:schematic-layout} Delete the old diagram layout
+  - Context: The sheet is the default now. The old layout (`?sheet=0`), its drawing code and the checks built on it can go.
+  - Goal: The old layout and its checks are gone, once the sheet has been played a while.
+  - Other: Takes in T-2582, blocks taking in intercity branches. notes/T-2580.md
+- T-2593 [P3] {L:schematic-rivers} Land past the built world draws as sea
+  - Context: On the diagram sheet, where no zone has a mask, the far grid still guesses toward sea.
+  - Goal: Land beyond the built zones draws as land.
+  - Other: Found by njwater (T-2591). notes/T-2591.md
+- T-2592 [P3] {L:schematic-speed} Diagram sheet map step speed
+  - Context: The map step takes 2.4 s on New York and 5.1 s on all Japan. Limiting it to the area near the network saves little.
+  - Goal: A faster map step: the thin passes' distance transforms and the grid triangles are what is left.
+  - Other: notes/T-2589.md
+- T-2538 [P3] {L:schematic-layout} Diagram routing loses crossings B kept
+  - Context: After T-2534, all Japan outside dense places keeps 0.76 of B's crossings but draws 0.49: stations slide along a bent piece past the crossing.
+  - Goal: Drawn crossings stay close to what B kept.
+  - Other: notes/T-2534.md
+- T-2539 [P3] {L:schematic-layout} Diagram rebuild moves more since T-2534
+  - Context: The t2407 rebuild check shows the median city station further beyond its block (0.071 to 0.186 hops in one city).
+  - Goal: Decide whether the limit or the rebuild's crossing weights change.
+  - Other: notes/T-2534.md
+- T-2551 [P3] {L:schematic-rivers} New York river bands wind
+  - Context: In the diagram, New York's core river bands wind where the layout scatters a river's crossings. Hidden stretches also show on the LIRR by Jamaica.
+  - Goal: Core river bands run straight and no stretch is hidden.
+  - Other: notes/T-2541.md, notes/T-2550.md
 Anita's notes 2026-11-05 morning (verbatim in notes/todo-2026-11-05a.md; briefs quote it word for word):
-- T-2529 [P3] {L:schematic-layout} Network diagram: parallel lines lost in the routing (after T-2520, 80-90% of parallel pairs share a direction after B but 62-70% once drawn): pieces off a direction get two legs chosen separately, so parallel pieces jog differently; couple their leg order or snap. notes/T-2520.md. Open.
-- T-2530 [P3] {L:schematic-layout} Network diagram: B converges slower since T-2520 (New York's layout 2.8 -> 3.6 s, B 1.37 -> 1.99 s); find a cheaper way to the same choices, and look at all Japan's near pairs drawn on the wrong side (387 -> 481). notes/T-2520.md. Open.
+- T-2529 [P3] {L:schematic-layout} Parallel lines lose their direction in routing
+  - Context: After T-2520, 80-90% of parallel pairs share a direction after B but 62-70% once drawn, because each piece picks its two legs separately.
+  - Goal: Couple the leg order or snap, so parallel pieces jog the same way.
+  - Other: notes/T-2520.md
+- T-2530 [P3] {L:schematic-layout} Diagram B converges slower
+  - Context: Since T-2520, New York's layout takes 3.6 s (was 2.8) and B 1.99 s (was 1.37). All Japan has 481 near pairs on the wrong side (was 387).
+  - Goal: A cheaper way to the same choices, and fewer wrong-side pairs.
+  - Other: notes/T-2520.md
 Anita's notes 2026-11-04 late (verbatim in notes/todo-2026-11-04j.md):
-- T-2486 [P3] {L:loading} Wire size: `.bin` is 76% of R2 (2.2 of 2.9 GB) and the biggest piece of each city's download, and the first line pulls 14.4 MB of worldwide data; compress `.bin` for whole-file reads, keep Range reads working, load the market files by region. notes/T-2472.md section 6.
-- T-2458 [P3] {L:solve-speed} A zone selected in the city view during a load is solved coarse by the load's solve and refined only by a second whole solve after its final (Tokyo save: Seoul selected 8 s before the solve was sent, fine figures about 6 s after the final). Pick its level before the load's solve goes. notes/T-2453.md "Left as they are". Open.
+- T-2486 [P3] {L:loading} Compress .bin files to cut download size
+  - Context: .bin files are 76% of R2 (2.2 of 2.9 GB), and the first line pulls 14.4 MB of worldwide data.
+  - Goal: .bin is compressed for whole-file reads, Range reads still work, and market files load by region.
+  - Other: notes/T-2472.md, section 6.
+- T-2458 [P3] {L:solve-speed} Zone selected during a load solves coarse
+  - Context: A zone selected in the city view during a load is solved coarse, then refined only by a second whole solve.
+  - Goal: Pick the zone level before the load solve is sent.
+  - Other: notes/T-2453.md
 Anita's chat 2026-11-04 ~17:10 (verbatim in notes/todo-2026-11-04h.md; briefs quote it word for word):
 Anita's notes 2026-11-04 late afternoon (verbatim in notes/todo-2026-11-04g.md; briefs quote it word for word):
 Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs quote it word for word):
-- T-2425 [P3] {L:schematic-layout} Network diagram after T-2407, all Japan: single-line stretches +19% (18,399 -> 21,886 pitches; 4 longer than the longest block), pill overlaps 4 -> 9. A's rounds are not the cause (40 rounds: 21,875); the long stretches (Kosei line, Tsuruga-Higashi-Maizuru, Tatsuno) are stations between blocks, so the stage's box spacing and the sprawling block 25 (Iga-Ueno to Hikone) are the next look; B is slower because turn terms beside long hops between blocks stop its solves converging (whole layout still 78 s against 93 without blocks). notes/T-2425.md. Open (diagnames handed back, 2026-11-04).
-- T-2422 [P3] {L:world-rebuild} {after:next data batch} Governors Island (T-2418 fix 2): tunnels join land only at their two ends, not drawn onto the water (a `way_flags` bit, `WAYS_RULE` bumped, every extract re-read: ~1h45, 67 GB worldwide); risk to Hong Kong Island, Haneda, Umihotaru (add checks). Rides with the next data batch. notes/T-2418.md. Open.
-- T-2426 [P3] {L:islands} Car ferries OSM leaves untagged for cars: since T-2424 a ferry carries cars between places only with `motor_vehicle`/`motorcar` yes, and China's Bohai Strait ferries (Dalian - Yantai, real Ro-Ro) have no such tag, so Shanghai - Dalian and Seoul's pairs with eastern China now drive round by Beijing (rt 0.87 -> 1.60). Count the untagged `route=ferry` lines over 50 km between two places' landmasses and decide a rule (a length floor, `ferry=*` or `hgv` tags) or leave. notes/T-2424.md. Open.
+- T-2425 [P3] {L:schematic-layout} All Japan diagram has longer stretches
+  - Context: After T-2407, all Japan's single-line stretches are 19% longer (21,886 pitches) and pill overlaps went from 4 to 9.
+  - Goal: Find the cause, likely the block stage's box spacing and the sprawling block 25 (Iga-Ueno to Hikone).
+  - Other: notes/T-2425.md
+- T-2422 [P3] {L:world-rebuild} {after:next data batch} Tunnels on Governors Island
+  - Context: Tunnels should join land only at their two ends, not draw onto the water (T-2418 fix 2).
+  - Goal: Tunnels fixed worldwide, with checks for Hong Kong Island, Haneda and Umihotaru.
+  - Other: About 1h45 and 67 GB of re-read extracts. notes/T-2418.md
+- T-2426 [P3] {L:islands} Untagged car ferries in OSM
+  - Context: China's Bohai ferries carry cars but lack the motor_vehicle tag, so Shanghai-Dalian now drives round by Beijing (0.87 to 1.60).
+  - Goal: A rule for untagged ferries over 50 km, or a decision to leave it.
+  - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
-- T-2396 [P3] {L:small-fixes} After T-2282: the dock's tab area keeps one height for every tab, so the shorter Build tab gives the inspector no more room (notes/T-2267.md 3.5). Open.
+- T-2396 [P3] {L:small-fixes} Dock tab area keeps one height
+  - Context: After T-2282, the shorter Build tab leaves the inspector no more room.
+  - Goal: The inspector gets the room the Build tab leaves.
+  - Other: notes/T-2267.md section 3.5
 Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in notes/todo-2026-11-03h.md; briefs quote it word for word):
-- T-2280 [P3] {L:help-tutorial} {after:tutorial playtest} More tutorial-only longer hovers (T-2263's `guideVerbose` in game/ui.ts): candidates the demand bubble hover (map/bubbles.ts), Train length (inspector/LineInspector.tsx) and the top bar's split (TopBar.tsx, game/splitTip.ts), files T-2214's tree held on 2026-11-03. Only if Anita's playtest of the tutorial asks for more. Open.
-- T-2264 [P2] {L:help-tutorial} Help panels ("?") explaining demand and effective time, drafted from docs/demand-plain.md; wording for Anita. notes/todo-2026-11-03h.md. Open.
-- T-2268 [P2] {L:station-placement} Station placement: more room for a station when auto-ramping over a line (an easier transfer), and snap a station to the nearest viable spot when one is close. notes/todo-2026-11-03h.md. Open.
-- T-2337 [P3] {L:map-look} Idea: load by hour of day as a small plot in the crowding hover, if peak load per hour is cheap to keep (Anita 2026-11-04, notes/todo-2026-11-04a.md). Open.
-- T-2321 [P3] {L:schematic-layout} Network diagram, a follow-up to T-2289: all Japan has 3 more pill overlaps (neighbours on compressed lines, Nishi-Fujinomiya and Numakubo, Izuma and Kamiichiba) and 4 pairs closer than their spacing that it had not; Tokyo-game 2 close pairs. A gap pass along each piece changed nothing (the pairs sit at piece ends). Figures in notes/T-2289.md. Open.
-- T-2293 [P3] {L:schematic-layout} Network diagram, a follow-up to T-2290: near stations still drawn on the wrong side of each other after the routing and separation (10 to 18 pairs a city), mostly parallel lines a kilometre apart whose stations the routing places by share of a piece; a side term in the separation's linear terms is the likely way. Figures in notes/T-2290.md. Open. notes/T-2293.md.
-- T-2332 [P3] {L:small-fixes} After T-2291: a copied line (`copyLine`, Rust-side) keeps its source's colour, and a bus or ferry line takes its colour at the tool's start (`nextFreeColour` at the first click), before its route is drawn, so neither avoids a near-duplicate beside it; same re-pick as `lineColour.ts` if wanted (a copy sharing the original's colour may be intended). Open.
-- T-2292 [P3] {L:schematic-layout} {after:a real save shows it} Network diagram idea, a follow-up to T-2290: lines that run close together and swap sides on the ground drawn as one parallel bundle with a fixed order (Anita's first reading of line 8, since corrected: "not that egregious"). Only if a real save shows it. Open.
-- T-2288 [P3] {L:airports} The airport badge's hover (map/airportMarks.ts) leaves "No route" trips out of its count and bar (T-2215 follow-up). Open.
-- T-2320 [P3] {L:stops} {after:Anita asks} Drag a train line's stops into another order in its stops list while editing stops (`setStops` with the new order), if Anita wants it: a reordered list on track mostly makes trains double back, so T-2275 left it out (DECISIONS 2026-11-04). Open.
+- T-2280 [P3] {L:help-tutorial} {after:tutorial playtest} More tutorial hovers
+  - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
+  - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
+  - Other: Uses `guideVerbose` from T-2263.
+- T-2264 [P2] {L:help-tutorial} Help panels for demand and effective time
+  - Context: Help panels ("?") explaining demand and effective time, drafted from docs/demand-plain.md. The wording needs your OK.
+  - Goal: Two help panels in game, with wording you have acknowledged.
+  - Other: notes/todo-2026-11-03h.md
+- T-2268 [P2] {L:station-placement} Easier station placement over a ramp
+  - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
+  - Goal: Placing a station near a line or ramp finds a viable spot.
+  - Other: notes/todo-2026-11-03h.md.
+- T-2337 [P3] {L:map-look} Load by hour in the crowding hover
+  - Context: Idea from 2026-11-04: a small plot of load by hour of day in the crowding hover, if peak load per hour is cheap to keep.
+  - Goal: The crowding hover shows load by hour.
+  - Other: notes/todo-2026-11-04a.md
+- T-2321 [P3] {L:schematic-layout} Diagram pill overlaps in all Japan
+  - Context: Follow-up to T-2289: all Japan has 3 more pill overlaps and 4 pairs closer than their spacing. A gap pass changed nothing.
+  - Goal: No new overlaps or close pairs in all Japan.
+  - Other: notes/T-2289.md
+- T-2293 [P3] {L:schematic-layout} Near stations on the wrong side in diagram
+  - Context: Follow-up to T-2290: 10 to 18 near pairs per city are still drawn on the wrong side of each other, mostly parallel lines a kilometre apart.
+  - Goal: Far fewer wrong-side pairs; a side term in the separation is the likely way.
+  - Other: notes/T-2293.md, notes/T-2290.md
+- T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour
+  - Context: A copied line keeps its source's colour. A bus or ferry line takes its colour at the first click, before its route is drawn.
+  - Goal: Re-pick the colour as `lineColour.ts` does, if wanted (a shared colour on a copy may be intended).
+- T-2292 [P3] {L:schematic-layout} {after:a real save shows it} Diagram bundle for lines that swap sides
+  - Context: Idea: lines that run close and swap sides on the ground drawn as one parallel bundle with a fixed order.
+  - Goal: Build it only if a real save shows the problem.
+  - Other: Follow-up to T-2290.
+- T-2288 [P3] {L:airports} Airport badge hover skips "No route" trips
+  - Context: The hover leaves "No route" trips out of its count and bar.
+  - Goal: The hover counts them.
+- T-2320 [P3] {L:stops} {after:Anita asks} Drag stops into another order
+  - Context: T-2275 left this out since a reordered list mostly makes trains double back (DECISIONS 2026-11-04).
+  - Goal: Stops can be dragged into a new order, if you want it.
 Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md):
-- T-2043 [P3] {L:checks} Bring checks/t988-cloud.mjs up to T-2037 (it needs a local shonei-server, not run): section 7 expects a fork slot named "T-007-real-nyc at <time>" that the page moves into; now the playing slot splits off in place (same name, new account id, same origin). Open. notes/T-2043.md.
-- T-1916 [P3] {L:single-track} Drawing beside track: in the real-save sweep (`beside_sweep_real_save`, sim/src/track/wasm/beside_tests.rs) 32 of ~85,000 previews still cross the track followed, where the concentric line itself crosses the run, and the tool falls back to the plain route; also 46 on-line starts refused as "on top of existing track" beside a parallel line. Open. notes/T-1916.md.
-- T-1917 [P3] {L:track-drawing} A ramp spread over several legs (T-1895) can move when two pieces are joined under a new platform (the join widens the room it spreads in); harmless while platforms refuse ramps, but check `unjoin_near` joins keep heights. T-1964's drawn sweep: 58 of 6,851 spots near a level-change joint refused for the ramp a join moves (shown as the platform on a ramp), 1 with a curve reason. Open.
-- T-1970 [P3] {L:station-placement} The station tool slides a station off a ramp it is clicked on near the ramp's end (at most half a platform and 2 m, as T-1870's room slide), from the ramps in the edge's drawn heights; today "The platform would be on a ramp." stands. T-1964's drawn sweep: 1,012 of 6,851 spots refused for a ramp. notes/T-1964.md. Open.
-- T-1948 [P3] {L:track-drawing} A node drag's new lead-in toward a loose end takes at most 0.3 of the leg (`lead_in_capped`), so a 1 km straight with its joint dragged 108 m sideways gets a 4,400 m curve (250 km/h) where about 9,000 m fits; let it use the whole leg when the far end is a track end. Open (found in T-1898).
-- T-1949 [P3] {L:track-drawing} Node and pick drag previews draw high-speed track as ordinary track (`previewStrokes` in map/nodeDrag.ts passes no `hsr`; the curve bend does). Open (found in T-1898).
-- T-2046 [P3] {L:solve-speed} Seoul on Tokyo Seoul Fukuoka Busan: the first Homes/Destinations switch in the seconds after zooming in waits about 6 s, until its detailed solve lands; main thread idle, cause not found (maybe a headless frame stall). notes/T-1904.md "After".
+- T-2043 [P3] {L:checks} Old cloud check needs updating
+  - Context: checks/t988-cloud.mjs expects a fork slot the page now splits off in place (T-2037); it needs a local shonei-server.
+  - Goal: The check matches the current slot behaviour and passes.
+  - Other: See notes/T-2043.md.
+- T-1916 [P3] {L:single-track} Drawing beside track still crosses it
+  - Context: In the real-save sweep, 32 of about 85,000 previews cross the track followed, and 46 starts are refused beside a parallel line.
+  - Goal: Those cases draw cleanly beside the track.
+  - Other: notes/T-1916.md.
+- T-1917 [P3] {L:track-drawing} Spread ramp can move when pieces join
+  - Context: Harmless while platforms refuse ramps; 58 of 6,851 spots near a level change are refused for it.
+  - Goal: Joins keep heights, checked in `unjoin_near`.
+- T-1970 [P3] {L:station-placement} Slide a station off a ramp near its end
+  - Context: Today "The platform would be on a ramp." stands; 1,012 of 6,851 spots refused for a ramp.
+  - Goal: A station clicked near a ramp's end slides clear of it.
+  - Other: notes/T-1964.md.
+- T-1948 [P3] {L:track-drawing} Node drag lead-in capped too short
+  - Context: A 1 km straight dragged 108 m sideways gets a 4,400 m curve where about 9,000 m fits.
+  - Goal: The drag uses the whole leg when the far end is a track end.
+  - Other: Found in T-1898.
+- T-1949 [P3] {L:track-drawing} Drag previews draw high-speed track as ordinary
+  - Context: Node and pick drag previews pass no `hsr`, so they look like ordinary track.
+  - Goal: Previews show high-speed track correctly.
+  - Other: Found in T-1898.
+- T-2046 [P3] {L:solve-speed} Slow first Homes/Destinations switch after zooming in
+  - Context: In Seoul on the Tokyo, Seoul, Fukuoka, Busan save, the first switch waits about 6 s. Cause not found, maybe a headless stall.
+  - Goal: The first switch answers without a long wait, or the cause is shown to be a test artifact.
+  - Other: notes/T-1904.md "After"
 Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "feels nice", Traffic view "looks pretty good", related lines "looks great", adding local games to the account worked.
-- T-1856 [P2] {L:terrain} Terrain cells as hexagons, our own lattice (Anita 2026-10-30: yes); T-1854 landed first so price and shape changes stayed apart. Design written (notes/T-1881.md, last section; about a day); T-1881's terrain rebuild landed 2026-11-03 (8212d530), so it can go ahead. After release (Anita 2026-11-07: "its fine to put this in after release so we can do it ltater"). Open.
-- T-1861 [P3] {L:edit-speed} Track placement on the all-Japan save still feels a little unresponsive (Anita 2026-10-30: expected for its size, but room to improve). T-2404 (2026-11-06) fixed steady movement (every move scanned the snap and pick grids before their idle build got a turn; now 1 ms a move, ghost 41 ms p50). Left: after a click the edit's answer waits 0.1-0.85 s behind the boarding account's steps (250-750 ms each, demand re-posting riders), and `preview_route` takes 40-190 ms a move; both sim work (notes/T-2404.md "What is left"). Open.
-- T-1863 [P2] {L:line-rates} The settle leaves lines with no shared track unchanged to the bit, as track-and-service.md says (T-1850 stage 2, sim/src/track). Done when `netdiff.mjs` shows 0 changed Tokyo lines after the Ceuta edit. After t1854b leaves sim/src/track. notes/T-1850.md. Open.
-- T-1867 [P3] {L:map-look} {waits:Anita} Draw a destination's everyday homes as the smooth spread their samples stand for (T-1866 fix 1, drawing only). On hold: T-1874 has landed; look again once Anita has seen it. notes/T-1866.md. Open.
-- T-1875 [P3] {L:station-placement} `t671-ghost-hover` fails "near track ends" on the real save (14 of 84 hovers, 2 chains): the page's guess says a spot fits and the worker refuses it (a flat crossing the page's marks miss; an end station the worker finds too short). Not from T-1870's change (same candidates before). Page/worker agreement on new blueprint near flat crossings. Open.
-- T-1876 [P3] {L:jobs-places} Australian jobs from the 2016 census Working Population Profile by destination zone (ABS DataPacks, CC BY 4.0) instead of tier 0's proxy (2021's place of work was taken in lockdown). notes/T-1857.md. Open.
-- T-1878 [P3] {L:region-redraws} The zone planner never splits a zone from its own pieces hundreds of km apart (seen in Australia, T-1857). notes/T-1857.md. Open.
-- T-1879 [P3] {L:region-redraws} A metro rule for 1M+ cities GHSL's urban centres miss (Adelaide was made one zone by hand, T-1857); CLAUDE.md's join rule already names data/terrain. Open.
-- T-1882 [P3] {L:checks} checks/t1270-terrain.mjs: the track key was fixed to "1" on 2026-11-02 (902af16d); whether its quote-rows check still matches the layout since T-1839 is unknown: run it and fix or archive. Open.
-- T-2141 [P3] {L:map-look} Lines side by side, tight and loose ribbons by zoom: T-2132's hold keeps a ribbon across gaps where tracks are up to 50 m apart at every zoom, so close in a held band can sit up to 25 m off its track; mix a held and an unheld profile by line width on screen if that shows. notes/T-2058.md 3e.
-- T-2150 [P3] {L:achievements} Achievements stage 3: the Sea crossing first (a running line whose path crosses 10 km of unbroken water, bridge or tunnel). The sim gives each line its longest unbroken water run at any level (T-1930's run counting, bored tunnels included) in `LineStats`; it changes the WASM interface, so its own worktree. Open. notes/T-2150.md.
-- T-2242 [P3] {L:schematic-layout} Network diagram spacing left from T-2205: Tokyo's 7 close pairs (mostly key nodes: Iidabashi, Tokyo, Nippori/Tabata; the count swings 4-17 with small settings), and rebuilds leave more than a fresh layout (Tokyo 13 against 7) because of the 0.3 hop cap that keeps edits stable. notes/T-2205.md. Open.
-- T-2262 [P3] {L:map-look} Float32 plane-metre positions lose 1-2 m in x far from the frame's origin on Japan saves (strokes, trains, stations): jitter at street zoom, and the root of T-2222's zero-length segments (now hidden by T-2222's 8 m minimum). Store positions relative to a nearby origin. notes/T-2058.md 3h. Open.
-- T-2259 [P3] {L:schematic-layout} Network diagram: the separation can still fold a line when its redraw leaves a node another way (Tokyo's 東中野 in 3 of 16 perturbed samples). notes/T-2255.md. Open.
-- T-2260 [P3] {L:schematic-layout} Network diagram: hooks at four-way hubs where lines end (New York Penn: no axis crosses all 24 stops; Jamaica, Sutphin). Fixing them would let A's pushes move to its last 3 rounds, which ended doubling back in every sample. notes/T-2255.md. Open.
-- T-2261 [P3] {L:schematic-layout} Network diagram: the game's graph depends on the camera's draw anchor (float32 local coordinates), so another session can get another layout; build it from pack-frame places so it is the same every time. notes/T-2255.md. Open.
-- T-2246 [P3] {L:schematic-layout} Network diagram: room for names in the layout (reserve label space at busy interchanges, as Nöllenburg and Wolff do), so 47-50 Sts-Rockefeller Ctr and 7 Av get names at 14 px and Times Sq, Penn, Grand Central and Shinjuku at the opening zoom (tied to T-2242). Done when Times Sq's 15 interchanges are all named at 14 px. notes/T-2162.md. Open. notes/T-2246.md.
-- T-2247 [P3] {L:schematic-speed} Network diagram: name placement takes 0.5-1 s of New York's layout (whose Node timing nears the 5 s limit on a loaded machine); skip levels that change little or carry unchanged names over. notes/T-2162.md. Open.
-- T-2510 [P3] {L:world-rebuild} {after:next data batch} Japan's water masks miss the big rivers (found in T-2497): along the hops crossing them the 25 m mask is dry at the Tama (二子玉川-二子新地), the Sumida (浅草橋-両国) and the Yodo (新大阪-大阪, 十三-中津), and the Arakawa at 赤羽 is 175 m wet; so the diagram's water (and the track model's water pricing) lacks them. Likely the OSM river-area multipolygons in pipeline/osm_water.py's read. A data rebuild; wait until no join runs. notes/T-2497.md. Open.
-- T-2511 [P3] {L:schematic-rivers} Diagram sea fallbacks (after T-2497): Jamaica Bay is not sea on the ground (counting islands under 3 km² as water for the core test did not change it), the Boso side of Tokyo Bay comes out partly land, and the sea ends in a straight cut 40 pitches past the network's box, seen when zoomed out. notes/T-2497.md. Open.
-- T-2518 [P3] {L:schematic-rivers} Diagram river drawing time after T-2516 (whole rivers, channels): all Japan about 1.2 -> 4.2 s, New York 0.9-1.4 s in game, in the layout worker after each rebuild; with T-2498. notes/T-2516.md. Open.
-- T-2498 [P3] {L:schematic-rivers} Diagram water time (after T-2169): the ground's water takes 4.9 s for all Japan (0.7 s New York) and is worked out again after every rebuild that moves a station or the network's middle, holding the layout worker; keep it per tile in mercator so an edit redoes only its tiles. notes/T-2169.md. Open.
-- T-2148 [P3] {L:money} Saves keep every day of every region's ledger (T-2143), about 30 bytes compressed a region-day; a world game of 100 regions over 1,000 days nears the account's 4 MB cap. If saves get big, fold a region's days older than 90 into Monday weeks in the save (the chart already shows weeks past 90 days). Open.
+- T-1856 [P2] {L:terrain} Terrain cells as hexagons
+  - Context: You said yes 2026-10-30 and "its fine to put this in after release". The design is written and the terrain rebuild landed.
+  - Goal: Terrain cells are hexagons on our own lattice.
+  - Other: About a day. notes/T-1881.md.
+- T-1861 [P3] {L:edit-speed} Track placement on all-Japan feels slow
+  - Context: You found placement on the all-Japan save a little unresponsive; steady movement is fixed, but a click waits 0.1-0.85 s on the boarding account.
+  - Goal: A click on the Japan save answers quickly, and `preview_route` takes less than 40-190 ms.
+  - Other: notes/T-2404.md, "What is left".
+- T-1863 [P2] {L:line-rates} Settle leaves unshared lines unchanged
+  - Context: track-and-service.md says lines with no shared track stay unchanged to the bit; this is not yet true. Waits for t1854b to leave sim/src/track.
+  - Goal: netdiff.mjs shows 0 changed Tokyo lines after the Ceuta edit.
+  - Other: notes/T-1850.md
+- T-1867 [P3] {L:map-look} {waits:Anita} Smooth spread for a destination's homes
+  - Need from Anita: Look at the T-1874 result in game, then say whether to draw the smooth spread.
+  - Context: Draw a destination's everyday homes as the smooth spread their samples stand for (drawing only). T-1874 has landed.
+  - Goal: The homes drawing matches the spread.
+  - Other: notes/T-1866.md
+- T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings
+  - Context: `t671-ghost-hover` fails on the real save: 14 of 84 hovers, where the page says a spot fits and the worker refuses.
+  - Goal: Page and worker agree on new blueprint near flat crossings.
+- T-1876 [P3] {L:jobs-places} Australian jobs from the 2016 census
+  - Context: Australia uses tier 0's job proxy; 2021's place of work was taken in lockdown.
+  - Goal: Jobs by destination zone from the 2016 Working Population Profile (ABS DataPacks, CC BY 4.0).
+  - Other: notes/T-1857.md
+- T-1878 [P3] {L:region-redraws} Planner never splits far-apart pieces
+  - Context: The zone planner does not split a zone from its own pieces hundreds of km apart (Australia).
+  - Goal: The planner splits such zones.
+  - Other: notes/T-1857.md
+- T-1879 [P3] {L:region-redraws} Metro rule for 1M+ cities GHSL misses
+  - Context: Adelaide was made one zone by hand; GHSL urban centres miss some 1M+ cities.
+  - Goal: A rule makes such cities one zone.
+- T-1882 [P3] {L:checks} Terrain check may be out of date
+  - Context: checks/t1270-terrain.mjs's quote-rows check may no longer match the layout since T-1839.
+  - Goal: The check is run, then fixed or archived.
+- T-2141 [P3] {L:map-look} Tight and loose ribbons by zoom
+  - Context: T-2132's hold keeps a ribbon across gaps up to 50 m at every zoom, so a close ribbon can sit up to 25 m off its track.
+  - Goal: Mix a held and an unheld profile by line width on screen, if the offset shows.
+  - Other: notes/T-2058.md section 3e
+- T-2150 [P3] {L:achievements} Sea crossing achievement
+  - Context: Stage 3 of achievements. The sim would report each line's longest unbroken water run in LineStats.
+  - Goal: A line crossing 10 km of unbroken water earns the Sea crossing. Needs its own worktree (WASM change).
+  - Other: notes/T-2150.md
+- T-2242 [P3] {L:schematic-layout} Tokyo diagram close pairs
+  - Context: Left over from T-2205: Tokyo has 7 close pairs, mostly key nodes. Rebuilds leave 13 because of the 0.3 hop cap.
+  - Goal: Fewer close pairs in Tokyo, fresh and after rebuilds.
+  - Other: notes/T-2205.md
+- T-2262 [P3] {L:map-look} Float32 positions jitter far from origin
+  - Context: On Japan saves, positions lose 1-2 m in x far from the frame origin. It shows as jitter at street zoom.
+  - Goal: Store positions relative to a nearby origin.
+  - Other: Root of T-2222's zero-length segments. notes/T-2058.md section 3h
+- T-2259 [P3] {L:schematic-layout} Separation can still fold a line
+  - Context: When a redraw leaves a node another way, the separation can fold a line (3 of 16 perturbed Tokyo samples).
+  - Goal: No folds in the perturbed samples.
+  - Other: notes/T-2255.md
+- T-2260 [P3] {L:schematic-layout} Diagram hooks at four-way hubs
+  - Context: Where lines end at a four-way hub the diagram draws hooks (New York Penn, Jamaica, Sutphin).
+  - Goal: No hooks, letting A's pushes move to its last 3 rounds.
+  - Other: notes/T-2255.md
+- T-2261 [P3] {L:schematic-layout} Diagram depends on the camera anchor
+  - Context: The game's diagram graph depends on the camera's draw anchor, so another session can get another layout.
+  - Goal: Build it from pack-frame places so it is the same every time.
+  - Other: notes/T-2255.md
+- T-2246 [P3] {L:schematic-layout} Room for names in the diagram layout
+  - Context: Reserve label space at busy interchanges, as Nöllenburg and Wolff do. Tied to T-2242.
+  - Goal: Times Sq's 15 interchanges are all named at 14 px.
+  - Other: notes/T-2246.md, notes/T-2162.md
+- T-2247 [P3] {L:schematic-speed} Diagram name placement takes too long
+  - Context: Name placement takes 0.5-1 s of New York's layout, which nears the 5 s limit on a loaded machine.
+  - Goal: Skip levels that change little or carry unchanged names over.
+  - Other: notes/T-2162.md
+- T-2510 [P3] {L:world-rebuild} {after:next data batch} Japan's water masks miss big rivers
+  - Context: Found in T-2497: the Tama, Sumida, Yodo and Arakawa are dry or wrong in the 25 m mask, so diagrams and track water pricing lack them.
+  - Goal: The big rivers show wet in the mask.
+  - Other: Likely the river-area multipolygons in pipeline/osm_water.py. Wait until no join runs. notes/T-2497.md
+- T-2511 [P3] {L:schematic-rivers} Diagram sea fallbacks
+  - Context: Jamaica Bay is not sea on the ground, the Boso side of Tokyo Bay is partly land, and the sea ends in a straight cut 40 pitches past the network box.
+  - Goal: Those three look right when zoomed out.
+  - Other: notes/T-2497.md
+- T-2518 [P3] {L:schematic-rivers} Diagram river drawing time
+  - Context: After T-2516, all Japan's rivers take about 4.2 s (was 1.2), New York 0.9-1.4 s, in the layout worker after each rebuild.
+  - Goal: Faster river drawing; goes with T-2498.
+  - Other: notes/T-2516.md
+- T-2498 [P3] {L:schematic-rivers} Diagram water time
+  - Context: The ground's water takes 4.9 s for all Japan (0.7 s New York) and is redone after every rebuild that moves a station.
+  - Goal: Keep water per tile in mercator so an edit redoes only its tiles.
+  - Other: notes/T-2169.md
+- T-2148 [P3] {L:money} Save size from money history
+  - Context: Saves keep every day of every region's ledger, about 30 bytes a region-day. A big world game could near the 4 MB account cap.
+  - Goal: If saves get big, days older than 90 fold into weeks.
 Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026-11-03d.md, her shots in artifacts/trainworld/anita-2026-11-03d/):
-- T-2209 [P3] {L:buses} Ferry routes in canals at the 10 m limit: Amsterdam's grachten route (3.0 km) is not found at 2.5 m cells (an 11 m canal, a seam between water polygons), so Centraal to Rijksmuseum goes by the Amstel (4.25 km); 1-4% of Venice's and Amsterdam's routes under 5 m. Perhaps a 1.5 m cell for short canal legs, or seams under a cell closed. notes/T-2177.md "T-2192 results". Open.
-- T-2188 [P3] {L:solve-speed} A city line's edit ends with its local solve, no whole solve of the cluster (the "Trips in 18 cities" step): the touch rule already re-solves only the line's zone (city game: Tokyo alone, 0.1 s; the whole solve 8 s), and on the real Tokyo save the local result was within 83 riders of the whole (31.7M). Open. notes/T-2188.md.
-- T-2189 [P3] {L:small-fixes} The edit note forgets edits not settled in 5 minutes (`GIVE_UP_MS`, game/editNote.ts): Tokyo's real save on one demand worker settled in 352-361 s and showed no note. Raise it, keeping the level-of-detail hold it now bounds (T-2180) short. Open.
-- T-2198 [P3] {L:passing-tracks} Mark where faster trains lose time behind slower ones (T-1924's following loss, wire kind 11): it can be minutes a train, yet it shows only in the line panel ("Behind X trains"), never on the map or in the trouble list, and drawn it is trains bunched behind slower ones, which reads as a jam with no mark. Open; notes/T-2185.md. notes/T-2198.md.
-- T-2199 [P3] {L:trains-drawn} Trains drawn far behind their timetable at a full merge: T-2185's test Y at 100% (`checks/t2185-merge.mjs`, 10 trains a line, cut to 12.5 an hour each) drew 9-15 trains over 30 s late, up to 5-10 min, all on one line's approach to the merge, where at 92% the most was 20 s-2 min. Open; notes/T-2185.md. notes/T-2199.md.
-- T-2200 [P3] {L:achievements} {after:T-2150} Named crossings (Anita 2026-11-03: "ok we can do named crossings. perhaps have them hidden so as to not clog if u haen't made them"): a hand-made list of 20-30 real straits, base tunnels and great lines (built or proposed), each marked when a running line uses it, hidden until then; after T-2150 (sea crossing). research/late-game-spending.md B. Open.
-- T-2201 [P3] {L:track-speed} Maglev (Anita 2026-11-03: "oh yeah we could do maglev lol. can make it super expensive. would be good for being competitive with planes"): a third track kind, 500 km/h, its own track, a high price. Design first; it only pays if long trips ride rail (T-1504). research/late-game-spending.md C. Open.
+- T-2209 [P3] {L:buses} Ferry routes in narrow canals
+  - Context: Amsterdam's grachten route is not found at 2.5 m cells, so it goes by the Amstel; 1-4% of Venice and Amsterdam routes under 5 m are affected.
+  - Goal: Short canal ferry routes are found.
+  - Other: notes/T-2177.md "T-2192 results".
+- T-2188 [P3] {L:solve-speed} City line edit ends with its local solve
+  - Context: The touch rule already re-solves only the line zone (Tokyo 0.1 s against 8 s whole), and the local result was within 83 riders of the whole.
+  - Goal: A city line edit ends with the local solve, no whole solve.
+  - Other: notes/T-2188.md
+- T-2189 [P3] {L:small-fixes} Edit note forgets slow edits
+  - Context: The edit note gives up after 5 minutes (`GIVE_UP_MS`). Tokyo's real save settled in 352-361 s and showed no note.
+  - Goal: Raise the limit and keep the level-of-detail hold (T-2180) short.
+- T-2198 [P3] {L:passing-tracks} Mark where faster trains lose time
+  - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list.
+  - Goal: The loss is marked on the map or in the trouble list.
+  - Other: notes/T-2198.md
+- T-2199 [P3] {L:trains-drawn} Trains drawn late at a full merge
+  - Context: At 100% in the T-2185 merge test, 9-15 trains were drawn up to 5-10 min late, all on one line. At 92% the worst was 2 min.
+  - Goal: Trains at a full merge are drawn close to their timetable.
+  - Other: notes/T-2199.md
+- T-2200 [P3] {L:achievements} {after:T-2150} Named crossings
+  - Context: Your 2026-11-03: "ok we can do named crossings. perhaps have them hidden". A hand-made list of 20-30 straits and tunnels. Comes after T-2150.
+  - Goal: Each is marked when a running line uses it, hidden until then.
+  - Other: research/late-game-spending.md B
+- T-2201 [P3] {L:track-speed} Maglev track kind
+  - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
+  - Goal: A maglev track kind, design first.
+  - Other: research/late-game-spending.md C.
 Anita 2026-11-03 early afternoon (verbatim in notes/todo-2026-11-03g.md):
 Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
-- T-2240 [P3] {L:passing-tracks} The express's last minute: on a timetabled overtake pair, the shared-track queue (58 s) and terminus queue (8 s) still sit on top of the overtake plan (T-2231's 180 km line at 10/10: +1.2 min over free, 8 s of it overtakes). Decide whether pairs the timetable already orders should skip that queue. notes/T-2228.md 8. Open.
-- T-2241 [P3] {L:passing-tracks} Three-speed lines (local, rapid, express) with passing tracks: T-2231's plans are pairwise and a local's waits for several faster lines are added up. Measure on a three-line test before changing anything. notes/T-2228.md 8. Open.
-- T-2216 [P3] {L:islands} Islands I4: market zone pairs on two parts or landmasses solved with rail as the only ground mode (plane where it has one) in place of "fixed, never solved" (1.45M longer trips and 631,000 commutes a day today); market zones take their part; closes T-1396 under "car ferries ignored". Own worktree (intercity); T-2214 is done. Open. notes/T-2216.md.
-- T-2256 [P3] {L:islands} Islands I2b (from T-2214): the land-parts rule where local demand still lacks it: a selection's far end by cell, and the regional layer's commutes and outings across zone lines (`intercity.rs`, `cross.rs`). Done when Sado's far-end bubbles and Salamis's zone-line commutes show no car or walk off the island. notes/T-2214.md. Open. notes/T-2256.md.
-- T-1864 [P3] {L:solve-consistency} Barrier solves (3 workers) keep clean market clusters, which T-1607's split marks all dirty (T-1850 stage 3). Measure how often it happens first. notes/T-1850.md. Open.
+- T-2240 [P3] {L:passing-tracks} Express still queues on an overtake pair
+  - Context: On a timetabled overtake pair, the shared-track and terminus queues still add 66 s on top of the overtake plan.
+  - Goal: Decide whether pairs the timetable already orders skip that queue.
+  - Other: notes/T-2228.md section 8
+- T-2241 [P3] {L:passing-tracks} Three-speed lines with passing tracks
+  - Context: Overtake plans are pairwise, so a local's waits for several faster lines are added up.
+  - Goal: Measured on a three-line test, then changed only if it matters.
+  - Other: notes/T-2228.md section 8
+- T-2216 [P3] {L:islands} Islands: ground-only solve for island pairs
+  - Context: Market zone pairs on two landmasses are "fixed, never solved" today (1.45M longer trips, 631,000 commutes a day).
+  - Goal: They solve with rail as the only ground mode; closes T-1396.
+  - Other: Own worktree (intercity). notes/T-2216.md
+- T-2256 [P3] {L:islands} Islands: land-parts rule in local demand
+  - Context: Local demand still lacks the rule in far-end selection and the regional layer's commutes (intercity.rs, cross.rs).
+  - Goal: Sado and Salamis show no car or walk off the island.
+  - Other: notes/T-2256.md
+- T-1864 [P3] {L:solve-consistency} Barrier solves lose clean market clusters
+  - Context: Barrier solves with 3 workers keep clean clusters, but T-1607 marks them all dirty.
+  - Goal: Measure how often it happens, then decide whether to fix.
+  - Other: notes/T-1850.md
 Anita's playtest of buses and the round, 2026-10-26 (evening). "buses are cool!"
 Anita's answers on T-1411 and T-1412's ideas, 2026-10-26 (afternoon). Not wanted: riders before you pay ("people can just build it and find out"), growth near good stations (confusing), flights or freight you run.
 Anita's TODO.md short term, filed 2026-10-27 (morning). Her priorities: memory per zone and worker high; rest of the world after the finer demand calibration.
 Anita's TODO.md short term, filed 2026-10-28 (afternoon).
-- T-1681 [P3] {L:single-track} Doubling up the real save: 122 of 1,093 double-track pieces are refused with PlatformCrossing (another track crossing at the same level where the pair's twin platform goes), found by T-1678's scan. Check whether that is right or the twin station could go elsewhere. Open.
+- T-1681 [P3] {L:single-track} Doubling up refused in the real save
+  - Context: 122 of 1,093 double-track pieces are refused with PlatformCrossing.
+  - Goal: Know whether the refusals are right, or place the twin station elsewhere.
 Anita's TODO.md short term, filed 2026-10-27 (night).
-- T-1736 [P3] {L:solve-consistency} After 40 minutes of edits on all of Japan the last whole solve differs from a fresh solve of its network in one zone (Okayama: 1 line, 13 stations, about 2e-9 of their figures; T-1734's run `jp-steady1`; again 2026-11-04 after its rebase, `artifacts/trainworld/solveend/jp-steady`). Find which state carries over (a level refine's periods, a market kept across networks) and make it equal to the bit. Open. notes/T-1736.md.
-- T-1764 [P2] {L:solve-speed} Touch rule, rule 2 left (rule 1 done 2026-10-29, see ARCHIVE): a line with at most 3 stops in a zone's view (one of its own plus pads) no longer touches it on trains an hour or run times. Open. notes/T-1764.md.
-- T-1763 [P3] {L:frame-rate} After T-1644, the overlay at zoom 15 on all of Japan still draws every station box (9,529, three passes, about 1.1 ms) and train (about 0.8 ms) whatever is on screen; cull both to the view with a spatial index (about 1.5 ms a frame; also the 18-19% GPU with the clock running and the map still). notes/T-1644.md. Open.
-- T-1760 [P3] {L:solve-speed} A new express shows about a quarter of its market riders until the whole solve lands on all of Japan (a 623 km copy: 26% in play, against 72-85% at free flow on T-1650's network; China's HSR express 64%). Open. notes/T-1760.md.
-- T-1444 [P3] {L:real-networks} A game mode with a city's real network run as a rival to win riders from (Anita: a new game mode). After T-1305. Open.
+- T-1736 [P3] {L:solve-consistency} Last whole solve differs from a fresh solve
+  - Context: After 40 minutes of edits on Japan, Okayama differs by about 2e-9 of its figures.
+  - Goal: Find the carried-over state and make the solve equal to the bit.
+  - Other: notes/T-1736.md
+- T-1764 [P2] {L:solve-speed} Touch rule: skip lines with few stops in view
+  - Context: Rule 1 is done; rule 2 left: a line with at most 3 stops in a zone view should not touch it on trains an hour or run times.
+  - Goal: Rule 2 is in and tested.
+  - Other: notes/T-1764.md
+- T-1763 [P3] {L:frame-rate} Cull overlay stations and trains to the view
+  - Context: At zoom 15 on Japan the overlay still draws all 9,529 station boxes and every train, about 1.9 ms a frame.
+  - Goal: Both are culled to the view with a spatial index.
+  - Other: Also trims the 18-19% GPU use. notes/T-1644.md
+- T-1760 [P3] {L:solve-speed} New express shows a quarter of its riders
+  - Context: A new express on Japan shows about 26% of its market riders until the whole solve lands, against 72-85% at free flow.
+  - Goal: A new express shows near-final riders at once.
+  - Other: notes/T-1760.md
+- T-1444 [P3] {L:real-networks} Real network as a rival game mode
+  - Context: You want a mode where a city's real network runs as a rival to win riders from. After T-1305.
+  - Goal: The mode exists.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1502 [P3] {L:money} Bus money by region on a road route: `regionMoney.ts` shares a route's road km by the chords between stops, rougher on a winding route; share by the route's own points (notes/T-1465.md). Open.
-- T-1446 [P3] {L:community} Share a game by link, read only (Anita: yes). Open.
-- T-1447 [P3] {L:track-drawing} Copy and paste blueprints between saves (Anita: yes). Open.
+- T-1502 [P3] {L:money} Bus money shares by route points
+  - Context: regionMoney.ts shares a route's road km by chords between stops, which is rough on a winding route.
+  - Goal: Shares follow the route's own points.
+  - Other: notes/T-1465.md
+- T-1446 [P3] {L:community} Share a game by link, read only
+  - Context: You said yes.
+  - Goal: A link opens a shared game read only.
+- T-1447 [P3] {L:track-drawing} Copy and paste blueprints between saves
+  - Context: You said yes.
+  - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-993 [P3] {L:accounts-server} noritetsu's account delete question (`noritetsu/dist/account.js`, "Delete your account? Local saves will stay.") should say trainsworld's leaderboard entries go too, since the account is shared (T-972); its privacy page could mention trainsworld. Open.
-- T-1791 [P3] {L:small-fixes} Line groups, stage 4 only (stages 1-3 landed, ARCHIVE): boardings in the group view; left out of stage 2 as a later stage if wanted. Open; notes/T-1791.md.
-- T-3398 [P3] {L:translations} The next languages, Indonesian first, then Italian, Polish, Arabic (right to left: the interface mirrors), maybe Malay, Dutch, Thai. Anita 2026-11-16: "replace with new list, indonesian first in the queue"; her TODO: "add languages... indonesian, italian, polish, arabic / malay? dutch? thai". Replaces T-2851. Non-Latin scripts need a font and place-name check. research/localization.md. Open.
-- T-3401 [P3] {L:accounts-server} Sign in on the landing page, before the New game button. Her TODO 2026-11-15: "should probably show sign in on the landing page, even before the new game button... do we do that?" Check what the start screen shows now, answer her, and add it if missing. Open.
-- T-3402 [P3] {L:community} Community: the page switcher on all three views and the total count. Her TODO 2026-11-15: "be able to view pages after the first page in community? currently can only see page switcher on the "most liekd" view for some reason ... do we only show a fixed number of saves? ... maybe capping to show 26 or something, would be nice to be able to see everything (like 1/xx pages) to give at least sensation of big community." Open.
-- T-3403 [P2] {L:map-look} Profit map mode on single track and flyover single track splits says no trains run over one of them. Her TODO 2026-11-15: "profit map mode doesn't handle single track / flyover single track splits well (says no trains run over one of them)". Bug. Open.
-- T-3404 [P3] {L:small-fixes} The intercity trip explorer's effective time hover lacks the breakdown the city one shows. Her TODO 2026-11-15: "intracity trip explorer effective time hover for tnsit shows tooltip explaining breakdown as equation, but this tooltip is missing for intercity". Open.
-- T-3406 [P3] {L:small-fixes} A station's "waiting now" split by direction. Her TODO 2026-11-15: "in stations show "waiting now" separated by direction (maybe with arrows pointing in the direction)". Open.
-- T-3407 [P3] {L:money} Money plot times in the save's local time. Her TODO 2026-11-15: "money plot timestamps do not match local time, ideally have it match wherever you started the save what city you first built in or whatever we trakc thats simialr to that. and perhaps be able to change the time zone at the bottom of finances pane". Open.
-- T-3409 [P3] {L:schematic} A schematic of one city or a chosen set of cities. Her TODO 2026-11-15: "i think schematic map maybe looks good if youonly build in one city? does building farther away degrade performance locally? if so maybe we can just work on preserving the smaller look. also give option to generate schematic of just one city or a set of cities, i guess". Answer her question with the change. Open.
-- T-3413 [P3] {L:community} Save lineage: a save records who made the first version and who copied it. Her TODO 2026-11-15: "on metrodreamin people "steal" each others maps ... perhaps we should record in each save like who the original author is? ... and also mybe records that you downloaded it. so if someone else downloads it there is a tree (or i guess, a linear path) we can trace". Design first, for her. Open.
-- T-3414 [P3] {L:small-fixes} About 4 px between the issues panel and its toggle. Her TODO 2026-11-15: "separate issues panel from issues panel toggle by 4 or so px of space". Open.
-- T-3416 [P3] {L:small-fixes} A very long line group name can stop it being changed; check line names too. Her TODO 2026-11-15: "bug: if you make erally long name for line group sometimes you can no longer chaneg it (check if this is true for line names too in sme cases?)". Bug. Open.
-- T-3420 [P2] {L:map-look} Hide or show lines by type, one by one, and by track level. Her TODO: "hide only soem types of lines (maybe hide/show by linet ype, and also hide/show individual lines? and a shwo all button) (also hide/show by level (very necessary so that people can delete things that are perfectly overlapping)? fade in for ramps ?)"; also "add line bundles, like line groups but juts for grouping in the lines list ?". Players ask too (board request "Hide lines"; feedback 11-15 "路線を任意で非表示にする機能が欲しい"). Her design (scratch pad 2026-11-16): "maybe we should have a button on lines list to toggle showing toggles for visibility of each lines and line groups. with a "show all" that shows up (without changing layout) if nything is hidden. then the visibility of levels can be in a different spot, perhaps in settings where we say like "show lines by level" in the "show" section and then on the next line we have a level selector kinda like the -3 to +3 that shows up when we are constucting track. and they are all enabled, and we can click levels to hide them." Ready to build to that; list player strings for her.
-- T-3421 [P2] {L:track-speed} High-speed auto-ramps over water run at 160 km/h, not 320 (player report via Anita's scratch pad 2026-11-16: "someone reports high speed autoramps over water are lowkey 160km/h rather than 320"). Find whether a ramp, gradient or bridge rule caps it or it is a bug; fix a bug, take a rule to her. Reach: anyone building high speed over water.
-- T-3422 [P2] {L:rebuild-track} Trains still run over part of a flyover that is blueprint (player report via Anita's scratch pad 2026-11-16: "someone reports part of flyover is blueprint but trains still running there"). Reproduce: blueprint pieces should carry no trains (or the piece is built and drawn as blueprint). Bug.
-- T-3424 [P1] {L:board} A changelog for the next update on the board (Anita 2026-11-16): "whenever we add a feature or do something you guys can put an item in the changelog. i should have the ability to edit any item's wording (though that doesnt make it ifnal, if something new happens or u think its wrong u can re-ediit it later when u re-review it closer to release) and i should have the ability to hide any item (so that it doesn't actually make it into the posted changelog, though it is still in our hidden changelog cuz its clear that we did it...)". Plan: items in a committed JSON per release, an agent CLI to add, her edits and hides saved directly from a Changelog view (pad-style versioned save), the publish step writes updates.ts from visible items. Also on the board: drag to resize every column of a notes table ("mostly just wan tit for the left-most column").
-- T-3423 [P3] {L:small-fixes} Line groups inside line groups, many levels deep (Anita's scratch pad 2026-11-16: "people requested line group groups. i think we can just do infinitely nested groups. or like, many levels deep allowed."). Lines list and group view; saves keep loading.
-- T-3417 [P3] {L:map-look} A pixel-art style city map, like the ones going around Twitter. Her TODO 2026-11-15: "maybe do something along the lines of those popular "pixel-art style" city maps that have been going around twitter?" Idea; a mock for her first. Open.
-- T-3418 [P3] {L:map-look} An isochrone map mode: travel time from a point to everywhere. Her TODO 2026-11-15: "isochrone map mode: see travel time from a poitn to everywhere". Design first. Open.
+- T-993 [P3] {L:accounts-server} Account delete text should mention leaderboards
+  - Context: noritetsu's delete question says only "Local saves will stay." The account is shared with trainsworld (T-972).
+  - Goal: The text says trainsworld leaderboard entries go too, and the privacy page mentions trainsworld.
+- T-1791 [P3] {L:small-fixes} Boardings in the line group view
+  - Context: Line groups stage 4 only; stages 1-3 landed. Boardings in the group view were left out of stage 2.
+  - Goal: Boardings show in the group view, if wanted.
+  - Other: notes/T-1791.md
+- T-3398 [P3] {L:translations} The next languages
+  - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
+  - Goal: Indonesian is added first, then the others in order.
+  - Other: Non-Latin scripts need a font and place-name check. research/localization.md
+- T-3401 [P3] {L:accounts-server} Sign in on the landing page
+  - Context: Your TODO 2026-11-15: "should probably show sign in on the landing page, even before the new game button... do we do that?"
+  - Goal: Check what the start screen shows, answer you, add sign in if missing.
+- T-3402 [P3] {L:community} Community page switcher on all views
+  - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
+  - Goal: All three views have a page switcher and a total count.
+- T-3403 [P2] {L:map-look} Profit map mode on single track splits (taking, 2026-11-16, agent bugs2)
+  - Context: Your TODO 2026-11-15: profit map mode says no trains run over one of a single track or flyover single track split. It is a bug.
+  - Goal: Both sides of a split show their own profit.
+- T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown
+  - Context: The city trip explorer's effective time hover explains the breakdown as an equation. The intercity one has none.
+  - Goal: The intercity hover shows the same breakdown.
+- T-3406 [P3] {L:small-fixes} Waiting now split by direction
+  - Context: Your TODO 2026-11-15: show "waiting now" separated by direction at stations, maybe with arrows.
+  - Goal: A station shows waiting riders per direction.
+- T-3407 [P3] {L:money} Money plot in the save's local time
+  - Context: Your TODO 2026-11-15: money plot times do not match local time. You want the first-built city's time zone, changeable in the finances pane.
+  - Goal: Plot times follow the save's time zone, with a way to change it.
+- T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
+  - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
+  - Goal: Answer your question, and add a way to draw a schematic of chosen cities.
+- T-3413 [P3] {L:community} Save lineage: original author and copies
+  - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
+  - Goal: A design for you first; then a save traces back to its original.
+- T-3414 [P3] {L:small-fixes} Space between issues panel and its toggle
+  - Context: Your TODO 2026-11-15: about 4 px between the issues panel and its toggle.
+  - Goal: 4 px of space.
+- T-3416 [P3] {L:small-fixes} Very long line group name locks the name
+  - Context: Your TODO 2026-11-15: a really long line group name can stop you changing it. Check line names too. It is a bug.
+  - Goal: Long group and line names stay editable.
+- T-3420 [P2] {L:map-look} Hide or show lines by type and level (taking, 2026-11-16, agent visibility)
+  - Context: Your design 2026-11-16: a lines-list button toggles per-line and per-group visibility, with a "show all" when anything is hidden. Levels get a selector in settings, like the -3 to +3 one.
+  - Goal: Hide lines by type, one by one, and by track level, as you designed it.
+  - Other: Player strings go to you for review. Players asked too (board request "Hide lines").
+- T-3421 [P2] {L:track-speed} High-speed auto-ramps over water run at 160 km/h (taking, 2026-11-16, agent bugs2)
+  - Context: A player reports they run at 160 instead of 320. Not yet known if a ramp, gradient or bridge rule caps it.
+  - Goal: Fix it if a bug; bring you the rule if intended.
+- T-3422 [P2] {L:rebuild-track} Trains run over blueprint flyover (taking, 2026-11-16, agent bugs2)
+  - Context: A player reports part of a flyover is blueprint but trains still run there.
+  - Goal: Blueprint pieces carry no trains.
+- T-3424 [P1] {L:board} Changelog on the board (taking, 2026-11-16, agent changelog)
+  - Context: Your 2026-11-16 ask: items you can edit and hide, kept in a hidden changelog. An agent is taking it.
+  - Goal: The board has a Changelog view; publishing writes updates.ts from visible items.
+  - Other: See Also in this task: resizable columns in notes tables..
+- T-3423 [P3] {L:small-fixes} Line groups inside line groups
+  - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
+  - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
+- T-3417 [P3] {L:map-look} Pixel-art city map style
+  - Context: Your TODO 2026-11-15: a pixel-art style like the city maps going around Twitter. An idea.
+  - Goal: A mock for you first.
+- T-3418 [P3] {L:map-look} Isochrone map mode
+  - Context: Your TODO 2026-11-15: a map mode showing travel time from a point to everywhere.
+  - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3335 [P3] {L:quad-track} A line on both quad pairs (T-3333): the parts of its panel that still show its own pair only. The timetable chart (`line_trips`), the held trains and turning alerts (`line_held`), the delay places (`lineDelays`, `lineWaits`), its riders before the account counts them (demand's `ridersPerDay`), and the boardings at the stations beside its stops (counted at its own). Each folds the hidden twin's answer into the line's, as `foldTwins` does for the past day; about 2-3 h. Open. notes/T-3333.md "As built".
-- T-3326 [P2] {L:feedback} {waits:Anita} Screenshots in feedback, Anita's TODO 2026-11-12: "when people submit feedback allow them to attach a screenshot or up to 4 by pasting or attaching". App form plus shonei-server (store, caps, feedback.py `--shot`); the server side needs her word to deploy. Server (shonei-server 7a635f7, e5a132a), feedback.py, the form and the inbox thumbnails are built (form and inbox in worktree branch tw/fbshots, check `checks/t3326-feedback-shots.mjs`); open until the branch is merged, the server deployed with her word and the other languages translated. Notes: notes/T-3326.md.
-- T-3365 [P2] {L:track-kinds} {waits:Anita} What single, double and quad track are to the player, design first, Anita 2026-11-12: "i am pretty confused. i guess cuz i am not totally sure what a quad track really *is* at this point, and where it ends. i feel like we should maybe rigorously define this and think about what we want to present to the player and how we want them to think about single, double, and quad track in the long term. i think like perhaps a two-level understanding is acceptable, like for instance maybe the advanced understanding is "everything can be thought of as a collection of single tracks" but the simple understanding is "everything is thought of as a collection of double trcks" ??" Her answers 2026-11-12 (recorded in notes/T-3365.md and DECISIONS; parked until after v0.3.3, "lets not talk about this any more until we come back to it"). Also: "adding to the confusion significantly is the automatic crossovers. which i do think are important, i think its important that new players odnt have to think about crossovers. but like when do they get placed in game, when are they actually drawn, and when should we have to put manual crossovers?" Before T-3348 is built; plan for many parallel tracks long term. Crossovers folded in (Anita, same evening). Design done 2026-11-12 (t3365): two levels (simple counts in doubles, advanced every track has a way), quad as one remembered thing, count icons always count tracks, crossover rules; waits for her five calls. notes/T-3365.md. Anita 2026-11-16: she has handwritten thoughts to transcribe and discuss first. Her TODO 2026-11-15: "make more obvious when ur building single track or double or quad, and when ur looking at it . also maybe make it more obvious when ur looking at a bus line or tram or train or hsr"; "for double track... maybe just make everything single track ... maybe we could store double as a bundle of singles to stay compact?".
-- T-3373 [P2] {L:memory} Demand workers share one copy of the zone data, design first. Anita 2026-11-12: "yeah seems like we might wanna look into sharing if we havent already, lets file", after player cookie (Discord, Firefox on Linux, 10.3 GiB machine): one content process at 7.4 GB after 43 min, "it wont stop growing", "each worker seems to be getting its own copy of the memory? is there a reason they arent sharing it? also looks like youre storing everything as Objects why not typed arrays?" Today every solving worker holds its own WASM copy of the zones it solves (250-550 MB a big city, 1.3 GB all-China, plus 170-340 MB JS heap each; 3 workers on 12+ threads; notes/T-3329.md, T-3071.md). Options to weigh: (a) one WebAssembly.Memory over a SharedArrayBuffer, which needs COOP/COEP (GitHub Pages can't send them: coi-serviceworker or a host move; every cross-origin fetch, R2 packs and map tiles, then needs CORS/CORP); (b) split work between workers by zone instead of by period, so no worker holds every zone; (c) fewer workers when memory is tight (T-3072 only does this after an out-of-memory). Also check his "won't stop growing" (a leak over a long session, Firefox) and where the main thread and clock worker keep big data as JS objects. Hours and the figure each option saves, to Anita before building.
-- T-3386 [P2] {L:single-track} A one-way leg whose way is only inferred turns two-way once a station splits it (found by perdir, 2026-11-13): the inference (`derive_ways`) stops at stations, so on a double split into two single legs the player must set each leg's way by hand before per-direction stops work. Carry the inferred way through stations on single track.
-- T-3384 [P3] {L:stops} Waypoints on lines (Anita 2026-11-13, among the weekend's single-track complaints: "we could also maybe allow adding waypoints on lines"): a line passes through a point it doesn't stop at, to pick its path. Design first. Goes with T-3079 (exact stop spacing back; Anita 2026-11-16: "they should also have the ability to do waypoints"); her TODO 2026-11-15: "waypoints for trains".
-- T-3383 [P2] {L:single-track} Line panel: say when the wait is on single track (Anita 2026-11-13, after a Yakutsk save of two lines sharing a single-track stretch read "Waiting at busy track" 30-35 min against 11-22 min running: "we should maybe say 'waiting at busy single track' when its single track. so its more obvious. no need for hotfix"). The round-trip breakdown's "Waiting at busy track" row, and its per-place rows ("On the track near X"), say single track where the wait is on single track ("Waiting at busy single track", "On the single track near X"); new strings in every language, for her text review. While there: both lines showed exactly 24m00s near the same station; check that figure is a real wait and not a cap or a stuck-train fallback. Pictures: artifacts/trainworld/reports/t3383-line1.png, t3383-line2.png.
-- T-3382 [P3] {L:twstats} {after:15-minute ring live a week} "Where people play" in twstats (Anita 2026-11-13: "we dont have a way of seeing what cities people are actually building in / playing in, right?"): the server records only each play's start city. Plan (twstats3): the game adds the save's current city (registry id of the city under the map centre or most of the network) to the ping every N minutes or on change; the server keeps minutes per day per that city beside `starts`; the page adds a "where games are played" view. About 3-4 h. Wait until the 15-minute ring (shonei-server 8391326) has been live a week. Folded in T-2910 (Anita 2026-11-09: "track like what cities people build in").
-- T-3379 [P2] {L:single-track} Single track joined to one side of a double track draws a kink (player report via Anita 2026-11-13): double track built first, single track built separately ahead of it, then the single track's end drawn to one side of the double's end; the join shows a short sideways jog where the single meets one track of the pair. Picture: artifacts/trainworld/reports/t3379-single-to-double-kink.png. Find whether it's only drawing (the offset of single vs one track of a pair) or the geometry.
-- T-3380 [P2] {L:single-track} Delete ghost on single track is drawn as double (player report via Anita 2026-11-13): hovering single track with the Delete tool shows the red highlight two tracks wide, with the single track between ("Remove 0.08 km of built track"). Picture: artifacts/trainworld/reports/t3380-single-delete-ghost.png.
-- T-3381 [P2] {L:station-placement} A station joined to a complex shows its generated name in the corner notice (player report via Anita 2026-11-13): "the new feature of taking on a connected station's name seems to only apply after the corner notification, so you see the generated name there despite it not surfacing afterwards". The built-station notice should use the shared complex name (v0.3.3 "stations within a station complex share a name by default").
-- T-3378 [P2] {L:buses} Bus vs tram balance, BRT (Anita 2026-11-13: players "consistently complain about buses being not good, and metros/trams being too good. this checks out with my experience too and someone measured it against irl"; some ask for "BRT"; "will come back to that later when we have more usage ... can do it with other requested modes too"). Thoughts so far (maps-19): the game's bus already assumes a bus lane (0.9x car speed, never under 30 km/h moving, 28 s a stop, about 19 km/h in a dense centre); its weak spot is the 6 perceived minutes per bus boarding and 80 a bus. Street tram is capped at 60 km/h with no boarding cost at 0.1x track price, so it acts like light rail on its own lane. Real figures: city bus 12-18 km/h, BRT 20-30 (TransMilenio ~26, Guangzhou ~23, Istanbul Metrobus ~40), 150-250 an articulated bus; street tram in traffic 15-20, light rail on its own way 20-30. Idea: a drawn busway priced per km (buses up to 50-60 km/h off traffic, BRT stations with short dwell and most of the boarding cost gone, articulated buses ~150), 1-2 days; or a per-line BRT upgrade, a few hours. Pair with street tram slowing to traffic (~0.9x car), tram on its own track keeping 60. Ask Anita for the player's real-life measurement. Design for her first; fold in other requested modes. Folded in T-1467 (a bus lane upgrade).
-- T-3377 [P3] {L:open-source} Mod support beyond forks (Anita 2026-11-13: "since its open source want to in general give modders lots of power to do things"; level 1, the data open to any site, done). Level 2: rule and content mods as data files (game numbers, vehicle and line types, start conditions) loaded by link, listed in Settings, stored with the save, modded games off the leaderboards, about a day. Level 3: a JavaScript mod API (overlays, panels, build events, read network and demand) built on the internal edit API, 2-4 days plus keeping it stable, and a sandbox or an approved list for safety. Level 4: player-built city packs loaded by link. Design first, for her; wait for modders' asks.
-- T-3376 [P2] {L:jobs-places} Industrial areas' jobs (Anita 2026-11-13: "semi high prio to try to fit industrial areas in general later"; the published figure for Jurong Island is "over 27,000", so about 4-5x high; not blocking v0.3.3). Jurong Island holds 128,000 jobs in the game after T-3287's Singapore fix (Singapore's jobs total, 3.53M, is spread by built surface, and the island's refinery tanks count as buildings). Find a sourced workforce figure and how jobs are placed on industrial land with tanks (other refinery and port areas likely the same); propose a fix. From gaprun3's check, 2026-11-13.
-- T-3375 [P2] {L:region-redraws} Units with no residents next to a metro stay dark (ports, industrial estates, airports, reclaimed land: Singapore's Tuas, Jurong Island and Pioneer were, fixed by hand in T-3287 11-13; likely Rotterdam's Maasvlakte, Jebel Ali). A metro takes a unit only when half its people live in the urban centre, and a unit of 0 people never does; free, it falls under the density floor. Proposed rule (gaprun3): a free unit under the floor that shares at least half its land border with one metro joins that metro. Worldwide scan to count the cases first, then a plan change and rebuilds. From Anita's Singapore/Jurong player report. Half done 11-13 (gaprun3): a unit's outline now keeps a piece with nobody in it when it holds 0.2 km2 of GHSL built surface (osm_units.py `BUILT_KEEP_M2`, rows built from now on; Jurong Island and Sentosa came in that way); the other half, units with no residents beside a metro, remains.
-- T-3371 [P3] {L:checks} t3260-track-bar part B fails on master (f90e7495, run 11-12 by maps-19): the track ghost's tag no longer says "Hold Ctrl to draw straight" ("0.48 km, cost 1.00x, $35.7M | +1 | 79 km/h"). Find whether the line was dropped on purpose (then fix the check) or lost.
-- T-3370 [P3] {L:buses} Bus route drag follow-ups, from T-3366: hide the network's own hover ("Bus 1 / Bus line / Not running yet") while over the route's path in Edit route; check whether dragging by touch works and fix the "By touch" line in docs/ui-building.md (says dragging points needs a mouse).
-- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries, Anita's TODO 2026-11-12: "schematic map settings / show buses, ferries". After T-3345's stage 2 lands (same code). Folded in T-3019 (Anita 2026-11-10: buses laid on top wherever they fit without changing the layout, drawn much thinner than rail).
-- T-3358 [P3] {L:schematic-rivers} {after:Anita raises rivers again} Schematic water continuity, PAUSED by Anita 2026-11-12 night after seeing prototype 2's London picture: "i do want the river to still be straightened... i misinterpreted and thought we were leaving the lines unstraightened ... i do not like the river look ... lets pause / stop that pursuit". The build (rivers2) was stopped and its tree dropped; don't restart until she raises rivers again. Anita 2026-11-12: "the other major pressing issue is that water looks bad in terms of river continuity, rivers often show up as strings of disconnected oval lake blobs." Study and mock first, she reviews before anything lands (as T-3345). Study done 2026-11-12 (t3345). Anita: option 1 (join each river into one course) and, first, stations never on water and always on their own bank. Measured: none on water today; 0-27 stations a city on the wrong bank, and joining courses alone makes it worse, so not landed; parked work and the next step (one-sided fit corridors) in the notes. Tried 2026-11-12 (schem2): the band's own side fix and the carry meeting wrong-bank stations harder both fail (New York 27-42 wrong); next: narrow crossed rivers stiff in the carry. Parked, notes "T-3358 rivers: tried". notes/T-3345.md. Anita 2026-11-12 evening: "would like to continue working on rivers. perhaps we do need to try out drawing the river as a train line first, and then sort of tying it in somehow to make it look visually coherent. might want some brainstorming to happen before we jump into code agian for this project". Brainstorm done 2026-11-12 (rivers), notes/T-3358.md: recommends her idea (river as a stopless line in the layout, crossings held on the right hop), a 2 h prototype on New York and London first (wrong banks 0, straight share down at most 3 points), else B (thread the river through the gaps after layout, 6-9 h). Prototype 1 (river as a line) failed: London 19/145 wrong bank. Prototype 2 (her idea, 11-12: don't straighten near rivers; stations within 1.5 km of a crossed river end their pieces) works: wrong pairs New York 11 -> 1 of 59, London 97 -> 27 of 1,469 (12-15 with a second pass), straight share unchanged. Next (6-8 h): land "near", one course and one width per river, pairs check standing, second pass if needed. Waits for her go.
-- T-3354 [P3] {L:single-track} A one-track station's platform jumps to the other track when a node drag turns its track through due north-south, from T-3332: the way is stored against a fixed east (or north) axis (`net::one_for_travel`), which flips there. Fix: in the drag's op, turn `StationData::one` round when the heading crosses north-south (about 1 h). Reach: rare. notes/T-3332.md.
-- T-3353 [P3] {L:single-track} A second single from a double's end refused when the first came in at an angle, from T-3344 (report 5174140f): the double is drawn tangent to the slanted first single, so a second single to a close target on the other side gets RadiusTooSmall. Fix lets a route leave a node anywhere in the cone between the ends' headings (`lead_in` / `nearer_dir`, sim/src/track/wasm/draw.rs), which changes every junction's geometry; a design call, 4-6 h. Reach: a handful. notes/T-3344.md.
-- T-3345 [P2] {L:schematic} {waits:Anita} Better schematic, Anita's high-level list ("better schematic") and 2026-11-12: "i think schematic improvements are kinda hard, but we could have someone take a stab at them. i definitely want to review before we put anything in, cuz i think there are a lot of ways it can go wrong." Player case in her TODO: a Beijing grid network's diagram "getting really stretched one way ... like 2.5x lengthwise". Stage 1: failure catalogue on real saves, approaches, before/after mocks for her; nothing lands until she has reviewed. Stage 1 done 2026-11-12 (t3345). Stage 2 (each city keeps its turn on maps 600 km+ across, all Japan included) built 2026-11-12 in tree tw/schem, not landed; one-city maps bit-identical. Next: approach 2 mocks (bigger city centres, and a notch more distortion; Anita: "distortion is a tad low"), nothing lands before she sees them; approach 2 mocks done 2026-11-12 (schem2); Anita picked bigger centres (p 0.8, dial unchanged), built in tree tw/schem3, not landed. notes/T-3345.md.
-- T-3346 [P2] {L:timetables} Timetables and better scheduling, design first, Anita's high-level list ("timetables, better scheduling") and 2026-11-12 ("timetables design"). Covers her TODO items on schedule settings (weekend, rush hour), generating a timetable and its controls, assigning trains to platforms, and T-3343, T-3264 (hold plan), T-3219, T-3271 where they meet. Design to her before anything is built. Stage 1 landed ac72df8d (behind ?timetables); stage 2 parked in .tw-trees/tt2. Design revised twice 2026-11-12 after her replies (schedule panel with Simple, Detailed and Exact modes; rows averaged into demand's five periods; weekends; exact trains with first-come conflicts; six stages, about 44-63 h before Exact, 68-97 h with it). Stage 2 built in tw/tt2, not landed: right in the timetable, but at 30/10 headway lines the map holds expresses at G because the round trip keeps the best phase's averaged waits (notes "Stage 2 as built", fix about 4-6 h). Stage 1 built in .tw-trees/tt1 (tt1), not landed. notes/T-3346.md. Folded in (Anita 2026-11-16): T-2393 fractional trains (trains wait at the end of the line when demand is low); T-2336 weekend service (stage 4); T-3219 meets at stations on single track (stage 6; her words "japanese poeple will want it"); T-3343 a local leaving before its express (stage 2, player F_Nickey_44); T-2239 holds alike both ways at passing tracks (stage 2); T-2234 passing loops between stations, only if she wants them.
-- T-3348 [P3] {L:quad-track} Quad platforms, from her TODO ("aa/bb quad track (advanced) ... assign trains to stop at specific platforms within those stations"): choosing which pair a line stops on at a quad station from the stops list (move a stop to the station beside it, T-3333's `station_beside`), and quad paired by direction (both tracks of one direction side by side) as a track layout. Split off T-3346. Design written 2026-11-12 (aabb), T-3363 folded in: her model (middle double plus two one-way singles), per-direction stops, smart extension by pointer, flying split, one quad station model for both kinds (platforms per track), five stages, 27-39 h; waits for her calls. Stage 1 parked in .tw-trees/perdir: sim built in tree tw/perdir (uncommitted), demand per run not yet (notes "Stage 1 as built"). notes/T-3348.md.
-- T-3320 [P3] {L:real-networks} Berlin's RE5 (all three relations) goes off the real-network graph after T-3285: hop 3 of 8 (about 25 km straight, north-north-west of the city) routes 26.7 km but 7.1 km off the relation's own shape, so it is dropped to a straight line (RE off graph 63 -> 158 km; RB/RE7/RE2 unchanged). Probably the router takes a parallel track that light rail added, or the Nordbahn chain lost its link; check which chains the route uses (realroute.Graph keeps no kind or rank, so read the .rgr) and whether a rank or kind penalty for light rail on a main-line family route fixes it. Open. notes/T-3265.md
-- T-3271 [P3] {L:trains-drawn} t1965-follow regressed (75 of 1,248 frames drawn through each other at 1+1, 211 of 1,622 at 4+2; 0 on 2026-11-02): since T-2419 (2026-11-04) the check's express is timetabled at a 907 s round trip against the local's 1,885 s, so its timetable overtakes the local where there is nowhere to pass; with T-3231 at one-place ends. Found by T-3264. notes/T-3264.md.
-- T-3264 [P2] {L:trains-drawn} A general way to stop trains being drawn in ways that make no sense, mostly passing through each other (Anita's TODO 2026-11-12: "try to come up with more general framework"). Proposal first; T-3231, T-3202, T-3212, T-3250 are cases of it. notes/T-3264.md. Proposal written 2026-11-12 (trainsdraw): D (opposite directions, parallel tracks and crossing levels drawn apart; stage 1 needs her look at a mock) then B (one hold plan per hour slice in the clock worker, path-signal style, replacing the per-frame guard); stages 0-6, about 13-19 h; baselines in the notes. Folded in T-1967 (opposing trains on single track drawn through each other between passing points). Anita 2026-11-16: "3264 yes this soudns good" (plan D then B approved; not started yet, she limited this week's start to bugs, the board and line visibility).
-- T-3252 [P2] {L:line-rates} Real Tokyo line 99 at the low level loses about 16% of its rate on every edit, whatever the edit (0.95/h to 0.005/h over 55 edits, round trip unchanged, `line_pace` 22,000 -> 143,000 s): T-2973's even share at a full merge, `even = 3600 k / sum(line_tph)`, reads rates the pacing itself lowered, so it feeds back; a line's night service fades away. Found by T-3238; near T-3235. notes/T-3238.md. Open.
-- T-3079 [P2] {L:stops} Exact stop spacing back, for players who want to control everything exactly, with waypoints (T-3384). Anita 2026-11-16: "actually sorry i changed my mind on this again. i think we should have exact stop spacing for the people that really want to be able to control everything exactly. they should also have the ability to do waypoints. leave open". Exact edits landed hidden behind ?exact (ee29c42c; her pictures artifacts/trainworld/t3079-anita-*.png) and was dropped for right-click loops (d762b813); bring it back as an option beside the normal stop editing. Her call is made; the design is ours.
-- T-3002 [P3] {L:trams} Shorter tram ramps, Anita 2026-11-10: "could we / should we maybe make tram ramps shorter? is that realistic? feels like would be to me". Open: researched, not built (agent tramfix 2026-11-10); notes/T-2921.md "Round 3".
-- T-3003 [P3] {L:trams} A street tram following a road across water rides the road's bridge at grade, Anita 2026-11-10: "when trams cross water using a *road* maybe they can do so "at grade" without ramping". Open: researched, not built (agent tramfix 2026-11-10); notes/T-2921.md "Round 3".
-- T-2165 [P3] {L:ridership-checks} Mark `data/work/realnet/jpn7_real.save` (44 flat crossings, after India's run frees data/) and `artifacts/trainworld/t737-japan-trains.save` (60) all `sep` with `notes/T-2064-mark-sep.mjs`, as T-2064 did New York, and rerun the T-2093 ridership figures on jpn7. Open; notes/T-2064.md.
-- T-1794 [P3] {L:edit-speed} T-1787 leftovers: on shared-track New York a headway edit on its busiest line still takes 150-400 ms (two or three settles of ~15 rounds), and Paris placements p95 237 ms; options in notes/T-1779.md "T-1787". Open; notes/T-1407.md "Left". notes/T-1794.md.
-- T-1816 [P3] {L:route-choice} Demand's `transfers` question names the zone in view, so a player who pans to a zone outside the solve and then edits probably gets no transfer pulses until they look back (found in T-1814, untested): ask by the edited network's zones instead. Open; notes/T-1810.md "T-1814".
-- T-1842 [P3] {L:edit-speed} `TrackApi.past_day` (the panels' past 24 hours) takes ~40 ms on shared New York, on every account change and 4 times a second while the clock runs: keep each line's tally in `Boarding` and redo only the lines whose account changed (found in T-1815). Open; notes/T-1815.md.
-- T-1808 [P3] {L:ridership-checks} `pipeline/calib.py run nyc` fails on its `--areas` file: data/work/realnet/cell_county.u8 has 61,427 values against the pack's 54,218 cells (found in T-1801); rebuild it from the current New York pack. Open.
-- T-1793 [P3] {L:map-look} The drawn platform crowd overstates riders where transfer pulses (T-554) are large: at Jamaica (line 40's terminal, 08:34) pulses plus the steady rate make about 9,750 an hour against 7,297 arrivals, so the platform shows about 1,958 while the train leaves with 1,501. Found in T-1785. Open; artifacts/trainworld/t1785/.
-- T-1778 [P3] {L:track-drawing} T-1777's leftovers: the tools' snap under a still pointer is kept in local units, so after a draw-anchor move the ring and ghost sit in the wrong place until the pointer moves; `map.project` placers (bus drawing, touch bar) are not hidden on the globe's far side. Open; notes/T-1777.md "Left".
-- T-1776 [P3] {L:map-look} Train sounds when zoomed in on trains (Anita's TODO): very light pass-by and acceleration sounds, slightly varied like the track placement sounds, a soft "sheuuu" as one passes, pitch rising a little as it accelerates, shaped by the game's playback speed. Open.
-- T-691 [P3] {L:station-placement} A station tried on edges 997 and 1130 of the real save (an overlapping pair, 688/1075) is refused with a track-drawing reason ("The curve is too tight... would run on top of existing track"): find where the worker's station trial produces it and give the station's own reason. Found in T-671. Open. notes/T-691.md.
-- T-1072 [P3] {L:stops} Changing a line's stops at an end (a stop added past the last, the first removed) moves the other direction's running trains by the length added or removed: flights are kept as offsets along the run; match them by place on the ground instead. Open; notes/T-1071.md "Limits".
-- T-1073 [P3] {L:line-rates} Undo or redo of a train count takes effect at once, without T-1071's lead, so at a fast clock its departures hop a little; tell the worker the step was a service edit. Open.
-- T-3400 [P3] {L:buses} A new ferry line runs a boat at low demand too (every 60 min), so bus and ferry both run all day from the start; today a new ferry has none at low (T-2273, an agent's call). From T-2915's review (notes/T-2915.md "For Anita"); a sensible default, tell her after. Open.
-- T-3405 [P3] {L:track-speed} A speed limit on any piece of track, edited directly, no cost. Her TODO 2026-11-15: "per track speed segment limit (edit directly, no cost or anything)". Lines already have a Speed limit (T-2987). Open.
-- T-3408 [P3] {L:rebuild-track} Rebuild from the track panel: what the Select bar's rebuild does, for the one piece selected. Her TODO 2026-11-15: "nything you can do in the rebuild menu with select tool, also add that to the track view so that you can do it for whatever individual track segmen u have selected (and also on the rebuild button hover, i guess suggest using the select tool to do multiple at once)". Open.
-- T-3410 [P3] {L:stops} Choose whether a tram passes through a one-way station (and which way) or turns around there. Her TODO 2026-11-15: "viktini play single track: sometimes might need to be able to specify whether a tram should pass through a one way station (and specify in which direction) or reverse at it in order to geet sensible pathing". Design first. Open.
-- T-3411 [P2] {L:single-track} A station built on one-way single track can't be made one platform. Her TODO 2026-11-15: "currently if you build a station on a one-way single track, it doesnt let you make it one platform, which is bug". Bug. Open.
-- T-3412 [P2] {L:station-placement} The "too close to end of track" refusal: say what it guards, then loosen it or explain it in the refusal. Her TODO 2026-11-15: "what exactly is "too close to end of track" placement error supposed to accomplish? seems like its frustrating a lot of people". Open.
-- T-3419 [P3] {L:buses} Waiting rooms at ferry ports. Her TODO 2026-11-15: "waiitng room for ferries should be allowed". Open.
+- T-3335 [P3] {L:quad-track} Line panel on both quad pairs
+  - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
+  - Goal: Each part folds in the twin line, as `foldTwins` does.
+  - Other: About 2-3 h. notes/T-3333.md "As built".
+- T-3326 [P2] {L:feedback} {waits:Anita} Screenshots in feedback
+  - Need from Anita: Say yes to deploying the feedback screenshots server, or hold it.
+  - Context: Your TODO 2026-11-12: let people attach up to 4 screenshots. Server and form are built; the form and inbox are on branch tw/fbshots.
+  - Goal: Branch merged, server deployed with your word, other languages translated.
+  - Other: notes/T-3326.md
+- T-3365 [P2] {L:track-kinds} {waits:Anita} What single, double and quad track mean
+  - Need from Anita: Discuss your handwritten thoughts and the five design calls.
+  - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
+  - Goal: The player has a clear model of single, double and quad track, and of crossovers.
+  - Other: notes/T-3365.md.
+- T-3373 [P2] {L:memory} Demand workers share one copy of the zone data
+  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes.
+  - Goal: Workers share the data or split zones between them, and the long-session growth is checked; costs go to you before building.
+  - Other: notes/T-3329.md and notes/T-3071.md.
+- T-3386 [P2] {L:single-track} Inferred one-way turns two-way at a station (taking, 2026-11-16, agent bugs1)
+  - Context: On a double split into two singles, `derive_ways` stops at stations, so you must set each way by hand.
+  - Goal: The inferred way carries through stations on single track.
+- T-3384 [P3] {L:stops} Waypoints on lines
+  - Context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
+  - Goal: Lines can have waypoints, design first.
+  - Other: Goes with T-3079, exact stop spacing.
+- T-3383 [P2] {L:single-track} Say when a wait is on single track (taking, 2026-11-16, agent bugs1)
+  - Context: You asked 2026-11-13 for "waiting at busy single track" in the line panel. Also check the 24m00s figure is a real wait.
+  - Goal: The panel says single track where the wait is on single track.
+  - Other: New strings for your review. Pictures artifacts/trainworld/reports/t3383-line1.png.
+- T-3382 [P3] {L:twstats} {after:15-minute ring live a week} Where people play in twstats
+  - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
+  - Goal: twstats shows minutes per city. Waits for the 15-minute ring to be live a week.
+  - Other: notes/T-3382.md
+- T-3379 [P2] {L:single-track} Single track joined to a double draws a kink (taking, 2026-11-16, agent bugs1)
+  - Context: A player reports a sideways jog where single track meets one track of a double.
+  - Goal: The join draws straight, or the cause is known.
+  - Other: Picture artifacts/trainworld/reports/t3379-single-to-double-kink.png.
+- T-3380 [P2] {L:single-track} Delete ghost on single track draws double (taking, 2026-11-16, agent bugs1)
+  - Context: Hovering single track with Delete shows the red highlight two tracks wide.
+  - Goal: The ghost matches the single track.
+  - Other: Picture artifacts/trainworld/reports/t3380-single-delete-ghost.png.
+- T-3381 [P2] {L:station-placement} Corner notice shows a generated station name (taking, 2026-11-16, agent bugs2)
+  - Context: A joined station takes the complex name only after the corner notice, which shows the generated one.
+  - Goal: The notice shows the shared complex name.
+- T-3378 [P2] {L:buses} Bus and tram balance, BRT
+  - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
+  - Goal: A design for BRT or busways and slower street trams, for you first.
+  - Other: Folds in T-1467, a bus lane upgrade. 1-2 days for busways.
+- T-3377 [P3] {L:open-source} Mod support beyond forks
+  - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
+  - Goal: A design for you first; waits for modders' asks.
+- T-3376 [P2] {L:jobs-places} Industrial areas' jobs
+  - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.
+  - Goal: A sourced workforce figure and a way to place jobs on industrial land with tanks, as a proposal.
+  - Other: From gaprun3's check. Not blocking v0.3.3.
+- T-3375 [P2] {L:region-redraws} Empty units beside a metro stay dark
+  - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
+  - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
+  - Other: notes/T-3287.md
+- T-3371 [P3] {L:checks} Track bar check fails on master
+  - Context: t3260-track-bar part B fails: the track ghost tag no longer says "Hold Ctrl to draw straight".
+  - Goal: Either the check is fixed (line dropped on purpose) or the hint is restored.
+- T-3370 [P3] {L:buses} Bus route drag follow-ups
+  - Context: Hide the network hover over the route path in Edit route, and check dragging by touch.
+  - Goal: Both done, with docs/ui-building.md fixed.
+  - Other: From T-3366.
+- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
+  - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019.
+  - Goal: Buses lay on top where they fit without changing the layout, drawn much thinner than rail.
+- T-3358 [P3] {L:schematic-rivers} {after:Anita raises rivers again} Schematic river continuity
+  - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
+  - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.
+  - Other: Do not restart until you raise rivers again. notes/T-3358.md
+- T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
+  - Context: The way is stored against a fixed axis, which flips when a drag turns the track through due north-south.
+  - Goal: The platform stays put through the turn.
+  - Other: About 1 h. notes/T-3332.md.
+- T-3353 [P3] {L:single-track} Second single from a double's end refused
+  - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall.
+  - Goal: A route leaves a node anywhere in the cone between the ends' headings.
+  - Other: A design call, 4-6 h. notes/T-3344.md.
+- T-3345 [P2] {L:schematic} Better schematic
+  - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
+  - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
+  - Other: notes/T-3345.md
+- T-3346 [P2] {L:timetables} Timetables and better scheduling
+  - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 and 2 are built but not landed.
+  - Goal: Design agreed, then built in stages (about 44-63 h before Exact).
+  - Other: notes/T-3346.md
+- T-3348 [P3] {L:quad-track} Quad platforms
+  - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Design written; stage 1 is parked in tree tw/perdir.
+  - Goal: Quad stations with per-direction stops, in five stages.
+  - Other: 27-39 h. notes/T-3348.md.
+- T-3320 [P3] {L:real-networks} Berlin RE5 dropped off the graph
+  - Context: After T-3285, hop 3 of 8 routes 7.1 km off the relation's shape, so RE5 falls to a straight line.
+  - Goal: RE5 stays on the real-network graph.
+  - Other: notes/T-3265.md.
+- T-3271 [P3] {L:trains-drawn} t1965-follow regressed
+  - Context: Since T-2419 (2026-11-04) the check's express overtakes the local where there is nowhere to pass: 75 of 1,248 frames drawn through each other.
+  - Goal: t1965-follow passes at 1+1 and 4+2. Part of T-3264.
+  - Other: notes/T-3264.md
+- T-3264 [P2] {L:trains-drawn} One fix for trains drawn through each other
+  - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Not started yet.
+  - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
+  - Other: notes/T-3264.md; about 13-19 h
+- T-3252 [P2] {L:line-rates} Real Tokyo line 99 loses rate on every edit
+  - Context: The line loses about 16% of its rate per edit (0.95/h to 0.005/h over 55 edits) because the even share reads rates the pacing already lowered.
+  - Goal: A line's rate stays put across edits.
+  - Other: notes/T-3238.md
+- T-3079 [P2] {L:stops} Exact stop spacing back
+  - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
+  - Goal: Exact stop spacing is an option beside normal stop editing.
+  - Other: Goes with T-3384, waypoints.
+- T-3002 [P3] {L:trams} Shorter tram ramps
+  - Context: You asked 2026-11-10 whether tram ramps could be shorter. Researched, not built.
+  - Goal: Tram ramps are shorter, if realistic.
+  - Other: notes/T-2921.md "Round 3".
+- T-3003 [P3] {L:trams} Trams cross water at grade on road bridges
+  - Context: You suggested 2026-11-10 that trams on a road across water skip ramping. Researched, not built.
+  - Goal: A street tram rides a road bridge at grade.
+  - Other: notes/T-2921.md "Round 3".
+- T-2165 [P3] {L:ridership-checks} Mark Japan saves sep and rerun ridership
+  - Context: Two Japan saves have flat crossings (44 and 60) to mark as separated, as T-2064 did for New York.
+  - Goal: Both saves marked and the T-2093 figures rerun on jpn7.
+  - Other: Notes: notes/T-2064.md
+- T-1794 [P3] {L:edit-speed} Headway edit on busy New York line
+  - Context: A headway edit on New York's busiest shared-track line still takes 150-400 ms, and Paris placements 237 ms at p95.
+  - Goal: Those edits take under 100 ms.
+  - Other: Options in notes/T-1779.md "T-1787", notes/T-1794.md.
+- T-1816 [P3] {L:route-choice} Transfer pulses missing after panning away
+  - Context: Demand asks for transfers by the zone in view, so panning off then editing may show no pulses. Found in T-1814, untested.
+  - Goal: Transfers are asked by the edited network's zones.
+  - Other: Notes: notes/T-1810.md "T-1814"
+- T-1842 [P3] {L:edit-speed} past_day costs 40 ms on New York
+  - Context: `TrackApi.past_day` takes about 40 ms on shared New York, on every account change and 4 times a second.
+  - Goal: Each line's tally is kept, and only changed lines are redone.
+  - Other: notes/T-1815.md
+- T-1808 [P3] {L:ridership-checks} Fix calib run for New York
+  - Context: `calib.py run nyc` fails: cell_county.u8 has 61,427 values against the pack's 54,218 cells.
+  - Goal: The file is rebuilt from the current New York pack and the run passes.
+- T-1793 [P3] {L:map-look} Platform crowd overstates riders
+  - Context: Where transfer pulses (T-554) are large, the drawn platform crowd is too big: Jamaica at 08:34 shows about 1,958 while the train leaves with 1,501.
+  - Goal: The drawn crowd matches the riders.
+  - Other: Found in T-1785. artifacts/trainworld/t1785/
+- T-1778 [P3] {L:track-drawing} Snap leftovers after a draw-anchor move
+  - Context: The snap ring and ghost sit wrong until the pointer moves, and some placers show on the globe's far side.
+  - Goal: Both fixed.
+  - Other: notes/T-1777.md "Left".
+- T-1776 [P3] {L:map-look} Train sounds when zoomed in
+  - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
+  - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
+- T-691 [P3] {L:station-placement} Wrong refusal reason on two real-save edges
+  - Context: A station on edges 997 and 1130 is refused with a track-drawing reason.
+  - Goal: The refusal gives the station's own reason.
+  - Other: Found in T-671. notes/T-691.md.
+- T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains
+  - Context: Trains keep offsets along the run, so they jump by the length added or removed.
+  - Goal: Trains match by place on the ground instead.
+  - Other: notes/T-1071.md "Limits".
+- T-1073 [P3] {L:line-rates} Undo of a train count hops departures
+  - Context: Undo or redo of a train count takes effect at once, so departures hop at a fast clock.
+  - Goal: The worker is told it was a service edit and departures stay smooth.
+- T-3400 [P3] {L:buses} New ferry line runs a boat at low demand
+  - Context: Today a new ferry has none at low demand. A default of every 60 min is sensible; tell you after.
+  - Goal: A new ferry runs every 60 min at low demand.
+  - Other: From T-2915. notes/T-2915.md "For Anita".
+- T-3405 [P3] {L:track-speed} Speed limit on any piece of track
+  - Context: Your TODO 2026-11-15: edit it directly, no cost. Lines already have a speed limit (T-2987).
+  - Goal: A per-piece speed limit, edited directly.
+- T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
+  - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece.
+  - Goal: The track panel has the same rebuild, and the hover suggests Select for several.
+- T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
+  - Context: Your TODO 2026-11-15, for sensible pathing on single track.
+  - Goal: Choose pass through (and which way) or reverse at a one-way station.
+- T-3411 [P2] {L:single-track} Station on one-way single track can't be one platform (taking, 2026-11-16, agent bugs1)
+  - Context: Your TODO 2026-11-15 calls it a bug.
+  - Goal: A station on one-way single track can have one platform.
+- T-3412 [P2] {L:station-placement} "Too close to end of track" refusal (taking, 2026-11-16, agent bugs2)
+  - Context: Your TODO 2026-11-15: it frustrates many people and you asked what it guards.
+  - Goal: The refusal is loosened or explains itself.
+- T-3419 [P3] {L:buses} Waiting rooms at ferry ports
+  - Context: Your TODO 2026-11-15: waiting rooms for ferries should be allowed.
+  - Goal: Ferry ports can have waiting rooms.
 
 ## Held features
-- T-2787 [P3] {L:money} {waits:Anita} Per-line money history. Built in c18d2fa1, held out of the release at Anita's request (2026-11-08); implementation preserved in that commit. Follow-up T-2809.
-- T-2790 [P3] {L:small-fixes} {waits:Anita} Trip lengths by purpose. Built in b167196a, held out of the release at Anita's request (2026-11-08); implementation preserved in that commit and worktree.
+- T-2787 [P3] {L:money} {waits:Anita} Per-line money history
+  - Need from Anita: Say when the per-line money history can go into a release, or keep holding it.
+  - Context: Built in c18d2fa1; you asked to hold it out of the release on 2026-11-08.
+  - Goal: It ships once you agree. Follow-up is T-2809.
+- T-2790 [P3] {L:small-fixes} {waits:Anita} Trip lengths by purpose
+  - Need from Anita: Say whether this goes into a release; it is held out at your request.
+  - Context: Built in commit b167196a and held out of the release 2026-11-08.
+  - Goal: Trip lengths by purpose are in the game.
+  - Other: The work is kept in that commit and its worktree.
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
-- T-3394 [P1] {L:board} Every task restructured so she can read it (Anita 2026-11-15: "currently it is mostly a block of text"): title (2-10 words), need from Anita (one sentence, if applicable), context (where are we, why), goal (what is done), other info; the board shows the fields. "dont have to write everything now but thats something we should do tmr." Shape: indented sub-bullets under each task line in TASKS.md (orchestrator's pick 2026-11-15); "need from Anita" left out when nothing is needed (Anita 2026-11-15). For tomorrow.
-- T-3156 [P3] {L:checks} `tools/aws/guard.py` false positive: it refused a read-only Bash loop because its argument list held the path `trainworld/tools/aws` followed by other paths, read as `aws <args>`. Match `aws` only as a command word (start of the command or after `;`, `&&`, `|`). Found by rulesaudit, 2026-11-11 (notes/rules-cleanup.md finding 33). Open.
-- T-2575 [P3] {L:cleanup} T-2512's item 26 step two: the realRoute worker's `cover` message carries the boxes the page needs, so regions.json (1.5 MB) is fetched once, not twice; changes the realRoute protocol and when the file is fetched. notes/T-2512.md. Open.
-- T-2573 [P3] {L:checks} `checks/t409-worker-check.mjs` still does not exercise the walker rule: rail pairs carry no walking share (parts[6] = parts[7] exactly) even with stops by the walkable Boston/Providence cells; needs a line serving two stations at both ends of a walkable cross-pack pair. notes/T-2527.md. Open.
-- T-2374 [P3] {L:cleanup} Cleanup A7: splits of demandClient.ts, clock.worker.ts, demand.worker.ts, renderer.ts (tools.ts optional), one agent per file, after T-2371 and T-2372. Open.
-- T-2375 [P3] {L:cleanup} Cleanup A9: main.ts's debug probes, one URL-parameter module, unused CSS, tsconfig `noUnused*`. Last of the app. Leftovers from T-2369 in notes/T-2375.md. Open.
-- T-2377 [P3] {L:cleanup} Cleanup D5: trainworld/CLAUDE.md cut from ~3,570 to ~2,400 words, orchestrator text to docs/orchestrating.md. Agents decide the reorg (Anita 2026-11-04: "feel free to make decisions among yourselves regarding reorg"); show her the result after. Open.
-- T-2854 [P3] {L:wiki} Anita 2026-11-09: "we should do a wiki rewrite later sot hat agents can read less documentation". Open; design to Anita first. Pilot approved 2026-11-09: about 10 pages on demand and track costs. Anita: "yes we should also maybe have a brief set of wiki editing rules. perhaps pull the figures directyl from code or something (if thats possible) so that we dont even have to keep them edited. if thats not possible, maybe just avoid using figures at all. we shouldnt duplicate any data that is better viewed in code by an agent, at least not in a way that requires constant upkeep". Pilot done: 15 pages, retest 67k tokens against the docs' 110k. Round 1 overnight 2026-11-09 (agent wiki): pilot leftovers done, 6 new pages (fares, train-speed, line-capacity, between-cities, zones-and-realms, loan-and-money), 21 pages, uncommitted. Round 2 done: JSON markers in wiki_build.py, 4 more pages (slower-trains, station-upgrades, points-and-goals, scheduling), 25 pages, uncommitted. Next: fix markers if trams rename V_TOP, V_HSR, LEVEL_MULT, track_factor; then the candidates in the notes. notes/T-2854.md. Retire a doc only when covered.
-- T-2380 [P3] {L:cleanup} Cleanup E3: retire `data/work/intercity.json` (moved out of data/packs and the deploy by T-428; read only by two ignored sim tests and joint_gravity's mode without `--packs`) and that mode. Open.
-- T-2382 [P3] {L:cleanup} Cleanup E6: pipeline and pack_gate small items (T-1114 pipeline F19-20, I). Between joins. Open.
-- T-2383 [P3] {L:cleanup} Cleanup E9: sim refactors after T-2381 (T-1114 sim H 20, 21, 23; `pass_window`, `realcorridors.build`). Open.
-- T-1183 [P3] {L:cleanup} After T-1146: take the fixed-rate line path out of the engine (`capacity.rs` `continuous` rounding, `LineData.trains` as an Option, the test-only `Op::Schedule`, `set_line` and `set_schedule` in `wasm.rs`), which about 30 sim tests pin exact trains per hour on, so they need rewriting onto train counts. Open. notes/T-1183.md.
-- T-3415 [P3] {L:checks} Linters worth setting up, for us and for pull requests. Her TODO 2026-11-15: "research linters that would be good to set up (mostly just for us but also for prs)". Research first. Open.
+- T-3156 [P3] {L:checks} AWS guard refuses a harmless command
+  - Context: `tools/aws/guard.py` read the path `trainworld/tools/aws` as an `aws` command and refused a read-only loop.
+  - Goal: `aws` only matches as a command word.
+  - Other: See notes/rules-cleanup.md finding 33.
+- T-2575 [P3] {L:cleanup} Fetch regions.json once
+  - Context: regions.json (1.5 MB) is fetched twice, by the page and the realRoute worker.
+  - Goal: The worker's `cover` message carries the boxes, so the file is fetched once.
+  - Other: See notes/T-2512.md.
+- T-2573 [P3] {L:checks} Worker check misses the walker rule
+  - Context: checks/t409-worker-check.mjs shows rail pairs with no walking share even by walkable Boston/Providence cells.
+  - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
+  - Other: See notes/T-2527.md.
+- T-2374 [P3] {L:cleanup} Split four large app files
+  - Context: demandClient.ts, clock.worker.ts, demand.worker.ts and renderer.ts are due for splits, one agent per file, after T-2371 and T-2372.
+  - Goal: The four files are split.
+- T-2375 [P3] {L:cleanup} Clean up main.ts and CSS
+  - Context: This is the last app cleanup (A9); leftovers from T-2369 are in the notes.
+  - Goal: Debug probes become one URL-parameter module, unused CSS goes, and tsconfig turns on `noUnused*`.
+  - Other: See notes/T-2375.md.
+- T-2377 [P3] {L:cleanup} Cut trainworld CLAUDE.md
+  - Context: It is about 3,570 words; you said agents may decide the reorg.
+  - Goal: About 2,400 words, orchestrator text moved to docs/orchestrating.md, result shown to you.
+- T-2854 [P3] {L:wiki} Wiki rewrite for less documentation
+  - Context: Your ask: a wiki so agents read less. 25 pages done (uncommitted) and figures come from code via JSON markers.
+  - Goal: Candidates in the notes are covered and retired docs removed. Next: fix markers if trams rename V_TOP, V_HSR, LEVEL_MULT, track_factor.
+  - Other: See notes/T-2854.md.
+- T-2380 [P3] {L:cleanup} Retire intercity.json
+  - Context: data/work/intercity.json is read only by two ignored sim tests and joint_gravity's no-`--packs` mode.
+  - Goal: The file and that mode are gone.
+- T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items
+  - Context: Cleanup E6, small items from T-1114 (pipeline F19-20, I). Best done between joins.
+  - Goal: Those items are done.
+- T-2383 [P3] {L:cleanup} Sim refactors
+  - Context: Cleanup E9, after T-2381: T-1114 sim H 20, 21, 23, plus `pass_window` and `realcorridors.build`.
+  - Goal: Those refactors are done.
+- T-1183 [P3] {L:cleanup} Remove the fixed-rate line path
+  - Context: After T-1146, the engine's fixed-rate path (capacity.rs, `LineData.trains`, `Op::Schedule`, wasm `set_line`/`set_schedule`) can go; about 30 sim tests pin it.
+  - Goal: The path is gone and the tests use train counts.
+  - Other: See notes/T-1183.md.
+- T-3415 [P3] {L:checks} Set up linters
+  - Context: Your TODO 2026-11-15: "research linters that would be good to set up (mostly just for us but also for prs)".
+  - Goal: A short report on which linters to set up.
 
 ## Waits on a rebuild
-- T-3270 [P3] {L:airports} {after:next world rebuild} Airport passengers for Europe from Eurostat avia_paoa (by airport, yearly) as a published source beside Wikidata (found by T-2896). Open. notes/T-2896.md.
-- T-3245 [P2] {L:world-rebuild} Before the next world rebuild: everything that should ride along (queued fixes, known data gaps, stale sources, omissions), gathered into one ordered list with what each needs (same ask as T-3244). Survey written 2026-11-11 (rbqueue), notes/T-3245.md; T-3240 has landed. Anita 2026-11-16: do it, on all the recommendations in the notes ("we should do it based on all your recommendations yes"), and new regions start with Central America from Guatemala to Panama and Venezuela (T-3399), "since they were requestedd".
+- T-3270 [P3] {L:airports} {after:next world rebuild} Eurostat airport passengers for Europe
+  - Context: Eurostat avia_paoa gives passengers by airport per year, a published source beside Wikidata.
+  - Goal: Europe's airport passengers use it at the next world rebuild.
+  - Other: notes/T-2896.md
+- T-3245 [P2] {L:world-rebuild} Gather what rides along with the next world rebuild
+  - Context: Your 2026-11-16: "we should do it based on all your recommendations yes", with Central America from Guatemala to Panama and Venezuela first (T-3399).
+  - Goal: One ordered list of queued fixes, data gaps and omissions, each with what it needs.
+  - Other: Survey of 2026-11-11: notes/T-3245.md
 Tasks that land only when a pack or country is rebuilt, grouped by that rebuild, so whoever runs it knows what rides along (2026-10-26). The two replan groups are also in notes/T-1189.md "What rides along".
 
 ### Europe's next rebuild (T-1189's Europe replan ran without these, T-2302, 2026-11-05)
-- T-617 [P3] {L:region-redraws} {after:Europe rebuild} Rebuild gla, lis and pot on T-610's unit matching. notes/someday.md
-- T-785 [P3] {L:census-totals} {after:Europe rebuild} France's countryside zones on the France module's sources. notes/someday.md
-- T-771 [P3] {L:census-totals} {after:Europe rebuild} A Spain module from the ministry's phone trip tables and INE's grid. notes/someday.md
-- T-2083 [P3] {L:census-totals} {after:Europe rebuild} Eurostat's Census 2021 1 km grid as population for every built EU country (GHSL is good there; small gain). research/next-countries-data.md
-- T-853 [P3] {L:jobs-places} {after:Europe rebuild} A tertiary share where UNESCO has none (Kosovo's Prizren). notes/someday.md
-- T-765 [P3] {L:jobs-places} {after:Europe rebuild} Work at home is 0 in archetype D packs; a per-country constant needs Anita. notes/someday.md
-- T-810 [P3] {L:borders} {after:Europe rebuild} Commutes across open EU borders far too damped at 0.05. notes/someday.md
-- T-429 [P3] {L:borders} {after:Europe rebuild} Cross-border long trips in Europe low on land pairs (Paris - Brussels). notes/someday.md
-- T-932 [P3] {L:borders} {after:Europe rebuild} Countries solved in turn leave a held neighbour off its margins. notes/someday.md
+- T-617 [P3] {L:region-redraws} {after:Europe rebuild} Rebuild Glasgow, Lisbon and Porto
+  - Context: Rows gla, lis and pot need rebuilding on T-610's unit matching.
+  - Goal: The three rows are rebuilt.
+  - Other: notes/someday.md
+- T-785 [P3] {L:census-totals} {after:Europe rebuild} France's countryside zones
+  - Context: France's countryside needs the France module's sources.
+  - Goal: Countryside zones built on them.
+  - Other: notes/someday.md
+- T-771 [P3] {L:census-totals} {after:Europe rebuild} Spain module from phone trip tables and INE grid
+  - Context: Spain would use the ministry's phone trip tables and INE's grid.
+  - Goal: A Spain module built on them.
+  - Other: notes/someday.md
+- T-2083 [P3] {L:census-totals} {after:Europe rebuild} Eurostat 1 km census grid for the EU
+  - Context: GHSL is good in the EU, so the gain is small.
+  - Goal: Eurostat's Census 2021 1 km grid as population for every built EU country.
+  - Other: research/next-countries-data.md
+- T-853 [P3] {L:jobs-places} {after:Europe rebuild} Tertiary share for Kosovo
+  - Context: UNESCO has no tertiary share for places like Prizren.
+  - Goal: A tertiary share filled in where UNESCO has none.
+  - Other: notes/someday.md
+- T-765 [P3] {L:jobs-places} {after:Europe rebuild} Work at home in archetype D packs
+  - Context: Work at home is 0 in archetype D packs.
+  - Goal: A per-country constant, which needs your call.
+  - Other: notes/someday.md
+- T-810 [P3] {L:borders} {after:Europe rebuild} Open EU border commutes too damped
+  - Context: Commutes across open EU borders are far too low at 0.05.
+  - Goal: Open EU borders get a fitting factor.
+  - Other: notes/someday.md
+- T-429 [P3] {L:borders} {after:Europe rebuild} Low cross-border long trips in Europe
+  - Context: Land pairs like Paris-Brussels come out low.
+  - Goal: Such pairs look right.
+  - Other: notes/someday.md
+- T-932 [P3] {L:borders} {after:Europe rebuild} Held neighbours left off solve margins
+  - Context: Countries solved in turn leave a held neighbour off their margins.
+  - Goal: Held neighbours are included.
+  - Other: notes/someday.md
 Also T-1344's Paris and London items if those metros are rebuilt.
 
 ### US replan (T-1189's US part)
-- T-1019 [P3] {L:jobs-places} {after:US replan} NCES schools, IPEDS and FAA enplanements for planned US rows. notes/someday.md
-- T-1034 [P3] {L:jobs-places} {after:US replan} Planned US rows' home end from LODES RAC by block. notes/someday.md
-- T-142 [P3] {L:jobs-places} {after:US replan} Private schools in US packs (NCES PSS). notes/T-142.md
-- T-203 [P3] {L:jobs-places} {after:US replan} Medical sites mapped as multipolygon relations are skipped. notes/someday.md
-- T-548 [P3] {L:jobs-places} {after:US replan} {after:T-203} Rerun `hospital_beds.py pool` after T-203. notes/T-387.md
-- T-235 [P3] {L:jobs-places} {after:US replan} Re-run the park draw on T-234's population. notes/someday.md
-- T-1933 [P2] {L:airports} {after:US replan} Airport jobs on the terminals: a census block's jobs over an airport go to its airport_trips cells, so JFK is one cluster instead of ~30 equal bubbles. Pipeline (build_city.py's block spread). Anita 2026-11-02: at a later rebuild. notes/T-1905.md.
+- T-1019 [P3] {L:jobs-places} {after:US replan} Schools, colleges and airports for planned US rows
+  - Context: Planned US rows lack NCES schools, IPEDS and FAA enplanements.
+  - Goal: Those three sources added.
+  - Other: notes/someday.md
+- T-1034 [P3] {L:jobs-places} {after:US replan} Planned US rows' home end from LODES
+  - Context: Planned US rows need home ends by block.
+  - Goal: Home end from LODES RAC by block.
+  - Other: notes/someday.md
+- T-142 [P3] {L:jobs-places} {after:US replan} Private schools in US packs
+  - Context: US packs lack private schools.
+  - Goal: NCES PSS private schools added.
+  - Other: notes/T-142.md
+- T-203 [P3] {L:jobs-places} {after:US replan} Medical sites mapped as multipolygons
+  - Context: Medical sites mapped as multipolygon relations are skipped.
+  - Goal: Those sites counted.
+  - Other: notes/someday.md
+- T-548 [P3] {L:jobs-places} {after:US replan} {after:T-203} Rerun hospital beds pool after T-203
+  - Context: The bed pool predates the multipolygon medical sites fix (T-203).
+  - Goal: hospital_beds.py pool rerun.
+  - Other: notes/T-387.md
+- T-235 [P3] {L:jobs-places} {after:US replan} Rerun the park draw on new population
+  - Context: T-234 changed the population the park draw uses.
+  - Goal: The park draw rerun on it.
+  - Other: notes/someday.md
+- T-1933 [P2] {L:airports} {after:US replan} Airport jobs on the terminals
+  - Context: A census block's jobs over an airport go to its airport_trips cells, so JFK is one cluster instead of about 30 equal bubbles. You said later rebuild.
+  - Goal: Airport jobs land on the terminals (build_city.py block spread).
+  - Other: notes/T-1905.md
 T-203, T-548 and T-235 re-enrich the nine US metro packs. Also T-1345's LODES lumps (T-043).
 
 ### China's next rebuild
-- T-985 [P3] {L:region-redraws} {after:China rebuild} Wei and Linquan rows carry solve_region henan though in Hebei and Anhui. notes/someday.md
-- T-996 [P3] {L:census-totals} {after:China rebuild} GHSL population spikes (Dazhou, Benxi); measure against T-1150's bound. notes/someday.md
-- T-1232 [P3] {L:region-redraws} {after:China rebuild} `osm_units.enclaves` can leave land in no outline (Ninghe). notes/someday.md
-- T-1258 [P3] {L:jobs-places} {after:China rebuild} China's countryside packs hold few OSM medical sites; a fallback. notes/someday.md
+- T-985 [P3] {L:region-redraws} {after:China rebuild} Wei and Linquan solve_region wrong
+  - Context: Wei and Linquan rows carry solve_region henan though they are in Hebei and Anhui.
+  - Goal: Both rows carry the right region.
+  - Other: notes/someday.md
+- T-996 [P3] {L:census-totals} {after:China rebuild} GHSL population spikes in Dazhou and Benxi
+  - Context: GHSL shows spikes in these two cities.
+  - Goal: The spikes measured against T-1150's bound.
+  - Other: notes/someday.md
+- T-1232 [P3] {L:region-redraws} {after:China rebuild} osm_units.enclaves can drop land
+  - Context: Land can end up in no outline (Ninghe).
+  - Goal: No land is left outside an outline.
+  - Other: notes/someday.md
+- T-1258 [P3] {L:jobs-places} {after:China rebuild} Medical sites in China's countryside
+  - Context: China's countryside packs hold few OSM medical sites.
+  - Goal: A fallback source for them.
+  - Other: notes/someday.md
 
 ### Korea's next rebuild, and Toronto's (tor was only re-solved in T-1239)
-- T-564 [P3] {L:census-totals} {after:Korea rebuild} Korea's registration as a tier 0 hook (Canada's DA population done in T-1239; its jobs by tract of work not yet). notes/T-555.md
-- T-1243 [P3] {L:census-totals} {after:Korea rebuild} Korea's resident registration counts by si-gun-gu for the plan rows. notes/someday.md
+- T-564 [P3] {L:census-totals} {after:Korea rebuild} Korea's registration as a tier 0 hook
+  - Context: Canada's DA population is done (T-1239); Korea's jobs by tract of work are not.
+  - Goal: Korea's resident registration as a tier 0 hook.
+  - Other: notes/T-555.md
+- T-1243 [P3] {L:census-totals} {after:Korea rebuild} Korea's registration counts for plan rows
+  - Context: Plan rows need resident registration counts by si-gun-gu.
+  - Goal: Those counts in the plan rows.
+  - Other: notes/someday.md
 Also T-1344's Toronto (T-282, T-357) and Seoul (T-504) items, T-1345's Toronto airport (T-283).
 
 ### Russia's build (held)
-- T-791 [P3] {L:jobs-places} {after:Russia rebuild} Moscow's jobs far too even (Anita: "definitely noticeable"); Russia is built (T-2295) on tier 0's job proxy, so the fix is a general change to the proxy. notes/someday.md
+- T-791 [P3] {L:jobs-places} {after:Russia rebuild} Moscow's jobs are too even
+  - Context: You said it was "definitely noticeable". Russia is built (T-2295) on tier 0's job proxy.
+  - Goal: A general change to the job proxy that makes Moscow's jobs uneven.
+  - Other: notes/someday.md
 
 ### The next data batch on every pack
-- T-926 [P3] {L:world-rebuild} {after:next data batch} Drop the unread `nocar` layer from the packs and Credits. notes/someday.md Also T-1114's pipeline G (closed).
-- T-878 [P3] {L:world-rebuild} {after:next data batch} Drop the `nocar` build step from world_run and everyday_rates (with T-926). notes/someday.md
+- T-926 [P3] {L:world-rebuild} {after:next data batch} Drop the unread nocar layer
+  - Context: The nocar layer is in the packs and Credits but nothing reads it.
+  - Goal: The layer gone from packs and Credits.
+  - Other: notes/someday.md; also T-1114's pipeline G (closed)
+- T-878 [P3] {L:world-rebuild} {after:next data batch} Drop the nocar build step
+  - Context: The nocar step still runs in world_run and everyday_rates.
+  - Goal: The step removed, with T-926.
+  - Other: notes/someday.md
 Also T-1114's pipeline G (the nocar layer), in Code health.
 
 ### Any pack's next rebuild (lands pack by pack)
-- T-578 [P3] {L:jobs-places} {after:pack rebuild} Older tier 0 packs (Paris, London, Sao Paulo, Japan) on current job rules. notes/someday.md
-- T-315 [P3] {L:jobs-places} {after:pack rebuild} Tier 0 universities matched to Wikidata by name. notes/T-315.md
+- T-578 [P3] {L:jobs-places} {after:pack rebuild} Older tier 0 packs on current job rules
+  - Context: Paris, London, Sao Paulo and Japan packs predate the current job rules.
+  - Goal: Those packs rebuilt on current rules.
+  - Other: notes/someday.md
+- T-315 [P3] {L:jobs-places} {after:pack rebuild} Tier 0 universities matched by name
+  - Context: Tier 0 universities are not matched to Wikidata.
+  - Goal: Universities matched to Wikidata by name.
+  - Other: notes/T-315.md
 
 ## Someday
-Short lines; the full context is in each task's notes file.
+Short fields; the full context is in each task's notes file.
 
 ### Quick wins
 Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no data rebuild. Grouped by the files they touch, so one agent can take a batch. None found in the sim's track code.
 #### Pipeline (between runs: the runner's files are in use while one runs)
-- T-612 [P3] {L:world-tooling} Runner: delete a parked row's pack files once its reason is recorded.
-- T-766 [P3] {L:world-tooling} world_run records each extract's PBF snapshot time. notes/someday.md
-- T-386 [P3] {L:world-tooling} tier0's signals log totals inside the boundary only. notes/T-291.md
-- T-943 [P3] {L:world-tooling} market_zones' Python part at a gate's register, 28 of 33 s. notes/someday.md
-- T-986 [P3] {L:world-tooling} Region list upkeep for newly built countries. notes/someday.md
+- T-612 [P3] {L:world-tooling} Delete parked rows' pack files
+  - Context: Runner keeps pack files of parked rows after their reason is recorded.
+  - Goal: Files are deleted once the reason is recorded.
+- T-766 [P3] {L:world-tooling} Record each extract's PBF snapshot time
+  - Context: world_run does not note when each PBF extract was taken.
+  - Goal: Each extract's snapshot time is recorded.
+  - Other: See notes/someday.md.
+- T-386 [P3] {L:world-tooling} tier0 signals log whole-area totals
+  - Context: tier0 logs signal totals inside the boundary only.
+  - Goal: Totals cover what is needed.
+  - Other: See notes/T-291.md.
+- T-943 [P3] {L:world-tooling} Speed up market_zones at register
+  - Context: Its Python part takes 28 of 33 s at a gate's register.
+  - Goal: The register is much faster.
+  - Other: See notes/someday.md.
+- T-986 [P3] {L:world-tooling} Region list upkeep
+  - Context: The region list needs updating for newly built countries.
+  - Goal: New countries appear in the list.
+  - Other: See notes/someday.md.
 
 ### World and countries
-- T-1344 [P3] {L:census-totals} One-city data sources, 9 folded tasks (Paris Filosofi, schools and Flores; London HESA; Toronto StatCan and outline; Seoul KOSIS; Mumbai jobs and curve): take one when cheap or when its pack is rebuilt. notes/T-1344.md
-- T-967 [P3] {L:world-tooling} Keep region caches until the join (its first half, fetching the next region's extracts ahead, is T-1980's). notes/someday.md
-- T-968 [P3] {L:world-tooling} The join's per-pack loops and the gate's register across processes. notes/someday.md
-- T-969 [P3] {L:world-tooling} Gate figures made in the build workers, not the serial gate. notes/someday.md
-- T-970 [P3] {L:world-tooling} About 8 s less build cost a row (h3, GHSL reuse, fewer processes). notes/someday.md
-- T-592 [P3] {L:world-tooling} Read the next region's extract while this one gates and joins. notes/someday.md
-- T-570 [P3] {L:car-free} Regional car-free homes from DHS and open census small areas. notes/someday.md
-- T-571 [P3] {L:car-free} National no-car figures for larger countries on T-562's GDP rule. notes/someday.md
-- T-563 [P3] {L:demand-ideas} Fit an archetype A planned city's own curve at build time. notes/someday.md
-- T-847 [P3] {L:region-redraws} A look at each newly joined country's zone names.
-- T-1027 [P3] {L:region-redraws} Coarse zone outlines overlap after simplification. notes/someday.md
-- T-462 [P3] {L:region-redraws} Japan zone tooling fixes from T-420. notes/someday.md
-- T-505 [P3] {L:jobs-places} University students by institution (France, Germany). notes/T-505.md
-- T-506 [P3] {L:jobs-places} Brazil's school census and DATASUS for tier 0. notes/T-506.md
-- T-507 [P3] {L:census-totals} Nigeria from GRID3. notes/T-507.md
-- T-512 [P3] {L:car-free} Car-free households below country level outside the US, England, Japan. notes/T-512.md
-- T-508 [P3] {L:jobs-places} Overture Places where OSM's completeness is under 0.3. notes/T-508.md
-- T-383 [P3] {L:world-tooling} A shared cached cell-to-unit table per pack for measurement scripts. notes/T-383.md
-- T-060 [P3] {L:loading} City packs on R2, the rest: a compressed .bin copy and the header in JS. notes/someday.md
-- T-321 [P3] {L:demand-ideas} Local time's rest: ledger days and market trips across offsets. notes/T-321.md
+- T-1344 [P3] {L:census-totals} One-city data sources, nine folded tasks
+  - Context: Paris, London, Toronto, Seoul and Mumbai each have a local source we haven't used.
+  - Goal: Take one when it's cheap or its pack is rebuilt.
+  - Other: notes/T-1344.md
+- T-967 [P3] {L:world-tooling} Keep region caches until the join
+  - Context: Caches are dropped before the join; fetching ahead is T-1980.
+  - Goal: Region caches stay until the join.
+  - Other: See notes/someday.md.
+- T-968 [P3] {L:world-tooling} Parallelise the join's per-pack loops
+  - Context: The join's per-pack loops and the gate's register run in one process.
+  - Goal: They run across processes.
+  - Other: See notes/someday.md.
+- T-969 [P3] {L:world-tooling} Gate figures in the build workers
+  - Context: The serial gate computes figures the build workers could.
+  - Goal: Workers make the gate figures.
+  - Other: See notes/someday.md.
+- T-970 [P3] {L:world-tooling} Cut build cost per row
+  - Context: Each row spends about 8 s more than needed (h3, GHSL reuse, extra processes).
+  - Goal: Each row builds about 8 s faster.
+  - Other: See notes/someday.md.
+- T-592 [P3] {L:world-tooling} Read next extract while gating
+  - Context: The next region's extract is read only after this one gates and joins.
+  - Goal: It is read while this one gates and joins.
+  - Other: See notes/someday.md.
+- T-570 [P3] {L:car-free} Regional car-free homes from DHS and census
+  - Context: Car-free homes only have country figures.
+  - Goal: Regional shares from DHS and open census small areas.
+  - Other: Notes: notes/someday.md
+- T-571 [P3] {L:car-free} National no-car figures for larger countries
+  - Context: Larger countries use T-562's GDP rule.
+  - Goal: National figures replace the GDP rule.
+  - Other: Notes: notes/someday.md
+- T-563 [P3] {L:demand-ideas} Fit a planned city's own curve
+  - Context: Archetype A planned cities use a shared curve.
+  - Goal: Each planned city fits its own curve at build time.
+  - Other: Notes: notes/someday.md
+- T-847 [P3] {L:region-redraws} Check zone names in newly joined countries
+  - Context: Each newly joined country's zone names need a look.
+  - Goal: Names are reviewed.
+- T-1027 [P3] {L:region-redraws} Coarse zone outlines overlap
+  - Context: Outlines overlap after simplification.
+  - Goal: Simplified outlines do not overlap.
+  - Other: notes/someday.md
+- T-462 [P3] {L:region-redraws} Japan zone tooling fixes
+  - Context: Fixes to Japan zone tooling came out of T-420.
+  - Goal: The fixes are made.
+  - Other: notes/someday.md
+- T-505 [P3] {L:jobs-places} University students by institution
+  - Context: France and Germany have no students by institution.
+  - Goal: Student counts per institution for both.
+  - Other: notes/T-505.md
+- T-506 [P3] {L:jobs-places} Brazil's school census and DATASUS
+  - Context: Tier 0 Brazil lacks school and health data.
+  - Goal: The school census and DATASUS added.
+  - Other: notes/T-506.md
+- T-507 [P3] {L:census-totals} Nigeria from GRID3
+  - Context: Nigeria's data could come from GRID3.
+  - Goal: Nigeria built on GRID3.
+  - Other: notes/T-507.md
+- T-512 [P3] {L:car-free} Car-free households below country level
+  - Context: Only the US, England and Japan have sub-country car-free figures.
+  - Goal: Other countries get regional figures.
+  - Other: Notes: notes/T-512.md
+- T-508 [P3] {L:jobs-places} Overture Places where OSM is thin
+  - Context: OSM's completeness is under 0.3 in some places.
+  - Goal: Overture Places fill those gaps.
+  - Other: notes/T-508.md
+- T-383 [P3] {L:world-tooling} Shared cell-to-unit table
+  - Context: Each measurement script builds its own cell-to-unit table.
+  - Goal: One cached table per pack is shared.
+  - Other: See notes/T-383.md.
+- T-060 [P3] {L:loading} City packs on R2, compressed copy
+  - Context: City packs on R2 still lack a compressed .bin copy and the header in JS.
+  - Goal: City packs load a compressed copy.
+  - Other: notes/someday.md
+- T-321 [P3] {L:demand-ideas} Local time across offsets
+  - Context: Ledger days and market trips ignore time zone offsets.
+  - Goal: They handle offsets.
+  - Other: Notes: notes/T-321.md
 
 ### Demand
-- T-2385 [P3] {L:route-choice} T-1920's far-end reach for everyday purposes: their samples carry the subzone pair's choice, so a far cell past `pair_walk_max` can still count rail. T-1920 moved 0.04% of far rail riders on New York, so likely low value. notes/T-1920.md. Open.
-- T-1345 [P3] {L:ridership-checks} One-city calibration checks, 12 folded tasks (Central Park, LIRR and Metro-North, MTA peaks, Hudson fade, LODES lumps, New Haven - Hartford, calib's area files, Nice, Toronto's airport; ACS timing, Japan's gravity and survey gaps as fits). notes/T-1345.md
-- T-263 [P3] {L:attractions} Stadium events (attractions' stage 3), low priority (Anita 2026-10-24); holiday sightseeing goes with T-264. notes/T-263.md
-- T-632 [P3] {L:route-choice} Walking feels too strong to play against; parked (Anita: try later). notes/T-632.md
-- T-634 [P3] {L:route-choice} A bike or short-trip mode before walking is refit on surveys. notes/someday.md
-- T-529 [P3] {L:car-free} Bikes to stations for car-free homes in Japan. notes/someday.md
-- T-461 [P3] {L:jobs-places} Japan's jobs total and public service. notes/someday.md
-- T-454 [P3] {L:demand-ideas} Destinations that respond to the network; parked by Anita. notes/someday.md
-- T-437 [P3] {L:islands} Long trips' modes: the long car's cost, the Channel, ferries. notes/someday.md
-- T-438 [P3] {L:demand-ideas} {waits:Anita} The market's destination choice: giant metros take neighbours' trips (waits on Anita). notes/someday.md
-- T-427 [P3] {L:solve-speed} Longer-trip answers sent only for zones with trips. notes/T-377.md
-- T-390 [P3] {L:route-choice} A station's walked/drove split for everyday and regional trips. notes/someday.md
-- T-296 [P3] {L:demand-ideas} Weekends overcount commuters in a station's far-zone rows. notes/T-296.md
-- T-298 [P3] {L:demand-ideas} Inspectors mix commutes between zones into longer trips. notes/someday.md
-- T-270 [P3] {L:demand-ideas} Drives across rivers and into dense centres too cheap (tolls). notes/someday.md
-- T-059 [P3] {L:demand-ideas} Trips home chosen from the work end. notes/someday.md
-- T-202 [P3] {L:route-choice} Rethink the 100 m station merge now complexes exist. notes/someday.md
-- T-265 [P3] {L:demand-ideas} Signals simulated by clumps of shared track. notes/someday.md
-- T-187 [P3] {L:demand-ideas} Trip chains (work, leisure, home); not a priority (Anita). notes/someday.md
-- T-1240 [P3] {L:solve-speed} A leaner per-cell sample index for coarse zones. notes/someday.md
-- T-1241 [P3] {L:demand-ideas} Everyday station noise in thin zones between draws. notes/someday.md
-- T-560 [P3] {L:demand-ideas} Crush load per country from published stock figures. notes/someday.md
-- T-873 [P3] {L:demand-ideas} A train empties fully mid-line in the boarding account. notes/someday.md
-- T-738 [P3] {L:airports} Flight data for long-distance demand (Anita's idea). notes/someday.md
+- T-2385 [P3] {L:route-choice} Far-end reach for everyday trips
+  - Context: A far cell past `pair_walk_max` can still count rail. T-1920 moved 0.04% of far rail riders in New York, so low value.
+  - Goal: Decide if the far-end reach is worth doing.
+  - Other: Notes: notes/T-1920.md
+- T-1345 [P3] {L:ridership-checks} One-city calibration checks
+  - Context: Twelve folded checks, such as Central Park, LIRR, Hudson fade, Nice and Toronto airport.
+  - Goal: Each check is run or dropped.
+  - Other: Notes: notes/T-1345.md
+- T-263 [P3] {L:attractions} Stadium events
+  - Context: Attractions' stage 3, low priority (your 2026-10-24 call). Holiday sightseeing goes with T-264.
+  - Goal: Stadium events as an attraction.
+  - Other: notes/T-263.md
+- T-632 [P3] {L:route-choice} Walking feels too strong
+  - Context: Walking feels too strong to play against. Parked: you said to try later.
+  - Goal: Walking feels balanced against trains.
+  - Other: Notes: notes/T-632.md
+- T-634 [P3] {L:route-choice} Bike or short-trip mode
+  - Context: No mode sits before walking.
+  - Goal: A bike or short-trip mode, once walking is refit on surveys.
+  - Other: Notes: notes/someday.md
+- T-529 [P3] {L:car-free} Bikes to stations in Japan
+  - Context: Car-free homes in Japan have no bike access to stations.
+  - Goal: Car-free homes can bike to stations.
+  - Other: Notes: notes/someday.md
+- T-461 [P3] {L:jobs-places} Japan's jobs total and public service
+  - Context: Japan's jobs total and public service are off.
+  - Goal: Both fixed.
+  - Other: notes/someday.md
+- T-454 [P3] {L:demand-ideas} Destinations that respond to the network
+  - Context: Destinations are fixed. Parked by you.
+  - Goal: Destinations shift as the network grows.
+  - Other: Notes: notes/someday.md
+- T-437 [P3] {L:islands} Long trip modes: car cost, Channel, ferries
+  - Context: The long car's cost, the Channel and ferries need a look.
+  - Goal: Long-trip modes behave sensibly.
+  - Other: notes/someday.md
+- T-438 [P3] {L:demand-ideas} {waits:Anita} Giant metros take neighbours' trips
+  - Need from Anita: Say whether giant metros taking neighbours' trips needs fixing.
+  - Context: The market's destination choice sends neighbours' trips to giant metros.
+  - Goal: Giant metros no longer take neighbours' trips.
+  - Other: Notes: notes/someday.md
+- T-427 [P3] {L:solve-speed} Longer-trip answers only for zones with trips
+  - Context: Someday: send longer-trip answers only for zones that have trips.
+  - Goal: Answers are sent only for zones with trips.
+  - Other: notes/T-377.md
+- T-390 [P3] {L:route-choice} Walked and drove split per station
+  - Context: Everyday and regional trips have no per-station walked/drove split.
+  - Goal: Each station shows its split.
+  - Other: Notes: notes/someday.md
+- T-296 [P3] {L:demand-ideas} Weekends overcount commuters in far zones
+  - Context: A station's far-zone rows overcount commuters on weekends.
+  - Goal: Far-zone rows show weekend trips fairly.
+  - Other: Notes: notes/T-296.md
+- T-298 [P3] {L:demand-ideas} Inspectors mix commutes into longer trips
+  - Context: Inspectors blend commutes between zones into longer trips.
+  - Goal: Inspectors keep commutes separate.
+  - Other: Notes: notes/someday.md
+- T-270 [P3] {L:demand-ideas} Driving across rivers and into centres too cheap
+  - Context: Drives across rivers and into dense centres lack tolls.
+  - Goal: Those drives cost more.
+  - Other: Notes: notes/someday.md
+- T-059 [P3] {L:demand-ideas} Trips home chosen from the work end
+  - Context: Homes are not chosen from the work end.
+  - Goal: Trips home are chosen from the work end.
+  - Other: Notes: notes/someday.md
+- T-202 [P3] {L:route-choice} Rethink the 100 m station merge
+  - Context: Complexes now exist, so the 100 m merge may be redundant.
+  - Goal: Decide whether the merge stays.
+  - Other: Notes: notes/someday.md
+- T-265 [P3] {L:demand-ideas} Signals simulated by clumps of shared track
+  - Context: Signals are not simulated per shared-track clump.
+  - Goal: Signals follow clumps of shared track.
+  - Other: Notes: notes/someday.md
+- T-187 [P3] {L:demand-ideas} Trip chains of work, leisure, home
+  - Context: Trips are not chained. Not a priority, you said.
+  - Goal: Trips chain work, leisure and home.
+  - Other: Notes: notes/someday.md
+- T-1240 [P3] {L:solve-speed} Leaner sample index for coarse zones
+  - Context: Someday: a smaller per-cell sample index for coarse zones.
+  - Goal: Coarse zones use a leaner index.
+  - Other: notes/someday.md
+- T-1241 [P3] {L:demand-ideas} Everyday station noise in thin zones
+  - Context: Thin zones show noisy everyday trips between draws.
+  - Goal: Everyday trips are steady between draws.
+  - Other: Notes: notes/someday.md
+- T-560 [P3] {L:demand-ideas} Crush load per country
+  - Context: Crush load is one value for all countries.
+  - Goal: Crush load follows published stock figures per country.
+  - Other: Notes: notes/someday.md
+- T-873 [P3] {L:demand-ideas} Train empties fully mid-line
+  - Context: The boarding account lets a train empty fully mid-line.
+  - Goal: The boarding account no longer empties trains mid-line.
+  - Other: Notes: notes/someday.md
+- T-738 [P3] {L:airports} Flight data for long-distance demand
+  - Context: Your idea: use flight data for long-distance demand.
+  - Goal: Long-distance demand uses flight data, or the idea is dropped.
+  - Other: notes/someday.md
 
 ### Performance
-- T-1172 [P3] {L:loading} Load-progress bookkeeping 5-7% of the main thread in a big load. notes/someday.md
-- T-1173 [P3] {L:loading} The clock worker's load is 5.7 s on the China save.
-- T-1230 [P3] {L:loading} The clock worker's first boarding hour after a result, 1.3 s. notes/someday.md
-- T-898 [P3] {L:loading} City pack opening, the floor of a big load (7 s a worker for Japan). notes/someday.md
-- T-899 [P3] {L:loading} A save outside New York still opens New York's pack first. notes/someday.md
-- T-1040 [P3] {L:edit-speed} A long piece's ghost is a full trial edit (100-300 ms). notes/someday.md
-- T-1031 [P3] {L:edit-speed} The first ghost of each run takes 0.5-0.7 s. notes/someday.md
-- T-879 [P3] {L:frame-rate} Long tasks left when panning zoomed out. notes/someday.md
-- T-875 [P3] {L:solve-speed} The evening period from midday's choices. notes/someday.md
-- T-876 [P3] {L:solve-speed} Tiny far-zone station rows folded into a remainder. notes/someday.md
-- T-877 [P3] {L:solve-speed} Market rows' air lists once per airport. notes/someday.md
-- T-777 [P3] {L:solve-speed} Market rows per country instead of the whole file. notes/someday.md
-- T-758 [P3] {L:edit-speed} The track derive with water masks, 4.9 s for Japan. notes/someday.md
-- T-499 [P3] {L:edit-speed} Stop edits: lines sent whole and the buffer build. notes/someday.md
-- T-281 [P3] {L:loading} Opening a big save searches every station's walk round water. notes/someday.md
-- T-076 [P3] {L:frame-rate} {waits:Anita} A lower frame rate when trains barely move (Anita's smoothness call). notes/T-076.md
-- T-168 [P3] {L:solve-speed} Add a newly viewed city without re-solving the whole network. notes/someday.md
-- T-414 [P3] {L:solve-speed} Each worker's first solve slower in the browser than native. notes/someday.md
-- T-436 [P3] {L:solve-speed} {waits:Anita} Start crowding rounds from the previous solve (Anita decides). notes/someday.md
-- T-361 [P3] {L:memory} One demand engine per city, not two. notes/T-361.md
-- T-354 [P3] {L:memory} Pack copies per worker and the final publish, spread. notes/T-354.md
-- T-359 [P3] {L:loading} A bare start's card waits 2 s for New York in one worker. notes/someday.md
-- T-344 [P3] {L:loading} A zone's loading bar can stick near 99%. notes/T-344.md
-- T-346 [P3] {L:loading} A cached reload hides the fresh solve's estimates. notes/someday.md
+- T-1172 [P3] {L:loading} Load progress costs 5-7% of main thread
+  - Context: Load-progress bookkeeping takes 5-7% of the main thread in a big load.
+  - Goal: Progress bookkeeping costs far less in a big load.
+  - Other: notes/someday.md
+- T-1173 [P3] {L:loading} Clock worker loads for 5.7 s on China
+  - Context: The clock worker takes 5.7 s to load on the China save.
+  - Goal: The clock worker loads the China save faster.
+- T-1230 [P3] {L:loading} Clock worker first boarding hour is slow
+  - Context: The clock worker's first boarding hour after a result takes 1.3 s.
+  - Goal: That first hour takes much less than 1.3 s.
+  - Other: notes/someday.md
+- T-898 [P3] {L:loading} City pack opening is slow for big loads
+  - Context: Opening a city pack is the floor of a big load, 7 s a worker for Japan.
+  - Goal: Pack opening takes much less than 7 s a worker on Japan.
+  - Other: notes/someday.md
+- T-899 [P3] {L:loading} Save outside New York opens NYC first
+  - Context: A save outside New York still opens New York's pack first.
+  - Goal: A save opens only its own city's pack.
+  - Other: notes/someday.md
+- T-1040 [P3] {L:edit-speed} Long piece ghost takes 100-300 ms
+  - Context: A long piece's ghost is a full trial edit, 100-300 ms.
+  - Goal: A long piece's ghost previews faster.
+  - Other: notes/someday.md
+- T-1031 [P3] {L:edit-speed} First ghost of a run takes 0.5-0.7 s
+  - Context: The first ghost of each run takes 0.5-0.7 s.
+  - Goal: The first ghost appears as fast as later ones.
+  - Other: notes/someday.md
+- T-879 [P3] {L:frame-rate} Long tasks when panning zoomed out
+  - Context: Someday: long tasks remain when panning zoomed out.
+  - Goal: Panning zoomed out has no long tasks.
+  - Other: notes/someday.md
+- T-875 [P3] {L:solve-speed} Evening period from midday choices
+  - Context: Someday: derive the evening period from midday choices.
+  - Goal: Evening is solved from midday choices.
+  - Other: notes/someday.md
+- T-876 [P3] {L:solve-speed} Fold tiny far-zone station rows
+  - Context: Someday: fold tiny far-zone station rows into a remainder.
+  - Goal: Tiny rows are folded into one remainder.
+  - Other: notes/someday.md
+- T-877 [P3] {L:solve-speed} Market air lists once per airport
+  - Context: Someday: store the market rows air lists once per airport.
+  - Goal: Air lists are stored once per airport.
+  - Other: notes/someday.md
+- T-777 [P3] {L:solve-speed} Market rows per country
+  - Context: Someday: load market rows per country instead of the whole file.
+  - Goal: Market rows load per country.
+  - Other: notes/someday.md
+- T-758 [P3] {L:edit-speed} Track derive takes 4.9 s on Japan
+  - Context: The track derive with water masks takes 4.9 s for Japan.
+  - Goal: The derive takes much less than 4.9 s.
+  - Other: notes/someday.md
+- T-499 [P3] {L:edit-speed} Stop edits send lines whole
+  - Context: Stop edits send lines whole and rebuild the buffers.
+  - Goal: Stop edits send and rebuild only what changed.
+  - Other: notes/someday.md
+- T-281 [P3] {L:loading} Big saves search every station's walk
+  - Context: Opening a big save searches every station's walk round water.
+  - Goal: A big save opens without searching every station.
+  - Other: notes/someday.md
+- T-076 [P3] {L:frame-rate} {waits:Anita} Lower frame rate when trains barely move
+  - Need from Anita: Do you accept a lower frame rate when trains barely move?
+  - Context: Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second.
+  - Goal: Frame rate drops when the fastest train moves under half a pixel a frame, roughly halving the cost.
+  - Other: Measure the visible step first. notes/T-076.md
+- T-168 [P3] {L:solve-speed} Add a viewed city without a whole re-solve
+  - Context: Someday: adding a newly viewed city re-solves the whole network.
+  - Goal: A new city is added without re-solving everything.
+  - Other: notes/someday.md
+- T-414 [P3] {L:solve-speed} First worker solve slower in the browser
+  - Context: Someday: each worker first solve is slower in the browser than native.
+  - Goal: Browser first solves match native.
+  - Other: notes/someday.md
+- T-436 [P3] {L:solve-speed} {waits:Anita} Start crowding rounds from the previous solve
+  - Need from Anita: Do you accept figures depending on edit history for faster solves?
+  - Context: Starting rounds from the last solve is faster, but figures would then depend on edit history. Not measured.
+  - Goal: Rounds start from the previous solve if you agree.
+  - Other: notes/T-434.md
+- T-361 [P3] {L:memory} One demand engine per city
+  - Context: There are two demand engines per city.
+  - Goal: One demand engine per city.
+  - Other: notes/T-361.md
+- T-354 [P3] {L:memory} Pack copies per worker
+  - Context: Each worker holds its own pack copies, and the final publish spreads them.
+  - Goal: Pack copies are shared and the publish is trimmed.
+  - Other: notes/T-354.md
+- T-359 [P3] {L:loading} Bare start card waits 2 s for New York
+  - Context: A bare start's card waits 2 s for New York in one worker.
+  - Goal: The card appears without the 2 s wait.
+  - Other: notes/someday.md
+- T-344 [P3] {L:loading} Zone loading bar sticks near 99%
+  - Context: A zone's loading bar can stick near 99%.
+  - Goal: The bar finishes when loading does.
+  - Other: notes/T-344.md
+- T-346 [P3] {L:loading} Cached reload hides fresh estimates
+  - Context: A cached reload hides the fresh solve's estimates.
+  - Goal: A reload shows the fresh solve's estimates.
+  - Other: notes/someday.md
 
 ### Interface
-- T-750 [P3] {L:real-networks} Add a city's real network to a running sandbox game (Anita wants it, not urgent). notes/someday.md
-- T-685 [P3] {L:achievements} Drawn city stamps at 10% rail share (stars done). notes/T-684.md
-- T-651 [P3] {L:map-look} Unopened zones look fully red zoomed out; give them their walk split (Anita's TODO). notes/someday.md
-- T-602 [P3] {L:map-look} Walk split for zones not loaded, the data half of T-651. notes/someday.md
-- T-678 [P3] {L:map-look} Day and night tint on the base map (T-676 is done). notes/T-676.md
-- T-803 [P3] {L:map-look} More station faces by time of day (Anita). notes/someday.md
-- T-984 [P3] {L:world-map} Region outlines fetched per region. notes/T-975.md
-- T-956 [P3] {L:map-look} WebKit keeps Homes bubbles drawn after Homes is off. notes/someday.md
-- T-166 [P3] {L:map-look} A station's riders by purpose on the map. notes/someday.md
-- T-057 [P3] {L:translations} Kana and kanji on the basemap in Zen Maru Gothic. notes/someday.md
+- T-750 [P3] {L:real-networks} Add a real network to a running sandbox
+  - Context: You want it, not urgent.
+  - Goal: A city's real network can be added to a running game.
+  - Other: notes/someday.md
+- T-685 [P3] {L:achievements} City stamps at 10% rail share
+  - Context: Stars are done; drawn stamps for 10% rail share remain.
+  - Goal: Stamps are drawn and awarded.
+  - Other: notes/T-684.md
+- T-651 [P3] {L:map-look} Unopened zones look fully red
+  - Context: Unopened zones look fully red zoomed out.
+  - Goal: They show their walk split.
+  - Other: notes/someday.md
+- T-602 [P3] {L:map-look} Walk split for unloaded zones
+  - Context: The data half of T-651.
+  - Goal: Unloaded zones have a walk split.
+  - Other: notes/someday.md
+- T-678 [P3] {L:map-look} Day and night tint on the base map
+  - Context: T-676 is done.
+  - Goal: The base map tints by time of day.
+  - Other: notes/T-676.md
+- T-803 [P3] {L:map-look} More station faces by time of day
+  - Context: Your idea.
+  - Goal: More faces by time of day.
+  - Other: notes/someday.md
+- T-984 [P3] {L:world-map} Region outlines fetched per region
+  - Context: Outlines load all at once today.
+  - Goal: Outlines fetch per region.
+  - Other: notes/T-975.md
+- T-956 [P3] {L:map-look} Homes bubbles stay drawn in WebKit
+  - Context: WebKit keeps Homes bubbles after Homes is off.
+  - Goal: Bubbles clear when Homes is off.
+  - Other: notes/someday.md
+- T-166 [P3] {L:map-look} Riders by purpose at a station
+  - Context: Idea.
+  - Goal: A station's riders by purpose show on the map.
+  - Other: notes/someday.md
+- T-057 [P3] {L:translations} Kana and kanji in Zen Maru Gothic
+  - Context: Basemap Japanese text uses a default font.
+  - Goal: Kana and kanji draw in Zen Maru Gothic.
+  - Other: notes/someday.md
 
 ### Track and trains
-- T-623 [P3] {L:station-placement} A station cut inside an arc still shifts the ramp. notes/someday.md
-- T-666 [P3] {L:track-drawing} An automatic bridge refused near a short first arc or tight turn. notes/someday.md
-- T-668 [P3] {L:track-drawing} Dragging a bridged segment refuses ground over water.
-- T-248 [P3] {L:track-drawing} Construct and level acting on a whole run between junctions. notes/someday.md
-- T-1936 [P3] {L:edit-speed} Run profiles with many holds in one hop are slow: `profile::run_with` works the hop out again for each hold, so T-1924's following waits cost the shared New York save ~10% on edits. A single pass over a hop's holds would let the waits sit at every station the slower trains stop at. track-and-service.md 6.2. Open. notes/T-1936.md.
-- T-1937 [P3] {L:passing-tracks} Departure spacing (T-1925) leaves flat crossings out: a crossing's other-route users carry no place on their run (`at` 0), so lines meeting only at a flat crossing are not spread. Give them their crossing offset, then count them in `spacing::place`.
-- T-340 [P3] {L:quad-track} Quad track's rest: end-node stations, express pair side. notes/someday.md
-- T-702 [P3] {L:station-placement} Station ghost leftovers on overlapping imported lines. notes/someday.md
-- T-755 [P3] {L:track-drawing} No room for ramps at Lake Hamana on the traced Tokaido Shinkansen. notes/someday.md
-- T-763 [P3] {L:edit-speed} Penn Station-Emeryville 3-3.6 s from rest to preview. notes/someday.md
-- T-914 [P3] {L:track-drawing} A snapped route Schiphol - Amsterdam Centraal refused over water. notes/someday.md
-- T-430 [P3] {L:track-drawing} A straight-then-arc fallback for too-tight clicks, only if wanted.
+- T-623 [P3] {L:station-placement} Station cut in an arc shifts the ramp
+  - Context: A station cut inside an arc still shifts the ramp.
+  - Goal: The ramp stays put.
+  - Other: notes/someday.md
+- T-666 [P3] {L:track-drawing} Automatic bridge refused near a tight turn
+  - Context: Refused near a short first arc or tight turn.
+  - Goal: The bridge is built there.
+  - Other: notes/someday.md
+- T-668 [P3] {L:track-drawing} Dragging a bridged segment over water
+  - Context: Dragging a bridged segment refuses ground over water.
+  - Goal: The drag works over water.
+- T-248 [P3] {L:track-drawing} Construct and level a whole run
+  - Context: Construct and level act on one piece, not a run between junctions.
+  - Goal: They act on the whole run.
+  - Other: notes/someday.md
+- T-1936 [P3] {L:edit-speed} Run profiles with many holds are slow
+  - Context: `profile::run_with` works a hop out again for each hold, costing the shared New York save about 10% on edits.
+  - Goal: One pass over a hop's holds, so waits sit at every station slower trains stop at.
+  - Other: notes/T-1936.md
+- T-1937 [P3] {L:passing-tracks} Departure spacing ignores flat crossings
+  - Context: Other-route users at a flat crossing carry no place on their run, so lines meeting only there are not spread.
+  - Goal: They get their crossing offset and count in spacing::place.
+- T-340 [P3] {L:quad-track} Quad track end-node stations and express side
+  - Context: Quad track's rest: end-node stations and the express pair side.
+  - Goal: Those two are built.
+  - Other: notes/someday.md
+- T-702 [P3] {L:station-placement} Station ghost leftovers on overlapping lines
+  - Context: Ghosts linger on overlapping imported lines.
+  - Goal: No leftover ghosts.
+  - Other: notes/someday.md
+- T-755 [P3] {L:track-drawing} No ramp room at Lake Hamana
+  - Context: The traced Tokaido Shinkansen has no room for ramps there.
+  - Goal: The trace builds at Lake Hamana.
+  - Other: notes/someday.md
+- T-763 [P3] {L:edit-speed} Penn Station to Emeryville preview takes 3 s
+  - Context: Penn Station-Emeryville takes 3-3.6 s from rest to preview.
+  - Goal: That route previews in well under 3 s.
+  - Other: notes/someday.md
+- T-914 [P3] {L:track-drawing} Snapped route Schiphol to Amsterdam Centraal refused
+  - Context: The snapped route is refused over water.
+  - Goal: The route is accepted.
+  - Other: notes/someday.md
+- T-430 [P3] {L:track-drawing} Straight-then-arc fallback for tight clicks
+  - Context: Only if wanted.
+  - Goal: Tight clicks fall back to a straight then an arc.

@@ -1,4 +1,5 @@
-"""Mark TASKS.md lines as taken: python mark_taking.py <tasks.md> <id>=<agent> ..."""
+"""Mark TASKS.md head lines as taken: python mark_taking.py <tasks.md> <id>=<agent> ...
+Appends "(taking, <date>, agent <name>)" after the title."""
 import re
 import sys
 from datetime import date
@@ -13,8 +14,8 @@ for pair in pairs:
             body = line.rstrip("\r")
             end = "\r" if line.endswith("\r") else ""
             if body.endswith(" Open."):
-                body = body[: -len(".")] + ";"
-            lines[i] = f"{body} taking, {date.today().isoformat()}, agent {agent}.{end}"
+                body = body[: -len(" Open.")]
+            lines[i] = f"{body} (taking, {date.today().isoformat()}, agent {agent}){end}"
             print(f"{tid}: marked")
             break
     else:

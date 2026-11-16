@@ -66,8 +66,14 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **DECISIONS.md and ARCHIVE.md are grepped, never read whole** (the `-to-2026-10-19` files too). A DECISIONS line is
   for a choice someone might revisit: date, one or two sentences, task id. An ARCHIVE entry: id, title, date,
   outcome, notes link.
-- **Tasks**: `- T-012 [P2] short title. State, owner if taken, notes link.` P1 now, P2 this milestone, P3 later;
-  "Someday" tasks are real open tasks. Use only the ids your brief gives you. Add `taking, <date>` before starting.
+- **Tasks**: a head line `- T-012 [P2] {L:slug} Title` (2-10 words, no full stop, no colon), then indented
+  one-line fields in this order: `  - Need from Anita:` (exactly when the head has `{waits:Anita}`: one sentence she can
+  act on, with the recommended answer if there is one), `  - Context:` (where things stand and why), `  - Goal:` (what
+  done is, with the deciding number), `  - Other:` (optional; the notes link last). Very short, written to her; leave
+  out what you're unsure of (Anita 2026-11-16). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later;
+  "Someday" tasks are real open tasks. Use only the ids your brief gives you. Add `(taking, <date>, agent <name>)`
+  after the title before starting (`checks/mark_taking.py`); update a task by rewriting its fields, never by
+  appending to the head line.
   Every open task carries `{L:<slug>}` from `LINES.md` right after its priority, plus `{waits:Anita}` or
   `{after:<task id or phrase>}` when it waits; a new task joins an existing line or adds one; set a line's `done:`
   when its last task closes.

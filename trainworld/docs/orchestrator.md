@@ -28,7 +28,8 @@ not once per message (Anita, 2026-11-09).
 
 ## TODO.md and asks
 
-- File only TODO.md's short-term section. The other sections are hers unless she points at an item.
+- File only TODO.md's short-term section. The other sections are hers unless she points at an item. A filed task
+  gets the head line and short fields (trainworld/CLAUDE.md, Tasks); her words go in Context.
 - A task that duplicates another may be folded into it without asking (Anita, 2026-11-16: "its fine to fold in
   duplicates if you think its a duplicate, since we're not ognna be losing that much info").
 - **Triage player reports** (tw-feedback, Anita 2026-11-12): a literal bug that would touch a decent number of

@@ -1,8 +1,8 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 7186e3f8-2ac6-4929-90c0-cf653363ab62, name maps-b8 [a8e864], since 2026-11-15 15:22 UTC
-(Took over from maps-19, session 5c59ad2f, already gone at 15:22 UTC with nothing in flight, so no wait.)
-Updated: 2026-11-15 15:22 UTC (first jobs from TODO.md short term: the crash, then a kanban view of the work)
+Orchestrator: session 76388cba-0327-41aa-a4e4-4e7d7376bf41, name maps-7e [2cdf3c], since 2026-11-16 13:13 UTC
+(Took over from maps-b8, session 7186e3f8, already gone at 13:13 UTC, paused with nothing in flight, so no wait.)
+Updated: 2026-11-16 13:13 UTC (resuming her plan for the week: T-3394 rollout, T-3424 board changelog, easy bugs, T-3420 visibility)
 
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
@@ -29,7 +29,23 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   of a partly built line: low priority) unanswered; she'll look Monday. Reply practice: docs/orchestrator.md.
 - No agents running, no core claims. Data: nothing running; newest freeze 20261113-013559.
 
-## In flight (maps-b8)
+## In flight (maps-7e, from 2026-11-16 13:15 UTC)
+- Resumed her plan for the week ("lets limit work to straight-forward bug investigation (can give up if seems hard)
+  and kanban. also track visibility"). All marked taking in TASKS.md; agents told not to edit TASKS/ARCHIVE this
+  round (the restructure is pending), so I archive their done tasks after the apply.
+- T-3394 rollout: nine Sonnet agents (r-track ae2d709cd87d8bec6, r-sched af20713845444111c, r-schem add08d4ba3de24723,
+  r-ops a72d91039ed58903c, r-demA a32b133e0373b684b, r-demB aa1d58c0dc4945475, r-demC aa3bfcd2e27d2a0ec, r-perfA a69d34ee2a470b366,
+  r-perfB aedb1e81ed16780da), line sets as in the paused plan below. Snapshot and block files in my scratchpad
+  rollout\ (C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\76388cba-0327-41aa-a4e4-4e7d7376bf41\scratchpad\rollout).
+  When all nine report: one apply with --keep-old notes/tasks-before-T-3394.md; refused blocks back to their agent;
+  then the CLAUDE.md Tasks rule, TASKS.md and Someday headers, orchestrator.md filing; retags.
+- bugs1 (Sonnet, a32d9d2d77d3e0ce0), tree .tw-trees/single, port 6111: T-3379, T-3380, T-3411, T-3386, T-3383.
+- bugs2 (Sonnet, ace743905b76bc49b), tree .tw-trees/fixes, port 6112: T-3381, T-3422, T-3421, T-3403, T-3412.
+- visibility (Opus, a34f8356acf49ce26), main tree app/, port 6113: T-3420 to her design.
+- changelog (Sonnet, acd06534dca27974c), trainworld/board, port 6114: T-3424 changelog on the board + column resize.
+- Board inbox Monitor armed 13:14 UTC (30 min, re-arm).
+
+## Earlier (maps-b8)
 - T-3390 done by agent lines (Opus, id a75a19621b6669315): 58 lines in LINES.md, every task tagged, 11 done tasks
   archived; 35 close candidates wait on her in notes/T-3390.md "For Anita". Unfiled TODO.md items listed there too.
 - T-3391 and T-3392 (board stages 1-2) built; serve.py restarted 16:08Z with the inbox endpoint (root serve.py is
