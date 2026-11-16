@@ -6,7 +6,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 
 ## Track and stations {area:track}
 
-- quad-track | AA/BB quad track | Splitting a double into a four-track stretch and back, and choosing which pair a line stops on. Its first stage is per-direction stops, parked half built in a tree. | update:track-stations
+- quad-track | AA/BB quad track | Splitting a double into a four-track stretch and back, and choosing which pair a line stops on. Stage 1 (per-direction stops) landed 2026-11-16; the rest is paused until the track rework (T-3444) is discussed. | update:track-stations
 - track-kinds | What single, double and quad mean | One clear picture of single, double and quad track and where crossovers come from, for players and for us. Her answers are recorded and it is parked until she reopens it. | update:track-stations
 - single-track | Single and double track fixes | Bugs and rough edges on single and one-way track, and on doubling up, mostly from player reports. | update:track-stations
 - stops | Stops and stop order | Which stations a line stops at and in what order: stopping twice at one station, reordering, waypoints. | update:track-stations

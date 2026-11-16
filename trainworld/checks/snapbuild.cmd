@@ -22,9 +22,9 @@ rem T-2962: the served build's files stay beside the new ones, so a tab open acr
 if exist dist python "%MAPS%\trainworld\tools\keep_assets.py" carry dist dist-new
 if exist dist move dist dist-old || exit /b 1
 move dist-new dist || (move dist-old dist & exit /b 1)
-rem the old build (7 GB) is renamed out of the way and deleted in a separate window, so the next build cannot trip on it
+rem the old build (7 GB) is renamed out of the way and deleted by a detached hidden process, so the next build cannot trip on it
 set TRASH=dist-trash-%RANDOM%
-if exist dist-old move dist-old %TRASH% >nul && start "" /min cmd /c "rmdir /s /q %TRASH% >nul 2>&1"
+if exist dist-old move dist-old %TRASH% >nul && powershell -NoProfile -Command "Start-Process cmd -ArgumentList '/c rmdir /s /q %TRASH%' -WorkingDirectory '%CD%' -WindowStyle Hidden"
 rem localhost:8800/twwiki/ (T-2854); a failure here leaves the old pages up and the game swapped
 python "%MAPS%\trainworld\tools\wiki_build.py" --html
 echo swapped

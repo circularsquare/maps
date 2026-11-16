@@ -22,7 +22,9 @@ def main(argv):
     cmd = ["cmd", "/c", str(Path("trainworld") / "checks" / script), *argv]
     out = open(log, "w", encoding="utf-8", errors="replace") if log else None
     try:
-        rc = subprocess.run(cmd, cwd=str(MAPS), stdout=out, stderr=subprocess.STDOUT if out else None).returncode
+        # CREATE_NO_WINDOW: started from a console-less parent, cmd would otherwise open a window on her screen
+        rc = subprocess.run(cmd, cwd=str(MAPS), stdout=out, stderr=subprocess.STDOUT if out else None,
+                            creationflags=0x08000000).returncode
     finally:
         if out:
             out.close()

@@ -2,7 +2,19 @@
 
 Orchestrator: session f7c8626c-6b89-4b09-983c-732243e787e9, name maps-d7 [e8137b], since 2026-11-16 15:36 UTC
 Previous: session 76388cba-0327-41aa-a4e4-4e7d7376bf41, name maps-7e [2cdf3c], handed over 2026-11-16 15:36 UTC, finishing in-flight work
-Updated: 2026-11-16 15:36 UTC (she is starting a new orchestrator now)
+Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
+
+## maps-d7 (new orchestrator, 15:38 UTC)
+- Board inbox watch armed by maps-d7 (Monitor, re-arm every 30 min). Pending was empty at 15:36.
+- maps-7e lands b5, lint, c1, c2, c3, e1, sc, doc, pick2 (glyph landed a2559e53), then messages maps-d7.
+- Handed to maps-d7: feeders T-3426 (land only after Anita sees the recalibration table; maps-7e forwards it),
+  shenzhen T-3428 (its report forwarded; 8800 rebuilds frozen at 20261113-013559 until then), T-3399 (Anita 15:38 UTC, her 10:30am:
+  "i will let you know when its time for that, otherwise dont worry about it": wait for her word; commit the plan
+  edits when it starts). shonei-server pushed and T-2396 closed by maps-7e on
+  her word.
+- Stale below, checked 15:36: perdir landed as e79a5cd6 (no tree now); trees hotfix, hotfix031, stop-freeze-034 are
+  gone (branches hotfix-stop-freeze-034 and tw/hotfix-10d remain); "State" 8800/master lines are older than "In flight"
+  (8800 = b6c40df5, origin = b6c40df5, master 14 ahead).
 
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
@@ -131,6 +143,11 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
    T-3375 zero-resident units beside a metro, T-3358 rivers (paused by her). Next free id T-3397 (check TASKS.md first: another session files ids too).
 
 ## Anita's standing asks
+- This week (Anita 11-16 15:45 UTC): small isolated fixes, getting the open-task count down, merging duplicates.
+  Quad work stopped (its tasks now wait on T-3444). Region redraws and other pack rebuilds are compute-heavy: batch
+  them into an overnight run, not daytime agents. T-3399 starts only on her word ("i will let you know when its time").
+- No visible windows on her screen: start background processes hidden (start_hidden.ps1 or CREATE_NO_WINDOW); she
+  saw python consoles popping 11-16 (maps-d7 tracing the source).
 - Every publish and server deploy needs her "yes" to that exact action; none overnight.
 - A game change a player asks for (numbers, what can be built) waits for her word (CLAUDE.md).
 - Replies on contributor PRs: written for a person, offers not requests, she sees each first.
