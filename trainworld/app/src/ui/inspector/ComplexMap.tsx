@@ -19,7 +19,7 @@ import { segmentGap } from "../../game/complexes";
 import type { LineInput, StationInput } from "../../game/types";
 import { world } from "../../game/world";
 import { vehicleOf } from "../../game/vehicle";
-import type { ComplexNow } from "../../game/complexLive";
+import { waitToward, type ComplexNow } from "../../game/complexLive";
 import { live } from "../../map/live";
 import { t as tr, tSeries } from "../../i18n";
 import { anchor, EARTH_C } from "../../map/geo";
@@ -194,7 +194,9 @@ export function ComplexMap({ id, members, stations, lines, now, onOpen }: {
     }
     const p = now?.platforms.get(s.id);
     if (now && p) {
-      text += "\n" + tr("complexMap.waiting", { count: count(p.side[0] + p.side[1]), room: count(p.room), oneSide: p.oneSide });
+      for (const w of waitToward(now.queues.filter((q) => q.station === s.id)))
+        text += "\n" + (w.to ? tr("complexMap.waitToward", { count: count(w.count), name: w.to }) : tr("complexMap.waitOpen", { count: count(w.count) }));
+      text += "\n" + tr("complexMap.room", { room: count(p.room), oneSide: p.oneSide });
     }
     return text;
   };

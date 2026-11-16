@@ -550,7 +550,6 @@
   "complexMap.linked": "Hover on a link the player drew between two stations of a complex. a, b: station names; length: the distance between them, \"120 m\".",
   "complexMap.noLines": "Line of the hover on a platform in the complex map when no line stops at it.",
   "complexMap.riders": "Line of the hover on a platform in the complex map. count: \"1.2k\". vehicle: train, tram, bus or boat.",
-  "complexMap.waiting": "Last line of the hover on a platform in the complex map. count: people waiting, \"14\"; room: how many more fit, \"80\"; oneSide: true when the platform has one side only, otherwise the room is on each of two sides.",
   "constructButton.plain": "Button that builds a planned line, before its price is known.",
   "constructButton.priced": "Button that builds a planned line. price: the full cost, \"$12.4M\".",
   "constructButton.tipBoth": "Hover on the Construct button when the line also needs vehicles bought. kind: boat, bus or line (a train line); build: the cost of the route or track, \"$10M\"; trains: the cost of the vehicles, \"$2.4M\". Reads as two costs then a sentence.",
@@ -2682,5 +2681,8 @@
   "oneWay.yes": "Button that confirms the question above. reverse: true when the track is being turned around.",
   "oneWay.no": "Button that closes the one-way confirmation and changes nothing.",
   "oneWay.reroutes": "A row under the one-way question, one per line whose route changes. line: the line's name, \"Line 4\".",
-  "issues.oneWayNoWay": "Notice when track cannot be made one way because a line has no other route between its stations. line: the line's name, \"Line 4\"."
+  "issues.oneWayNoWay": "Notice when track cannot be made one way because a line has no other route between its stations. line: the line's name, \"Line 4\".",
+  "complexMap.waitToward": "A line of the hover on a platform in the complex map, one per direction. count: people waiting on that side, \"14\"; name: the station that direction ends at.",
+  "complexMap.waitOpen": "Same, when the end station is unknown. count: people waiting, \"14\".",
+  "complexMap.room": "Last line of the hover on a platform in the complex map. room: how many fit, \"80\"; oneSide: true when the platform has one side only, otherwise the room is on each of two sides."
 }

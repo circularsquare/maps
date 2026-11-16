@@ -904,7 +904,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   on its trains there a day (each direction the busier of arriving and leaving loads, every period
   summed) and how many change to or from other lines with its three biggest partners (T-176,
   `complexTransfers(members)` asked at each published round, [demand-views.md](demand-views.md)
-  "Transfers"), then the riders waiting now and the room (T-246, `game/complexLive.ts`). Platforms on
+  "Transfers"), then the riders waiting now, one line per direction ("14 waiting toward <end station>", T-3406), and the room (T-246, `game/complexLive.ts`). Platforms on
   top of each other (parallel within 15 degrees, centre lines within 12 m) share one hover listing
   them all. A click opens that station alone. The player's links have a hover giving the distance.
 - When the complex has more than one name, each name (the part before a slash) has one label beside

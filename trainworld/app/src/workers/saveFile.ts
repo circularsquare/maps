@@ -121,6 +121,8 @@ export interface SaveHeader {
   mode?: GameMode;
   /** T-728: the zone the game started in; absent for a start on the world map and in older saves */
   start?: string;
+  /** T-3407: seconds the ledger days run ahead of the clock in a game with no start zone, set by its first built station; absent before one is built */
+  dayShift?: number;
   /** T-728, T-729: the zones opened in this game, in the order they were opened; absent in older saves */
   opened?: string[];
   /** T-1223: the zones demand held fine (the rest coarse, notes/T-1206.md), so a reload solves the
@@ -163,7 +165,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, mode: true, start: true,
-  opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true, copy: true,
+  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true, copy: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */
 export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADER_FIELDS));

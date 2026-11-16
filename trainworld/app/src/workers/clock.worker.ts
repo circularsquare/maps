@@ -338,11 +338,20 @@ let startZone: string | undefined;
  * clock's own, New York's). The ledgers' days run midnight to midnight there, so the Money tab's day
  * turns as its clock passes midnight; their hours stay the clock's. */
 let dayShift = 0;
+/** T-3407: a game with no start zone takes its first built station's, once; saved as `SaveHeader.dayShift`
+ * so days booked under it keep their keys on a reload (the first station can be deleted later). */
+let dayPinned = false;
 const ledgerDay = (t: number) => Math.floor((t + dayShift) / 86400);
-function setStartZone(z: string | undefined) {
+function setStartZone(z: string | undefined, saved?: number) {
   startZone = z;
   const c = z ? CITIES.find((x) => x.id === z) : undefined;
-  dayShift = c ? shiftAt(c.center[0], c.center[1]) : 0;
+  dayPinned = !c && saved !== undefined;
+  dayShift = c ? shiftAt(c.center[0], c.center[1]) : dayPinned ? saved! : 0;
+}
+function pinDayShift() {
+  if (startZone || dayPinned || !firstBuiltAt) return;
+  dayPinned = true;
+  dayShift = shiftAt(firstBuiltAt[0], firstBuiltAt[1]);
 }
 let opened: string[] | undefined = [];
 /** T-1223: the zones demand holds fine, from the page; T-2153 the last two builds' zones */
@@ -1814,6 +1823,7 @@ function buildState(): ClockState {
   for (let k = 0; k < stationCount; k++) if (nodes[k].stationBuilt && (!first || nodes[k].id < first.id)) first = nodes[k];
   firstBuiltAt = first ? [first.lng, first.lat] : null;
   pinFareRef();
+  pinDayShift();
   syncHolidays();
   applyRunFactors();
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled; a line whose return run
@@ -2441,7 +2451,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2815,7 +2825,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_ferry(h.fleetFerry ?? 0);
   api!.set_fleet_tram(h.fleetTram ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
-  setStartZone(h.start); // before the ledgers, whose days follow its local time
+  setStartZone(h.start, h.dayShift); // before the ledgers, whose days follow its local time
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
   loadRegions(h.regions);

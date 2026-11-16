@@ -14,7 +14,7 @@ import { platformOffsets } from "../../game/complexes";
 import { passagePrice } from "../../game/upgrades";
 import type { LineInput, StationInput } from "../../game/types";
 import { complexOf, inComplexView, openAlone } from "../../game/complexView";
-import { complexNow, type ComplexNow } from "../../game/complexLive";
+import { complexNow, waitToward, type ComplexNow } from "../../game/complexLive";
 import { LINK_MAX_M } from "../../game/complexes";
 import { linking, linksAmong, unlink } from "../../game/links";
 import { selection, TRAM_PLATFORM } from "../../game/ui";
@@ -91,7 +91,8 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
     const full = qs.some((q) => q.leftBehind) || (!!p && Math.max(p.side[0], p.side[1]) >= p.room);
     rows.push({
       station, lines: own.map((x) => x.l), built: station.built, waiting, full, boardings, today: todayB,
-      waitTip: waiting === null ? tr("stationInspector.noTrain", { vehicle }) : full ? tr("stationInspector.leftBehind", { vehicle }) : "",
+      waitTip: waiting === null ? tr("stationInspector.noTrain", { vehicle })
+        : [...waitToward(qs).map((w) => (w.to ? tr("complexMap.waitToward", { count: count(w.count), name: w.to }) : tr("complexMap.waitOpen", { count: count(w.count) }))), ...(full ? [tr("stationInspector.leftBehind", { vehicle })] : [])].join("\n"),
     });
   }
   rows.sort((a, b) => b.boardings - a.boardings || a.station.name.localeCompare(b.station.name));

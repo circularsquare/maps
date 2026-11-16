@@ -5,7 +5,7 @@
 import { clock } from "./clock";
 import { crowdAt, platformRoom, QUEUE_STRIDE } from "./boarding";
 import type { LineId, LineInput, StationId, StationInput } from "./types";
-import { stationsById, world } from "./world";
+import { stationNames, stationsById, world } from "./world";
 import { live } from "../map/live";
 
 /** One line and direction's riders on one platform now. */
@@ -16,6 +16,8 @@ export interface QueueNow {
   /** +1: its trains run along the station's heading, -1 against it */
   dir: number;
   waiting: number;
+  /** name of the station the run ends at, "" when unknown */
+  to: string;
   /** the last train to leave left riders behind */
   leftBehind: boolean;
 }
@@ -55,12 +57,25 @@ function runDir(l: LineInput, run: number, k: number, s: StationInput, byId: Map
   return run === 0 ? 1 : -1;
 }
 
+/** T-3406: a station's queues as riders waiting toward each end station, the biggest first; the two sides
+ * of a platform are told apart (a line running each way to the same name stays two rows only if the sides differ). */
+export function waitToward(qs: QueueNow[]): { to: string; count: number }[] {
+  const by = new Map<string, { to: string; count: number }>();
+  for (const q of qs) {
+    const k = (q.dir > 0 ? "+" : "-") + q.to, e = by.get(k) ?? { to: q.to, count: 0 };
+    e.count += q.waiting;
+    by.set(k, e);
+  }
+  return [...by.values()].sort((a, b) => b.count - a.count || a.to.localeCompare(b.to));
+}
+
 /** The complex `members` now, or null before the boarding account has an hour drawn. */
 export function complexNow(members: StationId[]): ComplexNow | null {
   const w = world.value, r = live.overlay?.renderer, net = r?.net;
   if (!w || !r || !net) return null;
   const inside = new Set(members);
   const byId = stationsById(w);
+  const names = stationNames(w);
   const byNum = new Map(members.map((m) => [byId.get(m)?.num, m]));
   const lines = new Map(w.save.lines.filter((l) => !w.lineStats[l.id]?.bus && l.stops.some((st) => inside.has(st))).map((l) => [l.id, l]));
   const now = clock.now();
@@ -81,7 +96,7 @@ export function complexNow(members: StationId[]): ComplexNow | null {
       for (let j = k + 1; j < l.stops.length; j++)
         if (l.stops[j] === station && Math.abs((offs[j] ?? Infinity) - b.queues[base + 3]) < Math.abs((offs[k] ?? Infinity) - b.queues[base + 3])) k = j;
       const c = crowdAt(b, q, t);
-      queues.push({ station, line, run, dir: runDir(l, run, k, s, byId), waiting: c.waiting, leftBehind: c.leftBehind });
+      queues.push({ station, line, run, dir: runDir(l, run, k, s, byId), waiting: c.waiting, to: names.get(run === 0 ? l.stops[l.stops.length - 1] : l.stops[0]) ?? "", leftBehind: c.leftBehind });
     }
     for (const m of members) {
       const qs = queues.filter((x) => x.station === m);

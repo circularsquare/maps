@@ -210,8 +210,10 @@ player is looking.
   "Today" kind of day are the local time at the view's centre (`viewShift`, updated as the map
   moves). A line's inspector and the Lines tab show each line's level in its own local time.
 - **The money ledgers' days** (T-2271): every ledger (the network's and each region's) has its days
-  midnight to midnight in the start zone's local time (`dayShift` in the clock worker; a save with no
-  start zone, the clock's own), one offset for all so the regions still add up to the network day by
+  midnight to midnight in the start zone's local time (`dayShift` in the clock worker; a game with no start
+  zone takes the local time of its first built station's zone once it has one, T-3407, and the save keeps
+  that offset as `dayShift` so days already booked keep their keys; days booked before the first station
+  stay under the clock's own), one offset for all so the regions still add up to the network day by
   day; the hour ledgers keep the clock's hours.
 - **Not yet local** (T-321): the world market's longer trips between zones of different offsets (London - Paris,
   Tokyo - New York), which take no period rule yet.
