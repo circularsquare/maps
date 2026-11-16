@@ -71,6 +71,11 @@ INBOX_RECENT_DAYS = 14
 # replaces the file if "version" is the one last read, else 409 with the current {"text", "version"}.
 PADS = {"twboard": "trainworld/notes/board-pad.md"}
 PAD_LOCK = threading.Lock()
+
+# The trainworld board's changelog (T-3424): GET /<name>/_changelog gives the release file plus "version";
+# POST {"id", "rev", "edited"?, "hidden"?} (X-Maps-Run) saves one item through trainworld/tools/changelog.py,
+# which the agents' CLI shares (a lock file); 409 with the current item when "rev" is not the item's.
+CHANGELOGS = {"twboard": "trainworld/changelog/next.json"}
 PAD_MAX = 256 * 1024
 
 
@@ -322,6 +327,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return HERE / PADS[parts[1]]
         return None
 
+    def changelog(self):
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) == 3 and parts[2] == "_changelog" and parts[1] in CHANGELOGS:
+            return HERE / CHANGELOGS[parts[1]]
+        return None
+
+    def post_changelog(self, path):
+        sys.path.insert(0, str(HERE / "trainworld" / "tools"))
+        import changelog
+        if not self.headers.get("X-Maps-Run"):
+            return self.send_error(403)
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+            if size > INBOX_MAX:
+                return self.send_error(413)
+            obj = json.loads(self.rfile.read(size).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return self.send_error(400, "not JSON")
+        if not isinstance(obj, dict) or not isinstance(obj.get("id"), str) or not isinstance(obj.get("rev"), int):
+            return self.send_error(400, "need id and rev")
+        fields = {k: obj[k] for k in ("edited", "hidden") if k in obj}
+        try:
+            code, item = changelog.update_item(obj["id"], fields, obj["rev"], str(path))
+        except RuntimeError:
+            return self.send_error(503, "changelog is locked")
+        if code == 404:
+            return self.send_error(404)
+        self.send_json(code, item)
+
     def do_PUT(self):
         path = self.pad()
         if not path:
@@ -349,6 +383,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json(200, pad_write(path, obj["text"]))
 
     def do_POST(self):
+        path = self.changelog()
+        if path:
+            return self.post_changelog(path)
         path = self.inbox()
         if path:
             return self.post_inbox(path)
@@ -372,6 +409,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if urllib.parse.urlsplit(self.path).path == "/":
             return self.send_front_page(True)
+        path = self.changelog()
+        if path:
+            sys.path.insert(0, str(HERE / "trainworld" / "tools"))
+            import changelog
+            return self.send_json(200, changelog.state(str(path)))
         path = self.pad()
         if path:
             with PAD_LOCK:

@@ -60,7 +60,8 @@ not once per message (Anita, 2026-11-09).
 headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your own Vite.
 1. Smoke on your dev server. Landing a tree or a batch: skip your own smoke when the agent's ran on the final state;
    one smoke on master after a batch lands (a failure is fixed or reverted).
-2. Commit explicit `trainworld/` paths, one plain sentence (`git commit -m "..." -- <paths>`; `git add` new files
+2. Commit explicit `trainworld/` paths (and the root `serve.py` when the change is for the board: Anita 2026-11-16, "yes
+   please commit board-related serve changes from now on"), one plain sentence (`git commit -m "..." -- <paths>`; `git add` new files
    first). Check the staged diff of shared docs right before: an agent's half-written paragraph rode along once.
    Commit at the end of a round or when a snapshot build needs it; push maps master a couple of times a session.
 3. Rebuild 8800: `cmd /c "trainworld\checks\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"` from the maps root
