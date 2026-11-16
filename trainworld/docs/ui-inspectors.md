@@ -337,9 +337,11 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   load past the rated load, as in Trains to add [T-2236]: each interval's load is the busiest hour's mean load
   of the trains on it (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16
   and 16-20) as a share of the rated load, 160 a car (`period_peaks` in `Boarding::line_periods`); the dot's
-  fill is the straight mean of the intervals' crowding colours (red, green and blue each; every interval counts
-  the same, `stretchColour`) and its 1 px ring 1 px outside it (a gap between) the fullest interval's load, so one
-  packed interval among many reads mostly green inside a crimson ring [T-2279, T-2335, T-3476]; each colour
+  fill is 70% the straight mean of the intervals' crowding colours (red, green and blue each; every interval
+  counts the same) and 30% the colour of T-2279's skewed load (100% plus the power-2 mean of each interval's
+  load past 100%, leaning to the fullest; `stretchColour`, `CROWD_SKEW`), and its 1 px ring 1 px outside it (a
+  gap between) the fullest interval's load, so one packed interval among many reads mostly green with a warm
+  tint inside a crimson ring [T-2279, T-2335, T-3476]; each colour
   running smoothly with that load: green to 70%, yellow-green at 80%, yellow at 100%, orange at 130%, red at
   140% and crimson at crush's 150% (`crowdColour` in `game/palette.ts`, fed by `crowdLevel` in `game/today.ts`;
   the Traffic view's crowding hover colours its load the same way, [ui-map.md](ui-map.md)) [T-477, T-515,

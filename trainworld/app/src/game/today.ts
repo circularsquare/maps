@@ -84,12 +84,30 @@ export function stretchLoad(per: ArrayLike<number>): number {
   return per.length ? sum / per.length : 0;
 }
 
-/** T-3476: the crowding dot's fill: the straight mean of the stretches' crowding colours (red, green and
- * blue each), every stretch counting the same since the bar draws them equal. */
+/** T-3476: the power the skewed load averages the loads past 100% at (T-2279's, 2). */
+const CROWD_MEAN_POWER = 2;
+/** T-3476: how much of the dot's fill is the skewed colour; the rest is the plain average. */
+export const CROWD_SKEW = 0.3;
+
+/** T-2279: the old skewed load, 100% plus the power mean of each stretch's load past 100%, so it leans
+ * to the fullest stretches. It is only the skewed share of `stretchColour`. */
+function skewedLoad(per: ArrayLike<number>): number {
+  let peak = 0, sum = 0;
+  for (let k = 0; k < per.length; k++) {
+    peak = Math.max(peak, per[k]);
+    if (per[k] > 1) sum += (per[k] - 1) ** CROWD_MEAN_POWER;
+  }
+  if (peak <= 1) return peak;
+  return 1 + (sum / per.length) ** (1 / CROWD_MEAN_POWER);
+}
+
+/** T-3476: the crowding dot's fill: 70% the straight mean of the stretches' crowding colours (red, green and
+ * blue each, every stretch counting the same since the bar draws them equal) and 30% (`CROWD_SKEW`) the
+ * colour of the skewed load, `skewedLoad`. */
 export function stretchColour(per: ArrayLike<number>): string {
-  const sum = [0, 0, 0];
+  const sum = [0, 0, 0], sk = rgb(crowdColour(skewedLoad(per)));
   for (let k = 0; k < per.length; k++) rgb(crowdColour(per[k])).forEach((c, i) => (sum[i] += c));
-  return "#" + sum.map((c) => Math.round(c / Math.max(1, per.length)).toString(16).padStart(2, "0")).join("");
+  return "#" + sum.map((c, i) => Math.round((1 - CROWD_SKEW) * c / Math.max(1, per.length) + CROWD_SKEW * sk[i]).toString(16).padStart(2, "0")).join("");
 }
 
 /** T-2279: the Lines list's trains cell's load in period `p` from a line's `line_periods` numbers
