@@ -6,7 +6,7 @@ A pipeline input, never shipped; `world_field.py` reads it.
 
 Writes data/work/world_field.npz (cells), world_field.countries.json, world_field.links.json.
 Sources and method: notes/archive/t0001-0499/T-375.md."""
-import gzip, json, os, shutil, sqlite3, sys, time, urllib.parse, urllib.request, zipfile
+import gzip, json, os, shutil, sqlite3, time, urllib.parse, urllib.request
 os.environ.setdefault("OMP_NUM_THREADS", "3")
 from pathlib import Path
 import numpy as np

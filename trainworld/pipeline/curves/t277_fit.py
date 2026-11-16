@@ -93,7 +93,7 @@ class Fit:
         has = o > 0
         for it in range(iters):
             s = (F @ col).astype(np.float64)
-            if it > 0 and np.max(np.abs(row[has] * s[has] / o[has] - 1)) < tol:
+            if it > 0 and np.max(np.abs(row[has] * s[has] / o[has] - 1)) < tol:  # noqa: F821 (row is set on the first pass)
                 break
             row = np.where(has, o / np.maximum(s, 1e-30), 0.0).astype(np.float32)
             t = (row @ F).astype(np.float64)

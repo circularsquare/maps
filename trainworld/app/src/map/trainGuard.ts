@@ -621,7 +621,7 @@ export class TrainGuard {
     const stand = cand.map((c, k) => tauOf[k] >= arriveS(n, f.trips[c * 2]));
     const taken = new Set<number>();
     for (let c = 0; c < cand.length; c++) {
-      const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE;
+      const i = cand[c], o = i * BAY_STRIDE;
       if (stand[c] && B[o + 2] >= 4) taken.add(B[o + 2]);
       else if (B[o] >= 4 && cs[c] - half[c] < Math.max(bayP(B[o + 1]), 2 * half[c] + 5)) taken.add(leftFrom(B[o]));
     }
@@ -634,7 +634,7 @@ export class TrainGuard {
       let other = false;
       for (let x = 0; x < cand.length && !other; x++) {
         if (x === c || this.singleWait.has(cand[x])) continue;
-        const j = cand[x], q = f.trips[j * 2], ox = j * BAY_STRIDE;
+        const j = cand[x], ox = j * BAY_STRIDE;
         other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(bayP(B[ox + 1]), 2 * half[x] + 5));
       }
       if (!other) continue;

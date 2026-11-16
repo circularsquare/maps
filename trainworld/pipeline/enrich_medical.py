@@ -31,7 +31,6 @@ import os
 import re
 import sys
 
-import h3
 import numpy as np
 import shapely
 from shapely import STRtree

@@ -12,6 +12,7 @@ use crate::demand::trip::{routes, Leg};
 /// Numbers in the answer's head and per station pair (`IntercityApi::market_trip`); a leg is
 /// `trip::LEG_LEN` numbers.
 pub const MT_HEAD: usize = 25;
+#[allow(dead_code)]
 pub const MT_PAIR_LEN: usize = 7;
 /// Station pairs under this share of the rail riders are not walked for routes, and routes under
 /// it are left out (as `trip.rs`).

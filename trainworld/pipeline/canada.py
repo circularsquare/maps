@@ -42,7 +42,6 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 
 import csv
 import functools
-import gzip
 import io
 import json
 import re
@@ -579,7 +578,7 @@ def main(city):
                "region_share": cfg.get("wfh_now", WFH_NOW), "census": cstats}
     region_block = {"level": "admin-1", "ids": region_codes, "names": ["ON" if c == "35" else c for c in region_codes],
                     "source": "Canadian province: the first two digits of each dissemination area id"}
-    cells_json = b.write_cells(city, cfg, {"h3": uniq, "x_m": x, "y_m": y, "pop": pop, "jobs": job,
+    b.write_cells(city, cfg, {"h3": uniq, "x_m": x, "y_m": y, "pop": pop, "jobs": job,
                                            "errand_jobs": vals["errand_jobs"][keep], "leisure_jobs": vals["leisure_jobs"][keep],
                                            "commute_home": hc, "commute_work": wc, "region": region},
                                totals, sources, mask, mask_info, commute, region_block)

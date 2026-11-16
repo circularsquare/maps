@@ -921,7 +921,7 @@ pub fn zones_from_pack(city: &City, pg: &PackGravity) -> Zones {
         pop: vec![0.0; n],
         jobs: vec![0.0; n],
         ncell: vec![0; n],
-        size: if pg.size.len() == n && pg.size.iter().any(|&s| s == 2) { pg.size.clone() } else { vec![] },
+        size: if pg.size.len() == n && pg.size.contains(&2) { pg.size.clone() } else { vec![] },
     };
     for c in 0..city.len() {
         let zi = z.cell_zone[c] as usize;

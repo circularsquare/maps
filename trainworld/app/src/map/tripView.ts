@@ -16,7 +16,7 @@ import { CITIES } from "../game/cities";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { cityCells, demandView, flows, intercitySelection, viewFinal, viewUpdating } from "../game/demand";
 import { dealFlows } from "../game/farChunks";
-import { count, distance, minutesText } from "../game/format";
+import { distance, minutesText } from "../game/format";
 import { loadMarketRows, rowsAnswer, stationNear } from "../game/marketRule";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";

@@ -207,7 +207,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
       </svg>
       {marks.some((m) => m.lines.length) && (
         <svg class="hist-hols" viewBox={`0 0 ${W} 4`} preserveAspectRatio="none">
-          {list.map((e, i) => marks[i].lines.length ? <rect class={"hist-hol" + (marks[i].off ? "" : " rush")} x={cx(i) - bw / 2} y={0} width={bw} height={4} /> : null)}
+          {list.map((_e, i) => marks[i].lines.length ? <rect class={"hist-hol" + (marks[i].off ? "" : " rush")} x={cx(i) - bw / 2} y={0} width={bw} height={4} /> : null)}
           {list.map((e, i) => marks[i].lines.length ? <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={4} data-tip={[name(e, i), ...marks[i].lines].join("\n")} /> : null)}
         </svg>
       )}

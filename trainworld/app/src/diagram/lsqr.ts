@@ -50,7 +50,7 @@ export function lsqr(start: Int32Array, col: Int32Array, val: Float64Array, b: F
   };
   const x = Float64Array.from(x0);
   const bnorm = norm(b);
-  const u = new Float64Array(m), v = new Float64Array(n), w = new Float64Array(n), tm = new Float64Array(m), tn = new Float64Array(n);
+  const u = new Float64Array(m), v = new Float64Array(n), w = new Float64Array(n), tm = new Float64Array(m);
   Av(x, tm);
   for (let r = 0; r < m; r++) u[r] = b[r] - tm[r];
   let beta = norm(u);

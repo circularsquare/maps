@@ -199,7 +199,6 @@ def _members(ways, hidden, rels):
     """Per way: ',id,...,' of the cached relations with its ring among theirs, for the ways an
     unfiltered read hides (others: None; a hidden way whose relation is not cached hides from no
     reader's result)."""
-    import shapely
     rings = {}
     for rid, g in zip(rels["osm_id"], rels.geometry):
         for p in getattr(g, "geoms", [g]):

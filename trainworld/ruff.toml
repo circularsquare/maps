@@ -1,0 +1,6 @@
+# T-3443: errors only (undefined names, unused imports and variables, syntax errors); checks/lint.cmd runs it.
+target-version = "py39"
+extend-exclude = ["data", "checks/old"]
+
+[lint]
+select = ["F", "E9"]

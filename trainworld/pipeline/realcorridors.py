@@ -649,7 +649,7 @@ def build(city, out_dir, avoid=None):
         paths.append(path)
 
     # OSM's track count beside each piece (all chains of the graph in the box, same family)
-    allp, allh, allc, allf = [], [], [], []
+    allp, allh, allc, _allf = [], [], [], []
     for c in range(len(graph.pts)):
         a, p, h = chain_samples(graph, c)
         allp.append(p)

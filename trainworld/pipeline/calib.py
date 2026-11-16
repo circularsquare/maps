@@ -212,7 +212,7 @@ def score(run, tg, top=15, say=print):
         f"(x{np.exp(st_level):.2f}), spread {out['station_spread']:.2f}; {out['n_hubs']} hubs apart, mean log ratio "
         f"{out['hubs_log_ratio'] if out['hubs_log_ratio'] is None else round(out['hubs_log_ratio'], 2)}")
     order = sorted(range(len(rows)), key=lambda i: -abs(rows[i][3] - rows[i][2]))
-    say(f"\nBiggest station misses (entries a day, all purposes; * = hub):")
+    say("\nBiggest station misses (entries a day, all purposes; * = hub):")
     for i in order[:top]:
         d, name, t, m, h = rows[i]
         say(f"  {'*' if h else ' '} {name:40s} measured {t:9,.0f}  model {m:9,.0f}  x{m / t:.2f}")

@@ -13,7 +13,7 @@ import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
-import { designSpeed, singleTrack, tramTrack } from "../game/ui";
+import { designSpeed, singleTrack } from "../game/ui";
 import { dataUrl } from "../game/dataBase";
 import { regionsJson } from "./regionsJson";
 import type { Overlay } from "./overlay";

@@ -12,7 +12,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 REGION = "us-east-2"            # Ohio. Never another: status --all-regions finds strays

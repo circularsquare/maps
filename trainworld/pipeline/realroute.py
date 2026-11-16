@@ -6,7 +6,6 @@ snap radius a candidate at either end with its distance counted twice. One regio
 to a box; no border joins (every real network lies in one region)."""
 import heapq
 import math
-import os
 
 import numpy as np
 

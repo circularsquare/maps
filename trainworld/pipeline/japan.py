@@ -28,7 +28,6 @@ All open: e-Stat under the Government Standard Terms 2.0 (CC BY 4.0 compatible);
     python pipeline/japan.py fetch tyo        download every input of a pack
     python pipeline/japan.py outline tyo      draw the outline (artifacts/trainworld/T-420-<id>-outline.png)
 """
-import io
 import json
 import math
 import os

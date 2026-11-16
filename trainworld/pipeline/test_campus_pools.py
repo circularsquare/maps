@@ -2,7 +2,6 @@
 a system's, untagged campuses join by name, open universities are left out."""
 import unittest
 
-import numpy as np
 import pandas as pd
 from shapely.geometry import box
 

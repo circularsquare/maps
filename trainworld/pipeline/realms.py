@@ -206,7 +206,6 @@ def simplified(raw, tol):
     exactly the same border; rings rebuilt into polygons by the even-odd rule."""
     import zone_outlines as zo
     from shapely.geometry import Polygon
-    from shapely.ops import unary_union
     shapes = {}
     for rid, g in raw.items():
         rings = []
@@ -242,7 +241,6 @@ def label_point(g):
 
 
 def feature(rid, g, zones):
-    from shapely.geometry import mapping
     polys = [p for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon"]
     r = lambda ring: [[round(x, NDP), round(y, NDP)] for x, y in ring]
     coords = [[r(p.exterior.coords)] + [r(h.coords) for h in p.interiors] for p in polys]

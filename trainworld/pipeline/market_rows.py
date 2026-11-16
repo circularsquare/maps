@@ -7,7 +7,6 @@ written by `market_zones.py` (from the sim's `market_pack`); its `country` is co
 index entry, which the new game sheet and the joint solve read.
 """
 import json
-import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

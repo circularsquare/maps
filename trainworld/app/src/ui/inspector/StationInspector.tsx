@@ -5,7 +5,7 @@ import { clock } from "../../game/clock";
 import { t as tr, tNumber } from "../../i18n";
 import { mobileDevice } from "../../workers/deviceMemory";
 import { lineDemand } from "../../game/demand";
-import { area, count, distance, duration, length, levelLabel, money, roughDistance } from "../../game/format";
+import { area, count, distance, duration, levelLabel, money, roughDistance } from "../../game/format";
 import { groundDist, groundScale } from "../../game/coords";
 import { outlineArea } from "../../game/buildings";
 import { buildingMembersById, buildingOf, hallWaiting } from "../../game/buildingView";

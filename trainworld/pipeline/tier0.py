@@ -95,7 +95,7 @@ import numpy as np
 import pandas as pd
 import shapely
 from shapely import make_valid, union_all
-from shapely.geometry import Point, mapping, shape
+from shapely.geometry import mapping, shape
 
 import build_city as b
 import netget
@@ -953,7 +953,7 @@ def fit_curve_bands(x_m, y_m, home, work, target):
     for label, (p, k) in (("fitted", (pw, km)), (f"power {DEFAULT_CURVE_POW:g}", (DEFAULT_CURVE_POW, fits[DEFAULT_CURVE_POW][0]))):
         mean, med = trip_stats(gravity(H, J, d, p, k), d)
         print(f"curve {label}: d^-{p:g} exp(-d/{k:.1f} km), KL {kl(p, k):.4f}, band shares "
-              + " ".join(f"{s:.3f}" for s in shares(p, k)) + f" against " + " ".join(f"{s:.3f}" for s in obs)
+              + " ".join(f"{s:.3f}" for s in shares(p, k)) + " against " + " ".join(f"{s:.3f}" for s in obs)
               + f"; model mean {mean:.1f} km, median {med:.1f} km over {len(H):,} zones", flush=True)
     return float(pw), round(km, 1)
 
@@ -1191,7 +1191,7 @@ def main(city):
         region = np.zeros(int(keep.sum()), np.uint8)
         region_block = {"level": "admin-1", "ids": ["00"], "names": [cfg.get("region_name", city.upper())],
                         "source": "tier 0: one region for the whole pack, no border factor"}
-    cells_json = b.write_cells(city, cfg, {"h3": cells, "x_m": x, "y_m": y, "pop": pop[keep], "jobs": jobs[keep],
+    b.write_cells(city, cfg, {"h3": cells, "x_m": x, "y_m": y, "pop": pop[keep], "jobs": jobs[keep],
                                            "errand_jobs": errand[keep], "leisure_jobs": leisure[keep],
                                            "commute_home": home_c[keep], "commute_work": work_c[keep],
                                            "region": region},

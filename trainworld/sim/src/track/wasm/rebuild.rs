@@ -386,7 +386,7 @@ fn tracks_ok(d: &EdgeData, w: Want) -> bool {
     w.tracks.map_or(true, |t| d.tracks == t || single_ok(d, w) || double_ok(d, w))
 }
 
-//// T-3321: what keeps picked double piece `e` from becoming single track, as `Issue::NoSingle`'s `why`; None when it
+/// T-3321: what keeps picked double piece `e` from becoming single track, as `Issue::NoSingle`'s `why`; None when it
 /// can. `kind` is the track type it would have. Anything that cannot work on single track is refused, never taken
 /// away: high-speed and tram track, a crossover at either end, a one-way single piece joined to one of its two
 /// tracks (a flyover's leg, a lane beside double track), and a flying junction. A two-way single piece joined to it

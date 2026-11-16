@@ -14,7 +14,6 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 
 import sys
 
-import numpy as np
 
 import merge_cells
 import read_pack

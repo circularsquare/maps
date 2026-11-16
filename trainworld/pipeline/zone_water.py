@@ -40,7 +40,7 @@ import scipy
 import shapely
 from shapely import STRtree
 from shapely.geometry import LineString, Polygon, box
-from shapely.ops import polygonize, unary_union
+from shapely.ops import unary_union
 
 import osm_water
 

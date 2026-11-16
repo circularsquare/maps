@@ -27,7 +27,7 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
 import { flipSites, rightHand, say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
-import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
+import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry, perfOff } from "../perfFlags";
@@ -582,7 +582,6 @@ export class ClockClient {
   private crossovers = new Newest<{ edge: number; x: number; y: number }, [a: CrossoverAnswer]>();
   private previews = new Newest<(seq: number) => ToClock, [a: PreviewAnswer]>();
   /** whether a preview is in flight (read by checks) */
-  private get previewBusy() { return this.previews.busy; }
   private epoch = NaN;
   private sawSlots = false;
   /** the last game load: where it came from and whether its save was converted to the world frame

@@ -737,7 +737,7 @@ fn world_market_serves_zones_in_every_frame_and_no_car_keeps_trips_fixed() {
     assert!(rail > 0.);
     // a selection in place 3: all its trips to place 0 are shown, none by rail
     let sel = a.selection_flows(3, &[0., 0.], &[1.]);
-    assert!(sel[1 + 8 * 0] > 0. && sel[2 + 8 * 0] == 0., "{:?}", &sel[..9]);
+    assert!(sel[1] > 0. && sel[2] == 0., "{:?}", &sel[..9]);
     // the far place: all of place 0's trips there, none by rail; its zones in the zone block
     let s0 = a.selection_flows(0, &[0., 0.], &[1.]);
     assert!(s0[1 + 8 * 2] > 0. && s0[2 + 8 * 2] == 0.);
@@ -1774,18 +1774,15 @@ fn far_chunk_pairs_keep_each_place_pairs_trips() {
     // per zone and later place, and per place pair: exact trips, chunked, far-chunked
     let mut zp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
     let mut pp: HashMap<(usize, usize), (f64, f64)> = HashMap::new();
-    let (mut bit, mut k0, mut kc, mut k1) = (0, 0, 0, 0);
+    let (mut bit, mut k0, mut k1) = (0, 0, 0);
     let mut far_seen = 0;
     let mut kind: HashMap<(usize, usize), bool> = HashMap::new();
     for i in 0..n {
         for k in i + 1..n {
-            let (on0, onc, on1) = (any0[bit / 64] >> (bit % 64) & 1 == 1, anyc[bit / 64] >> (bit % 64) & 1 == 1, any[bit / 64] >> (bit % 64) & 1 == 1);
+            let (on0, _onc, on1) = (any0[bit / 64] >> (bit % 64) & 1 == 1, anyc[bit / 64] >> (bit % 64) & 1 == 1, any[bit / 64] >> (bit % 64) & 1 == 1);
             bit += 1;
             let (za, zb) = (&m.zones[i], &m.zones[k]);
             let t0 = if on0 { k0 += 1; each0[k0 - 1] } else { 0. };
-            if onc {
-                kc += 1;
-            }
             let t1 = if on1 { k1 += 1; each[k1 - 1] } else { 0. };
             assert!(!on1 || on0, "a far-chunk pair that is not a pair");
             if !on0 {
@@ -2495,7 +2492,7 @@ fn t2878_ab() {
     let window = |a: &mut IntercityApi| {
         a.set_window(&now, &part.zones_at(&was), 180., share, floor);
     };
-    let mut sub = |shared: bool| -> (IntercityApi, f64) {
+    let sub = |shared: bool| -> (IntercityApi, f64) {
         let mut s = part.beside();
         s.set_chunk(MARKET_CHUNK);
         window(&mut s);

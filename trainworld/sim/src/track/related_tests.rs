@@ -82,7 +82,7 @@ fn copied_express_shares_all_track() {
     let l = local();
     let path: Vec<(u32, f64, f64)> = (0..6).map(|i| (i, i as f64 * 1000.0, 0.0)).collect();
     let x = route(1, &path, &[200, 202, 204, 206, 208], &[0, 2, 5]);
-    let g = run(&l, &[x.clone()], &[]);
+    let g = run(&l, std::slice::from_ref(&x), &[]);
     assert_eq!(g.len(), 1, "{g:?}");
     let g = &g[0];
     assert_eq!((g.line, g.kind, g.shared, g.dir), (1, 1, true, 1.0));

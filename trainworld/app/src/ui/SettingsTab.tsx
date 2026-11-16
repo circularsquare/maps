@@ -316,6 +316,7 @@ function UiScale() {
     const to = UI_SCALES[Math.max(0, Math.min(UI_SCALES.length - 1, (i < 0 ? UI_SCALES.indexOf(1) : i) + d))];
     if (to === s) return false;
     setDisplay("uiScale", to);
+    return undefined;
   };
   return (
     <>

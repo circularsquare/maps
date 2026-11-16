@@ -930,7 +930,7 @@ fn northeast_profile() {
     crate::demand::alloc::reset_peak();
     let live0 = crate::demand::alloc::current();
     let tstart = now_ms();
-    let mut stage_ms = vec![[0.0f64; 3]; 4];
+    let mut stage_ms = [[0.0f64; 3]; 4];
     for round in 0..4 {
         let tr = now_ms();
         let mut per_period: Vec<f64> = vec![];

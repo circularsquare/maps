@@ -5,11 +5,11 @@
 import { computed, type Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
-import { distUnit, kmhFromShown, kmhToShown, length, levelLabel, levelName, millions, speed } from "../game/format";
+import { distUnit, kmhFromShown, kmhToShown, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
 import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
-import { linesByNum, say, world } from "../game/world";
+import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
 import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
@@ -45,6 +45,7 @@ function stepSpeed(sig: Signal<number>, s: number) {
   const to = s > 0 ? DESIGN_SPEEDS.find((v) => v > now + 1e-6) : [...DESIGN_SPEEDS].reverse().find((v) => v < now - 1e-6);
   if (to === undefined) return false;
   sig.value = to;
+  return undefined;
 }
 
 /** A target speed: a step's to the nearest 5, as a round km/h figure reads in mph; a typed one as typed. */
@@ -171,6 +172,7 @@ function StationBar() {
           const to = tram ? Math.max(TRAM_PLATFORM.min, Math.min(TRAM_PLATFORM.max, len.value + s * TRAM_PLATFORM.step)) : stepPlatform(len.value, s);
           if (to === len.value) return false;
           len.value = to;
+          return undefined;
         }} />
         <PlatformTracks one={stationOneTrack.value} onPick={(one) => (stationOneTrack.value = one)} />
       </div>

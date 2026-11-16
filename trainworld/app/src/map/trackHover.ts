@@ -34,7 +34,7 @@ import { stretchMoney, type StretchFigures } from "../game/stretchMoney";
 import type { CrowdedStretch } from "../game/boarding";
 import { loadText } from "../game/today";
 import { t, tNumber, tRich, type MessageKey } from "../i18n";
-import type { ComponentChild, ComponentChildren } from "preact";
+import type { ComponentChild } from "preact";
 import { chip, kids, elevationFact, factRow, lineBullet, lineBullets, speedFact, trainSpeedFact } from "./trackTagRows";
 import { stretchLoad, tripsLanded } from "./stretchLoad";
 import { crowdColour, profitColour } from "../game/palette";

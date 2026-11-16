@@ -15,7 +15,6 @@ Read-only on data; about 3 minutes on one core.
 """
 import collections
 import json
-import math
 import os
 import sys
 

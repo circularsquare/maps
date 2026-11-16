@@ -15,7 +15,6 @@
     python pipeline/korea.py seo           (writes the districts file and prints what it holds)
 """
 import csv
-import io
 import json
 import os
 import re

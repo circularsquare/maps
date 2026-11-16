@@ -328,7 +328,7 @@ impl TrackApi {
         }
         let tracks = net.edge_tracks[edge as usize].min(net.edge_tracks[f as usize]);
         // splits, several on one edge in order along it: each after the first falls in the new half
-        let mut nodes = vec![0u32; 4];
+        let mut nodes = [0u32; 4];
         let mut new_nodes = vec![];
         let mut new_edges = vec![];
         let mut ops = vec![];

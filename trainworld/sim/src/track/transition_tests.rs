@@ -87,10 +87,10 @@ fn assert_smooth(w: &mut TrackWorld, t0: f64, t1: f64, edit: f64, what: &str) {
         }
         let now = places(w, t);
         let (gone, new) = pair(&prev, &now, reach);
-        for g in gone.iter().filter(|g| !g.terminal) {
-            panic!("{what}: a train vanished mid-line at +{:.0} s: {g:?}", t - t0);
-        }
-        for n in new.iter().filter(|n| !n.terminal) {
+        let gone: Vec<_> = gone.iter().filter(|g| !g.terminal).collect();
+        assert!(gone.is_empty(), "{what}: {} train(s) vanished mid-line at +{:.0} s: {gone:?}", gone.len(), t - t0);
+        let new: Vec<_> = new.iter().filter(|n| !n.terminal).collect();
+        for n in &new {
             if std::env::var("T1071_DEBUG").is_ok() {
                 for (k, v) in [(t - STEP_S, &prev), (t, &now)] {
                     eprintln!("at {k}:");
@@ -103,8 +103,8 @@ fn assert_smooth(w: &mut TrackWorld, t0: f64, t1: f64, edit: f64, what: &str) {
                 }
                 eprintln!("eras {:?}", w.svc.eras_of(n.line as usize));
             }
-            panic!("{what}: a train appeared mid-line at +{:.0} s: {n:?}", t - t0);
         }
+        assert!(new.is_empty(), "{what}: {} train(s) appeared mid-line at +{:.0} s: {new:?}", new.len(), t - t0);
         prev = now;
         t += STEP_S;
     }

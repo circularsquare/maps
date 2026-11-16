@@ -266,16 +266,6 @@ function bsrOf(n: number, buf: Int32Array, cap: number, len: Int32Array): Bsr {
   }
   return { n, rs, col, val: new Float64Array(rs[n] * 4), dg, inv: new Float64Array(n * 4) };
 }
-function slotOf(A: Bsr, i: number, j: number): number {
-  let lo = A.rs[i], hi = A.rs[i + 1] - 1;
-  while (lo <= hi) {
-    const m = (lo + hi) >> 1, c = A.col[m];
-    if (c === j) return m;
-    if (c < j) lo = m + 1;
-    else hi = m - 1;
-  }
-  return -1;
-}
 function mulBsr(A: Bsr, x: Float64Array, y: Float64Array) {
   const { n, rs, col, val } = A;
   for (let i = 0; i < n; i++) {

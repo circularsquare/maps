@@ -183,7 +183,7 @@ pub(super) fn sweep(a: &mut TrackApi, step: f64) -> Sweep {
                 out.slid += 1;
             } else {
                 *out.left.entry(key.clone()).or_default() += 1;
-                if out.examples.len() < 400 && joints.iter().any(|j| *j == "plain") {
+                if out.examples.len() < 400 && joints.contains(&"plain") {
                     let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(e), s);
                     out.examples.push(format!("edge {e} s {s:.0} ({x:.0},{y:.0}): {key}"));
                 }

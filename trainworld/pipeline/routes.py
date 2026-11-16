@@ -561,7 +561,6 @@ class RoadGraph:
     edge between junctions `pa` and `pb`, `la` and `lb` metres along the road from them."""
 
     def __init__(self, ways, lon0, lat0, box=None):
-        from scipy.sparse import coo_matrix
         off, lon, lat, cls = merged(ways, 1)
         x, y = local_xy(lon, lat, lon0, lat0)
         nway = len(off) - 1
@@ -890,7 +889,6 @@ def drive_tables(zs, graph, wm, dense, workers=2, log=print, side=SUPER, cell_pa
     for a_ in range(nsup):
         num[a_] = np.bincount(sup, weights=w[a_] * np.where(good[a_], Rs[a_], 0.0), minlength=nsup)
         den[a_] = np.bincount(sup, weights=w[a_] * S[a_], minlength=nsup)
-    unreach = (den > 0) & ~np.isfinite(num)
     num, den = num + num.T, den + den.T
     ff = np.where(den > 0, num / np.maximum(den, 1e-9), ROAD_DETOUR)
     far_q = quantise(ff)

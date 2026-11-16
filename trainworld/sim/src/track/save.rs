@@ -1036,7 +1036,7 @@ mod tests {
         let mut net = decode(&sample()).unwrap();
         net.set_edge(0, None).unwrap();
         let first = encode(&net);
-        let mut w = crate::track::world::TrackWorld::new(decode(&first).unwrap());
+        let w = crate::track::world::TrackWorld::new(decode(&first).unwrap());
         assert!(w.net.line_ok(0), "the line is kept");
         assert!(w.net.check_line(0).is_err(), "and is broken");
         assert!(w.net.line_path(0).iter().all(|&p| ((p >> 1) as usize) < w.net.edge_count()), "its path stays in range");

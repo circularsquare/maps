@@ -1826,7 +1826,7 @@ pub(super) const SKIM_TABLES: usize = 2;
 
 thread_local! {
     /// Skims of the graphs a worker solved most recently, newest last (T-119).
-    static SKIM_CACHE: std::cell::RefCell<Vec<(SkimKey, Skims)>> = std::cell::RefCell::new(vec![]);
+    static SKIM_CACHE: std::cell::RefCell<Vec<(SkimKey, Skims)>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
 /// Run `f` on the skims of `g` towards the stations in `want`, searching only what no earlier

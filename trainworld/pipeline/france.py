@@ -11,15 +11,12 @@
 
 All open (Licence Ouverte / Etalab). Cached in data/raw/tier0/france/.
 """
-import io
 import json
 import os
 import zipfile
 
-import numpy as np
 import pandas as pd
 import requests
-import shapely
 from shapely import make_valid, union_all
 from shapely.geometry import mapping, shape
 

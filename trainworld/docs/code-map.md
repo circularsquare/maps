@@ -365,6 +365,7 @@ Run from the maps root (`node trainworld/checks/<file>`).
 The standing checks stay in `checks/`. One-off checks of finished tasks (screenshot makers, before and after
 measurements, a feature's first test) are in `checks/old/`, written `old/<file>` below: run them as
 `node trainworld/checks/old/<file>`; nobody runs them as a habit, and some use selectors the app no longer has (T-1586, T-2831).
+`lint.cmd` runs the three linters (T-3443, about a minute warm, Rust on 3 cores): `tsc --noEmit` with `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns` and `noFallthroughCasesInSwitch` (app/tsconfig.json), `cargo clippy --all-targets -- -D warnings` on sim/ with and without `--features demand` (the style and complexity groups, `approx_constant` and `large_enum_variant` are allowed in sim/Cargo.toml), and ruff 0.14.5 with only F and E9 on pipeline/ and tools/ (`ruff.toml`; the maps venv has it). Run it before handing back work that touched app/, sim/ or pipeline/.
 Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `snapbuild-frozen.cmd <hash> <freeze>` (rebuild 8800; the served build's assets/ and fonts/ stay beside the new build's and `tools/deploy.py` does the same on the website, both through `tools/keep_assets.py`, so a tab open across a rebuild can still load its lazy files, T-2962),
 `smoke8800.cmd` (smoke 8800 light then dark, before a publish), `keep_hunks.py` (stage some hunks of a file), `mark_taking.py` (mark TASKS lines taken).
 

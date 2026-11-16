@@ -2275,7 +2275,7 @@ fn a_station_spans_several_short_segments() {
     let mid = segs[2];
     let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(mid), a.w.net.edge_len[mid as usize] / 2.0);
     assert_eq!(a.add_station(2, mid, x, y, 400, "Long".into()), 0, "{}", a.issues());
-    assert!(a.w.net.node_platform.iter().any(|&p| p == 400));
+    assert!(a.w.net.node_platform.contains(&400));
     assert_eq!(a.undo(), 0);
     assert_eq!(live_edges(&a).len(), 6);
 }

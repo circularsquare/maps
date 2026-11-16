@@ -927,7 +927,7 @@ def acs_counties():
     import shapefile
     rd = shapefile.Reader(dbf=open(dbf, "rb"))
     names = [f[0] for f in rd.fields[1:]]
-    ci, ti = names.index("COUNTYFP20"), names.index("TRACTCE20")
+    _ci, _ti = names.index("COUNTYFP20"), names.index("TRACTCE20")
     for rec in rd.iterRecords(fields=["COUNTYFP20", "TRACTCE20"]):
         if rec[0] == "001":
             ct_tracts.add(rec[1])

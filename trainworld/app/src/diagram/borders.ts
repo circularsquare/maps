@@ -44,33 +44,6 @@ export function stationZones(g: DiagramGraph, shapes: ZoneShape[]): Int32Array {
   return zoneAll;
 }
 
-/** the x-span where the row at `yc` meets the capsule round (ax, ay)-(bx, by) of radius `rho`, or null */
-function span(ax: number, ay: number, bx: number, by: number, rho: number, yc: number): [number, number] | null {
-  let lo = Infinity, hi = -Infinity;
-  for (const [px, py] of [[ax, ay], [bx, by]]) {
-    const dy = yc - py;
-    if (Math.abs(dy) > rho) continue;
-    const w = Math.sqrt(rho * rho - dy * dy);
-    (lo = Math.min(lo, px - w)), (hi = Math.max(hi, px + w));
-  }
-  const dx = bx - ax, dy = by - ay, L = hyp(dx, dy);
-  if (L > 0) {
-    const ux = dx / L, uy = dy / L;
-    let xl = -Infinity, xh = Infinity;
-    // along: (x - ax) ux + (yc - ay) uy in [0, L]; across: -(x - ax) uy + (yc - ay) ux in [-rho, rho]
-    for (const [c, k, a, b] of [[ux, (yc - ay) * uy, 0, L], [-uy, (yc - ay) * ux, -rho, rho]]) {
-      if (Math.abs(c) < 1e-12) {
-        if (k < a || k > b) xl = Infinity;
-        continue;
-      }
-      const p = (a - k) / c, q = (b - k) / c;
-      (xl = Math.max(xl, Math.min(p, q))), (xh = Math.min(xh, Math.max(p, q)));
-    }
-    if (xl <= xh) (lo = Math.min(lo, ax + xl)), (hi = Math.max(hi, ax + xh));
-  }
-  return lo <= hi ? [lo, hi] : null;
-}
-
 /** A polyline through px, py fitted with runs at 0, 45 and 90 degrees, its ends kept: from each point, the farthest
  * point reachable by one run or two (one straight, one diagonal) passing within `tol` of every point between (and
  * that `keeps` allows); runs going on the same way joined. Vertices as x, y pairs. */

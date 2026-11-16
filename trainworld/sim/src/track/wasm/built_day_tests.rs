@@ -171,7 +171,7 @@ fn an_older_save_reads_as_built_before_recording() {
     assert_eq!(net.edge_day[e as usize], DAY_UNKNOWN);
     assert_eq!(net.edge_day[id as usize], 0, "a blueprint has no day");
     assert_eq!(net.line_day[l as usize], DAY_UNKNOWN);
-    assert!(net.node_day.iter().any(|&d| d == DAY_UNKNOWN));
+    assert!(net.node_day.contains(&DAY_UNKNOWN));
 }
 
 #[test]

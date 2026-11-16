@@ -80,7 +80,6 @@ def multi(first, days, cap=None, want=None):
 
 def pattern_year(y):
     f = lunar_dates(y)
-    breaks = []  # (name, first, last, [swapped weekday count], makeup pending)
     out = {}
 
     def add(name, span, swaps=0, fixed=()):

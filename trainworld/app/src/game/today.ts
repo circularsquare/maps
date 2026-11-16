@@ -193,7 +193,7 @@ function twinsToo(st: LineStats, f: (l: LineInput, st: LineStats) => number): nu
 }
 
 /** A line's share of upkeep a day, US$, its hidden twin's added in (T-3333). */
-export const upkeepToday = (l: LineInput, st: LineStats): number => st.upkeep + twinsToo(st, (_, s) => s.upkeep);
+export const upkeepToday = (_l: LineInput, st: LineStats): number => st.upkeep + twinsToo(st, (_, s) => s.upkeep);
 
 /** T-2536: whether a line's profit has been worked out: it runs trains (or buses, boats) and a demand
  * result with an entry for it has landed. Before that its figures are only the upkeep. */

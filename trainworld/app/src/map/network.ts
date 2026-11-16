@@ -1825,7 +1825,6 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     return !p || !e ? new Float32Array(0) : e.a === node ? p : reversed(p);
   };
   const turnbacks = turnbackStrokes(s, linesSeen, endCount, (b) => {
-    const ways = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => [id, way(n, id)]);
     // a passing station's ways, carried on as far as `passWay` goes
     const waysOut = (n: number) => (waysAt.get(n) ?? []).map((id): [number, Float32Array] => {
       const parts: Float32Array[] = [];

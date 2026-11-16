@@ -400,7 +400,7 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
     if !g.zone_region.is_empty() {
         w.push("zone_region", "u8", "zone", nz, g.zone_region.clone());
     }
-    if g.size.iter().any(|&s| s == 2) {
+    if g.size.contains(&2) {
         w.push("zone_size", "u8", "zone", nz, g.size.clone());
     }
     // a merged pack's zones re-solved as they are keep their land (T-466)
@@ -440,7 +440,7 @@ pub fn with_gravity(header: &str, bin: &[u8], g: &PackGravity) -> Result<(String
         v["gravity"]["decay_flat_km"] = json!(g.flat_km);
         v["gravity"]["flat"] = json!("the decay at decay_flat_km for any pair closer than that (T-1091)");
     }
-    if g.size.iter().any(|&s| s == 2) && !coarse.is_null() {
+    if g.size.contains(&2) && !coarse.is_null() {
         v["gravity"]["coarse"] = coarse;
     }
     if let Some(p) = &g.pull {

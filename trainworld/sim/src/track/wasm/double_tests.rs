@@ -242,7 +242,7 @@ fn high_speed_and_tram_track_go_single_and_back() {
     assert!(edges.iter().all(|&e| a.w.net.edge_tracks[e as usize] == 1 && a.w.net.edge_kind[e as usize].is_hsr()));
 }
 
-//// The y of edge `e`'s middle.
+/// The y of edge `e`'s middle.
 fn mid_y(a: &TrackApi, e: u32) -> f64 {
     crate::track::geom::pos_at(a.w.net.edge_pieces(e), a.w.net.edge_len[e as usize] / 2.0).1
 }

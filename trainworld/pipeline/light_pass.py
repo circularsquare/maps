@@ -26,7 +26,6 @@ res-9 in data/packs: the run stops after `through` with the failed ids in failed
 `--from through --ids <file>`, then `--from cross`.
 """
 import datetime
-import glob
 import json
 import os
 import shutil

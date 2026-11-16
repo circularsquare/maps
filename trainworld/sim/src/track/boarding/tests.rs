@@ -344,7 +344,7 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     let m = ra.deps.len();
     // the queue at A, train by train through the day
     let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.order_t[j], ra.q_after[ra.order[j] as usize * 3], ra.load[ra.order[j] as usize * 3])).collect();
-    let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).last().unwrap().1;
+    let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).next_back().unwrap().1;
     assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
     // T-1067: 600 more a train than it takes, until the platform holds WAITING_CAP as a train
     // comes (3,000 arriving a headway): 2,600 left as each leaves, from about 07:00 to 10:00

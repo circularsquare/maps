@@ -1249,10 +1249,8 @@ mod tests {
         // T-786: block A solved with block B held at the joint solution gives the joint flows back
         let a: Vec<usize> = (0..40).collect();
         let (mut br, mut bc) = (vec![0f64; n], vec![0f64; n]);
-        for g in 40..n {
-            br[g] = fast.row[g];
-            bc[g] = fast.col[g];
-        }
+        br[40..n].copy_from_slice(&fast.row[40..n]);
+        bc[40..n].copy_from_slice(&fast.col[40..n]);
         let part = balance(&o, &d, &d, &br, &bc, &a, &part, 1, f64::INFINITY, &sums, 1e-10, 50000, 8, &mut |_, _, _| {});
         for i in 0..40 {
             for j in 0..n {
