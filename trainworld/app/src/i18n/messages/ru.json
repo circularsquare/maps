@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {Остановка на станции {station} слишком короткая для {wanted, plural, one {# вагона} few {# вагонов} many {# вагонов} other {# вагона}}. {line}: трамваи останутся с {kept, plural, one {# вагоном} few {# вагонами} many {# вагонами} other {# вагоном}}.} other {Платформа на станции {station} слишком короткая для {wanted, plural, one {# вагона} few {# вагонов} many {# вагонов} other {# вагона}}. {line}: поезда останутся с {kept, plural, one {# вагоном} few {# вагонами} many {# вагонами} other {# вагоном}}.}}",
   "scheduleCopy.withHeadways": "Интервалы: {list}, {cars, plural, one {# вагон} few {# вагона} many {# вагонов} other {# вагона}}, {fast, select, true {скоростные} other {обычные}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {Трамваев: {list}, {cars, plural, one {# вагон} few {# вагона} many {# вагонов} other {# вагона}}, {fast, select, true {скоростные} other {обычные}}} other {Поездов: {list}, {cars, plural, one {# вагон} few {# вагона} many {# вагонов} other {# вагона}}, {fast, select, true {скоростные} other {обычные}}}}",
-  "schedulePanel.chart": "График",
   "schedulePanel.departures": "Отправления",
   "schedulePanel.groupChart": "График расписания",
   "schedulePanel.label": "Расписание линии {line}",

@@ -230,14 +230,14 @@ svg .stroke2 { stroke-width: 2; }
 .marey-past { fill: var(--bg); fill-opacity: 0.5; stroke: none; pointer-events: none; }
 .marey-now { stroke: var(--accent); stroke-width: 1.5; }
 /* T-3346: the schedule panel (SchedulePanel.tsx), centred like Community */
-.saves-panel.sched-panel { width: min(1040px, calc(100vw - 40px)); }
+.saves-panel.sched-panel { width: min(1320px, calc(100vw - 40px)); }
 .saves-head.sp-title h2 { display: flex; align-items: center; gap: 8px; flex: none; min-width: 0; }
 .sp-title .sp-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-title .sp-word { color: var(--muted); font-weight: 400; font-size: 14px; }
 .sp-title .sp-mode { margin-left: 14px; }
 .sp-title .sp-close { margin-left: auto; }
-.sp-body { display: flex; gap: 32px; align-items: flex-start; }
-.sp-left { flex: 0 0 300px; min-width: 0; }
+.sp-body { display: flex; gap: 28px; align-items: flex-start; }
+.sp-left { flex: 0 0 270px; min-width: 0; }
 .sp-left .h:first-child { margin-top: 6px; }
 .sp-left .h.set-by { font-weight: 400; color: var(--muted); align-items: center; }
 .sp-left .h.set-by .right { margin-left: 12px; color: var(--text); }
@@ -247,15 +247,16 @@ svg .stroke2 { stroke-width: 2; }
 .sp-tabs .sp-others.on { background: var(--tint); color: var(--text); }
 .sp-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-width: 0; }
 .sp-tools select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
-/* the departures board: hour rows, each direction's minutes in its own column */
-.sp-view { display: flex; flex-direction: column; }
-.sp-board { flex: 1; min-height: 0; overflow-y: auto; font-variant-numeric: tabular-nums; }
-.sp-row { display: grid; grid-template-columns: 34px repeat(var(--runs), minmax(0, 1fr)); column-gap: 12px; min-height: 24px; align-items: center; }
+/* the departures board, under the schedule: hour rows, each direction's minutes in its own column */
+.sp-tools .sp-board-h { margin: 0; flex: none; }
+.sp-left .sp-tools { margin-top: 16px; }
+.sp-board { max-height: 340px; overflow-y: auto; font-size: 11px; font-variant-numeric: tabular-nums; border-top: 1px solid var(--rule); }
+.sp-row { display: grid; grid-template-columns: 26px repeat(var(--runs), minmax(0, 1fr)); column-gap: 8px; min-height: 17px; align-items: center; border-bottom: 1px solid var(--shade); }
 .sp-row.sp-heads { position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--rule); }
-.sp-dir { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-dir { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-hour { align-self: stretch; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--text) 6%, var(--bg)); }
 .sp-heads .sp-hour { background: none; }
-.sp-mins { display: flex; flex-wrap: wrap; column-gap: 10px; padding: 2px 0; }
+.sp-mins { display: flex; flex-wrap: wrap; column-gap: 6px; padding: 1px 0; }
 .sp-row.now { background: var(--tint); }
 .sp-row.now .sp-hour { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); }
 @media (max-width: 720px) {
@@ -263,6 +264,27 @@ svg .stroke2 { stroke-width: 2; }
   .sp-left { flex: none; width: 100%; }
   .sp-right { width: 100%; }
 }
+/* T-3469: the timetable (TrainTable.tsx), as a printed one: a column per train, small type */
+.tt-scroll { overflow: auto; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
+.tt-inner { position: relative; }
+.tt-head { position: sticky; top: 0; z-index: 3; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.tt-corner { position: sticky; left: 0; z-index: 2; height: 100%; background: var(--bg); }
+.tt-hour { position: absolute; top: 2px; padding-left: 3px; color: var(--muted); border-left: 1px solid var(--shade); line-height: 10px; white-space: nowrap; }
+.tt-hour.full { color: var(--text); font-weight: 700; border-left-color: var(--rule); }
+.tt-bullet { position: absolute; display: flex; justify-content: center; }
+.tt-strip { display: block; width: 15px; padding: 2px 0; border-radius: 3px; background: var(--c); color: var(--ct); font-size: 10px; font-weight: 700; line-height: 11px; text-align: center; writing-mode: vertical-rl; text-orientation: upright; }
+.tt-body { position: relative; background-image: repeating-linear-gradient(to bottom, transparent 0 calc(5 * var(--row) - 1px), var(--rule) calc(5 * var(--row) - 1px) calc(5 * var(--row))); }
+.tt-names { position: sticky; left: 0; z-index: 2; background: var(--bg); background-image: inherit; }
+.tt-names span { display: block; height: var(--row); line-height: var(--row); padding-right: 8px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-hour-rule { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--shade); }
+.tt-hour-rule.full { border-left-color: var(--rule); }
+.tt-col { position: absolute; top: 0; color: color-mix(in srgb, var(--ink) 78%, var(--text)); border-left: 1px solid var(--shade); }
+.tt-col span { display: block; height: var(--row); line-height: var(--row); text-align: center; }
+.tt-col .pass { color: var(--muted); }
+.tt-col.past { opacity: 0.5; }
+.tt-now { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--accent); }
+.tt-col:hover { background: var(--shade); opacity: 1; }
+.tt-chart { margin-top: 6px; }
 .help-panel dl { display: grid; grid-template-columns: 170px 1fr; gap: 3px 12px; margin: 0; }
 .help-panel dt { color: var(--muted); }
 .help-panel dd { margin: 0; }

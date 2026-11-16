@@ -1230,18 +1230,18 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 ## Schedule panel
 
-[T-3346 stage 1, `ui/inspector/SchedulePanel.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
+[T-3346 stage 1, T-3469; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
 
 - **Hidden for players** unless the address has `?timetables` (v0.3.3, Anita 2026-11-13): no icon opens it, line or group.
 - **A line's**: opened from the fourth icon by a running rail line's schedule heading (a station timetable,
-  hover "Detailed schedule"); a centred modal in the saved games panel's frame, about 1040 px wide; closed by its
+  hover "Detailed schedule"); a centred modal in the saved games panel's frame, up to 1320 px wide; closed by its
   close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the
   line's bullet and name, "schedule" in grey, then the mode choice, which offers Simple only until Detailed and
   Exact are built (stages 3 and 6). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
-  switch; an edit here is the line panel's edit.
-- **Right**: Departures or Chart, the choice kept for the session. Both are 410 px tall so switching moves nothing.
-- **Departures**: a station picker (the line's stops in order, each station once, the first stop to start), then
+  switch; an edit here is the line panel's edit. Under it the departures board.
+- **Right**: the timetable over the chart.
+- **Departures**: headed "Departures" with a station picker (the line's stops in order, each station once, the first stop to start), then
   the board: one row per local hour of the line, from 4:00 through to 3:00, kept to the hours from the first train to
   the last, each direction's minutes in its own column headed by where its trains go ("to Gum"; on a loop, both
   ending where they start, the next stop that way, "via Birch"). The hours are the next 24 from the start of this
@@ -1249,12 +1249,23 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   run's leaving times count (a run's last stop is no departure), and a line on both pairs of quad track shows its
   hidden twin's trains too. Times come from the sim, each trip's own (`station_departures`: its `draw` plus its
   profile's `dep` at the stop), the trips the chart and map draw.
-- **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") at the right side's
-  width, its stops 380 px tall, scaled by distance; the other lines toggle beside the tabs.
+- **Timetable** (T-3469), as a printed one: one direction at a time ("to Gum" / "to Ash", the way the chart reads
+  top to bottom first; the other lines toggle at the end of that row), stations down the side, one column per train
+  under its line's bullet (a bullet too wide for a column becomes its letters down a strip of the line's colour),
+  times in 10 px type as "742" / "1008" in the line's colour (`legibleOn`), the departure at each stop and the
+  arrival at the last, "|" where a group's train runs through a station; a rule every 5 rows, time marks along the
+  top, a past train faded, the time now an accent line. It covers the hour before this one and the day after,
+  scrolled sideways, now a quarter of the way in. Each column stands at its train's first time on the chart's time
+  scale: the most compact scale at which 95% of columns are pushed no more than their own width from their time
+  (trains leaving seconds apart push one regardless).
+- **Chart**: the timetable chart ([ui-inspectors.md](ui-inspectors.md) "The timetable chart") under the timetable,
+  its stops 240 px tall, scaled by distance, its time axis the table's: the table's scroll moves it, the wheel over
+  it scrolls both, and it does not zoom.
 - **A group's**: from the group view's chart icon, for a group with two or more running rail lines. Heading the
-  group's pill and name, then "schedule"; the body is the chart at the panel's width, the longest line (by length)
-  down the side and the group's other lines drawn at full strength in their colours where they share its track
-  (T-2660's mapping); the other lines toggle adds lines outside the group as the line chart does.
+  group's pill and name, then "schedule"; the body is the timetable and chart at the panel's width, the longest line
+  (by length) down the side, each other line's trains in the table at the stations it shares with it (a line
+  sharing fewer than two is left out of the table), and in the chart drawn at full strength in their colours where
+  they share its track (T-2660's mapping); the other lines toggle adds lines outside the group as the line chart does.
 
 ## Start menu
 

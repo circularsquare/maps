@@ -27,7 +27,8 @@ import { clipPath, gradePasses, sharedStretches, type Pass, type Shared } from "
 /** Whether the chart is open; it shows the selected rail line, and closes when no line is selected. */
 export const mareyOpen = signal(false);
 
-const W_PX = 600, GUTTER = 92, PAD_R = 18, TOP = 8, AXIS = 22;
+const W_PX = 600, TOP = 8, AXIS = 22;
+export const GUTTER = 92, PAD_R = 18;
 /** the window's share before now */
 const BEFORE = 0.25;
 const HOUR = 3600, QUARTER = 900;
@@ -150,18 +151,20 @@ function TripLayer({ width, height, ticks, defs, stands, others, passes, runs, o
 
 /** The chart of line `l`, `width` px wide. T-3346: `plotH` sets the height of its stops' span
  * (else by its stop count), and `group`'s lines are drawn where they share its track whether or not
- * other lines are shown, at full strength. */
-export function MareyBody({ l, st, links, width = W_PX, plotH, group }: { l: LineInput; st: LineStats; links: Links | null; width?: number; plotH?: number; group?: ReadonlySet<number> }) {
+ * other lines are shown, at full strength. T-3469: `view` fixes the window (its left edge and span,
+ * game s) for a timetable scrolled above it; the wheel then leaves it alone. */
+export function MareyBody({ l, st, links, width = W_PX, plotH, group, view }: { l: LineInput; st: LineStats; links: Links | null; width?: number; plotH?: number; group?: ReadonlySet<number>; view?: { t0: number; span: number } }) {
   const r0 = DEBUG ? performance.now() : 0;
   const w = world.value!;
   const net = live.overlay?.renderer.net ?? null;
   const [zoom, setZoom] = useState(0);
   const PLOT_W = width - GUTTER - PAD_R;
-  const span = Math.min(MAX_SPAN, Math.max(MIN_SPAN, defaultSpan(l, st) * ZOOM_STEP ** zoom));
+  const span = view?.span ?? Math.min(MAX_SPAN, Math.max(MIN_SPAN, defaultSpan(l, st) * ZOOM_STEP ** zoom));
   const q = span / 4;
   // fetched a quarter window either side of the window, again as now enters the next quarter
   const now = clock.minute.value * 60;
-  const slot = Math.floor(now / q);
+  const anchor = view ? view.t0 + BEFORE * span : now;
+  const slot = Math.floor(anchor / q);
   const base = (slot - 1) * q;
   const answer = useClockQuery({ what: "lineTrips", line: l.num, t0: base, t1: base + 6 * q }, [l.num, w.version, base, span],
     (d) => ({ line: l.num, base, span, trips: tripsOf(d) }));
@@ -286,9 +289,9 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group }: { l: Lin
   ), [drawn, otherDrawn, ticks, height]);
   const lit = hover === null ? null : (drawn?.runs.find((r) => r.key === hover) ?? otherDrawn?.runs.find((r) => r.key === hover) ?? null);
 
-  const view0 = now - BEFORE * span;
+  const view0 = anchor - BEFORE * span;
   const offset = -(view0 - fetchedBase) * k;
-  const nowX = BEFORE * PLOT_W;
+  const nowAt = (now - view0) * k, nowX = Math.max(0, Math.min(PLOT_W, nowAt));
   // labels down the side, each kept only where it clears the last one shown (the ends always)
   const order = l.stops.map((_, i) => i).sort((a, b) => yOf(st.stopS[0][a] ?? 0) - yOf(st.stopS[0][b] ?? 0));
   const labels: { i: number; y: number }[] = [];
@@ -303,7 +306,7 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group }: { l: Lin
   }
   const fit = (s: string) => (s.length > 14 ? s.slice(0, 13) + "…" : s);
   const onWheel = (e: WheelEvent) => {
-    if (!e.deltaY) return;
+    if (view || !e.deltaY) return;
     e.preventDefault();
     const dir = e.deltaY > 0 ? 1 : -1;
     if ((dir > 0 && span >= MAX_SPAN) || (dir < 0 && span <= MIN_SPAN)) return;
@@ -345,7 +348,7 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group }: { l: Lin
             const x = (t - fetchedBase) * k + offset;
             return x > 16 && x < PLOT_W - 16 && <text class="marey-time" x={x} y={TOP + H + 15}>{local(t)}</text>;
           })}
-          <line class="marey-now" x1={nowX} x2={nowX} y1={TOP - 4} y2={TOP + H + 4} />
+          {nowAt === nowX && <line class="marey-now" x1={nowX} x2={nowX} y1={TOP - 4} y2={TOP + H + 4} />}
         </svg>
       </div>
     </div>

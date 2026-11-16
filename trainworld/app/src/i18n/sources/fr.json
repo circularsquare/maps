@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {The stop at {station} is too short for {wanted, plural, one {# car} other {# cars}}. {line}'s trams stay at {kept, plural, one {# car} other {# cars}}.} other {The platform at {station} is too short for {wanted, plural, one {# car} other {# cars}}. {line}'s trains stay at {kept, plural, one {# car} other {# cars}}.}}",
   "scheduleCopy.withHeadways": "Headways {list}, {cars, plural, one {# car} other {# cars}}, {fast, select, true {high speed} other {ordinary}}",
   "scheduleCopy.withTrains": "{list} {vehicle, select, tram {trams} other {trains}}, {cars, plural, one {# car} other {# cars}}, {fast, select, true {high speed} other {ordinary}}",
-  "schedulePanel.chart": "Chart",
   "schedulePanel.departures": "Departures",
   "schedulePanel.groupChart": "Timetable chart",
   "schedulePanel.label": "{line} schedule",

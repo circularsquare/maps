@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {{station}的電車站停不下{wanted, plural, other {#節車廂}}，{line}的路面電車維持{kept, plural, other {#節}}。} other {{station}的月台停不下{wanted, plural, other {#節車廂}}，{line}的列車維持{kept, plural, other {#節}}。}}",
   "scheduleCopy.withHeadways": "班距{list}，{cars, plural, other {#節}}，{fast, select, true {高速} other {一般}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {路面電車{list}輛，{cars, plural, other {#節}}，{fast, select, true {高速} other {一般}}} other {列車{list}列，{cars, plural, other {#節}}，{fast, select, true {高速} other {一般}}}}",
-  "schedulePanel.chart": "運行圖",
   "schedulePanel.departures": "發車表",
   "schedulePanel.groupChart": "時刻表運行圖",
   "schedulePanel.label": "{line}時刻表",

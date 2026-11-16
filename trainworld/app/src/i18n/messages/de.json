@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {Die Haltestelle in {station} ist zu kurz für {wanted, plural, one {# Wagen} other {# Wagen}}. Die Trams von {line} bleiben bei {kept, plural, one {# Wagen} other {# Wagen}}.} other {Der Bahnsteig in {station} ist zu kurz für {wanted, plural, one {# Wagen} other {# Wagen}}. Die Züge von {line} bleiben bei {kept, plural, one {# Wagen} other {# Wagen}}.}}",
   "scheduleCopy.withHeadways": "Takte {list}, {cars, plural, one {# Wagen} other {# Wagen}}, {fast, select, true {Hochgeschwindigkeit} other {normal}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {{list} Trams, {cars, plural, one {# Wagen} other {# Wagen}}, {fast, select, true {Hochgeschwindigkeit} other {normal}}} other {{list} Züge, {cars, plural, one {# Wagen} other {# Wagen}}, {fast, select, true {Hochgeschwindigkeit} other {normal}}}}",
-  "schedulePanel.chart": "Bildfahrplan",
   "schedulePanel.departures": "Abfahrten",
   "schedulePanel.groupChart": "Bildfahrplan",
   "schedulePanel.label": "Fahrplan {line}",

@@ -2,8 +2,9 @@
 // schedule icon; the departures board's times at three stations match the timetable chart's trains
 // (each trip's leave time worked out from the profile the chart draws) to the second, and the board
 // shows one minute for each; a stepper in the panel changes the line and the board follows; Escape
-// closes it. Then two lines sharing track are grouped and the group's chart opens from the group
-// view with the second line drawn on it. Shots light and dark. From the maps root (or a tree's root):
+// closes it. T-3469: the timetable above the chart, each train's column over its train on the chart.
+// Then two lines sharing track are grouped and the group's chart opens from the group view with the
+// second line drawn on it. Shots light and dark. From the maps root (or a tree's root):
 //   node trainworld/checks/t3346-schedule-panel.mjs [url] [shots dir]   (about two minutes; default localhost:6180)
 import { mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -13,6 +14,34 @@ const BASE = process.argv[2] ?? 'http://localhost:6180/';
 const OUT = process.argv[3] ?? ARTIFACTS;
 await mkdir(OUT, { recursive: true });
 let fail = 0;
+// T-3469: where the timetable's columns stand against the chart's time axis, in the page. Each column
+// on show: its first time as printed against the chart's time at the column's middle, read off the
+// chart's tick labels, the 90th percentile of the gaps (a few trains leave seconds apart and push one
+// a column); allowed, the push a column may get (its width) and a minute's rounding.
+const alignment = () => {
+  const d = document.querySelector('dialog.sched-panel');
+  const names = d.querySelector('.tt-names').getBoundingClientRect(), plot = d.querySelector('.marey-plot').getBoundingClientRect();
+  const ticks = [...d.querySelectorAll('.marey-over text.marey-time')].map((e) => {
+    const r = e.getBoundingClientRect(), [h, m] = e.textContent.split(':').map(Number);
+    return { x: (r.left + r.right) / 2, m: h * 60 + m };
+  });
+  for (let i = 1; i < ticks.length; i++) while (ticks[i].m < ticks[i - 1].m) ticks[i].m += 1440;
+  const a = ticks[0], b = ticks[ticks.length - 1], perMin = (b.x - a.x) / (b.m - a.m);
+  const offs = [];
+  for (const c of d.querySelectorAll('.tt-col')) {
+    const r = c.getBoundingClientRect(), x = (r.left + r.right) / 2;
+    if (x < plot.left + 4 || x > plot.right - 4) continue;
+    const cell = [...c.children].find((s) => /^\d{3,4}$/.test(s.textContent));
+    if (!cell) continue;
+    const v = Number(cell.textContent);
+    let m = Math.floor(v / 100) * 60 + (v % 100);
+    const at = a.m + (x - a.x) / perMin;
+    while (m < at - 720) m += 1440;
+    offs.push(Math.abs(m - at));
+  }
+  offs.sort((p, q) => p - q);
+  return { edge: plot.left - names.right, cols: offs.length, worst: offs[Math.floor(offs.length * 0.9)] ?? 0, allowed: d.querySelector('.tt-col').getBoundingClientRect().width / perMin + 1 };
+};
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) fail++; };
 const chrome = await launchChrome({ prefix: 'tw-t3346-', size: [1400, 900], args: GL, deviceScaleFactor: 1 });
 const errors = [];
@@ -135,16 +164,17 @@ try {
     await page.waitForFunction((b) => document.querySelectorAll('.sp-board .sp-mins > span').length === b, before, { timeout: 30000, polling: 300 }).catch(() => {});
   } else check(false, 'the panel has the level steppers');
 
-  // 5. the chart at the panel's width
-  await page.click('.sp-tabs .btn:has-text("Chart")');
+  // 5. T-3469: the timetable, a column per train, over the chart, each column over its train
+  await page.waitForSelector('.sched-panel .tt-col', { timeout: 30000 });
   await page.waitForSelector('.sched-panel .marey-chart use.run', { timeout: 30000 });
   await page.waitForTimeout(800);
-  const cw = await page.$eval('.sched-panel .marey-chart', (e) => [e.getBoundingClientRect().width, e.closest('.sp-right').getBoundingClientRect().width]);
-  check(Math.abs(cw[0] - cw[1]) < 2, `the chart is the panel's right side wide: ${Math.round(cw[0])} of ${Math.round(cw[1])} px`);
+  const al = await page.evaluate(alignment);
+  check(Math.abs(al.edge) < 1.5, `the table's times start where the chart's do: ${al.edge.toFixed(1)} px apart`);
+  check(al.cols >= 5 && al.worst <= al.allowed, `${al.cols} columns each over its train on the chart: 90% within ${al.worst.toFixed(2)} min (${al.allowed.toFixed(2)} allowed)`);
   for (const s of ['light', 'dark']) {
     await shade(s);
     await page.mouse.move(5, 5);
-    await page.screenshot({ path: join(OUT, `t3346-s1-chart-${s}.png`) });
+    await page.screenshot({ path: join(OUT, `t3346-s1-table-${s}.png`) });
   }
   await shade('light');
   await page.keyboard.press('Escape');
@@ -184,10 +214,12 @@ try {
     await page.click('button[data-tip="Timetable chart"]');
     await page.waitForSelector('dialog.sched-panel[open] .marey-chart use.run', { timeout: 30000 });
     await page.waitForTimeout(1500);
+    const ga = await page.evaluate(alignment);
+    check(ga.cols >= 2 && ga.worst <= ga.allowed && Math.abs(ga.edge) < 1.5, `the group's table: ${ga.cols} columns over their trains, 90% within ${ga.worst.toFixed(2)} min`);
     const runs = await page.$$eval('.sched-panel .marey-layer use.run', (xs) => ({ own: xs.filter((x) => !x.style.getPropertyValue('--run')).length, group: xs.filter((x) => x.style.getPropertyValue('--run') && !x.classList.contains('other')).length }));
     check(runs.own > 0 && runs.group > 0, `the group chart draws the axis line's trains (${runs.own}) and the other line's at full strength (${runs.group})`);
-    const gw = await page.$eval('.sched-panel .marey-chart', (e) => [e.getBoundingClientRect().width, e.closest('.sp-group').getBoundingClientRect().width, e.closest('.saves-inner').getBoundingClientRect().width]);
-    check(Math.abs(gw[0] - gw[1]) < 2 && gw[1] > gw[2] - 60, `the group chart is the panel wide: ${Math.round(gw[0])} of ${Math.round(gw[2])} px`);
+    const gw = await page.$eval('.sched-panel .marey-chart', (e) => [e.getBoundingClientRect().width, e.closest('.saves-inner').getBoundingClientRect().width]);
+    check(gw[0] > gw[1] - 70, `the group chart is the panel wide: ${Math.round(gw[0])} of ${Math.round(gw[1])} px`);
     for (const s of ['light', 'dark']) {
       await shade(s);
       await page.mouse.move(5, 5);
@@ -202,8 +234,6 @@ try {
   await page.waitForTimeout(800);
   await S(({ sp }, id) => { sp.scheduleShown.value = { kind: 'line', line: id }; }, pick.line);
   await page.waitForSelector('dialog.sched-panel[open] .sp-tabs', { timeout: 30000 });
-  // the Chart choice of step 5 is kept for the session
-  await page.click('.sp-tabs .btn:has-text("Departures")');
   await page.waitForSelector('dialog.sched-panel[open] .sp-board .sp-row', { timeout: 30000 });
   await page.waitForTimeout(800);
   const phone = await page.$eval('dialog.sched-panel', (d) => ({ w: d.getBoundingClientRect().width, scroll: d.querySelector('.saves-inner').scrollWidth - d.querySelector('.saves-inner').clientWidth }));

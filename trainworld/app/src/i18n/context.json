@@ -1728,7 +1728,6 @@
   "schedule.uses": "Line of a schedule stepper hover: the change needs no purchase. unit: a count with its noun, \"2 cars\".",
   "schedule.vehicles": "A count of a line's vehicles with their noun. vehicle: train, bus or boat; count: 1, 6.",
   "schedule.waitingDemand": "Hover on the spinner beside a demand level while demand is still loading.",
-  "schedulePanel.chart": "Option of the schedule panel's right side: the line's timetable chart (time across, stops down by distance).",
   "schedulePanel.departures": "Option of the schedule panel's right side: a station's departures board, hour rows with the minutes trains leave.",
   "schedulePanel.groupChart": "Hover and screen-reader label of the line group view's button that opens the group's timetable chart in the schedule panel.",
   "schedulePanel.label": "Screen-reader label of the schedule panel. line: the line's or line group's name, \"Riverside\".",

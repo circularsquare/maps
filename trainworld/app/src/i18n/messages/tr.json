@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {{station} durağı {wanted, plural, one {# vagon} other {# vagon}} için kısa. {line} tramvayları {kept, plural, one {# vagonda} other {# vagonda}} kalır.} other {{station} peronu {wanted, plural, one {# vagon} other {# vagon}} için kısa. {line} trenleri {kept, plural, one {# vagonda} other {# vagonda}} kalır.}}",
   "scheduleCopy.withHeadways": "Sefer aralığı {list}, {cars, plural, one {# vagon} other {# vagon}}, {fast, select, true {yüksek hızlı} other {normal}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {{list} tramvay, {cars, plural, one {# vagon} other {# vagon}}, {fast, select, true {yüksek hızlı} other {normal}}} other {{list} tren, {cars, plural, one {# vagon} other {# vagon}}, {fast, select, true {yüksek hızlı} other {normal}}}}",
-  "schedulePanel.chart": "Grafik",
   "schedulePanel.departures": "Kalkışlar",
   "schedulePanel.groupChart": "Sefer planı grafiği",
   "schedulePanel.label": "{line} sefer planı",

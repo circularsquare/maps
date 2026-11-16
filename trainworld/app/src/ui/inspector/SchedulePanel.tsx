@@ -19,21 +19,16 @@ import { useModalDialog } from "../Modal";
 import { useClockQuery, useLatestAnswer } from "../useClockQuery";
 import { Chip, Icon, Segmented } from "../widgets";
 import { limitsFrom } from "./LineInspector";
-import { MareyBody, useChartLinks } from "./MareyChart";
+import { useChartLinks } from "./MareyChart";
+import { TrainTable } from "./TrainTable";
 import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf } from "./schedule";
 
 /** What the panel shows: a line's schedule, or a group's chart; null closed. */
 export type ScheduleShown = { kind: "line"; line: string } | { kind: "group"; group: number };
 export const scheduleShown = signal<ScheduleShown | null>(null);
 
-/** The right side's view, kept for the session. */
-type View = "board" | "chart";
-const view = signal<View>("board");
-
-/** The chart's stops span, px; the right side is the chart's height (as MareyChart's, 30 px more)
- * whichever view shows, so switching moves nothing. */
-const PLOT_H = 380;
-const VIEW_H = PLOT_H + 30;
+/** The chart's stops span under the timetable, px. */
+const PLOT_H = 240;
 /** The board's day starts at this local hour, as Japanese station timetables do. */
 const DAY_START_H = 4;
 
@@ -113,11 +108,12 @@ function Board({ l, st }: { l: LineInput; st: LineStats }) {
   // opened, or another station: the hour now at the top
   useLayoutEffect(() => {
     const el = body.current, row = el?.querySelector<HTMLElement>(".sp-row.now");
-    if (el && row) el.scrollTop = row.offsetTop - el.offsetTop - 28;
+    if (el && row) el.scrollTop = row.offsetTop - el.offsetTop - (el.querySelector<HTMLElement>(".sp-heads")?.offsetHeight ?? 0);
   }, [at, !!shown]);
   return (
     <>
       <div class="sp-tools">
+        <span class="h sp-board-h">{t("schedulePanel.departures")}</span>
         <select aria-label={t("schedulePanel.station")} value={at} onChange={(e) => setStation(e.currentTarget.value)}>
           {stops.map((s) => <option value={s}>{names.get(s) ?? ""}</option>)}
         </select>
@@ -145,20 +141,6 @@ function Board({ l, st }: { l: LineInput; st: LineStats }) {
 
 // ---------------------------------------------------------------- the panel
 
-/** The width of `ref`'s element, px, kept as it changes. */
-function useWidth(ref: { current: HTMLElement | null }): number {
-  const [w, setW] = useState(0);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    setW(el.clientWidth);
-    const ro = new ResizeObserver(() => setW(el.clientWidth));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return w;
-}
-
 /** The toggle for other lines' trains on the chart, where any meet it. */
 function OthersToggle({ any }: { any: boolean }) {
   if (!any) return null;
@@ -175,41 +157,29 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   if (limits !== NO_LIMITS) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const { periods } = useLinePeriods(l.id, l);
   const links = useChartLinks(l, st);
-  const right = useRef<HTMLDivElement>(null);
-  const width = useWidth(right);
-  const v = view.value;
   const any = !!links && (links.shared.size > 0 || links.passes.length > 0);
   return (
     <div class="sp-body">
       <div class="sp-left">
         <Schedule l={l} st={st} now={demandAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} />
+        <Board key={l.num} l={l} st={st} />
       </div>
-      <div class="sp-right" ref={right}>
-        <div class="sp-tabs">
-          <Segmented<View> options={[["board", t("schedulePanel.departures")], ["chart", t("schedulePanel.chart")]]} value={v} onChange={(x) => (view.value = x)} />
-          {v === "chart" && <OthersToggle any={any} />}
-        </div>
-        <div class="sp-view" style={{ height: VIEW_H + "px" }}>
-          {v === "board" ? <Board key={l.num} l={l} st={st} />
-            : width > 0 && <MareyBody key={l.num} l={l} st={st} links={links} width={width} plotH={PLOT_H} />}
-        </div>
+      <div class="sp-right">
+        <TrainTable axis={l} st={st} links={links} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
       </div>
     </div>
   );
 }
 
-function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; others: number[] }) {
+function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; others: LineInput[] }) {
   const links = useChartLinks(axis, st);
   // kept while the group's lines are the same: the chart redraws its trains when it changes
-  const key = others.join(",");
-  const group = useMemo<ReadonlySet<number>>(() => new Set(others), [key]);
-  const box = useRef<HTMLDivElement>(null);
-  const width = useWidth(box);
+  const key = others.map((o) => o.num).join(",");
+  const group = useMemo<ReadonlySet<number>>(() => new Set(others.map((o) => o.num)), [key]);
   const any = !!links && [...links.shared.keys(), ...links.passes.map((p) => p.o)].some((o) => !group.has(o));
   return (
-    <div class="sp-group" ref={box}>
-      {any && <div class="sp-tabs"><OthersToggle any /></div>}
-      {width > 0 && <MareyBody key={axis.num} l={axis} st={st} links={links} width={width} plotH={PLOT_H} group={group} />}
+    <div class="sp-group">
+      <TrainTable axis={axis} st={st} others={others} links={links} group={group} plotH={PLOT_H} tools={<OthersToggle any={any} />} />
     </div>
   );
 }
@@ -261,7 +231,7 @@ export function SchedulePanel() {
       const name = groupName(ls);
       body = (
         <Frame label={t("schedulePanel.label", { line: name })} title={<><GroupPill ls={ls} /><span class="sp-name">{name}</span></>}>
-          <GroupBody axis={axis} st={w.lineStats[axis.id]} others={rail.filter((l) => l !== axis).map((l) => l.num)} />
+          <GroupBody axis={axis} st={w.lineStats[axis.id]} others={rail.filter((l) => l !== axis)} />
         </Frame>
       );
     }

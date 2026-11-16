@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {{station}の停留場は{wanted, plural, other {#両}}には短いため、{line}は{kept, plural, other {#両}}のままです。} other {{station}のホームは{wanted, plural, other {#両}}には短いため、{line}は{kept, plural, other {#両}}のままです。}}",
   "scheduleCopy.withHeadways": "運転間隔{list}、{cars, plural, other {#両}}、{fast, select, true {高速} other {普通}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {トラム{list}編成、{cars, plural, other {#両}}、{fast, select, true {高速} other {普通}}} other {列車{list}編成、{cars, plural, other {#両}}、{fast, select, true {高速} other {普通}}}}",
-  "schedulePanel.chart": "ダイヤグラム",
   "schedulePanel.departures": "発車案内",
   "schedulePanel.groupChart": "ダイヤグラムを開く",
   "schedulePanel.label": "{line}のダイヤ",

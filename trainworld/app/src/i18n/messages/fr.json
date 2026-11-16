@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {L’arrêt de la station {station} est trop court pour {wanted, plural, one {# wagon} other {# wagons}}. {line} : les trams restent à {kept, plural, one {# wagon} other {# wagons}}.} other {Le quai de la station {station} est trop court pour {wanted, plural, one {# wagon} other {# wagons}}. {line} : les trains restent à {kept, plural, one {# wagon} other {# wagons}}.}}",
   "scheduleCopy.withHeadways": "Intervalles {list}, {cars, plural, one {# wagon} other {# wagons}}, {fast, select, true {grande vitesse} other {ordinaire}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {{list} trams, {cars, plural, one {# wagon} other {# wagons}}, {fast, select, true {grande vitesse} other {ordinaire}}} other {{list} trains, {cars, plural, one {# wagon} other {# wagons}}, {fast, select, true {grande vitesse} other {ordinaire}}}}",
-  "schedulePanel.chart": "Graphique",
   "schedulePanel.departures": "Départs",
   "schedulePanel.groupChart": "Graphique horaire",
   "schedulePanel.label": "Horaire de {line}",

@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {La parada {station} és massa curta per a {wanted, plural, one {# vagó} other {# vagons}}. {line}: els tramvies es queden amb {kept, plural, one {# vagó} other {# vagons}}.} other {L’andana de l’estació {station} és massa curta per a {wanted, plural, one {# vagó} other {# vagons}}. {line}: els trens es queden amb {kept, plural, one {# vagó} other {# vagons}}.}}",
   "scheduleCopy.withHeadways": "Intervals: {list}, {cars, plural, one {# vagó} other {# vagons}}, {fast, select, true {alta velocitat} other {normal}}",
   "scheduleCopy.withTrains": "{list} {vehicle, select, tram {tramvies} other {trens}}, {cars, plural, one {# vagó} other {# vagons}}, {fast, select, true {alta velocitat} other {normal}}",
-  "schedulePanel.chart": "Gràfic",
   "schedulePanel.departures": "Sortides",
   "schedulePanel.groupChart": "Gràfic d’horaris",
   "schedulePanel.label": "Horari de {line}",

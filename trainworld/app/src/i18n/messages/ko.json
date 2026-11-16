@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {{station}의 정류장이 {wanted, plural, other {#량}} 편성에는 짧아요. {line}의 트램은 {kept, plural, other {#량}} 그대로예요.} other {{station}의 승강장이 {wanted, plural, other {#량}} 편성에는 짧아요. {line}의 열차는 {kept, plural, other {#량}} 그대로예요.}}",
   "scheduleCopy.withHeadways": "배차 간격 {list}, {cars, plural, other {#량}}, {fast, select, true {고속} other {일반}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {트램 {list}대, {cars, plural, other {#량}}, {fast, select, true {고속} other {일반}}} other {열차 {list}대, {cars, plural, other {#량}}, {fast, select, true {고속} other {일반}}}}",
-  "schedulePanel.chart": "운행도",
   "schedulePanel.departures": "출발 안내",
   "schedulePanel.groupChart": "시간표 운행도",
   "schedulePanel.label": "{line} 시간표",

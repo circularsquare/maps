@@ -1811,7 +1811,6 @@
   "scheduleCopy.tooShort": "{vehicle, select, tram {{station}的电车站太短，停不下{wanted, plural, other {#节}}。{line}的有轨电车保持{kept, plural, other {#节}}。} other {{station}的站台太短，停不下{wanted, plural, other {#节}}。{line}的列车保持{kept, plural, other {#节}}。}}",
   "scheduleCopy.withHeadways": "发车间隔{list}，{cars, plural, other {#节}}，{fast, select, true {高速} other {普通}}",
   "scheduleCopy.withTrains": "{vehicle, select, tram {{list}辆有轨电车，{cars, plural, other {#节}}，{fast, select, true {高速} other {普通}}} other {{list}列列车，{cars, plural, other {#节}}，{fast, select, true {高速} other {普通}}}}",
-  "schedulePanel.chart": "运行图",
   "schedulePanel.departures": "发车表",
   "schedulePanel.groupChart": "时刻表运行图",
   "schedulePanel.label": "{line}时刻表",
