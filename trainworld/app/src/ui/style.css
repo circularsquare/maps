@@ -370,17 +370,22 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box .rows.dragging > li { cursor: grabbing; }
 .lines-box .rows > li.drop-on { box-shadow: inset 0 0 0 2px var(--accent); }
 .lines-box .rows > li.dragged { opacity: 0.5; }
-/* T-3420: the lines hidden on the map, their bullet and name faded; the eyes in a column of their own */
+/* T-3420: the lines hidden on the map, their bullet and name faded; in hide mode a box per row, the Settings
+   checkbox at a smaller size, ticked while the row's lines are drawn (a group's half lit while some are) */
 .list-vis { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.list-vis .show-all.unseen { visibility: hidden; }
 .lines-box .rows > li.hidden-line > :is(.chip, .group-pill, .line-name) { opacity: 0.4; }
-.lines-box .vis-toggle { margin: 0 -4px 0 -6px; color: var(--text); }
-.lines-box .vis-toggle.off, .lines-box .vis-toggle.some { color: var(--muted); }
+.lines-box .vis-check { appearance: none; width: calc(12 * var(--px)); height: calc(12 * var(--px)); margin: 0; flex: none; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--bg); }
+/* (the inner box as an inset ring, which stays square at any row position, where a centred ::after blurred) */
+.lines-box .vis-check:checked { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 calc(2 * var(--px)) var(--tint); }
+.lines-box .vis-check.some { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, var(--tint)); box-shadow: inset 0 0 0 calc(2 * var(--px)) var(--tint); }
+.lines-box .rows > li:has(> .vis-check) { min-height: 24px; }
 .lines-box.vis-on .rows > li.in-group { padding-left: 6px; }
-.lines-box.vis-on .rows > li.in-group > .vis-toggle { margin-right: 20px; }
-.lines-box.vis-on .sort-head > .sort-btn:first-child { padding-left: 18px; }
+.lines-box.vis-on .rows > li.in-group > .vis-check { margin-right: 16px; }
+.lines-box.vis-on .sort-head > .sort-btn:first-child { padding-left: calc(11 * var(--px) + 8px); }
 /* T-3420: Settings' Show levels, the label over the level buttons */
 :is(:root, :root[data-shade="dark"]) .level-toggles .btn.lv.on { border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); box-shadow: none; }
+.level-show + .checks { margin-top: 8px; }
 .level-show { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 4px; }
 .row-ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; gap: 6px; padding: 3px 8px;
   background: var(--bg); border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 2px 8px rgb(0 0 0 / 0.25); }

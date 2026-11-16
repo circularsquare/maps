@@ -6,7 +6,7 @@ import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { COUNT_MS, countingRiders, openings } from "../game/openingDay";
-import { createLine, newBusLine, newFerryLine } from "../game/lineActions";
+import { createLine } from "../game/lineActions";
 import { boatsText, busesText, count, money } from "../game/format";
 import { DEMAND_INDEX, type Demand, type LineInput, type LineStats } from "../game/types";
 import { lineSort, selection, uiScale } from "../game/ui";
@@ -126,16 +126,14 @@ function GroupFigures({ ls, w, trains, period }: { ls: LineInput[]; w: WorldView
   );
 }
 
-/** T-3420: a row's eye: hides its lines on the map, or shows them; a group's shows them all once any is hidden */
+/** T-3420: a row's box, ticked while its lines are drawn on the map; a group's is ticked while all are, and a click
+ * on it shows them all once any is hidden */
 function VisToggle({ ids, group }: { ids: string[]; group?: boolean }) {
   const hid = hiddenLines.value, n = ids.filter((id) => hid.has(id)).length;
-  const off = n === ids.length, some = n > 0 && !off;
-  const tip = group ? (n ? t("linesTab.showGroup") : t("linesTab.hideGroup")) : off ? t("linesTab.showLine") : t("linesTab.hideLine");
+  const label = group ? t("linesTab.showGroup") : t("linesTab.showLine");
   return (
-    <button class={"btn icon mini vis-toggle" + (off ? " off" : some ? " some" : "")} data-tip={tip} aria-label={tip} aria-pressed={!off}
-      onClick={(e) => { e.stopPropagation(); setLinesHidden(ids, n === 0); }} onDblClick={(e) => e.stopPropagation()}>
-      {off ? <Icon.eyeOff /> : <Icon.eye />}
-    </button>
+    <input type="checkbox" class={"vis-check" + (n > 0 && n < ids.length ? " some" : "")} checked={n === 0} aria-label={label}
+      onClick={(e) => { e.stopPropagation(); setLinesHidden(ids, n === 0); }} onDblClick={(e) => e.stopPropagation()} />
   );
 }
 
@@ -351,9 +349,7 @@ export function LinesTab() {
   }
   const pick = (id: string) => { if (!dragged.current) selection.value = { kind: "line", line: id }; };
   // T-3420: the lines hidden on the map, and whether the rows show their eyes
-  const hid = hiddenLines.value, eyes = visToggles.value;
-  const anyHidden = listedLines(w).some((l) => hid.has(l.id));
-  const lineRow = (l: LineInput, inGroup: boolean) => {
+  const hid = hiddenLines.value, eyes = visToggles.value;  const lineRow = (l: LineInput, inGroup: boolean) => {
     const st = w.lineStats[l.id];
     const on = (sel?.kind === "line" || sel?.kind === "train") && sel.line === l.id;
     const drop = "l:" + l.id;
@@ -423,13 +419,11 @@ export function LinesTab() {
       <div class="line-list-actions">
         <span style={{ display: "flex", gap: "6px" }}>
           <button class="btn text" data-guide="line" data-tip={t("linesTab.newLineTip", { key: "N" })} onClick={newLine} disabled={creating}><Icon.plus />{t("linesTab.newLine")}<span class="key muted">N</span></button>
-          <button class="btn icon new-bus" data-tip={t("linesTab.newBusTip", { key: "U" })} aria-label={t("linesTab.newBus")} onClick={() => newBusLine()}><Icon.bus /></button>
-          <button class="btn icon new-ferry" data-tip={t("linesTab.newFerryTip", { key: "O" })} aria-label={t("linesTab.newFerry")} onClick={() => newFerryLine()}><Icon.ferry /></button>
         </span>
         <span class="list-vis">
-          {/* T-3420: always laid out, seen only while a line is hidden, so the row never moves */}
-          <button class={"btn text show-all" + (anyHidden ? "" : " unseen")} disabled={!anyHidden} aria-hidden={!anyHidden} onClick={showAllLines}>{t("linesTab.showAll")}</button>
-          <button class={"btn icon" + (eyes ? " on" : "")} data-tip={t("linesTab.hideLines")} aria-label={t("linesTab.hideLines")} aria-pressed={eyes} onClick={() => (visToggles.value = !visToggles.peek())}><Icon.eye /></button>
+          {/* T-3420: hide mode; leaving it shows every line again */}
+          <button class={"btn icon" + (eyes ? " on" : "")} data-tip={eyes ? t("linesTab.showAllLines") : t("linesTab.hideLines")} aria-label={eyes ? t("linesTab.showAllLines") : t("linesTab.hideLines")} aria-pressed={eyes}
+            onClick={() => { if (visToggles.peek()) showAllLines(); visToggles.value = !visToggles.peek(); }}><Icon.eye /></button>
           <ScopeToggle />
         </span>
       </div>

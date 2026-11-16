@@ -542,7 +542,7 @@ node only, about two minutes; T-2438), `t2161-diagram-pills.mjs` (its pills: non
   `t1792-idle-bullets.mjs [url]` (the real save with one line at 0 trains at the level now: its
   bullet dimmed with a "Not running" hover in the Lines tab, station panel, related lines view and
   map tags, light and dark, into artifacts/trainworld/t1792/; about a minute),
-  `t3420-visibility.mjs [url]` (on the real save: the Lines tab's eyes hide lines and Show all comes without moving the row, a hidden line's strokes passed over by picks, Settings' Show levels hides level -1's track from picks, the hidden lines in the save file and back with its load; shots to artifacts/trainworld/t3420/; about a minute; T-3420),
+  `t3420-visibility.mjs [url]` (on the real save: no bus or ferry button in the Lines tab, hide mode's row boxes hide lines, a hidden line's strokes passed over by picks, the hidden lines in the save file and back with its load in hide mode, leaving hide mode shows all and saves none, Buses and ferries hides a bus line, Show levels hides level -1's track from picks; shots to artifacts/trainworld/t3420/; about a minute; T-3420),
   `t3319-line-shapes.mjs [url]` (line shapes on the real save: set by hand, a mode's default, back to the mode, a
   copy, the save file and its load; shots of the Lines tab, the line editor and Settings into
   artifacts/trainworld/t3319/; about two minutes),

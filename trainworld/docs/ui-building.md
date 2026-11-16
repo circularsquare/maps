@@ -398,7 +398,7 @@ last or a lone point.
 ## Drawing a bus line
 
 [T-1464, T-1465, T-1514; `map/busDraw.ts`] The Build tab's Bus button (under the four tools, beside
-Ferry, key U), the Lines tab's bus button beside New line, or U from any tab starts the bus tool for a
+Ferry, key U) or U from any tab starts the bus tool for a
 new line; the Build tab's button again, while it is on, leaves it. Each click adds a
 point. Between two points the route takes the shortest path over the basemap's zoom 14 roads
 (`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
@@ -527,7 +527,7 @@ lighter; at most 16 of each.
 ## Drawing a ferry line
 
 [T-2194; `map/ferryDraw.ts`; design notes/T-2177.md 3.2] The Build tab's Ferry button (beside Bus,
-each half the row, key O), the Lines tab's ferry button beside the bus one, or O from any tab starts
+each half the row, key O) or O from any tab starts
 the ferry tool for a new line. The player places **ports only**; between two consecutive ports the
 route is found over the basemap's water (track-and-service.md 6.8), never drawn by hand.
 

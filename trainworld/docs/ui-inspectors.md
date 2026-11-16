@@ -110,7 +110,7 @@ purpose filter the purpose drawn is ringed in the bar.
 
 ### The Lines tab
 
-- **The Lines tab** has New line above its list (actions go above lists of any length). The list
+- **The Lines tab** has New line above its list (actions go above lists of any length; new bus and ferry lines are started from the Build tab or U and O, T-3420). The list
   sorts by clicking a column header [T-310]: Name, City (below), Riders (today), Money (the line's expected profit today, fares less running cost and its share of upkeep, in the money format with negatives red; its hover gives "Expected profit today", the fares, the running cost, the upkeep and, on a weekend or holiday, a line saying so) [T-735, T-1893], Trains and Near. A click sorts by that
   column (names A to Z, figures biggest first, Near nearest first), a second reverses it, the sorted
   column has a small arrow, and each header's hover says what it sorts by. Names sort naturally, ties
@@ -212,17 +212,17 @@ purpose filter the purpose drawn is ringed in the bar.
   stops. A group edit is one undo step and wakes no demand; the hand order is outside the undo
   history, as a sort is.
 - **Hiding lines** [T-3420, `game/lineVisibility.ts`, `map/visibility.ts`]: an eye button beside the scope toggle
-  (hover "Hide lines", lit while on) shows an eye at the start of every row: a line's hides it on the map ("Hide line",
-  crossed out and muted while hidden, "Show line"), a group's hides all its lines ("Hide group"; muted while some are
-  hidden and crossed out when all are; "Show group" shows them all). A hidden line's bullet and name are faded in the
-  list whether the eyes show or not. "Show all", a text button left of the eye, shows every line again; it is always
-  laid out and seen only while a listed line is hidden, so the row never moves. Hiding is a view setting: a hidden
-  line runs, earns and is counted as before, keeps its row, its panel and the schematic; on the map its strokes, its
-  trains and a bus or ferry line's route and stops are not drawn and picks pass over them (the track under it stays),
-  and a hidden line's twin (T-3333) goes with it. Where lines run side by side its band's slot stays empty. The hidden
-  lines are saved with the game (the header's `hidden`, outside the undo history); a new line or a copy is shown. The
-  eyes' button is kept while the page is open. Settings' Show levels hides track levels the same way
-  ([ui-panels.md](ui-panels.md) "Settings").
+  turns hide mode on (hover "Hide lines", lit while on): a small checkbox (Settings' look, smaller) starts every row,
+  ticked while the line is drawn on the map; a group's is ticked while all its lines are, half lit while some are, and a
+  click on it hides them all or, with any hidden, shows them all. A hidden line's bullet and name are faded. The eye
+  again (hover "Show all lines") leaves hide mode and shows every line, so lines are hidden only while it is on.
+  Hiding is a view setting: a hidden line runs, earns and is counted as before, keeps its row, its panel and the
+  schematic; on the map its strokes, its trains and a bus or ferry line's route and stops are not drawn and picks pass
+  over them (the track under it stays), and a hidden line's twin (T-3333) goes with it. Where lines run side by side
+  its band's slot stays empty. The hidden lines are saved with the game (the header's `hidden`, outside the undo
+  history; none once hide mode is left), and a game opened with lines hidden opens in hide mode; a new line or a copy
+  is shown. Settings' Show levels and Buses and ferries hide by level and by mode ([ui-panels.md](ui-panels.md)
+  "Settings").
 - **A group's bullet** [T-1813, `ui/GroupPill.tsx`]: a pill with a see-through body, a 2 px
   outline and bold text in one colour, reading the group's name with a trailing " line" or " main
   line" taken off, any case ("Tokaido Main Line" reads "Tokaido"; "Line 1" stays), and likewise a

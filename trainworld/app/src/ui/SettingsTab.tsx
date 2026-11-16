@@ -14,7 +14,7 @@ import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
-import { hiddenLevels, toggleLevel } from "../game/lineVisibility";
+import { hiddenLevels, hideBuses, toggleLevel } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -138,6 +138,11 @@ export function SettingsTab() {
       <div class="level-show">
         <span>{t("settingsTab.showLevels")}</span>
         <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />
+      </div>
+      <div class="checks">
+        <Check checked={!hideBuses.value} onChange={(v) => (hideBuses.value = !v)}>
+          {t("settingsTab.busesFerries")}
+        </Check>
       </div>
       <div class="h">{t("settingsTab.realNetwork")}</div>
       <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}

@@ -64,9 +64,8 @@ export const Icon = {
   anchor: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="3.2" r="1.6" /><path d="M8 4.8v9.7M5.2 7.2h5.6M2.7 9.6c.4 2.9 2.6 4.9 5.3 4.9s4.9-2 5.3-4.9" /></svg>,
   redo: () => <svg viewBox="0 0 16 16"><path d="M10.5 4l3 3-3 3M13 7H6.5a3.5 3.5 0 000 7H9" /></svg>,
   cross: () => <svg viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>,
-  // T-3420: a line or level shown on the map, and hidden
+  // T-3420: the Lines tab's hide mode
   eye: () => <svg viewBox="0 0 16 16"><path d="M1.5 8c1.6-2.9 3.8-4.4 6.5-4.4s4.9 1.5 6.5 4.4c-1.6 2.9-3.8 4.4-6.5 4.4S3.1 10.9 1.5 8z" /><circle cx="8" cy="8" r="2" /></svg>,
-  eyeOff: () => <svg viewBox="0 0 16 16"><path d="M1.5 8c1.6-2.9 3.8-4.4 6.5-4.4s4.9 1.5 6.5 4.4c-1.6 2.9-3.8 4.4-6.5 4.4S3.1 10.9 1.5 8z" /><circle cx="8" cy="8" r="2" /><path d="M2.5 13.5l11-11" /></svg>,
   // the controls panel
   help: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" /><path d="M6.2 6.3a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.6" /><circle class="solid" cx="8" cy="11.6" r=".5" /></svg>,
   // T-2855: Discord's logo (filled, so no outline), for Settings' link to the server

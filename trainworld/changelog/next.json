@@ -4,7 +4,7 @@
   "items": [
     {
       "id": "c001",
-      "text": "added hiding lines on the map from the lines list, and hiding track levels in settings",
+      "text": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings",
       "edited": null,
       "hidden": false,
       "task": "T-3420",
@@ -100,6 +100,16 @@
       "task": "T-3412",
       "by": "bugs2",
       "at": "2026-11-16T13:50:50Z",
+      "rev": 1
+    },
+    {
+      "id": "c011",
+      "text": "removed the new bus and ferry line buttons from the lines list; they are in the build tab",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3420",
+      "by": "visibility",
+      "at": "2026-11-16T13:58:34Z",
       "rev": 1
     }
   ]

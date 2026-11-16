@@ -28,7 +28,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
-import { hiddenLevels, hiddenLines, levelBits } from "./game/lineVisibility";
+import { hiddenLevels, hiddenLines, hideBuses, levelBits } from "./game/lineVisibility";
 import { setHidden } from "./map/visibility";
 import "./game/capLoad";
 import { removeThing, setTrackHider } from "./game/remove";
@@ -434,6 +434,7 @@ const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || net
 const hiddenNums = computed(() => {
   const ids = hiddenLines.value, w = world.value, out = new Set<number>();
   for (const id of ids) out.add(Number(id));
+  if (hideBuses.value && w) for (const l of w.save.lines) if (w.lineStats[l.id]?.bus) out.add(l.num);
   if (w && ids.size) for (const [twin, of] of w.twins) if (ids.has(of)) out.add(Number(twin));
   return out;
 });
