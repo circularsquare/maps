@@ -1432,7 +1432,7 @@ export class Tools {
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
       say(tr("tools.blueprintStation", { name: this.shownNameAt(this.lastPlaced[0], this.lastPlaced[1]) ?? name }));
-    } else if (r.issues.length) say(describeIssues(r.issues), true);
+    } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
   }
 
   /** Local trip legs a day per cell, homes and destinations together (T-412), for the demand shown. */
@@ -1948,7 +1948,7 @@ export class Tools {
     const cand=(s:Spot):Candidate=>s.kind==="node"?{kind:"node",node:s.node}:{kind:"edge",edge:s.edge,frac:fractionAlong(n.edgePts.get(s.edge)??[],s.lx,s.ly)};
     const roomOf=(s:Spot)=>this.roomSnap(s);
     const g=likelyFirst(spots,(s)=>known(s)||layoutIssues(cand(s),platform,lay),roomOf);
-    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues)||tr("tools.cannotPlace")};
+    let guess:Verdict={key,spot:g.spot??spots[0],ok:!!g.spot,why:g.spot?"":describeIssues(g.issues,undefined,undefined,true)||tr("tools.cannotPlace")};
     if (spots.length>=HOLD_AT && !(g.spot?known(g.spot)===null:spots.every((s)=>known(s)))) {
       // a bundle of tracks where the worker has not yet confirmed the guess: there it is often
       // refused for what the page cannot see, so the ghost stays as it was until the answer (if it
@@ -1979,7 +1979,7 @@ export class Tools {
     };
     void firstAccepted(spots,trial,roomOf,()=>key!==this.guess?.key).then(({spot,issues})=>{
       if (key!==this.guess?.key) return; // a newer spot is already asked
-      const why=spot?"":describeIssues(issues)||tr("tools.cannotPlace");
+      const why=spot?"":describeIssues(issues,undefined,undefined,true)||tr("tools.cannotPlace");
       this.answer={key,spot:spot??(guess.held?spots[0]:guess.spot),ok:!!spot,why};
       if (tool.peek()==="station" && (this.answer.ok!==guess.ok || this.answer.why!==guess.why || this.answer.spot!==guess.spot)) this.place();
     });

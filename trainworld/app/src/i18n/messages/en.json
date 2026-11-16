@@ -974,6 +974,7 @@
   "issues.zeroLeg": "Two points are in the same place.",
   "issues.reversal": "The track would turn back on itself.",
   "issues.radiusTooSmall": "The curve is too tight. Curves need a radius of at least {radius}.",
+  "issues.stationCurveTight": "The track curves too tightly here for a station.",
   "issues.rampTooShort": "Not enough room to change level. Each level up or down needs {ramp} of ramp.",
   "issues.levelRange": "Levels go from −3 to +3.",
   "issues.groundOverWater": "Track at ground level cannot cross water. Pick a viaduct or tunnel.",

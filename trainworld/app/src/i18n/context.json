@@ -971,6 +971,7 @@
   "issues.zeroLeg": "Refusal of a track edit.",
   "issues.reversal": "Refusal of a track edit.",
   "issues.radiusTooSmall": "Refusal of a track edit. radius: a length, \"100 m\".",
+  "issues.stationCurveTight": "Refusal of placing a station where the existing track curves tighter than the minimum radius.",
   "issues.rampTooShort": "Refusal of a track edit. ramp: a length, \"200 m\".",
   "issues.levelRange": "Refusal of a track edit: the elevation levels allowed.",
   "issues.groundOverWater": "Refusal of a track edit.",
