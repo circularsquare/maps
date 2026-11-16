@@ -242,6 +242,8 @@ def step_main(argv):
     elif os.environ.get("TW_STEP_LOG"):
         quiet_watch(os.environ["TW_STEP_LOG"], int(os.environ.get("TW_QUIET_S", QUIET_S)))
     sys.path[:0] = [str(HERE), str(REAL / "checks")]
+    if argv and any(a in ("--help", "-h") for a in argv[1:]):
+        return step_help(argv[0])  # before anything imports or runs: no step may see --help (T-2398)
     root = os.environ.get("TW_RUN_ROOT")
     if root:
         Redirect(root).install()
@@ -252,6 +254,21 @@ def step_main(argv):
            "@preview": preview}[name](args)
     if out is not None:
         print("RESULT " + json.dumps(out))
+
+
+def step_help(name):
+    """`step <name> --help` (or -h): the script's docstring, read from its source without importing
+    or running it. Whatever flags the step parses itself, it never gets to see the help flag."""
+    print(f"world_run.py step {name} [args...]")
+    if name.startswith("@"):
+        print("a runner piece (@read_extract, @groups, @preview); see its function in world_run.py")
+        return
+    path = next((p for d in (HERE, REAL / "checks") for p in [d / (name + ".py")] if p.exists()), None)
+    if path is None:
+        raise SystemExit(f"no step named {name} in pipeline/ or checks/")
+    doc = ast.get_docstring(ast.parse(path.read_text(encoding="utf-8-sig")))
+    print(f"\n{path}\n\n{doc or '(no docstring; read the script for its arguments)'}")
+    print("\nThe step was not run. Its own flags are in its source; --help is never passed on.")
 
 
 def quiet_watch(log, secs):
