@@ -341,6 +341,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework
+  - Need from Anita: A design discussion when you are ready; nothing is built before it.
+  - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
+  - Goal: An agreed design that covers those cases and can grow, then a staged plan.
+  - Other: Your notes verbatim: notes/T-3444.md
 - T-3443 [P3] {L:checks} Set up the linters T-3415 recommends (taking, 2026-11-16, agent lint)
   - Context: T-3415's report: four tsc flags (22 errors), clippy relaxed with -D warnings (two loops that never loop in transition_tests.rs), ruff F and E9 for the pipeline.
   - Goal: All three pass clean, run from one checks/lint.cmd.
@@ -959,8 +964,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 and 2 are built but not landed.
   - Goal: Design agreed, then built in stages (about 44-63 h before Exact).
   - Other: notes/T-3346.md
-- T-3348 [P3] {L:quad-track} Quad platforms
-  - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4.
+- T-3348 [P3] {L:quad-track} {after:T-3444} Quad platforms
+  - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4. Paused by you 2026-11-16 until the track rework design (T-3444) is discussed.
   - Goal: Quad stations with per-direction stops, in five stages.
   - Other: 27-39 h. notes/T-3348.md.
 - T-3320 [P3] {L:real-networks} Berlin RE5 dropped off the graph
