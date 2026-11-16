@@ -382,7 +382,7 @@ export class BlueprintBox {
       m.ok = a.ok;
       m.issues = a.issues;
       m.preview = a;
-      this.overlay.renderer.setPreview(previewStrokes(a));
+      this.overlay.renderer.setPreview(previewStrokes(a, !!world.peek()?.edges.some((x) => x.hsr && (m.nodes.includes(x.a) || m.nodes.includes(x.b)))));
       this.overlay.invalidate();
       this.place();
     });

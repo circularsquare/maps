@@ -258,7 +258,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   flips it, whatever the lock's own light shows (the button shows the switch) [T-445, T-942]. A
   segment that joins track (a loose end or other node, or the middle of a piece of track or
   blueprint) ends the run whatever keep placing says; Shift held on that click still carries on from
-  the join [T-1811]. A double click, Escape or Enter ends the run (the first click of
+  the join [T-1811]. A double click, Escape, Enter or a right click on the map (T-3441; not after a right drag, nor by touch) ends the run (the first click of
   the double places the last segment); the button stays on. A click on the start (within 6 px, or
   on its node) does the same at any later time: it ends the run, or drops a start that has no
   segment yet [T-707]; a segment never ends where it starts, so no loop is lost. To carry on later, click the loose end

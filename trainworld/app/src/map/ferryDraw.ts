@@ -20,6 +20,7 @@
 // The tool owns no map layer: the route and ports are an SVG over the map in screen pixels, like the bus
 // tool's.
 
+import { hiddenOnGlobe } from "./live";
 import { t } from "../i18n";
 import { signal } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
@@ -832,7 +833,7 @@ export class FerryDraw {
     // the whole tag is red only when all it says is a refusal; else the refusal's row is
     tag.className = "tool-tag build-tag" + (bad && rows.every((r) => r.className === "bad") ? " bad" : "");
     tag.replaceChildren(...rows);
-    tag.style.display = "";
+    tag.style.display = hiddenOnGlobe(at.lng, at.lat) ? "none" : "";
     const s = this.map.project([at.lng, at.lat]);
     tag.style.transform = `translate(${Math.round(s.x + 14)}px, ${Math.round(s.y + 12)}px)`;
   }

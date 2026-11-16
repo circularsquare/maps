@@ -175,7 +175,7 @@ export class NodeDrag {
     this.client.previewNode(d.node, d.x, d.y, (a) => {
       if (this.drag !== d) return;
       this.preview = a;
-      this.overlay.renderer.setPreview(previewStrokes(a));
+      this.overlay.renderer.setPreview(previewStrokes(a, !!world.peek()?.edges.some((x) => x.hsr && (x.a === d.node || x.b === d.node))));
       this.overlay.invalidate();
       this.place();
     });

@@ -488,14 +488,14 @@ export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Floa
   return strokes;
 }
 
-/** One stroke set from a preview of several alignments (`parts`), red when it cannot be built. */
-export function previewStrokes(a: PreviewAnswer): Strokes | null {
+/** One stroke set from a preview of several alignments (`parts`), red when it cannot be built; `hsr`: drawn as high-speed track (T-1949) */
+export function previewStrokes(a: PreviewAnswer, hsr = false): Strokes | null {
   const parts = a.parts ?? new Uint32Array([0, a.pts.length / 3]);
   const all: Strokes[] = [];
   for (let k = 0; k + 1 < parts.length; k++) {
     const pts = a.pts.subarray(parts[k] * 3, parts[k + 1] * 3);
     // the track model's crossings and junctions belong to the whole preview: given to the first part
-    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks, a.partLanes?.[k] ?? 255));
+    if (pts.length >= 6) all.push(strokesFromPreview(pts, !a.ok, undefined, false, all.length ? undefined : a.marks, a.partLanes?.[k] ?? 255, hsr));
   }
   if (!all.length) return null;
   if (all.length === 1) return all[0];

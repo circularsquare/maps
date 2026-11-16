@@ -7,8 +7,8 @@
 // at once and never changed by later clicks; with Shift held or keepPlacing on (T-445) the next
 // segment starts at its end, until a double click, Escape or Enter.
 // The first click may start on a track end or on track (a new junction, flat, T-080); a click on
-// track or a node joins it there. Backspace takes the last segment of a chain back, Escape or
-// Enter stops. On quad track a segment from a loose quad end carries both pairs on (T-423). While
+// track or a node joins it there. Backspace takes the last segment of a chain back, Escape, Enter or a
+// right click on the map (T-3441) stops. On quad track a segment from a loose quad end carries both pairs on (T-423). While
 // drawing, the worker previews the segment (one request in flight): its cost, whether it can be
 // built and why not, and the radius and speed of its curve.
 //
@@ -59,6 +59,7 @@ import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
 import { StreetSnap, type StreetClick, type StreetRoute } from "./streetSnap";
 import { TRACK_SPECS } from "../game/trackKinds";
+import { hiddenOnGlobe } from "./live";
 import { SAME_TAP_PX, touchActions, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { BusDraw } from "./busDraw";
 import { FerryDraw } from "./ferryDraw";
@@ -268,6 +269,22 @@ export class Tools {
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
     map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
+    // T-1778: the snap ring and ghost are in local units, stale once the draw anchor moves: taken again where the pointer rests
+    worldFrameEpoch.subscribe(() => {
+      const p = this.pointer;
+      if (p && (this.hover || this.hoverBeside) && !touchInput.peek()) this.move({ point: { x: p.px, y: p.py }, lngLat: { lng: p.lng, lat: p.lat } } as MapMouseEvent);
+    });
+    // T-3441: a right click on empty map is Escape (a run ends, then the tool); a right drag is the map's own
+    let rightDown: { x: number; y: number } | null = null;
+    map.getContainer().addEventListener("mousedown", (e) => { rightDown = e.button === 2 ? { x: e.clientX, y: e.clientY } : null; }, true);
+    map.on("contextmenu", (e) => {
+      if (tool.peek() !== "track" || touchInput.peek()) return;
+      e.originalEvent.preventDefault();
+      const d = rightDown;
+      if (d && Math.hypot(e.originalEvent.clientX - d.x, e.originalEvent.clientY - d.y) > 4) return;
+      if (this.start) this.reset();
+      else this.exit();
+    });
     effect(() => { buildLevel.value; autoRamp.value; highSpeed.value; tramTrack.value; quadTrack.value; singleTrack.value; designSpeed.value; flyoverSpeed.value; if (tool.peek() === "track" && this.start) this.real?.active ? this.real.again() : this.street?.active ? this.street.again() : this.requestPreview(); });
     // T-1929: the worker prices road crossings from the basemap's own zoom 14 tiles; the ghost is
     // asked again when more of them land
@@ -904,6 +921,12 @@ export class Tools {
     if (!ctl || !at) {
       host.style.display = "none";
       this.handle.style.display = "none";
+      return;
+    }
+    if (hiddenOnGlobe(at.lng, at.lat)) {
+      host.style.display = "none";
+      this.handle.style.display = "none";
+      this.tag.style.display = "none";
       return;
     }
     const W = this.overlay.cssW, H = this.overlay.cssH;

@@ -28,6 +28,7 @@
 // The tool owns no map layer: the route and stops are an SVG over the map in screen pixels, like
 // the station ghost (map/tools.ts, which holds the tool's pointer events and the shared tag).
 
+import { hiddenOnGlobe } from "./live";
 import { t } from "../i18n";
 import { signal } from "@preact/signals";
 import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
@@ -1331,7 +1332,7 @@ export class BusDraw {
     const show = (rows: HTMLElement[], bad = false) => {
       tag.className = "tool-tag build-tag" + (bad ? " bad" : "");
       tag.replaceChildren(...(this.overPath && !this.drag ? [row(t("busDraw.dragAdd")), ...rows] : rows));
-      tag.style.display = "";
+      tag.style.display = hiddenOnGlobe(at!.lng, at!.lat) ? "none" : "";
       const s = this.map.project([at!.lng, at!.lat]);
       tag.style.transform = `translate(${Math.round(s.x + 14)}px, ${Math.round(s.y + 12)}px)`;
     };
