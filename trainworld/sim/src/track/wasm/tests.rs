@@ -3656,3 +3656,37 @@ fn a_complex_rename_does_not_flag_the_station() {
     assert_eq!(a.set_station_name(n, "Again".into()), 0);
     assert_eq!(a.named_stations(), vec![n]);
 }
+
+/// T-3412: a station placed within a split's 5 m of a bare end of track goes on the end; at a junction it is still refused.
+#[test]
+fn a_station_near_a_bare_end_goes_on_the_end_and_a_junction_still_refuses() {
+    for (x, platform) in [(2.0, 200u16), (2998.0, 200), (3.0, 60), (2997.0, 100)] {
+        let mut a = api();
+        let mut ends = free_at(0.0, 0.0, 0);
+        ends.extend(free_at(3000.0, 0.0, 0));
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let e = edge_under(&a, 1500.0, 0.0);
+        let before = a.w.net.edge_count();
+        assert_eq!(a.add_station(2, e, x, 0.0, platform, "End".into()), 0, "at {x}: {}", a.issues());
+        assert_eq!(a.w.net.edge_count(), before, "at {x}: no split, the end node is the station");
+        let n = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && a.w.net.node_platform[n as usize] > 0).expect("a station");
+        assert_eq!(a.w.net.node_ports[n as usize].n, 1, "at {x}: on the bare end");
+        assert_eq!(a.undo(), 0);
+        assert!(!(0..a.w.net.node_count() as u32).any(|n| a.w.net.node_ok(n) && a.w.net.node_platform[n as usize] > 0));
+    }
+    // a junction: three pieces meet, a station within 5 m of it is refused as before
+    let mut a = api();
+    let mut ends = free_at(0.0, 0.0, 0);
+    ends.extend(free_at(1000.0, 0.0, 0));
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let j = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - 1000.0).abs() < 1.0 && a.w.net.node_y[n as usize].abs() < 1.0).unwrap();
+    for to in [(2000.0, 0.0), (1000.0, 1000.0)] {
+        let mut e2 = vec![1.0, j as f64, 0.0, 0.0, 0.0];
+        e2.extend(free_at(to.0, to.1, 0));
+        assert_eq!(a.add_route(&e2, &[], 2, false), 0, "{}", a.issues());
+    }
+    assert_eq!(a.w.net.node_ports[j as usize].n, 3);
+    let e = edge_under(&a, 500.0, 0.0);
+    assert_ne!(a.add_station(2, e, 998.0, 0.0, 100, "J".into()), 0);
+    assert!(a.issue_kinds().contains("SplitPoint"), "{}", a.issue_kinds());
+}

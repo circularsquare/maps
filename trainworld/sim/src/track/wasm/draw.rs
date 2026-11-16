@@ -184,9 +184,9 @@ impl TrackApi {
             verts.push(p);
         }
         verts.push(Pi::new(rb.x, rb.y, 0.0, rb.level));
-        // T-817: the corners made here, not the clicked ones (a real line's, fitted at R_CAP); T-3121:
-        // under 160 the clicked ones too, so every curve follows the target
-        let made: Vec<usize> = if cap < R_CAP { (1..verts.len() - 1).collect() } else { (1..first_click).chain(lead_b.map(|_| verts.len() - 2)).collect() };
+        // T-817: the corners made here; T-3121: under 160 the clicked ones too, so every curve follows the
+        // target; T-3421: and over 160, so a clicked corner keeps the target's speed
+        let made: Vec<usize> = (1..verts.len() - 1).collect();
         design_radii(&mut verts, &made, cap, scaled);
         let mut ops = ra.ops.clone();
         ops.extend(rb.ops.clone());
@@ -1093,8 +1093,11 @@ impl TrackApi {
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
                 continue;
             }
-            let (more, s) = self.unjoin_near(e, s, st.platform as f64 / 2.0 + 2.0).unwrap_or((vec![], s));
-            // within a split's reach of a joint that stays (unlike pieces, T-1964), on the joint
+            // T-3412: within a split's reach of a bare end the platform runs back from it, so the joints
+            // within the whole platform go first, as for a station placed on that end
+            let reach = if self.bare_end_near(e, s) { st.platform as f64 + 2.0 } else { st.platform as f64 / 2.0 + 2.0 };
+            let (more, s) = self.unjoin_near(e, s, reach).unwrap_or((vec![], s));
+            // within a split's reach of a joint that stays (unlike pieces, T-1964), or of a bare end (T-3412), on it
             if let Some(n) = self.joint_at(e, &more, s) {
                 ops.extend(more);
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
@@ -1163,7 +1166,7 @@ impl TrackApi {
 
     /// The joint a station at chainage `s` of edge `e` goes on (T-1964): one within a split's 5 m
     /// of the edge's end, after `joins` (`unjoin_near`'s ops, which may have made `e` longer), where
-    /// two pieces meet that could not be joined.
+    /// two pieces meet that could not be joined, or the track ends (T-3412; a junction stays refused).
     fn joint_at(&self, e: u32, joins: &[Op], s: f64) -> Option<u32> {
         let net = &self.w.net;
         let (mut a, mut b, mut len) = (net.edge_a[e as usize], net.edge_b[e as usize], net.edge_len[e as usize]);
@@ -1176,7 +1179,16 @@ impl TrackApi {
         }
         let n = if s < 5.0 { a } else if s > len - 5.0 { b } else { return None };
         let p = &net.node_ports[n as usize];
-        (p.n == 2 && net.node_platform[n as usize] == 0 && p.side[0] != p.side[1]).then_some(n)
+        let bare = p.n == 1 && a != b;
+        ((p.n == 2 && p.side[0] != p.side[1]) || bare).then_some(n).filter(|&n| net.node_platform[n as usize] == 0)
+    }
+
+    /// T-3412: chainage `s` of edge `e` is within a split's 5 m of a bare end of track (no other piece, no station).
+    fn bare_end_near(&self, e: u32, s: f64) -> bool {
+        let net = &self.w.net;
+        let (a, b, len) = (net.edge_a[e as usize], net.edge_b[e as usize], net.edge_len[e as usize]);
+        let n = if s < 5.0 { a } else if s > len - 5.0 { b } else { return false };
+        a != b && net.node_ports[n as usize].n == 1 && net.node_platform[n as usize] == 0
     }
 
     /// The track beside edge `e` at chainage `s` on quad track (T-255): another edge running

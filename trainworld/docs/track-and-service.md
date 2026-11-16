@@ -53,7 +53,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   7,183 at 320; any speed from 20 to 320 km/h (T-3121), so 253 m at 60 and 29 m at 20, never under
   the track kind's smallest radius (`design_radius`, `TrackApi::set_design_speed`, `DESIGN_MIN_KMH`).
   It also sizes the lead-in curves of a drawn segment (`lead_in_capped`). Above 160, a corner the
-  tool makes whose curve comes out wider than 1,796 m gets that radius set, since an auto radius is
+  tool makes or the player clicks whose curve comes out wider than 1,796 m gets that radius set (T-3421), since an auto radius is
   always capped at 1,796 m; under 160, every auto corner of the route, clicked ones too, gets the
   design radius set where its curve would come out wider (T-3121: a low target lays tight curves),
   and so do the corners a reshape or node drag makes. So drawn track keeps its shape and existing
@@ -99,7 +99,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   no charge and no refund, and lines, trains, levels and curve radii carry over unchanged. Joints that cannot be joined
   (a different track count, high speed beside ordinary, constructed beside blueprint, blueprint switched on beside off) stay, and a platform that
   reaches one is refused as "the end of a piece of track"; a station clicked within 5 m of one
-  goes on the joint itself (T-1964). A platform may not reach a crossing
+  goes on the joint itself (T-1964), and within 5 m of a bare end of track on that end, its platform
+  running back from it (T-3412); a junction stays refused. A platform may not reach a crossing
   with track on the same level (a flat crossing, 6.2), within 1 m of its ends, nor lie on a ramp
   (a split on a ramp is refused as the platform's ramp).
 - **Reshaping blueprint track** (T-064, T-092, T-071): a selected stretch of blueprint track shows its PIs
