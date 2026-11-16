@@ -417,10 +417,13 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   };
 }
 
+/** What a route's totals and terms read from its period; the market's has no transfer fare. */
+type RouteCosts = Pick<TripPeriod, "pairs" | "baseFarePerceived" | "minPerUsd"> & { xferFarePerceived?: number };
+
 /** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
  * and walking between stations, the changes, and the fare in dollars (base fare and transfer fares
  * included; `xferUsd` the transfer fares alone). */
-export function routeTotals(t: TripPeriod, r: TripRoute) {
+export function routeTotals(t: RouteCosts, r: TripRoute) {
   const pair = t.pairs[r.pair];
   const driveMin = pair?.accessRide ? pair.accessMin : 0;
   const walkM = pair ? (pair.accessRide ? 0 : pair.accessM) + pair.egressM : 0;
@@ -460,7 +463,7 @@ export interface CostTerm {
  * drive to the station), the waits, the rides with their crowding, the walks between stations and
  * the fare. A change costs its wait, its walk and a fixed few minutes (T-717); the base fare is in
  * the fare. */
-export function routeTerms(t: TripPeriod, r: TripRoute): CostTerm[] {
+export function routeTerms(t: RouteCosts, r: TripRoute): CostTerm[] {
   const pair = t.pairs[r.pair];
   const tot = routeTotals(t, r);
   const out: CostTerm[] = [];

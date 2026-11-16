@@ -15,7 +15,7 @@ import { moneyState } from "../../game/money";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { eachCorridor, intercityDemand, intercityPlaceName } from "../../game/demand";
-import { peopleOf, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
+import { peopleOf, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -51,6 +51,24 @@ function carEquation(c: CarCost): string {
     ]),
   ];
   return `${equation(terms, c.total)}\n${tr("marketTrip.dollarWeight", { amount: smallMoney(1), w: num1(c.w) })}`;
+}
+
+/** The train's effective time as an equation (T-3404): the main route's terms in the order of the rows, with
+ * the walks as the felt minutes the market knows them by, and the model's figure, which pools every route
+ * the riders use, as the last term. */
+function trainEquation(t: MarketPeriod, r: TripRoute): string {
+  const felt = { ...t, pairs: t.pairs.map((p) => ({ ...p, accessMin: p.accessPerceived, egressMin: p.egressPerceived })) };
+  const terms: Term[] = routeTerms(felt, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
+    label: termLabel(x.id),
+    real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
+    weight: x.weight,
+    perceived: x.perceived,
+    ...(x.unit === "usd" ? { usd: true } : {}),
+  }));
+  const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
+  // i18n-ignore: term id
+  if (Math.abs(rest) >= 0.05) terms.push({ label: termLabel("choice of routes"), real: "", weight: 1, perceived: rest });
+  return equation(terms, t.railPerceived) + (Math.abs(rest) >= 0.05 ? "\n" + tr("tripInspector.choiceOfRoutes") : "");
 }
 
 /** By car: the drive, its running costs, parking, any crossing, and the effective time. `parts`
@@ -465,7 +483,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               </li>
             )}
             {Number.isFinite(t.railPerceived) && (
-              <li>
+              <li data-tip={trainEquation(t, main)}>
                 <span class="grow">{tr("tripText.effectiveTime")}</span>
                 <span class="val">{minText(t.railPerceived)}</span>
               </li>

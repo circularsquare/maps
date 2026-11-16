@@ -610,7 +610,9 @@ body.resizing, body.resizing * { user-select: none; }
 /* T-1812: the panel's title row stays at the top of the scrolled panel; it covers the panel's padding
    (12 px above, 14 px at the sides) and gives back the 6 px it takes below, so nothing moves */
 #inspector > .title:first-child { position: sticky; top: -12px; z-index: 3; background: var(--bg); margin: -12px -14px -6px; padding: 12px 14px 6px; }
-.title .name { font-size: 18px; font-weight: 700; flex: 1; min-width: 0; }
+.title .name { font-size: 18px; font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* T-3416: a very long group name makes a long bullet; it shrinks (ellipsis) so the buttons stay in the panel */
+.title > .badge-edit:has(.group-pill) { flex: 0 1 auto; min-width: 0; max-width: 96px; }
 .name-edit { flex: 1; min-width: 0; font: inherit; font-size: 18px; font-weight: 700; color: var(--text);
              background: var(--bg); border: 1px solid var(--accent); border-radius: 0; padding: 0 4px; height: 30px; }
 .sub { margin: 2px 0 0 40px; }
@@ -1858,7 +1860,7 @@ button.save-add:hover { color: var(--text); }
 .trouble-btn { grid-auto-flow: column; gap: 5px; color: var(--warn); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .trouble-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .trouble-fig.bad { color: var(--bad); }
-.rows.pick.trouble-list { width: 300px; max-width: 100%; max-height: min(260px, 50vh); overflow-y: auto; margin: 0 0 -1px;
+.rows.pick.trouble-list { width: 300px; max-width: 100%; max-height: min(260px, 50vh); overflow-y: auto; margin: 0 0 4px;
   padding: 2px 6px; border: 1px solid var(--rule); background: var(--bg); font-size: 12px; }
 .rows.pick.trouble-list > li { margin: 0 -6px; }
 .trouble-list .val { display: inline-flex; align-items: center; }

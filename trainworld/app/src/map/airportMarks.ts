@@ -26,6 +26,8 @@ interface Airport {
   train: number;
   walk: number;
   drive: number;
+  /** trips no way serves (T-2288) */
+  none: number;
 }
 
 /** Terminal cells this close (m) share a badge; Heathrow's T5 and T2/3 are further apart and get one each. */
@@ -50,24 +52,25 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
 
   /** Terminals' cells into airports: greedy, the busiest cell first. An airport sits at its busiest
    * cell, inside the biggest bubble at every zoom (the legs' mean can fall between terminals). */
-  const cluster = (lngs: number[], lats: number[], t: number[], w: number[], d: number[]): Airport[] => {
-    const order = lngs.map((_, i) => i).sort((a, b) => t[b] + w[b] + d[b] - (t[a] + w[a] + d[a]));
+  const cluster = (lngs: number[], lats: number[], t: number[], w: number[], d: number[], n: number[]): Airport[] => {
+    const order = lngs.map((_, i) => i).sort((a, b) => t[b] + w[b] + d[b] + n[b] - (t[a] + w[a] + d[a] + n[a]));
     const used = new Uint8Array(lngs.length);
     const out: Airport[] = [];
     for (const i of order) {
       if (used[i]) continue;
       const kx = M_PER_DEG * Math.cos((lats[i] * Math.PI) / 180);
-      let sw = 0, tt = 0, ww = 0, dd = 0;
+      let sw = 0, tt = 0, ww = 0, dd = 0, nn = 0;
       for (const j of order) {
         if (used[j] || Math.hypot((lngs[j] - lngs[i]) * kx, (lats[j] - lats[i]) * M_PER_DEG_LAT) > JOIN_M) continue;
         used[j] = 1;
-        const all = t[j] + w[j] + d[j];
+        const all = t[j] + w[j] + d[j] + n[j];
         sw += all;
         tt += t[j];
         ww += w[j];
         dd += d[j];
+        nn += n[j];
       }
-      if (sw >= MIN_LEGS) out.push({ lng: lngs[i], lat: lats[i], train: tt, walk: ww, drive: dd });
+      if (sw >= MIN_LEGS) out.push({ lng: lngs[i], lat: lats[i], train: tt, walk: ww, drive: dd, none: nn });
     }
     return out;
   };
@@ -84,18 +87,19 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
       return;
     }
     const frame = getWorldFrame();
-    const lngs: number[] = [], lats: number[] = [], t: number[] = [], w: number[] = [], d: number[] = [];
+    const lngs: number[] = [], lats: number[] = [], t: number[] = [], w: number[] = [], d: number[] = [], n: number[] = [];
     for (let c = 0; c < cells.n; c++) {
-      if (modes.workRail[c] + modes.workWalk[c] + modes.workDrive[c] <= 0) continue;
+      if (modes.workRail[c] + modes.workWalk[c] + modes.workDrive[c] + modes.workNone[c] <= 0) continue;
       const [lng, lat] = frame.toLonLat(cells.xy[c * 2], cells.xy[c * 2 + 1]);
       lngs.push(lng);
       lats.push(lat);
       t.push(modes.workRail[c]);
       w.push(modes.workWalk[c]);
       d.push(modes.workDrive[c]);
+      n.push(modes.workNone[c]);
     }
     tries.delete(key);
-    known.set(key, { at, airports: cluster(lngs, lats, t, w, d) });
+    known.set(key, { at, airports: cluster(lngs, lats, t, w, d, n) });
     refresh();
     if (demandView.peek() !== at) ensure();
   };
@@ -178,10 +182,10 @@ export function startAirportMarks(map: MlMap, overlay: Overlay) {
     for (const a of shown) {
       const m = map.project([a.lng, a.lat]);
       if (Math.hypot(m.x - at.x, m.y - at.y) > HOVER_PX || hiddenOnGlobe(a.lng, a.lat)) continue;
-      const all = a.train + a.walk + a.drive;
+      const all = a.train + a.walk + a.drive + a.none;
       return [
         t("airportMarks.hover", { trips: count(all), when: shownDayPhrase.peek() }),
-        modeBar(a.train, a.walk, a.drive),
+        modeBar(a.train, a.walk, a.drive, a.none),
       ];
     }
     return null;
