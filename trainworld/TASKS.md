@@ -341,6 +341,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (taking, 2026-11-16, agent b4)
+  - Context: You, 2026-11-16: "if i inspect elemetn it shows some "unable to load glyph" warnings and failed to load resource which also seems font related".
+  - Goal: No glyph or font load errors in the console on a normal load; missing glyph ranges served or not requested.
 - T-3435 [P3] {L:buses} {waits:Anita} Long-distance ferries
   - Need from Anita: A Fast ferry kind per line (65 km/h, about US$25M a boat, US$100 a boat-km), after T-2216? Recommended yes, ferry fan unchanged.
   - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
