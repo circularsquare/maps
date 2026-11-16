@@ -115,10 +115,15 @@ impl TrackApi {
     }
 
     /// A one-track station can go on node `node`: through track with the same tracks both sides
-    /// (one-way single track included: its natural station, one platform, players asked 2026-11-13).
+    /// (one-way single track included: its natural station, one platform, players asked 2026-11-13), or
+    /// the end of single track.
     pub(super) fn one_fits(&self, node: u32) -> bool {
         let net = &self.w.net;
         let p = &net.node_ports[node as usize];
+        // the end of single track is a one-platform stop too (T-3411)
+        if p.n == 1 {
+            return net.edge_tracks[(p.end[0] >> 1) as usize] == 1;
+        }
         if p.n != 2 || p.side[0] == p.side[1] {
             return false;
         }

@@ -521,9 +521,9 @@ export function previewStrokes(a: PreviewAnswer): Strokes | null {
 }
 
 /** A crossover's two diagonals as the placement preview (T-338), red when it cannot be built. */
-export function strokesFromParts(parts: Float32Array[], bad: boolean, placement = true): Strokes {
+export function strokesFromParts(parts: Float32Array[], bad: boolean, placement = true, lane = 255): Strokes {
   const b = new StrokeBuilder();
-  for (const pts of parts) b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (placement ? F_PLACEMENT : 0) | (bad ? F_BAD : 0));
+  for (const pts of parts) b.add(pts, TRACK, 0xffffffff, F_BLUEPRINT | (placement ? F_PLACEMENT : 0) | (bad ? F_BAD : 0), false, 0, undefined, lane);
   return b.build();
 }
 
@@ -717,6 +717,10 @@ function shiftedEnds(pts: Float32Array, shift: LegShift): { pts: Float32Array; s
   // how far off its line the end `end` holds the point (x, y), `d` along from that end
   const need = (end: number, x: number, y: number, d: number) => {
     if (!shift.sign[end] || d > reach) return 0;
+    // a piece shorter than the reach has its far end on the centre line too, or it jogs where the next piece meets it
+    // (T-3379): the hold fades out over its far half
+    const far = len < reach ? Math.max(0, Math.min(1, (d / len - 0.5) / 0.5)) : 0;
+    const kept = 1 - far * far * (3 - 2 * far);
     let m = 0;
     for (const o of shift.near[end]) m = Math.max(m, o.double ? h - distTo(o.pts, x, y) : h - distTo(o.pts, x, y) / 2);
     // fades out short of the reach, should the tracks still be close there
@@ -724,7 +728,7 @@ function shiftedEnds(pts: Float32Array, shift: LegShift): { pts: Float32Array; s
     // T-3191: and never back to the centre line faster than this, so a leg leaving just before the double ends (or at
     // its end) carries on from its track and eases off its line, not bends in the moment the other track is gone
     const e = Math.max(0, Math.min(1, d / (EASE_M * kk)));
-    return Math.max(Math.max(0, m) * t * t * (3 - 2 * t), h * (1 - e * e * (3 - 2 * e)));
+    return Math.max(Math.max(0, m) * t * t * (3 - 2 * t), h * (1 - e * e * (3 - 2 * e))) * kept;
   };
   const out: number[] = [], seg: number[] = [];
   const put = (k: number, f: number) => {

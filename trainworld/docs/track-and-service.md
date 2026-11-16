@@ -232,8 +232,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   edit for each run it touches, and on load): the single-track pieces through nodes where only two of
   them meet. Each run end votes: a join gives the way trains keep to on that track (the right track
   looking out along the piece carries trains away from the node with right-hand running), a bare track
-  end says nothing, and anything else says both ways (a station, double track or a crossover end to
-  end, a junction end with no join). A station anywhere on the run also says both. The run runs one way
+  end says nothing, and anything else says both ways (a station at a bare end, double track or a crossover end to
+  end, a junction end with no join). A station inside the run, or at a join that counts, says nothing (T-3386). The run runs one way
   where its join votes agree (at least one) and nothing says both; otherwise both ways, so a branch to
   a terminus runs both ways and a hand-laid flyover's legs, joined the way their trains come, each one
   way. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
@@ -609,7 +609,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   stop where trains cannot pass: drawn as plain single track (no T-3212 split) and the single-track
   section runs on through it (6.2); on one-way single track it is the one platform that track's
   station naturally is (players, 2026-11-13). Placed only on track running through, the same tracks
-  both sides (`OneTrackHere`). Priced as a single-track station; switching a built one to both
+  both sides, or at the end of single track (`OneTrackHere`; T-3411). Priced as a single-track station; switching a built one to both
   tracks pays the difference (the button's hover says "Costs $X", or "Free"), to one track is free with nothing back; a blueprint one switches free and
   undoes; a built station's switch plays the upgrade sound. A one-track station has no terminal and no passing tracks (they go when it switches). Single
   track rebuilt double makes it an ordinary station; double rebuilt single keeps it one-track (no

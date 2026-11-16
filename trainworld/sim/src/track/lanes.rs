@@ -258,11 +258,9 @@ impl Network {
     /// What the node at run end `c` says about the run's way.
     fn end_vote(&self, c: u32) -> Vote {
         let n = self.end_node(c >> 1, c & 1) as usize;
-        if self.node_platform[n] > 0 {
-            return Vote::Both;
-        }
         match self.node_ports[n].n {
-            1 => Vote::None,
+            // a stop at a bare end turns trains round (T-3386: a station inside a run does not decide its way)
+            1 => if self.node_platform[n] > 0 { Vote::Both } else { Vote::None },
             // double track or a crossover on: the run meets track that runs both ways, unless it
             // continues one track of the double (T-3190)
             _ => self.join_away(c).map_or(Vote::Both, Vote::Joined),
@@ -270,11 +268,11 @@ impl Network {
     }
 
     /// The run of single track through `e`: pieces (`in_run`) through nodes where just two of them
-    /// meet, as (piece, walked a to b) from one end to the other; whether a station is inside it;
+    /// meet, as (piece, walked a to b) from one end to the other;
     /// whether it closes on itself.
-    fn run_through(&self, e: u32) -> (Vec<(u32, bool)>, bool, bool) {
+    fn run_through(&self, e: u32) -> (Vec<(u32, bool)>, bool) {
         let (mut ahead, mut behind) = (vec![(e, true)], vec![]);
-        let (mut station, mut closed) = (false, false);
+        let mut closed = false;
         for back in [false, true] {
             let (mut cur, mut at_b) = (e, !back);
             loop {
@@ -285,7 +283,6 @@ impl Network {
                 if !self.in_run(o >> 1) {
                     break;
                 }
-                station |= self.node_platform[n] > 0;
                 if o >> 1 == e {
                     closed = true;
                     break;
@@ -301,13 +298,14 @@ impl Network {
         }
         behind.reverse();
         behind.extend(ahead);
-        (behind, station, closed)
+        (behind, closed)
     }
 
     /// Each run of single track with a piece in `edges` or an end at `nodes` takes its way again:
     /// one way where every join at its ends sends trains that way (at least one) and nothing says
-    /// both; both ways where a station is on it, it meets other track that runs both ways (a taper,
-    /// a junction with no join, a crossover) or its joins disagree. A bare end says nothing. Returns
+    /// both; both ways where it meets other track that runs both ways (a taper, a junction with no
+    /// join, a crossover), ends at a station, or its joins disagree (T-3386: a station inside the run, or
+    /// at a join, leaves its way). A bare end says nothing. Returns
     /// the pieces whose way changed.
     pub(super) fn derive_ways(&mut self, edges: &[u32], nodes: &[u32]) -> Vec<u32> {
         let mut seeds = vec![];
@@ -331,8 +329,8 @@ impl Network {
             if seen.contains(&e) {
                 continue;
             }
-            let (run, station, closed) = self.run_through(e);
-            let mut both = station || closed;
+            let (run, closed) = self.run_through(e);
+            let mut both = closed;
             let mut way = 0i8;
             if !closed {
                 let (e0, f0) = run[0];

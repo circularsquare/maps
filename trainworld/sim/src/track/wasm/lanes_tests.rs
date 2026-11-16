@@ -475,6 +475,26 @@ fn t3190_single_track_from_a_loose_end_joins_one_track() {
     }
 }
 
+/// T-3386: a station inside single track that runs one way by its join splits it into two pieces, both still
+/// running that way.
+#[test]
+fn t3386_a_station_inside_the_run_keeps_its_way() {
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0);
+        let end = node_near(&a, 6000.0, 0.0);
+        a.set_route_join(&[6000.0, 2.0, f64::NAN, f64::NAN]);
+        assert_eq!(a.add_route(&ends(at_node(&a, end), free(8000.0, 0.0)), &[], 1, false), 0, "{}", a.issues());
+        let s = singles(&a)[0];
+        let before = a.w.net.edge_way(s);
+        assert_ne!(before, 0, "one way by its join");
+        assert_eq!(a.add_station(2, s, 7000.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
+        let ways: Vec<u8> = singles(&a).into_iter().map(|e| a.w.net.edge_way(e)).collect();
+        assert_eq!(ways.len(), 2);
+        assert!(ways.iter().all(|&w| w != 0), "right hand {right_hand}: {ways:?}");
+    }
+}
+
 /// T-3171: double track branching off single track makes no flat badge and the single trunk keeps running both
 /// ways (the double has both directions), as a single branch off double track makes none; no joins either way.
 #[test]

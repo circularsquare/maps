@@ -54,7 +54,7 @@ const stationsNow = (): ReadonlyMap<number, StationInput> => (world.value ? stat
  * delay spent following slower trains on shared track (kind 11, T-1924); `waits`: standing at
  * passing tracks for faster trains (kind 13, T-2231), whose places come from `lineWaits`; the rest
  * is waiting at busy track. */
-interface Spot { text: string; s: number }
+interface Spot { text: string; s: number; single?: boolean }
 interface Spots { spots: Spot[]; behindSpots: Spot[]; behind: number; waits: number }
 function spotsFrom(d: Float64Array, v: Vehicle): Spots {
   const busy: Spot[] = [], following: Spot[] = [];
@@ -73,11 +73,13 @@ function spotsFrom(d: Float64Array, v: Vehicle): Spots {
         ? ahead ? tr("lineInspector.behindLine", { line: ahead, vehicle: v }) : tr("lineInspector.behindSlower", { vehicle: v })
         : (kind === 2 || kind === 3 || kind === 6 || kind === 8 || kind === 9 || kind === 10 || kind === 14) && at
           ? tr("lineInspector.spotAt", { name: at })
-          : tr("lineInspector.spotPlace", { kind: kind === 4 ? "junction" : kind === 5 ? "crossing" : kind === 12 ? "merge" : "track", hasNear: !!near, near: near ?? "" });
+          : kind === 1
+            ? tr("lineInspector.spotSingle", { hasNear: !!near, near: near ?? "" })
+            : tr("lineInspector.spotPlace", { kind: kind === 4 ? "junction" : kind === 5 ? "crossing" : kind === 12 ? "merge" : "track", hasNear: !!near, near: near ?? "" });
     const out = kind === 11 ? following : busy;
     const same = out.find((o) => o.text === text); // both directions, or two stretches by one station
     if (same) same.s += s;
-    else out.push({ text, s });
+    else out.push({ text, s, single: kind === 1 });
   }
   return { spots: busy, behindSpots: following, behind, waits };
 }
@@ -212,7 +214,7 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
         {turn > 0 && <Row label={tr(st.loop ? "lineInspector.turnEnd" : "lineInspector.turnEnds")}>{duration(turn)}</Row>}
         {reversing > 0 && <Row label={tr("lineInspector.reversing")}>{duration(reversing)}</Row>}
       </ul>
-      {delayRow(tr("lineInspector.busyTrack"), waiting, busy)}
+      {delayRow(tr(busy.reduce((n, p) => n + (p.single ? p.s : -p.s), 0) > 0 ? "lineInspector.busySingleTrack" : "lineInspector.busyTrack"), waiting, busy)}
       {delayRow(tr("lineInspector.behindSlower", { vehicle: vehicleOf(st) }), behind, behindSpots)}
       {delayRow(tr("lineInspector.fasterTrains", { vehicle: vehicleOf(st) }), forFaster, waitSpots)}
     </>

@@ -287,3 +287,24 @@ fn a_one_platform_station_pays_six_tenths_upkeep() {
     assert!((up(&two, mid2) - UG * ECONOMY / 1e6).abs() < 1e-9);
     assert!((up(&one, mid1) - SHARE * up(&two, mid2)).abs() < 1e-9);
 }
+
+/// T-3411: the end of single track takes a one-track station, as a through stop on it does; the end of double
+/// track does not.
+#[test]
+fn at_the_end_of_single_track() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 1, false), 0, "{}", a.issues());
+    let end = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && a.w.net.node_x[n as usize] == 0.0).unwrap();
+    a.set_station_one(&[]);
+    assert_eq!(a.add_station(1, end, 0.0, 0.0, 200, "End".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_station_tracks(end, true), 0, "{}", a.issue_kinds());
+    assert_eq!(a.station_one(end), 2);
+    assert_eq!(a.set_station_tracks(end, false), 0, "{}", a.issue_kinds());
+    assert_eq!(a.station_one(end), 0);
+    let mut d = TrackApi::new(-73.985, 40.758, true);
+    assert_eq!(d.add_route(&ends, &[], 2, false), 0, "{}", d.issues());
+    let end = (0..d.w.net.node_count() as u32).find(|&n| d.w.net.node_ok(n) && d.w.net.node_x[n as usize] == 0.0).unwrap();
+    assert_eq!(d.add_station(1, end, 0.0, 0.0, 200, "End".into()), 0, "{}", d.issues());
+    assert_ne!(d.set_station_tracks(end, true), 0, "double track's end stays refused");
+}

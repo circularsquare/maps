@@ -1614,7 +1614,7 @@ export class Tools {
         const [ka, kb] = stationTrim(h.edge), len = world.peek()?.edges.find((x) => x.id === h.edge)?.lengthM ?? 0;
         if ((ka || kb) && len > 0) parts[0] = trimPolyline(parts[0], ka / len, kb / len);
       }
-      this.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false) : null);
+      this.overlay.renderer.setPreview(parts.length ? strokesFromParts(parts, true, false, h?.kind === "track" && world.peek()?.edges.find((x) => x.id === h.edge)?.tracks === 1 ? 0 : 255) : null);
       this.overlay.invalidate();
     }
     this.map.getCanvas().style.cursor = h ? "pointer" : "crosshair";
