@@ -624,11 +624,6 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Goal: A rule for untagged ferries over 50 km, or a decision to leave it.
   - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
-- T-2396 [P3] {L:small-fixes} {waits:Anita} Dock tab area keeps one height
-  - Need from Anita: Shrink the tab area to its content on the Build tab only, so the inspector gets the room (its top edge then jumps only entering or leaving Build)? Recommended yes.
-  - Context: After T-2282, the shorter Build tab leaves the inspector no more room.
-  - Goal: The inspector gets the room the Build tab leaves.
-  - Other: notes/T-2267.md section 3.5
 Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in notes/todo-2026-11-03h.md; briefs quote it word for word):
 - T-2280 [P3] {L:help-tutorial} {after:tutorial playtest} More tutorial hovers
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.

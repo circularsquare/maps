@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2396 [P3] {L:small-fixes} Dock tab area keeps one height (2026-11-16): closed on Anita's word: the dock line stays where she drags it, no automatic jumping ("lets leave the line where it is").
 - T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (2026-11-16): the world map labels Nunavut in Canadian syllabics, which no shipped font range had; nine Noto Sans ranges added, so the start screen loads clean. notes/T-3442.md.
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails (2026-11-16): every size cap answers "too big" and the caps are doubled; server deployed 2026-11-16 15:34 UTC (372a8ce) on Anita's word; players get the game side with the next publish. notes/T-3440.md.
 - T-3402 [P3] {L:community} Community page switcher on all views (2026-11-16): the community pager shows on all views with a total; server deployed 2026-11-16 15:34 UTC (shonei-server 4b8bb1d) on Anita's word. notes/T-3402.md.
