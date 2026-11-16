@@ -352,6 +352,24 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3429 [P2] {L:single-track} Line creator refuses the next station after a one-way single station (taking, 2026-11-16, agent bugs3)
+  - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
+  - Goal: Reproduce; the next station is accepted where the track allows it.
+- T-3430 [P2] {L:map-look} Lines vanish past a zoom level on a Chromebook (taking, 2026-11-16, agent bugs3)
+  - Context: Two player reports (board group g039 "Tracks vanish when zoomed in"), one on an Acer R753T Chromebook. Other low-end devices may be affected.
+  - Goal: Find the zoom-dependent drawing limit that drops lines on weak GPUs and fix it, or say what it needs.
+- T-3431 [P2] {L:buses} Seattle to Victoria ferry gets no riders and shows no route
+  - Context: Player report 2026-11-16 (board group "Ferry has no riders and no route"). T-3400 (no boats at low demand) may explain part of it.
+  - Goal: Reproduce; the ferry runs and carries the trips a sensible ferry would.
+- T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia
+  - Context: Player report 2026-11-16 (board group g004): two lines built between them, the trip explorer finds no inter-city trip. Needs a repro first. May share a cause with T-3426 (feeders).
+  - Goal: Reproduce; inter-city trips between the two show up on a built line.
+- T-3433 [P3] {L:airports} Kobe Airport demand is offset from the terminal
+  - Context: Player report 2026-11-16. Reach: few.
+  - Goal: The airport's trips start at the terminal.
+- T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
+  - Context: Player report 2026-11-16. Reach: few.
+  - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
 - T-3426 [P2] {L:route-choice} Long-distance trips ignore feeders (taking, 2026-11-16, agent feeders)
   - Context: Your scratch pad 2026-11-16: "some people have noted that long distance train use doesn't actually seem to depend on feeders anymore. i've noticed this too which is kinda concerning, im pretty sure this used to not be the case. why is this?"
   - Goal: Find why long-distance rail use no longer depends on feeder lines, and whether it is a bug or a rule change; fix a bug, take a rule to you.
