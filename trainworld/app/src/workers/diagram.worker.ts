@@ -206,7 +206,7 @@ function maskOf(packs: string, id: string): Promise<WaterMask | null> {
       const row = head.arrays.find((a: { name: string }) => a.name === "water_row"), xs = head.arrays.find((a: { name: string }) => a.name === "water_x");
       if (!head.water || !row || !xs) return null;
       const start = row.offset, end = xs.offset + xs.count * 2;
-      const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` } });
+      const res = await fetch(url + ".bin", { headers: { Range: `bytes=${start}-${end - 1}` }, cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${url}.bin`);
       const buf = await res.arrayBuffer(), base = res.status === 206 ? start : 0, w = head.water;
       return {

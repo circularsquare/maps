@@ -14,7 +14,8 @@ import type { PiInput, RouteEnd } from "../workers/protocol";
 import type { FromRouter, ToRouter } from "../workers/realRoute.worker";
 import type { Level } from "../game/types";
 import { designSpeed, singleTrack, tramTrack } from "../game/ui";
-import { dataUrl, PUBLISHED } from "../game/dataBase";
+import { dataUrl } from "../game/dataBase";
+import { regionsJson } from "./regionsJson";
 import type { Overlay } from "./overlay";
 import { strokesFromPreview } from "./network";
 import { realReach } from "./realNetwork";
@@ -117,7 +118,8 @@ export class RealSnap {
     if (!this.worker) {
       this.worker = new Worker(new URL("../workers/realRoute.worker.ts", import.meta.url), { type: "module" });
       this.worker.onmessage = (e: MessageEvent<FromRouter>) => this.answer(e.data);
-      this.post({ kind: "init", page: document.baseURI, graphs: dataUrl("realgraph/"), published: PUBLISHED });
+      this.post({ kind: "init", graphs: dataUrl("realgraph/") });
+      void regionsJson().then((j) => this.worker?.postMessage({ kind: "regions", regions: j?.regions ?? null } satisfies ToRouter));
     }
     return this.worker;
   }

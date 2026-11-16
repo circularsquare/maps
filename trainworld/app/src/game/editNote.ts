@@ -36,8 +36,10 @@ export const NOTE_COUNT_MS = 900;
 /** Wall ms after the last edit, or the last moment demand was updating, before an edit that started
  * no solve (a refused one, a blueprint) is settled with the figures as they are (lineFigures' wait). */
 const NO_SOLVE_MS = 8000;
-/** Wall ms after which edits demand never settled are forgotten. */
+/** Wall ms of demand doing nothing after which edits it never settled are forgotten (a solve is working, the clock restarts: Tokyo's takes about 6 minutes). */
 const GIVE_UP_MS = 5 * 60_000;
+/** Wall ms after which they are forgotten even while demand works */
+const GIVE_UP_MAX_MS = 20 * 60_000;
 /** T-2682: the longest wall ms edits wait for the zone in view's fine figures (`refiningZone`) */
 const REFINE_WAIT_MS = 60_000;
 /** T-2390: the most lines the note names, and the least change in a line's riders a day that names it */
@@ -222,7 +224,7 @@ export function startEditNote() {
       if (updating || loading) pending.last = now;
       // T-3427: edits held while paused wait for the game to run, however long that is
       if (held) pending.since = pending.last = now;
-      if (now - pending.since > GIVE_UP_MS) { setPending(null); base = null; dropEstimate(); }
+      if (now - pending.last > GIVE_UP_MS || now - pending.since > GIVE_UP_MAX_MS) { setPending(null); base = null; dropEstimate(); }
     }
     // a network with nothing running has nothing for demand to solve: its train trips are 0 (a new game's
     // first line counts from there)

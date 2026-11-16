@@ -20,11 +20,13 @@
 import init, { TrackApi } from "../wasm/track/sim";
 import { NEW_GAME_FRAME } from "../game/cities";
 import { EARTH_R, frameKindNumber, type FrameSpec } from "../game/frame";
-import { inRing, noritetsuBases, ringBox } from "../game/rings";
+import { inRing, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
 
 export type ToRouter =
-  | { kind: "init"; page: string; graphs: string; published: boolean }
+  | { kind: "init"; graphs: string }
+  /** regions.json's regions, fetched once by the page (null: not reachable); answered ahead of the queue */
+  | { kind: "regions"; regions: Record<string, { parts: [number, number][][] }> | null }
   /** the view: the graphs of the regions in it are fetched ahead of a click */
   | { kind: "view"; w: number; s: number; e: number; n: number }
   /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
@@ -78,26 +80,17 @@ const post = (m: FromRouter, t: Transferable[] = []) => (self as unknown as Work
 
 interface Outline { cc: string; rings: Float64Array[]; boxes: [number, number, number, number][] }
 let outlines: Promise<Outline[]> | null = null;
-let pageBase = "", graphBase = "", published = false;
+let graphBase = "";
+let gotRegions!: (r: Record<string, { parts: [number, number][][] }> | null) => void;
+const regionsIn = new Promise<Record<string, { parts: [number, number][][] }> | null>((res) => { gotRegions = res; });
 
 function regionOutlines(): Promise<Outline[]> {
-  return (outlines ??= (async () => {
-    for (const b of noritetsuBases(pageBase, published)) {
-      try {
-        const r = await fetch(b + "regions.json");
-        const j = r.ok ? await r.json() : null;
-        if (!j?.regions) continue;
-        return Object.entries(j.regions as Record<string, { parts: [number, number][][] }>).map(([cc, r]) => {
-          const rings = r.parts.map((ring) => Float64Array.from(ring.flat()));
-          const boxes = rings.map(ringBox);
-          return { cc, rings, boxes };
-        });
-      } catch {
-        // not there: the next
-      }
-    }
-    return [];
-  })());
+  return (outlines ??= regionsIn.then((regions) =>
+    Object.entries(regions ?? {}).map(([cc, r]) => {
+      const rings = r.parts.map((ring) => Float64Array.from(ring.flat()));
+      const boxes = rings.map(ringBox);
+      return { cc, rings, boxes };
+    })));
 }
 
 /** The regions whose outline holds the point, else those whose box comes within `pad` degrees. */
@@ -593,6 +586,7 @@ self.onmessage = (ev: MessageEvent<ToRouter>) => {
     if (latest === m.seq) latest = -1;
     return;
   }
+  if (m.kind === "regions") return gotRegions(m.regions);
   if (m.kind === "route" || m.kind === "trace") latest = m.seq;
   if (m.kind === "reach") latestReach = m.seq;
   queue = queue.then(() => handle(m)).catch((err) => {
@@ -605,9 +599,7 @@ self.onmessage = (ev: MessageEvent<ToRouter>) => {
 
 async function handle(m: ToRouter) {
   if (m.kind === "init") {
-    pageBase = m.page;
     graphBase = m.graphs;
-    published = m.published;
     void sendCover();
   } else if (m.kind === "view") {
     const all = await regionOutlines();

@@ -20,10 +20,9 @@ import { SHADES, type ShadeColours } from "../game/shadeTable";
 import { display, mapShade, snapping } from "../game/ui";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
-import { noritetsuBases, ringBox } from "../game/rings";
-import { PUBLISHED } from "../game/dataBase";
+import { ringBox } from "../game/rings";
+import { regionsJson } from "./regionsJson";
 import { perfOff } from "../perfFlags";
-import { patientFetch } from "../workers/patientFetch";
 
 const OSM_ATTRIBUTION = '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a> (ODbL)';
 /** below this the view spans too many regions and the lines are too small to follow; at 4 a view of
@@ -97,25 +96,13 @@ export function startRealNetwork(map: maplibregl.Map) {
   let opacity = SHADES[mapShade.peek()].realOpacity;
   let filter: unknown = PASSENGER;
 
-  /** regions.json (about 1.5 MB, outlines in it): which regions exist and where, and which base serves them */
+  /** which regions exist and where, and which base serves them */
   const load = () =>
     (index ??= (async () => {
-      for (const b of noritetsuBases(document.baseURI, PUBLISHED)) {
-        try {
-          const r = await patientFetch(b + "regions.json"); // T-3314: a held request gives up, and the next base is tried
-          const j = r.ok ? await r.json() : null;
-          if (!j?.regions) continue;
-          base = b;
-          regions = Object.entries(j.regions as Record<string, { parts: [number, number][][] }>).map(([cc, r]) => ({
-            cc,
-            parts: r.parts.map((ring) => ringBox(ring.flat())),
-          }));
-          return;
-        } catch {
-          // not there, or not JSON: try the next
-        }
-      }
-      console.warn("Real network: noritetsu's data is not reachable");
+      const j = await regionsJson();
+      if (!j) return void console.warn("Real network: noritetsu's data is not reachable");
+      base = j.base;
+      regions = Object.entries(j.regions).map(([cc, r]) => ({ cc, parts: r.parts.map((ring) => ringBox(ring.flat())) }));
     })());
 
   /** every region's layer ever added: a style restored after a lost context has them still (T-957), `added` starts over */
