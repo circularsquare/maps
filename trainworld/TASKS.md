@@ -244,6 +244,21 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2872 [P3] {L:small-fixes} {after:Anita asks} Timeline of what was built
   - Context: A player asked for playback of what was built. The build days are recorded already (T-2871), with no UI.
   - Goal: Build it only when you ask.
+- T-3457 [P3] {L:checks} Slim the standing checks
+  - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
+  - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
+- T-3458 [P3] {L:cleanup} Fewer code comments
+  - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
+  - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
+- T-3459 [P3] {L:cleanup} Remove dead outputs and leftovers
+  - Context: From the code tour: pipeline/nocar.py still writes no-car households that demand stopped reading at T-854 (docs still say to rerun it); mock/ is an old design mock on MapLibre 5.24; registry market places 8 and 11-13 unused since T-1113; 351 scripts in notes/.
+  - Goal: Each is deleted or its docs fixed, with packs and smoke unchanged.
+- T-3460 [P3] {L:cleanup} Code written twice
+  - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
+  - Goal: One copy of each, or a written reason to keep both.
+- T-3461 [P3] {L:wiki} Code tour in the wiki
+  - Context: You 11-16: the code tour (notes/code-tour.md, review/code-tour.png) is a nice resource and might belong in the wiki.
+  - Goal: The tour is a wiki page kept current, per wiki/RULES.md (or an agents' section of it if the player wiki is the wrong home).
 - T-2843 [P3] {L:cleanup} Code review and state machines
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
   - Goal: State machines B and C are built.
@@ -332,8 +347,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3444 [P2] {L:track-kinds} {waits:Anita} Track, platform and station model rework
   - Need from Anita: A design discussion when you are ready; nothing is built before it.
   - Context: Your weekend notes (2026-11-16): double track as a pair of singles, any number of parallel tracks and platforms (Grand Central, Spanish solution, AABB, ABBA, AA above BB), island platforms that shift the tracks, a definition of a station, per-track stop picking with numbered circles; simple stop assignment kept for simple two-track lines.
-  - Goal: An agreed design that covers those cases and can grow, then a staged plan.
-  - Other: Your notes verbatim: notes/T-3444.md
+  - Goal: An agreed design that covers those cases and can grow, then a staged plan, with the track model split into parts an agent can read whole (you 11-16, after the code tour: it is too big to read fully today).
+  - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md
 - T-3435 [P3] {L:buses} {waits:Anita} Long-distance ferries
   - Need from Anita: A Fast ferry kind per line (65 km/h, about US$25M a boat, US$100 a boat-km), after T-2216? Recommended yes, ferry fan unchanged.
   - Context: Study done 2026-11-16: our boats are city boats (320 seats, 32 km/h); Helsinki-Tallinn is close to real, Hong Kong-Macau gets 1,800 of about 19,000, Seattle-Victoria 0, since trips between landmasses with no car or plane under 250 km are never offered (T-2216).
