@@ -1113,10 +1113,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
-- T-3156 [P3] {L:checks} AWS guard refuses a harmless command
-  - Context: `tools/aws/guard.py` read the path `trainworld/tools/aws` as an `aws` command and refused a read-only loop.
-  - Goal: `aws` only matches as a command word.
-  - Other: See notes/rules-cleanup.md finding 33.
 - T-2575 [P3] {L:cleanup} Fetch regions.json once
   - Context: regions.json (1.5 MB) is fetched twice, by the page and the realRoute worker.
   - Goal: The worker's `cover` message carries the boxes, so the file is fetched once.
@@ -1132,9 +1128,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: This is the last app cleanup (A9); leftovers from T-2369 are in the notes.
   - Goal: Debug probes become one URL-parameter module, unused CSS goes, and tsconfig turns on `noUnused*`.
   - Other: See notes/T-2375.md.
-- T-2377 [P3] {L:cleanup} Cut trainworld CLAUDE.md
-  - Context: It is about 3,570 words; you said agents may decide the reorg.
-  - Goal: About 2,400 words, orchestrator text moved to docs/orchestrating.md, result shown to you.
 - T-2854 [P3] {L:wiki} Wiki rewrite for less documentation
   - Context: Your ask: a wiki so agents read less. 25 pages done (uncommitted) and figures come from code via JSON markers.
   - Goal: Candidates in the notes are covered and retired docs removed. Next: fix markers if trams rename V_TOP, V_HSR, LEVEL_MULT, track_factor.

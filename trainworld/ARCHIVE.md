@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2377 [P3] {L:cleanup} Cut trainworld CLAUDE.md (2026-11-16): done in effect: trainworld/CLAUDE.md is 1,762 words against a goal of about 2,400, and the orchestrator text lives in docs/orchestrator.md.
+- T-3156 [P3] {L:checks} AWS guard refuses a harmless command (2026-11-16): done: guard.py now allows the command it refused (checked by agent picker).
 - T-3436 [P3] {L:map-look} Outline-only line bullet (2026-11-16): an outline shape among the line bullets (circle, square, diamond, outline), its ring 2.8 px against a line group's 2 px.
 - T-3427 [P2] {L:edit-speed} A setting to stop recalculating trips while paused (2026-11-16): "Recalculate trips while paused" in Settings, Performance, on by default; off, edits while paused wait and play solves once; a quiet tag says so. notes/T-3427.md.
 - T-3381 [P2] {L:station-placement} Corner notice shows a generated station name (2026-11-16): fixed: the blueprint notice and the constructed notice name the complex. notes/T-3381.md.
