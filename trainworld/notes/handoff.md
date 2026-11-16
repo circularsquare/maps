@@ -70,6 +70,24 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   pad agent rendering the fields on the board meanwhile. After the rollout: CLAUDE.md Tasks rule, TASKS.md and
   Someday headers, docs/orchestrator.md filing; `--retag T-3345` (stale waits).
 
+- **11-16 ~14:30Z PAUSED by Anita** ("lets pause work, i'd liek to try to turn on code mode"). No agents running.
+  Her plan for this week when work resumes (her words): "lets limit work to straight-forward bug investigation (can
+  give up if seems hard) and kanban. also track visibility since it seems easy enoguh." So, to launch on resume:
+  1. T-3394 rollout, all tasks ("lets do all the new task layouts ... keep the mini sections very short"). Brief:
+     notes/T-3394.md "Rollout brief". Nine Sonnet agents were launched then stopped at once by the pause (nothing
+     written); relaunch them, each with a fresh snapshot of TASKS.md and these line sets: track (all track lines);
+     schedule + community lines (skip T-3395, T-3397); schematic + interface lines; ops lines (skip T-3394); demand A
+     region-redraws, borders, islands, new-countries, airports; demand B jobs-places, census-totals, attractions,
+     wealth-split, world-rebuild; demand C demand-ideas, route-choice, ridership-checks, car-free; perf A
+     solve-speed, solve-consistency, frame-rate; perf B edit-speed, loading, memory. Block files in
+     scratchpad\rollout\<name>.md; then one apply with --keep-old notes/tasks-before-T-3394.md; then the CLAUDE.md
+     Tasks rule, TASKS.md and Someday headers, orchestrator.md filing rule; retag T-3345.
+  2. T-3424 changelog on the board + table column resize (resume or brief a board agent: notes/T-3391.md).
+  3. Bug investigation, give up if hard, in worktrees: T-3421 ramp speed, T-3422 blueprint flyover, T-3411, T-3412,
+     T-3379, T-3380, T-3381, T-3383, T-3386, T-3403.
+  4. T-3420 line and level visibility to her design (in the task line).
+  T-3264 approved by her ("yes this soudns good") but not to start this week. T-3213 and T-688 closed 11-16.
+
 ## Parked work in trees
 - .tw-trees/perdir (tw/perdir from f8119117): T-3348 stage 1, per-direction stops, sim half built and tested (her
   split-legs case runs both ways). Missing: demand per run (2-3 h, plan in that tree's notes/T-3348.md "Stage 1 as
