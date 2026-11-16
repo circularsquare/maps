@@ -366,13 +366,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3437 [P3] {L:translations} Hyogo shows as Osaka
+- T-3437 [P3] {L:translations} Hyogo shows as Osaka (taking, 2026-11-16, agent b7)
   - Context: Player report (board group "Place names wrong"), Japanese: picking Hyogo prefecture shows Osaka. Reach: few.
   - Goal: Hyogo's zone and place name read Hyogo.
-- T-3438 [P3] {L:translations} Changshu shows its English name in Chinese
+- T-3438 [P3] {L:translations} Changshu shows its English name in Chinese (taking, 2026-11-16, agent b7)
   - Context: Player report (board group "Place names wrong"): the Chinese name of Changshu is 常熟 but the game shows Changshu. Reach: few.
   - Goal: Changshu shows 常熟 in Chinese; check other zones with the same gap.
-- T-3439 [P3] {L:translations} Arnavutkoy shown as a city, not an Istanbul district
+- T-3439 [P3] {L:translations} Arnavutkoy shown as a city, not an Istanbul district (taking, 2026-11-16, agent b7)
   - Context: Player report (board group "Place names wrong"), Turkish: Arnavutkoy reads as a separate city. Reach: few.
   - Goal: Arnavutkoy is named as an Istanbul district, or Anita says leave it.
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails
@@ -392,7 +392,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The check "the 10x curve was never used" fails: an edit during a solve waits for it. Either the check or docs/track-and-service.md is out of date.
   - Goal: Check and doc agree and the check passes.
   - Other: notes/T-3303.md
-- T-3308 [P3] {L:translations} Blank page in Chinese compatibility browsers
+- T-3308 [P3] {L:translations} Blank page in Chinese compatibility browsers (taking, 2026-11-16, agent b7)
   - Context: 360, QQ and Sogou browsers in compatibility mode run the page as IE, so it stays blank with no message.
   - Goal: A nomodule script in index.html tells them in Chinese to switch to speed mode.
   - Other: Found by money (T-3307).
@@ -555,7 +555,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Each Auto/Manual switch costs the clock worker 0.2-0.5 s, and the first of a session 1.4-2.5 s.
   - Goal: A bus stop switch costs the worker almost nothing.
   - Other: Follow-up to T-2953.
-- T-2906 [P3] {L:map-look} More hairstyles
+- T-2906 [P3] {L:map-look} More hairstyles (taking, 2026-11-16, agent b7)
   - Context: Your TODO 2026-11-09: "should probably add some more hairstyles, like ponytail, wavy. maybe bias to wavy for black and white people, bias away for asian".
   - Goal: Ponytail and wavy hair added, with the bias you described.
 - T-2907 [P3] {L:accounts-server} Redirect mistyped trainworld addresses
@@ -957,7 +957,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3371 [P3] {L:checks} Track bar check fails on master (taking, 2026-11-16, agent b3)
   - Context: t3260-track-bar part B fails: the track ghost tag no longer says "Hold Ctrl to draw straight".
   - Goal: Either the check is fixed (line dropped on purpose) or the hint is restored.
-- T-3370 [P3] {L:buses} Bus route drag follow-ups
+- T-3370 [P3] {L:buses} Bus route drag follow-ups (taking, 2026-11-16, agent b5)
   - Context: Hide the network hover over the route path in Edit route, and check dragging by touch.
   - Goal: Both done, with docs/ui-building.md fixed.
   - Other: From T-3366.
@@ -1053,7 +1053,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1073 [P3] {L:line-rates} Undo of a train count hops departures
   - Context: Undo or redo of a train count takes effect at once, so departures hop at a fast clock.
   - Goal: The worker is told it was a service edit and departures stay smooth.
-- T-3400 [P3] {L:buses} New ferry line runs a boat at low demand
+- T-3400 [P3] {L:buses} New ferry line runs a boat at low demand (taking, 2026-11-16, agent b5)
   - Context: Today a new ferry has none at low demand. A default of every 60 min is sensible; tell you after.
   - Goal: A new ferry runs every 60 min at low demand.
   - Other: From T-2915. notes/T-2915.md "For Anita".
@@ -1066,7 +1066,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
   - Context: Your TODO 2026-11-15, for sensible pathing on single track.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
-- T-3419 [P3] {L:buses} Waiting rooms at ferry ports
+- T-3419 [P3] {L:buses} Waiting rooms at ferry ports (taking, 2026-11-16, agent b5)
   - Context: Your TODO 2026-11-15: waiting rooms for ferries should be allowed.
   - Goal: Ferry ports can have waiting rooms.
 
@@ -1107,7 +1107,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: After T-1146, the engine's fixed-rate path (capacity.rs, `LineData.trains`, `Op::Schedule`, wasm `set_line`/`set_schedule`) can go; about 30 sim tests pin it.
   - Goal: The path is gone and the tests use train counts.
   - Other: See notes/T-1183.md.
-- T-3415 [P3] {L:checks} Set up linters
+- T-3415 [P3] {L:checks} Set up linters (taking, 2026-11-16, agent b9)
   - Context: Your TODO 2026-11-15: "research linters that would be good to set up (mostly just for us but also for prs)".
   - Goal: A short report on which linters to set up.
 
