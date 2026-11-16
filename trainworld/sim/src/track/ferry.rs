@@ -21,22 +21,31 @@ pub const K_PORT: u8 = 1;
 /// A waypoint: the route passes through it at its speed and does not stop.
 pub const K_WAYPOINT: u8 = 2;
 
-/// A boat's top speed, m/s: 32 km/h, 200 m or more from land (notes/T-2177.md 3.4, T-2450).
-pub const BOAT_TOP: f64 = 32.0 / 3.6;
+/// A boat's top speed, m/s: 45 km/h, 200 m or more from land (notes/T-2177.md 3.4, T-2450, T-3435).
+pub const BOAT_TOP: f64 = 45.0 / 3.6;
 /// The slowest speed a route point may ask for, m/s.
 pub const BOAT_MIN: f64 = 0.25;
-/// A boat's acceleration and braking, m/s²: 59 s and 263 m to reach 32 km/h.
+/// A boat's acceleration and braking, m/s²: 83 s and 521 m to reach 45 km/h.
 pub const BOAT_A: f64 = 0.15;
 /// The app's speed in narrow water (10 km/h, at 20 m from land or less) and the open-water speed an
 /// `LFR1` save's routes were searched at (25 km/h), m/s.
 const V_CHANNEL: f64 = 10.0 / 3.6;
 const LFR1_TOP: f64 = 25.0 / 3.6;
+/// The open-water speed an `LFR2` save's routes were searched at (32 km/h), m/s.
+const LFR2_TOP: f64 = 32.0 / 3.6;
 
 /// A route point's speed from an `LFR1` save, m/s, on today's curve: the same share of the way from
 /// the channel speed to the top (T-2450). Exact for speeds set by room; a bend's limit is raised with
 /// them, a little over √(0.3 r).
 pub fn v_from_lfr1(v: f64) -> f64 {
-    if v <= V_CHANNEL { v } else { V_CHANNEL + (v - V_CHANNEL) * (BOAT_TOP - V_CHANNEL) / (LFR1_TOP - V_CHANNEL) }
+    rescale(v, LFR1_TOP)
+}
+/// The same for an `LFR2` save, searched at 32 km/h (T-3435).
+pub fn v_from_lfr2(v: f64) -> f64 {
+    rescale(v, LFR2_TOP)
+}
+fn rescale(v: f64, old_top: f64) -> f64 {
+    if v <= V_CHANNEL { v } else { V_CHANNEL + (v - V_CHANNEL) * (BOAT_TOP - V_CHANNEL) / (old_top - V_CHANNEL) }
 }
 /// A boat's length, m (drawn only).
 pub const BOAT_LEN_M: f64 = 35.0;

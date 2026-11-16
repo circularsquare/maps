@@ -23,9 +23,9 @@ use super::twin::Twin;
 /// `LBS1`, T-1464, is the same without a kind per point) gives the bus lines their routes; without
 /// it there are none. A trailing `LRT1` block (T-1787) carries the settled rates of the lines with
 /// trains to the bit, and the lines the settle left circling; without it a load settles in full.
-/// A trailing `LFR2` block (T-2193, T-2450) makes stations ports (their berths) and gives the ferry
-/// lines their routes; without it there are none. `LFR1` is the same with its speeds searched at 25
-/// km/h in open water, raised on load (`ferry::v_from_lfr1`).
+/// A trailing `LFR3` block (T-2193, T-2450, T-3435) makes stations ports (their berths) and gives the ferry
+/// lines their routes; without it there are none. `LFR2` and `LFR1` are the same with their speeds searched at 32
+/// and 25 km/h in open water, raised on load (`ferry::v_from_lfr2`, `v_from_lfr1`).
 /// A trailing `BLD1` block (T-2217) carries the station buildings; without it there are none.
 /// A trailing `LBD1` block (T-2871) carries the day each constructed station, edge and line was
 /// first built; without it, or where it is damaged, they read as built before recording began.
@@ -60,12 +60,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 24] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1"];
+pub const BLOCKS: [&[u8; 4]; 25] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 18;
+pub const LEVEL: u32 = 19;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -395,7 +395,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
     let ports: Vec<(usize, [f64; 2])> = nodes.iter().enumerate().filter_map(|(i, &n)| net.node_berth[n as usize].filter(|_| net.is_station(n)).map(|b| (i, b))).collect();
     let ferries: Vec<(usize, &super::ferry::FerryRoute)> = lines.iter().enumerate().filter_map(|(i, &l)| net.line_ferry[l as usize].as_ref().map(|r| (i, r))).collect();
     if !ports.is_empty() || !ferries.is_empty() {
-        w.0.extend_from_slice(b"LFR2");
+        w.0.extend_from_slice(b"LFR3");
         w.u(ports.len() as u64);
         for (i, b) in ports {
             let n = nodes[i] as usize;
@@ -418,7 +418,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
             }
         }
     }
-    // T-2217: the station buildings, after LFR2 and only when there are any: count, then per building
+    // T-2217: the station buildings, after LFR3 and only when there are any: count, then per building
     // its name, corner count and corners as mm deltas from the previous (the first from 0, 0)
     let halls: Vec<&super::building::Building> = net.buildings.iter().flatten().collect();
     if !halls.is_empty() {
@@ -847,8 +847,8 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         net.line_split = split;
     }
     let fr = r.0.get(r.1..r.1 + 4);
-    if fr == Some(b"LFR1") || fr == Some(b"LFR2") {
-        let old = fr == Some(b"LFR1");
+    if fr == Some(b"LFR1") || fr == Some(b"LFR2") || fr == Some(b"LFR3") {
+        let from = fr.map(|f| f[3]);
         r.1 += 4;
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
@@ -870,7 +870,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
                 points.push([x, y]);
                 kinds.push(r.u()? as u8);
                 let mps = r.u()? as f64 / 1000.0;
-                v.push(if old { super::ferry::v_from_lfr1(mps) } else { mps });
+                v.push(match from { Some(b'1') => super::ferry::v_from_lfr1(mps), Some(b'2') => super::ferry::v_from_lfr2(mps), _ => mps });
             }
             if i < n_lines { net.line_ferry[i] = Some(super::ferry::FerryRoute::new(points, kinds, v, built)); }
         }
@@ -1163,7 +1163,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (18, 24), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (19, 25), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

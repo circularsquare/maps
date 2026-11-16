@@ -296,7 +296,7 @@ Ferry lines (T-2193, design notes/T-2177.md) run on water between ports, station
 with a landing on the shore and a berth in the water. The route is free, found in the app over the
 basemap's water between two ports (T-2192): at least 5 m off land, keeping 400 m off where that costs
 under 1.3 times the shortest, with bends up to 300 m and a speed each point by its room and bend. Boats
-(one kind, two train cars: 320 riders, 480 at crush) run at most 32 km/h as room allows (T-2450) and accelerate
+(one kind, two train cars: 320 riders, 480 at crush) run at most 45 km/h as room allows (T-2450) and accelerate
 at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports only with
 the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a

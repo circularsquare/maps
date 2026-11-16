@@ -2073,7 +2073,7 @@ searches water.
 - **Shape**: the cells are simplified (Douglas-Peucker at 25 m, or a quarter of the room, never off sailable
   water), then every corner but a port's gets the widest arc that fits its two sides and stays sailable, at
   most 300 m. Where pieces of a leg meet, two corners either side take the turn so the route passes straight.
-- **Speeds**, one a point: 32 km/h 200 m or more from land (T-2450), 10 km/h at 20 m or less, straight between, at
+- **Speeds**, one a point: 45 km/h 200 m or more from land (T-2450, T-3435), 10 km/h at 20 m or less, straight between, at
   most √(0.3 m/s² x radius) on a bend; points every 25 m or so where the speed changes. Acceleration (0.15
   m/s²) and stops are the sim's.
 - **Cost**: 0.2 to 1 s a leg in the browser once its tiles are in (`checks/t2192-ferry-routes.mjs`). Tiles,
@@ -2103,10 +2103,10 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   line stops at cannot be removed.
 - **The route** is points in the network frame, each with a kind (0 route, 1 a port's berth, 2 a
   waypoint passed without stopping) and the most the boat may do there, m/s (kept on a mm/s grid,
-  0.25 to 8.889). Its stops are the line's ports, in order, one per kind 1 point, each within 50 m of
+  0.25 to 12.5). Its stops are the line's ports, in order, one per kind 1 point, each within 50 m of
   that port's berth; the first and last points are ports. At most 8,000 points, at least 100 m.
 - **Run**: between two points the boat runs at most the lower of their two speeds; it accelerates and
-  brakes at 0.15 m/s² (`ferry::BOAT_A`, 59 s and 263 m to reach 32 km/h), stops at every port, stands
+  brakes at 0.15 m/s² (`ferry::BOAT_A`, 83 s and 521 m to reach 45 km/h), stops at every port, stands
   the line's dwell at the ports between its ends and the turnaround at the ends. Out and back like a
   bus line. No capacity holds. A boat is two train cars: 320 riders at the rated load, 480 at crush
 (`BOAT_CRUSH`; demand's 2 cars, T-2195).
@@ -2122,8 +2122,8 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   as for a bus line (6.7): a circle in the service, one way unless set both ways (T-2981). The route runs from the first
   port's berth round to it again, so its first and last `K_PORT` points are that berth. The port is named
   twice in the stop list and is built, paid for and kept once.
-- **Saves**: a trailing `LFR2` block (save level 5) holds the ports' berths (as mm deltas from their
+- **Saves**: a trailing `LFR3` block (save level 19) holds the ports' berths (as mm deltas from their
   landings) and each ferry line's route (points, kinds, speeds) and whether it is constructed. A save
-  without it has no ports or ferries and loads as before. An `LFR1` block (level 3) is the same with
-  its speeds searched at 25 km/h in open water: each speed over 10 km/h loads at the same share of the
-  way from 10 to 32 (`ferry::v_from_lfr1`; a bend's limit rises with it, T-2450).
+  without it has no ports or ferries and loads as before. An `LFR2` block (level 5, speeds searched at 32 km/h) and an `LFR1` block (level 3, at 25) are the same:
+  each speed over 10 km/h loads at the same share of the way from 10 to 45 (`ferry::v_from_lfr2`,
+  `v_from_lfr1`; a bend's limit rises with it, T-2450, T-3435).

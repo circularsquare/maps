@@ -157,7 +157,7 @@ fn ferries_save_and_load_and_saves_without_them_are_unchanged() {
     let b = a.new_line_id();
     assert_eq!(a.set_bus_line(b, &[0.0, 1000.0, 1.0, 3000.0, 1000.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
     let plain = a.save();
-    assert!(!plain.windows(4).any(|w| w == b"LFR2") && plain.windows(4).any(|w| w == b"LBS2"));
+    assert!(!plain.windows(4).any(|w| w == b"LFR3") && plain.windows(4).any(|w| w == b"LBS2"));
     assert!(a.load(&plain));
     assert_eq!(a.save(), plain, "a save with no ferry loads and saves to the bit");
     // ports and a constructed line with a slow end and a waypoint
@@ -166,7 +166,7 @@ fn ferries_save_and_load_and_saves_without_them_are_unchanged() {
     let l = ferry_line(&mut a, &[p, q], &route);
     assert_eq!(a.construct_line(l), 0, "{}", a.issues());
     let saved = a.save();
-    assert!(saved.windows(4).any(|w| w == b"LFR2"));
+    assert!(saved.windows(4).any(|w| w == b"LFR3"));
     assert_eq!(TrackApi::save_unread(&saved), 0);
     let bits = |v: Vec<f64>| v.into_iter().map(f64::to_bits).collect::<Vec<_>>();
     let (times, back, way) = (bits(a.stop_times(l, 0, 0)), bits(a.stop_times(l, 1, 1)), a.ferry_route(l));
@@ -187,14 +187,20 @@ fn ferries_save_and_load_and_saves_without_them_are_unchanged() {
     assert!(((berth[0] - landing[0]).hypot(berth[1] - landing[1]) / c.w.net.k_at(landing[1]) - 100.0).abs() < 0.5);
     assert!(c.is_ferry(l) && c.w.svc.lines[l as usize].running && (c.ferry_m(l) - b.ferry_m(l)).abs() < 1.0);
     // T-2450: the same block as an LFR1 save wrote it loads with its speeds on today's curve: the
-    // channel speed as it was, 25 km/h (6.944) the new top, between them in proportion
-    let at = saved.windows(4).position(|w| w == b"LFR2").unwrap();
+    // channel speed as it was, 25 km/h (6.944) the top then, 12.5 (45 km/h) now, between them in proportion
+    let at = saved.windows(4).position(|w| w == b"LFR3").unwrap();
     let mut old = saved.clone();
     old[at + 3] = b'1';
     let mut d = api();
     assert!(d.load(&old));
     let speeds: Vec<f64> = d.ferry_route(l)[1..].chunks_exact(4).map(|c| c[3]).collect();
-    assert_eq!(speeds, vec![2.778, 6.241, 8.888, 3.715]);
+    assert_eq!(speeds, vec![2.778, 8.287, 12.499, 4.269]);
+    // T-3435: an LFR2 save, searched at 32 km/h (8.889), loads on the 45 km/h curve the same way
+    old[at + 3] = b'2';
+    let mut e = api();
+    assert!(e.load(&old));
+    let speeds: Vec<f64> = e.ferry_route(l)[1..].chunks_exact(4).map(|c| c[3]).collect();
+    assert_eq!(speeds, vec![2.778, 6.534, 9.406, 3.795]);
     assert!(d.stop_times(l, 0, 0)[1] < b.stop_times(l, 0, 0)[1]);
 }
 
