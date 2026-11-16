@@ -71,11 +71,15 @@ INBOX_RECENT_DAYS = 14
 # GET /<name>/_pad gives {"text", "version"}.  PUT {"text", "version"} (X-Maps-Run, at most 256 KB)
 # replaces the file if "version" is the one last read, else 409 with the current {"text", "version"}.
 PADS = {"twboard": "trainworld/notes/board-pad.md"}
+# The same for the board's roadmap (T-3467) at /<name>/_roadmap: its text is JSON, refused (400) when it does not parse.
+ROADMAPS = {"twboard": "trainworld/changelog/roadmap.json"}
 PAD_LOCK = threading.Lock()
 
 # The trainworld board's changelog (T-3424): GET /<name>/_changelog gives the release file plus "version";
-# POST {"id", "rev", "edited"?, "hidden"?} (X-Maps-Run) saves one item through trainworld/tools/changelog.py,
-# which the agents' CLI shares (a lock file); 409 with the current item when "rev" is not the item's.
+# POST {"id", "rev", "edited"?, "hidden"?, "area"?, "fix"?, "parent"?} (X-Maps-Run) saves one item through
+# trainworld/tools/changelog.py, which the agents' CLI shares (a lock file); 409 with the current item when "rev" is not
+# the item's. {"op": "group", "text", "area", "fix"} adds a group item (T-3466); {"op": "delete", "id", "rev"} removes
+# a group with nothing under it.
 CHANGELOGS = {"twboard": "trainworld/changelog/next.json"}
 PAD_MAX = 256 * 1024
 
@@ -337,6 +341,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         parts = urllib.parse.urlsplit(self.path).path.split("/")
         if len(parts) == 3 and parts[2] == "_pad" and parts[1] in PADS:
             return HERE / PADS[parts[1]]
+        if len(parts) == 3 and parts[2] == "_roadmap" and parts[1] in ROADMAPS:
+            return HERE / ROADMAPS[parts[1]]
         return None
 
     def image(self):
@@ -408,15 +414,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             obj = json.loads(self.rfile.read(size).decode("utf-8"))
         except (ValueError, UnicodeDecodeError):
             return self.send_error(400, "not JSON")
+        if isinstance(obj, dict) and obj.get("op") == "group":
+            try:
+                item = changelog.add_item(str(obj.get("text") or ""), None, "Anita", str(path), area=obj.get("area"),
+                                          fix=bool(obj.get("fix")), group=True)
+            except ValueError as e:
+                return self.send_error(400, str(e))
+            except RuntimeError:
+                return self.send_error(503, "changelog is locked")
+            return self.send_json(200, item)
         if not isinstance(obj, dict) or not isinstance(obj.get("id"), str) or not isinstance(obj.get("rev"), int):
             return self.send_error(400, "need id and rev")
-        fields = {k: obj[k] for k in ("edited", "hidden") if k in obj}
+        fields = {k: obj[k] for k in ("edited", "hidden", "area", "fix", "parent") if k in obj}
         try:
-            code, item = changelog.update_item(obj["id"], fields, obj["rev"], str(path))
+            if obj.get("op") == "delete":
+                code, item = changelog.delete_group(obj["id"], obj["rev"], str(path))
+            else:
+                code, item = changelog.update_item(obj["id"], fields, obj["rev"], str(path))
+        except ValueError as e:
+            return self.send_error(400, str(e))
         except RuntimeError:
             return self.send_error(503, "changelog is locked")
-        if code == 404:
-            return self.send_error(404)
+        if code in (400, 404):
+            return self.send_error(code)
         self.send_json(code, item)
 
     def do_PUT(self):
@@ -439,6 +459,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self.send_error(400, "need text and version")
         if len(obj["text"].encode("utf-8")) > PAD_MAX:
             return self.send_error(413)
+        if self.path.split("?")[0].endswith("/_roadmap"):
+            try:
+                json.loads(obj["text"])
+            except ValueError:
+                return self.send_error(400, "the roadmap is not JSON")
         with PAD_LOCK:
             cur = pad_state(path)
             if cur["version"] != obj["version"]:
