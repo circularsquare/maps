@@ -11,7 +11,7 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_BUILDING, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_BUILDING, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, trainStands, type BoardHour, type CrowdedStretch } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -20,7 +20,7 @@ import { TransferBubbles } from "./transferBubbles";
 import { BusLayer } from "./busLayer";
 import { MOVING_PLACE_MS } from "./moving";
 import { anchor, anchorPsi, EARTH_C, kAtY, localToMercMatrix, mul4, pxPerUnitAt, unitPerPxAt, type Anchor } from "./geo";
-import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
+import { clipToCss, compile, GpuTimer, interp, localCamera, mercToCss, PROJECT_UNIFORMS, setCamera, uniforms, viewCentreMerc, type Camera, type LocalCamera } from "./gl";
 import { GradeMarks } from "./gradeMarks";
 import { OneWayChevrons } from "./oneWayMarks";
 import { StrokeCache } from "./strokeCache";
@@ -1704,12 +1704,17 @@ export class NetworkRenderer {
     const one = { c: 0.5 * (barOut - barIn), hb: 0.5 * (barOut + barIn), depth: Math.max(4, 0.6 * (barOut + barIn)) };
     this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one };
     const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
+    // T-3481: on-screen sizes are measured at the view's middle (local units), never at a station,
+    // which can be in another city behind the globe (NaN) or where the globe's blend squeezes it
+    const mid = viewCentreMerc(cam);
+    const midX = mid ? (mid[0] - a.merc[0]) * EARTH_C : n.stations[0] ?? 0, midY = mid ? (mid[1] - a.merc[1]) * EARTH_C : n.stations[1] ?? 0;
     // The track through the boxes (T-236, Anita: "maybe the track on top of the station"): the
     // track and line strokes drawn again, no wider than TRACK_IN_BOX of the box's white and
     // without casing, where the stencil marks a station's white (1 the unselected, 2 the selected).
     const through = n.stationCount > 0 && boxes && this.hasStencil;
-    // every box has one width on the ground (T-239); any station's gives it on screen here
-    const boxWhite = 2 * ((boxes && n.stationCount ? this.stationShapeOf(0, project, true).halfWidth : 0) - ring);
+    // every box has one width on the ground (T-239): a plain box at the view's middle gives it on screen
+    const kMid = kAtY(midY, a);
+    const boxWhite = 2 * ((boxes && n.stationCount ? stationShape(midX, midY, { mx: 0, my: 0, ax: kMid, ay: 0, phi: 0 }, PLATFORM_HALF_M * kMid, project, this.stationStyle, false).halfWidth : 0) - ring);
     const trackCap = Math.max(1, TRACK_IN_BOX * boxWhite) * dpr;
     // T-1638: everything up to the stations changes only with the camera, the network and how it is
     // styled, so it is kept in a texture (layer 0, the track through the boxes layer 1) and drawn
@@ -2012,7 +2017,7 @@ export class NetworkRenderer {
       // drawn in the same layer, so dots and connectors are one white shape with one outline
       const connectors = !boxes && this.bridgeProg && this.connVao ? this.connPairs.length / 2 : 0;
       if (connectors) {
-        const [x0, y0] = project(n.stations[0], n.stations[1]), [x1, y1] = project(n.stations[0] + 1, n.stations[1]);
+        const [x0, y0] = project(midX, midY), [x1, y1] = project(midX + 1, midY);
         const pxPerLoc = Math.max(1e-9, Math.hypot(x1 - x0, y1 - y0));
         this.useBridges(lc, vp, ring * dpr, (connectorHalfPx(this.stationStyle) - ring) / pxPerLoc);
         this.hotPairs(this.bridgeU, this.connPairs, hotSt);

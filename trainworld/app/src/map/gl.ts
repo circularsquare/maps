@@ -151,6 +151,15 @@ export function mercToCss(cam: Camera, mx: number, my: number, w: number, h: num
 }
 const GLOBE_Z_FROM = 0.2;
 
+/** Mercator 0..1 of the flat map's point at the canvas's middle, which the globe shares; null for a
+ * camera that sees no ground there. */
+export function viewCentreMerc(cam: Camera): [number, number] | null {
+  // clip x = clip y = 0 on the ground plane
+  const m = cam.merc, det = m[0] * m[5] - m[4] * m[1];
+  if (!(Math.abs(det) > 0)) return null;
+  return [(m[4] * m[13] - m[12] * m[5]) / det, (m[1] * m[12] - m[0] * m[13]) / det];
+}
+
 /** A place (lng, lat) is on the globe's far side, out of sight: what `mercToCss` returns NaN for. */
 export function behindHorizon(cam: Camera | null | undefined, lng: number, lat: number): boolean {
   if (!cam?.globe || cam.t <= GLOBE_Z_FROM) return false;

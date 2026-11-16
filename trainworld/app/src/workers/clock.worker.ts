@@ -3048,8 +3048,8 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
   const n = networkFromState({ ...s, render: r, complexOf, buildingLL }, netCache, true);
   const t2 = performance.now();
   // a moved build is off the exact one by float32 rounding: `?patch=shiftcheck` measures by how much
-  if (patchMode === "shiftcheck" && shifted) checkShift(n, networkFromState({ ...s, render: r, complexOf }));
-  const out = (s.net = netForPost(n, patchMode === "check" && !shifted ? networkFromState({ ...s, render: r, complexOf }) : undefined));
+  if (patchMode === "shiftcheck" && shifted) checkShift(n, networkFromState({ ...s, render: r, complexOf, buildingLL }));
+  const out = (s.net = netForPost(n, patchMode === "check" && !shifted ? networkFromState({ ...s, render: r, complexOf, buildingLL }) : undefined));
   s.ms = [t1 - t0, t2 - t1];
   timing.state = t1 - t0;
   timing.buffers = t2 - t1;
