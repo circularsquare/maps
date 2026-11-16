@@ -21,7 +21,7 @@ let confirm = null;         // {key, action}: a select change waiting for Queue 
 const withdrawn = new Set();
 let REQ = null;             // requests.json: player request groups, their reports, pasted items
 let view = 'board';         // 'board' | 'requests' | 'changelog'
-const CL = { data: null, ok: true, status: {}, timers: {}, conflict: {} }; // the changelog (T-3424)
+const CL = { data: null, ok: true, status: {}, timers: {}, conflict: {}, menu: null }; // the changelog (T-3424); menu: the item whose area menu is open (T-3466)
 const expanded = new Set(); // request groups showing their reports
 let lastGroup = null;       // the group last opened, kept in the URL hash
 let groupForm = null;       // {gid, kind: 'accept' | 'merge' | 'dismiss' | 'comment'}
@@ -65,6 +65,18 @@ const ICONS = {
     ['path', { d: 'M2.5 13.5 13.5 2.5' }]],
   undo: [['path', { d: 'M5.5 3.5 2.5 6.5l3 3' }], ['path', { d: 'M2.5 6.5h7a3.5 3.5 0 0 1 0 7H6' }]],
   chev: [['path', { d: 'M6 4l4 4-4 4' }]],
+  // the changelog's areas (T-3466), as the game draws them (app/src/ui/widgets.tsx, Changelog.tsx)
+  'a-track': [['path', { d: 'M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4' }]],
+  'a-demand': [['circle', { class: 'bubble', cx: 8, cy: 8, r: 5.5 }]],
+  'a-scheduling': [['path', { d: 'M1.5 2.5h13M1.5 13.5h13M2 13.5l4-11M7.5 2.5l4 11M10 13.5l4-11' }]],
+  'a-fares': [['rect', { x: 1.5, y: 3.5, width: 10, height: 6.5 }], ['circle', { cx: 6.5, cy: 6.75, r: 1.4 }],
+    ['circle', { class: 'bg', cx: 11.5, cy: 11.5, r: 3 }], ['circle', { cx: 11.5, cy: 11.5, r: 1.2 }]],
+  'a-schematic': [['path', { d: 'M1.5 4l4-1.5 5 2 4-1.5v9.5l-4 1.5-5-2-4 1.5zM5.5 2.5V12M10.5 4.5V14' }]],
+  'a-community': [['circle', { cx: 8, cy: 5.2, r: 2.9 }], ['path', { d: 'M2.4 14.2c.6-3 2.9-4.6 5.6-4.6s5 1.6 5.6 4.6' }]],
+  'a-performance': [['rect', { class: 'screen', x: 1.5, y: 2.5, width: 13, height: 8.5, rx: 1 }], ['path', { d: 'M8 11v2.5M5 13.8h6' }]],
+  'a-other': [['circle', { cx: 8, cy: 8, r: 2, fill: 'currentColor', stroke: 'none' }]],
+  'a-bug': [['path', { d: 'M6.2 4.8a1.8 1.8 0 013.6 0' }], ['rect', { x: 4.8, y: 4.8, width: 6.4, height: 9.2, rx: 3.2 }],
+    ['path', { d: 'M8 7.6V14M4.8 8.6H2.4M4.8 11.6l-2.2 1.5M11.2 8.6h2.4M11.2 11.6l2.2 1.5M5.3 6.3L3.4 4.6M10.7 6.3l1.9-1.7' }]],
 };
 function icon(name) {
   const s = document.createElementNS(SVG_NS, 'svg');
@@ -1097,6 +1109,7 @@ function applyHash() {
   if (hash === 'changelog') {
     view = 'changelog';
     loadChangelog();
+    loadRoadmap();
   } else if (hash === 'requests' || hash.startsWith('requests/')) {
     view = 'requests';
     const g = hash.split('/')[1];
@@ -1503,7 +1516,7 @@ function inline(text) {
 function showView(v) {
   view = v;
   if (v !== 'board' && panel && panel.kind === 'line') panel = null;
-  if (v === 'changelog') loadChangelog();
+  if (v === 'changelog') { loadChangelog(); loadRoadmap(); }
   setHash();
   render();
   window.scrollTo(0, 0);
@@ -1761,11 +1774,83 @@ async function loadChangelog() {
 }
 
 function clShown(it) { return it.edited || it.text; }
+
+// T-3466: what an item is about, in the game's order (app/src/ui/updates.ts AREAS); the names are the board's only
+const CL_AREAS = [['track', 'Track'], ['demand', 'Demand'], ['scheduling', 'Scheduling'], ['fares', 'Fares and money'],
+  ['schematic', 'Map and schematic'], ['community', 'Community and accounts'], ['performance', 'Performance'],
+  ['other', 'Other (a plain dot)'], ['bug', 'Bug fix of no area']];
+const clRank = (it) => { const a = CL_AREAS.findIndex(([k]) => k === it.area); return (a < 0 ? CL_AREAS.length : a) * 2 + (it.fix ? 1 : 0); };
+
+/** the items as the game lists them: by area, an area's fixes after its other items, a group's items under it */
+function clOrdered(all) {
+  const groups = new Set(all.filter((i) => i.group).map((i) => i.id));
+  const top = all.map((it, n) => [it, n]).filter(([it]) => !groups.has(it.parent))
+    .sort((a, b) => clRank(a[0]) - clRank(b[0]) || a[1] - b[1]).map(([it]) => it);
+  return top.flatMap((it) => (it.group ? [it, ...all.filter((c) => c.parent === it.id).map((c) => ({ ...c, child: true }))] : [it]));
+}
+
+function clAreaIcon(area) {
+  return el('span', { class: `cl-area cl-a-${area || 'none'}` }, icon(`a-${area || 'other'}`));
+}
+
+async function clPost(body) {
+  const r = await fetch('_changelog', {
+    method: 'POST', headers: { 'X-Maps-Run': '1', 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  if (!r.ok && r.status !== 409) throw new Error(r.status);
+  return r;
+}
+
+async function clAddGroup() {
+  try {
+    const r = await clPost({ op: 'group', text: 'new group', area: 'bug', fix: true });
+    const it = await r.json();
+    CL.data.items.push(it);
+    CL.menu = it.id;
+  } catch (e) {
+    CL.ok = false;
+  }
+  renderChangelog();
+  const a = document.querySelector(`#changelog [data-item="${CL.menu}"] textarea.cl-text`);
+  if (a) { a.focus(); a.select(); }
+}
+
+async function clDelete(it) {
+  try {
+    const r = await clPost({ op: 'delete', id: it.id, rev: it.rev });
+    if (r.status === 409) clSetItem(await r.json());
+    else CL.data.items = CL.data.items.filter((x) => x.id !== it.id);
+  } catch (e) {
+    CL.status[it.id] = 'Not deleted: server not reachable';
+  }
+  CL.menu = null;
+  renderChangelog();
+}
+
+/** the area menu under an item's icon: its area, bug fix or not, and the group it sits under */
+function clMenu(it) {
+  const groups = CL.data.items.filter((g) => g.group && g.id !== it.id);
+  const kids = CL.data.items.some((c) => c.parent === it.id);
+  return el('div', { class: 'cl-menu', onclick: (e) => e.stopPropagation() },
+    ...CL_AREAS.map(([k, name]) => el('button', { class: `cl-pick${it.area === k ? ' on' : ''}`, type: 'button',
+      onclick: () => { CL.menu = null; clSave(it.id, { area: k }); } }, clAreaIcon(k), name)),
+    el('label', { class: 'cl-check' }, el('input', { type: 'checkbox', checked: !!it.fix,
+      onchange: (e) => clSave(it.id, { fix: e.target.checked }) }), 'Bug fix (lighter text)'),
+    it.group ? (kids ? null : el('button', { class: 'btn plain cl-del', type: 'button', onclick: () => clDelete(it) }, 'Delete this group'))
+      : el('label', { class: 'cl-under' }, 'Under ', el('select', { class: 'small',
+        onchange: (e) => { CL.menu = null; clSave(it.id, { parent: e.target.value || null }); } },
+        el('option', { value: '' }, 'no group'),
+        ...groups.map((g) => el('option', { value: g.id, selected: it.parent === g.id }, clShown(g))))));
+}
 function clDraft(it) { const d = drafts[`cl:${it.id}`]; return d === undefined ? clShown(it) : d; }
 
 function renderChangelog() {
+  const cols = document.querySelector('#changelog .rm-cols');
+  const left = cols ? cols.scrollLeft : 0;
   keepFocus($('#changelog'), drawChangelog);
-  for (const a of document.querySelectorAll('#changelog textarea.cl-text')) clGrow(a);
+  for (const a of document.querySelectorAll('#changelog textarea.cl-text, #changelog .rm textarea')) clGrow(a);
+  const c2 = document.querySelector('#changelog .rm-cols');
+  if (c2) c2.scrollLeft = left;
 }
 
 function clGrow(a) {
@@ -1837,9 +1922,15 @@ function clItem(it) {
   area.value = clDraft(it);
   const mine = CL.conflict[id];
   const when = new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' });
-  return el('div', { class: `cl-item${it.hidden ? ' is-hidden' : ''}`, 'data-item': id },
+  const cls = `cl-item${it.hidden ? ' is-hidden' : ''}${it.fix ? ' is-fix' : ''}${it.group ? ' is-group' : ''}${it.child ? ' is-child' : ''}`;
+  return el('div', { class: cls, 'data-item': id },
     el('div', { class: 'cl-row' },
-      it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'cl-task meta' }, 'no task'),
+      el('span', { class: 'cl-area-cell' },
+        el('button', { class: 'icon-btn cl-area-btn', type: 'button', 'aria-expanded': String(CL.menu === id),
+          title: `${(CL_AREAS.find(([k]) => k === it.area) || [0, 'No area yet'])[1]}${it.fix ? ', bug fix' : ''}. Click to change`,
+          onclick: (e) => { e.stopPropagation(); CL.menu = CL.menu === id ? null : id; renderChangelog(); } }, clAreaIcon(it.area)),
+        CL.menu === id ? clMenu(it) : null),
+      it.group ? el('span', { class: 'cl-task meta' }, 'group') : it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'cl-task meta' }, 'no task'),
       area,
       el('span', { class: 'cl-by' }, `added by ${it.by || 'an agent'}, ${when}`, it.edited ? ', reworded' : ''),
       el('span', { class: 'cl-state' }, CL.status[id] || ''),
@@ -1865,16 +1956,202 @@ function drawChangelog() {
   }
   const q = query();
   const all = CL.data.items;
-  const items = all.filter((i) => !q || (i.text + ' ' + (i.edited || '') + ' ' + (i.task || '')).toLowerCase().includes(q));
+  const items = clOrdered(all).filter((i) => !q || (i.text + ' ' + (i.edited || '') + ' ' + (i.task || '')).toLowerCase().includes(q));
   const hid = all.filter((i) => i.hidden).length;
   const kids = [
-    el('h2', { class: 'section' }, 'Next update', el('span', { class: 'n' }, ` ${all.length - hid} shown, ${hid} hidden`)),
+    drawRoadmap(),
+    el('div', { class: 'cl-head' },
+      el('h2', { class: 'section' }, 'Next update', el('span', { class: 'n' }, ` ${all.length - hid} shown, ${hid} hidden`)),
+      el('button', { class: 'btn', type: 'button', onclick: clAddGroup }, 'Add group')),
     el('p', { class: 'meta' }, CL.data.line ? `Start-menu line: ${CL.data.line}` : 'Start-menu line: not written yet'),
   ];
   if (!CL.ok) kids.push(el('p', { class: 'meta' }, 'Not saved: server not reachable'));
   if (!all.length) kids.push(el('p', { class: 'meta' }, 'Nothing here yet'));
   for (const it of items) kids.push(clItem(it));
   box.replaceChildren(...kids);
+}
+
+// ---------- roadmap (T-3467) ----------
+// Planned versions (0.4, 0.5, ...) as columns of short items, on the changelog tab only. Saved whole to
+// trainworld/changelog/roadmap.json through serve.py's /_roadmap (the pad's pattern: a PUT names the version it
+// read, and a newer file answers 409, which reloads it). Not shown in the game.
+
+const RM = { doc: null, version: 0, ok: true, status: '', timer: null, drag: null };
+const RM_IDLE_MS = 1200;
+const rmId = (p) => p + Math.random().toString(36).slice(2, 9);
+
+async function loadRoadmap() {
+  try {
+    const r = await fetch('_roadmap', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const s = await r.json();
+    RM.version = s.version;
+    RM.doc = s.text ? JSON.parse(s.text) : null;
+    RM.ok = true;
+  } catch (e) {
+    RM.ok = false;
+  }
+  if (!RM.doc || !Array.isArray(RM.doc.versions)) {
+    RM.doc = { versions: [{ id: rmId('v'), name: '0.4', items: [] }, { id: rmId('v'), name: '0.5', items: [] }] };
+  }
+  if (view === 'changelog') renderChangelog();
+}
+
+/** save the whole roadmap now, or soon (after she stops typing) */
+function rmSave(soon) {
+  clearTimeout(RM.timer);
+  RM.status = 'Saving';
+  rmShowStatus();
+  RM.timer = setTimeout(rmPut, soon ? RM_IDLE_MS : 0);
+}
+
+async function rmPut() {
+  RM.timer = null;
+  try {
+    const r = await fetch('_roadmap', {
+      method: 'PUT', headers: { 'X-Maps-Run': '1', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: JSON.stringify(RM.doc, null, 2) + String.fromCharCode(10), version: RM.version }),
+    });
+    if (r.status === 409) {
+      const s = await r.json();
+      RM.version = s.version;
+      RM.doc = JSON.parse(s.text);
+      RM.status = 'Changed in another tab, so this shows that one; redo the last change';
+      for (const k of Object.keys(drafts)) if (k.startsWith('rm:')) delete drafts[k];
+      if (view === 'changelog') renderChangelog();
+      return;
+    }
+    if (!r.ok) throw new Error(r.status);
+    RM.version = (await r.json()).version;
+    RM.status = 'Saved';
+  } catch (e) {
+    RM.status = 'Not saved: server not reachable';
+  }
+  rmShowStatus();
+}
+
+function rmShowStatus() {
+  const s = document.querySelector('#changelog .rm-state');
+  if (s) s.textContent = RM.status;
+}
+
+/** where an item is: [version, index] */
+function rmFind(id) {
+  for (const v of RM.doc.versions) {
+    const i = v.items.findIndex((x) => x.id === id);
+    if (i >= 0) return [v, i];
+  }
+  return [null, -1];
+}
+
+/** the next version's name: one more in the last part of the last one ("0.5" after "0.4") */
+function rmNextName() {
+  const last = RM.doc.versions[RM.doc.versions.length - 1];
+  const m = last && /^(.*?)(\d+)$/.exec(last.name.trim());
+  return m ? m[1] + (Number(m[2]) + 1) : '0.4';
+}
+
+function rmText(key, value, onSave, cls) {
+  const t = el('textarea', {
+    class: `input ${cls}`, rows: 1, spellcheck: 'true', 'data-key': key,
+    oninput: (e) => { drafts[key] = e.target.value; clGrow(e.target); onSave(e.target.value); rmSave(true); },
+    onblur: () => { delete drafts[key]; if (RM.timer) { clearTimeout(RM.timer); rmPut(); } },
+  });
+  t.value = drafts[key] !== undefined ? drafts[key] : value;
+  return t;
+}
+
+/** the index the dragged item would drop at in this item list, from the pointer's height */
+function rmDropAt(list, y) {
+  const cards = [...list.querySelectorAll(':scope > .rm-card:not(.dragging)')];
+  const i = cards.findIndex((c) => { const b = c.getBoundingClientRect(); return y < b.top + b.height / 2; });
+  return [cards, i < 0 ? cards.length : i];
+}
+
+function rmClearMarks() {
+  for (const m of document.querySelectorAll('#changelog .rm-drop-before, #changelog .rm-drop-end')) m.classList.remove('rm-drop-before', 'rm-drop-end');
+}
+
+function rmCard(v, it) {
+  const card = el('div', { class: 'rm-card', 'data-rm': it.id },
+    el('span', { class: 'rm-grip', draggable: 'true', title: 'Drag to move',
+      ondragstart: (e) => {
+        RM.drag = it.id;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', it.id);
+        e.dataTransfer.setDragImage(card, 12, 12);
+        requestAnimationFrame(() => card.classList.add('dragging'));
+      },
+      ondragend: () => { RM.drag = null; card.classList.remove('dragging'); rmClearMarks(); } }, '⠿'),
+    rmText(`rm:i:${it.id}`, it.text, (val) => { it.text = val; }, 'rm-text'),
+    el('button', { class: 'icon-btn rm-x', type: 'button', title: 'Delete this item', 'aria-label': 'Delete this item',
+      onclick: () => { v.items = v.items.filter((x) => x !== it); rmSave(); renderChangelog(); } }, '×'));
+  return card;
+}
+
+function rmColumn(v) {
+  const list = el('div', { class: 'rm-items',
+    ondragover: (e) => {
+      if (!RM.drag) return;
+      e.preventDefault();
+      rmClearMarks();
+      const [cards, i] = rmDropAt(list, e.clientY);
+      if (cards[i]) cards[i].classList.add('rm-drop-before'); else list.classList.add('rm-drop-end');
+    },
+    ondragleave: (e) => { if (!list.contains(e.relatedTarget)) rmClearMarks(); },
+    ondrop: (e) => {
+      e.preventDefault();
+      const id = RM.drag;
+      rmClearMarks();
+      if (!id) return;
+      const [, i] = rmDropAt(list, e.clientY);
+      const [from, at] = rmFind(id);
+      if (!from) return;
+      const [it] = from.items.splice(at, 1);
+      v.items.splice(i, 0, it);
+      RM.drag = null;
+      rmSave();
+      renderChangelog();
+    } },
+  ...v.items.map((it) => rmCard(v, it)));
+  const key = `rm:add:${v.id}`;
+  const add = el('input', { class: 'input rm-add', type: 'text', placeholder: 'Add an item', 'data-key': key,
+    oninput: (e) => { drafts[key] = e.target.value; },
+    onkeydown: (e) => {
+      if (e.key !== 'Enter' || !e.target.value.trim()) return;
+      v.items.push({ id: rmId('r'), text: e.target.value.trim() });
+      delete drafts[key];
+      rmSave();
+      renderChangelog();
+    } });
+  add.value = drafts[key] || '';
+  return el('div', { class: 'rm-col', 'data-version': v.id },
+    el('div', { class: 'rm-col-head' },
+      rmText(`rm:v:${v.id}`, v.name, (val) => { v.name = val; }, 'rm-name'),
+      el('button', { class: 'icon-btn rm-x', type: 'button', title: 'Delete this version', 'aria-label': 'Delete this version',
+        onclick: () => {
+          if (v.items.length && !confirm(`Delete ${v.name} and its ${v.items.length} items?`)) return;
+          RM.doc.versions = RM.doc.versions.filter((x) => x !== v);
+          rmSave();
+          renderChangelog();
+        } }, '×')),
+    list, add);
+}
+
+function drawRoadmap() {
+  if (!RM.doc) return el('p', { class: 'meta' }, 'Loading the roadmap');
+  return el('div', { class: 'rm' },
+    el('div', { class: 'cl-head' },
+      el('h2', { class: 'section' }, 'Roadmap', el('span', { class: 'n' }, ' not shown in the game')),
+      el('span', { class: 'rm-state meta' }, RM.ok ? RM.status : 'The roadmap can\'t be read until serve.py is restarted'),
+      el('button', { class: 'btn', type: 'button', onclick: () => {
+        RM.doc.versions.push({ id: rmId('v'), name: rmNextName(), items: [] });
+        rmSave();
+        renderChangelog();
+        const cols = document.querySelector('#changelog .rm-cols');
+        if (cols) cols.scrollLeft = cols.scrollWidth;
+      } }, 'Add version')),
+    el('div', { class: 'rm-cols' }, ...RM.doc.versions.map(rmColumn)));
 }
 
 // ---------- wiring ----------
@@ -1904,6 +2181,7 @@ $('#search').addEventListener('input', () => render());
 $('#v-board').addEventListener('click', () => showView('board'));
 $('#v-requests').addEventListener('click', () => showView('requests'));
 $('#v-changelog').addEventListener('click', () => showView('changelog'));
+document.addEventListener('click', () => { if (CL.menu) { CL.menu = null; if (view === 'changelog') renderChangelog(); } });
 $('#update').addEventListener('change', () => DATA && renderGrid());
 $('#p4').addEventListener('click', () => {
   SHOWP4 = !SHOWP4;
@@ -1944,7 +2222,8 @@ setInterval(() => DATA && renderStrip(), 60000);
 // the orchestrator marks actions handled as it applies them; then the files have changed too
 setInterval(async () => {
   if (!DATA || document.hidden) return;
-  if (view === 'changelog' && !Object.values(CL.timers).some(Boolean)) loadChangelog();
+  if (view === 'changelog' && !CL.menu && !RM.drag && !Object.values(CL.timers).some(Boolean)) loadChangelog();
+  if (view === 'changelog' && !RM.drag && !RM.timer && !Object.keys(drafts).some((k) => k.startsWith('rm:'))) loadRoadmap();
   const was = new Set(INBOX.pending.map((a) => a.id));
   const padsWere = new Set(INBOX.pads.filter((p) => p.handled).map((p) => p.id));
   if (!(await fetchInbox())) return;

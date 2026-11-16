@@ -32,7 +32,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
 - **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
   one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase,
-  past tense>" --task T-#### --by <you>`; list it with your strings. Internals, tools and docs get none. Anita rewords
+  past tense>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
+  the map and schematic, community for accounts and sharing, performance; other if none fits; a bug fix takes its area
+  plus `--fix`, and `bug` only when no area fits); list it with your strings. Internals, tools and docs get none. Anita rewords
   or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.

@@ -481,7 +481,38 @@ select.small {
 #changelog h2.section .n { color: var(--muted); font-weight: 400; font-size: 13px; }
 #changelog > .meta { margin-bottom: 6px; }
 .cl-item { border-bottom: 1px solid var(--line); padding: 3px 0; }
-.cl-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 8px; }
+.cl-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 8px; }
+/* T-3466: the area icon (the game's colours), its menu, groups and their items, bug fixes lighter */
+#changelog .cl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cl-area-cell { position: relative; }
+.cl-area { display: inline-grid; place-items: center; width: 16px; height: 16px; }
+.cl-area .ic { width: 14px; height: 14px; }
+.cl-area .bg { fill: var(--bg); }
+.cl-a-track { color: #2456e0; }
+.cl-a-demand .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
+.cl-a-scheduling, .cl-a-fares { color: #3f8a3a; }
+.cl-a-schematic { color: #c9a01c; }
+.cl-a-community { color: #c0661c; }
+.cl-a-bug, .cl-a-other { color: var(--muted); }
+.cl-a-none { color: var(--line); }
+.cl-a-performance { color: #9a9a9a; }
+.cl-a-performance .screen { fill: #fff; }
+.icon-btn.cl-area-btn { width: 26px; }
+.cl-menu { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: 230px; padding: 6px; display: flex;
+  flex-direction: column; gap: 1px; background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12); font-size: 13px; }
+.cl-menu .bg { fill: var(--card); }
+.cl-pick { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border: 0; border-radius: 4px; background: none;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.cl-pick:hover { background: var(--soft); }
+.cl-pick.on { background: var(--soft); font-weight: 700; }
+.cl-check, .cl-under { display: flex; align-items: center; gap: 6px; padding: 6px 6px 2px; border-top: 1px solid var(--line); margin-top: 4px; }
+.cl-under { border-top: 0; margin-top: 0; padding-top: 4px; }
+.cl-under select { flex: 1; min-width: 0; }
+.cl-del { margin-top: 4px; align-self: flex-start; }
+.cl-item.is-fix .cl-text { color: color-mix(in srgb, var(--text) 68%, var(--bg)); }
+.cl-item.is-group .cl-text { font-weight: 700; }
+.cl-item.is-child .cl-row { padding-left: 28px; }
 .cl-task { font-size: 12px; white-space: nowrap; }
 .cl-text {
   display: block;
@@ -514,6 +545,29 @@ select.small {
 .icon-btn .ic { width: 16px; height: 16px; }
 .icon-btn.eye[aria-pressed="true"] { color: var(--accent); }
 .cl-conflict { margin: 4px 0 4px; }
+
+/* T-3467: the roadmap, one column per planned version, its items dragged by their grip */
+.rm { margin-bottom: 22px; }
+.rm .cl-head { margin-bottom: 6px; }
+.rm .cl-head .rm-state { margin-left: auto; }
+.rm-cols { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
+.rm-col { flex: 0 0 240px; display: flex; flex-direction: column; gap: 4px; padding: 6px; background: var(--soft);
+  border: 1px solid var(--line); border-radius: 6px; }
+.rm-col-head { display: flex; align-items: center; gap: 4px; }
+.rm-col textarea { display: block; width: 100%; box-sizing: border-box; resize: none; overflow: hidden; border-color: transparent; background: transparent; padding: 3px 6px; }
+.rm-col textarea:hover { border-color: var(--line); }
+.rm-col textarea:focus { border-color: var(--accent); background: var(--card); outline: none; }
+.rm-name { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; }
+.rm-items { display: flex; flex-direction: column; gap: 4px; min-height: 30px; padding: 2px 0 4px; }
+.rm-items.rm-drop-end { box-shadow: inset 0 -2px 0 var(--accent); }
+.rm-card { display: flex; align-items: flex-start; gap: 2px; background: var(--card); border: 1px solid var(--line); border-radius: 4px; }
+.rm-card.rm-drop-before { box-shadow: 0 -3px 0 var(--accent); }
+.rm-card.dragging { opacity: 0.4; }
+.rm-grip { flex: none; padding: 5px 2px 0 5px; color: var(--muted); cursor: grab; user-select: none; font-size: 13px; line-height: 1; }
+.rm-text { flex: 1; min-width: 0; font-size: 13px; }
+.rm-x { flex: none; font-size: 16px; line-height: 1; visibility: hidden; }
+.rm-card:hover .rm-x, .rm-col-head:hover .rm-x, .rm-x:focus { visibility: visible; }
+.rm-add { font-size: 13px; padding: 4px 6px; }
 
 /* priority selects tinted in the chosen priority's colour (after select.small, which they override) */
 select.small[data-pri="P1"], select[data-pri="P1"] { background: var(--p1); color: var(--p1-ink); border-color: var(--p1); }
@@ -565,3 +619,11 @@ button.link.fold.open .ic { transform: rotate(90deg); }
 .col-edge:hover, body.col-dragging .col-edge:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 .colhead .col-edge { right: 0; }   /* the next header (sticky, same layer) would cover an edge that reached into it */
 body.col-dragging { cursor: col-resize; user-select: none; }
+@media (prefers-color-scheme: dark) {
+  .cl-a-track { color: #8aa6ff; }
+  .cl-a-scheduling, .cl-a-fares { color: #7cc576; }
+  .cl-a-schematic { color: #e5c34a; }
+  .cl-a-community { color: #eb9a52; }
+  .cl-a-performance { color: #f2f2f2; }
+  .cl-a-performance .screen { fill: color-mix(in srgb, #f2f2f2 22%, transparent); }
+}

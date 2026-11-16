@@ -5,18 +5,26 @@
 
 import type { MessageKey } from "../i18n";
 
+/** What a change is about, shown as its icon (Changelog.tsx); the list is sorted in this order (T-3466). "other"
+ * fits none of Anita's areas and gets a plain dot; "bug" is a fix that fits no area. */
+export const AREAS = ["track", "demand", "scheduling", "fares", "schematic", "community", "performance", "other", "bug"] as const;
+export type Area = typeof AREAS[number];
+/** one item: its text, its area, and "fix" for a bug fix (drawn a little lighter, after the area's other items) */
+export type Change = [key: MessageKey, area: Area, fix?: "fix"];
+
 export interface Update {
   version: string;
   /** ISO time it went out */
   at: string;
   /** the row's one line */
   line: MessageKey;
-  /** the changelog's list */
-  changes: MessageKey[];
+  /** the changelog's list, shown sorted by area */
+  changes: Change[];
   /** those of `changes` that make something harder, each with the key of its new figure, which is filled into the
    * line's `{figure}` and shown red (T-3133; only the figure is red, Anita 2026-11-11) */
   nerfs?: Partial<Record<MessageKey, MessageKey>>;
-  /** sub-items, shown indented under their parent item of `changes`; a sub key is not also in `changes` */
+  /** sub-items, shown indented under their parent item of `changes` (a group, like "track bug fixes"), with its area and
+   * fix; a sub key is not also in `changes` */
   sub?: Partial<Record<MessageKey, MessageKey[]>>;
 }
 
@@ -46,43 +54,43 @@ export const UPDATES: Update[] = [
     version: "v0.3.5",
     at: "2026-11-15T22:45:00Z",
     line: "updates.v035Line",
-    changes: ["updates.v035Fixes"],
+    changes: [["updates.v035Fixes", "bug", "fix"]],
   },
   {
     version: "v0.3.4",
     at: "2026-11-15T14:15:00Z",
     line: "updates.v034Line",
-    changes: ["updates.v034Fixes"],
+    changes: [["updates.v034Fixes", "performance", "fix"]],
   },
   {
     version: "v0.3.3",
     at: V0_3_3_AT,
     line: "updates.v033Line",
     changes: [
-      "updates.v033Satellite",
-      "updates.v033OpenSource",
-      "updates.v033OneWay",
-      "updates.v033SingleTrack",
-      "updates.v033Follow",
-      "updates.v033Bullets",
-      "updates.v033LeftHand",
-      "updates.v033SBahn",
-      "updates.v033BusReroute",
-      "updates.v033RealTime",
-      "updates.v033Memory",
-      "updates.v033Screenshots",
-      "updates.v033Zones",
-      "updates.v033LongTrips",
-      "updates.v033Resorts",
-      "updates.v033Schematic",
-      "updates.v033Terrain",
-      "updates.v033StationNames",
-      "updates.v033Networks",
-      "updates.v033Tunnels",
-      "updates.v033ZoomButtons",
-      "updates.v033ZoneNames",
-      "updates.v033HsrFare",
-      "updates.v033Fixes",
+      ["updates.v033Satellite", "schematic"],
+      ["updates.v033OpenSource", "community"],
+      ["updates.v033OneWay", "track"],
+      ["updates.v033SingleTrack", "track"],
+      ["updates.v033Follow", "other"],
+      ["updates.v033Bullets", "schematic"],
+      ["updates.v033LeftHand", "track"],
+      ["updates.v033SBahn", "track"],
+      ["updates.v033BusReroute", "track"],
+      ["updates.v033RealTime", "other"],
+      ["updates.v033Memory", "performance"],
+      ["updates.v033Screenshots", "community"],
+      ["updates.v033Zones", "demand"],
+      ["updates.v033LongTrips", "demand"],
+      ["updates.v033Resorts", "demand"],
+      ["updates.v033Schematic", "schematic"],
+      ["updates.v033Terrain", "schematic"],
+      ["updates.v033StationNames", "track"],
+      ["updates.v033Networks", "track"],
+      ["updates.v033Tunnels", "track"],
+      ["updates.v033ZoomButtons", "other"],
+      ["updates.v033ZoneNames", "schematic"],
+      ["updates.v033HsrFare", "fares"],
+      ["updates.v033Fixes", "bug", "fix"],
     ],
     sub: {
       "updates.v033Zones": ["updates.v033NorthKorea"],
@@ -94,9 +102,9 @@ export const UPDATES: Update[] = [
     at: V0_3_2_AT,
     line: "updates.v032Line",
     changes: [
-      "updates.v032FareWait",
-      "updates.v032FareCap",
-      "updates.v032Downloads",
+      ["updates.v032FareWait", "fares", "fix"],
+      ["updates.v032FareCap", "fares"],
+      ["updates.v032Downloads", "bug", "fix"],
     ],
   },
   {
@@ -104,11 +112,11 @@ export const UPDATES: Update[] = [
     at: V0_3_1_AT,
     line: "updates.v031Line",
     changes: [
-      "updates.v031Hsr",
-      "updates.v031Saves",
-      "updates.v031Search",
-      "updates.v031Played",
-      "updates.v031Button",
+      ["updates.v031Hsr", "fares", "fix"],
+      ["updates.v031Saves", "demand", "fix"],
+      ["updates.v031Search", "community"],
+      ["updates.v031Played", "community"],
+      ["updates.v031Button", "community"],
     ],
   },
   {
@@ -116,22 +124,22 @@ export const UPDATES: Update[] = [
     at: V0_3_AT,
     line: "updates.v03Line",
     changes: [
-      "updates.v03Flyovers",
-      "updates.v03Single",
-      "updates.v03Share",
-      "updates.v03Rebuild",
-      "updates.v03Boards",
-      "updates.v03Roads",
-      "updates.v03Quad",
-      "updates.v03Complexes",
-      "updates.v03Loops",
-      "updates.v03Ferries",
-      "updates.v03Curves",
-      "updates.v03Catalan",
-      "updates.v03NerfTerminals",
-      "updates.v03NerfTrams",
-      "updates.v03NerfJunctions",
-      "updates.v03Fixes",
+      ["updates.v03Flyovers", "track"],
+      ["updates.v03Single", "track"],
+      ["updates.v03Share", "community"],
+      ["updates.v03Rebuild", "track"],
+      ["updates.v03Boards", "community"],
+      ["updates.v03Roads", "track"],
+      ["updates.v03Quad", "track"],
+      ["updates.v03Complexes", "track"],
+      ["updates.v03Loops", "track"],
+      ["updates.v03Ferries", "track"],
+      ["updates.v03Curves", "track"],
+      ["updates.v03Catalan", "other"],
+      ["updates.v03NerfTerminals", "scheduling"],
+      ["updates.v03NerfTrams", "scheduling"],
+      ["updates.v03NerfJunctions", "scheduling"],
+      ["updates.v03Fixes", "bug", "fix"],
     ],
     nerfs: {
       "updates.v03NerfTerminals": "updates.v03NerfTerminalsFigure",
@@ -144,13 +152,13 @@ export const UPDATES: Update[] = [
     at: V0_2_1_AT,
     line: "updates.v021Line",
     changes: [
-      "updates.v021Hsr",
-      "updates.v021Terminals",
-      "updates.v021VehicleNames",
-      "updates.v021Transit",
-      "updates.v021TramCrossing",
-      "updates.v021Memory",
-      "updates.v021Fixes",
+      ["updates.v021Hsr", "track", "fix"],
+      ["updates.v021Terminals", "track", "fix"],
+      ["updates.v021VehicleNames", "bug", "fix"],
+      ["updates.v021Transit", "demand"],
+      ["updates.v021TramCrossing", "track"],
+      ["updates.v021Memory", "performance"],
+      ["updates.v021Fixes", "bug", "fix"],
     ],
   },
   {
@@ -158,23 +166,23 @@ export const UPDATES: Update[] = [
     at: V0_2_AT,
     line: "updates.v02Line",
     changes: [
-      "updates.v02Trams",
-      "updates.v02TramCrossing",
-      "updates.v02Loops",
-      "updates.v02BusLoops",
-      "updates.v02Colors",
-      "updates.v02Limit",
-      "updates.v02BusFare",
-      "updates.v02Places",
-      "updates.v02Languages",
-      "updates.v02Hidden",
-      "updates.v02ColorBlind",
-      "updates.v02BusManual",
-      "updates.v02Crowding",
-      "updates.v02Purpose",
-      "updates.v02StopOrder",
-      "updates.v02Terrain",
-      "updates.v02Fixes",
+      ["updates.v02Trams", "track"],
+      ["updates.v02TramCrossing", "track"],
+      ["updates.v02Loops", "track"],
+      ["updates.v02BusLoops", "track"],
+      ["updates.v02Colors", "schematic"],
+      ["updates.v02Limit", "scheduling"],
+      ["updates.v02BusFare", "fares"],
+      ["updates.v02Places", "demand"],
+      ["updates.v02Languages", "other"],
+      ["updates.v02Hidden", "other"],
+      ["updates.v02ColorBlind", "demand"],
+      ["updates.v02BusManual", "track"],
+      ["updates.v02Crowding", "demand"],
+      ["updates.v02Purpose", "demand"],
+      ["updates.v02StopOrder", "track"],
+      ["updates.v02Terrain", "schematic"],
+      ["updates.v02Fixes", "bug", "fix"],
     ],
   },
   {
@@ -182,12 +190,12 @@ export const UPDATES: Update[] = [
     at: "2026-11-09T16:40:00Z",
     line: "updates.v011Line",
     changes: [
-      "updates.v011Feedback",
-      "updates.v011Buses",
-      "updates.v011Currencies",
-      "updates.v011Discord",
-      "updates.v011Memory",
-      "updates.v011Fixes",
+      ["updates.v011Feedback", "community"],
+      ["updates.v011Buses", "track"],
+      ["updates.v011Currencies", "fares"],
+      ["updates.v011Discord", "community"],
+      ["updates.v011Memory", "performance"],
+      ["updates.v011Fixes", "bug", "fix"],
     ],
   },
   {
@@ -195,18 +203,18 @@ export const UPDATES: Update[] = [
     at: V0_1_AT,
     line: "updates.v01Line",
     changes: [
-      "updates.v01Currency",
-      "updates.v01Spanish",
-      "updates.v01Curves",
-      "updates.v01DeleteKeys",
-      "updates.v01StationsApart",
-      "updates.v01Rename",
-      "updates.v01DeleteBig",
-      "updates.v01Cars",
-      "updates.v01MainMenu",
-      "updates.v01MapDetail",
-      "updates.v01Phones",
-      "updates.v01Fixes",
+      ["updates.v01Currency", "fares"],
+      ["updates.v01Spanish", "other"],
+      ["updates.v01Curves", "track"],
+      ["updates.v01DeleteKeys", "track"],
+      ["updates.v01StationsApart", "track"],
+      ["updates.v01Rename", "other"],
+      ["updates.v01DeleteBig", "other"],
+      ["updates.v01Cars", "track"],
+      ["updates.v01MainMenu", "other"],
+      ["updates.v01MapDetail", "performance"],
+      ["updates.v01Phones", "performance"],
+      ["updates.v01Fixes", "bug", "fix"],
     ],
   },
 ];

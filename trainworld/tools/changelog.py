@@ -2,10 +2,14 @@
 
 One JSON file per release under trainworld/changelog/. The unpublished one is next.json; publish renames it to
 <version>.json. An item: id (c001...), text (what the agent wrote), edited (Anita's wording, or null), hidden,
-task, by, at, rev (counts changes, so a page saving over a newer change gets refused). The page shows
-edited if set, else text. A hidden item stays in the file and out of the game.
+task, by, at, rev (counts changes, so a page saving over a newer change gets refused), area (its icon, T-3466: one of
+AREAS), fix (a bug fix: lighter text, after its area's other items), parent (the id of the group it sits under) and
+group (true for a group item, like "track bug fixes", that others sit under). The page shows edited if set, else
+text. A hidden item stays in the file and out of the game; a hidden group hides its items too.
 
-    python trainworld/tools/changelog.py add "fixed trains drawn through each other on single track" --task T-3379 --by bugs1
+    python trainworld/tools/changelog.py add "fixed trains drawn through each other on single track" --area track --fix --task T-3379 --by bugs1
+    python trainworld/tools/changelog.py group "track bug fixes" --area track --fix
+    python trainworld/tools/changelog.py set c002 [--area track] [--fix | --no-fix] [--under c055 | --under none]
     python trainworld/tools/changelog.py list
     python trainworld/tools/changelog.py line "update v0.3.6: <the start menu's line, 80 characters at most>"
     python trainworld/tools/changelog.py publish --version v0.3.6 [--at 2026-11-17T15:00:00Z] [--dry-run]
@@ -19,6 +23,7 @@ import datetime
 import json
 import os
 import re
+import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +35,9 @@ MESSAGES = os.path.join(ROOT, "app", "src", "i18n", "messages", "en.json")
 CONTEXT = os.path.join(ROOT, "app", "src", "i18n", "context.json")
 LINE_MAX = 80  # checks/i18n.mjs UPDATE_LINE_MAX
 CURLY = chr(0x2019)
+# app/src/ui/updates.ts AREAS, in the order the game sorts by. "other" fits none of Anita's areas (a plain dot); "bug" is
+# a fix that fits no area (an area's own fixes take its icon)
+AREAS = ("track", "demand", "scheduling", "fares", "schematic", "community", "performance", "other", "bug")
 
 
 class Locked:
@@ -95,23 +103,59 @@ def state(path=NEXT):
     return d
 
 
-def add_item(text, task=None, by="agent", path=NEXT):
+def check_area(area):
+    if area not in AREAS:
+        raise ValueError("area is one of: " + ", ".join(AREAS))
+
+
+def check_parent(d, parent, item_id=None):
+    if parent is None:
+        return
+    g = next((i for i in d["items"] if i["id"] == parent), None)
+    if g is None or not g.get("group") or parent == item_id:
+        raise ValueError("%s is not a group" % parent)
+
+
+def add_item(text, task=None, by="agent", path=NEXT, area=None, fix=False, parent=None, group=False):
     text = " ".join(text.split())
     if not text:
         raise ValueError("empty text")
+    check_area(area)
     with Locked(path):
         d = read(path)
+        check_parent(d, parent)
         n = max([int(i["id"][1:]) for i in d["items"]] + [0]) + 1
         item = {"id": "c%03d" % n, "text": text, "edited": None, "hidden": False,
-                "task": task, "by": by, "at": now(), "rev": 1}
+                "task": task, "by": by, "at": now(), "rev": 1, "area": area, "fix": bool(fix)}
+        if parent:
+            item["parent"] = parent
+        if group:
+            item["group"] = True
         d["items"].append(item)
         write_file(d, path)
     return item
 
 
+def delete_group(item_id, rev, path=NEXT):
+    """Her board's delete, for a group item with nothing under it (agents' items stay as the record). (status, item)."""
+    with Locked(path):
+        d = read(path)
+        item = next((i for i in d["items"] if i["id"] == item_id), None)
+        if item is None:
+            return 404, None
+        if item["rev"] != rev:
+            return 409, item
+        if not item.get("group") or any(i.get("parent") == item_id for i in d["items"]):
+            return 400, item
+        d["items"].remove(item)
+        write_file(d, path)
+    return 200, item
+
+
 def update_item(item_id, fields, rev, path=NEXT):
-    """Her save: edited (string, or null to go back to the agent's text) and/or hidden. Returns (status, item):
-    409 with the current item when rev is not the item's."""
+    """Her save: edited (string, or null to go back to the agent's text), hidden, area, fix, parent (a group's id
+    or null). Returns (status, item): 409 with the current item when rev is not the item's; ValueError on a bad
+    area or parent."""
     with Locked(path):
         d = read(path)
         item = next((i for i in d["items"] if i["id"] == item_id), None)
@@ -126,6 +170,20 @@ def update_item(item_id, fields, rev, path=NEXT):
             item["edited"] = e if e != item["text"] else None
         if "hidden" in fields:
             item["hidden"] = bool(fields["hidden"])
+        if "area" in fields:
+            check_area(fields["area"])
+            item["area"] = fields["area"]
+        if "fix" in fields:
+            item["fix"] = bool(fields["fix"])
+        if "parent" in fields:
+            p = fields["parent"] or None
+            if item.get("group") and p:
+                raise ValueError("a group cannot sit under another")
+            check_parent(d, p, item_id)
+            if p:
+                item["parent"] = p
+            else:
+                item.pop("parent", None)
         item["rev"] += 1
         item["changed"] = now()
         write_file(d, path)
@@ -134,6 +192,27 @@ def update_item(item_id, fields, rev, path=NEXT):
 
 def shown(item):
     return item["edited"] or item["text"]
+
+
+def rank(i):
+    a = i.get("area")
+    return (AREAS.index(a) if a in AREAS else len(AREAS)) * 2 + (1 if i.get("fix") else 0)
+
+
+def visible(d):
+    """What reaches the game, in the game's order: [(item, [its group's items])]. Sorted by area, an area's fixes
+    after its other items, else in file order; a group with nothing visible under it is left out."""
+    items = d["items"]
+    groups = {i["id"]: i for i in items if i.get("group")}
+    out = []
+    for i in items:
+        if i["hidden"] or i.get("parent") in groups:
+            continue
+        kids = [c for c in items if c.get("parent") == i["id"] and not c["hidden"]] if i.get("group") else []
+        if i.get("group") and not kids:
+            continue
+        out.append((i, kids))
+    return [x for _, x in sorted(enumerate(out), key=lambda p: (rank(p[1][0]), p[0]))]
 
 
 def esc(s):
@@ -146,20 +225,31 @@ def publish(version, at=None, dry=False, path=NEXT):
         raise SystemExit("version looks like v0.3.6")
     prefix = "updates.v" + m.group(1).replace(".", "")
     d = read(path)
-    vis = [i for i in d["items"] if not i["hidden"]]
+    vis = visible(d)
     line = (d.get("line") or "").strip()
     if not vis:
         raise SystemExit("no visible items: nothing to publish")
+    bare = [i["id"] for i, _ in vis if i.get("area") not in AREAS]
+    if bare:
+        raise SystemExit("no area: %s (python trainworld/tools/changelog.py set <id> --area ...)" % ", ".join(bare))
     if not line:
         raise SystemExit("no start-menu line: python trainworld/tools/changelog.py line \"update %s: ...\"" % version)
     if len(line) > LINE_MAX:
         raise SystemExit("the line is %d characters, the limit is %d" % (len(line), LINE_MAX))
     strings = {prefix + "Line": line}
-    keys = []
-    for n, i in enumerate(vis, 1):
+    keys = []      # (key, item) of the list's items
+    subs = {}      # a group's key: its items' keys
+    n = 0
+    for i, kids in vis:
+        n += 1
         k = "%sChange%d" % (prefix, n)
         strings[k] = shown(i)
-        keys.append(k)
+        keys.append((k, i))
+        for c in kids:
+            n += 1
+            ck = "%sChange%d" % (prefix, n)
+            strings[ck] = shown(c)
+            subs.setdefault(k, []).append(ck)
     for k, v in list(strings.items()):
         v2 = v.replace("'", CURLY)
         if re.search(r"[{}]", v2):
@@ -170,8 +260,10 @@ def publish(version, at=None, dry=False, path=NEXT):
     if 'version: "%s"' % version in ts:
         raise SystemExit("%s is already in updates.ts" % version)
     at = at or now()
-    entry = ('  {\n    version: "%s",\n    at: "%s",\n    line: "%sLine",\n    changes: [%s],\n  },\n'
-             % (version, at, prefix, ", ".join('"%s"' % k for k in keys)))
+    changes = "".join('      ["%s", "%s"%s],\n' % (k, i["area"], ', "fix"' if i.get("fix") else "") for k, i in keys)
+    sub = "".join('      "%s": [%s],\n' % (k, ", ".join('"%s"' % c for c in cs)) for k, cs in subs.items())
+    entry = ('  {\n    version: "%s",\n    at: "%s",\n    line: "%sLine",\n    changes: [\n%s    ],\n%s  },\n'
+             % (version, at, prefix, changes, "    sub: {\n%s    },\n" % sub if sub else ""))
     entry = entry.replace("\n", eol)
     anchor = "export const UPDATES: Update[] = [" + eol
     if ts.count(anchor) != 1:
@@ -180,7 +272,7 @@ def publish(version, at=None, dry=False, path=NEXT):
         print(entry)
         for k, v in strings.items():
             print("  %s: %s" % (k, v))
-        print("dry run: nothing written (%d hidden items stay out)" % (len(d["items"]) - len(vis)))
+        print("dry run: nothing written (%d hidden items stay out)" % (len(d["items"]) - sum(1 + len(k) for _, k in vis)))
         return
     new_ts = ts.replace(anchor, anchor + entry, 1)
     en = open(MESSAGES, encoding="utf-8", newline="").read()
@@ -198,7 +290,8 @@ def publish(version, at=None, dry=False, path=NEXT):
 
     new_en = put(en, list(strings.items()))
     ctxl = [(prefix + "Line", "Start-menu announcement for %s. Casual, lowercase, at most %d characters." % (version, LINE_MAX))]
-    ctxl += [(k, "Changelog line for %s, written by an agent, wording checked before release." % version) for k in keys]
+    ctxl += [(k, "Changelog line for %s, written by an agent, wording checked before release." % version)
+             for k in strings if k != prefix + "Line"]
     new_ctx = put(ctx, ctxl)
     json.loads(new_en), json.loads(new_ctx)
     for p, s in ((UPDATES_TS, new_ts), (MESSAGES, new_en), (CONTEXT, new_ctx)):
@@ -218,8 +311,22 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("add")
     a.add_argument("text")
+    a.add_argument("--area", required=True, choices=AREAS)
+    a.add_argument("--fix", action="store_true", help="a bug fix (lighter text); give it its area, bug only when none fits")
+    a.add_argument("--under", help="the id of a group to sit under")
     a.add_argument("--task")
     a.add_argument("--by", default="agent")
+    g = sub.add_parser("group")
+    g.add_argument("text")
+    g.add_argument("--area", required=True, choices=AREAS)
+    g.add_argument("--fix", action="store_true")
+    g.add_argument("--by", default="agent")
+    s = sub.add_parser("set")
+    s.add_argument("id")
+    s.add_argument("--area", choices=AREAS)
+    s.add_argument("--fix", action="store_true", default=None)
+    s.add_argument("--no-fix", dest="fix", action="store_false")
+    s.add_argument("--under", help="a group's id, or none")
     sub.add_parser("list")
     l = sub.add_parser("line")
     l.add_argument("text")
@@ -228,15 +335,35 @@ def main():
     p.add_argument("--at")
     p.add_argument("--dry-run", action="store_true")
     r = ap.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")   # item text can be CJK; the Windows console's code page is not
     if r.cmd == "add":
-        it = add_item(r.text, r.task, r.by)
+        it = add_item(r.text, r.task, r.by, area=r.area, fix=r.fix, parent=r.under)
         print("added %s" % it["id"])
+    elif r.cmd == "group":
+        it = add_item(r.text, None, r.by, area=r.area, fix=r.fix, group=True)
+        print("added group %s" % it["id"])
+    elif r.cmd == "set":
+        fields = {}
+        if r.area:
+            fields["area"] = r.area
+        if r.fix is not None:
+            fields["fix"] = r.fix
+        if r.under:
+            fields["parent"] = None if r.under == "none" else r.under
+        it = next((i for i in read()["items"] if i["id"] == r.id), None)
+        if it is None:
+            raise SystemExit("no item " + r.id)
+        code, _ = update_item(r.id, fields, it["rev"])
+        if code != 200:
+            raise SystemExit("not saved (%d): try again" % code)
     elif r.cmd == "list":
         d = read()
         print("line: %s" % (d.get("line") or "(none)"))
         for i in d["items"]:
-            print("%s%s %s %s%s" % (i["id"], " [hidden]" if i["hidden"] else "", i.get("task") or "-", shown(i),
-                                    "  (edited)" if i["edited"] else ""))
+            print("%s%s %s %s%s %s%s%s" % (
+                i["id"], " [hidden]" if i["hidden"] else "", i.get("area") or "(no area)", "fix " if i.get("fix") else "",
+                i.get("task") or "-", "  " if i.get("parent") else "", "[group] " if i.get("group") else "", shown(i))
+                + ("  (edited)" if i["edited"] else ""))
     elif r.cmd == "line":
         with Locked(NEXT):
             d = read()

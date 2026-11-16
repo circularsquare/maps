@@ -95,8 +95,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 - Game: notes/T-924.md "Commands" (`tools/deploy.py --dry-run --version X`, then `--smoked`, website push, `--verify`).
   Every publish gets a version and an entry in `app/src/ui/updates.ts`, written from the board's changelog (T-3424):
   `tools/changelog.py line "update vX.Y.Z: ..."`, `publish --version vX.Y.Z --dry-run`, then without `--dry-run`
-  (her wording, hidden items left out), translate the new `updates.vXYZ*` keys, then deploy.py. Re-read the items
-  against what ships first. When landing agent work, check its changelog item exists.
+  (her wording, hidden items left out, sorted by area, groups' items under them; it refuses an item with no area:
+  `changelog.py set <id> --area ...`), translate the new `updates.vXYZ*` keys, then deploy.py. Re-read the items
+  against what ships first. When landing agent work, check its changelog item exists and has an area.
 - Open-source copy (T-2913, notes/T-2913.md): synced at each game publish under the same word (Anita, 2026-11-12):
   `venv\Scripts\python.exe trainworld/tools/opensource/export.py` from the maps root, then `git push` in
   ..\trainsworld-export. A PR is applied in maps by an agent (`gh pr diff`, `git apply`), checked like agent work,

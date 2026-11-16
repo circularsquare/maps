@@ -147,6 +147,11 @@ export const Icon = {
   link: () => <svg viewBox="0 0 16 16"><path d="M6.4 9.6l3.2-3.2M7.2 4.8l1.3-1.3a2.6 2.6 0 013.7 3.7l-1.3 1.3M8.8 11.2l-1.3 1.3a2.6 2.6 0 01-3.7-3.7l1.3-1.3" /></svg>,
   heart: () => <svg viewBox="0 0 16 16"><path d="M8 13.8S2 10.3 2 6.1A3.1 3.1 0 018 5a3.1 3.1 0 016 1.1c0 4.2-6 7.7-6 7.7z" /></svg>,
   flag: () => <svg viewBox="0 0 16 16"><path d="M3.5 14.5v-12M3.5 2.5h9l-2 3 2 3h-9" /></svg>,
+  // T-3466: the changelog's areas without an icon of their own: a folded map (map and schematic), a bug (a fix that
+  // fits no area), a computer (performance)
+  foldMap: () => <svg viewBox="0 0 16 16"><path d="M1.5 4l4-1.5 5 2 4-1.5v9.5l-4 1.5-5-2-4 1.5zM5.5 2.5V12M10.5 4.5V14" /></svg>,
+  bug: () => <svg viewBox="0 0 16 16"><path d="M6.2 4.8a1.8 1.8 0 013.6 0" /><rect x="4.8" y="4.8" width="6.4" height="9.2" rx="3.2" /><path d="M8 7.6V14M4.8 8.6H2.4M4.8 11.6l-2.2 1.5M11.2 8.6h2.4M11.2 11.6l2.2 1.5M5.3 6.3L3.4 4.6M10.7 6.3l1.9-1.7" /></svg>,
+  computer: () => <svg viewBox="0 0 16 16"><rect class="screen" x="1.5" y="2.5" width="13" height="8.5" rx="1" /><path d="M8 11v2.5M5 13.8h6" /></svg>,
   gear: () => (
     <svg viewBox="0 0 16 16">
       <path d="M6.83 3.14L7.09 1.26L8.91 1.26L9.17 3.14L10.61 3.74L12.13 2.59L13.41 3.87L12.26 5.39L12.86 6.83L14.74 7.09L14.74 8.91L12.86 9.17L12.26 10.61L13.41 12.13L12.13 13.41L10.61 12.26L9.17 12.86L8.91 14.74L7.09 14.74L6.83 12.86L5.39 12.26L3.87 13.41L2.59 12.13L3.74 10.61L3.14 9.17L1.26 8.91L1.26 7.09L3.14 6.83L3.74 5.39L2.59 3.87L3.87 2.59L5.39 3.74z" />

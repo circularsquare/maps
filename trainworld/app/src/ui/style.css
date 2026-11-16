@@ -1126,11 +1126,32 @@ a.btn { text-decoration: none; }
 .start-update-line { flex: 1; min-width: 0; }
 .start-update .btn { flex: none; height: 24px; padding: 0 6px; color: inherit; font-size: inherit; }
 .start-update .btn.icon { width: 24px; min-width: 24px; padding: 0; }
+/* T-3468: the links to each x.y version's page, under the title */
+.changelog-pages { margin: 0 0 12px; }
+.changelog-pages .btn { font-size: 12px; padding: 3px 9px; }
 .changelog-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; font-size: 14px; }
 .changelog-head span { font-weight: 400; }
 section + section > .changelog-head { margin-top: 16px; }
-.changelog-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
-.changelog-list ul { margin: 3px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.changelog-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.changelog-list > li { display: flex; gap: 6px; align-items: flex-start; }
+.changelog-list ul { margin: 3px 0 0; padding-left: 14px; display: flex; flex-direction: column; gap: 3px; }
+/* T-3466: each item's area icon, in its colour: track blue (the station circle's), demand the bubble control's purple,
+   scheduling and fares green, map yellow, community orange, a fix of no area grey, performance a near-white computer
+   with a grey edge (white on the dark shade); a bug fix's text a little lighter */
+.cl-area { flex: none; display: grid; place-items: center; width: 15px; height: 16px; }
+.cl-area svg { width: 14px; height: 14px; }
+.cl-track { color: #2456e0; }
+:root[data-shade="dark"] .cl-track { color: #8aa6ff; }
+.cl-demand .bubble { fill: color-mix(in oklab, color-mix(in oklab, #ff4d4d, #4d4dff) 62%, #fff); stroke: none; }
+.cl-scheduling, .cl-fares { color: var(--good); }
+.cl-schematic { color: var(--yellow); }
+.cl-community { color: var(--warn); }
+.cl-bug, .cl-other { color: var(--muted); }
+.cl-performance { color: #9a9a9a; }
+.cl-performance .screen { fill: #fff; }
+:root[data-shade="dark"] .cl-performance { color: #f2f2f2; }
+:root[data-shade="dark"] .cl-performance .screen { fill: color-mix(in srgb, #f2f2f2 22%, transparent); }
+.changelog-list li.fix { color: color-mix(in srgb, var(--text) 72%, var(--bg)); }
 .changelog-list .nerf { color: var(--bad); }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .start-save { display: flex; gap: 12px; width: 100%; padding: 8px; text-align: left; font: inherit; color: inherit;
