@@ -114,6 +114,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Shell**: scripts in a file in your scratchpad. Pin processes from PowerShell or a `.cmd`, never
   `cmd /c start ... /b` through Git Bash (it pops dialogs on her screen).
 - **Screenshots** go in `../artifacts/trainworld/`. For UI work, judge your own screenshots before reporting.
+- **Advisor** (when your session has one): call it for a call nobody has made, when stuck (the same failure twice or
+  about 30 minutes without progress) or before giving up, and before claiming a cause; about once a task. Not for
+  routine steps, wording or small UI. Say in your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
 - **Waiting**: under about 4 minutes, one foreground call; longer, in the background with a wait on the process

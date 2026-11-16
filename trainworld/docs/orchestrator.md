@@ -7,7 +7,14 @@ not once per message (Anita, 2026-11-09).
 ## Agents
 
 - **Model**: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands.
-  No Fable (Anita, 2026-11-09). This week's usage stance, if any, is in the handoff's standing asks.
+  No Fable as a model (Anita, 2026-11-09); Fable as advisor is on trial (below).
+- **Advisor trial** (Anita 2026-11-16): orchestrators start with `--advisor fable`, and every agent they start inherits it.
+  Call it for a call nobody has made (design, a source choice, a demand factor, a performance lie) before proposing or
+  acting; when stuck (the same failure twice, or about 30 minutes without progress) and before giving up; before
+  claiming a cause; and, for the orchestrator, when an agent's report doesn't add up. Not for bookkeeping, landing,
+  routine runs, wording or small UI, or a choice already going to Anita. About 3 calls a session for the orchestrator,
+  1 a task for agents; soft limits ("not the end of the world"). Log each call in notes/handoff-log.md: what was asked,
+  whether the advice changed anything. This week's usage stance, if any, is in the handoff's standing asks.
 - **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
   own (leave them alone), the task ids the agent may file, its own scratchpad subfolder and Vite port. A TODO.md
   short-term item goes into the brief verbatim, examples and all (a paraphrase lost her formula tooltip, T-1839).
@@ -18,7 +25,7 @@ not once per message (Anita, 2026-11-09).
 - **Thanks**: a short thanks when an agent's work is done, in your own reply; a SendMessage resumes the agent and it
   reports again. Resume the same agent for follow-ups.
 - **Your own cycling** (Anita 2026-11-16): at about 400k tokens (the stop hook says so), finish anything mid-landing,
-  bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld` (a new
+  bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new
   Windows Terminal tab running /takeover), then wind down per /handoff once the new one messages you. Don't wait for her.
 - **Cycling**: an agent past about 500k tokens with real work left writes its state to its notes and a fresh one
   continues. Overnight, while she sleeps, agents and you keep going past that (Anita, 2026-11-05).

@@ -65,14 +65,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: No join runs seams.py, so every country built since Southeast Asia has its pack lines at the plain 0.5, including Kerala's coast and Delhi's edge zones.
   - Goal: Seamless pairs are applied for the newer countries.
   - Other: notes/T-2112.md
-- T-2298 [P3] {L:world-tooling} Gate checks break when WASM is rebuilt
-  - Context: The gate serves the main tree's app/, so a WASM rebuild mid-gate parked 72 of Russia's rows with a misleading "Nn" error.
-  - Goal: The gate runs from a frozen copy of app/, or stops and reruns the chunk when the WASM changes.
-  - Other: See notes/T-2295.md.
-- T-2399 [P3] {L:world-tooling} Gate browser check fails silently on UI changes
-  - Context: An app change made the gate's browser check wait 300 s on every zone and park Jakarta's zones.
-  - Goal: A smoke check runs city-browser.mjs on one shipped zone, and a gate failing the same way on every row stops as a run fault.
-  - Other: See notes/T-2341.md.
 - T-2299 [P3] {L:region-redraws} Check for origins off their town
   - Context: Konya, Erzurum and three other zones were parked on 0 riders because their origin sat off the town. Unit names are also cut at 25 characters.
   - Goal: A preflight check flags such origins and the name cut.
@@ -254,27 +246,44 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
-- T-3472 [P2] {L:memory} Long-session memory check (taking, 2026-11-16, agent memcheck)
-  - Context: 7.4 GB in Firefox after 43 minutes is more than the workers' copies explain. Needed before T-3373.
-  - Goal: Memory over a 45-minute session on a big save, split by worker and main thread, with what grows named.
 - T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured
   - Context: CinnamonVII's PR 12 has gravity and layout speedups that keep every sum's order, a 4-lane row split that moves two demand totals in the last bits, and native gravity threads that would take every core. No timings in the PR. Part of T-3373 option A.
   - Goal: The order-keeping speedups landed with timings and identical figures, Cinnamon credited; the rest taken only if the drift is invisible and the threads respect the core claims.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
-- T-3478 [P2] {L:loading} New game from an open game waits silently (taking, 2026-11-16, agent newgame)
-  - Context: You, 2026-11-16: in an open game, New game then start on the map seemed to leave you in the old game for about 30 s, while a "terrain failed to download, will try again in 30 s" notice showed; then it opened the map pick as expected. Likely meets anyone starting a new game from a game.
-  - Goal: New game from a game saves and goes to the menu first, then loads the new one; a failure ends on the menu, never silently in the old game.
-- T-3479 [P3] {L:loading} Retry a failed terrain download now (taking, 2026-11-16, agent newgame)
-  - Context: You, 2026-11-16: the "terrain failed to download" notice waits 30 s before retrying.
-  - Goal: Clicking the notice retries at once.
-- T-3481 [P2] {L:map-look} Long straight lines drawn across the map (taking, 2026-11-16, agent lines)
-  - Context: You, 2026-11-16, with a Tokyo screenshot (artifacts/trainworld/board/20261116-155303-da96.png): "heres a bug that people ahve reported on the discord occaasionally. straight lines everywhere." Dozens of track-styled lines run from central Tokyo off the screen in every direction.
-  - Goal: The cause found and fixed, or written down with a repro if it is hard (give up early).
+- T-3491 [P1] {L:memory} Zone outlines stored compactly on the page (taking, 2026-11-16, agent phonemem)
+  - Context: From T-3472: the page holds zone outlines in a loose form, about 150 MB in every game, which matters most on phones.
+  - Goal: The outlines take a small fraction of that, with the map drawing the same.
+  - Other: notes/T-3472.md
+- T-3492 [P2] {L:memory} Give back idle solving workers' memory
+  - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
+  - Goal: An idle worker's spare memory goes back, with no solve slower than now.
+  - Other: notes/T-3472.md
+- T-3493 [P2] {L:memory} Peaks from data the page throws away
+  - Context: From T-3472: the page briefly holds up to 1.2 GB of data it is about to discard, which can push a phone or small laptop over.
+  - Goal: The biggest peaks found and cut.
+  - Other: notes/T-3472.md
 - T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting
   - Context: You, 2026-11-16: "for the bus routes lets add it as a setting, default off. i feel bad. and some people might want it... we can pull it in if thats easy. its not that many lines of code." From Renkon's open-source PR 1; a both-ways line or a loop still drives a one-way street backwards.
   - Goal: PR 1 brought in behind a setting that is off by default, credited to Renkon, with bus routes unchanged while it is off.
+  - Other: Open-source issue 8 (a330900neo) is the same case: a bus going the wrong way round a roundabout (you, 2026-11-16). Also take PR 12's one-line debug check in the mode choice code (fires when the walk rule is off), credited to CinnamonVII (your yes, 2026-11-16).
+- T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve
+  - Context: On Tokyo-Sendai, a passage between stations (300 m to 1 km) is sometimes missed by long-distance demand after a quick update solve; only a reload counts it (found by feedsample, notes/T-3454.md).
+  - Goal: A quick update solve and a reload give the same long-distance figures.
+- T-3483 [P3] {L:route-choice} Two real networks lower rail on Tokyo-Osaka
+  - Context: Adding both real networks gives less rail than the line alone, with and without the T-3426 fix; guess: the 10-access-station cap pushes the terminal out of dense zones' sets (notes/T-3454.md). Also from feedsample: T-3426's London-Paris real figure was high, about 20k/day is closer.
+  - Goal: Adding a real network never lowers rail on a pair, or the reason is written down.
+- T-3489 [P3] {L:borders} Commute border factor by direction
+  - Context: From T-3484: across Hong Kong-Shenzhen the game sends 3x too many Hong Kong residents to work in Shenzhen, and Macau-Zhuhai and Malaysia-Singapore are backwards the same way; real commutes mostly go toward the richer side. You, 2026-11-16: "ehhh oky we can do border factor depending on direction, if it fits. low prio."
+  - Goal: Commutes across these three borders go mostly the real way, with each total within 25% of today's; dropped if no simple rule fits.
+  - Other: Also worth a look then: what rail carries across Hong Kong-Shenzhen in a running game (about 4 cores, 30-45 min). notes/T-3484.md
+- T-3485 [P2] {L:airports} Few airport passengers ride rail
+  - Context: Open-source issues 6 (GHOST-AKU) and 11 (ykaydogdu): a rail link to a major airport carries very few riders; Istanbul Airport (84.5M passengers in 2025) gets a few thousand at most on its metro. Many players build airport links.
+  - Goal: Airport rail riders compared with published rail shares at a few airports (Heathrow, Istanbul, Hong Kong), and the cause found if far off.
+- T-3488 [P3] {L:region-redraws} Arnavutkoy into Istanbul, two districts to Kocaeli
+  - Context: Open-source issue 11 (ykaydogdu): Arnavutkoy (176k, Istanbul Airport) is its own city in game; T-3439 only renamed it "Arnavutköy, Istanbul". You, 2026-11-16: "the arnavutkoy thing we should do is merging it into istanbul, not just rename it". Altinova and Karamursel sit with Istanbul but are Kocaeli's; Gebze, Cayirova, Dilovasi and Darica can stay with Istanbul.
+  - Goal: Arnavutkoy's zone counts as part of Istanbul, and the two districts as Kocaeli, at the next Turkey rebuild.
 - T-3458 [P3] {L:cleanup} Fewer code comments
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
@@ -288,9 +297,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
   - Goal: State machines B and C are built.
   - Other: See notes/T-2843.md.
-- T-3160 [P3] {L:memory} Phone memory left over from T-2802
-  - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest.
-  - Goal: Phone memory comes down by trimming the biggest unexplained pieces.
+- T-3160 [P1] {L:memory} Phone memory left over from T-2802 (taking, 2026-11-16, agent phonemem)
+  - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
+  - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
 - T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode
   - Context: You see a hitch at about state scale, also at ?pace=2; video2 could not reproduce it (T-2774).
@@ -355,11 +364,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.
-- T-2136 [P3] {L:memory} World corridor table is 118 MB
+- T-2136 [P2] {L:memory} World corridor table is 118 MB
   - Context: The page holds a 5.9M-row world corridor table, 118 MB on the real save, growing with the square of the places.
   - Goal: The page keeps no full table; it asks a market's worker for a place's rows.
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
-- T-2496 [P3] {L:memory} Demand worker WASM is 367 MB
+- T-2496 [P2] {L:memory} Demand worker WASM is 367 MB
   - Context: A solving worker's WASM is 367 MB on the real save, and two workers hold the same packs.
   - Goal: Memory is counted per structure in Rust, then trimmed; likely 50-150 MB a worker.
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
@@ -416,10 +425,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: t1965-follow fails on master (43 of 950 frames): two on-time lines at one double-track terminal drawn over each other. A fix clears it to 4 frames but breaks t2980.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
-- T-3150 [P3] {L:small-fixes} Long straight rays across the map
-  - Context: A player saw thin white lines fanning out from one point (San Francisco). You have never seen it; players report it more, so it stays open. Not reproduced in about 2 hours, and nothing new without the player's save.
-  - Goal: Reproduce it (the player's save is the next step), fix it, add a check.
-  - Other: notes/T-3150.md
 - T-3101 [P3] {L:single-track} One-way track follow-ups
   - Context: The track panel's line list now counts a line that only uses a piece on its way back (fixed in tree bug-e, waiting to land). The Select bar still lacks switch and reverse for a picked single-track run: one confirmation and undo for several pieces, and the words, need a call.
   - Goal: Select bar switch and reverse work on single-track runs.
@@ -513,7 +518,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3069 [P2] {L:trams} Trams that snap to real rail
   - Context: A player asked for trams on real rail, which is light rail. You said sure 2026-11-10, with a new street-snap icon.
   - Goal: Tram track can snap to real rail, and the street-snap icon is new.
-  - Other: Folds in T-2929 (trams stage 3). Your TODO 2026-11-15 also wants snap icons standardized.
+  - Other: Folds in T-2929 (trams stage 3) and open-source issue 9 (snap to light rail such as Kaohsiung's circular line). Your TODO 2026-11-15 also wants snap icons standardized.
 - T-3070 [P3] {L:demand-ideas} Trips between two destinations
   - Context: Your 2026-11-10: "do we have a framework for destination -> destination trips?" Airports already do this; everyday trips are home-based only. A demand change, design first.
   - Goal: A design for destination to destination trips, for you to approve.
@@ -833,7 +838,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P2] {L:memory} {after:T-3472} Demand workers share one copy of the zone data
+- T-3373 [P1] {L:memory} Demand workers share one copy of the zone data (taking, 2026-11-16, agent memA)
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably.
   - Goal: A then B built, each with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
@@ -946,7 +951,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent savesafe2)
-  - Context: Stage 1 is done (server, not deployed): uploads get the full check, damaged ones are refused and kept aside, and each game's last intact copy is pinned outside backup rotation. Stages 2 (the game's slots, sync and restore, about 3 h) and 3 (the recurring scan, about 2 h) wait for your go on their design in the notes.
+  - Context: Stage 1 is done (server, not deployed): uploads get the full check, damaged ones are refused and kept aside, and each game's last intact copy is pinned outside backup rotation. Stage 2 is built (the game, not published): a damaged save says so, is never uploaded, written over a slot or kept as a backup, and Saved games offers its last undamaged copy, opened as a copy. Stage 3 (the recurring scan, about 2 h) is next; until it runs, games stored before the check have no pin.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
