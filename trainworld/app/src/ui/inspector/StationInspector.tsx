@@ -222,7 +222,7 @@ export function StationInspector({ id }: { id: string }) {
   };
   const construct = async () => {
     const a = await edit({ op: "construct", edges: [], stations: [s.num] });
-    if (a.ok) say(tr("stationInspector.constructed", { name: s.name, price: money(a.charge * 1e6) }));
+    if (a.ok) say(tr("stationInspector.constructed", { name: (world.peek() && stationNames(world.peek()!).get(s.id)) || s.name, price: money(a.charge * 1e6) }));
   };
   // constructed: asks first above the bottom bar (T-096)
   const remove = () => void removeThing({ kind: "station", node: s.num });

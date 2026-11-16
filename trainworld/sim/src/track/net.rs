@@ -2859,7 +2859,22 @@ impl Network {
             return r.built && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize]);
         }
         self.line_path(l).iter().all(|&p| self.edge_ok(path_edge(p)) && self.edge_built[path_edge(p) as usize])
+            && self.back_only_edges(l).iter().all(|&e| self.edge_ok(e) && self.edge_built[e as usize])
             && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize])
+    }
+
+    /// The edges only a rail line's return run takes, round one-way track such as a flyover's other
+    /// leg (T-3422): they must be constructed for it to run, as its path's are.
+    pub fn back_only_edges(&self, l: u32) -> Vec<u32> {
+        let path = self.line_path(l);
+        if self.line_runs_once(l) || path.iter().all(|&p| self.dir_ok(p ^ 1)) {
+            return vec![];
+        }
+        let Some(back) = self.back_path(l) else { return vec![] };
+        let mut out: Vec<u32> = back.iter().map(|&p| path_edge(p)).filter(|e| !path.iter().any(|&p| path_edge(p) == *e)).collect();
+        out.sort_unstable();
+        out.dedup();
+        out
     }
 
     /// The point of an edge nearest to (x, y): chainage and distance, m.

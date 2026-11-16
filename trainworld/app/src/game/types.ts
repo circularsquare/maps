@@ -206,6 +206,8 @@ export interface LineStats {
   stopS: [number[], number[]];
   /** its edges first stop to last, `edge << 1 | direction` (T-2420) */
   path: number[];
+  /** the return run's path where it is not `path` backward, last stop to first (T-3117), else absent */
+  back?: number[];
   /** dwell at each intermediate stop, and the layover at each end, s */
   dwellS: number;
   turnaroundS: number;

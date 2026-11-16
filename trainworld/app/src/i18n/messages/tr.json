@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Geçiş makası için çift hat gerekir.",
   "issues.singleFlyover": "Üst geçit için çift hat gerekir.",
   "issues.singleOneWay": "Tek yönlü bir ray, iki raydan birine bağlanıyor.",
-  "issues.splitPoint": "Rayın ucuna çok yakın ya da rampada.",
+  "issues.splitPoint": "Bir ray parçasının ucuna çok yakın ya da rampada. İstasyonların, kavşakların ve ayrımların her iki yanında 5 m ray olmalı.",
   "issues.stationHere": "Burada zaten bir istasyon var.",
   "issues.stationInUse": "Bir hat burada duruyor. Önce istasyonu o hattan çıkar.",
   "issues.stationInWater": "Zemin seviyesindeki istasyon suda duramaz.",

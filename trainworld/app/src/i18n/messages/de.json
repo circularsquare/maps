@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Eine Gleisverbindung braucht ein zweigleisiges Gleis.",
   "issues.singleFlyover": "Eine Überwerfung braucht ein zweigleisiges Gleis.",
   "issues.singleOneWay": "Ein Gleis nur in einer Richtung führt auf eines der beiden Gleise.",
-  "issues.splitPoint": "Zu nah am Ende des Gleises oder auf einer Rampe.",
+  "issues.splitPoint": "Zu nah am Ende eines Gleisstücks oder auf einer Rampe. Stationen, Kreuzungen und Abzweige brauchen auf jeder Seite 5 m Gleis.",
   "issues.stationHere": "Hier ist schon eine Station.",
   "issues.stationInUse": "Eine Linie hält hier. Nimm die Station erst aus dieser Linie.",
   "issues.stationInWater": "Eine ebenerdige Station kann nicht im Wasser stehen.",

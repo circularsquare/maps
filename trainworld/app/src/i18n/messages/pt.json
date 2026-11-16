@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Um cruzamento de vias precisa de via dupla.",
   "issues.singleFlyover": "Um cruzamento em desnível precisa de via dupla.",
   "issues.singleOneWay": "Uma via de sentido único se liga a uma das duas vias.",
-  "issues.splitPoint": "Perto demais do fim da via, ou numa rampa.",
+  "issues.splitPoint": "Perto demais do fim de um trecho de via, ou numa rampa. Estações, bifurcações e ramais precisam de 5 m de via de cada lado.",
   "issues.stationHere": "Já existe uma estação aqui.",
   "issues.stationInUse": "Uma linha tem parada aqui. Tire a estação dessa linha primeiro.",
   "issues.stationInWater": "Uma estação no nível do solo não pode ficar na água.",

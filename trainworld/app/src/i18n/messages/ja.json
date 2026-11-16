@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "渡り線には複線が必要です。",
   "issues.singleFlyover": "立体交差には複線が必要です。",
   "issues.singleOneWay": "一方通行の線路が、2本のうち1本につながっています。",
-  "issues.splitPoint": "線路の終端に近すぎるか、スロープ上です。",
+  "issues.splitPoint": "線路の区間の端に近すぎるか、スロープ上です。駅、分岐、枝線には、両側に5 mずつ線路が必要です。",
   "issues.stationHere": "ここにはすでに駅があります。",
   "issues.stationInUse": "この駅に停車する路線があります。先にその路線からこの駅を外してください。",
   "issues.stationInWater": "地上の駅は水の中には置けません。",

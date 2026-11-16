@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Una connexió de vies necessita via doble.",
   "issues.singleFlyover": "Un salt de moltó necessita via doble.",
   "issues.singleOneWay": "Una via d’un sol sentit s’uneix a una de les dues vies.",
-  "issues.splitPoint": "Massa a prop del final de la via, o en una rampa.",
+  "issues.splitPoint": "Massa a prop del final d’un tros de via, o en una rampa. Les estacions, els encreuaments i les bifurcacions necessiten 5 m de via a cada costat.",
   "issues.stationHere": "Aquí ja hi ha una estació.",
   "issues.stationInUse": "Aquí hi para una línia. Primer treu l’estació d’aquesta línia.",
   "issues.stationInWater": "Una estació en superfície no pot estar dins l’aigua.",

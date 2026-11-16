@@ -102,6 +102,8 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
   const curves = new Map<Fares, Fares>();
   /** per rail line placed: each stretch between stops, its edges and their metres in it */
   const placed = new Map<string, [number, number][][]>();
+  /** T-3403: per rail line whose way back takes other track (a flyover's other leg), each stretch of run 1 */
+  const placedBack = new Map<string, [number, number][][]>();
   /** per bus or ferry line placed, its stretches' figures */
   const busFigs = new Map<string, StretchFigures[]>();
   for (const l of w.save.lines) {
@@ -126,14 +128,21 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       pieces = stretchEdges(l, st.path, st.stopS[0], edgeById);
       if (!pieces) continue;
       placed.set(l.id, pieces);
+      const back = st.back?.length && !st.oneWay ? stretchEdges(l, st.back, st.stopS[1], edgeById) : null;
+      if (back) placedBack.set(l.id, back);
       if (!lineFiguresIn(dv, l.id, n)) dark.add(l.id);
       // running trains by length along the path
       const k = trainKind(m, st.fast, st.tram);
       // T-2669: at its countries' prices
       const runDay = (k.runCostTrainKm + st.cars * k.runCostCarKm) * E * (weight.get(l.id) ?? 0) * (st.oneWay ? 1 : 2) * st.km * lineRunFactor(l.num);
+      // the way back on track of its own takes half
+      const own = back && st.back ? 0.5 : 1;
       let pathM = 0;
       for (const p of st.path) pathM += edgeById.get(p >> 1)?.lengthM ?? 0;
-      if (pathM > 0) for (const p of st.path) part(p >> 1, l.id).running += runDay * (edgeById.get(p >> 1)?.lengthM ?? 0) / pathM;
+      if (pathM > 0) for (const p of st.path) part(p >> 1, l.id).running += own * runDay * (edgeById.get(p >> 1)?.lengthM ?? 0) / pathM;
+      let backM = 0;
+      if (back && st.back) for (const p of st.back) backM += edgeById.get(p >> 1)?.lengthM ?? 0;
+      if (back && st.back && backM > 0) for (const p of st.back) part(p >> 1, l.id).running += 0.5 * runDay * (edgeById.get(p >> 1)?.lengthM ?? 0) / backM;
     }
     // fares, as `incomeFor` charges them, by stretch
     const dm = dv.lines.get(l.id);
@@ -144,11 +153,16 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     let f = curves.get(lf);
     if (!f) curves.set(lf, (f = faresOf(lf, lf)));
     const { from } = scalesOf(g, sl, byId, lf);
-    const pk = new Array<number>(n - 1).fill(0);
+    const pk = new Array<number>(n - 1).fill(0), pkBack = new Array<number>(n - 1).fill(0);
+    const backPieces = placedBack.get(l.id);
     for (const seg of dm.loads) {
       if (seg.length !== km.length) continue;
       // run 1's stretch j covers run 0's stretch n - 2 - j
-      for (let j = 0; j < seg.length; j++) pk[j < n - 1 ? j : 2 * n - 3 - j] += seg[j] * km[j] * from[j];
+      for (let j = 0; j < seg.length; j++) {
+        const riders = seg[j] * km[j] * from[j];
+        pk[j < n - 1 ? j : 2 * n - 3 - j] += riders;
+        if (j >= n - 1) pkBack[2 * n - 3 - j] += riders;
+      }
     }
     let pkAll = 0;
     for (const v of pk) pkAll += v;
@@ -157,21 +171,37 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
     const mul = lineFareMul({ fast: st.fast, ferry: !!st.bus?.ferry, bus: !!st.bus && !st.bus.ferry }, lf);
     const base = E * f.base * (based.get(l.id) ?? 0);
     for (let s = 0; s < n - 1; s++) {
-      const share = pk[s] / pkAll;
-      const fare = E * (mul * f.perKm * pk[s] + fx * share) + base * share;
-      if (figs) figs[s].fares += fare;
-      else spread(pieces![s], (edge, sh) => (part(edge, l.id).fares += fare * sh));
+      const fareOf = (riders: number) => E * (mul * f.perKm * riders + fx * riders / pkAll) + base * riders / pkAll;
+      if (figs) figs[s].fares += fareOf(pk[s]);
+      else if (backPieces) {
+        // the riders of run 1 pay on the track it runs
+        const [out, back] = [fareOf(pk[s] - pkBack[s]), fareOf(pkBack[s])];
+        spread(pieces![s], (edge, sh) => (part(edge, l.id).fares += out * sh));
+        spread(backPieces[n - 2 - s], (edge, sh) => (part(edge, l.id).fares += back * sh));
+      } else {
+        const fare = fareOf(pk[s]);
+        spread(pieces![s], (edge, sh) => (part(edge, l.id).fares += fare * sh));
+      }
     }
   }
+  // the lines whose way back takes an edge their path does not
+  const backLines = new Map<number, string[]>();
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id];
+    if (!st?.back?.length || st.status !== "running" || st.oneWay || !placedBack.has(l.id)) continue;
+    const own = new Set(st.path.map((p) => p >> 1));
+    for (const e of new Set(st.back.map((p) => p >> 1))) if (!own.has(e)) backLines.set(e, [...(backLines.get(e) ?? []), l.id]);
+  }
+  const linesOf = (e: WorldView["edges"][number]) => (backLines.has(e.id) ? [...e.lines, ...backLines.get(e.id)!] : e.lines);
   // upkeep: each built edge between the running lines on it by trains a day
   const bareUpkeep = new Map<number, number>();
   for (const e of w.edges) {
     const u = edgeUpkeep(e, t);
     if (!(u > 0)) continue;
     let total = 0;
-    for (const id of e.lines) total += weight.get(id) ?? 0;
+    for (const id of linesOf(e)) total += weight.get(id) ?? 0;
     if (total > 0) {
-      for (const id of e.lines) {
+      for (const id of linesOf(e)) {
         const wt = weight.get(id) ?? 0;
         if (wt > 0) part(e.id, id).upkeep += u * wt / total;
       }
@@ -222,8 +252,8 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
       const a = edges.get(e.id)?.all;
       if (a) { fig.fares += a.fares; fig.running += a.running; fig.upkeep += a.upkeep; }
       fig.upkeep += bareUpkeep.get(e.id) ?? 0;
-      if (e.lines.some((id) => (weight.get(id) ?? 0) > 0)) fig.bare = false;
-      if (e.lines.some((id) => dark.has(id))) fig.noFigures = true;
+      if (linesOf(e).some((id) => (weight.get(id) ?? 0) > 0)) fig.bare = false;
+      if (linesOf(e).some((id) => dark.has(id))) fig.noFigures = true;
       fig.km += e.lengthM / 1000;
     }
     const v = ratioOf(fig);

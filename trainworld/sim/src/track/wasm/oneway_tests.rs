@@ -157,3 +157,23 @@ fn the_flag_survives_a_save_and_a_split() {
     assert_eq!(flagged.len(), 4, "{flagged:?}");
     assert!(flagged.chunks(2).all(|c| c[1] == 2));
 }
+
+/// T-3422: the way back round one-way track (a flyover's other leg) has to be constructed for the
+/// line to run, and constructing the line builds it.
+#[test]
+fn a_line_does_not_run_while_its_way_back_is_blueprint() {
+    let (mut a, n, e) = triangle();
+    let l = line(&mut a.w, &[n[0], n[1]], [8.0, 4.0, 2.0]);
+    assert_eq!(a.set_edge_oneway(e[0], 1), 0, "{}", a.issues());
+    assert!(a.w.svc.lines[l as usize].running);
+    let mut d = a.w.net.edge_data(e[1]).unwrap();
+    d.built = false;
+    a.w.apply(Op::Edge { id: e[1], data: Some(d) }).unwrap();
+    assert!(a.w.net.back_only_edges(l).contains(&e[1]));
+    assert!(!a.w.net.line_constructed(l), "its way back is blueprint");
+    assert!(!a.w.svc.lines[l as usize].running);
+    assert!(a.line_build_cost(l) > 0.0, "the return leg is part of what the line needs");
+    assert_eq!(a.construct_line(l), 0, "{}", a.issues());
+    assert!(a.w.net.line_constructed(l));
+    assert!(a.w.svc.lines[l as usize].running);
+}

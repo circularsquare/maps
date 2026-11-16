@@ -759,3 +759,75 @@ fn a_street_corner_over_water_stays_street_track() {
 fn bx_of(a: &TrackApi) -> f64 {
     base(a).0
 }
+
+/// T-3421: high-speed track drawn at 320 over water keeps its speed over the bridge's ramps.
+#[test]
+fn a_high_speed_bridge_keeps_its_design_speed() {
+    for (tx, ty, from, width) in [(4000.0, 0.0, 2000.0, 120.0), (6000.0, 2500.0, 3000.0, 120.0), (3000.0, 1500.0, 1500.0, 40.0), (9000.0, 0.0, 4000.0, 600.0)] {
+        let mut a = api();
+        water(&mut a, &[(from, from + width)]);
+        a.set_design_speed(320.0);
+        a.set_route_hsr(true);
+        let e = ends(&a, (0.0, 0.0), (tx, ty));
+        assert_eq!(a.preview_route(&e, &[], 2, false)[0], 1.0, "{}", a.issue_kinds());
+        let slowest = a.preview_render_speeds().iter().copied().fold(f32::INFINITY, f32::min);
+        assert_eq!(a.add_route(&e, &[], 2, false), 0, "{}", a.issue_kinds());
+        let radii: Vec<f64> = alive(&a).iter().flat_map(|&e| a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| p.ground_radius()).collect::<Vec<_>>()).collect();
+        let wet = alive(&a).iter().any(|&e| !a.w.net.edge_water(e).is_empty());
+        assert!(wet, "crosses the water");
+        assert!(slowest > 319.0, "to ({tx}, {ty}) water {from}+{width}: slowest {slowest} km/h, radii {radii:?}");
+    }
+}
+
+#[test]
+fn a_high_speed_bridge_with_clicked_corners_keeps_its_design_speed() {
+    for (w0, w1, pis_xy) in [(1000.0, 1500.0, [1250.0, 150.0, 3000.0, -300.0, 4500.0, 200.0]), (1000.0, 1500.0, [700.0, 20.0, 2500.0, -60.0, 4500.0, 30.0]), (2000.0, 2300.0, [1000.0, 30.0, 2100.0, 40.0, 4500.0, 30.0])] {
+        let mut a = api();
+        water(&mut a, &[(w0, w1)]);
+        a.set_design_speed(320.0);
+        a.set_route_hsr(true);
+        let (bx, by) = base(&a);
+        let e = ends(&a, (0.0, 0.0), (6000.0, 0.0));
+        let p = pis_xy;
+        let pis = [bx + p[0], by + p[1], 0.0, 0.0, bx + p[2], by + p[3], 0.0, 0.0, bx + p[4], by + p[5], 0.0, 0.0];
+        assert_eq!(a.preview_route(&e, &pis, 2, false)[0], 1.0, "{}", a.issue_kinds());
+        let slowest = a.preview_render_speeds().iter().copied().fold(f32::INFINITY, f32::min);
+        assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+        let radii: Vec<(f64, bool)> = alive(&a).iter().flat_map(|&e| a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| (p.ground_radius(), false)).collect::<Vec<_>>()).collect();
+        assert!(slowest > 150.0, "{p:?}: {slowest} km/h, radii {radii:?}");
+        println!("{p:?}: slowest {slowest} radii {radii:?}");
+    }
+}
+
+/// T-3421: a traced high-speed line (a real line's snap) over water keeps its curves at design speed 320.
+#[test]
+fn a_traced_high_speed_line_over_water_keeps_its_speed() {
+    for bands in [vec![(1000.0, 1400.0)], vec![(3200.0, 3500.0)], vec![(500.0, 700.0), (2900.0, 3300.0), (3800.0, 4000.0)]] {
+        let mut a = merc();
+        water(&mut a, &bands);
+        a.set_design_speed(320.0);
+        a.set_route_hsr(true);
+        let (bx, by) = base(&a);
+        let k = crate::track::frame::merc_k(by);
+        let mut xy: Vec<(f64, f64)> = (0..=300).map(|i| (bx + i as f64 * 10.0 * k, by)).collect();
+        let (r, turn) = (7500.0, 40f64.to_radians());
+        for i in 1..=(r * turn / 10.0) as usize {
+            let t = i as f64 * 10.0 / r;
+            xy.push((bx + (3000.0 + r * t.sin()) * k, by + (r - r * t.cos()) * k));
+        }
+        let (ex, ey) = *xy.last().unwrap();
+        for i in 1..=300 {
+            xy.push((ex + i as f64 * 10.0 * k * turn.cos(), ey + i as f64 * 10.0 * k * turn.sin()));
+        }
+        let lonlat: Vec<f64> = xy.iter().flat_map(|&(x, y)| a.to_lonlat(x, y)).collect();
+        let t = a.trace_route(&lonlat, 25.0, 2, 0);
+        let (sx, sy) = xy[0];
+        let (fx, fy) = *xy.last().unwrap();
+        let e = [0.0, 0.0, sx, sy, 0.0, 0.0, 0.0, fx, fy, 0.0];
+        assert_eq!(a.preview_route(&e, &t[3..], 2, false)[0], 1.0, "{bands:?}: {}", a.issue_kinds());
+        let slowest = a.preview_render_speeds().iter().copied().fold(f32::INFINITY, f32::min);
+        assert_eq!(a.add_route(&e, &t[3..], 2, false), 0, "{bands:?}: {}", a.issue_kinds());
+        let radii: Vec<f64> = alive(&a).iter().flat_map(|&e| a.w.net.edge_pieces(e).iter().filter(|p| p.k != 0.0).map(|p| p.ground_radius()).collect::<Vec<_>>()).collect();
+        assert!(slowest > 300.0, "{bands:?}: slowest {slowest} km/h, radii {radii:?}");
+    }
+}

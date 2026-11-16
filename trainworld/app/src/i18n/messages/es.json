@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Un cruce de vías necesita vía doble.",
   "issues.singleFlyover": "Un cruce a desnivel necesita vía doble.",
   "issues.singleOneWay": "Una vía de un solo sentido se une a una de las dos vías.",
-  "issues.splitPoint": "Demasiado cerca del final de la vía, o en una rampa.",
+  "issues.splitPoint": "Demasiado cerca del final de un tramo de vía, o en una rampa. Las estaciones, las bifurcaciones y los ramales necesitan 5 m de vía a cada lado.",
   "issues.stationHere": "Ya hay una estación aquí.",
   "issues.stationInUse": "Una línea tiene parada aquí. Quita antes la estación de esa línea.",
   "issues.stationInWater": "Una estación a nivel del suelo no puede estar en el agua.",

@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "渡線需要雙線。",
   "issues.singleFlyover": "立體交叉需要雙線。",
   "issues.singleOneWay": "單向軌道連著這兩條軌道中的一條。",
-  "issues.splitPoint": "太靠近軌道盡頭，或在坡道上。",
+  "issues.splitPoint": "太靠近一段軌道的盡頭，或在坡道上。車站、分岔和支線的兩側各需要 5 m 軌道。",
   "issues.stationHere": "這裡已經有車站了。",
   "issues.stationInUse": "有路線停靠這裡。請先把車站從那條路線移除。",
   "issues.stationInWater": "地面車站不能設在水裡。",

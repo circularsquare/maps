@@ -999,7 +999,7 @@
   "issues.insertStop": "No track joins these stations with that stop inserted. Check the track connections.",
   "issues.dropStop": "The line has to keep this stop.",
   "issues.lineSchedule": "Trains an hour cannot be negative.",
-  "issues.splitPoint": "Too close to the end of the track, or on a ramp.",
+  "issues.splitPoint": "Too close to the end of a piece of track, or on a ramp. Stations, junctions and branches need 5 m of track on each side.",
   "issues.nodeInUse": "Built track cannot be moved. Remove it and draw it again.",
   "issues.noSuchEdge": "That track is not there any more.",
   "issues.noSuchNode": "That is not there any more.",

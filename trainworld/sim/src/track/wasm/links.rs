@@ -197,7 +197,9 @@ impl TrackApi {
             ports.dedup();
             return Some((vec![], ports, vec![line]));
         }
-        Some((net.line_path(line).iter().map(|&p| p >> 1).collect(), net.line_stops(line).to_vec(), vec![]))
+        let mut edges: Vec<u32> = net.line_path(line).iter().map(|&p| p >> 1).collect();
+        edges.extend(net.back_only_edges(line));
+        Some((edges, net.line_stops(line).to_vec(), vec![]))
     }
 
     pub(super) fn construct_ops(&self, edges: &[u32], stations: &[u32], buses: &[u32]) -> Vec<Op> {

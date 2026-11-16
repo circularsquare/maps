@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "Une communication a besoin d’une voie double.",
   "issues.singleFlyover": "Un saut-de-mouton a besoin d’une voie double.",
   "issues.singleOneWay": "Une voie à sens unique rejoint l’une des deux voies.",
-  "issues.splitPoint": "Trop près du bout de la voie, ou sur une rampe.",
+  "issues.splitPoint": "Trop près de l’extrémité d’un tronçon de voie, ou sur une rampe. Les gares, les bifurcations et les embranchements demandent 5 m de voie de chaque côté.",
   "issues.stationHere": "Il y a déjà une station ici.",
   "issues.stationInUse": "Une ligne s’arrête ici. Retirez d’abord la station de cette ligne.",
   "issues.stationInWater": "Une station au niveau du sol ne peut pas être dans l’eau.",

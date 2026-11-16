@@ -1089,7 +1089,7 @@
   "issues.singleCrossover": "渡线需要双线。",
   "issues.singleFlyover": "立交需要双线。",
   "issues.singleOneWay": "单向轨道连着这两条轨道中的一条。",
-  "issues.splitPoint": "离轨道尽头太近，或者在坡道上。",
+  "issues.splitPoint": "离一段轨道的尽头太近，或者在坡道上。车站、分岔和支线的两侧各需要 5 m 轨道。",
   "issues.stationHere": "这里已经有一座车站了。",
   "issues.stationInUse": "有线路停靠这里。先把这座车站从那条线路中移除。",
   "issues.stationInWater": "地面车站不能建在水里。",

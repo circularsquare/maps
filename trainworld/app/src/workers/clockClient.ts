@@ -300,6 +300,7 @@ function toWorld(s: ClockState): WorldView {
       stretches: Array.from({ length: l.stretchSpeeds.length / 3 }, (_, k) => ({ reached: l.stretchSpeeds[3 * k], limit: l.stretchSpeeds[3 * k + 1], why: l.stretchSpeeds[3 * k + 2] })),
       stopS: l.stopS,
       path: l.path,
+      ...(l.back?.length ? { back: l.back } : {}),
       dwellS: l.dwell,
       turnaroundS: l.turnaround,
       shift: l.shift,

@@ -39,7 +39,7 @@ import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
-import { edit, say, world } from "../game/world";
+import { edit, say, stationNames, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
 import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
@@ -1371,6 +1371,19 @@ export class Tools {
     }, 150) as unknown as number;
   }
 
+  /** T-3381: the name the station placed at `at` shows (a station joining a complex takes its name), not the one made for it */
+  private shownNameAt(lng: number, lat: number): string | undefined {
+    const w = world.peek();
+    if (!w) return undefined;
+    const k = Math.cos((lat * Math.PI) / 180);
+    let best: string | undefined, bd = 4e-8;
+    for (const s of w.save.stations) {
+      const d = ((s.lng - lng) * k) ** 2 + (s.lat - lat) ** 2;
+      if (d < bd) (bd = d), (best = s.id);
+    }
+    return best === undefined ? undefined : stationNames(w).get(best);
+  }
+
   private async stationClick(e: MapMouseEvent) {
     const first = this.snap(e.point.x, e.point.y, e.lngLat);
     if (first.kind === "free") {
@@ -1395,7 +1408,7 @@ export class Tools {
     this.dropPending(pend);
     if (r.spot) {
       this.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
-      say(tr("tools.blueprintStation", { name }));
+      say(tr("tools.blueprintStation", { name: this.shownNameAt(this.lastPlaced[0], this.lastPlaced[1]) ?? name }));
     } else if (r.issues.length) say(describeIssues(r.issues), true);
   }
 
