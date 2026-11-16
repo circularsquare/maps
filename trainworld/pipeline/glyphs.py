@@ -11,8 +11,11 @@ stack and range, so the fallback has to live inside the file.
 Left out, because MapLibre never fetches them:
 - ranges whose every glyph is one MapLibre draws itself (kana, kanji, hangul and the other
   codepoints of its `localIdeographFontFamily` test, which are drawn by the browser);
-- ranges with no glyph in either font. Missing, the file is a 404 and MapLibre draws the
+- ranges with no glyph in any font here. Missing, the file is a 404 and MapLibre draws the
   codepoint locally; an empty file would make it vanish.
+
+Ranges neither font has but Protomaps' Noto Sans Regular does (Canadian syllabics, Yi, Vai, Braille,
+Buginese, Yijing) are copied from it, so the start menu's world map (Nunavut) logs no 404.
 
 Steps: download the font and its licence and OpenFreeMap's Noto ranges (cached in
 data/raw/glyphs/, 39 MB), run `build_pbf_glyphs` (Stadia Maps' sdf_font_tools, Rust) to render
@@ -41,6 +44,7 @@ FONT_FILE = "ZenMaruGothic-Regular.ttf"
 NOTO_OFL_URL = "https://github.com/google/fonts/raw/main/ofl/notosans/OFL.txt"
 NOTO = "Noto Sans Regular"
 NOTO_URL = "https://tiles.openfreemap.org/fonts/{stack}/{range}.pbf"
+PROTOMAPS_URL = "https://protomaps.github.io/basemaps-assets/fonts/Noto%20Sans%20Regular/{range}.pbf"
 STACK = "Zen Maru Gothic Regular,Noto Sans Regular"
 UA = {"User-Agent": "Mozilla/5.0 (glyph build)"}
 
@@ -151,6 +155,20 @@ def main():
         shipped += 1
         size += src.stat().st_size
         zen += bool(zen_ids.get(name, set()) - {cp for cp in zen_ids.get(name, set()) if local(cp)})
+    # the ranges left out so far, from Protomaps' Noto Sans Regular where it has glyphs MapLibre would fetch
+    extra = 0
+    for r in range(256):
+        name = f"{r * 256}-{r * 256 + 255}.pbf"
+        if (out / name).exists():
+            continue
+        src = RAW / "protomaps" / name
+        fetch(PROTOMAPS_URL.format(range=name[:-4]), src)
+        ids = glyph_ids(src)
+        if ids and not all(local(cp) for cp in ids):
+            shutil.copyfile(src, out / name)
+            extra += 1
+            size += src.stat().st_size
+    shipped += extra
     shutil.copyfile(RAW / "OFL-ZenMaruGothic.txt", OUT / "OFL-ZenMaruGothic.txt")
     shutil.copyfile(RAW / "OFL-NotoSans.txt", OUT / "OFL-NotoSans.txt")
     shutil.rmtree(WORK)     # 75 MB of intermediate ranges
