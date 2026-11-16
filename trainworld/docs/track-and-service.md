@@ -1689,7 +1689,7 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   Stations tabs' place), and "" for anything outside every zone, so the regions add up to the
   network. Settling divides each running line's hour: fares by the line's day of riders, the base
   part by the region of each boarding stop and the per-km part by passenger-km, each stretch
-  between two stops half to each stop's region; running cost by route km, split the same way.
+  between two stops half to each stop's region (a bus route by its own points, about 200 m at a time to the region there); running cost by route km, split the same way.
   A paid edit's construction goes to regions by the cost of the track it newly built in each
   (track midpoint's region; with no track, its new stations' regions, evenly; with neither, a station
   building's by the region of its outline's middle, T-2218); its new trains by the

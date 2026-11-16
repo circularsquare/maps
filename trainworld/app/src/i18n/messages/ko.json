@@ -584,6 +584,7 @@
   "community.stop": "공유 중단",
   "community.stopped": "공유 중단됨",
   "community.title": "커뮤니티",
+  "community.total": "{count, plural, other {노선망 #개}}",
   "community.unlike": "좋아요 취소",
   "commuterView.bubble": "{end, select, home {여기서 출발하는 {words} {when} {count}회} work {여기로 오는 {words} {when} {count}회} other {여기를 오가는 {words} {when} {count}회}}",
   "commuterView.exploreTrip": "클릭해서 이 이동 보기",

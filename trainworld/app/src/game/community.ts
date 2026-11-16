@@ -223,12 +223,15 @@ export async function stopSharing(id: string): Promise<void> {
 }
 
 /** T-3224: the server's list takes a search (`q`, in titles and display names); an older one ignores it and the box is hidden */
+/** T-3402: the server's Random list takes an `offset`, so every game is on some page */
+export const communityPagesOn = () => accountConfig.value?.trainworldCommunityPages === true;
 export const communitySearchOn = () => accountConfig.value?.trainworldCommunitySearch === true;
 /** the longest search the server takes */
 export const SEARCH_MAX = 40;
 
-export async function fetchShares(view: ShareView, city: string, seed: string, search = ""): Promise<ShareList> {
+export async function fetchShares(view: ShareView, city: string, seed: string, search = "", offset = 0): Promise<ShareList> {
   const q = new URLSearchParams({ view, city, seed });
+  if (offset) q.set("offset", String(offset));
   if (search) q.set("q", search.slice(0, SEARCH_MAX));
   const j = await api<ShareList>("GET", `trainworld/community/list?${q}`);
   return { ...j, rows: j.rows ?? [] };

@@ -112,11 +112,29 @@ export function edgeUpkeep(e: { built: boolean; crossover?: boolean; tracks: num
   const rate = e.levelMin <= -2 ? m.upkeepBoredKm : e.levelMin === -1 ? m.upkeepCutKm : e.levelMax > 0 ? m.upkeepViaductKm : m.upkeepTrackKm;
   return (e.lengthM / 1000) * rate * (e.tracks === 1 ? m.upkeepSingle : 1) * (e.hsr ? m.upkeepHsr : e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].upkeep : 1) * m.economy;
 }
-/** T-1464: a bus route's road km by region, each stretch between two stops half to each stop's
- * region (the drawn stops' ground distances, scaled to the road length). */
+/** T-1502: a bus route's road km by region, each piece of the route's own points (about 200 m of it) to the region
+ * at its middle, the drawn ground distances scaled to the road length; a route with no points keeps T-1464's
+ * chords, each stretch between two stops half to each stop's region. */
 function busKmByRegion(w: WorldView, line: string): Map<string, number> {
   const bus = w.lineStats[line]?.bus, out = new Map<string, number>();
   if (!bus) return out;
+  const r = bus.route, ll = bus.routeLL;
+  if (r?.length >= 4 && ll?.length === r.length) {
+    let ground = 0;
+    for (let k = 0; k + 3 < r.length; k += 2) ground += groundDist(r[k], r[k + 1], r[k + 2], r[k + 3]);
+    if (ground > 0) {
+      const scale = bus.roadM / 1000 / ground, piece = 200;
+      let from = 0, acc = 0;
+      for (let k = 0; k + 3 < r.length; k += 2) {
+        acc += groundDist(r[k], r[k + 1], r[k + 2], r[k + 3]);
+        if (acc < piece && k + 4 < r.length) continue;
+        add(out, placeAt((ll[from] + ll[k + 2]) / 2, (ll[from + 1] + ll[k + 3]) / 2) ?? "", acc * scale);
+        from = k + 2;
+        acc = 0;
+      }
+      return out;
+    }
+  }
   const byId = stopsById(w), p = bus.stops;
   const zone = (id: number) => { const s = byId.get(String(id)); return (s && stationZone(s)) ?? ""; };
   const d: number[] = [];

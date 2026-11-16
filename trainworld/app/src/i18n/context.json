@@ -2641,6 +2641,7 @@
   "community.back": "Button: from one network back to the list",
   "community.prev": "Pager",
   "community.next": "Pager",
+  "community.total": "How many shared networks the list has, after the page number in the pager. count: 57.",
   "community.errSend": "Error: the server refused the upload as malformed",
   "community.errTooSmall": "Error when sharing a tiny network",
   "community.errNeedName": "Error: the account has no display name",

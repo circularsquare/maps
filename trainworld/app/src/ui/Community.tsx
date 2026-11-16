@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsPast24h, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -257,6 +257,7 @@ function Browse() {
   const [boardKey, setBoardKey] = useState(WORLD);
   const [seed, setSeed] = useState(newSeed);
   const [rows, setRows] = useState<ShareRow[] | null>(null);
+  const [count, setCount] = useState(0);
   const [error, setError] = useState("");
   const [page, setPage] = useState(0);
   const [picked, setPicked] = useState<ShareRow | null>(null);
@@ -284,21 +285,23 @@ function Browse() {
   }, [typed, searchOn]);
   // the player's own shares, for Share again on an opened one
   useEffect(() => { void refreshMyShares(); }, [signedIn]);
+  // T-3402: Random is fetched a page at a time (the server's order is the seed's); the others arrive whole
+  const paged = view === "random" && communityPagesOn();
+  useEffect(() => { setPage(0); }, [view, city, seed, search, signedIn, shareTick.value]);
   useEffect(() => {
     let live = true;
-    setRows(null);
+    if (!(paged && page > 0)) setRows(null);
     setError("");
-    setPage(0);
-    fetchShares(view, city, seed, search).then((l) => { if (live) setRows(l.rows); }, (e) => { if (live) setError((e as Error).message); });
+    fetchShares(view, city, seed, search, paged ? page * PAGE : 0).then((l) => { if (live) { setRows(l.rows); setCount(l.count); } }, (e) => { if (live) setError((e as Error).message); });
     return () => { live = false; };
-  }, [view, city, seed, search, signedIn, shareTick.value]);
+  }, [view, city, seed, search, signedIn, shareTick.value, paged ? page : 0]);
   const mine = [...pointsPast24h.value].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const lands = [...new Set(mine.map((id) => zoneCountry(id)?.toLowerCase() ?? "").filter(Boolean))];
   const areas = [...new Set(mine.map(regionOf).filter((r): r is string => !!r))];
   const change = (r: ShareRow) => { setPicked(r); setRows((all) => all && all.map((x) => (x.id === r.id ? r : x))); };
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
   if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
-  const list = rows ?? [], pages = Math.ceil(list.length / PAGE), shown = list.slice(page * PAGE, (page + 1) * PAGE);
+  const list = rows ?? [], total = paged ? count : list.length, pages = Math.max(1, Math.ceil(total / PAGE)), shown = paged ? list : list.slice(page * PAGE, (page + 1) * PAGE);
   const views: [ShareView, string][] = [["random", t("community.random")], ["top", t("community.biggest")], ["liked", t("community.mostLiked")]];
   return <>
     <div class="cm-bar">
@@ -320,9 +323,9 @@ function Browse() {
       : !list.length ? <p class="muted">{search ? t("community.noMatch") : t("community.empty")}</p>
       : <ul class="cm-cards">{shown.map((r) => <Card key={r.id + r.rev} row={r} onOpen={() => setPicked(r)} />)}</ul>}
     {view === "top" && !error && rows && <p class="small muted cm-note-foot">{t("community.sandboxNote")}</p>}
-    {pages > 1 && <div class="cm-pager">
+    {rows && list.length > 0 && <div class="cm-pager">
       <button type="button" class="btn icon" aria-label={t("community.prev")} data-tip={t("community.prev")} disabled={page === 0} onClick={() => setPage(page - 1)}><Icon.goBack /></button>
-      <span class="small muted num">{page + 1} / {pages}</span>
+      <span class="small muted num">{page + 1} / {pages} · {t("community.total", { count: total })}</span>
       <button type="button" class="btn icon" aria-label={t("community.next")} data-tip={t("community.next")} disabled={page + 1 >= pages} onClick={() => setPage(page + 1)}><Icon.goOut /></button>
     </div>}
   </>;

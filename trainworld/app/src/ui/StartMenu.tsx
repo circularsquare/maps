@@ -182,7 +182,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
     <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}<AboutLink class="start-about" /></p>
     {/* T-2753: the language on the card's first row at the right, so a new player (who lands on the sheet) sets it first */}
     {sheet ? <div class="start-box new-game-box">
-      <div class="start-titlebar"><h1 id="start-title" class="big">{t("startMenu.newGame")}</h1><LanguageSelect class="start-top" /></div>
+      <div class="start-titlebar"><h1 id="start-title" class="big">{t("startMenu.newGame")}</h1><div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div></div>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
     </div> : <div class="start-box">
       {!LOGO && <h1 id="start-title" class="big">{t("startMenu.welcome")}</h1>}

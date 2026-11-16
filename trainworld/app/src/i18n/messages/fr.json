@@ -584,6 +584,7 @@
   "community.stop": "Arrêter le partage",
   "community.stopped": "Partage arrêté",
   "community.title": "Communauté",
+  "community.total": "{count, plural, one {# réseau} other {# réseaux}}",
   "community.unlike": "Retirer le j’aime",
   "commuterView.bubble": "{end, select, home {{count} {words} {when} depuis ici} work {{count} {words} {when} vers ici} other {{count} {words} {when} vers et depuis ici}}",
   "commuterView.exploreTrip": "Cliquer pour explorer ce déplacement",
