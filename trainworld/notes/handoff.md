@@ -7,18 +7,22 @@ Updated: 2026-11-15 15:22 UTC (first jobs from TODO.md short term: the crash, th
 Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier detail: this file's git history.
 
 ## State
-- **Live = v0.3.4**: Anita published it herself 11-15 (with GPT) from branch `hotfix-stop-freeze-034` (66ef6ca1, tree
+- **Live = v0.3.5**, published by the saves session on Anita's explicit go, 2026-11-15: Safari gzip fix, maps
+  bfe58c54, website c9b74a8, public source 6b8ef91. Pages run 43772084654 succeeded; live entry, clock worker and
+  gzip worker SHA-256 match the tested build. Data stays 2026-11-13, freeze 20261113-013559. Release tree
+  `.tw-trees/safari-save-035`, built package `artifacts/trainworld/publish/v0.3.5/dist`. 8800 was not swapped.
+- **Previous live v0.3.4**: Anita published it herself 11-15 (with GPT) from branch `hotfix-stop-freeze-034` (66ef6ca1, tree
   .tw-trees/stop-freeze-034, built on the v0.3.3 release b2897ae2): fixes freezes when editing stops on large saves
   (T-3385; hidden stop rows fed negative measurements). Website 3205539 + her later "intercity" 74f6a57. v0.3.3 went out
   11-13 ~14:00Z (data 2026-11-13; terrain v2 on R2 at terrain-world/v2).
-- **Master 7c47580f** (the board, unpushed); before it 6feec4b4, pushed (11-15): her v0.3.4 fix 0bb9fcfa; her freeze diagnostics 43b3acbe (off unless
+- **Master bfe58c54** (Safari save fix and v0.3.5 changelog; not pushed to maps). Board commits through 70cfd8af precede it; before them 6feec4b4, pushed (11-15): her v0.3.4 fix 0bb9fcfa; her freeze diagnostics 43b3acbe (off unless
   `?diagnostics=1`; T-3385 archived); v0.3.4 changelog translated 6feec4b4 (live v0.3.4 shows those two lines in
   English until the next publish). Typecheck and i18n clean.
 - Uncommitted on purpose: perdir's DECISIONS line (2026-11-13, T-3348 stage 1): commit it when per-direction stops land.
 - **8800** = 6feec4b4 from freeze 20261113-013559, smoke PASS (12,581,681 rail trips a day).
-- Her release tree .tw-trees/stop-freeze-034 (branch hotfix-stop-freeze-034) is what's live; keep it like hotfix031.
+- Her release tree .tw-trees/stop-freeze-034 (branch hotfix-stop-freeze-034) is the previous release; keep it like hotfix031.
 - **Server** shonei-server 8391326 deployed 11-13 16:28Z, pushed (twstats 15-minute playtime ring).
-- **Open source**: github.com/circularsquare/trainsworld, last sync a4a3210 (maps 6feec4b4; sync commits credit
+- **Open source**: github.com/circularsquare/trainsworld, last sync 6b8ef91 (maps bfe58c54; sync commits credit
   contributors). R2 data answers CORS `*` (forks can read it). Each publish: export.py, then `git push` there.
 - **PRs**: #2 peanutmow: part 1 landed 19a7f1e2 (co-author), reply posted, left open for a settle revision (T-3387).
   #1 Renkon (bus one-way streets: she leans no, maybe an advanced toggle) and #3 CinnamonVII (run the built stretch
@@ -46,6 +50,21 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   context / goal / other info. Proposed shape: indented sub-bullets under each task line in TASKS.md (grep -A finds
   them); likely one Sonnet agent per area reading each task's notes. Waits on her pick.
 
+- Saves session 11-15: the Safari client fix and checks are committed as bfe58c54 and published as v0.3.5
+  on Anita's explicit request. Source smoke and exact release smoke in light/dark all passed (28 checks each),
+  plus the compiled file-picker/save/reopen check. T-3395 automatic detection/pinned recovery remains open;
+  tools/ops/archive_bad_saves.py and private incident notes remain uncommitted. Recovery archives exist on
+  the server and, with Anita's explicit destination approval, in ignored artifacts/trainworld/save-recovery/2026-11-15.
+  Jordan's two damaged games have no cloud predecessors; only original-device local backups might survive.
+  See notes/jordan-save-investigation-2026-11-15.md. Scratch pad is T-3396 (renumbered; T-3395 was taken).
+
+- 11-16 12:40Z resumed after the usage limit. v0.3.5 (her Safari save fix, bfe58c54) is live. Running: pad
+  (Sonnet, id a0f0e9e24e5e22a04) finishing T-3396 then board fixes (wider panel, scroll kept on Back, no scroll
+  jumps, worktrees in the strip); lines (Opus, id a75a19621b6669315) applying her close answers (in my message to it
+  and her chat 11-16) and filing TODO.md short-term items as T-3398..T-3440; shape (Opus, id af72987d247ffa2b4)
+  T-3394 pilot of 14 tasks + tools/restructure_tasks.py, no TASKS.md edits. After the pilot: show her, then fan out
+  by area (block files, one apply). Board must then render the fields.
+
 ## Parked work in trees
 - .tw-trees/perdir (tw/perdir from f8119117): T-3348 stage 1, per-direction stops, sim half built and tested (her
   split-legs case runs both ways). Missing: demand per run (2-3 h, plan in that tree's notes/T-3348.md "Stage 1 as
@@ -61,7 +80,7 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
    corner notice, T-3383 "busy single track" wording (+ the 24m00s check), T-3386 inferred one-way lost at a station.
 3. T-3376 industrial jobs (Jurong 128k vs ~27k real; "semi high prio"), T-3388 London edits take 4 s.
 4. Later/design: T-3378 BRT and bus balance, T-3377 mods (levels 2-4), T-3382 where people play, T-3384 waypoints,
-   T-3375 zero-resident units beside a metro, T-3358 rivers (paused by her). Next free id T-3390.
+   T-3375 zero-resident units beside a metro, T-3358 rivers (paused by her). Next free id T-3397 (check TASKS.md first: another session files ids too).
 
 ## Anita's standing asks
 - Every publish and server deploy needs her "yes" to that exact action; none overnight.

@@ -178,6 +178,34 @@ def git_head():
         return None
 
 
+def worktrees():
+    """git worktrees: [{name (folder), branch, date (last commit, ISO), main}]; [] if git fails."""
+    try:
+        out = subprocess.run(["git", "worktree", "list", "--porcelain"], cwd=MAPS,
+                             capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    res = []
+    for block in out.replace("\r", "").strip().split("\n\n"):
+        path, branch = None, None
+        for ln in block.splitlines():
+            if ln.startswith("worktree "):
+                path = ln[9:]
+            elif ln.startswith("branch "):
+                branch = ln[7:].replace("refs/heads/", "")
+            elif ln == "detached":
+                branch = "detached"
+        if not path:
+            continue
+        try:
+            date = subprocess.run(["git", "-C", path, "log", "-1", "--format=%cI"], capture_output=True,
+                                  text=True, timeout=10).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            date = ""
+        res.append({"name": Path(path).name, "branch": branch or "", "date": date, "main": not res})
+    return res
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default=str(TW / "TASKS.md"))
@@ -262,6 +290,7 @@ def main():
         "live": {"updated": live.get("updated"), "orchestrator": live.get("orchestrator"),
                  "builds": live.get("builds") or {}, "agents": agents, "runs": live.get("runs") or []},
         "cores": cores(),
+        "worktrees": worktrees(),
         "warnings": warnings,
     }
     archive = archive_entries(notes_index)

@@ -9,8 +9,8 @@ const $ = (sel) => document.querySelector(sel);
 
 let DATA = null;
 let VIEW = null;            // the lines as the board shows them: data.json plus her queued moves
-let INBOX = { ok: false, pending: [], last_at: null, sent_at: null };
-let panel = null;           // {kind: 'line', slug} | {kind: 'queue'} | {kind: 'add'} | {kind: 'ack'}
+let INBOX = { ok: false, pending: [], pads: [], last_at: null, sent_at: null };
+let panel = null;           // {kind: 'line', slug} | {kind: 'queue'} | {kind: 'pad'} | {kind: 'ack'}
 const drafts = {};          // text typed in the panel, by field key, so a re-render keeps it
 const opened = new Set();   // task comment boxes that are open
 let confirm = null;         // {key, action}: a select change waiting for Queue change or Cancel
@@ -104,7 +104,7 @@ async function load(failed) {
   } catch (e) { /* a build from before stage 3: no requests yet */ }
   ARCHIVED = new Set(DATA.archived || []);
   ARCHIVE = null;
-  for (const k of Object.keys(NOTES_CACHE)) delete NOTES_CACHE[k];
+  for (const k of Object.keys(NOTES_CACHE)) if (NOTES_CACHE[k].state !== 'loading') loadNotes(k, true);
   const first = !hashApplied;
   if (first) { hashApplied = true; applyHash(); }
   if (panel && panel.kind === 'closed') loadArchive();
@@ -131,17 +131,23 @@ function fillUpdates() {
 
 // ---------- the inbox ----------
 
-/** true when the pending list changed */
+function padsSig(pads) { return (pads || []).map((p) => p.id + (p.handled ? 'h' : '')).join(); }
+
+/** true when the pending list or the sent pads changed */
 async function fetchInbox() {
   const before = INBOX.pending.map((a) => a.id).join();
+  const beforePads = padsSig(INBOX.pads);
   try {
     const r = await fetch('_inbox', { cache: 'no-store' });
     if (!r.ok) throw new Error(r.status);
     INBOX = { ok: true, ...(await r.json()) };
+    // a pad-send has its own list under the scratch pad; it is not a queued change
+    INBOX.pending = INBOX.pending.filter((a) => a.type !== 'pad-send');
+    INBOX.pads = INBOX.pads || [];
   } catch (e) {
-    INBOX = { ok: false, pending: [], last_at: null, sent_at: null };
+    INBOX = { ok: false, pending: [], pads: [], last_at: null, sent_at: null };
   }
-  return INBOX.pending.map((a) => a.id).join() !== before;
+  return INBOX.pending.map((a) => a.id).join() !== before || padsSig(INBOX.pads) !== beforePads;
 }
 
 async function post(obj) {
@@ -217,6 +223,7 @@ function describe(a) {
       const where = [a.area ? areaName(a.area) : '', a.line ? lineName(a.line) : ''].filter(Boolean).join(', ');
       return `New item${where ? ` (${where})` : ''}: ${a.text}`;
     }
+    case 'pad-send': return `Sent for filing: ${a.text}`;
     case 'comment': return `Comment on ${a.group ? groupTitle(a.group) : a.task || lineName(a.line)}: ${a.text}`;
     case 'accept': return `Accept ${groupTitle(a.group)} as ${a.priority} in ${a.line === 'new' ? 'a new line' : lineName(a.line)} (${areaName(a.area)})`;
     case 'merge': return `Merge ${groupTitle(a.group)} into ${a.task || lineName(a.line)}`;
@@ -276,7 +283,7 @@ function render() {
 
 function renderTop() {
   const n = INBOX.pending.length;
-  for (const id of ['#add', '#ack', '#queued', '#send']) $(id).hidden = !INBOX.ok;
+  for (const id of ['#pad', '#ack', '#queued', '#send']) $(id).hidden = !INBOX.ok;
   $('#queued').hidden = !INBOX.ok || !n;
   $('#queued').textContent = `${n} queued`;
   const send = $('#send');
@@ -314,6 +321,14 @@ function renderStrip() {
     c && c.cap != null ? el('div', {}, `${c.claimed} of ${c.cap} claimed`) : el('div', { class: 'quiet' }, 'Ledger not readable'),
     claims.length ? el('table', {}, claims.map((x) => el('tr', {},
       el('td', {}, x.name), el('td', {}, String(x.cores)), el('td', { class: 'time' }, x.age)))) : null));
+
+  const wt = DATA.worktrees || [];
+  if (wt.length) {
+    strip.append(el('div', { class: 'block wt' }, el('h2', {}, 'Worktrees'),
+      el('div', { class: 'wt-list' }, wt.map((w) => el('span', { class: 'wt-item' },
+        el('b', {}, w.main ? 'main' : w.name), ' ', el('span', { class: 'mono' }, w.branch),
+        w.date ? el('span', { class: 'time' }, ` ${ago(w.date)}`) : null)))));
+  }
 
   const b = live.builds || {};
   const kv = el('div', { class: 'kv' });
@@ -396,28 +411,58 @@ function openPanel(p) {
 
 function renderPanel() {
   const box = $('#panel');
+  if (panel && panel.kind === 'pad' && PAD.root && box.contains(PAD.root)) {
+    // the pad's own nodes stay put, so typing and focus are not disturbed
+    padShowStatus();
+    padRenderSent();
+    return;
+  }
+  if (!(panel && panel.kind === 'pad') && PAD.root) padFlush();
   const focus = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.key : null;
   const caret = focus ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
   const scroll = box.scrollTop;
   let kids = null;
   if (panel && panel.kind === 'line') kids = linePanel(VIEW.find((l) => l.slug === panel.slug));
   else if (panel && panel.kind === 'queue') kids = queuePanel();
-  else if (panel && panel.kind === 'add') kids = addPanel();
+  else if (panel && panel.kind === 'pad') kids = padPanel();
   else if (panel && panel.kind === 'ack') kids = ackPanel();
   else if (panel && panel.kind === 'closed') kids = closedPanel(panel.id);
   else if (panel && panel.kind === 'notes') kids = notesPanel(panel.name);
-  if (!kids) { box.hidden = true; box.replaceChildren(); return; }
+  if (!kids) { box.hidden = true; box.replaceChildren(); $('#grip').hidden = true; return; }
   box.replaceChildren(...kids.filter(Boolean));
   box.hidden = false;
+  $('#grip').hidden = false;
   box.scrollTop = scroll;
   if (focus) {
     const f = box.querySelector(`[data-key="${CSS.escape(focus)}"]`);
     if (f) {
-      f.focus();
+      f.focus({ preventScroll: true });     // focus() alone scrolls the field into view: the snap she saw
       if (caret && f.setSelectionRange && caret[0] != null) try { f.setSelectionRange(caret[0], caret[1]); } catch (e) { /* a select */ }
     }
   }
+  box.scrollTop = scroll;
+  applyPendingScroll(box);
 }
+
+// Back and Forward return to where she was: the panel's scroll and her open notes are kept in each history entry.
+let pendingScroll = null;   // {top, until}: waits for the notes to finish loading, then scrolls
+let scrollTimer = null;
+function saveScroll() {
+  clearTimeout(scrollTimer);
+  const box = $('#panel');
+  if (!panel || box.hidden) return;
+  try { history.replaceState({ sc: box.scrollTop, notes: [...notesOpen] }, ''); } catch (e) { /* no history */ }
+}
+function applyPendingScroll(box) {
+  if (!pendingScroll) return;
+  box.scrollTop = pendingScroll.top;
+  if (Date.now() > pendingScroll.until || !box.querySelector('.notes.meta')) pendingScroll = null;
+}
+$('#panel').addEventListener('scroll', () => {
+  if (pendingScroll) return;
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(saveScroll, 200);
+});
 
 function head(title) {
   return el('div', { class: 'head' }, el('h2', {}, title),
@@ -625,37 +670,198 @@ function queuePanel() {
   ];
 }
 
-function addPanel() {
-  const k = 'add';
-  const area = drafts['add:area'] || '';
-  const lineSel = el('select', { class: 'small', 'data-key': 'add:line', onchange: (e) => { drafts['add:line'] = e.target.value; } },
-    el('option', { value: '' }, 'No line'),
-    lineOptions().filter((g) => !area || g.group === areaName(area)).map((g) => el('optgroup', { label: g.group },
-      g.options.map((o) => el('option', { value: o.value }, o.label)))));
-  lineSel.value = drafts['add:line'] || '';
-  const areaSel = el('select', {
-    class: 'small', 'data-key': 'add:area',
-    onchange: (e) => { drafts['add:area'] = e.target.value; drafts['add:line'] = ''; renderPanel(); },
-  }, el('option', { value: '' }, 'No area'), areaOptions().map((o) => el('option', { value: o.value }, o.label)));
-  areaSel.value = area;
-  return [
-    head('Add item'),
-    el('div', { class: 'compose' }, textBox(`${k}:text`, 'What should happen', 5)),
+// ---------- the scratch pad (T-3396) ----------
+// One free-text area, saved on the server as she types (/_pad), sent for filing as a pad-send action.
+
+const PAD_IDLE_MS = 1500;
+const PAD_PREVIEW = 200;
+const PAD = {
+  text: '', version: 0, loaded: false, status: 'loading', reason: '',
+  saving: false, timer: null, retry: null, mine: null, root: null, sentList: null,
+};
+const padOpen = new Set();      // sent items showing their whole text
+
+function padStatusText() {
+  if (PAD.status === 'error') return `Not saved: ${PAD.reason}`;
+  if (PAD.status === 'saving') return 'Saving';
+  if (PAD.status === 'loading') return 'Loading';
+  return 'Saved';
+}
+function padShowStatus() {
+  if (!PAD.root) return;
+  const s = PAD.root.querySelector('.pad-state');
+  s.textContent = padStatusText();
+  s.classList.toggle('bad', PAD.status === 'error');
+  PAD.root.querySelector('.pad-send').disabled = !PAD.text.trim() || !!PAD.mine;
+}
+
+async function padLoad() {
+  try {
+    const r = await fetch('_pad', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const s = await r.json();
+    PAD.text = s.text;
+    PAD.version = s.version;
+    PAD.loaded = true;
+    PAD.status = 'saved';
+  } catch (e) {
+    PAD.status = 'error';
+    PAD.reason = 'server not reachable';
+  }
+  if (PAD.root) PAD.root.querySelector('textarea').value = PAD.text;
+  padShowStatus();
+}
+
+function padChanged() {
+  PAD.status = 'saving';
+  padShowStatus();
+  clearTimeout(PAD.timer);
+  PAD.timer = setTimeout(padSave, PAD_IDLE_MS);
+}
+
+/** PUT the text; resolves when it is saved or has failed. `beacon` is for a page that is going away */
+async function padSave(beacon) {
+  clearTimeout(PAD.timer);
+  clearTimeout(PAD.retry);
+  PAD.timer = null;
+  if (PAD.saving || !PAD.loaded || PAD.mine) return;
+  PAD.saving = true;
+  const text = PAD.text;
+  try {
+    const r = await fetch('_pad', {
+      method: 'PUT', keepalive: !!beacon && text.length < 30000,
+      headers: { 'X-Maps-Run': '1', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, version: PAD.version }),
+    });
+    if (r.status === 409) {
+      const cur = await r.json();
+      if (cur.text !== text) PAD.mine = text;
+      PAD.text = cur.text;
+      PAD.version = cur.version;
+      PAD.status = 'saved';
+      if (PAD.root) PAD.root.querySelector('textarea').value = PAD.text;
+      padRenderMine();
+    } else if (!r.ok) {
+      throw new Error(r.status);
+    } else {
+      PAD.version = (await r.json()).version;
+      PAD.status = PAD.text === text ? 'saved' : 'saving';
+    }
+  } catch (e) {
+    PAD.status = 'error';
+    PAD.reason = e.message === '413' ? 'too long' : 'server not reachable';
+    if (e.message !== '413') PAD.retry = setTimeout(padSave, 5000);
+  }
+  PAD.saving = false;
+  if (PAD.status === 'saving') PAD.timer = setTimeout(padSave, PAD_IDLE_MS);
+  padShowStatus();
+}
+
+/** save now, if something is waiting */
+function padFlush(beacon) {
+  if (PAD.timer || PAD.status === 'error') padSave(beacon);
+}
+
+/** the "Your unsaved text" box, after another tab saved first */
+function padRenderMine() {
+  if (!PAD.root) return;
+  const box = PAD.root.querySelector('.pad-mine');
+  box.hidden = !PAD.mine;
+  box.querySelector('textarea').value = PAD.mine || '';
+  padShowStatus();
+}
+
+async function padSend() {
+  const sentText = PAD.text;
+  if (!sentText.trim() || PAD.mine) return;
+  clearTimeout(PAD.timer);
+  PAD.timer = null;
+  while (PAD.saving) await new Promise((res) => setTimeout(res, 50));
+  if (PAD.status !== 'saved') await padSave();
+  if (PAD.status === 'error' || PAD.mine) return;
+  if (!(await post({ type: 'pad-send', text: sentText }))) return;
+  // what she typed after pressing stays for the next send
+  const rest = PAD.text.startsWith(sentText) ? PAD.text.slice(sentText.length).replace(/^\s+/, '') : PAD.text;
+  PAD.text = rest;
+  PAD.root.querySelector('textarea').value = rest;
+  PAD.status = 'saving';
+  await padSave();
+  padRenderSent();
+}
+
+/** the first ~200 characters, cut at a space */
+function padPreview(text) {
+  if (text.length <= PAD_PREVIEW) return text;
+  const cut = text.lastIndexOf(' ', PAD_PREVIEW);
+  return text.slice(0, cut > 100 ? cut : PAD_PREVIEW) + '...';
+}
+
+function padRenderSent() {
+  if (!PAD.sentList) return;
+  const pads = (INBOX.pads || []).slice().sort((a, b) => (a.id < b.id ? 1 : -1));
+  PAD.sentList.replaceChildren(
+    el('h3', {}, 'Sent for filing'),
+    ...(pads.length ? pads.map((p) => {
+      const long = p.text.length > PAD_PREVIEW;
+      const whole = padOpen.has(p.id);
+      return el('div', { class: 'pad-item' + (p.handled ? ' done' : ''), 'data-pad': p.id },
+        el('div', { class: 'when' }, `Sent ${padStamp(p.at)}`),
+        p.handled
+          ? el('div', { class: 'note' }, p.handled.note ? rich(p.handled.note) : 'Filed')
+          : el('div', { class: 'wait' }, 'Waiting to be filed'),
+        el('div', { class: 'sent-text' }, rich(whole ? p.text : padPreview(p.text))),
+        long ? el('button', {
+          class: 'link', type: 'button',
+          onclick: () => { if (whole) padOpen.delete(p.id); else padOpen.add(p.id); padRenderSent(); },
+        }, whole ? 'Show less' : 'Show all') : null);
+    }) : [el('p', { class: 'meta' }, 'Nothing sent in the last 14 days')]));
+}
+
+function padStamp(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? clock(iso) : `${d.toLocaleDateString([], { day: 'numeric', month: 'short' })}, ${clock(iso)}`;
+}
+
+function padBuild() {
+  const area = el('textarea', {
+    class: 'input pad-area', 'data-key': 'pad:text', spellcheck: 'true',
+    placeholder: 'Type requests and ideas, as many as you like. Nothing is sent until you press Send for filing.',
+    oninput: (e) => { PAD.text = e.target.value; padChanged(); },
+    onblur: () => padFlush(),
+  });
+  area.value = PAD.text;
+  const mine = el('div', { class: 'pad-mine', hidden: true },
+    el('h3', {}, 'Your unsaved text'),
+    el('p', { class: 'meta' }, 'The pad changed in another tab, so it now shows that version. What you typed here is below.'),
+    el('textarea', { class: 'input', rows: 6, readonly: true }),
     el('div', { class: 'controls' },
-      el('label', { class: 'field' }, el('span', {}, 'Area'), areaSel),
-      el('label', { class: 'field' }, el('span', {}, 'Line'), lineSel)),
+      el('button', { class: 'btn', type: 'button', onclick: () => {
+        const add = PAD.mine;
+        PAD.mine = null;
+        PAD.text = PAD.text ? `${PAD.text.replace(/\s+$/, '')}\n\n${add}` : add;
+        area.value = PAD.text;
+        padRenderMine();
+        padChanged();
+      } }, 'Add to the pad'),
+      el('button', { class: 'btn plain', type: 'button', onclick: () => { PAD.mine = null; padRenderMine(); } }, 'Discard')));
+  PAD.sentList = el('div', { class: 'pad-sent' });
+  PAD.root = el('div', { class: 'pad' }, area, mine,
     el('div', { class: 'controls' },
-      el('button', { class: 'btn', type: 'button', onclick: async () => {
-        const action = { type: 'add' };
-        if (drafts['add:area']) action.area = drafts['add:area'];
-        if (drafts['add:line']) action.line = drafts['add:line'];
-        if (!textOf(`${k}:text`)) return;
-        await submit(`${k}:text`, action);
-        delete drafts['add:area'];
-        delete drafts['add:line'];
-        openPanel({ kind: 'queue' });
-      } }, 'Add item')),
-  ];
+      el('button', { class: 'btn pad-send', type: 'button', onclick: padSend }, 'Send for filing'),
+      el('span', { class: 'pad-state' })),
+    PAD.sentList);
+  return PAD.root;
+}
+
+function padPanel() {
+  if (!PAD.root) padBuild();
+  padShowStatus();
+  padRenderMine();
+  padRenderSent();
+  if (!PAD.loaded || (!PAD.timer && !PAD.saving && PAD.status !== 'error')) padLoad();
+  return [head('Scratch pad'), PAD.root];
 }
 
 function ackPanel() {
@@ -706,7 +912,7 @@ function setHash(push) {
   const h = hashNow();
   if (h === location.hash || (!h && !location.hash)) return;
   const url = h || location.pathname + location.search;
-  if (push) history.pushState(null, '', url); else history.replaceState(null, '', url);
+  if (push) history.pushState(null, '', url); else history.replaceState(history.state, '', url);
 }
 
 function applyHash() {
@@ -773,6 +979,7 @@ function flash(id) {
 }
 
 function goTask(id) {
+  saveScroll();
   if (DATA.tasks[id]) {
     view = 'board';
     panel = { kind: 'line', slug: DATA.tasks[id].line, task: id };
@@ -792,6 +999,7 @@ function goTask(id) {
 }
 
 function goNotes(name) {
+  saveScroll();
   panel = { kind: 'notes', name };
   setHash(true);
   render();
@@ -863,8 +1071,10 @@ function excerpt(text, id) {
   return out.join('\n');
 }
 
-async function loadNotes(name) {
-  NOTES_CACHE[name] = { state: 'loading' };
+/** quiet: a refresh that keeps showing the old text, and redraws only if the file changed (a redraw must not move her scroll) */
+async function loadNotes(name, quiet) {
+  const old = NOTES_CACHE[name];
+  if (!quiet) NOTES_CACHE[name] = { state: 'loading' };
   const entry = (DATA.notes_index || {})[name];
   const paths = Array.isArray(entry) ? entry : entry ? [entry] : [];
   try {
@@ -877,8 +1087,9 @@ async function loadNotes(name) {
     }
     NOTES_CACHE[name] = paths.length ? { state: 'ok', text: texts.join('\n\n') } : { state: 'missing' };
   } catch (e) {
-    NOTES_CACHE[name] = { state: 'missing' };
+    NOTES_CACHE[name] = quiet && old ? old : { state: 'missing' };
   }
+  if (quiet && old && old.state === NOTES_CACHE[name].state && old.text === NOTES_CACHE[name].text) return;
   if (view === 'requests') renderRequests();
   renderPanel();
 }
@@ -909,8 +1120,8 @@ function md(src) {
       const body = [];
       for (i += 2; i < lines.length && /^\s*\|/.test(lines[i]); i++) body.push(cells(lines[i]));
       out.push(el('div', { class: 'md-table' }, el('table', {},
-        el('thead', {}, el('tr', {}, head.map((c) => el('th', {}, inline(c))))),
-        el('tbody', {}, body.map((r) => el('tr', {}, r.map((c) => el('td', {}, inline(c)))))))));
+        el('thead', {}, el('tr', {}, head.map((c) => el('th', { class: c.length <= 24 ? 'short' : null }, inline(c))))),
+        el('tbody', {}, body.map((r) => el('tr', {}, r.map((c) => el('td', { class: c.length <= 24 ? 'short' : null }, inline(c)))))))));
       continue;
     }
     if (/^\s*>/.test(l)) {
@@ -984,7 +1195,7 @@ function showView(v) {
   window.scrollTo(0, 0);
 }
 
-function stamp(iso) {
+function padStamp(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '';
   return d.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -1221,26 +1432,53 @@ function groupFormBox(g) {
 
 // ---------- wiring ----------
 
+try {
+  const w = parseInt(localStorage.getItem('twboard.panelw'), 10);
+  if (w >= 360) document.documentElement.style.setProperty('--panel-w', `${Math.min(w, window.innerWidth)}px`);
+} catch (e) { /* storage blocked: the default width */ }
+$('#grip').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  const grip = $('#grip');
+  grip.setPointerCapture(e.pointerId);
+  const move = (ev) => {
+    const w = Math.round(Math.max(360, Math.min(window.innerWidth - ev.clientX, window.innerWidth * 0.92)));
+    document.documentElement.style.setProperty('--panel-w', `${w}px`);
+  };
+  const up = () => {
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', up);
+    const w = parseInt(document.documentElement.style.getPropertyValue('--panel-w'), 10);
+    try { if (w) localStorage.setItem('twboard.panelw', String(w)); } catch (err) { /* not remembered */ }
+  };
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', up);
+});
 $('#search').addEventListener('input', () => render());
 $('#v-board').addEventListener('click', () => showView('board'));
 $('#v-requests').addEventListener('click', () => showView('requests'));
 $('#update').addEventListener('change', () => DATA && renderGrid());
 $('#refresh').addEventListener('click', rebuild);
-$('#add').addEventListener('click', () => openPanel({ kind: 'add' }));
+$('#pad').addEventListener('click', () => openPanel(panel && panel.kind === 'pad' ? null : { kind: 'pad' }));
 $('#ack').addEventListener('click', () => openPanel({ kind: 'ack' }));
 $('#queued').addEventListener('click', () => openPanel({ kind: 'queue' }));
 $('#send').addEventListener('click', () => post({ type: 'send-now' }));
+window.addEventListener('pagehide', () => padFlush(true));
+document.addEventListener('visibilitychange', () => { if (document.hidden) padFlush(true); });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && panel) openPanel(null);
 });
 new ResizeObserver(() => {
   document.documentElement.style.setProperty('--head', `${$('#top').offsetHeight}px`);
 }).observe($('#top'));
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (e) => {
   if (!DATA) return;
   applyHash();
+  const st = e.state;
+  if (st && Array.isArray(st.notes)) { notesOpen.clear(); st.notes.forEach((n) => notesOpen.add(n)); }
+  const restored = !!(panel && st && typeof st.sc === 'number');
+  if (restored) pendingScroll = { top: st.sc, until: Date.now() + 4000 };
   render();
-  if (panel && panel.task) {
+  if (panel && panel.task && !restored) {
     const row = $(`#panel [data-task="${panel.task}"]`);
     if (row) row.scrollIntoView({ block: 'center' });
   }
@@ -1250,8 +1488,10 @@ setInterval(() => DATA && renderStrip(), 60000);
 setInterval(async () => {
   if (!DATA || document.hidden) return;
   const was = new Set(INBOX.pending.map((a) => a.id));
+  const padsWere = new Set(INBOX.pads.filter((p) => p.handled).map((p) => p.id));
   if (!(await fetchInbox())) return;
-  const applied = [...was].some((id) => !withdrawn.has(id) && !INBOX.pending.some((a) => a.id === id));
+  const applied = [...was].some((id) => !withdrawn.has(id) && !INBOX.pending.some((a) => a.id === id))
+    || INBOX.pads.some((p) => p.handled && !padsWere.has(p.id));
   if (applied) rebuild();
   else render();
 }, POLL_MS);

@@ -29,6 +29,8 @@ not once per message (Anita, 2026-11-09).
 ## TODO.md and asks
 
 - File only TODO.md's short-term section. The other sections are hers unless she points at an item.
+- A task that duplicates another may be folded into it without asking (Anita, 2026-11-16: "its fine to fold in
+  duplicates if you think its a duplicate, since we're not ognna be losing that much info").
 - **Triage player reports** (tw-feedback, Anita 2026-11-12): a literal bug that would touch a decent number of
   players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
   her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
@@ -37,7 +39,8 @@ not once per message (Anita, 2026-11-09).
   final message's For you block.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
 - **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
-  acknowledged, new items, comments) land in `notes/board-inbox.jsonl`. At takeover start the watch with Monitor
+  acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
+  rough thoughts), reported at once: split it, merge duplicates, file the rest (notes/T-3391.md "Scratch pad"). At takeover start the watch with Monitor
   (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py`; it prints a line when a batch is
   ready (her Send now, or 3 idle minutes). `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
   moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.

@@ -1,4 +1,5 @@
 :root {
+  --panel-w: min(100vw, max(560px, 55vw));
   --bg: #fafafa;
   --card: #ffffff;
   --text: #1c1c1c;
@@ -188,7 +189,7 @@ a.task:hover, button.link:hover { text-decoration: underline; }
   border-top: 1px solid var(--line);
   right: 0;
   bottom: 0;
-  width: min(560px, 100vw);
+  width: var(--panel-w);
   overflow-y: auto;
   background: var(--card);
   border-left: 1px solid var(--line);
@@ -368,3 +369,44 @@ select.small {
   body { padding: 10px 16px 30px; }
   #search { width: 100%; }
 }
+
+/* scratch pad */
+.pad { margin-top: 10px; }
+.pad-area { min-height: 34vh; font-size: 14px; line-height: 1.5; resize: vertical; }
+.pad .controls { margin-top: 8px; }
+.pad-state { color: var(--muted); font-size: 12px; }
+.pad-state.bad { color: var(--s-you); }
+.pad-mine { margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--line); }
+.pad-mine .input { margin-top: 6px; }
+.pad-item {
+  border-left: 3px solid var(--s-you);
+  padding: 2px 0 2px 8px;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+.pad-item.done { border-left-color: var(--s-high); }
+.pad-item .when { font-size: 12px; color: var(--muted); }
+.pad-item .wait { font-size: 13px; color: var(--muted); }
+.pad-item .note { font-size: 13px; font-weight: 700; }
+.pad-item .sent-text { font-size: 13px; color: var(--muted); white-space: pre-wrap; margin-top: 2px; }
+.pad-item .link { font-size: 12px; }
+
+/* the panel's drag edge */
+#grip {
+  position: fixed;
+  top: var(--head, 0px);
+  bottom: 0;
+  right: calc(var(--panel-w) - 3px);
+  width: 7px;
+  cursor: col-resize;
+  z-index: 11;
+  touch-action: none;
+}
+#grip:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+/* notes tables: ids and short cells stay on one line; a wide table scrolls inside the notes */
+.notes .md-table { max-width: 100%; }
+.notes td.short, .notes th.short, .notes td button.link, .notes td a, .notes th button.link { white-space: nowrap; }
+#strip .wt-list { display: flex; flex-wrap: wrap; gap: 2px 18px; }
+#strip .wt-item { white-space: nowrap; }
+#strip .wt-item .time { color: var(--muted); }

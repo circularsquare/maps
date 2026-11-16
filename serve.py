@@ -14,7 +14,7 @@ it is not.  The running server re-reads served.json on every request, so add and
 effect on the next page load without a restart.
 
 A page can also start one of the scripts listed in ACTIONS below (diskmap's rescan button),
-and append to one of the INBOXES (the trainworld board's).
+and append to one of the INBOXES or save to one of the PADS (the trainworld board's).
 
 It speaks HTTP Range, which plain `python -m http.server` does not.  A .pmtiles archive is
 read through range requests, and without them the map loads with a basemap and nothing on
@@ -26,6 +26,7 @@ over between them: settings saved on one port start fresh on another.
 
 Bound to 127.0.0.1 deliberately; do not bind "" or 0.0.0.0.
 """
+import calendar
 import html
 import http.server
 import json
@@ -63,6 +64,14 @@ INBOXES = {"twboard": "trainworld/notes/board-inbox.jsonl"}
 INBOX_LOCK = threading.Lock()
 INBOX_MAX = 64 * 1024
 INBOX_LAST_ID = [0]
+INBOX_RECENT_DAYS = 14
+
+# A free-text file a page keeps saved as its person types (the board's scratch pad).
+# GET /<name>/_pad gives {"text", "version"}.  PUT {"text", "version"} (X-Maps-Run, at most 256 KB)
+# replaces the file if "version" is the one last read, else 409 with the current {"text", "version"}.
+PADS = {"twboard": "trainworld/notes/board-pad.md"}
+PAD_LOCK = threading.Lock()
+PAD_MAX = 256 * 1024
 
 
 def inbox_read(path):
@@ -95,7 +104,23 @@ def inbox_state(path):
         last_at = r.get("at")
         if str(r["id"]) not in handled:
             pending.append(r)
-    return {"pending": pending, "last_at": last_at, "sent_at": sent_at}
+    # her pad-send actions from the last INBOX_RECENT_DAYS days, handled or not (withdrawn ones left out)
+    cutoff = time.time() - INBOX_RECENT_DAYS * 86400
+    marks = {str(r["handled"]): r for r in rows if "handled" in r}
+    pads = []
+    for r in rows:
+        if r.get("type") != "pad-send" or "id" not in r:
+            continue
+        try:
+            when = calendar.timegm(time.strptime(r.get("at", ""), "%Y-%m-%dT%H:%M:%SZ"))
+        except ValueError:
+            continue
+        mark = marks.get(str(r["id"]))
+        if when < cutoff or (mark and mark.get("note") == "withdrawn"):
+            continue
+        pads.append({"id": r["id"], "at": r["at"], "text": r.get("text", ""),
+                     "handled": {"at": mark.get("at"), "by": mark.get("by"), "note": mark.get("note", "")} if mark else None})
+    return {"pending": pending, "last_at": last_at, "sent_at": sent_at, "pads": pads}
 
 
 def inbox_append(path, obj):
@@ -111,6 +136,32 @@ def inbox_append(path, obj):
     with open(path, "a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
     return obj
+
+
+def pad_state(path):
+    """{"text", "version"}; version is the file's mtime in microseconds (small enough for a JS number), 0 while there is no file."""
+    try:
+        st = os.stat(path)
+        return {"text": path.read_text(encoding="utf-8"), "version": st.st_mtime_ns // 1000}
+    except FileNotFoundError:
+        return {"text": "", "version": 0}
+
+
+def pad_write(path, text):
+    """Replace the file whole (temp file, then os.replace); returns the new state."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    for _ in range(20):
+        try:
+            os.replace(tmp, path)
+            break
+        except PermissionError:         # Windows: a reader has it open this instant
+            time.sleep(0.05)
+    else:
+        os.replace(tmp, path)
+    return pad_state(path)
 
 
 def load():
@@ -264,6 +315,39 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             stored = inbox_append(path, obj)
         self.send_json(200, stored)
 
+    def pad(self):
+        """The pad file if this request is for /<name>/_pad of a listed name, else None."""
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) == 3 and parts[2] == "_pad" and parts[1] in PADS:
+            return HERE / PADS[parts[1]]
+        return None
+
+    def do_PUT(self):
+        path = self.pad()
+        if not path:
+            return self.send_error(404)
+        if not self.headers.get("X-Maps-Run"):
+            return self.send_error(403)
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return self.send_error(400)
+        if size > PAD_MAX:
+            return self.send_error(413)
+        try:
+            obj = json.loads(self.rfile.read(size).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return self.send_error(400, "not JSON")
+        if not isinstance(obj, dict) or not isinstance(obj.get("text"), str) or not isinstance(obj.get("version"), int):
+            return self.send_error(400, "need text and version")
+        if len(obj["text"].encode("utf-8")) > PAD_MAX:
+            return self.send_error(413)
+        with PAD_LOCK:
+            cur = pad_state(path)
+            if cur["version"] != obj["version"]:
+                return self.send_json(409, cur)
+            self.send_json(200, pad_write(path, obj["text"]))
+
     def do_POST(self):
         path = self.inbox()
         if path:
@@ -288,6 +372,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if urllib.parse.urlsplit(self.path).path == "/":
             return self.send_front_page(True)
+        path = self.pad()
+        if path:
+            with PAD_LOCK:
+                state = pad_state(path)
+            return self.send_json(200, state)
         path = self.inbox()
         if path:
             with INBOX_LOCK:

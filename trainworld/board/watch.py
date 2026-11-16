@@ -5,7 +5,8 @@
     python trainworld/board/watch.py handled <id> [<id> ...] --by <orchestrator> [--note "..."]
 
 A batch is ready when something is pending and she pressed Send now after the last batch was
-reported, or nothing new has come from her for --idle seconds (180). The watch prints only then,
+reported, or a pad-send (the scratch pad's Send for filing) is new, or nothing new has come from
+her for --idle seconds (180). The watch prints only then,
 for the Monitor tool. The line format and the action types are in notes/T-3391.md.
 """
 import argparse
@@ -72,8 +73,9 @@ def watch(path, idle, poll):
         else:
             ids = [r["id"] for r in pending]
             quiet = last is not None and time.time() - last >= idle
-            if pushed or (quiet and set(ids) - reported):
-                why = "send now" if pushed else (f"idle {idle // 60} min" if idle >= 60 else f"idle {idle} s")
+            pads = {r["id"] for r in pending if r.get("type") == "pad-send"} - reported
+            if pushed or pads or (quiet and set(ids) - reported):
+                why = "send now" if pushed else ("scratch pad" if pads else (f"idle {idle // 60} min" if idle >= 60 else f"idle {idle} s"))
                 print(f"batch ready ({why}): {len(ids)} pending: {', '.join(ids)}", flush=True)
                 reported |= set(ids)
         time.sleep(poll)
