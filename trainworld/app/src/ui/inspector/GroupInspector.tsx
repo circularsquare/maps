@@ -18,7 +18,8 @@ import { LINE_PALETTE } from "../../game/palette";
 import { ColourPicker } from "../ColourPicker";
 import { GroupPill } from "../GroupPill";
 import { LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight } from "../../game/relatedLayout";
-import { today } from "../../game/today";
+import { today, useToday } from "../../game/today";
+import { count } from "../../game/format";
 import { DEMAND_INDEX, type LineInput, type WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
 import { edit, stationNames, stationsById, world } from "../../game/world";
@@ -61,6 +62,7 @@ let kept: { sig: string; lay: GroupLayout } | null = null;
 
 
 export function GroupInspector({ group }: { group: number }) {
+  useToday();
   const w = world.value;
   const byNum = w ? lineGroups(w.save.lines).get(group) : undefined;
   // T-1813: the columns in the Lines tab's hand order, where it has one
@@ -283,9 +285,11 @@ export function GroupInspector({ group }: { group: number }) {
                   const keep = !rail || n <= 2 || turns || (loop && (c.index === 0 || c.index === n - 1 || n <= 3));
                   const here = nm(c.station);
                   const end = c.index === 0 || c.index === n - 1;
-                  const tip = keep
+                  const day = today.value.get(l.id);
+                  const boards = day ? "\n" + t("stationInspector.boardings24", { count: count(day.stops[c.index] ?? 0) }) : "";
+                  const tip = (keep
                     ? (turns ? t("groupInspector.turnsBack", { line: B, station: here }) : t("groupInspector.stopsAt", { line: B, station: here }))
-                    : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 || mobileDevice() ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }));
+                    : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 || mobileDevice() ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }))) + boards;
                   const click = (e: MouseEvent) => {
                     if (e.shiftKey && !end && !loop) void change({ op: "endLineAt", line: l.num, index: c.index });
                     else void change({ op: "dropStop", line: l.num, index: c.index });
