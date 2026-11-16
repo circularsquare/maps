@@ -164,9 +164,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
   - Goal: The re-gate checks only what a joint solve can change.
   - Other: See notes/T-928.md section 4.
-- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads (taking, 2026-11-16, agent b4)
+- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
-  - Goal: Whole files load with no console error and smoke stays clean.
+  - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
   - Other: notes/T-1635.md
 - T-3399 [P2] {L:new-countries} Central America and Venezuela first (taking, 2026-11-16, agent countries)
   - Context: You asked (2026-11-16) for Guatemala to Panama and Venezuela before any other new region.
@@ -345,7 +345,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-3415's report: four tsc flags (22 errors), clippy relaxed with -D warnings (two loops that never loop in transition_tests.rs), ruff F and E9 for the pipeline.
   - Goal: All three pass clean, run from one checks/lint.cmd.
   - Other: notes/T-3415.md
-- T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (taking, 2026-11-16, agent b4)
+- T-3442 [P3] {L:small-fixes} {waits:Anita} Glyph and font load errors in the console
+  - Need from Anita: Where were you (zone, zoom, which game) when the glyph warnings showed? A search of 12 big cities found none.
   - Context: You, 2026-11-16: "if i inspect elemetn it shows some "unable to load glyph" warnings and failed to load resource which also seems font related".
   - Goal: No glyph or font load errors in the console on a normal load; missing glyph ranges served or not requested.
 - T-3435 [P3] {L:buses} {waits:Anita} Long-distance ferries
@@ -677,9 +678,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Follow-up to T-2290: 10 to 18 near pairs per city are still drawn on the wrong side of each other, mostly parallel lines a kilometre apart.
   - Goal: Far fewer wrong-side pairs; a side term in the separation is the likely way.
   - Other: notes/T-2293.md, notes/T-2290.md
-- T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour (taking, 2026-11-16, agent b4)
-  - Context: A copied line keeps its source's colour. A bus or ferry line takes its colour at the first click, before its route is drawn.
-  - Goal: Re-pick the colour as `lineColour.ts` does, if wanted (a shared colour on a copy may be intended).
 - T-2292 [P3] {L:schematic-layout} {after:a real save shows it} Diagram bundle for lines that swap sides
   - Context: Idea: lines that run close and swap sides on the ground drawn as one parallel bundle with a fixed order.
   - Goal: Build it only if a real save shows the problem.
@@ -806,9 +804,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: The touch rule already re-solves only the line zone (Tokyo 0.1 s against 8 s whole), and the local result was within 83 riders of the whole.
   - Goal: A city line edit ends with the local solve, no whole solve.
   - Other: notes/T-2188.md
-- T-2189 [P3] {L:small-fixes} Edit note forgets slow edits (taking, 2026-11-16, agent b4)
-  - Context: The edit note gives up after 5 minutes (`GIVE_UP_MS`). Tokyo's real save settled in 352-361 s and showed no note.
-  - Goal: Raise the limit and keep the level-of-detail hold (T-2180) short.
 - T-2198 [P3] {L:passing-tracks} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list.
   - Goal: The loss is marked on the map or in the trouble list.
@@ -1079,10 +1074,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and preserve recovery copies. Automatically validate local and cloud saves, quarantine failures, and pin the last verified intact revision outside ordinary backup rotation so affected players can restore it. Includes complete server upload validation and a recurring integrity scan. Open; requested by Anita 2026-11-15 after Jordan's truncated-save reports. notes/T-3395.md.
-- T-2575 [P3] {L:cleanup} Fetch regions.json once (taking, 2026-11-16, agent b4)
-  - Context: regions.json (1.5 MB) is fetched twice, by the page and the realRoute worker.
-  - Goal: The worker's `cover` message carries the boxes, so the file is fetched once.
-  - Other: See notes/T-2512.md.
 - T-2573 [P3] {L:checks} Worker check misses the walker rule (taking, 2026-11-16, agent b3)
   - Context: checks/t409-worker-check.mjs shows rail pairs with no walking share even by walkable Boston/Providence cells.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
@@ -1098,7 +1089,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 25 pages done (uncommitted) and figures come from code via JSON markers.
   - Goal: Candidates in the notes are covered and retired docs removed. Next: fix markers if trams rename V_TOP, V_HSR, LEVEL_MULT, track_factor.
   - Other: See notes/T-2854.md.
-- T-2380 [P3] {L:cleanup} Retire intercity.json (taking, 2026-11-16, agent b4)
+- T-2380 [P3] {L:cleanup} Retire intercity.json
   - Context: data/work/intercity.json is read only by two ignored sim tests and joint_gravity's no-`--packs` mode.
   - Goal: The file and that mode are gone.
 - T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items
@@ -1511,7 +1502,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: A bare start's card waits 2 s for New York in one worker.
   - Goal: The card appears without the 2 s wait.
   - Other: notes/someday.md
-- T-344 [P3] {L:loading} Zone loading bar sticks near 99% (taking, 2026-11-16, agent b4)
+- T-344 [P3] {L:loading} Zone loading bar sticks near 99%
   - Context: A zone's loading bar can stick near 99%.
   - Goal: The bar finishes when loading does.
   - Other: notes/T-344.md

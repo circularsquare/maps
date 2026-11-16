@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2332 [P3] {L:small-fixes} Copied and bus lines keep a duplicate colour (2026-11-16): decided, no code: a copied line keeps its source's colour (it is a variant of the same line). DECISIONS 2026-11-16. notes/T-2332.md.
+- T-2575 [P3] {L:cleanup} Fetch regions.json once (2026-11-16): regions.json is fetched once by the page and handed to the route worker. notes/T-2575.md.
+- T-2189 [P3] {L:small-fixes} Edit note forgets slow edits (2026-11-16): the edit note gives up after 5 minutes of demand doing nothing, capped at 20 minutes from the edit. notes/T-2189.md.
 - T-3415 [P3] {L:checks} Set up linters (2026-11-16): report in notes/T-3415.md: add four tsc flags (22 errors), clippy relaxed with -D warnings (two real test bugs in transition_tests.rs), ruff F/E9 for the pipeline; skip eslint; no CI until outside PRs. Follow-up T-3443.
 - T-1502 [P3] {L:money} Bus money shares by route points (2026-11-16): a bus route's money splits by its own points (about 200 m pieces); routes without points keep stop halves. notes/T-1502.md.
 - T-3401 [P3] {L:accounts-server} Sign in on the landing page (2026-11-16): the new game sheet has the Sign in icon too (returning players already had it). notes/T-3401.md.
