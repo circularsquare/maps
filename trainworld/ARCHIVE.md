@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3424 [P1] {L:board} A changelog for the next update on the board (2026-11-16): items in trainworld/changelog/next.json, added by agents with tools/changelog.py, her rewording and hiding saved from the board's Changelog view (serve.py /twboard/_changelog), `changelog.py publish` writes the updates.ts entry from visible items; notes tables get drag-to-resize columns. Rule in CLAUDE.md "Player text" and docs/orchestrator.md. notes/T-3424.md.
 - T-592 [P3] {L:world-tooling} Read next extract while gating (2026-11-16, agent tidy): folded into T-2070; the read-ahead was built as T-1980.
 - T-1309 [P3] {L:region-redraws} Look at 384 new Chinese zone names (2026-11-16, agent tidy): folded into T-847. docs/zones.md "Names".
 - T-3235 [P3] {L:edit-speed} London train-count edits settle for 3.5 s (2026-11-16, agent tidy): folded into T-3388; hysteresis in `pace_merges` is the likely fix. notes/T-3233.md.

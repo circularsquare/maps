@@ -16,7 +16,8 @@ const opened = new Set();   // task comment boxes that are open
 let confirm = null;         // {key, action}: a select change waiting for Queue change or Cancel
 const withdrawn = new Set();
 let REQ = null;             // requests.json: player request groups, their reports, pasted items
-let view = 'board';         // 'board' | 'requests'
+let view = 'board';         // 'board' | 'requests' | 'changelog'
+const CL = { data: null, ok: true, status: {}, timers: {}, conflict: {} }; // the changelog (T-3424)
 const expanded = new Set(); // request groups showing their reports
 let lastGroup = null;       // the group last opened, kept in the URL hash
 let groupForm = null;       // {gid, kind: 'accept' | 'merge' | 'dismiss' | 'comment'}
@@ -268,12 +269,16 @@ function render() {
   buildView();
   renderTop();
   const req = view === 'requests';
-  for (const id of ['#strip', '#grid-wrap', '#update']) $(id).hidden = req;
+  const cl = view === 'changelog';
+  for (const id of ['#strip', '#grid-wrap', '#update']) $(id).hidden = req || cl;
   $('#requests').hidden = !req;
-  $('#search').placeholder = req ? 'Search requests' : 'Search lines and tasks';
-  $('#v-board').setAttribute('aria-pressed', String(!req));
+  $('#changelog').hidden = !cl;
+  $('#search').placeholder = req ? 'Search requests' : cl ? 'Search the changelog' : 'Search lines and tasks';
+  $('#v-board').setAttribute('aria-pressed', String(!req && !cl));
   $('#v-requests').setAttribute('aria-pressed', String(req));
-  if (req) renderRequests();
+  $('#v-changelog').setAttribute('aria-pressed', String(cl));
+  if (cl) renderChangelog();
+  else if (req) renderRequests();
   else {
     renderStrip();
     renderGrid();
@@ -909,6 +914,7 @@ function hashNow() {
   if (panel && panel.kind === 'line' && panel.task) return `#task/${panel.task}`;
   if (panel && panel.kind === 'closed') return `#task/${panel.id}`;
   if (panel && panel.kind === 'notes') return `#notes/${panel.name}`;
+  if (view === 'changelog') return '#changelog';
   if (view === 'requests') return lastGroup ? `#requests/${lastGroup}` : '#requests';
   if (panel && panel.kind === 'line') return `#${panel.slug}`;
   return '';
@@ -926,7 +932,10 @@ function applyHash() {
   const hash = decodeURIComponent(location.hash.slice(1));
   panel = null;
   view = 'board';
-  if (hash === 'requests' || hash.startsWith('requests/')) {
+  if (hash === 'changelog') {
+    view = 'changelog';
+    loadChangelog();
+  } else if (hash === 'requests' || hash.startsWith('requests/')) {
     view = 'requests';
     const g = hash.split('/')[1];
     if (g) { expanded.add(g); lastGroup = g; }
@@ -1126,9 +1135,11 @@ function md(src) {
       const head = cells(l);
       const body = [];
       for (i += 2; i < lines.length && /^\s*\|/.test(lines[i]); i++) body.push(cells(lines[i]));
-      out.push(el('div', { class: 'md-table' }, el('table', {},
+      const table = el('table', {},
         el('thead', {}, el('tr', {}, head.map((c) => el('th', { class: c.length <= 24 ? 'short' : null }, inline(c))))),
-        el('tbody', {}, body.map((r) => el('tr', {}, r.map((c) => el('td', { class: c.length <= 24 ? 'short' : null }, inline(c)))))))));
+        el('tbody', {}, body.map((r) => el('tr', {}, r.map((c) => el('td', { class: c.length <= 24 ? 'short' : null }, inline(c)))))));
+      resizable(table);
+      out.push(el('div', { class: 'md-table' }, table));
       continue;
     }
     if (/^\s*>/.test(l)) {
@@ -1169,6 +1180,40 @@ function md(src) {
   return out;
 }
 
+/** a drag handle on the right edge of every header cell; the first drag fixes all the widths where they are */
+function resizable(table) {
+  const ths = [...table.tHead.rows[0].cells];
+  ths.forEach((th, i) => {
+    const grip = el('span', { class: 'col-grip' });
+    grip.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!table.classList.contains('fixed')) {
+        const w = ths.map((x) => x.offsetWidth);
+        ths.forEach((x, j) => { x.style.width = `${w[j]}px`; });
+        table.style.width = `${w.reduce((a, b) => a + b, 0)}px`;
+        table.classList.add('fixed');
+      }
+      const x0 = e.clientX;
+      const w0 = th.offsetWidth;
+      const t0 = table.offsetWidth;
+      grip.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const w = Math.max(36, w0 + ev.clientX - x0);
+        th.style.width = `${w}px`;
+        table.style.width = `${t0 + w - w0}px`;
+      };
+      const up = () => {
+        grip.removeEventListener('pointermove', move);
+        grip.removeEventListener('pointerup', up);
+      };
+      grip.addEventListener('pointermove', move);
+      grip.addEventListener('pointerup', up);
+    });
+    th.append(grip);
+  });
+}
+
 const INLINE_RE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)\s]+\))|(\*[^*\s][^*]*\*)/g;
 
 function inline(text) {
@@ -1196,7 +1241,8 @@ function inline(text) {
 
 function showView(v) {
   view = v;
-  if (v === 'requests' && panel && panel.kind === 'line') panel = null;
+  if (v !== 'board' && panel && panel.kind === 'line') panel = null;
+  if (v === 'changelog') loadChangelog();
   setHash();
   render();
   window.scrollTo(0, 0);
@@ -1437,6 +1483,141 @@ function groupFormBox(g) {
       cancel));
 }
 
+// ---------- changelog (T-3424) ----------
+
+const CL_IDLE_MS = 1200;
+
+async function loadChangelog() {
+  try {
+    const r = await fetch('_changelog', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    CL.data = await r.json();
+    CL.ok = true;
+  } catch (e) {
+    CL.ok = false;
+  }
+  if (view === 'changelog') renderChangelog();
+}
+
+function clShown(it) { return it.edited || it.text; }
+function clDraft(it) { const d = drafts[`cl:${it.id}`]; return d === undefined ? clShown(it) : d; }
+
+function renderChangelog() {
+  keepFocus($('#changelog'), drawChangelog);
+  for (const a of document.querySelectorAll('#changelog textarea.cl-text')) clGrow(a);
+}
+
+function clGrow(a) {
+  a.style.height = 'auto';
+  a.style.height = `${a.scrollHeight + 2}px`;
+}
+
+function clSetItem(item) {
+  const i = CL.data.items.findIndex((x) => x.id === item.id);
+  if (i >= 0) CL.data.items[i] = item;
+}
+
+async function clSave(id, fields) {
+  const it = CL.data && CL.data.items.find((x) => x.id === id);
+  if (!it) return;
+  const key = `cl:${id}`;
+  const sent = drafts[key];
+  const body = { id, rev: it.rev, ...fields };
+  if (!fields) { delete body.undefined; body.edited = sent; }
+  CL.status[id] = 'Saving';
+  clStatus(id);
+  try {
+    const r = await fetch('_changelog', {
+      method: 'POST', headers: { 'X-Maps-Run': '1', 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    if (r.status === 409) {
+      const cur = await r.json();
+      clSetItem(cur);
+      CL.conflict[id] = fields ? null : sent;
+      delete drafts[key];
+      CL.status[id] = '';
+    } else if (!r.ok) throw new Error(r.status);
+    else {
+      const cur = await r.json();
+      clSetItem(cur);
+      if (drafts[key] === sent) delete drafts[key];
+      CL.status[id] = drafts[key] === undefined ? 'Saved' : 'Saving';
+    }
+  } catch (e) {
+    CL.status[id] = `Not saved: ${e.message === '503' ? 'busy, try again' : 'server not reachable'}`;
+  }
+  if (view === 'changelog') renderChangelog();
+}
+
+function clStatus(id) {
+  const s = document.querySelector(`#changelog [data-item="${id}"] .cl-state`);
+  if (s) s.textContent = CL.status[id] || '';
+}
+
+function clItem(it) {
+  const id = it.id;
+  const area = el('textarea', {
+    class: 'input cl-text', rows: 1, spellcheck: 'true', 'data-key': `cl:${id}`,
+    oninput: (e) => {
+      drafts[`cl:${id}`] = e.target.value;
+      clGrow(e.target);
+      CL.status[id] = 'Saving';
+      clStatus(id);
+      clearTimeout(CL.timers[id]);
+      CL.timers[id] = setTimeout(() => clSave(id), CL_IDLE_MS);
+    },
+    onblur: () => {
+      if (drafts[`cl:${id}`] === undefined || !CL.timers[id]) return;
+      clearTimeout(CL.timers[id]);
+      CL.timers[id] = null;
+      clSave(id);
+    },
+  });
+  area.value = clDraft(it);
+  const mine = CL.conflict[id];
+  return el('div', { class: `cl-item${it.hidden ? ' is-hidden' : ''}`, 'data-item': id },
+    el('div', { class: 'cl-head' },
+      it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'meta' }, 'No task'),
+      it.hidden ? el('span', { class: 'cl-badge' }, 'Hidden') : null,
+      el('span', { class: 'cl-state' }, CL.status[id] || '')),
+    area,
+    mine ? el('div', { class: 'cl-conflict' },
+      el('p', { class: 'meta' }, 'This item changed while you were editing, so it shows the new wording. What you typed:'),
+      el('textarea', { class: 'input', rows: 2, readonly: true }, mine),
+      el('div', { class: 'controls' },
+        el('button', { class: 'btn', type: 'button', onclick: () => { drafts[`cl:${id}`] = mine; CL.conflict[id] = null; clSave(id); } }, 'Use my wording'),
+        el('button', { class: 'btn plain', type: 'button', onclick: () => { CL.conflict[id] = null; renderChangelog(); } }, 'Discard'))) : null,
+    el('div', { class: 'cl-foot' },
+      el('span', { class: 'meta' }, `Added by ${it.by || 'an agent'}, ${new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' })}`),
+      it.edited ? el('span', { class: 'meta' }, 'Reworded') : null,
+      el('span', { class: 'cl-sp' }),
+      it.edited ? el('button', { class: 'btn plain', type: 'button',
+        title: `The agent wrote: ${it.text}`,
+        onclick: () => { delete drafts[`cl:${id}`]; clSave(id, { edited: null }); } }, 'Use the agent\'s wording') : null,
+      el('button', { class: 'btn', type: 'button', onclick: () => clSave(id, { hidden: !it.hidden }) },
+        it.hidden ? 'Show in the update' : 'Hide from the update')));
+}
+
+function drawChangelog() {
+  const box = $('#changelog');
+  if (!CL.data) {
+    box.replaceChildren(el('p', { class: 'meta' }, CL.ok ? 'Loading' : 'The changelog can\'t be read until serve.py is restarted'));
+    return;
+  }
+  const q = query();
+  const all = CL.data.items;
+  const items = all.filter((i) => !q || (i.text + ' ' + (i.edited || '') + ' ' + (i.task || '')).toLowerCase().includes(q));
+  const hid = all.filter((i) => i.hidden).length;
+  const kids = [
+    el('h2', { class: 'section' }, 'Next update', el('span', { class: 'n' }, ` ${all.length - hid} shown, ${hid} hidden`)),
+    el('p', { class: 'meta' }, CL.data.line ? `Start-menu line: ${CL.data.line}` : 'Start-menu line: not written yet'),
+  ];
+  if (!CL.ok) kids.push(el('p', { class: 'meta' }, 'Not saved: server not reachable'));
+  if (!all.length) kids.push(el('p', { class: 'meta' }, 'Nothing here yet'));
+  for (const it of items) kids.push(clItem(it));
+  box.replaceChildren(...kids);
+}
+
 // ---------- wiring ----------
 
 try {
@@ -1463,6 +1644,7 @@ $('#grip').addEventListener('pointerdown', (e) => {
 $('#search').addEventListener('input', () => render());
 $('#v-board').addEventListener('click', () => showView('board'));
 $('#v-requests').addEventListener('click', () => showView('requests'));
+$('#v-changelog').addEventListener('click', () => showView('changelog'));
 $('#update').addEventListener('change', () => DATA && renderGrid());
 $('#refresh').addEventListener('click', rebuild);
 $('#pad').addEventListener('click', () => openPanel(panel && panel.kind === 'pad' ? null : { kind: 'pad' }));
@@ -1494,6 +1676,7 @@ setInterval(() => DATA && renderStrip(), 60000);
 // the orchestrator marks actions handled as it applies them; then the files have changed too
 setInterval(async () => {
   if (!DATA || document.hidden) return;
+  if (view === 'changelog' && !Object.values(CL.timers).some(Boolean)) loadChangelog();
   const was = new Set(INBOX.pending.map((a) => a.id));
   const padsWere = new Set(INBOX.pads.filter((p) => p.handled).map((p) => p.id));
   if (!(await fetchInbox())) return;

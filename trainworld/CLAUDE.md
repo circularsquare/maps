@@ -29,6 +29,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   to take (demand); "rides" and "riders" only for what happens on the player's system.
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
+- **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
+  one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase,
+  past tense>" --task T-#### --by <you>`; list it with your strings. Internals, tools and docs get none. Anita rewords
+  or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.
 - American wording: "turn around", never the British "turn round" or "round" for "around" (Anita, 2026-11-12: "its a
