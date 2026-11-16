@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3370 [P3] {L:buses} Bus route drag follow-ups (2026-11-16): no network hover over the route path in Edit route; touch already worked; docs fixed. notes/T-3370.md.
+- T-3419 [P3] {L:buses} Waiting rooms at ferry ports (2026-11-16): ferry ports can take a waiting room (US$5M, waits 20% shorter), and no other upgrade; her TODO 11-15. notes/T-3419.md.
+- T-3400 [P3] {L:buses} New ferry line runs a boat at low demand (2026-11-16): a new ferry runs 3/2/1 boats (every 20/30/60 min) at high/medium/low demand; reverses T-2273's none at low. notes/T-3400.md.
 - T-2396 [P3] {L:small-fixes} Dock tab area keeps one height (2026-11-16): closed on Anita's word: the dock line stays where she drags it, no automatic jumping ("lets leave the line where it is").
 - T-3442 [P3] {L:small-fixes} Glyph and font load errors in the console (2026-11-16): the world map labels Nunavut in Canadian syllabics, which no shipped font range had; nine Noto Sans ranges added, so the start screen loads clean. notes/T-3442.md.
 - T-3440 [P3] {L:accounts-server} Sharing a large network fails (2026-11-16): every size cap answers "too big" and the caps are doubled; server deployed 2026-11-16 15:34 UTC (372a8ce) on Anita's word; players get the game side with the next publish. notes/T-3440.md.

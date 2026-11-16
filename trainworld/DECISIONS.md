@@ -1,9 +1,12 @@
 # Decisions
 
+
 Newest first. One entry per decision: what, and why. The spec states the result; this keeps the
 reasoning and what it replaced.
 
 Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-10-19.md), searched the same way.
+- 2026-11-16 (agent doc, T-847): Chinese zones sharing a shown name: the smaller carries its province ("Taizhou, Jiangsu"), one-syllable counties end in "County", a county zone takes its prefecture city's name only where the zone is that city. Zone names live in the tw/doc worktree's zone-names.json, to merge with the main tree's own edits.
+- 2026-11-16 (agent sc, T-2590, T-2261): the diagram has one layout, the rubber sheet; the old layout's drawing code (the layout-time sea, `zoneBorders`, `diagramWater`, `waterSea.ts`) and `?sheet=0`, `?diagram=r2`, `?distort=` are gone, and `layout.ts` stays as the sheet's engine (its `sea` argument and `seaTerms` are now unused by the page, left for the checks that pass one). The graph is built from the clock worker's float64 mercator points, from an origin of the network's own (the middle of its box on a 1 degree grid), so the camera's draw anchor no longer changes it; `graph.origin` is that point's lng, lat.
 - 2026-11-16 (agent sv, T-3440): the shared-drawing limits were doubled (2048 lines, 40,000 stations, 1 MB gzipped / 8 MB unpacked) and every count cap now answers too-big, so a large network says so instead of "couldn't send". 2x is headroom, not measured on a real huge network; revisit if players still hit it.
 - 2026-11-16 (agent b5, T-3400): a new ferry line runs a boat every 60 min at low demand (20 and 30 min at high and medium, as before); trains keep 0 / 0 / 0, so bus and ferry both run all day from the start. Anita told after.
 - 2026-11-16 (agent b5, T-3419): a ferry port takes one station upgrade, the waiting room (US$5M, waits count 0.8 as at a station); terminal, park and ride, passing tracks and the passage stay off ports, and a port has no station building. Reverses T-2194's "a port has no platform to upgrade" for this one upgrade (her TODO 2026-11-15).
@@ -1649,3 +1652,4 @@ Entries before 2026-10-20 are in [DECISIONS-to-2026-10-19.md](DECISIONS-to-2026-
 - 2026-11-16 (agent b7, T-3439): Arnavutkoy stays its own zone (no zone beside it, 176k people) but is named "Arnavutköy, Istanbul" so it reads as a district; its ja and zh names are unchanged.
 - 2026-11-16 (agent b7, T-3308): the compatibility-mode message is an external nomodule script (public/legacy-browser.js), because the page's CSP forbids inline scripts.
 - 2026-11-16 (agent lint, T-3443): clippy runs with -D warnings but the style and complexity groups, approx_constant (tests' 6.28 and the kernel's ln 2 literals stay as written) and large_enum_variant are allowed in sim/Cargo.toml; ruff checks only F and E9 on pipeline/ and tools/; noUncheckedIndexedAccess and eslint are left out (notes/T-3415.md).
+- 2026-11-16: a game with no start zone takes its first built station's time zone for the money ledger's days, saved as `dayShift` in the header; no finances control, because booked days can't be re-cut (days before the first station stay under New York time). T-3407.

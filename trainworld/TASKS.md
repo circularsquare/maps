@@ -868,7 +868,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3335 [P3] {L:quad-track} Line panel on both quad pairs
+- T-3335 [P3] {L:quad-track} {after:T-3444} Line panel on both quad pairs
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
@@ -900,10 +900,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3370 [P3] {L:buses} Bus route drag follow-ups (taking, 2026-11-16, agent b5)
-  - Context: Hide the network hover over the route path in Edit route, and check dragging by touch.
-  - Goal: Both done, with docs/ui-building.md fixed.
-  - Other: From T-3366.
 - T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
   - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019.
   - Goal: Buses lay on top where they fit without changing the layout, drawn much thinner than rail.
@@ -996,10 +992,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1073 [P3] {L:line-rates} Undo of a train count hops departures (taking, 2026-11-16, agent e1)
   - Context: Undo or redo of a train count takes effect at once, so departures hop at a fast clock.
   - Goal: The worker is told it was a service edit and departures stay smooth.
-- T-3400 [P3] {L:buses} New ferry line runs a boat at low demand (taking, 2026-11-16, agent b5)
-  - Context: Today a new ferry has none at low demand. A default of every 60 min is sensible; tell you after.
-  - Goal: A new ferry runs every 60 min at low demand.
-  - Other: From T-2915. notes/T-2915.md "For Anita".
 - T-3405 [P3] {L:track-speed} Speed limit on any piece of track
   - Context: Your TODO 2026-11-15: edit it directly, no cost. Lines already have a speed limit (T-2987).
   - Goal: A per-piece speed limit, edited directly.
@@ -1009,9 +1001,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
   - Context: Your TODO 2026-11-15, for sensible pathing on single track.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
-- T-3419 [P3] {L:buses} Waiting rooms at ferry ports (taking, 2026-11-16, agent b5)
-  - Context: Your TODO 2026-11-15: waiting rooms for ferries should be allowed.
-  - Goal: Ferry ports can have waiting rooms.
 
 ## Held features
 
@@ -1512,7 +1501,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-1937 [P3] {L:passing-tracks} Departure spacing ignores flat crossings
   - Context: Other-route users at a flat crossing carry no place on their run, so lines meeting only there are not spread.
   - Goal: They get their crossing offset and count in spacing::place.
-- T-340 [P3] {L:quad-track} Quad track end-node stations and express side
+- T-340 [P3] {L:quad-track} {after:T-3444} Quad track end-node stations and express side
   - Context: Quad track's rest: end-node stations and the express pair side.
   - Goal: Those two are built.
   - Other: notes/someday.md

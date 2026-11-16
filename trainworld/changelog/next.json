@@ -372,6 +372,36 @@
       "by": "sv",
       "at": "2026-11-16T15:28:01Z",
       "rev": 1
+    },
+    {
+      "id": "c038",
+      "text": "waiting riders now show per direction in a station complex hover and its station list",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3406",
+      "by": "pick2",
+      "at": "2026-11-16T15:39:27Z",
+      "rev": 1
+    },
+    {
+      "id": "c039",
+      "text": "the money chart now runs on local time where you build first when the game has no start city",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3407",
+      "by": "pick2",
+      "at": "2026-11-16T15:39:30Z",
+      "rev": 1
+    },
+    {
+      "id": "c040",
+      "text": "renamed about 50 Chinese zones so no two share a name, and fixed some named after the wrong city",
+      "edited": null,
+      "hidden": false,
+      "task": "T-847",
+      "by": "doc",
+      "at": "2026-11-16T15:46:27Z",
+      "rev": 1
     }
   ]
 }
