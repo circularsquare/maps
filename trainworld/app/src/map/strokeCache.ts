@@ -76,16 +76,15 @@ export class StrokeCache {
       return r;
     };
     const depth = rb(gl.DEPTH24_STENCIL8);
-    const colour = this.samples > 1 ? rb(gl.RGBA8) : null;
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-    if (colour) {
-      const fb = gl.createFramebuffer()!;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colour);
-      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth);
-      this.drawFb.push(fb);
-    }
     for (let i = 0; i < this.layers; i++) {
+      if (this.samples > 1) {
+        const fb = gl.createFramebuffer()!;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb(gl.RGBA8));
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth);
+        this.drawFb.push(fb);
+      }
       const t = gl.createTexture()!;
       gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, w, h);
@@ -95,7 +94,7 @@ export class StrokeCache {
       const fb = gl.createFramebuffer()!;
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
-      if (!colour) {
+      if (this.samples <= 1) {
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth);
         this.drawFb.push(fb);
       }
@@ -120,7 +119,7 @@ export class StrokeCache {
   /** Draw layer `i` from here until `end`: its target bound and cleared, the viewport its size. */
   begin(i: number) {
     const gl = this.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawFb[this.samples > 1 ? 0 : i]);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawFb[i]);
     gl.viewport(0, 0, this.w, this.h);
     gl.clearColor(0, 0, 0, 0);
     gl.clearStencil(0);
@@ -132,7 +131,7 @@ export class StrokeCache {
   end(i: number, vp: readonly [number, number]) {
     const gl = this.gl;
     if (this.samples > 1) {
-      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.drawFb[0]);
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.drawFb[i]);
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.resolveFb[i]);
       gl.blitFramebuffer(0, 0, this.w, this.h, 0, 0, this.w, this.h, gl.COLOR_BUFFER_BIT, gl.NEAREST);
     }
