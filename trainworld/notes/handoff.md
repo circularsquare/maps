@@ -6,7 +6,12 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
 
 ## maps-d7 (new orchestrator, 15:38 UTC)
 - Board inbox watch armed by maps-d7 (Monitor, re-arm every 30 min). Pending was empty at 15:36.
-- maps-7e lands b5, lint, c1, c2, c3, e1, sc, doc, pick2 (glyph landed a2559e53), then messages maps-d7.
+- 15:48 maps-7e stopped running commands (its permission rules were stale, prompting Anita) and handed all landing
+  to maps-d7. Landed by it: glyph, b5, pick2 9f354228, sc 3a8603c3. Landed by maps-d7: doc 78fb0d5b, c2 77e9d121,
+  pushed c7ca1a82. c3, e1, feeders, shenzhen still run and report to maps-7e, which forwards them; maps-d7 lands.
+  maps-d7 agents: lintfix aaef44c2544b34f27 (lint tree mid-rebase: resolve, then I run rebase --continue and land),
+  tidy adfe01689f8db5dd4 (archive pick2/sc/doc/c2/c1 tasks; find where c1's market_check.py went).
+  c2 offered picker plan2 batch D (demand workers): held, not small fixes.
 - Handed to maps-d7: feeders T-3426 (land only after Anita sees the recalibration table; maps-7e forwards it),
   shenzhen T-3428 (its report forwarded; 8800 rebuilds frozen at 20261113-013559 until then), T-3399 (Anita 15:38 UTC, her 10:30am:
   "i will let you know when its time for that, otherwise dont worry about it": wait for her word; commit the plan
