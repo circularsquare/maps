@@ -351,6 +351,8 @@ pub enum Issue {
     StationInUse { node: u32, line: u32 },
     LineStops { line: u32 },
     LinePath { line: u32 },
+    /// A line's return run has no track to come back on: one-way track runs against it (T-3094).
+    NoWayBack { line: u32 },
     /// One-way single track (T-3094) that a line cannot go round: it has no other way between its stations.
     OneWayNoWay { line: u32 },
     /// T-3332: a line stops at a one-track station only on runs that pass it on the other track, or
@@ -2481,7 +2483,7 @@ impl Network {
         let back = if once { None } else {
             match self.back_run_of(stops, path) {
                 Some(b) => Some(b),
-                None => return Err(Issue::LinePath { line: l }),
+                None => return Err(Issue::NoWayBack { line: l }),
             }
         };
         let fwd = self.fwd_stops_of(stops, path);

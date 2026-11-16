@@ -999,6 +999,7 @@
   "issues.stationInUse": "A line stops here. Take the station out of that line first.",
   "issues.lineStops": "A line needs at least two different stations.",
   "issues.linePath": "No track joins these stations in this order.",
+  "issues.noWayBack": "No way back from this station on one-way track.",
   "issues.insertStop": "No track joins these stations with that stop inserted. Check the track connections.",
   "issues.dropStop": "The line has to keep this stop.",
   "issues.lineSchedule": "Trains an hour cannot be negative.",

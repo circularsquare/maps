@@ -177,3 +177,18 @@ fn a_line_does_not_run_while_its_way_back_is_blueprint() {
     assert!(a.w.net.line_constructed(l));
     assert!(a.w.svc.lines[l as usize].running);
 }
+
+/// T-3429: a stop that trains could reach but not come back from on one-way track is refused with its
+/// own message, not "no track joins these stations".
+#[test]
+fn a_stop_with_no_way_back_says_so() {
+    let (mut a, n, e) = triangle();
+    assert_eq!(a.set_edge_oneway(e[0], 1), 0, "{}", a.issues());
+    a.w.apply(Op::DeleteEdge { id: e[1] }).unwrap();
+    let l = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l, &[n[0], n[1]], 4, 2, 0, 30.0, 180.0, 0, 0, "Line".into()), 1);
+    assert_eq!(a.issue_kinds(), "NoWayBack");
+    // with the way back open it is accepted
+    let l = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l, &[n[2], n[0]], 4, 2, 0, 30.0, 180.0, 0, 0, "Line".into()), 0, "{}", a.issue_kinds());
+}

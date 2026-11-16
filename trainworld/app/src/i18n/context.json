@@ -996,6 +996,7 @@
   "issues.stationInUse": "Refusal of removing a station.",
   "issues.lineStops": "Refusal when making a line.",
   "issues.linePath": "Refusal when making a line.",
+  "issues.noWayBack": "Refusal when adding a stop to a line: the stop is reachable on one-way track, but trains could not come back from it.",
   "issues.insertStop": "Refusal when adding a stop to a line.",
   "issues.dropStop": "Refusal when removing a stop from a line.",
   "issues.lineSchedule": "Refusal when setting a line's trains an hour.",
