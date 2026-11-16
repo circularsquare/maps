@@ -402,6 +402,16 @@
       "by": "doc",
       "at": "2026-11-16T15:46:27Z",
       "rev": 1
+    },
+    {
+      "id": "c041",
+      "text": "a saved game outside new york no longer downloads new york's city data first",
+      "edited": null,
+      "hidden": false,
+      "task": "T-899",
+      "by": "c2",
+      "at": "2026-11-16T15:50:27Z",
+      "rev": 1
     }
   ]
 }
