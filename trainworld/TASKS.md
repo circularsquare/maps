@@ -1518,7 +1518,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Opening a big save searches every station's walk round water.
   - Goal: A big save opens without searching every station.
   - Other: notes/someday.md
-- T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move
+- T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move (taking, 2026-11-16, agent perf)
   - Context: Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second. You said yes 2026-11-16.
   - Goal: Frame rate drops when the fastest train moves under half a pixel a frame, roughly halving the cost.
   - Other: Measure the visible step first. notes/T-076.md
@@ -1530,7 +1530,7 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Someday: each worker first solve is slower in the browser than native.
   - Goal: Browser first solves match native.
   - Other: notes/someday.md
-- T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve
+- T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve (taking, 2026-11-16, agent perf)
   - Context: Starting rounds from the last solve should be faster, but figures would then depend on edit history. You, 2026-11-16: "lets measure and if it doesnt produce any results that would feel crazy to a player, and it improves performance/speed, we should do".
   - Goal: Measure speed and how far figures drift with edit history; ship it if it is faster and nothing a player would notice moves.
   - Other: notes/T-434.md
