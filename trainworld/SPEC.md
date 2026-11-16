@@ -301,7 +301,7 @@ under 1.3 times the shortest, with bends up to 300 m and a speed each point by i
 at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports only with
 the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a
-Ferry fare row in the Money tab. A new line runs a boat every 20 and 30 minutes, none at low demand (T-2273). In demand (T-2195) a ferry line is a line like
+Ferry fare row in the Money tab. A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400). In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base
 times the Ferry multiple, and trips by ferry are the network's. A tenth of visits and attractions
 trips are ferry fans, for whom each minute aboard a ferry counts 0.1 (T-2196, docs/demand-mode.md).

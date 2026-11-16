@@ -56,12 +56,12 @@ export function StationUpgrades({ s, members }: { s: StationInput; members?: str
   return (
     <div class="upgrades" role="group" aria-label={t("stationUpgrades.group")}>
       {/* T-3332: a one-track station has no terminal and no passing tracks */}
-      {UPGRADE_TEXT.filter((u) => (!s.tram || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
+      {UPGRADE_TEXT.filter((u) => ((!s.tram && !s.port) || u.bit === UPGRADE.waitingRoom) && (u.bit !== UPGRADE.passing || double || hasUpgrade(s.upgrades, u.bit))
         && !(s.one && (u.bit === UPGRADE.terminal || u.bit === UPGRADE.passing) && !hasUpgrade(s.upgrades, u.bit))).map((u) => (
         <UpgradeButton s={s} u={u} price={prices?.[UPGRADE_BITS.indexOf(u.bit)] ?? 0} housed={housed} />
       ))}
-      <PassageButton s={s} />
-      {!s.tram && <BuildingButton s={s} />}
+      {!s.port && <PassageButton s={s} />}
+      {!s.tram && !s.port && <BuildingButton s={s} />}
     </div>
   );
 }
@@ -81,13 +81,13 @@ function UpgradeButton({ s, u, price, housed = false }: { s: StationInput; u: Up
     else if (s.built) say(t("stationUpgrades.removed", { name: u.name, station: s.name }));
   };
   if (u.bit === UPGRADE.waitingRoom && housed && !on) return (
-    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does(s.tram)}\n${housedText()}`}>
+    <button class="btn icon upgrade" aria-label={u.name} disabled data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${housedText()}`}>
       <Ic />
     </button>
   );
   return (
     <button class={"btn icon upgrade" + state} aria-label={u.name} aria-pressed={on}
-      data-tip={`${u.name}\n${u.does(s.tram)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
+      data-tip={`${u.name}\n${u.does(s.tram, !!s.port)}\n${t("stationUpgrades.costs", { price: money(price * 1e6) })}\n${act}`}
       onClick={() => void toggle()}>
       <Ic />
     </button>

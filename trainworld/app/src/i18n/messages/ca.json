@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Via de retorn",
   "upgrades.terminalDoes": "Els trens que fan el retorn aquí fan servir les dues andanes. La capacitat de retorn passa de 15 a 30 trens per hora.",
   "upgrades.waiting": "Sala d’espera",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar un tramvia aquí sembla un 20 % més curt.} other {Esperar un tren aquí sembla un 20 % més curt.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar un tramvia aquí sembla un 20 % més curt.} boat {Esperar un vaixell aquí sembla un 20 % més curt.} other {Esperar un tren aquí sembla un 20 % més curt.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Esperar un tramvia en qualsevol parada d’aquest complex sembla un 20 % més curt.} other {Esperar un tren en qualsevol estació d’aquest complex sembla un 20 % més curt.}}",
   "vehicle.noun": "{vehicle, select, train {tren} tram {tramvia} bus {bus} other {vaixell}}",
   "widgets.blueprint": "Projecte",

@@ -257,9 +257,9 @@ export function StationInspector({ id }: { id: string }) {
       {asComplex && <div class="sub muted">{tr("stationInspector.complexOfN", { count: members.length })}</div>}
       {linking.value === id && <p class="muted">{tr(mobileDevice() ? "stationInspector.linkingTouch" : "stationInspector.linking", { distance: roughDistance(LINK_MAX_M) })}</p>}
       {!asComplex && !s.built && <Actions><button class="btn text" onClick={construct}>{tr(s.port ? "stationInspector.constructPort" : "stationInspector.constructStation")}</button></Actions>}
-      {/* T-2194: a port has no platform to upgrade */}
-      {!s.port && <div class="h">{tr("stationUpgrades.group")}</div>}
-      {!s.port && <StationUpgrades s={s} members={asComplex ? members : undefined} />}
+      {/* T-3419: a port takes the waiting room only; in a complex view its upgrades are the complex's */}
+      {(!s.port || !asComplex) && <div class="h">{tr("stationUpgrades.group")}</div>}
+      {(!s.port || !asComplex) && <StationUpgrades s={s} members={asComplex ? members : undefined} />}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (

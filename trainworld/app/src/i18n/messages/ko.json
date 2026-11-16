@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "회차선",
   "upgrades.terminalDoes": "여기서 회차하는 열차는 두 승강장을 모두 써요. 회차 용량이 시간당 15대에서 30대로 늘어나요.",
   "upgrades.waiting": "대합실",
-  "upgrades.waitingDoes": "{vehicle, select, tram {이곳에서 트램을 기다리는 시간이 20% 짧게 느껴져요.} other {이곳에서 열차를 기다리는 시간이 20% 짧게 느껴져요.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {이곳에서 트램을 기다리는 시간이 20% 짧게 느껴져요.} boat {이곳에서 배를 기다리는 시간이 20% 짧게 느껴져요.} other {이곳에서 열차를 기다리는 시간이 20% 짧게 느껴져요.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {이 환승역의 어느 정류장에서든 트램을 기다리는 시간이 20% 짧게 느껴져요.} other {이 환승역의 어느 역에서든 열차를 기다리는 시간이 20% 짧게 느껴져요.}}",
   "vehicle.noun": "{vehicle, select, train {열차} tram {트램} bus {버스} other {배}}",
   "widgets.blueprint": "계획",

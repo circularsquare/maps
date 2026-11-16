@@ -2664,7 +2664,7 @@
   "upgrades.terminal": "折り返し線",
   "upgrades.terminalDoes": "ここで折り返す列車は両方のホームを使います。折り返し能力は毎時15本から30本になります。",
   "upgrades.waiting": "待合室",
-  "upgrades.waitingDoes": "{vehicle, select, tram {ここでトラムを待つ時間が20%短く感じられます。} other {ここで列車を待つ時間が20%短く感じられます。}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {ここでトラムを待つ時間が20%短く感じられます。} boat {ここで船を待つ時間が20%短く感じられます。} other {ここで列車を待つ時間が20%短く感じられます。}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {この乗換拠点のどの停留場でも、トラムを待つ時間が20%短く感じられます。} other {この乗換駅のどの駅でも、列車を待つ時間が20%短く感じられます。}}",
   "vehicle.noun": "{vehicle, select, train {列車} tram {トラム} bus {バス} other {船}}",
   "widgets.blueprint": "計画",

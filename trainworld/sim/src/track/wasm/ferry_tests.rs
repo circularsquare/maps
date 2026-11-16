@@ -114,8 +114,13 @@ fn a_port_is_a_station_off_the_track() {
     let ends = [1.0, p as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 1000.0, -100.0, 0.0];
     assert_ne!(a.add_route(&ends, &[], 2, false), 0);
     assert!(a.issue_kinds().contains("NotAtPort"), "{}", a.issue_kinds());
-    // no platform upgrades
+    // no platform upgrades, the waiting room apart (T-3419)
     assert_ne!(a.set_station_upgrade(&[p], upgrades::TERMINAL, true), 0);
+    assert_ne!(a.set_station_upgrade(&[p], upgrades::PARK_RIDE, true), 0);
+    assert_eq!(a.set_station_upgrade(&[p], upgrades::WAITING_ROOM, true), 0, "{}", a.issues());
+    assert_eq!(a.station_upgrades(), vec![p, upgrades::WAITING_ROOM as u32]);
+    assert_eq!(row(&mut a, 8.0), Some((1.0, upgrades::WAITING_ROOM_COST)));
+    assert_eq!(a.set_station_upgrade(&[p], upgrades::WAITING_ROOM, false), 0, "{}", a.issues());
     // a berth out of reach
     assert_ne!(a.add_port(5000.0, -100.0, 5000.0, 900.0, "Far".into()), 0);
     assert!(a.issue_kinds().contains("PortBerth") && a.last_port() == u32::MAX, "{}", a.issue_kinds());

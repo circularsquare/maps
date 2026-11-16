@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Terminal",
   "upgrades.terminalDoes": "Trains turning here use both platforms. Turning capacity goes from 15 trains per hour to 30.",
   "upgrades.waiting": "Waiting room",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Waiting here for a tram feels 20% shorter.} other {Waiting here for a train feels 20% shorter.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Waiting here for a tram feels 20% shorter.} boat {Waiting here for a boat feels 20% shorter.} other {Waiting here for a train feels 20% shorter.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Waiting at any stop in this complex for a tram feels 20% shorter.} other {Waiting at any station in this complex for a train feels 20% shorter.}}",
   "vehicle.noun": "{vehicle, select, train {train} tram {tram} bus {bus} other {boat}}",
   "widgets.blueprint": "Blueprint",

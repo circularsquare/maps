@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Wendegleis",
   "upgrades.terminalDoes": "Hier wendende Züge nutzen beide Bahnsteige. Die Wendekapazität steigt von 15 auf 30 Züge pro Stunde.",
   "upgrades.waiting": "Wartesaal",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Das Warten auf eine Tram fühlt sich hier 20 % kürzer an.} other {Das Warten auf einen Zug fühlt sich hier 20 % kürzer an.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Das Warten auf eine Tram fühlt sich hier 20 % kürzer an.} boat {Das Warten auf ein Boot fühlt sich hier 20 % kürzer an.} other {Das Warten auf einen Zug fühlt sich hier 20 % kürzer an.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Das Warten auf eine Tram fühlt sich an jeder Haltestelle dieses Komplexes 20 % kürzer an.} other {Das Warten auf einen Zug fühlt sich an jeder Station dieses Komplexes 20 % kürzer an.}}",
   "vehicle.noun": "{vehicle, select, train {Zug} tram {Tram} bus {Bus} other {Boot}}",
   "widgets.blueprint": "Entwurf",

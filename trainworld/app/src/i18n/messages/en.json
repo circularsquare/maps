@@ -2585,7 +2585,7 @@
   "upgrades.parkingDoes": "Traveling to this station from far away feels 10 minutes shorter.",
   "upgrades.parkingDoesAll": "Traveling to any station in this complex from far away feels 10 minutes shorter.",
   "upgrades.waiting": "Waiting room",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Waiting here for a tram feels 20% shorter.} other {Waiting here for a train feels 20% shorter.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Waiting here for a tram feels 20% shorter.} boat {Waiting here for a boat feels 20% shorter.} other {Waiting here for a train feels 20% shorter.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Waiting at any stop in this complex for a tram feels 20% shorter.} other {Waiting at any station in this complex for a train feels 20% shorter.}}",
   "upgrades.passing": "Passing tracks",
   "upgrades.passingDoes": "Allow faster trains to pass slower trains that are stopped here.",

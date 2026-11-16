@@ -14,7 +14,7 @@ export interface UpgradeText {
   bit: number;
   name: string;
   /** what it does, one sentence for its hover */
-  does: (tram?: boolean) => string;
+  does: (tram?: boolean, port?: boolean) => string;
   /** the same, built for a whole complex (T-1528); absent: not offered there */
   doesAll?: (tram?: boolean) => string;
 }
@@ -23,7 +23,7 @@ export const UPGRADE_TEXT: UpgradeText[] = [
   { bit: UPGRADE.terminal, get name() { return t("upgrades.terminal"); }, does: () => t("upgrades.terminalDoes") },
   { bit: UPGRADE.parkRide, get name() { return t("upgrades.parking"); }, does: () => t("upgrades.parkingDoes"),
     doesAll: () => t("upgrades.parkingDoesAll") },
-  { bit: UPGRADE.waitingRoom, get name() { return t("upgrades.waiting"); }, does: (tram) => t("upgrades.waitingDoes", { vehicle: tram ? "tram" : "train" }),
+  { bit: UPGRADE.waitingRoom, get name() { return t("upgrades.waiting"); }, does: (tram, port) => t("upgrades.waitingDoes", { vehicle: port ? "boat" : tram ? "tram" : "train" }),
     doesAll: (tram) => t("upgrades.waitingDoesAll", { vehicle: tram ? "tram" : "train" }) },
   // T-2232: Anita's wording
   { bit: UPGRADE.passing, get name() { return t("upgrades.passing"); }, does: () => t("upgrades.passingDoes") },

@@ -20,6 +20,10 @@ impl TrackApi {
             if on && d.one != 0 && bit & (upgrades::TERMINAL | upgrades::PASSING) != 0 {
                 return self.refuse(Issue::OneTrackHere { node });
             }
+            // T-3419: a port takes the waiting room and nothing else
+            if on && d.berth.is_some() && bit != upgrades::WAITING_ROOM {
+                return self.refuse(Issue::NotAtPort { node });
+            }
             let ups = if on { d.upgrades | bit } else { d.upgrades & !bit };
             if ups != d.upgrades {
                 built |= d.built;

@@ -216,9 +216,9 @@ export class BusDraw {
     return tool.peek() === "bus";
   }
 
-  /** the pointer is on a point's handle, or drags one */
+  /** the pointer is on a point's handle or the route's path (T-3370), or drags a point */
   get onHandle() {
-    return this.active && (this.over >= 0 || this.drag !== null);
+    return this.active && (this.over >= 0 || this.overPath !== null || this.drag !== null);
   }
 
   /** Start the tool: a new line (`line` null) or the route of line number `line` as `routeLL`

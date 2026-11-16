@@ -442,7 +442,7 @@ lighter; at most 16 of each.
   neighbours joined by a new leg (a click on the active end finishes instead, below). A press on any point dragged more than 3 px moves it (the map does not
   pan), and the legs either side are searched again on every move; Escape during the drag puts it
   back. Over a point the tag says what a click there does ("Click to delete", or finishing; nothing over a lone point),
-  "Drag to move", and what a right click does where it does something, and the network's hover is left out.
+  "Drag to move", and what a right click does where it does something, and the network's hover is left out, over the path as over a point (T-3370).
   A press on the route's path between points (within 7 px, 12 with a finger) dragged the same 3 px puts a new point
   there that follows the pointer (T-3366): the legs either side are searched again as for any point, Escape
   during the drag removes it, Ctrl+Z takes it out and a click on it deletes it. Over the path the tag leads with
@@ -450,7 +450,7 @@ lighter; at most 16 of each.
   With a finger (T-1517): a press within 18 px of a point drags it as the mouse does, the map does
   not pan, and a second finger puts it back; a press held still for 500 ms (moving up to 8 px)
   does a right click's work there (the phone buzzes) and the lift adds nothing; a tap on a point is a click on it.
-  A press that does not move and is lifted sooner is a tap, as in Building by touch.
+  A press that does not move and is lifted sooner is a tap, as in Building by touch. A finger within 12 px of the route's path drags a new point out of it, as the mouse does (T-3370).
 - **Loop** (T-2899): with three points or more, a right click on the other end joins the active end to it by road,
   adds a copy of the first point at the end, and makes the line or saves the route as a click on the active end does;
   the tag over that point says "Right click to close the loop". A road that does not reach is refused as a click's
@@ -496,8 +496,7 @@ lighter; at most 16 of each.
   (none for a constructed route). Ctrl+Z and Ctrl+Y (or Ctrl+Shift+Z) in the tool step the draft's
   points back and forward and leave the game's own undo alone.
 - **By touch**: a tap previews, a second tap or the check places it; a tap on the active end with
-  nothing waiting finishes, on the other end makes it active (or closes the loop, with three points). Dragging and deleting points take a
-  mouse.
+  nothing waiting finishes, on the other end makes it active (or closes the loop, with three points).
 - **Stop spacing** (T-2885, T-2937; `StopsHead` in `ui/inspector/BusInspector.tsx`): the bus panel's Stops heading
   carries two buttons, Auto and Manual, as the schedule's Buses and Headway pair does; not on a ferry. Under Auto
   (planned or constructed line) a Stop spacing row follows with a stepper from 400 m to 100 km. Its first step,

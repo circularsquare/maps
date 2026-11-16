@@ -2113,8 +2113,8 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   `fleet_ferry`) with spares shared between ferry lines; running US$40 a boat-km (real, `ECONOMY`
   times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
   ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
-  metres (free) as kind 14. A new ferry line starts at a boat every 20 and 30 minutes at high and
-  medium demand and none at low (T-2273), 60 s dwell, 300 s
+  metres (free) as kind 14. A new ferry line starts at a boat every 20, 30 and 60 minutes at high, medium
+  and low demand (T-2273, T-3400), 60 s dwell, 300 s
   turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
 - **Loops** (T-2899; `ferry::is_closed`): a line of four stops or more whose last port is its first is a loop,
   as for a bus line (6.7): a circle in the service, one way unless set both ways (T-2981). The route runs from the first

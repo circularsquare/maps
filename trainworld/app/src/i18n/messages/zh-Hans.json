@@ -2664,7 +2664,7 @@
   "upgrades.terminal": "折返线",
   "upgrades.terminalDoes": "在这里折返的列车会用上两个站台。折返能力从每小时15班提高到30班。",
   "upgrades.waiting": "候车室",
-  "upgrades.waitingDoes": "{vehicle, select, tram {在这里等有轨电车，感觉时间缩短20%。} other {在这里等车，感觉时间缩短20%。}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {在这里等有轨电车，感觉时间缩短20%。} boat {在这里等船，感觉时间缩短20%。} other {在这里等车，感觉时间缩短20%。}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {在这个换乘站里的任何一个电车站等有轨电车，感觉时间缩短20%。} other {在这个换乘站里的任何一座车站等车，感觉时间缩短20%。}}",
   "vehicle.noun": "{vehicle, select, train {列车} tram {有轨电车} bus {公交车} other {船}}",
   "widgets.blueprint": "规划",

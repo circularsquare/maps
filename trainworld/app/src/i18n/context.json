@@ -2585,7 +2585,7 @@
   "upgrades.parkingDoes": "Hover of the Parking lot station upgrade.",
   "upgrades.parkingDoesAll": "Hover of the Parking lot upgrade applied to a whole complex.",
   "upgrades.waiting": "Name of a station upgrade.",
-  "upgrades.waitingDoes": "Hover of the Waiting room station upgrade. vehicle: train or tram (a tram's track and stops have their own words).",
+  "upgrades.waitingDoes": "Hover of the Waiting room station upgrade. vehicle: train, tram or boat (a ferry port).",
   "upgrades.waitingDoesAll": "Hover of the Waiting room upgrade applied to a whole complex. vehicle: train or tram (a tram's track and stops have their own words).",
   "upgrades.passing": "Name of a station upgrade.",
   "upgrades.passingDoes": "Hover of the Passing tracks station upgrade.",

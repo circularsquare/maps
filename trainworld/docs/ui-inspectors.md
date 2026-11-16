@@ -695,7 +695,7 @@ profit, average load (against 320 a boat at the rated load, so up to 150% at cru
 and Riders left at platform (a port keeps a waiting crowd, T-2919); then the round trip block. A boat's panel is a train's,
 named "boat", its On board against two cars (88 seats, 320 at the rated load, 480 at crush), "Typical
 boat this hour" (a bus's "Typical bus this hour"). A port's panel is a station's: "Port" under its
-name, no platform length or upgrades, its upkeep a port's (US$10k a game day), Construct port and
+name, no platform length and one upgrade, the Waiting room (T-3419; waits for a boat count 0.8, as at a station), its upkeep a port's (US$10k a game day), Construct port and
 Remove port. The Money tab shows boats owned, needed and spare once there are any, and a **Ferry**
 fare row under High speed once a ferry line exists (a stepper by 0.05, 1.00x by default, a button back
 to 1.00x once set, saved with the game; a change solves demand again, T-2195). The Build tab's quote

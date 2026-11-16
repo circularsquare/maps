@@ -2366,7 +2366,8 @@ impl Network {
         let i = n as usize;
         if let Some(b) = self.node_berth[i] {
             // a port's landing is on the shore, which the coarse masks may call water
-            if self.node_ports[i].n > 0 || self.node_upgrades[i] != 0 || self.node_level[i] != 0 {
+            // T-3419: a waiting room is the one upgrade a port takes
+            if self.node_ports[i].n > 0 || self.node_upgrades[i] & !super::upgrades::WAITING_ROOM != 0 || self.node_level[i] != 0 {
                 out.push(Issue::NotAtPort { node: n });
             }
             if !super::ferry::berth_ok(self, [self.node_x[i], self.node_y[i]], b) {
@@ -2607,6 +2608,9 @@ impl Network {
             // kind 12: ports (T-2193), a flat price
             if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] && self.node_berth[n].is_some() {
                 add(12, 0, 0, false, 0, 1.0, PORT_COST);
+                if self.node_upgrades[n] != 0 {
+                    add(8, level, 0, false, 0, 1.0, self.station_upgrades_price(n as u32, self.node_upgrades[n], false));
+                }
             } else if self.node_platform[n] > 0 && !self.node_built[n] && !self.node_off[n] {
                 let (tracks, wet) = (self.station_tracks(n as u32), is_wet());
                 add(1, level, tracks, wet, 0, 1.0, cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet));
@@ -2680,7 +2684,7 @@ impl Network {
             let is_wet = || self.node_is_wet(n);
             let level = self.node_level[n];
             if self.node_platform[n] > 0 && !self.node_built[n] {
-                let price = if self.node_berth[n].is_some() { PORT_COST } else {
+                let price = if self.node_berth[n].is_some() { PORT_COST + self.upgrades_cost(n) } else {
                     let wet = is_wet();
                     let ups = self.node_upgrades[n];
                     cost::station_cost_k(self.node_kind(n as u32), level, self.node_platform[n], self.station_tracks(n as u32), wet) + if ups != 0 { self.station_upgrades_price(n as u32, ups, wet) } else { 0.0 }

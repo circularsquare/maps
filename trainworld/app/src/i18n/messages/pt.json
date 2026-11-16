@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Via de retorno",
   "upgrades.terminalDoes": "Os trens que retornam aqui usam as duas plataformas. A capacidade de retorno passa de 15 para 30 trens por hora.",
   "upgrades.waiting": "Sala de espera",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar um bonde aqui parece 20% mais curto.} other {Esperar um trem aqui parece 20% mais curto.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar um bonde aqui parece 20% mais curto.} boat {Esperar um barco aqui parece 20% mais curto.} other {Esperar um trem aqui parece 20% mais curto.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Esperar um bonde em qualquer parada deste complexo parece 20% mais curto.} other {Esperar um trem em qualquer estação deste complexo parece 20% mais curto.}}",
   "vehicle.noun": "{vehicle, select, train {trem} tram {bonde} bus {ônibus} other {balsa}}",
   "widgets.blueprint": "Projeto",

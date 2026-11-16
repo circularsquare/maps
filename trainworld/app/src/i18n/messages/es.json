@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Vía de retorno",
   "upgrades.terminalDoes": "Los trenes que dan la vuelta aquí usan los dos andenes. La capacidad de retorno pasa de 15 a 30 trenes por hora.",
   "upgrades.waiting": "Sala de espera",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar un tranvía aquí se siente un 20% más corto.} other {Esperar un tren aquí se siente un 20% más corto.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Esperar un tranvía aquí se siente un 20% más corto.} boat {Esperar un barco aquí se siente un 20% más corto.} other {Esperar un tren aquí se siente un 20% más corto.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Esperar un tranvía en cualquier parada de este complejo se siente un 20% más corto.} other {Esperar un tren en cualquier estación de este complejo se siente un 20% más corto.}}",
   "vehicle.noun": "{vehicle, select, train {tren} tram {tranvía} bus {autobús} other {barco}}",
   "widgets.blueprint": "Proyecto",

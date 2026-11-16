@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Dönüş rayı",
   "upgrades.terminalDoes": "Burada dönen trenler iki peronu da kullanır. Dönüş kapasitesi saatte 15 trenden 30 trene çıkar.",
   "upgrades.waiting": "Bekleme salonu",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Burada tramvay beklemek %20 daha kısa hissettirir.} other {Burada tren beklemek %20 daha kısa hissettirir.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Burada tramvay beklemek %20 daha kısa hissettirir.} boat {Burada vapur beklemek %20 daha kısa hissettirir.} other {Burada tren beklemek %20 daha kısa hissettirir.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Bu kompleksteki herhangi bir durakta tramvay beklemek %20 daha kısa hissettirir.} other {Bu kompleksteki herhangi bir istasyonda tren beklemek %20 daha kısa hissettirir.}}",
   "vehicle.noun": "{vehicle, select, train {tren} tram {tramvay} bus {otobüs} other {vapur}}",
   "widgets.blueprint": "Taslak",

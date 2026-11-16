@@ -2662,7 +2662,7 @@
   "upgrades.terminal": "Voie de retournement",
   "upgrades.terminalDoes": "Les trains qui font demi-tour ici utilisent les deux quais. La capacité de retournement passe de 15 à 30 trains par heure.",
   "upgrades.waiting": "Salle d’attente",
-  "upgrades.waitingDoes": "{vehicle, select, tram {Attendre un tram ici paraît 20 % plus court.} other {Attendre un train ici paraît 20 % plus court.}}",
+  "upgrades.waitingDoes": "{vehicle, select, tram {Attendre un tram ici paraît 20 % plus court.} boat {Attendre un bateau ici paraît 20 % plus court.} other {Attendre un train ici paraît 20 % plus court.}}",
   "upgrades.waitingDoesAll": "{vehicle, select, tram {Attendre un tram à n’importe quel arrêt de ce pôle paraît 20 % plus court.} other {Attendre un train dans n’importe quelle station de ce pôle paraît 20 % plus court.}}",
   "vehicle.noun": "{vehicle, select, train {train} tram {tram} bus {bus} other {bateau}}",
   "widgets.blueprint": "Projet",
