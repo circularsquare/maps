@@ -352,6 +352,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
+- T-3425 [P1] {L:board} A more compact board (taking, 2026-11-16, agent boardui)
+  - Context: Your 11-16 asks: the agents, worktrees and builds strip packed across lines; field labels inline as icons; priority coloured everywhere with a bar under each task; tighter spacing.
+  - Goal: The same board in noticeably less height, with each priority one colour.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
@@ -1394,10 +1397,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Other: Notes: notes/T-321.md
 
 ### Demand
-- T-2385 [P3] {L:route-choice} Far-end reach for everyday trips
-  - Context: A far cell past `pair_walk_max` can still count rail. T-1920 moved 0.04% of far rail riders in New York, so low value. Close candidate: 0.04% moved in New York.
-  - Goal: Decide if the far-end reach is worth doing.
-  - Other: Notes: notes/T-1920.md
 - T-1345 [P3] {L:ridership-checks} One-city calibration checks
   - Context: Twelve folded checks, such as Central Park, LIRR, Hudson fade, Nice and Toronto airport.
   - Goal: Each check is run or dropped.
@@ -1458,10 +1457,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
 - T-059 [P3] {L:demand-ideas} Trips home chosen from the work end
   - Context: Homes are not chosen from the work end.
   - Goal: Trips home are chosen from the work end.
-  - Other: Notes: notes/someday.md
-- T-202 [P3] {L:route-choice} Rethink the 100 m station merge
-  - Context: Complexes now exist, so the 100 m merge may be redundant. notes/T-161.md found the merge already holds a platform chain together and decided it stays; nothing moved.
-  - Goal: Decide whether the merge stays.
   - Other: Notes: notes/someday.md
 - T-265 [P3] {L:demand-ideas} Signals simulated by clumps of shared track
   - Context: Signals are not simulated per shared-track clump.
@@ -1570,11 +1565,11 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Starting rounds from the last solve is faster, but figures would then depend on edit history. Not measured.
   - Goal: Rounds start from the previous solve if you agree.
   - Other: notes/T-434.md
-- T-361 [P3] {L:memory} One demand engine per city
+- T-361 [P3] {L:memory} {after:T-3373} One demand engine per city
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
   - Goal: One demand engine per city.
   - Other: notes/T-361.md
-- T-354 [P3] {L:memory} Pack copies per worker
+- T-354 [P3] {L:memory} {after:T-3373} Pack copies per worker
   - Context: Each worker holds its own pack copies, and the final publish spreads them. T-3373 shares the zone data; the pack copy may go with it.
   - Goal: Pack copies are shared and the publish is trimmed.
   - Other: notes/T-354.md
