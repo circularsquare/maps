@@ -12,6 +12,11 @@
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
 // regions.json (8800 serves it; the dev server proxies the path, vite.config.ts), else Cloudflare R2,
 // the way noritetsu's own page decides; the published page tries R2 first (T-941).
+//
+// Freight and abandoned rail (T-3464) are in a second archive per region, `<cc>_extra.pmtiles`, built by
+// pipeline/real_extra.py (`k` freight or abandoned). It is added only when Settings says All, only for
+// regions `extra.json` lists, and drawn under the region's passenger layer: freight thin, abandoned thinner
+// and dashed. `?realExtra=<url prefix>` reads the manifest and archives from there instead (tests).
 
 import * as maplibregl from "maplibre-gl";
 import { effect, signal } from "@preact/signals";
@@ -38,8 +43,14 @@ const kind = (k: string) => ["==", ["get", "k"], k];
 const METRO = kind("subway");
 const MAIN = ["all", kind("rail"), ["==", ["get", "r"], 0]];
 const PASSENGER = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail"), kind("light_rail")]];
-/** "All" draws every feature the tiles carry: track no line runs over, trams, monorails, funiculars, narrow gauge, heritage (yards and freight-only track are not in the tiles) */
+/** "All" draws every feature the tiles carry: track no line runs over, trams, monorails, funiculars, narrow gauge, heritage; freight and abandoned rail come from the extra archives */
 const EVERYTHING = ["has", "k"];
+
+const FREIGHT = ["==", ["get", "k"], "freight"];
+/** freight and abandoned are lesser than any passenger class: freight 0.45 of a main line, abandoned 0.35 and dashed */
+const extraWidth = ["interpolate", ["exponential", 1.4], ["zoom"], ...[0.6, 1, 1.5, 2.4, 4, 8].flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", FREIGHT, v * 0.45, v * 0.35]])];
+const extraColour = (c: ShadeColours) => ["case", FREIGHT, c.realFreight, c.realAbandoned];
+const EXTRA = "tw-realx-";
 
 /** line width (px) by zoom; main and metro the same, other rail thinner */
 const width = (...stops: number[]) => ["interpolate", ["exponential", 1.4], ["zoom"], ...stops.flatMap((v, i) => [WIDTH_ZOOM + [0, 4, 7, 10, 13, 16][i], ["case", ["any", METRO, MAIN], v, v * 0.7]])];
@@ -95,6 +106,9 @@ export function startRealNetwork(map: maplibregl.Map) {
   let painted: "light" | "dark" | null = null;
   let opacity = SHADES[mapShade.peek()].realOpacity;
   let filter: unknown = PASSENGER;
+  let extraOn = false;
+  let extraList: Promise<Record<string, number>> | null = null;
+  const extraAdded = new Set<string>();
 
   /** which regions exist and where, and which base serves them */
   const load = () =>
@@ -109,11 +123,42 @@ export function startRealNetwork(map: maplibregl.Map) {
   const everAdded = new Set<string>();
   const layerIds = () => [...everAdded].map((cc) => ID + cc).filter((id) => map.getLayer(id));
 
+  const extraBase = () => new URLSearchParams(location.search).get("realExtra") ?? `${base}data/`;
+  /** the regions that have an extra archive; none when the manifest is missing, as before the rebuild */
+  const extraRegions = () =>
+    (extraList ??= fetch(`${extraBase()}extra.json`).then((r) => (r.ok ? r.json() : {}), () => ({})).catch(() => ({})));
+
+  /** adds the extra layer of every region in view's set that has one, under that region's passenger layer */
+  const ensureExtra = async () => {
+    if (!extraOn || !regions) return;
+    const list = await extraRegions();
+    if (!extraOn || !styleUp(map)) return;
+    const colours = extraColour(SHADES[mapShade.peek()]);
+    for (const cc of added) {
+      if (!(cc in list) || extraAdded.has(cc) || !map.getLayer(ID + cc)) continue;
+      extraAdded.add(cc);
+      if (!map.getSource(EXTRA + cc)) map.addSource(EXTRA + cc, { type: "vector", url: `pmtiles://${extraBase()}${cc}_extra.pmtiles`, attribution: OSM_ATTRIBUTION });
+      // line-dasharray cannot vary by feature, so abandoned is its own layer
+      for (const [id, filt, dash] of [[EXTRA + cc, FREIGHT, [1]], [EXTRA + "a-" + cc, ["!", FREIGHT], [3, 2]]] as const)
+        if (!map.getLayer(id))
+          map.addLayer(
+            {
+              id, type: "line", source: EXTRA + cc, "source-layer": "track", minzoom: MIN_ZOOM, filter: filt as never,
+              layout: { "line-cap": "butt", "line-join": "round" },
+              paint: { "line-color": colours as never, "line-width": extraWidth as never, "line-opacity": opacity, "line-dasharray": dash as never },
+            },
+            ID + cc,
+          );
+    }
+  };
+  const extraIds = () => [...extraAdded].flatMap((cc) => [EXTRA + cc, EXTRA + "a-" + cc]).filter((id) => map.getLayer(id));
+
   const setShade = () => {
     const s = mapShade.peek();
     if (s === painted || !styleUp(map)) return;
     painted = s;
     for (const id of layerIds()) map.setPaintProperty(id, "line-color", colour(SHADES[s]) as never);
+    for (const id of extraIds()) map.setPaintProperty(id, "line-color", extraColour(SHADES[s]) as never);
   };
 
   const ensure = async () => {
@@ -127,7 +172,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       .filter((r) => !added.has(r.cc) && r.parts.some((p) => p[0] <= b.getEast() && p[2] >= b.getWest() && p[1] <= b.getNorth() && p[3] >= b.getSouth()))
       .sort((x, y) => dist(x) - dist(y))
       .slice(0, PER_PASS);
-    if (!hits.length) return;
+    if (!hits.length) return void ensureExtra();
     const before = map.getLayer(REACH) ? REACH : firstSymbolId(map);
     const colours = colour(SHADES[mapShade.peek()]);
     for (const { cc } of hits) {
@@ -153,6 +198,7 @@ export function startRealNetwork(map: maplibregl.Map) {
       );
     }
     painted = mapShade.peek();
+    void ensureExtra();
     if (hits.length === PER_PASS) map.once("idle", ensure);
   };
 
@@ -185,6 +231,12 @@ export function startRealNetwork(map: maplibregl.Map) {
         map.setFilter(id, filter as never);
         map.setPaintProperty(id, "line-opacity", opacity);
       }
+    if (styleUp(map))
+      for (const id of extraIds()) {
+        map.setLayoutProperty(id, "visibility", on && extraOn ? "visible" : "none");
+        map.setPaintProperty(id, "line-opacity", opacity);
+      }
+    void ensureExtra();
     showReach();
   };
   effect(() => {
@@ -195,12 +247,14 @@ export function startRealNetwork(map: maplibregl.Map) {
     // snapping goes only to passenger track, so while it is on only that is drawn
     filter = shown === "all" && !snap ? EVERYTHING : PASSENGER;
     on = shown !== "none" || snap;
+    extraOn = shown === "all" && !snap;
     opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[mapShade.value].realOpacity;
     apply();
   });
   map.on("moveend", ensure);
   map.on("style.load", () => {
     added.clear();
+    extraAdded.clear();
     painted = null;
     apply();
   });
