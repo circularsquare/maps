@@ -83,6 +83,11 @@ PAD_MAX = 256 * 1024
 # GET /<name>/_img/<path> sends <folder>/<path> if it is a png, jpg or webp file inside <folder>.
 # No directory listing, nothing outside the folder, nothing else.
 IMAGES = {"twboard": "artifacts"}
+# POST /<name>/_paste with the image bytes as the body (X-Maps-Run, png/jpeg/webp checked by content, at most
+# PASTE_MAX) saves it as <PASTES folder>/<date-time>-<random>.<ext> and answers {"path": "artifacts/..."}.
+PASTES = {"twboard": "artifacts/trainworld/board"}
+PASTE_MAX = 10 * 1024 * 1024
+PASTE_KINDS = ((b"\x89PNG\r\n\x1a\n", None, ".png"), (b"\xff\xd8\xff", None, ".jpg"), (b"RIFF", b"WEBP", ".webp"))
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
 
@@ -361,6 +366,30 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
         return True
 
+    def post_paste(self, name):
+        if not self.headers.get("X-Maps-Run"):
+            return self.send_error(403)
+        try:
+            size = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return self.send_error(400)
+        if size <= 0:
+            return self.send_error(400)
+        if size > PASTE_MAX:
+            return self.send_error(413)
+        data = self.rfile.read(size)
+        ext = None
+        for head, tag, e in PASTE_KINDS:
+            if data.startswith(head) and (tag is None or data[8:12] == tag):
+                ext = e
+        if not ext:
+            return self.send_error(415, "png, jpeg or webp only")
+        folder = HERE / PASTES[name]
+        folder.mkdir(parents=True, exist_ok=True)
+        stem = time.strftime("%Y%m%d-%H%M%S") + "-" + os.urandom(2).hex()
+        (folder / (stem + ext)).write_bytes(data)
+        self.send_json(200, {"path": PASTES[name] + "/" + stem + ext})
+
     def changelog(self):
         parts = urllib.parse.urlsplit(self.path).path.split("/")
         if len(parts) == 3 and parts[2] == "_changelog" and parts[1] in CHANGELOGS:
@@ -417,6 +446,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json(200, pad_write(path, obj["text"]))
 
     def do_POST(self):
+        parts = urllib.parse.urlsplit(self.path).path.split("/")
+        if len(parts) == 3 and parts[2] == "_paste" and parts[1] in PASTES:
+            return self.post_paste(parts[1])
         path = self.changelog()
         if path:
             return self.post_changelog(path)
@@ -434,7 +466,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 proc = subprocess.Popen(
                     [sys.executable, "-u", str(HERE / ACTIONS[key])], cwd=HERE,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                    text=True, encoding="utf-8", errors="replace")
+                    text=True, encoding="utf-8", errors="replace",
+                    # no console window on her screen: restart_serve.py starts this server detached
+                    creationflags=0x08000000 if os.name == "nt" else 0)
                 run = RUNS[key] = {"proc": proc, "line": "starting", "code": None}
                 threading.Thread(target=follow, args=(run,), daemon=True).start()
             state = self.run_state(key)
