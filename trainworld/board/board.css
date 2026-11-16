@@ -43,7 +43,8 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { color-scheme: light dark; }
+html { color-scheme: light dark; scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
+* { scrollbar-width: thin; }
 body {
   background: var(--bg);
   color: var(--text);
