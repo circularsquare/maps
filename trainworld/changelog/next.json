@@ -106,10 +106,21 @@
       "id": "c011",
       "text": "removed the new bus and ferry line buttons from the lines list; they are in the build tab",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:58:34Z",
+      "rev": 2,
+      "changed": "2026-11-16T14:12:09Z"
+    },
+    {
+      "id": "c012",
+      "text": "added a Settings option to hold off recalculating trips until you unpause",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3427",
+      "by": "recalc",
+      "at": "2026-11-16T14:12:29Z",
       "rev": 1
     }
   ]

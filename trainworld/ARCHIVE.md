@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3381 [P2] {L:station-placement} Corner notice shows a generated station name (2026-11-16): fixed: the blueprint notice and the constructed notice name the complex. notes/T-3381.md.
+- T-3422 [P2] {L:rebuild-track} Trains run over blueprint flyover (2026-11-16): fixed: a line needs its return legs built to run, and Construct line builds and prices them (old saves: a line with a blueprint return leg stops until it is built). Covers aejormor's "trains use unbuilt track". notes/T-3422.md.
+- T-3403 [P2] {L:map-look} Profit map mode on single track splits (2026-11-16): fixed: run 1's fares and half the running cost go on the return stretches; seen on a single-track loop, flyover by the same code. notes/T-3403.md.
+- T-3310 [P2] {L:fares} High-speed lines still lose money? (2026-11-16): kept the default multiplier, Anita: "i think we did 1.25x? this seems fine for the picked mult." notes/T-3310.md.
+- T-1599 [P3] {L:ridership-checks} Does a built Beijing-Shanghai line feel too empty? (2026-11-16): closed, Anita: "no it doesnt, its quite good/full actually"; her bigger worry, intercity riders not depending on feeders, is T-3426. notes/T-1599.md.
+- T-438 [P3] {L:demand-ideas} Giant metros take neighbours' trips (2026-11-16): closed as stale, Anita: "i think this is not an issue? i dont think people have complaiend about it". notes/someday.md.
+- T-3326 [P2] {L:feedback} Screenshots in feedback (2026-11-16): done: the game offers up to 4 pictures (account.ts reads trainworldFeedbackImages) and the server keeping them went out with the 11-13 deploy (7a635f7, e5a132a); Anita sees them. notes/T-3326.md.
 - T-3379 [P2] {L:single-track} Single track joined to a double drew a kink (2026-11-16): fixed, drawing only: a joined single piece shorter than the ease now fades back to its centre line. notes/T-3379.md.
 - T-3380 [P2] {L:single-track} Delete preview on single track drawn two tracks wide (2026-11-16): fixed, one track wide now. notes/T-3380.md.
 - T-3411 [P2] {L:single-track} One-platform station on one-way single track (2026-11-16): allowed at the end of single track too (the only refusal reproduced; mid-run already worked). notes/T-3411.md.

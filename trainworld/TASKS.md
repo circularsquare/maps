@@ -117,9 +117,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The read-ahead (T-1980) is untested on a real multi-region run; the chunked gate (T-1978) is confirmed on Mexico. T-592 (read the next extract while this one gates and joins) was the same read-ahead, built as T-1980.
   - Goal: Region k+1's download starts while region k builds, and no two `read` steps overlap.
   - Other: See notes/T-2070.md.
-- T-1981 [P2] {L:world-tooling} {waits:Anita} Joint solve thread scaling
-  - Need from Anita: Say go to measuring during the next country's join, and whether warm-started reruns are acceptable (they change results slightly).
-  - Context: Solves take 17-30 min a country, 2.4 h for China.
+- T-1981 [P2] {L:world-tooling} Joint solve thread scaling
+  - Context: Solves take 17-30 min a country, 2.4 h for China. You said yes to measuring and to warm-started reruns 2026-11-16.
   - Goal: Thread scaling is measured at 6 and 12 threads, then night joins at 12-15 cores or warm-started reruns are chosen.
   - Other: See notes/T-1981.md.
 - T-1988 [P3] {L:airports} Stale air_direct in market packs
@@ -130,7 +129,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-1738 [P2] {L:new-countries} Southeast Asia: Myanmar, Laos, Timor-Leste
+- T-1738 [P3] {L:new-countries} Southeast Asia: Myanmar, Laos, Timor-Leste
   - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet.
   - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
   - Other: notes/T-1738.md section 5
@@ -175,11 +174,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: docs/adding-a-country.md; research/next-countries-data.md
 
 ## Demand
-- T-3310 [P2] {L:fares} {waits:Anita} High-speed lines still lose money?
-  - Need from Anita: Pick the default fare multiplier for high-speed lines (now 1.5x, above the best fare).
-  - Context: Player reports "shinkansen losing money". Measured 2026-11-12: same on v0.3.1 and master; player skill (train length, frequency) and the 1.5x default explain it.
-  - Goal: A decision on the default multiplier; no code in this task.
-  - Other: notes/T-3310.md
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
@@ -208,11 +202,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Past about 8,000 stations the longer trips go unleaned. The old table is gone since T-1545, so lifting the gate only costs time.
   - Goal: Networks that big get the lean on longer trips too.
   - Other: Notes: notes/T-264.md
-- T-1599 [P3] {L:ridership-checks} {waits:Anita} Does a built Beijing-Shanghai line feel too empty?
-  - Need from Anita: Look at a built Beijing to Shanghai high-speed line and say whether its riders a day feel too empty.
-  - Context: Deferred option 2 of T-1508. T-1603 is done.
-  - Goal: You judge the line at player scale.
-  - Other: Notes: notes/T-1599.md
 - T-1233 [P2] {L:ridership-checks} {after:Guangdong market packs} Cross-city trips check for Guangdong
   - Context: Waits until Guangdong market packs carry the city pairs. Then run the T-1177 cross-everyday check on gua and fos.
   - Goal: Each purpose's local legs plus pairs match the old totals.
@@ -900,9 +889,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3402 [P3] {L:community} Community page switcher on all views
   - Context: Your TODO 2026-11-15: the page switcher shows only on "most liked"; you want to see everything, like 1/xx pages.
   - Goal: All three views have a page switcher and a total count.
-- T-3403 [P2] {L:map-look} Profit map mode on single track splits (taking, 2026-11-16, agent bugs2)
-  - Context: Your TODO 2026-11-15: profit map mode says no trains run over one of a single track or flyover single track split. It is a bug.
-  - Goal: Both sides of a split show their own profit.
 - T-3404 [P3] {L:small-fixes} Intercity trip explorer hover lacks breakdown
   - Context: The city trip explorer's effective time hover explains the breakdown as an equation. The intercity one has none.
   - Goal: The intercity hover shows the same breakdown.
@@ -924,12 +910,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3416 [P3] {L:small-fixes} Very long line group name locks the name
   - Context: Your TODO 2026-11-15: a really long line group name can stop you changing it. Check line names too. It is a bug.
   - Goal: Long group and line names stay editable.
-- T-3421 [P2] {L:track-speed} High-speed auto-ramps over water run at 160 km/h (taking, 2026-11-16, agent bugs2)
-  - Context: A player reports they run at 160 instead of 320. Not yet known if a ramp, gradient or bridge rule caps it.
-  - Goal: Fix it if a bug; bring you the rule if intended.
-- T-3422 [P2] {L:rebuild-track} Trains run over blueprint flyover (taking, 2026-11-16, agent bugs2)
-  - Context: A player reports part of a flyover is blueprint but trains still run there.
-  - Goal: Blueprint pieces carry no trains.
+- T-3421 [P2] {L:track-speed} Longer ramps for lines faster than 160 km/h (taking, 2026-11-16, agent bugs2)
+  - Context: High-speed trains slow to 160 km/h on ramps at the default slope. You, 2026-11-16: "a ramp at current default slope can keep its 160km/h limit. but high speed ramps should just default to be longer. or like ramps in general should default to being longer if the line target is > 160km/h". Also yes to wide curves on clicked corners above 160.
+  - Goal: Ramps and clicked corners drawn with a target above 160 km/h default to lengths and radii that keep the target speed.
+  - Other: notes/T-3421.md
 - T-3423 [P3] {L:small-fixes} Line groups inside line groups
   - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
   - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
@@ -945,11 +929,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
   - Other: About 2-3 h. notes/T-3333.md "As built".
-- T-3326 [P2] {L:feedback} {waits:Anita} Screenshots in feedback
-  - Need from Anita: Say yes to deploying the feedback screenshots server, or hold it.
-  - Context: Your TODO 2026-11-12: let people attach up to 4 screenshots. Server and form are built; the form and inbox are on branch tw/fbshots.
-  - Goal: Branch merged, server deployed with your word, other languages translated.
-  - Other: notes/T-3326.md
 - T-3365 [P2] {L:track-kinds} {waits:Anita} What single, double and quad track mean
   - Need from Anita: Discuss your handwritten thoughts and the five design calls.
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
@@ -963,13 +942,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-13 for lines to pass through points they don't stop at; again 2026-11-16 with T-3079.
   - Goal: Lines can have waypoints, design first.
   - Other: Goes with T-3079, exact stop spacing.
-- T-3382 [P3] {L:twstats} {after:15-minute ring live a week} Where people play in twstats
+- T-3382 [P3] {L:twstats} Where people play in twstats
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
-  - Goal: twstats shows minutes per city. Waits for the 15-minute ring to be live a week.
+  - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
   - Other: notes/T-3382.md
-- T-3381 [P2] {L:station-placement} Corner notice shows a generated station name (taking, 2026-11-16, agent bugs2)
-  - Context: A joined station takes the complex name only after the corner notice, which shows the generated one.
-  - Goal: The notice shows the shared complex name.
 - T-3378 [P2] {L:buses} Bus and tram balance, BRT
   - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
   - Goal: A design for BRT or busways and slower street trams, for you first.
@@ -1101,23 +1077,21 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station
   - Context: Your TODO 2026-11-15, for sensible pathing on single track.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
-- T-3412 [P2] {L:station-placement} "Too close to end of track" refusal (taking, 2026-11-16, agent bugs2)
-  - Context: Your TODO 2026-11-15: it frustrates many people and you asked what it guards.
-  - Goal: The refusal is loosened or explains itself.
+- T-3412 [P2] {L:station-placement} Snap a station onto a nearby corner (taking, 2026-11-16, agent bugs2)
+  - Context: The refusal now says what it needs (5 m of track each side; landed 2026-11-16). You said yes 2026-11-16 to snapping onto the nearby joint instead of refusing (joints with 3+ track ends stay refused).
+  - Goal: A station placed within 5 m of a corner lands on the corner. About 2-3 h.
+  - Other: notes/T-3412.md
 - T-3419 [P3] {L:buses} Waiting rooms at ferry ports
   - Context: Your TODO 2026-11-15: waiting rooms for ferries should be allowed.
   - Goal: Ferry ports can have waiting rooms.
 
 ## Held features
-- T-2787 [P3] {L:money} {waits:Anita} Per-line money history
-  - Need from Anita: Say when the per-line money history can go into a release, or keep holding it.
-  - Context: Built in c18d2fa1; you asked to hold it out of the release on 2026-11-08.
-  - Goal: It ships once you agree. Follow-up is T-2809.
-- T-2790 [P3] {L:small-fixes} {waits:Anita} Trip lengths by purpose
-  - Need from Anita: Say whether this goes into a release; it is held out at your request.
-  - Context: Built in commit b167196a and held out of the release 2026-11-08.
-  - Goal: Trip lengths by purpose are in the game.
-  - Other: The work is kept in that commit and its worktree.
+- T-2787 [P2] {L:money} Per-line money history (taking, 2026-11-16, agent unhold)
+  - Context: Built in c18d2fa1 and held out of the release 2026-11-08. You, 2026-11-16: "we can do this now-ish, no need to hold off".
+  - Goal: In the game on master for the next release. Follow-up is T-2809.
+- T-2790 [P2] {L:small-fixes} Trip lengths by purpose (taking, 2026-11-16, agent unhold)
+  - Context: Built in commit b167196a and held out of the release 2026-11-08. You, 2026-11-16: "yes we can put this into a release".
+  - Goal: In the game on master for the next release.
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
@@ -1431,11 +1405,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: The long car's cost, the Channel and ferries need a look.
   - Goal: Long-trip modes behave sensibly.
   - Other: notes/someday.md
-- T-438 [P3] {L:demand-ideas} {waits:Anita} Giant metros take neighbours' trips
-  - Need from Anita: Say whether giant metros taking neighbours' trips needs fixing.
-  - Context: The market's destination choice sends neighbours' trips to giant metros.
-  - Goal: Giant metros no longer take neighbours' trips.
-  - Other: Notes: notes/someday.md
 - T-427 [P3] {L:solve-speed} Longer-trip answers only for zones with trips
   - Context: Someday: send longer-trip answers only for zones that have trips.
   - Goal: Answers are sent only for zones with trips.
@@ -1549,9 +1518,8 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Opening a big save searches every station's walk round water.
   - Goal: A big save opens without searching every station.
   - Other: notes/someday.md
-- T-076 [P3] {L:frame-rate} {waits:Anita} Lower frame rate when trains barely move
-  - Need from Anita: Do you accept a lower frame rate when trains barely move?
-  - Context: Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second.
+- T-076 [P3] {L:frame-rate} Lower frame rate when trains barely move
+  - Context: Playing costs 13-15% of a core, nearly all Chrome presenting 60 frames a second. You said yes 2026-11-16.
   - Goal: Frame rate drops when the fastest train moves under half a pixel a frame, roughly halving the cost.
   - Other: Measure the visible step first. notes/T-076.md
 - T-168 [P3] {L:solve-speed} Add a viewed city without a whole re-solve
@@ -1562,10 +1530,9 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Someday: each worker first solve is slower in the browser than native.
   - Goal: Browser first solves match native.
   - Other: notes/someday.md
-- T-436 [P3] {L:solve-speed} {waits:Anita} Start crowding rounds from the previous solve
-  - Need from Anita: Do you accept figures depending on edit history for faster solves?
-  - Context: Starting rounds from the last solve is faster, but figures would then depend on edit history. Not measured.
-  - Goal: Rounds start from the previous solve if you agree.
+- T-436 [P3] {L:solve-speed} Start crowding rounds from the previous solve
+  - Context: Starting rounds from the last solve should be faster, but figures would then depend on edit history. You, 2026-11-16: "lets measure and if it doesnt produce any results that would feel crazy to a player, and it improves performance/speed, we should do".
+  - Goal: Measure speed and how far figures drift with edit history; ship it if it is faster and nothing a player would notice moves.
   - Other: notes/T-434.md
 - T-361 [P3] {L:memory} {after:T-3373} One demand engine per city
   - Context: There are two demand engines per city. T-3373 now covers sharing zone data between workers.
