@@ -14,22 +14,22 @@ export const SKIN = [
 ];
 
 /** Weights over `SKIN`, and over the hair colours (faces.ts `HAIR`: brown, black, auburn, honey). */
-interface Profile { skin: number[]; hair: number[] }
+interface Profile { skin: number[]; hair: number[]; /** T-2906: times the base chance of wavy hair; 1 when unset */ wavy?: number }
 
 const P: Record<string, Profile> = {
-  eastAsia: { skin: [3, 5, 2, 0, 0, 0], hair: [1, 9, 0, 0] },
-  southeastAsia: { skin: [1, 3, 4, 2, 0.5, 0], hair: [0.5, 9.5, 0, 0] },
+  eastAsia: { skin: [3, 5, 2, 0, 0, 0], hair: [1, 9, 0, 0], wavy: 0.25 },
+  southeastAsia: { skin: [1, 3, 4, 2, 0.5, 0], hair: [0.5, 9.5, 0, 0], wavy: 0.4 },
   southAsia: { skin: [0, 0.5, 2.5, 4, 2.5, 0.5], hair: [0.5, 9.5, 0, 0] },
   middleEast: { skin: [1, 3.5, 3.5, 1.5, 0.5, 0], hair: [3, 6.8, 0, 0.2] },
-  northEurope: { skin: [5.5, 3.5, 0.7, 0.2, 0.1, 0], hair: [5, 1.2, 0.6, 3.2] },
-  southEurope: { skin: [3.5, 4.5, 1.5, 0.3, 0.2, 0], hair: [6, 3, 0.3, 0.7] },
-  africa: { skin: [0, 0, 0.2, 1.3, 4, 4.5], hair: [0.2, 9.8, 0, 0] },
-  southAfrica: { skin: [0.8, 0.4, 0.6, 1.2, 3.5, 3.5], hair: [1.2, 8.2, 0.1, 0.5] },
-  northAmerica: { skin: [4, 2, 1.5, 1, 1, 0.5], hair: [4.5, 3.5, 0.4, 1.6] },
+  northEurope: { skin: [5.5, 3.5, 0.7, 0.2, 0.1, 0], hair: [5, 1.2, 0.6, 3.2], wavy: 1.8 },
+  southEurope: { skin: [3.5, 4.5, 1.5, 0.3, 0.2, 0], hair: [6, 3, 0.3, 0.7], wavy: 1.8 },
+  africa: { skin: [0, 0, 0.2, 1.3, 4, 4.5], hair: [0.2, 9.8, 0, 0], wavy: 1.8 },
+  southAfrica: { skin: [0.8, 0.4, 0.6, 1.2, 3.5, 3.5], hair: [1.2, 8.2, 0.1, 0.5], wavy: 1.8 },
+  northAmerica: { skin: [4, 2, 1.5, 1, 1, 0.5], hair: [4.5, 3.5, 0.4, 1.6], wavy: 1.6 },
   latinAmerica: { skin: [1.5, 3, 3, 1.5, 0.8, 0.2], hair: [5.5, 4, 0.1, 0.4] },
-  brazil: { skin: [2, 2.5, 2, 1.5, 1.2, 0.8], hair: [5, 4.4, 0.1, 0.5] },
-  southernCone: { skin: [3.5, 4, 1.5, 0.5, 0.3, 0.2], hair: [6, 3, 0.2, 0.8] },
-  oceania: { skin: [4.5, 2.5, 1.2, 0.8, 0.6, 0.4], hair: [4.5, 2.5, 0.5, 2.5] },
+  brazil: { skin: [2, 2.5, 2, 1.5, 1.2, 0.8], hair: [5, 4.4, 0.1, 0.5], wavy: 1.5 },
+  southernCone: { skin: [3.5, 4, 1.5, 0.5, 0.3, 0.2], hair: [6, 3, 0.2, 0.8], wavy: 1.5 },
+  oceania: { skin: [4.5, 2.5, 1.2, 0.8, 0.6, 0.4], hair: [4.5, 2.5, 0.5, 2.5], wavy: 1.6 },
 };
 
 const COUNTRIES: Record<string, string[]> = {
@@ -61,10 +61,10 @@ function drawFrom(weights: number[], u: number): number {
 
 /** A face's skin tone (index into `SKIN`, -1 for the mood-coloured face) and hair colour (index
  * into `hairs` colours) in `country`, from two uniform draws. */
-export function toneFor(country: string | null | undefined, hairs: number, us: number, uh: number): { skin: number; tint: number } {
+export function toneFor(country: string | null | undefined, hairs: number, us: number, uh: number): { skin: number; tint: number; wavy: number } {
   const p = country ? OF.get(country) : undefined;
-  if (!p) return { skin: -1, tint: Math.floor(uh * hairs) };
-  return { skin: drawFrom(p.skin, us), tint: drawFrom(p.hair, uh) };
+  if (!p) return { skin: -1, tint: Math.floor(uh * hairs), wavy: 1 };
+  return { skin: drawFrom(p.skin, us), tint: drawFrom(p.hair, uh), wavy: p.wavy ?? 1 };
 }
 
 const hex = (s: string) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));

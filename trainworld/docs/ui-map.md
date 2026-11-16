@@ -752,8 +752,10 @@ those who got on, less the load carried on.
   round mouth, a z) 4% on happy and tired faces; crying (eyes shut, a wailing mouth, two streams of
   tears) 8% and knocked out (cartoon X eyes, a tongue out) 3% on sad ones; a bucket hat, a
   baseball cap or sunglasses 2.5% each on any face (no sunglasses over shut or X'd eyes, and no z
-  under a hat); short hair 10% and long hair 10%, in one of four colours (brown, black, auburn,
-  honey), on a face with no hat [T-1852]; and a child, drawn at 72% size, 6%. In a country the
+  under a hat); short hair 14%, long 12%, a ponytail 8% and wavy 10%, in one of four colours (brown, black,
+  auburn, honey), on a face with no hat [T-1852, T-2906]; wavy is drawn 1.8 times as often in
+  Africa and Europe (1.5 to 1.6 in the Americas and Oceania) and a quarter to 0.4 times as often in
+  East and Southeast Asia (`wavy` in `map/faceTones.ts`); and a child, drawn at 72% size, 6%. In a country the
   table in `map/faceTones.ts` lists (the station's zone's country), a face is one of six plain skin
   tones instead of the mood's yellow, drawn from the country's weights, tired ones mixed 35% towards
   drained yellow and sad ones 45% towards blue, and its hair colour is drawn from the country's weights (black

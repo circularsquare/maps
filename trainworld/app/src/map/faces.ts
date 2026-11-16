@@ -71,8 +71,8 @@ const LOOK: Record<Mood, { fill: string; edge: string; ink: string }> = {
  * at CHILD_SCALE. */
 export type Expression = "" | "flat" | "sleepy" | "crying" | "dead";
 export type Accessory = "" | "bucket" | "cap" | "shades";
-/** T-1852: hair, short or long, in one of `HAIR` colours; a face with a hat has none. */
-export type Hair = "" | "short" | "long";
+/** T-1852: hair, in one of `HAIR` colours; a face with a hat has none. */
+export type Hair = "" | "short" | "long" | "ponytail" | "wavy";
 export interface Look {
   mood: Mood;
   expr: Expression;
@@ -86,8 +86,9 @@ export interface Look {
 }
 export const EXPR_CHANCE: Record<Exclude<Expression, "">, number> = { flat: 0.04, sleepy: 0.04, crying: 0.08, dead: 0.03 };
 export const ACC_CHANCE: Record<Exclude<Accessory, "">, number> = { bucket: 0.04, cap: 0.04, shades: 0.03 };
-/** T-2789: with the hats, about half of all faces have hair or a hat. */
-export const HAIR_CHANCE: Record<Exclude<Hair, "">, number> = { short: 0.22, long: 0.22 };
+/** T-2789: with the hats, about half of all faces have hair or a hat. T-2906: wavy's is times the
+ * country's factor (faceTones `wavy`: more for Black and white faces, fewer for Asian ones). */
+export const HAIR_CHANCE: Record<Exclude<Hair, "">, number> = { short: 0.14, long: 0.12, ponytail: 0.08, wavy: 0.1 };
 export const CHILD_CHANCE = 0.06;
 export const CHILD_SCALE = 0.72;
 
@@ -110,8 +111,11 @@ export function pickLook(mood: Mood, rand: () => number = Math.random, country: 
   if (acc === "shades" && (expr === "dead" || expr === "sleepy" || expr === "crying")) acc = "";
   const child = rand() < CHILD_CHANCE;
   let hair: Hair = "";
-  const rh = rand(), { skin, tint } = toneFor(country, HAIR.length, rand(), rand());
-  if (!acc || acc === "shades") hair = rh < HAIR_CHANCE.short ? "short" : rh < HAIR_CHANCE.short + HAIR_CHANCE.long ? "long" : "";
+  const rh = rand(), { skin, tint, wavy } = toneFor(country, HAIR.length, rand(), rand());
+  if (!acc || acc === "shades") {
+    t = 0;
+    for (const k of ["short", "long", "ponytail", "wavy"] as const) if (!hair && rh < (t += HAIR_CHANCE[k] * (k === "wavy" ? wavy : 1))) hair = k;
+  }
   return { mood, expr, acc, child, hair, tint, skin };
 }
 
@@ -149,6 +153,8 @@ export function sprite(look: Look | Mood): HTMLCanvasElement {
   g.lineJoin = "round";
   const h = hair ? HAIR[l.tint % HAIR.length] : null;
   if (h && hair === "long") drawLongBack(g, mx, my, h);
+  else if (h && hair === "ponytail") drawPonytail(g, mx, my, h);
+  else if (h && hair === "wavy") drawWavyBack(g, mx, my, h);
   g.beginPath();
   g.arc(mx, my, FACE_R, 0, Math.PI * 2);
   g.fillStyle = fill;
@@ -156,7 +162,7 @@ export function sprite(look: Look | Mood): HTMLCanvasElement {
   g.lineWidth = 3;
   g.strokeStyle = edge;
   g.stroke();
-  if (h) drawFringe(g, mx, my, h, hair === "long");
+  if (h) { if (hair === "wavy") drawWavyFringe(g, mx, my, h); else drawFringe(g, mx, my, h, hair === "long"); }
   g.fillStyle = ink;
   g.strokeStyle = ink;
   g.lineWidth = 3;
@@ -182,6 +188,55 @@ function drawLongBack(g: CanvasRenderingContext2D, mx: number, my: number, h: { 
   g.quadraticCurveTo(mx + 18, my + 26, mx + 13, my + 19);
   g.lineTo(mx - 13, my + 19);
   g.quadraticCurveTo(mx - 18, my + 26, mx - 24, my + 22);
+  g.closePath();
+  g.fill(); g.stroke();
+}
+
+/** A tail tied high at the back of the head, swinging out to the right. */
+function drawPonytail(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }) {
+  g.fillStyle = h.fill;
+  g.strokeStyle = h.edge;
+  g.lineWidth = 2.4;
+  g.beginPath();
+  g.moveTo(mx + 14, my - 16);
+  g.bezierCurveTo(mx + 27, my - 20, mx + 32, my - 2, mx + 26, my + 14);
+  g.quadraticCurveTo(mx + 23, my + 6, mx + 20, my - 2);
+  g.closePath();
+  g.fill(); g.stroke();
+  g.fillStyle = h.edge;
+  g.beginPath(); g.ellipse(mx + 17, my - 14, 3.2, 4.4, 0.5, 0, Math.PI * 2); g.fill();
+}
+
+/** Wavy hair behind the head: a mass wider than the face, its outer edge in scallops down to the
+ * chin. */
+function drawWavyBack(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }) {
+  g.fillStyle = h.fill;
+  g.strokeStyle = h.edge;
+  g.lineWidth = 2.4;
+  g.beginPath();
+  g.moveTo(mx - 22, my + 18);
+  g.quadraticCurveTo(mx - 29, my + 12, mx - 24, my + 6);
+  g.quadraticCurveTo(mx - 29, my, mx - 24, my - 6);
+  g.bezierCurveTo(mx - 26, my - 32, mx + 26, my - 32, mx + 24, my - 6);
+  g.quadraticCurveTo(mx + 29, my, mx + 24, my + 6);
+  g.quadraticCurveTo(mx + 29, my + 12, mx + 22, my + 18);
+  g.lineTo(mx - 22, my + 18);
+  g.closePath();
+  g.fill(); g.stroke();
+}
+
+/** The hair over a wavy head: a cap whose lower edge rolls in three waves. */
+function drawWavyFringe(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }) {
+  g.fillStyle = h.fill;
+  g.strokeStyle = h.edge;
+  g.lineWidth = 2.4;
+  g.beginPath();
+  g.moveTo(mx - 20, my - 3);
+  g.bezierCurveTo(mx - 24, my - 30, mx + 24, my - 30, mx + 20, my - 3);
+  g.quadraticCurveTo(mx + 15, my - 14, mx + 10, my - 8);
+  g.quadraticCurveTo(mx + 5, my - 16, mx, my - 9);
+  g.quadraticCurveTo(mx - 5, my - 16, mx - 10, my - 8);
+  g.quadraticCurveTo(mx - 15, my - 14, mx - 20, my - 3);
   g.closePath();
   g.fill(); g.stroke();
 }

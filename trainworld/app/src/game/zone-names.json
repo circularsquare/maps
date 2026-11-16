@@ -1541,5 +1541,6 @@
 "lst": {"name": "Pärnu", "aliases": ["Lääne-Eesti", "Haapsalu", "Saaremaa", "Kuressaare"]},
 "vim": {"name": "Daugavpils", "aliases": ["Vidzeme", "Latgale", "Valmiera", "Rēzekne", "Cēsis"]},
 "kuz": {"name": "Liepāja", "aliases": ["Kurzeme", "Courland", "Ventspils"]},
-"ute": {"name": "Utena", "aliases": ["Utenos apskritis", "Visaginas"]}
+"ute": {"name": "Utena", "aliases": ["Utenos apskritis", "Visaginas"]},
+"arv": {"name": "Arnavutköy, Istanbul", "aliases": ["Arnavutköy", "Arnavutkoy"]}
 }
