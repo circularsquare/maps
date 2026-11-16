@@ -64,6 +64,11 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
   and her chat 11-16) and filing TODO.md short-term items as T-3398..T-3440; shape (Opus, id af72987d247ffa2b4)
   T-3394 pilot of 14 tasks + tools/restructure_tasks.py, no TASKS.md edits. After the pilot: show her, then fan out
   by area (block files, one apply). Board must then render the fields.
+- 11-16 ~13:40Z: lines done (31 archived, T-3398..T-3420 filed), pad done (T-3396, 06a9b440, serve.py restarted).
+  Shape pilot done: notes/T-3394.md, tools/restructure_tasks.py (uncommitted). Rollout estimate ~25 agent-hours,
+  8 Sonnet agents ~3 h wall, by area (demand split in 2-3, performance in 2): waits on her OK of shape and cost.
+  pad agent rendering the fields on the board meanwhile. After the rollout: CLAUDE.md Tasks rule, TASKS.md and
+  Someday headers, docs/orchestrator.md filing; `--retag T-3345` (stale waits).
 
 ## Parked work in trees
 - .tw-trees/perdir (tw/perdir from f8119117): T-3348 stage 1, per-direction stops, sim half built and tested (her

@@ -246,7 +246,8 @@ function queuedList(actions) {
 function query() { return $('#search').value.trim().toLowerCase(); }
 
 function taskHits(t, q) {
-  return t.id.toLowerCase().includes(q) || t.text.toLowerCase().includes(q);
+  return t.id.toLowerCase().includes(q) || t.text.toLowerCase().includes(q)
+    || Object.values(t.fields || {}).some((v) => v.toLowerCase().includes(q));
 }
 
 /** null when the line is hidden; else the number of its tasks that match the search (or -1: no search) */
@@ -648,7 +649,8 @@ function taskRow(t, key, q) {
   const flash = flashTask === t.id && Date.now() < flashUntil;
   // the row's parts in order; the notes sit right above the answer box so she can read and answer in one place
   return el('div', { class: 'task-row' + (q && taskHits(t, q) ? ' hit' : '') + (flash ? ' flash' : ''), style: colour(key), 'data-task': t.id },
-    el('div', { class: 'top' }, el('b', {}, t.id), t.pri ? ` ${t.pri}` : ' no priority'),
+    el('div', { class: 'top' }, el('b', {}, t.id), t.pri ? ` ${t.pri}` : ' no priority',
+      t.fields ? el('span', { class: 'title' }, rich(t.text)) : null),
     taskBody(t),
     where,
     showing ? notesBlock(t.notes, t.id) : null,
@@ -657,7 +659,12 @@ function taskRow(t, key, q) {
 }
 
 /** what a task says; tomorrow's task fields (need from Anita, context, goal) go here */
+const FIELD_LABELS = [['need', 'Need from Anita'], ['context', 'Context'], ['goal', 'Goal'], ['other', 'Other']];
 function taskBody(t) {
+  if (t.fields) {
+    return el('div', { class: 'fields' }, FIELD_LABELS.filter(([k]) => t.fields[k]).map(([k, label]) =>
+      el('div', { class: `field-row ${k}` }, el('span', { class: 'lab' }, label), el('span', { class: 'val' }, rich(t.fields[k])))));
+  }
   return el('div', { class: 'text' }, rich(t.text));
 }
 

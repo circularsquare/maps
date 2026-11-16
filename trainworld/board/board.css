@@ -410,3 +410,16 @@ select.small {
 #strip .wt-list { display: flex; flex-wrap: wrap; gap: 2px 18px; }
 #strip .wt-item { white-space: nowrap; }
 #strip .wt-item .time { color: var(--muted); }
+
+/* tasks with fields (T-3394) */
+.task-row .top .title { display: block; font-size: 14px; font-weight: 700; color: var(--text); margin-top: 1px; }
+.task-row .fields { margin-top: 3px; display: flex; flex-direction: column; gap: 4px; }
+.field-row { font-size: 13px; }
+.field-row .lab { display: block; font-size: 11px; color: var(--muted); }
+.field-row.need {
+  border-left: 3px solid var(--s-you);
+  background: color-mix(in srgb, var(--s-you) 12%, transparent);
+  padding: 3px 6px;
+  border-radius: 0 4px 4px 0;
+}
+.field-row.need .lab { color: var(--s-you); font-weight: 700; }

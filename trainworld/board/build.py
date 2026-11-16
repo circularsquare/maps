@@ -50,6 +50,8 @@ PRI_RE = re.compile(r"^\[(P\d)\]\s*")
 TAG_RE = re.compile(r"\{\s*(L|waits|after)\s*:\s*([^}]*)\}\s*")
 HEAD_RE = re.compile(r"^(#{2,6})\s+(.*?)\s*$")
 AREA_HEAD_RE = re.compile(r"\{area:([a-z-]+)\}")
+FIELD_RE = re.compile(r"^\s+- (Need from Anita|Context|Goal|Other):\s*(.*?)\s*$")
+FIELD_KEYS = {"Need from Anita": "need", "Context": "context", "Goal": "goal", "Other": "other"}
 TAKING_RE = re.compile(r"\btaking,")      # the mark is "taking, <date>"; the bare word turns up in quotes
 
 
@@ -64,6 +66,10 @@ def parse_tasks(text):
     """Every task line: id, priority, tags, the text without tags, its section, Someday or not."""
     tasks, heads = [], {}
     for raw in text.splitlines():
+        f = FIELD_RE.match(raw)
+        if f and tasks:                       # an indented field line belongs to the task above it
+            tasks[-1].setdefault("fields", {})[FIELD_KEYS[f.group(1)]] = f.group(2)
+            continue
         h = HEAD_RE.match(raw)
         if h:
             level = len(h.group(1))
@@ -263,7 +269,7 @@ def main():
         (by_slug[slug] if slug else unsorted)["tasks"].append(t["id"])
         t["line"] = slug or UNSORTED
         del t["lines"], t["taking"]
-        t["notes"] = task_notes(t["id"], t["text"], notes_index)
+        t["notes"] = task_notes(t["id"], t["text"] + " " + (t.get("fields") or {}).get("other", ""), notes_index)
         task_out[t["id"]] = t
 
     out_lines = []
