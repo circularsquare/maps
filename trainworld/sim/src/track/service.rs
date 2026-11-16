@@ -194,6 +194,28 @@ pub struct InFlight {
     /// Standing at a stop: seconds before it would have left; with `s` infinite, standing at its
     /// last stop: seconds it has stood there.
     stopped_left: Option<f64>,
+    /// The place on the ground when `s` is finite: the path entry it is on, which time that entry
+    /// comes up in the run, and the metres into it. A changed run can start somewhere else, so
+    /// the offset alone would move the train.
+    at: Option<(u32, usize, f64)>,
+}
+
+/// Where offset `s` is on a run's path, as `InFlight::at` keeps it.
+fn ground_at(r: &Run, s: f64) -> Option<(u32, usize, f64)> {
+    if r.segs.is_empty() {
+        return None;
+    }
+    let i = r.seg_off.partition_point(|&o| o <= s).saturating_sub(1).min(r.segs.len() - 1);
+    let nth = r.segs[..i].iter().filter(|&&p| p == r.segs[i]).count();
+    Some((r.segs[i], nth, s - r.seg_off[i]))
+}
+
+/// The offset on a run of a place `ground_at` found on its old path: None when the new path no
+/// longer has that entry.
+fn offset_at(r: &Run, at: (u32, usize, f64)) -> Option<f64> {
+    let i = (0..r.segs.len()).filter(|&i| r.segs[i] == at.0).nth(at.1)?;
+    let end = r.seg_off.get(i + 1).copied().unwrap_or(r.len);
+    Some((r.seg_off[i] + at.2).min(end))
 }
 
 /// The service as an edit found it (`Service::before_edit`, then `note_changes`).
@@ -1024,12 +1046,13 @@ impl Service {
                 }
                 if tau >= p.duration {
                     // standing at the terminal: as long again after the new profile's arrival
-                    flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s: f64::INFINITY, stopped_left: Some(tau - p.duration) });
+                    flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s: f64::INFINITY, stopped_left: Some(tau - p.duration), at: None });
                     continue;
                 }
                 let (s, v) = profile::state_at(&p.phases, tau);
                 let stopped_left = (v < 0.01).then(|| time_reaching(&p.phases, p.duration, s + 0.05) - tau);
-                flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s, stopped_left });
+                let at = ground_at(&self.lines[t.line as usize].runs[t.run as usize], s);
+                flight.push(InFlight { line: t.line, run: t.run, level: t.level, dep: t.dep, s, stopped_left, at });
             }
         }
         let lens = (0..self.lines.len()).map(|l| self.trip_lens(net, l)).collect();
@@ -1057,6 +1080,8 @@ impl Service {
             let l = f.line as usize;
             let Some(ls) = self.lines.get(l).filter(|ls| ls.running) else { continue };
             let p = &ls.runs[f.run as usize].prof[f.level as usize];
+            let moved = f.at.and_then(|a| offset_at(&ls.runs[f.run as usize], a));
+            let f = &InFlight { s: moved.unwrap_or(f.s), ..*f };
             let tau = match f.stopped_left {
                 Some(stood) if f.s.is_infinite() => p.duration + stood,
                 Some(left) => {

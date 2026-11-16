@@ -70,3 +70,47 @@ fn undo_and_redo_of_a_count_change_are_service_edits() {
     assert_eq!(a.redo(), 0, "{}", a.issues());
     assert!(a.step_is_service(false));
 }
+
+/// T-1072: a stop added past one end moves no train on the ground, the other direction's included.
+#[test]
+fn a_stop_added_at_an_end_moves_no_train() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_cash(1e9);
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let node = |t: &TrackApi, x: f64| t.nodes_info().chunks(10).find(|c| (c[1] - x).abs() < 1e-6).unwrap()[0] as u32;
+    assert_eq!(a.add_station(2, 0, 6000.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
+    for x in [0.0, 12000.0] {
+        let n = node(&a, x);
+        assert_eq!(a.add_station(1, n, x, 0.0, 200, "S".into()), 0, "{}", a.issues());
+    }
+    let ns: Vec<u32> = [0.0, 6000.0, 12000.0].iter().map(|&x| node(&a, x)).collect();
+    let edges: Vec<u32> = (0..a.w.net.edge_count() as u32).filter(|&k| a.w.net.edge_ok(k)).collect();
+    assert_eq!(a.construct(&edges, &ns), 0, "{}", a.issues());
+    let id = a.new_line_id();
+    assert_eq!(a.set_line(id, &ns[..2], 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_train_counts(id, 4, 4, 4), 0, "{}", a.issues());
+    let now = 2.0 * 86400.0 + 11.0 * 3600.0 + 417.0;
+    a.set_now(now);
+    let at_now = |a: &TrackApi| {
+        let mut v: Vec<(u8, f64, f64)> = a.w.svc.trips(&a.w.net, now, now + 1e-3).iter().filter_map(|t| {
+            let p = &a.w.svc.lines[t.line as usize].runs[t.run as usize].prof[t.level as usize];
+            let tau = now - t.draw;
+            (tau >= 0.0 && tau < p.duration).then(|| {
+                let (s, _) = crate::track::profile::state_at(&p.phases, tau);
+                let (x, _) = a.w.svc.position(&a.w.net, t.line, t.run as usize, s);
+                (t.run, t.dep, x)
+            })
+        }).collect();
+        v.sort_by(|p, q| p.1.total_cmp(&q.1).then(p.0.cmp(&q.0)));
+        v
+    };
+    let before = at_now(&a);
+    assert!(before.iter().any(|t| t.0 == 1), "a train on the way back: {before:?}");
+    assert_eq!(a.set_line(id, &ns, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    let after = at_now(&a);
+    assert_eq!(before.len(), after.len(), "{before:?} {after:?}");
+    for (p, q) in before.iter().zip(&after) {
+        assert!((p.2 - q.2).abs() < 30.0, "{p:?} moved to {q:?}");
+    }
+}
