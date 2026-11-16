@@ -3055,13 +3055,51 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
 /** whether the page shows the diagram, and the last network's lines, edges and polylines */
 let diagramOn = false;
 let diagramIn: { lines: ClockLine[]; edges: ClockEdge[]; pts: ReadonlyMap<number, Float32Array> } | null = null;
+/** T-2261: the graph's points are float32 local units, so they are made from the kept float64 mercator points, from an
+ * origin of the network's own (its box's middle on a 1 degree grid), never the draw anchor: the same network gives the
+ * same graph whatever the camera has done. Each edge's converted points are kept while its mercator ones and the origin
+ * are, so the graph's arc lengths stay cached. */
+const diagramPts = new Map<number, { m: Float64Array; from: string; d: Float32Array }>();
+function diagramFrame(pts: ReadonlyMap<number, Float32Array>): { pts: Map<number, Float32Array>; at: Anchor } {
+  const a = anchor();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const merc = new Map<number, Float64Array>();
+  for (const [id, p] of pts) {
+    let m = edgeMerc.get(id);
+    if (!m || m.length !== p.length) {
+      // not kept (a move or a clear since): from the local points, float32 rounded
+      m = new Float64Array(p.length);
+      for (let k = 0; k < p.length; k += 3) (m[k] = a.merc[0] + p[k] / EARTH_C), (m[k + 1] = a.merc[1] + p[k + 1] / EARTH_C), (m[k + 2] = p[k + 2]);
+    }
+    merc.set(id, m);
+    for (let k = 0; k < m.length; k += 3) (x0 = Math.min(x0, m[k])), (x1 = Math.max(x1, m[k])), (y0 = Math.min(y0, m[k + 1])), (y1 = Math.max(y1, m[k + 1]));
+  }
+  const lng = merc.size ? Math.round(((x0 + x1) / 2) * 360 - 180) : a.lng;
+  const lat = merc.size ? Math.round((Math.asin(Math.tanh(2 * Math.PI * (0.5 - (y0 + y1) / 2))) * 180) / Math.PI) : a.lat;
+  const at = makeAnchor(lng, lat, 0), from = `${lng},${lat}`;
+  const out = new Map<number, Float32Array>(), keep = new Map<number, { m: Float64Array; from: string; d: Float32Array }>();
+  for (const [id, m] of merc) {
+    let c = diagramPts.get(id);
+    if (!c || c.m !== m || c.from !== from) {
+      const d = new Float32Array(m.length);
+      for (let k = 0; k < m.length; k += 3) (d[k] = (m[k] - at.merc[0]) * EARTH_C), (d[k + 1] = (m[k + 1] - at.merc[1]) * EARTH_C), (d[k + 2] = m[k + 2]);
+      c = { m, from, d };
+    }
+    keep.set(id, c);
+    out.set(id, c.d);
+  }
+  diagramPts.clear();
+  for (const [id, c] of keep) diagramPts.set(id, c);
+  return { pts: out, at };
+}
 /** the graph, after the network state it is of; the beside table is the one the bands just built */
 function postDiagram() {
   if (!diagramIn) return;
   const t0 = performance.now();
-  const { lines, edges, pts } = diagramIn;
+  const { lines, edges } = diagramIn;
+  const { pts, at } = diagramFrame(diagramIn.pts);
   const beside = besideSamples(bandEdges(lines), pts, new Map(edges.map((e) => [e.id, e])));
-  const graph = diagramGraph(lines, edges, pts, complexOfNodes(), beside);
+  const graph = diagramGraph(lines, edges, pts, complexOfNodes(), beside, at);
   send({ kind: "diagramGraph", graph, ms: performance.now() - t0 }, [graph.key.buffer, graph.x.buffer, graph.y.buffer, graph.ea.buffer, graph.eb.buffer, graph.first.buffer, graph.on.buffer]);
 }
 

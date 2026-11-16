@@ -44,7 +44,7 @@ export function gameGraph(city) {
   const g = { ...r, key: Int32Array.from(r.key), x: Float64Array.from(r.x), y: Float64Array.from(r.y), ea: Int32Array.from(r.ea), eb: Int32Array.from(r.eb), first: Int32Array.from(r.first), on: Int32Array.from(r.on), lines: r.lines.map((l) => ({ ...l, chain: Int32Array.from(l.chain), stop: Uint8Array.from(l.stop) })) };
   // a capture from before T-2405 has no strokes: one per colour on each edge, as the layout then drew them
   g.stroke = r.stroke ? Int32Array.from(r.stroke) : Int32Array.from(r.on, (l, k) => { let e = 0; while (r.first[e + 1] <= k) e++; for (let j = r.first[e]; j <= k; j++) if (r.lines[r.on[j]].colour === r.lines[l].colour) return r.on[j]; return l; });
-  return { g, frame: c.frame, zones: c.zones, text: c.names.text.map((t) => t ?? ''), width: Float32Array.from(c.names.width), width2: Float32Array.from(c.names.width2), fontPx: c.names.fontPx, page: c.page, captured: c.captured, fresh: c.layoutSrc === srcHash(LAYOUT_SRC), graphFresh: c.graphSrc === srcHash(GRAPH_SRC) };
+  return { g, frame: c.frame, zones: c.zones, text: c.names.text.map((t) => t ?? ''), width: Float32Array.from(c.names.width), width2: Float32Array.from(c.names.width2), fontPx: c.names.fontPx, page: c.page, captured: c.captured, fresh: false, // the page's layout is on the sheet now, so its places are not comparable with the checks' own  graphFresh: c.graphSrc === srcHash(GRAPH_SRC) };
 }
 
 /** the city names a check was asked for, each `<city>` (the save's graph, diagram-saves.mjs) or `<city>-game` */
@@ -77,8 +77,8 @@ async function capture(base, city) {
     });
     collectErrors(page, errors, NOISE);
     const sep = base.includes('?') ? '&' : '?';
-    // the layout before the rubber sheet (`sheet=0`, T-2580), which the diagram checks lay out themselves
-    await page.goto(`${base}${sep}debug=1&new=1&paused=1&demandWorkers=1&sheet=0&v=${Date.now()}`);
+    // the page lays the graph out on the rubber sheet; the checks lay it out themselves, on the engine alone
+    await page.goto(`${base}${sep}debug=1&new=1&paused=1&demandWorkers=1&v=${Date.now()}`);
     await page.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
     await importSave(page, await readFile(FILES[city]));
     await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 180000 });

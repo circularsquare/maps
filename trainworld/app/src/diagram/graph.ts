@@ -4,7 +4,7 @@
 // and the stations whose platforms lie beside its track (within NEAR_M and parallel), found from
 // corridors.ts' beside table, so an express on its own tracks shares the local's edges.
 
-import { kAtY } from "../map/geo";
+import { anchor, kAtY, type Anchor } from "../map/geo";
 import { SAMPLE_M, type Beside } from "../map/corridors";
 
 /** a platform this close to a line's track (m), and parallel to it, is passed by the line */
@@ -51,8 +51,10 @@ export interface DiagramGraph {
   /** per entry of `on`, the stroke its line is drawn in there: the lowest line of those sharing it, lines of
    * one colour and speed on the same track (T-2405) */
   stroke: Int32Array;
-  /** the middle the places are measured from, local units, and local units per metre there */
+  /** the middle the places are measured from, local units from `origin`, and local units per metre there */
   mid: [number, number];
+  /** the lng, lat the local units are measured from (T-2261: the network's own, not the camera's anchor) */
+  origin: [number, number];
   k: number;
   /** per edge, its track on the ground from a to b as one of its lines runs it, simplified (T-2169: where it crosses
    * water): x, y pairs in metres as `x`, `y`, edge e's from hopAt[e] to hopAt[e + 1] (pairs) */
@@ -91,7 +93,7 @@ export function bandEdges(lines: readonly GraphLine[]): number[] {
  * The graph. `pts`: each edge's local polyline (x, y, z triples, a to b); `complexOf`: each node's
  * complex, NO_COMPLEX for a node with no platform; `beside`: corridors.ts' table over `bandEdges`.
  */
-export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphEdge[], pts: ReadonlyMap<number, Float32Array>, complexOf: Uint32Array, beside: Beside): DiagramGraph {
+export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphEdge[], pts: ReadonlyMap<number, Float32Array>, complexOf: Uint32Array, beside: Beside, at: Anchor = anchor()): DiagramGraph {
   const ends = new Map<number, GraphEdge>();
   for (const e of edges) ends.set(e.id, e);
   const isStation = (n: number) => n < complexOf.length && complexOf[n] !== NO_COMPLEX;
@@ -269,7 +271,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   });
   mx /= Math.max(1, n);
   my /= Math.max(1, n);
-  const k = kAtY(my);
+  const k = kAtY(my, at);
   const key = new Int32Array(n), x = new Float64Array(n), y = new Float64Array(n);
   order.forEach((g, i) => {
     key[i] = keys[g];
@@ -333,7 +335,7 @@ export function diagramGraph(lines: readonly GraphLine[], edges: readonly GraphE
   });
   first[ek.length] = o;
   const { hop, hopAt } = hopTracks(ek, n, dl, out, ends, pts, cumOf, mx, my, k);
-  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), stroke: stroke.subarray(0, o), mid: [mx, my], k, hop, hopAt };
+  return { key, x, y, lines: dl, ea, eb, first, on: on.subarray(0, o), stroke: stroke.subarray(0, o), mid: [mx, my], origin: [at.lng, at.lat], k, hop, hopAt };
 }
 
 /** per edge (keys a * n + b in `ek`'s order), the track of the first line on it between its two nodes, in metres

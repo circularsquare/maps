@@ -4,9 +4,7 @@
 // stations and measures the names, and the layout worker lays it out, draws it and places the names,
 // one at a time, the newest waiting next, the last drawing staying up meanwhile. The layout is on the rubber sheet
 import { noteStaleBuild } from "../game/staleBuild";
-// (diagram/sheet.ts, sheetLines.ts; T-2568, T-2567, T-2580), the sheet kept on `window.twSheet` for checks; `?sheet=0`
-// lays out as before it, where `?diagram=r2` takes round 2's options and `?distort=0.5` that setting of the distortion
-// dial (layout.ts `DISTORT`, T-2556).
+// (diagram/sheet.ts, sheetLines.ts; T-2568, T-2567, T-2580), the sheet kept on `window.twSheet` for checks.
 //
 // Clicks and hovers are the map's (T-2163): a station selects its complex, a line the line, with the
 // map's tags; what is selected draws full and the rest faded. The camera goes with the selection, or
@@ -22,7 +20,7 @@ import { coarseOutlines } from "../map/coarseOutlines";
 import { zonesTouching } from "../game/cities";
 import { sheetZoneBox } from "./sheet";
 import { placesOfZone } from "../game/placeList";
-import { EARTH_C, toMerc01 } from "../map/geo";
+import { EARTH_C, makeAnchor, toMerc01 } from "../map/geo";
 import { placeNameInk } from "../map/basemap";
 import { SHADES } from "../game/shadeTable";
 import { DATA_BASE } from "../game/dataBase";
@@ -113,7 +111,7 @@ export function diagramTheme() {
 
 /** the graph node nearest a place on the ground, of `among` if given */
 function nearest(g: DiagramGraph, lng: number, lat: number, among?: Iterable<number>): number {
-  const [lx, ly] = toLocal(lng, lat), mx = (lx - g.mid[0]) / g.k, my = -(ly - g.mid[1]) / g.k;
+  const [lx, ly] = toLocal(lng, lat, makeAnchor(g.origin[0], g.origin[1], 0)), mx = (lx - g.mid[0]) / g.k, my = -(ly - g.mid[1]) / g.k;
   return nearestOf(g.x, g.y, mx, my, among ?? g.key.keys());
 }
 
@@ -292,9 +290,6 @@ function lineTag(l: LineInput, s: Shown, drawn: number, at: number): TipLine[] {
 }
 
 export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void {
-  const q = new URLSearchParams(location.search), options = q.get("diagram") === "r2" ? "r2" : undefined;
-  const dial = q.get("distort"), distort = dial !== null && dial !== "" && Number.isFinite(+dial) ? +dial : undefined;
-  const sheetOn = q.get("sheet") !== "0";
   const canvas = document.createElement("canvas");
   canvas.className = "diagram-canvas";
   Object.assign(canvas.style, { position: "absolute", inset: "0", width: "100%", height: "100%", zIndex: "3", display: "none", cursor: "grab", touchAction: "none" });
@@ -324,14 +319,12 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       waiting = g;
       return;
     }
-    busy = true;
     const zf = zoneFrame(g);
-    // the zones whose water masks the water is drawn from (T-2169)
-    const water = zf && diagramWater.peek() ? { packs: DATA_BASE, zones: zonesTouching(...zf.box).map((c) => c.id) } : undefined;
-    // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591); `?sheet=0` the layout
-    // before it
-    const sheet = sheetOn && zf ? { sheet: { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) } } : {};
-    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, options, distort, frame: zf?.frame, zones: zf ? newZones(zf.box) : undefined, water, ...sheet } satisfies ToDiagram);
+    // a graph with no station in the save has nothing to draw
+    if (!zf) return void (busy = false);
+    // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591)
+    const sheet = { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(zf.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) };
+    worker!.postMessage({ kind: "graph", graph: g, names: namesOf(g), seq: ++seq, frame: zf.frame, zones: newZones(zf.box), water: diagramWater.peek(), sheet } satisfies ToDiagram);
   };
   // T-2168: the zones' coarse outlines, each sent to the worker once, for the zones near the network
   let outlineMap: ReadonlyMap<string, MultiPolygon> | null = null, lastBox: [number, number, number, number] | null = null;
@@ -375,7 +368,6 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     })).then((towns) => worker?.postMessage({ kind: "towns", towns } satisfies ToDiagram));
   };
   let shownSeq = -1;
-  let waterMs: unknown = null;
   // T-2887: shares waiting for a layout of the network as it is now; with the diagram down the clock worker posts the
   // graph just for them
   let forShare: ((s: Shown | null) => void)[] = [], shareTimer = 0;
@@ -408,7 +400,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           return;
         }
         if (e.data.kind === "water") {
-          if (shown && e.data.seq === shownSeq && diagramWater.peek()) (shown.d.water = e.data.water), (waterMs = e.data.ms), draw();
+          if (shown && e.data.seq === shownSeq && diagramWater.peek()) (shown.d.water = e.data.water), draw();
           return;
         }
         if (e.data.kind === "sheet") {
@@ -430,7 +422,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         diagramProgress.value = null;
         diagramReady.value = true;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
-        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch, water: () => ({ ms: waterMs, stats: shown?.d.water?.stats, sea: shown?.d.water?.seaStats }) };
+        (window as unknown as { twDiagram: unknown }).twDiagram = { layouts: e.data.seq, ms: { ...layout.ms, ...e.data.ms }, complexes: graph.key.length, pieces: layout.pieces.length, names: names.at.map((l, i) => [names.levels[i], l.node.length]), cities: () => { const c = shown?.names.cities; return c ? [...c.order].map((b) => c.text[b]) : null; }, look: (fx: number, fy: number, pitchPx: number) => { const b = shown!.d.box; (cx = b[0] + (b[2] - b[0]) * fx), (cy = b[1] + (b[3] - b[1]) * fy), (scale = pitchPx / shown!.d.pitch), draw(); }, centreOn: (name: string, pitchPx: number) => { const i = nodeNamed(name); if (i < 0) return false; (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); return true; }, centre: (lng: number, lat: number, pitchPx: number) => { const i = nearest(graph, lng, lat); (cx = layout.x[i]), (cy = layout.y[i]), (scale = pitchPx / shown!.d.pitch), draw(); }, borders: (on?: boolean) => { const b = shown?.d.borders; if (on === false && b) (b.cmds = new Float64Array(0)), (b.path = undefined), draw(); return b ? b.cmds.length : -1; }, bench: (k: number) => { const t = performance.now(); for (let j = 0; j < k; j++) paintNow(); return (performance.now() - t) / k; }, where: (name: string) => whereOf(nodeNamed(name)), linePoint, middle: () => { const s = shown!; const i = nearestOf(s.x, s.y, cx, cy, s.graph.key.keys()); return s.names.text[i]; }, pitchPx: () => scale * shown!.d.pitch };
         if (!placed) place();
         draw();
         wantTowns(names.cities?.want);

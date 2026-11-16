@@ -5,7 +5,7 @@ graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T
 camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' borders (T-2464;
 notes/T-2464.md) and city and zone names (T-2438, T-2640); water is T-2169. The diagram is laid out on the **rubber sheet**
 (T-2566 to T-2580; its section at the end): the sheet's stages replace The layout's A and blocks' stage, Zone borders
-and Water below, which describe the layout before it, kept behind `?sheet=0` in the page's address.
+and Water below, whose code is deleted (T-2590): they describe how the old layout drew those, as the reasons and figures the sheet's map carries on; the sheet is the only layout.
 
 ## The button and key M
 
@@ -22,8 +22,7 @@ save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
 the rest; the layout 0.85 of the whole, the names the last 0.15; a post each percent).
-Drag pans, the wheel zooms about the pointer, drawn once a frame. `?diagram=r2` lays it out with round
-2's options.
+Drag pans, the wheel zooms about the pointer, drawn once a frame.
 
 - **The camera** (T-2163): each time it opens it is centred on the selection (a station's complex; for
   a line or group, of its stops the one nearest the map's centre), else on the complex nearest the
@@ -126,7 +125,7 @@ pressed while on; the choice is kept in localStorage as `anitabuilder-diagram-wa
 Turning it on lays the diagram out again with the water asked for (the layout keeps the sea open, so it cannot be added
 to a finished one). The T-2169 checks call the water code directly and ignore the button.
 
-`diagram/waterReal.ts`, `diagram/water.ts`, `diagram/waterSea.ts` (T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
+`diagram/waterReal.ts` and the water's drawing in `diagram/sheetLines.ts` (`diagram/water.ts` holds only its type; T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
 notes/T-2497.md, notes/T-2516.md, notes/T-2540.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
 coast drawn a little wrong shows less). The page names the zones near the network and the worker fetches their water
@@ -343,7 +342,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   the big sparse regions' floor (0.25 at 1). So 1 evens hop lengths fully and 0 draws every hop at its real length;
   the room for bundles and pills, the gaps the water and the blocks keep, the octilinear snapping and the routing are
   the same at any setting, so dense cores still open up. At 0.5 the power is 0.65, the lonely and local share 0.63 and
-  the floor 0.5; the figures below are the dial's 1. `?distort=0.5` in the page's address lays out at that setting.
+  the floor 0.5; the figures below are the dial's 1.
 - **A**: real directions, each hop's length `1000 m x (length / 1000 m)^0.3`, 10 rounds up to 2,000
   complexes, rising evenly to 40 at 8,000 and over (a country's long stretches only reach their targets in
   that many; T-2289). With two blocks or more (below), A lays out each block as if alone: the hops between
@@ -493,7 +492,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
 
 ## The rubber sheet
 
-**The diagram's layout (T-2568, T-2567, T-2580); `?sheet=0` in the page's address lays out as before it.** The page
+**The diagram's layout (T-2568, T-2567, T-2580).** The page
 sends the worker, with each graph, the zones whose boxes meet the sheet's box (the stations' box and the sheet's margin,
 the larger of 8 km and 8% of its diagonal, a quarter more for the scale; `sheetZoneBox`, T-2591), so the ground the sheet
 reads is a mask's wherever a zone has one, and the worker reads their water masks, finds the sea on
@@ -503,8 +502,7 @@ land kept near its shape and water giving way. The lines are then laid out on th
 borders drawn from the ground carried with them (`diagram/sheetLines.ts`, `diagram/sheetThin.ts`, notes/T-2567.md,
 notes/T-2580.md; below), in place of The layout's A and blocks' stage, the Zone borders above and the Water above. The
 sheet is posted as a `sheet` message too, which the page keeps as `window.twSheet` for checks. The loading bar follows
-the sheet (a tenth), the lines and the carry (seven tenths) and the map. With `?sheet=0` the page sends no `sheet` and
-none of this runs.
+the sheet (a tenth), the lines and the carry (seven tenths) and the map.
 
 - **The field**: the scale each station asks (its room, `gap` and `core`, at the dial's 0.5), times its **centre
   zoom** (T-3345, Anita, 2026-11-12: "ok can do bigger centers, looks nice"): the median distance to the 4th nearest
