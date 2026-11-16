@@ -4,8 +4,8 @@
 //    stays through High speed and Tram; Single goes with High speed and Tram (T-3352); the
 //    count picked survives a reload.
 //  B (T-3260) a segment, then the next with Ctrl held: the ghost's end is on the straight line on from the first
-//    (under 1 m off), the placed piece is straight; without Ctrl the same pointer curves; the tag says "Hold Ctrl
-//    to draw straight" without Ctrl and not with it.
+//    (under 1 m off), the placed piece is straight; without Ctrl the same pointer curves; Ctrl's
+//    straight line has no hint in the tag (dropped on purpose, Anita 2026-11-12).
 //  C (T-3263) Snap to roads with every ghost answer held 150 ms (a slow track model): a pointer moving every
 //    8 ms for 2 s still updates the ghost (at least 3 times; it was 0 before T-3263); a click then places the road route.
 //  D (T-3261) quad track on roads, two segments chained round a corner: both placed, and no node joins three
@@ -97,7 +97,7 @@ try {
   const tagFree = await page.evaluate(() => window.tw.tools.tag.innerText);
   const curved = await page.evaluate(() => { const a = window.tw.tools.lastPreview?.arc; return a && a.length >= 3 ? a[2] : 0; });
   check(curved > 0, 'B: without Ctrl the segment curves', `arc radius ${Math.round(curved)}`);
-  check(/Hold Ctrl to draw straight/.test(tagFree), 'B: the tag says Hold Ctrl to draw straight', tagFree.replace(/\n/g, ' | '));
+  check(!/Hold Ctrl to draw straight/.test(tagFree), 'B: the tag has no Ctrl-straight hint', tagFree.replace(/\n/g, ' | '));
   await page.screenshot({ path: join(OUT, 'check-b-no-ctrl.png') });
   await page.keyboard.down('Control');
   await page.mouse.move(cx + 151, cy + 21, { steps: 2 });
@@ -109,7 +109,7 @@ try {
     return { off: Math.abs((ex - sx) * uy - (ey - sy) * ux), ok: pv.ok, arc: pv.arc && pv.arc.length >= 3 ? pv.arc[2] : 0, tag: T.tag.innerText, n: v.length / 4 };
   });
   check(g.ok && g.off < 1 && g.n === 2, 'B: with Ctrl the ghost ends on the straight line on, no corner', JSON.stringify({ off: g.off, n: g.n, arc: g.arc }));
-  check(!/Hold Ctrl/.test(g.tag), 'B: and the tag drops the Ctrl line', g.tag.replace(/\n/g, ' | '));
+  check(!/Hold Ctrl to draw straight/.test(g.tag), 'B: and still none with Ctrl held', g.tag.replace(/\n/g, ' | '));
   await page.screenshot({ path: join(OUT, 'check-b-ctrl-ghost.png') });
   const before = await page.evaluate(() => window.tw.world.value.edges.length);
   await page.mouse.click(cx + 151, cy + 21);

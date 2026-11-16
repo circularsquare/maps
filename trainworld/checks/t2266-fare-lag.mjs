@@ -2,7 +2,7 @@
 // then (while that is solving) set it to 5x. The fare controls (moneyState) show each at once; fare income a
 // game hour stays what it was with the old fares until riders solved with the new curve show (a cluster's
 // final, then the solve's final) and ends at the new-fare figure, every line priced
-// at 5x. The 10x curve, overtaken by the second edit, is never used.
+// at 5x. The second edit waits for the 10x solve (T-3303), so the 10x curve shows only as that solve's whole final.
 //   node trainworld/checks/t2266-fare-lag.mjs [url] [save] [out.json]
 // from the maps root, on your own Vite (port 6172 by default), DEMAND_WORKERS demand workers (2 by default);
 // about 5 minutes. Income is game US$ (the economy's 100x) per game hour, weekday, 24-hour mean.
@@ -113,7 +113,8 @@ try {
   check('income does not move while every line is on the old fares', oldOnly.length > 5 && worstOld < 0.001, `${oldOnly.length} samples, worst ${(worstOld * 100).toFixed(3)}%`);
   const peak = Math.max(...seen.map((s) => s.income));
   check('income before the final stays far under the no-rule spike', peak < spike / 2, `highest ${Math.round(peak).toLocaleString()} against ${Math.round(spike).toLocaleString()}`);
-  check('the 10x curve was never used', !seen.some((s) => s.mix[10] !== undefined));
+  const tenMixed = seen.filter((s) => s.mix[10] !== undefined && Object.keys(s.mix).length > 1);
+  check('the 10x curve shows only as a whole final, never mixed with other fares', tenMixed.length === 0, `${tenMixed.length} mixed samples`);
   check('after the final every line is priced at the last curve (5x)', Object.keys(f.mix).length === 1 && f.mix[5] > 0 && f.controls === 5, JSON.stringify(f.mix));
   check('income moved to the new-fare figure', Math.abs(f.income / v0.income - 1) > 0.02, `${(f.income / v0.income).toFixed(3)} of before`);
 } catch (e) {

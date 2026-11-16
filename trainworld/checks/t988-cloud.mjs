@@ -149,7 +149,7 @@ try {
   const headOut = await tipOf(a, '.saves-head .save-head-mark');
   const icons = await a.locator('.save-slots li.on .save-actions button').evaluateAll((bs) => bs.map((b) => b.dataset.tip?.replace(/ \(Ctrl\+S\).*/, '') ?? b.textContent));
   await shotsOf(a, T1395, 'built-a');
-  report('signed out: head and card icons', headOut === 'Kept in this browser only. Sign in to keep your games on your account.' && icons.join('|') === 'Make a copy|Download as a file|Earlier versions|Save this game now',
+  report('signed out: head and card icons', headOut === 'Kept in this browser only. Sign in to keep your games on your account.' && icons.join('|') === 'Make a copy of this save|Download as a file|Delete|Save this game now',
     `("${headOut}"; ${icons.join(', ')})`);
   await panel(a, false);
 
@@ -179,6 +179,9 @@ try {
 
   // 3. B signs in on the start menu: the account's game is a card there; opening it claims it
   let b = await open(B);
+  // a device with no games opens on the new-game screen; its Back leads to the menu with the account button
+  await b.waitForSelector('.start-menu', { timeout: 60000 });
+  if (!await b.locator('.start-menu .acct-start').isVisible()) await b.click('.start-menu button:text-is("Back")');
   await b.waitForSelector('.start-menu .acct-start', { timeout: 60000 });
   await b.click('.start-menu .acct-start');
   await signInDev(b);
@@ -345,6 +348,7 @@ try {
   report('no page errors', errors.length === 0, errors.slice(0, 4).join(' | '));
 } catch (err) {
   report('ran to the end', false, String(err?.stack ?? err));
+  for (const d of devices) await d.page?.screenshot({ path: join(ARTIFACTS, `t988-failed-${d.name}.png`) }).catch(() => {});
 } finally {
   for (const d of devices) await d.close().catch(() => {});
   if (OWN_SERVER) { stopServer(); await pause(500); rmSync(serverDir, { recursive: true, force: true }); }

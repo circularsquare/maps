@@ -116,7 +116,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network);
-  the **roads switch** (hover "Snap to roads", then "Hold Ctrl to draw straight"; rail only, off by default; excludes
+  the **roads switch** (hover "Snap to roads", then "Hold Ctrl to draw by hand"; rail only, off by default; excludes
   the other two snaps) [T-3129]: [track-and-service.md](track-and-service.md) "Snap to roads";
   and the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
   region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
@@ -344,8 +344,7 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   real network or the roads or streets (with Snap to roads, Ctrl draws by hand, so straight; with Tram it
   flips the street snap as before, and straight only where that leaves the segment off the streets). Ramps
   over crossed track are unchanged (they change the level, not the line); as Ctrl joins nothing, it makes no
-  junction and so no flyover. While a segment is drawn on from track and Ctrl is not held, the tag's last line,
-  greyed, says "Hold Ctrl to draw straight" (not on touch).
+  junction and so no flyover. Nothing in the tag says so (dropped on purpose, Anita 2026-11-12).
 - **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
   outline outside the rails (black; the map's ink, near white, in the dark theme; `ghost` in
   `game/shadeTable.ts`) [T-1054]. The middle is coloured

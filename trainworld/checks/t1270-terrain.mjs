@@ -1,6 +1,6 @@
 // T-1270 in a new game through the edit API: track priced by the ground's terrain class. A
-// kilometre or so at ground level on flat ground in Brooklyn costs 22.5 US$M a km, the same at
-// ground level on mountain ground above Innsbruck 11x that (0.3 + 3, T-1928), and a bored tunnel (-2) there its flat
+// kilometre or so at ground level on flat ground in Brooklyn costs 37.5 US$M a km, the same at
+// ground level on mountain ground above Innsbruck 7x that (0.5 + 3, T-1928), and a bored tunnel (-2) there its flat
 // 120; Construct charges the quote. The spots come from the zones' terrain files (a run of cells of
 // one class). Then screenshots: the hillshade (Settings, Terrain) at Innsbruck in both themes, and
 // the track tool's tag over a mountain segment. About a minute.
@@ -102,27 +102,30 @@ try {
     const cost = es.reduce((s, e) => s + e.cost, 0) / 1e6, km = es.reduce((s, e) => s + e.lengthM, 0) / 1000;
     // the quote's rows, seven numbers each, asked as the Build tab asks (T-1171)
     const quoted = await tw.client.query({ what: 'blueprintQuote' }), rows = [];
-    for (let i = 0; i + 6 < quoted.length; i += 7) if (quoted[i] === 6) rows.push([quoted[i + 1], Math.round(quoted[i + 6])]);
+    for (let i = 0; i + 6 < quoted.length; i += 7) if (quoted[i] === 0 && quoted[i + 4] > 0) rows.push([quoted[i + 4], Math.round(quoted[i + 6])]);
     return { perKm: cost / km, km, quote: tw.world.value.money.blueprintCost / 1e6, rows };
   }, [a, b, level]);
 
   const plain = await segment(flatA, flatB, 0);
-  check(!plain.error && Math.abs(plain.perKm - 22.5) < 0.5, `flat ground at 0: ${plain.perKm?.toFixed(2) ?? plain.error} US$M a km (22.5)`);
+  check(!plain.error && Math.abs(plain.perKm - 37.5) < 0.5, `flat ground at 0: ${plain.perKm?.toFixed(2) ?? plain.error} US$M a km (37.5)`);
   const ground = await segment(mtn.a, mtn.b, 0);
-  check(!ground.error && Math.abs(ground.perKm - 247.5) < 4, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (247.5: 0.3 + 3, T-1928)`);
+  check(!ground.error && Math.abs(ground.perKm - 262.5) < 4, `mountain ground at 0: ${ground.perKm?.toFixed(2) ?? ground.error} US$M a km (262.5: 0.5 + 3, T-1928)`);
   check(ground.rows?.some(([cls]) => cls === 3), `the blueprint breakdown has a mountain row (${JSON.stringify(ground.rows)})`);
   const dy = 0.004; // a parallel run 450 m south, for the tunnel
   const tunnel = await segment([mtn.a[0], mtn.a[1] - dy], [mtn.b[0], mtn.b[1] - dy], -2);
   check(!tunnel.error && Math.abs(tunnel.perKm - 120) < 0.5, `a bored tunnel at -2 there: ${tunnel.perKm?.toFixed(2) ?? tunnel.error} US$M a km (120)`);
 
-  // Construct charges what the quote says
+  // Construct charges what the quote says, plus the road crossings of the ground-level piece in the city: the
+  // route edit fetches no road tiles, so the quote is priced without them and Construct fetches them and charges
+  // US$10M each (T-2613, docs/track-and-service.md "Road crossings")
   const built = await page.evaluate(async () => {
     const tw = window.tw;
     const quote = tw.world.value.money.blueprintCost / 1e6;
     const r = await tw.client.edit({ op: 'constructAll' });
     return { ok: r.ok, charge: r.charge, quote };
   });
-  check(built.ok && Math.abs(built.charge - built.quote) < 0.01, `Construct charged ${built.charge?.toFixed(1)} against the quote ${built.quote?.toFixed(1)} US$M`);
+  const extra = built.charge - built.quote;
+  check(built.ok && extra > -0.01 && Math.abs(extra / 10 - Math.round(extra / 10)) < 0.001, `Construct charged ${built.charge?.toFixed(1)} against the quote ${built.quote?.toFixed(1)} US$M (the difference is whole road crossings of 10)`);
 
   // screenshots: the hillshade in both themes, then the tool's tag over a mountain segment
   for (const theme of ['light', 'dark']) {
