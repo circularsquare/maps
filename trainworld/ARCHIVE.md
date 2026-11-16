@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3438 [P3] {L:translations} Changshu shows its English name in Chinese (2026-11-16): already fixed by T-3318 (fd613794): cau reads 常熟 in ja and zh.
+- T-3437 [P3] {L:translations} Hyogo shows as Osaka (2026-11-16): already fixed by T-3318 (fd613794): osa reads Kansai in ja and zh; checks/t3318-zone-names.mjs passes.
+- T-2906 [P3] {L:map-look} More hairstyles (2026-11-16): ponytail and wavy hairstyles; wavy weighted by region (Japan 2%, US 15%, Nigeria 17% of faces).
+- T-3439 [P3] {L:translations} Arnavutkoy shown as a city, not an Istanbul district (2026-11-16): zone arv named "Arnavutköy, Istanbul".
+- T-3308 [P3] {L:translations} Blank page in Chinese compatibility browsers (2026-11-16): a nomodule script (app/public/legacy-browser.js) hides the game and asks, in Chinese, to switch to speed mode; not tried in a real 360/QQ/Sogou browser.
 - T-1882 [P3] {L:checks} Terrain check may be out of date (2026-11-16): t1270-terrain updated to today's prices and quote layout; passes.
 - T-3322 [P3] {L:fares} Fare lag check fails on master (taking, 2026-11-16, agent b3) (2026-11-16): check and docs agree: a 10x line shows only as a whole final; real save passes.
 - T-3371 [P3] {L:checks} Track bar check fails on master (2026-11-16): t3260-track-bar expects no Ctrl hint, per her 11-12 decision; docs match.
