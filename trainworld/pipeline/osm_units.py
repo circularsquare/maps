@@ -46,6 +46,15 @@ MIN_PART_KM2 = 0.05  # outline pieces smaller than this are slivers left by the 
 # residential, 0.07 km2 non-residential) have no residents but are city; its empty islets (Southern Group 0.02
 # km2, Changi Bay's reclaimed strips 0.11) and nature reserves have next to none.
 BUILT_KEEP_M2 = 200_000
+# T-3428: land the units never covered because it was sea when their polygons were drawn (Shenzhen's Houhai and
+# Shenzhen Bay Port reclamation: 6 km2 in no zone, so no demand there). A piece of land that lies within
+# RECLAIM_KM of the units, is closed in by units and sea (at most RECLAIM_OPEN of its edge on other land),
+# and is RECLAIM_MIN_KM2 to RECLAIM_MAX_KM2 joins the unit it shares the longest edge with.
+RECLAIM_KM = 3.0
+RECLAIM_REACH_KM = 2.5   # a piece reaching past this may be cut by the search edge, so it may run on inland
+RECLAIM_OPEN = 0.1
+RECLAIM_MIN_KM2 = 0.1
+RECLAIM_MAX_KM2 = 50.0
 OSM = os.path.join(b.RAW, "osm")
 # the real packs, which a new outline is cut along: from this file, not b.ROOT, which a scratch
 # tree's redirect has already moved by the time this module loads (world_run's Redirect.KEEP)
@@ -384,6 +393,10 @@ def build(cid, row, sources):
             feats.append({"name": gname, "local": "", "plan_unit": uid, "source": src, "match": round(iou, 3)})
             print(f"  {cid}: {uid} {gname}: {share:.0%} of its land from {src} "
                   f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
+    for j, piece in reclaimed(geoms, sea, lat0):
+        print(f"  {cid}: {feats[j]['name']} takes {km2(piece, lat0):.1f} km2 of reclaimed land at "
+              f"{piece.centroid.x:.3f}, {piece.centroid.y:.3f}", flush=True)
+        geoms[j] = make_valid(union_all([geoms[j], piece]))
     out_units = [{"type": "Feature", "properties": props, "geometry": mapping(g)} for props, g in zip(feats, geoms)]
     whole = union_all([shape(f["geometry"]) for f in out_units]).buffer(0)
     shells = [shapely.Polygon(p.exterior) for p in shapely.get_parts(whole) if p.geom_type == "Polygon"]
@@ -426,6 +439,43 @@ def build(cid, row, sources):
             json.dump(doc, f, ensure_ascii=False)
         os.replace(path + ".part", path)
     return stem + ".outline.geojson"
+
+
+def _polys_in(water, bounds):
+    c = shapely.clip_by_rect(water, *bounds)
+    return shapely.MultiPolygon([q for x in shapely.get_parts(c) for q in shapely.get_parts(x) if q.geom_type == "Polygon"])
+
+
+def reclaimed(geoms, sea, lat0):
+    """T-3428: [(index into geoms, piece)] for coastal land no geometry covers, to be added to that geometry.
+    Pieces are land beside the geometries, closed in by them and the sea (a strip of inland land next to another
+    country, or a pack, is open along its far edge and stays out)."""
+    if not geoms:
+        return []
+    k = np.cos(np.radians(lat0))
+    deg = RECLAIM_KM / 111.0
+    loc = [make_valid(_local(g, lat0)) for g in geoms]
+    cov = union_all(loc)
+    zone = cov.buffer(deg)
+    water = _local(_polys_in(sea, shapely.transform(zone, lambda a: a / [k, 1.0]).bounds), lat0)
+    gap = make_valid(zone.difference(cov)).difference(make_valid(water))
+    near = cov.buffer(RECLAIM_REACH_KM / 111.0)
+    tol = 0.0005
+    closed = cov.union(water).buffer(tol)
+    out = []
+    for p in shapely.get_parts(gap):
+        if p.geom_type != "Polygon" or not p.intersects(cov.buffer(tol)):
+            continue
+        a = p.area * 111.32 * 110.57
+        if a < RECLAIM_MIN_KM2 or a > RECLAIM_MAX_KM2 or not near.contains(p):
+            continue
+        edge = p.exterior
+        if edge.difference(closed).length / edge.length > RECLAIM_OPEN:
+            continue
+        share = [edge.intersection(g.buffer(tol)).length for g in loc]
+        j = int(np.argmax(share))
+        out.append((j, shapely.transform(p, lambda c: c / [k, 1.0])))
+    return out
 
 
 _LINES = {}

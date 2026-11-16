@@ -29710,6 +29710,10 @@
       {
         "name": "Singapore",
         "regionName": "Singapore region"
+      },
+      {
+        "name": "Shenzhen",
+        "regionName": "Shenzhen region"
       }
     ],
     "rule": {
@@ -40950,31 +40954,6 @@
       "place": 2596,
       "country": "CN",
       "localTrips": 5647260.0,
-      "realm": "cn-south"
-    },
-    {
-      "id": "shz",
-      "name": "Shenzhen",
-      "origin": {
-        "lon": 114.0957,
-        "lat": 22.5668
-      },
-      "center": [
-        114.0957,
-        22.5668
-      ],
-      "zoom": 11.2,
-      "utcOffset": 8,
-      "market": -1,
-      "box": [
-        113.727,
-        22.428,
-        114.643,
-        22.883
-      ],
-      "place": 2598,
-      "country": "CN",
-      "localTrips": 48815959.0,
       "realm": "cn-south"
     },
     {
@@ -134478,6 +134457,30 @@
       "country": "SG",
       "localTrips": 17748332.0,
       "realm": "singapore"
+    },
+    {
+      "id": "shz",
+      "name": "Shenzhen",
+      "origin": {
+        "lon": 114.0957,
+        "lat": 22.5668
+      },
+      "center": [
+        114.0957,
+        22.5668
+      ],
+      "zoom": 11.2,
+      "utcOffset": 8,
+      "market": -1,
+      "box": [
+        113.727,
+        22.428,
+        114.643,
+        22.883
+      ],
+      "place": 7423,
+      "country": "CN",
+      "realm": "cn-south"
     }
   ]
 }

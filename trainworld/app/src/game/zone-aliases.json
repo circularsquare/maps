@@ -423,7 +423,6 @@
 "gua": ["广州市", "广州", "羊城", "省城", "穗城", "花城", "五羊城", "穗", "广", "省", "Shiqi", "石碁镇", "石碁"],
 "shn": ["Jieyang", "揭阳市", "揭阳", "汕头市", "汕头", "Chaozhou", "潮州市", "潮州", "海阳县", "Jiexi", "揭西县", "揭西", "Lianxia", "莲下镇", "莲下"],
 "hui": ["惠州市", "惠州", "惠阳县"],
-"shz": ["深圳市", "深圳", "Luohu", "罗湖区", "罗湖社区"],
 "dog": ["东莞市", "Huangjiang", "黄江镇", "黄江"],
 "fos": ["佛山市", "佛山", "Nanhai", "南海区", "南海", "Shishan", "狮山镇", "狮山", "狮山街道", "Dali", "大沥镇", "大沥", "大沥街道", "Lishui", "里水镇", "里水", "Xiqiao", "西樵镇", "西樵"],
 "zho": ["中山市", "中山", "香山"],
@@ -3444,5 +3443,6 @@
 "kuz": ["Liepāja", "Ventspils"],
 "tlk": ["Skien", "Porsgrunn"],
 "ute": ["Utena", "Visaginas", "Sniečkus"],
-"sin": ["Republic of Singapore"]
+"sin": ["Republic of Singapore"],
+"shz": ["深圳市", "深圳", "Luohu", "罗湖区", "罗湖社区"]
 }

@@ -324,7 +324,7 @@ sources. Each field comes from the row or a rule:
   the unit's own polygon when that is at least a tenth of it, and the build prints each such unit
   (T-610); a NUTS-3 unit's polygon may not ship (non-commercial terms), so its gap takes the
   geoBoundaries units lying mostly inside it instead, at the finest level with an open licence
-  (T-925, data-register.md). Units are clipped to the OSM coastline, holes filled, the outline cut along every
+  (T-925, data-register.md). Units are clipped to the OSM coastline, holes filled, coastal land within 3 km of the units that none of them covers (reclaimed after the polygons were drawn: Shenzhen's Houhai, 6 km2) joins the unit it borders longest when units and sea close it in (`osm_units.reclaimed`, T-3428), the outline cut along every
   existing pack, and pieces under 0.05 km2 or with nobody in them (GHSL 100 m) dropped, unless a piece with nobody
   in it holds 0.2 km2 of GHSL built surface (all buildings, 2020, `BUILT_KEEP_M2`; T-3375: Singapore's Jurong Island
   and Sentosa, which have no residents; an empty islet or a reserve has next to none). Units with

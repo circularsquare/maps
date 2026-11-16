@@ -358,9 +358,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your scratch pad 2026-11-16 asked why. Since T-718 (10-19) walks to several stations were averaged, adding ln(n)/0.1 felt minutes, so a feeder stop near the terminal made rail dearer. With the fix: New York-Philadelphia 2,355 / 6,171 / 10,237 longer rail trips as feeders are added (was falling to 1,668), Beijing-Tianjin 4.2k / 9.5k / 12.4k, real save longer trips by rail 4.8k to 91k, all rail +0.8%, ceiling tests unchanged.
   - Goal: Feeders always help long-distance rail. Fix ready in .tw-trees/feeders.
   - Other: Changelog draft: "feeder lines helped long-distance trips again: a metro or bus stop beside an inter-city station no longer counted against the train". notes/T-3426.md
-- T-3428 [P3] {L:jobs-places} Missing data at Shenzhen Bay Port and Tide Park (taking, 2026-11-16, agent shenzhen)
-  - Context: Your scratch pad 2026-11-16: "people reported missing data in shenzhen bay port/tide park"
-  - Goal: Find what is missing there (homes, jobs, places, zones) and why; fix it if small, else say what a fix takes.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
