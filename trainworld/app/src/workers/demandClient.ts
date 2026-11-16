@@ -816,6 +816,7 @@ class DemandClient {
     for (let i = 0; i <= n; i++) this.periodsOf.push(i < n ? periodsOfWorker(i, n) : []);
     this.marketsOf = marketsOfWorkers(n);
     for (let i = 0; i <= n; i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
+    if (this.viewHeld) setTimeout(() => this.releaseView(), 10_000);
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
@@ -920,6 +921,7 @@ class DemandClient {
   stationsAhead(frame: FrameSpec, xy: Float64Array, fine: string[] | null = null, built: string[][] | null = null) {
     // T-1223: a game loading: its fine set is made afresh, from the save's list if it has one
     this.lodReset(fine, built);
+    queueMicrotask(() => this.releaseView()); // after the camera's move to the save's view, which follows this call
     if (this.failed || xy.length < 2) return;
     this.endFocus(); // (a game picked while another loaded)
     this.startFocus();
@@ -984,7 +986,19 @@ class DemandClient {
   /** T-318: the viewed zone alone; empty over dead space, where nothing loads for the view, and
    * (T-871) zoomed out past `ZONE_LOAD_ZOOM`. */
   private viewedSet(): Set<CityId> {
+    if (this.viewHeld) return new Set();
     return this.withoutBroken(new Set(viewedZone.peek() && zonesLoadForView.peek() ? [activeCity.peek()] : []));
+  }
+
+  /** T-899: a saved game's pick has not yet moved the camera to the save's own view, so the zone in view is
+   * only the page's default (New York): nothing loads for the view until the save's stations or network arrive
+   * (or after 10 s, if neither does). */
+  private viewHeld = SAVED_GAME;
+  private releaseView() {
+    if (!this.viewHeld) return;
+    this.viewHeld = false;
+    this.ensure();
+    this.focusSoon();
   }
 
   /** T-2453: the zone the city view shows (a city selection), when it is not the zone in view */
@@ -3521,6 +3535,7 @@ class DemandClient {
 
   /** A network from the clock worker (T-025), or the test network. */
   submitNetwork(snap: NetworkSnapshot) {
+    this.releaseView();
     let svc = serviceFromSnapshot(snap);
     const key = keyOf(svc);
     if (this.pauseHolds(snap, key)) return;
@@ -4932,11 +4947,14 @@ const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";
 /** T-351: the page starts a new game (`?new=1`, or the start menu's New game, T-677): no stations,
  * so the viewed zone opens bare from the start. */
 let NEW_GAME = false;
+/** T-899: the page opens a saved game (not a new one), whose own view the camera has yet to reach */
+let SAVED_GAME = false;
 
 /** Start the pool for a city. With `?demandTest=1` it solves T-005's hand-made network. */
 export function startDemand(city = HOME_CITY, newGame = false) {
   if (client) return client;
   NEW_GAME = newGame && !TEST;
+  SAVED_GAME = !newGame && !TEST;
   const c = (client = new DemandClient(city));
   onLoadStop((why) => c.fail(why));
   setDownloadProbe(() => c.oldestDownload()); // T-2756
