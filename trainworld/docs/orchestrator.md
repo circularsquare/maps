@@ -63,7 +63,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 2. Commit explicit `trainworld/` paths (and the root `serve.py` when the change is for the board: Anita 2026-11-16, "yes
    please commit board-related serve changes from now on"), one plain sentence (`git commit -m "..." -- <paths>`; `git add` new files
    first). Check the staged diff of shared docs right before: an agent's half-written paragraph rode along once.
-   Commit at the end of a round or when a snapshot build needs it; push maps master a couple of times a session.
+   Commit at the end of a round or when a snapshot build needs it, folding small changes together; push maps master
+   regularly (Anita 2026-11-16: "feel free to be pushing this regulrly").
 3. Rebuild 8800: `cmd /c "trainworld\checks\snapbuild.cmd <hash> > <scratch>\snapbuild.log 2>&1"` from the maps root
    (`snapbuild-frozen.cmd <hash> <freeze>` while a country run owns `data/packs`). It checks out `.tw-snap` at the
    commit, builds into `dist-new` and swaps it in. Never two at once. No smoke needed for a 8800 rebuild.
