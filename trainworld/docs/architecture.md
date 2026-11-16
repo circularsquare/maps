@@ -385,12 +385,19 @@ Web first, so it can be shared as a link.
   whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
   together and without counting as a panic; the network is solved once more, questions wait for that
   final, and a worker is not restarted again until its memory or need has moved by 384 MB. Before
-  each solve the pool drops solving workers while 0.6 GB for the page, each worker's need plus 0.7 GB
+  each solve the pool drops solving workers while 0.6 GB for the page, each worker's need plus 0.15 GB
   for its JS heap (or, on a cross-origin isolated page, `measureUserAgentSpecificMemory`'s measure of
   everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), the device's
-  memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported. The periods are dealt again (`periods`, taken up
-  between solves) and every worker composes afresh; no figure changes. It never grows back in a page
-  (T-1366). `?perfOff=cap` turns the shrinking off; check `t1205-memory.mjs`.
+  memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported; or while the solving workers
+  together (need plus 0.15 GB each) would pass 17.5% of that budget (`SOLVING_SHARE`, T-3373: 1.4 GB on a
+  reported 8, so New York's real save runs 2 and all of China 1; memory over speed, Anita 2026-11-16; not with
+  Settings' "Use more cores" on, whose player chose speed). The
+  same test runs whenever a zone opens in a solving worker while no solve is out, and a loading save's pool is
+  cut before its packs open, by `memoryCheck`'s estimate of a worker for the zones its stations reach
+  (`capAhead`). The periods are dealt again (`periods`, taken up between solves) and every worker composes
+  afresh; no figure changes. It never grows back in a page (T-1366). `?perfOff=cap` turns the shrinking off,
+  `?demandWorkers=N` sets the pool and keeps it (`auto`: the page's own rule, for a check whose core plan would
+  add one); check `t1205-memory.mjs`.
 
 ### Threads, pipeline and determinism
 

@@ -334,7 +334,7 @@ until a copy is saved, T-320, so it is safe in a browser profile holding real ga
 the two below skipping the start menu (T-677),
 `?acct=local|live|off` (which account server a localhost page uses, remembered; none by default,
 T-972), `?synth=1&lines=500&trains=10000`, `?demandTest=1` (demand on T-005's hand-made network; both also
-never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N`, `?focusWorkers=N` (the focus pool's size),
+never autosave), `?backupMs=N` (wall ms between a slot's backups, T-744), `?demandWorkers=N` (`auto`: the page's own pool rule, where a check's core plan would add a number), `?focusWorkers=N` (the focus pool's size),
 `?memFree=MB` (the free memory a check pretends), `?lod=` (a fixed level of detail, `workers/demandLod.ts`), `?opened=all` (no realm
 hidden; checks that visit zones in every realm), `?patch=check|shiftcheck|0` (patched against whole builds, `game/patchMode.ts`),
 `window.twSheet` (the diagram's last rubber sheet, T-2568), `?rawdem=1` (the hillshade as it comes), `?logo=0` (no start menu logo),

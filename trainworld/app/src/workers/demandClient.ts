@@ -86,6 +86,7 @@ import { citiesReached, footprintOf, loadFootprints, REACH_M, zonesNearStations,
 import { nearbyZones, zoneAt, zonesLoadForView } from "../game/zones";
 import { packToLngLat } from "../game/coords";
 import { addOpened, reportDemandFine } from "../game/openedZones";
+import { memoryNeed } from "../game/memoryCheck";
 import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB, lodMode, planFine, VIEW_SETTLE_MS, EDIT_KEEP_MS, zonesGB } from "./demandLod";
 import { world } from "../game/world";
 import { trackZones } from "../game/trackZones";
@@ -201,10 +202,25 @@ export function marketsOfWorkers(n: number): number[][] {
  * to running out of memory stays that size for the tab's session (`rememberedPoolCap`).
  */
 export function poolSize(): number {
-  const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
-  if (Number.isInteger(q) && q >= 1 && q <= PERIODS.length) return q;
+  const q = workersAsked();
+  if (q !== null) return q;
   if (addressLimited()) return 1;
   return Math.min(poolBySetup(), rememberedPoolCap());
+}
+/** T-3373: the solving workers a game whose workers each need `perWorker` bytes (WASM and JS) runs here: the
+ * pool, less any past `SOLVING_SHARE` of the budget (`capPool`'s rule) */
+export function workersFor(perWorker: number): number {
+  const n = poolSize();
+  if (!shareCapped()) return n;
+  return Math.max(1, Math.min(n, Math.floor((SOLVING_SHARE * memBudget()) / Math.max(1, perWorker))));
+}
+
+const shareCapped = () => workersAsked() === null && !display.peek().moreCores;
+
+/** `?demandWorkers=N` (1-5), else null */
+function workersAsked(): number | null {
+  const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
+  return Number.isInteger(q) && q >= 1 && q <= PERIODS.length ? q : null;
 }
 function poolBySetup(): number {
   const hc = navigator.hardwareConcurrency || 4;
@@ -483,7 +499,11 @@ const MEM_RETRY_MS = 5_000;
 /** where the browser cannot measure the page: Chrome outside the demand workers, and each demand
  * worker outside its WASM (its JS heap; about 0.7 GB a worker on the all-China save) */
 const MEM_OTHER = 0.6 * 2 ** 30;
-const MEM_WORKER = 0.7 * 2 ** 30;
+const MEM_WORKER = 0.15 * 2 ** 30; // (T-3472: 110-150 MB a solving worker on all-China)
+/** T-3373: the share of the game's budget (`memBudget`) the solving workers may take together. Each holds
+ * every open zone and the market, so a big save runs fewer: on a reported 8 GB, New York 2, all of China 1.
+ * Not with "Use more cores" on (`shareCapped`): the player chose speed */
+const SOLVING_SHARE = 0.175;
 const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
 const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
 const SOLVE_MS = { base: 1000, perStop: 3.5 };
@@ -936,6 +956,8 @@ class DemandClient {
       const reached = this.reachedSet(svc);
       if (!reached?.size) return;
       if (this.lod === "auto" && !this.lodZones) this.initFine([...this.withoutBroken(new Set(reached))]);
+      // T-3373: a big save's pool is cut before its packs open, by their estimate
+      this.capAhead(memoryNeed([...reached]).wasmGB * 2 ** 30 + MEM_WORKER);
       // T-1533: the zone in view's pack first (T-2453: then the selected zone's), then the markets,
       // then the other zones
       const firsts = this.firstZones();
@@ -2845,6 +2867,12 @@ class DemandClient {
     return out;
   }
 
+  /** a solve's rounds are still out with the solving workers */
+  private solving(): boolean {
+    const s = this.cur;
+    return !!s && (s.published < ROUNDS || this.doneBy.size < this.computeN);
+  }
+
   /** ms until nothing is in flight and the network has been still for MEM_QUIET_MS (0: now). Never
    * during a solve, a load, an open or a question, nor while a worker is being replaced. */
   private quietIn(): number {
@@ -2873,11 +2901,12 @@ class DemandClient {
     for (const o of over) this.workerDied(o.i, `${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`, true); // i18n-ignore
   }
 
-  /** Before a solve: fewer solving workers when their projected memory with the rest of the page would
-   * pass the budget (`memBudget`). Each holds every open zone and the market, so a worker less saves
-   * its whole need, at a slower solve; no figure changes. Never grows back within a page. */
+  /** Before a solve, and as zones open while none runs: fewer solving workers when together they would
+   * pass `SOLVING_SHARE` of the budget (`memBudget`), or with the rest of the page the budget itself. Each
+   * holds every open zone and the market, so a worker less saves its whole need, at a slower solve; no
+   * figure changes. Never grows back within a page. */
   private capPool() {
-    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || new URLSearchParams(location.search).has("demandWorkers")) return;
+    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null) return;
     let per = 0;
     for (let i = 0; i < this.computeN; i++) per = Math.max(per, this.needOf(i) ?? 0);
     if (!per) return;
@@ -2885,9 +2914,18 @@ class DemandClient {
     const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? MEM_OTHER;
     const aux = (this.needOf(this.computeN) ?? 0) + js, budget = memBudget();
     let n = this.computeN;
-    while (n > 1 && other + n * (per + js) + aux > budget) n--;
+    const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
+    while (n > 1 && (other + n * (per + js) + aux > budget || n * (per + MEM_WORKER) > share)) n--;
     // i18n-ignore
     if (n < this.computeN) this.shrink(n, `about ${mb(per + js)} MB a solving worker, ${mb(aux)} MB the aux worker, ${mb(other)} MB the rest of the page, against ${mb(budget)} MB`);
+  }
+
+  /** T-3373: a loading save's pool cut to what workers of `perWorker` bytes may be (`workersFor`), before
+   * its packs open; `capPool` judges again by what they then hold */
+  private capAhead(perWorker: number) {
+    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || !shareCapped() || this.solving()) return;
+    const n = Math.min(this.computeN, workersFor(perWorker));
+    if (n < this.computeN) this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); // i18n-ignore
   }
 
   /** The pool's last solving workers stop and the periods are dealt again among the rest (between
@@ -3405,6 +3443,8 @@ class DemandClient {
       for (const id of Object.keys(msg.cityInfo)) this.openedBy(id, i);
       for (const id of msg.markets) this.openedBy(marketItem(id), i);
       if (left && !left.size) this.reopened(i);
+      // T-3373: a big save's extra workers go while its zones open, before each holds them all
+      if (i < this.computeN && !this.solving()) this.capPool();
       this.flush();
       this.progress();
       return;

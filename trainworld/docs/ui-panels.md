@@ -973,8 +973,8 @@ keeps what it had and earns no more.
     next load.
 
 **Memory a game takes** [T-3329]: a line under the facts of every card with stations, just "2.5 GB" (hover "Uses about 2.5 GB of memory"), from the
-station count (1.8 GB plus 0.65 GB per 1,000 stations plus 0.5 GB per solving worker past the first; within about 0.2 GB on
-the real-network saves). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
+station count (1.8 GB plus 0.65 GB per 1,000 stations plus, per solving worker past the first, 0.2 GB and 0.2 GB per 1,000
+stations, as many as the pool's memory rule lets run, T-3373; within about 0.2 GB on the real-network saves). Where the browser reports the device's memory (Chrome, Edge) or is 32-bit, a game over the budget
 shows it in red and its Open (saves panel and start menu, not the versions list) first asks "This game needs about 5 GB of
 memory and this device has about 4. It may not load." with Open anyway and Cancel. Elsewhere the line is plain and nothing asks.
 This is separate from the refusal [T-1197], which judges a save by its zones and still blocks a game no worker can hold.
