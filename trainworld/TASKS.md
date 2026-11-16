@@ -343,9 +343,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Player report (board group "Trains use unbuilt track", aejormor, 2026-11-16): after a stop on one-way single track the line creator won't take the next station.
   - Goal: Reproduce; the next station is accepted where the track allows it.
   - Other: Not reproduced 2026-11-16 (bugs3): every order works on a one-way loop; the refusal is right when the next station has no way back. Needs the player's save; a clearer "no way back" message is an option. notes/T-3429.md
-- T-3431 [P2] {L:buses} Seattle to Victoria ferry gets no riders and shows no route (taking, 2026-11-16, agent bug-b)
-  - Context: Player report 2026-11-16 (board group "Ferry has no riders and no route"). T-3400 (no boats at low demand) may explain part of it.
-  - Goal: Reproduce; the ferry runs and carries the trips a sensible ferry would.
+- T-3431 [P2] {L:buses} {after:T-2216} Seattle to Victoria ferry gets no riders and shows no route
+  - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
+  - Goal: The ferry carries trips once T-2216 solves island pairs; check this line then.
+  - Other: notes/T-3431.md
 - T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia
   - Context: Player report 2026-11-16 (board group g004): two lines built between them, the trip explorer finds no inter-city trip. Needs a repro first. May share a cause with T-3426 (feeders).
   - Goal: Reproduce; inter-city trips between the two show up on a built line.
@@ -790,8 +791,9 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
   - Context: You said yes.
   - Goal: Blueprints copy between saves.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
-- T-1791 [P3] {L:small-fixes} Boardings in the line group view (taking, 2026-11-16, agent bug-b)
-  - Context: Line groups stage 4 only; stages 1-3 landed. Boardings in the group view were left out of stage 2.
+- T-1791 [P3] {L:small-fixes} {waits:Anita} Boardings in the line group view
+  - Need from Anita: Do you want boardings in the group view? Recommended: past 24 hours per stop, in the stop's hover only.
+  - Context: Line groups stage 4 only; stages 1-3 landed and the view has no numbers. The line panel shows boardings per stop.
   - Goal: Boardings show in the group view, if wanted.
   - Other: notes/T-1791.md
 - T-3398 [P3] {L:translations} The next languages
@@ -928,18 +930,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains (taking, 2026-11-16, agent bug-b)
-  - Context: Trains keep offsets along the run, so they jump by the length added or removed.
-  - Goal: Trains match by place on the ground instead.
-  - Other: notes/T-1071.md "Limits".
 - T-3405 [P3] {L:track-speed} Speed limit on any piece of track
   - Context: Your TODO 2026-11-15: edit it directly, no cost. Lines already have a speed limit (T-2987).
   - Goal: A per-piece speed limit, edited directly.
 - T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
   - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece.
   - Goal: The track panel has the same rebuild, and the hover suggests Select for several.
-- T-3410 [P3] {L:stops} Tram passes through or turns at a one-way station (taking, 2026-11-16, agent bug-b)
-  - Context: Your TODO 2026-11-15, for sensible pathing on single track.
+- T-3410 [P3] {L:stops} {waits:Anita} Tram passes through or turns at a one-way station
+  - Need from Anita: Where does the choice go, on the station or on each line's stop? Recommended: on the line's stop, as a pass-through way or reverse.
+  - Context: Your TODO 2026-11-15, for sensible pathing on single track. Today the router decides the turn itself; a new choice changes what players can build.
   - Goal: Choose pass through (and which way) or reverse at a one-way station.
 
 ## Held features
@@ -1155,14 +1154,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Each row spends about 8 s more than needed (h3, GHSL reuse, extra processes).
   - Goal: Each row builds about 8 s faster.
   - Other: See notes/someday.md.
-- T-570 [P3] {L:car-free} Regional car-free homes from DHS and census
-  - Context: Car-free homes only have country figures.
-  - Goal: Regional shares from DHS and open census small areas.
-  - Other: Notes: notes/someday.md
-- T-571 [P3] {L:car-free} National no-car figures for larger countries
-  - Context: Larger countries use T-562's GDP rule.
-  - Goal: National figures replace the GDP rule.
-  - Other: Notes: notes/someday.md
 - T-563 [P3] {L:demand-ideas} Fit a planned city's own curve
   - Context: Archetype A planned cities use a shared curve.
   - Goal: Each planned city fits its own curve at build time.
@@ -1187,10 +1178,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Nigeria's data could come from GRID3.
   - Goal: Nigeria built on GRID3.
   - Other: notes/T-507.md
-- T-512 [P3] {L:car-free} Car-free households below country level
-  - Context: Only the US, England and Japan have sub-country car-free figures.
-  - Goal: Other countries get regional figures.
-  - Other: Notes: notes/T-512.md
 - T-508 [P3] {L:jobs-places} Overture Places where OSM is thin
   - Context: OSM's completeness is under 0.3 in some places.
   - Goal: Overture Places fill those gaps.
@@ -1222,12 +1209,8 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Goal: Walking feels balanced against trains.
   - Other: Notes: notes/T-632.md
 - T-634 [P3] {L:route-choice} Bike or short-trip mode
-  - Context: No mode sits before walking.
+  - Context: No mode sits before walking. Japan: Tokyo commute rail is 35% against 52%, partly for want of bike access to stations (notes/T-509.md sections 14-15).
   - Goal: A bike or short-trip mode, once walking is refit on surveys.
-  - Other: Notes: notes/someday.md
-- T-529 [P3] {L:car-free} Bikes to stations in Japan
-  - Context: Car-free homes in Japan have no bike access to stations.
-  - Goal: Car-free homes can bike to stations.
   - Other: Notes: notes/someday.md
 - T-461 [P3] {L:jobs-places} Japan's jobs total and public service
   - Context: Japan's jobs total and public service are off.

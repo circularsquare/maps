@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1072 [P3] {L:stops} Changing a line's end stops moves the other direction's trains (2026-11-16): fixed: a running train keeps its place on the ground (piece, pass, metres) and is put back there on the new route, so the other direction's trains no longer jump. notes/T-1072.md.
+- T-570 [P3] {L:car-free} Regional car-free homes from DHS and census (2026-11-16): no longer true: demand stopped reading car ownership in T-854 (SPEC "No car ownership"), so regional figures feed nothing; the unread layer is dropped by T-926. notes/T-562.md.
+- T-571 [P3] {L:car-free} National no-car figures for larger countries (2026-11-16): no longer true: demand stopped reading car ownership in T-854 (SPEC "No car ownership"); the nocar layer is dropped by T-926. notes/T-562.md.
+- T-512 [P3] {L:car-free} Car-free households below country level (2026-11-16): no longer true: demand stopped reading car ownership in T-854 (SPEC "No car ownership"); the nocar layer is dropped by T-926. notes/T-512.md.
+- T-529 [P3] {L:car-free} Bikes to stations in Japan (2026-11-16): folded into T-634. Its context: Car-free homes no longer exist (T-854); the wish is bike access to stations, and Tokyo commute rail is 35% against 52%. notes/T-509.md sections 14-15.
 - T-3449 [P2] {L:board} Paste images on the board (2026-11-16): Ctrl+V of an image into the scratch pad or any comment box saves it under artifacts/trainworld/board/ (serve.py POST /twboard/_paste, 10 MB, PNG/JPEG/WebP) and types its path, which shows as a thumbnail; a folder path in notes sets where later bare image names are found, so T-2625's pictures show.
 - T-1681 [P3] {L:single-track} Doubling up refused in the real save (2026-11-16): not reproducible: all 1,647 double pieces of the real save scanned, none refused for a platform crossing (584 refusals, all right: track alongside, tight curve, node heading). notes/T-1681.md.
 - T-691 [P3] {L:station-placement} Wrong refusal reason on two real-save edges (2026-11-16): a station refused because a split piece keeps an imported curve already under 25 m now says "The track curves too tightly here for a station."; where stations may go is unchanged (6d1f541f). notes/T-691.md.

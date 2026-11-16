@@ -422,6 +422,36 @@
       "by": "e1",
       "at": "2026-11-16T15:54:27Z",
       "rev": 1
+    },
+    {
+      "id": "c043",
+      "text": "a station refused on a tight old curve now says the track curves too tightly for a station",
+      "edited": null,
+      "hidden": false,
+      "task": "T-691",
+      "by": "bug-c",
+      "at": "2026-11-16T16:19:49Z",
+      "rev": 1
+    },
+    {
+      "id": "c044",
+      "text": "added the reclaimed land at Shenzhen Bay Port and Tide Park to Shenzhen, so it has homes and jobs",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3428",
+      "by": "shenzhen",
+      "at": "2026-11-16T16:35:58Z",
+      "rev": 1
+    },
+    {
+      "id": "c045",
+      "text": "trains no longer jump when a stop is added or taken off the end of a line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1072",
+      "by": "bug-b",
+      "at": "2026-11-16T16:36:59Z",
+      "rev": 1
     }
   ]
 }

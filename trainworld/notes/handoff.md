@@ -24,9 +24,14 @@ Updated: 2026-11-16 15:38 UTC (she is starting a new orchestrator now)
   opens a cmd window at 11:15 local; tell her, it's not ours to change.
 - schem a4c88ef4ea564313f (Opus, .tw-trees/schem, port 6141): T-3448 player's NYC schematic in islands (filed
   16:21 from a report she passed via maps-4a). bug-c: nothing fixed (T-691 resumed for station refusal wording).
-- board-img a5fe89768a22556f7 (Sonnet, .tw-trees/board-img): T-3449 paste images on the board; edits serve.py in its
-  tree, while main has my uncommitted serve.py window fix: land with the keep-hunks/patch procedure, then restart serve.
+- T-3449 landed 16:33 (board.js cec4dba4; tree removed). serve.py holds its /twboard/_paste endpoint and the window fix,
+  live (serve restarted 16:29) but UNCOMMITTED: the permission check refused committing serve.py three times; ask her.
   T-2724 closed on her word; T-3358 rivers back to P2 ready (she called rivers and squished cities the pressing issues).
+- sweep a30f41793d9dfc434 (Sonnet, no tree): closing already-done/untrue/duplicate tasks below T-1500 (no waits, no taking).
+- shenzhen (16:36, interim): shz rebuilt and joined (45 packs gated), no longer writing data/packs (8800 may use live
+  data again); join's market step timed out (1801 s) so no new freeze; market files checked fine. Its uncommitted files
+  (osm_units.py + test, registry.json, market-rows.json, outlines/realms) are to commit after its full report; note the
+  main tree's zone-names/realms/registry also hold T-3399's plan edits: split by key when committing.
 - T-3426 feeders: table relayed 16:10 (fix brings most corridors closer to real, NY-Philadelphia overshoots on
   commute legs); maps-7e put "land as is?" to Anita; land on her yes, then file the two follow-ups in notes/T-3426.md.
 - Anita 16:00: away working on other stuff, no frequent reports until she says she's back.

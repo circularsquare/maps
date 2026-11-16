@@ -40,7 +40,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - new-countries | More countries | Countries not built yet: Myanmar, Laos and Timor-Leste are what is left of Southeast Asia.
 - world-rebuild | Next world rebuild | Fixes that wait for the next rebuild of every pack, gathered so they all ride along.
 - islands | Islands and ferries in trips | Trips between islands and across water: who drives, who flies, which ferries carry cars.
-- car-free | Car-free homes | How many homes have no car, by country and region.
+- car-free | Car-free homes | How many homes have no car, by country and region. | done:2026-11-16
 - route-choice | Walking and route choice | How riders pick between walking, changing lines and the train, including reports of odd walks.
 - ridership-checks | Checks against real ridership | Comparing the game's riders with real counts in Japan, New York and elsewhere.
 - demand-ideas | Demand model ideas | Bigger changes to how trips are made, most parked or waiting for her call.
