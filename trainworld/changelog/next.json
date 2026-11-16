@@ -10,7 +10,10 @@
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:32:56Z",
-      "rev": 1
+      "rev": 2,
+      "area": "schematic",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c002",
@@ -20,7 +23,11 @@
       "task": "T-3379",
       "by": "bugs1",
       "at": "2026-11-16T13:47:15Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c003",
@@ -30,7 +37,11 @@
       "task": "T-3380",
       "by": "bugs1",
       "at": "2026-11-16T13:47:16Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c004",
@@ -40,7 +51,10 @@
       "task": "T-3411",
       "by": "bugs1",
       "at": "2026-11-16T13:47:17Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c005",
@@ -50,7 +64,11 @@
       "task": "T-3386",
       "by": "bugs1",
       "at": "2026-11-16T13:47:18Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c006",
@@ -60,7 +78,10 @@
       "task": "T-3383",
       "by": "bugs1",
       "at": "2026-11-16T13:47:19Z",
-      "rev": 1
+      "rev": 2,
+      "area": "scheduling",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c007",
@@ -70,7 +91,11 @@
       "task": "T-3381",
       "by": "bugs2",
       "at": "2026-11-16T13:50:47Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c008",
@@ -80,7 +105,11 @@
       "task": "T-3422",
       "by": "bugs2",
       "at": "2026-11-16T13:50:48Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c009",
@@ -90,7 +119,11 @@
       "task": "T-3403",
       "by": "bugs2",
       "at": "2026-11-16T13:50:49Z",
-      "rev": 1
+      "rev": 2,
+      "area": "fares",
+      "fix": true,
+      "parent": "c058",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c010",
@@ -100,7 +133,11 @@
       "task": "T-3412",
       "by": "bugs2",
       "at": "2026-11-16T13:50:50Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c011",
@@ -110,8 +147,10 @@
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:58:34Z",
-      "rev": 2,
-      "changed": "2026-11-16T14:12:09Z"
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "track",
+      "fix": false
     },
     {
       "id": "c012",
@@ -121,7 +160,10 @@
       "task": "T-3427",
       "by": "recalc",
       "at": "2026-11-16T14:12:29Z",
-      "rev": 1
+      "rev": 2,
+      "area": "performance",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c013",
@@ -131,7 +173,10 @@
       "task": "T-3436",
       "by": "bullet",
       "at": "2026-11-16T14:27:35Z",
-      "rev": 1
+      "rev": 2,
+      "area": "schematic",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c014",
@@ -141,7 +186,10 @@
       "task": "T-3430",
       "by": "bugs3",
       "at": "2026-11-16T14:37:36Z",
-      "rev": 1
+      "rev": 2,
+      "area": "schematic",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c015",
@@ -151,7 +199,10 @@
       "task": "T-2787",
       "by": "unhold",
       "at": "2026-11-16T14:40:45Z",
-      "rev": 1
+      "rev": 2,
+      "area": "fares",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c016",
@@ -161,7 +212,10 @@
       "task": "T-2790",
       "by": "unhold",
       "at": "2026-11-16T14:40:45Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c017",
@@ -171,7 +225,10 @@
       "task": "T-3348",
       "by": "perdir2",
       "at": "2026-11-16T14:49:14Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c018",
@@ -181,7 +238,10 @@
       "task": "T-3441",
       "by": "b2",
       "at": "2026-11-16T14:49:18Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c019",
@@ -191,7 +251,11 @@
       "task": "T-1949",
       "by": "b2",
       "at": "2026-11-16T14:49:20Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c020",
@@ -201,7 +265,11 @@
       "task": "T-1778",
       "by": "b2",
       "at": "2026-11-16T14:49:22Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c021",
@@ -211,7 +279,10 @@
       "task": "T-3412",
       "by": "bugs2",
       "at": "2026-11-16T14:52:36Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c022",
@@ -221,7 +292,11 @@
       "task": "T-3421",
       "by": "bugs2",
       "at": "2026-11-16T14:52:38Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c023",
@@ -231,7 +306,11 @@
       "task": "T-1502",
       "by": "b6",
       "at": "2026-11-16T14:57:44Z",
-      "rev": 1
+      "rev": 2,
+      "area": "fares",
+      "fix": true,
+      "parent": "c058",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c024",
@@ -241,7 +320,10 @@
       "task": "T-3402",
       "by": "b6",
       "at": "2026-11-16T14:57:45Z",
-      "rev": 1
+      "rev": 2,
+      "area": "community",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c025",
@@ -251,17 +333,23 @@
       "task": "T-3401",
       "by": "b6",
       "at": "2026-11-16T15:00:47Z",
-      "rev": 1
+      "rev": 2,
+      "area": "community",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c026",
       "text": "the issues list now has a little space above its toggle",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3414",
       "by": "b1",
       "at": "2026-11-16T15:01:41Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "bug",
+      "fix": true
     },
     {
       "id": "c027",
@@ -271,7 +359,10 @@
       "task": "T-3416",
       "by": "b1",
       "at": "2026-11-16T15:01:42Z",
-      "rev": 1
+      "rev": 2,
+      "area": "bug",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c028",
@@ -281,7 +372,10 @@
       "task": "T-3404",
       "by": "b1",
       "at": "2026-11-16T15:01:43Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c029",
@@ -291,7 +385,10 @@
       "task": "T-2288",
       "by": "b1",
       "at": "2026-11-16T15:01:44Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c030",
@@ -301,17 +398,23 @@
       "task": "T-2189",
       "by": "b4",
       "at": "2026-11-16T15:11:41Z",
-      "rev": 1
+      "rev": 2,
+      "area": "bug",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c031",
       "text": "added ponytail and wavy hairstyles to the faces at stations, wavy more often in Africa and Europe and less in East Asia",
-      "edited": null,
+      "edited": "added more long hairstyles",
       "hidden": false,
       "task": "T-2906",
       "by": "b7",
       "at": "2026-11-16T15:12:54Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "other",
+      "fix": false
     },
     {
       "id": "c032",
@@ -321,27 +424,36 @@
       "task": "T-3439",
       "by": "b7",
       "at": "2026-11-16T15:12:55Z",
-      "rev": 1
+      "rev": 2,
+      "area": "schematic",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c033",
       "text": "added a message in Chinese for browsers stuck in compatibility mode, telling them to switch to speed mode",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3308",
       "by": "b7",
       "at": "2026-11-16T15:12:56Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "bug",
+      "fix": true
     },
     {
       "id": "c034",
       "text": "new ferry lines run a boat every 60 minutes at low demand",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3400",
       "by": "b5",
       "at": "2026-11-16T15:18:28Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "scheduling",
+      "fix": false
     },
     {
       "id": "c035",
@@ -351,7 +463,10 @@
       "task": "T-3419",
       "by": "b5",
       "at": "2026-11-16T15:18:29Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c036",
@@ -361,7 +476,11 @@
       "task": "T-3370",
       "by": "b5",
       "at": "2026-11-16T15:18:30Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c037",
@@ -371,7 +490,10 @@
       "task": "T-3440",
       "by": "sv",
       "at": "2026-11-16T15:28:01Z",
-      "rev": 1
+      "rev": 2,
+      "area": "community",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c038",
@@ -381,7 +503,10 @@
       "task": "T-3406",
       "by": "pick2",
       "at": "2026-11-16T15:39:27Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c039",
@@ -391,17 +516,24 @@
       "task": "T-3407",
       "by": "pick2",
       "at": "2026-11-16T15:39:30Z",
-      "rev": 1
+      "rev": 2,
+      "area": "fares",
+      "fix": true,
+      "parent": "c058",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c040",
       "text": "renamed about 50 Chinese zones so no two share a name, and fixed some named after the wrong city",
-      "edited": null,
+      "edited": "fixed zone names, mostly in China and Japan",
       "hidden": false,
       "task": "T-847",
       "by": "doc",
       "at": "2026-11-16T15:46:27Z",
-      "rev": 1
+      "rev": 5,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "schematic",
+      "fix": true
     },
     {
       "id": "c041",
@@ -411,7 +543,10 @@
       "task": "T-899",
       "by": "c2",
       "at": "2026-11-16T15:50:27Z",
-      "rev": 1
+      "rev": 2,
+      "area": "performance",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c042",
@@ -421,7 +556,11 @@
       "task": "T-1073",
       "by": "e1",
       "at": "2026-11-16T15:54:27Z",
-      "rev": 1
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "parent": "c057",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c043",
@@ -431,7 +570,11 @@
       "task": "T-691",
       "by": "bug-c",
       "at": "2026-11-16T16:19:49Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c044",
@@ -441,7 +584,10 @@
       "task": "T-3428",
       "by": "shenzhen",
       "at": "2026-11-16T16:35:58Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c045",
@@ -451,7 +597,11 @@
       "task": "T-1072",
       "by": "bug-b",
       "at": "2026-11-16T16:36:59Z",
-      "rev": 1
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "parent": "c057",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c046",
@@ -461,7 +611,11 @@
       "task": "T-3429",
       "by": "bug-a",
       "at": "2026-11-16T16:46:53Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c047",
@@ -471,17 +625,24 @@
       "task": "T-3252",
       "by": "bug-d",
       "at": "2026-11-16T17:21:12Z",
-      "rev": 1
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "parent": "c057",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c048",
       "text": "moved the starting view of 124 cities onto the city centre",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-2698",
       "by": "bug-f",
       "at": "2026-11-16T17:32:29Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "schematic",
+      "fix": true
     },
     {
       "id": "c049",
@@ -491,7 +652,11 @@
       "task": "T-3042",
       "by": "bug-e",
       "at": "2026-11-16T17:35:28Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c050",
@@ -501,7 +666,11 @@
       "task": "T-3101",
       "by": "bug-e",
       "at": "2026-11-16T17:35:28Z",
-      "rev": 1
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "parent": "c056",
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c051",
@@ -511,7 +680,10 @@
       "task": "T-3426",
       "by": "maps-d7",
       "at": "2026-11-16T17:56:06Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": true,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c052",
@@ -521,17 +693,23 @@
       "task": "T-1791",
       "by": "hover",
       "at": "2026-11-16T17:56:13Z",
-      "rev": 1
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
     },
     {
       "id": "c053",
       "text": "fixed about a hundred place names in japanese and chinese that named a different place, like shiga showing as 志賀 instead of 滋賀",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3450",
       "by": "names",
       "at": "2026-11-16T18:32:08Z",
-      "rev": 1
+      "rev": 3,
+      "changed": "2026-11-16T19:48:59Z",
+      "area": "schematic",
+      "fix": true
     },
     {
       "id": "c054",
@@ -541,7 +719,73 @@
       "task": "T-3448",
       "by": "regions",
       "at": "2026-11-16T18:45:42Z",
-      "rev": 1
+      "rev": 2,
+      "area": "schematic",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
+    },
+    {
+      "id": "c055",
+      "text": "networks of a couple of hundred lines load about twice as fast",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3470",
+      "by": "pr7",
+      "at": "2026-11-16T19:38:05Z",
+      "rev": 2,
+      "area": "performance",
+      "changed": "2026-11-16T19:49:10Z"
+    },
+    {
+      "id": "c056",
+      "text": "track bug fixes",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "changelog",
+      "at": "2026-11-16T19:48:59Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true,
+      "group": true
+    },
+    {
+      "id": "c057",
+      "text": "train bug fixes",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "changelog",
+      "at": "2026-11-16T19:48:59Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true,
+      "group": true
+    },
+    {
+      "id": "c058",
+      "text": "money bug fixes",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "changelog",
+      "at": "2026-11-16T19:48:59Z",
+      "rev": 1,
+      "area": "fares",
+      "fix": true,
+      "group": true
+    },
+    {
+      "id": "c059",
+      "text": "points now come from a forecast weekday and update as soon as you change your network",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3465",
+      "by": "weekendscore",
+      "at": "2026-11-16T19:49:19Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
     }
   ]
 }

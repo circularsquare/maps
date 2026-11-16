@@ -201,10 +201,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-3387 [P2] {L:open-source} {after:contributor's revision} Contributor PR 2: settle and outline speedups
-  - Context: Part 1 (outline keys) landed with peanutmow credited. Parts 2-3 were not taken because they leave stale holds. PR is open for a revision.
-  - Goal: PR 2 merged or closed once peanutmow sends a revised settle part.
-  - Other: notes/T-3387.md
 - T-3388 [P2] {L:edit-speed} London edits take about 4 s
   - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235).
   - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
@@ -243,12 +239,33 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
+- T-3462 [P3] {L:checks} Two checks test old values
+  - Context: Found by the regions agent (T-3448): t2163 still looks for the old "Calculating diagram" text, and t2888 expects a line width of at most 1.4 (now 2).
+  - Goal: Both checks pass against the current game, or are deleted if T-3457 finds they guard nothing.
+- T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
+  - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
+  - Goal: The water mask loads on that save, or the failure is understood and filed.
+- T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting
+  - Context: You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
+  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The tile rebuild goes in an overnight batch.
+- T-3469 [P2] {L:timetables} Timetable restyle like real printed timetables (taking, 2026-11-16, agent ttstyle)
+  - Context: You, 2026-11-16 on the board: the current look is "kinda generic"; you want the feel of real timetables, Shinkansen tables as inspiration (artifacts/trainworld/board/20261116-141216-e91c.png): smaller font than elsewhere, very compact, related lines' bullets above, many high-throughput lines as "a massive expansive dense timetable. awe inspiring. lots of colors", the Marey diagram below, aligned. "only big nerds are gonna look at this stuff and i think this is what they wanna see."
+  - Goal: The schedule panel's departures read as a dense printed timetable with the chart aligned below, shown to you before it lands.
+- T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
+  - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
+  - Goal: Those tests skip with a plain message when their packs are absent.
+- T-3472 [P2] {L:memory} Long-session memory check
+  - Context: 7.4 GB in Firefox after 43 minutes is more than the workers' copies explain. Needed before T-3373.
+  - Goal: Memory over a 45-minute session on a big save, split by worker and main thread, with what grows named.
+- T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured
+  - Context: CinnamonVII's PR 12 has gravity and layout speedups that keep every sum's order, a 4-lane row split that moves two demand totals in the last bits, and native gravity threads that would take every core. No timings in the PR. Part of T-3373 option A.
+  - Goal: The order-keeping speedups landed with timings and identical figures, Cinnamon credited; the rest taken only if the drift is invisible and the threads respect the core claims.
+- T-3474 [P3] {L:open-source} Partly built lines run their built stretch
+  - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
+  - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
 - T-3458 [P3] {L:cleanup} Fewer code comments
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
-- T-3459 [P3] {L:cleanup} Remove dead outputs and leftovers
-  - Context: From the code tour: pipeline/nocar.py still writes no-car households that demand stopped reading at T-854 (docs still say to rerun it); registry market places 8 and 11-13 unused since T-1113; 351 scripts in notes/.
-  - Goal: Each is deleted or its docs fixed, with packs and smoke unchanged.
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
@@ -510,10 +527,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-2907 [P3] {L:accounts-server} Redirect mistyped trainworld addresses
   - Context: Your TODO 2026-11-09: three people tried anita.garden/trainsworlds, trainworlds and trainsimworld.
   - Goal: Those three addresses redirect to the game. Goes out with the next website publish.
-- T-2912 [P1] {L:accounts-server} Security review follow-through
-  - Context: The review is done and the admin page, hover script and server fixes landed (24c3d6dd, T-2914, T-2917). Not yet checked: the production box (firewall, the real secret line, Go version) and the old jsonbin key on the website.
-  - Goal: The production box and the website's old key checked; review recorded.
-  - Other: notes/T-2912.md
 - T-2901 [P2] {L:terrain} Terrain worldwide
   - Context: Stages 1-3 are done: blocks are on R2 and the game reads them. Stage 4 removes the old zone terrain after a release has run on blocks.
   - Goal: Zone terrain removed, with the 553 wrongly flat zones fixed by the blocks.
@@ -641,11 +654,6 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: You said yes 2026-10-30 and "its fine to put this in after release". The design is written and the terrain rebuild landed.
   - Goal: Terrain cells are hexagons on our own lattice.
   - Other: About a day. notes/T-1881.md.
-- T-1867 [P3] {L:map-look} {waits:Anita} Smooth spread for a destination's homes
-  - Need from Anita: Look at the T-1874 result in game, then say whether to draw the smooth spread.
-  - Context: Draw a destination's everyday homes as the smooth spread their samples stand for (drawing only). T-1874 has landed.
-  - Goal: The homes drawing matches the spread.
-  - Other: notes/T-1866.md
 - T-1875 [P3] {L:station-placement} Ghost hover disagrees with worker near crossings
   - Context: `t671-ghost-hover` fails on the real save: 14 of 84 hovers, all on new blueprint of 3 short pieces with a flat crossing just past the second joint. The page only looks for crossings on the hovered piece, and the worker refuses the end spot as too short where the page joins the pieces.
   - Goal: Page and worker agree on new blueprint near flat crossings (check passes, at most 5% corrected).
@@ -768,10 +776,6 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
   - Context: After 40 minutes of edits on Japan, Okayama differs by about 2e-9 of its figures.
   - Goal: Find the carried-over state and make the solve equal to the bit.
   - Other: notes/T-1736.md
-- T-1764 [P2] {L:solve-speed} Touch rule: skip lines with few stops in view
-  - Context: Rule 1 is done; rule 2 left: a line with at most 3 stops in a zone view should not touch it on trains an hour or run times.
-  - Goal: Rule 2 is in and tested.
-  - Other: notes/T-1764.md
 - T-1763 [P3] {L:frame-rate} Cull overlay stations and trains to the view
   - Context: At zoom 15 on Japan the overlay draws all 9,529 station boxes and every train, about 1.5 ms a frame. Culling needs a buffer in spatial order (stations share their index with textures and picking) and its own design.
   - Goal: Both are culled to the view with a spatial index.
@@ -821,10 +825,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P2] {L:memory} Demand workers share one copy of the zone data
-  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes.
-  - Goal: Workers share the data or split zones between them, and the long-session growth is checked; costs go to you before building.
-  - Other: notes/T-3329.md and notes/T-3071.md.
+- T-3373 [P2] {L:memory} {after:T-3472} Demand workers share one copy of the zone data
+  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably.
+  - Goal: A then B built, each with memory and solve time measured before and after on NYC and all-China.
+  - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
 - T-3382 [P3] {L:twstats} Where people play in twstats
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
   - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
@@ -870,7 +874,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3346 [P2] {L:timetables} Timetables and better scheduling
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 and 2 are built but not landed. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
   - Goal: Design agreed, then built in stages (about 44-63 h before Exact).
-  - Other: notes/T-3346.md
+  - Other: Stage 4 reuses the sim parts of GabrielMoraez's PR 13 (per-line calendar, crowding and running cost per kind of day, fleets sized to the busiest day, tests), credited; the PR itself is not merged (notes/pr-survey-2026-11-16.md). notes/T-3346.md
 - T-3348 [P3] {L:quad-track} {after:T-3444} Quad platforms
   - Context: Choose which pair a line stops on at a quad station, and quad paired by direction. Stage 1 (per-direction stops, demand per run included) landed 2026-11-16; the stop list and edit-stops markers for the return station are stage 4. Paused by you 2026-11-16 until the track rework design (T-3444) is discussed.
   - Goal: Quad stations with per-direction stops, in five stages.
@@ -933,7 +937,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent savesafe)
   - Context: Jordan's cloud saves had truncated gzip streams, and the server only checks the first four bytes of an upload, so backup rotation can throw away the last good copy.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
@@ -1084,8 +1088,8 @@ Also T-1344's Toronto (T-282, T-357) and Seoul (T-504) items, T-1345's Toronto a
 ### The next data batch on every pack
 - T-926 [P3] {L:world-rebuild} {after:next data batch} Drop the unread nocar layer
   - Context: The nocar layer is in the packs and Credits but nothing reads it. The nocar step also still runs in `world_run` and `everyday_rates` (T-878).
-  - Goal: The layer gone from packs and Credits, and the nocar step gone from `world_run` and `everyday_rates`.
-  - Other: notes/someday.md; also T-1114's pipeline G (closed)
+  - Goal: The layer gone from packs and Credits, and the nocar step gone from `world_run` and `everyday_rates`. In the same rebuild, the unused registry market places (2, 8, 11-13) compacted out (T-3459).
+  - Other: notes/someday.md; also T-1114's pipeline G (closed); notes/T-3459.md
 Also T-1114's pipeline G (the nocar layer), in Code health.
 
 ### Any pack's next rebuild (lands pack by pack)
