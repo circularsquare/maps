@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2777 [P3] {L:world-tooling} Restart a failed join's market step (2026-11-17): world_run.py join --market-only (ids from the newest join.market.log, --from-log or --ids) redoes a failed join's market and trips step through the same market_step a join uses, then freezes; docs/world-run.md says a join costs its groups. First real use will be the next failed join. notes/T-2702.md.
+- T-2627 [P3] {L:world-tooling} Join market step hits its time limit (2026-11-17): The join's market step limit is 1800 s plus 2 s per registered zone (about 9,200 s at 3,722 zones): local trips run over every registered zone. notes/T-2595.md.
+- T-3505 [P2] {L:map-look} Demand bubbles with 0 trips (2026-11-17): No bubble shows under 1 trip a day: each folds into the nearest bubble of at least 1 at every level, zone totals unchanged; folding the pack sites themselves is pipeline-only and small, filed as T-3519 (4 km rural blocks for thin packs). notes/T-3505.md.
 - T-3399 [P2] {L:new-countries} Central America and Venezuela first (2026-11-17): 91 of 95 rows shipped and joined (GT, BZ, SV, HN, NI, CR, PA, VE); the last four (Antigua Guatemala, Carora, Chimaltenango, Solola) continue as T-3517, Venezuela's and Nicaragua's university figures as T-3518. notes/T-3399.md.
 - T-617 [P3] {L:region-redraws} Rebuild Glasgow, Lisbon and Porto (2026-11-17): gla lis pot rebuilt on today's unit matching and joined: Glasgow +89,114 people (West Dunbartonshire), Lisbon +42,806 (Santa Maria Maior, Sao Vicente, Beato), Porto +9,599. notes/T-3399.md.
 - T-2725 [P3] {L:census-totals} Colombia's other rows on census totals (2026-11-17): The 28 Colombian rows admin_totals moved over 10% (and bug) rebuilt on DANE's 2025 municipio totals, archetype C, and joined. notes/night-queue-2026-11-17.md.

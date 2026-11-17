@@ -257,10 +257,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3505 [P2] {L:map-look} Demand bubbles with 0 trips (taking, 2026-11-17, agent bubfold)
-  - Context: You, 2026-11-17: a bubble in rural Ontario hovers "0 trips from here", which shouldn't show (it rounds to 0); "i thought we got rid of demand sites that are less than one person. or aggregated them ... it suggests to me that we could probably be more aggressive with dropping bubbles in some way or another." Fewer sites also means less memory.
-  - Goal: No bubble shows under 1 trip a day; tiny sites folded into a neighbour where there is one, with the zone's totals unchanged and the memory saved measured.
-- T-3510 [P3] {L:map-look} Bubble selection's purpose rows miss trips with other places
+- T-3510 [P3] {L:map-look} Bubble selection's purpose rows miss trips with other places (taking, 2026-11-17, agent bubfold)
   - Context: Since T-3503 a selected bubble's total counts its trips with other places, but its purpose rows, pie and timing charts still count its local trips only, so the rows add up to less than the total.
   - Goal: The purpose rows and pie add up to the selection's total, longer trips as a row of their own.
   - Other: notes/T-3503.md
@@ -456,10 +453,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: After a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
   - Goal: Shown lines update in seconds after an edit, with figures close to the final solve.
   - Other: Recommended: the aside worker also solves the shown network, and lines show their riders plus the zone change. notes/T-2605.md
-- T-2627 [P3] {L:world-tooling} Join market step hits its time limit
-  - Context: The step's limit is 1800 s, but local trips over 3,545 zones took 26 min on a busy machine.
-  - Goal: The limit is raised or dropped, or local trips are sped up.
-  - Other: See notes/T-2595.md.
 - T-2667 [P2] {L:attractions} Attractions from OSM where Wikidata has none
   - Context: You said 2026-11-06: "though i think it snot super urgent, *adding* demand is not really a prolem post release". Wikidata leaves many places with no attraction.
   - Goal: Packs with no attraction fall under 20% (from 52%), and China, India, Brazil, the Philippines, Vietnam and Nigeria reach 1+ per million people.
@@ -483,10 +476,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Fernando de Noronha, Con Dao, Lakshadweep, Misu-dong and Chukotka (35k, crosses the 180th meridian) are in no row.
   - Goal: Each is folded in at its country's next rebuild.
   - Other: notes/T-2702.md
-- T-2777 [P3] {L:world-tooling} Restart a failed join's market step
-  - Context: A failed join's market and trips step can't be redone alone; T-2702 re-solved all Mexico for 4 rows (55 min).
-  - Goal: `world_run.py join --market-only` redoes it with the join's id list, and docs/world-run.md says a join costs its groups.
-  - Other: See notes/T-2702.md.
 - T-2713 [P3] {L:borders} Border factors for open twin towns
   - Context: Rivera/Santana do Livramento, Leticia/Tabatinga, the King Fahd causeway and Al Ain/Buraimi sit at the national 0.05.
   - Goal: Each pair has a factor from a crossing count or judgement.
