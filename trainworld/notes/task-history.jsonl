@@ -211,3 +211,4 @@
 {"t":"2026-11-17T18:07Z","n":287,"area":{"demand":102,"ops":26,"performance":39,"track":47,"schedule":16,"community":15,"interface":19,"schematic":23},"pri":{"P3":224,"P2":62,"P1":1},"opened":6,"closed":4}
 {"t":"2026-11-17T18:57Z","n":288,"area":{"demand":102,"ops":25,"performance":40,"track":47,"schedule":17,"community":15,"interface":19,"schematic":23},"pri":{"P3":225,"P2":62,"P1":1},"opened":6,"closed":4}
 {"t":"2026-11-17T19:30Z","n":289,"area":{"demand":102,"ops":25,"performance":39,"track":47,"schedule":17,"community":15,"interface":21,"schematic":23},"pri":{"P3":228,"P2":60,"P1":1}}
+{"t":"2026-11-17T20:23Z","n":284,"area":{"demand":102,"ops":25,"performance":39,"track":44,"schedule":16,"community":16,"interface":19,"schematic":23},"pri":{"P3":230,"P2":53,"P1":1},"opened":4,"closed":8}
