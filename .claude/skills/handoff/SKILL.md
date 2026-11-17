@@ -14,7 +14,8 @@ part of this is clearly unhelpful for your project or situation, adapt it and sa
 A small edit to the relevant line whenever something changes that a successor would need:
 an agent launched or landed, a long run started or finished, a commit, a publish, a new standing
 ask from Anita, a change of plan. One or two lines each time; rewrite a section only when it has
-drifted. Also run this skill when the stop hook says context is past ~400k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks.
+drifted. Also run this skill when the stop hook says context is past ~500k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks. From about 450k
+start no new agents: list what you would start under "Next" and the new orchestrator starts them.
 
 ## Shape
 
@@ -53,13 +54,15 @@ If the new orchestrator messages you, the `Previous:` line names this session, o
 refused a new agent, you are winding down. There is no rush, and the new orchestrator holds off on
 commits, landings, publishing and 8800 until you are done, so land things properly:
 
-- Start no new work. Land what is in flight: review, smoke, commit as the project's CLAUDE.md says.
+- Start no new work. Agents' reports that still reach you go to the new orchestrator by `SendMessage`, nothing else.
+  Land what is in flight: review, smoke, commit as the project's CLAUDE.md says.
   An agent you genuinely need to finish in-flight work gets a description starting `in-flight:`.
 - As each item lands, move its line from "In flight" into "State" (re-read the file first: the new
   orchestrator edits it too).
 - When nothing of yours is left in flight, delete the `Previous:` line, update `Updated:`,
   `SendMessage` the new orchestrator (the name on its Orchestrator line) that you are done and what
-  you landed, and end with a short message to Anita saying the same.
+  you landed. Your one message to Anita is a single line: "talk to <new name> now". After it you write nothing
+  more to her and never ask her anything (she was getting the same news from two tabs, 2026-11-17).
 - If an agent will run for hours more, don't wait for it: make sure its "In flight" line says how to
   check its result without you, delete your `Previous:` line, tell the new orchestrator it is
-  theirs to adopt, and stop.
+  theirs to adopt, send Anita the one line, and stop.

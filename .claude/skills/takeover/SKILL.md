@@ -25,13 +25,17 @@ wrong for the situation, do the sensible thing and say why in your first message
        Previous: session <old id>, name <old name>, handed over <YYYY-MM-DD HH:MM>, finishing in-flight work
        Updated: <YYYY-MM-DD HH:MM>
 
+   If the project has a board (trainworld), also set the orchestrator's name on it:
+   `venv\Scripts\python.exe trainworld/tools/tasks.py set --orchestrator "<id short> (<name>)"`.
+
    Once `Previous` names it, the old session cannot start new agents (a hook refuses them unless
    the description starts with `in-flight:`).
 4. **Tell the old session.** `SendMessage` to the name on the old Orchestrator line, something like:
    "I've taken over $ARGUMENTS as <your name>. No rush: wind down per /handoff (no new work, land
    what's in flight), then message me when you're done." If the old line has no name (an
    orchestrator from before names were recorded), check `ListAgents` for it; if you can't tell
-   which session it is, ask Anita in your first message to tell the old tab.
+   which session it is, ask Anita in your first message to tell the old tab. From now on you alone talk to Anita: the old tab sends her
+   one line and then only passes agents' reports to you.
 5. **While `Previous:` is there, hold off on shared work.** The old session is landing its
    work, so leave alone: landing worktrees or merges, commits, rebuilding or restarting what 8800
    serves, publishing, writes to shared build outputs (`data/packs` and the like), and long runs
