@@ -1849,7 +1849,7 @@
   "settingsTab.ramp0": "0% transit",
   "settingsTab.ramp100": "100% transit",
   "settingsTab.realAll": "All",
-  "settingsTab.realAllTip": "Also trams, narrow gauge, heritage lines and unused track. Freight not all added yet",
+  "settingsTab.realAllTip": "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track",
   "settingsTab.realNetwork": "Real world network",
   "settingsTab.realNone": "None",
   "settingsTab.realPassenger": "Passenger",
