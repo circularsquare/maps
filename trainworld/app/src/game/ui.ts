@@ -49,6 +49,8 @@ export interface DisplaySettings {
   basemapLabels: boolean;
   /** T-682: faint real-world rail lines from noritetsu's tiles, under the network (map/realNetwork.ts) */
   realNetwork: RealNetworkShown;
+  /** T-3570: small rings on the real stations while the real network shows (map/realStations.ts); off by default */
+  realStations: boolean;
   /** station use circles (T-482): translucent circles behind platforms, area by the riders a day
    * starting a rail trip there, changing lines there, or both (all boardings); or none */
   stationUse: StationUseMode;
@@ -144,6 +146,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   basemapLabels: true,
   // T-727: faint by default, so the track to snap to is always in sight
   realNetwork: "passenger",
+  realStations: false,
   stationUse: "none",
   foldedRows: [],
   trainLoad: true,
@@ -247,7 +250,7 @@ export const selection = signal<Selection>(null);
  * nothing is stored, so the player's own come back on the next ordinary load. */
 export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
 const VIDEO_DISPLAY: Partial<DisplaySettings> = {
-  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none",
+  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none", realStations: false,
   stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true,
 };
 

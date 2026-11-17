@@ -872,7 +872,7 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   name"), its text selected; Enter or leaving the box keeps it, Escape drops it, an empty name is
   ignored. A station's title also has the locate button [T-569] (cross hairs, hover "Show on the map",
   beside the pencil: the same move as a double click on its row) and the cycle button (two arrows, hover "Next suggested name"):
-  each click renames it to the next of its suggestions, the cross street, the neighbourhood and the
+  each click renames it to the next of its suggestions, the real station it stands on, the cross street, the neighbourhood and the
   city or town, wrapping round, worked out then from where it stands (map/stationNames.ts,
   [track-and-service.md](track-and-service.md) "Placing stations"). The cross street needs the
   station on screen at zoom 13 or closer; with nothing else to offer it says "No other name is

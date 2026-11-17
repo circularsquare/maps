@@ -1,4 +1,4 @@
-// A station's suggested names (T-065, T-534): the nearest cross street on the basemap, a small
+// A station's suggested names (T-065, T-534): a real station it stands on (T-3571), the nearest cross street on the basemap, a small
 // neighbourhood from the city's place list (game/placeList.ts), and the city or town. A new
 // station takes the first there is; the station inspector's cycle button steps through them.
 // Worked out when asked, never stored.
@@ -12,6 +12,7 @@ import { toLngLat, toLocal } from "./geo";
 import type { NetworkBuffers } from "./network";
 import { edgesNear } from "./snapIndex";
 import { whenIdle } from "./cellIndex";
+import { realStationName } from "./realStations";
 
 /** From this zoom the basemap's tiles carry street names. */
 export const STREET_NAME_ZOOM = 13;
@@ -23,6 +24,8 @@ const PARALLEL_DEG = 30;
 const PLACE_SLACK_M = 800;
 
 export interface Suggestions {
+  /** T-3571: the real station within NAME_M (map/realStations.ts), the first choice */
+  real: string | null;
   street: string | null;
   hood: string | null;
   town: string | null;
@@ -231,20 +234,27 @@ function tilePlace(map: MlMap, lng: number, lat: number, taken: Set<string>): st
 }
 
 /** The suggestions for a station at (lng, lat) whose track runs along `track`; `taken` holds the
- * other stations' names, which each suggestion avoids. */
-export async function suggestNames(map: MlMap, lng: number, lat: number, track: [number, number] | null, taken: () => Set<string>): Promise<Suggestions> {
+ * other stations' names, which each suggestion avoids. `real`: look for a real station (not for a
+ * ferry port); `waitReal`: fetch the region's real stations first rather than use only those loaded. */
+export async function suggestNames(map: MlMap, lng: number, lat: number, track: [number, number] | null, taken: () => Set<string>, real = true, waitReal = false): Promise<Suggestions> {
   const street = crossStreet(map, lng, lat, track, taken());
-  const [listed, listedTowns] = await Promise.all([placesNear(lng, lat).catch(() => []), townsNear(lng, lat).catch(() => [])]);
+  const [listed, listedTowns, realName] = await Promise.all([
+    placesNear(lng, lat).catch(() => []),
+    townsNear(lng, lat).catch(() => []),
+    real ? realStationName(lng, lat, taken(), waitReal).catch(() => null) : null,
+  ]);
   const keep = (n: NearPlace) => !endsInStation(n.place.name, n.place.kind);
   const near = listed.filter(keep), towns = listedTowns.filter(keep);
   const t = taken(); // a station added meanwhile counts
-  return { street, hood: placeName(hoodsNear(near), t), town: placeName(towns, t), near };
+  return { real: realName && !t.has(realName) ? realName : null, street, hood: placeName(hoodsNear(near), t), town: placeName(towns, t), near };
 }
 
-/** A new station's name: the cross street, else a small neighbourhood, else the nearest place on
- * the list, else a place on the tiles, else "Station N". */
-export async function newStationName(map: MlMap, lng: number, lat: number, track: [number, number] | null, taken: () => Set<string>): Promise<string> {
-  const s = await suggestNames(map, lng, lat, track, taken);
+/** A new station's name: the real station it stands on (T-3571), else the cross street, else a small
+ * neighbourhood, else the nearest place on the list, else a place on the tiles, else "Station N".
+ * `real` false for a ferry port, which a railway station's name would not fit. */
+export async function newStationName(map: MlMap, lng: number, lat: number, track: [number, number] | null, taken: () => Set<string>, real = true): Promise<string> {
+  const s = await suggestNames(map, lng, lat, track, taken, real);
+  if (s.real) return s.real;
   if (s.street) return s.street;
   if (s.hood) return s.hood;
   const t = taken();
@@ -258,8 +268,8 @@ export async function newStationName(map: MlMap, lng: number, lat: number, track
  * `current` is none of them); null when there is nothing else to offer. */
 export async function nextSuggestion(map: MlMap, lng: number, lat: number, current: string, taken: () => Set<string>, net: NetworkBuffers | null): Promise<string | null> {
   const [lx, ly] = toLocal(lng, lat, net?.anchor);
-  const s = await suggestNames(map, lng, lat, trackDirection(net, lx, ly), taken);
-  const list = [...new Set([s.street, s.hood, s.town].filter((n): n is string => !!n))];
+  const s = await suggestNames(map, lng, lat, trackDirection(net, lx, ly), taken, true, true);
+  const list = [...new Set([s.real, s.street, s.hood, s.town].filter((n): n is string => !!n))];
   if (!list.length) return null;
   const next = list[(list.indexOf(current) + 1) % list.length];
   return next === current ? null : next;

@@ -43,6 +43,7 @@ import { live } from "./map/live";
 import { setBasemapLabels, setBasemapShade, setSatellite, setBusRoadHint, setHillshade, setRailRoadHint, setTramRoadHint } from "./map/basemap";
 import { createMap } from "./map/mapView";
 import { startRealNetwork } from "./map/realNetwork";
+import { startRealStations } from "./map/realStations";
 import { startCityBoundaries } from "./map/cityBoundaries";
 import { startZoneLoading } from "./map/zoneLoading";
 import { startRealmOverlay } from "./map/realmOverlay";
@@ -510,6 +511,7 @@ map.on("load", () => {
   effect(() => setRailRoadHint(map, tool.value === "track" && !tramTrack.value && snapRoads.value)); // T-3129
   startTerrainTint(map); // T-1270 stage 3
   startRealNetwork(map); // T-682
+  startRealStations(map); // T-3570
 });
 effect(() => client.setShade(shade.value)); // save thumbnails are drawn in it (T-543)
 // T-039: the network's casing and inks come from game/shades.ts at each draw

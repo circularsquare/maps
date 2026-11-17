@@ -41,6 +41,16 @@ nothing is fetched while it is hidden. The lines are noritetsu's per-region tile
 the national registers, one `track` layer); the tiles carry no line type or name at low zoom, so
 there is no high-speed class and no hover yet.
 
+**Real stations** [T-3570, `map/realStations.ts`]: "Show stations" under the Real world network buttons, off by
+default, draws a small ring on each real station (`realMain` round a land-coloured middle, 60% opaque in light,
+70% in dark, `realStationOpacity`) from zoom 10, over the lines and under the labels, whenever the lines show
+(by the setting or while snapping). Hovering a ring shows the station's name and nothing else (the name the
+station tool would give it, else the local name). A station whose every line is a tram, funicular, monorail or
+narrow gauge one shows only where those lines do: under All, or while tram track snaps. The stations are
+noritetsu's model's (`data/<cc>/stations.json`, junction points left out; the tram test reads the region's
+`lines.json`), fetched per region when the view at zoom 10 or closer first touches it with the setting on.
+Snapping is unchanged.
+
 ## Terrain (hill shading)
 
 **Terrain**, on by default (Anita, 2026-11-17; a stored off from before was dropped once) [T-1270], switched by the mountain button beside the Build tab's price per km

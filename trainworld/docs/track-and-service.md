@@ -159,6 +159,12 @@ Full design, numbers and sources: `notes/T-008.md`.
   crossing between levels, track on top of track), and so does any flat crossing on the piece
   (`PlatformCrossing`): a crossing that close would sit at the platform's end. A station's name
   suggestions (T-534, `map/stationNames.ts`, worked out when asked and never stored) are:
+  - **the real station** [T-3571]: the real station (noritetsu's, `map/realStations.ts`) nearest the spot
+    within 150 m, in Latin letters as the game writes place names: its own name where that is in them,
+    else its English one, else Cyrillic transliterated; one with none of those (some of Japan's,
+    China's, Greece's) or a name in use gives no suggestion. A ferry port never takes one. The region's
+    stations are fetched when the station tool is picked; a click before they arrive names as if there
+    were none;
   - **the cross street**: the nearest named street on the basemap within 400 m ("W 42nd St"), when
     the map is at zoom 13 or closer (further out the tiles hold only the bigger roads), skipping
     any street whose direction where it comes nearest is within 30° of the track's there (the
@@ -175,7 +181,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   a stop's own label in OSM) is suggested; the next candidate takes its place. A city, town,
   village or hamlet keeps its name even then (Huntington Station is a place) [T-568].
 
-  A new station takes the cross street, else the neighbourhood, else the nearest place of any kind
+  A new station takes the real station, else the cross street, else the neighbourhood, else the nearest place of any kind
   on the place list (neighbourhoods within 2.5 km of their label point, towns 5 km), else a place
   on the loaded tiles, else "Station N". A place name in use gives way to another place at most
   800 m further, else the way the station lies from it ("North Williamsburg"), else a number

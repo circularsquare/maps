@@ -1862,6 +1862,7 @@
   "settingsTab.realNetwork": "Real world network",
   "settingsTab.realNone": "None",
   "settingsTab.realPassenger": "Passenger",
+  "settingsTab.realStations": "Show stations",
   "settingsTab.riders": "Riders on trains and platforms",
   "settingsTab.rotate": "Rotate map with right drag",
   "settingsTab.units": "Units",

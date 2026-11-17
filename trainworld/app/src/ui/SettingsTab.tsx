@@ -151,6 +151,12 @@ export function SettingsTab() {
       <div class="h">{t("settingsTab.realNetwork")}</div>
       <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}
         tips={(v) => (v === "all" ? t("settingsTab.realAllTip") : undefined)} />
+      {/* T-3570: small rings on real stations, the name on hover; off by default */}
+      <div class="checks">
+        <Check checked={d.realStations} onChange={(v) => setDisplay("realStations", v)}>
+          {t("settingsTab.realStations")}
+        </Check>
+      </div>
       <div class="h">{t("settingsTab.riders")}</div>
       <div class="checks">
         <Check checked={d.trainLoad} onChange={(v) => setDisplay("trainLoad", v)}>

@@ -414,7 +414,7 @@ export class FerryDraw {
       }
       const taken = () => new Set([...(world.peek()?.save.stations.map((s) => s.name) ?? []), ...this.ports.map((p) => p.name)]);
       const p: DraftPort = { node: null, landing, berth, name: "" };
-      p.naming = newStationName(this.map, landing.lng, landing.lat, null, taken).then((n) => (p.name = n), () => (p.name = t("ferryDraw.port")));
+      p.naming = newStationName(this.map, landing.lng, landing.lat, null, taken, false).then((n) => (p.name = n), () => (p.name = t("ferryDraw.port")));
       this.add(p);
     } finally {
       this.busy = false;

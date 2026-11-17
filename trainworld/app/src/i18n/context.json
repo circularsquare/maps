@@ -1857,6 +1857,7 @@
   "settingsTab.realNetwork": "Settings: section heading over the choice of which real rail network is drawn faintly under the player's own (None, Passenger, All).",
   "settingsTab.realNone": "Settings, Real world network: segmented button, draw no real track, beside Passenger and All.",
   "settingsTab.realPassenger": "Settings, Real world network: segmented button, draw passenger and light rail track, beside None and All.",
+  "settingsTab.realStations": "Settings, under the Real world network buttons: checkbox, draw small marks where the real world's stations are (their names show on hover).",
   "settingsTab.riders": "Settings: section heading for how riders on trains and platforms are shown.",
   "settingsTab.rotate": "Settings, Map: checkbox; dragging with the right mouse button turns the map.",
   "settingsTab.units": "Settings: section heading over the units (US units) and the currency.",

@@ -37,6 +37,7 @@ import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpee
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
+import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { hidden, levelHidden } from "./visibility";
@@ -265,11 +266,17 @@ export class Tools {
     effect(() => { if (tool.value === "station") stationOnTram.value = tramTrack.value; }); // T-3015: also when the type changes with the station tool in hand
     // the place lists name stations where the tiles have no streets (T-065); the view's zones' are
     // fetched when the station tool is picked, not at startup (T-400)
-    effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); warmStreetNames(this.map); } });
+    // and the real stations of the view's region, which name a station on one (T-3571)
+    effect(() => { if (tool.value === "station") { const c = this.map.getCenter(); void loadPlacesAt(c.lng, c.lat); void loadRealStationsAt(c.lng, c.lat); warmStreetNames(this.map); } });
     // T-2430: the trips near are asked for when the tool is picked and when the demand shown changes,
     // so the figure is in hand when the pointer gets to the track
     effect(() => { demandView.value; activeCity.value; worldFrameEpoch.value; if (tool.value === "station") this.askLegs(); });
-    map.on("idle", () => tool.peek() === "station" && warmStreetNames(map));
+    map.on("idle", () => {
+      if (tool.peek() !== "station") return;
+      warmStreetNames(map);
+      const c = map.getCenter();
+      void loadRealStationsAt(c.lng, c.lat);
+    });
     // T-1778: the snap ring and ghost are in local units, stale once the draw anchor moves: taken again where the pointer rests
     worldFrameEpoch.subscribe(() => {
       const p = this.pointer;
