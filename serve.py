@@ -79,7 +79,8 @@ PAD_LOCK = threading.Lock()
 # POST {"id", "rev", "edited"?, "hidden"?, "area"?, "fix"?, "parent"?} (X-Maps-Run) saves one item through
 # trainworld/tools/changelog.py, which the agents' CLI shares (a lock file); 409 with the current item when "rev" is not
 # the item's. {"op": "group", "text", "area", "fix"} adds a group item (T-3466); {"op": "delete", "id", "rev"} removes
-# a group with nothing under it.
+# a group with nothing under it. {"op": "move", "id", "before"} puts an item before another with the same parent
+# (null: last): the file's order is her order.
 CHANGELOGS = {"twboard": "trainworld/changelog/next.json"}
 PAD_MAX = 256 * 1024
 
@@ -423,8 +424,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except RuntimeError:
                 return self.send_error(503, "changelog is locked")
             return self.send_json(200, item)
-        if not isinstance(obj, dict) or not isinstance(obj.get("id"), str) or not isinstance(obj.get("rev"), int):
+        if isinstance(obj, dict) and obj.get("op") == "move" and isinstance(obj.get("id"), str):
+            pass
+        elif not isinstance(obj, dict) or not isinstance(obj.get("id"), str) or not isinstance(obj.get("rev"), int):
             return self.send_error(400, "need id and rev")
+        if obj.get("op") == "move":
+            try:
+                code = changelog.move_item(str(obj.get("id")), obj.get("before"), str(path))
+            except RuntimeError:
+                return self.send_error(503, "changelog is locked")
+            if code != 200:
+                return self.send_error(code)
+            return self.send_json(200, {"ok": True})
         fields = {k: obj[k] for k in ("edited", "hidden", "area", "fix", "parent") if k in obj}
         try:
             if obj.get("op") == "delete":
