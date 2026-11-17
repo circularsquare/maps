@@ -5,13 +5,15 @@ One JSON file per release under trainworld/changelog/. The unpublished one is ne
 task, by, at, rev (counts changes, so a page saving over a newer change gets refused), area (its icon, T-3466: one of
 AREAS), fix (a bug fix: lighter text, after its area's other items), parent (the id of the group it sits under) and
 group (true for a group item, like "track bug fixes", that others sit under). The page shows edited if set, else
-text. A hidden item stays in the file and out of the game; a hidden group hides its items too.
+text. The order of items in the file is her order (the board's drag; new items go first); publish keeps the area
+grouping the game shows and uses her order within each area. A hidden item stays in the file and out of the game; a hidden group hides its items too.
 
     python trainworld/tools/changelog.py add "fixed trains drawn through each other on single track" --area track --fix --task T-3379 --by bugs1
     python trainworld/tools/changelog.py group "track bug fixes" --area track --fix
     python trainworld/tools/changelog.py set c002 [--area track] [--fix | --no-fix] [--under c055 | --under none]
     python trainworld/tools/changelog.py reword c002 "<new line>"      (sets edited, as the board's edit does)
     python trainworld/tools/changelog.py hide c002 [--show]
+    python trainworld/tools/changelog.py move c002 [--before c005]      (no --before: last)
     python trainworld/tools/changelog.py list
     python trainworld/tools/changelog.py line "update v0.3.6: <the start menu's line, 80 characters at most>"
     python trainworld/tools/changelog.py publish --version v0.3.6 [--at 2026-11-17T15:00:00Z] [--dry-run]
@@ -133,9 +135,30 @@ def add_item(text, task=None, by="agent", path=NEXT, area=None, fix=False, paren
             item["parent"] = parent
         if group:
             item["group"] = True
-        d["items"].append(item)
+        d["items"].insert(0, item)       # her order is the file's: a new item goes first, where she sees it
         write_file(d, path)
     return item
+
+
+def move_item(item_id, before, path=NEXT):
+    """Her drag on the board: put item_id just before the item `before` (an id), or last when before is None.
+    Only among the items with the same parent (top level, or one group's). Returns the status: 200, 404, 400."""
+    with Locked(path):
+        d = read(path)
+        items = d["items"]
+        item = next((i for i in items if i["id"] == item_id), None)
+        if item is None:
+            return 404
+        if before is not None:
+            tgt = next((i for i in items if i["id"] == before), None)
+            if tgt is None:
+                return 404
+            if tgt.get("parent") != item.get("parent") or tgt is item:
+                return 400
+        items.remove(item)
+        items.insert(len(items) if before is None else next(n for n, i in enumerate(items) if i["id"] == before), item)
+        write_file(d, path)
+    return 200
 
 
 def delete_group(item_id, rev, path=NEXT):
@@ -203,7 +226,7 @@ def rank(i):
 
 def visible(d):
     """What reaches the game, in the game's order: [(item, [its group's items])]. Sorted by area, an area's fixes
-    after its other items, else in file order; a group with nothing visible under it is left out."""
+    after its other items, else her (file) order; a group with nothing visible under it is left out."""
     items = d["items"]
     groups = {i["id"]: i for i in items if i.get("group")}
     out = []
@@ -338,6 +361,9 @@ def main():
     h = sub.add_parser("hide")
     h.add_argument("id")
     h.add_argument("--show", action="store_true", help="unhide")
+    mv = sub.add_parser("move")
+    mv.add_argument("id")
+    mv.add_argument("--before")
     sub.add_parser("list")
     l = sub.add_parser("line")
     l.add_argument("text")
@@ -377,6 +403,10 @@ def main():
         if code != 200:
             raise SystemExit("not saved (%d): try again" % code)
         print("%s %s" % (r.cmd, r.id))
+    elif r.cmd == "move":
+        code = move_item(r.id, r.before)
+        if code != 200:
+            raise SystemExit("not moved (%d): both ids need to exist and share a parent" % code)
     elif r.cmd == "list":
         d = read()
         print("line: %s" % (d.get("line") or "(none)"))

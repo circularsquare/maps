@@ -491,7 +491,7 @@ select.small {
 #changelog h2.section .n { color: var(--muted); font-weight: 400; font-size: 13px; }
 #changelog > .meta { margin-bottom: 6px; }
 .cl-item { border-bottom: 1px solid var(--line); padding: 3px 0; }
-.cl-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 8px; }
+.cl-row { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 8px; }
 /* T-3466: the area icon (the game's colours), its menu, groups and their items, bug fixes lighter */
 #changelog .cl-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .cl-area-cell { position: relative; }
@@ -507,6 +507,12 @@ select.small {
 .cl-a-none { color: var(--line); }
 .cl-a-performance { color: #9a9a9a; }
 .cl-a-performance .screen { fill: #fff; }
+.cl-grip { display: inline-grid; place-items: center; width: 18px; height: 26px; margin-right: -4px; color: var(--muted); cursor: grab; touch-action: none; }
+.cl-grip:hover { color: var(--text); }
+.cl-grip .ic { width: 14px; height: 14px; fill: currentColor; stroke: none; }
+.cl-item.cl-dragging { opacity: 0.45; }
+.cl-item.cl-drop-before { box-shadow: 0 -2px 0 var(--accent); }
+.cl-item.cl-drop-after { box-shadow: 0 2px 0 var(--accent); }
 .icon-btn.cl-area-btn { width: 26px; }
 .cl-menu { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: 230px; padding: 6px; display: flex;
   flex-direction: column; gap: 1px; background: var(--card); border: 1px solid var(--line); border-radius: 6px;

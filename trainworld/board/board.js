@@ -68,6 +68,8 @@ const ICONS = {
   'eye-off': [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }],
     ['path', { d: 'M2.5 13.5 13.5 2.5' }]],
   undo: [['path', { d: 'M5.5 3.5 2.5 6.5l3 3' }], ['path', { d: 'M2.5 6.5h7a3.5 3.5 0 0 1 0 7H6' }]],
+  grip: [['circle', { cx: 5.5, cy: 3.5, r: 1.1 }], ['circle', { cx: 10.5, cy: 3.5, r: 1.1 }], ['circle', { cx: 5.5, cy: 8, r: 1.1 }],
+    ['circle', { cx: 10.5, cy: 8, r: 1.1 }], ['circle', { cx: 5.5, cy: 12.5, r: 1.1 }], ['circle', { cx: 10.5, cy: 12.5, r: 1.1 }]],
   chev: [['path', { d: 'M6 4l4 4-4 4' }]],
   // the changelog's areas (T-3466), as the game draws them (app/src/ui/widgets.tsx, Changelog.tsx)
   'a-track': [['path', { d: 'M2.5 10.5l8-8M5.5 13.5l8-8M3 9l4 4M6 6l4 4M9 3l4 4' }]],
@@ -1901,12 +1903,68 @@ const CL_AREAS = [['track', 'Track'], ['demand', 'Demand'], ['scheduling', 'Sche
   ['other', 'Other (a plain dot)'], ['bug', 'Bug fix of no area']];
 const clRank = (it) => { const a = CL_AREAS.findIndex(([k]) => k === it.area); return (a < 0 ? CL_AREAS.length : a) * 2 + (it.fix ? 1 : 0); };
 
-/** the items as the game lists them: by area, an area's fixes after its other items, a group's items under it */
+/** T-3590: her order is the file's (new items first); shown items above hidden ones, a group's items under it.
+ *  A hidden group goes down with its items. Within a group, hidden items come after the shown ones. */
 function clOrdered(all) {
   const groups = new Set(all.filter((i) => i.group).map((i) => i.id));
-  const top = all.map((it, n) => [it, n]).filter(([it]) => !groups.has(it.parent))
-    .sort((a, b) => clRank(a[0]) - clRank(b[0]) || a[1] - b[1]).map(([it]) => it);
-  return top.flatMap((it) => (it.group ? [it, ...all.filter((c) => c.parent === it.id).map((c) => ({ ...c, child: true }))] : [it]));
+  const hid = (it) => (it.hidden ? 1 : 0);
+  const top = all.filter((it) => !groups.has(it.parent));
+  const kidsOf = (g) => all.filter((c) => c.parent === g.id);
+  const stable = (arr) => arr.map((it, n) => [it, n]).sort((a, b) => hid(a[0]) - hid(b[0]) || a[1] - b[1]).map(([it]) => it);
+  return stable(top).flatMap((it) => (it.group ? [it, ...stable(kidsOf(it)).map((c) => ({ ...c, child: true }))] : [it]));
+}
+
+/** the same move serve.py's changelog.move_item makes: it just before `before` (an id), or last */
+function clMoveLocal(id, before) {
+  const items = CL.data.items;
+  const it = items.find((x) => x.id === id);
+  if (!it) return;
+  items.splice(items.indexOf(it), 1);
+  items.splice(before == null ? items.length : items.findIndex((x) => x.id === before), 0, it);
+}
+
+const clDrag = { id: null, over: null, after: false };
+
+function clDropClear() {
+  for (const e of document.querySelectorAll('#changelog .cl-drop-before, #changelog .cl-drop-after, #changelog .cl-dragging'))
+    e.classList.remove('cl-drop-before', 'cl-drop-after', 'cl-dragging');
+}
+
+/** where a drag of the item `id` would land: {before, row, after} among the displayed items that share its parent,
+ *  or null. `rowId` is the row the pointer is on, `lower` whether it is on that row's lower half */
+function clTarget(id, rowId, lower) {
+  const all = CL.data.items;
+  const it = all.find((x) => x.id === id);
+  let row = all.find((x) => x.id === rowId);
+  if (!it || !row || row.id === id) return null;
+  const grp = (x) => (x.parent && all.some((g) => g.group && g.id === x.parent) ? x.parent : null);
+  const mine = grp(it);
+  if (grp(row) !== mine) {
+    // over a group's item while dragging a top-level one: counts as the lower part of that group
+    if (mine === null && grp(row)) { row = all.find((x) => x.id === grp(row)); lower = true; if (row.id === id) return null; }
+    else return null;
+  }
+  const order = clOrdered(all).filter((x) => grp(x) === mine && x.id !== id);
+  const k = order.findIndex((x) => x.id === row.id);
+  if (k < 0 || !!row.hidden !== !!it.hidden) return null;       // shown and hidden items keep apart
+  const next = order[k + (lower ? 1 : 0)];
+  const before = next && !!next.hidden === !!it.hidden ? next.id : null;
+  if (before === null && order.slice(k + 1).some((x) => !x.hidden === !it.hidden)) return null;
+  return { before, row: row.id, after: lower };
+}
+
+async function clMove(id, before) {
+  clMoveLocal(id, before);
+  CL.status[id] = 'Saving';
+  renderChangelog();
+  try {
+    const r = await clPost({ op: 'move', id, before });
+    if (!r.ok) throw new Error(r.status);
+    CL.status[id] = 'Saved';
+  } catch (e) {
+    CL.status[id] = 'Not saved: could not reorder';
+  }
+  await loadChangelog();
 }
 
 function clAreaIcon(area) {
@@ -1925,7 +1983,7 @@ async function clAddGroup() {
   try {
     const r = await clPost({ op: 'group', text: 'new group', area: 'bug', fix: true });
     const it = await r.json();
-    CL.data.items.push(it);
+    CL.data.items.unshift(it);
     CL.menu = it.id;
   } catch (e) {
     CL.ok = false;
@@ -2064,8 +2122,41 @@ function clItem(it) {
   const mine = CL.conflict[id];
   const when = new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' });
   const cls = `cl-item${it.hidden ? ' is-hidden' : ''}${it.fix ? ' is-fix' : ''}${it.group ? ' is-group' : ''}${it.child ? ' is-child' : ''}`;
-  return el('div', { class: cls, 'data-item': id },
+  return el('div', { class: cls, 'data-item': id,
+    ondragstart: (e) => {
+      if (!e.currentTarget.draggable || e.target !== e.currentTarget) { e.preventDefault(); return; }
+      clDrag.id = id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+      e.currentTarget.classList.add('cl-dragging');
+    },
+    ondragover: (e) => {
+      if (!clDrag.id) return;
+      const b = e.currentTarget.getBoundingClientRect();
+      const t = clTarget(clDrag.id, id, e.clientY > b.top + b.height / 2);
+      clDropClear();
+      const src = document.querySelector(`#changelog [data-item="${clDrag.id}"]`);
+      if (src) src.classList.add('cl-dragging');
+      if (!t) return;
+      e.preventDefault();
+      const row = document.querySelector(`#changelog [data-item="${t.row}"]`);
+      if (row) row.classList.add(t.after ? 'cl-drop-after' : 'cl-drop-before');
+    },
+    ondrop: (e) => {
+      if (!clDrag.id) return;
+      e.preventDefault();
+      const b = e.currentTarget.getBoundingClientRect();
+      const t = clTarget(clDrag.id, id, e.clientY > b.top + b.height / 2);
+      const moved = clDrag.id;
+      clDrag.id = null;
+      clDropClear();
+      if (t) clMove(moved, t.before);
+    },
+    ondragend: (e) => { clDrag.id = null; e.currentTarget.draggable = false; clDropClear(); } },
     el('div', { class: 'cl-row' },
+      el('span', { class: 'cl-grip', 'aria-label': 'Drag to reorder',
+        onpointerdown: (e) => { e.currentTarget.closest('.cl-item').draggable = true; },
+        onpointerup: (e) => { e.currentTarget.closest('.cl-item').draggable = false; } }, icon('grip')),
       el('span', { class: 'cl-area-cell' },
         el('button', { class: 'icon-btn cl-area-btn', type: 'button', 'aria-expanded': String(CL.menu === id),
           title: `${(CL_AREAS.find(([k]) => k === it.area) || [0, 'No area yet'])[1]}${it.fix ? ', bug fix' : ''}. Click to change`,
@@ -2363,7 +2454,7 @@ setInterval(() => DATA && renderStrip(), 60000);
 // the orchestrator marks actions handled as it applies them; then the files have changed too
 setInterval(async () => {
   if (!DATA || document.hidden) return;
-  if (view === 'changelog' && !CL.menu && !RM.drag && !Object.values(CL.timers).some(Boolean)) loadChangelog();
+  if (view === 'changelog' && !CL.menu && !clDrag.id && !RM.drag && !Object.values(CL.timers).some(Boolean)) loadChangelog();
   if (view === 'changelog' && !RM.drag && !RM.timer && !Object.keys(drafts).some((k) => k.startsWith('rm:'))) loadRoadmap();
   const was = new Set(INBOX.pending.map((a) => a.id));
   const padsWere = new Set(INBOX.pads.filter((p) => p.handled).map((p) => p.id));
