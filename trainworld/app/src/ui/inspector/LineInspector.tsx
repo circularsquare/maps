@@ -35,7 +35,6 @@ import { locateStation } from "../locate";
 import { demandView } from "../../game/demand";
 import { useClockQuery } from "../useClockQuery";
 import type { Vehicle } from "../../game/vehicle";
-import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, vehicleOf, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
 import { partwayReversals, turnedLine, type TurnRow } from "../../game/turnedLine";
 import { MareyButton } from "./MareyChart";
@@ -45,7 +44,7 @@ import { LineTopSpeed } from "./LineTopSpeed";
 import { LineFare, LineMoney } from "./LineMoney";
 import type { EditOp } from "../../workers/protocol";
 import { hasUpgrade, UPGRADE } from "../../game/upgrades";
-import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods } from "./schedule";
+import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods, vehicleOf } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 import { TRACK_SPECS } from "../../game/trackKinds";
 
@@ -633,21 +632,14 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
   return tr("lineInspector.reach", { speed: speed(s.reached), vehicle }) + "\n" + why + (s.reached < s.limit - 1 ? "\n" + tr("lineInspector.tooClose") : "");
 }
 
-/** T-1293: copy the line's schedule settings, and paste the copy on it (game/scheduleCopy.ts).
- * T-2919: on a bus or ferry line too, where only the trains or headways are carried. */
-export function ScheduleCopyButtons({ l, st }: { l: LineInput; st: LineStats }) {
-  const c = scheduleCopy.value;
-  const whole = !!c && wholeCopy(c, st);
-  const fit = whole ? carsCap(l) : null;
-  const cut = c && fit && c.cars > fit.cap ? "\n" + tr("lineInspector.pasteCut", { name: fit.name, cars: carsText(c.cars), cap: carsText(fit.cap), vehicle: vehicleOf(st) }) : "";
+/** The chart and schedule panel buttons beside the Schedule heading (T-3543: the copy and paste buttons are gone;
+ * a default for new lines is set in the schedule panel). */
+export function ScheduleButtons({ l, st }: { l: LineInput; st: LineStats }) {
+  if (st.bus) return null;
   return (
     <span class="sched-copy">
-      <button class="btn icon mini" aria-label={tr("lineInspector.copySchedule")} data-tip={tr("lineInspector.copyScheduleTip", { text: scheduleText(scheduleOf(l, st), !st.bus) })}
-        onClick={() => copySchedule(l, st)}><Icon.copy /></button>
-      <button class="btn icon mini" aria-label={tr("lineInspector.pasteSchedule")} disabled={!c} data-tip={c ? tr("lineInspector.pasteScheduleTip", { from: c.from, text: scheduleText(c, whole, vehicleOf(st)) }) + cut : tr("lineInspector.pasteNone")}
-        onClick={() => void pasteSchedule(l, st)}><Icon.paste /></button>
-      {!st.bus && <MareyButton st={st} />}
-      {!st.bus && <ScheduleButton l={l} st={st} />}
+      <MareyButton st={st} />
+      <ScheduleButton l={l} st={st} />
     </span>
   );
 }
@@ -1018,7 +1010,7 @@ function RailLineInspector({ id }: { id: string }) {
       </div>
       {editingStops && stopsBlock}
 
-      <Schedule l={l} st={st} now={now} limits={limits} crowd={periods} canAuto={canAuto} copy={<ScheduleCopyButtons l={l} st={st} />} />
+      <Schedule l={l} st={st} now={now} limits={limits} crowd={periods} canAuto={canAuto} copy={<ScheduleButtons l={l} st={st} />} />
       {st.status !== "broken" && <TrainType l={l} st={st} lev={lev} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status !== "broken" && <LinePairs l={l} st={st} />}

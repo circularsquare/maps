@@ -6,7 +6,7 @@
 import type { ComponentChildren } from "preact";
 import { lineMoneyTip, Money } from "../MoneyText";
 import { count, duration, headway, money, speed, trainKind } from "../../game/format";
-import { lowerWord, t, tNumber, tSeries } from "../../i18n";
+import { lowerWord, t, tList, tNumber, tSeries } from "../../i18n";
 import { pctWhole } from "./tripText";
 import { crowdColour } from "../../game/palette";
 import { hourSpan, levelHours, PERIODS } from "../../game/periods";
@@ -21,6 +21,7 @@ import { ask } from "../../game/ui";
 import { useClockQuery } from "../useClockQuery";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { pendingLabel } from "../../game/lineFigures";
+import { clearDefaultHeadway, makeDefaultHeadway, newHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
@@ -333,7 +334,27 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
         })}
         {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} />}
       </table>
+      {weekends && <DefaultHeadways id={l.id} auto={auto} />}
     </>
+  );
+}
+
+/** T-3543: the headways every new line starts with, in the schedule panel: what they are now, the
+ * button that makes this line's the default (a line on counts has none), and the way back. */
+function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, number] | null }) {
+  const now = newHeadway.value;
+  const same = !!auto && !!now && auto.every((s, i) => s === now[i]);
+  return (
+    <div class="sched-default">
+      <div class="sched-default-head">{t("schedule.defaultTitle")}</div>
+      <div class="muted">{now ? tList(now.map((s) => headway(s > 0 ? 3600 / s : 0))) : t("schedule.defaultNone")}</div>
+      <div class="sched-default-btns">
+        <span data-tip={auto ? undefined : t("schedule.defaultNeedsHeadway")}>
+          <button type="button" class="btn text mini" disabled={!auto || same} onClick={() => makeDefaultHeadway(id)}>{t("schedule.defaultSet")}</button>
+        </span>
+        <button type="button" class="btn text mini" disabled={!now} onClick={clearDefaultHeadway}>{t("schedule.defaultReset")}</button>
+      </div>
+    </div>
   );
 }
 

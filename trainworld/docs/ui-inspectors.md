@@ -300,15 +300,8 @@ purpose filter the purpose drawn is ringed in the bar.
 - **Sections**, in order: Schedule (trains for each demand level, with the resulting headway;
   [track-and-service.md](track-and-service.md) 6.3; columns Demand, Trains and Headway, every
   cell one line, the Demand column cut with an ellipsis when short of room [T-692]; beside the
-  heading two small muted icon buttons, copy and paste [T-1293, `game/scheduleCopy.ts`]: copy keeps
-  the line's trains or headways per level, train length and kind of train in the browser
-  (`localStorage` "anitabuilder-schedule-copy", so it outlasts the game and the visit; hover: the
-  settings, "Headways 3 min, 5 min and 10 min, 6 cars, high speed"), and paste puts them on the line
-  shown as separate edits (kind, length, then the trains or headways; a refusal stops the rest), the
-  length cut to what its shortest platform fits (the paste hover and a notice say so), a loop's
-  counts rounded up to even; paste is off until something is copied, its hover naming the line
-  copied from; a third, on a running line, opens the **timetable chart** (below, hover "Show timetable chart" /
-  "Hide timetable chart", pressed while open); a fourth, on a running line, opens the **schedule panel** (hover "Detailed
+  heading small muted icon buttons [T-3543]: on a running rail line the **timetable chart** (below, hover "Show timetable chart" /
+  "Hide timetable chart", pressed while open) and, a size bigger (24 px), the **schedule panel** (hover "Detailed
   schedule", [ui-panels.md](ui-panels.md#schedule-panel), T-3346); each level's count or headway is set on its own, a new line's included (T-2123 took
   back T-2092's fill of every level; the tutorial asks for trains at each level instead); a Trains / Headway switch in the heading
   chooses what the player sets [T-625]: with Trains a click on the count types it (Enter or leaving applies, Escape cancels, a loop's rounded up to even) [T-3152]. A count is raised to at most one train (a loop's two) more than the whole trains the line's track lets run at that level (the round trip over its shortest headway, `limits`; a loop's even, one at least; `trainCap`) and 1000, so one train is held and the held messages, the issue and the red headway show: a plus or a typed number at or past that is refused with the shake and the refusal knock, a typed number above it sets the cap and shakes, and the plus's hover says what limits the line. Lowering is free. When a game loads, a count past the cap is lowered to it (`game/capLoad.ts`); a cap that falls later, from a track edit, leaves the count, red with the held-out alert, until it is lowered [T-3165]; with Headway the headway column holds a stepper (steps to

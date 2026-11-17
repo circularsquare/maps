@@ -134,6 +134,8 @@ export interface SaveHeader {
   demandBuilt?: string[][];
   /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
   newCars?: number;
+  /** T-3543: the headways, seconds at high, medium and low demand, every new line starts with (set from the timetables window); absent: the game's own counts */
+  newHeadway?: [number, number, number];
   /** T-1826: the save level of the build that wrote it (`TrackApi.save_level`, sim/src/track/save.rs
    * `LEVEL`); absent before it, read as 0 */
   level?: number;
@@ -166,7 +168,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, mode: true, start: true,
-  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, level: true, guide: true, achievements: true, home: true, copy: true,
+  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, level: true, guide: true, achievements: true, home: true, copy: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */
 export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADER_FIELDS));

@@ -114,7 +114,6 @@ export const Icon = {
   marey: () => <svg viewBox="0 0 16 16"><path d="M1.5 2.5h13M1.5 13.5h13M2 13.5l4-11M7.5 2.5l4 11M10 13.5l4-11" /></svg>,
   // T-3346: the schedule panel, a station timetable's hour column and rows
   timetable: () => <svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1" /><path d="M2.5 5.5h11M5.5 5.5v8M7.5 8h4M7.5 10.5h3" /></svg>,
-  paste: () => <svg viewBox="0 0 16 16"><path d="M5.5 3h-2v11.5h9V3h-2" /><rect x="5.5" y="1.5" width="5" height="3" rx="0.5" /><path d="M6 8h4M6 10.5h4" /></svg>,
   // the Lines and Stations tabs' scope toggle (the viewed place, the whole world)
   calendar: () => <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="11.5" rx="1" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" /></svg>,
   // a long holiday's going-out and coming-back days (T-1373), the sky's arrows: out to the right

@@ -241,11 +241,11 @@ export function SchedulePanel() {
   return <>{body}</>;
 }
 
-/** The line panel's icon beside its schedule: the schedule panel. */
+/** The line panel's icon beside its schedule: the schedule panel (T-3543: a size bigger than the others there). */
 export function ScheduleButton({ l, st }: { l: LineInput; st: LineStats }) {
   if (!charted(st, l)) return null;
   const tip = t("schedulePanel.open");
-  return <button class="btn icon mini" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "line", line: l.id })}><Icon.timetable /></button>;
+  return <button class="btn icon mini sched-open" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "line", line: l.id })}><Icon.timetable /></button>;
 }
 
 /** The group view's icon: the group's chart, for a group of two or more running rail lines. */

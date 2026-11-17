@@ -12,6 +12,7 @@ import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities
 import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZones";
 import { setHandOrderSink, takeHandOrder } from "../game/handOrder";
 import { setLineShapeSink, takeLineShapes } from "../game/lineShapeState";
+import { setNewHeadwaySink, takeNewHeadway } from "../game/newHeadway";
 import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
@@ -723,6 +724,7 @@ export class ClockClient {
     setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
     setLineShapeSink((line, shape) => this.post({ kind: "lineShape", line, shape }));
     setHiddenLinesSink((lines) => this.post({ kind: "hideLines", lines }));
+    setNewHeadwaySink((seconds) => this.post({ kind: "newHeadway", seconds }));
     current = this;
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
@@ -1153,6 +1155,9 @@ export class ClockClient {
         break;
       case "lineShapes":
         takeLineShapes(msg.shapes);
+        break;
+      case "newHeadway":
+        takeNewHeadway(msg.seconds);
         break;
       case "hiddenLines":
         takeHiddenLines(msg.lines);

@@ -717,7 +717,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Train length** (T-733, `TrackApi::set_line_cars`, `build_line` in `service.rs`): each line
   stores its cars, 0 for the most its shortest platform fits; a new line starts at the length last
   set on any line in the game (5 cars until one is set, `NEW_LINE_CARS`, so a crowded line is the player's cue to
-  lengthen it, Anita T-2271; the save keeps it, `newCars` in its header, and a save from before T-1094 starts at 5 too) [T-1094]; a set length
+  lengthen it, Anita T-2271; the save keeps it, `newCars` in its header, and a save from before T-1094 starts at 5 too) [T-1094]; headways the player made the default in the schedule window ([ui-panels.md](ui-panels.md#schedule-panel), `newHeadway` in the header) are put on each new line after it is made [T-3543]; a set length
   runs as set, at most that cap. A platform later shortened below it caps the trains while the
   setting stays, so lengthening the platform brings the set length back. Riders a train holds
   (160 a car at its rated load, 100%, and 240 at crush, 150%, T-2186), the cars the fleet needs and the running cost (US$4 a train-km plus US$2 a car-km) follow the cars

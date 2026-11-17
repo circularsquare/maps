@@ -679,6 +679,10 @@ table.sched tr.sched-day:nth-child(2) th { padding-top: 4px; }
 table.sched .sched-day-row { display: flex; align-items: center; gap: 8px; }
 table.sched .sched-day-row .btn.text { margin-left: auto; font-weight: 400; }
 table.sched .sched-day-row .stepper { font-weight: 400; }
+/* T-3543: the headways new lines start with, under the schedule panel's table */
+.sched-default { margin-top: 16px; }
+.sched-default-head { font-weight: 700; }
+.sched-default-btns { display: flex; gap: 8px; margin-top: 6px; }
 /* T-692: every cell one line; the demand column takes what the others leave and is cut with an ellipsis */
 table.sched th, table.sched td { white-space: nowrap; }
 table.sched th:not(:first-child), table.sched td:not(:first-child) { padding-left: 10px; }
@@ -882,6 +886,8 @@ rect.now { fill-opacity: .45; }
 .h .sched-copy { display: inline-flex; align-self: center; margin-left: 6px; font-weight: 400; }
 .sched-copy .btn { color: var(--muted); }
 .sched-copy .btn.mini svg { width: 14px; height: 14px; }
+.sched-copy .btn.mini.sched-open { width: 24px; min-width: 24px; height: 24px; }
+.sched-copy .btn.mini.sched-open svg { width: 18px; height: 18px; }
 .sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }

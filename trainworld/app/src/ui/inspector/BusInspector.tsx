@@ -25,7 +25,7 @@ import { demandView, complexTransfers } from "../../game/demand";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { RoundTrip, ScheduleCopyButtons, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
+import { RoundTrip, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
 import { LineFare } from "./LineMoney";
 import { PurposeSplit } from "./PurposeSplit";
 import { drawnReversed } from "../../game/northUp";
@@ -385,7 +385,7 @@ export function BusInspector({ id }: { id: string }) {
         <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
-      <Schedule l={l} st={st} now={now} crowd={periods} copy={<ScheduleCopyButtons l={l} st={st} />} />
+      <Schedule l={l} st={st} now={now} crowd={periods} />
       <ul class="rows">
         <AverageSpeed st={st} lev={lev} />
       </ul>

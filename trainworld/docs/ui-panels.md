@@ -1256,7 +1256,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 [T-3346 stage 1, T-3469, T-3475, T-3521; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md, notes/T-3521.md]
 
-- **A line's**: opened from the fourth icon by a running rail line's schedule heading (a station timetable,
+- **A line's**: opened from the bigger icon by a running rail line's schedule heading (a station timetable,
   hover "Detailed schedule"); a centred modal in the saved games panel's frame, up to 1320 px wide; closed by its
   close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the
   line's bullet and name, "schedule" in grey, then the mode choice, which offers Simple only until Detailed and
@@ -1270,7 +1270,11 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set every line's weekends
   to 70% of its weekdays?" first. The level in force is bold in today's section only; each section's dots are its
   own kind of day's (today's, else a weekday's or a Saturday's). A stepper's hover counts the fleet over both
-  kinds of day. Under the table the departures board.
+  kinds of day. Under the table, **Headways for new lines**: the headways every new line starts with, "Game default"
+  (the game's own train counts) until set, a "Set as default" button that makes this line's headways the default
+  (off for a line on counts, hover "Switch this line to Headway first", and while they already are) and "Use game default" to go back
+  (T-3543; saved with the game, `SaveHeader.newHeadway`; the clock worker applies them to each new rail line after it is
+  made, as a second edit, a line that cannot pay for the trains they ask staying on its counts). Then the departures board.
 - **Right**: the timetable over the chart.
 - **Departures**: headed "Departures" with a station picker (the line's stops in order, each station once, the first stop to start), then
   the board: one row per local hour of the line, from 4:00 through to 3:00, kept to the hours from the first train to

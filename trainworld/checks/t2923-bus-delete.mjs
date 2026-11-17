@@ -74,15 +74,6 @@ try {
   await wait(1000);
   check(planned.r && planned.u && !!(await line(planned.line)), 'undo brings a planned bus line back', JSON.stringify(planned));
 
-  // the paste hover follows the line pasted on
-  const text = await page.evaluate(async (num) => {
-    const m = await import('/src/game/scheduleCopy.ts');
-    const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num) ?? w.save.lines.find((x) => w.lineStats[x.id].bus), st = w.lineStats[l.id];
-    const boat = { from: 'Ferry', headway: null, trains: [4, 3, 2], cars: 1, fast: false, vehicle: 'boat' };
-    return { bus: m.scheduleText(boat, false, m.vehicleOf(st)), own: m.scheduleText(boat, false) };
-  }, num);
-  check(/buses/.test(text.bus) && !/boats/.test(text.bus), 'a ferry copy pasted on a bus says buses', text.bus);
-  check(/boats/.test(text.own), 'a ferry copy on its own says boats', text.own);
   check(errors.length === 0, 'no page errors', errors.slice(0, 3).join(' | '));
 } finally { await chrome.close(); }
 process.exit(fail ? 1 : 0);
