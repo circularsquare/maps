@@ -9,6 +9,7 @@ import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import type { WorldView } from "../game/types";
 import { selection, stopEditing, tool } from "../game/ui";
+import { partwayReversals } from "../game/turnedLine";
 import { world } from "../game/world";
 import { anchorVersion } from "./anchorVersion";
 import { anchor, toLocal } from "./geo";
@@ -45,7 +46,8 @@ export function reversalsOf(w: WorldView): Reversal[] {
   for (const l of w.save.lines) {
     // a bus turns at its ends: no reversal to mark
     if (w.lineStats[l.id]?.bus) continue;
-    for (const k of w.lineStats[l.id]?.reversals ?? []) {
+    const st = w.lineStats[l.id];
+    for (const k of st ? partwayReversals(st) : []) {
       const s = stations.get(l.stops[k]);
       if (s) add(s.id, s.name, s.lng, s.lat, l);
     }

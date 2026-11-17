@@ -1204,7 +1204,7 @@ export class Tools {
     const to = at && at.kind !== "free" ? this.endOf(at) : free(r.last);
     // T-3129: rail on roads is an ordinary route through the fitted corners, as the real snap's
     if (!tramTrack.peek()) return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: quadTrack.peek(), through: true, design: designSpeed.peek(), hsr: highSpeed.peek(), tram: false, ramp: autoRamp.peek(), ...this.joinReq(at) };
-    return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false };
+    return { from: this.start!.end, to, pis: r.pis, single: singleTrack.peek(), quad: false, through: true, design: designSpeed.peek(), hsr: false, tram: true, street: true, streetLine: r.line, ramp: false, ...this.joinReq(at) };
   }
 
   /** A real route's request (T-727d): from the start, or on open ground from the route's first

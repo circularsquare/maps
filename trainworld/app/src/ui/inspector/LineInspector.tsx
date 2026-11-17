@@ -36,7 +36,7 @@ import { useClockQuery } from "../useClockQuery";
 import type { Vehicle } from "../../game/vehicle";
 import { carsCap, copySchedule, pasteSchedule, scheduleCopy, scheduleOf, scheduleText, vehicleOf, wholeCopy } from "../../game/scheduleCopy";
 import { drawnReversed } from "../../game/northUp";
-import { turnedLine, type TurnRow } from "../../game/turnedLine";
+import { partwayReversals, turnedLine, type TurnRow } from "../../game/turnedLine";
 import { MareyButton } from "./MareyChart";
 import { ScheduleButton } from "./SchedulePanel";
 import { LineProfile } from "./LineProfile";
@@ -170,9 +170,11 @@ export function RoundTrip({ num, st, lev, stops, spots: { spots: busy, behindSpo
   const reversals = st.reversals?.length ?? 0;
   // T-2919: a bus line gives its own standing time (its dwell is stood at train stations only)
   const dwell = standing ?? runs * Math.max(0, stops - 2 - reversals) * st.dwellS + (st.loop === "circle" ? st.dwellS : 0);
-  const turn = st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS;
+  // T-3538: a loop run out and back turns at its far end as at an end of the line
+  const partway = partwayReversals(st).length;
+  const turn = (st.loop === "circle" ? 0 : st.loop === "balloon" ? st.turnaroundS : 2 * st.turnaroundS) + runs * (reversals - partway) * st.turnaroundS;
   // and so does a bare track end it reverses at (B3), which is no stop
-  const reversing = runs * (reversals + (st.endTurns?.length ?? 0)) * st.turnaroundS;
+  const reversing = runs * (partway + (st.endTurns?.length ?? 0)) * st.turnaroundS;
   const delay = (st.delayS[lev] ?? 0) / halves;
   // T-1924: following slower trains, apart from waiting at busy track
   const behind = Math.min(delay, behindAll / halves);
@@ -895,7 +897,7 @@ function RailLineInspector({ id }: { id: string }) {
             {name.get(s)}
           </span>
           {t !== undefined && <span class="t muted num" data-tip={stretchTip(st.stretches[above], st.tram)}>{duration(t)}</span>}
-          {st.reversals?.includes(i) && (
+          {partwayReversals(st).includes(i) && (
             <span class="rev-stop" data-tip={tr("lineInspector.reverseTip", { time: duration(st.turnaroundS), vehicle: vehicleOf(st) })}>
               <Icon.uturn />
             </span>

@@ -4,6 +4,17 @@
 
 import type { LineStats } from "./types";
 
+/**
+ * T-3538: the stops where a line's trains turn back partway, as the map's mark and the stop list's icon show
+ * them. A loop that turns back at its first stop (a balloon) and at one other stop, and nowhere else, runs out
+ * to that stop and back by another way (over a one-way pair, say): both turns are its ends, so neither is
+ * partway. `reversals` itself keeps every turn for the timings and the stop edits.
+ */
+export function partwayReversals(st: Pick<LineStats, "loop" | "reversals" | "endTurns">): number[] {
+  const r = st.reversals ?? [];
+  return st.loop === "balloon" && r.length === 1 && !st.endTurns?.length ? [] : r;
+}
+
 /** One row of a turned line's stop list. */
 export interface TurnRow {
   /** the stop index of the station's first pass, which its time and stretches belong to */

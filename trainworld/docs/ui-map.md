@@ -926,7 +926,10 @@ those who got on, less the load carried on.
   first.
 - **Reversal icons** [T-797, T-1581; `map/reversalMarks.ts`]: over every station where a line's trains
   reverse partway (`LineStats.reversals`, from `TrackApi::line_reversals`) and every bare track end
-  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`), a badge in the built flat
+  they reverse at (`LineStats.endTurns`, `TrackApi::line_end_turns`); a loop that turns back at its
+  first stop and at one other stop, nowhere else, runs out and back between them (over a one-way pair,
+  say), so both are its ends and neither is marked, nor given the stop list's turn icon
+  (`partwayReversals` in `game/turnedLine.ts`, T-3538). The icon is a badge in the built flat
   junction badge's style: the casing colour inside, a 1 px amber ring and an amber U-turn arrow
   (#c98a00, #e8b020 in the dark theme), at 0.9 opacity, floating on a 1 px stem 6 px long just
   above the place so the stop editing marker on it stays clickable. Its diameter is twice the
