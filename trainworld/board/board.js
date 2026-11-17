@@ -8,6 +8,10 @@ const POLL_MS = 15000;
 const $ = (sel) => document.querySelector(sel);
 
 let DATA = null;
+let HIST = null;            // history.json: the open-task counts per hour (history.py), for the graph
+let HIST_BY = 'area';       // the graph stacks by area or by priority
+let HIST_OPEN = true;
+try { HIST_BY = localStorage.getItem('twb-histby') || 'area'; HIST_OPEN = localStorage.getItem('twb-histopen') !== '0'; } catch (e) { /* not remembered */ }
 let SHOWP4 = false;          // P4 (Someday) tasks are left out of every open count unless this is on
 try { SHOWP4 = localStorage.getItem('twb-showp4') === '1'; } catch (e) { /* not remembered */ }
 /** a task the board counts and lists: all but parked P4 ones, unless Show P4 is on or its panel is the one open */
@@ -165,6 +169,10 @@ async function load(failed) {
     const r = await fetch(`requests.json?t=${Date.now()}`, { cache: 'no-store' });
     if (r.ok) REQ = await r.json();
   } catch (e) { /* a build from before stage 3: no requests yet */ }
+  try {
+    const r = await fetch(`history.json?t=${Date.now()}`, { cache: 'no-store' });
+    HIST = r.ok ? await r.json() : null;
+  } catch (e) { HIST = null; }
   ARCHIVED = new Set(DATA.archived || []);
   ARCHIVE = null;
   for (const k of Object.keys(NOTES_CACHE)) if (NOTES_CACHE[k].state !== 'loading') loadNotes(k, true);
@@ -348,7 +356,7 @@ function render() {
   renderTop();
   const req = view === 'requests';
   const cl = view === 'changelog';
-  for (const id of ['#strip', '#grid-wrap', '#update']) $(id).hidden = req || cl;
+  for (const id of ['#strip', '#history', '#grid-wrap', '#update']) $(id).hidden = req || cl;
   $('#requests').hidden = !req;
   $('#changelog').hidden = !cl;
   $('#search').placeholder = req ? 'Search requests' : cl ? 'Search the changelog' : 'Search lines and tasks';
@@ -359,6 +367,7 @@ function render() {
   else if (req) renderRequests();
   else {
     renderStrip();
+    renderHistory();
     renderGrid();
   }
   renderWarnings();
@@ -418,6 +427,88 @@ function renderStrip() {
       el('span', { class: 'slab inline' }, 'Cores'),
       c && c.cap != null ? el('span', { class: 'sitem' }, `${c.claimed} of ${c.cap} claimed`) : el('span', { class: 'sitem quiet' }, 'ledger not readable'),
       claims.map((x) => el('span', { class: 'sitem' }, el('b', {}, x.name), ` ${x.cores}`, el('span', { class: 'time' }, ` ${x.age}`))))));
+}
+
+// ---------- open tasks over time ----------
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs, ...kids) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+  for (const c of kids) if (c != null) n.append(c);
+  return n;
+}
+
+function renderHistory() {
+  const box = $('#history');
+  box.replaceChildren();
+  const rows = HIST && HIST.rows;
+  if (!rows || rows.length < 2) { box.hidden = true; return; }
+  box.hidden = false;
+  const last = rows[rows.length - 1];
+  const t1 = Date.parse(last.t);
+  const week = rows.filter((r) => Date.parse(r.t) >= t1 - 7 * 864e5);
+  const sum = (since, k) => rows.filter((r) => Date.parse(r.t) > t1 - since).reduce((a, r) => a + (r[k] || 0), 0);
+  const first = week[0];
+  const delta = last.n - first.n;
+  const toggle = (key, label) => el('button', { type: 'button', 'aria-pressed': String(HIST_BY === key), onclick: () => {
+    HIST_BY = key;
+    try { localStorage.setItem('twb-histby', key); } catch (e) { /* not remembered */ }
+    renderHistory();
+  } }, label);
+  box.append(el('div', { class: 'hhead' },
+    el('b', {}, 'Open tasks'),
+    el('span', { class: 'hnow' }, String(last.n)),
+    el('span', { class: 'hmeta' }, `${delta > 0 ? '+' : ''}${delta} in 7 days`),
+    el('span', { class: 'hmeta' }, `opened ${sum(864e5, 'opened')}, closed ${sum(864e5, 'closed')} in 24 hours`),
+    el('span', { class: 'hmeta' }, `opened ${sum(7 * 864e5, 'opened')}, closed ${sum(7 * 864e5, 'closed')} in 7 days`),
+    el('span', { class: 'hsw' }, toggle('area', 'By area'), toggle('pri', 'By priority')),
+    el('button', { type: 'button', onclick: () => {
+      HIST_OPEN = !HIST_OPEN;
+      try { localStorage.setItem('twb-histopen', HIST_OPEN ? '1' : '0'); } catch (e) { /* not remembered */ }
+      renderHistory();
+    } }, HIST_OPEN ? 'Hide' : 'Show')));
+  if (!HIST_OPEN) return;
+
+  const byArea = HIST_BY === 'area';
+  const series = byArea
+    ? HIST.areas.map((a) => ({ key: a.slug, name: a.name, colour: `var(--a-${a.slug})` }))
+    : [['P1', 'P1'], ['P2', 'P2'], ['P3', 'P3'], ['P4', 'P4'], ['none', 'No priority']].map(([k, n]) => ({ key: k, name: n, colour: k === 'none' ? 'var(--p-none)' : `var(--${k.toLowerCase()})` }));
+  const field = byArea ? 'area' : 'pri';
+  const W = 720, H = 130, L = 30, R = 34, T = 8, B = 16;
+  const t0 = t1 - 7 * 864e5;
+  const x = (t) => L + ((t - t0) / (t1 - t0)) * (W - L - R);
+  const max = Math.max(...week.map((r) => r.n));
+  const step = max > 300 ? 100 : 50;
+  const top = Math.ceil(max / step) * step;
+  const y = (v) => T + (1 - v / top) * (H - T - B);
+  const s = svg('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Open tasks over the last 7 days' });
+  for (let v = 0; v <= top; v += step) {
+    s.append(svg('line', { class: 'grid', x1: L, x2: W - R, y1: y(v), y2: y(v) }));
+    s.append(svg('text', { x: L - 4, y: y(v) + 3, 'text-anchor': 'end' }, String(v)));
+  }
+  // stacks, bottom series first
+  const acc = week.map(() => 0);
+  for (const sr of series) {
+    const lo = acc.slice();
+    week.forEach((r, i) => { acc[i] += (r[field] && r[field][sr.key]) || 0; });
+    if (acc.every((v, i) => v === lo[i])) { sr.total = 0; continue; }
+    const up = week.map((r, i) => `${x(Date.parse(r.t)).toFixed(1)},${y(acc[i]).toFixed(1)}`);
+    const dn = week.map((r, i) => `${x(Date.parse(r.t)).toFixed(1)},${y(lo[i]).toFixed(1)}`).reverse();
+    s.append(svg('polygon', { points: up.concat(dn).join(' '), fill: sr.colour }));
+  }
+  s.append(svg('polyline', { class: 'tot', points: week.map((r) => `${x(Date.parse(r.t)).toFixed(1)},${y(r.n).toFixed(1)}`).join(' ') }));
+  s.append(svg('text', { class: 'totl', x: x(t1) + 4, y: y(last.n) + 3 }, String(last.n)));
+  // a tick at each local midnight
+  const d = new Date(t0); d.setHours(24, 0, 0, 0);
+  for (; d.getTime() <= t1; d.setDate(d.getDate() + 1)) {
+    const px = x(d.getTime());
+    s.append(svg('line', { class: 'grid', x1: px, x2: px, y1: H - B, y2: H - B + 3 }));
+    s.append(svg('text', { x: px, y: H - 3, 'text-anchor': 'middle' }, d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })));
+  }
+  const keyRows = series.filter((sr) => sr.total !== 0 && (last[field] && last[field][sr.key])).reverse().map((sr) => el('span', {},
+    el('i', { style: `background: ${sr.colour}` }), sr.name, el('em', {}, String((last[field] && last[field][sr.key]) || 0))));
+  box.append(el('div', { class: 'hbody' }, s, el('div', { class: 'hkey' }, keyRows)));
 }
 
 function taskLink(text) {

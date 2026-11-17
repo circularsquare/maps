@@ -7,6 +7,8 @@ data/packs/
 data/work/
 # the board: players' names and messages, Anita's comments, derived data (maps is public)
 board/data.json
+board/history.json
+notes/task-history-ids.json
 board/requests.json
 board/archive.json
 notes/board-pad.md

@@ -19,6 +19,10 @@
   --p2: #e17600; --p2-ink: #2a1400;
   --p3: #d8a400; --p3-ink: #2a2200;
   --p4: #2f9a3c; --p4-ink: #0b200e;
+  /* the open-tasks graph: one colour per area (rows of the board), stacked */
+  --a-track: #3d6fb4; --a-schedule: #5aa9b8; --a-demand: #d08a3c; --a-schematic: #8d6bb5;
+  --a-community: #c9607f; --a-interface: #6aa84f; --a-performance: #b8a23a; --a-ops: #7a7a7a; --a-none: #cfcfcf;
+  --p-none: #bdbdbd;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -40,6 +44,9 @@
     --p2: #f28a0a; --p2-ink: #1f1000;
     --p3: #e3b60a; --p3-ink: #1f1a00;
     --p4: #36b345; --p4-ink: #0b200e;
+    --a-track: #5a8fd6; --a-schedule: #6bbccb; --a-demand: #e09c4e; --a-schematic: #a384cc;
+    --a-community: #de7b98; --a-interface: #7cc05f; --a-performance: #cdb94a; --a-ops: #8c8c8c; --a-none: #444444;
+    --p-none: #555555;
   }
 }
 
@@ -630,3 +637,23 @@ body.col-dragging { cursor: col-resize; user-select: none; }
   .cl-a-performance { color: #f2f2f2; }
   .cl-a-performance .screen { fill: color-mix(in srgb, #f2f2f2 22%, transparent); }
 }
+
+/* open tasks over time (T-3504) */
+#history { margin: 4px 0 10px; }
+#history .hhead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
+#history .hhead b { font-size: 12px; color: var(--muted); }
+#history .hnow { font-weight: 700; }
+#history .hmeta { color: var(--muted); font-size: 12px; }
+#history .hsw { display: inline-flex; gap: 2px; }
+#history button { border: 1px solid var(--line); background: transparent; border-radius: 4px; padding: 0 7px; font-size: 12px; cursor: pointer; }
+#history button[aria-pressed="true"] { background: var(--soft); border-color: var(--muted); }
+#history .hbody { display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap; margin-top: 2px; }
+#history svg { display: block; flex: none; }
+#history svg text { fill: var(--muted); font-size: 10px; font-family: inherit; }
+#history svg .grid { stroke: var(--line); stroke-width: 1; }
+#history svg .tot { fill: none; stroke: var(--text); stroke-width: 1.3; }
+#history svg text.totl { fill: var(--text); font-weight: 700; }
+#history .hkey { display: flex; flex-direction: column; gap: 0; font-size: 12px; padding-top: 4px; }
+#history .hkey span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+#history .hkey i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+#history .hkey em { color: var(--muted); font-style: normal; margin-left: 4px; }
