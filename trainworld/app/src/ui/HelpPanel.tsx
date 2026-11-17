@@ -58,6 +58,8 @@ function questions(): [string, string][] {
     [t("help.qRecalc"), t("help.aRecalc", { setting: m(t("settingsTab.recalcWhilePaused")) })],
     [t("help.qLoseMoney"), t("help.aLoseMoney")],
     [t("help.qLoseMoneyIntercity"), t("help.aLoseMoneyIntercity")],
+    [t("help.qLeftBehind"), t("help.aLeftBehind")],
+    [t("help.qWeekend"), t("help.aWeekend", { schedule: m(t("schedule.title")) })],
   );
   return list;
 }
