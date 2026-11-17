@@ -18,7 +18,9 @@ not once per message (Anita, 2026-11-09).
 - **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
   own (leave them alone), the task ids the agent may file, its own scratchpad subfolder and Vite port. Point to
   trainworld/CLAUDE.md for Vite, cores, Rust and commit rules rather than restating them. End every brief with
-  "Report in at most 15 lines; detail goes in notes/T-xxxx.md" (Anita 2026-11-17: reports ran 30-60 lines). A TODO.md
+  "Report in at most 15 lines; detail goes in notes/T-xxxx.md" (Anita 2026-11-17: reports ran 30-60 lines), and
+  "stop your Vite and any background command before your final report". An agent left with background work re-sends
+  its whole report each time that work ticks (five copies on 11-17): TaskStop it once its report is in. A TODO.md
   short-term item goes into the brief verbatim, examples and all (a paraphrase lost her formula tooltip, T-1839).
   A UI brief asks the agent to judge its own screenshots (gaps above and below anything added) before reporting,
   and you look at one per change (the one going to her) before telling her it is done.
