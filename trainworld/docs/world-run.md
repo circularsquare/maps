@@ -37,6 +37,7 @@ to 7 and 11 of `docs/adding-a-city-by-hand.md` for it, with the gate (its sectio
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py run --limit 20     the next 20 rows
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py status             rows by status, locks held
     venv\Scripts\python.exe -I trainworld\pipeline\world_run.py join               the joint solve for gated rows
+    venv\Scripts\python.exe -I trainworld\pipeline\world_run.py join --market-only the market and trips step of a failed join, again
 
 `--rows a,b` or `--countries GB,PT` instead of `--limit`; `--jobs N` the cores in all (default 2,
 up to 12 on an overnight run Anita approves). A run builds `--workers` rows at once (default N),
@@ -192,7 +193,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   cut to the packs registered when that unit runs, so a unit that parked earlier takes no later
   unit with it, and the market step leaves out commutes naming packs that left (T-997). Then `register.py
   <shipped and changed> --market --trips` (its zone files over `--jobs` processes from 100 zones, T-2627) (or `market_zones.py --rows`
-  when only parks happened), and a check that every file `vite.config.ts` copies into a
+  when only parks happened). That step's time limit is 1800 s plus 2 s per registered zone, since the local trips
+  run over every registered zone whatever the ids (3,545 zones took 26 minutes on a busy machine, T-2595); a hung
+  step is told by the quiet-log stack dump, not the limit. Then a check that every file `vite.config.ts` copies into a
   production build exists for each shipped pack (it copies the registry's packs, so nothing more
   needs listing). Last, `zone_outlines.py` rewrites `data/packs/outlines.json`, the coarse outline of
   every registered zone with the sea off its coast (T-800, T-1145; over the run's `--jobs`, with its sea work kept in `data/work/zone_outlines_cache`, T-1977: about 4.5 minutes at 4 jobs from an empty cache, under a minute when a few zones changed; a failure only prints a warning and leaves the old file, so
@@ -203,6 +206,16 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   warning-only failure, so the new zones are found by their own name only until it is rerun).
   Status `shipped`; a shipped row's build hand-offs (`data/work/<id>.cells.*`, `walk_zone.u8*`) are deleted
   then, since nothing reads them after (T-2554).
+- **A join costs its groups** (T-2702): a join solves every solve unit a gated pack joined whole (a country's part of
+  a group, its neighbours fixed), so 4 rebuilt rows in Mexico cost all Mexico's solve (55 min of the 460 min of that
+  join). Batch small fixes in a big country with its next rebuild.
+- **The market step again** (T-2777): a join whose market step failed leaves the solves done and the packs shipped.
+  `join --market-only` redoes just that step, with the id list of the failed join's own `register ... --market
+  --trips` line (the last one in the newest `<batch>/join.market.log`; `--from-log <that file>` picks another,
+  `--ids a,b` names them; ids no longer registered are left out), under the `packs` lock after waiting for gates,
+  then the freeze the failed join skipped. Outlines, realms and aliases are not rerun (they ran in the failed
+  join, or `world_run.py step zone_outlines` etc.). It exits 2 on a failed step. Don't write the list by hand
+  from the rows: it also holds the fixed neighbours the join rewrote (T-2702's first retry missed tug).
 - **Freeze** (T-928): a join with no market failure and no other run live ends with
   `pipeline/freeze.py`, which hard-links every file a production build copies into
   `data/frozen/<stamp>/` (seconds, no space; the newest three kept). A publish during a later

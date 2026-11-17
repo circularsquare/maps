@@ -90,6 +90,7 @@ MODULE_OUTLINES = {"england", "france", "germany", "usa"}  # plan_hooks giving a
 # A step still running after this long is stopped and its row parks (four times as long for a row
 # over BIG_PEOPLE): the longest seen, a 20M pack's build, takes under an hour on 3 cores.
 STEP_LIMIT_S = {"build_city": 5400, "routes": 3600, "pack_gate": 5400, "intercity": 7200, None: 1800}
+MARKET_BASE_S, MARKET_S_PER_ZONE = 1800, 2  # the join's market step: 1800 s plus 2 s per registered zone (T-2627)
 BIG_PEOPLE = 15e6
 # T-1978: while a region builds, its built rows are gated in chunks of at least this many (each
 # chunk pays a snapshot, a register and a Vite start, about 2 minutes); the rest once its builds
@@ -459,7 +460,7 @@ class Run:
 
     # ---------------------------------------------------------------- one step
 
-    def step(self, name, args, log, threads=None, env=None, quiet=False, big=False):
+    def step(self, name, args, log, threads=None, env=None, quiet=False, big=False, limit=None):
         """(ok, seconds, the RESULT line's value or the log's last lines). A step outside a row's
         build gets every core of --jobs: a run's regions go one at a time, so its builds are idle."""
         t = threads or self.jobs
@@ -478,7 +479,7 @@ class Run:
             f.flush()
             p = subprocess.Popen([sys.executable, "-I", "-u", os.path.abspath(__file__), "step", name, *args],
                                  stdout=f, stderr=subprocess.STDOUT, env=e, cwd=str(MAPS), creationflags=flags)
-            limit = STEP_LIMIT_S.get(name, STEP_LIMIT_S[None]) * (4 if big else 1)
+            limit = limit or STEP_LIMIT_S.get(name, STEP_LIMIT_S[None]) * (4 if big else 1)
             size, still, said = -1, time.time(), False
             while True:
                 try:
@@ -714,7 +715,10 @@ class Run:
 
     def join_only(self):
         """T-786: the joint solve for every gated row (of --countries), once, after the parallel
-        runs' regions; one at a time (the packs lock), on every core of --jobs."""
+        runs' regions; one at a time (the packs lock), on every core of --jobs. With --market-only
+        (T-2777) only the market and trips step of a failed join, see market_only."""
+        if self.o.get("market_only"):
+            return self.market_only()
         rows = [r for r in self.rows() if r["status"] == "gated"]
         if self.o.get("countries"):
             cs = set(self.o["countries"].split(","))
@@ -1448,13 +1452,7 @@ class Run:
                 changed -= set(parked)
         order = [c["id"] for c in self.registry()["cities"]]
         ids = sorted((i for i in changed if i in order), key=order.index)  # a unit that parked later took its packs out
-        if ids:
-            ok, _, tail = self.step("register", ids + ["--market", "--trips"], f"{L}.market.log")
-        else:
-            ok, _, tail = self.step("market_zones", ["--rows"], f"{L}.market.log")
-        if not ok:
-            # the packs are registered and gated; a market failure leaves them so and says it
-            self.report.setdefault("problems", []).append(f"market step failed: {str(tail)[-300:]}")
+        self.market_step(ids, L)
         for i in shipped:
             missing = [x for x in VITE_FILES if not (self.packs / f"{i}{x}").exists()]
             if missing:
@@ -1483,6 +1481,82 @@ class Run:
                 print(f"  warning: zone search aliases not rebuilt: {str(tail)[-200:]}", flush=True)
         except Exception as e:
             print(f"  warning: zone search aliases not rebuilt: {e}", flush=True)
+
+    def market_step(self, ids, L):
+        """The join's market and trips step for `ids` (registry order). Its limit grows with the registry,
+        since the local trips run over every registered zone whatever the ids (T-2627: 3,545 zones took 26
+        minutes on a busy machine); a hung step is still told by QUIET_S's stack dump."""
+        zones = len(self.registry()["cities"])
+        limit = MARKET_BASE_S + MARKET_S_PER_ZONE * zones
+        if ids:
+            ok, _, tail = self.step("register", ids + ["--market", "--trips"], f"{L}.market.log", limit=limit)
+        else:
+            ok, _, tail = self.step("market_zones", ["--rows"], f"{L}.market.log", limit=limit)
+        if not ok:
+            # the packs are registered and gated; a market failure leaves them so and says it
+            self.report.setdefault("problems", []).append(f"market step failed: {str(tail)[-300:]}")
+        return ok
+
+    def market_only(self):
+        """T-2777: a failed join's market and trips step again, on its own. The ids are the join's own
+        register line (the last `register ... --market --trips` header of --from-log, else of the newest
+        `<batch>/join.market.log`), or --ids; the packs lock is held and gates are waited for, as in a join.
+        The solves are not redone. Ends with the freeze the failed join skipped."""
+        if self.o.get("ids"):
+            want = self.o["ids"].split(",")
+        else:
+            want = self.join_ids(self.o.get("from_log"))
+        if self.stop_file.exists():
+            raise SystemExit(f"{self.stop_file} exists: delete it to run")
+        with self.start():
+            print(f"batch {self.batch}: the market step again for {len(want)} ids; jobs {self.jobs}; logs {self.logs}", flush=True)
+            t0 = time.time()
+            try:
+                with self.held("packs", "market step"):
+                    self.wait_gates()
+                    order = [c["id"] for c in self.registry()["cities"]]
+                    gone = [i for i in want if i not in order]
+                    if gone:
+                        print(f"  not registered now, left out: {' '.join(gone)}", flush=True)
+                    ids = sorted((i for i in want if i in order), key=order.index)
+                    if not ids:
+                        raise SystemExit("none of the ids is registered")
+                    ok = self.market_step(ids, self.logs / "join")
+                    for i in ids:
+                        missing = [x for x in VITE_FILES if not (self.packs / f"{i}{x}").exists()]
+                        if missing:
+                            self.report.setdefault("problems", []).append(f"{i}: files a production build copies are missing: {', '.join(missing)}")
+                    if ok:
+                        self.freeze()
+            except RunFault as x:
+                self.report["fault"] = str(x)
+                print(f"\nRUN FAULT, the market step stops: {x}", flush=True)
+            self.report["seconds"] = round(time.time() - t0)
+            self.write_report()
+            print(f"market step {'ok' if not self.report.get('problems') else 'with problems: ' + '; '.join(self.report['problems'])}"
+                  f"; {self.report['seconds']} s", flush=True)
+        if "fault" in self.report or self.report.get("problems"):
+            sys.exit(2)
+
+    def join_ids(self, log=None):
+        """The id list of a join's market step: the last register header in its log. The newest
+        join.market.log of any batch when no log is named."""
+        base = (self.root / "artifacts") if self.scratch else (MAPS / "artifacts/trainworld/world_run")
+        if log:
+            p = Path(log)
+        else:
+            found = sorted(base.glob("*/join.market.log"), key=lambda q: q.stat().st_mtime)
+            if not found:
+                raise SystemExit(f"no join.market.log under {base}; name the ids with --ids a,b or the log with --from-log")
+            p = found[-1]
+        ids = None
+        for ln in p.read_text(encoding="utf-8", errors="replace").splitlines():
+            if ln.startswith("### ") and " register " in ln and ln.rstrip().endswith("--market --trips"):
+                ids = ln.split(" register ", 1)[1].rsplit(" --market --trips", 1)[0].split()
+        if not ids:
+            raise SystemExit(f"{p} has no register step header; name the ids with --ids a,b")
+        print(f"  ids from {p}: {len(ids)}", flush=True)
+        return ids
 
     def freeze(self):
         """T-928: the state this join left, frozen for publishing (pipeline/freeze.py), unless its
@@ -1699,8 +1773,8 @@ def status(root):
 def parse(argv):
     o = {}
     flags = {"--no-browser": "no_browser", "--keep-downloads": "keep_downloads", "--no-join": "no_join",
-             "--build-only": "build_only"}
-    valued = {"--rows": "rows", "--countries": "countries", "--limit": "limit", "--jobs": "jobs",
+             "--build-only": "build_only", "--market-only": "market_only"}
+    valued = {"--ids": "ids", "--from-log": "from_log", "--rows": "rows", "--countries": "countries", "--limit": "limit", "--jobs": "jobs",
               "--port": "port", "--root": "root", "--workers": "workers", "--coarse": "coarse"}
     i = 0
     while i < len(argv):
