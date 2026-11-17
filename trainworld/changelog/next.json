@@ -1372,6 +1372,30 @@
       "rev": 1,
       "area": "track",
       "fix": false
+    },
+    {
+      "id": "c108",
+      "text": "fixed lines on single track taking trains that only stood waiting to pass: a line no longer waits for its own trains there, and its train count stops at one more than the single track runs, as at a terminal",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3526",
+      "by": "singlecap",
+      "at": "2026-11-17T17:30:35Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
+      "id": "c109",
+      "text": "added a red tag when train track is drawn over tram track, or tram over train: Train track cannot be connected to tram track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3561",
+      "by": "tramtag",
+      "at": "2026-11-17T17:31:54Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
     }
   ]
 }

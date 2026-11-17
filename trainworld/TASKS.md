@@ -277,12 +277,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
+- T-3562 [P2] {L:single-track} Alert when a line runs the same track twice (taking, 2026-11-17, agent repeattrack)
+  - Context: Your pad, 2026-11-17: "we should probably generally alert if trains are ever running on the same track in the same direction at two separate times on their route. thats an indication that something stupid is happening. can show a little icon sort of like the "x" flat crossing icon, thats looks like a loop i guess with 2 lines coming out of it." Mockup: artifacts/trainworld/board/20261117-122545-3e84.png.
+  - Goal: A line that runs over the same track in the same direction twice in one run gets an alert and a loop icon on the map where it repeats.
+- T-3563 [P2] {L:trams} Trams path like trains in every way (taking, 2026-11-17, agent tramloops)
+  - Context: You, 2026-11-17: "yes trams hould use passing loops the way rail does. trams should be identical to trains in pathing in i think like all ways?" Today the sim runs every single-track tram stop as having no passing loop (`Network::no_passing`, T-3352); single tram lines in existing saves gain capacity.
+  - Goal: Trams use passing loops and every other pathing rule exactly as trains do; differences found are listed and removed.
+- T-3564 [P2] {L:map-look} Passing stations on single track draw both platforms (taking, 2026-11-17, agent tramstation)
+  - Context: You, 2026-11-17, on T-3540's one outside platform: "oh oh i see. yes drawing can go back for this case." Each direction stops on its own track at a passing station, so both tracks need a platform; the one smaller outside platform stays for single-track stations with no passing track.
+  - Goal: A single-track station with a passing track draws a platform beside each track again; tram boxes stay 30% narrower.
 - T-3561 [P2] {L:track-drawing} Say why rail won't snap to a tram track end (taking, 2026-11-17, agent tramtag)
   - Context: Your pad, 2026-11-17: "when hovering over a tram track end while normal track is selected, it doesnt snap. which is a bit confusing. if we try doing this perhaps lets say "train track cannot be connected to tram track" in a red tooltip. if theres a viable snap nearby that should take precedence ofc."
   - Goal: Hovering a tram track end with rail track selected (and no viable snap nearby) shows that red tag; a viable snap nearby still wins.
-- T-3560 [P2] {L:small-fixes} Hidden levels drawn faint instead of gone (taking, 2026-11-17, agent levelfade)
-  - Context: You, 2026-11-17: "im worried about people toggling certain levels visibility off and then forgetting about it and being confused where alll their lines are. instead of hiding them completely could we have them show super faded (maybe like 8% opacity) and not be selectable?"
-  - Goal: A level switched off is drawn at about 8% opacity and can't be clicked or hovered.
 - T-3556 [P2] {L:checks} Agent playtest harness (taking, 2026-11-17, agent harness)
   - Context: You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).
@@ -886,7 +892,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
 - T-3373 [P1] {L:memory} Demand workers share one copy of the zone data
-  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A is built, not landed: NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
+  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: A then B built, each with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
 - T-3382 [P3] {L:twstats} Where people play in twstats
@@ -935,10 +941,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
-- T-3521 [P1] {L:timetables} Weekend train counts per line (taking, 2026-11-17, agent weekend)
-  - Context: You, 2026-11-17: "be able to set train count on weekends" is highly requested, want it in v0.4.0 if it can be made today, no rush. Built ahead of Detailed mode from GabrielMoraez's PR 13 sim parts, in the shape you agreed 11-12 (one weekend, holidays as weekends, same as weekdays until changed).
-  - Goal: A line can run a different train count on weekends; with weekends the same, the real save and London match today to the bit and edits take no longer.
-  - Other: notes/T-3346.md stage 4; notes/pr-survey-2026-11-16.md "#13".
 - T-3346 [P2] {L:timetables} Timetables and better scheduling
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 and 2 are built but not landed. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
   - Goal: Design agreed, then built in stages (about 44-63 h before Exact).
@@ -956,7 +958,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: t1965-follow passes at 1+1 and 4+2. Part of T-3264.
   - Other: notes/T-3264.md
 - T-3264 [P2] {L:trains-drawn} One fix for trains drawn through each other (taking, 2026-11-17, agent drawapart)
-  - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Not started yet.
+  - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Stage 0 (the t3264-overlaps check) done; stage 1 (opposite directions side by side on double track from zoom 14) built in the drawapart tree as a mock, waiting on your look at it.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
 - T-3079 [P2] {L:stops} Exact stop ordering back
@@ -994,9 +996,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3526 [P2] {L:single-track} Block more trains than single track can run (taking, 2026-11-17, agent singlecap)
-  - Context: You chose fix 1 on 2026-11-17: a line's own trains stop queueing against each other on single track, so the terminal cap holds; cap at trains that fit plus one. Proposal in notes/T-3526.md: the terminal cap already covers single track, but it leaks because a line's two directions queue against each other, so each added train stretches the round trip and the cap grows with it (a 5 km single stretch: + stops at 3, typed counts at 2, 2 fit). No line on the NYC save changes. Your pad, 2026-11-17: "if we have a line that has a single track portion that severely limits capacity, we dont actually stop people from assigning way more trains than can actually run, which is a bit silly. should probably block this in analogous way to how we block adding tons of trains to lines past what their terminals can handle."
-  - Goal: A line's train count stops at what its single-track stretches can run, the way it stops at what its ends can turn; the rule and its numbers go to you before it is built.
 - T-3525 [P3] {L:track-speed} Speed limit for a whole selection
   - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.
   - Goal: A Speed limit control in the Select tool's bar sets a whole run at once, and a limit at the track's top counts as none.

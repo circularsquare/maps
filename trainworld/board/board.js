@@ -293,7 +293,7 @@ function areaName(slug) {
 
 function askText(id) {
   const a = (DATA.asks || []).find((x) => x.id === id);
-  const t = a ? a.text : id;
+  const t = a ? a.title || a.text : id;
   return t.length > 70 ? t.slice(0, 70) + '...' : t;
 }
 
@@ -533,7 +533,7 @@ function renderGrid() {
   const perCol = {};
   perCol.upnext = upnextTasks(q, update).length;
   for (const line of VIEW) if (shown.has(line.slug)) perCol[line.status] = (perCol[line.status] || 0) + 1;
-  const asks = (DATA.asks || []).filter((a) => !q || a.text.toLowerCase().includes(q));
+  const asks = (DATA.asks || []).filter((a) => !q || `${a.title || ''} ${a.text}`.toLowerCase().includes(q));
   if (asks.length && !update) perCol.you = (perCol.you || 0) + asks.length;
 
   const last = DATA.columns.length;   // columns 0 (the area names) .. last; a drag edge on the right of all but the last
@@ -620,7 +620,7 @@ function askCard(a) {
   return el('button', {
     class: 'card ask' + (isOpen ? ' open' : ''), type: 'button', 'data-ask': a.id, style: colour('you'),
     onclick: () => openPanel(isOpen ? null : { kind: 'ask', id: a.id }),
-  }, el('div', { class: 'row' }, el('div', { class: 'name' }, a.text), el('div', { class: 'count' }, a.since ? day(a.since) : '')),
+  }, el('div', { class: 'row' }, el('div', { class: 'name' }, a.title || a.text), el('div', { class: 'count' }, a.since ? day(a.since) : '')),
   q ? el('div', { class: 'queued' }, `${q} queued`) : null);
 }
 
@@ -630,7 +630,7 @@ function askPanel(id) {
   const k = `ask:${id}`;
   const mine = INBOX.pending.filter((p) => p.type === 'ask-answer' && p.ask === id);
   return [
-    head('Ask'),
+    head(a.title || 'Ask'),
     el('div', { class: 'meta' }, [a.by ? `From ${a.by}` : '', a.since ? `since ${day(a.since)}` : ''].filter(Boolean).join(', ')),
     el('p', { class: 'about' }, rich(a.text)),
     mine.length ? queuedList(mine) : null,

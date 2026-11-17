@@ -144,7 +144,8 @@ def parse_lines(text):
 
 
 def read_asks(path, warnings):
-    """notes/asks.json: [{id, text, since, by}], the orchestrator's asks that are not tasks; oldest first."""
+    """notes/asks.json: [{id, title, text, since, by}], the orchestrator's asks that are not tasks; oldest first.
+    title is the card's few words (like a task name); text is the whole question, shown in the panel."""
     text = read(path)
     if not text:
         return []
@@ -161,7 +162,8 @@ def read_asks(path, warnings):
             warnings.append(f"asks.json: skipped an entry with no id or text, or a repeated id: {str(a)[:60]}")
             continue
         seen.add(a["id"])
-        out.append({"id": str(a["id"]), "text": str(a["text"]), "since": str(a.get("since") or ""), "by": str(a.get("by") or "")})
+        out.append({"id": str(a["id"]), "title": str(a.get("title") or ""), "text": str(a["text"]),
+                    "since": str(a.get("since") or ""), "by": str(a.get("by") or "")})
     return sorted(out, key=lambda a: a["since"] or "9")
 
 

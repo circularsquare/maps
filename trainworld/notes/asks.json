@@ -1,19 +1,15 @@
 [
   {
     "id": "a-2026-11-17-6",
+    "title": "Shoreline: swap the margin",
     "text": "T-3553 shoreline: swap the 12 m margin for reading the water mask between cells (about 1 h)? Narrow city rivers then count as water across 69-75% of their width instead of 55-60%; shore forgiveness about the same. Pick: swap. Separately, NYC and 8 other US packs use TIGER water that is up to 116-178 m off around Brooklyn's piers; OSM water instead is about 2 h plus a water rebuild of those 9 packs, and moves track prices there. Pick: queue it for a night run.",
     "since": "2026-11-17",
     "by": "maps-58"
   },
   {
-    "id": "a-2026-11-17-7",
-    "text": "T-3540 (landed): tram stops on single track now draw a passing loop, but the sim still runs every single-track tram stop as having none. Should the sim honour tram passing loops, as it does for rail? It would raise capacity on single tram lines in existing saves. Pick: yes.",
-    "since": "2026-11-17",
-    "by": "maps-58"
-  },
-  {
-    "id": "a-2026-11-17-8",
-    "text": "T-3540: at a rail passing station one direction's train still stops on the inner track, which now has no platform beside it (artifacts/trainworld/t3212/t3540-meet-M-z18-light.png). Leave it, or draw a second platform when a station has a loop?",
+    "id": "a-2026-11-17-9",
+    "title": "Trains drawn apart: the look",
+    "text": "T-3264 stage 1: trains in opposite directions on double track drawn side by side from zoom 14 (artifacts/trainworld/review/t3264-before.png and t3264-after.png; Midtown rows in t3264-midtown.png). Does it look right? On shared track the trains get thin: keep the strict thin version, a 4 px floor, or leave shared track for a later stage that widens bands? Pick: the 4 px floor.",
     "since": "2026-11-17",
     "by": "maps-58"
   }
