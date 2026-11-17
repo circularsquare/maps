@@ -168,8 +168,6 @@ export interface DrawOptions {
   /** more stations drawn selected, indices in the station buffer: in complex view, the selected
    * station's whole complex (T-163) */
   selStations?: number[];
-  /** riders waiting on platforms (T-164, T-219): each platform filling up as they wait */
-  crowds?: boolean;
   /** the marks on flat crossings and junctions (T-673); absent: shown */
   flatMarks?: boolean;
   /** the marks on ramps and portals (T-3048); absent: shown */
@@ -1659,7 +1657,7 @@ export class NetworkRenderer {
       const pxPerM = pxPerUnitAt(zoom) / Math.cos(lat * Math.PI / 180);
       wait = Math.min(wait, (1000 * 0.5) / (TRAIN_MAX_MPS * speed * pxPerM));
     }
-    if (opt.crowds && this.board && zoom >= STATIONS_ZOOM) wait = Math.min(wait, (1000 * CROWD_STEP_S) / speed);
+    if (this.board && zoom >= STATIONS_ZOOM) wait = Math.min(wait, (1000 * CROWD_STEP_S) / speed);
     return wait;
   }
 
@@ -1959,7 +1957,7 @@ export class NetworkRenderer {
       cache.draw(0);
     }
     // the station buildings' hall crowds (T-2219), over the track and under the boxes
-    this.floors.drawHall(lc, vp, dpr, zoom, opt.crowds && this.board && !hidden ? this.crowds.hall : null);
+    this.floors.drawHall(lc, vp, dpr, zoom, this.board && !hidden ? this.crowds.hall : null);
 
     if (n.stationCount) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
@@ -2044,7 +2042,7 @@ export class NetworkRenderer {
       };
       // Riders waiting on the platforms (T-164, T-219), where platforms are drawn; zoomed out a pie
       // in each dot (T-228, T-553).
-      this.crowdsShown = !!opt.crowds && !!this.board && !hidden;
+      this.crowdsShown = !!this.board && !hidden;
       let any = false;
       if (this.crowdsShown) {
         const now = performance.now();

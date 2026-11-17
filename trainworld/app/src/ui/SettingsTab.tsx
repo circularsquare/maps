@@ -144,10 +144,8 @@ export function SettingsTab() {
         <Check checked={!hideBuses.value} onChange={(v) => (hideBuses.value = !v)}>
           {t("settingsTab.busesFerries")}
         </Check>
-        <Check checked={d.busOneWay} onChange={(v) => setDisplay("busOneWay", v)}>
-          {t("settingsTab.busOneWay")}
-        </Check>
       </div>
+      <GameMode />
       <div class="h">{t("settingsTab.realNetwork")}</div>
       <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}
         tips={(v) => (v === "all" ? t("settingsTab.realAllTip") : undefined)} />
@@ -155,15 +153,6 @@ export function SettingsTab() {
       <div class="checks">
         <Check checked={d.realStations} onChange={(v) => setDisplay("realStations", v)}>
           {t("settingsTab.realStations")}
-        </Check>
-      </div>
-      <div class="h">{t("settingsTab.riders")}</div>
-      <div class="checks">
-        <Check checked={d.trainLoad} onChange={(v) => setDisplay("trainLoad", v)}>
-          {t("settingsTab.trainLoad")}
-        </Check>
-        <Check checked={d.platformCrowds !== "off"} onChange={(v) => setDisplay("platformCrowds", v ? "patch" : "off")}>
-          {t("settingsTab.platformLoad")}
         </Check>
       </div>
       <div class="h">{t("settingsTab.upClose")}</div>
@@ -224,7 +213,6 @@ export function SettingsTab() {
         )}
       </div>
       <MemoryRow />
-      <GameMode />
       <div class="h">{t("settingsTab.lineShapes")}</div>
       <div class="shape-grid">
         {SHAPE_MODES.map((m) => (
@@ -297,8 +285,15 @@ function Slider({ label, min, max, step, value, tip, percent: pct, set }: { labe
 /** T-728: the game's mode; a normal game can be made a sandbox once, after a confirmation, never back. */
 function GameMode() {
   const m = moneyState.value;
-  if (!m) return null;
-  const sandbox = m.mode === "sandbox";
+  const sandbox = m?.mode === "sandbox";
+  const busOneWay = (
+    <div class="checks">
+      <Check checked={display.value.busOneWay} onChange={(v) => setDisplay("busOneWay", v)}>
+        {t("settingsTab.busOneWay")}
+      </Check>
+    </div>
+  );
+  if (!m) return <><div class="h">{t("settingsTab.game")}</div>{busOneWay}</>;
   return (
     <>
       <div class="h">{t("settingsTab.game")}</div>
@@ -316,6 +311,7 @@ function GameMode() {
           <button class="btn text" data-guide-restart onClick={() => saveGuide({ done: 0 })}>{t("settingsTab.startAgain")}</button>
         </div>
       )}
+      {busOneWay}
     </>
   );
 }

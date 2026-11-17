@@ -48,7 +48,7 @@ try {
   await page.addStyleTag({ content: '#dock-root,#topbar-root,#tools-root,#debug-root,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-top-left,.toast,#toasts,.map-top-left,.map-top-row,.map-find,.demand-selector,.map-sky,.realm-buttons,.zone-loads,.intercity-labels,.touch-bar-host{display:none!important}#game{display:block!important}#main{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important}#map{position:absolute!important;inset:0!important}*{cursor:none!important}' });
   await page.evaluate(async (P) => {
     const tw = window.tw, map = tw.map;
-    tw.display.value = { ...tw.display.value, trackColour: 'line', trains: true, trainLoad: false, platformCrowds: 'patch', sound: true, faces: true, basemapLabels: false, stationNames: false, stationUse: 'none', commuters: false, projection: 'flat', foldedRows: [] };
+    tw.display.value = { ...tw.display.value, trackColour: 'line', trains: true, sound: true, faces: true, basemapLabels: false, stationNames: false, stationUse: 'none', commuters: false, projection: 'flat', foldedRows: [] };
     tw.clock.setSpeed(0); // normal speed, running
     await new Promise((r) => setTimeout(r, 500)); map.resize(); await new Promise((r) => setTimeout(r, 500));
     const hideLayers = () => { for (const l of map.getStyle().layers) if (/^tw-(city|zone)/.test(l.id) && map.getLayoutProperty(l.id, 'visibility') !== 'none') map.setLayoutProperty(l.id, 'visibility', 'none'); };

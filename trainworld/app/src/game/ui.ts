@@ -56,11 +56,6 @@ export interface DisplaySettings {
   stationUse: StationUseMode;
   /** T-1448: the map's upper left rows folded down to their icon ("bubbles", "stations", "track") */
   foldedRows: MapRow[];
-  /** trains filled by how full they are: each train's own load from the boarding account (T-164) */
-  trainLoad: boolean;
-  /** riders waiting on platforms (T-164), drawn as each platform filling up (T-219), or not
-   * ("off"). "dots" is the T-164 option T-219 dropped, kept in older browsers' settings: on. */
-  platformCrowds: "patch" | "dots" | "off";
   /** T-686: sound at stations (a chime for an arriving train, pops for riders getting on and off),
    * from the zoom where platforms are drawn; the volume, 0-1 */
   sound: boolean;
@@ -149,8 +144,6 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   realStations: false,
   stationUse: "none",
   foldedRows: [],
-  trainLoad: true,
-  platformCrowds: "patch",
   sound: true,
   soundVolume: 0.6,
   faces: true,
@@ -208,12 +201,12 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
 // `complexView` (one ridership circle per station complex is the only way since T-1449), nor `font`
-// (Nunito is the only font, T-1524): dropped from storage
-const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, ...migratedDisplay } = oldDisplay ?? {};
+// (Nunito is the only font, T-1524), nor `trainLoad` and `platformCrowds` (train and platform fullness are always drawn, T-3579): dropped from storage
+const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, trainLoad: _trainLoad, platformCrowds: _platformCrowds, ...migratedDisplay } = oldDisplay ?? {};
 // T-703: the size default changed, and settings stored before had saved the old one with
 // everything else, so it is dropped once
 if ((saved.v ?? 1) < 3) delete migratedDisplay.uiScale;
@@ -251,7 +244,7 @@ export const selection = signal<Selection>(null);
 export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
 const VIDEO_DISPLAY: Partial<DisplaySettings> = {
   trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none", realStations: false,
-  stationUse: "none", commuters: false, trainLoad: false, platformCrowds: "patch", sound: true,
+  stationUse: "none", commuters: false, sound: true,
 };
 
 // T-3319: each mode's stored shape kept where it is one, the rest from the defaults

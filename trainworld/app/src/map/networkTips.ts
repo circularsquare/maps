@@ -73,7 +73,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   // a train standing at a terminal for its next departure is drawn past its trip (T-206), and one
   // the guard holds behind its timetable (T-1965)
   const at = tripAt(net, profile, dep + r.tripLag(i), clock.now(), i >= 0 && r.board && r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
-  if (!at || !st || !display.peek().trainLoad) return [name];
+  if (!at || !st) return [name];
   const dv = demandView.peek();
   if (!dv) return [name, t("networkTips.calculating")];
   const n = l.stops.length, run = Math.floor(profile / 3) % 2;
@@ -110,7 +110,7 @@ function waitRow(bullet: HTMLElement | null, label: string, count: string, full:
  * count red while that platform side is full (T-559). */
 function crowdLines(ov: Overlay, w: WorldView, id: string, i: number): TipLine[] {
   const r = ov.renderer, b = r.board;
-  if (!b || display.peek().platformCrowds === "off" || !r.crowdsShown) return [];
+  if (!b || !r.crowdsShown) return [];
   // zoomed out, the dot's pie (T-228, T-553): everyone waiting at it and its fullest platform
   const dot = r.dotCrowd(i);
   if (dot) {

@@ -19,7 +19,6 @@ import { LINE_VIEW_WIDTH, trafficBands } from "./lineBands";
 
 export interface LayerSwitches {
   lineLoad: boolean;
-  trainLoad: boolean;
   /** the map's purpose filter (T-158): line widths count this purpose only; train fill counts
    * everyone */
   purpose?: PurposeFilter;
@@ -165,10 +164,10 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const fill = new Float32Array(nSamples * 2).fill(-1);
   const strokeOf = net.sampleStroke;
   const pending = new Set<number>();
-  if (on.trainLoad && !loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
+  if (!loadFailure.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
   let lastLine = -1;
   let v: ReturnType<typeof nums.get>;
-  if (strokeOf && on.trainLoad && stretchOf)
+  if (strokeOf && stretchOf)
     for (let k = 0; k < nSamples; k++) {
       const i = strokeOf[k];
       if (i < 0) continue;

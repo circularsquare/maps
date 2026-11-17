@@ -267,7 +267,6 @@ const overlay = new Overlay(map, renderer, () => {
       // the blueprint stations picked with the blueprint tool's box (T-333)
       ...(n ? bpPicked.value.stations.map((id) => stationIndexOf(n, String(id))) : []),
     ],
-    crowds: d.platformCrowds !== "off", // T-164, T-219
     flatMarks: d.flatMarks,
     rampMarks: d.rampMarks,
     groups: dotGroups.peek(), // zoomed out, the stations the distance rule groups are one dot (T-217, T-225)

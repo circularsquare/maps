@@ -71,11 +71,11 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     // stop editing (T-233) draws plain widths: the demand is out of the way
     const editing = stopEditing.peek();
     const dv = demandView.peek();
-    const on = { lineLoad: d.trackColour === "traffic" && !editing, trainLoad: d.trainLoad,
+    const on = { lineLoad: d.trackColour === "traffic" && !editing,
       stopKey, purpose: purposeFilter.peek(), days: demandByDay.peek().map((x) => x.view) };
     // an edit changes the network and then the world: one build for both when nothing else moved
     // a stop click's rows-only world has the network it came after: the layers wait for the full state (T-3159)
-    const rest = [dv, period.peek(), on.lineLoad, on.trainLoad, on.purpose, demandByDay.peek()];
+    const rest = [dv, period.peek(), on.lineLoad, on.purpose, demandByDay.peek()];
     const same = n === inputs[0] && worldIsRows.value ? inputs[1] : w;
     if ([n, same, ...rest].every((v, i) => v === inputs[i])) return;
     inputs = [n, w, ...rest];
@@ -104,7 +104,7 @@ export function startDemandViews(overlay: Overlay, map: MlMap): DemandViews {
     demandByDay.value;
     period.value;
     const d = display.value;
-    void [d.trainLoad, d.trackColour];
+    void d.trackColour;
     purposeFilter.value;
     stopEditing.value;
     schedule();
