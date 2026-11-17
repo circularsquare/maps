@@ -1329,7 +1329,7 @@
       "id": "c104",
       "text": "fixed a line that splits over a one-way pair and comes back the other way showing a turn back mark at its far end",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3538",
       "by": "tramsplit",
       "at": "2026-11-17T17:00:29Z",
@@ -1395,6 +1395,30 @@
       "at": "2026-11-17T17:31:54Z",
       "rev": 1,
       "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c110",
+      "text": "added an alert on a line, and a loop mark on the map, where its trains pass the same track twice in the same direction",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3562",
+      "by": "repeattrack",
+      "at": "2026-11-17T17:48:27Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c111",
+      "text": "a station on single track with a passing loop is drawn with a platform beside each track again; one with no loop keeps its one platform on the outside",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3564",
+      "by": "tramstation",
+      "at": "2026-11-17T17:53:35Z",
+      "rev": 1,
+      "area": "schematic",
       "fix": false
     }
   ]

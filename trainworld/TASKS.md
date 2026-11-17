@@ -277,9 +277,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
-- T-3565 [P2] {L:single-track} {waits:Anita} Stops on a one-way street pair
-  - Need from Anita: When a line runs over a one-way pair and the stations on its two legs are over 300 m apart, should (a) they count as one stop served one way on each leg, (b) a stop be served one way only, each direction skipping the other leg's station, or (c) adding stops avoid the J shape? Recommended: (b).
-  - Context: Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
+- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair
+  - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
 - T-3566 [P2] {L:small-fixes} Line profit history like the finance tab (taking, 2026-11-17, agent lineprofit)
   - Context: Your pad, 2026-11-17: "for the per-line profit history, could we actually have it show blue bars for revenue and red for expenses, like the finance tab? the bars are just a bit chunky wide rn and i think this would look better. also elts move it to the bottom of the line view, i think it snot that important."
@@ -287,9 +286,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3567 [P2] {L:fares} Fare multiple per line (taking, 2026-11-17, agent lineprofit)
   - Context: Your pad, 2026-11-17: "lets also file building a very simple line-specific fare multiple setting. this can go right above the profit history graph. just like a 1.00 and if you click it you can set the fare multiple to like 1.2x what it would otherwise be for this line. should be typeable there is a more complex fare system planned but for now i think this will satisfy some people. cap it between like 0-3x i guess."
   - Goal: Each line has a typeable fare multiple, 0 to 3, default 1.00, above its profit history, applied on top of the game's fares for that line's rides.
-- T-3562 [P2] {L:single-track} Alert when a line runs the same track twice (taking, 2026-11-17, agent repeattrack)
-  - Context: Your pad, 2026-11-17: "we should probably generally alert if trains are ever running on the same track in the same direction at two separate times on their route. thats an indication that something stupid is happening. can show a little icon sort of like the "x" flat crossing icon, thats looks like a loop i guess with 2 lines coming out of it." Mockup: artifacts/trainworld/board/20261117-122545-3e84.png.
-  - Goal: A line that runs over the same track in the same direction twice in one run gets an alert and a loop icon on the map where it repeats.
 - T-3563 [P2] {L:trams} Trams path like trains in every way (taking, 2026-11-17, agent tramloops)
   - Context: You, 2026-11-17: "yes trams hould use passing loops the way rail does. trams should be identical to trains in pathing in i think like all ways?" Today the sim runs every single-track tram stop as having no passing loop (`Network::no_passing`, T-3352); single tram lines in existing saves gain capacity.
   - Goal: Trams use passing loops and every other pathing rule exactly as trains do; differences found are listed and removed.
@@ -308,9 +304,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3559 [P3] {L:checks} Train count cap not applied when a save loads
   - Context: t3165-cap.mjs fails its load step ("count lowered to the cap when the game loads", 15 -> 15) on master too (seen by singlecap, T-3526): capLoad's once-per-load pass may not fire on re-import.
   - Goal: A loaded save's counts over the cap are lowered to it, and t3165-cap passes.
-- T-3553 [P2] {L:terrain} {waits:Anita} More accurate shoreline than the 12 m margin
-  - Need from Anita: Swap the 12 m margin for reading the mask between cells (about 1 h; narrow rivers charged for 69-75% of their width instead of 55-60%, worst shore error 6-10 m as now), or leave it as is? Recommended: the swap.
-  - Context: You asked whether the 12 m margin loses city rivers and whether real accuracy gains exist; after testing, "it mostly feels okay ... if we see low hanging fruit we can." Measured: no cheap option is more accurate both ways, only a different trade; real gains need finer data in packs (hours of rebuild); the biggest error is NYC's TIGER water (up to 116-178 m off at the Brooklyn piers).
+- T-3568 [P2] {L:terrain} {after:tonight's night run} OSM water for the TIGER packs
+  - Context: From T-3553: NYC and 8 other US packs (nyc, phl, bos, wdc, bal, pvd, nhv, spf, wor) use TIGER water, up to 116-178 m off the drawn water around Brooklyn's piers, the biggest shore error in the game. You, 2026-11-17: "sure queue it for a night run". osm_water.py must cut piers first; built track there gets re-priced.
+  - Goal: Those 9 packs' water comes from OSM with piers cut out, rebuilt on a night run; NYC's shore error within the OSM packs' range (p99 about 13-20 m).
+  - Other: notes/T-3553.md
+- T-3553 [P2] {L:terrain} More accurate shoreline than the 12 m margin (taking, 2026-11-17, agent shoreswap)
+  - Context: Your yes 2026-11-17: swap the 12 m margin for reading the mask between cells at threshold 0.8 (about 1 h; narrow rivers charged for 69-75% of their width instead of 55-60%). You asked whether the 12 m margin loses city rivers and whether real accuracy gains exist; after testing, "it mostly feels okay ... if we see low hanging fruit we can." Measured: no cheap option is more accurate both ways, only a different trade; real gains need finer data in packs (hours of rebuild); the biggest error is NYC's TIGER water (up to 116-178 m off at the Brooklyn piers).
   - Goal: Your pick built or the task closed; with the margin, 50-70 m rivers still register 97-99% of the time.
   - Other: notes/T-3553.md
 - T-3543 [P2] {L:timetables} {after:T-3521} One schedule button and default headways
@@ -370,7 +369,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
   - Goal: State machines B and C are built.
   - Other: See notes/T-2843.md.
-- T-3160 [P1] {L:memory} Phone memory left over from T-2802
+- T-3160 [P2] {L:memory} Phone memory left over from T-2802
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
@@ -898,7 +897,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P1] {L:memory} Demand workers share one copy of the zone data
+- T-3373 [P2] {L:memory} Demand workers share one copy of the zone data
   - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A landed 2026-11-16 (b3d2ea95): NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: A then B built, each with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
