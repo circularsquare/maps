@@ -31,12 +31,16 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
   so fareTip joins the stale-key translation batch.
 - onewaystops2 (Opus, .tw-trees/onewaystops2, port 6181): T-3565 fresh start + T-3595 (a train may turn back at any
   track end; DECISIONS). Pairing per her 11-17: nice to have, ~50 m between platforms, any number of one-way stops per
-  leg. Checker straight after it reports. Old trees onewaystops and extendfix: remove once it's done.
+  leg. Checker straight after it reports; her ask 11-17: the checker also looks for regressions against live v0.3.5
+  (bfe58c54): anything a player could do there that they can't after (stop editing, advanced editor order, loops,
+  two-way lines, pairs 50-300 m apart, old saves loading the same). Old trees onewaystops and extendfix: remove once it's done.
 - l10n-shots (Sonnet, port 6186): pass 5 screenshots, may merge shorter wording; I commit messages/ after.
 - For after the publish (her 11-17 ask): idlemem (Opus, T-3492, 6182), capload (Sonnet, T-3559+T-3528, 6184; done,
-  smoke passed; checker capcheck running; land WITHOUT its changelog item, her word: revert the tree's next.json),
+  smoke passed; checker capcheck PASSED (notes/T-3559-check.md); land after the publish WITHOUT its changelog item, her word: revert the tree's next.json),
   snapbar (T-3516 DONE in its tree, smoke passed; c136 line shown to her), trafficwidth (T-3580 DONE, smoke passed),
-  tramsnap (Opus, T-3515, 6190), termdraw (Opus, T-3231, 6191). Land the done ones after the publish with finish.
+  tramsnap (T-3515 DONE: pipeline/realgraph.py tram rules; land after the publish: branch, then copy the rebuilt
+  graphs from trainworld\data\work\realgraph-t3515 (durable copy of scratchpad\tramsnap\graph-all) over data/packs/realgraph/ (they ship to R2 with the next publish's
+  packs); notes/T-3515.md "Landing"), termdraw (Opus, T-3231, 6191). Land the done ones after the publish with finish.
   icskip (T-3471) landed cf3a678d, oldchecks (T-3462) bde8c1d8.
 - She wants a high-level update on the one-way station work now and then. Away a few hours from 22:00 UTC; said
   start new lines if little is running.

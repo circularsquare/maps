@@ -282,6 +282,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick (taking, 2026-11-17, agent trafficwidth)
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3599 [P2] {L:solve-speed} Time left in the calculating trips hover (taking, 2026-11-17, agent solveeta)
+  - Context: Your pad, 2026-11-17: "could we have it so that hovering over the "Calculating trips after your change...." says like estimated 5 minutes left or whatever estimated time is?" (big Asia save, Kaohsiung feeder lines turned off).
+  - Goal: Hovering the calculating tag shows a time left within about a third of the real wait on the NYC save and one big multi-country save, or says why there is no estimate yet.
+- T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save
+  - Context: Your pad, 2026-11-17: "is it expected to take on the order of 5 minutes? it is a big save and taiwan is connected to the rest of the world (via one line) so i guess like its not completely unreasonable but i thought we restricted the set of things that were recalculated after a change of this sort". The edit was turning off feeder lines in Kaohsiung. T-2188 found a city line edit re-solves only its zone first, then still runs a whole solve.
+  - Goal: The measured reason a city line edit on that save takes about 5 minutes, and such an edit finishing in under a minute, or why it can't.
 - T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
@@ -473,7 +479,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
 - T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal (taking, 2026-11-17, agent termdraw)
-  - Context: t1965-follow fails on master (43 of 950 frames): two on-time lines at one double-track terminal drawn over each other. A fix clears it to 4 frames but breaks t2980.
+  - Context: Fixed in tree termdraw, to land after v0.4.0: t1965-follow drops from 40-47 frames to 17-19, t2980 unchanged. What is left is the express too late to draw (T-3271), not this bug.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 - T-3101 [P3] {L:single-track} One-way track follow-ups
@@ -559,7 +565,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Goal: Real network saves build tram lines as tram track, a both-ways junction helper for tram track, and stops placed about every N m along a new tram line, each if players want it.
   - Other: notes/T-2921.md (stage 3), notes/T-3069.md
 - T-3515 [P3] {L:trams} Tram snap refuses turns at Zurich junctions (taking, 2026-11-17, agent tramsnap)
-  - Context: From T-3069: snapping tram track between two different Zurich tram lines is refused ("The new track would run on top of existing track"); the router finds no direct turn at Central or Bahnhofplatz and goes out to a terminal loop and back. Cause not found. Also from its checker: Zurich's first tram candidate (603 m, $34.6M, Hills +0.3x) shows as placeable but ignores the placing click every time; the third places fine (repro: maps-44 scratchpad tramchk\chk.mjs, MODE=price ONLY=zurich). Reaches players snapping trams in dense tram cities.
+  - Context: Fixed in tw/tramsnap, waiting to land with its rebuilt graphs. The graph dropped Zurich's temporary Bahnhofquai track (OSM siding while the stop is rebuilt) and cut tight tram corners into chords the turn rule refused (Melbourne's route 82); the ignored click was the checker pressing under the track bar.
   - Goal: A tram snap across a real tram junction takes the junction's turn in Zurich and two other tram cities, every placeable candidate places on click, or the reason it can't is written down.
   - Other: notes/T-3069.md
 - T-3516 [P3] {L:track-drawing} Snap beside button off the phone bar (taking, 2026-11-17, agent snapbar)
