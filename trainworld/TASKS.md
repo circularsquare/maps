@@ -197,12 +197,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-3388 [P2] {L:edit-speed} London edits take about 4 s (taking, 2026-11-17, agent londonedit)
-  - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235). Player ank (via you, 11-16): 246M points, 3.0 of 8 GB, about 5 s per track piece, "use more cores" changed nothing.
-  - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
-  - Other: notes/T-3387.md; notes/T-3233.md
 - T-3550 [P3] {L:edit-speed} London train-count edits still take 1-4 s
-  - Context: After T-3388, track and station edits on London settle in 0.02-0.3 s, but a train-count edit on a line at its big merge still takes 0.6-1.5 s natively (up to 3 s for every level on a 3-train line) and 1.4-3.7 s in the browser: each settle round works out 100-190 line profiles again at about 1 ms each.
+  - Context: After T-3388, track and station edits on London settle in 0.02-0.3 s, but a train-count edit on a line at its big merge still takes 0.5-1.3 s natively (up to 3.3 s for every level on a 3-train line) and 1.4-3.7 s in the browser: each settle round works out 100-190 line profiles again at about 1 ms each.
   - Goal: Train-count edits on London under 0.5 s natively, settled figures unchanged.
   - Other: notes/T-3388.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
@@ -285,15 +281,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3569 [P2] {L:checks} t3212 check: trains no longer meet at A-M-B (taking, 2026-11-17, agent t3212fix)
-  - Context: tramstation (T-3564) found t3212-station-split failing "two trains met side by side at A-M-B" on master, with or without its change; its guess is T-3526's single-track train cap (fewer trains, so none meet), not traced.
-  - Goal: The check meets two trains again (its fixture given room under the new cap) or the cause is a real bug and is fixed.
 - T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
-- T-3566 [P2] {L:small-fixes} Line profit history like the finance tab (taking, 2026-11-17, agent lineprofit)
-  - Context: Your pad, 2026-11-17: "for the per-line profit history, could we actually have it show blue bars for revenue and red for expenses, like the finance tab? the bars are just a bit chunky wide rn and i think this would look better. also elts move it to the bottom of the line view, i think it snot that important."
-  - Goal: The line view's profit history draws blue revenue and red expense bars as the finance tab does, at the bottom of the line view.
 - T-3567 [P2] {L:fares} Fare multiple per line (taking, 2026-11-17, agent lineprofit)
   - Context: Your pad, 2026-11-17: "lets also file building a very simple line-specific fare multiple setting. this can go right above the profit history graph. just like a 1.00 and if you click it you can set the fare multiple to like 1.2x what it would otherwise be for this line. should be typeable there is a more complex fare system planned but for now i think this will satisfy some people. cap it between like 0-3x i guess."
   - Goal: Each line has a typeable fare multiple, 0 to 3, default 1.00, above its profit history, applied on top of the game's fares for that line's rides.
@@ -305,6 +295,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-17: "my gut is yes if its how trains work." Crossing track drawn between two double-track tram pieces is refused today (T-3352); on rail it makes a crossover, so trams could cross to the other track and turn back short.
   - Goal: Tram track takes crossovers exactly as rail does, priced as tram track.
   - Other: notes/T-3563.md
+- T-3578 [P2] {L:fares} {after:T-3567} Line fare multiple scales the base too
+  - Context: You, 2026-11-17: "i'd rather scale the base too actually, like if a person's ride uses that line at all it gets charged the higher base. i guess if there are lots of legs, we use the max of them." Today the multiple (T-3567) scales only the fare above the base, because the base is charged once per trip in mode choice; on the real save's line 14 the base is 61% of a ride's fare.
+  - Goal: A trip that uses a line pays that line's multiple on the base too, the largest multiple among its legs; demand and income agree, and at 1.00 everything is unchanged.
+  - Other: notes/T-3567.md
 - T-3556 [P4] {L:checks} Agent playtest harness, outside agents and attach my game
   - Context: Stage 1 (the shared harness in checks/lib) landed 47c98437. Left, as P4 on your word 2026-11-17 ("do it as like p4"): stage 2, an MCP server so outside agents can play (3-4 h local, 8-12 h more hosted, a server deploy); stage 3, "Attach my game" in feedback (2-3 h). Sketches in notes/T-3556.md. You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).

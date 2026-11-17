@@ -1504,6 +1504,42 @@
       "rev": 1,
       "area": "track",
       "fix": false
+    },
+    {
+      "id": "c119",
+      "text": "the profit history in a line's view moved to the bottom and shows blue fare bars and red running cost bars for the last 30 days, as the finances tab does",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3566",
+      "by": "lineprofit",
+      "at": "2026-11-17T18:41:35Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c120",
+      "text": "added a fare multiple to each line's view, from 0 to 3x, for the fare above the base on that line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3567",
+      "by": "lineprofit",
+      "at": "2026-11-17T18:41:35Z",
+      "rev": 1,
+      "area": "fares",
+      "fix": false
+    },
+    {
+      "id": "c121",
+      "text": "real world stations are drawn as soft purple dots like the real track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3577",
+      "by": "stationlook",
+      "at": "2026-11-17T18:58:41Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
     }
   ]
 }
