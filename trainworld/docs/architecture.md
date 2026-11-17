@@ -395,7 +395,11 @@ Web first, so it can be shared as a link.
   same test runs whenever a zone opens in a solving worker while no solve is out, and a loading save's pool is
   cut before its packs open, by `memoryCheck`'s estimate of a worker for the zones its stations reach
   (`capAhead`). The periods are dealt again (`periods`, taken up between solves) and every worker composes
-  afresh; no figure changes. It never grows back in a page (T-1366). `?perfOff=cap` turns the shrinking off,
+  afresh; no figure changes. The pool grows back (T-1366) once it is quiet, as for a restart: up to its size at
+  the start, to the most solving workers that fit 95% of both limits, each counted at the most any of them holds
+  or needs, and never within 2 minutes of its last change (doubled by each cut after a growth, so zones opening
+  and closing near the line cannot start and stop workers in turn). A new worker opens what the pool holds as a
+  replacement does and the network is solved once more. `?perfOff=cap` turns the shrinking off, `grow` the growing,
   `?demandWorkers=N` sets the pool and keeps it (`auto`: the page's own rule, for a check whose core plan would
   add one); check `t1205-memory.mjs`.
 

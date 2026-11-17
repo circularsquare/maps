@@ -504,6 +504,11 @@ const MEM_WORKER = 0.15 * 2 ** 30; // (T-3472: 110-150 MB a solving worker on al
  * every open zone and the market, so a big save runs fewer: on a reported 8 GB, New York 2, all of China 1.
  * Not with "Use more cores" on (`shareCapped`): the player chose speed */
 const SOLVING_SHARE = 0.175;
+/** T-1366: the pool grows back (`growTo`) only to a count whose workers fit GROW_ROOM of `capPool`'s limits, and
+ * no sooner than GROW_GAP_MS after its last change (doubled by each cut after a growth), so zones opening and
+ * closing near the line never start and stop workers in turn */
+const GROW_ROOM = 0.95;
+const GROW_GAP_MS = 120_000;
 const mb = (bytes: number) => Math.round(bytes / 2 ** 20);
 const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
 const SOLVE_MS = { base: 1000, perStop: 3.5 };
@@ -1425,7 +1430,9 @@ class DemandClient {
   private sweep() {
     clearTimeout(this.closeTimer);
     this.closeTimer = 0;
-    if (perfOff("close") || this.failed || this.ready < this.workers.length || this.held || startup.peek() !== "ready" || this.hold) return;
+    if (perfOff("close") || this.failed || startup.peek() === "failed") return;
+    // (T-1366: tried again after, as nothing else may ask: a still view in a paused game, an earlier game's markets)
+    if (this.ready < this.workers.length || this.held || startup.peek() !== "ready" || this.hold) return void (this.closeTimer = setTimeout(() => this.sweep(), MEM_RETRY_MS) as unknown as number);
     const keep = this.keepSet();
     if (!keep) return;
     const now = performance.now();
@@ -2888,23 +2895,85 @@ class DemandClient {
     this.memTimer = window.setTimeout(() => this.memCheck(), ms);
   }
 
-  /** Restart the workers well above their need, together, once the pool is quiet. The replacements
-   * reopen what they held and the network is solved again once (`workerDied`'s path); the figures
-   * shown stay until that solve's final, the same to the trip. */
+  /** Restart the workers well above their need, together, once the pool is quiet, and add back the solving
+   * workers that now fit (T-1366, `growTo`). The replacements and new workers open what the pool holds and the
+   * network is solved again once (`workerDied`'s path); the figures shown stay until that solve's final, the
+   * same to the trip. */
   private memCheck() {
     this.memTimer = 0;
     if (this.failed) return;
     const over = this.overNeed();
-    if (!over.length) return;
+    const n0 = this.computeN, n = this.growTo(new Set(over.map((o) => o.i)));
+    if (!over.length && n <= n0) return;
     const wait = this.quietIn();
     if (wait > 0) return this.memSoon(wait);
-    for (const o of over) this.workerDied(o.i, `${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`, true); // i18n-ignore
+    const gap = this.poolChangedAt + this.growGap - performance.now();
+    if (n > n0 && gap > 0) this.memSoon(gap);
+    else if (n > n0) this.grow(n, `about ${mb(this.growPer)} MB a solving worker, room for ${n} in ${mb(GROW_ROOM * this.solvingRoom())} MB`); // i18n-ignore
+    // (the aux worker has moved to the end of the grown pool)
+    for (const o of over) this.workerDied(o.i === n0 ? this.computeN : o.i, `${mb(o.wasm)} MB of WASM, about ${mb(o.need)} MB needed`, true); // i18n-ignore
+  }
+
+  /** T-1366: when the pool last grew or was cut (performance.now()), and the wait after it before it may grow */
+  private poolChangedAt = 0;
+  private growGap = GROW_GAP_MS;
+  private grew = false;
+  /** `growTo`'s last count of a solving worker, for the console */
+  private growPer = 0;
+  /** what the solving workers may take together: `SOLVING_SHARE` of the budget, or all of it with the share off */
+  private solvingRoom(): number {
+    return shareCapped() ? SOLVING_SHARE * memBudget() : memBudget();
+  }
+
+  /** T-1366: the solving workers the pool may have now, `computeN` or more, up to its size at the start
+   * (`poolN`; T-3072's remembered cap, `poolSize`). Each counts as the most any of them holds now (its WASM)
+   * or needs, a new worker opening all they hold; `restarting`, about to restart, as its need. Room: GROW_ROOM
+   * of `capPool`'s two limits, so a pool grown is a step away from being cut again. */
+  private growTo(restarting: Set<number>): number {
+    const n0 = this.computeN, max = Math.min(this.poolN, poolSize());
+    if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || workersAsked() !== null) return n0;
+    const held = (i: number) => { const need = this.needOf(i); return need === null ? null : restarting.has(i) ? need : Math.max(need, this.mem[i]?.wasm ?? 0); };
+    let per = 0;
+    for (let i = 0; i < n0; i++) { const h = held(i); if (h === null) return n0; per = Math.max(per, h); }
+    this.growPer = per;
+    const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? MEM_OTHER;
+    const aux = (held(n0) ?? 0) + js, budget = memBudget();
+    const share = shareCapped() ? SOLVING_SHARE * budget : Infinity;
+    let n = n0;
+    while (n < max && other + (n + 1) * (per + js) + aux <= GROW_ROOM * budget && (n + 1) * (per + MEM_WORKER) <= GROW_ROOM * share) n++;
+    return n;
+  }
+
+  /** T-1366: `shrink` in reverse: solving workers `computeN` to `n` - 1 start, open what the pool holds as a
+   * replacement does (`reopen`), and the periods are dealt again among all; the aux worker moves up to index `n`.
+   * Once every new worker holds it all, the network is solved again (`solveAgain`). */
+  private grow(n: number, why: string) {
+    const old = this.computeN, add = n - old;
+    console.info(`demand: ${old} solving workers to ${n}: ${why}`);
+    for (const list of [this.workers, this.ackedBy, this.start.workers, this.mem, this.restarted] as unknown[][]) {
+      while (list.length < old + 1) list.push(undefined);
+      list.splice(old, 0, ...new Array(add).fill(undefined));
+    }
+    if (this.isReady.delete(old)) this.isReady.add(n);
+    this.computeN = n;
+    this.periodsOf = [...Array.from({ length: n }, (_, i) => periodsOfWorker(i, n)), []];
+    this.marketsOf = marketsOfWorkers(n);
+    solveWaves = Math.ceil(PERIODS.length / n);
+    this.periodsOf.forEach((periods, i) => { if (i < old || i === n) this.workers[i].postMessage({ kind: "periods", periods, ...(i < n ? this.marketsMsg(i) : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}) } satisfies ToDemand); });
+    for (let i = old; i < n; i++) {
+      this.respawn.set(i, { left: null, solving: false, planned: true });
+      this.workers[i] = this.spawn(i, false);
+    }
+    this.endQueries();
+    this.freshParts = true;
+    this.poolChangedAt = performance.now();
+    this.grew = true;
   }
 
   /** Before a solve, and as zones open while none runs: fewer solving workers when together they would
    * pass `SOLVING_SHARE` of the budget (`memBudget`), or with the rest of the page the budget itself. Each
    * holds every open zone and the market, so a worker less saves its whole need, at a slower solve; no
-   * figure changes. Never grows back within a page. */
+   * figure changes. T-1366: `memCheck` grows it back (`growTo`). */
   private capPool() {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null) return;
     let per = 0;
@@ -2933,6 +3002,8 @@ class DemandClient {
   private shrink(n: number, why: string) {
     const old = this.computeN, cut = old - n;
     console.info(`demand: ${old} solving workers to ${n}: ${why}`);
+    this.poolChangedAt = performance.now();
+    if (this.grew) this.growGap *= 2; // (T-1366: grown too soon)
     for (let k = n; k < old; k++) this.workers[k].terminate();
     for (const list of [this.workers, this.ackedBy, this.start.workers, this.mem, this.restarted] as unknown[][]) list.splice(n, cut);
     const auxReady = this.isReady.has(old);
