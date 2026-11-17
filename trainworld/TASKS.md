@@ -277,13 +277,26 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
   - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
   - Other: notes/T-3473.md
-- T-3531 [P1] {L:track-drawing} Street tram drawing slow since v0.3.5 (taking, 2026-11-17, agent tramlag)
-  - Context: You, 2026-11-17: "im trying to place trams snapped to street in venezuela and its super unresponsive for some reason. did we make any regressions here? i also just rtied in new york and its quite slow too, a lot slower than rpreviously."
-  - Goal: Find the commit that slowed it and bring street tram drawing back to v0.3.5's responsiveness, measured in Venezuela and New York.
-- T-3529 [P2] {L:region-redraws} Reclaimed land skips other countries (taking, 2026-11-17, agent reclaim)
-  - Context: From T-3455's plan: a rebuild's `osm_units.reclaimed` step has no country check, so rebuilding Nice would put Monaco in Nice's zone and Sinuiju would take a piece Natural Earth puts in China. Both rows are held back from tonight.
-  - Goal: `reclaimed` drops pieces in another country's land (Natural Earth admin-0, countries not in the row's units), with a test case; then nic and pyo-kp can join a later night.
-  - Other: notes/T-3455.md
+- T-3537 [P2] {L:track-drawing} Street snap merges a double track's split (taking, 2026-11-17, agent tramsplit)
+  - Context: Your pad, 2026-11-17 (artifacts/trainworld/board/20261117-105027-a8c7.png): "when i hover the end of the double track, i get the yellow dot that indicates its gonna extend from one of the two tracks. but after i actually click, it ends up just merging the two single tracks into one, i think cuz its being overriden by "snap to street" ... i do want it to snap to street after i start extending ... if we are extending a double track with single, we should pay more attention to where the mouse is relative to the end of the double track, over the "snap to street" that forces us to merge the two tracks. we should only merge the two tracks if we're hovering over the center of the loose end. this should also be doable without zooming in a ton ideally."
+  - Goal: With street snap on, clicking near one track of a double track's loose end extends that track as single; only a click at the end's centre extends both, at normal zooms.
+- T-3538 [P2] {L:single-track} Split tram line flagged as turning back at its end (taking, 2026-11-17, agent tramsplit)
+  - Context: Your pad, 2026-11-17 (artifacts/trainworld/board/20261117-105713-f76a.png): "this split tram route says theres a switchback / yellow turn back at the southwest end. i feel like there shouldnt be, this is just a simple linear route except for the fact that it splits in the middle, and it should be treated as a linear route at its ends."
+  - Goal: A line that splits into two one-way singles in the middle shows no switchback mark at its ends.
+- T-3535 [P2] {L:track-drawing} Tram crossing mark missing from the preview (taking, 2026-11-17, agent tramlag)
+  - Context: You, 2026-11-17: "we have a different icon from the normal "x" flat crossing when a tram crosses a train. it shows up after we place the tram segment but not while we're only hovering / about to place, in that case we still show a normal x. could we have the broken x show up when we are hovering / about to place ghost?"
+  - Goal: The drawing preview shows the tram-rail crossing mark wherever the placed track would show it.
+- T-3532 [P2] {L:borders} {waits:Anita} Buenos Aires to Montevideo drive too short
+  - Need from Anita: OK to mark estuaries and wide rivers as water in the drive grid (Natural Earth) and rebuild the drives table overnight, so this drive goes from 5 h 41 to about 7 h 20 like the road around? Recommended: yes.
+  - Context: Your pad, 2026-11-17: "someone complained about buenos aires montevideo driving time being too short. we have a rough estimate of this right? what does our current method do for this case?" The drive is a least-cost path on a road-speed grid; it cuts across the Parana delta and the head of the Plata, which the water grid has as land (5 h 41, 323 km; real road about 7 h, 580 km, plus the border). Burning Natural Earth's sea in gives 7 h 22 in a test. No border-crossing time exists.
+  - Goal: Drives across estuaries and deltas go around them or take a mapped ferry; how many other pairs change is measured first.
+  - Other: notes/T-3532.md
+- T-3533 [P2] {L:map-look} Double track narrower than its real spacing (taking, 2026-11-17, agent tracklook)
+  - Context: Your pad, 2026-11-17: "if we zoom in on double track, for a short period, the visual width of the double track looks *smaller* than the actual width/distance between the two tracks of the double track... like the tracks expand out as we zoom in. thats kinda silly. we should have the visual width of the double track always correspond at least to the actual width on the world. so it should start spreading out a bit sooner i guess."
+  - Goal: At every zoom the drawn double track is at least as wide as the real distance between its two tracks.
+- T-3534 [P2] {L:map-look} Single track white stripe at close zoom (taking, 2026-11-17, agent tracklook)
+  - Context: Your pad, 2026-11-17: "also when super super zoomed in on single track it looks like it has a thin white line running down its center which is confusing. lets just have it be a solid gray line, no white stripe."
+  - Goal: Single track at the closest zooms is a solid grey line with no white stripe.
 - T-3530 [P3] {L:region-redraws} Coastal land for Japan's hand packs
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
@@ -866,9 +879,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
   - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
   - Other: notes/T-3382.md
-- T-3524 [P2] {L:track-drawing} Track near the shore counted as over water (taking, 2026-11-17, agent shore)
-  - Context: Your pad, 2026-11-17: "when we consider placed track "over water" is a little inconsistent when you zoom super far in. people are building things close to the shoreline and it says its over water and they get frustrated. would we be able to improve this? or bias it to be forgiving if thats significantly easier". Many players build along shores, so a decent reach.
-  - Goal: Track that looks on land at street zoom is not refused or priced as over water; a forgiving margin if a truer coastline is much harder.
 - T-3523 [P3] {L:open-source} {after:v0.4.0 publish} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
@@ -970,9 +980,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3526 [P2] {L:single-track} {waits:Anita} Block more trains than single track can run
-  - Need from Anita: fix 1 (a line's own trains stop queueing against each other on single track, so the existing cap works as at terminals; round trips get shorter) or fix 2 (run times kept, a separate cap and a new hover); cap at trains that fit plus one, as at terminals. Recommended: fix 1, plus one.
-  - Context: Proposal in notes/T-3526.md: the terminal cap already covers single track, but it leaks because a line's two directions queue against each other, so each added train stretches the round trip and the cap grows with it (a 5 km single stretch: + stops at 3, typed counts at 2, 2 fit). No line on the NYC save changes. Your pad, 2026-11-17: "if we have a line that has a single track portion that severely limits capacity, we dont actually stop people from assigning way more trains than can actually run, which is a bit silly. should probably block this in analogous way to how we block adding tons of trains to lines past what their terminals can handle."
+- T-3526 [P2] {L:single-track} Block more trains than single track can run (taking, 2026-11-17, agent singlecap)
+  - Context: You chose fix 1 on 2026-11-17: a line's own trains stop queueing against each other on single track, so the terminal cap holds; cap at trains that fit plus one. Proposal in notes/T-3526.md: the terminal cap already covers single track, but it leaks because a line's two directions queue against each other, so each added train stretches the round trip and the cap grows with it (a 5 km single stretch: + stops at 3, typed counts at 2, 2 fit). No line on the NYC save changes. Your pad, 2026-11-17: "if we have a line that has a single track portion that severely limits capacity, we dont actually stop people from assigning way more trains than can actually run, which is a bit silly. should probably block this in analogous way to how we block adding tons of trains to lines past what their terminals can handle."
   - Goal: A line's train count stops at what its single-track stretches can run, the way it stops at what its ends can turn; the rule and its numbers go to you before it is built.
 - T-3525 [P3] {L:track-speed} Speed limit for a whole selection
   - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.

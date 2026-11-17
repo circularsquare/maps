@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3536 [P2] {L:track-drawing} New snap to street icon (2026-11-17): snap to streets icon redrawn after her mockup; no clash with snapRoads (never in one bar).
+- T-3524 [P2] {L:track-drawing} Track near the shore counted as over water (2026-11-17): 12 m WATER_MARGIN on pack water masks; checker PASS (channels stay water, shore track on land goes to ground, crossings 2-9% cheaper, NYC built cost -0.6%); Anita OK'd 12 m. notes/T-3524.md.
+- T-3531 [P1] {L:track-drawing} Street tram drawing slow since v0.3.5 (2026-11-17): closed without code: Not reproduced: 33 ms per pointer move on dev in NYC and Caracas; Anita found 8800 fine later, likely the machine near its core cap with many agents and 8800 rebuilds running.
+- T-3529 [P2] {L:region-redraws} Reclaimed land skips other countries (2026-11-17): reclaimed drops pieces half or more in foreign NE land, clips the rest (floor 0.1 km2); nic's Monaco and sjc's China piece dropped, batch-2 rows unchanged; nic and pyo-kp free for a later night. notes/T-3455.md.
 - T-3527 [P2] {L:help-tutorial} Help list in the controls panel (2026-11-17): help panel: Anita's four questions above the controls, one answer open at a time (intercity one on phones only), plain ? button and F1; six more proposed in notes/T-3527.md.
 - T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (2026-11-17): Bus boarding 6 to 4 perceived minutes (BUS_BOARD_MIN); NYC test buses carry 7-14% more riders, Throgs Neck bus breaks even, rail trips move by 60-300 of 12.68M; landed 9fd75399. notes/T-3522.md.
 - T-3408 [P2] {L:rebuild-track} Rebuild from the track panel (2026-11-17): The track panel of built track has single/double and Regular/High speed with Rebuild, the Select bar's code for that one piece (same quote, question, charge; final), and a hint to the Select tool (4); checks/t3408-panel-rebuild.mjs.

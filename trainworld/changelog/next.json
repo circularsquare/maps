@@ -1239,6 +1239,18 @@
       "rev": 1,
       "area": "other",
       "fix": false
+    },
+    {
+      "id": "c097",
+      "text": "changed the snap to streets icon to a straight street with a dashed center line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3536",
+      "by": "snapicon",
+      "at": "2026-11-17T15:54:52Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
     }
   ]
 }
