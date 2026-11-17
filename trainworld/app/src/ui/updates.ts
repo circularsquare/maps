@@ -20,6 +20,9 @@ export interface Update {
   line: MessageKey;
   /** the changelog's list, shown sorted by area */
   changes: Change[];
+  /** T-3591: those of `changes` listed first, above the rest, in this order (a big update's 1-8 biggest changes);
+   * left out, the list is as before */
+  highlights?: MessageKey[];
   /** those of `changes` that make something harder, each with the key of its new figure, which is filled into the
    * line's `{figure}` and shown red (T-3133; only the figure is red, Anita 2026-11-11) */
   nerfs?: Partial<Record<MessageKey, MessageKey>>;

@@ -1,5 +1,6 @@
 // T-2810: the list of what changed in each update, a Modal; opened from the start menu's update row and
 // from Settings (T-3220). T-3466: each item has its area's icon, the list sorted by area, bug fixes lighter.
+// T-3591: an update with `highlights` lists them first, under a small heading, then the rest by area as before.
 // T-3468: one page per x.y version (v0.3 holds v0.3, v0.3.1, ...), the newest open, links to each at the top; only
 // the page shown is rendered, and nothing while closed.
 
@@ -27,6 +28,20 @@ const AREA_ICON: Record<Area, () => JSX.Element> = {
 function sorted(changes: Change[]): Change[] {
   const rank = (c: Change) => AREAS.indexOf(c[1]) * 2 + (c[2] ? 1 : 0);
   return changes.map((c, i) => [c, i] as const).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([c]) => c);
+}
+
+/** T-3591: an update's highlights, in the order it lists them, each with its area as in `changes` */
+function highlighted(u: Update): Change[] {
+  return u.highlights!.map((k) => u.changes.find((c) => c[0] === k)).filter((c): c is Change => !!c);
+}
+
+function Item({ u, c: [k, area, fix] }: { u: Update; c: Change }) {
+  if (mobileDevice() && k === "updates.v01DeleteKeys") return null;
+  const fig = u.nerfs?.[k];
+  return <li key={k} class={fix ? "fix" : undefined}>
+    <span class={`cl-area cl-${area}`} aria-hidden="true">{AREA_ICON[area]()}</span>
+    <div>{fig ? boldAll(tRich(k, { figure: <span class="nerf">{t(fig)}</span> })) : withBold(t(k))}{u.sub?.[k] && <ul>{u.sub[k]!.map((s) => <li key={s}>{withBold(t(s))}</li>)}</ul>}</div>
+  </li>;
 }
 
 /** "v0.3" for v0.3, v0.3.1, v0.3.5 */
@@ -65,13 +80,11 @@ function Pages() {
     </div>}
     {updates.map((u) => <section key={u.version}>
       <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
-      <ul class="changelog-list">{sorted(u.changes).filter(([k]) => !(mobileDevice() && k === "updates.v01DeleteKeys")).map(([k, area, fix]) => {
-        const fig = u.nerfs?.[k];
-        return <li key={k} class={fix ? "fix" : undefined}>
-          <span class={`cl-area cl-${area}`} aria-hidden="true">{AREA_ICON[area]()}</span>
-          <div>{fig ? boldAll(tRich(k, { figure: <span class="nerf">{t(fig)}</span> })) : withBold(t(k))}{u.sub?.[k] && <ul>{u.sub[k]!.map((s) => <li key={s}>{withBold(t(s))}</li>)}</ul>}</div>
-        </li>;
-      })}</ul>
+      {u.highlights?.length ? <>
+        <h4 class="changelog-sub">{t("startMenu.changelogHighlights")}</h4>
+        <ul class="changelog-list">{highlighted(u).map((c) => <Item u={u} c={c} />)}</ul>
+        <ul class="changelog-list changelog-rest">{sorted(u.changes.filter(([k]) => !u.highlights!.includes(k))).map((c) => <Item u={u} c={c} />)}</ul>
+      </> : <ul class="changelog-list">{sorted(u.changes).map((c) => <Item u={u} c={c} />)}</ul>}
     </section>)}
   </>;
 }

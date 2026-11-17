@@ -1927,6 +1927,7 @@
   "startMenu.backupDownloadFailed": "This backup could not be downloaded.",
   "startMenu.build": "build {version}",
   "startMenu.changelog": "Changelog",
+  "startMenu.changelogHighlights": "Highlights",
   "startMenu.delete": "Delete",
   "startMenu.deleteFailed": "This game could not be deleted.",
   "startMenu.savesUnreadable": "Could not read your saved games from browser storage. Reload the page to try again.",

@@ -1197,6 +1197,8 @@ a.btn { text-decoration: none; }
 .changelog-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; font-size: 14px; }
 .changelog-head span { font-weight: 400; }
 section + section > .changelog-head { margin-top: 16px; }
+.changelog-sub { margin: 0 0 4px; font-size: 12px; font-weight: 600; }
+.changelog-list.changelog-rest { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); }
 .changelog-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
 .changelog-list > li { display: flex; gap: 6px; align-items: flex-start; }
 .changelog-list ul { margin: 3px 0 0; padding-left: 14px; display: flex; flex-direction: column; gap: 3px; }

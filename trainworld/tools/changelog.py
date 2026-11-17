@@ -4,7 +4,9 @@ One JSON file per release under trainworld/changelog/. The unpublished one is ne
 <version>.json. An item: id (c001...), text (what the agent wrote), edited (Anita's wording, or null), hidden,
 task, by, at, rev (counts changes, so a page saving over a newer change gets refused), area (its icon, T-3466: one of
 AREAS), fix (a bug fix: lighter text, after its area's other items), parent (the id of the group it sits under) and
-group (true for a group item, like "track bug fixes", that others sit under). The page shows edited if set, else
+group (true for a group item, like "track bug fixes", that others sit under) and highlight (true on a top-level item or
+group that the game lists first, T-3591: for an update with more than about 20 shown items, 1-8 of the biggest
+changes for a player). The page shows edited if set, else
 text. The order of items in the file is her order (the board's drag; new items go first); publish keeps the area
 grouping the game shows and uses her order within each area. A hidden item stays in the file and out of the game; a hidden group hides its items too.
 
@@ -13,6 +15,7 @@ grouping the game shows and uses her order within each area. A hidden item stays
     python trainworld/tools/changelog.py set c002 [--area track] [--fix | --no-fix] [--under c055 | --under none]
     python trainworld/tools/changelog.py reword c002 "<new line>"      (sets edited, as the board's edit does)
     python trainworld/tools/changelog.py hide c002 [--show]
+    python trainworld/tools/changelog.py highlight c002 [--off]     (a top-level item or a group)
     python trainworld/tools/changelog.py move c002 [--before c005]      (no --before: last)
     python trainworld/tools/changelog.py list
     python trainworld/tools/changelog.py line "update v0.3.6: <the start menu's line, 80 characters at most>"
@@ -37,6 +40,7 @@ NEXT = os.path.join(DIR, "next.json")
 UPDATES_TS = os.path.join(ROOT, "app", "src", "ui", "updates.ts")
 MESSAGES = os.path.join(ROOT, "app", "src", "i18n", "messages", "en.json")
 CONTEXT = os.path.join(ROOT, "app", "src", "i18n", "context.json")
+HIGHLIGHT_MAX = 8
 LINE_MAX = 80  # checks/i18n.mjs UPDATE_LINE_MAX
 CURLY = chr(0x2019)
 # app/src/ui/updates.ts AREAS, in the order the game sorts by. "other" fits none of Anita's areas (a plain dot); "bug" is
@@ -178,7 +182,7 @@ def delete_group(item_id, rev, path=NEXT):
 
 
 def update_item(item_id, fields, rev, path=NEXT):
-    """Her save: edited (string, or null to go back to the agent's text), hidden, area, fix, parent (a group's id
+    """Her save: edited (string, or null to go back to the agent's text), hidden, highlight, area, fix, parent (a group's id
     or null). Returns (status, item): 409 with the current item when rev is not the item's; ValueError on a bad
     area or parent."""
     with Locked(path):
@@ -200,6 +204,13 @@ def update_item(item_id, fields, rev, path=NEXT):
             item["area"] = fields["area"]
         if "fix" in fields:
             item["fix"] = bool(fields["fix"])
+        if "highlight" in fields:
+            if fields["highlight"] and (item.get("parent") or fields.get("parent")):
+                raise ValueError("only a top-level item or a group can be a highlight")
+            if fields["highlight"]:
+                item["highlight"] = True
+            else:
+                item.pop("highlight", None)
         if "parent" in fields:
             p = fields["parent"] or None
             if item.get("group") and p:
@@ -207,6 +218,7 @@ def update_item(item_id, fields, rev, path=NEXT):
             check_parent(d, p, item_id)
             if p:
                 item["parent"] = p
+                item.pop("highlight", None)      # an item under a group is no highlight of its own
             else:
                 item.pop("parent", None)
         item["rev"] += 1
@@ -264,8 +276,12 @@ def publish(version, at=None, dry=False, path=NEXT):
         raise SystemExit("no start-menu line: python trainworld/tools/changelog.py line \"update %s: ...\"" % version)
     if len(line) > LINE_MAX:
         raise SystemExit("the line is %d characters, the limit is %d" % (len(line), LINE_MAX))
+    hl_ids = {i["id"] for i, _ in vis if i.get("highlight")}
+    if len(hl_ids) > HIGHLIGHT_MAX:
+        print("warning: %d highlights, the notes are meant to have 1-%d" % (len(hl_ids), HIGHLIGHT_MAX))
     strings = {prefix + "Line": line}
     keys = []      # (key, item) of the list's items
+    hl_keys = {}   # a highlight's id: its key
     subs = {}      # a group's key: its items' keys
     n = 0
     for i, kids in vis:
@@ -273,6 +289,8 @@ def publish(version, at=None, dry=False, path=NEXT):
         k = "%sChange%d" % (prefix, n)
         strings[k] = shown(i)
         keys.append((k, i))
+        if i["id"] in hl_ids:
+            hl_keys[i["id"]] = k
         for c in kids:
             n += 1
             ck = "%sChange%d" % (prefix, n)
@@ -290,9 +308,11 @@ def publish(version, at=None, dry=False, path=NEXT):
     at = at or now()
     changes = "".join('      ["%s", "%s"%s],\n' % (k, i["area"], ', "fix"' if i.get("fix") else "") for k, i in keys)
     sub = "".join('      "%s": [%s],\n' % (k, ", ".join('"%s"' % c for c in cs)) for k, cs in subs.items())
-    entry = ('  {\n    version: "%s",\n    at: "%s",\n    line: "%sLine",\n    changes: [\n%s    ],\n%s  },\n'
-             % (version, at, prefix, changes, "    sub: {\n%s    },\n" % sub if sub else ""))
-    entry = entry.replace("\n", eol)
+    hl = [hl_keys[i["id"]] for i in d["items"] if i["id"] in hl_keys]     # her (file) order
+    hl_ts = '    highlights: [%s],\n' % ", ".join('"%s"' % k for k in hl) if hl else ""
+    entry = ('  {\n    version: "%s",\n    at: "%s",\n    line: "%sLine",\n    changes: [\n%s    ],\n%s%s  },\n'
+             % (version, at, prefix, changes, hl_ts, "    sub: {\n%s    },\n" % sub if sub else ""))
+    entry = entry.replace(chr(10), eol)
     anchor = "export const UPDATES: Update[] = [" + eol
     if ts.count(anchor) != 1:
         raise SystemExit("cannot find the UPDATES list in updates.ts")
@@ -361,6 +381,9 @@ def main():
     h = sub.add_parser("hide")
     h.add_argument("id")
     h.add_argument("--show", action="store_true", help="unhide")
+    hl = sub.add_parser("highlight")
+    hl.add_argument("id")
+    hl.add_argument("--off", action="store_true", help="remove the highlight")
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("--before")
@@ -403,6 +426,17 @@ def main():
         if code != 200:
             raise SystemExit("not saved (%d): try again" % code)
         print("%s %s" % (r.cmd, r.id))
+    elif r.cmd == "highlight":
+        it = next((i for i in read()["items"] if i["id"] == r.id), None)
+        if it is None:
+            raise SystemExit("no item " + r.id)
+        try:
+            code, _ = update_item(r.id, {"highlight": not r.off}, it["rev"])
+        except ValueError as e:
+            raise SystemExit(str(e))
+        if code != 200:
+            raise SystemExit("not saved (%d): try again" % code)
+        print("%s %s" % ("unhighlighted" if r.off else "highlighted", r.id))
     elif r.cmd == "move":
         code = move_item(r.id, r.before)
         if code != 200:
@@ -411,8 +445,8 @@ def main():
         d = read()
         print("line: %s" % (d.get("line") or "(none)"))
         for i in d["items"]:
-            print("%s%s %s %s%s %s%s%s" % (
-                i["id"], " [hidden]" if i["hidden"] else "", i.get("area") or "(no area)", "fix " if i.get("fix") else "",
+            print("%s%s%s %s %s%s %s%s%s" % (
+                i["id"], " [hidden]" if i["hidden"] else "", " [highlight]" if i.get("highlight") else "", i.get("area") or "(no area)", "fix " if i.get("fix") else "",
                 i.get("task") or "-", "  " if i.get("parent") else "", "[group] " if i.get("group") else "", shown(i))
                 + ("  (edited)" if i["edited"] else ""))
     elif r.cmd == "line":

@@ -67,6 +67,7 @@ const ICONS = {
   eye: [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }]],
   'eye-off': [['path', { d: 'M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z' }], ['circle', { cx: 8, cy: 8, r: 2 }],
     ['path', { d: 'M2.5 13.5 13.5 2.5' }]],
+  star: [['path', { d: 'M8 2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.2 4.4 13.1l.7-4L2.2 6.3l4-.6z' }]],
   undo: [['path', { d: 'M5.5 3.5 2.5 6.5l3 3' }], ['path', { d: 'M2.5 6.5h7a3.5 3.5 0 0 1 0 7H6' }]],
   grip: [['circle', { cx: 5.5, cy: 3.5, r: 1.1 }], ['circle', { cx: 10.5, cy: 3.5, r: 1.1 }], ['circle', { cx: 5.5, cy: 8, r: 1.1 }],
     ['circle', { cx: 10.5, cy: 8, r: 1.1 }], ['circle', { cx: 5.5, cy: 12.5, r: 1.1 }], ['circle', { cx: 10.5, cy: 12.5, r: 1.1 }]],
@@ -1903,14 +1904,17 @@ const CL_AREAS = [['track', 'Track'], ['demand', 'Demand'], ['scheduling', 'Sche
   ['other', 'Other (a plain dot)'], ['bug', 'Bug fix of no area']];
 const clRank = (it) => { const a = CL_AREAS.findIndex(([k]) => k === it.area); return (a < 0 ? CL_AREAS.length : a) * 2 + (it.fix ? 1 : 0); };
 
-/** T-3590: her order is the file's (new items first); shown items above hidden ones, a group's items under it.
- *  A hidden group goes down with its items. Within a group, hidden items come after the shown ones. */
+/** T-3591: the board's three sections, top to bottom: highlights, the rest of what is shown, hidden */
+const clClass = (it) => (it.hidden ? 2 : it.highlight ? 0 : 1);
+
+/** T-3590: her order is the file's (new items first); highlights first (T-3591), then the other shown items, then hidden
+ *  ones; a group's items under it. A hidden group goes down with its items. Within a group, hidden items come after the
+ *  shown ones. */
 function clOrdered(all) {
   const groups = new Set(all.filter((i) => i.group).map((i) => i.id));
-  const hid = (it) => (it.hidden ? 1 : 0);
   const top = all.filter((it) => !groups.has(it.parent));
   const kidsOf = (g) => all.filter((c) => c.parent === g.id);
-  const stable = (arr) => arr.map((it, n) => [it, n]).sort((a, b) => hid(a[0]) - hid(b[0]) || a[1] - b[1]).map(([it]) => it);
+  const stable = (arr) => arr.map((it, n) => [it, n]).sort((a, b) => clClass(a[0]) - clClass(b[0]) || a[1] - b[1]).map(([it]) => it);
   return stable(top).flatMap((it) => (it.group ? [it, ...stable(kidsOf(it)).map((c) => ({ ...c, child: true }))] : [it]));
 }
 
@@ -1946,10 +1950,10 @@ function clTarget(id, rowId, lower) {
   }
   const order = clOrdered(all).filter((x) => grp(x) === mine && x.id !== id);
   const k = order.findIndex((x) => x.id === row.id);
-  if (k < 0 || !!row.hidden !== !!it.hidden) return null;       // shown and hidden items keep apart
+  if (k < 0 || clClass(row) !== clClass(it)) return null;       // highlights, the rest and hidden items keep apart
   const next = order[k + (lower ? 1 : 0)];
-  const before = next && !!next.hidden === !!it.hidden ? next.id : null;
-  if (before === null && order.slice(k + 1).some((x) => !x.hidden === !it.hidden)) return null;
+  const before = next && clClass(next) === clClass(it) ? next.id : null;
+  if (before === null && order.slice(k + 1).some((x) => clClass(x) === clClass(it))) return null;
   return { before, row: row.id, after: lower };
 }
 
@@ -2121,7 +2125,7 @@ function clItem(it) {
   area.value = clDraft(it);
   const mine = CL.conflict[id];
   const when = new Date(it.at).toLocaleDateString([], { day: 'numeric', month: 'short' });
-  const cls = `cl-item${it.hidden ? ' is-hidden' : ''}${it.fix ? ' is-fix' : ''}${it.group ? ' is-group' : ''}${it.child ? ' is-child' : ''}`;
+  const cls = `cl-item${it.highlight ? ' is-highlight' : ''}${it.hidden ? ' is-hidden' : ''}${it.fix ? ' is-fix' : ''}${it.group ? ' is-group' : ''}${it.child ? ' is-child' : ''}`;
   return el('div', { class: cls, 'data-item': id,
     ondragstart: (e) => {
       if (!e.currentTarget.draggable || e.target !== e.currentTarget) { e.preventDefault(); return; }
@@ -2168,6 +2172,10 @@ function clItem(it) {
       el('span', { class: 'cl-state' }, CL.status[id] || ''),
       it.edited ? el('button', { class: 'icon-btn', type: 'button', title: `Use the agent's wording: ${it.text}`, 'aria-label': 'Use the agent\'s wording',
         onclick: () => { delete drafts[`cl:${id}`]; clSave(id, { edited: null }); } }, icon('undo')) : el('span', { class: 'icon-btn ghost' }),
+      it.child ? el('span', { class: 'icon-btn ghost' })
+        : el('button', { class: 'icon-btn star', type: 'button', 'aria-pressed': String(!!it.highlight),
+          'aria-label': it.highlight ? 'Remove from the highlights' : 'Make a highlight',
+          onclick: () => clSave(id, { highlight: !it.highlight }) }, icon('star')),
       el('button', { class: 'icon-btn eye', type: 'button', 'aria-pressed': String(!it.hidden),
         title: it.hidden ? 'Hidden from the update. Click to show it' : 'In the update. Click to hide it',
         'aria-label': it.hidden ? 'Show in the update' : 'Hide from the update',
@@ -2199,7 +2207,15 @@ function drawChangelog() {
   ];
   if (!CL.ok) kids.push(el('p', { class: 'meta' }, 'Not saved: server not reachable'));
   if (!all.length) kids.push(el('p', { class: 'meta' }, 'Nothing here yet'));
-  for (const it of items) kids.push(clItem(it));
+  // T-3591: with any highlights, two small labels split the shown items
+  const anyHl = all.some((i) => i.highlight && !i.hidden && !i.parent);
+  let last = -1;
+  for (const it of items) {
+    const c = clClass(it);
+    if (!it.child && c !== last && anyHl && c < 2) kids.push(el('h3', { class: 'cl-section' }, c === 0 ? 'Highlights' : 'Everything else'));
+    if (!it.child) last = c;
+    kids.push(clItem(it));
+  }
   box.replaceChildren(...kids);
 }
 

@@ -1924,6 +1924,7 @@
   "startMenu.backupDownloadFailed": "Grey text on the start menu when downloading a backup from the player's account fails.",
   "startMenu.build": "Small grey text at the top of the start menu. version: the build number, e.g. \"2631\", or \"dev\".",
   "startMenu.changelog": "Button on the start menu's small update row, and the heading of the list of what changed that it opens. Narrow button.",
+  "startMenu.changelogHighlights": "Small heading above the biggest changes of an update, at the top of its list in the changelog.",
   "startMenu.delete": "Hover on the bin button of a saved game on the start menu.",
   "startMenu.deleteFailed": "Grey text on the start menu when deleting a saved game fails.",
   "startMenu.savesUnreadable": "Grey text on the start menu, under New game and Load from file, when the browser's storage kept failing to list the saved games (they are not shown, but were not changed). Not shown when there are simply no saved games.",

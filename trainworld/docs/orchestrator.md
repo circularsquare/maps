@@ -129,7 +129,10 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   `tools/changelog.py line "update vX.Y.Z: ..."`, `publish --version vX.Y.Z --dry-run`, then without `--dry-run`
   (her wording, hidden items left out, sorted by area, groups' items under them; it refuses an item with no area:
   `changelog.py set <id> --area ...`), translate the new `updates.vXYZ*` keys, then deploy.py. Re-read the items
-  against what ships first. When landing agent work, check its changelog item exists and has an area.
+  against what ships first. Highlights (Anita, 2026-11-17, T-3591): when an update has more than about 20 shown items,
+  pick 1-8 of the biggest changes for a player and mark them (`changelog.py highlight <id>`, `--off` to clear; a
+  top-level item or a group); the game lists them first, then the rest by area, and she adjusts the star on the
+  board. Under about 20 items, none. When landing agent work, check its changelog item exists and has an area.
 - Open-source copy (T-2913, notes/T-2913.md): synced at each game publish under the same word (Anita, 2026-11-12):
   `venv\Scripts\python.exe trainworld/tools/opensource/export.py` from the maps root, then `git push` in
   ..\trainsworld-export. A PR is applied in maps by an agent (`gh pr diff`, `git apply`), checked like agent work,
