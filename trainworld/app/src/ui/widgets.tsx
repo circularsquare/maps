@@ -51,8 +51,8 @@ export const Icon = {
   snapReal: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.5 14.5c5 0 10-4 13-12" /></svg>,
   // roads (T-3129): the sweep as a road, two edges and a centre line
   snapRoads: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.4 12.2L2.4 12.1L3.4 11.9L4.3 11.6L5.3 11.2L6.3 10.6L7.2 9.8L8.2 8.8L9.1 7.8L10 6.5L10.8 5.1L11.6 3.5L12.4 1.7M7.5 15.2L8.9 14.3L10.3 13.2L11.5 12L12.7 10.6L13.8 9L14.9 7.3" /><path d="M1.5 14.5c5 0 10-4 13-12" stroke-width="1" stroke-dasharray="1.6 1.4" /></svg>,
-  // streets for tram track (T-2927): a street turning a tight corner
-  snapStreets: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.5 10h6a2 2 0 002-2V1.5M1.5 14h9a4 4 0 004-4V1.5" /></svg>,
+  // streets for tram track (T-2927, T-3536): a straight street, two edges and a dashed centre line
+  snapStreets: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.5 12L12 1.5M4.5 15L15 4.5" /><path d="M3 13.5L13.5 3" stroke-width="1" stroke-dasharray="1.6 1.4" /></svg>,
   // beside track: two tracks along the sweep, the new one dashed
   snapBeside: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.4 12.9L2.5 12.8L3.6 12.6L4.6 12.3L5.7 11.8L6.7 11.1L7.7 10.3L8.7 9.3L9.6 8.2L10.6 6.9L11.4 5.4L12.2 3.8L13 1.9" /><path d="M6.5 14.9L7.9 14.2L9.2 13.2L10.4 12.1L11.6 10.8L12.7 9.4L13.8 7.8L14.7 6L15.2 5.1" stroke-dasharray="2 1.6" /></svg>,
   // two peaks, the track tag's terrain mark (T-1394)
