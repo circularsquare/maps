@@ -16,6 +16,7 @@ import { isMemoryFailure } from "./loadText";
 import { leftText } from "./loadBar";
 import { clock } from "./clock";
 import { cityById, type CityId } from "./cities";
+import { webgl2State } from "../map/webgl2";
 
 export interface LoadProgress {
   /** the cities being loaded, the viewed one first */
@@ -169,12 +170,24 @@ export function watchGraphics(canvas: HTMLCanvasElement) {
     if (lostCanvases.size) return;
     if (graphicsTimer) { clearTimeout(graphicsTimer); graphicsTimer = 0; }
     // the notice was for a context that never came back: this one did, so undo what the notice did
-    if (demandStopped.peek() === "graphics") {
-      demandStopped.value = null;
+    if (demandStopped.peek() === "graphics" || (graphicsGone.peek() && !gameFailed.peek())) {
+      if (demandStopped.peek() === "graphics") demandStopped.value = null;
+      graphicsGone.value = false;
       if (graphicsPaused) clock?.setRunning(true);
     }
     graphicsPaused = false;
   });
+}
+/** T-3582: the browser has WebGL2 but refuses this page a context, so a reload cannot help: the screen says to
+ * restart the browser. At startup nothing else starts; mid-game it covers
+ * the game, which is paused and saved (`onGraphicsGone`). */
+export const graphicsGone = signal(false);
+let graphicsGoneSave: () => void = () => {};
+export function onGraphicsGone(save: () => void) { graphicsGoneSave = save; }
+export function loadGraphicsGone(reason: string) {
+  graphicsGone.value = true;
+  gameFailed.value = true;
+  loadFailed(`WebGL2 context refused${reason ? ` (${reason})` : ""}`); // i18n-ignore: console and the failure's reason only
 }
 /** whether the graphics notice itself stopped the clock (a player who had paused stays paused) */
 let graphicsPaused = false;
@@ -183,7 +196,19 @@ function armGraphicsTimer() {
   if (graphicsTimer || !lostCanvases.size || typeof document === "undefined" || document.visibilityState === "hidden") return;
   graphicsTimer = window.setTimeout(() => {
     graphicsTimer = 0;
-    if (!lostCanvases.size || demandStopped.peek()) return;
+    if (!lostCanvases.size || graphicsGone.peek()) return;
+    // T-3582: a fresh context refused too means the browser blocked the page, and a reload would land on that
+    const probe = webgl2State();
+    if (probe.state !== "ok") {
+      console.warn("graphics: the lost context did not come back and a new one was refused", probe.state === "refused" ? probe.reason : ""); // i18n-ignore
+      if (demandStopped.peek() === "graphics") demandStopped.value = null;
+      else graphicsPaused = !!clock?.running.peek();
+      graphicsGone.value = true;
+      clock?.setRunning(false);
+      graphicsGoneSave();
+      return;
+    }
+    if (demandStopped.peek()) return;
     demandStopped.value = "graphics";
     graphicsPaused = !!clock?.running.peek();
     clock?.setRunning(false);

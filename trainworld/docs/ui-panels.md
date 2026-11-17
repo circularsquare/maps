@@ -1531,10 +1531,17 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   tag's "Demand could not load". A page that finds the flag set in sessionStorage at its start
   (set when a game starts loading, cleared when the load ends, fails or the page is left) was
   reloaded by the browser mid-load, as iOS does on running out of memory: it starts no game and shows
-  the memory sentence with Try again. A browser with no WebGL2 (MapLibre cannot start; `hasWebgl2`,
-  `map/webgl2.ts`, asked at the top of main.ts) gets its own screen before anything else starts: one
-  sentence saying to turn on hardware acceleration or update the browser, and no button, since a retry
-  or a way on cannot help [T-3307]. A browser with no WASM SIMD (Safari before 16.4; `hasWasmSimd`,
+  the memory sentence with Try again. A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
+  MapLibre cannot start; `webgl2State`, `map/webgl2.ts`, asked at the top of main.ts) gets its own screen
+  before anything else starts: one sentence saying to turn on hardware acceleration or update the browser,
+  and no button, since a retry or a way on cannot help [T-3307]. A browser that has WebGL2 but refuses the
+  page a context gets the same screen with another sentence: the map's graphics stopped working, reloading
+  won't fix it, close every browser window and open the browser again, and failing that check hardware
+  acceleration (a browser can block a page's graphics after they were lost until it restarts). The browser's
+  creation-error message goes to the console and the failure's reason. The same screen covers a game mid-play
+  when a lost context has not come back after the graphics notice's 6 s and a fresh probe context is refused
+  too; the game is paused and its autosave asked for, and the screen goes if the context comes back after
+  all. A probe that works keeps the graphics notice, whose Reload will then work [T-3582]. A browser with no WASM SIMD (Safari before 16.4; `hasWasmSimd`,
   `map/wasmSimd.ts`, asked right after WebGL2) gets the same screen with its own sentence: no WebAssembly
   SIMD, worded "missing a feature the game needs", update the browser (Safari 16.4 or later), Edge, Chrome or
   Firefox may work better [T-3315].

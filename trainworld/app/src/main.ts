@@ -105,8 +105,8 @@ import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
-import { choosing, lastLoadDied, loadCannotFinish, loadNoSimd, loadNoWebgl2, startGameWait, waitKey } from "./game/loading";
-import { hasWebgl2 } from "./map/webgl2";
+import { choosing, lastLoadDied, loadCannotFinish, loadGraphicsGone, loadNoSimd, loadNoWebgl2, onGraphicsGone, startGameWait, waitKey } from "./game/loading";
+import { webgl2State } from "./map/webgl2";
 import { hasWasmSimd } from "./map/wasmSimd";
 import { outOfMemoryText } from "./game/loadText";
 import { startSaveSafety } from "./game/saveSafety";
@@ -148,8 +148,14 @@ if (params.get("paused") === "1") clock.setRunning(false);
 // T-149, T-172: the clock is held until the viewed city's demand has its first estimate
 startLoadingGate();
 // T-3307: MapLibre cannot start without WebGL2; say what to do, start nothing (the throw ends this module)
-if (!hasWebgl2()) {
-  loadNoWebgl2();
+// T-3582: a browser that has WebGL2 but refuses it has most likely blocked the page after its graphics were lost
+// (a restart brings them back; the screen also names hardware acceleration); one with no WebGL2 gets T-3307's advice
+const gl2 = webgl2State();
+if (gl2.state !== "ok") {
+  if (gl2.state === "refused") {
+    console.warn("WebGL2 context refused:", gl2.reason || "no reason given"); // i18n-ignore
+    loadGraphicsGone(gl2.reason);
+  } else loadNoWebgl2();
   throw new Error("WebGL2 is not available"); // i18n-ignore: stops the page's setup; the player reads the failure screen
 }
 // T-3315: the simulation needs WASM SIMD (Safari 16.4); an older browser gets its own sentence, not a compile error
@@ -195,6 +201,8 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 const demandStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(demandStoppedRoot);
 render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
+// T-3582: the browser refused the page graphics mid-game: the game is saved before the player restarts the browser
+onGraphicsGone(() => { void client.saveBeforeReload(); });
 // T-2962: a file of this tab gone from the server after a publish: a notice with Reload, which saves first
 const newVersionRoot = document.createElement("div");
 map.getContainer().appendChild(newVersionRoot);

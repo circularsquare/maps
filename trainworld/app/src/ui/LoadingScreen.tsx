@@ -9,7 +9,7 @@
 import { h, render } from "preact";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, lastAlive, loadCannotFinish, loadFailure, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
+import { cardEnding, choosing, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadProgress, noSimd, noWebgl2, startup } from "../game/loading";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
 import { marketOff } from "../game/ui";
@@ -19,11 +19,12 @@ import { BunnyTrain } from "./Spinner";
 import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
-  if (startup.value !== "failed") return null;
+  // T-3582: the browser refuses the page graphics, at startup or mid-game: the same screen, a restart sentence
+  if (startup.value !== "failed" && !graphicsGone.value) return null;
   // T-3307: no WebGL2: what to do about it, and no button (a retry or a way on cannot help)
   // T-3315: no WASM SIMD (Safari before 16.4): the same, with its own sentence
-  if (noWebgl2.value || noSimd.value) {
-    const text = t(noWebgl2.value ? "loadText.noWebgl2" : "loadText.noSimd");
+  if (graphicsGone.value || noWebgl2.value || noSimd.value) {
+    const text = t(graphicsGone.value ? "loadText.graphicsGone" : noWebgl2.value ? "loadText.noWebgl2" : "loadText.noSimd");
     return <div class="loading-screen" role="alertdialog" aria-label={text}>
       <div class="loading-box failed">
         <p class="big">{text}</p>
@@ -135,5 +136,5 @@ export function startLoadingGate() {
   render(h(LoadingCard, null), card);
   // While the failure screen is up, keys go nowhere but its buttons (the map's, the tools', space
   // for the clock)
-  blockKeysOutside(root, () => startup.peek() === "failed");
+  blockKeysOutside(root, () => startup.peek() === "failed" || graphicsGone.peek());
 }
