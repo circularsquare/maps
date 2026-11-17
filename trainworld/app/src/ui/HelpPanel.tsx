@@ -29,12 +29,21 @@ export function helpKey() {
 function questions(): [string, string][] {
   const touch = mobileDevice();
   const [, selectName, , selectKey] = TOOLS.find(([id]) => id === "blueprint")!;
+  const [, deleteName, , deleteKey] = TOOLS.find(([id]) => id === "delete")!;
+  const copy = t("busInspector.copy");
   const list: [string, string][] = [
-    [t("help.qBranch"), t("help.aBranch", { copy: t("busInspector.copy") })],
+    [t("help.qBranch"), t("help.aBranch", { copy })],
+    [t("help.qExpress"), t("help.aExpress", { copy })],
     [t("help.qLoop"), t("help.aLoop", { touch })],
   ];
   if (touch) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: t("settingsTab.mobileIntercity") })]);
-  list.push([t("help.qRebuild"), t("help.aRebuild", { touch, tool: selectName, key: selectKey, rebuild: t("blueprint.rebuild") })]);
+  list.push(
+    [t("help.qRebuild"), t("help.aRebuild", { touch, tool: selectName, key: selectKey, rebuild: t("blueprint.rebuild") })],
+    [t("help.qEditTrack"), t("help.aEditTrack", { touch, del: deleteName, delKey: deleteKey, tool: selectName, key: selectKey, rebuild: t("blueprint.rebuild"), remove: t("blueprint.remove") })],
+    [t("help.qFourTracks"), t("help.aFourTracks")],
+    // T-3527: "Recalculate trips while paused" is on by default, so pausing alone still works trips out after each edit
+    [t("help.qRecalc"), t("help.aRecalc", { setting: t("settingsTab.recalcWhilePaused") })],
+  );
   return list;
 }
 

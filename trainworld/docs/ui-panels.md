@@ -568,9 +568,13 @@ or the start menu is up) opens a panel over the map beside the dock, under the t
 a chevron that opens its answer under it, one open at a time, ruled off from the controls below. The answers name
 the game's own controls through their keys ("Copy line", "Calculate intercity trips", the Select tool and its
 key, "Rebuild"), so they follow those labels in every language. Now: a branching or short turning line ("Copy
-line", then the new line's stops), a loop line (right click, on a phone hold, the stop to loop back to while
-adding stops), no intercity riders (phones only, where the setting exists: turn on "Calculate intercity trips"),
-rebuilding sections of track (the Select tool and its bar's Rebuild). New questions are proposed to Anita first.
+line", then the new line's stops), an express line ("Copy line", then drop the skipped stations), a loop line
+(right click, on a phone hold, the stop to loop back to while adding stops), no intercity riders (phones only,
+where the setting exists: turn on "Calculate intercity trips"), rebuilding sections of track (the Select tool and
+its bar's Rebuild), editing or deleting built track (the Delete tool, or the Select tool's Rebuild or Remove),
+four tracks using only two (new stations on the new pair and a new line), and the game recalculating after every
+piece (pause and turn off "Recalculate trips while paused", which is on by default; an entry points to a setting
+only when its default does not already fix the problem, Anita). New questions are proposed to Anita first.
 
 **The controls** then list only those no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
