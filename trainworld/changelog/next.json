@@ -867,9 +867,11 @@
       "task": "T-3491",
       "by": "phonemem",
       "at": "2026-11-16T22:50:29Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "parent": "c086",
+      "changed": "2026-11-17T13:51:07Z"
     },
     {
       "id": "c067",
@@ -915,9 +917,11 @@
       "task": "T-3497",
       "by": "phone2",
       "at": "2026-11-17T00:16:47Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "parent": "c086",
+      "changed": "2026-11-17T13:51:07Z"
     },
     {
       "id": "c071",
@@ -927,9 +931,11 @@
       "task": "T-3493",
       "by": "phonemem",
       "at": "2026-11-17T00:41:15Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "parent": "c086",
+      "changed": "2026-11-17T13:51:07Z"
     },
     {
       "id": "c072",
@@ -939,9 +945,11 @@
       "task": "T-2496",
       "by": "wasmmem",
       "at": "2026-11-17T01:25:51Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "parent": "c086",
+      "changed": "2026-11-17T13:51:07Z"
     },
     {
       "id": "c073",
@@ -1086,6 +1094,31 @@
       "rev": 1,
       "area": "other",
       "fix": false
+    },
+    {
+      "id": "c085",
+      "text": "a selected bubble's trip purposes added its trips with other places, so they sum to its total, inter-city trips in a row of their own",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3510",
+      "by": "bubfold",
+      "at": "2026-11-17T13:35:49Z",
+      "rev": 2,
+      "area": "demand",
+      "fix": true
+    },
+    {
+      "id": "c086",
+      "text": "the game used about 500 MB less memory on desktop",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "maps-b8",
+      "at": "2026-11-17T13:51:03Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false,
+      "group": true
     }
   ]
 }

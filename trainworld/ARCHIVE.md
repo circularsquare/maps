@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting (2026-11-17): Settings option Buses obey one-way streets (off by default) keeps bus routes to one-way streets, with arrows at 1.2x the road stroke and 70% opacity from zoom 15; routes identical to master while off (checker: 150 legs); covers open-source issue 8; Renkon credited as co-author (89476a46). PR 17's assert was already in.
 - T-2777 [P3] {L:world-tooling} Restart a failed join's market step (2026-11-17): world_run.py join --market-only (ids from the newest join.market.log, --from-log or --ids) redoes a failed join's market and trips step through the same market_step a join uses, then freezes; docs/world-run.md says a join costs its groups. First real use will be the next failed join. notes/T-2702.md.
 - T-2627 [P3] {L:world-tooling} Join market step hits its time limit (2026-11-17): The join's market step limit is 1800 s plus 2 s per registered zone (about 9,200 s at 3,722 zones): local trips run over every registered zone. notes/T-2595.md.
 - T-3505 [P2] {L:map-look} Demand bubbles with 0 trips (2026-11-17): No bubble shows under 1 trip a day: each folds into the nearest bubble of at least 1 at every level, zone totals unchanged; folding the pack sites themselves is pipeline-only and small, filed as T-3519 (4 km rural blocks for thin packs). notes/T-3505.md.

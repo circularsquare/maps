@@ -297,10 +297,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
   - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
   - Other: notes/T-3395.md
-- T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting (taking, 2026-11-17, agent busoneway)
-  - Context: You, 2026-11-16: "for the bus routes lets add it as a setting, default off. i feel bad. and some people might want it... we can pull it in if thats easy. its not that many lines of code." From Renkon's open-source PR 1; a both-ways line or a loop still drives a one-way street backwards.
-  - Goal: PR 1 brought in behind a setting that is off by default, credited to Renkon, with bus routes unchanged while it is off.
-  - Other: Open-source issue 8 (a330900neo) is the same case: a bus going the wrong way round a roundabout (you, 2026-11-16).
 - T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve
   - Context: On Tokyo-Sendai, a passage between stations (300 m to 1 km) is sometimes missed by long-distance demand after a quick update solve; only a reload counts it (found by feedsample, notes/T-3454.md).
   - Goal: A quick update solve and a reload give the same long-distance figures.
@@ -331,11 +327,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode
   - Context: You see a hitch at about state scale, also at ?pace=2; video2 could not reproduce it (T-2774).
   - Goal: Find the cause and remove the hitch.
-- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s
+- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s (taking, 2026-11-17, agent stationedit)
   - Context: Placing a station on built track takes 1.9-3.7 s in the worker, mostly because every line over it lays its strokes again.
   - Goal: The same edit keeps each line's strokes when only an edge id changes.
   - Other: notes/T-2763.md has the proposal.
-- T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line
+- T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line (taking, 2026-11-17, agent stationedit)
   - Context: Deleting a built station takes 0.4-3.9 s because all 109 lines' run profiles are rebuilt.
   - Goal: Only the touched lines are rebuilt.
   - Other: Proposal 1 in notes/T-2763.md.
@@ -957,7 +953,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3405 [P3] {L:track-speed} Speed limit on any piece of track
+- T-3405 [P3] {L:track-speed} Speed limit on any piece of track (taking, 2026-11-17, agent piecelimit)
   - Context: Your TODO 2026-11-15: edit it directly, no cost. Lines already have a speed limit (T-2987).
   - Goal: A per-piece speed limit, edited directly.
 - T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
