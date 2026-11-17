@@ -97,8 +97,13 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
    commit, builds into `dist-new` and swaps it in. Never two at once. No smoke needed for a 8800 rebuild. Batch
    rebuilds: one after a round of landings, not one per landing.
 4. Before a publish only: `checks/smoke8800.cmd` (light then dark; logs `artifacts/trainworld/smoke8800-*.log`).
-5. Land a tree: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`, then `remove <name>`; a landing
-   that changed sim/ rebuilds the main tree's WASM.
+5. Land and archive a tree in one command (T-3554):
+   `node trainworld/checks/agent-tree.mjs finish <name> "<sentence>" --task T-1,T-2 --outcome "..." [--notes notes/T-1.md] [--keep-tree] [--dry-run]`.
+   One line per step: changelog items the agent left in its tree's `next.json` move to the main tree (`changelog.py
+   add`) and the tree's file is reverted; land; WASM rebuild if sim/ changed; remove the tree; `tasks.py done` per
+   task. Git warnings and build logs go to a log file it names. It stops at the first failure, says what state
+   things are in and lists the steps left to do by hand. `--dry-run` first when unsure. `land <name> "<sentence>"`
+   and `remove <name>` still work alone.
 
 ## Publishing and servers (each only on her word, never overnight)
 
