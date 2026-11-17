@@ -43,8 +43,9 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - arrows (Sonnet, .tw-trees/arrows, port 6180): T-3596 one-way arrows vanish a zoom sooner, thinning twice as far.
 - Translation of v0.4.0 UI strings (~61 keys/language), docs/localization.md "Translating":
   - pass 1 done and committed: zh-TW, ru, tr (l10n-b; ru speedLimit clash noted for review), es, pt, ca (l10n-c).
-  - pass 1 running: l10n-a (ja, ko, zh-Hans), l10n-d (de, fr, id). Commit each one's messages/+sources/ files on report.
-  - pass 2 running: l10n-back-b (zh-TW, ru, tr) -> scratchpad\l10n-back-b\<lang>\back.json.
+  - pass 1 done and committed: ja, ko, zh-Hans (l10n-a; ja uses 休日 for timetable weekends, flagged).
+  - pass 1 running: l10n-d (de, fr, id). Commit its messages/+sources/ files on report.
+  - pass 2 done: zh-TW, ru, tr -> scratchpad\l10n-back-b\<lang>\back.json (keys taken from the commit diff: 58/57/57).
   - still to start: pass 2 for es/pt/ca and the rest; pass 3 review (fresh Opus, reads pass-1 doubts.md in
     scratchpad\l10n-<x>\<lang>\ and the back.json); zh-TW opencc check after zh-Hans is reviewed.
 
