@@ -1153,29 +1153,29 @@
     {
       "id": "c091",
       "text": "deleting a station on a big network takes about half a second less",
-      "edited": "deleting a station on a big network is faster",
+      "edited": "deleting a station on a big network shows up faster",
       "hidden": false,
       "task": "T-2768",
       "by": "stationedit",
       "at": "2026-11-17T14:50:14Z",
-      "rev": 8,
+      "rev": 9,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T23:26:49Z",
       "parent": "c133"
     },
     {
       "id": "c102",
       "text": "train count changes on a one-city game settle in seconds to about a minute, not one to two minutes",
-      "edited": "train count changes on a one-city game have rides settle ~10x faster",
+      "edited": "after a train count change on a one-city game, trips are calculated about 10x faster",
       "hidden": false,
       "task": "T-3512",
       "by": "settle2",
       "at": "2026-11-17T16:23:22Z",
-      "rev": 19,
+      "rev": 20,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T23:26:50Z",
       "parent": "c133"
     },
     {
@@ -1699,15 +1699,15 @@
     {
       "id": "c115",
       "text": "edits on the real london network settle 3 to 10 times faster",
-      "edited": null,
+      "edited": "after an edit on the real london network, trips are calculated 3 to 10 times faster",
       "hidden": true,
       "task": "T-3388",
       "by": "londonedit",
       "at": "2026-11-17T18:17:52Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-17T19:21:00Z"
+      "changed": "2026-11-17T23:26:50Z"
     },
     {
       "id": "c116",

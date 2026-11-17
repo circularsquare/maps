@@ -263,9 +263,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
-  - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
-  - Goal: Those tests skip with a plain message when their packs are absent.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
@@ -281,9 +278,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops2)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
+  - Other: Built in .tw-trees/onewaystops2 with T-3595 (your Line 2 1204 s round trip, was 4082; Line 3 729 s, was 2075); a checker goes next. notes/T-3565.md.
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick (taking, 2026-11-17, agent trafficwidth)
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
+  - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
+  - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
 - T-3595 [P1] {L:single-track} Extending a line with new track still breaks it (taking, 2026-11-17, agent onewaystops2)
   - Context: You, 2026-11-17: "it seems like we didnt actually fix the thing where extending a line by adding more track can break the line. is that supposed to be in 8800?" Cause found: a line that turns back at a loose track end breaks when track is built on from that end to a station, since trains may turn only at a stop or a bare end. Your Line 2 needs that turn only because of the one-way pair (T-3565 removes the need); the rule is fixed alongside it: a train may turn at any track end.
   - Goal: Extending a line by drawing track on from its end, in every way a player does it, never breaks the line; a standing check covers each way.
@@ -308,9 +309,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3558 [P3] {L:timetables} {after:T-3521} Holiday departures before the day's edits
   - Context: In T-3521's screenshot (artifacts/trainworld/t3521_headway.png) the 11:00 and 12:00 rows on a holiday show 15-minute departures from before edits made at 13:00. Not looked into; may be correct history.
   - Goal: The departures table shows what ran, or the cause is recorded as right.
-- T-3559 [P3] {L:checks} Train count cap not applied when a save loads (taking, 2026-11-17, agent capload)
-  - Context: t3165-cap.mjs fails its load step ("count lowered to the cap when the game loads", 15 -> 15) on master too (seen by singlecap, T-3526): capLoad's once-per-load pass may not fire on re-import.
-  - Goal: A loaded save's counts over the cap are lowered to it, and t3165-cap passes.
 - T-3568 [P2] {L:terrain} {after:tonight's night run} OSM water for the TIGER packs
   - Context: From T-3553: NYC and 8 other US packs (nyc, phl, bos, wdc, bal, pvd, nhv, spf, wor) use TIGER water, up to 116-178 m off the drawn water around Brooklyn's piers, the biggest shore error in the game. You, 2026-11-17: "sure queue it for a night run". osm_water.py must cut piers first; built track there gets re-priced.
   - Goal: Those 9 packs' water comes from OSM with piers cut out, rebuilt on a night run; NYC's shore error within the OSM packs' range (p99 about 13-20 m).
@@ -323,9 +321,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
   - Other: notes/T-3455.md
-- T-3528 [P3] {L:solve-speed} Undo after load takes back the cap lowering (taking, 2026-11-17, agent capload)
-  - Context: From T-3512: the cap lowering on load (T-3165, capLoad.ts) lands as undoable edits a second or two after a load, so a quick edit then undo takes back a lowering instead of the player's edit. Only saves with counts past the cap meet it.
-  - Goal: The load's cap lowering is not on the undo stack; an undo right after load undoes the player's own edit.
 - T-3513 [P3] {L:solve-speed} Train edits at high demand still take most of a minute
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
@@ -477,7 +472,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal
+- T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal (taking, 2026-11-17, agent termdraw)
   - Context: t1965-follow fails on master (43 of 950 frames): two on-time lines at one double-track terminal drawn over each other. A fix clears it to 4 frames but breaks t2980.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
@@ -563,11 +558,11 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: T-2929's other items were folded into T-3069, which did only the real snap: real network start saves still build tram lines as train track, and there is no junction helper or stop spacing for trams.
   - Goal: Real network saves build tram lines as tram track, a both-ways junction helper for tram track, and stops placed about every N m along a new tram line, each if players want it.
   - Other: notes/T-2921.md (stage 3), notes/T-3069.md
-- T-3515 [P3] {L:trams} Tram snap refuses turns at Zurich junctions
+- T-3515 [P3] {L:trams} Tram snap refuses turns at Zurich junctions (taking, 2026-11-17, agent tramsnap)
   - Context: From T-3069: snapping tram track between two different Zurich tram lines is refused ("The new track would run on top of existing track"); the router finds no direct turn at Central or Bahnhofplatz and goes out to a terminal loop and back. Cause not found. Also from its checker: Zurich's first tram candidate (603 m, $34.6M, Hills +0.3x) shows as placeable but ignores the placing click every time; the third places fine (repro: maps-44 scratchpad tramchk\chk.mjs, MODE=price ONLY=zurich). Reaches players snapping trams in dense tram cities.
   - Goal: A tram snap across a real tram junction takes the junction's turn in Zurich and two other tram cities, every placeable candidate places on click, or the reason it can't is written down.
   - Other: notes/T-3069.md
-- T-3516 [P3] {L:track-drawing} Snap beside button off the phone bar
+- T-3516 [P3] {L:track-drawing} Snap beside button off the phone bar (taking, 2026-11-17, agent snapbar)
   - Context: From T-3069's checker: on a phone the rail tool's fourth snap button (Snap beside, x 381-417) sits past the bar's edge, under the info button; the same on master, so not new. Reaches phone players building rail.
   - Goal: Every snap button on the phone rail bar sits inside the bar and can be tapped, at 360 px wide.
 - T-3070 [P3] {L:demand-ideas} Trips between two destinations

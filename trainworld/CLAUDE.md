@@ -29,6 +29,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 
 - **Voice**: the "User-facing text" section of her global CLAUDE.md, the wiki included. "Trips" for what people want
   to take (demand); "rides" and "riders" only for what happens on the player's system.
+- **Speed and waiting** (Anita, 2026-11-17), in game text and changelog alike, one phrase per wait: opening a game or
+  city "loads"; the map catching up to an edit "shows up" ("deleting a station shows up faster"); the numbers
+  updating after a change are "calculating trips" ("trips are calculated 10x faster"), never "settle", "demand" or
+  "rides" for that wait; memory "uses N MB less memory".
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
 - **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
