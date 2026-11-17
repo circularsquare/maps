@@ -243,6 +243,8 @@ const sameChange = (a: AlignAt, b: AlignAt) => a.key === b.key && a.prio === b.p
 interface LineMemo {
   path: number[];
   deps: number[];
+  /** the network-wide pair rules it read (`BandMemo.rel` keys) */
+  rels: string[];
   holds: number[];
   changes: AlignAt[];
   recipes: OwnRecipe[];
@@ -255,7 +257,7 @@ interface LineMemo {
   out?: { map: Int32Array; profile: Float32Array };
 }
 /** the ribbon at a sample, the edges it was worked out from and in which call */
-interface RibbonEntry { r: Ribbon; deps: number[]; at: number }
+interface RibbonEntry { r: Ribbon; deps: number[]; at: number; /** the pair rules its order was worked out from */ rels?: string[] }
 /** What the last call worked out (T-2238), so an edit works out again only the lines whose bands it
  * can change: per edge, what other lines' bands read of it (`fp`, its points and samples), the ribbon
  * at each sample, the network-wide pair rule's answers, and per line its `LineMemo`. */
@@ -404,7 +406,13 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   }
   const rel = new Map<string, number>();
   for (const [key, s] of pairSums) rel.set(key, Math.abs(s[0] / s[1]) < COINCIDE_M ? 1 : s[0] > 0 ? -1 : 1);
-  const relOf = (l: number, m: number): number => rel.get(`${l},${m}`) ?? 0;
+  /** the pair rules read since `relReads` was set (what a ribbon's order depends on) */
+  let relReads: string[] | null = null;
+  const relOf = (l: number, m: number): number => {
+    const key = `${l},${m}`;
+    relReads?.push(key);
+    return rel.get(key) ?? 0;
+  };
 
   // ---- T-2238: what changed since the last call, and so the lines to work out again
   const mode = `${useCorridors},${opts?.within ?? ""},${bandMode}`;
@@ -421,9 +429,11 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     if (mm.fp.get(e) !== f || mm.pts.get(e) !== pts.get(e) || mm.samples.get(e) !== samples.get(e)) changedEdges.add(e);
   }
   for (const e of mm.fp.keys()) if (!on.has(e)) changedEdges.add(e);
-  let relSame = mm.rel.size === rel.size;
-  if (relSame) for (const [k, v] of rel) if (mm.rel.get(k) !== v) { relSame = false; break; }
-  if (!relSame || changedEdges.size > MEMO_EDGES) {
+  // a pair rule that is new, gone or changed: only what read it is worked out again
+  const relChanged = new Set<string>();
+  for (const [k, v] of rel) if (mm.rel.get(k) !== v) relChanged.add(k);
+  for (const k of mm.rel.keys()) if (!rel.has(k)) relChanged.add(k);
+  if (changedEdges.size > MEMO_EDGES) {
     mm.lines.clear();
     mm.ribbons.clear();
     mm.changedAt.clear();
@@ -463,7 +473,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   const redo = new Set<number>();
   for (const l of rail) {
     const lm = mm.lines.get(l.id);
-    if (!lm || lm.path.length !== l.path.length || l.path.some((p, k) => p !== lm.path[k]) || lm.deps.some((d) => changedEdges.has(d))) redo.add(l.id);
+    if (!lm || lm.path.length !== l.path.length || l.path.some((p, k) => p !== lm.path[k]) || lm.deps.some((d) => changedEdges.has(d)) || lm.rels.some((k) => relChanged.has(k))) redo.add(l.id);
     else for (let h = 0; h < lm.holds.length && !redo.has(l.id); h += 4)
       for (let b = 0; b < changedBoxes.length; b += 4)
         if (!(changedBoxes[b + 2] < lm.holds[h] || changedBoxes[b] > lm.holds[h + 2] || changedBoxes[b + 3] < lm.holds[h + 1] || changedBoxes[b + 1] > lm.holds[h + 3])) {
@@ -493,7 +503,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     let r = own.get(e);
     if (!r) {
       const ids = linesOf(e), edges = ids.map(() => e), { key, back } = keysOf(ids);
-      const shape: Shape = { ids, edges, rids: [...ids].reverse(), redges: edges, key, back };
+      const shape: Shape = { ids, edges, rids: [...ids].reverse(), redges: edges, key, back, rels: [] };
       own.set(e, (r = { shape, flip: false, lines: ids, edges, key, back, mid: 0 }));
     }
     return r;
@@ -501,6 +511,8 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   const ribbons = mm.ribbons;
   /** the edges the line being worked out has read (T-2238) */
   let deps = new Set<number>();
+  /** the pair rules the line being worked out has read */
+  let relDeps = new Set<string>();
   /** the boxes, padded, the line being worked out has looked for tracks in to hold a ribbon across a gap (T-2132) */
   let holdBoxes: number[] = [];
   /** whether a ribbon kept from an earlier call holds: none of its edges changed since (the tracks of
@@ -509,7 +521,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   const holds = (x: RibbonEntry | undefined): x is RibbonEntry => {
     if (!x) return false;
     let h = holding.get(x.deps);
-    if (h === undefined) holding.set(x.deps, (h = x.deps.every((d) => (mm.changedAt.get(d) ?? -1) <= x.at)));
+    if (h === undefined) holding.set(x.deps, (h = x.deps.every((d) => (mm.changedAt.get(d) ?? -1) <= x.at) && (x.at === serial || !x.rels?.some((k) => relChanged.has(k)))));
     return h;
   };
   /** edge e's ribbons, none kept from before it changed */
@@ -531,6 +543,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     const old = memo[i];
     if (holds(old)) {
       for (const d of old.deps) deps.add(d);
+      for (const k of old.rels ?? []) relDeps.add(k);
       return old.r;
     }
     const all = [{ e, i, off: 0, rel: 1 }];
@@ -579,7 +592,14 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     let sig = "";
     for (const m of mem) sig += `${m.e}${m.rel * cw > 0 ? "+" : "-"}`;
     let sh = shapes.get(sig);
-    if (!sh) shapes.set(sig, (sh = shapeOf(mem.map((m) => [m.e, m.rel * cw]))));
+    if (!sh) {
+      relReads = [];
+      sh = shapeOf(mem.map((m) => [m.e, m.rel * cw]));
+      sh.rels = relReads;
+      relReads = null;
+      shapes.set(sig, sh);
+    }
+    for (const k of sh.rels) relDeps.add(k);
     const mid = (cw * (lo + hi)) / 2;
     // the ribbon seen from each of its tracks there, in that track's frame
     for (const m of mem) {
@@ -587,12 +607,12 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       const v: Ribbon = fwd
         ? { shape: sh, flip: false, lines: sh.ids, edges: sh.edges, key: sh.key, back: sh.back, mid: mm }
         : { shape: sh, flip: true, lines: sh.rids, edges: sh.redges, key: sh.back, back: sh.key, mid: -mm };
-      if (m.e === e) memo[i] = { r: v, deps: from, at: serial };
-      else put(m.e, m.i, { r: v, deps: from });
+      if (m.e === e) memo[i] = { r: v, deps: from, at: serial, rels: sh.rels };
+      else put(m.e, m.i, { r: v, deps: from, rels: sh.rels });
     }
     return memo[i]!.r;
   };
-  interface Shape { ids: number[]; edges: number[]; rids: number[]; redges: number[]; key: string; back: string }
+  interface Shape { ids: number[]; edges: number[]; rids: number[]; redges: number[]; key: string; back: string; rels: string[] }
   const shapes = new Map<string, Shape>();
   /** a ribbon's tracks left to right of its frame by the network-wide pairs (Copeland: by how many
    * of the others each is left of), the ground's order where two tracks are never beside */
@@ -650,7 +670,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       edges.push(f);
     }
     const { key, back } = keysOf(ids);
-    return { ids, edges, rids: [...ids].reverse(), redges: [...edges].reverse(), key, back };
+    return { ids, edges, rids: [...ids].reverse(), redges: [...edges].reverse(), key, back, rels: [] };
   };
   /** a line's slot left of e's a to b in ribbon r, line widths from the ribbon's middle (which is
    * `r.mid` metres from the line's own track) */
@@ -750,6 +770,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     changes: [string, Change][];
     later: (() => void) | null;
     deps: Set<number>;
+    rels: Set<string>;
     holds: number[];
     /** its ribbon changes as they were before lining up */
     aligns?: AlignAt[];
@@ -838,9 +859,10 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   for (let li = 0; ; ) {
    for (; li < queue.length; li++) {
     const l = queue[li];
-    const mine: Own = { recipes: [], idx: new Map(), recs: [], recPos: [], nRecords: 0, profile: null, changes: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), holds: [] };
+    const mine: Own = { recipes: [], idx: new Map(), recs: [], recPos: [], nRecords: 0, profile: null, changes: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), rels: new Set(), holds: [] };
     owns.set(l.id, mine);
     deps = mine.deps;
+    relDeps = mine.rels;
     holdBoxes = mine.holds;
     const recipeOf = (r: Ribbon, slot: number, sgn: number) => recipeIn(mine, r, slot, sgn);
     const n = l.path.length;
@@ -1316,7 +1338,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     if (!w) continue;
     w.later?.();
     mm.lines.set(l.id, {
-      path: l.path.slice(), deps: [...w.deps], holds: w.holds, changes: w.aligns!, recipes: w.recipes,
+      path: l.path.slice(), deps: [...w.deps], rels: [...w.rels], holds: w.holds, changes: w.aligns!, recipes: w.recipes,
       profile: w.profile, recs: Float32Array.from(w.recs), recPos: Int32Array.from(w.recPos), nRecords: w.nRecords,
     });
   }
