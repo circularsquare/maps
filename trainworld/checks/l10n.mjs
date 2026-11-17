@@ -243,7 +243,7 @@ async function lintOrDiff() {
       const latin = (w.match(/[A-Za-z]{2,}/g) ?? []).filter((x) => !KEEP.has(x));
       if (latin.length) warn(`English left: ${latin.join(", ")} (fine only for a name the data or the game gives)`);
       if (/\u0001(은|는|이|가|을|를|과|와|으로|로)(?![가-힣])/.test(w)) warn("a particle straight after a placeholder: its form depends on the value's last sound; put a noun or a label and colon before the value");
-      if (/습니다|ㅂ니다|십시오|세요/.test(w)) warn("formal 합쇼체 ending; the voice is 해요체 (or plain nouns for labels)");
+      if (/습니다|ㅂ니다|십시오/.test(w)) warn("formal 합쇼체 ending; the voice is 해요체 (or plain nouns for labels)");
       if (/[ㄱ-ㅎㅏ-ㅣ]/.test(w)) warn("a bare jamo (ㅋㅋ, ㅠㅠ)");
       if (/[一-鿿]/.test(w)) warn("hanja; write hangul");
       if (/ [.,!?]|[.!?](?=[가-힣])/.test(w)) warn("a space before or no space after punctuation");
