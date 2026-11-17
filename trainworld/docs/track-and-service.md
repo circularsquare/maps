@@ -305,7 +305,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   trains use; ordinary trains run on it at 160. The track inspector shows the limit.
 - **Tram track** (T-2921, T-2926; design notes/T-2921.md): a third kind of track, `TrackKind::Tram` (the table
   `TRACK_SPECS` in params.rs holds every kind's figures; `game/trackKinds.ts` copies them for the app).
-  Single, double or quad (T-3352: single tram is 0.6x its price and upkeep, a stop on it is one platform with no passing loop; T-3166: quad is two tram doubles 8 m apart, off-street, so priced 0.5x at ground twice over), curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
+  Single, double or quad (T-3352: single tram is 0.6x its price and upkeep, a stop on it is one platform with no passing loop, though one placed as a passing station is drawn with the loop (T-3540, drawing only); T-3166: quad is two tram doubles 8 m apart, off-street, so priced 0.5x at ground twice over), curves down to 18 m (`TRAM_MIN_RADIUS`, T-2997), 80 km/h cap, priced by level at 0.1x (on streets,
   T-2927), 0.5x (off street) of the 75M a km, viaducts and tunnels 0.4 under rail's, plus a quarter of what hills
   and mountains add (`TRAM_TERRAIN`, T-3004), and it pays no road crossings. The track bar's
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
@@ -612,7 +612,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   not the physical side, so the running side picks the track and a running-side switch turns the way
   round to keep the platform on its track (listed after the switch). On double track it is drawn as a thin bar
   over its track with a small bulge at the middle on the platform's side, so it does not read as a box; the bulge is 0.18 of the platform half length each way, so it keeps its place against the box at every zoom. On two-way single track it is a
-  stop where trains cannot pass: drawn as plain single track (no T-3212 split) and the single-track
+  stop where trains cannot pass: drawn as plain single track (no T-3212 split), its bar centred on the track (T-3540, as every station on single track: ui-map.md "Stations"), and the single-track
   section runs on through it (6.2); on one-way single track it is the one platform that track's
   station naturally is (players, 2026-11-13). Placed only on track running through, the same tracks
   both sides, or at the end of single track (`OneTrackHere`; T-3411). Priced as a single-track station; switching a built one to both
@@ -682,7 +682,8 @@ Full design, numbers and sources: `notes/T-008.md`.
     The waiting room joins one box's side at its middle, one outline and one white round box and
     annex: of the stations with one and both sides of each, the spot with the fewest other
     platforms, tracks, car parks and the name label's patch nearby, else outside the platform's
-    bend. The car park is a lot of its own outside the boxes (`map/parkingLots.ts`), drawn under
+    bend; a station with one platform (a one way station, any station on single track) has it on
+    the platform's side, joined to its bar (T-3540). The car park is a lot of its own outside the boxes (`map/parkingLots.ts`), drawn under
     the track and stations, true to size: a 6 m aisle with a row of 2.5 by 5 m spaces either side
     (a bay, 16 m), one bay for each station with park and ride up to three, as long as the
     longest such platform within 80-300 m, rounded to whole spaces, along a platform of the

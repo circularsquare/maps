@@ -195,7 +195,8 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
   `samples.ts` (the recordings in `public/sounds/`, decoded when the context opens, T-1474), `audioOut.ts` (the one audio context
   all share), `transferBubbles.ts` (riders changing trains walking between stations as bubbles, drawn by the renderer after the stations, T-1124).
 - Stations: `stationGeometry.ts` (platform shapes along the track for drawing, picking and the
-  ghost, T-189, T-254; the waiting room annex, `stationAnnexes`, T-1416), `facilityPlace.ts`
+  ghost, T-189, T-254; the waiting room annex, `stationAnnexes`, T-1416), `stationSide.ts` (the side a station on
+  single track draws its one platform on, T-3540), `facilityPlace.ts`
   (where each complex's one waiting room and car park go, in the clock worker, T-1528),
   `parkingLots.ts` (the car parks drawn as lots under the network, their hit test, T-1528), `stationNames.ts` (a station's name suggestions: cross street,
   neighbourhood, city or town, T-534), `stationLabels.ts` (names

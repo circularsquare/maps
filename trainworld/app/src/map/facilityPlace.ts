@@ -6,7 +6,7 @@
 // nearest spot along one of the complex's platforms that overlaps no box, track, waiting room, other
 // lot or the label, shrinking if none does, and the least bad spot if nothing fits.
 
-import { PLATFORM_POINTS, ST_FLIP, ST_PARK, ST_ROOM } from "./stationGeometry";
+import { PLATFORM_POINTS, ST_FLIP, ST_ONE, ST_ONE_NEG, ST_PARK, ST_ROOM } from "./stationGeometry";
 
 /** A lot's numbers in `NetworkBuffers.lots`: centre x, y (local); half its length along it as a
  * vector (local); half length and half depth, m; bays; flags (LOT_*); the station its hover names
@@ -152,7 +152,8 @@ export function placeFacilities(
         const f = frame(i), own = new Set(waysAt.get(st[i].id) ?? []);
         // + is to the left of the platform's way; it bends towards + when phi > 0, so its outside is -
         const outside = stationShape[i * 4 + 2] < 0 ? 1 : -1;
-        for (const sg of [outside, -outside]) {
+        // (T-3540: a station with one platform has its room on the platform's side, joined to it)
+        for (const sg of (flag(i) & ST_ONE ? [flag(i) & ST_ONE_NEG ? -1 : 1] : [outside, -outside])) {
           let bad = 0;
           for (const a of ALONG_M) for (const c of ACROSS_M) {
             const px = f.mx + (f.dx * a + f.nx * sg * c) * perM, py = f.my + (f.dy * a + f.ny * sg * c) * perM;

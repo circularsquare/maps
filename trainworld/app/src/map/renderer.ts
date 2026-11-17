@@ -11,7 +11,7 @@
 // re-uploaded. Phase tables change only on edits.
 
 import { BAD_RED, LEVEL_COLOURS, rgbf } from "../game/palette";
-import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_BUILDING, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
+import { ANNEX_ROOM, stationAnnexes, stationCoords, PASS_GAP_PX, PASS_TRACK_M, ST_BUFFER, ST_BUILDING, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_TRAM, ST_ROOM, ST_TERMINAL, TERMINAL_CAP, BOX_WIDTH_ZOOM, boxHalfPxAtBoxZoom, BRIDGE_HALF_PX, bridgeShape, connectorHalfPx, dotRing, spanningPairs, insideStation, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, SEL_GLOW_PX, SEL_OUTLINE_PX, shapePoints, STATION_BOX_ZOOM, STATIONS_ZOOM, TRAINS_ZOOM, stationRadii, stationReachPx, stationRing, stationShape, type Project, type StationShape, type StationStyle } from "./stationGeometry";
 import { shadeColours } from "../game/shades";
 import { readBoardHour, trainStands, type BoardHour, type CrowdedStretch } from "../game/boarding";
 import { UPGRADE } from "../game/upgrades";
@@ -428,7 +428,7 @@ export class NetworkRenderer {
     const n = this.net!;
     const flag = Math.round(n.stations[i * 3 + 2]);
     const one = (flag & ST_ONE) === 0 ? 0 : (flag & ST_ONE_NEG) !== 0 ? -1 : 1;
-    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0, !plain && (flag & ST_PASSING) !== 0, plain ? 0 : one);
+    return stationShape(n.stations[i * 3], n.stations[i * 3 + 1], platformShapeAt(n, i), n.stationShape?.[i * 4 + 3] ?? 0, project, this.stationStyle, (flag & 1) !== 0, !plain && (flag & ST_PASSING) !== 0, plain ? 0 : one, { tram: (flag & ST_TRAM) !== 0, mid: (flag & ST_ONE_MID) !== 0 });
   }
   private hotList = new Int32Array(HOT_STATIONS);
   /** The bridge program's hovered instances (T-730): the pairs in `pairs` (station indices, two
@@ -713,7 +713,7 @@ export class NetworkRenderer {
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
     this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_hide", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide"]);
-    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one"]);
+    this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n"]);
     // T-3192: the stations' u_stline, which a bridge never reads, on the stations' unit rather than one an integer texture may hold
@@ -1702,7 +1702,9 @@ export class NetworkRenderer {
     const ls = laneState(zoom), lineHalf = 0.5 * wLine / dpr + ring;
     const barIn = (1 - ls.t) * lineHalf, barOut = barIn + ls.t * (0.5 * ls.gap + 0.3 * wLine / dpr + ring + 1) + 0.5 * wLine / dpr;
     const one = { c: 0.5 * (barOut - barIn), hb: 0.5 * (barOut + barIn), depth: Math.max(4, 0.6 * (barOut + barIn)) };
-    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one };
+    // T-3540: on track drawn as one (single track with no passing loop) the bar is centred on it, as wide as the line and its rim
+    const oneMid = { c: 0, hb: lineHalf, depth: one.depth };
+    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one, oneMid };
     const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
     // T-3481: on-screen sizes are measured at the view's middle (local units), never at a station,
     // which can be in another city behind the globe (NaN) or where the globe's blend squeezes it
@@ -1994,6 +1996,8 @@ export class NetworkRenderer {
       gl.uniform1f(su.u_pass_half, (pass ? pass.half - (opt.boxShrinkPx ?? 0) : 0) * dpr);
       const so = this.stationStyle.one;
       gl.uniform3f(su.u_one, (so?.c ?? 0) * dpr, (so?.hb ?? 0) * dpr, (so?.depth ?? 0) * dpr);
+      const sm = this.stationStyle.oneMid;
+      gl.uniform3f(su.u_one_mid, (sm?.c ?? 0) * dpr, (sm?.hb ?? 0) * dpr, (sm?.depth ?? 0) * dpr);
       // T-2249: a passing station's riders stand between its running track and the outer track's
       // inner edge (the outer track as the track strokes draw it)
       let passIn = 0;

@@ -1,8 +1,8 @@
 // T-3212: at a station on two-way single track the track is drawn splitting into two platform tracks,
 // and the trains stand on them. A new sandbox game gets 3 km of single track A - M - B (stations of
-// 200 m, one line with two trains), a double-track line C - D and a tram line E - F (tram stops; tram
-// track is never single). Looks at the drawn track's lanes (`Strokes.lane`, 255 two tracks, 0 one) at each station and
-// between them, the station flag 16 (a platform each side), and the train lanes (`sampleLane`) against
+// 200 m, one line with two trains), a double-track line C - D and a tram line E - F (tram stops on double
+// tram track). Looks at the drawn track's lanes (`Strokes.lane`, 255 two tracks, 0 one) at each station and
+// between them, the station flags (16 a platform each side; T-3540: one platform, ST_ONE, on single track), and the train lanes (`sampleLane`) against
 // the line's drawn lanes all along A - B. Then runs the clock until two trains stand side by side at a
 // station and takes pictures of it at a few zooms, light and dark, and of D and F with no trains about,
 // to artifacts/trainworld/t3212/<tag>-*.png. From the maps root:
@@ -135,9 +135,10 @@ try {
     const { at, flags, trains } = out.lanes;
     check(at.M === 255 && at.A === 255 && at.B === 255, `single track drawn as two at A, M, B (lanes ${at.A}, ${at.M}, ${at.B})`);
     check(at.AMmid === 0 && at.MBmid === 0, `one track between the stations (lanes ${at.AMmid}, ${at.MBmid})`);
-    check([flags.A, flags.M, flags.B].every((f) => (f & 16) !== 0), 'A, M, B have a platform each side (flag 16)');
+    // (T-3540: a station on single track has one platform, on its outside, the split's inner track its passing loop)
+    check([flags.A, flags.M, flags.B].every((f) => (f & 16) === 0 && (f & 8192) !== 0 && (f & 32768) !== 0), 'A, M, B have one platform, to one side (ST_ONE, ST_SINGLE)');
     check(at.D === 255 && (flags.D & 16) !== 0, `the double-track station as before (lane ${at.D}, flag 16)`);
-    check(at.F === 255 && at.E === 255 && at.EFmid === 255 && (flags.F & 16) !== 0 && (flags.E & 16) !== 0, `the tram stops as before, on double tram track (tram track is never single; lanes ${at.E}, ${at.F}, flag 16)`);
+    check(at.F === 255 && at.E === 255 && at.EFmid === 255 && (flags.F & 16) !== 0 && (flags.E & 16) !== 0, `the tram stops as before, on double tram track (lanes ${at.E}, ${at.F}, flag 16)`);
     check(at.G === 255 && at.Gdouble === 255 && at.H0Gmid === 0 && (flags.G & 16) !== 0, `single track meeting double at a station: split on the single side, no taper on the double (lanes ${at.H0Gmid}, ${at.G}, ${at.Gdouble})`);
     check(at.J === 255 && at.JK === 255 && at.Kdouble === 255 && at.J0Jmid === 0, `a split reaching double track within its ease stays two tracks to it (lanes ${at.J0Jmid}, ${at.J}, ${at.JK}, ${at.Kdouble})`);
     check(trains.worst < 0.06, `trains' lanes follow the drawn lanes along A - B (worst ${trains.worst.toFixed(3)} at ${Math.round(trains.worstAt)} m)`);

@@ -8,7 +8,7 @@ import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
 import { LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
-import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
 const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
@@ -497,6 +497,7 @@ flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and
 flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249);
                          // a one-track station (T-3332): +-(10 + how far its band's middle is off the centre line, px), + or - its side
 uniform vec3 u_one;      // T-3332: a one-track station's bar: its middle off the centre line, half width, and how far its bulge sticks out, px
+uniform vec3 u_one_mid;  // T-3540: the same on track drawn as one (ST_ONE_MID), centred on it
 flat out vec2 v_bulge;   // a one-track station's bulge: how far it sticks out and its half length, px, 0 none
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
@@ -540,6 +541,8 @@ void main() {
   // zoomed out a dot's pie is its platforms' crowd (T-228, T-553): the fullest side's share, and
   // whether it is full
   if (!boxes) v_crowd = vec4(a_dcrowd, 0.0, 0.0);
+  // T-3540: a station on single track has one platform, filled as its fuller side (as its dot is)
+  else if ((flags & ${ST_SINGLE}) != 0) v_crowd = vec4(vec2(max(a_crowd.x, a_crowd.y)), vec2(max(a_crowd.z, a_crowd.w)));
   vec2 mid = a_st.xy + a_shape.xy;
   vec4 c = project(mid);
   vec4 e = project(mid + a_axis);
@@ -556,6 +559,9 @@ void main() {
   // it keeps one shape from there in; further out it keeps that width on screen (T-553)
   float perLoc = axisLoc > 1e-9 ? len / axisLoc : 0.0;
   float hw = max(max(a_shape.w, u_fixed.x * u_fixed.y) * perLoc, boxes ? u_fixed.x : 0.0);
+  // T-3540: a tram stop's box narrower
+  bool tramBox = (flags & ${ST_TRAM}) != 0;
+  if (tramBox) hw *= ${TRAM_BOX.toFixed(2)};
   // wide enough for its outer tracks' trains (T-2233)
   if (boxes && (flags & ${ST_PASSING}) != 0) hw = max(hw, u_pass_half);
   // a dot covers a plain line through it as drawn now
@@ -594,11 +600,17 @@ void main() {
     // T-3332: a one-track station: a thin bar on its track with a bulge at the middle on its side (the
     // fragment shader moves the band and adds the bulge; the quad keeps room for both)
     float room = hw;
+    // (a one-platform station's bar: its middle across, signed, and half width; its waiting room joins it)
+    vec2 oneBar = vec2(0.0, hw);
     if ((flags & ${ST_ONE}) != 0) {
-      v_size.y = u_one.y;
-      v_bulge = vec2(u_one.z, ${ONE_BULGE_K.toFixed(2)} * hl);
-      v_lane = ((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * (10.0 + u_one.x);
-      room = u_one.x + u_one.y + u_one.z;
+      // (T-3540: centred on track drawn as one; a tram stop's bulge narrower)
+      vec3 bar = (flags & ${ST_ONE_MID}) != 0 ? u_one_mid : u_one;
+      bar.z *= tramBox ? ${TRAM_BOX.toFixed(2)} : 1.0;
+      v_size.y = bar.y;
+      v_bulge = vec2(bar.z, ${ONE_BULGE_K.toFixed(2)} * hl);
+      v_lane = ((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * (10.0 + bar.x);
+      room = bar.x + bar.y + bar.z;
+      oneBar = vec2(((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * bar.x, bar.y);
     }
     lo = mn.y - room - ext - 1.0;
     hi = mx.y + room + ext + 1.0;
@@ -622,7 +634,7 @@ void main() {
       if (nl.y * ((flags & ${ST_FLIP}) != 0 ? 1.0 : -1.0) < 0.0) nl = -nl;
       float l = clamp(0.35 * hl, 1.2 * hw, 2.5 * hw), d = hw, at = 0.0;
       float edge = min(min(dot(centreAt(q, at - l) - qm, nl), dot(centreAt(q, at) - qm, nl)), dot(centreAt(q, at + l) - qm, nl));
-      vec2 rc = qm + dl * at + nl * (edge + hw - 2.0 * u_ring - u_pixel + d);
+      vec2 rc = qm + dl * at + nl * (edge + dot(nl, vec2(0.0, oneBar.x)) + oneBar.y - 2.0 * u_ring - u_pixel + d);
       shift = along * rc.x + across * rc.y;
       ra = along * dl.x + across * dl.y;
       rn = along * nl.x + across * nl.y;

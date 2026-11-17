@@ -227,7 +227,13 @@ export interface StationStyle {
    * on the platform's side: the bar's middle off the centre line (c), its half width (hb) and how far the
    * bulge sticks out past the bar (depth), CSS px */
   one?: { c: number; hb: number; depth: number };
+  /** T-3540: the same on track drawn as one on its centre line (ST_ONE_MID): the bar centred on it */
+  oneMid?: { c: number; hb: number; depth: number };
 }
+
+/** T-3540 (Anita: "tram platform boxes shoudl be ... 30% less wide"): a tram stop's box and its platform
+ * bulge are this share of a station's width. STATION_VS uses the same number. */
+export const TRAM_BOX = 0.7;
 
 /** T-3332: a one-track station's bulge is this share of the platform's half length each way, so it is part of the box:
  * the platform is fixed on the ground, so the bulge keeps its place against the box at every zoom. STATION_VS and the CPU twin use the same number. */
@@ -282,6 +288,8 @@ export interface StationShape {
   /** T-3332: a one-track station's bulge, a second box in the shape's frame: its middle across, half
    * length and half width (the bar's `halfWidth` plus half its depth) */
   bulge?: { cy: number; hl: number; hw: number };
+  /** T-3540: a one-track station's box half width, which its waiting room is sized by (the bar's is `halfWidth`) */
+  annexHalf?: number;
 }
 
 /** A shape's centre line in its own frame, PLATFORM_POINTS points: `pts`, or a straight line along it. */
@@ -324,7 +332,7 @@ export function polyFrame(q: ArrayLike<number>, a: number, b: number): [number, 
  * length and width are both fixed on the ground, so it has one shape at every zoom (T-204), and
  * the same width for every station (T-239).
  */
-export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, passing = false, one = 0): StationShape {
+export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth: number, project: Project, st: StationStyle, transfer: boolean, passing = false, one = 0, kind: { tram?: boolean; mid?: boolean } = {}): StationShape {
   const mx = x + sh.mx, my = y + sh.my;
   const [cx, cy] = project(mx, my), [ex, ey] = project(mx + sh.ax, my + sh.ay), [qx, qy] = project(mx - sh.ay, my + sh.ax);
   const len = Math.hypot(ex - cx, ey - cy), nl = Math.hypot(qx - cx, qy - cy);
@@ -334,10 +342,11 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const axisLoc = Math.hypot(sh.ax, sh.ay);
   const [ox, oy] = axisLoc > 1e-9 ? [0, 0] : project(mx + 1, my);
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
-  const full = Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0, st.boxes && passing ? st.passHalfPx ?? 0 : 0);
+  const tk = kind.tram ? TRAM_BOX : 1;
+  const full = Math.max(tk * Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0), st.boxes && passing ? st.passHalfPx ?? 0 : 0);
   // T-3332: a one-track station (`one` the side, 1 or -1): a thin bar with a bulge on that side, as
-  // STATION_VS draws it
-  const o = st.boxes && one ? st.one : undefined, hw = o ? o.hb : full;
+  // STATION_VS draws it; T-3540: centred on track drawn as one (`kind.mid`), a tram stop's bulge narrower
+  const o0 = st.boxes && one ? (kind.mid ? st.oneMid : st.one) : undefined, o = o0 && { ...o0, depth: o0.depth * tk }, hw = o ? o.hb : full;
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
   const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle
@@ -357,7 +366,7 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
     halfWidth: hw,
     dot: st.boxes ? 0 : Math.max(st.radius[transfer ? 1 : 0], cover),
     ...(st.boxes ? { pts } : {}),
-    ...(o ? { bulge: { cy: one * 0.5 * o.depth, hl: ONE_BULGE_K * halfLength, hw: o.hb + 0.5 * o.depth } } : {}),
+    ...(o ? { bulge: { cy: one * 0.5 * o.depth, hl: ONE_BULGE_K * halfLength, hw: o.hb + 0.5 * o.depth }, annexHalf: full } : {}),
   };
 }
 
@@ -406,8 +415,12 @@ export const ST_BUILDING = 2048;
 /** a tram stop (T-2926): its dot is smaller */
 export const ST_TRAM = 4096;
 /** T-3332: a one-track station on double track, drawn as the half of the box on its track's side: the
- * + side of the platform's axis, or with ST_ONE_NEG the other */
+ * + side of the platform's axis, or with ST_ONE_NEG the other; T-3540: every station on single track too */
 export const ST_ONE = 8192, ST_ONE_NEG = 16384;
+/** T-3540: a station on single track, drawn with ST_ONE on its outside: its one platform filled as its fuller
+ * side (ST_SINGLE), and where its track is drawn as one, not split round a passing loop, its bar is
+ * centred on that track (ST_ONE_MID) */
+export const ST_SINGLE = 32768, ST_ONE_MID = 65536;
 /** Passing tracks' outer pair (T-2233): this far from the centre line on the ground, m (the
  * running tracks are 2 m out), and joining the running track over this much past the platform's end. */
 export const PASS_TRACK_M = 6, PASS_LEAD_M = 100;
@@ -452,9 +465,10 @@ export function stationAnnexes(s: StationShape, flags: number, ring: number): { 
   [dx, dy] = dl > 1e-6 ? [dx / dl, dy / dl] : [1, 0];
   let nx = -dy, ny = dx;
   if (ny * ((flags & ST_FLIP) !== 0 ? 1 : -1) < 0) [nx, ny] = [-nx, -ny];
-  const hw = s.halfWidth, rl = Math.min(Math.max(0.35 * s.halfLength, 1.2 * hw), 2.5 * hw);
+  // (sized by the box, joined to the bar of a one-track station, T-3540)
+  const hw = s.halfWidth, aw = s.annexHalf ?? hw, rl = Math.min(Math.max(0.35 * s.halfLength, 1.2 * aw), 2.5 * aw);
   const out: { kind: number; shape: StationShape }[] = [];
-  for (const [kind, l, d, c] of [[ANNEX_ROOM, rl, hw, 0]]) {
+  for (const [kind, l, d, c] of [[ANNEX_ROOM, rl, aw, 0]]) {
     // the box's edge on this side under the annex, at its nearest to the centre line
     let edge = Infinity;
     for (const t of [c - l, c, c + l]) {

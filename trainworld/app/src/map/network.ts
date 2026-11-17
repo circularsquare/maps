@@ -17,9 +17,10 @@ import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
-import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
+import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_SINGLE, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
+import { stationOutside } from "./stationSide";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -1851,6 +1852,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     nodeLocal.set(e.a, [p[0], p[1]]);
     nodeLocal.set(e.b, [p[b * 3], p[b * 3 + 1]]);
   }
+  const edgesOf = (node: number) => (waysAt.get(node) ?? []).map((id) => edgeEnds.get(id)!);
   const stationsSeen: NetCache["stations"] = new Map();
   st.forEach((n, i) => {
     const p = nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat);
@@ -1867,11 +1869,16 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     }
     // T-3332: a one-track station on double track: the half of the box on its track's side
     const oneSide = n.one === 1 && n.oneHeading !== undefined ? oneSideAlong(n.oneHeading, s.rightHand === false, c.ax, c.ay) : 0;
+    // T-3540: a station on single track has one platform, on its outside, the inner track of a split its passing loop
+    const pe = edgeEnds.get(platformEdge.get(n.id) ?? -1);
+    const single = !oneSide && !!pe && ids.every((id) => edgeEnds.get(id)?.tracks === 1 && !edgeEnds.get(id)?.crossover);
+    const side = oneSide || (single ? stationOutside(n.id, pe, edgesOf, way, c.ax, c.ay, s.rightHand === false) : 0);
+    const split = splits.stations.has(n.id);
     stationsSeen.set(n.id, c);
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((edgeEnds.get(platformEdge.get(n.id) ?? -1)?.tracks === 2 && !oneSide) || splits.stations.has(n.id) ? 16 : 0) | (oneSide ? ST_ONE | (oneSide < 0 ? ST_ONE_NEG : 0) : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || (split && !single) ? 16 : 0) | (side ? ST_ONE | (side < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | (split ? 0 : ST_ONE_MID) : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of
