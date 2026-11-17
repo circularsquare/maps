@@ -1420,6 +1420,18 @@
       "rev": 1,
       "area": "schematic",
       "fix": false
+    },
+    {
+      "id": "c112",
+      "text": "fixed a line that stopped running when blueprint track was drawn on from the track end its trains turn around at",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3541",
+      "by": "tramsplit",
+      "at": "2026-11-17T18:03:40Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
     }
   ]
 }

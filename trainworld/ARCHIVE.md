@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3541 [P2] {L:single-track} Blueprint extension breaks a split line (2026-11-17): a built track end with only blueprint beyond still counts as an end; after the build the line reroutes through its stops; checker PASS (her Caracas save, rail headshunt, parts, loop; NYC identical) notes/T-3537.md.
 - T-3564 [P2] {L:map-look} Passing stations on single track draw both platforms (2026-11-17): a single-track station with a passing loop draws a platform beside each track again; the one outside platform stays for single-track stations with no loop; tram boxes stay 0.7 wide; notes/T-3540.md.
 - T-3562 [P2] {L:single-track} Alert when a line runs the same track twice (2026-11-17): line run that passes the same track twice in the same direction gets an alert in its panel and a loop mark on the first repeated piece; check t3562-repeat-track.mjs; the real save has none; changelog c110.
 - T-3561 [P2] {L:track-drawing} Say why rail won't snap to a tram track end (2026-11-17): With a train track kind picked, a tram end (or track) with no train snap in reach shows the red tag 'Train track cannot be connected to tram track'; the mirror with tram picked says 'Tram track cannot be connected to train track'; a snap of the picked family in reach wins and shows none. checks/t3561-tram-tag.mjs.
