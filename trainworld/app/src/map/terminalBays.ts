@@ -17,8 +17,7 @@ export const SINGLE_SPLIT_LEAD_M = 60;
 
 /** T-3212: whether single track `e` is drawn splitting into two tracks at its end `end` (0 a, 1 b),
  * at station `node`: two-way, no crossover, not joining one track of a double there, and no one-track
- * station, where trains cannot pass (T-3332). A tram stop splits too (T-3540: drawing only; the sim's
- * `no_passing` still runs every tram stop on single track as one with no loop). */
+ * station, where trains cannot pass (T-3332). A tram stop splits too, its trams meeting there (T-3540, T-3563). */
 export function splitsAt(e: ClockEdge, end: 0 | 1, node: ClockNode | undefined): boolean {
   return !!node && node.platform > 0 && !node.one && e.tracks === 1 && !e.oneWay && !e.crossover && ((end ? e.join >> 2 : e.join) & 3) === 0;
 }

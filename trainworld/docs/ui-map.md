@@ -167,8 +167,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   station, two-way single track splits into two tracks as double track's are [T-3212,
   `singleSplitEnds` in `map/terminalBays.ts`]: two along the platform (half of it each side of a
   through station, all of a dead end's), easing back to one over 60 m past each end, carried on
-  through plain nodes; tram stops split too (T-3540), though the sim runs every tram stop on single track as one
-  with no loop (track-and-service.md 6.2). It shows only once double track's two tracks part (from 4 m at 7 px), opening out of single track's width; further
+  through plain nodes; tram stops split too, their trams meeting there (T-3540, T-3563). It shows only once double track's two tracks part (from 4 m at 7 px), opening out of single track's width; further
   out the track and its lines keep single track's width through the station (`F_SPLIT`; Anita,
   2026-11-11: no thickening before the tracks show). Trains of opposite directions meet there (the capacity's passing points),
   and stand on the two tracks; the station has a platform each side, as on double track (T-3564). A split

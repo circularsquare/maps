@@ -1415,10 +1415,10 @@ impl Network {
     pub fn one_platform(&self, n: u32) -> bool {
         self.node_ok(n) && self.node_platform[n as usize] > 0 && (self.node_one[n as usize] != 0 || (self.node_tracks(n) == 1 && self.node_upgrades[n as usize] & crate::track::upgrades::PASSING == 0))
     }
-    /// T-3332: a one-track station where trains cannot pass: on single track.
-    /// T-3352: so is a tram stop on single track, drawn and run as one platform with no loop.
+    /// T-3332: a one-track station where trains cannot pass: on single track. A tram stop is the
+    /// same (T-3563): one placed as a passing station is a loop its trams meet at.
     pub fn no_passing(&self, n: u32) -> bool {
-        self.node_ok(n) && self.node_tracks(n) == 1 && (self.one_track(n) || (self.node_platform[n as usize] > 0 && self.node_kind(n).spec().family != 0))
+        self.node_ok(n) && self.node_tracks(n) == 1 && self.one_track(n)
     }
     /// Whether the node's heading points along the axis a one-track station's way is stored against
     /// (`one_for_travel`).

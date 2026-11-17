@@ -308,3 +308,61 @@ fn at_the_end_of_single_track() {
     assert_eq!(d.add_station(1, end, 0.0, 0.0, 200, "End".into()), 0, "{}", d.issues());
     assert_ne!(d.set_station_tracks(end, true), 0, "double track's end stays refused");
 }
+
+/// T-3563 (Anita, 2026-11-17: "trams should be identical to trains in pathing"): the `run` layout on
+/// single rail track and on single tram track, Mid a passing station or a stop with no loop, run by a
+/// line through it and a line turning at it, alike in speed, dwell, turnaround and cars, gives the same
+/// capacity resources with the same users, and the same single-track holds.
+#[test]
+fn trams_pass_and_turn_at_a_stop_as_trains_do() {
+    fn build(kind: u8, side_y: Option<f64>) -> (TrackApi, usize) {
+        let mut a = TrackApi::new(-73.985, 40.758, true);
+        a.set_cash(1e6);
+        a.set_route_kind(kind);
+        let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 8000.0, 0.0, 0.0];
+        assert_eq!(a.add_route(&ends, &[], 1, false), 0, "{}", a.issues());
+        let mut st = [0; 3];
+        for (i, x) in [1000.0, 4000.0, 7000.0].into_iter().enumerate() {
+            let edge = (0..a.w.net.edge_count() as u32)
+                .find(|&e| {
+                    let n = &a.w.net;
+                    n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+                })
+                .unwrap();
+            match (i, side_y) {
+                (1, Some(y)) => a.set_station_one(&[x, y]),
+                _ => a.set_station_one(&[]),
+            }
+            assert_eq!(a.add_station(2, edge, x, 0.0, 80, format!("S{i}")), 0, "{}", a.issues());
+            st[i] = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_platform[n as usize] > 0 && a.w.net.node_x[n as usize] == x).unwrap();
+        }
+        a.set_station_one(&[]);
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        for stops in [&st[..], &st[..2]] {
+            let id = a.new_line_id();
+            assert_eq!(a.set_line_with_trains(id, stops, 4, 2, 0, 30.0, 180.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
+            assert_eq!(a.set_line_limit(id, 60), 0, "{}", a.issue_kinds());
+            assert_eq!(a.w.net.line_tram(id), kind == 3);
+        }
+        let singles = a.w.svc.cap.res.iter().filter(|r| r.kind == ResKind::SingleTrack).count();
+        (a, singles)
+    }
+    let shape = |a: &TrackApi| {
+        let cap = &a.w.svc.cap;
+        (0..cap.res.len()).map(|r| (cap.res[r].kind, cap.res[r].node, cap.res[r].edge, cap.users_of(r).iter().map(|u| (u.line, u.run, u.owner, u.stop)).collect::<Vec<_>>())).collect::<Vec<_>>()
+    };
+    let holds = |a: &TrackApi| {
+        let cap = &a.w.svc.cap;
+        (0..cap.res.len()).filter(|&r| cap.res[r].kind == ResKind::SingleTrack).flat_map(|r| cap.users_of(r).iter().map(|u| u.occ).collect::<Vec<_>>()).collect::<Vec<_>>()
+    };
+    let mut counts = vec![];
+    for side_y in [None, Some(-10.0)] {
+        let ((rail, rs), (tram, ts)) = (build(0, side_y), build(3, side_y));
+        assert_eq!(rs, ts, "single-track sections, Mid {side_y:?}");
+        assert_eq!(shape(&rail), shape(&tram), "Mid {side_y:?}");
+        let (hr, ht) = (holds(&rail), holds(&tram));
+        assert!(hr.len() == ht.len() && hr.iter().zip(&ht).all(|(p, q)| (p - q).abs() < 1e-6), "single-track holds, Mid {side_y:?}: {hr:?} against {ht:?}");
+        counts.push(ts);
+    }
+    assert_eq!(counts, vec![2, 1], "a passing stop cuts the single track in two, one with no loop runs it on");
+}
