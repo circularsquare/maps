@@ -75,9 +75,6 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <div id="now">&nbsp;</div>
   <div id="nowlabel">playing now</div>
 
-  <h2>Today so far (UTC)</h2>
-  <div class="row" id="today"></div>
-
   <h2>By day (UTC)</h2>
   <div class="legend">
     <span><i style="border-color:var(--browsers)"></i>browsers</span>
@@ -91,23 +88,25 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <div id="dayHours"></div>
   <div class="sub" id="dayHoursNote"></div>
 
-  <h2>Time played per 15 minutes (UTC)</h2>
+  <h2>Players per 15 minutes (UTC)</h2>
   <div class="toggles">
-    <div class="seg" id="qseg"><button data-v="series" class="on">Last 14 days</button><button data-v="avg">Average day</button></div>
+    <div class="seg" id="qseg"><button data-v="series">Last 14 days</button><button data-v="avg" class="on">Average day</button></div>
   </div>
+  <div class="legend" id="qlegend"><span><i style="border-color:var(--plays);border-top-width:6px"></i>average day</span><span><i style="border-color:var(--browsers)"></i>today</span></div>
   <div id="quarters"></div>
   <div class="sub" id="quartersNote"></div>
 
-  <h2>Total time played per browser</h2>
-  <div id="ptBrowsers"></div>
-  <div class="sub" id="ptNoteB"></div>
-  <h2>Total time played per account</h2>
-  <div id="ptAccounts"></div>
-  <div class="sub" id="ptNoteA"></div>
+  <h2>Total time played</h2>
+  <div class="toggles">
+    <div class="seg" id="pwho"><button data-v="browsers" class="on">Browsers</button><button data-v="accounts">Accounts</button></div>
+    <div class="seg" id="pwt"><button data-v="minutes" class="on">Playtime</button><button data-v="count">Number</button></div>
+  </div>
+  <div id="ptChart"></div>
+  <div class="sub" id="ptNote"></div>
 
   <h2>Where games start</h2>
   <div class="toggles">
-    <div class="seg" data-k="weight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
+    <div class="seg" data-k="weight"><button data-v="plays">Plays</button><button data-v="minutes" class="on">Minutes played</button></div>
     <div class="seg" data-k="group"><button data-v="city" class="on">Start cities</button><button data-v="country">Countries</button></div>
   </div>
   <div id="map"></div>
@@ -121,7 +120,7 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 
   <h2>Browser language</h2>
   <div class="toggles">
-    <div class="seg" data-k="weight"><button data-v="plays" class="on">Plays</button><button data-v="minutes">Minutes played</button></div>
+    <div class="seg" data-k="weight"><button data-v="plays">Plays</button><button data-v="minutes" class="on">Minutes played</button></div>
   </div>
   <div id="langs"></div>
   <div class="sub" id="langnote" style="margin-top:8px"></div>
@@ -173,18 +172,10 @@ function renderNow(data) {
   }
 }
 
-function renderToday(data) {
-  const key = new Date().toISOString().slice(0, 10);
-  const d = data.days.find((x) => x.day === key);
-  const x = d || { plays: 0, plays5min: 0, minutes: 0, browsers: 0, newBrowsers: 0 };
-  const items = [["plays", fmt(x.plays)], ["plays over 5 min", fmt(x.plays5min)], ["hours played", (x.minutes / 60).toFixed(1)], ["browsers", fmt(x.browsers)], ["new browsers", fmt(x.newBrowsers)]];
-  $("today").innerHTML = items.map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
-}
-
 let CITY = {};
 const regionNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { return null; } })();
 const countryName = (code) => { try { return regionNames.of(code); } catch (e) { return code; } };
-const view = { weight: "plays", group: "city" };
+const view = { weight: "minutes", group: "city" };
 const expanded = { Today: false, All: false };
 const SHORT = 10, LONG = 40;
 
@@ -410,16 +401,17 @@ function renderChart(list) {
 }
 
 // ---- columns: hours played per day, and minutes played per 15 minutes (a 14-day series or an average day)
-function renderColumns(id, vals, unit, labelAt, tipAt, color, h, every) {
+function renderColumns(id, vals, unit, labelAt, tipAt, color, h, every, overlay) {
   const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
-  const max = niceMax(Math.max(...vals, 0.001));
+  let max = niceMax(Math.max(...vals, ...(overlay || []).map((v) => v || 0), 0.001));
+  if (max >= 4 && max < 100) max = Math.ceil(max / 4) * 4; // whole-number gridlines
   const n = vals.length, bw = (w - m.l - m.r) / n;
   const y = (v) => m.t + (1 - v / max) * (h - m.t - m.b);
   let s = "";
   for (let k = 0; k <= 4; k++) {
     const v = (max * k) / 4;
     s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
-    s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+    s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${max < 10 ? +v.toFixed(2) : fmt(v)}</text>`;
   }
   s += `<text x="${m.l - 6}" y="10" text-anchor="end">${unit}</text>`;
   vals.forEach((v, i) => {
@@ -428,6 +420,10 @@ function renderColumns(id, vals, unit, labelAt, tipAt, color, h, every) {
       `<rect x="${x0 + (bw > 4 ? 1 : 0)}" y="${y(v)}" width="${Math.max(bw - (bw > 4 ? 2 : 0), 0.5)}" height="${Math.max(bh, v ? 1 : 0)}" fill="${color}"/></g>`;
     if (i % every === 0) s += `<text x="${x0 + bw / 2}" y="${h - 8}" text-anchor="middle">${labelAt(i)}</text>`;
   });
+  if (overlay) {
+    const pts = overlay.map((v, i) => (v == null ? null : `${(m.l + (i + 0.5) * bw).toFixed(1)},${y(v).toFixed(1)}`)).filter(Boolean);
+    if (pts.length) s += `<polyline points="${pts.join(" ")}" fill="none" stroke="var(--browsers)" stroke-width="2.5" stroke-linejoin="round" pointer-events="none"/>`;
+  }
   const box = $(id);
   box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${unit}">${s}</svg>`;
   box.onmousemove = (ev) => {
@@ -452,7 +448,7 @@ function renderDayHours(data) {
   $("dayHoursNote").textContent = `${hrs(tot)} played over ${n} ${n === 1 ? "day" : "days"} from ${list[0].day}. Today is partial.`;
 }
 
-let qView = "series";
+let qView = "avg";
 $("qseg").addEventListener("click", (ev) => {
   const b = ev.target.closest("button"); if (!b || !lastData) return;
   qView = b.dataset.v;
@@ -463,35 +459,41 @@ const hhmm = (q) => String(Math.floor(q / 4)).padStart(2, "0") + ":" + String((q
 function renderQuarters(data) {
   const q = data.quarters;
   if (!q || !Array.isArray(q.minutes) || !q.minutes.length) {
-    $("quarters").innerHTML = `<div class="sub">not deployed yet</div>`; $("quartersNote").textContent = "";
+    $("quarters").innerHTML = `<div class="sub">not deployed yet</div>`; $("quartersNote").textContent = ""; $("qlegend").hidden = true;
     return;
   }
-  const mins = q.minutes, n = mins.length;
+  // average players in a 15 minute bucket = minutes played in it / 15
+  const mins = q.minutes.map((v) => v / 15), n = mins.length;
   const stamp = (i) => new Date((q.start + i * 900) * 1000).toISOString();
+  $("qlegend").hidden = qView !== "avg";
   if (qView === "series") {
-    renderColumns("quarters", mins, "minutes played",
-      (i) => stamp(i).slice(5, 10), (i) => `${stamp(i).slice(0, 10)} ${stamp(i).slice(11, 16)} UTC: ${fmt(Math.round(mins[i]))} min played`,
+    renderColumns("quarters", mins, "Avg players",
+      (i) => stamp(i).slice(5, 10), (i) => `${stamp(i).slice(0, 10)} ${stamp(i).slice(11, 16)} UTC: ${mins[i].toFixed(1)} avg players`,
       "var(--plays)", 240, 96 * 2);
-    $("quartersNote").textContent = `Minutes played in each 15 minutes since ${stamp(0).slice(0, 16).replace("T", " ")} UTC. Kept for 14 days; the server started counting when it was deployed.`;
+    $("quartersNote").textContent = `Average players in each 15 minutes since ${stamp(0).slice(0, 16).replace("T", " ")} UTC. Kept for 14 days; the server started counting when it was deployed.`;
   } else {
-    // mean minutes per 15 minutes of the day over the buckets since the server had any data
     const first = mins.findIndex((v) => v > 0);
     const sum = Array(96).fill(0), cnt = Array(96).fill(0);
-    for (let i = Math.max(first, 0); i < n; i++) { const k = Math.floor(((q.start + i * 900) % 86400) / 900); sum[k] += mins[i]; cnt[k]++; }
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const today = Array(96).fill(null);
+    for (let i = Math.max(first, 0); i < n; i++) {
+      const k = Math.floor(((q.start + i * 900) % 86400) / 900);
+      if (stamp(i).slice(0, 10) === todayKey) today[k] = mins[i]; else { sum[k] += mins[i]; cnt[k]++; }
+    }
     const avg = sum.map((v, k) => (cnt[k] ? v / cnt[k] : 0));
-    renderColumns("quarters", avg, "minutes played",
-      (k) => hhmm(k), (k) => `${hhmm(k)} UTC: ${avg[k].toFixed(1)} min played on average, over ${cnt[k]} days`,
-      "var(--plays)", 240, 8);
-    $("quartersNote").textContent = "Average minutes played in each 15 minutes of the UTC day, over the days since the server started counting. A day with no play in that slot counts as 0.";
+    renderColumns("quarters", avg, "Avg players",
+      (k) => hhmm(k), (k) => `${hhmm(k)} UTC: ${avg[k].toFixed(1)} on average, over ${cnt[k]} days` + (today[k] == null ? "" : `, ${today[k].toFixed(1)} today`),
+      "var(--plays)", 240, 8, today);
+    $("quartersNote").textContent = "Average players in each 15 minutes of the UTC day, over the days since the server started counting, with today so far as a line. A day with no play in that slot counts as 0.";
   }
 }
 
 // ---- histograms: equal-width bars per bin (the bins themselves are uneven), height is total time played
 const hrs = (m) => (m >= 600 ? fmt(Math.round(m / 60)) : (m / 60).toFixed(1)) + " h";
 const barTip = document.body.appendChild(Object.assign(document.createElement("div"), { id: "bartip" }));
-function renderBars(id, labels, counts, minutes, noun, color, h) {
+function renderBars(id, labels, counts, minutes, noun, color, h, byCount) {
   const w = 820, m = { l: 52, r: 12, t: 22, b: 28 };
-  const hours = minutes.map((v) => v / 60);
+  const hours = byCount ? counts : minutes.map((v) => v / 60);
   const max = niceMax(Math.max(...hours, 1));
   const n = labels.length, bw = (w - m.l - m.r) / n;
   const y = (v) => m.t + (1 - v / max) * (h - m.t - m.b);
@@ -501,7 +503,7 @@ function renderBars(id, labels, counts, minutes, noun, color, h) {
     s += `<line x1="${m.l}" x2="${w - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2a2a"/>`;
     s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
   }
-  s += `<text x="${m.l - 6}" y="10" text-anchor="end">hours played</text>`;
+  s += `<text x="${m.l - 6}" y="10" text-anchor="end">${byCount ? noun : "hours played"}</text>`;
   labels.forEach((lb, i) => {
     const x0 = m.l + i * bw;
     const bh = y(0) - y(hours[i]);
@@ -522,22 +524,25 @@ function renderBars(id, labels, counts, minutes, noun, color, h) {
   box.onmouseleave = () => { barTip.style.display = "none"; };
 }
 
+let ptWho = "browsers", ptWt = "minutes";
+for (const [id, set] of [["pwho", (v) => (ptWho = v)], ["pwt", (v) => (ptWt = v)]]) {
+  $(id).addEventListener("click", (ev) => {
+    const b = ev.target.closest("button"); if (!b || !lastData) return;
+    set(b.dataset.v);
+    for (const x of document.querySelectorAll("#" + id + " button")) x.classList.toggle("on", x === b);
+    renderPlaytime(lastData);
+  });
+}
 function renderPlaytime(data) {
-  const pt = data.playtime;
-  if (!pt || !Array.isArray(pt.bins) || !Array.isArray(pt.browserMinutes)) {
-    for (const id of ["ptBrowsers", "ptAccounts"]) $(id).innerHTML = `<div class="sub">not deployed yet</div>`;
-    $("ptNoteB").textContent = ""; $("ptNoteA").textContent = "";
+  const pt = data.playtime, acc = ptWho === "accounts";
+  if (!pt || !Array.isArray(pt.bins) || !Array.isArray(pt.browserMinutes) || (acc && !Array.isArray(pt.signedIn))) {
+    $("ptChart").innerHTML = `<div class="sub">not deployed yet</div>`; $("ptNote").textContent = "";
     return;
   }
   const sum = (a) => a.reduce((x, y) => x + y, 0);
-  renderBars("ptBrowsers", pt.bins, pt.browsers, pt.browserMinutes, "browsers", "var(--browsers)", 240);
-  $("ptNoteB").textContent = `${fmt(sum(pt.browsers))} browsers, ${hrs(sum(pt.browserMinutes))} played, all time. Bars are equal width and as tall as the time played in the bracket; the brackets are not equal.`;
-  if (!Array.isArray(pt.signedIn)) {
-    $("ptAccounts").innerHTML = `<div class="sub">not deployed yet</div>`; $("ptNoteA").textContent = "";
-    return;
-  }
-  renderBars("ptAccounts", pt.bins, pt.signedIn, pt.signedInMinutes, "accounts", "var(--plays)", 240);
-  $("ptNoteA").textContent = `${fmt(sum(pt.signedIn))} accounts, ${hrs(sum(pt.signedInMinutes))} played while signed in, all time.`;
+  const counts = acc ? pt.signedIn : pt.browsers, mins = acc ? pt.signedInMinutes : pt.browserMinutes;
+  renderBars("ptChart", pt.bins, counts, mins, ptWho, acc ? "var(--plays)" : "var(--browsers)", 240, ptWt === "count");
+  $("ptNote").textContent = `${fmt(sum(counts))} ${ptWho}, ${hrs(sum(mins))} played${acc ? " while signed in" : ""}, all time. Bars are grouped by each one's total time played; the brackets are not equal.`;
 }
 
 async function load() {
@@ -548,7 +553,7 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
-    lastData = data; renderNow(data); renderToday(data); renderCities(data); renderLangs(data); renderPlaytime(data); renderDayHours(data); renderQuarters(data);
+    lastData = data; renderNow(data); renderCities(data); renderLangs(data); renderPlaytime(data); renderDayHours(data); renderQuarters(data);
     if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
     $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
   } catch (e) {
