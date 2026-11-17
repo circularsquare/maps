@@ -16,6 +16,7 @@ import { t, tCountry, tList, tNumber } from "../i18n";
 import { tPlace } from "../i18n/places";
 
 import { stationZone } from "./listScope";
+import { playedSeconds, TRAINSFAN_HOURS, trainsfanReached } from "./hoursPlayed";
 import { moneyState } from "./money";
 import { foldTwins, readToday, runningToday, upkeepToday } from "./today";
 import { weekdayOf } from "./days";
@@ -58,7 +59,7 @@ export function tierText(id: TieredId, tier: number, a?: Achieved | Detail, toas
 /** The firsts in the panel's order (Sea crossing comes with T-2150). */
 export type CorridorId = "allJapan" | "orient" | "transcon" | "siberian" | "andean" | "cape" | "ghan" | "silk";
 export type NationCode = "JP" | "US" | "ES" | "GB" | "IT" | "DE" | "KR" | "TW" | "CN" | "ID" | "MX" | "BR" | "AU" | "TR";
-export type FirstId = "border" | "continents" | "long" | "pearls" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper"
+export type FirstId = "border" | "continents" | "long" | "pearls" | "money" | "bullet" | "circle" | "change" | "city" | "intercity" | "sleeper" | "trainsfan"
   | CorridorId | "europe" | `nation:${NationCode}`;
 export interface First { id: FirstId; name: string; rule?: () => string; text: (a: Achieved | Detail) => string;
   /** the figure now, for the hover of a step not yet earned; "" while unknown */
@@ -143,6 +144,9 @@ export const FIRSTS: First[] = [
   { id: "city", get name() { return t("achievements.nameCity"); }, rule: () => t("achievements.ruleCity", { share: CITY_SHARE }), text: (a) => t("achievements.textCity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
   { id: "intercity", get name() { return t("achievements.nameIntercity"); }, rule: () => t("achievements.ruleIntercity", { share: INTERCITY_SHARE }), text: (a) => t("achievements.textIntercity", { share: pct(a.v ?? 0), of: cityShown(a.of) }) },
   { id: "sleeper", get name() { return t("achievements.nameSleeper"); }, rule: () => t("achievements.ruleSleeper", { hours: SLEEPER_S / 3600 }), text: (a) => t("achievements.textSleeper", { hours: decimals(a.v ?? 0, 1), of: a.of }) },
+  // T-3520: hours played in this browser (game/hoursPlayed.ts); the figure is kept as hours
+  { id: "trainsfan", get name() { return t("achievements.nameTrainsfan"); }, rule: () => t("achievements.ruleTrainsfan", { hours: TRAINSFAN_HOURS }), text: (a) => t("achievements.textTrainsfan", { hours: decimals(a.v ?? 0, 0) }),
+    now: () => t("achievements.nowTrainsfan", { n: decimals(Math.min(playedSeconds.value / 3600, TRAINSFAN_HOURS), 1) }) },
   // T-3037: hidden until earned, so no rule to show
   ...CORRIDORS.map((c): First => ({ id: c.id, hidden: true, get name() { return corridorName[c.id](); }, text: (a) => t("achievements.textCorridor", { from: cityShown(a.of), to: cityShown(a.in?.[0]) }) })),
   { id: "europe", hidden: true, get name() { return t("achievements.nameEurope"); }, text: (a) => t("achievements.textShare", { share: shareText(a.v), place: continentLabel("Europe") }) },
@@ -443,6 +447,7 @@ export const metNow = computed(() => {
   }
   if (bp && bp.v! >= MONEY_USD) out.money = bp;
   if (longProfitable.value) out.pearls = longProfitable.value;
+  if (trainsfanReached.value) out.trainsfan = { v: TRAINSFAN_HOURS };
   // an older save's quiet working-out waits for the loaded game's own world, this network's own final
   // (a cached result shown ahead of it is solved again, `demandUpdating`) and the profit asked after it
   const settled = !!df?.covered && bp !== undefined && profitView === demandByDay.value[AVERAGE_DAY]?.view;

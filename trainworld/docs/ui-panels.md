@@ -853,7 +853,10 @@ keeps what it had and earns no more.
   **Grounded** (a region whose trips to and from other places, both ways as the city view's "To other
   places", are 20% by train, over at least 100k such trips a day), **Sleeper** (riders who stay 12
   hours on one train: of the riders on a stretch, all but those who boarded since an earlier stop were
-  aboard there, and at least 1 a day must be sure to ride that long). Sea crossing comes with T-2150.
+  aboard there, and at least 1 a day must be sure to ride that long), **trainsfan** [T-3520] (100 hours played in
+  this browser: `game/hoursPlayed.ts` counts the seconds a game is open and the tab visible, as the plays ping
+  does, in localStorage `trainworld.played`, across saves, from this release on; each save earns the step
+  itself; its hover while unearned adds "23.4 hours played so far"). Sea crossing comes with T-2150.
   **An earned step stays earned** (Anita, 2026-11-10): the save's record is only added to, so a rule made
   stricter later takes nothing from a game that already has the step.
 - **Hidden firsts** [T-3037]: not listed in the view or counted in its "n/N" until earned, then listed
