@@ -1586,14 +1586,15 @@
     {
       "id": "c123",
       "text": "added a Set as default button in the timetables window that gives every new line the selected line's headways, and one timetable button on the line panel in place of copy and paste schedule",
-      "edited": null,
+      "edited": "added a Set as default button in the timetables window: it gives every new line the selected line's headways (switching a line on train counts to headway first), no default is set in a new game, and Apply to all lines for weekends covers new lines too; one timetable button on the line panel in place of copy and paste schedule",
       "hidden": false,
       "task": "T-3543",
       "by": "schedbutton",
       "at": "2026-11-17T19:28:19Z",
-      "rev": 1,
+      "rev": 3,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:50:09Z"
     },
     {
       "id": "c124",
@@ -1619,6 +1620,31 @@
       "rev": 1,
       "area": "other",
       "fix": true
+    },
+    {
+      "id": "c126",
+      "text": "tram stops can have a terminal and passing tracks, like rail stations",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3574",
+      "by": "tramterm",
+      "at": "2026-11-17T19:46:58Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c127",
+      "text": "tram track takes crossovers, priced as tram track",
+      "edited": null,
+      "hidden": true,
+      "task": "T-3575",
+      "by": "tramterm",
+      "at": "2026-11-17T19:46:58Z",
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-17T19:50:55Z"
     }
   ]
 }

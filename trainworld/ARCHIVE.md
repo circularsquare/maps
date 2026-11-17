@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3575 [P2] {L:trams} Crossovers on tram track (2026-11-17): tram stop upgrades and tram crossovers priced at the tram table; checker passed. notes/T-3574.md.
+- T-3574 [P2] {L:trams} Terminal and passing tracks at tram stops (2026-11-17): tram stop upgrades and tram crossovers priced at the tram table; checker passed. notes/T-3574.md.
 - T-3582 [P2] {L:small-fixes} WebGL2 error after the map glitches (2026-11-17): A browser that has WebGL2 but refuses the page a context, at startup or mid-game after a lost context, now gets a screen saying the graphics stopped working and to restart the browser (hardware acceleration as the fallback); the cause of the loss is not established (GPU use measured on the real save, restores work, camera does not move). notes/T-3582.md.
 - T-3557 [P2] {L:timetables} Weekend headway stepper runs faster than stepped (2026-11-17): weekend headways stored and run (LWE1 flag 2); checker passed (notes/T-3557-check.md) notes/T-3557.md.
 - T-3587 [P2] {L:feedback} Board changelog view jumps while scrolled (2026-11-17): board changelog keeps her scroll place across the 15 s poll: skips unchanged redraws, anchors to the top item (notes/T-3585.md)

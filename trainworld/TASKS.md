@@ -284,14 +284,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
-- T-3574 [P2] {L:trams} {after:T-3563} Terminal and passing tracks at tram stops (taking, 2026-11-17, agent tramterm)
-  - Context: You, 2026-11-17: "yeah lets do the terminal." The sim already accepts both at a tram stop; the station panel (StationUpgrades) hides them. Without a terminal a tram line turns at most 15 times an hour, with one 30.
-  - Goal: A tram stop offers the terminal and passing tracks as a rail station does, the terminal priced as 1 km of the stop's own track kind.
-  - Other: notes/T-3563.md
-- T-3575 [P2] {L:trams} {after:T-3563} Crossovers on tram track (taking, 2026-11-17, agent tramterm)
-  - Context: You, 2026-11-17: "my gut is yes if its how trains work." Crossing track drawn between two double-track tram pieces is refused today (T-3352); on rail it makes a crossover, so trams could cross to the other track and turn back short.
-  - Goal: Tram track takes crossovers exactly as rail does, priced as tram track.
-  - Other: notes/T-3563.md
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
@@ -301,7 +293,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3582.md
 - T-3588 [P2] {L:timetables} Default headways switch lines to headway; none for new players (taking, 2026-11-17, agent defaulthw)
   - Context: You, 2026-11-17, after T-3543: "setting a line to use default should also switch it from running ont ain coutns to running on headway. also to be clear for a completely new player the default shoudl not be set. people should have to manually assign their first line ever, and manually set their default." Today "Set as default" on a line running on counts is refused with "Switch this line to Headway first".
-  - Goal: Setting the default from a line on counts switches that line to headway at its current headways; a new game has no default, so a first line runs on counts until the player sets one; the window's wording says "none" rather than suggesting a game default exists.
+  - Goal: Setting the default from a line on counts switches that line to headway at its current headways; a new game has no default ("Default not set"), so a first line runs on counts until the player sets one; "Apply to all lines" for weekends also sets the weekend percent new lines start with, and its question says so; the lone "Simple" mode button is hidden.
 - T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
   - Context: From T-3557: `restHeadwayStep` skips headways that need the same train count, so 12 and 13 min can be skipped. Now that a stepped headway is stored and run, they are different services.
   - Goal: The steppers stop at every headway the line can run.
