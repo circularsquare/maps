@@ -1,7 +1,6 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session a883eda3-3bdb-42c8-904a-1a72316f71e3, name maps-1c, since 2026-11-17 21:18 UTC
-Previous: session f0b2a436-f42b-45c6-999f-26d970f36c1a, name maps-45, handed over 2026-11-17 21:18 UTC, finishing in-flight work
 Updated: 2026-11-17 22:00 UTC
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
@@ -25,18 +24,20 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Landing: `agent-tree.mjs finish`; when a task must stay open, move the changelog item by hand, `land`, `remove`.
 
 ## In flight
-maps-45's (it relays reports to maps-1c verbatim): farebase (Opus, .tw-trees/farebase), T-3578: checker FAILED (all
-lines at 0x gives 33 lines negative revenue; notes/T-3578-check.md), fixing. Landing is maps-1c's: fresh checker,
-land, reword T-3567's fare item to the end state, hide farebase's.
-maps-1c's:
+maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
+- farebase (T-3578, .tw-trees/farebase, based on 71d8ffae): fixed after the first checker's fail (base extra on its
+  own channel, a 0x line takes no base). Checker farecheck2 (Sonnet, ports 6192/6193) running. On PASS land for
+  v0.4.0 (it's in the release); no changelog change (her c120 still holds); fareTip hover changed (approved by her),
+  so fareTip joins the stale-key translation batch.
 - onewaystops2 (Opus, .tw-trees/onewaystops2, port 6181): T-3565 fresh start + T-3595 (a train may turn back at any
   track end; DECISIONS). Pairing per her 11-17: nice to have, ~50 m between platforms, any number of one-way stops per
   leg. Checker straight after it reports. Old trees onewaystops and extendfix: remove once it's done.
 - l10n-shots (Sonnet, port 6186): pass 5 screenshots, may merge shorter wording; I commit messages/ after.
 - For after the publish (her 11-17 ask): idlemem (Opus, T-3492, 6182), capload (Sonnet, T-3559+T-3528, 6184; done,
-  running smoke + demand lib, then a checker; land WITHOUT its changelog item, her word: revert the tree's next.json),
-  snapbar (Sonnet, T-3516, 6188), icskip (Sonnet, T-3471, no Vite). trafficwidth (T-3580) DONE in its tree, smoke
-  passed: land after the publish with `agent-tree.mjs finish trafficwidth ... --task T-3580`.
+  smoke passed; checker capcheck running; land WITHOUT its changelog item, her word: revert the tree's next.json),
+  snapbar (T-3516 DONE in its tree, smoke passed; c136 line shown to her), trafficwidth (T-3580 DONE, smoke passed),
+  tramsnap (Opus, T-3515, 6190), termdraw (Opus, T-3231, 6191). Land the done ones after the publish with finish.
+  icskip (T-3471) landed cf3a678d, oldchecks (T-3462) bde8c1d8.
 - She wants a high-level update on the one-way station work now and then. Away a few hours from 22:00 UTC; said
   start new lines if little is running.
 
