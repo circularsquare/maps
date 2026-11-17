@@ -190,7 +190,9 @@ export const BUS_CORNER = 0.18;
  * reaches past the bullet's box above and below. */
 const SQUARE_SIDE = 0.94, DIAMOND_SIDE = 1.14;
 /** T-3594: the outline bullet's ring is as thick as its letter's stem (`BulletText.stem`), a little thicker than a line
- * group's (GroupPill's 2 px border), so the two still read apart. */
+ * group's (GroupPill's 2 px border), so the two still read apart; never under 2.4 px, the old ring having been 2.8
+ * (Anita, 2026-11-17). */
+const OUTLINE_MIN = 2.4;
 /** T-2194: a pill is at least this many times as wide as it is tall, fully rounded. */
 const PILL_W = 1.5;
 
@@ -220,7 +222,7 @@ export function bulletDraw(b: BulletText, shape: LineShape): BulletDraw {
   }
   if (shape === "outline") {
     // an outline-only circle (or pill): inset by half the stroke so it fills the same box as a circle
-    const sw = b.stem;
+    const sw = Math.max(b.stem, OUTLINE_MIN);
     return { w: b.w, h, x: b.x, y: b.y, rect: { x: sw / 2, y: top + sw / 2, w: b.w - sw, h: h - sw, r: (h - sw) / 2, ring: sw } };
   }
   const w = shape === "pill" ? Math.max(b.w, PILL_W * h) : b.w;
