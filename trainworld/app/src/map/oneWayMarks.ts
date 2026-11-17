@@ -20,12 +20,14 @@ export const ONE_WAY_GAP_PX = 150;
 /** A bus route's arrows show from this zoom, a train line's chevrons from `CHEVRON_ZOOM` while the
  * line is at least `CHEVRON_MIN_PX` wide there. */
 export const ARROW_ZOOM = 13;
-export const CHEVRON_ZOOM = 12;
+export const CHEVRON_ZOOM = 13;
 const CHEVRON_MIN_PX = 4.5;
+/** Train chevrons keep at least this gap, CSS px (twice the bus arrows' base, Anita, 2026-11-17). */
+const CHEVRON_GAP_PX = 300;
 
 /** The share of marks kept at a zoom: every `oneWayEvery`-th, from device px per ground metre (`spread`: step and gap both that much longer). */
-export function oneWayEvery(mPx: number, dpr: number, spread = 1): number {
-  const n = Math.ceil(Math.log2((ONE_WAY_GAP_PX * spread * dpr) / Math.max(1e-9, ONE_WAY_STEP_M * spread * mPx)));
+export function oneWayEvery(mPx: number, dpr: number, spread = 1, gapPx = ONE_WAY_GAP_PX): number {
+  const n = Math.ceil(Math.log2((gapPx * spread * dpr) / Math.max(1e-9, ONE_WAY_STEP_M * spread * mPx)));
   return 2 ** Math.max(0, Math.min(20, n));
 }
 
@@ -215,7 +217,7 @@ export class OneWayChevrons {
     gl.uniform1f(u.u_line, s.wLine);
     gl.uniform1f(u.u_band, s.band);
     gl.uniform1f(u.u_band_m, s.mPx);
-    gl.uniform1f(u.u_every, oneWayEvery(s.mPx, dpr));
+    gl.uniform1f(u.u_every, oneWayEvery(s.mPx, dpr, 1, CHEVRON_GAP_PX));
     // clear of a station's box or dot and its rim
     gl.uniform1f(u.u_clear, 14 * dpr);
     gl.uniform1f(u.u_min, CHEVRON_MIN_PX * dpr);

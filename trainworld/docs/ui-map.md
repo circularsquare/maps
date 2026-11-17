@@ -455,8 +455,8 @@ picked; the same line joins two bus lines' stops within 100 m of each other, one
 its vehicles go and sticking out both sides of the route, twice as wide as they are long (their casing only
 off the route), none in the Speed and Profit displays (T-2991, `oneWayMarks.ts`). Its street rings are half filled, the half on the right of the way the buses go, where the sim serves the stop one way (`line_stop_ways`, T-3147), and the bus stop hover has the line's chevron after its bullet. In stop editing, the hover over a stop served one way has "One way stop" above "Click to remove the stop" (T-3211). A train loop run one way
 has a tiny white chevron on the line instead, on the edges its path runs once (a balloon's tail runs both
-ways), from zoom 12 where the line or its band is at least 4.5 px wide, in the Line view only. Both are
-placed every 100 m along the route (bus and ferry arrows 125 m); at each zoom every 2^n-th is drawn so they are at least 150 px apart (arrows 190 px),
+ways), from zoom 13 where the line or its band is at least 4.5 px wide, in the Line view only. Both are
+placed every 100 m along the route (bus and ferry arrows 125 m); at each zoom every 2^n-th is drawn so they are at least 300 px apart (arrows 190 px),
 and none closer to a stop than its mark (14 px from a station). Selecting the line draws its 300 m
 corridor as a 1 px outline in the line's colour at 75% (the outline of the union of its segments, made
 with the stencil; `busLayer.ts`, T-1490); hovering draws nothing, and nothing is shaded. Hovering the route gives a rail line's tag: the line's
