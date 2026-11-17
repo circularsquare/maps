@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3508 [P3] {L:twstats} twstats layout and defaults (2026-11-16): all six changes in twstats; avg players is minutes per bucket divided by 15, no server change.
+- T-3504 [P2] {L:board} Open tasks over time on the board (2026-11-16): hourly recorder in serve.py, 7-day backfill, collapsible stacked graph by area or priority on the board.
+- T-3500 [P2] {L:airports} Airport hover misses trips from across the zone line (2026-11-16): airport hover and Airport bubbles count trips from across the zone line (Istanbul 4,327 -> 111,287, 26,480 by train); selection lists airport trips by far zone; solved figures identical. notes/T-3500.md
+- T-3485 [P2] {L:airports} Few airport passengers ride rail (2026-11-16): mode choice is fine (one line 17-23%, near real); Istanbul is a hover that reads only the airport zone (T-3500); border airports lose ground trips in the build (T-3501); a wider catchment for big hubs is her call. notes/T-3485.md.
 - T-2496 [P2] {L:memory} Demand worker WASM is 367 MB (2026-11-16): stage 1: corridor table one bit per corridor and f32 trips, -59 MB heap per solving worker once the market opens, figures identical (wasmcheck PASS); paused at no easy gains, leftovers in notes/T-2496.md. notes/T-2496.md.
 - T-1366 [P3] {L:memory} Demand workers never grow back (2026-11-16): the pool grows back to the most workers that fit 95% of the 17.5% share when quiet, never above its start size, with a doubling wait against flapping; zone and market closing no longer gives up while a load or restart runs (it stranded all-China markets in a later game in the same page). Players switching games already reload the page. notes/T-1366.md.
 - T-3497 [P1] {L:memory} Real memory savings on phones and low-memory devices (2026-11-16): stage 1: about 130 MB less on phones (first line 1,092 -> 962 MB, peak 1,182 -> 1,034), 50-100 MB less on desktop, all from GPU buffers; paused at no easy gains per Anita; what is left in notes/T-3497.md. notes/T-3497.md.

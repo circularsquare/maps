@@ -942,6 +942,42 @@
       "rev": 1,
       "area": "performance",
       "fix": false
+    },
+    {
+      "id": "c073",
+      "text": "snapped to unused track in the real world network's All setting",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3495",
+      "by": "snapsurvey",
+      "at": "2026-11-17T02:24:01Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c074",
+      "text": "added indonesian",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3398",
+      "by": "indonesian",
+      "at": "2026-11-17T02:46:34Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c075",
+      "text": "fixed airport hovers and airport bubbles leaving out trips from across the zone line (istanbul airport showed 4,300 trips a day, now about 111,000)",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3500",
+      "by": "airhover",
+      "at": "2026-11-17T03:06:24Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
     }
   ]
 }

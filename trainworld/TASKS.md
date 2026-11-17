@@ -241,13 +241,37 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Downloads approved by you 2026-11-16 ("ok, can start download"); colours approved ("track looks good"). You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
   - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36 and was tried on Chicago; the worldwide build (about 1.5-3 h on 2 cores plus downloads, 150-400 MB) goes in an overnight batch, then R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
   - Other: notes/T-3464.md
-- T-3495 [P2] {L:world-map} {after:T-3464} Snap track to freight and all real rail
-  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track". The real-line snap (realSnap.ts) follows passenger rail only; T-3464 builds freight and abandoned rail tiles for the All setting.
-  - Goal: With All shown, new track can snap along freight and abandoned real rail as it does along passenger rail.
+- T-3495 [P2] {L:world-map} Snap to any real rail that is drawn (taking, 2026-11-16, agent snapsurvey)
+  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and on the board: "a common complaint is that people cant snap to some rails that are visible. if something is visible we shoudl let people snap to it. (and if there are gaps that are easily fixable we should fix them but not put too much effort into doing this yet as we have other high prio stuff to work on)". The real-line snap (realSnap.ts) follows passenger rail only; T-3464 builds freight and abandoned rail tiles for the All setting.
+  - Goal: Every real rail line drawn at the current setting can be snapped to; first a short survey of which drawn rail can't be today and the easy fixes, then freight and abandoned once T-3464's tiles exist.
+- T-3499 [P3] {L:region-redraws} Bucaramanga is an enclave
+  - Context: A player reports (via you, 2026-11-16 on the board) that Bucaramanga, Colombia, sits as an enclave inside another zone, which is weird. Reaches players building in Colombia.
+  - Goal: Bucaramanga's zone has a sensible shape joined to its surroundings, fixed at the next Colombia rebuild if it needs one.
+- T-3501 [P2] {L:airports} {after:next world rebuild} Border airports lose ground trips in the build
+  - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
+  - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
+  - Other: notes/T-3485.md
+- T-3503 [P2] {L:map-look} Demand bubbles include trips between cities
+  - Context: You, 2026-11-17: "ideally we have demand bubbles show intercity trips as well", and the bubbles should simply add up to the zone's local plus intercity totals. Today street-zoom bubbles show only a zone's own local trips; zoomed out past 8.5 the zone bubbles already include regional trips. From T-3500's look: a worker query like airLegs that shares each zone's longer and cross-zone trips over its homes and jobs, small short-lived memory, about 3-5 h.
+  - Goal: Bubbles at every zoom include regional and long trips, always on, and add up to the zone's local plus intercity totals.
+  - Other: notes/T-3500.md
+- T-3505 [P2] {L:map-look} Demand bubbles with 0 trips
+  - Context: You, 2026-11-17: a bubble in rural Ontario hovers "0 trips from here", which shouldn't show (it rounds to 0); "i thought we got rid of demand sites that are less than one person. or aggregated them ... it suggests to me that we could probably be more aggressive with dropping bubbles in some way or another." Fewer sites also means less memory.
+  - Goal: No bubble shows under 1 trip a day; tiny sites folded into a neighbour where there is one, with the zone's totals unchanged and the memory saved measured.
+- T-3506 [P2] {L:region-redraws} Worldwide check for enclave zones
+  - Context: You, 2026-11-17: "we should do a general world check for enclave zones. or like enclave by land (liek arnavutkoy) and for each case consider whether its justified to keep liek that or if we should merge or shift stuff around". Bucaramanga (T-3499) and Arnavutkoy (T-3488) are in tonight's queue.
+  - Goal: Every zone enclosed by land by one other zone listed with a call each (keep, merge or shift, and why), and the merges and shifts queued for night rebuilds.
+- T-3507 [P3] {L:board} Task graph counts only real closes
+  - Context: From T-3504: "closed" in the hourly history counts any task leaving TASKS.md, including moves to Someday, so the closed counts run high (159 in a day on 11-16).
+  - Goal: Closed counts only tasks that reach ARCHIVE.md; moves to Someday shown apart or not at all.
+- T-3502 [P3] {L:airports} Big airports draw ground trips from farther away
+  - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
+  - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
+  - Other: notes/T-3485.md
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
-- T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured
+- T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured (taking, 2026-11-16, agent prspeed)
   - Context: CinnamonVII's PR 12 has gravity and layout speedups that keep every sum's order, a 4-lane row split that moves two demand totals in the last bits, and native gravity threads that would take every core. No timings in the PR. Part of T-3373 option A.
   - Goal: The order-keeping speedups landed with timings and identical figures, Cinnamon credited; the rest taken only if the drift is invisible and the threads respect the core claims.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
@@ -261,6 +285,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; now stored at 94 MB; T-2136 would drop it. The all-China peaks of up to 1.2 GB between collections are not traced yet.
   - Goal: The biggest peaks found and cut.
   - Other: notes/T-3472.md
+- T-3498 [P3] {L:accounts-server} Pins move forward to the newest intact save
+  - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
+  - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
+  - Other: notes/T-3395.md
 - T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting
   - Context: You, 2026-11-16: "for the bus routes lets add it as a setting, default off. i feel bad. and some people might want it... we can pull it in if thats easy. its not that many lines of code." From Renkon's open-source PR 1; a both-ways line or a loop still drives a one-way street backwards.
   - Goal: PR 1 brought in behind a setting that is off by default, credited to Renkon, with bus routes unchanged while it is off.
@@ -275,9 +303,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3484: across Hong Kong-Shenzhen the game sends 3x too many Hong Kong residents to work in Shenzhen, and Macau-Zhuhai and Malaysia-Singapore are backwards the same way; real commutes mostly go toward the richer side. You, 2026-11-16: "ehhh oky we can do border factor depending on direction, if it fits. low prio."
   - Goal: Commutes across these three borders go mostly the real way, with each total within 25% of today's; dropped if no simple rule fits.
   - Other: Also worth a look then: what rail carries across Hong Kong-Shenzhen in a running game (about 4 cores, 30-45 min). notes/T-3484.md
-- T-3485 [P2] {L:airports} Few airport passengers ride rail
-  - Context: Open-source issues 6 (GHOST-AKU) and 11 (ykaydogdu): a rail link to a major airport carries very few riders; Istanbul Airport (84.5M passengers in 2025) gets a few thousand at most on its metro. Many players build airport links.
-  - Goal: Airport rail riders compared with published rail shares at a few airports (Heathrow, Istanbul, Hong Kong), and the cause found if far off.
 - T-3488 [P3] {L:region-redraws} Arnavutkoy into Istanbul, two districts to Kocaeli
   - Context: Open-source issue 11 (ykaydogdu): Arnavutkoy (176k, Istanbul Airport) is its own city in game; T-3439 only renamed it "Arnavutköy, Istanbul". You, 2026-11-16: "the arnavutkoy thing we should do is merging it into istanbul, not just rename it". Altinova and Karamursel sit with Istanbul but are Kocaeli's; Gebze, Cayirova, Dilovasi and Darica can stay with Istanbul.
   - Goal: Arnavutkoy's zone counts as part of Istanbul, and the two districts as Kocaeli, at the next Turkey rebuild.
@@ -799,7 +824,7 @@ Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3398 [P3] {L:translations} The next languages
   - Context: You asked 2026-11-16 to replace the list, Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851.
-  - Goal: Indonesian is added first, then the others in order.
+  - Goal: Indonesian added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls); then Italian, Polish, Arabic in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
 - T-3409 [P3] {L:schematic} Schematic of one city or chosen cities
   - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
@@ -939,7 +964,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent scancheck2)
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
   - Context: Stage 1 (server) passed its checker, not deployed. Stage 2 (the game) landed 7cd2f5ac and is on 8800, not published; it must not ship before the stage 1 server is deployed. Stage 3 (the recurring scan, shonei-server 85e2945) is built and being checked; then the server deploy of stages 1 and 3 waits for your yes, in daytime.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
