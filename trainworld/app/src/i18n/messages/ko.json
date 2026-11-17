@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {{name}에서 {list} 트램 대기} other {{name}에서}}} other {{faster, select, true {{name}에서 {list} 열차 대기} other {{name}에서}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {트램 최고 속도 {speed}} track {일반 선로 제한 속도 {speed}} street {도로 위 트램 선로 제한 속도 {speed}} tram {트램 선로 제한 속도 {speed}} curve {여기 곡선 제한 속도 {speed}} other {여기 건넘선 제한 속도 {speed}}}} other {{why, select, top {열차 최고 속도 {speed}} track {일반 선로 제한 속도 {speed}} street {도로 위 트램 선로 제한 속도 {speed}} tram {트램 선로 제한 속도 {speed}} curve {여기 곡선 제한 속도 {speed}} other {여기 건넘선 제한 속도 {speed}}}}}",
   "lineMoney.fares": "요금 {amount}",
-  "lineMoney.heading": "요금에서 운행 비용을 뺀 금액",
   "lineMoney.net": "순액 {amount}",
   "lineMoney.running": "열차 운행 {amount}",
   "lineProfile.along": "{stop}에서 {distance}",

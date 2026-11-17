@@ -35,6 +35,9 @@ export interface Fares {
   ferry?: number;
   /** T-3028: the fare multiplier on bus lines; absent for `BUS_FARE` */
   bus?: number;
+  /** T-3567: each line's own fare multiplier, by line id, on top of the kind's above; only lines set off 1,
+   * absent while none is. A quad-track twin carries its line's (the clock worker keeps it so). */
+  lines?: Record<string, number>;
   /** T-1801: the transfer fare, paid on each boarding after a trip's first, in the curve's units
    * (times a country's scale where charged); absent for 0 */
   transfer?: number;
@@ -87,10 +90,23 @@ export function busFare(f: { bus?: number } | undefined): number {
   const v = f?.bus;
   return v !== undefined && Number.isFinite(v) && v >= 0 ? v : BUS_FARE;
 }
+/** T-3567: a line's own multiplier is 0 to this, in hundredths. */
+export const LINE_FARE_MAX = 3;
+/** A line's own multiplier the player typed or stepped to. */
+export function tidyLineFare(v: number): number {
+  return Number.isFinite(v) ? Math.min(LINE_FARE_MAX, Math.max(0, Math.round(v * 100) / 100)) : 1;
+}
+/** Line `id`'s own multiplier in `f`, 1 unless set. */
+export function ownLineFare(f: { lines?: Record<string, number> } | undefined, id: string): number {
+  const v = f?.lines?.[id];
+  return v !== undefined && Number.isFinite(v) && v >= 0 ? v : 1;
+}
 /** The multiplier a line's rides pay on the part of the fare above the base: a ferry's, a
- * bus's, a high-speed line's, else 1. */
-export function lineFareMul(line: { fast?: boolean; ferry?: boolean; bus?: boolean }, f: { hsr?: number; ferry?: number; bus?: number } | undefined): number {
-  return line.ferry ? ferryFare(f) : line.bus ? busFare(f) : line.fast ? hsrFare(f) : 1;
+ * bus's, a high-speed line's, else 1; times the line's own (T-3567). */
+export function lineFareMul(line: { id: string; fast?: boolean; ferry?: boolean; bus?: boolean }, f: { hsr?: number; ferry?: number; bus?: number; lines?: Record<string, number> } | undefined): number {
+  const kind = line.ferry ? ferryFare(f) : line.bus ? busFare(f) : line.fast ? hsrFare(f) : 1;
+  const own = ownLineFare(f, line.id);
+  return own === 1 ? kind : kind * own;
 }
 
 /** The curve as charged in a country whose fare scale is `s`. */

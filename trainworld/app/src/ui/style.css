@@ -742,8 +742,8 @@ table.ledger tr.b td { font-weight: 700; }
 :root[data-shade="dark"] { --revenue: #6aa2ea; --expense: #ec7b7b; }
 .hist-title { display: flex; align-items: baseline; margin: 8px 0 2px; }
 .hist-title .right { margin-left: auto; }
-.hist-title .hist-fares { color: var(--revenue); }
-.hist-title .hist-costs { color: var(--expense); }
+span.hist-fares { color: var(--revenue); }
+span.hist-costs { color: var(--expense); }
 rect.hist-oneoff, path.hist-oneoff { fill: color-mix(in srgb, var(--expense) 28%, var(--bg)); stroke: none; }
 path.hist-oneoff.cap { fill: var(--expense); }
 svg.hist { width: 100%; height: auto; stroke-width: 1.5; }

@@ -101,6 +101,44 @@ function binDays(list: Entry[], shift: number): { cols: Entry[]; binned: boolean
   return { cols, binned: true };
 }
 
+/** A column of the revenue and expenses chart: `oneOff` stacks on the expenses as a paler bar. */
+export interface BarCol { fares: number; costs: number; oneOff?: number; tip: string }
+
+/** The chart's top: the larger of any column's revenue and expenses, so a one-off cost never flattens the rest. */
+export const barTop = (cols: readonly BarCol[]) => Math.max(...cols.map((c) => Math.max(c.fares, c.costs)), 1e-9);
+
+/** T-2340, T-2444: each column a revenue bar (blue) and an expenses bar (red) side by side, one-off costs a paler
+ * bar stacked on the expenses, cut with a cap past the top (T-452); columns right-aligned in `slots`, so a few sit
+ * at the right at their usual width. The last column is the day or hour now when `now`. Also the line panel's
+ * chart (T-3566). */
+export function FareCostBars({ cols, slots, h = H, now = true, cls = "" }: { cols: readonly BarCol[]; slots: number; h?: number; now?: boolean; cls?: string }) {
+  const col = W / Math.max(slots, cols.length), x0 = W - cols.length * col, bw = Math.max(1, col - GAP);
+  const top = barTop(cols), last = now ? cols.length - 1 : -1;
+  const y1 = (v: number) => h - PAD - (v / top) * (h - 2 * PAD);
+  /** bar `k` of two across column `i` */
+  const bx = (i: number, k: number) => x0 + (i + 0.5) * col - bw / 2 + (k * bw) / 2;
+  const bar = (c: string, i: number, k: number, v: number) => {
+    const y = Math.max(PAD, y1(v));
+    return <rect class={c + (i === last ? " now" : "")} x={bx(i, k)} y={y} width={bw / 2} height={Math.max(0.5, h - PAD - y)} />;
+  };
+  return (
+    <svg class={"hist" + (cls ? " " + cls : "")} viewBox={`0 0 ${W} ${h}`}>
+      <line class="hist-axis" x1={0} x2={W} y1={h - PAD} y2={h - PAD} />
+      {cols.map((e, i) => {
+        const v = e.oneOff ?? 0, base = e.costs;
+        const yTop = Math.max(PAD, y1(base + v)), yBase = y1(base);
+        return <>
+          {bar("hist-fares", i, 0, e.fares)}
+          {bar("hist-costs", i, 1, base)}
+          {v > 0 && yBase > yTop && <rect class={"hist-oneoff" + (i === last ? " now" : "")} x={bx(i, 1)} y={yTop} width={bw / 2} height={yBase - yTop} />}
+          {base + v > top && <path class="hist-oneoff cap" d={`M${bx(i, 1)},${PAD + 3}L${bx(i, 1.5)},0L${bx(i, 2)},${PAD + 3}Z`} />}
+        </>;
+      })}
+      {cols.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={h} data-tip={e.tip} />)}
+    </svg>
+  );
+}
+
 export function MoneyHistory({ zone }: { zone: string | null }) {
   const hours = span.value === "1d";
   const shift = moneyState.value?.dayShift ?? 0, sh = shift / 3600;
@@ -131,17 +169,6 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
   /** y on a chart from 0 up to `top` */
   const yScale = (top: number) => (v: number) => H - PAD - (v / top) * (H - 2 * PAD);
 
-  // T-2340, T-2444: each column a fares bar and a running costs bar side by side, the one-off costs (new
-  // trains, construction) a paler bar stacked on the running costs bar, scaled to the larger of the first two; a one-off bar
-  // past the top is cut with a cap so a build day cannot flatten the others (T-452)
-  const top = Math.max(...list.map((e) => Math.max(e.fares, run(e))), 1e-9);
-  const y1 = yScale(top);
-  /** bar `k` of `n` across a column's width */
-  const bx = (i: number, k: number, n: number) => cx(i) - bw / 2 + (k * bw) / n;
-  const bar = (cls: string, i: number, k: number, n: number, v: number) => {
-    const y = Math.max(PAD, y1(v));
-    return <rect class={cls + (i === last ? " now" : "")} x={bx(i, k, n)} y={y} width={bw / n} height={Math.max(0.5, H - PAD - y)} />;
-  };
   const tip1 = (e: Entry, i: number) => [
     name(e, i),
     t("moneyHistory.fares", { amount: usd(e.fares) + per }),
@@ -153,6 +180,9 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
     ...(e.trains > 0 ? [t("moneyHistory.newTrains", { amount: usd(-e.trains) + per })] : []),
     ...(e.build > 0 ? [t("moneyHistory.construction", { amount: usd(-e.build) + per })] : []),
   ].join("\n");
+  // the one-off costs: new trains, construction
+  const cols: BarCol[] = list.map((e, i) => ({ fares: e.fares, costs: run(e), oneOff: oneOff(e), tip: tip1(e, i) }));
+  const top = barTop(cols);
 
   // train rides (T-565): bars up from zero
   const rideTop = Math.max(...list.map(rides), 1e-9);
@@ -182,20 +212,7 @@ export function MoneyHistory({ zone }: { zone: string | null }) {
         </span>
       </div>
       <div class="hist-title small"><span>{tRich("moneyHistory.title", { revenue: <span class="hist-fares">{t("moneyHistory.revenue")}</span>, expenses: <span class="hist-costs">{t("moneyHistory.expenses")}</span>, where })}</span><span class="right muted">{usd(top)}{per}</span></div>
-      <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
-        <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />
-        {list.map((e, i) => {
-          const v = oneOff(e), base = run(e);
-          const yTop = Math.max(PAD, y1(base + v)), yBase = y1(base);
-          return <>
-            {bar("hist-fares", i, 0, 2, e.fares)}
-            {bar("hist-costs", i, 1, 2, base)}
-            {v > 0 && yBase > yTop && <rect class={"hist-oneoff" + (i === last ? " now" : "")} x={bx(i, 1, 2)} y={yTop} width={bw / 2} height={yBase - yTop} />}
-            {base + v > top && <path class="hist-oneoff cap" d={`M${bx(i, 1, 2)},${PAD + 3}L${bx(i, 1.5, 2)},0L${bx(i, 2, 2)},${PAD + 3}Z`} />}
-          </>;
-        })}
-        {list.map((e, i) => <rect class="hist-col" x={x0 + i * col} y={0} width={col} height={H} data-tip={tip1(e, i)} />)}
-      </svg>
+      <FareCostBars cols={cols} slots={slots} />
       <div class="hist-title small"><span>{t("moneyHistory.ridesTitle", { where })}</span><span class="right muted">{count(rideTop)}{per}</span></div>
       <svg class="hist" viewBox={`0 0 ${W} ${H}`}>
         <line class="hist-axis" x1={0} x2={W} y1={H - PAD} y2={H - PAD} />

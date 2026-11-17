@@ -245,7 +245,7 @@ function rememberPoolCap(n: number) {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number> };
   /** `complex`: the station's complex (T-161); absent = a complex of its own */
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
@@ -641,8 +641,9 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
   // T-3348: run 1's stations, only where a line has a platform beside for its way back
   const backOf = (l: (typeof lines)[number]) => (l.back?.length === l.stops.length && l.back.every((s) => index.has(s)) ? l.back : null);
   if (lines.some((l) => backOf(l))) net.back = new Uint32Array(nStops);
-  // T-1626, T-2195: a high-speed, ferry or bus line's route nodes charge its multiplier, only where one is not 1
-  const muls = lines.map((l) => lineFareMul({ fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
+  // T-1626, T-2195: a high-speed, ferry or bus line's route nodes charge its multiplier, only where one is not 1;
+  // T-3567: times the line's own
+  const muls = lines.map((l) => lineFareMul({ id: l.id, fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
   if (muls.some((m) => m !== 1)) {
     const w = new Float32Array(2 * nStops).fill(1);
     let o = 0;

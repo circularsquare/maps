@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{faster, select, true {A {name}, per als {vehicle, select, tram {tramvies} other {trens}} {list}} other {A {name}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {La velocitat màxima dels tramvies és {speed}} track {La via normal limita els tramvies a {speed}} street {La via de tramvia pel carrer limita els tramvies a {speed}} tram {La via de tramvia limita els tramvies a {speed}} curve {Aquí les corbes limiten els tramvies a {speed}} other {Aquí un escapament limita els tramvies a {speed}}}} other {{why, select, top {La velocitat màxima dels trens és {speed}} track {La via normal limita els trens a {speed}} street {La via de tramvia pel carrer limita els tramvies a {speed}} tram {La via de tramvia limita els tramvies a {speed}} curve {Aquí les corbes limiten els trens a {speed}} other {Aquí un escapament limita els trens a {speed}}}}}",
   "lineMoney.fares": "Tarifes {amount}",
-  "lineMoney.heading": "Tarifes menys cost d'explotació",
   "lineMoney.net": "Net {amount}",
   "lineMoney.running": "Trens en servei {amount}",
   "lineProfile.along": "{distance} des de l’inici ({stop})",

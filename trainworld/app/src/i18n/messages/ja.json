@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {{name}で{list}のトラムを待避} other {{name}で}}} other {{faster, select, true {{name}で{list}の列車を待避} other {{name}で}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {トラムの最高速度は{speed}} track {通常の線路では{speed}まで} street {道路上のトラムの線路では{speed}まで} tram {トラムの線路では{speed}まで} curve {ここはカーブで{speed}まで} other {ここは渡り線で{speed}まで}}} other {{why, select, top {列車の最高速度は{speed}} track {通常の線路では{speed}まで} street {道路上のトラムの線路では{speed}まで} tram {トラムの線路では{speed}まで} curve {ここはカーブで{speed}まで} other {ここは渡り線で{speed}まで}}}}",
   "lineMoney.fares": "運賃収入 {amount}",
-  "lineMoney.heading": "運賃収入から運行費を引いた額",
   "lineMoney.net": "差引 {amount}",
   "lineMoney.running": "運行費 {amount}",
   "lineProfile.along": "{stop}から{distance}",

@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{faster, select, true {Di {name}, menunggu {vehicle, select, tram {trem} other {kereta}} {list}} other {Di {name}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {Kecepatan puncak trem {speed}} track {Rel biasa membatasi trem hingga {speed}} street {Rel trem di jalan membatasi trem hingga {speed}} tram {Rel trem membatasi trem hingga {speed}} curve {Tikungan membatasi trem hingga {speed} di sini} other {Crossover membatasi trem hingga {speed} di sini}}} other {{why, select, top {Kecepatan puncak kereta {speed}} track {Rel biasa membatasi kereta hingga {speed}} street {Rel trem di jalan membatasi trem hingga {speed}} tram {Rel trem membatasi trem hingga {speed}} curve {Tikungan membatasi kereta hingga {speed} di sini} other {Crossover membatasi kereta hingga {speed} di sini}}}}",
   "lineMoney.fares": "Tarif {amount}",
-  "lineMoney.heading": "Tarif dikurangi biaya operasi",
   "lineMoney.net": "Bersih {amount}",
   "lineMoney.running": "Biaya operasi kereta {amount}",
   "lineProfile.along": "{distance} dari {stop}",

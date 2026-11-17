@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {在{name}等候{list}的路面電車} other {在{name}}}} other {{faster, select, true {在{name}等候{list}的列車} other {在{name}}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {路面電車的最高速度是{speed}} track {一般軌道限速{speed}} street {街道路面電車軌道限速{speed}} tram {路面電車軌道限速{speed}} curve {這裡的彎道限速{speed}} other {這裡的渡線限速{speed}}}} other {{why, select, top {列車的最高速度是{speed}} track {一般軌道限速{speed}} street {街道路面電車軌道限速{speed}} tram {路面電車軌道限速{speed}} curve {這裡的彎道限速{speed}} other {這裡的渡線限速{speed}}}}}",
   "lineMoney.fares": "票箱收入{amount}",
-  "lineMoney.heading": "票箱收入減運行費用",
   "lineMoney.net": "淨額{amount}",
   "lineMoney.running": "運行費用{amount}",
   "lineProfile.along": "距{stop}{distance}",

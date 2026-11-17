@@ -540,6 +540,10 @@ export function setFareFerry(mul: number) {
 export function setFareBus(mul: number) {
   return edit({ op: "fareBus", mul });
 }
+/** T-3567: line `line`'s own fare multiplier. */
+export function setLineFare(line: number, mul: number) {
+  return edit({ op: "fareLine", line, mul });
+}
 /** T-1801: the transfer fare, in the curve's units. */
 export function setFareTransfer(usd: number) {
   return edit({ op: "fareTransfer", usd });

@@ -1,47 +1,65 @@
-// T-2787: a line's past week of money in its panel: fares minus running cost for each of the last 7
-// whole days, as bars up (blue) or down (red) from zero, in the Money tab history's style. The clock
-// worker keeps each line's days (`MoneyState.lineDays`) and saves them; upkeep is not in them, it is
-// not kept per line per day. Days the line did not run have no bar.
+// T-2787, T-3566: a line's past month of money at the bottom of its panel: each of the last 30 whole days its
+// fares (blue) and running cost (red) side by side, the Money tab history's chart (`FareCostBars`), a young line's
+// few days at the right. The clock worker keeps each line's days (`MoneyState.lineDays`) and saves them; upkeep is
+// not in them, it is not kept per line per day. Days the line did not run have no bars.
 
 import { dateName, shortDate } from "../../game/days";
+import { LINE_FARE_MAX, ownLineFare, tidyLineFare } from "../../game/fareCurve";
 import { money } from "../../game/format";
 import { liveMoney, moneyState } from "../../game/money";
-import { t } from "../../i18n";
+import { setLineFare } from "../../game/world";
+import type { LineInput } from "../../game/types";
+import { t, tNumber, tRich } from "../../i18n";
+import { barTop, FareCostBars, type BarCol } from "../MoneyHistory";
+import { Icon, Stepper } from "../widgets";
 
-const W = 300, H = 64, PAD = 3, DAYS = 7, GAP = 1.5;
+const H = 64, DAYS = 30;
+
+/** T-3567: the line's own fare multiple, on top of the Money tab's fares: a stepper by 0.05, typed on a click, as
+ * the Money tab's multiples, and a button back to 1.00x once set. */
+export function LineFare({ l }: { l: LineInput }) {
+  const m = moneyState.value;
+  if (!m) return null;
+  const mul = ownLineFare(m.fares, l.id);
+  const text = (v: number) => `${tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
+  const set = (v: number) => void setLineFare(l.num, tidyLineFare(v));
+  return (
+    <ul class="rows">
+      <li>
+        <span class="grow" data-tip={t("lineMoney.fareTip")}>{t("lineMoney.fare")}</span>
+        {mul !== 1 && <button class="btn icon" aria-label={t("lineMoney.fareBack", { value: text(1) })} data-tip={t("lineMoney.fareBack", { value: text(1) })} onClick={() => set(1)}><Icon.undo /></button>}
+        <Stepper value={text(mul)} wide label={t("lineMoney.fareLabel")} onStep={(d) => { if (d < 0 ? mul <= 0 : mul >= LINE_FARE_MAX) return false; set(Math.round(mul * 100) / 100 + d * 0.05); return true; }}
+          type={{ text: mul.toFixed(2), set, tip: t("lineMoney.fareTip") }} />
+      </li>
+    </ul>
+  );
+}
 
 export function LineMoney({ num }: { num: number }) {
   const m = moneyState.value;
   const v = m?.lineDays?.[String(num)];
   if (!m || !v) return null;
-  // the day now is not whole yet: it is left out, and the week ends the day before it
+  // the day now is not whole yet: it is left out, and the month ends the day before it
   const today = liveMoney.value.today?.day ?? m.ledger[m.ledger.length - 1]?.day ?? 0;
   const first = today - DAYS;
-  const days: { day: number; fares: number; running: number; net: number }[] = [];
-  for (let i = 0; i + 2 < v.length; i += 3) {
-    if (v[i] >= first && v[i] < today) days.push({ day: v[i], fares: v[i + 1], running: v[i + 2], net: v[i + 1] - v[i + 2] });
-  }
-  if (!days.length) return null;
-  const hi = Math.max(0, ...days.map((d) => d.net)), lo = Math.min(0, ...days.map((d) => d.net));
-  const span = hi - lo || 1;
-  const y = (x: number) => PAD + ((hi - x) / span) * (H - 2 * PAD);
-  const col = W / DAYS, bw = col - GAP;
-  const x0 = (d: number) => (d - first) * col;
+  const byDay = new Map<number, [number, number]>();
+  for (let i = 0; i + 2 < v.length; i += 3) if (v[i] >= first && v[i] < today) byDay.set(v[i], [v[i + 1], v[i + 2]]);
+  if (!byDay.size) return null;
   const usd = (x: number) => money(x * 1e6);
+  // every day from the line's first kept one, a day it did not run an empty column
+  const from = Math.min(...byDay.keys());
+  const cols: BarCol[] = [];
+  for (let d = from; d < today; d++) {
+    const [fares, running] = byDay.get(d) ?? [0, 0];
+    cols.push({ fares, costs: running, tip: [dateName(d), t("lineMoney.fares", { amount: usd(fares) }), t("lineMoney.running", { amount: usd(-running) }), t("lineMoney.net", { amount: usd(fares - running) })].join("\n") });
+  }
   return (
     <>
-      <div class="h">{t("lineMoney.heading")}</div>
-      <svg class="hist line-money" viewBox={`0 0 ${W} ${H}`}>
-        <line class="hist-axis" x1={0} x2={W} y1={y(0)} y2={y(0)} />
-        {days.map((d) => {
-          const top = Math.min(y(0), y(d.net)), h = Math.max(0.5, Math.abs(y(d.net) - y(0)));
-          return <rect class={d.net < 0 ? "hist-costs" : "hist-fares"} x={x0(d.day) + GAP / 2} y={top} width={bw} height={h} />;
-        })}
-        {days.map((d) => (
-          <rect class="hist-col" x={x0(d.day)} y={0} width={col} height={H}
-            data-tip={[dateName(d.day), t("lineMoney.fares", { amount: usd(d.fares) }), t("lineMoney.running", { amount: usd(-d.running) }), t("lineMoney.net", { amount: usd(d.net) })].join("\n")} />
-        ))}
-      </svg>
+      <div class="h">
+        <span>{tRich("lineMoney.title", { revenue: <span class="hist-fares">{t("moneyHistory.revenue")}</span>, expenses: <span class="hist-costs">{t("moneyHistory.expenses")}</span> })}</span>
+        <span class="right muted small">{usd(barTop(cols))}</span>
+      </div>
+      <FareCostBars cols={cols} slots={DAYS} h={H} now={false} cls="line-money" />
       <div class="hist-x small muted"><span>{shortDate(first)}</span><span>{shortDate(today - 1)}</span></div>
     </>
   );

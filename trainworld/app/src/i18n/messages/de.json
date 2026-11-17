@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {Bei {name}, wegen Trams von {list}} other {Bei {name}}}} other {{faster, select, true {Bei {name}, wegen Zügen von {list}} other {Bei {name}}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {Höchstgeschwindigkeit der Trams: {speed}} track {Normales Gleis begrenzt Züge auf {speed}} street {Straßenbahngleis auf Straßen begrenzt Straßenbahnen auf {speed}} tram {Straßenbahngleis begrenzt Straßenbahnen auf {speed}} curve {Kurven begrenzen Trams hier auf {speed}} other {Eine Gleisverbindung begrenzt Trams hier auf {speed}}}} other {{why, select, top {Höchstgeschwindigkeit der Züge: {speed}} track {Normales Gleis begrenzt Züge auf {speed}} street {Straßenbahngleis auf Straßen begrenzt Straßenbahnen auf {speed}} tram {Straßenbahngleis begrenzt Straßenbahnen auf {speed}} curve {Kurven begrenzen Züge hier auf {speed}} other {Eine Gleisverbindung begrenzt Züge hier auf {speed}}}}}",
   "lineMoney.fares": "Fahrpreise {amount}",
-  "lineMoney.heading": "Fahrpreise minus Betriebskosten",
   "lineMoney.net": "Netto {amount}",
   "lineMoney.running": "Zugbetrieb {amount}",
   "lineProfile.along": "{distance} ab {stop}",

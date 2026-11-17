@@ -161,7 +161,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   player's own; older saves keep their fares), paid once a trip; choosing
   between routes sees only its first stretch. On high-speed lines the fare above the base is 1.25
   times as much (or the player's multiplier), by the share of the trip's km on them, so riders weigh
-  the dearer fare. A transfer fare the player sets ($0 to start) is paid at each change of line,
+  the dearer fare. Each line also has its own fare multiple (0 to 3, 1 to start) that works the same way
+  on its km. A transfer fare the player sets ($0 to start) is paid at each change of line,
   times the country's scale too; people weigh it when picking a route and the train, and the line
   they change onto takes it. Trips between regions change free. At the default scales a fare weighs the same
   everywhere; poorer countries just pay less per ride. A new game's curve is about what real trains

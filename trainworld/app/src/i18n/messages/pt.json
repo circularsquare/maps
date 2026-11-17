@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {Em {name}, para os bondes de {list}} other {Em {name}}}} other {{faster, select, true {Em {name}, para os trens de {list}} other {Em {name}}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {A velocidade máxima dos bondes é {speed}} track {A via normal limita os trens a {speed}} street {A via de bonde na rua limita os bondes a {speed}} tram {A via de bonde limita os bondes a {speed}} curve {As curvas limitam os bondes a {speed} aqui} other {Um cruzamento de vias limita os bondes a {speed} aqui}}} other {{why, select, top {A velocidade máxima dos trens é {speed}} track {A via normal limita os trens a {speed}} street {A via de bonde na rua limita os bondes a {speed}} tram {A via de bonde limita os bondes a {speed}} curve {As curvas limitam os trens a {speed} aqui} other {Um cruzamento de vias limita os trens a {speed} aqui}}}}",
   "lineMoney.fares": "Tarifas {amount}",
-  "lineMoney.heading": "Tarifas menos custos de operação",
   "lineMoney.net": "Líquido {amount}",
   "lineMoney.running": "Trens em operação {amount}",
   "lineProfile.along": "{distance} desde {stop}",

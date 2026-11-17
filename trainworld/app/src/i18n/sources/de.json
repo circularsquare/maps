@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{faster, select, true {At {name}, for {list} {vehicle, select, tram {trams} other {trains}}} other {At {name}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {The trams' top speed is {speed}} track {Normal track holds trams to {speed}} street {Tram track on streets holds trams to {speed}} tram {Tram track holds trams to {speed}} curve {Curves hold trams to {speed} here} other {A crossover holds trams to {speed} here}}} other {{why, select, top {The trains' top speed is {speed}} track {Normal track holds trains to {speed}} street {Tram track on streets holds trams to {speed}} tram {Tram track holds trams to {speed}} curve {Curves hold trains to {speed} here} other {A crossover holds trains to {speed} here}}}}",
   "lineMoney.fares": "Fares {amount}",
-  "lineMoney.heading": "Fares minus running costs",
   "lineMoney.net": "Net {amount}",
   "lineMoney.running": "Running trains {amount}",
   "lineProfile.along": "{distance} from {stop}",

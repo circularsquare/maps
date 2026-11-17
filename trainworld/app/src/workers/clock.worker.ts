@@ -20,7 +20,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
-import { faresOf, START_FARE, START_NODES, tidyHsr, tidyTransfer, type Fares } from "../game/fareCurve";
+import { faresOf, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
@@ -86,10 +86,45 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   const bus = typeof f.bus === "number" && Number.isFinite(f.bus) ? { bus: tidyHsr(f.bus) } : {};
   // T-1801: a save from before has none: changes are free
   const transfer = tidyTransfer(f.transfer ?? 0);
+  // T-3567: lines' own multiples; a save from before has none, every line at 1
+  const own: Record<string, number> = {};
+  for (const [id, v] of Object.entries(f.lines ?? {})) if (typeof v === "number" && Number.isFinite(v) && tidyLineFare(v) !== 1) own[id] = tidyLineFare(v);
+  const lines = Object.keys(own).length ? { lines: own } : {};
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
   const curve = faresOf(g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref };
+  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines };
+}
+/** T-3567: line `line`'s own fare multiple set to `mul` (1 clears it), its quad-track twin's with it; false for
+ * no such line. */
+function setLineFare(a: TrackApi, line: number, mul: number): boolean {
+  const own = { ...fares.lines }, v = tidyLineFare(mul), li = a.lines_info();
+  let found = false;
+  // the hidden twins of the line (T-3333), run on its other pair of tracks, charge as it does
+  const twins: number[] = [];
+  for (let i = 0; i < li.length; i += 22) {
+    if (li[i] === line) found = true;
+    else if (a.line_twin_of(li[i]) === line) twins.push(li[i]);
+  }
+  if (!found) return false;
+  for (const id of [line, ...twins]) { if (v === 1) delete own[String(id)]; else own[String(id)] = v; }
+  const { lines: _, ...rest } = fares;
+  fares = Object.keys(own).length ? { ...rest, lines: own } : rest;
+  return true;
+}
+/** T-3567: the lines' own fare multiples kept to lines that exist, each twin at its line's; called as the network
+ * is sent to demand, so a deleted line's number never carries a multiple to a later line. Integer keys keep
+ * ascending order in any object, so two of the same multiples compare equal as JSON. */
+function tidyLineFares(a: TrackApi): void {
+  if (!fares.lines) return;
+  const li = a.lines_info(), own: Record<string, number> = {};
+  for (let i = 0; i < li.length; i += 22) {
+    const id = li[i], of = a.line_twin_of(id), v = fares.lines[String(of >= 0 ? of : id)];
+    if (v !== undefined) own[String(id)] = v;
+  }
+  if (JSON.stringify(own) === JSON.stringify(fares.lines)) return;
+  const { lines: _, ...rest } = fares;
+  fares = Object.keys(own).length ? { ...rest, lines: own } : rest;
 }
 /** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
 function demandFares(): Fares {
@@ -2018,8 +2053,8 @@ function regionEntries(zone: string, day: number, hour: number): [DayLedger, Hou
 /** T-2787: each line's recent days of money, US$M: [day, fares, running cost] per day, oldest first,
  * the day now last. A forecast is not kept, these are what settling paid. Saved in `SaveHeader.lineDays`. */
 let lineDays = new Map<number, [number, number, number][]>();
-/** Days kept per line: a week of closed days and the day now. */
-const LINE_DAYS = 8;
+/** Days kept per line: 30 closed days and the day now (T-3566: the line panel's chart is the Money tab's 30 days). */
+const LINE_DAYS = 31;
 
 function lineDayEntry(id: number, day: number): [number, number, number] {
   let l = lineDays.get(id);
@@ -3617,6 +3652,7 @@ function buildSnapshot(): NetworkSnapshot {
     });
   }
   snapStations = stationsKey(ni);
+  tidyLineFares(a);
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}) };
 }
 
@@ -4118,8 +4154,10 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}) };
+      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}) };
       return { r: 0 };
+    case "fareLine":
+      return { r: Number.isFinite(op.mul) && setLineFare(a, op.line, op.mul) ? 0 : 1 };
     case "fareHsr":
       if (!Number.isFinite(op.mul)) return { r: 1 };
       fares = { ...fares, hsr: tidyHsr(op.mul) };
@@ -4597,12 +4635,15 @@ async function handleMessage(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer") {
-      apply(msg.op);
-      dirty = edited = true; editAt = Date.now();
-      sendMoney();
-      scheduleSnapshot();
-      send({ kind: "edited", seq: msg.seq, ok: true, issues: [], charge: 0 });
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer" || msg.op.op === "fareLine") {
+      // T-3567: a line's own multiple for a line that is gone is refused
+      const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
+      if (ok) {
+        dirty = edited = true; editAt = Date.now();
+        sendMoney();
+        scheduleSnapshot();
+      }
+      send({ kind: "edited", seq: msg.seq, ok, issues: [], charge: 0 });
       return;
     }
     if (msg.op.op === "fareRef") {

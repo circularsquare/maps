@@ -1251,7 +1251,6 @@
   "lineInspector.waitSpot": "{vehicle, select, tram {{faster, select, true {На станции {name}, пропускают: {list}} other {На станции {name}}}} other {{faster, select, true {На станции {name}, пропускают: {list}} other {На станции {name}}}}}",
   "lineInspector.why": "{vehicle, select, tram {{why, select, top {Предел скорости трамваев: {speed}} track {Обычный путь ограничивает скорость поездов до {speed}} street {Трамвайный путь по улице ограничивает скорость трамваев до {speed}} tram {Трамвайный путь ограничивает скорость трамваев до {speed}} curve {Повороты здесь ограничивают скорость трамваев до {speed}} other {Съезд здесь ограничивает скорость трамваев до {speed}}}} other {{why, select, top {Предел скорости поездов: {speed}} track {Обычный путь ограничивает скорость поездов до {speed}} street {Трамвайный путь по улице ограничивает скорость трамваев до {speed}} tram {Трамвайный путь ограничивает скорость трамваев до {speed}} curve {Повороты здесь ограничивают скорость поездов до {speed}} other {Съезд здесь ограничивает скорость поездов до {speed}}}}}",
   "lineMoney.fares": "Тарифы {amount}",
-  "lineMoney.heading": "Тарифы минус эксплуатационные расходы",
   "lineMoney.net": "Итого {amount}",
   "lineMoney.running": "Движение поездов {amount}",
   "lineProfile.along": "От станции {stop}: {distance}",

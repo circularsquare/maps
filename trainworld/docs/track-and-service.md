@@ -1716,7 +1716,11 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   high-speed multiplier (`Fares.hsr`, default `HSR_FARE` 1.25 [was 1.5 until T-3338], 0 to 5, saved in the header; a save
   without one charges the default, a save with one keeps it); the base stays once a trip; a ferry line likewise with the Ferry multiplier
   (`Fares.ferry`, default `FERRY_FARE` 1.00, `lineFareMul`, T-2195) and a bus line with the Bus multiplier
-  (`Fares.bus`, default `BUS_FARE` 1.00, 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists). So a trip pays base + (curve(km) - base) x
+  (`Fares.bus`, default `BUS_FARE` 1.00, 0 to 5 as the others, T-3028; the Money tab's row shows once a bus line exists).
+  **A line's own multiple** [T-3567]: `Fares.lines` (line id to multiple, 0 to `LINE_FARE_MAX` 3 in hundredths,
+  only lines set off 1, saved in the header; an older save has none), set in the line's panel, times the line's
+  kind's multiple in `lineFareMul`, so it rides the same path everywhere. A quad-track twin carries its line's, and
+  a deleted line's goes as the network is next sent to demand (the clock's `tidyLineFares`). So a trip pays base + (curve(km) - base) x
   (1 + (m - 1) x its share of km on high-speed lines). Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,

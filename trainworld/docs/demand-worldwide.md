@@ -681,6 +681,10 @@ notes/T-420.md has the tables.
   a high-speed line a third of the riders 1.0 did (notes/T-3310.md). Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
+  **A line's own fare multiple** (T-3567): 0 to 3, default 1, set in the line's panel; it times that line's
+  multiplier above (high-speed, bus, ferry, else 1), so it too scales only the fare above the base, by the
+  trip's km on the line, everywhere the high-speed one reaches. The base stays one per trip, whatever lines it
+  rides.
   Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (default 1.00, T-2195; "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line, times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At
