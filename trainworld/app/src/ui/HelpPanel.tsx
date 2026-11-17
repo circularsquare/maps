@@ -23,26 +23,41 @@ export function helpKey() {
   }, true);
 }
 
+/** T-3598: a control's name inside an answer is wrapped in these two private-use characters, and
+ * rendered in the theme colour by `marked`. */
+const MARK_ON = "", MARK_OFF = "";
+const mark = (s: string) => MARK_ON + s + MARK_OFF;
+function marked(a: string) {
+  return a.split(MARK_ON).map((part, i) => {
+    if (i === 0) return part;
+    const [name, rest] = part.split(MARK_OFF);
+    return [<span class="help-ctl">{name}</span>, rest];
+  });
+}
+
 /** T-3527: the questions, worded with the names of the buttons and settings they point to, so an answer
  * follows its control's name in every language. Phones get their own gestures and the intercity
  * switch, which only phones have. */
 function questions(): [string, string][] {
+  const m = mark;
   const touch = mobileDevice();
   const [, selectName, , selectKey] = TOOLS.find(([id]) => id === "blueprint")!;
   const [, deleteName, , deleteKey] = TOOLS.find(([id]) => id === "delete")!;
-  const copy = t("busInspector.copy");
+  const copy = m(t("busInspector.copy"));
   const list: [string, string][] = [
     [t("help.qBranch"), t("help.aBranch", { copy })],
     [t("help.qExpress"), t("help.aExpress", { copy })],
     [t("help.qLoop"), t("help.aLoop", { touch })],
   ];
-  if (touch) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: t("settingsTab.mobileIntercity") })]);
+  if (touch) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: m(t("settingsTab.mobileIntercity")) })]);
   list.push(
-    [t("help.qRebuild"), t("help.aRebuild", { touch, tool: selectName, key: selectKey, rebuild: t("blueprint.rebuild") })],
-    [t("help.qEditTrack"), t("help.aEditTrack", { touch, del: deleteName, delKey: deleteKey, tool: selectName, key: selectKey, rebuild: t("blueprint.rebuild"), remove: t("blueprint.remove") })],
+    [t("help.qRebuild"), t("help.aRebuild", { touch, tool: m(selectName), key: m(selectKey), rebuild: m(t("blueprint.rebuild")) })],
+    [t("help.qEditTrack"), t("help.aEditTrack", { touch, del: m(deleteName), delKey: m(deleteKey), tool: m(selectName), key: m(selectKey), rebuild: m(t("blueprint.rebuild")), remove: m(t("blueprint.remove")) })],
     [t("help.qFourTracks"), t("help.aFourTracks")],
     // T-3527: "Recalculate trips while paused" is on by default, so pausing alone still works trips out after each edit
-    [t("help.qRecalc"), t("help.aRecalc", { setting: t("settingsTab.recalcWhilePaused") })],
+    [t("help.qRecalc"), t("help.aRecalc", { setting: m(t("settingsTab.recalcWhilePaused")) })],
+    [t("help.qLoseMoney"), t("help.aLoseMoney")],
+    [t("help.qLoseMoneyIntercity"), t("help.aLoseMoneyIntercity")],
   );
   return list;
 }
@@ -156,7 +171,7 @@ export function HelpPanel() {
             <button class={"help-q" + (i === shown ? " open" : "")} aria-expanded={i === shown} onClick={() => setShown(i === shown ? null : i)}>
               <Icon.chevron /><span>{q}</span>
             </button>
-            {i === shown && <p class="help-a">{a}</p>}
+            {i === shown && <p class="help-a">{marked(a)}</p>}
           </li>
         ))}
       </ul>
