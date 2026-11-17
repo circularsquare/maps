@@ -1110,12 +1110,12 @@
     {
       "id": "c086",
       "text": "the game uses about 500 MB less memory on desktop",
-      "edited": null,
+      "edited": "the game uses about 350 MB less memory on desktop",
       "hidden": false,
       "task": null,
       "by": "maps-b8",
       "at": "2026-11-17T13:51:03Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": false,
       "group": true
@@ -1191,6 +1191,42 @@
       "rev": 1,
       "area": "track",
       "fix": true
+    },
+    {
+      "id": "c093",
+      "text": "added rebuilding to the track panel: a built piece can change between single and double track, and between regular and high speed",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3408",
+      "by": "trackrebuild",
+      "at": "2026-11-17T15:13:50Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c094",
+      "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3521",
+      "by": "weekend",
+      "at": "2026-11-17T15:15:53Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c095",
+      "text": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3521",
+      "by": "weekend",
+      "at": "2026-11-17T15:15:53Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
     }
   ]
 }

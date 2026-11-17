@@ -249,7 +249,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
   - Goal: Freight rail drawn under All can be snapped to by train track, abandoned too if you say so, about 2-3 h plus about 100 MB of graph files.
   - Other: notes/T-3495.md
-- T-3511 [P2] {L:region-redraws} Rebuild the enclave shifts and merges
+- T-3511 [P2] {L:region-redraws} Rebuild the enclave shifts and merges (taking, 2026-11-17, agent nightprep)
   - Context: From T-3506: 127 enclave zones checked, 118 kept. To rebuild: Perth takes Rockingham, Kwinana, Mandurah and 11 Wheatbelt shires (rest renamed Bunbury); Sanliurfa takes Siverek, Hilvan, Bozova (ring renamed Nizip); Diyarbakir takes Cinar and Bismil; La Plata takes Magdalena, Punta Indio, Chascomus; Suchetgarh into Jammu; Yuhuan into Taizhou. The scan wants a rerun after T-3399's join (it read half-built Central America packs).
   - Goal: Rerun the scan, then the five night stages D-H in notes/T-3506.md (about 8.5 h, Turkey folded into T-3488's rebuild if it hasn't run), each country's gates passing.
   - Other: notes/T-3506.md
@@ -277,6 +277,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
   - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
   - Other: notes/T-3473.md
+- T-3529 [P2] {L:region-redraws} Reclaimed land skips other countries (taking, 2026-11-17, agent reclaim)
+  - Context: From T-3455's plan: a rebuild's `osm_units.reclaimed` step has no country check, so rebuilding Nice would put Monaco in Nice's zone and Sinuiju would take a piece Natural Earth puts in China. Both rows are held back from tonight.
+  - Goal: `reclaimed` drops pieces in another country's land (Natural Earth admin-0, countries not in the row's units), with a test case; then nic and pyo-kp can join a later night.
+  - Other: notes/T-3455.md
+- T-3530 [P3] {L:region-redraws} Coastal land for Japan's hand packs
+  - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
+  - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
+  - Other: notes/T-3455.md
+- T-3528 [P3] {L:solve-speed} Undo after load takes back the cap lowering
+  - Context: From T-3512: the cap lowering on load (T-3165, capLoad.ts) lands as undoable edits a second or two after a load, so a quick edit then undo takes back a lowering instead of the player's edit. Only saves with counts past the cap meet it.
+  - Goal: The load's cap lowering is not on the undo stack; an undo right after load undoes the player's own edit.
 - T-3513 [P3] {L:solve-speed} {after:T-3512 lands} Train edits at high demand still take most of a minute
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
@@ -408,7 +419,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan
+- T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan (taking, 2026-11-17, agent nightprep)
   - Context: From T-3428 (Shenzhen Bay): reclaimed coast left out of units. You said yes 2026-11-16 to queue it overnight: a coastal-only gap scan (~2 h, 3 cores), then rebuild flagged rows; likely Shanghai Lingang, Tianjin Binhai, Macau, Hong Kong, Dubai, Singapore, Incheon, Osaka Bay.
   - Goal: Coastal gaps found and the flagged rows rebuilt in an overnight run.
   - Other: notes/T-3428.md
@@ -859,9 +870,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
   - Other: notes/T-2913.md
-- T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (taking, 2026-11-17, agent busboard)
-  - Context: You, 2026-11-17: "i would actually like to drop the boarding time from 6 to 4 minutes ... we should measure a save or two yeah and see how much profitability / ridership changes in a couple cases. but i think its a minor change." Full BRT stays T-3378.
-  - Goal: Every bus boarding costs 4 perceived minutes instead of 6, with riders and profit before and after on two saves with buses.
 - T-3378 [P2] {L:buses} Bus and tram balance, BRT
   - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
   - Goal: A design for BRT or busways and slower street trams, for you first.
@@ -959,9 +967,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3408 [P2] {L:rebuild-track} Rebuild from the track panel (taking, 2026-11-17, agent trackrebuild)
-  - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece. Again 2026-11-17: "if i select a track segment i should be able to adjust its single/double status and its highspeed/regular. here we can also put a hint to use the select tool (4) to rebuild larger selections (which people often dont know how to find".
-  - Goal: The track panel changes the selected piece between single and double and between high speed and regular, the way the Select bar's rebuild does, with a hint to use the Select tool (4) for longer stretches.
+- T-3526 [P2] {L:single-track} Block more trains than single track can run (taking, 2026-11-17, agent singlecap)
+  - Context: Your pad, 2026-11-17: "if we have a line that has a single track portion that severely limits capacity, we dont actually stop people from assigning way more trains than can actually run, which is a bit silly. should probably block this in analogous way to how we block adding tons of trains to lines past what their terminals can handle."
+  - Goal: A line's train count stops at what its single-track stretches can run, the way it stops at what its ends can turn; the rule and its numbers go to you before it is built.
+- T-3527 [P2] {L:help-tutorial} Help list in the controls panel (taking, 2026-11-17, agent helplist)
+  - Context: Your pad, 2026-11-17: "lets also work on a help panel... we can co-opt the current controls panel which is not super useful i think. we can show the controls below and the help entries above. help is structured as a compact list of common questions. we show a list of questions (dont have to be a question, sometimes can just be like a concern / ask) and you can expand a question to see its answer. how to make a branching line, or short turning line - use "copy line" and modify the new copied line as desired / how to make a loop line - right click the point which you'd like to loop back to / there are no intercity passengers (mobile) - turn on "calculate intercity trips" in settings (will use more system resources) / how to rebuild sections of track - use the "select" tool (4). theres probably a bunch of other repetitive questions we get but these are the main ones. perhaps we swap out the icon to open this from a question mark in a circle, to a plain question mark to indicate that its a little different from before, but otherwise dont have to draw that much attention to it. also can have F1 open it i guess, if that isnt taken by something else. if you have other ideas for questions we shuoold include lemme kno"
+  - Goal: The controls panel has the four help entries above its controls, each opening to its answer, opened by a plain "?" icon and F1; more questions proposed to you from player reports.
 - T-3525 [P3] {L:track-speed} Speed limit for a whole selection
   - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.
   - Goal: A Speed limit control in the Select tool's bar sets a whole run at once, and a limit at the track's top counts as none.

@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (2026-11-17): Bus boarding 6 to 4 perceived minutes (BUS_BOARD_MIN); NYC test buses carry 7-14% more riders, Throgs Neck bus breaks even, rail trips move by 60-300 of 12.68M; landed 9fd75399. notes/T-3522.md.
+- T-3408 [P2] {L:rebuild-track} Rebuild from the track panel (2026-11-17): The track panel of built track has single/double and Regular/High speed with Rebuild, the Select bar's code for that one piece (same quote, question, charge; final), and a hint to the Select tool (4); checks/t3408-panel-rebuild.mjs.
 - T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line (2026-11-17): Station delete redoes line bands only for lines reading a changed pair rule (109 to 14 lines), about half a second less; figures identical; landed acc208b8. notes/T-2768.md.
 - T-3405 [P3] {L:track-speed} Speed limit on any piece of track (2026-11-17): Per-piece speed limit, 40 km/h to the kind's top, free and undoable in the track panel; LPS1 save block at level 20; checker PASS; landed 25736cbd.
 - T-3510 [P3] {L:map-look} Bubble selection's purpose rows miss trips with other places (2026-11-17): A selected bubble's purpose rows, pie and timing charts sum to its total (trips with other places per purpose from its cell legs, the remainder as Inter-city trips), worked out on final results only; checker passed (Mettmann, 14 NYC bubbles, edits mid-selection). notes/T-3510.md.
