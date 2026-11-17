@@ -3,6 +3,57 @@
   "line": "",
   "items": [
     {
+      "id": "c128",
+      "text": "added real world network features:",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "logsort",
+      "at": "2026-11-17T20:19:30Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false,
+      "group": true
+    },
+    {
+      "id": "c129",
+      "text": "changes for trams:",
+      "edited": null,
+      "hidden": false,
+      "task": null,
+      "by": "logsort",
+      "at": "2026-11-17T20:19:30Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false,
+      "group": true
+    },
+    {
+      "id": "c061",
+      "text": "ferries are faster, 45 km/h instead of 32",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3435",
+      "by": "ferry45",
+      "at": "2026-11-16T20:55:24Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c035",
+      "text": "ferry ports can have a waiting room",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3419",
+      "by": "b5",
+      "at": "2026-11-16T15:18:29Z",
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-16T19:48:59Z"
+    },
+    {
       "id": "c090",
       "text": "added a speed limit you can set on any piece of track",
       "edited": "added optional per-track segment speed limit",
@@ -26,19 +77,6 @@
       "rev": 1,
       "area": "track",
       "fix": false
-    },
-    {
-      "id": "c128",
-      "text": "added real world network features:",
-      "edited": null,
-      "hidden": false,
-      "task": null,
-      "by": "logsort",
-      "at": "2026-11-17T20:19:30Z",
-      "rev": 1,
-      "area": "track",
-      "fix": false,
-      "group": true
     },
     {
       "id": "c073",
@@ -97,19 +135,6 @@
       "parent": "c128"
     },
     {
-      "id": "c129",
-      "text": "changes for trams:",
-      "edited": null,
-      "hidden": false,
-      "task": null,
-      "by": "logsort",
-      "at": "2026-11-17T20:19:30Z",
-      "rev": 1,
-      "area": "track",
-      "fix": false,
-      "group": true
-    },
-    {
       "id": "c126",
       "text": "tram stops can have a terminal and passing tracks, like rail stations",
       "edited": null,
@@ -152,18 +177,6 @@
       "changed": "2026-11-17T20:28:37Z"
     },
     {
-      "id": "c061",
-      "text": "ferries are faster, 45 km/h instead of 32",
-      "edited": null,
-      "hidden": false,
-      "task": "T-3435",
-      "by": "ferry45",
-      "at": "2026-11-16T20:55:24Z",
-      "rev": 1,
-      "area": "track",
-      "fix": false
-    },
-    {
       "id": "c004",
       "text": "one platform stations can go at the end of single track",
       "edited": null,
@@ -184,19 +197,6 @@
       "task": "T-3348",
       "by": "perdir2",
       "at": "2026-11-16T14:49:14Z",
-      "rev": 2,
-      "area": "track",
-      "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
-    },
-    {
-      "id": "c035",
-      "text": "ferry ports can have a waiting room",
-      "edited": null,
-      "hidden": false,
-      "task": "T-3419",
-      "by": "b5",
-      "at": "2026-11-16T15:18:29Z",
       "rev": 2,
       "area": "track",
       "fix": false,
@@ -249,10 +249,11 @@
       "task": "T-3541",
       "by": "tramsplit",
       "at": "2026-11-17T18:03:40Z",
-      "rev": 3,
+      "rev": 4,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-17T20:05:11Z"
+      "changed": "2026-11-17T20:58:51Z",
+      "parent": "c056"
     },
     {
       "id": "c056",
@@ -262,10 +263,11 @@
       "task": null,
       "by": "changelog",
       "at": "2026-11-16T19:48:59Z",
-      "rev": 1,
+      "rev": 3,
       "area": "track",
       "fix": true,
-      "group": true
+      "group": true,
+      "changed": "2026-11-17T20:57:28Z"
     },
     {
       "id": "c002",
@@ -467,14 +469,14 @@
       "id": "c078",
       "text": "demand bubbles count trips to and from other zones at every zoom, and a zone's totals count its errands and visits across zone lines",
       "edited": "demand bubbles show intercity trips at all zoom levels",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3503",
       "by": "bubbles",
       "at": "2026-11-17T11:01:23Z",
-      "rev": 3,
+      "rev": 4,
       "area": "demand",
       "fix": false,
-      "changed": "2026-11-17T20:03:34Z"
+      "changed": "2026-11-17T20:57:23Z"
     },
     {
       "id": "c016",
@@ -527,6 +529,20 @@
       "area": "demand",
       "fix": false,
       "changed": "2026-11-16T19:48:59Z"
+    },
+    {
+      "id": "c084",
+      "text": "added Guatemala, Belize, El Salvador, Honduras, Nicaragua, Costa Rica, Panama and Venezuela",
+      "edited": "added Venezuela and Central America!",
+      "hidden": false,
+      "task": "T-3399",
+      "by": "nightwrap",
+      "at": "2026-11-17T12:53:13Z",
+      "rev": 3,
+      "area": "other",
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-17T20:56:05Z"
     },
     {
       "id": "c051",
@@ -1165,20 +1181,6 @@
       "changed": "2026-11-17T20:31:04Z"
     },
     {
-      "id": "c084",
-      "text": "added Guatemala, Belize, El Salvador, Honduras, Nicaragua, Costa Rica, Panama and Venezuela",
-      "edited": null,
-      "hidden": false,
-      "task": "T-3399",
-      "by": "nightwrap",
-      "at": "2026-11-17T12:53:13Z",
-      "rev": 2,
-      "area": "other",
-      "fix": false,
-      "highlight": true,
-      "changed": "2026-11-17T20:51:50Z"
-    },
-    {
       "id": "c074",
       "text": "added indonesian",
       "edited": "selamat pagi! added indonesian",
@@ -1194,14 +1196,15 @@
     {
       "id": "c096",
       "text": "added common questions with their answers above the controls list, opened with the ? in Settings or F1",
-      "edited": null,
+      "edited": "added common questions and answers, at the ? icon in settings",
       "hidden": false,
       "task": "T-3527",
       "by": "helplist",
       "at": "2026-11-17T15:26:30Z",
-      "rev": 1,
+      "rev": 11,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T20:58:31Z"
     },
     {
       "id": "c031",

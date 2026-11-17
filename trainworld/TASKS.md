@@ -287,6 +287,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3592 [P2] {L:feedback} Board changelog: drag items into and out of groups (taking, 2026-11-17, agent groupdrag)
+  - Context: You, 2026-11-17: "in general for the future let me drag and drop it into a group." Today a drag stays inside its own parent (T-3590), so moving an item under a group takes `changelog.py set --under`.
+  - Goal: Dragging an item onto a group puts it under that group, and dragging a child out puts it back at the top level; the order and parent are saved.
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
