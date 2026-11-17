@@ -55,6 +55,7 @@ RECLAIM_REACH_KM = 2.5   # a piece reaching past this may be cut by the search e
 RECLAIM_OPEN = 0.1
 RECLAIM_MIN_KM2 = 0.1
 RECLAIM_MAX_KM2 = 50.0
+RECLAIM_FOREIGN = 0.5    # share of a piece in another country's land (Natural Earth) at which the whole piece is dropped
 OSM = os.path.join(b.RAW, "osm")
 # the real packs, which a new outline is cut along: from this file, not b.ROOT, which a scratch
 # tree's redirect has already moved by the time this module loads (world_run's Redirect.KEEP)
@@ -393,7 +394,11 @@ def build(cid, row, sources):
             feats.append({"name": gname, "local": "", "plan_unit": uid, "source": src, "match": round(iou, 3)})
             print(f"  {cid}: {uid} {gname}: {share:.0%} of its land from {src} "
                   f"({len(idx)} OSM relations, overlap {iou:.2f})", flush=True)
-    for j, piece in reclaimed(geoms, sea, lat0):
+    d = RECLAIM_KM / 111.0 + 0.05
+    dx = d / max(np.cos(np.radians(lat0)), 0.2)
+    x0, y0, x1, y1 = union_all(geoms).bounds if geoms else (0, 0, 0, 0)
+    abroad = foreign_land(set(row["units"]), (x0 - dx, y0 - d, x1 + dx, y1 + d)) if geoms else None
+    for j, piece in reclaimed(geoms, sea, lat0, abroad):
         print(f"  {cid}: {feats[j]['name']} takes {km2(piece, lat0):.1f} km2 of reclaimed land at "
               f"{piece.centroid.x:.3f}, {piece.centroid.y:.3f}", flush=True)
         geoms[j] = make_valid(union_all([geoms[j], piece]))
@@ -446,10 +451,11 @@ def _polys_in(water, bounds):
     return shapely.MultiPolygon([q for x in shapely.get_parts(c) for q in shapely.get_parts(x) if q.geom_type == "Polygon"])
 
 
-def reclaimed(geoms, sea, lat0):
+def reclaimed(geoms, sea, lat0, foreign=None):
     """T-3428: [(index into geoms, piece)] for coastal land no geometry covers, to be added to that geometry.
     Pieces are land beside the geometries, closed in by them and the sea (a strip of inland land next to another
-    country, or a pack, is open along its far edge and stays out)."""
+    country, or a pack, is open along its far edge and stays out). `foreign` (lon/lat, see foreign_land) is other
+    countries' land, which no piece may take (T-3529)."""
     if not geoms:
         return []
     k = np.cos(np.radians(lat0))
@@ -474,8 +480,38 @@ def reclaimed(geoms, sea, lat0):
             continue
         share = [edge.intersection(g.buffer(tol)).length for g in loc]
         j = int(np.argmax(share))
-        out.append((j, shapely.transform(p, lambda c: c / [k, 1.0])))
+        piece = shapely.transform(p, lambda c: c / [k, 1.0])
+        if foreign is not None and not foreign.is_empty and piece.intersects(foreign):
+            # Natural Earth's 1:10m line is coarse and misses reclaimed land, so land it calls sea beside a foreign
+            # coast is usually that coast's too (Monaco's Larvotto): a piece mostly abroad goes whole, else the
+            # foreign part is cut off and the rest stays if still a piece worth having (RECLAIM_MIN_KM2)
+            if piece.intersection(foreign).area >= RECLAIM_FOREIGN * piece.area:
+                continue
+            rest = make_valid(piece.difference(foreign))
+            for q in shapely.get_parts(rest):
+                if q.geom_type == "Polygon" and km2(q, lat0) >= RECLAIM_MIN_KM2:
+                    out.append((j, q))
+            continue
+        out.append((j, piece))
     return out
+
+
+_NE_COUNTRIES = []
+
+
+def foreign_land(own, bounds):
+    """Natural Earth admin 0 land (lon/lat, clipped to bounds) of every country whose alpha-3 is not in own (the keys
+    of a plan row's units): where
+    `reclaimed` must not reach (T-3529)."""
+    import pyogrio
+    import world_plan as wp
+    if not _NE_COUNTRIES:
+        df = pyogrio.read_dataframe(f"zip://{wp.NE}!ne_10m_admin_0_countries.shp", columns=["ISO_A3_EH", "ADM0_A3"])
+        _NE_COUNTRIES.extend((wp.NE_FIX.get(adm, wp.NE_FIX.get(code, code)), make_valid(g)) for code, adm, g in
+                             zip(df["ISO_A3_EH"], df["ADM0_A3"], df.geometry))
+    box = shapely.box(*bounds)
+    parts = [shapely.clip_by_rect(g, *bounds) for cc, g in _NE_COUNTRIES if cc not in own and g.intersects(box)]
+    return union_all(parts) if parts else shapely.Polygon()
 
 
 _LINES = {}
