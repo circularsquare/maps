@@ -278,7 +278,7 @@ impl TrackApi {
         // the nearest track beside, running the same way or the other
         let mut best: Option<(u32, f64, f64)> = None;
         for f in 0..net.edge_count() as u32 {
-            if f == edge || !net.edge_ok(f) || net.edge_crossover[f as usize] {
+            if f == edge || !net.edge_ok(f) || net.edge_crossover[f as usize] || net.edge_kind[f as usize].spec().family != net.edge_kind[edge as usize].spec().family {
                 continue;
             }
             let (sf, dist) = net.project(f, cx, cy);
@@ -327,6 +327,8 @@ impl TrackApi {
             }
         }
         let tracks = net.edge_tracks[edge as usize].min(net.edge_tracks[f as usize]);
+        // tram track's crossover is tram track; rail and high-speed track's is plain rail
+        let kind = if net.edge_kind[edge as usize].spec().family == 0 { TrackKind::Regular } else { net.edge_kind[edge as usize] };
         // splits, several on one edge in order along it: each after the first falls in the new half
         let mut nodes = [0u32; 4];
         let mut new_nodes = vec![];
@@ -366,7 +368,7 @@ impl TrackApi {
             ];
             let id = self.w.net.alloc_edge();
             new_edges.push(id);
-            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) });
+            ops.push(Op::Edge { id, data: Some(EdgeData { a: nodes[p], b: nodes[q], tracks, pis: pis.clone(), built: false, off: false, thru: vec![], crossover: true, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) });
             let mut v = vec![Pi::new(px, py, 0.0, pl)];
             v.extend(pis);
             v.push(Pi::new(qx, qy, 0.0, ql));

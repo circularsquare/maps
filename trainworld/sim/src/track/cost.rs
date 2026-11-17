@@ -734,6 +734,14 @@ pub fn junction_cost(level: i8, flying: bool, wet: bool) -> f64 {
     c * w
 }
 
+/// A crossover's switches (T-3575): a junction's price, on tram track at the tram kind's level table.
+pub fn crossover_cost(level: i8, wet: bool, kind: TrackKind) -> f64 {
+    if kind.spec().family == 0 {
+        return junction_cost(level, false, wet);
+    }
+    JUNCTION_KM * BASE_COST_PER_KM * kind.spec().level_mult[(level.clamp(MIN_LEVEL, MAX_LEVEL) + 3) as usize] * if wet { WATER_COST } else { 1.0 }
+}
+
 /// A flat crossing: 0.1 km of track at its level.
 pub fn crossing_cost(level: i8, wet: bool) -> f64 {
     FLAT_CROSSING_KM * BASE_COST_PER_KM * level_mult(level) * if wet { WATER_COST } else { 1.0 }

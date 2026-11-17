@@ -726,7 +726,7 @@ switch on, the track tool follows the real network the layer draws.
 [T-338, T-733, T-1688; rules in [track-and-service.md](track-and-service.md) 6.1] The game adds no
 crossovers and there is no crossover tool: the player draws crossing track between two pairs where
 lines should change over. A crossover a save holds is selected, constructed and removed whole like
-other track (below). The clock worker's `previewCrossover` and `crossover` edit are for checks only.
+other track (below). Tram track takes crossing track and crossovers as rail does [T-3575]. The clock worker's `previewCrossover` and `crossover` edit are for checks only.
 
 ## Deleting
 

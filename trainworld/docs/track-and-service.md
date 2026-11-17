@@ -413,7 +413,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   drawing tool's side is [ui-building.md](ui-building.md) "Drawing track".
 - **Crossovers** (T-338, design notes/T-334.md): a crossover joins a track to the track running
   beside it. The game never places them (T-1688, above) and the player has no tool for them
-  (T-733): they come only from saves, which keep theirs, and from checks. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
+  (T-733): they come only from saves, which keep theirs, and from checks. Tram track takes them as rail does (T-3575,
+  Anita 2026-11-17; high-speed track has none): the diagonals are tram track, priced as a junction at the tram kind's
+  level table. `TrackApi::add_crossover` finds the nearest other track whose centre line is 6-15 m
   from the click and parallel there (quad's other pair, or a separate route drawn alongside), splits
   both 60 m either side of the click (or uses a plain joint within 8 m of that point), and joins
   the four new nodes with two diagonals in an X, one each way, so a train can change track in
@@ -671,7 +673,8 @@ Full design, numbers and sources: `notes/T-008.md`.
     Slower lines that stop there wait for faster ones to pass (6.2, "Behind slower trains"). Priced
     as the platform plus 0.4 km of double track at the station's level, 1.5 times on high-speed
     track, twice over water (`upgrades::price`): US$22.5M for a 200 m ground station, US$45M for a
-    400 m high-speed one. Works on double track only. `TrackApi::passing_spots(line)`: the
+    400 m high-speed one. A tram stop has the terminal and passing tracks too (T-3574, Anita 2026-11-17), at the tram
+    kind's level table instead of rail's (the terminal US$37.5M off street at grade, US$7.5M on a street; a tram stop with a terminal turns 30 an hour, without one 15); park and ride stays rail's. Works on double track only. `TrackApi::passing_spots(line)`: the
     stations where a line's trains get passed or would pass a slower line's, without them yet.
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
     `kernel::ride_fixed`); a P after the station's name. Drawn as a car park beside the complex (below).
@@ -1473,10 +1476,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   `0.4 + 0.6 x length / 200`.
 - Junction: 0.25 km of track at its level; a flyover adds 0.6 km one level away; flat
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
-  1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water), passing
+  1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water; a tram stop's at the tram kind's table, T-3574: the same US$37.5M off street at grade, US$7.5M on a street), passing
   tracks the platform plus 0.4 km of it, 1.5x on high-speed track (US$22.5M for a 200 m station at
   grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km, a station building US$2,000 a m² of floor (T-2217). A crossover: two junctions, all told (6.1,
-  T-338); the blueprint breakdown counts it as two junction switches.
+  T-338); the blueprint breakdown counts it as two junction switches. A tram crossover is priced at the tram kind's level table (T-3575).
 
 #### Blueprint, trains and running costs
 

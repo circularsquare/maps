@@ -1485,7 +1485,11 @@ impl Network {
     /// A station's upgrades, US$M (`upgrades::cost` at its level, water, platform and track).
     pub fn station_upgrades_price(&self, n: u32, bits: u8, wet: bool) -> f64 {
         let i = n as usize;
-        super::upgrades::cost(bits, self.node_level[i], wet, self.node_platform[i], self.node_hsr(n))
+        super::upgrades::cost(bits, self.node_level[i], wet, self.node_platform[i], self.node_price_kind(n))
+    }
+    /// The kind a station's upgrades are priced at: high speed if any of its track is, else its track's.
+    pub fn node_price_kind(&self, n: u32) -> TrackKind {
+        if self.node_hsr(n) { TrackKind::HighSpeed } else { self.node_kind(n) }
     }
     /// The speed limit an edge puts on every piece of it, m/s: its kind's (`v_kind_cap`) under the
     /// player's limit on it (T-3405).
@@ -1586,8 +1590,8 @@ impl Network {
             if d.a == d.b {
                 return Err(Issue::EdgeLoop { edge: id });
             }
-            // T-3352: high-speed and tram track may be single; neither has a crossover
-            if (d.tracks != 1 && d.tracks != 2) || (d.kind.spec().family != 0 && d.crossover) || (d.kind.is_hsr() && d.crossover) {
+            // T-3352: high-speed track has no crossover; T-3575: tram track takes them as rail does
+            if (d.tracks != 1 && d.tracks != 2) || (d.kind.is_hsr() && d.crossover) {
                 return Err(Issue::Tracks { edge: id });
             }
             for (node, which) in [(d.a, 0u32), (d.b, 1u32)] {
@@ -1969,7 +1973,7 @@ impl Network {
     /// it crosses at ground level (T-1929).
     fn edge_price(&self, i: usize, vert: &[[f64; 2]], wet: &[[f64; 2]], terrain: &[[f64; 3]], cross: &[[f64; 2]]) -> f64 {
         if self.edge_crossover[i] {
-            cost::junction_cost(self.node_level[self.edge_a[i] as usize], false, !wet.is_empty())
+            cost::crossover_cost(self.node_level[self.edge_a[i] as usize], !wet.is_empty(), self.edge_kind[i])
         } else {
             cost::track_cost_t(self.edge_len[i], vert, wet, terrain, self.edge_tracks[i], self.edge_kind[i]) + roads::charge(vert, cross).1
         }

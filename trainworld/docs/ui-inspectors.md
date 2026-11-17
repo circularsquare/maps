@@ -808,8 +808,8 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
     station of the complex (it replaced the row per line name), busiest by the forecast first so the order
     holds through the day: name (muted on a blueprint), riders waiting now at it (red when its platform is full or
     a last train left riders behind), boardings there in the past 24 hours, and the station view's terminal
-    button (same icon, hover, price and click: blueprint or build at once, take away again; a tram stop or a
-    port has none, TerminalButton in `ui/inspector/StationUpgrades.tsx`); under them the chips of the lines
+    button (same icon, hover, price and click: blueprint or build at once, take away again; a port
+    has none, TerminalButton in `ui/inspector/StationUpgrades.tsx`); under them the chips of the lines
     stopping there (a name once, branches and patterns summed, busiest first), each selecting its line. The
     figures have their hovers. A click on the row opens that station alone in station view (`openAlone`,
     `singleStation` in `game/complexView.ts`): its own inspector and outline, its

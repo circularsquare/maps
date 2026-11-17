@@ -358,3 +358,81 @@ fn single_tram_and_high_speed_track_are_drawn_priced_and_saved() {
         assert_eq!(a.add_station(2, e, 1500.0, 0.0, platform, "S".into()), 0, "{}", a.issues());
     }
 }
+
+/// T-3574: a tram stop's terminal is 1 km of its own track kind and its passing tracks the rail formula at that
+/// kind's table; with the terminal a line turning there turns 30 an hour where it turned 15.
+#[test]
+fn a_tram_stop_takes_a_terminal_and_passing_tracks_priced_as_tram_track() {
+    use crate::track::capacity::ResKind;
+    use crate::track::upgrades;
+    let (mut a, stops) = tram_line();
+    let t = stops[1];
+    assert!((a.station_upgrade_cost(t, upgrades::TERMINAL) - 37.5).abs() < 1e-9, "{}", a.station_upgrade_cost(t, upgrades::TERMINAL));
+    assert!((a.station_upgrade_cost(t, upgrades::PASSING) - 75.0 * 0.5 * 0.44).abs() < 1e-9);
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let id = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(id, &stops, 4, 2, 0, 15.0, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
+    let turns = |a: &TrackApi| {
+        let cap = &a.w.svc.cap;
+        let r = (0..cap.res.len()).find(|&r| cap.res[r].node == t && cap.res[r].kind == ResKind::Terminus).unwrap();
+        3600.0 / cap.users_of(r).iter().map(|u| u.occ).fold(f64::NAN, |_, o| o)
+    };
+    assert!((turns(&a) - 15.0).abs() < 1e-9, "{}", turns(&a));
+    let cash = a.cash();
+    assert_eq!(a.set_station_upgrade(&[t], upgrades::TERMINAL, true), 0, "{}", a.issues());
+    assert!((cash - a.cash() - 37.5).abs() < 1e-6, "paid 1 km of tram track");
+    assert!((turns(&a) - 30.0).abs() < 1e-9, "{}", turns(&a));
+    let cash = a.cash();
+    assert_eq!(a.set_station_upgrade(&[t], upgrades::PASSING, true), 0, "{}", a.issues());
+    assert!((cash - a.cash() - 16.5).abs() < 1e-6);
+    // rail's price is unchanged
+    let mut rail = api();
+    assert_eq!(route(&mut rail, (0.0, 0.0), (3000.0, 0.0), 2), 0);
+    assert_eq!(rail.add_station(2, edge_at(&rail, 1000.0, 0.0), 1000.0, 0.0, 200, "R".into()), 0);
+    let r = (0..rail.w.net.node_count() as u32).find(|&n| rail.w.net.node_platform[n as usize] > 0).unwrap();
+    assert!((rail.station_upgrade_cost(r, upgrades::TERMINAL) - 37.5).abs() < 1e-9);
+    assert!((rail.station_upgrade_cost(r, upgrades::PASSING) - 22.5).abs() < 1e-9);
+}
+
+/// T-3575: tram track takes crossovers as rail does: a tram crossover is tram track at the tram table's price (rail's
+/// at ground level off street), and a tram line whose stops lie on the two pairs of a quad runs over it.
+#[test]
+fn tram_track_takes_crossovers_priced_as_tram_track() {
+    let build = |kind: u8| {
+        let mut a = api();
+        a.set_cash(1e6);
+        a.set_route_kind(kind);
+        assert_eq!(route(&mut a, (0.0, 0.0), (3000.0, 0.0), 4), 0, "{}", a.issues());
+        let mut st = [0u32; 2];
+        for (k, (x, y)) in [(800.0, 0.0), (2200.0, 4.27)].into_iter().enumerate() {
+            let e = edge_at(&a, x, y);
+            assert_eq!(a.add_station(2, e, x, y, if kind == 3 { 40 } else { 200 }, format!("Q{k}")), 0, "{}", a.issues());
+            st[k] = (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && a.w.net.node_platform[n as usize] > 0 && (k == 0 || n != st[0])).unwrap();
+        }
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        let id = a.new_line_id();
+        let e = edge_at(&a, 1500.0, 0.0);
+        let preview = a.preview_crossover(e, 1500.0, 0.0);
+        assert_eq!(preview[0], 1.0, "{}", a.issue_kinds());
+        assert_eq!(a.add_crossover(e, 1500.0, 0.0), 0, "{}", a.issues());
+        let xs = a.crossover_edges();
+        assert_eq!(xs.len(), 2);
+        assert!(xs.iter().all(|&x| a.w.net.edge_kind[x as usize].spec().family == (kind == 3) as u8));
+        let price: f64 = xs.iter().map(|&x| a.w.net.edge_cost[x as usize]).sum();
+        assert_eq!(a.construct_all(), 0, "{}", a.issues());
+        assert_eq!(a.set_line_with_trains(id, &st, 2, 1, 0, 15.0, 120.0, 2, 0, "L".into()), 0, "{}", a.issue_kinds());
+        assert!(a.w.net.line_path(id).iter().any(|&p| xs.contains(&(p >> 1))), "kind {kind}: path {:?} crossovers {xs:?} stops {st:?}", a.w.net.line_path(id));
+        let bytes = a.save();
+        let mut b = api();
+        assert!(b.load(&bytes), "{}", b.issues());
+        assert_eq!(b.crossover_edges().len(), 2);
+        assert_eq!(b.save(), bytes);
+        price
+    };
+    let (rail, tram) = (build(0), build(3));
+    // off-street tram track is rail's price at ground level; street tram track is a fifth of it
+    assert!(rail > 0.0 && (tram - rail).abs() < 1e-6, "{tram} against {rail}");
+    use crate::track::cost::crossover_cost;
+    assert!((crossover_cost(0, false, TrackKind::StreetTram) - 0.25 * 75.0 * 0.1).abs() < 1e-9);
+    assert!((crossover_cost(0, false, TrackKind::Regular) - 0.25 * 37.5).abs() < 1e-9);
+}

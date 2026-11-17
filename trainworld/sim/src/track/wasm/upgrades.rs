@@ -47,7 +47,7 @@ impl TrackApi {
             return 0.0;
         }
         let i = node as usize;
-        upgrades::price(bit, net.node_level[i], net.water_mask.is_water(net.node_x[i], net.node_y[i]), net.node_platform[i], net.node_hsr(node))
+        upgrades::price(bit, net.node_level[i], net.water_mask.is_water(net.node_x[i], net.node_y[i]), net.node_platform[i], net.node_price_kind(node))
     }
 
     /// T-2231: the stations where `line`'s trains get passed or would pass a slower line's, with no
