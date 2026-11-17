@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3571 [P2] {L:world-map} New stations named after a nearby real station (2026-11-17): A new station within 150 m of a real station is first named after it, in Latin letters (local, English, or Cyrillic transliterated); ferry ports excluded (notes/T-3570.md)
+- T-3570 [P2] {L:world-map} Real stations on the real world map (2026-11-17): Settings > Real world network > Show stations (off by default) draws noritetsu's real stations as small rings from zoom 10, name on hover; tram-only stops follow tram track visibility; source already on R2, no upload (notes/T-3570.md)
+- T-3563 [P2] {L:trams} Trams path like trains in every way (2026-11-17): no_passing lost its tram clause; trams use loops as rail does; checker passed (notes/T-3563-check.md) notes/T-3563.md.
+- T-3576 [P2] {L:map-look} Ponytail sticks out too far (2026-11-17): ponytail redrawn as a short tail mostly behind the head with a hair tie, about 7 px past the outline instead of 12; adult and child checked at full and map size.
+- T-3573 [P2] {L:feedback} Unanswered mark in the feedback inbox (2026-11-17): tw-feedback list shows a light blue dot beside the age when the last message is the player's (open reports only); page-only change, reads each open thread by GET.
 - T-3541 [P2] {L:single-track} Blueprint extension breaks a split line (2026-11-17): a built track end with only blueprint beyond still counts as an end; after the build the line reroutes through its stops; checker PASS (her Caracas save, rail headshunt, parts, loop; NYC identical) notes/T-3537.md.
 - T-3564 [P2] {L:map-look} Passing stations on single track draw both platforms (2026-11-17): a single-track station with a passing loop draws a platform beside each track again; the one outside platform stays for single-track stations with no loop; tram boxes stay 0.7 wide; notes/T-3540.md.
 - T-3562 [P2] {L:single-track} Alert when a line runs the same track twice (2026-11-17): line run that passes the same track twice in the same direction gets an alert in its panel and a loop mark on the first repeated piece; check t3562-repeat-track.mjs; the real save has none; changelog c110.

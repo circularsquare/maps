@@ -1432,6 +1432,78 @@
       "rev": 1,
       "area": "track",
       "fix": true
+    },
+    {
+      "id": "c113",
+      "text": "narrow rivers count as water across more of their width, so track over them is priced as a bridge for more of the crossing",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3553",
+      "by": "shoreswap",
+      "at": "2026-11-17T18:14:10Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c114",
+      "text": "trams now pass each other at a tram stop on single track placed as a passing station, as trains do, so single tram lines can run more trams",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3563",
+      "by": "tramloops",
+      "at": "2026-11-17T18:14:16Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c115",
+      "text": "edits on the real london network settle 3 to 10 times faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3388",
+      "by": "londonedit",
+      "at": "2026-11-17T18:17:52Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c116",
+      "text": "ponytails now sit behind the head",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3576",
+      "by": "ponytail",
+      "at": "2026-11-17T18:30:48Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c117",
+      "text": "added real world stations to the real world network map, as small rings with the name on hover: settings, show stations, off by default",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3570",
+      "by": "realstations",
+      "at": "2026-11-17T18:33:34Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c118",
+      "text": "a station placed on a real world station now takes its name",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3571",
+      "by": "realstations",
+      "at": "2026-11-17T18:33:34Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
     }
   ]
 }

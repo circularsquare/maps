@@ -201,6 +201,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235). Player ank (via you, 11-16): 246M points, 3.0 of 8 GB, about 5 s per track piece, "use more cores" changed nothing.
   - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
   - Other: notes/T-3387.md; notes/T-3233.md
+- T-3550 [P3] {L:edit-speed} London train-count edits still take 1-4 s
+  - Context: After T-3388, track and station edits on London settle in 0.02-0.3 s, but a train-count edit on a line at its big merge still takes 0.6-1.5 s natively (up to 3 s for every level on a 3-train line) and 1.4-3.7 s in the browser: each settle round works out 100-190 line profiles again at about 1 ms each.
+  - Goal: Train-count edits on London under 0.5 s natively, settled figures unchanged.
+  - Other: notes/T-3388.md
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
   - Goal: Tracks that cross where only some have stations get a highlight.
@@ -277,15 +281,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
-- T-3573 [P2] {L:feedback} Unanswered mark in the feedback inbox (taking, 2026-11-17, agent fbdot)
-  - Context: You, 2026-11-17: "could we also add to tw-feedback a flag for when there is a message i have not responded to. perhaps a light blue circle bubble next to the age of the last message"
-  - Goal: In twfeedback on 8800, a report whose last message is the player's (no reply from you after it) has a light blue dot beside the age of its last message.
-- T-3570 [P2] {L:world-map} Real stations on the real world map (taking, 2026-11-17, agent realstations)
-  - Context: Your pad, 2026-11-17: "lets file real world station locations to be put on the real world reference map. no change to snapping behavior needed. discreet, lowkey. perhaps toggleable, default off.. some people also requested station names and idk how we could possibly do that in a discreet way."
-  - Goal: The real world network map can show real stations as small, quiet marks, switched off by default; names only if a discreet way is found (proposal to you).
-- T-3571 [P2] {L:world-map} New stations named after a nearby real station (taking, 2026-11-17, agent realstations)
-  - Context: Your pad, 2026-11-17: "some people also requested that our suggested autopopulated station names could try taking a nearby irl station name, which is prob a good idea especially if theyre super super close, the person probably is just trying to recreate that station."
-  - Goal: A station placed very close to a real station is suggested that station's name; otherwise naming is as today.
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
@@ -293,7 +288,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3569 [P2] {L:checks} t3212 check: trains no longer meet at A-M-B (taking, 2026-11-17, agent t3212fix)
   - Context: tramstation (T-3564) found t3212-station-split failing "two trains met side by side at A-M-B" on master, with or without its change; its guess is T-3526's single-track train cap (fewer trains, so none meet), not traced.
   - Goal: The check meets two trains again (its fixture given room under the new cap) or the cause is a real bug and is fixed.
-- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair
+- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
 - T-3566 [P2] {L:small-fixes} Line profit history like the finance tab (taking, 2026-11-17, agent lineprofit)
@@ -302,13 +297,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3567 [P2] {L:fares} Fare multiple per line (taking, 2026-11-17, agent lineprofit)
   - Context: Your pad, 2026-11-17: "lets also file building a very simple line-specific fare multiple setting. this can go right above the profit history graph. just like a 1.00 and if you click it you can set the fare multiple to like 1.2x what it would otherwise be for this line. should be typeable there is a more complex fare system planned but for now i think this will satisfy some people. cap it between like 0-3x i guess."
   - Goal: Each line has a typeable fare multiple, 0 to 3, default 1.00, above its profit history, applied on top of the game's fares for that line's rides.
-- T-3563 [P2] {L:trams} Trams path like trains in every way (taking, 2026-11-17, agent tramloops)
-  - Context: You, 2026-11-17: "yes trams hould use passing loops the way rail does. trams should be identical to trains in pathing in i think like all ways?" Today the sim runs every single-track tram stop as having no passing loop (`Network::no_passing`, T-3352); single tram lines in existing saves gain capacity.
-  - Goal: Trams use passing loops and every other pathing rule exactly as trains do; differences found are listed and removed.
+- T-3574 [P2] {L:trams} {after:T-3563} Terminal and passing tracks at tram stops (taking, 2026-11-17, agent tramterm)
+  - Context: You, 2026-11-17: "yeah lets do the terminal." The sim already accepts both at a tram stop; the station panel (StationUpgrades) hides them. Without a terminal a tram line turns at most 15 times an hour, with one 30.
+  - Goal: A tram stop offers the terminal and passing tracks as a rail station does, the terminal priced as 1 km of the stop's own track kind.
+  - Other: notes/T-3563.md
+- T-3575 [P2] {L:trams} {after:T-3563} Crossovers on tram track (taking, 2026-11-17, agent tramterm)
+  - Context: You, 2026-11-17: "my gut is yes if its how trains work." Crossing track drawn between two double-track tram pieces is refused today (T-3352); on rail it makes a crossover, so trams could cross to the other track and turn back short.
+  - Goal: Tram track takes crossovers exactly as rail does, priced as tram track.
+  - Other: notes/T-3563.md
 - T-3556 [P4] {L:checks} Agent playtest harness, outside agents and attach my game
   - Context: Stage 1 (the shared harness in checks/lib) landed 47c98437. Left, as P4 on your word 2026-11-17 ("do it as like p4"): stage 2, an MCP server so outside agents can play (3-4 h local, 8-12 h more hosted, a server deploy); stage 3, "Attach my game" in feedback (2-3 h). Sketches in notes/T-3556.md. You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).
-- T-3557 [P2] {L:timetables} {after:T-3521} Weekend headway stepper runs faster than stepped
+- T-3557 [P2] {L:timetables} {after:T-3521} Weekend headway stepper runs faster than stepped (taking, 2026-11-17, agent weekendstep)
   - Context: From T-3521's fix: the weekend headway stepper sets counts by hand, so the line then runs every round trip / count, which can be shorter than the headway stepped to. Paced count lines keep the weekday cap through `line_pace` (a known lie in notes/T-3521.md).
   - Goal: Stepping a weekend headway runs that headway.
 - T-3558 [P3] {L:timetables} {after:T-3521} Holiday departures before the day's edits
