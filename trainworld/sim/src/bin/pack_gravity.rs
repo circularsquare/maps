@@ -4,9 +4,12 @@
 //!
 //!   cargo run --release --features demand --bin pack_gravity -- IN.json OUT.json
 //!       [--zone-m 2000] [--decay-km K] [--decay-pow A] [--decay-flat-km D] [--border-factor F]
-//!       [--tol 1e-4] [--coarse UNDER --ends FILE]
+//!       [--tol 1e-4] [--coarse UNDER --ends FILE] [--threads 1]
 //!       (defaults: kernel::Params; the border factor's is 1, no effect; the flat near end's is
 //!       `kernel::flat_near_km` of the curve, T-1091)
+//!
+//! `--threads` (T-3473): the balance's passes over this many threads, same result to the bit; sized to
+//! the caller's core claim, one by default.
 //!
 //! `--coarse` (T-852): blocks of 2x2 squares in thin country (`kernel::coarsen`), judged on each
 //! square's trip ends a weekday, FILE holding one little-endian f32 per cell (`coarse_zones.py`).
@@ -32,6 +35,7 @@ fn main() {
     let (mut coarse, mut ends_path) = (None::<f64>, None::<String>);
     let mut flat = None::<f32>;
     let mut keep_zones = false;
+    let mut threads = 1usize;
     let mut given = vec![];
     let mut i = 0;
     while i < args.len() {
@@ -39,6 +43,10 @@ fn main() {
         given.push(args[i].clone());
         match args[i].as_str() {
             "--keep-zones" => keep_zones = true,
+            "--threads" => {
+                threads = val().parse().unwrap();
+                i += 1;
+            }
             "--zone-m" => {
                 p.zone_m = val().parse().unwrap();
                 i += 1;
@@ -114,7 +122,7 @@ fn main() {
         let blocks = z.size.iter().filter(|&&s| s == 2).count();
         println!("coarse: {blocks} blocks of 2x2 squares under {under} trip ends a square; zones {n0} -> {}", z.n);
     }
-    let g = kernel::gravity(&z, &p, 1000, tol);
+    let g = kernel::gravity_threads(&z, &p, 1000, tol, threads);
     let ms = now_ms() - t0;
     if g.max_err > tol {
         eprintln!("WARNING: Furness stopped at max row error {:.2e} (> {tol:.0e}) after {} iterations", g.max_err, g.iters);

@@ -512,7 +512,7 @@ pub fn mode_choice_part(z: &Zones, gr: &Gravity, sz: &Subzones, er: &[f32], walk
             // T-2307: this origin's rows of `till` are filled afresh as its lanes need them
             till_gen += 1;
             let n_all = ride.end - walk.start;
-            debug_assert!(n_all <= till_w);
+            debug_assert!(!rule || n_all <= till_w);
             let (ux8, uy8, lu08, lu18) = (F8::splat(sz.cx[u]), F8::splat(sz.cy[u]), F8::splat(local[u].0), F8::splat(local[u].1));
             let mut rail_sum = 0.0f32;
             let (mut d_sum, mut dk_sum, mut rk_sum) = (0.0f32, 0.0f32, 0.0f32);

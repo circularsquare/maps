@@ -1009,11 +1009,144 @@ pub fn to_pack_gravity(z: &Zones, g: &Gravity, p: &Params) -> PackGravity {
 /// pack's job-weighted geometric mean pull; past it they stay part unfilled, or overfill.
 pub const PULL_CAP: f64 = 20.0;
 
+/// Compute one chunk of rows in the Furness row pass, processing 4 rows at a time to share
+/// `colc`/`ckey` loads and break the serial `f64` latency chain while keeping each row's exact
+/// summation order. Returns the max relative row error for `it > 0`.
+#[allow(clippy::too_many_arguments)]
+fn gravity_row_chunk(
+    bases: &[i32],
+    regs: &[u8],
+    row_o: &[f64],
+    row_r: &mut [f64],
+    ckey: &[i32],
+    creg: &[u8],
+    colc: &[f64],
+    ftab: &[f32],
+    kf: [f64; 2],
+    one_region: bool,
+    check_err: bool,
+) -> f64 {
+    let mut err = 0.0f64;
+    let n4 = bases.len() & !3;
+    for m in (0..n4).step_by(4) {
+        let (b0, b1, b2, b3) = (bases[m], bases[m + 1], bases[m + 2], bases[m + 3]);
+        let (mut s0, mut s1, mut s2, mut s3) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+        if one_region {
+            for (k, &key) in ckey.iter().enumerate() {
+                let c = colc[k];
+                s0 += c * ftab[(b0 + key) as usize] as f64;
+                s1 += c * ftab[(b1 + key) as usize] as f64;
+                s2 += c * ftab[(b2 + key) as usize] as f64;
+                s3 += c * ftab[(b3 + key) as usize] as f64;
+            }
+        } else {
+            let (r0, r1, r2, r3) = (regs[m], regs[m + 1], regs[m + 2], regs[m + 3]);
+            for (k, &key) in ckey.iter().enumerate() {
+                let c = colc[k];
+                let rk = creg[k];
+                s0 += c * ftab[(b0 + key) as usize] as f64 * kf[(rk != r0) as usize];
+                s1 += c * ftab[(b1 + key) as usize] as f64 * kf[(rk != r1) as usize];
+                s2 += c * ftab[(b2 + key) as usize] as f64 * kf[(rk != r2) as usize];
+                s3 += c * ftab[(b3 + key) as usize] as f64 * kf[(rk != r3) as usize];
+            }
+        }
+        let sums = [s0, s1, s2, s3];
+        for j in 0..4 {
+            let s = sums[j];
+            if check_err {
+                err = err.max((row_r[m + j] * s / row_o[m + j] - 1.0).abs());
+            }
+            row_r[m + j] = row_o[m + j] / s;
+        }
+    }
+    for m in n4..bases.len() {
+        let base = bases[m];
+        let ri = regs[m];
+        let mut s = 0.0f64;
+        if one_region {
+            for (k, &key) in ckey.iter().enumerate() {
+                s += colc[k] * ftab[(base + key) as usize] as f64;
+            }
+        } else {
+            for (k, &key) in ckey.iter().enumerate() {
+                s += colc[k] * ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
+            }
+        }
+        if check_err {
+            err = err.max((row_r[m] * s / row_o[m] - 1.0).abs());
+        }
+        row_r[m] = row_o[m] / s;
+    }
+    err
+}
+
+/// Compute one chunk of columns in the Furness column pass, applying 4 rows per sweep over `acc`
+/// in exact row order to cut `acc` load/store traffic by 4x without changing any addition order.
+#[allow(clippy::too_many_arguments)]
+fn gravity_col_chunk(
+    bases: &[i32],
+    regs: &[u8],
+    row_r: &[f64],
+    ckey: &[i32],
+    creg: &[u8],
+    acc: &mut [f64],
+    ftab: &[f32],
+    kf: [f64; 2],
+    one_region: bool,
+) {
+    acc.fill(0.0);
+    let n4 = bases.len() & !3;
+    for m in (0..n4).step_by(4) {
+        let (b0, b1, b2, b3) = (bases[m], bases[m + 1], bases[m + 2], bases[m + 3]);
+        let (r0, r1, r2, r3) = (row_r[m], row_r[m + 1], row_r[m + 2], row_r[m + 3]);
+        if one_region {
+            for (k, &key) in ckey.iter().enumerate() {
+                let a = acc[k];
+                let a = a + r0 * ftab[(b0 + key) as usize] as f64;
+                let a = a + r1 * ftab[(b1 + key) as usize] as f64;
+                let a = a + r2 * ftab[(b2 + key) as usize] as f64;
+                acc[k] = a + r3 * ftab[(b3 + key) as usize] as f64;
+            }
+        } else {
+            let (reg0, reg1, reg2, reg3) = (regs[m], regs[m + 1], regs[m + 2], regs[m + 3]);
+            for (k, &key) in ckey.iter().enumerate() {
+                let rk = creg[k];
+                let a = acc[k];
+                let a = a + r0 * ftab[(b0 + key) as usize] as f64 * kf[(rk != reg0) as usize];
+                let a = a + r1 * ftab[(b1 + key) as usize] as f64 * kf[(rk != reg1) as usize];
+                let a = a + r2 * ftab[(b2 + key) as usize] as f64 * kf[(rk != reg2) as usize];
+                acc[k] = a + r3 * ftab[(b3 + key) as usize] as f64 * kf[(rk != reg3) as usize];
+            }
+        }
+    }
+    for m in n4..bases.len() {
+        let base = bases[m];
+        let ri = regs[m];
+        let r = row_r[m];
+        if one_region {
+            for (k, &key) in ckey.iter().enumerate() {
+                acc[k] += r * ftab[(base + key) as usize] as f64;
+            }
+        } else {
+            for (k, &key) in ckey.iter().enumerate() {
+                acc[k] += r * ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
+            }
+        }
+    }
+}
+
 /// Gravity by Furness balancing, rows exact and columns to their jobs within `PULL_CAP`. Workers =
 /// population scaled to total jobs.
 /// The decay depends on zone-centre distance only, so f is a small table by grid offset; it is
 /// multiplied by `p.border_factor` between zones of different regions (T-162).
 pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
+    gravity_threads(z, p, max_iters, tol, 1)
+}
+
+/// `gravity` with its row and column passes split over `threads` threads (native builds; the WASM
+/// build runs one), each sum in the same order, so the result is the same to the bit. The caller
+/// sizes `threads` to its core claim.
+pub fn gravity_threads(z: &Zones, p: &Params, max_iters: usize, tol: f64, threads: usize) -> Gravity {
     let (th, offx, offy, kb, _) = table_layout(z);
     let (ftab, dtab) = decay_tables(z, p.curve());
     let tp: f64 = z.pop.iter().sum();
@@ -1025,39 +1158,63 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
     let creg: Vec<u8> = cols.iter().map(|&j| z.region[j]).collect();
     // the factor by "regions differ" (index 0 same, 1 different)
     let kf = [1.0f64, p.border_factor as f64];
+    // one region: every pair's factor is kf[0] = 1, so the inner loops skip it (multiplying by
+    // exactly 1.0 changes no bit)
+    let one_region = z.region.iter().all(|&r| r == *z.region.first().unwrap_or(&0));
     let mut g = Gravity { row: vec![0.0; z.n], col: z.jobs.clone(), border: p.border_factor, ftab, zk: z.zone_m / 1000.0, walk_set: false, wroutes: None, wcost: WalkCost::default(), wf_off: vec![], wf_j: vec![], wf_c: vec![], wf_s: vec![], th, offx, offy, kb, iters: 0, max_err: 0.0, mean_km: 0.0, total: 0.0, pull: None };
+    let row_base: Vec<i32> = rows.iter().map(|&i| g.base(z, i)).collect();
+    let row_reg: Vec<u8> = rows.iter().map(|&i| z.region[i]).collect();
+    let row_o: Vec<f64> = rows.iter().map(|&i| o[i]).collect();
+    let mut row_r = vec![0.0f64; rows.len()];
     let mut colc: Vec<f64> = cols.iter().map(|&j| g.col[j]).collect();
     let mut acc = vec![0f64; cols.len()];
+    #[cfg(not(target_arch = "wasm32"))]
+    let threads = if row_base.len() >= 128 && ckey.len() >= 128 { threads.max(1) } else { 1 };
+    #[cfg(target_arch = "wasm32")]
+    let _ = threads;
     for it in 0..max_iters {
         // rows: A_I = 1 / sum_J col_J f_IJ k_IJ
-        let mut err: f64 = 0.0;
-        for &i in &rows {
-            let base = g.base(z, i);
-            let ri = z.region[i];
-            let mut s = 0.0f64;
-            for (k, &key) in ckey.iter().enumerate() {
-                s += colc[k] * g.ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
-            }
-            if it > 0 {
-                err = err.max((g.row[i] * s / o[i] - 1.0).abs());
-            }
-            g.row[i] = o[i] / s;
-        }
+        #[cfg(not(target_arch = "wasm32"))]
+        let err = if threads > 1 {
+            let chunk = ((row_base.len().div_ceil(threads) + 3) & !3).max(4);
+            let ftab = &g.ftab;
+            std::thread::scope(|s| {
+                let handles: Vec<_> = row_base
+                    .chunks(chunk)
+                    .zip(row_reg.chunks(chunk))
+                    .zip(row_o.chunks(chunk))
+                    .zip(row_r.chunks_mut(chunk))
+                    .map(|(((b, r), o), rr)| {
+                        s.spawn(|| gravity_row_chunk(b, r, o, rr, &ckey, &creg, &colc, ftab, kf, one_region, it > 0))
+                    })
+                    .collect();
+                handles.into_iter().fold(0.0f64, |acc_e, h| acc_e.max(h.join().unwrap()))
+            })
+        } else {
+            gravity_row_chunk(&row_base, &row_reg, &row_o, &mut row_r, &ckey, &creg, &colc, &g.ftab, kf, one_region, it > 0)
+        };
+        #[cfg(target_arch = "wasm32")]
+        let err = gravity_row_chunk(&row_base, &row_reg, &row_o, &mut row_r, &ckey, &creg, &colc, &g.ftab, kf, one_region, it > 0);
         g.iters = it + 1;
         g.max_err = err;
         if it > 0 && err < tol {
             break;
         }
         // columns: B_J = 1 / sum_I row_I f_IJ k_IJ
-        acc.iter_mut().for_each(|v| *v = 0.0);
-        for &i in &rows {
-            let base = g.base(z, i);
-            let ri = z.region[i];
-            let r = g.row[i];
-            for (k, &key) in ckey.iter().enumerate() {
-                acc[k] += r * g.ftab[(base + key) as usize] as f64 * kf[(creg[k] != ri) as usize];
-            }
+        #[cfg(not(target_arch = "wasm32"))]
+        if threads > 1 {
+            let chunk = ckey.len().div_ceil(threads).max(1);
+            let ftab = &g.ftab;
+            std::thread::scope(|s| {
+                for ((ck, cr), ac) in ckey.chunks(chunk).zip(creg.chunks(chunk)).zip(acc.chunks_mut(chunk)) {
+                    s.spawn(|| gravity_col_chunk(&row_base, &row_reg, &row_r, ck, cr, ac, ftab, kf, one_region));
+                }
+            });
+        } else {
+            gravity_col_chunk(&row_base, &row_reg, &row_r, &ckey, &creg, &mut acc, &g.ftab, kf, one_region);
         }
+        #[cfg(target_arch = "wasm32")]
+        gravity_col_chunk(&row_base, &row_reg, &row_r, &ckey, &creg, &mut acc, &g.ftab, kf, one_region);
         // T-1000: a column's pull 1 / acc is held within PULL_CAP of the job-weighted geometric
         // mean. The columns inside share what the held ones leave or take over (all divided by
         // `scale`, exactly 1 when none is held), so the rows' total still meets the jobs' and the
@@ -1089,16 +1246,28 @@ pub fn gravity(z: &Zones, p: &Params, max_iters: usize, tol: f64) -> Gravity {
         }
         g.pull = Some([lo / scale, hi / scale, 1.0 / scale, held / all.max(1e-300)]);
     }
+    for (m, &i) in rows.iter().enumerate() {
+        g.row[i] = row_r[m];
+    }
     // mean trip length
     let (mut sum, mut sumd) = (0.0f64, 0.0f64);
     for &i in &rows {
         let base = g.base(z, i);
         let ri = z.region[i];
-        for (k, &key) in ckey.iter().enumerate() {
-            let idx = (base + key) as usize;
-            let t = g.row[i] * colc[k] * g.ftab[idx] as f64 * kf[(creg[k] != ri) as usize];
-            sum += t;
-            sumd += t * dtab[idx] as f64;
+        if one_region {
+            for (k, &key) in ckey.iter().enumerate() {
+                let idx = (base + key) as usize;
+                let t = g.row[i] * colc[k] * g.ftab[idx] as f64;
+                sum += t;
+                sumd += t * dtab[idx] as f64;
+            }
+        } else {
+            for (k, &key) in ckey.iter().enumerate() {
+                let idx = (base + key) as usize;
+                let t = g.row[i] * colc[k] * g.ftab[idx] as f64 * kf[(creg[k] != ri) as usize];
+                sum += t;
+                sumd += t * dtab[idx] as f64;
+            }
         }
     }
     g.total = sum;
