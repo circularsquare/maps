@@ -152,10 +152,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
   - Other: notes/T-1635.md
-- T-3399 [P2] {L:new-countries} {after:your word to start the run} Central America and Venezuela first
-  - Context: You asked (2026-11-16) for Guatemala to Panama and Venezuela before any other new region.
-  - Goal: Those eight countries are built and shipped.
-  - Other: docs/adding-a-country.md; research/next-countries-data.md
+- T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked
+  - Context: From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
+  - Goal: Each of clt, scd, anu, tsx built and shipped, or left dead space with the reason in its notes; miv and auo terrain rebuilt on the 3 blocks.
+  - Other: notes/T-3399.md
+- T-3518 [P3] {L:new-countries} University students in Venezuela and Nicaragua
+  - Context: From T-3399: the World Bank has no tertiary enrolment for Venezuela or Nicaragua since 2010, so their zones count only OSM campuses, unscaled (Zamora's zone 257 students for 1M people); seven rows shipped with the gate's university check relaxed.
+  - Goal: A national figure for each in tier0's NATIONAL_TERTIARY (as Taiwan's, T-3273), taken up at their next rebuild.
+  - Other: notes/T-3399.md
 
 ## Demand
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
@@ -245,10 +249,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
   - Goal: Freight rail drawn under All can be snapped to by train track, abandoned too if you say so, about 2-3 h plus about 100 MB of graph files.
   - Other: notes/T-3495.md
-- T-3499 [P3] {L:region-redraws} Bucaramanga is an enclave
-  - Context: A player reports (via you, 2026-11-16 on the board) that Bucaramanga, Colombia, sits as an enclave inside another zone, which is weird. Reaches players building in Colombia.
-  - Goal: Bucaramanga's zone has a sensible shape joined to its surroundings, fixed at the next Colombia rebuild if it needs one.
-- T-3511 [P2] {L:region-redraws} {after:T-3399 join} Rebuild the enclave shifts and merges
+- T-3511 [P2] {L:region-redraws} Rebuild the enclave shifts and merges
   - Context: From T-3506: 127 enclave zones checked, 118 kept. To rebuild: Perth takes Rockingham, Kwinana, Mandurah and 11 Wheatbelt shires (rest renamed Bunbury); Sanliurfa takes Siverek, Hilvan, Bozova (ring renamed Nizip); Diyarbakir takes Cinar and Bismil; La Plata takes Magdalena, Punta Indio, Chascomus; Suchetgarh into Jammu; Yuhuan into Taizhou. The scan wants a rerun after T-3399's join (it read half-built Central America packs).
   - Goal: Rerun the scan, then the five night stages D-H in notes/T-3506.md (about 8.5 h, Turkey folded into T-3488's rebuild if it hasn't run), each country's gates passing.
   - Other: notes/T-3506.md
@@ -256,7 +257,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3505 [P2] {L:map-look} Demand bubbles with 0 trips
+- T-3505 [P2] {L:map-look} Demand bubbles with 0 trips (taking, 2026-11-17, agent bubfold)
   - Context: You, 2026-11-17: a bubble in rural Ontario hovers "0 trips from here", which shouldn't show (it rounds to 0); "i thought we got rid of demand sites that are less than one person. or aggregated them ... it suggests to me that we could probably be more aggressive with dropping bubbles in some way or another." Fewer sites also means less memory.
   - Goal: No bubble shows under 1 trip a day; tiny sites folded into a neighbour where there is one, with the zone's totals unchanged and the memory saved measured.
 - T-3510 [P3] {L:map-look} Bubble selection's purpose rows miss trips with other places
@@ -278,7 +279,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
-- T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (taking, 2026-11-17, agent settle)
+  - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
+- T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (taking, 2026-11-17, agent settle2)
   - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
   - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
   - Other: notes/T-3473.md
@@ -298,10 +300,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
   - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
   - Other: notes/T-3395.md
-- T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting
+- T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting (taking, 2026-11-17, agent busoneway)
   - Context: You, 2026-11-16: "for the bus routes lets add it as a setting, default off. i feel bad. and some people might want it... we can pull it in if thats easy. its not that many lines of code." From Renkon's open-source PR 1; a both-ways line or a loop still drives a one-way street backwards.
   - Goal: PR 1 brought in behind a setting that is off by default, credited to Renkon, with bus routes unchanged while it is off.
-  - Other: Open-source issue 8 (a330900neo) is the same case: a bus going the wrong way round a roundabout (you, 2026-11-16). Also take PR 12's one-line debug check in the mode choice code (fires when the walk rule is off), credited to CinnamonVII (your yes, 2026-11-16).
+  - Other: Open-source issue 8 (a330900neo) is the same case: a bus going the wrong way round a roundabout (you, 2026-11-16).
 - T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve
   - Context: On Tokyo-Sendai, a passage between stations (300 m to 1 km) is sometimes missed by long-distance demand after a quick update solve; only a reload counts it (found by feedsample, notes/T-3454.md).
   - Goal: A quick update solve and a reload give the same long-distance figures.
@@ -312,9 +314,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3484: across Hong Kong-Shenzhen the game sends 3x too many Hong Kong residents to work in Shenzhen, and Macau-Zhuhai and Malaysia-Singapore are backwards the same way; real commutes mostly go toward the richer side. You, 2026-11-16: "ehhh oky we can do border factor depending on direction, if it fits. low prio."
   - Goal: Commutes across these three borders go mostly the real way, with each total within 25% of today's; dropped if no simple rule fits.
   - Other: Also worth a look then: what rail carries across Hong Kong-Shenzhen in a running game (about 4 cores, 30-45 min). notes/T-3484.md
-- T-3488 [P3] {L:region-redraws} Arnavutkoy into Istanbul, two districts to Kocaeli
-  - Context: Open-source issue 11 (ykaydogdu): Arnavutkoy (176k, Istanbul Airport) is its own city in game; T-3439 only renamed it "Arnavutköy, Istanbul". You, 2026-11-16: "the arnavutkoy thing we should do is merging it into istanbul, not just rename it". Altinova and Karamursel sit with Istanbul but are Kocaeli's; Gebze, Cayirova, Dilovasi and Darica can stay with Istanbul.
-  - Goal: Arnavutkoy's zone counts as part of Istanbul, and the two districts as Kocaeli, at the next Turkey rebuild.
 - T-3458 [P3] {L:cleanup} Fewer code comments
   - Context: You 11-16 after the code tour: we might have more comments than needed. CLAUDE.md allows comments only for a why the code doesn't show.
   - Goal: Comments that restate the code or tell history are removed, area by area, with no code change.
@@ -480,10 +479,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: After a run, the follow-up rebuild is still whole-network (North America 0.4-1.1 s). Your idea: only rebuild near the track being drawn.
   - Goal: The drawn network, state rows, strokes and grids update only near the change.
   - Other: notes/T-2404.md has the table of what can be local.
-- T-2725 [P3] {L:census-totals} Colombia's other rows on census totals
-  - Context: Colombia's config and zone rule take census totals since T-2712, but only tiq pis lve seq were rebuilt.
-  - Goal: The other 42 rows run through admin_totals.py dry CO, and those moving over 10% are rebuilt.
-  - Other: notes/T-2702.md
 - T-2726 [P3] {L:region-redraws} {after:each country's rebuild} Small units still in no zone
   - Context: Fernando de Noronha, Con Dao, Lakshadweep, Misu-dong and Chukotka (35k, crosses the 180th meridian) are in no row.
   - Goal: Each is folded in at its country's next rebuild.
@@ -635,6 +630,10 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Context: Tunnels should join land only at their two ends, not draw onto the water (T-2418 fix 2).
   - Goal: Tunnels fixed worldwide, with checks for Hong Kong Island, Haneda and Umihotaru.
   - Other: About 1h45 and 67 GB of re-read extracts. notes/T-2418.md
+- T-3519 [P3] {L:world-rebuild} {after:next data batch} Rural 4 km zones for the packs still without them
+  - Context: You decided on 2026-10-21 (T-852) that existing countries take the 4 km rural blocks at their next routes rebuild, but thin packs such as Barrie, North Bay and Sol Plaatjie still have none (`world_run.py --coarse` is off by default). There farm cells of under one person, each alone in its 2 km zone, are 13-53% of cells; simulated, the blocks would about halve them and halve the zones.
+  - Goal: Thin regions rebuilt with `--coarse 1000`, tiny cells about halved (Barrie 12.6% to about 7%), 1-2 MB less per demand worker in the thinnest packs.
+  - Other: notes/T-3505.md
 - T-2426 [P3] {L:islands} Untagged car ferries in OSM
   - Context: China's Bohai ferries carry cars but lack the motor_vehicle tag, so Shanghai-Dalian now drives round by Beijing (0.87 to 1.60).
   - Goal: A rule for untagged ferries over 50 km, or a decision to leave it.
@@ -1028,10 +1027,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 Tasks that land only when a pack or country is rebuilt, grouped by that rebuild, so whoever runs it knows what rides along (2026-10-26). The two replan groups are also in notes/T-1189.md "What rides along".
 
 ### Europe's next rebuild (T-1189's Europe replan ran without these, T-2302, 2026-11-05)
-- T-617 [P3] {L:region-redraws} {after:Europe rebuild} Rebuild Glasgow, Lisbon and Porto
-  - Context: Rows gla, lis and pot need rebuilding on T-610's unit matching.
-  - Goal: The three rows are rebuilt.
-  - Other: notes/someday.md
 - T-785 [P3] {L:census-totals} {after:Europe rebuild} France's countryside zones
   - Context: France's countryside needs the France module's sources.
   - Goal: Countryside zones built on them.

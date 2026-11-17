@@ -1,1 +1,5 @@
-[]
+[
+  {"id": "a-2026-11-17-1", "text": "Open-source PR 16 (branch lines): leave it, or ask Douglas for his offered cut-down (Shift+click makes a copy line in the same line group, trunk stop edits reach the group's other lines, no save change)? I'd ask for the cut-down.", "since": "2026-11-17", "by": "maps-b8"},
+  {"id": "a-2026-11-17-2", "text": "Open-source PR 22 (level focus: toggles to dim other track levels to 30% and stop snapping to them, a per-browser setting): want it? I'd try it, with our own wording; about 3-5 h.", "since": "2026-11-17", "by": "maps-b8"},
+  {"id": "a-2026-11-17-3", "text": "Resend at its daily cap every day since 11-12 (recovery and reset mails fail for the rest of the day): Pro at $20/month, or leave it?", "since": "2026-11-17", "by": "maps-b8"}
+]

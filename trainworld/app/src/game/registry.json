@@ -30226,6 +30226,74 @@
       {
         "name": "Bucaramanga",
         "regionName": "Bucaramanga region"
+      },
+      {
+        "name": "Caracas",
+        "regionName": "Caracas region"
+      },
+      {
+        "name": "Zamora",
+        "regionName": "Zamora region"
+      },
+      {
+        "name": "Cabimas",
+        "regionName": "Cabimas region"
+      },
+      {
+        "name": "Colón",
+        "regionName": "Colón region"
+      },
+      {
+        "name": "Mara",
+        "regionName": "Mara region"
+      },
+      {
+        "name": "Leonardo Infante",
+        "regionName": "Leonardo Infante region"
+      },
+      {
+        "name": "San Carlos",
+        "regionName": "San Carlos region"
+      },
+      {
+        "name": "Cristóbal Rojas",
+        "regionName": "Cristóbal Rojas region"
+      },
+      {
+        "name": "Autónomo Atures",
+        "regionName": "Autónomo Atures region"
+      },
+      {
+        "name": "Tegucigalpa",
+        "regionName": "Tegucigalpa region"
+      },
+      {
+        "name": "San Pedro Sula",
+        "regionName": "San Pedro Sula region"
+      },
+      {
+        "name": "Danli",
+        "regionName": "Danli region"
+      },
+      {
+        "name": "Roatan",
+        "regionName": "Roatan region"
+      },
+      {
+        "name": "Municipio de Jinotega",
+        "regionName": "Municipio de Jinotega region"
+      },
+      {
+        "name": "Municipio Matagalpa",
+        "regionName": "Municipio Matagalpa region"
+      },
+      {
+        "name": "Municipio Nueva Guinea",
+        "regionName": "Municipio Nueva Guinea region"
+      },
+      {
+        "name": "Municipio Estelí",
+        "regionName": "Municipio Estelí region"
       }
     ],
     "rule": {
@@ -134345,7 +134413,7 @@
       ],
       "place": 7435,
       "country": "VE",
-      "localTrips": 5957668.0,
+      "localTrips": 5811849.0,
       "realm": "venezuela"
     },
     {
@@ -134370,7 +134438,7 @@
       ],
       "place": 7436,
       "country": "VE",
-      "localTrips": 4848435.0,
+      "localTrips": 4837028.0,
       "realm": "venezuela"
     },
     {
@@ -134396,7 +134464,7 @@
       ],
       "place": 7437,
       "country": "VE",
-      "localTrips": 4027374.0,
+      "localTrips": 4009300.0,
       "realm": "venezuela"
     },
     {
@@ -134422,7 +134490,7 @@
       ],
       "place": 7438,
       "country": "VE",
-      "localTrips": 3888074.0,
+      "localTrips": 3886390.0,
       "realm": "venezuela"
     },
     {
@@ -134448,7 +134516,7 @@
       ],
       "place": 7439,
       "country": "VE",
-      "localTrips": 2650752.0,
+      "localTrips": 2641178.0,
       "realm": "venezuela"
     },
     {
@@ -134474,7 +134542,7 @@
       ],
       "place": 7442,
       "country": "VE",
-      "localTrips": 2447039.0,
+      "localTrips": 2436246.0,
       "realm": "venezuela"
     },
     {
@@ -134500,7 +134568,7 @@
       ],
       "place": 7443,
       "country": "VE",
-      "localTrips": 2535142.0,
+      "localTrips": 2534816.0,
       "realm": "venezuela"
     },
     {
@@ -134682,7 +134750,7 @@
       ],
       "place": 7451,
       "country": "VE",
-      "localTrips": 3297858.0,
+      "localTrips": 3297085.0,
       "realm": "venezuela"
     },
     {
@@ -134708,7 +134776,7 @@
       ],
       "place": 7452,
       "country": "VE",
-      "localTrips": 3200693.0,
+      "localTrips": 3190703.0,
       "realm": "venezuela"
     },
     {
@@ -134734,7 +134802,7 @@
       ],
       "place": 7453,
       "country": "VE",
-      "localTrips": 2782449.0,
+      "localTrips": 2782046.0,
       "realm": "venezuela"
     },
     {
@@ -134760,7 +134828,7 @@
       ],
       "place": 7454,
       "country": "VE",
-      "localTrips": 2739175.0,
+      "localTrips": 2739417.0,
       "realm": "venezuela"
     },
     {
@@ -134786,7 +134854,7 @@
       ],
       "place": 7455,
       "country": "VE",
-      "localTrips": 2542822.0,
+      "localTrips": 2539840.0,
       "realm": "venezuela"
     },
     {
@@ -134812,7 +134880,7 @@
       ],
       "place": 7456,
       "country": "VE",
-      "localTrips": 2109705.0,
+      "localTrips": 2101358.0,
       "realm": "venezuela"
     },
     {
@@ -134838,7 +134906,7 @@
       ],
       "place": 7457,
       "country": "VE",
-      "localTrips": 2061424.0,
+      "localTrips": 2055087.0,
       "realm": "venezuela"
     },
     {
@@ -134864,7 +134932,7 @@
       ],
       "place": 7458,
       "country": "VE",
-      "localTrips": 1606162.0,
+      "localTrips": 1603393.0,
       "realm": "venezuela"
     },
     {
@@ -134890,7 +134958,7 @@
       ],
       "place": 7459,
       "country": "VE",
-      "localTrips": 1470207.0,
+      "localTrips": 1469970.0,
       "realm": "venezuela"
     },
     {
@@ -134916,7 +134984,7 @@
       ],
       "place": 7460,
       "country": "VE",
-      "localTrips": 1450354.0,
+      "localTrips": 1440275.0,
       "realm": "venezuela"
     },
     {
@@ -134942,7 +135010,7 @@
       ],
       "place": 7462,
       "country": "VE",
-      "localTrips": 1248181.0,
+      "localTrips": 1246878.0,
       "realm": "venezuela"
     },
     {
@@ -134968,7 +135036,7 @@
       ],
       "place": 7464,
       "country": "VE",
-      "localTrips": 1136641.0,
+      "localTrips": 1138850.0,
       "realm": "venezuela"
     },
     {
@@ -134994,7 +135062,7 @@
       ],
       "place": 7465,
       "country": "VE",
-      "localTrips": 997105.0,
+      "localTrips": 995987.0,
       "realm": "venezuela"
     },
     {
@@ -135020,7 +135088,7 @@
       ],
       "place": 7468,
       "country": "VE",
-      "localTrips": 1004115.0,
+      "localTrips": 859433.0,
       "realm": "venezuela"
     },
     {
@@ -135046,7 +135114,7 @@
       ],
       "place": 7469,
       "country": "VE",
-      "localTrips": 806765.0,
+      "localTrips": 730537.0,
       "realm": "venezuela"
     },
     {
@@ -135072,7 +135140,7 @@
       ],
       "place": 7471,
       "country": "VE",
-      "localTrips": 458682.0,
+      "localTrips": 458695.0,
       "realm": "venezuela"
     },
     {
@@ -135098,7 +135166,7 @@
       ],
       "place": 7474,
       "country": "VE",
-      "localTrips": 269508.0,
+      "localTrips": 266161.0,
       "realm": "venezuela"
     },
     {
@@ -135356,7 +135424,7 @@
       ],
       "place": 7486,
       "country": "HN",
-      "localTrips": 1871503.0,
+      "localTrips": 1838315.0,
       "realm": "central-america"
     },
     {
@@ -135382,7 +135450,7 @@
       ],
       "place": 7487,
       "country": "HN",
-      "localTrips": 1628641.0,
+      "localTrips": 1628343.0,
       "realm": "central-america"
     },
     {
@@ -135408,7 +135476,7 @@
       ],
       "place": 7488,
       "country": "HN",
-      "localTrips": 1647553.0,
+      "localTrips": 1618173.0,
       "realm": "central-america"
     },
     {
@@ -135434,7 +135502,7 @@
       ],
       "place": 7489,
       "country": "HN",
-      "localTrips": 1595226.0,
+      "localTrips": 1594857.0,
       "realm": "central-america"
     },
     {
@@ -135460,7 +135528,7 @@
       ],
       "place": 7490,
       "country": "VE",
-      "localTrips": 1116642.0,
+      "localTrips": 1116453.0,
       "realm": "venezuela"
     },
     {
@@ -135512,7 +135580,7 @@
       ],
       "place": 7492,
       "country": "HN",
-      "localTrips": 2114146.0,
+      "localTrips": 2091493.0,
       "realm": "central-america"
     },
     {
@@ -135538,7 +135606,7 @@
       ],
       "place": 7493,
       "country": "HN",
-      "localTrips": 2278479.0,
+      "localTrips": 2209566.0,
       "realm": "central-america"
     },
     {
@@ -135564,7 +135632,7 @@
       ],
       "place": 7494,
       "country": "HN",
-      "localTrips": 1569425.0,
+      "localTrips": 1566888.0,
       "realm": "central-america"
     },
     {
@@ -135590,7 +135658,7 @@
       ],
       "place": 7495,
       "country": "HN",
-      "localTrips": 1116958.0,
+      "localTrips": 1012171.0,
       "realm": "central-america"
     },
     {
@@ -135616,7 +135684,7 @@
       ],
       "place": 7496,
       "country": "HN",
-      "localTrips": 1183017.0,
+      "localTrips": 1182635.0,
       "realm": "central-america"
     },
     {
@@ -135642,7 +135710,7 @@
       ],
       "place": 7497,
       "country": "HN",
-      "localTrips": 1012474.0,
+      "localTrips": 991484.0,
       "realm": "central-america"
     },
     {
@@ -135668,7 +135736,7 @@
       ],
       "place": 7499,
       "country": "HN",
-      "localTrips": 511379.0,
+      "localTrips": 475045.0,
       "realm": "central-america"
     },
     {
@@ -135848,7 +135916,7 @@
       ],
       "place": 7507,
       "country": "NI",
-      "localTrips": 4734906.0,
+      "localTrips": 4731144.0,
       "realm": "central-america"
     },
     {
@@ -135874,7 +135942,7 @@
       ],
       "place": 7508,
       "country": "NI",
-      "localTrips": 2396130.0,
+      "localTrips": 2395036.0,
       "realm": "central-america"
     },
     {
@@ -135900,7 +135968,7 @@
       ],
       "place": 7510,
       "country": "NI",
-      "localTrips": 2296502.0,
+      "localTrips": 2269097.0,
       "realm": "central-america"
     },
     {
@@ -135926,7 +135994,7 @@
       ],
       "place": 7511,
       "country": "NI",
-      "localTrips": 1629717.0,
+      "localTrips": 1600944.0,
       "realm": "central-america"
     },
     {
@@ -135952,7 +136020,7 @@
       ],
       "place": 7514,
       "country": "NI",
-      "localTrips": 1393044.0,
+      "localTrips": 1369629.0,
       "realm": "central-america"
     },
     {
@@ -136885,6 +136953,445 @@
       "country": "CO",
       "localTrips": 4249788.0,
       "realm": "colombia"
+    },
+    {
+      "id": "caa",
+      "name": "Caracas",
+      "origin": {
+        "lon": -66.7992,
+        "lat": 10.492
+      },
+      "center": [
+        -66.7992,
+        10.492
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.488,
+        10.038,
+        -66.673,
+        10.586
+      ],
+      "place": 7552,
+      "country": "VE",
+      "localTrips": 8624693.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "zmo",
+      "name": "Zamora",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.545,
+        "lat": 10.4757
+      },
+      "center": [
+        -66.545,
+        10.4757
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.814,
+        9.919,
+        -65.412,
+        10.669
+      ],
+      "place": 7553,
+      "country": "VE",
+      "localTrips": 2546977.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "cbm",
+      "name": "Cabimas",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.4557,
+        "lat": 10.4106
+      },
+      "center": [
+        -71.4557,
+        10.4106
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.611,
+        9.562,
+        -70.649,
+        10.999
+      ],
+      "place": 7554,
+      "country": "VE",
+      "localTrips": 2223742.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "clo",
+      "name": "Colón",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.9131,
+        "lat": 8.9955
+      },
+      "center": [
+        -71.9131,
+        8.9955
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -73.372,
+        8.291,
+        -71.379,
+        10.642
+      ],
+      "place": 7555,
+      "country": "VE",
+      "localTrips": 1291121.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "mbm",
+      "name": "Mara",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.738,
+        "lat": 10.9643
+      },
+      "center": [
+        -71.738,
+        10.9643
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -72.918,
+        10.338,
+        -71.305,
+        11.869
+      ],
+      "place": 7556,
+      "country": "VE",
+      "localTrips": 1209776.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "led",
+      "name": "Leonardo Infante",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.0061,
+        "lat": 9.215
+      },
+      "center": [
+        -66.0061,
+        9.215
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.82,
+        7.61,
+        -64.754,
+        10.06
+      ],
+      "place": 7557,
+      "country": "VE",
+      "localTrips": 1009587.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "sck",
+      "name": "San Carlos",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.5745,
+        "lat": 9.654
+      },
+      "center": [
+        -68.5745,
+        9.654
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.007,
+        8.515,
+        -67.975,
+        10.104
+      ],
+      "place": 7558,
+      "country": "VE",
+      "localTrips": 913981.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "crj",
+      "name": "Cristóbal Rojas",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.8578,
+        "lat": 10.2478
+      },
+      "center": [
+        -66.8578,
+        10.2478
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.918,
+        10.136,
+        -66.73,
+        10.371
+      ],
+      "place": 7559,
+      "country": "VE",
+      "localTrips": 374277.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "auo",
+      "name": "Autónomo Atures",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.6185,
+        "lat": 5.6609
+      },
+      "center": [
+        -67.6185,
+        5.6609
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.882,
+        4.088,
+        -66.365,
+        6.214
+      ],
+      "place": 7560,
+      "country": "VE",
+      "localTrips": 356355.0,
+      "realm": "venezuela"
+    },
+    {
+      "id": "teu",
+      "name": "Tegucigalpa",
+      "origin": {
+        "lon": -87.1655,
+        "lat": 14.058
+      },
+      "center": [
+        -87.1655,
+        14.058
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -87.666,
+        13.666,
+        -86.689,
+        14.501
+      ],
+      "place": 7561,
+      "country": "HN",
+      "localTrips": 5513650.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "sap",
+      "name": "San Pedro Sula",
+      "origin": {
+        "lon": -88.0263,
+        "lat": 15.508
+      },
+      "center": [
+        -88.0263,
+        15.508
+      ],
+      "zoom": 11.2,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -88.554,
+        15.168,
+        -87.752,
+        15.779
+      ],
+      "place": 7562,
+      "country": "HN",
+      "localTrips": 4256378.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "dnl",
+      "name": "Danli",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.5701,
+        "lat": 14.0334
+      },
+      "center": [
+        -86.5701,
+        14.0334
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -87.087,
+        13.744,
+        -85.55,
+        14.441
+      ],
+      "place": 7563,
+      "country": "HN",
+      "localTrips": 991325.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "rta",
+      "name": "Roatan",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.4726,
+        "lat": 16.3454
+      },
+      "center": [
+        -86.4726,
+        16.3454
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.622,
+        15.934,
+        -85.796,
+        16.535
+      ],
+      "place": 7564,
+      "country": "HN",
+      "localTrips": 178147.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "mui",
+      "name": "Municipio de Jinotega",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.0019,
+        "lat": 13.085
+      },
+      "center": [
+        -86.0019,
+        13.085
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.805,
+        12.976,
+        -84.809,
+        14.632
+      ],
+      "place": 7565,
+      "country": "NI",
+      "localTrips": 2185224.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "mio",
+      "name": "Municipio Matagalpa",
+      "kind": "zone",
+      "origin": {
+        "lon": -85.918,
+        "lat": 12.9298
+      },
+      "center": [
+        -85.918,
+        12.9298
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.32,
+        12.516,
+        -85.052,
+        13.365
+      ],
+      "place": 7566,
+      "country": "NI",
+      "localTrips": 1688073.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "miv",
+      "name": "Municipio Nueva Guinea",
+      "kind": "zone",
+      "origin": {
+        "lon": -84.4547,
+        "lat": 11.6895
+      },
+      "center": [
+        -84.4547,
+        11.6895
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -85.218,
+        10.689,
+        -82.98,
+        13.33
+      ],
+      "place": 7567,
+      "country": "NI",
+      "localTrips": 1433345.0,
+      "realm": "central-america"
+    },
+    {
+      "id": "mcs",
+      "name": "Municipio Estelí",
+      "kind": "zone",
+      "origin": {
+        "lon": -86.3568,
+        "lat": 13.085
+      },
+      "center": [
+        -86.3568,
+        13.085
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -86.789,
+        12.843,
+        -86.049,
+        13.682
+      ],
+      "place": 7568,
+      "country": "NI",
+      "localTrips": 1138373.0,
+      "realm": "central-america"
     }
   ]
 }

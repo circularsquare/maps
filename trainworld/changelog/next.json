@@ -1014,6 +1014,78 @@
       "rev": 1,
       "area": "demand",
       "fix": false
+    },
+    {
+      "id": "c079",
+      "text": "merged Arnavutkoy into the Istanbul zone, and moved Karamursel to Kocaeli and Altinova to Yalova",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3488",
+      "by": "nightwrap",
+      "at": "2026-11-17T11:24:04Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c080",
+      "text": "fixed Bucaramanga's zone sitting inside another one, and moved 29 Colombian zones onto DANE's 2025 population figures",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3499",
+      "by": "nightwrap",
+      "at": "2026-11-17T11:24:04Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
+      "id": "c081",
+      "text": "fixed missing demand in central Lisbon and in Clydebank and Dumbarton by Glasgow",
+      "edited": null,
+      "hidden": false,
+      "task": "T-617",
+      "by": "nightwrap",
+      "at": "2026-11-17T11:24:04Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
+      "id": "c082",
+      "text": "added a setting to keep buses to one-way streets",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3480",
+      "by": "busoneway",
+      "at": "2026-11-17T11:27:34Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c083",
+      "text": "bubbles under one trip a day joined the nearest bubble, so no bubble shows 0 trips",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3505",
+      "by": "bubfold",
+      "at": "2026-11-17T11:49:44Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
+      "id": "c084",
+      "text": "added Guatemala, Belize, El Salvador, Honduras, Nicaragua, Costa Rica, Panama and Venezuela",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3399",
+      "by": "nightwrap",
+      "at": "2026-11-17T12:53:13Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
     }
   ]
 }

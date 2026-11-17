@@ -3504,5 +3504,19 @@
 "oca": ["Aguachica", "Ábrego", "San Martín", "San Alberto", "Pelaya"],
 "zip": ["Villeta", "Pacho", "Guaduas"],
 "gio": ["La Mesa", "El Colegio"],
-"bug": ["Floridablanca", "Girón", "Piedecuesta", "Lebrija", "Rionegro"]
+"bug": ["Floridablanca", "Girón", "Piedecuesta", "Lebrija", "Rionegro"],
+"caa": ["Santiago de León de Caracas", "Las Tejerías"],
+"zmo": ["Guarenas", "Guatire"],
+"cbm": ["Ciudad Ojeda", "Santa Rita"],
+"clo": ["Santa Bárbara del Zulia", "San Carlos del Zulia"],
+"mbm": ["La Concepción"],
+"led": ["Zaraza", "Valle de La Pascua"],
+"auo": ["Puerto Ayacucho"],
+"teu": ["Villa de San Antonio"],
+"sap": ["Choloma", "La Lima"],
+"dnl": ["Teupasenti"],
+"mui": ["Jinotega", "San Juan de Jinotega", "Las Brumas", "Ocotal"],
+"mio": ["Matagalpa", "Sébaco", "Sébaco de La Asunción", "Nuevo Sébaco de la Asunción"],
+"miv": ["Bluefields", "Blauvelt", "Nueva Guinea", "Colonia Nueva Guinea", "El Rama", "Rama"],
+"mcs": ["Estelí", "Villa de San Antonio de Pavía de Estelí", "Somoto", "Xomotepetl", "Villa de Santiago de los Caballeros de Somoto Grande"]
 }

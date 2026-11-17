@@ -22411,7 +22411,7 @@
    "order": 262,
    "id": "caa",
    "name": "Caracas",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -22476,16 +22476,18 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:23:16",
-    "reason": "gate: drive_factor_median 2.0200555277086965",
     "gate": {
-     "fail": [
-      "drive_factor_median 2.0200555277086965"
-     ],
      "warn": [
-      "top_school_cell_pupils 6000.0"
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0200555277086965"
      ]
     },
-    "parked": "2026-11-16T22:33:01"
+    "parked": "2026-11-16T22:33:01",
+    "gated": "2026-11-17T06:40:18",
+    "shipped": "2026-11-17T07:35:24"
+   },
+   "gate_relax": {
+    "drive_factor_median": "Caracas's narrow valley walled by the Avila and hillside barrios, 2.02 against the metro's 2.0 (T-3399)"
    }
   },
   {
@@ -30481,7 +30483,7 @@
    "order": 371,
    "id": "teu",
    "name": "Tegucigalpa",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -30559,17 +30561,20 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:41:39",
-    "reason": "gate: pop_vs_fua 1.678431252857312 1,148,517 in Tegucigalpa; drive_factor_median 2.0518667734879767",
     "gate": {
-     "fail": [
-      "pop_vs_fua 1.678431252857312 1,148,517 in Tegucigalpa",
-      "drive_factor_median 2.0518667734879767"
-     ],
      "warn": [
-      "top_school_cell_pupils 6000.0"
+      "pop_vs_fua 1.678431252857312",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0518667734879767"
      ]
     },
-    "parked": "2026-11-16T22:59:32"
+    "parked": "2026-11-16T22:59:32",
+    "gated": "2026-11-17T06:40:24",
+    "shipped": "2026-11-17T07:35:25"
+   },
+   "gate_relax": {
+    "drive_factor_median": "Tegucigalpa's hill basin, roads wind round the slopes, 2.05 against the metro's 2.0 (T-3399)",
+    "pop_vs_fua": "whole municipios round GHS-FUA's built-up part (pop_vs_ghsl 0.92-0.94), as T-2695's governorates (T-3399)"
    }
   },
   {
@@ -35155,7 +35160,7 @@
    "order": 433,
    "id": "sap",
    "name": "San Pedro Sula",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -35215,17 +35220,19 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:41:33",
-    "reason": "gate: pop_vs_fua 1.5223342775815942 998,550 in San Pedro Sula",
     "gate": {
-     "fail": [
-      "pop_vs_fua 1.5223342775815942 998,550 in San Pedro Sula"
-     ],
      "warn": [
+      "pop_vs_fua 1.5223342775815942",
       "top_zone_jobs_share 0.1039679027154695",
       "top_school_cell_pupils 6000.0"
      ]
     },
-    "parked": "2026-11-16T22:59:32"
+    "parked": "2026-11-16T22:59:32",
+    "gated": "2026-11-17T06:40:25",
+    "shipped": "2026-11-17T07:35:25"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "whole municipios round GHS-FUA's built-up part (pop_vs_ghsl 0.92-0.94), as T-2695's governorates (T-3399)"
    }
   },
   {
@@ -362123,7 +362130,7 @@
    "id": "dnl",
    "name": "Danli",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -362184,18 +362191,20 @@
      "everyday": 1.1
     },
     "built": "2026-11-16T22:44:14",
-    "reason": "gate: top_zone_jobs_share 0.3625254540366512 at [-86.5732, 14.0259]",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.3625254540366512 at [-86.5732, 14.0259]"
-     ],
      "warn": [
+      "top_zone_jobs_share 0.3625254540366512",
       "top_school_cell_pupils 6048.20166015625",
       "drive_factor_median 2.117000016612675",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-16T23:10:46"
+    "parked": "2026-11-16T23:10:46",
+    "gated": "2026-11-17T06:40:26",
+    "shipped": "2026-11-17T07:35:26"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one-town zone, top square at the town centre (Jinotega 0.27, Matagalpa 0.22, Esteli 0.23, Danli 0.36) (T-3399)"
    }
   },
   {
@@ -362268,7 +362277,7 @@
    "id": "rta",
    "name": "Roatan",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -362319,16 +362328,18 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:44:23",
-    "reason": "gate: top_zone_jobs_share 0.23420657335668452 at [-86.5343, 16.3218]",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.23420657335668452 at [-86.5343, 16.3218]"
-     ],
      "warn": [
+      "top_zone_jobs_share 0.23420657335668452",
       "fleet_range 4"
      ]
     },
-    "parked": "2026-11-16T23:10:48"
+    "parked": "2026-11-16T23:10:48",
+    "gated": "2026-11-17T06:40:27",
+    "shipped": "2026-11-17T07:35:27"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "zone under 0.2M, top 2 km square at the town centre (Coxen Hole, Puerto Ayacucho, Charallave), share up to 0.30 (T-3399)"
    }
   },
   {
@@ -362453,7 +362464,7 @@
    "id": "mui",
    "name": "Municipio de Jinotega",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -362538,18 +362549,20 @@
      "everyday": 1.1
     },
     "built": "2026-11-16T23:25:45",
-    "reason": "gate: top_zone_jobs_share 0.2674086482416275 at [-85.998, 13.0957]",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.2674086482416275 at [-85.998, 13.0957]"
-     ],
      "warn": [
+      "top_zone_jobs_share 0.2674086482416275",
       "top_school_cell_pupils 6128.52392578125",
       "drive_factor_median 2.0841789734955687",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T23:33:33"
+    "parked": "2026-11-16T23:33:33",
+    "gated": "2026-11-17T06:40:28",
+    "shipped": "2026-11-17T07:35:27"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one-town zone, top square at the town centre (Jinotega 0.27, Matagalpa 0.22, Esteli 0.23, Danli 0.36) (T-3399)"
    }
   },
   {
@@ -362739,7 +362752,7 @@
    "id": "mio",
    "name": "Municipio Matagalpa",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -362810,18 +362823,21 @@
      "everyday": 1.2
     },
     "built": "2026-11-16T23:25:31",
-    "reason": "gate: university_rate 0.00081; top_zone_jobs_share 0.2239990229986742 at [-85.9162, 12.9248]",
     "gate": {
-     "fail": [
-      "university_rate 0.00081",
-      "top_zone_jobs_share 0.2239990229986742 at [-85.9162, 12.9248]"
-     ],
      "warn": [
+      "university_rate 0.00081",
+      "top_zone_jobs_share 0.2239990229986742",
       "drive_factor_median 2.0518667734879767",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T23:33:35"
+    "parked": "2026-11-16T23:33:35",
+    "gated": "2026-11-17T06:40:29",
+    "shipped": "2026-11-17T07:35:28"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)",
+    "top_zone_jobs_share": "one-town zone, top square at the town centre (Jinotega 0.27, Matagalpa 0.22, Esteli 0.23, Danli 0.36) (T-3399)"
    }
   },
   {
@@ -362829,7 +362845,7 @@
    "id": "miv",
    "name": "Municipio Nueva Guinea",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -362908,18 +362924,20 @@
      "everyday": 0.8
     },
     "built": "2026-11-16T23:27:44",
-    "reason": "gate: drive_factor_median 3.080216848918031",
     "gate": {
-     "fail": [
-      "drive_factor_median 3.080216848918031"
-     ],
      "warn": [
       "top_zone_jobs_share 0.12006340080486608",
+      "drive_factor_median 3.080216848918031",
       "road_snap_median_m 2252.3",
       "fleet_range 3"
      ]
     },
-    "parked": "2026-11-16T23:33:35"
+    "parked": "2026-11-16T23:33:35",
+    "gated": "2026-11-17T06:40:29",
+    "shipped": "2026-11-17T07:35:29"
+   },
+   "gate_relax": {
+    "drive_factor_median": "Nicaragua's Caribbean lowland frontier, few roads through forest and rivers (road snap median 2.3 km), 3.08 (T-3399)"
    }
   },
   {
@@ -363023,7 +363041,7 @@
    "id": "mcs",
    "name": "Municipio Estelí",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -363098,16 +363116,18 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T23:26:11",
-    "reason": "gate: top_zone_jobs_share 0.23069736022669396 at [-86.3515, 13.097]",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.23069736022669396 at [-86.3515, 13.097]"
-     ],
      "warn": [
+      "top_zone_jobs_share 0.23069736022669396",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T23:33:36"
+    "parked": "2026-11-16T23:33:36",
+    "gated": "2026-11-17T06:40:30",
+    "shipped": "2026-11-17T07:35:29"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "one-town zone, top square at the town centre (Jinotega 0.27, Matagalpa 0.22, Esteli 0.23, Danli 0.36) (T-3399)"
    }
   },
   {
@@ -365517,7 +365537,7 @@
    "id": "zmo",
    "name": "Zamora",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365582,17 +365602,19 @@
      "everyday": 1.0
     },
     "built": "2026-11-16T22:24:30",
-    "reason": "gate: university_rate 0.00021",
     "gate": {
-     "fail": [
-      "university_rate 0.00021"
-     ],
      "warn": [
+      "university_rate 0.00021",
       "top_school_cell_pupils 6058.13916015625",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T22:33:05"
+    "parked": "2026-11-16T22:33:05",
+    "gated": "2026-11-17T06:40:19",
+    "shipped": "2026-11-17T07:35:30"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -365710,7 +365732,7 @@
    "id": "cbm",
    "name": "Cabimas",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365769,18 +365791,20 @@
      "everyday": 1.0
     },
     "built": "2026-11-16T22:24:55",
-    "reason": "gate: university_rate 0.00078",
     "gate": {
-     "fail": [
-      "university_rate 0.00078"
-     ],
      "warn": [
+      "university_rate 0.00078",
       "top_zone_jobs_share 0.18881923699888012",
       "top_school_cell_pupils 6059.48828125",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T22:33:06"
+    "parked": "2026-11-16T22:33:06",
+    "gated": "2026-11-17T06:40:19",
+    "shipped": "2026-11-17T07:35:31"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -366403,7 +366427,7 @@
    "id": "clo",
    "name": "Colón",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -366460,18 +366484,20 @@
      "everyday": 1.0
     },
     "built": "2026-11-16T22:27:20",
-    "reason": "gate: university_rate 0.0002",
     "gate": {
-     "fail": [
-      "university_rate 0.0002"
-     ],
      "warn": [
+      "university_rate 0.0002",
       "drive_factor_median 2.0518667734879767",
       "road_snap_median_m 345.0",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-16T22:51:04"
+    "parked": "2026-11-16T22:51:04",
+    "gated": "2026-11-17T06:40:20",
+    "shipped": "2026-11-17T07:35:31"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -366553,7 +366579,7 @@
    "id": "mbm",
    "name": "Mara",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -366606,17 +366632,19 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:27:41",
-    "reason": "gate: university_rate 0.00023",
     "gate": {
-     "fail": [
-      "university_rate 0.00023"
-     ],
      "warn": [
+      "university_rate 0.00023",
       "top_zone_jobs_share 0.1826532168319236",
       "fleet_range 1"
      ]
     },
-    "parked": "2026-11-16T22:51:05"
+    "parked": "2026-11-16T22:51:05",
+    "gated": "2026-11-17T06:40:21",
+    "shipped": "2026-11-17T07:35:32"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -366837,7 +366865,7 @@
    "id": "led",
    "name": "Leonardo Infante",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -366900,19 +366928,21 @@
      "everyday": 1.1
     },
     "built": "2026-11-16T22:30:01",
-    "reason": "gate: university_rate 0.00022",
     "gate": {
-     "fail": [
-      "university_rate 0.00022"
-     ],
      "warn": [
+      "university_rate 0.00022",
       "top_zone_jobs_share 0.10660046287575331",
       "drive_factor_median 2.0518667734879767",
       "road_snap_median_m 619.8",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-16T22:51:07"
+    "parked": "2026-11-16T22:51:07",
+    "gated": "2026-11-17T06:40:22",
+    "shipped": "2026-11-17T07:35:33"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -366920,7 +366950,7 @@
    "id": "sck",
    "name": "San Carlos",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -366981,18 +367011,20 @@
      "everyday": 0.9
     },
     "built": "2026-11-16T22:29:19",
-    "reason": "gate: university_rate 0.00083",
     "gate": {
-     "fail": [
-      "university_rate 0.00083"
-     ],
      "warn": [
+      "university_rate 0.00083",
       "top_zone_jobs_share 0.10475104178567256",
       "top_school_cell_pupils 6012.22802734375",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-16T22:51:08"
+    "parked": "2026-11-16T22:51:08",
+    "gated": "2026-11-17T06:40:22",
+    "shipped": "2026-11-17T07:35:33"
+   },
+   "gate_relax": {
+    "university_rate": "Venezuela and Nicaragua have no World Bank tertiary figure since 2010, so OSM campuses stand unscaled (as Kosovo, T-788); country gap filed as T-3518 (T-3399)"
    }
   },
   {
@@ -367258,7 +367290,7 @@
    "id": "crj",
    "name": "Cristóbal Rojas",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -367305,17 +367337,20 @@
      "everyday": 1.0
     },
     "built": "2026-11-16T22:30:15",
-    "reason": "gate: top_zone_jobs_share 0.29833407556368147 at [-66.852, 10.2373]; mean_commute_km 2.957769246247669",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.29833407556368147 at [-66.852, 10.2373]",
-      "mean_commute_km 2.957769246247669"
-     ],
      "warn": [
+      "top_zone_jobs_share 0.29833407556368147",
+      "mean_commute_km 2.957769246247669",
       "fleet_range 2"
      ]
     },
-    "parked": "2026-11-16T22:51:12"
+    "parked": "2026-11-16T22:51:12",
+    "gated": "2026-11-17T06:40:23",
+    "shipped": "2026-11-17T07:35:34"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "zone under 0.2M, top 2 km square at the town centre (Coxen Hole, Puerto Ayacucho, Charallave), share up to 0.30 (T-3399)",
+    "mean_commute_km": "compact zone of Charallave and Cua, mean trip 2.96 km against the 3 km floor (T-3399)"
    }
   },
   {
@@ -367323,7 +367358,7 @@
    "id": "auo",
    "name": "Autónomo Atures",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -367372,17 +367407,19 @@
      "everyday": 1.0
     },
     "built": "2026-11-16T22:30:48",
-    "reason": "gate: top_zone_jobs_share 0.21240690777037471 at [-67.5957, 5.6933]",
     "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.21240690777037471 at [-67.5957, 5.6933]"
-     ],
      "warn": [
       "university_rate 0.0",
+      "top_zone_jobs_share 0.21240690777037471",
       "fleet_range 3"
      ]
     },
-    "parked": "2026-11-16T22:51:12"
+    "parked": "2026-11-16T22:51:12",
+    "gated": "2026-11-17T06:40:24",
+    "shipped": "2026-11-17T07:35:35"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "zone under 0.2M, top 2 km square at the town centre (Coxen Hole, Puerto Ayacucho, Charallave), share up to 0.30 (T-3399)"
    }
   },
   {
