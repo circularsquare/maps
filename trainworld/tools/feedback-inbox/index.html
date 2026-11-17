@@ -39,6 +39,7 @@ textarea { display: block; width: 100%; padding: 8px; min-height: 80px; resize: 
 .row .age { margin-left: auto; white-space: nowrap; }
 .row .first { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 .row.closed .first { color: var(--dim); }
+.dot.wait { background: #8fd0f5; margin-left: -2px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--unread); flex: none; align-self: center; }
 .tag { font-size: 12px; color: var(--dim); border: 1px solid var(--line); padding: 0 5px; white-space: nowrap; }
 #thread { min-width: 0; }
@@ -232,6 +233,35 @@ function renderTags() {
     el("button", { type: "button", class: k === tag ? "on" : "", text: label, onclick: () => { tag = k; renderTags(); renderList(); } })));
 }
 
+// The list rows do not say who wrote last, so each open thread is read once per change (GET only) and
+// the author of its last message is kept by id and updated time.
+const lastFrom = new Map();
+const lastFromQueue = [];
+let lastFromBusy = 0;
+function waiting(r) {
+  if (r.broken || r.status === "closed") return false;
+  const c = lastFrom.get(r.id);
+  if (!c || c.updated !== r.updated) {
+    if (!lastFromQueue.includes(r)) lastFromQueue.push(r);
+    pumpLastFrom();
+    return false;
+  }
+  return c.from !== "anita";
+}
+function pumpLastFrom() {
+  while (lastFromBusy < 4 && lastFromQueue.length) {
+    const r = lastFromQueue.shift();
+    lastFromBusy++;
+    api("GET", `trainworld/inbox/thread/${r.id}`).then((x) => x.json()).then((t) => {
+      const m = t.messages || [];
+      lastFrom.set(r.id, { updated: r.updated, from: m.length ? m[m.length - 1].from : "anita" });
+    }).catch(() => { lastFrom.set(r.id, { updated: r.updated, from: "anita" }); }).finally(() => {
+      lastFromBusy--;
+      if (lastFromQueue.length) pumpLastFrom(); else if (!lastFromBusy) renderList();
+    });
+  }
+}
+
 function renderList() {
   const shown = rows.filter(passes);
   $("count").textContent = `${shown.length} shown, ${rows.length} in all`;
@@ -241,7 +271,8 @@ function renderList() {
       r.unread ? el("span", { class: "dot", title: r.unread + " unread" }) : null,
       el("span", { class: "tag", text: TAGS[r.kind] || r.kind }),
       el("span", { class: "who", text: whoOf(r) }),
-      el("span", { class: "age", text: ago(r.updated) }));
+      el("span", { class: "age", text: ago(r.updated) }),
+      waiting(r) ? el("span", { class: "dot wait", title: "Not answered" }) : null);
     const first = el("div", { class: "first", text: r.broken ? "(this thread's file cannot be read)" : r.first || "(empty)" });
     return el("button", { type: "button", class: "row" + (r.id === selected ? " sel" : "") + (r.status === "closed" ? " closed" : ""), onclick: () => open(r.id) }, top, first);
   }));
