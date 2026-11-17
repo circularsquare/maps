@@ -21,7 +21,8 @@ async function lowerOverCap(my: number) {
     if (!d || my !== seq) continue;
     const had = st.trainsNeeded;
     const to = had.map((n, lev) => {
-      const s = d[21 + 5 * lev];
+      // T-3526: the headway the count is capped by, else (an older answer) the line's limit
+      const s = d[36 + lev] > 0 ? d[36 + lev] : d[21 + 5 * lev];
       return s > 0 && !st.autoS?.[lev] ? Math.min(n, trainCap(st, st.roundTripByLevel[lev], s)) : n;
     }) as [number, number, number];
     if (to.some((n, i) => n !== had[i])) await edit({ op: "setTrainCount", line: l.num, trains: to }, true, true);

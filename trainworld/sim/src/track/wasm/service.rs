@@ -317,14 +317,25 @@ impl TrackApi {
     /// as u8), node or -1, x, y, trains an hour through it, the most it takes]`, all zero where the
     /// line's whole fleet runs. Then per level what limits the line (T-679): `[shortest headway s
     /// with every other line as it runs (infinite with no room left), kind, node or -1, x, y]`,
-    /// all zero where nothing does.
+    /// all zero where nothing does. Then per level the shortest headway a train count is capped by
+    /// (T-3526): the same, but with single track's margin counted for a lone train too; 0 where
+    /// nothing limits.
     pub fn line_held(&self, line: u32) -> Vec<f64> {
-        let mut out = vec![0.0; 12 * LEVELS];
+        let mut out = vec![0.0; 13 * LEVELS];
         let cap = &self.w.svc.cap;
         if line as usize >= self.w.net.line_count() {
             return out;
         }
         let most = cap.line_limits(&self.w.net)[line as usize];
+        // the lone case only differs for a line with one train or none
+        let lone = self.w.net.line_trains[line as usize].map_or(true, |t| t.iter().any(|&n| n <= 1));
+        let paired = if lone { cap.line_limits_lone(&self.w.net, false)[line as usize] } else { most };
+        for lev in 0..LEVELS {
+            let tph = paired[lev].0;
+            if paired[lev].1 != u32::MAX {
+                out[12 * LEVELS + lev] = if tph > 0.0 { 3600.0 / tph } else { f64::INFINITY };
+            }
+        }
         for lev in 0..LEVELS {
             let (tph, r) = most[lev];
             if r == u32::MAX {

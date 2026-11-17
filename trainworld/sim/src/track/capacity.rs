@@ -199,6 +199,12 @@ impl Capacity {
     /// as it stands, and the limiting resource that sets it: (trains an hour, resource), or
     /// (infinity, MAX) where nothing limits it. `fill` cuts a line at the same rate.
     pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); 3]> {
+        self.line_limits_lone(net, true)
+    }
+
+    /// `line_limits`, with `lone` false counting single track's margin for a lone train too
+    /// (T-3526): the limit a second train would meet, which a line's train count is capped by.
+    pub fn line_limits_lone(&self, net: &Network, lone: bool) -> Vec<[(f64, u32); 3]> {
         let mut out = vec![[(f64::INFINITY, u32::MAX); 3]; net.line_count()];
         let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
@@ -206,7 +212,7 @@ impl Capacity {
             for lev in 0..LEVELS {
                 own.clear();
                 for u in self.users_of(r) {
-                    let occ = occ_at(net, self.users_of(r), single, u, lev) / 3600.0;
+                    let occ = if lone { occ_at(net, self.users_of(r), single, u, lev) } else { u.occ } / 3600.0;
                     match own.iter_mut().find(|o| o.0 == u.line) {
                         Some(o) => o.1 += occ,
                         None => own.push((u.line, occ, self.caps(r, u))),
@@ -1136,7 +1142,10 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
             }
             load += tph * occ_at(net, us, single, u, lev);
             trains += tph;
-            let key = (u.line, u.run);
+            // T-3526: on two-way single track a line's two directions are timetabled to meet (the
+            // margin is the meeting), so they are one stream: one line alone waits for nothing until
+            // the track is full, as on any other resource. Different lines still queue.
+            let key = (u.line, if single { 0 } else { u.run });
             match streams.iter_mut().find(|s| s.0 == key) {
                 Some(s) => s.1 = s.1.max(tph),
                 None => streams.push((key, tph)),

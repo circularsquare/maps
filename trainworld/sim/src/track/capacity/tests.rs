@@ -199,6 +199,74 @@ fn a_lone_train_on_single_track_keeps_no_margin_from_itself() {
     }
 }
 
+/// T-3526 (Anita, 2026-11-17): a line's two directions on two-way single track are one stream, timetabled
+/// to meet, so the line alone waits for nothing there however many trains run; a second line on the
+/// stretch still queues with it. The cap's limit counts the margin for a lone train too.
+#[test]
+fn a_line_alone_on_single_track_does_not_queue_against_itself() {
+    use super::super::tests::{edge, line, node, station, world};
+    // 30 km of double track, then 2 km of single track to the end: two and three trains fit
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let c = node(&mut w, 30000.0, 0.0, 0);
+    let b = node(&mut w, 32000.0, 0.0, 0);
+    edge(&mut w, a, c, &[], 0).unwrap();
+    let e = edge(&mut w, c, b, &[], 0).unwrap();
+    let mut d = w.net.edge_data(e).unwrap();
+    d.tracks = 1;
+    w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    for n in [a, c, b] {
+        station(&mut w, n, 200);
+    }
+    let l = line(&mut w, &[a, c, b], [2.0, 0.0, 0.0]);
+    let single = |w: &TrackWorld| w.svc.cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
+    for n in [1u32, 2, 3] {
+        let tph = w.net.line_tph[l as usize];
+        w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
+        let r = single(&w);
+        let rho = w.svc.cap.rho[r][0];
+        assert!(n == 1 || (0.3..1.0).contains(&rho), "{n} trains fill the stretch to {rho}");
+        assert_eq!(w.svc.cap.delay[r][0], 0.0, "{n} trains wait {} s at their own single track (rho {rho})", w.svc.cap.delay[r][0]);
+        let both: f64 = w.svc.cap.users_of(r).iter().map(|u| u.occ).sum();
+        let cap_lim = w.svc.cap.line_limits_lone(&w.net, false)[l as usize][0].0;
+        assert!((cap_lim - 3600.0 / both).abs() < 1e-6, "{n} trains: the cap's limit {cap_lim} an hour, not the margin's {}", 3600.0 / both);
+    }
+    let o = line(&mut w, &[a, b], [2.0, 0.0, 0.0]);
+    let tph = w.net.line_tph[o as usize];
+    w.apply(Op::TrainCounts { id: o, trains: Some([1, 0, 0]), tph }).unwrap();
+    let r = single(&w);
+    assert!(w.svc.cap.delay[r][0] > 0.0, "two lines on one stretch wait for each other (rho {})", w.svc.cap.rho[r][0]);
+}
+
+/// T-3526: a shuttle on one stretch of single track goes from one train (no margin, T-3201) to two;
+/// the lone rate is past what two trains may run, so the second train's coming must cut the rate to
+/// the stretch rather than leave it over full with the line counted as held.
+#[test]
+fn a_second_train_on_a_lone_shuttle_cuts_it_to_the_stretch() {
+    use super::super::tests::{edge, line, node, station, world};
+    let mut w = world();
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let b = node(&mut w, 5000.0, 0.0, 0);
+    let e = edge(&mut w, a, b, &[], 0).unwrap();
+    let mut d = w.net.edge_data(e).unwrap();
+    d.tracks = 1;
+    w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    station(&mut w, a, 200);
+    station(&mut w, b, 200);
+    let l = line(&mut w, &[a, b], [2.0, 0.0, 0.0]);
+    for n in [1u32, 2, 3] {
+        let tph = w.net.line_tph[l as usize];
+        w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
+        let r = w.svc.cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
+        let rho = w.svc.cap.rho[r][0];
+        assert!(rho <= 1.0 + 1e-6, "{n} trains: the stretch at {rho}, {} an hour", w.net.line_tph[l as usize][0]);
+        if n > 1 {
+            let both: f64 = w.svc.cap.users_of(r).iter().map(|u| u.occ).sum();
+            assert!((w.net.line_tph[l as usize][0] as f64 - 3600.0 / both).abs() < 0.01, "{n} trains run {} an hour, the stretch takes {}", w.net.line_tph[l as usize][0], 3600.0 / both);
+        }
+    }
+}
+
 /// A line ending at a dead end and at a through station gets the same limit (T-3107, Anita
 /// 2026-11-10): 15 an hour at a 3-minute turnaround without a terminal, 30 with one.
 #[test]

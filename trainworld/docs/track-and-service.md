@@ -807,11 +807,18 @@ lines is plain track for capacity: a branch no train uses yet does not cut the s
 **Delay per train** (seconds), Kingman's queueing formula with a small variability term because
 trains are timetabled:
 
-    mix = 1 - sum over (line, direction) streams of (share of trains)²
+    mix = 1 - sum over (line, direction) streams of (share of trains)²   (a line on two-way single track: one stream)
     W   = 0.2 x mix x s x rho / (1 - rho)        rho <= 0.9; straight-line continuation above
         + 1800 x (1 - 1/rho)                     when rho > 1 (the queue builds for an hour)
 
-One line alone has no queueing delay (its trains are evenly spaced) until it is over capacity. A
+One line alone has no queueing delay (its trains are evenly spaced) until it is over capacity. On
+two-way single track that holds for both its directions together: they are timetabled to meet, the
+margin being the meeting, so a line alone there waits for nothing and the trains past what the stretch
+carries are held at the ends, as at a terminal (T-3526, Anita 2026-11-17). The lie: a real pair of
+trains also waits at the meeting station whenever the round trip is not a whole number of headways
+(two trains on 5 km of single track in a 15 km line: about 3 minutes a round trip); the game counts
+the running trains' round trip without it and holds part of a train instead, so trains an hour are
+right and ride times a little short. Different lines on one stretch still queue. A
 90 s junction shared by two equal lines: 27 s at 75%, 81 s at 90%, ~3 min at 100%, ~7 min at 110%.
 
 **Behind slower trains** (T-1924, notes/T-1900.md N1; Anita 2026-11-02). A faster line on a stretch
@@ -902,7 +909,9 @@ in proportion to the rate its fleet would give, until the first resource it uses
 (the hand-over below sends them out of service), so a fleet past capacity buys no shorter headway
 and no rider waits longer than at 100%. So the shortest headway a line can have is its fullest
 resource's `s`, 1m47s on track at 80 km/h. A count level held this way counts as settled, so
-an edit elsewhere leaves it to the bit.
+an edit elsewhere leaves it to the bit, except past full on single track only that line runs over:
+only its own rate can do that (a lone train's, which keeps no margin, when a second comes), so it is
+cut to the stretch (T-3526).
 
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
@@ -1228,7 +1237,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   A hand-set count is held by the panel to one train (a loop's two) more than the whole trains the
   limit allows: it refuses a rise at that and clamps a typed number to it (ui-inspectors.md; T-3165),
   so one train is held and shows as such; a count past it is lowered when a game loads and otherwise
-  kept until it is lowered.
+  kept until it is lowered. The limit the count is held to counts single track's margin even for a
+  lone train (`line_held`'s last three figures, `line_limits_lone`; T-3526), so a line of one train is
+  capped by what two would meet, not by its lone figure (T-3201).
   Every edit that changes the line, its track or shared track settles the counts
   again (`TrackWorld::settle_train_counts`: count from the round trip, settle the rates, repeat up
   to 5 rounds), and whole trains that full track would keep waiting at the ends (6.2) are dropped,

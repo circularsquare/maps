@@ -124,7 +124,8 @@ export function limitsFrom(v: Float64Array, vehicle: Vehicle): (Limit | null)[] 
     const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
     if (!(s > 0)) return null;
     const name = ((node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y))?.name ?? "";
-    return { s, what: fullParts(kind, name, vehicle).head + name };
+    const capS = v[36 + lev];
+    return { s, what: fullParts(kind, name, vehicle).head + name, capS: capS > 0 ? capS : s };
   });
 }
 

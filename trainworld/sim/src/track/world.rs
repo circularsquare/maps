@@ -671,8 +671,16 @@ impl TrackWorld {
                 let counts = self.net.line_trains[id as usize].unwrap();
                 for lev in 0..LEVELS {
                     let short = self.net.running_trains(id as usize, lev, trips[j][lev]) - rates[j][lev] as f64 * trips[j][lev] / 3600.0;
-                    // T-517: a line short of its fleet's rate is settled when a track it uses is full
-                    let held = short > 0.0 && worst[id as usize][lev].0 >= FULL_RHO;
+                    // T-517: a line short of its fleet's rate is settled when a track it uses is full.
+                    // T-3526: not single track it alone runs over past full: only its own rate can
+                    // overfill that (a lone train's rate, T-3201, when a second train comes), so it is
+                    // stepped and the fill cuts it to the stretch.
+                    let (wr, wres) = worst[id as usize][lev];
+                    let own_over = wr > 1.0 + 1e-9 && wres != u32::MAX && {
+                        let cap = &self.svc.cap;
+                        cap.res[wres as usize].kind == ResKind::SingleTrack && cap.users_of(wres as usize).iter().all(|u| u.line == id)
+                    };
+                    let held = short > 0.0 && wr >= FULL_RHO && !own_over;
                     // T-1283: a round trip that jumps as the rate passes a threshold (a hold coming
                     // and going) has no rate that fits the fleet exactly, and the steps below circle
                     // it to the cap, each a pass over every line. Near the fit, a shortfall that

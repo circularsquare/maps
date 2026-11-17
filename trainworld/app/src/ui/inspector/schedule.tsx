@@ -88,7 +88,9 @@ function changeTip(counts: readonly number[], lev: number, to: number, st: LineS
 
 /** What limits a rail line per level (T-679): its shortest headway in seconds with the other lines
  * as they run, and the spot named as the capacity alerts name it ("Terminus at West"). */
-export interface Limit { s: number; what: string }
+/** `capS`: the shortest headway the train count is capped by, which on single track counts the
+ * meeting margin for a lone train too (T-3526); `s` otherwise */
+export interface Limit { s: number; what: string; capS: number }
 export const NO_LIMITS: (Limit | null)[] = [null, null, null];
 
 /** "Terminus at West takes one train every 4m00s at most", or with no room left "... is full" */
@@ -134,7 +136,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
     const twin = st.twin ? world.value?.save.lines.find((x) => x.id === st.twin) : undefined;
     const tph = countPending ? (trip > 0 ? (counts[lev] * 3600) / trip : 0) : l.tph[d] + (twin?.tph[d] ?? 0);
     // T-3165: one train more than the track lets run, so one is held and the held messages show
-    const cap = trainCap(st, trip, limit?.s ?? null);
+    const cap = trainCap(st, trip, limit?.capS ?? null);
     const full = counts[lev] >= cap;
     const grow = (to: number) => setTrainCount(l.id, d, Math.min(to, cap));
     return (
