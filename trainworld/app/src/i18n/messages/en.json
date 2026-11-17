@@ -2152,6 +2152,8 @@
   "toolNotes.stopTip": "Stop (Esc)",
   "toolNotes.tripEnd": "{touch, select, true {Now tap where the trip ends, or a station.} other {Now click where the trip ends, or a station.}}",
   "toolNotes.tripHint": "{touch, select, true {Tap where a trip starts, or a station.} other {Click where a trip starts, or a station.}}",
+  "tools.noTrainToTram": "Train track cannot be connected to tram track",
+  "tools.noTramToTrain": "Tram track cannot be connected to train track",
   "tools.notOnTrack": "Place stations on track",
   "tools.tooFar": "Too far for one piece of track ({max} at most). Press Esc to start somewhere else.",
   "tools.tooFarTouch": "Too far for one piece of track ({max} at most).",

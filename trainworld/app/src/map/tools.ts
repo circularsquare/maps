@@ -414,7 +414,7 @@ export class Tools {
   }
 
   /** What is under the pointer for building: a node, a point on track, or open ground. */
-  private snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true): Snap {
+  private snap(px: number, py: number, lngLat: { lng: number; lat: number }, nodes = true, anyFamily = false): Snap {
     const w = world.peek();
     const n = this.overlay.renderer.net;
     const [fx, fy] = toLocal(lngLat.lng, lngLat.lat);
@@ -435,7 +435,7 @@ export class Tools {
     nodes &&= !station;
     // T-2926: tram track and train track never join, so while drawing, only the picked family's are snap targets
     // T-3153: only the track tool filters by family; delete and the rest see all track
-    const fam = station || tool.peek() !== "track" ? null : tramTrack.peek();
+    const fam = station || anyFamily || tool.peek() !== "track" ? null : tramTrack.peek();
     const tramOf = fam === null ? null : this.tramEdgeSet(w);
     const nearNodes = at && nodes ? nodesNear(w, at[0], at[1], TRACK_NODE_PX * at[2]) : null;
     const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
@@ -2255,6 +2255,8 @@ export class Tools {
       if (rt.text) kids.push(rt.text);
       if (kids.length) this.showTag(kids, rt.bad, ...at!);
       else this.tag.style.display = "none";
+    } else if (t === "track" && h?.kind === "free" && !hb && this.familyClash()) {
+      this.showTag(tr(tramTrack.peek() ? "tools.noTramToTrain" : "tools.noTrainToTram"), true, ...this.screen(h.lx, h.ly));
     } else if (t === "track" && this.start && h && !this.snapped && this.tooFar(h)) {
       this.showTag(tooFarText(), true, ...at!);
     } else if (t === "track" && this.start && h && (pv || this.waiting())) {
@@ -2270,6 +2272,13 @@ export class Tools {
       if (lines.length) this.showTag(lines, false, ...at!);
       else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
+  }
+
+  /** T-3561: the pointer is over track of the other family (tram or train) that the family filter in `snap` skipped, with no snap of the picked family. */
+  private familyClash(): boolean {
+    const p = this.pointer;
+    if (!p || this.real.ringAt || this.street.ringAt) return false;
+    return this.snap(p.px, p.py, { lng: p.lng, lat: p.lat }, true, true).kind !== "free";
   }
 
   /** The cursor tag with `content`, red when `bad`, by the screen point (x, y). */

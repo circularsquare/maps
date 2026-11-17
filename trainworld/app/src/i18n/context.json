@@ -2149,6 +2149,8 @@
   "toolNotes.stopTip": "Hover on the cross beside the tool description at the map's bottom left. Esc is the Escape key.",
   "toolNotes.tripEnd": "Grey hint at the map's bottom left after a trip's start is chosen. touch: true on a touch screen.",
   "toolNotes.tripHint": "Grey hint at the map's bottom left while the trip tool is on. touch: true on a touch screen.",
+  "tools.noTrainToTram": "Red tag in the track tool with train track picked, when the pointer is over tram track and no train track is near enough to snap to.",
+  "tools.noTramToTrain": "Red tag in the track tool with tram track picked, when the pointer is over train track and no tram track is near enough to snap to.",
   "tools.notOnTrack": "Notice and tag when a click for a station is not on track.",
   "tools.tooFar": "Notice and tag in the track tool when the next point is too far. max: \"500 km\".",
   "tools.tooFarTouch": "Notice and tag in the track tool when the next point is too far, on a phone or tablet. max: \"500 km\".",
