@@ -58,14 +58,14 @@
       "id": "c076",
       "text": "added a real world network snap for tram track that follows real tram and light rail, and redrew the snap buttons as one set of icons",
       "edited": "added a real world network snap for tram track that follows real tram and light rail, and redrew the snap buttons as one set of icons, with snap to streets a straight street with a dashed center line",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3069",
       "by": "trams",
       "at": "2026-11-17T07:44:10Z",
-      "rev": 3,
+      "rev": 4,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:35:23Z",
       "parent": "c128"
     },
     {
@@ -85,15 +85,15 @@
     {
       "id": "c118",
       "text": "a station placed on a real world station now takes its name",
-      "edited": "a station placed on a real world station takes its name by default",
+      "edited": "a station placed near a real world station takes its name",
       "hidden": false,
       "task": "T-3571",
       "by": "realstations",
       "at": "2026-11-17T18:33:34Z",
-      "rev": 4,
+      "rev": 6,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:36:01Z",
       "parent": "c128"
     },
     {
@@ -110,34 +110,6 @@
       "group": true
     },
     {
-      "id": "c103",
-      "text": "fixed single tram track drawn off a double track's end with snap to streets on, which joined both tracks instead of the one under the pointer",
-      "edited": "fixed single tram track continuing a double track end with snap to streets on, which joined both tracks instead of the one under the pointer",
-      "hidden": false,
-      "task": "T-3537",
-      "by": "tramsplit",
-      "at": "2026-11-17T17:00:29Z",
-      "rev": 4,
-      "area": "track",
-      "fix": true,
-      "changed": "2026-11-17T20:19:30Z",
-      "parent": "c129"
-    },
-    {
-      "id": "c114",
-      "text": "trams now pass each other at a tram stop on single track placed as a passing station, as trains do, so single tram lines can run more trams",
-      "edited": null,
-      "hidden": false,
-      "task": "T-3563",
-      "by": "tramloops",
-      "at": "2026-11-17T18:14:16Z",
-      "rev": 2,
-      "area": "track",
-      "fix": false,
-      "parent": "c129",
-      "changed": "2026-11-17T20:19:30Z"
-    },
-    {
       "id": "c126",
       "text": "tram stops can have a terminal and passing tracks, like rail stations",
       "edited": null,
@@ -150,6 +122,34 @@
       "fix": false,
       "parent": "c129",
       "changed": "2026-11-17T20:19:30Z"
+    },
+    {
+      "id": "c103",
+      "text": "fixed single tram track drawn off a double track's end with snap to streets on, which joined both tracks instead of the one under the pointer",
+      "edited": "fixed extending double track tram with single tracks when snap to street is enabled, now handles splitting better",
+      "hidden": false,
+      "task": "T-3537",
+      "by": "tramsplit",
+      "at": "2026-11-17T17:00:29Z",
+      "rev": 19,
+      "area": "track",
+      "fix": true,
+      "changed": "2026-11-17T20:28:26Z",
+      "parent": "c129"
+    },
+    {
+      "id": "c114",
+      "text": "trams now pass each other at a tram stop on single track placed as a passing station, as trains do, so single tram lines can run more trams",
+      "edited": "trams can use passing tracks like normal trains",
+      "hidden": true,
+      "task": "T-3563",
+      "by": "tramloops",
+      "at": "2026-11-17T18:14:16Z",
+      "rev": 4,
+      "area": "track",
+      "fix": false,
+      "parent": "c129",
+      "changed": "2026-11-17T20:28:37Z"
     },
     {
       "id": "c061",
@@ -206,13 +206,14 @@
       "id": "c113",
       "text": "narrow rivers count as water across more of their width, so track over them is priced as a bridge for more of the crossing",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3553",
       "by": "shoreswap",
       "at": "2026-11-17T18:14:10Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T20:36:32Z"
     },
     {
       "id": "c018",
@@ -230,15 +231,15 @@
     {
       "id": "c092",
       "text": "track along a shore no longer counts as over water when it is on land",
-      "edited": "water border improved for track construction what is considered on water",
+      "edited": "water border improved, for the purpose of track construction",
       "hidden": false,
       "task": "T-3524",
       "by": "shore",
       "at": "2026-11-17T14:54:10Z",
-      "rev": 16,
+      "rev": 18,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-17T20:05:40Z"
+      "changed": "2026-11-17T20:36:45Z"
     },
     {
       "id": "c112",
@@ -325,30 +326,30 @@
     {
       "id": "c022",
       "text": "high speed track drawn with clicked corners now keeps the speed you set",
-      "edited": null,
+      "edited": "high speed track drawn with shifted corners now keeps the speed you set",
       "hidden": false,
       "task": "T-3421",
       "by": "bugs2",
       "at": "2026-11-16T14:52:38Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:27:36Z"
     },
     {
       "id": "c036",
       "text": "the network hover no longer shows over a bus route's path in edit route",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3370",
       "by": "b5",
       "at": "2026-11-16T15:18:30Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:27:29Z"
     },
     {
       "id": "c007",
@@ -543,56 +544,57 @@
     {
       "id": "c130",
       "text": "added scheduling tools:",
-      "edited": null,
+      "edited": "added schedule panel:",
       "hidden": false,
       "task": null,
       "by": "logsort",
       "at": "2026-11-17T20:19:30Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
       "fix": false,
-      "group": true
+      "group": true,
+      "changed": "2026-11-17T20:38:32Z"
     },
     {
       "id": "c094",
       "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
-      "edited": "added weekend scheduling! can run fewer trains on weekends and holidays with new schedule panel",
+      "edited": "added weekend scheduling! can run fewer trains on weekends and holidays",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 14,
+      "rev": 15,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:38:36Z",
       "parent": "c130"
     },
     {
       "id": "c095",
       "text": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart",
-      "edited": "added timetable in schedule panel",
+      "edited": "added timetable!",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 7,
+      "rev": 9,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:42:32Z",
       "parent": "c130"
     },
     {
       "id": "c123",
       "text": "added a Set as default button in the timetables window that gives every new line the selected line's headways, and one timetable button on the line panel in place of copy and paste schedule",
-      "edited": "can set default headways for new lines, per train-type",
+      "edited": "can set default headways that are applied to new lines",
       "hidden": false,
       "task": "T-3543",
       "by": "schedbutton",
       "at": "2026-11-17T19:28:19Z",
-      "rev": 9,
+      "rev": 20,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:39:02Z",
       "parent": "c130"
     },
     {
@@ -692,15 +694,15 @@
     {
       "id": "c015",
       "text": "rail line panels have a small chart of fares minus running costs for each of the last 7 days",
-      "edited": "rail line panels have a chart at the bottom with blue fare bars and red running cost bars for each of the last 30 days",
+      "edited": "added per-line daily fare history graph",
       "hidden": false,
       "task": "T-2787",
       "by": "unhold",
       "at": "2026-11-16T14:40:45Z",
-      "rev": 3,
+      "rev": 12,
       "area": "fares",
       "fix": false,
-      "changed": "2026-11-17T19:30:24Z"
+      "changed": "2026-11-17T20:42:20Z"
     },
     {
       "id": "c120",
@@ -745,43 +747,43 @@
     {
       "id": "c023",
       "text": "bus routes now split their money between regions by the route's own points",
-      "edited": null,
+      "edited": "bus routes now split their money between regions",
       "hidden": false,
       "task": "T-1502",
       "by": "b6",
       "at": "2026-11-16T14:57:44Z",
-      "rev": 2,
+      "rev": 3,
       "area": "fares",
       "fix": true,
       "parent": "c058",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:41:41Z"
     },
     {
       "id": "c039",
       "text": "the money chart now runs on local time where you build first when the game has no start city",
-      "edited": null,
+      "edited": "the money chart now runs on local time where you build first, if the game has no start city",
       "hidden": false,
       "task": "T-3407",
       "by": "pick2",
       "at": "2026-11-16T15:39:30Z",
-      "rev": 2,
+      "rev": 3,
       "area": "fares",
       "fix": true,
       "parent": "c058",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:41:49Z"
     },
     {
       "id": "c001",
       "text": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings",
-      "edited": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings; a hidden level is drawn faint and can't be clicked, hovered or snapped to",
+      "edited": "added visibility toggles for lines, track level, line type, line group",
       "hidden": false,
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:32:56Z",
-      "rev": 3,
+      "rev": 13,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-17T19:30:24Z"
+      "changed": "2026-11-17T20:31:53Z"
     },
     {
       "id": "c054",
@@ -919,15 +921,15 @@
     {
       "id": "c044",
       "text": "added the reclaimed land at Shenzhen Bay Port and Tide Park to Shenzhen, so it has homes and jobs",
-      "edited": null,
+      "edited": "added reclaimed land at Shenzhen Bay Port and Tide Park to Shenzhen",
       "hidden": false,
       "task": "T-3428",
       "by": "shenzhen",
       "at": "2026-11-16T16:35:58Z",
-      "rev": 4,
+      "rev": 6,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-17T20:19:30Z",
+      "changed": "2026-11-17T20:29:29Z",
       "parent": "c132"
     },
     {
@@ -947,16 +949,16 @@
     {
       "id": "c081",
       "text": "fixed missing demand in central Lisbon and in Clydebank and Dumbarton by Glasgow",
-      "edited": null,
+      "edited": "added missing demand in central Lisbon and in Clydebank and Dumbarton by Glasgow",
       "hidden": false,
       "task": "T-617",
       "by": "nightwrap",
       "at": "2026-11-17T11:24:04Z",
-      "rev": 2,
+      "rev": 5,
       "area": "demand",
       "fix": true,
       "parent": "c132",
-      "changed": "2026-11-17T20:19:30Z"
+      "changed": "2026-11-17T20:40:59Z"
     },
     {
       "id": "c059",
@@ -986,29 +988,29 @@
     {
       "id": "c037",
       "text": "sharing a very large network works, and one still too big says so",
-      "edited": "sharing a very large network works",
+      "edited": "fixed very large saves failing to be shared",
       "hidden": false,
       "task": "T-3440",
       "by": "sv",
       "at": "2026-11-16T15:28:01Z",
-      "rev": 4,
+      "rev": 17,
       "area": "community",
       "fix": true,
-      "changed": "2026-11-17T20:13:01Z"
+      "changed": "2026-11-17T20:41:30Z"
     },
     {
       "id": "c086",
       "text": "the game uses about 500 MB less memory on desktop",
-      "edited": "small games use about 350 MB less memory on desktop",
+      "edited": "memory use improvements",
       "hidden": false,
       "task": null,
       "by": "maps-b8",
       "at": "2026-11-17T13:51:03Z",
-      "rev": 5,
+      "rev": 6,
       "area": "performance",
       "fix": false,
       "group": true,
-      "changed": "2026-11-17T19:20:17Z"
+      "changed": "2026-11-17T20:30:02Z"
     },
     {
       "id": "c066",
@@ -1069,27 +1071,29 @@
     {
       "id": "c068",
       "text": "big games use less memory: demand runs on fewer cores for them, about 0.5 GB less on a New York sized network and 3 GB less on all of China, with loads up to a third slower",
-      "edited": null,
-      "hidden": false,
+      "edited": "smarter core allocation to reduce memory usage for big",
+      "hidden": true,
       "task": "T-3373",
       "by": "memA",
       "at": "2026-11-16T23:06:24Z",
-      "rev": 2,
+      "rev": 5,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T20:30:40Z"
     },
     {
       "id": "c133",
       "text": "some things run faster:",
-      "edited": null,
+      "edited": "speed improvements",
       "hidden": false,
       "task": null,
       "by": "logsort",
       "at": "2026-11-17T20:19:30Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
       "fix": false,
-      "group": true
+      "group": true,
+      "changed": "2026-11-17T20:29:57Z"
     },
     {
       "id": "c055",
@@ -1149,14 +1153,14 @@
       "id": "c041",
       "text": "a saved game outside new york no longer downloads new york's city data first",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-899",
       "by": "c2",
       "at": "2026-11-16T15:50:27Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": true,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:31:04Z"
     },
     {
       "id": "c084",
@@ -1212,13 +1216,14 @@
       "id": "c062",
       "text": "new game from the saves panel no longer sat in the old game for up to a minute while terrain would not load; it saves and goes by the start menu",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3478",
       "by": "newgame",
       "at": "2026-11-16T20:59:31Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:30:49Z"
     },
     {
       "id": "c027",
