@@ -273,30 +273,22 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
   - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
-- T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (taking, 2026-11-17, agent settle2)
-  - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
-  - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
-  - Other: notes/T-3473.md
+- T-3541 [P2] {L:single-track} Blueprint extension breaks a split line (taking, 2026-11-17, agent tramsplit)
+  - Context: Your pad, 2026-11-17: "took my blue split double track line and extended the loose end that they were reversing at, extended with a double track. that broke the line, and im unable to get it back running." Then: "oddly it breaks the line right when i place the blueprint extending, before anything is actually constructed. if i delete the extension the line starts working agian as before."
+  - Goal: Placing blueprint track off a line's end never stops the line; the split Caracas tram line keeps running with a double extension at its end.
+- T-3540 [P2] {L:map-look} Tram stations show their tracks and platforms (taking, 2026-11-17, agent tramstation)
+  - Context: Your pad, 2026-11-17: "currently one-track stations (no passing loop) on trams look the exact same as two-track stations on one-track line (passing loop). we should draw the passing loop. and if its a one track, we should let the platform be smaller and skewed toward one side. should have very similar sort of shape to one way station on two tracks. um. i guess by default on the outside (so that if you have a split double track, each single track station gets a platform visually on the outside.) also i think tram platform boxes shoudl be a little narrower than train paltform boxes in general. visually. lets say 30% less wide."
+  - Goal: Every station on single track, rail or tram, draws one smaller platform to one side (outside by default, so a split double track's stations face out), with any passing track drawn on the other side, away from the platform (your follow-up 2026-11-17: "not tram specific ... it should apply even if we have a passing track. the passing track should be on the inside"); tram platform boxes are 30% narrower than rail ones.
 - T-3537 [P2] {L:track-drawing} Street snap merges a double track's split (taking, 2026-11-17, agent tramsplit)
   - Context: Your pad, 2026-11-17 (artifacts/trainworld/board/20261117-105027-a8c7.png): "when i hover the end of the double track, i get the yellow dot that indicates its gonna extend from one of the two tracks. but after i actually click, it ends up just merging the two single tracks into one, i think cuz its being overriden by "snap to street" ... i do want it to snap to street after i start extending ... if we are extending a double track with single, we should pay more attention to where the mouse is relative to the end of the double track, over the "snap to street" that forces us to merge the two tracks. we should only merge the two tracks if we're hovering over the center of the loose end. this should also be doable without zooming in a ton ideally."
   - Goal: With street snap on, clicking near one track of a double track's loose end extends that track as single; only a click at the end's centre extends both, at normal zooms.
 - T-3538 [P2] {L:single-track} Split tram line flagged as turning back at its end (taking, 2026-11-17, agent tramsplit)
   - Context: Your pad, 2026-11-17 (artifacts/trainworld/board/20261117-105713-f76a.png): "this split tram route says theres a switchback / yellow turn back at the southwest end. i feel like there shouldnt be, this is just a simple linear route except for the fact that it splits in the middle, and it should be treated as a linear route at its ends."
   - Goal: A line that splits into two one-way singles in the middle shows no switchback mark at its ends.
-- T-3535 [P2] {L:track-drawing} Tram crossing mark missing from the preview (taking, 2026-11-17, agent tramlag)
-  - Context: You, 2026-11-17: "we have a different icon from the normal "x" flat crossing when a tram crosses a train. it shows up after we place the tram segment but not while we're only hovering / about to place, in that case we still show a normal x. could we have the broken x show up when we are hovering / about to place ghost?"
-  - Goal: The drawing preview shows the tram-rail crossing mark wherever the placed track would show it.
-- T-3532 [P2] {L:borders} {waits:Anita} Buenos Aires to Montevideo drive too short
-  - Need from Anita: OK to mark estuaries and wide rivers as water in the drive grid (Natural Earth) and rebuild the drives table overnight, so this drive goes from 5 h 41 to about 7 h 20 like the road around? Recommended: yes.
-  - Context: Your pad, 2026-11-17: "someone complained about buenos aires montevideo driving time being too short. we have a rough estimate of this right? what does our current method do for this case?" The drive is a least-cost path on a road-speed grid; it cuts across the Parana delta and the head of the Plata, which the water grid has as land (5 h 41, 323 km; real road about 7 h, 580 km, plus the border). Burning Natural Earth's sea in gives 7 h 22 in a test. No border-crossing time exists.
+- T-3532 [P3] {L:borders} Buenos Aires to Montevideo drive too short
+  - Context: You said yes 2026-11-17 to the water fix, later ("not super high prio"). Fix: mark estuaries and wide rivers as water in the drive grid (Natural Earth), count the pairs that change, rebuild the drives table overnight. Your pad, 2026-11-17: "someone complained about buenos aires montevideo driving time being too short. we have a rough estimate of this right? what does our current method do for this case?" The drive is a least-cost path on a road-speed grid; it cuts across the Parana delta and the head of the Plata, which the water grid has as land (5 h 41, 323 km; real road about 7 h, 580 km, plus the border). Burning Natural Earth's sea in gives 7 h 22 in a test. No border-crossing time exists.
   - Goal: Drives across estuaries and deltas go around them or take a mapped ferry; how many other pairs change is measured first.
   - Other: notes/T-3532.md
-- T-3533 [P2] {L:map-look} Double track narrower than its real spacing (taking, 2026-11-17, agent tracklook)
-  - Context: Your pad, 2026-11-17: "if we zoom in on double track, for a short period, the visual width of the double track looks *smaller* than the actual width/distance between the two tracks of the double track... like the tracks expand out as we zoom in. thats kinda silly. we should have the visual width of the double track always correspond at least to the actual width on the world. so it should start spreading out a bit sooner i guess."
-  - Goal: At every zoom the drawn double track is at least as wide as the real distance between its two tracks.
-- T-3534 [P2] {L:map-look} Single track white stripe at close zoom (taking, 2026-11-17, agent tracklook)
-  - Context: Your pad, 2026-11-17: "also when super super zoomed in on single track it looks like it has a thin white line running down its center which is confusing. lets just have it be a solid gray line, no white stripe."
-  - Goal: Single track at the closest zooms is a solid grey line with no white stripe.
 - T-3530 [P3] {L:region-redraws} Coastal land for Japan's hand packs
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
@@ -304,7 +296,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3528 [P3] {L:solve-speed} Undo after load takes back the cap lowering
   - Context: From T-3512: the cap lowering on load (T-3165, capLoad.ts) lands as undoable edits a second or two after a load, so a quick edit then undo takes back a lowering instead of the player's edit. Only saves with counts past the cap meet it.
   - Goal: The load's cap lowering is not on the undo stack; an undo right after load undoes the player's own edit.
-- T-3513 [P3] {L:solve-speed} {after:T-3512 lands} Train edits at high demand still take most of a minute
+- T-3513 [P3] {L:solve-speed} Train edits at high demand still take most of a minute
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
   - Other: notes/T-3512.md

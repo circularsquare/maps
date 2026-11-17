@@ -1251,6 +1251,66 @@
       "rev": 1,
       "area": "track",
       "fix": false
+    },
+    {
+      "id": "c098",
+      "text": "fixed double track looking narrower than the real gap between its tracks as you zoom in",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3533",
+      "by": "tracklook",
+      "at": "2026-11-17T16:09:40Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
+      "id": "c099",
+      "text": "single tram track is a solid grey line close up, with no white wire down the middle",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3534",
+      "by": "tracklook",
+      "at": "2026-11-17T16:09:40Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c100",
+      "text": "fixed tram track crossing a railway showing a plain x while drawing instead of the broken x it gets when placed",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3535",
+      "by": "tramlag",
+      "at": "2026-11-17T16:23:22Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c101",
+      "text": "a click on a station of the selected complex selects that station on its own; clicking it again goes back to the complex",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3539",
+      "by": "complexpick",
+      "at": "2026-11-17T16:23:22Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c102",
+      "text": "train count changes on a one-city game settle in seconds to about a minute, not one to two minutes",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3512",
+      "by": "settle2",
+      "at": "2026-11-17T16:23:22Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
     }
   ]
 }

@@ -1,6 +1,11 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3539 [P2] {L:small-fixes} Click a station inside a selected complex (2026-11-17): A click on a station of the selected complex selects it alone; a second click goes back to the complex; landed 66379382.
+- T-3535 [P2] {L:track-drawing} Tram crossing mark missing from the preview (2026-11-17): Network::crossing_trams shared by placed and preview crossings; the ghost shows the broken x over rail; landed e9547f93. notes/T-3531.md.
+- T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (2026-11-17): Edit's local solve skipped where its populations took over 35% of a worker's passes (LOCAL_SHARE_MAX 0.35); NYC settle low 7 s vs ~114-166, medium 25-35 s vs ~127-172; checker PASS with figures identical to master; landed fbadc218. notes/T-3512.md.
+- T-3534 [P2] {L:map-look} Single track white stripe at close zoom (2026-11-17): single tram track parted out to its own width has no white wire; single rail track was already solid grey.
+- T-3533 [P2] {L:map-look} Double track narrower than its real spacing (2026-11-17): bare double track is drawn at least its tracks' outer width at every zoom (grows from about zoom 15.5 in New York instead of 15.9)
 - T-3536 [P2] {L:track-drawing} New snap to street icon (2026-11-17): snap to streets icon redrawn after her mockup; no clash with snapRoads (never in one bar).
 - T-3524 [P2] {L:track-drawing} Track near the shore counted as over water (2026-11-17): 12 m WATER_MARGIN on pack water masks; checker PASS (channels stay water, shore track on land goes to ground, crossings 2-9% cheaper, NYC built cost -0.6%); Anita OK'd 12 m. notes/T-3524.md.
 - T-3531 [P1] {L:track-drawing} Street tram drawing slow since v0.3.5 (2026-11-17): closed without code: Not reproduced: 33 ms per pointer move on dev in NYC and Caracas; Anita found 8800 fine later, likely the machine near its core cap with many agents and 8800 rebuilds running.
