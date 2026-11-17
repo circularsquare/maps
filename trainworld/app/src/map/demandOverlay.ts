@@ -11,7 +11,7 @@ import { MODE_COLOURS, rgbf, UNBUILT_RIM } from "../game/palette";
 import { shadeColours } from "../game/shades";
 import { DISC } from "../workers/commutersProtocol";
 import { anchor, pxPerUnitAt, type Anchor } from "./geo";
-import { compile, GpuTimer, localCamera, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, sizeCanvasLike, uniforms, type Camera, type LocalCamera } from "./gl";
+import { compile, fitSparse, GpuTimer, localCamera, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type Camera, type LocalCamera } from "./gl";
 import { bubblePad, hot, onHot, SELECTED_PAD_PX } from "./hovered";
 import type { Overlay } from "./overlay";
 import { PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, shapePoints, type StationShape } from "./stationGeometry";
@@ -306,7 +306,8 @@ export class DemandOverlay {
     this.canvas.className = "overlay demand";
     // over the network's canvas, under the station names and markers
     overlay.canvas.after(this.canvas);
-    const gl = this.canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: true, alpha: true });
+    // T-3497: no depth buffer (nothing here tests depth), and 0 by 0 while nothing is drawn (`fitSparse`)
+    const gl = this.canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: true, alpha: true, depth: false, stencil: false });
     if (!gl) throw new Error("no WebGL2");
     this.gl = gl;
     this.programs();
@@ -349,7 +350,7 @@ export class DemandOverlay {
   }
 
   private size() {
-    sizeCanvasLike(this.canvas, this.map);
+    fitSparse(this.canvas, this.map, !this.blank);
   }
 
   private makeSet(data: Float32Array, a: Anchor): DiscSet {
@@ -551,17 +552,16 @@ export class DemandOverlay {
       if (s) list.push(s);
     }
     if (!list.length && !this.lines.size) {
-      // clear once, then leave the canvas alone
+      // nothing drawn: no backing store either
       if (!this.blank) {
-        gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        fitSparse(this.canvas, this.map, false);
         this.blank = true;
       }
       return;
     }
     const t0 = performance.now();
     this.blank = false;
+    fitSparse(this.canvas, this.map, true);
     this.timer.begin();
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clearColor(0, 0, 0, 0);

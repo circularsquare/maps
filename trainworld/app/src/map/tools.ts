@@ -2112,7 +2112,10 @@ export class Tools {
     const n = this.overlay.renderer.net;
     const on = tool.peek() === "track" && besideOn.peek() && !!n;
     if (!on) {
-      if (this.bandEl) this.bandEl.style.display = "none";
+      if (this.bandEl) {
+        this.bandEl.style.display = "none";
+        this.bandEl.width = this.bandEl.height = 0; // T-3497: no backing store while hidden
+      }
       this.bandKey = "";
       return;
     }

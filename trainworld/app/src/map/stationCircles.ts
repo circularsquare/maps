@@ -15,7 +15,7 @@ import { stationUse, useFigure } from "../game/stationUse";
 import type { WorldView } from "../game/types";
 import { display, mapShade, stopEditing, type StationUseMode } from "../game/ui";
 import { world } from "../game/world";
-import { sizeCanvasLike } from "./gl";
+import { fitSparse } from "./gl";
 import type { Overlay } from "./overlay";
 import { stationHaloRadius, STATIONS_ZOOM } from "./stationGeometry";
 
@@ -128,6 +128,7 @@ export class StationCircles {
     this.canvas.className = "overlay stations";
     below.after(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
+    fitSparse(this.canvas, map, false);
     this.size();
     map.on("resize", () => {
       this.size();
@@ -148,7 +149,8 @@ export class StationCircles {
   }
 
   private size() {
-    [this.cssW, this.cssH] = sizeCanvasLike(this.canvas, this.map);
+    const c = this.map.getCanvas();
+    [this.cssW, this.cssH] = [c.clientWidth, c.clientHeight];
   }
 
   /** The figures or the network changed: draw again on the next animation frame. */
@@ -160,10 +162,20 @@ export class StationCircles {
 
   draw() {
     this.dirty = false;
+    this.placed = [];
+    this.place();
+    fitSparse(this.canvas, this.map, this.placed.length > 0);
+    if (!this.placed.length) return;
     const g = this.ctx, k = this.canvas.width / Math.max(1, this.cssW);
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.placed = [];
+    g.setTransform(k, 0, 0, k, 0, 0);
+    const col = circleColours();
+    for (const p of this.placed) drawCircle(g, p.x, p.y, p.r, p.c.transfers / p.c.riders, col);
+  }
+
+  /** The circles on screen now into `placed`. */
+  private place() {
     const net = this.overlay.renderer.net, w = world.peek(), dv = demandView.peek(), mode = modeNow(), zoom = this.map.getZoom();
     if (!net || !w || !dv || mode === "none" || zoom < STATIONS_ZOOM || !this.overlay.cam) return;
     const R = stationHaloRadius(zoom) * display.peek().stationCircleSize, at: [number, number] = [NaN, NaN];
@@ -173,9 +185,6 @@ export class StationCircles {
       if (!(r > 0) || Number.isNaN(at[0]) || at[0] < -r || at[1] < -r || at[0] > this.cssW + r || at[1] > this.cssH + r) continue;
       this.placed.push({ c, x: at[0], y: at[1], r });
     }
-    g.setTransform(k, 0, 0, k, 0, 0);
-    const col = circleColours();
-    for (const p of this.placed) drawCircle(g, p.x, p.y, p.r, p.c.transfers / p.c.riders, col);
   }
 
   /** The circle under a point (CSS px in the map) as last drawn: of those it is inside, the one whose

@@ -5,7 +5,7 @@
 // with the last, so with none there is no work at all. Motion by design, like the trains.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { sizeCanvasLike } from "./gl";
+import { fitSparse } from "./gl";
 import type { Overlay } from "./overlay";
 import { mix, SKIN, toneFor } from "./faceTones";
 import { countryAt } from "../game/holidays";
@@ -440,7 +440,7 @@ export class Faces {
   private countries = new Map<string, string>();
 
   constructor(private map: MlMap, private overlay: Overlay) {
-    map.on("resize", () => this.canvas && this.size());
+    map.on("resize", () => this.canvas && fitSparse(this.canvas, this.map, this.faces.length > 0));
     overlay.afterMapFrame.push(() => {
       if (this.faces.length) this.draw();
     });
@@ -503,18 +503,11 @@ export class Faces {
     this.overlay.canvas.after(c);
     this.canvas = c;
     this.ctx = c.getContext("2d");
-    this.size();
-  }
-
-  private size() {
-    sizeCanvasLike(this.canvas!, this.map);
+    fitSparse(c, this.map, false);
   }
 
   private wipe() {
-    if (this.canvas && this.ctx) {
-      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+    if (this.canvas) fitSparse(this.canvas, this.map, false);
   }
 
   /** The animation loop: a draw on each frame while faces are alive, but on MapLibre's frames from
@@ -530,8 +523,10 @@ export class Faces {
     if (!ctx || !this.canvas) return;
     const now = performance.now(), dpr = this.map.getPixelRatio(), zoom = this.map.getZoom();
     this.faces = this.faces.filter((f) => now - f.born < LIFE_MS);
-    this.wipe();
+    fitSparse(this.canvas, this.map, this.faces.length > 0);
     if (!this.faces.length) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // a little larger the closer the view, from 14 px at the platforms' zoom to 20 px
     const size = 14 + 6 * Math.min(1, Math.max(0, (zoom - 14) / 3));

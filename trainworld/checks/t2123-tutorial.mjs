@@ -24,12 +24,13 @@ const errors = [];
 const ringBox = (page) => page.evaluate(() => {
   const c = document.querySelector('canvas.guide-ripple');
   if (!c || !c.width) return null;
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, k = c.width / innerWidth;
+  // T-3497: the canvas covers the target and its rings' reach, not the screen
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, at = c.getBoundingClientRect(), k = c.width / at.width;
   let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
   for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) {
     if (d[(y * c.width + x) * 4 + 3] > 0) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
   }
-  return x1 < 0 ? null : { x0: x0 / k, y0: y0 / k, x1: x1 / k, y1: y1 / k };
+  return x1 < 0 ? null : { x0: at.left + x0 / k, y0: at.top + y0 / k, x1: at.left + x1 / k, y1: at.top + y1 / k };
 });
 /** whether the ripple is round the element `sel` (its centre inside the rings' box, the box within 24 px of it) */
 const ringOn = async (page, sel) => {

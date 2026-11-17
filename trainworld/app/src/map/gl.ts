@@ -93,6 +93,18 @@ export function sizeCanvasLike(canvas: HTMLCanvasElement, map: { getPixelRatio()
   return [w, h];
 }
 
+/** T-3497: an overlay canvas that is blank most of the time (the station circles, the demand discs, a trip's
+ * routes, the gap flash, the faces) holds no backing store while blank: `on` false makes it 0 by 0, true sizes it
+ * like the map's if it is not already. A change of size clears it. */
+export function fitSparse(canvas: HTMLCanvasElement, map: { getPixelRatio(): number; getCanvas(): HTMLCanvasElement }, on: boolean) {
+  if (!on) {
+    if (canvas.width || canvas.height) canvas.width = canvas.height = 0;
+    return;
+  }
+  const dpr = map.getPixelRatio(), c = map.getCanvas();
+  if (canvas.width !== (c.width || Math.round(c.clientWidth * dpr)) || canvas.height !== (c.height || Math.round(c.clientHeight * dpr))) sizeCanvasLike(canvas, map);
+}
+
 /** A point through a camera matrix `m` (column-major, as MapLibre's) to CSS px in a `w` by `h` view,
  * y down, into `out[at]` and `out[at + 1]`. The point is in the space `m` maps from (local units
  * for a matrix made with `localToMercMatrix`, Mercator 0..1 for the camera's). */

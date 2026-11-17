@@ -7,7 +7,7 @@
 import type { Map as MlMap } from "maplibre-gl";
 import { NET_INK } from "../game/palette";
 import { shadeColours } from "../game/shades";
-import { sizeCanvasLike } from "./gl";
+import { fitSparse } from "./gl";
 import type { Overlay } from "./overlay";
 
 /** Shown at full strength this long, then faded out over FADE_MS. */
@@ -32,11 +32,8 @@ export class GapFlash {
     this.canvas.style.zIndex = "2";
     overlay.canvas.after(this.canvas);
     this.ctx = this.canvas.getContext("2d")!;
-    sizeCanvasLike(this.canvas, map);
-    map.on("resize", () => {
-      sizeCanvasLike(this.canvas, map);
-      this.draw();
-    });
+    fitSparse(this.canvas, map, false);
+    map.on("resize", () => this.draw());
     overlay.afterMapFrame.push(() => {
       if (this.ends) this.draw();
     });
@@ -89,9 +86,10 @@ export class GapFlash {
 
   private draw() {
     const ctx = this.ctx, dpr = this.map.getPixelRatio();
+    fitSparse(this.canvas, this.map, !!this.ends);
+    if (!this.ends) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    if (!this.ends) return;
     const t = performance.now() - this.start;
     ctx.globalAlpha = t <= HOLD_MS ? 1 : Math.max(0, 1 - (t - HOLD_MS) / FADE_MS);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

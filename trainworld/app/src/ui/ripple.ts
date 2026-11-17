@@ -108,30 +108,52 @@ function ensureCanvas(): HTMLCanvasElement {
   canvas = document.createElement("canvas");
   canvas.className = "guide-ripple";
   canvas.setAttribute("aria-hidden", "true");
-  canvas.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:99999";
+  canvas.style.cssText = "position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:99999";
   document.body.appendChild(canvas);
   return canvas;
 }
 
+/** css px round the target's box that the rings reach */
+const REACH_PX = GROW_PX + LINE_PX + 1;
+
+/** T-3497: the canvas covers the target's box and its rings' reach only (a whole screen's backing store, held while
+ * the tutorial runs, was about 20 MB on a phone), 0 by 0 with nothing to ring; the css px corner it starts at */
+function fitTo(cv: HTMLCanvasElement, r: DOMRect | null, dpr: number): [number, number] {
+  if (!r) {
+    if (cv.width || cv.height) cv.width = cv.height = 0;
+    return [0, 0];
+  }
+  const x = Math.floor(r.left - REACH_PX), y = Math.floor(r.top - REACH_PX);
+  const cw = Math.ceil(r.right + REACH_PX) - x, ch = Math.ceil(r.bottom + REACH_PX) - y;
+  const w = Math.round(cw * dpr), h = Math.round(ch * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  // the box is the drawing's own size in css px, so one unit is one css px (T-2795)
+  const s = cv.style, px = (v: number) => v + "px";
+  if (s.left !== px(x)) s.left = px(x);
+  if (s.top !== px(y)) s.top = px(y);
+  if (s.width !== px(cw)) s.width = px(cw);
+  if (s.height !== px(ch)) s.height = px(ch);
+  return [x, y];
+}
+
 function frame(now: number) {
   const cv = ensureCanvas();
-  const dpr = cappedPixelRatio() ?? (devicePixelRatio || 1), w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
-  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
-  // T-2795: 100vw/100vh is the large viewport on a phone (its address bar hidden), taller than innerHeight, which
-  // stretched the drawing and put rings an inch off; the box is the drawing's own size so one unit is one css px
-  const cw = innerWidth + "px", ch = innerHeight + "px";
-  if (cv.style.width !== cw) cv.style.width = cw;
-  if (cv.style.height !== ch) cv.style.height = ch;
-  const g = cv.getContext("2d")!;
-  g.setTransform(1, 0, 0, 1, 0, 0);
-  g.clearRect(0, 0, w, h);
   const p = pulse;
   const total = reduced.matches ? STILL_MS : (RINGS - 1) * RING_GAP_MS + RING_MS;
-  if (!p || (!p.loop && now - p.at > total)) { pulse = null; looping = false; return; }
+  const dpr = cappedPixelRatio() ?? (devicePixelRatio || 1);
+  if (!p || (!p.loop && now - p.at > total)) {
+    pulse = null; looping = false;
+    fitTo(cv, null, dpr);
+    return;
+  }
   if (p.el && !p.el.isConnected) p.el = p.sel ? document.querySelector(p.sel) : null;
-  if (p.el && !blocked(p.step)) {
-    const r = p.el.getBoundingClientRect();
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const r = p.el && !blocked(p.step) ? p.el.getBoundingClientRect() : null;
+  const [x0, y0] = fitTo(cv, r, dpr);
+  if (r) {
+    const g = cv.getContext("2d")!;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, cv.width, cv.height);
+    g.setTransform(dpr, 0, 0, dpr, -x0 * dpr, -y0 * dpr);
     g.strokeStyle = p.colour;
     g.lineWidth = LINE_PX;
     const ring = (grow: number, alpha: number) => {

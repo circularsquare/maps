@@ -29,7 +29,7 @@ import { stationNames, stopsById, world } from "../game/world";
 import { placeAt } from "../game/zones";
 import { addFinder } from "./demandHover";
 import { toLngLat, toLocal, unitPerPxAt } from "./geo";
-import { sizeCanvasLike } from "./gl";
+import { fitSparse } from "./gl";
 import type { NetworkBuffers } from "./network";
 import type { Overlay } from "./overlay";
 import { pick } from "./pick";
@@ -71,8 +71,8 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
   let straight: string[] | null = null;
   let marks: { from: [number, number]; to: [number, number] | null; fromStation?: string; toStation?: string } | null = null;
 
-  sizeCanvasLike(canvas, map);
-  map.on("resize", () => { sizeCanvasLike(canvas, map); draw(); });
+  fitSparse(canvas, map, false);
+  map.on("resize", () => draw());
 
   /** pack metres (the two ends) to screen */
   const screen = (p: [number, number]) => {
@@ -110,9 +110,10 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
 
   function draw() {
     const dpr = map.getPixelRatio();
+    fitSparse(canvas, map, !!marks);
+    if (!marks) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!marks) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // a veil of the land colour over the network while a trip's routes are drawn, so they stand
     // out from the lines they ride

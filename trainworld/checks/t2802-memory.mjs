@@ -112,7 +112,7 @@ async function memoryDump(cdp, where) {
   const report = {};
   for (const e of events) {
     const a = e.ph === 'v' && e.args?.dumps?.allocators;
-    if (!a || !/Renderer/i.test(names.get(e.pid) ?? '')) continue;
+    if (!a || !Object.keys(a).length || !/Renderer/i.test(names.get(e.pid) ?? '')) continue;
     const keys = Object.keys(a), leaf = keys.filter((k) => !keys.some((o) => o.startsWith(k + '/')));
     const by = {};
     for (const k of leaf) {
@@ -164,10 +164,18 @@ try {
     await new Promise((r) => setTimeout(r, 500));
     // each demand worker's WASM memory and its allocator's live and peak bytes, MB
     const wasm = await page.evaluate(() => window.twDemand?.client?.mem?.map((m) => m && [m.wasm, ...(m.heap ?? [])].map((x) => Math.round(x / 1048576)).join('/'))).catch(() => null);
-    const r = { where, ...(await chromeMemory(chrome.profile)), ctx: await contexts(raw, !NOGC), demandWasm: wasm };
+    // T-3497: the page's canvases (class and backing size) and each MapLibre source's tiles in view and in its cache
+    const gfx = await page.evaluate(() => {
+      const canvases = [...document.querySelectorAll('canvas')].map((c) => `${c.className || '?'} ${c.width}x${c.height}`);
+      const ms = window.tw?.map?.style?.tileManagers ?? {};
+      const tiles = Object.entries(ms).map(([id, m]) => [id, m._inViewTiles?.getAllIds?.().length ?? -1, m._outOfViewCache?.order?.length ?? -1, m._outOfViewCache?.max ?? -1]).filter((t) => t[1] > 0 || t[2] > 0);
+      return { canvases, tiles };
+    }).catch(() => null);
+    const r = { where, ...(await chromeMemory(chrome.profile)), ctx: await contexts(raw, !NOGC), demandWasm: wasm, gfx };
     stages.push(r);
     console.log(where, `renderer ${r.renderer} gpu ${r.gpu} total ${r.total} demand wasm/live/peak ${wasm}`);
     console.log('    used+backing+wasm', r.ctx.map(([n, u, b, w]) => `${n} ${u}+${b}+${w}`).join(', '));
+    if (gfx) console.log('    canvases', gfx.canvases.join(', '), '| tiles in view/cached/max', gfx.tiles.map((t) => t.join(' ')).join(', '));
     if (process.env.DUMP && !NOGC) dumps[where] = await memoryDump(cdp, where);
   };
   await page.goto(`${BASE}?debug=1&demandWorkers=${DW}${QS}&v=${Date.now()}`);
