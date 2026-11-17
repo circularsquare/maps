@@ -160,7 +160,7 @@ export type EditOp =
   | { op: "weekendShare"; line: number; share: number }
   /** T-3521: a line's whole trains on weekends set by hand, high, medium, low
    * (`TrackApi.set_line_weekend_counts`) */
-  | { op: "weekendCounts"; line: number; counts: [number, number, number] }
+  | { op: "weekendCounts"; line: number; counts: [number, number, number]; headways?: [number, number, number] }
   /** T-3521: every line's weekends at a percent of its weekdays, as one edit
    * (`TrackApi.set_weekend_share_all`) */
   | { op: "weekendShareAll"; share: number }

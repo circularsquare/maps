@@ -275,6 +275,7 @@ pub fn halve(d: &mut LineData) {
     d.trains = d.trains.map(|t| t.map(|x| x.div_ceil(2)));
     // T-3521: weekend counts set by hand are one pair's too, or each pair would run the whole line's
     if let Some(c) = &mut d.weekend.counts { *c = c.map(|x| x.div_ceil(2)); }
+    d.weekend.headways = d.weekend.headways.map(|h| h * 2);
     d.tph = d.tph.map(|t| t / 2.0);
     d.auto = d.auto.map(|a| a.map(|h| h * 2));
 }
@@ -283,6 +284,7 @@ pub fn halve(d: &mut LineData) {
 pub fn double(d: &mut LineData) {
     d.trains = d.trains.map(|t| t.map(|x| x * 2));
     if let Some(c) = &mut d.weekend.counts { *c = c.map(|x| x * 2); }
+    d.weekend.headways = d.weekend.headways.map(|h| h / 2);
     d.tph = d.tph.map(|t| t * 2.0);
     d.auto = d.auto.map(|a| a.map(|h| h / 2));
 }

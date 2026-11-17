@@ -1265,7 +1265,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   switch; an edit here is the line panel's edit. The table has two sections (T-3521), each a bold heading row
   with room above it: **Weekdays**, the line panel's rows, and **Weekends** (hover "Weekends and public
   holidays"), a row a level with the same steppers on the line's weekend counts (under headways a headway
-  stepper, the count beside it), its headway the rate settled for weekends. Beside the Weekends heading the
+  stepper, the count beside it; the headway stepped to is kept with the counts and the weekends run it, T-3557),
+  its headway the rate settled for weekends. Beside the Weekends heading the
   line's percent of its weekdays in a stepper (5% a click, typed 10-200), greyed with the hover "Weekend trains
   set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set every line's weekends
   to 70% of its weekdays?" first. The level in force is bold in today's section only; each section's dots are its

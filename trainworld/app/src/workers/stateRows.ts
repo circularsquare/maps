@@ -112,7 +112,7 @@ function autoOf(v: ArrayLike<number>): [number, number, number] | null {
 /** T-3521: a line's weekends (`TrackApi.line_weekend`), empty where they are the weekdays' at 100%. */
 function weekendOf(a: TrackApi, id: number): number[] {
   const w = a.line_weekend(id);
-  return w.length === 5 && (w[0] !== 100 || w[1] !== 0) ? [...w] : [];
+  return w.length === 8 && (w[0] !== 100 || w[1] !== 0) ? [...w] : [];
 }
 
 function sameNumbers(a: ArrayLike<number>, b: ArrayLike<number>): boolean {

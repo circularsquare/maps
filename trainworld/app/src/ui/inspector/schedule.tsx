@@ -181,7 +181,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
 
 /** One demand level's weekend cells in the schedule panel: as the weekday row's (`LevelCells`), a
  * count stepper and the headway it runs, or under headways the count and a headway stepper. A step
- * sets the line's weekend counts by hand (`setWeekendCount`). The headway is the rate settled for
+ * sets the line's weekend counts by hand (`setWeekendCount`), with the headway stepped to under headways. The headway is the rate settled for
  * weekends (`restTph`), or for a count still on its way the round trip over it. */
 function WeekendCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d: Demand; auto: boolean; limits: (Limit | null)[] }) {
   const v = vehicleOf(st), lev = DEMAND_INDEX[d];

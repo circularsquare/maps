@@ -548,8 +548,11 @@ pub fn encode(net: &Network) -> Vec<u8> {
         for (i, x) in weekend {
             w.u(i as u64);
             w.u(x.share as u64);
-            w.u(x.counts.is_some() as u64);
+            // 1: counts; 2: counts and the headways stepped to (T-3557)
+            let hw = x.counts.is_some() && x.headways != [0; 3];
+            w.u(if hw { 2 } else { x.counts.is_some() as u64 });
             if let Some(c) = x.counts { for v in c { w.u(v as u64); } }
+            if hw { for v in x.headways { w.u(v as u64); } }
         }
         // the settled rates to the bit, so a load runs the same weekend trains
         let solved = net.rates_settled && net.rest_solved;
@@ -1051,14 +1054,17 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let share = r.u()?.min(u16::MAX as u64) as u16;
-            let counts = if r.u()? == 1 {
+            let flag = r.u()?;
+            let counts = if flag == 1 || flag == 2 {
                 let mut c = [0u32; 3];
                 for v in c.iter_mut() { *v = r.u()?.min(u32::MAX as u64) as u32; }
                 Some(c)
             } else {
                 None
             };
-            if i < n_lines { net.line_weekend[i] = Weekend { share, counts }; }
+            let mut headways = [0u32; 3];
+            if flag == 2 { for v in headways.iter_mut() { *v = r.u()?.min(u32::MAX as u64) as u32; } }
+            if i < n_lines { net.line_weekend[i] = Weekend { share, counts, headways }; }
         }
         if r.u()? == 1 {
             // only lines with trains have rates written; one without runs its weekday rates

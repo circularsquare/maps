@@ -4130,7 +4130,7 @@ function applyInner(op: EditOp): Applied {
     case "weekendShare":
       return { r: a.set_line_weekend_share(op.line, op.share) };
     case "weekendCounts":
-      return { r: a.set_line_weekend_counts(op.line, ...op.counts) };
+      return { r: op.headways ? a.set_line_weekend_headways(op.line, ...op.counts, ...op.headways) : a.set_line_weekend_counts(op.line, ...op.counts) };
     case "weekendShareAll":
       return { r: a.set_weekend_share_all(op.share) };
     case "lineLook": {

@@ -200,7 +200,7 @@ fn t3333_weekend_counts_split_with_the_line() {
     }
     assert_eq!(a.line_pairs(l), 1);
     let t = a.line_twin(l) as u32;
-    assert_eq!(a.line_weekend(l)[2..], [8.0, 4.0, 2.0], "the whole line's, as set");
+    assert_eq!(a.line_weekend(l)[2..5], [8.0, 4.0, 2.0], "the whole line's, as set");
     assert_eq!(a.w.net.line_weekend[t as usize], a.w.net.line_weekend[l as usize], "the twin runs the other pair's");
     // set on both pairs: half each
     assert_eq!(a.set_line_weekend_counts(l, 10, 4, 2), 0, "{}", a.issues());
@@ -208,7 +208,7 @@ fn t3333_weekend_counts_split_with_the_line() {
     assert_eq!(a.w.net.line_weekend[l as usize].counts, Some([5, 2, 1]));
     assert_eq!(a.w.net.line_weekend[t as usize], a.w.net.line_weekend[l as usize]);
     assert_eq!(a.set_line_pairs(l, false), 0, "{}", a.issues());
-    assert_eq!(a.line_weekend(l)[2..], [10.0, 4.0, 2.0], "the whole line's on one pair");
+    assert_eq!(a.line_weekend(l)[2..5], [10.0, 4.0, 2.0], "the whole line's on one pair");
 }
 
 /// The two pairs' trains take even turns on a weekend too: the twin's departures half that day's

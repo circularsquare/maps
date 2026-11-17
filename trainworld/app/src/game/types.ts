@@ -237,7 +237,8 @@ export interface LineStats {
   /** T-2987: the player's speed limit for the line's trains, km/h; 0 for none */
   limit: number;
   /** T-3521: the line's weekends (`ClockLine.weekend`): its percent, 1 where its counts are set by
-   * hand, then its whole trains on weekends, high, medium, low; absent: the weekdays' at 100% */
+   * hand, then its whole trains on weekends, high, medium, low, then the headways stepped to in
+   * seconds (0 none); absent: the weekdays' at 100% */
   weekend?: number[];
   /** T-3521: trains an hour on weekends, high, medium, low (`ClockLine.restTph`) */
   restTph?: number[];

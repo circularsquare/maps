@@ -283,11 +283,14 @@ pub struct Weekend {
     pub share: u16,
     /// Whole trains at high, medium and low demand set by hand, in place of the share.
     pub counts: Option<[u32; 3]>,
+    /// T-3557: the headway the player stepped a headway line's weekends to, seconds per level, 0 where
+    /// none; read only beside `counts`, which then hold the trains that run it.
+    pub headways: [u32; 3],
 }
 
 impl Default for Weekend {
     fn default() -> Self {
-        Weekend { share: 100, counts: None }
+        Weekend { share: 100, counts: None, headways: [0; 3] }
     }
 }
 

@@ -87,7 +87,7 @@ try {
   const at70 = await S(({ tw }, id) => { const st = tw.world.value.lineStats[id]; return { weekend: st.weekend, trains: st.trainsNeeded, restTph: st.restTph, tph: tw.world.value.save.lines.find((l) => l.id === id).tph }; }, pick.id);
   console.log('at 70%', JSON.stringify(at70));
   const want = at70.trains.map((n) => Math.ceil(n * 0.7 - 1e-9));
-  check(at70.weekend?.[0] === 70 && at70.weekend[1] === 0 && JSON.stringify(at70.weekend.slice(2)) === JSON.stringify(want), `70%: weekend counts ${JSON.stringify(at70.weekend?.slice(2))}, want ${JSON.stringify(want)}`);
+  check(at70.weekend?.[0] === 70 && at70.weekend[1] === 0 && JSON.stringify(at70.weekend.slice(2, 5)) === JSON.stringify(want), `70%: weekend counts ${JSON.stringify(at70.weekend?.slice(2, 5))}, want ${JSON.stringify(want)}`);
   check(at70.restTph[0] < at70.tph.high, `weekend high rate ${at70.restTph[0]?.toFixed(2)} under the weekday's ${at70.tph.high?.toFixed(2)}`);
   await page.waitForTimeout(800);
   const panel = await page.$('dialog.sched-panel .saves-inner');

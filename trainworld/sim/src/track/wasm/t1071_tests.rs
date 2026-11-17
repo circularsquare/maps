@@ -117,7 +117,7 @@ fn a_stop_added_at_an_end_moves_no_train() {
 
 /// T-3521: a line's weekend whole trains (`line_weekend`), high, medium, low.
 fn weekend_of(a: &TrackApi, id: u32) -> Vec<f64> {
-    a.line_weekend(id)[2..].to_vec()
+    a.line_weekend(id)[2..5].to_vec()
 }
 
 /// T-3521: a line follows its weekdays at its percent, so a weekday change moves the weekend
@@ -125,15 +125,15 @@ fn weekend_of(a: &TrackApi, id: u32) -> Vec<f64> {
 #[test]
 fn t3521_a_weekday_change_moves_a_weekend_at_its_percent() {
     let (mut a, id) = line_api();
-    assert_eq!(a.line_weekend(id), vec![100.0, 0.0, 2.0, 2.0, 2.0], "a new line runs its weekday trains every day");
+    assert_eq!(a.line_weekend(id), vec![100.0, 0.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0], "a new line runs its weekday trains every day");
     assert_eq!(a.set_line_weekend_share(id, 50), 0, "{}", a.issues());
     assert_eq!(a.set_train_counts(id, 5, 3, 2), 0, "{}", a.issues());
     assert_eq!(weekend_of(&a, id), vec![3.0, 2.0, 1.0], "half, rounded up");
     assert_eq!(a.set_line_weekend_counts(id, 1, 1, 0), 0, "{}", a.issues());
     assert_eq!(a.set_train_counts(id, 6, 3, 2), 0, "{}", a.issues());
-    assert_eq!(a.line_weekend(id), vec![50.0, 1.0, 1.0, 1.0, 0.0], "counts of its own are left as set");
+    assert_eq!(a.line_weekend(id), vec![50.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0], "counts of its own are left as set");
     assert_eq!(a.set_line_weekend_share(id, 50), 0, "{}", a.issues());
-    assert_eq!(a.line_weekend(id), vec![50.0, 0.0, 3.0, 2.0, 1.0], "the percent again");
+    assert_eq!(a.line_weekend(id), vec![50.0, 0.0, 3.0, 2.0, 1.0, 0.0, 0.0, 0.0], "the percent again");
 }
 
 /// T-3521: a headway line's weekend headway is its weekday headway over the percent, rounded down
@@ -202,11 +202,51 @@ fn t3521_a_headway_weekend_on_the_weekday_count() {
     assert_eq!(a.w.net.line_trains[id as usize], Some([1, 1, 1]));
     let week = a.w.net.line_tph[id as usize].map(f32::to_bits);
     assert_eq!(a.set_line_weekend_share(id, 70), 0, "{}", a.issues());
-    assert_eq!(a.line_weekend(id), vec![70.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_eq!(a.line_weekend(id), vec![70.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]);
     assert!(a.w.net.rest_solved);
     let rest = a.line_tph_rest(id);
     assert!(rest.iter().all(|&t| (3600.0 / t as f64 - 1260.0).abs() < 1.0), "{rest:?}");
     assert_eq!(a.w.net.line_tph[id as usize].map(f32::to_bits), week);
+}
+
+/// T-3557: a headway line's weekends stepped to a headway by hand run that headway, not the round
+/// trip over the trains set (shorter than it by up to a train's share), and a count edit at another
+/// level keeps it; a percent drops it; it saves and loads.
+#[test]
+fn t3557_a_stepped_weekend_headway_is_run() {
+    let (mut a, id) = line_api();
+    assert_eq!(a.set_auto_headway(id, 480, 480, 480), 0, "{}", a.issues());
+    assert_eq!(a.set_auto_headway(id, 480, 480, 480), 0, "{}", a.issues());
+    let trip = a.w.svc.lines[id as usize].round_trip[0];
+    // a headway the round trip does not divide: whole trains for it run it faster than it
+    let h = (trip / 1.7).round() as u32;
+    assert!(h > 300, "a headway the track allows: {h} s over a round trip of {trip} s");
+    let n = (trip / h as f64).ceil() as u32;
+    assert!(trip / n as f64 + 1.0 < h as f64, "the count alone runs faster than {h} s: {} s", trip / n as f64);
+    // stepping the High level alone leaves the other two at the headway they ran (their trains
+    // would otherwise run their own faster rate)
+    let rest0 = a.line_tph_rest(id);
+    let m = a.w.net.line_trains[id as usize].unwrap();
+    assert_eq!(a.set_line_weekend_headways(id, n, m[1], m[2], h, 0, 0), 0, "{}", a.issues());
+    let rest1 = a.line_tph_rest(id);
+    assert!((3600.0 / rest1[0] as f64 - h as f64).abs() <= 0.005 * h as f64 + 0.5, "High every {h} s: {}", 3600.0 / rest1[0] as f64);
+    assert!((1..3).all(|lev| (rest1[lev] - rest0[lev]).abs() <= 0.005 * rest0[lev]), "the other levels as they ran: {rest0:?} then {rest1:?}");
+    assert_eq!(a.set_line_weekend_headways(id, n, n, n, h, h, h), 0, "{}", a.issues());
+    let run = |a: &TrackApi, lev: usize| 3600.0 / a.line_tph_rest(id)[lev] as f64;
+    assert!((0..3).all(|lev| (run(&a, lev) - h as f64).abs() <= 0.005 * h as f64 + 0.5), "every {h} s: {} {} {}", run(&a, 0), run(&a, 1), run(&a, 2));
+    assert_eq!(a.line_weekend(id)[5..], [h as f64; 3]);
+    // a count edit at one level drops that level's headway only
+    assert_eq!(a.set_line_weekend_counts(id, n + 1, n, n), 0, "{}", a.issues());
+    assert_eq!(a.line_weekend(id)[5..], [0.0, h as f64, h as f64]);
+    assert!(run(&a, 0) < h as f64 - 1.0, "that level runs its trains' own rate");
+    // the headways save and load
+    assert_eq!(a.set_line_weekend_headways(id, n, n, n, h, h, h), 0, "{}", a.issues());
+    let mut b = TrackApi::new(-73.985, 40.758, true);
+    assert!(b.load(&a.save()));
+    assert_eq!(b.line_weekend(id), a.line_weekend(id));
+    // a percent drops them
+    assert_eq!(a.set_line_weekend_share(id, 70), 0, "{}", a.issues());
+    assert_eq!(a.line_weekend(id)[5..], [0.0; 3]);
 }
 
 /// The fleet is the most trains a line runs on either kind of day at any level, so more weekend
@@ -258,7 +298,7 @@ fn weekend_counts_undo_and_redo_to_the_bit() {
     assert!(!a.w.net.rest_solved, "every day back on the weekdays'");
     assert_eq!(saturday_trips(&a), sat0);
     assert_eq!(a.redo(), 0);
-    assert_eq!(a.line_weekend(id)[2..], [6.0, 2.0, 2.0]);
+    assert_eq!(a.line_weekend(id)[2..5], [6.0, 2.0, 2.0]);
     assert_eq!(a.line_tph_rest(id), rates);
     assert_eq!(saturday_trips(&a), sat);
 }
@@ -353,7 +393,7 @@ fn a_removed_line_takes_its_weekend_counts() {
     assert!(a.line_weekend(id).is_empty());
     assert!(!a.w.net.rest_solved, "no line left with weekends of its own");
     assert_eq!(a.undo(), 0);
-    assert_eq!(a.line_weekend(id)[2..], [6.0, 2.0, 2.0]);
+    assert_eq!(a.line_weekend(id)[2..5], [6.0, 2.0, 2.0]);
     assert!(a.w.net.rest_solved);
 }
 
@@ -364,10 +404,10 @@ fn a_percent_for_every_line_is_one_edit() {
     let (mut a, id) = line_api();
     assert_eq!(a.set_line_weekend_counts(id, 6, 2, 2), 0, "{}", a.issues());
     assert_eq!(a.set_weekend_share_all(50), 0, "{}", a.issues());
-    assert_eq!(a.line_weekend(id), vec![50.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_eq!(a.line_weekend(id), vec![50.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]);
     assert!(a.step_is_service(false));
     assert_eq!(a.undo(), 0);
-    assert_eq!(a.line_weekend(id), vec![100.0, 1.0, 6.0, 2.0, 2.0]);
+    assert_eq!(a.line_weekend(id), vec![100.0, 1.0, 6.0, 2.0, 2.0, 0.0, 0.0, 0.0]);
 }
 
 /// T-3521: each kind of day's boarding account runs its own trains: a Saturday's and a Sunday's (a

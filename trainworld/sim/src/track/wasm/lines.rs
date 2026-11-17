@@ -526,7 +526,8 @@ impl TrackApi {
         let (Some(w), Some(Some(t))) = (net.line_weekend.get(l).copied(), net.line_trains.get(l).copied()) else { return vec![] };
         let k = if pairs_split(net, id) { 2 } else { 1 };
         let c = self.w.weekend_counts(l).unwrap_or(t);
-        vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64]
+        let h = if w.counts.is_some() { w.headways.map(|h| h / k) } else { [0; 3] };
+        vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64, h[0] as f64, h[1] as f64, h[2] as f64]
     }
     /// T-3521: a line's trains an hour at level `lev` on kind of day `row` (0 weekdays, 1 weekends;
     /// `Network::line_tph_on`).
@@ -545,7 +546,7 @@ impl TrackApi {
     /// hand dropped. One undoable edit, charged for the trains it makes the line need (`cars_needed`).
     pub fn set_line_weekend_share(&mut self, id: u32, share: u32) -> u32 {
         if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
-        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None };
+        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None, headways: [0; 3] };
         if self.w.net.line_weekend[id as usize] == weekend { return 0; }
         self.run(Op::Weekend { id, weekend })
     }
@@ -554,14 +555,36 @@ impl TrackApi {
     pub fn set_line_weekend_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
         if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
         let c = if pairs_split(&self.w.net, id) { [high, medium, low].map(|x| x.div_ceil(2)) } else { [high, medium, low] };
-        let weekend = Weekend { counts: Some(c), ..self.w.net.line_weekend[id as usize] };
-        if self.w.net.line_weekend[id as usize] == weekend { return 0; }
+        let was = self.w.net.line_weekend[id as usize];
+        // a headway stepped to stays only at a level whose count did not change
+        let now = self.w.weekend_counts(id as usize).or(self.w.net.line_trains[id as usize]).unwrap_or([0; 3]);
+        let headways = std::array::from_fn(|i| if c[i] == now[i] { was.headways[i] } else { 0 });
+        let weekend = Weekend { counts: Some(c), headways, ..was };
+        if was == weekend { return 0; }
+        self.run(Op::Weekend { id, weekend })
+    }
+    /// T-3557: set a headway line's weekend trains by hand as `set_line_weekend_counts`, and the
+    /// headways in seconds they run (0 = a level run by count): the weekends then run that headway,
+    /// as the weekdays' headway line does.
+    pub fn set_line_weekend_headways(&mut self, id: u32, high: u32, medium: u32, low: u32, h_high: u32, h_medium: u32, h_low: u32) -> u32 {
+        if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
+        let split = pairs_split(&self.w.net, id);
+        let c = if split { [high, medium, low].map(|x| x.div_ceil(2)) } else { [high, medium, low] };
+        let mut headways = if split { [h_high, h_medium, h_low].map(|h| h * 2) } else { [h_high, h_medium, h_low] };
+        // a level not stepped keeps the headway the weekends ran there, or its trains would run
+        // their own rate at it
+        if let Some(cur) = self.w.weekend_auto(id as usize) {
+            for i in 0..3 { if headways[i] == 0 && c[i] > 0 { headways[i] = cur[i]; } }
+        }
+        let was = self.w.net.line_weekend[id as usize];
+        let weekend = Weekend { counts: Some(c), headways, ..was };
+        if was == weekend { return 0; }
         self.run(Op::Weekend { id, weekend })
     }
     /// T-3521: run every line's weekends at `share` percent of its weekdays, counts set by hand
     /// dropped (`set_line_weekend_share`), as one undoable edit. A hidden twin follows its line.
     pub fn set_weekend_share_all(&mut self, share: u32) -> u32 {
-        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None };
+        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None, headways: [0; 3] };
         let net = &self.w.net;
         let ops: Vec<Op> = (0..net.line_count() as u32)
             .filter(|&l| net.line_ok(l) && !net.is_twin(l) && net.line_weekend[l as usize] != weekend)

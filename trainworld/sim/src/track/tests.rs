@@ -1288,7 +1288,7 @@ fn same_deps(a: &[(f64, usize)], b: &[(f64, usize)]) -> bool {
 
 /// T-3521: a line's weekend setting, as one edit.
 fn set_weekend(w: &mut TrackWorld, id: u32, share: u16, counts: Option<[u32; 3]>) {
-    w.apply(Op::Weekend { id, weekend: Weekend { share, counts } }).unwrap();
+    w.apply(Op::Weekend { id, weekend: Weekend { share, counts, headways: [0; 3] } }).unwrap();
 }
 
 /// Weekend trains (`LineData::weekend`, T-3521, from PR 13): weekends run their own counts at the
@@ -1354,7 +1354,7 @@ fn weekends_and_holidays_run_their_own_trains() {
     w.undo().unwrap().unwrap();
     // a save keeps them; none writes nothing
     let back = super::save::decode(&super::save::encode(&w.net)).unwrap();
-    assert_eq!(back.line_weekend[id as usize], Weekend { share: 100, counts: own });
+    assert_eq!(back.line_weekend[id as usize], Weekend { share: 100, counts: own, headways: [0; 3] });
     w.undo().unwrap().unwrap();
     assert_eq!(w.net.line_weekend[id as usize], Weekend::default());
     assert!(!w.net.rest_solved);

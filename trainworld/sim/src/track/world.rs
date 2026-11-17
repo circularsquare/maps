@@ -497,11 +497,13 @@ impl TrackWorld {
 
     /// T-3521: a headway line's headways on weekends (`line_auto` while the weekends settle): the
     /// weekdays' at its percent (`weekend_headway`), none where its weekend counts are set by hand
-    /// (they run as a count line's). None for a count line.
-    fn weekend_auto(&self, l: usize) -> Option<[u32; 3]> {
+    /// (they run as a count line's, bar the headways stepped to, T-3557). None for a count line.
+    pub(crate) fn weekend_auto(&self, l: usize) -> Option<[u32; 3]> {
         let a = self.net.line_auto.get(l).copied().flatten()?;
         match self.net.line_weekend.get(l).copied().unwrap_or_default() {
-            Weekend { counts: Some(_), .. } => None,
+            // a headway stepped to by hand keeps the cap on the trains set to run it (T-3557); a level
+            // without one runs as a count line
+            Weekend { counts: Some(_), headways, .. } => (headways != [0; 3]).then_some(headways),
             Weekend { share: 100, .. } => Some(a),
             Weekend { share: p, .. } => Some(a.map(|h| weekend_headway(h, p))),
         }
