@@ -277,6 +277,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
+- T-3570 [P2] {L:world-map} Real stations on the real world map (taking, 2026-11-17, agent realstations)
+  - Context: Your pad, 2026-11-17: "lets file real world station locations to be put on the real world reference map. no change to snapping behavior needed. discreet, lowkey. perhaps toggleable, default off.. some people also requested station names and idk how we could possibly do that in a discreet way."
+  - Goal: The real world network map can show real stations as small, quiet marks, switched off by default; names only if a discreet way is found (proposal to you).
+- T-3571 [P2] {L:world-map} New stations named after a nearby real station (taking, 2026-11-17, agent realstations)
+  - Context: Your pad, 2026-11-17: "some people also requested that our suggested autopopulated station names could try taking a nearby irl station name, which is prob a good idea especially if theyre super super close, the person probably is just trying to recreate that station."
+  - Goal: A station placed very close to a real station is suggested that station's name; otherwise naming is as today.
+- T-3572 [P2] {L:accounts-server} Money and costs much higher on another device (taking, 2026-11-17, agent devicemoney)
+  - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
+  - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
 - T-3569 [P2] {L:checks} t3212 check: trains no longer meet at A-M-B (taking, 2026-11-17, agent t3212fix)
   - Context: tramstation (T-3564) found t3212-station-split failing "two trains met side by side at A-M-B" on master, with or without its change; its guess is T-3526's single-track train cap (fewer trains, so none meet), not traced.
   - Goal: The check meets two trains again (its fixture given room under the new cap) or the cause is a real bug and is fixed.
