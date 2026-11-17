@@ -533,16 +533,16 @@
     {
       "id": "c084",
       "text": "added Guatemala, Belize, El Salvador, Honduras, Nicaragua, Costa Rica, Panama and Venezuela",
-      "edited": "added Venezuela and Central America!",
+      "edited": "added Central America and Venezuela!",
       "hidden": false,
       "task": "T-3399",
       "by": "nightwrap",
       "at": "2026-11-17T12:53:13Z",
-      "rev": 3,
+      "rev": 11,
       "area": "other",
       "fix": false,
       "highlight": true,
-      "changed": "2026-11-17T20:56:05Z"
+      "changed": "2026-11-17T21:02:16Z"
     },
     {
       "id": "c051",
@@ -793,15 +793,15 @@
     {
       "id": "c001",
       "text": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings",
-      "edited": "added visibility toggles for lines, track level, line type, line group",
+      "edited": "added visibility toggles for lines, track level (with a Show all button), line type, line group",
       "hidden": false,
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:32:56Z",
-      "rev": 13,
+      "rev": 14,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-17T20:31:53Z"
+      "changed": "2026-11-17T21:05:13Z"
     },
     {
       "id": "c054",
@@ -1274,15 +1274,15 @@
     {
       "id": "c013",
       "text": "added an outline shape for line bullets, a ring a little thicker than a line group's",
-      "edited": null,
+      "edited": "added an outline shape for line bullets, its ring as thick as the letter's strokes",
       "hidden": true,
       "task": "T-3436",
       "by": "bullet",
       "at": "2026-11-16T14:27:35Z",
-      "rev": 3,
+      "rev": 4,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-17T19:59:21Z"
+      "changed": "2026-11-17T21:05:13Z"
     },
     {
       "id": "c021",

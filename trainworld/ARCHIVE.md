@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3594 [P2] {L:map-look} Thinner ring on the hollow bullet (2026-11-17): outline bullet ring now as thick as the bold letter's stem (1.6 px at 12/16, 2.4 px at 30); notes/T-3593.md.
+- T-3593 [P2] {L:small-fixes} Show all button for hidden track levels (2026-11-17): Show all button beside Show levels in Settings, shown only while a level is hidden (space reserved); notes/T-3593.md.
+- T-3592 [P2] {L:feedback} Board changelog: drag items into and out of groups (2026-11-17): The board's changelog drags items into, between and out of groups; saved through move with under; changelog.py move --under.
 - T-3591 [P2] {L:feedback} Changelog highlights at the top of big updates (2026-11-17): highlight flag on changelog items and groups: board star and section, changelog.py highlight, publish carries it, game notes list highlights first.
 - T-3588 [P2] {L:timetables} Default headways switch lines to headway; none for new players (2026-11-17): Set as default switches a counts line to headway and is kept per kind (regular, tram, high speed); a new game has none (Default not set); weekend Apply to all lines covers new lines; weekend headway steps keep the other levels in whole minutes; Simple button hidden; chart button 24 px; row in the panel's small text. Tree rebased on master, uncommitted. notes/T-3588.md.
 - T-3590 [P2] {L:feedback} Board changelog: hidden items last, drag to reorder (2026-11-17): board changelog: hidden items below shown, drag grip to reorder (file order), publish keeps area grouping with her order inside; serve.py restart needed.
