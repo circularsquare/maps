@@ -412,7 +412,7 @@ export function LevelButtons({ value, onPick, tip, levels = LEVELS }: { value: L
   );
 }
 
-/** T-3420: the level buttons with every level shown lit; a click hides or shows that level. */
+/** T-3420: the level buttons with every level shown lit; a click fades or restores that level (T-3560). */
 export function LevelToggles({ hidden, onToggle }: { hidden: ReadonlySet<Level>; onToggle: (l: Level) => void }) {
   return (
     <div class="group levels level-toggles">

@@ -6,7 +6,7 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
-import { LEVEL_SHOWN_GLSL } from "./visibility";
+import { LEVEL_FADE, LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
 import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
@@ -191,7 +191,6 @@ void main() {
     float hq = floor(a_level / 256.0);
     shown0 = levelShown(hq / 32.0 - 4.0);
     shown1 = levelShown((a_level - hq * 256.0) / 32.0 - 4.0);
-    if (max(shown0, shown1) <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   }
   bool sel = (u_kind == 1 && selectedLine(int(a_colour))) || (u_kind == 0 && int(a_edge) == u_sel_edge);
   bool blueprint = (flags & 1) != 0;
@@ -520,8 +519,8 @@ vec2 centreAt(vec2 q[${PLATFORM_POINTS}], float t) {
 void main() {
   v_hot = 0.0;
   for (int k = 0; k < ${HOT_STATIONS}; k++) if (k < u_hot_n && u_hot_st[k] == gl_InstanceID) v_hot = 1.0;
-  // T-3420: a station on a hidden level
-  if (a_sel < -0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  // T-3420, T-3560: a station on a switched-off level (a_sel -1) is drawn faint, without its crowd
+  float lvFade = a_sel < -0.5 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
   v_dot = 0.0;
   v_bulge = vec2(0.0);
   v_scr = vec4(1.0, 0.0, 0.0, 1.0);
@@ -529,12 +528,12 @@ void main() {
   int flags = int(a_st.z + 0.5);
   // 2: double track with passing tracks (T-2249)
   v_lane = (flags & 16) != 0 ? ((flags & ${ST_PASSING}) != 0 ? 2.0 : 1.0) : 0.0;
-  v_alpha = (flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0; // 8: a blueprint switched off (T-333)
+  v_alpha = ((flags & 8) != 0 ? 0.3 : (flags & 2) != 0 ? 0.6 : 1.0) * lvFade; // 8: a blueprint switched off (T-333)
   vec2 half_vp = u_viewport * 0.5;
   vec2 corner = vec2(float(gl_VertexID & 1) * 2.0 - 1.0, gl_VertexID < 2 ? -1.0 : 1.0);
   bool boxes = u_boxes > 0.5;
   bool sel = a_sel > 0.5;
-  bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0;
+  bool noCrowd = !boxes || (flags & 2) != 0 || max(a_crowd.x, a_crowd.y) <= 0.0 || lvFade < 1.0;
   bool noAnnex = u_room > 0 && (!boxes || (flags & ${ST_ROOM}) == 0);
   bool inBld = (flags & ${ST_BUILDING}) != 0;
   if ((u_pass == 1) != sel || (u_layer == 2 && noCrowd) || noAnnex || (u_bld == 1 && inBld) || (u_bld == 2 && !inBld)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
@@ -1071,10 +1070,11 @@ void main() {
   d = centre;
   float offsetM = u_detail ? (float(car) + 0.5) * pitchM - totalM * 0.5 : 0.0;
   float carD = u_detail ? centre + offsetM : d;
-  // T-3420: a car on a hidden level
+  // T-3420, T-3560: a car on a switched-off level is drawn faint
+  float lvShown = 1.0;
   if (u_level_hide != 0) {
     int sl = int(L.x + clamp(floor(clamp(carD, 0.0, L.z) / max(L.w, 1e-6)), 0.0, max(L.y - 1.0, 0.0)));
-    if (levelShown(texelFetch(u_slevel, tc(sl, ${TEX_W}), 0).x) < 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+    lvShown = levelShown(texelFetch(u_slevel, tc(sl, ${TEX_W}), 0).x);
   }
   vec2 p = lineAtX(L, carD);
   // local units per metre of ground where the train is (T-307: mercator's scale, 1 / cos(lat))
@@ -1152,7 +1152,7 @@ void main() {
   v_px = px;
   vec3 lc = texelFetch(u_line_colours, ivec2(line % ${LINES_W}, line / ${LINES_W}), 0).rgb;
   v_color = lc * 0.48;
-  v_alpha = selectedLine(line) ? 1.0 : u_dim;
+  v_alpha = (selectedLine(line) ? 1.0 : u_dim) * lvShown;
   // How full it is (T-084): the stretch it runs, from the sample ahead of it on its way.
   int run = (int(a_trip.x + 0.5) / 3) % 2;
   float i = floor(clamp(d, 0.0, L.z) / L.w) + (g_run == 0 ? 1.0 : 0.0);

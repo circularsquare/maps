@@ -1,6 +1,7 @@
 // T-3420: what the player hid on the map, as the renderer and the picks read it: lines (the Lines tab's
 // toggles, game/lineVisibility.ts) and track levels (Settings' Show levels). A view setting only:
-// hidden lines still run, hidden track still carries them.
+// hidden lines still run, hidden track still carries them. A switched-off level is drawn faint
+// (LEVEL_FADE) and skipped by picks, snaps and the select tool (T-3560); a hidden line is not drawn.
 
 import type { Level } from "../game/types";
 
@@ -25,12 +26,15 @@ export function setHidden(lines: Set<number>, levels: number, stationLevel: (id:
   return true;
 }
 
-/** How much of a height (in levels, a ramp's between two) is drawn: 1 on a shown level, 0 on a hidden
- * one, and between them along a ramp, so a ramp fades out toward a hidden level. */
+/** T-3560: a level switched off is drawn this opaque, and cannot be picked. */
+export const LEVEL_FADE = 0.08;
+
+/** How opaque a height (in levels, a ramp's between two) is drawn: 1 on a shown level, `LEVEL_FADE` on a
+ * switched-off one, and between them along a ramp, so a ramp fades toward a switched-off level. */
 export function levelShown(z: number, mask = hidden.levels): number {
   if (!mask) return 1;
   const c = Math.max(-3, Math.min(3, z)), lo = Math.floor(c), f = c - lo;
-  const on = (l: number) => (l > 3 || (mask & (1 << (l + 3))) === 0 ? 1 : 0);
+  const on = (l: number) => (l > 3 || (mask & (1 << (l + 3))) === 0 ? 1 : LEVEL_FADE);
   return on(lo) * (1 - f) + on(lo + 1) * f;
 }
 
@@ -52,7 +56,7 @@ export const LEVEL_SHOWN_GLSL = `float levelShown(float z) {
   if (u_level_hide == 0) return 1.0;
   float c = clamp(z, -3.0, 3.0), lo = floor(c);
   int a = int(lo) + 3, b = min(a + 1, 6);
-  float sa = ((u_level_hide >> a) & 1) != 0 ? 0.0 : 1.0;
-  float sb = ((u_level_hide >> b) & 1) != 0 ? 0.0 : 1.0;
+  float sa = ((u_level_hide >> a) & 1) != 0 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
+  float sb = ((u_level_hide >> b) & 1) != 0 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
   return mix(sa, sb, c - lo);
 }`;

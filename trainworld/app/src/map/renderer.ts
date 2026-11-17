@@ -31,11 +31,11 @@ import { ParkingLots } from "./parkingLots";
 import { BuildingFloors, STENCIL_BIT } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
-import { backBaseOf, F_BLUEPRINT, platformShapeAt, type NetworkBuffers, type Strokes } from "./network";
+import { backBaseOf, F_BLUEPRINT, platformShapeAt, sampleValue, type NetworkBuffers, type Strokes } from "./network";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
-import { codeHidden, hidden as vis, levelHidden, pickSkip } from "./visibility";
+import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./visibility";
 
 /** The render epoch moves to the start of each game hour. */
 export const EPOCH_S = 3600;
@@ -1425,6 +1425,14 @@ export class NetworkRenderer {
   stationHidden(i: number): boolean {
     return this.stationHid[i] === 1;
   }
+  private sampleLv: Float32Array | null = null;
+  /** T-3560: whether a train (as `tripAt` places it) is on a switched-off level, drawn faint and not pickable */
+  tripOnOffLevel(at: { geo: number; gr: number; s: number }): boolean {
+    const n = this.net;
+    if (!vis.levels || !this.sampleLv || !n) return false;
+    const d = at.gr === 0 ? at.s : n.lineTable[at.geo * 4 + 2] - at.s;
+    return levelShown(sampleValue(n, this.sampleLv, at.geo, d)) < 0.5;
+  }
   /** T-3420: per train sample, its height in levels (its line stroke's start), for the cars on a hidden level */
   private sampleLevels(n: NetworkBuffers): Float32Array {
     const m = Math.max(1, n.samples.length / 2), out = new Float32Array(m), s = n.sampleStroke;
@@ -1447,7 +1455,8 @@ export class NetworkRenderer {
       if (l !== undefined && levelHidden(l)) this.stationHid[i] = 1;
     }
     this.selDrawnKey = "";
-    if (vis.levels) this.putTexture("slevel", this.sampleLevels(n), "r32f", TEX_W);
+    this.sampleLv = vis.levels ? this.sampleLevels(n) : null;
+    if (this.sampleLv) this.putTexture("slevel", this.sampleLv, "r32f", TEX_W);
     else if (this.tex.slevel) { for (const r of this.texRes.slevel ?? []) r.del(); this.texRes.slevel = []; this.tex.slevel = null; }
     const L = n.lines, T = n.track;
     if (vis.lines.size || vis.levels) {

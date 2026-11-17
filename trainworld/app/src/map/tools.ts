@@ -39,6 +39,7 @@ import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
+import { hidden, levelHidden } from "./visibility";
 import { edit, say, stationNames, world } from "../game/world";
 import type { RouteEnd } from "../workers/protocol";
 import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
@@ -440,6 +441,7 @@ export class Tools {
     const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus || node.port) continue; // a bus stop or a port (T-2194) is no track to build on (T-1464)
+      if (hidden.levels && levelHidden(node.level)) continue; // T-3560
       if (fam !== null && (node.kind ?? 0) >= 2 !== fam) continue;
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
@@ -454,7 +456,7 @@ export class Tools {
     if (!hit && doubleIds && nodes) {
       for (const [node, { edge, fromA }] of this.doubleEnds(w).loose) {
         const pts = n.edgePts.get(edge), nd = w.nodes.get(node);
-        if (!pts || !nd || pts.length < 6) continue;
+        if (!pts || !nd || pts.length < 6 || (hidden.levels && levelHidden(nd.level))) continue;
         const [lx, ly] = toLocal(nd.lng, nd.lat), [x, y] = this.screen(lx, ly);
         const k = fromA ? 3 : pts.length - 6;
         const [x1, y1] = this.screen(pts[k], pts[k + 1]);
@@ -470,10 +472,13 @@ export class Tools {
       }
     }
     if (hit) return this.withJoin(hit, fx, fy);
+    // T-3560: track wholly on a switched-off level is no snap target
+    const offEdges = hidden.levels ? new Set(w.edges.filter((e) => levelHidden(e.levelMin) && levelHidden(e.levelMax)).map((e) => e.id)) : null;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       if (tramOf && tramOf.has(edge) !== fam) continue;
+      if (offEdges?.has(edge)) continue;
       const er = doubleIds?.has(edge) ? laneReach : edgePx;
       let eb = er * er, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {

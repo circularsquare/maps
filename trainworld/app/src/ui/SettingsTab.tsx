@@ -135,7 +135,7 @@ export function SettingsTab() {
           <span data-tip={t("settingsTab.terrainTip")}>{t("settingsTab.terrain")}</span>
         </Check>
       </div>
-      {/* T-3420: every level lit; a click hides that level's track, lines, stations and trains while the page is open */}
+      {/* T-3420: every level lit; a click draws that level's track, lines, stations and trains faint and not pickable (T-3560) while the page is open */}
       <div class="level-show">
         <span>{t("settingsTab.showLevels")}</span>
         <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />

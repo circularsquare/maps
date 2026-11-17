@@ -23,7 +23,7 @@ import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_POR
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
-import { hidden, levelHidden } from "./visibility";
+import { hidden, LEVEL_FADE, levelHidden } from "./visibility";
 
 /** ?perfOff=marks (measurement only, src/perfFlags.ts) */
 const NO_MARKS = perfOff("marks");
@@ -51,20 +51,21 @@ uniform vec2 u_viewport;
 uniform vec3 u_r;            // radius in device px: loud badge, quiet badge, ramp mark
 uniform float u_ramps;       // 0: no marks on ramps and portals
 uniform float u_flat;        // 0: no marks on flat crossings and junctions
-uniform int u_level_hide;    // T-3420: the levels not drawn, a bit each from level -3
+uniform int u_level_hide;    // T-3420: the levels switched off (drawn faint, T-3560), a bit each from level -3
 in vec4 a_mark;              // x, y, shape, angle
 in vec2 a_style;             // tier (0 built, 1 blueprint), level
 out vec2 v_p;
 flat out vec4 v_m;
 flat out vec2 v_s;
 flat out float v_r;
+flat out float v_fade;
 void main() {
   int shape = int(a_mark.z + 0.5);
   bool ramp = shape == ${M_RAMP} || shape == ${M_PORTAL};
   float r = ramp ? u_r.z : (a_style.x > 0.5 ? u_r.x : u_r.y);
   if (u_ramps < 0.5 && ramp) r = 0.0;
   if (u_flat < 0.5 && (shape == ${M_CROSSING} || shape == ${M_JUNCTION})) r = 0.0;
-  if (((u_level_hide >> (clamp(int(round(a_style.y)), -3, 3) + 3)) & 1) != 0) r = 0.0;
+  v_fade = ((u_level_hide >> (clamp(int(round(a_style.y)), -3, 3) + 3)) & 1) != 0 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rq = ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
@@ -97,6 +98,7 @@ in vec2 v_p;
 flat in vec4 v_m;
 flat in vec2 v_s;
 flat in float v_r;
+flat in float v_fade;
 out vec4 o;
 float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
 float seg(vec2 p, vec2 a, vec2 b) {
@@ -117,7 +119,7 @@ float quad(vec2 p, vec2 a, vec2 b, vec2 c, vec2 e) {
   }
   return s * sqrt(d);
 }
-void main() {
+void mark() {
   int shape = int(v_m.z + 0.5);
   bool blueprint = v_s.x > 0.5;
   float r = v_r;
@@ -173,6 +175,10 @@ void main() {
   vec3 col = mix(u_fill, ink, max(ring, glyph));
   float a = cov(d) * (blueprint ? 1.0 : u_quiet);
   o = vec4(col * a, a);
+}
+void main() {
+  mark();
+  o *= v_fade;
 }`;
 
 interface Instances {

@@ -2200,7 +2200,7 @@ function pointAt(n: NetworkBuffers, line: number, d: number, run = 0, shiftM = 0
 }
 
 /** A per-sample value of a line at offset `d` along run 0, between its samples. */
-function sampleValue(n: NetworkBuffers, v: Float32Array, line: number, d: number): number {
+export function sampleValue(n: NetworkBuffers, v: Float32Array, line: number, d: number): number {
   const first = n.lineTable[line * 4];
   if (n.lineTable[line * 4 + 1] < 2) return v[first] ?? 1e9;
   const [si, f] = sampleSegment(n, line, d);

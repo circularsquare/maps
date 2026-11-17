@@ -1881,7 +1881,7 @@
   "settingsTab.sun": "Settings, Day choice: Sunday, short as on a calendar. Narrow segmented button.",
   "settingsTab.terrain": "Settings, Show: checkbox for hill shading on the map.",
   "settingsTab.terrainTip": "Hover on the Terrain checkbox.",
-  "settingsTab.showLevels": "Settings, Show: label over a row of track level buttons (+3 to -3), each lit while that level is drawn; a click hides or shows the track, lines and stations on that level.",
+  "settingsTab.showLevels": "Settings, Show: label over a row of track level buttons (+3 to -3), each lit while that level is drawn; a click draws that level faint and not clickable, or normal again.",
   "settingsTab.busesFerries": "Settings, Show: checkbox under the level buttons; unticked, bus and ferry lines, their routes, stops and vehicles are not drawn on the map. A plural noun like the other items.",
   "settingsTab.theme": "Settings: section heading for light or dark, and the colour theme.",
   "settingsTab.trainLoad": "Settings, Riders on trains and platforms: checkbox for showing how full each train is on the map.",

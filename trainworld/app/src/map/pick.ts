@@ -403,7 +403,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
       if (hidden.lines.has(Math.floor(prof / 6))) continue; // T-3420
       const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM, r.tripBays ?? undefined, i * BAY_STRIDE);
-      if (!at) continue;
+      if (!at || r.tripOnOffLevel(at)) continue; // T-3560
       if (r.detailedTrains) {
         const cars = Math.max(1, carsOf(n.lineCars?.[at.line] ?? 8));
         for (let car = 0; car < cars; car++) {
