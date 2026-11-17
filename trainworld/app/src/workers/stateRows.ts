@@ -86,6 +86,8 @@ interface LineRead {
   loopKind: number;
   oneWay: boolean;
   limit: number;
+  weekend: number[];
+  restTph: number[];
   shift: number;
   upkeep: number;
   busRow: ClockLine["bus"];
@@ -105,6 +107,12 @@ const hex = (c: number) => "#" + c.toString(16).padStart(6, "0");
 /** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
 function autoOf(v: ArrayLike<number>): [number, number, number] | null {
   return v.length === 3 ? [v[0], v[1], v[2]] : null;
+}
+
+/** T-3521: a line's weekends (`TrackApi.line_weekend`), empty where they are the weekdays' at 100%. */
+function weekendOf(a: TrackApi, id: number): number[] {
+  const w = a.line_weekend(id);
+  return w.length === 5 && (w[0] !== 100 || w[1] !== 0) ? [...w] : [];
 }
 
 function sameNumbers(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
@@ -337,17 +345,17 @@ export class StateRows {
       read.push({
         i, id, ok, running, bus, prev, fresh,
         heavy: fresh ? this.heavy(a, id, ok) : prev!.heavy,
-        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), limit: a.line_limit(id), shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
+        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), limit: a.line_limit(id), weekend: weekendOf(a, id), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
         busRow: bus ? env.busRow(a, id, nodes ?? []) : undefined,
         pairs: bus ? 0 : a.line_pairs(id), twinOf: bus ? -1 : a.line_twin_of(id),
       });
     }
     const out: ClockLine[] = [];
     for (const r of read) {
-      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, shift, upkeep, pairs, twinOf } = r;
+      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, weekend, restTph, shift, upkeep, pairs, twinOf } = r;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
-      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, shift, pairs, twinOf, ...auto];
+      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
         continue;
@@ -372,6 +380,8 @@ export class StateRows {
         loopKind,
         oneWay,
         limit,
+        ...(weekend.length ? { weekend } : {}),
+        restTph,
         ...(pairs === 1 || pairs === 2 ? { pairs } : {}),
         ...(twinOf >= 0 ? { twinOf } : {}),
         ...(r.busRow ? { bus: r.busRow } : {}),

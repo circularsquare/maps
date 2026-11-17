@@ -120,7 +120,8 @@ impl TrackApi {
         ]
     }
     /// Running cost of the running lines per hour at a demand level, US$M: trains an hour in each
-    /// direction times the line's length and cars, at the game's economy scale (T-081).
+    /// direction times the line's length and cars, at the game's economy scale (T-081). T-3521: `level` 3
+    /// to 5 is a weekend's (3 + level), each line at its own trains then (`Network::line_tph_on`).
     pub fn running_cost(&self, level: usize) -> f64 {
         self.running_cost_in(level, f64::NAN)
     }
@@ -147,7 +148,8 @@ impl TrackApi {
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 // T-2669: priced in its countries' money, so a km costs the factor's share
-                let tk = n.line_tph[l][level.min(LEVELS - 1)] as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
+                let (row, lev) = ((level / LEVELS).min(DAY_ROWS - 1), level % LEVELS);
+                let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
                 let k = fleet_kind(n, l);
                 train_km[k] += tk;
                 car_km[k] += tk * s.cars as f64;

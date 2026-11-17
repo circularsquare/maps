@@ -12,7 +12,7 @@ import { batch, computed, effect, signal } from "@preact/signals";
 import { clock } from "./clock";
 import { cityById, cityWithin, outlinesIn } from "./cities";
 import { awayNear, awaySoon, dateRange, rushRun, rushSoon, whenAway, whenBack, whenOut } from "./days";
-import { holidayName, kindOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
+import { holidayName, kindOfIn, rowOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { world } from "./world";
 import { t, type MessageKey } from "../i18n";
@@ -38,6 +38,10 @@ export function countryAt(lng: number, lat: number): string | null {
   const z = cityWithin(lng, lat);
   return z ? cityById(z).country ?? null : null;
 }
+
+/** T-3521: which of a line's train counts (0 weekdays, 1 weekends) runs on local game day `day` in
+ * `country`. Reads the calendar signal. */
+export const rowIn = (country: string | null, day: number) => rowOfIn(data.value, country)(day);
 
 /** The kind of local game day `day` in `country` (T-872). Reads the calendar signal. */
 export const kindIn = (country: string | null, day: number) => kindOfIn(data.value, country)(day);

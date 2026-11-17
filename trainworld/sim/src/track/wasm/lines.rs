@@ -14,7 +14,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
@@ -515,6 +515,60 @@ impl TrackApi {
             return self.run(Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) });
         }
         self.run(Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph })
+    }
+
+    /// T-3521: a line's weekends: its percent, 1 where its counts are set by hand (else 0), then its
+    /// whole trains at high, medium and low demand on weekends (the weekdays' where it runs those),
+    /// whole-line counts as `set_train_counts` takes them. Empty for no line.
+    pub fn line_weekend(&self, id: u32) -> Vec<f64> {
+        let (net, l) = (&self.w.net, id as usize);
+        if !net.line_ok(id) { return vec![] }
+        let (Some(w), Some(Some(t))) = (net.line_weekend.get(l).copied(), net.line_trains.get(l).copied()) else { return vec![] };
+        let k = if pairs_split(net, id) { 2 } else { 1 };
+        let c = self.w.weekend_counts(l).unwrap_or(t);
+        vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64]
+    }
+    /// T-3521: a line's trains an hour at level `lev` on kind of day `row` (0 weekdays, 1 weekends;
+    /// `Network::line_tph_on`).
+    pub fn line_tph_on(&self, id: u32, row: u32, lev: u32) -> f32 {
+        if id as usize >= self.w.net.line_count() || lev as usize >= LEVELS { return 0.0 }
+        self.w.net.line_tph_on(id as usize, (row as usize).min(DAY_ROWS - 1), lev as usize)
+    }
+    /// T-3521: a line's trains an hour on weekends, high, medium, low (`line_tph_on`), with its hidden
+    /// twin's for a line on both pairs, as its panel shows the weekdays' (T-3333).
+    pub fn line_tph_rest(&self, id: u32) -> Vec<f32> {
+        let net = &self.w.net;
+        let twin = net.twin_line(id);
+        (0..LEVELS).map(|lev| net.line_tph_on(id as usize, WEEKEND, lev) + twin.map_or(0.0, |t| net.line_tph_on(t as usize, WEEKEND, lev))).collect()
+    }
+    /// T-3521: run a line's weekends at `share` percent of its weekdays (10 to 200), its counts set by
+    /// hand dropped. One undoable edit, charged for the trains it makes the line need (`cars_needed`).
+    pub fn set_line_weekend_share(&mut self, id: u32, share: u32) -> u32 {
+        if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
+        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None };
+        if self.w.net.line_weekend[id as usize] == weekend { return 0; }
+        self.run(Op::Weekend { id, weekend })
+    }
+    /// T-3521: set a line's whole trains at high, medium and low demand on weekends by hand (counts as
+    /// `set_train_counts` takes them); its percent is kept for the panel. One undoable edit.
+    pub fn set_line_weekend_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
+        if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
+        let c = if pairs_split(&self.w.net, id) { [high, medium, low].map(|x| x.div_ceil(2)) } else { [high, medium, low] };
+        let weekend = Weekend { counts: Some(c), ..self.w.net.line_weekend[id as usize] };
+        if self.w.net.line_weekend[id as usize] == weekend { return 0; }
+        self.run(Op::Weekend { id, weekend })
+    }
+    /// T-3521: run every line's weekends at `share` percent of its weekdays, counts set by hand
+    /// dropped (`set_line_weekend_share`), as one undoable edit. A hidden twin follows its line.
+    pub fn set_weekend_share_all(&mut self, share: u32) -> u32 {
+        let weekend = Weekend { share: share.clamp(WEEKEND_SHARE_MIN, WEEKEND_SHARE_MAX) as u16, counts: None };
+        let net = &self.w.net;
+        let ops: Vec<Op> = (0..net.line_count() as u32)
+            .filter(|&l| net.line_ok(l) && !net.is_twin(l) && net.line_weekend[l as usize] != weekend)
+            .map(|id| Op::Weekend { id, weekend })
+            .collect();
+        if ops.is_empty() { return 0; }
+        self.run(Op::Batch(ops))
     }
 
     /// T-625: the line's counts follow a headway in seconds per level (0 = no service): the

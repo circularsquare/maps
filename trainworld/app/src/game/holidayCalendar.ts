@@ -64,7 +64,49 @@ export function holidayName(d: HolidayData | null, country: string | null | unde
   return r ? d.names[r[1]] : null;
 }
 
+/** A country's calendar: its superholiday days' kinds, its days off and weekend days worked (keyed
+ * by January 1's weekday and day of the year), and its own week. Built once per country and shared
+ * by `kindOfIn` and `rowOfIn`, so the two never disagree on a day. */
+interface Calendar {
+  key: (day: number) => number;
+  rush: Map<number, DayKind>;
+  off: Set<number>;
+  worked: Set<number>;
+  own: (day: number) => DayKind;
+}
+
 const kinds = new WeakMap<HolidayData, Map<string, (day: number) => DayKind>>();
+const rowFns = new WeakMap<HolidayData, Map<string, (day: number) => DayRow>>();
+const calendars = new WeakMap<HolidayData, Map<string, Calendar>>();
+
+/** T-3521: the kinds of day a line sets its trains for (sim/src/track/params.rs `WEEKDAYS`,
+ * `WEEKEND`): weekdays and weekends. */
+export type DayRow = 0 | 1;
+/** The kind of a local game day by the week alone (`row_of_day`): a weekend day or a weekday. */
+export const rowOfDay = (day: number): DayRow => (dayKindOf(day) === 0 ? 0 : 1);
+
+/** T-3521: the kind of each local game day in `country` for its trains: weekdays on a
+ * superholiday's days (its busy travel days), weekends on its public holidays (working ones aside),
+ * weekdays on the weekend days it works, else its own week's weekend or weekday (sim boarding.rs
+ * `kind_row` gives each kind of day's account the same). Without data or a country, `rowOfDay`. */
+export function rowOfIn(d: HolidayData | null, country: string | null | undefined): (day: number) => DayRow {
+  if (!d || !country || !d.countries[country]) return rowOfDay;
+  let m = rowFns.get(d);
+  if (!m) rowFns.set(d, (m = new Map()));
+  let f = m.get(country);
+  if (!f) {
+    const c = calendarOf(d, country);
+    f = (day) => {
+      const k = c.key(day);
+      if (c.rush.has(k)) return 0;
+      if (c.off.has(k)) return 1;
+      return c.worked.has(k) ? 0 : c.own(day) === 0 ? 0 : 1;
+    };
+    m.set(country, f);
+  }
+  return f;
+}
+
 /** The kind of each local game day in `country`: a superholiday's away, going-out or coming-back day
  * on its days (T-264, T-1373), a Sunday on its holidays (working ones aside), a weekday on the
  * weekend days it works, else its own week's kind for the weekday. Without data or a country,
@@ -75,6 +117,21 @@ export function kindOfIn(d: HolidayData | null, country: string | null | undefin
   if (!m) kinds.set(d, (m = new Map()));
   let f = m.get(country);
   if (!f) {
+    const { key, rush, off, worked, own } = calendarOf(d, country);
+    f = (day) => {
+      const k = key(day);
+      return rush.get(k) ?? (off.has(k) ? 2 : worked.has(k) ? 0 : own(day));
+    };
+    m.set(country, f);
+  }
+  return f;
+}
+
+function calendarOf(d: HolidayData, country: string): Calendar {
+  let m = calendars.get(d);
+  if (!m) calendars.set(d, (m = new Map()));
+  let cal = m.get(country);
+  if (!cal) {
     const key = (wd: string, doy: number) => Number(wd) * 1000 + doy;
     const working = new Set(d.working?.[country] ?? []);
     const off = new Set<number>(), worked = new Set<number>();
@@ -94,11 +151,8 @@ export function kindOfIn(d: HolidayData | null, country: string | null | undefin
     }
     const week = d.weeks?.[country];
     const own = week ? (day: number): DayKind => week[weekdayOf(day)] ?? 0 : dayKindOf;
-    f = (day) => {
-      const k = newYearWeekday(day) * 1000 + dayOfYear(day);
-      return rush.get(k) ?? (off.has(k) ? 2 : worked.has(k) ? 0 : own(day));
-    };
-    m.set(country, f);
+    cal = { key: (day) => newYearWeekday(day) * 1000 + dayOfYear(day), rush, off, worked, own };
+    m.set(country, cal);
   }
-  return f;
+  return cal;
 }

@@ -16,7 +16,7 @@ Commutes bunch up. {{sim/src/demand/api.rs:TO_WORK[0]*100|0}}% of the day's trip
 
 Inside a period the busiest hour is busier than the average hour, up to {{sim/src/track/params.rs:max(PEAK_HOUR_FACTOR)}} times, and [[full-trains|crowding]] is judged at that hour.
 
-Weekends and public holidays have their own demand, with less commuting and more outings. Long holidays bring people going out one way and coming back the other. Each country decides which days those are. Trains run the same on every day.
+Weekends and public holidays have their own demand, with less commuting and more outings. Long holidays bring people going out one way and coming back the other. Each country decides which days those are. Weekends and public holidays can run their own trains ([[scheduling]]).
 
 The trips themselves are in [[who-travels]].
 

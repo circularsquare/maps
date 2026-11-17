@@ -1254,16 +1254,23 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 ## Schedule panel
 
-[T-3346 stage 1, T-3469, T-3475; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md]
+[T-3346 stage 1, T-3469, T-3475, T-3521; `ui/inspector/SchedulePanel.tsx`, `TrainTable.tsx`, sim `TrackApi.station_departures`; notes/T-3346.md, notes/T-3521.md]
 
-- **Hidden for players** unless the address has `?timetables` (v0.3.3, Anita 2026-11-13): no icon opens it, line or group.
 - **A line's**: opened from the fourth icon by a running rail line's schedule heading (a station timetable,
   hover "Detailed schedule"); a centred modal in the saved games panel's frame, up to 1320 px wide; closed by its
   close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the
   line's bullet and name, "schedule" in grey, then the mode choice, which offers Simple only until Detailed and
   Exact are built (stages 3 and 6). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
-  switch; an edit here is the line panel's edit. Under it the departures board.
+  switch; an edit here is the line panel's edit. The table has two sections (T-3521), each a bold heading row
+  with room above it: **Weekdays**, the line panel's rows, and **Weekends** (hover "Weekends and public
+  holidays"), a row a level with the same steppers on the line's weekend counts (under headways a headway
+  stepper, the count beside it), its headway the rate settled for weekends. Beside the Weekends heading the
+  line's percent of its weekdays in a stepper (5% a click, typed 10-200), greyed with the hover "Weekend trains
+  set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set every line's weekends
+  to 70% of its weekdays?" first. The level in force is bold in today's section only; each section's dots are its
+  own kind of day's (today's, else a weekday's or a Saturday's). A stepper's hover counts the fleet over both
+  kinds of day. Under the table the departures board.
 - **Right**: the timetable over the chart.
 - **Departures**: headed "Departures" with a station picker (the line's stops in order, each station once, the first stop to start), then
   the board: one row per local hour of the line, from 4:00 through to 3:00, kept to the hours from the first train to

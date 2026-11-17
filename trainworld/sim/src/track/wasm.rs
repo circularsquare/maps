@@ -15,7 +15,7 @@ use super::bridge;
 use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
-use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData};
+use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData, Weekend};
 use super::params::*;
 use super::profile;
 use super::roads::{self, RoadTile, Roads};
@@ -230,9 +230,15 @@ fn pack_mask_in(frame: super::frame::Frame, mask: &Arc<RunMask>, lon: f64, lat: 
 /// Ordinary cars, then high-speed ones (T-817), then buses (T-1464), then boats (T-2193), then trams (T-2926).
 fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
     let mut out = [0; FLEETS];
+    // T-3521: a train runs on whichever kind of day needs the most at any level
+    let mut weekend = vec![0u32; w.svc.lines.len()];
+    for (l, c) in w.weekend_own() {
+        if let Some(x) = weekend.get_mut(l) { *x = c.iter().copied().max().unwrap_or(0); }
+    }
     for (i, l) in w.svc.lines.iter().enumerate() {
         if l.running {
-            out[fleet_kind(&w.net, i)] += l.trains.iter().copied().max().unwrap_or(0) * l.cars;
+            let rest = weekend[i];
+            out[fleet_kind(&w.net, i)] += l.trains.iter().copied().max().unwrap_or(0).max(rest) * l.cars;
         }
     }
     out
@@ -422,6 +428,26 @@ impl TrackApi {
     /// last list.
     pub fn set_line_holidays(&mut self, packed: Vec<f64>) {
         self.boarding.set_holidays(&packed);
+    }
+    /// T-3521: each line's days whose kind is not the week's (`params::row_of_day`), so its weekend
+    /// trains (`LineData::weekend`) run on its country's weekends and public holidays: per line its
+    /// id, a count, then that many pairs of a local game day and its kind (0 weekdays, 1 weekends),
+    /// within `service::CAL_DAYS` of each other. Replaces the last list; a line left out follows the
+    /// week. Its departures read it (`service::Cal`).
+    pub fn set_line_rows(&mut self, packed: Vec<f64>) {
+        let mut cal = vec![crate::track::service::Cal::NONE; self.w.net.line_count()];
+        let mut i = 0;
+        while i + 1 < packed.len() {
+            let (id, n) = (packed[i] as usize, packed[i + 1] as usize);
+            i += 2;
+            let Some(days) = packed.get(i..i + 2 * n) else { break };
+            i += 2 * n;
+            let pairs: Vec<(i64, u8)> = days.chunks_exact(2).map(|d| (d[0] as i64, d[1] as u8)).collect();
+            if id < cal.len() {
+                cal[id] = crate::track::service::Cal::from_days(&pairs);
+            }
+        }
+        self.w.svc.set_cal(cal, self.w.net.rest_solved);
     }
     /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
     /// a kind of day (T-260); empty before riders.
@@ -2139,7 +2165,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })

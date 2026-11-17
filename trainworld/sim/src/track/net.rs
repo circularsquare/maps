@@ -269,6 +269,34 @@ pub struct LineData {
     /// T-3333: the line runs on both pairs of quad track (`Parent`), or is the hidden twin that runs
     /// the other pair for one (`Of`).
     pub twin: super::twin::Twin,
+    /// T-3521: the line's trains on weekends (`params::WEEKEND`). Saved in `LWE1`.
+    pub weekend: Weekend,
+}
+
+/// T-3521: how a line runs on weekends and public holidays. The default, 100% and no counts of its
+/// own, runs the weekdays' trains and costs no settle of its own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Weekend {
+    /// A percent of the weekdays': counts rounded up, a headway line's headway divided by it and
+    /// rounded down to a whole minute (`TrackWorld::weekend_counts`). Kept under `counts`, so the
+    /// panel shows the percent the line had.
+    pub share: u16,
+    /// Whole trains at high, medium and low demand set by hand, in place of the share.
+    pub counts: Option<[u32; 3]>,
+}
+
+impl Default for Weekend {
+    fn default() -> Self {
+        Weekend { share: 100, counts: None }
+    }
+}
+
+/// T-3521: a headway on weekends at `share` percent of the weekdays': `headway_s` divided by the
+/// share, rounded down to a whole minute (a headway under a minute to the second); 0 stays none.
+pub fn weekend_headway(headway_s: u32, share: u16) -> u32 {
+    if headway_s == 0 || share == 0 { return 0; }
+    let raw = headway_s as u64 * 100 / share as u64;
+    (if raw >= 60 { raw / 60 * 60 } else { raw.max(1) }).min(u32::MAX as u64) as u32
 }
 
 /// A line group's bullet set by hand (T-1813): its text (empty for the name's own) and its colour
@@ -414,6 +442,8 @@ pub struct Touch {
     pub stations: Vec<u32>,
     pub lines: Vec<u32>,
     pub schedules: Vec<u32>,
+    /// T-3521: lines whose weekend setting changed (`set_weekend`), which settle only the weekends
+    pub weekend: Vec<u32>,
     pub paths_changed: bool,
 }
 
@@ -512,6 +542,17 @@ pub struct Network {
     pub line_hand: Vec<bool>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
+    /// T-3521: `LineData::weekend`.
+    pub line_weekend: Vec<Weekend>,
+    /// T-3521: each line's settled rates on weekends, as `line_tph` on weekdays
+    /// (`TrackWorld::settle_counts`): every line's, since a line running its weekday trains then
+    /// still shares the track with lines that do not. Read only where `rest_solved` says so.
+    pub line_tph_rest: Vec<[f32; 3]>,
+    /// T-3521: weekends were settled on their own, as some line runs other trains then. Otherwise
+    /// every line runs its weekday rates then, at no settle's cost.
+    pub rest_solved: bool,
+    /// `settle_kept` of the weekend settle.
+    pub settle_kept_rest: Vec<(u32, usize, u32, u64, u32)>,
     /// T-3333: `LineData::twin`.
     pub line_twin: Vec<super::twin::Twin>,
     pub line_name: Vec<String>,
@@ -731,6 +772,20 @@ impl Network {
         }
     }
 
+    /// T-3521: a line's trains an hour at level `lev` on kind of day `row` (`params::WEEKDAYS`,
+    /// `WEEKEND`): the weekdays' `line_tph`, or the weekends' settled rate when there was one.
+    pub fn line_tph_on(&self, l: usize, row: usize, lev: usize) -> f32 {
+        if row == WEEKEND && self.rest_solved {
+            self.line_tph_rest.get(l).map_or(0.0, |t| t[lev])
+        } else {
+            self.line_tph.get(l).map_or(0.0, |t| t[lev])
+        }
+    }
+
+    /// T-3521: whether any line's weekend setting is other than the weekdays' trains at 100%.
+    pub fn any_weekend(&self) -> bool {
+        self.line_weekend.iter().any(|w| *w != Weekend::default())
+    }
     /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
     pub fn line_phase_of(&self, l: u32) -> [f32; 3] {
         self.line_phase.get(l as usize).copied().unwrap_or([0.0; 3])
@@ -856,6 +911,10 @@ impl Network {
             line_hand: vec![],
             line_one_way: vec![],
             line_limit: vec![],
+            line_weekend: vec![],
+            line_tph_rest: vec![],
+            rest_solved: false,
+            settle_kept_rest: vec![],
             line_twin: vec![],
             line_name: vec![],
             line_symbol: vec![],
@@ -1097,6 +1156,7 @@ impl Network {
         self.line_stops.push(Span::default());
         self.line_path.push(Span::default());
         self.line_tph.push([0.0; 3]);
+        self.line_tph_rest.push([0.0; 3]);
         self.line_trains.push(None);
         self.line_auto.push(None);
         self.line_dwell.push(DEFAULT_DWELL_S);
@@ -1113,6 +1173,7 @@ impl Network {
         self.line_hand.push(false);
         self.line_one_way.push(false);
         self.line_limit.push(0);
+        self.line_weekend.push(Weekend::default());
         self.line_twin.push(Default::default());
     }
     fn claim_node(&mut self, id: u32) {
@@ -1190,6 +1251,7 @@ impl Network {
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
                 twin: self.line_twin[i],
+                weekend: self.line_weekend[i],
             }
         })
     }
@@ -1699,6 +1761,7 @@ impl Network {
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
+                self.line_weekend[i] = d.weekend;
                 self.line_twin[i] = if d.bus.is_some() || d.ferry.is_some() { Default::default() } else { d.twin };
                 self.line_bus[i] = d.bus;
                 self.line_ferry[i] = d.ferry;
@@ -1716,6 +1779,7 @@ impl Network {
                 self.line_hand[i] = false;
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
+                self.line_weekend[i] = Weekend::default();
                 self.line_twin[i] = Default::default();
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
@@ -1757,6 +1821,16 @@ impl Network {
         self.line_trains[id as usize] = trains;
         self.line_auto[id as usize] = auto.filter(|_| trains.is_some());
         self.touch.schedules.push(id);
+        Ok(old)
+    }
+
+    /// T-3521: a line's weekend trains (`LineData::weekend`); returns the old setting.
+    pub fn set_weekend(&mut self, id: u32, weekend: Weekend) -> Result<Weekend, Issue> {
+        if !self.line_ok(id) {
+            return Err(Issue::NoSuchLine { line: id });
+        }
+        let old = std::mem::replace(&mut self.line_weekend[id as usize], weekend);
+        self.touch.weekend.push(id);
         Ok(old)
     }
 
@@ -1900,7 +1974,7 @@ impl Network {
 
     pub fn take_touch(&mut self) -> Touch {
         let mut t = std::mem::take(&mut self.touch);
-        for v in [&mut t.nodes, &mut t.edges, &mut t.stations, &mut t.lines, &mut t.schedules] {
+        for v in [&mut t.nodes, &mut t.edges, &mut t.stations, &mut t.lines, &mut t.schedules, &mut t.weekend] {
             v.sort_unstable();
             v.dedup();
         }

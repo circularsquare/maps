@@ -59,11 +59,15 @@ of a purpose in period q are the weekday's times
 on the main thread and every query (bubbles, catchments, selections, longer trips, transfers)
 weighs its periods the same way in the workers, with the everyday purposes' per-direction shares
 where it reads directions. Both keep the weekday's crowded route and mode choices (fewer riders
-would crowd less). **Every kind of day runs the same trains** (T-2335, Anita 2026-11-04: "weekends
-are juts busier than weekday evenings"): each level's trains in its own hours, high 6-20, medium
-20-24, low 0-6, so the boarding account works out a weekend day's crowding from its scaled riders on
-the weekday's timetable, and running cost is the same every day. Weekend schedules of their own are
-T-2336. **A superholiday's day away** (T-264) is a fourth kind,
+would crowd less). **Each kind of day runs its own trains** (T-3521): each level in its own hours, high 6-20, medium
+20-24, low 0-6, every day, weekdays at the line's weekday counts and weekends and public holidays at
+its weekend ones ([track-and-service.md](track-and-service.md) "Scheduling"); a superholiday's days
+run the weekday counts. The boarding account works out each kind of day's crowding from its scaled
+riders on that kind's trains (`Boarding::kind_row`: a Saturday's and a Sunday's account, so a
+public holiday's too, run the weekend trains, every other kind the weekday ones), and running cost
+follows them. The solve stays a weekday's on the weekday trains: weekend riders are scaled from it
+whatever runs then (Anita, 2026-11-12, assumed), so fewer weekend trains crowd them rather than
+lose them. **A superholiday's day away** (T-264) is a fourth kind,
 worked out the same way: a Sunday's load factor times `AWAY_RATE` (local outings 0.7, attractions
 1.5, the rest 1), not in the average day. **Its going-out and coming-back days** (T-1373) are a
 weekday and a Sunday with the longer trips `RUSH_LONGER` (2) times a weekday's, at a weekday's and

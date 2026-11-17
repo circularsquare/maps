@@ -98,7 +98,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   return a;
 }
 
-const TRAIN_OPS = new Set(["setStops", "insertStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "lineCars", "copyLine", "undo", "redo"]);
+const TRAIN_OPS = new Set(["setStops", "insertStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "lineCars", "copyLine", "undo", "redo"]);
 const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "crossover", "doubleUp", "stationUpgrade", "rebuild"]);
 /** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
 function buysOf(op: EditOp): Buys | undefined {
@@ -142,6 +142,118 @@ function changeTrains(id: LineId, demand: Demand, to: (now: number, step: number
   if (t[lev] === base[lev]) return false;
   setTrainCounts(id, t);
   return true;
+}
+
+// ---- T-3521: weekend trains (`LineStats.weekend`): a percent of the weekdays' or counts set by
+// hand; the sim settles weekends on the track on their own and buys what the busier kind of day needs.
+
+/** The percents a line's weekends may run at, and the step (sim params.rs `WEEKEND_SHARE_MIN`). */
+export const WEEKEND_SHARE_MIN = 10, WEEKEND_SHARE_MAX = 200, WEEKEND_SHARE_STEP = 5;
+
+/** A line's weekends as they show: its percent, whether its counts are set by hand (the percent
+ * then no longer says what runs), and its whole trains per level on weekends. */
+export interface WeekendShown { share: number; custom: boolean; counts: [number, number, number] }
+
+/** Weekend edits sent and not yet in the world, as `pendingTrains`: a second click steps from the
+ * first's. */
+const pendingWeekend = signal<ReadonlyMap<LineId, WeekendShown>>(new Map());
+
+/** A line's weekends as they show (`WeekendShown`); null without figures. A count line following
+ * its weekdays at a percent follows a weekday count still on its way too. */
+export function weekendShown(id: LineId): WeekendShown | null {
+  const p = pendingWeekend.value.get(id);
+  if (p) return p;
+  const st = world.value?.lineStats[id], wk = trainsShown(id);
+  if (!st || !wk) return null;
+  const x = st.weekend, share = x ? x[0] : 100, custom = !!x && x[1] === 1;
+  const sim = x ? ([x[2], x[3], x[4]] as [number, number, number]) : wk;
+  if (custom || st.autoS || !pendingTrains.value.has(id)) return { share, custom, counts: sim };
+  return { share, custom, counts: wk.map((n) => weekendCount(n, share)) as [number, number, number] };
+}
+
+/** A weekday count at a percent: rounded up (sim world.rs `weekend_counts`). */
+export const weekendCount = (n: number, share: number) => Math.ceil((n * share) / 100 - 1e-9);
+
+/** A line's trains per level on kind of day `row` (0 weekdays, 1 weekends) as they show. */
+export function restShown(id: LineId, row: number): [number, number, number] | null {
+  return row === 0 ? trainsShown(id) : weekendShown(id)?.counts ?? null;
+}
+
+function sendWeekend(id: LineId, next: WeekendShown, op: EditOp) {
+  pendingWeekend.value = new Map(pendingWeekend.value).set(id, next);
+  void edit(op, false, true).finally(() => {
+    if (pendingWeekend.peek().get(id) !== next) return;
+    const m = new Map(pendingWeekend.peek());
+    m.delete(id);
+    pendingWeekend.value = m;
+  });
+}
+
+/** Run a line's weekends at `share` percent of its weekdays (kept between the stepper's ends), its
+ * counts set by hand dropped; false when that changes nothing (the stepper shakes). */
+export function setWeekendShare(id: LineId, share: number): boolean {
+  const cur = weekendShown(id), wk = trainsShown(id);
+  if (!cur || !wk) return false;
+  const s = Math.max(WEEKEND_SHARE_MIN, Math.min(WEEKEND_SHARE_MAX, Math.round(share)));
+  if (s === cur.share && !cur.custom) return false;
+  sendWeekend(id, { share: s, custom: false, counts: wk.map((n) => weekendCount(n, s)) as [number, number, number] }, { op: "weekendShare", line: num(id), share: s });
+  return true;
+}
+
+/** Set a line's weekend trains at a level by hand, kept between none and `most` (`trainCap`, as a
+ * weekday count); false when that changes nothing. */
+export function setWeekendCount(id: LineId, demand: Demand, want: number, most: number): boolean {
+  const cur = weekendShown(id);
+  if (!cur) return false;
+  const i = DEMAND_INDEX[demand], to = Math.max(0, Math.min(most, want));
+  if (to === cur.counts[i]) return false;
+  const counts = [...cur.counts] as [number, number, number];
+  counts[i] = to;
+  sendWeekend(id, { share: cur.share, custom: true, counts }, { op: "weekendCounts", line: num(id), counts });
+  return true;
+}
+
+/** Step a line's weekend trains at a level by `by` steps (`trainStep`). */
+export function stepWeekendCount(id: LineId, demand: Demand, by: number, most: number): boolean {
+  const n = weekendShown(id)?.counts[DEMAND_INDEX[demand]];
+  return n !== undefined && setWeekendCount(id, demand, n + by * trainStep(id), most);
+}
+
+/** Step the headway a line's weekend count gives at a level (`dir` 1 longer, -1 shorter), by the
+ * weekdays' headway steps (`nextHeadway`), to the count that keeps it at the weekdays' round trip
+ * `trip` (`autoTrainsFor`). The sim keeps counts, not headways, for weekends set by hand, so a
+ * headway that needs the same count is stepped past. */
+export function stepWeekendHeadway(id: LineId, demand: Demand, dir: number, trip: number, limitS: number, loop: boolean, most: number, shown: number): boolean {
+  const n = weekendShown(id)?.counts[DEMAND_INDEX[demand]];
+  const step = n === undefined ? null : restHeadwayStep(n, dir, trip, limitS, loop, shown);
+  return step !== null && setWeekendCount(id, demand, step.to, most);
+}
+
+/** Where a weekend headway step (`stepWeekendHeadway`) goes from `n` trains: the count and the
+ * headway it was stepped to (0 none); null where it cannot step. `dir`'s size is minutes a step, as
+ * the weekdays' (Shift, Ctrl). It steps from `shown`, the headway the row shows (the rate settled
+ * for weekends, which a full track or held trains make longer than the round trip over the count):
+ * from the shorter one, + could land below what is shown and read backwards. */
+export function restHeadwayStep(n: number, dir: number, trip: number, limitS: number, loop: boolean, shown: number): { to: number; h: number } | null {
+  if (trip <= 0 || dir === 0) return null;
+  const up = dir > 0;
+  let h = shown > 0 ? shown : n > 0 ? trip / n : 0;
+  for (let i = 0; i < 60; i++) {
+    h = nextHeadway(h, Math.sign(dir), Math.abs(dir));
+    // the shortest headway's step down is no service, which is the wrong way for more trains
+    if (h <= 0) return up && n > 0 ? { to: 0, h: 0 } : null;
+    const to = autoTrainsFor(trip, h, limitS, loop);
+    if (up ? to < n : to > n) return { to, h };
+    if (h >= HEADWAY_MAX_S) return up && n > 0 ? { to: 0, h: 0 } : null;
+  }
+  return null;
+}
+
+/** Run every line's weekends at `share` percent of its weekdays, counts set by hand dropped: one
+ * undoable edit. */
+export function setWeekendShareAll(share: number): void {
+  const s = Math.max(WEEKEND_SHARE_MIN, Math.min(WEEKEND_SHARE_MAX, Math.round(share)));
+  void edit({ op: "weekendShareAll", share: s });
 }
 
 /** The most vehicles a count is raised to per level, when the track sets no lower limit (T-3152). */

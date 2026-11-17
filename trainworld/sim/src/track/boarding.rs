@@ -475,6 +475,17 @@ impl Boarding {
         let given = self.holidays.get(&(line as u32)).and_then(|d| d.iter().find(|x| x.0 == day)).map(|x| x.1);
         self.kind(given.unwrap_or_else(|| day_kind_at(t)))
     }
+    /// T-3521: which of a line's trains a kind of day's account runs (`Service::run_deps_as`): a
+    /// Saturday's and a Sunday's (a public holiday's too) the weekends', every other kind (a
+    /// superholiday's days among them) the weekdays' (`rowOfIn` in the app's
+    /// game/holidayCalendar.ts gives the days the same way).
+    pub fn kind_row(kind: usize) -> usize {
+        match kind {
+            1 | 2 => WEEKEND,
+            _ => WEEKDAYS,
+        }
+    }
+
     fn kind(&self, day: usize) -> usize {
         let day = day.min(DAY_KINDS - 1);
         if !self.riders[day].is_empty() {
@@ -503,6 +514,12 @@ impl Boarding {
         }
         for t in net.line_tph[l] {
             h.f(t as f64);
+        }
+        // T-3521: the weekend rates, which the weekend accounts run
+        if net.rest_solved {
+            for lev in 0..LEVELS {
+                h.f(net.line_tph_on(l, WEEKEND, lev) as f64);
+            }
         }
         // T-1925: the departure phases
         for p in net.line_phase_of(l as u32) {
@@ -587,8 +604,9 @@ impl Boarding {
             // queue that carries round, so that direction is run again from a day earlier.
             let runs = [0, 1].map(|r| {
                 let m = masks[r].as_deref();
-                let a = simulate_with(net, svc, l, r, lr, &self.peak, false, m);
-                if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m) } else { a }
+                let row = Some(Self::kind_row(day));
+                let a = simulate_with(net, svc, l, r, lr, &self.peak, false, m, row);
+                if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m, row) } else { a }
             });
             self.accounts[day][l] = Some(LineAccount { key, shift: ls.shift, runs });
             self.redone += 1;
@@ -1441,7 +1459,7 @@ pub const BUSY_PLATFORM_S: f64 = 60.0;
 /// still waiting when the day ended (then the warm run is the right one).
 #[allow(clippy::too_many_arguments)]
 pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool) -> RunAccount {
-    simulate_with(net, svc, l, r, lr, peak, warm, line_masks(net, svc, l, r).as_deref())
+    simulate_with(net, svc, l, r, lr, peak, warm, line_masks(net, svc, l, r).as_deref(), None)
 }
 
 /// Per stop of run `r` (in its travel order), when riders arrive by the tolerance (T-842b): by
@@ -1453,15 +1471,16 @@ pub fn line_masks(net: &Network, svc: &Service, l: usize, r: usize) -> RunMasks 
     Some(deps.iter().map(|d| Arc::new(span::stop_mask(d))).collect())
 }
 
-/// `simulate` with each stop's arrival mask (`line_masks`).
+/// `simulate` with each stop's arrival mask (`line_masks`), and the trains of kind of day `row` when
+/// given (`Service::run_deps_as`), else the line's calendar's.
 #[allow(clippy::too_many_arguments)]
-pub fn simulate_with(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, masks: Option<&[Arc<Mask>]>) -> RunAccount {
+pub fn simulate_with(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, masks: Option<&[Arc<Mask>]>, row: Option<usize>) -> RunAccount {
     // T-798: on a circle the riders still aboard at the last stop ride on round: a second pass
     // queues them at the first stop when their train arrives there, ahead of later arrivals
     let wrap = svc.lines[l].kind == crate::track::net::LoopKind::Circle;
     let masks = masks.filter(|m| m.len() == lr.n);
     let mut through = vec![];
-    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, &[], &mut through);
+    let mut acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, row, &[], &mut through);
     if wrap && !through.is_empty() {
         through.sort_by(|a, b| a.0.total_cmp(&b.0));
         let mut sum = 0.0;
@@ -1469,7 +1488,7 @@ pub fn simulate_with(net: &Network, svc: &Service, l: usize, r: usize, lr: &Line
             sum += x.1;
             x.1 = sum;
         }
-        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, &through, &mut vec![]);
+        acc = simulate_carry(net, svc, l, r, lr, peak, warm, wrap, masks, row, &through, &mut vec![]);
     }
     acc.hour_load = acc.hour_loads();
     acc
@@ -1486,14 +1505,14 @@ impl Cum<'_> {
 /// `simulate`, with `carry_in` (time, riders so far, in time order) joining the first stop's queue,
 /// and on a circle (`wrap`) the riders staying aboard at the last stop pushed to `carry_out`.
 #[allow(clippy::too_many_arguments)]
-fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, masks: Option<&[Arc<Mask>]>, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
+fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRiders, peak: &[f64; PERIODS], warm: bool, wrap: bool, masks: Option<&[Arc<Mask>]>, row: Option<usize>, carry_in: &[(f64, f64)], carry_out: &mut Vec<(f64, f64)>) -> RunAccount {
     let ls = &svc.lines[l];
     let n = lr.n;
     let cap = ls.crush();
     let t0 = svc.account_start(l, START_HOUR);
     let from = if warm { t0 - DAY } else { t0 };
     let mut trips: Vec<Trip> = vec![];
-    svc.run_deps(net, l, r, from, t0 + DAY, &mut trips);
+    svc.run_deps_as(net, l, r, from, t0 + DAY, row, &mut trips);
     // T-680: a change from a pattern with no trains is when the line's trains started; nobody
     // waited for them before it
     let open = svc.eras_of(l).iter().rev().find(|e| e.lat.tph.iter().all(|&t| t <= 0.0)).map(|e| e.until).filter(|&u| u > t0);

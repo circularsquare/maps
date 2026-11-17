@@ -672,6 +672,13 @@ table.sched th:first-child, table.sched td:first-child { text-align: left; }
 table.sched td { text-align: right; padding: 2px 0; }
 table.sched + .rows { margin-top: 4px; }
 table.sched tr.now td:first-child { font-weight: 700; }
+/* T-3521: the schedule panel's Weekdays and Weekends sections: a heading row each, parted by the room
+   above it, not a rule (docs/ui-panels.md "Look"); the Weekends row carries its percent and button */
+table.sched tr.sched-day th { text-align: left; padding: 12px 0 2px; color: var(--text); font-weight: 700; }
+table.sched tr.sched-day:nth-child(2) th { padding-top: 4px; }
+table.sched .sched-day-row { display: flex; align-items: center; gap: 8px; }
+table.sched .sched-day-row .btn.text { margin-left: auto; font-weight: 400; }
+table.sched .sched-day-row .stepper { font-weight: 400; }
 /* T-692: every cell one line; the demand column takes what the others leave and is cut with an ellipsis */
 table.sched th, table.sched td { white-space: nowrap; }
 table.sched th:not(:first-child), table.sched td:not(:first-child) { padding-left: 10px; }

@@ -61,6 +61,14 @@ fn main() {
         }
         std::fs::write(&path, s).unwrap();
     }
+    // T-3521: `TW_WEEKEND=<percent>` runs every line's weekends at that percent first (timed, not
+    // in the mean), so every edit after it settles the weekends too
+    if let Some(p) = std::env::var("TW_WEEKEND").ok().and_then(|s| s.parse::<u32>().ok()) {
+        time(&mut a, &format!("weekends {p}% (all lines)"), &|a| a.set_weekend_share_all(p));
+        // every line's trains an hour at each level, weekdays then weekends, summed
+        let sum = |row: u32| -> Vec<f32> { (0..3).map(|lev| lines.iter().map(|&l| a.line_tph_on(l, row, lev)).sum()).collect() };
+        eprintln!("trains an hour, all lines: weekdays {:?}, weekends {:?}", sum(0), sum(1));
+    }
     let mut all = vec![];
     all.push(time(&mut a, "headway 300/600/1200", &|a| a.set_auto_headway(best, 300, 600, 1200)));
     for i in 0..reps {

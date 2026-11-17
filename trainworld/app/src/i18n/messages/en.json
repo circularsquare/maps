@@ -2722,5 +2722,14 @@
   "oneWay.yes": "{reverse, select, true {Reverse} other {Run one way}}",
   "oneWay.no": "Cancel",
   "oneWay.reroutes": "{line} takes another way",
-  "issues.oneWayNoWay": "{line} has no other way between its stations."
+  "issues.oneWayNoWay": "{line} has no other way between its stations.",
+  "schedule.weekdays": "Weekdays",
+  "schedule.weekends": "Weekends",
+  "schedule.weekendsTip": "Weekends and public holidays",
+  "schedule.weekendShareLabel": "Weekend share of weekday trains",
+  "schedule.weekendShareOff": "Weekend trains set by hand",
+  "schedule.weekendAll": "Apply to all lines",
+  "schedule.weekendAllAsk": "Set every line's weekends to {pct} of its weekdays?",
+  "schedule.weekendLabel": "{vehicle, select, train {trains} tram {trams} bus {buses} other {boats}} on weekends",
+  "schedule.weekendHeadwayLabel": "Headway on weekends"
 }

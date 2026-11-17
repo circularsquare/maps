@@ -317,6 +317,8 @@ function toWorld(s: ClockState): WorldView {
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,
       limit: l.limit,
+      ...(l.weekend ? { weekend: l.weekend } : {}),
+      ...(l.restTph ? { restTph: l.restTph } : {}),
       ...(l.pairs ? { pairs: l.pairs } : {}),
       ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
       ...(l.bus ? { bus: l.bus } : {}),

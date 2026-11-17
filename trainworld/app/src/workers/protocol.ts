@@ -155,6 +155,15 @@ export type EditOp =
   | { op: "setTrainCount"; line: number; trains: [number, number, number] }
   /** T-625: the line's trains follow a headway in seconds per level (0: no service), or null: counts by hand */
   | { op: "setHeadway"; line: number; seconds: [number, number, number] | null }
+  /** T-3521: a line's weekends at a percent of its weekdays (`TrackApi.set_line_weekend_share`), its
+   * counts set by hand dropped. Undoable, and charged for the trains it makes the line need */
+  | { op: "weekendShare"; line: number; share: number }
+  /** T-3521: a line's whole trains on weekends set by hand, high, medium, low
+   * (`TrackApi.set_line_weekend_counts`) */
+  | { op: "weekendCounts"; line: number; counts: [number, number, number] }
+  /** T-3521: every line's weekends at a percent of its weekdays, as one edit
+   * (`TrackApi.set_weekend_share_all`) */
+  | { op: "weekendShareAll"; share: number }
   /** a field left out keeps the line's own as the worker has it now, so an edit never carries a stale
    * name, colour or symbol over one still on its way (T-1812); `letter` is the symbol set by hand, "" for none */
   | { op: "lineLook"; line: number; name?: string; colour?: string; letter?: string }
@@ -588,6 +597,12 @@ export interface ClockLine {
   oneWay: boolean;
   /** T-2987: the line's speed limit, km/h; 0 for none (`TrackApi::line_limit`) */
   limit: number;
+  /** T-3521: the line's weekends (`TrackApi::line_weekend`): its percent, 1 where its counts are set
+   * by hand, then its whole trains on weekends, high, medium, low; absent: the weekdays' at 100% */
+  weekend?: number[];
+  /** T-3521: the line's trains an hour on weekends, high, medium, low, as settled for them
+   * (`TrackApi::line_tph_rest`) */
+  restTph?: number[];
   /** T-3333: the switch to run on both pairs of quad track is on: 1 it runs on both (its counts,
    * rates and headways are one pair's, its hidden twin runs the other), 2 on one pair for now
    * (`TrackApi::line_pairs`) */

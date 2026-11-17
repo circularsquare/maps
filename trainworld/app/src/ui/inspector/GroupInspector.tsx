@@ -8,6 +8,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
+import { trainsNowAt } from "../../game/lineRunning";
 import { stopKey } from "../../game/complexView";
 import { BAR, CHIP, CHIP_GAP, CHIP_W, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
 import { bulletDraw, bulletText } from "../bullet";
@@ -46,7 +47,7 @@ const STOP_CHIPS = 2;
 function trainsNow(w: WorldView, l: LineInput) {
   const st = w.lineStats[l.id];
   const lev = demandAt(lineSeconds(st));
-  return { n: st?.status === "running" ? st.trainsNeeded[DEMAND_INDEX[lev]] : 0, lev };
+  return { n: st?.status === "running" ? trainsNowAt(l.id, DEMAND_INDEX[lev]) : 0, lev };
 }
 
 /** One stop edit at a time: a second click before the world has the first would count from stale indices. */

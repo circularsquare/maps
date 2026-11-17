@@ -16,7 +16,7 @@ Commutes bunch up. 70% of the day's trips to work start in the morning peak, and
 
 Inside a period the busiest hour is busier than the average hour, up to 1.5 times, and [crowding](full-trains.md) is judged at that hour.
 
-Weekends and public holidays have their own demand, with less commuting and more outings. Long holidays bring people going out one way and coming back the other. Each country decides which days those are. Trains run the same on every day.
+Weekends and public holidays have their own demand, with less commuting and more outings. Long holidays bring people going out one way and coming back the other. Each country decides which days those are. Weekends and public holidays can run their own trains ([scheduling](scheduling.md)).
 
 The trips themselves are in [who travels](who-travels.md).
 

@@ -1158,8 +1158,28 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
-  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on every kind of day, weekends and holidays too
-  (T-2335, [demand-timing.md](demand-timing.md) "Kinds of day"). New rail lines start at 0 / 0 / 0 and each level is
+  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on every kind of day. **Weekends** (T-3521, from
+  GabrielMoraez's PR 13; `LineData::weekend`): Saturday and Sunday (a country's own weekend) and
+  public holidays run a line's weekend trains; a superholiday's days and the weekend days a country
+  works run its weekday ones (`rowOfIn` in `game/holidayCalendar.ts`, sent per line as
+  `service::Cal`; `Boarding::kind_row` agrees). A line's weekends are a **percent** of its weekdays,
+  10% to 200% in 5% steps, 100% at first: a count line's counts times the percent rounded up, a
+  headway line's headway divided by it and rounded down to a whole minute, its count from the
+  weekday round trip (and under 100% never more than its weekday count), and it keeps that headway
+  as the weekdays keep theirs, its trains standing at the ends for the rest; a weekday edit moves the
+  weekends with it. Or **counts set by hand**, kept whatever the weekdays do, the percent kept
+  for the panel, run as a count line's (a headway line's too); picking a percent again drops them.
+  One edit sets every line's percent (`set_weekend_share_all`). Every line runs at once on weekends
+  too, so where any line's weekend counts or headways differ from its weekday ones the weekends are settled on their own after the weekdays'
+  (`TrackWorld::settle_weekend`: the same settle on the weekend counts, rates in
+  `Network::line_tph_rest`, `rest_solved`), on a weekend service kept between edits (`svc_rest`,
+  following each edit's rebuild; not saved, worked out again at the first edit after a load); the
+  weekdays' figures and service are left to the bit. With no line's weekends other than 100% there
+  is no weekend settle and every day runs the weekday pattern. A weekend-only edit settles only the
+  weekends (no weekday settle, no demand solve). The fleet a line needs is its most trains on
+  either kind of day (`cars_needed`); running cost is per kind of day (`running_cost` 3-5). Saved
+  in a trailing `LWE1` block (save level 21) with the weekend rates to the bit; a save without it
+  runs every line's weekends at 100%. New rail lines start at 0 / 0 / 0 and each level is
   set on its own, so a line given trains at high alone stops at 20:00 (T-2123; the tutorial's last
   steps ask for trains at every level); bus lines start with buses at every level; zero means no new departures. The panel shows the integer allocation and resulting headway.
   Frequency is derived from the capacity-adjusted round trip, with a bounded solve on edits (at
@@ -1223,8 +1243,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per stretch of one level (consecutive periods at the same
-  level: high demand's 6-20 is one stretch, `level_stretches`, T-1536; every kind of day the same,
-  T-2335) of the line's local time (T-309: its first
+  level: high demand's 6-20 is one stretch, `level_stretches`, T-1536; each day at its kind's
+  trains, `Lattice::levels_on` and `slot`, T-3521) of the line's local time (T-309: its first
   stop's region's, `Lattice::shift`; a New York to Toronto line is on one offset, a London to
   Paris line would run on London's), the first departure half a one-way run before the stretch's
   start and then one a headway, until half a run before its end (T-835, `Lattice::lead`: the mean

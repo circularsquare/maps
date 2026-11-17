@@ -5,7 +5,7 @@
 
 use super::frame::FrameKind;
 use super::geom::Pi;
-use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData, DAY_UNKNOWN};
+use super::net::{EdgeData, GroupLook, LineData, Network, NodeData, StationData, Weekend, DAY_UNKNOWN};
 use super::params::*;
 use super::twin::Twin;
 
@@ -50,6 +50,11 @@ use super::twin::Twin;
 /// line's index); without it no line has one.
 /// A trailing `LPS1` block (T-3405) gives the pieces of track with a speed limit of their own (count,
 /// then edge index and km/h); without it none has one.
+/// A trailing `LWE1` block (T-3521) gives the lines whose weekends are other than the default
+/// (`LineData::weekend`): count, then per line its index, its percent, 1 and three counts where they
+/// are set by hand (else 0); without it every line runs its weekday trains every day. Then 1 where
+/// weekends were settled on their own (`Network::rest_solved`), and then their rates and kept lines
+/// as `LRT1` gives the weekdays'.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -62,12 +67,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 26] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1"];
+pub const BLOCKS: [&[u8; 4]; 27] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 20;
+pub const LEVEL: u32 = 21;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -534,6 +539,36 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(v as u64);
         }
     }
+    // T-3521: after LTW1, as the blocks are read in order; only lines whose weekends are other than
+    // the default, so every other save is byte for byte as it was
+    let weekend: Vec<(usize, Weekend)> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_weekend[l as usize])).filter(|x| x.1 != Weekend::default()).collect();
+    if !weekend.is_empty() {
+        w.0.extend_from_slice(b"LWE1");
+        w.u(weekend.len() as u64);
+        for (i, x) in weekend {
+            w.u(i as u64);
+            w.u(x.share as u64);
+            w.u(x.counts.is_some() as u64);
+            if let Some(c) = x.counts { for v in c { w.u(v as u64); } }
+        }
+        // the settled rates to the bit, so a load runs the same weekend trains
+        let solved = net.rates_settled && net.rest_solved;
+        w.u(solved as u64);
+        if solved {
+            let rated: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_trains[l as usize].is_some()).map(|(i, _)| i).collect();
+            w.u(rated.len() as u64);
+            for &i in &rated {
+                w.u(i as u64);
+                for r in net.line_tph_rest[lines[i] as usize] { w.u(r.to_bits() as u64); }
+            }
+            let kept: Vec<_> = net.settle_kept_rest.iter().filter(|x| index.get(x.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
+            w.u(kept.len() as u64);
+            for &(l, lev, rate, trip, trains) in kept {
+                w.u(index[l as usize] as u64);
+                w.u(lev as u64); w.u(rate as u64); w.u(trip); w.u(trains as u64);
+            }
+        }
+    }
     w.0
 }
 
@@ -733,7 +768,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -1011,6 +1046,35 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LWE1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let share = r.u()?.min(u16::MAX as u64) as u16;
+            let counts = if r.u()? == 1 {
+                let mut c = [0u32; 3];
+                for v in c.iter_mut() { *v = r.u()?.min(u32::MAX as u64) as u32; }
+                Some(c)
+            } else {
+                None
+            };
+            if i < n_lines { net.line_weekend[i] = Weekend { share, counts }; }
+        }
+        if r.u()? == 1 {
+            // only lines with trains have rates written; one without runs its weekday rates
+            for i in 0..n_lines { net.line_tph_rest[i] = net.line_tph[i]; }
+            for _ in 0..r.u()? {
+                let i = r.u()? as usize;
+                let rates = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
+                if i < n_lines { net.line_tph_rest[i] = rates; }
+            }
+            for _ in 0..r.u()? {
+                let (l, lev, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
+                if (l as usize) < n_lines && lev < 3 { net.settle_kept_rest.push((l, lev, rate, trip, trains)); }
+            }
+            net.rest_solved = true;
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1048,7 +1112,7 @@ mod tests {
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() })).unwrap();
+        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() })).unwrap();
         encode(&net)
     }
 
@@ -1186,7 +1250,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (20, 26), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (21, 27), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

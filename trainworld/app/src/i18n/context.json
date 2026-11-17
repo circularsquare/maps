@@ -2720,5 +2720,14 @@
   "issues.oneWayNoWay": "Notice when track cannot be made one way because a line has no other route between its stations. line: the line's name, \"Line 4\".",
   "complexMap.waitToward": "A line of the hover on a platform in the complex map, one per direction. count: people waiting on that side, \"14\"; name: the station that direction ends at.",
   "complexMap.waitOpen": "Same, when the end station is unknown. count: people waiting, \"14\".",
-  "complexMap.room": "Last line of the hover on a platform in the complex map. room: how many fit, \"80\"; oneSide: true when the platform has one side only, otherwise the room is on each of two sides."
+  "complexMap.room": "Last line of the hover on a platform in the complex map. room: how many fit, \"80\"; oneSide: true when the platform has one side only, otherwise the room is on each of two sides.",
+  "schedule.weekdays": "Heading of the weekday rows of the schedule panel's table (a line's trains per demand level on Monday to Friday).",
+  "schedule.weekends": "Heading of the weekend rows of the schedule panel's table (a line's trains per demand level on Saturday, Sunday and public holidays).",
+  "schedule.weekendsTip": "Hover on the Weekends heading: which days its rows run on (the country's weekend days and its public holidays).",
+  "schedule.weekendShareLabel": "Screen-reader label of the percent stepper beside the Weekends heading: weekend trains as a percent of weekday trains.",
+  "schedule.weekendShareOff": "Hover on the greyed percent beside the Weekends heading: the line's weekend counts were changed by hand, so the percent is not in use.",
+  "schedule.weekendAll": "Button beside the Weekends heading: set every line's weekends to the percent shown. Also the confirm button of its question.",
+  "schedule.weekendAllAsk": "Question before setting every line's weekends to a percent. pct: a percent, \"70%\".",
+  "schedule.weekendLabel": "Screen-reader label of a weekend count stepper in the schedule panel. vehicle: train, tram, bus or boat.",
+  "schedule.weekendHeadwayLabel": "Screen-reader label of a weekend headway stepper in the schedule panel (the count follows the headway)."
 }
