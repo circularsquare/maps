@@ -23,7 +23,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Later nights: nic (Nice) and pyo-kp (Sinuiju) now safe after T-3529; T-3530 Tokyo Haneda; T-3532 drive-grid water fix (she said yes, low priority).
 
 ## Agents (all maps-45's; maps-58 closed out 11-17. Move a tree's DECISIONS lines first: scratchpad move_decisions.py <tree>)
-- onewaystops (Opus, maps-45's, .tw-trees/onewaystops, port 6153): T-3565 one-way pair stops; routing: checker before landing.
+- onewaystops: T-3565 done in tree; checker onewaycheck (Sonnet, port 6171) running. At landing its changelog item fixes a feature new in this update (T-3348's one-way pair stops): reword that item instead (changelog.py reword), hide the new one.
 - weekendstep: T-3557 done in tree (changelog item in tree; DECISIONS line in main; follow-ups T-3583, T-3584 filed); checker weekendcheck (Sonnet, port 6166) running; land on pass, then archive T-3557.
 - tramterm (Sonnet, maps-45's, .tw-trees/tramterm, port 6157): T-3574 tram stop terminal + passing tracks, T-3575 tram crossovers; code + Rust done, stopped waiting on its wasm build (log scratchpad\tramterm\wasm.log); resume it for full cargo, check t3574-tram-terminal.mjs, screenshot, notes; then checker.
 - shoreswap: T-3553 done in tree (changelog c113 in main); checker shorecheck (Sonnet, maps-45's, port 6158) running; land on pass, then archive T-3553.

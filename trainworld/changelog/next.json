@@ -1607,6 +1607,18 @@
       "area": "scheduling",
       "fix": true,
       "changed": "2026-11-17T19:39:41Z"
+    },
+    {
+      "id": "c125",
+      "text": "fixed the advice shown after the map's graphics crash: the game now says to restart the browser, since reloading the page doesn't bring them back",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3582",
+      "by": "glcontext",
+      "at": "2026-11-17T19:43:40Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
     }
   ]
 }

@@ -295,6 +295,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3589 [P3] {L:feedback} Graphics details in feedback reports
+  - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
+  - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
+  - Other: notes/T-3582.md
 - T-3588 [P2] {L:timetables} Default headways switch lines to headway; none for new players (taking, 2026-11-17, agent defaulthw)
   - Context: You, 2026-11-17, after T-3543: "setting a line to use default should also switch it from running ont ain coutns to running on headway. also to be clear for a completely new player the default shoudl not be set. people should have to manually assign their first line ever, and manually set their default." Today "Set as default" on a line running on counts is refused with "Switch this line to Headway first".
   - Goal: Setting the default from a line on counts switches that line to headway at its current headways; a new game has no default, so a first line runs on counts until the player sets one; the window's wording says "none" rather than suggesting a game default exists.
@@ -304,9 +308,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3584 [P3] {L:timetables} {after:T-3557} Weekend lines sharing track are not paced
   - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
   - Goal: Weekend lines sharing track are paced from their own weekend headways.
-- T-3582 [P2] {L:small-fixes} WebGL2 error after the map glitches (taking, 2026-11-17, agent glcontext)
-  - Context: Your pad, 2026-11-17, a player's report: "got this error / it doesn't fix when I reload the page, fixes when I restart the browser / should probably be looked into / (I checked my browser's config and WebGL2 is active) / before this error shows up the map starts glitching and zooming out and in on its own sorta". Likely the graphics context was lost and the browser then blocks WebGL for the page until restart, so the game shows its "no WebGL2" screen (T-3307) with the wrong advice. Reach: anyone whose GPU context drops; unknown how many.
-  - Goal: After a lost graphics context the player is told plainly to restart the browser (not to turn on WebGL2), and the likely cause of the loss is found and fixed or written down; give up if it is hard.
 - T-3581 [P3] {L:fares} Undoing a line delete loses its fare multiple (taking, 2026-11-17, agent farebase)
   - Context: Found by T-3567's checker: delete a line, then undo; the line returns at 1.00x because the tidy step drops its entry after the undo snapshot. Typing "1,5" reads as 15 (held to 3.00x), as in the other typed multiples.
   - Goal: Undoing a line delete brings back its fare multiple.
