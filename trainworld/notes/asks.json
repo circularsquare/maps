@@ -1,12 +1,5 @@
 [
   {
-    "id": "a-2026-11-17-5",
-    "title": "When to freeze for 0.4",
-    "text": "Freeze for 0.4 once the current agents finish (likely this evening, with T-3565 one-way pair stops in), or drop T-3565 to after 0.4 and freeze sooner? I'd freeze this evening with it in.",
-    "since": "2026-11-17",
-    "by": "maps-45"
-  },
-  {
     "id": "a-2026-11-17-6",
     "title": "Commit workflow fixes outside trainworld",
     "text": "The workflow fixes changed files outside the trainworld folder: .claude/skills/handoff, .claude/skills/takeover, .claude/hooks/orchestrator.py and the maps CLAUDE.md line about 500k. The orchestrator only commits trainworld paths, so these are uncommitted. Commit them on your yes, or leave them for you?",
