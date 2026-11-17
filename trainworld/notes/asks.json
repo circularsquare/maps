@@ -7,6 +7,13 @@
     "by": "maps-58"
   },
   {
+    "id": "a-2026-11-17-11",
+    "title": "Outside agents: build stage 2?",
+    "text": "T-3556 stage 2 (notes/T-3556.md): an MCP server so outside agents can play, over the harness's act and see calls, with accounts, server saves, sharing, leaderboard and feedback blocked. About 3-4 h to run locally, 8-12 h more to host publicly (needs a server deploy). Stage 3: \"Attach my game\" in feedback, about 2-3 h. Pick: stage 3 first (it helps bug reports now), stage 2 local later.",
+    "since": "2026-11-17",
+    "by": "maps-58"
+  },
+  {
     "id": "a-2026-11-17-10",
     "title": "One-way pair stops",
     "text": "T-3565: when a line runs over a one-way street pair and the stations on its two legs are over 300 m apart (your Caracas Line 2), should (a) they count as one stop served one way on each leg, (b) a stop be served one way only, each direction skipping the other leg's station, or (c) adding stops avoid the J shape? Pick: (b).",
