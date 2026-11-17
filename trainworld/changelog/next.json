@@ -1594,6 +1594,19 @@
       "rev": 1,
       "area": "scheduling",
       "fix": false
+    },
+    {
+      "id": "c124",
+      "text": "fixed the weekend headway in the timetables window running faster than the headway stepped to",
+      "edited": null,
+      "hidden": true,
+      "task": "T-3557",
+      "by": "weekendstep",
+      "at": "2026-11-17T19:34:30Z",
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "changed": "2026-11-17T19:39:41Z"
     }
   ]
 }
