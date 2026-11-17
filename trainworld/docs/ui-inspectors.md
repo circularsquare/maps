@@ -804,8 +804,10 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   group, station, train and track panels, the Stations tab, search, the trouble list, the edit note, the map's
   hovers and the network diagram's) and the group view's hovers; the group pill and the track on the map keep
   their own look.
-- **A click on a station selects its whole complex** [T-249]: complex view, whatever was selected
-  before (there is no Station / Complex switch). A station on its own is a complex of one. Complex
+- **A click on a station selects its whole complex** [T-249]: complex view (there is no Station / Complex switch).
+  With that complex already selected, or one of its stations opened alone, a click on a station of it opens that
+  station alone, and a click on the station already alone goes back to the complex [T-3539]. A station on its own
+  is a complex of one. Complex
   rules: [ui-map.md](ui-map.md) "Station complexes".
 - **Complex view** [T-1812: only these sections; no subtitle, no Trip from here, no commuters and no
   inter-city trips]:

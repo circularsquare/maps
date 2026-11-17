@@ -72,9 +72,9 @@ export const stopKey = (id: StationId): string => {
 
 /** A station opened on its own from its complex's station list (T-246, Anita: "clicking a station
  * should take us to that specific station view"). Any other selection, a new click on the same
- * station included (every selection is a new object), clears it: a click on a station always
- * selects its whole complex (T-249, Anita: "in general we should just pick the complex"). Set it
- * after the selection (`openAlone`). */
+ * station included (every selection is a new object), clears it: a click on a station selects its
+ * whole complex (T-249), unless that complex is already selected, when the click opens the station
+ * alone (map/main.ts `selectAt`, T-3539). Set it after the selection (`openAlone`). */
 export const singleStation = signal<StationId | null>(null);
 effect(() => {
   void selection.value;

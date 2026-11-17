@@ -20,7 +20,7 @@ import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRealTram, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
-import { complexOf, dotGroups, inComplexView } from "./game/complexView";
+import { complexOf, dotGroups, inComplexView, openAlone, singleStation } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
 import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, DEMAND_KEY, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
@@ -553,7 +553,18 @@ function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
   // lines, stations and trains, then commuter bubbles while they are shown, then the rest (T-1515)
-  else selection.value = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), selection.peek(), true, (num, seg) => lineSizeAt(overlay, num, seg));
+  else {
+    const cur = selection.peek();
+    const hit = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), cur, true, (num, seg) => lineSizeAt(overlay, num, seg));
+    // a station of the selected complex, or another of a station opened alone from it: that station alone (T-3539);
+    // the same station again goes back to its complex
+    const alone = singleStation.peek();
+    if (hit?.kind === "station" && cur?.kind === "station" && hit.station !== alone) {
+      const members = complexOf(cur.station);
+      if (members.length > 1 && members.includes(hit.station)) { openAlone(hit.station); live.overlay?.invalidate(); return; }
+    }
+    selection.value = hit;
+  }
 }
 capacity.selectClick = selectAt;
 // Linking stops when its station is no longer the selection or a tool is picked.
@@ -837,7 +848,7 @@ if (DEBUG) {
   (window as any).tw = {
     failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
     figures: { peaks: figuresPeaks, stopped: figuresStopped }, // T-3314: the longest quiet seen, and the notice's signal
-    soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
+    soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, singleStation, complexOf, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,
