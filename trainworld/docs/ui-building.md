@@ -967,13 +967,18 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   this piece to it; free, one undoable edit a step ([track-and-service.md](track-and-service.md) "A piece's speed
   limit"). One piece at a time: the Select tool's bar has no limit.
 - **Rebuild in the track inspector** [T-3408; `ui/inspector/PieceRebuild.tsx`]: built track that is not a crossover
-  has, under its header, the track count buttons (1-line and 2-line icons) and, on rail, Regular / High speed, with
-  the piece's own on; then **Rebuild** (wrench and word) on the left of the row whose right is Remove track; then a
-  grey line "Use the Select tool (4) to rebuild longer stretches" (no key on a phone). It is the Select bar's
-  Rebuild (below) for a pick of this one piece and no stations: the same choices (picking what the piece has
-  drops the choice), quote, hover, question, price and notice, through the same code (`rebuildPieces` in
-  `game/rebuild.ts`), and final like it. Greyed Rebuild has no hover. No level buttons and no Tram here: the level
-  is the bar's, and one piece can't change family alone.
+  has, under its header, the bar's level buttons, the track count buttons (1-line and 2-line icons) and the track
+  type (Regular / High speed on rail, Tram on tram track), the piece's own on; then **Rebuild** (wrench and word) on
+  the left of the row whose right is Remove track; then a grey line "Use the Select tool (4) to rebuild longer
+  stretches" (no key on a phone). A level, and the other family's kinds (Tram on rail, Regular and High speed on
+  tram), show only where the quote for this piece alone changes it and refuses nothing (`rebuildWhole`): the track
+  joined to a piece often ties its level (a piece with no corners between junctions) and its family (anything
+  joined to the other family), and then the buttons are left out, not greyed; with no other level open the level
+  buttons go, and so does a type group of only the piece's own kind. They are asked once a selection and after each
+  edit (Anita, 2026-11-17: "show level and tram as options, if they are options"). It is the Select bar's Rebuild
+  (below) for a pick of this one piece and no stations: the same choices (picking what the piece has drops the
+  choice), quote, hover, question, price and notice, through the same code (`rebuildPieces` in `game/rebuild.ts`),
+  and final like it. Greyed Rebuild has no hover.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

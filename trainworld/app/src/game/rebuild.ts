@@ -136,6 +136,9 @@ export function rebuildTip(q: RebuildQuote | null): string {
 /** Whether a Rebuild button for quote `q` does anything: it asks, or says why nothing can change. */
 export const canRebuild = (q: RebuildQuote | null) => !!q && (q.changed.length > 0 || q.stations > 0 || q.refused.length > 0);
 
+/** Whether quote `q` changes something and refuses nothing (T-3408: which choices the track panel offers). */
+export const rebuildWhole = (q: RebuildQuote | null) => !!q && !q.refused.length && (q.changed.length > 0 || q.stations > 0);
+
 /** Ask, then rebuild the pick. A short purse, or terrain not loaded, is explained by the refusal; so
  * is a pick none of which can change, which is not asked about. */
 export function rebuildPicked() {

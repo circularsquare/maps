@@ -398,11 +398,11 @@ export function SegBar({ parts, kind, label }: { parts: { share: number; cls?: s
   );
 }
 
-/** The elevation buttons in the level colours, `value` on; `tip` words each hover. */
-export function LevelButtons({ value, onPick, tip }: { value: Level | null; onPick: (l: Level) => void; tip: (l: Level) => string }) {
+/** The elevation buttons in the level colours, `value` on; `tip` words each hover; `levels`, only those. */
+export function LevelButtons({ value, onPick, tip, levels = LEVELS }: { value: Level | null; onPick: (l: Level) => void; tip: (l: Level) => string; levels?: readonly Level[] }) {
   return (
     <div class="group levels">
-      {LEVELS.map((l) => (
+      {levels.map((l) => (
         <button class={"btn lv" + (l === value ? " on" : "")} style={{ "--lc": LEVEL_COLOURS[l], "--lk": inkOn(LEVEL_COLOURS[l]) }}
           data-tip={tip(l)} aria-label={t("widgets.level", { level: levelLabel(l) })} aria-pressed={l === value} onClick={() => onPick(l)}>
           {levelLabel(l)}
