@@ -298,6 +298,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3585 [P2] {L:feedback} Asterisks bold words in changelog items (taking, 2026-11-17, agent boldlog)
   - Context: You, 2026-11-17: "coudl we make it so that i can use asterisks to bold specific words?" Changelog items are edited on the board's Changelog view and published into the game's update notes (app/src/ui/updates.ts, translated per language).
   - Goal: Words wrapped in asterisks in a changelog item show bold on the board (outside the edit box) and in the game's update notes, in every language.
+- T-3587 [P2] {L:feedback} Board changelog view jumps while scrolled (taking, 2026-11-17, agent boldlog)
+  - Context: You, 2026-11-17: "in trainworld board changelog whileim scrolled down, where im scrolled to keeps jumping around every 5-20 seconds, it makes it hard to read things. could we try to fix this? not sure if its cuz of agent edits."
+  - Goal: The Changelog view keeps your place while it refreshes, whatever agents add.
 - T-3586 [P2] {L:feedback} Workflow fixes from the 11-17 review (taking, 2026-11-17, agent wffix)
   - Context: You, 2026-11-17: "soudns good for those workflow fixes! thanks :)" and "ok we can do 500k tokens". notes/workflow-review-2026-11-17.md items 1-5 plus the Waiting rule: board kept current by the tools, one tab talks to you after a takeover, changelog rewording instead of duplicates, three versions for an unspecified redraw, the landing command treats an archived task as done; handover at 500k.
   - Goal: Each change is in the rules, skills or tools it names, and the handover point is 500k.

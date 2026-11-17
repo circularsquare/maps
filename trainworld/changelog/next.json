@@ -1222,15 +1222,15 @@
     {
       "id": "c094",
       "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
-      "edited": "added weekend train scheduling, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
+      "edited": "added weekend train scheduling, so a line can run fewer trains on weekends / holidays",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 2,
+      "rev": 3,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:19:21Z"
+      "changed": "2026-11-17T19:28:04Z"
     },
     {
       "id": "c095",
@@ -1503,14 +1503,15 @@
     {
       "id": "c117",
       "text": "added real world stations to the real world network map, as small rings with the name on hover: settings, show stations, off by default",
-      "edited": null,
+      "edited": "added real world stations to the real world network map, as dots with the name on hover: settings, show stations, off by default",
       "hidden": false,
       "task": "T-3570",
       "by": "realstations",
       "at": "2026-11-17T18:33:34Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:28:27Z"
     },
     {
       "id": "c118",
@@ -1554,24 +1555,38 @@
       "id": "c121",
       "text": "real world stations are drawn as soft purple dots like the real track",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3577",
       "by": "stationlook",
       "at": "2026-11-17T18:58:41Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:28:19Z"
     },
     {
       "id": "c122",
       "text": "moved buses obey one-way streets to the game settings; train and platform fullness are always shown",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3579",
       "by": "settingsmove",
       "at": "2026-11-17T19:17:31Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
+      "fix": false,
+      "changed": "2026-11-17T19:28:47Z"
+    },
+    {
+      "id": "c123",
+      "text": "added a Set as default button in the timetables window that gives every new line the selected line's headways, and one timetable button on the line panel in place of copy and paste schedule",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3543",
+      "by": "schedbutton",
+      "at": "2026-11-17T19:28:19Z",
+      "rev": 1,
+      "area": "scheduling",
       "fix": false
     }
   ]
