@@ -1796,20 +1796,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261017-020506",
+    "run_batch": "20261117-004737",
+    "built": "2026-11-17T00:54:42",
+    "shipped": "2026-11-17T02:09:05",
     "steps": {
-     "build": 55.8,
-     "places": 2.2,
-     "routes": 16.8,
-     "merge": 0.5,
-     "nocar": 10.1,
-     "everyday": 0.7
+     "build": 52.7,
+     "stations": 0.9,
+     "places": 3.1,
+     "routes": 51.7,
+     "merge": 0.7,
+     "nocar": 12.5,
+     "everyday": 0.8
     },
-    "built": "2026-10-17T02:33:41",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-17T02:35:50"
+    "gated": "2026-11-17T01:09:19"
    }
   },
   {
@@ -3411,21 +3413,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261030-002157",
+    "run_batch": "20261117-004737",
+    "built": "2026-11-17T01:07:24",
+    "shipped": "2026-11-17T02:09:06",
     "steps": {
-     "build": 64.3,
-     "stations": 0.8,
-     "places": 11.3,
-     "routes": 41.1,
+     "build": 522.1,
+     "stations": 0.9,
+     "places": 12.7,
+     "routes": 51.1,
      "merge": 0.7,
-     "nocar": 1.0,
-     "everyday": 0.7
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-10-30T00:36:08",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-30T04:55:50"
+    "gated": "2026-11-17T01:09:19"
    }
   },
   {
@@ -4750,21 +4753,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261030-002157",
+    "run_batch": "20261117-004737",
+    "built": "2026-11-17T00:59:53",
+    "shipped": "2026-11-17T02:09:07",
     "steps": {
-     "build": 53.9,
-     "stations": 0.7,
-     "places": 5.3,
-     "routes": 55.4,
-     "merge": 0.6,
-     "nocar": 1.1,
-     "everyday": 0.8
+     "build": 57.5,
+     "stations": 0.8,
+     "places": 7.7,
+     "routes": 68.6,
+     "merge": 1.5,
+     "nocar": 2.0,
+     "everyday": 1.0
     },
-    "built": "2026-10-30T00:36:06",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-30T04:55:50"
+    "gated": "2026-11-17T01:09:20"
    }
   },
   {
@@ -9200,7 +9204,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 14582317,
+   "people": 14692235,
    "origin": [
     28.8675,
     41.0597
@@ -9253,14 +9257,13 @@
      "54988432B36260416662231",
      "54988432B77407650026764",
      "54988432B54701256478195",
-     "54988432B34660982943926",
-     "54988432B14645765693693",
-     "54988432B71345383711908"
+     "54988432B71345383711908",
+     "54988432B54271266334519"
     ]
    },
    "bbox": [
     28.07,
-    40.525,
+    40.752,
     29.753,
     41.591
    ],
@@ -9277,27 +9280,32 @@
       "54988432B14645765693693",
       "54988432B71345383711908"
      ]
+    },
+    "hand_edit": {
+     "task": "T-3488",
+     "why": "Arnavutkoy (Istanbul Airport) is an Istanbul district, merged into Istanbul's zone (Anita 2026-11-16, open-source issue 11); Karamursel back to Kocaeli and Altinova to Yalova, their provinces"
     }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-025532",
+    "built": "2026-11-17T03:15:54",
+    "gated": "2026-11-17T03:18:06",
+    "shipped": "2026-11-17T04:17:47",
     "steps": {
-     "build": 280.5,
-     "stations": 1.4,
-     "places": 5.9,
-     "routes": 157.1,
-     "merge": 1.6,
-     "nocar": 2.0,
-     "everyday": 1.3
+     "build": 108.6,
+     "stations": 1.0,
+     "places": 4.1,
+     "routes": 127.6,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-11-04T02:30:51",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.00048828125"
+      "top_school_cell_pupils 6000.00048828125",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:15:40",
-    "shipped": "2026-11-04T04:27:04"
+    }
    }
   },
   {
@@ -20558,7 +20566,7 @@
    "order": 237,
    "id": "gut",
    "name": "Guatemala City",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -20641,6 +20649,26 @@
       "79465075B81292522353259"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 208.2,
+     "stations": 1.4,
+     "places": 3.3,
+     "routes": 71.8,
+     "merge": 1.2,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-16T22:18:11",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-16T23:44:35",
+    "shipped": "2026-11-17T00:31:09"
    }
   },
   {
@@ -21392,8 +21420,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B92581613564352",
@@ -21446,22 +21474,24 @@
     }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:31:36",
+    "gated": "2026-11-17T04:46:07",
+    "shipped": "2026-11-17T05:47:45",
     "steps": {
-     "build": 57.4,
-     "stations": 1.5,
-     "places": 3.9,
-     "routes": 50.0,
-     "merge": 2.3,
-     "nocar": 3.4,
-     "everyday": 2.0
+     "build": 37.8,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 33.2,
+     "merge": 0.8,
+     "nocar": 1.8,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:16:35",
     "gate": {
-     "warn": []
-    },
-    "gated": "2026-11-07T02:28:18",
-    "shipped": "2026-11-07T05:45:29"
+     "warn": [
+      "pop_vs_plan 1.2761102387756067"
+     ]
+    }
    }
   },
   {
@@ -22381,7 +22411,7 @@
    "order": 262,
    "id": "caa",
    "name": "Caracas",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -22433,6 +22463,29 @@
       "92452058B40538109508806"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 163.6,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 13.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:23:16",
+    "reason": "gate: drive_factor_median 2.0200555277086965",
+    "gate": {
+     "fail": [
+      "drive_factor_median 2.0200555277086965"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "parked": "2026-11-16T22:33:01"
    }
   },
   {
@@ -23354,7 +23407,7 @@
    "order": 275,
    "id": "saj",
    "name": "San José",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CRI"
@@ -23442,6 +23495,24 @@
       "36466004B38119903555726"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 47.8,
+     "stations": 0.9,
+     "places": 3.9,
+     "routes": 39.6,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:39:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:57",
+    "shipped": "2026-11-17T00:31:10"
    }
   },
   {
@@ -24693,7 +24764,7 @@
    "order": 292,
    "id": "sas",
    "name": "San Salvador",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SLV"
@@ -24819,6 +24890,26 @@
       "79315794B97184435061197"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 75.7,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 39.5,
+     "merge": 1.3,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:42:56",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.00048828125"
+     ]
+    },
+    "gated": "2026-11-16T23:45:00",
+    "shipped": "2026-11-17T00:31:10"
    }
   },
   {
@@ -27987,7 +28078,7 @@
    "order": 334,
    "id": "mac",
    "name": "Maracaibo",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -28025,6 +28116,26 @@
     "fua": [
      1459
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 122.0,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 20.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:23:43",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6169.650390625"
+     ]
+    },
+    "gated": "2026-11-16T23:44:43",
+    "shipped": "2026-11-17T00:31:11"
    }
   },
   {
@@ -30370,7 +30481,7 @@
    "order": 371,
    "id": "teu",
    "name": "Tegucigalpa",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "HND"
@@ -30435,6 +30546,30 @@
       "27666195B86037952896272"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 20.3,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 20.1,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:41:39",
+    "reason": "gate: pop_vs_fua 1.678431252857312 1,148,517 in Tegucigalpa; drive_factor_median 2.0518667734879767",
+    "gate": {
+     "fail": [
+      "pop_vs_fua 1.678431252857312 1,148,517 in Tegucigalpa",
+      "drive_factor_median 2.0518667734879767"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "parked": "2026-11-16T22:59:32"
    }
   },
   {
@@ -30943,7 +31078,7 @@
    "order": 378,
    "id": "vae",
    "name": "Valencia",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -30994,6 +31129,24 @@
       "92452058B45156381863749"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 187.5,
+     "stations": 1.5,
+     "places": 2.6,
+     "routes": 23.3,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:23:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:44",
+    "shipped": "2026-11-17T00:31:12"
    }
   },
   {
@@ -31280,7 +31433,7 @@
    "order": 384,
    "id": "paa",
    "name": "Panama City",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -31369,6 +31522,24 @@
       "15828444B60927966092553"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 68.9,
+     "stations": 1.4,
+     "places": 3.3,
+     "routes": 17.3,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:46:43",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:45:10",
+    "shipped": "2026-11-17T00:31:12"
    }
   },
   {
@@ -34789,7 +34960,7 @@
    "order": 430,
    "id": "mag",
    "name": "Managua",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -34848,6 +35019,24 @@
       "1004716B95201351767223"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 28.2,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 15.5,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T23:25:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:45:14",
+    "shipped": "2026-11-17T00:31:13"
    }
   },
   {
@@ -34966,7 +35155,7 @@
    "order": 433,
    "id": "sap",
    "name": "San Pedro Sula",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "HND"
@@ -35013,6 +35202,30 @@
       "27666195B58138028057911"
      ]
     }
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 18.3,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 15.4,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:41:33",
+    "reason": "gate: pop_vs_fua 1.5223342775815942 998,550 in San Pedro Sula",
+    "gate": {
+     "fail": [
+      "pop_vs_fua 1.5223342775815942 998,550 in San Pedro Sula"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.1039679027154695",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "parked": "2026-11-16T22:59:32"
    }
   },
   {
@@ -204445,7 +204658,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 1162750,
+   "people": 1194214,
    "origin": [
     29.7495,
     40.7719
@@ -204466,12 +204679,13 @@
      "54988432B88821463332228",
      "54988432B70012419752472",
      "54988432B88923492741350",
-     "54988432B79652739540199"
+     "54988432B79652739540199",
+     "54988432B14645765693693"
     ]
    },
    "bbox": [
     29.321,
-    40.53,
+    40.525,
     30.367,
     41.218
    ],
@@ -204485,26 +204699,33 @@
      "Derince",
      "Başiskele",
      "Kandıra",
-     "Şile"
-    ]
+     "Şile",
+     "Karamürsel"
+    ],
+    "hand_edit": {
+     "task": "T-3488",
+     "why": "Arnavutkoy (Istanbul Airport) is an Istanbul district, merged into Istanbul's zone (Anita 2026-11-16, open-source issue 11); Karamursel back to Kocaeli and Altinova to Yalova, their provinces"
+    }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-031810",
+    "built": "2026-11-17T03:21:49",
+    "gated": "2026-11-17T03:24:00",
+    "shipped": "2026-11-17T04:17:48",
     "steps": {
-     "build": 41.3,
-     "stations": 1.0,
+     "build": 41.1,
+     "stations": 0.9,
      "places": 2.2,
-     "routes": 57.2,
-     "merge": 1.2,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "routes": 41.0,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-04T02:38:55",
     "gate": {
-     "warn": []
-    },
-    "gated": "2026-11-04T03:16:02",
-    "shipped": "2026-11-04T04:27:13"
+     "warn": [
+      "fleet_range 1"
+     ]
+    }
    }
   },
   {
@@ -207280,7 +207501,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 496698,
+   "people": 531509,
    "origin": [
     29.2786,
     40.6552
@@ -207300,14 +207521,15 @@
      "54988432B73294820193521",
      "54988432B7457666939336",
      "54988432B49585252089849",
-     "54988432B6573283101831"
+     "54988432B6573283101831",
+     "54988432B34660982943926"
     ]
    },
    "bbox": [
     28.78,
     40.312,
-    29.525,
-    40.702
+    29.558,
+    40.743
    ],
    "source": {
     "zone": "T-723",
@@ -207318,28 +207540,34 @@
      "Çiftlikköy",
      "Çınarcık",
      "Termal",
-     "Armutlu"
-    ]
+     "Armutlu",
+     "Altınova"
+    ],
+    "hand_edit": {
+     "task": "T-3488",
+     "why": "Arnavutkoy (Istanbul Airport) is an Istanbul district, merged into Istanbul's zone (Anita 2026-11-16, open-source issue 11); Karamursel back to Kocaeli and Altinova to Yalova, their provinces"
+    }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-031810",
+    "built": "2026-11-17T03:21:13",
+    "gated": "2026-11-17T03:23:59",
+    "shipped": "2026-11-17T04:17:48",
     "steps": {
-     "build": 24.2,
-     "stations": 1.3,
-     "places": 2.2,
-     "routes": 28.6,
-     "merge": 1.1,
-     "nocar": 1.7,
+     "build": 23.2,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 22.0,
+     "merge": 0.8,
+     "nocar": 1.5,
      "everyday": 1.1
     },
-    "built": "2026-11-04T02:36:36",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.12199042787800547"
+      "top_zone_jobs_share 0.1158581645984844",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:15:57",
-    "shipped": "2026-11-04T04:27:29"
+    }
    }
   },
   {
@@ -208329,75 +208557,6 @@
      "warn": [
       "pop_vs_plan 1.5796328111938385",
       "pop_vs_ghsl_other 1.5820691843316055"
-     ]
-    },
-    "parked": "2026-11-04T03:14:38",
-    "gated": "2026-11-04T03:30:13",
-    "shipped": "2026-11-04T04:27:35"
-   },
-   "gate_relax": {
-    "pop_vs_plan": "census hook: the 2022 register with the Syrians under temporary protection by ilce (Adana's people sit in Seyhan's outline, not Ceyhan's)"
-   }
-  },
-  {
-   "order": 4282,
-   "id": "arv",
-   "name": "Arnavutköy",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "TUR"
-   ],
-   "iso2": "TR",
-   "people": 176193,
-   "origin": [
-    28.7474,
-    41.1857
-   ],
-   "tz": "Europe/Istanbul",
-   "utc_offset": 3,
-   "extracts": [
-    "europe/turkey"
-   ],
-   "archetype": "C",
-   "module": "admin_totals",
-   "units": {
-    "TUR": [
-     "54988432B54271266334519"
-    ]
-   },
-   "bbox": [
-    28.491,
-    41.089,
-    28.821,
-    41.408
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Arnavutköy"
-    ]
-   },
-   "run": {
-    "run_batch": "20261104-021141",
-    "steps": {
-     "build": 23.9,
-     "stations": 1.1,
-     "places": 2.3,
-     "routes": 26.5,
-     "merge": 0.8,
-     "nocar": 1.4,
-     "everyday": 1.0
-    },
-    "built": "2026-11-04T02:37:34",
-    "gate": {
-     "warn": [
-      "university_rate 0.0",
-      "pop_vs_plan 1.9107513687741637",
-      "pop_vs_ghsl_other 1.9129110451052356",
-      "top_zone_jobs_share 0.11850247834451476",
-      "fleet_range 2"
      ]
     },
     "parked": "2026-11-04T03:14:38",
@@ -325408,8 +325567,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B69747109400917",
@@ -325464,22 +325623,24 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:31:57",
+    "gated": "2026-11-17T04:46:08",
+    "shipped": "2026-11-17T05:47:46",
     "steps": {
-     "build": 62.3,
-     "stations": 1.7,
-     "places": 3.9,
-     "routes": 45.9,
-     "merge": 1.8,
-     "nocar": 2.3,
-     "everyday": 1.4
+     "build": 52.3,
+     "stations": 1.0,
+     "places": 2.3,
+     "routes": 35.9,
+     "merge": 1.0,
+     "nocar": 1.5,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:22:31",
     "gate": {
-     "warn": []
-    },
-    "gated": "2026-11-07T02:28:20",
-    "shipped": "2026-11-07T05:46:06"
+     "warn": [
+      "top_school_cell_pupils 5146.0732421875"
+     ]
+    }
    }
   },
   {
@@ -325656,8 +325817,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B99207474078135",
@@ -325728,29 +325889,33 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:33:00",
+    "gated": "2026-11-17T04:46:09",
+    "shipped": "2026-11-17T05:47:47",
     "steps": {
-     "build": 90.0,
-     "stations": 1.4,
-     "places": 3.0,
-     "routes": 103.7,
-     "merge": 8.4,
-     "nocar": 3.3,
-     "everyday": 2.2
+     "build": 64.9,
+     "stations": 1.2,
+     "places": 2.5,
+     "routes": 78.9,
+     "merge": 7.5,
+     "nocar": 2.5,
+     "everyday": 1.5
     },
-    "built": "2026-11-07T01:24:02",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.7752983190166801",
-      "pop_vs_ghsl 0.7746117907262396",
-      "area_km2 72880.14299001485",
+      "pop_vs_plan 0.5985865531787815",
+      "pop_vs_ghsl_other 0.5980565035282731",
+      "area_km2 72880.05713078036",
+      "top_zone_jobs_share 0.10515345575365087",
       "drive_factor_median 2.117000016612675",
-      "road_snap_median_m 760.0",
+      "road_snap_median_m 759.9",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-07T02:28:23",
-    "shipped": "2026-11-07T05:46:07"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 769,519, where the plan's GHSL 2025 has 1,285,560"
    }
   },
   {
@@ -325764,7 +325929,7 @@
     "COL"
    ],
    "iso2": "CO",
-   "people": 1233559,
+   "people": 1514977,
    "origin": [
     -73.1113,
     7.1201
@@ -325774,21 +325939,32 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B15400349523065",
      "7082276B34435529925249",
      "7082276B75603088073292",
-     "7082276B58843088778995"
+     "7082276B58843088778995",
+     "7082276B83568043326279",
+     "7082276B80565100217249",
+     "7082276B80237546514207",
+     "7082276B92176503195473",
+     "7082276B77365397936379",
+     "7082276B40020724861964",
+     "7082276B88836733063931",
+     "7082276B97300956542202",
+     "7082276B18867308996303",
+     "7082276B13563988320283",
+     "7082276B44126561494717"
     ]
    },
    "bbox": [
-    -73.551,
-    6.884,
-    -73.002,
-    7.429
+    -73.761,
+    6.725,
+    -72.817,
+    7.751
    ],
    "source": {
     "zone": "T-723",
@@ -325796,28 +325972,44 @@
      "Bucaramanga",
      "Floridablanca",
      "Girón",
-     "Lebríja"
-    ]
+     "Lebríja",
+     "California",
+     "Charta",
+     "El Playón",
+     "Los Santos",
+     "Matanza",
+     "Piedecuesta",
+     "Rionegro",
+     "Santa Barbara",
+     "Suratá",
+     "Tona",
+     "Vetas"
+    ],
+    "hand_edit": {
+     "task": "T-3499",
+     "why": "Bucaramanga's zone was an enclave in Barrancabermeja's (T-3499): it takes the rest of Soto province, Piedecuesta's 201,000 included; Colombia's rows moving over 10% on DANE totals take the census hook (T-2725)"
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-044629",
+    "built": "2026-11-17T04:49:28",
+    "gated": "2026-11-17T04:51:24",
+    "shipped": "2026-11-17T05:47:47",
     "steps": {
-     "build": 29.9,
-     "stations": 2.2,
-     "places": 3.3,
-     "routes": 16.7,
-     "merge": 1.3,
-     "nocar": 2.0,
-     "everyday": 2.3
+     "build": 24.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 16.2,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:17:22",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1445720876410203"
+      "top_zone_jobs_share 0.17504141046139676",
+      "drive_factor_median 2.325069660277121"
      ]
-    },
-    "gated": "2026-11-07T02:28:20",
-    "shipped": "2026-11-07T05:46:07"
+    }
    }
   },
   {
@@ -325947,8 +326139,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B34877429512170",
@@ -325997,25 +326189,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:32:04",
+    "gated": "2026-11-17T04:46:09",
+    "shipped": "2026-11-17T05:47:48",
     "steps": {
-     "build": 58.5,
-     "stations": 1.2,
-     "places": 2.5,
-     "routes": 56.2,
-     "merge": 2.7,
-     "nocar": 2.7,
-     "everyday": 1.3
+     "build": 52.3,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 47.4,
+     "merge": 1.8,
+     "nocar": 2.0,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:19:35",
     "gate": {
      "warn": [
-      "road_snap_median_m 437.3",
+      "pop_vs_plan 0.7397939003091217",
+      "road_snap_median_m 437.0",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:21",
-    "shipped": "2026-11-07T05:46:09"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 828,959, where the plan's GHSL 2025 has 1,120,101"
    }
   },
   {
@@ -326039,8 +326235,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B30096704247804",
@@ -326303,25 +326499,24 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:33:41",
+    "gated": "2026-11-17T04:46:10",
+    "shipped": "2026-11-17T05:47:49",
     "steps": {
-     "build": 98.7,
-     "stations": 2.0,
-     "places": 5.7,
-     "routes": 135.7,
-     "merge": 3.8,
-     "nocar": 2.9,
-     "everyday": 1.6
+     "build": 88.7,
+     "stations": 1.1,
+     "places": 3.4,
+     "routes": 101.6,
+     "merge": 2.6,
+     "nocar": 2.0,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:22:25",
     "gate": {
      "warn": [
-      "drive_factor_median 2.117000016612675",
-      "fleet_range 1"
+      "drive_factor_median 2.117000016612675"
      ]
-    },
-    "gated": "2026-11-07T02:28:22",
-    "shipped": "2026-11-07T05:46:09"
+    }
    }
   },
   {
@@ -326345,8 +326540,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B39779647098113",
@@ -326419,25 +326614,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:31:40",
+    "gated": "2026-11-17T04:46:10",
+    "shipped": "2026-11-17T05:47:49",
     "steps": {
-     "build": 43.0,
-     "stations": 1.8,
-     "places": 2.7,
-     "routes": 41.5,
-     "merge": 2.1,
-     "nocar": 2.4,
-     "everyday": 1.6
+     "build": 37.4,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 35.2,
+     "merge": 1.5,
+     "nocar": 2.0,
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:19:56",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.16716456967143958",
+      "pop_vs_plan 1.2621011949134737",
+      "top_zone_jobs_share 0.16392080226070524",
       "drive_factor_median 2.5139997230375233"
      ]
-    },
-    "gated": "2026-11-07T02:28:22",
-    "shipped": "2026-11-07T05:46:10"
+    }
    }
   },
   {
@@ -326451,7 +326647,7 @@
     "COL"
    ],
    "iso2": "CO",
-   "people": 1084599,
+   "people": 803181,
    "origin": [
     -73.8576,
     7.0634
@@ -326461,16 +326657,14 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B38592891469597",
-     "7082276B40020724861964",
      "7082276B77867476816808",
      "7082276B87231818219004",
      "7082276B82845110848853",
-     "7082276B80237546514207",
      "7082276B29346978372960",
      "7082276B35753389183496",
      "7082276B91247844433249",
@@ -326479,10 +326673,8 @@
      "7082276B5396414457031",
      "7082276B1273171600443",
      "7082276B67983395238238",
-     "7082276B88836733063931",
      "7082276B75718828984625",
      "7082276B66951297608622",
-     "7082276B92176503195473",
      "7082276B26370830430673",
      "7082276B68920496479863",
      "7082276B3826053378979",
@@ -326494,7 +326686,6 @@
      "7082276B70288083001558",
      "7082276B28404230547509",
      "7082276B85655990008010",
-     "7082276B13563988320283",
      "7082276B93438937234991",
      "7082276B70179238188683",
      "7082276B23546148362682",
@@ -326506,7 +326697,6 @@
      "7082276B96447826186422",
      "7082276B90463552702782",
      "7082276B83182882267594",
-     "7082276B77365397936379",
      "7082276B31557626540926",
      "7082276B84209220800631",
      "7082276B40597769905914",
@@ -326529,15 +326719,10 @@
      "7082276B96001848010118",
      "7082276B29202754493362",
      "7082276B9574899495584",
-     "7082276B18867308996303",
-     "7082276B80565100217249",
      "7082276B63653740618542",
      "7082276B99136019050465",
      "7082276B80163304219298",
      "7082276B89750880052970",
-     "7082276B97300956542202",
-     "7082276B83568043326279",
-     "7082276B44126561494717",
      "7082276B11851573676927",
      "7082276B45314174051982",
      "7082276B31143382537536",
@@ -326560,11 +326745,9 @@
     "zone": "T-723",
     "unit_names": [
      "Barrancabermeja",
-     "Piedecuesta",
      "Cimitarra",
      "San Gil",
      "San Vicente De Chucuri",
-     "El Playón",
      "Socorro",
      "Barbosa",
      "Puerto Wilches",
@@ -326573,10 +326756,8 @@
      "Sabana De Torres",
      "Málaga",
      "Landázuri",
-     "Rionegro",
      "El Peñón",
      "Vélez",
-     "Los Santos",
      "Oiba",
      "Curití",
      "Puente Nacional",
@@ -326588,7 +326769,6 @@
      "Aratoca",
      "La Belleza",
      "Suaita",
-     "Tona",
      "Charala",
      "Mogotes",
      "Simacota",
@@ -326600,7 +326780,6 @@
      "Guaca",
      "Cerrito",
      "Villanueva",
-     "Matanza",
      "Chipatá",
      "Barichara",
      "Gámbita",
@@ -326623,15 +326802,10 @@
      "Contratación",
      "Chima",
      "Molagavita",
-     "Suratá",
-     "Charta",
      "Valle De San Jose",
      "Hato",
      "Confines",
      "Galán",
-     "Santa Barbara",
-     "California",
-     "Vetas",
      "Palmas Del Socorro",
      "Guapotá",
      "San Joaquín",
@@ -326642,28 +326816,32 @@
      "Jordán Sube",
      "El Guacamayo",
      "Encino"
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3499",
+     "why": "Bucaramanga's zone was an enclave in Barrancabermeja's (T-3499): it takes the rest of Soto province, Piedecuesta's 201,000 included; Colombia's rows moving over 10% on DANE totals take the census hook (T-2725)"
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:32:59",
+    "gated": "2026-11-17T04:46:11",
+    "shipped": "2026-11-17T05:47:50",
     "steps": {
-     "build": 99.8,
-     "stations": 2.8,
-     "places": 7.0,
-     "routes": 111.6,
-     "merge": 5.4,
-     "nocar": 2.5,
-     "everyday": 1.6
+     "build": 73.7,
+     "stations": 1.1,
+     "places": 3.3,
+     "routes": 73.9,
+     "merge": 3.7,
+     "nocar": 2.4,
+     "everyday": 1.4
     },
-    "built": "2026-11-07T01:23:32",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.13426382003541285",
-      "drive_factor_median 2.289022796332201"
+      "top_zone_jobs_share 0.1447560715393718",
+      "drive_factor_median 2.218596968679145"
      ]
-    },
-    "gated": "2026-11-07T02:28:24",
-    "shipped": "2026-11-07T05:46:10"
+    }
    }
   },
   {
@@ -326687,8 +326865,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B6983949832660",
@@ -326777,27 +326955,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:03",
+    "gated": "2026-11-17T04:46:14",
+    "shipped": "2026-11-17T05:47:50",
     "steps": {
-     "build": 170.9,
-     "stations": 2.0,
-     "places": 5.5,
-     "routes": 249.1,
-     "merge": 12.4,
-     "nocar": 2.4,
-     "everyday": 1.3
+     "build": 129.5,
+     "stations": 1.3,
+     "places": 4.3,
+     "routes": 196.7,
+     "merge": 10.4,
+     "nocar": 2.1,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:27:24",
     "gate": {
      "warn": [
-      "area_km2 128562.47858550119",
+      "area_km2 128562.38773677553",
       "drive_factor_median 2.117000016612675",
       "road_snap_median_m 482.5",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-07T02:28:24",
-    "shipped": "2026-11-07T05:46:11"
+    }
    }
   },
   {
@@ -326821,8 +326999,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B67264617376503",
@@ -326869,28 +327047,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:32:55",
+    "gated": "2026-11-17T04:46:12",
+    "shipped": "2026-11-17T05:47:51",
     "steps": {
-     "build": 42.6,
-     "stations": 1.1,
-     "places": 1.9,
-     "routes": 39.1,
-     "merge": 2.3,
-     "nocar": 2.1,
-     "everyday": 1.2
+     "build": 32.7,
+     "stations": 1.3,
+     "places": 2.4,
+     "routes": 34.6,
+     "merge": 2.4,
+     "nocar": 2.3,
+     "everyday": 1.5
     },
-    "built": "2026-11-07T01:39:17",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10609342547432107",
-      "top_school_cell_pupils 5752.5634765625",
+      "top_school_cell_pupils 6000.0",
       "drive_factor_median 2.184200810815618",
       "road_snap_median_m 838.7",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:41",
-    "shipped": "2026-11-07T05:46:11"
+    }
    }
   },
   {
@@ -326914,8 +327091,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B49158804939428",
@@ -327038,27 +327215,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:35:22",
+    "gated": "2026-11-17T04:46:14",
+    "shipped": "2026-11-17T05:47:52",
     "steps": {
-     "build": 139.6,
-     "stations": 1.5,
-     "places": 4.0,
-     "routes": 105.2,
-     "merge": 5.1,
-     "nocar": 2.3,
-     "everyday": 1.5
+     "build": 118.5,
+     "stations": 1.2,
+     "places": 8.2,
+     "routes": 85.1,
+     "merge": 3.8,
+     "nocar": 1.9,
+     "everyday": 1.0
     },
-    "built": "2026-11-07T01:26:53",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10477557671553098",
+      "top_zone_jobs_share 0.10108757854568828",
       "drive_factor_median 2.676138774894477",
       "road_snap_median_m 410.7",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-07T02:28:25",
-    "shipped": "2026-11-07T05:46:12"
+    }
    }
   },
   {
@@ -327082,8 +327259,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B30491480162439",
@@ -327128,24 +327305,24 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:33:14",
+    "gated": "2026-11-17T04:46:12",
+    "shipped": "2026-11-17T05:47:52",
     "steps": {
-     "build": 33.7,
-     "stations": 1.2,
-     "places": 2.3,
-     "routes": 36.6,
-     "merge": 1.5,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 32.6,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 35.5,
+     "merge": 1.2,
+     "nocar": 1.8,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:24:52",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10815903374205287"
+      "top_zone_jobs_share 0.10681422606069285"
      ]
-    },
-    "gated": "2026-11-07T02:28:26",
-    "shipped": "2026-11-07T05:46:13"
+    }
    }
   },
   {
@@ -327169,8 +327346,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B74376648695935",
@@ -327241,25 +327418,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:33:28",
+    "gated": "2026-11-17T04:46:13",
+    "shipped": "2026-11-17T05:47:53",
     "steps": {
-     "build": 42.7,
-     "stations": 1.6,
-     "places": 3.8,
-     "routes": 35.7,
-     "merge": 1.6,
-     "nocar": 5.4,
-     "everyday": 2.0
+     "build": 45.0,
+     "stations": 1.4,
+     "places": 3.3,
+     "routes": 28.0,
+     "merge": 1.3,
+     "nocar": 1.8,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:25:45",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1638499311629734",
+      "pop_vs_plan 1.2459042000547451",
+      "top_zone_jobs_share 0.16175674543444934",
       "drive_factor_median 2.553589458062927"
      ]
-    },
-    "gated": "2026-11-07T02:28:26",
-    "shipped": "2026-11-07T05:46:13"
+    }
    }
   },
   {
@@ -327283,8 +327461,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B2481053474358",
@@ -327317,27 +327495,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:33:58",
+    "gated": "2026-11-17T04:46:15",
+    "shipped": "2026-11-17T05:47:54",
     "steps": {
-     "build": 34.5,
-     "stations": 1.5,
-     "places": 2.5,
-     "routes": 30.6,
-     "merge": 4.0,
-     "nocar": 2.8,
-     "everyday": 1.8
+     "build": 33.0,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 19.1,
+     "merge": 1.1,
+     "nocar": 1.8,
+     "everyday": 1.3
     },
-    "built": "2026-11-07T01:26:13",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1071525960631853",
+      "top_zone_jobs_share 0.10526024899533694",
       "drive_factor_median 2.325069660277121",
-      "road_snap_median_m 719.2",
+      "road_snap_median_m 718.5",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:27",
-    "shipped": "2026-11-07T05:46:14"
+    }
    }
   },
   {
@@ -327361,8 +327539,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B68142499203248",
@@ -327431,24 +327609,25 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:34:40",
+    "gated": "2026-11-17T04:46:16",
+    "shipped": "2026-11-17T05:47:54",
     "steps": {
-     "build": 57.0,
-     "stations": 1.4,
-     "places": 2.6,
-     "routes": 46.4,
-     "merge": 1.3,
-     "nocar": 1.6,
-     "everyday": 1.2
+     "build": 45.7,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 43.3,
+     "merge": 1.8,
+     "nocar": 2.1,
+     "everyday": 1.5
     },
-    "built": "2026-11-07T01:27:39",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.12633425444968102"
+      "pop_vs_plan 1.233181792475273",
+      "top_zone_jobs_share 0.11953857358191601"
      ]
-    },
-    "gated": "2026-11-07T02:28:28",
-    "shipped": "2026-11-07T05:46:14"
+    }
    }
   },
   {
@@ -327694,8 +327873,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B39650690530717",
@@ -327782,26 +327961,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:35:06",
+    "gated": "2026-11-17T04:46:16",
+    "shipped": "2026-11-17T05:47:55",
     "steps": {
-     "build": 45.5,
-     "stations": 1.0,
-     "places": 1.7,
-     "routes": 54.3,
-     "merge": 1.9,
-     "nocar": 1.7,
-     "everyday": 0.9
+     "build": 49.1,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 64.6,
+     "merge": 2.3,
+     "nocar": 1.8,
+     "everyday": 1.0
     },
-    "built": "2026-11-07T01:29:20",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.382675641885525",
       "drive_factor_median 2.0200555277086965",
       "road_snap_median_m 565.2",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:29",
-    "shipped": "2026-11-07T05:46:15"
+    }
    }
   },
   {
@@ -328025,8 +328205,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B99397100908240",
@@ -328061,27 +328241,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:34:34",
+    "gated": "2026-11-17T04:46:17",
+    "shipped": "2026-11-17T05:47:56",
     "steps": {
-     "build": 34.0,
-     "stations": 1.2,
-     "places": 2.1,
-     "routes": 19.6,
-     "merge": 1.0,
-     "nocar": 1.6,
-     "everyday": 1.0
+     "build": 46.4,
+     "stations": 1.1,
+     "places": 2.4,
+     "routes": 23.2,
+     "merge": 1.3,
+     "nocar": 1.9,
+     "everyday": 1.1
     },
-    "built": "2026-11-07T01:29:11",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1469397233600965",
+      "top_zone_jobs_share 0.12493576748441554",
       "drive_factor_median 2.0518667734879767",
       "road_snap_median_m 311.1",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:31",
-    "shipped": "2026-11-07T05:46:16"
+    }
    }
   },
   {
@@ -328541,8 +328721,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B49686436836196",
@@ -328577,25 +328757,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:34:43",
+    "gated": "2026-11-17T04:46:18",
+    "shipped": "2026-11-17T05:47:56",
     "steps": {
-     "build": 29.3,
-     "stations": 1.2,
-     "places": 2.7,
-     "routes": 34.6,
-     "merge": 1.6,
-     "nocar": 2.7,
-     "everyday": 1.7
+     "build": 32.1,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 32.8,
+     "merge": 1.2,
+     "nocar": 2.0,
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:31:07",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.11862449335440639",
-      "top_school_cell_pupils 5794.201171875"
+      "pop_vs_plan 1.2379845748137126",
+      "top_zone_jobs_share 0.12103274202372837",
+      "top_school_cell_pupils 6000.0"
      ]
-    },
-    "gated": "2026-11-07T02:28:34",
-    "shipped": "2026-11-07T05:46:20"
+    }
    }
   },
   {
@@ -328702,8 +328883,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B62156244785095",
@@ -328762,26 +328943,30 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:34:35",
+    "gated": "2026-11-17T04:46:18",
+    "shipped": "2026-11-17T05:47:57",
     "steps": {
-     "build": 29.7,
-     "stations": 1.5,
-     "places": 2.6,
-     "routes": 16.9,
-     "merge": 1.1,
-     "nocar": 2.3,
-     "everyday": 1.7
+     "build": 30.5,
+     "stations": 1.2,
+     "places": 2.4,
+     "routes": 13.8,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:31:21",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.11693199516027289",
+      "pop_vs_plan 0.7456603512057418",
+      "top_zone_jobs_share 0.12184850720716249",
       "drive_factor_median 2.0200555277086965",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:35",
-    "shipped": "2026-11-07T05:46:21"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 382,480, where the plan's GHSL 2025 has 512,902"
    }
   },
   {
@@ -328805,8 +328990,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B38105968828187",
@@ -328853,29 +329038,29 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:38:28",
+    "gated": "2026-11-17T04:46:19",
+    "shipped": "2026-11-17T05:47:57",
     "steps": {
-     "build": 72.6,
-     "stations": 2.8,
-     "places": 2.8,
-     "routes": 68.7,
-     "merge": 6.6,
-     "nocar": 2.8,
-     "everyday": 1.7
+     "build": 52.6,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 43.0,
+     "merge": 3.4,
+     "nocar": 1.6,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:33:35",
     "gate": {
      "warn": [
-      "area_km2 48247.63142477514",
-      "top_zone_jobs_share 0.23076241339746292",
+      "pop_vs_plan 0.8278849262398745",
+      "area_km2 48247.61080028596",
+      "top_zone_jobs_share 0.23383714751060453",
       "drive_factor_median 2.3616841797309096",
       "road_snap_median_m 1557.2",
-      "fleet_range 4"
+      "fleet_range 5"
      ]
-    },
-    "parked": "2026-11-07T01:57:28",
-    "gated": "2026-11-07T02:41:22",
-    "shipped": "2026-11-07T05:46:21"
+    }
    },
    "gate_relax": {
     "top_zone_jobs_share": "T-2695: one town's centre holds the jobs of a rural or small zone (Trelew, Rio Gallegos, Punta Arenas, Pereira, Riohacha, Florencia, Ayacucho, Girardot, Fusagasuga, Leticia), as Mexico's San Cristobal and Brazil's Cruzeiro do Sul"
@@ -328902,8 +329087,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B34643153596427",
@@ -328942,24 +329127,22 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:37:40",
+    "gated": "2026-11-17T04:46:20",
+    "shipped": "2026-11-17T05:47:58",
     "steps": {
-     "build": 29.4,
-     "stations": 1.3,
-     "places": 3.0,
-     "routes": 33.8,
-     "merge": 1.9,
-     "nocar": 3.6,
-     "everyday": 1.7
+     "build": 27.2,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 18.9,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:32:25",
     "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.10103926802818575"
-     ]
-    },
-    "gated": "2026-11-07T02:28:36",
-    "shipped": "2026-11-07T05:46:22"
+     "warn": []
+    }
    }
   },
   {
@@ -329094,8 +329277,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B88455186246146",
@@ -329172,28 +329355,28 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:49",
+    "gated": "2026-11-17T04:46:20",
+    "shipped": "2026-11-17T05:47:59",
     "steps": {
-     "build": 103.9,
-     "stations": 2.1,
-     "places": 3.6,
-     "routes": 48.1,
-     "merge": 2.1,
-     "nocar": 1.9,
+     "build": 85.4,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 38.0,
+     "merge": 1.4,
+     "nocar": 1.6,
      "everyday": 1.2
     },
-    "built": "2026-11-07T01:34:27",
     "gate": {
      "warn": [
-      "area_km2 48567.13623831297",
-      "top_zone_jobs_share 0.13779314410818425",
+      "area_km2 48567.12033689254",
+      "top_zone_jobs_share 0.13645368547609657",
       "drive_factor_median 2.6346490888156313",
-      "road_snap_median_m 2200.5",
+      "road_snap_median_m 2201.2",
       "fleet_range 3"
      ]
-    },
-    "gated": "2026-11-07T02:28:36",
-    "shipped": "2026-11-07T05:46:22"
+    }
    }
   },
   {
@@ -329217,8 +329400,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B44493492234121",
@@ -329271,24 +329454,25 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:35:58",
+    "gated": "2026-11-17T04:46:21",
+    "shipped": "2026-11-17T05:47:59",
     "steps": {
-     "build": 58.8,
-     "stations": 1.7,
-     "places": 3.5,
-     "routes": 32.2,
-     "merge": 1.4,
-     "nocar": 2.4,
-     "everyday": 1.7
+     "build": 44.7,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 24.0,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:34:21",
     "gate": {
      "warn": [
+      "pop_vs_plan 1.3158072311454025",
       "drive_factor_median 2.289022796332201"
      ]
-    },
-    "gated": "2026-11-07T02:28:37",
-    "shipped": "2026-11-07T05:46:23"
+    }
    }
   },
   {
@@ -329312,8 +329496,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B82326475607220"
@@ -329332,27 +329516,31 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:35:52",
+    "gated": "2026-11-17T04:46:22",
+    "shipped": "2026-11-17T05:48:00",
     "steps": {
-     "build": 48.2,
-     "stations": 1.3,
-     "places": 2.6,
-     "routes": 15.1,
-     "merge": 0.9,
+     "build": 47.6,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 12.0,
+     "merge": 0.7,
      "nocar": 1.6,
-     "everyday": 1.3
+     "everyday": 1.2
     },
-    "built": "2026-11-07T01:34:34",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.14149033345135156",
+      "pop_vs_plan 0.71090673378393",
+      "top_zone_jobs_share 0.1413223388465526",
       "drive_factor_median 2.0841789734955687",
       "road_snap_median_m 764.1",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:37",
-    "shipped": "2026-11-07T05:46:23"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 316,931, where the plan's GHSL 2025 has 445,813"
    }
   },
   {
@@ -329376,8 +329564,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B11470740818947",
@@ -329420,27 +329608,27 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:48",
+    "gated": "2026-11-17T04:46:22",
+    "shipped": "2026-11-17T05:48:01",
     "steps": {
-     "build": 66.9,
-     "stations": 1.6,
-     "places": 2.2,
-     "routes": 26.6,
-     "merge": 1.4,
-     "nocar": 2.1,
+     "build": 64.0,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 28.7,
+     "merge": 1.3,
+     "nocar": 1.7,
      "everyday": 1.2
     },
-    "built": "2026-11-07T01:35:30",
     "gate": {
      "warn": [
+      "top_zone_jobs_share 0.11129063407694532",
       "drive_factor_median 3.6011383362721756",
-      "road_snap_median_m 4683.0",
+      "road_snap_median_m 4686.4",
       "fleet_range 2"
      ]
-    },
-    "parked": "2026-11-07T01:57:34",
-    "gated": "2026-11-07T02:41:22",
-    "shipped": "2026-11-07T05:46:24"
+    }
    },
    "gate_relax": {
     "drive_factor_median": "T-2695: roads wind round the ground: Tumaco's mangrove estuaries and islands, Iquitos with no road out (rivers only), the Cordillera Blanca's valleys at Huaraz, the Urubamba gorge at Quillabamba, Quito's long valley cut by ravines"
@@ -329555,8 +329743,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B12484805764820",
@@ -329617,27 +329805,32 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:41",
+    "gated": "2026-11-17T04:46:23",
+    "shipped": "2026-11-17T05:48:01",
     "steps": {
-     "build": 30.9,
-     "stations": 1.3,
-     "places": 2.2,
-     "routes": 30.5,
-     "merge": 1.8,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 39.1,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 29.3,
+     "merge": 2.1,
+     "nocar": 2.1,
+     "everyday": 1.4
     },
-    "built": "2026-11-07T01:35:56",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.19161965851310217",
+      "pop_vs_plan 1.4375813879382602",
+      "pop_vs_ghsl_other 1.4390664808016833",
+      "top_zone_jobs_share 0.1802147504877171",
       "drive_factor_median 2.6346490888156313",
-      "road_snap_median_m 440.5",
+      "road_snap_median_m 440.4",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T02:28:39",
-    "shipped": "2026-11-07T05:46:25"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 618,595, where the plan's GHSL 2025 has 430,300"
    }
   },
   {
@@ -329902,8 +330095,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B49275138212053",
@@ -329976,26 +330169,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:37:12",
+    "gated": "2026-11-17T04:46:24",
+    "shipped": "2026-11-17T05:48:02",
     "steps": {
-     "build": 36.9,
-     "stations": 1.3,
-     "places": 2.6,
-     "routes": 36.8,
-     "merge": 0.9,
+     "build": 39.4,
+     "stations": 1.2,
+     "places": 3.1,
+     "routes": 31.2,
+     "merge": 1.1,
      "nocar": 1.4,
-     "everyday": 0.9
+     "everyday": 1.0
     },
-    "built": "2026-11-07T01:37:26",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.16172131481937738",
-      "drive_factor_median 2.475023769963025",
-      "fleet_range 1"
+      "pop_vs_plan 1.2857371186191757",
+      "top_zone_jobs_share 0.15694905756345356",
+      "drive_factor_median 2.475023769963025"
      ]
-    },
-    "gated": "2026-11-07T02:28:41",
-    "shipped": "2026-11-07T05:46:27"
+    }
    }
   },
   {
@@ -330019,8 +330212,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B44734955645531",
@@ -330077,27 +330270,26 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:58",
+    "gated": "2026-11-17T04:46:24",
+    "shipped": "2026-11-17T05:48:02",
     "steps": {
-     "build": 24.1,
-     "stations": 1.7,
-     "places": 2.5,
-     "routes": 26.8,
-     "merge": 1.2,
-     "nocar": 1.6,
-     "everyday": 1.2
+     "build": 25.8,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 24.8,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-11-07T01:37:16",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.28211011352101223",
+      "top_zone_jobs_share 0.2843964447399721",
       "drive_factor_median 2.0518667734879767",
       "fleet_range 1"
      ]
-    },
-    "parked": "2026-11-07T02:09:22",
-    "gated": "2026-11-07T02:41:24",
-    "shipped": "2026-11-07T05:46:28"
+    }
    },
    "gate_relax": {
     "top_zone_jobs_share": "T-2695: one town's centre holds the jobs of a rural or small zone (Trelew, Rio Gallegos, Punta Arenas, Pereira, Riohacha, Florencia, Ayacucho, Girardot, Fusagasuga, Leticia), as Mexico's San Cristobal and Brazil's Cruzeiro do Sul"
@@ -330124,8 +330316,8 @@
    "extracts": [
     "south-america/colombia"
    ],
-   "archetype": "D",
-   "module": null,
+   "archetype": "C",
+   "module": "admin_totals",
    "units": {
     "COL": [
      "7082276B51871988442122",
@@ -330154,30 +330346,32 @@
     ]
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-042247",
+    "built": "2026-11-17T04:36:46",
+    "gated": "2026-11-17T04:46:25",
+    "shipped": "2026-11-17T05:48:03",
     "steps": {
-     "build": 20.8,
-     "stations": 1.5,
-     "places": 2.4,
-     "routes": 11.5,
+     "build": 21.9,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 12.1,
      "merge": 0.9,
-     "nocar": 1.8,
+     "nocar": 1.9,
      "everyday": 1.2
     },
-    "built": "2026-11-07T01:37:09",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.3072749503024944",
+      "pop_vs_plan 1.4056724597549106",
+      "pop_vs_ghsl_other 1.4063207897880263",
+      "top_zone_jobs_share 0.29702354820588656",
       "drive_factor_median 2.117000016612675",
       "fleet_range 3"
      ]
-    },
-    "parked": "2026-11-07T02:09:23",
-    "gated": "2026-11-07T02:41:24",
-    "shipped": "2026-11-07T05:46:28"
+    }
    },
    "gate_relax": {
-    "top_zone_jobs_share": "T-2695: one town's centre holds the jobs of a rural or small zone (Trelew, Rio Gallegos, Punta Arenas, Pereira, Riohacha, Florencia, Ayacucho, Girardot, Fusagasuga, Leticia), as Mexico's San Cristobal and Brazil's Cruzeiro do Sul"
+    "top_zone_jobs_share": "T-2695: one town's centre holds the jobs of a rural or small zone (Trelew, Rio Gallegos, Punta Arenas, Pereira, Riohacha, Florencia, Ayacucho, Girardot, Fusagasuga, Leticia), as Mexico's San Cristobal and Brazil's Cruzeiro do Sul",
+    "pop_vs_plan": "the pack holds DANE's 2025 projections by municipio (T-2725): about 214,343, where the plan's GHSL 2025 has 152,484"
    }
   },
   {
@@ -358356,7 +358550,7 @@
    "id": "ccc",
    "name": "Chichicastenango",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358430,6 +358624,29 @@
      "Pachalum",
      "Patzité"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 202.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 34.8,
+     "merge": 1.9,
+     "nocar": 5.9,
+     "everyday": 2.1
+    },
+    "built": "2026-11-16T22:17:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1212633698347466",
+      "top_school_cell_pupils 6466.4912109375",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:35",
+    "shipped": "2026-11-17T00:31:14"
    }
   },
   {
@@ -358437,7 +358654,7 @@
    "id": "mlc",
    "name": "Malacatán",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358529,6 +358746,28 @@
      "San Lorenzo",
      "Río Blanco"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 203.5,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 27.3,
+     "merge": 1.2,
+     "nocar": 2.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-16T22:17:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10714357867702973",
+      "top_school_cell_pupils 6193.1123046875",
+      "drive_factor_median 2.0518667734879767"
+     ]
+    },
+    "gated": "2026-11-16T23:44:36",
+    "shipped": "2026-11-17T00:31:15"
    }
   },
   {
@@ -358536,7 +358775,7 @@
    "id": "mze",
    "name": "Mazatenango",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358626,6 +358865,26 @@
      "Zunilito",
      "San Gabriel"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 206.5,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 28.6,
+     "merge": 1.2,
+     "nocar": 2.4,
+     "everyday": 1.7
+    },
+    "built": "2026-11-16T22:17:21",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6129.67626953125"
+     ]
+    },
+    "gated": "2026-11-16T23:44:36",
+    "shipped": "2026-11-17T00:31:15"
    }
   },
   {
@@ -358633,7 +358892,7 @@
    "id": "cbi",
    "name": "Cobán",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358693,6 +358952,29 @@
      "Granados",
      "El Chol"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 202.6,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 32.0,
+     "merge": 1.4,
+     "nocar": 3.1,
+     "everyday": 4.0
+    },
+    "built": "2026-11-16T22:17:29",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14223403516648772",
+      "top_school_cell_pupils 6135.71728515625",
+      "drive_factor_median 2.184200810815618",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:37",
+    "shipped": "2026-11-17T00:31:16"
    }
   },
   {
@@ -358700,7 +358982,7 @@
    "id": "qet",
    "name": "Quetzaltenango",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358780,6 +359062,28 @@
      "Cajolá",
      "Sibilia"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 201.9,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 25.9,
+     "merge": 1.1,
+     "nocar": 2.2,
+     "everyday": 1.5
+    },
+    "built": "2026-11-16T22:17:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18434339031283636",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:38",
+    "shipped": "2026-11-17T00:31:17"
    }
   },
   {
@@ -358787,7 +359091,7 @@
    "id": "syx",
    "name": "Sayaxché",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358851,6 +359155,28 @@
      -90.1887,
      16.5262
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 210.2,
+     "stations": 1.6,
+     "places": 2.4,
+     "routes": 55.7,
+     "merge": 4.0,
+     "nocar": 2.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-16T22:17:56",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1996242299280373",
+      "top_school_cell_pupils 6015.70849609375",
+      "drive_factor_median 2.0518667734879767"
+     ]
+    },
+    "gated": "2026-11-16T23:44:38",
+    "shipped": "2026-11-17T00:31:17"
    }
   },
   {
@@ -358858,7 +359184,7 @@
    "id": "spe",
    "name": "San Pedro Carchá",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -358912,6 +359238,30 @@
      "Lanquín",
      "Santa Catalina La Tinta"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 204.6,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 31.0,
+     "merge": 1.9,
+     "nocar": 3.2,
+     "everyday": 2.1
+    },
+    "built": "2026-11-16T22:17:27",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.12587862031744584",
+      "top_school_cell_pupils 6055.72314453125",
+      "drive_factor_median 2.475023769963025",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:39",
+    "shipped": "2026-11-17T00:31:18"
    }
   },
   {
@@ -358919,7 +359269,7 @@
    "id": "jup",
    "name": "Jutiapa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359011,6 +359361,26 @@
      "Jerez",
      "El Adelanto"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 20.4,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 34.5,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:19:59",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6448.11083984375"
+     ]
+    },
+    "gated": "2026-11-16T23:44:40",
+    "shipped": "2026-11-17T00:31:19"
    }
   },
   {
@@ -359018,7 +359388,7 @@
    "id": "cbj",
    "name": "Chiantla",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359098,6 +359468,29 @@
      "San Gaspar Ixchil",
      "Petatán"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 29.6,
+     "stations": 1.4,
+     "places": 2.4,
+     "routes": 20.9,
+     "merge": 1.0,
+     "nocar": 2.0,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:18:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1073809662636451",
+      "top_school_cell_pupils 6022.392578125",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:39",
+    "shipped": "2026-11-17T00:31:20"
    }
   },
   {
@@ -359105,7 +359498,7 @@
    "id": "clt",
    "name": "Chimaltenango",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "GTM"
@@ -359167,6 +359560,14 @@
      "Pochuta",
      "Santa Cruz Balanyá"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 28.4
+    },
+    "reason": "build failed: anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\decorators.py\", line 77, in wrapped\n    return func(*args, **kwargs)\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\set_operations.py\", line 421, in union_all\n    return lib.unary_union(collections, **kwargs)\nshapely.errors.GEOSException: TopologyException: unable to assign free hole to a shell at -90.86601739999999 14.6467867",
+    "parked": "2026-11-16T22:18:56"
    }
   },
   {
@@ -359174,7 +359575,7 @@
    "id": "ciq",
    "name": "Chiquimula",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359250,6 +359651,29 @@
      "San José La Arada",
      "San Diego"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 26.3,
+     "stations": 1.8,
+     "places": 2.8,
+     "routes": 20.4,
+     "merge": 1.3,
+     "nocar": 1.8,
+     "everyday": 1.3
+    },
+    "built": "2026-11-16T22:18:27",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10007906405911472",
+      "top_school_cell_pupils 6125.759765625",
+      "drive_factor_median 2.0200555277086965",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:41",
+    "shipped": "2026-11-17T00:31:20"
    }
   },
   {
@@ -359257,7 +359681,7 @@
    "id": "sco",
    "name": "Santa Lucía Cotzumalguapa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359313,6 +359737,26 @@
      "Sipacate",
      "Iztapa"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 27.3,
+     "stations": 1.4,
+     "places": 2.6,
+     "routes": 22.9,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:18:31",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6156.6640625"
+     ]
+    },
+    "gated": "2026-11-16T23:44:41",
+    "shipped": "2026-11-17T00:31:21"
    }
   },
   {
@@ -359320,7 +359764,7 @@
    "id": "ttn",
    "name": "Totonicapán",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359368,6 +359812,28 @@
      "San Bartolo",
      "Santa Lucía La Reforma"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 20.4,
+     "stations": 1.9,
+     "places": 2.8,
+     "routes": 14.0,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.3
+    },
+    "built": "2026-11-16T22:18:20",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13534606047570708",
+      "top_school_cell_pupils 6417.75146484375",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:40",
+    "shipped": "2026-11-17T00:31:22"
    }
   },
   {
@@ -359375,7 +359841,7 @@
    "id": "bll",
    "name": "Barillas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359425,6 +359891,30 @@
      "San Sebastián Coatán",
      "San Rafael La Independencia"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 18.4,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 9.8,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:18:34",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.12110043912957913",
+      "top_school_cell_pupils 7188.56494140625",
+      "drive_factor_median 2.218596968679145",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:42",
+    "shipped": "2026-11-17T00:31:22"
    }
   },
   {
@@ -359432,7 +359922,7 @@
    "id": "scd",
    "name": "Sololá",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "GTM"
@@ -359502,6 +359992,14 @@
      "Santa María Visitación",
      "Santa Catarina Palopó"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 22.299999999999997
+    },
+    "reason": "build failed:     medical_parks(city, els, names)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\tier0.py\", line 1805, in medical_parks\n    enrich_parks.main(city)\n  File \"C:\\Users\\anita\\projects\\maps\\trainworld\\pipeline\\enrich_parks.py\", line 298, in main\n    raise ValueError(\"park location coverage below 85%\")\nValueError: park location coverage below 85%",
+    "parked": "2026-11-16T22:19:36"
    }
   },
   {
@@ -359509,7 +360007,7 @@
    "id": "mbk",
    "name": "Morales",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359551,6 +360049,28 @@
      "Lívingston",
      "Los Amates"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 23.5,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 16.9,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:19:08",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6009.2265625",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:42",
+    "shipped": "2026-11-17T00:31:23"
    }
   },
   {
@@ -359558,7 +360078,7 @@
    "id": "jlx",
    "name": "Jalapa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
@@ -359614,6 +360134,27 @@
      "San Manuel Chaparrón",
      "San Cristóbal Acasaguastlán"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 16.9,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 15.1,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:19:02",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10612068569981832",
+      "top_school_cell_pupils 6095.5107421875"
+     ]
+    },
+    "gated": "2026-11-16T23:44:43",
+    "shipped": "2026-11-17T00:31:24"
    }
   },
   {
@@ -359621,7 +360162,7 @@
    "id": "anu",
    "name": "Antigua Guatemala",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "GTM"
@@ -359671,6 +360212,30 @@
      "Santa Catarina Barahona",
      "San Antonio Aguas Calientes"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 14.6,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 9.1,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:19:05",
+    "reason": "gate: top_zone_jobs_share 0.4509015719779865 at [-90.7338, 14.5565]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.4509015719779865 at [-90.7338, 14.5565]"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-16T22:36:59"
    }
   },
   {
@@ -359678,7 +360243,7 @@
    "id": "stk",
    "name": "Stann Creek West",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "BLZ"
@@ -359768,6 +360333,24 @@
      -88.4193,
      16.5344
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 881.0,
+     "stations": 0.9,
+     "places": 4.8,
+     "routes": 18.8,
+     "merge": 0.9,
+     "nocar": 1.1,
+     "everyday": 0.7
+    },
+    "built": "2026-11-16T23:42:55",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:45:17",
+    "shipped": "2026-11-17T00:31:24"
    }
   },
   {
@@ -359775,7 +360358,7 @@
    "id": "sig",
    "name": "San Miguel",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SLV"
@@ -359991,6 +360574,27 @@
      "Null",
      "Null"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 72.8,
+     "stations": 1.0,
+     "places": 5.6,
+     "routes": 29.7,
+     "merge": 1.5,
+     "nocar": 2.3,
+     "everyday": 1.4
+    },
+    "built": "2026-11-16T22:42:46",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10755916900800631",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:45:01",
+    "shipped": "2026-11-17T00:31:25"
    }
   },
   {
@@ -359998,7 +360602,7 @@
    "id": "ahc",
    "name": "Ahuachpan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SLV"
@@ -360086,6 +360690,26 @@
      "Santo Domingo",
      "Cuisnahuat"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 68.3,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 14.9,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.4
+    },
+    "built": "2026-11-16T22:42:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14335808707026615"
+     ]
+    },
+    "gated": "2026-11-16T23:45:02",
+    "shipped": "2026-11-17T00:31:26"
    }
   },
   {
@@ -360093,7 +360717,7 @@
    "id": "scf",
    "name": "Santa Ana",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SLV"
@@ -360223,6 +360847,24 @@
      "San Antonia Los Ranchos",
      "San Francisco Lempa"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 69.2,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 26.4,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:42:36",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:45:02",
+    "shipped": "2026-11-17T00:31:26"
    }
   },
   {
@@ -360230,7 +360872,7 @@
    "id": "zat",
    "name": "Zacatecoluca",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "SLV"
@@ -360322,6 +360964,28 @@
      "Cinquera",
      "Mercedes La Ceiba"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 21.2,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 13.2,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:44:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18828525183269626",
+      "top_school_cell_pupils 5725.5263671875",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:45:06",
+    "shipped": "2026-11-17T00:31:27"
    }
   },
   {
@@ -360329,7 +360993,7 @@
    "id": "cmy",
    "name": "Comayagua",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360439,6 +361103,28 @@
      "Humuya",
      "Mercedes de Oriente"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 23.9,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 17.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:45:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11404182241741859",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-11-16T23:45:06",
+    "shipped": "2026-11-17T00:31:28"
    }
   },
   {
@@ -360446,7 +361132,7 @@
    "id": "clu",
    "name": "Choluteca",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360564,6 +361250,27 @@
      "San Miguelito",
      "Yauyupe"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 69.4,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 24.7,
+     "merge": 1.3,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:43:54",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5342.1552734375",
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-11-16T23:45:07",
+    "shipped": "2026-11-17T00:31:28"
    }
   },
   {
@@ -360571,7 +361278,7 @@
    "id": "juc",
    "name": "Juticalpa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360663,6 +361370,26 @@
      "Jano",
      "El Rosario"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 32.2,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 48.2,
+     "merge": 3.2,
+     "nocar": 1.9,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:43:10",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.398875293967098"
+     ]
+    },
+    "gated": "2026-11-16T23:45:03",
+    "shipped": "2026-11-17T00:31:29"
    }
   },
   {
@@ -360670,7 +361397,7 @@
    "id": "inb",
    "name": "Intibuca",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360793,6 +361520,29 @@
      "Virginia",
      "San Juan Guarita"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 26.4,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 24.3,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:43:25",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14121215120947606",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.289022796332201",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:45:04",
+    "shipped": "2026-11-17T00:31:30"
    }
   },
   {
@@ -360800,7 +361550,7 @@
    "id": "elg",
    "name": "El Progreso",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360854,6 +361604,28 @@
      "Jocon",
      "Arenal"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 23.0,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 23.2,
+     "merge": 1.2,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:43:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.17042310359570084",
+      "top_school_cell_pupils 6018.7578125",
+      "drive_factor_median 2.117000016612675"
+     ]
+    },
+    "gated": "2026-11-16T23:45:04",
+    "shipped": "2026-11-17T00:31:30"
    }
   },
   {
@@ -360861,7 +361633,7 @@
    "id": "ssd",
    "name": "Santa Rosa de Copan",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -360971,6 +361743,26 @@
      "Dolores Merendon",
      "Veracruz"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 21.1,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 14.2,
+     "merge": 1.1,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:43:31",
+    "gate": {
+     "warn": [
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:05",
+    "shipped": "2026-11-17T00:31:31"
    }
   },
   {
@@ -360978,7 +361770,7 @@
    "id": "lce",
    "name": "La Ceiba",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -361026,6 +361818,27 @@
      "Esparta",
      "San Francisco"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 12.6,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:43:39",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15910022545987326",
+      "drive_factor_median 2.0518667734879767"
+     ]
+    },
+    "gated": "2026-11-16T23:45:07",
+    "shipped": "2026-11-17T00:31:32"
    }
   },
   {
@@ -361033,7 +361846,7 @@
    "id": "vla",
    "name": "Villanueva",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -361081,6 +361894,29 @@
      "Pimienta",
      "Lago de Yojoa"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 16.8,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 13.8,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:43:49",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.15060785359667975",
+      "top_school_cell_pupils 5884.2392578125",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:08",
+    "shipped": "2026-11-17T00:31:33"
    }
   },
   {
@@ -361088,7 +361924,7 @@
    "id": "tca",
    "name": "Tocoa",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -361142,6 +361978,29 @@
      "Santa Rosa de Aguan",
      "Santa Fe"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 63.4,
+     "stations": 0.9,
+     "places": 1.5,
+     "routes": 24.9,
+     "merge": 1.1,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:45:01",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.553589458062927",
+      "road_snap_median_m 606.7",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:09",
+    "shipped": "2026-11-17T00:31:33"
    }
   },
   {
@@ -361149,7 +362008,7 @@
    "id": "mcz",
    "name": "Macuelizo",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -361235,6 +362094,28 @@
      -88.5596,
      15.2456
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 17.2,
+     "stations": 1.1,
+     "places": 1.7,
+     "routes": 14.7,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:44:11",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.19619715980194002",
+      "drive_factor_median 2.184200810815618",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:45:09",
+    "shipped": "2026-11-17T00:31:34"
    }
   },
   {
@@ -361242,7 +362123,7 @@
    "id": "dnl",
    "name": "Danli",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "HND"
@@ -361290,6 +362171,31 @@
      "Jacaleapa",
      "Potrerillos"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 17.6,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 15.3,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:44:14",
+    "reason": "gate: top_zone_jobs_share 0.3625254540366512 at [-86.5732, 14.0259]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.3625254540366512 at [-86.5732, 14.0259]"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6048.20166015625",
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T23:10:46"
    }
   },
   {
@@ -361297,7 +362203,7 @@
    "id": "pco",
    "name": "Puerto Cortes",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "HND"
@@ -361333,6 +362239,28 @@
      "Puerto Cortes",
      "Omoa"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 16.5,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 7.6,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:44:12",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1495643416955393",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:10",
+    "shipped": "2026-11-17T00:31:35"
    }
   },
   {
@@ -361340,7 +362268,7 @@
    "id": "rta",
    "name": "Roatan",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "HND"
@@ -361378,6 +362306,29 @@
      "Jose Santos Guardiola",
      "Guanaja"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 21.8,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 4.8,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:44:23",
+    "reason": "gate: top_zone_jobs_share 0.23420657335668452 at [-86.5343, 16.3218]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.23420657335668452 at [-86.5343, 16.3218]"
+     ],
+     "warn": [
+      "fleet_range 4"
+     ]
+    },
+    "parked": "2026-11-16T23:10:48"
    }
   },
   {
@@ -361385,7 +362336,7 @@
    "id": "msy",
    "name": "Masaya (Municipio)",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -361475,6 +362426,26 @@
      "San Juan de Oriente (Municipio)",
      "La Conquista (Municipio)"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 42.5,
+     "stations": 0.9,
+     "places": 2.5,
+     "routes": 26.0,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T23:25:52",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-16T23:45:15",
+    "shipped": "2026-11-17T00:31:35"
    }
   },
   {
@@ -361482,7 +362453,7 @@
    "id": "mui",
    "name": "Municipio de Jinotega",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NIC"
@@ -361554,6 +362525,31 @@
      "Municipio Ciudad Antigua",
      "Municipio Santa María"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 33.8,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 26.8,
+     "merge": 1.8,
+     "nocar": 2.0,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T23:25:45",
+    "reason": "gate: top_zone_jobs_share 0.2674086482416275 at [-85.998, 13.0957]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.2674086482416275 at [-85.998, 13.0957]"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6128.52392578125",
+      "drive_factor_median 2.0841789734955687",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T23:33:33"
    }
   },
   {
@@ -361561,7 +362557,7 @@
    "id": "mue",
    "name": "Municipio León",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -361637,6 +362633,26 @@
      "Santo Tomás del Norte (Municipio)",
      "San Pedro del Norte (Municipio)"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 56.1,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 25.6,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T23:26:08",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-16T23:45:15",
+    "shipped": "2026-11-17T00:31:36"
    }
   },
   {
@@ -361644,7 +362660,7 @@
    "id": "mus",
    "name": "Municipio Puerto Cabezas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -361692,6 +362708,30 @@
      "Municipio Prinzapolka",
      "Municipio Bonanza"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 48.1,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 30.3,
+     "merge": 1.9,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T23:26:06",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16711697269215237",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.553589458062927",
+      "road_snap_median_m 1554.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:16",
+    "shipped": "2026-11-17T00:31:37"
    }
   },
   {
@@ -361699,7 +362739,7 @@
    "id": "mio",
    "name": "Municipio Matagalpa",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NIC"
@@ -361757,6 +362797,31 @@
      "Municipio Muy Muy",
      "Municipio Terrabona"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 27.9,
+     "stations": 0.9,
+     "places": 2.0,
+     "routes": 17.9,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-16T23:25:31",
+    "reason": "gate: university_rate 0.00081; top_zone_jobs_share 0.2239990229986742 at [-85.9162, 12.9248]",
+    "gate": {
+     "fail": [
+      "university_rate 0.00081",
+      "top_zone_jobs_share 0.2239990229986742 at [-85.9162, 12.9248]"
+     ],
+     "warn": [
+      "drive_factor_median 2.0518667734879767",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T23:33:35"
    }
   },
   {
@@ -361764,7 +362829,7 @@
    "id": "miv",
    "name": "Municipio Nueva Guinea",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NIC"
@@ -361830,6 +362895,31 @@
      "Municipio Desembocadura de Cruz Río Grande",
      "Municipio San Juan de Nicaragua"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 58.2,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 46.7,
+     "merge": 3.9,
+     "nocar": 1.7,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T23:27:44",
+    "reason": "gate: drive_factor_median 3.080216848918031",
+    "gate": {
+     "fail": [
+      "drive_factor_median 3.080216848918031"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.12006340080486608",
+      "road_snap_median_m 2252.3",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-16T23:33:35"
    }
   },
   {
@@ -361837,7 +362927,7 @@
    "id": "tip",
    "name": "Tipitapa (Municipio)",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "NIC"
@@ -361903,6 +362993,29 @@
      "Municipio El Coral",
      "Municipio San Francisco de Cuapa"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 35.8,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 26.5,
+     "merge": 1.3,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T23:26:56",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10010930013374021",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 389.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:45:17",
+    "shipped": "2026-11-17T00:31:37"
    }
   },
   {
@@ -361910,7 +363023,7 @@
    "id": "mcs",
    "name": "Municipio Estelí",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "NIC"
@@ -361972,6 +363085,29 @@
      "Municipio San Nicolas",
      "Municipio Las Sabanas"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 20.2,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 12.4,
+     "merge": 0.9,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T23:26:11",
+    "reason": "gate: top_zone_jobs_share 0.23069736022669396 at [-86.3515, 13.097]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.23069736022669396 at [-86.3515, 13.097]"
+     ],
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T23:33:36"
    }
   },
   {
@@ -361979,7 +363115,7 @@
    "id": "scs",
    "name": "San Carlos",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CRI"
@@ -362043,6 +363179,24 @@
      "Nandayure",
      "Hojancha"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 65.8,
+     "stations": 0.9,
+     "places": 2.4,
+     "routes": 40.9,
+     "merge": 1.6,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:39:56",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:58",
+    "shipped": "2026-11-17T00:31:38"
    }
   },
   {
@@ -362050,7 +363204,7 @@
    "id": "pbe",
    "name": "Puntarenas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CRI"
@@ -362104,6 +363258,26 @@
      "Montes de Oro",
      "Turrubares"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 68.2,
+     "stations": 0.9,
+     "places": 3.2,
+     "routes": 22.5,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:39:41",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1035924970944363"
+     ]
+    },
+    "gated": "2026-11-16T23:44:58",
+    "shipped": "2026-11-17T00:31:39"
    }
   },
   {
@@ -362111,7 +363285,7 @@
    "id": "pcc",
    "name": "Pococi",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CRI"
@@ -362155,6 +363329,24 @@
      "Guacimo",
      "Matina"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 42.2,
+     "stations": 0.9,
+     "places": 2.4,
+     "routes": 25.7,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:39:20",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:59",
+    "shipped": "2026-11-17T00:31:39"
    }
   },
   {
@@ -362162,7 +363354,7 @@
    "id": "pzz",
    "name": "Perez Zeledon",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "CRI"
@@ -362214,6 +363406,26 @@
      "Puerto Jimenez",
      "Dota"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 38.2,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 27.8,
+     "merge": 1.1,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:39:16",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11015985085215281"
+     ]
+    },
+    "gated": "2026-11-16T23:45:00",
+    "shipped": "2026-11-17T00:31:40"
    }
   },
   {
@@ -362221,7 +363433,7 @@
    "id": "dvi",
    "name": "DAVID (CAB.)",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -362589,6 +363801,26 @@
      "BOCA CHICA",
      "SANTA CRUZ"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 178.9,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 29.9,
+     "merge": 1.4,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:48:40",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-11-16T23:45:11",
+    "shipped": "2026-11-17T00:31:41"
    }
   },
   {
@@ -362596,7 +363828,7 @@
    "id": "pnm",
    "name": "PENONOMÉ",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -363180,6 +364412,26 @@
      "SAN MIGUEL",
      "LEONES"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 2334.7,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 28.0,
+     "merge": 1.7,
+     "nocar": 1.3,
+     "everyday": 0.7
+    },
+    "built": "2026-11-16T23:24:34",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.16415589570426076"
+     ]
+    },
+    "gated": "2026-11-16T23:45:12",
+    "shipped": "2026-11-17T00:31:41"
    }
   },
   {
@@ -363187,7 +364439,7 @@
    "id": "vst",
    "name": "VISTA ALEGRE",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -363335,6 +364587,26 @@
      "OTOQUE OCCIDENTE",
      "EL LÍBANO"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 42.6,
+     "stations": 1.1,
+     "places": 3.7,
+     "routes": 12.8,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:46:09",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12571501131096907"
+     ]
+    },
+    "gated": "2026-11-16T23:45:12",
+    "shipped": "2026-11-17T00:31:42"
    }
   },
   {
@@ -363342,7 +364614,7 @@
    "id": "cso",
    "name": "CRISTOBAL",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -363432,6 +364704,28 @@
      "CACIQUE",
      "NUEVA CHAGRES (CAB.)"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 98.5,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 11.1,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:47:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13735920812913063",
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.1503379159523"
+     ]
+    },
+    "gated": "2026-11-16T23:45:13",
+    "shipped": "2026-11-17T00:31:43"
    }
   },
   {
@@ -363439,7 +364733,7 @@
    "id": "trx",
    "name": "TORTÍ",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "PAN"
@@ -363569,6 +364863,28 @@
      "YAPE",
      "GONZALO VÁSQUEZ"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 423.2,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 17.5,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:52:33",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.0200555277086965",
+      "road_snap_median_m 325.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:45:14",
+    "shipped": "2026-11-17T00:31:43"
    }
   },
   {
@@ -363576,7 +364892,7 @@
    "id": "mcy",
    "name": "Maracay",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363636,6 +364952,26 @@
      "Urdaneta",
      "Camatagua"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 113.1,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 21.2,
+     "merge": 0.9,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:23:33",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6082.224609375"
+     ]
+    },
+    "gated": "2026-11-16T23:44:45",
+    "shipped": "2026-11-17T00:31:44"
    }
   },
   {
@@ -363643,7 +364979,7 @@
    "id": "irb",
    "name": "Iribarren",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363687,6 +365023,26 @@
      "Urdaneta",
      "Simón Planas"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 190.5,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 19.9,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:23:48",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6124.05517578125"
+     ]
+    },
+    "gated": "2026-11-16T23:44:45",
+    "shipped": "2026-11-17T00:31:45"
    }
   },
   {
@@ -363694,7 +365050,7 @@
    "id": "cbk",
    "name": "Caroní",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363746,6 +365102,27 @@
      "Roscio",
      "El Callao"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 580.6,
+     "stations": 1.3,
+     "places": 6.8,
+     "routes": 31.4,
+     "merge": 1.2,
+     "nocar": 1.5,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:30:37",
+    "gate": {
+     "warn": [
+      "area_km2 93801.63231854716",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:47",
+    "shipped": "2026-11-17T00:31:45"
    }
   },
   {
@@ -363753,7 +365130,7 @@
    "id": "sct",
    "name": "San Cristóbal",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363843,6 +365220,27 @@
      "San Judas Tadeo",
      "Simón Rodríguez"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 40.1,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 18.7,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:31:12",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0",
+      "drive_factor_median 2.0841789734955687"
+     ]
+    },
+    "gated": "2026-11-16T23:44:48",
+    "shipped": "2026-11-17T00:31:46"
    }
   },
   {
@@ -363850,7 +365248,7 @@
    "id": "mtu",
    "name": "Maturín",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363908,6 +365306,26 @@
      "Santa Bárbara",
      "Sotillo"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 53.1,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 20.8,
+     "merge": 1.4,
+     "nocar": 1.5,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:31:42",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5647.3857421875"
+     ]
+    },
+    "gated": "2026-11-16T23:44:48",
+    "shipped": "2026-11-17T00:31:47"
    }
   },
   {
@@ -363915,7 +365333,7 @@
    "id": "bby",
    "name": "Barinas",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -363975,6 +365393,26 @@
      "Papelón",
      "Arismendi"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 59.3,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 48.8,
+     "merge": 3.2,
+     "nocar": 1.8,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:25:51",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.1503379159523"
+     ]
+    },
+    "gated": "2026-11-16T23:44:49",
+    "shipped": "2026-11-17T00:31:47"
    }
   },
   {
@@ -363982,7 +365420,7 @@
    "id": "pub",
    "name": "Puerto Cabello",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364052,6 +365490,26 @@
      "Miranda",
      "Manuel Monge"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 30.5,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 16.9,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:24:28",
+    "gate": {
+     "warn": [
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:46",
+    "shipped": "2026-11-17T00:31:48"
    }
   },
   {
@@ -364059,7 +365517,7 @@
    "id": "zmo",
    "name": "Zamora",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -364111,6 +365569,30 @@
      "Andrés Bello",
      "Pedro Gual"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 27.2,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 12.2,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:24:30",
+    "reason": "gate: university_rate 0.00021",
+    "gate": {
+     "fail": [
+      "university_rate 0.00021"
+     ],
+     "warn": [
+      "top_school_cell_pupils 6058.13916015625",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T22:33:05"
    }
   },
   {
@@ -364118,7 +365600,7 @@
    "id": "cbl",
    "name": "Carirubana",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364200,6 +365682,27 @@
      "Tocopero",
      "Bolívar"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 75.4,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 44.4,
+     "merge": 2.0,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:25:57",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1272315719995908",
+      "top_school_cell_pupils 6015.2734375"
+     ]
+    },
+    "gated": "2026-11-16T23:44:49",
+    "shipped": "2026-11-17T00:31:49"
    }
   },
   {
@@ -364207,7 +365710,7 @@
    "id": "cbm",
    "name": "Cabimas",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -364253,6 +365756,31 @@
      "Valmore Rodríguez",
      "Simón Bolívar"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 35.9,
+     "stations": 0.9,
+     "places": 1.6,
+     "routes": 21.5,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:24:55",
+    "reason": "gate: university_rate 0.00078",
+    "gate": {
+     "fail": [
+      "university_rate 0.00078"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.18881923699888012",
+      "top_school_cell_pupils 6059.48828125",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T22:33:06"
    }
   },
   {
@@ -364260,7 +365788,7 @@
    "id": "smv",
    "name": "Simón Bolívar",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364314,6 +365842,24 @@
      "San Juan de Capistrano",
      "Juan Manuel Cajigal"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 46.6,
+     "stations": 1.2,
+     "places": 3.5,
+     "routes": 17.1,
+     "merge": 1.2,
+     "nocar": 2.1,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:25:43",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:46",
+    "shipped": "2026-11-17T00:31:49"
    }
   },
   {
@@ -364321,7 +365867,7 @@
    "id": "scj",
    "name": "Sucre",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364383,6 +365929,24 @@
      "Andrés Mata",
      "Mejía"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 53.0,
+     "stations": 1.9,
+     "places": 2.6,
+     "routes": 16.2,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:25:50",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-16T23:44:47",
+    "shipped": "2026-11-17T00:31:50"
    }
   },
   {
@@ -364390,7 +365954,7 @@
    "id": "scv",
    "name": "Sucre, Valera",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364468,6 +366032,27 @@
      -71.0784,
      9.1581
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 36.6,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 17.5,
+     "merge": 1.1,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:25:59",
+    "gate": {
+     "warn": [
+      "drive_factor_median 2.117000016612675",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:50",
+    "shipped": "2026-11-17T00:31:51"
    }
   },
   {
@@ -364475,7 +366060,7 @@
    "id": "lib",
    "name": "Libertador",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364553,6 +366138,28 @@
      "Caracciolo Parra Olmedo",
      "Julio César Salas"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 29.3,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 15.7,
+     "merge": 0.9,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:26:36",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18961123945438033",
+      "drive_factor_median 2.325069660277121",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:50",
+    "shipped": "2026-11-17T00:31:51"
    }
   },
   {
@@ -364560,7 +366167,7 @@
    "id": "siz",
    "name": "Simón Rodríguez",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364612,6 +366219,27 @@
      "Independencia",
      "Sir Arthur Mac Gregor"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 124.7,
+     "stations": 2.3,
+     "places": 4.0,
+     "routes": 43.1,
+     "merge": 2.4,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:28:51",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 715.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:51",
+    "shipped": "2026-11-17T00:31:52"
    }
   },
   {
@@ -364619,7 +366247,7 @@
    "id": "mbl",
    "name": "Mariño",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364673,6 +366301,26 @@
      "Península de Macanao",
      "Villalba"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 22.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 7.6,
+     "merge": 1.0,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:26:30",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10924313252755437"
+     ]
+    },
+    "gated": "2026-11-16T23:44:51",
+    "shipped": "2026-11-17T00:31:53"
    }
   },
   {
@@ -364680,7 +366328,7 @@
    "id": "aru",
    "name": "Araure",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364728,6 +366376,26 @@
      "Esteller",
      "Santa Rosalía"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 27.5,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 18.3,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:26:51",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1294412802435892"
+     ]
+    },
+    "gated": "2026-11-16T23:44:52",
+    "shipped": "2026-11-17T00:31:54"
    }
   },
   {
@@ -364735,7 +366403,7 @@
    "id": "clo",
    "name": "Colón",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -364779,6 +366447,31 @@
      "Jesús María Semprum",
      "Francisco Javier Pulgar"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 40.7,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 31.9,
+     "merge": 1.6,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:27:20",
+    "reason": "gate: university_rate 0.0002",
+    "gate": {
+     "fail": [
+      "university_rate 0.0002"
+     ],
+     "warn": [
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 345.0",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T22:51:04"
    }
   },
   {
@@ -364786,7 +366479,7 @@
    "id": "frd",
    "name": "Francisco de Miranda",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364830,6 +366523,29 @@
      "San Gerónimo de Guayabal",
      "Camaguán"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 58.6,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 33.8,
+     "merge": 1.8,
+     "nocar": 2.1,
+     "everyday": 1.5
+    },
+    "built": "2026-11-16T22:28:13",
+    "gate": {
+     "warn": [
+      "area_km2 47462.84654118823",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 762.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:52",
+    "shipped": "2026-11-17T00:31:54"
    }
   },
   {
@@ -364837,7 +366553,7 @@
    "id": "mbm",
    "name": "Mara",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -364877,6 +366593,30 @@
      "Páez",
      "Almirante Padilla"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 29.2,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 27.2,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:27:41",
+    "reason": "gate: university_rate 0.00023",
+    "gate": {
+     "fail": [
+      "university_rate 0.00023"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.1826532168319236",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-16T22:51:05"
    }
   },
   {
@@ -364884,7 +366624,7 @@
    "id": "anj",
    "name": "Antonio José de Sucre",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364932,6 +366672,29 @@
      "Muñoz",
      "Andrés Eloy Blanco"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 77.3,
+     "stations": 1.4,
+     "places": 3.8,
+     "routes": 51.0,
+     "merge": 3.7,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:29:13",
+    "gate": {
+     "warn": [
+      "area_km2 61995.63048492778",
+      "drive_factor_median 2.2535347872132085",
+      "road_snap_median_m 441.5",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-16T23:44:53",
+    "shipped": "2026-11-17T00:31:55"
    }
   },
   {
@@ -364939,7 +366702,7 @@
    "id": "zae",
    "name": "Zamora, Juan Germán Roscio",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -364981,6 +366744,26 @@
      "Julián Mellado",
      "Ortíz"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 31.0,
+     "stations": 1.1,
+     "places": 2.3,
+     "routes": 26.9,
+     "merge": 1.0,
+     "nocar": 1.7,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:28:28",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11895413110627584"
+     ]
+    },
+    "gated": "2026-11-16T23:44:54",
+    "shipped": "2026-11-17T00:31:56"
    }
   },
   {
@@ -364988,7 +366771,7 @@
    "id": "hex",
    "name": "Heres",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365024,6 +366807,29 @@
      "Heres",
      "Raúl Leoni"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 583.0,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 22.3,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-16T22:37:58",
+    "gate": {
+     "warn": [
+      "area_km2 64619.72940767293",
+      "drive_factor_median 2.325069660277121",
+      "road_snap_median_m 2976.2",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:57",
+    "shipped": "2026-11-17T00:31:56"
    }
   },
   {
@@ -365031,7 +366837,7 @@
    "id": "led",
    "name": "Leonardo Infante",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -365081,6 +366887,32 @@
      "Santa María de Ipire",
      "Chaguaramas"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 59.4,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 34.7,
+     "merge": 2.1,
+     "nocar": 1.6,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:30:01",
+    "reason": "gate: university_rate 0.00022",
+    "gate": {
+     "fail": [
+      "university_rate 0.00022"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.10660046287575331",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 619.8",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T22:51:07"
    }
   },
   {
@@ -365088,7 +366920,7 @@
    "id": "sck",
    "name": "San Carlos",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -365136,6 +366968,31 @@
      "Ricaurte",
      "Lima Blanco"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 29.5,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 13.9,
+     "merge": 0.8,
+     "nocar": 1.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:29:19",
+    "reason": "gate: university_rate 0.00083",
+    "gate": {
+     "fail": [
+      "university_rate 0.00083"
+     ],
+     "warn": [
+      "top_zone_jobs_share 0.10475104178567256",
+      "top_school_cell_pupils 6012.22802734375",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T22:51:08"
    }
   },
   {
@@ -365143,7 +367000,7 @@
    "id": "lrx",
    "name": "La Guaira",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365177,6 +367034,28 @@
     "unit_names": [
      "La Guaira"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 30.7,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 9.7,
+     "merge": 0.8,
+     "nocar": 1.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:29:40",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.18499375685185826",
+      "drive_factor_median 2.2535347872132085",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-16T23:44:54",
+    "shipped": "2026-11-17T00:31:57"
    }
   },
   {
@@ -365184,7 +367063,7 @@
    "id": "lad",
    "name": "Lander",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365222,6 +367101,26 @@
      "Urdaneta",
      "Simón Bolívar"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 16.8,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 7.0,
+     "merge": 0.8,
+     "nocar": 1.5,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:29:45",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1507329636059076"
+     ]
+    },
+    "gated": "2026-11-16T23:44:55",
+    "shipped": "2026-11-17T00:31:58"
    }
   },
   {
@@ -365229,7 +367128,7 @@
    "id": "tsx",
    "name": "Torres",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -365263,6 +367162,29 @@
     "unit_names": [
      "Torres"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 24.4,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 10.3,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.1
+    },
+    "built": "2026-11-16T22:30:05",
+    "reason": "gate: top_zone_jobs_share 0.40508740387341846 at [-70.0783, 10.1668]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.40508740387341846 at [-70.0783, 10.1668]"
+     ],
+     "warn": [
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T22:51:10"
    }
   },
   {
@@ -365270,7 +367192,7 @@
    "id": "mbn",
    "name": "Morán",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365306,6 +367228,29 @@
      "Morán",
      "Andrés Eloy Blanco"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 22.3,
+     "stations": 1.3,
+     "places": 2.1,
+     "routes": 8.5,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
+    },
+    "built": "2026-11-16T22:30:19",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.18757166850753715",
+      "road_snap_median_m 317.9",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-16T23:44:55",
+    "shipped": "2026-11-17T00:31:58"
    }
   },
   {
@@ -365313,7 +367258,7 @@
    "id": "crj",
    "name": "Cristóbal Rojas",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -365347,6 +367292,30 @@
     "unit_names": [
      "Cristóbal Rojas"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 14.9,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 7.1,
+     "merge": 0.8,
+     "nocar": 1.7,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:30:15",
+    "reason": "gate: top_zone_jobs_share 0.29833407556368147 at [-66.852, 10.2373]; mean_commute_km 2.957769246247669",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.29833407556368147 at [-66.852, 10.2373]",
+      "mean_commute_km 2.957769246247669"
+     ],
+     "warn": [
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-16T22:51:12"
    }
   },
   {
@@ -365354,7 +367323,7 @@
    "id": "auo",
    "name": "Autónomo Atures",
    "kind": "zone",
-   "status": "planned",
+   "status": "parked",
    "region": "world",
    "countries": [
     "VEN"
@@ -365390,6 +367359,30 @@
      "Autónomo Atures",
      "Autónomo Autana"
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 29.3,
+     "stations": 1.0,
+     "places": 1.7,
+     "routes": 9.3,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:30:48",
+    "reason": "gate: top_zone_jobs_share 0.21240690777037471 at [-67.5957, 5.6933]",
+    "gate": {
+     "fail": [
+      "top_zone_jobs_share 0.21240690777037471 at [-67.5957, 5.6933]"
+     ],
+     "warn": [
+      "university_rate 0.0",
+      "fleet_range 3"
+     ]
+    },
+    "parked": "2026-11-16T22:51:12"
    }
   },
   {
@@ -365397,7 +367390,7 @@
    "id": "cee",
    "name": "Cedeño",
    "kind": "zone",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "VEN"
@@ -365437,6 +367430,29 @@
      -66.8391,
      6.5849
     ]
+   },
+   "run": {
+    "run_batch": "20261116-213647",
+    "steps": {
+     "build": 138.5,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 33.3,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 1.0
+    },
+    "built": "2026-11-16T22:33:22",
+    "gate": {
+     "warn": [
+      "area_km2 98260.56532365478",
+      "top_zone_jobs_share 0.13040815627280397",
+      "road_snap_median_m 3615.8",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-16T23:44:56",
+    "shipped": "2026-11-17T00:31:59"
    }
   }
  ],

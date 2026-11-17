@@ -204,3 +204,6 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
 - A game change a player asks for (numbers, what can be built) waits for her word (CLAUDE.md).
 - Replies on contributor PRs: written for a person, offers not requests, she sees each first.
 - Cores: the ledger's cap. Usage has been tight: be economical.
+
+## Advisor calls (trial)
+- 2026-11-17 10:00 UTC, maps-44: whether to land T-3512 after setchk's partial pass (stop-on-whole never fired, no unpinned level change, one hang with the old-path flags). Changed things: T-3512 held for a second round; T-3069 given a checker it would otherwise have skipped (hand-drawn tram turn rule, monorail/funicular); a like-for-like memory figure asked for T-3503; master smoke's t1053 no longer counted as noise.

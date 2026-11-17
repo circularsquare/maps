@@ -978,6 +978,18 @@
       "rev": 1,
       "area": "demand",
       "fix": true
+    },
+    {
+      "id": "c076",
+      "text": "added a real world network snap for tram track that follows real tram and light rail, and redrew the snap buttons as one set of icons",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3069",
+      "by": "trams",
+      "at": "2026-11-17T07:44:10Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
     }
   ]
 }

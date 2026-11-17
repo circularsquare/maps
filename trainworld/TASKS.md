@@ -281,6 +281,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
   - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
   - Other: notes/T-3473.md
+- T-3513 [P3] {L:solve-speed} {after:T-3512 lands} Train edits at high demand still take most of a minute
+  - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
+  - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
+  - Other: notes/T-3512.md
 - T-3492 [P2] {L:memory} Give back idle solving workers' memory
   - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
   - Goal: An idle worker's spare memory goes back, with no solve slower than now.
@@ -533,10 +537,21 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: You asked 2026-11-10 to change built track's height or kind from an edit button. Design approved: change pieces in place, from the Select bar, with price and confirm.
   - Goal: Built track changes level or kind in place, keeping stations and lines.
   - Other: Stages T-3059 (sim and bar) and T-3060 (preview). notes/T-3052.md.
-- T-3069 [P2] {L:trams} Trams that snap to real rail
+- T-3069 [P2] {L:trams} Trams that snap to real rail (taking, 2026-11-17, agent trams)
   - Context: A player asked for trams on real rail, which is light rail. You said sure 2026-11-10, with a new street-snap icon.
   - Goal: Tram track can snap to real rail, and the street-snap icon is new.
-  - Other: Folds in T-2929 (trams stage 3) and open-source issue 9 (snap to light rail such as Kaohsiung's circular line). Your TODO 2026-11-15 also wants snap icons standardized.
+  - Other: Folds in T-2929 (trams stage 3) and open-source issue 9 (snap to light rail such as Kaohsiung's circular line). Your TODO 2026-11-15 also wants snap icons standardized. Built in tree tw/trams; lands with the rebuilt graphs (notes/T-3069.md "Landing").
+- T-3514 [P3] {L:trams} The rest of trams stage 3
+  - Context: T-2929's other items were folded into T-3069, which did only the real snap: real network start saves still build tram lines as train track, and there is no junction helper or stop spacing for trams.
+  - Goal: Real network saves build tram lines as tram track, a both-ways junction helper for tram track, and stops placed about every N m along a new tram line, each if players want it.
+  - Other: notes/T-2921.md (stage 3), notes/T-3069.md
+- T-3515 [P3] {L:trams} Tram snap refuses turns at Zurich junctions
+  - Context: From T-3069: snapping tram track between two different Zurich tram lines is refused ("The new track would run on top of existing track"); the router finds no direct turn at Central or Bahnhofplatz and goes out to a terminal loop and back. Cause not found. Also from its checker: Zurich's first tram candidate (603 m, $34.6M, Hills +0.3x) shows as placeable but ignores the placing click every time; the third places fine (repro: maps-44 scratchpad tramchk\chk.mjs, MODE=price ONLY=zurich). Reaches players snapping trams in dense tram cities.
+  - Goal: A tram snap across a real tram junction takes the junction's turn in Zurich and two other tram cities, every placeable candidate places on click, or the reason it can't is written down.
+  - Other: notes/T-3069.md
+- T-3516 [P3] {L:track-drawing} Snap beside button off the phone bar
+  - Context: From T-3069's checker: on a phone the rail tool's fourth snap button (Snap beside, x 381-417) sits past the bar's edge, under the info button; the same on master, so not new. Reaches phone players building rail.
+  - Goal: Every snap button on the phone rail bar sits inside the bar and can be tapped, at 360 px wide.
 - T-3070 [P3] {L:demand-ideas} Trips between two destinations
   - Context: Your 2026-11-10: "do we have a framework for destination -> destination trips?" Airports already do this; everyday trips are home-based only. A demand change, design first.
   - Goal: A design for destination to destination trips, for you to approve.

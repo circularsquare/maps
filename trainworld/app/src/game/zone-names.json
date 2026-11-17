@@ -1,4 +1,5 @@
 {
+"ist": {"aliases": ["Arnavutköy", "Arnavutkoy"]},
 "osa": {"name": "Kansai", "aliases": ["Osaka", "Keihanshin", "Kyoto-Osaka-Kobe", "関西", "京阪神"]},
 "dor": {"name": "Ruhr", "aliases": ["Ruhrgebiet", "Ruhr Area", "Ruhrpott", "Dortmund"]},
 "fra": {"name": "Frankfurt", "aliases": ["Rhine-Main", "Rhein-Main", "FrankfurtRheinMain"]},
@@ -1542,7 +1543,6 @@
 "vim": {"name": "Daugavpils", "aliases": ["Vidzeme", "Latgale", "Valmiera", "Rēzekne", "Cēsis"]},
 "kuz": {"name": "Liepāja", "aliases": ["Kurzeme", "Courland", "Ventspils"]},
 "ute": {"name": "Utena", "aliases": ["Utenos apskritis", "Visaginas"]},
-"arv": {"name": "Arnavutköy, Istanbul", "aliases": ["Arnavutköy", "Arnavutkoy"]},
 "syx": {"name": "Flores", "aliases": ["Sayaxché", "Santa Elena", "San Benito"]},
 "cbj": {"name": "Huehuetenango", "aliases": ["Chiantla"]},
 "stk": {"name": "Belize City", "aliases": ["Stann Creek West", "Belize", "Belmopan"]},
