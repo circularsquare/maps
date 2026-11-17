@@ -19,6 +19,7 @@ import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
 import { helpOpen } from "./HelpPanel";
+import { HELP_KEY } from "./toolKeys";
 import { accountState } from "../game/account";
 import { AccountButton, AccountSection, loginText } from "./AccountPanel";
 import { CommunityButton } from "./Community";
@@ -56,8 +57,8 @@ export function SettingsTab() {
   return (
     <>
       <div class="settings-top">
-        <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip={t("settingsTab.controls")} aria-label={t("settingsTab.controls")} aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
-          <Icon.help />
+        <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip={mobileDevice() ? t("help.name") : t("dock.tabTip", { name: t("help.name"), key: HELP_KEY })} aria-label={t("help.name")} aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
+          <Icon.question />
         </button>
         <CommunityButton settings />
         <AccountButton kind="settings" />

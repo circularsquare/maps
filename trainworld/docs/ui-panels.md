@@ -103,7 +103,7 @@ bars); the network takes the line colours ([ui-map.md](ui-map.md)).
   their icons only, its button rows share the width, the Lines list drops its Near column, and the
   Money tab's ledger and fare rows put each name on its own line with the figures or stepper under
   it. The width handle is gone
-  and the controls panel covers the dock's width. Nothing changes above 600 px wide or on a short
+  and the help panel covers the dock's width. Nothing changes above 600 px wide or on a short
   (landscape) screen. Every key hint is in the theme's accent (the letter on a button, the key in brackets in a hover, the Help panel's key column) [T-1835, T-1852]; on buttons and in hovers it is at 0.7 opacity, brackets and all, as a hint (the Help panel's list stays full) [T-2157].
   On a touch screen the buttons show no key hints, and a press held on a control
   for half a second shows its hover tag above the finger, the tap it ends in doing nothing [T-1260,
@@ -553,21 +553,32 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | D | demand bubbles: None, Homes, Destinations, Total and then None again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
 | E, Delete | E enables the picked blueprints when any is off and disables them when all are on (`SWITCH_PICK_KEY`, T-2338; the Enable hover, and the Disable hover while all are on, name it); Delete removes them | select tool |
-| Space, Esc, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, hide the interface, save, undo and redo, search | any tab |
+| Space, Esc, F1, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, open the help panel, hide the interface, save, undo and redo, search | any tab |
 
 C stays Construct's, so Cities has Y; A opens Stations and S is Edit stops (Anita's pick); add-passed-stations
 has G (gaps). Anita wants 1234 kept for the tools (T-1834), so elevation is on Shift+1 to 7 again.
 
-## Controls
+## Help
 
-[T-908, `ui/HelpPanel.tsx`] The "?" at the top of Settings [T-1099] (hover "Controls") opens a panel over the
-map beside the dock, under the tab row, listing only the controls no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
+[T-908, T-3527, `ui/HelpPanel.tsx`] The plain "?" at the top of Settings [T-1099] (hover "Help (F1)") or F1 from
+anywhere (`HELP_KEY`; the browser's own F1 help is prevented; nothing while the interface is hidden, or a dialog
+or the start menu is up) opens a panel over the map beside the dock, under the tab row.
+
+**Common questions** first (Anita, T-3527): a compact list of what players ask again and again, each a line with
+a chevron that opens its answer under it, one open at a time, ruled off from the controls below. The answers name
+the game's own controls through their keys ("Copy line", "Calculate intercity trips", the Select tool and its
+key, "Rebuild"), so they follow those labels in every language. Now: a branching or short turning line ("Copy
+line", then the new line's stops), a loop line (right click, on a phone hold, the stop to loop back to while
+adding stops), no intercity riders (phones only, where the setting exists: turn on "Calculate intercity trips"),
+rebuilding sections of track (the Select tool and its bar's Rebuild). New questions are proposed to Anita first.
+
+**The controls** then list only those no button shows: turning the map (right drag or Ctrl drag, T-2031), the bubble
 gestures (Shift+drag box, hold then drag, Shift+click, Shift+drag over far bubbles), building
 modifiers (Shift+click, double click or Enter, Backspace, a double click on track adding a point
 (T-2951, not on a phone), Caps Lock, right drag, E and Delete in the blueprint tool; a bus point's right click and drag, and a click on a bus route's end, T-1514), the keys (1 to 7, the tab and tool letters, T, D, N, S, G, C, U, Space, Ctrl+Z/Y, `/` and Ctrl+K, Esc,
-the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY`, `DEMAND_KEY` and `BUS_KEY`; F2 hides the interface, below) and panel gestures (double click
+the letters read from `TAB_KEYS`, `TOOL_KEYS`, `ACTION_KEYS`, `TRIP_KEY`, `DEMAND_KEY` and `BUS_KEY`; F2 hides the interface, below; F1 itself) and panel gestures (double click
 a fare node, a name, a list row; Shift or Ctrl on the train stepper). Esc (before the game's own
-Esc, so the selection stays), a press outside or the button again closes it. A control added or
+Esc, so the selection stays), a press outside, F1 or the button again closes it. A control added or
 changed that a button does not show gets its row here.
 
 **Hiding the interface** [T-1491, `ui/hideUi.ts`]: F2 (`HIDE_UI_KEY`, any panel or field, with no
@@ -575,7 +586,7 @@ modifier) puts `ui-hidden` on the page, whose rule in `style.css` hides the dock
 notes, the map's control rows, search, blueprint bars, trouble list, loading card, touch bar, debug
 panel, the day and night strip with its train (`.map-sky`, T-1893) and MapLibre's controls; the map, network, bubbles, station labels and hover tags stay, and the
 map takes the room. F2 or Esc brings it back (Esc first, before every other Esc). Listed in the
-Controls panel as "F2". While hidden, pressing F2 and then moving the mouse show "Press F2 to show the UI" at the top
+help panel as "F2". While hidden, pressing F2 and then moving the mouse show "Press F2 to show the UI" at the top
 centre; it disappears 3 s after the key or the mouse stops [T-1548, T-1893].
 
 **Confirmations** [T-113]: a centred dialog headed "Confirm?" [T-1242] with operation-specific text, cancel
@@ -584,8 +595,8 @@ dismissed, and the map and tools are blocked meanwhile.
 
 ## Settings
 
-`ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Controls (the "?",
-opens the [Controls](#controls) panel) and, when accounts are on, Account or Sign in (the person icon, the account
+`ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Help (a plain "?",
+opens the [Help](#help) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,
 "Logged in as alice" or "Not logged in" [T-1728]; then the Language row: a globe icon (hover "Language" over
 "Non-English text is translated by AI") and a select of English, 日本語, 简体中文 and 繁體中文 (台灣), each in its own
@@ -1175,7 +1186,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 
 - **Shown only when the server says so**: `/noritetsu/config`'s `trainworldCommunity`, or in preview its
   `trainworldCommunityPreview` on a page opened with `?community`. Otherwise no button, and a share link opens nothing.
-- **Community** (people icon in the head of the saves panel and of the leaderboards, and in Settings between Controls
+- **Community** (people icon in the head of the saves panel and of the leaderboards, and in Settings between Help
   and the account button), headed "Community trains worlds", with the upload icon in its head to share the game
   being played. [Random] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Biggest is
   by points in the place, one per person, never a sandbox game (a note under the list says "Sandbox games aren't

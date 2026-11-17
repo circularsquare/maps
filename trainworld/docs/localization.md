@@ -150,7 +150,7 @@ shows every message in ⟦ ⟧ over the English, so text still inline stands out
 
 **Offered languages** are `OFFERED` in `i18n/intl.ts`: English, Japanese, Simplified and Traditional Chinese
 (released 2026-11-07, T-2585); a new language joins once released (below). Settings shows the Language row
-(`ui/SettingsTab.tsx`, right under the first row's Controls and account buttons), and the start menu the same picker
+(`ui/SettingsTab.tsx`, right under the first row's Help and account buttons), and the start menu the same picker
 (`ui/LanguageSelect.tsx`) at the right of its card's first row (T-2753), while `OFFERED` has two
 languages, and with `?lang=` in the address lists all of `PICKER` so a language can be seen before release.
 Each language is listed by its own name (`LANG_NAMES`, never translated); the globe icon's hover names the row

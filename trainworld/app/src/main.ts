@@ -26,6 +26,7 @@ import { cancelLink, linkPicked, linking } from "./game/links";
 import { ACTION_KEYS, DEMAND_KEY, levelOfKeyCode, pickTool, TAB_KEYS, TOOL_KEYS, TRIP_KEY } from "./ui/toolKeys";
 import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsSelected } from "./game/lineActions";
 import { hideUiKey } from "./ui/hideUi";
+import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
 import { stopsById, world } from "./game/world";
 import { hiddenLevels, hiddenLines, hideBuses, levelBits } from "./game/lineVisibility";
@@ -582,6 +583,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
 releaseSelectsAfterMousePick();
 followCapsLock();
 hideUiKey(); // F2 hides the interface for screenshots (T-1491)
+helpKey(); // F1 opens the help panel (T-3527)
 // Ctrl+S saves the game now (T-1251), in any panel or field, instead of the browser saving the page
 window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "s") {
