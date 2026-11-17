@@ -388,8 +388,7 @@ void main() {
   }
   // T-2927: a tram's two wires, coming in as high-speed track's centre line does; one along each track
   // once they part (blueprint's only then: between its rails there is no room for two more lines)
-  // (T-3534: a single tram track parted out to its own width is a solid stroke, no wire down its middle)
-  if (tram && u_casing <= 0.0 && u_lane_mode != 1 && !(u_lane_mode > 1 && lfm <= 0.0) && !(bpShape && u_lane_mode == 0) && !full && !late && (!ghost || u_ghost_layer == 2)) {
+  if (tram && u_casing <= 0.0 && u_lane_mode != 1 && !(bpShape && u_lane_mode == 0) && !full && !late && (!ghost || u_ghost_layer == 2)) {
     float hw = max(${(WIRE_MIN_PX / 2).toFixed(2)}, ${(WIRE_SHARE / 2).toFixed(3)} * w) * (u_lane_mode > 1 ? 1.0 : smoothstep(u_hsr.y, u_hsr.z, w));
     if (hw >= 0.1) {
       v_wire = vec4(bpShape || placement ? rail : u_wire, u_lane_mode == 0 ? ${WIRE_OFF.toFixed(3)} * w : 0.0);

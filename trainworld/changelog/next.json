@@ -169,14 +169,14 @@
       "id": "c013",
       "text": "added an outline shape for line bullets, a ring a little thicker than a line group's",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3436",
       "by": "bullet",
       "at": "2026-11-16T14:27:35Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:59:21Z"
     },
     {
       "id": "c014",
@@ -247,29 +247,29 @@
       "id": "c019",
       "text": "fixed high-speed track looking ordinary while you drag a node or a selection",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-1949",
       "by": "b2",
       "at": "2026-11-16T14:49:20Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:57:12Z"
     },
     {
       "id": "c020",
       "text": "fixed the track snap ring and ghost sitting in the wrong place after the map re-centers",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-1778",
       "by": "b2",
       "at": "2026-11-16T14:49:22Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:05:14Z"
     },
     {
       "id": "c021",
@@ -394,14 +394,14 @@
       "id": "c030",
       "text": "the edit note stays through slow calculations in big cities",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-2189",
       "by": "b4",
       "at": "2026-11-16T15:11:41Z",
-      "rev": 2,
+      "rev": 3,
       "area": "bug",
       "fix": true,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T20:02:58Z"
     },
     {
       "id": "c031",
@@ -607,15 +607,15 @@
       "id": "c046",
       "text": "a line stop with no way back on one-way track is refused with a message that says so",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3429",
       "by": "bug-a",
       "at": "2026-11-16T16:46:53Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:56:50Z"
     },
     {
       "id": "c047",
@@ -662,15 +662,15 @@
       "id": "c050",
       "text": "the track panel lists a line that only uses a piece on its way back",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3101",
       "by": "bug-e",
       "at": "2026-11-16T17:35:28Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": true,
       "parent": "c056",
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:56:56Z"
     },
     {
       "id": "c051",
@@ -714,15 +714,15 @@
     {
       "id": "c054",
       "text": "the schematic of a game with lines far apart draws each city at its own scale, nearest first, instead of squashing them all onto one coarse grid",
-      "edited": null,
+      "edited": "schematic for large maps draws regions separately",
       "hidden": false,
       "task": "T-3448",
       "by": "regions",
       "at": "2026-11-16T18:45:42Z",
-      "rev": 2,
+      "rev": 4,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:59:39Z"
     },
     {
       "id": "c055",
@@ -1023,14 +1023,15 @@
     {
       "id": "c078",
       "text": "demand bubbles count trips to and from other zones at every zoom, and a zone's totals count its errands and visits across zone lines",
-      "edited": null,
+      "edited": "demand bubbles show intercity trips at all zoom levels",
       "hidden": false,
       "task": "T-3503",
       "by": "bubbles",
       "at": "2026-11-17T11:01:23Z",
-      "rev": 1,
+      "rev": 3,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T20:03:34Z"
     },
     {
       "id": "c079",
@@ -1072,15 +1073,15 @@
     {
       "id": "c082",
       "text": "added a setting to keep buses to one-way streets",
-      "edited": "added a setting under Game to keep buses to one-way streets",
+      "edited": null,
       "hidden": false,
       "task": "T-3480",
       "by": "busoneway",
       "at": "2026-11-17T11:27:34Z",
-      "rev": 2,
+      "rev": 3,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:30:24Z"
+      "changed": "2026-11-17T19:57:30Z"
     },
     {
       "id": "c083",
@@ -1201,14 +1202,15 @@
     {
       "id": "c092",
       "text": "track along a shore no longer counts as over water when it is on land",
-      "edited": null,
+      "edited": "track on water along land is now counted as on land",
       "hidden": false,
       "task": "T-3524",
       "by": "shore",
       "at": "2026-11-17T14:54:10Z",
-      "rev": 1,
+      "rev": 4,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:04:32Z"
     },
     {
       "id": "c093",
@@ -1225,28 +1227,28 @@
     {
       "id": "c094",
       "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
-      "edited": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart, and weekend train scheduling so a line can run fewer trains on weekends / holidays",
+      "edited": "added weekend scheduling! can run fewer trains on weekends and holidays with new schedule panel",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 4,
+      "rev": 13,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:30:55Z"
+      "changed": "2026-11-17T19:58:34Z"
     },
     {
       "id": "c095",
       "text": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart",
-      "edited": null,
-      "hidden": true,
+      "edited": "added timetable, visible in new schedule panel",
+      "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 2,
+      "rev": 5,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:30:55Z"
+      "changed": "2026-11-17T19:58:49Z"
     },
     {
       "id": "c096",
@@ -1289,25 +1291,27 @@
       "id": "c099",
       "text": "single tram track is a solid grey line close up, with no white wire down the middle",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3534",
       "by": "tracklook",
       "at": "2026-11-17T16:09:40Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:59:42Z"
     },
     {
       "id": "c100",
       "text": "fixed tram track crossing a railway showing a plain x while drawing instead of the broken x it gets when placed",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3535",
       "by": "tramlag",
       "at": "2026-11-17T16:23:22Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:04:36Z"
     },
     {
       "id": "c101",
@@ -1337,14 +1341,15 @@
     {
       "id": "c103",
       "text": "fixed single tram track drawn off a double track's end with snap to streets on, which joined both tracks instead of the one under the pointer",
-      "edited": null,
+      "edited": "fixed single tram track continuing a double track end with snap to streets on, which joined both tracks instead of the one under the pointer",
       "hidden": false,
       "task": "T-3537",
       "by": "tramsplit",
       "at": "2026-11-17T17:00:29Z",
-      "rev": 1,
+      "rev": 3,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:04:52Z"
     },
     {
       "id": "c104",
@@ -1423,14 +1428,15 @@
     {
       "id": "c110",
       "text": "added an alert on a line, and a loop mark on the map, where its trains pass the same track twice in the same direction",
-      "edited": null,
+      "edited": "added an alert on a line where its trains pass the same track twice in the same direction",
       "hidden": false,
       "task": "T-3562",
       "by": "repeattrack",
       "at": "2026-11-17T17:48:27Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:58:56Z"
     },
     {
       "id": "c111",
@@ -1447,14 +1453,15 @@
     {
       "id": "c112",
       "text": "fixed a line that stopped running when blueprint track was drawn on from the track end its trains turn around at",
-      "edited": null,
+      "edited": "fixed a bug where extending a line could break it",
       "hidden": false,
       "task": "T-3541",
       "by": "tramsplit",
       "at": "2026-11-17T18:03:40Z",
-      "rev": 1,
+      "rev": 3,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:05:11Z"
     },
     {
       "id": "c113",
@@ -1586,15 +1593,15 @@
     {
       "id": "c123",
       "text": "added a Set as default button in the timetables window that gives every new line the selected line's headways, and one timetable button on the line panel in place of copy and paste schedule",
-      "edited": "added a Set as default button in the timetables window: it gives every new line the selected line's headways (switching a line on train counts to headway first), no default is set in a new game, and Apply to all lines for weekends covers new lines too; one timetable button on the line panel in place of copy and paste schedule",
+      "edited": "can set default line schedules for new lines",
       "hidden": false,
       "task": "T-3543",
       "by": "schedbutton",
       "at": "2026-11-17T19:28:19Z",
-      "rev": 3,
+      "rev": 5,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:50:09Z"
+      "changed": "2026-11-17T19:59:10Z"
     },
     {
       "id": "c124",
@@ -1613,13 +1620,14 @@
       "id": "c125",
       "text": "fixed the advice shown after the map's graphics crash: the game now says to restart the browser, since reloading the page doesn't bring them back",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3582",
       "by": "glcontext",
       "at": "2026-11-17T19:43:40Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T20:03:06Z"
     },
     {
       "id": "c126",

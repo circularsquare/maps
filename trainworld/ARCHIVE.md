@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3581 [P3] {L:fares} Undoing a line delete loses its fare multiple (2026-11-17): Undoing a line delete brings its fare multiple back: the clock worker keeps a deleted line's multiple in hand (not saved) and gives it back when an undo or redo brings the line back, tidied in the edit's own state; a new line taking a deleted line's id starts at 1.00x. Checked in checks/t3578-line-base.mjs (line 14 at 1.50x, Delete line, Ctrl+Z: 1.50x again). Tree farebase, not landed. notes/T-3578.md.
 - T-3575 [P2] {L:trams} Crossovers on tram track (2026-11-17): tram stop upgrades and tram crossovers priced at the tram table; checker passed. notes/T-3574.md.
 - T-3574 [P2] {L:trams} Terminal and passing tracks at tram stops (2026-11-17): tram stop upgrades and tram crossovers priced at the tram table; checker passed. notes/T-3574.md.
 - T-3582 [P2] {L:small-fixes} WebGL2 error after the map glitches (2026-11-17): A browser that has WebGL2 but refuses the page a context, at startup or mid-game after a lost context, now gets a screen saying the graphics stopped working and to restart the browser (hardware acceleration as the fallback); the cause of the loss is not established (GPU use measured on the real save, restores work, camera does not move). notes/T-3582.md.

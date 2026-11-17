@@ -287,6 +287,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3590 [P2] {L:feedback} Board changelog: hidden items last, drag to reorder (taking, 2026-11-17, agent logorder)
+  - Context: You, 2026-11-17: "in twboard could we have hidden items like go to the bottom of the list i dont want to see them interspersed with everything else. and also let me drag things around to reorder them putting high impact things in the top?"
+  - Goal: Hidden items sit below all shown ones; dragging an item moves it, the order is saved, and the published update notes follow it.
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
@@ -300,10 +303,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3584 [P3] {L:timetables} {after:T-3557} Weekend lines sharing track are not paced
   - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
   - Goal: Weekend lines sharing track are paced from their own weekend headways.
-- T-3581 [P3] {L:fares} Undoing a line delete loses its fare multiple (taking, 2026-11-17, agent farebase)
-  - Context: Found by T-3567's checker: delete a line, then undo; the line returns at 1.00x because the tidy step drops its entry after the undo snapshot. Typing "1,5" reads as 15 (held to 3.00x), as in the other typed multiples.
-  - Goal: Undoing a line delete brings back its fare multiple.
-  - Other: notes/T-3567-check.md
 - T-3578 [P2] {L:fares} Line fare multiple scales the base too (taking, 2026-11-17, agent farebase)
   - Context: You, 2026-11-17: "i'd rather scale the base too actually, like if a person's ride uses that line at all it gets charged the higher base. i guess if there are lots of legs, we use the max of them." Today the multiple (T-3567) scales only the fare above the base, because the base is charged once per trip in mode choice; on the real save's line 14 the base is 61% of a ride's fare.
   - Goal: A trip that uses a line pays that line's multiple on the base too, the largest multiple among its legs; demand and income agree, and at 1.00 everything is unchanged.
