@@ -38,7 +38,8 @@ const snap = () => page.evaluate(() => {
 });
 const quote = (edges, stations, level, kind) => page.evaluate(async ([edges, stations, level, kind]) => {
   const { queryClock } = await import('/src/workers/clockClient.ts');
-  const d = await queryClock({ what: 'rebuildQuote', edges, stations, level, kind });
+  // the quote's length, the quote, then why pieces are refused (game/rebuild.ts `fetchRebuildQuote`)
+  const a = await queryClock({ what: 'rebuildQuote', edges, stations, level, kind }), d = a.subarray(1, 1 + a[0]);
   const refused = d[3], end = 5 + refused + d[1], beyond = [];
   for (let k = end; k + 2 < d.length; k += 3) beyond.push({ edge: d[k], from: d[k + 1], m: d[k + 2] });
   return { price: d[0], changed: Array.from(d.subarray(5 + refused, end), Number), stations: d[2], refused: Array.from(d.subarray(5, 5 + refused), Number), red: d[4], beyond };

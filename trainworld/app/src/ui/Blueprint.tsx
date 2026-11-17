@@ -8,7 +8,7 @@ import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
 import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
-import { type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
+import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
@@ -280,7 +280,7 @@ export function BlueprintBar() {
       )}
       {s.ones + s.twos > 0 && <TrackCountButtons value={chosenTracks} onPick={pickTracks} />}
       {s.built && (
-        <button class="btn text" data-tip={rebuildTip(q)} disabled={!q || (!q.changed.length && !q.stations && !q.refused.length)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
+        <button class="btn text" data-tip={rebuildTip(q)} disabled={!canRebuild(q)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
       )}
       {!s.built && (
         <div class="group">

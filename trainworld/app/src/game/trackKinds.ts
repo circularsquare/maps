@@ -22,7 +22,8 @@ export interface TrackSpec {
 }
 
 const LEVEL_MULT = [2.0, 1.6, 1.0, 0.5, 1.0, 1.5, 2.0] as const;
-const HSR_COST = 1.5;
+/** high-speed track's price over regular's */
+export const HSR_COST = 1.5;
 
 export const TRACK_SPECS: Record<TrackKind, TrackSpec> = {
   regular: { id: 0, family: 0, vCapKmh: 160, minRadius: 25, levelMult: LEVEL_MULT, terrain: 1, water: 1, upkeep: 1, roadCrossings: true },

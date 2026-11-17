@@ -11,6 +11,7 @@ import { describeIssues } from "../../game/issues";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
 import { PieceLimit } from "./PieceLimit";
+import { PieceRebuild } from "./PieceRebuild";
 import { Actions, Built, Check, Chip, ConstructRemove, Icon, Row } from "../widgets";
 import { setOneWay } from "../../game/oneWay";
 import { useClockQuery } from "../useClockQuery";
@@ -59,8 +60,13 @@ export function TrackInspector({ edge }: { edge: number }) {
       <div class="sub muted">
         {tSeries([distance(e.lengthM), lv])}
       </div>
-      <ConstructRemove built={e.built} construct={construct} constructLabel={t("trackInspector.construct", { price: money(cost) })} remove={remove}
-        removeLabel={t("trackInspector.remove", { kind: e.crossover ? "crossover" : e.built ? "track" : "blueprint" })} removeTip="" />
+      {/* T-3408: built track rebuilds here, Rebuild beside Remove */}
+      {e.built && !e.crossover ? (
+        <PieceRebuild key={e.id} e={e}><button class="btn text" onClick={remove}>{t("trackInspector.remove", { kind: "track" })}</button></PieceRebuild>
+      ) : (
+        <ConstructRemove built={e.built} construct={construct} constructLabel={t("trackInspector.construct", { price: money(cost) })} remove={remove}
+          removeLabel={t("trackInspector.remove", { kind: e.crossover ? "crossover" : e.built ? "track" : "blueprint" })} removeTip="" />
+      )}
       <Built built={e.built} />
       {!e.built && e.off && <p class="muted" data-tip={t("trackInspector.disabledTip")}>{t("trackInspector.disabled")}</p>}
       {e.tracks === 1 && !e.crossover && (

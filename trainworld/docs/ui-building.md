@@ -869,7 +869,8 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   change."), or that none could. The phone bar's one button's hover is the level's name ("Viaduct"),
   or "Level of the selected track: mixed".
 - **Rebuild** [T-3059; `game/rebuild.ts`, `TrackApi::rebuild_quote` and `rebuild_pieces` in
-  `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060]: a pick of built track and
+  `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060; one piece also from the track inspector,
+  "Rebuild in the track inspector" below]: a pick of built track and
   stations has the same level buttons and Regular / High speed as a blueprint pick, plus **Tram** (T-3088, the
   track tool's word), but they only choose (the chosen ones are solid; nothing is chosen at first), and a
   **Rebuild** button (wrench icon and word) spends: it is greyed until a choice is made. The track and the
@@ -946,7 +947,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
 - **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
-  says "Remove track") and the lines here [T-1669]. Its title carries **Add point** [T-2951], an
+  says "Remove track", beside Rebuild, below) and the lines here [T-1669]. Its title carries **Add point** [T-2951], an
   icon of track with a square on it and a plus, on blueprint track that is not a crossover: a point
   halfway along the piece, as a double click adds one (hover "Add a point halfway along"). On single rail track it has the
   **Run trains one way** switch, **Reverse direction** and **Use automatic way** ([track-and-service.md](track-and-service.md)
@@ -965,6 +966,14 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   on, a **Speed limit** row with a stepper (steps of 10 km/h, 40 up to the cap, starting at the cap) holds trains on
   this piece to it; free, one undoable edit a step ([track-and-service.md](track-and-service.md) "A piece's speed
   limit"). One piece at a time: the Select tool's bar has no limit.
+- **Rebuild in the track inspector** [T-3408; `ui/inspector/PieceRebuild.tsx`]: built track that is not a crossover
+  has, under its header, the track count buttons (1-line and 2-line icons) and, on rail, Regular / High speed, with
+  the piece's own on; then **Rebuild** (wrench and word) on the left of the row whose right is Remove track; then a
+  grey line "Use the Select tool (4) to rebuild longer stretches" (no key on a phone). It is the Select bar's
+  Rebuild (below) for a pick of this one piece and no stations: the same choices (picking what the piece has
+  drops the choice), quote, hover, question, price and notice, through the same code (`rebuildPieces` in
+  `game/rebuild.ts`), and final like it. Greyed Rebuild has no hover. No level buttons and no Tram here: the level
+  is the bar's, and one piece can't change family alone.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

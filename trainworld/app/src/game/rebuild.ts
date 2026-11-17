@@ -46,6 +46,37 @@ export const rebuildQuote = signal<RebuildQuote | null>(null);
 const KIND = { regular: 1, hsr: 2, tram: 3 } as const;
 const version = computed(() => world.value?.version);
 
+/** What to rebuild (built pieces and stations) and what to: the Select bar's pick and choices, or one piece's
+ * in the track panel (T-3408). A null choice keeps what the pieces have. */
+export interface RebuildTarget { edges: number[]; stations: number[] }
+export interface RebuildChoice { level: Level | null; kind: RebuildKind | null; tracks: 1 | 2 | null }
+
+const opOf = (p: RebuildTarget, c: RebuildChoice) =>
+  ({ edges: p.edges, stations: p.stations, level: c.level, kind: c.kind ? KIND[c.kind] : 0 as const, tracks: c.tracks ?? 0 as const });
+
+/** The track model's quote for rebuilding `p` to `c`; null when the clock has no answer. */
+export async function fetchRebuildQuote(p: RebuildTarget, c: RebuildChoice): Promise<RebuildQuote | null> {
+  const answer = await queryClock({ what: "rebuildQuote", ...opOf(p, c) });
+  if (!answer) return null;
+  // the quote, then why pieces are refused (clock.worker.ts `rebuildQuoteAnswer`)
+  const d = answer.subarray(1, 1 + answer[0]);
+  const kinds = String.fromCharCode(...answer.subarray(1 + answer[0])).split("\n").filter((k) => k.startsWith("NoSingle:"));
+  const refused = d[3], red = d[4], end = 5 + refused + d[1];
+  const beyond: RebuildQuote["beyond"] = [];
+  for (let k = end; k + 2 < d.length; k += 3) beyond.push({ edge: d[k], from: d[k + 1], m: d[k + 2] });
+  return {
+    price: d[0],
+    changed: Array.from(d.subarray(5 + refused, end), Number),
+    stations: d[2],
+    refused: Array.from(d.subarray(5, 5 + refused), Number),
+    why: describeIssues(kinds),
+    red: Array.from(d.subarray(5, 5 + red), Number),
+    beyond,
+  };
+}
+
+const barChoice = (): RebuildChoice => ({ level: rebuildLevel.peek(), kind: rebuildKind.peek(), tracks: rebuildTracks.peek() });
+
 let seq = 0;
 effect(() => {
   const p = bpPicked.value, level = rebuildLevel.value, kind = rebuildKind.value, tracks = rebuildTracks.value;
@@ -56,23 +87,8 @@ effect(() => {
     rebuildQuote.value = null;
     return;
   }
-  void queryClock({ what: "rebuildQuote", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0, tracks: tracks ?? 0 }).then((answer) => {
-    if (mine !== seq || !answer) return;
-    // the quote, then why pieces are refused (clock.worker.ts `rebuildQuoteAnswer`)
-    const d = answer.subarray(1, 1 + answer[0]);
-    const kinds = String.fromCharCode(...answer.subarray(1 + answer[0])).split("\n").filter((k) => k.startsWith("NoSingle:"));
-    const refused = d[3], red = d[4], end = 5 + refused + d[1];
-    const beyond: RebuildQuote["beyond"] = [];
-    for (let k = end; k + 2 < d.length; k += 3) beyond.push({ edge: d[k], from: d[k + 1], m: d[k + 2] });
-    rebuildQuote.value = {
-      price: d[0],
-      changed: Array.from(d.subarray(5 + refused, end), Number),
-      stations: d[2],
-      refused: Array.from(d.subarray(5, 5 + refused), Number),
-      why: describeIssues(kinds),
-      red: Array.from(d.subarray(5, 5 + red), Number),
-      beyond,
-    };
+  void fetchRebuildQuote(p, { level, kind, tracks }).then((q) => {
+    if (mine === seq && q) rebuildQuote.value = q;
   });
 });
 
@@ -98,26 +114,43 @@ export function quoteLength(q: RebuildQuote): number {
   return lengthOf(q.changed) + q.beyond.reduce((s, b) => s + b.m, 0);
 }
 
-/** The Rebuild button's hover: the length and what it becomes, the price, and how many pieces cannot change. */
-export function rebuildTip(q: RebuildQuote | null): string {
-  const s = pickedState.peek(), n = s.edges + s.stations;
+/** The Rebuild button's hover: the length and what it becomes, the price, and how many of the `n` picked
+ * pieces and stations cannot change. */
+export function rebuildTipFor(q: RebuildQuote | null, c: RebuildChoice, n: number): string {
   if (!q) return t("rebuild.pickTip");
   if (!q.changed.length && !q.stations) return q.refused.length ? [t("rebuild.cantChange", { all: true, one: n === 1, n: q.refused.length, total: n }), q.why].filter(Boolean).join("\n") : t("rebuild.pickTip");
   return [
-    t("rebuild.tip", { length: distance(quoteLength(q)), to: rebuildTo(rebuildLevel.peek(), rebuildKind.peek(), rebuildTracks.peek()) }),
+    t("rebuild.tip", { length: distance(quoteLength(q)), to: rebuildTo(c.level, c.kind, c.tracks) }),
     // T-3321: double track made single, and nothing else, costs nothing
     q.price > 0 ? money(q.price * 1e6) : t("rebuild.free"),
     ...(q.refused.length ? [t("rebuild.cantChange", { all: false, one: false, n: q.refused.length, total: n }), q.why] : []),
   ].filter(Boolean).join("\n");
 }
 
+/** The Select bar's Rebuild hover, for its pick and choices. */
+export function rebuildTip(q: RebuildQuote | null): string {
+  const s = pickedState.peek();
+  return rebuildTipFor(q, barChoice(), s.edges + s.stations);
+}
+
+/** Whether a Rebuild button for quote `q` does anything: it asks, or says why nothing can change. */
+export const canRebuild = (q: RebuildQuote | null) => !!q && (q.changed.length > 0 || q.stations > 0 || q.refused.length > 0);
+
 /** Ask, then rebuild the pick. A short purse, or terrain not loaded, is explained by the refusal; so
  * is a pick none of which can change, which is not asked about. */
 export function rebuildPicked() {
-  const p = bpPicked.peek(), q = rebuildQuote.peek(), level = rebuildLevel.peek(), kind = rebuildKind.peek(), tracks = rebuildTracks.peek();
-  if (!p.built || !q || (!q.changed.length && !q.stations && !q.refused.length)) return;
+  const p = bpPicked.peek();
+  if (!p.built) return;
+  rebuildPieces(p, barChoice(), rebuildQuote.peek(), () => { rebuildLevel.value = rebuildKind.value = rebuildTracks.value = null; });
+}
+
+/** Ask, then rebuild `p` to `c` as quoted by `q` (the Select bar's pick, or one piece from the track panel,
+ * T-3408); `done` runs once the rebuild has gone through. */
+export function rebuildPieces(p: RebuildTarget, c: RebuildChoice, q: RebuildQuote | null, done?: () => void) {
+  if (!q || !canRebuild(q)) return;
+  const { level, kind, tracks } = c;
   if (!q.changed.length && !q.stations) {
-    void edit({ op: "rebuild", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0, tracks: tracks ?? 0 }).then((a) => {
+    void edit({ op: "rebuild", ...opOf(p, c) }).then((a) => {
       if (!a.ok && !a.issues.length) say(t("rebuild.none"), true);
     });
     return;
@@ -130,12 +163,12 @@ export function rebuildPicked() {
   const go = async () => {
     ask.value = null;
     const row = heightRunLength();
-    const a = await edit({ op: "rebuild", edges: p.edges, stations: p.stations, level, kind: kind ? KIND[kind] : 0, tracks: tracks ?? 0 });
+    const a = await edit({ op: "rebuild", ...opOf(p, c) });
     if (!a.ok) {
       if (!a.issues.length) say(t("rebuild.none"), true);
       return;
     }
-    rebuildLevel.value = rebuildKind.value = rebuildTracks.value = null;
+    done?.();
     const skipped = a.skipped ?? 0;
     if (level !== null && skipped < n) noteHeight(row, n);
     say(skipped ? t("rebuild.doneSome", { done: n - skipped, n, to, skipped }) : t("rebuild.done", { n, to }));

@@ -529,6 +529,9 @@ body.resizing, body.resizing * { user-select: none; }
 .pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
 /* T-1134: an inspector's buttons, in a row under its header */
 .inspector-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin: 8px 0; gap: 6px 8px; }
+/* T-3408: a built piece's rebuild choices, then the hint pointing to the Select tool */
+.piece-rebuild { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 8px 0; }
+.piece-rebuild-hint { margin: -2px 0 12px; }
 
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }

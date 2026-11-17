@@ -2696,6 +2696,7 @@
   "trackInspector.reverse": "Reverse direction",
   "trackInspector.oneWayAutoTip": "Set by the track it joins",
   "trackInspector.autoWay": "Use automatic way",
+  "trackInspector.rebuildHint": "{touch, select, true {Use the Select tool to rebuild longer stretches} other {Use the Select tool ({key}) to rebuild longer stretches}}",
   "trackHover.oneWay": "One way",
   "oneWay.question": "{reverse, select, true {Reverse this track?} other {Run trains one way on this track?}}",
   "oneWay.yes": "{reverse, select, true {Reverse} other {Run one way}}",
