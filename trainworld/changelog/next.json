@@ -882,6 +882,66 @@
       "rev": 1,
       "area": "performance",
       "fix": false
+    },
+    {
+      "id": "c068",
+      "text": "big games used less memory: demand ran on fewer cores for them, about 0.5 GB less on a New York sized network and 3 GB less on all of China, with loads up to a third slower",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3373",
+      "by": "memA",
+      "at": "2026-11-16T23:06:24Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c069",
+      "text": "the use more cores hover says it uses more memory to work out riders faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3496",
+      "by": "orchestrator",
+      "at": "2026-11-16T23:27:26Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c070",
+      "text": "games needed less memory, about 130 MB less on phones and 50 to 100 MB less on desktop: empty map layers stopped holding a screen-sized image, and the tutorial's rings covered only the button they pointed at",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3497",
+      "by": "phone2",
+      "at": "2026-11-17T00:16:47Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c071",
+      "text": "the game used about 130 MB less memory on desktop once a city's trips to other cities were worked out",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3493",
+      "by": "phonemem",
+      "at": "2026-11-17T00:41:15Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c072",
+      "text": "each solving demand worker held about 60 MB less once the regional market was open, about 190 MB less in all on a desktop game's first line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2496",
+      "by": "wasmmem",
+      "at": "2026-11-17T01:25:51Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
     }
   ]
 }

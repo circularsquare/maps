@@ -1821,7 +1821,7 @@
   "settingsTab.map": "Map",
   "settingsTab.mapLabels": "Map labels",
   "settingsTab.moreCores": "Use more cores",
-  "settingsTab.moreCoresTip": "Runs up to 5 demand workers, each using about 400 MB of memory. Reload to apply.",
+  "settingsTab.moreCoresTip": "Works out riders faster after a load or an edit by using more memory, up to 5 demand workers at about 400 MB each. Reload to apply.",
   "settingsTab.mobileIntercity": "Calculate intercity trips",
   "settingsTab.mobileIntercityTip": "if enabled, game may crash on phones with <4gb of RAM",
   "settingsTab.normal": "Normal",

@@ -237,11 +237,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
   - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
   - Goal: The water mask loads on that save, or the failure is understood and filed.
-- T-3464 [P2] {L:world-map} {waits:Anita} Freight and abandoned rail in the All setting
-  - Context: You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
-  - Need from Anita: yes to downloading fresh Geofabrik extracts for the 118 regions (one at a time, each deleted after use), starting with one region to look at first.
+- T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting (taking, 2026-11-16, agent freightbuild)
+  - Context: Downloads approved by you 2026-11-16 ("ok, can start download"); colours approved ("track looks good"). You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
   - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36 and was tried on Chicago; the worldwide build (about 1.5-3 h on 2 cores plus downloads, 150-400 MB) goes in an overnight batch, then R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
   - Other: notes/T-3464.md
+- T-3495 [P2] {L:world-map} {after:T-3464} Snap track to freight and all real rail
+  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track". The real-line snap (realSnap.ts) follows passenger rail only; T-3464 builds freight and abandoned rail tiles for the All setting.
+  - Goal: With All shown, new track can snap along freight and abandoned real rail as it does along passenger rail.
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
@@ -255,8 +257,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
   - Goal: An idle worker's spare memory goes back, with no solve slower than now.
   - Other: notes/T-3472.md
-- T-3493 [P2] {L:memory} Peaks from data the page throws away (taking, 2026-11-16, agent phonemem)
-  - Context: From T-3472: the page briefly holds up to 1.2 GB of data it is about to discard, which can push a phone or small laptop over.
+- T-3493 [P2] {L:memory} Peaks from data the page throws away
+  - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; now stored at 94 MB; T-2136 would drop it. The all-China peaks of up to 1.2 GB between collections are not traced yet.
   - Goal: The biggest peaks found and cut.
   - Other: notes/T-3472.md
 - T-3480 [P3] {L:buses} Buses keep to one-way streets, as a setting
@@ -292,7 +294,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
   - Goal: State machines B and C are built.
   - Other: See notes/T-2843.md.
-- T-3160 [P1] {L:memory} Phone memory left over from T-2802 (taking, 2026-11-16, agent phonemem)
+- T-3160 [P1] {L:memory} Phone memory left over from T-2802
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
@@ -343,10 +345,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Which market packs were open at a worker start changes its corridor table; on the real save two tables were ten rows apart.
   - Goal: Longer trips depend only on the world rows, whatever order packs arrive.
   - Other: notes/T-1354.md, notes/T-1174.md
-- T-1366 [P3] {L:memory} Demand workers never grow back
-  - Context: After the memory cap trims the solving workers, a page stays at 1-2 workers and solves slower.
-  - Goal: The pool adds a worker back when projected memory has room, without flapping.
-  - Other: notes/T-1205.md
 - T-1367 [P3] {L:memory} Demand worker heap keeps closed zones
   - Context: After zones or a market close, a worker's heap still holds them until its next solve (all-China: 2,041 MB at rest).
   - Goal: A worker frees closed zones promptly so the restart need not wait for a solve.
@@ -363,10 +361,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: The page holds a 5.9M-row world corridor table, 118 MB on the real save, growing with the square of the places.
   - Goal: The page keeps no full table; it asks a market's worker for a place's rows.
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
-- T-2496 [P2] {L:memory} Demand worker WASM is 367 MB
-  - Context: A solving worker's WASM is 367 MB on the real save, and two workers hold the same packs.
-  - Goal: Memory is counted per structure in Rust, then trimmed; likely 50-150 MB a worker.
-  - Other: Rust work, tell maps-17 first. notes/T-2485.md.
 
 ## Interface
 - T-3445 [P3] {L:track-speed} {after:a terrain rework decision} Ramp length sets the speed limit
@@ -833,8 +827,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Design is done and waits on your five calls. 2026-11-16 you want to transcribe handwritten thoughts and discuss first.
   - Goal: The player has a clear model of single, double and quad track, and of crossovers.
   - Other: notes/T-3365.md.
-- T-3373 [P1] {L:memory} Demand workers share one copy of the zone data (taking, 2026-11-16, agent memA)
-  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably.
+- T-3373 [P1] {L:memory} Demand workers share one copy of the zone data
+  - Context: Each solving worker holds its own copy of the zones (250-550 MB a big city, 1.3 GB all-China); you saw 7.4 GB in Firefox after 43 minutes. You, 2026-11-16: do A (fewer, faster workers capped by memory on big saves, 6-10 h, reverses T-3072) then B (split zones and the market between workers, T-1560, 25-40 h); queue C (one shared memory, threaded WASM, 60-100 h, Cloudflare header) only if it would help noticeably. A is built, not landed: NYC runs 2 workers (-0.5 GB, load about 15 s slower), all-China 1 (-2.9 GB, 30-50 s slower), figures identical.
   - Goal: A then B built, each with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
 - T-3382 [P3] {L:twstats} Where people play in twstats
@@ -945,7 +939,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
-- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent scancheck)
+- T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies (taking, 2026-11-16, agent scancheck2)
   - Context: Stage 1 (server) passed its checker, not deployed. Stage 2 (the game) landed 7cd2f5ac and is on 8800, not published; it must not ship before the stage 1 server is deployed. Stage 3 (the recurring scan, shonei-server 85e2945) is built and being checked; then the server deploy of stages 1 and 3 waits for your yes, in daytime.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
