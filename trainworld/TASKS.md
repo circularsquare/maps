@@ -287,6 +287,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3593 [P2] {L:small-fixes} Show all button for hidden track levels (taking, 2026-11-17, agent smallui)
+  - Context: Your pad, 2026-11-17: "we should rpobably add a "show all" button next to the track level visbility toggles, that only shows up if anything is hidden."
+  - Goal: A "Show all" button beside the track level toggles, shown only while a level is hidden, shows every level.
+- T-3594 [P2] {L:map-look} Thinner ring on the hollow bullet (taking, 2026-11-17, agent smallui)
+  - Context: Your pad, 2026-11-17: "we added a hollow bullet shape in addition to circle, rectangle, and diamond. lets actually make the hollow border a little thinner. we made it thick to contrast with line groups but i think it shoudl ideally match the font width of a letter. this is slightly bigger than the border of a line group so i think itll be still mostly differentiable. and i think itll look nicer." From T-3436.
+  - Goal: The hollow bullet's ring is as thick as the stroke of the bullet's letter, still a little thicker than a line group's ring.
 - T-3592 [P2] {L:feedback} Board changelog: drag items into and out of groups (taking, 2026-11-17, agent groupdrag)
   - Context: You, 2026-11-17: "in general for the future let me drag and drop it into a group." Today a drag stays inside its own parent (T-3590), so moving an item under a group takes `changelog.py set --under`.
   - Goal: Dragging an item onto a group puts it under that group, and dragging a child out puts it back at the top level; the order and parent are saved.
