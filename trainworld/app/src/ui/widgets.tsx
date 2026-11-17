@@ -6,7 +6,7 @@ import { levelLabel } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import { IDLE_TIP, isIdleLine } from "../game/lineRunning";
 import { PLANE_PATH } from "../map/glyphs";
-import { bulletDraw, bulletEpoch, bulletTextSoon, type BulletDraw } from "./bullet";
+import { bulletDraw, bulletEpoch, bulletText, bulletTextSoon, type BulletDraw } from "./bullet";
 import { shapeOf } from "../game/lineShapeState";
 import { LINE_SHAPES, type LineShape, type PickShape } from "../game/lineShape";
 import { LEVELS, type Level, type LineInput } from "../game/types";
@@ -196,7 +196,8 @@ export function Chip({ line, size = "", plain, pick, gone, tip }: { line: LineIn
 
 /** T-3319: a shape alone, sized as a 12 px bullet of it would be. */
 export function ShapeIcon({ shape }: { shape: LineShape }) {
-  const b = bulletDraw({ w: 12, h: 12, x: 0, y: 0, top: 0, iw: 0, ih: 0 }, shape);
+  void bulletEpoch.value;
+  const b = bulletDraw({ w: 12, h: 12, x: 0, y: 0, top: 0, iw: 0, ih: 0, stem: bulletText("I", "")?.stem ?? 2 }, shape);
   return <svg class="shape-icon" style={{ width: b.w + "px", height: b.h + "px" }} aria-hidden="true"><BulletOutline b={b} /></svg>;
 }
 

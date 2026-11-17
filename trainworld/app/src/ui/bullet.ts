@@ -40,6 +40,8 @@ export interface BulletText {
   /** the ink box's width and half its height, which a diamond is sized round (T-3319) */
   iw: number;
   ih: number;
+  /** the bold font's stem width at this size (an "I"'s ink width), which the outline bullet's ring is */
+  stem: number;
 }
 
 let ctx: CanvasRenderingContext2D | null = null;
@@ -109,11 +111,12 @@ export function bulletText(text: string, size: BulletSize, zoom = 1): BulletText
   ctx.textBaseline = "alphabetic";
   const m = ctx.measureText(text);
   const k = FONT_PX[size] / MEASURE_PX, h = HEIGHT[size];
+  const mi = ctx.measureText("I"), stem = (mi.actualBoundingBoxRight + mi.actualBoundingBoxLeft) * k;
   const w = Math.max(h, m.width * k + 2 * PAD[size]);
   const y = h / 2 + ((m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2) * k;
   const snapped = scale > 0 ? Math.round(y * scale) / scale : y;
   const v: BulletText = { w, h, x: w / 2 - ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) * k, y: snapped, top: snapped - y,
-    iw: (m.actualBoundingBoxRight + m.actualBoundingBoxLeft) * k, ih: ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / 2) * k };
+    iw: (m.actualBoundingBoxRight + m.actualBoundingBoxLeft) * k, ih: ((m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / 2) * k, stem };
   const ok = [v.w, v.x, v.y, v.top].every(Number.isFinite) && m.width > 0;
   // a face still loading would be measured in the fallback: kept until it loads, then measured again
   // (T-1021: a CJK symbol measured once a draw while its face loaded, 0.5 ms each)
@@ -186,8 +189,8 @@ export const BUS_CORNER = 0.18;
  * side by side (a square of the circle's height looks bigger, a diamond of it smaller); the diamond
  * reaches past the bullet's box above and below. */
 const SQUARE_SIDE = 0.94, DIAMOND_SIDE = 1.14;
-/** T-3436: the outline bullet's stroke is a line group's (GroupPill's 2 px border) plus this, so the two read apart. */
-const GROUP_RING = 2, OUTLINE_EXTRA = 0.8;
+/** T-3594: the outline bullet's ring is as thick as its letter's stem (`BulletText.stem`), a little thicker than a line
+ * group's (GroupPill's 2 px border), so the two still read apart. */
 /** T-2194: a pill is at least this many times as wide as it is tall, fully rounded. */
 const PILL_W = 1.5;
 
@@ -217,7 +220,7 @@ export function bulletDraw(b: BulletText, shape: LineShape): BulletDraw {
   }
   if (shape === "outline") {
     // an outline-only circle (or pill): inset by half the stroke so it fills the same box as a circle
-    const sw = GROUP_RING + OUTLINE_EXTRA;
+    const sw = b.stem;
     return { w: b.w, h, x: b.x, y: b.y, rect: { x: sw / 2, y: top + sw / 2, w: b.w - sw, h: h - sw, r: (h - sw) / 2, ring: sw } };
   }
   const w = shape === "pill" ? Math.max(b.w, PILL_W * h) : b.w;

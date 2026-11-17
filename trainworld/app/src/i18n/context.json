@@ -1876,6 +1876,7 @@
   "settingsTab.terrain": "Settings, Show: checkbox for hill shading on the map.",
   "settingsTab.terrainTip": "Hover on the Terrain checkbox.",
   "settingsTab.showLevels": "Settings, Show: label over a row of track level buttons (+3 to -3), each lit while that level is drawn; a click draws that level faint and not clickable, or normal again.",
+  "settingsTab.showAllLevels": "Settings, next to Show levels: button that draws every track level normally again; only visible while a level is faint.",
   "settingsTab.busesFerries": "Settings, Show: checkbox under the level buttons; unticked, bus and ferry lines, their routes, stops and vehicles are not drawn on the map. A plural noun like the other items.",
   "settingsTab.theme": "Settings: section heading for light or dark, and the colour theme.",
   "settingsTab.trains": "Settings, Show: checkbox for the trains drawn moving on the map.",

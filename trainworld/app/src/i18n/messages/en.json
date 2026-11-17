@@ -1881,6 +1881,7 @@
   "settingsTab.terrain": "Terrain",
   "settingsTab.terrainTip": "Show terrain. Steep terrain costs more to build on.",
   "settingsTab.showLevels": "Show levels",
+  "settingsTab.showAllLevels": "Show all",
   "settingsTab.busesFerries": "Buses and ferries",
   "settingsTab.theme": "Theme",
   "settingsTab.trains": "Trains",

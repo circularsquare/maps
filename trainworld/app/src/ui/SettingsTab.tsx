@@ -14,7 +14,7 @@ import { DETAIL_RANGE } from "../map/demandOverlay";
 import { makeSandbox, saveGuide } from "../workers/clockClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
-import { hiddenLevels, hideBuses, toggleLevel } from "../game/lineVisibility";
+import { hiddenLevels, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -137,7 +137,12 @@ export function SettingsTab() {
       </div>
       {/* T-3420: every level lit; a click draws that level's track, lines, stations and trains faint and not pickable (T-3560) while the page is open */}
       <div class="level-show">
-        <span>{t("settingsTab.showLevels")}</span>
+        <div class="level-head">
+          <span>{t("settingsTab.showLevels")}</span>
+          {/* the space is kept while nothing is hidden, so the row below does not move */}
+          <button class="btn text mini" style={{ visibility: hiddenLevels.value.size ? undefined : "hidden" }} tabIndex={hiddenLevels.value.size ? undefined : -1}
+            aria-hidden={!hiddenLevels.value.size} onClick={showAllLevels}>{t("settingsTab.showAllLevels")}</button>
+        </div>
         <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />
       </div>
       <div class="checks">

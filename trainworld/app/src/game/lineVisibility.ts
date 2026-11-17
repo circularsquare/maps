@@ -50,5 +50,8 @@ export function toggleLevel(l: Level) {
   hiddenLevels.value = next;
 }
 
+/** Show every level. */
+export function showAllLevels() { if (hiddenLevels.peek().size) hiddenLevels.value = new Set(); }
+
 /** `hiddenLevels` as the shaders' bits, one per level from -3. */
 export const levelBits = (s: ReadonlySet<Level>) => [...s].reduce<number>((m, l) => m | (1 << (l + 3)), 0);

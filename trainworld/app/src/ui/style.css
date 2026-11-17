@@ -424,6 +424,8 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box.vis-on .sort-head > .sort-btn:first-child { padding-left: calc(11 * var(--px) + 8px); }
 /* T-3420: Settings' Show levels, the label over the level buttons */
 :is(:root, :root[data-shade="dark"]) .level-toggles .btn.lv.on { border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); box-shadow: none; }
+.level-head { display: flex; align-items: center; gap: 10px; height: 24px; }
+.level-head .btn.text.mini { height: 22px; padding: 0 7px; font-size: 12px; }
 .level-show + .checks { margin-top: 8px; }
 .level-show { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 4px; }
 .row-ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; align-items: center; gap: 6px; padding: 3px 8px;
