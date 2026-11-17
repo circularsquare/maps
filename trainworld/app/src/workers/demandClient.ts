@@ -27,6 +27,7 @@
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
 import { t } from "../i18n";
+import { shareOf } from "../game/corridorShares";
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
@@ -303,7 +304,7 @@ function ownModes(t: CorridorTable | null, own: number): Float64Array | null {
     const { from, to, air, car } = t;
     for (let j = 0; j < t.n; j++) {
       const p = from[j] === own ? to[j] : to[j] === own ? from[j] : -1;
-      if (p >= 0 && p < INTERCITY_PLACES.length) (out[2 * p] = air[j]), (out[2 * p + 1] = car[j]);
+      if (p >= 0 && p < INTERCITY_PLACES.length) (out[2 * p] = shareOf(air[j])), (out[2 * p + 1] = shareOf(car[j]));
     }
     made.set(own, out);
   }

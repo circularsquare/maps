@@ -20,6 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, set_heap_step, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
+import { SHARE_ONE, shareCode } from "../game/corridorShares";
 import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { initWasm } from "./wasmInit";
@@ -1301,7 +1302,7 @@ function tableColumns(p: IntercityApi, make: boolean): { key: string; table: Cor
   });
   const longer = inPlace(raw!.intercityapi_corridor_rows_trips, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_trips(), (a) => {
     words(new Uint32Array(a.buffer, a.byteOffset, 2 * a.length));
-    return make ? (copies ? a : a.slice()) : null;
+    return make ? Float32Array.from(a) : null;
   });
   let commuteAt = new Uint32Array(0), commuteLegs = new Float64Array(0);
   inPlace(raw!.intercityapi_corridor_rows_commutes, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_commutes(), (legs) => {
@@ -1315,7 +1316,7 @@ function tableColumns(p: IntercityApi, make: boolean): { key: string; table: Cor
     commuteLegs = new Float64Array(at.length);
     for (let k = 0; k < at.length; k++) commuteLegs[k] = legs[at[k]];
   });
-  const air = new Float32Array(make ? n : 0), car = new Float32Array(make ? n : 0);
+  const air = new Uint16Array(make ? n : 0), car = new Uint16Array(make ? n : 0);
   inPlace(raw!.intercityapi_corridor_rows_modes, p, 4, (b, o, l) => new Float32Array(b, o, l), () => p.corridor_rows_modes(), (modes) => {
     const hasM = modes.length === 2 * n;
     // T-378: before any shares are known, all by car (1.0f is 0x3f800000)
@@ -1323,7 +1324,7 @@ function tableColumns(p: IntercityApi, make: boolean): { key: string; table: Cor
     for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j] : 0), 0x01000193);
     for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j + 1] : 0x3f800000), 0x01000193);
     if (!make) return;
-    if (hasM) for (let j = 0; j < n; j++) { air[j] = modes[2 * j]; car[j] = modes[2 * j + 1]; } else car.fill(1);
+    if (hasM) for (let j = 0; j < n; j++) { air[j] = shareCode(modes[2 * j]); car[j] = shareCode(modes[2 * j + 1]); } else car.fill(SHARE_ONE);
   });
   const key = `${n}:${(h >>> 0).toString(36)}`;
   return { key, table: longer ? { key, n, from, to, longer, commuteAt, commuteLegs, air, car } : null };

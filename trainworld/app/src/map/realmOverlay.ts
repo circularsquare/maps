@@ -25,7 +25,6 @@ import type { ShadeIn, ShadeOut } from "../workers/shade.worker";
 import { outsideZones } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
 import { packedOutlinesNow } from "./coarseOutlines";
-import { smallDevice } from "../workers/deviceMemory";
 import { whenGameReady } from "../game/loading";
 import { CITY_MARKS_MIN_ZOOM } from "./intercityView";
 import { ShadeLayer } from "./shadeLayer";
@@ -202,8 +201,8 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
     busy = true;
     worker!.postMessage({ kind: "cut", gen, ids } satisfies ShadeIn);
   };
-  // T-2794: a small device starts a worker per cut and ends it with its answer (the worker holds every zone's rings)
-  const lean = smallDevice();
+  // T-2794, T-3493: a worker per cut, ended with its answer (it held 32-42 MB all game on desktop); cuts come only
+  // when the realms shown change
   let loaded = false, waiting = false;
   const start = () => {
     const packed = packedOutlinesNow();
@@ -212,7 +211,8 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
       const w = new Worker(new URL("../workers/shade.worker.ts", import.meta.url), { type: "module" });
       w.onmessage = (e: MessageEvent<ShadeOut>) => {
         busy = false;
-        if (lean) { w.terminate(); worker = undefined; }
+        w.terminate();
+        worker = undefined;
         if (queued) {
           const q = queued;
           queued = null;
@@ -234,7 +234,7 @@ function shadeCutter(apply: (tri: Float64Array) => void) {
       gen++;
       last = { ids, outlines };
       // T-2794: the worker's rings of every zone wait for the load to end, the loading card still up
-      if (lean && !loaded) {
+      if (!loaded) {
         if (!waiting) {
           waiting = true;
           void whenGameReady().then(() => { loaded = true; if (last) this.cut(last.ids, last.outlines); });

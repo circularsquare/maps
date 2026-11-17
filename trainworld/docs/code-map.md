@@ -259,7 +259,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
   `pipeline/zone_water.py` (its windows over `--jobs` processes and cached in
   `data/work/zone_outlines_cache`, T-1977) and that sea alone (`coarseWater`) for the focused zone's shade, T-1145; `inOutline` is the point-in-outline test (a cell of the outline's grid no edge meets answers alone, `cellSays` in `workers/cityReach.ts`, T-1348; else its bands of latitude), for realms and the track's zones; it also gives `cityWithin` a place's zone by these outlines, and `readOutlinesForPlaces` is the clock worker's lean copy for that, T-1265; the file is fetched and parsed by the page alone and kept only as `PackedOutlines` (typed arrays, decoded a zone at a time, T-2794, T-3491), and the clock and shade workers get a copy of it, T-2802), `zoneLoading.ts` (zones still loading drawn grey with a loading
   bar, T-343), `realmOverlay.ts` (the realms not shown: one world shade with the shown zones cut out
-  by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026), drawn by
+  by `boundaryGeometry.ts`'s `ShadeCut` as triangles in `workers/shade.worker.ts` (T-1026; a worker per cut, ended with its answer, decoding only the zones a cut names, T-2794, T-3493), drawn by
   the custom layer `shadeLayer.ts` (T-1025), and a button each, T-975, T-1006), `zoneFocus.ts` (after each move: the focused and viewed zone, the nearby zones, and
   `zonesLoadForView`, the zoom test of `game/zones.ts` `ZONE_LOAD_ZOOM` that decides whether zones
   load for viewing, T-276, T-318, T-871).

@@ -24,6 +24,7 @@
 // meanwhile.
 
 import { t as tr } from "../i18n";
+import { shareOf } from "../game/corridorShares";
 import { tPlace } from "../i18n/places";
 import { computed, effect, signal } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
@@ -208,7 +209,7 @@ function totalsOf(t: CorridorTable): Float64Array {
   m = new Float64Array(Z * 3);
   for (let j = 0; j < t.n; j++) {
     const [a, b] = ends(t.from[j], t.to[j]);
-    const l = t.longer[j], f = l * t.air[j];
+    const l = t.longer[j], f = l * shareOf(t.air[j]);
     if (a >= 0) { m[3 * a] += l; m[3 * a + 2] += f; }
     if (b >= 0) { m[3 * b] += l; m[3 * b + 2] += f; }
   }

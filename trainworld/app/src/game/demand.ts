@@ -6,6 +6,7 @@
 // String()).
 
 import { t } from "../i18n";
+import { shareOf } from "./corridorShares";
 import { computed, signal } from "@preact/signals";
 import { activeCity, CITIES, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
@@ -138,11 +139,14 @@ export interface IntercityDemand { version: number; round: number; tripsPerDay: 
  * that fly and that drive (T-378). One table serves every result of a market (T-1008).
  */
 export interface CorridorTable {
-  key: string; n: number; from: PlaceIds; to: PlaceIds; longer: Float64Array;
+  key: string; n: number; from: PlaceIds; to: PlaceIds;
+  /** 32-bit (T-3493: 31 MB less on a one-city game; the world's total moves by 2e-10 of itself) */
+  longer: Float32Array;
   /** the rows with commute legs, ascending, and their legs; every other row has none (T-2485: 24k of
    * New York's 5.9M rows have any, so a full column was 47 MB of zeros) */
   commuteAt: Uint32Array; commuteLegs: Float64Array;
-  air: Float32Array; car: Float32Array;
+  /** in steps of 1 / SHARE_ONE (`shareOf`, game/corridorShares.ts) */
+  air: Uint16Array; car: Uint16Array;
 }
 /** A market's place numbers: 16 bits while it has fewer than 65,536 places (T-2485) */
 export type PlaceIds = Uint16Array | Uint32Array;
@@ -152,7 +156,7 @@ export type PlaceIds = Uint16Array | Uint32Array;
 export interface Corridors { table: CorridorTable; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array }
 
 export const NO_CORRIDORS: Corridors = {
-  table: { key: "", n: 0, from: new Uint16Array(0), to: new Uint16Array(0), longer: new Float64Array(0), commuteAt: new Uint32Array(0), commuteLegs: new Float64Array(0), air: new Float32Array(0), car: new Float32Array(0) },
+  table: { key: "", n: 0, from: new Uint16Array(0), to: new Uint16Array(0), longer: new Float32Array(0), commuteAt: new Uint32Array(0), commuteLegs: new Float64Array(0), air: new Uint16Array(0), car: new Uint16Array(0) },
   longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0),
 };
 
@@ -165,7 +169,7 @@ export interface CorridorFigures { trips: number; rail: number; air: number; car
 export function corridorAt(c: Corridors, j: number, k = railIndex(c, j), m = sortedIndex(c.table.commuteAt, j)): CorridorFigures {
   const t = c.table, tl = t.longer[j] * c.longerScale, cm = (m >= 0 ? t.commuteLegs[m] : 0) * c.commuteScale;
   const lr = k >= 0 ? c.longerRail[k] : 0, cr = k >= 0 ? c.commuteRail[k] : 0, rest = tl - lr;
-  return { trips: tl + cm, rail: lr + cr, air: rest * t.air[j], car: rest * t.car[j] + cm - cr, commutes: cm, commuteRail: cr };
+  return { trips: tl + cm, rail: lr + cr, air: rest * shareOf(t.air[j]), car: rest * shareOf(t.car[j]) + cm - cr, commutes: cm, commuteRail: cr };
 }
 
 /** Corridor `j`'s place in `railAt`, -1 when it has no rail. */
