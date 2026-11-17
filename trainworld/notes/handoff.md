@@ -33,7 +33,8 @@ maps-1c's:
   track end; DECISIONS). Pairing per her 11-17: nice to have, ~50 m between platforms, any number of one-way stops per
   leg. Checker straight after it reports. Old trees onewaystops and extendfix: remove once it's done.
 - l10n-shots (Sonnet, port 6186): pass 5 screenshots, may merge shorter wording; I commit messages/ after.
-- For after the publish (her 11-17 ask): idlemem (Opus, T-3492, 6182), capload (Sonnet, T-3559+T-3528, 6184),
+- For after the publish (her 11-17 ask): idlemem (Opus, T-3492, 6182), capload (Sonnet, T-3559+T-3528, 6184; done,
+  running smoke + demand lib, then a checker; land WITHOUT its changelog item, her word: revert the tree's next.json),
   snapbar (Sonnet, T-3516, 6188), icskip (Sonnet, T-3471, no Vite). trafficwidth (T-3580) DONE in its tree, smoke
   passed: land after the publish with `agent-tree.mjs finish trafficwidth ... --task T-3580`.
 - She wants a high-level update on the one-way station work now and then. Away a few hours from 22:00 UTC; said
@@ -52,7 +53,8 @@ maps-1c's:
 2. Leftover .tw-trees: onewaystops, extendfix (after onewaystops2), plus old c1, ferry45, fixes, freight,
    hotfix031-target, hover, touchrule, trackrebuild, safari-save-035, shenzhen, tt2, ttstyle, trams: look first.
 3. Later translation notes in scratchpad\l10n-rev-<x>\notes.md (es tu/infinitive mix, fr marketTrip tronçons, ko/zh
-   one-way trip word order).
+   one-way trip word order). Pass 5 (scratchpad\l10n-shots\notes.md): ru shows "km", "km/h" in Latin beside
+   translated "мин" (unit formatter? check other languages; file a task if real).
 
 ## Waiting on Anita
 - Nothing open.
