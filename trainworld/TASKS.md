@@ -700,6 +700,9 @@ Anita's playtest of 8800 (build 40593370), 2026-10-26 morning: the lighter map "
   - Context: T-2132's hold keeps a ribbon across gaps up to 50 m at every zoom, so a close ribbon can sit up to 25 m off its track.
   - Goal: Mix a held and an unheld profile by line width on screen, if the offset shows.
   - Other: notes/T-2058.md section 3e
+- T-3520 [P2] {L:achievements} Trainsfan achievement for 100 hours played (taking, 2026-11-17, agent trainsfan)
+  - Context: You, 2026-11-17: "lets maybe add an achievement for plyaing for 100 hours lol. can be called "trainsfan". we already track plytime roughly right?"
+  - Goal: An achievement named trainsfan earned at 100 hours played, in v0.4.0 if it's ready in time.
 - T-2150 [P3] {L:achievements} Sea crossing achievement
   - Context: Stage 3 of achievements. The sim would report each line's longest unbroken water run in LineStats.
   - Goal: A line crossing 10 km of unbroken water earns the Sea crossing. Needs its own worktree (WASM change).

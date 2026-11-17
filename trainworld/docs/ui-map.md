@@ -43,7 +43,7 @@ there is no high-speed class and no hover yet.
 
 ## Terrain (hill shading)
 
-**Terrain**, off by default [T-1270], switched by the mountain button beside the Build tab's price per km
+**Terrain**, on by default (Anita, 2026-11-17; a stored off from before was dropped once) [T-1270], switched by the mountain button beside the Build tab's price per km
 (T-1394) or Settings > Show: MapLibre's hillshade over the land cover and
 under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fetched to zoom 12 and
 stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
