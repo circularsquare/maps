@@ -283,7 +283,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3571 [P2] {L:world-map} New stations named after a nearby real station (taking, 2026-11-17, agent realstations)
   - Context: Your pad, 2026-11-17: "some people also requested that our suggested autopopulated station names could try taking a nearby irl station name, which is prob a good idea especially if theyre super super close, the person probably is just trying to recreate that station."
   - Goal: A station placed very close to a real station is suggested that station's name; otherwise naming is as today.
-- T-3572 [P2] {L:accounts-server} Money and costs much higher on another device (taking, 2026-11-17, agent devicemoney)
+- T-3572 [P2] {L:accounts-server} {waits:Anita} Money and costs much higher on another device
+  - Need from Anita: Store the chosen currency in each save so every device shows a game in the currency it was saved in (about 1-1.5 h), or only show a one-time note naming the currency on a new device (about 1 h)? Recommended: store it in the save.
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
 - T-3569 [P2] {L:checks} t3212 check: trains no longer meet at A-M-B (taking, 2026-11-17, agent t3212fix)
@@ -968,7 +969,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Since T-2419 (2026-11-04) the check's express overtakes the local where there is nowhere to pass: 75 of 1,248 frames drawn through each other.
   - Goal: t1965-follow passes at 1+1 and 4+2. Part of T-3264.
   - Other: notes/T-3264.md
-- T-3264 [P3] {L:trains-drawn} {after:v0.4.0} One fix for trains drawn through each other (taking, 2026-11-17, agent drawapart)
+- T-3264 [P3] {L:trains-drawn} {after:v0.4.0} One fix for trains drawn through each other
   - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Stage 0 (the t3264-overlaps check) done. You declined the narrowed trains of stage 1 and postponed the rest until after v0.4.0 (2026-11-17); your hunch is a local and an express on the same track.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
