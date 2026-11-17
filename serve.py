@@ -436,7 +436,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if code != 200:
                 return self.send_error(code)
             return self.send_json(200, {"ok": True})
-        fields = {k: obj[k] for k in ("edited", "hidden", "area", "fix", "parent") if k in obj}
+        fields = {k: obj[k] for k in ("edited", "hidden", "highlight", "area", "fix", "parent") if k in obj}
         try:
             if obj.get("op") == "delete":
                 code, item = changelog.delete_group(obj["id"], obj["rev"], str(path))
