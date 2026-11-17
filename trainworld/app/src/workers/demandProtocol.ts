@@ -188,6 +188,15 @@ export type ToDemand =
       freshParts?: boolean;
       /** T-1862 `?perfOff=noise`: a cluster keeps its result only on exactly the network it solved */
       exactKeep?: boolean;
+      /** T-3512 `?perfOff=localKeep`: an edit's local solve solves every period of the touched
+       * populations, the unchanged ones too, and the whole solve after it solves them again */
+      localAll?: boolean;
+      /** T-3512 `?perfOff=localSkip`: an edit's touched populations are solved locally first however
+       * much of the cluster's work they are */
+      alwaysLocal?: boolean;
+      /** T-3512, dev `?localShare=a,b`: solving worker i's own `LOCAL_SHARE_MAX`, so two workers can be
+       * made to disagree (one solving locally, one going straight to the whole solve) */
+      localShare?: number[];
       /** T-1733: the network's line ids (`lineN` order) and station ids (`stXY` order), so a worker
        * can carry what it holds solved over to the next network's route nodes */
       ids?: { lines: string[]; stations: string[] } }

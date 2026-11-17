@@ -1,0 +1,4 @@
+hang-new-1|&lod=fine|[{"t":"train","k":"low"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"undo"},{"t":"wait"}]|3|900
+hang-old-1|&lod=fine&perfOff=localKeep,localSkip|[{"t":"train","k":"low"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"undo"},{"t":"wait"}]|3|900
+hang-new-2|&lod=fine|[{"t":"train","k":"low"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"undo"},{"t":"wait"}]|3|900
+hang-old-2|&lod=fine&perfOff=localKeep,localSkip|[{"t":"train","k":"low"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"undo"},{"t":"wait"}]|3|900

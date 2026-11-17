@@ -182,6 +182,31 @@ function keepTrail(p: Population, q: number, r: number) {
   if (r === 0) t[q] = [];
   (t[q] ??= [])[r] = v;
 }
+/** T-3512: the trails of the periods in `mask` put back after `disturbed` dropped them (`saved`:
+ * each population's trail before), for periods kept with their inputs unchanged */
+function keepTrails(saved: Map<Population, (Float32Array | undefined)[][] | undefined>, mask: number) {
+  if (!mask) return;
+  for (const [p, was] of saved) {
+    if (!was) continue;
+    const t = trail.get(p) ?? [];
+    for (let q = 0; q < PERIODS.length; q++) if (mask & (1 << q) && was[q] && !t[q]) t[q] = was[q];
+    trail.set(p, t);
+  }
+}
+/** T-3512: a population's ms over every round of each period's last whole solve here, its passes alone */
+const passMs = new WeakMap<Population, number[]>();
+function addPass(p: Population, q: number, round: number, ms: number) {
+  let v = passMs.get(p);
+  if (!v) passMs.set(p, (v = []));
+  v[q] = (round === 0 ? 0 : v[q] ?? 0) + ms;
+}
+/** T-3512: an edit's touched populations taking this share of their changed periods' passes or more
+ * are solved whole at once: a local solve then shows its figures hardly sooner than the whole solve
+ * would, and puts the whole solve that much later (the real New York save: New York and its county
+ * are about 3/4 of the cluster, local 50 s and whole 70 s, against 70 s whole alone). The shares are
+ * timed passes and move with the machine's load: New York's touched 46-79% across runs, all of China's
+ * 10-16%, so the line sits in the gap between them, not in New York's spread */
+const LOCAL_SHARE_MAX = 0.35;
 /** T-756: whole network route node -> a view's, or -1 (made when first asked) */
 const nodeLocals = new WeakMap<PopView, Int32Array>();
 function nodeLocal(v: PopView, nodes: number): Int32Array {
@@ -1819,6 +1844,24 @@ async function run() {
       const firsts = job.barrier && job.focused ? [...(job.next ?? []), ...own] : [...own, ...(job.next ?? [])];
       const rank = (c: JobCluster) => { const k = firsts.findIndex((id) => c.cities.includes(id)); return k < 0 ? firsts.length : k; };
       if (firsts.length) dirty.sort((a, b) => rank(a) - rank(b));
+      // T-3512: this worker's periods every population of c holds from c's last whole solve on these
+      // inputs (setUp's test): a local solve keeps them as they are, so the whole solve after it keeps them too
+      const keptOf = (c: JobCluster) => (job.fresh || job.localAll ? 0 : mine.reduce((m, q) => (c.pops.every((p) => p.solved_mask() & (1 << q) && heldQ.get(p)?.[q] === c.psig[q]) ? m | (1 << q) : m), 0));
+      // T-3512: the share of c's changed periods' passes that `fresh` took in c's last whole solve here (-1: not known)
+      const freshShare = (c: JobCluster, fresh: Population[]) => {
+        const kept = keptOf(c);
+        let f = 0, all = 0;
+        for (const q of mine) {
+          if (kept & (1 << q)) continue;
+          for (const p of c.pops) {
+            const ms = passMs.get(p)?.[q];
+            if (ms === undefined) return -1;
+            all += ms;
+            if (fresh.includes(p)) f += ms;
+          }
+        }
+        return all > 0 ? f / all : 0;
+      };
       // T-392: after an edit (no barrier) the clusters are solved one after another, each to its last
       // round, and each but the last is sent as a cluster result the moment it is done; then the
       // solve's results. With the barrier (the shown estimates step through the rounds) they all go
@@ -1869,6 +1912,9 @@ async function run() {
           const fresh = c.pops.filter((p) => !(p instanceof IntercityApi) && !intact(p));
           // (something must stay frozen: the market part, or a city; on all of Japan the cities are a fifth of a solve)
           if (!fresh.length || (!c.part && fresh.length === c.pops.length)) continue;
+          const share = freshShare(c, fresh), shareMax = job.localShare?.[job.part?.[0] ?? 0] ?? LOCAL_SHARE_MAX;
+          if (import.meta.env.DEV) console.info(`T3512 v${job.version} periods ${mine.join(",")} kept ${keptOf(c).toString(2)}: ${fresh.length} of ${c.pops.length} populations touched, ${Math.round(100 * share)}% of the cluster's passes${share >= shareMax && !job.alwaysLocal ? ", solved whole at once" : ""}`); // i18n-ignore
+          if (!job.alwaysLocal && share >= shareMax) continue;
           const kept = c.part ?? c.pops.find((p) => !fresh.includes(p))!;
           editOf.set(c, { fresh, market, sig: held.get(kept) });
         }
@@ -1940,6 +1986,7 @@ async function run() {
         }
       };
       const setUp = (c: JobCluster) => {
+        const trails = new Map(c.solveOrder.map((p) => [p, trail.get(p)]));
         setUpPops(c, c.solveOrder);
         // T-124: a period is kept only if every population kept it (its inputs are unchanged: the
         // Rust side) and each holds it from a whole solve of this cluster's period (`psig`): the
@@ -1964,6 +2011,8 @@ async function run() {
           heldQ.set(p, h);
         }
         c.reuse = reuse;
+        // T-3512: a kept period's trail holds as it did, for the next edit's local solve
+        keepTrails(trails, reuse);
         ready.add(c);
         for (const q of units) if (reuse & (1 << q)) periodsKept++; else periodsSolved++;
       };
@@ -1989,7 +2038,7 @@ async function run() {
       work = job.barrier ? null : new Work(job.version);
       if (work) {
         for (const c of early) {
-          if (editOf.has(c)) work.plan(0, mine.length);
+          if (editOf.has(c)) { const k = keptOf(c); work.plan(0, mine.filter((q) => !(k & (1 << q))).length); }
           const fresh = localOf.get(c);
           work.plan(1, fresh ? (fresh.length ? mine.length : 0) : mine.length * (job.rounds + 1));
         }
@@ -2058,8 +2107,10 @@ async function run() {
         for (const a of c.solveOrder) {
           if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; if (oomPanic) { oomNow(); return false; } a.debug_panic(); }
           if (!here(a) || (total === null && skip?.has(a))) continue;
+          const t1 = performance.now();
           if (total === null) a.solve(q);
           else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
+          addPass(a, q, round, performance.now() - t1);
           // a population's pass is up to a second of one call: let a waiting query or a newer
           // network in between
           await yieldNow();
@@ -2307,17 +2358,25 @@ async function run() {
       // crowding of the touched cities' last round; the result's market less `less(q)`, the window's
       // pairs' old loads, plus `sub`'s)
       // (`stage`: the T-2729 work stage its periods count in)
-      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1): Promise<boolean> => {
+      const localSolve = async (c: JobCluster, fresh: Population[], ratioSig = c.sig, shared?: (Float32Array | undefined)[], win?: { sub: IntercityApi; less: (q: number) => Float32Array | null }, stage: 0 | 1 = 1): Promise<boolean | null> => {
         const N = jobNodes, isFresh = (a: Population) => fresh.includes(a), order = c.solveOrder.filter(isFresh);
+        const trails = new Map(order.map((p) => [p, trail.get(p)]));
         setUpPops(c, win ? [...order, win.sub] : order, win && c.part ? { sub: win.sub, part: c.part } : undefined);
+        const keep = keptOf(c);
+        keepTrails(trails, keep);
         for (const p of win ? [...fresh, win.sub] : fresh) {
-          const m = p.solved_mask();
-          for (let q = 0; q < PERIODS.length; q++) if (m & (1 << q)) p.forget_period(q);
-          heldQ.set(p, []);
+          const m = p.solved_mask(), h = p === win?.sub ? undefined : heldQ.get(p);
+          for (let q = 0; q < PERIODS.length; q++) if (m & (1 << q) && !(keep & (1 << q))) p.forget_period(q);
+          heldQ.set(p, PERIODS.map((_, q) => (keep & (1 << q) && h?.[q]) || ""));
         }
         c.reuse = 0;
         ready.add(c);
         for (const q of mine) {
+          if (keep & (1 << q)) continue;
+          if (stage === 0 && wholeGo >= job.version) {
+            if (work) { work.of[0] = work.done[0]; work.send(false); }
+            return null;
+          }
           work?.begin(stage);
           const sh = sharedOf(c, q, shared), shTrail = sh && c.part ? sharedTrail.get(c.part)?.[q] : undefined;
           // the others' loads as each round was priced on (`trail`), when every one holds them;
@@ -2329,6 +2388,7 @@ async function run() {
             for (let r = 0; r <= job.rounds; r++) if (t?.[r]?.length !== 3 * nr) return false;
             return true;
           });
+          if (import.meta.env.DEV) console.info(`T3512 v${job.version} local period ${q}: ${onTrail ? "on the trail" : "no full trail, the ended loads"}`); // i18n-ignore
           let ended: Float32Array | null = null;
           if (!onTrail) {
             const frozen = new Float32Array(3 * N), notFresh = (a: Population) => !isFresh(a);
@@ -2360,6 +2420,12 @@ async function run() {
               else if (!a.crowd_with_external(q, ownOfIn(c, a, t))) throw new Error("local crowding layout disagrees");
               await yieldNow();
               if (pending) return false;
+              // T-3512: `whole` came while this worker still solves locally (another worker went
+              // straight to the whole solve), so its local result can never be shown: stop here
+              if (stage === 0 && wholeGo >= job.version) {
+                if (work) { work.of[0] = work.done[0]; work.send(false); }
+                return null;
+              }
             }
             if (t === null) for (const a of fresh) { const b = boardsOf(a); b.free[q] = a.board(q); b.rounds[q] = undefined; }
           }
@@ -2430,7 +2496,12 @@ async function run() {
           },
         } : undefined;
         try {
-          if (!(await localSolve(c, e.fresh, e.sig, shared, win, 0))) { stale = true; break; }
+          const ok = await localSolve(c, e.fresh, e.sig, shared, win, 0);
+          if (ok === null) {
+            if (import.meta.env.DEV) console.info(`T3512 v${job.version} local solve stopped for the whole solve after ${Math.round(performance.now() - t0)} ms`); // i18n-ignore
+            break;
+          }
+          if (!ok) { stale = true; break; }
           for (const p of e.fresh) cityOn.set(p, viewOf(c, p));
           const touched = citiesOf(c, e.fresh);
           // T-2532: the touched zones' bubbles from this result, ahead of it, as a round's go ahead of

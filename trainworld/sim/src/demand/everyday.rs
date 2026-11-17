@@ -2108,10 +2108,12 @@ impl EverydayApi {
         }
         Ok(())
     }
-    /// T-1277: `DemandApi::set_fare_weight`.
+    /// T-1277: `DemandApi::set_fare_weight`. T-3512: it comes before `set_network`, so the engine's
+    /// `same` is still the last network's mask here; only a new weight drops the periods.
     pub fn set_fare_weight(&mut self, w: f32) -> Result<(), String> {
+        let was = self.engine.base.fare_w.to_bits();
         self.engine.set_fare_weight(w)?;
-        if self.engine.same == 0 {
+        if self.engine.base.fare_w.to_bits() != was {
             self.per.iter_mut().for_each(|v| *v = None);
         }
         Ok(())

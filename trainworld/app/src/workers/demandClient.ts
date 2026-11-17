@@ -338,6 +338,8 @@ function cellModesOf(version: number, day: DemandDay, data: Float32Array, copy =
   return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5), homeNone: b(6), workNone: b(7) };
 }
 const AIRPORT_KIND = EVERYDAY_KEYS.indexOf("airport");
+/** T-3512, dev `?localShare=a,b`: each solving worker's share for skipping an edit's local solve (`ToDemand` `localShare`) */
+const LOCAL_SHARE = import.meta.env.DEV ? new URLSearchParams(location.search).get("localShare")?.split(",").map(Number).filter((x) => x >= 0) : undefined;
 /** T-3503: what the last regional answers may hold (a zone's answer is 48 bytes a square: New York about 2 MB,
  * and a zone asks for about ten kinds and days) */
 const LAST_REG_BYTES = 48e6;
@@ -3863,7 +3865,7 @@ class DemandClient {
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("localKeep") ? { localAll: true } : {}), ...(perfOff("localSkip") ? { alwaysLocal: true } : {}), ...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}) };
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();

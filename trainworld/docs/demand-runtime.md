@@ -358,7 +358,18 @@ whole solves, each cluster the edit touched is solved locally first when its mar
 untouched cities still hold what they last solved: only the city populations whose view changed (a
 station or stop of theirs added, removed or moved, their lines' trains changed; run times within 1%,
 trains an hour within 5% and a stop's service span (the share of riders with a train due) within 0.06,
-one train a day more or less, count as unchanged), through their rounds and the capacity fit. Each
+one train a day more or less, count as unchanged), through their rounds and the capacity fit. A
+period every population of the cluster holds from its last whole solve on the same inputs (setUp's
+test, T-124) is not solved locally: it keeps its figures and its `trail`, and the whole solve after
+keeps it too, so a train change at one level costs that level's periods twice at most, not all five
+(T-3512). A worker whose touched populations took 35% or more of its changed periods' passes in the
+cluster's last whole solve (`passMs`, `LOCAL_SHARE_MAX`) skips the local solve and goes straight to
+the whole one: a one-city game's city is most of its cluster, and the local solve then only put the
+final later (`?perfOff=localSkip`, `?perfOff=localKeep` off). The page then sends `whole` at once, and
+a worker still solving locally stops at its next pass, since its local result can no longer be shown
+(dev `?localShare=a,b` sets each solving worker's share, to make two disagree). A population opened
+again at another level has no timed passes until its next whole solve, so the edit after a re-level
+keeps its local solve. Each
 round crowds on the others' loads as that round of their last solve was priced on (kept per
 population, period and round, `trail`; a shared period's market loads per round as the other worker
 sent them), plus their own, so with nothing changed it repeats the whole solve; the market's are

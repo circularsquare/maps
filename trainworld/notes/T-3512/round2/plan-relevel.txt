@@ -1,0 +1,2 @@
+relevel-new|&x=1|[{"t":"relevel"},{"t":"train","k":"low"},{"t":"wait"},{"t":"undo"},{"t":"wait"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"wait"}]|1|900
+relevel-old|&perfOff=localKeep,localSkip|[{"t":"relevel"},{"t":"train","k":"low"},{"t":"wait"},{"t":"undo"},{"t":"wait"},{"t":"train","k":"all"},{"t":"wait"},{"t":"undo"},{"t":"wait"}]|1|900

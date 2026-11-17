@@ -1077,3 +1077,27 @@ fn trip_lengths_add_up_to_the_summary() {
         }
     }
 }
+
+/// T-3512: the fare weight set again unchanged, as the worker does before each network, keeps
+/// every period, also when the last network kept none (a load's first, a stop edit); a train
+/// change at one level then drops only that level's periods
+#[test]
+fn same_fare_weight_keeps_periods() {
+    let (h, b) = fixture(4000.0);
+    let mut a = EverydayApi::new(&h, &b).unwrap();
+    network(&mut a, 4000.0, [12.0; 3]);
+    for q in 0..5 {
+        assert!(a.solve(q));
+    }
+    assert_eq!(a.solved_mask(), 0b11111);
+    let w = a.engine.base.fare_w;
+    a.set_fare_weight(w).unwrap();
+    assert_eq!(a.solved_mask(), 0b11111);
+    network(&mut a, 4000.0, [12.0, 12.0, 6.0]);
+    use crate::track::params::{LOW, PERIOD_LEVEL};
+    let low: u32 = (0..PERIODS).filter(|&q| PERIOD_LEVEL[q] == LOW).fold(0, |m, q| m | 1 << q);
+    assert!(low != 0);
+    assert_eq!(a.solved_mask(), 0b11111 & !low);
+    a.set_fare_weight(w * 2.0).unwrap();
+    assert_eq!(a.solved_mask(), 0);
+}
