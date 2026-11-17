@@ -993,7 +993,7 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <LineTitle l={l} t={title} />
       <div class="sub muted flush">
-        {tr("lineInspector.sub", { fast: !!st.fast, count: turned ? turned.rows.length : l.stops.length - (st.loop ? 1 : 0), distance: distance(st.km * 1000) })}
+        {tr("lineInspector.sub", { kind: st.tram ? "tram" : st.fast ? "fast" : "train", count: turned ? turned.rows.length : l.stops.length - (st.loop ? 1 : 0), distance: distance(st.km * 1000) })}
       </div>
       {st.status === "planned" && l.stops.length >= 2 && (
         <div class="callout">

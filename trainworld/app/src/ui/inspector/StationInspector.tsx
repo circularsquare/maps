@@ -244,7 +244,7 @@ export function StationInspector({ id }: { id: string }) {
           complex's list goes back to it from here */}
       {!asComplex && (
         <div class="sub muted">
-          {s.port ? tr("stationInspector.port") : tr("trackInspector.level", { level: levelLabel(s.level) })}
+          {s.port ? tr("stationInspector.port") : tr("stationInspector.sub", { level: levelLabel(s.level) })}
           {members.length > 1 && (
             <>
               {" · "}

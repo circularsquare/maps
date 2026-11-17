@@ -58,7 +58,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         {e.tracks === 2 && !e.crossover && <DoubleUp edge={e.id} version={w.version} />}
       </div>
       <div class="sub muted">
-        {tSeries([distance(e.lengthM), lv])}
+        {tSeries([distance(e.lengthM), t("trackInspector.kind", { kind: e.crossover ? "crossover" : e.kind ? (e.kind === 2 ? "streetTram" : "tram") : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single" }), lv])}
       </div>
       {/* T-3408: built track rebuilds here, Rebuild beside Remove */}
       {e.built && !e.crossover ? (
