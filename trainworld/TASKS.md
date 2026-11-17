@@ -323,14 +323,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode
   - Context: You see a hitch at about state scale, also at ?pace=2; video2 could not reproduce it (T-2774).
   - Goal: Find the cause and remove the hitch.
-- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s (taking, 2026-11-17, agent stationedit)
-  - Context: Placing a station on built track takes 1.9-3.7 s in the worker, mostly because every line over it lays its strokes again.
-  - Goal: The same edit keeps each line's strokes when only an edge id changes.
-  - Other: notes/T-2763.md has the proposal.
-- T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line (taking, 2026-11-17, agent stationedit)
-  - Context: Deleting a built station takes 0.4-3.9 s because all 109 lines' run profiles are rebuilt.
-  - Goal: Only the touched lines are rebuilt.
-  - Other: Proposal 1 in notes/T-2763.md.
+- T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s
+  - Context: Placing a station on built track takes 0.2-0.9 s in the worker, almost all in the line bands (the neighbour search and 8-15 lines worked out again); the strokes are 15-150 ms.
+  - Goal: Keep the bands of lines and neighbours that a split leaves unchanged.
+  - Other: notes/T-2768.md has the breakdown.
 - T-2762 [P3] {L:solve-speed} Faster longer-trips answer for a bubble
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
@@ -859,9 +855,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3524 [P2] {L:track-drawing} Track near the shore counted as over water (taking, 2026-11-17, agent shore)
   - Context: Your pad, 2026-11-17: "when we consider placed track "over water" is a little inconsistent when you zoom super far in. people are building things close to the shoreline and it says its over water and they get frustrated. would we be able to improve this? or bias it to be forgiving if thats significantly easier". Many players build along shores, so a decent reach.
   - Goal: Track that looks on land at street zoom is not refused or priced as over water; a forgiving margin if a truer coastline is much harder.
-- T-3523 [P3] {L:open-source} Open-source repo and maps repo the same
-  - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. The export syncs only at publishes (last 11-15).
-  - Goal: Your pick between syncing on every push plus a public in-progress list, or making the public repo the source.
+- T-3523 [P3] {L:open-source} {after:v0.4.0 publish} Make the public repo the real one
+  - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
+  - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.
   - Other: notes/T-2913.md
 - T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (taking, 2026-11-17, agent busboard)
   - Context: You, 2026-11-17: "i would actually like to drop the boarding time from 6 to 4 minutes ... we should measure a save or two yeah and see how much profitability / ridership changes in a couple cases. but i think its a minor change." Full BRT stays T-3378.
@@ -963,12 +959,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3405 [P3] {L:track-speed} Speed limit on any piece of track (taking, 2026-11-17, agent piecelimit)
-  - Context: Your TODO 2026-11-15: edit it directly, no cost. Lines already have a speed limit (T-2987).
-  - Goal: A per-piece speed limit, edited directly.
-- T-3408 [P3] {L:rebuild-track} Rebuild from the track panel
-  - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece.
-  - Goal: The track panel has the same rebuild, and the hover suggests Select for several.
+- T-3408 [P2] {L:rebuild-track} Rebuild from the track panel (taking, 2026-11-17, agent trackrebuild)
+  - Context: Your TODO 2026-11-15: whatever the Select bar rebuild does, for the one selected piece. Again 2026-11-17: "if i select a track segment i should be able to adjust its single/double status and its highspeed/regular. here we can also put a hint to use the select tool (4) to rebuild larger selections (which people often dont know how to find".
+  - Goal: The track panel changes the selected piece between single and double and between high speed and regular, the way the Select bar's rebuild does, with a hint to use the Select tool (4) for longer stretches.
+- T-3525 [P3] {L:track-speed} Speed limit for a whole selection
+  - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.
+  - Goal: A Speed limit control in the Select tool's bar sets a whole run at once, and a limit at the track's top counts as none.
 
 ## Held features
 

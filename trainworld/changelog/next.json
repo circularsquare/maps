@@ -1143,6 +1143,54 @@
       "rev": 1,
       "area": "community",
       "fix": false
+    },
+    {
+      "id": "c089",
+      "text": "a bus boarding costs riders 4 minutes of their time instead of 6, so buses carry more",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3522",
+      "by": "busboard",
+      "at": "2026-11-17T14:34:24Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
+    },
+    {
+      "id": "c090",
+      "text": "added a speed limit you can set on any piece of track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3405",
+      "by": "piecelimit",
+      "at": "2026-11-17T14:37:13Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c091",
+      "text": "deleting a station on a big network takes about half a second less",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2768",
+      "by": "stationedit",
+      "at": "2026-11-17T14:50:14Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c092",
+      "text": "track along a shore no longer counts as over water when it is on land",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3524",
+      "by": "shore",
+      "at": "2026-11-17T14:54:10Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
     }
   ]
 }
