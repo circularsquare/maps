@@ -500,7 +500,10 @@ Full design, numbers and sources: `notes/T-008.md`.
   check: street tram track rebuilt as tram track or rail at ground level over water is refused.
   Bridges and tunnels over or under water cost 2x (6.4). The mask is 25 m pixels in the city
   pack; water narrower than ~50 m (creeks, ditches, small ponds) is not in it, since a railway
-  crosses those at grade (notes/T-030.md). Outside every pack's mask the world's coarse mask
+  crosses those at grade (notes/T-030.md). A point counts as water only if the points 12 m east, west,
+  north and south of it are water too (`WATER_MARGIN`, T-3524): the pixels reach up to ~15 m past the drawn
+  coast, and this keeps track along a shore on land. Water 50 m wide still leaves a band the sampling
+  finds, and a probe off the raster does not count as land. The world's coarse mask has no margin. Outside every pack's mask the world's coarse mask
   decides (T-1285, zones.md 6): the sea and large lakes in cells of 1/60 degree, so open sea between
   zones is water like water inside them. Ground level means within half a level (4 m) of the
   ground, so the low end of a ramp counts too: bridge and tunnel approaches start on land.

@@ -543,7 +543,7 @@ impl TrackApi {
     pub fn append_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16], offset_x: f64, offset_y: f64, scale_x: f64, scale_y: f64) {
         assert!(scale_x.is_finite() && scale_x > 0.0 && scale_y.is_finite() && scale_y > 0.0);
         let m = TransformedMask {
-            mask: Arc::new(RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() }),
+            mask: Arc::new(RunMask::pack(cell, x0, y0, w, h, row.to_vec(), xs.to_vec())),
             offset: [offset_x, offset_y], scale: [scale_x, scale_y],
         };
         let previous = std::mem::replace(&mut self.w.net.water_mask, Box::new(NoWater));
@@ -555,7 +555,7 @@ impl TrackApi {
     /// equirectangular frame, in which the raster's grid is laid out. The mask follows the loaded
     /// network's frame and is rebuilt when a save in another frame is loaded.
     pub fn add_pack_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16], pack_lon: f64, pack_lat: f64) {
-        let mask = Arc::new(RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() });
+        let mask = Arc::new(RunMask::pack(cell, x0, y0, w, h, row.to_vec(), xs.to_vec()));
         let seen = pack_mask_in(self.w.net.frame(), &mask, pack_lon, pack_lat);
         let b = seen.1;
         self.rasters.push(PackWater { mask, lon: pack_lon, lat: pack_lat, seen });
@@ -2058,7 +2058,7 @@ impl TrackApi {
     /// The pack's water mask (notes/T-004.md): header `cell_m`, `origin_m`, `size`, and the
     /// `water_row` (u32) and `water_x` (u16) arrays.
     pub fn set_water(&mut self, cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: &[u32], xs: &[u16]) {
-        let m = RunMask { x0, y0, cell, w, h, row: row.to_vec(), xs: xs.to_vec() };
+        let m = RunMask::pack(cell, x0, y0, w, h, row.to_vec(), xs.to_vec());
         self.rasters.clear();
         self.w.net.set_water_mask(Box::new(m));
         self.w.reload();

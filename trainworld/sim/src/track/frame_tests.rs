@@ -158,7 +158,7 @@ fn geo_mask_agrees_with_the_affine_mask_in_the_legacy_frame_and_follows_the_grou
         }
         row.push(xs.len() as u32);
     }
-    let mask = Arc::new(RunMask { x0: -5000.0, y0: -5000.0, cell, w, h, row, xs });
+    let mask = Arc::new(RunMask::pack(cell, -5000.0, -5000.0, w, h, row, xs));
     let (plon, plat) = (-75.1636, 39.9526);
     let legacy = Frame::equirect(-73.985, 40.758);
     let world = Frame::lcc(-73.985, 40.758);
