@@ -1,4 +1,5 @@
-"""Rebuild 8800 at a commit: runs checks/snapbuild.cmd (or snapbuild-frozen.cmd with a freeze) from the maps root.
+"""Rebuild 8800 at a commit: runs checks/snapbuild.cmd (or snapbuild-frozen.cmd with a freeze) from the maps root,
+then writes the new build id to notes/board-live.json (tasks.py set --build).
 
 Usage: venv\Scripts\python.exe trainworld/tools/ops/snap8800.py <commit> [<freeze>] [--log <file>]
 """
@@ -30,6 +31,10 @@ def main(argv):
             out.close()
     if log:
         print(Path(log).read_text(encoding="utf-8", errors="replace")[-300:])
+    if rc == 0:
+        # the board's Builds row shows what 8800 runs
+        subprocess.run([sys.executable, str(MAPS / "trainworld" / "tools" / "tasks.py"), "set", "--build", f"8800={argv[0][:8]}"],
+                       cwd=str(MAPS))
     print(f"exit {rc}")
     return rc
 

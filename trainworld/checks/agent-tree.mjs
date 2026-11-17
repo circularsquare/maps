@@ -253,12 +253,13 @@ function finishTree(args) {
           if (it.fix) a2.push('--fix');
           if (it.task) a2.push('--task', it.task);
           if (it.by) a2.push('--by', it.by);
-          run(pythonExe(), a2, { cwd: maps });
+          const out = run(pythonExe(), a2, { cwd: maps });
+          it.finalId = (/added (c\d+)/.exec(out) ?? [])[1];   // the id the main tree gave it: the one to quote
           state.moved.push(it);
         }
       }
       line(1, `changelog: reverted the tree's next.json, ${fresh.length} item(s) ${o.dry ? 'to move' : 'moved'} to the main tree${dup ? `, ${dup} already there` : ''}${cl.edited ? `, ${cl.edited} edit(s) to existing items discarded` : ''}`);
-      for (const it of fresh) console.log(`      ${it.fix ? 'fix ' : ''}${it.area ?? 'other'} ${it.task ?? '-'} ${it.by ?? '-'}: ${it.text}`);
+      for (const it of fresh) console.log(`      ${it.finalId ? `${it.finalId} ` : ''}${it.fix ? 'fix ' : ''}${it.area ?? 'other'} ${it.task ?? '-'} ${it.by ?? '-'}: ${it.text}`);
     }
     // 2: land
     step = 2;
@@ -297,14 +298,18 @@ function finishTree(args) {
     step = 5;
     if (!tasks.length) line(5, 'tasks: none given');
     else {
+      const archived = fs.existsSync(path.join(maps, 'trainworld', 'ARCHIVE.md')) ? fs.readFileSync(path.join(maps, 'trainworld', 'ARCHIVE.md'), 'utf8') : '';
+      const already = [];
       for (const t of tasks) {
         if (o.dry) continue;
+        // the agent archived its own task: that counts as done
+        if (new RegExp(`^- ${t} \\[`, 'm').test(archived)) { already.push(t); state.doneTasks.push(t); continue; }
         const a2 = [path.join(maps, 'trainworld', 'tools', 'tasks.py'), 'done', t, '--outcome', o.outcome];
         if (o.notes) a2.push('--notes', o.notes);
         run(pythonExe(), a2, { cwd: maps });
         state.doneTasks.push(t);
       }
-      line(5, `tasks: ${tasks.join(', ')} ${o.dry ? 'would be archived' : 'archived'}`);
+      line(5, `tasks: ${tasks.join(', ')} ${o.dry ? 'would be archived' : 'archived'}${already.length ? ` (${already.join(', ')} already archived)` : ''}`);
     }
     if (!o.dry) console.log(`log: ${LOG}${warned ? ` (${warned} warning(s) in it)` : ''}`);
     else console.log('dry run: nothing changed');

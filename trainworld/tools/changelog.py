@@ -10,6 +10,8 @@ text. A hidden item stays in the file and out of the game; a hidden group hides 
     python trainworld/tools/changelog.py add "fixed trains drawn through each other on single track" --area track --fix --task T-3379 --by bugs1
     python trainworld/tools/changelog.py group "track bug fixes" --area track --fix
     python trainworld/tools/changelog.py set c002 [--area track] [--fix | --no-fix] [--under c055 | --under none]
+    python trainworld/tools/changelog.py reword c002 "<new line>"      (sets edited, as the board's edit does)
+    python trainworld/tools/changelog.py hide c002 [--show]
     python trainworld/tools/changelog.py list
     python trainworld/tools/changelog.py line "update v0.3.6: <the start menu's line, 80 characters at most>"
     python trainworld/tools/changelog.py publish --version v0.3.6 [--at 2026-11-17T15:00:00Z] [--dry-run]
@@ -327,6 +329,12 @@ def main():
     s.add_argument("--fix", action="store_true", default=None)
     s.add_argument("--no-fix", dest="fix", action="store_false")
     s.add_argument("--under", help="a group's id, or none")
+    w = sub.add_parser("reword")
+    w.add_argument("id")
+    w.add_argument("text")
+    h = sub.add_parser("hide")
+    h.add_argument("id")
+    h.add_argument("--show", action="store_true", help="unhide")
     sub.add_parser("list")
     l = sub.add_parser("line")
     l.add_argument("text")
@@ -356,6 +364,16 @@ def main():
         code, _ = update_item(r.id, fields, it["rev"])
         if code != 200:
             raise SystemExit("not saved (%d): try again" % code)
+    elif r.cmd in ("reword", "hide"):
+        # same save as the board's edit: sets edited (the shown wording) or hidden, bumps rev, stamps changed
+        it = next((i for i in read()["items"] if i["id"] == r.id), None)
+        if it is None:
+            raise SystemExit("no item " + r.id)
+        fields = {"edited": r.text} if r.cmd == "reword" else {"hidden": not r.show}
+        code, _ = update_item(r.id, fields, it["rev"])
+        if code != 200:
+            raise SystemExit("not saved (%d): try again" % code)
+        print("%s %s" % (r.cmd, r.id))
     elif r.cmd == "list":
         d = read()
         print("line: %s" % (d.get("line") or "(none)"))

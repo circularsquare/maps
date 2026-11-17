@@ -35,7 +35,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   past tense for the change, present for how things are now: "added ...", "fixed ...", but "the game uses 500 MB
   less" (Anita, 2026-11-17)>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
   the map and schematic, community for accounts and sharing, performance; other if none fits; a bug fix takes its area
-  plus `--fix`, and `bug` only when no area fits); list it with your strings. Internals, tools and docs get none. Anita rewords
+  plus `--fix`, and `bug` only when no area fits); list it with your strings. If the thing you changed is new in, or
+  already listed in, the unpublished changelog (`changelog.py list`), reword that item (`changelog.py reword <id>
+  "<line>"`) instead of adding one. Internals, tools and docs get none. Anita rewords
   or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.
@@ -124,8 +126,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   routine steps, wording or small UI. Say in your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
-- **Waiting**: under about 4 minutes, one foreground call; longer, in the background with a wait on the process
-  ending and at most one light check every 4-5 minutes. Final checks (smoke) run in the foreground.
+- **Waiting**: a build or test whose result you need runs inside one foreground call with a long time limit (up to
+  10 minutes; split anything longer), and you never end your turn while it is running (a watch on a background
+  process does not hold the turn open). Work that needs no result from you may run in the background, with at most
+  one light check every 4-5 minutes. Final checks (smoke) run in the foreground.
 
 ## Game principles (Anita's)
 

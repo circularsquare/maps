@@ -5,6 +5,7 @@
   venv\Scripts\python.exe trainworld/tools/tasks.py check
 upnext add <ids> [--at N] / remove <ids> / list: the board's "Up next" queue (board-live.json "upnext"); start, done and close drop
 their ids from it.
+set --orchestrator "<id> (<name>)" / --build 8800=<hash>: the board header (the takeover and snap8800.py call it).
 start: adds "(taking, <date>, agent <name>)" to each head line and the agent to notes/board-live.json.
 done / close: moves the task block to the top of ARCHIVE.md, sets the line's done: in LINES.md when it was the
 line's last open task, and drops the agent from board-live.json when it has no other taken task.
@@ -163,7 +164,8 @@ def cmd_start(r, a):
     b = r.board()
     mine = next((x for x in b["agents"] if x["name"] == a.agent), None)
     if mine is None:
-        mine = {"name": a.agent, "task": "", "model": a.model or "", "what": a.what or ""}
+        mine = {"name": a.agent, "task": "", "model": a.model or "", "what": a.what or "",
+                "started": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}   # board.js shows it as "N min"
         b["agents"].append(mine)
     have = [t.strip() for t in mine["task"].split(",") if t.strip()]
     mine["task"] = ", ".join(have + [t for t in marked if t not in have])
@@ -178,6 +180,19 @@ def cmd_start(r, a):
     if gone:
         print(f"up next: dropped {', '.join(gone)}")
     print(f"board: {a.agent} on {mine['task']}")
+    return 0
+
+
+def cmd_set(r, a):
+    """Board header fields the orchestrator and the 8800 rebuild keep current."""
+    b = r.board()
+    if a.orchestrator:
+        b["orchestrator"] = a.orchestrator
+    if a.build:
+        k, _, v = a.build.partition("=")
+        b.setdefault("builds", {})[k] = v
+    r.save_board(b)
+    print(f"board: orchestrator {b.get('orchestrator')}; builds {b.get('builds')}")
     return 0
 
 
@@ -365,11 +380,15 @@ def main():
     u.add_argument("action", choices=["add", "remove", "list"])
     u.add_argument("ids", nargs="*")
     u.add_argument("--at", type=int, help="1-based place in the queue (default: the end)")
+    t = sub.add_parser("set")
+    t.add_argument("--orchestrator", help='"<session id short> (<name>)", shown on the board')
+    t.add_argument("--build", help='"8800=<hash>" or "master=<hash>"')
     sub.add_parser("check")
     a = ap.parse_args()
     r = Root(a.root)
     code = {"start": lambda: cmd_start(r, a), "done": lambda: finish(r, a, "done"),
-            "close": lambda: finish(r, a, "close"), "check": lambda: cmd_check(r, a), "upnext": lambda: cmd_upnext(r, a)}[a.cmd]()
+            "close": lambda: finish(r, a, "close"), "check": lambda: cmd_check(r, a), "upnext": lambda: cmd_upnext(r, a),
+            "set": lambda: cmd_set(r, a)}[a.cmd]()
     sys.exit(code)
 
 

@@ -5,15 +5,15 @@
     {
       "id": "c001",
       "text": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings",
-      "edited": null,
+      "edited": "added hiding lines on the map from the lines list, and hiding track levels, buses and ferries in settings; a hidden level is drawn faint and can't be clicked, hovered or snapped to",
       "hidden": false,
       "task": "T-3420",
       "by": "visibility",
       "at": "2026-11-16T13:32:56Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c002",
@@ -194,15 +194,15 @@
     {
       "id": "c015",
       "text": "rail line panels have a small chart of fares minus running costs for each of the last 7 days",
-      "edited": null,
+      "edited": "rail line panels have a chart at the bottom with blue fare bars and red running cost bars for each of the last 30 days",
       "hidden": false,
       "task": "T-2787",
       "by": "unhold",
       "at": "2026-11-16T14:40:45Z",
-      "rev": 2,
+      "rev": 3,
       "area": "fares",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c016",
@@ -419,15 +419,15 @@
     {
       "id": "c032",
       "text": "named the Arnavutkoy zone as an Istanbul district",
-      "edited": null,
+      "edited": "merged Arnavutkoy into the Istanbul zone, and moved Karamursel to Kocaeli and Altinova to Yalova",
       "hidden": false,
       "task": "T-3439",
       "by": "b7",
       "at": "2026-11-16T15:12:55Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": true,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c033",
@@ -997,14 +997,15 @@
     {
       "id": "c076",
       "text": "added a real world network snap for tram track that follows real tram and light rail, and redrew the snap buttons as one set of icons",
-      "edited": null,
+      "edited": "added a real world network snap for tram track that follows real tram and light rail, and redrew the snap buttons as one set of icons, with snap to streets a straight street with a dashed center line",
       "hidden": false,
       "task": "T-3069",
       "by": "trams",
       "at": "2026-11-17T07:44:10Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c077",
@@ -1035,13 +1036,14 @@
       "id": "c079",
       "text": "merged Arnavutkoy into the Istanbul zone, and moved Karamursel to Kocaeli and Altinova to Yalova",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3488",
       "by": "nightwrap",
       "at": "2026-11-17T11:24:04Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c080",
@@ -1070,14 +1072,15 @@
     {
       "id": "c082",
       "text": "added a setting to keep buses to one-way streets",
-      "edited": null,
+      "edited": "added a setting under Game to keep buses to one-way streets",
       "hidden": false,
       "task": "T-3480",
       "by": "busoneway",
       "at": "2026-11-17T11:27:34Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c083",
@@ -1222,27 +1225,28 @@
     {
       "id": "c094",
       "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
-      "edited": "added weekend train scheduling, so a line can run fewer trains on weekends / holidays",
+      "edited": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart, and weekend train scheduling so a line can run fewer trains on weekends / holidays",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 3,
+      "rev": 4,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:28:04Z"
+      "changed": "2026-11-17T19:30:55Z"
     },
     {
       "id": "c095",
       "text": "added a schedule window for each rail line, with its departures, a timetable and a timetable chart",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:55Z"
     },
     {
       "id": "c096",
@@ -1260,13 +1264,14 @@
       "id": "c097",
       "text": "changed the snap to streets icon to a straight street with a dashed center line",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3536",
       "by": "snapicon",
       "at": "2026-11-17T15:54:52Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c098",
@@ -1382,13 +1387,14 @@
       "id": "c107",
       "text": "a level switched off in Settings is now drawn faint (8%) and can't be clicked, hovered or snapped to, instead of vanishing",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3560",
       "by": "levelfade",
       "at": "2026-11-17T17:23:17Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c108",
@@ -1503,15 +1509,15 @@
     {
       "id": "c117",
       "text": "added real world stations to the real world network map, as small rings with the name on hover: settings, show stations, off by default",
-      "edited": "added real world stations to the real world network map, as dots with the name on hover: settings, show stations, off by default",
+      "edited": "added real world stations to the real world network map, as soft purple dots like the real track, with the name on hover: settings, show stations, off by default",
       "hidden": false,
       "task": "T-3570",
       "by": "realstations",
       "at": "2026-11-17T18:33:34Z",
-      "rev": 2,
+      "rev": 3,
       "area": "schematic",
       "fix": false,
-      "changed": "2026-11-17T19:28:27Z"
+      "changed": "2026-11-17T19:30:24Z"
     },
     {
       "id": "c118",

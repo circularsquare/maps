@@ -1,5 +1,5 @@
 """Start the next orchestrator in a new Windows Terminal tab (Anita 2026-11-16: orchestrators restart themselves
-at ~400k tokens; she works in Windows Terminal).
+at ~500k tokens; she works in Windows Terminal).
 
     venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py <project> [--model opus] [--advisor fable] [--dry-run]
 

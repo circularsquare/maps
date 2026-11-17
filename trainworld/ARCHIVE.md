@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3586 [P2] {L:feedback} Workflow fixes from the 11-17 review (2026-11-17): Workflow fixes from the 11-17 review: board kept by tools (agent start time, 8800 build id, orchestrator name), one-line handover and no new agents past 450k, handover at 500k, changelog reword/hide commands and final ids from finish, three-versions briefing rule, finish counts an already archived task as done, Waiting rule. Skipped: landing quick checks, handoff churn. notes/workflow-review-2026-11-17.md.
 - T-3543 [P2] {L:timetables} One schedule button and default headways (2026-11-17): Copy and paste schedule buttons removed; the schedule window has Set as default and Use game default for new lines' headways (saved in the header's newHeadway, applied to every new line); one 24 px schedule button beside the chart button. Check t3543-default-headways.mjs, smoke and typecheck pass; no sim change. notes/T-3543.md.
 - T-3553 [P2] {L:terrain} More accurate shoreline than the 12 m margin (2026-11-17): between-cell water read at 0.8 replaces the 12 m margin; checker passed (notes/T-3553-check.md) notes/T-3553.md.
 - T-3579 [P2] {L:small-fixes} Settings: one-way buses under Game, fullness always on (2026-11-17): Buses obey one-way streets moved to Game, Game sits right after Show, fullness checkboxes removed and fullness always drawn. Notes: notes/T-3579.md.

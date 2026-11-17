@@ -28,12 +28,14 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - tramterm (Sonnet, maps-45's, .tw-trees/tramterm, port 6157): T-3574 tram stop terminal + passing tracks, T-3575 tram crossovers; code + Rust done, stopped waiting on its wasm build (log scratchpad\tramterm\wasm.log); resume it for full cargo, check t3574-tram-terminal.mjs, screenshot, notes; then checker.
 - shoreswap: T-3553 done in tree (changelog c113 in main); checker shorecheck (Sonnet, maps-45's, port 6158) running; land on pass, then archive T-3553.
 - farebase (Opus, .tw-trees/farebase, port 6163): T-3578 fare multiple scales the base (max over legs) + T-3581 undo keeps the multiple; demand/money: checker before landing.
-- schedbutton (Sonnet, .tw-trees/schedbutton, port 6164): T-3543 one schedule button + default headways; checker only if the sim/save changes.
+- boldlog (Sonnet, .tw-trees/boldlog, port 6169): T-3585 asterisks bold in changelog items (board + game update notes), T-3587 board changelog view keeps scroll.
+- wffix (Sonnet, main tree, no worktree): T-3586 workflow review fixes (rules, skills, tasks.py/snap8800 write board-live, changelog reword, finish treats archived as done, handover 500k). Commit its edits after.
+- Open to her: freeze for 0.4 this evening (my rec, T-3565 in) or drop T-3565 and freeze sooner; T-3543 strings text-ack and whether the chart (Marey) button goes too.
 - glcontext (Opus, .tw-trees/glcontext, port 6165): T-3582 WebGL2 error after a lost graphics context: clear restart screen, then the cause (give up if hard).
 - workflowreview (Fable, on her ask 11-17): read-only review of today's workflow to notes/workflow-review-2026-11-17.md; relay its top items.
 - londonedit: T-3388 done in tree (archived itself; changelog c115, T-3550 follow-up in main); checker londoncheck (Sonnet, port 6162) running; land on pass.
 - settingsmove (Sonnet, .tw-trees/settingsmove, port 6161): T-3579 settings reorder; UI, no checker.
-- Landed 11-17 under maps-45: T-3573 fbdot (e85e761c), T-3563 tramloops (25c3c642, checker passed), T-3570/T-3571 realstations (0697cb3d), T-3576 ponytail (b on her pick), T-3569 t3212fix (141fbf62, fixture lengthened), T-3577 station dots (5bf18338), T-3566/T-3567 lineprofit (d30ffc11, checker passed).
+- Landed 11-17 under maps-45: T-3573 fbdot (e85e761c), T-3563 tramloops (25c3c642, checker passed), T-3570/T-3571 realstations (0697cb3d), T-3576 ponytail (b on her pick), T-3569 t3212fix (141fbf62, fixture lengthened), T-3577 station dots (5bf18338), T-3566/T-3567 lineprofit (d30ffc11, checker passed), T-3553 shoreswap (1eceb454, checker passed), T-3579 settingsmove (3a980535), T-3543 schedbutton (07448241). londonedit: checker passed; londonmerge (Opus) resolving its rebase onto T-3521's weekend code in .tw-trees/londonedit, then finish again.
 - Landed 11-17 under maps-58: T-3554, T-3537/38, T-3555 (+ translations), T-3540, T-3564, T-3560, T-3521 (gabs co-author), T-3526, T-3561, T-3562, T-3556 stage 1 (checks/lib harness), T-3541, T-3264 stage 0 check. Note: t3537-tram-split.mjs kept tramsplit's version at the T-3541 landing, so it is no longer on the harness.
 
 ## Next

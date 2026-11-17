@@ -24,13 +24,25 @@ not once per message (Anita, 2026-11-09).
   short-term item goes into the brief verbatim, examples and all (a paraphrase lost her formula tooltip, T-1839).
   A UI brief asks the agent to judge its own screenshots (gaps above and below anything added) before reporting,
   and you look at one per change (the one going to her) before telling her it is done.
+- **A look to change, no numbers given** (Anita 2026-11-17, T-3586): the first brief asks for three clearly different
+  versions beside the current one, at map size, on one sheet. You land your pick and send her the sheet; she swaps by
+  letter. When she gives numbers ("60% of current, filled in, purple"), one version is enough.
 - **Size**: split big work into stages, each its own id and report; a big task's design goes to her before it is
   built. An agent that compacts was given too much.
 - **Thanks**: a short thanks when an agent's work is done, in your own reply; a SendMessage resumes the agent and it
   reports again. Resume the same agent for follow-ups.
-- **Your own cycling** (Anita 2026-11-16): at about 400k tokens (the stop hook says so), finish anything mid-landing,
-  bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new
+- **Your own cycling** (Anita 2026-11-16; 11-17: 500k): at about 500k tokens (the stop hook says so), finish anything
+  mid-landing, bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new
   Windows Terminal tab running /takeover), then wind down per /handoff once the new one messages you. Don't wait for her.
+  From about 450k start no new agents: list what you would start in the handoff's Next and the new orchestrator starts
+  them (each report an old tab passes on is paid for twice, 11-17). After handing over, send her one line ("talk to
+  <new name> now") and write nothing more to her: you only pass agents' reports to the new orchestrator and never ask
+  her anything.
+- **Never go quiet on her** (Anita 2026-11-17: 25 minutes without an answer): anything you run that takes over a
+  minute (a landing with a WebAssembly rebuild, smoke, a 8800 rebuild) starts in the background, and you answer her
+  message first. The board keeps itself current from the tools: `tasks.py start` writes an agent's start time,
+  `snap8800.py` writes the 8800 build id when it swaps, and the takeover sets the orchestrator's name
+  (`tasks.py set --orchestrator "<id> (<name>)"`).
 - **Cycling**: an agent past about 500k tokens with real work left writes its state to its notes and a fresh one
   continues. Overnight, while she sleeps, agents and you keep going past that (Anita, 2026-11-05).
 - **Supervising**: check long runs (process and `world_run.py status`) at least every couple of hours; ask after any
@@ -103,7 +115,10 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
    `node trainworld/checks/agent-tree.mjs finish <name> "<sentence>" --task T-1,T-2 --outcome "..." [--notes notes/T-1.md] [--keep-tree] [--dry-run]`.
    One line per step: changelog items the agent left in its tree's `next.json` move to the main tree (`changelog.py
    add`) and the tree's file is reverted; land; WASM rebuild if sim/ changed; remove the tree; `tasks.py done` per
-   task. Git warnings and build logs go to a log file it names. It stops at the first failure, says what state
+   task; a task the agent already archived counts as done. It prints the final changelog id of each item it moved (agents'
+   own ids change when the work lands: quote these). If one repeats or contradicts an item already unpublished,
+   merge or hide it yourself (`changelog.py reword <id> "..."`, `changelog.py hide <id>`) and tell her in one line; no
+   question. Git warnings and build logs go to a log file it names. It stops at the first failure, says what state
    things are in and lists the steps left to do by hand. `--dry-run` first when unsure. `land <name> "<sentence>"`
    and `remove <name>` still work alone.
 
