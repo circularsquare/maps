@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3555 [P2] {L:small-fixes} Kind of line, station and track in panel subtitles (2026-11-17): Panel subtitles now name the kind: line (train, high-speed train, tram, bus, ferry), station (Station, Level N), track (single/double/high-speed/tram track, crossover). English keys only; changelog c105.
+- T-3538 [P2] {L:single-track} Split tram line flagged as turning back at its end (2026-11-17): street snap passes the join point (one line in streetReq), so a single off a double's end joins the track under the pointer; a loop turning back only at its first stop and one other reads as a line with two ends (display only); checks/t3537-tram-split.mjs 18 checks; smoke PASSED. notes/T-3537.md.
+- T-3537 [P2] {L:track-drawing} Street snap merges a double track's split (2026-11-17): street snap passes the join point (one line in streetReq), so a single off a double's end joins the track under the pointer; a loop turning back only at its first stop and one other reads as a line with two ends (display only); checks/t3537-tram-split.mjs 18 checks; smoke PASSED. notes/T-3537.md.
 - T-3554 [P2] {L:checks} One command to land and archive a tree (2026-11-17): agent-tree.mjs finish <name> "<sentence>" --task ... --outcome ... lands, rebuilds WASM if needed, removes the tree and archives tasks, one line per step; tested in a throwaway clone. notes/T-3554.md.
 - T-3539 [P2] {L:small-fixes} Click a station inside a selected complex (2026-11-17): A click on a station of the selected complex selects it alone; a second click goes back to the complex; landed 66379382.
 - T-3535 [P2] {L:track-drawing} Tram crossing mark missing from the preview (2026-11-17): Network::crossing_trams shared by placed and preview crossings; the ghost shows the broken x over rail; landed e9547f93. notes/T-3531.md.
