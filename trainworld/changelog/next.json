@@ -1353,7 +1353,7 @@
       "id": "c106",
       "text": "a station on single track is drawn with one platform on the outside, and its passing loop on the inside where it has one. tram stops are drawn 30% narrower",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3540",
       "by": "tramstation",
       "at": "2026-11-17T17:21:57Z",
@@ -1412,7 +1412,7 @@
     {
       "id": "c111",
       "text": "a station on single track with a passing loop is drawn with a platform beside each track again; one with no loop keeps its one platform on the outside",
-      "edited": null,
+      "edited": "a station on single track with no passing loop is drawn with one smaller platform on the outside. tram stops are drawn 30% narrower",
       "hidden": false,
       "task": "T-3564",
       "by": "tramstation",

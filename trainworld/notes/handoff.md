@@ -1,7 +1,6 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d516cc87-bbe1-4627-9f97-62b5c973620b, name maps-58, since 2026-11-17 16:41 UTC
-Previous: session eda3ac12-4519-4720-a0c5-be8bdcb2ed0b, name maps-60, handed over 2026-11-17 16:41 UTC, finishing in-flight work
 Updated: 2026-11-17 16:50 UTC (maps-58 took over and owns landings; maps-60's agents report to maps-60, which relays them verbatim while its tab is open; resources checked 16:44)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
