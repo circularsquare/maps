@@ -1,4 +1,4 @@
-// T-3540: a station on single track has one platform, drawn to one side of its track: the outside.
+// T-3540: a station on single track with no passing loop has one platform, drawn to one side of its track: the outside.
 import type { ClockEdge } from "../workers/protocol";
 
 /** How far along single track a station looks for the double track it leaves (`stationOutside` rule 1), m. */

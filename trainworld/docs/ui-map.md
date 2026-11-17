@@ -171,8 +171,7 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
   with no loop (track-and-service.md 6.2). It shows only once double track's two tracks part (from 4 m at 7 px), opening out of single track's width; further
   out the track and its lines keep single track's width through the station (`F_SPLIT`; Anita,
   2026-11-11: no thickening before the tracks show). Trains of opposite directions meet there (the capacity's passing points),
-  and stand on the two tracks; the station has one platform, along the outer track ("Stations"), and the inner
-  track is the passing loop. A split
+  and stand on the two tracks; the station has a platform each side, as on double track (T-3564). A split
   that reaches double track within its 60 m stays two tracks to it, and double track meeting
   single at such a station does not narrow; one that reaches a junction first eases over what
   room there is. One-way single track, and single track joining one track of a double at the
@@ -506,7 +505,7 @@ number) and shows n as its symbol.
 - **Inside the white** [T-236], over the crowd fill: the track and line strokes run through the
   box (drawn where a stencil marks the white, no wider than 30% of it, without casing). No platform
   edges are drawn [T-1121].
-- **A platform each side, close in** [T-658c]: on a double-track station, or one where single track splits beside double track (T-3212; flag 16 in the
+- **A platform each side, close in** [T-658c]: on a double-track station, or one where single track splits (T-3212, T-3564; flag 16 in the
   station buffer), as the two tracks part ("Lines and track") each direction's riders stand on their own
   platform, from the outer edge of its track out to the rim [T-1121], instead of filling half the box:
   the + side is the right of the platform axis, so with trains keeping right those travelling along the
@@ -514,17 +513,16 @@ number) and shows n as its symbol.
   the running track and the outer track (where trains on both stop, T-2248), so its riders stand
   from the running track's outer edge to the outer track's inner edge [T-2249, `u_pass_in`]; from
   zoom 14 to where the tracks part, from the middle to the outer track.
-- **One platform on single track** [T-3540, `map/stationSide.ts`; Anita, 2026-11-17]: every station whose
-  track is single both ways, rail or tram, one-track or passing, is drawn as a one way station on double
-  track is (T-3332): a thin bar over its track with the bulge on one side, filled as its fuller side
-  (`ST_SINGLE`), and a waiting room on that side joined to the bar. Where the track splits round a passing loop (T-3212) the bar is over the outer track,
-  so the inner one, the loop, does not touch the platform; elsewhere the bar is centred on the one track
-  (`ST_ONE_MID`). The side is the outside: (1) followed through plain nodes up to 3 km, where the track
+- **One platform on single track** [T-3540, `map/stationSide.ts`; Anita, 2026-11-17]: a station whose
+  track is single both ways and does not split round a passing loop (a one-track stop, one-way single track,
+  single track joining one track of a double), rail or tram, is drawn as a one way station on double
+  track is (T-3332): a thin bar centred on its track (`ST_ONE_MID`) with the bulge on one side, filled as
+  its fuller side (`ST_SINGLE`), and a waiting room on that side joined to the bar. A passing station keeps
+  a platform each side (T-3564, Anita: "drawing can go back for this case"). The side is the outside: (1) followed through plain nodes up to 3 km, where the track
   leaves one track of a double (its join), the side that track is on, so the two legs of a split double
   face away from each other; (2) else on one-way track the side trains keep to; (3) else south-east of
   the track (east of north-south track, south of east-west), south-west where trains keep left (the
-  mirror image). Drawing only: trains stop as before, on both tracks of a loop.
-  A station with double track on one side keeps a platform each side.
+  mirror image). Drawing only.
 - **A player link's bridge** [T-197]: a straight white band 3 px wide at zoom 15 (fixed on the
   ground) with the 2 px rim along both sides, between the nearest points of the two platforms'
   centre lines, at least 6 px inside each platform's ends; overlapping platforms get one inside

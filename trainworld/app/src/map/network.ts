@@ -1870,16 +1870,17 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     }
     // T-3332: a one-track station on double track: the half of the box on its track's side
     const oneSide = n.one === 1 && n.oneHeading !== undefined ? oneSideAlong(n.oneHeading, s.rightHand === false, c.ax, c.ay) : 0;
-    // T-3540: a station on single track has one platform, on its outside, the inner track of a split its passing loop
+    // T-3540: a station on single track with no passing loop has one platform, on its outside; one whose track
+    // splits round a loop keeps a platform each side, each way's trains stopping on their own track (T-3564)
     const pe = edgeEnds.get(platformEdge.get(n.id) ?? -1);
-    const single = !oneSide && !!pe && ids.every((id) => edgeEnds.get(id)?.tracks === 1 && !edgeEnds.get(id)?.crossover);
-    const side = oneSide || (single ? stationOutside(n.id, pe, edgesOf, way, c.ax, c.ay, s.rightHand === false) : 0);
     const split = splits.stations.has(n.id);
+    const single = !oneSide && !split && !!pe && ids.every((id) => edgeEnds.get(id)?.tracks === 1 && !edgeEnds.get(id)?.crossover);
+    const side = oneSide || (single ? stationOutside(n.id, pe, edgesOf, way, c.ax, c.ay, s.rightHand === false) : 0);
     stationsSeen.set(n.id, c);
     stationAxis.set([c.ax, c.ay], i * 2);
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
-    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || (split && !single) ? 16 : 0) | (side ? ST_ONE | (side < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | (split ? 0 : ST_ONE_MID) : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || split ? 16 : 0) | (side ? ST_ONE | (side < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | ST_ONE_MID : 0) | (n.kind ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
   });
   cache.stations = stationsSeen;
   // T-2219: the station buildings' members as drawn (their boxes join the floor), which car parks stay out of

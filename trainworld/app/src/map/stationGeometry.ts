@@ -415,11 +415,10 @@ export const ST_BUILDING = 2048;
 /** a tram stop (T-2926): its dot is smaller */
 export const ST_TRAM = 4096;
 /** T-3332: a one-track station on double track, drawn as the half of the box on its track's side: the
- * + side of the platform's axis, or with ST_ONE_NEG the other; T-3540: every station on single track too */
+ * + side of the platform's axis, or with ST_ONE_NEG the other; T-3540: a single-track station with no passing loop too */
 export const ST_ONE = 8192, ST_ONE_NEG = 16384;
-/** T-3540: a station on single track, drawn with ST_ONE on its outside: its one platform filled as its fuller
- * side (ST_SINGLE), and where its track is drawn as one, not split round a passing loop, its bar is
- * centred on that track (ST_ONE_MID) */
+/** T-3540: a station on single track with no passing loop, drawn with ST_ONE on its outside: its one platform
+ * filled as its fuller side (ST_SINGLE), its bar centred on the track (ST_ONE_MID) */
 export const ST_SINGLE = 32768, ST_ONE_MID = 65536;
 /** Passing tracks' outer pair (T-2233): this far from the centre line on the ground, m (the
  * running tracks are 2 m out), and joining the running track over this much past the platform's end. */

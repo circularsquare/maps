@@ -682,7 +682,7 @@ Full design, numbers and sources: `notes/T-008.md`.
     The waiting room joins one box's side at its middle, one outline and one white round box and
     annex: of the stations with one and both sides of each, the spot with the fewest other
     platforms, tracks, car parks and the name label's patch nearby, else outside the platform's
-    bend; a station with one platform (a one way station, any station on single track) has it on
+    bend; a station with one platform (a one way station, a single-track station with no passing loop) has it on
     the platform's side, joined to its bar (T-3540). The car park is a lot of its own outside the boxes (`map/parkingLots.ts`), drawn under
     the track and stations, true to size: a 6 m aisle with a row of 2.5 by 5 m spaces either side
     (a bay, 16 m), one bay for each station with park and ride up to three, as long as the
