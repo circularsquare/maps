@@ -1,14 +1,14 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session d516cc87-bbe1-4627-9f97-62b5c973620b, name maps-58, since 2026-11-17 16:41 UTC
-Updated: 2026-11-17 16:50 UTC (maps-58 took over and owns landings; maps-60's agents report to maps-60, which relays them verbatim while its tab is open; resources checked 16:44)
+Updated: 2026-11-17 18:14 UTC (maps-58 near 400k, starting its successor)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5.
 
 ## State
 - Live = v0.3.5 (maps bfe58c54, published 11-15). Next publish v0.4.0: no deadline; she picks when and tracks the landing cut-off herself: land things as they pass.
-- master 09276628 + bookkeeping, pushed to e030f000; 8800 = a0e4157b (rebuild after the smoke on 09276628). Server level 21 (95356ed) now needed: master writes level 21 since weekends landed.
+- master af04b3e8, pushed to dc1be574; 8800 = dc1be574 (smoke PASSED 29/29 on 09276628; cargo 604/795 on combined master). Since 8800: T-3562, T-3564, T-3541, T-3264 check: rebuild 8800 with the next batch. Server level 21 (95356ed) needed before publish: master writes level 21 since weekends.
 - R2 version 2026-11-10d purged on her word 11-17.
 - In master since v0.3.5 (for the v0.4.0 notes): everything maps-b8 listed (Central America + Venezuela, Lisbon/Glasgow/Porto, Istanbul/Colombia redraws, ~350 MB less memory, faster loads, bubble folds, purpose rows, buses obey one-way streets (Renkon), tram snap, terrain on by default, trainsfan, ferries 45 km/h) plus today: track speed limit per piece (T-3405), station delete faster (T-2768), track panel rebuild incl. levels and tram (T-3408), bus boarding 4 min (T-3522), help list + F1 (T-3527), shore 12 m margin (T-3524), snap to streets icon (T-3536), double track width / tram wire (T-3533/T-3534), settle speed (T-3512), tram crossing ghost (T-3535), complex pick (T-3539), reclaimed-land country check (T-3529, pipeline).
 - Server: shonei-server 7a23cbc (playtime cap), 96e4f12 (save level 20, LPS1) and 95356ed (level 21, LWE1) committed, not pushed or deployed; all needed before v0.4.0 publishes (master already writes level 20). TestTwSaveCheckFollowsTheGame goes green when weekend lands.
@@ -22,20 +22,20 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Start: `powershell -File C:\Users\anita\projects\maps\trainworld\tools\country\start_hidden.ps1 C:\Users\anita\projects\maps\trainworld\notes\T-3455\kit\night1117.cmd`. Log artifacts/trainworld/night1117.log; PID in kit\night1117.state; stop: create trainworld\data\work\world_run\STOP, then kill only that PID. Claims 10 cores (waits for 6 free). Hold app/ landings during its gates. Disk 45 GB free, needs ~28.
 - Later nights: nic (Nice) and pyo-kp (Sinuiju) now safe after T-3529; T-3530 Tokyo Haneda; T-3532 drive-grid water fix (she said yes, low priority).
 
-## Agents (maps-58 owns all landings; tramsplit and tramstation are maps-60's subagents, resumed by it in fresh trees, reports relayed by maps-60 while its tab is open)
-- tramsplit (Opus, .tw-trees/tramsplit, port 6122): T-3541 fixed (blueprint off a turn-back end; sim), checker-tramsplit (Sonnet, ports 6145/6146) running; on PASS finish it (its changelog c103 may be in the tree). Then T-3541 done. Its T-3538 fix doesn't cover her Line 2: changelog c104 may need hiding (her board).
-- tramstation (Opus, .tw-trees/tramstation, port 6126): T-3564, passing stations draw both platforms again (her 11-17 call).
-- tramloops (Opus, .tw-trees/tramloops, port 6142): T-3563 trams path like trains (passing loops first); sim: checker before landing.
-- repeattrack (Sonnet, .tw-trees/repeattrack, port 6143): T-3562 alert + loop icon when a line runs the same track twice the same way.
-- lineprofit (Opus, .tw-trees/lineprofit, port 6144): T-3566 profit bars blue/red + to the bottom; T-3567 per-line fare multiple 0-3 (money: checker before landing; agent leaves T-3567 for me to archive).
-- harness (Opus, .tw-trees/harness, port 6139): T-3556 stage 1 shared playtest module; stage 2 sketch for her.
-- londonedit (Opus, .tw-trees/londonedit, port 6132): T-3388 London edits under 4 s; checker before landing (demand). May file T-3550-3552.
-- drawapart (Opus, .tw-trees/drawapart, uncommitted, idle): T-3264 stages 0-1 built to a mock; waits on her look (asks.json); then polish per her pick and land. May file T-3546-3549.
-- Landed today under maps-58: T-3554 finish command, T-3537/T-3538, T-3555 subtitles (+ translations ea21cce7), T-3540, T-3560 level fade, T-3521 weekends (21c7a92a, gabs co-author), T-3526 single-track cap, T-3561 rail/tram tag, changelog icon colour. Cargo tests on combined master passed (604, 795).
+## Agents (all maps-58's subagents; their reports come to maps-58, which relays them verbatim while its tab is open. If it's gone, check each directly: its tree's git status, notes, the ledger)
+- tramloops (Opus, .tw-trees/tramloops, port 6142): T-3563 trams path like trains (passing loops first); sim: fresh checker before landing.
+- lineprofit (Opus, .tw-trees/lineprofit, port 6144): T-3566 profit bars blue/red + to the bottom; T-3567 per-line fare multiple 0-3 (money: checker before landing; it leaves T-3567 to archive after the checker).
+- shoreswap (Sonnet, .tw-trees/shoreswap, port 6147): T-3553 between-cell water read replaces the 12 m margin (track prices: checker before landing; I archive).
+- londonedit (Opus, .tw-trees/londonedit, port 6132): T-3388 London edits under 4 s; demand: checker before landing. May file T-3550-3552.
+- realstations (Opus, .tw-trees/realstations, port 6149): T-3570 real stations on the real world map (toggle, default off), T-3571 names from a nearby real station.
+- t3212fix (Sonnet, .tw-trees/t3212fix, port 6148): T-3569 t3212 meet check failing since T-3526; reports a real bug rather than patching it.
+- fbdot (Sonnet, .tw-trees/fbdot, port 6152): T-3573 light blue dot for unanswered reports in twfeedback (tool, no changelog).
+- Ready to start when a slot frees: T-3565 (one-way pair stops: each direction serves only its own street's station, once; her answer in the task), T-3543 (one schedule button; touches LineInspector like lineprofit: after it lands).
+- Landed 11-17 under maps-58: T-3554, T-3537/38, T-3555 (+ translations), T-3540, T-3564, T-3560, T-3521 (gabs co-author), T-3526, T-3561, T-3562, T-3556 stage 1 (checks/lib harness), T-3541, T-3264 stage 0 check. Note: t3537-tram-split.mjs kept tramsplit's version at the T-3541 landing, so it is no longer on the harness.
 
 ## Next
 1. Land each agent as it passes (checker for sim/save/demand/money); smoke on master per batch; rebuild 8800; push.
-2. T-3543 (one bigger schedule button, default headways replacing copy/paste) after weekend lands; same files.
+2. T-3565 and T-3543 when slots free (see Agents).
 3. The night run this evening.
 4. When she says release: the v0.4.0 steps under State.
 5. Leftover .tw-trees folders (c1, ferry45, fixes, freight, hotfix031-target, hover, touchrule, trackrebuild (empty)) and stale trees (safari-save-035, shenzhen, tt2, ttstyle, trams): look before removing; never delete by hand.

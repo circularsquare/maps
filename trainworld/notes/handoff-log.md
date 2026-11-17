@@ -2,8 +2,11 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
-## 2026-11-17, maps-58 (from 16:41 UTC)
-- Took over from maps-60, which handed its five agents over un-landed and relays their reports. Started drawapart (T-3264 stages 0-1) and londonedit (T-3388). Her TODO short-term items are all filed or done already.
+## 2026-11-17, maps-58 (16:41-18:14 UTC)
+- Took over from maps-60 (handed its agents over un-landed). Landed 14 pieces of work (list in handoff Agents), 8800 rebuilt once (dc1be574), master pushed. Built the finish command (T-3554), the checks/lib playtest harness (T-3556 stage 1), short ask titles on the board.
+- Her calls: report length 15 lines and only new asks in final messages ("catch me up" reads asks.json); 3/4/5 periods game-wide by default (T-3542); trains-drawn-apart postponed past v0.4.0 (keep train shape); passing stations get both platforms back; one-way pair stops one-way each (T-3565); trams path like rail; shoreline swap + OSM water for TIGER packs on a later night; currency in save P4; harness stages 2-3 P4.
+- Lesson: agents left with background jobs re-sent reports up to five times; briefs now say stop them, and TaskStop after a report. My own long foreground waits made her wait 25 minutes: background them.
+- Advisor: not called this session.
 
 ## 2026-11-17, maps-60 (14:40-16:40 UTC)
 - Took over from maps-b8, landed its piecelimit, stationedit, busboard, shore, settle (squash) and my trackrebuild (+ levels/tram follow-up), helplist (+4 entries), reclaim, snapicon, tracklook, tramlag (T-3535), complexpick; 8800 rebuilt five times, last a0e4157b; master pushed.
