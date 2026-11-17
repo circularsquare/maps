@@ -273,6 +273,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
   - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
+- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-17, agent tiers)
+  - Context: You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
+  - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
+  - Other: notes/T-3346.md
+- T-3543 [P2] {L:timetables} {after:T-3521} One schedule button and default headways
+  - Context: You, 2026-11-17: "i think we can get rid of the copy/paste feature and instead allow setting currently selected headways as default (always applied to new lines) in the timetables window. this way we just have one icon / button on the lines panel. it should be slightly bigger than the icons we currently have, and it should be a "timetable / complex scheduling" button." Weekends stay in the window only; the line view keeps its 3 rows.
+  - Goal: The copy/paste schedule buttons are gone; the timetables window has a control that makes the current headways the default for new lines; the line panel has one slightly bigger schedule button that opens the window.
 - T-3541 [P2] {L:single-track} Blueprint extension breaks a split line (taking, 2026-11-17, agent tramsplit)
   - Context: Your pad, 2026-11-17: "took my blue split double track line and extended the loose end that they were reversing at, extended with a double track. that broke the line, and im unable to get it back running." Then: "oddly it breaks the line right when i place the blueprint extending, before anything is actually constructed. if i delete the extension the line starts working agian as before."
   - Goal: Placing blueprint track off a line's end never stops the line; the split Caracas tram line keeps running with a double extension at its end.

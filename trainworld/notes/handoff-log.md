@@ -2,6 +2,11 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
+## 2026-11-17, maps-60 (14:40-16:40 UTC)
+- Took over from maps-b8, landed its piecelimit, stationedit, busboard, shore, settle (squash) and my trackrebuild (+ levels/tram follow-up), helplist (+4 entries), reclaim, snapicon, tracklook, tramlag (T-3535), complexpick; 8800 rebuilt five times, last a0e4157b; master pushed.
+- Her calls: public repo becomes the real one after v0.4.0 (T-3523); single-track cap fix 1 (T-3526); shore 12 m OK; c086 "350 MB"; BA-Montevideo water fix later, low priority; tram slowness (T-3531) was machine load.
+- weekend checker FAILED on headway lines; weekend2 fixing. Advisor: not called this session.
+
 ## 2026-11-17, maps-b8 (11:13-14:40 UTC)
 - Took over from maps-44; landed nightwrap's runs (948e61f3), T-3505, T-2627/T-2777, T-3480 (by hand, Renkon co-author), T-3520, T-3510, terrain default; posted PR 17-20 replies (17, 20 closed).
 - Replies to post at the next open-source sync (her OK given):
