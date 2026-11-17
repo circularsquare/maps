@@ -1657,16 +1657,25 @@ function groupText(g) {
 }
 
 /** re-render a container without losing the field she is typing in */
-function keepFocus(box, fn) {
+function keepFocus(box, fn, anchorSel) {
   const a = document.activeElement;
   const key = a && box.contains(a) ? a.dataset.key : null;
   const caret = key && a.selectionStart != null ? [a.selectionStart, a.selectionEnd] : null;
+  // T-3587: keep her place. The first element still on screen stays where it was, even if items came in above it
+  const y = window.scrollY;
+  let anchor = null;
+  if (anchorSel) {
+    const el0 = [...box.querySelectorAll(anchorSel)].find((e) => e.getBoundingClientRect().bottom > 0);
+    if (el0) anchor = [el0.dataset.item, el0.getBoundingClientRect().top];
+  }
   fn();
-  if (!key) return;
-  const f = box.querySelector(`[data-key="${CSS.escape(key)}"]`);
-  if (!f) return;
-  f.focus();
-  if (caret) try { f.setSelectionRange(caret[0], caret[1]); } catch (e) { /* a select */ }
+  const f = key ? box.querySelector(`[data-key="${CSS.escape(key)}"]`) : null;
+  if (f) {
+    f.focus({ preventScroll: true });
+    if (caret) try { f.setSelectionRange(caret[0], caret[1]); } catch (e) { /* a select */ }
+  }
+  const now = anchor && box.querySelector(`[data-item="${CSS.escape(anchor[0])}"]`);
+  window.scrollTo(0, now ? window.scrollY + now.getBoundingClientRect().top - anchor[1] : y);
 }
 
 function renderRequests() {
@@ -1958,10 +1967,16 @@ function clDraft(it) { const d = drafts[`cl:${it.id}`]; return d === undefined ?
 function renderChangelog() {
   const cols = document.querySelector('#changelog .rm-cols');
   const left = cols ? cols.scrollLeft : 0;
-  keepFocus($('#changelog'), drawChangelog);
-  for (const a of document.querySelectorAll('#changelog textarea.cl-text, #changelog .rm textarea')) clGrow(a);
-  const c2 = document.querySelector('#changelog .rm-cols');
-  if (c2) c2.scrollLeft = left;
+  // T-3587: the poll re-renders every 15 s; nothing changed, nothing to redraw
+  const sig = JSON.stringify([CL.data, CL.ok, CL.menu, CL.conflict, CL.status, RM.doc, RM.status, RM.ok, query(), drafts]);
+  if (sig === CL.sig && $('#changelog').childElementCount) return;
+  CL.sig = sig;
+  keepFocus($('#changelog'), () => {
+    drawChangelog();
+    for (const a of document.querySelectorAll('#changelog textarea.cl-text, #changelog .rm textarea')) clGrow(a);
+    const c2 = document.querySelector('#changelog .rm-cols');
+    if (c2) c2.scrollLeft = left;
+  }, '.cl-item[data-item]');
 }
 
 function clGrow(a) {
@@ -2011,12 +2026,27 @@ function clStatus(id) {
   if (s) s.textContent = CL.status[id] || '';
 }
 
+/** T-3585: *word* and **word** are bold in the game; a lone asterisk stays as typed (same rule as app/src/ui/Changelog.tsx) */
+function clBold(s) {
+  const out = [];
+  let at = 0;
+  for (const m of String(s).matchAll(/\*\*(?=\S)([^*\n]*?\S)\*\*|\*(?=\S)([^*\n]*?\S)\*/g)) {
+    if (m.index > at) out.push(s.slice(at, m.index));
+    out.push(el('b', {}, m[1] != null ? m[1] : m[2]));
+    at = m.index + m[0].length;
+  }
+  if (at < s.length) out.push(s.slice(at));
+  return out;
+}
+
 function clItem(it) {
   const id = it.id;
+  const bv = el('div', { class: 'cl-view', 'aria-hidden': 'true' }, ...clBold(clDraft(it)));
   const area = el('textarea', {
     class: 'input cl-text', rows: 1, spellcheck: 'true', 'data-key': `cl:${id}`,
     oninput: (e) => {
       drafts[`cl:${id}`] = e.target.value;
+      bv.replaceChildren(...clBold(e.target.value));
       clGrow(e.target);
       CL.status[id] = 'Saving';
       clStatus(id);
@@ -2042,7 +2072,7 @@ function clItem(it) {
           onclick: (e) => { e.stopPropagation(); CL.menu = CL.menu === id ? null : id; renderChangelog(); } }, clAreaIcon(it.area)),
         CL.menu === id ? clMenu(it) : null),
       it.group ? el('span', { class: 'cl-task meta' }, 'group') : it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'cl-task meta' }, 'no task'),
-      area,
+      el('span', { class: 'cl-wrap' }, area, bv),
       el('span', { class: 'cl-by' }, `added by ${it.by || 'an agent'}, ${when}`, it.edited ? ', reworded' : ''),
       el('span', { class: 'cl-state' }, CL.status[id] || ''),
       it.edited ? el('button', { class: 'icon-btn', type: 'button', title: `Use the agent's wording: ${it.text}`, 'aria-label': 'Use the agent\'s wording',

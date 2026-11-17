@@ -217,6 +217,9 @@ def visible(d):
     return [x for _, x in sorted(enumerate(out), key=lambda p: (rank(p[1][0]), p[0]))]
 
 
+KEEP_STARS = " Words between asterisks are bold: keep the asterisks around the translated words, as in the source."
+
+
 def esc(s):
     return json.dumps(s, ensure_ascii=False)
 
@@ -292,8 +295,8 @@ def publish(version, at=None, dry=False, path=NEXT):
 
     new_en = put(en, list(strings.items()))
     ctxl = [(prefix + "Line", "Start-menu announcement for %s. Casual, lowercase, at most %d characters." % (version, LINE_MAX))]
-    ctxl += [(k, "Changelog line for %s, written by an agent, wording checked before release." % version)
-             for k in strings if k != prefix + "Line"]
+    ctxl += [(k, "Changelog line for %s, written by an agent, wording checked before release.%s" % (version, KEEP_STARS if "*" in v else ""))
+             for k, v in strings.items() if k != prefix + "Line"]
     new_ctx = put(ctx, ctxl)
     json.loads(new_en), json.loads(new_ctx)
     for p, s in ((UPDATES_TS, new_ts), (MESSAGES, new_en), (CONTEXT, new_ctx)):

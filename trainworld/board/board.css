@@ -533,6 +533,16 @@ select.small {
   padding: 3px 6px;
   font-size: 13px;
 }
+/* T-3585: the item as the game shows it (asterisked words bold) sits over the box until she clicks into it */
+.cl-wrap { position: relative; display: block; min-width: 0; }
+.cl-view { position: absolute; inset: 0; padding: 4px 7px; border: 1px solid transparent; font-size: 13px; line-height: normal;
+  white-space: pre-wrap; overflow-wrap: break-word; pointer-events: none; overflow: hidden; }
+.cl-view b { font-weight: 700; }
+.cl-text:not(:focus) { color: transparent; }
+.cl-text:focus + .cl-view { visibility: hidden; }
+.cl-item.is-fix .cl-view { color: color-mix(in srgb, var(--text) 68%, var(--bg)); }
+.cl-item.is-group .cl-view { font-weight: 700; }
+.cl-item.is-hidden .cl-view { color: var(--muted); text-decoration: line-through; }
 .cl-text:hover { border-color: var(--line); }
 .cl-text:focus { border-color: var(--accent); background: var(--card); outline: none; }
 .cl-item.is-hidden .cl-text { color: var(--muted); text-decoration: line-through; }

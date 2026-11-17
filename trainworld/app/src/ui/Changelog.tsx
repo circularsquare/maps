@@ -3,7 +3,7 @@
 // T-3468: one page per x.y version (v0.3 holds v0.3, v0.3.1, ...), the newest open, links to each at the top; only
 // the page shown is rendered, and nothing while closed.
 
-import type { JSX } from "preact";
+import type { ComponentChildren, JSX } from "preact";
 import { useRef, useState } from "preact/hooks";
 import { Modal } from "./Modal";
 import { AREAS, UPDATES, type Area, type Change, type Update } from "./updates";
@@ -34,6 +34,22 @@ const pageOf = (version: string) => version.split(".").slice(0, 2).join(".");
 /** the pages, newest first, each with its updates (UPDATES is newest first) */
 const PAGES: [string, Update[]][] = [...UPDATES.reduce((m, u) => m.set(pageOf(u.version), [...(m.get(pageOf(u.version)) ?? []), u]), new Map<string, Update[]>())];
 
+/** T-3585: *word* and **word** in an item's text are bold; a lone asterisk stays as typed. Everything else is plain
+ * text (Preact escapes it), so item text can't inject markup. */
+const BOLD_RE = /\*\*(?=\S)([^*\n]*?\S)\*\*|\*(?=\S)([^*\n]*?\S)\*/g;
+export function withBold(s: string): ComponentChildren[] {
+  const out: ComponentChildren[] = [];
+  let at = 0;
+  for (const m of s.matchAll(BOLD_RE)) {
+    if (m.index! > at) out.push(s.slice(at, m.index));
+    out.push(<strong>{m[1] ?? m[2]}</strong>);
+    at = m.index! + m[0].length;
+  }
+  if (at < s.length) out.push(s.slice(at));
+  return out;
+}
+const boldAll = (c: ComponentChildren): ComponentChildren => (Array.isArray(c) ? c.map(boldAll) : typeof c === "string" ? withBold(c) : c);
+
 export function Changelog({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
   return <Modal open={open} onClose={onClose} title={t("startMenu.changelog")} cls="changelog"><Pages /></Modal>;
@@ -53,7 +69,7 @@ function Pages() {
         const fig = u.nerfs?.[k];
         return <li key={k} class={fix ? "fix" : undefined}>
           <span class={`cl-area cl-${area}`} aria-hidden="true">{AREA_ICON[area]()}</span>
-          <div>{fig ? tRich(k, { figure: <span class="nerf">{t(fig)}</span> }) : t(k)}{u.sub?.[k] && <ul>{u.sub[k]!.map((s) => <li key={s}>{t(s)}</li>)}</ul>}</div>
+          <div>{fig ? boldAll(tRich(k, { figure: <span class="nerf">{t(fig)}</span> })) : withBold(t(k))}{u.sub?.[k] && <ul>{u.sub[k]!.map((s) => <li key={s}>{withBold(t(s))}</li>)}</ul>}</div>
         </li>;
       })}</ul>
     </section>)}
