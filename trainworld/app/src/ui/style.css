@@ -1192,10 +1192,10 @@ section + section > .changelog-head { margin-top: 16px; }
 .cl-schematic { color: var(--yellow); }
 .cl-community { color: var(--warn); }
 .cl-bug, .cl-other { color: var(--muted); }
-.cl-performance { color: #9a9a9a; }
-.cl-performance .screen { fill: #fff; }
-:root[data-shade="dark"] .cl-performance { color: #f2f2f2; }
-:root[data-shade="dark"] .cl-performance .screen { fill: color-mix(in srgb, #f2f2f2 22%, transparent); }
+.cl-performance { color: #5aa9e6; }
+.cl-performance .screen { fill: #d6ecff; }
+:root[data-shade="dark"] .cl-performance { color: #9fd0ff; }
+:root[data-shade="dark"] .cl-performance .screen { fill: color-mix(in srgb, #9fd0ff 22%, transparent); }
 .changelog-list li.fix { color: color-mix(in srgb, var(--text) 72%, var(--bg)); }
 .changelog-list .nerf { color: var(--bad); }
 .start-saves { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
