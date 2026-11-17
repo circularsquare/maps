@@ -45,6 +45,10 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
 - She wants a high-level update on the one-way station work now and then. Away a few hours from 22:00 UTC; said
   start new lines if little is running.
 
+- solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag, after the publish.
+- T-3600 (5 min after a Kaohsiung edit on her big Asia save): waits on her save file (asked 11-17); then an Opus
+  investigation agent.
+
 ## Night run
 - T-3511 enclave shifts + T-3455 coastal rows, plan notes/T-3455.md, ~8.2 h, 10 cores. It rebuilds packs, so never
   during a publish: start after the publish, or once she says she's done for the night without one. Start:

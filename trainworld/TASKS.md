@@ -285,9 +285,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3599 [P2] {L:solve-speed} Time left in the calculating trips hover (taking, 2026-11-17, agent solveeta)
   - Context: Your pad, 2026-11-17: "could we have it so that hovering over the "Calculating trips after your change...." says like estimated 5 minutes left or whatever estimated time is?" (big Asia save, Kaohsiung feeder lines turned off).
   - Goal: Hovering the calculating tag shows a time left within about a third of the real wait on the NYC save and one big multi-country save, or says why there is no estimate yet.
-- T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save
+- T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save (taking, 2026-11-17, agent kaohsiung)
   - Context: Your pad, 2026-11-17: "is it expected to take on the order of 5 minutes? it is a big save and taiwan is connected to the rest of the world (via one line) so i guess like its not completely unreasonable but i thought we restricted the set of things that were recalculated after a change of this sort". The edit was turning off feeder lines in Kaohsiung. T-2188 found a city line edit re-solves only its zone first, then still runs a whole solve.
   - Goal: The measured reason a city line edit on that save takes about 5 minutes, and such an edit finishing in under a minute, or why it can't.
+- T-3601 [P2] {L:solve-consistency} Lines with no trains keep their riders until the next change (taking, 2026-11-17, agent kaohsiung)
+  - Context: You, 2026-11-17: "after i removed all the trains from the local kaohsiung lines, and waited for the recalc to finish, in traffic view i still see a bunch of them saying like 10k riders per day or something. and its not currently recalculating. so i guess i'd need to make another change for them to recalc to 0." Saves: artifacts/trainworld/t3600-asianita-1851.save and -1852.save (two downloads a minute apart).
+  - Goal: Once the calculation after a change finishes, a line with no trains shows 0 riders in the traffic view and its panel.
 - T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
@@ -331,10 +334,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
   - Other: notes/T-3512.md
-- T-3492 [P2] {L:memory} Give back idle solving workers' memory (taking, 2026-11-17, agent idlemem)
-  - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
-  - Goal: An idle worker's spare memory goes back, with no solve slower than now.
-  - Other: notes/T-3472.md
 - T-3493 [P2] {L:memory} Peaks from data the page throws away
   - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; now stored at 94 MB; T-2136 would drop it. The all-China peaks of up to 1.2 GB between collections are not traced yet.
   - Goal: The biggest peaks found and cut.
