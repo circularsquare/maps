@@ -1918,11 +1918,19 @@ function clOrdered(all) {
   return stable(top).flatMap((it) => (it.group ? [it, ...stable(kidsOf(it)).map((c) => ({ ...c, child: true }))] : [it]));
 }
 
-/** the same move serve.py's changelog.move_item makes: it just before `before` (an id), or last */
-function clMoveLocal(id, before) {
+/** the same move changelog.move_item makes: it just before `before` (an id), or last, under the group `under` (an id or
+ *  null; undefined keeps the parent) */
+function clMoveLocal(id, before, under) {
   const items = CL.data.items;
   const it = items.find((x) => x.id === id);
   if (!it) return;
+  if (under !== undefined && (under || undefined) !== it.parent) {
+    if (under) {
+      it.parent = under;
+      delete it.highlight;
+      if (items.find((x) => x.id === under).hidden) it.hidden = true;
+    } else delete it.parent;
+  }
   items.splice(items.indexOf(it), 1);
   items.splice(before == null ? items.length : items.findIndex((x) => x.id === before), 0, it);
 }
@@ -1930,39 +1938,54 @@ function clMoveLocal(id, before) {
 const clDrag = { id: null, over: null, after: false };
 
 function clDropClear() {
-  for (const e of document.querySelectorAll('#changelog .cl-drop-before, #changelog .cl-drop-after, #changelog .cl-dragging'))
-    e.classList.remove('cl-drop-before', 'cl-drop-after', 'cl-dragging');
+  for (const e of document.querySelectorAll('#changelog .cl-drop-before, #changelog .cl-drop-after, #changelog .cl-drop-into, #changelog .cl-dragging'))
+    e.classList.remove('cl-drop-before', 'cl-drop-after', 'cl-drop-into', 'cl-dragging');
 }
 
-/** where a drag of the item `id` would land: {before, row, after} among the displayed items that share its parent,
- *  or null. `rowId` is the row the pointer is on, `lower` whether it is on that row's lower half */
-function clTarget(id, rowId, lower) {
+/** where a drag of the item `id` would land, from the row under the pointer and where on it (`frac`, 0 top to 1
+ *  bottom): {parent, before, row, mode} or null. parent is the group it ends up under (null: top level); mode is
+ *  'before' or 'after' the row (a line), or 'into' (the group row is lit). On a group row the top quarter drops above
+ *  the group, the rest puts the item first in the group. A group never goes inside a group. An item dropped in a
+ *  group joins that group's section (hidden when the group is); within a section the order is the file's. */
+function clTarget(id, rowId, frac) {
   const all = CL.data.items;
   const it = all.find((x) => x.id === id);
-  let row = all.find((x) => x.id === rowId);
+  const row = all.find((x) => x.id === rowId);
   if (!it || !row || row.id === id) return null;
+  const isGroup = (x) => !!x.group;
   const grp = (x) => (x.parent && all.some((g) => g.group && g.id === x.parent) ? x.parent : null);
-  const mine = grp(it);
-  if (grp(row) !== mine) {
-    // over a group's item while dragging a top-level one: counts as the lower part of that group
-    if (mine === null && grp(row)) { row = all.find((x) => x.id === grp(row)); lower = true; if (row.id === id) return null; }
-    else return null;
+  let parent;
+  let mode;
+  let at = row;                                   // the row the drop is placed against
+  if (isGroup(row) && !isGroup(it) && frac > 0.25) { parent = row.id; mode = 'into'; }
+  else if (grp(row)) {
+    if (isGroup(it)) { at = all.find((x) => x.id === grp(row)); parent = null; mode = 'after'; if (at.id === id) return null; }
+    else { parent = grp(row); mode = frac > 0.5 ? 'after' : 'before'; }
+  } else { parent = null; mode = frac > 0.5 ? 'after' : 'before'; }
+  const gHidden = parent ? !!all.find((x) => x.id === parent).hidden : false;
+  const cls = it.hidden || gHidden ? 2 : parent ? 1 : clClass(it);
+  const order = clOrdered(all).filter((x) => grp(x) === parent && x.id !== id);
+  let before;
+  if (mode === 'into') {
+    const first = order.find((x) => clClass(x) === cls);
+    before = first ? first.id : null;
+    if (!first && order.some((x) => clClass(x) > cls)) before = order.find((x) => clClass(x) > cls).id;
+  } else {
+    const k = order.findIndex((x) => x.id === at.id);
+    if (k < 0 || clClass(order[k]) !== cls) return null;        // highlights, the rest and hidden items keep apart
+    const next = order[k + (mode === 'after' ? 1 : 0)];
+    before = next && clClass(next) === cls ? next.id : null;
+    if (before === null && order.slice(k + 1).some((x) => clClass(x) === cls)) return null;
   }
-  const order = clOrdered(all).filter((x) => grp(x) === mine && x.id !== id);
-  const k = order.findIndex((x) => x.id === row.id);
-  if (k < 0 || clClass(row) !== clClass(it)) return null;       // highlights, the rest and hidden items keep apart
-  const next = order[k + (lower ? 1 : 0)];
-  const before = next && clClass(next) === clClass(it) ? next.id : null;
-  if (before === null && order.slice(k + 1).some((x) => clClass(x) === clClass(it))) return null;
-  return { before, row: row.id, after: lower };
+  return { parent, before, row: at.id, mode };
 }
 
-async function clMove(id, before) {
-  clMoveLocal(id, before);
+async function clMove(id, before, under) {
+  clMoveLocal(id, before, under);
   CL.status[id] = 'Saving';
   renderChangelog();
   try {
-    const r = await clPost({ op: 'move', id, before });
+    const r = await clPost({ op: 'move', id, before, under });
     if (!r.ok) throw new Error(r.status);
     CL.status[id] = 'Saved';
   } catch (e) {
@@ -2137,24 +2160,24 @@ function clItem(it) {
     ondragover: (e) => {
       if (!clDrag.id) return;
       const b = e.currentTarget.getBoundingClientRect();
-      const t = clTarget(clDrag.id, id, e.clientY > b.top + b.height / 2);
+      const t = clTarget(clDrag.id, id, (e.clientY - b.top) / b.height);
       clDropClear();
       const src = document.querySelector(`#changelog [data-item="${clDrag.id}"]`);
       if (src) src.classList.add('cl-dragging');
       if (!t) return;
       e.preventDefault();
       const row = document.querySelector(`#changelog [data-item="${t.row}"]`);
-      if (row) row.classList.add(t.after ? 'cl-drop-after' : 'cl-drop-before');
+      if (row) row.classList.add(t.mode === 'into' ? 'cl-drop-into' : t.mode === 'after' ? 'cl-drop-after' : 'cl-drop-before');
     },
     ondrop: (e) => {
       if (!clDrag.id) return;
       e.preventDefault();
       const b = e.currentTarget.getBoundingClientRect();
-      const t = clTarget(clDrag.id, id, e.clientY > b.top + b.height / 2);
+      const t = clTarget(clDrag.id, id, (e.clientY - b.top) / b.height);
       const moved = clDrag.id;
       clDrag.id = null;
       clDropClear();
-      if (t) clMove(moved, t.before);
+      if (t) clMove(moved, t.before, t.parent);
     },
     ondragend: (e) => { clDrag.id = null; e.currentTarget.draggable = false; clDropClear(); } },
     el('div', { class: 'cl-row' },

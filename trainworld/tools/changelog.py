@@ -16,7 +16,8 @@ grouping the game shows and uses her order within each area. A hidden item stays
     python trainworld/tools/changelog.py reword c002 "<new line>"      (sets edited, as the board's edit does)
     python trainworld/tools/changelog.py hide c002 [--show]
     python trainworld/tools/changelog.py highlight c002 [--off]     (a top-level item or a group)
-    python trainworld/tools/changelog.py move c002 [--before c005]      (no --before: last)
+    python trainworld/tools/changelog.py move c002 [--before c005] [--under c010|none]   (no --before: last; --under
+                                                          puts it in a group, none takes it out; default: as it is)
     python trainworld/tools/changelog.py list
     python trainworld/tools/changelog.py line "update v0.3.6: <the start menu's line, 80 characters at most>"
     python trainworld/tools/changelog.py publish --version v0.3.6 [--at 2026-11-17T15:00:00Z] [--dry-run]
@@ -144,21 +145,44 @@ def add_item(text, task=None, by="agent", path=NEXT, area=None, fix=False, paren
     return item
 
 
-def move_item(item_id, before, path=NEXT):
-    """Her drag on the board: put item_id just before the item `before` (an id), or last when before is None.
-    Only among the items with the same parent (top level, or one group's). Returns the status: 200, 404, 400."""
+KEEP = object()      # move_item's `under` when the parent is not part of the move
+
+
+def move_item(item_id, before, path=NEXT, under=KEEP):
+    """Her drag on the board: put item_id just before the item `before` (an id), or last when before is None, under the
+    group `under` (an id; None for the top level; KEEP leaves the parent as it is). `before` must have the item's new
+    parent. A group cannot go under a group. An item that changes parent loses its highlight, and is hidden when
+    the group is. Returns the status: 200, 404, 400."""
     with Locked(path):
         d = read(path)
         items = d["items"]
         item = next((i for i in items if i["id"] == item_id), None)
         if item is None:
             return 404
+        parent = item.get("parent") if under is KEEP else (under or None)
+        changed = parent != item.get("parent")
+        if parent:
+            g = next((i for i in items if i["id"] == parent), None)
+            if g is None:
+                return 404
+            if not g.get("group") or parent == item_id or item.get("group"):
+                return 400
         if before is not None:
             tgt = next((i for i in items if i["id"] == before), None)
             if tgt is None:
                 return 404
-            if tgt.get("parent") != item.get("parent") or tgt is item:
+            if (tgt.get("parent") or None) != parent or tgt is item:
                 return 400
+        if changed:
+            if parent:
+                item["parent"] = parent
+                item.pop("highlight", None)
+                if g.get("hidden"):
+                    item["hidden"] = True
+            else:
+                item.pop("parent", None)
+            item["rev"] += 1
+            item["changed"] = now()
         items.remove(item)
         items.insert(len(items) if before is None else next(n for n, i in enumerate(items) if i["id"] == before), item)
         write_file(d, path)
@@ -387,6 +411,7 @@ def main():
     mv = sub.add_parser("move")
     mv.add_argument("id")
     mv.add_argument("--before")
+    mv.add_argument("--under", help="a group's id, or none for the top level")
     sub.add_parser("list")
     l = sub.add_parser("line")
     l.add_argument("text")
@@ -438,9 +463,11 @@ def main():
             raise SystemExit("not saved (%d): try again" % code)
         print("%s %s" % ("unhighlighted" if r.off else "highlighted", r.id))
     elif r.cmd == "move":
-        code = move_item(r.id, r.before)
+        under = KEEP if r.under is None else (None if r.under == "none" else r.under)
+        code = move_item(r.id, r.before, under=under)
         if code != 200:
-            raise SystemExit("not moved (%d): both ids need to exist and share a parent" % code)
+            raise SystemExit("not moved (%d): the ids need to exist, --under must be a group (an item, not a group, "
+                             "goes in one), and --before must sit in the item's new place" % code)
     elif r.cmd == "list":
         d = read()
         print("line: %s" % (d.get("line") or "(none)"))

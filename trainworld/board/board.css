@@ -513,6 +513,13 @@ select.small {
 .cl-item.cl-dragging { opacity: 0.45; }
 .cl-item.cl-drop-before { box-shadow: 0 -2px 0 var(--accent); }
 .cl-item.cl-drop-after { box-shadow: 0 2px 0 var(--accent); }
+.cl-item.is-child.cl-drop-before, .cl-item.is-child.cl-drop-after { box-shadow: none; position: relative; }
+.cl-item.is-child.cl-drop-before::after, .cl-item.is-child.cl-drop-after::after { content: ''; position: absolute; left: 28px; right: 0; height: 2px; background: var(--accent); }
+.cl-item.is-child.cl-drop-before::after { top: -1px; }
+.cl-item.is-child.cl-drop-after::after { bottom: -1px; }
+/* a drop onto a group: the group row is lit and an indented line shows where the item goes, first in the group */
+.cl-item.cl-drop-into { position: relative; background: color-mix(in srgb, var(--accent) 12%, transparent); outline: 1px solid var(--accent); outline-offset: -1px; }
+.cl-item.cl-drop-into::after { content: ''; position: absolute; left: 28px; right: 0; bottom: -1px; height: 3px; z-index: 2; background: var(--accent); }
 .icon-btn.cl-area-btn { width: 26px; }
 .cl-menu { position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; width: 230px; padding: 6px; display: flex;
   flex-direction: column; gap: 1px; background: var(--card); border: 1px solid var(--line); border-radius: 6px;
