@@ -1131,6 +1131,18 @@
       "rev": 1,
       "area": "schematic",
       "fix": false
+    },
+    {
+      "id": "c088",
+      "text": "added the trainsfan achievement for 100 hours played",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3520",
+      "by": "trainsfan",
+      "at": "2026-11-17T14:16:22Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
     }
   ]
 }
