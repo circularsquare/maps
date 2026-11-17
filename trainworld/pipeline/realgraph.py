@@ -243,6 +243,8 @@ def build(cc, boxes):
             rank = 1
         if rank >= 2:
             shown = False
+        elif not shown:
+            shown = True  # track no line runs over is drawn in All, so it is snapped to (T-3495)
         # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
         if not shown and (tags.get("service") not in (None, "crossover") or tags.get("usage") in SPARE_USAGE):
             continue

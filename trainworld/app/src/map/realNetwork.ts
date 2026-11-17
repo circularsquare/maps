@@ -7,7 +7,7 @@
 // `track` layer: k kind, r rank 0 main or 1 other, p confirmed by a passenger route, n no line runs over
 // it, x such track of a named line the model left out (T-3043), c colour; nm and w only from zoom 10). The tiles carry no line type, so the classes are what they
 // do carry: metro (subway), main line (rail, rank 0), other rail a line runs over (rank 1, T-3043), and light rail (S-Bahn, Stadtbahn, DLR; the tiles carry no usage, so all of it, T-3285). Trams, monorails, funiculars, narrow gauge, heritage and track no line runs over are
-// left out, unless Settings says All (T-3289). A region's source is added when the view first touches it, from zoom 6 up.
+// left out, unless Settings says All (T-3289); while the track tool snaps, All draws only what the router can follow (rail, light rail and metro, used or not). A region's source is added when the view first touches it, from zoom 6 up.
 //
 // Where the files are: beside the game at `../noritetsu/` when that answers with noritetsu's
 // regions.json (8800 serves it; the dev server proxies the path, vite.config.ts), else Cloudflare R2,
@@ -45,6 +45,8 @@ const MAIN = ["all", kind("rail"), ["==", ["get", "r"], 0]];
 const PASSENGER = ["all", ["any", ["!=", ["get", "n"], 1], ["==", ["get", "x"], 1]], ["any", METRO, kind("rail"), kind("light_rail")]];
 /** "All" draws every feature the tiles carry: track no line runs over, trams, monorails, funiculars, narrow gauge, heritage; freight and abandoned rail come from the extra archives */
 const EVERYTHING = ["has", "k"];
+/** what the router's graphs hold (pipeline/realgraph.py): metro, rail and light rail, used or not (T-3495) */
+const ROUTABLE = ["any", METRO, kind("rail"), kind("light_rail")];
 
 const FREIGHT = ["==", ["get", "k"], "freight"];
 /** freight and abandoned are lesser than any passenger class: freight 0.45 of a main line, abandoned 0.35 and dashed */
@@ -244,8 +246,9 @@ export function startRealNetwork(map: maplibregl.Map) {
     const snap = snapping.value;
     const reach = snap && !!realReach.value;
     const shown = display.value.realNetwork;
-    // snapping goes only to passenger track, so while it is on only that is drawn
-    filter = shown === "all" && !snap ? EVERYTHING : PASSENGER;
+    // snapping goes only to track the router has, so while it is on only that is drawn: all of it
+    // under All, the track lines run over under Passenger (T-3495)
+    filter = shown === "all" ? (snap ? ROUTABLE : EVERYTHING) : PASSENGER;
     on = shown !== "none" || snap;
     extraOn = shown === "all" && !snap;
     opacity = snap ? (reach ? OPACITY_DIM : OPACITY_SNAP) : SHADES[mapShade.value].realOpacity;
