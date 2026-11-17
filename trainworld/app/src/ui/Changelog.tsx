@@ -81,7 +81,6 @@ function Pages() {
     {updates.map((u) => <section key={u.version}>
       <h3 class="changelog-head">{u.version}<span class="muted small">{tDate(Date.parse(u.at), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</span></h3>
       {u.highlights?.length ? <>
-        <h4 class="changelog-sub">{t("startMenu.changelogHighlights")}</h4>
         <ul class="changelog-list">{highlighted(u).map((c) => <Item u={u} c={c} />)}</ul>
         <ul class="changelog-list changelog-rest">{sorted(u.changes.filter(([k]) => !u.highlights!.includes(k))).map((c) => <Item u={u} c={c} />)}</ul>
       </> : <ul class="changelog-list">{sorted(u.changes).map((c) => <Item u={u} c={c} />)}</ul>}
