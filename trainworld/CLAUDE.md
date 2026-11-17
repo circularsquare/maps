@@ -13,7 +13,8 @@ The orchestrator also reads `docs/orchestrator.md`.
 - **She doesn't read the code.** Quote the value or list in the message, or name the place on 8800, never a file
   to open.
 - **Estimates in hours of real agent time**, checked against similar past tasks (T-3137 C1, guessed at days, took
-  about 45 minutes). Never "agent-days".
+  about 45 minutes). Never "agent-days". Don't call something impossible by a time: our guesses run pessimistic, and
+  work often lands sooner. No deadlines unless she gives one; aim for the next release and see (Anita, 2026-11-17).
 - **Ask when the answer is needed next**, not ahead. Test items only once the change is on 8800.
 
 ## What waits for her word

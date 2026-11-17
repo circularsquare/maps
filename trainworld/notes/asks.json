@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-17-7",
-    "title": "One-way station partner rule",
-    "text": "T-3565: today a station on one leg of a one-way pair counts as one stop with a station on the other leg within 300 m (T-3348): the line serves the pair once each way, and clicking either can add the other. Your model (\"a station on one-way track is just a one-way station\") suggests dropping that pairing, so each one-way station is its own stop served by one direction. Drop it (my pick), or keep it?",
-    "since": "2026-11-17",
-    "by": "maps-1c"
-  }
-]
+[]

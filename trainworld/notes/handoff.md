@@ -8,9 +8,9 @@ A short state page, rewritten (not appended) as things change. The diary is note
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5.
 
 ## State
-- Live = v0.3.5. She wants v0.4.0 out TONIGHT if it works ("would rather do tonight, but dont worry about it").
-  T-3565 (one-way pairs) is NOT in: she said 11-17 ~22:10 UTC "write down ideas and start fresh" (below). My
-  proposed cut-off: ship without T-3565 if not solid by ~8 pm her time (asked, unanswered).
+- Live = v0.3.5. v0.4.0: she'd rather wait for the one-way station work (T-3565 + T-3595) and ship with it if it
+  lands tonight; if not, ship without. No deadline, no cut-off; don't call it impossible (11-17 21:40 UTC).
+  T-3464 freight tiles stays after the publish (her word).
 - 8800 = fa0eeaea. master is ahead: pass-1 translations, arrows T-3596 (372ea8f7), workflow files 71d8ffae; pushed
   fa0eeaea. Rebuild 8800 after the next landing batch.
 - v0.4.0 highlights marked (c084 regions, c051 long-distance fix, c130 schedule panel). Changelog sorted, grouped,
@@ -19,8 +19,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   line` + `publish --version v0.4.0`; then translate the new updates.v040* keys (second l10n batch, 3 passes);
   server save check: maps-1c fixed LWE1 flag 2 (T-3557 headways) in shonei-server a46c2e9, tests pass; T-3588's
   header fields aren't read by the check; server deploy (7a23cbc..a46c2e9, her yes); smoke8800 light and dark; deploy.py;
-  website push; open-source sync + push; Renkon PR 1 / issue 8 replies (handoff-log 11-17 maps-b8). T-3464 freight
-  tiles is {after:v0.4.0 publish} in TASKS but an old handoff listed it pre-ship: ask her if it matters.
+  website push; open-source sync + push; Renkon PR 1 / issue 8 replies (handoff-log 11-17 maps-b8).
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
   tools/ops/archive_bad_saves.py, changelog/roadmap.json, notes/T-3455/kit (commit with the night run). Outside
   trainworld, uncommitted, hers to decide (asks.json): .claude/skills/handoff, takeover, hooks/orchestrator.py, maps
@@ -31,8 +30,6 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 
 ## In flight
 maps-45's (it relays their reports to maps-1c verbatim):
-- extendfix (Opus, .tw-trees/extendfix, port 6179): T-3595 P1, her Caracas San Martin save
-  (artifacts/trainworld/t3595-caracas-sanmartin-broken.save). Diagnosing on master; no source edits yet.
 - farebase (Opus, .tw-trees/farebase): T-3578 checker FAILED: all lines at 0x gives 33 lines negative revenue (base
   pool shared by boardings, negative base term spread by km); notes/T-3578-check.md. Fixing and rebasing. Landing is
   maps-1c's: commit the reviewers' messages/ merges first, then a fresh checker, then land; reword T-3567's fare
@@ -40,10 +37,12 @@ maps-45's (it relays their reports to maps-1c verbatim):
 maps-1c's:
 - onewaystops2 (Opus, .tw-trees/onewaystops2 off master, port 6181): T-3565 fresh start; old tree .tw-trees/onewaystops
   is a read-only quarry (remove after). Partner rule kept pending her answer (asks.json). Keeps off T-3595's cause.
-  No landing tonight; checker after.
+  Lands when ready, checker straight after, into v0.4.0 if it comes together. Also has T-3595 as a second stage (extendfix found the cause, notes/T-3595.md:
+  a train may turn back at any track end, my call, DECISIONS); it takes the check and ignored test from
+  .tw-trees/extendfix (remove that tree after).
 - After-0.4 work, her ask 11-17 ("easily verifiable tasks, for after 0.4"); land after the publish: idlemem (Opus,
   T-3492, port 6182), trafficwidth (Sonnet, T-3580, 6183), capload (Sonnet, T-3559+T-3528, 6184), oldchecks
-  (Sonnet, T-3462, 6185), each in .tw-trees/<name>.
+  (Sonnet, T-3462, landed bde8c1d8, checks only), each in .tw-trees/<name>.
 - She wants a high-level update on the one-way station work every so often.
 - Translations: pass 3 done and committed for all 12 (9b393ad7, c42aa7a9, cd10e0d3, ea5c651c). Running: l10n-shots
   (Sonnet, port 6186, pass 5 screenshots, may merge shorter wording; I commit). Later notes in each
@@ -66,8 +65,8 @@ maps-1c's:
    hotfix031-target, hover, touchrule, trackrebuild, safari-save-035, shenzhen, tt2, ttstyle, trams: look first.
 
 ## Waiting on Anita
-- asks.json: T-3565 partner rule (drop recommended). Workflow files: she said yes, committed 71d8ffae.
-- Asked again in chat by maps-1c: ship 0.4 without T-3565 (my pick; it won't be checked tonight); T-3464 before?
+- Nothing open. Answered 11-17: partner rule kept as "nice to have" at ~50 m between platforms, unpaired one-way
+  stations normal (any number per leg); passed to onewaystops2.
 
 ## Her standing asks this week
 - Small isolated fixes, open-task count down, merge duplicates; bug investigations give up if hard.
