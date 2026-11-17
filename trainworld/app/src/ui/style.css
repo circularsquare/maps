@@ -891,8 +891,8 @@ rect.now { fill-opacity: .45; }
 .sched-copy .btn.icon.mini { width: 24px; min-width: 24px; height: 24px; }
 .sched-copy .btn.mini svg { width: 18px; height: 18px; }
 /* the schedule button stands out: its icon 40% bigger than the chart's (Anita, 2026-11-17) */
-.sched-copy .btn.icon.mini.sched-open { width: 30px; min-width: 30px; height: 30px; }
-.sched-copy .btn.mini.sched-open svg { width: 25px; height: 25px; }
+.sched-copy .btn.icon.mini.sched-open { width: 26px; min-width: 26px; height: 26px; }
+.sched-copy .btn.mini.sched-open svg { width: 19.5px; height: 19.5px; }
 /* the chart icon fills 13 of its 16 units where the timetable's fills 11: drawn smaller so the two look one size */
 .sched-copy .btn.mini.marey-open svg { width: 15px; height: 15px; }
 .sched-copy .btn:hover:not(:disabled) { color: var(--text); }

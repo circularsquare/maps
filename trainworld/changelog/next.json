@@ -536,10 +536,11 @@
       "task": "T-3426",
       "by": "maps-d7",
       "at": "2026-11-16T17:56:06Z",
-      "rev": 20,
+      "rev": 21,
       "area": "demand",
       "fix": true,
-      "changed": "2026-11-17T20:17:27Z"
+      "changed": "2026-11-17T20:51:51Z",
+      "highlight": true
     },
     {
       "id": "c130",
@@ -549,11 +550,12 @@
       "task": null,
       "by": "logsort",
       "at": "2026-11-17T20:19:30Z",
-      "rev": 2,
+      "rev": 3,
       "area": "scheduling",
       "fix": false,
       "group": true,
-      "changed": "2026-11-17T20:38:32Z"
+      "changed": "2026-11-17T20:51:50Z",
+      "highlight": true
     },
     {
       "id": "c094",
@@ -1170,9 +1172,11 @@
       "task": "T-3399",
       "by": "nightwrap",
       "at": "2026-11-17T12:53:13Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-17T20:51:50Z"
     },
     {
       "id": "c074",
