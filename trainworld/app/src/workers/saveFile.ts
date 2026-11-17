@@ -69,6 +69,20 @@ export function addEntry(to: Omit<DayLedger, "day">, e: Omit<DayLedger, "day">, 
   to.points = (to.points ?? 0) + sign * (e.points ?? 0);
 }
 
+/** T-3543, T-3588: the headways new lines start with (seconds at high, medium and low demand), by kind of line */
+export type Headways = [number, number, number];
+export type NewHeadways = { rail?: Headways; tram?: Headways; fast?: Headways };
+const isHeadways = (v: unknown): v is Headways => Array.isArray(v) && v.length === 3 && v.every((s) => typeof s === "number" && Number.isFinite(s) && s >= 0);
+/** A header's `newHeadway` read back: the kinds it holds well-formed, none from anything else. */
+export function cleanNewHeadways(v: unknown): NewHeadways {
+  const out: NewHeadways = {};
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    const o = v as Record<string, unknown>;
+    for (const k of ["rail", "tram", "fast"] as const) if (isHeadways(o[k])) out[k] = [o[k][0], o[k][1], o[k][2]];
+  }
+  return out;
+}
+
 export interface SaveHeader {
   game: "anitabuilder";
   format: number;
@@ -135,7 +149,8 @@ export interface SaveHeader {
   /** T-1094: the train length last set on a line (0 for the most the platforms fit), a new line's start; absent in older saves */
   newCars?: number;
   /** T-3543: the headways, seconds at high, medium and low demand, every new line starts with (set from the timetables window); absent: the game's own counts */
-  newHeadway?: [number, number, number];
+  newHeadway?: NewHeadways;
+  newWeekendShare?: number;
   /** T-1826: the save level of the build that wrote it (`TrackApi.save_level`, sim/src/track/save.rs
    * `LEVEL`); absent before it, read as 0 */
   level?: number;
@@ -168,7 +183,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, mode: true, start: true,
-  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, level: true, guide: true, achievements: true, home: true, copy: true,
+  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, newWeekendShare: true, level: true, guide: true, achievements: true, home: true, copy: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */
 export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADER_FIELDS));

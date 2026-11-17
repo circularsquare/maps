@@ -216,6 +216,16 @@ export function setWeekendCount(id: LineId, demand: Demand, want: number, most: 
   return true;
 }
 
+/** The headway the weekends' row at level `lev` shows with `n` trains, to a whole minute (seconds); 0 none. */
+function shownRestHeadway(id: LineId, lev: number, n: number): number {
+  const st = world.value?.lineStats[id];
+  if (!st || !(n > 0)) return 0;
+  const trip = st.roundTripByLevel[lev], ran = st.weekend ? st.weekend[2 + lev] : st.trainsNeeded[lev];
+  const tph = n === ran && st.restTph ? st.restTph[lev] : trip > 0 ? (n * 3600) / trip : 0;
+  const h = tph > 0 ? 3600 / tph : 0;
+  return h >= 60 ? Math.round(h / 60) * 60 : Math.round(h);
+}
+
 /** Set a line's weekend trains at a level to `to` and the headway they run (seconds, 0 none): the
  * weekends then run that headway (T-3557). False when that changes nothing. */
 function setWeekendHeadway(id: LineId, demand: Demand, to: number, h: number, most: number): boolean {
@@ -225,7 +235,8 @@ function setWeekendHeadway(id: LineId, demand: Demand, to: number, h: number, mo
   if (cur.custom && n === cur.counts[i] && sec === (cur.headways?.[i] ?? 0)) return false;
   const counts = [...cur.counts] as [number, number, number];
   counts[i] = n;
-  const headways = [...(cur.headways ?? [0, 0, 0])] as [number, number, number];
+  // a level left alone keeps the headway it shows, in whole minutes, not the count's round trip share (T-3588)
+  const headways = [0, 1, 2].map((k) => cur.headways?.[k] || shownRestHeadway(id, k, cur.counts[k])) as [number, number, number];
   headways[i] = sec;
   sendWeekend(id, { share: cur.share, custom: true, counts, headways }, { op: "weekendCounts", line: num(id), counts, headways });
   return true;
@@ -513,12 +524,18 @@ export function stepHeadway(id: LineId, demand: Demand, dir: number): boolean {
 /** Switch a line between counting its trains by hand and keeping a headway: it starts with the
  * headway its trains give now, so no train comes or goes. */
 export function setAutoTrains(id: LineId, on: boolean) {
-  const st = world.value?.lineStats[id];
-  if (!st) return;
   if (!on) {
     queueHeadway(id, null);
     return;
   }
+  const seconds = headwaysOfTrains(id);
+  if (seconds) queueHeadway(id, seconds);
+}
+
+/** The headways a line's trains give now, so a switch to Headway changes no train (T-3588 shares it). */
+export function headwaysOfTrains(id: LineId): [number, number, number] | null {
+  const st = world.value?.lineStats[id];
+  if (!st) return null;
   const n = trainsShown(id) ?? st.trainsNeeded;
   // the headway its trains give, rounded to the coarsest of 1 minute, 30, 10 or 5 seconds that keeps them
   const seconds = n.map((k, lev) => {
@@ -531,7 +548,7 @@ export function setAutoTrains(id: LineId, on: boolean) {
     }
     return exact;
   }) as [number, number, number];
-  queueHeadway(id, seconds);
+  return seconds;
 }
 
 /** The fare curve for the whole network (T-883, game/fareCurve.ts): its nodes, km and US$. */

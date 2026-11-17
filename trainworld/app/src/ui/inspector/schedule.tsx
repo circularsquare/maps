@@ -21,7 +21,7 @@ import { ask } from "../../game/ui";
 import { useClockQuery } from "../useClockQuery";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { pendingLabel } from "../../game/lineFigures";
-import { clearDefaultHeadway, makeDefaultHeadway, newHeadway } from "../../game/newHeadway";
+import { clearDefaultHeadway, lineKind, makeDefaultHeadway, newHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
@@ -339,24 +339,26 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
   );
 }
 
-/** T-3543: the headways every new line starts with, in the schedule panel: what they are now, the
- * button that makes this line's the default (a line on counts has none), and the way back. */
+/** T-3543, T-3588: the headways every new line of this line's kind starts with, in the schedule panel: what they
+ * are now, the button that makes this line's the default for the kind, and the way back. A bus or
+ * ferry line has none. */
 function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, number] | null }) {
-  const now = newHeadway.value;
+  const kind = lineKind(id);
+  if (!kind) return null;
+  const now = newHeadway.value[kind] ?? null;
   const same = !!auto && !!now && auto.every((s, i) => s === now[i]);
   return (
     <div class="sched-default">
-      <div class="sched-default-head">{t("schedule.defaultTitle")}</div>
-      <div class="muted">{now ? tList(now.map((s) => headway(s > 0 ? 3600 / s : 0))) : t("schedule.defaultNone")}</div>
+      <div class="sched-default-head">{t(KIND_TITLE[kind])}</div>
+      <div class="muted">{now ? tList(now.map(headwayText)) : t("schedule.defaultNone")}</div>
       <div class="sched-default-btns">
-        <span data-tip={auto ? undefined : t("schedule.defaultNeedsHeadway")}>
-          <button type="button" class="btn text mini" disabled={!auto || same} onClick={() => makeDefaultHeadway(id)}>{t("schedule.defaultSet")}</button>
-        </span>
-        <button type="button" class="btn text mini" disabled={!now} onClick={clearDefaultHeadway}>{t("schedule.defaultReset")}</button>
+        <button type="button" class="btn text mini" disabled={same} onClick={() => makeDefaultHeadway(id)}>{t("schedule.defaultSet")}</button>
+        {now && <button type="button" class="btn text mini" onClick={() => clearDefaultHeadway(kind)}>{t("schedule.defaultReset")}</button>}
       </div>
     </div>
   );
 }
+const KIND_TITLE = { rail: "schedule.defaultTitle", tram: "schedule.defaultTitleTram", fast: "schedule.defaultTitleFast" } as const;
 
 /** T-3521: the schedule panel's table body: a Weekdays section and a Weekends section, each a row a
  * level. Today's kind of day bolds its level now, as the line panel does, and has `crowd`'s dots;

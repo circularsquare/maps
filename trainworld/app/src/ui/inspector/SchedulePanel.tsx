@@ -186,6 +186,9 @@ function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; other
 
 /** The panel's frame: a modal like the saved games panel's, its title the line's or group's bullet,
  * name and "schedule". */
+/** The modes the heading offers; the choice is drawn only once there is more than Simple (Detailed and Exact, T-3346 stages 3 and 6). */
+const scheduleModes = (): [string, string][] => [["simple", t("schedulePanel.simple")]];
+
 function Frame({ label, title, mode, children }: { label: string; title: ComponentChildren; mode?: ComponentChildren; children: ComponentChildren }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, true);
@@ -217,7 +220,7 @@ export function SchedulePanel() {
     if (l && charted(st, l)) {
       body = (
         <Frame label={t("schedulePanel.label", { line: l.name })} title={<><Chip line={l} plain /><span class="sp-name">{l.name}</span></>}
-          mode={<span class="sp-mode"><Segmented options={[["simple", t("schedulePanel.simple")]]} value="simple" onChange={() => {}} /></span>}>
+          mode={scheduleModes().length > 1 ? <span class="sp-mode"><Segmented options={scheduleModes()} value="simple" onChange={() => {}} /></span> : undefined}>
           <LineBody l={l} st={st} />
         </Frame>
       );

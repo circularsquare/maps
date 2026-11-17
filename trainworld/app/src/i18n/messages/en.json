@@ -2724,12 +2724,13 @@
   "schedule.weekendShareLabel": "Weekend share of weekday trains",
   "schedule.weekendShareOff": "Weekend trains set by hand",
   "schedule.weekendAll": "Apply to all lines",
-  "schedule.weekendAllAsk": "Set every line's weekends to {pct} of its weekdays?",
+  "schedule.weekendAllAsk": "Set weekends to {pct} of weekdays on every line, and on new lines too?",
   "schedule.weekendLabel": "{vehicle, select, train {trains} tram {trams} bus {buses} other {boats}} on weekends",
   "schedule.weekendHeadwayLabel": "Headway on weekends",
-  "schedule.defaultTitle": "Headways for new lines",
-  "schedule.defaultNone": "Game default",
+  "schedule.defaultTitle": "Headways for new regular lines",
+  "schedule.defaultTitleTram": "Headways for new tram lines",
+  "schedule.defaultTitleFast": "Headways for new high-speed lines",
+  "schedule.defaultNone": "Default not set",
   "schedule.defaultSet": "Set as default",
-  "schedule.defaultReset": "Use game default",
-  "schedule.defaultNeedsHeadway": "Switch this line to Headway first"
+  "schedule.defaultReset": "Clear default"
 }

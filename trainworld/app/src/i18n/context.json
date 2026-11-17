@@ -2724,12 +2724,13 @@
   "schedule.weekendShareLabel": "Screen-reader label of the percent stepper beside the Weekends heading: weekend trains as a percent of weekday trains.",
   "schedule.weekendShareOff": "Hover on the greyed percent beside the Weekends heading: the line's weekend counts were changed by hand, so the percent is not in use.",
   "schedule.weekendAll": "Button beside the Weekends heading: set every line's weekends to the percent shown. Also the confirm button of its question.",
-  "schedule.weekendAllAsk": "Question before setting every line's weekends to a percent. pct: a percent, \"70%\".",
+  "schedule.weekendAllAsk": "Question before setting every line's weekends, and the weekends of lines built later, to a percent. pct: a percent, \"70%\".",
   "schedule.weekendLabel": "Screen-reader label of a weekend count stepper in the schedule panel. vehicle: train, tram, bus or boat.",
   "schedule.weekendHeadwayLabel": "Screen-reader label of a weekend headway stepper in the schedule panel (the count follows the headway).",
   "schedule.defaultTitle": "Heading in the schedule panel, above the headways every new line starts with and the buttons that set and reset them.",
-  "schedule.defaultNone": "Under schedule.defaultTitle when no default is set: new lines start on the game's own train counts.",
-  "schedule.defaultSet": "Button in the schedule panel that makes the open line's headways the ones every new line starts with.",
-  "schedule.defaultReset": "Button in the schedule panel that goes back to the game's own train counts for new lines.",
-  "schedule.defaultNeedsHeadway": "Hover on the disabled schedule.defaultSet button while the line's schedule is set by train counts."
+  "schedule.defaultNone": "Under schedule.defaultTitle when no default is set: new lines start on train counts.",
+  "schedule.defaultTitleTram": "Same heading for a tram line.",
+  "schedule.defaultTitleFast": "Same heading for a high-speed line.",
+  "schedule.defaultSet": "Button in the schedule panel that makes the open line's headways the ones every new line starts with; a line on train counts is switched to Headway first.",
+  "schedule.defaultReset": "Button in the schedule panel, shown only while a default is set, that clears it so new lines start on train counts."
 }

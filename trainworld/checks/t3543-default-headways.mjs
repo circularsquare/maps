@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { ARTIFACTS, importSave } from './lib.mjs';
 import { openGame } from './lib/play.mjs';
 
-const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6164/';
+const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6170/';
 let fail = 0;
 const check = (ok, what, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}${detail ? `  (${detail})` : ''}`); if (!ok) fail++; };
 const C = [-73.93, 40.66];
@@ -27,7 +27,7 @@ const headwaysOf = (name) => page.evaluate(async (n) => {
   const l = world.save.lines.find((x) => x.name === n);
   return l ? w.headwayShown(l.id) : undefined;
 }, name);
-const defaultNow = () => page.evaluate(async () => (await import('/src/game/newHeadway.ts')).newHeadway.value);
+const defaultNow = () => page.evaluate(async () => (await import('/src/game/newHeadway.ts')).newHeadway.value.rail ?? null);
 const windowText = () => page.evaluate(() => document.querySelector('.sched-default')?.innerText ?? null);
 const closeWindow = async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(400); };
 try {
@@ -47,7 +47,7 @@ try {
   check(!labels.some((x) => /Copy the schedule|Paste the schedule/.test(x ?? '')), 'no copy or paste schedule button', labels.join(' | '));
   check(!(await page.getByRole('button', { name: /Paste a schedule|Paste the schedule|Copy the schedule/ }).count()), 'none of them anywhere on the page');
   const sched = buttons.find((b) => b.label === 'Detailed schedule'), other = buttons.find((b) => b.label !== 'Detailed schedule');
-  check(!!sched && !!other && sched.w > other.w && sched.w - other.w <= 8, 'the schedule button is a little bigger than the chart button', JSON.stringify(buttons));
+  check(!!sched && !!other && Math.abs(sched.w - other.w) < 0.5 && sched.w >= 21, 'the chart button is as big as the schedule button', JSON.stringify(buttons));
   await g.shot('t3543_line_panel_full.png', { element: '#inspector' });
   await page.evaluate(() => document.querySelector('#inspector .h .sched-copy')?.scrollIntoView({ block: 'center' }));
   const head = await page.evaluate(() => { const r = document.querySelector('#inspector .h .sched-copy').parentElement.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
@@ -56,11 +56,27 @@ try {
   // the window: Headway, three headways, then Set as default
   await g.act.click('Detailed schedule');
   await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
-  check(/Game default/.test((await windowText()) ?? ''), 'the window says Game default', await windowText());
+  check(/Default not set/.test((await windowText()) ?? ''), 'a fresh game: the window says Default not set', await windowText());
+  check(!(await page.getByRole('button', { name: 'Clear default' }).count()), 'no Clear default while there is no default');
+  check((await headwaysOf('First')) === null, 'the first line runs on counts');
   const setBtn = page.getByRole('button', { name: 'Set as default' });
-  check(await setBtn.isDisabled(), 'Set as default is off while the line runs on counts');
-  await page.locator('dialog.sched-panel').getByRole('button', { name: 'Headway', exact: true }).first().click();
-  await page.waitForTimeout(800);
+  check(await setBtn.isEnabled(), 'Set as default is on for a line on counts');
+  await page.evaluate(async () => {
+    const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'First');
+    for (const [d, n] of [['high', 3], ['medium', 2], ['low', 1]]) { w.setTrainCount(l.id, d, n); await new Promise((r) => setTimeout(r, 700)); }
+  });
+  await page.waitForFunction(() => { const w = window.tw.world.value, l = w.save.lines.find((x) => x.name === 'First'); return l && w.lineStats[l.id]?.trainsNeeded?.join() === '3,2,1'; }, undefined, { timeout: 30000 });
+  const counts = await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'First'); return [...(w.trainsShown(l.id) ?? window.tw.world.value.lineStats[l.id].trainsNeeded)]; });
+  await setBtn.click();
+  await page.waitForTimeout(2500);
+  const sw = await headwaysOf('First');
+  check(Array.isArray(sw) && sw.some((x) => x > 0) && (await defaultNow())?.join() === sw.join(), 'Set as default on counts: the line switched to headway and it is the default', JSON.stringify({ sw, def: await defaultNow() }));
+  const after = await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'First'); return [...window.tw.world.value.lineStats[l.id].trainsNeeded]; });
+  check(counts.join() === after.join(), 'same trains as before the switch', `${counts} -> ${after}`);
+  check(/Clear default/.test(await page.locator('.sched-default').innerText()), 'Clear default now shown');
+  await g.shot('t3588_window.png', { element: 'dialog.sched-panel' });
+  await page.locator('.sched-default').scrollIntoViewIfNeeded();
+  await page.locator('dialog.sched-panel').screenshot({ path: join(REVIEW, 't3588.png') });
   await page.evaluate(async () => {
     const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'First');
     w.setHeadway(l.id, 'high', 300); await new Promise((r) => setTimeout(r, 700));
@@ -90,7 +106,7 @@ try {
   const dl = page.waitForEvent('download', { timeout: 60000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'export' }));
   const bytes = await readFile(await (await dl).path());
-  const header = await page.evaluate(async (data) => (await import('/src/workers/saveFile.ts')).decodeSave(Uint8Array.from(data)).then((d) => d.header.newHeadway ?? null), Array.from(bytes));
+  const header = await page.evaluate(async (data) => (await import('/src/workers/saveFile.ts')).decodeSave(Uint8Array.from(data)).then((d) => d.header.newHeadway?.rail ?? null), Array.from(bytes));
   check(JSON.stringify(header) === '[300,480,900]', 'the exported save carries the default', JSON.stringify(header));
   await importSave(page, bytes);
   await page.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length >= 2, undefined, { timeout: 300000 });
@@ -101,12 +117,46 @@ try {
   await page.waitForTimeout(1500);
   check(JSON.stringify(await headwaysOf('Third')) === '[300,480,900]', 'a line drawn after the reload starts with it', JSON.stringify(await headwaysOf('Third')));
 
+  // weekends: Apply to all lines asks, says it covers new lines, and a line drawn after starts on it
+  await g.act.click('Detailed schedule');
+  await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
+  await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Third'); w.setWeekendShare(l.id, 60); });
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Apply to all lines' }).click();
+  await page.waitForTimeout(400);
+  const askText = await page.evaluate(() => document.body.innerText.match(/Set weekends to .*new lines too\?/)?.[0] ?? null);
+  check(!!askText, 'the question says new lines too', String(askText));
+  await page.getByRole('button', { name: 'Apply to all lines' }).last().click();
+  await page.waitForTimeout(1500);
+  await closeWindow();
+  await g.act.newLine([A, B], { name: 'Weekender', zoom: 15 });
+  await page.waitForTimeout(1500);
+  const wshare = await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Weekender'); return w.weekendShown(l.id)?.share ?? null; });
+  check(wshare === 60, 'a new line starts on the weekend percent set for all lines', String(wshare));
+
+  // stepping one weekend headway leaves the other levels as shown, in whole minutes
+  await g.act.click('Detailed schedule');
+  await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
+  await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Third'); w.setWeekendShare(l.id, 70); });
+  await page.waitForTimeout(1500);
+  const shownRest = () => page.evaluate(async () => { const l = window.tw.world.value.save.lines.find((x) => x.name === 'Third'), st = window.tw.world.value.lineStats[l.id]; return st.restTph.map((t) => (t > 0 ? Math.round(3600 / t) : 0)); });
+  const wkBefore = await shownRest();
+  await page.evaluate(async () => {
+    const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Third'), st = window.tw.world.value.lineStats[l.id];
+    const h = st.restTph[0] > 0 ? 3600 / st.restTph[0] : 0;
+    w.stepWeekendHeadway(l.id, 'high', 1, st.roundTripByLevel[0], 0, false, 99, h);
+  });
+  await page.waitForTimeout(1500);
+  const wkAfter = await shownRest();
+  check(wkBefore[1] === wkAfter[1] && wkBefore[2] === wkAfter[2] && wkAfter[0] % 60 === 0 && wkAfter[0] !== wkBefore[0], 'a weekend headway step leaves the other two levels as shown, whole minutes', JSON.stringify({ wkBefore, wkAfter }));
+  await closeWindow();
+
   // back to the game's own default
   await g.act.click('Detailed schedule');
   await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
-  await page.getByRole('button', { name: 'Use game default' }).click();
+  await page.getByRole('button', { name: 'Clear default' }).click();
   await page.waitForTimeout(500);
-  check((await defaultNow()) === null && /Game default/.test((await windowText()) ?? ''), 'Use game default clears it', await windowText());
+  check((await defaultNow()) === null && /Default not set/.test((await windowText()) ?? ''), 'Clear default clears it', await windowText());
   await closeWindow();
   await g.act.newLine([A, D], { name: 'Fourth', zoom: 15 });
   await page.waitForTimeout(1500);

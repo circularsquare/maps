@@ -347,7 +347,7 @@ export type ToClock =
   /** T-3319: a line's own bullet shape, null for its mode's; outside the undo history */
   | { kind: "lineShape"; line: string; shape: LineShape | null }
   /** T-3543: the headways (seconds at high, medium, low) new lines start with, null for the game's counts; outside the undo history */
-  | { kind: "newHeadway"; seconds: [number, number, number] | null }
+  | { kind: "newHeadway"; seconds: import("./saveFile").NewHeadways }
   /** T-3420: the line ids the player hid on the map; outside the undo history */
   | { kind: "hideLines"; lines: string[] }
   /** `restore`: `key` is a backup's (T-744) */
@@ -868,7 +868,7 @@ export type FromClock =
   /** T-3319: the game's line shapes (`SaveHeader.shapes`), sent with "opened" and after a new line or a copy */
   | { kind: "lineShapes"; shapes: Record<string, LineShape> }
   /** T-3543: the game's new-line headways (`SaveHeader.newHeadway`), sent with "opened" */
-  | { kind: "newHeadway"; seconds: [number, number, number] | null }
+  | { kind: "newHeadway"; seconds: import("./saveFile").NewHeadways }
   /** T-3420: the game's hidden lines (`SaveHeader.hidden`), sent with "opened" and after a new line takes a hidden one's id */
   | { kind: "hiddenLines"; lines: string[] }
   /** T-2395: the home of the game in hand (`SaveHeader.home`), sent with "opened" */

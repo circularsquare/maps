@@ -1259,8 +1259,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **A line's**: opened from the bigger icon by a running rail line's schedule heading (a station timetable,
   hover "Detailed schedule"); a centred modal in the saved games panel's frame, up to 1320 px wide; closed by its
   close button, Esc or a click outside it (the dock's timetable chart, open under it, keeps going). Heading: the
-  line's bullet and name, "schedule" in grey, then the mode choice, which offers Simple only until Detailed and
-  Exact are built (stages 3 and 6). A player who never opens it sees nothing else new.
+  line's bullet and name, "schedule" in grey, then the mode choice, drawn only once Detailed and
+  Exact are built (stages 3 and 6; Simple alone shows no choice). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
   switch; an edit here is the line panel's edit. The table has two sections (T-3521), each a bold heading row
   with room above it: **Weekdays**, the line panel's rows, and **Weekends** (hover "Weekends and public
@@ -1268,13 +1268,10 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   stepper, the count beside it; the headway stepped to is kept with the counts and the weekends run it, T-3557),
   its headway the rate settled for weekends. Beside the Weekends heading the
   line's percent of its weekdays in a stepper (5% a click, typed 10-200), greyed with the hover "Weekend trains
-  set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set every line's weekends
-  to 70% of its weekdays?" first. The level in force is bold in today's section only; each section's dots are its
+  set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set weekends to 70% of weekdays on every line, and on new lines too?" first (new lines start on that percent, `SaveHeader.newWeekendShare`, T-3588). The level in force is bold in today's section only; each section's dots are its
   own kind of day's (today's, else a weekday's or a Saturday's). A stepper's hover counts the fleet over both
-  kinds of day. Under the table, **Headways for new lines**: the headways every new line starts with, "Game default"
-  (the game's own train counts) until set, a "Set as default" button that makes this line's headways the default
-  (off for a line on counts, hover "Switch this line to Headway first", and while they already are) and "Use game default" to go back
-  (T-3543; saved with the game, `SaveHeader.newHeadway`; the clock worker applies them to each new rail line after it is
+  kinds of day. Under the table, **Headways for new regular, tram or high-speed lines** (the heading names the selected line's kind; a bus or ferry line has none): the headways every new line of that kind starts with, "Default not set" until the player sets one (a new game has none, so a first line runs on train counts; without a default a line starts on counts, which give no fixed headway to show), a "Set as default" button that makes this line's headways the default for its kind (a line on counts is switched to Headway first at the headways its trains give, so it runs the same service; off while they already are) and "Clear default", shown only while one is set. The row uses the table's 12 px text
+  (T-3543, T-3588; saved with the game, `SaveHeader.newHeadway` {rail, tram, fast}; the clock worker applies them to each new rail line after it is
   made, as a second edit, a line that cannot pay for the trains they ask staying on its counts). Then the departures board.
 - **Right**: the timetable over the chart.
 - **Departures**: headed "Departures" with a station picker (the line's stops in order, each station once, the first stop to start), then

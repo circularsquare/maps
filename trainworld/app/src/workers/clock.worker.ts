@@ -42,7 +42,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
@@ -327,7 +327,9 @@ let hiddenLines = new Set<string>();
 /** T-1094: the train length last set on any line (0 for the most the platforms fit), a new line's start */
 let newLineCars = NEW_LINE_CARS;
 /** T-3543: the headways (seconds at each level) a new line starts with, set from the timetables window; null: the game's counts */
-let newLineHeadway: [number, number, number] | null = null;
+let newLineHeadway: NewHeadways = {};
+/** T-3588: the weekend percent "Apply to all lines" last set, which new lines start with; null: none set (100) */
+let newLineWeekendShare: number | null = null;
 /** T-2926: a new tram line's sections, and the most a tram has (an 80 m platform) */
 const TRAM_NEW_CARS = 2, TRAM_MAX_CARS = 4;
 /** T-1822: the Getting started card's progress in this game; undefined: none. `guideWanted`: the page
@@ -2543,7 +2545,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(newLineHeadway ? { newHeadway: newLineHeadway } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2889,7 +2891,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   const decoded = await decodeSave(bytes);
   const { track } = decoded;
   const h: SaveHeader = currentZones(fresh
-    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, lineDays: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, newHeadway: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
+    ? { ...decoded.header, clock: startClock(fresh), cash: START_CASH, loan: undefined, loanPay: undefined, loanDays: undefined, ledger: [], hours: [], regions: undefined, lineDays: undefined, stars: undefined, goals: undefined, notes: undefined, newCars: undefined, newHeadway: undefined, newWeekendShare: undefined, guide: undefined, achievements: undefined, home: undefined, ...newGameHeader(fresh) }
     : decoded.header);
   if (!isThisWorld(h)) throw new Error("This save is for another world.");
   if (isRetiredTrackFormat(track)) throw new Error("This save is from an older version of the game and no longer opens.");
@@ -2930,7 +2932,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   lineShapes = shapesFrom(h.shapes);
   hiddenLines = new Set(Array.isArray(h.hidden) ? h.hidden.filter((x) => typeof x === "string") : []);
   newLineCars = h.newCars ?? NEW_LINE_CARS;
-  newLineHeadway = Array.isArray(h.newHeadway) && h.newHeadway.length === 3 && h.newHeadway.every((s) => Number.isFinite(s) && s >= 0) ? [h.newHeadway[0], h.newHeadway[1], h.newHeadway[2]] : null;
+  newLineWeekendShare = typeof h.newWeekendShare === "number" && Number.isFinite(h.newWeekendShare) ? h.newWeekendShare : null;
+  newLineHeadway = cleanNewHeadways(h.newHeadway);
   guide = h.mode === "sandbox" ? undefined : h.guide;
   home = h.home;
   copyOf = !fresh && typeof h.copy === "string" && h.copy ? h.copy : undefined;
@@ -3013,7 +3016,8 @@ async function newGame(spec?: NewGameSpec) {
   lineShapes = new Map();
   hiddenLines = new Set();
   newLineCars = NEW_LINE_CARS;
-  newLineHeadway = null;
+  newLineHeadway = {};
+  newLineWeekendShare = null;
   restart(startClock(spec), "new");
 }
 
@@ -4053,16 +4057,26 @@ function applyInner(op: EditOp): Applied {
       const [tramDwell, tramTurn] = tram ? TrackApi.kind_defaults(3) : [dwellS, turnaroundS];
       const r = a.set_line_with_trains(id, new Uint32Array(op.stops), h, m, l, tramDwell, tramTurn, tram ? TRAM_NEW_CARS : newLineCars, colourInt(op.colour), op.name || a.next_line_name());
       if (r !== 0) return { r, line: id };
-      // T-3543: the headways the player made the default; a refused edit (cash) leaves the line on its counts
+      // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
       let charge = a.last_charge(), trainCharge = a.last_train_charge();
-      if (newLineHeadway && a.set_auto_headway(id, ...newLineHeadway) === 0) {
+      let fast = false;
+      if (op.autoFast && hsrShare(a, id) > 0.5 && a.set_line_fast(id, true) === 0) {
+        fast = true;
         charge += a.last_charge();
         trainCharge += a.last_train_charge();
       }
-      // T-1899: a line started on high-speed track (a track's New line) runs high-speed trains
-      if (!op.autoFast || hsrShare(a, id) <= 0.5) return { r, line: id, charge, trainCharge };
-      const before = [charge, trainCharge];
-      return a.set_line_fast(id, true) === 0 ? { r, line: id, charge: before[0] + a.last_charge(), trainCharge: before[1] + a.last_train_charge() } : { r, line: id, charge, trainCharge };
+      // T-3543, T-3588: the headways the player made the default for this kind of line; a refused edit (cash) leaves it on its counts
+      const wanted = newLineHeadway[tram ? "tram" : fast ? "fast" : "rail"];
+      if (wanted && a.set_auto_headway(id, ...wanted) === 0) {
+        charge += a.last_charge();
+        trainCharge += a.last_train_charge();
+      }
+      // T-3588: the weekend percent "Apply to all lines" set for new lines
+      if (newLineWeekendShare !== null && newLineWeekendShare !== 100 && a.set_line_weekend_share(id, newLineWeekendShare) === 0) {
+        charge += a.last_charge();
+        trainCharge += a.last_train_charge();
+      }
+      return { r, line: id, charge, trainCharge };
     }
     case "copyLine": {
       const id = a.new_line_id();
@@ -4132,6 +4146,8 @@ function applyInner(op: EditOp): Applied {
     case "weekendCounts":
       return { r: op.headways ? a.set_line_weekend_headways(op.line, ...op.counts, ...op.headways) : a.set_line_weekend_counts(op.line, ...op.counts) };
     case "weekendShareAll":
+      newLineWeekendShare = op.share;
+      dirty = true;
       return { r: a.set_weekend_share_all(op.share) };
     case "lineLook": {
       let colour = 0;
