@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c135",
+      "text": "added freight and abandoned rail to the real world network's All setting",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3464",
+      "by": "freight2",
+      "at": "2026-11-17T21:49:23Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
       "id": "c134",
       "text": "one-way track arrows are drawn from a zoom one level closer in, and kept twice as far apart",
       "edited": null,

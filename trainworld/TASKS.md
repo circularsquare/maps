@@ -235,15 +235,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
-- T-3462 [P3] {L:checks} Two checks test old values (taking, 2026-11-17, agent oldchecks)
-  - Context: Found by the regions agent (T-3448): t2163 still looks for the old "Calculating diagram" text, and t2888 expects a line width of at most 1.4 (now 2).
-  - Goal: Both checks pass against the current game, or are deleted if T-3457 finds they guard nothing.
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
   - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
   - Goal: The water mask loads on that save, or the failure is understood and filed.
-- T-3464 [P2] {L:world-map} {after:v0.4.0 publish} Freight and abandoned rail in the All setting
-  - Context: Downloads approved by you 2026-11-16 ("ok, can start download"); colours approved ("track looks good"). You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
-  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36; all 120 regions are built (2026-11-17, 246 MB, noritetsu/dist/data/*_extra.pmtiles and extra.json). Left: upload to R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
+- T-3464 [P2] {L:world-map} {after:v0.4.0 publish starts} Freight and abandoned rail in the All setting
+  - Context: You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." You, 2026-11-17: include it in v0.4.0. Code, hover and changelog c135 are on master (b8d0003b); all 120 regions are built and checked locally (de, jp, gb).
+  - Goal: Real world network All draws freight and abandoned rail in the published game. Left: the R2 upload as a release step (commands in the notes, about 2 minutes at 2 MB/s), then archive.
   - Other: notes/T-3464.md
 - T-3495 [P2] {L:world-map} {after:v0.4.0 publish} Snap to freight and abandoned rail
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
