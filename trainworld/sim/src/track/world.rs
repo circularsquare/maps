@@ -1120,8 +1120,8 @@ impl TrackWorld {
         let broken = rerouted.then(|| self.net.line_broken.clone());
         let (mut inv, mut t, mut der) = self.apply_and_derive(op)?;
         let ops = match &broken {
-            Some(b) if !der.ways.is_empty() => self.way_reroutes(&der, b),
-            _ => vec![],
+            Some(b) => self.way_reroutes(&der, b),
+            None => vec![],
         };
         if !ops.is_empty() {
             if let Ok((inv2, t2, der2)) = self.apply_and_derive(Op::Batch(ops)) {
@@ -1286,10 +1286,24 @@ impl TrackWorld {
     /// T-3137: ops moving each rail line on track whose way the edit changed (`der.ways`) that it
     /// left broken (`broken`: as they were before) onto a path through its same stops that runs every
     /// track's way, as `TrackApi::set_edge_oneway` does; one with no such path stays broken.
+    /// T-3541: so too a line that turned back at a track end the edit built on past (no longer a
+    /// track end), never with more turns back than it had.
     fn way_reroutes(&self, der: &super::net::Derived, broken: &[bool]) -> Vec<Op> {
         let net = &self.net;
         let mut lines: Vec<u32> = der.ways.iter().flat_map(|&e| net.lines_on_edge(e).iter().copied()).collect();
-        lines.extend(net.back_lines());
+        if !der.ways.is_empty() {
+            lines.extend(net.back_lines());
+        }
+        let turned: Vec<u32> = (0..net.line_count() as u32)
+            .filter(|&l| net.line_ok(l) && net.line_broken[l as usize] && {
+                let path = net.line_path(l);
+                net.path_reversals(path).into_iter().any(|k| {
+                    let n = net.path_nodes(path[k]).0;
+                    der.nodes.contains(&n) && net.node_platform[n as usize] == 0 && !net.bare_end(n)
+                })
+            })
+            .collect();
+        lines.extend(&turned);
         lines.sort_unstable();
         lines.dedup();
         let mut ops = vec![];
@@ -1300,7 +1314,8 @@ impl TrackWorld {
             }
             let stops = net.line_stops(l);
             let once = net.line_runs_once(l);
-            let Some(path) = net.route_hops(stops).ok().filter(|p| once || net.back_path_of(stops, p).is_some()) else { continue };
+            let turns = net.path_reversals(net.line_path(l)).len();
+            let Some(path) = net.route_hops(stops).ok().filter(|p| (once || net.back_path_of(stops, p).is_some()) && (!turned.contains(&l) || net.path_reversals(p).len() <= turns)) else { continue };
             if let Some(mut d) = net.line_data(l).filter(|d| d.path != path) {
                 d.path = path;
                 ops.push(Op::Line { id: l, data: Some(d) });

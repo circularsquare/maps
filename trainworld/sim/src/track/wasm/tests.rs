@@ -1691,6 +1691,27 @@ fn a_station_past_a_headshunt_reverses_at_the_track_end() {
     assert!((split[1] - 4.0 * 180.0).abs() < 1e-9, "two ends and the track end both ways: {split:?}");
 }
 
+/// T-3541: blueprint drawn on from the bare end a running line turns at leaves it turning there and
+/// running; once that track is built the line turns at its new end, still running.
+#[test]
+fn blueprint_past_a_headshunt_leaves_the_line_running() {
+    use super::super::tests::{line, reversal_fixture_with};
+    let mut a = api();
+    let (w, [x, _, _, m, br]) = reversal_fixture_with(false);
+    a.w = w;
+    let id = line(&mut a.w, &[m, br], [6.0, 3.0, 0.0]);
+    assert_eq!(a.line_end_turns(id), vec![x as f64]);
+    let ends = [1.0, x as f64, 0.0, 0.0, 0.0, 0.0, 0.0, -4000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running, "a blueprint past X stops the line");
+    assert_eq!(a.line_end_turns(id), vec![x as f64]);
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running, "built past X, the line no longer runs");
+    assert_ne!(a.line_end_turns(id), vec![x as f64], "X is no track end once built past");
+}
+
 /// T-798: on a ring the first stop's marker closes the line into a circle, then opens it; a
 /// closed line takes new stops inside the loop only.
 #[test]

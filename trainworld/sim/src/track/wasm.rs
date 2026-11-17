@@ -1305,7 +1305,8 @@ fn reach_from(net: &Network, stops: &[u32]) -> (Vec<bool>, Vec<bool>) {
         seen_node[node as usize] = true;
         let p = &net.node_ports[node as usize];
         let arr = p.find(super::net::path_edge(st), 1 - super::net::path_dir(st));
-        let link = if net.bare_end(node) { 1 } else { arr.map_or(0, |i| net.node_moves[node as usize].link[i]) };
+        let on = arr.map_or(0, |i| net.node_moves[node as usize].link[i]);
+        let link = if net.bare_end(node) { on | 1 << arr.unwrap_or(0) } else { on };
         for k in super::lanes::ends_in(link) {
             let c = p.end[k];
             if !seen[c as usize] {

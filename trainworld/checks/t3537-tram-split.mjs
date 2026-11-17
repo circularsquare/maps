@@ -9,15 +9,17 @@
 //   one leg and back over the other (a loop that turns back at both ends, its stops on both legs) has no turn-back
 //   mark at either end and no turn icon in its stop list; a line that turns back partway (N, S, L) and a loop that
 //   turns back at two stops besides its first keep theirs.
+// T-3541, on Anita's save (artifacts/trainworld/t3541-caracas.save, skipped when absent): Line 2's return run turns at
+//   the loose end just past Avenida Arismendi; blueprint double track drawn on from that end leaves it running, and
+//   so does building it.
 // Pictures (SHOTS=before|after): artifacts/trainworld/t3537_<shots>_end.png (the split at D1's end, zoomed in),
 // t3537_<shots>_corner.png, t3538_<shots>.png (the line selected).
-// On the playtest harness (T-3556): the tool and its options picked on the real track bar, the singles drawn by
-// pointer presses at lon/lat points, the line opened from the Lines tab. The doubles and T-3538's network are laid
-// by edits, so their geometry is the same every run.
 // From the maps root, on a Vite of your own (node trainworld/checks/dev-nowatch.mjs 6122):
 //   [ZOOM=15] [OFF=5] node trainworld/checks/t3537-tram-split.mjs [dev url]
 // About 4 minutes.
-import { launchGames } from './lib/play.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ARTIFACTS, collectErrors, importSave, launchChrome } from './lib.mjs';
 
 const BASE = process.argv.slice(2).find((a) => /^https?:/.test(a)) ?? 'http://localhost:6122/';
 const SHOTS = process.env.SHOTS ?? 'after';
@@ -29,20 +31,36 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const AT = [-66.9146, 10.5061];
 const STREET = [840, 450], DIR = [0.98, 0.197];
 
-const games = await launchGames({ prefix: 'tw-t3537-', size: [1400, 900] });
-const open = () => games.open({ url: BASE, city: 'caa', mode: 'sandbox', query: { demandWorkers: 1 }, ui: { shade: 'light', v: 7, build: { level: 0, keep: false } } });
+const chrome = await launchChrome({ prefix: 'tw-t3537-', size: [1400, 900], deviceScaleFactor: 1 });
 const errors = [];
+const open = async () => {
+  const page = await chrome.ctx.newPage();
+  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', v: 7, build: { level: 0, keep: false } })); } catch {} });
+  collectErrors(page, errors);
+  await page.goto(`${BASE}?debug=1&new=1&city=caa&mode=sandbox&paused=1&demandWorkers=1&v=${Date.now()}`);
+  await page.waitForFunction(() => window.tw?.world?.value && window.tw.tools, undefined, { timeout: 180000 });
+  return page;
+};
 
 try {
   // ------------------------------------------------------------------ T-3537
-  const g = await open();
-  const page = g.page;
-  /** the tram track tool with street snap on, single or double, picked on the track bar */
-  const tramTool = (single) => g.act.tool('track', { type: 'tram', tracks: single ? 1 : 2, snap: { streets: true }, keepPlacing: false });
+  const page = await open();
+  const settle = async (ms = 600) => {
+    await page.waitForFunction(() => window.tw.map.loaded() && !window.tw.map.isMoving(), undefined, { timeout: 60000 }).catch(() => {});
+    await wait(ms);
+  };
+  /** the tram track tool with street snap on, single or double */
+  const tramTool = (single) => page.evaluate(async (single) => {
+    const ui = await import('/src/game/ui.ts');
+    ui.tool.value = 'track'; ui.setTrackType('tram'); ui.setSingleTrack(single); ui.snapStreets.value = true; ui.keepPlacing.value = false;
+  }, single);
+  const edgeCount = () => page.evaluate(() => window.tw.world.value.edges.length);
+  const waitEdges = (n) => page.waitForFunction((n) => window.tw.world.value.edges.length > n, n, { timeout: 30000 }).then(() => wait(800), () => {});
+  const streetDone = () => page.waitForFunction(() => ['done', 'none', 'off'].includes(window.tw.tools.street.phase), undefined, { timeout: 30000 }).catch(() => {});
   // the doubles' ends on the street, found at zoom 16 and kept as lng, lat
-  await g.act.camera(AT, 16);
+  await page.evaluate(([c]) => window.tw.map.jumpTo({ center: c, zoom: 16 }), [AT]);
   await tramTool(false);
-  await wait(5000);
+  await settle(5000);
   const ends = await page.evaluate(([s, d]) => {
     const tw = window.tw, st = tw.tools.street;
     const at = (t) => { const p = tw.map.unproject([s[0] + d[0] * t, s[1] + d[1] * t]); return st.landing(p.lng, p.lat); };
@@ -60,9 +78,9 @@ try {
     return { ok: out, e1: near(ends.d1[1]), w2: near(ends.d2[0]) };
   }, ends);
   check(made.ok.every(Boolean), 'two doubles laid on the street', JSON.stringify(made));
-  await g.act.camera(ends.d1[1], Z);
+  await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [ends.d1[1], Z]);
   await tramTool(true);
-  await wait(4000);
+  await settle(4000);
 
   /** a node's place on screen and the way out of it along its double (unit, screen), with left = (uy, -ux) */
   const endAt = (node) => page.evaluate((node) => {
@@ -73,25 +91,32 @@ try {
     const l = Math.hypot(q0.x - q1.x, q0.y - q1.y);
     return { x: r.left + p.x, y: r.top + p.y, ux: (q0.x - q1.x) / l, uy: (q0.y - q1.y) / l };
   }, node);
-  const hover = () => page.evaluate(() => { const h = window.tw.tools.hover; return h ? { kind: h.kind, node: h.node, join: !!h.join, merge: !!h.merge } : null; });
-  const ghostNow = () => page.evaluate(() => { const p = window.tw.tools.lastPreview; return p ? { ok: p.ok, joins: Array.from(p.joins ?? []).slice(0, 2), street: window.tw.tools.street.phase } : null; });
-  const joinAt = (edges, node) => { const e = edges.find((e) => e.a === node || e.b === node); return e ? (e.a === node ? e.join & 3 : (e.join >> 2) & 3) : null; };
+  const hoverAt = async (x, y) => {
+    await page.mouse.move(x, y, { steps: 3 });
+    await wait(500);
+    return page.evaluate(() => { const h = window.tw.tools.hover; return h ? { kind: h.kind, node: h.node, join: !!h.join, merge: !!h.merge } : null; });
+  };
   const e1 = await endAt(made.e1), w2 = await endAt(made.w2);
-  /** single track from D1's end at `off` px left of its centre line to `to` (screen px), drawn by the pointer: the hover
-   * at its start, the hover and the ghost at its end (read with the pointer resting there), the built piece's joins */
+  /** single track from D1's end at `off` px left of its centre line to `to` (screen), clicked; the ghost and the built piece's joins */
   const single = async (off, to, toOff = null) => {
-    const [from, end] = await g.toLngLat([[e1.x + e1.uy * off, e1.y - e1.ux * off], to]);
-    let h = null, hEnd = null, ghost = null;
-    const run = await g.act.drawTrack([from, end], {
-      settleMs: 1000,
-      before: async (i) => {
-        if (i === 0) return void (h = await hover());
-        if (toOff !== null) { const x = await hover(); hEnd = x && { kind: x.kind, join: x.join, merge: x.merge }; }
-        ghost = await ghostNow();
-      },
-    });
-    const all = run.segments.flatMap((s) => s.edges), singles = all.filter((e) => e.tracks === 1);
-    return { h, hEnd, ghost, made: singles.length, start: joinAt(singles, made.e1), end: joinAt(singles, made.w2), kinds: [...new Set(singles.map((e) => e.kind))] };
+    const h = await hoverAt(e1.x + e1.uy * off, e1.y - e1.ux * off);
+    const n = await edgeCount();
+    await page.mouse.down(); await page.mouse.up();
+    await wait(600);
+    await page.mouse.move(to[0] - 30, to[1], { steps: 6 });
+    await page.mouse.move(to[0], to[1], { steps: 4 });
+    await streetDone();
+    await wait(1000);
+    const hEnd = toOff === null ? null : await page.evaluate(() => { const h = window.tw.tools.hover; return h ? { kind: h.kind, join: !!h.join, merge: !!h.merge } : null; });
+    const ghost = await page.evaluate(() => { const p = window.tw.tools.lastPreview; return p ? { ok: p.ok, joins: Array.from(p.joins ?? []).slice(0, 2), street: window.tw.tools.street.phase } : null; });
+    await page.mouse.down(); await page.mouse.up();
+    await waitEdges(n);
+    const got = await page.evaluate(([n, a, b]) => {
+      const w = window.tw.world.value, made = w.edges.slice(n).filter((e) => e.tracks === 1);
+      const at = (node) => { const e = made.find((e) => e.a === node || e.b === node); return e ? (e.a === node ? e.join & 3 : (e.join >> 2) & 3) : null; };
+      return { made: made.length, start: at(a), end: at(b), kinds: [...new Set(made.map((e) => e.kind))] };
+    }, [n, made.e1, made.w2]);
+    return { h, hEnd, ghost, ...got };
   };
   // D2's west end, its way out pointing back west: its left is D1's right
   const d2 = (off) => [w2.x + w2.uy * off, w2.y - w2.ux * off];
@@ -113,11 +138,11 @@ try {
   });
   check(ways.length === 2 && ways.includes(1) && ways.includes(-1), 'the two singles run one way each, opposite ways', JSON.stringify(ways));
   // zoomed in on the split
-  await g.act.camera(ends.d1[1], 18.3);
-  await wait(2500);
-  await g.shot(`t3537_${SHOTS}_end.png`, { clip: { x: 500, y: 250, width: 700, height: 400 } });
-  await g.act.camera(ends.d1[1], Z);
-  await wait(1500);
+  await page.evaluate(([c]) => window.tw.map.jumpTo({ center: c, zoom: 18.3 }), [ends.d1[1]]);
+  await settle(2500);
+  await page.screenshot({ path: join(ARTIFACTS, `t3537_${SHOTS}_end.png`), clip: { x: 500, y: 250, width: 700, height: 400 } });
+  await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [ends.d1[1], Z]);
+  await settle(1500);
   // turning off at the first corner: the street crossing south of D1's end
   const cornerTo = await page.evaluate(([x, y, ux, uy]) => {
     const tw = window.tw, r = tw.map.getContainer().getBoundingClientRect();
@@ -127,8 +152,8 @@ try {
   }, [e1.x, e1.y, e1.ux, e1.uy]);
   const corner = await single(OFF, cornerTo);
   check(corner.start === 1 && corner.ghost?.joins?.[0] === 1, 'a single turning off at the first corner joins the left track', JSON.stringify(corner));
-  await g.shot(`t3537_${SHOTS}_corner.png`, { clip: { x: 450, y: 200, width: 700, height: 500 } });
-  await g.act.key('Control+Z');
+  await page.screenshot({ path: join(ARTIFACTS, `t3537_${SHOTS}_corner.png`), clip: { x: 450, y: 200, width: 700, height: 500 } });
+  await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
   await wait(1200);
   // from the centre the single takes both tracks; on a loose end only, so D2's east end
   const e2 = await page.evaluate(([n]) => {
@@ -137,19 +162,22 @@ try {
     return w.edges.filter((e) => e.tracks === 2).flatMap((e) => [e.a, e.b]).find((x) => deg.get(x) === 1 && x !== n);
   }, [made.e1]);
   const c2 = await endAt(e2);
-  let h = null, ghost = null;
-  const midRun = await g.act.drawTrack(await g.toLngLat([[c2.x, c2.y], [c2.x + c2.ux * 150, c2.y + c2.uy * 150]]), {
-    settleMs: 1000,
-    before: async (i) => { if (i === 0) h = await hover(); else ghost = await page.evaluate(() => Array.from(window.tw.tools.lastPreview?.joins ?? []).slice(0, 1)); },
-  });
-  const mid = joinAt(midRun.segments.flatMap((s) => s.edges), e2);
+  const h = await hoverAt(c2.x, c2.y);
+  const n = await edgeCount();
+  await page.mouse.down(); await page.mouse.up();
+  await wait(600);
+  await page.mouse.move(c2.x + c2.ux * 150, c2.y + c2.uy * 150, { steps: 8 });
+  await streetDone();
+  await wait(1000);
+  const ghost = await page.evaluate(() => Array.from(window.tw.tools.lastPreview?.joins ?? []).slice(0, 1));
+  await page.mouse.down(); await page.mouse.up();
+  await waitEdges(n);
+  const mid = await page.evaluate(([n, node]) => { const e = window.tw.world.value.edges.slice(n).find((e) => e.a === node || e.b === node); return e ? (e.a === node ? e.join & 3 : (e.join >> 2) & 3) : null; }, [n, e2]);
   check(h?.merge && ghost[0] === 0 && mid === 0, 'a click at a loose end\'s centre merges both tracks into the single', JSON.stringify({ h, ghost, mid }));
-  errors.push(...g.pageErrors());
-  await g.close();
+  await page.close();
 
   // ------------------------------------------------------------------ T-3538
-  const g2 = await open();
-  const p2 = g2.page;
+  const p2 = await open();
   const net = await p2.evaluate(async ([c]) => {
     const tw = window.tw, cl = tw.client, o = tw.lngLatToPack(c[0], c[1]);
     const P = (dx, dy) => ({ x: o.x + dx, y: o.y + dy });
@@ -206,21 +234,21 @@ try {
   const s = net.split;
   check(s.loop === 'balloon' && s.rev.length === 1 && /W/.test(s.stops) && /E/.test(s.stops), 'the split line runs out on one leg and back on the other, a loop that turns at both ends', JSON.stringify(s));
   check(s.marked.length === 0, 'no turn-back mark at either end of the split line', JSON.stringify(s.marked));
-  // the line panel's stop list, the line opened from the Lines tab: no turn icon on the split line, nor a mark on the map
-  await g2.act.openLine('Split');
-  const view = await p2.evaluate(([c]) => {
-    const tw = window.tw, o = tw.lngLatToPack(c[0], c[1]), q = tw.packToLngLat(o.x - 400, o.y + 900);
-    return Array.isArray(q) ? q : [q.lng, q.lat];
-  }, [AT]);
-  await g2.act.camera(view, 14.6);
+  // the line panel's stop list: no turn icon on the split line, nor a mark on the map
+  await p2.evaluate(async ([id, c]) => {
+    const tw = window.tw, o = tw.lngLatToPack(c[0], c[1]), q = tw.packToLngLat(o.x - 400, o.y + 900), [lng, lat] = Array.isArray(q) ? q : [q.lng, q.lat];
+    (await import('/src/game/ui.ts')).selection.value = { kind: 'line', line: id };
+    tw.map.jumpTo({ center: [lng, lat], zoom: 14.6 });
+  }, [s.id, AT]);
+  await p2.waitForFunction(() => window.tw.map.loaded() && !window.tw.map.isMoving(), undefined, { timeout: 60000 }).catch(() => {});
   await wait(3000);
   await p2.evaluate(() => document.querySelector('[data-stop]')?.scrollIntoView({ block: 'start' }));
   await wait(500);
   const icons = await p2.evaluate(() => ({ list: document.querySelectorAll('.rev-stop').length, map: [...document.querySelectorAll('.rev-mark')].filter((e) => e.style.display !== 'none').length }));
   check(icons.list === 0 && icons.map === 0, 'no turn icon in the split line\'s stop list, no mark on the map', JSON.stringify(icons));
-  const lap = (await g2.see.panel())?.text ?? '';
+  const lap = await p2.evaluate(() => document.querySelector('.inspector, aside, body').innerText);
   check(!/Reversing partway/.test(lap) && /Turning at the end/.test(lap), 'its lap has both turns as turning at the end, none partway', (lap.match(/(Turning at the end|Reversing partway)\s*\S+/g) ?? []).join(', '));
-  await g2.shot(`t3538_${SHOTS}.png`);
+  await p2.screenshot({ path: join(ARTIFACTS, `t3538_${SHOTS}.png`) });
   // lines that do turn back partway keep their marks
   const ctl = await p2.evaluate(async () => {
     const { line, info, pause } = window.t3538;
@@ -232,13 +260,44 @@ try {
   check(ctl.back.rev.length === 1 && ctl.back.marked.join() === ctl.back.rev.join(), 'a line turning back partway keeps its mark', JSON.stringify(ctl.back));
   check(ctl.two.rev.length >= 2 && ctl.two.marked.length === ctl.two.rev.length, 'a loop turning back at two stops keeps both marks', JSON.stringify(ctl.two));
 
-  errors.push(...g2.pageErrors());
+  // ------------------------------------------------------------------ T-3541
+  const SAVE = join(ARTIFACTS, 't3541-caracas.save');
+  if (!existsSync(SAVE)) console.log('SKIP T-3541: no ' + SAVE);
+  else {
+    const p3 = await open();
+    await importSave(p3, readFileSync(SAVE));
+    await p3.waitForFunction(() => window.tw.client.lastLoad?.from === 'file' && window.tw.world.value.save.lines.length > 0, undefined, { timeout: 180000 });
+    await wait(3000);
+    const r = await p3.evaluate(async () => {
+      const tw = window.tw, pause = (ms) => new Promise((d) => setTimeout(d, ms));
+      const status = () => tw.world.value.lineStats[tw.world.value.save.lines.find((l) => l.name === 'Line 2').id].status;
+      const w = tw.world.value, ar = w.save.stations.find((s) => s.name === 'Avenida Arismendi');
+      const ends = new Map();
+      for (const e of w.edges) for (const n of [e.a, e.b]) ends.set(n, [...(ends.get(n) ?? []), e]);
+      // the loose end nearest the station, and the way on past it
+      const loose = [...w.nodes.values()].filter((n) => ends.get(n.id)?.length === 1).sort((a, b) => Math.hypot(a.lng - ar.lng, a.lat - ar.lat) - Math.hypot(b.lng - ar.lng, b.lat - ar.lat))[0];
+      const e = ends.get(loose.id)[0], o = w.nodes.get(e.a === loose.id ? e.b : e.a);
+      const p = tw.lngLatToPack(loose.lng, loose.lat), q = tw.lngLatToPack(o.lng, o.lat), L = Math.hypot(p.x - q.x, p.y - q.y);
+      const out = { before: status(), far: Math.round(Math.hypot((loose.lng - ar.lng) * 109000, (loose.lat - ar.lat) * 111000)) };
+      const x = await tw.client.edit({ op: 'route', from: { kind: 'node', node: loose.id }, to: { kind: 'free', x: p.x + ((p.x - q.x) / L) * 300, y: p.y + ((p.y - q.y) / L) * 300, level: 0 }, pis: [], single: false, tram: true });
+      await pause(2500);
+      out.extended = x.ok ? status() : 'refused ' + (x.issues ?? []).join(',');
+      const c = await tw.client.edit({ op: 'constructAll' });
+      await pause(2500);
+      out.built = c.ok ? status() : 'refused ' + (c.issues ?? []).join(',');
+      return out;
+    });
+    check(r.before === 'running' && r.far < 60, 'her Line 2 runs, a loose end just past Avenida Arismendi', JSON.stringify(r));
+    check(r.extended === 'running', 'blueprint double drawn on from that end leaves Line 2 running', JSON.stringify(r));
+    check(r.built === 'running', 'built, Line 2 still runs', JSON.stringify(r));
+  }
+
   const bad = errors.filter((e) => !/favicon|404/.test(String(e)));
   check(bad.length === 0, 'no console errors', bad.slice(0, 3).join(' | '));
 } catch (e) {
   check(false, 'the check ran to the end', e.stack ?? e.message);
 } finally {
-  await games.close();
+  await chrome.close();
 }
-console.log(fail ? `T-3537/T-3538 FAILED: ${fail}` : 'T-3537/T-3538 PASSED');
+console.log(fail ? `T-3537/T-3538/T-3541 FAILED: ${fail}` : 'T-3537/T-3538/T-3541 PASSED');
 process.exit(fail ? 1 : 0);

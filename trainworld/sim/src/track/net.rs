@@ -2637,9 +2637,11 @@ impl Network {
     }
 
     /// A track end with no station (T-797 B3): a train may reverse there without stopping for
-    /// riders, as in a headshunt.
+    /// riders, as in a headshunt. T-3541: an end of constructed track with only blueprint beyond
+    /// it is still one, so blueprint drawn on from it never moves a running line's turn there.
     pub fn bare_end(&self, n: u32) -> bool {
-        self.node_ports[n as usize].n == 1 && self.node_platform[n as usize] == 0
+        let p = &self.node_ports[n as usize];
+        self.node_platform[n as usize] == 0 && (p.n == 1 || (p.n > 1 && self.built_ports(n) == 1))
     }
 
     /// `path_reversals` that must fall on a stop: all but those at a bare track end.
@@ -3088,15 +3090,15 @@ impl Network {
                 path.reverse();
                 return Some((path, arr_side));
             }
-            let bare = self.bare_end(node);
-            if bare {
-                // a train may turn back at a track end with no station (T-797 B3)
-                on |= self.dir_ok(p.end[0]) as u8;
+            // a train may turn back at a track end with no station (T-797 B3), the way it came
+            let back = if self.bare_end(node) { arr.or(Some(0)) } else { None };
+            if let Some(i) = back {
+                on |= (self.dir_ok(p.end[i]) as u8) << i;
             }
             for k in ends_in(on) {
                 let nst = p.end[k];
                 let e = nst >> 1;
-                let nd = d + self.edge_time[e as usize] + if bare { REVERSAL_SEARCH_S } else { 0.0 };
+                let nd = d + self.edge_time[e as usize] + if back == Some(k) { REVERSAL_SEARCH_S } else { 0.0 };
                 if nd < dist[nst as usize] {
                     dist[nst as usize] = nd;
                     prev[nst as usize] = st;

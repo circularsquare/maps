@@ -1078,7 +1078,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   turns back at the stop, at a loop's ends, below two stops, and for a bus line (a bus or ferry loop is 6.7).
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
-  bare track end (a node with one edge end and no station, such as a headshunt), nowhere else.
+  bare track end (a node with one edge end and no station, such as a headshunt; or one with one
+  constructed edge end and only blueprint beyond, so blueprint drawn on from an end never moves a
+  running line's turn there, T-3541), nowhere else. An edit that builds past a line's track end
+  routes the line again through its same stops in the same edit, never with more turns back.
   Nothing stores it: a reversal is two path entries arriving at and leaving a node on the same
   side, and stops are matched to the path so every reversal not at a bare end falls on one. The
   route search may reverse at a hop's first stop, or at a bare end on the way, for 600 s of search
