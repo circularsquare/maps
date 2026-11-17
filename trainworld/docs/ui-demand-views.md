@@ -182,8 +182,12 @@ hover and clicks. They do not enlarge the station's click target.
   (T-1903: so a job centre looks as under Destinations and a home area about 0.75 times its Homes radius), so a home
   bubble is 1.34 times the radius of a destination bubble of the same legs; times 0.75
   (`BUBBLE_BASE`, T-1852: the old 0.75x is the new 1x) times the Bubble size
-  setting (0.25-2x width, T-2271). No minimum size; nobody
-  means no bubble.
+  setting (0.25-2x width, T-2271). No minimum size, but **no bubble under 1 trip a day** [T-3505,
+  `foldSmall` in `map/bubbles.ts`]: at each level such a bubble's trips go into the nearest bubble
+  of at least 1, which keeps its place (into the busiest where the zone has none; dropped only if
+  the whole set is still under 1), so every level adds up to the zone's legs. The bubble that took
+  them counts them in its hover and selects their cells with its own; a selection's own bubbles
+  fold the same way among themselves; the purpose colouring takes the same fold. Display only.
 - **Colour** by the **Colors** setting: **2-color** (the old Train share) (default since T-833; a stored Mode mix
   from before settings version 6 is reset once) colours by the train share of the bubble's legs along a ramp from a start colour
   at 0% (default #ff4d4d) to an end colour at 100% (default #4d4dff; Anita, T-1138, lighter than

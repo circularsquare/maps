@@ -28,7 +28,7 @@ export type ToCommuters =
   /** the draw anchor moved: measure the cells from the new one and send them back (`Moved`) */
   | { kind: "anchor"; id: number; anchor: Anchor }
   /** `none`: T-2215's trips no way serves (No route) */
-  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array; unsmoothed?: boolean }
+  | { kind: "build"; id: number; end: BubbleEnd; train: Float32Array; walk: Float32Array; drive: Float32Array; none: Float32Array; unsmoothed?: boolean; fold?: boolean }
   /** a set of cells with their own counts (a selection's far end, up to ~80k cells), summed
    * into every level */
   | { kind: "sum"; id: number; cells: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array; none?: Float32Array };
@@ -88,6 +88,9 @@ export interface BubbleLevel {
   /** T-2886: per disc, trips for work and school, errands and leisure, and the rest, only
    * while bubbles are coloured by purpose; the main thread puts it there */
   purp?: { work: Float32Array; errands: Float32Array; other: Float32Array };
+  /** T-3505: groups under a trip a day folded into a neighbour, as pairs (from, into; map/bubbles.ts
+   * `foldSmall`): their trips are in the disc of the group they went into, which selects them too */
+  fold?: Uint32Array;
 }
 
 export interface Bubbles {

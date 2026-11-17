@@ -28,8 +28,8 @@ import { tripWords } from "../ui/inspector/tripText";
 import type { BubbleEnd, CommutersOneWay, Selection } from "../game/types";
 import { display, purposeFilter, selection, mapShade, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
-import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
-import { aggregate, discs, recolour, type Groups } from "./bubbles";
+import { BUBBLE_DENSITY, DISC, RES_AREA_M2, type BubbleLevel, type Bubbles, type FromCommuters, type Moved, type Ready, type Summed, type ToCommuters } from "../workers/commutersProtocol";
+import { aggregate, applyFold, discs, foldedInto, foldSmall, recolour, type Groups } from "./bubbles";
 import { cityOverview, farAreaPerTrip, interBox, setNearPoint } from "./intercityView";
 import { loadFailure, zoneFailures } from "../game/loading";
 import { anchorVersion } from "./anchorVersion";
@@ -202,7 +202,7 @@ export const commuterStats = { nearbyMs: 0, nearbyBuilds: 0, nearbyShown: {} as 
   /** T-2756, dev server: the last focus change's kept legs against the result shown */
   kept: "",
   /** ?debug=1 (T-317): the city's bubbles on show, with the anchor their positions are relative to */
-  probe: null as null | (() => { anchor: Anchor; levels: { discs: Float32Array; group: Uint32Array; purp: boolean }[] } | null),
+  probe: null as null | (() => { anchor: Anchor; totals: [number, number, number, number]; ms: number; levels: { discs: Float32Array; group: Uint32Array; purp: boolean; legs: Float32Array; fold: Uint32Array | null; shade: boolean; purpLegs: Float32Array | null }[] } | null),
   farProbe: null as null | (() => { anchor: Anchor; discs: Float32Array; near: Float32Array | null; group: Uint32Array; train: Float32Array; walk: Float32Array; drive: Float32Array } | null) };
 
 
@@ -326,7 +326,8 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** T-2756: zones focused before, newest last: their legs and bubbles of a final result, and the solve the legs came from */
   const keptBuilt = new Map<CityId, { built: Built; src: string }>();
   const KEPT_ZONES = 6;
-  commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group, purp: !!l.purp })) } : null);
+  commuterStats.probe = () => (shown ? { anchor: shown.bubbles.anchor, totals: shown.bubbles.totals, ms: shown.bubbles.ms, levels: shown.bubbles.levels.map((l) => ({ discs: l.discs, group: l.group, purp: !!l.purp, legs: l.train.map((v, i) => v + l.walk[i] + l.drive[i] + l.none[i]), fold: l.fold ?? null,
+    shade: !!l.shade, purpLegs: l.purp ? l.purp.work.map((v, i) => v + l.purp!.other[i] + l.purp!.errands[i]) : null })) } : null);
   let wanted = 0;
   // T-1493: an ask that ended without bubbles, and is still the newest, is made again after a wait
   // that doubles up to RETRY_MAX_MS, so the zone in view's bubbles always arrive
@@ -505,12 +506,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   /** One end's legs per cell (rail, walking, driving, no route), copies to transfer to a worker. */
   const endCells = (m: CellModes, end: BubbleEnd) => endModes(m, end).map((a) => a.slice());
   /** Bubbles of one end from legs per cell (`endCells`; transferred), in worker `w`. */
-  const buildOn = (w: Worker, end: BubbleEnd, cells: Float32Array[], unsmoothed = false) => {
+  const buildOn = (w: Worker, end: BubbleEnd, cells: Float32Array[], unsmoothed = false, fold = true) => {
     const id = nextId++;
     sync(w);
     return new Promise<Bubbles>((done) => {
       pending.set(id, done);
-      const msg: ToCommuters = { kind: "build", id, end, train: cells[0], walk: cells[1], drive: cells[2], none: cells[3], unsmoothed };
+      const msg: ToCommuters = { kind: "build", id, end, train: cells[0], walk: cells[1], drive: cells[2], none: cells[3], unsmoothed, fold };
       w.postMessage(msg, [msg.train.buffer, msg.walk.buffer, msg.drive.buffer, msg.none.buffer]);
     });
   };
@@ -634,11 +635,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       const other = new Float32Array(n);
       for (let i = 0; i < n; i++) other[i] = Math.max(0, total[i] - work[i] - errands[i]);
       const perCell = { end, work: work.slice(), other: other.slice(), errands: errands.slice() }; // `buildOn` hands its arrays to the worker
-      const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)], true);
+      const pb = await buildOn(w, end, [work, other, errands, new Float32Array(n)], true, false);
       if (!purposeSchemeOn() || pb.anchor.version !== b.anchor.version || pb.levels.length !== b.levels.length) return false;
       cellPurp.set(b, perCell);
       b.levels.forEach((l, li) => {
-        const q = pb.levels[li], at = new Map<number, number>();
+        // T-3505: the groups the bubbles fold, folded the same way
+        const q = applyFold(pb.levels[li], l.fold), at = new Map<number, number>();
         q.group.forEach((g, j) => at.set(g, j));
         const take = (src: { train: Float32Array; walk: Float32Array; drive: Float32Array }) => {
           const o = { work: new Float32Array(l.group.length), other: new Float32Array(l.group.length), errands: new Float32Array(l.group.length) };
@@ -772,6 +774,12 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const i = discAt(L.discs, p, shown.bubbles.anchor, view.bubbleSize);
     return i < 0 ? [] : [L.group[i]];
   };
+  const foldedMemo = new WeakMap<BubbleLevel, Map<number, number[]>>();
+  const foldedOf = (L: BubbleLevel): Map<number, number[]> => {
+    let m = foldedMemo.get(L);
+    if (!m) foldedMemo.set(L, (m = foldedInto(L.fold)));
+    return m;
+  };
   const groupsIn = (p0: Pointer, p1: Pointer): number[] => {
     if (!shown) return [];
     const L = shown.bubbles.levels[bubbleLevel(map.getZoom())];
@@ -779,11 +787,14 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
   };
   const selectGroups = (groups: number[], add: boolean): Extract<Selection, { kind: "commuters" }> | null => {
     if (!shown || !city || !groups.length) return null;
-    const g = city.levels[bubbleLevel(map.getZoom())];
+    const level = bubbleLevel(map.getZoom());
+    const g = city.levels[level];
     const cells = new Set<number>();
     const cur = selection.peek();
     if (add && cur?.kind === "commuters" && cur.end === shown.end) for (const c of cur.cells) cells.add(c);
-    for (const q of groups) for (let k = g.off[q]; k < g.off[q + 1]; k++) cells.add(g.members[k]);
+    // T-3505: a bubble's cells and those of the groups under a trip a day folded into it
+    const folded = foldedOf(shown.bubbles.levels[level]);
+    for (const q0 of groups) for (const q of [q0, ...(folded.get(q0) ?? [])]) for (let k = g.off[q]; k < g.off[q + 1]; k++) cells.add(g.members[k]);
     const prevAreas = add && cur?.kind === "commuters" ? cur.areas : 0;
     return { kind: "commuters", end: shown.end, cells: [...cells], areas: prevAreas + groups.length };
   };
@@ -1083,14 +1094,16 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const m = shown.modes;
     const [mt, mw, md, mu] = endModes(m, sel.end);
     const t = Float32Array.from(sel.cells, (c) => mt[c]), w = Float32Array.from(sel.cells, (c) => mw[c]), d = Float32Array.from(sel.cells, (c) => md[c]), u = Float32Array.from(sel.cells, (c) => mu[c]);
-    near = aggregate(g, city.cellX, city.cellY, sel.cells, t, w, d, u);
+    // T-3505: folded as the city's bubbles are, among the selection's own
+    const nf = foldSmall(aggregate(g, city.cellX, city.cellY, sel.cells, t, w, d, u));
+    near = nf.groups;
     nearAnchor = city.anchor;
     nearDiscs = discs(near, 1 / BUBBLE_DENSITY[sel.end], BUBBLE_ALPHA, 2, nearAnchor);
     const nearPurp = purposeSchemeOn() ? cellPurp.get(shown.bubbles) : undefined;
     nearByPurpose = null;
     if (nearPurp && nearPurp.end === sel.end) {
       const of = (a: Float32Array) => Float32Array.from(sel.cells, (c) => a[c]);
-      nearByPurpose = aggregate(g, city.cellX, city.cellY, sel.cells, of(nearPurp.work), of(nearPurp.other), of(nearPurp.errands));
+      nearByPurpose = applyFold(aggregate(g, city.cellX, city.cellY, sel.cells, of(nearPurp.work), of(nearPurp.other), of(nearPurp.errands)), nf.fold);
       tintByPurpose(nearDiscs, near, nearByPurpose);
     }
     view.setDiscs("near", nearDiscs, nearAnchor);

@@ -8,7 +8,7 @@
 //   bubble at its commuters' weighted centre, as discs ready to upload (map/bubbles.ts).
 
 import { BUBBLE_ALPHA } from "../game/palette";
-import { aggregate, biggestFirst, discs, recolour, reorder } from "../map/bubbles";
+import { aggregate, applyFold, biggestFirst, discs, foldSmall, recolour, reorder } from "../map/bubbles";
 import { toLocal, type Anchor } from "../map/geo";
 import { BUBBLE_DENSITY, BUBBLE_RES, type BubbleLevel, type FromCommuters, type Grouping, type ToCommuters } from "./commutersProtocol";
 
@@ -140,7 +140,8 @@ function smooth(train: Float32Array, walk: Float32Array, drive: Float32Array, no
   return [t, w, d, u];
 }
 
-function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Float32Array, drive: Float32Array, none: Float32Array, unsmoothed = false) {
+/** `fold` false: the groups as they are (a Purpose build, which takes the fold of the build it colours) */
+function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Float32Array, drive: Float32Array, none: Float32Array, unsmoothed = false, fold = true) {
   const totals: [number, number, number, number] = [0, 0, 0, 0];
   for (let i = 0; i < train.length; i++) {
     totals[0] += train[i];
@@ -150,12 +151,15 @@ function build(end: keyof typeof BUBBLE_DENSITY, train: Float32Array, walk: Floa
   }
   const smoothed = unsmoothed ? null : smooth(train, walk, drive, none);
   const out: BubbleLevel[] = levels.map((g) => {
-    const a = aggregate(g, cellX, cellY, null, train, walk, drive, none);
+    // T-3505: no bubble under a trip a day; its trips go to the nearest that is not
+    const f = fold ? foldSmall(aggregate(g, cellX, cellY, null, train, walk, drive, none)) : { groups: aggregate(g, cellX, cellY, null, train, walk, drive, none), fold: null };
+    const a = f.groups;
     const order = biggestFirst(a);
     const s = reorder(a, order);
-    // the same cells and groups, so the same groups in the same order
-    const sh = smoothed && reorder(aggregate(g, cellX, cellY, null, smoothed[0], smoothed[1], smoothed[2], smoothed[3]), order);
+    // the same cells and groups folded the same way, so the same groups in the same order
+    const sh = smoothed && reorder(applyFold(aggregate(g, cellX, cellY, null, smoothed[0], smoothed[1], smoothed[2], smoothed[3]), f.fold), order);
     const l: BubbleLevel = { discs: discs(s, 1 / BUBBLE_DENSITY[end], BUBBLE_ALPHA, 0, cur!), group: s.group, train: s.train, walk: s.walk, drive: s.drive, none: s.none };
+    if (f.fold) l.fold = f.fold;
     if (sh && sh.group.length === s.group.length) l.shade = { train: sh.train, walk: sh.walk, drive: sh.drive, none: sh.none };
     return l;
   });
@@ -188,8 +192,8 @@ self.onmessage = (e: MessageEvent<ToCommuters>) => {
     return;
   }
   if (msg.kind === "build") {
-    const r = build(msg.end, msg.train, msg.walk, msg.drive, msg.none, msg.unsmoothed);
+    const r = build(msg.end, msg.train, msg.walk, msg.drive, msg.none, msg.unsmoothed, msg.fold ?? true);
     const out: FromCommuters = { kind: "bubbles", id: msg.id, end: msg.end, ...r, ms: performance.now() - t0 };
-    post(out, r.levels.flatMap((l) => [l.discs.buffer, l.group.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer, l.none.buffer, ...(l.shade ? [l.shade.train.buffer, l.shade.walk.buffer, l.shade.drive.buffer, l.shade.none.buffer] : [])]));
+    post(out, r.levels.flatMap((l) => [l.discs.buffer, l.group.buffer, l.train.buffer, l.walk.buffer, l.drive.buffer, l.none.buffer, ...(l.shade ? [l.shade.train.buffer, l.shade.walk.buffer, l.shade.drive.buffer, l.shade.none.buffer] : []), ...(l.fold ? [l.fold.buffer] : [])]));
   }
 };
