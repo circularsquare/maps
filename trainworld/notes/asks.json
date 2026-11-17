@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "a-2026-11-17-2",
+    "text": "T-3524's 12 m water margin (landed): keep it until T-3553's shoreline measurements are in, or take it out now? Pick: keep (50 m+ rivers confirmed still water).",
+    "since": "2026-11-17",
+    "by": "maps-58"
+  },
+  {
+    "id": "a-2026-11-17-3",
+    "text": "Remove the oldest R2 data version 2026-11-10d (about 5 GB, about $0.07 a month)? Pick: yes. The permission check refused it for the orchestrator; run venv\\Scripts\\python.exe trainworld/tools/r2_purge.py 2026-11-10d --yes from the maps root.",
+    "since": "2026-11-17",
+    "by": "maps-58"
+  },
+  {
+    "id": "a-2026-11-17-4",
+    "text": "T-3542 strings (proposed, not built): \"Periods: 3 / 4 / 5\", \"Rush / Midday / Evening / Night\", \"Morning / Midday / Afternoon / Evening / Night\", hover \"Rush: 06:00-10:00, 16:00-20:00\", switch-down \"Confirm?\" / \"Morning, midday and afternoon will run 12 trains, the most of the three.\" / \"Use 3 periods\" / \"Stay\", \"Hours\" / \"2 hours at least\". Text acknowledged, or name lines.",
+    "since": "2026-11-17",
+    "by": "maps-58"
+  }
+]

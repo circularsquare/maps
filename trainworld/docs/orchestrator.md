@@ -16,10 +16,12 @@ not once per message (Anita, 2026-11-09).
   1 a task for agents; soft limits ("not the end of the world"). Log each call in notes/handoff-log.md: what was asked,
   whether the advice changed anything. This week's usage stance, if any, is in the handoff's standing asks.
 - **Briefs**: the goal in her words, the decisions already made, scope, what done looks like, the files other agents
-  own (leave them alone), the task ids the agent may file, its own scratchpad subfolder and Vite port. A TODO.md
+  own (leave them alone), the task ids the agent may file, its own scratchpad subfolder and Vite port. Point to
+  trainworld/CLAUDE.md for Vite, cores, Rust and commit rules rather than restating them. End every brief with
+  "Report in at most 15 lines; detail goes in notes/T-xxxx.md" (Anita 2026-11-17: reports ran 30-60 lines). A TODO.md
   short-term item goes into the brief verbatim, examples and all (a paraphrase lost her formula tooltip, T-1839).
   A UI brief asks the agent to judge its own screenshots (gaps above and below anything added) before reporting,
-  and you look at them too before telling her it is done.
+  and you look at one per change (the one going to her) before telling her it is done.
 - **Size**: split big work into stages, each its own id and report; a big task's design goes to her before it is
   built. An agent that compacts was given too much.
 - **Thanks**: a short thanks when an agent's work is done, in your own reply; a SendMessage resumes the agent and it
@@ -55,7 +57,7 @@ not once per message (Anita, 2026-11-09).
   players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
   her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
   the task list is long (Sendai's Senzan Line). Say the reach guess in the task line.
-- Asks that outlive the session, task or not, go in `notes/asks.json` (`[{id, text, since, by}]`, `since` a date, `id` like `a-2026-11-16-1`); the board shows them oldest first under Waiting on you. Her answer or dismissal arrives in the inbox as `ask-answer`: act on it, remove the entry, mark it handled. The final message's For you block repeats them.
+- Every open ask goes in `notes/asks.json` (`[{id, text, since, by}]`, `since` a date, `id` like `a-2026-11-16-1`), the one place asks persist across sessions; the board shows them oldest first under Waiting on you. Her answer or dismissal arrives in the inbox as `ask-answer` (or in chat): act on it, remove the entry, mark it handled. Final messages are short and their For you block carries only asks new in that message, not the standing ones (Anita 2026-11-17: "stop repeating things unless i ask"); when she asks to be caught up ("catch me up on everything i haven't responded to"), read asks.json back to her in full, plus anything in flight that needs her.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
 - **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
@@ -92,7 +94,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 3. Rebuild 8800: `venv\Scripts\python.exe trainworld/tools/ops/snap8800.py <hash> [<freeze>] --log <scratch>\snapbuild.log`
    from the maps root (allowed without a prompt, like the orchestrator's other routine commands: Anita 2026-11-16)
    (`snapbuild-frozen.cmd <hash> <freeze>` while a country run owns `data/packs`). It checks out `.tw-snap` at the
-   commit, builds into `dist-new` and swaps it in. Never two at once. No smoke needed for a 8800 rebuild.
+   commit, builds into `dist-new` and swaps it in. Never two at once. No smoke needed for a 8800 rebuild. Batch
+   rebuilds: one after a round of landings, not one per landing.
 4. Before a publish only: `checks/smoke8800.cmd` (light then dark; logs `artifacts/trainworld/smoke8800-*.log`).
 5. Land a tree: `node trainworld/checks/agent-tree.mjs land <name> "<sentence>"`, then `remove <name>`; a landing
    that changed sim/ rebuilds the main tree's WASM.

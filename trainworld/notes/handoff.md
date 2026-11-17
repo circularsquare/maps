@@ -1,14 +1,15 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session eda3ac12-4519-4720-a0c5-be8bdcb2ed0b, name maps-60, since 2026-11-17 14:40 UTC
-Updated: 2026-11-17 16:40 UTC (maps-60 past 400k: starting its successor; its agents report to maps-60, which relays them verbatim while its tab is open)
+Orchestrator: session d516cc87-bbe1-4627-9f97-62b5c973620b, name maps-58, since 2026-11-17 16:41 UTC
+Previous: session eda3ac12-4519-4720-a0c5-be8bdcb2ed0b, name maps-60, handed over 2026-11-17 16:41 UTC, finishing in-flight work
+Updated: 2026-11-17 16:50 UTC (maps-58 took over and owns landings; maps-60's agents report to maps-60, which relays them verbatim while its tab is open; resources checked 16:44)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5.
 
 ## State
 - Live = v0.3.5 (maps bfe58c54, published 11-15). Next publish v0.4.0: no deadline; she picks when and tracks the landing cut-off herself: land things as they pass.
-- master a0e4157b + uncommitted TASKS.md (T-3542/T-3543 lines), pushed at a0e4157b; 8800 = a0e4157b. Smoke PASSED on 66379382 (code-identical).
+- master c350115a, pushed; 8800 = a0e4157b (c350115a is notes only). Smoke PASSED on 66379382 (code-identical).
 - In master since v0.3.5 (for the v0.4.0 notes): everything maps-b8 listed (Central America + Venezuela, Lisbon/Glasgow/Porto, Istanbul/Colombia redraws, ~350 MB less memory, faster loads, bubble folds, purpose rows, buses obey one-way streets (Renkon), tram snap, terrain on by default, trainsfan, ferries 45 km/h) plus today: track speed limit per piece (T-3405), station delete faster (T-2768), track panel rebuild incl. levels and tram (T-3408), bus boarding 4 min (T-3522), help list + F1 (T-3527), shore 12 m margin (T-3524), snap to streets icon (T-3536), double track width / tram wire (T-3533/T-3534), settle speed (T-3512), tram crossing ghost (T-3535), complex pick (T-3539), reclaimed-land country check (T-3529, pipeline).
 - Server: shonei-server 7a23cbc (playtime cap), 96e4f12 (save level 20, LPS1) and 95356ed (level 21, LWE1) committed, not pushed or deployed; all needed before v0.4.0 publishes (master already writes level 20). TestTwSaveCheckFollowsTheGame goes green when weekend lands.
 - Before v0.4.0 ships: translation batch (busOneWay, T-3510's strings, trainsfan, T-3527 help keys, schedule window + weekend keys, updates.v040*; drop settingsTab.controls and help.title); `changelog.py line` + `publish --version v0.4.0`; freight tiles to R2 + hover + item (T-3464); real graphs v2 via deploy.py; smoke8800 light and dark; server deploy; deploy.py; website push; open-source sync + push; Renkon PR 1 / issue 8 replies (text in handoff-log 2026-11-17 maps-b8). Each needs her yes.
@@ -21,7 +22,10 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Start: `powershell -File C:\Users\anita\projects\maps\trainworld\tools\country\start_hidden.ps1 C:\Users\anita\projects\maps\trainworld\notes\T-3455\kit\night1117.cmd`. Log artifacts/trainworld/night1117.log; PID in kit\night1117.state; stop: create trainworld\data\work\world_run\STOP, then kill only that PID. Claims 10 cores (waits for 6 free). Hold app/ landings during its gates. Disk 45 GB free, needs ~28.
 - Later nights: nic (Nice) and pyo-kp (Sinuiju) now safe after T-3529; T-3530 Tokyo Haneda; T-3532 drive-grid water fix (she said yes, low priority).
 
-## Agents (all maps-60's subagents; reports come to maps-60 and are relayed. If its tab is gone, check each directly: its tree's git status, notes, the ledger)
+## Agents (maps-58 owns all landings. The first five are maps-60's subagents, handed over un-landed: their reports come to maps-60, which relays them to maps-58 while its tab is open. If its tab is gone, check each directly: its tree's git status, notes, the ledger)
+- drawapart (Opus, maps-58's, .tw-trees/drawapart, port 6131): T-3264 stage 0 (standing overlap check) and stage 1 (opposite directions drawn apart from z14) built to a mock; screenshots to review/ for her yes before polishing. May file T-3546-3549 for stages 2-6.
+- shoreline (Opus, maps-58's, .tw-trees/shoreline, port 6133): T-3553, measuring shoreline accuracy options against T-3524's landed 12 m margin (her second thoughts 11-17); read-only on data/packs; results go to her to pick. Revert path if she wants the margin out: `git revert 66e46fed`, hide changelog c092, reopen T-3524.
+- londonedit (Opus, maps-58's, .tw-trees/londonedit, port 6132): T-3388 London edits under 4 s, settles unchanged; checker before landing (demand). May file T-3550-3552.
 - weekend2 (Opus, a8b211c279a6dfa8a, .tw-trees/weekend, port 6127): fixing T-3521's checker FAIL (headway lines ignore the weekend percent; save.rs test-string mojibake). Then: a fresh Sonnet checker on headway cases + default parity (checker-weekend's report: default parity NYC 12,679,834 / 12,384,581 / 10,797,533 weekday/Sat/Sun; repro scratchpad\checker-weekend\s4.mjs), then commit by hand with trailers `Co-authored-by: gabs <moraes.madm@gmail.com>` and Claude's; its 5 DECISIONS lines and changelog c094, c095 are already in master. Strings were shown to her.
 - singlecap (Opus, adda47c60a86f18ba, .tw-trees/singlecap, port 6113): T-3526 fix 1 (her pick): a line's own trains don't queue against each other on single track; cap at trains that fit plus one. Sim change: fresh checker before landing.
 - tramsplit (Opus, a089adcfacfecebf2, .tw-trees/tramsplit, port 6122): T-3537 street snap merges a double track's split; T-3538 split tram line gets a turn-back mark at its end; T-3541 a blueprint extension off that end stops the line. Her Caracas screenshots in artifacts/trainworld/board/.

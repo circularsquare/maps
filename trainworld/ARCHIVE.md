@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3554 [P2] {L:checks} One command to land and archive a tree (2026-11-17): agent-tree.mjs finish <name> "<sentence>" --task ... --outcome ... lands, rebuilds WASM if needed, removes the tree and archives tasks, one line per step; tested in a throwaway clone. notes/T-3554.md.
 - T-3539 [P2] {L:small-fixes} Click a station inside a selected complex (2026-11-17): A click on a station of the selected complex selects it alone; a second click goes back to the complex; landed 66379382.
 - T-3535 [P2] {L:track-drawing} Tram crossing mark missing from the preview (2026-11-17): Network::crossing_trams shared by placed and preview crossings; the ghost shows the broken x over rail; landed e9547f93. notes/T-3531.md.
 - T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (2026-11-17): Edit's local solve skipped where its populations took over 35% of a worker's passes (LOCAL_SHARE_MAX 0.35); NYC settle low 7 s vs ~114-166, medium 25-35 s vs ~127-172; checker PASS with figures identical to master; landed fbadc218. notes/T-3512.md.

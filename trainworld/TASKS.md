@@ -197,7 +197,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-3388 [P2] {L:edit-speed} London edits take about 4 s
+- T-3388 [P2] {L:edit-speed} London edits take about 4 s (taking, 2026-11-17, agent londonedit)
   - Context: Each edit on the real London network runs three paced settles, about 4 s; a save with no settled rates takes 70 s to settle on load. A train-count edit alone settles for 3.5 s (8-10 s in the browser) because pacing flips about 240 lines each round (T-3235). Player ank (via you, 11-16): 246M points, 3.0 of 8 GB, about 5 s per track piece, "use more cores" changed nothing.
   - Goal: An edit on London takes well under 4 s, with settles ending where they do now. Hysteresis in `pace_merges` is the likely fix for train-count edits, and it moves rates.
   - Other: notes/T-3387.md; notes/T-3233.md
@@ -273,12 +273,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
   - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
-- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-17, agent tiers)
-  - Context: You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
+- T-3542 [P2] {L:timetables} {after:T-3521 and T-3346 stage 2} Four or five service periods
+  - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
+- T-3553 [P2] {L:terrain} More accurate shoreline than the 12 m margin (taking, 2026-11-17, agent shoreline)
+  - Context: You, 2026-11-17, on T-3524's 12 m water margin (landed): "i dont wanna just aggressively make it forgiving cuz then some city rivers might not register at all. did we find any actual improvements to accuracy were possible? any that seem potentially worth pursuing?" The pack mask is 25 m cells read at the centre: up to 15 m off the drawn coast one way, 22 m the other.
+  - Goal: Measured options (reading the mask between cell centres, a finer or distance mask in packs, OSM water for TIGER packs, a smaller margin) on Sydney, NYC and a narrow city river, each with error both ways, memory and pack cost, for you to pick.
 - T-3543 [P2] {L:timetables} {after:T-3521} One schedule button and default headways
-  - Context: You, 2026-11-17: "i think we can get rid of the copy/paste feature and instead allow setting currently selected headways as default (always applied to new lines) in the timetables window. this way we just have one icon / button on the lines panel. it should be slightly bigger than the icons we currently have, and it should be a "timetable / complex scheduling" button." Weekends stay in the window only; the line view keeps its 3 rows.
+  - Context: You, 2026-11-17: "i think we can get rid of the copy/paste feature and instead allow setting currently selected headways as default (always applied to new lines) in the timetables window. this way we just have one icon / button on the lines panel. it should be slightly bigger than the icons we currently have, and it should be a "timetable / complex scheduling" button." Weekends stay in the window only; the line view keeps its rows (3, 4 or 5), no weekends.
   - Goal: The copy/paste schedule buttons are gone; the timetables window has a control that makes the current headways the default for new lines; the line panel has one slightly bigger schedule button that opens the window.
 - T-3541 [P2] {L:single-track} Blueprint extension breaks a split line (taking, 2026-11-17, agent tramsplit)
   - Context: Your pad, 2026-11-17: "took my blue split double track line and extended the loose end that they were reversing at, extended with a double track. that broke the line, and im unable to get it back running." Then: "oddly it breaks the line right when i place the blueprint extending, before anything is actually constructed. if i delete the extension the line starts working agian as before."
@@ -940,7 +943,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Since T-2419 (2026-11-04) the check's express overtakes the local where there is nowhere to pass: 75 of 1,248 frames drawn through each other.
   - Goal: t1965-follow passes at 1+1 and 4+2. Part of T-3264.
   - Other: notes/T-3264.md
-- T-3264 [P2] {L:trains-drawn} One fix for trains drawn through each other
+- T-3264 [P2] {L:trains-drawn} One fix for trains drawn through each other (taking, 2026-11-17, agent drawapart)
   - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Not started yet.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h

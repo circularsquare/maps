@@ -2,6 +2,9 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
+## 2026-11-17, maps-58 (from 16:41 UTC)
+- Took over from maps-60, which handed its five agents over un-landed and relays their reports. Started drawapart (T-3264 stages 0-1) and londonedit (T-3388). Her TODO short-term items are all filed or done already.
+
 ## 2026-11-17, maps-60 (14:40-16:40 UTC)
 - Took over from maps-b8, landed its piecelimit, stationedit, busboard, shore, settle (squash) and my trackrebuild (+ levels/tram follow-up), helplist (+4 entries), reclaim, snapicon, tracklook, tramlag (T-3535), complexpick; 8800 rebuilt five times, last a0e4157b; master pushed.
 - Her calls: public repo becomes the real one after v0.4.0 (T-3523); single-track cap fix 1 (T-3526); shore 12 m OK; c086 "350 MB"; BA-Montevideo water fix later, low priority; tram slowness (T-3531) was machine load.

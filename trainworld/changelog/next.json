@@ -966,14 +966,15 @@
     {
       "id": "c074",
       "text": "added indonesian",
-      "edited": null,
+      "edited": "selamat pagi! added indonesian",
       "hidden": false,
       "task": "T-3398",
       "by": "indonesian",
       "at": "2026-11-17T02:46:34Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T16:53:13Z"
     },
     {
       "id": "c075",
