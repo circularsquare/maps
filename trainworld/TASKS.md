@@ -856,6 +856,16 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your 2026-11-13: "we dont have a way of seeing what cities people are actually building in". The server records only each play's start city. About 3-4 h.
   - Goal: twstats shows minutes per city. The 15-minute ring has been live since 2026-11-13 (you: "i think we already did 15-minute live a week").
   - Other: notes/T-3382.md
+- T-3524 [P2] {L:track-drawing} Track near the shore counted as over water (taking, 2026-11-17, agent shore)
+  - Context: Your pad, 2026-11-17: "when we consider placed track "over water" is a little inconsistent when you zoom super far in. people are building things close to the shoreline and it says its over water and they get frustrated. would we be able to improve this? or bias it to be forgiving if thats significantly easier". Many players build along shores, so a decent reach.
+  - Goal: Track that looks on land at street zoom is not refused or priced as over water; a forgiving margin if a truer coastline is much harder.
+- T-3523 [P3] {L:open-source} Open-source repo and maps repo the same
+  - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. The export syncs only at publishes (last 11-15).
+  - Goal: Your pick between syncing on every push plus a public in-progress list, or making the public repo the source.
+  - Other: notes/T-2913.md
+- T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (taking, 2026-11-17, agent busboard)
+  - Context: You, 2026-11-17: "i would actually like to drop the boarding time from 6 to 4 minutes ... we should measure a save or two yeah and see how much profitability / ridership changes in a couple cases. but i think its a minor change." Full BRT stays T-3378.
+  - Goal: Every bus boarding costs 4 perceived minutes instead of 6, with riders and profit before and after on two saves with buses.
 - T-3378 [P2] {L:buses} Bus and tram balance, BRT
   - Context: Players say buses are weak and metros and trams too strong. The bus's weak spot is its boarding cost; street tram acts like light rail.
   - Goal: A design for BRT or busways and slower street trams, for you first.

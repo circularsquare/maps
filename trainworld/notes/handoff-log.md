@@ -2,6 +2,13 @@
 
 Older entries moved out of handoff.md on 2026-11-16 (T-3451 recommendation 4). New entries go at the top.
 
+## 2026-11-17, maps-b8 (11:13-14:40 UTC)
+- Took over from maps-44; landed nightwrap's runs (948e61f3), T-3505, T-2627/T-2777, T-3480 (by hand, Renkon co-author), T-3520, T-3510, terrain default; posted PR 17-20 replies (17, 20 closed).
+- Replies to post at the next open-source sync (her OK given):
+  - PR 1: "Thanks for this, Renkon! It's in the game now as a setting, Buses obey one-way streets, off by default so existing bus routes don't change. We kept your routing as it was, made the arrows lighter and start them at zoom 15. You're credited as co-author on the commit. It goes out with the next update, and we'll close this with a link once the public repo syncs."
+  - Issue 8: "Thanks for reporting this. The next update adds a setting, Buses obey one-way streets, that keeps bus routes going the way one-way streets and roundabouts run. It's off by default; turn it on in Settings > Show. We'll close this once it's out."
+- The trainsfan agent kept re-notifying after finishing; stopped with TaskStop.
+
 ## 2026-11-16, maps-7e and maps-d7 (copied from handoff.md as it stood at 18:05 UTC)
 
 
@@ -208,3 +215,4 @@ Read trainworld/CLAUDE.md, docs/orchestrator.md and TASKS.md first. Earlier deta
 ## Advisor calls (trial)
 - 2026-11-17 10:00 UTC, maps-44: whether to land T-3512 after setchk's partial pass (stop-on-whole never fired, no unpinned level change, one hang with the old-path flags). Changed things: T-3512 held for a second round; T-3069 given a checker it would otherwise have skipped (hand-drawn tram turn rule, monorail/funicular); a like-for-like memory figure asked for T-3503; master smoke's t1053 no longer counted as noise.
 - 2026-11-17 11:20 UTC, maps-b8: takeover plan (which tasks to start beside nightwrap and settle2). Changed things: briefs re-read from exact task blocks (my first grep had mixed in the next tasks' fields); bubfold told to keep off settle2's files and not rebuild packs; Rust agents held to CARGO_BUILD_JOBS=2 while settle2 times solves; PRs 17-21 surveyed against PR 12's earlier decisions instead of from scratch; T-3512's taking mark fixed to settle2.
+- 2026-11-17 ~14:20 UTC, maps-b8: how to fit weekend train counts in (PR 13 narrow cut vs Detailed mode). Changed things: save levels split 20/21 with one owner of the server check file; PR 13 port checked first; her 11-12 shape over the PR's; changelog tense fixed and the CLAUDE.md rule changed; a master smoke and a terrain memory check before publish.
