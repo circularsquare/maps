@@ -1,5 +1,5 @@
 // T-2163, T-2235: the network diagram's clicks, hovers, camera, build keys, picture and loading bar, on the
-// real New York save in headless Chrome. The first layout shows "Calculating diagram" with a loading bar that
+// real New York save in headless Chrome. The first layout shows the busy text (diagramButton.calculating) with a loading bar that
 // rises; the diagram opens on the complex nearest the map's centre; a hover on Times Sq shows its tag and a
 // click opens its inspector; M back goes to the map centred on it, and M again opens the diagram centred on it;
 // a click on a line selects it, the rest faded (screenshots light and dark); a build key goes back to the map
@@ -7,12 +7,15 @@
 //   node trainworld/checks/t2163-diagram-clicks.mjs [url]      (about a minute; screenshots and the PNG in
 //   artifacts/trainworld/t2163/)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { ARTIFACTS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6194/';
 const OUT = `${ARTIFACTS}t2163/`;
 mkdirSync(OUT, { recursive: true });
+// the shown words, read from the game's English messages
+const BUSY = JSON.parse(readFileSync(fileURLToPath(new URL('../app/src/i18n/messages/en.json', import.meta.url)), 'utf8'))['diagramButton.calculating'];
 const CENTRE = 'Times Sq-42 St';
 let failed = 0;
 const line = (ok, name, info) => { if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ': ' + info : ''}`); };
@@ -38,14 +41,14 @@ try {
   }, CENTRE);
 
   // 1. the first layout: the loading bar, its share rising
-  await page.evaluate(() => {
+  await page.evaluate((BUSY) => {
     const seen = (window.twBarSeen = { text: false, values: [] });
     new MutationObserver(() => {
-      for (const t of document.querySelectorAll('.status-tag')) if (t.textContent.includes('Calculating diagram')) seen.text = true;
+      for (const t of document.querySelectorAll('.status-tag')) if (t.textContent.includes(BUSY)) seen.text = true;
       const v = document.querySelector('.status-tag .load-bar')?.getAttribute('aria-valuenow');
       if (v !== null && v !== undefined && seen.values.at(-1) !== +v) seen.values.push(+v);
     }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-valuenow', 'style'] });
-  });
+  }, BUSY);
   const t0 = Date.now();
   await page.keyboard.press('m');
   await page.waitForFunction(() => window.twDiagram?.layouts >= 1, undefined, { timeout: 90000 });
@@ -53,7 +56,7 @@ try {
   await page.waitForTimeout(300);
   const bar = await page.evaluate(() => ({ ...window.twBarSeen, after: !!document.querySelector('.status-tag .load-bar') }));
   const rising = bar.values.every((v, i) => i === 0 || v >= bar.values[i - 1]);
-  line(bar.text && bar.values.length >= 4 && rising && Math.max(...bar.values) >= 80 && !bar.after, 'loading bar with "Calculating diagram" rises through the first layout and goes',
+  line(bar.text && bar.values.length >= 4 && rising && Math.max(...bar.values) >= 80 && !bar.after, `loading bar with "${BUSY}" rises through the first layout and goes`,
     `${firstS.toFixed(1)} s; values ${bar.values.join(' ')}`);
   const opened = await page.evaluate(() => window.twDiagram.middle());
   line(opened === CENTRE, 'the diagram opens on the complex nearest the map\'s centre', opened);

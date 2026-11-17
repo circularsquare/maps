@@ -1,9 +1,13 @@
 // T-2888: the diagram pauses the game while it is up and gives the clock back as it was; its line width slider.
 //   node trainworld/checks/t2888-diagram-width.mjs [url]     (about 1 minute; pictures in artifacts/trainworld/t2888/)
 import { mkdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { ARTIFACTS, REAL_SAVE, NOISE, launchChrome, collectErrors, importSave } from './lib.mjs';
 
 const base = process.argv[2] ?? 'http://localhost:6125/';
+// the slider's range, read from the game (draw.ts WIDTH_MIN, WIDTH_MAX)
+const DRAW = readFileSync(fileURLToPath(new URL('../app/src/diagram/draw.ts', import.meta.url)), 'utf8');
+const [, WMIN, WMAX] = DRAW.match(/WIDTH_MIN = (\d+(?:\.\d+)?), WIDTH_MAX = (\d+(?:\.\d+)?)/).map(Number);
 const OUT = `${ARTIFACTS}t2888/`;
 mkdirSync(OUT, { recursive: true });
 const errors = [];
@@ -64,7 +68,7 @@ try {
   await page.waitForTimeout(1500);
   const set = (v) => page.evaluate((v) => { const i = document.querySelector('.diagram-width input'); i.value = String(v); i.dispatchEvent(new Event('input', { bubbles: true })); return [i.min, i.max]; }, v);
   const [min, max] = (await set(1)).map(Number);
-  check('slider range', min === 1 && max > 1.1 && max <= 1.4, `${min} to ${max}`);
+  check('slider range', min === WMIN && max === WMAX, `${min} to ${max}`);
   const canvas = page.locator('.diagram-canvas');
   const box = await canvas.boundingBox();
   const mid = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
