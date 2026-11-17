@@ -237,9 +237,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
   - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
   - Goal: The water mask loads on that save, or the failure is understood and filed.
-- T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting (taking, 2026-11-16, agent freightbuild)
+- T-3464 [P2] {L:world-map} {after:v0.4.0 publish} Freight and abandoned rail in the All setting
   - Context: Downloads approved by you 2026-11-16 ("ok, can start download"); colours approved ("track looks good"). You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
-  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36 and was tried on Chicago; the worldwide build (about 1.5-3 h on 2 cores plus downloads, 150-400 MB) goes in an overnight batch, then R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
+  - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36; all 120 regions are built (2026-11-17, 246 MB, noritetsu/dist/data/*_extra.pmtiles and extra.json). Left: upload to R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
   - Other: notes/T-3464.md
 - T-3495 [P2] {L:world-map} Snap to any real rail that is drawn (taking, 2026-11-16, agent snapsurvey)
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and on the board: "a common complaint is that people cant snap to some rails that are visible. if something is visible we shoudl let people snap to it. (and if there are gaps that are easily fixable we should fix them but not put too much effort into doing this yet as we have other high prio stuff to work on)". The real-line snap (realSnap.ts) follows passenger rail only; T-3464 builds freight and abandoned rail tiles for the All setting.
@@ -247,23 +247,26 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3499 [P3] {L:region-redraws} Bucaramanga is an enclave
   - Context: A player reports (via you, 2026-11-16 on the board) that Bucaramanga, Colombia, sits as an enclave inside another zone, which is weird. Reaches players building in Colombia.
   - Goal: Bucaramanga's zone has a sensible shape joined to its surroundings, fixed at the next Colombia rebuild if it needs one.
+- T-3511 [P2] {L:region-redraws} {after:T-3399 join} Rebuild the enclave shifts and merges
+  - Context: From T-3506: 127 enclave zones checked, 118 kept. To rebuild: Perth takes Rockingham, Kwinana, Mandurah and 11 Wheatbelt shires (rest renamed Bunbury); Sanliurfa takes Siverek, Hilvan, Bozova (ring renamed Nizip); Diyarbakir takes Cinar and Bismil; La Plata takes Magdalena, Punta Indio, Chascomus; Suchetgarh into Jammu; Yuhuan into Taizhou. The scan wants a rerun after T-3399's join (it read half-built Central America packs).
+  - Goal: Rerun the scan, then the five night stages D-H in notes/T-3506.md (about 8.5 h, Turkey folded into T-3488's rebuild if it hasn't run), each country's gates passing.
+  - Other: notes/T-3506.md
 - T-3501 [P2] {L:airports} {after:next world rebuild} Border airports lose ground trips in the build
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3503 [P2] {L:map-look} Demand bubbles include trips between cities
+- T-3503 [P2] {L:map-look} Demand bubbles include trips between cities (taking, 2026-11-16, agent bubbles)
   - Context: You, 2026-11-17: "ideally we have demand bubbles show intercity trips as well", and the bubbles should simply add up to the zone's local plus intercity totals. Today street-zoom bubbles show only a zone's own local trips; zoomed out past 8.5 the zone bubbles already include regional trips. From T-3500's look: a worker query like airLegs that shares each zone's longer and cross-zone trips over its homes and jobs, small short-lived memory, about 3-5 h.
   - Goal: Bubbles at every zoom include regional and long trips, always on, and add up to the zone's local plus intercity totals.
   - Other: notes/T-3500.md
 - T-3505 [P2] {L:map-look} Demand bubbles with 0 trips
   - Context: You, 2026-11-17: a bubble in rural Ontario hovers "0 trips from here", which shouldn't show (it rounds to 0); "i thought we got rid of demand sites that are less than one person. or aggregated them ... it suggests to me that we could probably be more aggressive with dropping bubbles in some way or another." Fewer sites also means less memory.
   - Goal: No bubble shows under 1 trip a day; tiny sites folded into a neighbour where there is one, with the zone's totals unchanged and the memory saved measured.
-- T-3506 [P2] {L:region-redraws} Worldwide check for enclave zones
-  - Context: You, 2026-11-17: "we should do a general world check for enclave zones. or like enclave by land (liek arnavutkoy) and for each case consider whether its justified to keep liek that or if we should merge or shift stuff around". Bucaramanga (T-3499) and Arnavutkoy (T-3488) are in tonight's queue.
-  - Goal: Every zone enclosed by land by one other zone listed with a call each (keep, merge or shift, and why), and the merges and shifts queued for night rebuilds.
-- T-3507 [P3] {L:board} Task graph counts only real closes
-  - Context: From T-3504: "closed" in the hourly history counts any task leaving TASKS.md, including moves to Someday, so the closed counts run high (159 in a day on 11-16).
-  - Goal: Closed counts only tasks that reach ARCHIVE.md; moves to Someday shown apart or not at all.
+- T-3509 [P3] {L:map-look} {waits:Anita} Long trips inside one zone show nowhere
+  - Need from Anita: should a zone's longer trips between its own far-apart parts count in its "Trips within" (and so its train share goals)? I'd say yes, as trips within.
+  - Context: The regional layer has trips of 25 km and more between 6 km areas of one zone (New York 1.93M legs a day, 2.8% of its local trips; London 0.60M; median zone 0.13%). They ride the player's lines but are in no bubble and no zone figure, and T-3503 leaves them out too.
+  - Goal: These trips show in the zone's bubbles and in one of its figures, and the bubbles still add up to the figures.
+  - Other: notes/T-3503.md
 - T-3502 [P3] {L:airports} Big airports draw ground trips from farther away
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
@@ -271,12 +274,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3471 [P3] {L:open-source} Intercity tests skip when the packs are missing
   - Context: PRs 12 and 13 report 8 intercity tests failing on the export's main, likely because the export ships no packs.
   - Goal: Those tests skip with a plain message when their packs are absent.
-- T-3473 [P2] {L:solve-speed} {after:T-3470} Take PR 12's demand CPU speedups, measured (taking, 2026-11-16, agent prspeed)
-  - Context: CinnamonVII's PR 12 has gravity and layout speedups that keep every sum's order, a 4-lane row split that moves two demand totals in the last bits, and native gravity threads that would take every core. No timings in the PR. Part of T-3373 option A.
-  - Goal: The order-keeping speedups landed with timings and identical figures, Cinnamon credited; the rest taken only if the drift is invisible and the threads respect the core claims.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
+- T-3512 [P2] {L:solve-speed} Train count edits take over a minute to settle (taking, 2026-11-17, agent settle)
+  - Context: From T-3473: changing a line's train count takes 75-130 s to reach its final figures on NYC and all-China, but the re-solve itself is only 0.2-0.3 s of worker time; the wait is somewhere else, not traced yet. Every player who edits a line meets it.
+  - Goal: Find where the wait goes and cut a train-count edit's settle time to a few seconds on the NYC save, or say why it can't be.
+  - Other: notes/T-3473.md
 - T-3492 [P2] {L:memory} Give back idle solving workers' memory
   - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
   - Goal: An idle worker's spare memory goes back, with no solve slower than now.

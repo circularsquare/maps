@@ -1,0 +1,19 @@
+{
+ "waves": [
+  [
+   "bnz",
+   "sve"
+  ],
+  [
+   "dir",
+   "slr"
+  ]
+ ],
+ "retire": [],
+ "rows": [
+  "bnz",
+  "dir",
+  "slr",
+  "sve"
+ ]
+}

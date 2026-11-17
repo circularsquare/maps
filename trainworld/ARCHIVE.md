@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3473 [P2] {L:solve-speed} Take PR 12's demand CPU speedups, measured (2026-11-17): PR 12's gravity speedup landed (pack_gravity 2.2x one thread, bit for bit, --threads opt-in); its mode choice changes and 4-lane split left out, no gain measured; Cinnamon credited. notes/T-3473.md.
+- T-3506 [P2] {L:region-redraws} Worldwide check for enclave zones (2026-11-16): 127 enclave zones listed with calls: keep 118, shift 6, merge 3 (Perth, Sanliurfa, Diyarbakir, La Plata shifts; Suchetgarh into Jammu, Yuhuan into Taizhou); rebuilds queued as T-3511. notes/T-3506.md.
+- T-3507 [P3] {L:board} Task graph counts only real closes (2026-11-16): closed counts only ids that reach ARCHIVE.md (moves to Someday and other vanishes are not counted, not shown); backfill redone from git, 11-16 is 154 (146 archived that day), 11-10 to 11-12 fell by about 30 in all.
 - T-3508 [P3] {L:twstats} twstats layout and defaults (2026-11-16): all six changes in twstats; avg players is minutes per bucket divided by 15, no server change.
 - T-3504 [P2] {L:board} Open tasks over time on the board (2026-11-16): hourly recorder in serve.py, 7-day backfill, collapsible stacked graph by area or priority on the board.
 - T-3500 [P2] {L:airports} Airport hover misses trips from across the zone line (2026-11-16): airport hover and Airport bubbles count trips from across the zone line (Istanbul 4,327 -> 111,287, 26,480 by train); selection lists airport trips by far zone; solved figures identical. notes/T-3500.md

@@ -1,0 +1,12 @@
+{
+ "task": "T-3506",
+ "iso": "IND",
+ "retire": {"suc": "jau"},
+ "names": {
+  "drop": ["suc"],
+  "aliases": {
+   "jau": ["Suchetgarh", "R.S. Pura", "RS Pura"]
+  }
+ },
+ "why": "Suchetgarh and R.S. Pura (275,589), two Jammu district tehsils under the zone floor, were an enclave between Jammu's metro and the border (T-3506); merged into Jammu"
+}

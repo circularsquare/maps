@@ -1,0 +1,15 @@
+{
+ "task": "T-3506",
+ "iso": "ARG",
+ "moves": [
+  ["61730980B51096129050346", "Magdalena", "bue", "lal"],
+  ["61730980B33989982283720", "Punta Indio", "bue", "lal"],
+  ["61730980B62875315745131", "Chascomús", "bue", "lal"]
+ ],
+ "names": {
+  "aliases": {
+   "lal": ["Magdalena", "Chascomús", "Chascomus"]
+  }
+ },
+ "why": "La Plata's zone was an enclave in Buenos Aires's metro (T-3506): Magdalena, Punta Indio and Chascomús, rural partidos south of La Plata at the far edge of the Buenos Aires row, join La Plata, which then borders the Tandil and Chivilcoy zones"
+}

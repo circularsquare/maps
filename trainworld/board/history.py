@@ -2,13 +2,15 @@
 
   python trainworld/board/history.py record [--force]   append one row if the last is 50+ minutes old (serve.py runs
                                                          this hourly); also rewrites board/history.json
-  python trainworld/board/history.py backfill [--days 7] rebuild the rows older than the first recorded one, from
+  python trainworld/board/history.py backfill [--days 7] [--redo] rebuild the rows older than the first recorded one, from
                                                          TASKS.md and LINES.md at each hour in git history
   python trainworld/board/history.py show                print the last rows
 
 notes/task-history.jsonl: one row per line {t, n, area{slug: n}, pri{P1..P4, none: n}, opened, closed}. "Open" is what
 the board counts: every task in TASKS.md except a parked one (P4 or under Someday, nobody on it, not waiting). opened/closed are the
-task ids that appeared in / vanished from TASKS.md since the previous row (a close moves it to ARCHIVE.md).
+task ids that appeared in TASKS.md / vanished from it into ARCHIVE.md since the previous row. A task that
+vanishes without an ARCHIVE.md entry (dropped, merged, moved elsewhere) is not a close. ARCHIVE.md is add-only, so
+the backfill checks vanished ids against today's file.
 Areas come from the task's line in LINES.md; before LINES.md existed (2026-11-15) a task takes the area it has in the
 earliest snapshot that has one, else "none" (Not sorted).
 notes/task-history-ids.json is the id list of the last row; board/history.json is what the page reads.
@@ -16,6 +18,7 @@ notes/task-history-ids.json is the id list of the last row; board/history.json i
 import datetime as dt
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -56,6 +59,11 @@ def snapshot(tasks_text, lines_text, fallback=None):
         p = t["pri"] or "none"
         pri[p] = pri.get(p, 0) + 1
     return {"n": sum(area.values()), "area": area, "pri": pri}, ids, own
+
+
+def archived_ids():
+    text = build.read(TW / "ARCHIVE.md") or ""
+    return set(re.findall(r"^- (T-\d+) ", text, re.M))
 
 
 def read_rows():
@@ -100,7 +108,7 @@ def record(force=False):
     try:
         before = set(json.loads(IDS.read_text(encoding="utf-8")))
         row["opened"] = len(ids - before)
-        row["closed"] = len(before - ids)
+        row["closed"] = len((before - ids) & archived_ids())
     except (OSError, ValueError):
         pass
     rows.append(row)
@@ -119,6 +127,9 @@ def backfill(days=7):
     now = dt.datetime.now(dt.timezone.utc).replace(minute=0, second=0, microsecond=0)
     existing = read_rows()
     stop = existing[0]["t"] if existing else None
+    if existing and "--redo" in sys.argv:
+        existing = []
+        stop = None
     points = [now - dt.timedelta(hours=h) for h in range(days * 24, -1, -1)]
     points = [p for p in points if not stop or p.strftime("%Y-%m-%dT%H:%MZ") < stop]
     blobs = {}
@@ -129,6 +140,7 @@ def backfill(days=7):
             blobs[k] = git("show", f"{commit}:{path}")
         return blobs[k]
 
+    done = archived_ids()
     snaps = []
     for p in points:
         iso = p.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -149,7 +161,7 @@ def backfill(days=7):
         row = {"t": p.strftime("%Y-%m-%dT%H:%MZ"), **row}
         if prev is not None:
             row["opened"] = len(ids - prev)
-            row["closed"] = len(prev - ids)
+            row["closed"] = len((prev - ids) & done)
         prev = ids
         rows.append(row)
     write_rows(rows + existing)
