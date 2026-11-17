@@ -1,6 +1,6 @@
 // The roads a bus route follows (T-1465, notes/T-1445.md "Stage 2"). Between two clicked points the
 // route takes the shortest path over the basemap's zoom 14 roads and motorways (`roadGraph.ts`), counting road length
-// as it is; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
+// as it is and a one-way street only the way it runs; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
 // cap, or too long to search), and the tool keeps it out of a route. The tiles are fetched here,
 // straight from the basemap's own tile server, because the map holds only the zoom it is showing; they
 // are kept decoded, and the graph is built from them as a leg needs.
@@ -118,7 +118,7 @@ export class BusRoads {
   /** the search's cost, for the check: calls, total and slowest, ms */
   stats = { legs: 0, ms: 0, max: 0, tiles: 0 };
 
-  constructor(private map: MlMap, private onLoad: () => void, private keep: RoadKeep = busRoad) {}
+  constructor(private map: MlMap, private onLoad: () => void, private keep: RoadKeep = busRoad, private oneWay: () => boolean = () => false) {}
 
   // ---------------------------------------------------------------- tiles
 
@@ -206,6 +206,11 @@ export class BusRoads {
   }
 
   private fresh() {
+    const way = this.oneWay();
+    if (way !== this.graph.oneWay) {
+      this.graph.oneWay = way;
+      this.legs.clear();
+    }
     if (this.cachedVersion === this.graph.version) return;
     this.cachedVersion = this.graph.version;
     this.legs.clear();
@@ -333,7 +338,7 @@ export class BusRoads {
       const direct = Math.hypot(pa[0] - pb[0], pa[1] - pb[1]) * mpu;
       const cap = Math.max(direct * DETOUR, direct + DETOUR_M);
       let path = this.graph.path(sa, sb, cap);
-      if (!path && free) {
+      if (!path && free && !this.graph.oneWay) {
         // the nearest road has no path: another road near the free end may (searched from the fixed one)
         const [fixed, near, fx, fy] = free === "b" ? [sa, sb, bx, by] : [sb, sa, ax, ay];
         const alts = this.graph.snapsWithin(fx, fy, SNAP_M / mpu).slice(1, 1 + MAX_ALTS);
@@ -345,6 +350,12 @@ export class BusRoads {
           got.fast?.reverse();
         }
         path = got;
+      } else if (!path && free) {
+        // the nearest road has no path: another road near the free end may. Searched in the direction
+        // the bus will run, so a one-way street is not taken by finding the path backward and reversing it.
+        const alts = this.graph.snapsWithin(free === "b" ? bx : ax, free === "b" ? by : ay, SNAP_M / mpu).slice(1, 1 + MAX_ALTS);
+        const pen = (c: Snap) => SNAP_PEN * this.graph.snapCost(c) * mpu;
+        path = alts.length === 0 ? null : free === "b" ? this.graph.path(sa, sb, cap + SNAP_PEN * SNAP_M, alts, pen) : this.graph.path(sa, sb, cap + SNAP_PEN * SNAP_M, [], pen, alts);
       }
       if (path) {
         const thinned = path.fast ? thinFlagged(path.pts, path.fast, THIN_M / mpu) : { pts: thin(path.pts, THIN_M / mpu), flags: undefined };

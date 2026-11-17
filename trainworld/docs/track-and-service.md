@@ -1926,7 +1926,7 @@ crowding rounds. There are no signals (SPEC 2.1).
 
 A bus line (T-1464, T-1465; design notes/T-1445.md) is a line with no track: the player clicks points
 and between two clicks the route follows the basemap's roads, motorways and their bridges and tunnels
-included (T-2469); the app refuses a point they do not reach (T-2451, T-2467). Any road in the basemap data
+included (T-2469), a one-way street only the way it runs when Settings > "Buses obey one-way streets" is ticked, off by default (T-3480; ui-building.md "Drawing a bus line"); the app refuses a point they do not reach (T-2451, T-2467). Any road in the basemap data
 counts (T-3172): streets of every class, service ways of every kind, tracks, bus guideways and pedestrian
 streets. Footways, cycleways, steps, bridleways, platforms, raceways, piers, rail and ferries do not. Street
 trams use the same roads without motorways. It shares lines' ids, schedules (buses or a headway per

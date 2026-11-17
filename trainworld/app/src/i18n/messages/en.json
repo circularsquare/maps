@@ -1840,6 +1840,7 @@
   "settingsTab.rotate": "Rotate map with right drag",
   "settingsTab.units": "Units",
   "settingsTab.zoomButtons": "Show zoom buttons",
+  "settingsTab.busOneWay": "Buses obey one-way streets",
   "mapZoom.in": "Zoom in",
   "mapZoom.out": "Zoom out",
   "settingsTab.runInBackground": "Run in background",

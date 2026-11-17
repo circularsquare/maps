@@ -35,7 +35,7 @@ import type { Map as MlMap, MapMouseEvent } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { distance, length, moneyShort } from "../game/format";
 import { editBusRoute, newBusLine, nextFreeColour } from "../game/lineActions";
-import { ask, loopTap, renameLinePrompt, selection, tool } from "../game/ui";
+import { ask, display, loopTap, renameLinePrompt, selection, tool } from "../game/ui";
 import { edit, say, world } from "../game/world";
 import { keyIsTheirs } from "../ui/keys";
 import { BUS_KEY } from "../ui/toolKeys";
@@ -179,7 +179,7 @@ export class BusDraw {
   private svg: SVGSVGElement;
 
   constructor(private map: MlMap, box: HTMLElement, private tag: HTMLElement, private client: ClockClient, private overlay: Overlay, private host: { exit(): void }) {
-    this.roads = new BusRoads(map, () => this.loaded());
+    this.roads = new BusRoads(map, () => this.loaded(), undefined, () => display.peek().busOneWay);
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.setAttribute("class", "bus-draw");
     this.svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;display:none";

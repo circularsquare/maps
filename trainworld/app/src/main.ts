@@ -504,7 +504,7 @@ map.on("load", () => {
   effect(() => { shade.value; setBasemapShade(map, mapShade.value, contrast.value); });
   effect(() => setSatellite(map, display.value.satellite)); // T-3249
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
-  effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883
+  effect(() => setBusRoadHint(map, tool.value === "bus", display.value.busOneWay)); // T-2883
   effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value && !snapRealTram.value)); // T-2998
   effect(() => setRailRoadHint(map, tool.value === "track" && !tramTrack.value && snapRoads.value)); // T-3129
   startTerrainTint(map); // T-1270 stage 3

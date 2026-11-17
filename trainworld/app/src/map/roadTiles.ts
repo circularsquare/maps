@@ -20,6 +20,9 @@ export interface RoadLines {
   weights?: number[];
   /** each line's level: 0 on the ground, anything else on a bridge, in a tunnel or on an OSM layer */
   levels?: number[];
+  /** each line's direction: 1 with the line as drawn, -1 against it, 0 both ways (OpenMapTiles `oneway`;
+   * missing: every line both ways). A bus route follows this; the reader keeps it off the weights. */
+  ways?: number[];
 }
 
 /** A road's `class`, `brunnel` (bridge, tunnel, ford or none), `service` and `access` in OpenMapTiles. */
@@ -68,14 +71,17 @@ class Reader {
   }
 }
 
-/** A value message as a string, an integer's raw varint in decimal. */
+/** A value message as a string. An integer is its decimal form. OpenMapTiles stores integers as protobuf
+ * sint (field 6, zigzag), so `oneway` -1 and a negative `layer` come through as themselves. */
 function valueString(r: Reader, end: number): string | null {
   let out: string | null = null;
   while (r.pos < end) {
     const tag = r.varint(), f = tag >> 3, w = tag & 7;
     if (f === 1 && w === 2) out = r.string(r.len());
-    else if (w === 0) out = String(r.varint());
-    else r.skip(w);
+    else if (w === 0) {
+      const n = r.varint();
+      out = String(f === 6 ? ((n & 1) === 1 ? -(n + 1) / 2 : n / 2) : n);
+    } else r.skip(w);
   }
   return out;
 }
@@ -130,13 +136,13 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
     }
     t.pos = end;
     if (name !== "transportation") continue;
-    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer"), serviceKey = keys.indexOf("service"), accessKey = keys.indexOf("access"), subclassKey = keys.indexOf("subclass");
-    const lines: Int32Array[] = [], weights: number[] = [], levels: number[] = [];
+    const classKey = keys.indexOf("class"), brunnelKey = keys.indexOf("brunnel"), layerKey = keys.indexOf("layer"), serviceKey = keys.indexOf("service"), accessKey = keys.indexOf("access"), subclassKey = keys.indexOf("subclass"), onewayKey = keys.indexOf("oneway");
+    const lines: Int32Array[] = [], weights: number[] = [], levels: number[] = [], ways: number[] = [];
     for (const [s, e] of feats) {
       const fr = new Reader(b, e);
       fr.pos = s;
       let type = 0, geomStart = -1, geomEnd = -1, cls: string | null = null, brunnel: string | null = null, layer = 0;
-      let service: string | null = null, access: string | null = null, subclass: string | null = null;
+      let service: string | null = null, access: string | null = null, subclass: string | null = null, oneway = 0;
       while (fr.pos < e) {
         const ft = fr.varint(), ff = ft >> 3, fw = ft & 7;
         if (ff === 2 && fw === 2) {
@@ -149,6 +155,7 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
             else if (k === serviceKey) service = values[v] ?? null;
             else if (k === accessKey) access = values[v] ?? null;
             else if (k === subclassKey) subclass = values[v] ?? null;
+            else if (k === onewayKey) oneway = values[v] === "1" ? 1 : values[v] === "-1" ? -1 : 0;
           }
         } else if (ff === 3 && fw === 0) type = fr.varint();
         else if (ff === 4 && fw === 2) {
@@ -165,6 +172,9 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
       const g = new Reader(b, geomEnd);
       g.pos = geomStart;
       let x = 0, y = 0, cur: number[] | null = null;
+      const push = () => {
+        if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight), levels.push(level), ways.push(oneway);
+      };
       while (g.pos < geomEnd) {
         const cmd = g.varint(), id = cmd & 7;
         let count = cmd >> 3;
@@ -174,14 +184,14 @@ export function decodeRoads(buf: ArrayBuffer, keep: RoadKeep = (c) => BUS_CLASSE
           x += (dx >> 1) ^ -(dx & 1);
           y += (dy >> 1) ^ -(dy & 1);
           if (id === 1) {
-            if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight), levels.push(level);
+            push();
             cur = [x, y];
           } else cur?.push(x, y);
         }
       }
-      if (cur && cur.length >= 4) lines.push(Int32Array.from(cur)), weights.push(weight), levels.push(level);
+      push();
     }
-    return { extent, lines, weights, levels };
+    return { extent, lines, weights, levels, ways };
   }
   return { extent: 4096, lines: [], weights: [] };
 }

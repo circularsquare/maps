@@ -522,8 +522,34 @@ export function setHillshade(map: maplibregl.Map, on: boolean) {
 let hillshadeOn = false;
 
 /** T-2883: in bus placing mode, the roads a bus may drive are tinted faintly over the basemap's own
- * roads; T-2998: with Tram in the track tool and the street snap on, the streets a tram may follow, in
- * green. Colour light, dark, opacity light, dark. */
+ * roads, and a one-way street gets arrows pointing the way traffic runs; T-2998: with Tram in the track
+ * tool and the street snap on, the streets a tram may follow, in green. Colour light, dark, opacity light, dark. */
+const ONEWAY_ARROW = "bus-oneway-arrow";
+const ONEWAY_LAYER = "bus_roads_oneway";
+/** A chevron pointing right, the direction `symbol-placement: line` treats as forward along the road. */
+function onewayArrow(dark: boolean): { width: number; height: number; data: Uint8ClampedArray } {
+  const s = 32;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = s;
+  const g = canvas.getContext("2d", { willReadFrequently: true })!;
+  g.clearRect(0, 0, s, s);
+  g.strokeStyle = dark ? "#3fd0c4" : "#1a9e94";
+  g.lineWidth = 3.5;
+  g.lineCap = "butt";
+  g.lineJoin = "miter";
+  g.beginPath();
+  g.moveTo(11, 10);
+  g.lineTo(19, 16);
+  g.lineTo(11, 22);
+  g.stroke();
+  const pixels = g.getImageData(0, 0, s, s).data;
+  return { width: s, height: s, data: new Uint8ClampedArray(pixels) };
+}
+function ensureOnewayArrow(map: maplibregl.Map, dark: boolean) {
+  const image = onewayArrow(dark);
+  if (map.hasImage(ONEWAY_ARROW)) map.updateImage(ONEWAY_ARROW, image);
+  else map.addImage(ONEWAY_ARROW, image);
+}
 const ROAD_HINTS = {
   // T-3014: both a quarter wider and from a zoom further out (the road tiles carry the minor streets from 12, so
   // at 11 the hint is the major ones)
@@ -534,7 +560,10 @@ const ROAD_HINTS = {
 } as const;
 type RoadHint = keyof typeof ROAD_HINTS;
 const hintOn: Record<RoadHint, boolean> = { bus: false, tram: false, rail: false };
-export function setBusRoadHint(map: maplibregl.Map, on: boolean) {
+/** Settings > Buses keep to one-way streets: the arrows are drawn only with it on */
+let busOneWayOn = false;
+export function setBusRoadHint(map: maplibregl.Map, on: boolean, oneWay = false) {
+  busOneWayOn = oneWay;
   setRoadHint(map, "bus", on);
 }
 export function setTramRoadHint(map: maplibregl.Map, on: boolean) {
@@ -553,22 +582,56 @@ function setRoadHint(map: maplibregl.Map, kind: RoadHint, on: boolean) {
   const h = ROAD_HINTS[kind], dark = shadeAs[0] === "dark" ? 1 : 0;
   if (!on) {
     if (map.getLayer(h.id)) map.removeLayer(h.id);
+    if (kind === "bus" && map.getLayer(ONEWAY_LAYER)) map.removeLayer(ONEWAY_LAYER);
     return;
   }
   const style = map.getStyle();
   if (!style || !map.getLayer("highway_minor") || !map.getSource(VECTOR_SOURCE)) return;
   const colour = h.colour[dark], opacity = h.opacity[dark];
+  const before = style.layers.find((l) => l.type === "symbol")?.id;
   if (map.getLayer(h.id)) {
     map.setPaintProperty(h.id, "line-color", colour);
     map.setPaintProperty(h.id, "line-opacity", opacity);
+  } else {
+    map.addLayer({
+      id: h.id, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: h.minzoom,
+      filter: h.filter() as maplibregl.FilterSpecification,
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: { "line-color": colour, "line-opacity": opacity, "line-width": zoomWidth(11, 0.4 * h.width, 12, 0.5 * h.width, 14, h.width, 16, 2.5 * h.width, 20, 10 * h.width) as maplibregl.ExpressionSpecification },
+    }, before);
+  }
+  if (kind === "bus") {
+    if (busOneWayOn) setBusOnewayArrows(map, dark === 1, before);
+    else if (map.getLayer(ONEWAY_LAYER)) map.removeLayer(ONEWAY_LAYER);
+  }
+}
+
+/** Arrows on the one-way streets a bus may use, in the hint's own colour, pointing the way the road
+ * runs. `oneway` -1 is drawn against the line. They wait until the streets are close enough to draw
+ * on, and go when the bus tool is off. */
+const ONEWAY_MINZOOM = 15;
+function setBusOnewayArrows(map: maplibregl.Map, dark: boolean, before: string | undefined) {
+  ensureOnewayArrow(map, dark);
+  if (map.getLayer(ONEWAY_LAYER)) {
+    map.setLayerZoomRange(ONEWAY_LAYER, ONEWAY_MINZOOM, 24);
     return;
   }
-  const before = style.layers.find((l) => l.type === "symbol")?.id;
   map.addLayer({
-    id: h.id, type: "line", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: h.minzoom,
-    filter: h.filter() as maplibregl.FilterSpecification,
-    layout: { "line-cap": "round", "line-join": "round" },
-    paint: { "line-color": colour, "line-opacity": opacity, "line-width": zoomWidth(11, 0.4 * h.width, 12, 0.5 * h.width, 14, h.width, 16, 2.5 * h.width, 20, 10 * h.width) as maplibregl.ExpressionSpecification },
+    id: ONEWAY_LAYER, type: "symbol", source: VECTOR_SOURCE, "source-layer": "transportation", minzoom: ONEWAY_MINZOOM,
+    filter: ["all", busRoadFilter(), ["any", ["==", ["to-number", ["get", "oneway"]], 1], ["==", ["to-number", ["get", "oneway"]], -1]]] as unknown as maplibregl.FilterSpecification,
+    layout: {
+      "symbol-placement": "line",
+      "symbol-spacing": 90,
+      "icon-image": ONEWAY_ARROW,
+      // the chevron's stroke is 3.5 px at size 1: sized to 1.2 x the road hint's own stroke at each zoom
+      "icon-size": ["interpolate", ["exponential", 1.4], ["zoom"], 14, 0.43, 16, 1.06, 20, 4.24] as maplibregl.ExpressionSpecification,
+      "icon-rotate": ["case", ["==", ["to-number", ["get", "oneway"]], -1], 180, 0] as maplibregl.ExpressionSpecification,
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+      "icon-padding": 0,
+    },
+    paint: { "icon-opacity": 0.7 },
   }, before);
 }
 

@@ -174,7 +174,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
 
 ### src/map/: the map and what is drawn on it
 
-- `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark,
+- `mapView.ts` (the MapLibre map; its scroll zoom told wheel gaps by event time, T-675; the flat map or globe setting, T-033), `basemap.ts` (the Positron style: warm paper repaint, three road weights, light or dark, arrows on one-way streets while the bus tool is on and Settings makes buses obey them,
   labels in Zen Maru Gothic from `public/fonts/`; the Terrain hillshade, T-1270), `demFlat.ts` (the hillshade's tiles with the relief over flat-class ground blurred away, in `workers/demFlat.worker.ts`, T-1881), `terrainTint.ts` (the terrain classes' wash while building, from `game/terrain.ts`'s grids, in the hexes track is charged by, T-1270, T-2890), `realNetwork.ts` (the Real network reference layer, with the freight and abandoned archives built by `pipeline/real_extra.py`, T-3464: noritetsu's
   PMTiles per region, read from `../noritetsu/` or R2; vite.config.ts proxies `/noritetsu` to 8800 in dev, T-682),
   `styleReady.ts` (`styleUp`: MapLibre style calls are skipped while it has no style, a lost context, and reapplied on `style.load`, T-957),
@@ -208,7 +208,7 @@ city's name in Japanese or Chinese from `place-names.json`, written by `tools/pl
   selection, tags and pick, drawn by the renderer under rail), `busDraw.ts` (the bus tool: clicked
   points and their handles, drag, delete and the active end (T-1514), the worker's `busQuote` preview and price tag, `busDraft`), and the roads they follow (T-1465):
   `busRoads.ts` (zoom 14 tiles fetched from the basemap's tile server, the roads and motorways a bus drives (T-2469), snapping, `near` and `leg`, a leg with no road `refused` (T-2451), a free end landing on another reachable road (T-2467)),
-  `roadGraph.ts` (`joinRoads` putting back the junctions the tiles simplify away (T-2873) and keeping short service links (T-2882), the road graph from those tiles and its A* search), `roadTiles.ts` (the vector tile reader).
+  `roadGraph.ts` (`joinRoads` putting back the junctions the tiles simplify away (T-2873) and keeping short service links (T-2882), the road graph from those tiles and its A* search, one-way streets only the way they run when `oneWay` is set, T-3480), `roadTiles.ts` (the vector tile reader, including `oneway`; `roadOneWay.test.ts` runs with `npx vite-node`).
 - Ferry routes (T-2192, track-and-service.md 6.8), in `src/ferry/` beside `map/`: `waterTiles.ts` (a zoom 12 tile's water polygons and
   bridge lines), `route.ts` (the water raster with bridges filled, port snapping, the leg search, coarse
   for long legs with fine ends, the line's rounding and speeds, `runSeconds`; pure, shared with the check),

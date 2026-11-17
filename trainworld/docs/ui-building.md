@@ -405,9 +405,9 @@ Ferry, key U) or U from any tab starts the bus tool for a
 new line; the Build tab's button again, while it is on, leaves it. Each click adds a
 point. Between two points the route takes the shortest path over the basemap's zoom 14 roads
 (`busRoads.ts`; trunk, primary, secondary, tertiary, minor and bus-only roads, and motorways, so the
-long bridges and tunnels most cities carry on them (T-2469); any direction, length as it is, no turn
+long bridges and tunnels most cities carry on them (T-2469); any direction, or with Settings > "Buses obey one-way streets" ticked only the way a one-way street runs (T-3480, Renkon's open-source PR 1), length as it is, no turn
 rules; service ways, tracks and paths are left out, except that a plain service road (no driveway, alley or parking aisle tag, open to all, at ground level) at most 60 m long with each end within 3 m of a street can be driven, and is never landed on (T-2882)), at most 3 times the straight line or 1 km more
-than it, whichever is longer. Roads join where a road's vertex comes within about 1 m of another road
+than it, whichever is longer. With that setting ticked (off by default, `display.busOneWay`; with it off a route is as it was) a one-way street is the basemap's `oneway`: 1 runs with the line as drawn, -1 against it, and a street with no `oneway` runs both ways (`RoadGraph.path`). The route goes round rather than back down a one-way street. While the bus tool is on and the setting is ticked, those one-way streets carry small arrows in the road hint's own colour, pointing the way traffic runs (turned round where `oneway` is -1), from zoom 15, drawn about 1.2 times the road hint's own stroke at each zoom (`bus_roads_oneway` in `basemap.ts`). A two-way street stays a plain line. A line set to both ways, and one that loops back, still runs that drawn road in reverse on the way back (open-source issue 8, a bus going the wrong way round a roundabout, is the same case). Roads join where a road's vertex comes within about 1 m of another road
 at its level, or where two ground-level roads cross, since the tiles drop the junction's vertex from a road
 running straight through it (T-2873; a motorway joins another motorway, and its own ends join any road).
 A click within 100 m of a road lands on the nearest one, a motorway

@@ -114,6 +114,9 @@ export interface DisplaySettings {
   hillshade: boolean;
   /** T-2031: a right-button drag turns the map (map/mapView.ts `followRotation`) */
   rotateMap: boolean;
+  /** T-3480: a bus route drives a one-way street only the way it runs (map/busRoads.ts, map/roadGraph.ts); off, any
+   * street runs both ways. Renkon's change (open-source PR 1). */
+  busOneWay: boolean;
   /** T-3268: the plus and minus buttons at the map's right edge (ui/ZoomButtons.tsx) */
   zoomButtons: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
@@ -171,6 +174,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   hillshade: false,
   rotateMap: false,
   zoomButtons: true,
+  busOneWay: false,
   chartOtherLines: true,
   mobileIntercity: false,
   modeShapes: { ...MODE_SHAPES },

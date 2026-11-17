@@ -143,6 +143,9 @@ export function SettingsTab() {
         <Check checked={!hideBuses.value} onChange={(v) => (hideBuses.value = !v)}>
           {t("settingsTab.busesFerries")}
         </Check>
+        <Check checked={d.busOneWay} onChange={(v) => setDisplay("busOneWay", v)}>
+          {t("settingsTab.busOneWay")}
+        </Check>
       </div>
       <div class="h">{t("settingsTab.realNetwork")}</div>
       <Segmented<RealNetworkShown> options={worded(REAL_OPTIONS)} value={d.realNetwork} onChange={(v) => setDisplay("realNetwork", v)}

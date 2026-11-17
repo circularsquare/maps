@@ -1834,6 +1834,7 @@
   "settingsTab.riders": "Settings: section heading for how riders on trains and platforms are shown.",
   "settingsTab.rotate": "Settings, Map: checkbox; dragging with the right mouse button turns the map.",
   "settingsTab.units": "Settings: section heading over the units (US units) and the currency.",
+  "settingsTab.busOneWay": "Settings, Show: checkbox under Buses and ferries; ticked, a bus route drives a one-way street only the way it runs and goes around the block otherwise. Off by default.",
   "settingsTab.zoomButtons": "Settings, Map: checkbox; shows the plus and minus buttons at the map's right edge.",
   "mapZoom.in": "Screen-reader label of the plus button on the map that zooms in one step (no hover).",
   "mapZoom.out": "Screen-reader label of the minus button on the map that zooms out one step (no hover).",
