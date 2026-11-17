@@ -37,6 +37,7 @@ import { logShare, modeBar, purposeLines, type PurposeSplit } from "./modeBar";
 import { addFinder, discAt, pointerAt, type Pointer } from "./demandHover";
 import { bubbleLevel, LINE, type DemandOverlay } from "./demandOverlay";
 import { anchor, anchorShift, kAtY, toLocal, type Anchor } from "./geo";
+import { purposeRows, ROW_PURPOSES } from "./purposeRows";
 
 
 export interface Place {
@@ -1157,6 +1158,25 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     return [...byName].map(([name, riders]) => ({ name, riders })).sort((p, q) => q.riders - p.riders);
   };
 
+  /** T-3510: the selection's purpose rows with its trips with other places (map/purposeRows.ts); its
+   * local rows alone when every purpose's legs cannot be had for one result after a few tries; null
+   * while a solve is under way, when a purpose's regional part may lag all purposes' (each is kept
+   * apart while the workers are busy) and the difference would show as inter-city trips: the rows
+   * on show stay, and the result's final asks again (`refreshPick`) */
+  const regionalRows = async (sel: Extract<Selection, { kind: "commuters" }>, f: Flows): Promise<PurposeTrips[] | null> => {
+    for (let tries = 0; tries < 5; tries++) {
+      if (!demandView.peek()?.final || demandUpdating.peek()) return null;
+      const [all, ...ms] = await Promise.all([cellModes("all"), ...ROW_PURPOSES.map(([k]) => cellModes(k))]);
+      if (selection.peek() !== sel) return f.purposes;
+      if (all && ms.every((m) => m && m.version === all.version && m.day === all.day)) {
+        const by = new Map(ROW_PURPOSES.map(([k], i) => [k, ms[i]!]));
+        return purposeRows(f.purposes, sel.cells, (m) => endModes(m, sel.end), all, by, all.day);
+      }
+      await new Promise((done) => setTimeout(done, 1500));
+    }
+    return f.purposes;
+  };
+
   const refreshPick = () => {
     const sel = selection.peek();
     if (sel?.kind !== "commuters" || !shown) return;
@@ -1229,7 +1249,15 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
       farCells = summed.levels;
       farSource = { f: dealtOf(f, purpose), purpose };
       farAnchor = summed.anchor;
-      commuterPick.value = { sel, totals, purposes: f.purposes, far: { totals: ft, places: places(farCells, farAnchor) }, purpose, at };
+      // T-3510: the purpose rows with the trips with other places come after the far end (the rows
+      // already shown for this selection stay meanwhile)
+      const shownRows = commuterPick.peek()?.sel === sel ? commuterPick.peek()?.purposes : undefined;
+      commuterPick.value = { sel, totals, purposes: shownRows, far: { totals: ft, places: places(farCells, farAnchor) }, purpose, at };
+      void regionalRows(sel, f).then((rows) => {
+        const cur = commuterPick.peek();
+        if (ask !== flowAsk || selection.peek() !== sel || cur?.sel !== sel || (!rows && cur.purposes)) return;
+        commuterPick.value = { ...cur, purposes: rows ?? f.purposes };
+      });
       drawPick();
       ensureFarPurp();
       commuterStats.farAt = performance.now();

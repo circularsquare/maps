@@ -345,11 +345,16 @@ riders counters keep their own smoothing (Live feel).
   zone bubble's colour, running from that bubble toward the selected one). Under every bubble, no hover (`setLines` in
   `map/demandOverlay.ts`).
 - **The inspector** (`ui/inspector/CommutersInspector.tsx`): titled "Trips from homes here",
-  "Trips to destinations here" or "Trips to and from here" (Total, both ends' legs summed [T-1903]); the selection's local trip legs and
+  "Trips to destinations here" or "Trips to and from here" (Total, both ends' legs summed [T-1903]); the selection's trip legs, local
+  and with other places as its bubbles count them [T-3503] ("Trip legs per day"), and
   split (Train, Walking, Driving, and No route where it has any, its hover "No road joins their two ends", T-2215; the
-  far-end bubbles still count those trips as walking and driving, T-2256); no list of far-end places and no inter-city trips (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
+  far-end bubbles still count those trips as walking and driving, T-2256); no list of far-end places and no inter-city trips by place (the far end is on the map only) [T-1668]; for a single area the closest stations from its trip-weighted centre
   [T-312, [ui-inspectors.md](ui-inspectors.md)]; purpose counts and shares for Work, School,
-  Errands, Leisure, Airports, Medical and Attractions [T-142, T-192, T-263, T-1253], with a
+  Errands, Leisure, Airports, Medical, Attractions and Inter-city trips [T-142, T-192, T-263, T-1253,
+  T-3510] that add up to the selection's trip legs under All purposes: each purpose with its
+  trips with other places (Work the commutes across a zone line, the everyday purposes their
+  outings across one), Inter-city trips the longer trips with other places (what all purposes'
+  legs hold beyond every purpose's; `map/purposeRows.ts`); No route counts with driving; with a
   purpose pie and legend following All modes / Train only (hover: "Work: 12,400 trip legs per day,
   48%"; a zero-trip scope shows an empty neutral disc); hovers state the scope (matched public
   schools and degree-granting colleges, commercial airports with connecting passengers and staff
@@ -357,7 +362,9 @@ riders counters keep their own smoothing (Live feel).
 - **Timing** [T-193]: per purpose one compact chart, a bar per period, labelled as the clock writes
   hours ("06:00-10:00", ..., "00:00-06:00", T-2271), departures toward the destination drawn up from a baseline and departures home down, as
   departures an hour on one scale; each bar's hover gives count, hourly rate and share of that
-  direction's day. Weekdays only.
+  direction's day. Weekdays only. A purpose's trips with other places take the periods of its local
+  trips (the model times both by the same tables); Inter-city trips depart at the longer trips'
+  shares (`longerShare`), all toward the destination.
 
 ## A selected station
 

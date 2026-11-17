@@ -28,6 +28,8 @@ export function purposeLabel(name: string): string {
     case "Medical": return t("purposes.medical");
     case "Attractions": return t("purposes.attractions");
     case "Work": return t("purposes.work");
+    // T-3510: a bubble selection's longer trips with other places (map/purposeRows.ts)
+    case "Longer": return t("purposes.intercity");
     default: return name;
   }
 }
