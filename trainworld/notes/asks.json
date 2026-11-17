@@ -7,6 +7,13 @@
     "by": "maps-58"
   },
   {
+    "id": "a-2026-11-17-10",
+    "title": "One-way pair stops",
+    "text": "T-3565: when a line runs over a one-way street pair and the stations on its two legs are over 300 m apart (your Caracas Line 2), should (a) they count as one stop served one way on each leg, (b) a stop be served one way only, each direction skipping the other leg's station, or (c) adding stops avoid the J shape? Pick: (b).",
+    "since": "2026-11-17",
+    "by": "maps-58"
+  },
+  {
     "id": "a-2026-11-17-9",
     "title": "Trains drawn apart: the look",
     "text": "T-3264 stage 1: trains in opposite directions on double track drawn side by side from zoom 14 (artifacts/trainworld/review/t3264-before.png and t3264-after.png; Midtown rows in t3264-midtown.png). Does it look right? On shared track the trains get thin: keep the strict thin version, a 4 px floor, or leave shared track for a later stage that widens bands? Pick: the 4 px floor.",
