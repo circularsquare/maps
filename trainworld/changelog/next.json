@@ -959,14 +959,15 @@
     {
       "id": "c073",
       "text": "snapped to unused track in the real world network's All setting",
-      "edited": null,
+      "edited": "can now snap to unused track in the real world network's All setting",
       "hidden": false,
       "task": "T-3495",
       "by": "snapsurvey",
       "at": "2026-11-17T02:24:01Z",
-      "rev": 1,
+      "rev": 3,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T20:06:00Z"
     },
     {
       "id": "c074",
@@ -1202,15 +1203,15 @@
     {
       "id": "c092",
       "text": "track along a shore no longer counts as over water when it is on land",
-      "edited": "track on water along land is now counted as on land",
+      "edited": "water border improved for track construction what is considered on water",
       "hidden": false,
       "task": "T-3524",
       "by": "shore",
       "at": "2026-11-17T14:54:10Z",
-      "rev": 4,
+      "rev": 16,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-17T20:04:32Z"
+      "changed": "2026-11-17T20:05:40Z"
     },
     {
       "id": "c093",
@@ -1593,15 +1594,15 @@
     {
       "id": "c123",
       "text": "added a Set as default button in the timetables window that gives every new line the selected line's headways, and one timetable button on the line panel in place of copy and paste schedule",
-      "edited": "can set default line schedules for new lines",
+      "edited": "can set default headways for new lines, separately for regular, tram and high-speed lines; none is set in a new game, and applying weekends to all lines covers new lines too",
       "hidden": false,
       "task": "T-3543",
       "by": "schedbutton",
       "at": "2026-11-17T19:28:19Z",
-      "rev": 5,
+      "rev": 6,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-17T19:59:10Z"
+      "changed": "2026-11-17T20:06:50Z"
     },
     {
       "id": "c124",
