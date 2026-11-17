@@ -1312,6 +1312,66 @@
       "rev": 1,
       "area": "performance",
       "fix": false
+    },
+    {
+      "id": "c103",
+      "text": "fixed single tram track drawn off a double track's end with snap to streets on, which joined both tracks instead of the one under the pointer",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3537",
+      "by": "tramsplit",
+      "at": "2026-11-17T17:00:29Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c104",
+      "text": "fixed a line that splits over a one-way pair and comes back the other way showing a turn back mark at its far end",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3538",
+      "by": "tramsplit",
+      "at": "2026-11-17T17:00:29Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c105",
+      "text": "the line, station and track panels say what kind they are: \"6 stops, 5.3 km, tram\", \"Station, Level 0\", \"0.42 km, single track, Level 0\"",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3555",
+      "by": "subtitles",
+      "at": "2026-11-17T17:08:44Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c106",
+      "text": "a station on single track is drawn with one platform on the outside, and its passing loop on the inside where it has one. tram stops are drawn 30% narrower",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3540",
+      "by": "tramstation",
+      "at": "2026-11-17T17:21:57Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c107",
+      "text": "a level switched off in Settings is now drawn faint (8%) and can't be clicked, hovered or snapped to, instead of vanishing",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3560",
+      "by": "levelfade",
+      "at": "2026-11-17T17:23:17Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
     }
   ]
 }
