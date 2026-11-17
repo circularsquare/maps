@@ -83,6 +83,8 @@
     { "id": "morocco", "name": "Morocco", "countries": ["MA", "EH"] },
     { "id": "algeria-tunisia", "name": "Algeria and Tunisia", "countries": ["DZ", "TN"] },
     { "id": "egypt", "name": "Egypt", "countries": ["EG"] },
-    { "id": "levant", "name": "Levant", "countries": ["IL", "PS"] }
+    { "id": "levant", "name": "Levant", "countries": ["IL", "PS"] },
+    { "id": "central-america", "name": "Central America", "countries": ["GT", "BZ", "SV", "HN", "NI", "CR", "PA"] },
+    { "id": "venezuela", "name": "Venezuela", "countries": ["VE"] }
   ]
 }

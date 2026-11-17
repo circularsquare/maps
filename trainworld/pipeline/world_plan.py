@@ -256,7 +256,18 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # North Korea's counties (geoBoundaries ADM2, the state's) as Korea's rule: no density floor (its mountain
               # counties are 10-20 a km2), held to touching units; `fua_whole` 0.3M keeps Sariwon whole (T-3287)
               "PRK": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "plan_units": True,
-                      "fua_whole": 300_000, "task": "T-3287"}}
+                      "fua_whole": 300_000, "task": "T-3287"},
+              # Central America's municipios (Panama's corregimientos) with no density floor, as Mexico: at the default
+              # 20 a km2 Honduras left 0.38M dead (Catacamas), Nicaragua 0.58M (Bluefields, Waspan, El Rama), Guatemala
+              # Peten's towns (Flores, San Andres), Costa Rica 0.13M, Panama 0.34M (T-3399); `fua_whole` 0.3M as Mexico
+              **{iso: {"min_density": 0.0, "contiguous": True, "plan_units": True, "fua_whole": 300_000, "task": "T-3399"}
+                 for iso in ("GTM", "SLV", "HND", "NIC", "CRI", "PAN")},
+              # Belize has no metro row, so no units in the plan state (no `plan_units`, as Oman)
+              "BLZ": {"min_density": 0.0, "contiguous": True, "task": "T-3399"},
+              # Venezuela on Colombia's rule: at the default 20 a km2 the Llanos and Guayana left 2.89M dead (Tucupita,
+              # Calabozo, Valle de la Pascua, Machiques, Upata); the Amazon beyond reach stays dead (T-3399)
+              "VEN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True, "task": "T-3399"}}
 # T-3287 (Anita, 2026-11-12): blocs come out whole. In these countries a unit the density test leaves dead is a zone
 # anyway when it sits between built land (`gap_fill.pick`: the line between two towns of 50,000 within 300 km runs
 # 15 km over it, it holds such a town and touches built land, or built land holds 75% of its land border); a pick
