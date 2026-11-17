@@ -1,81 +1,53 @@
 // T-3093: Single track is in the Build tab's Tracks row again, beside double and quad. In a sandbox game with the track
-// tool in hand: the button is there; picking it sets the signal, shows 0.6x in the price, and clears quad; double
+// tool in hand: the button is there; picking it sets it, shows 0.6x in the price, and clears quad; double
 // puts it back; high speed clears it; a route drawn by clicking the map comes out single (edge tracks 1); a station
 // goes on it. Screenshots of the bar in light and dark go to artifacts/trainworld/t3093-bar-*.png. From the maps root:
 //   node trainworld/checks/t3093-single-track.mjs [url]
-import { launchChrome, collectErrors } from './lib.mjs';
+// On the playtest harness (T-3556): the tool and its options picked on the real bar, the route and the station placed
+// by the pointer at lon/lat points.
+import { openGame } from './lib/play.mjs';
 
 const url = process.argv[2] ?? 'http://localhost:6177/';
 let fail = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) fail++; };
-const SHOTS = 'C:/Users/anita/projects/maps/artifacts/trainworld';
+// Brooklyn, open ground in a new game; two points 2.2 km apart east to west
+const C = [-73.95, 40.69], dLng = 1.1 / (111.32 * Math.cos((C[1] * Math.PI) / 180));
+const W = [C[0] - dLng, C[1]], E = [C[0] + dLng, C[1] + 0.0018];
 
-const chrome = await launchChrome({ prefix: 'tw-t3093-', size: [1300, 850] });
-const errors = [];
+const g = await openGame({ url, mode: 'sandbox', size: [1300, 850], prefix: 'tw-t3093-' });
 try {
-  const page = await chrome.ctx.newPage();
-  collectErrors(page, errors);
-  await page.goto(`${url}?debug=1&new=1&paused=1&demandWorkers=1`);
-  await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
-  await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
-  await page.waitForTimeout(1500);
-  await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.tool.value = 'track'; });
-  await page.waitForSelector('.track-bar .tb-count');
-  const btn = (label) => page.locator(`.track-bar .tb-count button[aria-label="${label}"]`);
-  const sig = () => page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); return { single: ui.singleTrack.value, quad: ui.quadTrack.value, hsr: ui.highSpeed.value }; });
-  const price = () => page.locator('.track-bar .cost-mult').first().innerText();
+  await g.act.camera(C, 13);
+  let tb = await g.act.tool('track');
+  const price = async () => (await g.see.toolbar()).price.match(/\(([\d.]+x cost)\)/)?.[1] ?? '';
 
-  check(await btn('Single track').count() === 1, 'the Single track button is in the Tracks row');
-  check((await btn('Double track').getAttribute('aria-pressed')) === 'true', 'double is the default');
+  check('Single track' in tb.pressed, 'the Single track button is in the Tracks row');
+  check(tb.pressed['Double track'] === true, 'double is the default');
   const double = await price();
-  await btn('Single track').click();
-  let s = await sig();
-  check(s.single && !s.quad && (await btn('Single track').getAttribute('aria-pressed')) === 'true', 'picking single sets it');
+  tb = await g.act.tool('track', { tracks: 1 });
+  check(tb.pressed['Single track'] && !tb.pressed['Quad track'], 'picking single sets it');
   const single = await price();
   check(single.startsWith('0.6') && double.startsWith('1.0') || single !== double, `price shows the single multiple (${double} -> ${single})`);
-  await btn('Quad track').click();
-  s = await sig();
-  check(s.quad && !s.single, 'quad clears single');
-  await btn('Single track').click();
-  s = await sig();
-  check(s.single && !s.quad, 'single clears quad');
-  await page.getByRole('button', { name: 'High speed', exact: true }).first().click().catch(() => {});
-  s = await sig();
-  check(s.hsr ? !s.single : true, 'high speed clears single');
-  await page.getByRole('button', { name: 'Regular', exact: true }).first().click().catch(() => {});
-  await btn('Single track').click();
-  s = await sig();
-  check(s.single && !s.hsr, 'single back on regular track');
+  tb = await g.act.tool('track', { tracks: 4 });
+  check(tb.pressed['Quad track'] && !tb.pressed['Single track'], 'quad clears single');
+  tb = await g.act.tool('track', { tracks: 1 });
+  check(tb.pressed['Single track'] && !tb.pressed['Quad track'], 'single clears quad');
+  tb = await g.act.tool('track', { type: 'hsr' }).catch(() => g.see.toolbar());
+  check(tb.type === 'High speed' ? !tb.pressed['Single track'] : true, 'high speed clears single');
+  tb = await g.act.tool('track', { type: 'regular', tracks: 1 }).catch(() => g.see.toolbar());
+  check(tb.pressed['Single track'] && tb.type === 'Regular', 'single back on regular track');
 
   // draw by clicking the map
-  const box = await page.locator('canvas').first().boundingBox();
-  const before = await page.evaluate(() => new Set(window.tw.world.value.edges.map((e) => e.id)).size);
-  const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
-  await page.mouse.move(cx - 150, cy);
-  await page.mouse.click(cx - 150, cy);
-  await page.waitForTimeout(300);
-  await page.mouse.move(cx + 150, cy + 20, { steps: 5 });
-  await page.waitForTimeout(500);
-  await page.mouse.click(cx + 150, cy + 20);
-  await page.waitForTimeout(1500);
-  const drawn = await page.evaluate((n) => window.tw.world.value.edges.slice(n).map((e) => e.tracks), before);
+  const run = await g.act.drawTrack([W, E]);
+  const drawn = run.segments.flatMap((s) => s.edges.map((e) => e.tracks));
   console.log('drawn edge tracks', JSON.stringify(drawn));
   check(drawn.length > 0 && drawn.every((k) => k === 1), 'a route clicked on the map is single track');
 
-  // a station on it
-  const st = await page.evaluate(async () => {
-    const tw = window.tw, c = tw.client;
-    const edges = tw.world.value.edges.filter((e) => e.tracks === 1);
-    if (!edges.length) return { ok: false, why: 'no single edge' };
-    const e = edges[Math.floor(edges.length / 2)];
-    const n = tw.world.value.nodes.get(e.a), m = tw.world.value.nodes.get(e.b);
-    const res = await c.edit({ op: 'addStation', at: { kind: 'edge', edge: e.id, x: (n.x + m.x) / 2, y: (n.y + m.y) / 2 }, platform: 120, name: 'Solo' });
-    return { ok: !!res?.ok, issue: res?.issue ?? res?.error ?? null };
-  });
-  check(st.ok, `a station goes on single track ${JSON.stringify(st)}`);
+  // a station on it, with the station tool, halfway along
+  const st = await g.act.placeStation([(W[0] + E[0]) / 2, (W[1] + E[1]) / 2]);
+  check(st.ok, `a station goes on single track ${JSON.stringify({ ok: st.ok, issue: st.ok ? null : st.notes.map((n) => n.text).join(" / ") })}`);
 
   // double up on single track, and a single branch off double track: both answer without a fault
-  const odd = await page.evaluate(async () => {
+  const odd = await g.page.evaluate(async () => {
     const tw = window.tw, c = tw.client;
     const pause = (ms) => new Promise((d) => setTimeout(d, ms));
     const one = tw.world.value.edges.find((e) => e.tracks === 1);
@@ -93,14 +65,18 @@ try {
   console.log('odd cases', JSON.stringify(odd));
   check(odd.dbl && odd.br && odd.brTracks === 1, 'a single branch off double track is drawn');
 
+  await g.act.tool('track');
   for (const theme of ['light', 'dark']) {
-    await page.evaluate(async (th) => { const ui = await import('/src/game/ui.ts'); ui.theme.value = th; }, theme);
-    await page.waitForTimeout(500);
-    await page.locator('.track-bar').screenshot({ path: `${SHOTS}/t3093-bar-${theme}.png` });
+    await g.page.evaluate(async (th) => { const ui = await import('/src/game/ui.ts'); ui.theme.value = th; }, theme);
+    await g.page.waitForTimeout(500);
+    await g.shot(`t3093-bar-${theme}.png`, { element: '.track-bar' });
   }
+  const errors = g.pageErrors();
   if (errors.length) console.log('errors: ' + errors.slice(0, 3).join(' | '));
   check(errors.length === 0, 'no console errors');
+} catch (e) {
+  check(false, 'the check ran to the end: ' + (e.stack ?? e.message));
 } finally {
-  await chrome.close();
+  await g.close();
 }
 process.exit(fail ? 1 : 0);

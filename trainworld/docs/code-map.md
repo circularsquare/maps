@@ -426,7 +426,10 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
   wait for a demand final), `buildLine` and `acrossLine` (a built test line), `startVite`, and for
   Node `loadApp` (an app module bundled by Vite), `bundleDemandWorker` with `startWorker` (the real
   demand worker), `workerPack`, `marketPacks` and `network` (two test lines in the New York frame).
-  A new check imports from it rather than copying a block. `cores.mjs` (T-2630) is what `launchChrome`
+  A new check imports from it rather than copying a block. `lib/` is the playtest harness (T-3556): `play.mjs`
+  (`openGame`, `launchGames`: the Playwright side and its driver), `actions.mjs` (the player's actions over any
+  driver, no Playwright), `reads.mjs` (the in-page reads: what the screen shows, and named state reads); its own
+  check `t3556-play.mjs`, notes/T-3556.md. `cores.mjs` (T-2630) is what `launchChrome`
   uses to keep Chrome to its own cores: `TW_CORES` or a ledger claim released at exit, an affinity mask
   from the top cores down (`TW_CORE_MASK`, `TW_NOPIN`), set through PowerShell on the browser and its
   children, and `?demandWorkers` added by an init script; it logs the affinity at launch and at close.

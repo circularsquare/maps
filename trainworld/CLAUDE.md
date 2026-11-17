@@ -102,6 +102,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   restarted after app edits. 8800 is Anita's; no long sweeps against it. If your brief gives you a worktree, run
   everything from it.
 - **Headless Chrome** through Playwright with its own `--user-data-dir`; stop only PIDs you started.
+- **Playing the game in a check**: `checks/lib/play.mjs` (how-to at its top) opens a city or a save, picks tools on
+  the real toolbar, draws track and places stations by pointer at lon/lat points (exact), presses controls by name,
+  and reads panels and money as shown. Build fixtures through it rather than edits where the player's path matters;
+  a new read goes in `checks/lib/reads.mjs`.
 - **The real save** is `T-007-real-nyc.save`. `?new=1` never writes a slot.
 - **Typecheck** with `npm run check --prefix app`; `npm run wasm --prefix app` when Rust changed. No full builds, no
   commits (a brief that touches shonei-server may say to commit there; pushing and deploying stay the orchestrator's).
