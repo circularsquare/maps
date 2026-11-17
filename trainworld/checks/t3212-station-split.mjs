@@ -3,7 +3,7 @@
 // 200 m, one line with two trains), a double-track line C - D and a tram line E - F (tram stops on double
 // tram track). Looks at the drawn track's lanes (`Strokes.lane`, 255 two tracks, 0 one) at each station and
 // between them, the station flag 16 (a platform each side), and the train lanes (`sampleLane`) against
-// the line's drawn lanes all along A - B. Then runs the clock until two trains stand side by side at a
+// the line's drawn lanes all along A - B. Then runs the clock until two trains of a 6 km line stand side by side at a
 // station and takes pictures of it at a few zooms, light and dark, and of D and F with no trains about,
 // to artifacts/trainworld/t3212/<tag>-*.png. From the maps root:
 //   node trainworld/checks/t3212-station-split.mjs [url] [tag]
@@ -26,6 +26,9 @@ const E = [LNG0, LAT - 0.7 * N], F = [LNG0 + 1 * KM, LAT - 0.7 * N];
 // G: single track one side, double the other; J: a station whose split runs through a plain node K 120 m on into double track
 const H0 = [LNG0, LAT - 1.4 * N], G = [LNG0 + 1 * KM, LAT - 1.4 * N], H1 = [LNG0 + 2 * KM, LAT - 1.4 * N];
 const J0 = [LNG0, LAT + 1.4 * N], J = [LNG0 + 1 * KM, LAT + 1.4 * N], K = [LNG0 + 1.12 * KM, LAT + 1.4 * N], K1 = [LNG0 + 2 * KM, LAT + 1.4 * N];
+// P: 6 km of single track with a station every km, for the meeting (a single-track section between stations takes about
+// 10 minutes a train over 1 km, so a line only runs two trains once its round trip is twice that: A - M - B is too short, T-3526)
+const P = [0, 1, 2, 3, 4, 5, 6].map((k) => [LNG0 + k * KM, LAT + 2.1 * N]);
 const chrome = await launchChrome({ prefix: 'tw-t3212-', size: [1300, 850] });
 const errors = [];
 const out = {};
@@ -36,7 +39,7 @@ try {
   await page.waitForFunction(() => window.tw?.world?.value && window.tw?.client, undefined, { timeout: 180000 });
   await page.evaluate(() => window.tw.client.post({ kind: 'sandbox' }));
   await page.waitForTimeout(1000);
-  out.built = await page.evaluate(async ({ A, M, B, C, D, E, F, H0, G, H1, J0, J, K, K1 }) => {
+  out.built = await page.evaluate(async ({ A, M, B, C, D, E, F, H0, G, H1, J0, J, K, K1, P }) => {
     const tw = window.tw, c = tw.client, pause = (ms) => new Promise((d) => setTimeout(d, ms));
     const xy = (p) => { const q = tw.lngLatToPack(p[0], p[1]); return [q.x, q.y]; };
     const near = (p) => { const [x, y] = xy(p); let best = null, bd = 1e12; for (const n of tw.world.value.nodes.values()) { const d = Math.hypot(n.x - x, n.y - y); if (d < bd) { bd = d; best = n.id; } } return best; };
@@ -55,12 +58,16 @@ try {
       ok.push((await c.edit({ op: 'route', from, to: free(q), pis: [], single }))?.ok);
       await pause(300);
     }
-    for (const p of [A, M, B, C, D, G, J]) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await pause(200); }
+    for (let k = 0; k + 1 < P.length; k++) {
+      ok.push((await c.edit({ op: 'route', from: k ? { kind: 'node', node: near(P[k]) } : free(P[0]), to: free(P[k + 1]), pis: [], single: true }))?.ok);
+      await pause(300);
+    }
+    for (const p of [A, M, B, C, D, G, J, ...P]) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 200, name: '' }); await pause(200); }
     for (const p of [E, F]) { await c.edit({ op: 'addStation', at: { kind: 'node', node: near(p) }, platform: 40, name: '' }); await pause(200); }
     await c.edit({ op: 'constructAll' });
     await pause(500);
     const lines = {};
-    for (const [name, stops, colour] of [['amb', [A, M, B], '#d9467a'], ['cd', [C, D], '#2f7fd0'], ['ef', [E, F], '#3a9a4a']]) {
+    for (const [name, stops, colour] of [['amb', [A, M, B], '#d9467a'], ['cd', [C, D], '#2f7fd0'], ['ef', [E, F], '#3a9a4a'], ['long', P, '#e08a1e']]) {
       const r = await c.edit({ op: 'addLine', stops: stops.map(near), name: '', colour });
       if (r?.line !== undefined) await c.edit({ op: 'setTrainCount', line: r.line, trains: [2, 2, 2] });
       lines[name] = r?.line;
@@ -69,7 +76,7 @@ try {
     await pause(1500);
     const nodes = Object.fromEntries(Object.entries({ A, M, B, C, D, E, F, G, J }).map(([k, p]) => [k, near(p)]));
     return { ok, lines, nodes, edges: tw.world.value.edges.map((e) => [e.id, e.a, e.b, e.tracks, e.kind]) };
-  }, { A, M, B, C, D, E, F, H0, G, H1, J0, J, K, K1 });
+  }, { A, M, B, C, D, E, F, H0, G, H1, J0, J, K, K1, P });
   console.log('built', JSON.stringify(out.built));
   check(out.built.ok.every(Boolean) && Object.values(out.built.lines).every((l) => l !== undefined), 'the three lines built');
   await page.waitForFunction(() => window.tw.renderer.tripCount > 0 && window.tw.renderer.net?.track?.count > 0, undefined, { timeout: 60000 });
@@ -205,7 +212,7 @@ try {
   await shoot('mixed-G', G, 17.7);
   await shoot('plain-J', [J[0] + 0.05 * KM, J[1]], 17.7);
 
-  // two trains standing side by side at a station of A - M - B
+  // two trains standing side by side at the middle station of the 6 km line P
   const met = await page.evaluate(async ({ line, nodes }) => {
     const tw = window.tw, c = tw.clock, r = tw.renderer, day = Math.floor(c.now() / 86400) + 1;
     c.setRunning(false);
@@ -226,8 +233,8 @@ try {
           const L = n.meta[p * 4 + 3];
           seen.push({ run: pos.run, d: pos.run === 0 ? pos.s : L - pos.s, L });
         }
-        // both within 120 m of the same station (M at half way, B at the end), one each way
-        for (const [name, at] of [['M', 0.5], ['B', 1]]) {
+        // both within 120 m of the middle station (half way), one each way
+        for (const [name, at] of [['P3', 0.5]]) {
           const here = seen.filter((q) => Math.abs(q.d - at * q.L) < 120);
           if (here.length >= 2 && here.some((q) => q.run === 0) && here.some((q) => q.run === 1)) { c.setRunning(false); return done(name); }
         }
@@ -235,12 +242,12 @@ try {
       };
       requestAnimationFrame(step);
     });
-  }, { line: out.built.lines.amb, nodes: out.built.nodes });
+  }, { line: out.built.lines.long, nodes: out.built.nodes });
   console.log('met at', met);
-  check(met !== null, 'two trains met side by side at a station of A - M - B');
+  check(met !== null, 'two trains met side by side at the middle station of the 6 km line');
   if (met) {
     await page.waitForTimeout(1500);
-    const where = met === 'M' ? M : [B[0] - 0.08 * KM, B[1]];
+    const where = P[3];
     for (const z of [16, 16.7, 17.3, 18]) await shoot(`meet-${met}`, where, z);
   }
   out.errors = errors;
