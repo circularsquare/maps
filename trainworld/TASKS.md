@@ -235,7 +235,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
-- T-3462 [P3] {L:checks} Two checks test old values
+- T-3462 [P3] {L:checks} Two checks test old values (taking, 2026-11-17, agent oldchecks)
   - Context: Found by the regions agent (T-3448): t2163 still looks for the old "Calculating diagram" text, and t2888 expects a line width of at most 1.4 (now 2).
   - Goal: Both checks pass against the current game, or are deleted if T-3457 finds they guard nothing.
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
@@ -281,19 +281,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops)
+- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops2)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
-- T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
+- T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick (taking, 2026-11-17, agent trafficwidth)
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
-- T-3595 [P1] {L:single-track} Extending a line with new track still breaks it (taking, 2026-11-17, agent extendfix)
-  - Context: You, 2026-11-17: "it seems like we didnt actually fix the thing where extending a line by adding more track can break the line. is that supposed to be in 8800?" T-3541 (77758e2b, on 8800 since this afternoon) fixed blueprint drawn on from the end a line turns at; the break you see may be another path (built track, a different end, a station added after).
+- T-3595 [P1] {L:single-track} Extending a line with new track still breaks it (taking, 2026-11-17, agent onewaystops2)
+  - Context: You, 2026-11-17: "it seems like we didnt actually fix the thing where extending a line by adding more track can break the line. is that supposed to be in 8800?" Cause found: a line that turns back at a loose track end breaks when track is built on from that end to a station, since trains may turn only at a stop or a bare end. Your Line 2 needs that turn only because of the one-way pair (T-3565 removes the need); the rule is fixed alongside it: a train may turn at any track end.
   - Goal: Extending a line by drawing track on from its end, in every way a player does it, never breaks the line; a standing check covers each way.
-  - Other: notes/T-3541.md
-- T-3596 [P2] {L:map-look} One-way arrows quieter when zoomed out (taking, 2026-11-17, agent arrows)
-  - Context: You, 2026-11-17: "i think the one-way arrows that run long one way track are a bit too prominent zoomed out. could we have them disappear one zoom level earlier? like a factor of two? and also it seems we already hide some of them if they're too cloes together in screen space, maybe lets have that be like twice as aggressive."
-  - Goal: One-way arrows disappear one zoom level sooner, and the screen-space thinning keeps arrows twice as far apart as now.
+  - Other: notes/T-3595.md
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
@@ -314,7 +311,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3558 [P3] {L:timetables} {after:T-3521} Holiday departures before the day's edits
   - Context: In T-3521's screenshot (artifacts/trainworld/t3521_headway.png) the 11:00 and 12:00 rows on a holiday show 15-minute departures from before edits made at 13:00. Not looked into; may be correct history.
   - Goal: The departures table shows what ran, or the cause is recorded as right.
-- T-3559 [P3] {L:checks} Train count cap not applied when a save loads
+- T-3559 [P3] {L:checks} Train count cap not applied when a save loads (taking, 2026-11-17, agent capload)
   - Context: t3165-cap.mjs fails its load step ("count lowered to the cap when the game loads", 15 -> 15) on master too (seen by singlecap, T-3526): capLoad's once-per-load pass may not fire on re-import.
   - Goal: A loaded save's counts over the cap are lowered to it, and t3165-cap passes.
 - T-3568 [P2] {L:terrain} {after:tonight's night run} OSM water for the TIGER packs
@@ -329,14 +326,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3455's scan: Tokyo's pack leaves out 7,404 people of reclaimed coast in 18 pieces, the biggest at Haneda (6.45 km2); Japan's zones are built by hand builders that have no reclaimed-land step.
   - Goal: Japan's hand builders take in reclaimed coast the way plan rows do, and Tokyo is rebuilt with Haneda inside.
   - Other: notes/T-3455.md
-- T-3528 [P3] {L:solve-speed} Undo after load takes back the cap lowering
+- T-3528 [P3] {L:solve-speed} Undo after load takes back the cap lowering (taking, 2026-11-17, agent capload)
   - Context: From T-3512: the cap lowering on load (T-3165, capLoad.ts) lands as undoable edits a second or two after a load, so a quick edit then undo takes back a lowering instead of the player's edit. Only saves with counts past the cap meet it.
   - Goal: The load's cap lowering is not on the undo stack; an undo right after load undoes the player's own edit.
 - T-3513 [P3] {L:solve-speed} Train edits at high demand still take most of a minute
   - Context: From T-3512: on the NYC save low and medium train edits now settle in 6-20 s, but high demand's three periods (two on one of two workers) take about 47 s and an every-level edit about 57 s; that is the crowding rounds themselves, four passes a period of 4-6 s each.
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
   - Other: notes/T-3512.md
-- T-3492 [P2] {L:memory} Give back idle solving workers' memory
+- T-3492 [P2] {L:memory} Give back idle solving workers' memory (taking, 2026-11-17, agent idlemem)
   - Context: From T-3472: solving workers keep their emptied memory, about 0.7 GB on all-China; restarting an idle worker would return it.
   - Goal: An idle worker's spare memory goes back, with no solve slower than now.
   - Other: notes/T-3472.md

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3596 [P2] {L:map-look} One-way arrows quieter when zoomed out (2026-11-17): One-way chevrons draw from zoom 13 (was 12) and keep 300 px apart (was 150); bus arrows unchanged. Caracas before/after in artifacts/trainworld/review/t3596.png.
 - T-3594 [P2] {L:map-look} Thinner ring on the hollow bullet (2026-11-17): outline bullet ring now as thick as the bold letter's stem (1.6 px at 12/16, 2.4 px at 30); notes/T-3593.md.
 - T-3593 [P2] {L:small-fixes} Show all button for hidden track levels (2026-11-17): Show all button beside Show levels in Settings, shown only while a level is hidden (space reserved); notes/T-3593.md.
 - T-3592 [P2] {L:feedback} Board changelog: drag items into and out of groups (2026-11-17): The board's changelog drags items into, between and out of groups; saved through move with under; changelog.py move --under.

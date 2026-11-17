@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c134",
+      "text": "one-way track arrows are drawn from a zoom one level closer in, and kept twice as far apart",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3596",
+      "by": "arrows",
+      "at": "2026-11-17T21:20:37Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
       "id": "c128",
       "text": "added real world network features:",
       "edited": null,
@@ -244,15 +256,15 @@
     {
       "id": "c112",
       "text": "fixed a line that stopped running when blueprint track was drawn on from the track end its trains turn around at",
-      "edited": "fixed a bug where extending a line could break it",
+      "edited": "fixed a bug where extending a line over blueprint track could break it",
       "hidden": false,
       "task": "T-3541",
       "by": "tramsplit",
       "at": "2026-11-17T18:03:40Z",
-      "rev": 4,
+      "rev": 5,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-17T20:58:51Z",
+      "changed": "2026-11-17T21:34:41Z",
       "parent": "c056"
     },
     {
