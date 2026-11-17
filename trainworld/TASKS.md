@@ -291,6 +291,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-17: "it seems like we didnt actually fix the thing where extending a line by adding more track can break the line. is that supposed to be in 8800?" T-3541 (77758e2b, on 8800 since this afternoon) fixed blueprint drawn on from the end a line turns at; the break you see may be another path (built track, a different end, a station added after).
   - Goal: Extending a line by drawing track on from its end, in every way a player does it, never breaks the line; a standing check covers each way.
   - Other: notes/T-3541.md
+- T-3596 [P2] {L:map-look} One-way arrows quieter when zoomed out (taking, 2026-11-17, agent arrows)
+  - Context: You, 2026-11-17: "i think the one-way arrows that run long one way track are a bit too prominent zoomed out. could we have them disappear one zoom level earlier? like a factor of two? and also it seems we already hide some of them if they're too cloes together in screen space, maybe lets have that be like twice as aggressive."
+  - Goal: One-way arrows disappear one zoom level sooner, and the screen-space thinning keeps arrows twice as far apart as now.
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
