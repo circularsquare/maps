@@ -460,6 +460,20 @@ mod tests {
                 assert_eq!((back.net.line_pace_of(l), back.net.line_tph[l as usize]), (w.net.line_pace_of(l), w.net.line_tph[l as usize]));
             }
             assert_eq!(super::super::save::encode(&back.net), bytes, "and writes back the same bytes");
+            // T-3388: an edit refused for money leaves the pacing and the rates as they were; once
+            // the pacing has held through a settle, an edit that moves nothing paces nothing again
+            let state = |w: &TrackWorld| ls.iter().map(|&l| (w.net.line_pace_of(l), w.net.line_tph[l as usize], w.net.line_trains[l as usize])).collect::<Vec<_>>();
+            let before = state(&w);
+            let tph = w.net.line_tph[ls[0] as usize];
+            let refused = w.apply_paid(Op::TrainCounts { id: ls[0], trains: Some([5, 2, 0]), tph }, 0.0, false, &|_| 1.0);
+            assert!(matches!(refused, Err(super::super::world::ChargeError::Money { .. })));
+            assert_eq!(before, state(&w));
+            let same = |w: &mut TrackWorld| w.apply(Op::TrainCounts { id: ls[1], trains: w.net.line_trains[ls[1] as usize], tph: w.net.line_tph[ls[1] as usize] }).unwrap();
+            same(&mut w);
+            let held = state(&w);
+            assert!(held.iter().all(|x| x.0[HIGH] > 0.0), "still in step: {held:?}");
+            same(&mut w);
+            assert_eq!(held, state(&w));
         }
     }
 }

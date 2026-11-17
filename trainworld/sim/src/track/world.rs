@@ -60,6 +60,29 @@ const PACE_SLACK: f64 = 0.002;
 /// T-2973: a merge this full is shared out evenly.
 const PACE_FULL_RHO: f64 = 0.98;
 const PACE_ROUNDS: usize = 3;
+/// T-3388: a count line's headway moving by no more than this share keeps its merge's pacing, while
+/// the line can still run its pace. A line on the edge of a set moves its own round trip by about
+/// 0.2% as it joins or leaves it.
+const PACE_HOLD: f64 = 0.005;
+
+/// T-3388: what one line's pacing at one level was last worked out from (`TrackWorld::pace_in`):
+/// its headway (0 when it took no part), whether its merge was full, its group (least line, line
+/// count), the set it was put in (the set's longest line), and whether it was paced in this
+/// settle, so its headway has not yet moved with its own pacing.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct PaceIn {
+    h: f64,
+    full: bool,
+    group: (u32, u32),
+    set: u32,
+    fresh: bool,
+}
+const NO_SET: u32 = u32::MAX;
+impl Default for PaceIn {
+    fn default() -> Self {
+        PaceIn { h: 0.0, full: false, group: (NO_SET, 0), set: NO_SET, fresh: false }
+    }
+}
 
 /// How far over the chosen headway the real one may run: a line's round trip moves a little with
 /// its own train count, and a train more for a few seconds would be noise (T-625).
@@ -129,6 +152,9 @@ pub struct TrackWorld {
     /// T-3521: a load keeps the save's weekend rates as they are (`reload`), to the bit, and the
     /// weekend service is worked out at the first edit that settles them.
     weekend_as_saved: bool,
+    /// T-3388: per line and level, what `pace_merges` last paced it from. Not saved: a load takes
+    /// the saved pacing as it is. Weekdays' only: the weekends run the weekdays' pacing.
+    pace_in: Vec<[PaceIn; LEVELS]>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -141,7 +167,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, svc_rest: None, weekend_as_saved: false };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, svc_rest: None, weekend_as_saved: false, pace_in: vec![] };
         w.reload();
         w
     }
@@ -155,9 +181,11 @@ impl TrackWorld {
         self.net.derive(&t);
         self.svc.update_all(&self.net);
         self.weekend_as_saved = self.net.rates_from_save && self.net.rest_solved;
+        self.pace_in.clear();
         if self.net.pace_from_save {
             // T-3233: the save's rates were settled with its pacing; pacing again would move them
             self.settle_unpaced(false);
+            self.pace_merges(true);
             self.settle_weekend(false);
         } else {
             self.settle_train_counts(!self.net.rates_from_save);
@@ -221,11 +249,12 @@ impl TrackWorld {
     fn settle_train_counts(&mut self, full: bool) -> Vec<u32> {
         let mut affected = self.settle_unpaced(full);
         for _ in 0..PACE_ROUNDS {
-            if !self.pace_merges() {
+            if !self.pace_merges(false) {
                 break;
             }
             affected.extend(self.settle_unpaced(full));
         }
+        self.pace_in.iter_mut().flatten().for_each(|p| p.fresh = false);
         affected.extend(self.settle_weekend(full));
         affected.sort_unstable();
         affected.dedup();
@@ -265,7 +294,15 @@ impl TrackWorld {
     /// lines take even turns at the merge all day instead of drifting past each other. A headway
     /// line there counts with its set headway and is never moved. Into `Network::line_pace`; true
     /// when it changed.
-    fn pace_merges(&mut self) -> bool {
+    ///
+    /// T-3388: a merge's lines at one level are paced again only when what they were paced from
+    /// has changed: a line's headway by more than `PACE_HOLD` or past its pace, a line joining or
+    /// leaving, the merge filling or emptying (`pace_in`). Then the lines that have not moved keep
+    /// their sets and a set its pace where it still fits. Otherwise each pacing slows the lines a
+    /// little and moves the next one's headways and set edges, and London's 130 lines at one merge
+    /// never settle. `adopt`: take the pacing as it stands (a load's) and only note what it was
+    /// paced from.
+    fn pace_merges(&mut self, adopt: bool) -> bool {
         let n = self.net.line_count();
         let mut root: Vec<usize> = (0..n).collect();
         fn top(root: &mut [usize], mut x: usize) -> usize {
@@ -304,55 +341,122 @@ impl TrackWorld {
                 }
             }
         }
+        let was: Vec<[f32; LEVELS]> = (0..n).map(|l| self.net.line_pace_of(l as u32)).collect();
         let mut pace = vec![[0.0f32; LEVELS]; n];
         let mut groups: std::collections::BTreeMap<usize, Vec<usize>> = Default::default();
         for l in (0..n).filter(|&l| met[l]) {
             let g = top(&mut root, l);
             groups.entry(g).or_default().push(l);
         }
+        self.pace_in.resize(n, [PaceIn::default(); LEVELS]);
         for lines in groups.values() {
+            let g = top(&mut root, lines[0]);
+            // lines are pushed in id order, so the first is the group's least
+            let group = (lines[0] as u32, lines.len() as u32);
             for lev in 0..LEVELS {
-                // (headway, line, set by the player)
-                let mut hs: Vec<(f64, usize, bool)> = vec![];
+                let is_full = full.contains(&(g, lev));
+                // (headway, line, set by the player, the set it was in when last paced: NO_SET
+                // when it has moved since); a count line's headway within `PACE_HOLD` of the one it
+                // was last paced from, and no longer than its pace, counts as that one
+                let mut hs: Vec<(f64, usize, bool, u32)> = vec![];
                 for &l in lines {
                     let ls = &self.svc.lines[l];
                     if !self.net.line_ok(l as u32) || !ls.ok || !ls.running || ls.is_loop() || ls.is_bus() {
                         continue;
                     }
+                    let last = self.pace_in[l][lev];
                     if let Some(a) = self.net.line_auto[l] {
                         if a[lev] > 0 {
-                            hs.push((a[lev] as f64, l, true));
+                            let h = a[lev] as f64;
+                            hs.push((h, l, true, if last.h == h { last.set } else { NO_SET }));
                         }
-                        continue;
+                    } else if let Some(c) = self.net.line_trains[l] {
+                        if c[lev] > 0 && ls.round_trip[lev] > 0.0 {
+                            let h = ls.round_trip[lev] / c[lev] as f64;
+                            let keeps = was[l][lev] == 0.0 || h <= was[l][lev] as f64;
+                            if !adopt && last.fresh && last.h > 0.0 && keeps {
+                                // just paced: its headway moved with its own pacing, which is what
+                                // it is now paced from
+                                self.pace_in[l][lev].h = h;
+                                self.pace_in[l][lev].fresh = false;
+                                hs.push((h, l, false, last.set));
+                            } else if !adopt && last.h > 0.0 && keeps && (h - last.h).abs() <= PACE_HOLD * last.h {
+                                hs.push((last.h, l, false, last.set));
+                            } else {
+                                hs.push((h, l, false, NO_SET));
+                            }
+                        }
                     }
-                    let Some(c) = self.net.line_trains[l] else { continue };
-                    if c[lev] > 0 && ls.round_trip[lev] > 0.0 {
-                        hs.push((ls.round_trip[lev] / c[lev] as f64, l, false));
+                }
+                let h_of = |l: usize| hs.iter().find(|x| x.1 == l).map_or(0.0, |x| x.0);
+                let same = lines.iter().all(|&l| {
+                    let p = self.pace_in[l][lev];
+                    p.h == h_of(l) && p.full == is_full && p.group == group
+                });
+                if adopt {
+                    // the sets the loaded pacing has: count lines at one pace, and a headway line
+                    // whose headway is that pace
+                    let mut set_of: std::collections::HashMap<u32, u32> = Default::default();
+                    for x in hs.iter().filter(|x| !x.2 && was[x.1][lev] > 0.0) {
+                        set_of.entry(was[x.1][lev].to_bits()).or_insert(x.1 as u32);
                     }
+                    for &l in lines {
+                        self.pace_in[l][lev] = PaceIn { h: 0.0, full: is_full, group, set: NO_SET, fresh: false };
+                    }
+                    for x in &hs {
+                        let key = if x.2 { (x.0 as f32).to_bits() } else { was[x.1][lev].to_bits() };
+                        let set = set_of.get(&key).copied().unwrap_or(x.1 as u32);
+                        self.pace_in[x.1][lev] = PaceIn { h: x.0, full: is_full, group, set, fresh: false };
+                    }
+                }
+                if adopt || same {
+                    for &l in lines {
+                        pace[l][lev] = was[l][lev];
+                    }
+                    continue;
+                }
+                for &l in lines {
+                    self.pace_in[l][lev] = PaceIn { h: 0.0, full: is_full, group, set: NO_SET, fresh: false };
                 }
                 hs.sort_by(|a, b| b.0.total_cmp(&a.0));
                 let mut i = 0;
                 while i < hs.len() {
                     let top_h = hs[i].0;
+                    // a line that has not moved stays out of a set it was not in: the sets' edges
+                    // stay where they were, or one line moving shifts every edge below it
+                    let mut set = hs[i].3;
                     let mut j = i + 1;
                     while j < hs.len() && hs[j].0 * (1.0 + PACE_SHARE) >= top_h {
+                        if hs[j].3 != NO_SET {
+                            if set == NO_SET {
+                                set = hs[j].3;
+                            } else if set != hs[j].3 {
+                                break;
+                            }
+                        }
                         j += 1;
                     }
                     // every count line of the set, the slowest too, a little over the longest, so a
                     // round trip drifting by a second as the others' holds move keeps them in step
-                    let keep = if hs[i].2 { top_h } else { top_h * (1.0 + PACE_SLACK) };
+                    let mut keep = if hs[i].2 { top_h } else { top_h * (1.0 + PACE_SLACK) };
+                    // a set that ran one pace keeps it while every line can run it and it is
+                    // within `PACE_HOLD` of the new one
+                    let old = was[hs[i].1][lev] as f64;
+                    if !hs[i].2 && old >= top_h && old <= keep * (1.0 + PACE_HOLD) && (i..j).all(|k| !hs[k].2 && was[hs[k].1][lev] as f64 == old) {
+                        keep = old;
+                    }
                     for k in i..j {
                         if !hs[k].2 && j - i > 1 {
                             pace[hs[k].1][lev] = keep as f32;
                         }
+                        self.pace_in[hs[k].1][lev] = PaceIn { h: hs[k].0, full: is_full, group, set: hs[i].1 as u32, fresh: true };
                     }
                     i = j;
                 }
                 // a full merge is shared out evenly between the count lines through it: each that
                 // could run more often runs the even share of what they run together, so the full
                 // track's queue is not all one line's (T-2960 saw 3:39 and 7:02 for two alike)
-                let g = top(&mut root, lines[0]);
-                if full.contains(&(g, lev)) {
+                if is_full {
                     let count: Vec<(usize, f64)> = hs.iter().filter(|x| !x.2).map(|x| (x.1, x.0)).collect();
                     let rate: f64 = count.iter().map(|&(l, _)| self.net.line_tph[l][lev] as f64).sum();
                     if count.len() > 1 && rate > 0.0 {
@@ -380,8 +484,7 @@ impl TrackWorld {
                 }
             }
         }
-        let was: Vec<[f32; LEVELS]> = (0..n).map(|l| self.net.line_pace_of(l as u32)).collect();
-        if was == pace {
+        if adopt || was == pace {
             return false;
         }
         self.net.line_pace = pace;

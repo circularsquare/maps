@@ -1218,7 +1218,13 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   (`PACE_SLACK`), so a round trip drifting by a second keeps them together; their trains stand the
   time over at their ends as a headway line's do (`Network::line_pace`, derived on every settle and
   saved with the settled rates in `LPC1`, so a load keeps it rather than pacing again, T-3233; the
-  spacing places where it stands, 6.3 "Departures"). A headway line there counts with its
+  spacing places where it stands, 6.3 "Departures"). The pacing holds still (T-3388, `PACE_HOLD`):
+  a merge's lines at one level are paced again only when one of them has moved, its headway by more
+  than 0.5% or past its pace, or joined or left, or the merge filled or emptied; then a line that
+  has not moved stays in its set, and a set that ran one pace keeps it while every line can run it
+  and it is within 0.5% of the new one. The move a pacing makes in the paced lines' own round trips
+  counts as part of that pacing, not as a move. Without this London's 130 lines at one merge paced each
+  other back and forth on every edit. A load takes the saved pacing and its sets as they are. A headway line there counts with its
   set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
   it evenly: each that could run more often keeps the even share of their trains an hour together
   (a line left at its own headway counts at the rate it now runs, so the share is the same on every
