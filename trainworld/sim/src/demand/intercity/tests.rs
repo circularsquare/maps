@@ -1446,6 +1446,9 @@ fn real_far_lines_share_rail_with_air() {
 #[test]
 fn a_streamed_pass_is_the_pass_to_the_bit() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     // the commutes between zones here are Tokyo's to Gunma's
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
@@ -1509,6 +1512,9 @@ fn a_streamed_pass_is_the_pass_to_the_bit() {
 #[test]
 fn the_window_keeps_every_trip() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
     let mut times = vec![];
@@ -1542,6 +1548,9 @@ fn the_window_keeps_every_trip() {
 #[test]
 fn a_window_keeps_its_pairs_trips() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
     let mut times = vec![];
@@ -1649,6 +1658,9 @@ fn same_joins_reads_the_zones_joined() {
 #[test]
 fn fare_factors_weigh_trips_by_their_origin() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let ll = [139.7671, 35.6812, 139.7387, 35.6285, 139.6970, 35.5313, 139.6222, 35.4660, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
     let mut times = vec![];
@@ -1707,6 +1719,9 @@ fn fare_factors_weigh_trips_by_their_origin() {
 #[test]
 fn the_explorer_counts_commutes_as_the_selection() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let ll = [139.7671, 35.6812, 139.7006, 35.6896, 139.7774, 35.7138, 139.6239, 35.9064, 139.0124, 36.3221];
     let mut t = vec![0f32; 6 * 5];
@@ -1787,6 +1802,17 @@ fn t761_market_bench() {
 }
 /// The world composition as the app opens it: the market rows of the registry's zones (T-776:
 /// market-rows.json, in registry order) and the packs of `ids` (all that exist with None).
+/// The tests that read real places' packs return early when a pack is missing: `data/packs` is not in
+/// the open-source copy.
+pub(crate) fn have_packs(root: &str, ids: &[&str]) -> bool {
+    match ids.iter().find(|id| !std::path::Path::new(&format!("{root}/data/packs/{id}.market.json")).exists()) {
+        Some(id) => {
+            eprintln!("skipping: data/packs/{id}.market.json is missing (packs are not in the open-source copy)");
+            false
+        }
+        None => true,
+    }
+}
 pub(crate) fn real_world(root: &str, ids: Option<&[&str]>) -> String {
     // T-780: a copy of the registry and rows (`TW_REGISTRY`, `TW_ROWS`) while a batch is adding zones
     let reg = std::env::var("TW_REGISTRY").unwrap_or(format!("{root}/app/src/game/registry.json"));
@@ -1857,6 +1883,9 @@ pub(crate) fn t780_net_with(path: &str, chunk: f64, before: impl FnOnce(&mut Int
 #[test]
 fn eachway_with_its_curves_is_eachway() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let m = &api.m;
     for a in m.zones.iter().step_by(7) {
@@ -1871,6 +1900,9 @@ fn eachway_with_its_curves_is_eachway() {
 #[test]
 fn sampled_pairs_keep_each_zones_trips_with_each_place() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     let m = &api.m;
     let served: Vec<usize> = (0..m.zones.len()).collect();
@@ -1912,6 +1944,9 @@ fn sampled_pairs_keep_each_zones_trips_with_each_place() {
 #[test]
 fn far_chunk_pairs_keep_each_place_pairs_trips() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm", "osa"]) {
+        return;
+    }
     let api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm", "osa"]))).unwrap();
     let m = &api.m;
     let served: Vec<usize> = (0..m.zones.len()).collect();
@@ -2007,6 +2042,9 @@ fn t2641_dump() {
 #[test]
 fn sampled_selection_rail_stays_within_trips() {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    if !have_packs(root, &["tyo", "gnm"]) {
+        return;
+    }
     let mut api = IntercityApi::new(&real_world(root, Some(&["tyo", "gnm"]))).unwrap();
     api.set_chunk(1.);
     // the streamed pass's two lines across Tokyo, changing at Tokyo station
