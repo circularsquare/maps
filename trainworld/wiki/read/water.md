@@ -14,7 +14,7 @@ A water stretch's price is the level's multiplier plus the water surcharge, in p
 
 Small creeks and ditches aren't on the water map, so track crosses them at ground level.
 
-The water map is coarser than the drawn coast, so the game gives the shore a little slack: a spot counts as water only when the water map has water about 12 m out on all four sides of it. Track along a quay or a beach stays on land.
+The water map is coarser than the drawn coast, so the game gives the shore a little slack: a spot counts as water only when the water map has water on nearly all sides of it, which trims a few metres off each bank. Track along a quay or a beach stays on land.
 
 Exact rule: `docs/track-and-service.md` "Water, bridges and ramps" for how a bridge gets made, "Construction prices" for the price and the longest span.
 In the code: **main** `sim/src/track/bridge.rs` `bridge_long`, also `sim/src/track/cost.rs` `track_cost_parts_t` `sim/src/track/net.rs` `bridged_water_through` `sim/src/track/params.rs` `WATER_SURCHARGE`, `WATER_COST`, `WATER_SPAN_MAX`

@@ -74,14 +74,14 @@
       "id": "c006",
       "text": "the line panel says single track when trains wait on single track",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3383",
       "by": "bugs1",
       "at": "2026-11-16T13:47:19Z",
-      "rev": 2,
+      "rev": 3,
       "area": "scheduling",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:19:30Z"
     },
     {
       "id": "c007",
@@ -381,14 +381,14 @@
       "id": "c029",
       "text": "the airport badge hover now counts trips with no route, in its total and its bar",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-2288",
       "by": "b1",
       "at": "2026-11-16T15:01:44Z",
-      "rev": 2,
+      "rev": 3,
       "area": "demand",
       "fix": true,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:24:02Z"
     },
     {
       "id": "c030",
@@ -675,15 +675,15 @@
     {
       "id": "c051",
       "text": "feeder lines help long-distance trips again: a metro or bus stop beside an inter-city station no longer counts against the train",
-      "edited": null,
+      "edited": "fixed long-distance trip bug where local lines were lowering intercity train usage, intercity trains usage goes up a lot in most cases",
       "hidden": false,
       "task": "T-3426",
       "by": "maps-d7",
       "at": "2026-11-16T17:56:06Z",
-      "rev": 2,
+      "rev": 15,
       "area": "demand",
       "fix": true,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-17T19:24:58Z"
     },
     {
       "id": "c052",
@@ -791,13 +791,14 @@
       "id": "c060",
       "text": "the crowding dot on each service level now shows the plain average colour of the line's segments",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3476",
       "by": "crowddot",
       "at": "2026-11-16T20:39:54Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:19:09Z"
     },
     {
       "id": "c061",
@@ -826,14 +827,15 @@
     {
       "id": "c063",
       "text": "a click on the \"Terrain could not load\" tag tried the download again at once",
-      "edited": null,
-      "hidden": false,
+      "edited": "a click on the \"Terrain could not load\" tag tries the download again at once",
+      "hidden": true,
       "task": "T-3479",
       "by": "newgame",
       "at": "2026-11-16T20:59:33Z",
-      "rev": 1,
+      "rev": 3,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:19Z"
     },
     {
       "id": "c064",
@@ -855,9 +857,10 @@
       "task": "T-3481",
       "by": "lines2",
       "at": "2026-11-16T22:11:58Z",
-      "rev": 1,
+      "rev": 5,
       "area": "schematic",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T19:19:53Z"
     },
     {
       "id": "c066",
@@ -877,13 +880,14 @@
       "id": "c067",
       "text": "the memory readout shows 8 GB+ where the browser only reports its 8 GB maximum, shows just the game's own use where the browser reports nothing, and its hover says what the figure counts",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3494",
       "by": "memtext",
       "at": "2026-11-16T22:51:29Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:34Z"
     },
     {
       "id": "c068",
@@ -901,13 +905,14 @@
       "id": "c069",
       "text": "the use more cores hover says it uses more memory to work out riders faster",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3496",
       "by": "orchestrator",
       "at": "2026-11-16T23:27:26Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:17:53Z"
     },
     {
       "id": "c070",
@@ -980,13 +985,14 @@
       "id": "c075",
       "text": "fixed airport hovers and airport bubbles leaving out trips from across the zone line (istanbul airport showed 4,300 trips a day, now about 111,000)",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3500",
       "by": "airhover",
       "at": "2026-11-17T03:06:24Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T19:26:37Z"
     },
     {
       "id": "c076",
@@ -1004,13 +1010,14 @@
       "id": "c077",
       "text": "fixed airport hovers and airport bubbles leaving out trips from across the zone line (istanbul airport showed 4,300 trips a day, now about 111,000)",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3500",
       "by": "maps-44",
       "at": "2026-11-17T10:57:33Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T19:26:36Z"
     },
     {
       "id": "c078",
@@ -1076,13 +1083,14 @@
       "id": "c083",
       "text": "bubbles under one trip a day joined the nearest bubble, so no bubble shows 0 trips",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3505",
       "by": "bubfold",
       "at": "2026-11-17T11:49:44Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-17T19:19:41Z"
     },
     {
       "id": "c084",
@@ -1111,75 +1119,81 @@
     {
       "id": "c086",
       "text": "the game uses about 500 MB less memory on desktop",
-      "edited": "the game uses about 350 MB less memory on desktop",
+      "edited": "small games use about 350 MB less memory on desktop",
       "hidden": false,
       "task": null,
       "by": "maps-b8",
       "at": "2026-11-17T13:51:03Z",
-      "rev": 3,
+      "rev": 5,
       "area": "performance",
       "fix": false,
-      "group": true
+      "group": true,
+      "changed": "2026-11-17T19:20:17Z"
     },
     {
       "id": "c087",
       "text": "terrain shows on the map by default",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": null,
       "by": "maps-b8",
       "at": "2026-11-17T14:07:27Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:18:47Z"
     },
     {
       "id": "c088",
       "text": "added the trainsfan achievement for 100 hours played",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3520",
       "by": "trainsfan",
       "at": "2026-11-17T14:16:22Z",
-      "rev": 1,
+      "rev": 2,
       "area": "community",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:53Z"
     },
     {
       "id": "c089",
       "text": "a bus boarding costs riders 4 minutes of their time instead of 6, so buses carry more",
-      "edited": null,
+      "edited": "bus boarding penalty is reduced, buses will be used slightly more often",
       "hidden": false,
       "task": "T-3522",
       "by": "busboard",
       "at": "2026-11-17T14:34:24Z",
-      "rev": 1,
+      "rev": 6,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:22:54Z"
     },
     {
       "id": "c090",
       "text": "added a speed limit you can set on any piece of track",
-      "edited": null,
+      "edited": "added optional per-track segment speed limit",
       "hidden": false,
       "task": "T-3405",
       "by": "piecelimit",
       "at": "2026-11-17T14:37:13Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:23:34Z"
     },
     {
       "id": "c091",
       "text": "deleting a station on a big network takes about half a second less",
-      "edited": null,
+      "edited": "deleting a station on a big network is faster",
       "hidden": false,
       "task": "T-2768",
       "by": "stationedit",
       "at": "2026-11-17T14:50:14Z",
-      "rev": 1,
+      "rev": 7,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:07Z"
     },
     {
       "id": "c092",
@@ -1208,14 +1222,15 @@
     {
       "id": "c094",
       "text": "added weekend trains, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
-      "edited": null,
+      "edited": "added weekend train scheduling, so a line can run fewer or more trains on weekends and public holidays, as a percent of its weekdays or set by hand",
       "hidden": false,
       "task": "T-3521",
       "by": "weekend",
       "at": "2026-11-17T15:15:53Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:19:21Z"
     },
     {
       "id": "c095",
@@ -1304,14 +1319,15 @@
     {
       "id": "c102",
       "text": "train count changes on a one-city game settle in seconds to about a minute, not one to two minutes",
-      "edited": null,
+      "edited": "train count changes on a one-city game have rides settle ~10x faster",
       "hidden": false,
       "task": "T-3512",
       "by": "settle2",
       "at": "2026-11-17T16:23:22Z",
-      "rev": 1,
+      "rev": 18,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:20:57Z"
     },
     {
       "id": "c103",
@@ -1341,13 +1357,14 @@
       "id": "c105",
       "text": "the line, station and track panels say what kind they are: \"6 stops, 5.3 km, tram\", \"Station, Level 0\", \"0.42 km, single track, Level 0\"",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3555",
       "by": "subtitles",
       "at": "2026-11-17T17:08:44Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:23Z"
     },
     {
       "id": "c106",
@@ -1461,25 +1478,27 @@
       "id": "c115",
       "text": "edits on the real london network settle 3 to 10 times faster",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3388",
       "by": "londonedit",
       "at": "2026-11-17T18:17:52Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:00Z"
     },
     {
       "id": "c116",
       "text": "ponytails now sit behind the head",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3576",
       "by": "ponytail",
       "at": "2026-11-17T18:30:48Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:18:27Z"
     },
     {
       "id": "c117",
@@ -1496,26 +1515,28 @@
     {
       "id": "c118",
       "text": "a station placed on a real world station now takes its name",
-      "edited": null,
+      "edited": "a station placed on a real world station takes its name by default",
       "hidden": false,
       "task": "T-3571",
       "by": "realstations",
       "at": "2026-11-17T18:33:34Z",
-      "rev": 1,
+      "rev": 3,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:23:24Z"
     },
     {
       "id": "c119",
       "text": "the profit history in a line's view moved to the bottom and shows blue fare bars and red running cost bars for the last 30 days, as the finances tab does",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3566",
       "by": "lineprofit",
       "at": "2026-11-17T18:41:35Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-17T19:21:28Z"
     },
     {
       "id": "c120",
@@ -1539,6 +1560,18 @@
       "at": "2026-11-17T18:58:41Z",
       "rev": 1,
       "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c122",
+      "text": "moved buses obey one-way streets to the game settings; train and platform fullness are always shown",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3579",
+      "by": "settingsmove",
+      "at": "2026-11-17T19:17:31Z",
+      "rev": 1,
+      "area": "other",
       "fix": false
     }
   ]

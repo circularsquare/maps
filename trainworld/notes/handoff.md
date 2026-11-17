@@ -24,7 +24,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 
 ## Agents (all maps-45's; maps-58 closed out 11-17. Move a tree's DECISIONS lines first: scratchpad move_decisions.py <tree>)
 - onewaystops (Opus, maps-45's, .tw-trees/onewaystops, port 6153): T-3565 one-way pair stops; routing: checker before landing.
-- weekendstep (Sonnet, maps-45's, .tw-trees/weekendstep, port 6154): T-3557 weekend headway stepper; scheduling numbers: checker before landing.
+- weekendstep: T-3557 done in tree (changelog item in tree; DECISIONS line in main; follow-ups T-3583, T-3584 filed); checker weekendcheck (Sonnet, port 6166) running; land on pass, then archive T-3557.
 - tramterm (Sonnet, maps-45's, .tw-trees/tramterm, port 6157): T-3574 tram stop terminal + passing tracks, T-3575 tram crossovers; code + Rust done, stopped waiting on its wasm build (log scratchpad\tramterm\wasm.log); resume it for full cargo, check t3574-tram-terminal.mjs, screenshot, notes; then checker.
 - shoreswap: T-3553 done in tree (changelog c113 in main); checker shorecheck (Sonnet, maps-45's, port 6158) running; land on pass, then archive T-3553.
 - farebase (Opus, .tw-trees/farebase, port 6163): T-3578 fare multiple scales the base (max over legs) + T-3581 undo keeps the multiple; demand/money: checker before landing.
