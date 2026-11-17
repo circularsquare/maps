@@ -1844,7 +1844,7 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, other {# kereta}}} tram {{count, plural, other {# trem}}} bus {{count, plural, other {# bus}}} other {{count, plural, other {# kapal}}}}",
   "schedule.waitingDemand": "Menunggu permintaan dimuat",
   "schedule.weekdays": "Hari kerja",
-  "schedule.weekendAll": "Terapkan ke semua lini",
+  "schedule.weekendAll": "Semua lini",
   "schedule.weekendAllAsk": "Atur akhir pekan jadi {pct} dari hari kerja di semua lini, termasuk lini baru?",
   "schedule.weekendHeadwayLabel": "Selang akhir pekan",
   "schedule.weekendLabel": "{vehicle, select, train {kereta akhir pekan} tram {trem akhir pekan} bus {bus akhir pekan} other {kapal akhir pekan}}",

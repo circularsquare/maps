@@ -1844,7 +1844,7 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# train} other {# trains}}} tram {{count, plural, one {# tram} other {# trams}}} bus {{count, plural, one {# bus} other {# bus}}} other {{count, plural, one {# bateau} other {# bateaux}}}}",
   "schedule.waitingDemand": "Chargement de la demande en cours",
   "schedule.weekdays": "En semaine",
-  "schedule.weekendAll": "Appliquer à toutes les lignes",
+  "schedule.weekendAll": "Toutes les lignes",
   "schedule.weekendAllAsk": "Régler le week-end à {pct} des jours de semaine sur toutes les lignes, nouvelles lignes comprises ?",
   "schedule.weekendHeadwayLabel": "Intervalle le week-end",
   "schedule.weekendLabel": "{vehicle, select, train {trains le week-end} tram {trams le week-end} bus {bus le week-end} other {bateaux le week-end}}",

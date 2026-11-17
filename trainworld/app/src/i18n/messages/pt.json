@@ -1844,7 +1844,7 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# trem} other {# trens}}} tram {{count, plural, one {# bonde} other {# bondes}}} bus {{count, plural, one {# ônibus} other {# ônibus}}} other {{count, plural, one {# balsa} other {# balsas}}}}",
   "schedule.waitingDemand": "Esperando a demanda carregar",
   "schedule.weekdays": "Dias úteis",
-  "schedule.weekendAll": "Aplicar a todas as linhas",
+  "schedule.weekendAll": "Todas as linhas",
   "schedule.weekendAllAsk": "Definir os fins de semana em {pct} dos dias úteis em todas as linhas, inclusive nas novas?",
   "schedule.weekendHeadwayLabel": "Intervalo nos fins de semana",
   "schedule.weekendLabel": "{vehicle, select, train {trens nos fins de semana} tram {bondes nos fins de semana} bus {ônibus nos fins de semana} other {balsas nos fins de semana}}",

@@ -1844,7 +1844,7 @@
   "schedule.vehicles": "{vehicle, select, train {{count, plural, one {# tren} other {# trens}}} tram {{count, plural, one {# tramvia} other {# tramvies}}} bus {{count, plural, one {# autobús} other {# autobusos}}} other {{count, plural, one {# vaixell} other {# vaixells}}}}",
   "schedule.waitingDemand": "Esperant que es carregui la demanda",
   "schedule.weekdays": "Feiners",
-  "schedule.weekendAll": "Aplica a totes les línies",
+  "schedule.weekendAll": "Totes les línies",
   "schedule.weekendAllAsk": "Vols posar els caps de setmana al {pct} dels dies feiners a totes les línies, i també a les noves?",
   "schedule.weekendHeadwayLabel": "Interval en cap de setmana",
   "schedule.weekendLabel": "{vehicle, select, train {trens en cap de setmana} tram {tramvies en cap de setmana} bus {autobusos en cap de setmana} other {vaixells en cap de setmana}}",
