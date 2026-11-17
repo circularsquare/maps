@@ -990,6 +990,30 @@
       "rev": 1,
       "area": "track",
       "fix": false
+    },
+    {
+      "id": "c077",
+      "text": "fixed airport hovers and airport bubbles leaving out trips from across the zone line (istanbul airport showed 4,300 trips a day, now about 111,000)",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3500",
+      "by": "maps-44",
+      "at": "2026-11-17T10:57:33Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
+      "id": "c078",
+      "text": "demand bubbles count trips to and from other zones at every zoom, and a zone's totals count its errands and visits across zone lines",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3503",
+      "by": "bubbles",
+      "at": "2026-11-17T11:01:23Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
     }
   ]
 }

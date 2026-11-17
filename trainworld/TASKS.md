@@ -241,9 +241,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Downloads approved by you 2026-11-16 ("ok, can start download"); colours approved ("track looks good"). You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." All has shown passenger rail only since T-3289 (hover "Freight not all added yet"); noritetsu's tiles have no freight.
   - Goal: Real world network All draws freight and abandoned rail as well, Passenger unchanged. The code landed 5bfded36; all 120 regions are built (2026-11-17, 246 MB, noritetsu/dist/data/*_extra.pmtiles and extra.json). Left: upload to R2, then the hover changes to "Also freight and abandoned rail, trams, narrow gauge, heritage lines and unused track" with a changelog item.
   - Other: notes/T-3464.md
-- T-3495 [P2] {L:world-map} Snap to any real rail that is drawn (taking, 2026-11-16, agent snapsurvey)
-  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and on the board: "a common complaint is that people cant snap to some rails that are visible. if something is visible we shoudl let people snap to it. (and if there are gaps that are easily fixable we should fix them but not put too much effort into doing this yet as we have other high prio stuff to work on)". The real-line snap (realSnap.ts) follows passenger rail only; T-3464 builds freight and abandoned rail tiles for the All setting.
-  - Goal: Every real rail line drawn at the current setting can be snapped to; first a short survey of which drawn rail can't be today and the easy fixes, then freight and abandoned once T-3464's tiles exist.
+- T-3495 [P2] {L:world-map} {after:v0.4.0 publish} Snap to freight and abandoned rail
+  - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
+  - Goal: Freight rail drawn under All can be snapped to by train track, abandoned too if you say so, about 2-3 h plus about 100 MB of graph files.
+  - Other: notes/T-3495.md
 - T-3499 [P3] {L:region-redraws} Bucaramanga is an enclave
   - Context: A player reports (via you, 2026-11-16 on the board) that Bucaramanga, Colombia, sits as an enclave inside another zone, which is weird. Reaches players building in Colombia.
   - Goal: Bucaramanga's zone has a sensible shape joined to its surroundings, fixed at the next Colombia rebuild if it needs one.
@@ -255,13 +256,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3503 [P2] {L:map-look} Demand bubbles include trips between cities (taking, 2026-11-16, agent bubbles)
-  - Context: You, 2026-11-17: "ideally we have demand bubbles show intercity trips as well", and the bubbles should simply add up to the zone's local plus intercity totals. Today street-zoom bubbles show only a zone's own local trips; zoomed out past 8.5 the zone bubbles already include regional trips. From T-3500's look: a worker query like airLegs that shares each zone's longer and cross-zone trips over its homes and jobs, small short-lived memory, about 3-5 h.
-  - Goal: Bubbles at every zoom include regional and long trips, always on, and add up to the zone's local plus intercity totals.
-  - Other: notes/T-3500.md
 - T-3505 [P2] {L:map-look} Demand bubbles with 0 trips
   - Context: You, 2026-11-17: a bubble in rural Ontario hovers "0 trips from here", which shouldn't show (it rounds to 0); "i thought we got rid of demand sites that are less than one person. or aggregated them ... it suggests to me that we could probably be more aggressive with dropping bubbles in some way or another." Fewer sites also means less memory.
   - Goal: No bubble shows under 1 trip a day; tiny sites folded into a neighbour where there is one, with the zone's totals unchanged and the memory saved measured.
+- T-3510 [P3] {L:map-look} Bubble selection's purpose rows miss trips with other places
+  - Context: Since T-3503 a selected bubble's total counts its trips with other places, but its purpose rows, pie and timing charts still count its local trips only, so the rows add up to less than the total.
+  - Goal: The purpose rows and pie add up to the selection's total, longer trips as a row of their own.
+  - Other: notes/T-3503.md
 - T-3509 [P3] {L:map-look} {waits:Anita} Long trips inside one zone show nowhere
   - Need from Anita: should a zone's longer trips between its own far-apart parts count in its "Trips within" (and so its train share goals)? I'd say yes, as trips within.
   - Context: The regional layer has trips of 25 km and more between 6 km areas of one zone (New York 1.93M legs a day, 2.8% of its local trips; London 0.60M; median zone 0.13%). They ride the player's lines but are in no bubble and no zone figure, and T-3503 leaves them out too.
@@ -537,10 +538,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: You asked 2026-11-10 to change built track's height or kind from an edit button. Design approved: change pieces in place, from the Select bar, with price and confirm.
   - Goal: Built track changes level or kind in place, keeping stations and lines.
   - Other: Stages T-3059 (sim and bar) and T-3060 (preview). notes/T-3052.md.
-- T-3069 [P2] {L:trams} Trams that snap to real rail (taking, 2026-11-17, agent trams)
-  - Context: A player asked for trams on real rail, which is light rail. You said sure 2026-11-10, with a new street-snap icon.
-  - Goal: Tram track can snap to real rail, and the street-snap icon is new.
-  - Other: Folds in T-2929 (trams stage 3) and open-source issue 9 (snap to light rail such as Kaohsiung's circular line). Your TODO 2026-11-15 also wants snap icons standardized. Built in tree tw/trams; lands with the rebuilt graphs (notes/T-3069.md "Landing").
 - T-3514 [P3] {L:trams} The rest of trams stage 3
   - Context: T-2929's other items were folded into T-3069, which did only the real snap: real network start saves still build tram lines as train track, and there is no junction helper or stop spacing for trams.
   - Goal: Real network saves build tram lines as tram track, a both-ways junction helper for tram track, and stops placed about every N m along a new tram line, each if players want it.
