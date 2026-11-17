@@ -229,7 +229,7 @@ fn markets_beside_split_by_network_and_pairs_need_track() {
     for (sel, m) in [([0f32, 0.], 0u32), ([300000., 0.], 2)] {
         let j = both.selection_flows_day(m, &sel, &[1.], 0);
         let a = parts[0].selection_flows_day(m, &sel, &[1.], 0);
-        let b = parts[1].unpack_rail(&parts[1].selection_rail_day(m, &sel, &[1.], 0));
+        let b = parts[1].unpack_rail(&parts[1].selection_rail_day(m, &sel, &[1.], &[], 0));
         assert!(j.iter().zip(a.iter().zip(&b)).all(|(j, (a, b))| (j - (a + b)).abs() <= 1e-9 * j.abs().max(1.)), "{j:?}\n{a:?}\n{b:?}");
         assert!(b.iter().any(|v| *v > 0.) == (m == 2));
     }
@@ -336,7 +336,7 @@ fn rush_days_lean_towards_touristy_zones() {
     assert_eq!((touristy(0., 1000.), touristy(3000., 1000.), touristy(30000., 1000.), touristy(1e6, 0.)), (0., 0., 1., 1.));
     assert!((touristy(3000. * 10f64.sqrt(), 1000.) - 0.5).abs() < 1e-6);
     let mut a = api();
-    let flows = |a: &IntercityApi, day: u32| a.unpack_selection(&a.selection_all_day(2, &[60000., 0.], &[1.], day, 31));
+    let flows = |a: &IntercityApi, day: u32| a.unpack_selection(&a.selection_all_day(2, &[60000., 0.], &[1.], &[], day, 31));
     let (wd0, out0) = (flows(&a, 0), flows(&a, OUT as u32));
     let m = Rc::get_mut(&mut a.m).unwrap();
     let z = m.zones.iter().position(|z| z.place == 2).unwrap();
@@ -424,7 +424,7 @@ fn expanded_markets_route_boston_and_washington_and_keep_flow_layouts() {
     solve_all(&mut a);
     let nz = a.zone_count();
     let selected = a.selection_flows(3, &[180000., 0.], &[1.]);
-    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz + 30 * nz + 2);
+    assert_eq!(selected.len(), 41 + 7 * nz + 20 + 4 * nz + 6 * E_CROSS.len() * nz + 2);
     assert_eq!(selected[0], 1.);
     assert!(selected[1 + 8 * 4 + 1] > 0., "Boston to Washington is served");
     let washington = a.selection_flows(4, &[240000., 0.], &[1.]);
@@ -877,8 +877,8 @@ fn everyday_pairs_by_purpose_in_selections_and_the_explorer() {
     let far0 = a.m.places[0].off as usize;
     for (market, end, far) in [(0usize, 0usize, far1), (1, 1, far0)] {
         let (xy, share) = sites(market);
-        let base = a.unpack_selection(&a.selection_all_day(market as u32, &xy, &share, WEEKDAY as u32, all_q));
-        let with = a.unpack_rail(&a.selection_rail_day(market as u32, &xy, &share, WEEKDAY as u32));
+        let base = a.unpack_selection(&a.selection_all_day(market as u32, &xy, &share, &[], WEEKDAY as u32, all_q));
+        let with = a.unpack_rail(&a.selection_rail_day(market as u32, &xy, &share, &[], WEEKDAY as u32));
         assert_eq!(base.len(), etail + E_CROSS.len() * 6 * ng + 2);
         for (ki, &k) in E_CROSS.iter().enumerate() {
             let o = etail + ki * 6 * ng + 6 * far + 3 * end;
@@ -916,6 +916,70 @@ fn everyday_pairs_by_purpose_in_selections_and_the_explorer() {
     let back = a.market_trip(0, WEEKDAY as u32, 1, &xy, &share, 1, 0, -1);
     let both = a.market_trip_between(0, WEEKDAY as u32, 1, -1, 1, 0, -1);
     assert!(back[19] > 0. && (back[19] - both[19]).abs() < 1e-6 * both[19]);
+}
+/// T-3500: airport trips across a zone line: a selection lists them at the home end by people and
+/// at the airport's end by the terminals selected (none without them), and `airport_legs` spreads
+/// a zone's over its points by weight, with the selection's legs and rail.
+#[test]
+fn airport_pairs_across_a_zone_line() {
+    let packs = world_packs();
+    let rows = rows_json(&packs);
+    let mut v: serde_json::Value = serde_json::from_str(&with_everyday(&packs[0], [1000., 100.], true)).unwrap();
+    v["everyday_kind"] = serde_json::json!([0, E_AIRPORT]);
+    let mut e_packs = packs.clone();
+    e_packs[0] = v.to_string();
+    let mut a = IntercityApi::new(&composition(&e_packs, Some(&rows))).unwrap();
+    world_lines(&mut a, true, true);
+    solve_all(&mut a);
+    let (all_q, day) = ((1u32 << PERIODS) - 1, WEEKDAY as u32);
+    let ki = E_CROSS.iter().position(|&k| k == E_AIRPORT).unwrap();
+    let (np, ng) = (a.m.places.len(), a.m.n_gid);
+    let etail = 1 + 8 * np + 11 * ng + 4 * np;
+    // each place's first zone (the homes in place 0, the airport in place 1) and its sites
+    let sites = |place: usize| {
+        let z = (0..a.m.zones.len()).find(|&z| a.m.zones[z].gid == a.m.places[place].off).unwrap();
+        (0..a.m.n_sites())
+            .filter(|&s| a.m.cell_zone[s] == z)
+            .map(|s| {
+                let (g, i) = a.m.site(s);
+                [g.city.x[i], g.city.y[i]]
+            })
+            .collect::<Vec<_>>()
+    };
+    let (homes, airport) = (sites(0), sites(1));
+    let flat = |s: &[[f32; 2]]| s.iter().flatten().copied().collect::<Vec<f32>>();
+    let (xy, share) = (flat(&airport), vec![1f32; airport.len()]);
+    let o = etail + ki * 6 * ng + 6 * a.m.places[0].off as usize + 3;
+    // no terminals given: none at the airport's end
+    let none = a.unpack_selection(&a.selection_all_day(1, &xy, &share, &[], day, all_q));
+    assert_eq!(none[o], 0.);
+    // every terminal selected: the 100 outings' 200 legs; half the terminals' weight: half
+    let air: Vec<f32> = airport.iter().flat_map(|s| [s[0], s[1], 1., 1.]).collect();
+    let base = a.unpack_selection(&a.selection_all_day(1, &xy, &share, &air, day, all_q));
+    let rail = a.unpack_rail(&a.selection_rail_day(1, &xy, &share, &air, day));
+    assert!((base[o] - 200.).abs() < 1e-3, "legs {}", base[o]);
+    assert!(rail[o + 1] > 0. && rail[o + 1] < base[o], "rail {}", rail[o + 1]);
+    let half: Vec<f32> = airport.iter().flat_map(|s| [s[0], s[1], 2., 1.]).collect();
+    let h = a.unpack_selection(&a.selection_all_day(1, &[], &[], &half, day, all_q));
+    assert!((h[o] - 100.).abs() < 1e-3, "half {}", h[o]);
+    // the homes' end, by people as every kind's
+    let (hxy, hshare) = (flat(&homes), vec![1f32; homes.len()]);
+    let at_home = a.unpack_selection(&a.selection_all_day(0, &hxy, &hshare, &[], day, all_q));
+    let oh = etail + ki * 6 * ng + 6 * a.m.places[1].off as usize;
+    assert!((at_home[oh] - 200.).abs() < 1e-3, "home end {}", at_home[oh]);
+    // two points of the airport's zone weighing 3 and 1, and one outside the market
+    let p = [airport[0][0], airport[0][1], airport[0][0], airport[0][1], 1e9, 1e9];
+    let w = [3., 1., 1.];
+    let legs = a.airport_legs_day(1, 1, &p, &w, day, all_q, false);
+    assert!((legs[0] - 150.).abs() < 1e-3 && (legs[3] - 50.).abs() < 1e-3, "{legs:?}");
+    assert_eq!(&legs[6..], &[0., 0., 0.]);
+    let r = a.airport_legs_day(1, 1, &p, &w, day, all_q, true);
+    assert!(r[0] == 0. && (r[1] + r[4] - rail[o + 1]).abs() < 1e-6 * rail[o + 1], "rail {} {}", r[1] + r[4], rail[o + 1]);
+    // the homes' end: every home site of the zone, evenly
+    let n = homes.len() as f32;
+    let at = a.airport_legs_day(0, 0, &hxy, &vec![1.; homes.len()], day, all_q, false);
+    assert!((at.iter().step_by(3).sum::<f64>() - 200.).abs() < 1e-3);
+    assert!((at[0] - 200. / n as f64).abs() < 1e-3);
 }
 #[test]
 fn places_not_open_answer_by_place() {
@@ -1151,8 +1215,8 @@ fn market_packs_compose_and_answer_all_modes_without_a_solve() {
         solve_all(a);
     }
     let whole = direct.selection_flows(0, &[0., 0.], &[1.]);
-    let all = base.unpack_selection(&base.selection_all_day(0, &[0., 0.], &[1.], 0, 31));
-    let rail = part.unpack_rail(&part.selection_rail_day(0, &[0., 0.], &[1.], 0));
+    let all = base.unpack_selection(&base.selection_all_day(0, &[0., 0.], &[1.], &[], 0, 31));
+    let rail = part.unpack_rail(&part.selection_rail_day(0, &[0., 0.], &[1.], &[], 0));
     assert!(rail.iter().any(|v| *v > 0.));
     for i in 0..whole.len() {
         assert!((whole[i] - (all[i] + rail[i])).abs() <= 1e-9 * whole[i].abs().max(1.), "{i}: {} vs {} + {}", whole[i], all[i], rail[i]);
@@ -2036,8 +2100,8 @@ fn t1204_signature() {
             }
             let p = zz.place as u32;
             sig.push((format!("selection_flows_day z{z} {day}"), f64s(&a.selection_flows_day(p, &xy, &share, day))));
-            sig.push((format!("selection_all_day z{z} {day}"), f64s(&a.unpack_selection(&a.selection_all_day(p, &xy, &share, day, 31)))));
-            sig.push((format!("selection_rail_day z{z} {day}"), f64s(&a.unpack_rail(&a.selection_rail_day(p, &xy, &share, day)))));
+            sig.push((format!("selection_all_day z{z} {day}"), f64s(&a.unpack_selection(&a.selection_all_day(p, &xy, &share, &[], day, 31)))));
+            sig.push((format!("selection_rail_day z{z} {day}"), f64s(&a.unpack_rail(&a.selection_rail_day(p, &xy, &share, &[], day)))));
         }
     }
     let pt = a.place_trips(&[(0, 1), (100, 200), (5, 5)], 30.);

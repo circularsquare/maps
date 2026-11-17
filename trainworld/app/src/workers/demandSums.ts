@@ -17,7 +17,7 @@ import { mergeEveryday } from "./selectionMerge";
 
 /** The everyday kinds (`EVERYDAY_KEYS` order) whose outings cross zone lines, in the order of
  * `IntercityApi.selection`'s blocks (sim `E_CROSS`). */
-export const CROSS_KINDS = [0, 1, 2, 3, 5];
+export const CROSS_KINDS = [0, 1, 2, 3, 4, 5];
 
 /** A selection's numbers per far zone (sim `SEL_Z`): all and rail of the longer trips starting in the
  * selection and ending there, the same of the commutes (T-276), then per `CROSS_KINDS` kind

@@ -31,7 +31,7 @@ import { curveKnots, scaledKnots } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorTable } from "../game/demand";
-import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { addIntercity } from "./demandSums";
 import { VIEW_TOLERANCE, sameView } from "./demandView";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
@@ -143,7 +143,7 @@ let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths", "airLegs"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-1607: which of a cluster's populations a worker solves a period of: all, the cities' alone
  * (the market's in another worker) or the market's alone */
@@ -953,22 +953,48 @@ function squaresOf(id: CityId, a: DemandApi): Squares {
   squares.set(id, (s = { key, total }));
   return s;
 }
-/** A selection's squares: their centres (world metres) and the share of each that is selected. */
-function selectionSquares(id: CityId, a: DemandApi, end: number, cells: Uint32Array) {
+const AIRPORT_KIND = EVERYDAY_KEYS.indexOf("airport");
+/** A selection's squares: their centres (world metres) and the share of each that is selected; at
+ * the activity end with the zone's everyday layer `e`, T-3500: every square holding airport
+ * terminals (cells with airport legs at that end) with their legs and the selected part. */
+function selectionSquares(id: CityId, a: DemandApi, end: number, cells: Uint32Array, e?: EverydayApi, day = 0): SelSquares {
   const s = squaresOf(id, a), n = s.key.length;
   const w = a.cell_commuters();
   const picked = new Map<number, number>();
   for (const c of cells) if (c < n) picked.set(s.key[c], (picked.get(s.key[c]) ?? 0) + w[end * n + c]);
   const xy = new Float32Array(2 * picked.size), share = new Float32Array(picked.size);
+  const centre = (k: number, out: Float32Array, at: number) => {
+    out[at] = (Math.floor(k / KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
+    out[at + 1] = ((k % KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
+  };
   let i = 0;
   for (const [k, sel] of picked) {
     const tot = s.total.get(k)![end];
-    xy[2 * i] = (Math.floor(k / KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
-    xy[2 * i + 1] = ((k % KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
+    centre(k, xy, 2 * i);
     share[i] = tot > 0 ? Math.min(1, sel / tot) : 1;
     i++;
   }
-  return { xy, share };
+  if (end !== 1 || !e || AIRPORT_KIND < 0 || AIRPORT_KIND >= e.purpose_count()) return { xy, share };
+  const m = e.cell_modes_of_day(AIRPORT_KIND, day);
+  if (m.length !== 6 * n) return { xy, share };
+  const chosen = new Set(cells);
+  const by = new Map<number, [number, number]>();
+  for (let c = 0; c < n; c++) {
+    const v = m[3 * n + c] + m[4 * n + c] + m[5 * n + c];
+    if (!(v > 0)) continue;
+    const t = by.get(s.key[c]) ?? by.set(s.key[c], [0, 0]).get(s.key[c])!;
+    t[0] += v;
+    if (chosen.has(c)) t[1] += v;
+  }
+  const air = new Float32Array(4 * by.size);
+  i = 0;
+  for (const [k, [tot, sel]] of by) {
+    centre(k, air, 4 * i);
+    air[4 * i + 2] = tot;
+    air[4 * i + 3] = sel;
+    i++;
+  }
+  return { xy, share, air };
 }
 /** A zone's place in the world market (T-377: every zone has one). */
 const MARKET_OF: Record<CityId, number> = Object.fromEntries(CITIES.map(c => [c.id, c.place]));
@@ -1066,15 +1092,16 @@ function query(msg: Query) {
       // T-336: a zone open bare in the aux worker comes with its squares (this worker does not hold
       // the zone)
       const ok = marketLive && (!!msg.sq || !!a) && !!intercity;
-      const sq = !ok ? null : msg.sq ?? selectionSquares(msg.city, a!, msg.end, msg.cells);
+      const sq = !ok ? null : msg.sq ?? selectionSquares(msg.city, a!, msg.end, msg.cells, everyday.get(msg.city), day);
       // T-409, T-377: the all-mode trips and the zones once, from the market of every open pack,
       // then every part's rail
       let packed: Float64Array | null = null;
       if (sq) {
         const place = MARKET_OF[msg.city];
         // (T-2747: packed, only the far zones the selection reaches)
-        packed = intercity!.selection_all_day(place, sq.xy, sq.share, day, maskOf(at?.markets ?? mine));
-        for (const c of mcs) packed = addIntercity("icSel", packed, c.part!.selection_rail_day(place, sq.xy, sq.share, day), REGISTRY.market.places.length);
+        const air = sq.air ?? new Float32Array(0);
+        packed = intercity!.selection_all_day(place, sq.xy, sq.share, air, day, maskOf(at?.markets ?? mine));
+        for (const c of mcs) packed = addIntercity("icSel", packed, c.part!.selection_rail_day(place, sq.xy, sq.share, air, day), REGISTRY.market.places.length);
       }
       const mask = ok ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : 0;
       sendMessage({ kind: "icSel", id: msg.id, version: msg.version, mask, packed }, packed ? [packed.buffer] : []);
@@ -1164,8 +1191,26 @@ function query(msg: Query) {
     } else if (msg.kind === "bareSquares") {
       // T-336: the solving workers hold the market but not the zone: its squares come from here
       const b = bare.get(msg.city);
-      const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells) : null;
-      sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null });
+      const sq = b ? selectionSquares(msg.city, b.a, msg.end, msg.cells, b.e ?? undefined, day) : null;
+      sendMessage({ kind: "bareSquares", id: msg.id, xy: sq?.xy ?? null, share: sq?.share ?? null, ...(sq?.air ? { air: sq.air } : {}) });
+    } else if (msg.kind === "airLegs") {
+      // T-3500: as `icSel`: the all-mode legs from the market of every open pack over this worker's
+      // periods, then every part's rail; with no part (no station reaches across a zone line) the
+      // legs alone
+      const place = MARKET_OF[msg.city];
+      const ok = !!intercity && !!at && place !== undefined && place >= 0 && (mcs.length === 0 || marketLive);
+      const all = maskOf(at?.markets ?? mine);
+      const legs = (end: number, xy: Float32Array, w: Float32Array) => {
+        const v = intercity!.airport_legs_day(place, end, xy, w, day, all, false);
+        for (const c of mcs) {
+          const r = c.part!.airport_legs_day(place, end, xy, w, day, c.part!.solved_mask(), true);
+          for (let k = 0; k < v.length; k++) v[k] += r[k];
+        }
+        return v;
+      };
+      const legs0 = ok ? legs(0, msg.xy0, msg.w0) : null, legs1 = ok ? legs(1, msg.xy1, msg.w1) : null;
+      const mask = !ok ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : all;
+      sendMessage({ kind: "airLegs", id: msg.id, version: msg.version, mask, legs0, legs1 }, [...(legs0 ? [legs0.buffer] : []), ...(legs1 ? [legs1.buffer] : [])]);
     } else if (msg.kind === "tripLengths") {
       // T-2365: a zone open bare from the aux worker's copy, its periods solved on no network
       const b = msg.bare ? bare.get(msg.city) : undefined;
@@ -1195,6 +1240,7 @@ function query(msg: Query) {
     else if (msg.kind === "bare") sendMessage({ kind: "bare", id: msg.id, commute: null, masks: [], parts: [] });
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
+    else if (msg.kind === "airLegs") sendMessage({ kind: "airLegs", id: msg.id, version: msg.version, mask: 0, legs0: null, legs1: null });
     else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null, kinds: null });
   }
 }

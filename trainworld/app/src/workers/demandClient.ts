@@ -29,7 +29,7 @@
 import { t } from "../i18n";
 import { shareOf } from "../game/corridorShares";
 import { effect } from "@preact/signals";
-import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
+import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, worldToCity, cityToMarket, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
@@ -92,7 +92,7 @@ import { builtKeep, firstFine, LEFT_ALONE_MS, LOD_COARSE, LOD_FINE, lodBudgetGB,
 import { world } from "../game/world";
 import { trackZones } from "../game/trackZones";
 import { viewCentre } from "../game/listScope";
-import { ALL_PERIODS, isQuery, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
+import { ALL_PERIODS, isQuery, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
 import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, summaryOnDay, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
 import { primeDealt } from "../game/farChunks";
 import { tripLengthsOf, type TripLengths } from "../game/tripLengths";
@@ -337,6 +337,7 @@ function cellModesOf(version: number, day: DemandDay, data: Float32Array, copy =
   const n = data.length / 8, b = (k: number) => (copy ? data.slice(k * n, (k + 1) * n) : data.subarray(k * n, (k + 1) * n));
   return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5), homeNone: b(6), workNone: b(7) };
 }
+const AIRPORT_KIND = EVERYDAY_KEYS.indexOf("airport");
 /** A bare zone's everyday legs per solving worker's periods (T-325), in `byMask`'s order. */
 function bareParts(r: Extract<FromDemand, { kind: "bare" }>): Float32Array[] {
   return r.parts.map((p, i) => [r.masks[i], p] as const).sort((a, b) => a[0] - b[0]).map(([, p]) => p);
@@ -4075,6 +4076,7 @@ class DemandClient {
         }
         if (mask !== ALL_PERIODS) return null;
       }
+      if (kinds.includes(AIRPORT_KIND)) await this.airportAcross(modes, cells, city, at.version, other, other === undefined ? this.liveAt(at) : at);
       if (!stillShown(other, city, version, day)) return null;
       return cellModesOf(version, day, modes);
     })();
@@ -4084,6 +4086,50 @@ class DemandClient {
     this.purposeP.set(key, p);
     p.then((v) => { if (!v && this.purposeP.get(key) === p) this.purposeP.delete(key); });
     return p;
+  }
+
+  /** T-3500: the airport trips across the zone line added to a zone's airport legs `modes` (eight
+   * blocks): its airports' at their terminals, its residents' at their homes, each 6 km zone's spread
+   * over its cells by their own airport legs at that end. As they were when the workers cannot say. */
+  private async airportAcross(modes: Float32Array, cells: CityCells, city: CityId, version: number, other: CityId | undefined, t: Target): Promise<void> {
+    const n = cells.n;
+    if (modes.length !== 8 * n) return;
+    const ends = [[0, 1, 2, 6], [3, 4, 5, 7]].map((blocks) => {
+      const at: number[] = [], w: number[] = [];
+      for (let c = 0; c < n; c++) {
+        let v = 0;
+        for (const b of blocks) v += modes[b * n + c];
+        if (v > 0) at.push(c), w.push(v);
+      }
+      const xy = new Float32Array(2 * at.length);
+      at.forEach((c, i) => {
+        // the zone's sites in the market sit in its pack's frame, or the market's (cities.ts `cityToMarket`)
+        const q = worldToCity(cells.xy[2 * c], cells.xy[2 * c + 1], city), p = cityToMarket(q.x, q.y, city);
+        xy[2 * i] = p.x;
+        xy[2 * i + 1] = p.y;
+      });
+      return { at, xy, w: Float32Array.from(w) };
+    });
+    if (!ends[0].at.length && !ends[1].at.length) return;
+    const [h, a] = ends;
+    const replies = await this.ask((id) => ({ kind: "airLegs", id, version, xy0: h.xy, w0: h.w, xy1: a.xy, w1: a.w }), undefined, [], other, t);
+    const sums = ends.map((e) => new Float64Array(3 * e.at.length));
+    let mask = 0;
+    for (const r of byMask(replies)) {
+      if (r.kind !== "airLegs" || !r.legs0 || !r.legs1) return;
+      mask |= r.mask;
+      [r.legs0, r.legs1].forEach((v, e) => { if (v.length === sums[e].length) addInto(sums[e], v); });
+    }
+    if (mask !== ALL_PERIODS) return;
+    ends.forEach(({ at }, e) => {
+      const s = sums[e], o = 3 * e;
+      at.forEach((c, i) => {
+        const rail = Math.max(0, s[3 * i + 1]), walk = Math.max(0, s[3 * i + 2]);
+        modes[o * n + c] += rail;
+        modes[(o + 1) * n + c] += walk;
+        modes[(o + 2) * n + c] += Math.max(0, s[3 * i] - rail - walk);
+      });
+    });
   }
 
   /** T-2365: a zone's trips a day by length on the day shown (game/tripLengths.ts), from every
@@ -4596,9 +4642,9 @@ class DemandClient {
 
   /** T-336: a selection of the zone in view, open bare, as the regional market's squares, from the
    * aux worker (the solving workers hold the market but not the zone); null when it has none. */
-  private async bareSquares(version: number, end: number, cells: Uint32Array): Promise<{ xy: Float32Array; share: Float32Array } | null> {
+  private async bareSquares(version: number, end: number, cells: Uint32Array): Promise<SelSquares | null> {
     const [r] = await this.ask((id) => ({ kind: "bareSquares", id, version, end, cells }), [this.computeN]);
-    return r?.kind === "bareSquares" && r.xy && r.share ? { xy: r.xy, share: r.share } : null;
+    return r?.kind === "bareSquares" && r.xy && r.share ? { xy: r.xy, share: r.share, ...(r.air ? { air: r.air } : {}) } : null;
   }
 
   /** The longer trips of a bubble selection (game/demand.ts `IntercitySelection`, T-118). */

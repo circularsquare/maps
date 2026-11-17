@@ -18,7 +18,8 @@ hour and the clock's own day ([ui-map.md](ui-map.md)).
 result changes and keeps its last answer meanwhile. After an edit only the final round is shown
 [T-232], so views rebuild once; at startup or a game load each estimate shows, and a zone just opened shows its own estimates in its view while the lines keep their final figures [T-2793].
 
-**Scope.** Bubbles and selections cover the focused zone's modelled local trips; a station
+**Scope.** Bubbles and selections cover the focused zone's modelled local trips (Airport bubbles
+also its airport trips across the zone line, "Airports" below); a station
 inspector's commuters are its commuters. Line widths, station totals and train fill include every open zone
 and the regional layer. Changing zone clears cell-indexed selections and cached layers.
 
@@ -208,7 +209,10 @@ hover and clicks. They do not enlarge the station's click target.
   one plane. Planes take no clicks (a click reaches the bubble under); the hover, within 8 px of
   the plane (the plane itself, so the job bubbles beside a terminal keep their own hover, T-681),
   says "228k trips per day to and from this airport" with the mode split, the whole airport's
-  legs, read again with each demand result.
+  legs, read again with each demand result. Under the Airport purpose the bubbles, and so the
+  plane, count the airport trips from across the zone line too (an airport in a zone apart from its
+  city, T-2896): each 6 km zone's share of them at the airport end spread over its terminal cells,
+  and at the home end over its homes, by the cells' own airport legs [T-3500].
 - **Attractions** [T-263, `map/attractionMarks.ts`]: a small classical front (12 px, map ink with
   a land-coloured halo) on each attraction of the world file, with or without bubbles. From zoom
   12, or 10 with the purpose filter on Attractions (each mark follows its attraction every frame

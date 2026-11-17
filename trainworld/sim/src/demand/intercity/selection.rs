@@ -188,7 +188,7 @@ impl IntercityApi {
     }
     /// `selection_flows` on a kind of day (T-260, `days.rs`): that day's trips and period shares.
     pub fn selection_flows_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
-        self.selection(market, xy, share, day, self.solved_mask(), true).dense(&self.m)
+        self.selection(market, xy, share, &[], day, self.solved_mask(), true).dense(&self.m)
     }
     /// `station_flows` on a kind of day, every global zone listed (the app's answer is `station_flows_day`).
     pub fn station_flows_dense(&self, station: u32, day: u32) -> Vec<f64> {
@@ -250,7 +250,11 @@ impl IntercityApi {
             }
         })
     }
-    pub(super) fn selection(&self, market: u32, xy: &[f32], share: &[f32], day: u32, mask: u32, with_rail: bool) -> Selection {
+    /// `air`: four numbers per 600 m square holding airport terminals (T-3500): its x, y, its
+    /// terminals' weight and the selected part of that weight. Airport trips from across a zone line
+    /// end at the terminals, so a zone's share of them is its terminals' share selected, not its
+    /// attraction's; with none given the selection holds none of them at that end.
+    pub(super) fn selection(&self, market: u32, xy: &[f32], share: &[f32], air: &[f32], day: u32, mask: u32, with_rail: bool) -> Selection {
         let m = &self.m;
         let day = day as usize;
         let np = m.places.len();
@@ -282,6 +286,18 @@ impl IntercityApi {
         if mask == 0 {
             return sel;
         }
+        let mut air_w: Vec<(usize, f64)> = {
+            let mut by: HashMap<usize, (f64, f64)> = HashMap::new();
+            for a in air.chunks_exact(4) {
+                let key = ((a[0] / SITE_M).floor() as i32, (a[1] / SITE_M).floor() as i32, market as usize);
+                let Some(c) = m.site_at(key) else { continue };
+                let e = by.entry(m.cell_zone[c]).or_default();
+                e.0 += a[2].max(0.) as f64;
+                e.1 += a[3].max(0.) as f64;
+            }
+            by.into_iter().filter(|(_, (t, s))| *t > 0. && *s > 0.).map(|(z, (t, s))| (z, (s / t).min(1.))).collect()
+        };
+        air_w.sort_unstable_by_key(|e| e.0);
         let per_of = |q: usize| if mask >> q & 1 == 0 { None } else { Some(if with_rail { self.per(q) } else { None }) };
         // each selected zone's pairs with every other open zone (and the far zone's slot in
         // `zones`), and with each place not open
@@ -407,27 +423,109 @@ impl IntercityApi {
                         let pair = &m.everyday[i as usize];
                         let k = pair.kind as usize;
                         let Some(ki) = E_CROSS.iter().position(|&c| c == k) else { continue };
+                        if end == 1 && k == E_AIRPORT {
+                            continue;
+                        }
                         let far = if end == 0 { pair.a as usize } else { m.zones[pair.h as usize].gid as usize };
-                        let n = w * pair.trips as f64;
-                        let legs = n * (share_out(day, everyday_purpose(k), q) + share_ret(day, everyday_purpose(k), q)) as f64;
+                        let v = self.e_legs(i as usize, w, day, q, per);
                         let s = zones.at(far);
                         let e = &mut zones.v[s][8 + 6 * ki + 3 * end..8 + 6 * ki + 3 * end + 3];
-                        e[0] += legs;
-                        match per {
-                            None => e[2] += legs * pair.walk as f64,
-                            Some(per) => {
-                                let ei = self.epair_of(i as usize);
-                                let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
-                                let rail = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day, everyday_purpose(k), q) as f64 * frac;
-                                e[1] += rail;
-                                e[2] -= rail * pair.walk as f64;
-                            }
-                        }
+                        e[0] += v[0];
+                        e[1] += v[1];
+                        e[2] += v[2];
                     }
+                }
+            }
+            // T-3500: airport trips at the airports' end, by the terminals selected
+            let ki = E_CROSS.iter().position(|&c| c == E_AIRPORT).unwrap();
+            let (off, items) = &m.e_act;
+            for &(z, w) in &air_w {
+                for &i in &items[off[z] as usize..off[z + 1] as usize] {
+                    let pair = &m.everyday[i as usize];
+                    if pair.kind as usize != E_AIRPORT {
+                        continue;
+                    }
+                    let v = self.e_legs(i as usize, w, day, q, per);
+                    let s = zones.at(m.zones[pair.h as usize].gid as usize);
+                    let e = &mut zones.v[s][8 + 6 * ki + 3..8 + 6 * ki + 6];
+                    e[0] += v[0];
+                    e[1] += v[1];
+                    e[2] += v[2];
                 }
             }
         }
         sel
+    }
+    /// T-1229: everyday pair `i`'s legs in period `q` of a kind of day at weight `w`: legs, rail
+    /// legs and walking legs. Without `per` (all modes) the walking legs are the pair's own with no
+    /// rail; with it the rail is that network's and the walking legs the walkers rail takes, negative.
+    fn e_legs(&self, i: usize, w: f64, day: usize, q: usize, per: Option<&Period>) -> [f64; 3] {
+        let pair = &self.m.everyday[i];
+        let k = pair.kind as usize;
+        let n = w * pair.trips as f64;
+        let legs = n * (share_out(day, everyday_purpose(k), q) + share_ret(day, everyday_purpose(k), q)) as f64;
+        match per {
+            None => [legs, 0., legs * pair.walk as f64],
+            Some(per) => {
+                let ei = self.epair_of(i);
+                let frac = if ei == u32::MAX { 0. } else { per.e_frac.get(ei as usize).copied().unwrap_or(0.) as f64 };
+                let rail = n * (OUTWARD[k][q] + RETURN[k][q]) as f64 * load_factor(day, everyday_purpose(k), q) as f64 * frac;
+                [legs, rail, -(rail * pair.walk as f64)]
+            }
+        }
+    }
+    /// T-3500: the airport trips across zone lines at points `xy` (market metres) of place
+    /// `market`, at end `end` (0 the homes, 1 the airports), on a kind of day over the periods of
+    /// `mask`: each point's zone's legs, rail legs and walking legs (as `selection`'s blocks: all
+    /// modes without `rail`, that network's rail with it, its legs then zero) times the point's
+    /// weight `w` over its zone's points'. Three numbers a point.
+    pub(super) fn airport_legs(&self, market: u32, end: u32, xy: &[f32], w: &[f32], day: u32, mask: u32, rail: bool) -> Vec<f64> {
+        let m = &self.m;
+        let (n, day) = (w.len(), day as usize);
+        let mut out = vec![0.; 3 * n];
+        if xy.len() != 2 * n || market as usize >= m.places.len() || end > 1 {
+            return out;
+        }
+        let zone: Vec<Option<usize>> = (0..n)
+            .map(|i| {
+                let key = ((xy[2 * i] / SITE_M).floor() as i32, (xy[2 * i + 1] / SITE_M).floor() as i32, market as usize);
+                m.site_at(key).map(|c| m.cell_zone[c]).filter(|_| w[i] > 0.)
+            })
+            .collect();
+        let mut by: HashMap<usize, (f64, [f64; 3])> = HashMap::new();
+        for (i, z) in zone.iter().enumerate() {
+            if let Some(z) = z {
+                by.entry(*z).or_default().0 += w[i] as f64;
+            }
+        }
+        let (off, items) = if end == 0 { &m.e_home } else { &m.e_act };
+        for (&z, (_, e)) in by.iter_mut() {
+            for q in (0..PERIODS).filter(|&q| mask >> q & 1 == 1) {
+                let per = match (rail, self.per(q)) {
+                    (false, _) => None,
+                    (true, Some(p)) => Some(p),
+                    (true, None) => continue,
+                };
+                for &i in &items[off[z] as usize..off[z + 1] as usize] {
+                    if m.everyday[i as usize].kind as usize != E_AIRPORT {
+                        continue;
+                    }
+                    let v = self.e_legs(i as usize, 1., day, q, per);
+                    e[0] += v[0];
+                    e[1] += v[1];
+                    e[2] += v[2];
+                }
+            }
+        }
+        for (i, z) in zone.iter().enumerate() {
+            let Some(z) = z else { continue };
+            let (t, e) = by[z];
+            let f = w[i] as f64 / t;
+            out[3 * i] = if rail { 0. } else { e[0] * f };
+            out[3 * i + 1] = e[1] * f;
+            out[3 * i + 2] = e[2] * f;
+        }
+        out
     }
     /// T-2747: `station_flows`'s numbers, by far zone only where the station reaches; None with no
     /// such station.
@@ -475,10 +573,14 @@ impl IntercityApi {
 impl IntercityApi {
     /// T-409: `selection_flows_day` with only its rail numbers, the rest zero: what a market beside
     /// another adds to that one's answer. Packed as `selection_all_day`.
-    pub fn selection_rail_day(&self, market: u32, xy: &[f32], share: &[f32], day: u32) -> Vec<f64> {
-        let mut sel = self.selection(market, xy, share, day, self.solved_mask(), true);
+    pub fn selection_rail_day(&self, market: u32, xy: &[f32], share: &[f32], air: &[f32], day: u32) -> Vec<f64> {
+        let mut sel = self.selection(market, xy, share, air, day, self.solved_mask(), true);
         sel.rail_only(self.m.places.len());
         sel.pack(&self.m)
+    }
+    /// T-3500: `airport_legs` (the airport trips across zone lines at points of a place, one end).
+    pub fn airport_legs_day(&self, market: u32, end: u32, xy: &[f32], w: &[f32], day: u32, mask: u32, rail: bool) -> Vec<f64> {
+        self.airport_legs(market, end, xy, w, day, mask, rail)
     }
     /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
     /// T-2747: packed, the 6 numbers per place, then the far zones the station reaches as

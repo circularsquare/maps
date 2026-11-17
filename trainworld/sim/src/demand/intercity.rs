@@ -995,9 +995,11 @@ struct EPair {
     trips: f32,
     walk: f32,
 }
-/// T-1229: the everyday kinds that cross zone lines (errands, social, school, university, medical),
-/// which `IntercityApi::selection` lists by kind.
-pub const E_CROSS: [usize; 5] = [0, 1, 2, 3, 5];
+/// T-1229: the everyday kinds that cross zone lines (errands, social, school, university, airport,
+/// medical), which `IntercityApi::selection` lists by kind.
+pub const E_CROSS: [usize; 6] = [0, 1, 2, 3, 4, 5];
+/// T-3500: the airport kind, whose outings across a zone line end at the airport's terminals.
+pub const E_AIRPORT: usize = 4;
 /// T-1175: an everyday pair some station serves: its index in `everyday`, the car's perceived
 /// minutes (the commutes' car to the activity zone), the walk's weight against it, as `exp(uw)` of
 /// the local layer's logit, from the pair's share walking with no rail.
