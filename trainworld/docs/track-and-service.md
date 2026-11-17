@@ -344,7 +344,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   within 100 m draws ordinary tram track; no street path is refused as the bus tool's are; no fit says "The streets
   are too tight here. Add a point on the way." Street track reshaped by hand becomes tram track. Both kinds look
   alike on the map: 0.75 of rail's width, lines over them too, with two thin wires along the middle, white in light
-  and near white in dark (`tramWire`, T-3006), once a stroke is wide enough, one along each track once they part (blueprint's only then).
+  and near white in dark (`tramWire`, T-3006), once a stroke is wide enough, one along each track once they part (blueprint's only then), none on a single tram track once parted out to its own width (T-3534).
 - **Snap to roads** (T-3129, rail with Regular or High speed; notes/T-3129.md): a switch in the track bar beside the
   real-network and beside-track ones, off by default, remembered, and off whenever either of those is on (and they
   turn it off). While it is on the roads rail may follow are tinted orange over the map (motorway, trunk, primary,

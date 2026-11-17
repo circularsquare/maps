@@ -115,7 +115,8 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
 - **Double track as its two tracks, close in** [T-658, `laneState` in `map/renderer.ts`, design
   notes/T-658.md]: drawing only; the track stays one piece. Where 4 m on the ground is 4 px on
   screen, a double track's stroke starts growing to its two tracks' width (4 m plus a track's
-  2.4 m), which it reaches at 7 px; from there to 10 px a stripe opens down its middle, widening
+  2.4 m), which it reaches at 7 px (bare track is never drawn narrower than its tracks' outer edges, 4 m plus its own
+  width, so its stroke follows the ground from about 2.9 px, zoom 15.5 in New York, T-3533; a line's ramp is as above); from there to 10 px a stripe opens down its middle, widening
   to 1.6 m while the outline stays the same, each track half of what is left, until the tracks'
   centres are 4 m apart and each is 2.4 m wide; from 10 px on everything is to scale, except that
   from 10 to 16 px each track narrows to 1.92 m (80%; `LANE_NARROW`, T-713) so the riders waiting

@@ -236,7 +236,9 @@ void main() {
   bool tBand = u_band_traffic == 1 && u_cap <= 0.0;
   float wmul = shared && u_cap > 0.0 ? 1.0 : a_wmul.x;
   float bandW = tBand ? 1.0 : 1.0 - bandOn * mix(a_band.z, a_band.w, along);
-  float grow = u_lanes.z * max(0.0, lfw * (G + lt) - core * (bpShape ? 1.0 : wmul));
+  // (T-3533: bare track is never drawn narrower than its two tracks' outer edges, G + lt, from the first zoom
+  // they would be; a line keeps the ramp, its width is its riders' in the Traffic view)
+  float grow = (u_kind == 0 ? 1.0 : u_lanes.z) * max(0.0, lfw * (G + lt) - core * (bpShape ? 1.0 : wmul));
   float extra = sel ? u_width.y : 0.0;
   bool muted = u_kind == 1 && u_mute.x > 0.0 && !sel;
   if (muted) bandW *= u_mute.x;
@@ -387,7 +389,8 @@ void main() {
   }
   // T-2927: a tram's two wires, coming in as high-speed track's centre line does; one along each track
   // once they part (blueprint's only then: between its rails there is no room for two more lines)
-  if (tram && u_casing <= 0.0 && u_lane_mode != 1 && !(bpShape && u_lane_mode == 0) && !full && !late && (!ghost || u_ghost_layer == 2)) {
+  // (T-3534: a single tram track parted out to its own width is a solid stroke, no wire down its middle)
+  if (tram && u_casing <= 0.0 && u_lane_mode != 1 && !(u_lane_mode > 1 && lfm <= 0.0) && !(bpShape && u_lane_mode == 0) && !full && !late && (!ghost || u_ghost_layer == 2)) {
     float hw = max(${(WIRE_MIN_PX / 2).toFixed(2)}, ${(WIRE_SHARE / 2).toFixed(3)} * w) * (u_lane_mode > 1 ? 1.0 : smoothstep(u_hsr.y, u_hsr.z, w));
     if (hw >= 0.1) {
       v_wire = vec4(bpShape || placement ? rail : u_wire, u_lane_mode == 0 ? ${WIRE_OFF.toFixed(3)} * w : 0.0);
