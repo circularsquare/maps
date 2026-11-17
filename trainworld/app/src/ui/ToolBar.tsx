@@ -2,7 +2,7 @@
 // the map's bottom edge on a phone), shown only while that tool is on; T-2284: the click mode's
 // colour as an aura round the map.
 
-import { computed, type Signal } from "@preact/signals";
+import { batch, computed, type Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { distUnit, kmhFromShown, kmhToShown, levelLabel, levelName, millions, speed } from "../game/format";
@@ -12,7 +12,7 @@ import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/pal
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
-import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, snapBeside, snapReal, snapRoads, snapStreets, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
+import { autoRamp, buildAdvanced, buildLevel, buildPlatform, buildTramPlatform, clampDesign, DESIGN_SPEEDS, designSpeed, flyoverSpeed, keepPlacing, lineDraft, quadTrack, setDoubleTrack, setQuadTrack, setSingleTrack, setTrackType, singleTrack, shade, besideOn, snapBeside, snapReal, snapRealTram, snapRoads, snapStreets, stationOnTram, stationOneTrack, TRAM_PLATFORM, tool, trackType, type TrackType } from "../game/ui";
 import { costBackground } from "../map/trackTagRows";
 import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice";
 import { Icon, LevelButtons, Segmented, Stepper, TrackCountButtons } from "./widgets";
@@ -118,20 +118,29 @@ function TrackBar() {
               data-tip={t(mobileDevice() ? "toolBar.keepPlacingTipTouch" : "toolBar.keepPlacingTip")}
               onClick={() => (keepPlacing.value = !keepPlacing.peek())}><Icon.keepPlacing /></button>
             {tram ? (
-              <button class={"btn icon tb-streets" + (snapStreets.value ? " on" : "")} aria-label={t("toolBar.snapStreets")} aria-pressed={snapStreets.value}
-                data-tip={t("toolBar.snapStreets") + (mobileDevice() ? "" : "\n" + t("toolBar.snapStreetsCtrl", { on: snapStreets.value }))}
-                onClick={() => { const on = !snapStreets.peek(); snapStreets.value = on; if (on) setQuadTrack(false); }}><Icon.snapReal /></button>
+              <>
+                {/* T-3069: tram track's own real network snap (tram and light rail), beside Snap to streets; the two exclude each other */}
+                <button class={"btn icon" + (snapRealTram.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapRealTram.value}
+                  data-tip={t("toolBar.snapReal")}
+                  onClick={() => { const on = !snapRealTram.peek(); batch(() => { snapRealTram.value = on; if (on) snapStreets.value = snapBeside.value = false; }); }}><Icon.snapReal /></button>
+                <button class={"btn icon tb-streets" + (snapStreets.value ? " on" : "")} aria-label={t("toolBar.snapStreets")} aria-pressed={snapStreets.value}
+                  data-tip={t("toolBar.snapStreets") + (mobileDevice() || snapRealTram.value ? "" : "\n" + t("toolBar.snapStreetsCtrl", { on: snapStreets.value }))}
+                  onClick={() => { const on = !snapStreets.peek(); batch(() => { snapStreets.value = on; if (on) { snapRealTram.value = false; setQuadTrack(false); } }); }}><Icon.snapStreets /></button>
+              </>
             ) : (
-              <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
-                data-tip={t("toolBar.snapReal")}
-                onClick={() => { const on = !snapReal.peek(); snapReal.value = on; if (on) snapBeside.value = snapRoads.value = false; }}><Icon.snapReal /></button>
+              <>
+                <button class={"btn icon" + (snapReal.value ? " on" : "")} aria-label={t("toolBar.snapReal")} aria-pressed={snapReal.value}
+                  data-tip={t("toolBar.snapReal")}
+                  onClick={() => { const on = !snapReal.peek(); snapReal.value = on; if (on) snapBeside.value = snapRoads.value = false; }}><Icon.snapReal /></button>
+                <button class={"btn icon" + (snapRoads.value ? " on" : "")} aria-label={t("toolBar.snapRoads")} aria-pressed={snapRoads.value}
+                  data-tip={t("toolBar.snapRoads") + (mobileDevice() ? "" : "\n" + t("toolBar.snapRoadsCtrl"))}
+                  onClick={() => { const on = !snapRoads.peek(); snapRoads.value = on; if (on) snapBeside.value = snapReal.value = false; }}><Icon.snapRoads /></button>
+              </>
             )}
-            {!tram && <button class={"btn icon" + (snapRoads.value ? " on" : "")} aria-label={t("toolBar.snapRoads")} aria-pressed={snapRoads.value}
-              data-tip={t("toolBar.snapRoads") + (mobileDevice() ? "" : "\n" + t("toolBar.snapRoadsCtrl"))}
-              onClick={() => { const on = !snapRoads.peek(); snapRoads.value = on; if (on) snapBeside.value = snapReal.value = false; }}><Icon.snapRoads /></button>}
-            {!(tram && snapStreets.value) && <button class={"btn icon" + (snapBeside.value ? " on" : "")} aria-label={t("toolBar.snapBeside")} aria-pressed={snapBeside.value}
+            {/* beside is shared by both track types, so it turns off both real snaps (and roads), whichever type is picked later */}
+            {!(tram && snapStreets.value) && <button class={"btn icon" + (besideOn.value ? " on" : "")} aria-label={t("toolBar.snapBeside")} aria-pressed={besideOn.value}
               data-tip={t("toolBar.snapBesideTip")}
-              onClick={() => { const on = !snapBeside.peek(); snapBeside.value = on; if (on) snapReal.value = snapRoads.value = false; }}><Icon.snapBeside /></button>}
+              onClick={() => { const on = !besideOn.peek(); batch(() => { snapBeside.value = on; if (on) snapReal.value = snapRoads.value = snapRealTram.value = false; }); }}><Icon.snapBeside /></button>}
           </span>
           {!tram && <button class={"btn text tb-wide tb-advanced" + (adv ? " open" : "")} aria-expanded={adv}
             onClick={() => (buildAdvanced.value = !buildAdvanced.peek())}><Icon.chevron />{t("toolBar.advanced")}</button>}

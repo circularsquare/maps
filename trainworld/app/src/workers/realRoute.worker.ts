@@ -7,7 +7,8 @@
 //
 // The search is A* over chains in each direction: shortest by length, a turn of more than 60
 // degrees where two chains meet refused (no running in one branch of a turnout and out the other),
-// the other family than the first click's nearest track (metro or rail) at three times its length,
+// the other families than the first click's nearest track's (rail, metro, and the rest by track type,
+// game/realFollow.ts) at three times their length, kinds the track type does not follow left out (T-3069),
 // high-speed chains at HSR of theirs (T-838), and every chain within the snap radius of each click
 // a candidate, its distance from the click counted twice. It gives up after 2 s or 3 million states.
 //
@@ -22,6 +23,7 @@ import { NEW_GAME_FRAME } from "../game/cities";
 import { EARTH_R, frameKindNumber, type FrameSpec } from "../game/frame";
 import { inRing, ringBox } from "../game/rings";
 import { realGraph, type RealGraph } from "../game/realGraph";
+import { FOLLOW, type SnapMode } from "../game/realFollow";
 
 export type ToRouter =
   | { kind: "init"; graphs: string }
@@ -29,8 +31,9 @@ export type ToRouter =
   | { kind: "regions"; regions: Record<string, { parts: [number, number][][] }> | null }
   /** the view: the graphs of the regions in it are fetched ahead of a click */
   | { kind: "view"; w: number; s: number; e: number; n: number }
-  /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290) */
-  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number; design: number }
+  /** `ra`, `rb`: the snap radius at each click, ground m; `design` the target max speed, km/h (T-1290);
+   * `mode` the track type's kinds (T-3069: tram track is fitted as tram track, in the game's `frame`) */
+  | { kind: "route"; seq: number; a: [number, number]; b: [number, number]; ra: number; rb: number; tracks: number; level: number; tol: number; design: number; mode: SnapMode; frame: FrameSpec }
   /** T-2927: a street's line (lon, lat pairs) fitted as track of kind `track` (2, street tram) at `tol`
    * ground m; answered with a "fit". T-3129: with `rail`, a road's line fitted as rail track for that
    * target speed (km/h), curves as wide as the road allows (`TrackApi::trace_road`) */
@@ -38,9 +41,9 @@ export type ToRouter =
   /** the route asked as `seq` is no longer wanted (the pointer left real track, the run ended): a
    * search or fit still running for it stops at its next look (T-1039) */
   | { kind: "drop"; seq: number }
-  /** the track reachable from a first click at `a` (snap radius `ra`), in view box `box` (w, s, e,
-   * n), vertices kept `step` degrees apart; null `a` drops it */
-  | { kind: "reach"; seq: number; a: [number, number] | null; ra: number; box: [number, number, number, number]; step: number };
+  /** the track reachable from a first click at `a` (snap radius `ra`) for track type `mode`, in view
+   * box `box` (w, s, e, n), vertices kept `step` degrees apart; null `a` drops it */
+  | { kind: "reach"; seq: number; a: [number, number] | null; ra: number; box: [number, number, number, number]; step: number; mode: SnapMode };
 
 export type FromRouter =
   /** the real line, lon, lat pairs; `why` when there is none: "off" no real track within reach of
@@ -63,6 +66,9 @@ const SEARCH_MS = 2000;
 const SEARCH_STATES = 3e6;
 /** the headings at a chain's ends are taken this far into it, m */
 const HEADING_M = 30;
+/** T-3069: the same for tram track: a junction curve of 12-15 m radius that runs on into the cross street
+ * reads as a turn of over 60 degrees taken 30 m in, so trams measure their headings 10 m in */
+const HEADING_TRAM_M = 10;
 /** the candidate index's cell, degrees */
 const CELL = 0.01;
 /** a border junction looks for a neighbour's graph within this, degrees */
@@ -73,6 +79,9 @@ const HSR = 0.8;
 /** where the two clicks' nearest track is of different families, each also looks this far for the
  * other's, ground m (T-923: Tianjin's high-speed platforms are 149 m from the metro under them) */
 const FAMILY_M = 400;
+/** T-3069: tram track fitted to real rail is `TrackKind::Tram`, tried at these tolerances (ground m) in turn */
+const TRAM_KIND = 3;
+const TRAM_TOLS = [10, 25];
 
 const post = (m: FromRouter, t: Transferable[] = []) => (self as unknown as Worker).postMessage(m, t);
 
@@ -114,8 +123,8 @@ const net = {
   border: new Uint8Array(1 << 16),
   ca: new Uint32Array(1 << 16),
   cb: new Uint32Array(1 << 16),
-  /** 0 rail, 1 metro */
-  fam: new Uint8Array(1 << 16),
+  /** the graph's kind (game/realFollow.ts REAL_KINDS) */
+  kind: new Uint8Array(1 << 16),
   /** the cost of a m of it: 1, or HSR on high-speed track */
   per: new Float32Array(1 << 16),
   /** 0 main line, 1 other rail, 2 metro, as the layer colours them */
@@ -126,6 +135,9 @@ const net = {
   /** heading leaving a into the chain, and arriving at b along it (radians, east 0, north pi/2) */
   ha: new Float32Array(1 << 16),
   hb: new Float32Array(1 << 16),
+  /** the same headings taken HEADING_TRAM_M in, for tram track */
+  ta: new Float32Array(1 << 16),
+  tb: new Float32Array(1 << 16),
   graph: [] as RealGraph[],
   /** each chain's graph, and its number there */
   cg: new Uint16Array(1 << 16),
@@ -211,8 +223,8 @@ function join(g: RealGraph) {
   const C0 = net.C;
   for (const k of ["ca", "cb", "cl"] as const) net[k] = grow(net[k], C0 + C);
   for (const k of ["len"] as const) net[k] = grow(net[k], C0 + C);
-  for (const k of ["ha", "hb"] as const) net[k] = grow(net[k], C0 + C);
-  net.fam = grow(net.fam, C0 + C);
+  for (const k of ["ha", "hb", "ta", "tb"] as const) net[k] = grow(net[k], C0 + C);
+  net.kind = grow(net.kind, C0 + C);
   net.per = grow(net.per, C0 + C);
   net.cls = grow(net.cls, C0 + C);
   net.box = grow(net.box, (C0 + C) * 4);
@@ -221,9 +233,10 @@ function join(g: RealGraph) {
     const gc = C0 + c, v0 = g.off[c], v1 = g.off[c + 1];
     net.ca[gc] = jmap[g.a[c]];
     net.cb[gc] = jmap[g.b[c]];
-    net.fam[gc] = g.kind[c] === 2 ? 1 : 0;
+    net.kind[gc] = g.kind[c];
     net.per[gc] = g.flags[c] & 8 ? HSR : 1;
-    net.cls[gc] = g.kind[c] === 2 ? 2 : g.rank[c] === 0 ? 0 : 1;
+    // the layer's colours: metro the subway, main line the rail at rank 0, other rail all else
+    net.cls[gc] = g.kind[c] === 2 ? 2 : g.kind[c] === 0 && g.rank[c] === 0 ? 0 : 1;
     net.cg[gc] = gi;
     net.cl[gc] = c;
     let w = 180, s = 90, e = -180, n = -90;
@@ -247,8 +260,10 @@ function join(g: RealGraph) {
       for (let s = 1; s <= steps; s++) cells(x0 + ((x1 - x0) * s) / steps, y0 + ((y1 - y0) * s) / steps);
     }
     net.len[gc] = L;
-    net.ha[gc] = endHeading(g, v0, v1, 1);
-    net.hb[gc] = endHeading(g, v1 - 1, v0 - 1, -1) + Math.PI;
+    net.ha[gc] = endHeading(g, v0, v1, 1, HEADING_M);
+    net.hb[gc] = endHeading(g, v1 - 1, v0 - 1, -1, HEADING_M) + Math.PI;
+    net.ta[gc] = endHeading(g, v0, v1, 1, HEADING_TRAM_M);
+    net.tb[gc] = endHeading(g, v1 - 1, v0 - 1, -1, HEADING_TRAM_M) + Math.PI;
   }
   net.C += C;
   // the incidence lists, all of them again: a border junction gains chains from the new region
@@ -261,13 +276,13 @@ function join(g: RealGraph) {
   net.adj = adj;
 }
 
-/** The heading from vertex `from` towards a point HEADING_M along the chain in direction `step`. */
-function endHeading(g: RealGraph, from: number, stop: number, step: number) {
+/** The heading from vertex `from` towards a point `m` along the chain in direction `step`. */
+function endHeading(g: RealGraph, from: number, stop: number, step: number, m: number) {
   const x0 = g.lon[from], y0 = g.lat[from];
   let v = from + step, d = 0;
   for (; v !== stop; v += step) {
     d = ground(x0, y0, g.lon[v], g.lat[v]);
-    if (d >= HEADING_M) break;
+    if (d >= m) break;
   }
   if (v === stop) v -= step;
   const [x, y] = metres(g.lon[v], g.lat[v], x0, y0);
@@ -278,13 +293,13 @@ function endHeading(g: RealGraph, from: number, stop: number, step: number) {
 
 interface Cand { c: number; /** m along the chain from its a end */ along: number; dist: number; lon: number; lat: number }
 
-/** Every chain within `r` ground m of the point, at its nearest point. */
-function candidates(lon: number, lat: number, r: number): Cand[] {
+/** Every chain of a kind followed (its `fam` 0 or more) within `r` ground m of the point, at its nearest point. */
+function candidates(lon: number, lat: number, r: number, fam: readonly number[]): Cand[] {
   const dLat = r / M_PER_DEG, dLon = dLat / Math.cos(lat * Math.PI / 180);
   const seen = new Set<number>();
   for (let x = Math.floor((lon - dLon) / CELL) - 1; x <= Math.floor((lon + dLon) / CELL) + 1; x++)
     for (let y = Math.floor((lat - dLat) / CELL) - 1; y <= Math.floor((lat + dLat) / CELL) + 1; y++)
-      for (const c of net.grid.get((x + 36000) * 40000 + y + 20000) ?? []) seen.add(c);
+      for (const c of net.grid.get((x + 36000) * 40000 + y + 20000) ?? []) if (fam[net.kind[c]] >= 0) seen.add(c);
   const out: Cand[] = [];
   for (const c of seen) {
     const g = net.graph[net.cg[c]], l = net.cl[c], v0 = g.off[l], v1 = g.off[l + 1];
@@ -321,19 +336,21 @@ const turn = (a: number, b: number) => {
 
 let latest = 0;
 
-async function search(seq: number, a: [number, number], b: [number, number], ra: number, rb: number): Promise<{ legs: Leg[] | null; why?: "off" | "none"; states: number; start?: Cand; end?: Cand }> {
+async function search(seq: number, a: [number, number], b: [number, number], ra: number, rb: number, follow: readonly number[]): Promise<{ legs: Leg[] | null; why?: "off" | "none"; states: number; start?: Cand; end?: Cand }> {
   await Promise.all([...(await regionsAt(a[0], a[1], 0)), ...(await regionsAt(b[0], b[1], 0))].map(loadRegion));
-  const starts = candidates(a[0], a[1], ra), ends = candidates(b[0], b[1], rb);
+  const fam = (c: number) => follow[net.kind[c]];
+  const [ha, hb] = follow === FOLLOW.tram ? [net.ta, net.tb] : [net.ha, net.hb];
+  const starts = candidates(a[0], a[1], ra, follow), ends = candidates(b[0], b[1], rb, follow);
   if (!starts.length || !ends.length) return { legs: null, why: "off", states: 0 };
   // one end on a metro under a main-line station, the other on rail (T-923): each end also takes the
   // other's family within FAMILY_M, so a route of one family can exist
-  const fs = new Set(starts.map((s) => net.fam[s.c])), fe = new Set(ends.map((e) => net.fam[e.c]));
+  const fs = new Set(starts.map((s) => fam(s.c))), fe = new Set(ends.map((e) => fam(e.c)));
   if (![...fs].some((f) => fe.has(f))) {
-    starts.push(...candidates(a[0], a[1], Math.max(ra, FAMILY_M)).filter((s) => fe.has(net.fam[s.c]) && !fs.has(net.fam[s.c])));
-    ends.push(...candidates(b[0], b[1], Math.max(rb, FAMILY_M)).filter((e) => fs.has(net.fam[e.c]) && !fe.has(net.fam[e.c])));
+    starts.push(...candidates(a[0], a[1], Math.max(ra, FAMILY_M), follow).filter((s) => fe.has(fam(s.c)) && !fs.has(fam(s.c))));
+    ends.push(...candidates(b[0], b[1], Math.max(rb, FAMILY_M), follow).filter((e) => fs.has(fam(e.c)) && !fe.has(fam(e.c))));
   }
-  const fam0 = net.fam[starts[0].c];
-  const fac = (c: number) => (net.fam[c] === fam0 ? 1 : OTHER_FAMILY) * net.per[c];
+  const fam0 = fam(starts[0].c);
+  const fac = (c: number) => (fam(c) === fam0 ? 1 : OTHER_FAMILY) * net.per[c];
   const endsOn = new Map<number, Cand[]>();
   for (const e of ends) endsOn.set(e.c, [...(endsOn.get(e.c) ?? []), e]);
   let n2 = net.C * 2;
@@ -410,11 +427,11 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
       }
     }
     const c = s >> 1, back = s & 1;
-    const hin = back ? net.ha[c] + Math.PI : net.hb[c];
+    const hin = back ? ha[c] + Math.PI : hb[c];
     for (let k = net.adjStart[J]; k < net.adjStart[J + 1]; k++) {
       const end = net.adj[k], c2 = end >> 1, fromB = end & 1;
-      const hout = fromB ? net.hb[c2] + Math.PI : net.ha[c2];
-      if (turn(hin, hout) > TURN_MAX) continue;
+      const hout = fromB ? hb[c2] + Math.PI : ha[c2];
+      if (turn(hin, hout) > TURN_MAX || fam(c2) < 0) continue;
       const f2 = fac(c2), L = net.len[c2];
       for (const e of endsOn.get(c2) ?? []) {
         const total = g[s] + (fromB ? L - e.along : e.along) * f2 + 2 * e.dist;
@@ -451,19 +468,20 @@ async function search(seq: number, a: [number, number], b: [number, number], ra:
 let reached: { key: string; C: number; on: Uint8Array; chains: number } | null = null;
 
 /** Every chain a route from (lon, lat) could run over: the search's moves without its costs. */
-function reachFrom(lon: number, lat: number, r: number): { on: Uint8Array; chains: number } {
+function reachFrom(lon: number, lat: number, r: number, follow: readonly number[]): { on: Uint8Array; chains: number } {
   const n2 = net.C * 2, seen = new Uint8Array(n2), on = new Uint8Array(net.C), stack = new Uint32Array(n2);
   let sp = 0, chains = 0;
-  for (const { c } of candidates(lon, lat, r)) {
+  const [ha, hb] = follow === FOLLOW.tram ? [net.ta, net.tb] : [net.ha, net.hb];
+  for (const { c } of candidates(lon, lat, r, follow)) {
     if (!on[c]) (on[c] = 1), chains++;
     for (const s of [c * 2, c * 2 + 1]) if (!seen[s]) (seen[s] = 1), (stack[sp++] = s);
   }
   while (sp) {
     const s = stack[--sp], c = s >> 1, back = s & 1, J = back ? net.ca[c] : net.cb[c];
-    const hin = back ? net.ha[c] + Math.PI : net.hb[c];
+    const hin = back ? ha[c] + Math.PI : hb[c];
     for (let k = net.adjStart[J]; k < net.adjStart[J + 1]; k++) {
       const end = net.adj[k], c2 = end >> 1, s2 = end;
-      if (seen[s2] || turn(hin, end & 1 ? net.hb[c2] + Math.PI : net.ha[c2]) > TURN_MAX) continue;
+      if (seen[s2] || follow[net.kind[c2]] < 0 || turn(hin, end & 1 ? hb[c2] + Math.PI : ha[c2]) > TURN_MAX) continue;
       seen[s2] = 1;
       stack[sp++] = s2;
       if (!on[c2]) (on[c2] = 1), chains++;
@@ -615,20 +633,20 @@ async function handle(m: ToRouter) {
     if (m.seq !== latestReach) return;
     if (!m.a) return void (reached = null);
     const t0 = performance.now();
-    const a = m.a, key = `${a[0]},${a[1]},${m.ra}`;
+    const a = m.a, key = `${a[0]},${a[1]},${m.ra},${m.mode}`;
     const [w, s, e, n] = m.box;
     const here = await regionsAt(a[0], a[1], 0);
     const all = await regionOutlines();
     const inView = all.filter((o) => !here.includes(o.cc) && o.boxes.some((b) => b[0] <= e && b[2] >= w && b[1] <= n && b[3] >= s)).slice(0, 4).map((o) => o.cc);
     await Promise.all([...here, ...inView].map(loadRegion));
     if (m.seq !== latestReach) return;
-    if (reached?.key !== key || reached.C !== net.C) reached = { key, C: net.C, ...reachFrom(a[0], a[1], m.ra) };
+    if (reached?.key !== key || reached.C !== net.C) reached = { key, C: net.C, ...reachFrom(a[0], a[1], m.ra, FOLLOW[m.mode]) };
     const { xy, off, cls } = reachIn(reached.on, m.box, m.step);
     post({ kind: "reach", seq: m.seq, xy, off, cls, chains: reached.chains, ms: performance.now() - t0 }, [xy.buffer, off.buffer, cls.buffer]);
   } else if (m.kind === "route") {
     if (m.seq !== latest) return;
     const t0 = performance.now();
-    const r = await search(m.seq, m.a, m.b, m.ra, m.rb);
+    const r = await search(m.seq, m.a, m.b, m.ra, m.rb, FOLLOW[m.mode]);
     if (m.seq !== latest) return;
     if (!r.legs) return post({ kind: "line", seq: m.seq, line: null, lengthM: 0, why: r.why ?? "none", ms: performance.now() - t0, states: r.states });
     const { line, lengthM } = lineOf(r.legs, r.start!, r.end!);
@@ -636,8 +654,17 @@ async function handle(m: ToRouter) {
     await apiReady;
     if (m.seq !== latest) return;
     const t1 = performance.now();
-    api!.set_design_speed(m.design);
-    const out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
+    let out: Float64Array | null = null;
+    if (m.mode === "tram") {
+      // T-3069: tram track's own curves (`trace_kind`, down to its 18 m), close to the rail first
+      for (const tol of TRAM_TOLS) {
+        out = await traceLatest(m.seq, line, tol, 2, m.level, TRAM_KIND, m.frame);
+        if (!out || out.length >= 3) break;
+      }
+    } else {
+      api!.set_design_speed(m.design);
+      out = await traceLatest(m.seq, line, m.tol, m.tracks, m.level);
+    }
     if (!out) return;
     const ms = performance.now() - t1;
     if (out.length < 3) return post({ kind: "fit", seq: m.seq, pis: null, worst: 0, ms });

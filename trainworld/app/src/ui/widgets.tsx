@@ -16,6 +16,9 @@ import type { Signal } from "@preact/signals";
 import { t, type MessageKey } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
 
+/** the snap switches' magnet, its two pole tips apart from its body (T-3069) */
+const SNAP_MAGNET = "M1.75 1.5v1.2M6.75 1.5v1.2M1.75 4.2v1.3a2.5 2.5 0 005 0V4.2";
+
 export const Icon = {
   minus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8" /></svg>,
   plus: () => <svg viewBox="0 0 16 16"><path d="M4 8h8M8 4v8" /></svg>,
@@ -43,12 +46,15 @@ export const Icon = {
   bubble: () => <svg viewBox="0 0 16 16"><circle class="bubble" cx="8" cy="8" r="5.5" /></svg>,
   // a run of segments, each starting where the last ended
   keepPlacing: () => <svg viewBox="0 0 16 16"><path d="M2 12.5l4-6 3 3 5-6.5" /><circle class="solid" cx="6" cy="6.5" r="1.4" /><circle class="solid" cx="9" cy="9.5" r="1.4" /><circle class="solid" cx="14" cy="3" r="1.4" /></svg>,
-  // a magnet over a curving line
-  snapReal: () => <svg viewBox="0 0 16 16"><path d="M1.5 14.5c4-.5 9-3 13-8" /><path d="M5 2.5v3.5a3 3 0 006 0V2.5M5 4.5h2M9 4.5h2" /></svg>,
-  // a road with its centre line, a rail track curving along it (T-3129)
-  snapRoads: () => <svg viewBox="0 0 16 16"><path d="M1.5 12.5c4 0 8-2 13-9M4.5 15c4 0 8-2 11-6.5" /><path d="M2.5 9c3.5-.5 7-2 11-7" stroke-dasharray="1.5 1.5" /></svg>,
-  // two curving tracks side by side, the new one dashed
-  snapBeside: () => <svg viewBox="0 0 16 16"><path d="M1.5 11.5c4.5 0 8-3 10-9.5" /><path d="M4.5 14.5c4.5 0 8-3 10-9.5" stroke-dasharray="2 1.6" /></svg>,
+  // T-3069: the snaps are one family, the same magnet top left over what it snaps to, drawn on one sweep.
+  // The real network: one line
+  snapReal: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.5 14.5c5 0 10-4 13-12" /></svg>,
+  // roads (T-3129): the sweep as a road, two edges and a centre line
+  snapRoads: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.4 12.2L2.4 12.1L3.4 11.9L4.3 11.6L5.3 11.2L6.3 10.6L7.2 9.8L8.2 8.8L9.1 7.8L10 6.5L10.8 5.1L11.6 3.5L12.4 1.7M7.5 15.2L8.9 14.3L10.3 13.2L11.5 12L12.7 10.6L13.8 9L14.9 7.3" /><path d="M1.5 14.5c5 0 10-4 13-12" stroke-width="1" stroke-dasharray="1.6 1.4" /></svg>,
+  // streets for tram track (T-2927): a street turning a tight corner
+  snapStreets: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.5 10h6a2 2 0 002-2V1.5M1.5 14h9a4 4 0 004-4V1.5" /></svg>,
+  // beside track: two tracks along the sweep, the new one dashed
+  snapBeside: () => <svg viewBox="0 0 16 16"><path d={SNAP_MAGNET} /><path d="M1.4 12.9L2.5 12.8L3.6 12.6L4.6 12.3L5.7 11.8L6.7 11.1L7.7 10.3L8.7 9.3L9.6 8.2L10.6 6.9L11.4 5.4L12.2 3.8L13 1.9" /><path d="M6.5 14.9L7.9 14.2L9.2 13.2L10.4 12.1L11.6 10.8L12.7 9.4L13.8 7.8L14.7 6L15.2 5.1" stroke-dasharray="2 1.6" /></svg>,
   // two peaks, the track tag's terrain mark (T-1394)
   terrain: () => <svg viewBox="0 0 16 16"><path d="M1.5 13.5L6 6l2.4 3.4L10.6 6.5l3.9 7z" /></svg>,
   // track carried on at its own height: a raised piece, then an arrow along the same level (T-1161)

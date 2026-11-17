@@ -129,6 +129,7 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   anything constructed, T-096).
 - `realGraph.ts`: a region's real-network routing graph (`packs/realgraph/<cc>.rgr`, fetched once
   and decoded), for snapping track to the real network (T-727); read by `workers/realRoute.worker.ts`.
+  `realFollow.ts`: the graph's kinds and what each track type follows (T-3069), for the router and the layer.
 - Account (T-972, T-973): `account.ts` (the optional anita.garden account, noritetsu's, and the
   leaderboards: which server, the session, each slot's game id and its score sends, the boards;
   shonei-server's `trainworld.go`); its panels `ui/AccountPanel.tsx` and `ui/Leaderboard.tsx`. T-3269, the flag beside

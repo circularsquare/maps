@@ -5,7 +5,7 @@ import type { MoneyState } from "../workers/protocol";
 import { edgeUpkeep } from "../game/regionMoney";
 import type { Level } from "../game/types";
 import { kindLevelMult, TRACK_SPECS } from "../game/trackKinds";
-import { snapStreets, type TrackType } from "../game/ui";
+import { snapRealTram, snapStreets, type TrackType } from "../game/ui";
 import { levelKeyName } from "./toolKeys";
 import { t, tNumber } from "../i18n";
 
@@ -18,7 +18,7 @@ const SINGLE_MULT = 0.6;
 export const trackMult = (l: Level, t: TrackType, quad = false, single = false) =>
   kindLevelMult(t === "tram" ? tramKind() : t === "hsr" ? "highSpeed" : "regular", l) * (quad ? 2 : single ? SINGLE_MULT : 1);
 /** T-2927: the tram track the tool lays: on streets while the street snap is on */
-export const tramKind = () => (snapStreets.value ? "streetTram" : "tram") as "streetTram" | "tram";
+export const tramKind = () => (snapStreets.value && !snapRealTram.value ? "streetTram" : "tram") as "streetTram" | "tram";
 /** "1.0x", "1.50x" for high-speed track */
 const multOf = (v: number, t: TrackType) => tNumber(v, { minimumFractionDigits: t === "hsr" ? 2 : 1, maximumFractionDigits: t === "hsr" ? 2 : 1 }) + "x";   // i18n-ignore
 export const multText = (l: Level, t: TrackType, quad = false, single = false) => multOf(trackMult(l, t, quad, single), t);

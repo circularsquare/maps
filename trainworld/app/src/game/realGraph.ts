@@ -13,7 +13,7 @@ export interface RealGraph {
   /** each chain's junctions: `a` at its first vertex, `b` at its last */
   a: Uint32Array;
   b: Uint32Array;
-  /** 0 rail, 2 subway */
+  /** realFollow.ts REAL_KINDS: 0 rail, 1 light rail, 2 subway, 3 tram, ... (version 1 files: 0 and 2 only) */
   kind: Uint8Array;
   /** 0 main line, 1 other */
   rank: Uint8Array;
@@ -48,7 +48,7 @@ export function realGraph(cc: string, base: string): Promise<RealGraph | null> {
 
 export function decodeRealGraph(cc: string, raw: ArrayBuffer): RealGraph {
   const v = new DataView(raw);
-  if (new TextDecoder().decode(new Uint8Array(raw, 0, 4)) !== "TWRG" || v.getUint32(4, true) !== 1) throw new Error(`${cc}: not a real-network graph`);
+  if (new TextDecoder().decode(new Uint8Array(raw, 0, 4)) !== "TWRG" || ![1, 2].includes(v.getUint32(4, true))) throw new Error(`${cc}: not a real-network graph`);
   const [J, C, V, S] = [8, 12, 16, 20].map((o) => v.getUint32(o, true));
   let o = 24;
   // the arrays are not 4-byte aligned after the u8 ones, so each is copied out

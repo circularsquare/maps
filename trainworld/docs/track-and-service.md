@@ -309,7 +309,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   T-2927), 0.5x (off street) of the 75M a km, viaducts and tunnels 0.4 under rail's, plus a quarter of what hills
   and mountains add (`TRAM_TERRAIN`, T-3004), and it pays no road crossings. The track bar's
   Tram type (`TrackApi::set_route_kind(3)`, also the Build tab's Tram button) lays it at ground level; the ramp
-  switch and target speed do not apply. Tram track and train track never meet at a node
+  switch and target speed do not apply. Snapped to the real network (its own switch, T-3069; ui-building.md
+  "Snapping to the real network") it follows real tram and light rail and is laid as this off-street kind, curves
+  fitted to the rail at 10 m (25 m where that fails) down to the 18 m radius. Tram track and train track never meet at a node
   (`TrackFamily`: "Tram track and train track can't join. They can cross."), so while one is picked the other's
   track and stations are not snap targets; they cross flat and hold each other in capacity at the train's 120 s.
   A stop is a station with a 20 to 80 m platform (default 40, remembered apart from rail's), at a flat US$2M

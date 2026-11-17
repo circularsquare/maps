@@ -18,7 +18,7 @@ import { clock, startClock } from "./game/clock";
 import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
-import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
+import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRealTram, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -505,7 +505,7 @@ map.on("load", () => {
   effect(() => setSatellite(map, display.value.satellite)); // T-3249
   effect(() => setHillshade(map, display.value.hillshade)); // T-1270
   effect(() => setBusRoadHint(map, tool.value === "bus")); // T-2883
-  effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value)); // T-2998
+  effect(() => setTramRoadHint(map, tool.value === "track" && tramTrack.value && snapStreets.value && !snapRealTram.value)); // T-2998
   effect(() => setRailRoadHint(map, tool.value === "track" && !tramTrack.value && snapRoads.value)); // T-3129
   startTerrainTint(map); // T-1270 stage 3
   startRealNetwork(map); // T-682

@@ -13,6 +13,7 @@ import type { PurposeFilter } from "./purposes";
 import { LEVELS, type BubbleEnd, type Level, type Selection } from "./types";
 import { isLineShape, MODE_SHAPES, type LineShape } from "./lineShape";
 import type { Vehicle } from "./vehicle";
+import type { SnapMode } from "./realFollow";
 
 export type Tab = "build" | "lines" | "stations" | "money" | "cities" | "settings";
 /** Tabs a remembered choice can name. */
@@ -192,7 +193,7 @@ export interface DockLayout {
  * saved the old default with everything else, so that setting is dropped once and the new default applies; 9 since the ramp's ends are lighter (T-1138); 10 since the track display starts on Line (T-1244); 11 since the station circles start off (T-1585); 12 since lines side by side are on (T-2346); 13 since everyone starts on High map detail (T-2840); 14 since the currency starts from the browser's region (T-2860). */
 const VERSION = 14;
 
-function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean }>; guide: boolean; v: number }> {
+function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partial<DisplaySettings>; dock: DockLayout; build: Partial<{ level: Level; ramp: boolean; tracks: 1 | 2 | 4; hsr: boolean; tram: boolean; keep: boolean; snap: boolean; tramSnap: boolean; streets: boolean; roads: boolean; beside: boolean; design: number; fly: number; advanced: boolean; platform: number; tramPlatform: number; oneTrack: boolean }>; guide: boolean; v: number }> {
   try {
     return JSON.parse(localStorage.getItem(STORE) || "{}");
   } catch {
@@ -358,9 +359,12 @@ export const keepPlacing = signal((saved.v ?? 1) < 7 || saved.build?.keep !== fa
 /** T-727: the track tool snaps to the real network (noritetsu's lines); while it does, the layer is
  * drawn at full strength */
 export const snapReal = signal(saved.build?.snap === true);
+/** T-3069: tram track snaps to the real network's tram and light rail; its own switch, so a browser's
+ * rail snap leaves the street snap alone. Off by default; it and Snap to streets exclude each other. */
+export const snapRealTram = signal(saved.build?.tramSnap === true);
 /** T-2927: tram track drawn with the track tool follows the streets (street tram track); on unless
  * turned off, and flipped while Ctrl is held (tools.ts) */
-export const snapStreets = signal(saved.build?.streets !== false && !(saved.build?.tram === true && saved.build?.tracks === 4));
+export const snapStreets = signal(saved.build?.streets !== false && saved.build?.tramSnap !== true && !(saved.build?.tram === true && saved.build?.tracks === 4));
 /** T-3129: rail track drawn with the track tool follows the main roads; off by default, and off whenever the real
  * network or beside track is snapped to (the three exclude each other in the bar) */
 export const snapRoads = signal(saved.build?.roads === true && saved.build?.snap !== true && saved.build?.beside !== true);
@@ -459,10 +463,12 @@ export function setTrackType(t: TrackType) {
     }
   });
 }
-/** the real network is being snapped to: the switch on and the track tool in hand */
-/** T-3049: Snap beside is moot while tram track follows the streets, so its switch is hidden and the stored choice kept */
-export const besideOn = computed(() => snapBeside.value && !(tramTrack.value && snapStreets.value));
-export const snapping = computed(() => snapReal.value && tool.value === "track" && !tramTrack.value);
+/** T-3049: Snap beside is moot while tram track follows the streets, so its switch is hidden and the stored choice kept;
+ * T-3069: off too while tram track snaps to the real network (the rail bar's beside switch clears only the rail snap) */
+export const besideOn = computed(() => snapBeside.value && !(tramTrack.value && (snapStreets.value || snapRealTram.value)));
+/** the real network is being snapped to, by which track type: its switch on and the track tool in hand (T-3069) */
+export const snapMode = computed<SnapMode | null>(() => (tool.value !== "track" ? null : tramTrack.value ? (snapRealTram.value ? "tram" : null) : snapReal.value ? "rail" : null));
+export const snapping = computed(() => snapMode.value !== null);
 
 /** The day every demand view shows (T-260, T-464): the setting, the average day by default. Away,
  * Out and Back read as the average while no superholiday is near (T-264, T-1373). */
@@ -511,7 +517,7 @@ if (typeof window !== "undefined") {
 void loadNunito().then(() => document.dispatchEvent?.(new Event("tw-fontchange")));
 effect(() => {
   if (VIDEO) return; // T-2774
-  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value }, guide: guideFinished.value, v: VERSION };
+  const s = { tab: tab.value, theme:theme.value, shade: shade.value, display: display.value, dock: dockLayout.value, build: { level: buildLevel.value, ramp: autoRamp.value, hsr: highSpeed.value, tram: tramTrack.value, tracks: countPicked.value, keep: keepPlacing.value, snap: snapReal.value, tramSnap: snapRealTram.value, streets: snapStreets.value, roads: snapRoads.value, beside: snapBeside.value, design: designSpeed.value, fly: flyoverSpeed.value, advanced: buildAdvanced.value, platform: buildPlatform.value, tramPlatform: buildTramPlatform.value, oneTrack: stationOneTrack.value }, guide: guideFinished.value, v: VERSION };
   try {
     localStorage.setItem(STORE, JSON.stringify(s));
   } catch {

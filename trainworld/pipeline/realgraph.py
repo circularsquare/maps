@@ -6,10 +6,11 @@
     --out DIR                               write or read the files there instead
 
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
-line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps exactly the ways the
-game's real-network layer draws (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
-build_tiles.py, then SHOWN): subway, rail and light rail, each with some line in ways.json running over it (T-3043). The track tool snaps only to these
-(DECISIONS 2026-10-19, T-727). Short groups of other track that join drawn track at two points or
+line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps the ways the game's
+real-network layer draws under All (`app/src/map/realNetwork.ts`, the same filter as noritetsu's
+build_tiles.py): every kind in KIND at rank 0 or 1, whether a line runs over it or not (T-3495,
+T-3069). The track tool snaps only to these, each track type to the kinds it may follow
+(`app/src/game/realFollow.ts`). Short groups of other track that join drawn track at two points or
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
 `gap_fillers`); they are not drawn, so a click never starts on one.
 
@@ -18,10 +19,12 @@ track tool tries to snap only inside those, T-913); gzip of the little-endian la
 with `game/realGraph.ts` and a production build copies it (vite.config.ts). Coordinates are
 degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker), chain ends kept.
 
-    "TWRG" u32 version=1, u32 junctions J, u32 chains C, u32 vertices V, u32 shared S
+    "TWRG" u32 version=2, u32 junctions J, u32 chains C, u32 vertices V, u32 shared S
     i32[J] lon, i32[J] lat                      junctions (OSM nodes where chains meet or end)
     u32[C] a, u32[C] b                          each chain's two junctions, a at its first vertex
-    u8[C] kind (0 rail, 2 subway), u8[C] rank (0 main, 1 other), u8[C] flags (1 passenger route,
+    u8[C] kind (KIND: 0 rail, 1 light rail, 2 subway, 3 tram, 4 monorail, 5 funicular, 6 narrow
+        gauge, 7 heritage; version 1 had only 0, light rail in it, and 2; 8 and up are free for
+        freight and abandoned, T-3464), u8[C] rank (0 main, 1 other), u8[C] flags (1 passenger route,
         2 bridge, 4 tunnel, 8 high speed; the top four bits OSM's `layer`, a signed nibble clamped
         to -8..7, for the real networks' levels, T-1773; `layer_of`)
     u32[C + 1] first vertex of each chain
@@ -46,9 +49,13 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 NORI = HERE.parents[1] / "noritetsu"
 OUT = HERE.parent / "data" / "packs" / "realgraph"
-VERSION = 1
+# 2 from T-3069: the kinds below; a page that reads only version 1 then finds no graph rather than
+# taking tram chains for rail
+VERSION = 2
 THIN_M = 3.0
-KIND = {"rail": 0, "light_rail": 0, "subway": 2}  # light rail routes as main-line family (T-3285)
+# OSM railway=* to the graph's kind; `preserved` is heritage (noritetsu build_tiles.KIND)
+KIND = {"rail": 0, "light_rail": 1, "subway": 2, "tram": 3, "monorail": 4, "funicular": 5,
+        "narrow_gauge": 6, "preserved": 7}
 URBAN = {"light_rail", "subway", "tram", "monorail", "funicular"}
 # T-816: track the layer leaves out that may still fill a gap in it; the longest group of such ways
 # that goes in, km
@@ -360,8 +367,9 @@ def check(cc):
     km = seg.sum()
     n, lab = connected_components(coo_matrix((np.ones(g["a"].size), (g["a"], g["b"])), shape=(J, J)), directed=False)
     big = np.bincount(lab).max()
-    print(f"{cc}: chain ends on their junctions {ends_ok}; {km:,.0f} km of track; {n:,} pieces, "
-          f"largest {big / J:.0%} of junctions; subway chains {np.sum(g['kind'] == 2):,}; shared {g['shared'].size}")
+    kinds = {name: int(np.sum(g["kind"] == k)) for name, k in KIND.items() if np.any(g["kind"] == k)}
+    print(f"{cc}: version {g['version']}; chain ends on their junctions {ends_ok}; {km:,.0f} km of track; {n:,} pieces, "
+          f"largest {big / J:.0%} of junctions; chains by kind {kinds}; shared {g['shared'].size}")
     return ends_ok
 
 

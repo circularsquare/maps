@@ -33,7 +33,7 @@ import { activeCity, getWorldFrame, worldFrameEpoch } from "../game/cities";
 import { cellModes, cityCells, demandView } from "../game/demand";
 import { settleNewLineColour } from "../game/lineColour";
 import { metresBetween } from "../game/walks";
-import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapRoads, snapStreets, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
+import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpeed, flyoverSpeed, highSpeed, keepPlacing, lineDraft, newLine, quadTrack, selection, singleTrack, besideOn, snapping, snapMode, snapRealTram, snapRoads, snapStreets, stationOnTram, stationOneTrack, tool, tramTrack } from "../game/ui";
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
@@ -306,7 +306,7 @@ export class Tools {
       if (!this.real.active) this.requestPreview();
       this.place();
     }, () => this.place(), () => this.freeLevel());
-    effect(() => this.real.setOn(snapping.value));
+    effect(() => this.real.setOn(snapMode.value));
     // T-2927: the street snap for tram track, its own route and preview as the real snap's
     this.street = new StreetSnap(map, overlay, client, (r) => this.streetReq(r), (a, req) => {
       if (a) return this.start && this.showPreview(a, req ? JSON.stringify(req) : "");
@@ -317,7 +317,7 @@ export class Tools {
       }
       this.place();
     }, () => this.place(), () => this.freeLevel(), () => ({ design: designSpeed.peek(), hsr: highSpeed.peek(), quad: quadTrack.peek() }));
-    effect(() => { tool.value; tramTrack.value; snapStreets.value; snapRoads.value; this.streetSwitch(); });
+    effect(() => { tool.value; tramTrack.value; snapStreets.value; snapRoads.value; snapRealTram.value; this.streetSwitch(); });
     effect(() => { besideOn.value; this.place(); });
     // T-1260: the touch control bar and the handle that drags the point being previewed
     this.touchHost = document.createElement("div");
@@ -399,7 +399,8 @@ export class Tools {
   private streetSwitch() {
     if (!this.street) return;
     // T-3129: rail follows the roads with Snap to roads on and Ctrl not held
-    const tram = tramTrack.peek(), on = tool.peek() === "track" && (tram ? snapStreets.peek() !== this.noSnap : snapRoads.peek() && !this.noSnap);
+    // T-3069: with tram track snapping to the real network Ctrl does not bring the streets in
+    const tram = tramTrack.peek(), on = tool.peek() === "track" && (tram ? !snapRealTram.peek() && snapStreets.peek() !== this.noSnap : snapRoads.peek() && !this.noSnap);
     const profile = tram ? "tram" : "rail";
     if (on === this.street.isOn && (!on || profile === this.street.snapProfile)) return;
     this.street.setOn(on, profile);

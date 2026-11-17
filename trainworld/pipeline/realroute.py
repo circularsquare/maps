@@ -37,7 +37,9 @@ class Graph:
         lo, hi = off[:-1], off[1:]
         cx0, cx1 = np.minimum.reduceat(x, lo), np.maximum.reduceat(x, lo)
         cy0, cy1 = np.minimum.reduceat(y, lo), np.maximum.reduceat(y, lo)
-        keep = np.flatnonzero((cx1 >= x0) & (cx0 <= x1) & (cy1 >= y0) & (cy0 <= y1) & (hi - lo >= 2))
+        # rail, light rail and subway only: the real networks' lines are train lines, and the kinds a
+        # version 2 graph adds (tram, monorail and the rest, T-3069) were never in their routes
+        keep = np.flatnonzero((cx1 >= x0) & (cx0 <= x1) & (cy1 >= y0) & (cy0 <= y1) & (hi - lo >= 2) & (g["kind"] <= 2))
         self.pts, self.cum, self.ja, self.jb, self.fam, self.ha, self.hb, self.flags = [], [], [], [], [], [], [], []
         self.grid = {}
         adj = {}

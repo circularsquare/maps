@@ -113,14 +113,18 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   (0.6x of the type's price); quad can be high speed [T-3126]; picking single clears quad. Quad tram is off-street tram track, so
   picking it turns Snap to streets off, and turning that on picks Double again. A browser remembers the
   count picked (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
-  Then the **keep placing** switch, the **snap switch** (a magnet, "Snap to real world network") [T-727]:
+  Then the **keep placing** switch, the **snap switch** ("Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network);
+  with Tram picked it is tram track's own switch, off by default, and excludes Snap to streets [T-3069];
   the **roads switch** (hover "Snap to roads", then "Hold Ctrl to draw by hand"; rail only, off by default; excludes
-  the other two snaps) [T-3129]: [track-and-service.md](track-and-service.md) "Snap to roads";
+  the other two snaps) [T-3129]: [track-and-service.md](track-and-service.md) "Snap to roads", with Tram in its
+  place **Snap to streets** (on by default) [T-2927];
   and the **beside switch** (two curving tracks; hover "Snap beside track", then "Hover over the blue
   region to draw track parallel to another track" [T-1811]), off by default [T-1685, T-1756]: what it
-  does is under [Drawing track](#drawing-track). Last, at the row's right end (not with Tram), the
+  does is under [Drawing track](#drawing-track). The snap switches' icons are one family [T-3069]: the same
+  magnet at the top left over what each snaps to, a line for the real network, a road for roads, a street
+  turning a corner for streets, two tracks for beside. Last, at the row's right end (not with Tram), the
   **Advanced** expander (a chevron that turns down when open) [T-3169]: it adds a third row, right
   aligned under it, of the two target speeds; whether it is open is remembered per browser
   (`build.advanced`), closed at first. **Target max speed** (hover "Attempt to draw
@@ -583,6 +587,17 @@ route is found over the basemap's water (track-and-service.md 6.8), never drawn 
 [T-727d; `map/realSnap.ts`, `workers/realRoute.worker.ts`; design notes/T-727.md] With the snap
 switch on, the track tool follows the real network the layer draws.
 
+- **What each track type follows** [T-3069; `game/realFollow.ts`, one table for the router and the layer]:
+  train track follows rail, light rail, metro, monorail, funicular, narrow gauge and heritage, never tram
+  rail; tram track follows tram and light rail, and rail, metro, funicular, narrow gauge and heritage as
+  other families (tram-trains and street running share rail track), never a monorail. While a type
+  snaps, the layer draws only what it follows: under All, all of that, used or not; under Passenger the
+  passenger track, with every tram line added for tram track. Each kind is its own family but rail and light
+  rail (one for train track) and tram and light rail (one for tram track). For tram track the 60 degree turn
+  rule takes each chain's heading 10 m in, not 30, as a 12-15 m junction curve running on into the cross street
+  reads as a sharper turn over 30 m. Snapped tram track is off-street
+  tram track, its corners fitted with tram curves ([track-and-service.md](track-and-service.md) "Tram track").
+
 - **The ring**: within 12 px of a drawn real line (the layer's own rendered features), the ring
   sits on the line where a click would snap. A first click on open ground there starts on the line;
   a first click on the player's own track starts there as always, and the route begins from the
@@ -595,7 +610,7 @@ switch on, the track tool follows the real network the layer draws.
   either click, its distance from the click counted twice; where the two clicks' candidates share
   no family (one on the metro under a main-line station, the other on rail), each click also takes
   the other's family within 400 m [T-923]; no turn sharper than 60 degrees where
-  two chains meet; the other family (metro or rail) than the first click's nearest track at three
+  two chains meet; every other family than the first click's nearest track's at three
   times its length, so a subway click follows the subway and an intercity route keeps off it;
   high-speed track (flag 8 in the graph) at 0.8 times its length, so London to Paris keeps to HS1
   and the LGV by Lille (493 km) over the shorter classic line by Amiens [T-838]; otherwise a metre

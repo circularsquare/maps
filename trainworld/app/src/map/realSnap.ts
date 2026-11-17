@@ -21,6 +21,8 @@ import { strokesFromPreview } from "./network";
 import { realReach } from "./realNetwork";
 import { inRing, nearRing, ringBox } from "../game/rings";
 import { toLocal, unitPerPxAt } from "./geo";
+import type { SnapMode } from "../game/realFollow";
+import { getWorldFrame } from "../game/cities";
 
 /** the snap radius, px; and the pointer's rest before a route is searched, ms */
 const SNAP_PX = 12;
@@ -100,7 +102,7 @@ export class RealSnap {
   private askReach() {
     const f = this.from;
     if (!f) {
-      if (realReach.peek() || this.reachAt) this.post({ kind: "reach", seq: ++this.reachSeq, a: null, ra: 0, box: [0, 0, 0, 0], step: 0 });
+      if (realReach.peek() || this.reachAt) this.post({ kind: "reach", seq: ++this.reachSeq, a: null, ra: 0, box: [0, 0, 0, 0], step: 0, mode: this.mode });
       this.reachAt = 0;
       realReach.value = null;
       return;
@@ -111,6 +113,7 @@ export class RealSnap {
       kind: "reach", seq: ++this.reachSeq, a: [f.lng, f.lat], ra: f.r,
       box: [b.getWest() - pw, b.getSouth() - ph, b.getEast() + pw, b.getNorth() + ph],
       step: (REACH_STEP_PX * 360) / (512 * 2 ** this.map.getZoom()),
+      mode: this.mode,
     });
   }
 
@@ -136,10 +139,15 @@ export class RealSnap {
   }
 
   private on = false;
-  /** The snap switch with the track tool in hand. */
-  setOn(on: boolean) {
-    if (on === this.on) return;
+  /** the track type snapping: which kinds the router follows (T-3069) */
+  private mode: SnapMode = "rail";
+  /** The snap switch with the track tool in hand, for track type `mode` (null: off). */
+  setOn(mode: SnapMode | null) {
+    const on = mode !== null;
+    if (on === this.on && (!on || mode === this.mode)) return;
+    if (on && this.on) this.reset(); // another track type: the segment's start no longer follows the same rail
     this.on = on;
+    if (mode) this.mode = mode;
     if (on) this.sendView();
     else (this.ringAt = null), this.reset();
   }
@@ -334,7 +342,8 @@ export class RealSnap {
     s.phase = "search";
     s.t0 = performance.now();
     setTimeout(() => this.redraw(), SLOW_MS + 20);
-    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: 2, level: this.level(), tol: TOL_M, design: designSpeed.peek() });
+    const fr = getWorldFrame();
+    this.post({ kind: "route", seq: s.seq, a: [f.lng, f.lat], b: [s.lng, s.lat], ra: f.r, rb: SNAP_PX * this.perPx(s.lat) + SLACK_M, tracks: 2, level: this.level(), tol: TOL_M, design: designSpeed.peek(), mode: this.mode, frame: { kind: fr.kind, lon: fr.lon, lat: fr.lat } });
   }
 
   private finish(s: Spot, phase: "done" | "none" | "off") {
