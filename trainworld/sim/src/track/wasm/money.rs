@@ -262,7 +262,7 @@ impl TrackApi {
     }
     /// Per stretch between stops of run 0 (T-817): the highest speed the trains reach there, the
     /// highest the limits allow, km/h, and what sets that limit: 0 the trains' top speed, 1 the
-    /// track (ordinary track's 160), 2 curves, 3 a crossover.
+    /// track (ordinary track's 160), 2 curves, 3 a crossover, 4 a piece's own speed limit (T-3405).
     pub fn line_stretch_speeds(&self, line: u32) -> Vec<f64> {
         let net = &self.w.net;
         let Some(s) = self.w.svc.lines.get(line as usize).filter(|s| s.ok) else { return vec![] };
@@ -286,7 +286,7 @@ impl TrackApi {
                     let v = curve.min(cap).min(top);
                     if v > best + 1e-9 {
                         best = v;
-                        why = if top <= cap && top <= curve { 0.0 } else if cap <= curve { if net.edge_crossover[e as usize] { 3.0 } else { 1.0 } } else { 2.0 };
+                        why = if top <= cap && top <= curve { 0.0 } else if cap <= curve { if net.edge_crossover[e as usize] { 3.0 } else if cap < net.v_kind_cap(e) { 4.0 } else { 1.0 } } else { 2.0 };
                     }
                 }
             }

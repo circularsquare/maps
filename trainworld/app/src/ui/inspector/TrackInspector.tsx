@@ -10,7 +10,7 @@ import { removeThing } from "../../game/remove";
 import { describeIssues } from "../../game/issues";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
-import { TRACK_SPECS } from "../../game/trackKinds";
+import { PieceLimit } from "./PieceLimit";
 import { Actions, Built, Check, Chip, ConstructRemove, Icon, Row } from "../widgets";
 import { setOneWay } from "../../game/oneWay";
 import { useClockQuery } from "../useClockQuery";
@@ -75,13 +75,8 @@ export function TrackInspector({ edge }: { edge: number }) {
           )}
         </Actions>
       )}
-      <ul class="rows">
-        {!e.crossover && (
-          <li data-tip={e.kind ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal")}>
-            <span class="grow">{t("trackInspector.speedLimit")}</span>
-            <span class="val">{speed(e.kind ? TRACK_SPECS[e.kind === 2 ? "streetTram" : "tram"].vCapKmh : e.hsr ? 320 : 160)}</span>
-          </li>
-        )}
+      <ul class="rows top-speed">
+        {!e.crossover && <PieceLimit key={e.id} e={e} />}
         <Row label={t("trackInspector.slowest")}>{speed(e.vminKmh)}</Row>
         <Row label={t("trackInspector.cost")}>{money(cost)}</Row>
         {!e.crossover && m && (

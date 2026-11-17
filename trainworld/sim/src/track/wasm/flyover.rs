@@ -514,7 +514,7 @@ impl TrackApi {
             ops.push(Op::Edge { id, data: Some(d) });
         }
         let pis = shape[1..shape.len() - 1].to_vec();
-        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: net.edge_kind[re as usize], sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)] }) });
+        ops.push(Op::Edge { id: leg, data: Some(EdgeData { a: j, b: j3, tracks: 1, pis, built: false, off: false, thru: vec![], crossover: false, kind: net.edge_kind[re as usize], sep: false, day: 0, oneway: if crossing_out { 1 } else { 2 }, join: [join_for(crossing_out, net.right_hand), join_for(!crossing_out, net.right_hand)], limit: 0 }) });
         Some((ops, vec![j3], vec![e3b, leg], shape))
     }
 }

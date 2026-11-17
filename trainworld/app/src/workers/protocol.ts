@@ -100,6 +100,8 @@ export type EditOp =
   | { op: "doubleUp"; edge: EdgeId }
   /** single track run one way (`dir` 1 a to b, 2 b to a) or both (0), the lines that ran against it taking another way in the same edit (T-3094); refused with "OneWayNoWay:<line>" */
   | { op: "oneWay"; edge: EdgeId; dir: 0 | 1 | 2 | 3 }
+  /** T-3405: a speed limit on pieces of track, km/h, 0 for none; free */
+  | { op: "pieceLimit"; edges: EdgeId[]; kmh: number }
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   /** T-3332: a station's platforms on one track (`one`) or both; a constructed one pays the difference to both, nothing back to one */
   | { op: "stationTracks"; node: NodeId; one: boolean }
@@ -472,6 +474,8 @@ export interface ClockEdge {
   /** US$M */
   cost: number;
   vminKmh: number;
+  /** T-3405: the player's speed limit on it, km/h (`TrackApi::edge_limits`); 0 none */
+  limit: number;
   levelMin: number;
   levelMax: number;
 }

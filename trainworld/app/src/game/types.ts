@@ -115,8 +115,10 @@ export interface TrackEdge {
   lengthM: number;
   /** build cost, US$ */
   cost: number;
-  /** lowest curve speed limit on it, km/h */
+  /** lowest curve speed limit on it, km/h (the kind's cap at most; never the player's limit) */
   vminKmh: number;
+  /** T-3405: the player's speed limit on it, km/h; absent for none */
+  limit?: number;
   levelMin: Level;
   levelMax: Level;
   /** lines whose path uses it */

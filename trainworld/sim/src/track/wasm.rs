@@ -823,6 +823,7 @@ mod beside;
 mod crossings;
 mod links;
 mod oneway;
+mod limits;
 mod flip;
 mod rebuild;
 mod lines;
@@ -2074,7 +2075,7 @@ impl TrackApi {
         if self.w.net.edge_ok(id) && self.w.net.edge_built[id as usize] {
             return self.refuse(Issue::NoSuchEdge { edge: id });
         }
-        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] }) })
+        self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
         self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0 }) })
@@ -2194,6 +2195,8 @@ mod stop_pass_tests;
 mod stop_order_tests;
 #[cfg(test)]
 mod oneway_tests;
+#[cfg(test)]
+mod limits_tests;
 /// T-3103, T-3092: flat-junction badges and real flyovers.
 #[cfg(test)]
 mod flyover_tests;

@@ -172,6 +172,9 @@ pub struct EdgeData {
     /// the left, 2 the right. Single track only; read only where the node has double track on the
     /// end's other side (`Network::join_away`).
     pub join: [u8; 2],
+    /// T-3405: the player's speed limit on this piece, km/h; 0 none. Never on a crossover, never above
+    /// the kind's top speed (`Network::set_edge` keeps it so).
+    pub limit: u16,
 }
 
 /// T-3332: `StationData::one` for trains travelling heading `th`: 1 eastward (northward where the
@@ -480,6 +483,8 @@ pub struct Network {
     pub edge_sep: Vec<bool>,
     pub edge_oneway: Vec<u8>,
     pub edge_join: Vec<[u8; 2]>,
+    /// T-3405: `EdgeData::limit`.
+    pub edge_limit: Vec<u16>,
     /// Derived (T-3137): the way single track's run takes by itself (`lanes.rs` `derive_ways`): 0
     /// both, 1 a to b, 2 b to a.
     pub edge_infer: Vec<u8>,
@@ -829,6 +834,7 @@ impl Network {
             edge_sep: vec![],
             edge_oneway: vec![],
             edge_join: vec![],
+            edge_limit: vec![],
             edge_infer: vec![],
             edge_len: vec![],
             edge_pieces: vec![],
@@ -1071,6 +1077,7 @@ impl Network {
         self.edge_sep.push(false);
         self.edge_oneway.push(0);
         self.edge_join.push([0; 2]);
+        self.edge_limit.push(0);
         self.edge_infer.push(0);
         self.edge_len.push(0.0);
         self.edge_pieces.push(Span::default());
@@ -1150,7 +1157,7 @@ impl Network {
     pub fn edge_data(&self, e: u32) -> Option<EdgeData> {
         self.edge_ok(e).then(|| {
             let i = e as usize;
-            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i], join: self.edge_join[i] }
+            EdgeData { a: self.edge_a[i], b: self.edge_b[i], tracks: self.edge_tracks[i], pis: self.pis.get(self.edge_pis[i]).to_vec(), built: self.edge_built[i], off: self.edge_off[i], thru: self.edge_thru[i].clone(), crossover: self.edge_crossover[i], kind: self.edge_kind[i], sep: self.edge_sep[i], day: self.edge_day[i], oneway: self.edge_oneway[i], join: self.edge_join[i], limit: self.edge_limit[i] }
         })
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
@@ -1415,9 +1422,18 @@ impl Network {
         let i = n as usize;
         super::upgrades::cost(bits, self.node_level[i], wet, self.node_platform[i], self.node_hsr(n))
     }
-    /// The speed limit an edge puts on every piece of it, m/s: `V_CROSSOVER` on a crossover, 320
-    /// km/h on high-speed track, 160 on any other (T-817).
+    /// The speed limit an edge puts on every piece of it, m/s: its kind's (`v_kind_cap`) under the
+    /// player's limit on it (T-3405).
     pub fn v_cap(&self, e: u32) -> f64 {
+        let cap = self.v_kind_cap(e);
+        match self.edge_limit[e as usize] {
+            0 => cap,
+            lim => cap.min(lim as f64 / 3.6),
+        }
+    }
+    /// The speed limit of an edge's kind of track, m/s: `V_CROSSOVER` on a crossover, 320 km/h on
+    /// high-speed track, 160 on other rail, the tram kinds' own (T-817).
+    pub fn v_kind_cap(&self, e: u32) -> f64 {
         if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap() }
     }
     /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817).
@@ -1541,6 +1557,7 @@ impl Network {
                 self.edge_sep[i] = d.sep;
                 self.edge_oneway[i] = if d.tracks == 1 { d.oneway } else { 0 };
                 self.edge_join[i] = if d.tracks == 1 { d.join } else { [0; 2] };
+                self.edge_limit[i] = if d.crossover || d.limit == 0 { 0 } else { d.limit.clamp(EDGE_LIMIT_MIN, (d.kind.v_cap() * 3.6).round() as u16) };
                 self.node_ports[d.a as usize].add(id << 1);
                 self.node_ports[d.b as usize].add(id << 1 | 1);
                 self.touch_node(d.a);
@@ -1563,6 +1580,7 @@ impl Network {
                 self.edge_sep[i] = false;
                 self.edge_oneway[i] = 0;
                 self.edge_join[i] = [0; 2];
+                self.edge_limit[i] = 0;
                 self.edge_infer[i] = 0;
                 self.edge_free.push(id);
             }
@@ -3299,9 +3317,9 @@ impl Network {
                 t2.push(*p);
             }
         }
-        let join = self.edge_join[i];
-        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [join[0], 0] };
-        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [0, join[1]] };
+        let (join, limit) = (self.edge_join[i], self.edge_limit[i]);
+        let a = EdgeData { a: self.edge_a[i], b: u32::MAX, tracks, pis: p1[1..p1.len() - 1].to_vec(), built, off, thru: t1, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [join[0], 0], limit };
+        let b = EdgeData { a: u32::MAX, b: self.edge_b[i], tracks, pis: p2[1..p2.len() - 1].to_vec(), built, off, thru: t2, crossover: false, kind, sep, day: self.edge_day[i], oneway, join: [0, join[1]], limit };
         Ok((node, a, b))
     }
 }

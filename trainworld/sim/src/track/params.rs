@@ -15,6 +15,8 @@ pub const TRACE_MIN_RADIUS: f64 = 100.0;
 pub const V_TOP: f64 = 160.0 / 3.6;
 /// Top speed of a high-speed train and the cap on high-speed track, m/s (T-817).
 pub const V_HSR: f64 = 320.0 / 3.6;
+/// The lowest speed limit the player can put on a piece of track, km/h (T-3405), as on a line (T-2987).
+pub const EDGE_LIMIT_MIN: u16 = 40;
 /// Auto radius cap: the smallest whole-metre radius that already allows V_TOP
 /// (ceil(44.44² / 1.1) = 1,796 m; T-008 rounds it to 1,800).
 pub const R_CAP: f64 = 1796.0;
@@ -543,7 +545,7 @@ mod kind_tests {
         }
         for (k, kind) in kinds.into_iter().enumerate() {
             let e = net.alloc_edge();
-            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2] })).unwrap();
+            net.set_edge(e, Some(EdgeData { a: k as u32, b: k as u32 + 1, tracks: 2, pis: vec![], built: false, off: false, thru: vec![], crossover: false, kind, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
         }
         net
     }

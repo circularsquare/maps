@@ -958,9 +958,13 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   icon of two rails and a plus: a click adds the express pair beside its run as blueprint
   ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
   why not, greyed (a pair beside already). The title names the track: Double track, Single track
-  or High-speed track [T-817]; high-speed track has no Double up. A **Speed limit** row above
-  Slowest curve gives the track's cap, 160 km/h or 320 on high-speed track, its hover saying which
-  trains run up to what [T-817]; the slowest curve on high-speed track counts up to 320.
+  or High-speed track [T-817]; high-speed track has no Double up. A **Top speed** row above
+  Slowest curve gives the track's cap, 160 km/h or 320 on high-speed track (the tram kinds' 60 and 80), its hover
+  saying which trains run up to what while no limit is set [T-817]; the slowest curve on high-speed track counts up
+  to 320. Beside the cap a mini **Limit** toggle, as on a line's Top speed row [T-3405; `ui/inspector/PieceLimit.tsx`]:
+  on, a **Speed limit** row with a stepper (steps of 10 km/h, 40 up to the cap, starting at the cap) holds trains on
+  this piece to it; free, one undoable edit a step ([track-and-service.md](track-and-service.md) "A piece's speed
+  limit"). One piece at a time: the Select tool's bar has no limit.
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

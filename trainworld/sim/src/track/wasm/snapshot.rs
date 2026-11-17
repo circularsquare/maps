@@ -57,7 +57,8 @@ impl TrackApi {
                 continue;
             }
             let i = e as usize;
-            let vmin = n.edge_pieces(e).iter().map(|p| p.v_curve()).fold(n.v_cap(e), f64::min);
+            // the track's own: the player's limit on it (T-3405) is not a curve
+            let vmin = n.edge_pieces(e).iter().map(|p| p.v_curve()).fold(n.v_kind_cap(e), f64::min);
             let zs = n.edge_vert(e).iter().map(|v| v[1]);
             let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), z| (a.min(z), b.max(z)));
             out.extend([e as f64, n.edge_a[i] as f64, n.edge_b[i] as f64, n.edge_tracks[i] as f64, n.edge_built[i] as u8 as f64, n.edge_len[i], n.edge_cost[i], vmin * 3.6, (lo / LEVEL_H).round(), (hi / LEVEL_H).round()]);

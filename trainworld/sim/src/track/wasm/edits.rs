@@ -328,7 +328,7 @@ impl TrackApi {
     /// change is set to the one it had; a joint up to `JOINT_KINK_M` off the straight is
     /// straightened), lines through it follow. Pieces join when both are
     /// constructed or both blueprint (switched alike), with the same track count (T-624) and type
-    /// (high speed or not, T-817); a built piece's cost is derived from its shape, so the joined
+    /// (high speed or not, T-817) and speed limit (T-3405, so a limit is never lost or spread); a built piece's cost is derived from its shape, so the joined
     /// edge costs what the two did. None if no joint is that near.
     pub(super) fn unjoin_near(&self, e: u32, s: f64, reach: f64) -> Option<(Vec<Op>, f64)> {
         let net = &self.w.net;
@@ -350,7 +350,7 @@ impl TrackApi {
                 // a one-way piece joins only one that runs the same way along the joined edge (T-3094)
                 let flip = if k == 0 { which == 0 } else { which == 1 };
                 let sense = if flip && matches!(od.oneway, 1 | 2) { 3 - od.oneway } else { od.oneway };
-                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover || sense != d.oneway {
+                if seen.contains(&o) || od.built != d.built || od.off != d.off || od.tracks != d.tracks || od.kind != d.kind || od.crossover || d.crossover || sense != d.oneway || od.limit != d.limit {
                     break;
                 }
                 seen.push(o);
@@ -409,7 +409,7 @@ impl TrackApi {
                 pis[j].radius = quant(want);
             }
         }
-        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, oneway: d.oneway, join, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
+        let joined = EdgeData { a, b, tracks: d.tracks, pis: pis[1..pis.len() - 1].to_vec(), built: d.built, off: d.off, thru: vec![], crossover: false, kind: d.kind, sep: d.sep, oneway: d.oneway, join, limit: d.limit, day: sides.iter().flatten().fold(d.day, |day, m| crate::track::net::earliest_day(day, m.2.day)) };
         // each part's direction that runs the joined edge's way
         let mut forward: Vec<(u32, u32)> = vec![(e, 0)];
         forward.extend(sides[0].iter().map(|&(o, which, _)| (o, if which == 1 { 0 } else { 1 })));

@@ -48,6 +48,8 @@ use super::twin::Twin;
 /// A trailing `LTW1` block (T-3333) gives the lines run on both pairs of quad track and their hidden
 /// twins (count, then index and kind: 1 a line on one pair for now, 2 on both, 3 a twin, then its
 /// line's index); without it no line has one.
+/// A trailing `LPS1` block (T-3405) gives the pieces of track with a speed limit of their own (count,
+/// then edge index and km/h); without it none has one.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -60,12 +62,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 25] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1"];
+pub const BLOCKS: [&[u8; 4]; 26] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 19;
+pub const LEVEL: u32 = 20;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.
@@ -523,6 +525,15 @@ pub fn encode(net: &Network) -> Vec<u8> {
             if kind == 3 { w.u(j as u64); }
         }
     }
+    let limited: Vec<(usize, u16)> = edges.iter().enumerate().filter(|(_, &e)| net.edge_limit[e as usize] > 0).map(|(i, &e)| (i, net.edge_limit[e as usize])).collect();
+    if !limited.is_empty() {
+        w.0.extend_from_slice(b"LPS1");
+        w.u(limited.len() as u64);
+        for (i, v) in limited {
+            w.u(i as u64);
+            w.u(v as u64);
+        }
+    }
     w.0
 }
 
@@ -692,7 +703,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
                 thru.push(Pi { x, y, radius: 0.0, level: r.i()? as i8 });
             }
         }
-        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, kind, sep, day: 0, oneway, join: [(tb >> 13 & 3) as u8, (tb >> 15 & 3) as u8] })).map_err(|e| format!("{e:?}"))?;
+        net.set_edge(id, Some(EdgeData { a: a as u32, b: b as u32, tracks, pis, built, off, thru, crossover, kind, sep, day: 0, oneway, join: [(tb >> 13 & 3) as u8, (tb >> 15 & 3) as u8], limit: 0 })).map_err(|e| format!("{e:?}"))?;
     }
     let n_lines = r.u()? as usize;
     let (mut dead_node, mut dead_edge) = (None, None);
@@ -988,6 +999,18 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             if i < n_lines { net.line_twin[i] = t; }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LPS1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            let v = r.u()?;
+            if i < n_edges {
+                if let Some(d) = net.edge_data(i as u32) {
+                    net.set_edge(i as u32, Some(EdgeData { limit: v.min(u16::MAX as u64) as u16, ..d })).map_err(|e| format!("{e:?}"))?;
+                }
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1023,7 +1046,7 @@ mod tests {
             net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
         }
         let e = net.alloc_edge();
-        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2] })).unwrap();
+        net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
         let l = net.alloc_line();
         net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default() })).unwrap();
         encode(&net)
@@ -1163,7 +1186,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (19, 25), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (20, 26), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

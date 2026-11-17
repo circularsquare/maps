@@ -3914,6 +3914,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.double_up(op.edge) };
     case "oneWay":
       return { r: a.set_edge_oneway(op.edge, op.dir) };
+    case "pieceLimit":
+      return { r: a.set_edges_limit(new Uint32Array(op.edges), op.kmh) };
     case "stationTracks":
       return { r: a.set_station_tracks(op.node, op.one) };
     case "stationWay":
