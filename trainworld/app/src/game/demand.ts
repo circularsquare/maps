@@ -131,7 +131,10 @@ const carried = new WeakMap<Float32Array[], { now: string; out: Float32Array[] |
  * corridor's trips and rail are both parts together, `commutes` and `commuteRail` the commute legs;
  * T-378: `air` and `car` the rest by plane and by car, `elsewhere` each place's longer trips with
  * places that have no zone, each way. */
-export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: Corridors; elsewhere?: number[] }
+export interface IntercityDemand { version: number; round: number; tripsPerDay: number; railTripsPerDay: number; commuteTripsPerDay?: number; commuteRailPerDay?: number; corridors: Corridors; elsewhere?: number[];
+  /** T-3503: each place's everyday outings across a zone line with other places, four numbers a
+   * place with any (place, legs with an end there, rail legs, walking legs) */
+  everyday?: number[] }
 /**
  * The market's corridors with trips (T-789: hundreds of thousands of place pairs), the part no
  * network or period changes, one column an array: each pair's two places, its longer trips and

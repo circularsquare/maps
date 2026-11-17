@@ -498,7 +498,8 @@ from both sides, so the everyday draw does not stop at the line.
   from each network. `market_trip` adds them to its answer (head slots 19 to 21: legs, rail, walking)
   and their rail riders to its station pairs and routes. A station's far-end lists already counted
   their rail riders with the other regional trips. The city's own counts by purpose stay its local
-  legs, shrunk by the kept share; the pairs are counted in the market's.
+  legs, shrunk by the kept share; the pairs are counted in the market's, and in the zone figures and
+  bubbles of both their zones (T-3503, ui-demand-views.md "Local trip bubbles").
 
 ## 5. The world market (longer trips)
 

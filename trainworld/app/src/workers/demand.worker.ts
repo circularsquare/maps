@@ -143,7 +143,7 @@ let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths", "airLegs"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths", "airLegs", "regLegs"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-1607: which of a cluster's populations a worker solves a period of: all, the cities' alone
  * (the market's in another worker) or the market's alone */
@@ -953,6 +953,55 @@ function squaresOf(id: CityId, a: DemandApi): Squares {
   squares.set(id, (s = { key, total }));
   return s;
 }
+/** T-3503: every cell's 600 m square (an index into `xy`, the squares' centres in market metres) and
+ * its share of the square at each end (`share`: home end, then destination end), as
+ * `selectionSquares` with every cell picked; a square with no weight at an end shares it evenly. */
+function zoneSquares(id: CityId, a: DemandApi) {
+  const s = squaresOf(id, a), n = s.key.length, w = a.cell_commuters();
+  const at = new Map<number, number>(), keys: number[] = [], cnt: number[] = [];
+  const sq = new Uint32Array(n);
+  for (let c = 0; c < n; c++) {
+    let i = at.get(s.key[c]);
+    if (i === undefined) at.set(s.key[c], (i = keys.length)), keys.push(s.key[c]), cnt.push(0);
+    sq[c] = i;
+    cnt[i]++;
+  }
+  const share = new Float32Array(2 * n);
+  for (let end = 0; end < 2; end++)
+    for (let c = 0; c < n; c++) {
+      const tot = s.total.get(s.key[c])![end];
+      share[end * n + c] = tot > 0 ? w[end * n + c] / tot : 1 / cnt[sq[c]];
+    }
+  const xy = new Float32Array(2 * keys.length);
+  keys.forEach((k, i) => {
+    xy[2 * i] = (Math.floor(k / KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
+    xy[2 * i + 1] = ((k % KEY_SPAN) - KEY_OFFSET + 0.5) * SQUARE_M;
+  });
+  return { xy, sq, share };
+}
+/** T-3503: a market's all-mode legs at a zone's squares (`zone_legs_day`), which need no network:
+ * kept per market composition, zone, day, periods and kinds. */
+const baseKept = new WeakMap<IntercityApi, Map<string, Float64Array>>();
+const BASE_KEPT_BYTES = 12e6;
+function baseLegs(m: IntercityApi, city: CityId, place: number, xy: Float32Array, day: number, mask: number, kinds: number): Float64Array {
+  let kept = baseKept.get(m);
+  if (!kept) baseKept.set(m, (kept = new Map()));
+  const key = `${city}:${day}:${mask}:${kinds}:${xy.length}`;
+  let v = kept.get(key);
+  if (!v) {
+    v = m.zone_legs_day(place, xy, day, mask, kinds, false);
+    kept.set(key, v);
+    // at most BASE_KEPT_BYTES a market (New York's every kind is about 2 MB), the oldest out first
+    let bytes = 0;
+    for (const x of kept.values()) bytes += x.byteLength;
+    for (const [k, x] of kept) {
+      if (bytes <= BASE_KEPT_BYTES || k === key) break;
+      kept.delete(k);
+      bytes -= x.byteLength;
+    }
+  }
+  return v;
+}
 const AIRPORT_KIND = EVERYDAY_KEYS.indexOf("airport");
 /** A selection's squares: their centres (world metres) and the share of each that is selected; at
  * the activity end with the zone's everyday layer `e`, T-3500: every square holding airport
@@ -1211,6 +1260,27 @@ function query(msg: Query) {
       const legs0 = ok ? legs(0, msg.xy0, msg.w0) : null, legs1 = ok ? legs(1, msg.xy1, msg.w1) : null;
       const mask = !ok ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : all;
       sendMessage({ kind: "airLegs", id: msg.id, version: msg.version, mask, legs0, legs1 }, [...(legs0 ? [legs0.buffer] : []), ...(legs1 ? [legs1.buffer] : [])]);
+    } else if (msg.kind === "zoneSquares") {
+      // T-3503: a solving worker's copy of the zone, or the aux worker's of a zone open bare
+      const za = cities.get(msg.city) ?? bare.get(msg.city)?.a;
+      const r = za ? zoneSquares(msg.city, za) : null;
+      sendMessage({ kind: "zoneSquares", id: msg.id, xy: r?.xy ?? null, sq: r?.sq ?? null, share: r?.share ?? null }, r ? [r.xy.buffer, r.sq.buffer, r.share.buffer] : []);
+    } else if (msg.kind === "regLegs") {
+      // T-3503: as `airLegs`: the all-mode legs from the market of every open pack over this
+      // worker's periods (kept: they need no network), then every part's rail
+      const place = MARKET_OF[msg.city];
+      const ok = !!intercity && !!at && place !== undefined && place >= 0 && (mcs.length === 0 || marketLive);
+      const all = maskOf(at?.markets ?? mine);
+      let legs: Float64Array | null = null;
+      if (ok) {
+        legs = baseLegs(intercity!, msg.city, place, msg.xy, day, all, msg.kinds).slice();
+        for (const c of mcs) {
+          const r = c.part!.zone_legs_day(place, msg.xy, day, c.part!.solved_mask(), msg.kinds, true);
+          for (let k = 0; k < legs.length; k++) if (k % 3) legs[k] += r[k];
+        }
+      } else if (!intercity || place === undefined || place < 0) legs = new Float64Array(0); // none: no market, or a zone outside it
+      const mask = !ok ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : all;
+      sendMessage({ kind: "regLegs", id: msg.id, version: msg.version, mask, legs }, legs ? [legs.buffer] : []);
     } else if (msg.kind === "tripLengths") {
       // T-2365: a zone open bare from the aux worker's copy, its periods solved on no network
       const b = msg.bare ? bare.get(msg.city) : undefined;
@@ -1241,6 +1311,8 @@ function query(msg: Query) {
     else if (msg.kind === "bareFlows") sendMessage({ kind: "bareFlows", id: msg.id, packed: null, masks: [], work: [], everyday: [], names: [] });
     else if (msg.kind === "bareSquares") sendMessage({ kind: "bareSquares", id: msg.id, xy: null, share: null });
     else if (msg.kind === "airLegs") sendMessage({ kind: "airLegs", id: msg.id, version: msg.version, mask: 0, legs0: null, legs1: null });
+    else if (msg.kind === "zoneSquares") sendMessage({ kind: "zoneSquares", id: msg.id, xy: null, sq: null, share: null });
+    else if (msg.kind === "regLegs") sendMessage({ kind: "regLegs", id: msg.id, version: msg.version, mask: 0, legs: null });
     else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null, kinds: null });
   }
 }
@@ -1487,7 +1559,25 @@ function marketFigures(parts: IntercityApi[], q: number) {
     ...marketCorridors(parts, q),
     // T-378: the same in every part
     elsewhere: parts.length ? Array.from(parts[0].elsewhere(q)) : [],
+    everydayPlaces: everydayPlaces(parts, q),
   };
+}
+/** T-3503: the everyday outings across a zone line by place in period q over the market's parts,
+ * four numbers a place with any (place, legs, rail legs, walking legs): the legs and the walking
+ * with no rail the same in every part, the rail each part's own and the walkers each part's rail takes. */
+function everydayPlaces(parts: IntercityApi[], q: number): number[] {
+  const by = new Map<number, [number, number, number, number]>();
+  for (const p of parts) {
+    const v = p.everyday_place_legs(q);
+    for (let i = 0; i + 4 < v.length; i += 5) {
+      const e = by.get(v[i]);
+      if (!e) by.set(v[i], [v[i + 1], v[i + 2], v[i + 3], v[i + 4]]);
+      else { e[1] += v[i + 2]; e[2] -= v[i + 4] - v[i + 3]; }
+    }
+  }
+  const out: number[] = [];
+  for (const [p, [legs, rail, walk]] of by) out.push(p, legs, rail, Math.max(0, walk));
+  return out;
 }
 /** Where a trip answer's pair and route counts sit (`count`, the routes' next), and its pairs' two
  * route nodes (`node`): `DemandApi.trip`'s (trip.rs) and `IntercityApi.market_trip`'s (market_trip.rs). */
@@ -2117,7 +2207,7 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
+        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, everydayPlaces: market?.everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
         const t = market?.corridorTable;
         const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, ...(t ? [t.from, t.to, t.longer, t.commuteAt, t.commuteLegs, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };

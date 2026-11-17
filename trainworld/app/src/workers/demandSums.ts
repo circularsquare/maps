@@ -284,7 +284,7 @@ export function flowsBody(p: Float32Array, purposeParts: PurposePart[]): Omit<Fl
 // ---------------------------------------------------------------- the views of each kind of day (T-1208)
 
 /** The parts of a period's result (`FromDemand` "result") the day views read. */
-export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
+export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "everydayPlaces" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
 type PeriodResult = Extract<FromDemand, { kind: "result" }>;
 /**
  * T-1543: one period's result from its parts (`result.part`, one from each solving worker, a part
@@ -343,6 +343,7 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     corridorShares: market.corridorShares,
     corridorRail: market.corridorRail,
     elsewhere: market.elsewhere,
+    everydayPlaces: market.everydayPlaces,
     seg: sum((r) => r.seg)!,
     board,
     alight: sum((r) => r.alight)!,
@@ -360,8 +361,8 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
 /** A result's fields `DayResult` names, without the rest (the corridor table and modes are large and
  * read elsewhere). */
 export function dayResultOf(r: DayResult): DayResult {
-  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense } = r;
-  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense };
+  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense } = r;
+  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense };
 }
 
 /** What a solve's views are worked out from: its version, the round published and whether it is
@@ -516,6 +517,11 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const intercityParts = ip && marketPartsOn(ip, fl, fw, factor);
   if (intercityParts && intercityParts.length >= 7) { intercitySummary[1] += intercityParts[4]; intercitySummary[2] += intercityParts[5]; intercitySummary[3] = intercityParts[6]; }
   const elsewhere = r.elsewhere?.map((v) => v * fl);
+  // T-3503: each place's outings across a zone line by the market's whole factor for them (each
+  // place's mix of purposes taken as the market's)
+  const ratio = (k: number) => (ip && intercityParts && ip[k] > 0 ? intercityParts[k] / ip[k] : 1);
+  const [el, er, ew] = [ratio(4), ratio(5), ratio(6)];
+  const everydayPlaces = r.everydayPlaces?.map((v, i) => (i % 4 === 1 ? v * el : i % 4 === 2 ? v * er : i % 4 === 3 ? v * ew : v));
   const summary = r.summary.slice();
   summary[1] = summary[2] = summary[3] = 0;
   for (const v of [...Object.values(citySummary), intercitySummary]) for (const k of [1, 2, 3]) summary[k] += v[k] ?? 0;
@@ -524,7 +530,7 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const by = (day: number, raw: number) => (raw > 0 ? day / raw : 1);
   const fareSense = r.fareSense && [r.fareSense[0] * by(railOf(citySummary), railOf(r.citySummary)), r.fareSense[1] * by(intercitySummary[2] ?? 0, r.intercitySummary[2] ?? 0), r.fareSense[2], r.fareSense[3]] as [number, number, number, number];
   // the corridors keep the weekday's numbers and their factors, applied as `dayCorridors` adds them (T-789)
-  return { ...r, fareSense, seg, board, alight, arrive, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+  return { ...r, fareSense, seg, board, alight, arrive, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, everydayPlaces, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
 }
 
 /**
@@ -649,18 +655,26 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
   // the regional layer between places: longer trips and (T-276) commutes between zones together
   let interTrips = 0, interRail = 0, commuteTrips = 0, commuteRail = 0;
   const elsewhere = Array.from({ length: input.places }, () => 0);
+  // T-3503: each place's everyday outings across a zone line: legs, rail legs, walking legs
+  const everydayAt = new Map<number, [number, number, number]>();
   for (const r of res) {
     interTrips += r.intercitySummary[1] ?? 0; interRail += r.intercitySummary[2] ?? 0;
     if (r.intercityParts && r.intercityParts.length >= 4) { commuteTrips += r.intercityParts[2]; commuteRail += r.intercityParts[3]; }
     r.elsewhere?.forEach((v, p) => { if (p < elsewhere.length) elsewhere[p] += v; });
+    const e = r.everydayPlaces ?? [];
+    for (let i = 0; i + 3 < e.length; i += 4) {
+      const t = everydayAt.get(e[i]) ?? everydayAt.set(e[i], [0, 0, 0]).get(e[i])!;
+      t[0] += e[i + 1]; t[1] += e[i + 2]; t[2] += e[i + 3];
+    }
   }
+  const everyday = [...everydayAt].sort((x, y) => x[0] - y[0]).flatMap(([p, t]) => [p, ...t]);
   // T-1300: the day's fare sensitivity, with the rail trips it is of; packed with the view's skeleton
   if (res.every((r) => r.fareSense)) {
     const sum = (i: number) => res.reduce((a, r) => a + r.fareSense![i], 0);
     const reach = (i: number, j: number) => { const d = sum(i); return d < 0 ? res.reduce((a, r) => a + r.fareSense![i] * (r.fareSense![j] ?? 1), 0) / d : 1; };
     network.fareSense = { local: sum(0), market: sum(1), localReach: reach(0, 2), marketReach: reach(1, 3), marketRail: interRail };
   }
-  return { view: network, cities, intercity: { version: input.version, round: input.round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: input.noCorridors ? null : dayCorridors(res), elsewhere } };
+  return { view: network, cities, intercity: { version: input.version, round: input.round, tripsPerDay: interTrips, railTripsPerDay: interRail, commuteTripsPerDay: commuteTrips, commuteRailPerDay: commuteRail, corridors: input.noCorridors ? null : dayCorridors(res), elsewhere, everyday } };
 }
 
 /** T-260: each asked kind of day's views: the weekday is the solve itself; a weekend is worked out

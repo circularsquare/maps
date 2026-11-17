@@ -242,9 +242,9 @@ lists. They feed the common strategy graph. Local feeder lines, transfers and th
 intercity service receive actual loads and boardings. No express-only route or station-city
 affiliation bypasses the player's local network.
 
-**Seeing them** [T-118]: the local views cannot show them (a Philadelphia bubble's trips end in New
-York, off screen), so a selected bubble set and a selected station list them by place and draw
-them by far zone ([ui-demand-views.md](ui-demand-views.md) "Inter-city trips"). A selection of
+**Seeing them** [T-118, T-3503]: the bubbles count them at the end in the zone in view (a
+Philadelphia bubble's trips to New York at its homes), and a selected bubble set and a selected
+station list them by place and draw them by far zone ([ui-demand-views.md](ui-demand-views.md) "Inter-city trips"). A selection of
 local cells is mapped to the market through its 600 m squares: the sites were built from the same
 cells, so each selected cell falls in one site's square; a square counts the selected share of its
 people (homes) or attraction (destinations), and a site's share of its zone's departures is its

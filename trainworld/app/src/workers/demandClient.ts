@@ -338,6 +338,14 @@ function cellModesOf(version: number, day: DemandDay, data: Float32Array, copy =
   return { version, day, homeRail: b(0), homeWalk: b(1), homeDrive: b(2), workRail: b(3), workWalk: b(4), workDrive: b(5), homeNone: b(6), workNone: b(7) };
 }
 const AIRPORT_KIND = EVERYDAY_KEYS.indexOf("airport");
+/** T-3503: what the last regional answers may hold (a zone's answer is 48 bytes a square: New York about 2 MB,
+ * and a zone asks for about ten kinds and days) */
+const LAST_REG_BYTES = 48e6;
+/** T-3503: `regLegs`' kinds: longer trips (bit 0), commutes (bit 1), each everyday kind (bit 2 + k) */
+const REG_COMMUTES = 2;
+const REG_ALL = 3 | EVERYDAY_KEYS.reduce((b, _, k) => b | (1 << (2 + k)), 0);
+/** T-3503: a zone's 600 m squares (market metres), each cell's square and its share of it at each end */
+interface ZoneSq { xy: Float32Array; sq: Uint32Array; share: Float32Array }
 /** A bare zone's everyday legs per solving worker's periods (T-325), in `byMask`'s order. */
 function bareParts(r: Extract<FromDemand, { kind: "bare" }>): Float32Array[] {
   return r.parts.map((p, i) => [r.masks[i], p] as const).sort((a, b) => a[0] - b[0]).map(([, p]) => p);
@@ -1297,6 +1305,7 @@ class DemandClient {
    * `built`: its save's last two builds, latest first). */
   private lodReset(saved: string[] | null, built: string[][] | null = null) {
     this.lodZones = null;
+    this.lastReg.clear();
     this.savedFine = saved;
     this.fine = new Set();
     this.touched.clear();
@@ -4032,6 +4041,7 @@ class DemandClient {
   /** A zone's cells in every frame, when it closes or its frame is out of date. */
   private dropCells(id: string) {
     for (const k of this.otherCells.keys()) if (k.slice(0, k.lastIndexOf(":")) === id) this.otherCells.delete(k);
+    this.zsq.delete(id as CityId);
   }
 
   /** One purpose's local trip legs per cell (T-158's filter): work from the commute sums alone,
@@ -4076,7 +4086,10 @@ class DemandClient {
         }
         if (mask !== ALL_PERIODS) return null;
       }
-      if (kinds.includes(AIRPORT_KIND)) await this.airportAcross(modes, cells, city, at.version, other, other === undefined ? this.liveAt(at) : at);
+      // T-3503: the purpose's trips with other places (airports' at their terminals, by the local legs)
+      const tg = other === undefined ? this.liveAt(at) : at, local = kinds.includes(AIRPORT_KIND) ? modes.slice() : null;
+      await this.regionalInto(modes, city, at.version, other, tg, kinds.reduce((b, k) => b | (1 << (2 + k)), 0));
+      if (local) await this.airportAcross(modes, local, cells, city, at.version, other, tg);
       if (!stillShown(other, city, version, day)) return null;
       return cellModesOf(version, day, modes);
     })();
@@ -4088,17 +4101,18 @@ class DemandClient {
     return p;
   }
 
-  /** T-3500: the airport trips across the zone line added to a zone's airport legs `modes` (eight
-   * blocks): its airports' at their terminals, its residents' at their homes, each 6 km zone's spread
-   * over its cells by their own airport legs at that end. As they were when the workers cannot say. */
-  private async airportAcross(modes: Float32Array, cells: CityCells, city: CityId, version: number, other: CityId | undefined, t: Target): Promise<void> {
+  /** T-3500: the airport trips from across the zone line added to `modes` (eight blocks) at a zone's
+   * airports: each 6 km zone's spread over its terminal cells by their airport legs in `weights`
+   * (eight blocks; T-3503: the residents' end comes with the other trips, `regionalInto`). As they
+   * were when the workers cannot say. */
+  private async airportAcross(modes: Float32Array, weights: Float32Array, cells: CityCells, city: CityId, version: number, other: CityId | undefined, t: Target): Promise<void> {
     const n = cells.n;
-    if (modes.length !== 8 * n) return;
-    const ends = [[0, 1, 2, 6], [3, 4, 5, 7]].map((blocks) => {
+    if (modes.length !== 8 * n || weights.length !== 8 * n) return;
+    const ends = [[], [3, 4, 5, 7]].map((blocks) => {
       const at: number[] = [], w: number[] = [];
-      for (let c = 0; c < n; c++) {
+      for (let c = 0; c < n && blocks.length; c++) {
         let v = 0;
-        for (const b of blocks) v += modes[b * n + c];
+        for (const b of blocks) v += weights[b * n + c];
         if (v > 0) at.push(c), w.push(v);
       }
       const xy = new Float32Array(2 * at.length);
@@ -4130,6 +4144,94 @@ class DemandClient {
         modes[(o + 2) * n + c] += Math.max(0, s[3 * i] - rail - walk);
       });
     });
+  }
+
+  /** T-3503: the trips with other places added to a zone's legs of every purpose (`everydayToo`) or
+   * of work alone: under every purpose the airports' from across the zone line too, at their
+   * terminals by the Airport purpose's legs. */
+  private async withRegional(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target, everydayToo: boolean): Promise<void> {
+    await this.regionalInto(modes, city, version, other, t, everydayToo ? REG_ALL : REG_COMMUTES);
+    if (!everydayToo || AIRPORT_KIND < 0 || perfOff("regional")) return;
+    const [air, cells] = await Promise.all([this.purposeModes("airport", other), this.cityCells(other)]);
+    if (!air || !cells) return;
+    const w = concat([air.homeRail, air.homeWalk, air.homeDrive, air.workRail, air.workWalk, air.workDrive, air.homeNone, air.workNone]);
+    await this.airportAcross(modes, w, cells, city, version, other, t);
+  }
+
+  /** T-3503: each zone's 600 m squares and its cells' shares of them (static for a pack's cells). */
+  private zsq = new Map<CityId, Promise<ZoneSq | null>>();
+  private zoneSq(city: CityId, version: number, other: CityId | undefined): Promise<ZoneSq | null> {
+    let p = this.zsq.get(city);
+    if (!p) {
+      const ask = async (w: number) => {
+        const [r] = await this.ask((id) => ({ kind: "zoneSquares", id, version }), [w], [], other);
+        return r?.kind === "zoneSquares" && r.xy && r.sq && r.share ? { xy: r.xy, sq: r.sq, share: r.share } : null;
+      };
+      const q: Promise<ZoneSq | null> = (async () => (await ask(this.isBare(city) ? this.computeN : 0)) ?? (await ask(this.isBare(city) ? 0 : this.computeN)))();
+      this.zsq.set(city, (p = q));
+      q.then((v) => { if (!v && this.zsq.get(city) === q) this.zsq.delete(city); });
+    }
+    return p;
+  }
+  /** T-3503: the last whole answer per zone, kinds and day, so the bubbles keep their size while a
+   * round's is out */
+  private lastReg = new Map<string, Float64Array>();
+  /**
+   * T-3503: the regional layer's trips with other places added to a zone's legs `modes` (eight
+   * blocks), at the end of each that is in the zone: longer trips leaving, the residents' commutes
+   * and outings at the homes; longer trips arriving, the workers' commutes and the outings coming
+   * here at the destinations (airports' instead by `airportAcross`). Each 600 m square takes its 6 km
+   * zone's share by people, attraction or jobs (`IntercityApi.zone_legs_day`, as a selection counts
+   * them), and its cells their share of it. `kinds` as `regLegs`. Rail is rail, walking walking, the
+   * rest (car and plane) driving.
+   */
+  private async regionalInto(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target | undefined, kinds: number): Promise<void> {
+    if (perfOff("regional")) return;
+    const n = modes.length / 8;
+    let z = await this.zoneSq(city, version, other);
+    if (z && z.sq.length !== n) {
+      // the zone was opened again with another set of cells (demandLod.ts)
+      this.zsq.delete(city);
+      z = await this.zoneSq(city, version, other);
+    }
+    if (!z || z.sq.length !== n) return;
+    const m = z.xy.length / 2, xy = z.xy;
+    const replies = await this.ask((id) => ({ kind: "regLegs", id, version, xy, kinds }), undefined, [], other, t);
+    const key = `${city}:${kinds}:${shownDay.peek()}`;
+    let sum: Float64Array | undefined = new Float64Array(6 * m), mask = 0;
+    for (const r of byMask(replies)) {
+      if (r.kind !== "regLegs" || !r.legs) { sum = undefined; break; }
+      // an empty answer: no regional market in this worker (a game with no line yet), or none at
+      // this moment: the last answer stands, and `lodReset` drops them when a game is loaded
+      if (!r.legs.length) { sum = undefined; break; }
+      mask |= r.mask;
+      if (r.legs.length === sum.length) addInto(sum, r.legs);
+    }
+    if (sum && mask === ALL_PERIODS) {
+      this.lastReg.delete(key);
+      this.lastReg.set(key, sum);
+      let bytes = 0;
+      for (const v of this.lastReg.values()) bytes += v.byteLength;
+      for (const k of this.lastReg.keys()) {
+        if (bytes <= LAST_REG_BYTES || this.lastReg.size < 2) break;
+        bytes -= this.lastReg.get(k)!.byteLength;
+        this.lastReg.delete(k);
+      }
+    } else if ((sum = this.lastReg.get(key))) { this.lastReg.delete(key); this.lastReg.set(key, sum); }
+    if (!sum || sum.length !== 6 * m) return;
+    for (let c = 0; c < n; c++) {
+      const i = z.sq[c];
+      for (let end = 0; end < 2; end++) {
+        const f = z.share[end * n + c];
+        if (!(f > 0)) continue;
+        const o = 6 * i + 3 * end, b = 3 * end;
+        const legs = sum[o], rail = Math.max(0, sum[o + 1]), walk = Math.max(0, sum[o + 2]);
+        if (!(legs > 0)) continue;
+        modes[b * n + c] += f * rail;
+        modes[(b + 1) * n + c] += f * walk;
+        modes[(b + 2) * n + c] += f * Math.max(0, legs - rail - walk);
+      }
+    }
   }
 
   /** T-2365: a zone's trips a day by length on the day shown (game/tripLengths.ts), from every
@@ -4245,7 +4347,8 @@ class DemandClient {
     }
     const p = (async (): Promise<CellModes | null> => {
       const city = other ?? activeCity.peek();
-      if (this.isBare(city)) return this.bareModes(city, everydayToo, version, round, day, other);
+      const tg = other === undefined ? this.liveAt(at) : at;
+      if (this.isBare(city)) return this.bareModes(city, everydayToo, version, round, day, other, at.version, tg);
       let mask = 0;
       let sums: Float32Array | null = null;
       let extra: Float32Array | null = null;
@@ -4278,6 +4381,8 @@ class DemandClient {
       // Old commuter queries count one person; convert before adding everyday travel.
       // (work alone for the purpose filter, T-158: `everydayToo` false)
       for (let k = 0; k < r.modes.length; k++) r.modes[k] = 2 * r.modes[k] + (everydayToo ? extra?.[k] ?? 0 : 0);
+      await this.withRegional(r.modes, city, at.version, other, tg, everydayToo);
+      if (!stillShown(other, city, version, day)) return null;
       return cellModesOf(version, day, r.modes);
     })();
     if (!everydayToo || other !== undefined) return p; // cached by purposeModes, or a nearby zone's
@@ -4291,7 +4396,7 @@ class DemandClient {
   /** T-325: `cellModes` of a zone open bare, from the aux worker's no-rail pass: the commuters by
    * mode (no rail) and each solving worker's periods' everyday legs, added up as `cellModes` adds
    * the workers' answers for a solved city. */
-  private async bareModes(city: CityId, everydayToo: boolean, version: number, round: number, day: DemandDay, other: CityId | undefined): Promise<CellModes | null> {
+  private async bareModes(city: CityId, everydayToo: boolean, version: number, round: number, day: DemandDay, other: CityId | undefined, solve: number, t: Target): Promise<CellModes | null> {
     const [r] = await this.ask((id) => ({ kind: "bare", id, version, purpose: everydayToo ? -1 : -2 }), [this.computeN], [], other);
     if (r?.kind !== "bare" || !r.commute || !r.commute.length) return null;
     let extra: Float32Array | null = null;
@@ -4302,6 +4407,8 @@ class DemandClient {
     if (!stillShown(other, city, version, day) || demandView.peek()?.round !== round) return null;
     const m = r.commute;
     for (let k = 0; k < m.length; k++) m[k] = 2 * m[k] + (everydayToo ? extra?.[k] ?? 0 : 0);
+    await this.withRegional(m, city, solve, other, t, everydayToo);
+    if (!stillShown(other, city, version, day)) return null;
     return cellModesOf(version, day, m);
   }
 

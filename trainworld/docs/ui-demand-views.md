@@ -18,8 +18,8 @@ hour and the clock's own day ([ui-map.md](ui-map.md)).
 result changes and keeps its last answer meanwhile. After an edit only the final round is shown
 [T-232], so views rebuild once; at startup or a game load each estimate shows, and a zone just opened shows its own estimates in its view while the lines keep their final figures [T-2793].
 
-**Scope.** Bubbles and selections cover the focused zone's modelled local trips (Airport bubbles
-also its airport trips across the zone line, "Airports" below); a station
+**Scope.** Bubbles and selections cover the focused zone's modelled local trips and its regional
+trips with other places, each at the end that is in the zone ("Local trip bubbles" below); a station
 inspector's commuters are its commuters. Line widths, station totals and train fill include every open zone
 and the regional layer. Changing zone clears cell-indexed selections and cached layers.
 
@@ -156,7 +156,24 @@ hover and clicks. They do not enlarge the station's click target.
 
 - **What**: every modelled trip leg at the chosen end (`cellModes`, [demand-views.md](demand-views.md)), the
   zone's res-9 cells summed into their H3 parent by zoom, each bubble at its trips' weighted
-  centre. The **Detail** setting (Settings, 4 steps, default the third) starts resolution 9 at zoom
+  centre. With the local legs come the regional layer's legs with other places [T-3503]: at the
+  homes the longer trips leaving the zone and the commutes and everyday outings across a zone line
+  of the people living there; at the destinations the longer trips arriving, the commutes of the
+  people working there and the outings coming there (airports' at their terminals, "Airports"
+  below). A local leg has both ends in the zone, a regional one one, so Homes adds up to the zone's
+  local legs L plus its regional legs leaving, Destinations to L plus those arriving, Total to 2L
+  plus all of them, and zoomed out (below) the zone's bubble is L plus all of them under either
+  button. Longer trips between two parts of one zone (T-3509) and trips with places that have no
+  zone are left out, as the zone figures leave them out. Each 600 m square takes its 6 km zone's
+  share as a selection counts it, by people at the homes, attraction at the destinations, jobs at a
+  commute's work end (`IntercityApi::zone_legs_day`), and its cells their share of it by their own
+  commuters at that end, so a selected bubble's count is its far end's, local and regional.
+  Under the purpose filter each purpose counts its own: Work the commutes between places, the
+  everyday purposes their outings across a zone line, longer trips only under All purposes.
+  Rail is rail, walking walking, the car and the plane driving. The all-mode legs need no
+  network and are kept in each worker per market and day; the rail comes with each round, and until
+  a round's is in the bubbles keep the last. With no regional market (a game with no line yet) the
+  bubbles are the local legs alone. The **Detail** setting (Settings, 4 steps, default the third) starts resolution 9 at zoom
   15.4, 13.6, 11.8 (default) or 10, and each coarser level (8, 7, 6) 1.8 zoom levels further out
   (`bubbleLevel`). Resolution 9 is the finest at any step. All levels are built at
   once, so the setting costs no rebuild.
@@ -209,10 +226,10 @@ hover and clicks. They do not enlarge the station's click target.
   one plane. Planes take no clicks (a click reaches the bubble under); the hover, within 8 px of
   the plane (the plane itself, so the job bubbles beside a terminal keep their own hover, T-681),
   says "228k trips per day to and from this airport" with the mode split, the whole airport's
-  legs, read again with each demand result. Under the Airport purpose the bubbles, and so the
-  plane, count the airport trips from across the zone line too (an airport in a zone apart from its
-  city, T-2896): each 6 km zone's share of them at the airport end spread over its terminal cells,
-  and at the home end over its homes, by the cells' own airport legs [T-3500].
+  legs, read again with each demand result. The bubbles, and so the plane, count the airport trips
+  from across the zone line too (an airport in a zone apart from its city, T-2896): each 6 km zone's
+  share of them at the airport end spread over its terminal cells by the cells' own airport legs
+  [T-3500], and at the home end over its homes as the other regional trips [T-3503].
 - **Attractions** [T-263, `map/attractionMarks.ts`]: a small classical front (12 px, map ink with
   a land-coloured halo) on each attraction of the world file, with or without bubbles. From zoom
   12, or 10 with the purpose filter on Attractions (each mark follows its attraction every frame
@@ -384,7 +401,9 @@ Destinations or Total on and no bubble selection, every zone in the regional mar
 one included, is one bubble at its registry centre in place of the focused zone's own bubbles:
 all its trips a day (its local trips, from the open zone's view or the pipeline's no-rail count in
 `zones.json`, plus the regional layer's to and from it, which counts only zones whose market pack
-is open: reached, near a station or selected [T-801]; with no market result yet, as on a start on
+is open: reached, near a station or selected [T-801]; the longer trips and commutes with other
+places from the corridors, the everyday outings across its lines with other places from the
+market's result, at both ends [T-3503]; with no market result yet, as on a start on
 the world map, local trips alone), drawn as a red dot (all its trips; car, plane and walking all
 red) with a concentric blue dot inside whose area is the train share, so its radius is the square
 root of the share times the red one's [T-901], with no minimum size, so the dot says what the
@@ -394,11 +413,11 @@ blue dot under half a pixel tints its pixel by its size. Both at the bubble opac
 the edge. A bubble nobody travels in is a plain grey disc. With `SPLIT_BUBBLES` off in
 `map/intercityView.ts` the bubble is a solid disc coloured by `modeMix` of train, walking and the
 rest [T-576: an open zone's walking is green, from its split; a zone not loaded in this session
-has no walk split, so its walking counts in the red; regional trips have no walking]. Labelled
+has no walk split, so its walking counts in the red; of the regional trips only the everyday outings walk]. Labelled
 "Philadelphia · 187k trips" (plain text on the map with a halo, no box [T-824]; at most eight labels on screen, the biggest first [T-493], spaced as above [T-1050]). The hover
 has two lines, each with a mode bar [T-494]: "1.6m trips per day within Yamanashi" (bar from
 the zone's modelled split with its No route part [T-2215], none for a zone not loaded) and "120k inter-city trips per day on
-average to and from Yamanashi" (train blue, the rest red). One scale that depends on the zoom
+average to and from Yamanashi" (train blue, walking green, the rest red). One scale that depends on the zoom
 alone, never on what is on screen [T-525, T-530]: 60,000 trips a day per px² of bubble area at
 zoom 6.5 (`TRIPS_PER_PX2`, `SCALE_ZOOM`), before the size slider, the radius times
 2^(0.35 x (zoom - 6.5)) (`ZOOM_GROWTH`), so bubbles shrink somewhat as the map zooms out.
@@ -423,6 +442,6 @@ that moves the camera to its centre and clears the selection [T-220, T-1134], th
 own rows ([ui-inspectors.md](ui-inspectors.md#the-city-view), T-1438), then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
 "Trips within Philadelphia" [T-2365] (train, walking, car and, where there are any, No route from the open zone's split, the
-last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, train blue, car
-red and planes in the muted grey), then both by trip length as a graph ([ui-inspectors.md](ui-inspectors.md#the-city-view)), then the three places with the most trips, name and trips a day. No table of every place.
+last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, with the everyday outings across its
+lines [T-3503], train blue, walking green, car red and planes in the muted grey), then both by trip length as a graph ([ui-inspectors.md](ui-inspectors.md#the-city-view)), then the three places with the most trips, name and trips a day. No table of every place.
 For a zone with stations the city view goes on with its boardings by purpose and its top lines and stations.

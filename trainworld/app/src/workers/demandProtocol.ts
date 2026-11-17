@@ -110,7 +110,7 @@ export interface SelSquares { xy: Float32Array; share: Float32Array; air?: Float
 export const ALL_PERIODS = (1 << PERIODS.length) - 1;
 
 /** The questions for the demand views, `ToDemand`'s and `FromDemand`'s kinds alike */
-const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail", "flows", "purposes", "icSel", "icStation", "purposeModes", "transfers", "trip", "icTrip", "bare", "bareFlows", "bareSquares", "tripLengths", "airLegs"] as const;
+const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail", "flows", "purposes", "icSel", "icStation", "purposeModes", "transfers", "trip", "icTrip", "bare", "bareFlows", "bareSquares", "tripLengths", "airLegs", "zoneSquares", "regLegs"] as const;
 export type QueryKind = (typeof QUERY_KIND_LIST)[number];
 const QUERY_KINDS: ReadonlySet<string> = new Set(QUERY_KIND_LIST);
 export const isQuery = <T extends { kind: string }>(m: T): m is Extract<T, { kind: QueryKind }> => QUERY_KINDS.has(m.kind);
@@ -277,6 +277,13 @@ export type ToDemand =
    * (market metres, `IntercityApi.airport_legs_day`): `xy0`, `w0` its homes with airport trips and
    * their weight, `xy1`, `w1` its terminals */
   | { kind: "airLegs"; id: number; city: CityId; version: number; round: number; xy0: Float32Array; w0: Float32Array; xy1: Float32Array; w1: Float32Array }
+  /** T-3503: the zone's 600 m squares and each cell's square and share of it at each end, from a
+   * worker holding the zone (the aux worker's copy for a zone open bare) */
+  | { kind: "zoneSquares"; id: number; city: CityId; version: number; round: number }
+  /** T-3503: the regional layer's legs with other places at the zone's squares (market metres) over
+   * this worker's periods (`IntercityApi.zone_legs_day`); `kinds`: bit 0 longer trips, bit 1
+   * commutes, bit 2 + k everyday kind k */
+  | { kind: "regLegs"; id: number; city: CityId; version: number; round: number; xy: Float32Array; kinds: number }
   /** T-2365: the zone's trips by length over this worker's periods (`DemandApi.trip_lengths_day`,
    * `EverydayApi.trip_lengths_day`); `bare`: the aux worker's for a zone open bare, every period */
   | { kind: "tripLengths"; id: number; city: CityId; version: number; round: number; bare?: boolean };
@@ -351,6 +358,9 @@ export type FromDemand =
       corridorRail?: Float64Array;
       /** T-378: per place, its longer trips in the period with places that have no zone, each way */
       elsewhere?: number[];
+      /** T-3503: the everyday outings across a zone line with another place in the period, four
+       * numbers a place with any: place, legs with an end there, rail legs, walking legs */
+      everydayPlaces?: number[];
       /** per route node (line by line, run 0 stops then run 1 stops): riders in the period */
       seg: Float32Array;
       board: Float32Array;
@@ -463,6 +473,12 @@ export type FromDemand =
   /** T-3500: per point of each end, legs, rail legs and walking legs (`airport_legs_day`, the
    * market's all-mode legs and its parts' rail added); null: no market, or not `version` and `round` */
   | { kind: "airLegs"; id: number; city: CityId; version: number; mask: number; legs0: Float64Array | null; legs1: Float64Array | null }
+  /** T-3503: `xy` the squares' centres, `sq` each cell's square, `share` each cell's share of it
+   * (home end, then destination end); null: the zone is not held here */
+  | { kind: "zoneSquares"; id: number; city: CityId; xy: Float32Array | null; sq: Uint32Array | null; share: Float32Array | null }
+  /** T-3503: per square, legs, rail legs and walking legs at the home end, then at the destination
+   * end; null: no market, or not `version` and `round` */
+  | { kind: "regLegs"; id: number; city: CityId; version: number; mask: number; legs: Float64Array | null }
   /** T-2365: eight blocks of `trip_length_edges` bins each (trips, rail, walking, no way, then their
    * km); null: not `version` and `round` (or not held here); `everyday` null for a zone without the layer */
   | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null; kinds: Float64Array | null };

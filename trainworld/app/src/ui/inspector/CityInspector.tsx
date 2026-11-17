@@ -45,6 +45,12 @@ function TripsBar({ label, tip, kind, city, parts, goals }: { label: string; tip
   );
 }
 
+/** T-3503: a place's everyday outings across its zone lines (`IntercityDemand.everyday`): legs, rail, walking. */
+function everydayOf(e: number[] | undefined, place: number): [number, number, number] {
+  for (let i = 0; e && i + 3 < e.length; i += 4) if (e[i] === place) return [e[i + 1], e[i + 2], e[i + 3]];
+  return [0, 0, 0];
+}
+
 export function CityInspector({ id }: { id: string }) {
   const city = cityById(id);
   // T-421: a zone still loading (its bar on the map) has no figures to state yet
@@ -61,8 +67,11 @@ export function CityInspector({ id }: { id: string }) {
     byPlace.set(other, p);
   });
   const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
-  const interAll = places.reduce((s, [, p]) => s + p.all, 0);
-  const interRail = places.reduce((s, [, p]) => s + p.rail, 0);
+  // T-3503: with the everyday outings across the zone's lines (walking some of them)
+  const ev = everydayOf(market?.everyday, city.place);
+  const interAll = places.reduce((s, [, p]) => s + p.all, 0) + ev[0];
+  const interRail = places.reduce((s, [, p]) => s + p.rail, 0) + ev[1];
+  const interWalk = ev[2];
   const interAir = places.reduce((s, [, p]) => s + p.air, 0);
   // T-378: both ways, as the corridors count them
   const elsewhere = 2 * (market?.elsewhere?.[city.place] ?? 0);
@@ -71,7 +80,7 @@ export function CityInspector({ id }: { id: string }) {
   const lm = localModes(view);
   const localAll = view ? view.tripsPerDay : city.localTrips ?? 0;
   // the title mark is the zone's bubble colour (map/intercityView.ts): local and inter-region together
-  const walk = lm?.walk ?? 0, none = lm?.none ?? 0;
+  const walk = (lm?.walk ?? 0) + interWalk, none = lm?.none ?? 0;
   const rail = interRail + (lm?.train ?? 0);
   const d = display.value;
   setBubbleShade(mapShade.value);
@@ -127,7 +136,8 @@ export function CityInspector({ id }: { id: string }) {
                 city={shownName}
                 parts={[
                   { name: t("cityInspector.train"), n: interRail, cls: "seg-train" },
-                  { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interAir), cls: "seg-drive" },
+                  ...(interWalk > 0 ? [{ name: t("cityInspector.walk"), n: interWalk, cls: "seg-walk" }] : []),
+                  { name: t("cityInspector.car"), n: Math.max(0, interAll - interRail - interWalk - interAir), cls: "seg-drive" },
                   ...(interAir > 0 ? [{ name: t("cityInspector.plane"), n: interAir, cls: "seg-other" }] : []),
                 ]}
               />

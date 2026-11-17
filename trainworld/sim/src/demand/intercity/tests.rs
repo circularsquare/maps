@@ -981,6 +981,69 @@ fn airport_pairs_across_a_zone_line() {
     assert!((at.iter().step_by(3).sum::<f64>() - 200.).abs() < 1e-3);
     assert!((at[0] - 200. / n as f64).abs() < 1e-3);
 }
+/// T-3503: `zone_legs` over every site of a place adds up to a selection of all of them, its trips
+/// with other places at each end (longer trips, commutes, everyday outings), all modes and rail;
+/// and `everyday_place_legs` counts each outing at both its places.
+#[test]
+fn zone_legs_add_up_to_a_whole_place_selection() {
+    let packs = world_packs();
+    let rows = rows_json(&packs);
+    let mut e_packs = packs.clone();
+    e_packs[0] = with_everyday(&packs[0], [1000., 100.], true);
+    let mut a = IntercityApi::new(&composition(&e_packs, Some(&rows))).unwrap();
+    world_lines(&mut a, true, true);
+    solve_all(&mut a);
+    let (np, ng) = (a.m.places.len(), a.m.n_gid);
+    let all_q = (1u32 << PERIODS) - 1;
+    let etail = 1 + 8 * np + 11 * ng + 4 * np;
+    let every = u32::MAX;
+    for place in 0..2usize {
+        let g = a.m.groups.iter().find(|g| a.m.zones[a.m.cell_zone[g.lo]].place == place).unwrap();
+        let xy: Vec<f32> = (0..g.city.len()).flat_map(|i| [g.city.x[i], g.city.y[i]]).collect();
+        let share = vec![1f32; g.city.len()];
+        for day in [WEEKDAY as u32, crate::demand::days::OUT as u32] {
+            let all = a.unpack_selection(&a.selection_all_day(place as u32, &xy, &share, &[], day, all_q));
+            let rail = a.unpack_rail(&a.selection_rail_day(place as u32, &xy, &share, &[], day));
+            let legs = a.zone_legs_day(place as u32, &xy, day, all_q, every, false);
+            let rl = a.zone_legs_day(place as u32, &xy, day, all_q, every, true);
+            for end in 0..2 {
+                let sum = |v: &[f64], j: usize| v.chunks_exact(6).map(|c| c[3 * end + j]).sum::<f64>();
+                let (mut want, mut want_rail, mut want_walk) = (0f64, 0f64, 0f64);
+                for p in (0..np).filter(|&p| p != place) {
+                    want += all[1 + 8 * p + 4 * end];
+                    want_rail += rail[1 + 8 * p + 4 * end + 1];
+                    let o = 1 + 8 * np + 7 * ng + 4 * p + 2 * end;
+                    want += all[o];
+                    want_rail += rail[o + 1];
+                }
+                for (ki, &k) in E_CROSS.iter().enumerate() {
+                    if end == 1 && k == E_AIRPORT {
+                        continue;
+                    }
+                    for gid in (0..ng).filter(|&g| a.m.gid_place[g] as usize != place) {
+                        let o = etail + ki * 6 * ng + 6 * gid + 3 * end;
+                        want += all[o];
+                        want_rail += rail[o + 1];
+                        want_walk += all[o + 2] + rail[o + 2];
+                    }
+                }
+                let (got, got_rail, got_walk) = (sum(&legs, 0), sum(&rl, 1), sum(&legs, 2) + sum(&rl, 2));
+                let close = |x: f64, y: f64| (x - y).abs() <= 1e-6 * x.abs().max(y.abs()).max(1.);
+                assert!(want > 0., "place {place} end {end} day {day} has trips");
+                assert!(close(got, want) && close(got_rail, want_rail) && close(got_walk, want_walk), "place {place} end {end} day {day}: {got} {want}, rail {got_rail} {want_rail}, walk {got_walk} {want_walk}");
+                assert_eq!(sum(&rl, 0), 0.);
+            }
+        }
+    }
+    // only the outings: place 0's homes and place 1's activities each count them once
+    let q = 1;
+    let v = a.everyday_place_legs(q);
+    let by: HashMap<usize, Vec<f64>> = v.chunks_exact(5).map(|c| (c[0] as usize, c[1..].to_vec())).collect();
+    let s = a.part_summary(q);
+    let total: f64 = by.values().map(|c| c[0]).sum();
+    assert!((total - 2. * s[4]).abs() <= 1e-6 * s[4], "{total} {}", s[4]);
+    assert!(by.values().all(|c| c[1] <= c[0] && c[2] <= c[3] + 1e-9));
+}
 #[test]
 fn places_not_open_answer_by_place() {
     let packs = world_packs();

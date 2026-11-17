@@ -527,6 +527,253 @@ impl IntercityApi {
         }
         out
     }
+    /// T-3503: the regional layer's legs at 600 m squares `xy` (market metres) of place `market` on a
+    /// kind of day over the periods of `mask`, with other places only (a zone's own place's pairs
+    /// and places with no zone left out, as the zone figures count them). Six numbers a square: at
+    /// the home end (legs leaving: longer trips starting there, commutes and everyday outings of the
+    /// people living there) legs, rail legs and walking legs, then the same at the destination end
+    /// (longer trips arriving, commutes of the people working there, outings coming there; airports'
+    /// left out, spread by their terminals instead, `airport_legs`). A square takes its zone's legs by
+    /// its site's share of the zone's people, attraction or jobs, as `selection` weighs them. `kinds`:
+    /// bit 0 longer trips, bit 1 commutes, bit 2 + k everyday kind k. Without `rail` all modes and
+    /// the walking with no rail; with it this network's rail legs and the walkers rail takes
+    /// (negative), the legs zero.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn zone_legs(&self, market: u32, xy: &[f32], day: u32, mask: u32, kinds: u32, rail: bool) -> Vec<f64> {
+        let m = &self.m;
+        let (n, day) = (xy.len() / 2, day as usize);
+        let mut out = vec![0f64; 6 * n];
+        if market as usize >= m.places.len() {
+            return out;
+        }
+        let nz = m.zones.len();
+        // each square's zone and its shares of the zone's people, attraction and jobs
+        let sq: Vec<Option<(usize, [f64; 3])>> = (0..n)
+            .map(|i| {
+                let key = ((xy[2 * i] / SITE_M).floor() as i32, (xy[2 * i + 1] / SITE_M).floor() as i32, market as usize);
+                let c = m.site_at(key)?;
+                let z = m.cell_zone[c];
+                let (g, ci) = m.site(c);
+                let zz = &m.zones[z];
+                let jobs = if zz.jobs > 0. { ((g.city.jobs[ci] - g.city.pop[ci]) as f64 / 2.).max(0.) / zz.jobs } else { 0. };
+                Some((z, [g.city.pop[ci] as f64 / zz.pop.max(1e-12), g.city.jobs[ci] as f64 / zz.w_attr.max(1e-12), jobs]))
+            })
+            .collect();
+        let mut need = vec![false; nz];
+        for &(z, _) in sq.iter().flatten() {
+            need[z] = true;
+        }
+        // per zone: longer leaving, longer arriving, commutes of residents, of workers, outings of
+        // residents, to here; three numbers each
+        let mut zl = vec![[0f64; 18]; nz];
+        let add = |zl: &mut Vec<[f64; 18]>, z: usize, cat: usize, v: [f64; 3]| {
+            let e = &mut zl[z][3 * cat..3 * cat + 3];
+            e[0] += v[0];
+            e[1] += v[1];
+            e[2] += v[2];
+        };
+        let other = |a: usize, b: usize| m.zones[a].place != m.zones[b].place;
+        let sign = lean_sign(day);
+        let lean = |dir: usize, l: f32| if sign == 0. { 1. } else { 1. + (sign * if dir == 0 { l } else { -l }) as f64 };
+        let periods: Vec<usize> = (0..PERIODS).filter(|&q| mask >> q & 1 == 1 && (!rail || self.per(q).is_some())).collect();
+        if kinds & 1 != 0 {
+            if !rail {
+                let sh: f64 = periods.iter().map(|&q| share_out(day, LONGER, q) as f64).sum();
+                self.zone_longer_all(&need, sh, |z, dir, v| add(&mut zl, z, dir, [v, 0., 0.]), &lean);
+            } else {
+                for &q in &periods {
+                    let per = self.per(q).unwrap();
+                    let f = load_factor(day, LONGER, q) as f64;
+                    for p in 0..self.pairs.len() {
+                        let r = per.pair_rail.get(p).copied().unwrap_or(0.) as f64;
+                        if r <= 0. {
+                            continue;
+                        }
+                        let base = &self.pairs[p & !1];
+                        let (a, b) = if p & 1 == 0 { (base.a as usize, base.b as usize) } else { (base.b as usize, base.a as usize) };
+                        if !other(a, b) {
+                            continue;
+                        }
+                        let (za, zb) = (&m.zones[a], &m.zones[b]);
+                        if need[a] {
+                            add(&mut zl, a, 0, [0., r * f * lean(0, m.zone_lean(za, zb)), 0.]);
+                        }
+                        if need[b] {
+                            add(&mut zl, b, 1, [0., r * f * lean(1, m.zone_lean(zb, za)), 0.]);
+                        }
+                    }
+                }
+            }
+        }
+        if kinds & 2 != 0 {
+            for &q in &periods {
+                let legs = (share_out(day, WORK, q) + share_ret(day, WORK, q)) as f64;
+                let rail_legs = (TO_WORK[q] + TO_HOME[q]) as f64 * load_factor(day, WORK, q) as f64;
+                if rail {
+                    let per = self.per(q).unwrap();
+                    for (i, cp) in self.cpairs.iter().enumerate() {
+                        let (h, wg, nc) = m.commutes[cp.c as usize];
+                        let (h, w) = (h as usize, m.comp_of_gid[wg as usize]);
+                        if w == u32::MAX || !other(h, w as usize) {
+                            continue;
+                        }
+                        let r = nc as f64 * rail_legs * per.c_frac.get(i).copied().unwrap_or(0.) as f64;
+                        if need[h] {
+                            add(&mut zl, h, 2, [0., r, 0.]);
+                        }
+                        if need[w as usize] {
+                            add(&mut zl, w as usize, 3, [0., r, 0.]);
+                        }
+                    }
+                } else {
+                    for (end, (off, items)) in [(0usize, &m.c_home), (1, &m.c_work)] {
+                        for z in (0..nz).filter(|&z| need[z]) {
+                            for &c in &items[off[z] as usize..off[z + 1] as usize] {
+                                let (h, wg, nc) = m.commutes[c as usize];
+                                if m.gid_place[wg as usize] as usize == m.zones[h as usize].place {
+                                    continue;
+                                }
+                                add(&mut zl, z, 2 + end, [nc as f64 * legs, 0., 0.]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if kinds >> 2 != 0 {
+            let want = |k: usize| kinds >> (2 + k) & 1 == 1;
+            let same = |pair: &EPair| m.gid_place[pair.a as usize] as usize == m.zones[pair.h as usize].place;
+            for &q in &periods {
+                if rail {
+                    let per = self.per(q).unwrap();
+                    for ep in &self.epairs {
+                        let pair = &m.everyday[ep.e as usize];
+                        let k = pair.kind as usize;
+                        if !want(k) || same(pair) {
+                            continue;
+                        }
+                        let v = self.e_legs(ep.e as usize, 1., day, q, Some(per));
+                        let (h, a) = (pair.h as usize, m.comp_of_gid[pair.a as usize]);
+                        if need[h] {
+                            add(&mut zl, h, 4, [0., v[1], v[2]]);
+                        }
+                        if a != u32::MAX && need[a as usize] && k != E_AIRPORT {
+                            add(&mut zl, a as usize, 5, [0., v[1], v[2]]);
+                        }
+                    }
+                } else {
+                    for (end, (off, items)) in [(0usize, &m.e_home), (1, &m.e_act)] {
+                        for z in (0..nz).filter(|&z| need[z]) {
+                            for &i in &items[off[z] as usize..off[z + 1] as usize] {
+                                let pair = &m.everyday[i as usize];
+                                let k = pair.kind as usize;
+                                if !want(k) || same(pair) || (end == 1 && k == E_AIRPORT) {
+                                    continue;
+                                }
+                                add(&mut zl, z, 4 + end, self.e_legs(i as usize, 1., day, q, None));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (i, s) in sq.iter().enumerate() {
+            let Some((z, [pop, attr, jobs])) = *s else { continue };
+            let v = &zl[z];
+            for j in 0..3 {
+                out[6 * i + j] = pop * (v[j] + v[6 + j] + v[12 + j]);
+                out[6 * i + 3 + j] = attr * (v[3 + j] + v[15 + j]) + jobs * v[9 + j];
+            }
+            if rail {
+                out[6 * i] = 0.;
+                out[6 * i + 3] = 0.;
+            }
+        }
+        out
+    }
+    /// T-3503: every zone in `need`'s longer trips a day with other places' zones, all modes, at
+    /// `sh` (the periods' outward shares summed): `f(zone, 0, leaving)` and `f(zone, 1, arriving)`.
+    /// Near places' open zones pair zone to zone as `zone_row`; every other place by the zone's share
+    /// (`zone_place_eachway`), which for far places is linear in the zone's normalisers, so off a
+    /// rush day their sum is worked out once for the zone's place.
+    fn zone_longer_all(&self, need: &[bool], sh: f64, mut f: impl FnMut(usize, usize, f64), lean: &dyn Fn(usize, f32) -> f64) {
+        let m = &self.m;
+        let np = m.places.len();
+        let spans = m.place_spans();
+        let mut span_of = vec![None; np];
+        for &(p, a, b) in &spans {
+            span_of[p] = Some((a, b));
+        }
+        let rush = lean(0, 1.) != 1.;
+        // per own place, once: its near places, its far places' rules both ways, and their sums
+        // (the coefficients of a zone's g, t, a and ta)
+        struct Own {
+            near: Vec<usize>,
+            far: Vec<(usize, PairRule, PairRule)>,
+            sums: [f64; 4],
+        }
+        let mut own: HashMap<usize, Own> = HashMap::new();
+        for (z, zz) in m.zones.iter().enumerate().filter(|(z, _)| need[*z]) {
+            let i = zz.place;
+            let o = own.entry(i).or_insert_with(|| {
+                let mut o = Own { near: vec![], far: vec![], sums: [0.; 4] };
+                for j in (0..np).filter(|&j| j != i && m.places[j].has) {
+                    let r = m.pr(i, j);
+                    if r.near {
+                        o.near.push(j);
+                        continue;
+                    }
+                    let (q, bk) = (&m.places[j], m.pr(j, i));
+                    let (g, t) = (m.rule.ground(r.km), m.rule.tail(r.km));
+                    let w = r.b * m.pull_w(r.pull, r.pull_near, r.km);
+                    let wb = bk.b * m.pull_w(bk.pull, bk.pull_near, r.km);
+                    o.sums[0] += w * g * q.a;
+                    o.sums[1] += w * t * q.ta * r.rel;
+                    o.sums[2] += wb * g * q.g;
+                    o.sums[3] += wb * t * q.t * bk.rel;
+                    if rush {
+                        o.far.push((j, r, bk));
+                    }
+                }
+                o
+            });
+            let (mut out, mut back) = (0f64, 0f64);
+            for &j in &o.near {
+                if let Some((a, b)) = span_of[j] {
+                    for zb in &m.zones[a..b] {
+                        let t = m.eachway(zz, zb);
+                        if t >= m.rule.min_trips {
+                            let l = m.zone_lean(zz, zb);
+                            out += t * lean(0, l);
+                            back += t * lean(1, l);
+                        }
+                    }
+                } else {
+                    let (t, l) = (m.zone_place_eachway(zz, j), m.zone_place_lean(zz, j));
+                    out += t * lean(0, l);
+                    back += t * lean(1, l);
+                }
+            }
+            if rush {
+                for (j, r, bk) in &o.far {
+                    let q = &m.places[*j];
+                    let t = 0.5
+                        * (m.directed_by(r.b, r.rel, r.pull, r.pull_near, zz.g, zz.t, q.a, q.ta, r.km)
+                            + m.directed_by(bk.b, bk.rel, bk.pull, bk.pull_near, q.g, q.t, zz.a, zz.ta, r.km));
+                    let l = m.zone_place_lean(zz, *j);
+                    out += t * lean(0, l);
+                    back += t * lean(1, l);
+                }
+            } else {
+                let s = &o.sums;
+                let t = 0.5 * (zz.g * s[0] + zz.t * s[1] + zz.a * s[2] + zz.ta * s[3]);
+                out += t;
+                back += t;
+            }
+            f(z, 0, out * sh);
+            f(z, 1, back * sh);
+        }
+    }
     /// T-2747: `station_flows`'s numbers, by far zone only where the station reaches; None with no
     /// such station.
     fn station_sel(&self, station: u32, day: u32) -> Option<StationSel> {
@@ -581,6 +828,52 @@ impl IntercityApi {
     /// T-3500: `airport_legs` (the airport trips across zone lines at points of a place, one end).
     pub fn airport_legs_day(&self, market: u32, end: u32, xy: &[f32], w: &[f32], day: u32, mask: u32, rail: bool) -> Vec<f64> {
         self.airport_legs(market, end, xy, w, day, mask, rail)
+    }
+    /// T-3503: `zone_legs` (the regional layer's legs at a place's squares, both ends).
+    pub fn zone_legs_day(&self, market: u32, xy: &[f32], day: u32, mask: u32, kinds: u32, rail: bool) -> Vec<f64> {
+        self.zone_legs(market, xy, day, mask, kinds, rail)
+    }
+    /// T-3503: the everyday outings across a zone line with another place, by place, in period `q`
+    /// (a weekday): for each place with any, its index, then the legs with an end there (both ends
+    /// counted, all modes, the same in every part of the market), this network's rail legs, the
+    /// walking legs (the walkers this network's rail takes out) and the walking legs with no rail.
+    /// Empty before the period is solved.
+    pub fn everyday_place_legs(&self, q: usize) -> Vec<f64> {
+        let Some(s) = self.per(q) else { return vec![] };
+        let m = &self.m;
+        let mut by = vec![[0f64; 4]; m.places.len()];
+        let ends = |pair: &EPair| (m.zones[pair.h as usize].place, m.gid_place[pair.a as usize] as usize);
+        for pair in &m.everyday {
+            let (h, a) = ends(pair);
+            if h == a {
+                continue;
+            }
+            let k = pair.kind as usize;
+            let legs = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64;
+            for p in [h, a] {
+                by[p][0] += legs;
+                by[p][2] += legs * pair.walk as f64;
+                by[p][3] += legs * pair.walk as f64;
+            }
+        }
+        for (ei, ep) in self.epairs.iter().enumerate() {
+            let pair = &m.everyday[ep.e as usize];
+            let (h, a) = ends(pair);
+            if h == a {
+                continue;
+            }
+            let k = pair.kind as usize;
+            let rail = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64 * s.e_frac.get(ei).copied().unwrap_or(0.) as f64;
+            for p in [h, a] {
+                by[p][1] += rail;
+                by[p][2] -= rail * pair.walk as f64;
+            }
+        }
+        let mut out = vec![];
+        for (p, v) in by.iter().enumerate().filter(|(_, v)| v[0] > 0.) {
+            out.extend([p as f64, v[0], v[1], v[2].max(0.), v[3]]);
+        }
+        out
     }
     /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
     /// T-2747: packed, the 6 numbers per place, then the far zones the station reaches as
