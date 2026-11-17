@@ -23,18 +23,34 @@ const EARTH_R = 6371008.8, RAD = Math.PI / 180;
  * row 0 south, in the pack's own frame at (lon, lat) */
 export interface WaterMaskRows { cell: number; x0: number; y0: number; w: number; h: number; rows: Uint32Array; runs: Uint16Array; lon: number; lat: number }
 
+/** A cell of a mask: 1 water, 0 land; a cell off the raster repeats the nearest one */
+function cellWater(m: WaterMaskRows, r: number, c: number): number {
+  r = Math.min(Math.max(r, 0), m.h - 1);
+  c = Math.min(Math.max(c, 0), m.w - 1);
+  for (let p = m.rows[r] / 2; p < m.rows[r + 1] / 2; p++) {
+    if (m.runs[p * 2] > c) break;
+    if (c < m.runs[p * 2 + 1]) return 1;
+  }
+  return 0;
+}
+
+/** water where the cells around a point, weighted by closeness, add to this or more: the sim's rule
+ * (`WATER_READ` in params.rs, T-3553) */
+const WATER_READ = 0.8;
+
 /** 1 where some mask says water at a place, 0 where one covers it as land, -1 where none covers it */
 function waterAt(masks: WaterMaskRows[], lng: number, lat: number): number {
   let covered = false;
   for (const m of masks) {
-    const r = Math.floor((EARTH_R * (lat - m.lat) * RAD - m.y0) / m.cell);
-    const c = (EARTH_R * RAD * Math.cos(m.lat * RAD) * (lng - m.lon) - m.x0) / m.cell;
-    if (r < 0 || r >= m.h || c < 0 || c >= m.w) continue;
+    const fr = (EARTH_R * (lat - m.lat) * RAD - m.y0) / m.cell;
+    const fc = (EARTH_R * RAD * Math.cos(m.lat * RAD) * (lng - m.lon) - m.x0) / m.cell;
+    if (fr < 0 || fr >= m.h || fc < 0 || fc >= m.w) continue;
     covered = true;
-    for (let p = m.rows[r] / 2; p < m.rows[r + 1] / 2; p++) {
-      if (m.runs[p * 2] > c) break;
-      if (c < m.runs[p * 2 + 1]) return 1;
-    }
+    const r0 = Math.floor(fr - 0.5), c0 = Math.floor(fc - 0.5);
+    const tr = fr - 0.5 - r0, tc = fc - 0.5 - c0;
+    const lo = cellWater(m, r0, c0) * (1 - tc) + cellWater(m, r0, c0 + 1) * tc;
+    const hi = cellWater(m, r0 + 1, c0) * (1 - tc) + cellWater(m, r0 + 1, c0 + 1) * tc;
+    if (lo * (1 - tr) + hi * tr >= WATER_READ) return 1;
   }
   return covered ? 0 : -1;
 }

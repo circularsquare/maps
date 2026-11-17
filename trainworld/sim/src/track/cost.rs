@@ -211,7 +211,7 @@ impl WorldWater {
             }
             row.push(xs.len() as u32);
         }
-        Some(RunMask { x0: -180.0, y0: -90.0, cell: 1.0 / per as f64, w, h, row, xs, shore: 0.0 })
+        Some(RunMask { x0: -180.0, y0: -90.0, cell: 1.0 / per as f64, w, h, row, xs, between: false })
     }
 }
 
@@ -240,15 +240,14 @@ pub struct RunMask {
     pub h: u32,
     pub row: Vec<u32>,
     pub xs: Vec<u16>,
-    /// Metres from a water cell's edge that still count as land, see `is_water` (T-3524). 0 for the world's
-    /// coarse mask, whose cells are degrees.
-    pub shore: f64,
+    /// Read between cell centres, see `is_water` (T-3553). False for the world's coarse mask, whose cells are degrees.
+    pub between: bool,
 }
 
 impl RunMask {
-    /// A city pack's raster, with the shore margin (`WATER_MARGIN`).
+    /// A city pack's raster, read between cell centres.
     pub fn pack(cell: f64, x0: f64, y0: f64, w: u32, h: u32, row: Vec<u32>, xs: Vec<u16>) -> RunMask {
-        RunMask { x0, y0, cell, w, h, row, xs, shore: WATER_MARGIN }
+        RunMask { x0, y0, cell, w, h, row, xs, between: true }
     }
     fn cell_water(&self, x: f64, y: f64) -> bool {
         let c = ((x - self.x0) / self.cell).floor();
@@ -265,19 +264,33 @@ impl RunMask {
     pub fn from_pack(cell: f64, origin: [f64; 2], size: [u32; 2], row_bytes: &[u8], x_bytes: &[u8]) -> RunMask {
         let row = row_bytes.chunks_exact(4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])).collect();
         let xs = x_bytes.chunks_exact(2).map(|b| u16::from_le_bytes([b[0], b[1]])).collect();
-        RunMask { x0: origin[0], y0: origin[1], cell, w: size[0], h: size[1], row, xs, shore: WATER_MARGIN }
+        RunMask { x0: origin[0], y0: origin[1], cell, w: size[0], h: size[1], row, xs, between: true }
     }
 }
 
 impl WaterMask for RunMask {
     fn is_water(&self, x: f64, y: f64) -> bool {
-        if !self.cell_water(x, y) {
+        if !self.between {
+            return self.cell_water(x, y);
+        }
+        if !self.covers(x, y) {
             return false;
         }
-        // Water only where the four points `shore` m around are water too: the raster's edge is
-        // up to ~15 m off the drawn coast (T-3524). A probe off the raster does not veto.
-        let d = self.shore;
-        d <= 0.0 || [(d, 0.0), (-d, 0.0), (0.0, d), (0.0, -d)].iter().all(|&(dx, dy)| !self.covers(x + dx, y + dy) || self.cell_water(x + dx, y + dy))
+        // The pixels' edge is up to ~15 m off the drawn coast (T-3524), so water is where the 0/1 cell values
+        // around the point, weighted by distance from their centres, add to `WATER_READ` or more (T-3553). The
+        // raster's own edge repeats its last cell: it is not a shore.
+        let (fc, fr) = ((x - self.x0) / self.cell - 0.5, (y - self.y0) / self.cell - 0.5);
+        let (c0, r0) = (fc.floor(), fr.floor());
+        let (tc, tr) = (fc - c0, fr - r0);
+        let (c0, r0) = (c0 as i64, r0 as i64);
+        let at = |r: i64, c: i64| -> f64 {
+            let (r, c) = (r.clamp(0, self.h as i64 - 1) as usize, c.clamp(0, self.w as i64 - 1) as i64);
+            let row = &self.xs[self.row[r] as usize..self.row[r + 1] as usize];
+            (row.partition_point(|&v| (v as i64) <= c) % 2) as f64
+        };
+        let lo = at(r0, c0) * (1.0 - tc) + at(r0, c0 + 1) * tc;
+        let hi = at(r0 + 1, c0) * (1.0 - tc) + at(r0 + 1, c0 + 1) * tc;
+        lo * (1.0 - tr) + hi * tr >= WATER_READ
     }
     fn covers(&self, x: f64, y: f64) -> bool {
         let (c, r) = ((x - self.x0) / self.cell, (y - self.y0) / self.cell);
@@ -733,7 +746,7 @@ mod tests {
     #[test]
     fn transformed_water_union_keeps_cell_edges_and_uncovered_land() {
         let pack = RunMask { x0: -10.0, y0: -20.0, cell: 5.0, w: 3, h: 2,
-            row: vec![0, 2, 4], xs: vec![1, 3, 0, 1], shore: 0.0 };
+            row: vec![0, 2, 4], xs: vec![1, 3, 0, 1], between: false };
         let transformed = TransformedMask { mask: Arc::new(pack), offset: [-100000.0, -90000.0], scale: [0.5, 1.0] };
         let at = |x, y| transformed.is_water(-100000.0 + 0.5 * x, -90000.0 + y);
         assert!(!at(-7.5, -17.5));
@@ -1018,7 +1031,7 @@ mod tests {
         impl WaterMask for Sea {
             fn is_water(&self, _: f64, _: f64) -> bool { true }
         }
-        let pack = RunMask { x0: 0.0, y0: 0.0, cell: 50.0, w: 2, h: 2, row: vec![0, 2, 4], xs: vec![1, 2, 1, 2], shore: 0.0 };
+        let pack = RunMask { x0: 0.0, y0: 0.0, cell: 50.0, w: 2, h: 2, row: vec![0, 2, 4], xs: vec![1, 2, 1, 2], between: false };
         let set = MaskSet { rasters: vec![(Arc::new(pack), [0.0, 0.0, 100.0, 100.0])], world: Some(Arc::new(Sea)) };
         assert!(!set.is_water(25.0, 25.0), "the pack's land wins over the world's water");
         assert!(set.is_water(75.0, 25.0));
@@ -1029,7 +1042,7 @@ mod tests {
     }
 
     #[test]
-    fn shore_margin_keeps_the_bank_dry_and_the_channel_wet() {
+    fn reading_between_cells_keeps_the_bank_dry_and_the_channel_wet() {
         // 25 m cells, 8 x 8: a vertical channel of 2 cells (columns 3-4), a diagonal one of 2 cells' width,
         // and water along the whole east edge of the raster (columns 6-7)
         let (w, h) = (8usize, 8usize);
@@ -1041,12 +1054,13 @@ mod tests {
             while c < w { if g[r][c] { let s = c; while c < w && g[r][c] { c += 1; } xs.push(s as u16); xs.push(c as u16); } else { c += 1; } }
             row.push(xs.len() as u32);
         }
-        let m = RunMask { x0: 0.0, y0: 0.0, cell: 25.0, w: 8, h: 8, row: row.clone(), xs: xs.clone(), shore: WATER_MARGIN };
-        let raw = RunMask { shore: 0.0, ..RunMask { x0: 0.0, y0: 0.0, cell: 25.0, w: 8, h: 8, row, xs, shore: 0.0 } };
-        // the channel's cells: 75..125 m. Within 12 m of either bank is land now, the middle stays water
+        let m = RunMask { x0: 0.0, y0: 0.0, cell: 25.0, w: 8, h: 8, row: row.clone(), xs: xs.clone(), between: true };
+        let raw = RunMask { between: false, ..RunMask { x0: 0.0, y0: 0.0, cell: 25.0, w: 8, h: 8, row, xs, between: false } };
+        // the channel's cells: 75..125 m. The outer 7.5 m of each bank is land now, 82.5..117.5 stays water
         assert!(raw.is_water(76.0, 100.0) && !m.is_water(76.0, 100.0));
         assert!(raw.is_water(124.0, 100.0) && !m.is_water(124.0, 100.0));
         assert!(m.is_water(100.0, 100.0) && m.is_water(88.0, 100.0) && m.is_water(112.0, 100.0));
+        assert!(!m.is_water(81.0, 100.0) && m.is_water(84.0, 100.0) && m.is_water(116.0, 100.0) && !m.is_water(119.0, 100.0));
         // a crossing of the channel still has a wet span, along a diagonal too
         let mut out = vec![];
         water_spans(200.0, |s| (s, 100.0), &m, &mut out);
@@ -1069,7 +1083,7 @@ mod tests {
         assert_eq!(out.len(), 1);
         assert!((out[0][0] - 400.0).abs() <= 25.0 && (out[0][1] - 600.0).abs() <= 25.0);
         // Row 0: columns 1..3 water; row 1: none.
-        let r = RunMask { x0: 0.0, y0: 0.0, cell: 50.0, w: 4, h: 2, row: vec![0, 2, 2], xs: vec![1, 3], shore: 0.0 };
+        let r = RunMask { x0: 0.0, y0: 0.0, cell: 50.0, w: 4, h: 2, row: vec![0, 2, 2], xs: vec![1, 3], between: false };
         assert!(!r.is_water(10.0, 10.0) && r.is_water(60.0, 10.0) && r.is_water(149.0, 10.0));
         assert!(!r.is_water(151.0, 10.0) && !r.is_water(60.0, 60.0) && !r.is_water(-1.0, 0.0));
     }

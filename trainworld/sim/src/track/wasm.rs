@@ -2182,6 +2182,8 @@ mod tests;
 #[cfg(test)]
 mod flip_tests;
 #[cfg(test)]
+mod realwater_tests;
+#[cfg(test)]
 mod bus_tests;
 #[cfg(test)]
 mod loop_tests;

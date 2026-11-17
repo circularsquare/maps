@@ -118,10 +118,10 @@ pub const FLYOVER_KM: f64 = 0.6;
 pub const FLAT_CROSSING_KM: f64 = 0.1;
 /// Water mask sampling step along track, m: half the pack mask's 25 m pixel (notes/T-004.md).
 pub const WATER_STEP: f64 = 12.5;
-/// A pack mask's water starts this far inside its raster edge (T-3524): the raster's cells reach up to
-/// ~15 m past the drawn coast, so ground track near a shore stays on land. Under WATER_STEP, so a 50 m
-/// channel (the narrowest the masks keep) still leaves a band the sampling catches.
-pub const WATER_MARGIN: f64 = 12.0;
+/// A pack mask reads as water where the 0/1 values of the four cells around a point, weighted by closeness,
+/// add to this or more (T-3553): the cells reach up to ~15 m past the drawn coast, so ground track near a shore
+/// stays on land, and a 50 m channel still leaves a band (about 35 m) the sampling catches.
+pub const WATER_READ: f64 = 0.8;
 /// What each terrain class adds to the level's multiplier (T-1890, Anita 2026-10-31): flat, low
 /// hills, high hills, mountains. Added, so at grade in mountains is 0.5 + 3 = 3.5x.
 pub const TERRAIN_SURCHARGE: [f64; 4] = [0.0, 0.5, 1.2, 3.0];
