@@ -18,6 +18,8 @@ export const M_BAD = 4;
 /** T-3164: one-way track pointing into a node with no way on, or out of it with no way in */
 export const M_CONVERGE = 5;
 export const M_DIVERGE = 6;
+/** T-3562: a line's run goes over this piece twice in the same direction */
+export const M_REPEAT = 7;
 
 /** T-3062: a flat crossing's modes ride in its level slot as a tenth per tram track: level + 0.1 for a
  * tram over rail track (the tram yields), + 0.2 for two tram tracks. Whole levels still round to

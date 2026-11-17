@@ -19,7 +19,7 @@ import { shadeColours } from "../game/shades";
 import { display } from "../game/ui";
 import { compileOptional, interp, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
-import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, MARK_STRIDE } from "./markData";
+import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_PORTAL, M_RAMP, M_REPEAT, MARK_STRIDE } from "./markData";
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
@@ -148,6 +148,12 @@ void mark() {
     // a fork: a stem below, two arms up
     vec2 hub = vec2(0.0, 0.1 * r);
     glyph = cov(min(seg(v_p, vec2(0.0, 0.55 * r), hub), min(seg(v_p, hub, vec2(-0.42 * r, -0.55 * r)), seg(v_p, hub, vec2(0.42 * r, -0.55 * r)))) - g);
+  } else if (shape == ${M_REPEAT}) {
+    // T-3562: a loop with its two ends crossing at the top and leaving it, up and to each side
+    vec2 c0 = vec2(0.0, 0.12 * r);
+    float lp = abs(length(v_p - c0) - 0.32 * r) - g;
+    float tails = min(seg(v_p, vec2(0.12 * r, -0.2 * r), vec2(0.62 * r, -0.55 * r)), seg(v_p, vec2(-0.12 * r, -0.2 * r), vec2(-0.62 * r, -0.55 * r)));
+    glyph = cov(min(lp, tails - g));
   } else if (shape == ${M_CONVERGE} || shape == ${M_DIVERGE}) {
     // T-3164: two arrows on one line, pointing at each other or apart; the right one, mirrored
     vec2 q = vec2(abs(v_p.x), v_p.y);
@@ -309,6 +315,7 @@ export function markTip(marks: Float32Array, i: number): TipLine[] {
   else if (shape === M_BAD) out.push(t("gradeMarks.badCross"));
   else if (shape === M_CONVERGE) out.push(t("gradeMarks.converging"));
   else if (shape === M_DIVERGE) out.push(t("gradeMarks.diverging"));
+  else if (shape === M_REPEAT) out.push(t("gradeMarks.repeatTrack"));
   else {
     out.push(t(shape === M_JUNCTION ? "gradeMarks.junction" : "gradeMarks.crossing"));
     if (shape === M_CROSSING && crossTrams(marks[i + 5]) === 1) out.push(t("gradeMarks.tramYields"));

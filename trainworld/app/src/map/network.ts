@@ -11,7 +11,8 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import type { PreviewAnswer } from "../workers/clockClient";
 import type { ClockEdge, ClockState } from "../workers/protocol";
 import { anchor, kAtY, toLocal, type Anchor } from "./geo";
-import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, MARK_STRIDE, rampMarks } from "./markData";
+import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_REPEAT, MARK_STRIDE, rampMarks } from "./markData";
+import { repeatedEdge } from "../game/repeatTrack";
 import { placeFacilities } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, KNOT, lineBands, profileAt, type BandProfile } from "./lineBands";
@@ -1935,6 +1936,15 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   }
   const cx = s.crossings;
   if (cx) for (let k = 0; k + 4 < cx.length; k += 5) marks.push(cx[k], cx[k + 1], cx[k + 2] === 1 ? M_BAD : M_CROSSING, 0, cx[k + 4] === 1 ? 0 : 1, cx[k + 3]);
+  // T-3562: a loop at the first piece a line's run goes over twice in the same direction, at the piece's middle
+  for (const l of s.lines) {
+    if (l.bus || l.twinOf !== undefined) continue;
+    const id = repeatedEdge(l), pts = id === null ? undefined : edgePts.get(id);
+    if (!pts || pts.length < 6) continue;
+    const k = Math.floor((pts.length / 3 - 1) / 2) * 3, f = ((pts.length / 3 - 1) % 2) / 2;
+    const z = pts[k + 2] + f * (pts[k + 5] - pts[k + 2]);
+    marks.push(pts[k] + f * (pts[k + 3] - pts[k]), pts[k + 1] + f * (pts[k + 4] - pts[k + 1]), M_REPEAT, 0, builtEdge.get(id!) === false ? 1 : 0, Math.max(-3, Math.min(3, Math.round(z / 8))));
+  }
   // T-3094: chevrons along one-way single track, clear of stations
   const oneWayTrack: number[] = [];
   if (s.edges.some((e) => e.oneWay)) {

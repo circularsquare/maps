@@ -22,6 +22,7 @@ import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/render
 import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
+import { repeatedEdge } from "../../game/repeatTrack";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats } from "../../game/world";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
@@ -1004,6 +1005,10 @@ function RailLineInspector({ id }: { id: string }) {
       )}
       {st.status === "broken" && (
         <ul class="alerts"><Alert>{tr("lineInspector.broken")}</Alert></ul>
+      )}
+
+      {st.status !== "broken" && repeatedEdge(st) !== null && (
+        <ul class="alerts"><Alert tip={tr("lineInspector.repeatTrackTip", { vehicle: vehicleOf(st) })}>{tr("lineInspector.repeatTrack")}</Alert></ul>
       )}
 
       <div class="line-stop-actions">
