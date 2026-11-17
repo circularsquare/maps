@@ -580,6 +580,23 @@ def follow(run):
         run["code"] = code
 
 
+HISTORY_SCRIPT = HERE / "trainworld" / "board" / "history.py"
+
+
+def history_loop():
+    """Once an hour, count the board's open tasks (T-3504): history.py adds a row when the last is 50+ minutes old
+    and rewrites the board's history.json. Checked every 5 minutes; a failure waits for the next check."""
+    while True:
+        if HISTORY_SCRIPT.exists():
+            try:
+                subprocess.run([sys.executable, str(HISTORY_SCRIPT), "record"], cwd=str(HERE), timeout=120,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            except (OSError, subprocess.SubprocessError):
+                pass
+        time.sleep(300)
+
+
 class Server(http.server.ThreadingHTTPServer):
     daemon_threads = True
     # Windows refuses (not delays) connections past a full backlog; the default 5 lost 60% of
@@ -636,6 +653,7 @@ def serve(port):
                  f"Or pick another: python serve.py {port + 1}")
     global PORT
     PORT = port
+    threading.Thread(target=history_loop, daemon=True).start()
     with httpd:
         print(f"maps at http://localhost:{port}/  (ctrl-c to stop)", flush=True)
         for name, _, _ in load():
