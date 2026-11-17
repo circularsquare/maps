@@ -292,8 +292,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3564 [P2] {L:map-look} Passing stations on single track draw both platforms (taking, 2026-11-17, agent tramstation)
   - Context: You, 2026-11-17, on T-3540's one outside platform: "oh oh i see. yes drawing can go back for this case." Each direction stops on its own track at a passing station, so both tracks need a platform; the one smaller outside platform stays for single-track stations with no passing track.
   - Goal: A single-track station with a passing track draws a platform beside each track again; tram boxes stay 30% narrower.
-- T-3556 [P2] {L:checks} Agent playtest harness (taking, 2026-11-17, agent harness)
-  - Context: You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
+- T-3556 [P4] {L:checks} Agent playtest harness, outside agents and attach my game
+  - Context: Stage 1 (the shared harness in checks/lib) landed 47c98437. Left, as P4 on your word 2026-11-17 ("do it as like p4"): stage 2, an MCP server so outside agents can play (3-4 h local, 8-12 h more hosted, a server deploy); stage 3, "Attach my game" in feedback (2-3 h). Sketches in notes/T-3556.md. You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).
 - T-3557 [P2] {L:timetables} {after:T-3521} Weekend headway stepper runs faster than stepped
   - Context: From T-3521's fix: the weekend headway stepper sets counts by hand, so the line then runs every round trip / count, which can be shorter than the headway stepped to. Paced count lines keep the weekday cap through `line_pace` (a known lie in notes/T-3521.md).
@@ -963,8 +963,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Since T-2419 (2026-11-04) the check's express overtakes the local where there is nowhere to pass: 75 of 1,248 frames drawn through each other.
   - Goal: t1965-follow passes at 1+1 and 4+2. Part of T-3264.
   - Other: notes/T-3264.md
-- T-3264 [P2] {L:trains-drawn} One fix for trains drawn through each other (taking, 2026-11-17, agent drawapart)
-  - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Stage 0 (the t3264-overlaps check) done; stage 1 (opposite directions side by side on double track from zoom 14) built in the drawapart tree as a mock, waiting on your look at it.
+- T-3264 [P3] {L:trains-drawn} {after:v0.4.0} One fix for trains drawn through each other (taking, 2026-11-17, agent drawapart)
+  - Context: You approved the plan 2026-11-16: "3264 yes this soudns good". Draw tracks apart first, then one hold plan per hour. Stage 0 (the t3264-overlaps check) done. You declined the narrowed trains of stage 1 and postponed the rest until after v0.4.0 (2026-11-17); your hunch is a local and an express on the same track.
   - Goal: Trains on different tracks are drawn apart, and t1965-follow passes at 1+1 and 4+2.
   - Other: notes/T-3264.md; about 13-19 h
 - T-3079 [P2] {L:stops} Exact stop ordering back
