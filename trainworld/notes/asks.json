@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-17-12",
-    "title": "Currency on another device",
-    "text": "T-3572: the Japanese player's \"money 150x on another device\" is the per-browser currency: a Japanese browser starts on yen, so the same game shows every figure in yen there and dollars elsewhere. Fix: store the chosen currency in each save so every device shows the game in the currency it was saved in (about 1-1.5 h; old saves keep the device's choice), or only a one-time note on a new device naming the currency (about 1 h)? Pick: store it in the save.",
-    "since": "2026-11-17",
-    "by": "maps-58"
-  }
-]
+[]
