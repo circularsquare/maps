@@ -888,6 +888,8 @@ rect.now { fill-opacity: .45; }
 .sched-copy .btn { color: var(--muted); }
 .sched-copy .btn.icon.mini { width: 24px; min-width: 24px; height: 24px; }
 .sched-copy .btn.mini svg { width: 18px; height: 18px; }
+/* the chart icon fills 13 of its 16 units where the timetable's fills 11: drawn smaller so the two look one size */
+.sched-copy .btn.mini.marey-open svg { width: 15px; height: 15px; }
 .sched-copy .btn:hover:not(:disabled) { color: var(--text); }
 .stops .grow { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stops .t { margin-left: 8px; }
