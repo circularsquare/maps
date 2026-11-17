@@ -46,8 +46,8 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
   start new lines if little is running.
 
 - solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag, after the publish.
-- T-3600 (5 min after a Kaohsiung edit on her big Asia save): waits on her save file (asked 11-17); then an Opus
-  investigation agent.
+- kaohsiung (Opus, .tw-trees/kaohsiung, port 6199): T-3600 (5 min after a Kaohsiung edit) + T-3601 (lines with no
+  trains keep riders after the recalc) on her saves artifacts/trainworld/t3600-asianita-1851/-1852.save.
 
 ## Night run
 - T-3511 enclave shifts + T-3455 coastal rows, plan notes/T-3455.md, ~8.2 h, 10 cores. It rebuilds packs, so never
