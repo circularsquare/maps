@@ -2,7 +2,7 @@
 // tiles (the base map/realNetwork.ts reads them from, so R2 for players), one region's file fetched the first
 // time it is needed. Junction points (`j`) are not stations and are left out.
 //
-// Marks: small rings over the real network from MIN_ZOOM, when Settings > Real world network > Show stations
+// Marks: soft purple dots (the real metro colour, low opacity, like the track) over the real network from MIN_ZOOM, when Settings > Real world network > Show stations
 // is on (off by default) and the network itself is shown; the name only on hover. A station whose every line
 // is a tram, funicular, monorail or narrow gauge one shows only where those lines do (All, or tram track
 // snapping), which takes the region's lines.json too (only while the marks are on).
@@ -208,10 +208,8 @@ export function startRealStations(map: maplibregl.Map) {
 
   const paint = () => {
     const c = SHADES[mapShade.peek()];
-    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-color", c.land);
-    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-stroke-color", c.realMain);
+    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-color", c.realMetro);
     map.setPaintProperty(REAL_STATIONS_LAYER, "circle-opacity", c.realStationOpacity);
-    map.setPaintProperty(REAL_STATIONS_LAYER, "circle-stroke-opacity", c.realStationOpacity);
   };
 
   const draw = () => {
@@ -225,8 +223,7 @@ export function startRealStations(map: maplibregl.Map) {
         {
           id: REAL_STATIONS_LAYER, type: "circle", source: REAL_STATIONS_LAYER, minzoom: MIN_ZOOM,
           paint: {
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 1.4, 12, 1.8, 14, 3, 16, 4.5, 18, 6],
-            "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 14, 1.3, 18, 1.8],
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2, 12, 2.6, 14, 3.8, 16, 5.2, 18, 7],
           },
         },
         map.getLayer("tw-reach") ? "tw-reach" : firstSymbolId(map),

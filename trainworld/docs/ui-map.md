@@ -42,9 +42,9 @@ the national registers, one `track` layer); the tiles carry no line type or name
 there is no high-speed class and no hover yet.
 
 **Real stations** [T-3570, `map/realStations.ts`]: "Show stations" under the Real world network buttons, off by
-default, draws a small ring on each real station (`realMain` round a land-coloured middle, 60% opaque in light,
-70% in dark, `realStationOpacity`) from zoom 10, over the lines and under the labels, whenever the lines show
-(by the setting or while snapping). Hovering a ring shows the station's name and nothing else (the name the
+default, draws a small filled dot on each real station (`realMetro` purple, 36% opaque in light,
+42% in dark, `realStationOpacity`) from zoom 10, over the lines and under the labels, whenever the lines show
+(by the setting or while snapping). Hovering a dot shows the station's name and nothing else (the name the
 station tool would give it, else the local name). A station whose every line is a tram, funicular, monorail or
 narrow gauge one shows only where those lines do: under All, or while tram track snaps. The stations are
 noritetsu's model's (`data/<cc>/stations.json`, junction points left out; the tram test reads the region's
