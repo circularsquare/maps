@@ -284,6 +284,12 @@ pub fn zones_check(z: &Zones) -> u64 {
 }
 
 impl Routes {
+    /// T-2496: heap bytes (`demand::mem`).
+    pub(crate) fn heap_bytes(&self) -> usize {
+        use super::mem::vb;
+        self.walk.as_ref().map_or(0, |w| vb(&w.row_off) + vb(&w.xs)) + vb(&self.gx) + vb(&self.gy) + vb(&self.reg) + vb(&self.drive_near) + vb(&self.sup) + vb(&self.drive_far)
+            + vb(&self.walk_zone) + vb(&self.part) + vb(&self.unit_off)
+    }
     /// No walking barrier and no tables yet, for zones `z`.
     pub fn bare(z: &Zones) -> Routes {
         Routes {

@@ -39,6 +39,7 @@ impl Drive {
 
 /// The table by place: each place's pairs with later places (`off`, CSR), ascending.
 #[derive(Default)]
+
 pub(super) struct Drives {
     off: Vec<u32>,
     to: Vec<(u16, i8, i8)>,
@@ -51,6 +52,14 @@ pub(super) struct Drives {
     zgroups: Vec<(u32, u32, u16, bool)>,
     zdense: Vec<[i8; 2]>,
     zsparse: Vec<(u16, i8, i8)>,
+}
+
+impl Drives {
+    /// T-2496: heap bytes (`demand::mem`).
+    pub(super) fn heap_bytes(&self) -> usize {
+        use crate::demand::mem::vb;
+        vb(&self.off) + vb(&self.to) + vb(&self.ferry) + vb(&self.zgroups) + vb(&self.zdense) + vb(&self.zsparse)
+    }
 }
 fn take_bytes<'a>(b: &'a [u8], p: &mut usize, n: usize) -> Result<&'a [u8], String> {
     let s = b.get(*p..*p + n).ok_or_else(|| "invalid market drives".to_string())?;

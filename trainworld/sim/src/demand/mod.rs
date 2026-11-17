@@ -35,6 +35,8 @@ pub mod lanes;
 pub mod lengths;
 /// T-1222: a zone's level of detail.
 pub mod lod;
+/// T-2496: heap bytes by structure (`mem_report`).
+pub(crate) mod mem;
 pub mod network;
 pub mod pack;
 /// T-275: routed walks (around water, over bridges) and drives (OSM roads) from the pack.

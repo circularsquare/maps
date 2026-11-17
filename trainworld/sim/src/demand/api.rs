@@ -575,6 +575,56 @@ pub struct DemandApi {
     len_base: std::cell::OnceCell<LenBase>,
 }
 
+/// T-2496: heap bytes by structure (`demand::mem`).
+impl DemandApi {
+    /// Everything this population holds, under `at`; with `shared` the cells, zones, gravity and
+    /// parameters' tables it shares with its everyday layer too (counted once, with the commutes).
+    pub(crate) fn mem_into(&self, r: &mut super::mem::Report, at: &str, shared: bool) {
+        use super::mem::{self, vb};
+        if shared {
+            mem::city(&self.city, r, at);
+            r.add(format!("{at}zones"), mem::zones(&self.z));
+            mem::gravity(&self.gr, r, at);
+            r.add(format!("{at}no rail (NoRail)"), self.nr.heap_bytes());
+            let b = &self.base;
+            r.add(format!("{at}routes (walks, drives)"), b.routes.as_ref().map_or(0, |x| x.heap_bytes()));
+            r.add(format!("{at}home density, cordon"), b.home_dens.as_ref().map_or(0, |x| vb(x)) + b.cordon.as_ref().map_or(0, |x| vb(x)));
+            r.add(format!("{at}land parts"), b.parts.as_ref().map_or(0, |p| vb(&p.cell) + vb(&p.z_off) + vb(&p.s_part) + vb(&p.s_pop) + vb(&p.s_jobs) + vb(&p.cell_slot) + vb(&p.mixed)));
+        }
+        r.add(format!("{at}weights"), self.weights.as_ref().map_or(0, |(a, b)| vb(a) + vb(b)));
+        r.add(format!("{at}per zone (walk, unr, home_k, work_k)"), vb(&self.walk_home_zone) + vb(&self.walk_work_zone) + vb(&self.unr_home) + vb(&self.unr_work) + vb(&self.home_k) + vb(&self.work_k));
+        if let Some(s) = &self.svc {
+            r.add(format!("{at}service"), vb(&s.st_x) + vb(&s.st_y) + vb(&s.st_map) + vb(&s.line_off) + vb(&s.stops) + vb(&s.stop_xy) + vb(&s.times) + vb(&s.tph) + vb(&s.cars) + vb(&s.group) + vb(&s.span) + vb(&s.ups) + vb(&s.passages) + vb(&s.catches) + s.catches.iter().map(|c| vb(&c.pts)).sum::<usize>() + vb(&s.st_bus) + vb(&s.st_tram) + vb(&s.back));
+        }
+        if let Some(s) = &self.sz {
+            mem::subzones(s, r, at);
+        }
+        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in));
+        let (mut net, mut g, mut avg, mut od, mut sub, mut rest) = (0, 0, 0, 0, 0, 0);
+        for p in self.per.iter().flatten() {
+            net += mem::network(&p.net);
+            g += mem::graph(&p.g);
+            avg += mem::loads(&p.avg);
+            let s = &p.sub;
+            od += vb(&s.od);
+            sub += vb(&s.rail_home) + vb(&s.rail_work) + vb(&s.walk_lost_home) + vb(&s.walk_lost_work) + vb(&s.unr_lost_home) + vb(&s.unr_lost_work) + vb(&s.acc_home) + vb(&s.acc_work);
+            rest += vb(&p.fac) + vb(&p.seen) + mem::xfer(&p.xi) + vb(&p.xfer) + vb(&p.len.rail) + vb(&p.len.walk) + vb(&p.len.unr);
+        }
+        r.add(format!("{at}periods: network copies"), net);
+        r.add(format!("{at}periods: graphs"), g);
+        r.add(format!("{at}periods: loads"), avg);
+        r.add(format!("{at}periods: station OD (sub.od)"), od);
+        r.add(format!("{at}periods: by subzone and access entry (sub)"), sub);
+        r.add(format!("{at}periods: crowding, transfers, lengths"), rest);
+    }
+    /// `mem_into` of everything, as text (`bin/demand_mem.rs`).
+    pub fn mem_report(&self) -> String {
+        let mut r = super::mem::Report::default();
+        self.mem_into(&mut r, "", true);
+        r.text()
+    }
+}
+
 /// T-2365: a pack's commutes a day by length with no network: all, walking, and between two land
 /// parts (`LenSums` each; `DemandApi::len_base`).
 struct LenBase {

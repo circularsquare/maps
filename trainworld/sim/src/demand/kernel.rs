@@ -798,6 +798,11 @@ pub struct NoRail {
 }
 
 impl NoRail {
+    /// T-2496: heap bytes (`demand::mem`).
+    pub(crate) fn heap_bytes(&self) -> usize {
+        use super::mem::vb;
+        vb(&self.place) + vb(&self.park) + vb(&self.home)
+    }
     pub fn new(z: &Zones, p: &Params) -> NoRail {
         let place = z.density().iter().map(|&d| p.place_min_per_km(d)).collect();
         let park = (0..z.n).map(|j| p.park_parts(z, j)).collect();

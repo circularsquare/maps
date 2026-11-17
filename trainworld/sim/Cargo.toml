@@ -88,6 +88,12 @@ name = "zone_summary"
 path = "src/bin/zone_summary.rs"
 required-features = ["demand"]
 
+# T-2496: what a solving demand worker's heap holds on the real New York network, stage by stage.
+[[bin]]
+name = "demand_mem"
+path = "src/bin/demand_mem.rs"
+required-features = ["demand"]
+
 # T-509: one calibration run, a weekday on a city's real network with a parameter set.
 [[bin]]
 name = "calib"

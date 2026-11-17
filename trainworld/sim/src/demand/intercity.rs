@@ -928,10 +928,12 @@ struct Rules {
 struct Corridors {
     /// distinct for each set worked out (`IntercityApi::corridors_id`)
     id: u32,
-    /// the corridors with longer trips, ascending, and their trips a day (T-2122: dense, it was 8
-    /// bytes for each of the world's 12.7M corridors in every solving worker, two thirds of them 0)
-    trips_at: Vec<u32>,
-    trips: Vec<f64>,
+    /// the corridors with longer trips, a bit each of the world's corridors (T-2496: 2 MB where their
+    /// indices took 31), and their trips a day in corridor order, as f32 (T-2496: 31 MB less, the
+    /// figures within 1e-7 of the f64 sum; T-2122 made them dense, 8 bytes for each of the world's
+    /// 12.7M corridors before)
+    has_trips: Vec<u64>,
+    trips: Vec<f32>,
     commute: Vec<(u32, f64)>,
     commuters: f64,
     leaving_by: Vec<f64>,
@@ -940,6 +942,22 @@ struct Corridors {
     place_pairs: usize,
     /// T-1849: how many corridors have trips or commutes (`IntercityApi::table_rows`), once counted
     rows: std::cell::OnceCell<usize>,
+}
+
+impl Corridors {
+    /// The corridors with longer trips, ascending, and their trips a day.
+    fn with_trips(&self) -> impl Iterator<Item = (usize, f64)> + '_ {
+        self.has_trips.iter().enumerate().flat_map(|(k, &w)| {
+            let mut w = w;
+            std::iter::from_fn(move || {
+                (w != 0).then(|| {
+                    let b = w.trailing_zeros() as usize;
+                    w &= w - 1;
+                    64 * k + b
+                })
+            })
+        }).zip(self.trips.iter().map(|&t| t as f64))
+    }
 }
 
 /// A longer trips' zone pair, both ways apart: the modes but rail come from its place pair's rule
@@ -1010,6 +1028,7 @@ mod api;
 mod pass;
 mod setup;
 mod exports;
+mod mem;
 mod selection;
 use logsum::*;
 pub use costs::*;

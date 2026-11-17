@@ -1669,6 +1669,37 @@ impl EverydayApi {
     }
 }
 
+/// T-2496: heap bytes by structure (`demand::mem`).
+impl EverydayApi {
+    pub(crate) fn mem_into(&self, r: &mut super::mem::Report, at: &str) {
+        use super::mem::{self, vb};
+        self.engine.mem_into(r, &format!("{at}engine: "), false);
+        r.add(format!("{at}samples: destinations"), vb(&self.destinations));
+        r.add(format!("{at}samples: pairs (Pair)"), vb(&self.pairs));
+        r.add(format!("{at}samples: edge_pair"), vb(&self.edge_pair));
+        r.add(format!("{at}samples: live, first, norm, kept"), [&self.live, &self.first].iter().map(|v| vb(*v) + v.iter().map(vb).sum::<usize>()).sum::<usize>() + vb(&self.norm) + self.norm.iter().map(vb).sum::<usize>() + vb(&self.kept) + self.kept.iter().map(vb).sum::<usize>());
+        r.add(format!("{at}per cell and zone (sz_part, airports, attractions, enrollment)"), vb(&self.sz_part) + vb(&self.wplace) + vb(&self.wpark) + vb(&self.school_enrollment) + vb(&self.university_enrollment) + vb(&self.airport_origin) + vb(&self.airport_scale) + vb(&self.attraction_origin) + vb(&self.attraction_scale) + vb(&self.attractions));
+        let (mut net, mut g, mut l, mut parts, mut rest) = (0, 0, 0, 0, 0);
+        for p in self.per.iter().flatten() {
+            net += mem::network(&p.net);
+            g += mem::graph(&p.g);
+            l += mem::loads(&p.loads);
+            parts += vb(&p.parts) + p.parts.iter().map(|x| vb(&x.seg) + vb(&x.rn_board) + vb(&x.rn_alight)).sum::<usize>();
+            rest += vb(&p.probability) + vb(&p.fac) + vb(&p.seen) + vb(&p.walk_lost) + vb(&p.unr_lost) + mem::xfer(&p.xi) + vb(&p.xfer);
+        }
+        r.add(format!("{at}periods: network copies"), net);
+        r.add(format!("{at}periods: graphs"), g);
+        r.add(format!("{at}periods: loads"), l);
+        r.add(format!("{at}periods: loads by purpose (parts)"), parts);
+        r.add(format!("{at}periods: probability, crowding, transfers"), rest);
+    }
+    pub fn mem_report(&self) -> String {
+        let mut r = super::mem::Report::default();
+        self.mem_into(&mut r, "");
+        r.text()
+    }
+}
+
 #[wasm_bindgen]
 impl EverydayApi {
     #[wasm_bindgen(constructor)]

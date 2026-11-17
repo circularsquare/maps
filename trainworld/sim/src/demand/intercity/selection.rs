@@ -155,8 +155,8 @@ impl IntercityApi {
         self.per(q).map_or(vec![], |s| {
             let m = &self.m;
             let mut out: Vec<f64> = m.each_corridor().flat_map(|(a, b)| [a as f64, b as f64, 0., 0.]).collect();
-            for (&c, &t) in m.cw.trips_at.iter().zip(&m.cw.trips) {
-                out[4 * c as usize + 2] = t * SHARES[q] as f64;
+            for (c, t) in m.cw.with_trips() {
+                out[4 * c + 2] = t * SHARES[q] as f64;
             }
             for (k, c) in m.open_corridors() {
                 out[4 * c + 3] = s.corridors.get(k);
@@ -225,22 +225,22 @@ impl IntercityApi {
         *self.m.cw.rows.get_or_init(|| self.table_rows().count())
     }
     /// T-2122: the corridors `corridor_trips` or `commute_base` gives more than 0, as (corridor, its
-    /// two places, its trips), in corridor order: `trips_at` and `commute` merged (each sorted by
+    /// two places, its trips), in corridor order: `with_trips` and `commute` merged (each sorted by
     /// corridor), not every corridor of the world walked (T-1849).
     pub(super) fn table_rows(&self) -> impl Iterator<Item = (usize, usize, usize, f64)> + '_ {
         let cw = &*self.m.cw;
         let np = self.m.places.len();
         let commute: &[(u32, f64)] = if cw.commuters > 0. { &cw.commute } else { &[] };
         // (a: the first place of the corridor last given)
-        let (mut kt, mut kc, mut a) = (0, 0, 0);
+        let (mut trips, mut kc, mut a) = (cw.with_trips().peekable(), 0, 0);
         std::iter::from_fn(move || loop {
-            let ti = cw.trips_at.get(kt).map_or(usize::MAX, |&i| i as usize);
+            let ti = trips.peek().map_or(usize::MAX, |e| e.0);
             let ci = commute.get(kc).map_or(usize::MAX, |e| e.0 as usize);
             let i = ti.min(ci);
             if i == usize::MAX {
                 return None;
             }
-            let t = if ti == i { kt += 1; cw.trips[kt - 1] } else { 0. };
+            let t = if ti == i { trips.next().unwrap().1 } else { 0. };
             let c = ci == i && { kc += 1; commute[kc - 1].1 > 0. };
             if t > 0. || c {
                 while a + 1 < np && tri(np, a + 1, a + 1) <= i {

@@ -322,7 +322,9 @@ impl Market {
         // (corridor order is this loop's order, so the lists come sorted; sized for every pair of places
         // with zones, nearly all of which have trips, so they never grow by doubling)
         let has = self.places.iter().filter(|p| p.has).count();
-        let (mut at, mut ct) = (Vec::with_capacity(has * (has + 1) / 2), Vec::with_capacity(has * (has + 1) / 2));
+        let mut at = vec![0u64; (np * (np + 1) / 2).div_ceil(64)];
+        let mut ct: Vec<f32> = Vec::with_capacity(has * (has + 1) / 2);
+        let mut daily = 0f64;
         let mut to_places = vec![0f64; np];
         let mut pairs = 0usize;
         for i in 0..np {
@@ -349,8 +351,10 @@ impl Market {
                     (self.directed_by(bi, ri, ui, ni, p.g, p.t, q.a, q.ta, km) + self.directed_by(bj, rj, uj, nj, q.g, q.t, p.a, p.ta, km)) * 0.5
                 };
                 if t > 0. {
-                    at.push(tri(np, i, j) as u32);
-                    ct.push(2. * t);
+                    let c = tri(np, i, j);
+                    at[c / 64] |= 1 << (c % 64);
+                    ct.push((2. * t) as f32);
+                    daily += 2. * t;
                     // a place's own pairs both start there
                     to_places[i] += t;
                     to_places[j] += t;
@@ -359,9 +363,8 @@ impl Market {
             }
         }
         let leaving_by: Vec<f64> = (0..np).map(|p| if self.places[p].has { (self.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
-        at.shrink_to_fit();
         ct.shrink_to_fit();
-        Corridors { id: next_corridors_id(), daily: ct.iter().fold(0., |s, &t| s + t), leaving: leaving_by.iter().sum(), trips_at: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs, rows: Default::default() }
+        Corridors { id: next_corridors_id(), daily, leaving: leaving_by.iter().sum(), has_trips: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs, rows: Default::default() }
     }
     /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
     pub(super) fn place_spans(&self) -> Vec<(usize, usize, usize)> {

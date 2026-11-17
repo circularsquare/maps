@@ -569,8 +569,8 @@ impl IntercityApi {
     /// T-1008: per corridor, its longer trips a day; period `q`'s are these times `corridor_shares(q)[0]`.
     pub fn corridor_trips(&self) -> Vec<f64> {
         let mut out = vec![0f64; self.m.n_corridors()];
-        for (&c, &t) in self.m.cw.trips_at.iter().zip(&self.m.cw.trips) {
-            out[c as usize] = t;
+        for (c, t) in self.m.cw.with_trips() {
+            out[c] = t;
         }
         out
     }
