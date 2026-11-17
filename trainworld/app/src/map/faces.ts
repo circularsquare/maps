@@ -192,20 +192,18 @@ function drawLongBack(g: CanvasRenderingContext2D, mx: number, my: number, h: { 
   g.fill(); g.stroke();
 }
 
-/** A tail tied at the back of the head, drawn before the face and its fringe: only a flick over the
- * crown and the hair tie show, nothing at the sides. */
+/** A tail tied at the back of the head, drawn before the face: only a sliver shows past the right
+ * cheek. */
 function drawPonytail(g: CanvasRenderingContext2D, mx: number, my: number, h: { fill: string; edge: string }) {
   g.fillStyle = h.fill;
   g.strokeStyle = h.edge;
   g.lineWidth = 2.4;
   g.beginPath();
-  g.moveTo(mx + 4, my - 22);
-  g.bezierCurveTo(mx + 8, my - 32, mx + 19, my - 33, mx + 21, my - 22);
-  g.quadraticCurveTo(mx + 16, my - 24, mx + 10, my - 20);
+  g.moveTo(mx + 13, my - 12);
+  g.bezierCurveTo(mx + 22, my - 12, mx + 25, my - 2, mx + 22, my + 12);
+  g.quadraticCurveTo(mx + 17, my + 8, mx + 12, my + 2);
   g.closePath();
   g.fill(); g.stroke();
-  g.fillStyle = h.edge;
-  g.beginPath(); g.ellipse(mx + 8, my - 22, 2.4, 3.6, 1.2, 0, Math.PI * 2); g.fill();
 }
 
 /** Wavy hair behind the head: a mass wider than the face, its outer edge in scallops down to the
