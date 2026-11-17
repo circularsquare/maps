@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3527 [P2] {L:help-tutorial} Help list in the controls panel (2026-11-17): help panel: Anita's four questions above the controls, one answer open at a time (intercity one on phones only), plain ? button and F1; six more proposed in notes/T-3527.md.
 - T-3522 [P1] {L:buses} Bus boarding cost 6 to 4 minutes (2026-11-17): Bus boarding 6 to 4 perceived minutes (BUS_BOARD_MIN); NYC test buses carry 7-14% more riders, Throgs Neck bus breaks even, rail trips move by 60-300 of 12.68M; landed 9fd75399. notes/T-3522.md.
 - T-3408 [P2] {L:rebuild-track} Rebuild from the track panel (2026-11-17): The track panel of built track has single/double and Regular/High speed with Rebuild, the Select bar's code for that one piece (same quote, question, charge; final), and a hint to the Select tool (4); checks/t3408-panel-rebuild.mjs.
 - T-2768 [P3] {L:edit-speed} Deleting a station rebuilds every line (2026-11-17): Station delete redoes line bands only for lines reading a changed pair rule (109 to 14 lines), about half a second less; figures identical; landed acc208b8. notes/T-2768.md.

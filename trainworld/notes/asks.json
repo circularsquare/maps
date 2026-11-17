@@ -1,1 +1,4 @@
-[]
+[
+  {"id": "a-2026-11-17-5", "text": "Single track train cap (T-3526): fix 1, a line's own trains stop queueing against each other on single track so the existing terminal-style cap holds (single-track round trips get shorter, about 2 h), or fix 2, run times kept and a separate cap with a new hover (about 3 h)? Cap at the trains that fit plus one, as at terminals? I'd pick fix 1 and plus one.", "since": "2026-11-17", "by": "maps-60"},
+  {"id": "a-2026-11-17-6", "text": "Help list (T-3527): which extra questions go in? From player reports: 1 single to double track (4 reports), 2 edit or delete built track (2), 3 recalculating after every piece (3), 4 hiding lines (2), 5 four tracks only using two (2), 6 express line (1). I'd add 1 (folded into the rebuild entry), 3 and 4. Also: an entry for 'too few riders between far cities' (about 6 reports, no in-game fix to point to)?", "since": "2026-11-17", "by": "maps-60"}
+]

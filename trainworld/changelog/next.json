@@ -1194,7 +1194,7 @@
     },
     {
       "id": "c093",
-      "text": "added rebuilding to the track panel: a built piece can change between single and double track, and between regular and high speed",
+      "text": "added rebuild buttons to the track panel for a built piece's level, single or double track, and track type",
       "edited": null,
       "hidden": false,
       "task": "T-3408",
@@ -1226,6 +1226,18 @@
       "at": "2026-11-17T15:15:53Z",
       "rev": 1,
       "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c096",
+      "text": "added common questions with their answers above the controls list, opened with the ? in Settings or F1",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3527",
+      "by": "helplist",
+      "at": "2026-11-17T15:26:30Z",
+      "rev": 1,
+      "area": "other",
       "fix": false
     }
   ]
