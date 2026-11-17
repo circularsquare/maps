@@ -263,8 +263,8 @@ parking is paid, rail wins easily (Hempstead to Midtown). The trip explorer show
 The player's answer is a bus (since T-1464). Anyone within 300 m of a bus route walks to it (their
 distance to the route plus 100 m), waits and rides to a station at 90% of what a car does on the road there, never under 30 km/h while moving (a bus lane), losing 28 seconds at each stop: about 19 km/h with stops every 400 m in a dense centre like Manhattan. The change to the
 train is free: one fare for the whole trip on the same curve. Every time someone boards a bus,
-including changing from a train to one, it costs them 6 perceived minutes on top of the wait. A home
-1.5 km from a station walks 29 perceived minutes to it, or about 24 by bus. Trips by bus alone count
+including changing from a train to one, it costs them 4 perceived minutes on top of the wait. A home
+1.5 km from a station walks 29 perceived minutes to it, or about 22 by bus. Trips by bus alone count
 as rail. A bus is a third of a train car: riders mind its crowding from 45 aboard, it is at 100% with 53
 and takes 80 at the most (a train car: 112, 160 and 240).
 

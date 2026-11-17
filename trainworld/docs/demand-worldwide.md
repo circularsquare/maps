@@ -634,7 +634,7 @@ notes/T-420.md has the tables.
   ownership and parking. Check: a country's travel survey walk shares by distance (NHTS,
   England's NTS, France's EMP, Japan's person-trip surveys) and its census walk-to-work share.
 
-- **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (a bus pays 6 perceived
+- **Trams** (T-2926). A tram line is a rail line: it boards with no penalty (a bus pays 4 perceived
   minutes), each tram section counts as three quarters of a rail car in seats, rated and crush loads,
   and a cell keeps at most 3 stops served only by tram lines among its 6 nearest stations, so a street of
   close stops does not crowd out the metro a short walk away. A stop a metro or rail line also serves is
@@ -1044,9 +1044,9 @@ notes/T-420.md has the tables.
   A home within 300 m of a bus route walks its distance to the route plus 100 m and rides at the bus's run time (T-2904: a hop takes the
   car's time at 90% of its speed, never under 30 km/h for a bus lane, plus 28 s for the stop; about 19 km/h at
   400 m stops in a dense centre, 22 in open country), on the network's fare curve, bus kilometres included. Every boarding of a bus, a change
-  from a train or another bus onto it included, costs 6 perceived minutes on top of the wait
+  from a train or another bus onto it included, costs 4 perceived minutes on top of the wait
   (T-1576; unreliability, crowding at the stop, a stop not worth the wait for a short hop). Judgement
-  figures, not fitted; the 6 minutes and 300 m were chosen so a drawn route's riders per route-km
+  figures, not fitted; the 300 m and a 6 minute boarding cost (4 since T-3522) were chosen so a drawn route's riders per route-km
   land in the range of busy real routes (notes/T-1466.md). Why they may not carry over: bus speeds
   run from about 10 km/h in dense Asian and African centres to 25-30 in North American suburbs, and
   the model gives every dense centre a bus lane's speed (Seoul's median lanes, Anita 2026-11-09), so
