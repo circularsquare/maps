@@ -901,6 +901,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
   - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
   - Other: notes/T-3345.md
+- T-3521 [P1] {L:timetables} Weekend train counts per line (taking, 2026-11-17, agent weekend)
+  - Context: You, 2026-11-17: "be able to set train count on weekends" is highly requested, want it in v0.4.0 if it can be made today, no rush. Built ahead of Detailed mode from GabrielMoraez's PR 13 sim parts, in the shape you agreed 11-12 (one weekend, holidays as weekends, same as weekdays until changed).
+  - Goal: A line can run a different train count on weekends; with weekends the same, the real save and London match today to the bit and edits take no longer.
+  - Other: notes/T-3346.md stage 4; notes/pr-survey-2026-11-16.md "#13".
 - T-3346 [P2] {L:timetables} Timetables and better scheduling
   - Context: Design revised twice after your replies: Simple, Detailed and Exact modes, six stages. Stage 1 and 2 are built but not landed. Your board note 11-16 (weekday/weekend headways, five day periods, tweakable hours, no per-train detail) is Detailed mode, stages 3-4.
   - Goal: Design agreed, then built in stages (about 44-63 h before Exact).

@@ -31,8 +31,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
 - **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
-  one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase,
-  past tense>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
+  one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase;
+  past tense for the change, present for how things are now: "added ...", "fixed ...", but "the game uses 500 MB
+  less" (Anita, 2026-11-17)>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
   the map and schematic, community for accounts and sharing, performance; other if none fits; a bug fix takes its area
   plus `--fix`, and `bug` only when no area fits); list it with your strings. Internals, tools and docs get none. Anita rewords
   or hides items on the board's Changelog view.
