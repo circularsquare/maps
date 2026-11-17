@@ -8,7 +8,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 
 ## State
 - Live = v0.3.5 (maps bfe58c54, published 11-15). Next publish v0.4.0: no deadline; she picks when and tracks the landing cut-off herself: land things as they pass.
-- master has ponytail b (T-3576, her pick) past 8800; pushed to 68322201; 8800 = 68322201 (smoke PASSED 29/29 on it). Rebuild 8800 with the next batch. Server level 21 (95356ed) needed before publish: master writes level 21 since weekends.
+- master = 8800 = pushed = 2066814c (smoke PASSED 29/29 on 68322201; since then only ponytail b, T-3577 dots, t3212 check). Server level 21 (95356ed) needed before publish: master writes level 21 since weekends.
 - R2 version 2026-11-10d purged on her word 11-17.
 - In master since v0.3.5 (for the v0.4.0 notes): everything maps-b8 listed (Central America + Venezuela, Lisbon/Glasgow/Porto, Istanbul/Colombia redraws, ~350 MB less memory, faster loads, bubble folds, purpose rows, buses obey one-way streets (Renkon), tram snap, terrain on by default, trainsfan, ferries 45 km/h) plus today: track speed limit per piece (T-3405), station delete faster (T-2768), track panel rebuild incl. levels and tram (T-3408), bus boarding 4 min (T-3522), help list + F1 (T-3527), shore 12 m margin (T-3524), snap to streets icon (T-3536), double track width / tram wire (T-3533/T-3534), settle speed (T-3512), tram crossing ghost (T-3535), complex pick (T-3539), reclaimed-land country check (T-3529, pipeline).
 - Server: shonei-server 7a23cbc (playtime cap), 96e4f12 (save level 20, LPS1) and 95356ed (level 21, LWE1) committed, not pushed or deployed; all needed before v0.4.0 publishes (master already writes level 20). TestTwSaveCheckFollowsTheGame goes green when weekend lands.
@@ -22,20 +22,23 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Start: `powershell -File C:\Users\anita\projects\maps\trainworld\tools\country\start_hidden.ps1 C:\Users\anita\projects\maps\trainworld\notes\T-3455\kit\night1117.cmd`. Log artifacts/trainworld/night1117.log; PID in kit\night1117.state; stop: create trainworld\data\work\world_run\STOP, then kill only that PID. Claims 10 cores (waits for 6 free). Hold app/ landings during its gates. Disk 45 GB free, needs ~28.
 - Later nights: nic (Nice) and pyo-kp (Sinuiju) now safe after T-3529; T-3530 Tokyo Haneda; T-3532 drive-grid water fix (she said yes, low priority).
 
-## Agents (maps-58 handed all its agents to maps-45 un-landed; their reports go to maps-58, which relays them verbatim to maps-45 while its tab is open. If it's gone, check each directly: its tree's git status, notes, the ledger. Move a tree's DECISIONS lines first: scratchpad move_decisions.py <tree>)
+## Agents (all maps-45's; maps-58 closed out 11-17. Move a tree's DECISIONS lines first: scratchpad move_decisions.py <tree>)
 - onewaystops (Opus, maps-45's, .tw-trees/onewaystops, port 6153): T-3565 one-way pair stops; routing: checker before landing.
 - weekendstep (Sonnet, maps-45's, .tw-trees/weekendstep, port 6154): T-3557 weekend headway stepper; scheduling numbers: checker before landing.
-- tramterm (Sonnet, maps-45's, .tw-trees/tramterm, port 6157): T-3574 tram stop terminal + passing tracks, T-3575 tram crossovers; build rules and prices: checker before landing.
+- tramterm (Sonnet, maps-45's, .tw-trees/tramterm, port 6157): T-3574 tram stop terminal + passing tracks, T-3575 tram crossovers; code + Rust done, stopped waiting on its wasm build (log scratchpad\tramterm\wasm.log); resume it for full cargo, check t3574-tram-terminal.mjs, screenshot, notes; then checker.
 - shoreswap: T-3553 done in tree (changelog c113 in main); checker shorecheck (Sonnet, maps-45's, port 6158) running; land on pass, then archive T-3553.
-- lineprofit: T-3566 (archived) + T-3567 done in tree (changelog c119, c120 in main); checker farecheck (Sonnet, maps-45's, port 6159) running; land on pass, then archive T-3567.
-- londonedit (Opus, maps-58's, .tw-trees/londonedit, port 6132): T-3388 London edits under 4 s; demand: checker before landing. May file T-3550-3552.
-- Ready to start: T-3543 (one schedule button; touches LineInspector like lineprofit: after it lands).
-- Landed 11-17 under maps-45: T-3573 fbdot (e85e761c), T-3563 tramloops (25c3c642, checker passed), T-3570/T-3571 realstations (0697cb3d), T-3576 ponytail (b on her pick), T-3569 t3212fix (141fbf62, fixture lengthened).
+- farebase (Opus, .tw-trees/farebase, port 6163): T-3578 fare multiple scales the base (max over legs) + T-3581 undo keeps the multiple; demand/money: checker before landing.
+- schedbutton (Sonnet, .tw-trees/schedbutton, port 6164): T-3543 one schedule button + default headways; checker only if the sim/save changes.
+- glcontext (Opus, .tw-trees/glcontext, port 6165): T-3582 WebGL2 error after a lost graphics context: clear restart screen, then the cause (give up if hard).
+- workflowreview (Fable, on her ask 11-17): read-only review of today's workflow to notes/workflow-review-2026-11-17.md; relay its top items.
+- londonedit: T-3388 done in tree (archived itself; changelog c115, T-3550 follow-up in main); checker londoncheck (Sonnet, port 6162) running; land on pass.
+- settingsmove (Sonnet, .tw-trees/settingsmove, port 6161): T-3579 settings reorder; UI, no checker.
+- Landed 11-17 under maps-45: T-3573 fbdot (e85e761c), T-3563 tramloops (25c3c642, checker passed), T-3570/T-3571 realstations (0697cb3d), T-3576 ponytail (b on her pick), T-3569 t3212fix (141fbf62, fixture lengthened), T-3577 station dots (5bf18338), T-3566/T-3567 lineprofit (d30ffc11, checker passed).
 - Landed 11-17 under maps-58: T-3554, T-3537/38, T-3555 (+ translations), T-3540, T-3564, T-3560, T-3521 (gabs co-author), T-3526, T-3561, T-3562, T-3556 stage 1 (checks/lib harness), T-3541, T-3264 stage 0 check. Note: t3537-tram-split.mjs kept tramsplit's version at the T-3541 landing, so it is no longer on the harness.
 
 ## Next
 1. Land each agent as it passes (checker for sim/save/demand/money); smoke on master per batch; rebuild 8800; push.
-2. T-3543 and T-3578 (fare multiple scales the base too, her rule in the task; demand + money, Opus, checker) once lineprofit lands. stationlook (Sonnet, maps-45's, .tw-trees/stationlook, port 6160) on T-3577 real station dots. 3. The night run this evening.
+2. 8800 rebuild after the next landings (lineprofit, T-3579 settings, checkers' passes). 3. The night run this evening.
 4. When she says release: the v0.4.0 steps under State.
 5. Leftover .tw-trees folders (c1, ferry45, fixes, freight, hotfix031-target, hover, touchrule, trackrebuild (empty)) and stale trees (safari-save-035, shenzhen, tt2, ttstyle, trams): look before removing; never delete by hand.
 

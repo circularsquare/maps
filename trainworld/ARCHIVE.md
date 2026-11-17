@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3567 [P2] {L:fares} Fare multiple per line (2026-11-17): per-line fare multiple 0-3 in Fares.lines via lineFareMul; checker passed (notes/T-3567-check.md) notes/T-3567.md.
 - T-3388 [P2] {L:edit-speed} London edits take about 4 s (2026-11-17): merge pacing holds still (PACE_HOLD 0.5%, sets and paces kept for lines that have not moved, the saved pacing adopted on load); London natively: track pieces and stations 3-5 s -> 0.02-0.26 s, train counts 3-5 s -> 0.5-1.3 s (every level on short lines up to 3.3 s), NYC unchanged; browser windrush +1: 13.5 s -> 3.7 s; rates per line within what the old rule itself flips between (one line 1.2% outside), totals within 0.1%, train counts identical; rest filed as T-3550. notes/T-3388.md.
 - T-3577 [P2] {L:world-map} Real stations drawn like the real track (2026-11-17): real stations are filled purple dots at 60% of the old opacity, like the real track; notes/T-3577.md.
 - T-3569 [P2] {L:checks} t3212 check: trains no longer meet at A-M-B (2026-11-17): T-3526 broke the check's fixture, not the sim: the 3 km A - M - B round trip (751 s) is under twice the single-track headway (672 s over 1.5 km sections, by the spec), so only one of its 2 trains runs and the other waits at A. The meeting now uses a 6 km single-track line with a station every km; the check passes.

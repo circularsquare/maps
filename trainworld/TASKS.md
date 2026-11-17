@@ -284,9 +284,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops)
   - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
   - Goal: A line over a one-way pair serves its stations without turning back or looping.
-- T-3567 [P2] {L:fares} Fare multiple per line (taking, 2026-11-17, agent lineprofit)
-  - Context: Your pad, 2026-11-17: "lets also file building a very simple line-specific fare multiple setting. this can go right above the profit history graph. just like a 1.00 and if you click it you can set the fare multiple to like 1.2x what it would otherwise be for this line. should be typeable there is a more complex fare system planned but for now i think this will satisfy some people. cap it between like 0-3x i guess."
-  - Goal: Each line has a typeable fare multiple, 0 to 3, default 1.00, above its profit history, applied on top of the game's fares for that line's rides.
 - T-3574 [P2] {L:trams} {after:T-3563} Terminal and passing tracks at tram stops (taking, 2026-11-17, agent tramterm)
   - Context: You, 2026-11-17: "yeah lets do the terminal." The sim already accepts both at a tram stop; the station panel (StationUpgrades) hides them. Without a terminal a tram line turns at most 15 times an hour, with one 30.
   - Goal: A tram stop offers the terminal and passing tracks as a rail station does, the terminal priced as 1 km of the stop's own track kind.
@@ -295,7 +292,20 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-17: "my gut is yes if its how trains work." Crossing track drawn between two double-track tram pieces is refused today (T-3352); on rail it makes a crossover, so trams could cross to the other track and turn back short.
   - Goal: Tram track takes crossovers exactly as rail does, priced as tram track.
   - Other: notes/T-3563.md
-- T-3578 [P2] {L:fares} {after:T-3567} Line fare multiple scales the base too
+- T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick
+  - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
+  - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
+- T-3579 [P2] {L:small-fixes} Settings: one-way buses under Game, fullness always on (taking, 2026-11-17, agent settingsmove)
+  - Context: You, 2026-11-17: "in the settings, "buses obey one-way streets" should not be in the "show" section.lets put them under "Game" section. lets also move the "game" section up, to right below the "Show" section. also lets remove "how full each train is" / "how full each platform is" i feel like these are things that people dont ever really want disabled. can just always enable."
+  - Goal: "Buses obey one-way streets" sits in the Game section, Game comes right after Show, and the two fullness checkboxes are gone with fullness always drawn.
+- T-3582 [P2] {L:small-fixes} WebGL2 error after the map glitches (taking, 2026-11-17, agent glcontext)
+  - Context: Your pad, 2026-11-17, a player's report: "got this error / it doesn't fix when I reload the page, fixes when I restart the browser / should probably be looked into / (I checked my browser's config and WebGL2 is active) / before this error shows up the map starts glitching and zooming out and in on its own sorta". Likely the graphics context was lost and the browser then blocks WebGL for the page until restart, so the game shows its "no WebGL2" screen (T-3307) with the wrong advice. Reach: anyone whose GPU context drops; unknown how many.
+  - Goal: After a lost graphics context the player is told plainly to restart the browser (not to turn on WebGL2), and the likely cause of the loss is found and fixed or written down; give up if it is hard.
+- T-3581 [P3] {L:fares} Undoing a line delete loses its fare multiple (taking, 2026-11-17, agent farebase)
+  - Context: Found by T-3567's checker: delete a line, then undo; the line returns at 1.00x because the tidy step drops its entry after the undo snapshot. Typing "1,5" reads as 15 (held to 3.00x), as in the other typed multiples.
+  - Goal: Undoing a line delete brings back its fare multiple.
+  - Other: notes/T-3567-check.md
+- T-3578 [P2] {L:fares} Line fare multiple scales the base too (taking, 2026-11-17, agent farebase)
   - Context: You, 2026-11-17: "i'd rather scale the base too actually, like if a person's ride uses that line at all it gets charged the higher base. i guess if there are lots of legs, we use the max of them." Today the multiple (T-3567) scales only the fare above the base, because the base is charged once per trip in mode choice; on the real save's line 14 the base is 61% of a ride's fare.
   - Goal: A trip that uses a line pays that line's multiple on the base too, the largest multiple among its legs; demand and income agree, and at 1.00 everything is unchanged.
   - Other: notes/T-3567.md
@@ -319,7 +329,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Your yes 2026-11-17: swap the 12 m margin for reading the mask between cells at threshold 0.8 (about 1 h; narrow rivers charged for 69-75% of their width instead of 55-60%). You asked whether the 12 m margin loses city rivers and whether real accuracy gains exist; after testing, "it mostly feels okay ... if we see low hanging fruit we can." Measured: no cheap option is more accurate both ways, only a different trade; real gains need finer data in packs (hours of rebuild); the biggest error is NYC's TIGER water (up to 116-178 m off at the Brooklyn piers).
   - Goal: Your pick built or the task closed; with the margin, 50-70 m rivers still register 97-99% of the time.
   - Other: notes/T-3553.md
-- T-3543 [P2] {L:timetables} {after:T-3521} One schedule button and default headways
+- T-3543 [P2] {L:timetables} {after:T-3521} One schedule button and default headways (taking, 2026-11-17, agent schedbutton)
   - Context: You, 2026-11-17: "i think we can get rid of the copy/paste feature and instead allow setting currently selected headways as default (always applied to new lines) in the timetables window. this way we just have one icon / button on the lines panel. it should be slightly bigger than the icons we currently have, and it should be a "timetable / complex scheduling" button." Weekends stay in the window only; the line view keeps its rows (3, 4 or 5), no weekends.
   - Goal: The copy/paste schedule buttons are gone; the timetables window has a control that makes the current headways the default for new lines; the line panel has one slightly bigger schedule button that opens the window.
 - T-3532 [P3] {L:borders} Buenos Aires to Montevideo drive too short
@@ -927,9 +937,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries
-  - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019.
-  - Goal: Buses lay on top where they fit without changing the layout, drawn much thinner than rail.
+- T-3360 [P3] {L:schematic} Schematic settings for buses and ferries
+  - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019. Your pad, 2026-11-17: "want buses and ferries drawn on schematic map eventually, also p3 prob. also want the ability to toggle their visibility, as well as tram and train visibility i guess with buttons on the top. can use icons. when we draw the buses, they can just appear as really thin lines, stops not labelled, and i think we can basically just draw them as the last step, and not have them impact distortion ... i suppose this should be relaxed in cases where people are building bus-only networks but yeah like they should definitely not be a priority. same for ferries, not have much distortion power."
+  - Goal: Buses and ferries are drawn last as very thin lines with unlabelled stops, fitted into the layout the rail lines set (little or no pull on it, except on a bus-only network), with icon buttons at the top to show or hide trains, trams, buses and ferries.
 - T-3358 [P2] {L:schematic-rivers} Schematic river continuity
   - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
   - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.

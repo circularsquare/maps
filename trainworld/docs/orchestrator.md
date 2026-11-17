@@ -7,7 +7,7 @@ not once per message (Anita, 2026-11-09).
 ## Agents
 
 - **Model**: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands.
-  No Fable as a model (Anita, 2026-11-09); Fable as advisor is on trial (below).
+  No Fable as a model unless she asks for one (Anita, 2026-11-09 and 11-17); Fable as advisor is on trial (below).
 - **Advisor trial** (Anita 2026-11-16): orchestrators start with `--advisor fable`, and every agent they start inherits it.
   Call it for a call nobody has made (design, a source choice, a demand factor, a performance lie) before proposing or
   acting; when stuck (the same failure twice, or about 30 minutes without progress) and before giving up; before
