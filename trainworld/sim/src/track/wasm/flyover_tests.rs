@@ -91,7 +91,7 @@ fn t3103_preview_marks_only_crossing_junctions() {
         let e = *alive(&a).iter().find(|&&e| a.w.net.project(e, 1000.0, y).1 < 1.0).unwrap();
         assert_eq!(a.preview_route(&ends([2.0, e as f64, 1000.0, y, 0.0], free(2000.0, y - 600.0)), &[], tracks, false)[0], 1.0, "{}", a.issues());
         let m = a.preview_marks();
-        let marked = m.chunks(3).any(|r| r[2] == 1.0 && (r[0] - 1000.0).abs() < 1.0);
+        let marked = m.chunks(4).any(|r| r[2] == 1.0 && (r[0] - 1000.0).abs() < 1.0);
         assert_eq!(marked, tracks == 2, "tracks {tracks}: {m:?}");
     }
 }
@@ -387,7 +387,7 @@ fn t3092_no_room_falls_back_flat() {
     let to = ends([2.0, e as f64, 1000.0, 0.0, 0.0], free(1250.0, 150.0));
     assert_eq!(a.preview_route(&to, &[], 2, true)[0], 1.0, "{}", a.issues());
     assert_eq!(a.route_flyovers_flat(), 1);
-    assert!(a.preview_marks().chunks(3).any(|r| r[2] == 1.0), "the flat badge shows");
+    assert!(a.preview_marks().chunks(4).any(|r| r[2] == 1.0), "the flat badge shows");
     assert_eq!(a.add_route(&to, &[], 2, true), 0, "{}", a.issues());
     assert_eq!(a.route_flyovers_flat(), 1);
     let js = junctions(&a);
@@ -416,7 +416,7 @@ fn t3092_preview_draws_the_leg() {
     assert!(fly.len() > flat.len());
     assert!(a.preview_render_speeds().contains(&-1.0));
     assert!(fly[1] > flat[1], "the flyover costs more: {} vs {}", fly[1], flat[1]);
-    assert!(!a.preview_marks().chunks(3).any(|r| r[2] == 1.0), "no flat badge");
+    assert!(!a.preview_marks().chunks(4).any(|r| r[2] == 1.0), "no flat badge");
     let before = alive(&a).len();
     assert_eq!(a.add_route(&to, &[], 2, true), 0);
     assert!(alive(&a).len() > before + 3);

@@ -422,8 +422,8 @@ pub struct Touch {
 pub struct Derived {
     pub edges: Vec<u32>,
     pub nodes: Vec<u32>,
-    /// Positions of crossings removed or added.
-    pub crossings: Vec<[f64; 2]>,
+    /// Positions of crossings removed or added, and their tram tracks (`crossing_trams`).
+    pub crossings: Vec<[f64; 3]>,
     /// Single track whose way (`Network::edge_way`) changed (T-3137); also in `edges`.
     pub ways: Vec<u32>,
 }
@@ -2010,9 +2010,9 @@ impl Network {
         let before = self.crossings.len();
         let is_touched = |e: u32| edges.binary_search(&e).is_ok();
         let mut kept = Vec::with_capacity(before);
-        for c in self.crossings.drain(..) {
+        for c in std::mem::take(&mut self.crossings) {
             if is_touched(c.e1) || is_touched(c.e2) {
-                d.crossings.push([c.x, c.y]);
+                d.crossings.push([c.x, c.y, self.crossing_trams(c.e1, c.e2) as f64]);
             } else {
                 kept.push(c);
             }
@@ -2107,7 +2107,7 @@ impl Network {
         self.node_ports[i] = p;
     }
 
-    fn find_crossings(&mut self, e: u32, f: u32, changed: &mut Vec<[f64; 2]>) {
+    fn find_crossings(&mut self, e: u32, f: u32, changed: &mut Vec<[f64; 3]>) {
         let (ie, i_f) = (e as usize, f as usize);
         if self.edge_sep[ie] && self.edge_sep[i_f] {
             return;
@@ -2141,8 +2141,14 @@ impl Network {
             };
             let (e1, s1, e2, s2) = if e <= f { (e, s1, f, s2) } else { (f, s2, e, s1) };
             self.crossings.push(Crossing { e1, s1, e2, s2, x, y, kind });
-            changed.push([x, y]);
+            changed.push([x, y, self.crossing_trams(e1, e2) as f64]);
         }
+    }
+
+    /// T-3062: the tram tracks (0 to 2) of a crossing of edges `e1` and `e2`. At a flat crossing a tram
+    /// gives way to a train, and the map draws its stroke of the mark broken.
+    pub fn crossing_trams(&self, e1: u32, e2: u32) -> u8 {
+        [e1, e2].into_iter().filter(|&e| self.edge_kind[e as usize].spec().family == 1).count() as u8
     }
 
     fn rebuild_edge_lines(&mut self) {

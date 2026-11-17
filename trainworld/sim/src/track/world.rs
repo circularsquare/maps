@@ -87,8 +87,8 @@ pub fn clamp_auto(want: u32, trip_s: f64, headway_s: u32, most_tph: f64) -> u32 
 pub struct Dirty {
     pub edges: Vec<u32>,
     pub nodes: Vec<u32>,
-    /// Positions of crossings removed or added.
-    pub crossings: Vec<[f64; 2]>,
+    /// Positions of crossings removed or added, and their tram tracks (`Network::crossing_trams`).
+    pub crossings: Vec<[f64; 3]>,
     /// Resources (indices into `svc.cap.res`, valid until the next edit) on touched track or used
     /// by a directly changed line.
     pub resources: Vec<u32>,

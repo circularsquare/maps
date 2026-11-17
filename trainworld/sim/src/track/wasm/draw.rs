@@ -655,7 +655,7 @@ impl TrackApi {
         let shape = std::mem::take(&mut self.route_bridged);
         let mut out = self.preview_out(r, &verts, &shape, tracks.min(2), self.route_kind_of(tracks));
         for (j, _) in self.route_junctions.iter().zip(&crosses).filter(|c| *c.1) {
-            self.preview_marks.extend([j.1[0], j.1[1], 1.0]);
+            self.preview_marks.extend([j.1[0], j.1[1], 1.0, 0.0]);
         }
         // T-3134: each flyover's plain leg, from its junction to J3, is single track
         if out.len() > 5 {

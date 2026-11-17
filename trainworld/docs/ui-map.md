@@ -406,7 +406,9 @@ has no hover of its own; the track tool's tag names the class and its factor [T-
     Elevation colour of the level the meeting is on [T-673]. A junction is built once three of its ends are, a crossing
     once both tracks are. A crossing the model refuses (on a ramp, the tracks less than a level
     apart; [track-and-service.md](track-and-service.md) "The graph") is a red X, hover "Tracks cross
-    on a ramp less than a level apart" [T-2226].
+    on a ramp less than a level apart" [T-2226]. Where tram track crosses rail, the X's tram stroke stops short
+    either side of the rail's, and where two tram tracks cross both stop short of the centre (hover "Trams yield
+    here"), on built track and in the drawing tool's preview alike (`Network::crossing_trams`) [T-3062, T-3535].
   - **One-way track no train can use** [T-3164, `Network::node_unusable`]: at a node with no station
     and two or more track ends, one-way single track pointing in with no move on, or pointing out
     with no move into it, gets a red badge with two arrows, pointing at each other or apart, sized

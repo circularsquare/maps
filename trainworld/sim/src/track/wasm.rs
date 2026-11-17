@@ -1951,14 +1951,14 @@ fn render_chainages(pieces: &[geom::Piece], vert: &[[f64; 2]]) -> Vec<f64> {
 }
 
 /// The crossings a trial edit added or removed (an accepted edit), or the ones a refusal names,
-/// as `preview_marks` rows (x, y, 0). The refusal's are the bad ones.
+/// as `preview_marks` rows (x, y, 0, tram tracks). The refusal's are the bad ones, with no trams.
 fn trial_crossings(r: &Result<EditResult, Vec<Issue>>) -> Vec<f64> {
     let mut out = vec![];
     match r {
-        Ok(r) => r.dirty.crossings.iter().for_each(|c| out.extend([c[0], c[1], 0.0])),
+        Ok(r) => r.dirty.crossings.iter().for_each(|c| out.extend([c[0], c[1], 0.0, c[2]])),
         Err(is) => is.iter().for_each(|i| {
             if let Issue::Crossing { x, y, overlap: false, .. } = i {
-                out.extend([*x, *y, 0.0]);
+                out.extend([*x, *y, 0.0, 0.0]);
             }
         }),
     }

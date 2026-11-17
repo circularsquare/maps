@@ -1732,6 +1732,15 @@ function markPoints(rows: Float64Array, stride: number): Float32Array {
   return out;
 }
 
+/** T-3535: `preview_marks` (x, y, kind, tram tracks) as the preview message's marks: x, y in local units, then 1
+ * for a junction, or for a crossing its tram tracks packed as a placed crossing's level carries them (`packCross`
+ * at level 0), so the ghost draws the mark the placed track will. */
+function previewMarkRows(rows: Float64Array): Float32Array {
+  const m = markPoints(rows, 4), out = new Float32Array((m.length / 4) * 3);
+  for (let k = 0, j = 0; k + 3 < m.length; k += 4, j += 3) out.set([m[k], m[k + 1], m[k + 2] === 1 ? 1 : packCross(0, m[k + 3])], j);
+  return out;
+}
+
 /** T-1859: each station's platform line, for the complexes */
 const platformLines = new PlatformLines();
 const platformLineOf = (a: TrackApi, id: number, x: number, y: number, platform: number) => platformLines.of(a, id, x, y, platform, groundK(y));
@@ -1877,14 +1886,11 @@ function buildState(): ClockState {
   });
   const conflicts = a.guard_conflicts();
   const singles = a.guard_singles();
-  const crossings = markPoints(a.crossings_info(), 5);
-  // T-3062: a flat crossing's level carries which modes cross, for the mark's drawing (markData.ts)
-  for (let k = 0, f = 0; k + 4 < crossings.length; k += 5) {
-    if (crossings[k + 2] !== 0) continue;
-    const e1 = conflicts[1 + f * 4], e2 = conflicts[3 + f * 4];
-    f++;
-    const tram = (a.edge_kind(e1) >= 2 ? 1 : 0) + (a.edge_kind(e2) >= 2 ? 1 : 0);
-    crossings[k + 3] = packCross(crossings[k + 3], tram);
+  // T-3062: a flat crossing's level carries its tram tracks, for the mark's drawing (markData.ts)
+  const info = markPoints(a.crossings_info(), 6), crossings = new Float32Array((info.length / 6) * 5);
+  for (let k = 0, j = 0; k + 5 < info.length; k += 6, j += 5) {
+    crossings.set(info.subarray(k, k + 5), j);
+    if (info[k + 2] === 0) crossings[j + 3] = packCross(info[k + 3], info[k + 5]);
   }
   const tq4 = performance.now(); timing.sRest = tq4 - tq3;
   const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
@@ -4883,7 +4889,7 @@ async function handleMessage(msg: ToClock) {
     if (speeds.length !== Math.max(0, pts.length / 3 - 1)) throw new Error("Preview speed/point length mismatch");
     const lanes = a.preview_render_lanes();
     if (lanes.length !== speeds.length) throw new Error("Preview lane/speed length mismatch");
-    const marks = markPoints(a.preview_marks(), 3);
+    const marks = previewMarkRows(a.preview_marks());
     const ground = msg.kind === "preview" ? Array.from(a.preview_ground()) : undefined;
     const flatJunctions = msg.kind === "preview" ? a.route_flyovers_flat() : 0;
     const joins = msg.kind === "preview" ? a.route_joins() : undefined;
@@ -4943,7 +4949,7 @@ function sendNodePreview(seq: number, out: Float64Array) {
     parts.push(pts.length / 3);
   }
   const v = new Float64Array(verts), p = new Float32Array(pts), pa = new Uint32Array(parts);
-  const marks = markPoints(api!.preview_marks(), 3);
+  const marks = previewMarkRows(api!.preview_marks());
   const partLanes = api!.preview_part_lanes();
   send({ kind: "preview", seq, ok, cost: out[1], lengthM: 0, mult: 0, issues: ok ? [] : issues(), verts: v, pts: p, parts: pa, partLanes, anchor: anchor().version, marks }, [v.buffer, p.buffer, pa.buffer, partLanes.buffer, marks.buffer]);
 }

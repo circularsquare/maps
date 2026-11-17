@@ -795,8 +795,8 @@ export type FromClock =
       legs?: Float64Array;
       /** the draw anchor version `verts`, `pts`, `arc` and `marks` are relative to (T-307) */
       anchor?: number;
-      /** where the track makes a crossing or a flat junction (T-629): x, y (local units), kind (0
-       * crossing, 1 junction), per mark */
+      /** where the track makes a crossing or a flat junction (T-629): x, y (local units), then 1 for a
+       * junction, or for a crossing its tram tracks as `packCross(0, trams)` (0, 0.1 or 0.2; T-3535), per mark */
       marks?: Float32Array;
     }
   | { kind: "state"; state: ClockState }

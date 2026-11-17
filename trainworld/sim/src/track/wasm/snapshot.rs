@@ -103,9 +103,9 @@ impl TrackApi {
         }
         out
     }
-    /// Per crossing of two edges at one height, 5 numbers: x, y, kind (0 flat, 1 bad), level (a
-    /// flat crossing's, else 0), built (1 when both its edges are constructed). For the map's
-    /// marks (T-629).
+    /// Per crossing of two edges at one height, 6 numbers: x, y, kind (0 flat, 1 bad), level (a
+    /// flat crossing's, else 0), built (1 when both its edges are constructed), tram tracks
+    /// (`Network::crossing_trams`, T-3062). For the map's marks (T-629).
     pub fn crossings_info(&self) -> Vec<f64> {
         let n = &self.w.net;
         let mut out = vec![];
@@ -116,12 +116,13 @@ impl TrackApi {
                 CrossKind::Overlap => continue,
             };
             let built = n.edge_built[c.e1 as usize] && n.edge_built[c.e2 as usize];
-            out.extend([c.x, c.y, kind, level, built as u8 as f64]);
+            out.extend([c.x, c.y, kind, level, built as u8 as f64, n.crossing_trams(c.e1, c.e2) as f64]);
         }
         out
     }
     /// Where the last route, edge or node-move preview makes a crossing or a flat junction:
-    /// x, y, kind (0 crossing, 1 junction) per mark (T-629).
+    /// x, y, kind (0 crossing, 1 junction), tram tracks of a crossing (`Network::crossing_trams`,
+    /// T-3535) per mark (T-629).
     pub fn preview_marks(&self) -> Vec<f64> {
         self.preview_marks.clone()
     }

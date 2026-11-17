@@ -538,12 +538,12 @@ export function strokesFromEdges(lines: Float32Array[]): Strokes {
 }
 
 /** A preview's marks (T-629): the ramps and portals of its track, then the crossings and flat
- * junctions the track model found (`sim`: x, y, 0 crossing or 1 junction), all in the blueprint
- * tier. */
+ * junctions the track model found (`sim`: x, y, then 1 for a junction or a crossing's packed level,
+ * which carries its tram tracks, T-3535), all in the blueprint tier. */
 export function previewMarks(pts: ArrayLike<number>, sim?: ArrayLike<number>): Float32Array | undefined {
   const m: number[] = [];
   rampMarks(pts, 1, m);
-  if (sim) for (let k = 0; k + 2 < sim.length; k += 3) m.push(sim[k], sim[k + 1], sim[k + 2] === 1 ? M_JUNCTION : M_CROSSING, 0, 1, 0);
+  if (sim) for (let k = 0; k + 2 < sim.length; k += 3) m.push(sim[k], sim[k + 1], sim[k + 2] === 1 ? M_JUNCTION : M_CROSSING, 0, 1, sim[k + 2] === 1 ? 0 : sim[k + 2]);
   return m.length ? new Float32Array(m) : undefined;
 }
 

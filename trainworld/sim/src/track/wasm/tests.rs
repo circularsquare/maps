@@ -429,20 +429,34 @@ fn crossing_and_junction_marks() {
     // a route across it: the preview names the crossing, nothing is made
     assert_eq!(a.preview_route(&line(500.0, -300.0, 500.0, 300.0), &[], 2, false)[0], 1.0);
     let m = a.preview_marks();
-    assert_eq!(m.len(), 3, "{m:?}");
-    assert!((m[0] - 500.0).abs() < 1.0 && m[1].abs() < 1.0 && m[2] == 0.0);
+    assert_eq!(m.len(), 4, "{m:?}");
+    assert!((m[0] - 500.0).abs() < 1.0 && m[1].abs() < 1.0 && m[2] == 0.0 && m[3] == 0.0, "rail over rail: no trams {m:?}");
     assert!(a.crossings_info().is_empty());
     assert_eq!(a.add_route(&line(500.0, -300.0, 500.0, 300.0), &[], 2, false), 0);
     let c = a.crossings_info();
-    assert_eq!(c.len(), 5);
-    assert_eq!(&c[2..], &[0.0, 0.0, 0.0], "a flat crossing at level 0, not built");
+    assert_eq!(c.len(), 6);
+    assert_eq!(&c[2..], &[0.0, 0.0, 0.0, 0.0], "a flat crossing at level 0, not built, no trams");
+    // T-3535: tram track across rail: the preview's crossing counts the tram as the placed one does
+    a.set_route_kind(TrackKind::Tram as u8);
+    assert_eq!(a.preview_route(&line(800.0, -300.0, 800.0, 300.0), &[], 2, false)[0], 1.0, "{}", a.issues());
+    let m = a.preview_marks();
+    assert!(m.chunks(4).any(|r| (r[0] - 800.0).abs() < 1.0 && r[2] == 0.0 && r[3] == 1.0), "tram over rail: one tram {m:?}");
+    assert_eq!(a.add_route(&line(800.0, -300.0, 800.0, 300.0), &[], 2, false), 0, "{}", a.issues());
+    assert!(a.crossings_info().chunks(6).any(|r| (r[0] - 800.0).abs() < 1.0 && r[5] == 1.0), "placed: one tram");
+    // tram across tram: two
+    assert_eq!(a.preview_route(&line(700.0, 150.0, 900.0, 150.0), &[], 2, false)[0], 1.0, "{}", a.issues());
+    assert!(a.preview_marks().chunks(4).any(|r| (r[0] - 800.0).abs() < 1.0 && r[3] == 2.0), "tram over tram: two");
+    a.set_route_kind(TrackKind::Regular as u8);
+    // rail track across tram: one
+    assert_eq!(a.preview_route(&line(700.0, 200.0, 900.0, 200.0), &[], 2, false)[0], 1.0, "{}", a.issues());
+    assert!(a.preview_marks().chunks(4).any(|r| (r[0] - 800.0).abs() < 1.0 && r[3] == 1.0), "rail over tram: one");
     // a route leaving the first track: a flat junction at its start, flying none
     let e = a.edges_info()[0];
     let from_edge = [2.0, e, 200.0, 0.0, 0.0];
     let ends: Vec<f64> = from_edge.iter().chain(free(200.0, -600.0).iter()).copied().collect();
     assert_eq!(a.preview_route(&ends, &[], 2, false)[0], 1.0);
     let m = a.preview_marks();
-    assert!(m.chunks(3).any(|r| r[2] == 1.0 && (r[0] - 200.0).abs() < 1.0), "{m:?}");
+    assert!(m.chunks(4).any(|r| r[2] == 1.0 && (r[0] - 200.0).abs() < 1.0), "{m:?}");
 }
 
 #[test]
