@@ -41,16 +41,18 @@ import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { hidden, levelHidden } from "./visibility";
-import { edit, say, stationNames, world } from "../game/world";
-import type { RouteEnd } from "../workers/protocol";
+import { edit, rightHand, say, stationNames, world } from "../game/world";
+import type { ClockEdge, ClockNode, RouteEnd } from "../workers/protocol";
 import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
-import type { Level } from "../game/types";
+import type { Level, TrackEdge } from "../game/types";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview, TAPER_M } from "./network";
-import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom, type PlatformShape } from "./stationGeometry";
+import { stationOutside } from "./stationSide";
+import { splitsAt } from "./terminalBays";
+import { PLATFORM_HALF_M, platformShape, reversed, stationPath, stationShape, waysFrom, type PlatformShape, type StationShape } from "./stationGeometry";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
@@ -1821,7 +1823,7 @@ export class Tools {
   }
 
   /** T-2763: the box of the ghost last drawn, kept for a click to stand in for the station it places */
-  private lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number } | null = null;
+  private lastBox: { lx: number; ly: number; ways: ArrayLike<number>[]; perM: number; plat: number; side: number; tram: boolean; mid: boolean } | null = null;
   /** T-2763: stations clicked and not yet in the world (the worker takes 0.3 to 3 s on a big network),
    * drawn where they were clicked; the worker's answer takes them away, and a refusal leaves none */
   private pendingSt: { b: NonNullable<Tools["lastBox"]>; el: SVGSVGElement }[] = [];
@@ -1842,11 +1844,26 @@ export class Tools {
   }
   private placePending() {
     for (const { b, el } of this.pendingSt) {
-      const style = { ...this.overlay.renderer.stationStyle, boxes: true };
-      const shape = stationShape(b.lx, b.ly, platformShape(b.ways, 0, b.plat / 2 * b.perM), PLATFORM_HALF_M * b.perM, (x, y) => this.screen(x, y), style, false, false, b.side);
+      const shape = this.ghostShape(b.lx, b.ly, b.ways, b.perM, b.plat, b.side, b.tram, b.mid);
       placeAt(el, shape.x, shape.y, 0, 0, false);
-      el.firstElementChild!.setAttribute("d", stationPath(shape));
+      this.ghostPath(el.firstElementChild as SVGPathElement, shape);
     }
+  }
+
+  /** The box of a station to place, from the same `stationShape` call as a built one (renderer.ts's
+   * stationShapeAt), so the ghost, the pending mark and the station keep one width: always the full
+   * box at its true length, whatever the zoom (T-311), the map's own style drawing dots below STATION_BOX_ZOOM */
+  private ghostShape(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, plat: number, side: number, tram: boolean, mid = false) {
+    const style = { ...this.overlay.renderer.stationStyle, boxes: true };
+    return stationShape(lx, ly, platformShape(ways, 0, plat / 2 * perM), PLATFORM_HALF_M * perM, (x, y) => this.screen(x, y), style, false, false, side, { tram, mid });
+  }
+
+  /** A ghost's outline, as wide as a built station's rim and inside the box's edge as that is (a stroke is
+   * centred on its path, so the path is drawn half a rim in) */
+  private ghostPath(el: SVGPathElement, shape: StationShape) {
+    const ring = this.overlay.renderer.stationStyle.ringPx;
+    el.setAttribute("d", stationPath(shape, -ring / 2));
+    el.style.strokeWidth = `${ring}px`;
   }
 
   /** The placement ghost: the platform as it will be drawn, at the configured length along the
@@ -1874,31 +1891,67 @@ export class Tools {
       : candidates.map((id)=>{ const e=w.edges.find((x)=>x.id===id), p=n.edgePts.get(id); return !e||!p?new Float32Array(0):e.a===h.node?p:reversed(p); });
     // on quad track the pair clicked only (T-1687); T-3332: a one-track station's half on double track
     const double=candidates.some((id)=>w.edges.find((x)=>x.id===id)?.tracks===2);
-    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null,undefined,double);
+    // network.ts's `single`: every track under the platform is single and not a crossover
+    const ends=candidates.map((id)=>w.edges.find((x)=>x.id===id)!);
+    const single=!double&&ends.every((e)=>e.tracks===1&&!e.crossover);
+    const outside=single?(sh:PlatformShape)=>this.outsideSide(h,ends,ways,sh):null;
+    this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null,undefined,double,outside);
+  }
+
+  /** The side of its platform a station on one-way single track (or single track joining double) draws its one bar, from the same `stationOutside` a
+   * built one uses. Part way along an edge the new station's node is -1, with the edge's two halves either side. */
+  private outsideSide(h: Exclude<Snap,{kind:"free"}>, ends: TrackEdge[], ways: ArrayLike<number>[], sh: PlatformShape): number {
+    const clock=(e: TrackEdge, over: Partial<ClockEdge> = {}) => ({ ...e, off: !!e.off, hsr: !!e.hsr, kind: e.kind ?? 0, oneWay: e.oneWay ?? 0, join: e.join ?? 0, crossover: !!e.crossover, ...over }) as unknown as ClockEdge;
+    let node: number, at: ClockEdge[], way: (n: number, id: number) => ArrayLike<number>, platformEdge: ClockEdge;
+    if (h.kind==="node") {
+      node=h.node;
+      at=ends.map((e)=>clock(e));
+      way=(_n,id)=>ways[ends.findIndex((e)=>e.id===id)] ?? new Float32Array(0);
+      platformEdge=at[0];
+    } else {
+      const e=ends[0], half=e.lengthM/2;
+      const toB=clock(e,{ id: -1, a: -1, join: (e.join ?? 0) >> 2 << 2, lengthM: half });
+      const toA=clock(e,{ id: -2, b: -1, join: (e.join ?? 0) & 3, lengthM: half });
+      node=-1; at=[toB,toA];
+      way=(_n,id)=>id===-1?ways[0]:ways[1];
+      platformEdge=toB;
+    }
+    // two-way single track splits through the station, a full box (network.ts `split`): no bar
+    if (at.some((e)=>splitsAt(e, e.a===node?0:1, { platform: 1, one: 0 } as unknown as ClockNode))) return 0;
+    const others=(n: number): readonly ClockEdge[] => {
+      if (n===node) return at;
+      const w=world.peek();
+      return (w?.edges ?? []).filter((e)=>(e.a===n||e.b===n)&&!(h.kind==="edge"&&e.id===h.edge)).map((e)=>clock(e));
+    };
+    return stationOutside(node, platformEdge, others, (n,id)=>{
+      if (n===node) return way(n,id);
+      const e=world.peek()?.edges.find((x)=>x.id===id), p=this.overlay.renderer.net?.edgePts.get(id);
+      return !e||!p?new Float32Array(0):e.a===n?p:reversed(p);
+    }, sh.ax, sh.ay, rightHand.peek()===false);
   }
 
   /** The platform box at (lx, ly) along `ways` (the track from the spot each way), and the twin's
    * on quad. */
-  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = this.platFor(this.stationSpot()), double = false) {
+  private boxGhost(lx: number, ly: number, ways: ArrayLike<number>[], perM: number, bad: boolean, twinAt: { x: number; y: number; ways: ArrayLike<number>[] } | null, plat = this.platFor(this.stationSpot()), double = false, outside: ((sh: PlatformShape) => number) | null = null) {
     const sh=platformShape(ways,0,plat/2*perM);
     // T-3332: a platform on one track of double track: its half of the box, on the pointer's side
-    const side=this.oneSideAt(lx,ly,sh,double);
-    this.lastBox={lx,ly,ways,perM,plat,side};
-    // always the full box at its true length, whatever the zoom (T-311): the map's own style
-    // draws dots below STATION_BOX_ZOOM
-    const style={...this.overlay.renderer.stationStyle,boxes:true};
-    const shape=stationShape(lx,ly,sh,PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false,false,side);
+    const one=this.oneSideAt(lx,ly,sh,double);
+    // a station on single track is one bar on its outside, as network.ts draws it (T-3540)
+    const side=one||outside?.(sh)||0, mid=!one&&side!==0;
+    const tram=this.tramSpot(this.stationSpot());
+    this.lastBox={lx,ly,ways,perM,plat,side,tram,mid};
+    const shape=this.ghostShape(lx,ly,ways,perM,plat,side,tram,mid);
     this.ghost ??= this.svgMark(["path"], false);
     this.ring.style.display="none";
     this.ghost.style.display="";
     this.ghost.setAttribute("class",`station-ghost ${bad?"bad":"ok"}`);
     placeAt(this.ghost,shape.x,shape.y,0,0,false);
-    this.ghost.firstElementChild!.setAttribute("d",stationPath(shape));
+    this.ghostPath(this.ghost.firstElementChild as SVGPathElement,shape);
     let twin=this.ghost.children[1] as SVGPathElement|undefined;
     if (twinAt) {
-      const ts=stationShape(twinAt.x,twinAt.y,platformShape(twinAt.ways,0,plat/2*perM),PLATFORM_HALF_M*perM,(x,y)=>this.screen(x,y),style,false);
+      const ts=this.ghostShape(twinAt.x,twinAt.y,twinAt.ways,perM,plat,0,tram);
       if (!twin) twin=this.ghost.appendChild(document.createElementNS("http://www.w3.org/2000/svg","path"));
-      twin.setAttribute("d",stationPath(ts));
+      this.ghostPath(twin,ts);
       twin.setAttribute("transform",`translate(${ts.x-shape.x},${ts.y-shape.y})`);
       twin.style.display="";
     } else if (twin) twin.style.display="none";
