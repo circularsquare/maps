@@ -35,7 +35,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   "rides" for that wait; memory "uses N MB less memory".
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
   answers "text acknowledged" or names lines. Propose wording; never ask her to write it.
-- **Changelog**: a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
+- **Changelog** (when in doubt, no item; Anita 2026-11-18: "we need to be less willing to put stuff on the
+  changelog"): a change a player would notice (a new control, a changed number, a fixed bug they'd have met) gets
   one item before you report: `venv\Scripts\python.exe trainworld/tools/changelog.py add "<one plain line, lowercase;
   past tense for the change, present for how things are now: "added ...", "fixed ...", but "the game uses 500 MB
   less" (Anita, 2026-11-17)>" --area <area> [--fix] --task T-#### --by <you>` (area: track, demand, scheduling, fares, schematic for
@@ -48,6 +49,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.
+- "Manually", never "by hand" (Anita, 2026-11-18: "by hand is a bit weird").
 - American wording: "turn around", never the British "turn round" or "round" for "around" (Anita, 2026-11-12: "its a
   pet peeve of mine").
 - Watch for an object or colour as the subject ("grey fills"), dropped words ("from street zooms"), and hovers that

@@ -1,7 +1,58 @@
 {
   "release": "next",
-  "line": "",
+  "line": "update v0.4.2: bus and ferry schedules, less memory, track types by colour, plus fixes",
   "items": [
+    {
+      "id": "c054",
+      "text": "fixed normal games sometimes getting marked as sandbox when you opened another save or a community network",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3687",
+      "by": "sandboxfix",
+      "at": "2026-11-18T20:21:47Z",
+      "rev": 1,
+      "area": "community",
+      "fix": true
+    },
+    {
+      "id": "c053",
+      "text": "track started or ended a few metres from a junction or the end of a piece of track goes on the nearest spot that fits instead of being refused as too close to the end",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3690",
+      "by": "endgap",
+      "at": "2026-11-18T20:14:22Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c052",
+      "text": "added weekends and default headways to bus and ferry lines, in their own detailed schedule",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3703",
+      "by": "busched",
+      "at": "2026-11-18T20:08:22Z",
+      "rev": 3,
+      "area": "scheduling",
+      "fix": false,
+      "changed": "2026-11-18T20:08:35Z",
+      "highlight": true
+    },
+    {
+      "id": "c051",
+      "text": "the clear button in search boxes shows whenever there is text in them",
+      "edited": null,
+      "hidden": true,
+      "task": "T-3715",
+      "by": "searchx",
+      "at": "2026-11-18T20:05:08Z",
+      "rev": 2,
+      "area": "other",
+      "fix": false,
+      "changed": "2026-11-18T20:20:52Z"
+    },
     {
       "id": "c050",
       "text": "fixed bus and ferry lines not updating their headway, trips and profit when you change their buses, boats or headway",
@@ -10,21 +61,24 @@
       "task": "T-3704",
       "by": "busfix",
       "at": "2026-11-18T19:21:11Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": true
+      "fix": true,
+      "highlight": true,
+      "changed": "2026-11-18T19:55:58Z"
     },
     {
       "id": "c049",
       "text": "games played with a mod, or on a copy of the game hosted somewhere else, stay off the leaderboards",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3707",
       "by": "modmark",
       "at": "2026-11-18T19:11:30Z",
-      "rev": 1,
+      "rev": 2,
       "area": "community",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T20:13:34Z"
     },
     {
       "id": "c048",
@@ -47,22 +101,25 @@
       "task": "T-2136",
       "by": "corridor",
       "at": "2026-11-18T18:58:52Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T19:55:58Z"
     },
     {
       "id": "c046",
       "text": "the track tool and a selected or hovered line or piece of track show their type by colour and their track count as rings",
-      "edited": "the track tool and a selected or hovered line or track show the track type by colour and the number of tracks as rings",
+      "edited": "the track tool shows the track type by colour and the number of tracks in its tag, and the tag over track or a line names both",
       "hidden": false,
       "task": "T-3693",
       "by": "modelook",
       "at": "2026-11-18T18:20:21Z",
-      "rev": 2,
+      "rev": 5,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-18T18:20:34Z"
+      "changed": "2026-11-18T20:15:03Z",
+      "highlight": true
     },
     {
       "id": "c045",
@@ -140,14 +197,16 @@
     {
       "id": "c039",
       "text": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed, and the comma and period keys slow down and speed up by one step",
-      "edited": null,
+      "edited": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed; click the speed to pick one on a slider, and hold comma or period to keep slowing down or speeding up",
       "hidden": false,
       "task": "T-3653",
       "by": "timectl",
       "at": "2026-11-18T17:37:31Z",
-      "rev": 1,
+      "rev": 4,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T20:12:14Z"
     },
     {
       "id": "c038",
@@ -166,27 +225,27 @@
       "id": "c037",
       "text": "fixed old copies of the clock piling up in the top bar",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3635",
       "by": "clockdup",
       "at": "2026-11-18T17:27:03Z",
-      "rev": 2,
+      "rev": 3,
       "area": "other",
       "fix": true,
-      "changed": "2026-11-18T17:27:58Z"
+      "changed": "2026-11-18T20:20:52Z"
     },
     {
       "id": "c036",
       "text": "fixed a save made in one tab being overwritten by an autosave from another tab of the same game",
-      "edited": "fixed a save by hand being overwritten by an autosave from another tab open on the same game",
+      "edited": "fixed a manual save being overwritten by an autosave from another tab open on the same game",
       "hidden": false,
       "task": "T-3611",
       "by": "autolease",
       "at": "2026-11-18T17:11:28Z",
-      "rev": 2,
+      "rev": 3,
       "area": "other",
       "fix": true,
-      "changed": "2026-11-18T17:11:32Z"
+      "changed": "2026-11-18T20:18:50Z"
     },
     {
       "id": "c035",
@@ -203,15 +262,15 @@
     {
       "id": "c034",
       "text": "added a search box to settings that finds a setting by its name or a few other words for it (\"miles\" finds units)",
-      "edited": "added a search box to settings, which also finds other words for a setting (miles finds units)",
+      "edited": "added a search box to settings",
       "hidden": false,
       "task": "T-3681",
       "by": "setsearch",
       "at": "2026-11-18T17:01:27Z",
-      "rev": 2,
+      "rev": 3,
       "area": "other",
       "fix": false,
-      "changed": "2026-11-18T17:01:53Z"
+      "changed": "2026-11-18T20:13:47Z"
     },
     {
       "id": "c033",
@@ -221,9 +280,11 @@
       "task": "T-3652",
       "by": "newest",
       "at": "2026-11-18T16:58:32Z",
-      "rev": 1,
+      "rev": 2,
       "area": "community",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T19:55:58Z"
     },
     {
       "id": "c032",
@@ -253,13 +314,14 @@
       "id": "c030",
       "text": "moved the join control to the top of the leaderboards",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3683",
       "by": "lbfix",
       "at": "2026-11-18T16:46:54Z",
-      "rev": 1,
+      "rev": 2,
       "area": "community",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T20:20:52Z"
     },
     {
       "id": "c029",
@@ -278,13 +340,14 @@
       "id": "c028",
       "text": "fixed community previews showing \"Could not load this network\" when switching tabs quickly",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3680",
       "by": "commload",
       "at": "2026-11-18T16:23:47Z",
-      "rev": 1,
+      "rev": 2,
       "area": "community",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:20:52Z"
     },
     {
       "id": "c027",
@@ -353,39 +416,41 @@
     {
       "id": "c022",
       "text": "fixed the game getting stuck calculating trips after its memory restart on very big saves",
-      "edited": "very big games like all of China come back more reliably after the game frees memory",
+      "edited": "very big games come back more reliably after the game frees memory",
       "hidden": false,
       "task": "T-3604",
       "by": "restarts",
       "at": "2026-11-18T14:31:29Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": true,
-      "changed": "2026-11-18T14:31:39Z"
+      "changed": "2026-11-18T20:14:05Z"
     },
     {
       "id": "c021",
       "text": "fixed Cairo's name sitting in the desert east of the city",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3623",
       "by": "cairo",
       "at": "2026-11-18T14:00:24Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:01:26Z"
     },
     {
       "id": "c020",
       "text": "fixed the new game city pick showing 0 intercity trips before they are calculated",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3658",
       "by": "zerorow",
       "at": "2026-11-18T13:54:03Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:20:53Z"
     },
     {
       "id": "c019",
@@ -416,13 +481,14 @@
       "id": "c017",
       "text": "added a help answer for how to see which mode people take between two places",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3649",
       "by": "helptrip",
       "at": "2026-11-18T12:59:00Z",
-      "rev": 1,
+      "rev": 2,
       "area": "other",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T20:10:20Z"
     },
     {
       "id": "c016",
@@ -453,13 +519,14 @@
       "id": "c014",
       "text": "fixed a new line on busy track running no trains at the peaks until minutes later",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3482",
       "by": "settle",
       "at": "2026-11-18T08:20:56Z",
-      "rev": 1,
+      "rev": 2,
       "area": "scheduling",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:01:16Z"
     },
     {
       "id": "c013",
@@ -477,75 +544,81 @@
     {
       "id": "c012",
       "text": "lines that aren't fully built run trains on the part that is (thanks CinnamonVII)",
-      "edited": null,
+      "edited": "lines that are partially broken run trains on the part that is okay (thanks CinnamonVII!)",
       "hidden": false,
       "task": "T-3474",
       "by": "partline",
       "at": "2026-11-18T07:21:44Z",
-      "rev": 1,
+      "rev": 6,
       "area": "scheduling",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T20:02:08Z"
     },
     {
       "id": "c011",
       "text": "fixed the start menu covering the out of memory message after a game failed to load",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3643",
       "by": "oomscreen",
       "at": "2026-11-18T07:09:21Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:20:53Z"
     },
     {
       "id": "c010",
       "text": "fixed bus trips saying they wait for a train with room",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3637",
       "by": "busroom",
       "at": "2026-11-18T06:55:05Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:00:37Z"
     },
     {
       "id": "c009",
       "text": "fixed the trip panel showing transit as 100% or 0% for trips that happen less than once a day",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3641",
       "by": "panelshare",
       "at": "2026-11-18T06:03:07Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:00:34Z"
     },
     {
       "id": "c008",
       "text": "fixed sharing a long-played network failing with \"could not be sent\"",
-      "edited": "fixed sharing a network you have played for a long time to the community failing",
+      "edited": "fixed sharing a network you have played for a long time to the community, sometimes was failing",
       "hidden": false,
       "task": "T-3640",
       "by": "bigshare",
       "at": "2026-11-18T06:01:44Z",
-      "rev": 2,
+      "rev": 3,
       "area": "community",
       "fix": true,
-      "changed": "2026-11-18T06:01:56Z"
+      "changed": "2026-11-18T20:15:03Z"
     },
     {
       "id": "c007",
       "text": "when you turn trains on or off on several lines a few seconds apart, each line's new riders show within seconds",
-      "edited": null,
+      "edited": "new rider count shows faster after updating train count",
       "hidden": false,
       "task": "T-3616",
       "by": "secondedit",
       "at": "2026-11-18T05:56:40Z",
-      "rev": 1,
+      "rev": 6,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T20:14:35Z"
     },
     {
       "id": "c006",
@@ -575,25 +648,27 @@
       "id": "c004",
       "text": "the trip hovers count money the same way for the train and the car, in the local currency",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3627",
       "by": "carhover",
       "at": "2026-11-18T05:32:04Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T20:00:55Z"
     },
     {
       "id": "c003",
       "text": "fixed the bus ride hover saying no bus is due for hours on frequent lines",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-3636",
       "by": "bushover",
       "at": "2026-11-18T05:30:46Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:00:58Z"
     },
     {
       "id": "c002",
@@ -603,22 +678,24 @@
       "task": "T-3634",
       "by": "multitrack",
       "at": "2026-11-18T05:12:33Z",
-      "rev": 2,
+      "rev": 3,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-18T06:06:03Z"
+      "changed": "2026-11-18T19:55:58Z",
+      "highlight": true
     },
     {
       "id": "c001",
       "text": "fixed the real world network snap for tram track missing some real tram corners and links, like on Melbourne's route 82 and at Zurich's main station",
-      "edited": null,
+      "edited": "fixed the real world network snap for tram track missing some real tram corners",
       "hidden": false,
       "task": "T-3515",
       "by": "maps-ca",
       "at": "2026-11-18T04:53:48Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T20:01:07Z"
     }
   ]
 }

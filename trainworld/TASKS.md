@@ -167,9 +167,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3689 [P2] {L:fares} Transfer fare at the cap still pays (taking, 2026-11-18, agent xferfare)
-  - Context: Your old TODO: "people can do money exploit by setting transfer fare to 1000 dollars? apparently people make a lot of money this way". T-3303 caps fares and the transfer fare at US$1,000 (DECISIONS 2026-11-12), which is the exploit's own figure, so the cap doesn't stop it. You, 2026-11-18: file it.
-  - Goal: The cause found (which riders keep paying a huge transfer fare and why demand doesn't drop them); a proposal to you if the fix changes fare rules or numbers.
+- T-3689 [P1] {L:fares} Transfer fare at the cap still pays (taking, 2026-11-18, agent farecap)
+  - Context: You, 2026-11-18: "yeah can cap transfer are at base fare and let trips start with walk, can juts do cap first if the other half is harder / less important." Stage 1 (this task): the transfer fare is held to at most the base fare, for v0.4.2. Stage 2 is T-3718.
+  - Goal: No transfer fare above the base fare can be set or loaded.
+  - Other: notes/T-3689.md
+- T-3718 [P2] {L:route-choice} Trips can start with a walk to a station
+  - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
+  - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.
+  - Other: notes/T-3689.md (real NYC save, transfer fare 0 / 100 / 1000: fare income 3.86B / 40.5B / 384.6B a day).
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 landed (7d14a945): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
@@ -363,19 +368,31 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
+- T-3721 [P2] {L:community} Copied network shares as Copy, not Sandbox
+  - Context: From T-3687: a Community network copied and played on as a normal game is shared with the Sandbox tag (T-3115). You, 2026-11-18: "it can show "copy" there instead of sandbox for copied network". Needs the server to record why a game is latched, so a server deploy.
+  - Goal: Such a share shows Copy; real sandboxes still show Sandbox.
+  - Other: notes/T-3687.md
+- T-3722 [P2] {L:small-fixes} Exit to main menu sometimes missing (taking, 2026-11-18, agent exitmenu)
+  - Context: You, 2026-11-18: "sometimes on 8800 i dont see the "exit to main menu" button on saved games. seems kinda random when this is the case."
+  - Goal: Cause found; the button shows on every saved game.
+- T-3723 [P1] {L:route-choice} Review sheet of every no transit route message (taking, 2026-11-18, agent noroute)
+  - Context: You, 2026-11-18, on c006 ("the intercity trip panel says why there is no transit route"): "a common complaint is that people say theres no transit route and the message is misleading soi wanna look at each of these cases mysefl". T-3632 stage 2 added noTrain and noAlt beside the older noRail, noRoad and noStation.
+  - Goal: One page for you: each message as shown, when it appears, and a screenshot of a real case; then your edits.
+  - Other: notes/T-3632.md
+- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch
+  - Context: From T-3687 (possible, not reproduced): a new game in the reused `autosave` slot could inherit a deleted sandbox game's id and so its latch, keeping it off the leaderboards.
+  - Goal: Reproduced or ruled out; a new game never carries an old game's id.
+  - Other: notes/T-3687.md
+- T-3719 [P2] {L:timetables} Switching to sandbox lowers some lines' train counts (taking, 2026-11-18, agent sandcount)
+  - Context: Seen by T-3703's checker on the real NYC save: switching to sandbox mode alone lowered three rail lines' weekday counts (line 7 from 23 to 17, S 3 to 2, L 23 to 19), before any other edit. Not compared with master; reach unknown.
+  - Goal: Cause found; switching mode leaves every line's counts as they were, or the reason it shouldn't is written down.
+  - Other: notes/T-3703.md
 - T-3695 [P3] {L:map-look} Travel by mode overview
   - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
   - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
   - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
   - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
-- T-3684 [P3] {L:community} {waits:Anita} Leaderboard flags wrong for some countries
-  - Need from Anita: Where you saw Sierra Leone with Antarctica's flag (which player, roughly when); otherwise close it as fixed by the second flag set.
-  - Context: Your old TODO: "leaderboard flags are messed up, sierra leone's flag is antarctican flag". Flags came with T-3269. Not reproduced 2026-11-18: all 336 pictures and codes check out (notes/T-3683.md); needs which build or player showed it. Reach: players of the affected countries.
-  - Goal: Every country's leaderboard flag is its own; the cause found and the whole list checked, not only Sierra Leone.
-- T-3687 [P2] {L:community} Normal games marked as sandbox (taking, 2026-11-18, agent sandboxfix)
-  - Context: Your old TODO: "someoen (ylik) said their sandbox save they uploaded to community is actully a nromal mode, they dont know why its considered community". You, 2026-11-18: "a while ago people were reporting their games getting marked as sandbox when they were normal games ... seems good to [look] while we're here". T-3144 handles the Sandbox tag. A lead from T-3707: v0.4.1 treats any 403 from the score route as the server's sandbox latch and remembers it in the browser.
-  - Goal: Every way a normal game can come to be treated as sandbox (in the game, on the leaderboards, in Community) found, the real ones fixed, and games already wrongly latched put right where we can.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
@@ -799,12 +816,18 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3703 [P2] {L:buses} Schedules for buses and ferries like trains (taking, 2026-11-18, agent busched)
-  - Context: You, 2026-11-18: "some ppl on discord are complaining about schedule feature not being enabled for buses / ferries also. we should get that working. we can leave out the marey diagram / timetable part for now if thats harder to add but yeah want to bring buses and ferries to be more consistent with trains. not necessarily super high prio but would be nice to get out in next few updates". Then: the Discord fleet complaints (T-3704) and this both count: "both whats pictured and what i mentioned should be things we try to get consistent".
-  - Goal: Bus and ferry lines get the train lines' schedule controls (periods, weekend, headway steps), the timetable chart optional; a list of what differs goes in the notes first.
-- T-3690 [P2] {L:station-placement} Too close to the end of a piece of track (taking, 2026-11-18, agent endgap)
-  - Context: Your old TODO: "what exactly is "too close to end of track" placement error supposed to accomplish? seems like its frustrating a lot of people". The refusal is `issues.splitPoint` ("Stations, junctions and branches need 5 m of track on each side"); T-2268 covers ramps. You, 2026-11-18: file it.
-  - Goal: The reason for the 5 m found; then the refusal relaxed, or the click slid to the nearest spot that works, so players rarely see it; refusals counted before and after on a fixture.
+- T-3710 [P3] {L:timetables} Count hover reads wrong for one vehicle
+  - Context: From T-3703: with a count of one, the schedule's count hover reads "1 bus on the line keep the headway..." (trains too).
+  - Goal: The hover reads right for one vehicle in every language.
+  - Other: notes/T-3703.md
+- T-3712 [P3] {L:station-placement} Branching off a ramp says too close to the end
+  - Context: From T-3690: the "Too close to the end of a piece of track" refusal also fires on ramps, which T-1964's sweep found far more often than piece ends; T-3690 left ramps alone. Stations on ramps are T-2268.
+  - Goal: Branching track off a ramp either works or the refusal says it is a ramp.
+  - Other: notes/T-3690.md
+- T-3713 [P3] {L:track-drawing} Route ending near a bare end refused as too tight
+  - Context: From T-3690: a route ending about 1 m from a bare end snaps to that end and is refused with "The curve is too tight"; same before and after T-3690.
+  - Goal: That route joins the bare end smoothly or ends where the player let go.
+  - Other: notes/T-3690.md
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
   - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
@@ -859,6 +882,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
   - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.
   - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
+- T-3711 [P2] {L:single-track} Shift-click a stop to make it one way (taking, 2026-11-18, agent oneway)
+  - Context: From T-3672: a bypass joined to the other track of a split leaves a leg two-way, so a line through both side platforms stops at the two-way one in both directions and zigzags. You, 2026-11-18: "maybe we should just make it so that if we shift click we force a one way stop in the way that makes sense? then people can specify more unambiguously".
+  - Goal: Shift-clicking a station while editing a line adds it as a one-way stop, served only in the direction the line is going there; the Caracas side platform case runs without the zigzag.
+  - Other: notes/T-3672.md (cases 1-3)
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Goal: The platform stays put through the turn.
