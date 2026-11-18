@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3649 [P3] {L:help-tutorial} Help answer for the trip explorer (2026-11-18): help.qTripMode/aTripMode added in 13 languages.
+- T-3650 [P2] {L:timetables} Weekend headway edits by train count (2026-11-18): the weekend step used the next headway needing a different train count; now the weekdays' steps, and typed entry. notes/T-3650.md.
+- T-3648 [P3] {L:rebuild-track} Removing a track set leaves a stub at a station (2026-11-18): keep_under_stations uses the same station margin as a single Remove (reach + 4 m, was + 10 m); the 176 m stub was not reproduced. notes/T-3648.md.
+- T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count (2026-11-18): hand_over no longer offers a trip redrawn at its first stop for a waiting train to take over; checker PASS (9 sweeps, 3 fail on old code) notes/T-3645.md.
 - T-3455 [P3] {L:region-redraws} Coastal land gaps scan (2026-11-18): night 2026-11-18: all 28 coastal rows of batch 2 shipped (KR, EG, IN, ID, QA, KW, MY; Busan, Chennai, Doha, Kuwait, Makassar, Johor Bahru, Mokpo); osm_units.reclaimed fixed (make_valid for invalid pieces, cover buffer made once); Kuala Terengganu's water check relaxed (newer OSM ponds); Monaco and Sinuiju held back. notes/T-3455.md.
 - T-3622 [P2] {L:route-choice} Transit and driving value time differently in Malaysia (2026-11-18): closed without code: Anita 2026-11-18 ~05:10 UTC: keep today's demand, fix the hovers to show one dollar-to-minute ratio for every mode; done by T-3627 (31fc4b4f). notes/T-3622.md.
 - T-3511 [P2] {L:region-redraws} Rebuild the enclave shifts and merges (2026-11-18): night 2026-11-17/18: sve, roc, jau rerun with Buenos Aires, La Plata, Wenzhou, Taizhou, Perth, Bunbury, Jammu and five Turkish zones joined and shipped (12 rows, batch 20261118-000045, freeze 20261118-015639) notes/T-3455.md.

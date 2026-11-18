@@ -3,6 +3,43 @@
   "line": "",
   "items": [
     {
+      "id": "c017",
+      "text": "added a help answer for how to see which mode people take between two places",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3649",
+      "by": "helptrip",
+      "at": "2026-11-18T12:59:00Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c016",
+      "text": "fixed the weekend headway stepping by train count, so it steps by the minute like weekdays; it can also be typed",
+      "edited": "fixed weekend headways jumping by several minutes; they step by the minute and can be typed, like weekdays",
+      "hidden": false,
+      "task": "T-3650",
+      "by": "weekendhw",
+      "at": "2026-11-18T12:58:50Z",
+      "rev": 2,
+      "area": "scheduling",
+      "fix": true,
+      "changed": "2026-11-18T13:06:57Z"
+    },
+    {
+      "id": "c015",
+      "text": "fixed a train disappearing when a line's train count changed",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3645",
+      "by": "vanish",
+      "at": "2026-11-18T12:51:46Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
       "id": "c014",
       "text": "fixed a new line on busy track running no trains at the peaks until minutes later",
       "edited": null,

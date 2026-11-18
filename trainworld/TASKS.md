@@ -159,8 +159,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
   - Other: notes/T-1635.md
+- T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache
+  - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
+  - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
+  - Other: notes/T-3455.md "What ran (nightfix3)"
 - T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked
-  - Context: From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
+  - Context: Chimaltenango's union error may be the reclaimed-land fault fixed 2026-11-18 (T-3455: make_valid on invalid pieces); try it first. From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
   - Goal: Each of clt, scd, anu, tsx built and shipped, or left dead space with the reason in its notes; miv and auo terrain rebuilt on the 3 blocks.
   - Other: notes/T-3399.md
 - T-3518 [P3] {L:new-countries} University students in Venezuela and Nicaragua
@@ -450,19 +454,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count (taking, 2026-11-18, agent vanish)
-  - Context: Found by T-3482's agent: in `hand_over`, a train dwelling at its first stop is merged into the train waiting at that terminal, so one train disappears when a line's count changes. A repro and a candidate fix are in notes/T-3482.md (and the scratch file service.rs.fixed it names).
-  - Goal: Changing a line's train count never loses a running train; the trains on the map match the panel's count after the change.
-  - Other: notes/T-3482.md
-- T-3648 [P3] {L:rebuild-track} Removing a track set leaves a stub at a station (taking, 2026-11-18, agent setstub)
-  - Context: Found landing T-3638: removing a set of selected track (and the Select bar's Remove) leaves a 176 m stub under a middle station, which removing the pieces one at a time trims.
-  - Goal: Removing a set or a Select bar run leaves the same track behind as removing its pieces one by one.
-- T-3649 [P3] {L:help-tutorial} Help answer for the trip explorer (taking, 2026-11-18, agent helptrip)
-  - Context: Your pad, 2026-11-18: "some people dont know hwo to trip explore. we can add that tothe little question/answer guide, "how can i tell what mode of transport people will use between two points? show demand bubbles, click one bubble, then click another bubble."
-  - Goal: The help panel has that question and answer, in every language the panel has.
-- T-3650 [P2] {L:timetables} Weekend headway edits by train count (taking, 2026-11-18, agent weekendhw)
-  - Context: Your pad, 2026-11-18: "some new twfeedback says that ediiting weekend train count is weird / not possible. should look into it". The report (boblovespi, 2026-11-18, v0.4.1): "when editing the weekend headway it edits by train count instead of headway".
-  - Goal: A line set by headway edits its weekend rows by headway, as its weekday rows do, and the weekend count can be changed.
 - T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms
   - Context: Your pad, 2026-11-18, a Discord report (Zui), screenshot artifacts/trainworld/board/20261118-071350-c9cd.png: "The train is supposed to use the 2 side platforms in the top right station and then turn back at the single track platform on the left but it kept insisting to use the passing tracks in the center. it only correctly pathfinds after I remove the tracks it's not supposed to be using". You: "might be related to the amsterdam issue" (T-3647).
   - Goal: A line routes through the platforms of the stations it stops at, not through the station's passing tracks; or folded into T-3647 if it is the same cause.
