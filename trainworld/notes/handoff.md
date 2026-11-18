@@ -34,6 +34,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   easiness as well as impact" (notes/triage-2026-11-18-{a,b}.md, todo-sweep-2026-11-18.md).
 - "we need to be less willing to put stuff on the changelog": a player-view review agent hides noes before she edits
   (docs/orchestrator.md, notes/changelog-review.md). Player text says "manually", never "by hand" (CLAUDE.md).
+- 11-18 23:35: a task kept open after its main work gets its title/Context/Goal rewritten to what's left; Goal
+  dropped when the title says it (CLAUDE.md Tasks; tasks.py check no longer requires Goal). Sweep: tasksweep agent.
 - No route: "showing anything, even if its not eprfect, is better than showing nothing at all" (T-3724).
 - Track look: no halos on the map; only the count icon beside the level in the hovers (T-3714, T-3727).
 - Points scale with each line's cost recovery capped at 1 (T-3657, shipped in v0.4.2).

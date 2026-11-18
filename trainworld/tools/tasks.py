@@ -334,7 +334,7 @@ def cmd_check(r, a):
         plain = plain.strip()
         words = len(plain.split())
         if words > 14 or len(plain) > 110:
-            problems.append(f"{where}: old shape or long head line ({words} words); needs head plus Context/Goal fields")
+            problems.append(f"{where}: old shape or long head line ({words} words); needs head plus Context field")
         elif words < 2:
             problems.append(f"{where}: title under 2 words")
         elif plain.endswith((".", ":")) or ": " in plain:
@@ -344,8 +344,9 @@ def cmd_check(r, a):
         names = [f.group(1) for f in fields if f]
         if len(plain.split()) <= 14:
             order = ["Need from Anita", "Context", "Goal", "Other"]
-            if "Context" not in names or "Goal" not in names:
-                problems.append(f"{where}: missing Context or Goal field")
+            # Goal is optional when the title already says what done is (Anita, 2026-11-18)
+            if "Context" not in names:
+                problems.append(f"{where}: missing Context field")
             bad = [x for x in names if x not in order]
             if bad:
                 problems.append(f"{where}: unknown field {bad[0]}")

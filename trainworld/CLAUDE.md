@@ -88,8 +88,10 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Tasks**: a head line `- T-012 [P2] {L:slug} Title` (2-10 words, no full stop, no colon), then indented
   one-line fields in this order: `  - Need from Anita:` (exactly when the head has `{waits:Anita}`: one sentence she can
   act on, with the recommended answer if there is one), `  - Context:` (where things stand and why), `  - Goal:` (what
-  done is, with the deciding number), `  - Other:` (optional; the notes link last). Very short, written to her; leave
-  out what you're unsure of (Anita 2026-11-16). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board);
+  done is, with the deciding number; left out when the title already says it, and never "these items are done"),
+  `  - Other:` (optional; the notes link last). Very short, written to her; leave out what you're unsure of (Anita
+  2026-11-16). When a task's main work is done but it stays open for what's left, rewrite the title, Context and Goal
+  to be the part that's left, so the board shows what is still open (Anita, 2026-11-18). Examples: notes/T-3394.md. P1 now, P2 this milestone, P3 later, P4 lowest (set by her on the board);
   Someday tasks are P4 and don't count as open. Use only the ids your brief gives you. Mark a task taken
   before starting and archive it when done with `venv\Scripts\python.exe trainworld/tools/tasks.py start <ids> --agent <name>`
   / `done <id> --outcome "..."` (agents may use both; `check` lists malformed lines); update a task by rewriting its fields, never by
