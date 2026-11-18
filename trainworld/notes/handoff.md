@@ -1,132 +1,54 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session f171f68d-958c-4fdd-a988-a53db2329545, name maps-ca, since 2026-11-18 04:48 UTC
-Updated: 2026-11-18 12:08 UTC (maps-ca past 500k, starting its successor). In flight now: nightfix3 (T-3455,
-Malaysia rerun, then done), tramoneway (T-3647), settle (T-3482 READY to land after nightfix3). maps-ca's morning
-report went to her at 12:08 with the For you items (T-3298, T-3630 asks; strings list below).
+Orchestrator: session 59c85afe-f6fc-46fa-b1d6-fdaa946e7f95, name maps-4f, since 2026-11-18 12:08 UTC
+Updated: 2026-11-18 12:20 UTC (maps-ca rewrote State/In flight on winding down; its remaining agents are maps-4f's
+to adopt: their reports still reach maps-ca, which relays them verbatim)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
-git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5; ~00:40 local she
-said she's heading to bed: overnight, knock off Up next tasks with spare cores.
+git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5. She's up (12:05 UTC):
+"can keep night runs going til finished". maps-ca's morning report (12:08) gave her the full list of overnight
+landings, the strings to check and the asks below.
 
 ## State
-- v0.4.1 LIVE since ~05:35 UTC (app only on data 2026-11-18; website 8fbf33e; verify --page PASS; export 405ecf5
-  pushed). 13 items, her trim. Old R2 versions 2026-11-11, 2026-11-11b can go via r2_purge (keep newest 3).
-- deploy.py --skip-data now checks the registry against R2 at that version (local packs mid-run tripped it).
-- master 3ce746f9 pushed. 8800 rebuilding at 3ce746f9 + smoke on the 8800 URL (scratchpad batch1.ps1, task
-  b6jazk9pt; log artifacts/trainworld/smoke-batch1.log). Landed since v0.4.1: T-3636 (bus hover), T-3634
-  (shift+click track set), T-3627 (hovers: one money-to-minutes figure per place, demand unchanged).
-- Unpublished changelog next.json: c001 T-3515 (data), c002 T-3634, c003 T-3636, c004 T-3627. She edits the
-  changelog on the board before every publish now (docs/orchestrator.md).
-- Board Up next (her ask: misc tasks for the next minor update): T-3597, T-3637, T-3638, T-3589, T-3604, T-3482,
-  T-3433, T-3474, T-3630, then T-2136, T-1080, T-930. T-3597 waits for noroute2 to land (both add i18n keys).
+- v0.4.1 LIVE since ~05:35 UTC (app only on data 2026-11-18). deploy.py --skip-data checks the registry against R2.
+- master f039efbc+ pushed. Landed overnight, all archived: T-3636, T-3634, T-3638, T-3627, T-3632 stage 2 (stays
+  open), T-3629, T-3589, T-3616, T-3640, T-3641, T-3597, T-3637, T-3643, T-3639, T-3644, T-3474 (co-author Cinnamon),
+  T-3511 (night batch 1); T-3433 closed not a bug. agent-tree finish takes --coauthor now.
+- 8800 = ff3a04cd on freeze 20261118-015639 (batch 1), smoke PASSED; missing everything after ff3a04cd (T-3640,
+  T-3639, T-3644, T-3474) and yhu/suc don't open (the night run's registry edits are uncommitted in the main tree).
+  Earlier 8800 builds tonight used plain snapbuild during the run (a slip; use snapbuild-frozen while a run owns packs).
+- Unpublished changelog: c001-c014 (`changelog.py list`); c014 is T-3482's, whose code isn't landed yet.
+- Up next: T-3604, T-2136, T-1080, T-930 (all after the night run).
 
-## In flight
-- DECISIONS.md uncommitted: T-3616 (secondedit), T-3627 (mine + carhover's, check for a duplicate), T-3634
-  (multitrack). Commit with secondedit's landing.
-- T-3616 LANDED b0ff2f51 (c007). Checker: Kaohsiung chain PASS (finals within 0.005%), T-1734 wait kept, NYC same;
-  undo/redo case differs 0.2-0.35% from the old path, inside the 0.27% load-to-load noise its notes record (not
-  settled; Japan-size case skipped). secondedit's idea for edits during the whole solve (gap = 1/7 of the solve,
-  latest start 60 s; ~2-3 h): not filed yet.
-- T-3589 LANDED a0434306 (graphics line in feedback reports, no server change).
-- T-3641 LANDED 9680779d (c009) + DECISIONS a0eebb07: under 1 trip a day the explorer head shows model shares.
-- T-3597 LANDED a5cdd597 (14 keys -> Calculating trips, 13 languages; Lines tab cell fits in en/de).
-- T-3638 LANDED 94aa413c (Remove/Delete for a track set; c002 reworded "...rebuild or remove them together").
-  Known: the set (like the Select bar) leaves a 176 m stub under a middle station that single Remove trims; unfiled.
-- partline (Opus, .tw-trees/partline, port 6198): T-3474 port of CinnamonVII's PR 21; checker + co-author credit
-  at landing.
-- T-3637 LANDED 3d524ff5 (c010).
-- Strings for her (old -> new), to list in the morning report: T-3632 noTrain/noAlt (new); T-3597's 14 keys ->
-  "Calculating trips" (cityInspector/demandSelector/loadBar/networkTips/trackHover "Calculating demand", linesTab
-  /schedule "Calculating rides…", lineFigures.pendingNew/schedule.calculating "calculating...", trainInspector
-  "Calculating", statusTag.recomputingCities "Trips in {count} cities being recomputed…" -> "Calculating trips in
-  {count} cities…", recomputingHere -> "Calculating trips here…", topBar "(trips being recomputed…)" -> "(calculating
-  trips…)", freedMemory -> "Calculating trips again after freeing memory"); T-3637 "Waiting for a train with room" ->
-  "Waiting for a {bus|train|tram|boat|ride} with room", fullWaitTip "Riders left at the platform by full trains wait
-  {min} more on average for a train with room." -> "Riders left behind by full {buses|...} wait {min} more on average
-  for a {bus|...} with room."; T-3634 "{n} pieces of track", "Shift+click more track to rebuild it together",
-  "Shift+click track to add it or take it out".
-- T-3604 (all-China worker restarts) held until the night run ends: memory-heavy beside the join.
-- T-3474 LANDED 407cac3c (checker PASS; co-author Cinnamon <merlinannegarcia@gmail.com>, the form his earlier
-  commits use; c012; WASM rebuilt). PR 21 can be closed with a link after the next open-source sync (her OK on the
-  reply text first). Untested: a loop with only an arc built, one-way track on the built part.
-- T-3482 retitled "New line on full track gets its trains minutes late" (not the passage: track shares re-settle
-  minutes after an edit); agent settle (Opus, .tw-trees/settle, port 6191) on it; checker before landing.
-- Night run: batch 1 (T-3511) joined and shipped 12 zones (T-3511 archived). Batch 2 (T-3455 coastal, 17
-  countries) stopped 09:09 UTC: 20 gated, 8 parked (shl chn ngt mdt klt joo kut: shapely TopologyException in
-  union_all; mop: 90-min step limit), no join. nightfix3 (Opus, main tree, claims 9 cores) fixing, rerunning the 8,
-  then joining; aims to finish by ~15:00 UTC. HOLD app/ writes and landings in the main tree while its gates run
-  (gates serve the main tree's app/). After its join: commit the game json (registry etc.), 8800 rebuild, T-3620,
-  T-3623, T-3604 and the pipeline Up next tasks can start.
-- settle (T-3482) built, checker 4/5; its one fail (undo/redo shares) is master's behaviour too, filed T-3646. READY
-  to land (`agent-tree.mjs finish settle ... --task T-3482`, WASM rebuild) once nightfix3's gates are done. Changelog c014 is new text. Follow-ups from settle (unfiled): a running line's new headway
-  on full track keeps its old rate; a train can vanish in hand_over at a terminal (repro + candidate fix in
-  notes/T-3482.md in the tree); data/work/realnet/nyc_real.twt2 no longer loads.
-- 8800 builds tonight (3ce746f9, acfb779a, ff3a04cd) used plain snapbuild while the night run owned data/packs (my
-  slip: orchestrator.md says frozen). 8800 = ff3a04cd on freeze 20261118-015639 (batch 1's), smoke PASSED. Known gap
-  either way: the commit's registry still lists yhu and suc (the run merged them; its registry edits are uncommitted
-  in the main tree), so those two zones don't open on 8800 until the run's game json is committed and 8800 rebuilt.
-- T-3643 LANDED ff3a04cd (c011).
-- T-3639 LANDED 545dcac4 (c013): score sent only from a whole final; cause was the 15 s tick sending mid-load
-  figures, worst the past-24h stand-in on a weekend clock (NYC Sunday reload sent 0.84 of the forecast; her report
-  0.82). Not ruled out: an old build posting under the same game id. T-3644 LANDED 37f50dfd: on-screen score
-  is a dash from a load's start to its first final, then the last final through edits.
-- Up next left: T-3604 (after the night run: all-China memory), T-2136, T-1080, T-930 (pipeline/world-run work:
-  after the night run). Only settle (T-3482) is running.
-- T-3630 proposal ready, waits on her (asks.json; sheet artifacts/trainworld/review/t3630-landing.png; B recommended).
-- oomscreen (Sonnet, .tw-trees/oomscreen, port 6196): T-3643 start menu covers the out of memory screen (found by
-  T-3630's agent).
-- T-3433 closed, not a bug (trips on Kobe's terminals; basemap's own airport icon on the runway); left as is, DECISIONS.
-- Night run 06:47 UTC: in the join (night1117b-T3511-join.log), roc+per joint group done 06:30; alive.
-- passage (Opus, .tw-trees/passage, port 6191): T-3482 passage missed after quick update solve; checker after.
-- T-3640 LANDED 7daba9ff (c008): the share's 8 MB header cap removed; over 2 MB says too big. No checker (a cap
-  removed in forShare, narrow); follow-ups filed as T-3642. Not on 8800 yet (after batch 2).
-- setremove (Sonnet, .tw-trees/setremove, port 6189): T-3638 Remove for a track set; proposes a c002 reword.
-- Batch 2 (T-3629, T-3632, T-3589, T-3616): 8800 = acfb779a, smoke PASSED. master 6afeccaa (T-3640 on top).
-- T-3632 stage 2 LANDED 7d14a945 (checker PASS; c006; WASM rebuilt). New strings for her: marketTrip.noTrain "No
-  train runs between the two ends this period.", marketTrip.noAlt "No road or flight joins these two places, so for
-  now none of their trips go by transit." T-3632 stays open (wider goal).
-- calctag (Sonnet, .tw-trees/calctag, port 6198): T-3597 every calculating tag says Calculating trips.
-- gfxreport (Sonnet, .tw-trees/gfxreport, port 6197): T-3589 graphics line in feedback reports.
-- T-3298 (tramchange) cause found, waits on her (asks.json: walking change limit 300 m -> 600 m?); notes and scene
-  script copied to main notes/, tree removed. T-3641 filed from it (panel head vs period rows), queued in Up next.
-- T-3629 (trackpick) LANDED c2005ce4, c005; not yet on 8800 (next batch rebuild).
-- tramchange (Opus, .tw-trees/tramchange, port 6199): T-3298 tram then train shows as a walk.
-- scoreswing (Opus, .tw-trees/scoreswing, port 6190): T-3639 leaderboard score swings 450m-550m (her pad, Discord).
-  May commit in shonei-server; deploy is hers.
-- bigshare (Sonnet, .tw-trees/bigshare, port 6189): T-3640 Swattik's network can't be shared (after T-3440).
-- 8800 = 3ce746f9, batch smoke PASSED (12 checks). She went to bed ~05:42 UTC ("gnight").
-- Her islands idea (a fare point past which transit isn't taken) is in T-2216's goal.
-- Night run b: kit\night1117b.ps1 (-Want 9 -NoCif), script pid 39588 (cmd 31772), log
-  artifacts/trainworld/night1117b.log (step logs night1117b-*.log). On the rerun of sve,roc,jau since 23:01 local
-  (yhu, suc etc. missing from data/packs mid-run: expected). 05:47 UTC: in the join (world_run join --countries
-  TR,AU,AR,IN,CN, pid 23572 under 33100, since 05:00 UTC); its run log stops at 04:18 UTC, which is normal for the join. Stop: create trainworld\data\work\world_run\STOP, then
-  kill 39588 only; on failure it writes the restore command. nightfix's notes: notes/T-3455.md "What ran (nightfix)".
-  Disk ~32 GB free, backups ~20 GB: watch it. Monitor re-armed by maps-ca. After: tasks.py done T-3511/T-3455,
-  start_difficulty.py --fresh once more, 8800 rebuild, then T-3620 and T-3623 can start.
+## In flight (maps-ca's agents; maps-4f adopts)
+- nightfix3 (Opus, MAIN tree, 9 cores, ledger name nightfix3): T-3455 batch 2. Fixed the shapely TopologyException,
+  reran 8 parked rows, joined batch 2 (join log artifacts/trainworld/night1118fix-T3455-join.log, status-end 11:27 UTC,
+  start_difficulty run); now "Malaysia again" (a rerun of Malaysian rows). Done when its ledger claim is gone and
+  notes/T-3455.md "What ran" is updated. HOLD app/ writes and landings in the main tree while it gates. Then: commit
+  the night run's game json (registry, market-rows, zone-*.json, world_plan.json, notes/T-3455.md + kit), tasks.py
+  done T-3455, snap8800 at master (plain, run over), T-3620, T-3623, T-3604 can start.
+- settle (.tw-trees/settle): T-3482 READY, checker 4/5 (the fail is master's undo behaviour, filed T-3646). Land after
+  nightfix3: `node trainworld/checks/agent-tree.mjs finish settle "<sentence>" --task T-3482 --outcome "..."` (WASM
+  rebuild); its DECISIONS lines and c014 are already in main. Follow-ups in its notes (unfiled): a running line's new
+  headway on full track keeps its old rate; data/work/realnet/nyc_real.twt2 no longer loads. T-3645 filed.
+- tramoneway (Opus, .tw-trees/tramoneway, port 6194): T-3647 (P1) dattera's Amsterdam tram save broken by 0.4's
+  one-way stops; reproducing; fix (checker before landing) or options to her. His real save needs her word for ssh.
 
-- She's up (12:05 UTC): "can keep night runs going til finished". T-3647 (P1, dattera's Amsterdam tram save broken
-  by 0.4's one-way stops): tramoneway (Opus, .tw-trees/tramoneway, port 6194) reproducing; fix or a proposal to her.
-  His save itself needs server access (her word).
-
-## Waiting on Anita
-- Nothing in asks.json. New strings for her when noroute2 lands (above) and from overnight agents.
-- She does a feedback pass with artifacts/trainworld/review/feedback-triage-2026-11-18.md; T-3635 has a reply draft.
+## Waiting on Anita (asks.json)
+- T-3298 walking change limit 300 m -> 600 m? (recommended 600 m for all)
+- T-3630 start menu settings A/B/C (artifacts/trainworld/review/t3630-landing.png; recommended B)
+- Strings to check were listed in maps-ca's 12:08 report (T-3632, T-3597, T-3637, T-3634, T-3627 car hover).
+- CinnamonVII's PR 21: close with a link after the next open-source sync; draft the reply for her first.
 
 ## Next
-1. Land secondedit and noroute2 once their checkers pass; batch smoke + 8800 rebuild after.
-2. Overnight: start Up next tasks as agents finish (T-3597 after noroute2; T-3637 small-fixes; T-3638; T-3589;
-   T-3604; T-3482; T-3433; T-3474 is 4-6 h, credit CinnamonVII; T-3630 needs a proposal to her first).
-3. Leftover .tw-trees: touchrule (empty, locked), shenzhen (dirty pipeline/osm_units.py, 11-16: whose?), tt2 (stale).
-4. Translation leftover: es/pt "interurbano" glossary stem.
+1. Adopt the three agents above; land settle after nightfix3; commit the run's json; 8800 rebuild + smoke.
+2. Leftover .tw-trees: touchrule (empty, locked), shenzhen (dirty pipeline/osm_units.py, whose?), tt2 (stale).
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
-  tools/ops/archive_bad_saves.py, changelog/roadmap.json, notes/T-3455/kit (but night1118.cmd is committed), main
-  tree's game json (the night run's registry edits), world_plan.json and notes/T-3455.md (night run).
+  tools/ops/archive_bad_saves.py, changelog/roadmap.json, the night run's files above.
 
 ## Her standing asks this week
 - Small isolated fixes, open-task count down, merge duplicates; bug investigations give up if hard.
-- She edits each update's changelog on the board before publish (unless ~2 items). Highlights (1-8) for updates
-  over ~20 items.
+- She edits each update's changelog on the board before publish (unless ~2 items) (docs/orchestrator.md).
 - Lean testing: concise time-boxed checkers, no checker for small UI, smoke per batch.
 - One phrase per wait in player text: loads / shows up / calculating trips / memory.
 - Long jobs in the background; answer her first. No windows on her screen.
