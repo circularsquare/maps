@@ -33,7 +33,7 @@ const secs = () => ((Date.now() - t0) / 1000).toFixed(0) + ' s';
 
 function runNode(file, flags = [], args = []) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [...flags, join(HERE, file), ...args], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [...flags, join(HERE, file), ...args], { cwd: MAPS, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     let out = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
@@ -286,7 +286,7 @@ try {
   }
   if (!served) {
     // T-2854: a wiki figure whose constant changed or went
-    const w = spawnSync('python', [join(HERE, '..', 'tools', 'wiki_build.py'), '--check'], { cwd: MAPS, encoding: 'utf8' });
+    const w = spawnSync('python', [join(HERE, '..', 'tools', 'wiki_build.py'), '--check'], { cwd: MAPS, encoding: 'utf8', windowsHide: true });
     report('wiki figures', w.status === 0, w.status === 0 ? '' : (w.stderr || w.error?.message || '').slice(0, 400));
   }
   if (!given) vite = await startVite(Number(process.env.SMOKE_PORT ?? 6190));
@@ -297,7 +297,7 @@ try {
   if (!served && !process.env.SMOKE_NO_ZONE) {
     const zone = process.env.SMOKE_ZONE ?? 'mcu';
     const z = spawnSync(join(MAPS, 'venv', 'Scripts', 'python.exe'), ['-I', join(HERE, 'pack_gate.py'), zone, '--browser-only', '--out', join(tmpdir(), 'tw-smoke-zone')],
-      { cwd: MAPS, encoding: 'utf8', env: { ...process.env, BASE: base.replace(/\/$/, ''), WORKERS: '1' } });
+      { cwd: MAPS, encoding: 'utf8', windowsHide: true, env: { ...process.env, BASE: base.replace(/\/$/, ''), WORKERS: '1' } });
     report('gate browser check on ' + zone, z.status === 0, z.status === 0 ? '' : tail((z.stdout || '') + (z.stderr || '')));
   }
   await browserChecks(base);

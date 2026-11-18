@@ -172,7 +172,7 @@ export const acrossLine = async (page, [lng, lat], km = 2) => {
 
 /** this check's own Vite (dev-nowatch.mjs) on `port`; `child.kill()` stops it */
 export async function startVite(port) {
-  const child = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, [join(HERE, 'dev-nowatch.mjs'), String(port)], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
   let out = '';
   child.stdout.on('data', (d) => { out += d; });
   child.stderr.on('data', (d) => { out += d; });
