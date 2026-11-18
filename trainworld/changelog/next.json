@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c048",
+      "text": "fixed colored bars over the map in Firefox with resist fingerprinting turned on",
+      "edited": "fixed colored bars covering the map in Firefox set to resist fingerprinting",
+      "hidden": false,
+      "task": "T-3705",
+      "by": "firefox",
+      "at": "2026-11-18T19:02:32Z",
+      "rev": 2,
+      "area": "schematic",
+      "fix": true,
+      "changed": "2026-11-18T19:02:51Z"
+    },
+    {
       "id": "c047",
       "text": "the game uses about 200 MB less memory",
       "edited": null,
