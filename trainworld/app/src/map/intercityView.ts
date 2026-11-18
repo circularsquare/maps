@@ -419,10 +419,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
         const iw = !own || isOwn ? interWalk(c.place) : 0;
         const interBar = modeBar(inter.rail, iw, Math.max(0, inter.all - inter.rail - iw));
         // T-3074: before any market result the inter-city figure is unknown, not 0: leave its row out
+        // T-3658: a 0 just means it is not calculated yet: leave the row out then too
+        const known = pairsIn && Math.round(inter.all) > 0;
         return !own
-          ? [localLine, localBar, ...(pairsIn ? [interLine, interBar] : []), ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
+          ? [localLine, localBar, ...(known ? [interLine, interBar] : []), ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
           : isOwn
-            ? [interLine, interBar, `(${localLine})`]
+            ? (known ? [interLine, interBar, `(${localLine})`] : [localLine, localBar])
             : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
       };
       return [{ ...t, city: c, isOwn, tag, unbuilt, tier }];
