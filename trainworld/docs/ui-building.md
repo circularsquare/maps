@@ -181,11 +181,11 @@ while no line is picked yet), trip explorer `#268769`, station building `#a15b7b
   stop editing and station building tools' rows are their descriptors, the square before their words
   ("New bus line: 3 points" with Cancel and Make line, and so on). Esc places a new bus or ferry line of
   two points or more, as it ends a chain of track; on an edit of a built one it drops the edit (T-2924).
-- **Track type and count** [T-3693, T-3714; `game/buildMode.ts`, `trackCountIcon` and `trackKindRow` in
+- **Track type and count** [T-3693, T-3714; `game/buildMode.ts`, `trackCountIcon` in
   `map/trackTagRows.ts`, `map/quadPairs.ts`]: the track tool's aura and square take the track type's colour, and
   its placing tag starts the elevation row with the count buttons' icon (1, 2 or 4 strokes) in that colour. The
-  hover tag over track or a rail line on it starts with the type and the count ("Regular", the icon, "Quad"),
-  each on the type's colour; quad is a double edge with a twin pair alongside, found by its drawn points (about
+  hover tag over track or a rail line on it puts the same icon, in the type's colour, before the level
+  chip on its row (no extra row, no words); quad is a double edge with a twin pair alongside, found by its drawn points (about
   8 m off). Nothing on the map changes with the type or count (Anita 2026-11-18: no halos or rings round the
   ghost or a selected or hovered line or track, no mark by the pointer).
 

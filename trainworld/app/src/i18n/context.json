@@ -2297,7 +2297,6 @@
   "trackTagRows.speedLimit": "Accessible name of the speed icon in a track tag.",
   "trackTagRows.terrain": "Accessible name of the mountain icon in a track tag.",
   "trackTagRows.water": "Accessible name of the waves icon in a track tag.",
-  "trackTagRows.trackCount": "Hover tag over track or a line on it, first row, after the track type (Regular, High speed, Tram) and an icon of 1, 2 or 4 lines: how many tracks are there, in one word. count: single (one track), double (two), quad (four: two double tracks side by side).",
   "trackTagRows.roads": "Accessible name of the road icon in a track tag.",
   "trackTagRows.fastest": "Row in a track tag in the Speed view: the fastest a vehicle goes there. vehicle: train, bus or boat; speed: a coloured chip, \"160 km/h\".",
   "trackTagRows.terrainAdds": "Chip in the track tool's tag: the roughest ground crossed and the cost multiplier it adds. terrain: \"Hills\"; mult: \"0.3\".",

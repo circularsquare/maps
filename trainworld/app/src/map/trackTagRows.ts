@@ -92,17 +92,6 @@ export function trackCountIcon(mode: BuildKind = buildMode(true).mode, count: 1 
   return svg;
 }
 
-/** T-3714 (look B's row, T-3693): the track type and count of track under the pointer, each on the type's colour,
- * the count after its icon. */
-export function trackKindRow(mode: BuildKind, count: 1 | 2 | 4): HTMLDivElement {
-  const c = TRACK_TYPE_COLOURS[mode];
-  const type = chip(t(mode === "tram" ? "toolBar.tram" : mode === "hsr" ? "toolBar.highSpeed" : "toolBar.regular"), c, 0.3);
-  const n = document.createElement("span");
-  n.className = "tag-fact";
-  n.append(trackCountIcon(mode, count), chip(t("trackTagRows.trackCount", { count: count === 1 ? "single" : count === 2 ? "double" : "quad" }), c, 0.3));
-  return factRow(type, n);
-}
-
 /** The icon and chip for a speed limit, on the Speed display's colour. */
 export function speedFact(kmh: number): HTMLSpanElement {
   const s = document.createElement("span");
