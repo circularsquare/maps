@@ -11,6 +11,10 @@ import { display, isBuildTool, mapShade, tool } from "../game/ui";
 import { BLOCK_CELLS, HEX_ROW, HEX_SHIFT, HEX_WIDTH, mercLat, terrainGrids, terrainVersion, type ClassGrid } from "../game/terrain";
 import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
+import { canvasReadsTrue, encodePng } from "./canvasRead";
+
+/** a clear 1 x 1 PNG */
+const BLANK_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 const ID = "terrain-tint";
 /** below this a view is wider than the view fetch reaches, and a patch of tint would show its edge (T-2901) */
@@ -31,7 +35,7 @@ const shown = computed(() => display.value.hillshade && isBuildTool(tool.value))
 export function startTerrainTint(map: MlMap): () => void {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1;
-  const blank = canvas.toDataURL();
+  const blank = canvasReadsTrue() ? canvas.toDataURL() : BLANK_PNG;
   let url: string | null = null;
   let drawn = "";
 
@@ -131,7 +135,7 @@ export function startTerrainTint(map: MlMap): () => void {
     const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [
       [lonW, mercLat(y0)], [lonE, mercLat(y0)], [lonE, mercLat(y1)], [lonW, mercLat(y1)],
     ];
-    canvas.toBlob((blob) => {
+    const show = (blob: Blob | null) => {
       if (!blob || drawn !== key) return;
       const src = map.getSource(ID) as maplibregl.ImageSource | undefined;
       if (!src) return;
@@ -140,7 +144,10 @@ export function startTerrainTint(map: MlMap): () => void {
       src.updateImage({ url, coordinates });
       // an image still loading when the next is asked for keeps its URL a while
       if (old) window.setTimeout(() => URL.revokeObjectURL(old), 10_000);
-    });
+    };
+    // T-3705: a browser that makes up a canvas's pixels gets the PNG made from them here
+    if (canvasReadsTrue()) canvas.toBlob(show);
+    else encodePng(px, W, H).then(show, () => show(null));
   };
 
   map.on("style.load", add);

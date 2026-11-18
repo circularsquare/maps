@@ -6,6 +6,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { SHADES } from "../game/shadeTable";
 import type { Shade } from "../game/ui";
+import { canvasReadsTrue } from "../map/canvasRead";
 
 type RGB = [number, number, number];
 interface Pal { land: RGB; casing: RGB; track: RGB }
@@ -87,11 +88,12 @@ export function useThumbIn(src: string, from: Shade, to: Shade): string | undefi
   const key = `${from}>${to}|${src.length}|${src.slice(-64)}`;
   const [out, setOut] = useState<{ key: string; url: string } | null>(null);
   useEffect(() => {
-    if (from === to || done.has(key)) return;
+    if (from === to || done.has(key) || !canvasReadsTrue()) return;
     let live = true;
     convert(src, from, to).then((url) => { done.set(key, url); if (live) setOut({ key, url }); }, () => { if (live) setOut({ key, url: src }); });
     return () => { live = false; };
   }, [key]);
-  if (from === to) return src;
+  // T-3705: a browser that makes up a canvas's pixels keeps the picture in the theme it was saved in
+  if (from === to || !canvasReadsTrue()) return src;
   return done.get(key) ?? (out?.key === key ? out.url : undefined);
 }

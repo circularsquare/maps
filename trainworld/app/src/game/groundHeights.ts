@@ -4,6 +4,7 @@
 import { signal } from "@preact/signals";
 import { demBytes } from "../map/demFlat";
 import { terrainUrl } from "../map/basemap";
+import { canvasReadsTrue, decodePng } from "../map/canvasRead";
 
 /** the finest zoom read; finer tiles outside the US are this one's data upsampled */
 export const GROUND_MAX_Z = 12;
@@ -20,11 +21,16 @@ const idle = () => new Promise<void>((r) => (typeof requestIdleCallback === "fun
 
 async function decode(bytes: ArrayBuffer): Promise<Float32Array> {
   await idle();
-  const bmp = await createImageBitmap(new Blob([bytes], { type: "image/png" }), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
-  const c = new OffscreenCanvas(N, N).getContext("2d", { willReadFrequently: true })!;
-  c.drawImage(bmp, 0, 0);
-  bmp.close();
-  const px = c.getImageData(0, 0, N, N).data, out = new Float32Array(N * N);
+  let px: Uint8ClampedArray;
+  if (!canvasReadsTrue()) px = (await decodePng(bytes)).rgba;
+  else {
+    const bmp = await createImageBitmap(new Blob([bytes], { type: "image/png" }), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+    const c = new OffscreenCanvas(N, N).getContext("2d", { willReadFrequently: true })!;
+    c.drawImage(bmp, 0, 0);
+    bmp.close();
+    px = c.getImageData(0, 0, N, N).data;
+  }
+  const out = new Float32Array(N * N);
   // Terrarium: R*256 + G + B/256 - 32768, the sea floor below 0
   for (let i = 0; i < N * N; i++) out[i] = px[i * 4] * 256 + px[i * 4 + 1] + px[i * 4 + 2] / 256 - 32768;
   return out;

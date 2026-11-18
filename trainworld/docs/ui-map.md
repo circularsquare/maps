@@ -57,7 +57,8 @@ Snapping is unchanged.
 (T-1394) or Settings > Show: MapLibre's hillshade over the land cover and
 under roads, from the Terrain Tiles on AWS Open Data (Terrarium PNG, 256 px, fetched to zoom 12 and
 stretched past it; `map/basemap.ts`). The water is drawn again over it (`water_over_shade`), so the
-sea floor's relief stays hidden. Shadow and highlight follow the theme (light: warm brown shadow,
+sea floor's relief stays hidden. A browser that makes up canvas pixels (Firefox resisting fingerprinting) gets no
+hillshade, the tint still drawn [T-3705]. Shadow and highlight follow the theme (light: warm brown shadow,
 white highlight, exaggeration 0.35; dark: black shadow, 0.45) and the base map contrast slider mutes
 them with the rest. **The shade never shows on water** [T-1552, T-2628]: a terrain tile is held back (a
 `twdem://` protocol in `basemap.ts`) until every basemap vector tile over its ground in view, at the zoom

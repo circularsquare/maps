@@ -4,6 +4,8 @@
 // (BLUR_M), so only the lie of the land over kilometres is left, blended back to the tile's own heights
 // by `mask`. The 3 x 3 tiles round it give the blur its reach, so neighbouring tiles agree at their edge.
 
+import { canvasReadsTrue, decodePng } from "../map/canvasRead";
+
 /** `bytes`: the PNGs of the tile and its 8 neighbours, row by row from the north-west (null: none,
  * the tile's own edge stands in); `mask`: 0-255 a pixel, how flat (255 all). */
 export type DemFlatIn = { id: number; keys: string[]; bytes: (ArrayBuffer | null)[]; mask: Uint8Array; pxM: number };
@@ -24,12 +26,16 @@ async function heights(key: string, bytes: ArrayBuffer): Promise<Float32Array> {
     decoded.set(key, hit);
     return hit;
   }
-  const bmp = await createImageBitmap(new Blob([bytes]), { premultiplyAlpha: "none", colorSpaceConversion: "none" });
-  const cv = new OffscreenCanvas(N, N);
-  const cx = cv.getContext("2d", { willReadFrequently: true })!;
-  cx.drawImage(bmp, 0, 0);
-  bmp.close();
-  const px = cx.getImageData(0, 0, N, N).data;
+  let px: Uint8ClampedArray;
+  if (!canvasReadsTrue()) px = (await decodePng(bytes)).rgba;
+  else {
+    const bmp = await createImageBitmap(new Blob([bytes]), { premultiplyAlpha: "none", colorSpaceConversion: "none" });
+    const cv = new OffscreenCanvas(N, N);
+    const cx = cv.getContext("2d", { willReadFrequently: true })!;
+    cx.drawImage(bmp, 0, 0);
+    bmp.close();
+    px = cx.getImageData(0, 0, N, N).data;
+  }
   const h = new Float32Array(N * N);
   for (let i = 0; i < N * N; i++) h[i] = px[4 * i] * 256 + px[4 * i + 1] + px[4 * i + 2] / 256 - 32768;
   decoded.set(key, h);

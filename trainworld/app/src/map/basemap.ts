@@ -17,6 +17,7 @@ import { display, SAT_INK_FLIP, shade, type Shade } from "../game/ui";
 import { styleUp } from "./styleReady";
 import { busRoadFilter, railRoadFilter } from "./busRoads";
 import { demBytes, flattenDem, onRedraw } from "./demFlat";
+import { canvasReadsTrue } from "./canvasRead";
 
 const POSITRON = "https://tiles.openfreemap.org/styles/positron";
 /** The one font stack every basemap label uses: Regular only, Zen Maru has no italic. */
@@ -68,6 +69,9 @@ const TERRAIN_TILES = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{
  * until the basemap's vector tiles over the same ground have loaded, so the shade never shows where the
  * water is still coming. */
 const DEM_PROTOCOL = "twdem";
+/** T-3705: MapLibre reads the heights back through a canvas, or VideoFrame where a canvas read is made up; a
+ * browser with neither (Firefox resisting fingerprinting) would shade noise, so no shade is drawn there. */
+const demReadable = () => canvasReadsTrue() || typeof VideoFrame !== "undefined";
 const VECTOR_SOURCE = "openmaptiles";
 /** how often a held terrain tile asks whether the basemap has stopped loading (ms): its last tile failing fires no tile event */
 const DEM_POLL_MS = 500;
@@ -337,7 +341,7 @@ function restyle(style: maplibregl.StyleSpecification): maplibregl.StyleSpecific
     style.sources[DEM] = { type: "raster-dem", tiles: [`${DEM_PROTOCOL}://{z}/{x}/{y}`], encoding: "terrarium", tileSize: 256, maxzoom: 12, attribution: TERRAIN_CREDIT };
     const visibility = display.peek().hillshade ? "visible" : "none";
     style.layers.splice(at, 0,
-      { id: HILLSHADE, type: "hillshade", source: DEM, layout: { visibility }, paint: {} },
+      { id: HILLSHADE, type: "hillshade", source: DEM, layout: { visibility: demReadable() ? visibility : "none" }, paint: {} },
       { ...(JSON.parse(JSON.stringify(water)) as typeof water), id: WATER_OVER_SHADE, layout: { visibility } } as maplibregl.LayerSpecification);
   }
   for (const layer of style.layers) {
@@ -428,7 +432,7 @@ function orderSatellite(map: maplibregl.Map, on: boolean) {
 
 /** Whether a basemap layer is drawn: the terrain setting takes the shading away. */
 function layerVisible(id: string) {
-  return id === HILLSHADE || id === WATER_OVER_SHADE ? hillshadeOn : true;
+  return id === HILLSHADE ? hillshadeOn && demReadable() : id === WATER_OVER_SHADE ? hillshadeOn : true;
 }
 
 /** The imagery's opacity is the Base map slider (0-1) over the drawn map at its 0% look, so 0% is Map mode's own
@@ -529,6 +533,7 @@ const ONEWAY_LAYER = "bus_roads_oneway";
 /** A chevron pointing right, the direction `symbol-placement: line` treats as forward along the road. */
 function onewayArrow(dark: boolean): { width: number; height: number; data: Uint8ClampedArray } {
   const s = 32;
+  if (!canvasReadsTrue()) return { width: s, height: s, data: chevronPixels(s, dark ? [0x3f, 0xd0, 0xc4] : [0x1a, 0x9e, 0x94]) };
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = s;
   const g = canvas.getContext("2d", { willReadFrequently: true })!;
@@ -544,6 +549,30 @@ function onewayArrow(dark: boolean): { width: number; height: number; data: Uint
   g.stroke();
   const pixels = g.getImageData(0, 0, s, s).data;
   return { width: s, height: s, data: new Uint8ClampedArray(pixels) };
+}
+/** T-3705: the same chevron worked out pixel by pixel, where a canvas read is made up (map/canvasRead.ts): each
+ * pixel's cover by a 3.5 px stroke along both legs, butt ends and a mitred joint, edges smoothed over a pixel */
+function chevronPixels(s: number, [r, g, b]: number[]): Uint8ClampedArray {
+  const legs = [[11, 10, 19, 16], [19, 16, 11, 22]], half = 1.75;
+  const px = new Uint8ClampedArray(s * s * 4);
+  for (let y = 0; y < s; y++)
+    for (let x = 0; x < s; x++) {
+      const cx = x + 0.5, cy = y + 0.5;
+      let d = Infinity;
+      const off: number[] = [], at: number[] = [];
+      for (const [x0, y0, x1, y1] of legs) {
+        const vx = x1 - x0, vy = y1 - y0, t = ((cx - x0) * vx + (cy - y0) * vy) / (vx * vx + vy * vy);
+        const e = Math.hypot(cx - x0 - t * vx, cy - y0 - t * vy);
+        off.push(e);
+        at.push(t);
+        if (t >= 0 && t <= 1) d = Math.min(d, e);
+      }
+      // the mitre: where both legs' strokes, run on past the joint, overlap
+      if (at[0] >= 0 && at[1] <= 1) d = Math.min(d, Math.max(off[0], off[1]));
+      const a = Math.min(1, Math.max(0, half + 0.5 - d));
+      if (a > 0) px.set([r, g, b, Math.round(a * 255)], (y * s + x) * 4);
+    }
+  return px;
 }
 function ensureOnewayArrow(map: maplibregl.Map, dark: boolean) {
   const image = onewayArrow(dark);

@@ -36,6 +36,7 @@ import { bandEdges, diagramGraph } from "../diagram/graph";
 import { nodeLngLat, regionGroups } from "../diagram/regions";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces, type PackedOutlines } from "../map/coarseOutlines";
+import { canvasReadsTrue } from "../map/canvasRead";
 import { buildComplexes, type Complexes } from "../game/complexes";
 import { ComplexBuilder } from "../game/complexBuilder";
 import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/buildings";
@@ -2631,7 +2632,8 @@ async function slotSummary(): Promise<SlotSummary> {
   const li = a.lines_info();
   const summary: SlotSummary = { cities, lines: li.length / 22, stations, cash: a.cash(), mode, ...(copyOf ? { copy: true } : {}) };
   try {
-    if (typeof OffscreenCanvas === "undefined") return summary;
+    // T-3705: a browser that makes up a canvas's pixels gets no picture rather than a made-up one
+    if (typeof OffscreenCanvas === "undefined" || !canvasReadsTrue()) return summary;
     // track (grey) and each line's route (its colour), in local units: what the renderer draws
     const track: ArrayLike<number>[] = [];
     const ei = a.edges_info();
