@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3641 [P3] {L:route-choice} Trip panel head and periods disagree on transit share (2026-11-18): Head no longer rounds under-one-trip pairs to one person (100%/0%); now the model's shares (77% vs 73% rows, 43% vs 28%); remaining gap is areas vs exact points.
+- T-3640 [P2] {L:community} Big network still can't be shared (2026-11-18): Cause: the game refused its own save before sending (header cap 8 MB, grows with days played via per-region daily ledgers); cap removed, a save over the server's 2 MB now says too big. Game only.
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports (2026-11-18): feedback reports carry a graphics: line (renderer/vendor, context lost and restored counts, last creation error, map canvas buffer size); server stores context opaquely, no change needed.
 - T-3629 [P3] {L:track-drawing} Track under a station can't be picked (2026-11-18): A second click on a selected station picks track under its box that does not touch its node; the delete tool picks it over the station. Track on the station's own platform stretch is still the station's.
 - T-3634 [P2] {L:rebuild-track} A panel for several selected pieces of track (2026-11-18): Shift+click on built track with built track selected adds or takes out a piece; 2+ pieces show one track panel (totals, every level and type) whose Rebuild quotes and charges once for all, refused pieces red on the map. Final like the Select bar's rebuild (no undo, Anita 2026-11-10), not undoable as the brief guessed. Lands from worktree tw/multitrack (uncommitted). notes/T-3634.md.
