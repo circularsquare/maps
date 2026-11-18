@@ -165,6 +165,9 @@ export interface SaveHeader {
   /** T-3115: the Community share this game is a copy of (game/sharedSave.ts); a copy plays as normal but its
    * figures never reach the leaderboards. Absent for a game of the player's own */
   copy?: string;
+  /** T-3707: why the game is modded (game/modded.ts: a mod's name, "unofficial build", "site:<host>"), every reason
+   * seen, never removed; a modded game's figures never reach the leaderboards. Absent for the published game's */
+  modded?: string[];
 }
 
 /** T-2395: `SaveHeader.home` for all the player's cities (the built area, zoomed out) */
@@ -184,7 +187,7 @@ export interface GuideSave { done: number; hidden?: true; closed?: true; card?: 
 const HEADER_FIELDS: Record<keyof SaveHeader, true> = {
   game: true, format: true, city: true, region: true, cities: true, clock: true, cash: true, loan: true, loanPay: true, loanDays: true, fleet: true, fleetFast: true,
   fleetBus: true, fleetFerry: true, fleetTram: true, fares: true, ledger: true, hours: true, regions: true, lineDays: true, stars: true, goals: true, notes: true, shapes: true, hidden: true, mode: true, start: true,
-  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, newWeekendShare: true, level: true, guide: true, achievements: true, home: true, copy: true,
+  dayShift: true, opened: true, demandFine: true, demandBuilt: true, newCars: true, newHeadway: true, newWeekendShare: true, level: true, guide: true, achievements: true, home: true, copy: true, modded: true,
 };
 /** T-3115: the header fields, for checking a stranger's save (game/sharedSave.ts) */
 export const SAVE_HEADER_FIELDS: ReadonlySet<string> = new Set(Object.keys(HEADER_FIELDS));

@@ -20,6 +20,9 @@ about 15 MB) goes to the website repo's `trainsworld/` (T-1707; its old `trainwo
 redirect pages there, written in the same publish), since module workers and WASM must be
 same-origin with the page. The page finds its data with game/dataBase.ts: the `tw-data` meta this
 script writes into the published index.html, else `packs/` beside the page (every local build).
+T-3707: `trainsworld/builds.json` lists the published builds' stamps, this one first and the two before it
+(dist/build.json holds the stamp); the account server keeps scores only from a build on it, so it goes live with the
+page in the same website commit and needs no server deploy.
 
 The terrain blocks (T-2901). 19k small files, about 0.7 GB, under one fixed prefix on R2 that is not the
 release's (`r2:anitamaps/trainworld/terrain-world/v2/` since T-3372), so they go up once and not with every release. The build
@@ -45,6 +48,7 @@ import datetime
 import gzip
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -72,6 +76,10 @@ TERRAIN_PREFIX = "terrain-world/v2"
 # T-1707: the game lives at /trainsworld/; the old /trainworld/ folder keeps only redirect pages
 SITE_DIR = "trainsworld"
 OLD_DIR = "trainworld"
+# T-3707: the build's stamp (app/vite.config.ts), and the site's list of published ones the account server reads
+BUILD_FILE = "build.json"
+BUILDS_FILE = "builds.json"
+BUILDS_KEPT = 3
 SITE = "https://anita.garden/"
 PAGE = SITE + SITE_DIR + "/"
 OLD_PAGE = SITE + OLD_DIR + "/"
@@ -160,6 +168,10 @@ def preflight(dist, allow_dirty, app=None, r2_version=None):
     if not any("tw-data" in open(p, encoding="utf-8", errors="ignore").read()
                for p in (os.path.join(assets, f) for f in os.listdir(assets)) if p.endswith(".js")):
         problems.append("the build has no game/dataBase.ts (T-924): it would read packs/ beside the page and find nothing")
+    if not build_stamp(dist):
+        problems.append("the build has no build.json (T-3707): its scores would never be kept; rebuild with the current vite.config.ts")
+    elif os.path.isfile(os.path.join(app, "unofficial-build.txt")):
+        problems.append("the app has unofficial-build.txt (T-3707): every game it plays would be marked modded")
 
     reg = json.load(open(os.path.join(frozen["freeze"], "game", "registry.json") if frozen else os.path.join(app, "src", "game", "registry.json"), encoding="utf-8"))
     ids = [c["id"] for c in reg["cities"]]
@@ -296,9 +308,32 @@ def page_html(dist, base):
     return src.replace(anchor, anchor + f'\n    <meta name="tw-data" content="{base}" />\n    <meta name="tw-terrain" content="{terrain}" />', 1)
 
 
+def build_stamp(dist):
+    """T-3707: the build's stamp (app/vite.config.ts writes dist/build.json), or None."""
+    try:
+        b = json.load(open(os.path.join(dist, BUILD_FILE), encoding="utf-8")).get("build")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return b if isinstance(b, str) and re.fullmatch(r"[a-z0-9]{1,32}", b) else None
+
+
+def published_builds(dest, stamp):
+    """T-3707: the site's list of published builds with `stamp` first: the account server takes a score only from a
+    build on it (shonei-server trainworld_builds.go). The builds before it stay a while, so tabs open across a publish
+    still count."""
+    try:
+        old = json.load(open(os.path.join(dest, BUILDS_FILE), encoding="utf-8")).get("builds") or []
+    except (OSError, ValueError, AttributeError):
+        old = []
+    return [stamp] + [b for b in old if isinstance(b, str) and b != stamp][:BUILDS_KEPT - 1]
+
+
 def copy_site(dist, dest, base, dry):
-    """dist minus packs/ into dest (the website's trainsworld/), index.html wrapped for Jekyll."""
+    """dist minus packs/ into dest (the website's trainsworld/), index.html wrapped for Jekyll, and the published
+    builds list with this build first."""
     print(f"   {dist} -> {dest}  (index.html with tw-data = {base})")
+    builds = published_builds(dest, build_stamp(dist))
+    print(f"   {BUILDS_FILE}: {', '.join(builds)}")
     if dry:
         return
     os.makedirs(dest, exist_ok=True)
@@ -307,7 +342,7 @@ def copy_site(dist, dest, base, dry):
     kept, gone = keep_assets.carry_into(dest, dist)
     print(f"   assets/ and fonts/: the previous build's {kept} files kept, {gone} older ones removed")
     for r, p in files_under(dist):
-        if r.startswith("packs/") or r == "index.html" or r.split("/")[0] in keep_assets.DIRS or r == keep_assets.MANIFEST:
+        if r.startswith("packs/") or r in ("index.html", BUILD_FILE) or r.split("/")[0] in keep_assets.DIRS or r == keep_assets.MANIFEST:
             continue
         t = os.path.join(dest, *r.split("/"))
         os.makedirs(os.path.dirname(t), exist_ok=True)
@@ -317,6 +352,8 @@ def copy_site(dist, dest, base, dry):
     page = os.path.join(dest, "index.html")
     fm = web_wrap.existing_front_matter(page) or "---\nsitemap: false\n---\n"
     open(page, "w", encoding="utf-8", newline="").write(fm + page_html(dist, base))
+    with open(os.path.join(dest, BUILDS_FILE), "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps({"builds": builds}) + "\n")
 
 
 REDIRECT = """{fm}<!doctype html>
@@ -399,6 +436,16 @@ def verify(version, page):
             print(f"   {'PASS' if 'javascript' in (h.get('Content-Type') or '') else 'FAIL'} entry script type {h.get('Content-Type')}")
         except Exception as e:  # noqa: BLE001
             print(f"   FAIL entry script: {e}")
+            ok = False
+        # T-3707: the account server keeps scores only from a build on the live list
+        try:
+            want = json.load(open(os.path.join(WEBSITE, SITE_DIR, BUILDS_FILE), encoding="utf-8"))["builds"][0]
+            _, _, body = fetch(PAGE + f"{BUILDS_FILE}?t={int(datetime.datetime.now().timestamp())}", {})
+            good = json.loads(body.decode("utf-8")).get("builds", [None])[0] == want
+            print(f"   {'PASS' if good else 'FAIL'} {BUILDS_FILE} lists this build ({want}) first")
+            ok &= good
+        except Exception as e:  # noqa: BLE001
+            print(f"   FAIL {BUILDS_FILE}: {e}")
             ok = False
         # T-1707: the old address is a redirect page into the new one
         try:

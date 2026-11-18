@@ -1202,13 +1202,25 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   one (T-988), so one id names a game's save and its figures. A game that turns sandbox sends that once and is
   never listed again; one that was always a sandbox sends nothing. A slot deleted in this browser
   takes its figures off (on the next signed-in load if signed out then).
+- **Modded games** (T-3707, `game/modded.ts`): a game played in a page that is not the published game is marked
+  modded in its save (`modded`: the reasons, never removed) and never ranks: the page sends the server's latch once
+  (`{mode: "sandbox", modded: true}`, even with no figures sent before, so an older build can't list it either).
+  Marked when a mod calls `trainsworld.markModded("<name>")` (always defined; the page's own mark goes on every
+  game it plays after, the open one and any loaded or started), when the page is served from a site other than
+  anita.garden or a local or home-network address, or when the build came from the public repo
+  (`unofficial-build.txt`, which tools/opensource adds). A build stamp is never compared page side: 8800 and dev
+  servers carry unpublished ones. The mark survives a file, Make a copy, a backup, the account and a share's copy.
+- **Only the published game's scores** (T-3707): each normal send carries the build's stamp (`build`,
+  `__TW_BUILD__`). The server keeps them only from anita.garden with a stamp on the site's `builds.json`, which
+  `tools/deploy.py` writes at each publish; a refusal (426 `unpublished`) stops this page's sends for 10 minutes.
 - **Leaderboards**: the trophy opens a centred modal: a picker (World, then up to two countries in
   this game, then its cities by points; typing searches cities and countries, a country by its name in
   the player's language or in English), the top 50 (rank, name, points short, the
   exact figure in the hover; the person's flag after the name, 16 x 12 px, its name in the hover; a long name is cut, the flag never), the player's own row under them when lower, "Nobody here yet." on an
   empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24
   characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
-  name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
+  name is kept); in a sandbox game also "Sandbox games are not listed", in a modded one "Modded games are not
+  listed", and after a refusal "Scores from this version are not listed. Reload the page for the newest.". Each person shows once per
   board. A game counts at the figures it last sent, not its best (T-3248), sent only from a whole final solve of the
   network as it is (no solve running or held, never the past 24 hours' stand-in, T-3639; the score on screen takes the same finals, `scoreSettled`, T-3644); on each board the person's
   row is their best game there. Anita's feedback inbox has a Leaderboards tab that sets a cutoff date:

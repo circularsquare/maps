@@ -1,0 +1,5 @@
+While this file is here, a build of this copy of the game marks every game it plays as modded.
+A modded game is never listed on the leaderboards, also when its save is later opened at
+anita.garden/trainsworld/. The leaderboards are for the published game only.
+
+A mod calls `trainsworld.markModded("<your mod's name>")` when it loads. That marks the game the same way.

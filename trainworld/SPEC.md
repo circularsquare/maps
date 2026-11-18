@@ -398,7 +398,9 @@ Keeping old saves loading is a nicety: only Anita has saves. An optional account
 a world leaderboard and one per city and country, each person once per board. A game counts at its
 current figures, the forecast weekday's points, never its best ever, so a demand change never leaves an unreachable score up;
 they are sent only once trips are calculated for the network as it is, never a load's or an edit's early figures, and
-on each board a person's row is their best game there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248, T-3465, T-3639; docs/ui-panels.md "Account and leaderboards"].
+on each board a person's row is their best game there; a game that was ever a sandbox, or is modded (a mod ran, or
+another site or the public repo's build played it), is never listed, and the server keeps figures only from the
+published game on anita.garden [T-972, T-973, T-3248, T-3465, T-3639, T-3707; docs/ui-panels.md "Account and leaderboards"].
 Games synced between devices and sharing by link come later (T-988 to T-990).
 [docs/architecture.md](docs/architecture.md) 11.
 

@@ -357,6 +357,14 @@ let guideWanted = false;
 let home: string | undefined;
 /** T-3115: the Community share this game is a copy of (`SaveHeader.copy`); undefined: the player's own */
 let copyOf: string | undefined;
+/** T-3707: why this page's games are modded (the "modded" message), and the game in hand's reasons (`SaveHeader.modded`):
+ * its own and the page's, never fewer; undefined for the published game's own */
+let pageModded: string[] = [];
+let modded: string[] | undefined;
+function withModded(own: unknown): string[] | undefined {
+  const all = [...new Set([...(Array.isArray(own) ? own.filter((x): x is string => typeof x === "string") : []), ...pageModded])].slice(0, 16);
+  return all.length ? all : undefined;
+}
 /** T-531: paid edits' charges, held under "" until the main thread says how each divides */
 const heldCharges = new Map<number, { day: number; hour: number; build: number; trains: number }>();
 /** Wall ms on the clock both threads read (`ToClock` "clock"): Date.now() drifts from it, and the
@@ -2285,6 +2293,7 @@ function moneyState(): MoneyState {
     dayShift,
     mode,
     ...(copyOf ? { copy: true } : {}),
+    ...(modded ? { modded: true } : {}),
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
     fleetFast: a.fleet_fast(),
@@ -2587,7 +2596,7 @@ function shapeHour(epoch: number, b: Float32Array) {
 // ---------------------------------------------------------------- saves (T-029)
 
 function header(): SaveHeader {
-  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}) };
+  return { game: "anitabuilder", format: SAVE_FORMAT, level: TrackApi.save_level(), city, region: WORLD_ID, cities: CITIES.map(c => c.id), clock: gameNow(), cash: api!.cash(), ...loanToSave(loan), fleet: api!.fleet(), fleetFast: api!.fleet_fast(), ...(api!.fleet_bus() ? { fleetBus: api!.fleet_bus() } : {}), ...(api!.fleet_ferry() ? { fleetFerry: api!.fleet_ferry() } : {}), ...(api!.fleet_tram() ? { fleetTram: api!.fleet_tram() } : {}), fares: { ...fares }, ledger: ledger.map(rounded), hours: hourLedger.map(rounded), regions: savedRegions(rounded), ...(lineDays.size ? { lineDays: savedLineDays(true) } : {}), stars: Object.fromEntries(stars), goals: Object.fromEntries(goals), notes: Object.fromEntries(lineNotes), ...savedShapes(), ...savedHidden(), mode, start: startZone, ...(dayPinned ? { dayShift } : {}), opened: opened && [...opened], ...(demandFine ? { demandFine } : {}), ...(demandBuilt?.length ? { demandBuilt } : {}), newCars: newLineCars, ...(Object.keys(newLineHeadway).length ? { newHeadway: newLineHeadway } : {}), ...(newLineWeekendShare !== null ? { newWeekendShare: newLineWeekendShare } : {}), ...(guide ? { guide } : {}), ...(achievements ? { achievements: Object.fromEntries(achievements) } : {}), ...(home ? { home } : {}), ...(copyOf ? { copy: copyOf } : {}), ...(modded ? { modded } : {}) };
 }
 
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
@@ -2993,6 +3002,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   guide = h.mode === "sandbox" ? undefined : h.guide;
   home = h.home;
   copyOf = !fresh && typeof h.copy === "string" && h.copy ? h.copy : undefined;
+  modded = withModded(h.modded);
   api!.set_cash(h.cash + unsettleAfter(h.clock));
   setMode(h.mode === "sandbox" ? "sandbox" : "normal");
   loan = mode === "sandbox" ? null : loanFromSave(h);
@@ -3032,6 +3042,7 @@ function setNewGame(spec?: NewGameSpec) {
   guide = guideWanted && g.mode === "normal" && !testPage ? { done: 0, ...(g.start ? {} : { zoom: true as const }) } : undefined;
   home = undefined;
   copyOf = undefined;
+  modded = withModded(undefined);
   fares = startFares(spec);
   goneLineFares.clear();
 }
@@ -4408,6 +4419,8 @@ onmessage = (e: MessageEvent<ToClock>) => {
   }
   // T-2802: at once, not behind init's queue, which a save's summary can wait on
   if (msg.kind === "outlines") return outlinesIn(msg.packed);
+  // T-3707: at once, so a game loading now is marked too; the queue below marks the game in hand
+  if (msg.kind === "modded") pageModded = [...new Set([...pageModded, ...msg.why.filter((x) => typeof x === "string")])].slice(0, 16);
   if (msg.kind === "previewStale") {
     previewStaleSeq = Math.max(previewStaleSeq, msg.seq);
     wakeStale?.();
@@ -4717,6 +4730,13 @@ async function handleMessage(msg: ToClock) {
   } else if (msg.kind === "listOrder") {
     api.set_list_order(msg.list, new Uint32Array(msg.ids));
     dirty = edited = true; editAt = Date.now();
+  } else if (msg.kind === "modded") {
+    const was = modded?.length ?? 0;
+    modded = withModded(modded);
+    if ((modded?.length ?? 0) === was) return;
+    dirty = edited = true; editAt = Date.now();
+    sendMoney();
+    void autosave(); // the mark is in the slot at once
   } else if (msg.kind === "sandbox") {
     if (mode === "sandbox") return;
     setMode("sandbox");

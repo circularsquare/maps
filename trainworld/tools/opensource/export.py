@@ -63,6 +63,8 @@ EXTRA = {
     "NOTICE.md": "NOTICE.md",
     "CONTRIBUTING.md": "CONTRIBUTING.md",
     "gitignore": ".gitignore",
+    # T-3707: a build from this copy marks its games modded (app/vite.config.ts UNOFFICIAL)
+    "unofficial-build.txt": "trainworld/app/unofficial-build.txt",
 }
 
 
@@ -75,11 +77,11 @@ def patch_vite(out):
     data/packs (files/vite-data-fallback.ts). Fails loudly if vite.config.ts changed shape; then update the anchors."""
     path = os.path.join(out, "trainworld", "app", "vite.config.ts")
     src = open(path, encoding="utf-8").read()
-    a1, a2 = "export default defineConfig({", "  plugins: [packs()],"
+    a1, a2 = "export default defineConfig({", "  plugins: [packs(), buildStamp()],"
     if src.count(a1) != 1 or src.count(a2) != 1:
         sys.exit("vite.config.ts no longer has the anchors export.py patches: update patch_vite")
     frag = open(os.path.join(FILES, "vite-data-fallback.ts"), encoding="utf-8").read()
-    src = src.replace(a1, frag + a1).replace(a2, "  plugins: [dataFallback(), packs()],")
+    src = src.replace(a1, frag + a1).replace(a2, "  plugins: [dataFallback(), packs(), buildStamp()],")
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(src)
 

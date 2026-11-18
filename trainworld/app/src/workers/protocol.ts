@@ -335,6 +335,9 @@ export type ToClock =
   | { kind: "newGame"; name?: string; game?: NewGameSpec }
   /** T-728: make this normal game a sandbox, for good */
   | { kind: "sandbox" }
+  /** T-3707: this page is not the published game, or runs a mod (game/modded.ts): the game in hand and every game
+   * loaded or started after are marked modded, for good. `why`: the page's reasons, all of them each time */
+  | { kind: "modded"; why: string[] }
   /** T-3297: every train, tram and bus to the other side (`TrackApi.flip_right_hand`), answered with "answer": the
    * sites, two numbers each (sim `FLIP_*`: 1 single track turned round, an edge; 2 a line moved, 3 a line left
    * broken; 4 a junction now crossing flat, 5 one-way track no train can use, a node) */
@@ -379,6 +382,8 @@ export interface MoneyState {
   mode: GameMode;
   /** T-3115: a copy of a shared network: it plays as normal and never ranks */
   copy?: boolean;
+  /** T-3707: played in a page that is not the published game, or with a mod (`SaveHeader.modded`): never ranks */
+  modded?: boolean;
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;

@@ -501,6 +501,12 @@ async function ifItFits(src: { bytes: Uint8Array } | { key: string }, then?: () 
 export function makeSandbox() {
   current?.post({ kind: "sandbox" });
 }
+/** T-3707: the page's modded marks (game/modded.ts), told to every clock worker this page starts. */
+let moddedWhy: string[] = [];
+export function postModded(why: string[]) {
+  moddedWhy = why;
+  current?.post({ kind: "modded", why });
+}
 /** T-1822: keep the Getting started card's progress in the save. */
 export function saveGuide(guide: GuideSave) {
   current?.post({ kind: "guide", guide });
@@ -736,6 +742,7 @@ export class ClockClient {
     setHiddenLinesSink((lines) => this.post({ kind: "hideLines", lines }));
     setNewHeadwaySink((seconds) => this.post({ kind: "newHeadway", seconds }));
     current = this;
+    if (moddedWhy.length) this.post({ kind: "modded", why: moddedWhy });
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
     const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: this.game });

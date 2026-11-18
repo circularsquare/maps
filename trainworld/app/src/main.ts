@@ -106,6 +106,7 @@ import { mountGuide } from "./ui/Guide";
 import { guideNewGame } from "./game/guide";
 import { mountKeepDot } from "./ui/KeepDot";
 import { startTips } from "./ui/tip";
+import { startModded } from "./game/modded";
 import { setupDone, startLoadingGate } from "./ui/LoadingScreen";
 import { choosing, lastLoadDied, loadCannotFinish, loadGraphicsGone, loadNoSimd, loadNoWebgl2, onGraphicsGone, startGameWait, waitKey } from "./game/loading";
 import { webgl2State } from "./map/webgl2";
@@ -142,6 +143,8 @@ const SYNTH = params.get("synth") === "1";
 
 // T-210: the game's own hover tag for every panel and control, never the browser's
 startTips();
+// T-3707: `trainsworld.markModded` for mods, and the page's own signs of not being the published game
+startModded();
 
 // ---- the clock: a new game starts on day 1 at 07:00 (morning peak) ----
 startClock(86400 + 7 * 3600);

@@ -1105,6 +1105,8 @@
   "leaderboard.pointsRule": "You get {trip, plural, one {# point} other {# points}} for each trip and {km, plural, one {# point} other {# points}} for each km travelled on a weekday",
   "leaderboard.valueTip": "{world, select, true {{points} points in the world} other {{points} points in {city}}}",
   "leaderboard.sandbox": "Sandbox games are not listed",
+  "leaderboard.modded": "Modded games are not listed",
+  "leaderboard.unpublished": "Scores from this version are not listed. Reload the page for the newest.",
   "leaderboard.signIn": "Sign in to be listed",
   "leaderboard.leave": "Leave the leaderboards",
   "leaderboard.name": "Name to show",

@@ -182,15 +182,31 @@ function version(): string {
   }
 }
 
+// T-328: the app build, part of the demand cache's key: new at each build and dev-server start. T-3707: also the stamp
+// a score is sent with; tools/deploy.py reads it from dist/build.json into the site's list of published builds.
+const BUILD = Date.now().toString(36);
+const VERSION = version();
+/** T-3707: a build from the public repo (tools/opensource adds this file there) marks its games modded. */
+const UNOFFICIAL = existsSync(resolve(here, "unofficial-build.txt"));
+
+function buildStamp(): Plugin {
+  return {
+    name: "tw-build-stamp",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "build.json", source: JSON.stringify({ build: BUILD, version: VERSION }) + "\n" });
+    },
+  };
+}
+
 export default defineConfig({
   // Served under /trainworld/ by maps/serve.py, so every URL in the build must be relative.
   base: "./",
   worker: { format: "es" },
-  // T-328: the app build, part of the demand cache's key: new at each build and dev-server start
-  define: { __TW_BUILD__: JSON.stringify(Date.now().toString(36)), __TW_VERSION__: JSON.stringify(version()) },
+  define: { __TW_BUILD__: JSON.stringify(BUILD), __TW_VERSION__: JSON.stringify(VERSION), __TW_UNOFFICIAL__: JSON.stringify(UNOFFICIAL) },
   build: { outDir: "dist", target: "es2022" },
   // T-682: the real-network layer reads noritetsu's tiles beside the game (map/realNetwork.ts); 8800 serves them
   // at /noritetsu/ and sends no CORS headers, so the dev server passes the path through
   server: { proxy: { "/noritetsu": "http://localhost:8800" } },
-  plugins: [packs()],
+  plugins: [packs(), buildStamp()],
 });

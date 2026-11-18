@@ -362,7 +362,7 @@ export async function gameForShare(): Promise<string | null> {
   if (cid && e.id !== cid) e = { id: cid };
   if (m && unranked(m) && !e.sandbox) {
     try {
-      await api("PUT", `trainworld/score/${e.id}`, { mode: "sandbox" });
+      await api("PUT", `trainworld/score/${e.id}`, latch(m));
       e.sandbox = true;
     } catch { /* shared untagged */ }
   }
@@ -389,9 +389,20 @@ function figures(): { day: number; points: number; cities: Record<string, number
   return { day: Math.floor(hour / 24), points, cities };
 }
 
-/** A game whose figures never rank: a sandbox, or (T-3115) a copy of a shared network, which the server is told is a
- * sandbox so it never ranks there either, the copy's own play notwithstanding. */
-const unranked = (m: { mode: string; copy?: boolean }) => m.mode === "sandbox" || m.copy === true;
+/** A game whose figures never rank: a sandbox, (T-3115) a copy of a shared network, or (T-3707) a modded game, which
+ * the server is told is a sandbox so it never ranks there either, the copy's own play notwithstanding. */
+const unranked = (m: { mode: string; copy?: boolean; modded?: boolean }) => m.mode === "sandbox" || m.copy === true || m.modded === true;
+/** T-3707: the latch the server keeps for good; a modded game says so (older servers read it as a sandbox's) */
+const latch = (m: { modded?: boolean }) => (m.modded ? { mode: "sandbox", modded: true } : { mode: "sandbox" });
+
+/** T-3707: the server keeps scores only from the published game, and refused this page's (shonei-server
+ * trainworld_builds.go): a dev page, or a tab open since a publish. Asked again after REFUSED_WAIT_MS, as a publish
+ * that has just gone live can be refused for its first minute. */
+export const scoresRefused = signal(false);
+let refusedAt = 0;
+const REFUSED_WAIT_MS = 10 * 60_000;
+declare const __TW_BUILD__: string | undefined;
+const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 let sending = false;
 /** Send the playing game's figures if they changed and the gap has passed (`now` skips the gap). */
@@ -405,30 +416,34 @@ export async function sendScores(now = false) {
   if (cid && e.id !== cid) e = { id: cid };
   let body: unknown;
   if (unranked(m)) {
-    // only a game that may have figures on this account needs the notice
-    if (e.sandbox || e.acct !== acct || !e.sent) return;
-    body = { mode: "sandbox" };
+    // only a game that may have figures on this account needs the notice; a modded one is latched anyway (T-3707), so
+    // a build that does not read the mark (an open tab of an older one) can never list it
+    if (e.sandbox || (!m.modded && (e.acct !== acct || !e.sent))) return;
+    body = latch(m);
   } else {
     const f = figures();
-    if (!f) return;
+    if (!f || (scoresRefused.peek() && Date.now() - refusedAt < REFUSED_WAIT_MS)) return;
     const sig = JSON.stringify([f.points, f.cities]);
     const before = e.acct === acct ? e.sent : undefined;
     if (sig === before || (!before && f.points <= 0)) return;
     if (!now && before && Date.now() - (e.at ?? 0) < SEND_GAP_MS) return;
-    body = { mode: "normal", ...f };
+    body = { mode: "normal", build: BUILD, ...f };
     e.sent = sig;
   }
   sending = true;
   try {
     await api("PUT", `trainworld/score/${e.id}`, body);
     if (unranked(m)) e.sandbox = true;
+    else if (scoresRefused.peek()) scoresRefused.value = false;
     e.acct = acct;
     e.at = Date.now();
     lsSet(GAMES_KEY, { ...games(), [slot]: e });
     if (boards.peek().at) boards.value = { ...boards.peek(), at: 0 }; // the boards may have moved
   } catch (err) {
+    // T-3707: not the published build (a dev page, or a tab open since a publish): none of this page's will be kept
+    if ((err as ApiError).code === "unpublished") { scoresRefused.value = true; refusedAt = Date.now(); }
     // a game the server knows as a sandbox: it stays unlisted, so stop asking
-    if ((err as ApiError).status === 403) lsSet(GAMES_KEY, { ...games(), [slot]: { ...e, sandbox: true, acct } });
+    else if ((err as ApiError).status === 403) lsSet(GAMES_KEY, { ...games(), [slot]: { ...e, sandbox: true, acct } });
   } finally {
     sending = false;
   }

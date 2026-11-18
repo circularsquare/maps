@@ -9,7 +9,7 @@ import { normalise } from "../game/search";
 import { tPlace } from "../i18n/places";
 import { findStart } from "./NewGame";
 import { CITIES, zoneCountry } from "../game/cities";
-import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, session, setBoard, type BoardRow } from "../game/account";
+import { accountOpen, accountState, boardSetting, boards, boardsOpen, fetchBoards, scoresRefused, session, setBoard, type BoardRow } from "../game/account";
 import { exact } from "../game/format";
 import { t, tCountry } from "../i18n";
 import { countryName } from "../i18n/intl";
@@ -46,6 +46,8 @@ function Join({ top }: { top?: boolean }) {
   if (!!top === joined) return null;
   return <div class={top ? "lb-foot lb-join" : "lb-foot"}>
     {moneyState.value?.mode === "sandbox" && <p class="small muted">{t("leaderboard.sandbox")}</p>}
+    {moneyState.value?.mode !== "sandbox" && moneyState.value?.modded && <p class="small muted">{t("leaderboard.modded")}</p>}
+    {!moneyState.value?.modded && moneyState.value?.mode !== "sandbox" && scoresRefused.value && <p class="small muted">{t("leaderboard.unpublished")}</p>}
     {!session.value
       ? <button class="btn text" onClick={() => { boardsOpen.value = false; accountOpen.value = true; }}>{t("leaderboard.signIn")}</button>
       : b?.on
