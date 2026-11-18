@@ -15,7 +15,7 @@ use super::bridge;
 use super::cost::{BlockIndex, ClassGrid, GeoMask, MaskSet, NoWater, RunMask, TransformedMask, UnionMask, WaterMask, WorldWater};
 use super::frame::FrameKind;
 use super::geom::{self, design_radii, GeomIssue, Pi};
-use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData, Weekend};
+use super::net::{CrossKind, EdgeData, GroupLook, Issue, LineData, LoopKind, Network, NodeData, StationData, Weekend, SPLIT_ROOM};
 use super::params::*;
 use super::profile;
 use super::roads::{self, RoadTile, Roads};

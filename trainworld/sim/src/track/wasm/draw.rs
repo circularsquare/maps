@@ -94,18 +94,22 @@ impl TrackApi {
             End::Node(n) if net.node_ok(n) => (net.node_x[n as usize], net.node_y[n as usize]),
             End::Node(_) => (0.0, 0.0),
         };
-        let (a, from_a) = branch_end(net, a, pis.first().map_or(b_at, |p| (p.x, p.y)))?;
+        let toward_a = pis.first().map_or(b_at, |p| (p.x, p.y));
+        let (a, from_a) = branch_end(net, a, toward_a)?;
+        let a = split_room(net, a, toward_a);
         // Both ends on one edge: the second split must name the half it falls in.
         let first_split = if let End::Edge { e, x, y } = a { Some((e, self.w.net.project(e, x, y).0)) } else { None };
         let mut ra = self.resolve(a, None, &mut new_nodes, &mut new_edges)?;
         leave_away(&mut ra, from_a);
-        let (b, from_b) = match branch_end(&self.w.net, b, pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y))) {
+        let toward_b = pis.last().map_or((ra.x, ra.y), |p| (p.x, p.y));
+        let (b, from_b) = match branch_end(&self.w.net, b, toward_b) {
             Ok(v) => v,
             Err(i) => {
                 self.release(&new_nodes, &new_edges);
                 return Err(i);
             }
         };
+        let b = split_room(&self.w.net, b, toward_b);
         let existing = [matches!(a, End::Node(_)), matches!(b, End::Node(_))];
         at_station = [at_station[0] || from_a.is_some(), at_station[1] || from_b.is_some()];
         let mut rb = self.resolve(b, first_split, &mut new_nodes, &mut new_edges)?;
@@ -1473,6 +1477,48 @@ fn branch_end(net: &Network, end: End, toward: (f64, f64)) -> Result<(End, Optio
         Err(m) if m != u32::MAX && net.node_ports[m as usize].n == 1 && net.node_platform[m as usize] == 0 => Ok((End::Node(m), None)),
         Err(_) => Err(room),
     }
+}
+
+/// T-3690: a route end on track within a split's `SPLIT_ROOM` of the piece's end, where a click can
+/// put it: on a plain joint (it becomes the junction, as a click on the joint makes), on a bare end
+/// when the route carries on past it, else the split slid in to `SPLIT_ROOM` (a junction, a
+/// station's node, a hairpin, a bare end the route heads back from). A piece too short for that is
+/// left to refuse. Any other end is unchanged.
+fn split_room(net: &Network, end: End, toward: (f64, f64)) -> End {
+    let End::Edge { e, x, y } = end else { return end };
+    if !net.edge_ok(e) || net.edge_crossover[e as usize] {
+        return end;
+    }
+    let (s, _) = net.project(e, x, y);
+    let len = net.edge_len[e as usize];
+    if (SPLIT_ROOM..=len - SPLIT_ROOM).contains(&s) {
+        return end;
+    }
+    let which = if s < len / 2.0 { 0 } else { 1 };
+    let n = net.end_node(e, which);
+    let i = n as usize;
+    let p = &net.node_ports[i];
+    if net.node_platform[i] == 0 && net.edge_a[e as usize] != net.edge_b[e as usize] {
+        if p.n == 2 && p.side[0] != p.side[1] {
+            return End::Node(n);
+        }
+        if p.n == 1 {
+            // into the track from its end, against the way to the route's next point
+            let pcs = net.edge_pieces(e);
+            let inner = geom::pos_at(pcs, if which == 0 { len.min(1.0) } else { (len - 1.0).max(0.0) });
+            let (nx, ny) = (net.node_x[i], net.node_y[i]);
+            if (inner.0 - nx) * (toward.0 - nx) + (inner.1 - ny) * (toward.1 - ny) < 0.0 {
+                return End::Node(n);
+            }
+        }
+    }
+    // a little past the limit, so the chainage the split projects back to is not a hair short
+    let room = SPLIT_ROOM + 0.1;
+    if len < 2.0 * room {
+        return end;
+    }
+    let (x, y, _) = geom::pos_at(net.edge_pieces(e), if which == 0 { room } else { len - room });
+    End::Edge { e, x, y }
 }
 
 /// A branch past a platform (`branch_end`) leaves its junction away from the station at `from`.

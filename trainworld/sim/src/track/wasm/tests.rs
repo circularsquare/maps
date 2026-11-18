@@ -3854,3 +3854,47 @@ fn a_station_near_a_bare_end_goes_on_the_end_and_a_junction_still_refuses() {
     assert_ne!(a.add_station(2, e, 998.0, 0.0, 100, "J".into()), 0);
     assert!(a.issue_kinds().contains("SplitPoint"), "{}", a.issue_kinds());
 }
+
+/// T-3690: a route ending on track within a split's 5 m of a piece's end goes where a click could put it: on a
+/// plain joint, on a bare end it carries on past, else split 5 m in (a junction, a bare end it heads back from).
+#[test]
+fn a_route_end_near_a_piece_end_goes_on_the_joint_or_slides_in() {
+    let node_at = |a: &TrackApi, x: f64, y: f64| (0..a.w.net.node_count() as u32).find(|&n| a.w.net.node_ok(n) && (a.w.net.node_x[n as usize] - x).abs() < 0.5 && (a.w.net.node_y[n as usize] - y).abs() < 0.5);
+    let on = |a: &TrackApi, x: f64| vec![2.0, edge_under(a, x, 0.0) as f64, x, 0.0, 0.0];
+    let route = |a: &mut TrackApi, from: Vec<f64>, to: Vec<f64>| {
+        let ends: Vec<f64> = from.into_iter().chain(to).collect();
+        a.add_route(&ends, &[], 2, false)
+    };
+    let mut a = api();
+    let end = piece(&mut a, Err((0.0, 0.0, 0)), &[], (1000.0, 0.0, 0));
+    piece(&mut a, Ok(end), &[], (2000.0, 0.0, 0));
+    let joint = node_at(&a, 1000.0, 0.0).unwrap();
+    assert_eq!(a.w.net.node_ports[joint as usize].n, 2);
+    // a junction at 500
+    assert_eq!({ let p = on(&a, 500.0); route(&mut a, p, free_at(900.0, -300.0, 0)) }, 0, "{}", a.issues());
+    let junction = node_at(&a, 500.0, 0.0).unwrap();
+    let live = |a: &TrackApi| (0..a.w.net.node_count() as u32).filter(|&n| a.w.net.node_ok(n)).count();
+    let nodes = live(&a);
+
+    // 3 m from the joint, from either piece and as either end: the joint is the junction
+    for (x, rev) in [(997.0, false), (1003.0, false), (997.0, true)] {
+        let (p, q) = (on(&a, x), free_at(x + 300.0, 200.0, 0));
+        assert_eq!(if rev { route(&mut a, q, p) } else { route(&mut a, p, q) }, 0, "at {x}: {}", a.issues());
+        assert_eq!(a.w.net.node_ports[joint as usize].n, 3, "at {x}");
+        assert!(node_at(&a, x, 0.0).is_none());
+        assert_eq!(a.undo(), 0);
+    }
+    // 3 m from the junction: a new junction 5 m from it, the old one as it was
+    assert_eq!({ let p = on(&a, 503.0); route(&mut a, p, free_at(800.0, 250.0, 0)) }, 0, "{}", a.issues());
+    assert_eq!(a.w.net.node_ports[junction as usize].n, 3);
+    assert!(node_at(&a, 505.1, 0.0).is_some());
+    assert_eq!(a.undo(), 0);
+    // 3 m from the bare end: heading back along the track, a junction 5 m in; on past the end, from the end
+    assert_eq!({ let p = on(&a, 3.0); route(&mut a, p, free_at(300.0, 150.0, 0)) }, 0, "{}", a.issues());
+    assert!(node_at(&a, 5.1, 0.0).is_some());
+    assert_eq!(a.undo(), 0);
+    assert_eq!({ let p = on(&a, 3.0); route(&mut a, p, free_at(-300.0, 50.0, 0)) }, 0, "{}", a.issues());
+    assert_eq!(a.w.net.node_ports[node_at(&a, 0.0, 0.0).unwrap() as usize].n, 2);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(live(&a), nodes);
+}

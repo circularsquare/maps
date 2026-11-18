@@ -22,6 +22,10 @@ use std::f64::consts::PI;
 /// Most edge ends one node can have.
 pub const MAX_PORTS: usize = 8;
 
+/// The least track a split leaves on each side of its node, m (`split_plan`), so no sliver piece
+/// or PI a hair from a node is made.
+pub const SPLIT_ROOM: f64 = 5.0;
+
 /// What a newly installed file changes in the edges it reaches (`Network::rework_ground`).
 #[derive(Clone, Copy)]
 enum Ground {
@@ -3366,7 +3370,7 @@ impl Network {
         let v = self.edge_vertices(e);
         let f = self.fit(&v);
         let mut s = s;
-        if s < 5.0 || s > f.len - 5.0 {
+        if s < SPLIT_ROOM || s > f.len - SPLIT_ROOM {
             return Err(Issue::SplitPoint { edge: e });
         }
         // Snap to a piece boundary within 2 m, so new PIs are never a hair from the node.
