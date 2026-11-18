@@ -15,47 +15,28 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Her yes to all four steps in maps-86's tab, 01:27 UTC. Done: (1) shonei-server deployed (active 01:27:58) and
   pushed 3e8e501..a46c2e9; (2) freight tiles + extra.json on R2 (206/200), T-3464 archived.
 - PUBLISHED 2026-11-18 ~01:50 UTC: data 2026-11-18 on R2, website d13096e, `--verify --page` all PASS.
-- Landing (background, scratchpad of c8a9be2a \land1.ps1, log \land1.log): trafficwidth, snapbar, capload,
-  tramsnap (+ realgraph-t3515 copied into data/packs/realgraph), idlemem, chevrons, ctrlsnap. Then one smoke on
-  master, snap8800, push.
-  (4) export pushed (trainsworld 8ebd2d2 = maps 5bb38d73). PR 1 / issue 8 replies: texts in handoff-log line 19-20
-  were written pre-release ("goes out with the next update"); updated wording shown to her, post + close on her OK.
+- Landed after the publish: T-3580, T-3516, T-3559/T-3528, T-3515 (+ realgraph copied into data/packs), T-3492
+  fix, T-3607, T-3608, T-3615; bookkeeping 2d1567f3. Changelog c001-c006 unpublished. Smoke on master PASSED (29),
+  8800 = master = 2d1567f3, pushed.
+  (4) export pushed (trainsworld 8ebd2d2 = maps 5bb38d73). PR 1 and issue 8 replied and closed on her OK.
+  She: "0.4 looks good on live".
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
 ## In flight (maps-86's)
-- T-3397 DONE (saverisk): no other documented bug writes a bad save and reports success; filed T-3610 (P2), T-3611,
-  T-3612 (P3). Findings in notes/T-3397.md (commit with the next round).
-- saveread: T-3610 + T-3612 DONE in .tw-trees/saveread (archived). Changelog c001 in tree "fixed one unreadable
-  saved game hiding all the others; it now shows as damaged and the rest still open". Wart: the damaged card says
-  "No undamaged copy of this game is left" while a backup is offered. Checker scheck (Sonnet, port 6184) running ->
-  notes/T-3610-check.md; land on PASS.
-- sidebox: T-3615 DONE in .tw-trees/sidebox (sheet review/t3615.png, looked at, fine); changelog c003 already in the
-  MAIN tree's next.json. Touches rendererShaders.ts like trafficwidth: land after the batch.
-- kcheck (Sonnet, checker, runs in .tw-trees/kaohsiung, port 6183): T-3600 option (a) + T-3601; writes
-  notes/T-3600-check.md. kaohsiung's report: intercity within 0.4-2.5% of final in 2-6 s; changelog c136 (T-3601),
-  c137 "after you turn a line's trains on or off, the intercity lines through that city show their new riders within
-  seconds"; open: edits during a quick solve wait ~170 s (the T-1734 hold, option c, not built).
-- T-3614 DONE (zonesmap): tools/release/new_zones_map.py, publish step in docs/orchestrator.md, image
-  review/v0.4.0-new-zones.png (91 new, 6 grown; holes are T-3517's parked zones). Commit the tool + notes with the
-  next round.
-- sidebox (Opus, .tw-trees/sidebox, port 6181): T-3615 single-side station boxes with world width (her numbers).
-  May touch oneWayMarks.ts like chevrons: merge at landing.
+- T-3610 + T-3612 LANDED a6c617a9 (checker PASS, wart fixed, c009); T-3617 filed. Running: smoke on master + snap8800
+  (\smoke_snap.ps1) for kaohsiung + saveread; push after. Main tree's app/node_modules lost @preact/signals and .bin
+  ~02:10 UTC (likely scheck deleting a scratch worktree by hand); saveread's npm install restored it.
+- T-3600 (a) + T-3601 LANDED c5319e6d after checker PASS (changelog c007, c008); not yet on 8800 (next rebuild,
+  with saveread). Leftover filed T-3616 P3. Checker saw "demand sums worker: undefined" once at page close: untraced.
 
 ## In flight (maps-1c's agents; maps-1c relays their reports verbatim)
-- chevrons (Sonnet, .tw-trees/chevrons): T-3607 DONE in tree: track arrows every 300 m (her word 11-18), bus
-  chevrons from zoom 12, BUS_ARROW_GAP_PX 50. Sheet review/t3607.png looked at, fine. Changelog c001 in tree.
-- ctrlsnap (Sonnet, .tw-trees/ctrlsnap): T-3608 DONE in tree (changelog c001 "holding ctrl while snapping to
-  streets pauses the snap"; no strings).
-- splitflat (Opus, .tw-trees/splitflat, port 6205): T-3609 split into singles marked a flat junction. After.
+- splitflat: T-3609 DONE in tree (two drawing fixes, sim draw.rs; c001 in tree "fixed single track drawn where a
+  double track splits sometimes joining the wrong track and making a flat junction"). Checker fcheck (Sonnet, port
+  6188) running -> notes/T-3609-check.md; land on PASS. Rest of her case filed T-3618.
 - solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag. After.
-- kaohsiung (Opus, .tw-trees/kaohsiung, port 6199): T-3601 fix done (tag stays until numbers final, StatusTag.tsx);
-  now building T-3600 option (a), her pick: the quick solve also covers market pairs through the edited city.
-  Merge with solveeta's hover at landing. After the publish.
-- DONE in trees, land after the publish with `agent-tree.mjs finish <tree> "<sentence>" --task ...`:
-  trafficwidth (T-3580), snapbar (T-3516), capload (T-3559+T-3528, checker PASS; revert the tree's next.json: no
-  changelog item, her word), tramsnap (T-3515; then copy trainworld\data\work\realgraph-t3515 over
-  data/packs/realgraph/, ships with the next publish's packs; notes/T-3515.md "Landing"), idlemem (T-3492 archived
-  unmet; small demandClient.ts fix: `land idlemem` + `remove`).
+- ghostmatch (Sonnet, .tw-trees/ghostmatch, port 6187): T-3606 tram ghost fixed (c010; archived early), resumed
+  for the single-track / passing-track ghost cases. Land when it reports.
+- solveeta lands onto c5319e6d (kaohsiung's StatusTag.tsx / demand worker changes): expect a rebase at its landing.
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
 ## Night run (she says when; NOT straight after the publish, her 11-18)

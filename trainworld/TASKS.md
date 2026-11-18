@@ -281,6 +281,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (taking, 2026-11-17, agent splitflat)
   - Context: Your pad, 2026-11-18: "sometimes it says theres a flat junction (merge) where a double track splits into 2 singles. ... that isn't the case, really. its just splitting. there shouldnt be a merge" (artifacts/trainworld/board/20261117-201857-14b6.png: Paris, one-way singles off a double track, "Flat junction" with 0).
   - Goal: Where a double track splits into two single tracks, no flat junction mark or hover unless trains really cross each other's path there.
+- T-3618 [P2] {L:single-track} Split still marked when the straight single was drawn first
+  - Context: From T-3609 (its two drawing fixes landing): a split still shows a flat junction when the straight single was drawn first with a press on a lane at the double's bare end, or was set one way with the switch; your Paris split keeps its mark since track already drawn isn't changed. Proposed in notes/T-3609.md: the one-way switch defaults to the joined track's way; the second single re-places the first one's join; the snap ring stops sitting on the pointer's track at a split.
+  - Goal: Drawing a split in either order, or setting a single one way, never leaves a flat junction mark unless trains really cross.
+  - Other: notes/T-3609.md
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
