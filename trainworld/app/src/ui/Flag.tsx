@@ -13,7 +13,7 @@ import "./flag.css";
 export function Flag({ code, small }: { code?: string | null; small?: boolean }) {
   if (!isFlag(code)) return null;
   const name = flagName(code);
-  return <img class={"flag" + (small ? " small" : "")} src={flagUrl(code)} alt={name} data-tip={name} loading="lazy" decoding="async" />;
+  return <img key={code} class={"flag" + (small ? " small" : "")} src={flagUrl(code)} alt={name} data-tip={name} loading="lazy" decoding="async" />;
 }
 
 /** A name with its flag after it; a long name is cut short, the flag never. */
@@ -130,7 +130,7 @@ function FlagPicker({ anchor, current, onPick, onClose }: { anchor: { current: H
       }} />
     <ul role="listbox" ref={list}>
       {items.map(({ code, gap }, i) => (
-        <li role="option" aria-selected={i === cursor} class={(i === cursor ? "on" : "") + (code === current ? " picked" : "") + (gap ? " gap" : "")}
+        <li key={`${code}:${i}`} role="option" aria-selected={i === cursor} class={(i === cursor ? "on" : "") + (code === current ? " picked" : "") + (gap ? " gap" : "")}
           onMouseDown={(e) => { e.preventDefault(); onPick(code); }}>
           {code ? <img class="flag" src={flagUrl(code)} alt="" loading="lazy" decoding="async" /> : <span class="flag flag-none" />}
           <span class="flag-pop-name">{code ? flagName(code) : t("accountPanel.noFlag")}</span>

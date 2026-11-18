@@ -35,13 +35,16 @@ function Row({ r, board, mine }: { r: BoardRow; board: string; mine: boolean }) 
   </li>;
 }
 
-function Join() {
+/** `top`: the way in (sign in, or a name with Join) above the boards, so players see they can join; the foot holds Leave. */
+function Join({ top }: { top?: boolean }) {
   const b = boardSetting.value;
+  const joined = !!session.value && !!b?.on;
   const [name, setName] = useState(b?.name ?? "");
   const [msg, setMsg] = useState("");
   const run = (f: () => Promise<unknown>) => { setMsg(""); f().then(() => fetchBoards()).catch((e) => setMsg(e.message)); };
   useEffect(() => { if (b?.name) setName(b.name); }, [b?.name]);
-  return <div class="lb-foot">
+  if (!!top === joined) return null;
+  return <div class={top ? "lb-foot lb-join" : "lb-foot"}>
     {moneyState.value?.mode === "sandbox" && <p class="small muted">{t("leaderboard.sandbox")}</p>}
     {!session.value
       ? <button class="btn text" onClick={() => { boardsOpen.value = false; accountOpen.value = true; }}>{t("leaderboard.signIn")}</button>
@@ -123,6 +126,7 @@ function Boards() {
   const lands = [...new Set([...mine.map((id) => zoneCountry(id)?.toLowerCase() ?? ""), ...Object.keys(st.list).filter((k) => k.startsWith(COUNTRY)).map((k) => k.slice(COUNTRY.length))].filter(Boolean))];
   const meIn = d?.me && d.rows.some((r) => r.rank === d.me!.rank && r.name === d.me!.name);
   return <>
+    <Join top />
     <CityPick boardKey={key} mine={mine} all={new Set([...mine, ...others])} countries={lands} />
     {!d ? <p class="small muted">{st.error || t("leaderboard.loading")}</p>
       : <ol class="lb-rows">

@@ -47,6 +47,7 @@
 .lb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-value { flex: none; }
 .lb-foot { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.lb-foot.lb-join { margin: 0 0 12px; }
 .lb-foot .acct-row { width: 100%; }
 .lb-foot p { margin: 0; }
 .lb-open { flex: none; color: var(--muted); }

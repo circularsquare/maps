@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsScore, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -95,6 +95,25 @@ function PointsLine({ row }: { row: ShareRow }) {
     {city && <span>{city}</span>}
     {points && <span>{points}</span>}
     {row.sandbox && <span class="save-sandbox small">{t("savesPanel.sandbox")}</span>}
+  </div>;
+}
+
+/** T-3685: under the day and night picture, a share's heart while its network, opened from Community, is the game in
+ * hand: the same like as on its card. Nothing for a saved game opened again, or a share that is the player's own. */
+export function ViewedLike() {
+  const v = viewedShare.value, row = viewedRow.value, st = saveSlotsState.value;
+  const [msg, setMsg] = useState("");
+  if (!v || !row || row.id !== v.id || !(st.viewing || (v.slot && v.slot === st.active))) return null;
+  const like = async () => {
+    if (!session.peek()) { accountOpen.value = true; return; }
+    setMsg("");
+    try { const r = await setLiked(row.id, !row.liked); viewedRow.value = { ...row, liked: r.liked, likes: r.likes }; }
+    catch (e) { setMsg((e as Error).message); }
+  };
+  return <div class="sky-like">
+    <button type="button" class={"btn text cm-like" + (row.liked || row.mine ? " on" : "")} disabled={row.mine} aria-label={row.liked ? t("community.unlike") : t("community.like")} aria-pressed={!!row.liked}
+      data-tip={row.mine ? t("community.errOwn") : t("community.likes", { count: row.likes })} onClick={like}><Icon.heart /><span class="num">{row.likes}</span></button>
+    {msg && <p class="acct-msg bad">{msg}</p>}
   </div>;
 }
 

@@ -13,6 +13,7 @@ import { PERIODS, periodAt } from "../game/periods";
 import { SkyBanner } from "./SkyBanner";
 import { StatusTag } from "./StatusTag";
 import { BusyTag } from "./BusyTag";
+import { ViewedLike } from "./Community";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
@@ -169,6 +170,7 @@ export function MapSky() {
   const hols = [...holidayLines(minute, near, true).map((l) => l.text), ...rushLines(minute, rush, near, true)];
   return <div class="map-sky">
     <SkyBanner skyTip={hols.length ? hols.join("\n") : undefined} bandTip={periodTip(minute)} />
+    <ViewedLike />
     <div class="sky-status"><StatusTag /><BusyTag /></div>
   </div>;
 }

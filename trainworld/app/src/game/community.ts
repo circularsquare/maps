@@ -63,6 +63,35 @@ export const linkedShare = signal<string | null>((() => {
 // Community opens on the linked share once the server says Community is there (preview: on a `?community` page only).
 effect(() => { if (linkedShare.value && communityOn()) communityOpen.value = true; });
 
+/** T-3685: the share the game in hand was opened from (T-3257's view), for a like button on the map. It lasts while the
+ * network is unsaved and, once saved from the view, while that slot is the game in hand; any other game ends it. The
+ * reload into a view carries it in sessionStorage. */
+const VIEWED_KEY = "tw.community.viewed";
+export const viewedShare = signal<{ id: string; seen: boolean; name: string; slot: string } | null>((() => {
+  try {
+    const id = sessionStorage.getItem(VIEWED_KEY);
+    sessionStorage.removeItem(VIEWED_KEY);
+    return id && SHARE_ID.test(id) ? { id, seen: false, name: "", slot: "" } : null;
+  } catch { return null; }
+})());
+/** that share's card as the server has it: its likes, and whether this player liked it */
+export const viewedRow = signal<ShareRow | null>(null);
+effect(() => {
+  const v = viewedShare.value, s = saveSlotsState.value;
+  if (!v) return;
+  if (s.viewing) { try { sessionStorage.removeItem(VIEWED_KEY); } catch { /* none */ } if (!v.seen || v.name !== s.viewing.name) viewedShare.value = { ...v, seen: true, name: s.viewing.name }; return; }
+  if (!v.seen) return;
+  const saved = v.slot ? null : s.slots.find((x) => x.key === s.active && x.name === v.name);
+  if (saved) viewedShare.value = { ...v, slot: saved.key };
+  else if (!v.slot || v.slot !== s.active) viewedShare.value = null;
+});
+effect(() => {
+  const id = viewedShare.value?.id, live = communityOn(), who = session.value;
+  if (!id || !live) { viewedRow.value = null; return; }
+  void who;
+  fetchShare(id).then((r) => { if (viewedShare.peek()?.id === id) viewedRow.value = r; }, () => { viewedRow.value = null; });
+});
+
 /** A share's link: this page's address and the share, and in preview the flag that shows Community. */
 export function shareLink(id: string): string {
   return `${location.origin}${location.pathname}?share=${id}${accountConfig.peek()?.trainworldCommunity === true ? "" : "&community"}`;
@@ -90,8 +119,12 @@ export async function openSharedView(row: ShareRow, name: string): Promise<strin
     if (err.status === 429) return t("community.errBusy");
     return err.message;
   }
-  try { return await openView(bytes, name); }
-  catch { return t("community.errCopyBad"); }
+  const before = viewedShare.peek();
+  viewedShare.value = { id: row.id, seen: false, name: "", slot: "" };
+  try { sessionStorage.setItem(VIEWED_KEY, row.id); } catch { /* the button then waits for a game opened without a reload */ }
+  const undo = () => { viewedShare.value = before; try { sessionStorage.removeItem(VIEWED_KEY); } catch { /* none */ } };
+  try { const why = await openView(bytes, name); if (why !== "") undo(); return why; }
+  catch { undo(); return t("community.errCopyBad"); }
 }
 
 /** What went wrong, in plain words, for each of the server's codes. */
