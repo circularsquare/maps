@@ -1195,10 +1195,11 @@ fn a_line_reversing_at_a_bare_track_end_runs() {
     assert_eq!(back.net.line_path(l), w.net.line_path(l));
     assert_eq!(back.svc.lines[l as usize].round_trip, w.svc.lines[l as usize].round_trip);
     assert_eq!(back.svc.lines[l as usize].runs[0].ends, w.svc.lines[l as usize].runs[0].ends);
-    // a station on the stub is a stop like any other: X a station, the same path needs it as one
+    // T-3595: a station at the stub's end is turned at the same way, without stopping; listed, it is a stop
     let mut d = w.net.line_data(l).unwrap();
     station(&mut w, x, 200);
-    assert!(w.net.check_line(l).is_err());
+    assert!(w.net.check_line(l).is_ok());
+    assert_eq!(w.svc.lines[l as usize].runs[0].ends.len(), 1, "turned at, no stop");
     d.stops = vec![br, x, m];
     w.apply(Op::Line { id: l, data: Some(d) }).unwrap();
     assert!(w.svc.lines[l as usize].runs[0].ends.is_empty());

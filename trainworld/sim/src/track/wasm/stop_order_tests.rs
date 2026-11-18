@@ -81,7 +81,8 @@ fn a_hand_order_is_kept_until_sorted() {
 }
 
 /// T-2895: S0 - T - J - M along x, a branch J - B leaving J towards M, and two stations on track
-/// of their own. From B a train reaches M only by turning at the junction, which no train does.
+/// of their own. From B a train reaches M only by turning at the junction, which no train does
+/// (S0 - T is one-way single track toward T, so no train turns at S0's track end, T-3595).
 #[test]
 fn an_order_with_no_route_names_its_hop() {
     let mut w = world();
@@ -92,7 +93,8 @@ fn an_order_with_no_route_names_its_hop() {
     let b = node(&mut w, 5000.0, 1500.0, 0);
     let z0 = node(&mut w, 0.0, 9000.0, 0);
     let z1 = node(&mut w, 3000.0, 9000.0, 0);
-    edge(&mut w, s0, t, &[], 0).unwrap();
+    let id = w.net.alloc_edge();
+    w.apply(Op::Edge { id, data: Some(EdgeData { a: s0, b: t, tracks: 1, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 1, join: [0; 2], limit: 0 }) }).unwrap();
     edge(&mut w, t, j, &[], 0).unwrap();
     edge(&mut w, j, m, &[], 0).unwrap();
     edge(&mut w, j, b, &[(3400.0, 0.0)], 0).unwrap();

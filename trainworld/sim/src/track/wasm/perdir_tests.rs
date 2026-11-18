@@ -40,8 +40,8 @@ fn svc_stop(a: &TrackApi, l: u32, run: usize, k: usize) -> u32 {
 
 /// Her case (Anita 2026-11-13, reports/t3348-split-legs.png): a double splits into two one-way
 /// singles about 150 m apart, a station on each leg, and they rejoin as double. A two-way line
-/// listing one of them stops at it one way and at the other leg's station the other way, whichever
-/// leg the click was on, on both running sides; nothing in between turns back.
+/// listing one of them runs without turning back, whichever leg the click was on, on both running
+/// sides. (Pairs side by side, one stop served each way at its own platform: oneleg_tests.rs.)
 #[test]
 fn t3348_split_legs_stop_each_way_on_its_own_leg() {
     for right_hand in [true, false] {
@@ -81,21 +81,19 @@ fn t3348_split_legs_stop_each_way_on_its_own_leg() {
             let stops = net.line_stops(l).to_vec();
             assert_eq!(stops.len(), 3, "one stop at the pair: {stops:?}");
             let mid = stops[1];
-            let other = if mid == n { s } else { n };
-            // the forward run runs along the stop's leg, the return along the other
+            assert_eq!(mid, click, "right hand {right_hand}: the station clicked");
+            // T-3565: 150 m apart the two are no pair (that is 50 m at most): the stop is a one-way
+            // station, served by the run along its leg and passed by the other on its own
             assert!(net.line_path(l).iter().all(|&e| net.dir_ok(e)));
             assert!(net.path_reversals(net.line_path(l)).is_empty(), "no turn back on the way out");
             let (back_stops, back) = net.back_run(l).unwrap();
-            assert_eq!(back_stops, vec![q, other, p], "right hand {right_hand}");
+            assert_eq!(back_stops, vec![q, mid, p], "right hand {right_hand}");
             assert!(net.path_reversals(&back).is_empty(), "no turn back on the way back");
             let ls = &a.w.svc.lines[l as usize];
             assert!(ls.ok, "the service builds");
-            assert_eq!((svc_stop(&a, l, 0, 1), svc_stop(&a, l, 1, 1)), (mid, other));
-            assert!(ls.runs.iter().all(|r| !r.pass.contains(&true)));
+            assert_eq!((svc_stop(&a, l, 0, 1), svc_stop(&a, l, 1, 1)), (mid, mid));
+            assert_eq!(ls.runs.iter().filter(|r| r.passes(1)).count(), 1, "right hand {right_hand}: served one way");
             assert!(a.w.net.check_line(l).is_ok());
-            // the way back's station goes only with the line's stop, as a listed stop does
-            assert_ne!(a.remove_station(other), 0, "right hand {right_hand}: the way back's station is in use");
-            assert!(a.w.net.is_station(other) && !a.w.net.line_broken[l as usize]);
             assert_eq!(a.remove_line(l), 0, "{}", a.issues());
         }
     }

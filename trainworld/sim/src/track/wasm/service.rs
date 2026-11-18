@@ -122,7 +122,8 @@ impl TrackApi {
             let p = prof(&t);
             let n = ls.runs[t.run as usize].stop_idx.len();
             for k in 0..n.saturating_sub(1) {
-                if ls.stop_node(t.run as usize, k) != Some(node) {
+                // T-3565: nor where the run passes a one-way station on the other track
+                if ls.stop_node(t.run as usize, k) != Some(node) || ls.runs[t.run as usize].away.iter().any(|x| x.0 as usize == k) {
                     continue;
                 }
                 let at = t.draw + p.dep.get(k).copied().unwrap_or(0.0);

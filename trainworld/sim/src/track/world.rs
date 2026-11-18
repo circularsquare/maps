@@ -1392,7 +1392,7 @@ impl TrackWorld {
     /// left broken (`broken`: as they were before) onto a path through its same stops that runs every
     /// track's way, as `TrackApi::set_edge_oneway` does; one with no such path stays broken.
     /// T-3541: so too a line that turned back at a track end the edit built on past (no longer a
-    /// track end), never with more turns back than it had.
+    /// track end, T-3595: a station there or not), never with more turns back than it had.
     fn way_reroutes(&self, der: &super::net::Derived, broken: &[bool]) -> Vec<Op> {
         let net = &self.net;
         let mut lines: Vec<u32> = der.ways.iter().flat_map(|&e| net.lines_on_edge(e).iter().copied()).collect();
@@ -1404,7 +1404,8 @@ impl TrackWorld {
                 let path = net.line_path(l);
                 net.path_reversals(path).into_iter().any(|k| {
                     let n = net.path_nodes(path[k]).0;
-                    der.nodes.contains(&n) && net.node_platform[n as usize] == 0 && !net.bare_end(n)
+                    // T-3595: a station there too, when the line does not stop at it
+                    der.nodes.contains(&n) && !net.line_stops(l).contains(&n) && !net.turn_end(n)
                 })
             })
             .collect();

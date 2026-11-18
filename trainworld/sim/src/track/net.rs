@@ -2580,7 +2580,7 @@ impl Network {
             return Err(Issue::LineStops { line: l });
         }
         let turns = self.stop_reversals(path);
-        let Some(at) = match_stops(&nodes, stops, &turns) else {
+        let Some((at, _)) = self.match_run(&nodes, stops, &turns) else {
             return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
         };
         // the return run goes round one-way track when the path back is against it (T-3094), and each
@@ -2594,7 +2594,7 @@ impl Network {
         let fwd = self.fwd_stops_of(stops, path);
         let one = |s: &[u32]| s.iter().any(|&s| self.one_side(s).is_some());
         if one(stops) || one(&fwd) || back.as_ref().is_some_and(|b| one(&b.0)) {
-            let at = if fwd == stops { at } else { match_stops(&nodes, &fwd, &turns).ok_or(Issue::LinePath { line: l })? };
+            let at = if fwd == stops { at } else { self.match_run(&nodes, &fwd, &turns).map(|m| m.0).ok_or(Issue::LinePath { line: l })? };
             self.check_one_track(l, stops, path, &at, back.as_ref().map(|b| (&b.0[..], &b.1[..])))?;
         }
         Ok(nodes)
@@ -2611,7 +2611,7 @@ impl Network {
         let rev = match back {
             Some((rs, b)) => {
                 let nodes: Vec<u32> = std::iter::once(self.path_nodes(b[0]).0).chain(b.iter().map(|&p| self.path_nodes(p).1)).collect();
-                let ra = match_stops(&nodes, rs, &self.stop_reversals(b)).ok_or(Issue::LinePath { line: l })?;
+                let ra = self.match_run(&nodes, rs, &self.stop_reversals(b)).map(|m| m.0).ok_or(Issue::LinePath { line: l })?;
                 let mut r = self.run_passes(b, &ra.into_iter().map(|k| k as u32).collect::<Vec<_>>(), circle);
                 r.reverse();
                 Some(r)
@@ -2619,7 +2619,7 @@ impl Network {
             None => None,
         };
         let n = stops.len();
-        let turns = self.stop_reversals(path);
+        let turns = self.path_reversals(path);
         for j in 0..n {
             // a turn back partway arrives on the same track both ways
             let end = j == 0 || j + 1 == n || turns.contains(&at[j]);
@@ -2647,13 +2647,21 @@ impl Network {
     /// riders, as in a headshunt. T-3541: an end of constructed track with only blueprint beyond
     /// it is still one, so blueprint drawn on from it never moves a running line's turn there.
     pub fn bare_end(&self, n: u32) -> bool {
-        let p = &self.node_ports[n as usize];
-        self.node_platform[n as usize] == 0 && (p.n == 1 || (p.n > 1 && self.built_ports(n) == 1))
+        self.node_platform[n as usize] == 0 && self.turn_end(n)
     }
 
-    /// `path_reversals` that must fall on a stop: all but those at a bare track end.
+    /// T-3595: a track end, station or not (one constructed end, as `bare_end`): a train may turn back
+    /// there without stopping. A station there that is no stop of the line is run into and out of;
+    /// building on from a loose end to a station so never leaves a line with nowhere to turn.
+    pub fn turn_end(&self, n: u32) -> bool {
+        let p = &self.node_ports[n as usize];
+        p.n == 1 || (p.n > 1 && self.built_ports(n) == 1)
+    }
+
+    /// `path_reversals` that must fall on a stop: all but those at a track end (`turn_end`), where a
+    /// train turns back whether the line stops there or not.
     pub fn stop_reversals(&self, path: &[u32]) -> Vec<usize> {
-        self.path_reversals(path).into_iter().filter(|&k| !self.bare_end(self.path_nodes(path[k]).0)).collect()
+        self.path_reversals(path).into_iter().filter(|&k| !self.turn_end(self.path_nodes(path[k]).0)).collect()
     }
 
     /// What kind of loop stops and a path make (T-798).
@@ -3056,8 +3064,8 @@ impl Network {
     /// Fastest path from `from` to `to` over valid moves, by speed-limit running time. `arrived`
     /// is the side the train came in on at `from`, or None at a line's first stop. It leaves on
     /// the other side, or turns back there at `REVERSAL_SEARCH_S` extra; on the way it may turn
-    /// back at a bare track end at the same cost (T-797: never at a station it passes or a
-    /// junction). Returns the path and the side it arrives on at `to`.
+    /// back at a track end at the same cost, a station there or not (T-797, T-3595: never at a
+    /// through station it passes or a junction). Returns the path and the side it arrives on at `to`.
     pub fn find_path(&self, from: u32, to: u32, arrived: Option<u8>) -> Option<(Vec<u32>, u8)> {
         self.find_path_side(from, to, arrived, None)
     }
@@ -3097,8 +3105,8 @@ impl Network {
                 path.reverse();
                 return Some((path, arr_side));
             }
-            // a train may turn back at a track end with no station (T-797 B3), the way it came
-            let back = if self.bare_end(node) { arr.or(Some(0)) } else { None };
+            // a train may turn back at a track end (T-797 B3, T-3595), the way it came
+            let back = if self.turn_end(node) { arr.or(Some(0)) } else { None };
             if let Some(i) = back {
                 on |= (self.dir_ok(p.end[i]) as u8) << i;
             }
@@ -3123,8 +3131,17 @@ impl Network {
     }
 
     /// `route` over stops that are all stations, or the first hop with no path (T-2895: hop k runs
-    /// from stop k to stop k + 1).
+    /// from stop k to stop k + 1). Past a one-way station on the way back's track (T-3565,
+    /// `route_legs`).
     pub fn route_hops(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
+        if let Some(p) = self.route_legs(stops) {
+            return Ok(p);
+        }
+        self.route_hops_plain(stops)
+    }
+
+    /// `route_hops` through every stop.
+    pub fn route_hops_plain(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
         let mut path: Vec<u32> = vec![];
         let mut side = None;
         let closes = stops.len() >= 3 && stops[0] == stops[stops.len() - 1];

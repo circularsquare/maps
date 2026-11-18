@@ -1712,6 +1712,41 @@ fn blueprint_past_a_headshunt_leaves_the_line_running() {
     assert_ne!(a.line_end_turns(id), vec![x as f64], "X is no track end once built past");
 }
 
+/// T-3595: as above, but the new track ends at a station the line does not stop at. Built, X is no
+/// track end; the line turns at the station's end instead, running in and out without stopping.
+#[test]
+fn built_past_a_headshunt_to_a_station_leaves_the_line_running() {
+    use super::super::tests::{line, reversal_fixture_with, station};
+    let mut a = api();
+    let (w, [x, _, _, m, br]) = reversal_fixture_with(false);
+    a.w = w;
+    let id = line(&mut a.w, &[m, br], [6.0, 3.0, 0.0]);
+    let ends = [1.0, x as f64, 0.0, 0.0, 0.0, 0.0, 0.0, -4000.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let net = &a.w.net;
+    let far = (0..net.node_count() as u32).filter(|&n| net.node_ok(n)).min_by(|&p, &q| {
+        let d = |n: u32| (net.node_x[n as usize] + 4000.0).hypot(net.node_y[n as usize]);
+        d(p).total_cmp(&d(q))
+    }).unwrap();
+    station(&mut a.w, far, 200);
+    let ls = &a.w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running, "a station on blueprint past X stops the line");
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running, "built past X to a station, the line no longer runs");
+    assert_eq!(a.line_end_turns(id), vec![far as f64], "it turns at the new end, the station");
+    assert!(!ls.runs.iter().any(|r| r.stop_idx.iter().any(|&k| r.nodes[k as usize] == far)), "and does not stop there");
+    // built on again past that station: the line turns at the newer end, still running
+    let fx = a.w.net.node_x[far as usize];
+    let on = [1.0, far as f64, fx, 0.0, 0.0, 0.0, 0.0, fx - 1500.0, 0.0, 0.0];
+    assert_eq!(a.add_route(&on, &[], 2, false), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let ls = &a.w.svc.lines[id as usize];
+    assert!(ls.ok && ls.running, "built past the station too, the line no longer runs");
+    let turns = a.line_end_turns(id);
+    assert!(turns.len() == 1 && turns[0] as u32 != far, "it turns at the newest end, {turns:?}");
+}
+
 /// T-798: on a ring the first stop's marker closes the line into a circle, then opens it; a
 /// closed line takes new stops inside the loop only.
 #[test]

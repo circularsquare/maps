@@ -52,6 +52,11 @@ impl TrackApi {
                 }
             }
             let mut memo = HopMemo::new();
+            // T-3565: one-way stations go where the track puts them, whatever the cost
+            if let Some((stops, path)) = super::legs::sorted(net, &once, &mut memo) {
+                (d.stops, d.path) = (stops, path);
+                return self.run(Op::Line { id, data: Some(d) });
+            }
             let mut best = Some((vec![], vec![]));
             for &s in &once {
                 best = best.and_then(|b| best_slot(net, &b.0, s, &mut memo));
@@ -104,7 +109,13 @@ impl TrackApi {
     pub fn stop_passed(&mut self, id: u32, station: u32) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(stops) = stopped_at(&self.w.net, &d, station) else { return self.refuse(Issue::LinePath { line: id }) };
-        d.stops = stops;
+        // T-3565: a one-way station goes where the track puts it
+        if let Some((s, p)) = (!d.hand).then(|| super::legs::ordered(&self.w.net, &stops, &mut HopMemo::new())).flatten() {
+            d.path = p;
+            d.stops = s;
+        } else {
+            d.stops = stops;
+        }
         self.run(Op::Line { id, data: Some(d) })
     }
     /// Stops `lo..=hi` out; `lo..=hi` is one interior stop, a start or an end of the line.
@@ -438,8 +449,13 @@ impl TrackApi {
         // way its platform's trains run
         let one_way_at = |n: u32| net.one_side(n).map(|s| [n as f64, net.node_heading[n as usize] + if s == 0 { 0.0 } else { PI }]);
         if !ls.one_way {
+            // T-3565: a one-way station, which the run on the other track passes
+            let mut legs: Vec<u32> = ls.runs.iter().flat_map(|r| r.away.iter().map(|x| x.1)).collect();
+            legs.sort_unstable();
+            legs.dedup();
+            let legs: Vec<f64> = legs.into_iter().filter_map(|n| net.leg_heading(n).map(|th| [n as f64, th])).flatten().collect();
             if ls.is_bus() || !ls.stops.iter().any(|&n| net.one_side(n).is_some()) {
-                return vec![];
+                return legs;
             }
             // T-3348: a stop whose two runs stop at platforms of their own is served both ways
             let n = ls.stops.len();
@@ -447,7 +463,7 @@ impl TrackApi {
             let mut out: Vec<u32> = (0..n).filter(|&k| !split(k)).map(|k| ls.stops[k]).filter(|&n| net.one_side(n).is_some()).collect();
             out.sort_unstable();
             out.dedup();
-            return out.into_iter().filter_map(one_way_at).flatten().collect();
+            return out.into_iter().filter_map(one_way_at).flatten().chain(legs).collect();
         }
         if let Some(plan) = ls.bus.as_ref() {
             let l = line as usize;
@@ -687,6 +703,12 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 /// it stops at (T-3122, `every_pass`).
 fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
+    // T-3565: one-way stations where the track puts them
+    if !hand {
+        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new()) {
+            return Some(r);
+        }
+    }
     let path = net.route(&stops)?;
     if !closed(&stops) {
         return Some(if hand { (stops, path) } else { straighten(net, &stops, &path).unwrap_or((stops, path)) });
@@ -719,15 +741,21 @@ fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32
     if closed(&d.stops) && (lo == 0 || hi == n - 1 || n - (hi - lo + 1) < 3) {
         return None;
     }
-    let at = super::super::net::match_stops(&path_node_list(net, &d.path), &d.stops, &net.stop_reversals(&d.path))?;
+    let at = net.match_run(&path_node_list(net, &d.path), &d.stops, &net.stop_reversals(&d.path))?.0;
     let stops: Vec<u32> = d.stops[..lo].iter().chain(&d.stops[hi + 1..]).copied().collect();
     if stops.windows(2).any(|w| w[0] == w[1]) {
         return None;
     }
+    // T-3565: with one-way stations the path is found again, as they go where the track puts them
+    if !d.hand {
+        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new()) {
+            return Some(r);
+        }
+    }
     let first = if lo == 0 { hi + 1 } else { 0 };
     let last = if hi == n - 1 { lo - 1 } else { n - 1 };
     let path = d.path[at[first]..at[last]].to_vec();
-    super::super::net::match_stops(&path_node_list(net, &path), &stops, &net.stop_reversals(&path))?;
+    net.match_run(&path_node_list(net, &path), &stops, &net.stop_reversals(&path))?;
     Some((stops, path))
 }
 
@@ -739,7 +767,7 @@ fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
     }
     let nodes = path_node_list(net, &d.path);
     let must = net.stop_reversals(&d.path);
-    let at = super::super::net::match_stops(&nodes, &d.stops, &must)?;
+    let at = net.match_run(&nodes, &d.stops, &must)?.0;
     nodes.iter().enumerate().filter(|x| *x.1 == station).find_map(|(k, _)| {
         let pos = at.iter().filter(|&&a| a < k).count();
         let mut stops = d.stops.clone();
@@ -747,7 +775,7 @@ fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
             return None;
         }
         stops.insert(pos, station);
-        super::super::net::match_stops(&nodes, &stops, &must).map(|_| stops)
+        net.match_run(&nodes, &stops, &must).map(|_| stops)
     })
 }
 

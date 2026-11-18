@@ -748,7 +748,7 @@ together. The node's **move table**, derived on every edit with its ports, says 
 arriving through each end may leave by: any end on the other side, with a lane running each way
 the move needs. Routing, a line's check, the badge, junction capacity and the train guard all
 read it. A line's path turns back (arrives and leaves on the same side) only at a station it stops
-at or at a bare track end, one with no station (T-797, 6.3). In a **junction**, two moves conflict
+at or at a track end, a station there or not (T-797, T-3595, 6.3). In a **junction**, two moves conflict
 when their paths cross at the same level (their lanes' positions in opposite order on the two
 sides); merges and diverges do not, as track capacity counts them. A plain double-track Y has one
 crossing pair. Single track joined to the double's track beside it and running that track's way
@@ -1046,7 +1046,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Per-direction stops** (T-3348 stage 1, notes/T-3348.md; `track/perdir.rs`): a line stops at a station, and
   each run stops at the platform on its own track. Where a stop between the ends serves one way only (on one-way
   single track, or a one-track station) and a run goes the other way, that run stops instead at the nearest
-  station of the stop's complex, else within 300 m (the walk riders change on), whose platform its trains pass on
+  station of the stop's complex, else within 300 m (the walk riders change on; for a one-way station, below, only
+  one within 50 m, complex or not), whose platform its trains pass on
   their own track running roughly its way (within 60 degrees), not already a stop of the line (`way_stops`). The
   line still lists one stop; its return run goes round by the other station (`back_run_of`, which the T-3094 way
   back now is); ends and stops where trains turn back keep their own. Run 0 takes another station only where its
@@ -1055,12 +1056,30 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   both ways this way has no half dot. A click adding a station that serves one way (`best_slot`) also tries the
   others of its group that do, and keeps the one whose route costs least (the clicked one on a tie), so a click on
   either leg of a split adds the one the line runs out along. So a double split into two one-way singles with a
-  station on each (Anita's case, 2026-11-13) is one stop, each way on its own leg. Demand follows: the snapshot
+  station on each, platforms within 50 m, is one stop, each way on its own leg (farther apart, each is a one-way
+  station, below). Demand follows: the snapshot
   gives a line's return-run stations where they differ (`backStops`, `TrackApi::line_back_stops`), demand's
   return-run route node stands at that station (`demand::Network::back_stops`, `set_back_stops`), so its riders
   board and alight there and it counts as the line's station for access; the figures credit each run's riders
   to its own station. The map draws the return run's station as a stop of the line, and a station a run stops
   at this way can be taken out only with the line's stop (`StationInUse`, as a listed stop).
+- **One-way stations** (T-3565, notes/T-3565.md; `track/perdir.rs` `leg_stop`, `track/wasm/legs.rs`): a station on
+  one-way single track (both its pieces single and one way; a one-track station on double track is none) is a
+  one-way station. A line stopping at one is served there once a round trip, by the run whose track passes it, where
+  that run passes it; the other run goes by on its own track, neither turning back nor looping to reach it. Routing
+  skips the one-way stations on the other run's track (`route_legs`, first in `route_hops`); one neither run's track
+  passes is routed through as any stop. The other run keeps the stop in its per-stop arrays as a pass (`run.pass`,
+  `Run::away`; placed at its path's node nearest the station; no dwell, no riders, no departures there). A one-way
+  station's place in the stop list comes from the track, never from click order: the line's other stops are a
+  skeleton in the line's order (a click puts a new one where `best_slot` puts it), its one-way stations a set, each
+  put in the skeleton's gap where the run passing it does, run 0's in its order, then run 1's reversed (`flatten`);
+  those past the skeleton's ends go in where they cost least, the skeleton tried both ways round. So the same
+  stations make the same line whatever order they were clicked in, up to its direction. Every stop edit (click, set,
+  drop, end, sort, a passed station stopped at) and every line of a loaded save go through it; a line ordered by hand
+  (T-2895) keeps the player's order and is still served once at each. A one-way station pairs with one on the other
+  leg only when their platforms are within 50 m (Anita, 2026-11-17): a lone listed one with an unlisted pair is one
+  stop served each way at its own platform (per-direction stops, above); listed together, each is a one-way station.
+  Any number may sit on a leg, none on the other included. Half dots and the departures board show each one way.
 
 #### Line groups
 
@@ -1088,13 +1107,15 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   turns back at the stop, at a loop's ends, below two stops, and for a bus line (a bus or ferry loop is 6.7).
   A line with one stop or none is inactive: no route, no trains, nothing refused (T-1242).
   **Reversing partway** (T-797, notes/T-797.md): a line's path may turn back at a stop or at a
-  bare track end (a node with one edge end and no station, such as a headshunt; or one with one
-  constructed edge end and only blueprint beyond, so blueprint drawn on from an end never moves a
-  running line's turn there, T-3541), nowhere else. An edit that builds past a line's track end
+  track end (a node with one edge end, such as a headshunt; or one with one constructed edge end and
+  only blueprint beyond, so blueprint drawn on from an end never moves a running line's turn there,
+  T-3541), nowhere else. A station at a track end that is no stop of the line is turned at the same
+  way, without stopping (T-3595: so building on from a loose end a line turns at, to a station, never
+  leaves it nowhere to turn; Network::turn_end). An edit that builds past a line's track end
   routes the line again through its same stops in the same edit, never with more turns back.
   Nothing stores it: a reversal is two path entries arriving at and leaving a node on the same
-  side, and stops are matched to the path so every reversal not at a bare end falls on one. The
-  route search may reverse at a hop's first stop, or at a bare end on the way, for 600 s of search
+  side, and stops are matched to the path so every reversal not at a track end falls on one. The
+  route search may reverse at a hop's first stop, or at a track end on the way, for 600 s of search
   time each (`REVERSAL_SEARCH_S`), and the stop insertion counts each reversal as twice the
   route's length, at least 5 km (`order_cost`, `REVERSAL_INSERT_M`, T-1899), so a route without one
   wins unless it is over three times as long. A reversing train
@@ -1102,7 +1123,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   arrival and leaves from d past it in the run's unfolded offsets (`Run::jump`, the same place on
   the ground; d is half the train at a through station, half the platform at a dead end, half the
   train plus 20 m at a bare end, each at most half the way to the next place a train stands), so
-  it is drawn jumping once as it stops. A bare end is no stop: the profile stands the turnaround
+  it is drawn jumping once as it stops. A turn back at no stop is no stop: the profile stands the turnaround
   there (`Run::ends`) and leaves it out of the stop times, so riders through it pay the stand in
   their ride. The stand is inside the run's duration, so the round trip, fleet
   and demand need nothing new; trains still enter and leave only at the two ends.

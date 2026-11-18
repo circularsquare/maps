@@ -32,7 +32,10 @@ pub struct Run {
     /// `Network::run_passes`). It keeps its place in every per-stop array, timed as the train passes
     /// (`arr` and `dep` alike), so the runs' stops stay the line's; empty for none.
     pub pass: Vec<bool>,
-    /// Bare track ends where trains reverse between stops (T-797 B3): index into `nodes`, where
+    /// T-3565: the one-way stations on the other run's track (`Network::match_run`), as (stop index,
+    /// station): passed (`pass`), each placed at the node of this run's path nearest it.
+    pub away: Vec<(u32, u32)>,
+    /// Track ends where trains reverse between stops (T-797 B3; a station there no stop, T-3595): index into `nodes`, where
     /// the train's middle stands on arrival and how far on it leaves from, as `stop_s`/`jump`.
     /// Not stops: the profile stands the turnaround there and leaves them out of `arr`/`dep`.
     pub ends: Vec<(u32, f64, f64)>,
@@ -110,6 +113,9 @@ impl LineSvc {
             return if self.ferry && k < n { plan.stops[if run == 0 { k } else { n - 1 - k }].station } else { None };
         }
         let r = self.runs.get(run)?;
+        if let Some(&(_, s)) = r.away.iter().find(|x| x.0 as usize == k) {
+            return Some(s);
+        }
         r.nodes.get(*r.stop_idx.get(k)? as usize).copied()
     }
 }
@@ -561,15 +567,23 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         f[0] = 0.0;
     }
     let turns = net.stop_reversals(&run.segs);
-    run.stop_idx = super::net::match_stops(&run.nodes, &stops, &turns)?.into_iter().map(|k| k as u32).collect();
-    if stops.iter().any(|&s| net.one_side(s).is_some()) {
+    let (at, stopped) = net.match_run(&run.nodes, &stops, &turns)?;
+    run.stop_idx = at.into_iter().map(|k| k as u32).collect();
+    run.away = stopped.iter().enumerate().filter(|x| !*x.1).map(|(j, _)| (j as u32, stops[j])).collect();
+    if stops.iter().any(|&s| net.one_side(s).is_some()) || !run.away.is_empty() {
         run.pass = net.run_passes(&run.segs, &run.stop_idx, net.line_loop(l) == LoopKind::Circle);
+        for &(j, _) in &run.away {
+            run.pass[j as usize] = true;
+        }
         if !run.pass.contains(&true) {
             run.pass.clear();
         }
     }
     let node_s: Vec<f64> = run.stop_idx.iter().map(|&i| run.node_s[i as usize]).collect();
-    let bare: Vec<usize> = net.path_reversals(&run.segs).into_iter().filter(|&k| net.bare_end(run.nodes[k])).collect();
+    // where it turns back at a stop it stands its turnaround there; anywhere else (a track end, T-797 B3, T-3595) too, as no stop
+    let reversals = net.path_reversals(&run.segs);
+    let stops_at: Vec<u32> = (0..stops.len()).filter(|&j| !run.away.iter().any(|x| x.0 as usize == j)).map(|j| run.stop_idx[j]).collect();
+    let bare: Vec<usize> = reversals.iter().copied().filter(|&k| !stops_at.contains(&(k as u32))).collect();
     // Where trains stand still, in path order: a reversal's train takes at most half the gap to
     // its neighbours on each side.
     let mut marks: Vec<f64> = node_s.iter().copied().chain(bare.iter().map(|&k| run.node_s[k])).collect();
@@ -592,7 +606,7 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
         // Unused blueprints do not move the stops of a constructed service. Planned
         // services still preview the complete planned station geometry.
         let ports = if running { net.built_ports(st) } else { net.node_ports[st as usize].n as usize };
-        let turn = turns.contains(&(run.stop_idx[j] as usize));
+        let turn = reversals.contains(&(run.stop_idx[j] as usize)) && !run.away.iter().any(|x| x.0 as usize == j);
         run.turn.push(turn);
         run.jump.push(0.0);
         if turn {

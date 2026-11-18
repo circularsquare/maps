@@ -736,7 +736,7 @@ impl TrackApi {
                 net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
-                if stop_every_pass(&mut self.w.net) {
+                if stop_every_pass(&mut self.w.net) | legs::straighten_legs(&mut self.w.net) {
                     self.w.reload();
                 }
                 // T-2669: the last game's lines' prices are not this one's; the app sends them again
@@ -863,6 +863,7 @@ mod ferry;
 mod buildings;
 mod twin;
 mod onetrack;
+mod legs;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {
@@ -937,6 +938,9 @@ type HopMemo = std::collections::HashMap<(u32, u32, u8, u8), Option<(Vec<u32>, u
 fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
     if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
         return None;
+    }
+    if let Some(p) = net.route_legs(stops) {
+        return Some(p);
     }
     let mut path = vec![];
     let mut side = None;
@@ -1020,7 +1024,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
     let old = round_guess(net, line, stops, path);
     let nodes = nodes_of(net, path);
     let (_, k) = net.loop_back(path, true, nodes.len(), old + turn_allowance(old))?;
-    let at = super::net::match_stops(&nodes, stops, &net.stop_reversals(path))?;
+    let at = net.match_run(&nodes, stops, &net.stop_reversals(path))?.0;
     let branch = (0..n).rev().find(|&i| at[i] <= k)?;
     let mut new = stops.to_vec();
     new.extend((0..n - 1).rev().filter(|&i| at[i] <= k).map(|i| stops[i]));
@@ -1032,7 +1036,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
 fn turn_first(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut HopMemo) -> Option<Turn> {
     let n = stops.len();
     let nodes = nodes_of(net, path);
-    let at = super::net::match_stops(&nodes, stops, &net.stop_reversals(path))?;
+    let at = net.match_run(&nodes, stops, &net.stop_reversals(path))?.0;
     let old = round_guess(net, line, stops, path);
     let (_, k) = net.loop_back(path, false, at[open_prefix(stops)], old + turn_allowance(old))?;
     let mut new: Vec<u32> = (1..n).filter(|&i| at[i] > k).map(|i| stops[i]).collect();
@@ -1181,6 +1185,12 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
     if !net.line_ok(line) {
         return None;
     }
+    // T-3565: a line with one-way stations served once orders them by the track
+    if !net.line_hand[line as usize] {
+        if let Some(r) = legs::insert(net, net.line_stops(line), station, memo) {
+            return Some(r);
+        }
+    }
     let (stops, path) = best_slot(net, net.line_stops(line), station, memo)?;
     Some((every_pass(net, &stops, &path), path))
 }
@@ -1260,7 +1270,7 @@ fn straighten(net: &Network, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, V
 fn stop_spread(net: &Network, stops: &[u32], path: &[u32]) -> f64 {
     let Some(&first) = path.first() else { return 0.0 };
     let nodes: Vec<u32> = std::iter::once(net.path_nodes(first).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();
-    let Some(at) = super::net::match_stops(&nodes, stops, &net.stop_reversals(path)) else { return f64::INFINITY };
+    let Some((at, _)) = net.match_run(&nodes, stops, &net.stop_reversals(path)) else { return f64::INFINITY };
     let mut off = Vec::with_capacity(path.len() + 1);
     off.push(0.0);
     for &p in path {
@@ -1306,7 +1316,7 @@ fn reach_from(net: &Network, stops: &[u32]) -> (Vec<bool>, Vec<bool>) {
         let p = &net.node_ports[node as usize];
         let arr = p.find(super::net::path_edge(st), 1 - super::net::path_dir(st));
         let on = arr.map_or(0, |i| net.node_moves[node as usize].link[i]);
-        let link = if net.bare_end(node) { on | 1 << arr.unwrap_or(0) } else { on };
+        let link = if net.turn_end(node) { on | 1 << arr.unwrap_or(0) } else { on };
         for k in super::lanes::ends_in(link) {
             let c = p.end[k];
             if !seen[c as usize] {
@@ -2261,6 +2271,8 @@ mod onetrack_tests;
 mod tram_tests;
 #[cfg(test)]
 mod perdir_tests;
+#[cfg(test)]
+mod oneleg_tests;
 #[cfg(test)]
 mod gap_tests;
 /// T-2414: close crossings, ends near water and islands.
