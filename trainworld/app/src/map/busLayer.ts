@@ -25,6 +25,8 @@
 // (`lineAt`, `stopAt`), on pointer moves only.
 
 import { t } from "../i18n";
+import { render } from "preact";
+import { Icon } from "../ui/widgets";
 import { speedColour, profitColour, rgb, rgbf, LEVEL_COLOURS } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
 import type { WorldView } from "../game/types";
@@ -1067,13 +1069,23 @@ function nameRow(w: WorldView, line: number, deg: number | null = null): HTMLEle
   return factRow(held, name);
 }
 
-/** The tag for a bus line (hovering its route): as a rail line's, its name, that it is a bus, and
+/** The dock's bus or ferry icon at the tag's icon size, ending a line's name row. */
+function vehicleIcon(kind: "bus" | "ferry"): HTMLSpanElement {
+  const s = document.createElement("span");
+  s.className = "tag-vehicle";
+  s.setAttribute("aria-label", t(kind === "ferry" ? "busLayer.ferryLine" : "busLayer.busLine"));
+  render(Icon[kind](), s);
+  return s;
+}
+
+/** The tag for a bus line (hovering its route): as a rail line's, its name and its vehicle's icon, and
  * `rows` (its riders there) once it runs. */
 export function busLineTip(w: WorldView, line: number, rows: TipLine[] = []): TipLine[] {
   const l = w.save.lines.find((x) => x.num === line);
   const b = l ? w.lineStats[l.id]?.bus : undefined, built = b ? b.built : true;
-  const kind = b?.ferry ? t("busLayer.ferryLine") : t("busLayer.busLine");
-  return built ? [nameRow(w, line), kind, ...rows] : [nameRow(w, line), kind, t("busLayer.notRunning")];
+  const name = nameRow(w, line);
+  if (typeof name !== "string") name.append(vehicleIcon(b?.ferry ? "ferry" : "bus"));
+  return built ? [name, ...rows] : [name, t("busLayer.notRunning")];
 }
 
 /** The tag for one of its stops. */

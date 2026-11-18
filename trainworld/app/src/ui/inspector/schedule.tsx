@@ -454,7 +454,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
     if (!pending) return null;
     return (
       <>
-        <div class="h divided">{shown !== null && <span class="pending-note muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</div>
+        <div class="h divided">{shown !== null && <span class="pending-note muted">{pendingLabel(pending)}</span>}</div>
         <ul class="rows"><Row label={t("schedule.riders")}>{shown !== null ? count(shown) : <span class="muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</Row></ul>
       </>
     );
@@ -465,7 +465,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
   // T-2392: while the riders are worked out again the old figures stay, the label above them
   return (
     <>
-      <div class="h divided">{pending && <span class="pending-note muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</div>
+      <div class="h divided">{pending && <span class="pending-note muted">{pendingLabel(pending)}</span>}</div>
       <ul class="rows">
         <Row label={t("schedule.riders")}>{count(shown ?? d.riders)}</Row>
         {!pending && extra}
