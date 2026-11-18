@@ -174,9 +174,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
-- T-3664 [P2] {L:workflow} Faster sim test builds for agents (taking, 2026-11-18, agent testbuild)
-  - Context: Proposal 4 of research/workflow-2026-11-18.md, approved by you 2026-11-18 ("lets do them all"). An edit-test cycle takes 196 s; 64 s measured with link-time optimisation off and incremental builds on, tests 11 s either way. Landing and 8800 builds keep today's settings.
-  - Goal: Agents' `cargo test` and their own WebAssembly builds use a fast profile (about 64 s a warm cycle); shipped builds unchanged; CLAUDE.md's Rust line says which to use.
 - T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (taking, 2026-11-18, agent playkeep)
   - Context: Proposal 1, approved 2026-11-18. Agents spent 388 of 1,278 minutes (30%) waiting on the game; each probe reloads it (13 s new game, 129 s the real save); 41 of 71 scratch browser scripts skip play.mjs; 173 blocked sleeps since 11-16.
   - Goal: `play start <city|save>` keeps a game open; `play do` answers a probe in a few seconds with short JSON, waiting on conditions not fixed times; `play sim` reads the simulation; a `wait` command replaces hand-written polling; CLAUDE.md points agents to it. Snapshot/restore tried and kept only if it works.
@@ -472,9 +469,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms (taking, 2026-11-18, agent sideplat)
-  - Context: Your pad, 2026-11-18, a Discord report (Zui), screenshot artifacts/trainworld/board/20261118-071350-c9cd.png: "The train is supposed to use the 2 side platforms in the top right station and then turn back at the single track platform on the left but it kept insisting to use the passing tracks in the center. it only correctly pathfinds after I remove the tracks it's not supposed to be using". You: "might be related to the amsterdam issue" (T-3647).
-  - Goal: A line routes through the platforms of the stations it stops at, not through the station's passing tracks; or folded into T-3647 if it is the same cause.
 - T-3652 [P3] {L:community} Newest view in Community
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "sort community by newest". Community has Random, Biggest and Most liked today.
   - Goal: Community has a Newest view beside the other three; a server change goes to you before deploy.

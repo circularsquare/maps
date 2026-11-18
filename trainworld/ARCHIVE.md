@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3664 [P2] {L:workflow} Faster sim test builds for agents (2026-11-18): profile.agent + agent_cargo.py test/wasm (claims 3 cores under rust-<tree>); warm test cycle 175 s -> 17-18 s per suite, both suites 70 s; both suites pass; shipped wasm/landing/snap/deploy paths untouched. notes/T-3664.md.
+- T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms (2026-11-18): perdir route_legs/leg_run, legs place, back_run_of; straighten_legs on load; checker PASS (12 saves identical to master, Zui layout 2373 -> 824 s in every click order, undo/redo exact); covers inbox report 1794752820 (Nagoya) notes/T-3651.md.
 - T-3669 [P3] {L:workflow} One-line index of the checks (2026-11-18): INDEX.md 379 lines, broken marks for t1201 (needs a rewrite for today's fare rows), t1550 (T-3663), t2626 (too slow); code-map 1085 -> 686 lines. notes/T-3669.md.
 - T-3665 [P2] {L:workflow} Landing guards (2026-11-18): tree_guard.py hook, append-only conflict union, blocker messages, removeTree with process names and leftover cleanup, provisional <tree>-N changelog ids; tested in a throwaway repo. notes/T-3665.md.
 - T-3667 [P2] {L:workflow} Handoff state by command, asks by command (2026-11-18): handoff.py status (read-only, ~4 s, ~30 lines) and asks.py add/answer/list with asks-log.jsonl; proposed skill and doc text applied by the orchestrator. notes/T-3667.md.

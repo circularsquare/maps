@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c025",
+      "text": "fixed lines with a stop on each of two one way tracks taking the passing tracks between them instead, and turning back at the wrong station",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3651",
+      "by": "sideplat",
+      "at": "2026-11-18T15:27:00Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c024",
       "text": "added a settings gear, the language and submit feedback to the start menu's bottom line, and submit feedback to the failed to load screen",
       "edited": "added a settings gear, language and submit feedback at the bottom of the start menu, and submit feedback on the failed to load screen",

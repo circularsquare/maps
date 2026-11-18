@@ -118,11 +118,14 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   and reads panels and money as shown. Build fixtures through it rather than edits where the player's path matters;
   a new read goes in `checks/lib/reads.mjs`.
 - **The real save** is `T-007-real-nyc.save`. `?new=1` never writes a slot.
-- **Typecheck** with `npm run check --prefix app`; `npm run wasm --prefix app` when Rust changed. No full builds, no
-  commits (a brief that touches shonei-server may say to commit there; pushing and deploying stay the orchestrator's).
-- **Rust**: `CARGO_BUILD_JOBS=3`, keep the crate compiling between edits. After a sim/ change run
-  `cargo test --release` and `cargo test --release --features demand --lib` from trainworld/sim. Add a function to
-  the WASM interface in Rust before any app code calls it.
+- **Typecheck** with `npm run check --prefix app`; `python trainworld/tools/agent_cargo.py wasm` when Rust changed.
+  No full builds, no commits (a brief that touches shonei-server may say to commit there; pushing and deploying stay
+  the orchestrator's).
+- **Rust**: keep the crate compiling between edits. After a sim/ change run `python trainworld/tools/agent_cargo.py
+  test` (both suites on the fast `agent` profile: no LTO, incremental, about 70 s warm against 180 s for `cargo test
+  --release`; it claims its cores in the ledger and releases them). Build your tree's WASM with `agent_cargo.py
+  wasm`, not `npm run wasm`, which is the shipped build and stays for landing. Your tests link differently from the
+  shipped build (DECISIONS 2026-11-18). Add a function to the WASM interface in Rust before any app code calls it.
 - **CPU**: the cap is the ledger's (`python cores.py list`). Playwright checks claim for themselves
   (`checks/cores.mjs`); claim by hand for the pipeline, Rust and scripts that launch their own browser. A page's
   demand workers take about a core each: cap them to your claim.
