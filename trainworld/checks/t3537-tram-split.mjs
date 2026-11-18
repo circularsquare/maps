@@ -3,8 +3,9 @@
 // T-3537, through the pointer and the real tool, street snap on, single track picked, at ZOOM (default 15):
 //   two doubles on one street, D1 west and D2 east, loose ends facing; from D1's east end a single 5 px left of
 //   its centre line joins D1's left track and ends 5 px left of D2's west end on D2's left track; a second single
-//   from the same end (no longer loose) on the right tracks; a third, turning off at the first corner, on the left
-//   track; one from the end's centre merges both tracks. Each time the ghost's joins agree with the built piece's.
+//   from the same end (no longer loose) on the right tracks; a third, turning off at the first corner, on the track
+//   of its own side (right; T-3609), and the same turn from a loose end on the track under the pointer (left);
+//   one from the end's centre merges both tracks. Each time the ghost's joins agree with the built piece's.
 // T-3538, on track laid by edits: a tram double, two one-way singles 500 m apart, double again; a line run out over
 //   one leg and back over the other (a loop that turns back at both ends, its stops on both legs) has no turn-back
 //   mark at either end and no turn icon in its stop list; a line that turns back partway (N, S, L) and a loop that
@@ -120,6 +121,18 @@ try {
   };
   // D2's west end, its way out pointing back west: its left is D1's right
   const d2 = (off) => [w2.x + w2.uy * off, w2.y - w2.ux * off];
+  // the first corner: the street crossing south of D1's end, found at the screen's centre on D1's end
+  const cornerPoint = () => page.evaluate(([x, y, ux, uy]) => {
+    const tw = window.tw, r = tw.map.getContainer().getBoundingClientRect();
+    // 70 px on and 90 px to the right of the way out, on the nearest street
+    const p = tw.map.unproject([x - r.left + ux * 70 - uy * 90, y - r.top + uy * 70 + ux * 90]), q = tw.tools.street.landing(p.lng, p.lat), s = tw.map.project(q);
+    return [r.left + s.x, r.top + s.y];
+  }, [e1.x, e1.y, e1.ux, e1.uy]);
+  // turning off at the first corner from the loose end: a press 5 px left, the turn to the right; the pointer's track wins
+  const cornerLoose = await single(OFF, await cornerPoint());
+  check(cornerLoose.start === 1 && cornerLoose.ghost?.joins?.[0] === 1, 'a single turning off at the first corner from a loose end joins the track under the pointer (left)', JSON.stringify(cornerLoose));
+  await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
+  await wait(1200);
   const left = await single(OFF, d2(-OFF), -OFF);
   check(left.h?.join && !left.h.merge, `hover ${OFF} px left of D1's end picks a track`, JSON.stringify(left.h));
   check(left.hEnd?.join, `hover ${OFF} px off D2's end picks a track`, JSON.stringify(left.hEnd));
@@ -143,15 +156,10 @@ try {
   await page.screenshot({ path: join(ARTIFACTS, `t3537_${SHOTS}_end.png`), clip: { x: 500, y: 250, width: 700, height: 400 } });
   await page.evaluate(([c, z]) => window.tw.map.jumpTo({ center: c, zoom: z }), [ends.d1[1], Z]);
   await settle(1500);
-  // turning off at the first corner: the street crossing south of D1's end
-  const cornerTo = await page.evaluate(([x, y, ux, uy]) => {
-    const tw = window.tw, r = tw.map.getContainer().getBoundingClientRect();
-    // 70 px on and 90 px to the right of the way out, on the nearest street
-    const p = tw.map.unproject([x - r.left + ux * 70 - uy * 90, y - r.top + uy * 70 + ux * 90]), q = tw.tools.street.landing(p.lng, p.lat), s = tw.map.project(q);
-    return [r.left + s.x, r.top + s.y];
-  }, [e1.x, e1.y, e1.ux, e1.uy]);
+  // the same press and turn where the double has split into two singles (T-3609): the single takes the track on its own side, the right
+  const cornerTo = await cornerPoint();
   const corner = await single(OFF, cornerTo);
-  check(corner.start === 1 && corner.ghost?.joins?.[0] === 1, 'a single turning off at the first corner joins the left track', JSON.stringify(corner));
+  check(corner.start === 2 && corner.ghost?.joins?.[0] === 2, 'at the split a single turning right takes the right track whatever side was pressed', JSON.stringify(corner));
   await page.screenshot({ path: join(ARTIFACTS, `t3537_${SHOTS}_corner.png`), clip: { x: 450, y: 200, width: 700, height: 500 } });
   await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
   await wait(1200);
