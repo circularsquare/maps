@@ -45,8 +45,10 @@ const solve = async (k, version) => {
 const close = (x, y, tol, what) => assert(Math.abs(x - y) <= tol * Math.max(1, Math.abs(y)), `${what}: ${x} vs ${y}`);
 const sum = (xs) => xs.reduce((s, v) => s + v, 0);
 
-const plain = marketPacks(ids);
-const pairs = real ? plain : marketPacks(ids).map((p) => (p.id === homeId ? { id: p.id, pack: JSON.stringify(withPairs()) } : p));
+const strip = (p) => { const v = JSON.parse(p.pack); for (const k of Object.keys(v)) if (k.startsWith('everyday_') && !k.startsWith('everyday_kept')) v[k] = []; return { id: p.id, pack: JSON.stringify(v) }; };
+// the control has no pairs: the made-up case writes none into the pack, the real one has them removed
+const plain = real ? marketPacks(ids).map(strip) : marketPacks(ids);
+const pairs = real ? marketPacks(ids) : marketPacks(ids).map((p) => (p.id === homeId ? { id: p.id, pack: JSON.stringify(withPairs()) } : p));
 const kc = await worker(plain), kp = await worker(pairs);
 const [control, res] = [await solve(kc, 1), await solve(kp, 1)];
 assert.equal(res.length, 5);
@@ -107,10 +109,10 @@ const sel = async (id, end, day, version = 1) => {
   assert(r.packed, `icSel ${id} end ${end}`); assert.equal(r.mask, 31);
   return r.packed;
 };
-// T-2747: the far zones packed after the head, each gid, x, y, place and 38 numbers (the everyday ones from +12)
-const layout = (v) => { const h = 3 + 12 * P, nz = v[h]; assert(v.length === h + 1 + 42 * nz, `layout: ${v.length} numbers, ${P} places`); return { nz, r0: h + 1 }; };
-const block = (v, ki, dir) => { const { nz, r0 } = layout(v); const rows = []; for (let z = 0; z < nz; z++) { const o = r0 + 42 * z + 12 + 6 * ki + 3 * dir; if (v[o] > 0) rows.push([v[r0 + 42 * z], v[o], v[o + 1], v[o + 2]]); } return rows; };
-const EK = [0, 1, 2, 3, 5];
+// T-2747: the far zones packed after the head, each gid, x, y, place and 44 numbers (T-3500 added airports) (the everyday ones from +12)
+const layout = (v) => { const h = 3 + 12 * P, nz = v[h]; assert(v.length === h + 1 + 48 * nz, `layout: ${v.length} numbers, ${P} places`); return { nz, r0: h + 1 }; };
+const block = (v, ki, dir) => { const { nz, r0 } = layout(v); const rows = []; for (let z = 0; z < nz; z++) { const o = r0 + 48 * z + 12 + 6 * ki + 3 * dir; if (v[o] > 0) rows.push([v[r0 + 48 * z], v[o], v[o + 1], v[o + 2]]); } return rows; };
+const EK = [0, 1, 2, 3, 4, 5];
 for (const [id, end, dir] of [[homeId, 0, 0], [awayId, 1, 1]]) {
   const v = await sel(id, end, 0);
   EK.forEach((k, ki) => {
