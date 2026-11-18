@@ -294,6 +294,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3602 [P2] {L:timetables} Use default in place of Clear default (taking, 2026-11-17, agent usedefault)
   - Context: You, 2026-11-17: "we should probably get rid of "clear default" (we rarely want to do that i think, and if someone watns to do it they can just clear their headways and set that as default) and instead show like "Match default" or "set to default" or something."
   - Goal: The schedule panel's default row has Set as default and a button that gives this line the default headways; no Clear default; in v0.4.0.
+- T-3603 [P2] {L:timetables} Weekend headway edits flash a decimal headway (taking, 2026-11-17, agent weekendedit)
+  - Context: You, 2026-11-17: "when changing the weekend headways it still momentarily shows a weird decimal time like 6.34 min, then corrects a little later." The lag you mentioned: "probably just my computer overall. ignore the lag".
+  - Goal: A weekend headway edit shows the stepped headway at once, never an in-between decimal; in v0.4.0.
 - T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
