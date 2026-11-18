@@ -56,15 +56,19 @@ function carEquation(c: CarCost): string {
 /** The train's effective time as an equation (T-3404): the main route's terms in the order of the rows, with
  * the walks as the felt minutes the market knows them by, and the model's figure, which pools every route
  * the riders use, as the last term. */
-function trainEquation(t: MarketPeriod, r: TripRoute): string {
+function trainEquation(t: MarketPeriod, r: TripRoute, sc: number): string {
   const felt = { ...t, pairs: t.pairs.map((p) => ({ ...p, accessMin: p.accessPerceived, egressMin: p.egressPerceived })) };
-  const terms: Term[] = routeTerms(felt, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
-    label: termLabel(x.id),
-    real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
-    weight: x.weight,
-    perceived: x.perceived,
-    ...(x.unit === "usd" ? { usd: true } : {}),
-  }));
+  const terms: Term[] = routeTerms(felt, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => {
+    // T-3622: the fare in the money the rider pays (the Fare row's), not in the curve's dollars
+    const s = x.id === "fare" ? sc : 1; // i18n-ignore: term id
+    return {
+      label: termLabel(x.id),
+      real: x.unit === "usd" ? usd(x.real * s) : x.real > 0 ? num1(x.real) : "",
+      weight: x.weight / s,
+      perceived: x.perceived,
+      ...(x.unit === "usd" ? { usd: true } : {}),
+    };
+  });
   const rest = t.railPerceived - terms.reduce((s, x) => s + x.perceived, 0);
   // i18n-ignore: term id
   if (Math.abs(rest) >= 0.05) terms.push({ label: termLabel("choice of routes"), real: "", weight: 1, perceived: rest });
@@ -483,7 +487,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               </li>
             )}
             {Number.isFinite(t.railPerceived) && (
-              <li data-tip={trainEquation(t, main)}>
+              <li data-tip={trainEquation(t, main, sc)}>
                 <span class="grow">{tr("tripText.effectiveTime")}</span>
                 <span class="val">{minText(t.railPerceived)}</span>
               </li>
