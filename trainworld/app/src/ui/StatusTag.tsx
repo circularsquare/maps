@@ -3,12 +3,13 @@
 // Its hover says more. T-2693: a thin bar in every case (see `share` below); no ring since T-2728.
 
 import { computed, effect, signal } from "@preact/signals";
-import { demandBehindFrom, demandHeld, demandScope, demandStep, demandSolving, demandWork, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
+import { demandBehindFrom, demandHeld, demandScope, demandStep, demandSolving, demandWork, editHeld, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
-import { STAGE_TEXT } from "../game/loadBar";
+import { nextLeft, STAGE_TEXT } from "../game/loadBar";
+import { editLeft, editPrior } from "../game/editLeft";
 import { loadFailText } from "../game/loadText";
 import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
 import { selection } from "../game/ui";
@@ -69,9 +70,33 @@ function waitText(zone: CityId): string {
 /** its hover: the time left of a whole solve (or the zone's own load), or that nothing has come for a while */
 function waitTip(zone: CityId): string {
   second.value;
+  // T-3599: an edit's solve: the time left of it
+  if (waitText(zone) === t("statusTag.calculatingAfterChange")) return afterChangeLeft();
   const z = zoneSteps.value.get(zone);
   const left = z ?? (focusZones.value.get(zone) === false ? undefined : solveLeft.value ?? undefined);
   return loadLines(left ? { leftMs: left.leftMs, at: left.at } : undefined).join("\n");
+}
+
+/** T-3599: the time left of an edit's solve as the hover shows it, counted down between estimates and taking
+ * a new one in as `nextLeft` does (so it never climbs by degrees); null until the solve has one */
+const editShown: Record<"all" | "view", { leftMs: number; at: number } | null> = { all: null, view: null };
+// (a solve that starts as a held edit's whole wait goes on keeps the count: `editHeld` clears just after)
+effect(() => { if (!demandWork.value && !editHeld.peek()) editShown.all = editShown.view = null; });
+/** (`view`: to the zone in view's figures, for the tag saying they are being recomputed) */
+function afterChangeLeft(part: "all" | "view" = "all"): string {
+  const now = performance.now();
+  const w = demandWork.value;
+  // (a load's solve, or one after memory was freed, has the load's estimate)
+  let est = w ? editLeft(w, now, editPrior, part) : part === "all" && solveLeft.value ? Math.max(0, solveLeft.value.leftMs - (now - solveLeft.value.at)) : null;
+  // a newer edit waits for this solve to end, then is solved as long again, roughly
+  const held = editHeld.value;
+  if (w && est !== null && held) est += now - held.sentAt + est;
+  const was = editShown[part];
+  if (est !== null) editShown[part] = { leftMs: nextLeft(was ? was.leftMs : null, est, was ? now - was.at : 0), at: now };
+  const s = editShown[part];
+  if (!s) return t("statusTag.leftUnknown");
+  const ms = Math.max(0, s.leftMs - (now - s.at));
+  return ms < 60_000 ? t("statusTag.leftUnderMinute") : t("statusTag.leftMinutes", { n: Math.round(ms / 60_000) });
 }
 /** T-2613: terrain has been downloading for TERRAIN_SLOW_MS (grids and masks for the clock worker, or
  * the hillshade's tiles), so a quick download on a pan never flashes the tag */
@@ -226,6 +251,11 @@ export function StatusTag() {
     : !demandView.value ? busy
     : bubblesWaiting.value ? ""
     : clickWait.value ? waitTip(clickWait.value)
+    : busy === t("statusTag.calculatingAfterChange") ? afterChangeLeft()
+    // (a wait past a game day at the cap, 6 min, says how far behind instead: the same time left)
+    : behindDays.value >= 1 && busy === t("statusTag.behind", { count: behindDays.value }) && demandUpdating.value ? afterChangeLeft()
+    // T-3599: the zone in view's trips recomputed after an edit
+    : viewRecomputing.value && busy === recomputing() && demandUpdating.value && demandBehindFrom.value !== null ? afterChangeLeft("view")
     : "");
   const tip = [base, !onTerrain && clock.capped.value ? t("statusTag.capped", { cap: DEMAND_CAP }) : ""].filter(Boolean).join("\n") || undefined;
   const failed = onTerrain ? terrainFailed : !!loadFailure.value || !!zoneFailure;

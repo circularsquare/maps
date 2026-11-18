@@ -439,8 +439,13 @@ export type FromDemand =
    * of this worker's periods in the clusters solved, how many were kept and how many solved */
   /** T-2729: an edit's solve's units on this worker, done and planned by stage (0 its local solve, 1
    * the whole solve), the stage of the unit begun or ended, whether one is in hand (`busy`) and each
-   * stage's mean unit time, ms (0: not known) */
-  | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number] }
+   * stage's mean unit time, ms (0: not known). T-3599: `left`, each stage's units not ended by their
+   * expected ms from the last passes; `blind`, the size (populations) of those with none; `cur`, the unit
+   * in hand's (null: none), `curSize` its size; `sizeMs`, this solve's ms a population (from its units with
+   * none once one has ended); `ran`, `ranExp` and `ranN`, this solve's units ended with one, their ms as run
+   * and as expected and how many; `viewLeft`, `viewBlind` and `curView` the same for the units before the
+   * zone in view's figures; `leftQ`, `ranQ`, `expQ`, `nQ` and `curQ` the whole solve's by period */
+  | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[] }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */

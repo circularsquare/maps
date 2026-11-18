@@ -235,8 +235,13 @@ export const demandStep = signal({ done: 0, of: 4 });
 /** T-2729: an edit's solve, whose results land at each stage's end: every solving worker's last `work`
  * (demandProtocol.ts) and when it came (performance.now()), or null before each has sent one (and for
  * other solves) */
-export type WorkPart = { stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; at: number };
+export type WorkPart = { stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; at: number;
+  /** T-3599 (demandProtocol.ts `work`) */
+  left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number };
 export const demandWork = signal<WorkPart[] | null>(null);
+/** T-3599: a newer network waits for the running edit's solve to end (T-1734), and that solve was sent at
+ * `sentAt` (performance.now()); null otherwise */
+export const editHeld = signal<{ sentAt: number } | null>(null);
 /** before any unit has been measured, the time over which the unit in hand goes 63% of the way to 90%
  * of a unit, ms: it slows rather than stops, since a first unit can take 15 s (New York's real save) */
 const UNIT_MS = 4000;

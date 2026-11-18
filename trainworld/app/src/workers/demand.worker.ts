@@ -195,10 +195,34 @@ function keepTrails(saved: Map<Population, (Float32Array | undefined)[][] | unde
 }
 /** T-3512: a population's ms over every round of each period's last whole solve here, its passes alone */
 const passMs = new WeakMap<Population, number[]>();
+/** T-3599: a population's ms of each period's pass in each round, as last solved whole here (a round
+ * overwritten only by the same round, so a solve cut short leaves the others as they were) */
+const passByRound = new WeakMap<Population, number[][]>();
 function addPass(p: Population, q: number, round: number, ms: number) {
   let v = passMs.get(p);
   if (!v) passMs.set(p, (v = []));
   v[q] = (round === 0 ? 0 : v[q] ?? 0) + ms;
+  let b = passByRound.get(p);
+  if (!b) passByRound.set(p, (b = []));
+  (b[q] ??= [])[round] = ms;
+}
+/** T-3599: each crowding round's time over the round before's, roughly (notes/T-3599.md) */
+const ROUND_DECAY = 0.75;
+/** T-3599: the expected ms of round `round` of period q over `pops`, from their last passes; null when under
+ * half have one. A population with none counts as nothing (after a load on the Asia save 2 of 213 had none,
+ * or 212: then only the market, a small share, had one) */
+function passPrior(pops: readonly Population[], q: number, round: number | "all", rounds: number): number | null {
+  let sum = 0, known = 0;
+  for (const p of pops) {
+    const b = passByRound.get(p)?.[q];
+    if (!b) continue;
+    let ms = 0;
+    if (round === "all") { for (let r = 0; r <= rounds; r++) ms += b[r] ?? b[Math.min(r, b.length - 1)] ?? 0; }
+    else ms = b[round] ?? b[b.length - 1] ?? 0;
+    sum += ms;
+    known++;
+  }
+  return known && 2 * known >= pops.length ? sum : null;
 }
 /** T-3512: an edit's touched populations taking this share of their changed periods' passes or more
  * are solved whole at once: a local solve then shows its figures hardly sooner than the whole solve
@@ -507,21 +531,98 @@ class Work {
   private ms: [number, number] = [0, 0];
   private stage: 0 | 1 = 0;
   private t0 = 0;
+  /** T-3599: per stage, the expected ms (`passPrior`) of the units planned and not ended that have one,
+   * and the size (populations solved) of those that have none */
+  private left: [number, number] = [0, 0];
+  private blind: [number, number] = [0, 0];
+  /** the unit in hand's expected ms, null for none, and its size */
+  private cur: number | null = null;
+  private curSize = 0;
+  /** this solve's units ended by stage, their ms and size: the blind ones' alone once one has ended, so
+   * a unit with no expected ms is timed by its size */
+  private sized: [number, number] = [0, 0];
+  private sizedMs: [number, number] = [0, 0];
+  private blindRan: [boolean, boolean] = [false, false];
+  /** this solve's units with an expected ms ended so far: their ms as run and as expected */
+  private ran: [number, number] = [0, 0];
+  private ranExp: [number, number] = [0, 0];
+  private ranN: [number, number] = [0, 0];
+  /** the same as `left` and `blind` for the units before the zone in view's figures are sent (`view`),
+   * by stage, and whether the unit in hand is one */
+  private viewLeft: [number, number] = [0, 0];
+  private viewBlind: [number, number] = [0, 0];
+  private curView = false;
+  /** the local stage was dropped: every unit of the whole solve counts as before the view's figures */
+  private viewAll = false;
+  /** the whole solve's units by period: expected ms left, and ended so far as run and as expected (a
+   * period's passes after a load can be off by a factor of three for that period alone); the unit in
+   * hand's period, -1 for none or a unit of no one period */
+  private leftQ = PERIODS.map(() => 0);
+  private ranQ = PERIODS.map(() => 0);
+  private expQ = PERIODS.map(() => 0);
+  private nQ = PERIODS.map(() => 0);
+  private curQ = -1;
   constructor(readonly version: number) {}
-  plan(stage: 0 | 1, units: number) { this.of[stage] += units; }
-  begin(stage: 0 | 1) {
+  /** `exp`: the units' expected ms in all, null when they have none (negative units, `exp` too, take
+   * back units planned that will not run); `q` the units' period; `size` each one's populations */
+  plan(stage: 0 | 1, units: number, exp: number | null, view: boolean, q: number, size: number) {
+    this.of[stage] += units;
+    if (exp === null) this.blind[stage] += units * size; else this.left[stage] += exp;
+    if (view || (this.viewAll && stage === 1)) { if (exp === null) this.viewBlind[stage] += units * size; else this.viewLeft[stage] += exp; }
+    if (stage === 1 && q >= 0 && exp !== null) this.leftQ[q] += exp;
+  }
+  begin(stage: 0 | 1, exp: number | null, view: boolean, q: number, size: number) {
     this.stage = stage;
+    this.cur = exp;
+    this.curSize = size;
+    this.curView = view || (this.viewAll && stage === 1);
+    this.curQ = stage === 1 ? q : -1;
     this.t0 = performance.now();
     this.send(true);
   }
-  end() {
-    const s = this.stage;
-    this.ms[s] += performance.now() - this.t0;
-    unitMsLast[s] = this.ms[s] / ++this.done[s];
+  /** `ran`: false for a unit that turned out to have nothing to do, whose time says nothing of the pace */
+  end(ran = true) {
+    const s = this.stage, took = performance.now() - this.t0;
+    if (ran) {
+      this.ms[s] += took;
+      unitMsLast[s] = this.ms[s] / ++this.done[s];
+    } else this.done[s]++;
+    if (ran && this.curSize > 0 && (this.cur === null || !this.blindRan[s])) {
+      if (this.cur === null && !this.blindRan[s]) { this.blindRan[s] = true; this.sized[s] = this.sizedMs[s] = 0; }
+      this.sized[s] += this.curSize;
+      this.sizedMs[s] += took;
+    }
+    if (this.cur === null) {
+      this.blind[s] = Math.max(0, this.blind[s] - this.curSize);
+      if (this.curView) this.viewBlind[s] = Math.max(0, this.viewBlind[s] - this.curSize);
+    } else {
+      this.left[s] = Math.max(0, this.left[s] - this.cur);
+      if (this.curView) this.viewLeft[s] = Math.max(0, this.viewLeft[s] - this.cur);
+      if (ran) { this.ran[s] += took; this.ranExp[s] += this.cur; this.ranN[s]++; }
+      const q = this.curQ;
+      if (q >= 0) {
+        this.leftQ[q] = Math.max(0, this.leftQ[q] - this.cur);
+        if (ran) { this.ranQ[q] += took; this.expQ[q] += this.cur; this.nQ[q]++; }
+      }
+    }
+    this.cur = null;
+    this.curSize = 0;
+    this.curView = false;
+    this.curQ = -1;
+    this.send(false);
+  }
+  /** the local stage stopped for the whole solve: its units left will not run (nor will the zone in
+   * view's local result come: its figures are then the whole solve's) */
+  dropLocal() {
+    this.of[0] = this.done[0];
+    this.left[0] = this.blind[0] = 0;
+    this.viewLeft = [0, this.left[1]];
+    this.viewBlind = [0, this.blind[1]];
+    this.viewAll = true;
     this.send(false);
   }
   send(busy: boolean) {
-    sendMessage({ kind: "work", version: this.version, stage: this.stage, busy, done: [...this.done], of: [...this.of], unitMs: [...unitMsLast] });
+    sendMessage({ kind: "work", version: this.version, stage: this.stage, busy, done: [...this.done], of: [...this.of], unitMs: [...unitMsLast], left: [...this.left], blind: [...this.blind], cur: busy ? this.cur : null, curSize: busy ? this.curSize : 0, sizeMs: [0, 1].map((s) => (this.sized[s] > 0 ? this.sizedMs[s] / this.sized[s] : 0)) as [number, number], ran: [...this.ran], ranExp: [...this.ranExp], ranN: [...this.ranN], viewLeft: [...this.viewLeft], viewBlind: [...this.viewBlind], curView: busy && this.curView, leftQ: [...this.leftQ], ranQ: [...this.ranQ], expQ: [...this.expQ], nQ: [...this.nQ], curQ: busy ? this.curQ : -1 });
   }
 }
 let work: Work | null = null;
@@ -2053,13 +2154,52 @@ async function run() {
       // T-2729: an edit's solve's units, as the loops below make them; a cluster's kept periods come
       // off as it is set up
       work = job.barrier ? null : new Work(job.version);
+      // T-3599: each unit's expected ms, worked out as planned (the whole solve's passes replace the
+      // priors as it goes): a local solve's period, or a round of a period of a cluster solved whole
+      const exps = new Map<JobCluster, Map<string, number | null>>();
+      const expOf = (c: JobCluster, key: string, f: () => number | null) => {
+        let m = exps.get(c);
+        if (!m) exps.set(c, (m = new Map()));
+        if (!m.has(key)) m.set(key, f());
+        return m.get(key)!;
+      };
+      const localExp = (c: JobCluster, fresh: Population[], q: number) => expOf(c, `l${q}`, () => passPrior(fresh, q, "all", job.rounds));
+      // (the zone in view's cluster solved whole shows its free flow first, its round 0 split between the
+      // workers by origins, `splitRound`, the market alone solved in this worker's own periods: those
+      // periods' round 0 then leave the market out)
+      const splits = !job.exact0 && !!job.part && job.part[1] > 1 && mine.length > 0;
+      const previews = (c: JobCluster) => splits && job.rounds > 0 && c === early[0] && !!job.first && c.cities.includes(job.first) && !editOf.has(c) && !localOf.has(c);
+      const roundExp = (c: JobCluster, q: number, r: number) => expOf(c, `${q}:${r}`, () => passPrior(r === 0 && previews(c) ? c.pops.filter((p) => p !== c.part) : c.pops, q, r, job.rounds));
+      // (a part of period 0's origins, timed by this worker's own periods' passes: it may hold no pass of period 0)
+      const splitExp = (c: JobCluster) => expOf(c, "split", () => {
+        const cityPops = c.pops.filter((p) => !(p instanceof IntercityApi));
+        let own = 0, market = 0;
+        for (const q of mine) { const m = passPrior(cityPops, q, 0, job.rounds); if (m === null) return null; own += m / mine.length; }
+        if (c.part) for (const q of mine) { const m = passPrior([c.part], q, 0, job.rounds); if (m === null) return null; market += m; }
+        return own / job.part![1] + market;
+      });
+      // (a unit's size, to time it by when it has no expected ms: its populations, each later round less as
+      // the crowding settles, 26, 21, 16 and 11 s a round on the Asia save's big cluster)
+      const roundSize = (c: JobCluster, r: number) => c.pops.length * ROUND_DECAY ** r;
+      const splitSize = (c: JobCluster) => c.pops.filter((p) => !(p instanceof IntercityApi)).length / job.part![1] + (c.part ? mine.length : 0);
+      // T-3599: the units before the zone in view's figures go: its cluster's local result when the edit
+      // touched it (the local stage up to that cluster), else that cluster's whole result after the local stage
+      const firstAt = job.first ? early.findIndex((c) => c.cities.includes(job.first!)) : -1;
+      const firstEdit = firstAt >= 0 ? editOf.get(early[firstAt]) : undefined;
+      const viewLocal = !!firstEdit && citiesOf(early[firstAt], firstEdit.fresh).includes(job.first!);
+      const inView = (c: JobCluster, stage: 0 | 1) => firstAt >= 0 && (stage === 0 ? !viewLocal || early.indexOf(c) <= firstAt : !viewLocal && early.indexOf(c) <= firstAt);
       if (work) {
         for (const c of early) {
-          if (editOf.has(c)) { const k = keptOf(c); work.plan(0, mine.filter((q) => !(k & (1 << q))).length); }
-          const fresh = localOf.get(c);
-          work.plan(1, fresh ? (fresh.length ? mine.length : 0) : mine.length * (job.rounds + 1));
+          const e = editOf.get(c), fresh = localOf.get(c), v0 = inView(c, 0), v1 = inView(c, 1);
+          if (e) { const k = keptOf(c); for (const q of mine) if (!(k & (1 << q))) work.plan(0, 1, localExp(c, e.fresh, q), v0, -1, e.fresh.length); }
+          if (fresh) { const k = keptOf(c); if (fresh.length) for (const q of mine) if (!(k & (1 << q))) work.plan(1, 1, localExp(c, fresh, q), v1, q, fresh.length); }
+          else {
+            if (previews(c)) work.plan(1, 1, splitExp(c), v1, -1, splitSize(c));
+            for (const q of mine) for (let r = 0; r <= job.rounds; r++) work.plan(1, 1, roundExp(c, q, r), v1, q, roundSize(c, r));
+          }
         }
         work.send(false);
+        if (import.meta.env.DEV) console.info(`T3599 v${job.version} periods ${mine.join(",")}: ${early.map((c) => `${c.cities.length} zones, ${c.pops.filter((p) => mine.some((q) => passByRound.get(p)?.[q])).length} of ${c.pops.length} populations with a pass${c.part ? `, market ${mine.some((q) => passByRound.get(c.part!)?.[q]) ? "with" : "without"}` : ""}`).join("; ")}`); // i18n-ignore
       }
       current = job.version;
       roundsHeld.fill(-1);
@@ -2393,10 +2533,10 @@ async function run() {
         for (const q of mine) {
           if (keep & (1 << q)) continue;
           if (stage === 0 && wholeGo >= job.version) {
-            if (work) { work.of[0] = work.done[0]; work.send(false); }
+            work?.dropLocal();
             return null;
           }
-          work?.begin(stage);
+          work?.begin(stage, localExp(c, fresh, q), inView(c, stage), q, fresh.length);
           const sh = sharedOf(c, q, shared), shTrail = sh && c.part ? sharedTrail.get(c.part)?.[q] : undefined;
           // the others' loads as each round was priced on (`trail`), when every one holds them;
           // else as they ended, before the cap (`capRatio`)
@@ -2442,7 +2582,7 @@ async function run() {
               // T-3512: `whole` came while this worker still solves locally (another worker went
               // straight to the whole solve), so its local result can never be shown: stop here
               if (stage === 0 && wholeGo >= job.version) {
-                if (work) { work.of[0] = work.done[0]; work.send(false); }
+                work?.dropLocal();
                 return null;
               }
             }
@@ -2575,7 +2715,7 @@ async function run() {
           continue;
         }
         setUp(c);
-        if (work) for (const q of mine) if (c.reuse & (1 << q)) work.plan(1, -(job.rounds + 1));
+        if (work) for (const q of mine) if (c.reuse & (1 << q)) for (let r = 0; r <= job.rounds; r++) { const x = roundExp(c, q, r); work.plan(1, -1, x === null ? null : -x, inView(c, 1), q, roundSize(c, r)); }
         // T-1533: the zone in view's cluster's free-flow figures at once, for the lines new since
         // the shown result (T-324), rather than at the cluster's last round
         // (T-1733: none after its local result)
@@ -2590,14 +2730,17 @@ async function run() {
           let previewed = false, parted = false;
           const done = new Map<number, Set<Population>>();
           if (preview && round === 0) {
+            const timed = !!work && previews(c);
+            if (timed) work!.begin(1, splitExp(c), inView(c, 1), -1, splitSize(c));
             const r = await splitRound([c], c, [], done);
             if (r === false) { stale = true; break; }
+            if (timed) work!.end(r !== null);
             previewed = parted = !!r;
           }
           const todo = mine.filter((q) => !(c.reuse & (1 << q)));
           for (const q of todo) {
             await yieldNow();
-            work?.begin(1);
+            work?.begin(1, roundExp(c, q, round), inView(c, 1), q, roundSize(c, round));
             if (pending || !(await step(c, round, q, done.get(q)))) { stale = true; break; }
             work?.end();
             release_skims();

@@ -193,7 +193,19 @@ wide so a longer date moves nothing [T-1868].
   while an edit's whole solve runs after its local result showed, until that solve's final: the
   local result keeps the longer trips and other zones' riders as they were before the edit (a line
   with no trains left can read tens of thousands) [T-3601]. While capped, the
-  tag's hover says "Time capped at 4x while updating demand".
+  tag's hover says "Time capped at 4x while updating demand". After an edit the hover's first line is
+  the time left [T-3599]: on "Calculating trips after your change…" to the edit's final, on the
+  recomputing tag to the zone in view's figures; "About 5 min left" in whole minutes, "Less than a
+  minute left" under 60 s, "Time left not known yet" before the solve has a plan, or while units whose
+  populations mostly have no timed pass are left and none like them has ended (the first edit after some
+  loads of a big game). Each solving worker times its units of the solve (a period of a local solve, a
+  round of a period of a cluster solved whole, the zone in view's split free flow) by its populations'
+  last passes, at the pace this solve and the last edit's ran against them, period by period, and a unit
+  with no passes by its populations at this solve's time a population; the slowest worker's time, plus
+  the page's wait between the local and the whole solve and the last edit's stretch from its last unit
+  to its figures, is the estimate; with a newer edit waiting for that solve's final (T-1734), as long again
+  as the running solve's whole time. It counts down and takes a new estimate as the loading card's time
+  left does (never climbing by degrees).
   **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
   day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while
   some figures in play still miss it: a line reading "calculating...", or the zone
@@ -1511,7 +1523,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   edit's solve runs, "Calculating trips in 81 cities…" while a whole solve runs (the zones it still
   has to finish, as "Trips in 81 cities being recomputed…" counts them; the zone's name for one), and
   "Loading data…" with no solve running. Its hover has the time left as the loading card words it
-  (the zone's load's, else the running whole solve's; none for the zone's own solve), counted down each
+  (the zone's load's, else the running whole solve's; none for the zone's own solve; after an edit, the
+  edit's, as the capped tag's above), counted down each
   second, or "No progress for 1 min" after 90 s with nothing arriving, as a zone's bar has it
   ([ui-demand-views.md](ui-demand-views.md)). While the loading card is up it says the same in the
   middle of the map, and the status shows nothing.

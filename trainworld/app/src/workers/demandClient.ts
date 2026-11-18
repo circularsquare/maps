@@ -40,6 +40,7 @@ import {
   type DemandView,
   demandStep,
   demandWork,
+  editHeld,
   type WorkPart,
   demandScope,
   demandUpdating,
@@ -75,6 +76,7 @@ import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, smallDevice } from "./deviceMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
+import { noteEditSolve } from "../game/editLeft";
 import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
@@ -438,6 +440,13 @@ interface Solve {
   localPlans?: number[];
   /** T-2729: per solving worker, an edit's solve's last `work` */
   work?: WorkPart[];
+  /** T-3599, ?debug=1: every `work` as it came, by worker */
+  workLog?: (WorkPart & { i: number })[];
+  /** T-3599: when the last unit of an edit's solve ended, on any worker; its local stage's last unit
+   * ended; its whole solve's first unit began */
+  lastUnitAt?: number;
+  localEndAt?: number;
+  wholeAt?: number;
   wholeSent?: boolean;
   /** T-1790: local cluster results shown so far, and (T-1734) when the first was */
   localShown?: number;
@@ -1929,7 +1938,10 @@ class DemandClient {
     if (this.failed) return;
     if (this.idle()) return this.settleIdle();
     if (!force && this.firm()) {
-      if (this.waiting && this.cur) this.cur.heldFrom ??= performance.now();
+      if (this.waiting && this.cur) {
+        this.cur.heldFrom ??= performance.now();
+        if (editHeld.peek()?.sentAt !== this.cur.sentAt) editHeld.value = { sentAt: this.cur.sentAt };
+      }
       this.refineAside();
       return;
     }
@@ -3580,7 +3592,11 @@ class DemandClient {
     if (msg.kind === "work") {
       if (i >= this.computeN || s.barrier) return;
       const w = (s.work ??= []);
-      w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now() };
+      w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now(), left: msg.left, blind: msg.blind, cur: msg.cur, curSize: msg.curSize, sizeMs: msg.sizeMs, ran: msg.ran, ranExp: msg.ranExp, ranN: msg.ranN, viewLeft: msg.viewLeft, viewBlind: msg.viewBlind, curView: msg.curView, leftQ: msg.leftQ, ranQ: msg.ranQ, expQ: msg.expQ, nQ: msg.nQ, curQ: msg.curQ };
+      if (!msg.busy && msg.done[0] + msg.done[1] > 0) s.lastUnitAt = w[i].at;
+      if (!msg.busy && msg.stage === 0 && msg.done[0] > 0) s.localEndAt = w[i].at;
+      if (msg.busy && msg.stage === 1 && s.wholeAt === undefined) s.wholeAt = w[i].at;
+      if (DEBUG_LOD) (s.workLog ??= []).push({ i, ...w[i] });
       for (let k = 0; k < this.computeN; k++) if (!w[k]) return;
       if (s === this.cur) demandWork.value = w.slice(0, this.computeN);
       return;
@@ -3872,6 +3888,7 @@ class DemandClient {
     // whole one (`plan` says whether there is a local one), not rounds
     demandStep.value = { done: 0, of: barrier ? ROUNDS + 1 : 1 };
     demandWork.value = null;
+    editHeld.value = null;
     demandScope.value = cities.length;
     // T-327: rounds in step only where clicks are answered by round (`target`): it costs the final
     // about 0.7 s on the real save
@@ -4931,6 +4948,8 @@ class DemandClient {
       else this.retireFocus();
       if (final) {
         s.refinedAt = performance.now();
+        // T-3599: the next edit's time left starts from this one's pace and tail
+        if (!s.barrier && s.work && s.lastUnitAt !== undefined) noteEditSolve(s.work, s.refinedAt - s.lastUnitAt, s.localEndAt !== undefined && s.wholeAt !== undefined && s.wholeAt > s.localEndAt ? s.wholeAt - s.localEndAt : null);
         const k = this.uncovered.findIndex((u) => u.svc === s.svc);
         if (k >= 0) {
           this.uncovered.splice(0, k + 1);
