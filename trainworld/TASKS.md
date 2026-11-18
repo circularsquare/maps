@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
-- T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4
+- T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4 (taking, 2026-11-18, agent checkfix)
   - Context: Found by the workflow research (2026-11-18): t1550, a check nobody had run lately, fails its two lines that a bubble's hover tag shows at zoom 7 and 8.4. May be a real regression, or the check is out of date.
   - Goal: Either the hover tag shows those lines again or t1550 is updated to today's rule, with the reason in one line.
   - Other: research/workflow-2026-11-18.md
@@ -199,7 +199,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Demand
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
-  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 built (noroute2, not landed yet): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
+  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 landed (7d14a945): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
 - T-3624 [P3] {L:wealth-split} School trips lean to transit
@@ -298,9 +298,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
-  - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
-  - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
-  - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
+  - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
+  - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h).
 - T-3584 [P3] {L:timetables} {after:T-3557} Weekend lines sharing track are not paced
   - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
   - Goal: Weekend lines sharing track are paced from their own weekend headways.
@@ -419,6 +418,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
+- T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
+  - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
+  - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
+  - Other: notes/T-3630.md "Follow-ups"
+- T-3675 [P3] {L:feedback} Feedback button on the graphics error screens
+  - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
+  - Goal: Both screens have a Submit feedback button that opens the form.
+  - Other: notes/T-3630.md "Follow-ups"
+- T-3678 [P3] {L:translations} Three track panel strings untranslated (taking, 2026-11-18, agent onewaytext)
+  - Context: From T-3630: `trackInspector.pieces`, `shiftAddTip` and `shiftSetTip` have no translations (before T-3630 too).
+  - Goal: The three keys are translated in every language the game ships.
 - T-3445 [P3] {L:track-speed} {after:a terrain rework decision} Ramp length sets the speed limit
   - Context: You, 2026-11-16: "do want ramps with speed limit eventually. plan is that current ramp length should keep max speed of 160, longer ramps should allow higher max speeds, shorter ramps should restrain to lower max speeds. cuz people complain about wanting mroe ramps. but hold off on introducing it now, also hold off on changing any ramp max speed behavior at all actually. we will wait on thinking about a more general terrain rework that encompasses the idea of taking into account real terrain / real elevation."
   - Goal: Held until you decide on a terrain rework; then ramps cap speed by length (today's 200 m a level keeps 160 km/h).
@@ -887,6 +897,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
+- T-3676 [P3] {L:single-track} Line warning for track that runs the other way (taking, 2026-11-18, agent onewaytext)
+  - Context: From T-3647: "Track this line ran on is gone" also shows for track that is still there but runs the other way, so the player doesn't know to switch its direction. Reach: anyone who flips one-way track under a line.
+  - Goal: That case gets its own warning ("Track this line runs on goes the other way"), the gone case keeps its own.
+  - Other: notes/T-3647.md
+- T-3677 [P3] {L:single-track} Turning one-way off asks the wrong question (taking, 2026-11-18, agent onewaytext)
+  - Context: From T-3647: switching "Run trains one way" off, when lines change, asks "Run trains one way on this track?" with a "Run one way" button, which reads as turning it on.
+  - Goal: Turning it off asks about two-way running, with a button that names that.
+  - Other: notes/T-3647.md
 - T-3335 [P3] {L:quad-track} {after:T-3444} Line panel on both quad pairs
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
@@ -1016,7 +1034,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
   - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
   - Other: notes/T-3397.md
-- T-3617 [P3] {L:checks} Saves check expects every backup as a row
+- T-3679 [P3] {L:checks} Graphics check expects the phone note twice (taking, 2026-11-18, agent checkfix)
+  - Context: From T-3630: t2832-graphics-back fails two lines that expect the phone note to show again after a reload; it shows once ever since T-2861, so the check is out of date.
+  - Goal: t2832 checks the note shows once, and passes on master.
+- T-3617 [P3] {L:checks} Saves check expects every backup as a row (taking, 2026-11-18, agent checkfix)
   - Context: From T-3610's checker: t1826-saves "live backups listed with their age" fails on master too. All four backup tiers exist but the card shows one row; likely the version list hides backups with no edit since the save (workers/versions.ts), which the check doesn't do.
   - Goal: Either the check makes real edits between saves and passes, or the panel shows backups it wrongly hides; t1826 passes on master.
   - Other: notes/T-3610-check.md

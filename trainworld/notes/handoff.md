@@ -1,43 +1,31 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session a3a433e6-4dfe-47ce-ad1a-12e81c692557, name maps-56, since 2026-11-18 16:08 UTC
-Updated: 2026-11-18 16:08 UTC (takeover). maps-4f's notes follow. Running agents, all to adopt through the
-report inbox (watch.py --session <your id>; reports.py show/read): sideplat2 T-3672 (P1, her Caracas save
-Downloads/trainsworld-caracas-day-53.save; checker before landing), tripswithin T-3509 (demand: checker), corridor
-T-2136 (smoke + checker), regate T-930/T-3656 (land after dayrun's join), playkeep T-3666 (workflow; apply its
-CLAUDE.md text), dayrun T-3671 (main tree, 6 cores; 8800 rebuild after its PACKS FREE, ~19:15 UTC). T-3670: verify
-aws-mcp/stripe gone in your fresh session (/mcp or ToolSearch "stripe"); if gone, archive it.
+Updated: 2026-11-18 16:20 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-1. Workflow round (her yes 2026-11-18, all seven of research/workflow-2026-11-18.md, any order). Running: testbuild
-   T-3664, guards T-3665, playkeep T-3666. Then T-3668 (report inbox, needs T-3667, landed) and T-3669 (checks
-   index). Each agent hands back text for CLAUDE.md, orchestrator.md, skills or .claude/settings.json; apply it in
-   the main tree at landing (only they don't edit shared rule files).
-2. T-3651 (side platforms): checker sideplatcheck running; land after PASS (WASM rebuild), then 8800 rebuild.
-3. T-3668 inbox live check PASSED 15:39 UTC (probe T-9997 captured as a handback). A probe agent's whole run cost
-   49.9k tokens with 0 tool calls (start was ~56k before the connectors change).
-   T-3670 connectors: maps .claude/settings.json has disableClaudeAiConnectors (worked live), deniedMcpServers
-   aws-mcp + stripe (stripe still loaded in this session), skillOverrides off for 24 AWS skills + unity. In a fresh
-   session check aws-mcp/stripe are gone and measure an agent's first call (was 56k); if not, she toggles them off
-   with /mcp in a maps session. Then archive T-3670.
-4. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).
-5. dayrun (Opus, main tree, 6 cores): T-3671 daytime rebuild running since ~16:05 UTC; gates serve a frozen copy,
-   so app/ and WASM landings are free; until kit dayrun.state says "PACKS FREE" (about 19:15 UTC) hold anything
-   writing data/packs or data/terrain, including 8800 rebuilds (snapbuild-frozen if one is needed).
-6. Started 15:55 UTC: corridor (Opus, T-2136, Vite 6199), regate (Opus, T-930 + T-3656; lands after dayrun's
-   join), sideplat2 (Opus, T-3672 P1, her caracas save), onewayarrow (Sonnet, T-3673). T-1080 waits for a world run
-   to reproduce on (dayrun's, if it hits the commit limit).
-7. Landed, waiting for an 8800 rebuild once dayrun says PACKS FREE (~19:15 UTC; the newest freeze 20261118-065950
-   lacks T-3623's Cairo places, so no frozen build): T-3673 3210be41 (one-way arrows, c026). tripswithin (Opus,
-   T-3509, her yes 15:55) started; demand change, checker before landing.
-8. After the workflow round: T-3660 (downtown Cairo, next night run), T-2136, T-1080, T-930; T-3620 (Caribbean,
-   Bolivia, Paraguay) only when she says.
+1. Adopted from maps-4f (reports arrive through the inbox): sideplat2 T-3672 (P1, her Caracas save
+   Downloads/trainsworld-caracas-day-53.save; checker before landing, WASM rebuild), tripswithin T-3509 (demand
+   change: checker before landing), corridor T-2136 (smoke + checker), regate T-930/T-3656 (land after dayrun's
+   join), dayrun T-3671/T-3660/T-3517 (main tree, 6 cores).
+2. Mine, started 16:20 UTC (Sonnet, trees): onewaytext T-3676/3677/3678 (one-way warning and question strings,
+   3 untranslated keys; Vite 6150); checkfix T-3663/3679/3617 (three stale or failing checks; Vite 6151).
+3. dayrun: until kit dayrun.state (notes/T-3671/kit) says "PACKS FREE" (about 19:15 UTC) hold anything writing
+   data/packs or data/terrain, including 8800 rebuilds. Gates serve a frozen copy, so app/ and WASM landings are free.
+4. 8800 rebuild once PACKS FREE: 8800 is 866e3212, lacks T-3673's one-way arrows (3210be41) and T-3666; the freeze
+   20261118-065950 predates T-3623's Cairo places, so no frozen build. Fold in whatever lands before then.
+5. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).
+6. Then: T-1080 (waits for a world run hitting the commit limit), T-3160 phone memory once corridor (T-2136) lands
+   (both memory; avoid measuring under each other), T-3620 (Caribbean, Bolivia, Paraguay) only when she says.
+   T-2216 islands needs a design to her first (a point past which transit isn't taken is a new demand rule).
+7. Play/wait tools (T-3666) landed: CLAUDE.md now says smoke is waited on through its log (an agent saw shell
+   calls moved to the background at 180 s). Watch whether agents' smoke runs still behave.
 
 ## Her words
-- "lets do them all, can start in whatever order you think makes sense" (workflow, 11-18).
+- "lets do them all, can start in whatever order you think makes sense" (workflow, 11-18; all seven done).
 - 11-18 ~15:20 UTC: mostly hands off today (headache): ask her nothing unless it truly needs her; short messages.
 - Daytime builds on part of the cores when compute is free, thinking-heavy tasks beside them (11-18).
 - Caribbean+: "we can worruy about caribbean+ later ... i will lyk" (11-18).
@@ -52,11 +40,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Only a person knows
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
-  tools/ops/archive_bad_saves.py, changelog/roadmap.json; maps .claude/settings.json (her edits + my T-3670 keys).
-- Old trees shenzhen (dirty pipeline/osm_units.py, 11-16, owner unknown) and tt2 (stale): ask before removing.
+  tools/ops/archive_bad_saves.py, changelog/roadmap.json; maps .claude/settings.json (her edits + T-3670 keys).
+- Old trees shenzhen (dirty pipeline/osm_units.py, 11-16, owner unknown) and tt2 (stale, has a stray cores.json):
+  ask before removing.
 - Overnight undo points data/work/pre-T3455/{pre,prejoin} and pre-T3455my/prejoin: delete once she has played the
   new zones on 8800.
-- Unfiled follow-ups from T-3630: last-load record for reports; feedback on the no-WebGL2 and graphics-lost screens;
-  t2832's stale phone-note lines; trackInspector's 3 untranslated keys. From T-3647: a string for "track runs the
-  other way"; "Run trains one way on this track?" reads backwards when turning it off.
-- Changelog has 24 unpublished items; a publish needs her edit on the board first.
+- Changelog has 26 unpublished items; a publish needs her edit on the board first.
