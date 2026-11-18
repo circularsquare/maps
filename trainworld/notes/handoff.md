@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session e152feed-f0d3-4dcd-84f4-e7cb5c5a0a5b, name maps-3f, since 2026-11-18 22:56 UTC
-Updated: 2026-11-18 23:05 UTC
+Updated: 2026-11-18 23:27 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -15,22 +15,18 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 1. Her go 22:40 UTC: "lets start with all of group 1 and feel free to continue with group 2 and 3 as well. and also
    continue with whatever else if you finish with that." Keep 4 cores free ("no need to be super strict"): cap 12.
    T-3731 landed df82464f (next update's c001).
-   - T-3711 PASS (onewaychk), landing 23:05 UTC (tools.ts conflict with T-3731 resolved by hand: master's
-     queueStopEdit plus oneWay; typecheck clean). Changelog c002.
-   - Server deploy (0846bef T-3733 + fa61219 T-3721, shonei-server, not pushed) waits for T-3711 landed and her word.
-   - Adopted from maps-76, reports via inbox: walkstart (Opus) T-3718; localroute (Sonnet) T-3730; slotown (Opus)
-     T-3734 stage 1 (stage 2 after copylabel and panelstops land); copychk checker on tree copylabel (T-3721).
-     Checker needed before landing: walkstart, localroute.
-   - panelstops T-3732 done in tree (its smoke: demand final timed out on 1 core, as oneway's did: watch the
-     batch smoke); my checker panelchk (Sonnet) running.
-   - Mine, started 23:00 UTC: hoverone (Sonnet) T-3710 port 6181; tramsplit (Sonnet) T-3709 port 6182;
-     servedpairs (Sonnet) T-2880 port 6183 (needs a checker: demand).
+   - Landed 23:00-23:26 UTC: T-3711 (c002), T-3709, T-3710, T-3730, T-3721 (c003), T-2380 (intercity.json deleted),
+     T-3461 (docs/code-tour.md), T-3732. Master 28e475a2 pushed. 8800 = 94a62a96 (needs a rebuild for T-3732 etc.
+     after the next landings). Batch smoke on 94a62a96 PASSED (29).
+   - Server deployed 23:08 UTC (0846bef + fa61219) and pushed, on her "yes can deploy server now".
+   - Running: walkstart (Opus, adopted) T-3718, needs a checker; slotown (Opus, adopted) T-3734 stage 1, stage 2
+     can start now (copylabel and panelstops landed); weekpace (Sonnet) T-3584; speedsel (Opus) T-3525 port 6186;
+     rampend (Sonnet) T-3712+T-3713 port 6191; pairschk (Sonnet) checker on tree servedpairs (T-2880 done there).
    - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). T-3734 picked.
    - Next: T-3726 comments A/B after group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
-3. Up next: T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461; filed today T-3712,
-   T-3713, T-3720 (T-3720 after T-3734: same slot code).
-4. T-3729 Steam: she picks screenshots this evening and says where; then agents make the store images from the
-   landing page's "trains world!" logo (research/steam-page.md has sizes and rules).
+3. Up next: T-3495, T-2054, T-2901, T-3354, T-3518, T-2598; T-3720 after T-3734 (same slot code).
+4. T-3729 Steam: on hold (Anita 23:15 UTC: "dont worry about steam now"). She is thinking about screenshots (hers
+   or agents'); capsule art from the "trains world!" logo after (research/steam-page.md). Don't raise it.
 5. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC).
 
 ## Her words
@@ -51,7 +47,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Waiting on her (asks.py list has the open ones)
 - None open beyond text acks. Steam screenshots.
-- Text not yet acknowledged: "Saving stops" (T-3731).
+- Text not yet acknowledged: "Saving stops" (T-3731). T-3711's shift-click hovers and T-3710's roundTip: acked 23:16 UTC.
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
 
 ## Only a person knows

@@ -164,14 +164,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3732 [P2] {L:stops} Quick stop edits in the line panel can be dropped (taking, 2026-11-18, agent panelstops)
-  - Context: From T-3731: the line panel's own stop edits (`stopEdit`, `moveStop`) ignore a second click while one is out, and `setStops` builds from stale rows, so a quick second edit can be dropped or overwritten. Not the reported path.
-  - Goal: Quick edits in the panel all apply, in order, as T-3731 made map clicks do.
-  - Other: notes/T-3731.md
-- T-3730 [P3] {L:route-choice} Local trip panel can list no route while trains carry riders (taking, 2026-11-18, agent localroute)
-  - Context: From T-3724: `trip.rs` (about line 807, the local trip panel's "No route.") has the same route loop T-3724 fixed for intercity trips, with no keep-one rule. Not reported by players.
-  - Goal: Checked on a real save; the local panel lists a route whenever rail carries riders, as T-3724's `pick_routes` does.
-  - Other: notes/T-3724.md
 - T-3718 [P2] {L:route-choice} Trips can start with a walk to a station (taking, 2026-11-18, agent walkstart)
   - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
   - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.
@@ -217,10 +209,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
   - Goal: Tracks that cross where only some have stations get a highlight.
-- T-2880 [P2] {L:solve-speed} Skip needless rebuild of served pairs
-  - Context: The market part rebuilds its served pairs (about 13 s of a North America whole solve) even when only component numbers moved.
-  - Goal: Skip the rebuild when the same zones are joined, with identical results.
-  - Other: About 13 s saved per whole solve after such an edit. Found by T-2878 (same_joins check).
 - T-2879 [P3] {L:solve-speed} Show two crowding rounds, then three
   - Context: Your words 2026-11-09: you like three rounds and do not want to move to just two.
   - Goal: Two rounds appear as an early result, then refine to three without losing much overall time.
@@ -261,9 +249,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h).
-- T-3584 [P3] {L:timetables} Weekend lines sharing track are not paced
-  - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
-  - Goal: Weekend lines sharing track are paced from their own weekend headways.
 - T-3556 [P4] {L:checks} Agent playtest harness, outside agents and attach my game
   - Context: Stage 1 (the shared harness in checks/lib) landed 47c98437. Left, as P4 on your word 2026-11-17 ("do it as like p4"): stage 2, an MCP server so outside agents can play (3-4 h local, 8-12 h more hosted, a server deploy); stage 3, "Attach my game" in feedback (2-3 h). Sketches in notes/T-3556.md. You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).
@@ -304,9 +289,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3460 [P3] {L:cleanup} Code written twice
   - Context: From the code tour: the schematic's sheet maths in Rust (diagram.rs) and again in JavaScript (sheetLines.ts, kept as a fallback); the real-rail route finder in the game (realRoute.worker.ts) and copied in the pipeline (realroute.py); car street speeds twice in Rust.
   - Goal: One copy of each, or a written reason to keep both.
-- T-3461 [P3] {L:wiki} Code tour in the wiki
-  - Context: You 11-16: the code tour (notes/code-tour.md, review/code-tour.png) is a nice resource and might belong in the wiki.
-  - Goal: The tour is a wiki page kept current, per wiki/RULES.md (or an agents' section of it if the player wiki is the wrong home).
 - T-3734 [P2] {L:cleanup} One owner for the save slot and the playing game (taking, 2026-11-18, agent slotown)
   - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md): who may write the save slot and which game the page thinks is playing caused T-3687, T-3611, T-3698 and T-3722's worker half today; each fix added a flag. Takes in T-2843's state machine C and T-3698.
   - Goal: Four stages, each landed alone: (1) standing checks for the races already met; (2) one write-block answer (machine C); (3) every worker message stamped with its game; (4) the save code moved out of clock.worker.ts. Checks pass at each stage; no save format change.
@@ -435,6 +417,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
+- T-3735 [P3] {L:timetables} Weekend departures use the weekday round trip
+  - Context: From T-3584: weekend lines at a merge are now paced from their weekend headways, but weekend departures still take the weekday round trip, spare-time split and phases, because placing departures reads the weekday service (notes/T-3521.md "Lies").
+  - Goal: Weekend departures are placed from the weekend service's own round trip, split and phases.
+  - Other: notes/T-3584.md
 - T-3646 [P3] {L:timetables} Undo leaves other lines' trains cut
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
@@ -814,15 +800,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3710 [P3] {L:timetables} Count hover reads wrong for one vehicle
-  - Context: From T-3703: with a count of one, the schedule's count hover reads "1 bus on the line keep the headway..." (trains too).
-  - Goal: The hover reads right for one vehicle in every language.
-  - Other: notes/T-3703.md
-- T-3712 [P3] {L:station-placement} Branching off a ramp says too close to the end
+- T-3712 [P3] {L:station-placement} Branching off a ramp says too close to the end (taking, 2026-11-18, agent rampend)
   - Context: From T-3690: the "Too close to the end of a piece of track" refusal also fires on ramps, which T-1964's sweep found far more often than piece ends; T-3690 left ramps alone. Stations on ramps are T-2268.
   - Goal: Branching track off a ramp either works or the refusal says it is a ramp.
   - Other: notes/T-3690.md
-- T-3713 [P3] {L:track-drawing} Route ending near a bare end refused as too tight
+- T-3713 [P3] {L:track-drawing} Route ending near a bare end refused as too tight (taking, 2026-11-18, agent rampend)
   - Context: From T-3690: a route ending about 1 m from a bare end snaps to that end and is refused with "The curve is too tight"; same before and after T-3690.
   - Goal: That route joins the bare end smoothly or ends where the player let go.
   - Other: notes/T-3690.md
@@ -943,7 +925,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3525 [P3] {L:track-speed} Speed limit for a whole selection
+- T-3525 [P3] {L:track-speed} Speed limit for a whole selection (taking, 2026-11-18, agent speedsel)
   - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.
   - Goal: A Speed limit control in the Select tool's bar sets a whole run at once, and a limit at the track's top counts as none.
 
@@ -962,10 +944,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
   - Other: notes/T-3446.md
-- T-3709 [P3] {L:checks} Tram split check joins the wrong track
-  - Context: t3537-tram-split fails one item on master ("a single turning off at the first corner joins the left track": the ghost joins the right one), seen by T-3647, T-3672 and T-3700. Not yet known whether the game or the check is wrong.
-  - Goal: The cause found; the drawing join fixed if players would meet it, else the check updated, and t3537 passes.
-  - Other: notes/T-3700.md
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
   - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
@@ -988,9 +966,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your ask: a wiki so agents read less. 26 pages are built and figures come from code through JSON markers; the trams landed and every marker still matches.
   - Goal: Next pages are the Money tab ledger detail and the line panel stop times, then retired docs removed.
   - Other: See notes/T-2854.md.
-- T-2380 [P3] {L:cleanup} Retire intercity.json
-  - Context: data/work/intercity.json is read only by two ignored sim tests and joint_gravity's no-`--packs` mode.
-  - Goal: The file and that mode are gone.
 - T-2382 [P3] {L:cleanup} Pipeline and pack_gate small items
   - Context: Cleanup E6, small items from T-1114 (pipeline F19-20, I). Best done between joins.
   - Goal: Those items are done.
