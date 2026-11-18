@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3667 [P2] {L:workflow} Handoff state by command, asks by command (2026-11-18): handoff.py status (read-only, ~4 s, ~30 lines) and asks.py add/answer/list with asks-log.jsonl; proposed skill and doc text applied by the orchestrator. notes/T-3667.md.
 - T-3630 [P2] {L:feedback} Settings and feedback on the landing page (2026-11-18): Anita picked C plus language and a gear; intercity a setting everywhere (on for computers, off for phones), the menu's box decides a menu-opened game; feedback form mounts on its own; 19 inter-city spellings now intercity. notes/T-3630.md.
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen (2026-11-18): replacement downloads share 6 places across workers; 20 forced all-China restarts in a row all reopened with 0 ERR_INSUFFICIENT_RESOURCES (before: up to 4,336); load path untouched; rest factor 1.38 -> 1.12; the once-in-seven stuck pool itself was not reproduced. notes/T-3604.md.
 - T-3623 [P2] {L:new-countries} Cairo's place point sits in the desert (2026-11-18): places.py keeps a city node in a small hole of its pack's outline (closed by 500 m, held by no other pack) and merges a same-named area into its node; 26 packs rebuilt: Cairo at Tahrir (start score 38,139 -> 54,553, still easy), Jodhpur 2.5 km to its node; start tiers otherwise unchanged; T-3660, T-3661 filed. notes/T-3623.md.

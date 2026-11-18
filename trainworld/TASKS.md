@@ -171,6 +171,24 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
+- T-3664 [P2] {L:workflow} Faster sim test builds for agents (taking, 2026-11-18, agent testbuild)
+  - Context: Proposal 4 of research/workflow-2026-11-18.md, approved by you 2026-11-18 ("lets do them all"). An edit-test cycle takes 196 s; 64 s measured with link-time optimisation off and incremental builds on, tests 11 s either way. Landing and 8800 builds keep today's settings.
+  - Goal: Agents' `cargo test` and their own WebAssembly builds use a fast profile (about 64 s a warm cycle); shipped builds unchanged; CLAUDE.md's Rust line says which to use.
+- T-3665 [P2] {L:workflow} Landing guards (taking, 2026-11-18, agent guards)
+  - Context: Proposal 6, approved 2026-11-18. 13% of landings and removals failed since 11-17; 4 of 5 conflicts were bookkeeping files; agents edited TASKS/DECISIONS in their trees 27 times; a shell inside a tree blocked a removal; four trees each gave a changelog item id c014.
+  - Goal: Edits to TASKS, DECISIONS, ARCHIVE or LINES under .tw-trees are refused with a pointer to the main tree; finish keeps both texts of a notes file written in both places and of an append-only doc conflict; remove names the process holding a tree; changelog ids made in a tree are provisional.
+- T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (taking, 2026-11-18, agent playkeep)
+  - Context: Proposal 1, approved 2026-11-18. Agents spent 388 of 1,278 minutes (30%) waiting on the game; each probe reloads it (13 s new game, 129 s the real save); 41 of 71 scratch browser scripts skip play.mjs; 173 blocked sleeps since 11-16.
+  - Goal: `play start <city|save>` keeps a game open; `play do` answers a probe in a few seconds with short JSON, waiting on conditions not fixed times; `play sim` reads the simulation; a `wait` command replaces hand-written polling; CLAUDE.md points agents to it. Snapshot/restore tried and kept only if it works.
+- T-3668 [P2] {L:workflow} {after:T-3667} Agent reports reach the current orchestrator
+  - Context: Proposal 3, approved 2026-11-18. Old orchestrator tabs relaying reports after a handover cost about 1.8M tokens a handover (13% of orchestrator tokens).
+  - Goal: Each agent's final report is also written to a file inbox the board watch prints to the current orchestrator, which adopts running agents from the board; the old tab stops after its one line.
+- T-3669 [P3] {L:workflow} One-line index of the checks
+  - Context: Proposal 7, approved 2026-11-18. 317 task checks, 14 in smoke, 39 never run since 11-01; of 7 spot-run, 3 failed (t1550 filed as T-3663).
+  - Goal: A generated table (name, what it proves, helper or check, runs since a date, last pass) that agents grep before writing a scratch script; out-of-date checks fixed or moved to old/ with a line why, after a look at what they caught.
+- T-3670 [P2] {L:workflow} Agents start lighter
+  - Context: Proposal 2, approved 2026-11-18 ("yes please turn off connectors. ill do it if u cant"). Every agent starts at 56k tokens; AWS, Stripe and Docs tools got 0 calls in 2,750.
+  - Goal: Sessions in maps start without the AWS and Stripe servers, the claude.ai connectors and the AWS skills, measured at the next agent's first call.
 - T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4
   - Context: Found by the workflow research (2026-11-18): t1550, a check nobody had run lately, fails its two lines that a bubble's hover tag shows at zoom 7 and 8.4. May be a real regression, or the check is out of date.
   - Goal: Either the hover tag shows those lines again or t1550 is updated to today's rule, with the reason in one line.

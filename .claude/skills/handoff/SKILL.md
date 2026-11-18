@@ -11,15 +11,36 @@ part of this is clearly unhelpful for your project or situation, adapt it and sa
 
 ## When to touch it
 
-A small edit to the relevant line whenever something changes that a successor would need:
-an agent launched or landed, a long run started or finished, a commit, a publish, a new standing
-ask from Anita, a change of plan. One or two lines each time; rewrite a section only when it has
-drifted. Also run this skill when the stop hook says context is past ~500k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks. From about 450k
+In a project with a state command (trainworld: `venv\Scripts\python.exe trainworld/tools/handoff.py status`),
+edit the file when the plan or her words change, not when an agent launches or lands: the command already shows
+that. In a project without one, a small edit to the relevant line whenever something changes that a successor would
+need: an agent launched or landed, a long run started or finished, a commit, a publish, a new standing ask from
+Anita, a change of plan. One or two lines each time; rewrite a section only when it has drifted. Also run this skill when the stop hook says context is past ~500k (then start the successor: docs/orchestrator.md "Your own cycling"), and when Anita asks. From about 450k
 start no new agents: list what you would start under "Next" and the new orchestrator starts them.
 
 ## Shape
 
-Keep it under about 60 lines. Pointers, not detail: task ids, notes/ paths, commands. Detail
+**With a state command (trainworld):** under about 40 lines, holding only what no command can print: the plan, her
+words and judgement. Live state (trees, agents, uncommitted paths, builds, asks, runs, core claims) comes from the
+command; don't copy it in. Open asks are never written here: `trainworld/tools/asks.py add|answer|list` is their
+only editor, and an ask she answers is `asks.py answer <id> --note "..."` in the same turn.
+
+    # Orchestrator handoff, <project>
+
+    Orchestrator: session <id>, name <name for messages>, since <YYYY-MM-DD HH:MM>
+    Updated: <YYYY-MM-DD HH:MM>
+
+    ## Next
+    1. In order, with task ids and rough durations; what to start, what to hold and why.
+
+    ## Her words
+    Standing asks that still hold, in her words where short; calls she has made this week.
+
+    ## Only a person knows
+    Why something is held, which uncommitted file is left on purpose and whose, what a tree is for when its
+    name does not say, a run's restart command if the command cannot find it.
+
+**Without one:** keep it under about 60 lines. Pointers, not detail: task ids, notes/ paths, commands. Detail
 belongs in `notes/T-###.md`, TASKS.md, DECISIONS.md. Procedures and lessons that outlast this run
 go in `<project>/docs/orchestrator.md`; a standing ask that binds subagents goes in the project's
 CLAUDE.md, since they never read this file. Finished work leaves "In flight" once it is committed.
@@ -58,7 +79,8 @@ commits, landings, publishing and 8800 until you are done, so land things proper
   Land what is in flight: review, smoke, commit as the project's CLAUDE.md says.
   An agent you genuinely need to finish in-flight work gets a description starting `in-flight:`.
 - As each item lands, move its line from "In flight" into "State" (re-read the file first: the new
-  orchestrator edits it too).
+  orchestrator edits it too). With a state command, nothing to move: landed work shows there; delete its line
+  from Next if it was there.
 - When nothing of yours is left in flight, delete the `Previous:` line, update `Updated:`,
   `SendMessage` the new orchestrator (the name on its Orchestrator line) that you are done and what
   you landed. Your one message to Anita is a single line: "talk to <new name> now". After it you write nothing

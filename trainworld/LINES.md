@@ -83,5 +83,6 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - board | Anita's board | This board, and her answers reaching the orchestrator. | done:2026-11-16
 - cleanup | Code and docs cleanup | Splitting big files, removing old paths, shorter agent docs.
 - checks | Checks and agent tools | Standing checks that fail or test the wrong thing, and agent tool fixes.
+- workflow | Workflow round 2026-11-18 | The seven proposals in research/workflow-2026-11-18.md: cheaper agents, steadier landings and handoffs.
 - world-tooling | World build tooling | The world run and join: speed, failures, preflight checks.
 - wiki | Wiki | The player wiki that agents read instead of the docs.

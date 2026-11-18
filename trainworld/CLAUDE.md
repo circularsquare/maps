@@ -63,7 +63,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 | `TASKS.md` | Open work, by priority | agents |
 | `LINES.md` | Anita's lines: the conceptual units tasks group into, by area | agents |
 | `DECISIONS.md`, `ARCHIVE.md` | Dated choices and why; finished tasks, newest first. Older: `*-to-2026-10-19.md` | agents, add only |
-| `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator), `asks.json` (orchestrator) | agents |
+| `notes/` | `T-###.md` task notes, `handoff.md` (orchestrator: plan, her words), `asks.json` (orchestrator, only through `tools/asks.py`) | agents |
 | `checks/` | Standing checks, `smoke.mjs` first | agents |
 | `research/` | Background reports with sources | agents |
 | `TODO.md` | Anita's own list | Anita only; agents never edit it |

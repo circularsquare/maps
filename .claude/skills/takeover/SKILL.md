@@ -15,8 +15,11 @@ wrong for the situation, do the sensible thing and say why in your first message
    `notes/handoff.md` yet, use the newest `notes/handoff-*.md` and create `notes/handoff.md` from it
    in step 3, moving the dated one to `notes/archive/`. Then `git status`, `git log --oneline -8`,
    and grep `TASKS.md` for `taking`. Read SPEC.md and other docs on demand, not up front.
-2. **Check what the file claims** before trusting it: each long run's liveness check, and that the
-   commit it names for 8800 or master matches `git log`. Note anything stale.
+2. **Read the live state.** trainworld: `venv\Scripts\python.exe trainworld/tools/handoff.py status` from the
+   maps root (trees, agents, uncommitted paths, 8800 and master, open asks, core claims, world run, unpublished
+   changelog); where it and the file disagree, trust the command. A project without a state command: check what
+   the file claims before trusting it (each long run's liveness check, and that the commit it names for 8800 or
+   master matches `git log`). Note anything stale.
 3. **Claim the file.** Your session id is in the session-start context ("Session id: ..."); your
    name for messages is what `ListAgents` reports as "This session is <name>". Edit the top of
    `notes/handoff.md`:

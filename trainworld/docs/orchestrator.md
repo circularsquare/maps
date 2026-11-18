@@ -1,8 +1,9 @@
 # Orchestrating trainworld
 
-For the orchestrator only; `/takeover` reads it after `trainworld/CLAUDE.md`. Live state is `notes/handoff.md`
-(shape: the `handoff` skill). Edit the handoff when the plan changes, folded into that turn's other bookkeeping,
-not once per message (Anita, 2026-11-09).
+For the orchestrator only; `/takeover` reads it after `trainworld/CLAUDE.md`. Live state is
+`venv\Scripts\python.exe trainworld/tools/handoff.py status`; `notes/handoff.md` keeps only the plan, her words and
+judgement (shape: the `handoff` skill). Edit the handoff when one of those changes, folded into that turn's other
+bookkeeping, not once per message (Anita, 2026-11-09).
 
 ## Agents
 
@@ -71,7 +72,7 @@ not once per message (Anita, 2026-11-09).
   players may be looked into; a design question (a new feature, a change to numbers or what can be built) goes to
   her for a call, however many asked; something few players would meet is filed, usually P3, and not started while
   the task list is long (Sendai's Senzan Line). Say the reach guess in the task line.
-- Every open ask goes in `notes/asks.json` (`[{id, title, text, since, by}]`, `title` a few words like a task name (Anita 2026-11-17: cards were too long), `text` the whole question, `since` a date, `id` like `a-2026-11-16-1`); remove an ask as soon as she answers it, wherever the answer arrives, the one place asks persist across sessions; the board shows them oldest first under Waiting on you. Her answer or dismissal arrives in the inbox as `ask-answer` (or in chat): act on it, remove the entry, mark it handled. Final messages are short and their For you block carries only asks new in that message, not the standing ones (Anita 2026-11-17: "stop repeating things unless i ask"); when she asks to be caught up ("catch me up on everything i haven't responded to"), read asks.json back to her in full, plus anything in flight that needs her.
+- Every open ask goes in through `venv\Scripts\python.exe trainworld/tools/asks.py add --title "<few words, like a task name>" --text "<the whole question>" --by <you>` (Anita 2026-11-17: cards were too long); nothing else edits `notes/asks.json` (ids `a-YYYY-MM-DD-N` are never reused; every add and answer is kept in `notes/asks-log.jsonl`). When she answers, wherever the answer arrives (chat, or `ask-answer` in the inbox, which may be a dismissal), act on it, run `asks.py answer <id> --note "<her words>"` and mark the inbox item handled. The board shows asks oldest first under Waiting on you. Final messages are short and their For you block carries only asks new in that message, not the standing ones (Anita 2026-11-17: "stop repeating things unless i ask"); when she asks to be caught up ("catch me up on everything i haven't responded to"), run `asks.py list --full` and read it back to her in full, plus anything in flight that needs her.
 - Show her every in-game string agents report, old -> new; she answers "text acknowledged" or names lines.
 - **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
