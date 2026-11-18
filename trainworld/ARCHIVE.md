@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3693 [P2] {L:map-look} Show which mode you're building (2026-11-18): Look C landed (orchestrator's pick; A/B sheet kept for Anita at artifacts/trainworld/review/t3693-mode-looks.png): track tool aura, square and pointer mark in the track type's colour (regular #0a819d, high speed #5a5fc8, tram #c0603a), and the ghost and a selected or hovered line, piece or bus line ringed, one ring a track per stroke (quad found by geometry, F_QUAD).
 - T-2043 [P3] {L:checks} Old cloud check needs updating (2026-11-18): checks/t988-cloud.mjs rewritten to the T-2037 sync rules and origin-grouped cards (steps 3, 4, 7 on, a third device for the conflict split); all 17 lines pass against a local shonei-server. Notes: notes/T-2043.md.
 - T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.
 - T-930 [P2] {L:world-tooling} Join re-gate only checks what changed (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.

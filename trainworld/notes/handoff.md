@@ -47,7 +47,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    writes ARCHIVE first and retries the replace.
 3. dayrun finished 18:10 UTC (T-3671 archived, data/packs free, committed). Undo points data/work/pre-T3671/
    {pre,prejoin,retired} (~3 GB) go once smoke and 8800 are clean. regate and qwpre landed 18:12.
-4. 18:13 UTC: smoke on master running (scratch smoke-master.log); then snap8800 at master. node_modules was emptied
+4. 18:20 UTC: smoke on master PASSED (29); 8800 = 07cc78bd (everything landed today); master pushed;
+   pre-T3671 undo points deleted. node_modules was emptied
    at 18:03 by sideplat2's tree removal (a junction git deleted through); npm install restored it; agent-tree.mjs
    now unlinks every junction before removing a tree.
 5. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).

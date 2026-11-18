@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c046",
+      "text": "the track tool and a selected or hovered line or piece of track show their type by colour and their track count as rings",
+      "edited": "the track tool and a selected or hovered line or track show the track type by colour and the number of tracks as rings",
+      "hidden": false,
+      "task": "T-3693",
+      "by": "modelook",
+      "at": "2026-11-18T18:20:21Z",
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-18T18:20:34Z"
+    },
+    {
       "id": "c045",
       "text": "fixed transfer pulses going missing after panning to a zone your lines don't reach",
       "edited": null,

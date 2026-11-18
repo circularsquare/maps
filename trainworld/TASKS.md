@@ -360,9 +360,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
-- T-3693 [P2] {L:map-look} Show which mode you're building (taking, 2026-11-18, agent modelook)
-  - Context: Your old TODO: "make more obvious when ur building single track or double or quad, and when ur looking at it. also maybe make it more obvious when ur looking at a bus line or tram or train or hsr". You, 2026-11-18: "yeah they should have slightly different halo colors i guess, maybe some more indicators too if u have ideas".
-  - Goal: Three clearly different versions on one sheet (halo colour per mode plus other cues for track count), you pick by letter, then it's built.
 - T-3695 [P3] {L:map-look} Travel by mode overview
   - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
   - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
