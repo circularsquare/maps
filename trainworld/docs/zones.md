@@ -675,11 +675,12 @@ is known without its files (T-302, T-400):
 weekday trip legs a km² (every purpose but attractions, walking included, no rail) with both ends
 within 10 km of its centre, times its country's fare scale over the US's to the power 0.2 (fares
 follow income, construction does not). The centre is a metro's OSM city or town of its name nearest
-the registry centre within 40 km, else the registry centre; each pack the circle reaches counts its
+the registry centre within 40 km whose 10 km circle holds at least half the people of the registry
+centre's (its own pack's; T-3621), else the registry centre; each pack the circle reaches counts its
 own trips, and trips between packs are left out. The well-known starts (every metro built as a city,
 the suggested starts and zones with over 1.5M people in the circle, 465) are cut 26.7% easy, 60% medium and
 13.3% hard (thirds with medium widened by 80% of its count, a fifth of that taken from easy and three fifths
-from hard: Anita, 2026-11-07, T-2748): easy from 12,147, medium from 3,980 (2026-11-18). The new game sheet's search names each result's tier, and the
+from hard: Anita, 2026-11-07, T-2748): easy from 12,175, medium from 3,998 (2026-11-18). The new game sheet's search names each result's tier, and the
 zoomed-out map colours unopened zones' dots by it until the first line is set up
 (ui-panels.md "The new game sheet", ui-demand-views.md "Zoomed far out"). Rerun the script after
 packs change; `--tiers` re-cuts in seconds.

@@ -22,8 +22,8 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   She: "0.4 looks good on live".
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
-## Landed since 8800's 3fd86cd2 (next rebuild): T-3606 98ca8aca, T-3619 f2894ea1, T-3599 63bacf31 (strings shown to
-  her). 8800 has T-3600/T-3601/T-3610/T-3612. node_modules broke once ~02:10 UTC (a checker deleting a scratch
+## Landed since 8800's 3fd86cd2 (next rebuild): T-3606 98ca8aca, T-3619 f2894ea1, T-3599 63bacf31 (strings: her
+  "text ack" 11-18). 8800 has T-3600/T-3601/T-3610/T-3612. node_modules broke once ~02:10 UTC (a checker deleting a scratch
   worktree by hand); npm install restored it.
 
 ## In flight (maps-86's; maps-1c fully wound down 03:00 UTC)
@@ -31,7 +31,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   double track splits sometimes joining the wrong track and making a flat junction"). Checker fcheck (Sonnet, port
   6188) running -> notes/T-3609-check.md; land on PASS. Rest of her case filed T-3618.
 - vot (Opus, .tw-trees/vot, port 6189): T-3622 player report, transit 8.86 vs driving 2.31 min/S$ in Malaysia.
-  A demand-number change waits for her.
+  A demand-number change waits for her. She: "potentially pretty huge bug", report to her as soon as it lands.
 - secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 (her go 11-18): later edits wait ~170 s behind the
   first whole solve (T-1734 hold). Told to rebase onto 63bacf31 (T-3599's editLeft doubling while an edit waits).
 - T-3619 DONE f2894ea1 (351 starts had no tier; c011). cairo (Opus, main tree, scratchpad \cairo): T-3621 why
@@ -44,7 +44,10 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   Started 02:34 UTC via kit\night1118.cmd (= night1117.ps1 -Want 9), cmd pid 23028, script pid 30872 (claim
   nightqueue, 9 cores; 5 free for day work). Log artifacts/trainworld/night1117.log; state kit\night1117.state;
   stop: create trainworld\data\work\world_run\STOP, then kill only the script PID. Gates serve the main tree's app/:
-  keep app/ landings short and between gate steps. After it: rerun start_difficulty.py (T-3619), then 8800 rebuild;
+  keep app/ landings short and between gate steps. 8800 rebuilds during the run: before its joins only (packs are
+  hard links to data/packs), else snapbuild-frozen with a freeze; smoke the 8800 URL, not a main-tree Vite (the
+  main tree's game json carries the run's in-progress registry). 03:55 UTC: snap+smoke of d4c7e639 running
+  (\snap_smoke.ps1); push after it passes. After it: rerun start_difficulty.py (T-3619), then 8800 rebuild;
   then T-3620 (Caribbean, Bolivia, Paraguay) can start.
 
 ## Next

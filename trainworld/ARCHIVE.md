@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3621 [P2] {L:new-countries} Cairo scores as a hard start (2026-11-17): Cairo's centre had landed on a desert area's box centre 37 km east (the real Cairo node sits just outside the pack footprint); centre() now skips a name match whose 10 km circle holds under half the registry centre's people; Cairo 439 hard -> 38,139 easy, no other start's centre moved. notes/T-3621.md.
 - T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (2026-11-17): two drawing fixes, checker PASS (notes/T-3609-check.md); drawn-first and one-way-switch cases continue as T-3618. notes/T-3609.md.
 - T-3599 [P2] {L:solve-speed} Time left in the calculating trips hover (2026-11-17): time left in the hover; mean error 12-18% on NYC and the Asia save; first edit after a load says not known yet for ~70 s. notes/T-3599.md.
 - T-3619 [P2] {L:new-countries} New countries' cities all show as hard starts (2026-11-17): start tiers rerun for all 4,135 starts (351 had never been scored); docs/adding-a-country.md and world-run.md reruns it. notes/T-3619.md.

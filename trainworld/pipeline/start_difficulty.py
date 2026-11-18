@@ -41,7 +41,12 @@ QUICK = ["nyc", "lon", "par", "tyo", "tor"]
 # a zone (kind "zone") counts as well known with this many people in the circle
 NOTABLE_ZONE_POP = 1_500_000
 CENTRE_REACH_KM = 40
+# a named place whose circle holds under this share of the registry centre's circle's people (the
+# start's own pack) is not the city: Cairo's only match is a governorate-sized area's box centre in
+# the desert, 0.7% (notes/T-3621.md)
+CENTRE_MIN_PEOPLE = 0.5
 BATCH = 40
+DTYPES = {"f32": "<f4", "f64": "<f8", "u32": "<u4", "u64": "<u8"}
 INCOME = ROOT / "app/src/game/countryIncome.json"
 FARE_POW = 0.2
 # shares of the well-known starts: thirds widened to 80% more medium, 20% of a third taken from
@@ -61,26 +66,54 @@ def _fold(s):
     return "".join(ch for ch in unicodedata.normalize("NFKD", s) if not unicodedata.combining(ch)).casefold().strip()
 
 
+def people_within(pid):
+    """A function giving the pack's people within RADIUS_KM of a point, or None if the pack can't
+    be read (a night run may be rewriting it)."""
+    try:
+        import numpy as np
+        d = json.loads((PACKS / f"{pid}.json").read_text(encoding="utf-8"))
+        raw = (PACKS / f"{pid}.bin").read_bytes()
+        a = {x["name"]: np.frombuffer(raw, dtype=DTYPES[x["dtype"]], count=x["count"], offset=x["offset"])
+             for x in d["arrays"] if x["name"] in ("x_m", "y_m", "pop")}
+        o = d["origin"]
+    except (OSError, ValueError, KeyError):
+        return None
+
+    def within(lon, lat):
+        x = (lon - o["lon"]) * 111320 * math.cos(math.radians(o["lat"]))
+        y = (lat - o["lat"]) * 110540
+        return float(a["pop"][np.hypot(a["x_m"] - x, a["y_m"] - y) < RADIUS_KM * 1000].sum())
+    return within
+
+
 def centre(c):
     """The start's centre: for a metro (kind "city"), the OSM city or town in its own place list
     named as it is (the part before any bracket or comma: "Rotterdam [The Hague]", "Washington, DC"),
     the nearest such within CENTRE_REACH_KM of the registry centre (OSM also has a metro label node:
-    Sydney's is 38 km west of the city); else, and for every zone, the registry centre. Some
-    registry centres are far from their city's (Atlanta 23 km, Oklahoma City 31; notes/T-2690.md)."""
+    Sydney's is 38 km west of the city) whose circle holds CENTRE_MIN_PEOPLE of the registry
+    centre's circle's people; else, and for every zone, the registry centre. Some registry centres
+    are far from their city's (Atlanta 23 km, Oklahoma City 31; notes/T-2690.md)."""
     lon, lat = c["center"]
     f = PACKS / f"{c['id']}.places.json"
     if c.get("kind") == "zone" or not f.exists():
         return lon, lat, False
     d = json.loads(f.read_text(encoding="utf-8"))
     want = _fold(re.split(r"[\[,(]", c["name"])[0])
-    best = None
+    found = []
     for name, k, plon, plat, pop, *rest in d["places"]:
         if d["kinds"][k] not in ("city", "town") or want not in {_fold(n) for n in [name, *(rest[0] if rest else [])]}:
             continue
         km = math.hypot((plon - lon) * 111.32 * math.cos(math.radians(lat)), (plat - lat) * 111.32)
-        if km <= CENTRE_REACH_KM and (best is None or km < best[0]):
-            best = (km, plon, plat)
-    return (best[1], best[2], True) if best else (lon, lat, False)
+        if km <= CENTRE_REACH_KM:
+            found.append((km, plon, plat))
+    if not found:
+        return lon, lat, False
+    within = people_within(c["id"])
+    floor = within(lon, lat) * CENTRE_MIN_PEOPLE if within else 0
+    for km, plon, plat in sorted(found):
+        if not within or within(plon, plat) >= floor:
+            return plon, plat, True
+    return lon, lat, False
 
 
 def starts(reg):
