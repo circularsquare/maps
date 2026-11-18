@@ -14,6 +14,9 @@ tasks (except those an open task or the handoff cites) live in `notes/archive/` 
 
 ## World and countries
 Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline: notes/T-535.md "Stages".
+- T-3706 [P3] {L:new-countries} Venezuela's trips to Caracas look low
+  - Context: Discord bug-reports 2026-11-18 (lekker puh): travel between Barquisimeto, Maracaibo, Valencia and Caracas "should be boosted, and in particular the demand between the Valles del Tuy cities (Charallave, Cúa, Ocumare) and to a lesser extent the Altos Mirandinos (Los Teques, Carrizal, San Antonio) towards Caracas is severely underestimated". Venezuela shipped recently (T-3620's batch).
+  - Goal: Compared with any published commute or travel figure for those pairs; a fix proposed to you if one is clearly off, else recorded as within the worldwide rule.
 - T-3701 [P3] {L:region-redraws} {after:Venezuela's next join} Merge Carora into a neighbour
   - Context: From T-3671: tsx (Carora) is parked because one square holds 41% of its jobs; no open task names it.
   - Goal: Carora merged into a neighbouring zone at Venezuela's next join, and shipped.
@@ -796,6 +799,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
+- T-3704 [P2] {L:buses} Changing a bus line's fleet doesn't recalculate (taking, 2026-11-18, agent busfix)
+  - Context: Discord bug-reports 2026-11-18 (PranCZ): "when I change the number of buses on a given line, the profit isn't recalculated automatically, and secondly, when I add an additional bus for a line the headway doesn't change at some point ... Seems like demand isn't being recalculated either"; Márcio: "Same with ferry". Reach: every bus and ferry player.
+  - Goal: Changing a bus or ferry line's fleet updates its headway, profit and trips as a train line's does, at every fleet size.
+- T-3703 [P2] {L:buses} {after:T-3704} Schedules for buses and ferries like trains
+  - Context: You, 2026-11-18: "some ppl on discord are complaining about schedule feature not being enabled for buses / ferries also. we should get that working. we can leave out the marey diagram / timetable part for now if thats harder to add but yeah want to bring buses and ferries to be more consistent with trains. not necessarily super high prio but would be nice to get out in next few updates".
+  - Goal: Bus and ferry lines get the train lines' schedule controls (periods, weekend, headway steps), the timetable chart optional; a list of what differs goes in the notes first.
+- T-3705 [P2] {L:track-drawing} Can't build on Firefox (taking, 2026-11-18, agent firefox)
+  - Context: Discord bug-reports 2026-11-18 (natteru): "Anyone else can't build on firefox?". Reach: Firefox players, likely all of them if it reproduces.
+  - Goal: Reproduced in Firefox (or shown not to), fixed, and a building check run in Firefox once.
 - T-3700 [P2] {L:single-track} Way back skips the other one-way leg's station
   - Context: Found by T-3101's checks 2026-11-18: t3348-perdir fails on master. A West to East line over a station split into two one-way legs gets stops [0,4,3] and no back stops, so the way back doesn't stop at the north leg (riders 8623 north, 0 south). Possibly from T-3651's side-platform change (72793e68, today) or T-3647; sideplat2 (T-3672) is in the same code.
   - Goal: The way back stops at the other leg's station again and t3348-perdir passes; checked after T-3672 lands.

@@ -59,6 +59,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    calls moved to the background at 180 s). Watch whether agents' smoke runs still behave.
 
 ## Her words
+- 11-18 18:25 UTC: buses and ferries should get trains' schedule controls ("we can leave out the marey diagram /
+  timetable part for now ... not necessarily super high prio but would be nice to get out in next few updates"):
+  T-3703, after busfix's T-3704 (same code). Discord reports filed: T-3704 (busfix running), T-3705 Firefox
+  (firefox running), T-3706 Venezuela trips to Caracas (P3). Restore copies pre-T3455 deleted on her OK.
 - 11-18 16:25 UTC: close easy high-priority wins and old tasks, small over design-heavy, to get the open count
   down; retriage clear miscategorisations; "prio should take into account easiness as well as impact". Triage
   agents triageA/triageB write notes/triage-2026-11-18-{a,b}.md (Close, Small wins, Needs her, Reprioritise); I apply
