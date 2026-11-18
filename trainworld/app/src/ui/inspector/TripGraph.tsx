@@ -7,7 +7,7 @@
 import { signal } from "@preact/signals";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { City } from "../../game/cities";
-import { demandAskTurn, demandView, intercityDemand } from "../../game/demand";
+import { demandAskTurn, demandView, intercityDemand, rowsOf } from "../../game/demand";
 import { count } from "../../game/format";
 import { t, tNumber, type MessageKey } from "../../i18n";
 import { purposeColour, purposeName, type PurposeKey } from "../../game/purposes";
@@ -158,16 +158,18 @@ export function TripGraph({ city }: { city: City }) {
   const local = lengthsOf(city.id);
   const market = intercityDemand.value;
   const by = layersBy.value;
+  // T-2136: the zone's rows, asked of the workers; the graph waits for them
+  const rows = market ? rowsOf(market.corridors, city.place) : null;
   const g = useMemo(() => {
-    if (!local) return null;
     const far = market ? farTrips(city.place, market.corridors) : [];
+    if (!local || !far) return null;
     if (by === "purpose") {
       const Ls = purposeLayers(local, far);
       return drawGraph(Ls, purposeColour, (km) => purposeTip(Ls, km));
     }
     const Ls = lengthLayers(local, far);
     return drawGraph(Ls, modeColour, (km) => modeTip(Ls, km));
-  }, [local, market, city.place, by]);
+  }, [local, market, rows, city.place, by]);
   if (!g) return null;
   const { edges, u0, u1, hx, drawn, tip } = g;
   const hb = hoverKm === null ? null : bandAt(edges, hoverKm);

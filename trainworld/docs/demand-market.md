@@ -31,10 +31,10 @@ table of the open places by the open places); any other pair's is worked out whe
 place pair's longer trips and commutes a day, kept for the pairs with any, the departures to places with no zone, the totals:
 `Corridors`) are worked out at a worker's first composition, about 0.3 s natively, and kept by
 `MarketPacks` for every later one, since with the world's rows they are the same whichever packs
-are open; the market's parts and compositions share them (`corridors_id`), so the worker makes the
-corridor table once. The table holds only the corridors with longer trips or commutes (`corridor_rows*`,
-3.9M of the world's 12.7M place pairs in 2026-11, about 120 MB, read off the corridors' sorted lists; 8.2M rows by
-2026-11-16, sent to the page as 16-bit place numbers, 32-bit longer trips and 16-bit shares, 94 MB, T-3493), its
+are open; the market's parts and compositions share them (`corridors_id`), so the worker sums the
+corridor table up once. The table is the corridors with longer trips or commutes (`table_rows`, 8.5M
+of the world's place pairs on 2026-11-18), never made whole (T-2136): `table_summary` walks it once for the
+page's book, `place_rows` gives a few places' rows when the page asks, `rows_at` the rows with rail; its
 split by plane and car included, worked out for those rows alone: what a pair's two ways share (the car,
 the flight, the crossings, the routed drive) once, each way's share that flies over its own income groups
 (T-1849; the pass looks the airports' direct flights up in a bit table made for it, 2.5 MB, where

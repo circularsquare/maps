@@ -14,7 +14,8 @@ import { fareScale } from "../../game/income";
 import { moneyState } from "../../game/money";
 import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
-import { eachCorridor, intercityDemand, intercityPlaceName } from "../../game/demand";
+import { intercityDemand, intercityPlaceName } from "../../game/demand";
+import { pairFigures as pairOf, type PairTrips } from "../../game/corridorFigures";
 import { baseFareOf, peopleOf, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
@@ -168,17 +169,11 @@ function PlaneRows({ f: f0, km, w }: { f: FlightCost; km: number; w: number }) {
   );
 }
 
-/** Two places' longer trips a day both ways as the solve split them (the corridor's, commutes between
- * the zones left out); null with none. */
-function pairFigures(a: number, b: number): { trips: number; rail: number; air: number; car: number } | null {
+/** Two places' longer trips a day both ways as the solve split them (game/corridorFigures.ts); null
+ * with none, and while their rows are asked (T-2136: shown as they land). */
+function pairFigures(a: number, b: number): PairTrips | null {
   const c = intercityDemand.value?.corridors;
-  if (!c || a === b) return null;
-  let out: { trips: number; rail: number; air: number; car: number } | null = null;
-  eachCorridor(c, (x, y) => (x === a && y === b) || (x === b && y === a), (_, f) => {
-    const trips = f.trips - f.commutes, rail = f.rail - f.commuteRail;
-    if (trips > 0) out = { trips, rail, air: f.air, car: Math.max(0, f.car - (f.commutes - f.commuteRail)) };
-  });
-  return out;
+  return c ? pairOf(c, a, b) ?? null : null;
 }
 
 /** The bar and rows of a market panel's modes: `parts` are mode, share and colour. `of` finishes each hover. */

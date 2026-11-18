@@ -46,7 +46,7 @@ const readout = (p) => p.evaluate(async () => {
 
 /** the diagnostics behind the share and long-ride firsts, to set their floors */
 const diag = (p) => p.evaluate(async () => {
-  const { demandByDay, eachCorridor, roughZones } = await import('/src/game/demand.ts');
+  const { demandByDay, eachCorridor, roughZones, rowsNow } = await import('/src/game/demand.ts');
   const { cityById } = await import('/src/game/cities.ts');
   const { stationZone } = await import('/src/game/listScope.ts');
   const w = window.tw.world.value, d = demandByDay.value[6];
@@ -54,9 +54,11 @@ const diag = (p) => p.evaluate(async () => {
   const places = new Map([...built].map((id) => [cityById(id).place, id]));
   const sums = new Map();
   const c = d.intercity?.corridors;
-  if (c) eachCorridor(c, (x, y) => x !== y && (places.has(x) || places.has(y)), (j, v) => {
-    for (const p of [c.table.from[j], c.table.to[j]]) if (places.has(p)) { const e = sums.get(p) ?? { all: 0, rail: 0 }; e.all += v.trips; e.rail += v.rail; sums.set(p, e); }
-  });
+  // (T-2136: each place's rows from a worker)
+  for (const p of c ? places.keys() : []) {
+    const rows = await rowsNow(c, p);
+    if (rows) eachCorridor(c, rows, (x, y) => x !== y && (x === p || y === p), (from, to, v) => { const e = sums.get(p) ?? { all: 0, rail: 0 }; e.all += v.trips; e.rail += v.rail; sums.set(p, e); });
+  }
   const inter = [...sums].map(([p, e]) => [cityById(places.get(p)).name, Math.round(e.all), +(100 * e.rail / e.all).toFixed(1)]).sort((x, y) => y[2] - x[2]).slice(0, 8);
   const local = [...built].map((id) => { const v = d.cities.get(id); return [cityById(id).name, v ? +v.split.train.toFixed(1) : null, v?.final, roughZones.value.has(id)]; }).sort((x, y) => (y[1] ?? -1) - (x[1] ?? -1)).slice(0, 6);
   // the longest one-way run of each running line, h

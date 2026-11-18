@@ -10,7 +10,7 @@ import { CITIES, cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
 import { continentLabel, continentOf } from "./continents";
 import { AVERAGE_DAY, WEEKDAY_LONG } from "./days";
-import { demandByDay, demandUpdating, eachCorridor, lineFiguresIn, marketIn, roughZones, zoneViews, type Corridors } from "./demand";
+import { demandByDay, demandUpdating, lineFiguresIn, marketIn, roughZones, zoneViews, type Corridors } from "./demand";
 import { bigDistance, clockTime, dayOf, money, speed } from "./format";
 import { t, tCountry, tList, tNumber } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -293,14 +293,16 @@ let corridorMemo: { corr: Corridors; key: string; sums: Map<number, { all: numbe
 function corridorSums(corr: Corridors, places: ReadonlyMap<number, CityId>): Map<number, { all: number; rail: number }> {
   const key = [...places.keys()].sort((a, b) => a - b).join(",");
   if (corridorMemo?.corr === corr && corridorMemo.key === key) return corridorMemo.sums;
+  // T-2136: all trips from the market's book, rail from the rows with rail (summed in another order than the
+  // rows', so equal to theirs within rounding); no rows asked, which on a big save would be millions
   const sums = new Map<number, { all: number; rail: number }>();
-  const add = (p: number, all: number, rail: number) => {
-    if (!places.has(p)) return;
-    const e = sums.get(p) ?? { all: 0, rail: 0 };
-    e.all += all; e.rail += rail;
-    sums.set(p, e);
-  };
-  eachCorridor(corr, (a, b) => a !== b && (places.has(a) || places.has(b)), (j, x) => { add(corr.table.from[j], x.trips, x.rail); add(corr.table.to[j], x.trips, x.rail); });
+  const b = corr.book.totals;
+  for (const p of places.keys()) if (3 * p + 1 < b.length) sums.set(p, { all: b[3 * p] * corr.longerScale + b[3 * p + 1] * corr.commuteScale, rail: 0 });
+  for (let k = 0; k < corr.railAt.length; k++) {
+    const from = corr.railFrom[k], to = corr.railTo[k], r = corr.longerRail[k] + corr.commuteRail[k];
+    if (from === to) continue;
+    for (const p of [from, to]) { const e = sums.get(p); if (e) e.rail += r; }
+  }
   corridorMemo = { corr, key, sums };
   return sums;
 }

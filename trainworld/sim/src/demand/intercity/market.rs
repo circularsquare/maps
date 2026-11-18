@@ -364,7 +364,7 @@ impl Market {
         }
         let leaving_by: Vec<f64> = (0..np).map(|p| if self.places[p].has { (self.places[p].dep - to_places[p]).max(0.) } else { 0. }).collect();
         ct.shrink_to_fit();
-        Corridors { id: next_corridors_id(), daily, leaving: leaving_by.iter().sum(), has_trips: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs, rows: Default::default() }
+        Corridors { id: next_corridors_id(), daily, leaving: leaving_by.iter().sum(), has_trips: at, trips: ct, commute: commute.into_iter().collect(), commuters, leaving_by, place_pairs: pairs, rows: Default::default(), rank: Default::default() }
     }
     /// Each open place's run of zones (zones are laid out place by place): (place, first, end).
     pub(super) fn place_spans(&self) -> Vec<(usize, usize, usize)> {

@@ -357,7 +357,7 @@ Web first, so it can be shared as a link.
   panic is never taken for a broken pack. The page terminates it, starts a new worker in its place,
   downloads again (all replacements together keep 6 downloads going) and reopens everything it held, then sends the newest network again under a new
   version (`freshParts`: every worker composes its market afresh from the packs open, as the
-  replacement did, so all hold the same corridor table, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
+  replacement did, so all hold the same corridor book, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
   a solve through, or a fifth replacement in the page, stops the pool as before. `?debug=1` on the
   dev server has `twDemand.client.debugPanic(worker, "now" | "solve")`; check `t1174-panic-recover.mjs`.
   A demand worker whose code did not download (an error with no message before the worker said
@@ -710,7 +710,9 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   "The zone in view first"); from then a click is answered from the newest round the workers reach ("The pool", T-327),
   and the fresh final replaces the cache in one step (it is bit for bit the same). A test page, `?new=1` and a tab without the slot never
   write it. The write runs in a worker of its own (`workers/cacheWrite.worker.ts`, T-789), the
-  market's corridor table (shared by the days) copied once and transferred to it.
+  market's corridor book (shared by the days) copied once and transferred to it, with the corridor rows the page
+  holds of the zone in view and up to 15 more zones (T-2136: no worker has them at the next load until it holds
+  the market, about 20 s on the New York save; any other zone's rows wait that long).
   **Ahead of the network** (T-1539): a result whose network is the one a load worked out from its
   save also holds that network snapshot and the key of the save's network inputs (a SHA-256 of the
   save's track bytes, which a save numbers densely, without their eras tail (the trains changing over

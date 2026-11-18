@@ -39,10 +39,13 @@ const figures = (page) => page.evaluate(async (zone) => {
   const market = dm.intercityDemand.value;
   if (!v || !local || !market) return { error: `view ${!!v}, lengths ${!!local}, market ${!!market}` };
   if (local.version !== dm.demandView.value?.version) return { error: `lengths of solve ${local.version}, view ${dm.demandView.value?.version}` };
+  // (T-2136: the place's rows come from a worker)
+  const rows = await dm.rowsNow(market.corridors, city.place);
+  if (!rows) return { error: 'no corridor rows' };
   const far = zl.farTrips(city.place, market.corridors);
   // the city view's To other places, as CityInspector sums it
   let all = 0, rail = 0, air = 0;
-  dm.eachCorridor(market.corridors, (a, b) => a !== b && (a === city.place || b === city.place), (j, f) => { all += f.trips; rail += f.rail; air += f.air; });
+  dm.eachCorridor(market.corridors, rows, (a, b) => a !== b && (a === city.place || b === city.place), (a, b, f) => { all += f.trips; rail += f.rail; air += f.air; });
   const L = tl.lengthLayers(local, far);
   const sum = (a) => a.reduce((s, x) => s + x, 0);
   const bins = Object.fromEntries(tl.LAYERS.map((l) => [l, sum(L.n[l])]));

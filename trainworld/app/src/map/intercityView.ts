@@ -24,16 +24,17 @@
 // meanwhile.
 
 import { t as tr } from "../i18n";
-import { shareOf } from "../game/corridorShares";
 import { tPlace } from "../i18n/places";
-import { computed, effect, signal } from "@preact/signals";
+import { computed, effect, signal, untracked } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
 import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES, type City } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { lngLatToPack, packToLngLat } from "../game/coords";
 import { openFarTrip, tripOpenedFrom } from "../game/trip";
-import { cityDemandViews, demandView, eachCorridor, intercityDemand, INTERCITY_PLACES, intercitySelection, type Corridors, type CorridorTable, type IntercitySelection, type PlaceFlows } from "../game/demand";
+import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, rowsLanded, rowsOf, type IntercitySelection, type PlaceFlows } from "../game/demand";
+import { builtCities } from "../game/worldTotals";
+import { marketPairs, Z, zoneOf, zoneRowOf, type MarketPairs } from "../game/corridorFigures";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, purposeColour3, purposeSchemeOn, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
@@ -184,82 +185,10 @@ interface Marks {
   far?: { place: number; gid: number; at: [number, number] }[];
 }
 
-const PLACES = INTERCITY_PLACES.length;
-/** T-789: the city view draws zones only, so it keeps the places that hold a zone (`Z` of them),
- * not every place of the market. */
-const ZONE_PLACES = [...new Set(CITIES.map((c) => c.place).filter((p) => p >= 0 && p < PLACES))];
-const Z = ZONE_PLACES.length;
-const zoneIndex = new Int32Array(PLACES).fill(-1);
-ZONE_PLACES.forEach((p, i) => (zoneIndex[p] = i));
-const zoneOf = (place: number) => (place >= 0 && place < PLACES ? zoneIndex[place] : -1);
-/** where `MarketPairs` keeps a zone place's figures: [trips, rail, air] at `zoneOf` index * 3 */
+/** T-2136: how many zones' rows are asked ahead (game/demand.ts keeps 48 places' or sets') */
+const PREFETCH_PLACES = 16;
+/** the city view's market figures before any result (`MarketPairs.totals` all zero) */
 let noPairs: Float64Array | null = null;
-/** each corridor endpoint that is a zone place (`zoneOf`), -1 for none; a corridor within one
- * place or with a place past the list counts nowhere */
-const ends = (from: number, to: number): [number, number] =>
-  from === to || from >= PLACES || to >= PLACES ? [-1, -1] : [zoneOf(from), zoneOf(to)];
-
-/** T-1008: per zone place, a corridor table's longer trips, commute legs and longer trips by
- * plane (all as if no pair had rail) with every other place of the market, before a day's scales;
- * worked out once per table. */
-const tableTotals = new WeakMap<CorridorTable, Float64Array>();
-function totalsOf(t: CorridorTable): Float64Array {
-  let m = tableTotals.get(t);
-  if (m) return m;
-  m = new Float64Array(Z * 3);
-  for (let j = 0; j < t.n; j++) {
-    const [a, b] = ends(t.from[j], t.to[j]);
-    const l = t.longer[j], f = l * shareOf(t.air[j]);
-    if (a >= 0) { m[3 * a] += l; m[3 * a + 2] += f; }
-    if (b >= 0) { m[3 * b] += l; m[3 * b + 2] += f; }
-  }
-  for (let k = 0; k < t.commuteAt.length; k++) {
-    const j = t.commuteAt[k], [a, b] = ends(t.from[j], t.to[j]), c = t.commuteLegs[k];
-    if (a >= 0) m[3 * a + 1] += c;
-    if (b >= 0) m[3 * b + 1] += c;
-  }
-  tableTotals.set(t, m);
-  return m;
-}
-
-/** The market's trips a day for the city view: each zone place's with every other place of the
- * market (`totals`), all modes, by train and (T-378) by plane; and a zone place's with each other
- * zone place (`row`, worked out when a zone is selected). T-3503: `totals` take each zone place's
- * everyday outings across its lines too (`everyday`), and `walk` their walking. */
-interface MarketPairs { c: Corridors; totals: Float64Array; walk: Float64Array; rows: Map<number, Float64Array> }
-function pairs(c: Corridors, everyday: number[] = []): MarketPairs {
-  const b = totalsOf(c.table), totals = new Float64Array(Z * 3), walk = new Float64Array(Z);
-  for (let i = 0; i + 3 < everyday.length; i += 4) {
-    const z = zoneOf(everyday[i]);
-    if (z < 0) continue;
-    totals[3 * z] += everyday[i + 1];
-    totals[3 * z + 1] += everyday[i + 2];
-    walk[z] += everyday[i + 3];
-  }
-  for (let z = 0; z < Z; z++) {
-    totals[3 * z] += b[3 * z] * c.longerScale + b[3 * z + 1] * c.commuteScale;
-    totals[3 * z + 2] = b[3 * z + 2] * c.longerScale;
-  }
-  // the pairs with rail: their rail, and their longer trips by rail no longer by plane
-  const { from, to, air } = c.table;
-  for (let k = 0; k < c.railAt.length; k++) {
-    const j = c.railAt[k], r = c.longerRail[k] + c.commuteRail[k], f = c.longerRail[k] * air[j];
-    for (const z of ends(from[j], to[j])) if (z >= 0) { totals[3 * z + 1] += r; totals[3 * z + 2] -= f; }
-  }
-  return { c, totals, walk, rows: new Map() };
-}
-function rowOf(p: MarketPairs, za: number): Float64Array {
-  let m = p.rows.get(za);
-  if (m) return m;
-  m = new Float64Array(Z * 3);
-  const row = m;
-  eachCorridor(p.c, (from, to) => { const [a, b] = ends(from, to); return a >= 0 && b >= 0 && (a === za || b === za); }, (j, v) => {
-    const [a, b] = ends(p.c.table.from[j], p.c.table.to[j]), o = 3 * (a === za ? b : a);
-    row[o] += v.trips; row[o + 1] += v.rail; row[o + 2] += v.air;
-  });
-  p.rows.set(za, m);
-  return m;
-}
 
 const discLngLats = new WeakMap<Marks, Float64Array>();
 function lngLats(m: Marks): Float64Array {
@@ -349,6 +278,8 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   // ---- the market's corridors ----
   let market: MarketPairs | null = null;
+  /** a selected zone's rows were asked for and are not in yet */
+  let rowWanted = false;
 
   /** What the city view draws: the overview, a selected city, or neither. */
   const cityMode = (): "overview" | "selected" | null => {
@@ -371,7 +302,9 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const own = selected ? cityById(selected) : null;
     const totals = pairsIn?.totals ?? (noPairs ??= new Float64Array(Z * 3));
     const ownZone = own ? zoneOf(own.place) : -1;
-    const row = pairsIn && ownZone >= 0 ? rowOf(pairsIn, ownZone) : null;
+    // T-2136: the selected zone's rows come from a worker; drawn again as they land (`rowWanted`)
+    const row = pairsIn && ownZone >= 0 ? zoneRowOf(pairsIn, ownZone) : null;
+    rowWanted = !!pairsIn && ownZone >= 0 && !row;
     const at = (m: Float64Array | null, z: number) => (!m || z < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[3 * z], rail: m[3 * z + 1], air: m[3 * z + 2] });
     // (only ever the selected zone's pairs)
     const pair = (a: number, b: number) => at(zoneOf(a) === ownZone ? row : null, zoneOf(b));
@@ -387,7 +320,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     const loads = zoneLoads.peek();
     const day = shownDayPhrase.peek();
     // T-2748: a zoom step reuses the points and, within a tenth of a zoom level, their spacing; only the discs change
-    const inputs = [pairsIn, own, local, opened, tiered, loads, day, shownRealms.peek()];
+    const inputs = [pairsIn, own, row, local, opened, tiered, loads, day, shownRealms.peek()];
     const zoom = map.getZoom();
     const zq = Math.round(zoom * 10);
     if (!cityPoints || perfOff("overviewCache") || inputs.some((x, k) => x !== cityPoints!.inputs[k])) {
@@ -587,8 +520,20 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
   effect(() => {
     const r = intercityDemand.value;
     if (!r) return;
-    market = pairs(r.corridors, r.everyday);
-    if (cityMode()) render();
+    market = marketPairs(r.corridors, r.everyday);
+    if (cityMode()) untracked(render);
+    // T-2136: the zone in view's rows and the built zones', asked as a market's book comes (kept by its
+    // key, so once a market), since a question waits for a worker's next break while trips are calculated
+    const c = r.corridors;
+    untracked(() => {
+      const ids = [activeCity.peek(), ...builtCities().keys()];
+      const places = [...new Set(ids.map((id) => cityById(id)?.place ?? -1).filter((p) => p >= 0))];
+      for (const p of places.slice(0, PREFETCH_PLACES)) rowsOf(c, p);
+    });
+  });
+  effect(() => {
+    void rowsLanded.value;
+    if (rowWanted && cityMode()) untracked(render);
   });
 
   // under the commuter discs (order 10): where both are under the pointer, the commuters answer

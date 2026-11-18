@@ -27,7 +27,7 @@
 //   has landed, then swaps it in whole (free flow first, again after each crowding round).
 
 import { t } from "../i18n";
-import { shareOf } from "../game/corridorShares";
+import { ownModesFrom } from "../game/corridorFigures";
 import { effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, worldToCity, cityToMarket, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
@@ -61,8 +61,14 @@ import {
   type StationRiders,
   type ZoneRiders,
   type Corridors,
-  type CorridorTable,
+  type CorridorBook,
+  type CorridorRows,
   NO_CORRIDORS,
+  heldRows,
+  rowsCanCome,
+  rowsNow,
+  seedRows,
+  setRowsSource,
   demandSolving,
   roughZones,
   refiningZone,
@@ -137,6 +143,11 @@ const PERIOD_STRIDE = 6;
 const FLOWS_FIRST_MS = 1000;
 /** T-2746: the same wait with no solve running, a guard only: the far end's `flows` is posted within ~100 ms */
 const FLOWS_IDLE_MS = 5000;
+/** T-2136: a corridor rows question no solving worker has answered by then counts as none holding them
+ * (a worker replaced meanwhile never answers); asked again with the next result */
+const ROWS_WAIT_MS = 20000;
+/** T-2136: one-place corridor rows kept with a cached result, the zone in view's first (about 80 kB each) */
+const CACHED_ROWS = 16;
 
 /** The first registry zone of each market place (a scan per place was 45 ms a query in China, T-1165). */
 let placeCities: Map<number, (typeof CITIES)[number]> | null = null;
@@ -293,23 +304,18 @@ function stillShown(other: CityId | undefined, city: CityId, version: number, da
 }
 const frameOf = (): FrameSpec => { const f = getWorldFrame(); return { kind: f.kind, lon: f.lon, lat: f.lat }; };
 /** T-378: the shares of the longer trips not by rail that fly and that drive on each corridor with
- * place `own`, 2 per place (`SumsCtx.modes`), from the corridor table's rows: NaN where the table has
- * none (a corridor with no trips, whose bubbles carry none either, T-2122) or the shares are NaN (near
- * places on two landmasses); null with no place or before any are known (all by car). */
-const ownModesMade = new WeakMap<CorridorTable, Map<number, Float64Array>>();
-function ownModes(t: CorridorTable | null, own: number): Float64Array | null {
-  if (!t || own < 0) return null;
-  const made = ownModesMade.get(t) ?? ownModesMade.set(t, new Map()).get(t)!;
-  let out = made.get(own);
-  if (!out) {
-    out = new Float64Array(2 * INTERCITY_PLACES.length).fill(NaN);
-    const { from, to, air, car } = t;
-    for (let j = 0; j < t.n; j++) {
-      const p = from[j] === own ? to[j] : to[j] === own ? from[j] : -1;
-      if (p >= 0 && p < INTERCITY_PLACES.length) (out[2 * p] = shareOf(air[j])), (out[2 * p + 1] = shareOf(car[j]));
-    }
-    made.set(own, out);
-  }
+ * place `own`, 2 per place (`SumsCtx.modes`, game/corridorFigures.ts `ownModesFrom`); null with no
+ * place, before any are known, or with no worker holding the book's market (all by car). */
+const ownModesMade = new WeakMap<CorridorBook, Map<number, Float64Array>>();
+async function ownModes(b: CorridorBook | null, own: number): Promise<Float64Array | null> {
+  if (!b || own < 0) return null;
+  const made = ownModesMade.get(b) ?? ownModesMade.set(b, new Map()).get(b)!;
+  const had = made.get(own);
+  if (had) return had;
+  const r = await rowsNow({ ...NO_CORRIDORS, book: b }, own);
+  if (!r) return null;
+  const out = ownModesFrom(r, own);
+  made.set(own, out);
   return out;
 }
 let placeCentres: Float64Array | null = null;
@@ -746,9 +752,12 @@ class DemandClient {
   /** T-392: zones whose shown figures come from a cluster published ahead of a newer solve's final
    * (the version they came from); questions about them go to that solve */
   private cityVersion = new Map<CityId, number>();
-  /** T-378: the corridor table last sent, whose rows hold the shares of the longer trips not by rail
+  /** T-378: the corridor book last sent, whose rows hold the shares of the longer trips not by rail
    * by plane and by car (`ownModes`) */
-  private modesTable: CorridorTable | null = null;
+  private modesBook: CorridorBook | null = null;
+  /** T-2136: the rows asked of the solving workers (`corridorRows`), by question */
+  private rowsAsked = new Map<number, { left: number; done: (r: CorridorRows | null) => void }>();
+  private rowsNext = 1;
   /** T-1208, T-1210: the sums worker (`inSums`), started on first use, and its questions waiting */
   private sumsWorker: Worker | null = null;
   private sumsNext = 1;
@@ -758,9 +767,9 @@ class DemandClient {
   private sumsCells = new Set<string>();
   /** T-1208: the publishes waiting for their views (`inOrder`) */
   private dayQueue: Promise<void> = Promise.resolve();
-  /** T-1008: the market's corridor tables by key, the newest last (`dayCorridors`) */
-  private corridorTables = new Map<string, CorridorTable>();
-  /** the tables asked for again (`corridorsAgain`) and not back yet */
+  /** T-1008: the market's corridor books by key, the newest last (`dayCorridors`) */
+  private corridorBooks = new Map<string, CorridorBook>();
+  /** the books asked for again (`corridorsAgain`) and not back yet */
   private tableAsked = new Set<string>();
   /** T-789: the demand cache's writer (`writeStored`) and its writes waiting for an answer */
   private cacheWriter: Worker | null = null;
@@ -956,7 +965,7 @@ class DemandClient {
     };
     w.onmessageerror = () => { const j = at(); if (j >= 0) this.fail(`worker ${j}: a message could not be read`); }; // i18n-ignore
     // T-325: the aux worker is told every solving worker's periods, for the zones it holds bare
-    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("inPlace") ? { copies: true } : {}), ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
+    const msg: ToDemand = { kind: "init", packs: [], periods: this.periodsOf[i], ...(i < n ? this.marketsMsg(i) : {}), aux: i === n, warmEveryday, ...(perfOff("allSums") ? { allSums: true } : {}), ...(i === n ? { groups: this.periodsOf.slice(0, n) } : {}), heapStep: heapStep() };
     w.postMessage(msg);
     return w;
   }
@@ -2546,6 +2555,7 @@ class DemandClient {
     this.cachedCities = new Set(cities);
     this.cachedHash = hash;
     this.cachedModes = stored.modes ?? null;
+    seedRows(stored.rows ?? []);
     this.cachedAhead = stored.ahead?.save ?? null;
     if (this.cur?.svc === svc) this.cur.showEstimates = false;
     // T-2045: every zone has its final figures; T-2533: the focus pool stays for the zone in view's questions
@@ -2592,7 +2602,10 @@ class DemandClient {
     const modes = cm && { city, data: concat([cm.homeRail, cm.homeWalk, cm.homeDrive, cm.workRail, cm.workWalk, cm.workDrive, cm.homeNone, cm.workNone]), ...(m!.day ? { day: m!.day } : {}) };
     const ms = performance.now() - t0;
     const bytes = storedSize(stored) + (modes?.data.byteLength ?? 0);
-    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}) } satisfies StoredDemand);
+    // T-2136: with the zone in view's and the built zones' corridor rows, which no worker has at the next load until it holds the market
+    const bookKey = days[0].intercity?.corridors.book.key;
+    const rows = bookKey ? heldRows(bookKey, cityById(activeCity.peek())?.place ?? -1, CACHED_ROWS) : [];
+    const ok = await this.writeStored(slots.active, hash, { ...key, at: Date.now(), round: s.published, days: stored, ...(modes ? { modes } : {}), ...(ahead ? { ahead } : {}), ...(rows.length ? { rows } : {}) } satisfies StoredDemand);
     this.cachedHash = hash;
     this.cachedAhead = ahead?.save ?? null;
     (this.cacheLog ??= { at: t0 }).wrote = { at: performance.now(), ms, bytes, ok, ...(ahead ? { ahead: true } : {}) };
@@ -2616,27 +2629,24 @@ class DemandClient {
     }
     const transfer: ArrayBuffer[] = [];
     const days: StoredDemand["days"] = [];
-    // T-1008: the days share the market's table, copied once (the clone keeps it shared)
-    const tables = new Map<CorridorTable, CorridorTable>();
+    // T-1008: the days share the market's book, copied once (the clone keeps it shared)
+    const books = new Map<CorridorBook, CorridorBook>();
     const own = <T extends Uint16Array | Uint32Array | Float64Array | Float32Array>(a: T): T => { const b = a.slice() as T; transfer.push(b.buffer as ArrayBuffer); return b; };
     for (const d of v.days) {
       const c = d.intercity?.corridors;
       if (c) {
-        let t = tables.get(c.table);
-        if (!t) {
-          const s = c.table;
-          tables.set(s, (t = { key: s.key, n: s.n, from: own(s.from), to: own(s.to), longer: own(s.longer), commuteAt: own(s.commuteAt), commuteLegs: own(s.commuteLegs), air: own(s.air), car: own(s.car) }));
-          await new Promise((r) => setTimeout(r, 0));
-        }
-        const copy: Corridors = { table: t, longerScale: c.longerScale, commuteScale: c.commuteScale, railAt: own(c.railAt), longerRail: own(c.longerRail), commuteRail: own(c.commuteRail) };
+        let t = books.get(c.book);
+        if (!t) books.set(c.book, (t = { key: c.book.key, n: c.book.n, totals: own(c.book.totals), own: own(c.book.own) }));
+        const copy: Corridors = { book: t, longerScale: c.longerScale, commuteScale: c.commuteScale, railAt: own(c.railAt), longerRail: own(c.longerRail), commuteRail: own(c.commuteRail), railFrom: own(c.railFrom), railTo: own(c.railTo), railAir: own(c.railAir) };
         days.push({ ...d, intercity: { ...d.intercity!, corridors: copy } });
       } else days.push(d);
     }
     if (v.modes) transfer.push(v.modes.data.buffer as ArrayBuffer);
+    const rows = v.rows?.map(({ place, rows: r }) => ({ place, rows: { key: r.key, n: r.n, at: own(r.at), from: own(r.from), to: own(r.to), longer: own(r.longer), commute: own(r.commute), air: own(r.air), car: own(r.car) } }));
     const id = ++this.cacheWriteId;
     return new Promise((resolve) => {
       this.cacheWriteWaits.set(id, resolve);
-      this.cacheWriter!.postMessage({ id, slot, hash, value: { ...v, days } }, transfer);
+      this.cacheWriter!.postMessage({ id, slot, hash, value: { ...v, days, ...(rows ? { rows } : {}) } }, transfer);
     });
   }
 
@@ -3566,6 +3576,7 @@ class DemandClient {
       markStep();
       return this.progressSoon();
     }
+    if (msg.kind === "rows") return this.rowsAnswered(msg.id, msg.rows);
     if (this.reply(i, msg)) return;
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     markStep();
@@ -3639,15 +3650,16 @@ class DemandClient {
       this.progress();
       return;
     }
-    // T-1008: a worker sends each corridor table once, maybe on a result superseded here
-    if (msg.kind === "result" && msg.corridorTable) {
-      const t = msg.corridorTable;
-      this.corridorTables.delete(t.key);
-      this.corridorTables.set(t.key, t);
+    // T-1008: a worker sends each corridor book once, maybe on a result superseded here
+    if (msg.kind === "result" && msg.corridorBook) {
+      const t = msg.corridorBook;
+      this.corridorBooks.delete(t.key);
+      this.corridorBooks.set(t.key, t);
       this.tableAsked.delete(t.key);
       // more than one is in use only while the market changes (`dayCorridors` keeps its own newest)
-      if (this.corridorTables.size > 3) this.corridorTables.delete(this.corridorTables.keys().next().value!);
-      this.modesTable = t;
+      if (this.corridorBooks.size > 3) this.corridorBooks.delete(this.corridorBooks.keys().next().value!);
+      this.modesBook = t;
+      rowsCanCome(t.key);
     }
     const s = this.cur;
     if (!s || msg.version !== s.version) return; // superseded
@@ -4870,8 +4882,31 @@ class DemandClient {
   }
 
   /** The frames and tables a longer-trip answer is read with (`SumsCtx`). */
-  private sumsCtx(own = -1): SumsCtx {
-    return { market: MARKET_SPEC, world: frameOf(), places: INTERCITY_PLACES.length, own, modes: ownModes(this.modesTable, own), centres: centresOfPlaces() };
+  private async sumsCtx(own = -1): Promise<SumsCtx> {
+    const modes = await ownModes(this.modesBook, own);
+    return { market: MARKET_SPEC, world: frameOf(), places: INTERCITY_PLACES.length, own, modes, centres: centresOfPlaces() };
+  }
+
+  /** T-2136: the table rows of the market whose book has `key` touching `place` (game/demand.ts
+   * `rowsOf`), from the first solving worker to answer with them; null when none holds that market
+   * (a cached result shown before the market is open, or a newer one opened). */
+  corridorRows(key: string, place: number): Promise<CorridorRows | null> {
+    const n = this.computeN;
+    if (!n || this.status !== "ready") return Promise.resolve(null);
+    const id = this.rowsNext++;
+    return new Promise((done) => {
+      const t = window.setTimeout(() => this.rowsAnswered(id, null, true), ROWS_WAIT_MS);
+      this.rowsAsked.set(id, { left: n, done: (r) => { clearTimeout(t); done(r); } });
+      for (let i = 0; i < n; i++) this.workers[i].postMessage({ kind: "rows", id, key, place } satisfies ToDemand);
+    });
+  }
+  private rowsAnswered(id: number, rows: CorridorRows | null, timedOut = false) {
+    const w = this.rowsAsked.get(id);
+    if (!w) return;
+    if (rows || timedOut || --w.left === 0) {
+      this.rowsAsked.delete(id);
+      w.done(rows);
+    }
   }
 
   /** T-336: a selection of the zone in view, open bare, as the regional market's squares, from the
@@ -4901,7 +4936,7 @@ class DemandClient {
     const parts = await this.partsIntercity("icSel", t, (id) => ({ kind: "icSel", id, version: t.version, end: e, cells, ...(sq ? { sq } : {}) }));
     if (!parts) return null;
     const own = CITIES.find((c) => c.id === activeCity.peek())?.place ?? -1;
-    const ctx = this.sumsCtx(own);
+    const ctx = await this.sumsCtx(own);
     const r = await this.inSums<Omit<IntercitySelection, "version">>({ kind: "icSel", parts, ctx }, parts.map((p) => p.buffer), () => selectionFlows(sumParts("icSel", parts, ctx.places), ctx));
     return r && { version, ...r };
   }
@@ -4919,7 +4954,7 @@ class DemandClient {
     const answers = await Promise.all(indices.map((station) => this.partsIntercity("icStation", t, (id) => ({ kind: "icStation", id, version: t.version, station }))));
     const memberParts = answers.filter((a): a is Float64Array[] => !!a);
     if (!memberParts.length) return null;
-    const ctx = this.sumsCtx();
+    const ctx = await this.sumsCtx();
     const r = await this.inSums<Pick<IntercityStation, "starts" | "ends">>({ kind: "icStation", members: memberParts, ctx }, memberParts.flat().map((p) => p.buffer), () => stationFlows(memberParts.map((parts) => sumParts("icStation", parts, ctx.places)), ctx));
     return r && { version, stationId, scope: members.join(","), ...r };
   }
@@ -4990,20 +5025,21 @@ class DemandClient {
   }
 
   /**
-   * T-1008: a kind of day's corridors with the market's table (sent once, shared by every result);
-   * none while the table is lost (a newer market's pushed it out), which the workers then send
+   * T-1008: a kind of day's corridors with the market's book (sent once, shared by every result);
+   * none while the book is lost (a newer market's pushed it out), which the workers then send
    * again with their next results.
    */
   private corridorsOf(c: CorridorRail | null): Corridors {
     if (!c) return NO_CORRIDORS;
-    const table = this.corridorTables.get(c.key);
-    if (!table) {
+    const book = this.corridorBooks.get(c.key);
+    if (!book) {
       if (!this.tableAsked.has(c.key)) { this.tableAsked.add(c.key); for (const w of this.workers) w.postMessage({ kind: "corridorsAgain" } satisfies ToDemand); }
       return NO_CORRIDORS;
     }
-    this.corridorTables.delete(c.key);
-    this.corridorTables.set(c.key, table);
-    return { table, longerScale: c.longerScale, commuteScale: c.commuteScale, railAt: c.railAt, longerRail: c.longerRail, commuteRail: c.commuteRail };
+    this.corridorBooks.delete(c.key);
+    this.corridorBooks.set(c.key, book);
+    const { key: _, ...rail } = c;
+    return { book, ...rail };
   }
 
   /** Every period has reached `round`: build the view the UI reads. */
@@ -5367,6 +5403,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setDownloadProbe(() => c.oldestDownload()); // T-2756
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
+  setRowsSource((key, place) => c.corridorRows(key, place)); // T-2136
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, poolSize, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };

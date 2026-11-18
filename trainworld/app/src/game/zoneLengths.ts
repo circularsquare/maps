@@ -3,7 +3,7 @@
 
 import { signal } from "@preact/signals";
 import { CITIES, type City, type CityId } from "./cities";
-import { demandAskTurn, demandView, eachCorridor, zoneTripLengths, type Corridors } from "./demand";
+import { demandAskTurn, demandView, eachCorridor, rowsOf, zoneTripLengths, type Corridors } from "./demand";
 import type { FarTrips, TripLengths } from "./tripLengths";
 import { shownDay } from "./ui";
 
@@ -56,12 +56,15 @@ function km([lon1, lat1]: [number, number], [lon2, lat2]: [number, number]): num
 }
 
 /** The trips between `place` and every other place, as the city view's To other places counts
- * them, each at the distance between the two places' centres. */
-export function farTrips(place: number, c: Corridors): FarTrips[] {
+ * them, each at the distance between the two places' centres; null while the place's rows are
+ * asked of the workers (T-2136). */
+export function farTrips(place: number, c: Corridors): FarTrips[] | null {
+  const r = rowsOf(c, place);
+  if (!r) return null;
   const out: FarTrips[] = [];
   const here = placeCity(place)?.center;
-  eachCorridor(c, (from, to) => from !== to && (from === place || to === place), (j, v) => {
-    const other = c.table.from[j] === place ? c.table.to[j] : c.table.from[j];
+  eachCorridor(c, r, (from, to) => from !== to && (from === place || to === place), (from, to, v) => {
+    const other = from === place ? to : from;
     const there = placeCity(other)?.center;
     out.push({ km: here && there ? km(here, there) : Infinity, trips: v.trips, rail: v.rail, air: v.air });
   });

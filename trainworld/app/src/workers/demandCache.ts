@@ -12,7 +12,7 @@
 // worker order) and the perfOff flags. Any difference means no cache, never a wrong one.
 
 import type { CityId } from "../game/cities";
-import type { DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
+import type { CorridorRows, DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
 import type { DemandDay } from "../game/days";
 import type { PurposeKey } from "../game/purposes";
 import type { ModeSplit } from "../game/types";
@@ -21,7 +21,7 @@ import type { NetworkSnapshot } from "./protocol";
 declare const __TW_BUILD__: string | undefined;
 /** The app build: set by vite.config.ts at each build and each dev-server start. */
 export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "unknown";
-export const CACHE_FORMAT = 9; // raise when the cached result's layout changes
+export const CACHE_FORMAT = 12; // raise when the cached result's layout changes
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;
@@ -52,7 +52,10 @@ interface StoredDay { view: StoredView; cities: [CityId, CityFigures][]; interci
 /** `modes`: the viewed zone's bubbles on the kind of day shown (`day`, a weekday when absent), all
  * purposes (`CellModes`' eight arrays one after another, pack cell order), when they were on show as
  * the result landed */
-export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array; day?: number }; ahead?: CacheAhead }
+export interface StoredDemand extends CacheKey { at: number; round: number; days: StoredDay[]; modes?: { city: CityId; data: Float32Array; day?: number }; ahead?: CacheAhead;
+  /** T-2136: the corridor rows the page held of the result's market, one place each (the zone in view's
+   * and the built zones'), so a cached result shows them before any worker holds the market */
+  rows?: { place: number; rows: CorridorRows }[] }
 /** T-1539: the network a load of a save works out, when this result is that network's: `save` the
  * clock worker's key of the save's network inputs (`saveNetKey`), `snapshot` the network it sent */
 export interface CacheAhead { save: string; snapshot: NetworkSnapshot }

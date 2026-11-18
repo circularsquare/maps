@@ -339,7 +339,7 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     intercitySummary: market.intercitySummary,
     intercityParts: market.intercityParts,
     corridorKey: market.corridorKey,
-    corridorTable: market.corridorTable,
+    corridorBook: market.corridorBook,
     corridorShares: market.corridorShares,
     corridorRail: market.corridorRail,
     elsewhere: market.elsewhere,
@@ -385,11 +385,11 @@ export interface DayInput {
   noCorridors: boolean;
 }
 
-/** A kind of day's corridors less the table they index (`Corridors.table`, kept on the main thread
- * by its key); null for none (`NO_CORRIDORS`). */
-export type CorridorRail = Omit<Corridors, "table"> & { key: string };
+/** A kind of day's corridors less their book (`Corridors.book`, kept on the main thread by its key);
+ * null for none (`NO_CORRIDORS`). */
+export type CorridorRail = Omit<Corridors, "book"> & { key: string };
 /** A kind of day's views as `DayDemand`, before the zones open bare join the cities and the
- * corridors their table. */
+ * corridors their book. */
 export interface DayViews { view: DemandView; cities: Map<CityId, DemandView>; intercity: Omit<IntercityDemand, "corridors"> & { corridors: CorridorRail | null } }
 
 /** The purposes in `day_factors()`'s order (sim/src/demand/days.rs): work, the everyday layer's
@@ -536,17 +536,18 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
 }
 
 /**
- * T-1008: a kind of day's corridors from its period results, less the market's table (sent once,
- * kept by its key): the day's scales, the periods' shares times their day factors, and the pairs
- * with rail added up over the periods. Work in the pairs with rail only.
+ * T-1008: a kind of day's corridors from its period results, less the market's book (sent once,
+ * kept by its key): the day's scales, the periods' shares times their day factors, and the table
+ * rows with rail added up over the periods, with their places and share flying (T-2136). Work in
+ * the rows with rail only.
  */
 function dayCorridors(res: DayResult[]): CorridorRail | null {
   const key = res.find((r) => r.corridorKey)?.corridorKey;
   if (!key) return null;
   let longerScale = 0, commuteScale = 0;
-  const rail = new Map<number, [number, number]>();
+  const rail = new Map<number, [number, number, number, number, number]>();
   for (const r of res) {
-    // every period of one solve has the same market; a period of another would index other rows
+    // every period of one solve has the same market; a period of another would be of other rows
     if (r.corridorKey !== key) {
       if (r.corridorKey) console.error("demand: periods with different corridor tables", key, r.corridorKey);
       continue;
@@ -554,15 +555,15 @@ function dayCorridors(res: DayResult[]): CorridorRail | null {
     const [fl, fw] = r.corridorDay ?? [1, 1];
     if (r.corridorShares) { longerScale += r.corridorShares[0] * fl; commuteScale += r.corridorShares[1] * fw; }
     const v = r.corridorRail;
-    for (let i = 0; v && i < v.length; i += 3) {
+    for (let i = 0; v && i < v.length; i += 6) {
       const j = v[i], a = rail.get(j);
-      if (a) { a[0] += v[i + 1] * fl; a[1] += v[i + 2] * fw; } else rail.set(j, [v[i + 1] * fl, v[i + 2] * fw]);
+      if (a) { a[0] += v[i + 1] * fl; a[1] += v[i + 2] * fw; } else rail.set(j, [v[i + 1] * fl, v[i + 2] * fw, v[i + 3], v[i + 4], v[i + 5]]);
     }
   }
-  const railAt = Uint32Array.from(rail.keys()).sort();
-  const longerRail = new Float64Array(railAt.length), commuteRail = new Float64Array(railAt.length);
-  railAt.forEach((j, k) => { const [l, c] = rail.get(j)!; longerRail[k] = l; commuteRail[k] = c; });
-  return { key, longerScale, commuteScale, railAt, longerRail, commuteRail };
+  const railAt = Uint32Array.from(rail.keys()).sort(), n = railAt.length;
+  const longerRail = new Float64Array(n), commuteRail = new Float64Array(n), railFrom = new Uint32Array(n), railTo = new Uint32Array(n), railAir = new Uint16Array(n);
+  railAt.forEach((j, k) => { const [l, c, a, b, air] = rail.get(j)!; longerRail[k] = l; commuteRail[k] = c; railFrom[k] = a; railTo[k] = b; railAir[k] = air; });
+  return { key, longerScale, commuteScale, railAt, longerRail, commuteRail, railFrom, railTo, railAir };
 }
 
 /** The views of one kind of day from its period results. */

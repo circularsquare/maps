@@ -485,7 +485,7 @@ pub(super) fn build_for(b: Built, near_for: Option<&[bool]>, reuse: Option<Rc<Co
         e_home: (vec![], vec![]),
         e_act: (vec![], vec![]),
         e_base: vec![],
-        cw: Rc::new(Corridors { id: 0, has_trips: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0, rows: Default::default() }),
+        cw: Rc::new(Corridors { id: 0, has_trips: vec![], trips: vec![], commute: vec![], commuters: 0., leaving_by: vec![], daily: 0., leaving: 0., place_pairs: 0, rows: Default::default(), rank: Default::default() }),
     };
     for (c, z) in m.zones.iter().enumerate() {
         m.comp_of_gid[z.gid as usize] = c as u32;

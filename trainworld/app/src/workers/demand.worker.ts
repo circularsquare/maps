@@ -20,7 +20,7 @@
 // covers goes when that solve ends.
 
 import init, { DemandApi, EverydayApi, IntercityApi, MarketPacks, day_factors, demand_periods, everyday_warm_up, last_panic, release_skims, set_heap_step, trip_length_edges, wasm_heap_bytes, wasm_heap_peak, wasm_memory_bytes } from "../wasm/demand/sim"; // demand only (T-051)
-import { SHARE_ONE, shareCode } from "../game/corridorShares";
+import { shareCode } from "../game/corridorShares";
 import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, marketWorld, setWorldFrame, widenBox, worldToCity, worldToLonLat, zoneBox, type CityId } from "../game/cities";
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { initWasm } from "./wasmInit";
@@ -30,7 +30,7 @@ import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
-import type { CorridorTable } from "../game/demand";
+import type { CorridorBook, CorridorRows } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
 import { addIntercity } from "./demandSums";
 import { VIEW_TOLERANCE, sameView } from "./demandView";
@@ -124,7 +124,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "debugPanic" | "periods" | "first" | "view" | "loads" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "close" | "corridorsAgain" | "rows" | "debugPanic" | "periods" | "first" | "view" | "loads" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -910,8 +910,6 @@ function closeDeferred() {
 const openQueue: { msg: Extract<ToDemand, { kind: "open" }>; epoch: number }[] = [];
 let closeEpoch = 0;
 
-/** T-2495: `?perfOff=inPlace`, the table's columns through the binding's copies (`inPlace`) */
-let copies = false;
 /** T-2596: `?perfOff=allSums` */
 let allSums = false;
 
@@ -981,11 +979,10 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     opening = opening.then(async () => {
       try {
         const t0 = performance.now();
-        [raw, attractions] = await Promise.all([initWasm(() => init(), "demand worker"), loadAttractions()]); // i18n-ignore
+        [, attractions] = await Promise.all([initWasm(() => init(), "demand worker"), loadAttractions()]); // i18n-ignore
         if (msg.heapStep) set_heap_step(msg.heapStep);
         const t1 = performance.now();
         aux = !!msg.aux;
-        copies = !!msg.copies;
         allSums = !!msg.allSums;
         mine = msg.periods;
         mkt = msg.markets ?? mine;
@@ -1050,6 +1047,12 @@ onmessage = (e: MessageEvent<ToDemand>) => {
   } else if (msg.kind === "corridorsAgain") {
     sentTables.clear();
     tableAsked = true;
+  } else if (msg.kind === "rows") {
+    // T-2136: answered whatever is being solved (the rows depend on no network, period or round)
+    let rows: CorridorRows | null = null;
+    try { rows = started && !dead ? rowsFor(msg.key, msg.place) : null; } catch (err) { console.error("demand rows:", err); }
+    const r = rows;
+    postMessage({ kind: "rows", id: msg.id, rows: r } satisfies FromDemand, { transfer: r ? [r.at, r.from, r.to, r.longer, r.commute, r.air, r.car].map((a) => a.buffer as ArrayBuffer) : [] });
   } else if (msg.kind === "periods") {
     dealt = msg;
     if (!busy) deal();
@@ -1521,119 +1524,62 @@ function marketStationFlows(at: Version, c: JobCluster | undefined, m: Intercity
 }
 
 /**
- * T-1008: the market's corridor table (game/demand.ts `CorridorTable`): the pairs with longer trips
- * or commutes, which depend on neither the period nor the network (most of the market's place
- * pairs have none), with a key of all of it. `row` maps a market corridor to its row, -1 none.
- * Made once per market part; the main thread is sent each key once (`sentTables`), since its tens
- * of MB in every period's result cost it a frame or more each (T-790). T-1204: the parts and
- * compositions of one world share their corridors (`corridors_id`), so the table is made once for
- * them all (it was tens of MB a part, and as many again to make). T-2122: the worker keeps only the
- * rows' corridors (`idx`, ascending, which a period's rail is matched against); the columns go to the
- * main thread as made and are made again if it asks (`corridorsAgain`), so no whole-world array
- * (12.7M corridors in 2026-11, against 3.9M rows) is held or copied here. T-2485: only the worker
- * holding period 0's market makes and sends it (every solving worker sent its own copy, 188 MB each
- * on the New York save), any worker once the page asks again; place numbers 16-bit where they fit
- * and commute legs only where there are any.
+ * T-1008, T-2136: the market's corridor table (the pairs with longer trips or commutes, which depend on
+ * neither the period nor the network; most of the market's place pairs have none) is held whole by
+ * no one. The page gets its book once per key (game/demand.ts `CorridorBook`: the rows' count, a key
+ * of all of it, each place's sums for the city view), asks a solving worker for a few places' rows
+ * when a view needs them (`rowsFor`, from the WASM's own figures), and each period's rail comes by
+ * corridor with its two places and share flying (`railMemo`). It was 118 MB on the page and as much
+ * again to make in a worker on the New York save (8.5M rows in 2026-11, growing with the square of the
+ * places). T-1204: the parts and compositions of one world share their corridors (`corridors_id`),
+ * so the book is made once for them all. T-2485: only the worker holding period 0's market sends it,
+ * any worker once the page asks again (`corridorsAgain`).
  */
-interface MadeTable { key: string; idx: Uint32Array; cols: CorridorTable | null }
-let madeTable: { id: number; made: MadeTable } | null = null;
+interface Book { id: number; key: string; n: number; totals: Float64Array; own: Float64Array }
+let madeBook: Book | null = null;
 const sentTables = new Set<string>();
-/** the page asked for the tables again (`corridorsAgain`): the next result with a market sends its own */
+/** the page asked for the books again (`corridorsAgain`): the next result with a market sends its own */
 let tableAsked = false;
 const sendsTable = (q: number) => tableAsked || (q === 0 && mkt.includes(0));
-/** The table's key (FNV-1a over the bits of every column as whole columns: from, to as u32, longer,
- * commute legs on every row, air, car) and, with `make`, the table. */
-function tableColumns(p: IntercityApi, make: boolean): { key: string; table: CorridorTable | null } {
-  let h = 0x811c9dc5, n = 0;
-  const words = (w: Uint32Array) => {
-    for (let i = 0; i < w.length; i++) h = Math.imul(h ^ w[i], 0x01000193);
-  };
-  // each column read in place, one at a time (`inPlace`)
-  let from: Uint16Array | Uint32Array = new Uint32Array(0), to: Uint16Array | Uint32Array = new Uint32Array(0);
-  inPlace(raw!.intercityapi_corridor_rows_pairs, p, 4, (b, o, l) => new Uint32Array(b, o, l), () => p.corridor_rows_pairs(), (pairs) => {
-    n = pairs.length / 2;
-    for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j], 0x01000193);
-    for (let j = 0; j < n; j++) h = Math.imul(h ^ pairs[2 * j + 1], 0x01000193);
-    if (!make) return;
-    let most = 0;
-    for (let i = 0; i < pairs.length; i++) if (pairs[i] > most) most = pairs[i];
-    from = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
-    to = most < 65536 ? new Uint16Array(n) : new Uint32Array(n);
-    for (let j = 0; j < n; j++) { from[j] = pairs[2 * j]; to[j] = pairs[2 * j + 1]; }
-  });
-  const longer = inPlace(raw!.intercityapi_corridor_rows_trips, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_trips(), (a) => {
-    words(new Uint32Array(a.buffer, a.byteOffset, 2 * a.length));
-    return make ? Float32Array.from(a) : null;
-  });
-  let commuteAt = new Uint32Array(0), commuteLegs = new Float64Array(0);
-  inPlace(raw!.intercityapi_corridor_rows_commutes, p, 8, (b, o, l) => new Float64Array(b, o, l), () => p.corridor_rows_commutes(), (legs) => {
-    if (legs.length !== n) { for (let i = 0; i < 2 * n; i++) h = Math.imul(h, 0x01000193); return; }
-    words(new Uint32Array(legs.buffer, legs.byteOffset, 2 * n));
-    if (!make) return;
-    // (a -0 kept too, so every figure is the same to the bit)
-    const at: number[] = [];
-    for (let j = 0; j < n; j++) if (legs[j] !== 0 || Object.is(legs[j], -0)) at.push(j);
-    commuteAt = Uint32Array.from(at);
-    commuteLegs = new Float64Array(at.length);
-    for (let k = 0; k < at.length; k++) commuteLegs[k] = legs[at[k]];
-  });
-  const air = new Uint16Array(make ? n : 0), car = new Uint16Array(make ? n : 0);
-  inPlace(raw!.intercityapi_corridor_rows_modes, p, 4, (b, o, l) => new Float32Array(b, o, l), () => p.corridor_rows_modes(), (modes) => {
-    const hasM = modes.length === 2 * n;
-    // T-378: before any shares are known, all by car (1.0f is 0x3f800000)
-    const mw = new Uint32Array(modes.buffer, modes.byteOffset, modes.length);
-    for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j] : 0), 0x01000193);
-    for (let j = 0; j < n; j++) h = Math.imul(h ^ (hasM ? mw[2 * j + 1] : 0x3f800000), 0x01000193);
-    if (!make) return;
-    if (hasM) for (let j = 0; j < n; j++) { air[j] = shareCode(modes[2 * j]); car[j] = shareCode(modes[2 * j + 1]); } else car.fill(SHARE_ONE);
-  });
-  const key = `${n}:${(h >>> 0).toString(36)}`;
-  return { key, table: longer ? { key, n, from, to, longer, commuteAt, commuteLegs, air, car } : null };
-}
-
-/** The WASM's exports (`init`), for `inPlace`. */
-let raw: Awaited<ReturnType<typeof init>> | null = null;
-/**
- * T-2495: a vector a market getter returns (`IntercityApi.corridor_rows_*`), read where it lies in the
- * WASM's memory and freed there, without the copy the binding makes: the table's columns are 47 MB each
- * on the New York save, and a worker's copies stayed until its next garbage collection, which a solve
- * running in the WASM puts off for its whole length (about 190 MB a solving worker during a load).
- * `use` must not call into the WASM (memory growth would detach the view). `size`: bytes an element.
- */
-function inPlace<A, T>(get: (ptr: number) => [number, number], p: IntercityApi, size: number, view: (buf: ArrayBuffer, off: number, len: number) => A, copy: () => A, use: (a: A) => T): T {
-  if (copies) return use(copy());
-  const [ptr, len] = get((p as unknown as { __wbg_ptr: number }).__wbg_ptr);
-  try {
-    return use(view(raw!.memory.buffer as ArrayBuffer, ptr, len));
-  } finally {
-    raw!.__wbindgen_free(ptr, len * size, size);
-  }
-}
-function corridorTable(p: IntercityApi): MadeTable {
+function corridorBook(p: IntercityApi): Book {
   const id = p.corridors_id();
-  if (madeTable?.id === id) return madeTable.made;
-  const { key, table } = tableColumns(p, tableAsked || mkt.includes(0));
-  const made = { key, idx: p.corridor_rows(), cols: table };
-  madeTable = { id, made };
-  return made;
+  if (madeBook?.id === id) return madeBook;
+  const np = REGISTRY.market.places.length;
+  const s = p.table_summary(np);
+  // (T-3509: the own rows' longer trips rounded to 32 bits, as the rows and the page's old table hold them)
+  const own = s.slice(2 + 3 * np);
+  for (let i = 0; i < own.length; i += 2) own[i] = Math.fround(own[i]);
+  madeBook = { id, key: `${s[0]}:${(s[1] >>> 0).toString(36)}`, n: s[0], totals: s.slice(2, 2 + 3 * np), own };
+  railMemo.clear();
+  return madeBook;
 }
-/** The row of corridor `c` in `idx`, -1 none. */
-function rowOf(idx: Uint32Array, c: number): number {
-  let lo = 0, hi = idx.length - 1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >>> 1, v = idx[mid];
-    if (v === c) return mid;
-    if (v < c) lo = mid + 1; else hi = mid - 1;
+/** each corridor with rail under the book in hand: its two places and share flying (`shareCode`), or
+ * null for one that is no table row (no trips, no commutes), which the page never counted */
+const railMemo = new Map<number, [number, number, number] | null>();
+
+/** T-2136: the table rows touching `place` (game/demand.ts `CorridorRows`), from the market whose
+ * book has `key`; null when this worker holds no such market (not open yet, or another). */
+function rowsFor(key: string, place: number): CorridorRows | null {
+  const b = madeBook;
+  if (b?.key !== key) return null;
+  const p = [intercity, ...marketParts.values()].find((x) => x && x.corridors_id() === b.id);
+  if (!p) return null;
+  const v = p.place_rows(Uint32Array.of(place)), n = v.length / 7;
+  const r: CorridorRows = { key, n, at: new Uint32Array(n), from: new Uint32Array(n), to: new Uint32Array(n), longer: new Float32Array(n), commute: new Float64Array(n), air: new Uint16Array(n), car: new Uint16Array(n) };
+  for (let k = 0; k < n; k++) {
+    r.at[k] = v[7 * k]; r.from[k] = v[7 * k + 1]; r.to[k] = v[7 * k + 2]; r.longer[k] = v[7 * k + 3]; r.commute[k] = v[7 * k + 4];
+    r.air[k] = shareCode(v[7 * k + 5]); r.car[k] = shareCode(v[7 * k + 6]);
   }
-  return -1;
+  return r;
 }
 
-/** T-1008: period `q`'s corridor figures over the market's parts: the table, the period's shares
- * (the first part's that solved it; the trips are the same in every part) and the pairs with rail,
- * each part's own network's added up, by table row, ascending. */
+/** T-1008: period `q`'s corridor figures over the market's parts: the book, the period's shares
+ * (the first part's that solved it; the trips are the same in every part) and the table rows with
+ * rail, each part's own network's added up, by corridor ascending, six numbers each (corridor, rail
+ * trips, commute rail legs, its two places, its share flying as a `shareCode`). */
 function marketCorridors(parts: IntercityApi[], q: number) {
   if (!parts.length) return null;
-  const made = corridorTable(parts[0]);
+  const made = corridorBook(parts[0]);
   let shares: number[] = [];
   const rail = new Map<number, [number, number]>();
   for (const p of parts) {
@@ -1642,25 +1588,25 @@ function marketCorridors(parts: IntercityApi[], q: number) {
     if (!shares.length) shares = Array.from(s);
     const v = p.corridor_rail(q);
     for (let i = 0; i < v.length; i += 3) {
-      const j = rowOf(made.idx, v[i]);
-      if (j < 0) continue;
-      const r = rail.get(j);
-      if (r) { r[0] += v[i + 1]; r[1] += v[i + 2]; } else rail.set(j, [v[i + 1], v[i + 2]]);
+      const r = rail.get(v[i]);
+      if (r) { r[0] += v[i + 1]; r[1] += v[i + 2]; } else rail.set(v[i], [v[i + 1], v[i + 2]]);
     }
   }
-  const rows = [...rail.keys()].sort((a, b) => a - b);
-  const out = new Float64Array(3 * rows.length);
-  rows.forEach((j, k) => { const [r, c] = rail.get(j)!; out[3 * k] = j; out[3 * k + 1] = r; out[3 * k + 2] = c; });
-  // (transferred: made again for a `corridorsAgain`)
-  let table: CorridorTable | undefined;
+  const fresh = [...rail.keys()].filter((c) => !railMemo.has(c));
+  if (fresh.length) {
+    const at = parts[0].rows_at(Uint32Array.from(fresh));
+    fresh.forEach((c, k) => railMemo.set(c, Number.isNaN(at[6 * k + 2]) ? null : [at[6 * k], at[6 * k + 1], shareCode(at[6 * k + 4])]));
+  }
+  const rows = [...rail.keys()].filter((c) => railMemo.get(c)).sort((a, b) => a - b);
+  const out = new Float64Array(6 * rows.length);
+  rows.forEach((c, k) => { const [r, cm] = rail.get(c)!, [a, b, air] = railMemo.get(c)!; out.set([c, r, cm, a, b, air], 6 * k); });
+  let book: CorridorBook | undefined;
   if (!sentTables.has(made.key) && sendsTable(q)) {
-    table = made.cols ?? tableColumns(parts[0], true).table!;
-    made.cols = null;
-    made.key = table.key;
-    sentTables.add(table.key);
+    book = { key: made.key, n: made.n, totals: made.totals.slice(), own: made.own.slice() };
+    sentTables.add(made.key);
     tableAsked = false;
   }
-  return { corridorKey: made.key, corridorTable: table, corridorShares: shares.length >= 2 ? [shares[0], shares[1]] as [number, number] : undefined, corridorRail: out };
+  return { corridorKey: made.key, corridorBook: book, corridorShares: shares.length >= 2 ? [shares[0], shares[1]] as [number, number] : undefined, corridorRail: out };
 }
 
 /**
@@ -2418,9 +2364,8 @@ async function run() {
           if (e) for (let k = 0; k < Math.min(e.length, 3 * (local - 1)); k++) v[3 + k] = e[k];
           return [id, v];
         })) as Record<CityId, number[]>;
-        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorTable: market?.corridorTable, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, everydayPlaces: market?.everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, baseX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
-        const t = market?.corridorTable;
-        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, ...(t ? [t.from, t.to, t.longer, t.commuteAt, t.commuteLegs, t.air, t.car].map((a) => a.buffer) : [])].filter((b): b is ArrayBuffer => !!b);
+        const msg = { version: job.version, period: q, summary, fareSense, citySummary, cityParts, intercitySummary, intercityParts: market ? market.parts : [], corridorKey: market?.corridorKey, corridorBook: market?.corridorBook, corridorShares: market?.corridorShares, corridorRail: market?.corridorRail, elsewhere: market?.elsewhere, everydayPlaces: market?.everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, baseX, xferIn, parts, ms, setupMs, memBytes: wasm_memory_bytes(), ...(part ? { part: part.at, fareRaw: ls as [number, number, number, number] } : {}), ...(come ? { come } : {}) };
+        const big = [...(come ? come.map((a) => a.buffer) : []), market?.corridorRail?.buffer, market?.corridorBook?.totals.buffer, market?.corridorBook?.own.buffer].filter((b): b is ArrayBuffer => !!b);
         return { msg, transfer: [seg.buffer, board.buffer, alight.buffer, arrive.buffer, loadOfCrush.buffer, fareX.buffer, baseX.buffer, xferIn.buffer, parts.seg.buffer, parts.board.buffer, parts.alight.buffer, ...(parts.lean ? [parts.lean.buffer] : []), ...big] };
       };
       // T-1543: a free-flow round shown before it is solved (a rough solve's, the zone in view's

@@ -1,5 +1,5 @@
 import type { CityId } from "../game/cities";
-import type { CorridorTable } from "../game/demand";
+import type { CorridorBook, CorridorRows } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 
@@ -124,8 +124,6 @@ export type ToDemand =
   | { kind: "init"; packs: { id: CityId; header: string; bin: ArrayBuffer }[]; intercity?: MarketPack[]; rows?: MarketRows; periods: number[]; aux?: boolean;
       /** T-173: open a small synthetic everyday layer first (`everyday_warm_up`), before `ready` */
       warmEveryday?: boolean;
-      /** T-2495: the corridor table's columns through the binding's copies (`?perfOff=inPlace`) */
-      copies?: boolean;
       /** T-2596: every zone's bubble sums pushed each round, not only the zones on screen (`?perfOff=allSums`) */
       allSums?: boolean;
       /** T-2802: the least the WASM memory grows by, bytes (`heapStep` in deviceMemory.ts) */
@@ -217,8 +215,10 @@ export type ToDemand =
    * zone in view and the nearby zones; none while the bubbles are off): a solve's `sums` for those
    * zones carry that day's too */
   | { kind: "view"; day: number; zones: CityId[] }
-  /** T-1008: the page has lost the corridor tables sent: the next results carry theirs again */
+  /** T-1008: the page has lost the corridor books sent: the next results carry theirs again */
   | { kind: "corridorsAgain" }
+  /** T-2136: the table rows of the market whose book has `key` touching `place` */
+  | { kind: "rows"; id: number; key: string; place: number }
   /** T-1174, dev server only (`twDemand.client.debugPanic`): make this worker's WASM panic, `now`
    * or in the running solve's next step */
   | { kind: "debugPanic"; when: "now" | "solve"; oom?: boolean }
@@ -360,13 +360,14 @@ export type FromDemand =
        * zones and rail (both in `intercitySummary`), then (T-1175) everyday legs across a zone
        * line, their rail and walking legs, and their walking legs with no rail */
       intercityParts?: number[];
-      /** T-1008: the market's corridor table this result's corridors index (`CorridorTable.key`);
-       * the table itself rides along the first time this worker sends its key */
+      /** T-1008: the market's corridor table this result's corridors are of (`CorridorBook.key`);
+       * its book rides along the first time this worker sends its key (T-2136) */
       corridorKey?: string;
-      corridorTable?: CorridorTable;
+      corridorBook?: CorridorBook;
       /** T-1008: the period's factors of the table's longer trips and commute legs */
       corridorShares?: [number, number];
-      /** the pairs with rail as (index in the table, rail trips, commute rail legs) */
+      /** the table rows with rail, six numbers each: corridor, rail trips, commute rail legs, its two
+       * places, its share flying as a `shareCode` (T-2136) */
       corridorRail?: Float64Array;
       /** T-378: per place, its longer trips in the period with places that have no zone, each way */
       elsewhere?: number[];
@@ -451,6 +452,8 @@ export type FromDemand =
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number; local?: true }
   | { kind: "cells"; id: number; city: CityId; xy: Float32Array; h3: BigUint64Array; zone: Uint32Array; zoneXY: Float32Array }
+  /** T-2136: null when this worker holds no market with that book */
+  | { kind: "rows"; id: number; rows: CorridorRows | null }
   /** `mask`: bit q set for each period included; null sums: no network, or not `version` */
   | { kind: "subSums"; id: number; city: CityId; version: number; mask: number; sums: Float32Array | null; everyday: Float32Array | null }
   /** `everyday`: per purpose kind 30 timing values, m, then m far cells, their rail, walk and

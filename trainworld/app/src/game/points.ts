@@ -60,7 +60,7 @@ export function railTripsByRegion(d: DayDemand): Map<string, number> {
   };
   const c = d.intercity?.corridors;
   for (let k = 0; c && k < c.railAt.length; k++) {
-    const rail = c.longerRail[k] + c.commuteRail[k], j = c.railAt[k], from = c.table.from[j], to = c.table.to[j];
+    const rail = c.longerRail[k] + c.commuteRail[k], from = c.railFrom[k], to = c.railTo[k];
     if (!(rail > 0)) continue;
     if (from === to) give(from, rail);
     else { give(from, rail / 2); give(to, rail / 2); }

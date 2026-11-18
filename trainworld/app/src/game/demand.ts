@@ -139,43 +139,51 @@ export interface IntercityDemand { version: number; round: number; tripsPerDay: 
    * place with any (place, legs with an end there, rail legs, walking legs) */
   everyday?: number[] }
 /**
- * The market's corridors with trips (T-789: hundreds of thousands of place pairs), the part no
- * network or period changes, one column an array: each pair's two places, its longer trips and
- * commute legs a day before a kind of day's scales, and the shares of its longer trips not by rail
- * that fly and that drive (T-378). One table serves every result of a market (T-1008).
+ * The market's corridors with trips (T-789: millions of place pairs; 8.5M on the New York save in
+ * 2026-11), the part no network or period changes. T-2136: the page keeps no table of them; it has
+ * each market's book, and asks the workers for a few places' rows when a view needs them (`rowsOf`).
+ * One book serves every result of a market (T-1008).
  */
-export interface CorridorTable {
-  key: string; n: number; from: PlaceIds; to: PlaceIds;
-  /** 32-bit (T-3493: 31 MB less on a one-city game; the world's total moves by 2e-10 of itself) */
+export interface CorridorBook {
+  key: string; n: number;
+  /** per market place, 3 numbers over the rows between it and another place: their longer trips,
+   * commute legs, and longer trips times the share flying, before a kind of day's scales */
+  totals: Float64Array;
+  /** T-3509: per market place, 2 numbers from its own row (between its own zones): its longer trips
+   * (32-bit, as the rows hold them) and commute legs, before a kind of day's scales (`withinOf`) */
+  own: Float64Array;
+}
+/** Some of a market's table rows (`rowsOf`), corridor ascending: the corridor (`Corridors.railAt`'s
+ * numbers), its two places, its longer trips and commute legs a day before a kind of day's scales,
+ * and the shares of its longer trips not by rail that fly and that drive (T-378). */
+export interface CorridorRows {
+  key: string; n: number; at: Uint32Array; from: Uint32Array; to: Uint32Array;
+  /** 32-bit (T-3493: the world's total moves by 2e-10 of itself) */
   longer: Float32Array;
-  /** the rows with commute legs, ascending, and their legs; every other row has none (T-2485: 24k of
-   * New York's 5.9M rows have any, so a full column was 47 MB of zeros) */
-  commuteAt: Uint32Array; commuteLegs: Float64Array;
+  commute: Float64Array;
   /** in steps of 1 / SHARE_ONE (`shareOf`, game/corridorShares.ts) */
   air: Uint16Array; car: Uint16Array;
 }
-/** A market's place numbers: 16 bits while it has fewer than 65,536 places (T-2485) */
-export type PlaceIds = Uint16Array | Uint32Array;
-/** A kind of day's corridors: the table's longer trips and commute legs times `longerScale` and
- * `commuteScale`, and the pairs with rail (`railAt`, ascending) their longer trips and commute legs
- * by rail. */
-export interface Corridors { table: CorridorTable; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array }
+/** A kind of day's corridors: the book's longer trips and commute legs times `longerScale` and
+ * `commuteScale`, and the table rows with rail (`railAt`, by corridor, ascending) their longer trips
+ * and commute legs by rail, their two places and share flying (`shareOf`). */
+export interface Corridors { book: CorridorBook; longerScale: number; commuteScale: number; railAt: Uint32Array; longerRail: Float64Array; commuteRail: Float64Array; railFrom: Uint32Array; railTo: Uint32Array; railAir: Uint16Array }
 
 export const NO_CORRIDORS: Corridors = {
-  table: { key: "", n: 0, from: new Uint16Array(0), to: new Uint16Array(0), longer: new Float32Array(0), commuteAt: new Uint32Array(0), commuteLegs: new Float64Array(0), air: new Uint16Array(0), car: new Uint16Array(0) },
-  longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0),
+  book: { key: "", n: 0, totals: new Float64Array(0), own: new Float64Array(0) },
+  longerScale: 0, commuteScale: 0, railAt: new Uint32Array(0), longerRail: new Float64Array(0), commuteRail: new Float64Array(0), railFrom: new Uint32Array(0), railTo: new Uint32Array(0), railAir: new Uint16Array(0),
 };
+const NO_ROWS: CorridorRows = { key: "", n: 0, at: new Uint32Array(0), from: new Uint32Array(0), to: new Uint32Array(0), longer: new Float32Array(0), commute: new Float64Array(0), air: new Uint16Array(0), car: new Uint16Array(0) };
 
 /** One corridor's figures a day: all trips (longer and commute legs), by rail, by plane, by car,
  * and the commute legs alone. */
 export interface CorridorFigures { trips: number; rail: number; air: number; car: number; commutes: number; commuteRail: number }
 
-/** Corridor `j`'s figures; `k` its place in `railAt` and `m` in the table's `commuteAt` (-1 none;
- * looked up when left out). */
-export function corridorAt(c: Corridors, j: number, k = railIndex(c, j), m = sortedIndex(c.table.commuteAt, j)): CorridorFigures {
-  const t = c.table, tl = t.longer[j] * c.longerScale, cm = (m >= 0 ? t.commuteLegs[m] : 0) * c.commuteScale;
+/** Row `i` of `r`'s figures; `k` its place in `railAt` (-1 none; looked up when left out). */
+export function corridorAt(c: Corridors, r: CorridorRows, i: number, k = railIndex(c, r.at[i])): CorridorFigures {
+  const tl = r.longer[i] * c.longerScale, cm = r.commute[i] * c.commuteScale;
   const lr = k >= 0 ? c.longerRail[k] : 0, cr = k >= 0 ? c.commuteRail[k] : 0, rest = tl - lr;
-  return { trips: tl + cm, rail: lr + cr, air: rest * shareOf(t.air[j]), car: rest * shareOf(t.car[j]) + cm - cr, commutes: cm, commuteRail: cr };
+  return { trips: tl + cm, rail: lr + cr, air: rest * shareOf(r.air[i]), car: rest * shareOf(r.car[i]) + cm - cr, commutes: cm, commuteRail: cr };
 }
 
 /** Corridor `j`'s place in `railAt`, -1 when it has no rail. */
@@ -192,14 +200,88 @@ export function sortedIndex(a: Uint32Array, j: number): number {
   return -1;
 }
 
-/** Every corridor whose places `keep` accepts, in table order, with its figures. */
-export function eachCorridor(c: Corridors, keep: (from: number, to: number) => boolean, f: (j: number, v: CorridorFigures) => void) {
-  const { from, to, n, commuteAt: ca } = c.table, at = c.railAt;
-  for (let j = 0, k = 0, m = 0; j < n; j++) {
-    while (k < at.length && at[k] < j) k++;
-    while (m < ca.length && ca[m] < j) m++;
-    if (keep(from[j], to[j])) f(j, corridorAt(c, j, k < at.length && at[k] === j ? k : -1, m < ca.length && ca[m] === j ? m : -1));
+/** Every row of `r` whose places `keep` accepts, in table order, with its figures. */
+export function eachCorridor(c: Corridors, r: CorridorRows, keep: (from: number, to: number) => boolean, f: (from: number, to: number, v: CorridorFigures) => void) {
+  const { from, to, n } = r, at = c.railAt;
+  for (let i = 0, k = 0; i < n; i++) {
+    while (k < at.length && at[k] < r.at[i]) k++;
+    if (keep(from[i], to[i])) f(from[i], to[i], corridorAt(c, r, i, k < at.length && at[k] === r.at[i] ? k : -1));
   }
+}
+
+/** T-2136: where rows come from (the demand client's `corridorRows`: a solving worker that holds
+ * the market); null with none of the book's market open there. */
+let rowsSource: ((key: string, place: number) => Promise<CorridorRows | null>) | null = null;
+export const setRowsSource = (f: typeof rowsSource) => { rowsSource = f; };
+/** bumped as asked rows land, so the views that read `rowsOf` work out again */
+export const rowsLanded = signal(0);
+/** the places' rows asked for lately, by book key and place; a place's are about 80 kB on the New York
+ * save (one place an ask, so the page never holds more than ROWS_KEPT places' rows) */
+const rowsKept = new Map<string, { rows: CorridorRows | null; failedFor?: Corridors; asking?: Promise<CorridorRows | null> }>();
+const ROWS_KEPT = 48;
+/**
+ * The table rows of `c`'s market touching `place`, or null while they are asked of the workers
+ * (`rowsLanded` then moves); asked again for a newer result, or once a worker sends the book
+ * (`rowsCanCome`), if no worker had them. Reads `rowsLanded`, so a computed or component reading it
+ * works out again when they land.
+ */
+export function rowsOf(c: Corridors, place: number): CorridorRows | null {
+  void rowsLanded.value;
+  if (!c.book.key) return NO_ROWS;
+  const id = `${c.book.key}|${place}`;
+  const e = rowsKept.get(id);
+  if (e) {
+    rowsKept.delete(id);
+    rowsKept.set(id, e);
+    if (e.rows || e.asking || e.failedFor === c) return e.rows;
+  }
+  void askRows(c, id, place);
+  return null;
+}
+/** `rowsOf` once they are in (null if no worker has them). */
+export function rowsNow(c: Corridors, place: number): Promise<CorridorRows | null> {
+  const got = rowsOf(c, place);
+  if (got || !c.book.key) return Promise.resolve(got);
+  return rowsKept.get(`${c.book.key}|${place}`)?.asking ?? Promise.resolve(null);
+}
+function askRows(c: Corridors, id: string, place: number): Promise<CorridorRows | null> {
+  const e: { rows: CorridorRows | null; failedFor?: Corridors; asking?: Promise<CorridorRows | null> } = { rows: null };
+  rowsKept.set(id, e);
+  while (rowsKept.size > ROWS_KEPT) rowsKept.delete(rowsKept.keys().next().value!);
+  e.asking = (rowsSource ? rowsSource(c.book.key, place) : Promise.resolve(null)).catch(() => null).then((rows) => {
+    e.asking = undefined;
+    e.rows = rows;
+    if (!rows) e.failedFor = c;
+    rowsLanded.value++;
+    return rows;
+  });
+  return e.asking;
+}
+/** The rows held of the book with `key`, `first`'s first, at most `most` (the demand cache's). */
+export function heldRows(key: string, first: number, most: number): { place: number; rows: CorridorRows }[] {
+  const out: { place: number; rows: CorridorRows }[] = [];
+  for (const [id, e] of rowsKept) {
+    const [k, p] = id.split("|");
+    if (k === key && e.rows) out.push({ place: Number(p), rows: e.rows });
+  }
+  out.sort((a, b) => Number(b.place === first) - Number(a.place === first));
+  return out.slice(0, most);
+}
+/** Rows kept with a cached result (`heldRows`), as if asked and answered. */
+export function seedRows(got: { place: number; rows: CorridorRows }[]) {
+  for (const { place, rows } of got) {
+    const id = `${rows.key}|${place}`;
+    if (!rowsKept.get(id)?.rows) rowsKept.set(id, { rows });
+  }
+  while (rowsKept.size > ROWS_KEPT) rowsKept.delete(rowsKept.keys().next().value!);
+  if (got.length) rowsLanded.value++;
+}
+/** A worker has sent the book with `key` (it holds that market now): the rows no worker had for it
+ * are asked again by the views that want them (a cached result's, shown before any worker held it). */
+export function rowsCanCome(key: string) {
+  let any = false;
+  for (const [id, e] of rowsKept) if (!e.rows && !e.asking && id.startsWith(key + "|")) { rowsKept.delete(id); any = true; }
+  if (any) rowsLanded.value++;
 }
 
 /** One kind of day's results (T-260, game/days.ts): the network's view, each city's, the market's.
@@ -218,24 +300,26 @@ export const demandView = computed<DemandView | null>(() => demandByDay.value[sh
 /** Each zone's trips within it on the day shown (`zoneViews`), separate from network-wide totals. */
 export const cityDemandViews = computed<Map<CityId, DemandView>>(() => zoneViews(demandByDay.value[shownDay.value]));
 
-/** T-3509: each corridor table's row of the trips within each place (`from === to`), by place */
-const withinRows = new WeakMap<CorridorTable, Map<number, number>>();
+/** T-3509: each kind of day's rail row within each place (`railFrom === railTo`), by place */
+const withinRail = new WeakMap<Corridors, Map<number, number>>();
 /** T-3509: the market's legs a day between two 6 km zones of place `place` (its longer trips 25 km and
- * more apart, and the long commutes that stay in it), and those by rail; null with no market result. */
+ * more apart, and the long commutes that stay in it), and those by rail; null with no market result.
+ * T-2136: from the book's own-row sums and the rail rows, no table rows asked. */
 export function withinOf(ic: IntercityDemand | null | undefined, place: number): { trips: number; rail: number } | null {
   const c = ic?.corridors;
-  if (!c) return null;
-  let rows = withinRows.get(c.table);
-  if (!rows) {
-    rows = new Map();
-    const { from, to, n } = c.table;
-    for (let j = 0; j < n; j++) if (from[j] === to[j]) rows.set(from[j], j);
-    withinRows.set(c.table, rows);
+  const own = c?.book.own;
+  if (!c || !own || place < 0 || 2 * place + 1 >= own.length) return null;
+  const trips = own[2 * place] * c.longerScale + own[2 * place + 1] * c.commuteScale;
+  if (!(trips > 0)) return null;
+  let rail = withinRail.get(c);
+  if (!rail) {
+    rail = new Map();
+    for (let k = 0; k < c.railAt.length; k++) if (c.railFrom[k] === c.railTo[k]) rail.set(c.railFrom[k], k);
+    withinRail.set(c, rail);
   }
-  const j = rows.get(place);
-  if (j === undefined) return null;
-  const v = corridorAt(c, j);
-  return v.trips > 0 ? { trips: v.trips, rail: Math.min(v.rail, v.trips) } : null;
+  const k = rail.get(place);
+  const r = k === undefined ? 0 : c.longerRail[k] + c.commuteRail[k];
+  return { trips, rail: Math.min(r, trips) };
 }
 
 /** T-3509 (Anita, 2026-11-18: "yes, all trips within should count"): zone `id`'s view on day `d` with
@@ -250,9 +334,9 @@ export function zoneView(d: DayDemand | undefined, id: CityId): DemandView | und
   const walk = (v.tripsPerDay * v.split.walk) / 100, none = (v.tripsPerDay * (v.split.none ?? 0)) / 100;
   return { ...v, tripsPerDay: trips, railTripsPerDay: rail, split: splitOf(trips, rail, walk, none) };
 }
-/** T-3509: day `d` has the market's result (its corridor table), so `zoneView` holds the trips between
+/** T-3509: day `d` has the market's result (its corridor book), so `zoneView` holds the trips between
  * a zone's own parts. A load shows final local figures before it: a goal waits for it. */
-export const marketIn = (d: DayDemand | undefined): boolean => (d?.intercity?.corridors?.table.n ?? 0) > 0;
+export const marketIn = (d: DayDemand | undefined): boolean => (d?.intercity?.corridors?.book.n ?? 0) > 0;
 /** `zoneView` of every zone with a view on day `d`. */
 export function zoneViews(d: DayDemand | undefined): Map<CityId, DemandView> {
   const out = new Map<CityId, DemandView>();

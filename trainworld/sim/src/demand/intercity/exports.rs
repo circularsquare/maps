@@ -1,5 +1,12 @@
 use super::*;
 
+/// A share as the page holds it (game/corridorShares.ts `shareCode`, then `shareOf`): in steps of
+/// 1 / 65534, NaN kept.
+fn share_step(s: f32) -> f64 {
+    let s = s as f64;
+    if s.is_nan() { f64::NAN } else { (s.max(0.).min(1.) * 65534.).round() / 65534. }
+}
+
 #[wasm_bindgen]
 impl IntercityApi {
     /// A market from a world composition (`{"world": registry rule and rows, "zones": [place
@@ -571,6 +578,100 @@ impl IntercityApi {
         let directs = Directs::of(&m.places);
         out.extend(self.table_rows().flat_map(|(_, a, b, _)| m.corridor_mode(&directs, a, b)));
         out
+    }
+    /// T-2136: the table (`corridor_rows`) summed up for the page, which keeps no table: its row
+    /// count, its key (FNV-1a over each row's corridor and the bits of its trips, commute legs and
+    /// shares, as u32 words), then three numbers per place below `limit` over the rows between it
+    /// and another place below `limit` (game/demand.ts `CorridorBook`): the longer trips, the commute
+    /// legs, and the longer trips times the share flying in steps of 1 / 65534 (game/corridorShares.ts
+    /// `shareCode`), each added in row order as the page did; then (T-3509) two numbers per place
+    /// below `limit` from its own row (between its own zones): the longer trips and the commute legs.
+    /// Nothing the size of the table is made.
+    pub fn table_summary(&self, limit: u32) -> Vec<f64> {
+        let (m, cw, lim) = (&self.m, &*self.m.cw, limit as usize);
+        let directs = Directs::of(&m.places);
+        let mut out = vec![0f64; 2 + 5 * lim];
+        let (mut h, mut n) = (0x811c9dc5u32, 0usize);
+        let mut word = |w: u32| h = (h ^ w).wrapping_mul(0x01000193);
+        for (i, a, b, t) in self.table_rows() {
+            n += 1;
+            let c = cw.commute_of(i).0;
+            let [air, car] = m.corridor_mode(&directs, a, b);
+            word(i as u32);
+            for x in [t, c] {
+                let v = x.to_bits();
+                word(v as u32);
+                word((v >> 32) as u32);
+            }
+            word(air.to_bits());
+            word(car.to_bits());
+            if a >= lim || b >= lim {
+                continue;
+            }
+            if a == b {
+                out[2 + 3 * lim + 2 * a] = t;
+                out[2 + 3 * lim + 2 * a + 1] = c;
+                continue;
+            }
+            let f = t * share_step(air);
+            for p in [a, b] {
+                let s = &mut out[2 + 3 * p..][..3];
+                s[0] += t;
+                s[1] += c;
+                s[2] += f;
+            }
+        }
+        out[0] = n as f64;
+        out[1] = h as f64;
+        out
+    }
+    /// T-2136: the table rows touching any of places `ps`, corridor ascending, seven numbers each:
+    /// the corridor, its two places, and its figures as the `corridor_rows_*` columns give them
+    /// (longer trips a day, commute legs a day or 0, the shares flying and driving).
+    pub fn place_rows(&self, ps: &[u32]) -> Vec<f64> {
+        let np = self.m.places.len();
+        let mut cs: Vec<(usize, usize)> = ps.iter().map(|&p| p as usize).filter(|&p| p < np).flat_map(|p| (0..np).map(move |q| (p.min(q), p.max(q)))).collect();
+        cs.sort_unstable();
+        cs.dedup();
+        let directs = Directs::of(&self.m.places);
+        let mut out = vec![];
+        for (a, b) in cs {
+            let c = tri(np, a, b);
+            if let Some(r) = self.row_of(&directs, c, a, b) {
+                out.push(c as f64);
+                out.extend(r);
+            }
+        }
+        out
+    }
+    /// T-2136: corridors `cs`, six numbers each: its two places and its figures as `place_rows`
+    /// gives them, the trips NaN for a corridor that is no table row.
+    pub fn rows_at(&self, cs: &[u32]) -> Vec<f64> {
+        let np = self.m.places.len();
+        let directs = Directs::of(&self.m.places);
+        let mut out = Vec::with_capacity(6 * cs.len());
+        for &c in cs {
+            let c = c as usize;
+            // (the corridors are numbered a, then b from a: `tri`)
+            let (mut lo, mut hi) = (0, np);
+            while hi - lo > 1 {
+                let mid = (lo + hi) / 2;
+                if tri(np, mid, mid) <= c { lo = mid } else { hi = mid }
+            }
+            let (a, b) = (lo, lo + c - tri(np, lo, lo));
+            out.extend(self.row_of(&directs, c, a, b).unwrap_or([a as f64, b as f64, f64::NAN, 0., 0., 0.]));
+        }
+        out
+    }
+    fn row_of(&self, directs: &Directs, c: usize, a: usize, b: usize) -> Option<[f64; 6]> {
+        let cw = &*self.m.cw;
+        let t = cw.trips_of(c);
+        let (cm, has_c) = cw.commute_of(c);
+        if !(t > 0. || has_c) {
+            return None;
+        }
+        let [air, car] = self.m.corridor_mode(directs, a, b);
+        Some([a as f64, b as f64, t, cm, air as f64, car as f64])
     }
     /// T-378: per place, its longer trips in period `q` with places that have no zone, each way.
     pub fn elsewhere(&self, q: usize) -> Vec<f64> {

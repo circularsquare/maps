@@ -61,8 +61,9 @@ await ctx.addInitScript(([bubbles]) => {
       put([ic.tripsPerDay, ic.railTripsPerDay, ic.commuteTripsPerDay ?? 0, ic.commuteRailPerDay ?? 0]);
       const c = ic.corridors;
       mark('corridorTable');
-      nums.push(c.table.n, c.longerScale, c.commuteScale); for (const ch of c.table.key) nums.push(ch.charCodeAt(0));
-      mark('railAt'); put([...c.railAt]);
+      nums.push(c.book.n, c.longerScale, c.commuteScale); for (const ch of c.book.key) nums.push(ch.charCodeAt(0));
+      mark('corridorBook'); put([...c.book.totals, ...(c.book.own ?? [])]);
+      mark('railAt'); put([...c.railAt, ...c.railFrom, ...c.railTo, ...c.railAir]);
       mark('longerRail'); put([...c.longerRail]);
       mark('commuteRail'); put([...c.commuteRail]);
     }

@@ -5,7 +5,8 @@
 // Cities tab opens it too, the city view (T-1438), with CityDetails.tsx's rows around these.
 
 import { cityById, type CityId } from "../../game/cities";
-import { cityDemandViews, eachCorridor, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { cityDemandViews, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { placeFigures } from "../../game/corridorFigures";
 import { count, exact } from "../../game/format";
 import { zoneLoads } from "../../game/loading";
 import { t, tSeries } from "../../i18n";
@@ -54,19 +55,12 @@ function everydayOf(e: number[] | undefined, place: number): [number, number, nu
 export function CityInspector({ id }: { id: string }) {
   const city = cityById(id);
   // T-421: a zone still loading (its bar on the map) has no figures to state yet
-  const market = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
+  const shown = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
   if (!city) return null;
-  const byPlace = new Map<number, { all: number; rail: number; air: number }>();
-  const c = market?.corridors;
-  if (c) eachCorridor(c, (from, to) => from !== to && (from === city.place || to === city.place), (j, v) => {
-    const other = c.table.from[j] === city.place ? c.table.to[j] : c.table.from[j];
-    const p = byPlace.get(other) ?? { all: 0, rail: 0, air: 0 };
-    p.all += v.trips;
-    p.rail += v.rail;
-    p.air += v.air;
-    byPlace.set(other, p);
-  });
-  const places = [...byPlace].filter(([, p]) => p.all > 0).sort((a, b) => b[1].all - a[1].all);
+  // T-2136: the zone's rows come from a worker; until they do, its trips to other places wait as a loading zone's do
+  const byPlace = shown ? placeFigures(shown.corridors, city.place) : null;
+  const market = byPlace ? shown : null;
+  const places = byPlace ?? [];
   // T-3503: with the everyday outings across the zone's lines (walking some of them)
   const ev = everydayOf(market?.everyday, city.place);
   const interAll = places.reduce((s, [, p]) => s + p.all, 0) + ev[0];

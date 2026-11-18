@@ -942,9 +942,35 @@ struct Corridors {
     place_pairs: usize,
     /// T-1849: how many corridors have trips or commutes (`IntercityApi::table_rows`), once counted
     rows: std::cell::OnceCell<usize>,
+    /// T-2136: per word of `has_trips`, the corridors with trips before it (`trips_of`), made when first asked
+    rank: std::cell::OnceCell<Vec<u32>>,
 }
 
 impl Corridors {
+    /// T-2136: corridor `c`'s longer trips a day as `with_trips` gives them, 0 without.
+    fn trips_of(&self, c: usize) -> f64 {
+        let (k, b) = (c / 64, c % 64);
+        let Some(&w) = self.has_trips.get(k) else { return 0. };
+        if (w >> b) & 1 == 0 {
+            return 0.;
+        }
+        let rank = self.rank.get_or_init(|| {
+            let mut n = 0u32;
+            self.has_trips.iter().map(|w| { let r = n; n += w.count_ones(); r }).collect()
+        });
+        self.trips[(rank[k] + (w & ((1u64 << b) - 1)).count_ones()) as usize] as f64
+    }
+    /// T-2136: corridor `c`'s commute legs a day as `corridor_rows_commutes` gives them (0 without,
+    /// or with no commuters), and whether they make it a table row (`IntercityApi::table_rows`).
+    fn commute_of(&self, c: usize) -> (f64, bool) {
+        if self.commuters <= 0. {
+            return (0., false);
+        }
+        match self.commute.binary_search_by_key(&(c as u32), |e| e.0) {
+            Ok(k) => (self.commute[k].1, self.commute[k].1 > 0.),
+            Err(_) => (0., false),
+        }
+    }
     /// The corridors with longer trips, ascending, and their trips a day.
     fn with_trips(&self) -> impl Iterator<Item = (usize, f64)> + '_ {
         self.has_trips.iter().enumerate().flat_map(|(k, &w)| {

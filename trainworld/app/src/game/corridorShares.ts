@@ -1,5 +1,5 @@
 // T-3493: the corridor table's shares of the longer trips not by rail that fly and that drive (game/demand.ts
-// `CorridorTable`), 16 bits each: a step of 1 / SHARE_ONE, about 0.0015% of a corridor's trips. As 32-bit floats
+// `CorridorRows`), 16 bits each: a step of 1 / SHARE_ONE, about 0.0015% of a corridor's trips. As 32-bit floats
 // they were 62 MB of the page on a one-city game (8.2M rows).
 export const SHARE_ONE = 65534;
 /** a share that is NaN (near places on two landmasses) */
