@@ -4054,7 +4054,9 @@ function applyInner(op: EditOp): Applied {
     case "doubleUp":
       return { r: a.double_up(op.edge) };
     case "oneWay":
-      return { r: a.set_edge_oneway(op.edge, op.dir) };
+      return { r: a.set_edges_oneway(new Uint32Array([op.edge]), new Uint8Array([op.dir])) };
+    case "oneWays":
+      return { r: a.set_edges_oneway(new Uint32Array(op.edges), new Uint8Array(op.dirs)) };
     case "pieceLimit":
       return { r: a.set_edges_limit(new Uint32Array(op.edges), op.kmh) };
     case "stationTracks":
@@ -4980,7 +4982,7 @@ async function handleMessage(msg: ToClock) {
       : q.what === "upgradeCost" ?new Float64Array(UPGRADE_BITS.map((b) => api!.station_upgrade_cost(q.node, b)))
       : q.what === "platformCost" ? new Float64Array([api.platform_cost(new Uint32Array(q.nodes), q.platform)])
       : q.what === "doubleUp" ? doubleUpAnswer(q.edge)
-      : q.what === "oneWay" ? new Float64Array(api.oneway_effects(q.edge, q.dir))
+      : q.what === "oneWays" ? new Float64Array(api.oneway_effects_many(new Uint32Array(q.edges), new Uint8Array(q.dirs)))
       : q.what === "lineAccount" ? api.line_account(q.line, q.day)
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)

@@ -46,7 +46,13 @@ impl TrackApi {
     /// take another way through the same stops in the same edit, and it is refused (`OneWayNoWay`)
     /// when one has none.
     pub fn set_edge_oneway(&mut self, edge: u32, dir: u8) -> u32 {
-        match self.oneway_ops(edge, dir) {
+        self.set_edges_oneway(&[edge], &[dir])
+    }
+
+    /// `set_edge_oneway` for several pieces at once (`dirs[k]` for `edges[k]`), still one undoable edit.
+    pub fn set_edges_oneway(&mut self, edges: &[u32], dirs: &[u8]) -> u32 {
+        let set: Vec<(u32, u8)> = edges.iter().copied().zip(dirs.iter().copied()).collect();
+        match self.oneway_ops(&set) {
             Ok((ops, _)) => self.run(Op::Batch(ops)),
             Err(i) => self.refuse(i),
         }
@@ -55,7 +61,13 @@ impl TrackApi {
     /// What `set_edge_oneway` would do to lines, as pairs: line, 1 if it can take another way and 0 if it
     /// has none. Empty when no line runs against it, or the edit is refused for another reason.
     pub fn oneway_effects(&mut self, edge: u32, dir: u8) -> Vec<f64> {
-        match self.oneway_plan(edge, dir) {
+        self.oneway_effects_many(&[edge], &[dir])
+    }
+
+    /// `oneway_effects` for `set_edges_oneway`: each line once, however many of the pieces it uses.
+    pub fn oneway_effects_many(&mut self, edges: &[u32], dirs: &[u8]) -> Vec<f64> {
+        let set: Vec<(u32, u8)> = edges.iter().copied().zip(dirs.iter().copied()).collect();
+        match self.oneway_plan(&set) {
             Ok((_, rows)) => rows.iter().flat_map(|r| [r.0 as f64, r.1.is_some() as u8 as f64]).collect(),
             Err(_) => vec![],
         }
@@ -69,29 +81,33 @@ impl TrackApi {
     /// off an entry against the flag, and its return run takes its own way back
     /// (`Network::back_path_of`). A loop that runs one way only needs its path to avoid the flag.
     #[allow(clippy::type_complexity)]
-    fn oneway_plan(&mut self, edge: u32, dir: u8) -> Result<(Op, Vec<(u32, Option<Vec<u32>>)>), Issue> {
+    fn oneway_plan(&mut self, set: &[(u32, u8)]) -> Result<(Op, Vec<(u32, Option<Vec<u32>>)>), Issue> {
         let net = &self.w.net;
-        if !net.edge_ok(edge) {
-            return Err(Issue::NoSuchEdge { edge });
-        }
-        let mut d = net.edge_data(edge).ok_or(Issue::NoSuchEdge { edge })?;
-        if dir > 3 || (dir != 0 && (d.tracks != 1 || d.crossover)) {
-            return Err(Issue::Tracks { edge });
-        }
-        d.oneway = dir;
-        // the ends joined to a double's track move to the track that carries the set way (T-3137 C4)
-        if dir == 1 || dir == 2 {
-            for end in 0..2u32 {
-                if net.join_applies(edge << 1 | end) {
-                    let away = (dir == 1) == (end == 0);
-                    d.join[end as usize] = crate::track::lanes::join_for(away, net.right_hand);
+        let mut ops = vec![];
+        for &(edge, dir) in set {
+            if !net.edge_ok(edge) {
+                return Err(Issue::NoSuchEdge { edge });
+            }
+            let mut d = net.edge_data(edge).ok_or(Issue::NoSuchEdge { edge })?;
+            if dir > 3 || (dir != 0 && (d.tracks != 1 || d.crossover)) {
+                return Err(Issue::Tracks { edge });
+            }
+            d.oneway = dir;
+            // the ends joined to a double's track move to the track that carries the set way (T-3137 C4)
+            if dir == 1 || dir == 2 {
+                for end in 0..2u32 {
+                    if net.join_applies(edge << 1 | end) {
+                        let away = (dir == 1) == (end == 0);
+                        d.join[end as usize] = crate::track::lanes::join_for(away, net.right_hand);
+                    }
                 }
             }
+            ops.push(Op::Edge { id: edge, data: Some(d) });
         }
-        let op = Op::Edge { id: edge, data: Some(d) };
+        let op = if ops.len() == 1 { ops.remove(0) } else { Op::Batch(ops) };
         let rail = |l: u32| net.line_ok(l) && net.line_bus.get(l as usize).map_or(true, |b| b.is_none()) && net.line_ferry.get(l as usize).map_or(true, |f| f.is_none());
         // lines whose return run goes round other one-way track may now go round this
-        let mut hit: Vec<u32> = (0..net.line_count() as u32).filter(|&l| rail(l) && net.line_path(l).iter().any(|&p| path_edge(p) == edge)).collect();
+        let mut hit: Vec<u32> = (0..net.line_count() as u32).filter(|&l| rail(l) && net.line_path(l).iter().any(|&p| set.iter().any(|s| s.0 == path_edge(p)))).collect();
         hit.extend(net.back_lines());
         hit.sort_unstable();
         hit.dedup();
@@ -123,8 +139,8 @@ impl TrackApi {
     }
 
     /// `oneway_plan` as the ops of one edit; `OneWayNoWay` names the first line with no other way.
-    fn oneway_ops(&mut self, edge: u32, dir: u8) -> Result<(Vec<Op>, usize), Issue> {
-        let (op, rows) = self.oneway_plan(edge, dir)?;
+    fn oneway_ops(&mut self, set: &[(u32, u8)]) -> Result<(Vec<Op>, usize), Issue> {
+        let (op, rows) = self.oneway_plan(set)?;
         let mut ops = vec![op];
         for (l, path) in &rows {
             let Some(path) = path else { return Err(Issue::OneWayNoWay { line: *l }) };

@@ -7,7 +7,7 @@ import { inkOn, LEVEL_COLOURS } from "../game/palette";
 import type { Level } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
-import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
+import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
 import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
@@ -226,6 +226,21 @@ function PickDoubleUp() {
   );
 }
 
+/** T-3101: the track panel's one-way switch and Reverse for the picked single-track pieces. */
+function PickOneWay() {
+  const p = bpPicked.value, w = world.value;
+  const pieces = useMemo(() => oneWayPieces(p), [p, w]);
+  // one piece: the track panel has the same controls
+  if (pieces.length < 2) return null;
+  const all = pieces.every((e) => e.oneWay), some = pieces.some((e) => e.oneWay);
+  return (
+    <div class="group">
+      <button class={"btn text" + (all ? " on" : "")} onClick={() => void oneWayPicked(pieces)}>{t("trackInspector.oneWay")}</button>
+      {some && <button class="btn text" onClick={() => void reversePicked(pieces)}>{t("trackInspector.reverse")}</button>}
+    </div>
+  );
+}
+
 /** T-353, T-815, T-829: while the Select tool has a selection (or a blueprint piece is clicked, T-2283), a bar at the map's top centre, the
  * selection's inspector: how many pieces and how much track, then for blueprint the elevation
  * buttons, regular or high-speed track (T-1898, for its double track), Disable and Enable; Remove
@@ -289,6 +304,7 @@ export function BlueprintBar() {
         </div>
       )}
       <PickDoubleUp />
+      <PickOneWay />
       <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: keys })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
       <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
       </div>

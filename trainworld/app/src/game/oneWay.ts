@@ -22,16 +22,19 @@ export function runsAgainstOneWay(w: WorldView, path: readonly number[]): boolea
   return against;
 }
 
-/** Run an edge one way (`dir` 1 a to b, 2 b to a), both ways pinned (3), or the way its run takes (0). */
-export async function setOneWay(edge: number, dir: 0 | 1 | 2 | 3, reverse = false, off = false) {
-  const d = await queryClock({ what: "oneWay", edge, dir });
+/** Run edges one way (`dir` 1 a to b, 2 b to a), both ways pinned (3), or the way their run takes (0): one
+ * confirmation listing the lines it re-routes, one undo. */
+export async function setOneWays(set: readonly { edge: number; dir: 0 | 1 | 2 | 3 }[], reverse = false, off = false) {
+  if (!set.length) return;
+  const edges = set.map((s) => s.edge), dirs = set.map((s) => s.dir);
+  const d = await queryClock({ what: "oneWays", edges, dirs });
   const w = world.peek();
   if (!w) return;
   const rows: { line: number; ok: boolean }[] = [];
   for (let k = 0; d && k + 1 < d.length; k += 2) rows.push({ line: d[k], ok: d[k + 1] === 1 });
   const stuck = rows.find((r) => !r.ok);
   if (stuck) return say(noWay(stuck.line), true);
-  const go = () => void edit({ op: "oneWay", edge, dir });
+  const go = () => void edit({ op: "oneWays", edges, dirs });
   if (!rows.length) return go();
   const byNum = linesByNum(w);
   ask.value = {
@@ -42,3 +45,5 @@ export async function setOneWay(edge: number, dir: 0 | 1 | 2 | 3, reverse = fals
     lines: rows.map((r) => ({ line: r.line, text: t("oneWay.reroutes", { line: byNum.get(r.line)?.name ?? "" }) })),
   };
 }
+
+export const setOneWay = (edge: number, dir: 0 | 1 | 2 | 3, reverse = false, off = false) => setOneWays([{ edge, dir }], reverse, off);

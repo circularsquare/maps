@@ -7,6 +7,7 @@ import { computed, effect, signal } from "@preact/signals";
 import { bigDistance, distance, levelLabel } from "./format";
 import { describeIssues } from "./issues";
 import { heightRunLength, noteHeight } from "./deleteHint";
+import { setOneWays } from "./oneWay";
 import { isBigDelete, lineEffects, removeQuestion } from "./remove";
 import type { Level, TrackEdge } from "./types";
 import { ask, buildLevel, selection, setTrackType, tool } from "./ui";
@@ -191,6 +192,24 @@ export async function doubleUpPicked(pieces: number[]) {
   }
   if (!done) say(why || t("blueprintPick.doubleNone"), true);
   else if (done < pieces.length) say(t("blueprintPick.doubleSome", { done, total: pieces.length, why }).trim());
+}
+
+/** T-3101: the picked single-track pieces (no crossover), the ones the track panel's one-way switch applies to. */
+export function oneWayPieces(p: BpPicked): TrackEdge[] {
+  const picked = new Set(p.edges);
+  return (world.peek()?.edges ?? []).filter((e) => picked.has(e.id) && e.tracks === 1 && !e.crossover);
+}
+
+/** T-3101: the track panel's switch for every picked single-track piece: all one way gives them back both ways
+ * (or the way their run takes), else those not yet one way run one way. One confirmation, one undo. */
+export function oneWayPicked(pieces: readonly TrackEdge[]) {
+  if (pieces.every((e) => e.oneWay)) return setOneWays(pieces.map((e) => ({ edge: e.id, dir: e.autoWay ? 3 : 0 })), false, true);
+  return setOneWays(pieces.filter((e) => !e.oneWay).map((e) => ({ edge: e.id, dir: e.autoWay ?? 1 })));
+}
+
+/** T-3101: the track panel's Reverse for every picked piece that runs one way, each turned around. */
+export function reversePicked(pieces: readonly TrackEdge[]) {
+  return setOneWays(pieces.filter((e) => e.oneWay).map((e) => ({ edge: e.id, dir: e.oneWay === 1 ? 2 : 1 })), true);
 }
 
 /** What the picked pieces are now: how many are switched off, their track's length, and the one
