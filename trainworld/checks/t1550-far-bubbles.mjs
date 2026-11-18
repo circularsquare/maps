@@ -51,7 +51,9 @@ try {
     await page.mouse.move(box.left + x, box.top + y);
     await page.waitForTimeout(300);
     if (process.env.DEBUG) console.log('at', x, y, JSON.stringify(await page.evaluate(async ([x, y]) => [window.tw.pick(window.tw.overlay, x, y, false), window.tw.map.getZoom(), (await import('/src/map/intercityView.ts')).cityOverview.peek()], [x, y])));
-    const tag = await page.evaluate(() => { const t = document.querySelector('.demand-tag:not(.rest-list)'); return !!t && t.style.display !== 'none' && t.textContent.trim() !== ''; });
+    // the bubble's tag is the demand-tag that is neither the resting list nor a track tag; since the track tags came
+    // a hidden track tag sits first in the DOM, so look at all of them rather than the first
+    const tag = await page.evaluate(() => [...document.querySelectorAll('.demand-tag:not(.rest-list):not(.track-tag)')].some((t) => t.style.display !== 'none' && t.textContent.trim() !== ''));
     await page.mouse.click(box.left + x, box.top + y);
     await page.waitForTimeout(300);
     return { sel: await page.evaluate(() => window.tw.selection.value), tag };

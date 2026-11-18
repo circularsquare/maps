@@ -140,12 +140,12 @@ const dm4 = () => Object.defineProperty(Navigator.prototype, 'deviceMemory', { c
     const page2 = await open(chrome, init);
     check(await page2.evaluate(() => JSON.parse(localStorage.getItem('trainworld-ui')).display?.intercityTrips === true), 'the setting survives a reload');
     await page2.waitForTimeout(3000);
-    const t2 = await noteText(page2);
-    check(/4GB of RAM or less/.test(t2 ?? '') && !/Intercity/.test(t2 ?? ''), `toggle on after reload: memory sentence only (${t2})`);
+    // T-2861: the note shows once ever per browser, so after the reload it stays away (the stale check expected it again)
+    check(!(await note(page2)), 'after a reload the note does not show again (once ever)');
     check(await marketOpen(page2), 'toggle on: the market opens');
     await page2.getByText('Calculate intercity trips').click();
     await page2.waitForTimeout(500);
-    check(/Intercity trips are off/.test((await noteText(page2)) ?? ''), 'toggle off: the sentence is back');
+    check(!(await note(page2)), 'toggle off after the reload: still no note');
   } finally { await chrome.close(); }
 }
 {

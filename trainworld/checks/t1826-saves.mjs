@@ -98,15 +98,23 @@ try {
   await a.waitForTimeout(1500);
   const home = (await state(a)).active;
   for (const end = Date.now() + 25000; Date.now() < end;) { await saveNow(a); await a.waitForTimeout(250); }
+  // the version list drops a backup with no player change since the slot's save (workers/versions.ts, T-2037: the clock
+  // alone moving on is the same version), so a real edit goes in before the last save, after the backups exist
+  // twice: a save also backs up the state it writes, so the second edit leaves every backup older than the slot
+  for (const at of [[-73.95, 40.78], [-73.92, 40.8]]) { await acrossLine(a, at, 2); await saveNow(a); await a.waitForTimeout(1500); }
   const live = await backups(a, home);
   const tierKeys = live.filter((b) => /:t\d$/.test(b.key)).map((b) => b.key.slice(-2)).sort();
+  // a tier saved a moment after the same player change holds the slot's own version, which the list leaves out
+  // (workers/versions.ts, T-2037); so the rows are the tiers whose time and edit both differ from the slot's
+  const slot = await a.evaluate(async (k) => { const x = (await (await import('/src/workers/saveFile.ts')).listSlots()).find((x) => x.key === k); return { at: x?.at, edit: x?.edit ?? x?.at }; }, home);
+  const listed = live.filter((b) => /:t\d$/.test(b.key) && b.at !== slot.at && (b.edit ?? b.at) !== slot.edit).length;
   await a.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = true; });
   // T-2037: listed under the card's "other versions" line
   await a.waitForSelector('.save-slots li.on .save-versions-line');
   await a.click('.save-slots li.on .save-versions-line');
   await a.waitForTimeout(800);
   const rows = await a.locator('.save-slots li.on .save-version-list li[data-kind="backup"] .save-version > span').allTextContents();
-  report('live backups fill four tiers, listed with their age', line !== null && tierKeys.join() === 't0,t1,t2,t3' && rows.length === 4 && rows.every((r) => /^Saved .* · Day \d+/.test(r)),
+  report('live backups fill four tiers, listed with their age', line !== null && tierKeys.join() === 't0,t1,t2,t3' && rows.length === listed && listed >= 2 && rows.every((r) => /^Saved .* · Day \d+/.test(r)),
     `(line ${line}; tiers ${tierKeys.join()}; ages ${live.map((b) => ((Date.now() - b.at) / 1000).toFixed(1) + ' s').join(', ')}; rows ${JSON.stringify(rows)})`);
   await a.evaluate(async () => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = false; });
 
