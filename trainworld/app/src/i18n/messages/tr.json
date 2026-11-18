@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "1. günden beri: {amount}",
   "topBar.slower": "Yavaşlat (,)",
   "topBar.speedCapped": "{speed} (talep güncellenirken zaman {cap} ile sınırlı)",
-  "topBar.speedPick": "{speed} hız\nHız seçmek için çift tıkla",
+  "topBar.speedPick": "{speed} hız\nHız seçmek için tıkla",
   "topBar.speedReal": "gerçek",
   "topBar.speedReal4": "4gerçek",
   "topBar.timingNow": "şimdi",

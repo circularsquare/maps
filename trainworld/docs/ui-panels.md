@@ -299,7 +299,7 @@ wide so a longer date moves nothing [T-1868].
   scene is mixed 15% towards the background. Pause, then
   slower and faster buttons with the speed between them as text [T-3653]: one step along the slider's 20 stops (`SLIDER_STOPS` in `game/clock.ts`,
   real to 100x, spaced for the eye; "real" is 1 game second per second, 1/60 of 1x, and "4real" is four times that), each button off at its end; the
-  comma key slows and the period key speeds up by one step (`clock.stepSpeed`, `main.ts`; listed in Help). **Double-click the speed** for the slider [T-1664];
+  comma key slows and the period key speeds up by one step (`clock.stepSpeed`, `main.ts`; listed in Help; held, they keep stepping every 90 ms at most [T-3717]). **Click the speed** for the slider [T-1664, T-3717];
   the speed stays until changed (not saved with the game). Replaced the 1x, 4x, 16x buttons.
   **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
   `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders

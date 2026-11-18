@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "С первого дня: {amount}",
   "topBar.slower": "Медленнее (,)",
   "topBar.speedCapped": "{speed} (время ограничено до {cap}, пока обновляется спрос)",
-  "topBar.speedPick": "Скорость {speed}\nДважды щёлкните, чтобы выбрать скорость",
+  "topBar.speedPick": "Скорость {speed}\nЩёлкните, чтобы выбрать скорость",
   "topBar.speedReal": "реальная",
   "topBar.speedReal4": "4 реальных",
   "topBar.timingNow": "уже идёт",

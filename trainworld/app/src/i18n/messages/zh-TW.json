@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "第1天至今：{amount}",
   "topBar.slower": "減速（,）",
   "topBar.speedCapped": "{speed}（更新需求期間，時間最快{cap}）",
-  "topBar.speedPick": "速度{speed}\n按兩下選擇速度",
+  "topBar.speedPick": "速度{speed}\n按一下選擇速度",
   "topBar.speedReal": "即時",
   "topBar.speedReal4": "4倍即時",
   "topBar.timingNow": "進行中",

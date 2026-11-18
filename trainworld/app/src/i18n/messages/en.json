@@ -2225,7 +2225,7 @@
   "topBar.speedCapped": "{speed} (time capped at {cap} while updating demand)",
   "topBar.speedReal": "real",
   "topBar.speedReal4": "4real",
-  "topBar.speedPick": "{speed} speed\nDouble-click to pick a speed",
+  "topBar.speedPick": "{speed} speed\nClick to pick a speed",
   "topBar.timingNow": "now",
   "topBar.timingTomorrow": "tomorrow",
   "topBar.today": "Today: {what}",

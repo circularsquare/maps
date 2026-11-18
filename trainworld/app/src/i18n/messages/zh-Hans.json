@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "第1天以来：{amount}",
   "topBar.slower": "减速（,）",
   "topBar.speedCapped": "{speed}（更新需求期间，时间限制在{cap}）",
-  "topBar.speedPick": "{speed}速度\n双击选择速度",
+  "topBar.speedPick": "{speed}速度\n点击选择速度",
   "topBar.speedReal": "实时",
   "topBar.speedReal4": "4倍实时",
   "topBar.timingNow": "进行中",

@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "1일차부터: {amount}",
   "topBar.slower": "느리게 (,)",
   "topBar.speedCapped": "{speed} (수요 갱신 중에는 최대 {cap})",
-  "topBar.speedPick": "{speed} 속도\n더블 클릭해서 속도 선택",
+  "topBar.speedPick": "{speed} 속도\n클릭해서 속도 선택",
   "topBar.speedReal": "실시간",
   "topBar.speedReal4": "실시간x4",
   "topBar.timingNow": "진행 중",

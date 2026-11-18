@@ -222,7 +222,7 @@ function CityName({ id, name, tip }: { id: string | null; name: string; tip?: st
 const times = (x: number) =>
   Math.abs(x - REAL_SPEED) < 1e-9 ? t("topBar.speedReal") : Math.abs(x - REAL4_SPEED) < 1e-9 ? t("topBar.speedReal4") : `${x}x`;
 
-/** T-1664: double-click the fastest button for a slider of speeds, real to 100x (the third button always
+/** T-1664: click the speed figure for a slider of speeds, real to 100x (the third button always
  * shows its speed as text); T-1665: while demand updates the clock is held at DEMAND_CAP, the chosen speed dimmed. */
 function Speed() {
   const running = clock.running.value;
@@ -248,7 +248,7 @@ function Speed() {
       <button class="btn icon" data-tip={t("topBar.slower")} aria-label={t("topBar.slower")} disabled={stop <= 0} onClick={() => clock.stepSpeed(-1)}>
         <Icon.slower />
       </button>
-      <button class={"btn icon rate" + (held ? " held" : "")} data-tip={held ? t("topBar.speedCapped", { speed: times(chosen), cap: times(DEMAND_CAP) }) : t("topBar.speedPick", { speed: times(chosen) })} aria-label={t("topBar.speedPick", { speed: times(chosen) })} onDblClick={() => setOpen((o) => !o)}>
+      <button class={"btn icon rate" + (held ? " held" : "")} data-tip={held ? t("topBar.speedCapped", { speed: times(chosen), cap: times(DEMAND_CAP) }) : t("topBar.speedPick", { speed: times(chosen) })} aria-label={t("topBar.speedPick", { speed: times(chosen) })} onClick={(e) => { if (e.detail < 2) setOpen((o) => !o); }}>
         {times(chosen)}
       </button>
       <button class="btn icon" data-tip={t("topBar.faster")} aria-label={t("topBar.faster")} disabled={stop >= SLIDER_STOPS.length - 1} onClick={() => clock.stepSpeed(1)}>

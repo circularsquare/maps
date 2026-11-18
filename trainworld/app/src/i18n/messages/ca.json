@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "Des del dia 1: {amount}",
   "topBar.slower": "Més lent (,)",
   "topBar.speedCapped": "{speed} (temps limitat a {cap} mentre s’actualitza la demanda)",
-  "topBar.speedPick": "Velocitat {speed}\nFes doble clic per triar una velocitat",
+  "topBar.speedPick": "Velocitat {speed}\nFes clic per triar una velocitat",
   "topBar.speedReal": "real",
   "topBar.speedReal4": "4real",
   "topBar.timingNow": "ara",

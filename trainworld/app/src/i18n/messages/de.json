@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "Seit Tag 1: {amount}",
   "topBar.slower": "Langsamer (,)",
   "topBar.speedCapped": "{speed} (Zeit auf {cap} begrenzt, während die Nachfrage aktualisiert wird)",
-  "topBar.speedPick": "Tempo {speed}\nDoppelklick, um ein Tempo zu wählen",
+  "topBar.speedPick": "Tempo {speed}\nKlicken, um ein Tempo zu wählen",
   "topBar.speedReal": "Echtzeit",
   "topBar.speedReal4": "4x Echtzeit",
   "topBar.timingNow": "jetzt",

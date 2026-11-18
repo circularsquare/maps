@@ -2337,7 +2337,7 @@
   "topBar.sinceDay1": "1日目からの収支：{amount}",
   "topBar.slower": "遅く（,）",
   "topBar.speedCapped": "{speed}（需要の更新中は{cap}に制限）",
-  "topBar.speedPick": "速度{speed}\nダブルクリックで速度を選ぶ",
+  "topBar.speedPick": "速度{speed}\nクリックで速度を選ぶ",
   "topBar.speedReal": "実時間",
   "topBar.speedReal4": "実時間×4",
   "topBar.timingNow": "期間中",
