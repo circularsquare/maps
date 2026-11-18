@@ -12,8 +12,10 @@ import { cpus } from 'node:os';
 import { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const MAPS = fileURLToPath(new URL('../../', import.meta.url));
-const ARTIFACTS = fileURLToPath(new URL('../../artifacts/trainworld/', import.meta.url));
+// the shared ledger is the main tree's: from an agent's worktree (maps/.tw-trees/<name>/) a claim in the tree's own
+// copy of cores.py went to a cores.json nobody else reads
+const MAPS = fileURLToPath(new URL('../../', import.meta.url)).replace(/[\\/]\.tw-trees[\\/][^\\/]+[\\/]?$/, '/');
+const ARTIFACTS = MAPS + 'artifacts/trainworld/'; // and so is the registry of which cores each check holds
 
 const REGISTRY = ARTIFACTS + 'check-cores.json';
 let PLAN = null;

@@ -260,6 +260,9 @@ export function actions(d) {
       view: () => state('view'),
       money: () => state('money'),
       lastLoad: () => state('lastLoad'),
+      trips: (opts) => state('trips', opts ?? {}),
+      clock: () => state('clock'),
+      bubbles: (opts) => state('bubbles', opts ?? {}),
     },
     /** page px of lon/lat points, each with `onMap` (a press there reaches the map) or `cover` */
     toScreen: (pts) => state('toScreen', pts),

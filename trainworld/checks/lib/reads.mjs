@@ -130,6 +130,42 @@ export const STATE = {
     const d = window.twDemand, v = d?.view?.(), s = d?.log?.findLast((x) => !d.client.fversions?.has(x.version));
     return { version: v?.version ?? null, final: !!v?.final, newest: s?.version ?? null, waiting: !!d?.client?.waiting, lines: v?.lines?.size ?? 0 };
   },
+  /** the demand view's totals: trips and rail trips a day, its round, version and whether final, lines with riders;
+   * `byLine` adds each line's riders a day by name */
+  trips: ({ byLine = false } = {}) => {
+    const v = window.twDemand?.view?.();
+    if (!v) return null;
+    const r = (x) => (typeof x === 'number' ? Math.round(x) : null);
+    const out = { version: v.version ?? null, final: !!v.final, round: v.round ?? null, tripsPerDay: r(v.tripsPerDay), railTripsPerDay: r(v.railTripsPerDay), lines: v.lines?.size ?? 0 };
+    if (byLine) {
+      const names = new Map(window.tw.world.value.save.lines.map((l) => [String(l.id), l.name]));
+      out.byLine = Object.fromEntries([...(v.lines ?? new Map())].map(([id, l]) => [names.get(String(id)) ?? String(id), r(l.ridersPerDay)]));
+    }
+    return out;
+  },
+  /** the clock: game time (s), running, held, speed step, rate (game s per real s) */
+  clock: () => { const c = window.tw.clock; return { now: c.now(), running: c.running.peek(), held: c.held.peek(), speed: c.speed.peek(), rate: c.rate() }; },
+  /** demand bubbles a click would select, scanned over the map every `step` px: one per bubble (its middle), the
+   * selection kind and its page px and lon/lat; `kind` keeps one kind; at most `limit`. Needs ?debug=1 (twViews). */
+  bubbles: ({ step = 8, kind = null, limit = 20 } = {}) => {
+    const m = window.tw.map, c = m.getContainer(), r = c.getBoundingClientRect(), W = c.clientWidth, H = c.clientHeight;
+    const groups = new Map();
+    for (let y = 4; y < H - 4; y += step) for (let x = 4; x < W - 4; x += step) {
+      const h = window.twViews?.click(x, y, false, true);
+      if (!h || (kind && h.kind !== kind)) continue;
+      // the screen must reach the map there too (a panel over it would take the press)
+      const top = document.elementFromPoint(r.left + x, r.top + y);
+      if (!top || !(top === m.getCanvas() || m.getCanvasContainer().contains(top) || top.closest('.maplibregl-canvas-container'))) continue;
+      const key = JSON.stringify(h);
+      const g = groups.get(key) ?? { kind: h.kind, n: 0, sx: 0, sy: 0 };
+      g.n++; g.sx += x; g.sy += y;
+      groups.set(key, g);
+    }
+    return [...groups.values()].sort((a, b) => b.n - a.n).slice(0, limit).map((g) => {
+      const x = g.sx / g.n, y = g.sy / g.n, p = m.unproject([x, y]);
+      return { kind: g.kind, lngLat: [Math.round(p.lng * 1e5) / 1e5, Math.round(p.lat * 1e5) / 1e5], px: [Math.round(r.left + x), Math.round(r.top + y)], hits: g.n };
+    });
+  },
   /** the game's money as numbers (US$ millions) and its mode */
   money: () => { const m = window.tw.moneyState.value; return m ? { mode: m.mode, cash: m.cash ?? null } : null; },
   /** the last load: from autosave, file or new */
