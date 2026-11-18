@@ -467,6 +467,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
+- T-3647 [P1] {L:single-track} Tram lines on one-way stops broke in 0.4 (taking, 2026-11-18, agent tramoneway)
+  - Context: Your pad, 2026-11-18, a player (dattera, save "Amsterdam"): since 0.4 tram lines are forced through one-way stations both ways, take long detours, and some say track is missing where none seems to be; deleting the stations or track doesn't help. Screenshot: artifacts/trainworld/board/20261118-070516-b9df.png. You: "could we look into whether its possible to support their sort of configuration? i think its rare but should try". 0.4 stopped pairing one-way stations (T-3605, T-3565).
+  - Goal: Saves built like his (tram stops as one-way stations on each side of the street) run as they did before 0.4, or each broken line says plainly what to change.
 - T-3101 [P3] {L:single-track} One-way track follow-ups
   - Context: The track panel's line list now counts a line that only uses a piece on its way back (fixed in tree bug-e, waiting to land). The Select bar still lacks switch and reverse for a picked single-track run: one confirmation and undo for several pieces, and the words, need a call.
   - Goal: Select bar switch and reverse work on single-track runs.
