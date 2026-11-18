@@ -11,7 +11,7 @@ import { cityDemandViews, demandView, ridesOf } from "../../game/demand";
 import { count, exact, money, moneyNegative } from "../../game/format";
 import { stationZone } from "../../game/listScope";
 import { moneyState } from "../../game/money";
-import { GOAL_SHARES, goalsReached, pointsScore, pointsShort, STAR_SHARE } from "../../game/points";
+import { GOAL_SHARES, goalsReached, pointsShown, pointsText, STAR_SHARE } from "../../game/points";
 import { splitTable } from "../../game/splitTip";
 import { lengthsOf } from "../../game/zoneLengths";
 import { stationsToday, today, useToday } from "../../game/today";
@@ -74,7 +74,7 @@ export function CityFigures({ city, built }: { city: City; built: boolean }) {
           </li>
           <li>
             <span class="grow">{tr("cityDetails.points")}</span>
-            <span class="val" data-tip={pointsTip(city.id, city.name)}>{pointsShort(pointsScore.value.get(city.id) ?? 0)}</span>
+            <span class="val" data-tip={pointsTip(city.id, city.name)}>{pointsText(pointsShown.value?.get(city.id) ?? 0)}</span>
           </li>
           <li>
             <span class="grow">{tr("cityDetails.profit")}</span>

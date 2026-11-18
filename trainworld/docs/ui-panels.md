@@ -836,7 +836,7 @@ all cities view ([ui-inspectors.md](ui-inspectors.md#the-all-cities-view)) and t
 same hover), its train trips per day and its profit a day (the column is headed Profit), fares less running trains and upkeep (yesterday's, today so far
 until the game has a first full day; hover: fares, running trains and upkeep, then new trains and
 construction, left out of the figure, when there were any; losses red), and its points, its forecast
-weekday's, changing as soon as the solve answers [T-3465], to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure "on a weekday", and the rule) [T-684, T-694]. A star after the name marks a region
+weekday's, changing when a solve answers with a whole final (the last final stays shown through an edit's solve), and a dash (hover "calculating trips…") from a load until its first final [T-3465, T-3644], to three significant digits ("512k", "4.56M", "103M"; `pointsShort`) [T-831] (hover: the exact figure "on a weekday", and the rule) [T-684, T-694]. A star after the name marks a region
 whose train share has reached 10% (hover: when it was earned, "Monday, day 71, at 14:08" in the
 region's local time) [T-685]. The top bar's city name has the same points in its hover. A narrow
 list keeps about six characters of each name (60 px): below that the star goes first, then the
@@ -1193,7 +1193,7 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
   name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
   board. A game counts at the figures it last sent, not its best (T-3248), sent only from a whole final solve of the
-  network as it is (no solve running or held, never the past 24 hours' stand-in, T-3639); on each board the person's
+  network as it is (no solve running or held, never the past 24 hours' stand-in, T-3639; the score on screen takes the same finals, `scoreSettled`, T-3644); on each board the person's
   row is their best game there. Anita's feedback inbox has a Leaderboards tab that sets a cutoff date:
   games last sent before it count on no board until played again. A country board ranks a game by its points summed over that country's
   cities (the same per-city figures the city boards use; the server maps city to country with a table

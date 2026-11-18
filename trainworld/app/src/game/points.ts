@@ -9,10 +9,12 @@
 // that period's boardings onto the line (each boarding the line's average km), so the km count in
 // the region where riders get on. The clock worker settles both as fares land (clock.worker.ts).
 
-import { computed } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, awayNear, DAY_KINDS, DEMAND_DAYS, kindMade, PLAIN_KIND, rushRun } from "./days";
-import { demandByDay, type DayDemand } from "./demand";
+import { demandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type DayDemand } from "./demand";
+import { loadProgress } from "./loading";
+import { t } from "../i18n";
 import { compactOf, sig3 } from "./format";
 import { lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
@@ -192,3 +194,34 @@ export const pointsScore = computed<Map<string, number>>(() => {
   for (const [z, r] of pointsPerDay.value) if (z && r[0] > 0) out.set(z, Math.round(r[0]));
   return out.size ? out : pointsPast24h.value;
 });
+
+/** T-3639, T-3644: whether the figures are a whole final of the network as it is ("solved"), or there is nothing running
+ * to solve ("idle"). Before that a score is a load's or an edit's early figure, the past 24 hours' before any solve, or
+ * (a game just opened in a running page) the last game's view. The board is sent only then, and the score on screen
+ * shows only then. */
+export const scoreSettled = computed<"solved" | "idle" | null>(() => {
+  const w = moneyWorld.value, net = networkWorld.value;
+  // (a load's focus figures come only while its whole solve runs; T-2533 can keep the pool's zone after it, a hair off)
+  if (!w || demandUpdating.value || demandHeld.value || loadProgress.value || net < 0 || finalWorld.value < net) return null;
+  const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running");
+  if (!running.length) return "idle";
+  const dv = demandByDay.value[0]?.view;
+  if (!dv?.final) return null;
+  // every running line solved on its stops as they are (editNote's `solvedForNow`, and none missing)
+  for (const l of running) {
+    const d = dv.lines.get(l.id);
+    if (!d || (d.stops && (d.stops.length !== l.stops.length || d.stops.some((s, k) => s !== l.stops[k])))) return null;
+  }
+  return "solved";
+});
+
+const lastFinal = signal<Map<string, number> | null>(null);
+effect(() => {
+  if (scoreSettled.value) lastFinal.value = pointsScore.peek();
+  else if (loadProgress.value) lastFinal.value = null; // another game's figures are not this one's
+});
+/** The scores on screen: the newest whole final's, kept through an edit's solve (the board holds it too), and null (a
+ * dash, hover `pointsPending`) from a load's start until its first final. */
+export const pointsShown = computed<Map<string, number> | null>(() => (scoreSettled.value ? pointsScore.value : lastFinal.value));
+export const pointsText = (n: number): string => (pointsShown.value ? pointsShort(n) : "–");
+export const pointsPending = () => t("lineFigures.pendingNew");

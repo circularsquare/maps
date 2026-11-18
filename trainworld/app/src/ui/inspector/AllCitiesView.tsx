@@ -3,7 +3,7 @@
 
 import { count, exact, money, moneyNegative } from "../../game/format";
 import { t as tr } from "../../i18n";
-import { pointsShort } from "../../game/points";
+import { pointsText } from "../../game/points";
 import { splitTip } from "../../game/splitTip";
 import { stationZone } from "../../game/listScope";
 import { builtCities } from "../../game/worldTotals";
@@ -55,7 +55,7 @@ export function AllCitiesView() {
         </li>
         <li>
           <span class="grow">{tr("cityDetails.points")}</span>
-          <span class="val" data-tip={t.pointsTip}>{pointsShort(t.pointsPast)}</span>
+          <span class="val" data-tip={t.pointsTip}>{pointsText(t.pointsPast)}</span>
         </li>
         <li>
           <span class="grow">{tr("cityDetails.profit")}</span>

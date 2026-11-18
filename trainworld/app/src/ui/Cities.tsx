@@ -9,7 +9,7 @@ import { cityDemandViews, ridesOf, type DemandView } from "../game/demand";
 import { count, exact, money, moneyNegative } from "../game/format";
 import { AVERAGE_DAY } from "../game/days";
 import { moneyState } from "../game/money";
-import { POINTS_PER_KM, POINTS_PER_TRIP, pointsScore, pointsShort, STAR_SHARE } from "../game/points";
+import { POINTS_PER_KM, POINTS_PER_TRIP, pointsPending, pointsShown, pointsText, STAR_SHARE } from "../game/points";
 import { t, tSpaced } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { regionLedger } from "../game/regionMoney";
@@ -66,14 +66,16 @@ export function moneyTip(name: string, f: { d: DayLedger; yesterday: boolean }):
 
 /** T-694, T-3465: a region's points, its forecast weekday's. */
 export function pointsTip(id: CityId, name: string): string {
-  const score = pointsScore.value.get(id) ?? 0;
+  const shown = pointsShown.value;
+  if (!shown) return pointsPending();
+  const score = shown.get(id) ?? 0;
   return [
     t("cities.pointsPast", { points: exact(score), city: name }),
     t("cities.pointsRule", { trip: POINTS_PER_TRIP, km: POINTS_PER_KM }),
   ].join("\n");
 }
 function PointsCell({ id, name }: { id: CityId; name: string }) {
-  return <span class="val w-points c-cities" data-tip={pointsTip(id, name)}>{pointsShort(pointsScore.value.get(id) ?? 0)}</span>;
+  return <span class="val w-points c-cities" data-tip={pointsTip(id, name)}>{pointsText(pointsShown.value?.get(id) ?? 0)}</span>;
 }
 
 /** T-685: the star beside a region that has reached the mark, with when (its local time, as the
@@ -117,7 +119,7 @@ export function allCitiesTotals() {
     yesterday &&= f.yesterday;
     counted++;
   }
-  const past = pointsScore.value;
+  const past = pointsShown.value ?? new Map<string, number>();
   let pointsPast = 0;
   for (const id of built.keys()) pointsPast += past.get(id) ?? 0;
   const where = tSpaced(t("cities.whereAll", { dayed: shownDay.value !== AVERAGE_DAY, day: shownDayOn.value }));
@@ -125,7 +127,7 @@ export function allCitiesTotals() {
     cities: built.size, stations, modes, where,
     money: counted ? { d: sum, yesterday } : null,
     pointsPast,
-    pointsTip: t("cities.pointsPastAll", { points: exact(pointsPast) }),
+    pointsTip: !pointsShown.value ? pointsPending() : t("cities.pointsPastAll", { points: exact(pointsPast) }),
   };
 }
 
@@ -155,7 +157,7 @@ function TotalRow({ on }: { on: boolean }) {
       </span>
       <span class="val w-riders c-cities" data-tip={seen ? t("cities.tripsTip", { count: count(rides), where: tot.where.trim() }) : undefined}>{seen ? count(rides) : "–"}</span>
       <span class={"val w-money c-cities c-money" + (f && moneyNegative(net(f.d) * 1e6) ? " neg" : "")} data-tip={f ? moneyTip(t("cities.allLower"), f) : undefined}>{f ? money(net(f.d) * 1e6) : "–"}</span>
-      <span class="val w-points c-cities" data-tip={tot.pointsTip}>{pointsShort(tot.pointsPast)}</span>
+      <span class="val w-points c-cities" data-tip={tot.pointsTip}>{pointsText(tot.pointsPast)}</span>
     </li>
   );
 }
@@ -172,7 +174,7 @@ export function CitiesList({ empty = null }: { empty?: JSX.Element | null }) {
     return { id, name: tPlace(id, cityById(id).name), stations, view, trainShare: view ? view.split.train : null, rides: view ? view.railTripsPerDay : null, money: m ? figures(id, m) : null };
   });
   const { key, dir } = citySort.value;
-  const past = pointsScore.value;
+  const past = pointsShown.value ?? new Map<string, number>();
   const val = (r: CityRow) => (key === "train" ? r.trainShare : key === "rides" ? r.rides : key === "money" ? (r.money ? net(r.money.d) : null) : key === "points" ? (past.get(r.id) ?? 0) : null);
   rows.sort((a, b) => {
     if (key !== "name") {
