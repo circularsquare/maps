@@ -453,7 +453,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up
+- T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up (taking, 2026-11-18, agent timectl)
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "rework time controls to just be like comma and period speed up or slow down? someone suggested this is how it works in KSP. maybe instead of having 1x 4x 16x(flexible) we could just do like slow down flexible speed up. and period speeds up and comma slows down by one step."
   - Goal: 1x / 4x / 16x become a slow-down button, the speed shown, and a speed-up button stepping through today's slider stops; comma slows and period speeds up by one step; the double-click picker on the speed stays (your yes 2026-11-18).
 - T-3654 [P3] {L:map-look} Draw on the map for planning
@@ -550,10 +550,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
   - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
   - Other: Needs a registry rebuild and upload; fold into the next data batch with T-3033. notes/T-3074.md
-- T-3635 [P2] {L:map-look} Top bar fills with copies of the clock (taking, 2026-11-18, agent clockdup)
-  - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced). You, 2026-11-18: "lets do this as relatively high prio cuz it does look pretty bad. should fix before saying its ok".
-  - Goal: Reproduced (Chrome's page translation in Japanese, a game crossing a holiday, or another cause), fixed so the top bar can never hold more than one clock, then the reply goes to the player.
-  - Other: notes/T-3635.md (draft reply to the player)
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
   - Goal: The new level and kind show as a preview before the player pays.

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3635 [P2] {L:map-look} Top bar fills with copies of the clock (2026-11-18): Stale clocks reproduced with a simulated page rewriter (a text node moved under <font> made the holiday dot's insert throw; Preact then mounted a new clock and left the old one): 5 clocks over four holiday turns before, 1 after. The clock's text is set by the game on its own elements, the dot has its own slot, any extra .clock is removed after each render, and the whole top bar is translate=no. The player's exact trigger (their stale clocks read 02:00) not identified. notes/T-3635.md.
 - T-3611 [P2] {L:accounts-server} Autosave lands after another tab took the slot (2026-11-18): autosave re-checks its lease before the slot write and writeSlot refuses inside its transaction when the slot has an edit this tab never read; two-tab probe: before the other tab's save was lost, after it is kept (notes/T-3611.md)
 - T-3625 [P2] {L:map-look} A toggle to hide stations (2026-11-18): Settings > Show > Stations checkbox hides stations and names, unpickable; station tool shows them while active (notes/T-3625.md)
 - T-3101 [P3] {L:single-track} One-way track follow-ups (2026-11-18): Select bar has Run trains one way and Reverse direction for every picked single-track piece: one confirm listing the re-routed lines, one undo (new set_edges_oneway in sim oneway.rs)

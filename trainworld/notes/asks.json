@@ -5,5 +5,12 @@
     "text": "T-3684: every flag and code checks out on today's build (the first flag set was replaced in round 2). Where did you see Sierra Leone with Antarctica's flag (which player, roughly when)? If you don't remember, I'd close it.",
     "since": "2026-11-18",
     "by": "maps-56"
+  },
+  {
+    "id": "a-2026-11-18-12",
+    "title": "Top bar skips page translation",
+    "text": "T-3635: to stop the clock copies, browser page translation now skips the whole top bar. The cost: a player translating into a language the game doesn't offer sees Sandbox, World and the speed labels untranslated (hovers still translate). Keep it? I would.",
+    "since": "2026-11-18",
+    "by": "maps-56"
   }
 ]
