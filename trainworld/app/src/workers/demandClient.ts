@@ -455,6 +455,10 @@ interface Solve {
   barrier?: boolean;
   /** T-1734: networks held back while it ran, and when the first came */
   heldFrom?: number;
+  /** T-3616: when the first of the edits' solves this one follows on from without a whole solve started between
+   * was sent (its own `sentAt` if none); and whether a check at the end of `LOCAL_CHAIN_MS` is set */
+  chainFrom?: number;
+  chainTimer?: boolean;
   /** T-392: each cluster published ahead of the solve's final, by its cities: its results per
    * round and period as they come in, the last round in from every worker, and when its final
    * round was shown */
@@ -621,6 +625,14 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
 /** T-1733: after an edit's local results are shown, how long the whole solve waits for the next edit
  * (stations built, then the line, a few seconds apart): until it starts, the next edit is solved locally too */
 const EDIT_SETTLE_MS = 8000;
+/** T-3616: an edit made during an edit's local solve goes as soon as that local result shows, while the first
+ * edit since a whole solve last started was sent at most this long before; after that it waits for the whole
+ * solve's final (T-1734), so a local solve slower than this (all of Japan's, about 2 minutes) never restarts */
+const LOCAL_CHAIN_MS = 60000;
+/** T-3616: for this long after an edit's solve is sent, a network held behind its local solve is taken to go at
+ * the local result: no zone is solved aside (T-2605) and the time left counts no second solve (T-3599); a slow
+ * local solve gets both after it, so all of Japan's aside starts at most this much later */
+const HOLD_QUIET_MS = 10000;
 
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
 function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
@@ -1957,9 +1969,19 @@ class DemandClient {
     if (this.failed) return;
     if (this.idle()) return this.settleIdle();
     if (!force && this.firm()) {
-      if (this.waiting && this.cur) {
-        this.cur.heldFrom ??= performance.now();
-        if (editHeld.peek()?.sentAt !== this.cur.sentAt) editHeld.value = { sentAt: this.cur.sentAt };
+      const s = this.cur;
+      if (this.waiting && s) {
+        s.heldFrom ??= performance.now();
+        // T-3616: held only until the local result, likely: no wait for the whole solve to count, no zone solved aside
+        if (this.quickHold(s)) {
+          if (!s.chainTimer) {
+            s.chainTimer = true;
+            const end = Math.min(s.sentAt + HOLD_QUIET_MS, (s.chainFrom ?? s.sentAt) + LOCAL_CHAIN_MS);
+            setTimeout(() => { if (this.cur === s) this.flush(); }, Math.max(0, end - performance.now()) + 50);
+          }
+          return;
+        }
+        if (editHeld.peek()?.sentAt !== s.sentAt) editHeld.value = { sentAt: s.sentAt };
       }
       this.refineAside();
       return;
@@ -2009,13 +2031,27 @@ class DemandClient {
    * network (an edit, a zone opened or at another level) waits, and is sent the moment the final
    * is shown, solved locally on top of it. The one gap is the moment after the local result shows,
    * until `whole` goes (`EDIT_SETTLE_MS`), so an edit right after another (a line, then its trains)
-   * is solved locally too; a network held back since before that waits for the final, or edits faster than
-   * the local solve would never let a whole solve start.
+   * is solved locally too. A network held back since before that goes in the gap too while the edits since
+   * a whole solve last started began at most `LOCAL_CHAIN_MS` before the local result (T-3616), and waits for
+   * the final after that, or edits faster than a slow local solve would never let a whole solve start.
    */
   private firm(): boolean {
     const s = this.cur;
     if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || perfOff("firm")) return false;
-    return !(s.localShownAt !== undefined && !s.wholeSent && (s.heldFrom === undefined || s.heldFrom > s.localShownAt));
+    if (s.localShownAt === undefined || s.wholeSent) return true;
+    if (s.heldFrom === undefined || s.heldFrom > s.localShownAt) return false;
+    return perfOff("heldLocal") || s.localShownAt - (s.chainFrom ?? s.sentAt) > LOCAL_CHAIN_MS;
+  }
+
+  /** T-3616: a network held now will likely go at `s`'s local result (`firm`): its local stage runs, sent at most
+   * `HOLD_QUIET_MS` ago, and within the chain's `LOCAL_CHAIN_MS` */
+  private quickHold(s: Solve): boolean {
+    if (perfOff("heldLocal") || s.wholeSent || s.localShownAt !== undefined) return false;
+    // (no worker solves locally: it is solved whole at once; the plans come within a second or so)
+    const plans = Array.from({ length: this.computeN }, (_, k) => s.localPlans?.[k]);
+    if (plans.every((v) => v === 0)) return false;
+    const now = performance.now();
+    return now - s.sentAt <= HOLD_QUIET_MS && now - (s.chainFrom ?? s.sentAt) <= LOCAL_CHAIN_MS;
   }
 
   /**
@@ -3632,6 +3668,8 @@ class DemandClient {
       const plans = (s.localPlans ??= []);
       plans[i] = msg.local ?? 0;
       const n = this.computeN, all = plans.slice(0, n);
+      // T-3616: a network held while the plans came in: now it is known whether it goes at the local result
+      if (all.filter((v) => v !== undefined).length === n && this.waiting && s === this.cur) setTimeout(() => { if (this.cur === s) this.flush(); }, 0);
       if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
         if (all.some((v) => !v)) this.wholeGo(s);
         else if (s === this.cur && !s.barrier) {
@@ -3898,7 +3936,10 @@ class DemandClient {
     // (T-2560: a cached result's network solved again after its card went, as under the card)
     const barrier = showEstimates || newZones || !!this.hold || svc === this.cacheSolve;
     const markets = [...this.opened].filter(isMarket).map(marketZone);
-    this.cur = { version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
+    // T-3616: an edit's solve sent before the one in hand started its whole solve follows on from it
+    const prev = this.cur;
+    const chainFrom = !barrier && prev && prev.barrier === false && !prev.rough && !prev.wholeSent && prev.published < ROUNDS ? prev.chainFrom ?? prev.sentAt : undefined;
+    this.cur = { ...(chainFrom !== undefined ? { chainFrom } : {}), version, svc, layout, results: PERIODS.map(() => null), byRound: Array.from({length: ROUNDS + 1}, () => PERIODS.map(() => null)), published: -1, arrivedAt, sentAt: performance.now(), periodMs: [], setupMs: [], memBytes: [], cities, markets, coarse: this.coarseOf(cities), sent: { cities: [...cities], markets: [...markets] }, showEstimates, newZones, barrier };
     this.log.push(this.cur);
     if (this.log.length > 50) this.log.shift();
     if (this.cacheShown()) this.retireFocus(); // (T-2533)
@@ -5209,8 +5250,11 @@ class DemandClient {
         // T-1733: its lines' riders are worked out (a local result's too, longer trips as last solved)
         linesSettled(fresh.map((l) => l.id), this.netWorld.get(s.svc) ?? -1);
         if (c.local) {
+          const first = s.localShownAt === undefined;
           s.localShownAt ??= performance.now();
           setTimeout(() => this.wholeGo(s), EDIT_SETTLE_MS);
+          // T-3616: a network held through a quick local solve goes now
+          if (first && this.waiting) setTimeout(() => { if (this.cur === s) this.flush(); }, 0);
         }
         // T-1790: an edit's step 2 (the whole solve) once every local result is in
         if (c.local && s === this.cur && (s.localShown = (s.localShown ?? 0) + 1) >= Math.max(...(s.localPlans ?? [0])) && demandStep.peek().of === 2) {

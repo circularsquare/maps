@@ -411,8 +411,13 @@ nothing.
 page sends a solve without the barrier until its final is shown, a newer network (an edit, a zone
 opened or at another level) is held on the page, not sent, and goes the moment that final shows,
 solved locally on top of it. The one gap is those 8 s before `whole`: a network that arrives in them
-goes at once, and one held since before them waits for the final, so edits coming faster than the
-local solve never keep a whole solve from starting. A worker replaced meanwhile still re-solves at
+goes at once. One held since before them (an edit made during the local solve) goes at the local
+result too while the first edit since a whole solve last started was sent at most 60 s before
+(`LOCAL_CHAIN_MS`, T-3616, notes/T-3616.md, `?perfOff=heldLocal` off), and waits for the final after
+that, so edits coming faster than a slow local solve (all of Japan's, about 2 minutes) never keep a
+whole solve from starting. For the first 10 s of the local solve (`HOLD_QUIET_MS`) a network held
+behind it is taken to go at its local result: no zone is refined aside and the time left counts no
+second solve; after that both as for any hold. A worker replaced meanwhile still re-solves at
 once. So building steadily, a whole solve lands about every local solve plus whole solve (a line a
 minute on 2 workers: all of China every 60-90 s, all of Japan every 19-26 minutes), and an edit made during one
 shows its figures when it has landed and the local solve on top is done (the zone in view's sooner, from a
