@@ -1062,11 +1062,27 @@ const TRACK_MARGIN_M = 2_000;
 const VIEW_MARGIN_M = 20_000;
 const VIEW_SPAN_M = 400_000;
 
+/** masks fetched at once at most: a game over a continent meets hundreds of zones, and that many fetches at once fail
+ * in the browser (ERR_INSUFFICIENT_RESOURCES, T-3463, as the diagram's masks did in T-3448) */
+const WATER_FETCHES = 32;
+let waterBusy = 0;
+const waterQueue: (() => void)[] = [];
+async function inWaterSlot<T>(run: () => Promise<T>): Promise<T> {
+  if (waterBusy >= WATER_FETCHES) await new Promise<void>((r) => waterQueue.push(r)); // a finished fetch hands its slot over
+  else waterBusy++;
+  try {
+    return await run();
+  } finally {
+    const next = waterQueue.shift();
+    if (next) next(); else waterBusy--;
+  }
+}
+
 function fetchWater(id: string): Promise<WaterRaster | null> {
   let p = waterFetches.get(id);
   if (!p) {
     const url = new URL(id, packBase).href;
-    p = (async () => {
+    const once = async (): Promise<WaterRaster | null> => {
       const res = await fetch(url + ".json", { signal: AbortSignal.timeout(GROUND_TIMEOUT_MS) });
       if (res.status === 404) return null;
       const head = await res.json();
@@ -1081,7 +1097,9 @@ function fetchWater(id: string): Promise<WaterRaster | null> {
         rows: new Uint32Array(buf, row.offset - base, row.count), runs: new Uint16Array(buf, xs.offset - base, xs.count),
         lon: head.origin.lon, lat: head.origin.lat,
       };
-    })();
+    };
+    // one more try a second later, in the same slot
+    p = inWaterSlot(() => once().catch(() => new Promise<void>((r) => setTimeout(r, 1000)).then(once)));
     waterFetches.set(id, p);
     watchGround("w:" + id, p);
     // a failed fetch is tried again by the next edit or view that needs it, or by `retryGround`

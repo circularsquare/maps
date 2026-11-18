@@ -26,7 +26,7 @@ import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
 import { RoundTrip, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
-import { LineFare } from "./LineMoney";
+import { LineFare, LineMoney } from "./LineMoney";
 import { PurposeSplit } from "./PurposeSplit";
 import { drawnReversed } from "../../game/northUp";
 import { AverageSpeed, PastDay, Schedule, useLinePeriods } from "./schedule";
@@ -420,6 +420,7 @@ export function BusInspector({ id }: { id: string }) {
 
       {l.stops.length >= 2 && <RoundTrip num={l.num} st={st} lev={lev} stops={l.stops.length} standing={standing} />}
       <LineFare l={l} />
+      {st.status === "running" && <LineMoney num={l.num} />}
     </>
   );
 }
