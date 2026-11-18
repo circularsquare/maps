@@ -803,10 +803,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3704 [P2] {L:buses} Changing a bus line's fleet doesn't recalculate (taking, 2026-11-18, agent busfix)
-  - Context: Discord bug-reports 2026-11-18 (PranCZ): "when I change the number of buses on a given line, the profit isn't recalculated automatically, and secondly, when I add an additional bus for a line the headway doesn't change at some point ... Seems like demand isn't being recalculated either"; Márcio: "Same with ferry". Reach: every bus and ferry player.
-  - Goal: Changing a bus or ferry line's fleet updates its headway, profit and trips as a train line's does, at every fleet size.
-- T-3703 [P2] {L:buses} {after:T-3704} Schedules for buses and ferries like trains
+- T-3703 [P2] {L:buses} Schedules for buses and ferries like trains
   - Context: You, 2026-11-18: "some ppl on discord are complaining about schedule feature not being enabled for buses / ferries also. we should get that working. we can leave out the marey diagram / timetable part for now if thats harder to add but yeah want to bring buses and ferries to be more consistent with trains. not necessarily super high prio but would be nice to get out in next few updates". Then: the Discord fleet complaints (T-3704) and this both count: "both whats pictured and what i mentioned should be things we try to get consistent".
   - Goal: Bus and ferry lines get the train lines' schedule controls (periods, weekend, headway steps), the timetable chart optional; a list of what differs goes in the notes first.
 - T-3705 [P2] {L:track-drawing} Can't build on Firefox (taking, 2026-11-18, agent firefox)
