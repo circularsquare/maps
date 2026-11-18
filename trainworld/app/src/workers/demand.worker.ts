@@ -1334,7 +1334,8 @@ function query(msg: Query) {
       sendMessage({ kind: "trip", id: msg.id, version: msg.version, mask: api ? api.solved_mask() : 0, periods, answers: api ? answers : null }, answers.map((v) => v.buffer));
     } else if (msg.kind === "icTrip") {
       // T-866: each period from the market part with the most rail (each part's rail is its own
-      // network's); with no part, an answer with no rail
+      // network's); with no part, an answer with no rail (T-3632: why 6), and with parts but none
+      // that solved the period, one the client reads as not answered (7)
       const ok = marketLive || (mcs.length === 0 && !!intercity && live);
       // T-885: a near place or 6 km zone instead of cells
       const near = ok ? msg.near : undefined;
@@ -1350,7 +1351,7 @@ function query(msg: Query) {
             if (v[0] !== 1) continue;
             if (!best || v[3] + v[20] + v[23] > best[3] + best[20] + best[23]) { tripNodesGlobal(v, viewOf(c, c.part!).nodeGlobal, MARKET_TRIP_NODES); best = v; }
           }
-          if (!best) { best = new Float64Array(MARKET_TRIP_LAYOUT.HEAD); best[0] = 1; best[14] = 2; best[13] = 1; best[6] = best[7] = best[24] = -1; }
+          if (!best) { best = new Float64Array(MARKET_TRIP_LAYOUT.HEAD); best[0] = 1; best[14] = mcs.length ? 7 : 6; best[13] = 1; best[6] = best[7] = best[24] = -1; }
           answers.push(best);
           periods.push(q);
         }

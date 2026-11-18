@@ -4666,7 +4666,8 @@ class DemandClient {
     for (const r of await this.ask((id) => ({ kind: "icTrip", id, version: t.version, end: e, cells, far, farGid, ...(sq ? { sq } : {}), ...(near ? { near } : {}) }), undefined, [], undefined, t)) {
       if (r.kind !== "icTrip" || !r.answers) return null;
       mask |= r.mask;
-      r.periods.forEach((q, i) => (periods[q] = readMarketPeriod(r.answers![i], at)));
+      // T-3632: a worker's unanswered period never replaces another's answer
+      r.periods.forEach((q, i) => (periods[q] = readMarketPeriod(r.answers![i], at) ?? periods[q]));
     }
     if (mask !== ALL_PERIODS || !this.still(t)) return null;
     return periods;

@@ -274,9 +274,11 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
   return routes;
 }
 
-/** Why the market's rail is not offered between two zones (T-866). */
-export type MarketNoRail = "" | "farClosed" | "noRail" | "unmatched";
-const MARKET_WHY: MarketNoRail[] = ["", "farClosed", "noRail", "unmatched"];
+/** Why the market's rail is not offered between two zones (T-866), as `IntercityApi.market_trip`
+ * says; T-3632: "noPart" and "unanswered" are the worker's stand-ins, with no market part on its
+ * network or none that solved the period. An unanswered period reads as not answered. */
+export type MarketNoRail = "" | "farClosed" | "noRail" | "unmatched" | "noTrain" | "noAlt" | "noPart" | "unanswered";
+const MARKET_WHY: MarketNoRail[] = ["", "farClosed", "noRail", "unmatched", "noTrain", "noAlt", "noPart", "unanswered"];
 
 /**
  * T-866: the longer trips between a selection and a far place (or one of its 6 km zones) in one
@@ -324,7 +326,7 @@ const { HEAD: MT_HEAD, PAIR_LEN: MT_PAIR_LEN } = MARKET_TRIP_LAYOUT;
 
 /** Read one period's `IntercityApi.market_trip` answer. */
 export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod | null {
-  if (v.length < MT_HEAD || v[0] !== 1) return null;
+  if (v.length < MT_HEAD || v[0] !== 1 || MARKET_WHY[v[14]] === "unanswered") return null;
   const st = (rn: number) => stationAt(at, rn);
   const np = v[11], nr = v[12];
   const pairs: TripPair[] = [];

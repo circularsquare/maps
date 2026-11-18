@@ -26,6 +26,10 @@ const OK: f64 = 0.;
 const FAR_NOT_OPEN: f64 = 1.;
 const NO_RAIL: f64 = 2.;
 const NOT_MATCHED: f64 = 3.;
+/// T-3632: lines join the two ends' stations, but none runs a train between them this period
+const NO_TRAIN: f64 = 4.;
+/// T-3632: no road or flight joins the two places, so their pairs are never solved (`has_alt`)
+const NO_ALT: f64 = 5.;
 
 impl IntercityApi {
     /// The selection's zone weights (`selection`'s): by people (`dir` 0) or attraction (1).
@@ -108,7 +112,9 @@ impl IntercityApi {
     /// pairs' mean distance, km; the base fare (perceived
     /// minutes) and perceived minutes per dollar; station pairs, routes; the rail riders' share on
     /// routes not listed; why rail is not offered (0 offered, 1 the far place is not open here, 2
-    /// no zone pair rail can serve, 3 no square matched a site); the share of the trips on pairs
+    /// no zone pair rail can serve, 3 no square matched a site, 4 the ends' stations are on one
+    /// network but no path joins them this period, 5 no car or plane joins the two places, so the
+    /// pairs are never solved; the app's worker adds 6 and 7, `trip.ts`); the share of the trips on pairs
     /// rail can serve; the reference mode's perceived minutes (the car's, or the plane's where no
     /// car goes), trip weighted; zone pairs counted; then (T-1229) the everyday outings across a
     /// zone line between the two ends, as the pairs choose them: legs a day, rail legs and walking
@@ -248,6 +254,9 @@ impl IntercityApi {
         let mut fares: Vec<f32> = vec![];
         let beta = p.beta as f64;
         let mut oc = 0f64;
+        // T-3632: why no rail, for the answer with none: some pair with no car or plane, some
+        // pair joined by lines with no path this period
+        let (mut no_alt, mut no_train) = (false, false);
         for &z in &near {
             for &b in &fars {
                 if z == b {
@@ -256,6 +265,9 @@ impl IntercityApi {
                 let (a, bb) = if dir == 0 { (z, b) } else { (b, z) };
                 let (za, zb) = (&m.zones[a], &m.zones[bb]);
                 let trips = m.eachway(za, zb);
+                if !m.pr(za.place, zb.place).has_alt() {
+                    no_alt = true;
+                }
                 if trips < m.rule.min_trips {
                     continue;
                 }
@@ -318,6 +330,8 @@ impl IntercityApi {
                 }
                 if offered {
                     served += t;
+                } else if mix.is_some_and(|x| x.sum <= 0.) {
+                    no_train = true;
                 }
             }
         }
@@ -425,7 +439,7 @@ impl IntercityApi {
         }
         h[18] = n;
         if rail_all <= 0. {
-            h[14] = NO_RAIL;
+            h[14] = if no_alt { NO_ALT } else if no_train { NO_TRAIN } else { NO_RAIL };
             h[13] = 1.;
             return h;
         }

@@ -361,6 +361,13 @@ function trainShare(x: MarketPeriod, ways: number): number {
   return roundTo([r0, 1 - r0], Math.round(ways * x.trips) || null)[0];
 }
 
+/** T-3632: why a period has no train between the two ends, in words. */
+function noRailText(why: MarketPeriod["why"]): string {
+  if (why === "noTrain") return tr("marketTrip.noTrain");
+  if (why === "noAlt") return tr("marketTrip.noAlt");
+  return tr("marketTrip.noRail", { why: why === "farClosed" || why === "unmatched" ? why : "noRail" });
+}
+
 export function MarketTrip({ m }: { m: MarketShown }) {
   const q = shownPeriod.value;
   const t = m.periods[q];
@@ -475,7 +482,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
       {!closed && cLegs >= 0.5 && <CommuteModes legs={cLegs} rail={cRail} day={day} who={commuters} />}
       {!closed && eLegs >= 0.5 && <EverydayModes legs={eLegs} rail={eRail} walk={eWalk} day={day} />}
       <div class="h">{tr("tripText.byTrain")}<span class="right muted small" data-tip={pooled ? tr("marketTrip.trainOthersTip", { period: periodLow, picked: tripPeriod.value !== null }) : repTip}>{pooled ? period : tr("marketTrip.interCityPeriod", { period: periodLow })}</span></div>
-      {t.why || !main || !tm ? <p class="muted">{noStation || tr("marketTrip.noRail", { why: t.why || "noRail" })}</p> : (
+      {t.why || !main || !tm ? <p class="muted">{noStation || noRailText(t.why)}</p> : (
         <>
           <Legs t={t} r={main} />
           <ul class="rows">
