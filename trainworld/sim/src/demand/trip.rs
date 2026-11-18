@@ -19,6 +19,7 @@
 
 use super::api::DemandApi;
 use super::everyday::{EverydayApi, TripInputs};
+use super::intercity::market_trip::pick_routes;
 use super::kernel::*;
 use super::network::PERIODS;
 use wasm_bindgen::prelude::*;
@@ -30,13 +31,6 @@ pub const NEAR_CELL_M: f32 = 600.0;
 /// An attraction takes the nearest cell within this many metres (T-2666): a mountain's or lake's
 /// point is its summit or middle, a theme park's centre is off the built-up cells.
 pub const ATTRACTION_REACH_M: f32 = 2000.0;
-/// Station pairs carrying less than this share of the trip's rail riders are not walked for routes.
-const PAIR_MIN: f32 = 0.005;
-/// Routes carrying less than this share of the trip's rail riders are left out.
-const ROUTE_MIN: f32 = 0.005;
-/// At most this many routes are listed.
-const MAX_ROUTES: usize = 8;
-
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
 pub const HEAD: usize = 48;
 pub const PAIR_LEN: usize = 20;
@@ -802,20 +796,13 @@ impl DemandApi {
             body.extend([a as f64, t as f64, rep[a], rep[t], sz.acc_d[ka] as f64, sz.acc_w[ka] as f64, sz.acc_d[kt] as f64, sz.acc_w[kt] as f64, sk.r[a * s + t] as f64, share as f64, sz.acc_t[ka] as f64, sz.acc_t[kt] as f64, ride as u8 as f64]);
             body.extend(parts.iter().map(|&x| x as f64));
         }
-        // routes over the bigger pairs, by their share of the whole trip's rail riders
-        let mut all: Vec<(usize, f32, Vec<Leg>)> = vec![];
-        for (pi, &(ka, kt, share)) in pairs.iter().enumerate() {
-            if share < PAIR_MIN {
-                break;
-            }
-            let (a, t) = (sz.acc_st[ka] as usize, sz.acc_st[kt] as usize);
-            for (rs, legs) in routes(g, &sk, p, a, t, ROUTE_MIN / share) {
-                all.push((pi, rs * share, legs));
-            }
-        }
-        all.sort_by(|x, y| y.1.partial_cmp(&x.1).unwrap());
-        all.truncate(MAX_ROUTES);
-        all.retain(|r| r.1 >= ROUTE_MIN);
+        // routes over the bigger pairs, by their share of the whole trip's rail riders; one is always
+        // kept while any rail rides (T-3730, as the intercity panel's)
+        let shares: Vec<f32> = pairs.iter().map(|p| p.2).collect();
+        let all = pick_routes(&shares, |pi, min| {
+            let (ka, kt, _) = pairs[pi];
+            routes(g, &sk, p, sz.acc_st[ka] as usize, sz.acc_st[kt] as usize, min)
+        });
         h[24] = pairs.len() as f64;
         h[25] = all.len() as f64;
         h[31] = (1.0 - all.iter().map(|r| r.1 as f64).sum::<f64>()).max(0.0);

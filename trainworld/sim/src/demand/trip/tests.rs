@@ -479,3 +479,19 @@ fn trip_real_network() {
         println!("dumped to {path}");
     }
 }
+
+/// T-3730: the local panel's route list is `pick_routes` with the trip's pair shares: a route is
+/// listed whenever any rail rides, also when the biggest pair is under `PAIR_MIN` or its riders split.
+#[test]
+fn rail_riders_always_list_a_route() {
+    use crate::demand::intercity::market_trip::pick_routes;
+    let split = |n: usize| move |pi: usize, min: f32| -> Vec<(f32, usize)> { (0..n).map(|k| (1. / n as f32, 10 * pi + k)).filter(|r| r.0 >= min).collect() };
+    // the biggest pair under 0.5% of the riders (no pair was walked before)
+    let r = pick_routes(&[0.004f32, 0.003, 0.002], split(1));
+    assert_eq!((r.len(), r[0].0), (1, 0));
+    // a pair a little over 0.5% whose riders split in two
+    assert_eq!(pick_routes(&[0.0062f32, 0.0049], split(2)).len(), 1);
+    // riders on few pairs: every route over the bar, as before
+    let r = pick_routes(&[0.7f32, 0.3], split(2));
+    assert_eq!(r.iter().map(|x| x.2).collect::<Vec<_>>(), vec![0, 1, 10, 11]);
+}

@@ -35,7 +35,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 mod drives;
-mod market_trip;
+pub(crate) mod market_trip;
 use drives::{Drive, Drives};
 
 pub const SHARES: [f32; PERIODS] = [0.20, 0.35, 0.25, 0.15, 0.05];

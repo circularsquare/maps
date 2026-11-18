@@ -43,7 +43,7 @@ const ROUTE_FLOOR: f32 = 1e-4;
 /// again in order at `ROUTE_FLOOR` and the first one's biggest route kept. `shares`:
 /// each pair's share of the rail riders, biggest first; `walk(pair, min)` its routes carrying
 /// `min` of the pair's riders, biggest first.
-fn pick_routes<L>(shares: &[f32], mut walk: impl FnMut(usize, f32) -> Vec<(f32, L)>) -> Vec<(usize, f32, L)> {
+pub(crate) fn pick_routes<L>(shares: &[f32], mut walk: impl FnMut(usize, f32) -> Vec<(f32, L)>) -> Vec<(usize, f32, L)> {
     let mut all: Vec<(usize, f32, L)> = vec![];
     for (pi, &share) in shares.iter().enumerate() {
         if pi > 0 && (share as f64) < PAIR_MIN {
