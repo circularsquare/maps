@@ -164,10 +164,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3724 [P2] {L:route-choice} No transit route shown though a line joins the places (taking, 2026-11-18, agent railnone)
-  - Context: You, 2026-11-18: "have we looked into why case 3 happens so often in cases where people do have routes connecting the endpoints? it is one of the most common complaints". T-3632 stage 1 rebuilt the two reported scenes (New York to Philadelphia, Milan to Bologna) and could not reproduce on 11-18 code, with one demand worker; the message also shows when a demand worker holds no part of the market on its network.
-  - Goal: The cause found on players' own saves or a faithful rebuild with several workers, and fixed so a joined pair shows its route.
-  - Other: notes/T-3632.md, artifacts/trainworld/review/t3723-no-route.md case 3
+- T-3730 [P3] {L:route-choice} Local trip panel can list no route while trains carry riders
+  - Context: From T-3724: `trip.rs` (about line 807, the local trip panel's "No route.") has the same route loop T-3724 fixed for intercity trips, with no keep-one rule. Not reported by players.
+  - Goal: Checked on a real save; the local panel lists a route whenever rail carries riders, as T-3724's `pick_routes` does.
+  - Other: notes/T-3724.md
 - T-3718 [P2] {L:route-choice} Trips can start with a walk to a station
   - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
   - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.

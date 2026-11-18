@@ -7,6 +7,9 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
+-2. 21:20 UTC: landed since: T-3727, T-3728, T-3657 (c056 starred). Checkers running: exitchk (T-3722) and
+   routechk (T-3724, tree railnone: intercity "no route" with riders, cause found on a player's save; sim, WASM
+   rebuild at landing; in v0.4.2 if it passes). Filed T-3730 (same loop in trip.rs). She is editing the board.
 -1. 21:05 UTC: everything for v0.4.2 so far is on 8800 (75f0b3bf, master pushed, smoke passed). Waiting on her:
    board changelog OK, text acks (consolidated list sent). Asks answered 20:55: profitpts in v0.4.2 on PASS; T-3726
    after release; hover row trimmed to the icon (hovericon, Sonnet, T-3727, for v0.4.2); shonei-server push: her
