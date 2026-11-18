@@ -179,10 +179,16 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   `.tw-snap-target-demand`, about 4 cores for two minutes) and deletes the old build (`dist-trash-*`) in a separate
   window after "swapped"; it is normal for that window to run on for a minute.
 - `call snapbuild.cmd` inside another .cmd leaves the shell in `.tw-snap\trainworld\app`: `cd /d` back.
-- Landing a tree fails while the main tree has others' edits in the same files: `git diff -- <files>` to a patch,
-  `git checkout -- <files>`, land, `git apply --3way` the patch, `git reset -- <files>`. Write the patch with
-  `cmd /c "git diff -- <files> > x.patch"`: PowerShell's Out-File adds a BOM and CRLFs and the patch won't apply. An
-  agent still editing those files may write them meanwhile: tell it to pause first.
+- `finish` keeps both sides of a rebase conflict in DECISIONS.md, ARCHIVE.md, notes/ and research/ (master's first);
+  a conflict anywhere else stops it. If master won't fast-forward because the main tree has uncommitted edits in a
+  file the commit changes, the message names the files and the commit command: commit them (they are yours), then
+  run finish again. Edits that aren't yours to commit: `git diff -- <files>` to a patch (`cmd /c "git diff --
+  <files> > x.patch"`; PowerShell's Out-File adds a BOM and CRLFs), `git checkout -- <files>`, land, `git apply
+  --3way` the patch, `git reset -- <files>`; an agent still editing those files may write them meanwhile, so tell it
+  to pause first.
+- Never run `remove` or `finish` from a shell whose cwd is inside the tree: it refuses. If git still can't remove a
+  tree, the message names the processes that mention it; close them (it never kills anything) and run `remove`
+  again, which also clears an empty leftover folder.
 - A translation batch can drop the space after a colon in a JSON file: grep for `":"` before committing.
 - A tree's `app/node_modules` is a junction to the main tree's: deleting a tree folder by hand (not `agent-tree.mjs
   remove`, which unlinks first) deletes through it. 11-12 the main tree lost `.bin` and 15 packages ("Cannot find

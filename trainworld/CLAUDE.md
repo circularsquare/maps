@@ -98,6 +98,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   ARCHIVE.md. Then grep TASKS.md for the id, close a parent whose last stage this was, and
   name any other open task your work also did. New work found on the way is a new task.
 - **Shared files**: re-read right before editing, small edits, never rewrite TASKS, DECISIONS or ARCHIVE wholesale.
+  In a tree, TASKS.md, DECISIONS.md, ARCHIVE.md and LINES.md are never edited (a hook refuses): edit the main tree's,
+  and run tasks.py from the maps root. Changelog items made in a tree are `<tree>-1`, `<tree>-2` until landing
+  numbers them.
 - **notes/** is the agents': move, merge, delete. Check outputs go in `../artifacts/trainworld/`. A notes link that
   doesn't resolve is in `notes/archive/<band>/`.
 - **Data register**: a task that uses, finds or rules out a source updates that country's cell in
