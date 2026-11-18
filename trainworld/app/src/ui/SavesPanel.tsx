@@ -89,6 +89,8 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
 export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren; /** T-3257: a viewed network, never saved */ unsaved?: boolean }) {
   const when = savedWhen(slot.at, now, !!autosaved);
   const cities = cityList(slot.cities ?? []), played = slot.key ? gameSeconds(slot.key) : undefined;
+  // T-3610: a record the browser could not read has no time or day, only the damaged line below
+  if (slot.unreadable) return <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div>;
   return <>
     <div class="small muted save-when">{unsaved ? <span>{t("savesPanel.notSaved")}</span> : <span data-tip={t("savesPanel.lastSaved", { date: fullDate(slot.at) })}>{when}</span>}{mark}</div>
     <div class="small muted num">

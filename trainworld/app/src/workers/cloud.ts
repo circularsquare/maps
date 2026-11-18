@@ -357,7 +357,7 @@ export async function splitOff(ctx: CloudContext, key: string): Promise<Upload> 
 /** T-2037: an origin for every slot in this browser without one (`assignOrigins` over the slots and
  * the account's games, an account game's uploaded origin first). */
 export async function stampAll(list: AccountList | null): Promise<void> {
-  const slots = await listSlots().catch(() => [] as SaveSlot[]);
+  const slots = (await listSlots().catch(() => [] as SaveSlot[])).filter((s) => !s.unreadable); // T-3610: no record to stamp
   if (slots.every((s) => s.origin)) return;
   const games = list?.games ?? [];
   const factsOrigin = (id?: string) => { const o = id ? games.find((g) => g.id === id)?.facts?.origin : undefined; return typeof o === "string" ? o : undefined; };

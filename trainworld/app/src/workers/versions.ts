@@ -127,7 +127,7 @@ export function groupVersions(slots: SaveSlot[], account: AccountGame[], backups
       || (v.kind === "accountBackup" && last.kind === "pinned" && v.game.id === last.game.id && v.backup.rev === last.game.pinned?.rev));
     others = [...(last ? [last] : []), ...others.filter((v) => !isLastGood(v) && !same(v))];
     out.push({ origin, top, others, at: Math.max(...list.filter((v) => v.kind === "slot" || v.kind === "account").map((v) => v.at)),
-      ...(bad ? { damaged: true, noneLeft: !good.length && !unknownLeft(top) } : {}) });
+      ...(bad ? { damaged: true, noneLeft: !good.length && !unknownLeft(top) && !(top.kind === "slot" && top.slot.unreadable && others.length) } : {}) });
   }
   return out.sort((a, b) => b.at - a.at);
 }

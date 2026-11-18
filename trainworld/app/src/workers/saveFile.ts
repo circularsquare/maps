@@ -416,7 +416,7 @@ export interface StoredSave extends Partial<SlotSummary> {
   edit?: number;
 }
 
-export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-2569: an account card whose picture is still being fetched */ loading?: boolean; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; /** T-3395 */ damaged?: boolean; }
+export interface SaveSlot extends Partial<SlotSummary> { key: string; name: string; at: number; day: number; /** T-2569: an account card whose picture is still being fetched */ loading?: boolean; /** T-988 */ cloud?: SyncRecord; /** T-2037 */ origin?: string; edit?: number; /** T-3395 */ damaged?: boolean; /** T-3610: the browser could not read the record at all, so only the key is known (also `damaged`) */ unreadable?: boolean; }
 
 /** T-988: a slot's tie to a game on the account (`sync:<slot>`, deleted with the slot). Absent, or
  * without `acct`, for a slot tied to no account (a game made while signed out). The slot has changed
@@ -583,21 +583,38 @@ export async function writeStored(key: string, v: StoredSave): Promise<boolean> 
   }
 }
 
+const UNREADABLE = Symbol("unreadable");
+/** T-3610: `key`'s record read in a transaction of its own, so that one the browser cannot read (Chrome
+ * 130+ NotFoundError when a big value's file is gone, Firefox UnknownError) aborts only itself; tried
+ * twice, then UNREADABLE. A blocked storage's error is thrown. */
+async function readApart<T>(key: string): Promise<T | undefined | typeof UNREADABLE> {
+  for (let tries = 0; ; tries++) {
+    try {
+      return (await req((await store("readonly")).get(key))) as T | undefined;
+    } catch (err) {
+      if (storageBlocked(err)) throw err;
+      if (tries) return UNREADABLE;
+    }
+  }
+}
+
 /** Metadata only leaves the worker; unreadable-save recovery copies are kept out of the list. Only
  * the slots are read, not the demand caches beside them (several MB each, T-328). Also read by the
  * start menu on the main thread (T-677). Throws a blocked storage's error as it is, and a
  * StorageReadError when the reads keep failing (T-2705). */
 export async function listSlots(): Promise<SaveSlot[]> {
   const [keys, saves, syncs] = await retried("the slot list", "list", async () => { // i18n-ignore: console text
-    const s = await store("readonly");
-    const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
-    const saves = await Promise.all(keys.map((k) => req(s.get(k)) as Promise<StoredSave>));
-    const syncs = await Promise.all(keys.map((k) => req(s.get(SYNC_PREFIX + k)) as Promise<SyncRecord | undefined>));
+    const keys = (await req((await store("readonly")).getAllKeys())).filter((k): k is string => typeof k === "string" && (k === ORIGINAL_SLOT || k.startsWith("slot-")));
+    const saves = await Promise.all(keys.map((k) => readApart<StoredSave>(k)));
+    const syncs = await Promise.all(keys.map(async (k) => { const v = await readApart<SyncRecord>(SYNC_PREFIX + k); return v === UNREADABLE ? undefined : v; }));
     return [keys, saves, syncs] as const;
   });
-  return keys.flatMap((key, i) => {
+  return keys.flatMap((key, i): SaveSlot[] => {
     const s = saves[i];
     if (!s) return [];
+    // T-3610: a record the browser cannot read (its value's file is gone) is that one game, damaged; its
+    // backups and account copy are still offered, and `at` 0 puts it last
+    if (s === UNREADABLE) return [{ key, name: slotName(key), at: 0, day: 0, damaged: true, unreadable: true, cloud: syncs[i] }];
     if (syncs[i]) seeSync(key, syncs[i]);
     return [{ key, name: slotName(key, s), at: s.at, day: s.day, thumb: s.thumb, panels: s.panels, shade: s.shade, cities: s.cities, lines: s.lines, stations: s.stations, cash: s.cash, mode: s.mode, ...(s.copy ? { copy: true } : {}), ...(s.damaged ? { damaged: true } : {}), cloud: syncs[i], origin: s.origin, edit: s.edit }];
   }).sort((a, b) => b.at - a.at);
@@ -762,12 +779,11 @@ export interface SlotBackup { key: string; at: number; day: number; /** the slot
 const backupKey = (slot: string, tier: string) => `${BACKUP_PREFIX}${slot}:${tier}`;
 
 export async function listBackups(slot: string): Promise<SlotBackup[]> {
-  const s = await store("readonly");
-  const keys = (await req(s.getAllKeys())).filter((k): k is string => typeof k === "string" && isBackupOf(k, slot));
+  const keys = (await req((await store("readonly")).getAllKeys())).filter((k): k is string => typeof k === "string" && isBackupOf(k, slot));
   const out: SlotBackup[] = [];
   for (const key of keys) {
-    const b = (await req(s.get(key))) as StoredSave | undefined;
-    if (b) out.push({ key, at: b.at, day: b.day, stations: b.stations, edit: b.edit, ...(key.endsWith(":pull") ? { pull: true } : {}), ...(key.endsWith(":" + GOOD) ? { good: true } : {}) });
+    const b = await readApart<StoredSave>(key); // one unreadable backup is left out (T-3610)
+    if (b && b !== UNREADABLE) out.push({ key, at: b.at, day: b.day, stations: b.stations, edit: b.edit, ...(key.endsWith(":pull") ? { pull: true } : {}), ...(key.endsWith(":" + GOOD) ? { good: true } : {}) });
   }
   return out.sort((a, b) => b.at - a.at);
 }

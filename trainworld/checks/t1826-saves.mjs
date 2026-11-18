@@ -12,7 +12,7 @@ import { readFile } from 'node:fs/promises';
 import { launchChrome, collectErrors, importSave, acrossLine, ANGLE } from './lib.mjs';
 
 const BASE = process.argv[2] ?? 'http://localhost:6189/';
-const NEWER = 'This game was saved by a newer version. Reload the page to update.';
+const NEWER = 'This game was saved on a newer game version. Reload the page to update.';
 
 let failed = false;
 const report = (name, ok, detail) => { failed ||= !ok; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };

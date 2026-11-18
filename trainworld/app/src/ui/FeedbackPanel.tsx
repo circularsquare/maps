@@ -39,7 +39,9 @@ export function browserOf(ua: string): string {
   if (!m) return ua.slice(0, 120);
   const name = ({ Edg: "Edge", OPR: "Opera", FxiOS: "Firefox", CriOS: "Chrome", Version: /Safari/.test(ua) ? "Safari" : "Browser" } as Record<string, string>)[m[1]] ?? m[1];
   const version = name === "Safari" ? /Version\/([\d.]+)/.exec(ua)?.[1] ?? m[2] : m[2];
-  return name + " " + version;
+  // Every iOS browser runs WebKit, so the iOS version is what places a WebKit bug (T-3612)
+  const ios = /\b(?:iPhone )?OS (\d+(?:_\d+)*) like Mac OS X/.exec(ua)?.[1]?.replace(/_/g, ".");
+  return name + " " + version + (ios ? " (iOS " + ios + ")" : "");
 }
 
 /** T-2826: what a report carries beside the message: the game version, the browser, whether the device
