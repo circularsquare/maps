@@ -993,7 +993,10 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   from the Select tool's pick, whose Shift+click adds the way between. Its inspector is titled "3 pieces of track",
   with the total length, the kind when all share it and the level or range under it; then the rebuild choices with
   every level and every type offered, as on the bar, the set's own level, count and type on when all share it;
-  Rebuild and the Select tool line; Cost to construct and Upkeep summed; the lines on any of them. No Remove yet.
+  Rebuild and the Select tool line; Cost to construct and Upkeep summed; the lines on any of them. Remove track (T-3638) beside Rebuild, and the Delete key, remove the set
+  as the bar's Remove does a pick (`removeTracks` in `game/remove.ts`, edit `removePieces`): one question naming the
+  total length (as for one piece, built and final), lines that lose a stop listed, the whole set refused with the
+  track model's reason when a piece cannot go, the set deselected after. Touch has no way to build a set.
   Rebuild is the bar's for a pick of these pieces and no stations: one quote, question and charge for all, final;
   the pieces it would refuse are red on the map and the ramps beyond in the band, as for the bar (one piece's panel
   draws its quote that way too). The set is drawn in the pick's band; pieces gone after an edit drop out of it.

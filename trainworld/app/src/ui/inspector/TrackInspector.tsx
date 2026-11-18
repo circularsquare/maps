@@ -6,7 +6,7 @@ import { selection } from "../../game/ui";
 import { t, tSeries } from "../../i18n";
 import { edit, say, world } from "../../game/world";
 import { createLine } from "../../game/lineActions";
-import { removeThing } from "../../game/remove";
+import { removeThing, removeTracks } from "../../game/remove";
 import { describeIssues } from "../../game/issues";
 import { moneyState } from "../../game/money";
 import { edgeUpkeep } from "../../game/regionMoney";
@@ -55,7 +55,7 @@ export function TracksInspector({ edges: ids }: { edges: number[] }) {
         <span class="name" data-tip={touchInput.value ? undefined : t("trackInspector.shiftSetTip")}>{t("trackInspector.pieces", { count: edges.length })}</span>
       </div>
       <div class="sub muted">{tSeries([distance(sum((e) => e.lengthM)), kind, lv].filter(Boolean))}</div>
-      <PieceRebuild edges={edges} />
+      <PieceRebuild edges={edges}><button class="btn text" onClick={() => void removeTracks(ids)}>{t("trackInspector.remove", { kind: "track" })}</button></PieceRebuild>
       <ul class="rows top-speed">
         <Row label={t("trackInspector.cost")}>{money(sum((e) => e.cost))}</Row>
         {m && (

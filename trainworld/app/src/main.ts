@@ -32,7 +32,7 @@ import { stopsById, world } from "./game/world";
 import { hiddenLevels, hiddenLines, hideBuses, levelBits } from "./game/lineVisibility";
 import { setHidden } from "./map/visibility";
 import "./game/capLoad";
-import { removeThing, setTrackHider } from "./game/remove";
+import { removeThing, removeTracks, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
@@ -725,6 +725,11 @@ window.addEventListener("keydown", (e) => {
     if (s?.kind === "track" || (s?.kind === "station" && !inComplexView(s.station))) {
       e.preventDefault();
       void removeThing(s.kind === "track" ? { kind: "track", edge: s.edge } : { kind: "station", node: Number(s.station) });
+      return;
+    }
+    if (s?.kind === "tracks") {
+      e.preventDefault();
+      void removeTracks(s.edges);
       return;
     }
     if (!s && e.key === "Delete") {
