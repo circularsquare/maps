@@ -177,9 +177,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (taking, 2026-11-18, agent playkeep)
   - Context: Proposal 1, approved 2026-11-18. Agents spent 388 of 1,278 minutes (30%) waiting on the game; each probe reloads it (13 s new game, 129 s the real save); 41 of 71 scratch browser scripts skip play.mjs; 173 blocked sleeps since 11-16.
   - Goal: `play start <city|save>` keeps a game open; `play do` answers a probe in a few seconds with short JSON, waiting on conditions not fixed times; `play sim` reads the simulation; a `wait` command replaces hand-written polling; CLAUDE.md points agents to it. Snapshot/restore tried and kept only if it works.
-- T-3668 [P2] {L:workflow} {after:T-3667} Agent reports reach the current orchestrator (taking, 2026-11-18, agent inbox)
-  - Context: Proposal 3, approved 2026-11-18. Old orchestrator tabs relaying reports after a handover cost about 1.8M tokens a handover (13% of orchestrator tokens).
-  - Goal: Each agent's final report is also written to a file inbox the board watch prints to the current orchestrator, which adopts running agents from the board; the old tab stops after its one line.
 - T-3670 [P2] {L:workflow} Agents start lighter
   - Context: Proposal 2, approved 2026-11-18 ("yes please turn off connectors. ill do it if u cant"). Every agent starts at 56k tokens; AWS, Stripe and Docs tools got 0 calls in 2,750.
   - Goal: Sessions in maps start without the AWS and Stripe servers, the claude.ai connectors and the AWS skills, measured at the next agent's first call.

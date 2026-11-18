@@ -75,8 +75,14 @@ If the new orchestrator messages you, the `Previous:` line names this session, o
 refused a new agent, you are winding down. There is no rush, and the new orchestrator holds off on
 commits, landings, publishing and 8800 until you are done, so land things properly:
 
-- Start no new work. Agents' reports that still reach you go to the new orchestrator by `SendMessage`, nothing else.
-  Land what is in flight: review, smoke, commit as the project's CLAUDE.md says.
+- **With an agent report inbox (trainworld: `tools/reports.py`):** start no new work and finish only the landing
+  you are in. Agents still running are the new orchestrator's: their reports reach it from the inbox, so never pass
+  one on. Each of your agents still wakes you when it finishes; end that turn with one word and no tool calls, and
+  keep the tab open until they are done, since they run inside it. Then delete the `Previous:` line, update
+  `Updated:`, message the new orchestrator once (what you landed, which agents are still running), send Anita the one
+  line below, and stop.
+- **Without one:** start no new work. Agents' reports that still reach you go to the new orchestrator by
+  `SendMessage`, nothing else. Land what is in flight: review, smoke, commit as the project's CLAUDE.md says.
   An agent you genuinely need to finish in-flight work gets a description starting `in-flight:`.
 - As each item lands, move its line from "In flight" into "State" (re-read the file first: the new
   orchestrator edits it too). With a state command, nothing to move: landed work shows there; delete its line

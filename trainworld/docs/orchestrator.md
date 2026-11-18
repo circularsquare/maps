@@ -32,13 +32,22 @@ bookkeeping, not once per message (Anita, 2026-11-09).
   built. An agent that compacts was given too much.
 - **Thanks**: a short thanks when an agent's work is done, in your own reply; a SendMessage resumes the agent and it
   reports again. Resume the same agent for follow-ups.
+- **Reports** (T-3668): every agent's final report is also kept in `notes/agent-reports/` by a SubagentStop hook
+  (`tools/reports.py`), with its name, task, session and time. Your own agents' reports reach you directly; the board
+  watch prints a line for each report from another session's agent (one the previous orchestrator started), and
+  `handoff.py status` lists them unread. Read one with `reports.py show <id>`; once you have acted on it,
+  `reports.py read <id or T-id> --by <you>` (`tasks.py done` and `close` do this for their task, so what a previous
+  orchestrator leaves unread is what it never landed). An adopted agent can't be resumed from your session: a
+  follow-up goes to a fresh agent on its tree and notes. `reports.py sweep` backfills from transcripts if the hook
+  missed one.
 - **Your own cycling** (Anita 2026-11-16; 11-17: 500k): at about 500k tokens (the stop hook says so), finish anything
   mid-landing, bring the handoff current, run `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a new
   Windows Terminal tab running /takeover), then wind down per /handoff once the new one messages you. Don't wait for her.
   From about 450k start no new agents: list what you would start in the handoff's Next and the new orchestrator starts
-  them (each report an old tab passes on is paid for twice, 11-17). After handing over, send her one line ("talk to
-  <new name> now") and write nothing more to her: you only pass agents' reports to the new orchestrator and never ask
-  her anything.
+  them. After handing over, finish the landing you are in, send her one line ("talk to <new name> now"), message the
+  new orchestrator once, and stop. Agents still running are the new orchestrator's: their reports reach it through
+  the inbox, so you never pass one on. Each of your agents still wakes you when it finishes (they live in your tab,
+  so keep it open until they are done): end that turn with one word and no tool calls.
 - **Never go quiet on her** (Anita 2026-11-17: 25 minutes without an answer): anything you run that takes over a
   minute (a landing with a WebAssembly rebuild, smoke, a 8800 rebuild) starts in the background, and you answer her
   message first. The board keeps itself current from the tools: `tasks.py start` writes an agent's start time,
@@ -77,7 +86,7 @@ bookkeeping, not once per message (Anita, 2026-11-09).
 - **The board inbox** (twboard on 8800): her board actions (reorder, area, priority, move a task, answers, text
   acknowledged, comments) land in `notes/board-inbox.jsonl`; her scratch pad arrives there as one `pad-send` (all her
   rough thoughts), reported at once: split it, merge duplicates, file the rest (notes/T-3391.md "Scratch pad"). At takeover start the watch with Monitor
-  (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py`; it prints a line when a batch is
+  (longest timeout, re-arm): `venv\Scripts\python.exe -u trainworld/board/watch.py --session <your session id>`; it prints a line when a batch is
   ready (her Send now, or 3 idle minutes). `watch.py pending` lists them; apply each in TASKS.md / LINES.md (a reorder
   moves the line in LINES.md: that order is the area's queue), then `watch.py handled <ids> --by <you> --note "..."`.
   Line format and how each type applies: notes/T-3391.md "Stage 2".

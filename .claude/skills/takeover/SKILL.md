@@ -17,7 +17,8 @@ wrong for the situation, do the sensible thing and say why in your first message
    and grep `TASKS.md` for `taking`. Read SPEC.md and other docs on demand, not up front.
 2. **Read the live state.** trainworld: `venv\Scripts\python.exe trainworld/tools/handoff.py status` from the
    maps root (trees, agents, uncommitted paths, 8800 and master, open asks, core claims, world run, unpublished
-   changelog); where it and the file disagree, trust the command. A project without a state command: check what
+   changelog, unread agent reports: those from the old session's agents are yours to act on); where it and the
+   file disagree, trust the command. A project without a state command: check what
    the file claims before trusting it (each long run's liveness check, and that the commit it names for 8800 or
    master matches `git log`). Note anything stale.
 3. **Claim the file.** Your session id is in the session-start context ("Session id: ..."); your
@@ -38,14 +39,19 @@ wrong for the situation, do the sensible thing and say why in your first message
    what's in flight), then message me when you're done." If the old line has no name (an
    orchestrator from before names were recorded), check `ListAgents` for it; if you can't tell
    which session it is, ask Anita in your first message to tell the old tab. From now on you alone talk to Anita: the old tab sends her
-   one line and then only passes agents' reports to you.
+   one line, finishes the landing it is in and stops. In trainworld its agents still running are yours to adopt
+   from the board (`handoff.py status`): start the board watch now (docs/orchestrator.md, `watch.py --session <your
+   id>`); each report arrives as `agent report <id> ...`; read it with `reports.py show <id>`, act on it as on your
+   own, then `reports.py read <id> --by <you>`. A follow-up to an adopted agent goes to a fresh agent on its tree
+   and notes. A project without a report inbox: the old tab passes agents' reports to you.
 5. **While `Previous:` is there, hold off on shared work.** The old session is landing its
    work, so leave alone: landing worktrees or merges, commits, rebuilding or restarting what 8800
    serves, publishing, writes to shared build outputs (`data/packs` and the like), and long runs
    that would compete for the cores its runs hold. Fine meanwhile: reading, planning, filing tasks,
    and briefing and launching agents on tasks that are not in flight; queue their landings.
    Lines under "In flight" that name the old session are its to land: don't relaunch those tasks
-   or edit their files.
+   or edit their files. In trainworld the old session lands only what it was landing at the handover; its other
+   agents' trees are yours to land once their reports arrive.
 6. **The wait ends** when the old session messages you, or its `Previous:` line is gone. If
    neither happens within a couple of hours, look at it in `ListAgents` and the file: if it is idle
    or gone with lines still in flight, check that work directly (the task's notes, the working
