@@ -1,7 +1,9 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session f171f68d-958c-4fdd-a988-a53db2329545, name maps-ca, since 2026-11-18 04:48 UTC
-Updated: 2026-11-18 05:40 UTC
+Updated: 2026-11-18 12:08 UTC (maps-ca past 500k, starting its successor). In flight now: nightfix3 (T-3455,
+Malaysia rerun, then done), tramoneway (T-3647), settle (T-3482 READY to land after nightfix3). maps-ca's morning
+report went to her at 12:08 with the For you items (T-3298, T-3630 asks; strings list below).
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5; ~00:40 local she
@@ -102,6 +104,10 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   kill 39588 only; on failure it writes the restore command. nightfix's notes: notes/T-3455.md "What ran (nightfix)".
   Disk ~32 GB free, backups ~20 GB: watch it. Monitor re-armed by maps-ca. After: tasks.py done T-3511/T-3455,
   start_difficulty.py --fresh once more, 8800 rebuild, then T-3620 and T-3623 can start.
+
+- She's up (12:05 UTC): "can keep night runs going til finished". T-3647 (P1, dattera's Amsterdam tram save broken
+  by 0.4's one-way stops): tramoneway (Opus, .tw-trees/tramoneway, port 6194) reproducing; fix or a proposal to her.
+  His save itself needs server access (her word).
 
 ## Waiting on Anita
 - Nothing in asks.json. New strings for her when noroute2 lands (above) and from overnight agents.
