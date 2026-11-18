@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, routeCrowding, roomVehicle, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -45,7 +45,7 @@ const trips = (n: number, f: PurposeFilter) => tripsAmount(count(n), n, f);
  * main route's sum by a last term. `pooled` false: the route's own sum alone (T-870). */
 function trainEquation(t: TripPeriod, r: TripRoute, pooled = true): string {
   const terms: Term[] = routeTerms(t, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => ({
-    label: termLabel(x.id),
+    label: termLabel(x.id, x.vehicle),
     real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
     weight: x.weight,
     perceived: x.perceived,
@@ -187,8 +187,8 @@ function CrowdRows({ r }: { r: TripRoute }) {
         </li>
       )}
       {fullWait >= 0.05 && (
-        <li data-tip={tr("tripInspector.fullWaitTip", { min: minNum1(fullWait) })}>
-          <span class="grow">{tr("tripInspector.waitForRoom")}</span>
+        <li data-tip={tr("tripInspector.fullWaitTip", { min: minNum1(fullWait), vehicle: roomVehicle(r) })}>
+          <span class="grow">{tr("tripInspector.waitForRoom", { vehicle: roomVehicle(r) })}</span>
           <span class="val">{minText(fullWait)}</span>
         </li>
       )}
@@ -220,7 +220,7 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
     .map((k) => [k, (a.get(k) ?? 0) - (b.get(k) ?? 0)] as const)
     .filter(([, d]) => Math.abs(d) >= 0.05);
   const diffTip = tr("tripInspector.diffTip", { own: minText(own), main: minText(mainOwn) }) +
-    (parts.length ? "\n" + parts.map(([k, d]) => tr("tripInspector.diffTerm", { term: termLabelCap(k), delta: tr("inspector.min", { n: (d > 0 ? "+" : "−") + num1(Math.abs(d)) }) })).join("\n") : "");
+    (parts.length ? "\n" + parts.map(([k, d]) => tr("tripInspector.diffTerm", { term: termLabelCap(k, roomVehicle(r)), delta: tr("inspector.min", { n: (d > 0 ? "+" : "−") + num1(Math.abs(d)) }) })).join("\n") : "");
   return (
     <div class="trip-alt">
       <RouteLegs t={t} r={r} />
@@ -244,7 +244,7 @@ function RouteDetail({ t, r }: { t: TripPeriod; r: TripRoute }) {
   );
 }
 
-const termLabelCap = (id: string) => capitalise(termLabel(id));
+const termLabelCap = (id: string, vehicle?: string) => capitalise(termLabel(id, vehicle));
 
 /** The main route's group, up to four other routes and the many small ones left (T-709), with
  * their shares of the train riders: in whole riders when `riders` (T-911; the small ones together

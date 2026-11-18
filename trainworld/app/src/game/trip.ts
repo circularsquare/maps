@@ -19,6 +19,7 @@ import { EVERYDAY_KEYS, FILTER_PURPOSES, shownKey, type PurposeFilter, type Purp
 import type { CommutersOneWay, Selection } from "./types";
 import { MARKET_TRIP_LAYOUT, TRIP_LAYOUT } from "../workers/demandProtocol";
 import { stationNames, stationsById, world } from "./world";
+import { vehicleOf, type Vehicle } from "./vehicle";
 
 /** One leg of a route: a ride on a line, or a walk after a ride, to another station or between the
  * platforms of one (T-717). */
@@ -464,6 +465,18 @@ export function routeCrowding(r: TripRoute) {
   return { crowding, fullWait };
 }
 
+/** What the rides that waited for room run, for the words of that wait: their vehicle where it is one kind,
+ * "ride" where the row sums rides of different kinds. */
+export function roomVehicle(r: TripRoute): Vehicle | "ride" {
+  const kinds = new Set<Vehicle>();
+  for (const l of r.legs) {
+    if (l.kind !== "ride" || l.fullWaitMin < 0.05) continue;
+    const st = world.peek()?.lineStats[l.line];
+    kinds.add(st ? vehicleOf(st) : "train");
+  }
+  return kinds.size === 1 ? [...kinds][0] : kinds.size === 0 ? "train" : "ride";
+}
+
 /** One term of a route's perceived total: what it is, its real amount (minutes, dollars for the
  * fare, or a count of changes) with the weight it counts at, and its perceived minutes. */
 export interface CostTerm {
@@ -475,6 +488,8 @@ export interface CostTerm {
   weight: number;
   perceived: number;
   unit: "min" | "usd" | "count";
+  /** the wait for room only: what the rides run, for `termLabel` */
+  vehicle?: Vehicle | "ride";
 }
 
 /** A route's perceived total as terms, from the worker's own perceived minutes: the walks (or the
@@ -506,7 +521,7 @@ export function routeTerms(t: RouteCosts, r: TripRoute): CostTerm[] {
   const { crowding, fullWait } = routeCrowding(r);
   const wait = tot.wait - fullWait;
   out.push({ id: "wait", label: tr("trip.wait"), real: wait, weight: wait > 0 ? (waitP - fullWait) / wait : 1, perceived: waitP - fullWait, unit: "min" });
-  if (fullWait >= 0.05) out.push({ id: "waiting for a train with room", label: tr("trip.waitRoom"), real: fullWait, weight: 1, perceived: fullWait, unit: "min" }); // i18n-ignore
+  if (fullWait >= 0.05) out.push({ id: "waiting for a train with room", label: tr("trip.waitRoom", { vehicle: roomVehicle(r) }), vehicle: roomVehicle(r), real: fullWait, weight: 1, perceived: fullWait, unit: "min" }); // i18n-ignore
   out.push({ id: "ride", label: tr("trip.ride"), real: tot.ride, weight: 1, perceived: tot.ride, unit: "min" });
   if (crowding >= 0.05) out.push({ id: "crowding", label: tr("trip.crowding"), real: 0, weight: 1, perceived: crowding, unit: "min" });
   if (tot.xfer > 0) out.push({ id: "walk between stations", label: tr("trip.walkBetween"), real: tot.xfer, weight: xferP / tot.xfer, perceived: xferP, unit: "min" }); // i18n-ignore

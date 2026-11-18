@@ -69,7 +69,7 @@ function trainEquation(t: MarketPeriod, r: TripRoute, sc: number, w: number): st
     // travellers' weight, as the choice weighs it and the car and plane rows show it, not the route search's
     if (x.id === "fare") return { label: termLabel(x.id), real: usd(x.real * sc), weight: w, perceived: x.real * sc * w, usd: true }; // i18n-ignore: term id
     return {
-      label: termLabel(x.id),
+      label: termLabel(x.id, x.vehicle),
       real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
       weight: x.weight,
       perceived: x.perceived,

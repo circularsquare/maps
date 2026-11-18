@@ -90,7 +90,7 @@ const TERM_KEYS: Record<string, MessageKey> = {
   "until the flight": "tripText.termUntilFlight",
   flight: "tripText.termFlight",
 };
-export const termLabel = (id: string): string => (TERM_KEYS[id] ? t(TERM_KEYS[id]) : id);
+export const termLabel = (id: string, vehicle: string = "train"): string => (TERM_KEYS[id] ? t(TERM_KEYS[id], { vehicle }) : id);
 
 /** One term of an effective time equation: "walk 8 × 1.5", "wait 3", "fare $2.90 × 3". `label` is
  * already worded (`termLabel`). */
