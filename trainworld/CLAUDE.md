@@ -113,10 +113,13 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   restarted after app edits. 8800 is Anita's; no long sweeps against it. If your brief gives you a worktree, run
   everything from it.
 - **Headless Chrome** through Playwright with its own `--user-data-dir`; stop only PIDs you started.
-- **Playing the game in a check**: `checks/lib/play.mjs` (how-to at its top) opens a city or a save, picks tools on
-  the real toolbar, draws track and places stations by pointer at lon/lat points (exact), presses controls by name,
-  and reads panels and money as shown. Build fixtures through it rather than edits where the player's path matters;
-  a new read goes in `checks/lib/reads.mjs`.
+- **Playing the game in a check or a probe**: probe with `node trainworld/checks/play.mjs` (how-to at its top).
+  `start <city|save> --port <your Vite>` keeps a game open in a headless Chrome of its own (cores claimed; it stops
+  after 30 unused minutes); then `do '<act/see calls>'`, `sim <read>` and `edits <file>` answer in a second or two
+  with short JSON, waiting on conditions (`wait.final()`, `wait.panel()`, `wait.selection()`); `reload` after
+  restarting Vite, `stop` when done. A standing check makes the same calls through `checks/lib/play.mjs`, which picks
+  tools on the real toolbar, draws track and places stations by pointer at lon/lat points, and reads panels and money
+  as shown. Build fixtures by the player's path where it matters; a new read goes in `checks/lib/reads.mjs`.
 - **The real save** is `T-007-real-nyc.save`. `?new=1` never writes a slot.
 - **Typecheck** with `npm run check --prefix app`; `python trainworld/tools/agent_cargo.py wasm` when Rust changed.
   No full builds, no commits (a brief that touches shonei-server may say to commit there; pushing and deploying stay
@@ -138,10 +141,12 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   routine steps, wording or small UI. Say in your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
 - **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
-- **Waiting**: a build or test whose result you need runs inside one foreground call with a long time limit (up to
-  10 minutes; split anything longer), and you never end your turn while it is running (a watch on a background
-  process does not hold the turn open). Work that needs no result from you may run in the background, with at most
-  one light check every 4-5 minutes. Final checks (smoke) run in the foreground.
+- **Waiting**: no `sleep`, no polling loops of your own: `node trainworld/checks/wait.mjs <file> <pattern>
+  <timeout-s> [--pid N] [--fail <pattern>]` for a log or build, `play.mjs do 'wait.final()'` for the game. A shell call
+  still running at about 180 s can be moved to the background, so keep each wait under 170 s and wait again if it
+  times out; never end your turn while something you need is running (a watch on a background process does not hold
+  the turn open). Work that needs no result from you may run in the background, with at most one light check every
+  4-5 minutes. Final checks (smoke) write a log; wait on it with `wait.mjs` and read its result before you report.
 - **Testing, kept lean** (Anita, 2026-11-17: "a bit too test heavy"): run the checks near your change, not every
   check. Smoke only when your brief asks or the change touches sim, saves, demand or money; the orchestrator runs one
   smoke per landed batch. Add a standing check only for a bug that really happened and could quietly come back;

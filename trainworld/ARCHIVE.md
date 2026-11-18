@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (2026-11-18): play.mjs start/do/sim/edits/reload/status/stop, wait.mjs, reads trips/clock/bubbles; helptrip probe 129 s -> 21.5 s cold, 3-4 s per retry; real-save reads 172 s -> ms after the first; cores.mjs claims in the main ledger from trees; snapshot/restore tried, not kept. notes/T-3666.md.
+- T-3670 [P2] {L:workflow} Agents start lighter (2026-11-18): Fresh maps session (maps-56, 2026-11-18) starts with no aws-mcp or stripe tools and no claude.ai connectors; a probe agent's first call was 49.9k tokens, down from 56k.
 - T-3673 [P2] {L:single-track} One-way direction on short track and in the track panel (2026-11-18): oneWayMarks: one mark at the point farthest from stops for runs with none, chevrons at least 1.5x min width; TrackInspector WayArrow turns with map bearing; checked on her Caracas save. notes/T-3673.md.
 - T-3668 [P2] {L:workflow} Agent reports reach the current orchestrator (2026-11-18): reports.py hook/list/show/read/sweep/register; watch.py --session; status lists unread; tasks.py done marks read; tested on 300 transcripts; live interactive firing not yet proven. notes/T-3668.md.
 - T-3664 [P2] {L:workflow} Faster sim test builds for agents (2026-11-18): profile.agent + agent_cargo.py test/wasm (claims 3 cores under rust-<tree>); warm test cycle 175 s -> 17-18 s per suite, both suites 70 s; both suites pass; shipped wasm/landing/snap/deploy paths untouched. notes/T-3664.md.

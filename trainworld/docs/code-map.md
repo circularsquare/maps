@@ -377,7 +377,7 @@ Scripts for the orchestrator's builds are here too: `snapbuild.cmd <hash>` and `
 `smoke8800.cmd` (smoke 8800 light then dark, before a publish), `keep_hunks.py` (stage some hunks of a file), `mark_taking.py` (mark TASKS lines taken).
 
 - Playwright checks: a `page.evaluate` that moves the map must return nothing (`() => void window.tw.map.jumpTo(...)`): MapLibre's `jumpTo` returns the map, and Playwright serialising it is 1-2 s of main thread that reads as lag (T-1052).
-- `lib.mjs` is the shared plumbing (Playwright, headless Chrome); `lib/play.mjs` plays the game by pointer (how-to at its top) and `lib/reads.mjs` reads panels.
+- `lib.mjs` is the shared plumbing (Playwright, headless Chrome); `lib/play.mjs` plays the game by pointer (how-to at its top) and `lib/reads.mjs` reads panels. `play.mjs` keeps one game open per Vite port for probes (`start`, `do`, `sim`, `edits`, `reload`, `stop`); `wait.mjs` waits for a line in a log.
 - `t3137-lanes-parity.mjs [--write]` fingerprints what the lanes and move tables decide against a baseline (`t3137-parity-digest.json`; text in `artifacts/trainworld/t3137-parity/`); rerun it after any change to lanes, moves, routing or junction capacity, and write a new baseline when a change meant to alter them is reviewed. `t3297-mirror.mjs` does the same for a left-hand game against its mirror (about 4 minutes).
 
 ## pipeline/: city packs (Python)
