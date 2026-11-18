@@ -1192,7 +1192,8 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   empty board. At the bottom: Sign in to be listed (opens the account panel), a name (at most 24
   characters, the map games' name filter on the server) with Join, or Leave the leaderboards (the
   name is kept); in a sandbox game also "Sandbox games are not listed". Each person shows once per
-  board. A game counts at the figures it last sent, not its best (T-3248); on each board the person's
+  board. A game counts at the figures it last sent, not its best (T-3248), sent only from a whole final solve of the
+  network as it is (no solve running or held, never the past 24 hours' stand-in, T-3639); on each board the person's
   row is their best game there. Anita's feedback inbox has a Leaderboards tab that sets a cutoff date:
   games last sent before it count on no board until played again. A country board ranks a game by its points summed over that country's
   cities (the same per-city figures the city boards use; the server maps city to country with a table

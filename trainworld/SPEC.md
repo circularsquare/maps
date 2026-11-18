@@ -396,8 +396,9 @@ on reload when the network, packs and build match [T-328].
 Keeping old saves loading is a nicety: only Anita has saves. An optional account, noritetsu's on
 `shonei-server` (one sign-in for both pages), lists a signed-in player's normal games by points on
 a world leaderboard and one per city and country, each person once per board. A game counts at its
-current figures, the forecast weekday's points, never its best ever, so a demand change never leaves an unreachable score up, and
-on each board a person's row is their best game there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248, T-3465; docs/ui-panels.md "Account and leaderboards"].
+current figures, the forecast weekday's points, never its best ever, so a demand change never leaves an unreachable score up;
+they are sent only once trips are calculated for the network as it is, never a load's or an edit's early figures, and
+on each board a person's row is their best game there; a game that was ever a sandbox is never listed [T-972, T-973, T-3248, T-3465, T-3639; docs/ui-panels.md "Account and leaderboards"].
 Games synced between devices and sharing by link come later (T-988 to T-990).
 [docs/architecture.md](docs/architecture.md) 11.
 

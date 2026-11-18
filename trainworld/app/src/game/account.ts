@@ -9,17 +9,19 @@
 // `/noritetsu/config` to say `trainworld`: an older server, or none, keeps every icon hidden.
 //
 // While signed in, each normal game's points (the forecast weekday's, the Cities tab's) are sent at
-// most every two wall minutes when they change, joined or not, so a board is current the moment its
-// player joins. A game owns a random id per browser slot (`GAMES_KEY`), or its account game's id
-// (T-988); a sandbox sends only the fact, once, which the server keeps for good. A slot deleted here
+// most every two wall minutes when they change and only from a whole final solve (T-3639), joined or
+// not, so a board is current the moment its player joins. A game owns a random id per browser slot
+// (`GAMES_KEY`), or its account game's id (T-988); a sandbox sends only the fact, once, which the server keeps for good. A slot deleted here
 // takes its figures off.
 //
 // T-988: the games themselves go on the account too (workers/cloud.ts, game/accountGames.ts); this
 // file gives the clock worker the account (`cloudContext`) on every change.
 
 import { effect, signal } from "@preact/signals";
-import { moneyState } from "./money";
-import { pointsScore } from "./points";
+import { moneyState, moneyWorld } from "./money";
+import { pointsPerDay } from "./points";
+import { demandByDay, demandHeld, demandUpdating, finalWorld, networkWorld } from "./demand";
+import { loadProgress } from "./loading";
 import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
@@ -372,15 +374,37 @@ export async function gameForShare(): Promise<string | null> {
   return e.id;
 }
 
-/** The game's figures now: weekday points (T-3465, `pointsScore`) in all, and its best cities. */
+/** T-3639: whether the shown figures are a whole final of the network as it is ("solved"), or there is nothing running
+ * to solve ("idle"). Before that a score is a load's or an edit's early figure, the past 24 hours' before any solve, or
+ * (a game just opened in a running page) the last game's view, which then stayed up for the gap. */
+function settled(): "solved" | "idle" | null {
+  const w = moneyWorld.peek(), net = networkWorld.peek();
+  // (a load's focus figures come only while its whole solve runs; T-2533 can keep the pool's zone after it, a hair off)
+  if (!w || demandUpdating.peek() || demandHeld.peek() || loadProgress.peek() || net < 0 || finalWorld.peek() < net) return null;
+  const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running");
+  if (!running.length) return "idle";
+  const dv = demandByDay.peek()[0]?.view;
+  if (!dv?.final) return null;
+  // every running line solved on its stops as they are (editNote's `solvedForNow`, and none missing)
+  for (const l of running) {
+    const d = dv.lines.get(l.id);
+    if (!d || (d.stops && (d.stops.length !== l.stops.length || d.stops.some((s, k) => s !== l.stops[k])))) return null;
+  }
+  return "solved";
+}
+
+/** The game's figures now: the forecast weekday's points (T-3465) in all, and its best cities. */
 function figures(): { day: number; points: number; cities: Record<string, number> } | null {
   const m = moneyState.peek();
   const hour = m?.hours.at(-1)?.hour;
-  if (!m || hour === undefined) return null;
-  const per = [...pointsScore.peek()].filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]);
+  const how = settled();
+  if (!m || hour === undefined || !how) return null;
+  // the weekday row itself: `pointsScore` falls back to the past 24 hours, which a weekend or holiday lowers
+  const per = [...pointsPerDay.peek()].map(([id, r]): [string, number] => [id, Math.round(r[0])]).filter(([id, v]) => id && v > 0).sort((a, b) => b[1] - a[1]);
   // the server refuses a figure over 1e12 (twMaxPoints), which would leave a bigger game stuck on its last accepted one
   const cap = (v: number) => Math.min(Math.round(v), 1e12);
   const points = cap(per.reduce((a, [, v]) => a + v, 0));
+  if (points <= 0 && how !== "idle") return null; // running lines whose points are not in yet
   const cities: Record<string, number> = {};
   for (const [id, v] of per.slice(0, MAX_CITIES)) cities[id] = cap(v);
   return { day: Math.floor(hour / 24), points, cities };
