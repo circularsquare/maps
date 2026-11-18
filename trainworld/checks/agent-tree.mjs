@@ -67,10 +67,25 @@ function excludeTrees() {
   if (!/^\.tw-trees\/$/m.test(text)) fs.appendFileSync(file, (text.endsWith('\n') || !text ? '' : '\n') + '.tw-trees/\n');
 }
 
+// Every junction in the tree, not only LINKS: `worktree remove --force` deletes through any it meets, and an agent's
+// own scratch junction to app/node_modules emptied the main tree's on 2026-11-18.
 function unlinkJunctions(dir) {
   for (const rel of LINKS) {
     const p = path.join(dir, rel);
     if (isLink(p)) fs.unlinkSync(p);
+  }
+  const stack = [dir];
+  while (stack.length) {
+    const d = stack.pop();
+    let ents;
+    try { ents = fs.readdirSync(d, { withFileTypes: true }); } catch { continue; }
+    for (const e of ents) {
+      if (e.name === '.git') continue;
+      const p = path.join(d, e.name);
+      const link = e.isSymbolicLink() || (e.isDirectory() && isLink(p));
+      if (link) { try { fs.unlinkSync(p); } catch { fs.rmdirSync(p); } }
+      else if (e.isDirectory()) stack.push(p);
+    }
   }
 }
 
