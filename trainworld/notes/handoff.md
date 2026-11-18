@@ -40,7 +40,7 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
   snapbar (T-3516 DONE in its tree, smoke passed; c136 line shown to her), trafficwidth (T-3580 DONE, smoke passed),
   tramsnap (T-3515 DONE: pipeline/realgraph.py tram rules; land after the publish: branch, then copy the rebuilt
   graphs from trainworld\data\work\realgraph-t3515 (durable copy of scratchpad\tramsnap\graph-all) over data/packs/realgraph/ (they ship to R2 with the next publish's
-  packs); notes/T-3515.md "Landing"), termdraw (Opus, T-3231, 6191). Land the done ones after the publish with finish.
+  packs); notes/T-3515.md "Landing"). termdraw (T-3231) parked as notes/T-3231-fix.patch {after:T-3271}, tree removed. Land the done ones after the publish with finish.
   icskip (T-3471) landed cf3a678d, oldchecks (T-3462) bde8c1d8.
 - She wants a high-level update on the one-way station work now and then. Away a few hours from 22:00 UTC; said
   start new lines if little is running.

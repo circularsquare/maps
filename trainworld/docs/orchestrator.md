@@ -94,7 +94,10 @@ not once per message (Anita, 2026-11-09).
 
 Risky changes (sim, saves, demand numbers, money) get a checker before landing (Anita 2026-11-16, T-3451): a fresh
 Sonnet agent given the task's Goal and the diff, not the first agent's report, that tries to break it in the running
-game; one round, pass or fail with evidence. Labels, text and docs skip it.
+game; one round, pass or fail with evidence. Labels, text, docs, CSS and small UI skip it (the agent's own screenshot
+plus your look is enough). Concise checkers (Anita 2026-11-17, "a bit too test heavy"): the brief names the 3-5
+riskiest cases, reuses existing checks and fixtures before building new ones, and caps the round at about 45 minutes;
+the report lists what it skipped.
 
 `node trainworld/checks/smoke.mjs [url]` from the maps root runs Node checks, then a new game and the real save in
 headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your own Vite.
