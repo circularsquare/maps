@@ -1,0 +1,11 @@
+{
+ "task": "T-3671",
+ "iso": "EGY",
+ "moves": [
+  ["37247803B52731964573716", "Qasr Al-Nile", null, "cai"]
+ ],
+ "retire": {"slw": "elm"},
+ "set": {"elm": {"gate_relax": {"pop_vs_fua": "whole markaz round Mansoura's FUA: Sinbillawin and Tamy Al-Amdid joined so the metro is one piece (T-3033, T-3671); 1.37 before, about 1.5 with them, as jau, sap and teu"}}},
+ "names": {"drop": ["slw"], "aliases": {"elm": ["Sinbillawin"]}},
+ "why": "Qasr Al-Nile (downtown Cairo, Tahrir and Garden City) was in no row, a hole in Cairo's outline (T-3660, notes/T-3623.md); Mansoura's metro was in two pieces with Sinbillawin between them (T-3033, notes/T-3012.md: the bridge rule's pick), and the Sinbillawin zone's other unit, Tamy Al-Amdid (0.21M, two thirds of its border on Mansoura's), goes with it"
+}

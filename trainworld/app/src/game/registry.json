@@ -30482,6 +30482,18 @@
       {
         "name": "Pontian",
         "regionName": "Pontian region"
+      },
+      {
+        "name": "Cairo",
+        "regionName": "Cairo region"
+      },
+      {
+        "name": "El Mansura",
+        "regionName": "El Mansura region"
+      },
+      {
+        "name": "Chimaltenango",
+        "regionName": "Chimaltenango region"
       }
     ],
     "rule": {
@@ -127016,31 +127028,6 @@
       "realm": "algeria-tunisia"
     },
     {
-      "id": "elm",
-      "name": "El Mansura",
-      "origin": {
-        "lon": 31.3745,
-        "lat": 31.0327
-      },
-      "center": [
-        31.3745,
-        31.0327
-      ],
-      "zoom": 11.2,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        30.884,
-        30.318,
-        31.882,
-        31.494
-      ],
-      "place": 7109,
-      "country": "EG",
-      "localTrips": 19409378.0,
-      "realm": "egypt"
-    },
-    {
       "id": "asy",
       "name": "Asyut",
       "origin": {
@@ -127062,7 +127049,7 @@
       ],
       "place": 7112,
       "country": "EG",
-      "localTrips": 9824825.0,
+      "localTrips": 9824816.0,
       "realm": "egypt"
     },
     {
@@ -127087,7 +127074,7 @@
       ],
       "place": 7114,
       "country": "EG",
-      "localTrips": 4245104.0,
+      "localTrips": 4246184.0,
       "realm": "egypt"
     },
     {
@@ -127112,7 +127099,7 @@
       ],
       "place": 7115,
       "country": "EG",
-      "localTrips": 1954966.0,
+      "localTrips": 1949670.0,
       "realm": "egypt"
     },
     {
@@ -127138,7 +127125,7 @@
       ],
       "place": 7116,
       "country": "EG",
-      "localTrips": 6298047.0,
+      "localTrips": 6297809.0,
       "realm": "egypt"
     },
     {
@@ -127164,7 +127151,7 @@
       ],
       "place": 7117,
       "country": "EG",
-      "localTrips": 3360622.0,
+      "localTrips": 3358872.0,
       "realm": "egypt"
     },
     {
@@ -127739,31 +127726,6 @@
       "realm": "morocco"
     },
     {
-      "id": "cai",
-      "name": "Cairo",
-      "origin": {
-        "lon": 31.1816,
-        "lat": 30.0141
-      },
-      "center": [
-        31.1816,
-        30.0141
-      ],
-      "zoom": 11.2,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        30.569,
-        29.144,
-        31.821,
-        30.53
-      ],
-      "place": 7143,
-      "country": "EG",
-      "localTrips": 73468787.0,
-      "realm": "egypt"
-    },
-    {
       "id": "mrz",
       "name": "Markz Mallawi",
       "kind": "zone",
@@ -127786,7 +127748,7 @@
       ],
       "place": 7144,
       "country": "EG",
-      "localTrips": 3785886.0,
+      "localTrips": 3785878.0,
       "realm": "egypt"
     },
     {
@@ -127812,7 +127774,7 @@
       ],
       "place": 7145,
       "country": "EG",
-      "localTrips": 3825612.0,
+      "localTrips": 3825613.0,
       "realm": "egypt"
     },
     {
@@ -127838,7 +127800,7 @@
       ],
       "place": 7146,
       "country": "EG",
-      "localTrips": 2338367.0,
+      "localTrips": 2339918.0,
       "realm": "egypt"
     },
     {
@@ -127864,7 +127826,7 @@
       ],
       "place": 7147,
       "country": "EG",
-      "localTrips": 2868902.0,
+      "localTrips": 2868900.0,
       "realm": "egypt"
     },
     {
@@ -127890,7 +127852,7 @@
       ],
       "place": 7148,
       "country": "EG",
-      "localTrips": 2504484.0,
+      "localTrips": 2504480.0,
       "realm": "egypt"
     },
     {
@@ -127916,7 +127878,7 @@
       ],
       "place": 7150,
       "country": "EG",
-      "localTrips": 3635137.0,
+      "localTrips": 3635128.0,
       "realm": "egypt"
     },
     {
@@ -127942,7 +127904,7 @@
       ],
       "place": 7151,
       "country": "EG",
-      "localTrips": 2355550.0,
+      "localTrips": 2355540.0,
       "realm": "egypt"
     },
     {
@@ -127968,7 +127930,7 @@
       ],
       "place": 7152,
       "country": "EG",
-      "localTrips": 1747073.0,
+      "localTrips": 1745784.0,
       "realm": "egypt"
     },
     {
@@ -127994,7 +127956,7 @@
       ],
       "place": 7153,
       "country": "EG",
-      "localTrips": 2328886.0,
+      "localTrips": 2328879.0,
       "realm": "egypt"
     },
     {
@@ -128826,7 +128788,7 @@
       ],
       "place": 7196,
       "country": "EG",
-      "localTrips": 2925441.0,
+      "localTrips": 2925502.0,
       "realm": "egypt"
     },
     {
@@ -128852,7 +128814,7 @@
       ],
       "place": 7197,
       "country": "EG",
-      "localTrips": 2756768.0,
+      "localTrips": 2756804.0,
       "realm": "egypt"
     },
     {
@@ -128878,7 +128840,7 @@
       ],
       "place": 7199,
       "country": "EG",
-      "localTrips": 2088536.0,
+      "localTrips": 2088530.0,
       "realm": "egypt"
     },
     {
@@ -128930,7 +128892,7 @@
       ],
       "place": 7201,
       "country": "EG",
-      "localTrips": 1663786.0,
+      "localTrips": 1663784.0,
       "realm": "egypt"
     },
     {
@@ -128956,7 +128918,7 @@
       ],
       "place": 7202,
       "country": "EG",
-      "localTrips": 1076563.0,
+      "localTrips": 1076624.0,
       "realm": "egypt"
     },
     {
@@ -128982,7 +128944,7 @@
       ],
       "place": 7203,
       "country": "EG",
-      "localTrips": 1601465.0,
+      "localTrips": 1601459.0,
       "realm": "egypt"
     },
     {
@@ -129008,7 +128970,7 @@
       ],
       "place": 7204,
       "country": "EG",
-      "localTrips": 1283380.0,
+      "localTrips": 1283403.0,
       "realm": "egypt"
     },
     {
@@ -129034,7 +128996,7 @@
       ],
       "place": 7205,
       "country": "EG",
-      "localTrips": 1342271.0,
+      "localTrips": 1342112.0,
       "realm": "egypt"
     },
     {
@@ -129060,7 +129022,7 @@
       ],
       "place": 7206,
       "country": "EG",
-      "localTrips": 2084489.0,
+      "localTrips": 2084478.0,
       "realm": "egypt"
     },
     {
@@ -129086,7 +129048,7 @@
       ],
       "place": 7207,
       "country": "EG",
-      "localTrips": 1560519.0,
+      "localTrips": 1560415.0,
       "realm": "egypt"
     },
     {
@@ -129112,7 +129074,7 @@
       ],
       "place": 7208,
       "country": "EG",
-      "localTrips": 1553880.0,
+      "localTrips": 1553876.0,
       "realm": "egypt"
     },
     {
@@ -129138,7 +129100,7 @@
       ],
       "place": 7210,
       "country": "EG",
-      "localTrips": 1351175.0,
+      "localTrips": 1350701.0,
       "realm": "egypt"
     },
     {
@@ -129450,7 +129412,7 @@
       ],
       "place": 7226,
       "country": "EG",
-      "localTrips": 1718082.0,
+      "localTrips": 1718562.0,
       "realm": "egypt"
     },
     {
@@ -129476,7 +129438,7 @@
       ],
       "place": 7227,
       "country": "EG",
-      "localTrips": 1582362.0,
+      "localTrips": 1581714.0,
       "realm": "egypt"
     },
     {
@@ -129502,7 +129464,7 @@
       ],
       "place": 7228,
       "country": "EG",
-      "localTrips": 1379836.0,
+      "localTrips": 1379847.0,
       "realm": "egypt"
     },
     {
@@ -129528,7 +129490,7 @@
       ],
       "place": 7230,
       "country": "EG",
-      "localTrips": 1385571.0,
+      "localTrips": 1385564.0,
       "realm": "egypt"
     },
     {
@@ -129554,7 +129516,7 @@
       ],
       "place": 7231,
       "country": "EG",
-      "localTrips": 1590103.0,
+      "localTrips": 1588615.0,
       "realm": "egypt"
     },
     {
@@ -129580,7 +129542,7 @@
       ],
       "place": 7232,
       "country": "EG",
-      "localTrips": 1244983.0,
+      "localTrips": 1240974.0,
       "realm": "egypt"
     },
     {
@@ -129606,7 +129568,7 @@
       ],
       "place": 7234,
       "country": "EG",
-      "localTrips": 1362211.0,
+      "localTrips": 1362172.0,
       "realm": "egypt"
     },
     {
@@ -129632,7 +129594,7 @@
       ],
       "place": 7235,
       "country": "EG",
-      "localTrips": 936771.0,
+      "localTrips": 944945.0,
       "realm": "egypt"
     },
     {
@@ -129658,7 +129620,7 @@
       ],
       "place": 7236,
       "country": "EG",
-      "localTrips": 1388305.0,
+      "localTrips": 1388139.0,
       "realm": "egypt"
     },
     {
@@ -129684,7 +129646,7 @@
       ],
       "place": 7237,
       "country": "EG",
-      "localTrips": 1064548.0,
+      "localTrips": 1064099.0,
       "realm": "egypt"
     },
     {
@@ -129710,7 +129672,7 @@
       ],
       "place": 7241,
       "country": "EG",
-      "localTrips": 1165359.0,
+      "localTrips": 1165357.0,
       "realm": "egypt"
     },
     {
@@ -129736,7 +129698,7 @@
       ],
       "place": 7244,
       "country": "EG",
-      "localTrips": 913711.0,
+      "localTrips": 913714.0,
       "realm": "egypt"
     },
     {
@@ -129762,7 +129724,7 @@
       ],
       "place": 7245,
       "country": "EG",
-      "localTrips": 757986.0,
+      "localTrips": 757260.0,
       "realm": "egypt"
     },
     {
@@ -129866,7 +129828,7 @@
       ],
       "place": 7257,
       "country": "EG",
-      "localTrips": 959520.0,
+      "localTrips": 959515.0,
       "realm": "egypt"
     },
     {
@@ -129892,7 +129854,7 @@
       ],
       "place": 7259,
       "country": "EG",
-      "localTrips": 807011.0,
+      "localTrips": 806393.0,
       "realm": "egypt"
     },
     {
@@ -129918,7 +129880,7 @@
       ],
       "place": 7261,
       "country": "EG",
-      "localTrips": 672449.0,
+      "localTrips": 671449.0,
       "realm": "egypt"
     },
     {
@@ -129944,7 +129906,7 @@
       ],
       "place": 7262,
       "country": "EG",
-      "localTrips": 563242.0,
+      "localTrips": 569719.0,
       "realm": "egypt"
     },
     {
@@ -129970,7 +129932,7 @@
       ],
       "place": 7264,
       "country": "EG",
-      "localTrips": 389379.0,
+      "localTrips": 389414.0,
       "realm": "egypt"
     },
     {
@@ -130048,7 +130010,7 @@
       ],
       "place": 7269,
       "country": "EG",
-      "localTrips": 1590033.0,
+      "localTrips": 1590032.0,
       "realm": "egypt"
     },
     {
@@ -130099,7 +130061,7 @@
       ],
       "place": 7274,
       "country": "EG",
-      "localTrips": 6207995.0,
+      "localTrips": 6207993.0,
       "realm": "egypt"
     },
     {
@@ -130124,7 +130086,7 @@
       ],
       "place": 7275,
       "country": "EG",
-      "localTrips": 7817936.0,
+      "localTrips": 7817923.0,
       "realm": "egypt"
     },
     {
@@ -130150,7 +130112,7 @@
       ],
       "place": 7277,
       "country": "EG",
-      "localTrips": 2304478.0,
+      "localTrips": 2304081.0,
       "realm": "egypt"
     },
     {
@@ -130176,7 +130138,7 @@
       ],
       "place": 7278,
       "country": "EG",
-      "localTrips": 2015780.0,
+      "localTrips": 2013967.0,
       "realm": "egypt"
     },
     {
@@ -130202,7 +130164,7 @@
       ],
       "place": 7279,
       "country": "EG",
-      "localTrips": 1771095.0,
+      "localTrips": 1770969.0,
       "realm": "egypt"
     },
     {
@@ -130228,33 +130190,7 @@
       ],
       "place": 7280,
       "country": "EG",
-      "localTrips": 2018908.0,
-      "realm": "egypt"
-    },
-    {
-      "id": "slw",
-      "name": "Sinbillawin",
-      "kind": "zone",
-      "origin": {
-        "lon": 31.4637,
-        "lat": 30.8784
-      },
-      "center": [
-        31.4637,
-        30.8784
-      ],
-      "zoom": 10.5,
-      "utcOffset": 2,
-      "market": -1,
-      "box": [
-        31.32,
-        30.784,
-        31.711,
-        31.016
-      ],
-      "place": 7282,
-      "country": "EG",
-      "localTrips": 1709089.0,
+      "localTrips": 2018903.0,
       "realm": "egypt"
     },
     {
@@ -130280,7 +130216,7 @@
       ],
       "place": 7283,
       "country": "EG",
-      "localTrips": 1251168.0,
+      "localTrips": 1251135.0,
       "realm": "egypt"
     },
     {
@@ -130306,7 +130242,7 @@
       ],
       "place": 7285,
       "country": "EG",
-      "localTrips": 1318936.0,
+      "localTrips": 1318907.0,
       "realm": "egypt"
     },
     {
@@ -130332,7 +130268,7 @@
       ],
       "place": 7286,
       "country": "EG",
-      "localTrips": 1263308.0,
+      "localTrips": 1263300.0,
       "realm": "egypt"
     },
     {
@@ -130358,7 +130294,7 @@
       ],
       "place": 7287,
       "country": "EG",
-      "localTrips": 1068081.0,
+      "localTrips": 1068078.0,
       "realm": "egypt"
     },
     {
@@ -130384,7 +130320,7 @@
       ],
       "place": 7288,
       "country": "EG",
-      "localTrips": 955760.0,
+      "localTrips": 955434.0,
       "realm": "egypt"
     },
     {
@@ -130410,7 +130346,7 @@
       ],
       "place": 7289,
       "country": "EG",
-      "localTrips": 1637693.0,
+      "localTrips": 1637688.0,
       "realm": "egypt"
     },
     {
@@ -130436,7 +130372,7 @@
       ],
       "place": 7290,
       "country": "EG",
-      "localTrips": 582026.0,
+      "localTrips": 582247.0,
       "realm": "egypt"
     },
     {
@@ -130462,7 +130398,7 @@
       ],
       "place": 7291,
       "country": "EG",
-      "localTrips": 603185.0,
+      "localTrips": 602355.0,
       "realm": "egypt"
     },
     {
@@ -130488,7 +130424,7 @@
       ],
       "place": 7294,
       "country": "EG",
-      "localTrips": 451637.0,
+      "localTrips": 451629.0,
       "realm": "egypt"
     },
     {
@@ -131086,7 +131022,7 @@
       ],
       "place": 7319,
       "country": "EG",
-      "localTrips": 3195624.0,
+      "localTrips": 3194309.0,
       "realm": "egypt"
     },
     {
@@ -131112,7 +131048,7 @@
       ],
       "place": 7320,
       "country": "EG",
-      "localTrips": 926248.0,
+      "localTrips": 927387.0,
       "realm": "egypt"
     },
     {
@@ -131138,7 +131074,7 @@
       ],
       "place": 7321,
       "country": "EG",
-      "localTrips": 333882.0,
+      "localTrips": 334745.0,
       "realm": "egypt"
     },
     {
@@ -133263,7 +133199,7 @@
       ],
       "place": 7424,
       "country": "GT",
-      "localTrips": 11228597.0,
+      "localTrips": 11091856.0,
       "realm": "central-america"
     },
     {
@@ -133289,7 +133225,7 @@
       ],
       "place": 7425,
       "country": "GT",
-      "localTrips": 3357516.0,
+      "localTrips": 3326679.0,
       "realm": "central-america"
     },
     {
@@ -133315,7 +133251,7 @@
       ],
       "place": 7426,
       "country": "GT",
-      "localTrips": 3295261.0,
+      "localTrips": 3299727.0,
       "realm": "central-america"
     },
     {
@@ -133341,7 +133277,7 @@
       ],
       "place": 7427,
       "country": "GT",
-      "localTrips": 2600637.0,
+      "localTrips": 2595921.0,
       "realm": "central-america"
     },
     {
@@ -133367,7 +133303,7 @@
       ],
       "place": 7428,
       "country": "GT",
-      "localTrips": 2378850.0,
+      "localTrips": 2379191.0,
       "realm": "central-america"
     },
     {
@@ -133393,7 +133329,7 @@
       ],
       "place": 7429,
       "country": "GT",
-      "localTrips": 2411788.0,
+      "localTrips": 2411967.0,
       "realm": "central-america"
     },
     {
@@ -133419,7 +133355,7 @@
       ],
       "place": 7430,
       "country": "GT",
-      "localTrips": 2261984.0,
+      "localTrips": 2264347.0,
       "realm": "central-america"
     },
     {
@@ -133445,7 +133381,7 @@
       ],
       "place": 7431,
       "country": "GT",
-      "localTrips": 2152530.0,
+      "localTrips": 2154719.0,
       "realm": "central-america"
     },
     {
@@ -133471,7 +133407,7 @@
       ],
       "place": 7432,
       "country": "GT",
-      "localTrips": 2138293.0,
+      "localTrips": 2139599.0,
       "realm": "central-america"
     },
     {
@@ -133497,7 +133433,7 @@
       ],
       "place": 7433,
       "country": "GT",
-      "localTrips": 1458675.0,
+      "localTrips": 1459585.0,
       "realm": "central-america"
     },
     {
@@ -133703,7 +133639,7 @@
       ],
       "place": 7444,
       "country": "GT",
-      "localTrips": 2335372.0,
+      "localTrips": 2341320.0,
       "realm": "central-america"
     },
     {
@@ -133729,7 +133665,7 @@
       ],
       "place": 7445,
       "country": "GT",
-      "localTrips": 1893070.0,
+      "localTrips": 1899066.0,
       "realm": "central-america"
     },
     {
@@ -133755,7 +133691,7 @@
       ],
       "place": 7446,
       "country": "GT",
-      "localTrips": 1874262.0,
+      "localTrips": 1857638.0,
       "realm": "central-america"
     },
     {
@@ -133781,7 +133717,7 @@
       ],
       "place": 7447,
       "country": "GT",
-      "localTrips": 1443202.0,
+      "localTrips": 1444740.0,
       "realm": "central-america"
     },
     {
@@ -133807,7 +133743,7 @@
       ],
       "place": 7448,
       "country": "GT",
-      "localTrips": 1300363.0,
+      "localTrips": 1304620.0,
       "realm": "central-america"
     },
     {
@@ -133833,7 +133769,7 @@
       ],
       "place": 7449,
       "country": "GT",
-      "localTrips": 1214192.0,
+      "localTrips": 1214774.0,
       "realm": "central-america"
     },
     {
@@ -136882,7 +136818,7 @@
       ],
       "place": 7586,
       "country": "EG",
-      "localTrips": 18204993.0,
+      "localTrips": 18204887.0,
       "realm": "egypt"
     },
     {
@@ -136908,7 +136844,7 @@
       ],
       "place": 7587,
       "country": "EG",
-      "localTrips": 2130153.0,
+      "localTrips": 2129814.0,
       "realm": "egypt"
     },
     {
@@ -136934,7 +136870,7 @@
       ],
       "place": 7588,
       "country": "EG",
-      "localTrips": 3731637.0,
+      "localTrips": 3731270.0,
       "realm": "egypt"
     },
     {
@@ -136960,7 +136896,7 @@
       ],
       "place": 7589,
       "country": "EG",
-      "localTrips": 1572098.0,
+      "localTrips": 1560704.0,
       "realm": "egypt"
     },
     {
@@ -136986,7 +136922,7 @@
       ],
       "place": 7590,
       "country": "EG",
-      "localTrips": 1080260.0,
+      "localTrips": 1080246.0,
       "realm": "egypt"
     },
     {
@@ -137423,7 +137359,7 @@
       ],
       "place": 7611,
       "country": "EG",
-      "localTrips": 323096.0,
+      "localTrips": 323097.0,
       "realm": "egypt"
     },
     {
@@ -137528,6 +137464,82 @@
       "country": "MY",
       "localTrips": 319320.0,
       "realm": "malaysia"
+    },
+    {
+      "id": "cai",
+      "name": "Cairo",
+      "origin": {
+        "lon": 31.1816,
+        "lat": 30.0141
+      },
+      "center": [
+        31.1816,
+        30.0141
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.569,
+        29.144,
+        31.821,
+        30.53
+      ],
+      "place": 7616,
+      "country": "EG",
+      "localTrips": 73523523.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "elm",
+      "name": "El Mansura",
+      "origin": {
+        "lon": 31.3745,
+        "lat": 31.0327
+      },
+      "center": [
+        31.3745,
+        31.0327
+      ],
+      "zoom": 11.2,
+      "utcOffset": 2,
+      "market": -1,
+      "box": [
+        30.884,
+        30.318,
+        31.882,
+        31.494
+      ],
+      "place": 7617,
+      "country": "EG",
+      "localTrips": 21628258.0,
+      "realm": "egypt"
+    },
+    {
+      "id": "clt",
+      "name": "Chimaltenango",
+      "kind": "zone",
+      "origin": {
+        "lon": -90.8249,
+        "lat": 14.6638
+      },
+      "center": [
+        -90.8249,
+        14.6638
+      ],
+      "zoom": 10.5,
+      "utcOffset": -6,
+      "market": -1,
+      "box": [
+        -91.148,
+        14.351,
+        -90.666,
+        14.957
+      ],
+      "place": 7618,
+      "country": "GT",
+      "localTrips": 2422199.0,
+      "realm": "central-america"
     }
   ]
 }

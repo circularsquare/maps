@@ -7725,7 +7725,8 @@
      "37247803B42171035160974",
      "37247803B39026546430649",
      "37247803B57962000824705",
-     "37247803B48784531357995"
+     "37247803B48784531357995",
+     "37247803B52731964573716"
     ]
    },
    "bbox": [
@@ -7754,27 +7755,31 @@
       "from": "tmy",
       "task": "T-2897"
      }
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3671",
+     "why": "Qasr Al-Nile (downtown Cairo, Tahrir and Garden City) was in no row, a hole in Cairo's outline (T-3660, notes/T-3623.md); Mansoura's metro was in two pieces with Sinbillawin between them (T-3033, notes/T-3012.md: the bridge rule's pick), and the Sinbillawin zone's other unit, Tamy Al-Amdid (0.21M, two thirds of its border on Mansoura's), goes with it"
+    }
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-105812",
+    "built": "2026-11-18T11:28:02",
+    "gated": "2026-11-18T11:32:34",
+    "shipped": "2026-11-18T12:34:28",
     "steps": {
-     "build": 108.9,
-     "stations": 1.8,
-     "places": 4.6,
-     "routes": 902.4,
-     "merge": 1.8,
-     "nocar": 2.3,
-     "everyday": 1.9
+     "build": 59.5,
+     "stations": 1.6,
+     "places": 5.2,
+     "routes": 719.7,
+     "merge": 1.4,
+     "nocar": 1.7,
+     "everyday": 1.0
     },
-    "built": "2026-11-10T00:22:55",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 8479.19921875"
+      "top_school_cell_pupils 8472.2119140625"
      ]
-    },
-    "gated": "2026-11-10T01:05:53",
-    "shipped": "2026-11-10T02:21:58"
+    }
    }
   },
   {
@@ -12127,7 +12132,7 @@
     "EGY"
    ],
    "iso2": "EG",
-   "people": 8712850,
+   "people": 9578126,
    "origin": [
     31.3745,
     31.0327
@@ -12163,7 +12168,9 @@
      "37247803B76793683664752",
      "37247803B96389835129643",
      "37247803B60189516177334",
-     "37247803B6997097478011"
+     "37247803B6997097478011",
+     "37247803B43017025732324",
+     "37247803B352337860507"
     ]
    },
    "bbox": [
@@ -12184,28 +12191,35 @@
      "units": [
       "37247803B6997097478011"
      ]
+    },
+    "hand_edit": {
+     "task": "T-3671",
+     "why": "Qasr Al-Nile (downtown Cairo, Tahrir and Garden City) was in no row, a hole in Cairo's outline (T-3660, notes/T-3623.md); Mansoura's metro was in two pieces with Sinbillawin between them (T-3033, notes/T-3012.md: the bridge rule's pick), and the Sinbillawin zone's other unit, Tamy Al-Amdid (0.21M, two thirds of its border on Mansoura's), goes with it"
     }
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-105812",
+    "built": "2026-11-18T11:22:38",
+    "gated": "2026-11-18T11:32:35",
+    "shipped": "2026-11-18T12:34:29",
     "steps": {
-     "build": 97.5,
-     "stations": 1.2,
-     "places": 3.3,
-     "routes": 442.0,
-     "merge": 4.2,
-     "nocar": 7.9,
-     "everyday": 2.8
+     "build": 49.6,
+     "stations": 1.3,
+     "places": 3.7,
+     "routes": 406.9,
+     "merge": 1.3,
+     "nocar": 1.9,
+     "everyday": 1.3
     },
-    "built": "2026-11-10T00:15:09",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.365062819729445",
-      "top_school_cell_pupils 7517.83837890625"
+      "pop_vs_fua 1.500979669370768",
+      "top_school_cell_pupils 7503.2763671875"
      ]
-    },
-    "gated": "2026-11-10T01:05:49",
-    "shipped": "2026-11-10T02:21:59"
+    }
+   },
+   "gate_relax": {
+    "pop_vs_fua": "whole markaz round Mansoura's FUA: Sinbillawin and Tamy Al-Amdid joined so the metro is one piece (T-3033, T-3671); 1.37 before, about 1.5 with them, as jau, sap and teu"
    }
   },
   {
@@ -350329,76 +350343,6 @@
    }
   },
   {
-   "order": 5491,
-   "id": "slw",
-   "name": "Sinbillawin",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "EGY"
-   ],
-   "iso2": "EG",
-   "people": 865276,
-   "origin": [
-    31.4637,
-    30.8784
-   ],
-   "tz": "Africa/Cairo",
-   "utc_offset": 2,
-   "extracts": [
-    "africa/egypt"
-   ],
-   "archetype": "C",
-   "module": "admin_totals",
-   "units": {
-    "EGY": [
-     "37247803B43017025732324",
-     "37247803B352337860507"
-    ]
-   },
-   "bbox": [
-    31.342,
-    30.803,
-    31.689,
-    30.997
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Sinbillawin",
-     "Tamy Al-Amdid"
-    ]
-   },
-   "run": {
-    "run_batch": "20261109-235702",
-    "steps": {
-     "build": 26.0,
-     "stations": 1.3,
-     "places": 2.0,
-     "routes": 43.7,
-     "merge": 1.0,
-     "nocar": 1.8,
-     "everyday": 1.3
-    },
-    "built": "2026-11-10T00:28:34",
-    "gate": {
-     "warn": [
-      "university_rate 0.0",
-      "top_zone_jobs_share 0.3525032564771777",
-      "top_school_cell_pupils 6896.80224609375",
-      "fleet_range 4"
-     ]
-    },
-    "parked": "2026-11-10T00:43:07",
-    "gated": "2026-11-10T01:18:10",
-    "shipped": "2026-11-10T02:23:06"
-   },
-   "gate_relax": {
-    "top_zone_jobs_share": "T-2897: a one-town zone (or Luxor's and Sohag's metros, one centre each): the town's centre holds a fifth to a third of its jobs, as Indonesia's (T-1738)"
-   }
-  },
-  {
    "order": 5492,
    "id": "mks",
    "name": "Markz Samalut",
@@ -359467,13 +359411,13 @@
    "id": "clt",
    "name": "Chimaltenango",
    "kind": "zone",
-   "status": "parked",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "GTM"
    ],
    "iso2": "GT",
-   "people": 726248,
+   "people": 972588,
    "origin": [
     -90.8249,
     14.6638
@@ -359501,13 +359445,22 @@
      "79465075B95275885163057",
      "79465075B14911635135013",
      "79465075B89019096689616",
-     "79465075B16496006430587"
+     "79465075B16496006430587",
+     "79465075B72939253081387",
+     "79465075B37174278421226",
+     "79465075B53030566243177",
+     "79465075B60145282500225",
+     "79465075B20964806196125",
+     "79465075B63522445953752",
+     "79465075B97668033547878",
+     "79465075B35254467846514",
+     "79465075B38855532318009"
     ]
    },
    "bbox": [
     -91.128,
     14.373,
-    -90.751,
+    -90.687,
     14.938
    ],
    "source": {
@@ -359527,16 +359480,42 @@
      "Parramos",
      "Santa Apolonia",
      "Pochuta",
-     "Santa Cruz Balanyá"
-    ]
+     "Santa Cruz Balanyá",
+     "Antigua Guatemala",
+     "Sumpango",
+     "Ciudad Vieja",
+     "Alotenango",
+     "Jocotenango",
+     "Pastores",
+     "San Miguel Dueñas",
+     "Santa Catarina Barahona",
+     "San Antonio Aguas Calientes"
+    ],
+    "hand_edit": {
+     "task": "T-3671",
+     "why": "Antigua Guatemala's zone (0.25M) parked on one square holding 45% of its jobs, past the gate's 0.35 for a one-town zone (T-3517); it joins Chimaltenango next door, which is rebuilt anyway for its outline fault"
+    }
    },
    "run": {
-    "run_batch": "20261116-213647",
+    "run_batch": "20261118-105812",
     "steps": {
-     "build": 28.4
+     "build": 18.3,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 20.9,
+     "merge": 1.6,
+     "nocar": 2.7,
+     "everyday": 1.2
     },
-    "reason": "build failed: anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\decorators.py\", line 77, in wrapped\n    return func(*args, **kwargs)\n  File \"C:\\Users\\anita\\projects\\maps\\venv\\lib\\site-packages\\shapely\\set_operations.py\", line 421, in union_all\n    return lib.unary_union(collections, **kwargs)\nshapely.errors.GEOSException: TopologyException: unable to assign free hole to a shell at -90.86601739999999 14.6467867",
-    "parked": "2026-11-16T22:18:56"
+    "built": "2026-11-18T11:28:52",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10638081776210187",
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-18T11:32:36",
+    "shipped": "2026-11-18T12:34:30"
    }
   },
   {
@@ -360124,87 +360103,6 @@
     },
     "gated": "2026-11-16T23:44:43",
     "shipped": "2026-11-17T00:31:24"
-   }
-  },
-  {
-   "order": 5628,
-   "id": "anu",
-   "name": "Antigua Guatemala",
-   "kind": "zone",
-   "status": "parked",
-   "region": "world",
-   "countries": [
-    "GTM"
-   ],
-   "iso2": "GT",
-   "people": 246340,
-   "origin": [
-    -90.7366,
-    14.5573
-   ],
-   "tz": "America/Guatemala",
-   "utc_offset": -6,
-   "extracts": [
-    "central-america/guatemala"
-   ],
-   "archetype": "D",
-   "module": null,
-   "units": {
-    "GTM": [
-     "79465075B72939253081387",
-     "79465075B37174278421226",
-     "79465075B53030566243177",
-     "79465075B60145282500225",
-     "79465075B20964806196125",
-     "79465075B63522445953752",
-     "79465075B97668033547878",
-     "79465075B35254467846514",
-     "79465075B38855532318009"
-    ]
-   },
-   "bbox": [
-    -90.881,
-    14.376,
-    -90.687,
-    14.725
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Antigua Guatemala",
-     "Sumpango",
-     "Ciudad Vieja",
-     "Alotenango",
-     "Jocotenango",
-     "Pastores",
-     "San Miguel Dueñas",
-     "Santa Catarina Barahona",
-     "San Antonio Aguas Calientes"
-    ]
-   },
-   "run": {
-    "run_batch": "20261116-213647",
-    "steps": {
-     "build": 14.6,
-     "stations": 0.9,
-     "places": 1.8,
-     "routes": 9.1,
-     "merge": 0.8,
-     "nocar": 1.3,
-     "everyday": 0.9
-    },
-    "built": "2026-11-16T22:19:05",
-    "reason": "gate: top_zone_jobs_share 0.4509015719779865 at [-90.7338, 14.5565]",
-    "gate": {
-     "fail": [
-      "top_zone_jobs_share 0.4509015719779865 at [-90.7338, 14.5565]"
-     ],
-     "warn": [
-      "top_school_cell_pupils 6000.0",
-      "fleet_range 4"
-     ]
-    },
-    "parked": "2026-11-16T22:36:59"
    }
   },
   {

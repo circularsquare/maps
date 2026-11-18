@@ -3191,7 +3191,6 @@
 "sik": ["سكيكدة ⵙⴽⵉⴽⴷⴰ", "Philippeville", "Collo", "القل", "Azzaba", "عزابة ⵄⵣⵣⴰⴱⴰ", "Jemmapes", "Tamalous", "تمالوس ⵜⴰⵎⴰⵍⵓⵙ", "El Harrouch", "الحروش ⵍⵃⵔⵔⵓⵛ", "Ben Azzouz", "بن عزوز ⴱⵏ ⵄⵣⵣⵓⵣ"],
 "tre": ["Tiaret ⵜⴰⵀⴻⵔⵜ تيارت", "Frenda", "Ksar Chellala", "تخمارت", "Mahdia", "Burdeau", "Ain Deheb"],
 "sbz": ["Setif;ⵚⵟⵉⴼ;سطيف", "Aïn Arnat;عين أرنات", "Aïn Arnat", "Guijel", "Aïn El Kebira", "Bougaa"],
-"elm": ["المنصورة", "شبين الكوم", "Shibin El Kawm", "دكرنس", "Dikirnis", "ميت غمر", "ميت غمر و كفر البطل", "Mit Ghamr", "زفتى", "Zifta", "طناح", "Tanah"],
 "asy": ["أسيوط"],
 "alz": ["الزقازيق", "Zagazig"],
 "bah": ["بنها"],
@@ -3217,7 +3216,6 @@
 "sbw": ["Settat ⵥⵟⵟⴰⵟ سطات", "Ben Ahmed ⴱⵏ ⵃⵎⴷ بن أحمد", "Ben Ahmed"],
 "cht": ["Tiznit", "Tiznit ⵜⵉⵣⵏⵉⵜ تزنيت", "Commune de Tiznit ⵜⴰⵖⵉⵡⴰⵏⵜ ⵏ ⵜⵉⵣⵏⵉⵜ جماعة تيزنيت", "Aït Amira", "Aït Amira ⴰⵢⵜ ⵄⵎⵉⵔⴰ آيت اعميرة", "Sidi Bibi", "Sidi Bibi ⵙⵉⴷⵉ ⴱⵉⴱⵉ سيدي بيبي", "Biougra", "Biougra ⴱⵢⵓⴳⵔⴰ بيوكرى", "Belfaa", "Belfaa ⴱⵍⴼⴰⵄ بلفاع"],
 "aha": ["Aït Ourir ⴰⵢⵜ ⵓⵔⵉⵔ ايت اورير"],
-"cai": ["القاهرة", "الجيزة", "Giza", "شبرا الخيمة", "Shubra al Khayma", "حلوان", "Helwan", "القاهرة الجديدة", "New Cairo", "مدينة القاهرة الجديدة", "New Cairo City"],
 "mrz": ["ملوى", "ملوي", "Mallawi"],
 "kbu": ["إدفو", "Idfu", "دراو", "Daraw"],
 "mrm": ["المنيا", "Al Minya"],
@@ -3517,5 +3515,8 @@
 "shl": ["شرم الشيخ", "Sharm El Sheikh"],
 "joo": ["JB", "Iskandar Puteri", "Pasir Gudang", "Kulai", "Skudai"],
 "kut": ["Kemaman", "Chukai", "Cukai", "Dungun", "Kuala Dungun", "Pekan"],
-"kog": ["Pengerang", "Mersing"]
+"kog": ["Pengerang", "Mersing"],
+"cai": ["القاهرة", "الجيزة", "Giza", "شبرا الخيمة", "Shubra al Khayma", "حلوان", "Helwan", "القاهرة الجديدة", "New Cairo", "مدينة القاهرة الجديدة", "New Cairo City"],
+"elm": ["المنصورة", "شبين الكوم", "Shibin El Kawm", "دكرنس", "Dikirnis", "ميت غمر", "ميت غمر و كفر البطل", "Mit Ghamr", "زفتى", "Zifta", "طناح", "Tanah"],
+"clt": ["Sumpango", "Ciudad Vieja"]
 }

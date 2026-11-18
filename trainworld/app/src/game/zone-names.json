@@ -1,4 +1,5 @@
 {
+"clt": {"aliases": ["Antigua Guatemala"]},
 "taz": {"aliases": ["Yuhuan"]},
 "jau": {"aliases": ["Suchetgarh", "R.S. Pura", "RS Pura"]},
 "lal": {"aliases": ["Magdalena", "Chascomús", "Chascomus"]},
@@ -1466,7 +1467,7 @@
 "xav": {"name": "Le Kef", "aliases": ["El Kef", "Siliana", "الكاف"]},
 "xaw": {"name": "Mahdia", "aliases": ["El Jem", "المهدية"]},
 "xax": {"name": "Gabès", "aliases": ["Gabes", "قابس"]},
-"elm": {"name": "Mansoura", "aliases": ["El Mansura", "Mansura"]},
+"elm": {"name": "Mansoura", "aliases": ["El Mansura", "Mansura", "Sinbillawin"]},
 "suh": {"name": "Sohag", "aliases": ["Suhaj"]},
 "alz": {"name": "Zagazig", "aliases": ["Al Zaqaziq"]},
 "bah": {"aliases": ["Benha"]},

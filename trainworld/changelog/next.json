@@ -3,6 +3,54 @@
   "line": "",
   "items": [
     {
+      "id": "c044",
+      "text": "driving to school counts twice now, since a parent drives the pupil and makes the trip too, so more school trips walk or take the train",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3624",
+      "by": "schoolcar",
+      "at": "2026-11-18T18:07:22Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
+    },
+    {
+      "id": "c043",
+      "text": "added Chimaltenango, with Antigua Guatemala, as a zone",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3517",
+      "by": "dayrun",
+      "at": "2026-11-18T17:54:39Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c042",
+      "text": "fixed Mansoura's zone being split in two by the Sinbillawin zone, which is now part of Mansoura",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3033",
+      "by": "dayrun",
+      "at": "2026-11-18T17:54:39Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
+      "id": "c041",
+      "text": "fixed downtown Cairo around Tahrir and Garden City missing from the Cairo zone",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3660",
+      "by": "dayrun",
+      "at": "2026-11-18T17:54:39Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c040",
       "text": "added the one way switch and reverse to the selection bar for several pieces of single track at once",
       "edited": null,

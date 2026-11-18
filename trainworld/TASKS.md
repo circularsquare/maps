@@ -21,10 +21,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3688 [P3] {L:region-redraws} {after:next world rebuild} Hokkaido, Manila and Muzaffarpur redraws
   - Context: Your old TODO, from Discord suggestions: "generally prioritize compactness more ... hokkaido into 4; manila looks weird, make a bit smaller and surrounding regions more compact; muzafarapur, huge rural region prob should be split". Nearest: T-1878.
   - Goal: Each of the three redrawn more compact in its country's next rebuild.
-- T-2001 [P3] {L:region-redraws} More geoBoundaries files with merged far-flung units (taking, 2026-11-18, agent qwpre)
-  - Context: Malaysia's ADM3 had same-named units dissolved into one far-flung feature. Portugal ADM3, Indonesia ADM2 and Sierra Leone ADM3 may do the same.
-  - Goal: Each of those files is checked and split where needed.
-  - Other: notes/T-2001.md
 - T-2578 [P3] {L:borders} Mexico-US border factor too low
   - Context: Every border pair gets the national factor 0.05, but Tijuana-San Diego and Juarez-El Paso are very busy crossings.
   - Goal: A pair factor in borders.json, checked against published crossing counts.
@@ -41,9 +37,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The Cambodia config (KH) covers only the north-west because the old district polygons lack five new districts and renumber Tbong Khmum's seven.
   - Goal: New districts folded into the old polygons (or newer polygons found), then the rest of Cambodia rebuilt.
   - Other: notes/T-1738.md 15; notes/T-2107.md
-- T-2002 [P3] {L:census-totals} Preflight flag for GHSL phantom people (taking, 2026-11-18, agent qwpre)
-  - Context: GHSL (the satellite population grid) sometimes puts people where none live (T-2000).
-  - Goal: A preflight check flags plan rows with 1 km pixels over about 20,000 people and no urban centre, naming the units.
 - T-2099 [P3] {L:census-totals} Shore clip drops people on stilt villages
   - Context: Packs clip at the shore, so GHSL people on stilt villages and coastal pixels go missing: Jolo, Bongao and Siasi keep only 80-90%.
   - Goal: Stilt and coastal pixels count in the pack, so the census total (T-2084) is not cut short (pti 1.63M of 1.89M today).
@@ -68,10 +61,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: No join runs seams.py, so every country built since Southeast Asia has its pack lines at the plain 0.5, including Kerala's coast and Delhi's edge zones.
   - Goal: Seamless pairs are applied for the newer countries.
   - Other: notes/T-2112.md
-- T-2299 [P3] {L:region-redraws} Check for origins off their town (taking, 2026-11-18, agent qwpre)
-  - Context: Konya, Erzurum and three other zones were parked on 0 riders because their origin sat off the town. Unit names are also cut at 25 characters.
-  - Goal: A preflight check flags such origins and the name cut.
-  - Other: notes/T-2299.md
 - T-2296 [P3] {L:census-totals} Plan zones on census totals where configured
   - Context: Turkey's plan was grouped on GHSL, which holds 0.84M in Adana's four urban districts against 2.01M registered, so sey Adana ships over the cap and yum Ceyhan under the floor.
   - Goal: Zone grouping uses census totals wherever an admin_totals config exists, and Adana's centre makes the metro list.
@@ -128,8 +117,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Try shedding the arm that makes the wrap before halving; replan Canada after.
   - Other: notes/T-1239.md section 1
 - T-1376 [P3] {L:region-redraws} Madeleine Islands zone fails the park check
-  - Context: Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell.
-  - Goal: Let a small island zone through, or leave it as dead space.
+  - Context: Les Iles-de-la-Madeleine (12,000 people) parks in its build: under 85% of its park draw lands on a cell. Solola, Guatemala (scd, 0.56M, 6 of 31 parks off every cell by Lake Atitlan) parks the same way and is dead space beside Chimaltenango.
+  - Goal: Both zones built with their parks on cells (or the check let through for parks on water's edge), or Madeleine left as dead space; Solola, at 0.56M, should not stay dark.
   - Other: notes/T-1239.md
 - T-2300 [P3] {L:region-redraws} Taiwan's Taitung zone spans the mountains
   - Context: tig (1.29M) is the Central Range with both foothills, joined by shape because mountain townships fill the hull.
@@ -151,17 +140,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
   - Other: notes/T-3455.md "What ran (nightfix3)"
-- T-3672 [P1] {L:single-track} Side platforms still bugged after T-3651 (taking, 2026-11-18, agent sideplat2)
-  - Context: You, 2026-11-18, on 8800 866e3212 (T-3651 in it): "i just tried the side platform thing and it looks bugged. the train runs on all 3 tracks and backtracks." T-3651 was built and checked on Zui's layout (two side platforms with two middle tracks); yours has three tracks.
-  - Goal: Your layout (a split station, the third bypass track joining one of the split legs; screenshot artifacts/trainworld/board/20261118-104721-f812.png, save Downloads/trainsworld-caracas-day-53.save) runs each way on its own platform track with no backtracking, by a general rule for any number of platform and through tracks ("ideally we try to come up with a general fix, not one that works for just this situation"); T-3651's cases still pass.
-  - Other: notes/T-3651.md
-- T-3671 [P2] {L:region-redraws} Daytime rebuild batch on part of the cores (taking, 2026-11-18, agent dayrun)
-  - Context: You, 2026-11-18: "if we find ourselves with substantial free compute that we're not using we can maybe just start some more world builds during the day, using just prart of the cores, they can run slowly while we also fill with thinking heavy tasks." Not the Caribbean (T-3620 waits for your word).
-  - Goal: A batch of approved rebuild fixes and parked rows (T-3660 and others the planner picks) built, gated and joined on about 6 cores, without blocking the day's landings.
-- T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone (taking, 2026-11-18, agent dayrun)
-  - Context: Found by T-3623: Qasr Al-Nile (1.2 km2, Tahrir and downtown, geoBoundaries EGY ADM2) is in no plan row, so cai's outline has a hole there and downtown Cairo's people and jobs are missing. Marsa Alam, North Coast and Port Suez are also Egyptian units in no zone.
-  - Goal: Qasr Al-Nile joins cai and the other three join a zone or are written down as dead space on purpose; rebuilt in the next night run.
-  - Other: notes/T-3623.md
+- T-3660 [P2] {L:region-redraws} Two Egyptian units missing from the plan
+  - Context: Downtown Cairo (Qasr Al-Nile) joined Cairo's zone on 2026-11-18 (T-3671); Marsa Alam is dead space by the reach rule; one North Coast unit is Alexandria's. Two geoBoundaries units are not in the plan's unit state at all (365 units in the file, 363 in the state): a second North Coast (11 km2 at 29.28, 30.86, in no zone) and Port Suez Police Department (5.6 km2, a quarter inside Al-Arbiin).
+  - Goal: Find why world_plan's state lost the two, and give them a zone with Egypt's next rebuild if they hold people.
+  - Other: notes/T-3671.md, notes/T-3623.md
 - T-3661 [P3] {L:region-redraws} Zone centres on the wrong town
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
@@ -176,10 +158,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3657 [P3] {L:accounts-server} Free fares inflate leaderboard points
   - Context: Put off by you, 2026-11-18, needs more thought: "im not sure if doing points and fares game-wide really helps that much. people can still cheese by running like 70% of their lines at 0x. i think this needs roe thought, lets put it off til later, but we sdhould definitely think about it." Considered so far: points scaled by fares over running costs, full from 100% (game-wide or per city); a line's points only while it makes money; a separate profit board. Your pad, 2026-11-18, from Discord: "u can cheese leaderboard scores by just dropping fares to zero ... how might we incorporate profit somehow? is there an easy way to only track like rides that are carried profitably or something? idk. not sure if thatd even be the best metric...?" Points are 20 a rail trip plus 1 a passenger-km on a forecast weekday; any line's fare multiple can go from 0 to 3, so free fares raise trips with nothing against it.
   - Goal: Free or near-free fares can't raise a leaderboard score; a network paying its way scores as today.
-- T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked (taking, 2026-11-18, agent dayrun)
-  - Context: Chimaltenango's union error may be the reclaimed-land fault fixed 2026-11-18 (T-3455: make_valid on invalid pieces); try it first. From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
-  - Goal: Each of clt, scd, anu, tsx built and shipped, or left dead space with the reason in its notes; miv and auo terrain rebuilt on the 3 blocks.
-  - Other: notes/T-3399.md
 - T-3518 [P3] {L:new-countries} University students in Venezuela and Nicaragua
   - Context: From T-3399: the World Bank has no tertiary enrolment for Venezuela or Nicaragua since 2010, so their zones count only OSM campuses, unscaled (Zamora's zone 257 students for 1M people); seven rows shipped with the gate's university check relaxed.
   - Goal: A national figure for each in tier0's NATIONAL_TERTIARY (as Taiwan's, T-3273), taken up at their next rebuild.
@@ -296,7 +274,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: A high-demand edit on the NYC save under 20 s, or the measured reason it cannot be without changing how demand converges.
   - Other: notes/T-3512.md
 - T-3493 [P3] {L:memory} Peaks from data the page throws away
-  - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; now stored at 94 MB; T-2136 would drop it. The all-China peaks of up to 1.2 GB between collections are not traced yet.
+  - Context: On a one-city desktop game the 232 MB was the market's corridor table held on the page, not churn; T-2136 drops the table from the page (in its tree, 2026-11-18). The all-China peaks of up to 1.2 GB between collections are not traced yet.
   - Goal: The biggest peaks found and cut.
   - Other: notes/T-3472.md
 - T-3498 [P3] {L:accounts-server} Pins move forward to the newest intact save
@@ -521,11 +499,11 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Goal: Tunisia on delegation-level census totals.
   - Other: notes/T-2897.md
 - T-3011 [P3] {L:region-redraws} Cairo border misses the Nile
-  - Context: You said (2026-11-10) the border is too far east of the river and islands, and the river should just be part of Cairo.
+  - Context: You said (2026-11-10) the border is too far east of the river and islands, and the river should just be part of Cairo. Since 2026-11-18 (T-3671) downtown is in the zone, so the border runs along both banks; the Nile's channels themselves (about 160 m and 440 m wide at Tahrir) stay outside, since no admin unit covers the water.
   - Goal: Cairo's zone lines up with the Nile and keeps Gezira and Zamalek.
 - T-3033 [P2] {L:region-redraws} Rebuild the 37 split rows
-  - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan.
-  - Goal: The 37 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
+  - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan. Mansoura is done (2026-11-18, T-3671: it took the Sinbillawin zone); 36 rows left, each needing its mend worked out.
+  - Goal: The 36 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
   - Other: plan in notes/T-3012.md; rows in artifacts/trainworld/split-zones.json
 - T-3052 [P2] {L:rebuild-track} {after:T-3060} Rebuild built track with new properties
   - Context: You asked 2026-11-10 to change built track's height or kind from an edit button. Design approved: change pieces in place, from the Select bar, with price and confirm.

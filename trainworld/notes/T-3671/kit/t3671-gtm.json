@@ -1,0 +1,8 @@
+{
+ "task": "T-3671",
+ "iso": "GTM",
+ "retire": {"anu": "clt"},
+ "replan": ["clt"],
+ "names": {"drop": ["anu"], "aliases": {"clt": ["Antigua Guatemala"]}},
+ "why": "Antigua Guatemala's zone (0.25M) parked on one square holding 45% of its jobs, past the gate's 0.35 for a one-town zone (T-3517); it joins Chimaltenango next door, which is rebuilt anyway for its outline fault"
+}

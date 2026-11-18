@@ -215,8 +215,9 @@ your whole context.
 
 Several countries at once: one run each with `--no-join`, its own port and log; one join for all.
 
-The gate's browser check serves the main tree's app/: before a run that gates, ask the orchestrator to hold app/ and
-WASM landings until it ends (a mid-gate WASM rebuild parked 72 of Russia's rows on "no page errors", T-2298). While
+The gate's browser check serves a copy of app/ frozen at each gate chunk's start (T-2298, after a mid-gate WASM
+rebuild parked 72 of Russia's rows), so app/ and WASM landings need no hold; writes to data/packs and data/terrain
+do, from the first register or retire to the join's end (world-run.md's rules). While
 another run or join holds the packs, `--build-only` builds the rows without registering them; a later run gates them.
 
 ## 6. Parks: one relax run
