@@ -4457,6 +4457,8 @@ async function processMessage(msg: ToClock) {
       pinFareRef();
       if (syncHolidays()) sendTrips();
     });
+    // T-3722: a leave that comes before the pending game is read must not skip it (a picked file would be lost)
+    initIncoming = !!msg.pending;
     ready = (async () => {
       const t0 = performance.now();
       freezeMemory = (await initWasm(() => init(), "clock worker")).memory; // i18n-ignore
@@ -4486,12 +4488,12 @@ async function processMessage(msg: ToClock) {
         msg.game = pending.spec;
       } else if (pending) {
         incoming = await pendingGame(pending);
-        initIncoming = !!incoming;
         msg.slot = pending.from;
       } else if (msg.pending && msg.game) {
         // T-3478: a new game whose spec is gone from storage is still a new game, never the game left for it
         msg.newSlot = newGameName(await listSlots().catch(() => []), msg.game);
       }
+      initIncoming = !!incoming;
       if (msg.fresh) {
         // T-320: a new game for a check owns no slot, so nothing it does can reach a saved game
         activeSlot = "";

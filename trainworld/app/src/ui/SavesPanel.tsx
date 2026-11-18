@@ -14,7 +14,7 @@ import { shade } from "../game/ui";
 import { useThumbIn } from "./thumbShade";
 import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
-import { startup } from "../game/loading";
+import { choosing } from "../game/loading";
 import { exportGame, exportSlot, importGame, leaveToMenu, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
 import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
@@ -458,7 +458,8 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
         <button class="btn text" data-tip={t("savesPanel.openFileTip")} onClick={pick}>{t("savesPanel.openFile")}</button>
         {/* a test page's game has no card to copy it from */}
         {!saves.viewing && !saves.slots.some((s) => s.key === saves.active) && <button class="btn icon save-copy" data-tip={t("savesPanel.copy")} aria-label={t("savesPanel.copy")} disabled={copyFrom !== null} onClick={copy}><Icon.copy /></button>}
-        {startup.value === "ready" && <MainMenuButton />}
+        {/* T-3722: from the moment a game is picked, its load included (a big save's first trips take a minute or more) */}
+        {!choosing.value && <MainMenuButton />}
       </div>
       <ul class="save-slots">
         {saves.viewing && <ViewCard slot={saves.viewing} now={shownNow} />}
