@@ -294,6 +294,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3606 [P3] {L:map-look} Tram station ghost drawn at full width
   - Context: You, 2026-11-17: "the placement ghost of the tram stations are not shrunk, so they look thick and once we place them it places them as thin. should make the ghost match (and ideally make it so the ghost automatically matches in every case) but can do that later."
   - Goal: The placement ghost of every station kind is drawn by the same code and widths as the placed station, so they always match.
+- T-3607 [P2] {L:map-look} One-way chevrons spaced by distance; bus chevrons further out and thinner (taking, 2026-11-17, agent chevrons)
+  - Context: Your pad, 2026-11-18: "currently the one-way chevrons on track seem to appear like at least once per track segment or something. when we're snapping to street we often have tons of short track segments which means we have way more chevrons than we'd otherwise want. could we show them like once per some distance, accumulated across track segments? also lets show the one-way bus chevrons like 2x more zoomed out. currently have to zoom in a lot to see them. and lower their thickness a bit more, to match the bus lines themselves."
+  - Goal: Track chevrons sit one per set distance along a run of one-way track whatever its piece count; bus chevrons show from one zoom level further out and are drawn no thicker than the bus line.
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
