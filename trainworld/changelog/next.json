@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c039",
+      "text": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed, and the comma and period keys slow down and speed up by one step",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3653",
+      "by": "timectl",
+      "at": "2026-11-18T17:37:31Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c038",
+      "text": "long trips between two far-apart parts of one zone count in its trips within, its train share goals and its bubbles",
+      "edited": "long trips between two far-apart parts of one zone count in its trips within, train share, goals and bubbles",
+      "hidden": false,
+      "task": "T-3509",
+      "by": "tripswithin",
+      "at": "2026-11-18T17:32:44Z",
+      "rev": 2,
+      "area": "demand",
+      "fix": false,
+      "changed": "2026-11-18T17:37:31Z"
+    },
+    {
       "id": "c037",
       "text": "fixed old copies of the clock piling up in the top bar",
       "edited": null,

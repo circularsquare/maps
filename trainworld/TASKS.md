@@ -262,10 +262,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3509 [P3] {L:map-look} Long trips inside one zone show nowhere (taking, 2026-11-18, agent tripswithin)
-  - Context: You, 2026-11-18: "yes, all trips within should count" (a zone's longer trips between its own far-apart parts count in its Trips within, and so its train share goals). The regional layer has trips of 25 km and more between 6 km areas of one zone (New York 1.93M legs a day, 2.8% of its local trips; London 0.60M; median zone 0.13%). They ride the player's lines but are in no bubble and no zone figure, and T-3503 leaves them out too.
-  - Goal: These trips show in the zone's bubbles and in one of its figures, and the bubbles still add up to the figures.
-  - Other: notes/T-3503.md
 - T-3502 [P3] {L:airports} Big airports draw ground trips from farther away
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
@@ -453,9 +449,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up (taking, 2026-11-18, agent timectl)
-  - Context: Your pad, 2026-11-18, from Discord, "not high prio": "rework time controls to just be like comma and period speed up or slow down? someone suggested this is how it works in KSP. maybe instead of having 1x 4x 16x(flexible) we could just do like slow down flexible speed up. and period speeds up and comma slows down by one step."
-  - Goal: 1x / 4x / 16x become a slow-down button, the speed shown, and a speed-up button stepping through today's slider stops; comma slows and period speeds up by one step; the double-click picker on the speed stays (your yes 2026-11-18).
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
@@ -966,6 +959,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
+  - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
+  - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
+  - Other: notes/T-3509.md
 - T-3698 [P3] {L:accounts-server} Refused save by hand says it could not be saved
   - Context: From T-3611's checker: when another tab wrote the slot while this tab still held its lease (a late lock message), this tab's save by hand is refused by the new edit check and shows "This game could not be saved. Download it as a file to keep it."; the next save by hand takes the slot back and works. Rare (two tabs, a narrow race).
   - Goal: That save by hand takes the slot back as the keepOtherTabs path does, or says the game was saved in another tab.
