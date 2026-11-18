@@ -2741,5 +2741,5 @@
   "schedule.defaultTitleTram": "Same heading for a tram line.",
   "schedule.defaultTitleFast": "Same heading for a high-speed line.",
   "schedule.defaultSet": "Button in the schedule panel that makes the open line's headways the ones every new line starts with; a line on train counts is switched to Headway first.",
-  "schedule.defaultReset": "Button in the schedule panel, shown only while a default is set, that clears it so new lines start on train counts."
+  "schedule.defaultUse": "Button in the schedule panel that gives the open line the headways new lines of its kind start with; greyed while none is set or the line already has them."
 }

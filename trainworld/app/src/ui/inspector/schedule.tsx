@@ -21,7 +21,7 @@ import { ask } from "../../game/ui";
 import { useClockQuery } from "../useClockQuery";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { pendingLabel } from "../../game/lineFigures";
-import { clearDefaultHeadway, lineKind, makeDefaultHeadway, newHeadway } from "../../game/newHeadway";
+import { lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, restTphShown, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
@@ -352,7 +352,7 @@ function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, numb
       <div class="muted">{now ? tList(now.map(headwayText)) : t("schedule.defaultNone")}</div>
       <div class="sched-default-btns">
         <button type="button" class="btn text mini" disabled={same} onClick={() => makeDefaultHeadway(id)}>{t("schedule.defaultSet")}</button>
-        {now && <button type="button" class="btn text mini" onClick={() => clearDefaultHeadway(kind)}>{t("schedule.defaultReset")}</button>}
+        <button type="button" class="btn text mini" disabled={!now || same} onClick={() => applyDefaultHeadway(id)}>{t("schedule.defaultUse")}</button>
       </div>
     </div>
   );

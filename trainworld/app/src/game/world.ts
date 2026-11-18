@@ -487,6 +487,11 @@ export function setHeadway(id: LineId, demand: Demand, seconds: number) {
   queueHeadway(id, h);
 }
 
+/** All three levels' headways at once, as one edit (a line on counts is switched to Headway by it). */
+export function setHeadways(id: LineId, secs: [number, number, number]) {
+  queueHeadway(id, [...secs]);
+}
+
 const sendHeadway = folded(pendingHeadway, async (id, secs) => {
   const had = world.peek()?.lineStats[id]?.autoS;
   const a = await edit({ op: "setHeadway", line: num(id), seconds: secs }, false, true);

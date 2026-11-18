@@ -5,7 +5,7 @@
 
 import { signal } from "@preact/signals";
 import type { NewHeadways, Headways } from "../workers/saveFile";
-import { world, headwayShown, headwaysOfTrains, setAutoTrains } from "./world";
+import { world, headwayShown, headwaysOfTrains, setAutoTrains, setHeadways } from "./world";
 
 export type { Headways, NewHeadways };
 export type LineKind = "rail" | "tram" | "fast";
@@ -44,9 +44,11 @@ export function makeDefaultHeadway(id: string): boolean {
   return true;
 }
 
-/** No default for `kind`: new lines of it start on train counts. */
-export function clearDefaultHeadway(kind: LineKind) {
-  const { [kind]: _gone, ...rest } = newHeadway.value;
-  newHeadway.value = rest;
-  sink?.(rest);
+/** Give line `id` the default headways of its kind, as the edit a player's own headway change is; false
+ * when its kind has no default. */
+export function applyDefaultHeadway(id: string): boolean {
+  const kind = lineKind(id), h = kind && newHeadway.value[kind];
+  if (!h) return false;
+  setHeadways(id, h);
+  return true;
 }

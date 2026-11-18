@@ -3,7 +3,7 @@
 // bigger than the chart button beside it. In the schedule window the line's headways are set (the Headway switch),
 // "Set as default" makes them the default (the window shows them), a second line drawn after starts with those
 // headways. The game is exported and opened again: the default holds (the save's header carries it) and a line
-// drawn then starts with it. "Use game default" clears it and the next line starts on counts. Shots: the line
+// drawn then starts with it. "Use default" gives a line the default (one undo each way; off with no default or a match). Shots: the line
 // panel (review/t3543.png) and the schedule window. From the tree root, on a Vite of your own:
 //   node trainworld/checks/t3543-default-headways.mjs [dev url]      (about three minutes)
 import { mkdir, readFile } from 'node:fs/promises';
@@ -57,7 +57,8 @@ try {
   await g.act.click('Detailed schedule');
   await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
   check(/Default not set/.test((await windowText()) ?? ''), 'a fresh game: the window says Default not set', await windowText());
-  check(!(await page.getByRole('button', { name: 'Clear default' }).count()), 'no Clear default while there is no default');
+  check(!(await page.getByRole('button', { name: 'Clear default' }).count()), 'no Clear default button');
+  check(await page.getByRole('button', { name: 'Use default' }).isDisabled(), 'Use default is off while there is no default');
   check((await headwaysOf('First')) === null, 'the first line runs on counts');
   const setBtn = page.getByRole('button', { name: 'Set as default' });
   check(await setBtn.isEnabled(), 'Set as default is on for a line on counts');
@@ -73,7 +74,7 @@ try {
   check(Array.isArray(sw) && sw.some((x) => x > 0) && (await defaultNow())?.join() === sw.join(), 'Set as default on counts: the line switched to headway and it is the default', JSON.stringify({ sw, def: await defaultNow() }));
   const after = await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'First'); return [...window.tw.world.value.lineStats[l.id].trainsNeeded]; });
   check(counts.join() === after.join(), 'same trains as before the switch', `${counts} -> ${after}`);
-  check(/Clear default/.test(await page.locator('.sched-default').innerText()), 'Clear default now shown');
+  check(await page.getByRole('button', { name: 'Use default' }).isDisabled(), 'Use default is off: the line is the default');
   await g.shot('t3588_window.png', { element: 'dialog.sched-panel' });
   await page.locator('.sched-default').scrollIntoViewIfNeeded();
   await page.locator('dialog.sched-panel').screenshot({ path: join(REVIEW, 't3588.png') });
@@ -151,16 +152,33 @@ try {
   check(wkBefore[1] === wkAfter[1] && wkBefore[2] === wkAfter[2] && wkAfter[0] % 60 === 0 && wkAfter[0] !== wkBefore[0], 'a weekend headway step leaves the other two levels as shown, whole minutes', JSON.stringify({ wkBefore, wkAfter }));
   await closeWindow();
 
-  // back to the game's own default
-  await g.act.click('Detailed schedule');
-  await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
-  await page.getByRole('button', { name: 'Clear default' }).click();
-  await page.waitForTimeout(500);
-  check((await defaultNow()) === null && /Default not set/.test((await windowText()) ?? ''), 'Clear default clears it', await windowText());
-  await closeWindow();
+  // Use default: a line on counts, then one with its own headways; one undoable edit each
   await g.act.newLine([A, D], { name: 'Fourth', zoom: 15 });
   await page.waitForTimeout(1500);
-  check((await headwaysOf('Fourth')) === null, 'the next line starts on counts again');
+  await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Fourth'); w.setAutoTrains(l.id, false); });
+  await page.waitForTimeout(1500);
+  check((await headwaysOf('Fourth')) === null, 'the fourth line is on counts');
+  await g.act.click('Detailed schedule');
+  await page.waitForSelector('dialog.sched-panel .sched-default', { timeout: 15000 });
+  const useBtn = page.getByRole('button', { name: 'Use default' });
+  check(await useBtn.isEnabled(), 'Use default is on for a line on counts');
+  await useBtn.click();
+  await page.waitForTimeout(2000);
+  check(JSON.stringify(await headwaysOf('Fourth')) === '[300,480,900]', 'Use default gives the line the default headways', JSON.stringify(await headwaysOf('Fourth')));
+  check(await useBtn.isDisabled(), 'Use default is off once the line matches');
+  await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
+  await page.waitForTimeout(2000);
+  check((await headwaysOf('Fourth')) === null, 'one undo puts the line back on counts', JSON.stringify(await headwaysOf('Fourth')));
+  await page.evaluate(async () => { const w = await import('/src/game/world.ts'), l = window.tw.world.value.save.lines.find((x) => x.name === 'Fourth'); w.setAutoTrains(l.id, true); await new Promise((r) => setTimeout(r, 1500)); w.setHeadway(l.id, 'high', 420); });
+  await page.waitForTimeout(2000);
+  check(await useBtn.isEnabled(), 'Use default is on for a line with other headways', JSON.stringify(await headwaysOf('Fourth')));
+  await useBtn.click();
+  await page.waitForTimeout(2000);
+  check(JSON.stringify(await headwaysOf('Fourth')) === '[300,480,900]', 'Use default replaces the other headways', JSON.stringify(await headwaysOf('Fourth')));
+  await page.evaluate(() => window.tw.client.edit({ op: 'undo' }));
+  await page.waitForTimeout(2000);
+  check((await headwaysOf('Fourth'))?.[0] === 420, 'one undo restores the line\'s own headways', JSON.stringify(await headwaysOf('Fourth')));
+  await closeWindow();
 
   const errs = g.pageErrors().filter((e) => !/WebGL|GPU|ResizeObserver/.test(e));
   check(errs.length === 0, `no page errors${errs.length ? ': ' + errs.slice(0, 3).join(' | ') : ''}`);

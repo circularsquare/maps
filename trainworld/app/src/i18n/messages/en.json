@@ -2741,5 +2741,5 @@
   "schedule.defaultTitleFast": "Headways for new high-speed lines",
   "schedule.defaultNone": "Default not set",
   "schedule.defaultSet": "Set as default",
-  "schedule.defaultReset": "Clear default"
+  "schedule.defaultUse": "Use default"
 }
