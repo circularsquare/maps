@@ -29,13 +29,18 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
   own channel, a 0x line takes no base). Checker farecheck2 (Sonnet, ports 6192/6193) running. On PASS land for
   v0.4.0 (it's in the release); no changelog change (her c120 still holds); fareTip hover changed (approved by her),
   so fareTip joins the stale-key translation batch.
-- onewaystops2 (Opus, .tw-trees/onewaystops2, port 6181): T-3565 fresh start + T-3595 (a train may turn back at any
+- LANDED for v0.4.0 (11-18 00:25 UTC): one-way stations T-3565 + T-3595 (5c5bb1ac, checker PASS, notes/T-3565-check2.md;
+  c017 and c112 reworded), weekend decimal T-3603 (86b124e0), Use default T-3602 (b1001f67, 08a4f9cf). Smoke on
+  master running; 8800 rebuilding at 08a4f9cf. Old trees onewaystops, extendfix can go.
+- (was) onewaystops2: T-3565 fresh start + T-3595 (a train may turn back at any
   track end; DECISIONS). Pairing per her 11-17: nice to have, ~50 m between platforms, any number of one-way stops per
   leg. Checker straight after it reports; her ask 11-17: the checker also looks for regressions against live v0.3.5
   (bfe58c54): anything a player could do there that they can't after (stop editing, advanced editor order, loops,
   two-way lines, pairs 50-300 m apart, old saves loading the same). Old trees onewaystops and extendfix: remove once it's done.
 - l10n-shots (Sonnet, port 6186): pass 5 screenshots, may merge shorter wording; I commit messages/ after.
-- For after the publish (her 11-17 ask): idlemem (Opus, T-3492, 6182), capload (Sonnet, T-3559+T-3528, 6184; done,
+- For after the publish (her 11-17 ask): idlemem (T-3492 archived unmet: an idle restart gives back <50 MB on the
+  default pool, not 0.7 GB; its tree holds a small demandClient.ts fix, a question during a reopen waits instead of
+  coming back empty: land with `agent-tree.mjs land idlemem` + remove, task already archived; T-3604 filed), capload (Sonnet, T-3559+T-3528, 6184; done,
   smoke passed; checker capcheck PASSED (notes/T-3559-check.md); land after the publish WITHOUT its changelog item, her word: revert the tree's next.json),
   snapbar (T-3516 DONE in its tree, smoke passed; c136 line shown to her), trafficwidth (T-3580 DONE, smoke passed),
   tramsnap (T-3515 DONE: pipeline/realgraph.py tram rules; land after the publish: branch, then copy the rebuilt

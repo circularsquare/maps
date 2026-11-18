@@ -275,10 +275,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3565 [P2] {L:single-track} {after:T-3541} Stops on a one-way street pair (taking, 2026-11-17, agent onewaystops2)
-  - Context: You, 2026-11-17: "each direction should serve only its own streets station i think? like the stations on the split part should count as separate one-way stations that only get stopped at one way, onec during the whole route." Your Caracas Line 2 (T-3541): Este 18 and Calzadilla I sit on opposite legs over 300 m apart, so adding stops made a J: trams turn around at Arismendi and the return run loops the line about twice (round trip 66 min for a 13 min trip out). notes/T-3537.md.
-  - Goal: A line over a one-way pair serves its stations without turning back or looping.
-  - Other: Built in .tw-trees/onewaystops2 with T-3595 (your Line 2 1204 s round trip, was 4082; Line 3 729 s, was 2075); a checker goes next. notes/T-3565.md.
 - T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick (taking, 2026-11-17, agent trafficwidth)
   - Context: Your pad, 2026-11-17: "in traffic view, a double track line shows up as twice as thick as a single track line, even if they carry the same number of people. it should show up as the same. because in traffic view line mode, the thickness shouldd= directly correspond with number of people carried on that segment, and thats it. minor, can file as p3"
   - Goal: In the traffic view's line mode a segment's thickness depends only on the riders it carries; single and double track carrying the same riders draw the same width.
@@ -291,19 +287,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (taking, 2026-11-17, agent kaohsiung)
   - Context: You, 2026-11-17: "after i removed all the trains from the local kaohsiung lines, and waited for the recalc to finish, in traffic view i still see a bunch of them saying like 10k riders per day or something. and its not currently recalculating. so i guess i'd need to make another change for them to recalc to 0." Then: "another 5 minutes later theyre all updated to 0 ... its just a bit slow." Saves: artifacts/trainworld/t3600-asianita-1851.save and -1852.save.
   - Goal: The calculating tag stays up until the traffic view's numbers are final.
-- T-3602 [P2] {L:timetables} Use default in place of Clear default (taking, 2026-11-17, agent usedefault)
-  - Context: You, 2026-11-17: "we should probably get rid of "clear default" (we rarely want to do that i think, and if someone watns to do it they can just clear their headways and set that as default) and instead show like "Match default" or "set to default" or something."
-  - Goal: The schedule panel's default row has Set as default and a button that gives this line the default headways; no Clear default; in v0.4.0.
-- T-3603 [P2] {L:timetables} Weekend headway edits flash a decimal headway (taking, 2026-11-17, agent weekendedit)
-  - Context: You, 2026-11-17: "when changing the weekend headways it still momentarily shows a weird decimal time like 6.34 min, then corrects a little later." The lag you mentioned: "probably just my computer overall. ignore the lag".
-  - Goal: A weekend headway edit shows the stepped headway at once, never an in-between decimal; in v0.4.0.
+- T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
+  - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
+  - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
 - T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
-- T-3595 [P1] {L:single-track} Extending a line with new track still breaks it (taking, 2026-11-17, agent onewaystops2)
-  - Context: You, 2026-11-17: "it seems like we didnt actually fix the thing where extending a line by adding more track can break the line. is that supposed to be in 8800?" Cause found: a line that turns back at a loose track end breaks when track is built on from that end to a station, since trains may turn only at a stop or a bare end. Your Line 2 needs that turn only because of the one-way pair (T-3565 removes the need); the rule is fixed alongside it: a train may turn at any track end.
-  - Goal: Extending a line by drawing track on from its end, in every way a player does it, never breaks the line; a standing check covers each way.
-  - Other: notes/T-3595.md
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
