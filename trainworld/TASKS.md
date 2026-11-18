@@ -171,6 +171,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
+- T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4
+  - Context: Found by the workflow research (2026-11-18): t1550, a check nobody had run lately, fails its two lines that a bubble's hover tag shows at zoom 7 and 8.4. May be a real regression, or the check is out of date.
+  - Goal: Either the hover tag shows those lines again or t1550 is updated to today's rule, with the reason in one line.
+  - Other: research/workflow-2026-11-18.md
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
