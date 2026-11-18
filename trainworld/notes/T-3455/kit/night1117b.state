@@ -1,0 +1,2 @@
+﻿pid 39588
+2026-11-18T04:09:49 [batch 2 T-3455] STOPPED: T3455 wave 1 run exit 0, rows not all gated; no join. Undo the batch with tools\country\restore.py T3455 pre --go, or relax the parked rows (adding-a-country.md 6), run --rows again and join

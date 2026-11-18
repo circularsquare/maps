@@ -1,0 +1,2 @@
+﻿pid 23668
+2026-11-18T07:01:35 [after] start start tiers : C:\Users\anita\projects\maps\trainworld\pipeline\start_difficulty.py --fresh --jobs 9 > C:\Users\anita\projects\maps\artifacts\trainworld\night1118my-start-difficulty.log

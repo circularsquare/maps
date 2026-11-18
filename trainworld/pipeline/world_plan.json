@@ -10182,7 +10182,7 @@
     "ARG"
    ],
    "iso2": "AR",
-   "people": 15042734,
+   "people": 14964965,
    "origin": [
     -58.3967,
     -34.5928
@@ -10245,17 +10245,14 @@
      "61730980B70807838850882",
      "61730980B497821979952",
      "61730980B14792793371960",
-     "61730980B51096129050346",
      "61730980B93860432283235",
-     "61730980B62875315745131",
-     "61730980B33989982283720",
      "61730980B17134937162409"
     ]
    },
    "bbox": [
     -59.553,
-    -35.868,
-    -57.128,
+    -35.757,
+    -57.89,
     -34.002
    ],
    "source": {
@@ -10292,27 +10289,31 @@
       "61730980B33989982283720",
       "61730980B17134937162409"
      ]
+    },
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "La Plata's zone was an enclave in Buenos Aires's metro (T-3506): Magdalena, Punta Indio and Chascomús, rural partidos south of La Plata at the far edge of the Buenos Aires row, join La Plata, which then borders the Tandil and Chivilcoy zones"
     }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:08:21",
+    "gated": "2026-11-17T22:35:31",
+    "shipped": "2026-11-18T01:53:53",
     "steps": {
-     "build": 159.4,
-     "stations": 10.9,
-     "places": 9.4,
-     "routes": 527.4,
-     "merge": 4.2,
-     "nocar": 2.8,
-     "everyday": 1.9
+     "build": 96.2,
+     "stations": 0.8,
+     "places": 3.8,
+     "routes": 248.0,
+     "merge": 1.9,
+     "nocar": 1.7,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T00:30:24",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
-    },
-    "gated": "2026-11-07T02:27:34",
-    "shipped": "2026-11-07T05:45:22"
+    }
    }
   },
   {
@@ -10373,28 +10374,29 @@
       "45978901B10881458681761",
       "45978901B39379786732373"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "tamil",
    "run": {
-    "run_batch": "20261103-055139",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:38:42",
+    "gated": "2026-11-18T04:53:12",
+    "shipped": "2026-11-18T06:07:20",
     "steps": {
-     "build": 154.3,
-     "stations": 1.3,
-     "places": 2.9,
-     "routes": 181.1,
-     "merge": 1.3,
-     "nocar": 2.4,
-     "everyday": 1.2
+     "build": 189.6,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 99.2,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.7
     },
-    "built": "2026-11-03T07:16:59",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6318.57958984375"
+      "top_school_cell_pupils 6319.203125"
      ]
-    },
-    "gated": "2026-11-03T08:08:41",
-    "shipped": "2026-11-03T16:17:17"
+    }
    }
   },
   {
@@ -12809,27 +12811,28 @@
       "37247803B42052057109088",
       "37247803B38142631960117"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:17:30",
+    "gated": "2026-11-18T04:09:36",
+    "shipped": "2026-11-18T06:07:21",
     "steps": {
-     "build": 109.5,
-     "stations": 1.8,
-     "places": 4.1,
-     "routes": 89.4,
-     "merge": 1.2,
-     "nocar": 2.1,
-     "everyday": 1.4
+     "build": 37.4,
+     "stations": 1.2,
+     "places": 2.6,
+     "routes": 62.6,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-11-10T00:09:18",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 8886.263671875"
+      "top_school_cell_pupils 8929.291015625"
      ]
-    },
-    "gated": "2026-11-10T01:05:50",
-    "shipped": "2026-11-10T02:21:59"
+    }
    }
   },
   {
@@ -17587,29 +17590,31 @@
       "62558664B79437707634898"
      ],
      "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "zhejiang",
    "gate_relax": {
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261107-072922",
-    "built": "2026-11-07T07:42:06",
-    "gated": "2026-11-07T08:50:22",
-    "shipped": "2026-11-07T17:39:19",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:09:51",
+    "gated": "2026-11-17T22:35:31",
+    "shipped": "2026-11-18T01:53:53",
     "steps": {
-     "build": 22.7,
-     "stations": 0.9,
-     "places": 1.5,
-     "routes": 30.1,
-     "merge": 0.7,
-     "nocar": 1.3,
-     "everyday": 0.8
+     "build": 51.6,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 27.6,
+     "merge": 0.9,
+     "nocar": 1.8,
+     "everyday": 1.3
     },
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6020.97607421875"
+      "top_school_cell_pupils 6021.41455078125",
+      "osm_land_share 0.8048"
      ]
     }
    }
@@ -18420,28 +18425,29 @@
      "units": [
       "45978901B71801045907783"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "kerala",
    "run": {
-    "run_batch": "20261103-055139",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:11:10",
+    "gated": "2026-11-18T04:09:35",
+    "shipped": "2026-11-18T06:07:21",
     "steps": {
-     "build": 28.0,
-     "stations": 1.2,
-     "places": 2.4,
-     "routes": 47.8,
-     "merge": 1.0,
-     "nocar": 1.6,
+     "build": 32.7,
+     "stations": 1.3,
+     "places": 2.5,
+     "routes": 51.3,
+     "merge": 1.5,
+     "nocar": 1.7,
      "everyday": 1.1
     },
-    "built": "2026-11-03T07:16:04",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.3964099991004277"
+      "pop_vs_fua 1.4049573199851981"
      ]
-    },
-    "gated": "2026-11-03T08:08:43",
-    "shipped": "2026-11-03T16:17:23"
+    }
    }
   },
   {
@@ -18977,27 +18983,28 @@
       "36326507B33224331564429",
       "36326507B60168938726366"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-000321",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:21:55",
+    "gated": "2026-11-18T04:09:40",
+    "shipped": "2026-11-18T06:07:22",
     "steps": {
-     "build": 37.5,
-     "stations": 1.9,
-     "places": 2.9,
-     "routes": 43.1,
-     "merge": 1.5,
-     "nocar": 2.3,
-     "everyday": 1.5
+     "build": 38.7,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 27.0,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T00:30:45",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
-    },
-    "gated": "2026-11-07T01:39:11",
-    "shipped": "2026-11-07T05:45:27"
+    }
    }
   },
   {
@@ -19492,25 +19499,26 @@
       "71637012B2360085372224"
      ],
      "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-072922",
-    "built": "2026-11-07T07:46:59",
-    "shipped": "2026-11-07T17:39:20",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:31:12",
+    "shipped": "2026-11-18T06:07:22",
+    "gated": "2026-11-18T04:09:41",
     "steps": {
-     "build": 27.7,
+     "build": 176.2,
      "stations": 1.0,
-     "places": 2.2,
-     "routes": 28.5,
-     "merge": 0.7,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "places": 2.0,
+     "routes": 26.8,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-07T08:50:23"
+    }
    }
   },
   {
@@ -21704,7 +21712,7 @@
     "CHN"
    ],
    "iso2": "CN",
-   "people": 3378078,
+   "people": 4031642,
    "origin": [
     121.4506,
     28.6676
@@ -21721,12 +21729,13 @@
      "62558664B17972809273164",
      "62558664B41017634671604",
      "62558664B8097582816509",
-     "62558664B20167162144105"
+     "62558664B20167162144105",
+     "62558664B47653013259541"
     ]
    },
    "bbox": [
     120.767,
-    28.248,
+    28.037,
     121.924,
     28.78
    ],
@@ -21736,33 +21745,37 @@
     ],
     "fua": [
      10392
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Yuhuan (654,923), a county of Taizhou prefecture under China's 1M floor, was an enclave of Taizhou's metro on its peninsula (T-3506); merged into Taizhou"
+    }
    },
    "solve_region": "zhejiang",
    "gate_relax": {
     "pop_vs_fua": "T-897: a Chinese metro is whole counties and districts round a small GHSL urban area (FUA), so it holds well over the FUA's people; pop_vs_plan still guards it"
    },
    "run": {
-    "run_batch": "20261024-191220-30572",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:09:46",
+    "gated": "2026-11-17T22:35:32",
+    "shipped": "2026-11-18T01:53:54",
     "steps": {
-     "build": 10.5,
-     "stations": 0.8,
-     "places": 1.2,
-     "coarse": 0.4,
-     "routes": 16.9,
-     "merge": 0.7,
-     "nocar": 1.1,
-     "everyday": 0.9
+     "build": 46.3,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 26.0,
+     "merge": 1.3,
+     "nocar": 2.0,
+     "everyday": 1.2
     },
-    "built": "2026-10-24T19:30:48",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6031.14013671875",
-      "osm_land_share 0.9163"
+      "pop_vs_fua 1.3195952792044527",
+      "top_school_cell_pupils 6021.19921875",
+      "osm_land_share 0.9239"
      ]
-    },
-    "gated": "2026-10-24T19:51:41",
-    "shipped": "2026-10-25T00:57:59"
+    }
    }
   },
   {
@@ -23027,27 +23040,28 @@
     ],
     "fua": [
      6878
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261102-195242",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T03:59:02",
+    "gated": "2026-11-18T04:09:45",
+    "shipped": "2026-11-18T06:07:23",
     "steps": {
-     "build": 24.3,
-     "stations": 1.0,
-     "places": 2.0,
-     "routes": 32.1,
-     "merge": 0.9,
-     "nocar": 1.4,
-     "everyday": 1.1
+     "build": 27.8,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 33.7,
+     "merge": 0.8,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-11-02T20:55:59",
     "gate": {
      "warn": [
       "top_school_cell_pupils 6000.0"
      ]
-    },
-    "gated": "2026-11-02T21:30:09",
-    "shipped": "2026-11-02T22:46:17"
+    }
    }
   },
   {
@@ -27334,29 +27348,29 @@
       "91078587B87782055915042",
       "91078587B12839905472934"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-000321",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:22:14",
+    "gated": "2026-11-18T04:09:40",
+    "shipped": "2026-11-18T06:07:23",
     "steps": {
-     "build": 27.9,
-     "stations": 1.4,
-     "places": 2.6,
-     "routes": 72.8,
-     "merge": 0.9,
-     "nocar": 1.6,
-     "everyday": 1.4
+     "build": 45.3,
+     "stations": 1.1,
+     "places": 2.1,
+     "routes": 40.5,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T00:33:52",
     "gate": {
      "warn": [
-      "jobs_per_resident 0.7386474260598271",
+      "jobs_per_resident 0.7386474271045481",
       "top_school_cell_pupils 6000.0"
      ]
-    },
-    "parked": "2026-11-07T00:54:55",
-    "gated": "2026-11-07T01:57:52",
-    "shipped": "2026-11-07T05:45:32"
+    }
    },
    "gate_relax": {
     "jobs_per_resident": "T-2697: Qatar's residents are mostly migrant workers (labour force about 0.78 of the people, ILO), so 0.74 jobs a resident is right"
@@ -28385,27 +28399,29 @@
       "33779110B69156036741339",
       "33779110B78876890887227"
      ]
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:39:55",
+    "gated": "2026-11-18T06:30:25",
+    "shipped": "2026-11-18T06:57:24",
     "steps": {
-     "build": 84.9,
-     "stations": 1.2,
-     "places": 2.7,
-     "routes": 46.9,
-     "merge": 2.7,
-     "nocar": 3.5,
-     "everyday": 2.0
+     "build": 23.9,
+     "stations": 0.8,
+     "places": 2.8,
+     "routes": 40.5,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-02T13:55:45",
+    "parked": "2026-11-18T05:13:06",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5373.00634765625"
+      "top_school_cell_pupils 5354.6982421875"
      ]
-    },
-    "gated": "2026-11-02T14:09:38",
-    "shipped": "2026-11-02T14:33:47"
+    }
    }
   },
   {
@@ -30746,7 +30762,7 @@
     "AUS"
    ],
    "iso2": "AU",
-   "people": 1874553,
+   "people": 2193812,
    "origin": [
     115.8006,
     -31.7113
@@ -30791,14 +30807,28 @@
      "25037944B32288278809201",
      "25037944B97460463632510",
      "25037944B8066772871928",
-     "25037944B49536287471778"
+     "25037944B49536287471778",
+     "25037944B36908504302594",
+     "25037944B7523913669113",
+     "25037944B63650800772080",
+     "25037944B53188273537939",
+     "25037944B25957721357526",
+     "25037944B36470505967652",
+     "25037944B4799895230449",
+     "25037944B27165515239628",
+     "25037944B97234562917936",
+     "25037944B89171502248139",
+     "25037944B17943761568072",
+     "25037944B61457505310320",
+     "25037944B83412079426782",
+     "25037944B17845862979070"
     ]
    },
    "bbox": [
-    115.45,
+    114.983,
     -32.816,
-    116.961,
-    -31.089
+    118.208,
+    -30.074
    ],
    "source": {
     "ucdb": [
@@ -30815,25 +30845,31 @@
       "25037944B8066772871928",
       "25037944B49536287471778"
      ]
+    },
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Perth's metro was wrapped by the Rockingham zone (T-3506): Rockingham, Kwinana and Mandurah are Greater Perth and join it, and so do the small Wheatbelt shires north and east of Perth (as Northam, Toodyay and Chittering already are), so the zone left is the South West and Peel, south of Perth, named Bunbury"
     }
    },
    "run": {
-    "run_batch": "20261030-111017",
+    "run_batch": "20261117-234520",
+    "built": "2026-11-17T23:51:55",
+    "gated": "2026-11-17T23:58:30",
+    "shipped": "2026-11-18T01:53:55",
     "steps": {
-     "build": 350.9,
-     "stations": 1.2,
-     "places": 3.5,
-     "routes": 93.0,
-     "merge": 1.2,
-     "nocar": 1.4,
-     "everyday": 1.0
+     "build": 111.9,
+     "stations": 1.0,
+     "places": 4.4,
+     "routes": 155.7,
+     "merge": 4.3,
+     "nocar": 1.7,
+     "everyday": 0.9
     },
-    "built": "2026-10-30T12:24:50",
     "gate": {
-     "warn": []
-    },
-    "gated": "2026-10-30T13:22:00",
-    "shipped": "2026-10-30T14:32:53"
+     "warn": [
+      "area_km2 40272.5792240018"
+     ]
+    }
    }
   },
   {
@@ -37427,7 +37463,7 @@
     "IND"
    ],
    "iso2": "IN",
-   "people": 1671430,
+   "people": 1887176,
    "origin": [
     74.8615,
     32.7283
@@ -37452,12 +37488,14 @@
      "45978901B53705371821128",
      "45978901B28065136622659",
      "45978901B15694572864449",
-     "45978901B59535213683496"
+     "45978901B59535213683496",
+     "45978901B92599184207265",
+     "45978901B60598209202830"
     ]
    },
    "bbox": [
-    74.65,
-    32.411,
+    74.635,
+    32.441,
     75.177,
     33.1
    ],
@@ -37481,28 +37519,36 @@
       "45978901B15694572864449",
       "45978901B59535213683496"
      ]
+    },
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Suchetgarh and R.S. Pura (275,589), two Jammu district tehsils under the zone floor, were an enclave between Jammu's metro and the border (T-3506); merged into Jammu"
     }
    },
    "solve_region": "jammu",
    "run": {
-    "run_batch": "20261103-055139",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:14:23",
+    "gated": "2026-11-17T23:18:23",
+    "shipped": "2026-11-18T01:53:55",
     "steps": {
-     "build": 11.0,
-     "stations": 1.3,
-     "places": 1.9,
-     "routes": 25.5,
-     "merge": 0.9,
-     "nocar": 1.5,
-     "everyday": 1.1
+     "build": 9.7,
+     "stations": 1.0,
+     "places": 1.8,
+     "routes": 27.7,
+     "merge": 0.8,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-11-03T07:20:45",
     "gate": {
      "warn": [
-      "pop_vs_fua 1.376749503792903"
+      "pop_vs_fua 1.6085103784061971"
      ]
     },
-    "gated": "2026-11-03T08:09:01",
-    "shipped": "2026-11-03T16:17:40"
+    "parked": "2026-11-17T22:16:09"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-3506 merged Suchetgarh and R.S. Pura (275,589), two rural Jammu district tehsils on the border, into jau: whole tehsils round GHS-FUA's built-up Jammu (1.16M); before the merge 1.67M, about 1.44"
    }
   },
   {
@@ -47018,24 +47064,26 @@
      "Buyeo-gun",
      "Seocheon-gun",
      "Cheongyang-gun"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:30:07",
+    "shipped": "2026-11-18T06:07:24",
     "steps": {
-     "build": 28.9,
+     "build": 57.2,
      "stations": 1.0,
-     "places": 2.0,
-     "routes": 70.3,
-     "merge": 1.0,
-     "nocar": 1.5,
+     "places": 2.1,
+     "routes": 75.1,
+     "merge": 0.9,
+     "nocar": 1.6,
      "everyday": 1.0
     },
-    "built": "2026-10-25T10:52:35",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-25T11:51:57"
+    "gated": "2026-11-18T04:09:42"
    }
   },
   {
@@ -47541,24 +47589,26 @@
      "Yanggu-gun",
      "Gangneung-si",
      "Geundong-myeon"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:29:23",
+    "shipped": "2026-11-18T06:07:24",
     "steps": {
-     "build": 39.4,
+     "build": 47.9,
      "stations": 1.0,
-     "places": 4.0,
-     "routes": 38.1,
-     "merge": 1.1,
-     "nocar": 1.5,
-     "everyday": 1.0
+     "places": 4.1,
+     "routes": 42.3,
+     "merge": 1.0,
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-10-25T10:52:47",
     "gate": {
      "warn": []
     },
-    "shipped": "2026-10-25T11:51:58"
+    "gated": "2026-11-18T04:09:42"
    }
   },
   {
@@ -47800,25 +47850,26 @@
       "71637012B11470162514300"
      ],
      "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-072922",
-    "built": "2026-11-07T07:47:10",
-    "shipped": "2026-11-07T17:39:22",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:51:48",
+    "shipped": "2026-11-18T06:07:25",
+    "gated": "2026-11-18T04:09:43",
     "steps": {
-     "build": 37.3,
-     "stations": 1.0,
-     "places": 1.9,
-     "routes": 27.1,
-     "merge": 0.9,
-     "nocar": 1.3,
-     "everyday": 0.9
+     "build": 1418.6,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 22.1,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-07T08:50:23"
+    }
    }
   },
   {
@@ -48436,27 +48487,28 @@
       "71637012B430526896357"
      ],
      "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-072922",
-    "built": "2026-11-07T07:46:43",
-    "shipped": "2026-11-07T17:39:22",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:28:36",
+    "shipped": "2026-11-18T06:07:25",
+    "gated": "2026-11-18T04:09:43",
     "steps": {
-     "build": 13.0,
-     "stations": 0.9,
-     "places": 1.8,
-     "routes": 20.2,
-     "merge": 0.9,
-     "nocar": 1.4,
+     "build": 24.9,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 19.7,
+     "merge": 0.7,
+     "nocar": 1.3,
      "everyday": 0.9
     },
     "gate": {
      "warn": [
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T08:50:24"
+    }
    }
   },
   {
@@ -48855,28 +48907,29 @@
       "71637012B72496236323183"
      ],
      "why": "units the plan state had lost (representative point in no first-level unit), in no pack"
-    }
+    },
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-072922",
-    "built": "2026-11-07T07:48:15",
-    "shipped": "2026-11-07T17:39:23",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:46:23",
+    "shipped": "2026-11-18T06:07:26",
+    "gated": "2026-11-18T04:53:15",
     "steps": {
-     "build": 67.7,
-     "stations": 1.7,
-     "places": 37.9,
-     "routes": 26.7,
-     "merge": 0.8,
-     "nocar": 1.2,
+     "build": 186.3,
+     "stations": 1.4,
+     "places": 35.0,
+     "routes": 28.0,
+     "merge": 1.0,
+     "nocar": 1.3,
      "everyday": 0.7
     },
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10242054447120463",
+      "top_zone_jobs_share 0.1017839651195071",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-07T08:50:24"
+    }
    }
   },
   {
@@ -49173,27 +49226,29 @@
     ],
     "groups": [
      "Tongyeong-si"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261025-104133",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:30:06",
+    "shipped": "2026-11-18T06:07:26",
     "steps": {
-     "build": 12.3,
-     "stations": 0.8,
-     "places": 1.4,
-     "routes": 4.1,
-     "merge": 0.5,
-     "nocar": 1.0,
-     "everyday": 0.8
+     "build": 130.3,
+     "stations": 1.3,
+     "places": 2.3,
+     "routes": 8.1,
+     "merge": 0.7,
+     "nocar": 1.4,
+     "everyday": 1.0
     },
-    "built": "2026-10-25T10:52:57",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.2501001245082617",
+      "top_zone_jobs_share 0.24148040163328843",
       "fleet_range 2"
      ]
     },
-    "shipped": "2026-10-26T02:56:58"
+    "gated": "2026-11-18T04:09:44"
    },
    "gate_relax": {
     "top_zone_jobs_share": "0.2501 against 0.25 (orchestrator 2026-10-25, T-1262)"
@@ -93023,71 +93078,6 @@
    }
   },
   {
-   "order": 2055,
-   "id": "yhu",
-   "name": "Yuhuan",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "CHN"
-   ],
-   "iso2": "CN",
-   "people": 654923,
-   "origin": [
-    121.165,
-    28.0986
-   ],
-   "tz": "Asia/Shanghai",
-   "utc_offset": 8,
-   "extracts": [
-    "asia/china/zhejiang"
-   ],
-   "archetype": "C",
-   "module": "china",
-   "units": {
-    "CHN": [
-     "62558664B47653013259541"
-    ]
-   },
-   "bbox": [
-    121.12,
-    28.037,
-    121.528,
-    28.323
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Yuhuan County"
-    ]
-   },
-   "solve_region": "zhejiang",
-   "run": {
-    "run_batch": "20261025-124019-29608",
-    "steps": {
-     "build": 9.3,
-     "stations": 1.3,
-     "places": 1.8,
-     "coarse": 0.6,
-     "routes": 8.9,
-     "merge": 1.4,
-     "nocar": 2.0,
-     "everyday": 1.6
-    },
-    "built": "2026-10-25T13:37:14",
-    "gate": {
-     "warn": [
-      "university_rate 0.0",
-      "top_school_cell_pupils 5958.58935546875",
-      "fleet_range 2"
-     ]
-    },
-    "gated": "2026-10-25T14:21:54",
-    "shipped": "2026-10-25T22:27:28"
-   }
-  },
-  {
    "order": 2917,
    "id": "wzh",
    "name": "Wuzhi",
@@ -117208,7 +117198,7 @@
   {
    "order": 3147,
    "id": "roc",
-   "name": "Rockingham",
+   "name": "Bunbury",
    "kind": "zone",
    "status": "shipped",
    "region": "world",
@@ -117216,10 +117206,10 @@
     "AUS"
    ],
    "iso2": "AU",
-   "people": 558836,
+   "people": 228809,
    "origin": [
-    115.8047,
-    -32.3485
+    115.3081,
+    -33.6629
    ],
    "tz": "Australia/Perth",
    "utc_offset": 8,
@@ -117230,9 +117220,6 @@
    "module": "australia",
    "units": {
     "AUS": [
-     "25037944B36908504302594",
-     "25037944B7523913669113",
-     "25037944B63650800772080",
      "25037944B46798430259876",
      "25037944B68706686187302",
      "25037944B91209319772795",
@@ -117244,45 +117231,31 @@
      "25037944B58524535883846",
      "25037944B94844051789605",
      "25037944B27145137337674",
-     "25037944B53188273537939",
      "25037944B12129239120455",
      "25037944B30802850607008",
-     "25037944B97234562917936",
-     "25037944B25957721357526",
      "25037944B46034099777028",
      "25037944B18898865249121",
      "25037944B63512656480867",
-     "25037944B89171502248139",
      "25037944B18504039205701",
-     "25037944B27165515239628",
      "25037944B96867361654532",
      "25037944B2745809655475",
-     "25037944B83412079426782",
      "25037944B20309273511019",
-     "25037944B17845862979070",
-     "25037944B17943761568072",
-     "25037944B4799895230449",
-     "25037944B61457505310320",
      "25037944B87064425958741",
      "25037944B89790845522775",
      "25037944B92991223821328",
-     "25037944B36470505967652",
      "25037944B57924194295774",
      "25037944B81892326519969"
     ]
    },
    "bbox": [
-    114.957,
+    114.975,
     -35.069,
-    118.208,
-    -30.074
+    117.989,
+    -32.445
    ],
    "source": {
     "zone": "T-723",
     "unit_names": [
-     "Rockingham",
-     "Mandurah",
-     "Kwinana",
      "Busselton",
      "Bunbury",
      "Harvey",
@@ -117294,54 +117267,52 @@
      "Manjimup",
      "Donnybrook-Balingup",
      "Narrogin",
-     "Gingin",
      "Bridgetown-Greenbushes",
      "Waroona",
-     "York",
-     "Dandaragan",
      "Boddington",
      "Kojonup",
      "Wagin",
-     "Beverley",
      "Boyup Brook",
-     "Cunderdin",
      "Nannup",
      "Broomehill-Tambellup",
-     "Pingelly",
      "Cranbrook",
-     "Corrigin",
-     "Quairading",
-     "Goomalling",
-     "Brookton",
      "Williams",
      "West Arthur",
      "Cuballing",
-     "Victoria Plains",
      "Wickepin",
      "Woodanilling"
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Perth's metro was wrapped by the Rockingham zone (T-3506): Rockingham, Kwinana and Mandurah are Greater Perth and join it, and so do the small Wheatbelt shires north and east of Perth (as Northam, Toodyay and Chittering already are), so the zone left is the South West and Peel, south of Perth, named Bunbury"
+    },
+    "rebuilt_for": "T-3511",
+    "origin_was": [
+     115.8047,
+     -32.3485
     ]
    },
    "run": {
-    "run_batch": "20261030-111017",
+    "run_batch": "20261117-230102",
+    "built": "2026-11-17T23:08:19",
+    "gated": "2026-11-17T23:18:24",
+    "shipped": "2026-11-18T01:53:56",
     "steps": {
-     "build": 449.9,
+     "build": 141.0,
      "stations": 0.9,
-     "places": 5.1,
-     "routes": 212.7,
-     "merge": 13.1,
-     "nocar": 2.1,
-     "everyday": 1.2
+     "places": 1.6,
+     "routes": 67.1,
+     "merge": 5.3,
+     "nocar": 1.8,
+     "everyday": 1.0
     },
-    "built": "2026-10-30T12:28:42",
     "gate": {
      "warn": [
-      "area_km2 79489.4067140799",
-      "road_snap_median_m 367.9",
+      "area_km2 50534.1886502282",
+      "road_snap_median_m 334.2",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-10-30T13:22:01",
-    "shipped": "2026-10-30T14:32:55"
+    }
    }
   },
   {
@@ -121583,25 +121554,27 @@
      "Dungun",
      "Pekan",
      "Rompin"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:40:07",
+    "gated": "2026-11-18T06:30:25",
+    "shipped": "2026-11-18T06:57:24",
     "steps": {
-     "build": 56.9,
-     "stations": 1.2,
-     "places": 2.3,
-     "routes": 42.7,
-     "merge": 1.7,
-     "nocar": 1.9,
-     "everyday": 1.4
+     "build": 39.6,
+     "stations": 0.8,
+     "places": 2.2,
+     "routes": 37.1,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-11-02T13:57:14",
+    "parked": "2026-11-18T05:13:07",
     "gate": {
      "warn": []
-    },
-    "gated": "2026-11-02T14:09:40",
-    "shipped": "2026-11-02T14:33:58"
+    }
    }
   },
   {
@@ -123443,6 +123416,9 @@
     },
     "gated": "2026-11-02T14:09:43",
     "shipped": "2026-11-02T14:34:02"
+   },
+   "gate_relax": {
+    "water_points_in_water": "OSM water added after its 2026-11-02 build: 3 unnamed polygons of 0.07-0.29 km2 near 103.337, 4.917 that its mask lacks; passed 35 of 35 then (T-3455, nightfix3 2026-11-18)"
    }
   },
   {
@@ -124068,27 +124044,29 @@
     "groups": [
      "Kota Tinggi",
      "Mersing"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T04:04:23",
+    "gated": "2026-11-18T06:30:26",
+    "shipped": "2026-11-18T06:57:25",
     "steps": {
-     "build": 38.7,
-     "stations": 1.1,
-     "places": 3.8,
-     "routes": 32.5,
-     "merge": 1.6,
-     "nocar": 2.2,
-     "everyday": 1.5
+     "build": 38.8,
+     "stations": 0.9,
+     "places": 3.3,
+     "routes": 24.7,
+     "merge": 0.7,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-02T14:00:36",
+    "parked": "2026-11-18T05:13:05",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1178210949002729"
+      "top_zone_jobs_share 0.11360845638749603"
      ]
-    },
-    "gated": "2026-11-02T14:09:45",
-    "shipped": "2026-11-02T14:34:04"
+    }
    }
   },
   {
@@ -124368,28 +124346,30 @@
     ],
     "groups": [
      "Pontian"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261102-134624",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T04:03:43",
+    "gated": "2026-11-18T06:30:26",
+    "shipped": "2026-11-18T06:57:25",
     "steps": {
-     "build": 8.6,
-     "stations": 1.1,
-     "places": 1.5,
-     "routes": 9.8,
-     "merge": 0.9,
-     "nocar": 1.7,
-     "everyday": 1.5
+     "build": 9.2,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 11.1,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-02T14:00:12",
+    "parked": "2026-11-18T05:13:06",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.1663821998661894",
+      "top_zone_jobs_share 0.16441067381556004",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-02T14:09:46",
-    "shipped": "2026-11-02T14:34:06"
+    }
    }
   },
   {
@@ -157016,29 +156996,30 @@
      "Burja",
      "Hiramandalam",
      "Sarubujjili"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "andhra",
    "run": {
-    "run_batch": "20261103-055139",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:10:50",
+    "gated": "2026-11-18T04:09:36",
+    "shipped": "2026-11-18T06:07:27",
     "steps": {
-     "build": 24.1,
-     "stations": 2.2,
-     "places": 3.2,
-     "routes": 40.9,
-     "merge": 1.3,
-     "nocar": 1.9,
-     "everyday": 1.3
+     "build": 25.2,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 37.6,
+     "merge": 1.5,
+     "nocar": 2.5,
+     "everyday": 1.4
     },
-    "built": "2026-11-03T07:35:15",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6305.23095703125",
+      "top_school_cell_pupils 6306.35498046875",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-03T08:09:52",
-    "shipped": "2026-11-03T16:18:33"
+    }
    }
   },
   {
@@ -176705,29 +176686,30 @@
      "Thellar",
      "Lathur",
      "Anakkavur"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "tamil",
    "run": {
-    "run_batch": "20261103-081104",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:37:34",
+    "gated": "2026-11-18T04:53:13",
+    "shipped": "2026-11-18T06:07:27",
     "steps": {
-     "build": 15.6,
-     "stations": 1.2,
-     "places": 1.7,
-     "routes": 49.7,
-     "merge": 0.8,
-     "nocar": 1.5,
-     "everyday": 1.1
+     "build": 181.7,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 38.5,
+     "merge": 0.6,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-11-03T08:23:06",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10424972609091838",
-      "top_school_cell_pupils 6019.375"
+      "top_zone_jobs_share 0.10423165406561637",
+      "top_school_cell_pupils 6019.376953125"
      ]
-    },
-    "gated": "2026-11-03T08:42:52",
-    "shipped": "2026-11-03T16:20:08"
+    }
    }
   },
   {
@@ -194487,29 +194469,30 @@
      "Keelaiyur",
      "Karaikal",
      "Kilvelur"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "tamil",
    "run": {
-    "run_batch": "20261103-084339",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:37:23",
+    "gated": "2026-11-18T04:53:13",
+    "shipped": "2026-11-18T06:07:28",
     "steps": {
-     "build": 17.6,
-     "stations": 1.8,
-     "places": 2.7,
-     "routes": 25.7,
-     "merge": 1.0,
-     "nocar": 1.6,
-     "everyday": 1.4
+     "build": 182.3,
+     "stations": 0.7,
+     "places": 1.4,
+     "routes": 27.8,
+     "merge": 0.6,
+     "nocar": 1.1,
+     "everyday": 0.8
     },
-    "built": "2026-11-03T09:21:17",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6377.25634765625",
+      "top_school_cell_pupils 6377.306640625",
       "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-03T10:01:49",
-    "shipped": "2026-11-03T16:21:41"
+    }
    }
   },
   {
@@ -198917,29 +198900,30 @@
      "Kultali",
      "Jaynagar-Ii",
      "Mathurapur-Ii"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "solve_region": "west",
    "run": {
-    "run_batch": "20261103-084339",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:46:55",
+    "gated": "2026-11-18T04:53:15",
+    "shipped": "2026-11-18T06:07:28",
     "steps": {
-     "build": 18.3,
-     "stations": 1.0,
-     "places": 1.8,
-     "routes": 11.0,
-     "merge": 0.9,
-     "nocar": 1.5,
-     "everyday": 0.9
+     "build": 13.8,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 11.5,
+     "merge": 0.6,
+     "nocar": 1.0,
+     "everyday": 0.8
     },
-    "built": "2026-11-03T09:50:27",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.791160390031707",
+      "pop_vs_plan 0.8144798722075217",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-03T10:02:32",
-    "shipped": "2026-11-03T16:22:05"
+    }
    }
   },
   {
@@ -201142,72 +201126,6 @@
     },
     "gated": "2026-11-03T10:02:27",
     "shipped": "2026-11-03T16:22:17"
-   }
-  },
-  {
-   "order": 4191,
-   "id": "suc",
-   "name": "Suchetgarh",
-   "kind": "zone",
-   "status": "shipped",
-   "region": "world",
-   "countries": [
-    "IND"
-   ],
-   "iso2": "IN",
-   "people": 275589,
-   "origin": [
-    74.7319,
-    32.6074
-   ],
-   "tz": "Asia/Kolkata",
-   "utc_offset": 5,
-   "extracts": [
-    "asia/india/northern-zone",
-    "asia/pakistan"
-   ],
-   "archetype": "C",
-   "module": "india",
-   "units": {
-    "IND": [
-     "45978901B92599184207265",
-     "45978901B60598209202830"
-    ]
-   },
-   "bbox": [
-    74.63,
-    32.461,
-    74.827,
-    32.697
-   ],
-   "source": {
-    "zone": "T-723",
-    "unit_names": [
-     "Suchetgarh",
-     "R.S.Pura"
-    ]
-   },
-   "solve_region": "jammu",
-   "run": {
-    "run_batch": "20261103-084339",
-    "steps": {
-     "build": 8.6,
-     "stations": 1.5,
-     "places": 1.9,
-     "routes": 13.9,
-     "merge": 1.3,
-     "nocar": 1.8,
-     "everyday": 1.1
-    },
-    "built": "2026-11-03T09:48:32",
-    "gate": {
-     "warn": [
-      "top_zone_jobs_share 0.11818432922194291",
-      "fleet_range 2"
-     ]
-    },
-    "gated": "2026-11-03T10:02:28",
-    "shipped": "2026-11-03T16:22:18"
    }
   },
   {
@@ -203602,7 +203520,7 @@
   {
    "order": 4286,
    "id": "sve",
-   "name": "Siverek",
+   "name": "Nizip",
    "kind": "zone",
    "status": "shipped",
    "region": "world",
@@ -203610,10 +203528,10 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 1500856,
+   "people": 1108701,
    "origin": [
-    39.3132,
-    37.751
+    37.7977,
+    37.0097
    ],
    "tz": "Europe/Istanbul",
    "utc_offset": 3,
@@ -203624,7 +203542,6 @@
    "module": "admin_totals",
    "units": {
     "TUR": [
-     "54988432B23191513902101",
      "54988432B32789090404224",
      "54988432B84852030517373",
      "54988432B150490693817",
@@ -203632,9 +203549,7 @@
      "54988432B18592908532301",
      "54988432B51005953593095",
      "54988432B18155993888482",
-     "54988432B647422472855",
      "54988432B99023740963316",
-     "54988432B13336850419353",
      "54988432B66531887129041",
      "54988432B54960387029794"
     ]
@@ -203643,12 +203558,11 @@
     37.497,
     36.669,
     40.238,
-    38.021
+    37.563
    ],
    "source": {
     "zone": "T-723",
     "unit_names": [
-     "Siverek",
      "Nizip",
      "Viranşehir",
      "Akçakale",
@@ -203656,32 +203570,40 @@
      "Birecik",
      "Harran",
      "Ceylanpınar",
-     "Bozova",
      "Araban",
-     "Hilvan",
      "Halfeti",
      "Karkamış"
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Şanlıurfa's and Diyarbakır's centre zones were enclaves in the rest of their provinces (T-3506): Şanlıurfa takes Siverek, Hilvan and Bozova (it then borders Adıyaman's and Bingöl's zones), Diyarbakır takes Çınar and Bismil (it then borders Mardin's and Batman's); the Siverek zone, left with the south and west, is named Nizip"
+    },
+    "rebuilt_for": "T-3511",
+    "origin_was": [
+     39.3132,
+     37.751
     ]
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-230102",
+    "built": "2026-11-17T23:09:44",
+    "gated": "2026-11-17T23:18:24",
+    "shipped": "2026-11-18T01:53:57",
     "steps": {
-     "build": 61.0,
-     "stations": 1.2,
-     "places": 2.6,
-     "routes": 83.9,
-     "merge": 1.9,
-     "nocar": 1.6,
-     "everyday": 1.1
+     "build": 41.1,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 35.9,
+     "merge": 1.0,
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-11-04T02:39:29",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 6000.0"
+      "top_school_cell_pupils 5590.103515625",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:16:01",
-    "shipped": "2026-11-04T04:27:08"
+    }
    }
   },
   {
@@ -204005,29 +203927,31 @@
      "Kemalpaşa",
      "Dernekpazarı",
      "Hemşin"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:29:51",
+    "gated": "2026-11-17T22:35:33",
+    "shipped": "2026-11-18T01:53:57",
     "steps": {
-     "build": 65.4,
-     "stations": 1.4,
-     "places": 3.5,
-     "routes": 90.8,
-     "merge": 2.4,
-     "nocar": 2.4,
-     "everyday": 1.3
+     "build": 59.5,
+     "stations": 1.1,
+     "places": 3.0,
+     "routes": 52.0,
+     "merge": 1.4,
+     "nocar": 1.2,
+     "everyday": 0.8
     },
-    "built": "2026-11-04T02:31:22",
     "gate": {
      "warn": [
-      "pop_vs_plan 1.306385358381343",
+      "pop_vs_plan 1.3079970534222523",
       "top_school_cell_pupils 6000.0",
-      "drive_factor_median 2.0518667734879767"
+      "drive_factor_median 2.0518667734879767",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:15:43",
-    "shipped": "2026-11-04T04:27:10"
+    }
    }
   },
   {
@@ -204893,7 +204817,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 1096018,
+   "people": 874083,
    "origin": [
     40.4924,
     38.886
@@ -204908,10 +204832,8 @@
    "units": {
     "TUR": [
      "54988432B13359639505311",
-     "54988432B28793494841069",
      "54988432B3445581450876",
      "54988432B15523271257274",
-     "54988432B71029132182367",
      "54988432B48804901701005",
      "54988432B85329501367983",
      "54988432B60654827640333",
@@ -204930,7 +204852,7 @@
    },
    "bbox": [
     39.107,
-    37.506,
+    37.794,
     41.367,
     39.474
    ],
@@ -204938,10 +204860,8 @@
     "zone": "T-723",
     "unit_names": [
      "Bingöl merkez",
-     "Bismil",
      "Ergani",
      "Silvan",
-     "Çınar",
      "Çermik",
      "Dicle",
      "Kulp",
@@ -204956,25 +204876,31 @@
      "Çüngüş",
      "Adaklı",
      "Kiğı"
-    ]
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Şanlıurfa's and Diyarbakır's centre zones were enclaves in the rest of their provinces (T-3506): Şanlıurfa takes Siverek, Hilvan and Bozova (it then borders Adıyaman's and Bingöl's zones), Diyarbakır takes Çınar and Bismil (it then borders Mardin's and Batman's); the Siverek zone, left with the south and west, is named Nizip"
+    }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-215054",
+    "built": "2026-11-17T22:29:18",
+    "gated": "2026-11-17T22:35:33",
+    "shipped": "2026-11-18T01:53:58",
     "steps": {
-     "build": 52.4,
+     "build": 37.9,
      "stations": 1.1,
-     "places": 2.4,
-     "routes": 66.5,
-     "merge": 1.7,
-     "nocar": 2.2,
-     "everyday": 1.4
+     "places": 2.1,
+     "routes": 41.4,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.9
     },
-    "built": "2026-11-04T02:39:35",
     "gate": {
-     "warn": []
-    },
-    "gated": "2026-11-04T03:16:03",
-    "shipped": "2026-11-04T04:27:15"
+     "warn": [
+      "fleet_range 1"
+     ]
+    }
    }
   },
   {
@@ -205085,7 +205011,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 1077889,
+   "people": 1470044,
    "origin": [
     38.8006,
     37.1684
@@ -205101,42 +205027,53 @@
     "TUR": [
      "54988432B57432661063863",
      "54988432B2483198976675",
-     "54988432B20444305553089"
+     "54988432B20444305553089",
+     "54988432B23191513902101",
+     "54988432B13336850419353",
+     "54988432B647422472855"
     ]
    },
    "bbox": [
-    38.42,
+    38.034,
     36.853,
-    39.608,
-    37.557
+    39.856,
+    38.021
    ],
    "source": {
     "zone": "T-723",
     "unit_names": [
      "Haliliye",
      "Eyyübiye",
-     "Karaköprü"
-    ]
+     "Karaköprü",
+     "Siverek",
+     "Hilvan",
+     "Bozova"
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Şanlıurfa's and Diyarbakır's centre zones were enclaves in the rest of their provinces (T-3506): Şanlıurfa takes Siverek, Hilvan and Bozova (it then borders Adıyaman's and Bingöl's zones), Diyarbakır takes Çınar and Bismil (it then borders Mardin's and Batman's); the Siverek zone, left with the south and west, is named Nizip"
+    }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-234520",
+    "built": "2026-11-17T23:53:24",
+    "gated": "2026-11-17T23:58:30",
+    "shipped": "2026-11-18T01:53:58",
     "steps": {
-     "build": 27.4,
-     "stations": 1.2,
+     "build": 41.9,
+     "stations": 0.9,
      "places": 2.1,
-     "routes": 33.9,
-     "merge": 1.3,
-     "nocar": 1.9,
-     "everyday": 1.4
+     "routes": 38.4,
+     "merge": 1.0,
+     "nocar": 1.2,
+     "everyday": 0.7
     },
-    "built": "2026-11-04T02:38:40",
     "gate": {
      "warn": [
-      "top_school_cell_pupils 5821.9296875"
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:16:03",
-    "shipped": "2026-11-04T04:27:16"
+    }
    }
   },
   {
@@ -205150,7 +205087,7 @@
     "TUR"
    ],
    "iso2": "TR",
-   "people": 1068368,
+   "people": 1290303,
    "origin": [
     40.2362,
     37.9191
@@ -205167,13 +205104,15 @@
      "54988432B24237027631041",
      "54988432B52020069669764",
      "54988432B60901714548003",
-     "54988432B73640437939057"
+     "54988432B73640437939057",
+     "54988432B71029132182367",
+     "54988432B28793494841069"
     ]
    },
    "bbox": [
     39.803,
-    37.754,
-    40.67,
+    37.506,
+    41.063,
     38.268
    ],
    "source": {
@@ -205182,29 +205121,36 @@
      "Yenişehir",
      "Kayapınar",
      "Sur",
-     "Bağlar"
-    ]
+     "Bağlar",
+     "Çınar",
+     "Bismil"
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "Şanlıurfa's and Diyarbakır's centre zones were enclaves in the rest of their provinces (T-3506): Şanlıurfa takes Siverek, Hilvan and Bozova (it then borders Adıyaman's and Bingöl's zones), Diyarbakır takes Çınar and Bismil (it then borders Mardin's and Batman's); the Siverek zone, left with the south and west, is named Nizip"
+    }
    },
    "run": {
-    "run_batch": "20261104-021141",
+    "run_batch": "20261117-234520",
+    "built": "2026-11-17T23:53:09",
+    "gated": "2026-11-17T23:58:31",
+    "shipped": "2026-11-18T01:53:59",
     "steps": {
-     "build": 25.3,
-     "stations": 1.2,
-     "places": 2.8,
-     "routes": 27.0,
+     "build": 32.5,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 28.1,
      "merge": 0.9,
-     "nocar": 1.8,
-     "everyday": 1.5
+     "nocar": 1.5,
+     "everyday": 1.0
     },
-    "built": "2026-11-04T02:38:36",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.10554857291889533",
-      "top_school_cell_pupils 6000.0"
+      "top_zone_jobs_share 0.11109624426581854",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
      ]
-    },
-    "gated": "2026-11-04T03:16:04",
-    "shipped": "2026-11-04T04:27:16"
+    }
    }
   },
   {
@@ -321588,7 +321534,7 @@
     "ARG"
    ],
    "iso2": "AR",
-   "people": 947718,
+   "people": 1025487,
    "origin": [
     -57.9523,
     -34.9152
@@ -321604,13 +321550,16 @@
     "ARG": [
      "61730980B35724148843083",
      "61730980B11593916805025",
-     "61730980B68751377972541"
+     "61730980B68751377972541",
+     "61730980B51096129050346",
+     "61730980B33989982283720",
+     "61730980B62875315745131"
     ]
    },
    "bbox": [
-    -58.289,
-    -35.236,
-    -57.708,
+    -58.454,
+    -35.868,
+    -57.128,
     -34.175
    ],
    "source": {
@@ -321618,28 +321567,35 @@
     "unit_names": [
      "La Plata",
      "Berisso",
-     "Ensenada"
-    ]
+     "Ensenada",
+     "Magdalena",
+     "Punta Indio",
+     "Chascomús"
+    ],
+    "hand_edit": {
+     "task": "T-3506",
+     "why": "La Plata's zone was an enclave in Buenos Aires's metro (T-3506): Magdalena, Punta Indio and Chascomús, rural partidos south of La Plata at the far edge of the Buenos Aires row, join La Plata, which then borders the Tandil and Chivilcoy zones"
+    }
    },
    "run": {
-    "run_batch": "20261107-000313",
+    "run_batch": "20261117-234520",
+    "built": "2026-11-17T23:55:59",
+    "gated": "2026-11-17T23:58:32",
+    "shipped": "2026-11-18T01:54:00",
     "steps": {
-     "build": 33.4,
-     "stations": 1.4,
-     "places": 2.6,
-     "routes": 29.1,
-     "merge": 1.0,
-     "nocar": 1.9,
-     "everyday": 1.6
+     "build": 44.7,
+     "stations": 0.7,
+     "places": 2.1,
+     "routes": 34.4,
+     "merge": 0.9,
+     "nocar": 1.3,
+     "everyday": 0.8
     },
-    "built": "2026-11-07T00:26:30",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.11248083668001618"
+      "top_zone_jobs_share 0.10585458126458146"
      ]
-    },
-    "gated": "2026-11-07T02:27:40",
-    "shipped": "2026-11-07T05:45:40"
+    }
    }
   },
   {
@@ -339035,31 +338991,32 @@
      "Abdali",
      "El_Noyseep",
      "Elkeran_Elgededa"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261107-000321",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:21:50",
+    "gated": "2026-11-18T04:09:41",
+    "shipped": "2026-11-18T06:07:29",
     "steps": {
      "build": 27.0,
-     "stations": 0.9,
-     "places": 1.8,
-     "routes": 34.3,
+     "stations": 1.0,
+     "places": 1.9,
+     "routes": 32.3,
      "merge": 1.0,
-     "nocar": 1.6,
-     "everyday": 1.0
+     "nocar": 1.4,
+     "everyday": 0.9
     },
-    "built": "2026-11-07T01:28:34",
     "gate": {
      "warn": [
       "university_rate 0.0",
-      "top_zone_jobs_share 0.10148017344858784",
-      "top_school_cell_pupils 6006.0",
-      "road_snap_median_m 971.4",
+      "top_zone_jobs_share 0.10136279895861547",
+      "top_school_cell_pupils 6006.03857421875",
+      "road_snap_median_m 964.5",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-07T01:39:28",
-    "shipped": "2026-11-07T05:47:32"
+    }
    }
   },
   {
@@ -350346,29 +350303,29 @@
       "name": "Police Department Port Said Port",
       "task": "T-2897"
      }
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:16:39",
+    "gated": "2026-11-18T04:09:37",
+    "shipped": "2026-11-18T06:07:29",
     "steps": {
-     "build": 30.6,
-     "stations": 1.5,
-     "places": 2.7,
-     "routes": 19.9,
-     "merge": 0.8,
-     "nocar": 1.7,
-     "everyday": 1.5
+     "build": 24.9,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 16.9,
+     "merge": 1.0,
+     "nocar": 1.8,
+     "everyday": 1.1
     },
-    "built": "2026-11-10T00:27:25",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.14063377581429934",
-      "top_school_cell_pupils 6845.27783203125"
+      "top_zone_jobs_share 0.13979723385900444",
+      "top_school_cell_pupils 6846.208984375"
      ]
-    },
-    "parked": "2026-11-10T00:38:01",
-    "gated": "2026-11-10T01:18:09",
-    "shipped": "2026-11-10T02:23:06"
+    }
    }
   },
   {
@@ -351301,28 +351258,29 @@
       "from": "ism",
       "task": "T-2897"
      }
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:17:19",
+    "gated": "2026-11-18T04:09:38",
+    "shipped": "2026-11-18T06:07:30",
     "steps": {
-     "build": 35.6,
-     "stations": 2.7,
-     "places": 3.5,
-     "routes": 82.2,
-     "merge": 1.1,
-     "nocar": 1.7,
-     "everyday": 1.2
+     "build": 32.7,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 62.8,
+     "merge": 0.7,
+     "nocar": 1.3,
+     "everyday": 0.9
     },
-    "built": "2026-11-10T00:39:01",
     "gate": {
      "warn": [
-      "top_zone_jobs_share 0.11771935300820857",
-      "top_school_cell_pupils 6551.08837890625"
+      "top_zone_jobs_share 0.11771534532180168",
+      "top_school_cell_pupils 6551.14501953125"
      ]
-    },
-    "gated": "2026-11-10T01:06:05",
-    "shipped": "2026-11-10T02:23:13"
+    }
    }
   },
   {
@@ -351498,30 +351456,31 @@
      "Dumyat 1",
      "Ras al-Bar",
      "Police Department Port of Damietta"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:16:32",
+    "gated": "2026-11-18T04:09:38",
+    "shipped": "2026-11-18T06:07:30",
     "steps": {
-     "build": 26.2,
-     "stations": 1.2,
-     "places": 2.1,
-     "routes": 11.7,
-     "merge": 0.8,
-     "nocar": 1.8,
-     "everyday": 1.2
+     "build": 22.4,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 11.9,
+     "merge": 1.0,
+     "nocar": 2.1,
+     "everyday": 1.3
     },
-    "built": "2026-11-10T00:40:01",
     "gate": {
      "warn": [
       "university_rate 0.0",
-      "top_zone_jobs_share 0.13481492594894007",
-      "top_school_cell_pupils 6193.9921875",
+      "top_zone_jobs_share 0.135929950186814",
+      "top_school_cell_pupils 6194.021484375",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-10T01:06:08",
-    "shipped": "2026-11-10T02:23:14"
+    }
    }
   },
   {
@@ -352987,31 +352946,33 @@
      "Daba",
      "Salloum",
      "Alamn"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:17:05",
+    "gated": "2026-11-18T04:09:39",
+    "shipped": "2026-11-18T06:07:31",
     "steps": {
-     "build": 38.1,
-     "stations": 1.0,
-     "places": 2.3,
-     "routes": 31.0,
-     "merge": 12.7,
-     "nocar": 2.1,
-     "everyday": 1.2
+     "build": 44.6,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 30.5,
+     "merge": 1.6,
+     "nocar": 2.0,
+     "everyday": 1.1
     },
-    "built": "2026-11-10T00:55:46",
     "gate": {
      "warn": [
-      "area_km2 102482.49096720015",
-      "top_zone_jobs_share 0.1492341179833691",
-      "top_school_cell_pupils 5869.46923828125",
-      "road_snap_median_m 448.8",
+      "area_km2 102517.33081568756",
+      "top_zone_jobs_share 0.1490418400643123",
+      "top_school_cell_pupils 6000.0",
+      "road_snap_median_m 449.6",
+      "osm_land_share 0.8001",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-10T01:06:16",
-    "shipped": "2026-11-10T02:23:25"
+    }
    }
   },
   {
@@ -353260,32 +353221,33 @@
       "from": "lux",
       "task": "T-2897"
      }
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-015913",
+    "built": "2026-11-18T02:17:45",
+    "gated": "2026-11-18T04:09:39",
+    "shipped": "2026-11-18T06:07:31",
     "steps": {
-     "build": 57.7,
-     "stations": 0.9,
-     "places": 2.2,
-     "routes": 54.2,
+     "build": 74.8,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 44.3,
      "merge": 0.8,
-     "nocar": 1.3,
+     "nocar": 1.2,
      "everyday": 0.8
     },
-    "built": "2026-11-10T00:56:56",
     "gate": {
      "warn": [
-      "area_km2 59941.08499698814",
-      "top_zone_jobs_share 0.1699310179145598",
+      "water_points_in_water 0.8333333333333334",
+      "area_km2 59952.109308885614",
+      "top_zone_jobs_share 0.1688466139298945",
       "top_school_cell_pupils 6000.0",
-      "road_snap_median_m 458.8",
+      "road_snap_median_m 458.5",
       "fleet_range 2"
      ]
-    },
-    "parked": "2026-11-10T01:04:45",
-    "gated": "2026-11-10T01:18:15",
-    "shipped": "2026-11-10T02:23:27"
+    }
    },
    "gate_relax": {
     "water_points_in_water": "T-2897: the dry points lie at El Gouna's lagoons and Hurghada's marinas and reclaimed shore"
@@ -353543,36 +353505,36 @@
      "Nuweiba",
      "Taba",
      "Dahab"
-    ]
+    ],
+    "rebuilt_for": "T-3455"
    },
    "gate_relax": {
     "pop_vs_plan": "T-2956: people scaled to CAPMAS 2023 governorate totals (South Sinai 0.69 of GHS-POP): about 116,000 against the plan's GHSL 168,000"
    },
    "run": {
-    "run_batch": "20261109-235702",
+    "run_batch": "20261118-042356",
+    "built": "2026-11-18T04:49:57",
+    "gated": "2026-11-18T04:53:16",
+    "shipped": "2026-11-18T06:07:32",
     "steps": {
-     "build": 32.6,
-     "stations": 0.8,
+     "build": 29.1,
+     "stations": 0.7,
      "places": 1.4,
-     "routes": 18.9,
-     "merge": 1.1,
-     "nocar": 1.4,
-     "everyday": 0.9
+     "routes": 15.9,
+     "merge": 0.9,
+     "nocar": 1.1,
+     "everyday": 0.7
     },
-    "built": "2026-11-10T00:57:27",
     "gate": {
      "warn": [
-      "pop_vs_plan 0.6788577837887481",
-      "pop_vs_ghsl_other 0.6953610482170323",
-      "top_zone_jobs_share 0.17183724216823482",
+      "pop_vs_plan 0.7256263424889723",
+      "top_zone_jobs_share 0.1805138696905711",
       "top_school_cell_pupils 6000.0",
-      "drive_factor_median 2.117000016612675",
-      "road_snap_median_m 764.5",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 741.5",
       "fleet_range 2"
      ]
-    },
-    "gated": "2026-11-10T01:06:18",
-    "shipped": "2026-11-10T02:23:29"
+    }
    }
   },
   {

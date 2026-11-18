@@ -1,0 +1,30 @@
+{
+ "task": "T-3506",
+ "iso": "AUS",
+ "moves": [
+  ["25037944B36908504302594", "Rockingham", "roc", "per"],
+  ["25037944B7523913669113", "Mandurah", "roc", "per"],
+  ["25037944B63650800772080", "Kwinana", "roc", "per"],
+  ["25037944B53188273537939", "Gingin", "roc", "per"],
+  ["25037944B25957721357526", "Dandaragan", "roc", "per"],
+  ["25037944B36470505967652", "Victoria Plains", "roc", "per"],
+  ["25037944B4799895230449", "Goomalling", "roc", "per"],
+  ["25037944B27165515239628", "Cunderdin", "roc", "per"],
+  ["25037944B97234562917936", "York", "roc", "per"],
+  ["25037944B89171502248139", "Beverley", "roc", "per"],
+  ["25037944B17943761568072", "Quairading", "roc", "per"],
+  ["25037944B61457505310320", "Brookton", "roc", "per"],
+  ["25037944B83412079426782", "Pingelly", "roc", "per"],
+  ["25037944B17845862979070", "Corrigin", "roc", "per"]
+ ],
+ "set": {
+  "roc": {"name": "Bunbury"}
+ },
+ "names": {
+  "drop": ["roc"],
+  "aliases": {
+   "per": ["Rockingham", "Mandurah", "Kwinana"]
+  }
+ },
+ "why": "Perth's metro was wrapped by the Rockingham zone (T-3506): Rockingham, Kwinana and Mandurah are Greater Perth and join it, and so do the small Wheatbelt shires north and east of Perth (as Northam, Toodyay and Chittering already are), so the zone left is the South West and Peel, south of Perth, named Bunbury"
+}

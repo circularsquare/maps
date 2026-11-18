@@ -1,0 +1,2 @@
+﻿pid 30872
+2026-11-17T22:35:37 [batch 1 T-3511] STOPPED: T3511 wave 1 run exit 0, rows not all gated; no join. Undo the batch with tools\country\restore.py T3511 pre --go, or relax the parked rows (adding-a-country.md 6), run --rows again and join

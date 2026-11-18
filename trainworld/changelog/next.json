@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c014",
+      "text": "fixed a new line on busy track running no trains at the peaks until minutes later",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3482",
+      "by": "settle",
+      "at": "2026-11-18T08:20:56Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
       "id": "c013",
       "text": "fixed leaderboard scores jumping to another value for a few minutes while trips were still being calculated",
       "edited": "fixed leaderboard scores jumping to another value for a few minutes after opening a game",

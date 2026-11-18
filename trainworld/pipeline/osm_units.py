@@ -468,9 +468,15 @@ def reclaimed(geoms, sea, lat0, foreign=None):
     near = cov.buffer(RECLAIM_REACH_KM / 111.0)
     tol = 0.0005
     closed = cov.union(water).buffer(tol)
+    # once, not per part: Mokpo's island coast has so many gap parts that buffering cov for each ran past the
+    # 90-minute step limit
+    cov_t = cov.buffer(tol)
+    shapely.prepare(cov_t)
+    shapely.prepare(near)
+    loc_t = [None] * len(loc)
     out = []
     for p in shapely.get_parts(gap):
-        if p.geom_type != "Polygon" or not p.intersects(cov.buffer(tol)):
+        if p.geom_type != "Polygon" or not p.intersects(cov_t):
             continue
         a = p.area * 111.32 * 110.57
         if a < RECLAIM_MIN_KM2 or a > RECLAIM_MAX_KM2 or not near.contains(p):
@@ -478,9 +484,25 @@ def reclaimed(geoms, sea, lat0, foreign=None):
         edge = p.exterior
         if edge.difference(closed).length / edge.length > RECLAIM_OPEN:
             continue
-        share = [edge.intersection(g.buffer(tol)).length for g in loc]
+        share = []
+        for i, g in enumerate(loc):
+            if loc_t[i] is None:
+                loc_t[i] = g.buffer(tol)
+            share.append(edge.intersection(loc_t[i]).length)
         j = int(np.argmax(share))
         piece = shapely.transform(p, lambda c: c / [k, 1.0])
+        if not piece.is_valid:
+            # the scale back to lon/lat can leave a vertex a hair across an edge (Kuantan, Chennai): the union
+            # with its unit then fails with a GEOS TopologyException
+            fixed = make_valid(piece)
+            if fixed.geom_type == "GeometryCollection":  # its polygons may sit in a MultiPolygon member
+                fixed = union_all([q for x in shapely.get_parts(fixed) for q in shapely.get_parts(x) if q.geom_type == "Polygon"])
+            if abs(fixed.area - piece.area) > 1e-6 * max(piece.area, 1e-12):
+                print(f"  reclaimed: a piece at {p.centroid.x / k:.3f}, {p.centroid.y:.3f} made valid, area "
+                      f"{piece.area * 111.32 * 110.57 * k:.4f} to {fixed.area * 111.32 * 110.57 * k:.4f} km2", flush=True)
+            if fixed.is_empty:
+                continue
+            piece = fixed
         if foreign is not None and not foreign.is_empty and piece.intersects(foreign):
             # Natural Earth's 1:10m line is coarse and misses reclaimed land, so land it calls sea beside a foreign
             # coast is usually that coast's too (Monaco's Larvotto): a piece mostly abroad goes whole, else the

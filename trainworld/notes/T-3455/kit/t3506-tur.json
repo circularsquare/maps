@@ -1,0 +1,21 @@
+{
+ "task": "T-3506",
+ "iso": "TUR",
+ "moves": [
+  ["54988432B23191513902101", "Siverek", "sve", "slr"],
+  ["54988432B13336850419353", "Hilvan", "sve", "slr"],
+  ["54988432B647422472855", "Bozova", "sve", "slr"],
+  ["54988432B71029132182367", "Çınar", "bnz", "dir"],
+  ["54988432B28793494841069", "Bismil", "bnz", "dir"]
+ ],
+ "set": {
+  "sve": {"name": "Nizip"}
+ },
+ "names": {
+  "aliases": {
+   "slr": ["Siverek", "Hilvan", "Bozova"],
+   "dir": ["Bismil", "Çınar"]
+  }
+ },
+ "why": "Şanlıurfa's and Diyarbakır's centre zones were enclaves in the rest of their provinces (T-3506): Şanlıurfa takes Siverek, Hilvan and Bozova (it then borders Adıyaman's and Bingöl's zones), Diyarbakır takes Çınar and Bismil (it then borders Mardin's and Batman's); the Siverek zone, left with the south and west, is named Nizip"
+}

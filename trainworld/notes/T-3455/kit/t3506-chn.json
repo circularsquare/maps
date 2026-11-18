@@ -1,0 +1,12 @@
+{
+ "task": "T-3506",
+ "iso": "CHN",
+ "retire": {"yhu": "taz"},
+ "names": {
+  "drop": ["yhu"],
+  "aliases": {
+   "taz": ["Yuhuan"]
+  }
+ },
+ "why": "Yuhuan (654,923), a county of Taizhou prefecture under China's 1M floor, was an enclave of Taizhou's metro on its peninsula (T-3506); merged into Taizhou"
+}

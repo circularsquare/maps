@@ -1,8 +1,8 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 59c85afe-f6fc-46fa-b1d6-fdaa946e7f95, name maps-4f, since 2026-11-18 12:08 UTC
-Updated: 2026-11-18 12:20 UTC (maps-ca rewrote State/In flight on winding down; its remaining agents are maps-4f's
-to adopt: their reports still reach maps-ca, which relays them verbatim)
+Updated: 2026-11-18 12:30 UTC (maps-4f adopted maps-ca's three agents; their reports still reach maps-ca, which
+relays them verbatim. maps-4f started vanish (T-3645) and setstub (T-3648); T-3622's ask restored to asks.json)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5. She's up (12:05 UTC):
@@ -33,6 +33,22 @@ landings, the strings to check and the asks below.
   headway on full track keeps its old rate; data/work/realnet/nyc_real.twt2 no longer loads. T-3645 filed.
 - tramoneway (Opus, .tw-trees/tramoneway, port 6194): T-3647 (P1) dattera's Amsterdam tram save broken by 0.4's
   one-way stops; reproducing; fix (checker before landing) or options to her. His real save needs her word for ssh.
+
+## In flight (maps-4f's agents)
+- vanish (.tw-trees/vanish): T-3645 built (hand_over skips a trip redrawn at its first stop; Rust test; c014 in
+  tree "fixed a train disappearing when a line's train count changed"). Checker PASS (9 Rust sweeps, 3 fail on old
+  code; t1071 on the real save; skipped browser save/reload/undo). READY: land after settle; WASM rebuild.
+- T-3655 filed (held line on full track keeps its old rate; settle's and vanishcheck's finding).
+- setstub (.tw-trees/setstub): T-3648 READY. keep_under_stations used reach + 10 m, single Remove reach + 4 m
+  (STATION_TRIM_MARGIN_M); one constant in sim wasm/links.rs + a Rust test; no changelog. The "176 m" was not
+  reproduced (only the 6 m per end); no checker (one constant, tested). Land after nightfix3, WASM rebuild.
+- helptrip (.tw-trees/helptrip): T-3649 READY (help.qTripMode/aTripMode, 13 languages, screenshot looked at;
+  c014 in tree). Strings for her below. Land after nightfix3.
+- weekendhw (Sonnet, .tw-trees/weekendhw): T-3650 READY (TS only, world.ts restHeadwayStep + typed weekend headway;
+  t3557 passes; typed entry driven; no checker: UI-side, no sim/money). Land after nightfix3. Its changelog item is new.
+- T-3652, T-3653, T-3654 filed P3 from her 12:24 pad (Community Newest, time controls, map drawing); not started.
+- T-3651 (Zui: passing tracks over side platforms) filed; sent to tramoneway via maps-ca in case it is T-3647's cause.
+- T-3622 closed on her 05:10 answer (T-3627 did it); its ask removed.
 
 ## Waiting on Anita (asks.json)
 - T-3298 walking change limit 300 m -> 600 m? (recommended 600 m for all)

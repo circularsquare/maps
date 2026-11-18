@@ -169,11 +169,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3622 [P2] {L:route-choice} {waits:Anita} Transit and driving value time differently in Malaysia
-  - Need from Anita: Should a dollar of car costs inside a city weigh what a fare dollar weighs in that country (more driving lost to rail in poorer places, ceiling tests rerun), or keep 3 minutes everywhere and say so in the hover? I'd make them equal as its own measured task.
-  - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
-  - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
-  - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 built (noroute2, not landed yet): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
@@ -435,10 +430,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
-- T-3455 [P3] {L:region-redraws} {after:your word for an overnight run} Coastal land gaps scan (taking, 2026-11-17, agent nightprep)
-  - Context: From T-3428 (Shenzhen Bay): reclaimed coast left out of units. You said yes 2026-11-16 to queue it overnight: a coastal-only gap scan (~2 h, 3 cores), then rebuild flagged rows; likely Shanghai Lingang, Tianjin Binhai, Macau, Hong Kong, Dubai, Singapore, Incheon, Osaka Bay.
-  - Goal: Coastal gaps found and the flagged rows rebuilt in an overnight run.
-  - Other: notes/T-3428.md
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Goal: Sendai real network rebuilt with the Senzan Line stopping at Toshogu, in a later batch.
@@ -459,10 +450,35 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count
+- T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count (taking, 2026-11-18, agent vanish)
   - Context: Found by T-3482's agent: in `hand_over`, a train dwelling at its first stop is merged into the train waiting at that terminal, so one train disappears when a line's count changes. A repro and a candidate fix are in notes/T-3482.md (and the scratch file service.rs.fixed it names).
   - Goal: Changing a line's train count never loses a running train; the trains on the map match the panel's count after the change.
   - Other: notes/T-3482.md
+- T-3648 [P3] {L:rebuild-track} Removing a track set leaves a stub at a station (taking, 2026-11-18, agent setstub)
+  - Context: Found landing T-3638: removing a set of selected track (and the Select bar's Remove) leaves a 176 m stub under a middle station, which removing the pieces one at a time trims.
+  - Goal: Removing a set or a Select bar run leaves the same track behind as removing its pieces one by one.
+- T-3649 [P3] {L:help-tutorial} Help answer for the trip explorer (taking, 2026-11-18, agent helptrip)
+  - Context: Your pad, 2026-11-18: "some people dont know hwo to trip explore. we can add that tothe little question/answer guide, "how can i tell what mode of transport people will use between two points? show demand bubbles, click one bubble, then click another bubble."
+  - Goal: The help panel has that question and answer, in every language the panel has.
+- T-3650 [P2] {L:timetables} Weekend headway edits by train count (taking, 2026-11-18, agent weekendhw)
+  - Context: Your pad, 2026-11-18: "some new twfeedback says that ediiting weekend train count is weird / not possible. should look into it". The report (boblovespi, 2026-11-18, v0.4.1): "when editing the weekend headway it edits by train count instead of headway".
+  - Goal: A line set by headway edits its weekend rows by headway, as its weekday rows do, and the weekend count can be changed.
+- T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms
+  - Context: Your pad, 2026-11-18, a Discord report (Zui), screenshot artifacts/trainworld/board/20261118-071350-c9cd.png: "The train is supposed to use the 2 side platforms in the top right station and then turn back at the single track platform on the left but it kept insisting to use the passing tracks in the center. it only correctly pathfinds after I remove the tracks it's not supposed to be using". You: "might be related to the amsterdam issue" (T-3647).
+  - Goal: A line routes through the platforms of the stations it stops at, not through the station's passing tracks; or folded into T-3647 if it is the same cause.
+- T-3652 [P3] {L:community} Newest view in Community
+  - Context: Your pad, 2026-11-18, from Discord, "not high prio": "sort community by newest". Community has Random, Biggest and Most liked today.
+  - Goal: Community has a Newest view beside the other three; a server change goes to you before deploy.
+- T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up
+  - Context: Your pad, 2026-11-18, from Discord, "not high prio": "rework time controls to just be like comma and period speed up or slow down? someone suggested this is how it works in KSP. maybe instead of having 1x 4x 16x(flexible) we could just do like slow down flexible speed up. and period speeds up and comma slows down by one step."
+  - Goal: A proposal to you first (the steps, what shows between the buttons, the keys), then the change.
+- T-3654 [P3] {L:map-look} Draw on the map for planning
+  - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
+  - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
+- T-3655 [P3] {L:line-rates} A line on full track keeps its old rate after a new count
+  - Context: Found by T-3482's agent and again by T-3645's checker: a line held on full track keeps its rate when given a new count or headway until a line beside it moves (London's busiest line keeps 8 trains at medium as its headway goes 540 -> 360 s; a local raised from 3 to 40 beside a 40-train express still draws 1 train for 3 hours). Master and the fixes alike. Stepping it cost London's shared save about 300 ms an edit in one try.
+  - Goal: A new count or headway on full track takes its share at the edit, within about 50 ms an edit on London's shared save.
+  - Other: notes/T-3482.md "Follow-ups"
 - T-3231 [P3] {L:trains-drawn} {after:T-3271} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
