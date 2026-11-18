@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3721 [P2] {L:community} Copied network shares as Copy, not Sandbox (2026-11-18): A copy of a share played as normal now shares tagged Copy: the server records why a game was latched (copy, next to modded); real sandboxes still Sandbox. shonei-server fa61219, needs a server deploy. notes/T-3721.md.
 - T-3725 [P2] {L:cleanup} Refactoring round on the most confusing areas (2026-11-18): survey ranked 7 areas (track skipped for the rework); picked area 1 as T-3734, area 2 next. notes/refactor-survey-2026-11-18.md.
 - T-3733 [P2] {L:accounts-server} Server save check reads save level 22 (2026-11-18): shonei-server save check reads level 22 and LOS1 (line index, count, stop place + side 0-2); tests added; committed, not pushed or deployed; TestTwSaveCheckFollowsTheGame fails until T-3711 lands in the main tree.
 - T-3731 [P1] {L:stops} Stop edits lost on large saves (2026-11-18): stop clicks still waiting when stop editing ended were dropped; now each keeps its line and is sent however editing ends (busy tag 'Saving stops'), undo, saves and leaving wait for them; na476 with a slow worker: 6 of 8 lost before, 0 after. notes/T-3731.md.

@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 49d5e3c4-3205-457a-b910-06fb8268277a, name maps-76, since 2026-11-18 19:20 UTC
-Updated: 2026-11-18 22:30 UTC
+Updated: 2026-11-18 23:05 UTC (maps-76 past 500k, starting its successor)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -20,9 +20,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      T-3711 tree oneway; refactorlist (Opus) T-3725 survey -> notes/refactor-survey-2026-11-18.md for her.
    - T-3733 done: shonei-server 0846bef (save check level 22), not pushed/deployed; its TestTwSaveCheckFollowsTheGame
      fails until T-3711 lands in maps, and deploy.ps1 runs go test first, so land T-3711 before any server deploy.
-   - copylabel (Sonnet) T-3721 started 22:55 (server commit + game tree copylabel).
+   - copylabel T-3721 done (archived): game tree copylabel + shonei-server fa61219 (not pushed/deployed); checker
+     copychk running. Server deploy (0846bef + fa61219) waits for T-3711 to land and her word.
    - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). I pick
      from the survey and run it; tell her what and why.
+   - slotown (Opus) T-3734 stage 1 (standing checks for the save-slot races, no game code), tree slotown; stage 2
+     after copylabel and panelstops land. Agents still running at handover (all maps-76's; reports come through
+     the inbox): walkstart, panelstops, localroute, onewaychk (on tree oneway), copychk (on tree copylabel), slotown.
+     Each needs: checker if risky (walkstart, panelstops, localroute: yes), then finish; 8800 rebuild per batch.
    - Next: T-3726 comments A/B tonight after
      group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
    - T-3711: on PASS land (DECISIONS line from its notes; WASM). Shift meaning different things on the map and
