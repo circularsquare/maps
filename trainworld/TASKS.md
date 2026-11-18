@@ -158,10 +158,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3718 [P2] {L:route-choice} Trips can start with a walk to a station (taking, 2026-11-18, agent walkstart)
-  - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
-  - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.
-  - Other: notes/T-3689.md (real NYC save, transfer fare 0 / 100 / 1000: fare income 3.86B / 40.5B / 384.6B a day).
 - T-3632 [P2] {L:route-choice} Fix the causes behind No route
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". The reports are gathered (3 direct: New York - Philadelphia and Milan - Bologna, not reproduced on today's code, and Seattle - Victoria, islands; 18 cousins: a route found but not taken, areas with no trips, odd routes, cities not loading), and the panel's By transit line now says which cause applies (7d14a945). Left: the causes themselves, islands first (T-2216).
   - Goal: The common causes of No route fixed or filed one by one.
@@ -220,7 +216,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
-- T-3495 [P2] {L:world-map} Snap to freight and abandoned rail
+- T-3495 [P2] {L:world-map} Snap to freight and abandoned rail (taking, 2026-11-18, agent freightsnap)
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) shipped with v0.4.0; abandoned rail is snappable too (DECISIONS 2026-11-17, your rule "if something is visible we should let people snap to it").
   - Goal: Freight and abandoned rail drawn under All can be snapped to by train track, about 2-3 h plus about 100 MB of graph files.
   - Other: notes/T-3495.md
@@ -344,6 +340,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
+- T-3736 [P2] {L:small-fixes} Ferry and bus icons in the line hover (taking, 2026-11-18, agent hovericons)
+  - Context: You, 2026-11-18: "in tnhe hover over a line, for a ferry and bus lets use the ferry icon and bus icon rather than saying like "Ferry line"."
+- T-3737 [P2] {L:small-fixes} No hover on the calculating trips row (taking, 2026-11-18, agent hovericons)
+  - Context: You, 2026-11-18: hovering "Calculating trips..." in the line view, just above the riders row, shows a tooltip that only says "Calculating trips..." again; remove that tooltip.
+- T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharepreview)
+  - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
+  - Goal: A design and an hour estimate for you first (where the preview image comes from and what serves it), then built.
 - T-3729 [P2] {L:steam} {waits:Anita} Steam store page
   - Need from Anita: Start the Steamworks account and put your screenshot picks (from your Twitter posts) in a folder; then agents make the store images from the landing page's "trains world!" logo.
   - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
@@ -879,9 +882,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-1776 [P3] {L:map-look} Train sounds when zoomed in
   - Context: Your TODO: very light pass-by and acceleration sounds when zoomed in on trains, varied a little like the track placement sounds.
   - Goal: A soft pass-by sound, pitch rising as it accelerates, shaped by playback speed.
-- T-3525 [P3] {L:track-speed} Speed limit for a whole selection (taking, 2026-11-18, agent speedsel)
-  - Context: From T-3405: the track speed limit is set one piece at a time in the track panel; the sim call already takes a list of pieces. The checker noticed the Limit toggle switches on at the track's top speed and stores that as a limit, so the piece won't join an unlimited neighbour.
-  - Goal: A Speed limit control in the Select tool's bar sets a whole run at once, and a limit at the track's top counts as none.
 
 ## Held features
 

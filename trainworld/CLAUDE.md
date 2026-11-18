@@ -47,8 +47,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   for a player (Anita, 2026-11-17: undo after a load's cap lowering), nor one that only changes a tooltip, an
   alert's wording or diagnostic text, since that text is the whole change and players can read it (Anita, 2026-11-18). Anita rewords
   or hides items on the board's Changelog view.
-- **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
-  own message (Anita, 2026-11-11); still list it in the report.
+- **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, text copied word for word from her
+  own message (Anita, 2026-11-11), and text reused word for word from a string already in the game (Anita,
+  2026-11-18); still list it in the report, marked as reused.
 - "Manually", never "by hand" (Anita, 2026-11-18: "by hand is a bit weird").
 - American wording: "turn around", never the British "turn round" or "round" for "around" (Anita, 2026-11-12: "its a
   pet peeve of mine").
