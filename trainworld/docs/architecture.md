@@ -122,7 +122,9 @@ Web first, so it can be shared as a link.
   rebuilds no demand layers (`worldIsRows`) [T-3159]. The clicks wait in the page in order (`queueStopEdit` in
   game/world.ts), each holding its line and game from the click: stop editing ending sends them all (the busy tag
   says "Saving stops" meanwhile) and only a game loaded since drops one; an undo or redo, a save, leaving the game
-  and a reload wait for them (closing the tab does not: Anita, 2026-11-18) [T-3731]. A state carries only the edges,
+  and a reload wait for them (closing the tab does not: Anita, 2026-11-18) [T-3731]. The line panel's own
+  stop edits (a row's remove, a dot click, a drag, Add, Shift-click end) join the same queue, each naming its
+  stops by station and visit and resolving them against the list the one before left [T-3732]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last

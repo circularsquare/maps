@@ -24,7 +24,8 @@ import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "..
 import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
-import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats } from "../../game/world";
+import { gamesLoaded } from "../../workers/clockClient";
+import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit } from "../../game/world";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
@@ -644,8 +645,15 @@ export function ScheduleButtons({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
-/** One diagram stop edit at a time: a second click before the world has the first would count from stale indices. */
-let stopEditing = false;
+/** A stop named by its station and which visit of it (a loop passes some twice), so an edit still points at it after
+ * the edits queued before it changed the list. */
+type StopRef = { s: string; n: number };
+const refAt = (stops: readonly string[], i: number): StopRef => ({ s: stops[i], n: stops.slice(0, i).filter((x) => x === stops[i]).length });
+const indexOfRef = (stops: readonly string[], r: StopRef): number => {
+  let seen = 0;
+  for (let k = 0; k < stops.length; k++) if (stops[k] === r.s && seen++ === r.n) return k;
+  return -1;
+};
 
 function RailLineInspector({ id }: { id: string }) {
   const w = world.value;
@@ -700,25 +708,44 @@ function RailLineInspector({ id }: { id: string }) {
   const passed = editingStops && !partly ? st.passed : [];
   const pending = pendingAt && pendingAt.v === w.version ? pendingAt.gaps : null;
   const setPending = (gaps: number[] | null) => setPendingAt(gaps && { v: w.version, gaps });
-  const setStops = async (stops: number[]) => {
-    const a = await edit({ op: "setStops", line: l.num, stops });
-    if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
+  const keepDraft = () => {
+    const now = world.peek()?.save.lines.find((x) => x.num === l.num);
+    if (now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: planStopsOf(now).map(Number) };
   };
+  // T-3732: a panel stop edit joins the queue the map's stop clicks use (T-3731): each is sent once the one before is
+  // answered, and built then from the stops that one left (`build` gets them), so a quick second edit counts from
+  // the new list. `build` answers null when the stop it meant is gone.
+  const sendStops = (build: (cur: string[]) => EditOp | null, quiet = false, refused?: (issues: string[]) => void) => {
+    const game = gamesLoaded.peek();
+    return queueStopEdit(async () => {
+      const w2 = world.peek();
+      const now = w2 && game === gamesLoaded.peek() ? linesById(w2).get(id) : undefined;
+      const op = now && build(now.stops.map(String));
+      if (!op) return;
+      const a = await edit(op, quiet);
+      if (a.ok) keepDraft();
+      else refused?.(a.issues);
+    }).catch(() => {});
+  };
+  const setStops = (build: (cur: string[]) => number[] | null) =>
+    sendStops((cur) => { const stops = build(cur); return stops && { op: "setStops", line: l.num, stops }; });
   const addGaps = (gs: number[]) => {
     const add = passed.filter((p) => gs.includes(p.gap));
-    const build = (list: { gap: number; node: number }[]) => l.stops.flatMap((s, i) => [Number(s), ...list.filter((p) => p.gap === i).map((p) => p.node)]);
     setPending(null);
     // T-3039: on a turned line each station goes in as the map click puts it in (`insertStop`: both passes of the
     // stem, and the turn moves to it where it lies between the turn station and the loop)
     if (turned) {
-      return (async () => {
-        const nodes = [...new Set([...add].sort((a, b) => a.gap - b.gap).map((p) => p.node))];
+      const nodes = [...new Set([...add].sort((a, b) => a.gap - b.gap).map((p) => p.node))];
+      return queueStopEdit(async () => {
         for (let k = 0; k < nodes.length; k++) if (!(await edit({ op: "insertStop", line: l.num, station: nodes[k] }, false, k > 0)).ok) break;
-        const now = world.peek()?.save.lines.find((x) => x.num === l.num);
-        if (now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: planStopsOf(now).map(Number) };
-      })();
+        keepDraft();
+      }).catch(() => {});
     }
-    return setStops(build(add));
+    const after = add.map((p) => ({ at: refAt(l.stops, p.gap), node: p.node }));
+    return setStops((cur) => {
+      const where = after.map((x) => ({ i: indexOfRef(cur, x.at), node: x.node }));
+      return cur.flatMap((s, i) => [Number(s), ...where.filter((x) => x.i === i).map((x) => x.node)]);
+    });
   };
   const addPassed = () => addGaps(pending ?? []);
   const stationsText = (n: number) => tr("inspector.stations", { count: n });
@@ -727,20 +754,15 @@ function RailLineInspector({ id }: { id: string }) {
   const removeStop = (i: number) => {
     if (partly) return;
     if (st.loop && i > 0 && i === l.stops.length - 1) return stopEdit({ op: "openLoop", line: l.num });
-    if (!st.loop) return setStops(l.stops.filter((_, k) => k !== i).map(Number));
-    const left = l.stops.filter((s) => s !== l.stops[i]);
-    if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
-    return setStops(left.map(Number));
+    const at = refAt(l.stops, i), here = l.stops[i];
+    if (!st.loop) return setStops((cur) => { const k = indexOfRef(cur, at); return k < 0 ? null : cur.filter((_, j) => j !== k).map(Number); });
+    return setStops((cur) => {
+      const left = cur.filter((s) => s !== here);
+      if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
+      return left.map(Number);
+    });
   };
-  const stopEdit = async (op: EditOp) => {
-    if (stopEditing) return;
-    stopEditing = true;
-    try {
-      const a = await edit(op);
-      const now = world.peek()?.save.lines.find((x) => x.num === l.num);
-      if (a.ok && now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: planStopsOf(now).map(Number) };
-    } finally { stopEditing = false; }
-  };
+  const stopEdit = (op: EditOp) => sendStops(() => op);
   // T-2919: no question, since an undo brings the line back (track and stations stay)
   const remove = () => {
     void edit({ op: "removeLine", line: l.num }).then(a => {
@@ -779,17 +801,16 @@ function RailLineInspector({ id }: { id: string }) {
     const names = { a: name.get(String(f[2])) ?? "", b: name.get(String(f[3])) ?? "" };
     return tr(f[1] === 0 ? "lineInspector.orderNoTrack" : "lineInspector.orderJunction", { ...names, vehicle: vehicleOf(st) });
   };
-  const moveStop = async (from: number, gap: number) => {
-    if (stopEditing) return;
-    stopEditing = true;
-    try {
-      const stops = l.stops.map(Number).filter((_, k) => k !== from);
-      stops.splice(gap > from ? gap - 1 : gap, 0, Number(l.stops[from]));
-      const a = await edit({ op: "orderStops", line: l.num, stops }, true);
-      if (!a.ok) return say(orderWhy(a.issues), true);
-      const now = world.peek()?.save.lines.find((x) => x.num === l.num);
-      if (now && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops: planStopsOf(now).map(Number) };
-    } finally { stopEditing = false; }
+  // the stop goes in before the one that is now at `gap` (the end when `gap` is past the last)
+  const moveStop = (from: number, gap: number) => {
+    const moved = refAt(l.stops, from), before = gap < nStops ? refAt(l.stops, gap) : null;
+    return sendStops((cur) => {
+      const f = indexOfRef(cur, moved), b = before ? indexOfRef(cur, before) : cur.length;
+      if (f < 0 || b < 0) return null;
+      const stops = cur.map(Number).filter((_, k) => k !== f);
+      stops.splice(b > f ? b - 1 : b, 0, Number(cur[f]));
+      return { op: "orderStops", line: l.num, stops };
+    }, true, (issues) => say(orderWhy(issues), true));
   };
   const rowDown = (e: PointerEvent, from: number) => {
     if (!canDrag || e.button !== 0 || e.pointerType === "touch" || (e.target as Element | null)?.closest?.(".stop-hit, button")) return;
@@ -836,10 +857,14 @@ function RailLineInspector({ id }: { id: string }) {
   // ends the line there, as in the group view; a stop the line needs has no click
   const takeOut = (row: TurnRow) => {
     if (partly) return;
-    const left = l.stops.filter((_, k) => !row.occ.includes(k));
-    // T-3050: a loop's first station going takes the closing stop too; the line closes again on its new first stop
-    if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
-    return setStops(left.map(Number));
+    const gone = row.occ.map((k) => refAt(l.stops, k));
+    return setStops((cur) => {
+      const out = new Set(gone.map((r) => indexOfRef(cur, r)));
+      const left = cur.filter((_, k) => !out.has(k));
+      // T-3050: a loop's first station going takes the closing stop too; the line closes again on its new first stop
+      if (left.length && left[0] !== left[left.length - 1]) left.push(left[0]);
+      return left.map(Number);
+    });
   };
   const dotClick = (i: number, row?: TurnRow): { tip: string; click: (e: MouseEvent) => void } | null => {
     if (partly) return null;
@@ -853,7 +878,14 @@ function RailLineInspector({ id }: { id: string }) {
     const again = loop && l.stops.filter((s) => s === l.stops[i]).length > 1;
     return {
       tip: tr("busInspector.removeStop", { name: here }) + (end || loop || nStops < 3 || mobileDevice() ? "" : "\n" + tr("lineInspector.shiftEnd")),
-      click: (e) => void (again ? removeStop(i) : stopEdit(e.shiftKey && !end && !loop ? { op: "endLineAt", line: l.num, index: i } : { op: "dropStop", line: l.num, index: i })),
+      click: (e) => {
+        if (again) return void removeStop(i);
+        const at = refAt(l.stops, i), shift = e.shiftKey && !end && !loop;
+        void sendStops((cur) => {
+          const k = indexOfRef(cur, at);
+          return k < 0 ? null : { op: shift ? "endLineAt" : "dropStop", line: l.num, index: k };
+        });
+      },
     };
   };
   // the station the line passes at a side line's stop (related lines while stops are edited)
