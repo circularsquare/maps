@@ -13,7 +13,18 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    join), dayrun T-3671/T-3660/T-3517 (main tree, 6 cores).
 2. Mine, started 16:20 UTC (Sonnet, trees): onewaytext T-3676/3677/3678 (one-way warning and question strings,
    3 untranslated keys; Vite 6150); checkfix T-3663/3679/3617 (three stale or failing checks; Vite 6151);
-   commload T-3680 (P1, her pad: community cards say Could not load too soon; Vite 6152; app-only, no server deploy).
+   Landed: onewaytext (c027 hidden per her), checkfix, commload (c028). Running (all Sonnet unless said, own trees):
+   setsearch (Opus, T-3681, 6153), qwapp T-2809/T-3463 (6154), qwcheck T-1233/T-1635/T-3558 (6155), qwpre
+   T-2002/T-2299/T-2001 (preflight, no data writes), lbfix T-3683/3684/3685 (6156), qwdiag T-3446/T-2662 (6157).
+   regate (T-930/T-3656) reported done: land after dayrun's join with its DECISIONS line (notes/T-930.md), file nothing
+   more (T-3682 filed for its follow-up).
+8. Triage done (notes/triage-2026-11-18-{a,b}.md, todo-sweep-2026-11-18.md): 15 closed or folded, 21 reprioritised
+   or unblocked, 7 tasks filed from the old TODO (T-3682-3688). Up next holds the rest of the small wins in order;
+   start each as its blocker frees: T-3625 after setsearch (SettingsTab), T-3611 after qwapp (clock.worker),
+   T-2880 after corridor, T-3495/T-2054/T-2901/T-2380 after dayrun's PACKS FREE and regate's landing, T-3354 after
+   sideplat2. Her 10 open asks (asks.py list) carry the Needs-her items.
+9. tasks.py lost T-1970 when ARCHIVE.md's replace was refused (Windows lock); recovered by hand, and tasks.py now
+   writes ARCHIVE first and retries the replace.
 3. dayrun: until kit dayrun.state (notes/T-3671/kit) says "PACKS FREE" (about 19:15 UTC) hold anything writing
    data/packs or data/terrain, including 8800 rebuilds. Gates serve a frozen copy, so app/ and WASM landings are free.
 4. 8800 rebuild once PACKS FREE: 8800 is 866e3212, lacks T-3673's one-way arrows (3210be41) and T-3666; the freeze

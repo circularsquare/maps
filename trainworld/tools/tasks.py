@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import date, datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -38,7 +39,15 @@ def write(path, text, eol):
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8", newline="") as f:
         f.write(text.replace("\n", eol))
-    os.replace(tmp, path)
+    # Windows refuses the replace while another process has the file open for a moment (a reader, an editor)
+    for wait in (0.2, 0.5, 1, 2, 0):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if not wait:
+                raise
+            time.sleep(wait)
 
 
 def block_end(lines, i):
@@ -221,16 +230,16 @@ def finish(r, a, how):
     entry = f"- {a.id} [{pri}] {rest.strip()} ({today}): {body}"
     if a.notes:
         entry += f" {a.notes}."
-    del lines[i:j]
-    write(r.tasks, "\n".join(lines), eol)
-
+    # archive first: a failure between the two writes leaves the task in both files, never in neither
     atext, aeol = read(r.archive)
     k = atext.find(ARCHIVE_ANCHOR)
     if k < 0:
-        print("ARCHIVE.md: anchor line not found; entry NOT archived, task already removed. Entry:\n" + entry)
+        print("ARCHIVE.md: anchor line not found; nothing changed. Entry:\n" + entry)
         return 1
     k = atext.index("\n", k) + 1
     write(r.archive, atext[:k] + entry + "\n" + atext[k:], aeol)
+    del lines[i:j]
+    write(r.tasks, "\n".join(lines), eol)
     print(f"{a.id}: archived")
 
     if slug:

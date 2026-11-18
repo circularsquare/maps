@@ -1,6 +1,17 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1970 [P3] {L:station-placement} Slide a station off a ramp near its end (2026-11-18): closed without code: folded into T-2268; the 1,012 of 6,851 ramp refusals (notes/T-1964.md) are its measure.
+- T-2148 [P3] {L:money} Save size from money history (2026-11-18): closed without code: folded into T-3642, which measured the per-day ledger growth; its goal now covers the save's own ledgers.
+- T-2320 [P3] {L:stops} Drag stops into another order (2026-11-18): closed without code: folded into T-3079; exact ordering is how players will put stops in their own order.
+- T-3271 [P3] {L:trains-drawn} t1965-follow regressed (2026-11-18): closed without code: folded into T-3264, whose goal includes t1965-follow passing at 1+1 and 4+2.
+- T-1446 [P3] {L:community} Share a game by link, read only (2026-11-18): done by T-3115 (the ?share= link) and T-3257 (View plays a shared network without saving it) (triage 2026-11-18)
+- T-2887 [P2] {L:community} Community: share and browse saves (2026-11-18): done: Community shipped in v0.3 (2026-11-11) with share, browse by Random/Biggest/Most liked and likes; follow-ups are their own tasks (T-3642, T-3652, T-3413) (triage 2026-11-18)
+- T-2907 [P3] {L:accounts-server} Redirect mistyped trainworld addresses (2026-11-18): done in the website repo 644a01f (2026-11-09): trainsworlds, trainworlds and trainsimworld redirect to the game (triage 2026-11-18)
+- T-1334 [P3] {L:region-redraws} Other coastal districts dropped like Kwai Tsing (2026-11-18): closed without code: superseded by T-3428's reclaimed-land step and T-3455's coastal scan of all packs; flagged groups rebuilt 2026-11-18 (triage 2026-11-18, notes/T-3455.md)
+- T-2866 [P2] {L:feedback} Feedback panel follow-ups (2026-11-18): closed without code: overtaken: feedback threads and inbox are live on server and game, phone players report through it (T-3573, T-3626, T-3612; triage 2026-11-18)
+- T-2003 [P3] {L:borders} One-way border flows come out both ways (2026-11-18): closed without code: duplicate of T-3489 (commute border factor by direction; triage 2026-11-18)
+- T-2326 [P3] {L:world-tooling} Cloud wave seed lacks world_field (2026-11-18): done in T-2301: the cloud wave seed carries world_field.* and the clipped sea polygons (314776ed; triage 2026-11-18)
 - T-3617 [P3] {L:checks} Saves check expects every backup as a row (2026-11-18): t1826 makes real edits before the last save and expects rows for tiers differing in time and edit from the slot (versions.ts hides same-edit backups by design); notes/T-3663.md.
 - T-3679 [P3] {L:checks} Graphics check expects the phone note twice (2026-11-18): t2832 now checks the phone note shows once ever (T-2861), none after reload; notes/T-3663.md.
 - T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4 (2026-11-18): t1550 read the first demand tag, which is now a hidden track tag; it checks all non-track demand tags (game was right); notes/T-3663.md.
