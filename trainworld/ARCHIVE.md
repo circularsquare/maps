@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-1816 [P3] {L:route-choice} Transfer pulses missing after panning away (2026-11-18): Real bug, fixed: transfers (pulses) were asked of the zone in view, which answers nothing when panned outside the solve; now asked of a zone the solve covers (demandClient transferParts). Probed on the northeast save panned to Boston (null before, 12,037 pairs after). Changelog qwpulse-1. Notes: notes/T-1816.md.
 - T-3509 [P3] {L:map-look} Long trips inside one zone show nowhere (2026-11-18): NYC trips within +2.39M (17.79% -> 17.40%), London +0.76M; checker withincheck PASS (no double counting, local-only equal to master with intercity off) notes/T-3509.md.
 - T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up (2026-11-18): top bar has slower, speed and faster buttons; comma and period step the speed; notes/T-3653.md.
 - T-3635 [P2] {L:map-look} Top bar fills with copies of the clock (2026-11-18): Stale clocks reproduced with a simulated page rewriter (a text node moved under <font> made the holiday dot's insert throw; Preact then mounted a new clock and left the old one): 5 clocks over four holiday turns before, 1 after. The clock's text is set by the game on its own elements, the dot has its own slot, any extra .clock is removed after each render, and the whole top bar is translate=no. The player's exact trigger (their stale clocks read 02:00) not identified. notes/T-3635.md.

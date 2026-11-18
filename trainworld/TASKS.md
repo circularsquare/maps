@@ -828,6 +828,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
+- T-3700 [P2] {L:single-track} Way back skips the other one-way leg's station
+  - Context: Found by T-3101's checks 2026-11-18: t3348-perdir fails on master. A West to East line over a station split into two one-way legs gets stops [0,4,3] and no back stops, so the way back doesn't stop at the north leg (riders 8623 north, 0 south). Possibly from T-3651's side-platform change (72793e68, today) or T-3647; sideplat2 (T-3672) is in the same code.
+  - Goal: The way back stops at the other leg's station again and t3348-perdir passes; checked after T-3672 lands.
+  - Other: notes/T-3348.md
 - T-3690 [P2] {L:station-placement} Too close to the end of a piece of track
   - Context: Your old TODO: "what exactly is "too close to end of track" placement error supposed to accomplish? seems like its frustrating a lot of people". The refusal is `issues.splitPoint` ("Stations, junctions and branches need 5 m of track on each side"); T-2268 covers ramps. You, 2026-11-18: file it.
   - Goal: The reason for the 5 m found; then the refusal relaxed, or the click slid to the nearest spot that works, so players rarely see it; refusals counted before and after on a fixture.
@@ -937,10 +941,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: A headway edit on New York's busiest shared-track line still takes 150-400 ms, and Paris placements 237 ms at p95.
   - Goal: Those edits take under 100 ms.
   - Other: Options in notes/T-1779.md "T-1787", notes/T-1794.md.
-- T-1816 [P3] {L:route-choice} Transfer pulses missing after panning away (taking, 2026-11-18, agent qwpulse)
-  - Context: Demand asks for transfers by the zone in view, so panning off then editing may show no pulses. Found in T-1814, untested.
-  - Goal: Transfers are asked by the edited network's zones.
-  - Other: Notes: notes/T-1810.md "T-1814"
 - T-1842 [P3] {L:edit-speed} past_day costs 40 ms on New York
   - Context: `TrackApi.past_day` takes about 40 ms on shared New York, on every account change and 4 times a second.
   - Goal: Each line's tally is kept, and only changed lines are redone.

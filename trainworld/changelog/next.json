@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c040",
+      "text": "added the one way switch and reverse to the selection bar for several pieces of single track at once",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3101",
+      "by": "selway",
+      "at": "2026-11-18T17:42:23Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
       "id": "c039",
       "text": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed, and the comma and period keys slow down and speed up by one step",
       "edited": null,
