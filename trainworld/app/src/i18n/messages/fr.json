@@ -1810,7 +1810,6 @@
   "schedule.buys": "Achète {unit} pour {price}",
   "schedule.calculating": "calcul en cours...",
   "schedule.defaultNone": "Aucun réglage par défaut",
-  "schedule.defaultReset": "Effacer le réglage",
   "schedule.defaultSet": "Définir par défaut",
   "schedule.defaultTitle": "Intervalles des nouvelles lignes classiques",
   "schedule.defaultTitleFast": "Intervalles des nouvelles lignes à grande vitesse",

@@ -1810,7 +1810,6 @@
   "schedule.buys": "Kauft {unit} für {price}",
   "schedule.calculating": "wird berechnet...",
   "schedule.defaultNone": "Kein Standard festgelegt",
-  "schedule.defaultReset": "Standard löschen",
   "schedule.defaultSet": "Als Standard setzen",
   "schedule.defaultTitle": "Takt für neue normale Linien",
   "schedule.defaultTitleFast": "Takt für neue Hochgeschwindigkeitslinien",

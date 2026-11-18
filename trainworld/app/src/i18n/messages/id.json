@@ -1810,7 +1810,6 @@
   "schedule.buys": "Membeli {unit} seharga {price}",
   "schedule.calculating": "menghitung...",
   "schedule.defaultNone": "Belum ada bawaan",
-  "schedule.defaultReset": "Hapus bawaan",
   "schedule.defaultSet": "Jadikan bawaan",
   "schedule.defaultTitle": "Selang untuk lini biasa baru",
   "schedule.defaultTitleFast": "Selang untuk lini kecepatan tinggi baru",

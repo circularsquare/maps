@@ -1810,7 +1810,6 @@
   "schedule.buys": "{unit} 구매: {price}",
   "schedule.calculating": "계산 중...",
   "schedule.defaultNone": "기본값 없음",
-  "schedule.defaultReset": "기본값 지우기",
   "schedule.defaultSet": "기본값으로 설정",
   "schedule.defaultTitle": "새 일반 노선의 배차 간격",
   "schedule.defaultTitleFast": "새 고속 노선의 배차 간격",

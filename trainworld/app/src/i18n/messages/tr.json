@@ -1810,7 +1810,6 @@
   "schedule.buys": "{unit} alır: {price}",
   "schedule.calculating": "hesaplanıyor...",
   "schedule.defaultNone": "Varsayılan ayarlanmadı",
-  "schedule.defaultReset": "Varsayılanı sil",
   "schedule.defaultSet": "Varsayılan yap",
   "schedule.defaultTitle": "Yeni normal hatlar için sefer aralıkları",
   "schedule.defaultTitleFast": "Yeni yüksek hızlı hatlar için sefer aralıkları",

@@ -1810,7 +1810,6 @@
   "schedule.buys": "花{price}購買{unit}",
   "schedule.calculating": "計算中…",
   "schedule.defaultNone": "尚未設定預設值",
-  "schedule.defaultReset": "清除預設值",
   "schedule.defaultSet": "設為預設值",
   "schedule.defaultTitle": "新建一般路線的班距",
   "schedule.defaultTitleFast": "新建高速路線的班距",
