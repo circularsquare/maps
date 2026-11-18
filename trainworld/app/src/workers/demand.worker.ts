@@ -325,13 +325,16 @@ const WINDOW_SHARE = 0.09;
 const WINDOW_FLOOR = 800;
 /** T-1735: an edit whose longest changed run (`editedStations`' `minutes`) is shorter leaves the
  * market frozen: a city line's market riders are a few percent of its riders (China's new metro
- * lines 1.5-2%), and the window's market set on the network was most of China's local solve */
+ * lines 1.5-2%), and the window's market set on the network was most of China's local solve.
+ * T-3600: except a line switched on or off (`switched`), whose zones' pairs are solved in the window
+ * with no reach beyond them: five Kaohsiung feeders switched on moved the intercity lines by 7-16% */
 const WINDOW_EDIT_MIN = 20;
 /** T-1735: the stations network `b` changed from `a` (a stop added or dropped there, or a hop's run
- * time changed), as masks over `b`'s and `a`'s stations; `map` is `nodeMap(a, b)`.
+ * time changed, or, T-3600, every station of a line whose trains at some level went to or from none),
+ * as masks over `b`'s and `a`'s stations; `map` is `nodeMap(a, b)`; `switched`: such a line.
  * `minutes`: the longest run between a line's first and last changed stops, the window's reach (a
  * pair goes out of its way for a new service only about as far as the service itself goes) */
-function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof lastNet>, map: Int32Array): { now: Uint8Array; was: Uint8Array; minutes: number } {
+function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof lastNet>, map: Int32Array): { now: Uint8Array; was: Uint8Array; minutes: number; switched: boolean } {
   const now = new Uint8Array(b.stations.length), was = new Uint8Array(a.stations.length);
   const atB = new Map(b.stations.map((id, k) => [id, k]));
   const offs = (n: Uint32Array) => { const o = [0]; for (const v of n) o.push(o[o.length - 1] + v); return o; };
@@ -349,9 +352,9 @@ function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof la
     if (map[k] < 0) { mark(sa, la, stopOf(a.lineN, oa, la, k)); continue; }
     hit[map[k]] = 1;
     const m = map[k], lb = lineOf(ob, m), ia = stopOf(a.lineN, oa, la, k), ib = stopOf(b.lineN, ob, lb, m);
-    // this hop's run time past VIEW_TOLERANCE (trains an hour do not count: a train-count edit moves
-    // the market's riders by under 1% on lines, T-1650, and an edit's knock-on trains on whole far
-    // lines would open a window for a city line)
+    // this hop's run time past VIEW_TOLERANCE (trains an hour do not count, but for a line switched
+    // on or off below: a train-count edit moves the market's riders by under 1% on lines, T-1650, and
+    // an edit's knock-on trains on whole far lines would open a window for a city line)
     const off = (x: number, y: number, tol: number) => x !== y && Math.abs(x - y) > tol * Math.max(1, Math.abs(x));
     let changed = false;
     // (times: per line, two directions by three levels of a value per stop)
@@ -366,7 +369,20 @@ function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof la
     for (const [l, [i, j]] of spans) { let s = 0; for (let k = i; k < j; k++) s += n.times[6 * o[l] + (k - o[l])] || 0; most = Math.max(most, s); }
     return most / 60;
   };
-  return { now, was, minutes: Math.min(WINDOW_REACH_MIN, Math.max(run(a, oa, spanA), run(b, ob, spanB))) };
+  // (tph: three levels per line)
+  const lineA = new Map(a.lines.map((id, l) => [id, l]));
+  let switched = false;
+  b.lines.forEach((id, lb) => {
+    const la = lineA.get(id);
+    if (la === undefined) return;
+    let flip = false;
+    for (let v = 0; v < 3; v++) flip ||= a.tph[3 * la + v] > 0 !== b.tph[3 * lb + v] > 0;
+    if (!flip) return;
+    switched = true;
+    for (let i = oa[la]; i < oa[la + 1]; i++) was[a.stops[i]] = 1;
+    for (let i = ob[lb]; i < ob[lb + 1]; i++) now[b.stops[i]] = 1;
+  });
+  return { now, was, minutes: Math.min(WINDOW_REACH_MIN, Math.max(run(a, oa, spanA), run(b, ob, spanB))), switched };
 }
 /** T-1733: carry the route-node state kept across solves (`marketOn`, `sharedMkt`, `capRatio`) to a
  * new network; without both networks' ids it is dropped */
@@ -2242,11 +2258,13 @@ async function run() {
         if (delta?.[0] && hasMarket) {
           const N = jobNodes, [all, com, ...ev] = delta, last = parts.keys.length - 1, kinds = Math.min(ev.length, last - 1);
           const into = [parts.seg, parts.board, parts.alight];
+          // (each part held at 0 or more, as the totals above: T-3600, a line switched off read -1,042 riders)
           for (let b = 0; b < 3; b++) for (let k = 0; k < N; k++) {
+            const to = into[b];
             let rest = all[b * N + k];
-            if (com) { into[b][k] += com[b * N + k]; rest -= com[b * N + k]; }
-            for (let i = 0; i < kinds; i++) { into[b][(1 + i) * N + k] += ev[i][b * N + k]; rest -= ev[i][b * N + k]; }
-            into[b][last * N + k] += rest;
+            if (com) { to[k] = Math.max(0, to[k] + com[b * N + k]); rest -= com[b * N + k]; }
+            for (let i = 0; i < kinds; i++) { const j = (1 + i) * N + k; to[j] = Math.max(0, to[j] + ev[i][b * N + k]); rest -= ev[i][b * N + k]; }
+            to[last * N + k] = Math.max(0, to[last * N + k] + rest);
           }
         }
         // T-260: each city's trips, rail and walked trips by purpose, `parts.keys` order less the
@@ -2478,11 +2496,12 @@ async function run() {
         // frozen market less those pairs' old loads (`less`)
         const part = c.part, base = part && e.market && lastNet ? marketNet.get(part) : undefined;
         const ed = base ? editedStations(base, lastNet!, nodeMap(base, lastNet!)) : null;
-        const sub = ed && ed.minutes >= WINDOW_EDIT_MIN ? part!.beside() : null;
+        const reach = ed && ed.minutes >= WINDOW_EDIT_MIN ? ed.minutes : 0;
+        const sub = ed && (reach > 0 || ed.switched) ? part!.beside() : null;
         const lessOf = new Map<number, Float32Array[]>();
         if (sub) {
           c.views.set(sub, whole!);
-          sub.set_window(ed!.now, part!.zones_at(ed!.was), ed!.minutes, WINDOW_SHARE, WINDOW_FLOOR);
+          sub.set_window(ed!.now, part!.zones_at(ed!.was), reach, WINDOW_SHARE, WINDOW_FLOOR);
         }
         const win = sub ? {
           sub,

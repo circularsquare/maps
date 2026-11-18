@@ -189,13 +189,15 @@ wide so a longer date moves nothing [T-1868].
   [T-2045]; it goes once the zone in view's figures are final, though other zones still solve
   [T-392], and a zone solved on its own first counts as final at its last round [T-2045]. The tag
   shows all the while the clock is capped (below): when the zone in view is final and the cap still
-  holds for an edit, it says **"Calculating trips after your change…"** [T-2622]. While capped, the
+  holds for an edit, it says **"Calculating trips after your change…"** [T-2622]. It says the same
+  while an edit's whole solve runs after its local result showed, until that solve's final: the
+  local result keeps the longer trips and other zones' riders as they were before the edit (a line
+  with no trains left can read tens of thousands) [T-3601]. While capped, the
   tag's hover says "Time capped at 4x while updating demand".
   **"Calculation 1 day behind"** ("Calculation 3 days behind") takes the tag's place when a whole game
   day or more has passed since the oldest edit no solve's final covers yet (`demandBehindFrom`) while
   some figures in play still miss it: a line reading "calculating...", or the zone
-  in view recomputing [T-2409]. Lines whose local result is in count for nothing: they are within
-  about 2% of the whole solve [T-1733, T-2410]. While the
+  in view recomputing [T-2409]. Lines whose local result is in count for nothing [T-1733, T-2410]. While the
   edit changes the zone in view's figures the split is faded, the figures held [T-232]; a zone the edit
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
   "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar

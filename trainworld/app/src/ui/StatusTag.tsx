@@ -30,6 +30,9 @@ const behindDays = computed(() => {
   return Math.max(0, Math.floor((clock.minute.value - from) / 1440));
 });
 
+/** T-3601: an edit no final covers yet is being solved (its local result may already show) */
+const editUnsettled = computed(() => demandUpdating.value && demandBehindFrom.value !== null);
+
 function recomputing(): string {
   // T-2045: the zone in view being solved alone ahead of a load's whole solve
   if (focusZones.value.has(activeCity.value)) return t("statusTag.recomputingHere");
@@ -206,8 +209,10 @@ export function StatusTag() {
     // say one thing; once the zone in view is final, other zones still solving show nothing
     // T-1904: and whether that is the zone in view alone or a whole solve of many, which takes longer
     : viewRecomputing.value ? recomputing()
-    // T-2622: the clock capped for an edit whose figures elsewhere are not in, the zone in view final
-    : clock.capped.value ? t("statusTag.calculatingAfterChange") : null;
+    // T-2622: the clock capped for an edit whose figures elsewhere are not in, the zone in view final;
+    // T-3601: or an edit's whole solve still running after its local result showed (lines there hold the
+    // longer trips of before the edit until its final)
+    : clock.capped.value || editUnsettled.value ? t("statusTag.calculatingAfterChange") : null;
   if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); return null; }
   // T-3427: edits held while paused: nothing is working, so a hover and no bar
   if (demandHeld.value && busy === t("statusTag.heldPaused")) {
