@@ -178,10 +178,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
   - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
   - Other: notes/T-3647.md
-- T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4 (taking, 2026-11-18, agent checkfix)
-  - Context: Found by the workflow research (2026-11-18): t1550, a check nobody had run lately, fails its two lines that a bubble's hover tag shows at zoom 7 and 8.4. May be a real regression, or the check is out of date.
-  - Goal: Either the hover tag shows those lines again or t1550 is updated to today's rule, with the reason in one line.
-  - Other: research/workflow-2026-11-18.md
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
@@ -418,9 +414,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
-- T-3680 [P1] {L:community} Community cards say Could not load too soon (taking, 2026-11-18, agent commload)
-  - Context: Your pad 2026-11-18: "when clicking through community tabs, it often says "could not load this network" for like half the maps ... if i click on any it loads like almost instantly so we should probbly jut give it a tad more time before saying "could not load"". Screenshot artifacts/trainworld/board/20261118-111610-0e5e.png. Reach: everyone who browses community.
-  - Goal: Switching tabs shows every card's preview or a loading state; "Could not load this network" only for a network that really fails.
+- T-3681 [P2] {L:small-fixes} Search box in settings (taking, 2026-11-18, agent setsearch)
+  - Context: You, 2026-11-18: "would be nice to add a search setting to settings. so people can type a string and find matches, or alias matches. people having trouble with finding certain settings frequently." Your old TODO: settings "getting a bit cluttered ... hard to find stuff".
+  - Goal: Typing in a box at the top of settings shows only the settings whose label, section or aliases match (e.g. "satellite" finds the map style), with a plain line when nothing matches.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
@@ -1026,13 +1022,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
   - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
   - Other: notes/T-3397.md
-- T-3679 [P3] {L:checks} Graphics check expects the phone note twice (taking, 2026-11-18, agent checkfix)
-  - Context: From T-3630: t2832-graphics-back fails two lines that expect the phone note to show again after a reload; it shows once ever since T-2861, so the check is out of date.
-  - Goal: t2832 checks the note shows once, and passes on master.
-- T-3617 [P3] {L:checks} Saves check expects every backup as a row (taking, 2026-11-18, agent checkfix)
-  - Context: From T-3610's checker: t1826-saves "live backups listed with their age" fails on master too. All four backup tiers exist but the card shows one row; likely the version list hides backups with no edit since the save (workers/versions.ts), which the check doesn't do.
-  - Goal: Either the check makes real edits between saves and passes, or the panel shows backups it wrongly hides; t1826 passes on master.
-  - Other: notes/T-3610-check.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.

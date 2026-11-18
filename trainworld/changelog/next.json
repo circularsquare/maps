@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c028",
+      "text": "fixed community previews showing \"Could not load this network\" when switching tabs quickly",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3680",
+      "by": "commload",
+      "at": "2026-11-18T16:23:47Z",
+      "rev": 1,
+      "area": "community",
+      "fix": true
+    },
+    {
+      "id": "c027",
+      "text": "fixed a line's alert saying its track is gone when the track is still there but runs the other way, and turning one way off now asks about running both ways",
+      "edited": null,
+      "hidden": true,
+      "task": "T-3676",
+      "by": "onewaytext",
+      "at": "2026-11-18T16:20:45Z",
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "changed": "2026-11-18T16:27:02Z"
+    },
+    {
       "id": "c026",
       "text": "added an arrow for which way one-way track runs: at least one on every short piece, and in the track panel",
       "edited": "added arrows for which way one way track runs, on short pieces too and in the track panel",

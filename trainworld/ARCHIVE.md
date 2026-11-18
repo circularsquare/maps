@@ -1,6 +1,13 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3617 [P3] {L:checks} Saves check expects every backup as a row (2026-11-18): t1826 makes real edits before the last save and expects rows for tiers differing in time and edit from the slot (versions.ts hides same-edit backups by design); notes/T-3663.md.
+- T-3679 [P3] {L:checks} Graphics check expects the phone note twice (2026-11-18): t2832 now checks the phone note shows once ever (T-2861), none after reload; notes/T-3663.md.
+- T-3663 [P3] {L:checks} Bubble hover tag check fails at zoom 7 and 8.4 (2026-11-18): t1550 read the first demand tag, which is now a hidden track tag; it checks all non-track demand tags (game was right); notes/T-3663.md.
+- T-3680 [P1] {L:community} Community cards say Could not load too soon (2026-11-18): Cause: drawings fetched 12 per page hit the server's 429 bucket (60 at once, 4/s) and a card never retried. Fixed in the app: four at a time, retry after a 429, unwanted cards dropped; 0 error cards in 10 fast clicks (was 6-7 of 12).
+- T-3678 [P3] {L:translations} Three track panel strings untranslated (2026-11-18): pieces, shiftAddTip, shiftSetTip and the four new keys translated in all 12 languages through l10n.mjs. Notes: notes/T-3676.md.
+- T-3677 [P3] {L:single-track} Turning one-way off asks the wrong question (2026-11-18): Turning one way off asks 'Run trains both ways on this track?' with a 'Run both ways' button. Notes: notes/T-3676.md.
+- T-3676 [P3] {L:single-track} Line warning for track that runs the other way (2026-11-18): Own warning when the track is there but runs the other way (app only); gone case keeps its string. Notes: notes/T-3676.md.
 - T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (2026-11-18): play.mjs start/do/sim/edits/reload/status/stop, wait.mjs, reads trips/clock/bubbles; helptrip probe 129 s -> 21.5 s cold, 3-4 s per retry; real-save reads 172 s -> ms after the first; cores.mjs claims in the main ledger from trees; snapshot/restore tried, not kept. notes/T-3666.md.
 - T-3670 [P2] {L:workflow} Agents start lighter (2026-11-18): Fresh maps session (maps-56, 2026-11-18) starts with no aws-mcp or stripe tools and no claude.ai connectors; a probe agent's first call was 49.9k tokens, down from 56k.
 - T-3673 [P2] {L:single-track} One-way direction on short track and in the track panel (2026-11-18): oneWayMarks: one mark at the point farthest from stops for runs with none, chevrons at least 1.5x min width; TrackInspector WayArrow turns with map bearing; checked on her Caracas save. notes/T-3673.md.

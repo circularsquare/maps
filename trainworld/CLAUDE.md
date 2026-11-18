@@ -43,7 +43,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   plus `--fix`, and `bug` only when no area fits); list it with your strings. If the thing you changed is new in, or
   already listed in, the unpublished changelog (`changelog.py list`), reword that item (`changelog.py reword <id>
   "<line>"`) instead of adding one. Internals, tools and docs get none, and nor does a change too minor or too fiddly to describe
-  for a player (Anita, 2026-11-17: undo after a load's cap lowering). Anita rewords
+  for a player (Anita, 2026-11-17: undo after a load's cap lowering), nor one that only changes a tooltip, an
+  alert's wording or diagnostic text, since that text is the whole change and players can read it (Anita, 2026-11-18). Anita rewords
   or hides items on the board's Changelog view.
 - **Not reviewed**: the wiki, zone/region/realm names, docs, commit messages, and text copied word for word from her
   own message (Anita, 2026-11-11); still list it in the report.
