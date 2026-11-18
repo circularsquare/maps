@@ -273,8 +273,7 @@ export function stepWeekendCount(id: LineId, demand: Demand, by: number, most: n
 
 /** Step the headway a line's weekend count gives at a level (`dir` 1 longer, -1 shorter), by the
  * weekdays' headway steps (`nextHeadway`), to the count that keeps it at the weekdays' round trip
- * `trip` (`autoTrainsFor`), and sends the headway with them so the weekends run it (T-3557). A
- * headway that needs the same count is stepped past. */
+ * `trip` (`autoTrainsFor`), and sends the headway with them so the weekends run it (T-3557). */
 export function stepWeekendHeadway(id: LineId, demand: Demand, dir: number, trip: number, limitS: number, loop: boolean, most: number, shown: number): boolean {
   const n = weekendShown(id)?.counts[DEMAND_INDEX[demand]];
   const step = n === undefined ? null : restHeadwayStep(n, dir, trip, limitS, loop, shown);
@@ -289,16 +288,19 @@ export function stepWeekendHeadway(id: LineId, demand: Demand, dir: number, trip
 export function restHeadwayStep(n: number, dir: number, trip: number, limitS: number, loop: boolean, shown: number): { to: number; h: number } | null {
   if (trip <= 0 || dir === 0) return null;
   const up = dir > 0;
-  let h = shown > 0 ? shown : n > 0 ? trip / n : 0;
-  for (let i = 0; i < 60; i++) {
-    h = nextHeadway(h, Math.sign(dir), Math.abs(dir));
-    // the shortest headway's step down is no service, which is the wrong way for more trains
-    if (h <= 0) return up && n > 0 ? { to: 0, h: 0 } : null;
-    const to = autoTrainsFor(trip, h, limitS, loop);
-    if (up ? to < n : to > n) return { to, h };
-    if (h >= HEADWAY_MAX_S) return up && n > 0 ? { to: 0, h: 0 } : null;
-  }
-  return null;
+  const now = shown > 0 ? shown : n > 0 ? trip / n : 0;
+  // past the longest headway is no service; a step shorter than the shortest is none
+  if (up && now >= HEADWAY_MAX_S) return n > 0 ? { to: 0, h: 0 } : null;
+  const h = nextHeadway(now, Math.sign(dir), Math.abs(dir));
+  if (h <= 0 || h === now) return null;
+  return { to: autoTrainsFor(trip, h, limitS, loop), h };
+}
+
+/** A weekend headway typed in minutes at a level: it runs that headway (to 5 s, as the weekdays'), with the
+ * count it needs; 0 or less is no service. */
+export function typeWeekendHeadway(id: LineId, demand: Demand, minutes: number, trip: number, limitS: number, loop: boolean, most: number): boolean {
+  const h = headwayFromMinutes(minutes);
+  return setWeekendHeadway(id, demand, h > 0 ? autoTrainsFor(trip, h, limitS, loop) : 0, h, most);
 }
 
 /** Run every line's weekends at `share` percent of its weekdays, counts set by hand dropped: one

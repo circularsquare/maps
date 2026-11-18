@@ -24,7 +24,7 @@ import { pendingLabel } from "../../game/lineFigures";
 import { lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
-import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, restTphShown, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, restTphShown, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, typeWeekendHeadway, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
 import { Row, Segmented, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
@@ -212,7 +212,8 @@ function WeekendCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats;
           <Stepper wide jump jumpUnit={t("schedule.minUnit")} label={t("schedule.weekendHeadwayLabel")}
             value={short ? <span class="bad">{headwayText(h)}</span> : headwayText(h)}
             onStep={(s) => stepWeekendHeadway(l.id, d, s, trip, lim, loop, most, h)}
-            tipDown={stepTip(-1)} tipUp={stepTip(1)} />
+            tipDown={stepTip(-1)} tipUp={stepTip(1)}
+            type={{ text: h ? String(+(h / 60).toFixed(2)) : "0", set: (x) => { typeWeekendHeadway(l.id, d, x, trip, lim, loop, most); } }} />
         </td>
       </>
     );
