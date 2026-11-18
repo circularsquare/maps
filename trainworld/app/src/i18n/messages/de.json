@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Feedback löschen",
   "feedbackPanel.deleteConfirm": "Dieses Feedback und die Antworten endgültig löschen? (Die Entwickler können es dann auch nicht mehr sehen)",
   "feedbackPanel.earlier": "Dein bisheriges Feedback",
-  "feedbackPanel.emailLabel": "E-Mail",
-  "feedbackPanel.emailPlaceholder": "E-Mail (optional)",
   "feedbackPanel.empty": "Schreib zuerst eine Nachricht.",
   "feedbackPanel.failed": "{reason} Deine Nachricht ist noch da.",
   "feedbackPanel.full": "Das Feedback-Postfach ist gerade voll. Versuch es später nochmal.",

@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Supprimer l’avis",
   "feedbackPanel.deleteConfirm": "Supprimer cet avis et ses réponses pour de bon ? (Les développeurs ne pourront plus le voir non plus)",
   "feedbackPanel.earlier": "Vos avis précédents",
-  "feedbackPanel.emailLabel": "E-mail",
-  "feedbackPanel.emailPlaceholder": "E-mail (facultatif)",
   "feedbackPanel.empty": "Écrivez d’abord un message.",
   "feedbackPanel.failed": "{reason} Votre message est toujours là.",
   "feedbackPanel.full": "La boîte à avis est pleine pour le moment. Réessayez plus tard.",

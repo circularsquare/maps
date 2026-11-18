@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "의견 삭제",
   "feedbackPanel.deleteConfirm": "이 의견과 답글을 영구 삭제할까요? (개발자도 더 이상 볼 수 없어요)",
   "feedbackPanel.earlier": "이전에 보낸 의견",
-  "feedbackPanel.emailLabel": "이메일",
-  "feedbackPanel.emailPlaceholder": "이메일 (선택)",
   "feedbackPanel.empty": "메시지를 먼저 써 주세요.",
   "feedbackPanel.failed": "{reason} 메시지는 그대로 있어요.",
   "feedbackPanel.full": "지금은 의견함이 가득 찼어요. 나중에 다시 해 보세요.",

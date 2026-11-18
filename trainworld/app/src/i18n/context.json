@@ -735,8 +735,6 @@
   "feedbackPanel.title": "Title of the feedback form.",
   "feedbackPanel.namePlaceholder": "Placeholder of the name box in the feedback form.",
   "feedbackPanel.nameLabel": "Screen-reader label of the name box in the feedback form.",
-  "feedbackPanel.emailPlaceholder": "Placeholder of the email box in the feedback form.",
-  "feedbackPanel.emailLabel": "Screen-reader label of the email box in the feedback form.",
   "feedbackPanel.messageLabel": "Placeholder and screen-reader label of the message box in the feedback form.",
   "feedbackPanel.sending": "Label of the send button while the feedback is being sent.",
   "feedbackPanel.send": "Submit button of the feedback form.",

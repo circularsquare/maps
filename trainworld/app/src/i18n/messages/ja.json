@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "フィードバックを削除",
   "feedbackPanel.deleteConfirm": "このフィードバックと返信を完全に削除しますか？（開発者も見られなくなります）",
   "feedbackPanel.earlier": "これまでのフィードバック",
-  "feedbackPanel.emailLabel": "メールアドレス",
-  "feedbackPanel.emailPlaceholder": "メールアドレス（任意）",
   "feedbackPanel.empty": "先にメッセージを書いてください。",
   "feedbackPanel.failed": "{reason}入力したメッセージは残っています。",
   "feedbackPanel.full": "現在フィードバックを受け付けられません。しばらくしてからもう一度お試しください。",

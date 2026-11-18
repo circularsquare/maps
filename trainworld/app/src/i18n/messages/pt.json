@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Excluir feedback",
   "feedbackPanel.deleteConfirm": "Excluir este feedback e as respostas para sempre? (Os desenvolvedores também deixarão de vê-lo)",
   "feedbackPanel.earlier": "Seus feedbacks anteriores",
-  "feedbackPanel.emailLabel": "E-mail",
-  "feedbackPanel.emailPlaceholder": "E-mail (opcional)",
   "feedbackPanel.empty": "Escreva uma mensagem primeiro.",
   "feedbackPanel.failed": "{reason} Sua mensagem continua aqui.",
   "feedbackPanel.full": "A caixa de feedback está cheia agora. Tente de novo mais tarde.",

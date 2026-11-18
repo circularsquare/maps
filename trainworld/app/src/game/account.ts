@@ -142,7 +142,7 @@ export async function fetchBytes(path: string, max: number): Promise<Uint8Array>
 
 /** T-1673: the feedback form's send, to the account server (which mails it on; no address is in
  * the page). Signed in, it carries the session so the mail names the account (T-1719). Throws an ApiError whose message says what to do. */
-export async function sendFeedback(f: { name: string; contact: string; message: string; context: Record<string, string>; kind?: string; images?: { type: string; data: string }[] }) {
+export async function sendFeedback(f: { name: string; message: string; context: Record<string, string>; kind?: string; images?: { type: string; data: string }[] }) {
   if (!BASE) throw new ApiError(t("account.noServer"), 0);
   // a server that does not say it takes feedback answers 404 without CORS headers: do not call it
   const cfg = accountConfig.peek();
@@ -151,7 +151,7 @@ export async function sendFeedback(f: { name: string; contact: string; message: 
   // refuse the key header in its CORS preflight)
   const threads = cfg?.trainworldFeedbackThreads === true;
   if (threads && !session.peek() && !readFeedbackKey()) makeFeedbackKey();
-  await api("POST", "trainworld/feedback", { kind: threads && f.kind ? f.kind : "feedback", message: f.message, name: f.name, contact: f.contact, context: f.context, ...(threads && f.images?.length ? { images: f.images } : {}) },
+  await api("POST", "trainworld/feedback", { kind: threads && f.kind ? f.kind : "feedback", message: f.message, name: f.name, context: f.context, ...(threads && f.images?.length ? { images: f.images } : {}) },
     { headers: threads ? keyHeaders() : undefined });
 }
 

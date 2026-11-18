@@ -1,4 +1,4 @@
-// T-1673: Settings' "Submit feedback" opens this modal: name and email (both optional) and a message,
+// T-1673: Settings' "Submit feedback" opens this modal: a name (optional) and a message,
 // sent to the account server's /trainworld/feedback (game/account.ts sendFeedback), which stores it
 // and mails it on. No address is in the page. What was typed stays until it is sent.
 //
@@ -100,7 +100,6 @@ export function FeedbackButton() {
 
 export function FeedbackPanel() {
   const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
   const [kind, setKind] = useState("");
   const [state, setState] = useState<"" | "sending">("");
@@ -143,7 +142,7 @@ export function FeedbackPanel() {
     setState("sending"); setMsg("");
     try {
       const pics = room ? await Promise.all(images.map(imageField)) : [];
-      await sendFeedback({ name: name.trim(), contact: contact.trim(), message: message.trim(), context: reportContext(), kind: kind || undefined, images: pics });
+      await sendFeedback({ name: name.trim(),message: message.trim(), context: reportContext(), kind: kind || undefined, images: pics });
       images.forEach(dropImage); setImages([]);
       setMessage(""); setKind(""); setState("");
       close();
@@ -161,8 +160,6 @@ export function FeedbackPanel() {
       onDrop={room ? (e) => { setOver(false); const fs = Array.from(e.dataTransfer?.files ?? []); if (fs.length) { e.preventDefault(); void addFiles(fs); } } : undefined}>
       <input name="name" placeholder={t("feedbackPanel.namePlaceholder")} aria-label={t("feedbackPanel.nameLabel")} autocomplete="name" maxLength={100}
         value={name} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
-      <input name="email" type="email" placeholder={t("feedbackPanel.emailPlaceholder")} aria-label={t("feedbackPanel.emailLabel")} autocomplete="email" maxLength={200}
-        value={contact} onInput={(e) => setContact((e.target as HTMLInputElement).value)} />
       <textarea name="message" placeholder={t("feedbackPanel.messageLabel")} aria-label={t("feedbackPanel.messageLabel")} rows={6} maxLength={4000}
         value={message} onInput={(e) => setMessage((e.target as HTMLTextAreaElement).value)} />
       {room > 0 && <div class="fb-shots">

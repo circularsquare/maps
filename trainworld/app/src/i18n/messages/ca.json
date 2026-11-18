@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Elimina",
   "feedbackPanel.deleteConfirm": "Vols eliminar aquest comentari i les respostes per sempre? (Els desenvolupadors tampoc no el podran veure)",
   "feedbackPanel.earlier": "Els teus comentaris anteriors",
-  "feedbackPanel.emailLabel": "Correu",
-  "feedbackPanel.emailPlaceholder": "Correu (opcional)",
   "feedbackPanel.empty": "Primer escriu un missatge.",
   "feedbackPanel.failed": "{reason} El teu missatge encara és aquí.",
   "feedbackPanel.full": "La bústia de comentaris és plena ara mateix. Torna-ho a provar més tard.",

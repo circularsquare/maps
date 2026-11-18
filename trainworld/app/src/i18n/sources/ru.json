@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Delete feedback",
   "feedbackPanel.deleteConfirm": "Delete this feedback and its replies permanently? (Developers will also no longer be able to see it)",
   "feedbackPanel.earlier": "Your earlier feedback",
-  "feedbackPanel.emailLabel": "Email",
-  "feedbackPanel.emailPlaceholder": "Email (optional)",
   "feedbackPanel.empty": "Write a message first.",
   "feedbackPanel.failed": "{reason} Your message is still here.",
   "feedbackPanel.full": "Feedback is full right now. Try again later.",

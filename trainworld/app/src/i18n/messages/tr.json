@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Geri bildirimi sil",
   "feedbackPanel.deleteConfirm": "Bu geri bildirim ve yanıtları kalıcı olarak silinsin mi? (Geliştiriciler de artık göremez)",
   "feedbackPanel.earlier": "Önceki geri bildirimlerin",
-  "feedbackPanel.emailLabel": "E-posta",
-  "feedbackPanel.emailPlaceholder": "E-posta (isteğe bağlı)",
   "feedbackPanel.empty": "Önce bir mesaj yaz.",
   "feedbackPanel.failed": "{reason} Mesajın hâlâ burada.",
   "feedbackPanel.full": "Geri bildirim şu an dolu. Sonra tekrar dene.",

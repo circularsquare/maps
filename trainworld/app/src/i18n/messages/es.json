@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Borrar comentario",
   "feedbackPanel.deleteConfirm": "¿Borrar este comentario y sus respuestas de forma permanente? (Los desarrolladores tampoco podrán verlo)",
   "feedbackPanel.earlier": "Tus comentarios anteriores",
-  "feedbackPanel.emailLabel": "Correo",
-  "feedbackPanel.emailPlaceholder": "Correo (opcional)",
   "feedbackPanel.empty": "Escribe un mensaje primero.",
   "feedbackPanel.failed": "{reason} Tu mensaje sigue aquí.",
   "feedbackPanel.full": "No se pueden recibir comentarios ahora mismo. Vuelve a intentarlo más tarde.",

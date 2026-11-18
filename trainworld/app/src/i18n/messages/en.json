@@ -738,8 +738,6 @@
   "feedbackPanel.title": "Feedback",
   "feedbackPanel.namePlaceholder": "Name (optional)",
   "feedbackPanel.nameLabel": "Name",
-  "feedbackPanel.emailPlaceholder": "Email (optional)",
-  "feedbackPanel.emailLabel": "Email",
   "feedbackPanel.messageLabel": "Message",
   "feedbackPanel.sending": "Sending…",
   "feedbackPanel.send": "Send feedback",

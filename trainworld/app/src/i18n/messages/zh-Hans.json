@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "删除反馈",
   "feedbackPanel.deleteConfirm": "要彻底删除这条反馈和它的回复吗？（开发者也将无法再看到）",
   "feedbackPanel.earlier": "你之前的反馈",
-  "feedbackPanel.emailLabel": "邮箱",
-  "feedbackPanel.emailPlaceholder": "邮箱（选填）",
   "feedbackPanel.empty": "请先写点内容。",
   "feedbackPanel.failed": "{reason}你的留言还在。",
   "feedbackPanel.full": "反馈暂时满了，请稍后再试。",

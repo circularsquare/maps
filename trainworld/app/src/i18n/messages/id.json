@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Hapus masukan",
   "feedbackPanel.deleteConfirm": "Hapus masukan ini dan balasannya selamanya? (Pengembang juga tidak bisa melihatnya lagi)",
   "feedbackPanel.earlier": "Masukanmu sebelumnya",
-  "feedbackPanel.emailLabel": "Email",
-  "feedbackPanel.emailPlaceholder": "Email (opsional)",
   "feedbackPanel.empty": "Tulis pesan dulu.",
   "feedbackPanel.failed": "{reason} Pesanmu masih ada di sini.",
   "feedbackPanel.full": "Masukan sedang penuh. Coba lagi nanti.",

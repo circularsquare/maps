@@ -787,8 +787,6 @@
   "feedbackPanel.delete": "Удалить отзыв",
   "feedbackPanel.deleteConfirm": "Удалить этот отзыв и ответы на него насовсем? (Разработчики тоже больше не смогут его увидеть)",
   "feedbackPanel.earlier": "Ваши прошлые отзывы",
-  "feedbackPanel.emailLabel": "Почта",
-  "feedbackPanel.emailPlaceholder": "Почта (необязательно)",
   "feedbackPanel.empty": "Сначала напишите сообщение.",
   "feedbackPanel.failed": "{reason} Ваше сообщение осталось на месте.",
   "feedbackPanel.full": "Отзывы сейчас не принимаются: хранилище полно. Попробуйте позже.",
