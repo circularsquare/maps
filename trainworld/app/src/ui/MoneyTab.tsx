@@ -177,9 +177,9 @@ function FerryFareRow({ mul }: { mul: number }) {
 
 /** T-1801: the transfer fare as charged where the panel looks (times its scale): a stepper by
  * $0.25, typed on a click, as the base fare. */
-function TransferFareRow({ fare, scale }: { fare: number; scale: number }) {
-  const shown = fare * scale;
-  const set = (v: number) => void setFareTransfer(tidyTransfer(Math.max(0, v) / scale));
+function TransferFareRow({ fare, base, scale }: { fare: number; base: number; scale: number }) {
+  const shown = fare * scale, baseShown = base * scale; // T-3689: at most the base fare
+  const set = (v: number) => void setFareTransfer(tidyTransfer(Math.min(Math.max(0, v), baseShown) / scale));
   return (
     <li>
       <span class="fr-what">{t("moneyTab.transferFare")}</span>
@@ -292,7 +292,7 @@ export function MoneyTab() {
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
           {busLine !== null && <BusFareRow mul={busLine} />}
           {ferry !== null && <FerryFareRow mul={ferry} />}
-          <TransferFareRow fare={transferFare(m.fares)} scale={scale} />
+          <TransferFareRow fare={transferFare(m.fares)} base={m.fares.nodes[0]?.[1] ?? m.fares.base} scale={scale} />
           <FareScaleRow country={country} scale={scale} own={m.fares.scales?.[country] !== undefined} scales={m.fares.scales} refCountry={fareRef(m.fares)} />
         </>} />
       <FareEffect preview={farePreview.value} scale={scale} />

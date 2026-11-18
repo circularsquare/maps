@@ -1807,7 +1807,8 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   groups weigh the same fares (`IntercityApi::fare_col`). Fare income takes the rate times it on
   that line's passenger-km. **Transfer fare** [T-1801]: `Fares.transfer` (curve units, absent for
   $0, saved in the header; an older save loads with none) is paid on each boarding after a trip's
-  first, times the trip's country's scale, in route choice and mode choice (docs/demand-mode.md)
+  first, never above the base fare (T-3689: `transferFare` holds it at read, and a lowered base, a typed fare and a
+  loaded save bring the stored one down; a base of 0 leaves none), times the trip's country's scale, in route choice and mode choice (docs/demand-mode.md)
   and in fare income on the line boarded after the change (`fare_extra`, so inside `LineDemand.fareX`);
   the regional market's trips change free. Fare income is the first stretch's base on
   each of demand's trips and its rate on their passenger-km per period, plus demand's extra on the

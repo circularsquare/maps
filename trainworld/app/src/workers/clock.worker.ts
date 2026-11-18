@@ -20,7 +20,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
-import { faresOf, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
+import { capTransfer, faresOf, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
@@ -94,7 +94,7 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
   const curve = faresOf(g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return { ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines };
+  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines });
 }
 /** T-3567: line `line`'s own fare multiple set to `mul` (1 clears it), its quad-track twin's with it; false for
  * no such line. */
@@ -4266,7 +4266,7 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = { ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}) };
+      fares = capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}) });
       return { r: 0 };
     case "fareLine":
       return { r: Number.isFinite(op.mul) && setLineFare(a, op.line, op.mul) ? 0 : 1 };
@@ -4285,7 +4285,7 @@ function applyInner(op: EditOp): Applied {
     case "fareTransfer": {
       if (!Number.isFinite(op.usd)) return { r: 1 };
       const { transfer: _, ...rest } = fares, v = tidyTransfer(op.usd);
-      fares = v > 0 ? { ...rest, transfer: v } : rest;
+      fares = capTransfer(v > 0 ? { ...rest, transfer: v } : rest);
       return { r: 0 };
     }
     case "fareScale": {

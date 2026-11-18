@@ -27,7 +27,7 @@ import { initWasm } from "./wasmInit";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
-import { curveKnots, scaledKnots } from "../game/fareCurve";
+import { curveKnots, scaledKnots, transferFare } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorBook, CorridorRows } from "../game/demand";
@@ -2047,7 +2047,7 @@ async function run() {
           p.set_base_mul(m.baseW ?? new Float32Array(0)); // T-3578
           p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
           // T-1801: the market's trips change lines free (its fares weigh by income group)
-          if (!(p instanceof IntercityApi)) p.set_transfer_fare((m.fare.transfer ?? 0) * scale);
+          if (!(p instanceof IntercityApi)) p.set_transfer_fare(Math.min(transferFare(m.fare) * scale, rounded ? rounded.base : m.fare.base * scale)); // T-3689: never above the base fare charged
         }
       };
       const setUp = (c: JobCluster) => {

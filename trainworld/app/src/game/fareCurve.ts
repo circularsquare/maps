@@ -48,10 +48,22 @@ export interface Fares {
   ref?: string;
 }
 
-/** T-1801: the transfer fare of `f`, 0 unless set. */
-export function transferFare(f: { transfer?: number } | undefined): number {
+/** The base fare of `f` (the curve's first node), curve units. */
+function baseOf(f: { base?: number; nodes?: FareNode[] }): number {
+  return f.nodes?.[0]?.[1] ?? f.base ?? 0;
+}
+/** T-1801: the transfer fare of `f`, 0 unless set, never above its base fare (T-3689: a change never costs more
+ * than a new trip; a base of 0 leaves none). Every reader takes it from here, so a lowered base or an old save's
+ * larger number charges the base. */
+export function transferFare(f: { transfer?: number; base?: number; nodes?: FareNode[] } | undefined): number {
   const v = f?.transfer;
-  return v !== undefined && Number.isFinite(v) && v > 0 ? v : 0;
+  return v !== undefined && Number.isFinite(v) && v > 0 ? Math.min(v, Math.max(0, baseOf(f!))) : 0;
+}
+/** `f` with its transfer fare held to the base fare (dropped when 0). */
+export function capTransfer<T extends { transfer?: number; base?: number; nodes?: FareNode[] }>(f: T): T {
+  if (f.transfer === undefined) return f;
+  const { transfer: _, ...rest } = f, v = transferFare(f);
+  return (v > 0 ? { ...rest, transfer: v } : rest) as T;
 }
 /** A transfer fare the player set, in the curve's units: not below 0, to a hundredth of a cent
  * (as the curve's fares, so a fare typed in a country with a scale reads back as typed). */

@@ -802,7 +802,7 @@ the first's end; the last node's distance changes no fare, so it is only dragged
 line runs high-speed trains, "High speed" with the high-speed fare multiplier in a stepper ("1.25x" by default,
 by 0.05 from 0 to 5, a click types one), its hover the rule, and after a change an undo icon ("Back
 to 1.50x") [T-1626]. Then "Transfer fare" with the fare each change of line pays in a stepper
-("$0.00" in a new game, by $0.25 as the base fare, a click types one), shown times the country's
+("$0.00" in a new game, by $0.25 as the base fare, a click types one; at most the base fare, T-3689), shown times the country's
 fare scale as the curve is [T-1801]. Last, one row "Japan fares" (the country above; no hover on the label, T-1852)
 with its fares as a multiple of the reference country's (T-2679, docs/track-and-service.md "Fares by country").
 The reference country's row shows a plain "1.00x" in the stepper's column, no stepper and no buttons (hover

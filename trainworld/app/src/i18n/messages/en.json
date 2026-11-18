@@ -1496,7 +1496,7 @@
   "moneyTab.trains": "Trains",
   "moneyTab.transferFare": "Transfer fare",
   "moneyTab.transferFareLabel": "transfer fare",
-  "moneyTab.transferTip": "Paid each time a trip changes lines.",
+  "moneyTab.transferTip": "Paid each time a trip changes lines. At most the base fare.",
   "moneyTab.upkeep": "Upkeep",
   "moneyTab.yesterday": "Yesterday",
   "moneyText.fares": "Fares {amount}",

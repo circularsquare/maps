@@ -7,7 +7,7 @@
 
 import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { PERIODS } from "../game/periods";
-import { curveKnots } from "../game/fareCurve";
+import { curveKnots, transferFare } from "../game/fareCurve";
 import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
 
@@ -406,7 +406,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.transfer ? `|x${n.fare.transfer}` : ""}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
   const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
