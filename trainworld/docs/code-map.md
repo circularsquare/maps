@@ -2,6 +2,8 @@
 
 Where things live and how they are built. Read when you need to find a file; the rules are in
 `CLAUDE.md`. Keep a line here current when you add, move or split a module.
+For the big picture first (the parts, how data moves, three everyday moments), read `docs/code-tour.md`;
+whoever moves a file it names fixes it there too.
 
 ## sim/: the Rust crate (`trainworld-sim`)
 

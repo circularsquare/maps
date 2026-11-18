@@ -61,7 +61,7 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 | File | Holds | Who edits |
 |---|---|---|
 | `SPEC.md` | What the game is and how it works, **as of now**, in summary | agents, rewritten in place |
-| `docs/` | The spec in detail, one file per area (indexes: `interface.md`, `demand.md`); `adding-a-country.md`, `world-run.md`, `data-register.md`, `code-map.md` | agents |
+| `docs/` | The spec in detail, one file per area (indexes: `interface.md`, `demand.md`); `adding-a-country.md`, `world-run.md`, `data-register.md`, `code-map.md`, `code-tour.md` (the parts and how data moves) | agents |
 | `wiki/` | Pages for a curious player; how to edit: `wiki/RULES.md` | agents |
 | `TASKS.md` | Open work, by priority | agents |
 | `LINES.md` | Anita's lines: the conceptual units tasks group into, by area | agents |

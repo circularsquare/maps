@@ -21,3 +21,4 @@ then run `python trainworld/tools/wiki_build.py` from the maps root and commit `
 - **Stays out:** task ids, build steps, the history of why, every edge case. The exact rule line points to those.
 - **Don't write about what's moving.** A mechanic being changed right now waits until it has landed.
 - A changed rule changes its page in the same edit, as with the spec.
+- **Code is not a wiki page.** The wiki is for players: one idea a page, figures from markers. The tour of how the code is built (parts, sizes, how data moves) is for people reading the code, so it lives at `docs/code-tour.md`, outside `wiki/` and unchecked by the build. Whoever moves or renames a file that tour names fixes it in the same change.
