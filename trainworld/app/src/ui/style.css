@@ -122,6 +122,8 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .btn:hover { background: var(--shade); }
 .btn.on { background: var(--tint); border-color: var(--accent); position: relative; z-index: 1; }
 .btn.icon { width: 28px; padding: 0; }
+.way-arrow { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; color: var(--muted, currentColor); }
+.way-arrow svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* station upgrades (T-1281): outlined, dashed in the blueprint, filled when built */
 .upgrades { display: flex; gap: 6px; margin: 6px 0; }
 .btn.upgrade { color: var(--muted); }

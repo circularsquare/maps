@@ -17,6 +17,7 @@ import { setOneWay } from "../../game/oneWay";
 import { useClockQuery } from "../useClockQuery";
 import { settable } from "../../game/trackSet";
 import { touchInput } from "../../map/touch";
+import { mapBearing } from "../../map/live";
 import type { TrackEdge } from "../../game/types";
 
 /** Double up: an express pair beside this double track as far as its run goes, as
@@ -33,7 +34,17 @@ function DoubleUp({ edge, version }: { edge: number; version: number }) {
   );
 }
 
-const kindOf = (e: TrackEdge) => (e.kind ? (e.kind === 2 ? "streetTram" : "tram") : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single");
+/** The way a one-way piece runs, as an arrow turned to where its direction points on screen (its a-to-b bearing minus the map's). */
+function WayArrow({ e }: { e: TrackEdge }) {
+  const nodes = world.value?.nodes, a = nodes?.get(e.a), b = nodes?.get(e.b);
+  if (!a || !b) return null;
+  const [from, to] = e.oneWay === 2 ? [b, a] : [a, b];
+  const north = (to.lat - from.lat), east = (to.lng - from.lng) * Math.cos((from.lat * Math.PI) / 180);
+  const deg = (Math.atan2(east, north) * 180) / Math.PI - mapBearing.value;
+  return <span class="way-arrow" aria-hidden="true" style={{ transform: `rotate(${deg}deg)` }}><Icon.arrowUp /></span>;
+}
+
+const kindOf =(e: TrackEdge) => (e.kind ? (e.kind === 2 ? "streetTram" : "tram") : e.hsr ? "hsr" : e.tracks === 2 ? "double" : "single");
 
 /** T-3634: built pieces Shift+clicked together (game/trackSet.ts): their totals, one Rebuild for all, and the
  * lines on any of them. */
@@ -125,6 +136,7 @@ export function TrackInspector({ edge }: { edge: number }) {
           <span data-tip={e.oneWay && !e.setWay ? t("trackInspector.oneWayAutoTip") : undefined}>
             <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? e.autoWay ?? 1 : e.autoWay ? 3 : 0)}>{t("trackInspector.oneWay")}</Check>
           </span>
+          {e.oneWay && <WayArrow e={e} />}
           {e.oneWay && <button class="btn text" onClick={() => void setOneWay(e.id, e.oneWay === 1 ? 2 : 1, true)}>{t("trackInspector.reverse")}</button>}
           {!!e.setWay && (e.setWay === 3 ? 0 : e.setWay) !== (e.autoWay ?? 0) && (
             <button class="btn text" onClick={() => void setOneWay(e.id, 0)}>{t("trackInspector.autoWay")}</button>

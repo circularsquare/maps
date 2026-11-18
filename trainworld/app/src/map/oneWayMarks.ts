@@ -11,6 +11,8 @@ import { kAtY } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
 import { compileOptional, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 
+/** A run of one-way track whose marks all sit nearer a stop than this, ground metres, gets one mark that ignores stop clearance. */
+const LONE_CLEAR_M = 100;
 /** Marks are placed every this many ground metres along a route; the shaders keep every 2^n-th. */
 export const ONE_WAY_STEP_M = 100;
 /** Bus and ferry arrows are this much further apart than train chevrons, step and gap alike (Anita, 2026-11-10: about 20% fewer). */
@@ -107,35 +109,69 @@ export function oneWayTrackRuns(edges: readonly OneWayEdge[], stops: readonly (r
   const done = new Set<OneWayEdge>();
   const follow = (first: OneWayEdge) => {
     let off = 0;
+    const before = out.length, run: [OneWayEdge, number][] = [];
     for (let e: OneWayEdge | undefined = first; e && !done.has(e); e = next(e)) {
       done.add(e);
+      run.push([e, off]);
       off += edgeMarks(e, off, stops, out);
+    }
+    // a run with no mark well clear of the stops (a short leg, or one beside a station) gets one where it is
+    // farthest from any stop, and the shaders' stop clearance leaves it alone
+    let clearest = 0;
+    for (let k = before; k < out.length; k += CHEVRON_STRIDE) clearest = Math.max(clearest, out[k + 9]);
+    if (off > 0 && clearest < LONE_CLEAR_M) {
+      out.length = before;
+      let best = -1, bestAt = off / 2;
+      for (let i = 1; i <= 9; i++) {
+        const d = off * i / 10, at = locate(run, d);
+        if (!at) continue;
+        const probe: number[] = [];
+        edgeMarkAt(at[0], at[1], 0, stops, probe);
+        if (probe.length && probe[9] > best) { best = probe[9]; bestAt = d; }
+      }
+      const at = locate(run, bestAt);
+      if (at) edgeMarkAt(at[0], at[1], 0, stops, out, true);
     }
   };
   for (const e of edges) if (!hasPrev.has(e)) follow(e);
   for (const e of edges) follow(e);
 }
 
-/** The marks on one edge of a run that starts `off` local units before it; returns the edge's length. */
-function edgeMarks(e: OneWayEdge, off: number, stops: readonly (readonly [number, number])[], out: number[]): number {
+function edgeLength(e: OneWayEdge): number {
   const s = e.strokes, n = s.count;
   if (!n) return 0;
-  const k = kAtY(s.seg[1]), step = CHEVRON_STEP_M * k, sign = e.way === 2 ? -1 : 1;
-  const segLen = (i: number) => Math.hypot(s.seg[i * 4 + 2] - s.seg[i * 4], s.seg[i * 4 + 3] - s.seg[i * 4 + 1]);
-  const L = s.dist[n - 1] + segLen(n - 1);
+  return s.dist[n - 1] + Math.hypot(s.seg[(n - 1) * 4 + 2] - s.seg[(n - 1) * 4], s.seg[(n - 1) * 4 + 3] - s.seg[(n - 1) * 4 + 1]);
+}
+
+/** The edge of a run (`[edge, local units before it]`) `d` local units along it, and the distance into that edge. */
+function locate(run: readonly [OneWayEdge, number][], d: number): [OneWayEdge, number] | undefined {
+  for (const [e, at] of run) if (d >= at && d <= at + edgeLength(e)) return [e, d - at];
+  return undefined;
+}
+
+/** One mark `travel` local units along an edge in its running direction; `keep` gives it no stop clearance. */
+function edgeMarkAt(e: OneWayEdge, travel: number, m: number, stops: readonly (readonly [number, number])[], out: number[], keep = false) {
+  const s = e.strokes, n = s.count, k = kAtY(s.seg[1]), sign = e.way === 2 ? -1 : 1;
+  const L = edgeLength(e), q = e.way === 1 ? travel : L - travel;
+  let lo = 0, hi = n - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (s.dist[mid] <= q) lo = mid; else hi = mid - 1; }
+  const x0 = s.seg[lo * 4], y0 = s.seg[lo * 4 + 1], dx = s.seg[lo * 4 + 2] - x0, dy = s.seg[lo * 4 + 3] - y0, len = Math.hypot(dx, dy);
+  if (!(len > 0)) return;
+  const t = Math.min(1, Math.max(0, (q - s.dist[lo]) / len));
+  const x = x0 + t * dx, y = y0 + t * dy;
+  let near = Infinity;
+  for (const p of stops) near = Math.min(near, Math.hypot(p[0] - x, p[1] - y));
+  out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, keep ? 1e9 : near / k, 1);
+}
+
+/** The marks on one edge of a run that starts `off` local units before it; returns the edge's length. */
+function edgeMarks(e: OneWayEdge, off: number, stops: readonly (readonly [number, number])[], out: number[]): number {
+  const L = edgeLength(e);
+  if (!L) return 0;
+  const step = CHEVRON_STEP_M * kAtY(e.strokes.seg[1]);
   for (let m = Math.max(0, Math.ceil(off / step - 0.5)); (m + 0.5) * step < off + L; m++) {
     const travel = (m + 0.5) * step - off;
-    if (travel < 0) continue;
-    const q = e.way === 1 ? travel : L - travel;
-    let lo = 0, hi = n - 1;
-    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (s.dist[mid] <= q) lo = mid; else hi = mid - 1; }
-    const x0 = s.seg[lo * 4], y0 = s.seg[lo * 4 + 1], dx = s.seg[lo * 4 + 2] - x0, dy = s.seg[lo * 4 + 3] - y0, len = Math.hypot(dx, dy);
-    if (!(len > 0)) continue;
-    const t = Math.min(1, Math.max(0, (q - s.dist[lo]) / len));
-    const x = x0 + t * dx, y = y0 + t * dy;
-    let near = Infinity;
-    for (const p of stops) near = Math.min(near, Math.hypot(p[0] - x, p[1] - y));
-    out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, near / k, 1);
+    if (travel >= 0) edgeMarkAt(e, travel, m, stops, out);
   }
   return L;
 }
@@ -159,9 +195,11 @@ out vec2 v_p;
 flat out float v_h;
 flat out float v_t;
 void main() {
+  bool lone = a_band.w < -0.5;   // one-way track (no line): drawn at least u_min wide, however thin the line is
   float w = u_line * (1.0 - u_band * a_band.z) * a_more.z;
+  if (lone) w = max(w, 1.5 * u_min);
   bool muted = u_sel >= 0 && int(a_band.w + 0.5) != u_sel;
-  if (mod(a_more.x, u_every) > 0.5 || a_more.y * u_band_m < u_clear || w < u_min || muted) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if (mod(a_more.x, u_every) > 0.5 || a_more.y * u_band_m < u_clear || (w < u_min && !lone) || muted) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   vec4 c0 = project(a_mark.xy);
   vec4 c1 = project(a_mark.xy + a_mark.zw);
   vec2 half_vp = u_viewport * 0.5;
