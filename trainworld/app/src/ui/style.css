@@ -1090,6 +1090,7 @@ button.status-tag:hover { background: var(--shade); color: var(--text); }
 .band-hit { top: 18px; height: 6px; }
 /* T-862: today is a holiday in a country with the player's stations; SkyBanner.tsx HOLIDAY_COLOUR */
 .day-away { display: inline-flex; vertical-align: middle; }
+.dot-slot { display: contents; }
 .holiday-dot { display: inline-block; width: 6px; height: 6px; margin: 0 5px 2px 0; border-radius: 50%; background: #ff5fa2; vertical-align: middle; }
 /* T-1476, T-1865: near a long holiday the dot is a button (the calendar icon's job), its hit area wider than the dot */
 .holiday-dot.coming { background: var(--yellow); }

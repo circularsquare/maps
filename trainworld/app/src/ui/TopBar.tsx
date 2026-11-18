@@ -15,7 +15,7 @@ import { StatusTag } from "./StatusTag";
 import { BusyTag } from "./BusyTag";
 import { ViewedLike } from "./Community";
 import { countryName, groupHolidays, holidaysNear, loadHolidays, rushNear, runToday, superDays, supersNear, type HolidaySpan, type RushSpan } from "../game/holidays";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { display, setDisplay, shownDay, shownDayOn } from "../game/ui";
 import { splitTable, splitTip } from "../game/splitTip";
 import { lengthsOf, wantLengths } from "../game/zoneLengths";
@@ -137,6 +137,19 @@ function HolidayDot({ today }: { today: boolean }) {
   return <button class={"holiday-dot btn-dot" + (coming ? " coming" : "") + (showing ? " on" : "")} data-tip={lines.join("\n")} aria-label={t("topBar.longHolidays")} onClick={click} />;
 }
 
+/** T-3635: an element whose text the game sets itself on each render, with no Preact text node inside.
+ * A page translator or extension that wraps or replaces text nodes then can't freeze the text, and
+ * can't leave Preact a text node it must insert beside: that insert threw mid-diff, and each throw
+ * left a stale copy of the clock in the bar. */
+function useOwnText<E extends HTMLElement>(text: string) {
+  const ref = useRef<E>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && el.textContent !== text) el.textContent = text;
+  });
+  return ref;
+}
+
 /** T-861, T-1853: the time and date on one line. */
 function Clock() {
   // ?perfOff=clock (T-045, measurement only): read without subscribing, so it never re-renders.
@@ -149,12 +162,22 @@ function Clock() {
   const near = holidaysNear.value;
   const todayHols = holidayLines(minute, near, false).filter((l) => l.today).map((l) => l.text);
   const dateTip = t("topBar.dateTip", { weekday: t("topBar.weekday", { day: WEEKDAY_KEYS[weekdayOf(day)] }), month: MONTH_LONG[month], date, year: yearOf(day), day });
+  const time = useOwnText<HTMLElement>(clockTime(minute)), dateText = useOwnText<HTMLSpanElement>(dateName(day));
+  // T-3635: any throw in this diff makes Preact mount a fresh clock and leave the old one in the bar;
+  // whatever the cause, a stale copy lasts one render at most
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const me = box.current, bar = me?.parentElement;
+    if (!bar) return;
+    for (const c of bar.querySelectorAll(":scope > .clock")) if (c !== me) c.remove();
+  });
+  // T-3635: the dot (none, an <i> or a <button>) has a slot of its own, so it is only ever inserted
+  // into an empty element, never before a node something else may have moved
   return (
-    // T-3635: a page translator rewriting the date's text can break the holiday dot's diff and leave stale clocks behind
-    <div class="clock" translate={false}>
+    <div class="clock" ref={box}>
       <div class="clock-text" data-tip={held ? t("topBar.clockHeld") : [dateTip, ...todayHols].join("\n")}>
-        <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
-        <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
+        <b class={"time lg" + (held ? " held" : "")} ref={time} />
+        <span class="date"><span class="dot-slot"><HolidayDot today={todayHols.length > 0} /></span><span ref={dateText} /></span>
       </div>
     </div>
   );
@@ -306,7 +329,9 @@ export function TopBar() {
   const note = demandView.value && (viewRecomputing.value || demandView.value.version === CACHE_VERSION) ? tSpaced(t("topBar.recomputing")) : "";
   const worldTip = total ? t("topBar.worldTip", { cities: total.cities, stations: total.stations }) : undefined;
   return (
-    <><header id="topbar">
+    // T-3635: a page translator leaves the bar alone (numbers, a clock and a place name, all shown in the
+    // game's language already); text it replaces would stop updating
+    <><header id="topbar" translate={false}>
       {/* T-1108: the name takes what it needs up to a cap, on two lines at most, the whole name on hover */}
       {far ? <CityName id={null} name={t("topBar.world")} tip={worldTip} /> : <CityName id={city?.id ?? null} name={cityName} />}
       <div class="split">
