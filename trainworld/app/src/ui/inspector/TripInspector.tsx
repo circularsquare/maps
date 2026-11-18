@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { baseFareOf, cityMinPerUsd, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { baseFareOf, cityMinPerUsd, countedPeople, countsTrain, openRoute, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -89,13 +89,13 @@ function ModeBar({ t, mix, of }: { t: TripPeriod; mix: TripMix | null; of: strin
   const n = m ? m.rail + m.walk + m.drive + m.none : 0;
   const model = n > 0 ? [m!.rail / n, m!.walk / n, m!.drive / n, m!.none / n] : [t.pTrain, t.pWalk, t.pDrive, t.pNone];
   // T-911: counted trips are whole people; the representative trip's chances stay as they are
-  const [train, walk, drive, none] = roundTo(model, peopleOf(n));
+  const [train, walk, drive, none] = roundTo(model, countedPeople(n));
   type Mode = "train" | "walk" | "drive" | "none";
   const parts: [Mode, number, string][] = [["train", train, "seg-train"], ["walk", walk, "seg-walk"], ["drive", drive, "seg-drive"],
     ...(t.apart || none > 0 ? [["none", none, "seg-none"] as [Mode, number, string]] : [])];
   const walkTip = tr("tripInspector.walkClause", { min: minText(t.walkMin) });
   const note = n > 0 ? "" : groupNote(t);
-  const modelTip = (i: number) => (n > 0 ? "\n" + tr("tripText.modelLine", { share: pct1(model[i]) }) : "");
+  const modelTip = (i: number) => (n >= 1 ? "\n" + tr("tripText.modelLine", { share: pct1(model[i]) }) : "");
   const stands = (m: Mode) => (STANDS_FOR[m] ? "\n" + tr(STANDS_FOR[m]!) : "");
   const extra = (m: Mode) => (m === "walk" && !t.apart ? walkTip : "");
   // walking and driving between two land parts are 0: their rows go, By car and By walking say why
@@ -417,7 +417,7 @@ export function TripInspector() {
   const periodLow = lowerWord(period);
   const of = n >= 0.5 ? tr("tripInspector.ofTrips", { trips: trips(n, filter), day }) : n > 0 ? tr("tripInspector.ofTrips", { trips: tripWords(filter), day }) : tr("tripInspector.ofPeople", { period: periodLow });
   // T-911: the train riders the headline counts, in whole trips, for the route shares (none: the model's)
-  const riders = n > 0 ? wholePeople([mix!.rail, mix!.walk, mix!.drive], peopleOf(n))[0] || null : null;
+  const riders = n > 0 ? wholePeople([mix!.rail, mix!.walk, mix!.drive], countedPeople(n))[0] || null : null;
   const trainCounted = countsTrain(mix);
   const countTip = n > 0 ? [tr("tripInspector.countTip", { amount: exact(n), trips: tripWords(filter), day }), ...(filter === "all" ? mix!.purposes.filter((p) => p.rail + p.walk + p.drive >= 0.5).map((p) => tr("tripText.labelValue", { label: purposeName(p.key), value: exact(p.rail + p.walk + p.drive) })) : [])].join("\n") : tr("tripInspector.straightLine", { distance: distance(t.distM) });
   const words = purposeWords(v!.purpose);

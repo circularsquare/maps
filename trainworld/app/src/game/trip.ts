@@ -616,11 +616,15 @@ export function wholePeople(shares: number[], n: number, pooled = -1): number[] 
 /** T-911: the whole number of people `n` trips a day stand for (at least one, when there are any). */
 export const peopleOf = (n: number) => (n > 0 ? Math.max(1, Math.round(n)) : 0);
 
+/** T-3641: the whole people the trip explorer's modes are shared out over: none (the model's own shares)
+ * under one trip a day, where rounding to one person is all or nothing and the period rows disagree. */
+export const countedPeople = (n: number) => (n >= 1 ? Math.round(n) : 0);
+
 /** T-1902: the headline counts at least one whole train trip (as its bar rounds the modes), so the
  * explorer shows a train route even where the two exact points have none (`TripPeriod.lifted`). */
 export function countsTrain(mix: TripMix | null): boolean {
   const n = mix ? mix.rail + mix.walk + mix.drive : 0;
-  return n > 0 && wholePeople([mix!.rail, mix!.walk, mix!.drive], peopleOf(n))[0] > 0;
+  return n > 0 && (n < 1 ? mix!.rail > 0 : wholePeople([mix!.rail, mix!.walk, mix!.drive], countedPeople(n))[0] > 0);
 }
 
 /** Trips a day (legs both ways) between two places by mode, under the purpose filter. */
