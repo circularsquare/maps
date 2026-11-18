@@ -25,7 +25,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - passing-tracks | Passing and overtakes | Expresses passing locals: passing loops, holds that line up both ways, three-speed lines. | update:scheduling-fares
 - trains-drawn | Trains drawn sensibly | Trains on the map should never pass through each other or run far behind their timetable. | update:scheduling-fares
 - line-rates | Line rates | How a line's trains an hour settle when lines share track, and the bugs where that drifts.
-- fares | Fares | Fare levels and fare controls, starting with high-speed lines losing money. | update:scheduling-fares
+- fares | Fares | Fare levels and fare controls, starting with high-speed lines losing money. | update:scheduling-fares | done:2026-11-17
 - money | Money history | Money over time: per-line history, bus money by region, and how much of it a save keeps.
 
 ## Demand and world data {area:demand}

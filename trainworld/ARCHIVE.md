@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3578 [P2] {L:fares} Line fare multiple scales the base too (2026-11-17): base extra on its own channel (base_extra / baseX); 0x line takes no base share; checker PASS notes/T-3578-check2.md; 1.00x byte-identical. notes/T-3578.md.
 - T-3602 [P2] {L:timetables} Use default in place of Clear default (2026-11-17): schedule.defaultReset removed, schedule.defaultUse added; applyDefaultHeadway as one undoable edit; disabled with no default or when matching. notes/T-3602.md.
 - T-3603 [P2] {L:timetables} Weekend headway edits flash a decimal headway (2026-11-17): weekend cells read restTphShown/weekendHeadwayAt, a mirror of the sim's weekend_headway; t3603-weekend-flash.mjs samples every frame. notes/T-3603.md.
 - T-3595 [P1] {L:single-track} Extending a line with new track still breaks it (2026-11-17): one-way leg stops ordered by the run that passes them (skeleton plus set, wasm/legs.rs); pairs within 50 m; Network::turn_end lets trains turn at any track end; checker PASS (notes/T-3565-check2.md), Caracas Line 2 4082 -> 1204 s, NYC identical. notes/T-3565.md.

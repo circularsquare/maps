@@ -1,6 +1,6 @@
 {
-  "release": "next",
-  "line": "",
+  "release": "v0.4.0",
+  "line": "update v0.4! central america and venezuela, timetables, fares, faster loading...",
   "items": [
     {
       "id": "c135",
@@ -216,15 +216,15 @@
     {
       "id": "c017",
       "text": "lines through two one-way tracks with a station on each stop at both, one each way, and riders board each way at its own station",
-      "edited": null,
+      "edited": "fixes to one-way stations: splitting a double track line into two single track lines allows trains to stop correctly at stations on the single track portions",
       "hidden": false,
       "task": "T-3348",
       "by": "perdir2",
       "at": "2026-11-16T14:49:14Z",
-      "rev": 2,
+      "rev": 9,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-16T19:48:59Z"
+      "changed": "2026-11-18T00:48:11Z"
     },
     {
       "id": "c113",
@@ -268,15 +268,15 @@
     {
       "id": "c112",
       "text": "fixed a line that stopped running when blueprint track was drawn on from the track end its trains turn around at",
-      "edited": "fixed a bug where extending a line over blueprint track could break it",
+      "edited": "fixed a bug where extending a line could break it",
       "hidden": false,
       "task": "T-3541",
       "by": "tramsplit",
       "at": "2026-11-17T18:03:40Z",
-      "rev": 5,
+      "rev": 6,
       "area": "track",
       "fix": true,
-      "changed": "2026-11-17T21:34:41Z",
+      "changed": "2026-11-18T00:25:34Z",
       "parent": "c056"
     },
     {
@@ -1800,5 +1800,6 @@
       "fix": false,
       "changed": "2026-11-17T19:50:55Z"
     }
-  ]
+  ],
+  "published": "2026-11-18T00:50:09Z"
 }
