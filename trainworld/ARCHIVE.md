@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2662 [P3] {L:timetables} Passing dots on the timetable chart at a flat junction (2026-11-18): checked: a player-built flat junction (two lines sharing track, one branching at a station) draws its dots at the times the other line's trains pass; no code change.
+- T-3446 [P3] {L:schematic-layout} Clear old-layout leftovers from the diagram (2026-11-18): unused sea path removed from layoutDiagram (LayoutSea, seaTerms, about 190 lines); sheet layout hashes identical on nyc and jpn; t2160/t2161 retired to checks/old; docs/ui-diagram.md describes the sheet.
+- T-3685 [P3] {L:community} Like button on an opened community game (2026-11-18): A share opened from Community shows a like button under the day/night picture while it is the game in hand, also after saving it; a reloaded save has none; notes/T-3683.md.
+- T-3683 [P2] {L:community} Join the leaderboards at the top (2026-11-18): Join (or Sign in) sits at the top of the leaderboard panel, Leave stays at the bottom; notes/T-3683.md.
 - T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia (2026-11-18): closed without code: not reproduced (bugs3, 2026-11-16) and the likely shared cause T-3426 landed; Anita 2026-11-18 thinks it a duplicate; reopen if the player sends a save.
 - T-1753 [P3] {L:ridership-checks} Rapid and express service on Tokyo suburban lines (2026-11-18): closed without code: Anita 2026-11-18: an ODPT account for about +2% on Tokyo isn't worth it.
 - T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode (2026-11-18): closed without code: Anita 2026-11-18: no more videos planned, close.

@@ -462,7 +462,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3652 [P3] {L:community} Newest view in Community
+- T-3652 [P3] {L:community} Newest view in Community (taking, 2026-11-18, agent newest)
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "sort community by newest". Community has Random, Biggest and Most liked today.
   - Goal: Community has a Newest tab (newest share first, one per person like Random) beside the other three; its server change ships with the next server deploy (your yes 2026-11-18).
 - T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up
@@ -479,7 +479,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
-- T-3101 [P3] {L:single-track} One-way track follow-ups
+- T-3101 [P3] {L:single-track} One-way track follow-ups (taking, 2026-11-18, agent selway)
   - Context: The track panel's line list counts a line that only uses a piece on its way back (landed 5a15e44d). The Select bar still lacks switch and reverse for a picked single-track run. You, 2026-11-18: yes to one confirm listing every re-routed line, one undo, and the track panel's words ("Run trains one way", "Reverse direction").
   - Goal: Select bar switch and reverse work on picked single-track runs with one confirm and one undo.
   - Other: notes/T-3101.md
@@ -492,9 +492,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: You said 2026-11-06: "though i think it snot super urgent, *adding* demand is not really a prolem post release". Wikidata leaves many places with no attraction.
   - Goal: Packs with no attraction fall under 20% (from 52%), and China, India, Brazil, the Philippines, Vietnam and Nigeria reach 1+ per million people.
   - Other: An OSM pass of a few hours, no pack rebuild. notes/T-2663.md section 5
-- T-2662 [P3] {L:timetables} Passing dots on the timetable chart at a flat junction (taking, 2026-11-18, agent qwdiag)
-  - Context: The chart draws passing dots at junctions as well as flat crossings; only the crossing path has been checked.
-  - Goal: A player-built flat junction shows its dots at the right times.
 - T-2755 [P3] {L:world-map} Real rail network at far zoom
   - Context: You asked for level of detail later, low priority. The real network now starts at zoom 6 because picking lagged at zoom 4.
   - Goal: Show it again from zoom 4 or further out using simplified, merged far-zoom geometry.
@@ -603,10 +600,6 @@ Anita's notes 2026-11-05 late morning (verbatim in notes/todo-2026-11-05b.md; br
   - Context: Two speedups landed 2026-11-06. All Japan takes 38 s in the page and New York 9.3 s.
   - Goal: All Japan well under 15 s and New York under 4 s.
   - Other: Folded in T-2592 (Diagram sheet map step speed). Most of what is left is the layout on a country map, about 13 s of Japan's 41. notes/T-2589.md
-- T-3446 [P3] {L:schematic-layout} Clear old-layout leftovers from the diagram (taking, 2026-11-18, agent qwdiag)
-  - Context: T-2590 deleted the old layout. `layoutDiagram` still takes an unused `sea` argument and `seaTerms` (T-2541), and docs/ui-diagram.md "Zone borders" and "Water" still describe the old layout.
-  - Goal: The unused sea argument is gone and both doc sections describe the sheet.
-  - Other: notes/T-2590.md
 - T-2538 [P3] {L:schematic-layout} Diagram routing loses crossings B kept
   - Context: After T-2534, all Japan outside dense places keeps 0.76 of B's crossings but draws 0.49: stations slide along a bent piece past the crossing.
   - Goal: Drawn crossings stay close to what B kept.
@@ -996,6 +989,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-3697 [P3] {L:checks} Old-layout diagram checks fail
+  - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
+  - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
+  - Other: notes/T-3446.md
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
   - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
