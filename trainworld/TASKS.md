@@ -855,7 +855,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Other: Folds in T-1467, a bus lane upgrade. 1-2 days for busways.
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
-  - Goal: A design for you first, aimed at players who vibe-code their mods (you, 2026-11-18): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, instructions for coding assistants in the open-source repo, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
+  - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
   - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this.
 - T-3376 [P2] {L:jobs-places} Industrial areas' jobs
   - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.

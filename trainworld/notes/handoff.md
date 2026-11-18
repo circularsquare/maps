@@ -62,7 +62,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 - 11-18 18:40 UTC: modded games off the leaderboards "soonish ... p2" (T-3707, modmark running: modded mark +
   scores only from published builds on anita.garden; server deploy hers). Points scale with each line's cost
   recovery capped at 1, "if fares cover 50% of expenses they should count as 50% points"; measure first (T-3657,
-  profitpts running: stops before building if honest networks lose >20%). Mod support aimed at vibe-coders (T-3377).
+  profitpts running: stops before building if honest networks lose >20%). Mod support (T-3377) for hand-coders and assistant users alike; never
+  say publicly it's aimed at vibe-coders (her 18:50).
 - 11-18 18:25 UTC: buses and ferries should get trains' schedule controls ("we can leave out the marey diagram /
   timetable part for now ... not necessarily super high prio but would be nice to get out in next few updates"):
   T-3703, after busfix's T-3704 (same code). Discord reports filed: T-3704 (busfix running), T-3705 Firefox
