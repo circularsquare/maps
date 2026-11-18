@@ -23,6 +23,7 @@ import { liveMoney, moneyState } from "../../game/money";
 import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "../../game/capacityKinds";
 import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
+import { runsAgainstOneWay } from "../../game/oneWay";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats } from "../../game/world";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
@@ -1008,7 +1009,7 @@ function RailLineInspector({ id }: { id: string }) {
         </div>
       )}
       {st.status === "broken" && (
-        <ul class="alerts"><Alert>{tr("lineInspector.broken")}</Alert></ul>
+        <ul class="alerts"><Alert>{tr(runsAgainstOneWay(w, st.path) ? "lineInspector.brokenOtherWay" : "lineInspector.broken")}</Alert></ul>
       )}
 
       {st.status !== "broken" && repeatedEdge(st) !== null && (

@@ -134,7 +134,7 @@ export function TrackInspector({ edge }: { edge: number }) {
         <Actions>
           {/* T-3137: the switch shows the way it runs, taken by itself included; off where the run gives a way pins both ways */}
           <span data-tip={e.oneWay && !e.setWay ? t("trackInspector.oneWayAutoTip") : undefined}>
-            <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? e.autoWay ?? 1 : e.autoWay ? 3 : 0)}>{t("trackInspector.oneWay")}</Check>
+            <Check checked={!!e.oneWay} onChange={(on) => void setOneWay(e.id, on ? e.autoWay ?? 1 : e.autoWay ? 3 : 0, false, !on)}>{t("trackInspector.oneWay")}</Check>
           </span>
           {e.oneWay && <WayArrow e={e} />}
           {e.oneWay && <button class="btn text" onClick={() => void setOneWay(e.id, e.oneWay === 1 ? 2 : 1, true)}>{t("trackInspector.reverse")}</button>}

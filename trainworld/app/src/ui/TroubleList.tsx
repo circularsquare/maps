@@ -15,6 +15,7 @@ import { nearestStation, stationNameNear } from "../game/places";
 import { readToday, type LineToday } from "../game/today";
 import { DEMAND_INDEX, type LineInput, type Selection, type WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
+import { runsAgainstOneWay } from "../game/oneWay";
 import { listedLines, world } from "../game/world";
 import { nearestJunction, tramSpot } from "../map/capacityMarkers";
 import { toLngLat } from "../map/geo";
@@ -68,7 +69,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     if (!st) continue;
     if (st.status === "broken") {
       out.push({ key: "b" + l.id, tier: 0, size: 0, lead: <Chip line={l} size="sm" plain />, label: l.name,
-        value: <span class="crowd-bad"><Icon.alert /></span>, tip: t("troubleList.broken") + "\n" + t("troubleList.fixBroken"), go: goLine(l) });
+        value: <span class="crowd-bad"><Icon.alert /></span>, tip: t(runsAgainstOneWay(w, st.path) ? "troubleList.brokenOtherWay" : "troubleList.broken") + "\n" + t("troubleList.fixBroken"), go: goLine(l) });
       continue;
     }
     const d = st.status === "running" ? day.get(l.id) : undefined;
