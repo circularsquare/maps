@@ -54,7 +54,18 @@ maps-45 wound down 11-17 ~22:20 UTC. All in flight is maps-1c's:
 - kaohsiung (Opus, .tw-trees/kaohsiung, port 6199): T-3600 (5 min after a Kaohsiung edit) + T-3601 (lines with no
   trains keep riders after the recalc) on her saves artifacts/trainworld/t3600-asianita-1851/-1852.save.
 
-## Night run
+## Release v0.4.0 IN PROGRESS (her "can start", 11-18 00:50 UTC)
+- Done: changelog published into updates.ts (898df9f8; line "update v0.4! central america and venezuela,
+  timetables, fares, faster loading..." on her word, cut to 80 chars); fare base T-3578 landed (93ee151d).
+- Running: pass 1 translators l10n2-a/b/c/d (scratchpad\l10n2-<x>\<lang>), ~96 keys each; then pass 2 (Sonnet,
+  extract changed keys from their commits) and pass 3 (Opus); commit messages/ per batch.
+- Then ask her, together: server deploy, freight R2 upload, smoke8800 + deploy.py + website push, open-source
+  sync + push, PR replies. onewayfix (T-3605) goes in if it lands before the deploy.
+- kaohsiung (T-3600/T-3601) DONE in tree: T-3601 fix (StatusTag.tsx) lands after the publish (merge with solveeta's
+  hover); T-3600 options (a) quick solve covers the market's pairs through the edited city 3-5 h, (b) spread periods
+  over workers 3-4 h, (c) don't hold edits behind a whole solve: asked her.
+
+## Night run (NOT after the publish: she says when, 11-18)
 - T-3511 enclave shifts + T-3455 coastal rows, plan notes/T-3455.md, ~8.2 h, 10 cores. It rebuilds packs, so never
   during a publish: start after the publish, or once she says she's done for the night without one. Start:
   `powershell -File C:\Users\anita\projects\maps\trainworld\tools\country\start_hidden.ps1
