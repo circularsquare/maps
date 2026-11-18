@@ -455,6 +455,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
+- T-3646 [P3] {L:timetables} Undo leaves other lines' trains cut
+  - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
+  - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
+  - Other: notes/T-3482.md
 - T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count
   - Context: Found by T-3482's agent: in `hand_over`, a train dwelling at its first stop is merged into the train waiting at that terminal, so one train disappears when a line's count changes. A repro and a candidate fix are in notes/T-3482.md (and the scratch file service.rs.fixed it names).
   - Goal: Changing a line's train count never loses a running train; the trains on the map match the panel's count after the change.

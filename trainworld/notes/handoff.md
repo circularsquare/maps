@@ -56,8 +56,8 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   then joining; aims to finish by ~15:00 UTC. HOLD app/ writes and landings in the main tree while its gates run
   (gates serve the main tree's app/). After its join: commit the game json (registry etc.), 8800 rebuild, T-3620,
   T-3623, T-3604 and the pipeline Up next tasks can start.
-- settle (T-3482) built; checker check3482 (Sonnet, .tw-trees/settle, port 6191) running; landing waits for
-  nightfix3's gates. Changelog c014 is new text. Follow-ups from settle (unfiled): a running line's new headway
+- settle (T-3482) built, checker 4/5; its one fail (undo/redo shares) is master's behaviour too, filed T-3646. READY
+  to land (`agent-tree.mjs finish settle ... --task T-3482`, WASM rebuild) once nightfix3's gates are done. Changelog c014 is new text. Follow-ups from settle (unfiled): a running line's new headway
   on full track keeps its old rate; a train can vanish in hand_over at a terminal (repro + candidate fix in
   notes/T-3482.md in the tree); data/work/realnet/nyc_real.twt2 no longer loads.
 - 8800 builds tonight (3ce746f9, acfb779a, ff3a04cd) used plain snapbuild while the night run owned data/packs (my
