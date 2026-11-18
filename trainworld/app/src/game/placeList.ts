@@ -10,6 +10,8 @@ import { normalise } from "./search";
 import { dataUrl } from "./dataBase";
 import { M_PER_DEG, M_PER_DEG_LAT } from "./frame";
 import { patientFetch } from "../workers/patientFetch";
+import { language } from "../i18n";
+import { nativeLang, nativePlaceName } from "../i18n/nativeNames";
 
 export interface Place {
   name: string;
@@ -23,6 +25,8 @@ export interface Place {
   city: CityId;
   /** normalised name and other names (alt_name, short_name...), for matching */
   keys: string[];
+  /** the other names as written, OSM's own name first where `name` is a Latin one */
+  aka: string[];
 }
 
 interface PlaceFile { format: number; kinds: string[]; places: [string, number, number, number, number, string[]?][] }
@@ -39,7 +43,7 @@ function load(id: CityId): Promise<Place[]> {
       const f = (await r.json()) as PlaceFile;
       const list = f.places.map(([name, k, lng, lat, pop, others]): Place => ({
         name, kind: f.kinds[k] ?? "neighbourhood", lng, lat, pop, city: id,
-        keys: [normalise(name), ...(others ?? []).map(normalise)],
+        keys: [normalise(name), ...(others ?? []).map(normalise)], aka: others ?? [],
       }));
       places.value = new Map([...places.peek(), [id, list]]);
       return list;
@@ -77,6 +81,17 @@ export async function widenPlaces(lng: number, lat: number): Promise<boolean> {
   if (!next.length) return false;
   await loadAll(next.map((c) => c.id));
   return true;
+}
+
+const COUNTRY = new Map(CITIES.map((c) => [c.id, c.country]));
+/** The country of the zone nearest a point. */
+export const countryAt = (lng: number, lat: number) => COUNTRY.get(cityNear(lng, lat));
+
+/** T-3631: the name a station takes from a place: in the player's script where the place has a name in
+ * it (i18n/nativeNames.ts), else its own. */
+export function stationPlaceName(p: Place): string {
+  const lang = nativeLang(language.peek());
+  return (lang && nativePlaceName([p.name, ...p.aka], p.kind, COUNTRY.get(p.city), lang)) || p.name;
 }
 
 /** Kinds a station may be named after, nearest first within this many metres. */

@@ -161,8 +161,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   suggestions (T-534, `map/stationNames.ts`, worked out when asked and never stored) are:
   - **the real station** [T-3571]: the real station (noritetsu's, `map/realStations.ts`) nearest the spot
     within 150 m, in Latin letters as the game writes place names: its own name where that is in them,
-    else its English one, else Cyrillic transliterated; one with none of those (some of Japan's,
-    China's, Greece's) or a name in use gives no suggestion. A ferry port never takes one. The region's
+    else its English one, else Cyrillic transliterated (in Japanese, Chinese or Korean, its own name
+    first: below); one with none of those (some of Japan's, China's, Greece's) or a name in use gives no suggestion. A ferry port never takes one. The region's
     stations are fetched when the station tool is picked; a click before they arrive names as if there
     were none;
   - **the cross street**: the nearest named street on the basemap within 400 m ("W 42nd St"), when
@@ -180,6 +180,17 @@ Full design, numbers and sources: `notes/T-008.md`.
   No street, neighbourhood or tile label ending in "station" ("Station", "Sta.", "Stn", any case:
   a stop's own label in OSM) is suggested; the next candidate takes its place. A city, town,
   village or hamlet keeps its name even then (Huntington Station is a place) [T-568].
+
+  **In the player's script** [T-3631]: with the game in Japanese, Chinese (either) or Korean, each
+  suggestion takes the local name (the real station's own, the tile's `name`, the place list's OSM name)
+  where every letter of it is in a script the language reads: kanji and kana for Japanese, Han for
+  Chinese (as written, Simplified or Traditional), Hangul or Han for Korean; else the Latin name (a
+  Japanese player in Seoul gets "Gangnam"). A place's name drops one administrative suffix where its
+  OSM kind is that unit and two characters stay (`i18n/nativeNames.ts`: 世田谷区 to 世田谷, 九亭镇 to 九亭,
+  陆家嘴街道 and 陆家嘴社区 to 陆家嘴, 강남구 to 강남, 역삼1동 to 역삼; a block number at any length, 桜三丁目 to 桜;
+  never 大手町, 종로3가 or 仙乐小区), or takes a shorter other name it starts with. A name in use gives way to
+  東世田谷 / 上海南 / 동대구, else 世田谷2. A station's own footbridge, passage or exit on the basemap
+  (保土ヶ谷駅東口歩道橋) is suggested in no language; 駅前通り still is. Stations already named keep their names.
 
   A new station takes the real station, else the cross street, else the neighbourhood, else the nearest place of any kind
   on the place list (neighbourhoods within 2.5 km of their label point, towns 5 km), else a place

@@ -1892,7 +1892,9 @@ export class Tools {
     // on quad track the pair clicked only (T-1687); T-3332: a one-track station's half on double track
     const double=candidates.some((id)=>w.edges.find((x)=>x.id===id)?.tracks===2);
     // network.ts's `single`: every track under the platform is single and not a crossover
-    const ends=candidates.map((id)=>w.edges.find((x)=>x.id===id)!);
+    const ends=candidates.map((id)=>w.edges.find((x)=>x.id===id));
+    // a snap made before an undo can name track the undo took away: no ghost until the next snap
+    if (!ends.length||!ends.every((e):e is TrackEdge=>!!e)) return;
     const single=!double&&ends.every((e)=>e.tracks===1&&!e.crossover);
     const outside=single?(sh:PlatformShape)=>this.outsideSide(h,ends,ways,sh):null;
     this.boxGhost(h.lx,h.ly,ways,perM,this.verdict()?.ok===false,null,undefined,double,outside);

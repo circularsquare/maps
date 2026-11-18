@@ -10,7 +10,8 @@
 // Names: a station placed within NAME_M of a real one is first suggested its name (map/stationNames.ts),
 // written as the game writes place names: Latin letters, the local name where it is in them, else the
 // English one, else Cyrillic transliterated (pipeline/realauto.py `pick_name`); a station with none of those
-// gives no name, and naming goes on as before.
+// gives no name, and naming goes on as before. For a Japanese, Chinese or Korean player the local name comes
+// first where it is in a script they read (i18n/nativeNames.ts, T-3631).
 
 import type { Feature } from "geojson";
 import * as maplibregl from "maplibre-gl";
@@ -25,6 +26,8 @@ import { firstSymbolId } from "./basemap";
 import { styleUp } from "./styleReady";
 import { addFinder } from "./demandHover";
 import { hiddenOnGlobe } from "./live";
+import { language } from "../i18n";
+import { nativeLang, readable } from "../i18n/nativeNames";
 
 /** A new station this close to a real one takes its name: half a long platform from the real station's
  * point, and under the gap between neighbouring stations of different names almost everywhere (the
@@ -159,7 +162,8 @@ export async function realStationName(lng: number, lat: number, taken: Set<strin
   const load = loadRealStationsAt(lng, lat);
   if (wait) await load;
   const near = nearby(lng, lat, NAME_M)[0];
-  const name = near ? near.st.name[near.i] : null;
+  const lang = nativeLang(language.peek());
+  const name = near ? (lang && readable(near.st.local[near.i], lang)) || near.st.name[near.i] : null;
   return name && !taken.has(name) ? name : null;
 }
 
