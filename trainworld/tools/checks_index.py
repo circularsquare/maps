@@ -16,7 +16,6 @@ SINCE = sys.argv[1] if len(sys.argv) > 1 else '2026-11-01'
 BROKEN = {
     't2626-profit-estimate.mjs': 'too slow: did not finish in 280 s on 3 cores (2026-11-18)',
     't1201-fare-rows.mjs': 'Money tab selector fixed 2026-11-18, still fails 8 of 11 lines: the fare rows moved (now Base fare, two stretches, Transfer fare, country scale) and its row indices and buttons are stale',
-    't1550-far-bubbles.mjs': 'fails its zoom 7/8.4 hover-tag lines (T-3663)',
 }
 # helpers a check imports, or data a check reads: not checks themselves
 HELPERS = {'t2407-draw.py', 't1177-data.mjs', 't1966-layout.mjs', 'lib.mjs', 'static-serve.mjs', 'token_usage.py'}
