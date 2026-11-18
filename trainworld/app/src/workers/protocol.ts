@@ -384,6 +384,9 @@ export interface MoneyState {
   copy?: boolean;
   /** T-3707: played in a page that is not the published game, or with a mod (`SaveHeader.modded`): never ranks */
   modded?: boolean;
+  /** T-3687: the save slot this game is played in ("" for none). A load sends the new game's money before the slot
+   * list says it is playing, so the page scores a game only while the two name the same slot. */
+  slot: string;
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;

@@ -587,7 +587,8 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   dirty = writeNow;
   savedAt = Date.now();
   if (newer && newerFile) await keepAsLoaded(key);
-  else if (!writeNow || !await autosave()) await publishSlots();
+  // T-3687: an empty game is not written (autosave), and the page must still hear which slot it is in
+  else if (!writeNow || !await autosave() || unwritten === key) await publishSlots();
   slotChanges?.postMessage({ key });
 }
 
@@ -2294,6 +2295,7 @@ function moneyState(): MoneyState {
     mode,
     ...(copyOf ? { copy: true } : {}),
     ...(modded ? { modded: true } : {}),
+    slot: loadingInto ?? activeSlot,
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
     fleetFast: a.fleet_fast(),
@@ -2885,6 +2887,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         newerFile = null;
         dirty = true;
         savedAt = Date.now();
+        sendMoney(); // T-3687: the money names the slot it is played in
       } catch (err) { lease.release(); throw err; }
     } else if (msg.action === "open") {
       const key = msg.key;

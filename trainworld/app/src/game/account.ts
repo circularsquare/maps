@@ -360,7 +360,7 @@ export async function gameForShare(): Promise<string | null> {
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
   let e = games()[slot] ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
-  if (m && unranked(m) && !e.sandbox) {
+  if (m && unranked(m) && !e.sandbox && m.slot === slot) {
     try {
       await api("PUT", `trainworld/score/${e.id}`, latch(m));
       e.sandbox = true;
@@ -408,7 +408,9 @@ let sending = false;
 /** Send the playing game's figures if they changed and the gap has passed (`now` skips the gap). */
 export async function sendScores(now = false) {
   const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
-  if (sending || !s || accountState.peek() !== "on" || !slot || !m) return;
+  // T-3687: while a load is under way the money can be the incoming game's and the slot still the one before; a
+  // sandbox or a copy opened from a normal game would latch that game for good
+  if (sending || !s || accountState.peek() !== "on" || !slot || !m || m.slot !== slot) return;
   const all = games(), acct = s.account.id;
   // T-988: the slot's game id on the account names its figures too (a fork or a kept copy has a new one)
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
@@ -434,7 +436,10 @@ export async function sendScores(now = false) {
   try {
     await api("PUT", `trainworld/score/${e.id}`, body);
     if (unranked(m)) e.sandbox = true;
-    else if (scoresRefused.peek()) scoresRefused.value = false;
+    else {
+      delete e.sandbox; // listed, so not latched: a 403 remembered by mistake, or a latch taken off by hand
+      if (scoresRefused.peek()) scoresRefused.value = false;
+    }
     e.acct = acct;
     e.at = Date.now();
     lsSet(GAMES_KEY, { ...games(), [slot]: e });
