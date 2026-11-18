@@ -1,16 +1,1 @@
-[
-  {
-    "id": "a-2026-11-18-4",
-    "title": "Walking change distance",
-    "text": "T-3298: riders change between two stations on foot only when they are under 300 m apart, unless a passage links them. So a tram stop 450 m from a train station gives no change at all (the trip walks 33 min to the train instead). Raise the limit to 600 m for every pair of stations, raise it only for tram stops to train stations, or keep 300 m and leave it to passages? Recommended: 600 m for all, after measuring search time and riders on the real save. It makes passages a bit less useful (they still reach 1 km).",
-    "since": "2026-11-18",
-    "by": "maps-ca"
-  },
-  {
-    "id": "a-2026-11-18-5",
-    "title": "Start menu settings: A, B or C",
-    "text": "T-3630: pick A (a gear in the card's top row), B (a Settings and Submit feedback row in the card) or C (a footer line) on artifacts/trainworld/review/t3630-landing.png. Recommended: B, with Calculate intercity trips, Use more cores and Panel and text size; language stays where it is. Two calls with it: intercity becomes a setting on computers too (today it's phone-only), and a checkbox on the menu would replace the rule that every pick from the menu turns intercity back on (yours, 2026-11-10). Whichever you pick, the failure screen gets the same Submit feedback button.",
-    "since": "2026-11-18",
-    "by": "maps-ca"
-  }
-]
+[]

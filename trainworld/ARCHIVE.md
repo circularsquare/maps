@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change (2026-11-18): closed without code: Anita 2026-11-18: keep the 300 m walking change limit; a tram stop further from a train station gets a drawn passage ("i dont think we need this, i think we can just draw passages"). notes/T-3298.md.
+- T-3583 [P3] {L:timetables} Headway steppers skip headways with the same count (2026-11-18): done by T-3650 (021b9b38): the weekend stepper now uses the weekdays' exact headway steps, so no headway with the same train count is skipped.
 - T-3649 [P3] {L:help-tutorial} Help answer for the trip explorer (2026-11-18): help.qTripMode/aTripMode added in 13 languages.
 - T-3650 [P2] {L:timetables} Weekend headway edits by train count (2026-11-18): the weekend step used the next headway needing a different train count; now the weekdays' steps, and typed entry. notes/T-3650.md.
 - T-3648 [P3] {L:rebuild-track} Removing a track set leaves a stub at a station (2026-11-18): keep_under_stations uses the same station margin as a single Remove (reach + 4 m, was + 10 m); the 176 m stub was not reproduced. notes/T-3648.md.

@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c019",
+      "text": "fixed lines taking long detours or saying their track is gone where a stop is on single track, in games saved before 0.4 and on single track out to a dead end",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3647",
+      "by": "tramoneway",
+      "at": "2026-11-18T13:48:57Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c018",
+      "text": "fixed the switch to run trains one way being refused while any line was broken",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3647",
+      "by": "tramoneway",
+      "at": "2026-11-18T13:48:57Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c017",
       "text": "added a help answer for how to see which mode people take between two places",
       "edited": null,

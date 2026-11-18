@@ -113,7 +113,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3623 [P2] {L:new-countries} {after:the night run (Egypt rows in it)} Cairo's place point sits in the desert
+- T-3623 [P2] {L:new-countries} {after:the night run (Egypt rows in it)} Cairo's place point sits in the desert (taking, 2026-11-18, agent cairo)
   - Context: From T-3621: Cairo's real OSM node (Tahrir, 9.1M) is 0.25 km outside its pack's outline, in the gap along the Nile, so places.py dropped it; the only "Cairo" left in cai.places.json is a governorate-sized area whose box centre is desert 37 km east, population 0. Stations within 6 km of it may be named Cairo, and a search for Cairo may land there. Other big cities on a river gap may lose their node the same way.
   - Goal: Cairo's place point is at Tahrir; places.py keeps a named city node just outside its pack's outline (a small tolerance), checked on a few river cities.
   - Other: notes/T-3621.md
@@ -163,6 +163,23 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
   - Other: notes/T-3455.md "What ran (nightfix3)"
+- T-3658 [P3] {L:small-fixes} Start-in-city pick shows 0 intercity trips (taking, 2026-11-18, agent zerorow)
+  - Context: Your pad, 2026-11-18: "when selecting a city to start in with "select on map" for new game, we're still showing "0 intercity trips to or from ..." we should just drop this row if we would say 0. cuz that just means we havent calculated it yet so we should not show it"
+  - Goal: Picking a start city on the map shows no intercity trips row while its figure is 0.
+- T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone
+  - Context: Found by T-3623: Qasr Al-Nile (1.2 km2, Tahrir and downtown, geoBoundaries EGY ADM2) is in no plan row, so cai's outline has a hole there and downtown Cairo's people and jobs are missing. Marsa Alam, North Coast and Port Suez are also Egyptian units in no zone.
+  - Goal: Qasr Al-Nile joins cai and the other three join a zone or are written down as dead space on purpose; rebuilt in the next night run.
+  - Other: notes/T-3623.md
+- T-3661 [P3] {L:region-redraws} Zone centres on the wrong town
+  - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
+  - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
+  - Other: notes/T-3623.md
+- T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
+  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
+  - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
+- T-3657 [P3] {L:accounts-server} Free fares inflate leaderboard points
+  - Context: Put off by you, 2026-11-18, needs more thought: "im not sure if doing points and fares game-wide really helps that much. people can still cheese by running like 70% of their lines at 0x. i think this needs roe thought, lets put it off til later, but we sdhould definitely think about it." Considered so far: points scaled by fares over running costs, full from 100% (game-wide or per city); a line's points only while it makes money; a separate profit board. Your pad, 2026-11-18, from Discord: "u can cheese leaderboard scores by just dropping fares to zero ... how might we incorporate profit somehow? is there an easy way to only track like rides that are carried profitably or something? idk. not sure if thatd even be the best metric...?" Points are 20 a rail trip plus 1 a passenger-km on a forecast weekday; any line's fare multiple can go from 0 to 3, so free fares raise trips with nothing against it.
+  - Goal: Free or near-free fares can't raise a leaderboard score; a network paying its way scores as today.
 - T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked
   - Context: Chimaltenango's union error may be the reclaimed-land fault fixed 2026-11-18 (T-3455: make_valid on invalid pieces); try it first. From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
   - Goal: Each of clt, scd, anu, tsx built and shipped, or left dead space with the reason in its notes; miv and auo terrain rebuilt on the 3 blocks.
@@ -177,11 +194,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 built (noroute2, not landed yet): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
-- T-3298 [P2] {L:route-choice} {waits:Anita} Trips walk to a train instead of tram change
-  - Need from Anita: Riders change between two stations on foot only when they are under 300 m apart (or a passage links them); raise that to 600 m for every pair of stations, or only for tram stops to train stations, or keep 300 m and leave it to passages? Recommended: 600 m for all, after measuring search time and riders on the real save.
-  - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Cause found (inferred, his layout is gone): a tram stop beside a train station is always its own station, and over 300 m away there's no change at all (450 m: walk 33 min then the train; 250 m or a passage: tram then train, 14 min).
-  - Goal: A tram-then-train trip changes at the station instead of walking across town.
-  - Other: Not the cause of T-3295 (walk onto the same line). Notes: notes/T-3298.md
 - T-3624 [P3] {L:wealth-split} School trips lean to transit
   - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess."
   - Goal: Trips to school weigh driving less than other purposes do (students mostly can't drive), if it's a small change to the purpose rules; a demand rule change, so docs/demand-worldwide.md says it.
@@ -238,9 +250,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3630 [P2] {L:feedback} {waits:Anita} Settings and feedback on the landing page
-  - Need from Anita: Pick A, B or C on artifacts/trainworld/t3630-landing.png and confirm the settings list; I recommend B (a Settings and Submit feedback row in the card) with Calculate intercity trips (made a setting on computers too), Use more cores and Panel and text size, language staying where it is.
-  - Context: The proposal is ready (notes/T-3630.md). Mid-load, feedback can already be reached, but only at the bottom of Settings; it can't be reached from the failure screen or after a reload, and that is where a stuck player ends up. Your pad, 2026-11-18: "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
+- T-3630 [P2] {L:feedback} Settings and feedback on the landing page (taking, 2026-11-18, agent landing)
+  - Context: You picked C, 2026-11-18: "oh i do like the footer line C. could we put the language toggle on the bototm, and also the gear to open mini settings with any other settings we might need from menu (liek submit feedback, calc intercity, whatever)". Proposal: notes/T-3630.md. Mid-load, feedback can already be reached, but only at the bottom of Settings; it can't be reached from the failure screen or after a reload, and that is where a stuck player ends up. Your pad, 2026-11-18: "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
@@ -286,12 +297,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
+- T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen (taking, 2026-11-18, agent restarts)
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
-- T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
-  - Context: From T-3557: `restHeadwayStep` skips headways that need the same train count, so 12 and 13 min can be skipped. Now that a stepped headway is stored and run, they are different services.
-  - Goal: The steppers stop at every headway the line can run.
 - T-3584 [P3] {L:timetables} {after:T-3557} Weekend lines sharing track are not paced
   - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
   - Goal: Weekend lines sharing track are paced from their own weekend headways.
@@ -1006,7 +1014,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 
 ## Code health
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
-  - Context: Stage 1 (server) passed its checker, not deployed. Stage 2 (the game) landed 7cd2f5ac and is on 8800, not published; it must not ship before the stage 1 server is deployed. Stage 3 (the recurring scan, shonei-server 85e2945) is built and being checked; then the server deploy of stages 1 and 3 waits for your yes, in daytime.
+  - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-3611 [P3] {L:accounts-server} Autosave lands after another tab took the slot

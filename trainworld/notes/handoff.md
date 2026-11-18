@@ -14,7 +14,29 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - Landed and archived: T-3482 a9bbcb5f, T-3645 6e542f1b, T-3648 0e9da2cc, T-3650 021b9b38, T-3649 d5714bee
   (changelog c015 T-3645, c016 T-3650 reworded, c017 T-3649; T-3482 is c014). Smoke on master PASSED (29 checks).
 - 8800 = d5714bee (swapped 13:06 UTC): has the night run's zones and every landing so far.
-- Up next (board): T-3604, T-2136, T-1080, T-930; plus T-3620, T-3623 now the run is over.
+- Up next (board): T-2136, T-1080, T-930; T-3620 (Caribbean etc.) held: she'll say when (11-18 morning, "i will lyk").
+- cairo (Opus): T-3623 code LANDED 5e36f4ed (places.py: node in a small outline hole kept, same-named area merges
+  into its node); 26 packs change. cairo now shipping in the MAIN tree (backup data/work/pre-T3623, places on 26 ids,
+  start_difficulty --fresh, zone_aliases, changelog). Commit its outputs after; archive T-3623. Filed T-3660
+  (downtown Cairo unit in no zone, next night run) and T-3661 (zone centres on the wrong town).
+- restarts (Sonnet, .tw-trees/restarts, port 6189): T-3604 bounded fetches on worker restart (all-China).
+- T-3583 closed: done by T-3650. T-3298 closed on her word (300 m stays; passages), DECISIONS.
+- tramoneway (maps-ca's) DONE T-3647 in .tw-trees/tramoneway: cause T-3386 (0.4 single track no longer two-way at
+  a station); fixes: broken line no longer blocks the way switch, dead-end branch with a station anywhere runs both
+  ways, saves level <= 18 pin those runs both ways on load. Tree changelog c014/c015 (renumbered by finish; reword
+  c014 shorter). Checker tramcheck (Sonnet, port 6185/6186) running. Her calls (I'd keep both; tell her): fix 2
+  reverses T-3386's own test; the old-save pinning brings back shared two-way single track (A1 534 -> 561 s).
+  Proposals not built: a string for "track runs the other way"; "Run trains one way on this track?" reads backwards
+  when turning it off. Reply draft for dattera is in my 13:40 message to her.
+- zerorow (Sonnet, .tw-trees/zerorow, port 6190): T-3658 (her pad) hide "0 intercity trips" on the start city pick.
+- shonei-server DEPLOYED 13:30 UTC on her yes and pushed (4d07666: leaderboard country tables + T-3395 stages 1
+  and 3, save levels 19-21, playtime cap). T-3395's game side (stage 2, on 8800) may ship with the next publish;
+  close T-3395 after a day of clean scans (she leaves it to the scan's emails).
+- T-3657 free fares: put off by her (P3, needs more thought: 0x on most lines still cheats a game-wide ratio).
+- T-3659 filed: contributors' speed PRs (caelum418 23, 24; CinnamonVII 18, 19) for the next performance round.
+- landing (Opus, .tw-trees/landing, port 6191): T-3630 she picked C + footer language + gear mini settings;
+  intercity becomes a setting everywhere, the checkbox replacing her 11-10 menu rule (tell her; DECISIONS).
+- She keeps both T-3647 rule changes; she'll send dattera's reply herself later.
 - workflow (Opus, background, no tree): research + ranked proposal for her ask (workflow improvements, code/test
   trimming, agent tools) -> trainworld/research/workflow-2026-11-18.md. A design to her; nothing built until she picks.
 
