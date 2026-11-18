@@ -18,6 +18,7 @@ import { acceptedType, dropImage, imageField, ImageTooBig, MAX_IMAGES, prepareIm
 import { loadFailure } from "../game/loading";
 import { stateReport } from "../game/diagnostics";
 import { display } from "../game/ui";
+import { graphicsReport } from "../map/graphicsInfo";
 import { language, t, tDate } from "../i18n";
 import { Modal } from "./Modal";
 import { showPassingNote } from "./PassingNote";
@@ -60,6 +61,7 @@ function reportContext(): Record<string, string> {
   // T-3313: where the clock worker and the demand pool stood, and the money's currency (another device can
   // start on another one)
   ctx.state = stateReport();
+  ctx.graphics = graphicsReport();
   ctx.currency = display.peek().currency;
   return ctx;
 }

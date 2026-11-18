@@ -3,6 +3,8 @@
 // T-3582: a browser that has WebGL2 can still refuse a context: Chrome can block a page's WebGL after its context
 // was lost (a GPU crash or reset) until the browser restarts, and a reload does not lift it.
 
+import { noteCreationError } from "./graphicsInfo";
+
 /** "ok"; "missing" when the browser has no WebGL2 at all (too old); "refused" when it has WebGL2 but gave no
  * context (blocked after a lost context, or hardware acceleration off with no software fallback), with the
  * browser's own reason when it gave one. */
@@ -14,7 +16,7 @@ export function webgl2State(): Webgl2State {
   let reason = "";
   try {
     const canvas = document.createElement("canvas");
-    canvas.addEventListener("webglcontextcreationerror", (e) => { reason = (e as WebGLContextEvent).statusMessage || reason; });
+    canvas.addEventListener("webglcontextcreationerror", (e) => { reason = (e as WebGLContextEvent).statusMessage || reason; noteCreationError(reason); });
     const gl = canvas.getContext("webgl2");
     if (!gl) return { state: "refused", reason };
     gl.getExtension("WEBGL_lose_context")?.loseContext();
