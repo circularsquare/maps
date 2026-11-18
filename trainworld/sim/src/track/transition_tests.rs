@@ -239,6 +239,19 @@ fn a_change_to_a_following_pair_on_full_track_moves_no_train() {
 }
 
 #[test]
+fn a_change_with_a_train_dwelling_at_its_first_stop_loses_none() {
+    // T-3645: the express at its fair share (12.8/h), not the 8 it starts at. A train dwelling at its
+    // first stop when the local's change shifts its profile is redrawn standing there, and the train
+    // waiting at that terminal must not take it as a departure: one would vanish
+    let (mut w, ns) = corridor(7);
+    let local = line(&mut w, &ns, [8.0, 6.0, 3.0]);
+    let express = line(&mut w, &[ns[0], ns[6]], [12.8, 6.0, 3.0]);
+    counts(&mut w, local, [40, 40, 2]);
+    counts(&mut w, express, [40, 40, 2]);
+    edit_at(&mut w, MIDDAY, "local, fewer", |w| counts(w, local, [3, 40, 2]));
+}
+
+#[test]
 fn a_headway_change_moves_no_train() {
     let (mut w, ns) = corridor(7);
     let id = line(&mut w, &ns, [12.0, 6.0, 3.0]);

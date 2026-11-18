@@ -1525,7 +1525,10 @@ impl Service {
                 if t.run == r {
                     ev.push((ready[i] - HANDOVER_TOL_S, 0, i));
                 }
-                if (t.run == r) == is_loop {
+                // a train running at a change and drawn on from where it was (`shifts`) is that
+                // train still, even drawn from its first stop: no train standing there takes it
+                let moved_on = t.draw != t.dep && eras.iter().any(|e| t.dep < e.until && e.drawn.contains(&(t.run, t.dep)));
+                if (t.run == r) == is_loop && !moved_on {
                     ev.push((t.draw, 1, i));
                     deps.push((t.draw, t.hw));
                 }
