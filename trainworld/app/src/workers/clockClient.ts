@@ -26,7 +26,7 @@ import { demandByDay, demandView, marketIn, platformTransfers, roughZones, zoneV
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
-import { flipSites, rightHand, say, setEditSink, world, worldIsRows } from "../game/world";
+import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
@@ -75,6 +75,8 @@ export function manageSaveSlot(action: Extract<ToClock, { kind: "saveSlot" }>["a
   if (action === "delete" && key && key === saveSlotsState.peek().active && current?.running) {
     return void current.leave(undefined, toStartMenu, { kind: "saveSlot", action, key });
   }
+  // T-3731: a save waits for the stop clicks still being sent, so it holds them
+  if (stopsQueued.peek() > 0) return void afterStopEdits().then(() => current?.post({ kind: "saveSlot", action, key, name }));
   current?.post({ kind: "saveSlot", action, key, name });
 }
 
@@ -897,7 +899,9 @@ export class ClockClient {
   }
 
   /** T-2657: write the autosave and wait for its mark (or 1.5 s) before the page reloads */
-  saveBeforeReload(): Promise<void> {
+  async saveBeforeReload(): Promise<void> {
+    // T-3731: the stop clicks still being sent first
+    await afterStopEdits();
     const from = saveSlotsState.peek().at;
     this.post({ kind: "flush" });
     return new Promise((done) => {
@@ -928,7 +932,9 @@ export class ClockClient {
     // a worker that never started has no game to keep
     if (!this.worker) return then();
     this.onLeft = then;
-    this.post(instead ?? { kind: "leave", pending });
+    // T-3731: the game saved on leaving holds the stop clicks still being sent
+    if (stopsQueued.peek() > 0) void afterStopEdits().then(() => this.post(instead ?? { kind: "leave", pending }));
+    else this.post(instead ?? { kind: "leave", pending });
   }
 
   get running() { return !!this.worker; }

@@ -119,7 +119,10 @@ Web first, so it can be shared as a link.
   clock pass it, anything else runs it first. Meanwhile the client holds every other read until no
   stop click has been answered for 500 ms (the panels ask a dozen after each world). The clicked marker is drawn
   in its new tier at the click (`StopMarkers.guessClick`, settled when the edit is answered) and a rows world
-  rebuilds no demand layers (`worldIsRows`) [T-3159]. A state carries only the edges,
+  rebuilds no demand layers (`worldIsRows`) [T-3159]. The clicks wait in the page in order (`queueStopEdit` in
+  game/world.ts), each holding its line and game from the click: stop editing ending sends them all (the busy tag
+  says "Saving stops" meanwhile) and only a game loaded since drops one; an undo or redo, a save, leaving the game
+  and a reload wait for them (closing the tab does not: Anita, 2026-11-18) [T-3731]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last

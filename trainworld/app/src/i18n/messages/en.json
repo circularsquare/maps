@@ -2185,6 +2185,7 @@
   "tools.nearUnder": "Under 50 trips within 1{unit}",
   "tools.lineHelp": "Click a circle to add or remove a stop. Right click one to loop back there. Press Enter when done.",
   "tools.stopFailed": "Could not change that stop. Please try again.",
+  "tools.savingStops": "Saving stops",
   "tools.cannotPlace": "Cannot be placed here.",
   "tools.removeWhat": "Remove {what}",
   "topBar.autosaveOff": "Autosave is off for this game.",

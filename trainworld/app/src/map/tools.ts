@@ -41,9 +41,10 @@ import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { hidden, levelHidden } from "./visibility";
-import { edit, rightHand, say, stationNames, world } from "../game/world";
+import { afterStopEdits, edit, queueStopEdit, rightHand, say, stationNames, stopsQueued, world } from "../game/world";
+import { hideBusy, showBusy } from "../game/busy";
 import type { ClockEdge, ClockNode, RouteEnd } from "../workers/protocol";
-import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
+import { gamesLoaded, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
@@ -218,12 +219,12 @@ export class Tools {
   private marks: HTMLDivElement[] = [];
   private tag: HTMLDivElement;
   private ring: HTMLDivElement;
-  private lineSession = 0;
   private editingLine: number | null = null;
   /** the toggle markers on every station while a line's stops are edited (T-233); set by main.ts */
   stops: StopMarkers | null = null;
   busStops: BusStopMarkers | null = null;
-  private stopClicks: Promise<void> = Promise.resolve();
+  /** T-3731: the busy tag's token while stop clicks are still being sent after stop editing ended */
+  private savingStops = 0;
   /** T-1260, on touch: the tap whose preview waits to be confirmed (the track's end, a station's
    * spot, what the delete tool would remove) */
   private touchAt: LngLatish | null = null;
@@ -359,9 +360,11 @@ export class Tools {
       const w = world.value;
       if (active !== this.editingLine) {
         this.editingLine = active;
-        this.lineSession++;
-        // T-1899: a line is new until its first stop editing ends
-        if (newLine.peek() && newLine.peek()!.line !== active) newLine.value = null;
+        // T-1899: a line is new until its first stop editing ends, and its clicks still out are sent (T-3731)
+        const was = newLine.peek()?.line;
+        if (was !== undefined && was !== active) void afterStopEdits().then(() => {
+          if (newLine.peek()?.line === was && this.editingLine !== was) newLine.value = null;
+        });
       }
       if (active === null || !w) return;
       const line = w.save.lines.find((l) => Number(l.id) === active);
@@ -373,6 +376,15 @@ export class Tools {
       }
       const stops = planStopsOf(line).map(Number);
       if (!sameStops(stops, lineDraft.peek().stops)) lineDraft.value = { line: active, stops };
+    });
+    // T-3731: stop editing left with clicks still being sent: the tag says they are on their way
+    effect(() => {
+      const waiting = stopsQueued.value > 0 && !(tool.value === "line" && lineDraft.value.line !== null);
+      if (waiting && !this.savingStops) this.savingStops = showBusy(tr("tools.savingStops"));
+      else if (!waiting && this.savingStops) {
+        hideBusy(this.savingStops);
+        this.savingStops = 0;
+      }
     });
   }
 
@@ -1720,28 +1732,30 @@ export class Tools {
     this.queueStop(station, tier);
   }
 
+  /** T-3731: the click's line and game are taken now; it is sent however stop editing has ended meanwhile, and
+   * dropped only when another game has loaded (its ids are another game's) or the line is gone. */
   private queueStop(station: number, tier?: StopTier) {
-    const session = this.lineSession;
+    const id = lineDraft.peek().line, game = gamesLoaded.peek();
+    if (id === null) return;
     if (!tier) {
-      const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       // T-3474: the panel's rows are the stops its trains serve, which a guess matches only while they are the plan
       if (line && !line.planStops) guessRow(String(station), line.stops.includes(String(station)), line.num);
     }
-    this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
-      if (session === this.lineSession) say(tr("tools.stopFailed"), true);
+    void queueStopEdit(() => this.toggle(station, id, game, tier)).catch(() => {
+      if (game === gamesLoaded.peek()) say(tr("tools.stopFailed"), true);
     }).finally(() => {
       if (tier) return;
-      this.stops?.settleClick(station);
-      const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      settleRow(String(station), !!line && !line.planStops && line.stops.includes(String(station)));
+      this.stops?.settleClick(id, station);
+      const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
+      settleRow(String(station), !!line && !line.planStops && line.stops.includes(String(station)), id);
     });
   }
 
-  private async toggle(station: number, session: number, tier?: StopTier) {
-    if (session !== this.lineSession || tool.peek() !== "line") return;
-    const id = lineDraft.peek().line;
+  private async toggle(station: number, id: number, game: number, tier?: StopTier) {
+    if (game !== gamesLoaded.peek()) return;
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-    if (id === null || !line) return;
+    if (!line) return;
     const before = planStopsOf(line).map(Number);
     let change: Parameters<typeof edit>[0];
     const n = before.length;
@@ -1775,12 +1789,13 @@ export class Tools {
     }
     // T-2766: answered once the world holds it (the next click reads its stops), its network once the clicks stop
     const a = await edit(change, false, false, "rows");
-    if (a.ok && session === this.lineSession && tool.peek() === "line") {
+    if (!a.ok || game !== gamesLoaded.peek()) return;
+    if (tool.peek() === "line" && lineDraft.peek().line === id) {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: planStopsOf(latest).map(Number) };
-      this.noteFast(id);
-      void settleNewLineColour(id);
     }
+    this.noteFast(id);
+    void settleNewLineColour(id);
   }
 
   /** T-1899: whether a stop edit on `id` picks its train type by the track: while it is the new line

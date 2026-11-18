@@ -76,6 +76,32 @@ export function setAfterEdit(f: (op: EditOp, a: EditAnswer) => void) {
   afterEdit = f;
 }
 
+/** T-3731: the line tool's stop clicks, each sent once the one before is answered (it reads the stops that one
+ * left). A click is kept when stop editing ends; only a game loaded since drops it. */
+let stopQueue: Promise<void> = Promise.resolve();
+/** stop clicks made and not yet answered */
+export const stopsQueued = signal(0);
+/** when the queue last moved (a click made into an empty queue, or one answered) */
+let stopsMoved = 0;
+/** a waiter gives up on clicks that have had no answer for this long, ms (a worker that never answers holds nothing
+ * for ever; clockClient's `stopOut` is as long) */
+const STOPS_GIVE_UP_MS = 10000;
+export function queueStopEdit(f: () => Promise<void>): Promise<void> {
+  if (stopsQueued.peek() === 0) stopsMoved = performance.now();
+  stopsQueued.value++;
+  const p = stopQueue.then(f).finally(() => { stopsQueued.value--; stopsMoved = performance.now(); });
+  stopQueue = p.catch(() => {});
+  return p;
+}
+const stopsStuck = () => performance.now() - stopsMoved >= STOPS_GIVE_UP_MS;
+/** Resolves once every stop click made so far is answered (at once when none is out), or when none has been answered
+ * for `STOPS_GIVE_UP_MS`. */
+export async function afterStopEdits(): Promise<void> {
+  while (stopsQueued.peek() > 0 && !stopsStuck()) {
+    await Promise.race([stopQueue, new Promise((r) => setTimeout(r, STOPS_GIVE_UP_MS - (performance.now() - stopsMoved)))]);
+  }
+}
+
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
  * its sound was played already (the click that sent it, or the one sound of a run of edits). */
 export async function edit(op: EditOp, quiet = false, silent = false, early: boolean | "rows" = false): Promise<EditAnswer> {
@@ -88,6 +114,8 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   breakDeleteRun();
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
+  // T-3731: an undo or redo takes back the last stop click shown, so it waits for the clicks still out
+  if ((op.op === "undo" || op.op === "redo") && stopsQueued.peek() > 0) await afterStopEdits();
   noteEdit(op, world.peek());
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):

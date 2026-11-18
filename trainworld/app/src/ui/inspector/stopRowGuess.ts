@@ -4,9 +4,12 @@
 // per-stop figures lined up by index, so the guess is done on the DOM and the next render replaces it
 // (`applyRowGuesses` in a layout effect of the inspector).
 import { world } from "../../game/world";
+import { selection } from "../../game/ui";
 
-interface Guess { add: boolean; n: number; num: number }
+interface Guess { add: boolean; n: number; num: number; station: string }
+/** by line and station: a line's clicks may still be out while another line's panel is open (T-3731) */
 const guesses = new Map<string, Guess>();
+const keyOf = (num: number, station: string) => `${num}:${station}`;
 
 const rowsOf = (station: string) => [...document.querySelectorAll<HTMLElement>(`ul.stops > li[data-station="${station}"]`)];
 
@@ -16,7 +19,10 @@ export function applyRowGuesses() {
     if (e.hasAttribute("data-guess")) e.remove();
     else e.classList.remove("guess-out");
   }
-  for (const [station, g] of guesses) {
+  const sel = selection.peek(), open = sel?.kind === "line" ? Number(sel.line) : null;
+  for (const g of guesses.values()) {
+    if (g.num !== open) continue;
+    const station = g.station;
     const rows = rowsOf(station);
     if (!g.add) {
       for (const r of rows) r.classList.add("guess-out");
@@ -49,18 +55,18 @@ export function applyRowGuesses() {
 /** a plain click on `station`, drawn at once; `isStop` is whether the world's line stops there, and a click already
  * out for the station counts as done. */
 export function guessRow(station: string, isStop: boolean, num: number) {
-  const g = guesses.get(station);
-  guesses.set(station, { add: g ? !g.add : !isStop, n: (g?.n ?? 0) + 1, num });
+  const g = guesses.get(keyOf(num, station));
+  guesses.set(keyOf(num, station), { add: g ? !g.add : !isStop, n: (g?.n ?? 0) + 1, num, station });
   applyRowGuesses();
 }
 
-/** the click's edit is answered. A refused one puts the row back; one the world holds is left to the render that
- * shows the world. */
-export function settleRow(station: string, isStop: boolean) {
-  const g = guesses.get(station);
+/** the click's edit on line `num` is answered. A refused one puts the row back; one the world holds is left to the
+ * render that shows the world. */
+export function settleRow(station: string, isStop: boolean, num: number) {
+  const g = guesses.get(keyOf(num, station));
   if (!g) return;
   if (--g.n > 0) return;
-  guesses.delete(station);
+  guesses.delete(keyOf(num, station));
   if (g.add !== isStop) applyRowGuesses();
   else setTimeout(applyRowGuesses, 300);
 }

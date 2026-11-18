@@ -2182,6 +2182,7 @@
   "tools.nearUnder": "Row in the station tool's hover tag when fewer than 50 trips are near. unit: \"km\" or \"mi\".",
   "tools.lineHelp": "Notice when the line tool starts editing a line's stops.",
   "tools.stopFailed": "Notice when adding or removing a stop on a line failed.",
+  "tools.savingStops": "Busy tag on the map's top row while stop clicks made in stop editing are still being applied after it ended (slow on big games).",
   "tools.cannotPlace": "Tag next to the cursor in a build tool when a spot is refused with no reason given.",
   "tools.removeWhat": "Tag next to the cursor in the remove tool. what: a phrase for the thing under the cursor, \"the built station Canal St\".",
   "topBar.autosaveOff": "Notice under the top bar when the game cannot be saved automatically and no more specific reason is known.",

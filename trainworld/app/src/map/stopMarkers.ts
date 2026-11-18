@@ -184,6 +184,8 @@ export class StopMarkers {
   private gapAsked = 0;
   /** T-3159: a clicked marker drawn in its new tier at the click, until its edit is answered; `n` clicks are out */
   private guess = new Map<string, { tier: StopTier; prev: StopTier; n: number }>();
+  /** a guess's key: the line's, since its clicks may still be out while another line is edited (T-3731) */
+  private guessKey = (line: number, id: string) => `${line}:${id}`;
 
   /** T-3109: a finger down on a marker, until it is held long enough, moves or lifts */
   private press: { id: string; x: number; y: number; timer: number } | null = null;
@@ -291,7 +293,9 @@ export class StopMarkers {
   }
 
   private applyGuesses() {
-    for (const [id, g] of this.guess) this.tiers.set(id, g.tier);
+    if (!this.line) return;
+    const head = `${this.line.num}:`;
+    for (const [k, g] of this.guess) if (k.startsWith(head)) this.tiers.set(k.slice(head.length), g.tier);
   }
 
   /** T-3159: the marker of a plain click drawn as the click will leave it, a frame after it rather than after the
@@ -299,9 +303,9 @@ export class StopMarkers {
   private guessClick(id: string) {
     const prev = this.tierOf(id);
     const tier: StopTier | null = prev === "on" ? "route" : prev === "route" || prev === "reroute" || prev === "reverse" ? "on" : null;
-    if (!tier) return;
-    const g = this.guess.get(id);
-    this.guess.set(id, { tier, prev: g?.prev ?? prev, n: (g?.n ?? 0) + 1 });
+    if (!tier || !this.line) return;
+    const key = this.guessKey(this.line.num, id), g = this.guess.get(key);
+    this.guess.set(key, { tier, prev: g?.prev ?? prev, n: (g?.n ?? 0) + 1 });
     this.tiers.set(id, tier);
     this.place();
     this.overlay.invalidate();
@@ -309,12 +313,12 @@ export class StopMarkers {
 
   /** T-3159: the edit of a plain click on station `id` is answered and the world holds it or does not: a marker
    * still showing the guess goes back to what it was when the click was refused. */
-  settleClick(id: number | string) {
-    const key = String(id), g = this.guess.get(key);
+  settleClick(line: number, id: number | string) {
+    const key = String(id), gk = this.guessKey(line, key), g = this.guess.get(gk);
     if (!g) return;
     if (--g.n > 0) return;
-    this.guess.delete(key);
-    if (!this.line) return;
+    this.guess.delete(gk);
+    if (this.line?.num !== line) return;
     const isStop = planStopsOf(this.line).includes(key), shownStop = this.tierOf(key) === "on";
     if (isStop === shownStop) return;
     this.tiers.set(key, isStop ? "on" : g.prev === "on" ? "route" : g.prev);
