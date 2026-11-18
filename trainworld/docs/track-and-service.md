@@ -328,7 +328,7 @@ Full design, numbers and sources: `notes/T-008.md`.
 - **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
   upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
-  tram tool Ctrl means nothing else but, where that leaves the segment off the streets, straight on from track, T-3260) lays it, the streets a tram may follow tinted green over the map while it is on
+  tram tool with the switch on, Ctrl pauses the snap and the segment is free, T-3608) lays it, the streets a tram may follow tinted green over the map while it is on
   (T-2998; the bus tool's teal hint, without motorways): a first click within 100 m of a street lands on it; the route to
   the pointer follows the basemap's streets (no motorways), shortest with 200 m added for each turn over 30
   degrees, a turn back of 135 to 165 degrees costing 200 m rising to 400 m (T-3035) and none over 165 (nor any over 135
@@ -365,7 +365,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   never refused (the tag's lowest limit shows it); no fit says "The roads are too tight here. Add a point on the
   way." It is placed as an ordinary route through those corners at the level, track count and type picked (as the
   real snap's), the road's centre line at every level, in one undo step, and costs what any route does: no discount
-  for following a road. Ctrl held draws by hand, straight on from track (ui-building.md "Ctrl", T-3260). A pointer
+  for following a road. Ctrl held draws by hand, free to the pointer (ui-building.md "Ctrl", T-3608). A pointer
   with no road within 100 m draws an ordinary segment. Quad track on roads carries both pairs on from a loose quad
   end and ends them apart, as quad drawn through points does (T-3261, below).
 - **Doubling up** (T-708, `TrackApi::double_up`): double track already placed, blueprint or

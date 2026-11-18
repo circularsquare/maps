@@ -1264,9 +1264,11 @@ export class Tools {
     return true;
   }
 
-  /** T-3260: Ctrl held while a segment is drawn on from track: the segment runs straight on from its start */
+  /** T-3260: Ctrl held while a segment is drawn on from track: the segment runs straight on from its start.
+   * T-3608: only with the street snap switch off; with it on, Ctrl just pauses the snap and the end is free. */
   private straightOn(): boolean {
-    return this.noSnap && !!this.start?.dir && !this.real.active && !this.street.isOn;
+    const switchOn = tramTrack.peek() ? snapStreets.peek() && !snapRealTram.peek() : snapRoads.peek();
+    return this.noSnap && !!this.start?.dir && !this.real.active && !this.street.isOn && !switchOn;
   }
 
   /** T-3260: `s` with Ctrl held: open ground moved onto the straight line on from the start (either way, so a

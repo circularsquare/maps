@@ -345,8 +345,9 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   (either way along it, so a branch off the middle of track goes straight either way), so the segment has no
   curve; the line is the start's heading (the last segment's end heading, else the first leg of a ghost from
   there, `Placed.dir`). From open ground every segment is straight already. Not while a route follows the
-  real network or the roads or streets (with Snap to roads, Ctrl draws by hand, so straight; with Tram it
-  flips the street snap as before, and straight only where that leaves the segment off the streets). Ramps
+  real network, and not while the street snap switch is on (Snap to roads, or Snap to streets with Tram): there Ctrl
+  pauses the snap and draws by hand to the pointer, curved as ever, and the snap returns when it is let go [T-3608];
+  with Tram's switch off, Ctrl still turns the street snap on as before. Ramps
   over crossed track are unchanged (they change the level, not the line); as Ctrl joins nothing, it makes no
   junction and so no flyover. Nothing in the tag says so (dropped on purpose, Anita 2026-11-12).
 - **The ghost** is drawn as blueprint track (dark blue rails round a light blue middle) with a thin
