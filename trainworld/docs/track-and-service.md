@@ -260,7 +260,16 @@ Full design, numbers and sources: `notes/T-008.md`.
   they did. The run runs one way
   where its join votes agree (at least one) and nothing says both; otherwise both ways, so a branch to
   a terminus runs both ways and a hand-laid flyover's legs, joined the way their trains come, each one
-  way. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
+  way. **Runs that meet where only single track meets** (a leg of a split pair splitting again, as a bypass
+  beside a side platform; any number of tracks) take their way together (T-3672, `run_group`, `group_ways`):
+  trains pass such a junction from the pieces on one side to those on the other, so each run's way fixes the
+  others'; the group runs one way where every end it has elsewhere is a join that counts and all of them send
+  trains that way (an end left unjoined at double track that another of its ends joins at that node says
+  nothing). Otherwise (a bare end or a station at one, an end with no join, joins that disagree, a
+  junction with nothing on one side, ways that contradict round a loop) each run takes its way by its own ends,
+  and those ending at such a junction run both ways. A pre-0.4 save pins such a group whole when a station is
+  on any of it. A line of a loaded save whose path runs against a way its track now takes is moved through its
+  same stops on load (`reroute_against_ways`), as an edit changing a way moves it. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
   round (`TrackApi::set_edge_oneway`, free, one undo step, 0 to 3; `edge_oneway` gives the set value,
   `edge_infer` the run's own way, `edge_way` and `oneway_edges` the way, `join_edges` the joins that count);
   it also moves the piece's joins that count to the double track that carries a set way 1 or 2

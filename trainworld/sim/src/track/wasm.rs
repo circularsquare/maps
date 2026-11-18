@@ -749,7 +749,7 @@ impl TrackApi {
                 if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
                     self.w.reload();
                 }
-                if stop_every_pass(&mut self.w.net) | legs::straighten_legs(&mut self.w.net) {
+                if reroute_against_ways(&mut self.w.net) | stop_every_pass(&mut self.w.net) | legs::straighten_legs(&mut self.w.net) {
                     self.w.reload();
                 }
                 // T-2669: the last game's lines' prices are not this one's; the app sends them again
@@ -1179,6 +1179,26 @@ fn stop_every_pass(net: &mut Network) -> bool {
             d.stops = stops;
             changed |= net.set_line(l, Some(d)).is_ok();
         }
+    }
+    changed
+}
+
+/// T-3672: every rail line of a loaded save whose path runs against the way its track now takes (a
+/// save made before a way rule changed: legs that split and join again now run one way) through its
+/// same stops by a way that runs, as an edit changing a way moves its lines (`way_reroutes`). A line
+/// with no such way is left as it was, broken. Whether any changed.
+fn reroute_against_ways(net: &mut Network) -> bool {
+    let mut changed = false;
+    for l in 0..net.line_count() as u32 {
+        if !net.line_ok(l) || net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() || net.line_path(l).iter().all(|&p| net.dir_ok(p)) {
+            continue;
+        }
+        let stops = net.line_stops(l).to_vec();
+        let once = net.line_runs_once(l);
+        let Some(path) = net.route_hops(&stops).ok().filter(|p| !p.is_empty() && (once || net.back_path_of(&stops, p).is_some())) else { continue };
+        let mut d = net.line_data(l).unwrap();
+        d.path = path;
+        changed |= net.set_line(l, Some(d)).is_ok();
     }
     changed
 }

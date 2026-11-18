@@ -495,6 +495,139 @@ fn t3651_passing_tracks_click_order_never_matters() {
     }
 }
 
+/// T-3672: double track (0, 0) to (2000, 0), split into two single legs through (3000, `gap`) and
+/// (3000, -`gap`) that join double again at (4000, 0) to (6000, 0), their ways left to their joins
+/// (no way set); end stations P (0, 0) and Q (6000, 0), a station on each leg's middle; with
+/// `bypass`, single track from the north leg at x 2400 to the east junction through (3000, gap / 2):
+/// a third track beside the north platform (Anita's Caracas, 2026-11-18); `Some(true)` joined at the
+/// far junction to the north leg's track by the pointer, `Some(false)` left unjoined there (drawn
+/// zoomed out). Returns the api, [P, Q, N, S] and the bypass's pieces.
+fn split_bypass(right_hand: bool, gap: f64, bypass: Option<bool>) -> (TrackApi, [u32; 4], Vec<u32>) {
+    let mut a = api(right_hand);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(2000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+    assert_eq!(a.add_route(&ends(free(4000.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+    let (j0, j1) = (node_near(&a, 2000.0, 0.0), node_near(&a, 4000.0, 0.0));
+    for y in [gap, -gap] {
+        assert_eq!(a.add_route(&ends(at_node(&a, j0), at_node(&a, j1)), &[3000.0, y, 0.0, 0.0], 1, false), 0, "{}", a.issues());
+    }
+    let (p, q) = (end_station(&mut a, 0.0, 0.0), end_station(&mut a, 6000.0, 0.0));
+    let (n, s) = (station_near(&mut a, 3000.0, gap), station_near(&mut a, 3000.0, -gap));
+    let mut by = vec![];
+    if let Some(joined) = bypass {
+        let net = &a.w.net;
+        let e = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1).min_by(|&u, &v| net.project(u, 2400.0, gap / 2.0).1.total_cmp(&net.project(v, 2400.0, gap / 2.0).1)).unwrap();
+        let (px, py, _) = crate::track::geom::pos_at(net.edge_pieces(e), net.project(e, 2400.0, gap / 2.0).0);
+        assert!(py > 0.0, "on the north leg");
+        // the player's pointer at the far junction, on the north leg's side: the track it joins
+        if joined {
+            a.set_route_join(&[f64::NAN, f64::NAN, 3900.0, 8.0]);
+        }
+        assert_eq!(a.add_route(&ends([2.0, e as f64, px, py, 0.0], at_node(&a, j1)), &[3000.0, gap / 2.0, 0.0, 0.0], 1, false), 0, "{}", a.issues());
+        // the north leg's pieces each touch J0 or N; the bypass's neither
+        let net = &a.w.net;
+        let (ea, eb) = (&net.edge_a, &net.edge_b);
+        let mid_y = |e: u32| (net.node_y[ea[e as usize] as usize] + net.node_y[eb[e as usize] as usize]) / 2.0;
+        by = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1 && mid_y(e) > 0.0 && ![ea[e as usize], eb[e as usize]].iter().any(|&m| m == j0 || m == n)).collect();
+        assert!(!by.is_empty(), "the bypass");
+    }
+    (a, [p, q, n, s], by)
+}
+
+/// Every single-track piece of `a` runs one way.
+fn assert_singles_one_way(a: &TrackApi, what: &str) {
+    let net = &a.w.net;
+    let two: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1 && net.edge_way(e) == 0).collect();
+    assert!(two.is_empty(), "{what}: pieces {two:?} run both ways");
+    assert!(net.edge_oneway.iter().all(|&w| w == 0), "{what}: no way is set by hand");
+}
+
+/// T-3672 (Anita 2026-11-18, her Caracas save): side platforms on a split pair, with a bypass
+/// leaving the north leg before its platform and joining at the far junction (three tracks through
+/// the station). The bypass's junction is single track only, so each of the north leg's runs used to
+/// meet "a junction with no join" there and run both ways: the north platform was then no one-way
+/// station, and a line listing both platforms ran all three tracks and turned back. The legs that
+/// split and join again now take their way together, from the joins at the double track: every
+/// single piece runs one way, by itself, the bypass joined at the far junction or left unjoined.
+/// Given or clicked in either order, on both running sides, each run stops at its own leg's platform
+/// without turning back and the bypass is unused; taking the bypass out leaves the legs one way, and
+/// the save loads with the ways it had.
+#[test]
+fn t3672_side_platforms_with_a_bypass() {
+    for (right_hand, joined) in [(true, true), (false, true), (true, false), (false, false)] {
+        let (mut a, [p, q, n, s], by) = split_bypass(right_hand, 80.0, Some(joined));
+        let rh = format!("right hand {right_hand}, bypass joined {joined}");
+        assert_singles_one_way(&a, &rh);
+        let ways: Vec<u8> = (0..a.w.net.edge_count() as u32).map(|e| a.w.net.edge_way(e)).collect();
+        for order in 0..2 {
+            let what = format!("{rh}, order {order}");
+            let mid = if order == 0 { [n, s] } else { [s, n] };
+            let l = new_line(&mut a, &[p, mid[0], mid[1], q]);
+            assert_served_once(&a, l, &[n, s], &format!("{what}, set"));
+            assert_off_centre(&a, l, &by, &format!("{what}, set"));
+            let c = new_line(&mut a, &[p, q]);
+            assert_eq!(a.add_stop(c, mid[0]), 0, "{what}: {}", a.issues());
+            assert_eq!(a.add_stop(c, mid[1]), 0, "{what}: {}", a.issues());
+            assert_eq!(a.w.net.line_stops(c).len(), 4, "{what}: both one-way stations are stops");
+            assert_served_once(&a, c, &[n, s], &format!("{what}, clicked"));
+            assert_off_centre(&a, c, &by, &format!("{what}, clicked"));
+        }
+        // a line past both platforms takes the bypass one way and its leg the other, never turning
+        let o = new_line(&mut a, &[p, q]);
+        assert_served_once(&a, o, &[], &format!("{rh}, P to Q"));
+        // the bypass taken out (a lone run again each leg), and the save from before it went
+        let saved = a.save();
+        assert_eq!(a.delete_pieces(&by, &[]), 0, "{rh}: {}", a.issues());
+        assert_singles_one_way(&a, &format!("{rh}, bypass out"));
+        let mut b = api(right_hand);
+        assert!(b.load(&saved), "{rh}: loads");
+        assert_singles_one_way(&b, &format!("{rh}, loaded"));
+        let again: Vec<u8> = (0..b.w.net.edge_count() as u32).map(|e| b.w.net.edge_way(e)).collect();
+        assert_eq!(again, ways, "{rh}: the save's track runs as it did");
+    }
+}
+
+/// T-3672: a game saved before the rule, its lines made while the bypass and the north leg ran both
+/// ways (so a line between P and Q could run out and back over the bypass), loads with every line
+/// running and none turning back; one saved before 0.4 loads with the whole north side pinned both
+/// ways (T-3647), its lines running as they did.
+#[test]
+fn t3672_lines_saved_before_the_rule_load() {
+    for (right_hand, level) in [(true, crate::track::save::LEVEL), (false, crate::track::save::LEVEL), (true, crate::track::save::OLD_STATION_WAYS)] {
+        let what = format!("right hand {right_hand}, level {level}");
+        let (mut a, [p, q, n, s], by) = split_bypass(right_hand, 80.0, Some(true));
+        // the north side as master ran it: both ways
+        let net = &a.w.net;
+        let north: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1 && net.edge_way(e) != 0 && (net.node_y[net.edge_a[e as usize] as usize] + net.node_y[net.edge_b[e as usize] as usize]) > 0.0).collect();
+        for &e in &north {
+            assert_eq!(a.set_edge_oneway(e, 3), 0, "{what}: {}", a.issues());
+        }
+        let lines: Vec<u32> = [&[p, q][..], &[q, p], &[p, n, q], &[q, n, p], &[p, s, q], &[p, n, s, q]].iter().map(|st| new_line(&mut a, st)).collect();
+        assert!(lines.iter().any(|&l| a.w.svc.lines[l as usize].runs.iter().all(|r| r.segs.iter().any(|&x| by.contains(&(x >> 1))))), "{what}: some line runs both ways over the bypass, as on master");
+        for &e in &north {
+            a.w.net.edge_oneway[e as usize] = 0;
+        }
+        let saved = a.save();
+        let mut b = api(right_hand);
+        b.set_load_level(level);
+        assert!(b.load(&saved), "{what}: loads");
+        let old = level <= crate::track::save::OLD_STATION_WAYS;
+        if old {
+            // T-3647: a station on the group pins all of it both ways, so it runs as it did then
+            assert!(north.iter().all(|&e| b.w.net.edge_way(e) == 0), "{what}: the north side pinned both ways");
+        }
+        for &l in &lines {
+            let net = &b.w.net;
+            assert!(!net.line_broken[l as usize] && net.check_line(l).is_ok(), "{what}: line {l} {:?} runs", net.line_stops(l));
+            if old {
+                continue;
+            }
+            for (r, run) in b.w.svc.lines[l as usize].runs.iter().enumerate() {
+                assert!(net.path_reversals(&run.segs).is_empty(), "{what}: line {l} {:?} run {r} turns back", net.line_stops(l));
+            }
+        }
+    }
+}
+
 /// Probe: a real save's rail lines (`T3565_NET`, from `python trainworld/checks/save_net.py <save>
 /// <out>`), one line each: id, name, broken, stops, both runs' lengths and reversals, round trip.
 ///   cargo test --release oneleg_probe -- --ignored --nocapture

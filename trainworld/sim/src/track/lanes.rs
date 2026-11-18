@@ -278,10 +278,12 @@ impl Network {
             if !self.in_run(e) || seen.contains(&e) || self.edge_oneway[e as usize] != 0 || self.edge_infer[e as usize] == 0 {
                 continue;
             }
-            let (run, _) = self.run_through(e);
-            seen.extend(run.iter().map(|x| x.0));
-            if run.iter().any(|&(p, _)| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
-                pin.extend(run.iter().map(|x| x.0).filter(|&p| self.edge_oneway[p as usize] == 0));
+            // T-3672: the runs that take their way together (`run_group`) are pinned together, as they all ran
+            // both ways then
+            let run: Vec<u32> = self.run_group(e).into_iter().flat_map(|r| r.0.into_iter().map(|x| x.0)).collect();
+            seen.extend(run.iter().copied());
+            if run.iter().any(|&p| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
+                pin.extend(run.into_iter().filter(|&p| self.edge_oneway[p as usize] == 0));
             }
         }
         for &p in &pin {
@@ -352,47 +354,179 @@ impl Network {
             if seen.contains(&e) {
                 continue;
             }
-            let (run, closed) = self.run_through(e);
-            let mut both = closed;
-            let mut way = 0i8;
-            if !closed {
-                let (e0, f0) = run[0];
-                let (e1, f1) = run[run.len() - 1];
-                let ends = [(e0 << 1 | !f0 as u32, true), (e1 << 1 | f1 as u32, false)];
-                // T-3647: a run with a bare end and a station on it is a terminus branch, as one with its station at
-                // that end is: trains go in, stop and come back (a tail past the platform, or a stub that runs on)
-                let bare = ends.iter().any(|&(c, _)| self.node_ports[self.end_node(c >> 1, c & 1) as usize].n == 1);
-                if bare && run.iter().any(|&(p, _)| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
-                    both = true;
-                }
-                for (c, start) in ends {
-                    match self.end_vote(c) {
-                        Vote::None => {}
-                        Vote::Both => both = true,
-                        Vote::Joined(away) => {
-                            let w = if away == start { 1 } else { -1 };
-                            both |= way != 0 && way != w;
-                            way = w;
-                        }
+            let runs = self.run_group(e);
+            let ways = self.group_ways(&runs).unwrap_or_else(|| runs.iter().map(|(run, closed)| self.run_way(run, *closed)).collect());
+            for ((run, _), way) in runs.iter().zip(ways) {
+                for &(p, f) in run {
+                    seen.insert(p);
+                    let infer = match (way, f) {
+                        (1, true) | (-1, false) => 1,
+                        (1, false) | (-1, true) => 2,
+                        _ => 0,
+                    };
+                    let was = self.edge_way(p);
+                    self.edge_infer[p as usize] = infer;
+                    if self.edge_way(p) != was {
+                        changed.push(p);
                     }
-                }
-            }
-            for &(p, f) in &run {
-                seen.insert(p);
-                let infer = match (both, way, f) {
-                    (false, 1, true) | (false, -1, false) => 1,
-                    (false, 1, false) | (false, -1, true) => 2,
-                    _ => 0,
-                };
-                let was = self.edge_way(p);
-                self.edge_infer[p as usize] = infer;
-                if self.edge_way(p) != was {
-                    changed.push(p);
                 }
             }
         }
         changed.sort_unstable();
         changed
+    }
+
+    /// A run's two ends (`run_through`, not closed), as (edge end, whether it is the run's start).
+    fn run_ends(run: &[(u32, bool)]) -> [(u32, bool); 2] {
+        let (e0, f0) = run[0];
+        let (e1, f1) = run[run.len() - 1];
+        [(e0 << 1 | !f0 as u32, true), (e1 << 1 | f1 as u32, false)]
+    }
+
+    /// One run's way by its own ends (`derive_ways`): 1 along its walk, -1 against it, 0 both ways.
+    fn run_way(&self, run: &[(u32, bool)], closed: bool) -> i8 {
+        if closed {
+            return 0;
+        }
+        let ends = Self::run_ends(run);
+        let mut way = 0i8;
+        // T-3647: a run with a bare end and a station on it is a terminus branch, as one with its station at
+        // that end is: trains go in, stop and come back (a tail past the platform, or a stub that runs on)
+        let bare = ends.iter().any(|&(c, _)| self.node_ports[self.end_node(c >> 1, c & 1) as usize].n == 1);
+        if bare && run.iter().any(|&(p, _)| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
+            return 0;
+        }
+        for (c, start) in ends {
+            match self.end_vote(c) {
+                Vote::None => {}
+                Vote::Both => return 0,
+                Vote::Joined(away) => {
+                    let w = if away == start { 1 } else { -1 };
+                    if way != 0 && way != w {
+                        return 0;
+                    }
+                    way = w;
+                }
+            }
+        }
+        way
+    }
+
+    /// T-3672: a node where three or more single-track pieces (`in_run`) meet and nothing else: one
+    /// leg of a split pair splitting again (a bypass beside a side platform).
+    fn single_junction(&self, n: u32) -> bool {
+        let p = &self.node_ports[n as usize];
+        self.node_ok(n) && p.n >= 3 && p.ends().iter().all(|&c| self.in_run(c >> 1))
+    }
+
+    /// The runs through `e`'s run and every run meeting it at a `single_junction`, transitively,
+    /// with whether each closes on itself; `e`'s first.
+    fn run_group(&self, e: u32) -> Vec<(Vec<(u32, bool)>, bool)> {
+        let first = self.run_through(e);
+        let mut have: std::collections::HashSet<u32> = first.0.iter().map(|x| x.0).collect();
+        let mut runs = vec![first];
+        let mut i = 0;
+        while i < runs.len() {
+            if !runs[i].1 {
+                for (c, _) in Self::run_ends(&runs[i].0) {
+                    let n = self.end_node(c >> 1, c & 1);
+                    if !self.single_junction(n) {
+                        continue;
+                    }
+                    for &o in self.node_ports[n as usize].ends() {
+                        if !have.contains(&(o >> 1)) {
+                            let r = self.run_through(o >> 1);
+                            have.extend(r.0.iter().map(|x| x.0));
+                            runs.push(r);
+                        }
+                    }
+                }
+            }
+            i += 1;
+        }
+        runs
+    }
+
+    /// T-3672: the ways of runs that meet at `single_junction`s (legs that split and join again, any
+    /// number of tracks), taken together: trains pass each such junction from the pieces on one side
+    /// to those on the other, which fixes every run's way against the others'; then the group runs
+    /// one way where every end it has elsewhere is a join that counts and all of them send trains
+    /// that way; an end left unjoined at double track where another of the group's ends is joined
+    /// says nothing. None (each run by its own ends, as before) for a lone run, a junction with nothing
+    /// on one side, ways that contradict round a loop, or any other end (bare, a station there, double
+    /// track or a crossover with no join).
+    fn group_ways(&self, runs: &[(Vec<(u32, bool)>, bool)]) -> Option<Vec<i8>> {
+        if runs.len() < 2 || runs.iter().any(|r| r.1) {
+            return None;
+        }
+        // rel[r]: run r's walk against run 0's orientation, +1 or -1; at[n]: whether trains leave
+        // junction n by its side 1 (arrive by side 0)
+        let mut rel: Vec<i8> = vec![0; runs.len()];
+        let mut at: std::collections::HashMap<u32, bool> = std::collections::HashMap::new();
+        rel[0] = 1;
+        // the ends elsewhere: (edge end, the run's start, run)
+        let mut outer: Vec<(u32, bool, usize)> = vec![];
+        let mut queue = vec![0usize];
+        let run_of = |c: u32| runs.iter().position(|(run, _)| Self::run_ends(run).iter().any(|x| x.0 == c));
+        while let Some(r) = queue.pop() {
+            for (c, start) in Self::run_ends(&runs[r].0) {
+                let n = self.end_node(c >> 1, c & 1);
+                // walking the run with orientation `rel`, trains arrive at this end's node
+                let arrive = |rel: i8| (rel == 1) != start;
+                if !self.single_junction(n) {
+                    outer.push((c, start, r));
+                    continue;
+                }
+                let p = &self.node_ports[n as usize];
+                if (0..p.n as usize).all(|k| p.side[k] == p.side[0]) {
+                    return None;
+                }
+                let side = p.side[p.find(c >> 1, c & 1)?] == 1;
+                // trains arrive by side 0 when `at`; this end's arrival then says which
+                let here = arrive(rel[r]) != side;
+                match at.get(&n) {
+                    Some(&a) if a != here => return None,
+                    Some(_) => {}
+                    None => {
+                        at.insert(n, here);
+                        for k in 0..p.n as usize {
+                            let o = p.end[k];
+                            let s = run_of(o)?;
+                            let ostart = Self::run_ends(&runs[s].0).iter().find(|x| x.0 == o)?.1;
+                            // the other end arrives where its side says it must
+                            let want_arrive = here != (p.side[k] == 1);
+                            let orel = if want_arrive != ostart { 1 } else { -1 };
+                            if rel[s] == 0 {
+                                rel[s] = orel;
+                                queue.push(s);
+                            } else if rel[s] != orel {
+                                return None;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if rel.contains(&0) {
+            return None;
+        }
+        let node = |c: u32| self.end_node(c >> 1, c & 1);
+        let joined = |c: u32| matches!(self.end_vote(c), Vote::Joined(_));
+        let mut votes: Vec<i8> = vec![];
+        for &(c, start, r) in &outer {
+            match self.end_vote(c) {
+                Vote::Joined(away) => votes.push(if away == start { rel[r] } else { -rel[r] }),
+                // an end the player left unjoined (drawn zoomed out) at the double track another run of the
+                // group joins there, beside it: it says nothing, and trains take it the group's way
+                Vote::Both if self.edge_join[(c >> 1) as usize][(c & 1) as usize] == 0 && self.join_applies(c) && outer.iter().any(|&(o, _, _)| o != c && node(o) == node(c) && joined(o)) => {}
+                _ => return None,
+            }
+        }
+        let g = *votes.first()?;
+        if votes.iter().any(|&v| v != g) {
+            return None;
+        }
+        Some(rel.iter().map(|&r| r * g).collect())
     }
 }
 
