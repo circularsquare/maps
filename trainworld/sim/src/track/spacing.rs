@@ -480,4 +480,52 @@ mod tests {
             assert_eq!(held, state(&w));
         }
     }
+
+    /// T-3584: two count lines on branches 5.1 and 6.0 km, 4 trains each on weekdays, run one headway
+    /// there (T-2973); at 3 trains each on weekends they are paced again from the weekend headways
+    /// (the weekday pace 302 s would leave them 400 s apart by 1.6 s), the weekdays' left as they were.
+    #[test]
+    fn weekend_lines_at_a_merge_are_paced_from_their_weekend_headways() {
+        use super::super::net::Weekend;
+        use super::super::params::{HIGH, WEEKEND};
+        let mut w = world();
+        let t = node(&mut w, 0.0, 0.0, 0);
+        let j = node(&mut w, 3000.0, 0.0, 0);
+        let m = node(&mut w, 6000.0, 0.0, 0);
+        let br = node(&mut w, 4400.0, 1500.0, 0);
+        edge(&mut w, t, j, &[], 0).unwrap();
+        edge(&mut w, j, m, &[], 0).unwrap();
+        edge(&mut w, j, br, &[(3400.0, 0.0)], 0).unwrap();
+        for x in [t, m, br] { station(&mut w, x, 200); }
+        crate::track::tests::terminals_at_dead_ends(&mut w);
+        let mut ls = vec![];
+        for end in [br, m] {
+            let l = line(&mut w, &[t, end], [0.0; 3]);
+            w.apply(Op::TrainCounts { id: l, trains: Some([4, 2, 0]), tph: [6.0, 3.0, 0.0] }).unwrap();
+            ls.push(l);
+        }
+        let week = |w: &TrackWorld| ls.iter().map(|&l| (w.net.line_pace_of(l), w.net.line_tph[l as usize], w.net.line_trains[l as usize])).collect::<Vec<_>>();
+        let before = week(&w);
+        assert!(before.iter().all(|x| x.0[HIGH] > 0.0), "weekdays in step");
+        // the weekend headways: the long branch with 5 trains runs as often as the short with 3
+        let trip: Vec<f64> = ls.iter().map(|&l| w.svc.lines[l as usize].round_trip[HIGH]).collect();
+        let counts = [3u32, 3];
+        let own: Vec<f64> = (0..2).map(|i| trip[i] / counts[i] as f64).collect();
+        let (lo, hi) = (own[0].min(own[1]), own[0].max(own[1]));
+        // (the two headways are what the branches' lengths make them: skip the premise if not close)
+        for (i, &l) in ls.iter().enumerate() {
+            w.apply(Op::Weekend { id: l, weekend: Weekend { share: 100, counts: Some([counts[i], 2, 0]), headways: [0; 3] } }).unwrap();
+        }
+        assert_eq!(before, week(&w), "the weekdays are left as they were");
+        assert!(hi / lo - 1.0 < 0.03, "weekend headways {own:?} within the pacing share");
+        let rest: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph_on(l as usize, WEEKEND, HIGH) as f64).collect();
+        assert!((rest[0] - rest[1]).abs() < 0.01, "one weekend headway: {rest:?} (own {own:?})");
+        assert!(w.pace_rest.iter().any(|p| p[HIGH] > 0.0), "weekend pacing kept");
+        // the same through an edit elsewhere on the weekends' kept service
+        let kept = rest.clone();
+        w.apply(Op::Weekend { id: ls[0], weekend: Weekend { share: 100, counts: Some([counts[0], 2, 0]), headways: [0; 3] } }).unwrap();
+        let again: Vec<f64> = ls.iter().map(|&l| 3600.0 / w.net.line_tph_on(l as usize, WEEKEND, HIGH) as f64).collect();
+        assert!(again.iter().zip(&kept).all(|(a, b)| (a - b).abs() < 1.0), "{again:?} against {kept:?}");
+        assert_eq!(before, week(&w));
+    }
 }

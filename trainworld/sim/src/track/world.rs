@@ -165,8 +165,12 @@ pub struct TrackWorld {
     /// weekend service is worked out at the first edit that settles them.
     weekend_as_saved: bool,
     /// T-3388: per line and level, what `pace_merges` last paced it from. Not saved: a load takes
-    /// the saved pacing as it is. Weekdays' only: the weekends run the weekdays' pacing.
+    /// the saved pacing as it is.
     pace_in: Vec<[PaceIn; LEVELS]>,
+    /// T-3584: the weekends' pacing and what it was paced from, kept with `svc_rest` (the weekdays'
+    /// start them at the first weekend settle). Not saved.
+    pub(crate) pace_rest: Vec<[f32; LEVELS]>,
+    pace_in_rest: Vec<[PaceIn; LEVELS]>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -179,7 +183,7 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], svc_rest: None, weekend_as_saved: false, pace_in: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], svc_rest: None, weekend_as_saved: false, pace_in: vec![], pace_rest: vec![], pace_in_rest: vec![] };
         w.reload();
         w
     }
@@ -723,9 +727,28 @@ impl TrackWorld {
                 let moved: Vec<u32> = (0..n as u32).filter(|&l| self.net.line_tph[l as usize] != week_tph[l as usize] && self.svc.lines.get(l as usize).is_some_and(|s| s.ok)).collect();
                 if !moved.is_empty() { self.svc.update_scoped(&self.net, &[], &moved, true, Some((&[], &[]))); }
             }
+            // T-3584: lines sharing track are paced on the weekends' headways too, from the weekdays'
+            // pacing at first
+            let (week_pace, week_pace_in) = (std::mem::take(&mut self.net.line_pace), std::mem::take(&mut self.pace_in));
+            if fresh {
+                self.net.line_pace = week_pace.clone();
+                self.pace_in = week_pace_in.clone();
+            } else {
+                self.net.line_pace = std::mem::take(&mut self.pace_rest);
+                self.pace_in = std::mem::take(&mut self.pace_in_rest);
+            }
             self.settle_edited = std::mem::take(&mut self.settle_edited_rest);
             self.settle_counts(full);
             self.settle_edited.clear();
+            for _ in 0..PACE_ROUNDS {
+                if !self.pace_merges(false) {
+                    break;
+                }
+                self.settle_counts(full);
+            }
+            self.pace_in.iter_mut().flatten().for_each(|p| p.fresh = false);
+            self.pace_rest = std::mem::replace(&mut self.net.line_pace, week_pace);
+            self.pace_in_rest = std::mem::replace(&mut self.pace_in, week_pace_in);
             self.net.line_tph_rest.clone_from(&self.net.line_tph);
             // a loop's counts set by hand were made even (as its weekday counts are), which it keeps
             for &(l, _) in &own {

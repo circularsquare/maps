@@ -1293,7 +1293,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   has not moved stays in its set, and a set that ran one pace keeps it while every line can run it
   and it is within 0.5% of the new one. The move a pacing makes in the paced lines' own round trips
   counts as part of that pacing, not as a move. Without this London's 130 lines at one merge paced each
-  other back and forth on every edit. A load takes the saved pacing and its sets as they are. A headway line there counts with its
+  other back and forth on every edit. A load takes the saved pacing and its sets as they are. On weekends the same
+  pacing runs on the weekend counts and service (T-3584: inside `settle_weekend`, from the weekdays'
+  pacing at first; kept beside `svc_rest`, not saved, worked out again at the first edit after a load), so
+  lines sharing track are paced from their weekend headways. A headway line there counts with its
   set headway and is never moved. Where a merge is full (98%, `PACE_FULL_RHO`) its count lines share
   it evenly: each that could run more often keeps the even share of their trains an hour together
   (a line left at its own headway counts at the rate it now runs, so the share is the same on every
