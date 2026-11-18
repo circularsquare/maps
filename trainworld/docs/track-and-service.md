@@ -934,7 +934,11 @@ and no rider waits longer than at 100%. So the shortest headway a line can have 
 resource's `s`, 1m47s on track at 80 km/h. A count level held this way counts as settled, so
 an edit elsewhere leaves it to the bit, except past full on single track only that line runs over:
 only its own rate can do that (a lone train's, which keeps no margin, when a second comes), so it is
-cut to the stretch (T-3526).
+cut to the stretch (T-3526). Nor is a line the edit changed at a level where it ran no trains before
+(a new line, one an undo brings back, one given trains there): no fill has given it a share, so it
+steps with the lines already filling the track until its rate moves less than 0.01 trains an hour
+a round, on weekdays and weekends alike, and takes its share at the edit rather than 0 until some later
+edit nearby (T-3482).
 
 **Settled in the clock worker before demand runs.** Whole-line train allocations derive their
 frequencies from capacity-adjusted round trips with a bounded, damped solve on edits (T-104).
@@ -1300,7 +1304,8 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   the headways; switching to headways starts from the headway the current trains give. Switching
   either way buys and sells no train: that edit keeps the line's counts as they stand (T-752),
   except at a level with no trains, which takes its headway's count (T-849: a new line set
-  straight to headways runs). Saved in a
+  straight to headways runs), following its round trip and trimmed of the trains full track
+  leaves waiting as any headway line's (T-3482). Saved in a
   trailing `LAU1` block of the track save (line index and three headways, only when a line has
   them); a save without it loads every line by hand.
 - **Departures** (`Service::run_deps`): per stretch of one level (consecutive periods at the same

@@ -1213,6 +1213,60 @@ fn shared_track_splits_its_capacity() {
     assert!(fullest(&w, HIGH) <= 1.0 + 1e-4);
 }
 
+/// A line as the game adds one (`TrackApi::set_line_with_trains`): its trains and a starting rate.
+fn new_line(w: &mut TrackWorld, stops: &[u32], trains: [u32; 3]) -> u32 {
+    let path = w.net.route(stops).expect("no route");
+    let id = w.net.alloc_line();
+    let d = LineData { symbol: String::new(), trains: Some(trains), auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() };
+    w.apply(Op::Line { id, data: Some(d) }).unwrap();
+    id
+}
+
+#[test]
+fn a_new_line_on_full_track_gets_its_share_at_the_edit() {
+    // T-3482: a busy line fills the shared stretch, then a new line comes onto it
+    for headway in [false, true] {
+        let (mut w, ns) = corridor(5);
+        terminals_at_dead_ends(&mut w);
+        let busy = line(&mut w, &ns, [8.0, 3.0, 1.0]);
+        set_counts(&mut w, busy, [40, 4, 2]);
+        // elsewhere, a line sharing nothing with them
+        let far: Vec<u32> = (0..3).map(|i| node(&mut w, i as f64 * 2000.0, 50_000.0, 0)).collect();
+        for i in 0..2 { edge(&mut w, far[i], far[i + 1], &[], 0).unwrap(); }
+        for &n in &far { station(&mut w, n, 200); }
+        let other = line(&mut w, &far, [8.0, 3.0, 1.0]);
+        set_counts(&mut w, other, [4, 3, 2]);
+        assert!((fullest(&w, HIGH) - 1.0).abs() < 1e-4, "{}", fullest(&w, HIGH));
+        let before = w.net.line_tph[busy as usize];
+        // as the game adds a line: no trains, then trains or headways
+        let new = new_line(&mut w, &ns[1..4], [0, 0, 0]);
+        if headway {
+            w.apply(Op::AutoTrains { id: new, auto: Some([300, 600, 1800]), trains: Some([0, 0, 0]) }).unwrap();
+        } else {
+            set_counts(&mut w, new, [8, 4, 2]);
+        }
+        let at_edit = w.net.line_tph.clone();
+        let counts = w.net.line_trains.clone();
+        assert!(at_edit[new as usize][HIGH] > 0.5, "the new line runs at the peak: {:?}", at_edit[new as usize]);
+        assert!(at_edit[busy as usize][HIGH] < before[HIGH], "the busy line makes room");
+        assert!(fullest(&w, HIGH) <= 1.0 + 1e-4, "{}", fullest(&w, HIGH));
+        // the same trains or headways sent again move nothing: the line has its share
+        if headway {
+            w.apply(Op::AutoTrains { id: new, auto: Some([300, 600, 1800]), trains: counts[new as usize] }).unwrap();
+        } else {
+            set_counts(&mut w, new, [8, 4, 2]);
+        }
+        for l in [busy, new, other] {
+            assert_eq!(w.net.line_tph[l as usize].map(f32::to_bits), at_edit[l as usize].map(f32::to_bits), "line {l} moved: {:?} -> {:?}", at_edit[l as usize], w.net.line_tph[l as usize]);
+        }
+        // T-1787: an edit elsewhere leaves them as they are
+        set_counts(&mut w, other, [5, 3, 2]);
+        for l in [busy, new] {
+            assert_eq!(w.net.line_tph[l as usize].map(f32::to_bits), at_edit[l as usize].map(f32::to_bits), "line {l} moved on an edit elsewhere");
+        }
+    }
+}
+
 /// T-797: X - T - J - M, and a branch J - Br leaving towards M. From T, Br is reached only by
 /// turning back (at T, a through station, or at X, a dead end).
 pub fn reversal_fixture() -> (TrackWorld, [u32; 5]) {
