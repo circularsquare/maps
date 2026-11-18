@@ -216,12 +216,35 @@ export function setWeekendCount(id: LineId, demand: Demand, want: number, most: 
   return true;
 }
 
+/** A weekday headway at a weekend percent, to a whole minute from a minute up (sim `weekend_headway`). */
+export function weekendHeadwayAt(headwayS: number, share: number): number {
+  if (!(headwayS > 0) || !(share > 0)) return 0;
+  const raw = Math.floor((headwayS * 100) / share);
+  return raw >= 60 ? Math.floor(raw / 60) * 60 : Math.max(1, raw);
+}
+
+/** The trains an hour the weekends' row shows at level `lev` with `n` trains. On a headway line it
+ * is the stepped headway the weekends are asked to run, as the weekdays' row shows its stored one:
+ * the hand-set headway, or the weekday headway at the percent (sim `weekend_headway`). The settled
+ * rate (`restTph`) is a decimal wherever the train count cannot hit the headway, and the round
+ * trip over a count still on its way is another; neither is shown there (T-3603). */
+export function restTphShown(id: LineId, st: LineStats, lev: number, n: number): number {
+  const trip = st.roundTripByLevel[lev];
+  const wk = weekendShown(id), auto = headwayShown(id);
+  if (n > 0 && wk) {
+    const given = wk.custom ? wk.headways?.[lev] ?? 0 : auto ? weekendHeadwayAt(auto[lev], wk.share) : 0;
+    if (given > 0) return 3600 / given;
+  }
+  const ran = st.weekend ? st.weekend[2 + lev] : st.trainsNeeded[lev];
+  if (!pendingWeekend.value.has(id) && n === ran && st.restTph) return st.restTph[lev];
+  return trip > 0 ? (n * 3600) / trip : 0;
+}
+
 /** The headway the weekends' row at level `lev` shows with `n` trains, to a whole minute (seconds); 0 none. */
 function shownRestHeadway(id: LineId, lev: number, n: number): number {
   const st = world.value?.lineStats[id];
   if (!st || !(n > 0)) return 0;
-  const trip = st.roundTripByLevel[lev], ran = st.weekend ? st.weekend[2 + lev] : st.trainsNeeded[lev];
-  const tph = n === ran && st.restTph ? st.restTph[lev] : trip > 0 ? (n * 3600) / trip : 0;
+  const tph = restTphShown(id, st, lev, n);
   const h = tph > 0 ? 3600 / tph : 0;
   return h >= 60 ? Math.round(h / 60) * 60 : Math.round(h);
 }

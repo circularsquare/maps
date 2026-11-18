@@ -24,7 +24,7 @@ import { pendingLabel } from "../../game/lineFigures";
 import { clearDefaultHeadway, lineKind, makeDefaultHeadway, newHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
-import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
+import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, restTphShown, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
 import { Row, Segmented, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
 
@@ -191,8 +191,7 @@ function WeekendCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats;
   const trip = st.roundTripByLevel[lev], limit = limits[lev];
   // the track holds as many on a weekend as on a weekday: the weekdays' cap (T-3165)
   const most = trainCap(st, trip, limit?.s ?? null);
-  const ran = st.weekend ? st.weekend[2 + lev] : st.trainsNeeded[lev];
-  const tph = n === ran && st.restTph ? st.restTph[lev] : trip > 0 ? (n * 3600) / trip : 0;
+  const tph = restTphShown(l.id, st, lev, n);
   const loop = loopHalves(st), k = loop ? 2 : 1;
   if (auto) {
     const lim = limit?.s ?? 0, h = tph > 0 ? 3600 / tph : 0;
