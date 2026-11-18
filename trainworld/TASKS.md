@@ -178,6 +178,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-3622. You, 2026-11-18: "i dont really see why a fare dollar should cont 8x mroe than a car dollar in india. i think car cost should be changed to scale the same way as fares. lets test out how big of a change that is. dont necessarily want to do it. but want to see."
   - Goal: A trial (not landed) where a dollar of car costs inside a city weighs what a fare dollar weighs in that country, with the change in rail and car share shown for a few countries and your two ceiling tests, so you can decide.
   - Other: notes/T-3622.md
+- T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
+  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). One sentence in the panel covers several causes.
+  - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
+  - Other: notes/T-3632.md
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
@@ -575,6 +579,13 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
   - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
   - Other: Needs a registry rebuild and upload; fold into the next data batch with T-3033. notes/T-3074.md
+- T-3635 [P3] {L:map-look} Top bar fills with copies of the clock
+  - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced).
+  - Goal: The player confirms it's gone (or their extensions explain it); reproduce with Chrome's page translation on a game crossing a holiday.
+  - Other: notes/T-3635.md (draft reply to the player)
+- T-3634 [P2] {L:rebuild-track} A panel for several selected pieces of track
+  - Context: Your pad, 2026-11-18, a player request: "add view for multiple track selection, like single track view. so that you can shift click to add to track selection and then rebuild just like you can rebuild a selected single track section".
+  - Goal: Shift+click adds track pieces to a selection, and the selection gets the track panel's view with the same Rebuild (level and kind, one quote and charge for all).
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
   - Goal: The new level and kind show as a preview before the player pays.

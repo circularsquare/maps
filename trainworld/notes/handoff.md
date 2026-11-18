@@ -33,8 +33,10 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   Her: car cost should scale like fares; "lets test out how big of a change that is. dont necessarily want to do it".
   carmoney (Opus, .tw-trees/carmoney, port 6193): T-3627 trial A (equal) and B (US anchored), patch only; plus C
   (her idea: same numbers restated as cheaper car costs in poorer countries, "cuz of mopeds"; check vs real costs).
-- nativenames (Opus, .tw-trees/nativenames, port 6195): T-3631 P1 (her: "somewhat high prio", ~60% of players
-  Japanese): new station names in the player's script from the place lists' native aliases.
+- nativenames: T-3631 DONE in tree (not a regression; names in the player's script for ja/zh/ko; c016 in tree).
+  Resumed to fix an undo-after-placing crash in tools.ts stationGhost (maybe T-3606's): must be fixed before the
+  hotfix. On landing run `tasks.py done T-3631` in the main tree. Found: English players get CJK names where data
+  has no Latin (file). Asked her: Japanese player in mainland China gets Simplified names (浦东) or Latin?
 - T-3630 filed (settings + feedback on the landing page); twitter reply sent by her.
 - T-3626 LANDED 4065b244 (c015; strings "Email (optional)", "Email" removed; privacy page line changed).
 - secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 built (edits within 60 s of a local solve go when it
@@ -59,8 +61,16 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   30 GB free, backups ~20 GB: watch it. After it ends: tasks.py done T-3511/T-3455, notes/T-3455.md "What ran".
 - HOTFIX v0.4.1 (her ask 11-18 04:05 UTC, she's up ~2 h): app-only (`deploy.py --skip-data`, data 2026-11-18:
   data/packs is mid night run, must not ship). Candidates: everything on master + T-3631 + T-3628 retry if ready.
-  l10n041 (Sonnet) translating T-3599's 3 strings. Needs: changelog publish v0.4.1, translate updates keys,
-  8800 rebuild, smoke8800, her test + her yes to each step.
+  T-3599 strings translated (5275e53e); T-3628 landed 2c196e38. Her OK on the scope 11-18 ~04:20 UTC ("that list
+  sounds good"). Waits on nativenames (T-3631). Then: changelog publish v0.4.1, translate updates keys, 8800
+  rebuild, smoke8800, her test, her yes per step. T-3515's tram fix is data (realgraph), so not in an app-only hotfix.
+- tramterm (Sonnet, .tw-trees/tramterm, port 6197): T-3633 Terminal upgrade for tram stops (her "lets just do this").
+  T-3634 filed (panel for several selected pieces, P2), not started: cores full.
+- datestrip (Sonnet, no tree, port 6198): what the row of past dates in a Japanese player's top bar is (feedback
+  1794744778-ef2051d1) -> notes/T-3635.md (id reserved, task not filed yet). She stopped her feedback pass for
+  tonight; another pass tomorrow (notes/feedback-triage-2026-11-18.md).
+- T-3632 stage 1 DONE (notes/T-3632.md): only 3 direct reports in the inbox; recommended first fix: the "By
+  transit" line names the cause (strings drafted, shown to her). Asked her where she sees it (Discord/X?).
 ## Night run (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)
 - T-3511 enclave shifts + T-3455 coastal rows (+ cif-ph if time, -Until 10:00 local), plan notes/T-3455.md, ~8 h.
   Started 02:34 UTC via kit\night1118.cmd (= night1117.ps1 -Want 9), cmd pid 23028, script pid 30872 (claim

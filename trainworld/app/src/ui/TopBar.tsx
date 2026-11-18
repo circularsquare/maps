@@ -149,7 +149,8 @@ function Clock() {
   const todayHols = holidayLines(minute, near, false).filter((l) => l.today).map((l) => l.text);
   const dateTip = t("topBar.dateTip", { weekday: t("topBar.weekday", { day: WEEKDAY_KEYS[weekdayOf(day)] }), month: MONTH_LONG[month], date, year: yearOf(day), day });
   return (
-    <div class="clock">
+    // T-3635: a page translator rewriting the date's text can break the holiday dot's diff and leave stale clocks behind
+    <div class="clock" translate={false}>
       <div class="clock-text" data-tip={held ? t("topBar.clockHeld") : [dateTip, ...todayHols].join("\n")}>
         <b class={"time lg" + (held ? " held" : "")}>{clockTime(minute)}</b>
         <span class="date"><HolidayDot today={todayHols.length > 0} />{dateName(day)}</span>
