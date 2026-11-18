@@ -973,6 +973,8 @@
   "help.aLeftBehind": "Add trains, or make them longer. If other portions of the line are mostly empty, consider making another version of the line that short turns. If the track cannot fit more trains, try adding another parallel line.",
   "help.qWeekend": "How to run fewer trains on weekends",
   "help.aWeekend": "Set the weekend share in the line's timetable, which you can open with the button next to the word {schedule} in the line view.",
+  "help.qTripMode": "How to tell what mode of transport people will use between two points",
+  "help.aTripMode": "{touch, select, true {Show demand bubbles with {homes}, {destinations} or {total}, tap one bubble, then tap another bubble.} other {Show demand bubbles with {homes}, {destinations} or {total}, click one bubble, then click another bubble.}}",
   "help.aRecalc": "Pause, then turn off {setting} in Settings. Trips are worked out again once the game runs.",
   "hideUi.hint": "Press {key} to show the UI",
   "holidays.laborDay": "Labor Day",

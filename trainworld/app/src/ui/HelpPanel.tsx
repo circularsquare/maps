@@ -56,6 +56,7 @@ function questions(): [string, string][] {
     [t("help.qFourTracks"), t("help.aFourTracks")],
     // T-3527: "Recalculate trips while paused" is on by default, so pausing alone still works trips out after each edit
     [t("help.qRecalc"), t("help.aRecalc", { setting: m(t("settingsTab.recalcWhilePaused")) })],
+    [t("help.qTripMode"), t("help.aTripMode", { touch, homes: m(t("demandSelector.homes")), destinations: m(t("demandSelector.destinations")), total: m(t("demandSelector.total")) })],
     [t("help.qLoseMoney"), t("help.aLoseMoney")],
     [t("help.qLoseMoneyIntercity"), t("help.aLoseMoneyIntercity")],
     [t("help.qLeftBehind"), t("help.aLeftBehind")],

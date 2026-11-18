@@ -969,6 +969,8 @@
   "help.aLeftBehind": "Answer to help.qLeftBehind, shown under it. A short turning version runs only the busy part of the line and turns back before its end.",
   "help.qWeekend": "A question players ask, listed with the common questions in the help panel: how to run fewer trains on Saturdays and Sundays than on weekdays.",
   "help.aWeekend": "Answer to help.qWeekend, shown under it. schedule: the heading of the line panel's train count section (schedule.title, \"Schedule\"); the timetable opens from the small button beside it.",
+  "help.qTripMode": "A question players ask, listed with the common questions in the help panel: how to see which way people travel between two places (train, walking, car), which the trip explorer shows.",
+  "help.aTripMode": "Answer to help.qTripMode, shown under it. touch: true on a phone or tablet (a tap instead of a click). homes, destinations, total: the three buttons of the map's demand row that switch demand bubbles on (demandSelector.homes \"Homes\", demandSelector.destinations \"Destinations\", demandSelector.total \"Total\"). Clicking one bubble, then another, opens the trip explorer between them.",
   "help.qRecalc": "A problem players report, listed with the common questions in the help panel: the game works out trips again after each piece of track they draw, even while paused.",
   "help.aRecalc": "Answer to help.qRecalc, shown under it. setting: the Settings checkbox's label (settingsTab.recalcWhilePaused, \"Recalculate trips while paused\"), which is on by default.",
   "hideUi.hint": "Reminder at the top of the screen while the interface is hidden for screenshots. key: the key name, e.g. \"F2\".",
