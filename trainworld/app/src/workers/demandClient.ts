@@ -512,9 +512,12 @@ const MAX_RESPAWNS = 4;
 /** T-2704: the waits before each new try of a worker whose code did not download (as wasmInit.ts's) */
 const SCRIPT_WAITS_MS = [1_000, 4_000];
 /** T-1205 (measured, notes/T-1205.md): a fresh worker's WASM after a solve, as its heap at rest or that
- * solve's heap peak times these, plus MEM_BASE (New York and all-China within 4%) */
-const MEM_NEED: [number, number] = [1.38, 1.07];
+ * solve's heap peak times these, plus MEM_BASE (T-3604, notes/T-3604.md: all-China within 3%, New York set by
+ * its peak) */
+const MEM_NEED: [number, number] = [1.12, 1.07];
 const MEM_BASE = 64 * 2 ** 20;
+/** T-3604: pack downloads a pool's replacement workers have under way at once, all of them together */
+const REOPEN_FETCHES = 6;
 /** an idle worker restarts when its WASM is this many times its need and this much above it */
 const MEM_OVER = 1.15;
 const MEM_FREE = (Number(new URLSearchParams(location.search).get("memFree")) || 384) * 2 ** 20; // ?memFree=MB: checks
@@ -2852,22 +2855,41 @@ class DemandClient {
     this.aheadP.clear();
   }
 
+  private reopenBusy = 0;
+  private reopenQueue: (() => void)[] = [];
+  /** Run one of a replacement's downloads when one of REOPEN_FETCHES places is free; `stale` (the replacement
+   * itself was replaced, or the pool stopped) ends the wait with an error the caller ignores. */
+  private async reopenSlot<T>(stale: () => boolean, run: () => Promise<T>): Promise<T> {
+    if (this.reopenBusy >= REOPEN_FETCHES) await new Promise<void>((go) => this.reopenQueue.push(go)); // (the place is handed on, not freed)
+    else this.reopenBusy++;
+    try {
+      if (stale()) throw new Error("replaced");
+      return await run();
+    } finally {
+      const next = this.reopenQueue.shift();
+      if (next) next(); else this.reopenBusy--;
+    }
+  }
+
   /** The replacement for worker `i` is ready: download again what the worker held (the page keeps no
    * copy; the browser's cache has them) and open it there. */
   private async reopen(i: number) {
     const r = this.respawn.get(i)!, aux = i === this.computeN;
     const items = [...this.fetching].filter((x) => !aux || !isMarket(x));
     const bare = aux ? [...this.fetchingBare] : [];
-    const city = async (id: CityId) => {
+    // the downloads of every replacement share REOPEN_FETCHES places (T-3604: all of them at once, in three
+    // workers, ran the browser out of connections: ERR_INSUFFICIENT_RESOURCES, and the replacements never opened)
+    const stale = () => this.respawn.get(i) !== r || this.failed;
+    const city = (id: CityId) => this.reopenSlot(stale, async () => {
       const [header, bin] = await this.downloadPack(id);
       return { id, header: new TextDecoder().decode(header), bin: bin.slice().buffer as ArrayBuffer, level: this.levelPosted.get(id) ?? LOD_FINE };
-    };
+    });
     try {
       const markets = items.filter(isMarket).map(marketZone);
       const [packs, barePacks, intercity, rows, drives] = await Promise.all([
         Promise.all(items.filter((x) => !isMarket(x)).map((id) => city(id as CityId))),
         Promise.all(bare.map(city)),
-        Promise.all(markets.map(async (id) => ({ id, pack: await this.download(`${id}.market.json`) }))),
+        Promise.all(markets.map((id) => this.reopenSlot(stale, async () => ({ id, pack: await this.download(`${id}.market.json`) })))),
         markets.length ? this.download(MARKET_ROWS) : Promise.resolve(undefined),
         markets.length ? fetchMarketDrives().then((d) => d ?? undefined) : Promise.resolve(undefined),
       ]);

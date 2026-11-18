@@ -355,7 +355,7 @@ Web first, so it can be shared as a link.
   objects it was in borrowed, so the worker posts `dead` with `last_panic()`'s text (the panic
   message, or the allocation that failed) and does nothing more; a pack that fails to open with a
   panic is never taken for a broken pack. The page terminates it, starts a new worker in its place,
-  downloads again and reopens everything it held, then sends the newest network again under a new
+  downloads again (all replacements together keep 6 downloads going) and reopens everything it held, then sends the newest network again under a new
   version (`freshParts`: every worker composes its market afresh from the packs open, as the
   replacement did, so all hold the same corridor table, T-1354); the shown figures stay until that final. A second panic before the replacement has seen
   a solve through, or a fifth replacement in the page, stops the pool as before. `?debug=1` on the
@@ -380,7 +380,7 @@ Web first, so it can be shared as a link.
   shrinks, so each worker reports its memory with its heap in use and its last solve's heap peak
   (`wasm_heap_bytes`, `wasm_heap_peak`; the peak is reset as each solve starts and forgotten when
   anything closes). A worker's need, what a worker started afresh reaches, is the larger of its heap
-  at rest times 1.38 and that peak times 1.07, plus 64 MB. Once nothing is in flight (no solve, load,
+  at rest times 1.12 and that peak times 1.07, plus 64 MB. Once nothing is in flight (no solve, load,
   open, close or question, no replacement) and the network has been still for 20 s, every worker
   whose memory is at least 384 MB and 15% above its need is restarted through the panic path above,
   together and without counting as a panic; the network is solved once more, questions wait for that
