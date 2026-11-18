@@ -22,12 +22,12 @@ import { encodeSave, isRetiredTrackFormat, isThisWorld, SAVE_FORMAT, SAVE_HEADER
 /** shonei-server's MaxTwCommunitySave and MaxTwCommunitySaveUnpacked */
 export const MAX_SHARED_SAVE = 2 << 20;
 const MAX_RAW = 32 << 20;
-const MAX_HEADER = 8 << 20, MAX_DEPTH = 8, MAX_NODES = 4_000_000, MAX_STRING = 1000, MAX_KEYS = 100_000;
+const MAX_DEPTH = 8, MAX_NODES = 4_000_000, MAX_STRING = 1000, MAX_KEYS = 100_000;
 const BAD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
-/** Why a copy did not open: "version" (another world, a retired or newer format), "bad" (not a save, damaged, too big). */
+/** Why a copy did not open: "version" (another world, a retired or newer format), "big" (over the size limit), "bad" (not a save, damaged). */
 export class CopyRefused extends Error {
-  constructor(readonly why: "version" | "bad") { super(why); }
+  constructor(readonly why: "version" | "bad" | "big") { super(why); }
 }
 
 /** `gz` unpacked, or null when it is not gzip or unpacks past `cap` bytes */
@@ -83,11 +83,11 @@ function withinLimits(root: unknown): boolean {
 
 /** A save's header and network out of its file, checked; throws CopyRefused. */
 async function readChecked(gz: Uint8Array): Promise<{ header: SaveHeader; track: Uint8Array }> {
-  if (gz.length > MAX_SHARED_SAVE) throw new CopyRefused("bad");
+  if (gz.length > MAX_SHARED_SAVE) throw new CopyRefused("big");
   const raw = await gunzipCapped(gz, MAX_RAW);
   if (!raw || raw.length < 8 || new TextDecoder().decode(raw.subarray(0, 4)) !== SAVE_MAGIC) throw new CopyRefused("bad");
   const n = new DataView(raw.buffer, raw.byteOffset).getUint32(4, true);
-  if (n > MAX_HEADER || 8 + n + 4 > raw.length) throw new CopyRefused("bad");
+  if (8 + n + 4 > raw.length) throw new CopyRefused("bad");
   let parsed: unknown;
   try { parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw.subarray(8, 8 + n))); } catch { throw new CopyRefused("bad"); }
   if (!plain(parsed) || !withinLimits(parsed)) throw new CopyRefused("bad");
@@ -105,15 +105,15 @@ async function readChecked(gz: Uint8Array): Promise<{ header: SaveHeader; track:
   return { header: h, track };
 }
 
-/** The playing game's save as it goes up with a share, its private parts out; null if it is not a save this build can
- * read back or is over the server's limit. */
-export async function forShare(bytes: Uint8Array): Promise<Uint8Array | null> {
+/** The playing game's save as it goes up with a share, its private parts out; "big" when it is over the server's limit,
+ * null if it is not a save this build can read back. */
+export async function forShare(bytes: Uint8Array): Promise<Uint8Array | "big" | null> {
   try {
     const { header, track } = await readChecked(bytes);
     const { guide: _g, copy: _c, ...rest } = header;
     const out = await encodeSave(rest, track);
-    return out.length <= MAX_SHARED_SAVE ? out : null;
-  } catch { return null; }
+    return out.length <= MAX_SHARED_SAVE ? out : "big";
+  } catch (e) { return e instanceof CopyRefused && e.why === "big" ? "big" : null; }
 }
 
 /** A shared save, as downloaded, checked and made the viewer's copy of share `id`: tagged with it (so its figures

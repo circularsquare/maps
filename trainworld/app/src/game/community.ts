@@ -187,12 +187,13 @@ export async function shareGame(name: string, copy: boolean, title: string): Pro
     if (!got) throw new Error(t("community.errDraw"));
     const blob = await packShared(got.d, got.names);
     if (!blob) throw new Error(t("community.errTooBig"));
-    let save: Uint8Array | null = null;
+    let save: Uint8Array | "big" | null = null;
     if (copy) {
       const bytes = await exportForShare();
       if (!bytes) throw new Error(t("community.errSend"));
       save = await forShare(bytes);
-      if (!save) throw new Error(bytes.length > MAX_SHARED_SAVE ? t("community.errTooBig") : t("community.errSend"));
+      if (save === "big") throw new Error(t("community.errTooBig"));
+      if (!save) throw new Error(t("community.errSend"));
     }
     sharePhase.value = "sending";
     // T-3114: the card counts what the saves list counts, every line and station, bus and ferry ones too
