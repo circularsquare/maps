@@ -614,6 +614,13 @@ dismissed, and the map and tools are blocked meanwhile.
 
 ## Settings
 
+A search box heads the tab ("Search settings", T-3681, `ui/SettingsSearch.tsx`): typing hides every row whose shown
+text (labels, options, icon buttons' names), section heading or keywords do not hold each typed word, ignoring case,
+accents and full-width letters; a matched heading shows its whole section, a matched row its heading; "No settings
+match" when none. Keywords are a short list per labelled row or heading (`ALIASES`), in English and the player's
+language, both always searched; a new setting needs no entry to be found by its label. Esc or clearing the box
+shows the tab as it was.
+
 `ui/SettingsTab.tsx`, remembered per browser, in order: two icon buttons at the top, Help (a plain "?",
 opens the [Help](#help) panel) and, when accounts are on, Account or Sign in (the person icon, the account
 panel, [Account and leaderboards](#account-and-leaderboards)) [T-1099], with light text beside the icon,

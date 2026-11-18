@@ -2,7 +2,7 @@
 // their own panel (ui/SavesPanel.tsx).
 
 import type { ComponentChildren } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { budgetGB, budgetKind, gbText, liveGB } from "../game/memoryEstimate";
 import { CURRENCIES, CURRENCY, isCurrency } from "../game/currency";
 import { exact } from "../game/format";
@@ -28,6 +28,7 @@ import { FeedbackButton } from "./FeedbackPanel";
 import { t, tNumber, type MessageKey } from "../i18n";
 import { LanguageSelect } from "./LanguageSelect";
 import { SideRow } from "./SideSwitch";
+import { SettingsSearch } from "./SettingsSearch";
 
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
@@ -46,6 +47,7 @@ const percent = (v: number) => tNumber(v, { style: "percent", maximumFractionDig
 
 export function SettingsTab() {
   const d = display.value;
+  const list = useRef<HTMLDivElement>(null);
   // T-264, T-1373: a superholiday's days while one is within 21 days, each an icon named on hover
   const away = awayNear.value, rush = rushRun.value;
   // on a row of their own under the four, which leave no room beside them in the dock
@@ -56,6 +58,8 @@ export function SettingsTab() {
   if (rush && wBack) days.push(["back", <span class="day-away" data-tip={t("settingsTab.dayOf", { holiday: wBack })} aria-label={wBack}><Icon.goBack /></span>]);
   return (
     <>
+      <SettingsSearch list={list} />
+      <div class="settings-list" ref={list}>
       <div class="settings-top">
         <button class={"btn icon help-open" + (helpOpen.value ? " on" : "")} data-tip={mobileDevice() ? t("help.name") : t("dock.tabTip", { name: t("help.name"), key: HELP_KEY })} aria-label={t("help.name")} aria-pressed={helpOpen.value} onClick={() => (helpOpen.value = !helpOpen.peek())}>
           <Icon.question />
@@ -72,7 +76,7 @@ export function SettingsTab() {
         <Segmented<DayShown> options={worded(DAY_OPTIONS)} value={days.some(([k]) => k === d.dayShown) ? d.dayShown : DAY_OPTIONS.some(([k]) => k === d.dayShown) ? d.dayShown : "average"} onChange={(v) => setDisplay("dayShown", v)} />
       </div>
       {days.length > 0 && (
-        <div class="slider day-super">
+        <div class="slider day-super" data-search-follow>
           <span />
           <Segmented<DayShown> options={days} value={d.dayShown} onChange={(v) => setDisplay("dayShown", v)} />
         </div>
@@ -92,7 +96,7 @@ export function SettingsTab() {
         <Segmented<BubbleScheme> options={worded(SCHEME_OPTIONS)} value={d.bubbleColours} onChange={(v) => setDisplay("bubbleColours", v)} />
       </div>
       {d.bubbleColours === "ramp" && (
-        <div class="pickers">
+        <div class="pickers" data-search-follow>
           <label>
             <input type="color" value={d.rampFrom} onInput={(e) => setDisplay("rampFrom", (e.target as HTMLInputElement).value)} />
             {t("settingsTab.ramp0")}
@@ -222,13 +226,17 @@ export function SettingsTab() {
         ))}
       </div>
       <AccountSection />
-      {/* T-3630: the form itself is mounted on its own (startFeedbackUi), so the start menu and the failure screen open it too */}
-      <FeedbackButton />
-      <div class="donate">
-        <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.donateTip")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
-        <span class="muted" data-tip={t("settingsTab.donateTip")}>{t("settingsTab.donate")}</span>
+      {/* found by their own text, not under the section above (T-3681) */}
+      <div data-search-group data-search-alone>
+        {/* T-3630: the form itself is mounted on its own (startFeedbackUi), so the start menu and the failure screen open it too */}
+        <FeedbackButton />
+        <div class="donate">
+          <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.donateTip")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
+          <span class="muted" data-tip={t("settingsTab.donateTip")}>{t("settingsTab.donate")}</span>
+        </div>
+        <Credits />
       </div>
-      <Credits />
+      </div>
     </>
   );
 }
