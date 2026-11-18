@@ -3,6 +3,7 @@
 // and its dialog. Nothing shows unless the server's `trainworldCommunity` is on (game/community.ts). Names reach the
 // page only through Preact's text and the canvas's fillText, never as HTML.
 
+import { FindInput } from "./FindInput";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
@@ -332,7 +333,7 @@ function Browse() {
         <CityPick boardKey={boardKey} mine={mine} all={ALL_CITIES} countries={lands} more={{ ...MORE_PLACES, regions: areas }} onPick={setBoardKey} />
       </div>
       {view === "random" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
-      {searchOn && <input type="search" class="new-game-find cm-search" maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
+      {searchOn && <FindInput type="search" wrap="cm-search" class="new-game-find" onClear={() => setTyped("")} maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
         value={typed} onInput={(e) => setTyped((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => { if (e.key === "Escape" && typed) { e.preventDefault(); e.stopPropagation(); setTyped(""); } }} />}
     </div>

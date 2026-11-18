@@ -2,6 +2,7 @@
 // where to start: one of five suggested cities or the player's location (T-1132), any registry city
 // or zone found by name, or the world map. In a sandbox, a city with a real network (T-731) can start with it.
 
+import { FindInput } from "./FindInput";
 import type { RefObject } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { CITIES, cityById, isCity, zonesTouching, ZONE_REACH_M, type City } from "../game/cities";
@@ -228,7 +229,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
           </button>}
         </div>
         <span class="new-game-or muted small">{t("newGame.or")}</span>
-        <input type="text" class="new-game-find" aria-label={t("newGame.findCity")} placeholder={t("newGame.findCity")} value={text} maxLength={60}
+        <FindInput type="text" class="new-game-find" onClear={() => pick(null)} aria-label={t("newGame.findCity")} placeholder={t("newGame.findCity")} value={text} maxLength={60}
           onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); setLocated(null); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }

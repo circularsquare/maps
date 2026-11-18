@@ -4,6 +4,7 @@
 // them when lower, and at the bottom Sign in to be listed, a name with Join, or Leave the
 // leaderboards. Each person once per board, with their best normal game there at its current figures (T-3248; shonei-server's trainworld.go).
 
+import { FindInput } from "./FindInput";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { normalise } from "../game/search";
 import { tPlace } from "../i18n/places";
@@ -96,7 +97,7 @@ export function CityPick({ boardKey, mine, all, countries, more, onPick }: { boa
   }, [text, mine, all, countries, more]);
   const pick = (key: string) => { setText(null); if (onPick) onPick(key); else void fetchBoards(key); (document.activeElement as HTMLElement | null)?.blur(); };
   return <div class="lb-find">
-    <input type="text" class="new-game-find lb-pick" aria-label={t("leaderboard.pick")} placeholder={t("newGame.findCity")} maxLength={60}
+    <FindInput type="text" class="new-game-find lb-pick" showClear={!!text} onClear={() => { setText(""); setCursor(0); }} aria-label={t("leaderboard.pick")} placeholder={t("newGame.findCity")} maxLength={60}
       value={text ?? current}
       onFocus={(e) => { setText(""); setCursor(0); (e.target as HTMLInputElement).select(); }}
       onBlur={() => setText(null)}

@@ -1,6 +1,7 @@
 // T-3269, T-3279: a player's flag after their name (leaderboard rows, Community cards), and the account panel's flag
 // button beside the display name, which opens the picker.
 
+import { FindInput } from "./FindInput";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { boardSetting } from "../game/account";
 import { flagCountry, flagGroups, flagName, flagUrl, flagsOn, homeCountry, isFlag, setFlag } from "../game/flags";
@@ -120,7 +121,7 @@ function FlagPicker({ anchor, current, onPick, onClose }: { anchor: { current: H
   };
   if (!at) return null;
   return <div class="flag-pop" ref={box} style={{ left: `${at.left}px`, top: at.top === undefined ? "auto" : `${at.top}px`, bottom: at.bottom === undefined ? "auto" : `${at.bottom}px`, maxHeight: `${at.height}px` }}>
-    <input type="text" ref={input} class="new-game-find" aria-label={t("accountPanel.flag")} placeholder={t("accountPanel.flagSearch")} maxLength={40}
+    <FindInput type="text" inputRef={input} class="new-game-find" onClear={() => { setText(""); setCursor(0); }} aria-label={t("accountPanel.flag")} placeholder={t("accountPanel.flagSearch")} maxLength={40}
       value={text} autocomplete="off" spellcheck={false}
       onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (list.current) list.current.scrollTop = 0; }}
       onKeyDown={(e) => {
