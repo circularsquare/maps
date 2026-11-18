@@ -174,12 +174,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
   - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
   - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
-- T-3627 [P2] {L:route-choice} {after:v0.4.1 ships, to land} Hovers show one money to minutes figure per place
-  - Context: Measured (notes/T-3627.md): weighing car money like fares raises rail 10-43% in poorer cities and moves driving mostly to walking. You, 2026-11-18: "yeah lets keep todays demand and just fix hovers. then we show same dollar to minute ratio regardless of mode."
-  - Goal: Demand unchanged; every hover in a place weighs a dollar of fare and of car money with the same minutes figure (car dollars restated at the fare weight, items 1-3 of notes/T-3627.md), and the car hover reads like "Each S$1 counts as 3.6 minutes".
-  - Other: notes/T-3622.md, notes/T-3627.md
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often (taking, 2026-11-17, agent noroute2)
-  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). One sentence in the panel covers several causes.
+  - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 built (noroute2, not landed yet): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
@@ -304,9 +300,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
-- T-3597 [P3] {L:small-fixes} {after:v0.4.0 publish} Every calculating tag says Calculating trips
+- T-3597 [P3] {L:small-fixes} Every calculating tag says Calculating trips
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
+- T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room
+  - Context: Seen in T-3636's screenshot: a trip by bus has a panel row "Waiting for a train with room".
+  - Goal: The row names the bus (or boat, tram) the trip rides, as the ride hover already does.
+- T-3638 [P3] {L:rebuild-track} Remove a set of selected track
+  - Context: From T-3634 (shift+click builds a set of track pieces with one Rebuild). A set has no Remove, and the Delete key does nothing on it; touch has no way to build a set.
+  - Goal: A set of track pieces can be removed in one go, as one piece can.
 - T-3589 [P3] {L:feedback} Graphics details in feedback reports
   - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
   - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
@@ -580,9 +582,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced).
   - Goal: The player confirms it's gone (or their extensions explain it); reproduce with Chrome's page translation on a game crossing a holiday.
   - Other: notes/T-3635.md (draft reply to the player)
-- T-3634 [P2] {L:rebuild-track} A panel for several selected pieces of track (taking, 2026-11-17, agent multitrack)
-  - Context: Your pad, 2026-11-18, a player request: "add view for multiple track selection, like single track view. so that you can shift click to add to track selection and then rebuild just like you can rebuild a selected single track section".
-  - Goal: Shift+click adds track pieces to a selection, and the selection gets the track panel's view with the same Rebuild (level and kind, one quote and charge for all).
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
   - Goal: The new level and kind show as a preview before the player pays.

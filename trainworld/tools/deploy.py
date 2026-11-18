@@ -121,8 +121,17 @@ def blocks_listed(terrain):
         return int.from_bytes(f.read(16)[12:16], "little")
 
 
-def preflight(dist, allow_dirty, app=None):
-    """The build's commit, the registry against the files, the sizes. Returns (problems, warnings, info)."""
+def r2_files(version):
+    """Every file name at the top of a data version on R2, or None when it can't be listed."""
+    r = subprocess.run(["rclone", "lsf", f"{REMOTE}/{version}/", "--files-only", "--s3-no-check-bucket"],
+                       capture_output=True, text=True, encoding="utf-8")
+    return None if r.returncode else {l.strip() for l in r.stdout.splitlines() if l.strip()}
+
+
+def preflight(dist, allow_dirty, app=None, r2_version=None):
+    """The build's commit, the registry against the files, the sizes. Returns (problems, warnings, info).
+    With r2_version (--skip-data) the registry is checked against that version's files on R2: the build's own
+    packs/ never ship then, and a country run may be rewriting data/packs under it."""
     problems, warnings = [], []
     packs = os.path.join(dist, "packs")
     if not os.path.isfile(os.path.join(dist, "index.html")) or not os.path.isdir(packs):
@@ -155,7 +164,10 @@ def preflight(dist, allow_dirty, app=None):
     reg = json.load(open(os.path.join(frozen["freeze"], "game", "registry.json") if frozen else os.path.join(app, "src", "game", "registry.json"), encoding="utf-8"))
     ids = [c["id"] for c in reg["cities"]]
     missing = []
-    for c in ids:
+    live = r2_files(r2_version) if r2_version else None
+    if r2_version and live is None:
+        problems.append(f"could not list {REMOTE}/{r2_version}/ to check the registry against it")
+    for c in ([] if r2_version else ids):
         for ext in PACK_EXT:
             if not os.path.isfile(os.path.join(packs, c + ext)):
                 missing.append(c + ext)
@@ -168,17 +180,21 @@ def preflight(dist, allow_dirty, app=None):
                 problems.append(f"{c}.json reaches byte {end} of a {size}-byte {c}.bin")
         except (OSError, ValueError, KeyError):
             pass
-    for f in ["outlines.json", "realgraph/index.json"]:
+    if live is not None:
+        missing += [c + ext for c in ids for ext in PACK_EXT if c + ext not in live]
+        missing += [] if "outlines.json" in live else ["outlines.json"]
+    for f in ([] if r2_version else ["outlines.json", "realgraph/index.json"]):
         if not os.path.isfile(os.path.join(packs, f)):
             missing.append(f)
     try:
-        for cc in json.load(open(os.path.join(packs, "realgraph", "index.json"), encoding="utf-8"))["regions"]:
+        for cc in ([] if r2_version else json.load(open(os.path.join(packs, "realgraph", "index.json"), encoding="utf-8"))["regions"]):
             if not os.path.isfile(os.path.join(packs, "realgraph", cc + ".rgr")):
                 missing.append(f"realgraph/{cc}.rgr")
     except (OSError, ValueError, KeyError):
         pass
     if missing:
-        problems.append(f"{len(missing)} files the registry needs are not in the build: {', '.join(missing[:12])}{' ...' if len(missing) > 12 else ''}")
+        where = f"on R2 at {r2_version}" if r2_version else "in the build"
+        problems.append(f"{len(missing)} files the registry needs are not {where}: {', '.join(missing[:12])}{' ...' if len(missing) > 12 else ''}")
 
     site = [(r, os.path.getsize(p)) for r, p in files_under(dist) if not r.startswith("packs/")]
     data = [(r, os.path.getsize(p)) for r, p in files_under(packs) if not r.startswith("terrain-world/")]
@@ -441,7 +457,7 @@ def main():
     if a.verify:
         sys.exit(0 if verify(v, a.page) else 1)
 
-    problems, warnings, info = preflight(a.dist, a.allow_dirty or bool(a.stage), a.app)
+    problems, warnings, info = preflight(a.dist, a.allow_dirty or bool(a.stage), a.app, a.version if a.skip_data else None)
     if info:
         summary(info)
     for w in warnings:
