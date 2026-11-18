@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3639 [P2] {L:accounts-server} Leaderboard score swings after v0.4 (2026-11-18): Scores were sent mid-solve and held 2 minutes: on a reload with the game clock on a weekend the past-24-hours stand-in went up (NYC late Sunday 370.6M against 442.9M, the report's 0.82), and loads' early rounds too. account.ts now sends only from a whole final of the network as it is, the weekday row itself; real PUTs before/after in notes/T-3639.md.
 - T-3643 [P2] {L:feedback} Start menu covers the out of memory screen (2026-11-18): The start menu is no longer put up after a died load, so the out of memory screen is readable and Try again reloads to the menu.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch (2026-11-18): partly built lines run their longest built stretch (CinnamonVII's PR 21, ported by hand); real NYC save bit-identical; notes/T-3474.md.
 - T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room (2026-11-18): The wait for room row, its hover, the equation term and the cost term name the bus, boat or tram the trip rides; a row summing rides of different kinds says a ride (all 13 languages).

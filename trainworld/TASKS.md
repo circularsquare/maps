@@ -582,9 +582,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Design is done and your questions are answered. The server part is built behind SHONEI_COMMUNITY=1; the game part is next. You parked it from the next release.
   - Goal: Players can share a map, browse others and like them.
   - Other: notes/T-2887.md
-- T-3639 [P2] {L:accounts-server} Leaderboard score swings after v0.4 (taking, 2026-11-18, agent scoreswing)
-  - Context: Your pad, 2026-11-18, a Discord report: "leaderboard position fluctuated from 450m to 550m and back. after updating to 0.4. thats weird, probably shouldtn be happening now that we take froecasted weekday? are the weekdays different?" T-3465 made every score the region's forecast weekday from the current solve.
-  - Goal: Find why a score moves about 20% and back with no edit, and fix it if it's a bug; a player's score holds steady between edits.
 - T-3642 [P3] {L:community} Long-played networks near the share limits
   - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
   - Goal: A network played for years still shares: the shared copy thins or packs the per-day ledgers (no server change), and the drawing finishes well inside the wait.

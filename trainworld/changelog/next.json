@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c013",
+      "text": "fixed leaderboard scores jumping to another value for a few minutes while trips were still being calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3639",
+      "by": "scoreswing",
+      "at": "2026-11-18T07:29:41Z",
+      "rev": 1,
+      "area": "community",
+      "fix": true
+    },
+    {
       "id": "c012",
       "text": "lines that aren't fully built run trains on the part that is (thanks CinnamonVII)",
       "edited": null,
