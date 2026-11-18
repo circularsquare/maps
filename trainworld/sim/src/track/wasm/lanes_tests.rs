@@ -563,3 +563,53 @@ fn t3344_second_single_after_the_double_joins_both_tracks() {
         assert!(ways.iter().all(|&w| w != 0), "ways {ways:?}");
     }
 }
+
+/// T-3609: two singles between two doubles' loose ends, the second drawn from one end to the other:
+/// the first single, joined at both its ends by that one route, keeps both joins and runs one way,
+/// as does the second, so no move crosses at either end.
+#[test]
+fn t3609_singles_between_two_doubles_both_run_one_way() {
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 2000.0), free(0.0, 0.0)), &[], 2, false), 0);
+        assert_eq!(a.add_route(&ends(free(0.0, -3000.0), free(0.0, -5000.0)), &[], 2, false), 0);
+        let (j, k) = (node_near(&a, 0.0, 0.0), node_near(&a, 0.0, -3000.0));
+        assert_eq!(a.add_route(&ends(at_node(&a, j), at_node(&a, k)), &[], 1, false), 0, "{}", a.issues());
+        let first = singles(&a)[0];
+        assert_eq!(a.add_route(&ends(at_node(&a, j), at_node(&a, k)), &[-600.0, -1500.0, 0.0, 0.0], 1, false), 0, "{}", a.issues());
+        let net = &a.w.net;
+        assert!(net.edge_join[first as usize].iter().all(|&x| x != 0), "right hand {right_hand}: joins {:?}", net.edge_join[first as usize]);
+        let ways: Vec<u8> = singles(&a).iter().map(|&e| net.edge_way(e)).collect();
+        assert!(ways.iter().all(|&w| w != 0), "right hand {right_hand}: ways {ways:?}");
+        assert!(!junction_crosses(net, j) && !junction_crosses(net, k));
+    }
+}
+
+/// T-3609: where double track splits into two singles, the second single pressed on the double's far
+/// track still takes the track on its own side, so with the first single a terminus (both ways) no
+/// move crosses at the split. Off a double that carries on, the pointer still picks.
+#[test]
+fn t3609_split_into_singles_ignores_a_far_track_press() {
+    for right_hand in [true, false] {
+        for far in [-3.0, 3.0] {
+            let mut a = api(right_hand);
+            assert_eq!(a.add_route(&ends(free(0.0, 2000.0), free(0.0, 0.0)), &[], 2, false), 0);
+            let j = node_near(&a, 0.0, 0.0);
+            assert_eq!(a.add_route(&ends(at_node(&a, j), free(0.0, -2000.0)), &[], 1, false), 0, "{}", a.issues());
+            // the branch heads west; `far` east is the far track, west its own
+            a.set_route_join(&[far, 0.0, f64::NAN, f64::NAN]);
+            assert_eq!(a.add_route(&ends(at_node(&a, j), free(-1500.0, -1500.0)), &[], 1, false), 0, "{}", a.issues());
+            let n = node_near(&a, 0.0, -2000.0);
+            let (x, y) = (a.w.net.node_x[n as usize], a.w.net.node_y[n as usize]);
+            assert_eq!(a.add_station(1, n, x, y, 200, "S".into()), 0, "{}", a.issues());
+            assert!(!junction_crosses(&a.w.net, j), "right hand {right_hand}, press at {far}");
+        }
+        // a single off a double that carries on: the press picks the far track, whose trains cross the near one
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0);
+        // the branch heads south: the north track is the far one
+        a.set_route_join(&[2000.0, 3.0, f64::NAN, f64::NAN]);
+        assert_eq!(a.add_route(&ends(on_edge(&a, 2000.0, 0.0), free(3500.0, -1500.0)), &[], 1, false), 0, "{}", a.issues());
+        assert!(junction_crosses(&a.w.net, junctions(&a)[0]), "right hand {right_hand}: the far track's join stays");
+    }
+}

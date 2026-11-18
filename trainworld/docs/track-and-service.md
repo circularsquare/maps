@@ -224,7 +224,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   The drawing tool sets it: `set_route_join` names a point on the track to join at each end (the track
   nearer the pointer while double track is drawn as two, ui-building.md "Drawing track"), else the route
   takes the track beside it, the one it meets without crossing the
-  other (on its side of the double track it leaves, or of the other single track there). The map draws a
+  other (on its side of the double track it leaves, or of the other single track there). Where only single
+  track is on the route's side (double track splitting into singles) and the route has a side of it, the
+  track beside wins over the pointer (T-3609). The map draws a
   joined end on its track (`network.ts` `legShifts`, from `join_edges`), easing back to the piece's centre
   line over the turnout and crossing the near track for a far-track join; a one-way end with no join
   (flyovers laid before joins) keeps the T-3117 guess, away from the nearest track leaving its way. A single-track

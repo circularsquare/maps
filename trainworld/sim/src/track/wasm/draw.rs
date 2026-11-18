@@ -261,7 +261,11 @@ impl TrackApi {
                 d.join[k] = own;
             }
             for (c, j) in theirs {
-                if let Some(mut d) = self.w.net.edge_data(c >> 1) {
+                // T-3609: a piece joined at both its ends by one route (a pair of singles between two
+                // doubles) takes both joins in one op
+                if let Some(Op::Edge { data: Some(d), .. }) = ops.iter_mut().rev().find(|o| matches!(o, Op::Edge { id, data: Some(_) } if *id == c >> 1)) {
+                    d.join[(c & 1) as usize] = j;
+                } else if let Some(mut d) = self.w.net.edge_data(c >> 1) {
                     d.join[(c & 1) as usize] = j;
                     ops.push(Op::Edge { id: c >> 1, data: Some(d) });
                 }
@@ -1370,13 +1374,18 @@ fn end_joins(net: &Network, r: &Resolved, out: &[Pi], at: (f64, f64), single: bo
             None => 0,
         }
     };
+    let same: Vec<(f64, bool)> = there.iter().filter(|t| t.3).map(|t| (t.1, t.2)).collect();
+    let geometric = beside(mine, &same);
+    // T-3609: where double track splits into singles (only singles on the route's side), the single takes
+    // the track on its own side whatever the pointer: the far one would cross the other single's leg
+    let split_into_singles = !same.is_empty() && same.iter().all(|o| !o.1) && geometric != 0;
     let own = if !single || !there.iter().any(|t| !t.3 && t.2) {
         0
-    } else if at.0.is_finite() && at.1.is_finite() {
+    } else if at.0.is_finite() && at.1.is_finite() && !split_into_singles {
         let l = left_of(at.0, at.1);
         if l > 0.0 { 1 } else if l < 0.0 { 2 } else { 0 }
     } else {
-        beside(mine, &there.iter().filter(|t| t.3).map(|t| (t.1, t.2)).collect::<Vec<_>>())
+        geometric
     };
     let mut theirs = vec![];
     if !split && !singles_first && r.new_junction && there.iter().any(|t| !t.3 && t.2) {
