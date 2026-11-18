@@ -3,7 +3,7 @@
 // words for some. Hidden rows carry `data-search-out` (an attribute, since Preact rewrites `class` and
 // `.slider { display: flex }` beats `[hidden]`).
 
-import { FindInput } from "./FindInput";
+import { FindInput, SearchIcon } from "./FindInput";
 import type { RefObject } from "preact";
 import { useEffect, useLayoutEffect, useState } from "preact/hooks";
 import { normalise } from "../game/search";
@@ -137,9 +137,10 @@ export function SettingsSearch({ list }: { list: RefObject<HTMLElement | null> }
   }, [query]);
   return (
     <>
-      <FindInput type="search" wrap="settings-find" class="new-game-find" onClear={() => setQuery("")} placeholder={t("settingsSearch.placeholder")} aria-label={t("settingsSearch.placeholder")}
+      <FindInput type="search" wrap="settings-find" class="new-game-find" icon={<SearchIcon />} onClear={() => setQuery("")} aria-label={t("settingsSearch.placeholder")}
         maxLength={60} spellcheck={false} value={query} onInput={(e) => setQuery((e.currentTarget as HTMLInputElement).value)}
         onKeyDown={(e) => { if (e.key === "Escape" && query) { e.stopPropagation(); setQuery(""); } }} />
+      <div class="settings-find-rule" />
       {none && <p class="muted settings-none">{t("settingsSearch.none")}</p>}
     </>
   );

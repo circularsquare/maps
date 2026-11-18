@@ -10,12 +10,25 @@ type Props = Omit<JSX.IntrinsicElements["input"], "ref"> & {
   onClear: () => void;
   /** whether the clear button shows; by default when the box holds text */
   showClear?: boolean;
+  /** a muted icon inside the box, at the left */
+  icon?: JSX.Element;
 };
 
-export function FindInput({ wrap, inputRef, onClear, showClear, ...input }: Props) {
+/** The magnifying glass of the find place tool; `size` in px */
+export function SearchIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <circle cx="5.75" cy="5.75" r="4.25" />
+      <path d="M8.9 8.9 L13 13" stroke-linecap="round" />
+    </svg>
+  );
+}
+
+export function FindInput({ wrap, inputRef, onClear, showClear, icon, ...input }: Props) {
   const on = showClear ?? !!input.value;
   return (
-    <span class={"find-box" + (wrap ? " " + wrap : "")}>
+    <span class={"find-box" + (icon ? " with-icon" : "") + (wrap ? " " + wrap : "")}>
+      {icon && <span class="find-icon">{icon}</span>}
       <input ref={inputRef} {...(input as object)} />
       {on && <button type="button" class="find-clear" aria-label={t("blueprint.clear")} tabIndex={-1}
         onMouseDown={(e) => e.preventDefault()}

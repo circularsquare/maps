@@ -7,7 +7,7 @@
 // every other state change) and, with no build tool on, selects the station or line; with a tool
 // on it only moves the camera, so a half-drawn route or a line being edited carries on there.
 
-import { FindInput } from "./FindInput";
+import { FindInput, SearchIcon } from "./FindInput";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { activeCity } from "../game/cities";
 import { zoneAt } from "../game/zones";
@@ -171,10 +171,7 @@ export function Search() {
       <div class="map-search closed">
         <button class="btn icon search-open" data-guide="zoom" aria-label={t("search.find")} data-tip={t("search.findTip")}
           onClick={expand}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <circle cx="5.75" cy="5.75" r="4.25" />
-            <path d="M8.9 8.9 L13 13" stroke-linecap="round" />
-          </svg>
+          <SearchIcon />
         </button>
       </div>
     );
