@@ -1,0 +1,177 @@
+diff --git a/trainworld/app/src/map/trainGuard.ts b/trainworld/app/src/map/trainGuard.ts
+index ad56ee34..dba87331 100644
+--- a/trainworld/app/src/map/trainGuard.ts
++++ b/trainworld/app/src/map/trainGuard.ts
+@@ -137,6 +137,9 @@ export class TrainGuard {
+    * its stop past it (`singleSpan`) */
+   private singleCache = new Map<number, number>();
+   private singlePhases: Float32Array | null = null;
++  /** per profile and hold point: where it stands by its timetable just past it (`standNear`) */
++  private standCache = new Map<number, number>();
++  private standPhases: Float32Array | null = null;
+   /** the last frame: trains standing for single track; since the last `resetCounts`, trains let on
+    * at LAG_MAX (checks) */
+   singleHeld = 0;
+@@ -617,38 +620,98 @@ export class TrainGuard {
+    */
+   private holdForPlaces(f: GuardFrame, cand: number[], cs: number[], half: number[], tauOf: number[], sNew: number[]) {
+     const B = f.bays!, n = this.net!, meta = n.meta, prevS = this.prevS;
+-    // each candidate standing at its last stop (its turnaround inside its trip, T-2980)
+-    const stand = cand.map((c, k) => tauOf[k] >= arriveS(n, f.trips[c * 2]));
++    // each candidate standing at its last stop (its turnaround inside its trip, T-2980): by its
++    // timetable and lag, and drawn there last frame too. T-3231: a train held short of the crossover
++    // a few seconds out is due there by its decayed lag one long frame later, and would go in unheld.
++    const stand = cand.map((i, k) => {
++      const p = f.trips[i * 2], a = arriveS(n, p);
++      if (tauOf[k] < a) return false;
++      return Number.isNaN(prevS[i]) || prevS[i] >= profileS(n, p, a) - 2;
++    });
++    const leaving = (x: number) => {
++      const ox = cand[x] * BAY_STRIDE;
++      return B[ox] >= 4 && cs[x] - half[x] < Math.max(bayP(B[ox + 1]), 2 * half[x] + 5);
++    };
+     const taken = new Set<number>();
+     for (let c = 0; c < cand.length; c++) {
+-      const i = cand[c], o = i * BAY_STRIDE;
+-      if (stand[c] && B[o + 2] >= 4) taken.add(B[o + 2]);
+-      else if (B[o] >= 4 && cs[c] - half[c] < Math.max(bayP(B[o + 1]), 2 * half[c] + 5)) taken.add(leftFrom(B[o]));
++      const o = cand[c] * BAY_STRIDE;
++      // (by one on its way in too: the nearest takes it first, below)
++      if (B[o + 2] >= 4) taken.add(B[o + 2]);
++      if (leaving(c)) taken.add(leftFrom(B[o]));
+     }
+     if (!taken.size) return;
+-    for (let c = 0; c < cand.length; c++) {
++    const toEnd = (c: number) => meta[f.trips[cand[c] * 2] * 4 + 3] - (Number.isNaN(prevS[cand[c]]) ? cs[c] : prevS[cand[c]]);
++    // T-3231: per place, the trains past their hold point on the way in (`going`) and those waiting at
++    // it (`queued`), as drawn this frame. Nearest first, so the one ahead is placed when the next is
++    // looked at: the following rule ran before this, behind where the one ahead would be unheld.
++    const going = new Map<number, number[]>(), queued = new Map<number, number[]>();
++    const add = (m: Map<number, number[]>, k: number, c: number) => {
++      const v = m.get(k);
++      if (v) v.push(c);
++      else m.set(k, [c]);
++    };
++    const order = cand.map((_, c) => c).sort((a, b) => toEnd(a) - toEnd(b) || a - b);
++    for (const c of order) {
+       const i = cand[c], p = f.trips[i * 2], o = i * BAY_STRIDE, place = B[o + 2];
+       if (place < 4 || !taken.has(place) || stand[c]) continue;
++      const L = meta[p * 4 + 3], plat = Math.max(bayP(B[o + 3]), 2 * half[c] + 5), short = L - plat - TURNBACK_M - GUARD_GAP_M - half[c];
++      // (where its timetable has it stand for the place further on, its front short of the platform, it
++      // waits there: held short of that, it would carry the timetable's whole wait as lag)
++      const st = this.standNear(n, p, short, L - plat - half[c]), hold = Number.isNaN(st) ? short : st;
+       // standing there itself, or leaving from it, is not taking it from itself; nor is one standing
+-      // to leave over single track until this one is in (T-3202), which would wait for it for ever
+-      let other = false;
+-      for (let x = 0; x < cand.length && !other; x++) {
++      // to leave over single track until this one is in (T-3202), which would wait for it for ever.
++      // One standing there or on its way in ahead of this one holds it short of the crossover, or,
++      // where this one is past that already, its train length and the gap behind its back: the
++      // following rule leaves out a train standing at an end, and the two would stand on one platform.
++      // One waiting at the hold point ahead of it only keeps it that far behind
++      let other = false, behind = Infinity;
++      const ahead = (x: number, holds: boolean) => {
++        if (holds) other = true;
++        const q = f.trips[cand[x] * 2];
++        behind = Math.min(behind, L - (meta[q * 4 + 3] - sNew[x] + half[x]) - GUARD_GAP_M - half[c]);
++      };
++      for (let x = 0; x < cand.length; x++) {
+         if (x === c || this.singleWait.has(cand[x])) continue;
+-        const j = cand[x], ox = j * BAY_STRIDE;
+-        other = (B[ox + 2] === place && stand[x]) || (leftFrom(B[ox]) === place && cs[x] - half[x] < Math.max(bayP(B[ox + 1]), 2 * half[x] + 5));
++        if (B[cand[x] * BAY_STRIDE + 2] === place && stand[x]) ahead(x, true);
++        else if (leftFrom(B[cand[x] * BAY_STRIDE]) === place && leaving(x)) other = true;
+       }
+-      if (!other) continue;
+-      const L = meta[p * 4 + 3], hold = L - Math.max(bayP(B[o + 3]), 2 * half[c] + 5) - TURNBACK_M - GUARD_GAP_M - half[c];
++      for (const x of going.get(place) ?? []) ahead(x, true);
++      for (const x of queued.get(place) ?? []) ahead(x, false);
+       const was = Number.isNaN(prevS[i]) ? cs[c] : prevS[i];
+-      // already over the crossover: it goes on
+-      if (was > hold + 1) continue;
+-      if (sNew[c] > hold) {
+-        if (this.placeLog && this.placeLog.length < 40) this.placeLog.push({ t: f.time, i, place, s: +cs[c].toFixed(0), L: meta[p * 4 + 3], lag: this.lag[i], who: cand.map((j, x) => [j, B[j * BAY_STRIDE], B[j * BAY_STRIDE + 2], stand[x] ? 1 : 0, +(cs[x] - half[x]).toFixed(0), +tauOf[x].toFixed(0), +this.lag[j].toFixed(0), f.trips[j * 2]]).filter((w) => leftFrom(w[1] as number) === place || w[2] === place) });
+-        sNew[c] = Math.max(0, hold);
++      // already over the crossover: it goes on, behind the one ahead
++      const cap = other && was <= hold + 1 ? Math.min(hold, behind) : behind;
++      if (sNew[c] > cap) {
++        if (this.placeLog && this.placeLog.length < 40) this.placeLog.push({ t: f.time, i, place, s: +cs[c].toFixed(0), L: meta[p * 4 + 3], lag: this.lag[i], cap: +cap.toFixed(0), who: cand.map((j, x) => [j, B[j * BAY_STRIDE], B[j * BAY_STRIDE + 2], stand[x] ? 1 : 0, +(cs[x] - half[x]).toFixed(0), +tauOf[x].toFixed(0), +this.lag[j].toFixed(0), f.trips[j * 2]]).filter((w) => leftFrom(w[1] as number) === place || w[2] === place) });
++        sNew[c] = Math.max(0, cap);
+       }
++      if (sNew[c] > hold + HOLD_TOL_M) add(going, place, c);
++      else if (sNew[c] >= hold - HOLD_TOL_M) add(queued, place, c);
+     }
+   }
+ 
++  /** T-3231: the furthest offset in (`from`, `to`] along its run where profile `p` stands still by its
++   * timetable before its last stop (the capacity's hold for a place at its end), NaN none. */
++  private standNear(n: NetworkBuffers, p: number, from: number, to: number): number {
++    if (this.standPhases !== n.phases) { this.standCache.clear(); this.standPhases = n.phases; }
++    const key = p * 2 ** 27 + Math.round(from * 2);
++    const had = this.standCache.get(key);
++    if (had !== undefined) return had;
++    const ph = n.phases, first = n.meta[p * 4], count = n.meta[p * 4 + 1];
++    let out = NaN;
++    // (the last phase brakes to the last stop and stays)
++    for (let k = first; k + 1 < first + count; k++) {
++      const t0 = ph[k * 4], v = ph[k * 4 + 2], acc = ph[k * 4 + 3], t1 = ph[(k + 1) * 4];
++      let s = ph[k * 4 + 1];
++      if (v !== 0 || acc !== 0) {
++        if (!(acc < 0) || t0 + v / -acc >= t1 - 1e-3) continue;
++        s += (v * v) / (2 * -acc);
++      }
++      if (s > from && s <= to) out = s;
++    }
++    this.standCache.set(key, out);
++    return out;
++  }
++
+   /**
+    * T-1966: the waits at conflicts. Each candidate whose body is over a conflict, or whose front
+    * reached its hold point this frame, has its time there from its timetable and lag: [A, B], from
+diff --git a/trainworld/checks/t2018-trail.mjs b/trainworld/checks/t2018-trail.mjs
+index fb4cac73..d8a1114d 100644
+--- a/trainworld/checks/t2018-trail.mjs
++++ b/trainworld/checks/t2018-trail.mjs
+@@ -1,5 +1,5 @@
+ // T-2018: an express behind a local never halts between stations unless the train in front of it
+-// is standing too. A new game with Anita's test track (8 km of straight double track, a station
++// is standing too, or, short of a line end's one platform, going into or leaving it (T-3231). A new game with Anita's test track (8 km of straight double track, a station
+ // every km, a local at all of them and its copy at the ends only), the clock at its fastest for a
+ // few game hours. Every frame, each express is placed as drawn (the guard's lag included) and so is
+ // the nearest local ahead of it on its run; a frame where an express has not moved since the last
+@@ -126,7 +126,13 @@ try {
+       // (a local that has finished its run stands at the platform ahead as its next trip, the
+       // other run, not yet moved from that run's start)
+       const turning = f[k][1].some((y) => y[1] === built.local && y[2] !== x[2] && Math.abs(y[3] - (stopsOf(y[4])[0] ?? 0)) < 1 && f[k - 1][1].some((z) => z[0] === y[0] && z[3] === y[3]));
+-      if ((ahead && ap && ahead[3] - ap[3] <= 0.5) || (!ahead && turning)) behindStanding++;
++      // (at the end's one platform the express waits short of the crossover while the local goes in,
++      // stands, and leaves until it is off the platform: its back past the platform, 200 m, the
++      // train 160 m long; T-2986, T-3231)
++      const nearEnd = (stopsOf(x[4])[1] ?? Infinity) - x[3] < 500;
++      const goingIn = nearEnd && ahead && (stopsOf(ahead[4])[1] ?? Infinity) - ahead[3] < 400;
++      const leaving = nearEnd && f[k][1].some((y) => y[1] === built.local && y[2] !== x[2] && y[3] - (stopsOf(y[4])[0] ?? 0) < 300);
++      if ((ahead && ap && ahead[3] - ap[3] <= 0.5) || goingIn || (!ahead && (turning || leaving))) behindStanding++;
+       else { halts++; if (halted.length < 10) halted.push({ t: f[k][0], s: x[3], ahead: ahead ? [ahead[3], ap ? ap[3] : null] : null }); }
+     }
+   }
+diff --git a/trainworld/docs/ui-map.md b/trainworld/docs/ui-map.md
+index 4e03029d..dc01f45b 100644
+--- a/trainworld/docs/ui-map.md
++++ b/trainworld/docs/ui-map.md
+@@ -665,9 +665,12 @@ works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; t
+   splits [T-3202, T-3212] has two places there, the split's two tracks, the crossover 60 m
+   past where they join, and each arriving train takes the place free longest, so the train it meets
+   there stands on the other. A train standing at such an end holds no one on its track; one due at a place still
+-  taken (its train standing there, or leaving and not yet off the platform, but not one standing
+-  for the single track until it is in) stands short of
+-  the crossover, 30 m before it, until it is free. One place only (a through platform without a
++  taken (its train standing there, or leaving and not yet off the platform, or another due there
++  ahead of it and already past its own hold point; but not one standing for the single track until it
++  is in) stands short of the crossover, 30 m before it, until it is free, or where its timetable
++  stands it for the place, if that is further on with its front short of the platform (T-3231). One
++  already past that point stays its length and 30 m behind the one ahead, and one behind a train
++  waiting there stays that far behind it. One place only (a through platform without a
+   terminal): the train ahead holds it, as above. A line with places at its ends is guarded
+   even alone on its track (`TrainGuard.placeLines`, T-2986), so a stand longer than its headway at a
+   one-place end holds the next train back instead of drawing two there. Clicks and the train panel use the

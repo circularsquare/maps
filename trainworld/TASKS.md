@@ -483,8 +483,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
-- T-3231 [P3] {L:trains-drawn} Two lines drawn over each other at a terminal (taking, 2026-11-17, agent termdraw)
-  - Context: Fixed in tree termdraw, to land after v0.4.0: t1965-follow drops from 40-47 frames to 17-19, t2980 unchanged. What is left is the express too late to draw (T-3271), not this bug.
+- T-3231 [P3] {L:trains-drawn} {after:T-3271} Two lines drawn over each other at a terminal
+  - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 - T-3101 [P3] {L:single-track} One-way track follow-ups
