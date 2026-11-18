@@ -336,7 +336,7 @@ Panels take CSS tokens (`ui/style.css`); the map's light and dark colours (basem
 ink) are one table, `game/shades.ts`, whose basemap palette is warm paper land, soft teal water and sage parks [T-676]. The network takes the line colours, the same in both themes. One dock on the left holds the icon tabs (Build, Lines, Stations, Finances, Cities), the
 saved games button and the Settings gear, with the inspector under them, whose top edge never
 moves. The top bar holds the mode split (the goal number) of the city in view, or zoomed far out the world's train trips a day ("11.8M trips/day", T-1440), the cash, the local time and date beside or over
-a moving sky and a band in the demand level's colours (T-861), pause and three speeds. **Panels show what can change**: labels, numbers and states,
+a moving sky and a band in the demand level's colours (T-861), pause, slower and faster. **Panels show what can change**: labels, numbers and states,
 no explanatory notes [T-253]. **Everything drawn that encodes a number has a hover**, always the
 game's own tag, never a browser tooltip [T-194, T-210]. Motion is allowed where it helps, never
 slowing a control (Anita 2026-10-29). A new normal game shows a **Tutorial card**, a post-it

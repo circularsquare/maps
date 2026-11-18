@@ -145,6 +145,14 @@ class GameClock {
     this.changed();
   }
 
+  /** T-3653: one step along SLIDER_STOPS from the chosen speed, stopping at the ends; time runs after it */
+  stepSpeed(dir: 1 | -1) {
+    const x = this.chosenRate.peek() / SPEEDS[0];
+    const at = Math.max(0, SLIDER_STOPS.findIndex((s) => s >= x - 1e-9));
+    const to = Math.min(SLIDER_STOPS.length - 1, Math.max(0, at + dir));
+    if (to !== at) this.setMultiple(SLIDER_STOPS[to]);
+  }
+
   /** T-1665: apply or lift the demand cap */
   setCapped(on: boolean) {
     if (on === this.capped.peek()) return;

@@ -126,6 +126,7 @@ function sections(): [string, [string, string][]][] {
     [keyOf("addPassed"), t("help.addPassed")],
     [keyOf("construct"), t("help.construct")],
     [t("help.space"), t("help.pause")],
+    [", .", t("help.speedKeys")], // i18n-ignore
     ["Ctrl Z, Ctrl Y", t("help.undoRedo")], // i18n-ignore
     ["Ctrl S", t("help.saveNow")], // i18n-ignore
     ["/, Ctrl K, Ctrl F", t("help.find")], // i18n-ignore

@@ -296,11 +296,11 @@ wide so a longer date moves nothing [T-1868].
   unlabelled range, T-1888). A click sets the Day choice (Settings) to the run's
   going-out day [T-1373] (once those are past its coming-back day, then a day away), and a second
   click back to the day shown before. In the dark theme the
-  scene is mixed 15% towards the background. Pause and three
-  speeds (1x, 4x, 16x; hovers "Normal speed", "4x speed", "16x speed" [T-1800]); the third button always shows its speed as text, "16x" by
-  default [T-3327]. **Double-click it** for a slider of real to 100x [T-1664]
-  (20 stops, `SLIDER_STOPS` in `game/clock.ts`, spaced for the eye; "real" is 1 game second per second, 1/60 of 1x, and "4real" is four times that);
-  the speed picked shows as text on that button and stays until another speed button is pressed (not saved with the game).
+  scene is mixed 15% towards the background. Pause, then
+  slower and faster buttons with the speed between them as text [T-3653]: one step along the slider's 20 stops (`SLIDER_STOPS` in `game/clock.ts`,
+  real to 100x, spaced for the eye; "real" is 1 game second per second, 1/60 of 1x, and "4real" is four times that), each button off at its end; the
+  comma key slows and the period key speeds up by one step (`clock.stepSpeed`, `main.ts`; listed in Help). **Double-click the speed** for the slider [T-1664];
+  the speed stays until changed (not saved with the game). Replaced the 1x, 4x, 16x buttons.
   **While the player's edits are not yet in the figures** the clock runs no faster than 4x [T-1665,
   `demandCapped` in `game/lineFigures.ts`]: after an edit, until every line it changed has its riders
   again (each reads "calculating..." meanwhile: its cluster's local result, or the
@@ -466,7 +466,7 @@ step. With reduced motion asked for: one still outline 8 px out, held until the 
   stops Edit stops (the line panel; the attribute is off while the stops are being edited), trains
   the stepper in the High row of the Schedule (the trains count or the headway, whichever the line's
   schedule uses), crowd the High row's crowding dot, levels the stepper of the first row with no
-  train, play the top bar's Normal speed button, destinations the Destinations button, traffic the track display's
+  train, play the top bar's Pause button (which also resumes), destinations the Destinations button, traffic the track display's
   Traffic button, and "end" the card's Continue or Done! button once every step is ticked. The split
   step points at the top bar's mode split by its class (`GUIDE_SPLIT`). The bubble, trip and train
   share steps point at nothing. The tab icons carry `data-guide-tab`, the view rows' fold icons `data-fold`.

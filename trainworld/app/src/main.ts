@@ -759,6 +759,12 @@ window.addEventListener("keydown", (e) => {
     if (selection.peek() === null && diagramShown.peek()) diagramShown.value = false;
     else selection.value = null;
   }
+  // T-3653: comma slows the clock by one step and period speeds it up
+  if ((e.key === "," || e.key === ".") && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    e.preventDefault();
+    clock.stepSpeed(e.key === "." ? 1 : -1);
+    return;
+  }
   // Space: pause, or carry on at the speed that was running (the clock keeps it while paused).
   if (e.key === " " && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
     e.preventDefault();
