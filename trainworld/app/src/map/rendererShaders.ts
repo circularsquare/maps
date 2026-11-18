@@ -8,14 +8,15 @@ import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
 import { LEVEL_FADE, LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
-import { ONE_BULGE_K, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { ONE_BULGE_K, ONE_BUMP, ONE_END, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
-const TRAM_WIDTH = 0.75, TRAM_DOT = 0.7;
+export const TRAM_WIDTH = 0.75;
+const TRAM_DOT = 0.7;
 /** T-3136 (Anita: "we should draw double track a bit thicker, and single a bit thinner"): rail track's
  * width as a share of a line's, single and double, so the two read apart zoomed out. Double eases back to 1
  * as its two tracks grow apart (`u_lanes.z`), and single with it, so close in nothing changes. */
-const SINGLE_WIDTH = 0.71, DOUBLE_WIDTH = 1.24;
+export const SINGLE_WIDTH = 0.71, DOUBLE_WIDTH = 1.24;
 /** Zoomed far out every stroke is at least a pixel wide; double track's least is this many (device px), so
  * the two still differ where both would be at the floor. */
 const DOUBLE_FLOOR_PX = 2.0;
@@ -496,8 +497,8 @@ flat out vec4 v_scr;     // a dot's frame on the screen (T-553): where its x and
                          // (x.x, y.x, x.y, y.y) with the screen's y up, so a pie can start at 12 o'clock
 flat out float v_lane;   // 1 on double track: a platform each side of its two tracks close in (T-658); 2 with passing tracks (T-2249);
                          // a one-track station (T-3332): +-(10 + how far its band's middle is off the centre line, px), + or - its side
-uniform vec3 u_one;      // T-3332: a one-track station's bar: its middle off the centre line, half width, and how far its bulge sticks out, px
-uniform vec3 u_one_mid;  // T-3540: the same on track drawn as one (ST_ONE_MID), centred on it
+uniform vec4 u_one;      // T-3332, T-3615: the track a one-track station's bar covers from the centre line, away from its platform's side and towards it, px; rail (xy) and tram (zw)
+uniform vec4 u_one_mid;  // T-3540: the same on track drawn as one (ST_ONE_MID)
 flat out vec2 v_bulge;   // a one-track station's bulge: how far it sticks out and its half length, px, 0 none
 uniform highp int u_hot_st[${HOT_STATIONS}]; // the hovered stations (T-730), u_hot_n of them
 uniform highp int u_hot_n;
@@ -603,9 +604,11 @@ void main() {
     // (a one-platform station's bar: its middle across, signed, and half width; its waiting room joins it)
     vec2 oneBar = vec2(0.0, hw);
     if ((flags & ${ST_ONE}) != 0) {
-      // (T-3540: centred on track drawn as one; a tram stop's bulge narrower)
-      vec3 bar = (flags & ${ST_ONE_MID}) != 0 ? u_one_mid : u_one;
-      bar.z *= tramBox ? ${TRAM_BOX.toFixed(2)} : 1.0;
+      // (T-3615: sized by its box, as stationGeometry.ts oneBar; T-3540: on track drawn as one)
+      vec4 cov4 = (flags & ${ST_ONE_MID}) != 0 ? u_one_mid : u_one;
+      vec2 cov = tramBox ? cov4.zw : cov4.xy;
+      float span = cov.x + cov.y, ends = max(${(2 * ONE_END).toFixed(2)} * hw, span), bump = max(${(2 * ONE_BUMP).toFixed(2)} * hw + span, ends);
+      vec3 bar = vec3(0.5 * ends - cov.x, 0.5 * ends, bump - ends);
       v_size.y = bar.y;
       v_bulge = vec2(bar.z, ${ONE_BULGE_K.toFixed(2)} * hl);
       v_lane = ((flags & ${ST_ONE_NEG}) != 0 ? -1.0 : 1.0) * (10.0 + bar.x);

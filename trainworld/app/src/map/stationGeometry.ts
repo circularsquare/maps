@@ -223,21 +223,37 @@ export interface StationStyle {
   hidden?: boolean;
   /** the least half width of a box with passing tracks (ST_PASSING, T-2233) */
   passHalfPx?: number;
-  /** T-3332: a one-track station on double track is a thin bar over its track with a bulge at the middle
-   * on the platform's side: the bar's middle off the centre line (c), its half width (hb) and how far the
-   * bulge sticks out past the bar (depth), CSS px */
-  one?: { c: number; hb: number; depth: number };
-  /** T-3540: the same on track drawn as one on its centre line (ST_ONE_MID): the bar centred on it */
-  oneMid?: { c: number; hb: number; depth: number };
+  /** T-3332, T-3615: a one-track station on double track is a bar over its track with a bulge at the middle
+   * on the platform's side (`oneBar`); this is the track it covers, rim included: how far it reaches from the
+   * centre line away from the platform's side (inner) and towards it (outer), CSS px, rail and tram */
+  one?: OneCover;
+  /** T-3540: the same on track drawn as one on its centre line (ST_ONE_MID) */
+  oneMid?: OneCover;
 }
 
-/** T-3540 (Anita: "tram platform boxes shoudl be ... 30% less wide"): a tram stop's box and its platform
- * bulge are this share of a station's width. STATION_VS uses the same number. */
+export interface OneCover { inner: number; outer: number; innerTram: number; outerTram: number }
+
+/** T-3615 (Anita: "lets have these have an actual world width, like the station boxes"): a one-track
+ * station's bar is ONE_END of a full box's width at its ends, and ONE_BUMP of it plus its track's width
+ * where the bulge is; never narrower than its track. STATION_VS does the same. */
+export const ONE_END = 0.3, ONE_BUMP = 0.5;
+
+/** A one-track station's bar on screen, CSS px, from its box's half width (`full`, the tram share already
+ * in) and the track it covers: the bar's middle off the centre line towards the platform (c), its half
+ * width (hb), and how far the bulge sticks out past it (depth). The bar's inner edge is the track's. */
+export function oneBar(full: number, inner: number, outer: number): { c: number; hb: number; depth: number } {
+  const span = inner + outer, ends = Math.max(2 * ONE_END * full, span), bump = Math.max(2 * ONE_BUMP * full + span, ends);
+  return { c: 0.5 * ends - inner, hb: 0.5 * ends, depth: bump - ends };
+}
+
+/** T-3540 (Anita: "tram platform boxes shoudl be ... 30% less wide"): a tram stop's box, and so its
+ * one-track bar, is this share of a station's width. STATION_VS uses the same number. */
 export const TRAM_BOX = 0.7;
 
-/** T-3332: a one-track station's bulge is this share of the platform's half length each way, so it is part of the box:
- * the platform is fixed on the ground, so the bulge keeps its place against the box at every zoom. STATION_VS and the CPU twin use the same number. */
-export const ONE_BULGE_K = 0.18;
+/** T-3332: a one-track station's bulge is this share of the platform's half length each way (T-3615, Anita: "cover
+ * the middle half of the length of the platform"), so it keeps its place against the box at every zoom.
+ * STATION_VS and the CPU twin use the same number. */
+export const ONE_BULGE_K = 0.5;
 
 /** A box is this share of the width that covers a plain line and its rim at BOX_WIDTH_ZOOM
  * (T-239, Anita: "a bit too fat still, maybe 25% narrower"; T-652, "about 50% wider", hard to see
@@ -344,9 +360,10 @@ export function stationShape(x: number, y: number, sh: PlatformShape, halfWidth:
   const perLoc = axisLoc > 1e-9 ? len / axisLoc : Math.hypot(ox - cx, oy - cy);
   const tk = kind.tram ? TRAM_BOX : 1;
   const full = Math.max(tk * Math.max(boxHalfLoc(st, halfWidth) * perLoc, st.boxes ? boxHalfPxAtBoxZoom(st) : 0), st.boxes && passing ? st.passHalfPx ?? 0 : 0);
-  // T-3332: a one-track station (`one` the side, 1 or -1): a thin bar with a bulge on that side, as
-  // STATION_VS draws it; T-3540: centred on track drawn as one (`kind.mid`), a tram stop's bulge narrower
-  const o0 = st.boxes && one ? (kind.mid ? st.oneMid : st.one) : undefined, o = o0 && { ...o0, depth: o0.depth * tk }, hw = o ? o.hb : full;
+  // T-3332: a one-track station (`one` the side, 1 or -1): a bar with a bulge on that side, as STATION_VS
+  // draws it, sized by its box (T-3615); T-3540: on track drawn as one (`kind.mid`)
+  const cov = st.boxes && one ? (kind.mid ? st.oneMid : st.one) : undefined;
+  const o = cov && oneBar(full, kind.tram ? cov.innerTram : cov.inner, kind.tram ? cov.outerTram : cov.outer), hw = o ? o.hb : full;
   // a dot covers a plain line through it as drawn now (not a wider traffic line, T-239)
   const cover = 0.5 * PLAIN_COVER * st.linePx + st.ringPx + 1;
   // the track's own line along the platform (T-254), in the frame at its middle

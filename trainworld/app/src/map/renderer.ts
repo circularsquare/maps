@@ -34,7 +34,7 @@ import { LOT_STRIDE } from "./facilityPlace";
 import { backBaseOf, F_BLUEPRINT, platformShapeAt, sampleValue, type NetworkBuffers, type Strokes } from "./network";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_GAP_PX, BAND_RANGE, BAND_STRIDE, LINE_VIEW_WIDTH, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
-import { BRIDGE_VS, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
+import { BRIDGE_VS, DOUBLE_WIDTH, HOT_STATIONS, LANE_SHARE, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_SET_MAX, SEL_STRIDE, SEL_VS, SINGLE_WIDTH, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS, TRAM_WIDTH } from "./rendererShaders";
 import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./visibility";
 
 /** The render epoch moves to the start of each game hour. */
@@ -1704,14 +1704,19 @@ export class NetworkRenderer {
     // passing stations close in (T-2233): their outer tracks, the trains stopping there, their boxes
     const pass = boxes && this.passing ? passingState(zoom, ring) : null;
     this.passShiftM = pass ? pass.off / pass.mPx : 0;
-    // T-3332: a one-track station's bar covers the line through it until double track's two tracks part,
-    // then reaches from the centre line out over its own track; the bulge sticks out as far as the bar is thick
-    const ls = laneState(zoom), lineHalf = 0.5 * wLine / dpr + ring;
-    const barIn = (1 - ls.t) * lineHalf, barOut = barIn + ls.t * (0.5 * ls.gap + 0.3 * wLine / dpr + ring + 1) + 0.5 * wLine / dpr;
-    const one = { c: 0.5 * (barOut - barIn), hb: 0.5 * (barOut + barIn), depth: Math.max(4, 0.6 * (barOut + barIn)) };
-    // T-3540: on track drawn as one (single track with no passing loop) the bar is centred on it, as wide as the line and its rim
-    const oneMid = { c: 0, hb: lineHalf, depth: one.depth };
-    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wLine / dpr, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one, oneMid };
+    // T-3332, T-3615: the track a one-track station's bar covers, rim included (its size is its box's, oneBar): the
+    // line through it until double track's two tracks part, then from the centre line out over its own track;
+    // single track (T-3540) either side of its line. As STROKE_VS draws them, lines and tram track narrower.
+    const ls = laneState(zoom), wl = wLine / dpr, lt = ls.share * ls.gap;
+    const cover = (tram: boolean) => {
+      const tw = tram ? TRAM_WIDTH : 1, kS = tram ? 1 : SINGLE_WIDTH + (1 - SINGLE_WIDTH) * ls.grow, kD = tram ? 1 : DOUBLE_WIDTH + (1 - DOUBLE_WIDTH) * ls.grow;
+      const core = wl * tw * kD, d = 0.5 * (core + ls.grow * Math.max(0, ls.gap + lt * tw - core)) + ring;
+      return { single: 0.5 * Math.max(wl * tw * kS, lt * tw) + ring, inner: (1 - ls.t) * d, outer: d };
+    };
+    const cr = cover(false), ct = cover(true);
+    const one = { inner: cr.inner, outer: cr.outer, innerTram: ct.inner, outerTram: ct.outer };
+    const oneMid = { inner: cr.single, outer: cr.single, innerTram: ct.single, outerTram: ct.single };
+    this.stationStyle = { boxes, radius: stationRadii(zoom), linePx: wl, ringPx: ring, boxLinePx, boxRingPx, hidden, ...(pass ? { passHalfPx: pass.half } : {}), one, oneMid };
     const project = this.projector(cam, a, vp[0] / dpr, vp[1] / dpr);
     // T-3481: on-screen sizes are measured at the view's middle (local units), never at a station,
     // which can be in another city behind the globe (NaN) or where the globe's blend squeezes it
@@ -2001,10 +2006,8 @@ export class NetworkRenderer {
       const unitAtBox = unitPerPxAt(BOX_WIDTH_ZOOM) / dpr;
       gl.uniform2f(su.u_fixed, (boxHalfPxAtBoxZoom({ boxLinePx, boxRingPx }) - (opt.boxShrinkPx ?? 0)) * dpr, unitAtBox);
       gl.uniform1f(su.u_pass_half, (pass ? pass.half - (opt.boxShrinkPx ?? 0) : 0) * dpr);
-      const so = this.stationStyle.one;
-      gl.uniform3f(su.u_one, (so?.c ?? 0) * dpr, (so?.hb ?? 0) * dpr, (so?.depth ?? 0) * dpr);
-      const sm = this.stationStyle.oneMid;
-      gl.uniform3f(su.u_one_mid, (sm?.c ?? 0) * dpr, (sm?.hb ?? 0) * dpr, (sm?.depth ?? 0) * dpr);
+      for (const [loc, c] of [[su.u_one, this.stationStyle.one], [su.u_one_mid, this.stationStyle.oneMid]] as const)
+        gl.uniform4f(loc, (c?.inner ?? 0) * dpr, (c?.outer ?? 0) * dpr, (c?.innerTram ?? 0) * dpr, (c?.outerTram ?? 0) * dpr);
       // T-2249: a passing station's riders stand between its running track and the outer track's
       // inner edge (the outer track as the track strokes draw it)
       let passIn = 0;
