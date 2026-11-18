@@ -785,7 +785,9 @@ onStationsAhead((frame, xy, fine, built, home) => {
 onNetAhead(netAhead);
 
 // ---- T-677: the start menu; the pick starts demand, then the clock worker, in startup's order ----
-if (!urlChoice) showStartMenu((choice) => {
+// T-3643: after a died load the failure screen is the page; the menu would draw over it (same layer), and
+// Try again reloads to the menu
+if (!urlChoice && !lastDied) showStartMenu((choice) => {
   // T-728: a new game opens on its start city, or the world map; a real network (T-731) has stations, so it does not open bare
   enterGame(); // T-2477: a pan before the pick does not count
   if (choice.game) viewStart(choice.game.start, choice.game.mode);
