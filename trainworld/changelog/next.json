@@ -3,6 +3,42 @@
   "line": "",
   "items": [
     {
+      "id": "c033",
+      "text": "added a Newest tab to Community, with the most recently shared network of each player first",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3652",
+      "by": "newest",
+      "at": "2026-11-18T16:58:32Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
+    },
+    {
+      "id": "c032",
+      "text": "added the 30-day money chart to bus and ferry line panels",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2809",
+      "by": "qwapp",
+      "at": "2026-11-18T16:58:08Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c031",
+      "text": "fixed water missing on the map and diagram in games spread over a continent",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3463",
+      "by": "qwapp",
+      "at": "2026-11-18T16:58:08Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
       "id": "c030",
       "text": "moved the join control to the top of the leaderboards",
       "edited": null,

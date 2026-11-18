@@ -27,6 +27,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    before the reply goes), schoolcar (Opus, T-3624, demand: checker before landing), newest (T-3652, commits in
    shonei-server, deploy hers), selway (T-3101). Landed qwcheck, lbfix (c029, c030; T-3684 waits on her). T-3653 time
    controls next, after clockdup lands (both in TopBar.tsx). Filed T-3689-3696 from her answers.
+   Landed since: qwdiag, qwapp (c031, c032), newest (c033; server shonei-server 12d58a0 unpushed and undeployed: the
+   tab stays hidden until that deploy, so hide c033 at a publish that goes out before it). Started autolease T-3611
+   (saves: checker before landing).
 11. Windows popping on her screen (her 16:45): checks' children lacked windowsHide; play.mjs's background game has no
    console so each python/powershell child flashed. Fixed in cores.mjs/lib.mjs/smoke.mjs, copied into running trees;
    CLAUDE.md Shell rule added. If she still sees windows, look at dayrun's world_run children next.
