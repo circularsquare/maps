@@ -156,7 +156,7 @@ export function sheetLines(g: DiagramGraph, sheet: Sheet, o: SheetLinesOptions =
   const last: LastPlaces = new Map();
   for (let i = 0; i < n; i++) last.set(g.key[i], [WX[i] * K, WY[i] * K, WX[i] * K, WY[i] * K]);
   // the layout about 0.6 of the time, the carry the rest
-  const layout = layoutDiagram(g2, { ...dialled(0), puDiv: medH, sheet: { pairs: Float64Array.from(sp), wGeo: o.wGeo } }, last, progress && ((s) => progress(0.6 * s)), null);
+  const layout = layoutDiagram(g2, { ...dialled(0), puDiv: medH, sheet: { pairs: Float64Array.from(sp), wGeo: o.wGeo } }, last, progress && ((s) => progress(0.6 * s)));
   tick("layout");
 
   // ---- the carry

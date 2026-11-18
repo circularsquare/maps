@@ -4,8 +4,8 @@ The design, with its references and stages: [notes/T-2146.md](../notes/T-2146.md
 graph (T-2159), the layout (T-2160), the view and its drawing (T-2161), names (T-2162), and clicks, the
 camera and the picture (T-2163), city blocks (T-2407; notes/T-2407.md), the zones' borders (T-2464;
 notes/T-2464.md) and city and zone names (T-2438, T-2640); water is T-2169. The diagram is laid out on the **rubber sheet**
-(T-2566 to T-2580; its section at the end): the sheet's stages replace The layout's A and blocks' stage, Zone borders
-and Water below, whose code is deleted (T-2590): they describe how the old layout drew those, as the reasons and figures the sheet's map carries on; the sheet is the only layout.
+(T-2566 to T-2580; its section at the end): the sheet's stages replace The layout's A and blocks' stage, and the sheet's
+map draws Zone borders and Water below; the old layout's code is deleted (T-2590, T-3446).
 
 ## The button and key M
 
@@ -94,8 +94,8 @@ made a Path2D on the page when first painted.
 fare zones: a border says which drawn stations are in which zone, not where the ground boundary runs. A station's
 zone is the outline holding it (the map's coarse outlines, `packs/outlines.json`), else the nearest within 40 km;
 the page sends the outlines of the zones near the network once each, in mercator, with the graph's frame worked out
-from the stations' own places. The layout worker makes the borders after the names (and again, alone, for outlines
-that arrive after a layout), between blocks as inside them.
+from the stations' own places. The layout worker makes the borders with the sheet's map (and again, alone, for outlines
+that arrive after a layout).
 
 - **The region**: on a grid of one pitch, every cell within 5 pitches of a line's casing or a pill; then grown by
   50 pitches and shrunk by 50 again (never inside the 5), so gaps and bays under about 100 pitches close and the
@@ -121,17 +121,16 @@ that arrive after a layout), between blocks as inside them.
 
 **Water is experimental (T-2565): off by default, behind the waves button beside the save button** (hover "Show water",
 pressed while on; the choice is kept in localStorage as `anitabuilder-diagram-water`). Off, the page sends the worker no
-`water`, so none of the work below runs and the layout has no sea to keep open; the picture saved follows the button.
-Turning it on lays the diagram out again with the water asked for (the layout keeps the sea open, so it cannot be added
-to a finished one). The T-2169 checks call the water code directly and ignore the button.
+`water`, so the sea and rivers are not drawn (the sheet still reads the sea on the ground); the picture saved follows the
+button. Turning it on lays the diagram out again with the water asked for. The T-2169 checks call the water code directly and ignore the button.
 
 `diagram/waterReal.ts` and the water's drawing in `diagram/sheetLines.ts` (`diagram/water.ts` holds only its type; T-2169, T-2497, T-2516, T-2540; notes/T-2169.md,
 notes/T-2497.md, notes/T-2516.md, notes/T-2540.md). Rivers are drawn as bands and the sea (lakes too) as a coast, under everything else, in the theme's
 map water mixed 55% of the way from the background (`WATER_SHARE` in draw.ts, in Oklab: nearer the land, so a river or
 coast drawn a little wrong shows less). The page names the zones near the network and the worker fetches their water
 masks from the packs (the 25 m rasters the track model prices water with), each zone once. Before a first layout the
-worker finds the sea on the ground (the coarse and far grids and the land masses below), which the layout keeps open
-(The layout, Water); the rivers and the drawing come last, after the borders, posted on their own.
+worker finds the sea on the ground (the coarse and far grids and the land masses below), which the sheet keeps open
+(The rubber sheet); the rivers and the drawing come last, after the borders, posted on their own.
 
 - **On the ground**, near the network only. A coarse grid (200 m, within 15 km of a station) says where the **sea**
   is: water at least 2 km across everywhere within it, and water within 400 m of that counts as the sea's. Each sea
@@ -392,18 +391,7 @@ those), so every browser, and the Node checks, lay a graph out to the same bits.
   stations (Anita, 2026-11-05: "the sparse big regions of tohoku and hokkaido ar e a bit small"): on all Japan, at the
   dial's 0.5, Hokkaido is drawn at about 0.25 to 0.26 of the Kanto core's scale and northern Tohoku 0.25 to 0.27,
   while a single city's network is hardly touched (its sparsest edges only). After the lonely, local, parallel and crossing hops.
-- **Water** (T-2541): the layout reads the sea on the ground (Water below: the coarse and far grids and the land
-  masses), which the worker finds before a first layout; a rebuild takes the last found. The scale round a station is
-  the targets of the land hops with middles within 10 km over their real lengths. A **hop across water** (its ends on
-  different land masses, found out to 2 km, or a run of sea on its track of 2 km and 30% of it) has at least twice its
-  real length at the geometric mean of its ends' scales, and 12 pitches past its own target between land masses.
-  **Stations with the sea between them**: each station within 3 km of the sea with its 4 nearest within 40 km that are
-  on another land mass or have such a run of sea on the straight way between them. Each pair's scale is the targets
-  over the real lengths along the shortest way between them by track, up to 6 times their distance and 200 km (else
-  the scale round its ends), so a bay is as wide as its shores are drawn, not as a city on one of them; it is kept
-  1.25 times its real distance at that scale apart along its real bearing, and 12 pitches between land masses: in A
-  and B when nearer (weight 3; in A only within one block), and in the blocks' stage each pair of units is held to
-  its pairs' lengths and bearings (weight 1 in all). So straits and bays get room before land does: Japan's four main
+- **Water**: straits and bays get room before land does, by the sheet's water-gap pairs (The rubber sheet): Japan's four main
   islands are drawn apart, Tokyo Bay is open, and Boso and Izu read as peninsulas by the water around them, while a
   small piece of land with few stations keeps the lonely and local hops' short targets (Anita, 2026-11-05: peninsulas
   need not be big).

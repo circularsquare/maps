@@ -317,7 +317,7 @@ export function placeBlocks(g: DiagramGraph, B: Blocks, pos: Float64Array, L: Fl
   const unit = new Int32Array(n);
   let nu = nb;
   for (let i = 0; i < n; i++) unit[i] = of[i] >= 0 ? of[i] : nu++;
-  // stations with the sea between them in different units (layout.ts' seaTerms, T-2541: a, b, ux, uy, length), each pair
+  // stations with the sea between them in different units (the sheet's pairs: a, b, ux, uy, length), each pair
   // of units held at its pairs' lengths and bearings with wSea in all
   const seaHere: number[] = [], perUnits = new Map<number, number>();
   for (let k = 0; k < sea.length; k += 5) {

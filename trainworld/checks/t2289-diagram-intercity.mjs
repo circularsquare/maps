@@ -7,7 +7,7 @@
 //   node trainworld/checks/t2289-diagram-intercity.mjs [ne,jpn] [lonely=1]      (about two minutes; figures in
 //   artifacts/trainworld/t2289/intercity.json; the second argument overrides the layout's options, to compare)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { openSave, app, waterOf } from './diagram-saves.mjs';
+import { openSave, app } from './diagram-saves.mjs';
 import { ARTIFACTS, loadApp } from './lib.mjs';
 
 globalThis.Path2D ??= class { moveTo() {} lineTo() {} quadraticCurveTo() {} };
@@ -26,8 +26,6 @@ for (const city of which) {
   const names = [...g.key].map((k) => s.name(k) ?? '');
   const ni = s.api.nodes_info(), xy = new Map();
   for (let i = 0; i < ni.length; i += 10) xy.set(ni[i], [ni[i + 1], ni[i + 2]]);
-  // the sea on the ground the page's layout reads (T-2541)
-  const { sea } = waterOf(s, g);
   s.api.free();
   // the save's own frame (T-2542)
   const frame = app.makeFrame(s.frameSpec);
@@ -38,7 +36,7 @@ for (const city of which) {
     return bd <= 120000 ? best : null;
   });
   const t0 = performance.now();
-  const lay = L.layoutDiagram(g, OPTS, null, undefined, sea);
+  const lay = L.layoutDiagram(g, OPTS, null);
   const ms = performance.now() - t0;
   const d = L.drawing(g, lay);
   const r = { complexes: g.key.length, ms: Math.round(ms), ...intercity(g, lay, names, zone), overlaps: overlaps(g, d, names), close: closePairs(g, lay) };

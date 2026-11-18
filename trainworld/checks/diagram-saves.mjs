@@ -120,12 +120,10 @@ export function masksOf(ids) {
   return out;
 }
 
-/** T-2541: the save's graph `g` with what the page's layout worker has of the water: its frame, box, masks and the sea
- * on the ground (waterReal.ts' groundSea), which layoutDiagram takes; `s` the open save (before api.free()) */
+/** the save's graph `g` with what the page's layout worker has of the water: its frame, box, masks and the sea
+ * on the ground (waterReal.ts' groundSea), which the sheet takes; `s` the open save (before api.free()) */
 export function waterOf(s, g) {
   const { frame, box } = s.ground(g), masks = masksNear(box);
   return { frame, box, masks, sea: app.groundSea(g, masks, frame) };
 }
 
-/** T-2541: the sea a game capture's layout read (diagram-game.mjs `gameGraph`), or null for a capture without it */
-export const gameSea = (cap) => (cap?.frame && cap.zones ? app.groundSea(cap.g, masksOf(cap.zones), cap.frame) : null);
