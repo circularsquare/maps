@@ -174,11 +174,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
   - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
   - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
-- T-3627 [P2] {L:route-choice} Measure car money weighed like fares (taking, 2026-11-17, agent carmoney)
-  - Context: From T-3622. You, 2026-11-18: "i dont really see why a fare dollar should cont 8x mroe than a car dollar in india. i think car cost should be changed to scale the same way as fares. lets test out how big of a change that is. dont necessarily want to do it. but want to see."
-  - Goal: A trial (not landed) where a dollar of car costs inside a city weighs what a fare dollar weighs in that country, with the change in rail and car share shown for a few countries and your two ceiling tests, so you can decide.
-  - Other: notes/T-3622.md
-- T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
+- T-3627 [P2] {L:route-choice} {after:v0.4.1 ships, to land} Hovers show one money to minutes figure per place
+  - Context: Measured (notes/T-3627.md): weighing car money like fares raises rail 10-43% in poorer cities and moves driving mostly to walking. You, 2026-11-18: "yeah lets keep todays demand and just fix hovers. then we show same dollar to minute ratio regardless of mode."
+  - Goal: Demand unchanged; every hover in a place weighs a dollar of fare and of car money with the same minutes figure (car dollars restated at the fare weight, items 1-3 of notes/T-3627.md), and the car hover reads like "Each S$1 counts as 3.6 minutes".
+  - Other: notes/T-3622.md, notes/T-3627.md
+- T-3632 [P2] {L:route-choice} Trip explorer shows No route too often (taking, 2026-11-17, agent noroute2)
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). One sentence in the panel covers several causes.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
@@ -580,7 +580,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced).
   - Goal: The player confirms it's gone (or their extensions explain it); reproduce with Chrome's page translation on a game crossing a holiday.
   - Other: notes/T-3635.md (draft reply to the player)
-- T-3634 [P2] {L:rebuild-track} A panel for several selected pieces of track
+- T-3634 [P2] {L:rebuild-track} A panel for several selected pieces of track (taking, 2026-11-17, agent multitrack)
   - Context: Your pad, 2026-11-18, a player request: "add view for multiple track selection, like single track view. so that you can shift click to add to track selection and then rebuild just like you can rebuild a selected single track section".
   - Goal: Shift+click adds track pieces to a selection, and the selection gets the track panel's view with the same Rebuild (level and kind, one quote and charge for all).
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
@@ -605,7 +605,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Goal: Players can share a map, browse others and like them.
   - Other: notes/T-2887.md
 - T-2586 [P3] {L:translations} Place names in the player's language
-  - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata. Station names too: English for English speakers or non-local players (your idea 2026-11-09, T-2877).
+  - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata. Station names too: English for English speakers or non-local players (your idea 2026-11-09, T-2877); since T-3631 an English player still gets a CJK name where the data has no Latin one.
   - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists. A setting picks English or local station names.
   - Other: Starts after T-2585. Traditional Chinese is Taiwan's (zh-TW).
 Anita's notes 2026-11-05 evening (verbatim in notes/todo-2026-11-05c.md; briefs quote it word for word):

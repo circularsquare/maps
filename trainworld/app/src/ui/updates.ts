@@ -54,6 +54,29 @@ const V0_3_3_AT = "2026-11-13T14:30:00Z";
 
 export const UPDATES: Update[] = [
   {
+    version: "v0.4.1",
+    at: "2026-11-18T04:53:47Z",
+    line: "updates.v041Line",
+    changes: [
+      ["updates.v041Change1", "track"],
+      ["updates.v041Change2", "track"],
+      ["updates.v041Change3", "track", "fix"],
+      ["updates.v041Change4", "track", "fix"],
+      ["updates.v041Change5", "demand", "fix"],
+      ["updates.v041Change6", "fares", "fix"],
+      ["updates.v041Change7", "schematic"],
+      ["updates.v041Change8", "schematic"],
+      ["updates.v041Change9", "schematic", "fix"],
+      ["updates.v041Change10", "schematic", "fix"],
+      ["updates.v041Change11", "community"],
+      ["updates.v041Change12", "community", "fix"],
+      ["updates.v041Change13", "performance"],
+      ["updates.v041Change14", "performance"],
+      ["updates.v041Change15", "performance", "fix"],
+      ["updates.v041Change16", "other", "fix"],
+    ],
+  },
+  {
     version: "v0.4.0",
     at: "2026-11-18T00:50:09Z",
     line: "updates.v040Line",

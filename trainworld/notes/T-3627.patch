@@ -1,0 +1,135 @@
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index d3c2e631..bd98529e 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -1168,6 +1168,7 @@ impl DemandApi {
+         let country = h["country"].as_str().or_else(|| h["everyday"]["country"].as_str()).unwrap_or("");
+         base.set_extra("country_asc_rail", country_asc_rail(country))?;
+         base.park_income = super::kernel::park_income_of(country_gdp_usd(country));
++        base.car_w = super::kernel::car_w_of(country_gdp_usd(country));
+         // T-2214: the pack's land parts (T-2213), if it has two or more
+         if let Some(part) = pack::cell_weights(header, bin, "part", city.len())? {
+             base.parts = Parts::of(part.iter().map(|&v| v as u16).collect(), &city, &z).map(Arc::new);
+diff --git a/trainworld/sim/src/demand/cross.rs b/trainworld/sim/src/demand/cross.rs
+index 9567819a..2d26a1a6 100644
+--- a/trainworld/sim/src/demand/cross.rs
++++ b/trainworld/sim/src/demand/cross.rs
+@@ -193,6 +193,7 @@ impl CrossPack {
+         let py: Vec<f64> = (0..nz).map(|i| z.y0 as f64 + z.hy(i) as f64 * 0.5 * z.zone_m as f64).collect();
+         // T-2278: paid parking by the country's income, as the local layers have it
+         p.park_income = super::kernel::park_income_of(super::api::country_gdp_usd(&h["country"].as_str().unwrap_or("US").to_uppercase()));
++        p.car_w = super::kernel::car_w_of(super::api::country_gdp_usd(&h["country"].as_str().unwrap_or("US").to_uppercase()));
+         let ep = p.everyday();
+         let place = z.density().iter().map(|&d| ep.place_min_per_km(d)).collect();
+         let park = (0..nz).map(|j| ep.park_parts(&z, j)).collect();
+diff --git a/trainworld/sim/src/demand/intercity/setup.rs b/trainworld/sim/src/demand/intercity/setup.rs
+index cc85f55f..4e17e777 100644
+--- a/trainworld/sim/src/demand/intercity/setup.rs
++++ b/trainworld/sim/src/demand/intercity/setup.rs
+@@ -180,7 +180,8 @@ impl IntercityApi {
+             let km = m.zone_km(zh, zw) as f32;
+             let r = m.pr(zh.place, zw.place);
+             let (rt, rk) = m.zone_ratios(&r, zh, zw);
+-            let car = drive_min(km) * rt * pc.w_drive + zw.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
++            let cw = crate::demand::kernel::car_w_of_fw(m.places[zh.place].w());
++            let car = drive_min(km) * rt * pc.w_drive + zw.park + (pc.car_own_usd_trip + km * ROAD_DETOUR * rk * pc.car_own_usd_km) * cw + r.cross.at(FARE_MIN_PER_USD);
+             let corridor = m.open_corridor(zh.place, zw.place);
+             let band = pc.band_of_d2(km * km * 1e6) as u8;
+             self.cpairs.push(CPair { c: c as u32, car, corridor, ride: km >= pc.ride_min_km, band });
+@@ -201,7 +202,8 @@ impl IntercityApi {
+             let km = m.zone_km(zh, za) as f32;
+             let r = m.pr(zh.place, za.place);
+             let (rt, rk) = m.zone_ratios(&r, zh, za);
+-            let car = drive_min(km) * rt * pc.w_drive + za.park + pc.car_own_min() + km * ROAD_DETOUR * rk * pc.car_own_km_min() + r.cross.at(FARE_MIN_PER_USD);
++            let cw = crate::demand::kernel::car_w_of_fw(m.places[zh.place].w());
++            let car = drive_min(km) * rt * pc.w_drive + za.park + (pc.car_own_usd_trip + km * ROAD_DETOUR * rk * pc.car_own_usd_km) * cw + r.cross.at(FARE_MIN_PER_USD);
+             let w = ep.walk.min(0.999);
+             self.epairs.push(EPairOn { e: e as u32, car, walk_e: w / (1. - w), ride: km >= pc.ride_min_km, band: pc.band_of_d2(km * km * 1e6) as u8 });
+         }
+diff --git a/trainworld/sim/src/demand/kernel.rs b/trainworld/sim/src/demand/kernel.rs
+index 160f10e8..07977542 100644
+--- a/trainworld/sim/src/demand/kernel.rs
++++ b/trainworld/sim/src/demand/kernel.rs
+@@ -128,6 +128,9 @@ pub struct Params {
+     /// minutes a dollar; a drive to a station pays both on its own road.
+     pub car_own_usd_trip: f32,
+     pub car_own_usd_km: f32,
++    /// T-3627 (trial): perceived minutes a dollar of the car's ownership money, set from the pack
++    /// country's income (`car_w_of`).
++    pub car_w: f32,
+     /// A congestion charge per zone (`cordon_by_zone`), perceived minutes a one-way trip, paid
+     /// by every driver arriving there. None: no charge anywhere.
+     pub cordon: Option<std::sync::Arc<Vec<f32>>>,
+@@ -263,6 +266,41 @@ pub fn park_income_of(gdp: Option<f32>) -> f32 {
+         _ => 1.0,
+     }
+ }
++/// T-3627 (trial, not landed): the local car's money weighs the country's fare weight times this
++/// (A: 1); a negative value anchors it on the US instead (B: `FARE_MIN_PER_USD` x the fare weight
++/// over the US's, so the US car is unchanged); 0 keeps today's `FARE_MIN_PER_USD` everywhere.
++pub const CAR_FARE_RATIO: f32 = 1.0;
++/// app game/income.ts `FARE_W_REF`, `FARE_Y_REF`
++const FARE_W_REF: f32 = 4.4;
++const FARE_Y_REF: f32 = 90_000.0;
++/// `CAR_FARE_RATIO`, or natively `TW_CAR_RATIO` from the environment (the trial's measurements).
++fn car_fare_ratio() -> f32 {
++    #[cfg(not(target_arch = "wasm32"))]
++    if let Some(v) = std::env::var("TW_CAR_RATIO").ok().and_then(|s| s.parse().ok()) {
++        return v;
++    }
++    CAR_FARE_RATIO
++}
++/// game/income.ts `fareWeight` for a country of `gdp` US$ a head; None without a figure.
++pub fn fare_w_of(gdp: Option<f32>) -> Option<f32> {
++    gdp.filter(|&y| y > 0.0).map(|y| FARE_W_REF * (y / FARE_Y_REF).powf(-MONEY_E))
++}
++/// T-3627: perceived minutes a dollar of the car's ownership money where a fare dollar costs `fw`.
++pub fn car_w_of_fw(fw: f32) -> f32 {
++    let r = car_fare_ratio();
++    if !(fw > 0.0) || r == 0.0 {
++        return super::api::FARE_MIN_PER_USD;
++    }
++    if r > 0.0 {
++        return r * fw;
++    }
++    let us = fare_w_of(super::api::country_gdp_usd("US")).unwrap_or(FARE_W_REF);
++    super::api::FARE_MIN_PER_USD * fw / us
++}
++/// The same for a country of `gdp` US$ a head; today's `FARE_MIN_PER_USD` without a figure.
++pub fn car_w_of(gdp: Option<f32>) -> f32 {
++    fare_w_of(gdp).map_or(super::api::FARE_MIN_PER_USD, car_w_of_fw)
++}
+ /// T-710: edges (straight-line km) of the station choice's distance bands (`Params::band`); from
+ /// 12 km on the trip counts as 60 minutes or more, where the scale stops changing.
+ pub const REL_EDGES: [f32; 5] = [0.0, 3.0, 7.0, 12.0, f32::INFINITY];
+@@ -344,6 +382,7 @@ impl Default for Params {
+             // T-938 then T-1755: T-621's $1.50 + $0.10 raised about 30%, then 5% (Anita)
+             car_own_usd_trip: 2.1,
+             car_own_usd_km: 0.1365,
++            car_w: super::api::FARE_MIN_PER_USD,
+             cordon: None,
+             period: 0,
+             period_share: 0.45,
+@@ -476,6 +515,7 @@ impl Params {
+             "home_park_f" => self.home_park_f = v,
+             "car_own_usd_trip" => self.car_own_usd_trip = v,
+             "car_own_usd_km" => self.car_own_usd_km = v,
++            "car_w" => self.car_w = v,
+             // T-2214: 0 drops the pack's land parts (checks: a pack solved as one part)
+             "parts" => {
+                 if v == 0.0 {
+@@ -603,12 +643,12 @@ impl Params {
+     /// The ownership cost's part every car trip pays whatever its length, perceived minutes.
+     #[inline]
+     pub fn car_own_min(&self) -> f32 {
+-        self.car_own_usd_trip * super::api::FARE_MIN_PER_USD
++        self.car_own_usd_trip * self.car_w
+     }
+     /// The ownership cost's part a km of road, perceived minutes.
+     #[inline]
+     pub fn car_own_km_min(&self) -> f32 {
+-        self.car_own_usd_km * super::api::FARE_MIN_PER_USD
++        self.car_own_usd_km * self.car_w
+     }
+     /// A drive of `drive_min` real minutes over `road_km` of road, perceived: its time and the
+     /// ownership cost's part by distance (`mode_choice`'s lanes use the same expression).
