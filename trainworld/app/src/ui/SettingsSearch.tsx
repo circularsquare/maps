@@ -34,6 +34,7 @@ const ALIASES: [MessageKey, MessageKey][] = [
   ["settingsTab.currency", "settingsSearch.aliasCurrency"],
   ["settingsTab.performance", "settingsSearch.aliasPerformance"],
   ["settingsTab.lineShapes", "settingsSearch.aliasShapes"],
+  ["settingsTab.stations", "settingsSearch.aliasStations"],
   ["accountPanel.account", "settingsSearch.aliasAccount"],
   ["accountPanel.signIn", "settingsSearch.aliasAccount"],
   ["feedbackPanel.open", "settingsSearch.aliasFeedback"],

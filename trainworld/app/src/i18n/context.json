@@ -1883,6 +1883,7 @@
   "settingsTab.startAgain": "Settings, Game: button beside Tutorial that restarts the tutorial.",
   "settingsTab.stationCircles": "Settings: section heading for the circles sized by each station's riders.",
   "settingsTab.stationNames": "Settings, Show: checkbox for station names on the map.",
+  "settingsTab.stations": "Settings, Show: checkbox that draws the stations on the map. Unticked, no stations or their names are drawn and none can be clicked; lines and trains stay.",
   "settingsTab.sun": "Settings, Day choice: Sunday, short as on a calendar. Narrow segmented button.",
   "settingsTab.terrain": "Settings, Show: checkbox for hill shading on the map.",
   "settingsTab.terrainTip": "Hover on the Terrain checkbox.",
@@ -2873,5 +2874,6 @@
   "settingsSearch.aliasShapes": "Never shown. Search keywords, comma-separated, that find the Default bullet shapes section of Settings (the shape of each mode's line badge). The English list is always searched too.",
   "settingsSearch.aliasAccount": "Never shown. Search keywords, comma-separated, that find the Account section and button in Settings. The English list is always searched too.",
   "settingsSearch.aliasFeedback": "Never shown. Search keywords, comma-separated, that find the Submit feedback button in Settings. The English list is always searched too.",
-  "settingsSearch.aliasAbout": "Never shown. Search keywords, comma-separated, that find the About this game link and the changelog at the foot of Settings. The English list is always searched too."
+  "settingsSearch.aliasAbout": "Never shown. Search keywords, comma-separated, that find the About this game link and the changelog at the foot of Settings. The English list is always searched too.",
+  "settingsSearch.aliasStations": "Never shown. Search keywords, comma-separated, that find the Stations checkbox in Settings (draw or hide stations on the map). The English list is always searched too."
 }

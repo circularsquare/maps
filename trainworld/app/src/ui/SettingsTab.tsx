@@ -114,7 +114,10 @@ export function SettingsTab() {
         <Check checked={d.trains} onChange={(v) => setDisplay("trains", v)}>
           {t("settingsTab.trains")}
         </Check>
-        <Check checked={d.stationNames} onChange={(v) => setDisplay("stationNames", v)}>
+        <Check checked={d.stations} onChange={(v) => setDisplay("stations", v)}>
+          {t("settingsTab.stations")}
+        </Check>
+        <Check checked={d.stationNames}onChange={(v) => setDisplay("stationNames", v)}>
           {t("settingsTab.stationNames")}
         </Check>
         <Check checked={d.capacity} onChange={(v) => setDisplay("capacity", v)}>

@@ -148,6 +148,8 @@ export interface StationGroups {
 
 export interface DrawOptions {
   showTrains: boolean;
+  /** T-3625: false draws no station, bridge, car park or bus stop at a station, and none can be picked; absent: shown */
+  showStations?: boolean;
   byLevel: boolean;
   bySpeed?: boolean;
   /** T-2420: the track coloured by its stretch's profit (`setProfit`) */
@@ -366,6 +368,8 @@ export class NetworkRenderer {
   stationStyle: StationStyle = { boxes: false, radius: stationRadii(12), linePx: 0, ringPx: stationRing(12), boxLinePx: interp(BOX_WIDTH_ZOOM, LINE_PX), boxRingPx: stationRing(BOX_WIDTH_ZOOM) };
   /** zoomed out below STATIONS_ZOOM at the last draw: trains neither drawn nor picked (T-205) */
   trainsHidden = false;
+  /** T-3625: the stations are switched off in Settings (set each draw) */
+  stationsOff = false;
   private selectedStation = -1;
   /** `DrawOptions.selStations` as a set, and as drawn into `stationSelBuf` (its key) */
   private selectedAlso = new Set<number>();
@@ -451,7 +455,7 @@ export class NetworkRenderer {
    * overlap, the one whose centre is nearest. */
   stationAt(px: number, py: number, project: Project, padding = 7): number {
     const n = this.net;
-    if (!n) return -1;
+    if (!n || this.stationsOff) return -1;
     const dots = !this.stationStyle.boxes;
     // T-724: on a flat camera, a station whose node is further from the pointer than its platform
     // and shape reach is skipped before its shape is worked out (same answers)
@@ -530,7 +534,7 @@ export class NetworkRenderer {
    * a terminal's thick end, or the car park whose hover names station `i` (T-1528). */
   upgradeAt(i: number, px: number, py: number, project: Project): number {
     const n = this.net;
-    if (!n || !this.stationStyle.boxes || i < 0 || i >= n.stationCount) return 0;
+    if (!n || this.stationsOff || !this.stationStyle.boxes || i < 0 || i >= n.stationCount) return 0;
     const s = this.drawnShapeOf(i, project);
     for (const x of this.annexesOf(i, s)) if (insideStation(x.shape, px, py, 1) && x.kind === ANNEX_ROOM) return UPGRADE.waitingRoom;
     const flags = Math.round(n.stations[i * 3 + 2]);
@@ -547,10 +551,11 @@ export class NetworkRenderer {
   /** The car park drawn under a point (T-1528), its index in `lots.lots`, or -1: drawn from
    * STATION_BOX_ZOOM in. */
   lotAt(px: number, py: number, project: Project): number {
-    return this.stationStyle.boxes ? this.lots.at(px, py, project) : -1;
+    return this.stationStyle.boxes && !this.stationsOff ? this.lots.at(px, py, project) : -1;
   }
   /** A selected station drawn at a point, or -1 (picking: it is above the demand bubbles). */
   selectedStationAt(px: number, py: number, project: Project, padding = 2): number {
+    if (this.stationsOff) return -1;
     for (const i of this.selectedDrawn()) {
       const s = this.drawnShapeOf(i, project);
       if (s && insideStation(s, px, py, padding)) return i;
@@ -1736,12 +1741,14 @@ export class NetworkRenderer {
     const cache = this.strokeCache && !this.gl.isContextLost() && Math.max(vp[0], vp[1]) <= this.cacheMax ? (view ? (this.snapCache ??= new StrokeCache(gl, 2)) : (this.mainCache ??= new StrokeCache(gl, 2))) : null;
     const buses = !view && this.buses.any;
     if (!view) this.busesShown = buses;
-    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0, vis.v], shadeColours());
+    const stationsOff = opt.showStations === false;
+    this.stationsOff = stationsOff;
+    const redraw = !cache || cache.stale(vp[0], vp[1], [zoom, dpr, ...lc.m, ...lc.globe, ...lc.plane, ...lc.at, k, opt.byLevel ? 1 : 0, opt.bySpeed ? 1 : 0, opt.byProfit ? 1 : 0, opt.selLine, (opt.selLines ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), opt.selEdge, opt.hotLine ?? -1, opt.hotEdge ?? -1, (opt.hotBuses ?? []).reduce((h, v) => (h * 31 + v + 1) | 0, 7), this.hide[0], this.hide[1], opt.dimOthers ?? 1, opt.flatMarks !== false ? 1 : 0, opt.rampMarks !== false ? 1 : 0, buses ? this.buses.version : -1, through ? 1 : 0, this.uploads, this.strokeCull ? 1 : 0, this.strokeLod ? 1 : 0, this.strokeGather ? 1 : 0, this.lineBands ? 1 : 0, stationsOff ? 1 : 0, vis.v], shadeColours());
     this.quiet = true;
     if (cache && redraw) cache.begin(0);
     // the complexes' car parks under everything else (T-1528)
-    if (redraw) this.floors.draw(lc, vp, dpr, zoom);
-    if (redraw && zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
+    if (redraw && !stationsOff) this.floors.draw(lc, vp, dpr, zoom);
+    if (redraw && !stationsOff && zoom >= STATION_BOX_ZOOM) this.lots.draw(lc, vp, dpr);
     // bus lines have no strokes: their own pass, under the track (T-1464, busLayer.ts)
     if (redraw && buses) {
       const sh = shadeColours();
@@ -1962,9 +1969,9 @@ export class NetworkRenderer {
       cache.draw(0);
     }
     // the station buildings' hall crowds (T-2219), over the track and under the boxes
-    this.floors.drawHall(lc, vp, dpr, zoom, this.board && !hidden ? this.crowds.hall : null);
+    if (!stationsOff) this.floors.drawHall(lc, vp, dpr, zoom, this.board && !hidden ? this.crowds.hall : null);
 
-    if (n.stationCount) {
+    if (n.stationCount && !stationsOff) {
       // Platforms along the track from STATION_BOX_ZOOM, each one shape at every zoom (T-204), dots
       // further out (T-189), one for a whole complex (T-217), and below STATIONS_ZOOM only the
       // selected ones (T-205).
@@ -2176,7 +2183,7 @@ export class NetworkRenderer {
     }
 
     // a bus line's stops at train stations, over the stations (T-2948)
-    if (buses) this.buses.drawStationStops(lc, vp, dpr);
+    if (buses && !stationsOff) this.buses.drawStationStops(lc, vp, dpr);
 
     // No trains zoomed far out (T-205).
     this.trainsHidden = zoom < TRAINS_ZOOM;

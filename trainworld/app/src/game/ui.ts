@@ -36,6 +36,8 @@ export interface DisplaySettings {
   /** Track display: plain lines, traffic-weighted lines, height, or geometry speed limit. */
   trackColour: "line" | "traffic" | "height" | "speed" | "profit";
   trains: boolean;
+  /** T-3625: false draws no stations (or their names) and none can be picked */
+  stations: boolean;
   stationNames: boolean;
   capacity: boolean;
   /** T-1152: the traffic view's red edges where track is at capacity or trains run packed full */
@@ -133,6 +135,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-1101: plain lines to start with; Traffic is one click away
   trackColour: "line",
   trains: true,
+  stations: true,
   stationNames: false,
   capacity: true,
   fullMarks: true,
@@ -247,7 +250,7 @@ export const selection = signal<Selection>(null);
  * nothing is stored, so the player's own come back on the next ordinary load. */
 export const VIDEO = new URLSearchParams(location.search).get("video") === "1";
 const VIDEO_DISPLAY: Partial<DisplaySettings> = {
-  trackColour: "line", trains: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none", realStations: false,
+  trackColour: "line", trains: true, stations: true, stationNames: false, capacity: false, basemapLabels: false, realNetwork: "none", realStations: false,
   stationUse: "none", commuters: false, sound: true,
 };
 

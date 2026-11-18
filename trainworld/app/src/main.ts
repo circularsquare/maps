@@ -259,6 +259,7 @@ const overlay = new Overlay(map, renderer, () => {
   const groupLines = sel?.kind === "group" && hovered === null ? (lineGroups(world.peek()?.save.lines ?? []).get(sel.group) ?? []).map((l) => l.num) : undefined;
   return {
     showTrains: d.trains,
+    showStations: d.stations || tool.peek() === "station", // T-3625: the station tool shows what it places
     byLevel: d.trackColour === "height",
     bySpeed: d.trackColour === "speed",
     byProfit: d.trackColour === "profit",
@@ -471,6 +472,7 @@ effect(() => {
 effect(() => {
   selection.value;
   display.value;
+  tool.value; // T-3625: the station tool draws stations while they are hidden
   overlay.invalidate();
 });
 
@@ -479,7 +481,7 @@ effect(() => {
   const w = world.value;
   if (w && !SYNTH) labels.set(w);
 });
-effect(() => labels.setVisible(display.value.stationNames && !SYNTH));
+effect(() => labels.setVisible(display.value.stationNames && display.value.stations && !SYNTH));
 startOpeningDay(); // T-1434
 startLineFigures(); // T-1665
 startEditNote(); // T-2125
