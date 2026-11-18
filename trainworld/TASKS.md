@@ -377,9 +377,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Need from Anita: Where you saw Sierra Leone with Antarctica's flag (which player, roughly when); otherwise close it as fixed by the second flag set.
   - Context: Your old TODO: "leaderboard flags are messed up, sierra leone's flag is antarctican flag". Flags came with T-3269. Not reproduced 2026-11-18: all 336 pictures and codes check out (notes/T-3683.md); needs which build or player showed it. Reach: players of the affected countries.
   - Goal: Every country's leaderboard flag is its own; the cause found and the whole list checked, not only Sierra Leone.
-- T-3687 [P3] {L:community} Sandbox save shown as normal in Community
-  - Context: Your old TODO: "someoen (ylik) said their sandbox save they uploaded to community is actully a nromal mode, they dont know why its considered community". T-3144 handles the Sandbox tag. Few players.
-  - Goal: The cause found (which mode a share records and shows) and fixed, or shown to be right.
+- T-3687 [P2] {L:community} Normal games marked as sandbox (taking, 2026-11-18, agent sandboxfix)
+  - Context: Your old TODO: "someoen (ylik) said their sandbox save they uploaded to community is actully a nromal mode, they dont know why its considered community". You, 2026-11-18: "a while ago people were reporting their games getting marked as sandbox when they were normal games ... seems good to [look] while we're here". T-3144 handles the Sandbox tag. A lead from T-3707: v0.4.1 treats any 403 from the score route as the server's sandbox latch and remembers it in the browser.
+  - Goal: Every way a normal game can come to be treated as sandbox (in the game, on the leaderboards, in Community) found, the real ones fixed, and games already wrongly latched put right where we can.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
