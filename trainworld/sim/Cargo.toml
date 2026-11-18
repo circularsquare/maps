@@ -119,6 +119,14 @@ large_enum_variant = "allow"
 opt-level = 3
 lto = true
 
+# T-3664: agents' edit-test cycles (`cargo test --profile agent`, `npm run wasm:agent`). No LTO, incremental:
+# about a third of release's build time. Never ships; landing and 8800 use release and wasm.
+[profile.agent]
+inherits = "release"
+lto = false
+incremental = true
+codegen-units = 16
+
 # T-051: the app's two wasm modules (app/package.json). One codegen unit: 2-5% smaller.
 [profile.wasm]
 inherits = "release"
