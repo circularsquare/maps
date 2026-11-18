@@ -222,7 +222,9 @@ void main() {
   bool bpShape = bpTrack || bpLine || ghost;
   float lt = (blueprint && !placement) || ghost ? u_lanes.w : u_width.z * (tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0);
   float tw = tram ? ${TRAM_WIDTH.toFixed(2)} : 1.0;
-  float tk = tram || turnback || passing ? 1.0 : mix(mix(${SINGLE_WIDTH.toFixed(2)}, ${DOUBLE_WIDTH.toFixed(2)}, lfw), 1.0, u_lanes.z);
+  // (T-3580: a line's Traffic view width is its riders' alone, the same on single and double track)
+  bool trafficLine = u_kind == 1 && u_band_traffic == 1;
+  float tk = tram || turnback || passing || trafficLine ? 1.0 : mix(mix(${SINGLE_WIDTH.toFixed(2)}, ${DOUBLE_WIDTH.toFixed(2)}, lfw), 1.0, u_lanes.z);
   float core = bpShape ? u_bp.x * tw * tk + 2.0 * u_bp.y : u_width.x * tw * tk;
   int id = gl_VertexID;
   float along = float(id & 1);
