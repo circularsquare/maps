@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (2026-11-17): option (a) built, checker PASS (notes/T-3600-check.md); intercity within 0.4-2.5% of final in 2-7 s; edits during a quick solve still wait for the whole solve (T-3616) notes/T-3600.md.
+- T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save (2026-11-17): option (a) built, checker PASS (notes/T-3600-check.md); intercity within 0.4-2.5% of final in 2-7 s; edits during a quick solve still wait for the whole solve (T-3616) notes/T-3600.md.
 - T-3615 [P2] {L:map-look} Single-side station boxes with a real width (2026-11-17): single-side boxes have a world width per her numbers; sheet review/t3615.png. notes/T-3615.md.
 - T-3608 [P2] {L:track-drawing} Ctrl pauses snap to street (2026-11-17): Ctrl pauses street snap; straight only with snap off.
 - T-3607 [P2] {L:map-look} One-way chevrons spaced by distance; bus chevrons further out and thinner (2026-11-17): track arrows every 300 m by distance; bus chevrons from zoom 12, line-thick.
