@@ -2572,7 +2572,7 @@
   "updates.v03NerfJunctions": "trains crossing at flat junction block the junction for {figure}, up from 90 seconds (build flyovers to resolve)",
   "updates.v03NerfJunctionsFigure": "120 seconds",
   "updates.v03Fixes": "bug fixes",
-  "updates.v040Line": "update v0.4! central america and venezuela, timetables, fares, faster loading...",
+  "updates.v040Line": "update v0.4! central america and venezuela, timetables, faster loading...",
   "updates.v040Change1": "added real world network features:",
   "updates.v040Change2": "can now snap to unused track in the real world network’s All setting",
   "updates.v040Change3": "added real world stations to the real world network map, hidden by default",
