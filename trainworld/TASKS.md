@@ -113,7 +113,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3623 [P2] {L:new-countries} Cairo's place point sits in the desert
+- T-3623 [P2] {L:new-countries} {after:the night run (Egypt rows in it)} Cairo's place point sits in the desert
   - Context: From T-3621: Cairo's real OSM node (Tahrir, 9.1M) is 0.25 km outside its pack's outline, in the gap along the Nile, so places.py dropped it; the only "Cairo" left in cai.places.json is a governorate-sized area whose box centre is desert 37 km east, population 0. Stations within 6 km of it may be named Cairo, and a search for Cairo may land there. Other big cities on a river gap may lose their node the same way.
   - Goal: Cairo's place point is at Tahrir; places.py keeps a named city node just outside its pack's outline (a small tolerance), checked on a few river cities.
   - Other: notes/T-3621.md
@@ -169,13 +169,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3622 [P2] {L:route-choice} Transit and driving value time differently in Malaysia (taking, 2026-11-17, agent vot)
-  - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". You: "seems like no... those should be the same right? im also not sure where they're seeing these numbers. probably in a tooltip somewhere in trip analysis. maybe one value is wrong?" The display currency is the player's own setting.
-  - Goal: Where the game shows minutes per money for a trip, transit and driving use the same rate for the same trip, or the reason they differ is a rule we meant.
+- T-3622 [P2] {L:route-choice} {waits:Anita} Transit and driving value time differently in Malaysia
+  - Need from Anita: Should a dollar of car costs inside a city weigh what a fare dollar weighs in that country (more driving lost to rail in poorer places, ceiling tests rerun), or keep 3 minutes everywhere and say so in the hover? I'd make them equal as its own measured task.
+  - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
+  - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
+  - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
   - Other: Not the cause of T-3295 (walk onto the same line). Notes: notes/T-3298.md
+- T-3624 [P3] {L:wealth-split} School trips lean to transit
+  - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess."
+  - Goal: Trips to school weigh driving less than other purposes do (students mostly can't drive), if it's a small change to the purpose rules; a demand rule change, so docs/demand-worldwide.md says it.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips
   - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
   - Goal: A cheaper way to give local trips income groups, after an estimate.
@@ -285,10 +290,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3600 (option a landed): only the first edit of a quick batch updates in seconds; an edit made while that first quick solve runs waits behind its whole solve (the T-1734 hold), about 170 s on your Kaohsiung save. Levers in notes/T-3600.md: that hold, and the 8 s wait before the whole solve (option c).
   - Goal: Edits made a few seconds apart on the Kaohsiung save each show their quick numbers within about 10 s.
   - Other: notes/T-3600.md
-- T-3618 [P2] {L:single-track} Split still marked when the straight single was drawn first
-  - Context: From T-3609 (its two drawing fixes landing): a split still shows a flat junction when the straight single was drawn first with a press on a lane at the double's bare end, or was set one way with the switch; your Paris split keeps its mark since track already drawn isn't changed. Proposed in notes/T-3609.md: the one-way switch defaults to the joined track's way; the second single re-places the first one's join; the snap ring stops sitting on the pointer's track at a split.
-  - Goal: Drawing a split in either order, or setting a single one way, never leaves a flat junction mark unless trains really cross.
-  - Other: notes/T-3609.md
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
@@ -664,6 +665,9 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
   - Goal: Placing a station near a line or ramp finds a viable spot.
   - Other: notes/todo-2026-11-03h.md.
+- T-3625 [P3] {L:map-look} A toggle to hide stations
+  - Context: Your pad, 2026-11-18: "someone requests toggle to hide stations. seems easy enough, lets add that at some pt"
+  - Goal: A Show stations toggle beside the other map toggles hides the station boxes and their names (lines and trains stay).
 - T-2337 [P3] {L:map-look} Load by hour in the crowding hover
   - Context: Idea from 2026-11-04: a small plot of load by hour of day in the crowding hover, if peak load per hour is cheap to keep.
   - Goal: The crowding hover shows load by hour.

@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c014",
+      "text": "fixed the train's effective time hover for trips between cities showing a different fare from the fare row when the trip starts in another country than the game",
+      "edited": "fixed the fare in the train's effective time hover between cities, which was off for trips starting in a different country from your starting city",
+      "hidden": false,
+      "task": "T-3622",
+      "by": "vot",
+      "at": "2026-11-18T03:18:58Z",
+      "rev": 2,
+      "area": "fares",
+      "fix": true,
+      "changed": "2026-11-18T03:19:02Z"
+    },
+    {
       "id": "c013",
       "text": "fixed single track drawn where a double track splits sometimes joining the wrong track and making a flat junction",
       "edited": null,
@@ -78,14 +91,15 @@
     {
       "id": "c007",
       "text": "after you turn a line's trains on or off, the intercity lines through that city show their new riders within seconds",
-      "edited": null,
+      "edited": "after you turn a line's trains on or off, the intercity lines through that city show their new riders within seconds, also when you change several lines one after another",
       "hidden": false,
       "task": "T-3600",
       "by": "kaohsiung",
       "at": "2026-11-18T02:04:04Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T03:22:22Z"
     },
     {
       "id": "c006",

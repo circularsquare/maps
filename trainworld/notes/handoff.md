@@ -22,9 +22,8 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   She: "0.4 looks good on live".
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
-## Landed since 8800's 3fd86cd2 (next rebuild): T-3606 98ca8aca, T-3619 f2894ea1, T-3599 63bacf31 (strings: her
-  "text ack" 11-18). 8800 has T-3600/T-3601/T-3610/T-3612. node_modules broke once ~02:10 UTC (a checker deleting a scratch
-  worktree by hand); npm install restored it.
+## 8800 d4c7e639 has everything landed tonight but T-3621's json (T-3599 strings: her "text ack" 11-18).
+  node_modules broke once ~02:10 UTC (a checker deleting a scratch worktree by hand); npm install restored it.
 
 ## In flight (maps-86's; maps-1c fully wound down 03:00 UTC)
 - splitflat: T-3609 DONE in tree (two drawing fixes, sim draw.rs; c001 in tree "fixed single track drawn where a
@@ -34,9 +33,13 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   A demand-number change waits for her. She: "potentially pretty huge bug", report to her as soon as it lands.
 - secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 (her go 11-18): later edits wait ~170 s behind the
   first whole solve (T-1734 hold). Told to rebase onto 63bacf31 (T-3599's editLeft doubling while an edit waits).
-- T-3619 DONE f2894ea1 (351 starts had no tier; c011). cairo (Opus, main tree, scratchpad \cairo): T-3621 why
-  Cairo scores 439 (hard); may change start_difficulty.py + start-difficulty.json.
-- Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}.
+- T-3619 DONE f2894ea1 (351 starts had no tier; c011); T-3621 DONE 5acbd214 (Cairo's centre was a desert box
+  centre; now easy). Filed T-3623 (Cairo's place point) {after: night run}. Tiers rerun once more after the joins.
+- Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}; T-3624 school trips to transit (P3), T-3625 hide
+  stations toggle (P3). T-3618 closed on her word (track rework covers it).
+- fbtriage (Opus, no tree): her ask "what feedbacks should i close and what responses should i give": 78 open
+  unanswered reports (dump scratchpad \fb\unanswered.txt) -> notes/feedback-triage-2026-11-18.md for her; file
+  its "bugs with no task". The inbox rate-limits: fetch slowly (1.2 s apart).
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
 ## Night run RUNNING (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)
@@ -46,8 +49,8 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   stop: create trainworld\data\work\world_run\STOP, then kill only the script PID. Gates serve the main tree's app/:
   keep app/ landings short and between gate steps. 8800 rebuilds during the run: before its joins only (packs are
   hard links to data/packs), else snapbuild-frozen with a freeze; smoke the 8800 URL, not a main-tree Vite (the
-  main tree's game json carries the run's in-progress registry). 03:55 UTC: snap+smoke of d4c7e639 running
-  (\snap_smoke.ps1); push after it passes. After it: rerun start_difficulty.py (T-3619), then 8800 rebuild;
+  main tree's game json carries the run's in-progress registry). 8800 = d4c7e639 (smoke on 8800 PASSED 12),
+  master 5acbd214 pushed. 5acbd214's Cairo tier change is not on 8800 yet (json only; next rebuild). After it: rerun start_difficulty.py (T-3619), then 8800 rebuild;
   then T-3620 (Caribbean, Bolivia, Paraguay) can start.
 
 ## Next
