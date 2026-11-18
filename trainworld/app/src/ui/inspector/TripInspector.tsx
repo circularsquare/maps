@@ -18,7 +18,7 @@ import { shownPeriod } from "../../map/tripView";
 import { Actions, SegBar } from "../widgets";
 import { MarketTrip } from "./MarketTrip";
 import { legRows, PeriodRows, routeRow, StationLink } from "./RouteParts";
-import { equation, minFix1, minNum1, minRound, minText, modeName, noRoad, num1, pct1, pctShare, rideTip, roundTo, sumLine, termLabel, tripsAmount, tripWords, usd, type ModeId, type Term } from "./tripText";
+import { BUS_BOARD_FELT_MIN, equation, minFix1, minNum1, minRound, minText, modeName, noRoad, num1, pct1, pctShare, rideTip, roundTo, sumLine, termLabel, tripsAmount, tripWords, usd, type ModeId, type Term } from "./tripText";
 
 /** T-910: why the train is not offered. Too long a way to and from the trains says which end
  * holds it back: people drive to a station from home on trips of `rideMinKm` or more, and walk
@@ -138,7 +138,9 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
       )}
       {legRows(r, name, ln, (l) => {
         // T-842: riders arriving when no train is due for hours weigh on the wait as felt
-        return rideTip(l, w.lineStats[l.line], l.fullWaitMin, l.waitPerceived - l.waitMin);
+        // the felt wait also carries the bus boarding cost (sim `BUS_BOARD_MIN`, T-1576), which is no service gap
+        const st = w.lineStats[l.line];
+        return rideTip(l, st, l.fullWaitMin, Math.max(0, l.waitPerceived - l.waitMin - (st?.bus ? BUS_BOARD_FELT_MIN : 0)));
       })}
       {pair && last && (
         <li data-tip={walkTip(pair.egressM, pair.egressMin)}>

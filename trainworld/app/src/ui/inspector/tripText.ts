@@ -138,6 +138,9 @@ export const tripWords = (f: PurposeFilter): string => t("tripText.tripsWords", 
 export const tripsAmount = (amount: string, n: number, f: PurposeFilter): string =>
   t("tripText.tripsAmount", { kind: kind(f), words: f === "all" ? "" : purposeWords(f), amount, count: Math.round(n) });
 
+/** Felt minutes a bus or ferry boarding adds to a ride's perceived wait: sim/src/demand/kernel/access.rs `BUS_BOARD_MIN`. */
+export const BUS_BOARD_FELT_MIN = 4;
+
 /** The hover of a ride in a route: its wait, its ride and its stops, in minutes to one decimal. `row`
  * is the line's stats (its bus row, a ferry's too, or its tram flag), `full` the wait for a train with room (T-842), `late` the
  * extra felt wait of trips starting when no train is due for hours; both 0 where the panel gives
