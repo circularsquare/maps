@@ -169,6 +169,7 @@ uniform vec3 u_casing_rgb;
 uniform vec3 u_rail_rgb;
 uniform float u_rail;        // a blueprint's rail beyond the colour, device px a side
 uniform float u_px_per_unit; // device px a local unit spans
+uniform vec4 u_halo;         // T-3693: w 1 for a halo pass (pass 0 in this colour)
 in vec4 a_seg;
 in vec4 a_info;
 in float a_w;                // T-2274: the Traffic view's width by riders, a share of the line's own
@@ -226,7 +227,8 @@ void main() {
   v_period = xfer ? max(${TRANSFER_DASH_WIDTHS.toFixed(1)} * w, 5.0) : max(${DASH_WIDTHS.toFixed(1)} * w, 6.0);
   v_dash = u_pass == 1 && (flags & ${FLAG_FERRY | FLAG_TRANSFER}) != 0 ? a_info.w * u_px_per_unit + ua : -1.0;
   v_alpha = faint * (u_pass == 2 ? u_alpha : (sel ? 1.0 : mute ? ${MUTE_ALPHA} : u_dim)) * (xfer ? u_xfer_alpha : 1.0);
-  if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
+  if (u_pass == 0 && u_halo.w > 0.5) { v_color = u_halo.rgb; v_alpha = faint; }
+  else if (u_pass == 0) v_color = bp ? u_rail_rgb : u_casing_rgb;
   else if (xfer) v_color = u_xfer_rgb;
   else {
     v_color = col;
@@ -415,6 +417,8 @@ export interface BusStyle {
   phases: Float32Array;
   meta: Float32Array;
   trackRgb: Float32Array;
+  /** T-3693: the selected and hovered line's halo, its colour and width a side (device px); absent none */
+  halo?: { rgb: Float32Array; px: number };
 }
 
 export type BusPaintKind = "speed" | "profit" | "level" | null;
@@ -450,7 +454,7 @@ export class BusLayer {
     this.gl = gl;
     this.segProg = compile(gl, SEG_VS, SEG_FS);
     this.stopProg = compile(gl, STOP_VS, STOP_FS);
-    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha"]);
+    this.su = uniforms(gl, this.segProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_add", "u_extra", "u_pass", "u_sel", "u_hot", "u_lit", "u_lit_n", "u_only", "u_dim", "u_alpha", "u_casing_rgb", "u_rail_rgb", "u_rail", "u_px_per_unit", "u_track_rgb", "u_xfer", "u_xfer_w", "u_xfer_rgb", "u_xfer_alpha", "u_halo"]);
     this.pu = uniforms(gl, this.stopProg, [...PROJECT_UNIFORMS, "u_viewport", "u_r", "u_rail_rgb", "u_rings", "u_fill", "u_rim", "u_keep"]);
     this.arrowProg = compile(gl, ARROW_VS, ARROW_FS);
     this.au = uniforms(gl, this.arrowProg, [...PROJECT_UNIFORMS, "u_viewport", "u_size", "u_every", "u_m_px", "u_clear", "u_sel", "u_hot", "u_dim", "u_casing_rgb"]);
@@ -766,9 +770,28 @@ export class BusLayer {
       gl.uniform1i(u.u_pass, 1);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
     };
+    gl.uniform4f(u.u_halo, 0, 0, 0, 0);
     body(-1);
+    // T-3693: the hovered and selected line in their halo, over the rest
+    const halo = (only: number) => {
+      if (!s.halo) return;
+      gl.uniform1i(u.u_only, only);
+      gl.uniform1f(u.u_width, bus);
+      gl.uniform1i(u.u_pass, 0);
+      gl.uniform1f(u.u_add, s.casing * CASING_SHARE + 2 * s.halo.px);
+      gl.uniform4f(u.u_halo, s.halo.rgb[0], s.halo.rgb[1], s.halo.rgb[2], 1);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, b.count);
+      gl.uniform4f(u.u_halo, 0, 0, 0, 0);
+    };
+    if (s.halo && s.hot >= 0 && s.hot !== s.sel && this.byId.has(s.hot)) {
+      halo(s.hot);
+      body(s.hot);
+    }
     // the selected line again over the rest, as the rail lines' (renderer.ts)
-    if (this.byId.has(s.sel)) body(-2);
+    if (this.byId.has(s.sel)) {
+      halo(-2);
+      body(-2);
+    }
     gl.bindVertexArray(null);
     // T-2991: one-way arrows, in the line view only
     this.arrows = b.arrows.length / ARROW_STRIDE;

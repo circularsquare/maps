@@ -22,6 +22,7 @@ import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, pla
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, oneWayTrackRuns, trainChevrons, type OneWayEdge } from "./oneWayMarks";
 import { stationOutside } from "./stationSide";
+import { quadPairs } from "./quadPairs";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -56,6 +57,8 @@ export const F_TRAM = 4096;
 /** Single track splitting through a station (T-3212), and lines over it: its lanes widen the stroke
  * only as double track grows into two tracks, so zoomed out it stays single track's width. */
 export const F_SPLIT = 8192;
+/** T-3693: one pair of quad track (`quadPairs`), and lines over it: a selected or hovered halo shows four tracks. */
+export const F_QUAD = 16384;
 /** A tram line's `lineCars` is its sections plus this, so the car shader tells it from a train of as many cars
  * (readers of the count use `carsOf`). */
 export const TRAM_MARK = 0.5;
@@ -462,9 +465,9 @@ function linesOnEdges(s: ClockState) {
 
 /** `lane`: as `Strokes.lane`, 0 for single track (T-658), or per segment like `speed` (T-3134: the sim's
  * answer, `PreviewAnswer.lanes`); `hsr`: high-speed track's look (T-817) */
-export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane: number | ArrayLike<number> = 255, hsr = false, tram = false): Strokes {
+export function strokesFromPreview(pts: Float32Array, bad: boolean, speed?: Float32Array, placement = false, simMarks?: ArrayLike<number>, lane: number | ArrayLike<number> = 255, hsr = false, tram = false, quad = false): Strokes {
   const b = new StrokeBuilder();
-  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0) | (tram ? F_TRAM : 0);
+  const flags = F_BLUEPRINT | (bad ? F_BAD : 0) | (placement ? F_PLACEMENT : 0) | (hsr ? F_HSR : 0) | (tram ? F_TRAM : 0) | (quad ? F_QUAD : 0);
   // the points `from` to `to` with their lanes: each point takes its own segment's, the last its segment before
   const part = (from: number, to: number) => {
     const p = pts.subarray(from * 3, (to + 1) * 3);
@@ -1539,6 +1542,8 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
   const offEdge = new Set<number>(s.edges.filter((e) => e.off).map((e) => e.id));
   const hsrEdge = new Set<number>(s.edges.filter((e) => e.hsr).map((e) => e.id));
   const tramEdge = new Set<number>(s.edges.filter((e) => e.kind).map((e) => e.id));
+  const partOf = new Map(s.edges.map((e, i) => [e.id, r.edgeParts![i]]));
+  const quadEdge = new Set<number>(quadPairs(s.edges, (id) => partOf.get(id)).keys());
   /** edges whose polyline, ends and flags are as in the last build */
   const kept = new Set<number>();
   const edgesSeen: NetCache["edges"] = new Map();
@@ -1572,7 +1577,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     const given = r.edgeParts![i];
     const sg: ArrayLike<number> | undefined = r.edgeSpeedParts?.[i];
     builtEdge.set(e.id, e.built);
-    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0) | (e.tracks === 1 && splits.ends.has(e.id) ? F_SPLIT : 0);
+    const flags = (e.built ? 0 : F_BLUEPRINT | (e.off ? F_OFF : 0)) | (e.hsr ? F_HSR : 0) | (e.kind ? F_TRAM : 0) | (e.tracks === 1 && splits.ends.has(e.id) ? F_SPLIT : 0) | (quadEdge.has(e.id) ? F_QUAD : 0);
     if (flags & F_SPLIT) splitEdge.add(e.id);
     const lanes = (e.tracks === 2 ? 1 : 0) | (e.tracks === 2 && taperAt(e.a) ? 2 : 0) | (e.tracks === 2 && taperAt(e.b) ? 4 : 0);
     const split = e.tracks === 1 ? splits.ends.get(e.id) ?? null : null;
@@ -1685,7 +1690,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         const ends = edgeEnds.get(e);
         if (dr) {
           const served = k >= runStart && k < runEnd;
-          const flags = (l.running && served ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0);
+          const flags = (l.running && served ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0) | (quadEdge.has(e) ? F_QUAD : 0);
           // (-1 off the part its trains run: no riders' stretch there)
           const stretchOf = served ? Math.max(0, Math.min(stretch - stopStart, Math.max(0, l.stops.length - 2))) : -1;
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
@@ -1716,7 +1721,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           const e = p >> 1, dr = drawn.get(e), ends = edgeEnds.get(e);
           if (own.has(e)) backStroke[j] = own.get(e)!;
           else if (dr) {
-            const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0);
+            const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0) | (quadEdge.has(e) ? F_QUAD : 0);
             if (dr.lpts.length >= 6) backStroke[j] = lines.count;
             bd = lines.add(dr.lpts, l.id, e, flags, (p & 1) === 1, bd, Math.max(0, Math.min(last, last - back)), dr.lane);
           }

@@ -8,7 +8,8 @@ import type { ComponentChildren } from "preact";
 import { distUnit, kmhFromShown, kmhToShown, levelLabel, levelName, millions, speed } from "../game/format";
 import { linking } from "../game/links";
 import { moneyState } from "../game/money";
-import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn } from "../game/palette";
+import { CLICK_MODE_COLOURS, inkOn, LEVEL_COLOURS, legibleOn, MODE_HALO_COLOURS } from "../game/palette";
+import { buildMode } from "../game/buildMode";
 import { linesByNum, world } from "../game/world";
 import { CAR_M, stepPlatform } from "../game/boarding";
 import { carsText } from "./inspector/schedule";
@@ -27,6 +28,7 @@ export const clickMode = computed<ClickMode>(() => (linking.value !== null ? "pa
  * stops are edited, kept legible on the shade (`legibleOn`); the mode's fixed colour otherwise. */
 export function clickColour(mode: ClickMode): string {
   if (mode === "select") return "transparent";
+  if (mode === "track") return MODE_HALO_COLOURS[buildMode().mode]; // T-3693: the track type's colour
   const draft = lineDraft.value, w = world.value;
   if (mode === "line" && draft.line !== null && w) {
     const l = linesByNum(w).get(draft.line);

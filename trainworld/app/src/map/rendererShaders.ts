@@ -147,6 +147,14 @@ uniform int u_band_traffic;  // 1: the Traffic view's bands, each its riders' wi
 uniform float u_band_gap;    // T-2126: px of casing between bands side by side
 uniform float u_band_m;     // T-2132: px a metre of ground is drawn, for a band's metres to its ribbon's middle
 uniform int u_level_hide;   // T-3420: the levels not drawn, a bit each from level -3; a line not drawn has its colour's alpha 0
+// T-3693: the halo round the selected (u_only_sel 1) or hovered (2) strokes and the ghost, one ring a track
+// (single 1, double 2, quad 4), each u_halo_px.x wide and u_halo_px.y apart, in the mode's colour. A pass draws
+// ring u_halo.y (1 innermost) in the mode's colour (u_halo.x 1) or the gap inside it in the casing's (2); 0 off.
+// u_twin: the selected and hovered piece's other pair where it is quad track, lit with it
+uniform ivec2 u_halo;
+uniform vec2 u_halo_px;
+uniform ivec2 u_twin;
+uniform vec3 u_mode_rgb[3];  // regular, high speed, tram
 in vec4 a_seg;
 in uint a_colour;
 in uint a_edge;
@@ -204,7 +212,12 @@ void main() {
   // the middle is a line wide, so a line planned along it fills it and the rails show either side
   bool bpTrack = blueprint && !placement && u_kind == 0;
   bool swOff = (flags & 64) != 0;
-  if ((u_only_sel == 1 && !sel) || (u_casing > 0.0 && blueprint && !placement && !bpTrack) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  bool hotS = (u_kind == 1 && int(a_colour) == u_hot.x) || (u_kind == 0 && int(a_edge) == u_hot.y);
+  bool selH = sel || (u_kind == 0 && u_twin.x >= 0 && int(a_edge) == u_twin.x);
+  bool hotH = hotS || (u_kind == 0 && u_twin.y >= 0 && int(a_edge) == u_twin.y);
+  bool halo = u_halo.x > 0;
+  if ((u_only_sel == 1 && !(halo ? selH : sel)) || (u_only_sel == 2 && !(halo ? hotH : hotS))) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+  if ((u_casing > 0.0 && blueprint && !placement && !bpTrack && !halo) || (u_bp_part == 1 && blueprint) || (u_bp_part == 2 && !blueprint)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   // a line planned along blueprint fills the track's middle (T-331: narrower than a line now)
   bool bpLine = blueprint && !placement && u_kind == 1;
   // double track as its two tracks close in (T-658): first the stroke grows to the pair's width
@@ -292,6 +305,12 @@ void main() {
   if (ghost) {
     w = max(w, u_ghost_min.x);
     w = u_ghost_layer == 0 ? w + u_ghost_min.y : u_ghost_layer == 2 ? max(0.0, w - 2.0 * u_bp.y) : w;
+  }
+  if (halo) {
+    int nTracks = (lfm > 0.0 ? 2 : 1) * ((flags & 16384) != 0 ? 2 : 1); // network.ts F_QUAD
+    if (u_halo.y > nTracks) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+    float hr = u_halo_px.x, hg = u_halo_px.y, k = float(u_halo.y);
+    w += 2.0 * (u_halo.x == 1 ? k * (hr + hg) : k * (hr + hg) - hr);
   }
   // thinner than a pixel (zoomed far out, T-205): a pixel wide and fainter, rather than broken up
   float faint = clamp(w, 0.05, 1.0);
@@ -402,6 +421,16 @@ void main() {
   if (u_kind == 1 && a_full.x != 0.0 && u_casing <= 0.0 && !full) v_color = mix(v_color, vec3(0.0), ${FULL_DARKEN} * fs);
   // the band behind a line's two tracks, pale so they stand out on it
   if (u_lane_mode == 1 && u_casing <= 0.0) v_color = mix(v_color, u_casing_rgb, 0.6 * t);
+  if (halo) {
+    v_color = u_halo.x == 1 ? (hsr ? u_mode_rgb[1] : tram ? u_mode_rgb[2] : u_mode_rgb[0]) : u_casing_rgb;
+    v_alpha = faint * (along < 0.5 ? shown0 : shown1);
+    v_stripe = vec4(0.0);
+    v_stripe_only = 0.0;
+    v_wire_hw = 0.0;
+    v_inner = vec4(0.0);
+    v_aa = 0.0;
+    v_dash = 0.0;
+  }
 }`;
 
 // highp: v_cap is device px along the segment, past fp16's 65504 on a long straight zoomed in on a

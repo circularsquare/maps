@@ -165,7 +165,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
 
 [T-2284; `MapToolBar` in `ui/ToolBar.tsx`, `ui/ToolNotes.tsx`, `CLICK_MODE_COLOURS` in
 `game/palette.ts`; design notes/T-2267.md 3.7] Each click mode but plain selecting has its own
-colour: track `#0a819d`, station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
+colour: track `#0a819d` (regular; high speed `#5a5fc8`, tram `#c0603a`, `MODE_HALO_COLOURS`, T-3693), station `#8d71b1`, delete `#d63f73`, select tool `#9c7b31`, bus `#a09e2d`,
 ferry `#16716f`, line stops the edited line's own colour (kept legible on the shade, `legibleOn`; `#d777ed`
 while no line is picked yet), trip explorer `#268769`, station building `#a15b7b`, passage
 `#b0866a`, the same in both shades (chosen 11 or more CIEDE2000 from every colour the game draws).
@@ -181,6 +181,13 @@ while no line is picked yet), trip explorer `#268769`, station building `#a15b7b
   stop editing and station building tools' rows are their descriptors, the square before their words
   ("New bus line: 3 points" with Cancel and Make line, and so on). Esc places a new bus or ferry line of
   two points or more, as it ends a chain of track; on an edit of a built one it drops the edit (T-2924).
+- **Track type and count** [T-3693; `game/buildMode.ts`, `map/quadPairs.ts`, the stroke shader's `u_halo`]: the
+  track tool's aura and square take the track type's colour, and a mark above right of the pointer draws a
+  stroke a track (the count buttons' icons) in it. The ghost, and a selected or hovered line, piece of track
+  or bus line, get rings in that colour (bus lines the bus colour): one ring a track, 1.5 px each and 1.5 px
+  apart, per stroke, so a line shows two rings on double track and four where it runs on quad. Quad is found
+  by its drawn points (a parallel double edge about 8 m off, `F_QUAD` on its strokes and the lines over it); a
+  selected or hovered quad piece lights its other pair too.
 
 ## Building by touch
 
