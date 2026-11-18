@@ -143,7 +143,7 @@ export function actions(d) {
         const before = await state('counts');
         if (d.input === 'touch') await d.tap(s.x, s.y);
         else await d.move(s.x, s.y, { steps: 8 });
-        const ghost = await until(d, () => state('drawing'), (g) => g.settled && !['search', 'fit', 'preview'].includes(g.street), { timeout, what: 'the ghost' }).catch((e) => ({ error: e.message }));
+        const ghost = await until(d, () => state('drawing'), (g) => g.settled && !['search', 'fit', 'preview'].includes(g.street) && !['rest', 'search', 'fit', 'preview'].includes(g.real), { timeout, what: 'the ghost' }).catch((e) => ({ error: e.message }));
         await d.sleep(settleMs);
         const g = await state('drawing');
         if (probe) await probe(i);

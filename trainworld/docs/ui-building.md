@@ -595,7 +595,8 @@ switch on, the track tool follows the real network the layer draws.
   passenger track, with every tram line added for tram track. Each kind is its own family but rail and light
   rail (one for train track) and tram and light rail (one for tram track). For tram track the 60 degree turn
   rule takes each chain's heading 10 m in, not 30, as a 12-15 m junction curve running on into the cross street
-  reads as a sharper turn over 30 m. Snapped tram track is off-street
+  reads as a sharper turn over 30 m; the graph keeps tram track's shape to 0.5 m (other track to 3 m), as a corner
+  curve cut into 20 m chords reads as a turn over 60 degrees [T-3515]. Snapped tram track is off-street
   tram track, its corners fitted with tram curves ([track-and-service.md](track-and-service.md) "Tram track").
 
 - **The ring**: within 12 px of a drawn real line (the layer's own rendered features), the ring
@@ -606,7 +607,8 @@ switch on, the track tool follows the real network the layer draws.
   track asks the router worker for the route. It is the cheapest over the graph files
   (`packs/realgraph/<cc>.rgr`: the drawn track, and short undrawn track joining it at two points or
   more, at most 3 km a group, so a tunnel portal or station throat no line runs over leaves no gap
-  [T-816]), every chain within the snap radius (plus 20 m) a candidate at
+  [T-816]; tram sidings, diversions and spurs among it, not depot yards, so a city's tram links no line is
+  mapped over join up [T-3515]), every chain within the snap radius (plus 20 m) a candidate at
   either click, its distance from the click counted twice; where the two clicks' candidates share
   no family (one on the metro under a main-line station, the other on rail), each click also takes
   the other's family within 400 m [T-923]; no turn sharper than 60 degrees where

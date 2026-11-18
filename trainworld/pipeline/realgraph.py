@@ -12,12 +12,13 @@ build_tiles.py): every kind in KIND at rank 0 or 1, whether a line runs over it 
 T-3069). The track tool snaps only to these, each track type to the kinds it may follow
 (`app/src/game/realFollow.ts`). Short groups of other track that join drawn track at two points or
 more go in too, so a portal or station throat no line runs over does not cut the graph (T-816,
-`gap_fillers`); they are not drawn, so a click never starts on one.
+`gap_fillers`; tram sidings and diversions among them, T-3515); they are not drawn, so a click never starts
+on one.
 
 Writes `data/packs/realgraph/<cc>.rgr`, and `index.json` listing every region built there (the
 track tool tries to snap only inside those, T-913); gzip of the little-endian layout below; the app reads it
 with `game/realGraph.ts` and a production build copies it (vite.config.ts). Coordinates are
-degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker), chain ends kept.
+degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker; tram 0.5 m, T-3515), chain ends kept.
 
     "TWRG" u32 version=2, u32 junctions J, u32 chains C, u32 vertices V, u32 shared S
     i32[J] lon, i32[J] lat                      junctions (OSM nodes where chains meet or end)
@@ -53,6 +54,9 @@ OUT = HERE.parent / "data" / "packs" / "realgraph"
 # taking tram chains for rail
 VERSION = 2
 THIN_M = 3.0
+# T-3515: tram chains are thinned this finely; at 3 m a street corner's 15 m curve is one or two chords, so the
+# router's heading 10 m into a chain reads the corner as a turn of over 60 degrees and refuses it
+THIN_TRAM_M = 0.5
 # OSM railway=* to the graph's kind; `preserved` is heritage (noritetsu build_tiles.KIND)
 KIND = {"rail": 0, "light_rail": 1, "subway": 2, "tram": 3, "monorail": 4, "funicular": 5,
         "narrow_gauge": 6, "preserved": 7}
@@ -61,6 +65,9 @@ URBAN = {"light_rail", "subway", "tram", "monorail", "funicular"}
 # that goes in, km
 SPARE_USAGE = {"industrial", "military", "tourism", "test"}
 SPARE_KM = 3.0
+# T-3515: tram track of these services may fill a gap too: a city's tram links no line is mapped over (Zurich's
+# Bahnhofquai track while its stop is rebuilt) are tagged so; yards (depots) stay out
+SPARE_TRAM_SERVICE = {"siding", "diversion", "spur"}
 
 
 def rank_of(kind, tags):
@@ -253,7 +260,9 @@ def build(cc, boxes):
         elif not shown:
             shown = True  # track no line runs over is drawn in All, so it is snapped to (T-3495)
         # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
-        if not shown and (tags.get("service") not in (None, "crossover") or tags.get("usage") in SPARE_USAGE):
+        service = tags.get("service")
+        if not shown and ((service not in (None, "crossover") and not (rw == "tram" and service in SPARE_TRAM_SERVICE))
+                          or tags.get("usage") in SPARE_USAGE):
             continue
         pos = node_positions(cid, nodes)
         if pos is None:
@@ -285,7 +294,7 @@ def build(cc, boxes):
             la = lat_all[seg]
             x = lon_all[seg] * np.cos(np.radians(la)) * 111320.0
             y = la * 110950.0
-            seg = seg[thin(x, y, THIN_M)]
+            seg = seg[thin(x, y, THIN_TRAM_M if kind == KIND["tram"] else THIN_M)]
             ca.append(seg[0])
             cb.append(seg[-1])
             ck.append(kind)

@@ -122,7 +122,7 @@ export const STATE = {
   /** the track tool's state: a segment being placed, its start, whether the ghost asked for has landed, the street snap's phase */
   drawing: () => {
     const t = window.tw.tools;
-    return { placing: !!t.placing, start: t.start ? [t.start.lng, t.start.lat] : null, settled: t.wantKey === t.previewKey, preview: t.lastPreview ? { ok: t.lastPreview.ok, lengthM: t.lastPreview.lengthM ?? null, cost: t.lastPreview.cost ?? null } : null, street: t.street?.phase ?? null, pointer: t.pointer ? [t.pointer.lng, t.pointer.lat] : null };
+    return { placing: !!t.placing, start: t.start ? [t.start.lng, t.start.lat] : null, settled: t.wantKey === t.previewKey, preview: t.lastPreview ? { ok: t.lastPreview.ok, lengthM: t.lastPreview.lengthM ?? null, cost: t.lastPreview.cost ?? null } : null, street: t.street?.phase ?? null, real: t.real?.spot?.phase ?? null, pointer: t.pointer ? [t.pointer.lng, t.pointer.lat] : null };
   },
   /** demand: the view's version and whether it is final, the newest solve's version, a solve waiting (see lib.mjs demandFinal) */
   demand: () => {
