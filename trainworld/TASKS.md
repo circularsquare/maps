@@ -266,10 +266,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
   - Goal: Freight rail drawn under All can be snapped to by train track, abandoned too if you say so, about 2-3 h plus about 100 MB of graph files.
   - Other: notes/T-3495.md
-- T-3511 [P2] {L:region-redraws} Rebuild the enclave shifts and merges (taking, 2026-11-17, agent nightprep)
-  - Context: From T-3506: 127 enclave zones checked, 118 kept. To rebuild: Perth takes Rockingham, Kwinana, Mandurah and 11 Wheatbelt shires (rest renamed Bunbury); Sanliurfa takes Siverek, Hilvan, Bozova (ring renamed Nizip); Diyarbakir takes Cinar and Bismil; La Plata takes Magdalena, Punta Indio, Chascomus; Suchetgarh into Jammu; Yuhuan into Taizhou. The scan wants a rerun after T-3399's join (it read half-built Central America packs).
-  - Goal: Rerun the scan, then the five night stages D-H in notes/T-3506.md (about 8.5 h, Turkey folded into T-3488's rebuild if it hasn't run), each country's gates passing.
-  - Other: notes/T-3506.md
 - T-3501 [P2] {L:airports} {after:next world rebuild} Border airports lose ground trips in the build
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
@@ -330,10 +326,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
   - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
   - Other: notes/T-3395.md
-- T-3482 [P3] {L:timetables} New line on full track gets its trains minutes late (taking, 2026-11-18, agent settle)
-  - Context: Not the passage (2026-11-18): demand counts it every time, and a quick update and a reload of the same game agree (5,913 both). What swings is the test line's peak trains: 0 an hour in low runs, 2.35 in high ones, on capacity it shares with four Tokyo metro lines that stay at 15 or drop to 13.83; the shares moved minutes after the build with no edit, and the figure went from 5.9k to 30.4k. A fix would change how lines share full track on an edit, which is track work.
-  - Goal: A new line on track that other lines already fill gets its share of peak trains at the edit (Tokyo-Sendai: 2.35 an hour, not 0), and the shares don't move minutes later with no edit. Likely in settle_counts and fill (sim/src/track/world.rs, T-1787). Then check T-3483, which may be the same.
-  - Other: notes/T-3482.md
 - T-3483 [P3] {L:route-choice} Two real networks lower rail on Tokyo-Osaka
   - Context: Adding both real networks gives less rail than the line alone, with and without the T-3426 fix; guess: the 10-access-station cap pushes the terminal out of dense zones' sets (notes/T-3454.md). Also from feedsample: T-3426's London-Paris real figure was high, about 20k/day is closer.
   - Goal: Adding a real network never lowers rail on a pair, or the reason is written down.
@@ -463,6 +455,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: `stop_every_pass` adds a stop to line 150 on each load, costing one extra derive and settle.
   - Goal: realsave saves after `stop_every_pass`, so London loads without the fix-up.
   - Other: Reshipping London moves its settled rates. notes/T-3234.md.
+- T-3645 [P3] {L:trains-drawn} A train vanishes at a change of train count
+  - Context: Found by T-3482's agent: in `hand_over`, a train dwelling at its first stop is merged into the train waiting at that terminal, so one train disappears when a line's count changes. A repro and a candidate fix are in notes/T-3482.md (and the scratch file service.rs.fixed it names).
+  - Goal: Changing a line's train count never loses a running train; the trains on the map match the panel's count after the change.
+  - Other: notes/T-3482.md
 - T-3231 [P3] {L:trains-drawn} {after:T-3271} Two lines drawn over each other at a terminal
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.

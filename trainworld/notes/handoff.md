@@ -50,8 +50,16 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   reply text first). Untested: a loop with only an arc built, one-way track on the built part.
 - T-3482 retitled "New line on full track gets its trains minutes late" (not the passage: track shares re-settle
   minutes after an edit); agent settle (Opus, .tw-trees/settle, port 6191) on it; checker before landing.
-- Night run: batch 1 (T-3511) joined and shipped 12 zones by 06:55 UTC; batch 2 (T-3455 coastal, 17 countries) began
-  06:57 UTC with backup.py. Watch: background task bglwdb3jw prints when pid 39588 exits.
+- Night run: batch 1 (T-3511) joined and shipped 12 zones (T-3511 archived). Batch 2 (T-3455 coastal, 17
+  countries) stopped 09:09 UTC: 20 gated, 8 parked (shl chn ngt mdt klt joo kut: shapely TopologyException in
+  union_all; mop: 90-min step limit), no join. nightfix3 (Opus, main tree, claims 9 cores) fixing, rerunning the 8,
+  then joining; aims to finish by ~15:00 UTC. HOLD app/ writes and landings in the main tree while its gates run
+  (gates serve the main tree's app/). After its join: commit the game json (registry etc.), 8800 rebuild, T-3620,
+  T-3623, T-3604 and the pipeline Up next tasks can start.
+- settle (T-3482) built; checker check3482 (Sonnet, .tw-trees/settle, port 6191) running; landing waits for
+  nightfix3's gates. Changelog c014 is new text. Follow-ups from settle (unfiled): a running line's new headway
+  on full track keeps its old rate; a train can vanish in hand_over at a terminal (repro + candidate fix in
+  notes/T-3482.md in the tree); data/work/realnet/nyc_real.twt2 no longer loads.
 - 8800 builds tonight (3ce746f9, acfb779a, ff3a04cd) used plain snapbuild while the night run owned data/packs (my
   slip: orchestrator.md says frozen). 8800 = ff3a04cd on freeze 20261118-015639 (batch 1's), smoke PASSED. Known gap
   either way: the commit's registry still lists yhu and suc (the run merged them; its registry edits are uncommitted
