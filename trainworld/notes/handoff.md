@@ -22,9 +22,16 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
 ## In flight
 - DECISIONS.md uncommitted: T-3616 (secondedit), T-3627 (mine + carhover's, check for a duplicate), T-3634
   (multitrack). Commit with secondedit's landing.
-- secondedit (.tw-trees/secondedit, port 6191): T-3616 built, archived early. Checker check3616 (Sonnet) running;
-  then land (its tree's c002 item moves to main). Its idea for edits during the whole solve (gap = 1/7 of the solve,
-  latest start 60 s; ~2-3 h): file it after landing.
+- T-3616 LANDED b0ff2f51 (c007). Checker: Kaohsiung chain PASS (finals within 0.005%), T-1734 wait kept, NYC same;
+  undo/redo case differs 0.2-0.35% from the old path, inside the 0.27% load-to-load noise its notes record (not
+  settled; Japan-size case skipped). secondedit's idea for edits during the whole solve (gap = 1/7 of the solve,
+  latest start 60 s; ~2-3 h): not filed yet.
+- T-3589 LANDED a0434306 (graphics line in feedback reports, no server change).
+- panelshare (Sonnet, .tw-trees/panelshare, port 6197): T-3641.
+- T-3640 LANDED 7daba9ff (c008): the share's 8 MB header cap removed; over 2 MB says too big. No checker (a cap
+  removed in forShare, narrow); follow-ups filed as T-3642. Not on 8800 yet (after batch 2).
+- setremove (Sonnet, .tw-trees/setremove, port 6189): T-3638 Remove for a track set; proposes a c002 reword.
+- Batch 2 (T-3629, T-3632, T-3589, T-3616): 8800 rebuild at acfb779a + smoke running (batch2.ps1, ba94uc9sn).
 - T-3632 stage 2 LANDED 7d14a945 (checker PASS; c006; WASM rebuilt). New strings for her: marketTrip.noTrain "No
   train runs between the two ends this period.", marketTrip.noAlt "No road or flight joins these two places, so for
   now none of their trips go by transit." T-3632 stays open (wider goal).

@@ -183,9 +183,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Cause found (inferred, his layout is gone): a tram stop beside a train station is always its own station, and over 300 m away there's no change at all (450 m: walk 33 min then the train; 250 m or a passage: tram then train, 14 min).
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
   - Other: Not the cause of T-3295 (walk onto the same line). Notes: notes/T-3298.md
-- T-3641 [P3] {L:route-choice} Trip panel head and periods disagree on transit share (taking, 2026-11-18, agent panelshare)
-  - Context: Seen in T-3298's scene: the trip panel's head says Transit 100% (stops 250 m apart) or 0% (450 m) while its "Transit by period" rows say 73% and 28% in every period. Scene script: notes/T-3298-scene.mjs.
-  - Goal: The head and the period rows agree, or show plainly that they count different things.
 - T-3624 [P3] {L:wealth-split} School trips lean to transit
   - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess."
   - Goal: Trips to school weigh driving less than other purposes do (students mostly can't drive), if it's a small change to the purpose rules; a demand rule change, so docs/demand-worldwide.md says it.
@@ -306,7 +303,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room
   - Context: Seen in T-3636's screenshot: a trip by bus has a panel row "Waiting for a train with room".
   - Goal: The row names the bus (or boat, tram) the trip rides, as the ride hover already does.
-- T-3638 [P3] {L:rebuild-track} Remove a set of selected track
+- T-3638 [P3] {L:rebuild-track} Remove a set of selected track (taking, 2026-11-18, agent setremove)
   - Context: From T-3634 (shift+click builds a set of track pieces with one Rebuild). A set has no Remove, and the Delete key does nothing on it; touch has no way to build a set.
   - Goal: A set of track pieces can be removed in one go, as one piece can.
 - T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
@@ -602,10 +599,10 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3639 [P2] {L:accounts-server} Leaderboard score swings after v0.4 (taking, 2026-11-18, agent scoreswing)
   - Context: Your pad, 2026-11-18, a Discord report: "leaderboard position fluctuated from 450m to 550m and back. after updating to 0.4. thats weird, probably shouldtn be happening now that we take froecasted weekday? are the weekdays different?" T-3465 made every score the region's forecast weekday from the current solve.
   - Goal: Find why a score moves about 20% and back with no edit, and fix it if it's a bug; a player's score holds steady between edits.
-- T-3640 [P2] {L:community} Big network still can't be shared (taking, 2026-11-18, agent bigshare)
-  - Context: Swattik's feedback (1794943989-cc4cce06): "This network could not be sent" when sharing to the community and making a drawing of the network; still failing after T-3440 doubled the size caps (your pad, 2026-11-18: "still having issues"). T-3440's caps answer "too big", so this is another failure.
-  - Goal: Find what fails for his network and fix it, or name the server change it needs.
-  - Other: notes/T-3440.md
+- T-3642 [P3] {L:community} Long-played networks near the share limits
+  - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
+  - Goal: A network played for years still shares: the shared copy thins or packs the per-day ledgers (no server change), and the drawing finishes well inside the wait.
+  - Other: notes/T-3640.md
 - T-2586 [P3] {L:translations} Place names in the player's language
   - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata. Station names too: English for English speakers or non-local players (your idea 2026-11-09, T-2877); since T-3631 an English player still gets a CJK name where the data has no Latin one.
   - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists. A setting picks English or local station names.

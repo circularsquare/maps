@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c008",
+      "text": "fixed sharing a long-played network failing with \"could not be sent\"",
+      "edited": "fixed sharing a network you have played for a long time to the community failing",
+      "hidden": false,
+      "task": "T-3640",
+      "by": "bigshare",
+      "at": "2026-11-18T06:01:44Z",
+      "rev": 2,
+      "area": "community",
+      "fix": true,
+      "changed": "2026-11-18T06:01:56Z"
+    },
+    {
       "id": "c007",
       "text": "when you turn trains on or off on several lines a few seconds apart, each line's new riders show within seconds",
       "edited": null,
