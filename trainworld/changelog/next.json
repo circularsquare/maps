@@ -1,7 +1,19 @@
 {
   "release": "next",
-  "line": "update v0.4.2: bus and ferry schedules, less memory, track types by colour, plus fixes",
+  "line": "update v0.4.2: bus and ferry schedules, bug fixes",
   "items": [
+    {
+      "id": "c055",
+      "text": "the transfer fare can't be set higher than the base fare",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3689",
+      "by": "farecap",
+      "at": "2026-11-18T20:44:38Z",
+      "rev": 1,
+      "area": "fares",
+      "fix": false
+    },
     {
       "id": "c054",
       "text": "fixed normal games sometimes getting marked as sandbox when you opened another save or a community network",
@@ -96,16 +108,15 @@
     {
       "id": "c047",
       "text": "the game uses about 200 MB less memory",
-      "edited": null,
+      "edited": "the game uses about 150 MB less memory with intercity trips on, by loading trips between distant cities only when a panel needs them",
       "hidden": false,
       "task": "T-2136",
       "by": "corridor",
       "at": "2026-11-18T18:58:52Z",
-      "rev": 2,
+      "rev": 4,
       "area": "performance",
       "fix": false,
-      "highlight": true,
-      "changed": "2026-11-18T19:55:58Z"
+      "changed": "2026-11-18T20:28:33Z"
     },
     {
       "id": "c046",
@@ -115,11 +126,10 @@
       "task": "T-3693",
       "by": "modelook",
       "at": "2026-11-18T18:20:21Z",
-      "rev": 5,
+      "rev": 6,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-18T20:15:03Z",
-      "highlight": true
+      "changed": "2026-11-18T20:24:37Z"
     },
     {
       "id": "c045",
@@ -197,16 +207,16 @@
     {
       "id": "c039",
       "text": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed, and the comma and period keys slow down and speed up by one step",
-      "edited": "replaced the 1x, 4x and 16x buttons with slower and faster buttons around the speed; click the speed to pick one on a slider, and hold comma or period to keep slowing down or speeding up",
+      "edited": "replaced the 1x, 4x and 16x buttons with buttons to speed up and slow down time. hotkeys comma and period",
       "hidden": false,
       "task": "T-3653",
       "by": "timectl",
       "at": "2026-11-18T17:37:31Z",
-      "rev": 4,
+      "rev": 8,
       "area": "other",
       "fix": false,
       "highlight": true,
-      "changed": "2026-11-18T20:12:14Z"
+      "changed": "2026-11-18T20:24:22Z"
     },
     {
       "id": "c038",
@@ -225,14 +235,14 @@
       "id": "c037",
       "text": "fixed old copies of the clock piling up in the top bar",
       "edited": null,
-      "hidden": true,
+      "hidden": false,
       "task": "T-3635",
       "by": "clockdup",
       "at": "2026-11-18T17:27:03Z",
-      "rev": 3,
+      "rev": 4,
       "area": "other",
       "fix": true,
-      "changed": "2026-11-18T20:20:52Z"
+      "changed": "2026-11-18T20:26:26Z"
     },
     {
       "id": "c036",
@@ -280,11 +290,10 @@
       "task": "T-3652",
       "by": "newest",
       "at": "2026-11-18T16:58:32Z",
-      "rev": 2,
+      "rev": 3,
       "area": "community",
       "fix": false,
-      "highlight": true,
-      "changed": "2026-11-18T19:55:58Z"
+      "changed": "2026-11-18T20:24:35Z"
     },
     {
       "id": "c032",
@@ -392,14 +401,14 @@
       "id": "c024",
       "text": "added a settings gear, the language and submit feedback to the start menu's bottom line, and submit feedback to the failed to load screen",
       "edited": "added a settings gear, language and submit feedback at the bottom of the start menu, and submit feedback on the failed to load screen",
-      "hidden": false,
+      "hidden": true,
       "task": "T-3630",
       "by": "landing",
       "at": "2026-11-18T14:40:20Z",
-      "rev": 2,
+      "rev": 3,
       "area": "other",
       "fix": false,
-      "changed": "2026-11-18T14:40:43Z"
+      "changed": "2026-11-18T20:25:57Z"
     },
     {
       "id": "c023",
@@ -409,9 +418,11 @@
       "task": "T-3630",
       "by": "landing",
       "at": "2026-11-18T14:40:20Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T20:25:52Z"
     },
     {
       "id": "c022",
@@ -549,11 +560,10 @@
       "task": "T-3474",
       "by": "partline",
       "at": "2026-11-18T07:21:44Z",
-      "rev": 6,
+      "rev": 7,
       "area": "scheduling",
       "fix": false,
-      "highlight": true,
-      "changed": "2026-11-18T20:02:08Z"
+      "changed": "2026-11-18T20:24:30Z"
     },
     {
       "id": "c011",
@@ -678,11 +688,10 @@
       "task": "T-3634",
       "by": "multitrack",
       "at": "2026-11-18T05:12:33Z",
-      "rev": 3,
+      "rev": 4,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-18T19:55:58Z",
-      "highlight": true
+      "changed": "2026-11-18T20:24:32Z"
     },
     {
       "id": "c001",

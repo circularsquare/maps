@@ -167,10 +167,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3689 [P1] {L:fares} Transfer fare at the cap still pays (taking, 2026-11-18, agent farecap)
-  - Context: You, 2026-11-18: "yeah can cap transfer are at base fare and let trips start with walk, can juts do cap first if the other half is harder / less important." Stage 1 (this task): the transfer fare is held to at most the base fare, for v0.4.2. Stage 2 is T-3718.
-  - Goal: No transfer fare above the base fare can be set or loaded.
-  - Other: notes/T-3689.md
+- T-3724 [P2] {L:route-choice} No transit route shown though a line joins the places (taking, 2026-11-18, agent railnone)
+  - Context: You, 2026-11-18: "have we looked into why case 3 happens so often in cases where people do have routes connecting the endpoints? it is one of the most common complaints". T-3632 stage 1 rebuilt the two reported scenes (New York to Philadelphia, Milan to Bologna) and could not reproduce on 11-18 code, with one demand worker; the message also shows when a demand worker holds no part of the market on its network.
+  - Goal: The cause found on players' own saves or a faithful rebuild with several workers, and fixed so a joined pair shows its route.
+  - Other: notes/T-3632.md, artifacts/trainworld/review/t3723-no-route.md case 3
 - T-3718 [P2] {L:route-choice} Trips can start with a walk to a station
   - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
   - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.
@@ -375,18 +375,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3722 [P2] {L:small-fixes} Exit to main menu sometimes missing (taking, 2026-11-18, agent exitmenu)
   - Context: You, 2026-11-18: "sometimes on 8800 i dont see the "exit to main menu" button on saved games. seems kinda random when this is the case."
   - Goal: Cause found; the button shows on every saved game.
-- T-3723 [P1] {L:route-choice} Review sheet of every no transit route message (taking, 2026-11-18, agent noroute)
-  - Context: You, 2026-11-18, on c006 ("the intercity trip panel says why there is no transit route"): "a common complaint is that people say theres no transit route and the message is misleading soi wanna look at each of these cases mysefl". T-3632 stage 2 added noTrain and noAlt beside the older noRail, noRoad and noStation.
-  - Goal: One page for you: each message as shown, when it appears, and a screenshot of a real case; then your edits.
-  - Other: notes/T-3632.md
 - T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch
   - Context: From T-3687 (possible, not reproduced): a new game in the reused `autosave` slot could inherit a deleted sandbox game's id and so its latch, keeping it off the leaderboards.
   - Goal: Reproduced or ruled out; a new game never carries an old game's id.
   - Other: notes/T-3687.md
-- T-3719 [P2] {L:timetables} Switching to sandbox lowers some lines' train counts (taking, 2026-11-18, agent sandcount)
-  - Context: Seen by T-3703's checker on the real NYC save: switching to sandbox mode alone lowered three rail lines' weekday counts (line 7 from 23 to 17, S 3 to 2, L 23 to 19), before any other edit. Not compared with master; reach unknown.
-  - Goal: Cause found; switching mode leaves every line's counts as they were, or the reason it shouldn't is written down.
-  - Other: notes/T-3703.md
 - T-3695 [P3] {L:map-look} Travel by mode overview
   - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
   - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.

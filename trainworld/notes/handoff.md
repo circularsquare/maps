@@ -24,8 +24,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - nohalo (Opus) T-3714, P1 for v0.4.2: no halos on the map, count icons in the placing tag, no cursor icon,
      "Quad"; rewords c046. If late, ship the removals only.
    - searchx (Sonnet) T-3715 (search clear button visible when typed in) + T-3716 (Newest tab second).
-   - farecap (Sonnet) T-3689 stage 1: transfer fare capped at the base fare (her yes 20:05 UTC), for v0.4.2;
-     money, so a checker before landing. Stage 2 T-3718 (trips start with a walk; her yes) after the release, Opus.
+   - farecap T-3689 done in tree farecap (archived); checker capchk running; land for v0.4.2. Hover changed:
+     "Paid each time a trip changes lines." -> "... At most the base fare." farecap killed profitpts' Vite on 6182
+     by mistake and restarted one there (PID 32480, profitpts tree); if profitpts reports errors, that's why.
+   - Her board edits 20:30 UTC: line "update v0.4.2: bus and ferry schedules, bug fixes"; c047 reworded to my fix of
+     her wording (150 MB, "with intercity trips on", not "large saves": the table was world-wide on any save).
+     T-3723 closed; then she reworded 3 intercity no-route messages (done by me in en.json, uncommitted:
+     noRail other, noTrain, noAlt). railnone (Opus) T-3724: why "no route" shows on joined pairs (top complaint). Order now: land farecap, one translation batch after changelog publish (all new
+     and stale keys plus updates.v042*), snap8800, smoke8800, deploy on her yes. Stage 2 T-3718 (trips start with a walk; her yes) after the release, Opus.
    - sandboxfix T-3687 done in tree sandboxfix (score send during a load latched the old game); checker sandchk
      running; filed T-3720. timekeys T-3717 landed 07fac734 (empty locked folder .tw-trees/timekeys left). searchx landed 35275e92 (T-3715; T-3716 needed nothing: Newest is already second).
    - oneway (Opus) T-3711: shift-click a stop to make it one way; reports options if blocked.
