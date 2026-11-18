@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3628 [P1] {L:feedback} Tokyo and Kansai fail to load on iPad (2026-11-17): Diagnosis (zone and ground failure reasons in the feedback report) and a retry on tab return or online added; cause of the WebKit download failures still unknown, next report will name the file. notes/T-3628.md.
+- T-3616 [P3] {L:solve-speed} A second edit waits for the first one's whole solve (2026-11-17): an edit made during a quick local solve goes at its local result instead of waiting for the whole solve (within 60 s of the first edit since a whole solve started; T-1734's hold kept past that); Kaohsiung edits 4-10 s apart showed in 4-15 s on busy cores, finals within 0.006% of a load solve. notes/T-3616.md.
 - T-3626 [P2] {L:feedback} Feedback stops asking for an email (2026-11-17): Email box removed from the feedback form, its i18n keys dropped, privacy page updated; server untouched.
 - T-3618 [P4] {L:single-track} Split still marked when the straight single was drawn first (2026-11-17): closed without code: her word 11-18: still seen on 8800 but drawing it differently clears it, 'people can figure it out', the full track rework (T-3444) covers it.
 - T-3621 [P2] {L:new-countries} Cairo scores as a hard start (2026-11-17): Cairo's centre had landed on a desert area's box centre 37 km east (the real Cairo node sits just outside the pack footprint); centre() now skips a name match whose 10 km circle holds under half the registry centre's people; Cairo 439 hard -> 38,139 easy, no other start's centre moved. notes/T-3621.md.
