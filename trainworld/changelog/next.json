@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c050",
+      "text": "fixed bus and ferry lines not updating their headway, trips and profit when you change their buses, boats or headway",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3704",
+      "by": "busfix",
+      "at": "2026-11-18T19:21:11Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
       "id": "c049",
       "text": "games played with a mod, or on a copy of the game hosted somewhere else, stay off the leaderboards",
       "edited": null,

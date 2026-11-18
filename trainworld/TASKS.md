@@ -167,7 +167,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3689 [P2] {L:fares} Transfer fare at the cap still pays
+- T-3689 [P2] {L:fares} Transfer fare at the cap still pays (taking, 2026-11-18, agent xferfare)
   - Context: Your old TODO: "people can do money exploit by setting transfer fare to 1000 dollars? apparently people make a lot of money this way". T-3303 caps fares and the transfer fare at US$1,000 (DECISIONS 2026-11-12), which is the exploit's own figure, so the cap doesn't stop it. You, 2026-11-18: file it.
   - Goal: The cause found (which riders keep paying a huge transfer fare and why demand doesn't drop them); a proposal to you if the fix changes fare rules or numbers.
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
@@ -361,10 +361,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.
-- T-2136 [P2] {L:memory} World corridor table is 118 MB (taking, 2026-11-18, agent corridor)
-  - Context: The page holds a 5.9M-row world corridor table, 118 MB on the real save, growing with the square of the places.
-  - Goal: The page keeps no full table; it asks a market's worker for a place's rows.
-  - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
 - T-3695 [P3] {L:map-look} Travel by mode overview
@@ -803,14 +799,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3703 [P2] {L:buses} Schedules for buses and ferries like trains
+- T-3703 [P2] {L:buses} Schedules for buses and ferries like trains (taking, 2026-11-18, agent busched)
   - Context: You, 2026-11-18: "some ppl on discord are complaining about schedule feature not being enabled for buses / ferries also. we should get that working. we can leave out the marey diagram / timetable part for now if thats harder to add but yeah want to bring buses and ferries to be more consistent with trains. not necessarily super high prio but would be nice to get out in next few updates". Then: the Discord fleet complaints (T-3704) and this both count: "both whats pictured and what i mentioned should be things we try to get consistent".
   - Goal: Bus and ferry lines get the train lines' schedule controls (periods, weekend, headway steps), the timetable chart optional; a list of what differs goes in the notes first.
-- T-3700 [P2] {L:single-track} Way back skips the other one-way leg's station
-  - Context: Found by T-3101's checks 2026-11-18: t3348-perdir fails on master. A West to East line over a station split into two one-way legs gets stops [0,4,3] and no back stops, so the way back doesn't stop at the north leg (riders 8623 north, 0 south). Possibly from T-3651's side-platform change (72793e68, today) or T-3647; sideplat2 (T-3672) is in the same code.
-  - Goal: The way back stops at the other leg's station again and t3348-perdir passes; checked after T-3672 lands.
-  - Other: notes/T-3348.md
-- T-3690 [P2] {L:station-placement} Too close to the end of a piece of track
+- T-3690 [P2] {L:station-placement} Too close to the end of a piece of track (taking, 2026-11-18, agent endgap)
   - Context: Your old TODO: "what exactly is "too close to end of track" placement error supposed to accomplish? seems like its frustrating a lot of people". The refusal is `issues.splitPoint` ("Stations, junctions and branches need 5 m of track on each side"); T-2268 covers ramps. You, 2026-11-18: file it.
   - Goal: The reason for the 5 m found; then the refusal relaxed, or the click slid to the nearest spot that works, so players rarely see it; refusals counted before and after on a fixture.
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
@@ -949,6 +941,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
   - Other: notes/T-3446.md
+- T-3709 [P3] {L:checks} Tram split check joins the wrong track
+  - Context: t3537-tram-split fails one item on master ("a single turning off at the first corner joins the left track": the ghost joins the right one), seen by T-3647, T-3672 and T-3700. Not yet known whether the game or the check is wrong.
+  - Goal: The cause found; the drawing join fixed if players would meet it, else the check updated, and t3537 passes.
+  - Other: notes/T-3700.md
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
   - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.

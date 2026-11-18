@@ -1,29 +1,27 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a3a433e6-4dfe-47ce-ad1a-12e81c692557, name maps-56, since 2026-11-18 16:08 UTC
-Updated: 2026-11-18 19:20 UTC (maps-56 past 500k, starting its successor)
+Orchestrator: session 49d5e3c4-3205-457a-b910-06fb8268277a, name maps-76, since 2026-11-18 19:20 UTC
+Updated: 2026-11-18 19:20 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
 1. Running (reports reach you through the inbox; act on each, then land):
-   - corrmerge (Opus) in tree corridor: finishing a rebase of T-2136 (corridor memory) onto T-3509 (trips within);
-     T-3509's within figures and `marketIn` must read the book, not the removed table. When it reports clean, land
-     corridor (`agent-tree.mjs finish corridor ... --task T-2136`; changelog c047 already moved, don't move again;
-     WASM rebuild, run it in the background).
-   - buscheck: checker on T-3704 (bus/ferry fleet edits don't recalculate; one-line settle-scope fix in tree busfix,
-     task already archived). On PASS land busfix (WASM rebuild), then start T-3703 (buses and ferries get trains'
-     schedule controls; notes/T-3704.md has what differs; Marey optional; her words in TASKS).
+   - Landed by maps-76: busfix T-3704 (ec6c5602), wayback T-3700 (f087e6d2, stale check only; filed T-3709 for
+     t3537-tram-split), corridor T-2136 (79a75030). Smoke on master running 19:45 UTC; then snap8800 and push.
+   - busched (Opus) T-3703 in tree busched: buses and ferries get trains' schedule controls (bus fix T-3704 landed
+     ec6c5602, c050).
+   - wayback (Opus) T-3700 in tree wayback; endgap (Opus) T-3690 in tree endgap; xferfare (Opus) T-3689,
+     investigation in the main tree, notes only, proposal goes to her. Started 19:25 UTC.
    - profitpts (Opus) T-3657: measures cost recovery first; stops and reports if honest networks lose >20% points,
      else builds her rule (points per leg x min(1, line fare income / running cost)). Checker before landing.
    - sandboxfix (Opus) T-3687: normal games treated as sandbox (lead: v0.4.1 takes any 403 on the score route as the
      sandbox latch). Server fixes commit in shonei-server, not deployed. Checker if it touches saves.
 2. After those land: one smoke on master, then snap8800 (8800 = 07cc78bd; since then landed modelook T-3693 look C,
    firefox T-3705, modmark T-3707, and whatever lands next).
-3. Up next (start as files free): T-3703, T-3690 (too close to end of track), T-3689 (transfer fare exploit,
-   investigate then proposal), T-2880, T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598,
-   T-3461. T-3700 (one-way leg back stops; t3348 fails on master, not fixed by T-3672) is open, P2.
+3. Up next (start as files free): T-3703, T-2880 (after corridor lands: market code), T-3495, T-2054, T-2901,
+   T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461.
 4. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC).
 
 ## Server deploy waiting (her word; she said "no rush")
