@@ -857,7 +857,7 @@ export type FromClock =
   /** `index.bin`: which blocks have a file */
   | { kind: "terrainIndex"; bytes: ArrayBuffer }
   /** T-2613: terrain grids and water masks on their way, and those whose last fetch failed */
-  | { kind: "ground"; pending: number; failed: number }
+  | { kind: "ground"; pending: number; failed: number; why: string[] }
   /** T-1929: road tiles just put in the track model: a preview asked before them is out of date */
   | { kind: "roads" }
   /** T-729: the opened zones of the game in hand, sent before its snapshot; null for a save from

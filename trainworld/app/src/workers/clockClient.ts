@@ -576,6 +576,8 @@ export class ClockClient {
   /** T-3313: when the last hour of trips came, and the worker's last error, for a feedback report */
   private tripsAt = NaN;
   private lastTrouble = "";
+  /** T-3628: the ground downloads (masks, terrain) that failed, with their errors, at most 5 */
+  private groundWhy: string[] = [];
   /** T-3313: one line for a feedback report: the oldest unanswered edit or read and its age, how many wait
    * behind it, the last trips' age, the last error (seconds) */
   diagnosis(): string {
@@ -584,6 +586,7 @@ export class ClockClient {
       first ? `oldest unanswered ${first.what} ${Math.round((now - first.at) / 1000)}s, ${this.sent.size} waiting` : "nothing unanswered", // i18n-ignore
       `trips ${Number.isNaN(this.tripsAt) ? "none yet" : Math.round((now - this.tripsAt) / 1000) + "s ago"}`, // i18n-ignore
       `status ${clockWorkerStatus.peek()}`,
+      this.groundWhy.length ? `ground failed ${this.groundWhy.join(", ")}` : "", // i18n-ignore
       this.lastTrouble ? `last error ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
     ].filter(Boolean).join("; ");
   }
@@ -1182,6 +1185,7 @@ export class ClockClient {
         break;
       case "ground":
         groundNet.value = { pending: msg.pending, failed: msg.failed };
+        this.groundWhy = msg.why;
         break;
       case "roads":
         for (const f of roadsListeners) f();

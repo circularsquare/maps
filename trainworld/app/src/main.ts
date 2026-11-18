@@ -114,8 +114,8 @@ import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/Start
 import { viewStart } from "./ui/locate";
 import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
-import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead } from "./workers/clockClient";
-import { demandStuckSince, netAhead, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onStationsAhead, retryGround } from "./workers/clockClient";
+import { demandStuckSince, netAhead, retryPackDownloads, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
@@ -309,6 +309,10 @@ startOpenFit(); // T-895
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
 setClockDiagnosis(() => client.diagnosis()); // T-3313: for feedback reports
+// T-3628: a download that failed while the tab was in the background or offline (iOS suspends fetches) is tried again once on return
+const retryDownloads = () => { retryPackDownloads(); retryGround(); };
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") retryDownloads(); });
+window.addEventListener("online", retryDownloads);
 watchFigures(() => client.unansweredSince(), demandStuckSince); // T-3314
 // T-895, T-1196: a game opened from the saves panel (the page reloaded into it) fits its network
 if (urlChoice?.slot || (urlChoice?.pending && !urlChoice.game)) client.fitNextGame();

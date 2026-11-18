@@ -1632,6 +1632,7 @@ class DemandClient {
       open.length ? `downloading ${open.slice(0, 6).join(", ")}` : "",
       `workers ${this.workers.length}, replaced ${this.respawns}`, // i18n-ignore
       this.lastTrouble ? `last trouble ${this.lastTrouble.slice(0, 200)}` : "", // i18n-ignore
+      this.failWhy.size ? `zones failed ${[...this.failWhy].slice(0, 4).map(([z, w]) => `${z}: ${w.slice(0, 100)}`).join(" | ")}` : "", // i18n-ignore
     ];
     return parts.filter(Boolean).join("; ");
   }
@@ -1846,6 +1847,7 @@ class DemandClient {
     const failures = new Map(zoneFailures.peek());
     failures.set(zone, t("demandClient.zoneFailed", { why, retry }));
     zoneFailures.value = failures;
+    this.failWhy.set(zone, why);
     this.ensure();
     // a game load's hold may have been waiting for this zone alone
     this.checkHold();
@@ -1885,6 +1887,23 @@ class DemandClient {
     const failures = new Map(zoneFailures.peek());
     failures.delete(zone);
     zoneFailures.value = failures;
+    this.failWhy.delete(zone);
+  }
+
+  /** T-3628: each flagged zone's raw reason, for a feedback report */
+  private failWhy = new Map<CityId, string>();
+
+  /** T-3628: the page came back to the foreground or the browser went online: every pack waiting out its
+   * retry delay is tried now, once. One already downloading is not in `broken`, so it is left alone. */
+  retryBroken() {
+    let any = false;
+    for (const [item, b] of this.broken) {
+      if (!b.timer) continue; // a pack that would not open twice is final
+      clearTimeout(b.timer);
+      this.broken.delete(item);
+      any = true;
+    }
+    if (any) this.ensure();
   }
 
   /** `ids` without the zones whose pack is waiting to be tried again. */
@@ -5296,4 +5315,9 @@ export function netAhead(key: string) {
 /** Hand the clock worker's NetworkSnapshot to the pool (from clockClient's onNetworkSnapshot). */
 export function submitNetwork(snap: NetworkSnapshot) {
   if (!TEST) client?.submitNetwork(snap);
+}
+
+/** T-3628: try the packs that failed to download again now (the tab came back, the browser went online). */
+export function retryPackDownloads() {
+  client?.retryBroken();
 }

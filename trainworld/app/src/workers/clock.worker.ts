@@ -1275,7 +1275,7 @@ let groundWait = 0;
 function watchGround(key: string, p: Promise<unknown>) {
   groundPending.add(key);
   sendGround();
-  void p.then(() => { groundFailed.delete(key); }, () => { groundFailed.add(key); }).then(() => {
+  void p.then(() => { groundFailed.delete(key); groundWhy.delete(key); }, (err) => { groundFailed.add(key); groundWhy.set(key, String(err)); }).then(() => {
     groundPending.delete(key);
     if (groundFailed.size) retryGroundLater();
     else groundWait = 0;
@@ -1283,11 +1283,15 @@ function watchGround(key: string, p: Promise<unknown>) {
   });
 }
 
+/** the error text of each failed key, for a feedback report */
+const groundWhy = new Map<string, string>();
+
 function sendGround() {
-  const k = `${groundPending.size} ${groundFailed.size}`;
+  const why = [...groundFailed].slice(0, 5).map((k) => `${k} ${(groundWhy.get(k) ?? "bad file").slice(0, 80)}`);
+  const k = `${groundPending.size} ${groundFailed.size} ${why.join("|")}`;
   if (k === groundSent) return;
   groundSent = k;
-  send({ kind: "ground", pending: groundPending.size, failed: groundFailed.size });
+  send({ kind: "ground", pending: groundPending.size, failed: groundFailed.size, why });
 }
 
 /** T-3479: the status tag clicked: what failed is fetched again now, and the wait before the next try starts over */
