@@ -13,7 +13,7 @@ pub(super) fn split(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)
     if closed(stops) || !stops.iter().any(|&s| net.leg_heading(s).is_some()) {
         return None;
     }
-    let (legs, skel): (Vec<u32>, Vec<u32>) = stops.iter().partition(|&&s| net.leg_stop(s, stops));
+    let (legs, skel): (Vec<u32>, Vec<u32>) = stops.iter().partition(|&&s| net.leg_stop(s));
     (!legs.is_empty()).then_some((skel, legs))
 }
 
@@ -116,9 +116,8 @@ pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMem
     if old.contains(&station) || closed(old) || !old.iter().chain(std::iter::once(&station)).any(|&s| net.leg_heading(s).is_some()) {
         return None;
     }
-    let all: Vec<u32> = old.iter().copied().chain(std::iter::once(station)).collect();
-    let (mut legs, skel): (Vec<u32>, Vec<u32>) = old.iter().partition(|&&s| net.leg_stop(s, &all));
-    let skel = if net.leg_stop(station, &all) {
+    let (mut legs, skel): (Vec<u32>, Vec<u32>) = old.iter().partition(|&&s| net.leg_stop(s));
+    let skel = if net.leg_stop(station) {
         legs.push(station);
         skel
     } else {

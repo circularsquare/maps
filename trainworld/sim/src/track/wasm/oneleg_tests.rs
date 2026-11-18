@@ -177,38 +177,44 @@ fn t3565_far_legs_each_served_one_way() {
     }
 }
 
-/// Anita (2026-11-17): a one-way station pairs with the other leg's only when their platforms are
-/// within about 50 m. Paired (40 m apart), one of them alone is one stop served each way at its
-/// own platform (T-3348); both are each served once. 70 m apart, one alone is served once.
+/// T-3605 (Anita 2026-11-17): stations side by side on the two legs (40 m apart) are two one-way
+/// stops, never a pair. One click adds the station clicked, served one way; both clicked, each is;
+/// either taken out again (by a map click, `set_stops` less it, or the panel's `drop_stop`), the
+/// other is left a half dot served by its own run only, and no train stops at the one taken out.
 #[test]
-fn t3565_pair_only_side_by_side() {
+fn t3605_side_by_side_stations_are_stops_of_their_own() {
     for right_hand in [true, false] {
-        let (mut a, [p, q, n, s]) = pair(right_hand, 20.0);
-        let l = new_line(&mut a, &[p, q]);
-        assert_eq!(a.add_stop(l, n), 0, "{}", a.issues());
-        assert_eq!(a.w.net.line_stops(l).len(), 3);
-        let ls = &a.w.svc.lines[l as usize];
-        let at = [ls.stop_node(0, 1).unwrap(), ls.stop_node(1, 1).unwrap()];
-        assert!(at.contains(&n) && at.contains(&s) && ls.runs.iter().all(|r| !r.pass.contains(&true)), "right hand {right_hand}: paired, each way at its own, {at:?}");
-        // the other way's station goes only with the line's stop, as a listed stop does (T-3348)
-        let other = if a.w.net.line_stops(l)[1] == n { s } else { n };
-        assert_ne!(a.remove_station(other), 0, "right hand {right_hand}: the way back's station is in use");
-        let first = a.w.net.line_stops(l)[1];
-        assert_eq!(a.add_stop(l, if first == n { s } else { n }), 0, "{}", a.issues());
-        assert_eq!(a.w.net.line_stops(l).len(), 4);
-        assert_served_once(&a, l, &[n, s], &format!("right hand {right_hand}, both of a pair"));
-
-        let (mut a, [p, q, n, s]) = pair(right_hand, 35.0);
-        for one in [n, s] {
-            let l = new_line(&mut a, &[p, q]);
-            assert_eq!(a.add_stop(l, one), 0, "{}", a.issues());
-            assert_eq!(a.w.net.line_stops(l), &[p, one, q][..], "right hand {right_hand}: the station clicked");
-            assert_served_once(&a, l, &[one], &format!("right hand {right_hand}, 70 m apart, one listed"));
-            assert_eq!(a.remove_line(l), 0, "{}", a.issues());
+        for (out, keep) in [(0usize, 1usize), (1, 0)] {
+            for by_drop in [false, true] {
+                let (mut a, [p, q, n, s]) = pair(right_hand, 20.0);
+                let what = format!("right hand {right_hand}, out {out}, drop {by_drop}");
+                let side = [n, s];
+                let l = new_line(&mut a, &[p, q]);
+                assert_eq!(a.add_stop(l, side[out]), 0, "{}", a.issues());
+                assert_eq!(a.w.net.line_stops(l), &[p, side[out], q][..], "{what}: the station clicked, alone");
+                assert_served_once(&a, l, &[side[out]], &format!("{what}, one clicked"));
+                assert!(a.line_back_stops(l).is_empty(), "{what}: no way-back station stands in");
+                assert_eq!(a.add_stop(l, side[keep]), 0, "{}", a.issues());
+                assert_served_once(&a, l, &[n, s], &format!("{what}, both"));
+                let first = a.w.net.line_stops(l)[0];
+                if by_drop {
+                    let i = a.w.net.line_stops(l).iter().position(|&x| x == side[out]).unwrap();
+                    assert_eq!(a.drop_stop(l, i as u32), 0, "{}", a.issues());
+                } else {
+                    let less: Vec<u32> = a.w.net.line_stops(l).iter().copied().filter(|&x| x != side[out]).collect();
+                    assert_eq!(a.set_stops(l, &less), 0, "{}", a.issues());
+                }
+                assert_eq!(a.w.net.line_stops(l).len(), 3, "{what}: {:?}", a.w.net.line_stops(l));
+                assert_eq!((a.w.net.line_stops(l)[0], a.w.net.line_stops(l)[1]), (first, side[keep]), "{what}: the other side stays, the line's way round too");
+                assert_served_once(&a, l, &[side[keep]], &format!("{what}, one taken out"));
+                assert!(a.line_back_stops(l).is_empty(), "{what}: no way-back station stands in");
+                let ls = &a.w.svc.lines[l as usize];
+                assert!(ls.runs.iter().all(|r| r.stop_idx.iter().enumerate().all(|(j, &k)| r.passes(j) || r.nodes[k as usize] != side[out])), "{what}: no run stops at the one taken out");
+                assert!(a.station_departures(l, side[out], 0.0, 2.0 * 86400.0).is_empty(), "{what}: no departures there");
+            }
         }
     }
 }
-
 /// Anita (2026-11-17): any number of stations on a leg, none on the other allowed. Three on the
 /// north leg and one on the south, then three and none: every click order the same line.
 #[test]

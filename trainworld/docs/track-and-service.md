@@ -1044,10 +1044,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in
   `sim/src/track/wasm/lines.rs`), so taking out a loop's only middle stop leaves a one-stop line.
 - **Per-direction stops** (T-3348 stage 1, notes/T-3348.md; `track/perdir.rs`): a line stops at a station, and
-  each run stops at the platform on its own track. Where a stop between the ends serves one way only (on one-way
-  single track, or a one-track station) and a run goes the other way, that run stops instead at the nearest
-  station of the stop's complex, else within 300 m (the walk riders change on; for a one-way station, below, only
-  one within 50 m, complex or not), whose platform its trains pass on
+  each run stops at the platform on its own track. Where a stop between the ends serves one way only (a one-track
+  station on double track; a one-way station, below, never stands for another) and a run goes the other way, that run stops instead at the nearest
+  station of the stop's complex, else within 300 m (the walk riders change on), whose platform its trains pass on
   their own track running roughly its way (within 60 degrees), not already a stop of the line (`way_stops`). The
   line still lists one stop; its return run goes round by the other station (`back_run_of`, which the T-3094 way
   back now is); ends and stops where trains turn back keep their own. Run 0 takes another station only where its
@@ -1055,9 +1054,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   edit, `back_lines`). Capacity, boarding, money and the stop ways read each run's own stations; a stop served
   both ways this way has no half dot. A click adding a station that serves one way (`best_slot`) also tries the
   others of its group that do, and keeps the one whose route costs least (the clicked one on a tie), so a click on
-  either leg of a split adds the one the line runs out along. So a double split into two one-way singles with a
-  station on each, platforms within 50 m, is one stop, each way on its own leg (farther apart, each is a one-way
-  station, below). Demand follows: the snapshot
+  either leg of a split adds the one the line runs out along. Demand follows: the snapshot
   gives a line's return-run stations where they differ (`backStops`, `TrackApi::line_back_stops`), demand's
   return-run route node stands at that station (`demand::Network::back_stops`, `set_back_stops`), so its riders
   board and alight there and it counts as the line's station for access; the figures credit each run's riders
@@ -1076,10 +1073,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   those past the skeleton's ends go in where they cost least, the skeleton tried both ways round. So the same
   stations make the same line whatever order they were clicked in, up to its direction. Every stop edit (click, set,
   drop, end, sort, a passed station stopped at) and every line of a loaded save go through it; a line ordered by hand
-  (T-2895) keeps the player's order and is still served once at each. A one-way station pairs with one on the other
-  leg only when their platforms are within 50 m (Anita, 2026-11-17): a lone listed one with an unlisted pair is one
-  stop served each way at its own platform (per-direction stops, above); listed together, each is a one-way station.
-  Any number may sit on a leg, none on the other included. Half dots and the departures board show each one way.
+  (T-2895) keeps the player's order and is still served once at each. A one-way station is never paired with one on the
+  other leg, however close (T-3605, Anita 2026-11-17): it is a stop of its own (no way_group), so the stop list and
+  its half dot say where trains stop, and taking one of two side by side out leaves the other served one way. Any
+  number may sit on a leg, none on the other included. Half dots and the departures board show each one way.
 
 #### Line groups
 
