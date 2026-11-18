@@ -113,6 +113,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
+- T-3621 [P2] {L:new-countries} Cairo scores as a hard start (taking, 2026-11-17, agent cairo)
+  - Context: From T-3619's fresh tier run: Cairo scores 439 trip legs a km² (hard) where Casablanca has 18,563 and Caracas 10,615. Likely a centre or pack problem, or a metro split over many packs whose trips between packs the score leaves out.
+  - Goal: Cairo, and any other big city hit by the same cause, gets the tier its density gives; the cause written down.
+  - Other: notes/T-3619.md
+- T-3620 [P2] {L:new-countries} {after:the night run (T-3511, T-3455)} Caribbean, Bolivia and Paraguay next
+  - Context: Your pad, 2026-11-18: "i think for next new countries lets actually do caribbean, and also bolivia + paraguay since people have requetsed caribbean ( i have yet to have any asia or africa requests) and i think it'd be nice to finish off the americas. can come after the other rebuild fixes if they should happen at different times." Builds packs, so not alongside the night run.
+  - Goal: The Caribbean countries, Bolivia and Paraguay built, shipped and joined, per docs/adding-a-country.md, with start tiers rerun.
 - T-1738 [P3] {L:new-countries} Southeast Asia: Myanmar, Laos, Timor-Leste
   - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet.
   - Goal: Myanmar, Laos and Timor-Leste are built and shipped.

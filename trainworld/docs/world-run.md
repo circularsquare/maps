@@ -216,6 +216,9 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   then the freeze the failed join skipped. Outlines, realms and aliases are not rerun (they ran in the failed
   join, or `world_run.py step zone_outlines` etc.). It exits 2 on a failed step. Don't write the list by hand
   from the rows: it also holds the fixed neighbours the join rewrote (T-2702's first retry missed tug).
+- **Start tiers** (T-3619): the join does not rescore starts, and a start missing from `app/src/game/start-difficulty.json`
+  shows as hard. After a join, `venv\Scripts\python.exe trainworld\pipeline\start_difficulty.py --fresh --jobs N`
+  (claim N cores; docs/zones.md "Start tiers").
 - **Freeze** (T-928): a join with no market failure and no other run live ends with
   `pipeline/freeze.py`, which hard-links every file a production build copies into
   `data/frozen/<stamp>/` (seconds, no space; the newest three kept). A publish during a later

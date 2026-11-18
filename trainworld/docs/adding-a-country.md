@@ -273,6 +273,9 @@ Done when: `world_run.py status` shows the country's gated rows shipped.
   --jobs N` (zones with no file only) and `market_drives.py build --jobs N` (the new places only); these three run
   without `-I`. Then `<tw>\checks\build_inputs.py`: no FLAG (the files a production build copies, and a routed-drive
   place for every zone).
+- Start tiers: a start missing from `app/src/game/start-difficulty.json` shows as hard, so after the join run
+  `venv\Scripts\python.exe trainworld\pipeline\start_difficulty.py --fresh --jobs N` (claim N cores; about 20 minutes)
+  and check the country's big cities are not all hard (docs/zones.md "Start tiers").
 - Smoke 22 of 22 on your Vite; the real save's rail trips within 0.1% of the figure in your brief, or the
   difference explained.
 - Names: zones named after a rural unit that hold a town take the town's name in

@@ -23,8 +23,8 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
 ## In flight (maps-86's)
-- T-3610 + T-3612 LANDED a6c617a9 (checker PASS, wart fixed, c009); T-3617 filed. Running: smoke on master + snap8800
-  (\smoke_snap.ps1) for kaohsiung + saveread; push after. Main tree's app/node_modules lost @preact/signals and .bin
+- T-3610 + T-3612 LANDED a6c617a9 (checker PASS, wart fixed, c009); T-3617 filed. Smoke PASSED, 8800 = 3fd86cd2,
+  pushed a7d861eb. Main tree's app/node_modules lost @preact/signals and .bin
   ~02:10 UTC (likely scheck deleting a scratch worktree by hand); saveread's npm install restored it.
 - T-3600 (a) + T-3601 LANDED c5319e6d after checker PASS (changelog c007, c008); not yet on 8800 (next rebuild,
   with saveread). Leftover filed T-3616 P3. Checker saw "demand sums worker: undefined" once at page close: untraced.
@@ -34,16 +34,20 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   double track splits sometimes joining the wrong track and making a flat junction"). Checker fcheck (Sonnet, port
   6188) running -> notes/T-3609-check.md; land on PASS. Rest of her case filed T-3618.
 - solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag. After.
-- ghostmatch (Sonnet, .tw-trees/ghostmatch, port 6187): T-3606 tram ghost fixed (c010; archived early), resumed
-  for the single-track / passing-track ghost cases. Land when it reports.
+- tiers (Sonnet, main tree, scratchpad \tiers): T-3619 rerun start_difficulty.py (stale since 11-07: new cities all
+  "hard"), add the step to adding-a-country.md. Writes app/src/game/start-difficulty.json.
+- Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}; asked her whether to start the night run tonight.
+- T-3606 LANDED 98ca8aca (c010; sheet review/t3606.png looked at). Not on 8800 yet: next rebuild with splitflat.
 - solveeta lands onto c5319e6d (kaohsiung's StatusTag.tsx / demand worker changes): expect a rebase at its landing.
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
-## Night run (she says when; NOT straight after the publish, her 11-18)
-- T-3511 enclave shifts + T-3455 coastal rows, plan notes/T-3455.md, ~8.2 h, 10 cores. Rebuilds packs, so never
-  during a publish. Start: `powershell -File C:\Users\anita\projects\maps\trainworld\tools\country\start_hidden.ps1
-  C:\Users\anita\projects\maps\trainworld\notes\T-3455\kit\night1117.cmd`. Log artifacts/trainworld/night1117.log;
-  PID in kit\night1117.state; stop: create trainworld\data\work\world_run\STOP, then kill only that PID.
+## Night run RUNNING (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)
+- T-3511 enclave shifts + T-3455 coastal rows (+ cif-ph if time, -Until 10:00 local), plan notes/T-3455.md, ~8 h.
+  Started 02:34 UTC via kit\night1118.cmd (= night1117.ps1 -Want 9), cmd pid 23028, script pid 30872 (claim
+  nightqueue, 9 cores; 5 free for day work). Log artifacts/trainworld/night1117.log; state kit\night1117.state;
+  stop: create trainworld\data\work\world_run\STOP, then kill only the script PID. Gates serve the main tree's app/:
+  keep app/ landings short and between gate steps. After it: rerun start_difficulty.py (T-3619), then 8800 rebuild;
+  then T-3620 (Caribbean, Bolivia, Paraguay) can start.
 
 ## Next
 1. Her release yeses, then the steps above; smoke8800 must have passed first.

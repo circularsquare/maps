@@ -3,16 +3,29 @@
   "line": "",
   "items": [
     {
+      "id": "c011",
+      "text": "fixed new cities all showing as hard starts",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3619",
+      "by": "tiers",
+      "at": "2026-11-18T02:35:19Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c010",
       "text": "fixed the station ghost of tram stops being drawn wider and thicker than the stop it places",
-      "edited": null,
+      "edited": "fixed the station ghost being drawn wider and thicker than the station it places, for tram stops and for one way stations",
       "hidden": false,
       "task": "T-3606",
       "by": "ghostmatch",
       "at": "2026-11-18T02:20:20Z",
-      "rev": 1,
+      "rev": 2,
       "area": "schematic",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T02:33:00Z"
     },
     {
       "id": "c009",
