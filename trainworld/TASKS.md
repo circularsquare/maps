@@ -306,6 +306,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3461 [P3] {L:wiki} Code tour in the wiki
   - Context: You 11-16: the code tour (notes/code-tour.md, review/code-tour.png) is a nice resource and might belong in the wiki.
   - Goal: The tour is a wiki page kept current, per wiki/RULES.md (or an agents' section of it if the player wiki is the wrong home).
+- T-3725 [P2] {L:cleanup} Refactoring round on the most confusing areas
+  - Context: You, 2026-11-18: "we've added quite a bit of stuff since we last did dedicated refactoring round i think, so probably good to start that once we have some bandwidth. focusing on areas that are super confusing." A likely first target is who may write the save slot (T-2843's state machine C), behind today's T-3687, T-3611, T-3698 and T-3722.
+  - Goal: A short list of the most confusing areas, with evidence from recent tasks, goes to you before any refactor is built.
+- T-3726 [P3] {L:cleanup} {waits:Anita} Are code comments worth keeping, A/B test
+  - Need from Anita: Run the test as proposed (about 8-10 agent runs at 100-250k tokens each)?
+  - Context: You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
+  - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} Code review and state machines
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
   - Goal: State machines B and C are built.
@@ -372,9 +379,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3687: a Community network copied and played on as a normal game is shared with the Sandbox tag (T-3115). You, 2026-11-18: "it can show "copy" there instead of sandbox for copied network". Needs the server to record why a game is latched, so a server deploy.
   - Goal: Such a share shows Copy; real sandboxes still show Sandbox.
   - Other: notes/T-3687.md
-- T-3722 [P2] {L:small-fixes} Exit to main menu sometimes missing (taking, 2026-11-18, agent exitmenu)
-  - Context: You, 2026-11-18: "sometimes on 8800 i dont see the "exit to main menu" button on saved games. seems kinda random when this is the case."
-  - Goal: Cause found; the button shows on every saved game.
 - T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch
   - Context: From T-3687 (possible, not reproduced): a new game in the reused `autosave` slot could inherit a deleted sandbox game's id and so its latch, keeping it off the leaderboards.
   - Goal: Reproduced or ruled out; a new game never carries an old game's id.

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3722 [P2] {L:small-fixes} Exit to main menu sometimes missing (2026-11-18): The button waited for the first game's demand to finish loading (a minute or more on a big save); it now shows whenever a game is open, and a leave during a file's open no longer drops the file. notes/T-3722.md.
 - T-3719 [P2] {L:timetables} Switching to sandbox lowers some lines' train counts (2026-11-18): closed without code: Not a sandbox effect: T-3165's load cap lowering (game/capLoad.ts) lowers counts set above the cap once the loaded game's trips are first calculated (~90 s in), which the checker's snapshots straddled; sandbox alone changes 0 of 109 lines. Intended, in v0.4.1 too (notes/T-3719.md).
 - T-3723 [P1] {L:route-choice} Review sheet of every no transit route message (2026-11-18): closed without code: Anita read the review page: the messages are ok as they are. notes/T-3632.md.
 - T-3689 [P1] {L:fares} Transfer fare at the cap still pays (2026-11-18): the transfer fare is held to the base fare (0 base: none), at every read and in the stored value; real save at an attempted 1000 earns the same as at the base (4.63B a day, was 384.6B) notes/T-3689.md.

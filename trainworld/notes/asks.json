@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "id": "a-2026-11-18-18",
+    "title": "Push shonei-server",
+    "text": "shonei-server is deployed (12d58a0, 662ed86, c960adc) but not pushed to GitHub. Push it? I would.",
+    "since": "2026-11-18",
+    "by": "maps-76"
+  },
+  {
+    "id": "a-2026-11-18-19",
+    "title": "Track hover top row",
+    "text": "T-3714: the hover over track or a line now starts with a row like Regular, the count icon, Quad (rebuilt from look B, since look C never changed the hover). Is that the hover you liked? Screenshot artifacts/trainworld/review/t3714-hover-tag.png.",
+    "since": "2026-11-18",
+    "by": "maps-76"
+  },
+  {
+    "id": "a-2026-11-18-20",
+    "title": "Word in the placing tag",
+    "text": "T-3714: the placing tag shows the 1, 2 or 4 track icon alone, in the type's colour, left of the level. Add the word too (Quad)? I'd leave the icon alone.",
+    "since": "2026-11-18",
+    "by": "maps-76"
+  },
+  {
+    "id": "a-2026-11-18-21",
+    "title": "Comments A/B test",
+    "text": "T-3726: replay 2-3 of today's tasks from their parent commits, one tree with comments and one stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task twice per arm for noise. About 8-10 runs at 100-250k tokens. Run it after the release?",
+    "since": "2026-11-18",
+    "by": "maps-76"
+  },
+  {
+    "id": "a-2026-11-18-22",
+    "title": "Points by cost recovery in v0.4.2",
+    "text": "T-3657 is built: each line's points scale with min(1, fares / running cost). Honest networks lose a median 0.13% (worst 1.65%); free-fare networks drop to 0. A checker is running. Include it in v0.4.2 if it passes? Board scores change only when each game sends a new result, so unopened games keep old figures. One shared NYC network with base fare 0 and a high per-km fare loses 26.6%: fine?",
+    "since": "2026-11-18",
+    "by": "maps-76"
+  }
+]
