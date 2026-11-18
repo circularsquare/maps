@@ -297,6 +297,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3608 [P2] {L:track-drawing} Ctrl pauses snap to street (taking, 2026-11-17, agent ctrlsnap)
   - Context: You, 2026-11-18 (and TODO.md): "hold ctrl while snapping to street should temporarily stop snapping to street, rather than forcing track to be straight. ... should definitely be in the next one". Only with snap to street off should Ctrl make track straight.
   - Goal: With snap to street on, holding Ctrl draws free track (no street snap) while held; with it off, Ctrl still draws straight; in the release after v0.4.0.
+- T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (taking, 2026-11-17, agent splitflat)
+  - Context: Your pad, 2026-11-18: "sometimes it says theres a flat junction (merge) where a double track splits into 2 singles. ... that isn't the case, really. its just splitting. there shouldnt be a merge" (artifacts/trainworld/board/20261117-201857-14b6.png: Paris, one-way singles off a double track, "Flat junction" with 0).
+  - Goal: Where a double track splits into two single tracks, no flat junction mark or hover unless trains really cross each other's path there.
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
