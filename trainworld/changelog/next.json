@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c012",
+      "text": "lines that aren't fully built run trains on the part that is (thanks CinnamonVII)",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3474",
+      "by": "partline",
+      "at": "2026-11-18T07:21:44Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
+      "id": "c011",
+      "text": "fixed the start menu covering the out of memory message after a game failed to load",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3643",
+      "by": "oomscreen",
+      "at": "2026-11-18T07:09:21Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": true
+    },
+    {
       "id": "c010",
       "text": "fixed bus trips saying they wait for a train with room",
       "edited": null,

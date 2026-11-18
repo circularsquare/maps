@@ -6,6 +6,7 @@
 //   node trainworld/checks/agent-tree.mjs remove <name> [--force]
 //   node trainworld/checks/agent-tree.mjs finish <name> "<one sentence>" [--task T-1,T-2 --outcome "..." [--notes notes/T-1.md]]
 //        [--keep-tree] [--dry-run] [--log <file>]   orchestrator: land + archive in one go, one line per step (T-3554)
+//        [--coauthor "Name <email>"]   repeatable: a contributor credited in the commit's trailer
 // `land` takes everything changed under trainworld/ in the tree (committed on the branch or not), rebases it
 // onto master, squashes it into one commit and fast-forwards master to it. Master's own uncommitted edits
 // stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
@@ -138,7 +139,7 @@ function restoreGameJson(dir) {
 }
 
 // Puts the tree's work on master as one commit; returns the trainworld/ files it changed.
-function landTree(dir, branch, message) {
+function landTree(dir, branch, message, coauthors = []) {
   if (!message) fail('land needs a commit message');
   if (!fs.existsSync(dir)) fail(`no tree ${dir}`);
   restoreGameJson(dir);
@@ -153,7 +154,9 @@ function landTree(dir, branch, message) {
     fail(`the rebase onto master stopped on a conflict in ${dir}: resolve there and \`git rebase --continue\`, or \`git rebase --abort\`; then land again`);
   }
   gitLoud(dir, 'reset', '-q', '--soft', 'master');
-  gitLoud(dir, 'commit', '-q', '-m', message, '-m', 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>');
+  // one trailer paragraph, so GitHub credits a contributor (--coauthor) beside the agent
+  const trailers = [...coauthors.map((c) => `Co-Authored-By: ${c}`), 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'];
+  gitLoud(dir, 'commit', '-q', '-m', message, '-m', trailers.join('\n'));
   try { gitLoud(maps, 'merge', '-q', '--ff-only', branch); } catch (e) {
     fail(`master did not fast-forward to ${branch} (an uncommitted edit in master's tree touches the same file, or master moved): the commit waits on the branch`);
   }
@@ -201,12 +204,16 @@ function treeChangelog(dir) {
 }
 
 function finishTree(args) {
-  const o = { keep: false, dry: false };
+  const o = { keep: false, dry: false, coauthor: [] };
   const words = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === '--keep-tree') o.keep = true;
     else if (a === '--dry-run') o.dry = true;
+    else if (a === '--coauthor') {
+      if (i + 1 >= args.length) { console.error('--coauthor needs "Name <email>"'); process.exit(2); }
+      o.coauthor.push(args[++i]);
+    }
     else if (['--task', '--outcome', '--notes', '--log'].includes(a)) {
       if (i + 1 >= args.length) { console.error(`${a} needs a value`); process.exit(2); }
       o[a.slice(2)] = args[++i];
@@ -271,7 +278,7 @@ function finishTree(args) {
       state.simChanged = tw.some((f) => f.startsWith('trainworld/sim/'));
       line(2, `land ${branch}: ${tw.length} trainworld file(s), ${git(dir, 'rev-list', '--count', 'master..HEAD')} branch commit(s) plus any uncommitted work, squashed into one commit "${message}"`);
     } else {
-      const tw = landTree(dir, branch, message);
+      const tw = landTree(dir, branch, message, o.coauthor);
       state.landed = true;
       state.simChanged = tw.some((f) => f.startsWith('trainworld/sim/'));
       line(2, `landed ${branch}: ${git(maps, 'log', '-1', '--format=%h %s')} (${tw.length} trainworld file(s))`);

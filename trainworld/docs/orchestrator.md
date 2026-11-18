@@ -115,7 +115,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
    rebuilds: one after a round of landings, not one per landing.
 4. Before a publish only: `checks/smoke8800.cmd` (light then dark; logs `artifacts/trainworld/smoke8800-*.log`).
 5. Land and archive a tree in one command (T-3554):
-   `node trainworld/checks/agent-tree.mjs finish <name> "<sentence>" --task T-1,T-2 --outcome "..." [--notes notes/T-1.md] [--keep-tree] [--dry-run]`.
+   `node trainworld/checks/agent-tree.mjs finish <name> "<sentence>" --task T-1,T-2 --outcome "..." [--notes notes/T-1.md] [--keep-tree] [--dry-run]`
+   (`--coauthor "Name <email>"` credits a contributor whose PR the work ports; reuse the form in earlier commits).
    One line per step: changelog items the agent left in its tree's `next.json` move to the main tree (`changelog.py
    add`) and the tree's file is reverted; land; WASM rebuild if sim/ changed; remove the tree; `tasks.py done` per
    task; a task the agent already archived counts as done. It prints the final changelog id of each item it moved (agents'

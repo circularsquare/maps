@@ -51,6 +51,11 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   minutes after an edit); agent settle (Opus, .tw-trees/settle, port 6191) on it; checker before landing.
 - Night run: batch 1 (T-3511) joined and shipped 12 zones by 06:55 UTC; batch 2 (T-3455 coastal, 17 countries) began
   06:57 UTC with backup.py. Watch: background task bglwdb3jw prints when pid 39588 exits.
+- 8800 builds tonight (3ce746f9, acfb779a, ff3a04cd) used plain snapbuild while the night run owned data/packs (my
+  slip: orchestrator.md says frozen). 8800 = ff3a04cd on freeze 20261118-015639 (batch 1's), smoke PASSED. Known gap
+  either way: the commit's registry still lists yhu and suc (the run merged them; its registry edits are uncommitted
+  in the main tree), so those two zones don't open on 8800 until the run's game json is committed and 8800 rebuilt.
+- T-3643 LANDED ff3a04cd (c011).
 - T-3630 proposal ready, waits on her (asks.json; sheet artifacts/trainworld/review/t3630-landing.png; B recommended).
 - oomscreen (Sonnet, .tw-trees/oomscreen, port 6196): T-3643 start menu covers the out of memory screen (found by
   T-3630's agent).

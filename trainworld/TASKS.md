@@ -243,9 +243,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Need from Anita: Pick A, B or C on artifacts/trainworld/t3630-landing.png and confirm the settings list; I recommend B (a Settings and Submit feedback row in the card) with Calculate intercity trips (made a setting on computers too), Use more cores and Panel and text size, language staying where it is.
   - Context: The proposal is ready (notes/T-3630.md). Mid-load, feedback can already be reached, but only at the bottom of Settings; it can't be reached from the failure screen or after a reload, and that is where a stuck player ends up. Your pad, 2026-11-18: "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
-- T-3643 [P2] {L:feedback} Start menu covers the out of memory screen (taking, 2026-11-18, agent oomscreen)
-  - Context: Found by T-3630's agent: after a load that died (the iOS out-of-memory reload), the start menu draws over the "Ran out of memory" screen and its text is unreadable under the logo. notes/T-3630.md.
-  - Goal: After a died load the player can read the out of memory screen; the start menu shows only once it is closed.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
   - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.
