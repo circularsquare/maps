@@ -169,6 +169,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
+- T-3622 [P2] {L:route-choice} Transit and driving value time differently in Malaysia (taking, 2026-11-17, agent vot)
+  - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". You: "seems like no... those should be the same right? im also not sure where they're seeing these numbers. probably in a tooltip somewhere in trip analysis. maybe one value is wrong?" The display currency is the player's own setting.
+  - Goal: Where the game shows minutes per money for a trip, transit and driving use the same rate for the same trip, or the reason they differ is a rule we meant.
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
@@ -278,16 +281,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3599 [P2] {L:solve-speed} Time left in the calculating trips hover (taking, 2026-11-17, agent solveeta)
-  - Context: Your pad, 2026-11-17: "could we have it so that hovering over the "Calculating trips after your change...." says like estimated 5 minutes left or whatever estimated time is?" (big Asia save, Kaohsiung feeder lines turned off).
-  - Goal: Hovering the calculating tag shows a time left within about a third of the real wait on the NYC save and one big multi-country save, or says why there is no estimate yet.
-- T-3616 [P3] {L:solve-speed} A second edit waits for the first one's whole solve
+- T-3616 [P3] {L:solve-speed} A second edit waits for the first one's whole solve (taking, 2026-11-17, agent secondedit)
   - Context: From T-3600 (option a landed): only the first edit of a quick batch updates in seconds; an edit made while that first quick solve runs waits behind its whole solve (the T-1734 hold), about 170 s on your Kaohsiung save. Levers in notes/T-3600.md: that hold, and the 8 s wait before the whole solve (option c).
   - Goal: Edits made a few seconds apart on the Kaohsiung save each show their quick numbers within about 10 s.
   - Other: notes/T-3600.md
-- T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (taking, 2026-11-17, agent splitflat)
-  - Context: Your pad, 2026-11-18: "sometimes it says theres a flat junction (merge) where a double track splits into 2 singles. ... that isn't the case, really. its just splitting. there shouldnt be a merge" (artifacts/trainworld/board/20261117-201857-14b6.png: Paris, one-way singles off a double track, "Flat junction" with 0).
-  - Goal: Where a double track splits into two single tracks, no flat junction mark or hover unless trains really cross each other's path there.
 - T-3618 [P2] {L:single-track} Split still marked when the straight single was drawn first
   - Context: From T-3609 (its two drawing fixes landing): a split still shows a flat junction when the straight single was drawn first with a press on a lane at the double's bare end, or was set one way with the switch; your Paris split keeps its mark since track already drawn isn't changed. Proposed in notes/T-3609.md: the one-way switch defaults to the joined track's way; the second single re-places the first one's join; the snap ring stops sitting on the pointer's track at a split.
   - Goal: Drawing a split in either order, or setting a single one way, never leaves a flat junction mark unless trains really cross.

@@ -22,23 +22,21 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   She: "0.4 looks good on live".
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
-## In flight (maps-86's)
-- T-3610 + T-3612 LANDED a6c617a9 (checker PASS, wart fixed, c009); T-3617 filed. Smoke PASSED, 8800 = 3fd86cd2,
-  pushed a7d861eb. Main tree's app/node_modules lost @preact/signals and .bin
-  ~02:10 UTC (likely scheck deleting a scratch worktree by hand); saveread's npm install restored it.
-- T-3600 (a) + T-3601 LANDED c5319e6d after checker PASS (changelog c007, c008); not yet on 8800 (next rebuild,
-  with saveread). Leftover filed T-3616 P3. Checker saw "demand sums worker: undefined" once at page close: untraced.
+## Landed since 8800's 3fd86cd2 (next rebuild): T-3606 98ca8aca, T-3619 f2894ea1, T-3599 63bacf31 (strings shown to
+  her). 8800 has T-3600/T-3601/T-3610/T-3612. node_modules broke once ~02:10 UTC (a checker deleting a scratch
+  worktree by hand); npm install restored it.
 
-## In flight (maps-1c's agents; maps-1c relays their reports verbatim)
+## In flight (maps-86's; maps-1c fully wound down 03:00 UTC)
 - splitflat: T-3609 DONE in tree (two drawing fixes, sim draw.rs; c001 in tree "fixed single track drawn where a
   double track splits sometimes joining the wrong track and making a flat junction"). Checker fcheck (Sonnet, port
   6188) running -> notes/T-3609-check.md; land on PASS. Rest of her case filed T-3618.
-- solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag. After.
-- tiers (Sonnet, main tree, scratchpad \tiers): T-3619 rerun start_difficulty.py (stale since 11-07: new cities all
-  "hard"), add the step to adding-a-country.md. Writes app/src/game/start-difficulty.json.
-- Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}; asked her whether to start the night run tonight.
-- T-3606 LANDED 98ca8aca (c010; sheet review/t3606.png looked at). Not on 8800 yet: next rebuild with splitflat.
-- solveeta lands onto c5319e6d (kaohsiung's StatusTag.tsx / demand worker changes): expect a rebase at its landing.
+- vot (Opus, .tw-trees/vot, port 6189): T-3622 player report, transit 8.86 vs driving 2.31 min/S$ in Malaysia.
+  A demand-number change waits for her.
+- secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 (her go 11-18): later edits wait ~170 s behind the
+  first whole solve (T-1734 hold). Told to rebase onto 63bacf31 (T-3599's editLeft doubling while an edit waits).
+- T-3619 DONE f2894ea1 (351 starts had no tier; c011). cairo (Opus, main tree, scratchpad \cairo): T-3621 why
+  Cairo scores 439 (hard); may change start_difficulty.py + start-difficulty.json.
+- Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}.
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
 ## Night run RUNNING (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)

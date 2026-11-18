@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c013",
+      "text": "fixed single track drawn where a double track splits sometimes joining the wrong track and making a flat junction",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3609",
+      "by": "splitflat",
+      "at": "2026-11-18T02:46:56Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c012",
+      "text": "the calculating trips hover shows about how long is left",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3599",
+      "by": "solveeta",
+      "at": "2026-11-18T02:45:38Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c011",
       "text": "fixed new cities all showing as hard starts",
       "edited": null,

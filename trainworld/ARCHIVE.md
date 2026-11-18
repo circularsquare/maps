@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (2026-11-17): two drawing fixes, checker PASS (notes/T-3609-check.md); drawn-first and one-way-switch cases continue as T-3618. notes/T-3609.md.
+- T-3599 [P2] {L:solve-speed} Time left in the calculating trips hover (2026-11-17): time left in the hover; mean error 12-18% on NYC and the Asia save; first edit after a load says not known yet for ~70 s. notes/T-3599.md.
 - T-3619 [P2] {L:new-countries} New countries' cities all show as hard starts (2026-11-17): start tiers rerun for all 4,135 starts (351 had never been scored); docs/adding-a-country.md and world-run.md reruns it. notes/T-3619.md.
 - T-3606 [P3] {L:map-look} Tram station ghost drawn at full width (2026-11-17): Station ghost now built by the same stationShape call as a built station (tram flag, oneBar widths) and outlined with its rim width; tram ghosts no longer full width. Single-track bar and passing-loop widths not yet in the ghost. notes/T-3606.md.
 - T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (2026-11-17): option (a) built, checker PASS (notes/T-3600-check.md); intercity within 0.4-2.5% of final in 2-7 s; edits during a quick solve still wait for the whole solve (T-3616) notes/T-3600.md.
