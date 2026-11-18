@@ -17,11 +17,15 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    session check aws-mcp/stripe are gone and measure an agent's first call (was 56k); if not, she toggles them off
    with /mcp in a maps session. Then archive T-3670.
 4. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).
-5. After the workflow round: T-3660 (downtown Cairo, next night run), T-2136, T-1080, T-930; T-3620 (Caribbean,
+5. dayrun (Opus, main tree, <= 6 cores): T-3671 daytime rebuild batch (her 11-18 idea; Caribbean excluded). Hold
+   8800 rebuilds that touch packs during its join; its notes' top line says when gates run.
+6. After the workflow round: T-3660 (downtown Cairo, next night run), T-2136, T-1080, T-930; T-3620 (Caribbean,
    Bolivia, Paraguay) only when she says.
 
 ## Her words
 - "lets do them all, can start in whatever order you think makes sense" (workflow, 11-18).
+- 11-18 ~15:20 UTC: mostly hands off today (headache): ask her nothing unless it truly needs her; short messages.
+- Daytime builds on part of the cores when compute is free, thinking-heavy tasks beside them (11-18).
 - Caribbean+: "we can worruy about caribbean+ later ... i will lyk" (11-18).
 - Free-fare leaderboard cheese (T-3657): "needs more thought, lets put it off til later".
 - caelum418's speed PRs (T-3659): "look at the next time we look at this area of performance".

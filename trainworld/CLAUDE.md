@@ -142,7 +142,8 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
 - **Testing, kept lean** (Anita, 2026-11-17: "a bit too test heavy"): run the checks near your change, not every
   check. Smoke only when your brief asks or the change touches sim, saves, demand or money; the orchestrator runs one
   smoke per landed batch. Add a standing check only for a bug that really happened and could quietly come back;
-  otherwise prove the change with a scratch script and leave it in your scratch folder.
+  otherwise prove the change with a scratch script and leave it in your scratch folder. Before writing a scratch
+  script, grep `checks/INDEX.md` (made by `tools/checks_index.py`) and reuse a check that already proves it.
 
 ## Game principles (Anita's)
 

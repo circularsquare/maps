@@ -159,6 +159,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
   - Other: notes/T-3455.md "What ran (nightfix3)"
+- T-3671 [P2] {L:region-redraws} Daytime rebuild batch on part of the cores (taking, 2026-11-18, agent dayrun)
+  - Context: You, 2026-11-18: "if we find ourselves with substantial free compute that we're not using we can maybe just start some more world builds during the day, using just prart of the cores, they can run slowly while we also fill with thinking heavy tasks." Not the Caribbean (T-3620 waits for your word).
+  - Goal: A batch of approved rebuild fixes and parked rows (T-3660 and others the planner picks) built, gated and joined on about 6 cores, without blocking the day's landings.
 - T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone
   - Context: Found by T-3623: Qasr Al-Nile (1.2 km2, Tahrir and downtown, geoBoundaries EGY ADM2) is in no plan row, so cai's outline has a hole there and downtown Cairo's people and jobs are missing. Marsa Alam, North Coast and Port Suez are also Egyptian units in no zone.
   - Goal: Qasr Al-Nile joins cai and the other three join a zone or are written down as dead space on purpose; rebuilt in the next night run.
@@ -177,12 +180,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3666 [P2] {L:workflow} A kept-open game for agents' probes, and a wait command (taking, 2026-11-18, agent playkeep)
   - Context: Proposal 1, approved 2026-11-18. Agents spent 388 of 1,278 minutes (30%) waiting on the game; each probe reloads it (13 s new game, 129 s the real save); 41 of 71 scratch browser scripts skip play.mjs; 173 blocked sleeps since 11-16.
   - Goal: `play start <city|save>` keeps a game open; `play do` answers a probe in a few seconds with short JSON, waiting on conditions not fixed times; `play sim` reads the simulation; a `wait` command replaces hand-written polling; CLAUDE.md points agents to it. Snapshot/restore tried and kept only if it works.
-- T-3668 [P2] {L:workflow} {after:T-3667} Agent reports reach the current orchestrator
+- T-3668 [P2] {L:workflow} {after:T-3667} Agent reports reach the current orchestrator (taking, 2026-11-18, agent inbox)
   - Context: Proposal 3, approved 2026-11-18. Old orchestrator tabs relaying reports after a handover cost about 1.8M tokens a handover (13% of orchestrator tokens).
   - Goal: Each agent's final report is also written to a file inbox the board watch prints to the current orchestrator, which adopts running agents from the board; the old tab stops after its one line.
-- T-3669 [P3] {L:workflow} One-line index of the checks
-  - Context: Proposal 7, approved 2026-11-18. 317 task checks, 14 in smoke, 39 never run since 11-01; of 7 spot-run, 3 failed (t1550 filed as T-3663).
-  - Goal: A generated table (name, what it proves, helper or check, runs since a date, last pass) that agents grep before writing a scratch script; out-of-date checks fixed or moved to old/ with a line why, after a look at what they caught.
 - T-3670 [P2] {L:workflow} Agents start lighter
   - Context: Proposal 2, approved 2026-11-18 ("yes please turn off connectors. ill do it if u cant"). Every agent starts at 56k tokens; AWS, Stripe and Docs tools got 0 calls in 2,750.
   - Goal: Sessions in maps start without the AWS and Stripe servers, the claude.ai connectors and the AWS skills, measured at the next agent's first call.

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3669 [P3] {L:workflow} One-line index of the checks (2026-11-18): INDEX.md 379 lines, broken marks for t1201 (needs a rewrite for today's fare rows), t1550 (T-3663), t2626 (too slow); code-map 1085 -> 686 lines. notes/T-3669.md.
 - T-3665 [P2] {L:workflow} Landing guards (2026-11-18): tree_guard.py hook, append-only conflict union, blocker messages, removeTree with process names and leftover cleanup, provisional <tree>-N changelog ids; tested in a throwaway repo. notes/T-3665.md.
 - T-3667 [P2] {L:workflow} Handoff state by command, asks by command (2026-11-18): handoff.py status (read-only, ~4 s, ~30 lines) and asks.py add/answer/list with asks-log.jsonl; proposed skill and doc text applied by the orchestrator. notes/T-3667.md.
 - T-3630 [P2] {L:feedback} Settings and feedback on the landing page (2026-11-18): Anita picked C plus language and a gear; intercity a setting everywhere (on for computers, off for phones), the menu's box decides a menu-opened game; feedback form mounts on its own; 19 inter-city spellings now intercity. notes/T-3630.md.
