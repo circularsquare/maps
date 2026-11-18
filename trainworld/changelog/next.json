@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c010",
+      "text": "fixed the station ghost of tram stops being drawn wider and thicker than the stop it places",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3606",
+      "by": "ghostmatch",
+      "at": "2026-11-18T02:20:20Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
+      "id": "c009",
+      "text": "fixed one unreadable saved game hiding all the others; it now shows as damaged and the rest still open",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3610",
+      "by": "saveread",
+      "at": "2026-11-18T02:20:06Z",
+      "rev": 1,
+      "area": "community",
+      "fix": true
+    },
+    {
       "id": "c008",
       "text": "fixed the calculating trips tag going away minutes before the trips after a change were all calculated",
       "edited": null,

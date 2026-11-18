@@ -1,9 +1,1 @@
-[
-  {
-    "id": "a-2026-11-18-2",
-    "title": "PR 1 and issue 8 replies",
-    "text": "The replies you OK'd were written before the release. v0.4.0 is out now, so updated: PR 1: \"Thanks for this, Renkon! It's in the game now as a setting, Buses obey one-way streets, off by default so existing bus routes don't change. We kept your routing as it was, made the arrows lighter and start them at zoom 13. You're credited as co-author on the commit. It's out in v0.4.0 and in the public repo, so I'm closing this.\" Issue 8: \"Thanks for reporting this. v0.4.0 adds a setting, Buses obey one-way streets, that keeps bus routes going the way one-way streets and roundabouts run. It's off by default; turn it on in Settings > Show. Closing this now that it's out.\" Post both and close them?",
-    "since": "2026-11-18",
-    "by": "maps-86"
-  }
-]
+[]

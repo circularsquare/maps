@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3606 [P3] {L:map-look} Tram station ghost drawn at full width (2026-11-17): Station ghost now built by the same stationShape call as a built station (tram flag, oneBar widths) and outlined with its rim width; tram ghosts no longer full width. Single-track bar and passing-loop widths not yet in the ghost. notes/T-3606.md.
 - T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (2026-11-17): option (a) built, checker PASS (notes/T-3600-check.md); intercity within 0.4-2.5% of final in 2-7 s; edits during a quick solve still wait for the whole solve (T-3616) notes/T-3600.md.
 - T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save (2026-11-17): option (a) built, checker PASS (notes/T-3600-check.md); intercity within 0.4-2.5% of final in 2-7 s; edits during a quick solve still wait for the whole solve (T-3616) notes/T-3600.md.
 - T-3615 [P2] {L:map-look} Single-side station boxes with a real width (2026-11-17): single-side boxes have a world width per her numbers; sheet review/t3615.png. notes/T-3615.md.

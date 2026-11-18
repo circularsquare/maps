@@ -278,9 +278,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3600 (option a landed): only the first edit of a quick batch updates in seconds; an edit made while that first quick solve runs waits behind its whole solve (the T-1734 hold), about 170 s on your Kaohsiung save. Levers in notes/T-3600.md: that hold, and the 8 s wait before the whole solve (option c).
   - Goal: Edits made a few seconds apart on the Kaohsiung save each show their quick numbers within about 10 s.
   - Other: notes/T-3600.md
-- T-3606 [P3] {L:map-look} Tram station ghost drawn at full width
-  - Context: You, 2026-11-17: "the placement ghost of the tram stations are not shrunk, so they look thick and once we place them it places them as thin. should make the ghost match (and ideally make it so the ghost automatically matches in every case) but can do that later."
-  - Goal: The placement ghost of every station kind is drawn by the same code and widths as the placed station, so they always match.
 - T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (taking, 2026-11-17, agent splitflat)
   - Context: Your pad, 2026-11-18: "sometimes it says theres a flat junction (merge) where a double track splits into 2 singles. ... that isn't the case, really. its just splitting. there shouldnt be a merge" (artifacts/trainworld/board/20261117-201857-14b6.png: Paris, one-way singles off a double track, "Flat junction" with 0).
   - Goal: Where a double track splits into two single tracks, no flat junction mark or hover unless trains really cross each other's path there.
@@ -994,6 +991,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
   - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
   - Other: notes/T-3397.md
+- T-3617 [P3] {L:checks} Saves check expects every backup as a row
+  - Context: From T-3610's checker: t1826-saves "live backups listed with their age" fails on master too. All four backup tiers exist but the card shows one row; likely the version list hides backups with no edit since the save (workers/versions.ts), which the check doesn't do.
+  - Goal: Either the check makes real edits between saves and passes, or the panel shows backups it wrongly hides; t1826 passes on master.
+  - Other: notes/T-3610-check.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.
