@@ -229,9 +229,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-2761 [P3] {L:track-drawing} Highlight crossings between stationed and unstationed track
   - Context: Your note 2026-11-07: "its probably an accident, but might not be an accident". Waits until after the post.
   - Goal: Tracks that cross where only some have stations get a highlight.
-- T-2809 [P3] {L:money} Bus lines in the money history (taking, 2026-11-18, agent qwapp)
-  - Context: The per-line money history (T-2787) covers rail line panels only. Bus lines have no plot, and upkeep is not in the figure.
-  - Goal: Bus lines show a money history too.
 - T-2880 [P2] {L:solve-speed} Skip needless rebuild of served pairs
   - Context: The market part rebuilds its served pairs (about 13 s of a North America whole solve) even when only component numbers moved.
   - Goal: Skip the rebuild when the same zones are joined, with identical results.
@@ -257,9 +254,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
-- T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save (taking, 2026-11-18, agent qwapp)
-  - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
-  - Goal: The water mask loads on that save, or the failure is understood and filed.
 - T-3495 [P2] {L:world-map} Snap to freight and abandoned rail
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) shipped with v0.4.0; abandoned rail is snappable too (DECISIONS 2026-11-17, your rule "if something is visible we should let people snap to it").
   - Goal: Freight and abandoned rail drawn under All can be snapped to by train track, about 2-3 h plus about 100 MB of graph files.
@@ -395,7 +389,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
-- T-3693 [P2] {L:map-look} Show which mode you're building
+- T-3693 [P2] {L:map-look} Show which mode you're building (taking, 2026-11-18, agent modelook)
   - Context: Your old TODO: "make more obvious when ur building single track or double or quad, and when ur looking at it. also maybe make it more obvious when ur looking at a bus line or tram or train or hsr". You, 2026-11-18: "yeah they should have slightly different halo colors i guess, maybe some more indicators too if u have ideas".
   - Goal: Three clearly different versions on one sheet (halo colour per mode plus other cues for track count), you pick by letter, then it's built.
 - T-3695 [P3] {L:map-look} Travel by mode overview
@@ -411,9 +405,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3687 [P3] {L:community} Sandbox save shown as normal in Community
   - Context: Your old TODO: "someoen (ylik) said their sandbox save they uploaded to community is actully a nromal mode, they dont know why its considered community". T-3144 handles the Sandbox tag. Few players.
   - Goal: The cause found (which mode a share records and shows) and fixed, or shown to be right.
-- T-3681 [P2] {L:small-fixes} Search box in settings (taking, 2026-11-18, agent setsearch)
-  - Context: You, 2026-11-18: "would be nice to add a search setting to settings. so people can type a string and find matches, or alias matches. people having trouble with finding certain settings frequently." Your old TODO: settings "getting a bit cluttered ... hard to find stuff".
-  - Goal: Typing in a box at the top of settings shows only the settings whose label, section or aliases match (e.g. "satellite" finds the map style), with a plain line when nothing matches.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
@@ -462,9 +453,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3652 [P3] {L:community} Newest view in Community (taking, 2026-11-18, agent newest)
-  - Context: Your pad, 2026-11-18, from Discord, "not high prio": "sort community by newest". Community has Random, Biggest and Most liked today.
-  - Goal: Community has a Newest tab (newest share first, one per person like Random) beside the other three; its server change ships with the next server deploy (your yes 2026-11-18).
 - T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "rework time controls to just be like comma and period speed up or slow down? someone suggested this is how it works in KSP. maybe instead of having 1x 4x 16x(flexible) we could just do like slow down flexible speed up. and period speeds up and comma slows down by one step."
   - Goal: 1x / 4x / 16x become a slow-down button, the speed shown, and a speed-up button stepping through today's slider stops; comma slows and period speeds up by one step; the double-click picker on the speed stays (your yes 2026-11-18).
@@ -479,10 +467,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
-- T-3101 [P3] {L:single-track} One-way track follow-ups (taking, 2026-11-18, agent selway)
-  - Context: The track panel's line list counts a line that only uses a piece on its way back (landed 5a15e44d). The Select bar still lacks switch and reverse for a picked single-track run. You, 2026-11-18: yes to one confirm listing every re-routed line, one undo, and the track panel's words ("Run trains one way", "Reverse direction").
-  - Goal: Select bar switch and reverse work on picked single-track runs with one confirm and one undo.
-  - Other: notes/T-3101.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
 - T-2624 [P2] {L:solve-speed} Lines in view wait on a whole solve
   - Context: After a trains-only edit, the zone shows in about 3 s but shown lines wait 40-120 s on your North America save.
@@ -663,9 +647,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Context: Give a station more room when auto-ramping over a line, and snap it to the nearest viable spot.
   - Goal: Placing a station near a line or ramp finds a viable spot.
   - Other: notes/todo-2026-11-03h.md.
-- T-3625 [P2] {L:map-look} A toggle to hide stations
-  - Context: Your pad, 2026-11-18: "someone requests toggle to hide stations. seems easy enough, lets add that at some pt"
-  - Goal: A Show stations toggle beside the other map toggles hides the station boxes and their names (lines and trains stay).
 - T-2337 [P3] {L:map-look} Load by hour in the crowding hover
   - Context: Idea from 2026-11-04: a small plot of load by hour of day in the crowding hover, if peak load per hour is cheap to keep.
   - Goal: The crowding hover shows load by hour.
@@ -997,7 +978,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
-- T-3611 [P2] {L:accounts-server} Autosave lands after another tab took the slot
+- T-3611 [P2] {L:accounts-server} Autosave lands after another tab took the slot (taking, 2026-11-18, agent autolease)
   - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
   - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
   - Other: notes/T-3397.md

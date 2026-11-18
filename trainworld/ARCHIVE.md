@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3625 [P2] {L:map-look} A toggle to hide stations (2026-11-18): Settings > Show > Stations checkbox hides stations and names, unpickable; station tool shows them while active (notes/T-3625.md)
+- T-3101 [P3] {L:single-track} One-way track follow-ups (2026-11-18): Select bar has Run trains one way and Reverse direction for every picked single-track piece: one confirm listing the re-routed lines, one undo (new set_edges_oneway in sim oneway.rs)
+- T-3681 [P2] {L:small-fixes} Search box in settings (2026-11-18): Settings has a search box at the top: typing hides rows whose label, section or keywords (26 entries, English plus the player's language) don't match; No settings match when none; changelog setsearch-1; notes/T-3681.md.
+- T-3652 [P3] {L:community} Newest view in Community (2026-11-18): Newest tab in Community, shown once the server config says trainworldCommunityNewest; server view=newest committed in shonei-server 12d58a0, not deployed. notes/T-3652.md.
+- T-2809 [P3] {L:money} Bus lines in the money history (2026-11-18): Bus and ferry line panels show the 30-day money chart (clock worker already kept their days); notes/T-2809.md.
+- T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save (2026-11-18): Cause: hundreds of mask fetches at once failed in the browser; now 32 at a time with one retry; notes/T-2809.md.
 - T-2662 [P3] {L:timetables} Passing dots on the timetable chart at a flat junction (2026-11-18): checked: a player-built flat junction (two lines sharing track, one branching at a station) draws its dots at the times the other line's trains pass; no code change.
 - T-3446 [P3] {L:schematic-layout} Clear old-layout leftovers from the diagram (2026-11-18): unused sea path removed from layoutDiagram (LayoutSea, seaTerms, about 190 lines); sheet layout hashes identical on nyc and jpn; t2160/t2161 retired to checks/old; docs/ui-diagram.md describes the sheet.
 - T-3685 [P3] {L:community} Like button on an opened community game (2026-11-18): A share opened from Community shows a like button under the day/night picture while it is the game in hand, also after saving it; a reloaded save has none; notes/T-3683.md.
