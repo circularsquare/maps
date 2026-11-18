@@ -243,16 +243,51 @@ export const newSeed = () => Math.random().toString(36).slice(2, 12);
 /** decoded drawings, the newest kept; each row's URL changes with its rev */
 const cache = new Map<string, Promise<DecodedShare>>();
 const CACHE_SIZE = 60;
+// T-3680: the server answers 429 past 60 drawings at once and 4 more a second, and a page is 12, so a few tab
+// switches or shuffles in a row tripped it for about half the cards. Drawings are asked for four at a time, a 429
+// holds the queue for a second, and a card nobody shows any more drops out of the queue unasked.
+interface DrawingJob { key: string; row: { id: string; rev: number }; refs: number; tries: number; resolve: (s: DecodedShare) => void; reject: (e: unknown) => void }
+const DRAWINGS_AT_ONCE = 4, DRAWING_TRIES = 10, DRAWING_HOLD_MS = 1000;
+const waiting: DrawingJob[] = [], pending = new Map<string, DrawingJob>();
+let drawingsActive = 0, drawingsHeldUntil = 0, drawingTimer: ReturnType<typeof setTimeout> | undefined;
+function pumpDrawings() {
+  while (drawingsActive < DRAWINGS_AT_ONCE && waiting.length) {
+    const hold = drawingsHeldUntil - Date.now();
+    if (hold > 0) { clearTimeout(drawingTimer); drawingTimer = setTimeout(pumpDrawings, hold); return; }
+    const job = waiting.shift()!;
+    if (job.refs <= 0) { pending.delete(job.key); job.reject(new Error("not wanted")); continue; } // i18n-ignore: never shown
+    drawingsActive++;
+    api<SharedDrawing>("GET", `trainworld/community/${encodeURIComponent(job.row.id)}/${job.row.rev}`, undefined, { auth: false }).then(decodeShared).then(
+      (s) => { pending.delete(job.key); job.resolve(s); },
+      (e) => {
+        const status = e instanceof ApiError ? e.status : -1;
+        if ((status === 0 || status === 429 || status >= 500) && ++job.tries < DRAWING_TRIES && job.refs > 0) {
+          if (status === 429) drawingsHeldUntil = Date.now() + DRAWING_HOLD_MS;
+          waiting.push(job);
+        } else { pending.delete(job.key); job.reject(e); }
+      },
+    ).finally(() => { drawingsActive--; pumpDrawings(); });
+  }
+}
+/** A card or the viewer asks for a drawing; pair each call with `releaseDrawing` when it stops looking. */
 export function loadDrawing(row: { id: string; rev: number }): Promise<DecodedShare> {
   const key = `${row.id}/${row.rev}`;
   let p = cache.get(key);
-  if (!p) {
-    p = api<SharedDrawing>("GET", `trainworld/community/${encodeURIComponent(row.id)}/${row.rev}`, undefined, { auth: false }).then(decodeShared);
-    p.catch(() => cache.delete(key));
-    cache.set(key, p);
-    if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
-  }
+  if (p) { const job = pending.get(key); if (job) job.refs++; return p; }
+  p = new Promise<DecodedShare>((resolve, reject) => {
+    const job: DrawingJob = { key, row, refs: 1, tries: 0, resolve, reject };
+    pending.set(key, job);
+    waiting.push(job);
+  });
+  p.catch(() => cache.delete(key));
+  cache.set(key, p);
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  pumpDrawings();
   return p;
+}
+export function releaseDrawing(row: { id: string; rev: number }) {
+  const job = pending.get(`${row.id}/${row.rev}`);
+  if (job) job.refs--;
 }
 
 export async function setLiked(id: string, liked: boolean): Promise<{ liked: boolean; likes: number }> {
