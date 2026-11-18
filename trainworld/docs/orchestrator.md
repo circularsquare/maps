@@ -168,7 +168,8 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   She sees each reply before it is posted.
 - Old R2 versions: only through `python trainworld/tools/r2_purge.py <versions> [--yes]` (allowed by a permission
   rule; it refuses the live version, the newest 3 and anything not dated). Never a bare `rclone purge`.
-- shonei-server: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call; then `git push` separately.
+- shonei-server: `.\deploy\deploy.ps1` from that repo, alone in its own PowerShell call; then `git push` separately,
+  which her yes to the deploy covers (Anita, 2026-11-18: no separate ask for the push).
 - The permission check refuses deploys and ssh unless her latest message says yes to that exact action.
 
 ## Tools

@@ -9,7 +9,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 ## Next
 0. v0.4.2 PUBLISHED 22:22 UTC (her "ok done. lets send :)"): data 2026-11-18b on R2, website 18c0dc9, --verify
    --page all PASS, open-source copy synced (7e55ee8). Master = 05eea22c pushed; 8800 = 05eea22c. Server deployed
-   20:12 UTC (12d58a0, 662ed86, c960adc), NOT pushed (her yes came via the board; ask again in chat). Five
+   20:12 UTC (12d58a0, 662ed86, c960adc), pushed 22:35 UTC; from now on a server deploy's yes covers its push. Five
    wrongly latched normal games unlatched after publish (latched.py --wrong now 0). Old R2 versions: purge only on
    her word (r2_purge.py).
 1. Running:
@@ -44,7 +44,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   publish, deploy and push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- Push shonei-server (say it in chat). T-3711's shift-click question. Steam screenshots.
+- T-3711's shift-click question. Steam screenshots.
 - Text not yet acknowledged: "Saving stops" (T-3731).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
 
