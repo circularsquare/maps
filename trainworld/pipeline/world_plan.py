@@ -778,8 +778,11 @@ GB_CACHE = "t897e"  # bump when gb_units' rules change: the cache beside each fi
 # geoBoundaries files that dissolve same-named units into one feature (Malaysia's ADM3: 40 mukim such as
 # Pulai, in Johor and three other states, 135-589 km apart; T-1738): each cluster of parts over FAR_PART_KM
 # from the biggest part is a unit of its own, "<shapeID>~<k>". Not every country: far islands are real elsewhere
-# (Indonesia's 25 far kabupaten parts are islands, and OSM's kabupaten relation holds them anyway; T-1738)
-GB_SPLIT_FAR = {"MYS"}
+# (Indonesia's 25 far kabupaten parts are islands, and OSM's kabupaten relation holds them anyway; T-1738).
+# T-2001: Portugal's ADM3 (115 of 2,905 features, same-named freguesias: Feteira on two Azores islands and the
+# mainland), Sierra Leone's ADM3 (Koya's 18,500 people 152 km away, Maforki) are dissolved too; Indonesia's ADM2
+# is islands (29 of 30) and stays whole
+GB_SPLIT_FAR = {"MYS", "PRT", "SLE"}
 FAR_PART_KM = 50.0
 # units a country's file draws round its others, split among them (T-2965): Egypt's 14 "Zemam Out" (outside the
 # farmland register, each governorate's desert) hold 4.7M of GHSL's valley-edge villages, just past the kism and

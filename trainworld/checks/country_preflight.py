@@ -13,6 +13,17 @@ FLAG lines need a fix before the build:
 - lone: a zone under LONE_PEOPLE people (parks on its own figures; world_plan.ZONE_ALONE_MIN)
 - cut city: a GHS-FUA over FUA_PEOPLE whose main urban centre is split between rows, two each holding
   world_plan.FUA_CUT_SHARE of its people (Adelaide)
+- phantom: a unit with a 1 km GHSL pixel of PHANTOM_PIXEL people or more that is a spike (its eight neighbours
+  average under PHANTOM_SPIKE of it) in no GHS-UCDB urban centre, or in one that first counted as urban in
+  PHANTOM_YOB or later: villages GHSL piles people on (Cambodia's Trapeang Prasat, T-2000, T-2002). Pixels alone
+  cannot tell a phantom from a dense small town (Turkey and the Philippines have both), so read each against a
+  census (world_plan's admin_totals) before holding a row
+- off town: a row whose origin has no pixel of ORIGIN_DENSE_SHARE of the row's densest within ORIGIN_TOWN_KM,
+  or has a pixel of PHANTOM_PIXEL people there but lies over ORIGIN_UC_KM from every urban centre of a row that
+  holds one (a village or an outskirt: Konya, Erzurum, T-2299). Fix: the town's centre by hand, as checks/zone_new_origins.py does for the densest pixel
+- cut name: a row named, or led, by a unit whose name is as long as a pile-up of names in its source file
+  (geoBoundaries cuts Russia's ADM2 names at 26 characters, Canada's and Cambodia's with a "*"). Fix: name the
+  zone in zone-names.json
 NOTE lines are for the run: built packs of other countries within BORDER_KM (borders.json, the joins); a
 planned row whose data/terrain/<id>.terrain is older than the dry plan (an earlier row's, which the runner
 clears, T-1986); far islets with next to no one in them.
@@ -44,6 +55,25 @@ ORIGIN_KM = 25.0
 LONE_PEOPLE = wp.ZONE_ALONE_MIN
 FUA_PEOPLE = wp.FUA_WHOLE
 BORDER_KM = 50.0
+# a km2 of 20,000 people is a Phnom Penh or Manila core; in a village it is GHSL's error (Cambodia's phantoms hold
+# 23,000-48,000)
+PHANTOM_PIXEL = 20000.0
+# a real core's neighbours hold a third to three quarters of it (Philippine cities 0.3-0.7); Cambodia's phantoms
+# 0.06-0.20
+PHANTOM_SPIKE = 0.2
+# UCDB draws a centre round each of Cambodia's phantoms, all first urban in 2020 or 2025 (they grew in GHSL's
+# newest epochs); Turkish and Philippine towns with such a pixel mostly date from 2015 or earlier
+PHANTOM_YOB = 2020
+# an origin off the town: the origin's pixel holds under a tenth of the row's densest; or sits on a hot pixel
+# (PHANTOM_PIXEL) outside every urban centre of a row that has some (Konya's and Erzurum's old origins were both on
+# one, GHSL's phantom villages). A lower pixel outside a centre is a small town in a village row: Indonesia,
+# Russia and Vietnam have 40 such rows at origin pixels of 3,000-6,000
+ORIGIN_DENSE_SHARE = 0.1
+ORIGIN_TOWN_KM = 3.0
+ORIGIN_UC_KM = 3.0
+# source names piled up at one length (the file's longest) as a cut makes: at least this many, twice the next
+# shorter length, an eighth of the next longer
+CUT_MIN, CUT_RATIO, CUT_LONGER = 20, 2.0, 8.0
 REGISTRY = TW / "app/src/game/registry.json"
 PLAN = TW / "pipeline/world_plan.json"
 
@@ -75,6 +105,36 @@ def units_of(iso, src):
             pr = f["properties"]
             k = pr.get("ITL325CD") or pr.get("NUTS_ID") or pr.get("id")
             out[k] = (pr.get("ITL325NM") or pr.get("NAME_LATN") or pr.get("NUTS_NAME"), shape(f["geometry"]))
+    return out
+
+
+_UC = []
+
+
+def uc_centres():
+    """(STRtree of the GHS-UCDB urban centre polygons, their 2025 people, centroid points, polygons, first year
+    urban), Mollweide."""
+    if not _UC:
+        import pyogrio
+        df = pyogrio.read_dataframe(wp.UCDB, layer="GHS_UCDB_THEME_GENERAL_CHARACTERISTICS_GLOBE_R2024A",
+                                    columns=["ID_UC_G0", "GC_POP_TOT_2025", "GC_UCB_YOB_2025"])
+        gs = [wp.polygonal(g) for g in df.geometry]
+        _UC.extend([shapely.STRtree(gs), df.GC_POP_TOT_2025.to_numpy(float), [g.centroid for g in gs], gs,
+                    df.GC_UCB_YOB_2025.to_numpy(float)])
+    return _UC
+
+
+def cut_lengths(iso, src):
+    """The name lengths a geoBoundaries file of the plan's levels piles names up at, as a cut does."""
+    out = set()
+    for level in sorted(set(src.get("urls", {})) | {src.get("level")}):
+        p = TW / f"data/raw/worldplan/geoboundaries/{iso}_{level}.geojson"
+        if src.get("kind") != "geoBoundaries" or not p.exists():
+            continue
+        import collections
+        c = collections.Counter(len(f["properties"].get("shapeName") or "")
+                                for f in json.loads(p.read_text(encoding="utf-8"))["features"])
+        out |= {n for n in c if n >= 12 and c[n] >= CUT_MIN and c[n] >= CUT_RATIO * c[n - 1] and c[n + 1] * CUT_LONGER <= c[n]}
     return out
 
 
@@ -162,6 +222,68 @@ def main(argv):
                          f"Fix: checks/zone_new_origins.py")
             red.add(r["id"])
 
+    # phantom people, origins off their town, cut names
+    uc = uc_centres()
+    cut = cut_lengths(iso, src)
+    for r in rows:
+        bad = []
+        for uid in r["units"][iso]:
+            if uid not in units:
+                continue
+            nm, ug = units[uid]
+            x, y, p = pop.inside(wp.to_moll(ug))
+            hot = np.nonzero(p >= PHANTOM_PIXEL)[0]
+            for i in hot[np.argsort(-p[hot])]:
+                hit = uc[0].query(shapely.points(x[i], y[i]), predicate="within")
+                big = float(uc[1][hit].max()) if len(hit) else 0.0
+                if len(hit) and uc[4][hit].max() < PHANTOM_YOB:
+                    continue
+                X, Y, P = pop.pixels((x[i] - 1500, y[i] - 1500, x[i] + 1500, y[i] + 1500))
+                d = np.hypot(X - x[i], Y - y[i])
+                nb = float(P[(d > 0) & (d < 1500)].sum()) / 8
+                if nb < PHANTOM_SPIKE * p[i]:
+                    bad.append((float(p[i]), nm, nb, big))
+                    break
+        if bad:
+            flags.append(f"FLAG phantom: {r['id']} {r['name']}: " + "; ".join(
+                f"{nm} has a 1 km pixel of {px:,.0f} people, its neighbours {nb:,.0f} each, in "
+                + (f"an urban centre of {big:,.0f}" if big else "no urban centre") for px, nm, nb, big in bad)
+                + ". Fix: compare with a census; hold the row or use census totals (T-2000)")
+            red.add(r["id"])
+        g = geom.get(r["id"])
+        if g is None or not r.get("origin"):
+            continue
+        gm = wp.to_moll(g)
+        x, y, p = pop.inside(gm)
+        om = wp.to_moll(Point(*r["origin"]))
+        if not len(p):
+            continue
+        near = np.hypot(x - om.x, y - om.y) <= ORIGIN_TOWN_KM * 1000
+        here = float(p[near].max()) if near.any() else 0.0
+        why = None
+        if here < ORIGIN_DENSE_SHARE * float(p.max()):
+            why = (f"the densest pixel within {ORIGIN_TOWN_KM:g} km of the origin holds {here:,.0f} people, "
+                   f"the row's densest {p.max():,.0f}")
+        else:
+            inrow = [int(k) for k in uc[0].query(gm, predicate="intersects")
+                     if gm.intersection(uc[3][int(k)]).area >= 0.25 * uc[3][int(k)].area]
+            if (inrow and here >= PHANTOM_PIXEL
+                    and not any(uc[3][k].distance(om) <= ORIGIN_UC_KM * 1000 for k in inrow)):
+                why = (f"a pixel of {here:,.0f} people within {ORIGIN_TOWN_KM:g} km of the origin, in none of the row's "
+                       f"{len(inrow)} urban centres")
+        if why:
+            flags.append(f"FLAG off town: {r['id']} {r['name']}: origin {r['origin']}: {why}. "
+                         f"Fix: the town's centre by hand (planned status, rebuilt)")
+            red.add(r["id"])
+    for r in rows:
+        lead = ((r.get("source") or {}).get("unit_names") or [None])[0]
+        for nm in {r["name"], lead} - {None}:
+            if nm.endswith("*") or len(nm) in cut:
+                flags.append(f"FLAG cut name: {r['id']} {r['name']}: '{nm}' is {len(nm)} characters, "
+                             f"the length its source file piles names up at, so cut unless it is a whole name. Fix: name the zone in zone-names.json")
+                red.add(r["id"])
+                break
+
     # lone tiny zones
     for r in zones:
         if r.get("people", 0) < LONE_PEOPLE:
@@ -235,14 +357,14 @@ def main(argv):
     for _, ps in near.items():
         for _, g in ps:
             for p in shapely.get_parts(g):
-                for ring in [p.exterior]:
-                    ax.fill(*ring.xy, color="#bbbbbb", lw=0)
+                if p.geom_type == "Polygon":
+                    ax.fill(*p.exterior.xy, color="#bbbbbb", lw=0)
     for n, r in enumerate(rows):
         g = geom.get(r["id"])
         if g is None:
             continue
         bad = r["id"] in red
-        for p in shapely.get_parts(g):
+        for p in (q for q in shapely.get_parts(g) if q.geom_type == "Polygon"):
             ax.fill(*p.exterior.xy, color=cmap(n % 20), alpha=0.75 if not bad else 0.9, lw=0)
             ax.plot(*p.exterior.xy, color="red" if bad else "#333333", lw=2.0 if bad else 0.3)
         c = g.representative_point()

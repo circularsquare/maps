@@ -124,7 +124,7 @@ Done when: the dry plan's rows look like the country's towns and countryside, wi
 
 ## 3. Preflight (on the dry plan; fix before any build)
 
-Each item checked and ticked in the notes. Items 1-5 and 8 in one call, from the maps root:
+Each item checked and ticked in the notes. Items 1-5 and 8-10 in one call, from the maps root:
 
     venv\Scripts\python.exe trainworld\checks\country_preflight.py XX <kit>\xx.json [--png <kit>\xx.png]
 
@@ -134,10 +134,11 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
 
 1. **Origins** (FLAG origin): none of the country's zones over 25 km from the unit it leads with (grouped
    zones are not checked: their origin is in the group they are named after). Over: on the live plan (section 4),
-   `checks/zone_new_origins.py <ids> --apply` moves the row's origin to its lead unit's densest pixel. The check does
-   not see an origin inside its unit but off the town (a village or an outskirt: Konya, Erzurum, Veliky Novgorod,
-   Tobolsk parked on the browser check with 0 riders); those park at the gate and take the town's centre by hand
-   (status planned, rebuilt). Where lead units are named in another script (Russia's "городской округ" city okrugs),
+   `checks/zone_new_origins.py <ids> --apply` moves the row's origin to its lead unit's densest pixel. An origin
+   inside its unit but off the town (a village or an outskirt: Konya, Erzurum, Veliky Novgorod, Tobolsk parked on
+   the browser check with 0 riders) is FLAG off town: no GHS-UCDB urban centre of the row within 3 km of the origin,
+   or no pixel within 3 km of it holding a tenth of the row's densest. Set it to the town's centre by hand (status
+   planned, rebuilt). Where lead units are named in another script (Russia's "городской округ" city okrugs),
    the zone is named after the first Latin-script unit, often a district beside the city: name it after its lead
    city in zone-names.json.
 2. **Scattered units** (FLAG scattered): no row with towns (1,000 people) in parts over 100 km from all its
@@ -170,7 +171,16 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
 8. **Reused ids** (NOTE reused id): the runner clears a planned row's old per-id caches itself, `data/terrain/<id>.terrain`
    included (T-1743, T-1986); only a cache it does not list (`world_run.ROW_CACHES`) needs deleting by hand.
 
-Done when: all eight ticked.
+9. **Phantom people** (FLAG phantom): a unit with a 1 km GHSL pixel of 20,000 or more that is a spike (its
+   eight neighbours average under a fifth of it) in no urban centre, or in one first urban in 2020 or later:
+   villages GHSL piles people on (Cambodia's north-west, T-2000). Pixels alone also flag some real dense small
+   towns (Turkey, the Philippines): compare each flagged unit with a census and hold the row (or give the
+   country census totals) where GHSL is over about 3 times it.
+10. **Cut names** (FLAG cut name): a row named or led by a unit whose name is the length a geoBoundaries file
+   cuts its names at (Russia's ADM2 at 26, Canada's and Cambodia's with a "*"): the source holds no full name,
+   so name the zone in zone-names.json.
+
+Done when: all ten ticked.
 
 ## 4. Write the plan, back up (15 minutes)
 
