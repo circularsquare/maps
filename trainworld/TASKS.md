@@ -239,7 +239,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3630 [P2] {L:feedback} Settings and feedback on the landing page
+- T-3630 [P2] {L:feedback} Settings and feedback on the landing page (taking, 2026-11-18, agent landing)
   - Context: Your pad, 2026-11-18, after a player on X couldn't load their save (stuck at "Calculating trips" 68%, about 2 minutes left, on an Osaka game): "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
@@ -445,9 +445,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Player report 2026-11-16 (board group g004): two lines built between them, the trip explorer finds no inter-city trip. Needs a repro first. May share a cause with T-3426 (feeders).
   - Goal: Reproduce; inter-city trips between the two show up on a built line.
   - Other: Not reproduced 2026-11-16 (bugs3); needs the player's save; may share a cause with T-3426. notes/T-3432.md
-- T-3433 [P3] {L:airports} Kobe Airport demand is offset from the terminal
-  - Context: Player report 2026-11-16. Reach: few.
-  - Goal: The airport's trips start at the terminal.
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
