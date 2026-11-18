@@ -60,8 +60,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Server deploy waiting (her word)
 - shonei-server unpushed and undeployed: 12d58a0 (T-3652 Newest tab), 662ed86 (T-3707 published builds + modded
-  latch). After that deploy the Newest tab shows; v0.4.1's unstamped scores stay accepted 48 h after the server first
-  reads builds.json, so the next game publish (which writes builds.json via deploy.py) should follow within 2 days.
+  latch). After that deploy the Newest tab shows. builds.json appears with the next game publish (deploy.py writes
+  it); old v0.4.1 tabs' unstamped scores stay accepted until 48 h after the server first reads it. Either order works.
 
 ## Her words
 - 11-18 18:40 UTC: modded games off the leaderboards "soonish ... p2" (T-3707, modmark running: modded mark +
