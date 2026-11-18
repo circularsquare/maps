@@ -1856,7 +1856,7 @@
   "schedule.profit": "利潤",
   "schedule.recalculating": "正在計算旅次…",
   "schedule.riders": "乘客",
-  "schedule.roundTip": "路線上的{vehicles}在往返一趟{trip}內維持這個班距",
+  "schedule.roundTip": "{count, plural, other {路線上的{vehicles}在往返一趟{trip}內維持這個班距}}",
   "schedule.stepperLabel": "{vehicle, select, train {路線上的列車} tram {路線上的路面電車} bus {路線上的公車} other {路線上的船}}",
   "schedule.title": "時刻表",
   "schedule.uses": "使用車庫裡的{unit}",

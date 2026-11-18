@@ -1856,7 +1856,7 @@
   "schedule.profit": "Gewinn",
   "schedule.recalculating": "Berechne Reisen…",
   "schedule.riders": "Fahrgäste",
-  "schedule.roundTip": "{vehicles} auf der Linie halten den Takt bei einer Fahrzeit von {trip} für Hin und zurück",
+  "schedule.roundTip": "{count, plural, one {{vehicles} auf der Linie hält den Takt bei einer Fahrzeit von {trip} für Hin und zurück} other {{vehicles} auf der Linie halten den Takt bei einer Fahrzeit von {trip} für Hin und zurück}}",
   "schedule.stepperLabel": "{vehicle, select, train {Züge auf der Linie} tram {Trams auf der Linie} bus {Busse auf der Linie} other {Boote auf der Linie}}",
   "schedule.title": "Fahrplan",
   "schedule.uses": "Nutzt {unit} aus dem Depot",

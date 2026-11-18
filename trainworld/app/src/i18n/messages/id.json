@@ -1856,7 +1856,7 @@
   "schedule.profit": "Laba",
   "schedule.recalculating": "Menghitung perjalanan…",
   "schedule.riders": "Penumpang",
-  "schedule.roundTip": "{vehicles} di lini menjaga selang sepanjang pulang-pergi {trip}",
+  "schedule.roundTip": "{count, plural, other {{vehicles} di lini menjaga selang sepanjang pulang-pergi {trip}}}",
   "schedule.stepperLabel": "{vehicle, select, train {kereta di lini} tram {trem di lini} bus {bus di lini} other {kapal di lini}}",
   "schedule.title": "Jadwal",
   "schedule.uses": "Memakai {unit} dari depo",

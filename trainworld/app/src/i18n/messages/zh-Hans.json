@@ -1856,7 +1856,7 @@
   "schedule.profit": "利润",
   "schedule.recalculating": "正在计算出行…",
   "schedule.riders": "乘客",
-  "schedule.roundTip": "往返一趟要{trip}，线路上的{vehicles}可维持这个发车间隔",
+  "schedule.roundTip": "{count, plural, other {往返一趟要{trip}，线路上的{vehicles}可维持这个发车间隔}}",
   "schedule.stepperLabel": "{vehicle, select, train {线路上的列车} tram {线路上的有轨电车} bus {线路上的公交车} other {线路上的船}}",
   "schedule.title": "时刻表",
   "schedule.uses": "使用闲置的{unit}",

@@ -1856,7 +1856,7 @@
   "schedule.profit": "Прибыль",
   "schedule.recalculating": "Расчёт поездок…",
   "schedule.riders": "Пассажиры",
-  "schedule.roundTip": "На линии {vehicles}, чтобы держать интервал на рейсе туда и обратно: {trip}",
+  "schedule.roundTip": "{count, plural, one {На линии {vehicles}, чтобы держать интервал на рейсе туда и обратно: {trip}} few {На линии {vehicles}, чтобы держать интервал на рейсе туда и обратно: {trip}} many {На линии {vehicles}, чтобы держать интервал на рейсе туда и обратно: {trip}} other {На линии {vehicles}, чтобы держать интервал на рейсе туда и обратно: {trip}}}",
   "schedule.stepperLabel": "{vehicle, select, train {поездов на линии} tram {трамваев на линии} bus {автобусов на линии} other {паромов на линии}}",
   "schedule.title": "Расписание",
   "schedule.uses": "Из депо: {unit}",

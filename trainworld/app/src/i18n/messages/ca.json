@@ -1856,7 +1856,7 @@
   "schedule.profit": "Benefici",
   "schedule.recalculating": "Calculant els desplaçaments…",
   "schedule.riders": "Passatgers",
-  "schedule.roundTip": "Amb {vehicles} a la línia es manté l’interval en una anada i tornada que dura {trip}",
+  "schedule.roundTip": "{count, plural, one {Amb {vehicles} a la línia es manté l’interval en una anada i tornada que dura {trip}} other {Amb {vehicles} a la línia es manté l’interval en una anada i tornada que dura {trip}}}",
   "schedule.stepperLabel": "{vehicle, select, train {trens a la línia} tram {tramvies a la línia} bus {autobusos a la línia} other {vaixells a la línia}}",
   "schedule.title": "Horari",
   "schedule.uses": "Fa servir {unit} del dipòsit",

@@ -1856,7 +1856,7 @@
   "schedule.profit": "이익",
   "schedule.recalculating": "이동 계산 중…",
   "schedule.riders": "승객",
-  "schedule.roundTip": "왕복 {trip} 동안 배차 간격을 지키려면 노선에 {vehicles} 필요",
+  "schedule.roundTip": "{count, plural, other {왕복 {trip} 동안 배차 간격을 지키려면 노선에 {vehicles} 필요}}",
   "schedule.stepperLabel": "{vehicle, select, train {노선의 열차 수} tram {노선의 트램 수} bus {노선의 버스 수} other {노선의 배 수}}",
   "schedule.title": "시간표",
   "schedule.uses": "차량기지의 {unit} 사용",

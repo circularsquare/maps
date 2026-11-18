@@ -1768,7 +1768,7 @@
   "schedule.profit": "Row label in a line view's past-24-hours rows: today's expected profit.",
   "schedule.recalculating": "Hover on the note shown over a line view's figures while riders are worked out again after an edit.",
   "schedule.riders": "Row label in a line view's past-24-hours rows: riders in the past 24 hours.",
-  "schedule.roundTip": "Hover on a vehicle count in the schedule table. vehicles: a count with its noun, \"6 trains\"; trip: the round trip time, \"48 min\".",
+  "schedule.roundTip": "Hover on a vehicle count in the schedule table. vehicles: a count with its noun, \"6 trains\"; count: the number of vehicles, 6, chooses the verb form; trip: the round trip time, \"48 min\".",
   "schedule.stepperLabel": "Screen-reader label of the vehicle count stepper in the schedule table. vehicle: train, bus or boat.",
   "schedule.title": "Heading of the schedule section in a line view.",
   "schedule.uses": "Line of a schedule stepper hover: the change needs no purchase. unit: a count with its noun, \"2 cars\".",

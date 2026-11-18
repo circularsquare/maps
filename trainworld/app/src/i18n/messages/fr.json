@@ -1856,7 +1856,7 @@
   "schedule.profit": "Bénéfice",
   "schedule.recalculating": "Calcul des déplacements…",
   "schedule.riders": "Voyageurs",
-  "schedule.roundTip": "Pour tenir l’intervalle sur un aller-retour de {trip} : {vehicles} sur la ligne",
+  "schedule.roundTip": "{count, plural, one {Pour tenir l’intervalle sur un aller-retour de {trip} : {vehicles} sur la ligne} other {Pour tenir l’intervalle sur un aller-retour de {trip} : {vehicles} sur la ligne}}",
   "schedule.stepperLabel": "{vehicle, select, train {trains sur la ligne} tram {trams sur la ligne} bus {bus sur la ligne} other {bateaux sur la ligne}}",
   "schedule.title": "Horaire",
   "schedule.uses": "Utilise {unit} du dépôt",

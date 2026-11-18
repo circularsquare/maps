@@ -1856,7 +1856,7 @@
   "schedule.profit": "Profit",
   "schedule.recalculating": "Calculating trips…",
   "schedule.riders": "Riders",
-  "schedule.roundTip": "{vehicles} on the line keep the headway over its round trip of {trip}",
+  "schedule.roundTip": "{count, plural, one {{vehicles} on the line keeps the headway over its round trip of {trip}} other {{vehicles} on the line keep the headway over its round trip of {trip}}}",
   "schedule.stepperLabel": "{vehicle, select, train {trains on the line} tram {trams on the line} bus {buses on the line} other {boats on the line}}",
   "schedule.title": "Schedule",
   "schedule.uses": "Uses {unit} from the depot",

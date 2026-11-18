@@ -1856,7 +1856,7 @@
   "schedule.profit": "Lucro",
   "schedule.recalculating": "Calculando deslocamentos…",
   "schedule.riders": "Passageiros",
-  "schedule.roundTip": "{vehicles} na linha mantêm o intervalo na ida e volta de {trip}",
+  "schedule.roundTip": "{count, plural, one {{vehicles} na linha mantém o intervalo na ida e volta de {trip}} other {{vehicles} na linha mantêm o intervalo na ida e volta de {trip}}}",
   "schedule.stepperLabel": "{vehicle, select, train {trens na linha} tram {bondes na linha} bus {ônibus na linha} other {balsas na linha}}",
   "schedule.title": "Horário",
   "schedule.uses": "Usa {unit} do depósito",

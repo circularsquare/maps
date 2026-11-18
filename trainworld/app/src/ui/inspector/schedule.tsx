@@ -165,7 +165,7 @@ function LevelCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats; d
         <span class={"num" + (broke ? " bad" : "")} data-tip={loop
           ? t("schedule.lapTip", { vehicles: vehiclesText(v, counts[lev]), half: counts[lev] / 2, lap: duration(trip / 2) })
           : st.loop ? t("schedule.lapOneWayTip", { vehicles: vehiclesText(v, counts[lev]), lap: duration(trip) })
-          : t("schedule.roundTip", { vehicles: vehiclesText(v, counts[lev]), trip: duration(trip) })}>{counts[lev]}</span>
+          : t("schedule.roundTip", { vehicles: vehiclesText(v, counts[lev]), count: counts[lev], trip: duration(trip) })}>{counts[lev]}</span>
       </td>
       <td>
         {wrap(<Stepper wide jump jumpUnit={t("schedule.minUnit")} label={t("schedule.headwayLabel")} value={short ? <span class="bad">{headwayText(auto[lev])}</span> : headwayText(auto[lev])} onStep={(s) => stepHeadway(l.id, d, s)}
@@ -206,7 +206,7 @@ function WeekendCells({ l, st, d, auto, limits }: { l: LineInput; st: LineStats;
           <span class="num" data-tip={loop
             ? t("schedule.lapTip", { vehicles: vehiclesText(v, n), half: n / 2, lap: duration(trip / 2) })
             : st.loop ? t("schedule.lapOneWayTip", { vehicles: vehiclesText(v, n), lap: duration(trip) })
-            : t("schedule.roundTip", { vehicles: vehiclesText(v, n), trip: duration(trip) })}>{n}</span>
+            : t("schedule.roundTip", { vehicles: vehiclesText(v, n), count: n, trip: duration(trip) })}>{n}</span>
         </td>
         <td>
           <Stepper wide jump jumpUnit={t("schedule.minUnit")} label={t("schedule.weekendHeadwayLabel")}

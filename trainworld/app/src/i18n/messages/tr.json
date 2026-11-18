@@ -1856,7 +1856,7 @@
   "schedule.profit": "Kâr",
   "schedule.recalculating": "Yolculuklar hesaplanıyor…",
   "schedule.riders": "Yolcular",
-  "schedule.roundTip": "Hattaki {vehicles}, {trip} süren gidiş-dönüş boyunca sefer aralığını korur",
+  "schedule.roundTip": "{count, plural, one {Hattaki {vehicles}, {trip} süren gidiş-dönüş boyunca sefer aralığını korur} other {Hattaki {vehicles}, {trip} süren gidiş-dönüş boyunca sefer aralığını korur}}",
   "schedule.stepperLabel": "{vehicle, select, train {hattaki trenler} tram {hattaki tramvaylar} bus {hattaki otobüsler} other {hattaki vapurlar}}",
   "schedule.title": "Sefer planı",
   "schedule.uses": "Depodan {unit} kullanır",
