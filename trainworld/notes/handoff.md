@@ -12,7 +12,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    change: checker before landing), corridor T-2136 (smoke + checker), regate T-930/T-3656 (land after dayrun's
    join), dayrun T-3671/T-3660/T-3517 (main tree, 6 cores).
 2. Mine, started 16:20 UTC (Sonnet, trees): onewaytext T-3676/3677/3678 (one-way warning and question strings,
-   3 untranslated keys; Vite 6150); checkfix T-3663/3679/3617 (three stale or failing checks; Vite 6151).
+   3 untranslated keys; Vite 6150); checkfix T-3663/3679/3617 (three stale or failing checks; Vite 6151);
+   commload T-3680 (P1, her pad: community cards say Could not load too soon; Vite 6152; app-only, no server deploy).
 3. dayrun: until kit dayrun.state (notes/T-3671/kit) says "PACKS FREE" (about 19:15 UTC) hold anything writing
    data/packs or data/terrain, including 8800 rebuilds. Gates serve a frozen copy, so app/ and WASM landings are free.
 4. 8800 rebuild once PACKS FREE: 8800 is 866e3212, lacks T-3673's one-way arrows (3210be41) and T-3666; the freeze
@@ -25,6 +26,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    calls moved to the background at 180 s). Watch whether agents' smoke runs still behave.
 
 ## Her words
+- 11-18 16:25 UTC: close easy high-priority wins and old tasks, small over design-heavy, to get the open count
+  down; retriage clear miscategorisations; "prio should take into account easiness as well as impact". Triage
+  agents triageA/triageB write notes/triage-2026-11-18-{a,b}.md (Close, Small wins, Needs her, Reprioritise); I apply
+  closes and priorities in one batch, queue small wins in Up next and start them. She is out walking, on remote control.
 - "lets do them all, can start in whatever order you think makes sense" (workflow, 11-18; all seven done).
 - 11-18 ~15:20 UTC: mostly hands off today (headache): ask her nothing unless it truly needs her; short messages.
 - Daytime builds on part of the cores when compute is free, thinking-heavy tasks beside them (11-18).

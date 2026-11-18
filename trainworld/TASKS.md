@@ -418,6 +418,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
+- T-3680 [P1] {L:community} Community cards say Could not load too soon (taking, 2026-11-18, agent commload)
+  - Context: Your pad 2026-11-18: "when clicking through community tabs, it often says "could not load this network" for like half the maps ... if i click on any it loads like almost instantly so we should probbly jut give it a tad more time before saying "could not load"". Screenshot artifacts/trainworld/board/20261118-111610-0e5e.png. Reach: everyone who browses community.
+  - Goal: Switching tabs shows every card's preview or a loading state; "Could not load this network" only for a network that really fails.
 - T-3674 [P3] {L:feedback} Feedback reports say where a load stuck
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
@@ -426,9 +429,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
   - Goal: Both screens have a Submit feedback button that opens the form.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3678 [P3] {L:translations} Three track panel strings untranslated (taking, 2026-11-18, agent onewaytext)
-  - Context: From T-3630: `trackInspector.pieces`, `shiftAddTip` and `shiftSetTip` have no translations (before T-3630 too).
-  - Goal: The three keys are translated in every language the game ships.
 - T-3445 [P3] {L:track-speed} {after:a terrain rework decision} Ramp length sets the speed limit
   - Context: You, 2026-11-16: "do want ramps with speed limit eventually. plan is that current ramp length should keep max speed of 160, longer ramps should allow higher max speeds, shorter ramps should restrain to lower max speeds. cuz people complain about wanting mroe ramps. but hold off on introducing it now, also hold off on changing any ramp max speed behavior at all actually. we will wait on thinking about a more general terrain rework that encompasses the idea of taking into account real terrain / real elevation."
   - Goal: Held until you decide on a terrain rework; then ramps cap speed by length (today's 200 m a level keeps 160 km/h).
@@ -897,14 +897,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3676 [P3] {L:single-track} Line warning for track that runs the other way (taking, 2026-11-18, agent onewaytext)
-  - Context: From T-3647: "Track this line ran on is gone" also shows for track that is still there but runs the other way, so the player doesn't know to switch its direction. Reach: anyone who flips one-way track under a line.
-  - Goal: That case gets its own warning ("Track this line runs on goes the other way"), the gone case keeps its own.
-  - Other: notes/T-3647.md
-- T-3677 [P3] {L:single-track} Turning one-way off asks the wrong question (taking, 2026-11-18, agent onewaytext)
-  - Context: From T-3647: switching "Run trains one way" off, when lines change, asks "Run trains one way on this track?" with a "Run one way" button, which reads as turning it on.
-  - Goal: Turning it off asks about two-way running, with a button that names that.
-  - Other: notes/T-3647.md
 - T-3335 [P3] {L:quad-track} {after:T-3444} Line panel on both quad pairs
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
