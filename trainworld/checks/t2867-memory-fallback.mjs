@@ -37,7 +37,8 @@ const settled = (page, after) => page.waitForFunction((after) => {
 
 try {
   const page = await ctx.newPage();
-  await page.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
+  // once per tab: "Play without intercity trips" unticks the stored setting across its reload (T-3630)
+  await page.addInitScript(() => { try { if (sessionStorage.getItem('tw-t2867-ui')) return; sessionStorage.setItem('tw-t2867-ui', '1'); localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday' }, v: 2 })); } catch {} });
   collectErrors(page, errors, NOISE, /glyphs/);
 
   await open(page);

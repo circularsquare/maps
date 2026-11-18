@@ -6,6 +6,7 @@ import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
+import { marketOff } from "../game/ui";
 import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
 import { Icon } from "./widgets";
 
@@ -36,8 +37,8 @@ function marked(a: string) {
 }
 
 /** T-3527: the questions, worded with the names of the buttons and settings they point to, so an answer
- * follows its control's name in every language. Phones get their own gestures and the intercity
- * switch, which only phones have. */
+ * follows its control's name in every language. Phones get their own gestures; the intercity question shows
+ * while intercity trips are off (T-3630). */
 function questions(): [string, string][] {
   const m = mark;
   const touch = mobileDevice();
@@ -49,7 +50,7 @@ function questions(): [string, string][] {
     [t("help.qExpress"), t("help.aExpress", { copy })],
     [t("help.qLoop"), t("help.aLoop", { touch })],
   ];
-  if (touch) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: m(t("settingsTab.mobileIntercity")) })]);
+  if (marketOff()) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: m(t("settingsTab.mobileIntercity")) })]);
   list.push(
     [t("help.qRebuild"), t("help.aRebuild", { touch, tool: m(selectName), key: m(selectKey), rebuild: m(t("blueprint.rebuild")) })],
     [t("help.qEditTrack"), t("help.aEditTrack", { touch, del: m(deleteName), delKey: m(deleteKey), tool: m(selectName), key: m(selectKey), rebuild: m(t("blueprint.rebuild")), remove: m(t("blueprint.remove")) })],

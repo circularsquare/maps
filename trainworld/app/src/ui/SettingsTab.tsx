@@ -24,7 +24,7 @@ import { accountState } from "../game/account";
 import { AccountButton, AccountSection, loginText } from "./AccountPanel";
 import { CommunityButton } from "./Community";
 import { PurposeSelect } from "./DemandSelector";
-import { FeedbackButton, FeedbackPanel } from "./FeedbackPanel";
+import { FeedbackButton } from "./FeedbackPanel";
 import { t, tNumber, type MessageKey } from "../i18n";
 import { LanguageSelect } from "./LanguageSelect";
 import { SideRow } from "./SideSwitch";
@@ -202,20 +202,14 @@ export function SettingsTab() {
       <CurrencyRow />
       <div class="h">{t("settingsTab.performance")}</div>
       <div class="checks">
-        <Check checked={d.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
-          <span data-tip={t("settingsTab.moreCoresTip")}>{t("settingsTab.moreCores")}</span>
-        </Check>
+        <MoreCoresCheck />
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           {t("settingsTab.runInBackground")}
         </Check>
         <Check checked={d.recalcWhilePaused} onChange={(v) => setDisplay("recalcWhilePaused", v)}>
           {t("settingsTab.recalcWhilePaused")}
         </Check>
-        {mobileDevice() && (
-          <Check checked={d.mobileIntercity} onChange={(v) => setDisplay("mobileIntercity", v)}>
-            <span data-tip={t("settingsTab.mobileIntercityTip")}>{t("settingsTab.mobileIntercity")}</span>
-          </Check>
-        )}
+        <IntercityCheck />
       </div>
       <MemoryRow />
       <div class="h">{t("settingsTab.lineShapes")}</div>
@@ -228,8 +222,8 @@ export function SettingsTab() {
         ))}
       </div>
       <AccountSection />
+      {/* T-3630: the form itself is mounted on its own (startFeedbackUi), so the start menu and the failure screen open it too */}
       <FeedbackButton />
-      <FeedbackPanel />
       <div class="donate">
         <a class="btn icon" href="https://ko-fi.com/anitamaps" target="_blank" rel="noopener" data-tip={t("settingsTab.donateTip")} aria-label={t("settingsTab.kofi")}><Icon.kofi /></a>
         <span class="muted" data-tip={t("settingsTab.donateTip")}>{t("settingsTab.donate")}</span>
@@ -323,6 +317,16 @@ function GameMode() {
 
 /** T-247: the size of the panels and their text (and of the map's name tags), remembered per browser. */
 function UiScale() {
+  return (
+    <>
+      <div class="h">{t("settingsTab.uiScale")}</div>
+      <UiScaleStepper />
+    </>
+  );
+}
+
+/** The panel size's stepper alone; also in the start menu's settings (T-3630). */
+export function UiScaleStepper() {
   const s = uiScale.value;
   const i = UI_SCALES.findIndex((v) => Math.abs(v - s) < 0.001);
   const step = (d: number) => {
@@ -331,10 +335,23 @@ function UiScale() {
     setDisplay("uiScale", to);
     return undefined;
   };
+  return <Stepper wide label={t("settingsTab.uiScaleLabel")} value={<span>{percent(s)}</span>} onStep={step} />;
+}
+
+/** T-381: more demand workers, read when a game loads; here and in the start menu's settings (T-3630). */
+export function MoreCoresCheck() {
   return (
-    <>
-      <div class="h">{t("settingsTab.uiScale")}</div>
-      <Stepper wide label={t("settingsTab.uiScaleLabel")} value={<span>{percent(s)}</span>} onStep={step} />
-    </>
+    <Check checked={display.value.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
+      <span data-tip={t("settingsTab.moreCoresTip")}>{t("settingsTab.moreCores")}</span>
+    </Check>
+  );
+}
+
+/** T-2838, T-3630: trips between cities, on every device; here and in the start menu's settings. */
+export function IntercityCheck() {
+  return (
+    <Check checked={display.value.intercityTrips} onChange={(v) => setDisplay("intercityTrips", v)}>
+      <span data-tip={t("settingsTab.mobileIntercityTip")}>{t("settingsTab.mobileIntercity")}</span>
+    </Check>
   );
 }

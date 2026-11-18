@@ -8,11 +8,12 @@
 // there is a reply (game/account.ts checks on load and every 30 minutes). Against any other server none
 // of that shows and the form sends as before.
 
-import { signal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
+import { h, render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
   ApiError, canListFeedback, deleteFeedback, feedbackImagesMax, feedbackThreadsOn, feedbackUnread, getFeedbackThread, listFeedback, markFeedbackRead,
-  replyFeedback, sendFeedback, session, type FeedbackRow, type FeedbackThread,
+  replyFeedback, sendFeedback, session, startAccount, type FeedbackRow, type FeedbackThread,
 } from "../game/account";
 import { acceptedType, dropImage, imageField, ImageTooBig, MAX_IMAGES, prepareImage, type FeedbackImage } from "../game/feedbackImages";
 import { loadFailure } from "../game/loading";
@@ -21,7 +22,7 @@ import { display } from "../game/ui";
 import { graphicsReport } from "../map/graphicsInfo";
 import { language, t, tDate } from "../i18n";
 import { Modal } from "./Modal";
-import { showPassingNote } from "./PassingNote";
+import { PassingNote, showPassingNote } from "./PassingNote";
 import { Icon } from "./widgets";
 import "./account.css";
 
@@ -90,6 +91,11 @@ export function NewReplyDot() {
 /** The hover line for what carries the dot; undefined when no reply is unread. */
 export const replyTip = () => (feedbackUnread.value ? t("feedbackPanel.hasReply") : undefined);
 
+/** T-3630: Submit feedback alone, in words, for the start menu's foot and the failure screen. */
+export function FeedbackOpen({ class: cls }: { class: string }) {
+  return <button class={cls + " fb-open" + (feedbackOpen.value ? " on" : "")} data-tip={replyTip()} onClick={() => (feedbackOpen.value = true)}>{t("feedbackPanel.open")}<NewReplyDot /></button>;
+}
+
 /** The Settings button. */
 export function FeedbackButton() {
   return <div class="pane-foot">
@@ -100,7 +106,21 @@ export function FeedbackButton() {
   </div>;
 }
 
-export function FeedbackPanel() {
+let mounted = false;
+/** T-3630: the form in a root of its own from startup, so the start menu and the failure screen, which have no
+ * Settings tab, open it too. Opening it starts the account (idempotent) so the server's config, which says what
+ * the form takes, loads without the dock. */
+export function startFeedbackUi() {
+  if (mounted) return;
+  mounted = true;
+  effect(() => { if (feedbackOpen.value) startAccount(); });
+  const root = document.createElement("div");
+  root.id = "feedback-root";
+  document.body.appendChild(root);
+  render(h(() => <><FeedbackPanel /><PassingNote page /></>, null), root);
+}
+
+function FeedbackPanel() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [kind, setKind] = useState("");

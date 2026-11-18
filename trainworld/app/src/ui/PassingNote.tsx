@@ -2,6 +2,7 @@
 // feedback panel's "sent"): one line of plain text on the map for a few seconds.
 
 import { signal } from "@preact/signals";
+import { choosing, startup } from "../game/loading";
 
 /** Wall ms the note stays. */
 const NOTE_MS = 5000;
@@ -16,9 +17,13 @@ export function showPassingNote(text: string) {
   passingTimer = setTimeout(() => { passing.value = null; }, NOTE_MS) as unknown as number;
 }
 
-/** In the map's upper left (DemandSelector.tsx's `MapTopLeft`). */
-export function PassingNote() {
+/** T-3630: while the start menu or the failure screen covers the map, the note is at the page's top centre instead */
+const overPage = () => choosing.value || startup.value === "failed";
+
+/** In the map's upper left (DemandSelector.tsx's `MapTopLeft`), or with `page` over the page (FeedbackPanel.tsx). */
+export function PassingNote({ page }: { page?: boolean }) {
   const say = passing.value;
-  if (!say) return null;
-  return <div class="edit-note" key={say.at}><div class="edit-row">{say.text}</div></div>;
+  if (!say || overPage() !== !!page) return null;
+  const note = <div class="edit-note" key={say.at}><div class="edit-row">{say.text}</div></div>;
+  return page ? <div class="page-note">{note}</div> : note;
 }

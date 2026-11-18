@@ -33,7 +33,7 @@ import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_
 import type { FrameSpec } from "../game/frame";
 import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
-import { display, marketDropped, marketOff, selection, shownDay, tool } from "../game/ui";
+import { display, marketOff, selection, shownDay, tool } from "../game/ui";
 import {
   cityDemandViews, demandByDay, intercityDemand,
   type DayDemand,
@@ -856,8 +856,9 @@ class DemandClient {
   private cacheSolve: Service | null = null;
 
   // --- T-328: the last final result kept beside the save (workers/demandCache.ts) ---
-  /** T-2794: not on a small device, which has no memory for the copies a write makes or a worker to write them */
-  private cacheOn = cacheAvailable() && !TEST && !mobileDevice() && !marketDropped();
+  /** T-2794: not on a small device, which has no memory for the copies a write makes or a worker to write them;
+   * T-2867: nor with intercity trips off, the choice of a player short of memory */
+  private cacheOn = cacheAvailable() && !TEST && !mobileDevice() && !marketOff();
   /** off: no cache is written (a check turns it off to leave a network uncached) */
   cacheWrites = true;
   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */

@@ -118,9 +118,10 @@ export interface DisplaySettings {
   zoomButtons: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
   chartOtherLines: boolean;
-  /** T-2838: a phone or tablet calculates trips between cities too (the market opens); per browser, since it is
-   * about the device. Read at each solve, so it applies from the next one. */
-  mobileIntercity: boolean;
+  /** T-2838, T-3630: trips between cities are calculated (the market opens); per browser, since it is about the
+   * device: on by default on a computer, off on a phone or tablet. Read at each solve, so it applies from the next
+   * one; the start menu's ticked box is what a game opened there gets. */
+  intercityTrips: boolean;
   /** T-3319: the bullet shape of each mode's lines that have none of their own (game/lineShapeState.ts) */
   modeShapes: Record<Vehicle, LineShape>;
 }
@@ -172,7 +173,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   zoomButtons: true,
   busOneWay: false,
   chartOtherLines: true,
-  mobileIntercity: false,
+  intercityTrips: !mobileDevice(),
   modeShapes: { ...MODE_SHAPES },
 };
 
@@ -201,12 +202,12 @@ function load(): Partial<{ tab: Tab; theme: Theme; shade: Shade; display: Partia
   }
 }
 const saved = load();
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { mobileIntercity?: boolean; lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
 // `complexView` (one ridership circle per station complex is the only way since T-1449), nor `font`
 // (Nunito is the only font, T-1524), nor `trainLoad` and `platformCrowds` (train and platform fullness are always drawn, T-3579): dropped from storage
-const { lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, trainLoad: _trainLoad, platformCrowds: _platformCrowds, ...migratedDisplay } = oldDisplay ?? {};
+const { mobileIntercity: _mobileIntercity, lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, trainLoad: _trainLoad, platformCrowds: _platformCrowds, ...migratedDisplay } = oldDisplay ?? {};
 // T-703: the size default changed, and settings stored before had saved the old one with
 // everything else, so it is dropped once
 if ((saved.v ?? 1) < 3) delete migratedDisplay.uiScale;
@@ -231,6 +232,9 @@ if ((saved.v ?? 1) < 12) delete migratedDisplay.lineBands;
 if ((saved.v ?? 1) < 14 && migratedDisplay.currency === "USD") delete migratedDisplay.currency;
 // Terrain shading became the default (Anita, 2026-11-17); the old default (off) was stored, so it is dropped once
 if ((saved.v ?? 1) < 15) delete migratedDisplay.hillshade;
+// T-3630: the phones-only toggle became a setting on every device; every computer had the old off stored, so only a
+// phone's choice carries over
+if (migratedDisplay.intercityTrips === undefined && mobileDevice() && _mobileIntercity !== undefined) migratedDisplay.intercityTrips = _mobileIntercity;
 // T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
 const trackColour = (saved.v ?? 1) < 10
   ? oldDisplay?.trackColour === "height" || oldDisplay?.trackColour === "speed" ? oldDisplay.trackColour : DEFAULT_DISPLAY.trackColour
@@ -253,24 +257,11 @@ const modeShapes = Object.fromEntries(Object.entries(MODE_SHAPES).map(([m, s]) =
 // T-3329: Map detail is gone, High for everyone; a stored Low is dropped
 delete (migratedDisplay as Record<string, unknown>).lighterMap;
 export const display = signal<DisplaySettings>({ ...DEFAULT_DISPLAY, ...migratedDisplay, modeShapes, trackColour, ...(VIDEO ? VIDEO_DISPLAY : {}) });
-/** T-2867: the player chose to play without intercity trips after running out of memory: this tab, across its
- * reloads, and gone with it (one bad evening should not take them away for good) */
-const MARKET_DROPPED = "tw-no-intercity";
-let droppedHere = false;
-try { droppedHere = typeof sessionStorage !== "undefined" && sessionStorage.getItem(MARKET_DROPPED) === "1"; } catch { /* storage unavailable */ }
-export const marketDropped = () => droppedHere;
-export function dropMarket() {
-  droppedHere = true;
-  try { sessionStorage.setItem(MARKET_DROPPED, "1"); } catch { /* this page only */ }
-}
-/** A game opened from the start menu without "Load without inter-city trips" has them again (Anita, 2026-11-10) */
-export function keepMarket() {
-  droppedHere = false;
-  try { sessionStorage.removeItem(MARKET_DROPPED); } catch { /* this page only */ }
-}
-/** T-2802, T-2838: no market (no trips between cities) on a phone or tablet, unless the player turned it on;
- * T-2867: or after `dropMarket` */
-export const marketOff = () => droppedHere || (mobileDevice() && !display.peek().mobileIntercity);
+/** T-2867, T-3630: "Play without intercity trips" and "Load without intercity trips" untick the setting, so the
+ * start menu shows what the next game gets */
+export const dropMarket = () => setDisplay("intercityTrips", false);
+/** T-2802, T-2838, T-3630: no market (no trips between cities) while the setting is off */
+export const marketOff = () => !display.peek().intercityTrips;
 // bubble colours are module state in palette.ts (the bubble worker has its own); views that colour
 // bubbles read the setting and call this again before building, so the order of effects is moot
 effect(() => setBubbleColours(display.value.bubbleColours, display.value.rampFrom, display.value.rampTo));

@@ -138,7 +138,7 @@ const dm4 = () => Object.defineProperty(Navigator.prototype, 'deviceMemory', { c
     check(!/Intercity/.test((await noteText(page)) ?? 'x'), 'toggle on: the note drops the intercity sentence at once');
     await page.close();
     const page2 = await open(chrome, init);
-    check(await page2.evaluate(() => JSON.parse(localStorage.getItem('trainworld-ui')).display?.mobileIntercity === true), 'the setting survives a reload');
+    check(await page2.evaluate(() => JSON.parse(localStorage.getItem('trainworld-ui')).display?.intercityTrips === true), 'the setting survives a reload');
     await page2.waitForTimeout(3000);
     const t2 = await noteText(page2);
     check(/4GB of RAM or less/.test(t2 ?? '') && !/Intercity/.test(t2 ?? ''), `toggle on after reload: memory sentence only (${t2})`);

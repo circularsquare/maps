@@ -14,6 +14,7 @@ import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
 import { marketOff } from "../game/ui";
 import { playWithoutIntercity } from "./DemandStopped";
+import { FeedbackOpen, feedbackOpen, startFeedbackUi } from "./FeedbackPanel";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
 import { t, tNumber } from "../i18n";
@@ -43,6 +44,8 @@ function LoadingScreen() {
       {why && <p class="small muted load-why">{why}</p>}
       <div class="loading-actions">
         <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
+        {/* T-3630: where a failed load leaves the player; the report carries the failure's text */}
+        <FeedbackOpen class="btn" />
         {named && <button class="btn" onClick={() => location.assign(location.pathname)}>{t("loadingScreen.backToStart")}</button>}
         {/* T-2867: out of memory, the way on keeps demand and drops intercity trips, while there are any to drop */}
         {!game && (isMemoryFailure(why) && !marketOff()
@@ -136,5 +139,7 @@ export function startLoadingGate() {
   render(h(LoadingCard, null), card);
   // While the failure screen is up, keys go nowhere but its buttons (the map's, the tools', space
   // for the clock)
-  blockKeysOutside(root, () => startup.peek() === "failed" || graphicsGone.peek());
+  // (T-3630: but the feedback form, a dialog of its own, takes its typing)
+  blockKeysOutside(root, () => (startup.peek() === "failed" || graphicsGone.peek()) && !feedbackOpen.peek());
+  startFeedbackUi();
 }

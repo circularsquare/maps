@@ -30,7 +30,7 @@ const markSeen = () => { try { localStorage.setItem(STORE, "1"); } catch { /* th
 const noteParts = () => {
   const parts: string[] = [];
   if (reportsLowMemory()) parts.push(t("noMarketNote.memory"));
-  if (mobileDevice() && !display.peek().mobileIntercity) parts.push(t("noMarketNote.text"));
+  if (mobileDevice() && !display.peek().intercityTrips) parts.push(t("noMarketNote.text"));
   return parts;
 };
 

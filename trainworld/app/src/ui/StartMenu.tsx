@@ -4,11 +4,13 @@
 // starts the clock and demand workers with the pick. It covers the page and takes every key until then.
 // With no saved game it opens on the new game sheet (T-1441).
 
-import { h, render } from "preact";
+import { h, render, type ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { HOME_CITY, isCity } from "../game/cities";
 import { choosing } from "../game/loading";
-import { display, dropMarket, keepMarket } from "../game/ui";
+import { display, dropMarket } from "../game/ui";
+import { FeedbackOpen } from "./FeedbackPanel";
+import { IntercityCheck, MoreCoresCheck, UiScaleStepper } from "./SettingsTab";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
@@ -107,9 +109,59 @@ function UpdateRow({ onChangelog }: { onChangelog: () => void }) {
   </div>;
 }
 
+/** T-3630: the settings that matter before a game loads, in a small panel over the foot's gear. */
+function StartSettings() {
+  return <div class="start-settings" role="group" aria-label={t("dock.settings")}>
+    <div class="checks">
+      <IntercityCheck />
+      <MoreCoresCheck />
+    </div>
+    <div class="slider start-scale"><span>{t("settingsTab.uiScale")}</span><UiScaleStepper /></div>
+  </div>;
+}
+
+/** T-3630: the menu's foot, on the menu and the new game sheet alike: the build, About, Submit feedback (one click,
+ * in words), the language and a gear for the settings that matter before a game loads. Under the update row, in
+ * one column with it, so neither covers the other on a phone. */
+function StartFoot({ update }: { update: ComponentChildren }) {
+  const [open, setOpen] = useState(false);
+  const foot = useRef<HTMLDivElement>(null);
+  const bottom = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => { if (!foot.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", away, true);
+    document.addEventListener("keydown", esc, true);
+    return () => { document.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", esc, true); };
+  }, [open]);
+  // the menu keeps the foot's height free at its bottom, so a tall card or sheet never runs under it
+  useEffect(() => {
+    const el = bottom.current, menu = el?.closest<HTMLElement>(".start-menu");
+    if (!el || !menu) return;
+    const ro = new ResizeObserver(() => menu.style.setProperty("--foot-h", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return <div class="start-bottom" ref={bottom}>
+    {update}
+    <div class="start-foot" ref={foot}>
+      {open && <StartSettings />}
+      <div class="start-foot-line">
+        <span class="start-version">{t("startMenu.build", { version: VERSION })}</span>
+        <AboutLink class="start-link" />
+        <FeedbackOpen class="start-link" />
+        <LanguageSelect class="start-lang" />
+        <button class={"btn icon start-gear" + (open ? " on" : "")} data-tip={t("dock.settings")} aria-label={t("dock.settings")} aria-expanded={open}
+          onClick={() => setOpen(!open)}><Icon.gear /></button>
+      </div>
+    </div>
+  </div>;
+}
+
 function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { slots: SaveSlot[]; unread: boolean; pick: (c: GameChoice) => void; settling: Promise<void> }) {
-  // T-3073: every game opened here has inter-city trips unless the warning's lite button asked otherwise
-  const pick = (c: GameChoice, lite = false) => { if (lite) dropMarket(); else keepMarket(); pickGame(c); };
+  // T-3630: a game opened here has intercity trips as the foot's setting says; the warning's lite button unticks it
+  const pick = (c: GameChoice, lite = false) => { if (lite) dropMarket(); pickGame(c); };
   const first = useRef<HTMLButtonElement>(null);
   // T-2810: out in the menu's own element, away from the card's zoom
   const [changelog, setChangelog] = useState(false);
@@ -192,20 +244,19 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
   // with the logo the welcome heading goes (Anita), the logo naming the menu
   return <div class={LOGO ? "start-menu with-logo" : "start-menu"} role="dialog" aria-modal="true" aria-labelledby={LOGO && !sheet ? undefined : "start-title"} aria-label={LOGO && !sheet ? "trainsworld" : undefined}>
     {LOGO && <StartLogo />}
-    <p class="start-version muted small">{t("startMenu.build", { version: VERSION })}<AboutLink class="start-about" /></p>
-    {/* T-2753: the language on the card's first row at the right, so a new player (who lands on the sheet) sets it first */}
+    {/* T-2753, T-3630: the language is in the foot, the same place on the menu and the sheet */}
     {sheet ? <div class="start-box new-game-box">
-      <div class="start-titlebar"><h1 id="start-title" class="big">{t("startMenu.newGame")}</h1><div class="start-top"><LanguageSelect /><AccountButton kind="start" /></div></div>
+      <div class="start-titlebar"><h1 id="start-title" class="big">{t("startMenu.newGame")}</h1><div class="start-top"><AccountButton kind="start" /></div></div>
       <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => pick({ newGame: true, newSlot: newGameName(slots, game), game })} />
     </div> : <div class="start-box">
       {!LOGO && <h1 id="start-title" class="big">{t("startMenu.welcome")}</h1>}
       <div class="save-files">
         <button ref={first} class="btn start-new" onClick={() => setSheet(true)}>{t("startMenu.newGame")}</button>
         {returning && <button class="btn start-file" onClick={load}>{t("startMenu.loadFile")}</button>}
-        <div class="start-top"><LanguageSelect /><AccountButton kind="start" /><CommunityButton start /></div>
+        <div class="start-top"><AccountButton kind="start" /><CommunityButton start /></div>
       </div>
       {(refused || deleteOwed.value) && <p class="muted small start-refused" role="alert">{refused || t("cloud.deleteOwed")}</p>}
-      {warned && !refused && <p class="muted small start-refused" role="alert">{warned.text} <button class="btn" onClick={() => { setWarned(null); warned.go(); }}>{t("startMenu.loadAnyway")}</button> <button class="btn" onClick={() => { setWarned(null); warned.go(true); }}>{t("startMenu.loadWithoutIntercity")}</button></p>}
+      {warned && !refused && <p class="muted small start-refused" role="alert">{warned.text} <button class="btn" onClick={() => { setWarned(null); warned.go(); }}>{t("startMenu.loadAnyway")}</button>{display.value.intercityTrips && <> <button class="btn" onClick={() => { setWarned(null); warned.go(true); }}>{t("startMenu.loadWithoutIntercity")}</button></>}</p>}
       {unread && <p class="muted small start-refused start-unread" role="alert">{t("startMenu.savesUnreadable")}</p>}
       {groups.length > 0 && <>
         <h2 class="start-head">{t("startMenu.savedGames")}</h2>
@@ -230,7 +281,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
         </ul>
       </>}
     </div>}
-    {!sheet && <UpdateRow onChangelog={() => setChangelog(true)} />}
+    <StartFoot update={!sheet && <UpdateRow onChangelog={() => setChangelog(true)} />} />
     <Changelog open={changelog} onClose={() => setChangelog(false)} />
   </div>;
 }

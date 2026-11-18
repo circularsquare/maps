@@ -584,8 +584,8 @@ a chevron that opens its answer under it, one open at a time, ruled off from the
 the game's own controls through their keys ("Copy line", "Calculate intercity trips", the Select tool and its
 key, "Rebuild"), so they follow those labels in every language. Now: a branching or short turning line ("Copy
 line", then the new line's stops), an express line ("Copy line", then drop the skipped stations), a loop line
-(right click, on a phone hold, the stop to loop back to while adding stops), no intercity riders (phones only,
-where the setting exists: turn on "Calculate intercity trips"), rebuilding sections of track (the Select tool and
+(right click, on a phone hold, the stop to loop back to while adding stops), no intercity riders (only while
+the setting is off: turn on "Calculate intercity trips"), rebuilding sections of track (the Select tool and
 its bar's Rebuild), editing or deleting built track (the Delete tool, or the Select tool's Rebuild or Remove),
 four tracks using only two (new stations on the new pair and a new line), and the game recalculating after every
 piece (pause and turn off "Recalculate trips while paused", which is on by default; an entry points to a setting
@@ -633,7 +633,9 @@ when accounts are on, Account [T-1139]: who is logged in ("Logged in as alice", 
 Google" or "Not logged in") and a button, Account settings or Sign in, that opens the same account
 panel as the icon at the top and the start menu's (sign in, recovery email, change password, sign
 out, delete; [Account and leaderboards](#account-and-leaderboards)), and Submit feedback at the bottom
-[T-1673, `ui/FeedbackPanel.tsx`]: a centred modal "Feedback" (the account panel's form styles) with Name (optional)
+[T-1673, `ui/FeedbackPanel.tsx`; the same button is on the start menu's foot and the failure screen, T-3630, the
+form mounted in a root of its own from startup, `startFeedbackUi`, so it opens with no Settings tab; sent from
+there, the "sent" note shows at the page's top centre]: a centred modal "Feedback" (the account panel's form styles) with Name (optional)
 and Message, and Send feedback. Under the feedback row, a Ko-fi cup icon link (inline SVG, the cup in the theme's colour and its heart in Ko-fi's red #ff5e5b, https://ko-fi.com/anitamaps in a new tab) with Anita's line "please consider donating to keep trains world running!" beside it; both carry the hover "this game is free, but the cost to host it is starting to get expensive. please consider donating!", then About and Changelog [T-3340]. Feedback POSTs to the account server's `/trainworld/feedback`
 (`sendFeedback` in `game/account.ts`, the same server choice as the account: live on anita.garden, `?acct=local` for
 127.0.0.1:8083), with the build id as `version`; the server stores it and mails it on, so no address is in the page.
@@ -672,7 +674,13 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. The Currency row follows.
 
 **Performance** [T-381, T-3329]: "Use more cores" (off by default) allows up to 5 demand workers instead of 3 at most; its
-hover says it takes effect after a reload ([architecture.md](architecture.md) 7). "Run in background"
+hover says it applies from the next load ([architecture.md](architecture.md) 7). "Calculate intercity trips" [T-2838,
+T-3630], on every device, remembered in the browser, on by default on a computer and off on a phone or tablet: off,
+no market pack opens, so there are no trips between zones and no demand cache (a solving worker about 174 MB lighter on
+New York's real save). Ticked mid-game it applies from the next solve; unticked mid-game, the market packs already
+open stay and keep their trips until the next load. The start menu's settings show the same box, and a game opened there has
+intercity trips as it says; "Play without intercity trips" (a memory failure) and "Load without intercity trips"
+(the start menu's memory warning) untick it. "Run in background"
 (off by default) keeps the clock running while the tab is hidden (the top bar's clock, above;
 [architecture.md](architecture.md) "A hidden page") [T-826]. "Recalculate trips while paused" (on by default): off, edits made while
 the game is paused start no demand solve; the first moment the game runs again, one solve covers them all
@@ -1084,7 +1092,7 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
 **A new game** starts on day 1 at 07:00 with $10B, empty or (a sandbox) from a real network, on its
 start city's registry centre and zoom, or on the world map (centre 20° E 30° N, zoom 1.8: the
 Americas, Europe and East Asia) with no start city; a start from the player's location is centred on
-it (below). Opening the page shows the start menu (below), with "build 786" muted at its bottom left: the
+it (below). Opening the page shows the start menu (below), with "build 786" muted first in its foot: the
 commit count of the build (`__TW_VERSION__`, vite.config.ts), "dev" on a dev server.
 The address bar never carries the map position. The tab remembers its last view (sessionStorage), and
 a reload starts the map at the registry centre and zoom of the city or zone that view is in, or over
@@ -1323,9 +1331,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 [T-677; `ui/StartMenu.tsx`; the startup order in [architecture.md](architecture.md) "Loading and readiness"]
 
 - Every page load opens on the logo (below) over a card on the bare map, in the loading card's look:
-  no tagline [T-1710], New game at the top with, at the right of its row, the language picker (the Settings
-  row's globe and select) and the account button when accounts are on [T-972, T-2753]; the new game sheet
-  has the picker at the right of its heading, then "Saved games", one card per game as in the saves panel (T-2037: the version with the latest player change on top, the latest save first), each a button with the
+  no tagline [T-1710], New game at the top with, at the right of its row, the account button when accounts are on
+  [T-972] and Community; the new game sheet has the account button at the right of its heading; then "Saved games", one card per game as in the saves panel (T-2037: the version with the latest player change on top, the latest save first), each a button with the
   saves panel's picture (the same 240 x 160 with its names) and facts (name, when saved, day, cities, lines, stations, cash), and under it, joined to it, the saves panel's "3 other versions" line and list (above).
   Signed in (T-988), the slots are first settled against the account (a click on a card waits for
   that, 10 s at most), and a game only on the account is a card with a cloud (hover "On your
@@ -1350,7 +1357,14 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   menu's dialog is named "trainsworld". The trains are the only motion; with reduced motion asked for,
   one still frame. `?logo=0` leaves the logo out: the card is then headed "Welcome to trainsworld!"
   and only city, town and village names are hidden.
-- **Update row** [T-2810; `ui/updates.ts` is the one list of updates, newest first]: at the screen's bottom right above the map attribution, a compact row framed in the theme colour, with 12 px muted text throughout, the newest update's one line, a Changelog button (a Modal listing each update's version, date and changes; each change has its area's icon in the area's colour, the list sorted by area with an area's bug fixes after its other changes and a little lighter, and a group such as "track bug fixes" lists its changes indented under it [T-3466]; one page per x.y version, v0.3 holding v0.3 to v0.3.5, picked with buttons under the title, the newest open [T-3468]) and an x that hides it for good in this browser. It shows for 2 days from the update's `at` (bumped at publish), not on the new game sheet. On narrow screens it can cover the saves; its close button stays visible.
+- **Foot** [T-3630, after Anita's pick of the footer line, 2026-11-18]: one line at the bottom left, on the menu and
+  the new game sheet alike, 12 px muted: "build 786", About this game, Submit feedback (opens the feedback form, as
+  in Settings), the language picker (the Settings row's globe and select; here only, so a new player who lands on
+  the sheet finds it in the same place, T-2753) and a gear (hover "Settings") that opens a small panel over the line
+  with the settings that matter before a game loads: Calculate intercity trips, Use more cores and Panel and text
+  size, the same controls as in Settings; a press outside it or Esc closes it. The line wraps on a narrow screen;
+  it and the update row stand in one column at the bottom, the row above, so neither covers the other.
+- **Update row** [T-2810; `ui/updates.ts` is the one list of updates, newest first]: at the screen's bottom right above the foot (and so above the map attribution), a compact row framed in the theme colour, with 12 px muted text throughout, the newest update's one line, a Changelog button (a Modal listing each update's version, date and changes; each change has its area's icon in the area's colour, the list sorted by area with an area's bug fixes after its other changes and a little lighter, and a group such as "track bug fixes" lists its changes indented under it [T-3466]; one page per x.y version, v0.3 holding v0.3 to v0.3.5, picked with buttons under the title, the newest open [T-3468]) and an x that hides it for good in this browser. It shows for 2 days from the update's `at` (bumped at publish), not on the new game sheet. On narrow screens it can cover the saves; its close button stays visible.
 - A click on a save opens that slot (a sandbox's name has the "Sandbox" mark). New game shows the
   new game sheet (above) in the card, headed "New game", with Back to the menu; its Start starts the
   game in a new slot, so no saved game is replaced. The slot is first written once the network has
@@ -1530,10 +1544,11 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   second, or "No progress for 1 min" after 90 s with nothing arriving, as a zone's bar has it
   ([ui-demand-views.md](ui-demand-views.md)). While the loading card is up it says the same in the
   middle of the map, and the status shows nothing.
-- If demand cannot load, a screen says so and offers two buttons, Try again (reload) and Play
-  without demand, and takes every key until one is pressed. If the game itself never started (the
-  clock worker failed to start, or the page's setup threw before its end), it has Try again alone
-  [T-950]. A saved game that browser storage cannot read (four tries over about two seconds) is such a
+- If demand cannot load, a screen says so and offers Try again (reload), Submit feedback (the feedback form,
+  whose report carries the failure's text, T-3630) and Play without demand, and takes every key until one is
+  pressed (the feedback form's typing excepted). If the game itself never started (the
+  clock worker failed to start, or the page's setup threw before its end), it has Try again and Submit feedback
+  alone [T-950]. A saved game that browser storage cannot read (four tries over about two seconds) is such a
   failure: the reason line says the save could not be read and nothing was written over it, and the game
   never opens as the Original game or a new one in its place [T-2703]. The box is centred, 400 px wide, the sentence balanced over its lines; when the address
   names a game (it has a query), a Back to start button sits beside Try again (it opens the address
