@@ -14,7 +14,10 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - 8800 = 1cd05bdb, smoke8800 PASSED light and dark (artifacts/trainworld/smoke8800-light.log, -dark.log).
 - Her yes to all four steps in maps-86's tab, 01:27 UTC. Done: (1) shonei-server deployed (active 01:27:58) and
   pushed 3e8e501..a46c2e9; (2) freight tiles + extra.json on R2 (206/200), T-3464 archived.
-- (3) data 2026-11-18 on R2 (data verify PASS), website pushed d13096e; `deploy.py --verify --page` waits on Pages.
+- PUBLISHED 2026-11-18 ~01:50 UTC: data 2026-11-18 on R2, website d13096e, `--verify --page` all PASS.
+- Landing (background, scratchpad of c8a9be2a \land1.ps1, log \land1.log): trafficwidth, snapbar, capload,
+  tramsnap (+ realgraph-t3515 copied into data/packs/realgraph), idlemem, chevrons, ctrlsnap. Then one smoke on
+  master, snap8800, push.
   (4) export pushed (trainsworld 8ebd2d2 = maps 5bb38d73). PR 1 / issue 8 replies: texts in handoff-log line 19-20
   were written pre-release ("goes out with the next update"); updated wording shown to her, post + close on her OK.
   Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
@@ -22,8 +25,12 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 ## In flight (maps-86's)
 - T-3397 DONE (saverisk): no other documented bug writes a bad save and reports success; filed T-3610 (P2), T-3611,
   T-3612 (P3). Findings in notes/T-3397.md (commit with the next round).
-- saveread (Sonnet, .tw-trees/saveread, port 6182): T-3610 one unreadable save hides all + T-3612 iOS version in
-  feedback. Saves: needs a checker before landing.
+- saveread: T-3610 + T-3612 DONE in .tw-trees/saveread (archived). Changelog c001 in tree "fixed one unreadable
+  saved game hiding all the others; it now shows as damaged and the rest still open". Wart: the damaged card says
+  "No undamaged copy of this game is left" while a backup is offered. Checker scheck (Sonnet, port 6184) running ->
+  notes/T-3610-check.md; land on PASS.
+- sidebox: T-3615 DONE in .tw-trees/sidebox (sheet review/t3615.png, looked at, fine); changelog c003 already in the
+  MAIN tree's next.json. Touches rendererShaders.ts like trafficwidth: land after the batch.
 - kcheck (Sonnet, checker, runs in .tw-trees/kaohsiung, port 6183): T-3600 option (a) + T-3601; writes
   notes/T-3600-check.md. kaohsiung's report: intercity within 0.4-2.5% of final in 2-6 s; changelog c136 (T-3601),
   c137 "after you turn a line's trains on or off, the intercity lines through that city show their new riders within

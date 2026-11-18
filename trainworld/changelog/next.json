@@ -1,0 +1,78 @@
+{
+  "release": "next",
+  "line": "",
+  "items": [
+    {
+      "id": "c006",
+      "text": "holding ctrl while snapping to streets pauses the snap",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3608",
+      "by": "ctrlsnap",
+      "at": "2026-11-18T01:53:07Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c005",
+      "text": "one-way arrows are spaced evenly along the track, and bus one-way arrows show from further out",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3607",
+      "by": "chevrons",
+      "at": "2026-11-18T01:52:54Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c004",
+      "text": "fixed the real world network snap for tram track missing some real tram corners and links, like on Melbourne's route 82 and at Zurich's main station",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3515",
+      "by": "tramsnap",
+      "at": "2026-11-18T01:52:34Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c003",
+      "text": "one way stations and stations with no passing loop grow with the map like other stations when zoomed in, with a longer bump on the platform side",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3615",
+      "by": "sidebox",
+      "at": "2026-11-18T01:50:17Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": false
+    },
+    {
+      "id": "c002",
+      "text": "fixed the snap beside button sitting off the end of the track bar on phones",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3516",
+      "by": "snapbar",
+      "at": "2026-11-18T01:47:40Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c001",
+      "text": "fixed double track drawing wider than single track in the traffic view, line width now follows riders only",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3580",
+      "by": "trafficwidth",
+      "at": "2026-11-18T01:47:28Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    }
+  ]
+}

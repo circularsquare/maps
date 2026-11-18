@@ -1,6 +1,14 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3615 [P2] {L:map-look} Single-side station boxes with a real width (2026-11-17): single-side boxes have a world width per her numbers; sheet review/t3615.png. notes/T-3615.md.
+- T-3608 [P2] {L:track-drawing} Ctrl pauses snap to street (2026-11-17): Ctrl pauses street snap; straight only with snap off.
+- T-3607 [P2] {L:map-look} One-way chevrons spaced by distance; bus chevrons further out and thinner (2026-11-17): track arrows every 300 m by distance; bus chevrons from zoom 12, line-thick.
+- T-3515 [P3] {L:trams} Tram snap refuses turns at Zurich junctions (2026-11-17): tram snap takes real junction turns; graphs rebuilt into data/packs/realgraph.
+- T-3612 [P3] {L:feedback} Feedback names the iOS version of iOS browsers (2026-11-17): Feedback browser string carries the iOS version, e.g. Chrome 120 (iOS 16.5). notes/T-3610.md. notes/T-3610.md.
+- T-3610 [P2] {L:accounts-server} One unreadable save hides every save (2026-11-17): A record the browser cannot read lists as one damaged game; the rest list and open; listBackups likewise (per-record transactions). notes/T-3610.md. notes/T-3610.md.
+- T-3516 [P3] {L:track-drawing} Snap beside button off the phone bar (2026-11-17): the Snap beside button sits inside the phone bar.
+- T-3580 [P3] {L:map-look} Traffic view draws double track twice as thick (2026-11-17): single and double track carrying the same riders draw the same width in the traffic view.
 - T-3397 [P2] {L:accounts-server} Research browser risks to save integrity (2026-11-17): Browser save risks reviewed: v0.3.5 closes the Safari 16.4-16.5 compression bug for saves; remaining risks are whole-origin loss, one unreadable record hiding every save (T-3610), a lock-steal race (T-3611) and iOS diagnostics (T-3612) notes/T-3397.md.
 - T-3614 [P2] {L:checks} New zones map for every update that adds regions (2026-11-17): trainworld/tools/release/new_zones_map.py made; v0.4.0 new zones image (Central America and Venezuela) at artifacts/trainworld/review/v0.4.0-new-zones.png; publish step in docs/orchestrator.md. notes/T-3614.md.
 - T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting (2026-11-17): freight and abandoned rail in the All setting; tiles and extra.json uploaded to R2 for v0.4.0 (2026-11-18) notes/T-3464.md.
