@@ -287,6 +287,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (taking, 2026-11-17, agent kaohsiung)
   - Context: You, 2026-11-17: "after i removed all the trains from the local kaohsiung lines, and waited for the recalc to finish, in traffic view i still see a bunch of them saying like 10k riders per day or something. and its not currently recalculating. so i guess i'd need to make another change for them to recalc to 0." Then: "another 5 minutes later theyre all updated to 0 ... its just a bit slow." Saves: artifacts/trainworld/t3600-asianita-1851.save and -1852.save.
   - Goal: The calculating tag stays up until the traffic view's numbers are final.
+- T-3605 [P1] {L:single-track} Unassigning one side of a split station flips its dots (taking, 2026-11-17, agent onewayfix)
+  - Context: You, 2026-11-17: "if i have a split station, and both sides are assigned (half dot on each side), and then i unassign side A, it actually ends up with side A having a full dot and side B having no dot. whereas I'd expect side A having no dot and side B having a half dot. and if i look at where the trains actually end up going, it looks like they're still stopping at both sides ... if i just click side A again though it clears both sides as expected".
+  - Goal: Unassigning one side of a paired one-way station leaves the other side as a half-dot stop served by its own direction, and the trains do exactly that; in v0.4.0.
+- T-3606 [P3] {L:map-look} Tram station ghost drawn at full width
+  - Context: You, 2026-11-17: "the placement ghost of the tram stations are not shrunk, so they look thick and once we place them it places them as thin. should make the ghost match (and ideally make it so the ghost automatically matches in every case) but can do that later."
+  - Goal: The placement ghost of every station kind is drawn by the same code and widths as the placed station, so they always match.
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
