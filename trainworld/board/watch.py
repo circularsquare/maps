@@ -1,6 +1,6 @@
 """The orchestrator's side of the board inbox (trainworld/notes/board-inbox.jsonl).
 
-    python trainworld/board/watch.py              # keeps running; one line per batch that is ready
+    python trainworld/board/watch.py --session <id> # keeps running; one line per batch that is ready
     python trainworld/board/watch.py pending      # her pending actions, one JSON line each
     python trainworld/board/watch.py handled <id> [<id> ...] --by <orchestrator> [--note "..."]
 
@@ -9,6 +9,10 @@ reported, or a pad-send (the scratch pad's Send for filing) is new, or nothing n
 her for --idle seconds (180). The watch prints only then,
 for the Monitor tool. The line format and the action types (reorder, area, priority, move-task, answer,
 ask-answer, text-ack, add, comment, ...) are in notes/T-3391.md.
+
+It also prints a line for each unread agent report (tools/reports.py, T-3668) that another session's agent
+sent: the current orchestrator's own agents already reach it directly. --session registers this session for
+the reports hook, and the watch stops once notes/handoff.md names another orchestrator.
 """
 import argparse
 import datetime as dt
@@ -17,7 +21,11 @@ import sys
 import time
 from pathlib import Path
 
-INBOX = Path(__file__).resolve().parents[1] / "notes" / "board-inbox.jsonl"
+TW = Path(__file__).resolve().parents[1]
+INBOX = TW / "notes" / "board-inbox.jsonl"
+sys.path.insert(0, str(TW / "tools"))
+import reports  # noqa: E402
+
 sys.stdout.reconfigure(encoding="utf-8")   # her text has CJK; Windows consoles default to cp1252
 
 
@@ -62,11 +70,34 @@ def state(path):
     return pending, last, sent
 
 
-def watch(path, idle, poll):
+def agent_reports(box, session, told):
+    """Lines for unread agent reports not yet printed; None once another session orchestrates."""
+    cur = box.current()
+    if session and cur and not (cur.startswith(session) or session.startswith(cur)):
+        return None
+    out = []
+    for r in box.unread():
+        if r["id"] in told or (session and str(r.get("session", "")).startswith(session[:8])):
+            continue
+        told.add(r["id"])
+        out.append(f"agent report {reports.line(r)} (reports.py show {r['id']})")
+    return out
+
+
+def watch(path, idle, poll, box=None, session=None):
     # At start, leftovers from before count as ready at once if she had pressed Send now.
     # The orchestrator handling part of a batch is not news; only actions not yet reported are.
     reported, seen_sent = set(), None
+    told, next_reports = set(), 0.0
     while True:
+        if box is not None and time.time() >= next_reports:
+            next_reports = time.time() + 10
+            lines = agent_reports(box, session, told)
+            if lines is None:
+                print(f"session {box.current()[:8]} orchestrates trainworld now; this watch stops", flush=True)
+                return
+            for l in lines:
+                print(l, flush=True)
         pending, last, sent = state(path)
         pushed = sent is not None and sent != seen_sent
         seen_sent = sent
@@ -98,11 +129,17 @@ def main():
     ap.add_argument("--idle", type=int, default=180)
     ap.add_argument("--poll", type=float, default=2.0)
     ap.add_argument("--inbox", default=str(INBOX))
+    ap.add_argument("--session", help="this orchestrator's session id: registers it for agent reports")
+    ap.add_argument("--root", default=str(TW), help="the trainworld/ whose agent reports to watch (for testing)")
     a = ap.parse_args()
     path = Path(a.inbox)
     if a.cmd == "watch":
+        box = reports.Box(a.root)
+        session = a.session or box.current()     # without --session, whoever orchestrates as it starts
+        if a.session:
+            box.register(a.session)
         try:
-            watch(path, a.idle, a.poll)
+            watch(path, a.idle, a.poll, box, session)
         except KeyboardInterrupt:
             pass
     elif a.cmd == "pending":

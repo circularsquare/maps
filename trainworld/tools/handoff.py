@@ -2,7 +2,7 @@
   venv\Scripts\python.exe trainworld/tools/handoff.py status
 Prints: master and origin, 8800's build, worktrees under .tw-trees (branch, commits ahead, dirty files, last change,
 a process holding it), agents on the board with start times, uncommitted trainworld paths in the main tree, open asks,
-core claims, a running world run, the unpublished changelog count. notes/handoff.md keeps only the plan, her words
+unread agent reports (tools/reports.py), core claims, a running world run, the unpublished changelog count. notes/handoff.md keeps only the plan, her words
 and judgement; this prints the rest.
 --root <dir> reads another copy of trainworld/ (for testing)."""
 import argparse
@@ -192,6 +192,24 @@ def section_asks(root, out):
         out.append(f"  {a.get('id')} ({age}, {a.get('by', '')}) {a.get('title') or a.get('text', '')[:70]}")
 
 
+def section_reports(root, out):
+    sys.path.insert(0, HERE)
+    import reports
+    box = reports.Box(root)
+    cur = box.current()
+    rs = box.unread()
+    theirs = [r for r in rs if not (cur and str(r.get("session", "")).startswith(cur[:8]))]
+    for r in theirs:
+        out.append("  " + reports.line(r, 116))
+    mine = len(rs) - len(theirs)
+    if mine:
+        out.append(f"  {mine} more from the current orchestrator's own agents (`reports.py list`)")
+    if not rs:
+        out.append("  none")
+    elif theirs:
+        out.append("  `reports.py show <id>` to read; `reports.py read <id> --by <you>` once acted on")
+
+
 def section_cores(main, out):
     r = run([sys.executable, os.path.join(main, "cores.py"), "list"], cwd=main)
     lines = [l for l in (r or "cores.py list failed").split("\n") if l.strip()]
@@ -259,6 +277,8 @@ def main():
     section_uncommitted(main_tree, out)
     out.append("open asks:")
     section_asks(live_root, out)
+    out.append("unread agent reports (from sessions other than the current orchestrator):")
+    section_reports(live_root, out)
     out.append("core claims:")
     section_cores(main_tree, out)
     out.append("world run:")
