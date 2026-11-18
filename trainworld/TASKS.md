@@ -624,10 +624,6 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Goal: Build it only if a real save shows the problem.
   - Other: Follow-up to T-2290.
 Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md):
-- T-2043 [P3] {L:checks} Old cloud check needs updating (taking, 2026-11-18, agent qwpulse)
-  - Context: checks/t988-cloud.mjs expects a fork slot the page now splits off in place (T-2037); it needs a local shonei-server.
-  - Goal: Steps 4 and 7 on of t988-cloud.mjs follow the T-2037 sync rules, and step 3 finds the account game on the new origin-grouped cards (it failed on the new card markup; about 1.5 h, rules in the notes).
-  - Other: See notes/T-2043.md.
 - T-1916 [P3] {L:single-track} Drawing beside track still crosses it
   - Context: In the real-save sweep, 32 of about 85,000 previews cross the track followed, and 46 starts are refused beside a parallel line.
   - Goal: Those cases draw cleanly beside the track.

@@ -45,10 +45,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    Empty locked folder .tw-trees/touchrule (not a worktree): remove once whatever holds it exits.
 9. tasks.py lost T-1970 when ARCHIVE.md's replace was refused (Windows lock); recovered by hand, and tasks.py now
    writes ARCHIVE first and retries the replace.
-3. dayrun: until kit dayrun.state (notes/T-3671/kit) says "PACKS FREE" (about 19:15 UTC) hold anything writing
-   data/packs or data/terrain, including 8800 rebuilds. Gates serve a frozen copy, so app/ and WASM landings are free.
-4. 8800 rebuild once PACKS FREE: 8800 is 866e3212, lacks T-3673's one-way arrows (3210be41) and T-3666; the freeze
-   20261118-065950 predates T-3623's Cairo places, so no frozen build. Fold in whatever lands before then.
+3. dayrun finished 18:10 UTC (T-3671 archived, data/packs free, committed). Undo points data/work/pre-T3671/
+   {pre,prejoin,retired} (~3 GB) go once smoke and 8800 are clean. regate and qwpre landed 18:12.
+4. 18:13 UTC: smoke on master running (scratch smoke-master.log); then snap8800 at master. node_modules was emptied
+   at 18:03 by sideplat2's tree removal (a junction git deleted through); npm install restored it; agent-tree.mjs
+   now unlinks every junction before removing a tree.
 5. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).
 6. Then: T-1080 (waits for a world run hitting the commit limit), T-3160 phone memory once corridor (T-2136) lands
    (both memory; avoid measuring under each other), T-3620 (Caribbean, Bolivia, Paraguay) only when she says.

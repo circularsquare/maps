@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-2043 [P3] {L:checks} Old cloud check needs updating (2026-11-18): checks/t988-cloud.mjs rewritten to the T-2037 sync rules and origin-grouped cards (steps 3, 4, 7 on, a third device for the conflict split); all 17 lines pass against a local shonei-server. Notes: notes/T-2043.md.
 - T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.
 - T-930 [P2] {L:world-tooling} Join re-gate only checks what changed (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.
 - T-3624 [P2] {L:wealth-split} School trips lean to transit (2026-11-18): SCHOOL_CAR_MUL 2.0; NYC school rail 18.5% -> 33.6%, walk 30.9% -> 51.4%; other purposes within 0.02 pt; ceilings pass; checker schoolcheck PASS. notes/T-3624.md.

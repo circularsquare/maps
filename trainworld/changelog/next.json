@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c045",
+      "text": "fixed transfer pulses going missing after panning to a zone your lines don't reach",
+      "edited": null,
+      "hidden": false,
+      "task": "T-1816",
+      "by": "qwpulse",
+      "at": "2026-11-18T18:16:59Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
       "id": "c044",
       "text": "driving to school counts twice now, since a parent drives the pupil and makes the trip too, so more school trips walk or take the train",
       "edited": "driving to school counts twice, so more school trips walk or take the train",
