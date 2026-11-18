@@ -1561,7 +1561,13 @@ export class Tools {
     };
     let best = Infinity, hit: (Removable & { lx: number; ly: number }) | null = null;
     const station=this.overlay.renderer.stationAt(px,py,(x,y)=>this.screen(x,y),5);
-    if (station>=0) return {kind:"station",node:Number(n.stationIds[station]),lx:n.stations[station*3],ly:n.stations[station*3+1]};
+    if (station>=0) {
+      // T-3629: track under the box that is not the station's own platform stretch (a siding) is the pick
+      const node = Number(n.stationIds[station]);
+      const s = this.snap(px, py, this.map.unproject([px, py]));
+      if (s.kind === "edge" && !w.edges.some((e) => e.id === s.edge && (e.a === node || e.b === node))) return { kind: "track", edge: s.edge, lx: s.lx, ly: s.ly };
+      return {kind:"station",node,lx:n.stations[station*3],ly:n.stations[station*3+1]};
+    }
     for (const node of w.nodes.values()) {
       if (!node.flying || node.ports < 3) continue;
       const [lx, ly] = toLocal(node.lng, node.lat);

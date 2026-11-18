@@ -1048,7 +1048,7 @@ Demand discs
 drawn under 8 px in radius are hit within 8 px of their centre [T-566, `MIN_PICK_PX` in
 `map/demandHover.ts`; the hover tag follows the same test], unless a disc drawn above them holds
 the pointer; where those areas overlap the nearest centre wins.
-Clicking the line already selected selects the track under it. Where several lines are under the
+Clicking the line already selected selects the track under it. Clicking the station already selected selects track lying under its box that does not touch its node (a siding), T-3629. Where several lines are under the
 pointer (drawn over each other, or side by side [T-1799]) a click selects the nearest, and between
 lines within 2 px of each other the one with more riders per day on that stretch (more trains an
 hour times cars before demand answers); a click with one of them selected selects the next in that

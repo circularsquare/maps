@@ -383,7 +383,17 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
 
   // a station wins over a train at the same spot (T-1414)
   const station=ov.renderer.stationAt(px,py,(x,y)=>ov.toScreen(x,y),SLOP_PX);
-  if (station>=0) return {kind:"station",station:n.stationIds[station]};
+  if (station>=0) {
+    const id = n.stationIds[station];
+    // T-3629: a click on the station already selected reaches track lying under its box that is not its own
+    // platform stretch (a siding): the station would otherwise win every hit there
+    if (chooseShared && current?.kind === "station" && current.station === id) {
+      const [ti] = topSeg(ov, n.track.seg, n.track.count, px, py, slop);
+      const edge = ti >= 0 ? n.track.edge[ti] : -1;
+      if (edge >= 0 && !world.peek()?.edges.some((e) => e.id === edge && (String(e.a) === id || String(e.b) === id))) return { kind: "track", edge };
+    }
+    return {kind:"station",station:id};
+  }
 
   // trains are not drawn zoomed far out (T-205)
   if (trainsShown && !ov.renderer.trainsHidden) {

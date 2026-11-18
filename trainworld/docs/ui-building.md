@@ -742,7 +742,7 @@ changing by any route, and a delete's late reply does not draw it again under an
 `clearDelHover` in `map/tools.ts`]. The track under a station takes the station [T-2412; `stationUnder` in
 `map/tools.ts`]: the pointer snapped to its node, or on its platform's stretch of track (half the platform
 and 4 m either side, all of a terminus's), rings and removes the station, with its own question, and the track stays; not
-zoomed out where stations are hidden. A station's short end piece [T-2797; `stationStub` in `game/remove.ts`, `holds_station` in the track
+zoomed out where stations are hidden; track under the station's box that does not touch its node (a siding) is the delete tool's pick instead [T-3629]. A station's short end piece [T-2797; `stationStub` in `game/remove.ts`, `holds_station` in the track
 model], from the station to a bare end and at most 11 m past the platform, also takes the station under the delete tool, bare end included, since
 removing that piece would only lay it back; zoomed out, or from the track inspector or the Select tool's Remove with only such pieces picked, it is refused
 ("A station needs this track. Remove the station first."). **Keys** [T-2797]: with the Select tool's pick, Delete or Backspace removes it; with track or a station selected and no tool on,
