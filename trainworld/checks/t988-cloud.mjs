@@ -1,14 +1,15 @@
-// T-988 stage 2: games on the account, against a local shonei-server (dev sign-in) with two browser
-// profiles as two devices, A and B. A loads the real save signed out, signs in and adds it at the
-// sign-in question; B signs in on the start menu and opens it from its account card, and A stops
-// autosaving; a save by hand on A takes it back and B stops. A then plays with the server out of
-// reach ("Not on your account yet") while B saves, and on its next save keeps its version as a fork
-// ("<name> at <time>") and catches up. A deletes the old game and B's copy goes at its next start
-// menu. A game made signed out and kept "here only" at the next sign-in shows the crossed cloud.
-// Stage 3: that cloud's click adds the game; the playing game's account backup is listed and opened
-// as a copy; the account panel counts games and room; signing out with Remove clears the browser.
-// T-1395's panel: the head's account icon, the playing card's icons, Make a copy naming the copy in
-// place, earlier versions as the account's list only.
+// T-988 stage 2 (sync rules of T-2037): games on the account, against a local shonei-server (dev sign-in)
+// with two browser profiles as two devices, A and B. A loads the real save signed out, signs in and adds it
+// at the sign-in question; B signs in on the start menu and opens it from its account card; B only ran its
+// clock, so A's next player change saves over B's claim and A carries on; a save by hand on A and a player
+// change on B stop B. A then plays with the server out of reach ("Not on your account yet") while a third
+// device C joins and uploads a player change to the game; A's next change splits its game off in place (same slot, a new
+// account game of the same origin), one card with the account's copy as another version. A deletes that
+// version and C's slot of it goes at its next start menu. A game made signed out and kept "here only" at
+// the next sign-in shows the crossed cloud.
+// Stage 3: the playing game's account backup is a row of its card and is
+// opened as a new version; the account panel counts games and room; signing out with Remove clears the browser.
+// T-1395's panel: the head's account icon, the playing card's icons, Make a copy naming the copy in place.
 // Screenshots of the sign-in question and the saves panel, light and dark, go to artifacts/trainworld/;
 // stage 3's, light and dark at desktop and phone width, to artifacts/trainworld/t988s3/; the saves
 // panel signed out (built-a) and signed in with earlier versions open (built-b) to t1395/.
@@ -181,13 +182,14 @@ try {
   let b = await open(B);
   // a device with no games opens on the new-game screen; its Back leads to the menu with the account button
   await b.waitForSelector('.start-menu', { timeout: 60000 });
-  if (!await b.locator('.start-menu .acct-start').isVisible()) await b.click('.start-menu button:text-is("Back")');
   await b.waitForSelector('.start-menu .acct-start', { timeout: 60000 });
   await b.click('.start-menu .acct-start');
   await signInDev(b);
   await b.waitForTimeout(500);
   await accountPanel(b, false);
-  const card = await until(() => b.locator(`.start-save[data-slot="account:${gid}"]`).count(), 20000);
+  // the new-game sheet (all a device with no games shows) has no cards: Back leads to the menu that lists them
+  await until(() => b.locator('.start-menu button:text-is("Back")').click({ timeout: 2000 }).then(() => true), 8000);
+  const card = await until(() => b.locator(`.start-menu li[data-origin] .start-save[data-slot="account:${gid}"]`).count(), 20000);
   const cardText = card ? await b.locator(`.start-save[data-slot="account:${gid}"]`).textContent() : '';
   await b.click(`.start-save[data-slot="account:${gid}"]`);
   await inGame(b);
@@ -198,13 +200,12 @@ try {
   report('saved on A, opened on B', !!card && /T-007-real-nyc/.test(cardText) && !!claimed && sb.slots.find((s) => s.key === sb.active)?.cloud?.id === gid,
     `(card ${card}, writer ${claimed ? 'B' : 'not B'}, B plays ${sb.slots.find((s) => s.key === sb.active)?.cloud?.id})`);
 
-  // 4. A's next upload hears "elsewhere": autosave stops there
+  // 4. B only opened the game and ran its clock: A's next player change saves over B's claim and A carries on
+  const revClaimed = claimed?.rev ?? 0;
   await change(a);
-  const gaveWay = await until(async () => { const s = await state(a); return !s.writable && /another device/.test(s.reason) ? s : null; }, 20000);
-  const atA = (await slotOf(a, G)).at;
-  await change(a);
-  await a.waitForTimeout(2500);
-  report('B opening it stops A', !!gaveWay && (await slotOf(a, G)).at === atA, `("${gaveWay?.reason ?? (await state(a)).reason}")`);
+  const overB = await until(async () => { const g = (await account()).games.find((x) => x.id === gid); return g?.writer === devA && g.rev > revClaimed ? g : null; }, 150000, 1000);
+  const sa = await state(a);
+  report('B opened it idle: A saves over it and carries on', !!overB && sa.writable, `(writer ${overB ? 'A' : '?'}, rev ${overB?.rev} after ${revClaimed}; A writable ${sa.writable} "${sa.reason}")`);
 
   // 5. a save by hand on A takes it back, and B stops
   await saveByHand(a);
@@ -214,6 +215,7 @@ try {
   report('save by hand on A takes it back, B stops', !!back && !!bStops, `(writer ${back ? 'A' : '?'}, rev ${back?.rev}; B "${bStops?.reason ?? ''}")`);
 
   // 6. A plays with the server out of reach: the game opened then cannot claim, its saves stay here
+  const revA = (await account()).games.find((g) => g.id === gid)?.rev;
   if (OWN_SERVER) stopServer(); else await A.ctx.route(SERVER + '**', (r) => r.abort());
   a = await open(A, '&paused=1');
   await inGame(a);
@@ -226,37 +228,63 @@ try {
   await panel(a, false);
   report('offline: Not on your account yet', !!offline && offWarn === 1 && /^Not on your account yet\. .*(could not be reached|Offline)/.test(offTip ?? ''), `(warn mark ${offWarn}, "${offTip}")`);
 
-  // 7. back online, B saves first; A's next save keeps its version as a fork and catches up
+  // 7. back online. B, stopped, keeps a change of its own, so a third device C joins, opens the game (writer, idle)
+  // and makes a player change that goes up; A, whose change never went up, changes again: its game is split off in
+  // place, the account's copy kept as another version
+  await B.close();
   if (OWN_SERVER) await startServer(); else await A.ctx.unroute(SERVER + '**');
-  await saveByHand(b);
-  const revB = await until(async () => { const g = (await account()).games.find((x) => x.id === gid); return g?.writer === devB ? g.rev : null; }, 20000);
+  const C = await device('c');
+  let c = await open(C);
+  await c.waitForSelector('.start-menu .acct-start', { timeout: 60000 });
+  await c.click('.start-menu .acct-start');
+  await signInDev(c);
+  await c.waitForTimeout(500);
+  await accountPanel(c, false);
+  await until(() => c.locator('.start-menu button:text-is("Back")').click({ timeout: 2000 }).then(() => true), 8000);
+  await c.waitForSelector(`.start-menu li[data-origin] .start-save[data-slot="account:${gid}"]`, { timeout: 30000 });
+  await c.click(`.start-save[data-slot="account:${gid}"]`);
+  await inGame(c);
+  await c.evaluate(() => window.tw.clock.setRunning(false));
+  const devC = await deviceId(c);
+  await until(async () => (await account()).games.find((x) => x.id === gid)?.writer === devC, 20000);
+  await change(c);
+  const revC = await until(async () => { const g = (await account()).games.find((x) => x.id === gid); return g?.writer === devC && g.rev > revA ? g.rev : null; }, 150000, 1000);
   await change(a);
-  const forked = await until(async () => { const s = await state(a); return s.active !== G ? s : null; }, 30000);
-  const fork = forked?.slots.find((s) => s.key === forked.active);
-  const afterFork = await until(async () => { const l = await account(); return l.games.length === 2 && l.games.some((g) => g.id === fork?.cloud?.id) ? l : null; }, 30000);
-  const old = await slotOf(a, G);
-  report('fork kept as a new slot', !!fork && /^T-007-real-nyc at \d{1,2}:\d\d/.test(fork.name) && old?.cloud?.rev === revB && old?.cloud?.id === gid,
-    `(playing "${fork?.name}", old slot rev ${old?.cloud?.rev} of B's ${revB})`);
-  const caught = await until(async () => { const s = await slotOf(a, fork?.key); return s?.cloud?.okAt && !s.cloud.error ? s : null; }, 20000);
-  report('offline, then catches up', !!afterFork && !!caught, `(account ${JSON.stringify(afterFork?.games.map((g) => [g.name, g.rev]))})`);
-
-  // 8. B on its start menu; A deletes the old game; B's copy goes at its next start menu
-  b = await open(B);
-  await b.waitForSelector('.start-menu', { timeout: 60000 });
-  await b.waitForTimeout(3000);
+  const split = await until(async () => { const s = await slotOf(a, G); const l = await account(); return s?.cloud?.id && s.cloud.id !== gid && l.games.length === 2 && l.games.some((g) => g.id === s.cloud.id) ? { s, l } : null; }, 150000, 1000);
+  const fork = split ? { key: G, name: split.s.name, cloud: split.s.cloud } : null;
+  const oldGame = split?.l.games.find((g) => g.id === gid);
+  report('conflict split off in place', !!split && (await state(a)).active === G && split.s.name === 'T-007-real-nyc' && oldGame?.rev === revC && oldGame?.name === 'T-007-real-nyc',
+    `(slot ${G} now on ${split?.s.cloud.id}, account ${JSON.stringify(split?.l.games.map((g) => [g.name, g.id, g.rev]))}, C's rev ${revC})`);
+  const caught = await until(async () => { const s = await slotOf(a, G); return s?.cloud?.okAt && !s.cloud.error ? s : null; }, 20000);
+  // one card with the account's copy as its other version (grouped by origin)
   await panel(a);
-  await a.click(`.save-slots li[data-slot="${G}"] .save-delete`);
-  const ask = await a.locator(`.save-slots li[data-slot="${G}"] .callout p`).textContent();
-  await a.click(`.save-slots li[data-slot="${G}"] .callout button:text-is("Delete")`);
+  await a.waitForSelector('.save-slots li.on .save-versions-line', { timeout: 10000 });
+  if (await a.locator('.save-slots li.on .save-versions-line[aria-expanded="false"]').count()) await a.click('.save-slots li.on .save-versions-line');
+  const cards = await a.locator('.save-slots > li[data-origin]').count();
+  const versionRows = await until(() => a.locator(`.save-slots li.on .save-version-list li[data-kind=account][data-version="account:${gid}"]`).count(), 10000);
+  report('offline, then catches up as one card', !!caught && cards === 1 && versionRows === 1, `(cards ${cards}, account-version rows ${versionRows})`);
+  await panel(a, false);
+
+  // 8. C on its start menu; A deletes the old version (the account's copy under the old id); C's slot of it goes
+  // at its next start menu, and the game kept on the account is a card there
+  c = await open(C);
+  await c.waitForSelector('.start-menu', { timeout: 60000 });
+  await c.waitForTimeout(3000);
+  await panel(a);
+  const oldRow = `.save-slots li.on .save-version-list li[data-version="account:${gid}"]`;
+  if (await a.locator('.save-slots li.on .save-versions-line[aria-expanded="false"]').count()) await a.click('.save-slots li.on .save-versions-line');
+  await a.click(`${oldRow} .save-delete`);
+  const ask = await a.locator(`${oldRow} .callout p`).textContent();
+  await a.click(`${oldRow} .callout button.danger`);
   const gone = await until(async () => { const l = await account(); return !l.games.some((g) => g.id === gid) && l.tombstones.some((t) => t.id === gid) ? l : null; }, 20000);
   await panel(a, false);
-  b = await open(B);
-  await b.waitForSelector('.start-menu', { timeout: 60000 });
-  const bGone = await until(async () => {
-    const slots = await b.evaluate(async () => (await (await import('/src/workers/saveFile.ts')).listSlots()).map((s) => s.cloud?.id));
-    return !slots.includes(gid) && (await b.locator(`.start-save[data-slot="account:${fork?.cloud?.id}"]`).count()) ? slots : null;
+  c = await open(C);
+  await c.waitForSelector('.start-menu', { timeout: 60000 });
+  const cGone = await until(async () => {
+    const slots = await c.evaluate(async () => (await (await import('/src/workers/saveFile.ts')).listSlots()).map((s) => s.cloud?.id));
+    return !slots.includes(gid) && (await c.locator(`.start-save[data-slot="account:${fork?.cloud?.id}"]`).count()) ? slots : null;
   }, 20000);
-  report('delete crosses over', /from this browser and your account\?$/.test(ask ?? '') && !!gone && !!bGone, `("${ask}"; B's slots ${JSON.stringify(bGone)})`);
+  report('delete crosses over', /^Delete this version from your account\?$/.test(ask ?? '') && !!gone && !!cGone, `("${ask}"; C's slots ${JSON.stringify(cGone)})`);
 
   // 9. A game made signed out and kept here only at the next sign-in: the crossed cloud (A's page
   // opened while the server was down has no sign-in form, so it is opened again first)
@@ -294,7 +322,9 @@ try {
   await inGame(a);
   await a.waitForTimeout(2000);
   await panel(a);
-  const mark = await a.locator(`.save-slots li[data-slot="${kept?.key}"] .save-cloud`).getAttribute('data-tip').catch(() => null);
+  // a copy shares its game's origin: it is a version of the card (a row of its list), with no account mark of its own
+  if (await a.locator('.save-slots li.on .save-versions-line[aria-expanded="false"]').count()) await a.click('.save-slots li.on .save-versions-line');
+  const keptRow = await until(() => a.locator(`.save-slots li.on .save-version-list li[data-version="${kept?.key}"][data-kind=slot]`).count(), 10000);
   const playingLine = await tipOf(a, '.save-slots li.on .save-account');
   await shot(a, 't988-saves-light.png');
   await theme(a, 'dark');
@@ -302,38 +332,35 @@ try {
   await shot(a, 't988-saves-dark.png');
   await theme(a, 'light');
   const listed = (await account()).games.map((g) => g.name);
-  report('kept here only: the crossed cloud', q3 === 'Add Kept here to your account?' && /^Only in this browser/.test(mark ?? '') && !listed.includes('Kept here') && /^On your account/.test(playingLine ?? ''),
-    `("${q3}", mark "${mark}", playing "${playingLine}", account ${JSON.stringify(listed)})`);
+  report('kept here only: a version of the card', q3 === 'Add Kept here to your account?' && keptRow === 1 && !listed.includes('Kept here') && /^On your account/.test(playingLine ?? ''),
+    `("${q3}", version rows of it ${keptRow}, playing "${playingLine}", account ${JSON.stringify(listed)})`);
 
   // ---- stage 3
   const shots = (name, before) => shotsOf(a, join(ARTIFACTS, 't988s3'), name, before);
-  // 10. the crossed cloud on a game kept here only is a button: a click adds it to the account
-  await shots('add', () => a.locator(`.save-slots li[data-slot="${kept?.key}"]`).scrollIntoViewIfNeeded());
-  await a.click(`.save-slots li[data-slot="${kept?.key}"] button.save-add`);
-  const added = await until(async () => (await account()).games.find((g) => g.name === 'Kept here'), 30000);
-  const markGone = await until(async () => (await a.locator(`.save-slots li[data-slot="${kept?.key}"] .save-cloud`).count()) === 0, 15000);
-  report('Add on a kept-here card', !!added && !!markGone, `(account ${JSON.stringify((await account()).games.map((g) => g.name))})`);
+  // 10. (the crossed cloud's Add button is on a card of its own origin; a copy is a version of its game's card, so
+  // it has none and there is nothing to click) the saves panel with the version row open, light and dark
+  await shots('kept-version', () => a.locator('.save-slots li.on').scrollIntoViewIfNeeded());
   await panel(a, false);
 
-  // 11. the playing game's earlier versions (T-1395: the clock icon) are the account's alone, this
-  // browser's hidden; one opened as a copy
+  // 11. the playing game's account backups are rows among the card's other versions (data-kind=accountBackup);
+  // one opened as a new version under the game's name
   const fid = fork?.cloud?.id;
   await change(a);
   await saveByHand(a);
   const withBackup = await until(async () => { const g = (await account()).games.find((x) => x.id === fid); return g?.backups?.length ? g : null; }, 30000);
   await panel(a);
-  await a.click('.save-slots li.on .save-versions');
-  const row = await until(() => a.locator('.save-slots li.on .save-backup[data-account-backup]').count(), 10000);
-  const rowTip = row ? await tipOf(a, '.save-slots li.on .save-backup[data-account-backup] > span') : '';
-  const rowText = row ? await a.locator('.save-slots li.on .save-backup[data-account-backup]').first().textContent() : '';
-  const browserRows = await a.locator('.save-slots li.on .save-backup[data-backup]').count();
-  const browserKept = await a.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.backups.length);
+  await a.waitForSelector('.save-slots li.on .save-versions-line', { timeout: 10000 });
+  if (await a.locator('.save-slots li.on .save-versions-line[aria-expanded="false"]').count()) await a.click('.save-slots li.on .save-versions-line');
+  const BK = '.save-slots li.on .save-version-list li[data-kind=accountBackup]';
+  const row = await until(() => a.locator(BK).count(), 10000);
+  const rowTip = row ? await tipOf(a, `${BK} .num`) : '';
+  const rowText = row ? await a.locator(BK).first().textContent() : '';
   await shotsOf(a, T1395, 'built-b', () => a.locator('.save-slots li.on').scrollIntoViewIfNeeded());
-  report('earlier versions: the account\'s only', !!withBackup && !!row && /on your account from/.test(rowTip ?? '') && /^(Today|\w{3} \d+) at \d{1,2}:\d\d.*Open as a copy$/.test(rowText ?? '') && browserRows === 0 && browserKept > 0,
-    `(backups ${JSON.stringify(withBackup?.backups?.map((b) => b.rev))}, rows ${row}, "${rowText}", "${rowTip}"; browser's ${browserKept} kept, ${browserRows} shown)`);
+  report('account backups: rows of the card', !!withBackup && !!row && /on your account/i.test(rowTip ?? '') && /^Saved (just now|\d+ \w+ ago|(Today|\w{3} \d+) at \d{1,2}:\d\d).*Open$/.test(rowText ?? ''),
+    `(backups ${JSON.stringify(withBackup?.backups?.map((b) => b.rev))}, rows ${row}, "${rowText}", "${rowTip}")`);
   const before3 = (await account()).games.length;
-  await a.locator('.save-slots li.on .save-backup[data-account-backup] button').first().click();
-  const restored = await until(async () => { const s = await state(a); const x = s.slots.find((y) => y.key === s.active); return x && x.key !== fork?.key && /^T-007-real-nyc at \d{1,2}:\d\d/.test(x.name) ? x : null; }, 120000, 600); // T-1363: the fork's own time is dropped from the name
+  await a.locator(`${BK} button.save-version-open`).first().click();
+  const restored = await until(async () => { const s = await state(a); const x = s.slots.find((y) => y.key === s.active); return x && x.key !== fork?.key && x.name === 'T-007-real-nyc' ? x : null; }, 120000, 600); // opened under the game's name, a new version of its card
   await inGame(a);
   const restoredUp = await until(async () => { const l = await account(); return l.games.length === before3 + 1 && l.games.some((g) => g.name === restored?.name) ? l : null; }, 30000);
   report('account backup restored as a copy', !!restored && !!restoredUp, `(playing "${restored?.name}", account ${JSON.stringify(restoredUp?.games.map((g) => g.name))})`);
@@ -342,8 +369,8 @@ try {
   // question and "Remove games" are gone)
   await a.waitForTimeout(1500);
   await accountPanel(a);
-  const usage = await until(() => a.locator('dialog.acct-panel .acct-games').textContent(), 15000);
-  report('account panel: games and room', /^\d+ games on your account · [\d.]+ MB of 64 MB$/.test(usage ?? ''), `("${usage}")`);
+  const usage = await until(() => a.locator('dialog.acct-panel .acct-games').first().textContent(), 15000);
+  report('account panel: games and room', /^\d+ games? on your account · [\d.]+ MB of 64 MB$/.test(usage ?? ''), `("${usage}")`);
 
   report('no page errors', errors.length === 0, errors.slice(0, 4).join(' | '));
 } catch (err) {

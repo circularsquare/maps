@@ -4632,7 +4632,10 @@ class DemandClient {
   private async transferParts(t: Target, nodes: number[]): Promise<Float32Array[] | null> {
     const ids = Uint32Array.from(nodes), parts: Float32Array[] = [];
     let mask = 0;
-    for (const r of byMask(await this.ask((id) => ({ kind: "transfers", id, version: t.version, nodes: ids }), undefined, [], undefined, t))) {
+    // T-1816: a zone the network's solve does not cover (panned away) answers nothing, and any zone it covers
+    // answers for every line, so a covered one is asked then
+    const c = t.solve?.cities, zone = c?.length && !c.includes(activeCity.peek()) ? c[0] : undefined;
+    for (const r of byMask(await this.ask((id) => ({ kind: "transfers", id, version: t.version, nodes: ids }), undefined, [], zone, t))) {
       if (r.kind !== "transfers" || !r.pairs) return null;
       mask |= r.mask;
       parts.push(r.pairs);
