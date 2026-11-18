@@ -3344,6 +3344,53 @@ fn removing_past_a_station_stops_at_its_platform_end() {
     }
 }
 
+/// T-3648: a set removed in one edit leaves the track that removing its pieces one by one leaves.
+#[test]
+fn removing_a_set_leaves_what_one_by_one_leaves() {
+    for (built, xs) in [(false, vec![2000.0]), (true, vec![2000.0]), (false, vec![1000.0, 3000.0]), (true, vec![1000.0, 3000.0])] {
+        let setup = || {
+            let mut a = api();
+            a.set_cash(1e6);
+            let ends: Vec<f64> = free(0.0, 0.0).iter().chain(free(4000.0, 0.0).iter()).copied().collect();
+            assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+            for &x in &xs {
+                let e = (0..a.w.net.edge_count() as u32).find(|&e| {
+                    let n = &a.w.net;
+                    n.edge_ok(e) && n.node_x[n.edge_a[e as usize] as usize] < x && n.node_x[n.edge_b[e as usize] as usize] > x
+                }).unwrap();
+                assert_eq!(a.add_station(2, e, x, 0.0, 200, format!("S{x}")), 0, "{}", a.issues());
+            }
+            if built {
+                assert_eq!(a.construct_all(), 0, "{}", a.issues());
+            }
+            a
+        };
+        // what is left: each piece's x span and length, sorted
+        let left = |t: &TrackApi| -> Vec<(i64, i64)> {
+            let n = &t.w.net;
+            let mut v: Vec<(i64, i64)> = live_edges(t).into_iter().map(|e| {
+                let (xa, xb) = (n.node_x[n.edge_a[e as usize] as usize], n.node_x[n.edge_b[e as usize] as usize]);
+                (xa.min(xb).round() as i64, xa.max(xb).round() as i64)
+            }).collect();
+            v.sort();
+            v
+        };
+        let mut a = setup();
+        let ids = live_edges(&a);
+        assert_eq!(a.delete_pieces(&ids, &[]), 0, "{}", a.issues());
+        let set = left(&a);
+        let mut b = setup();
+        for e in live_edges(&b) {
+            if b.w.net.edge_ok(e) {
+                b.delete_edge(e);
+            }
+        }
+        // the pieces not yet touched are gone by id; the one-by-one run may keep what a trim left
+        let one = left(&b);
+        assert_eq!(set, one, "built {built}, stations {xs:?}");
+    }
+}
+
 /// T-1667: track drawn on from a station at a dead end, at either end of its edge, leaves the
 /// platform where it was: the station's node moves back to the platform's middle, keeping its id
 /// and its line, and the new track starts from the old end.

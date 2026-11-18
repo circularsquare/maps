@@ -95,7 +95,7 @@ impl TrackApi {
     }
 
     /// T-1699: a station that removing `gone` takes an end from keeps a straight piece under it for
-    /// that end, along its old direction, the platform's reach plus 10 m long (as a station on open
+    /// that end, along its old direction, the platform's reach plus `STATION_TRIM_MARGIN_M` long (the same a trimmed removal leaves, T-3648; as a station on open
     /// ground has; less where the removed piece was shorter), with the removed piece's kind and
     /// state. So the station stays on track in its old orientation, its platform where it was.
     /// `removed`: stations going too (sorted).
@@ -127,7 +127,7 @@ impl TrackApi {
                 } else {
                     net.edge_len[ei]
                 };
-                let len = (reach + 10.0).min(room).max(reach + 1.0);
+                let len = (reach + STATION_TRIM_MARGIN_M).min(room).max(reach + 1.0);
                 let d = EdgeData { a: n, b: 0, tracks: net.edge_tracks[ei], pis: vec![], built: net.edge_built[ei], off: net.edge_off[ei], thru: vec![], crossover: false, kind: net.edge_kind[ei], sep: net.edge_sep[ei], day: net.edge_day[ei], oneway: net.edge_oneway[ei], join: [0; 2], limit: net.edge_limit[ei] };
                 let k = len * kk(net.frame().scaled(), y);
                 let (m, id) = (self.w.net.alloc_node(), self.w.net.alloc_edge());
