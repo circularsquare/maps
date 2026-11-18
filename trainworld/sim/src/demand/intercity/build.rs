@@ -714,26 +714,6 @@ pub(super) fn parse_built(header: &str) -> Result<Built, String> {
         compose(serde_json::from_value(v).map_err(|e| e.to_string())?)
     }
 }
-/// T-276: the market's zones as the game built them from an old single pack's sites, for the
-/// joint commute gravity (`bin/joint_gravity.rs`): each site's zone, the first site of each zone,
-/// and each site's 600 m square key (x, y / 600, floored; the market).
-pub fn market_site_zones(header: &str) -> Result<(Vec<u32>, Vec<u32>, Vec<(i32, i32, usize)>), String> {
-    let pack: LegacyPack = serde_json::from_str(header).map_err(|e| e.to_string())?;
-    let zm = pack.zone_m as f32;
-    let mut keys = BTreeMap::new();
-    let (mut site_zone, mut first, mut sq) = (vec![], vec![], vec![]);
-    for (s, nums) in pack.sites.iter().enumerate() {
-        let (x, y, m) = (nums[0] as f32, nums[1] as f32, nums[4] as usize);
-        let n = keys.len();
-        let z = *keys.entry(((x / zm).floor() as i32, (y / zm).floor() as i32, m)).or_insert(n);
-        if z == first.len() {
-            first.push(s as u32);
-        }
-        site_zone.push(z as u32);
-        sq.push(((x / SITE_M).floor() as i32, (y / SITE_M).floor() as i32, m));
-    }
-    Ok((site_zone, first, sq))
-}
 /// T-377: the registry rows of every place a composition holds (the world given without rows):
 /// what `bin/market_pack.rs` writes into the registry.
 pub fn world_rows(header: &str) -> Result<Vec<Row>, String> {

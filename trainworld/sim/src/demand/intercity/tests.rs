@@ -1470,20 +1470,6 @@ fn intercity_real_network_outputs() {
         assert!(worst < 1e-6);
     }
 }
-/// The Northeast's old single pack opens as a closed world (`bin/joint_gravity.rs` checks what it
-/// writes this way). `cargo test --release --features demand legacy_northeast_pack_opens -- --ignored`
-#[test]
-#[ignore]
-fn legacy_northeast_pack_opens() {
-    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
-    let text = std::fs::read_to_string(format!("{root}/data/work/intercity.json")).unwrap();
-    let t = now_ms();
-    let a = IntercityApi::new(&text).unwrap();
-    let (zones, first, keys) = market_site_zones(&text).unwrap();
-    eprintln!("{:.0} ms, info {:?}, {} sites, {} zones", now_ms() - t, a.info(), zones.len(), first.len());
-    assert_eq!(keys.len() as f64, a.info()[0]);
-    assert!(a.info()[2] > 0. && a.m.cw.commuters > 0.);
-}
 /// T-378: rail against the plane on real far pairs, one fast line between two stations (no feeders:
 /// walks and rides only), fares $1.50 + 10 cents a rail km, free flow in the busiest period.
 /// `cargo test --release --features demand real_far_lines_share_rail_with_air -- --ignored --nocapture`

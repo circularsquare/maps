@@ -1,15 +1,15 @@
 //! T-276: one commute gravity for every zone pack together (docs/zones.md 4).
 //!
-//!   cargo run --release --features demand --bin joint_gravity -- [--root ..] [--cut-km 150]
-//!       [--tol 1e-8] [--threads 3] [--dry] [--check] [--report data/work/joint_report.json]
-//!       [--dump factors.json] [--anderson 12] [--max-iters 500] [--packs a,b,.. --out FILE]
+//!   cargo run --release --features demand --bin joint_gravity -- --packs a,b,.. --out FILE [--root ..]
+//!       [--cut-km 150] [--tol 1e-8] [--threads 3] [--dry] [--check] [--report data/work/joint_report.json]
+//!       [--dump factors.json] [--anderson 12] [--max-iters 500]
 //!       [--admin1 F]  (F in place of borders.json's admin-1 default, for fitting it)
 //!       [--no-seamless]  (borders.json's `seamless` pairs take the ordinary factor, for comparing)
 //!       [--fixed c,d [--init F] [--hold-report F [--new a,b]]]
 //!
-//! `--packs` (T-463) solves the named packs instead (a group outside the Northeast, Japan's), and
-//! writes their cross-pack commutes to `--out` by 6 km squares of each pack's own frame, for
-//! pipeline/market_zones.py; intercity.json is not read or written.
+//! `--packs` (T-463) names the packs to solve (a group: Japan's, the Northeast's, ...), and
+//! `--out` is where their cross-pack commutes go, by 6 km squares of each pack's own frame, for
+//! pipeline/market_zones.py.
 //!
 //! `--fixed c,d` (T-786, with `--packs`): packs held at their factors (the pack's gravity block, or
 //! `--init F`, a `--dump` of an earlier solve), a neighbouring country's: their zones take part in
@@ -22,10 +22,8 @@
 //! their old factors, the `--new` ones absent), and whether it has any pair with a solved pack: how
 //! far holding a pack fixed leaves it off its own margins (notes/T-928.md).
 //!
-//! Reads every zone pack of the registry (`app/src/game/registry.json`, cities with a market place)
-//! and the regional market's pack (`data/work/intercity.json`, the Northeast's old
-//! single solve; no pipeline step writes it now), and solves the doubly constrained work gravity over all their 2 km zones
-//! at once: every zone's commuters (the pack's home weights, scaled so the union's homes equal its
+//! Reads the named zone packs (and the `--fixed` ones) and solves the doubly constrained work gravity
+//! over all their 2 km zones at once: every zone's commuters (the pack's home weights, scaled so the union's homes equal its
 //! jobs) are shared over every job in reach, in their own pack or another.
 //!
 //! - A pair inside one pack uses the pack's own decay table and border factor, exactly as the pack
@@ -38,9 +36,8 @@
 //!   national border.
 //!
 //! Writes each pack's gravity (new balancing factors, `zone_home` and `zone_work`: the trips each
-//! zone keeps in the pack, and a `joint` block), and the market pack's `commute_*` arrays: the
-//! cross-pack part spread over the market's 6 km zones by each gravity zone's homes and jobs in
-//! them. `--dry` writes nothing. Prints commuters between each pair of packs.
+//! zone keeps in the pack, and a `joint` block), and the `--out` file: the
+//! cross-pack part spread over 6 km zones by each gravity zone's homes and jobs in them. `--dry` writes nothing. Prints commuters between each pair of packs.
 //!
 //! T-1000: the balance's pull is capped per pack (`kernel::PULL_CAP`; `--pull-cap X`, 0 none), and
 //! `LONG_SHARE` of every zone's workers (`--long-share`) commute to jobs `LONG_KM` away outside the
@@ -57,7 +54,7 @@
 use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use trainworld_sim::demand::{clock::now_ms, intercity, kernel, pack};
+use trainworld_sim::demand::{clock::now_ms, kernel, pack};
 use trainworld_sim::track::frame::Frame;
 
 /// T-1000 (docs/zones.md 4): the share of every zone's workers who commute to jobs between
@@ -84,7 +81,6 @@ struct Pk {
     regions: Vec<usize>,
     /// first global zone index
     off: usize,
-    market: usize,
     fixed: bool,
 }
 
@@ -99,28 +95,18 @@ fn main() {
     let t0 = now_ms();
 
     let registry: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/app/src/game/registry.json")).unwrap()).unwrap();
-    // `--packs a,b,..`: a group outside the Northeast (Japan, T-463), its commutes to `--out`
-    let only: Option<Vec<String>> = get("--packs").map(|s| s.split(',').filter(|x| !x.is_empty()).map(String::from).collect());
+    let only: Vec<String> = get("--packs").expect("--packs a,b,.. is needed").split(',').filter(|x| !x.is_empty()).map(String::from).collect();
     let fixed_ids: Vec<String> = get("--fixed").map(|s| s.split(',').filter(|x| !x.is_empty()).map(String::from).collect()).unwrap_or_default();
-    assert!(fixed_ids.is_empty() || only.is_some(), "--fixed needs --packs");
     let cities = registry["cities"].as_array().unwrap();
-    // Zone distances in a conic: the Northeast's at the market's origin (T-125), a group's at the
+    // Zone distances in a conic: a group's at the
     // mean of its packs' origins (1.2% at 9 degrees of latitude off it). The game's own frame is
     // Mercator since T-306 and its plane metres are not ground metres, so it is not used here.
-    let world = match &only {
-        None => {
-            let wf = &registry["market"]["frame"];
-            Frame::lcc(wf["lon"].as_f64().unwrap(), wf["lat"].as_f64().unwrap())
-        }
-        Some(ids) => {
-            assert_eq!(cities.iter().filter(|c| fixed_ids.iter().any(|i| c["id"].as_str() == Some(i))).count(), fixed_ids.len(), "--fixed names a city the registry lacks");
-            // the frame at the mean of the solved and fixed packs' origins: a fixed pack's distances are the same as in its own solve to 1%
-            let os: Vec<&Value> = cities.iter().filter(|c| ids.iter().chain(&fixed_ids).any(|i| c["id"].as_str() == Some(i))).map(|c| &c["origin"]).collect();
-            assert_eq!(os.len(), ids.len() + fixed_ids.len(), "--packs names a city the registry lacks");
-            let n = os.len() as f64;
-            Frame::lcc(os.iter().map(|o| o["lon"].as_f64().unwrap()).sum::<f64>() / n, os.iter().map(|o| o["lat"].as_f64().unwrap()).sum::<f64>() / n)
-        }
-    };
+    assert_eq!(cities.iter().filter(|c| fixed_ids.iter().any(|i| c["id"].as_str() == Some(i))).count(), fixed_ids.len(), "--fixed names a city the registry lacks");
+    // the frame at the mean of the solved and fixed packs' origins: a fixed pack's distances are the same as in its own solve to 1%
+    let os: Vec<&Value> = cities.iter().filter(|c| only.iter().chain(&fixed_ids).any(|i| c["id"].as_str() == Some(i))).map(|c| &c["origin"]).collect();
+    assert_eq!(os.len(), only.len() + fixed_ids.len(), "--packs names a city the registry lacks");
+    let n = os.len() as f64;
+    let world = Frame::lcc(os.iter().map(|o| o["lon"].as_f64().unwrap()).sum::<f64>() / n, os.iter().map(|o| o["lat"].as_f64().unwrap()).sum::<f64>() / n);
     let borders: Value = serde_json::from_str(&std::fs::read_to_string(format!("{root}/pipeline/borders.json")).unwrap()).unwrap();
 
     // ---- the packs and their zones
@@ -128,10 +114,9 @@ fn main() {
     let mut region_key: Vec<(String, String)> = vec![]; // (country, region id)
     let mut off = 0usize;
     for c in cities {
-        let market = c["market"].as_i64().unwrap_or(-1);
         let id = c["id"].as_str().unwrap().to_string();
         let fixed = fixed_ids.contains(&id);
-        if match &only { Some(ids) => !ids.contains(&id) && !fixed, None => market < 0 } {
+        if !only.contains(&id) && !fixed {
             continue;
         }
         let (header, bin) = pack::load_raw(&format!("{root}/data/packs/{id}.json")).unwrap_or_else(|e| panic!("{e}"));
@@ -160,7 +145,7 @@ fn main() {
             })
             .collect();
         let n = z.n;
-        packs.push(Pk { id, header, bin, pk: kernel::PairKey::of(&z), border: pg.border_factor, curve, zone_m: pg.zone_m, city, z, ftab, dtab, regions, off, market: market.max(0) as usize, fixed });
+        packs.push(Pk { id, header, bin, pk: kernel::PairKey::of(&z), border: pg.border_factor, curve, zone_m: pg.zone_m, city, z, ftab, dtab, regions, off, fixed });
         off += n;
     }
     let nz = off;
@@ -664,48 +649,21 @@ fn main() {
         });
         std::fs::write(&p, serde_json::to_string(&d).unwrap()).unwrap();
     }
-    // market zones: in the Northeast, each pack cell's 600 m square's site in intercity.json, and
-    // its zone; in a `--packs` group, the cell's 6 km square in its own pack's frame (the square
-    // pipeline/market_zones.py's own sites fall in), listed in `group_zones`
-    let market_path = format!("{root}/data/work/intercity.json");
-    let (site_zone, zone_site, site_keys, mv, mframe) = if only.is_none() {
-        let market_text = std::fs::read_to_string(&market_path).unwrap();
-        let (site_zone, zone_site, site_keys) = intercity::market_site_zones(&market_text).unwrap();
-        let mv: Value = serde_json::from_str(&market_text).unwrap();
-        let mframe = Frame::equirect(mv["frame"]["lon"].as_f64().unwrap(), mv["frame"]["lat"].as_f64().unwrap());
-        (site_zone, zone_site, site_keys, mv, Some(mframe))
-    } else {
-        (vec![], vec![], vec![], Value::Null, None)
-    };
-    let square: HashMap<(i32, i32, usize), u32> = site_keys.iter().enumerate().map(|(s, &k)| (k, s as u32)).collect();
+    // market zones: the cell's 6 km square in its own pack's frame (the square pipeline/market_zones.py's
+    // own sites fall in), listed in `group_zones`
     let mut group_zones: Vec<(usize, i32, i32)> = vec![];
     let mut group_index: HashMap<(usize, i32, i32), u32> = HashMap::new();
     // per global zone: (market zone, share) of its homes and of its jobs
     let mut hsplit: Vec<Vec<(u32, f64)>> = vec![vec![]; nz];
     let mut wsplit: Vec<Vec<(u32, f64)>> = vec![vec![]; nz];
-    let mut missed = (0f64, 0f64);
     for (pi, p) in packs.iter().enumerate() {
-        let hv: Value = serde_json::from_str(&p.header).unwrap();
-        let fr = Frame::equirect(hv["origin"]["lon"].as_f64().unwrap(), hv["origin"]["lat"].as_f64().unwrap());
         let mut acc: Vec<HashMap<u32, (f64, f64)>> = vec![HashMap::new(); p.z.n];
         for c in 0..p.city.len() {
-            let mz = if let Some(mframe) = &mframe {
-                let (lon, lat) = fr.to_lonlat(p.city.x[c] as f64, p.city.y[c] as f64);
-                let (mx, my) = mframe.from_lonlat(lon, lat);
-                let key = ((mx / 600.0).floor() as i32, (my / 600.0).floor() as i32, p.market);
-                let Some(&s) = square.get(&key) else {
-                    missed.0 += p.city.pop[c] as f64;
-                    missed.1 += p.city.jobs[c] as f64;
-                    continue;
-                };
-                site_zone[s as usize]
-            } else {
-                let key = (pi, (p.city.x[c] as f64 / 6000.0).floor() as i32, (p.city.y[c] as f64 / 6000.0).floor() as i32);
-                *group_index.entry(key).or_insert_with(|| {
-                    group_zones.push(key);
-                    (group_zones.len() - 1) as u32
-                })
-            };
+            let key = (pi, (p.city.x[c] as f64 / 6000.0).floor() as i32, (p.city.y[c] as f64 / 6000.0).floor() as i32);
+            let mz = *group_index.entry(key).or_insert_with(|| {
+                group_zones.push(key);
+                (group_zones.len() - 1) as u32
+            });
             let e = acc[p.z.cell_zone[c] as usize].entry(mz).or_default();
             e.0 += p.city.pop[c] as f64;
             e.1 += p.city.jobs[c] as f64;
@@ -722,7 +680,6 @@ fn main() {
             }
         }
     }
-    eprintln!("cells with no market site: {:.0} home weight, {:.0} work weight", missed.0, missed.1);
     let mut flows: HashMap<(u32, u32), f64> = HashMap::new();
     let mut by_pack = vec![0f64; np * np];
     let mut cross_km = (0f64, 0f64);
@@ -756,7 +713,7 @@ fn main() {
     eprintln!("flows between packs, {:.0} s", (now_ms() - t0) / 1000.0);
     // T-1000: the add-back's pairs, a pack's own included; pooled by market zone of work per home
     // zone before the market zones of home
-    let nmz = if mframe.is_some() { zone_site.len() } else { group_zones.len() };
+    let nmz = group_zones.len();
     let mut long_flows: HashMap<(u32, u32), f64> = HashMap::new();
     let mut by_work = vec![0f64; nmz];
     let mut touched: Vec<u32> = vec![];
@@ -901,7 +858,7 @@ fn main() {
         println!("  {}: {:.0} trips kept, {:.0} out, {:.0} in", p.id, pg.trips, out, into);
     }
     // ---- write the market's commutes
-    if only.is_some() {
+    {
         let out = get("--out").expect("--packs needs --out");
         let zk = |m: u32| group_zones[m as usize];
         let g = json!({
@@ -921,18 +878,7 @@ fn main() {
         std::fs::write(format!("{out}.part"), &text).unwrap();
         std::fs::rename(format!("{out}.part"), &out).unwrap();
         println!("wrote {} packs and {out} ({:.2} MB) in {:.0} s", np, text.len() as f64 / 1e6, (now_ms() - t0) / 1000.0);
-        return;
     }
-    let mut mv = mv;
-    mv["commute_home"] = json!(list.iter().map(|x| zone_site[x.0 .0 as usize]).collect::<Vec<_>>());
-    mv["commute_work"] = json!(list.iter().map(|x| zone_site[x.0 .1 as usize]).collect::<Vec<_>>());
-    mv["commute_trips"] = json!(list.iter().map(|x| (x.1 * 1000.0).round() / 1000.0).collect::<Vec<_>>());
-    mv["commute_source"] = json!(format!("bin/joint_gravity.rs (T-276): the cross-pack part of one commute gravity over {} packs, cut at {cut_km} km, and {long_share} of every zone's workers to jobs {r0}-{r1} km away (T-1000); home and work sites name their 6 km zones", np));
-    let text = serde_json::to_string(&mv).unwrap();
-    intercity::IntercityApi::new(&text).unwrap_or_else(|e| panic!("the written market does not open: {e}"));
-    std::fs::write(format!("{market_path}.part"), &text).unwrap();
-    std::fs::rename(format!("{market_path}.part"), &market_path).unwrap();
-    println!("wrote {} packs and {market_path} ({:.2} MB) in {:.0} s", np, text.len() as f64 / 1e6, (now_ms() - t0) / 1000.0);
 }
 
 /// One pack's zones by bucket, row by row, so a run of buckets in a row is one slice.
