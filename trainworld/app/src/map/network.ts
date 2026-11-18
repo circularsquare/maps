@@ -446,12 +446,12 @@ function complexPassages(st: readonly { id: number; lat: number }[], stations: F
  * places, its passages' station ids in pairs, and the joins as member positions in pairs */
 interface PassageEntry { ids: number[]; pieces: object[]; xy: number[]; links: number[]; joins: number[] }
 
-/** The lines on each edge, by id. */
+/** The lines on each edge, by id: over their whole plans, as they are drawn (T-3474). */
 function linesOnEdges(s: ClockState) {
   const onEdge = new Map<number, number[]>();
   for (const l of [...s.lines].sort((a, b) => a.id - b.id)) {
     if (!l.ok) continue;
-    for (const e of new Set(l.path.map((p) => p >> 1))) {
+    for (const e of new Set((l.planPath ?? l.path).map((p) => p >> 1))) {
       const v = onEdge.get(e) ?? [];
       v.push(l.id);
       onEdge.set(e, v);
@@ -896,14 +896,23 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
   more(b);
   const nodes = new Map(s.nodes.map((n) => [n.id, n]));
   for (const l of s.lines) {
-    const st = lines.get(l.id)?.strokes;
+    const c = lines.get(l.id), st = c?.strokes;
     const last = l.stops.length - 1;
-    if (!l.ok || !st || !st.count || last < 1 || l.stops[0] === l.stops[last]) continue;
+    if (!l.ok || !c || !st || !st.count || last < 1 || l.stops[0] === l.stops[last]) continue;
     const segLen = (i: number) => Math.hypot(st.seg[i * 4 + 2] - st.seg[i * 4], st.seg[i * 4 + 3] - st.seg[i * 4 + 1]);
-    const D = st.dist[st.count - 1] + segLen(st.count - 1);
+    // T-3474: a line running part of its plan turns back at the ends of that part: strokes i0 to iEnd
+    // of its plan's forward strokes (its return run's own follow them)
+    let i0 = 0, iEnd = st.count - 1;
+    if (l.planPath) {
+      const runStart = l.pathStart ?? 0, runEnd = runStart + l.path.length;
+      i0 = c.firstStroke.slice(runStart, runEnd).find((k) => k >= 0) ?? -1;
+      iEnd = (c.firstStroke.slice(runEnd).find((k) => k >= 0) ?? c.forwardCount) - 1;
+      if (i0 < 0 || iEnd < i0) continue;
+    }
+    const S = l.planPath ? st.dist[i0] : 0, D = st.dist[iEnd] + segLen(iEnd);
     /** run 0's strokes from `s0` to `s1`, the lane going from `v0` to `v1` (-1 left, 1 right) */
     const along = (s0: number, s1: number, v0: number, v1: number, flags: number) => {
-      s0 = Math.max(0, s0);
+      s0 = Math.max(S, s0);
       s1 = Math.min(D, s1);
       if (s1 - s0 < 1e-6) return;
       const pts: number[] = [], lane: number[] = [];
@@ -934,13 +943,13 @@ function turnbackStrokes(s: ClockState, lines: NetCache["lines"], endCount: Map<
     };
     for (const atEnd of [false, true]) {
       const node = nodes.get(l.stops[atEnd ? last : 0]);
-      const i = atEnd ? st.count - 1 : 0;
+      const i = atEnd ? iEnd : i0;
       if (!node || !node.platform || (st.lane?.[i * 2 + (atEnd ? 1 : 0)] ?? 255) < 255) continue;
       const k = kAtY(st.seg[i * 4 + (atEnd ? 3 : 1)]);
       const dead = endCount.get(node.id) === 1;
       // the platform's open end at a dead end, else its end on the side the line arrives from
       const p = node.platform * k * (dead ? 1 : 0.5), T = TURNBACK_M * k;
-      const s0 = atEnd ? D - p - T : p;
+      const s0 = atEnd ? D - p - T : S + p;
       const flags = node.stationBuilt ? 0 : F_FADED;
       // from the arrival track to the departure track: with trains keeping left, the other way across (T-3297)
       const hand = s.rightHand === false ? -1 : 1;
@@ -1335,10 +1344,14 @@ interface EdgeEntry extends LanePoints {
   train: Float32Array;
 }
 interface LineEntry {
+  /** its whole plan's path and stops (`ClockLine.planPath` or `path`, T-3474), which its strokes draw */
   path: number[];
   /** T-3117: `ClockLine.back`, empty for none */
   back: number[];
   stops: number[];
+  /** T-3474: where the part its trains run starts in `path` and `stops` (0 for all of it) */
+  pathStart: number;
+  stopStart: number;
   running: boolean;
   /** high-speed trains: only such a line is drawn in the high-speed look (T-1494) */
   fast: boolean;
@@ -1346,7 +1359,10 @@ interface LineEntry {
   /** its bands (`LineBands.of`), null on no shared track */
   band: Float32Array | null;
   strokes: Strokes;
+  /** per entry of `path`, its first stroke segment, -1 none */
   firstStroke: number[];
+  /** T-3474: how many of `strokes` the path's entries made (the return run's own follow) */
+  forwardCount: number;
   /** T-3250: per entry of `back`, its first stroke segment (the path's own on an edge both use), -1 none */
   backStroke: number[];
 }
@@ -1653,23 +1669,28 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
     lineIds.push(String(l.id));
     let c = cache.lines.get(l.id);
     const band = bands.of.get(l.id) ?? null;
-    if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || !sameArray(c.path, l.path) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, l.stops) || !l.path.every((p) => kept.has(p >> 1)) || !(l.back ?? []).every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
+    // T-3474: the whole plan is drawn, faded where its trains do not run (an unbuilt extension, or beyond a gap)
+    const planPath = l.planPath ?? l.path, planStops = l.planStops ?? l.stops;
+    const runStart = l.pathStart ?? 0, runEnd = runStart + l.path.length, stopStart = l.stopStart ?? 0;
+    if (!c || c.running !== l.running || c.fast !== l.fast || c.tram !== l.tram || c.pathStart !== runStart || c.stopStart !== stopStart || !sameArray(c.path, planPath) || !sameArray(c.back, l.back ?? []) || !sameArray(c.stops, planStops) || !planPath.every((p) => kept.has(p >> 1)) || !(l.back ?? []).every((p) => kept.has(p >> 1)) || (c.band === null ? band !== null : band === null || (c.band !== band && !sameBand(c.band, band)))) {
       const lines = new StrokeBuilder(true, MIN_SEG_M);
       let d = 0;
       // the first stroke segment of each path entry (in this line's strokes), and the stop-to-stop
-      // stretch it is on (T-084)
-      const firstStroke = l.path.map(() => -1);
+      // stretch it is on (T-084), numbered as the part its trains run
+      const firstStroke = planPath.map(() => -1);
       let stretch = 0, next = 1;
-      l.path.forEach((p, k) => {
+      planPath.forEach((p, k) => {
         const e = p >> 1;
         const dr = drawn.get(e);
         const ends = edgeEnds.get(e);
         if (dr) {
-          const flags = (l.running ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0);
-          const stretchOf = Math.min(stretch, Math.max(0, l.stops.length - 2));
+          const served = k >= runStart && k < runEnd;
+          const flags = (l.running && served ? 0 : F_FADED | (builtEdge.get(e) ? 0 : F_BLUEPRINT | (offEdge.has(e) ? F_OFF : 0))) | (l.fast && hsrEdge.has(e) ? F_HSR : 0) | (l.tram && tramEdge.has(e) ? F_TRAM : 0) | (splitEdge.has(e) ? F_SPLIT : 0);
+          // (-1 off the part its trains run: no riders' stretch there)
+          const stretchOf = served ? Math.max(0, Math.min(stretch - stopStart, Math.max(0, l.stops.length - 2))) : -1;
           if (dr.lpts.length >= 6) firstStroke[k] = lines.count;
-          if (band && dr.lpts.length >= 6) {
-            const bp = bandPoints(dr, (p & 1) === 1, band, k);
+          if (band && served && dr.lpts.length >= 6) {
+            const bp = bandPoints(dr, (p & 1) === 1, band, k - runStart);
             // T-3158: a line alone on single track keeps a line's width; a ribbon beside it (a flyover's leg by
             // its main) only moves it sideways, as its return leg, which has no band, is drawn
             if (ends?.tracks === 1 && (bands.order.get(e)?.length ?? 0) < 2) for (let q = 1; q < bp.band.length; q += 3) bp.band[q] = 0;
@@ -1678,16 +1699,17 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         }
         // a path entry runs a -> b, or b -> a when its low bit is set
         const to = ends ? ((p & 1) === 1 ? ends.a : ends.b) : -1;
-        if (to === l.stops[next]) {
+        if (to === planStops[next]) {
           stretch++;
           next++;
         }
       });
+      const forwardCount = lines.count;
       // T-3117: track only the return run takes (a flyover's other leg), its stretch counted from the far end
       const backStroke = (l.back ?? []).map(() => -1);
       if (l.back?.length) {
         const own = new Map<number, number>();
-        l.path.forEach((p, k) => { if (!own.has(p >> 1)) own.set(p >> 1, firstStroke[k]); });
+        l.path.forEach((p, k) => { if (!own.has(p >> 1)) own.set(p >> 1, firstStroke[k + runStart]); });
         const last = Math.max(0, l.stops.length - 2);
         let bd = 0, back = 0, nextBack = l.stops.length - 2;
         for (const [j, p] of l.back.entries()) {
@@ -1705,7 +1727,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
           }
         }
       }
-      c = { path: l.path.slice(), back: (l.back ?? []).slice(), stops: l.stops.slice(), running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke, backStroke };
+      c = { path: planPath.slice(), back: (l.back ?? []).slice(), stops: planStops.slice(), pathStart: runStart, stopStart, running: l.running, fast: l.fast, tram: l.tram, band, strokes: lines.build(), firstStroke, forwardCount, backStroke };
     }
     linesSeen.set(l.id, c);
     lineParts.push(c);
@@ -1767,7 +1789,7 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
         }
       }
     };
-    runSamples(l.id, l.path, c.firstStroke, false);
+    runSamples(l.id, l.path, l.planPath ? c.firstStroke.slice(runStart, runEnd) : c.firstStroke, false);
     const slot = backSlotOf(r.lineTable, r.meta, l.id);
     if (slot >= 0 && l.back?.length) runSamples(slot, l.back, c.backStroke ?? [], true);
   }

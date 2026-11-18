@@ -138,9 +138,13 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
 /// branch into a shared terminus waits out at its own far end, so the order its trains leave the
 /// terminus in is the order they come back in). True when its split moved.
 fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; LEVELS]]) -> bool {
-    let path = net.line_path(l);
+    // T-3474: the ends of the part of its plan it runs
+    let path = match svc.lines.get(l as usize).filter(|x| x.part.is_some()) {
+        Some(x) => &x.runs[0].segs[..],
+        None => net.line_path(l),
+    };
     let (Some(&a), Some(&b)) = (path.first(), path.last()) else { return false };
-    let shared = |e: u32| net.lines_on_edge(e).iter().any(|&o| o != l && svc.lines.get(o as usize).is_some_and(|x| x.running && !x.is_bus()));
+    let shared = |e: u32| net.lines_on_edge(e).iter().any(|&o| o != l && svc.lines.get(o as usize).is_some_and(|x| x.running && !x.is_bus() && x.runs_on(e)));
     let want = match (shared(a >> 1), shared(b >> 1)) {
         (true, false) => 1.0,
         (false, true) => 0.0,

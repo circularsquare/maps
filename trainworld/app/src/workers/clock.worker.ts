@@ -3670,7 +3670,7 @@ function buildSnapshot(): NetworkSnapshot {
       }
     }
     lines.push({
-      id, name: a.line_name(id), stops: [...a.line_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
+      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),

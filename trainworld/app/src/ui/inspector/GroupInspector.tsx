@@ -21,7 +21,7 @@ import { GroupPill } from "../GroupPill";
 import { LINE, ROUND_MAX, TALL_MAX, barOffset, pillHeight } from "../../game/relatedLayout";
 import { today, useToday } from "../../game/today";
 import { count } from "../../game/format";
-import { DEMAND_INDEX, type LineInput, type WorldView } from "../../game/types";
+import { DEMAND_INDEX, planStopsOf, type LineInput, type WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
 import { edit, stationNames, stationsById, world } from "../../game/world";
 import { drawnReversed } from "../../game/northUp";
@@ -138,11 +138,12 @@ export function GroupInspector({ group }: { group: number }) {
   }
   const across = (key: string) => (outside.get(key) ?? []).sort((a, b) => b.n - a.n).map((x) => x.l);
 
-  const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(l.stops, w.lineStats[l.id]?.passed ?? [], stopKey) }));
+  // T-3474: the diagram is each line's plan, which its cells edit (`passed` is the plan's too)
+  const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(planStopsOf(l), w.lineStats[l.id]?.passed ?? [], stopKey) }));
   const keys = [...new Set(ins.flatMap((x) => x.places.map((p) => p.key)))];
   const crossN = new Map(keys.map((k) => [k, (outside.get(k) ?? []).length]));
   const at = stationsById(w);
-  const ups = ls.map((l) => drawnReversed(at.get(l.stops[0]), at.get(l.stops[l.stops.length - 1]), l.stops.length > 2 && l.stops[0] === l.stops[l.stops.length - 1]));
+  const ups = ls.map((l) => { const p = planStopsOf(l); return drawnReversed(at.get(p[0]), at.get(p[p.length - 1]), p.length > 2 && p[0] === p[p.length - 1]); });
   // T-2016: each line's bullet width, so a two-character pill sits as snugly beside its neighbours
   const chipW = ls.map((l) => { const b = bulletText(l.letter, "sm"); return b ? bulletDraw(b, shapeOf(l.id)).w : CHIP_W; });
   const sig = JSON.stringify([all, ins, [...crossN], ups, chipW]);
@@ -263,7 +264,10 @@ export function GroupInspector({ group }: { group: number }) {
                   const c = row.cells[k];
                   if (!c) return null;
                   const st = w.lineStats[l.id];
-                  const n = l.stops.length;
+                  const plan = planStopsOf(l);
+                  const n = plan.length;
+                  // T-3474: the cells are the plan's stops; where its trains turn back and what boards are the served part's
+                  const svc = c.index - (l.stopStart ?? 0), served = svc >= 0 && svc < l.stops.length;
                   const rail = !!st && !st.bus;
                   const B = tipBullet(l.letter, l.colour, shapeOf(l.id));
                   const [x0, x1] = hitOf(k, r), x = lay.xs[k][r];
@@ -281,13 +285,13 @@ export function GroupInspector({ group }: { group: number }) {
                   }
                   // a stop comes out unless the line needs it: a bus line, a line of two stops, a loop's
                   // ends (and a loop of three), or where its trains turn back
-                  const turns = !!st?.reversals.includes(c.index);
-                  const loop = !!st?.loop;
+                  const turns = served && !!st?.reversals.includes(svc);
+                  const loop = l.planStops ? n >= 3 && plan[0] === plan[n - 1] : !!st?.loop;
                   const keep = !rail || n <= 2 || turns || (loop && (c.index === 0 || c.index === n - 1 || n <= 3));
                   const here = nm(c.station);
                   const end = c.index === 0 || c.index === n - 1;
                   const day = today.value.get(l.id);
-                  const boards = day ? "\n" + t("stationInspector.boardings24", { count: count(day.stops[c.index] ?? 0) }) : "";
+                  const boards = day && served ? "\n" + t("stationInspector.boardings24", { count: count(day.stops[svc] ?? 0) }) : "";
                   const tip = (keep
                     ? (turns ? t("groupInspector.turnsBack", { line: B, station: here }) : t("groupInspector.stopsAt", { line: B, station: here }))
                     : t("groupInspector.removeStop", { line: B, station: here }) + (end || loop || n < 3 || mobileDevice() ? "" : "\n" + t("groupInspector.shiftEnd", { line: B }))) + boards;

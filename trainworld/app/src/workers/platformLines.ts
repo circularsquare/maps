@@ -37,11 +37,12 @@ export class PlatformLines {
   }
 
   /** How many lines run over each edge, from the latest line rows. */
-  setLines(lines: readonly { ok: boolean; path: number[] }[]) {
+  setLines(lines: readonly { ok: boolean; path: number[]; planPath?: number[] }[]) {
     const on = new Map<number, number>();
     for (const l of lines) {
       if (!l.ok) continue;
-      for (const e of new Set(l.path.map((p) => p >> 1))) on.set(e, (on.get(e) ?? 0) + 1);
+      // T-3474: a line's whole plan, which the map draws
+      for (const e of new Set((l.planPath ?? l.path).map((p) => p >> 1))) on.set(e, (on.get(e) ?? 0) + 1);
     }
     this.onEdge = on;
   }

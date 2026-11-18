@@ -2132,7 +2132,10 @@ impl TrackApi {
         if !net.line_ok(line) {
             return vec![];
         }
-        let Some(&s) = net.line_stops(line).iter().min_by_key(|&&s| net.node_platform[s as usize]) else { return vec![] };
+        // T-3474: of the stops its trains serve, as its trains are sized
+        let part = self.w.svc.lines.get(line as usize).filter(|l| l.part.is_some());
+        let stops = part.map_or(net.line_stops(line), |l| &l.stops[..]);
+        let Some(&s) = stops.iter().min_by_key(|&&s| net.node_platform[s as usize]) else { return vec![] };
         vec![((net.node_platform[s as usize] as f64 / CAR_LEN).floor().max(1.0)) as u32, s]
     }
     /// Per demand level (high, medium, low): round trip s, trains needed, delay s.

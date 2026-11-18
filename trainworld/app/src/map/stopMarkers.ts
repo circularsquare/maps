@@ -17,7 +17,7 @@
 import { t } from "../i18n";
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
-import type { LineInput, WorldView } from "../game/types";
+import { planStopsOf, type LineInput, type WorldView } from "../game/types";
 import { lineDraft, loopTap, newLine, stopEditing } from "../game/ui";
 import { world } from "../game/world";
 import { halfFill } from "./halfDot";
@@ -108,7 +108,8 @@ function tiersFrom(d: Float64Array, w: WorldView, revAt: Map<string, string>): M
  */
 function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> {
   const out = new Map<string, StopTier>();
-  const stops = new Set(line.stops);
+  const plan = planStopsOf(line);
+  const stops = new Set(plan);
   const adj = new Map<number, number[]>();
   const routeNodes = new Set<number>();
   for (const e of w.edges) {
@@ -121,17 +122,17 @@ function stopTiers(w: WorldView, line: LineInput): Map<string, StopTier> {
   }
   // the track network the stops lie on
   const joined = new Set<number>();
-  const queue = line.stops.map(Number);
+  const queue = plan.map(Number);
   for (const n of queue) joined.add(n);
   for (let k = 0; k < queue.length; k++)
     for (const m of adj.get(queue[k]) ?? []) if (!joined.has(m)) (joined.add(m), queue.push(m));
-  const hasRoute = line.stops.length >= 2 && routeNodes.size > 0;
-  const n = line.stops.length;
-  const loop = n >= 3 && line.stops[0] === line.stops[n - 1];
+  const hasRoute = plan.length >= 2 && routeNodes.size > 0;
+  const n = plan.length;
+  const loop = n >= 3 && plan[0] === plan[n - 1];
   for (const s of w.save.stations) {
-    if (loop && s.id === line.stops[0]) out.set(s.id, "open");
+    if (loop && s.id === plan[0]) out.set(s.id, "open");
     else if (stops.has(s.id)) out.set(s.id, "on");
-    else if (!line.stops.length) out.set(s.id, "route");
+    else if (!plan.length) out.set(s.id, "route");
     else if (hasRoute) out.set(s.id, routeNodes.has(s.num) ? "route" : joined.has(s.num) ? "reroute" : "cut");
     else out.set(s.id, joined.has(s.num) ? "route" : "cut");
   }
@@ -261,7 +262,7 @@ export class StopMarkers {
       // between made markers change and change back (T-648).
       const estimate = stopTiers(w, this.line);
       if (sameLine && this.fromWorker) {
-        const stops = new Set(this.line.stops);
+        const stops = new Set(planStopsOf(this.line));
         for (const s of estimate.keys()) {
           const was = this.fromWorker.get(s);
           if (!stops.has(s) && was !== undefined && was !== "on") estimate.set(s, was);
@@ -314,7 +315,7 @@ export class StopMarkers {
     if (--g.n > 0) return;
     this.guess.delete(key);
     if (!this.line) return;
-    const isStop = this.line.stops.includes(key), shownStop = this.tierOf(key) === "on";
+    const isStop = planStopsOf(this.line).includes(key), shownStop = this.tierOf(key) === "on";
     if (isStop === shownStop) return;
     this.tiers.set(key, isStop ? "on" : g.prev === "on" ? "route" : g.prev);
     this.place();
@@ -509,7 +510,7 @@ export class StopMarkers {
 
   /** the line being edited is a loop: its last stop is its first */
   private closedLine(): boolean {
-    const s = this.line?.stops ?? [];
+    const s = this.line ? planStopsOf(this.line) : [];
     return s.length >= 3 && s[0] === s[s.length - 1];
   }
 
@@ -536,7 +537,7 @@ export class StopMarkers {
 
   /** T-1896: where the line's track and station `id`'s are nearest, drawn for a few seconds. */
   private showGap(id: string) {
-    if (!this.line?.stops.length) return;
+    if (!this.line || !planStopsOf(this.line).length) return;
     const asked = ++this.gapAsked, line = this.line.num;
     void queryClock({ what: "stopGap", line, station: Number(id) }).then((d) => {
       if (asked !== this.gapAsked || this.line?.num !== line) return;

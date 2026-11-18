@@ -55,11 +55,16 @@ pub struct Run {
 pub struct LineSvc {
     /// Alive, not broken, profiles built.
     pub ok: bool,
-    /// `ok` and every edge and stop constructed: the line carries trains, loads capacity and
-    /// has trips (SPEC 6.4). A line that is `ok` but not running shows its times as a preview.
+    /// `ok` and the stops it runs constructed with the track between (all of its plan, or the part
+    /// in `part`): the line carries trains, loads capacity and has trips (SPEC 6.4). A line that is
+    /// `ok` but not running shows its times as a preview.
     pub running: bool,
-    /// The stops these profiles were built for (a change wakes demand).
+    /// The stops these profiles were built for (a change wakes demand): the part of the plan its
+    /// trains run (`part`), else the whole plan.
     pub stops: Vec<u32>,
+    /// T-3474: where the line runs only part of its plan (`Network::line_stretch`), that part; None
+    /// when it runs or previews all of it.
+    pub part: Option<super::net::Stretch>,
     /// A loop (T-798): each run goes from the first stop round to it again, and its trains take
     /// that run's next departure there.
     pub kind: LoopKind,
@@ -150,6 +155,11 @@ impl LineSvc {
     /// The runs that carry trains, from run 0: both, or run 0 alone on a one-way loop (T-2981).
     pub fn live_runs(&self) -> usize {
         if self.one_way { 1 } else { 2 }
+    }
+    /// Whether its trains take edge `e` that its plan has (T-3474): always, unless it runs only part
+    /// of its plan.
+    pub fn runs_on(&self, e: u32) -> bool {
+        self.part.is_none() || self.runs.iter().take(self.live_runs()).any(|r| r.segs.iter().any(|&p| path_edge(p) == e))
     }
     /// The round trip from each run's duration: a one-way loop's lap, twice a two-way loop's
     /// longer lap, or both runs and their turnarounds.
@@ -520,18 +530,27 @@ pub struct Service {
     pub cal: Vec<Cal>,
 }
 
-fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
-    let path = net.line_path(l);
-    let running = net.line_constructed(l);
+/// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
+/// partly built line runs, T-3474).
+struct Served<'a> {
+    stops: &'a [u32],
+    path: &'a [u32],
+    running: bool,
+    circle: bool,
+}
+
+fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwell: f64) -> Option<Run> {
+    let path = on.path;
+    let running = on.running;
     let mut run = Run::default();
     // T-3348: each run's own stop nodes, run 1's in its order
     let stops = if rev {
-        let (stops, segs) = net.back_run(l)?;
+        let (stops, segs) = net.back_run_of(on.stops, path)?;
         run.segs = segs;
         stops
     } else {
         run.segs = path.to_vec();
-        net.fwd_stops_of(net.line_stops(l), path)
+        net.fwd_stops_of(on.stops, path)
     };
     let mut s = 0.0;
     run.nodes.push(net.path_nodes(run.segs[0]).0);
@@ -571,7 +590,7 @@ fn build_run(net: &Network, l: u32, rev: bool, train_len: f64, dwell: f64) -> Op
     run.stop_idx = at.into_iter().map(|k| k as u32).collect();
     run.away = stopped.iter().enumerate().filter(|x| !*x.1).map(|(j, _)| (j as u32, stops[j])).collect();
     if stops.iter().any(|&s| net.one_side(s).is_some()) || !run.away.is_empty() {
-        run.pass = net.run_passes(&run.segs, &run.stop_idx, net.line_loop(l) == LoopKind::Circle);
+        run.pass = net.run_passes(&run.segs, &run.stop_idx, on.circle);
         for &(j, _) in &run.away {
             run.pass[j as usize] = true;
         }
@@ -701,9 +720,8 @@ fn stand_times(run: &Run, dwell: f64, turn: f64) -> Vec<f64> {
 }
 
 fn build_line(net: &Network, l: u32) -> LineSvc {
-    let mut ls = LineSvc::default();
     if !net.line_ok(l) || net.line_broken[l as usize] {
-        return ls;
+        return LineSvc::default();
     }
     if let Some(r) = net.line_bus[l as usize].as_ref() {
         return build_bus(net, l, r);
@@ -711,26 +729,43 @@ fn build_line(net: &Network, l: u32) -> LineSvc {
     if let Some(r) = net.line_ferry[l as usize].as_ref() {
         return build_ferry(net, l, r);
     }
-    ls.stops = net.line_stops(l).to_vec();
+    // T-3474: a line not wholly constructed runs the stretch of its plan that is, and previews the
+    // whole plan while none is; should that stretch not build, it previews as before
+    let stretch = net.line_stretch(l);
+    if let Some(s) = stretch.filter(|s| net.stretch_is_part(l, s)) {
+        let ls = build_on(net, l, s.stops(net.line_stops(l)), s.path(net.line_path(l)), true);
+        if ls.ok {
+            return LineSvc { part: Some(s), ..ls };
+        }
+        return build_on(net, l, net.line_stops(l), net.line_path(l), false);
+    }
+    build_on(net, l, net.line_stops(l), net.line_path(l), stretch.is_some())
+}
+
+/// A rail line's service over `stops` and `path` (its plan, or the part of it it runs).
+fn build_on(net: &Network, l: u32, stops: &[u32], path: &[u32], running: bool) -> LineSvc {
+    let mut ls = LineSvc::default();
+    ls.stops = stops.to_vec();
     if ls.stops.len() < 2 { return ls; }
-    ls.kind = net.line_loop(l);
+    ls.kind = net.loop_kind(stops, path);
     ls.one_way = ls.is_loop() && net.line_one_way[l as usize];
     // T-3348: the platforms each run stops at
-    let ways = net.way_stops(net.line_stops(l), net.line_path(l)).unwrap_or_default();
-    let min_plat = net.line_stops(l).iter().chain(&ways.0).chain(&ways.1).map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
+    let ways = net.way_stops(stops, path).unwrap_or_default();
+    let min_plat = stops.iter().chain(&ways.0).chain(&ways.1).map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;
     ls.cars = if want == 0 { fit } else { want.min(fit) };
     ls.train_len = ls.cars as f64 * CAR_LEN;
     let dwell = net.line_dwell[l as usize] as f64;
-    let first = build_run(net, l, false, ls.train_len, dwell);
+    let on = Served { stops, path, running, circle: ls.kind == LoopKind::Circle };
+    let first = build_run(net, l, &on, false, ls.train_len, dwell);
     // a loop that runs one way has no return run to build, whatever one-way track it goes round (T-3094)
-    let second = build_run(net, l, true, ls.train_len, dwell).or_else(|| if ls.one_way { first.clone() } else { None });
+    let second = build_run(net, l, &on, true, ls.train_len, dwell).or_else(|| if ls.one_way { first.clone() } else { None });
     match (first, second) {
         (Some(a), Some(b)) => {
             ls.runs = [a, b];
             ls.ok = true;
-            ls.running = net.line_constructed(l);
+            ls.running = running;
             ls.shift = net.line_shift(l);
         }
         _ => {}

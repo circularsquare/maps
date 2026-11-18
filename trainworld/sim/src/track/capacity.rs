@@ -371,9 +371,10 @@ fn hold_back(lines: &[LineSvc], l: usize) -> f64 {
 /// passes whole sections).
 /// T-1805: a node's edge ends that a running train line uses. A branch no train runs on yet
 /// (blueprint, or constructed with no line) leaves the track through the node one section.
+/// T-3474: a line running part of its plan uses only the track its runs take.
 fn live_ports(net: &Network, lines: &[LineSvc], node: u32) -> usize {
     net.node_ports[node as usize].ends().iter().filter(|&&c| {
-        net.lines_on_edge(c >> 1).iter().any(|&l| lines.get(l as usize).is_some_and(|ls| ls.running && !ls.is_bus()))
+        net.lines_on_edge(c >> 1).iter().any(|&l| lines.get(l as usize).is_some_and(|ls| ls.running && !ls.is_bus() && ls.runs_on(c >> 1)))
     }).count()
 }
 

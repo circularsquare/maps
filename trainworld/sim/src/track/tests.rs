@@ -96,6 +96,222 @@ fn unused_blueprint_extension_preserves_running_service_but_planned_lines_previe
     }
 }
 
+/// Track planned but not built, as a line's extension may be.
+pub fn planned_edge(w: &mut TrackWorld, a: u32, b: u32, pis: &[(f64, f64)], level: i8) -> u32 {
+    let id = w.net.alloc_edge();
+    let pis = pis.iter().map(|&(x, y)| Pi::new(x, y, 0.0, level)).collect();
+    w.apply(Op::Edge { id, data: Some(EdgeData { a, b, tracks: 2, pis, built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) }).unwrap();
+    id
+}
+
+/// T-3474 (from CinnamonVII's PR 21): stations at x = 0, 3, 6, 9 km, the edges built or planned as `built` says.
+fn straight(built: [bool; 3]) -> (TrackWorld, [u32; 4]) {
+    let mut w = world();
+    let ns: Vec<u32> = (0..4).map(|i| node(&mut w, 3000.0 * i as f64, 0.0, 0)).collect();
+    for i in 0..3 {
+        if built[i] { edge(&mut w, ns[i], ns[i + 1], &[], 0).unwrap(); } else { planned_edge(&mut w, ns[i], ns[i + 1], &[], 0); }
+    }
+    for &n in &ns {
+        station(&mut w, n, 200);
+    }
+    (w, [ns[0], ns[1], ns[2], ns[3]])
+}
+
+fn stretch_of(w: &TrackWorld, l: u32) -> (u32, u32, u32, u32) {
+    let s = w.net.line_stretch(l).expect("a stretch");
+    (s.stop0, s.stop1, s.path0, s.path1)
+}
+
+#[test]
+fn a_line_runs_the_built_part_of_its_plan_and_keeps_the_rest_planned() {
+    use super::net::LoopKind;
+    let (mut w, [a, b, c, d]) = straight([true, true, false]);
+    let l = line(&mut w, &[a, b, c, d], [8.0, 4.0, 2.0]);
+    assert_eq!(stretch_of(&w, l), (0, 3, 0, 2));
+    assert!(!w.net.line_constructed(l), "the plan as a whole is not built");
+    assert_eq!(w.net.line_stops(l), &[a, b, c, d], "the plan keeps its unbuilt stop");
+    assert_eq!(w.net.line_path(l).len(), 3, "and its unbuilt track");
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running);
+    assert_eq!(ls.stops, vec![a, b, c]);
+    assert_eq!(ls.part.map(|s| (s.stop0, s.stop1)), Some((0, 3)));
+    assert_eq!(ls.kind, LoopKind::None);
+    assert_eq!(ls.runs[0].segs, w.net.line_path(l)[..2].to_vec());
+    let back: Vec<u32> = ls.runs[0].segs.iter().rev().map(|p| p ^ 1).collect();
+    assert_eq!(ls.runs[1].segs, back);
+    assert_eq!((ls.runs[0].stop_s.len(), ls.runs[1].stop_s.len()), (3, 3), "the planned stop is not called at");
+    // once the rest is built the whole plan runs
+    let cd = w.net.line_path(l)[2] >> 1;
+    let mut e = w.net.edge_data(cd).unwrap();
+    e.built = true;
+    w.apply(Op::Edge { id: cd, data: Some(e) }).unwrap();
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.running && ls.part.is_none());
+    assert_eq!(ls.stops, vec![a, b, c, d]);
+}
+
+/// The invariant: a line running part of its plan runs it as a line planned over that part alone does
+/// (its ends turn back as any terminal: at a dead end on the platform's middle, else at the node).
+#[test]
+fn a_partly_built_line_runs_as_a_line_planned_over_its_built_part() {
+    for built in [[true, true, false], [false, true, true]] {
+        let (mut w1, s1) = straight(built);
+        let l1 = line(&mut w1, &s1, [8.0, 4.0, 2.0]);
+        let (mut w2, s2) = straight(built);
+        let part = if built[0] { &s2[..3] } else { &s2[1..] };
+        let l2 = line(&mut w2, part, [8.0, 4.0, 2.0]);
+        let (x, y) = (&w1.svc.lines[l1 as usize], &w2.svc.lines[l2 as usize]);
+        assert!(x.part.is_some() && y.part.is_none() && x.running && y.running, "{built:?}");
+        assert_eq!((x.stops.clone(), x.cars, x.round_trip, x.trains, x.delay), (y.stops.clone(), y.cars, y.round_trip, y.trains, y.delay), "{built:?}");
+        for r in 0..2 {
+            assert_eq!(x.runs[r].segs, y.runs[r].segs, "{built:?}");
+            assert_eq!(x.runs[r].stop_s, y.runs[r].stop_s, "{built:?}");
+            assert_eq!(x.runs[r].free, y.runs[r].free, "{built:?}");
+            assert_eq!(x.runs[r].prof, y.runs[r].prof, "{built:?}");
+        }
+    }
+}
+
+#[test]
+fn a_line_runs_a_built_middle_with_planned_ends() {
+    let mut w = world();
+    let ns: Vec<u32> = (0..5).map(|i| node(&mut w, 3000.0 * i as f64, 0.0, 0)).collect();
+    planned_edge(&mut w, ns[0], ns[1], &[], 0);
+    edge(&mut w, ns[1], ns[2], &[], 0).unwrap();
+    edge(&mut w, ns[2], ns[3], &[], 0).unwrap();
+    planned_edge(&mut w, ns[3], ns[4], &[], 0);
+    for &n in &ns {
+        station(&mut w, n, 200);
+    }
+    let l = line(&mut w, &ns, [8.0, 4.0, 2.0]);
+    assert_eq!(stretch_of(&w, l), (1, 4, 1, 3));
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running);
+    assert_eq!(ls.stops, ns[1..4].to_vec());
+    assert_eq!(w.net.line_stops(l), &ns[..], "both planned ends stay planned");
+}
+
+#[test]
+fn a_gap_leaves_the_shorter_side_of_the_plan_planned() {
+    let mut w = world();
+    let ns: Vec<u32> = (0..5).map(|i| node(&mut w, 3000.0 * i as f64, 0.0, 0)).collect();
+    edge(&mut w, ns[0], ns[1], &[], 0).unwrap();
+    let gap = planned_edge(&mut w, ns[1], ns[2], &[], 0);
+    edge(&mut w, ns[2], ns[3], &[], 0).unwrap();
+    edge(&mut w, ns[3], ns[4], &[], 0).unwrap();
+    for &n in &ns {
+        station(&mut w, n, 200);
+    }
+    let l = line(&mut w, &ns, [8.0, 4.0, 2.0]);
+    assert_eq!(stretch_of(&w, l), (2, 5, 2, 4), "the longer built stretch, beyond the gap");
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.running && ls.runs[0].segs.iter().chain(&ls.runs[1].segs).all(|&p| p >> 1 != gap));
+    assert_eq!(ls.stops, ns[2..].to_vec());
+}
+
+#[test]
+fn an_unbuilt_station_cuts_the_stretch() {
+    let (mut w, [a, b, c, d]) = straight([true, true, true]);
+    let mut st = w.net.station_data(b).unwrap();
+    st.built = false;
+    w.apply(Op::Station { node: b, data: Some(st) }).unwrap();
+    let l = line(&mut w, &[a, b, c, d], [8.0, 4.0, 2.0]);
+    assert_eq!(stretch_of(&w, l), (2, 4, 2, 3));
+    assert_eq!(w.svc.lines[l as usize].stops, vec![c, d]);
+}
+
+#[test]
+fn a_built_arc_of_a_planned_loop_runs_both_ways() {
+    use super::net::LoopKind;
+    let (mut w, ns) = ring_fixture();
+    let l = line(&mut w, &closed(&ns), [8.0, 4.0, 2.0]);
+    set_one_way(&mut w, l, true);
+    assert!(w.svc.lines[l as usize].one_way);
+    // leave only the closing arc planned: the rest of the ring runs, as an open line
+    let close = w.net.line_path(l)[w.net.line_path(l).len() - 1] >> 1;
+    let mut arc = w.net.edge_data(close).unwrap();
+    arc.built = false;
+    w.apply(Op::Edge { id: close, data: Some(arc) }).unwrap();
+    assert!(!w.net.line_constructed(l));
+    assert_eq!(stretch_of(&w, l), (0, 6, 0, 5));
+    assert!(!w.net.stretch_runs_once(l));
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running && !ls.one_way && ls.kind == LoopKind::None);
+    assert_eq!(ls.stops, ns);
+    assert!(ls.runs[0].segs.iter().chain(&ls.runs[1].segs).all(|&p| p >> 1 != close));
+    // once the closing arc is built the whole loop runs, one way again
+    let mut arc = w.net.edge_data(close).unwrap();
+    arc.built = true;
+    w.apply(Op::Edge { id: close, data: Some(arc) }).unwrap();
+    assert!(w.net.stretch_runs_once(l));
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running && ls.one_way && ls.kind == LoopKind::Circle && ls.part.is_none());
+}
+
+#[test]
+fn a_wholly_planned_line_previews_its_plan_without_running() {
+    let (mut w, [a, b, c, _]) = straight([false, false, false]);
+    let l = line(&mut w, &[a, b, c], [8.0, 4.0, 2.0]);
+    assert!(w.net.line_stretch(l).is_none());
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && !ls.running && ls.part.is_none(), "a planned line previews its times");
+    assert_eq!(ls.stops, vec![a, b, c]);
+}
+
+#[test]
+fn a_partly_built_one_way_stretch_never_returns_over_unbuilt_track() {
+    let mut w = world();
+    let d = node(&mut w, -3000.0, 0.0, 0);
+    let a = node(&mut w, 0.0, 0.0, 0);
+    let j = node(&mut w, 3000.0, 0.0, 0);
+    let b = node(&mut w, 6000.0, 0.0, 0);
+    // D-A-J built double track; J->B built single-track one-way; B->J an unbuilt one-way way back
+    edge(&mut w, d, a, &[], 0).unwrap();
+    edge(&mut w, a, j, &[], 0).unwrap();
+    let jb = w.net.alloc_edge();
+    w.apply(Op::Edge { id: jb, data: Some(EdgeData { a: j, b, tracks: 1, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 1, join: [0; 2], limit: 0 }) }).unwrap();
+    let bj = w.net.alloc_edge();
+    let bj_pis = [(7500.0, 0.0), (7500.0, 1500.0), (5000.0, 1500.0), (3400.0, 0.0)].into_iter().map(|(x, y)| Pi::new(x, y, 0.0, 0)).collect();
+    w.apply(Op::Edge { id: bj, data: Some(EdgeData { a: b, b: j, tracks: 1, pis: bj_pis, built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 1, join: [0; 2], limit: 0 }) }).unwrap();
+    for n in [d, a, b] {
+        station(&mut w, n, 200);
+    }
+    let l = line(&mut w, &[d, a, b], [8.0, 4.0, 2.0]);
+    // A-B's way back is the unbuilt B->J: the stretch stops at A
+    assert_eq!(stretch_of(&w, l).0..stretch_of(&w, l).1, 0..2);
+    let ls = &w.svc.lines[l as usize];
+    assert!(ls.ok && ls.running && ls.stops == vec![d, a]);
+    assert!(ls.runs[1].segs.iter().all(|&p| w.net.edge_built[(p >> 1) as usize]), "the return run stays on built track");
+    // A-B alone has built track out and none back: it previews
+    let l2 = line(&mut w, &[a, b], [8.0, 4.0, 2.0]);
+    assert!(w.net.line_stretch(l2).is_none());
+    assert!(!w.svc.lines[l2 as usize].running);
+}
+
+#[test]
+fn a_partly_built_one_way_loop_arc_is_one_of_back_lines() {
+    let (mut w, ns) = ring_fixture();
+    for e in 0..w.net.edge_count() as u32 {
+        let mut d = w.net.edge_data(e).unwrap();
+        d.tracks = 1;
+        d.oneway = 1;
+        w.apply(Op::Edge { id: e, data: Some(d) }).unwrap();
+    }
+    let l = line(&mut w, &closed(&ns), [8.0, 4.0, 2.0]);
+    set_one_way(&mut w, l, true);
+    // only ns[0] and ns[1] constructed: A-B runs both ways, back round the built one-way ring
+    for &s in &ns[2..] {
+        let mut st = w.net.station_data(s).unwrap();
+        st.built = false;
+        w.apply(Op::Station { node: s, data: Some(st) }).unwrap();
+    }
+    assert!(w.net.line_runs_once(l) && !w.net.stretch_runs_once(l));
+    let ls = &w.svc.lines[l as usize];
+    assert_eq!(ls.stops, ns[..2].to_vec());
+    assert!(w.net.back_lines().contains(&l), "its way back takes track off its path");
+    assert!(!ls.one_way && ls.runs[1].segs.len() >= 2);
+}
+
 /// A - B - C, stations at all three; B-C bends at a PI.
 fn simple() -> (TrackWorld, [u32; 3], [u32; 2], u32) {
     let mut w = world();

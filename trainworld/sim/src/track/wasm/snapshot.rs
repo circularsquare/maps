@@ -199,9 +199,34 @@ impl TrackApi {
             vec![]
         }
     }
+    /// T-3474: where a rail line's trains run only part of its plan, that part as
+    /// `[stop0, stop1, path0, path1]` (ranges of `line_stops` and `line_path`); else empty.
+    pub fn line_part(&self, id: u32) -> Vec<u32> {
+        self.part_of(id).map_or_else(Vec::new, |l| {
+            let s = l.part.unwrap();
+            vec![s.stop0, s.stop1, s.path0, s.path1]
+        })
+    }
+    /// T-3474: the stops its trains serve: `line_stops`, or the part of them a partly built line runs.
+    pub fn line_run_stops(&self, id: u32) -> Vec<u32> {
+        self.part_of(id).map_or_else(|| self.line_stops(id), |l| l.stops.clone())
+    }
+    /// T-3474: the path its trains run forward, as `line_run_stops`.
+    pub fn line_run_path(&self, id: u32) -> Vec<u32> {
+        self.part_of(id).map_or_else(|| self.line_path(id), |l| l.runs[0].segs.clone())
+    }
+    fn part_of(&self, id: u32) -> Option<&crate::track::service::LineSvc> {
+        self.w.svc.lines.get(id as usize).filter(|l| l.ok && l.part.is_some() && self.w.net.line_ok(id))
+    }
     /// T-3117: the path of the line's return run, last stop to first, where it is not its path run
-    /// backward (round one-way track, T-3094); else empty.
+    /// backward (round one-way track, T-3094); else empty. T-3474: of the part it runs, for a partly
+    /// built line.
     pub fn line_back_path(&self, id: u32) -> Vec<u32> {
+        if let Some(l) = self.part_of(id) {
+            let back = &l.runs[1].segs;
+            let same = back.iter().eq(l.runs[0].segs.iter().rev().map(|p| p ^ 1).collect::<Vec<_>>().iter());
+            return if l.one_way || same { vec![] } else { back.clone() };
+        }
         let n = &self.w.net;
         let rail = n.line_bus.get(id as usize).map_or(true, |b| b.is_none()) && n.line_ferry.get(id as usize).map_or(true, |f| f.is_none());
         if !n.line_ok(id) || !rail || n.line_runs_once(id) {

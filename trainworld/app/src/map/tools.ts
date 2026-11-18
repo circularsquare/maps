@@ -47,7 +47,7 @@ import { onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
-import type { Level, TrackEdge } from "../game/types";
+import { planStopsOf, type Level, type TrackEdge } from "../game/types";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { ghostChevrons, joinedGhost, strokesFromParts, strokesFromPreview, TAPER_M } from "./network";
 import { stationOutside } from "./stationSide";
@@ -371,7 +371,7 @@ export class Tools {
         this.exit();
         return;
       }
-      const stops = line.stops.map(Number);
+      const stops = planStopsOf(line).map(Number);
       if (!sameStops(stops, lineDraft.peek().stops)) lineDraft.value = { line: active, stops };
     });
   }
@@ -1724,7 +1724,8 @@ export class Tools {
     const session = this.lineSession;
     if (!tier) {
       const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      if (line) guessRow(String(station), line.stops.includes(String(station)), line.num);
+      // T-3474: the panel's rows are the stops its trains serve, which a guess matches only while they are the plan
+      if (line && !line.planStops) guessRow(String(station), line.stops.includes(String(station)), line.num);
     }
     this.stopClicks = this.stopClicks.then(() => this.toggle(station, session, tier)).catch(() => {
       if (session === this.lineSession) say(tr("tools.stopFailed"), true);
@@ -1732,7 +1733,7 @@ export class Tools {
       if (tier) return;
       this.stops?.settleClick(station);
       const id = lineDraft.peek().line, line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      settleRow(String(station), !!line?.stops.includes(String(station)));
+      settleRow(String(station), !!line && !line.planStops && line.stops.includes(String(station)));
     });
   }
 
@@ -1741,7 +1742,7 @@ export class Tools {
     const id = lineDraft.peek().line;
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
     if (id === null || !line) return;
-    const before = line.stops.map(Number);
+    const before = planStopsOf(line).map(Number);
     let change: Parameters<typeof edit>[0];
     const n = before.length;
     const closedLoop = n >= 3 && before[0] === before[n - 1];
@@ -1776,7 +1777,7 @@ export class Tools {
     const a = await edit(change, false, false, "rows");
     if (a.ok && session === this.lineSession && tool.peek() === "line") {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
-      if (latest) lineDraft.value = { line: id, stops: latest.stops.map(Number) };
+      if (latest) lineDraft.value = { line: id, stops: planStopsOf(latest).map(Number) };
       this.noteFast(id);
       void settleNewLineColour(id);
     }

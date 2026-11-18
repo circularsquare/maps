@@ -562,9 +562,16 @@ export interface ClockLine {
   delay: [number, number, number];
   dwell: number;
   turnaround: number;
+  /** the stops its trains serve: its plan, or the part of it a partly built line runs (T-3474) */
   stops: number[];
-  /** `edge << 1 | direction`, first stop to last */
+  /** `edge << 1 | direction`, first stop to last, of `stops` */
   path: number[];
+  /** T-3474: its whole plan (`TrackApi.line_stops`, `line_path`) where `stops` and `path` are only
+   * the part of it its trains run, and where that part starts in it; absent when they are the plan */
+  planStops?: number[];
+  planPath?: number[];
+  stopStart?: number;
+  pathStart?: number;
   /** T-3117: the return run's path, last stop to first, where it is not `path` run backward (round
    * one-way track: a flyover's other leg) */
   back?: number[];

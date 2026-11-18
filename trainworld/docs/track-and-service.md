@@ -1526,9 +1526,17 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   there: all of it, what one line still lacks (the line panel shows its price), one stretch of
   track, or one station. Only constructed track carries trains. Lines can be planned over
   blueprint track: they show their stop times, and run (load capacity, have trains, count for
-  demand) once every edge and stop they use is constructed, so a line drawn over constructed
-  track runs as soon as it has trains; Construct with nothing left to build is refused with the
-  issue `NothingToConstruct` (T-849). A junction is paid when its third
+  demand) over what of them is constructed (below), all of it once every edge and stop they use
+  is, so a line drawn over constructed track runs as soon as it has trains; Construct with nothing
+  left to build is refused with the issue `NothingToConstruct` (T-849).
+  **A partly built line** (T-3474, from CinnamonVII's PR 21; `Network::line_stretch`) runs the
+  longest stretch of its plan whose consecutive stops are constructed, joined by constructed track,
+  with a constructed way back (ties to more stops, then the earlier stretch); its trains turn back at
+  that stretch's end stations as at any line end, and its service, capacity, demand, upkeep share and
+  cars are that stretch's, as a line planned over it alone. An unbuilt station cuts the stretch there. A
+  loop's built arc is an open line, run both ways, until the loop is whole. With no two stops so joined
+  the whole plan stays a preview. The rest of the plan stays the line's: stop edits, Construct and its
+  price, and the line tool work on all of it, and the map draws it faded. A junction is paid when its third
   edge is constructed, a flat crossing when its second is.
   **Rebuilding constructed track** (T-3059, Anita 2026-11-10; `rebuild_pieces`, `rebuild_quote` in `wasm/rebuild.rs`):
   constructed edges and stations change level (as `set_edges_level` does for blueprint) and double track changes

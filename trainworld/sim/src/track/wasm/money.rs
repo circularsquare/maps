@@ -194,15 +194,18 @@ impl TrackApi {
             if !s.running { return 0.0 }
             (0..LEVELS).map(|k| n.line_tph[l][k] as f64 * hours.get(k).copied().unwrap_or(0.0)).sum()
         }).collect();
+        let svc = &self.w.svc.lines;
         let weight = |l: u32| w.get(l as usize).copied().unwrap_or(0.0);
+        // T-3474: a line running part of its plan shares only the track its trains take
+        let weight_on = |l: u32, e: u32| if svc.get(l as usize).map_or(true, |s| s.runs_on(e)) { weight(l) } else { 0.0 };
         let mut share = vec![0.0; w.len()];
         let mut rest = 0.0;
         for e in 0..n.edge_alive.len() {
             let Some(u) = edge_upkeep(n, e) else { continue };
             let on = n.lines_on_edge(e as u32);
-            let total: f64 = on.iter().map(|&l| weight(l)).sum();
+            let total: f64 = on.iter().map(|&l| weight_on(l, e as u32)).sum();
             if total > 0.0 {
-                for &l in on { share[l as usize] += u * weight(l) / total; }
+                for &l in on { share[l as usize] += u * weight_on(l, e as u32) / total; }
             } else {
                 rest += u;
             }
@@ -210,7 +213,7 @@ impl TrackApi {
         let mut stopping: std::collections::HashMap<u32, (f64, Vec<u32>)> = Default::default();
         for l in 0..w.len() as u32 {
             if weight(l) <= 0.0 || !n.line_ok(l) { continue }
-            let mut stops = n.line_stops(l).to_vec();
+            let mut stops = if svc[l as usize].part.is_some() { svc[l as usize].stops.clone() } else { n.line_stops(l).to_vec() };
             // T-3348: and the platforms each run stops at
             if let Some(ls) = self.w.svc.lines.get(l as usize).filter(|s| !s.is_bus()) {
                 for r in 0..2 {

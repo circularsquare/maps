@@ -45,8 +45,14 @@ interface Heavy {
   /** T-1813: the group's bullet text and colour set by hand, "" for none */
   groupSymbol: string;
   groupColour: string;
+  /** the stops its trains serve and the path they run: the plan, or the part of it a partly built line runs (T-3474) */
   stops: number[];
   path: number[];
+  /** T-3474: the whole plan where `stops` is only part of it, and where that part starts in it; else empty */
+  planStops: number[];
+  planPath: number[];
+  stopStart: number;
+  pathStart: number;
   /** T-3117: the return run's path where it is not `path` backward (`TrackApi.line_back_path`), else empty */
   back: number[];
   /** T-3348: the return run's stations where one differs from `stops` (`TrackApi.line_back_stops`), else empty */
@@ -365,7 +371,9 @@ export class StateRows {
         upkeep,
         id, name: heavy.name, letter: heavy.letter, group: heavy.group, groupName: heavy.groupName, groupSymbol: heavy.groupSymbol, groupColour: heavy.groupColour, colour: hex(li[i + 1]), ok, running, broken: li[i + 4] === 1, tph: t3(5), cars: li[i + 21] || li[i + 8], carsSet: li[i + 8],
         lengthM: li[i + 9], roundTrip: t3(10), trains: t3(13), auto: autoOf(auto), delay: t3(16), dwell: li[i + 19], turnaround: li[i + 20],
-        stops: heavy.stops, path: heavy.path, ...(heavy.back.length ? { back: heavy.back } : {}), ...(heavy.backStops.length ? { backStops: heavy.backStops } : {}),
+        stops: heavy.stops, path: heavy.path,
+        ...(heavy.planStops.length ? { planStops: heavy.planStops, planPath: heavy.planPath, stopStart: heavy.stopStart, pathStart: heavy.pathStart } : {}),
+        ...(heavy.back.length ? { back: heavy.back } : {}), ...(heavy.backStops.length ? { backStops: heavy.backStops } : {}),
         fromStart: heavy.fromStart,
         stopS: heavy.stopS,
         fast,
@@ -474,15 +482,17 @@ export class StateRows {
   }
 
   private heavy(a: TrackApi, id: number, ok: boolean): Heavy {
+    const part = a.line_part(id);
     return {
+      ...(part.length === 4
+        ? { stops: [...a.line_run_stops(id)], path: [...a.line_run_path(id)], planStops: [...a.line_stops(id)], planPath: [...a.line_path(id)], stopStart: part[0], pathStart: part[2] }
+        : { stops: [...a.line_stops(id)], path: [...a.line_path(id)], planStops: [], planPath: [], stopStart: 0, pathStart: 0 }),
       name: a.line_name(id),
       letter: a.line_symbol(id),
       group: a.line_group(id),
       groupName: a.line_group_name(id),
       groupSymbol: a.line_group_symbol(id),
       groupColour: ((c) => (c < 0 ? "" : hex(c)))(a.line_group_colour(id)),
-      stops: [...a.line_stops(id)],
-      path: [...a.line_path(id)],
       back: [...a.line_back_path(id)],
       backStops: [...a.line_back_stops(id)],
       fromStart: [0, 1, 2].map((lev) => [...a.stop_times(id, 0, lev)]),

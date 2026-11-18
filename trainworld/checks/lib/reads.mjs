@@ -116,7 +116,8 @@ export const STATE = {
     return all.slice(0, limit);
   },
   /** lines: number, id, name, stop ids, status, trains needed by level */
-  lines: () => { const w = window.tw.world.value; return w.save.lines.map((l) => ({ num: l.num, id: l.id, name: l.name, stops: l.stops.map(Number), status: w.lineStats[l.id]?.status ?? null, trains: w.lineStats[l.id]?.trainsNeeded ?? null })); },
+  // `stops` the line's plan, as stop edits set it; `served` the part of it its trains run, where only part (T-3474)
+  lines: () => { const w = window.tw.world.value; return w.save.lines.map((l) => ({ num: l.num, id: l.id, name: l.name, stops: (l.planStops ?? l.stops).map(Number), ...(l.planStops ? { served: l.stops.map(Number) } : {}), status: w.lineStats[l.id]?.status ?? null, trains: w.lineStats[l.id]?.trainsNeeded ?? null })); },
   /** the selection */
   selection: () => window.tw.selection.value ?? null,
   /** the track tool's state: a segment being placed, its start, whether the ghost asked for has landed, the street snap's phase */

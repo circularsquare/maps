@@ -686,6 +686,25 @@ pub enum LoopKind {
     Balloon,
 }
 
+/// The part of a rail line's plan its trains run (T-3474, `Network::line_stretch`): stops
+/// `stop0..stop1` and path entries `path0..path1`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Stretch {
+    pub stop0: u32,
+    pub stop1: u32,
+    pub path0: u32,
+    pub path1: u32,
+}
+
+impl Stretch {
+    pub fn stops<'a>(&self, stops: &'a [u32]) -> &'a [u32] {
+        &stops[self.stop0 as usize..self.stop1 as usize]
+    }
+    pub fn path<'a>(&self, path: &'a [u32]) -> &'a [u32] {
+        &path[self.path0 as usize..self.path1 as usize]
+    }
+}
+
 pub fn path_edge(p: u32) -> u32 {
     p >> 1
 }
@@ -2998,6 +3017,64 @@ impl Network {
             && self.line_stops(l).iter().all(|&s| self.node_ok(s) && self.node_built[s as usize])
     }
 
+    /// T-3474: the part of a rail line's plan its trains run. A constructed line runs all of it; one
+    /// that is not runs the longest stretch of consecutive constructed stops joined by constructed
+    /// track with a constructed way back (ties to more stops, then the earlier). None while no two
+    /// stops are joined so (the whole plan is previewed), and for buses and ferries. A built arc of
+    /// a loop is an open line, run both ways.
+    pub fn line_stretch(&self, l: u32) -> Option<Stretch> {
+        let i = l as usize;
+        if !self.line_ok(l) || self.line_bus[i].is_some() || self.line_ferry[i].is_some() {
+            return None;
+        }
+        let (stops, path) = (self.line_stops(l), self.line_path(l));
+        if stops.len() < 2 || path.is_empty() {
+            return None;
+        }
+        if self.line_constructed(l) {
+            return Some(Stretch { stop0: 0, stop1: stops.len() as u32, path0: 0, path1: path.len() as u32 });
+        }
+        let built_stop = |s: u32| self.node_ok(s) && self.node_built[s as usize];
+        let built_edge = |e: u32| self.edge_ok(e) && self.edge_built[e as usize];
+        if stops.iter().filter(|&&s| built_stop(s)).count() < 2 {
+            return None;
+        }
+        let nodes: Vec<u32> = std::iter::once(self.path_nodes(path[0]).0).chain(path.iter().map(|&p| self.path_nodes(p).1)).collect();
+        let (pos, _) = self.match_run(&nodes, stops, &self.stop_reversals(path))?;
+        let one_way = self.line_one_way.get(i).copied().unwrap_or(false);
+        let mut best: Option<(Stretch, f64, usize)> = None;
+        for a in 0..stops.len() {
+            if !built_stop(stops[a]) {
+                continue;
+            }
+            let (mut end, mut len) = (pos[a], 0.0);
+            for b in a + 1..stops.len() {
+                let next = pos[b];
+                // a stop passed twice (a balloon, a loop back past its first stop) ends the stretch
+                if !built_stop(stops[b]) || next <= end || !path[end..next].iter().all(|&p| built_edge(path_edge(p))) {
+                    break;
+                }
+                len += path[end..next].iter().map(|&p| self.edge_len[path_edge(p) as usize]).sum::<f64>();
+                end = next;
+                let (ss, sp) = (&stops[a..=b], &path[pos[a]..end]);
+                let once = one_way && self.loop_kind(ss, sp) != LoopKind::None;
+                if !once && !self.back_run_of(ss, sp).is_some_and(|(_, back)| back.iter().all(|&p| built_edge(path_edge(p)))) {
+                    continue;
+                }
+                let n = b - a + 1;
+                if best.map_or(true, |(_, been, m)| len > been + 1e-9 || ((len - been).abs() <= 1e-9 && n > m)) {
+                    best = Some((Stretch { stop0: a as u32, stop1: b as u32 + 1, path0: pos[a] as u32, path1: end as u32 }, len, n));
+                }
+            }
+        }
+        best.map(|b| b.0)
+    }
+
+    /// T-3474: a line runs part of its plan only: its stretch is not the whole of it.
+    pub fn stretch_is_part(&self, l: u32, s: &Stretch) -> bool {
+        s.stop0 != 0 || s.stop1 as usize != self.line_stops(l).len() || s.path0 != 0 || s.path1 as usize != self.line_path(l).len()
+    }
+
     /// The edges only a rail line's return run takes, round one-way track such as a flyover's other
     /// leg (T-3422): they must be constructed for it to run, as its path's are.
     pub fn back_only_edges(&self, l: u32) -> Vec<u32> {
@@ -3056,9 +3133,20 @@ impl Network {
                     && self.line_bus.get(l as usize).map_or(true, |b| b.is_none())
                     && self.line_ferry.get(l as usize).map_or(true, |f| f.is_none())
                     && (self.line_path(l).iter().any(|&p| !self.dir_ok(p ^ 1)) || beside(l))
-                    && !self.line_runs_once(l)
+                    && !(self.line_runs_once(l) && self.stretch_runs_once(l))
             })
             .collect()
+    }
+
+    /// T-3474: `line_runs_once` for the part of the plan its trains run: a loop's built arc runs
+    /// both ways.
+    pub fn stretch_runs_once(&self, l: u32) -> bool {
+        match self.line_stretch(l) {
+            Some(s) => {
+                self.line_one_way.get(l as usize).copied().unwrap_or(false) && self.loop_kind(s.stops(self.line_stops(l)), s.path(self.line_path(l))) != LoopKind::None
+            }
+            None => self.line_runs_once(l),
+        }
     }
 
     /// Fastest path from `from` to `to` over valid moves, by speed-limit running time. `arrived`

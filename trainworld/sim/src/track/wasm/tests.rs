@@ -249,6 +249,40 @@ fn upkeep_of_a_ten_km_line_and_its_shares() {
     assert!((s[s.len() - 1] - 1.5).abs() < 1e-3 && (s.chunks(2).map(|c| c[1]).sum::<f64>() - 3.2).abs() < 1e-3, "{s:?}");
 }
 
+/// T-3474: a line running part of its plan shares the upkeep of that part only; the built track and
+/// stations past an unbuilt station in its plan go to the rest.
+#[test]
+fn a_partly_built_line_pays_upkeep_on_the_part_it_runs() {
+    let mut a = api();
+    a.set_cash(1e6);
+    let mut st = vec![];
+    for i in 0..10 {
+        let from = if i == 0 { [0.0, 0.0, 0.0, 0.0, -1.0] } else { [1.0, st[i] as f64, 0.0, 0.0, 0.0] };
+        let ends: Vec<f64> = from.iter().chain([0.0, 0.0, (i + 1) as f64 * 1000.0, 0.0, -1.0].iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        if i == 0 {
+            st.push(a.nodes_info()[0] as u32);
+        }
+        st.push(a.route_end());
+    }
+    for (i, &n) in st.iter().enumerate() {
+        assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, format!("S{i}")), 0, "{}", a.issues());
+    }
+    let l = a.new_line_id();
+    assert_eq!(a.set_line(l, &st, 6.0, 4.0, 2.0, 30.0, 180.0, 0, 0xd7263d, "L1".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    // S5 back to blueprint: S0-S4 and S6-S10 tie at 4 km and five stops, and the earlier runs
+    let mut s5 = a.w.net.station_data(st[5]).unwrap();
+    s5.built = false;
+    a.w.apply(Op::Station { node: st[5], data: Some(s5) }).unwrap();
+    assert_eq!(a.line_part(l), vec![0, 5, 0, 4]);
+    assert_eq!(a.line_run_stops(l), st[..5].to_vec());
+    // 10 km at $100k and 10 built underground stations at $200k a day; the line's part is 4 km and 5 stations
+    let s = a.line_upkeep(&[8.0, 10.0, 6.0]);
+    let share = |l: f64| s.chunks(2).find(|c| c[0] == l).map_or(0.0, |c| c[1]);
+    assert!((share(l as f64) - 1.4).abs() < 1e-3 && (share(-1.0) - 1.6).abs() < 1e-3, "{s:?}");
+}
+
 #[test]
 fn an_express_added_over_constructed_track_runs() {
     // T-849: five stations 10 km apart, an all-stops line constructed, then an express

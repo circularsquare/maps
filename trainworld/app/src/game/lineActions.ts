@@ -10,7 +10,7 @@ import { stationZone } from "./listScope";
 import { blueprintQuote } from "./quotes";
 import { pickColour } from "./colourPick";
 import { rememberPicked, settleNewLineColour } from "./lineColour";
-import type { LineInput, StationInput, TrackEdge } from "./types";
+import { planStopsOf, type LineInput, type StationInput, type TrackEdge } from "./types";
 
 /** The lines that share a new line's city: a line's city is its first stop's zone (the Lines tab's
  * City column); a line with no stops yet counts in the city being viewed. */
@@ -166,7 +166,7 @@ export function toggleEditStops(l: LineInput) {
   if (bus && !bus.hand) return;
   if (tool.peek() === "line" && lineDraft.peek().line === l.num) { live.tools?.exit(); return; }
   live.tools?.exit();
-  lineDraft.value = { line: l.num, stops: l.stops.map(Number) };
+  lineDraft.value = { line: l.num, stops: planStopsOf(l).map(Number) };
   tool.value = "line";
   selection.value = { kind: "line", line: l.id };
 }
@@ -186,7 +186,7 @@ export async function addAllPassedSelected() {
   const l = s?.kind === "line" ? lineById(s.line) : undefined;
   const passed = l && w?.lineStats[l.id]?.passed;
   if (!l || !passed?.length) return;
-  const stops = l.stops.flatMap((x, i) => [Number(x), ...passed.filter((p) => p.gap === i).map((p) => p.node)]);
+  const stops = planStopsOf(l).flatMap((x, i) => [Number(x), ...passed.filter((p) => p.gap === i).map((p) => p.node)]);
   const a = await edit({ op: "setStops", line: l.num, stops });
   if (a.ok && lineDraft.peek().line === l.num) lineDraft.value = { line: l.num, stops };
 }

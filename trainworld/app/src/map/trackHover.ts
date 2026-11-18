@@ -20,7 +20,7 @@ import { restHolds } from "./hoverRest";
 import { markAt, markTip } from "./gradeMarks";
 import { hoverHeld } from "../ui/blurHold";
 import { live } from "./live";
-import { levelAtStart, type NetworkBuffers } from "./network";
+import { F_FADED, levelAtStart, type NetworkBuffers } from "./network";
 import { circleTip, stationTip, trainTip, upgradeTip, type TipLine } from "./networkTips";
 import { busLineTip, busStopTip } from "./busLayer";
 import type { Overlay } from "./overlay";
@@ -77,7 +77,8 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const l = w?.save.lines.find((x) => x.num === num);
   const name = l ? named(l) : t("trackHover.line", { num });
   const status = l ? w?.lineStats[l.id]?.status : undefined;
-  if (status === "planned") return [name, t("trackHover.notRunningYet")];
+  // T-3474: so is the part of a partly built line's plan its trains do not run yet, drawn faded
+  if (status === "planned" || (l?.planStops && (n.lines.flags[i] & F_FADED) !== 0)) return [name, t("trackHover.notRunningYet")];
   if (status === "broken") return [name, t("trackHover.notRunning")];
   if (!l) return [name];
   // T-1907: the riders in every track view; outside Traffic a tag without them says nothing of demand

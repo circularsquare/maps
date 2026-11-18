@@ -12,6 +12,7 @@ import { bigDistance, distance } from "./format";
 import { deleteRun, noteDelete } from "./deleteHint";
 import { ask, selection } from "./ui";
 import { edit, linesByNum, say, stationsByNum, world } from "./world";
+import { planStopsOf } from "./types";
 
 /** `bus`: a bus line by its number, route and line together; `building` a station building by its id (T-2218). */
 export type Removable = { kind: "track"; edge: number } | { kind: "station"; node: number } | { kind: "flyover"; node: number } | { kind: "bus"; line: number } | { kind: "building"; id: number };
@@ -105,7 +106,7 @@ export async function lineEffects(edges: number[], stations: number[]): Promise<
   for (let k = 0; k + 2 < d.length; k += 3) {
     const l = lineOf.get(d[k]);
     if (!l) continue;
-    const lost = [...new Set(l.stops.map(Number).filter((s) => gone.has(s)))].map((s) => byNum.get(s)?.name ?? t("remove.someStation"));
+    const lost = [...new Set(planStopsOf(l).map(Number).filter((s) => gone.has(s)))].map((s) => byNum.get(s)?.name ?? t("remove.someStation"));
     const loses = !!d[k + 1] && lost.length > 0, breaks = !!d[k + 2];
     if (!loses && !breaks) continue;
     const effect = loses && breaks ? "both" : loses ? "lose" : "stop";
