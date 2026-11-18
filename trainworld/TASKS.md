@@ -238,10 +238,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3463 [P3] {L:schematic-rivers} Diagram water fails on the North America save
   - Context: Found by the regions agent (T-3448): the clock worker's own water-mask fetches (fetchWater) fail on the North America save.
   - Goal: The water mask loads on that save, or the failure is understood and filed.
-- T-3464 [P2] {L:world-map} {after:v0.4.0 publish starts} Freight and abandoned rail in the All setting
-  - Context: You, 2026-11-16 on the board: "we should add freight rail along with abandoned rail to the reference real world map ... people requested it. under setting \"all\" ofc." You, 2026-11-17: include it in v0.4.0. Code, hover and changelog c135 are on master (b8d0003b); all 120 regions are built and checked locally (de, jp, gb).
-  - Goal: Real world network All draws freight and abandoned rail in the published game. Left: the R2 upload as a release step (commands in the notes, about 2 minutes at 2 MB/s), then archive.
-  - Other: notes/T-3464.md
 - T-3495 [P2] {L:world-map} {after:v0.4.0 publish} Snap to freight and abandoned rail
   - Context: You, 2026-11-16: "people want to be able to snap to freight / all track", and "if something is visible we shoudl let people snap to it". Done: unused rail (stage 1), trams, monorail, funicular, narrow gauge and heritage (T-3069, graph v2 with kinds 8 and up free). Left: freight and abandoned, whose tiles (T-3464) ship with v0.4.0; abandoned rail snapping needs your call.
   - Goal: Freight rail drawn under All can be snapped to by train track, abandoned too if you say so, about 2-3 h plus about 100 MB of graph files.
@@ -283,7 +279,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Hovering the calculating tag shows a time left within about a third of the real wait on the NYC save and one big multi-country save, or says why there is no estimate yet.
 - T-3600 [P2] {L:solve-speed} Five minutes after a Kaohsiung edit on a big save (taking, 2026-11-17, agent kaohsiung)
   - Context: Your pad, 2026-11-17: "is it expected to take on the order of 5 minutes? it is a big save and taiwan is connected to the rest of the world (via one line) so i guess like its not completely unreasonable but i thought we restricted the set of things that were recalculated after a change of this sort". The edit was turning off feeder lines in Kaohsiung. Measured (agent kaohsiung): only Kaohsiung's 3 zones are solved first (1-3 s), but then the whole solve redoes the 120-zone cluster Kaohsiung is in (2-4 minutes), and edits more than 8 s apart wait behind it and get a second one: five lines clicked 15 s apart took 295 s. Ending on the first quick solve would be 7-16% off on the lines and would miss the intercity change you were testing.
-  - Goal: Such an edit finishing in under a minute, or why it can't. Options in the notes; recommended next: the market's pairs through the edited city in the quick solve (intercity change in seconds), then spreading the whole solve's periods evenly over workers (about two thirds of the wait).
+  - Goal: Such an edit finishing in under a minute, or why it can't. Built (your pick, option a): a line switched on or off re-solves the intercity trips to and from its city in the quick solve, so the intercity lines land within 0.4-2.5% of the final in 2-6 s. Still open: edits that come while the first one's quick solve runs wait for its whole solve (about 2.5 minutes), and spreading the whole solve's periods evenly over workers (about two thirds of the wait).
   - Other: notes/T-3600.md
 - T-3601 [P2] {L:solve-consistency} Calculating tag goes before the numbers are final (taking, 2026-11-17, agent kaohsiung)
   - Context: You, 2026-11-17: "after i removed all the trains from the local kaohsiung lines, and waited for the recalc to finish, in traffic view i still see a bunch of them saying like 10k riders per day or something. and its not currently recalculating. so i guess i'd need to make another change for them to recalc to 0." Then: "another 5 minutes later theyre all updated to 0 ... its just a bit slow." Saves: artifacts/trainworld/t3600-asianita-1851.save and -1852.save.
@@ -300,6 +296,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (taking, 2026-11-17, agent splitflat)
   - Context: Your pad, 2026-11-18: "sometimes it says theres a flat junction (merge) where a double track splits into 2 singles. ... that isn't the case, really. its just splitting. there shouldnt be a merge" (artifacts/trainworld/board/20261117-201857-14b6.png: Paris, one-way singles off a double track, "Flat junction" with 0).
   - Goal: Where a double track splits into two single tracks, no flat junction mark or hover unless trains really cross each other's path there.
+- T-3615 [P2] {L:map-look} Single-side station boxes with a real width (taking, 2026-11-17, agent sidebox)
+  - Context: Your pad, 2026-11-18: "single-side tram stations look a bit weird with how thin they are and how small the side portion is. this applies to non-tram, normal train stations with single-side as well. like especially if i zoom in super super in, the station box actually looks less wide than the entire track which is obviously silly. lets have these have an actual world width, like the station boxes. their normal world width should be roughly half the normal station box world width. also theres like a little protrusion in the middle that indicates which side the stop is on. where we're at the protrusion, we can be like 0.5x the normal station box width, plus the world width of the track if thats nonnegligible. off the protrusion, (near the ends of the platform) we can be like 0.3x the normal station box width. also the protrusion should be a bit longer i think. lets have it cover the middle half of the length of the platform rather than like 1/4 of it."
+  - Goal: Single-side station boxes (tram and train) scale with the map like full boxes: 0.3x a normal box's world width at the ends, 0.5x plus the track's width at the side bump, the bump the middle half of the platform; never narrower than the track when zoomed far in.
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
@@ -1009,11 +1008,22 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-3397 [P2] {L:accounts-server} Research browser risks to save integrity. Brief review of browser documentation, release notes and bug trackers to predict other cases like Safari's truncated saves: relevant engine/version/platform, trigger, whether the game's save path reaches it, existing safeguards and remaining risk. Research first; browser testing optional. Open; requested by Anita 2026-11-15. notes/T-3397.md.
 - T-3395 [P1] {L:accounts-server} Detect corrupted saves and keep recovery copies
   - Context: Stage 1 (server) passed its checker, not deployed. Stage 2 (the game) landed 7cd2f5ac and is on 8800, not published; it must not ship before the stage 1 server is deployed. Stage 3 (the recurring scan, shonei-server 85e2945) is built and being checked; then the server deploy of stages 1 and 3 waits for your yes, in daytime.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
+- T-3610 [P2] {L:accounts-server} One unreadable save hides every save (taking, 2026-11-17, agent saveread)
+  - Context: From T-3397, by reading the code and Chromium's notes, not reproduced. When a big IndexedDB value's file goes missing from disk, the browser can't read it (Chrome 130+ NotFoundError, Firefox UnknownError). The saves list reads every slot in one transaction, and the error aborts all of it, so the start menu says the saves could not be read and every game shows storage unavailable.
+  - Goal: A record that can't be read shows as that one game unreadable, with its backups and account copy still offered, and every other game lists and opens. Proven with a forced read failure on one key.
+  - Other: Cancel each read's error event or read each record in its own transaction; `listBackups` has the same shape. notes/T-3397.md
+- T-3611 [P3] {L:accounts-server} Autosave lands after another tab took the slot
+  - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
+  - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
+  - Other: notes/T-3397.md
+- T-3612 [P3] {L:feedback} Feedback names the iOS version of iOS browsers (taking, 2026-11-17, agent saveread)
+  - Context: From T-3397. Every iOS browser runs Safari's engine, and its iOS version decides which Safari bug applies. Feedback shows iOS Chrome as "Chrome 120", with no iOS version, so a report like Jordan's "Chrome too" can't be placed.
+  - Goal: Feedback from Chrome, Firefox or an in-app browser on iOS carries the iOS version, for example "Chrome 120 (iOS 16.5)".
+  - Other: `browserOf` in ui/FeedbackPanel.tsx. notes/T-3397.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.

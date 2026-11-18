@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3397 [P2] {L:accounts-server} Research browser risks to save integrity (2026-11-17): Browser save risks reviewed: v0.3.5 closes the Safari 16.4-16.5 compression bug for saves; remaining risks are whole-origin loss, one unreadable record hiding every save (T-3610), a lock-steal race (T-3611) and iOS diagnostics (T-3612) notes/T-3397.md.
+- T-3614 [P2] {L:checks} New zones map for every update that adds regions (2026-11-17): trainworld/tools/release/new_zones_map.py made; v0.4.0 new zones image (Central America and Venezuela) at artifacts/trainworld/review/v0.4.0-new-zones.png; publish step in docs/orchestrator.md. notes/T-3614.md.
+- T-3464 [P2] {L:world-map} Freight and abandoned rail in the All setting (2026-11-17): freight and abandoned rail in the All setting; tiles and extra.json uploaded to R2 for v0.4.0 (2026-11-18) notes/T-3464.md.
 - T-3605 [P1] {L:single-track} Unassigning one side of a split station flips its dots (2026-11-17): way_group empty for one-way stations, LEG_PAIR_M gone; unassigning one side leaves the other a half dot served by its own run; NYC and Caracas saves identical. notes/T-3565.md.
 - T-3578 [P2] {L:fares} Line fare multiple scales the base too (2026-11-17): base extra on its own channel (base_extra / baseX); 0x line takes no base share; checker PASS notes/T-3578-check2.md; 1.00x byte-identical. notes/T-3578.md.
 - T-3602 [P2] {L:timetables} Use default in place of Clear default (2026-11-17): schedule.defaultReset removed, schedule.defaultUse added; applyDefaultHeadway as one undoable edit; disabled with no default or when matching. notes/T-3602.md.

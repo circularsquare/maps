@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a883eda3-3bdb-42c8-904a-1a72316f71e3, name maps-1c, since 2026-11-17 21:18 UTC
-Updated: 2026-11-18 01:25 UTC (maps-1c past 500k, starting its successor)
+Orchestrator: session c8a9be2a-ffb0-43df-9308-d516bb9169f7, name maps-86, since 2026-11-18 01:23 UTC
+Updated: 2026-11-18 01:33 UTC (maps-1c done 01:28; it only relays its three agents' reports)
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
 git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local time is UTC-5.
@@ -11,22 +11,34 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   loading..."); all 12 languages translated and reviewed (i18n.mjs 2822/2822 each); glossary excepts for
   updates.v040Change15/33/58 on her word. In 0.4: one-way stations T-3565/T-3595/T-3605 (pairing dropped on her
   word), fare base T-3578, Use default T-3602, weekend decimal T-3603, help guide T-3598, freight hover T-3464.
-- Running (hidden cmd, scratchpad of a883eda3 \release_prep.cmd): snap8800 at 1cd05bdb, then checks\smoke8800.cmd;
-  logs ...\scratchpad\snapbuild-rel.log and ...\scratchpad\smoke8800-rel.log (ends "DONE <code>"). If master moved
-  past 1cd05bdb only by bookkeeping, that build is the one to ship; 0b7f5a4f is bookkeeping only.
-- ASKED HER (awaiting her yes to each, in her latest message, none overnight): (1) server deploy (shonei-server
-  `.\deploy\deploy.ps1` alone, then git push; carries 7a23cbc..a46c2e9 incl. maps-1c's LWE1 flag-2 save check fix),
-  (2) freight R2 upload (notes/T-3464.md "Release step", rclone --bwlimit 2M; tiles first, extra.json last; then
-  `tasks.py done T-3464`), (3) deploy.py per notes/T-924.md "Commands" (--dry-run --version v0.4.0, then --smoked,
-  website push, --verify), (4) open-source export.py + push in ..\trainsworld-export, then post PR 1 / issue 8 replies
-  (texts in handoff-log 11-17 maps-b8 section; she OK'd them; change PR 1's "start them at zoom 15" to "zoom 13").
-- Also asked: one-way track arrows at zoom 14 (300 px gap leaves 1 arrow on the Caracas pair): lower to 150 px?
+- 8800 = 1cd05bdb, smoke8800 PASSED light and dark (artifacts/trainworld/smoke8800-light.log, -dark.log).
+- Her yes to all four steps in maps-86's tab, 01:27 UTC. Done: (1) shonei-server deployed (active 01:27:58) and
+  pushed 3e8e501..a46c2e9; (2) freight tiles + extra.json on R2 (206/200), T-3464 archived.
+- (3) data 2026-11-18 on R2 (data verify PASS), website pushed d13096e; `deploy.py --verify --page` waits on Pages.
+  (4) export pushed (trainsworld 8ebd2d2 = maps 5bb38d73). PR 1 / issue 8 replies: texts in handoff-log line 19-20
+  were written pre-release ("goes out with the next update"); updated wording shown to her, post + close on her OK.
+  Later: old R2 versions via r2_purge (2026-11-11, 2026-11-11b can go; keep newest 3).
 
-## In flight (maps-1c's agents; their reports come to maps-1c, which relays them verbatim)
-- chevrons (Sonnet, .tw-trees/chevrons): T-3607 DONE in tree (track arrows per 100 m across pieces; bus arrows from
-  zoom 12, chevron stroke = bus line, BUS_ARROW_GAP_PX 50). Sheet artifacts/trainworld/review/t3607.png. Changelog
-  c001 in its tree. Land after the publish (or into 0.4 if she wants; then the changelog line needs translating).
-- ctrlsnap (Sonnet, .tw-trees/ctrlsnap, port 6204): T-3608 Ctrl pauses snap to street. After the publish.
+## In flight (maps-86's)
+- T-3397 DONE (saverisk): no other documented bug writes a bad save and reports success; filed T-3610 (P2), T-3611,
+  T-3612 (P3). Findings in notes/T-3397.md (commit with the next round).
+- saveread (Sonnet, .tw-trees/saveread, port 6182): T-3610 one unreadable save hides all + T-3612 iOS version in
+  feedback. Saves: needs a checker before landing.
+- kcheck (Sonnet, checker, runs in .tw-trees/kaohsiung, port 6183): T-3600 option (a) + T-3601; writes
+  notes/T-3600-check.md. kaohsiung's report: intercity within 0.4-2.5% of final in 2-6 s; changelog c136 (T-3601),
+  c137 "after you turn a line's trains on or off, the intercity lines through that city show their new riders within
+  seconds"; open: edits during a quick solve wait ~170 s (the T-1734 hold, option c, not built).
+- T-3614 DONE (zonesmap): tools/release/new_zones_map.py, publish step in docs/orchestrator.md, image
+  review/v0.4.0-new-zones.png (91 new, 6 grown; holes are T-3517's parked zones). Commit the tool + notes with the
+  next round.
+- sidebox (Opus, .tw-trees/sidebox, port 6181): T-3615 single-side station boxes with world width (her numbers).
+  May touch oneWayMarks.ts like chevrons: merge at landing.
+
+## In flight (maps-1c's agents; maps-1c relays their reports verbatim)
+- chevrons (Sonnet, .tw-trees/chevrons): T-3607 DONE in tree: track arrows every 300 m (her word 11-18), bus
+  chevrons from zoom 12, BUS_ARROW_GAP_PX 50. Sheet review/t3607.png looked at, fine. Changelog c001 in tree.
+- ctrlsnap (Sonnet, .tw-trees/ctrlsnap): T-3608 DONE in tree (changelog c001 "holding ctrl while snapping to
+  streets pauses the snap"; no strings).
 - splitflat (Opus, .tw-trees/splitflat, port 6205): T-3609 split into singles marked a flat junction. After.
 - solveeta (Opus, .tw-trees/solveeta, port 6198): T-3599 time-left hover on the calculating tag. After.
 - kaohsiung (Opus, .tw-trees/kaohsiung, port 6199): T-3601 fix done (tag stays until numbers final, StatusTag.tsx);
@@ -48,8 +60,8 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 ## Next
 1. Her release yeses, then the steps above; smoke8800 must have passed first.
 2. After the publish: land the done trees (one smoke on master per batch), rebuild 8800, push.
-3. Leftover .tw-trees from before 11-17: c1, ferry45, fixes, freight, hotfix031-target, hover, touchrule,
-   trackrebuild, safari-save-035, shenzhen, tt2, ttstyle, trams: look first.
+3. Leftover .tw-trees: removed the empty and landed ones (11-18). Left: touchrule (empty folder, locked by some
+   process), shenzhen (dirty pipeline/osm_units.py + a test, 11-16: whose?), tt2 (50 dirty files from 11-12, stale).
 4. Translation leftovers (scratchpad of a883eda3, l10n2-rev-*/notes.md): es/pt "interurbano" needs an "interurban"
    stem in glossary.json for natural wording; T-3597 (Calculating trips everywhere) after 0.4.
 - Uncommitted on purpose: TODO.md (hers), notes/T-3397.md, jordan-save-investigation-2026-11-15.md,
@@ -57,7 +69,7 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   (T-3462, T-3471, T-3515, T-3516 ...): commit with their landings.
 
 ## Waiting on Anita
-- The release yeses and the zoom-14 arrow gap (above).
+- Nothing open (asks.json empty).
 
 ## Her standing asks this week
 - Small isolated fixes, open-task count down, merge duplicates; bug investigations give up if hard.
