@@ -264,7 +264,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   Splitting a piece keeps the flag on both halves; pieces join only with the same way along the joined
   piece. Capacity: single track that runs one way, set or by its run, is a directed track like double
   (section = `edge_section_s` + v / `SIGNAL_BRAKE`, per direction, `capacity::directed`), not shared.
-  Platforms and stations on it are unchanged. The map draws chevrons along it (`oneWayTrackChevrons`),
+  Platforms and stations on it are unchanged. The map draws chevrons along it (`oneWayTrackRuns`, one every 300 m of distance along a connected run),
   the hover says "One way".
 - **Quad track** (T-255): the other setting. The stroke draws the double track as usual and an
   express double track beside it, 8 m to the left of the drawn direction (centre to centre, so

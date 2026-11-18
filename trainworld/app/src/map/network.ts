@@ -20,7 +20,7 @@ import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
 import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, platformPoints, platformShape, reversed, ST_BUFFER, ST_BUILDING, ST_PARK, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_SINGLE, ST_ROOM, ST_TERMINAL, ST_TRAM, type PlatformShape } from "./stationGeometry";
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
-import { oneWayTrackChevrons, trainChevrons } from "./oneWayMarks";
+import { oneWayTrackChevrons, oneWayTrackRuns, trainChevrons, type OneWayEdge } from "./oneWayMarks";
 import { stationOutside } from "./stationSide";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
@@ -1966,10 +1966,12 @@ export function networkFromState(s: ClockState, cache: NetCache = newNetCache(),
       const x = marks[k], y = marks[k + 1];
       if (x >= box[0] - pad && x <= box[2] + pad && y >= box[1] - pad && y <= box[3] + pad) clear.push([x, y]);
     }
+    const runs: OneWayEdge[] = [];
     for (const e of s.edges) {
       const c = e.oneWay ? edgesSeen.get(e.id) : undefined;
-      if (c) oneWayTrackChevrons(c.strokes, e.oneWay as 1 | 2, clear, oneWayTrack);
+      if (c) runs.push({ a: e.a, b: e.b, way: e.oneWay as 1 | 2, strokes: c.strokes });
     }
+    oneWayTrackRuns(runs, clear, oneWayTrack);
   }
   // per line its path, and per return run on its own way back (T-3250) that way, at its `backSlot`
   const runPaths: [number, number[]][] = [];

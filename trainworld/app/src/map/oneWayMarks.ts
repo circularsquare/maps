@@ -19,11 +19,11 @@ export const ARROW_SPREAD = 1.25;
 export const ONE_WAY_GAP_PX = 150;
 /** A bus route's arrows show from this zoom, a train line's chevrons from `CHEVRON_ZOOM` while the
  * line is at least `CHEVRON_MIN_PX` wide there. */
-export const ARROW_ZOOM = 13;
+export const ARROW_ZOOM = 12;
 export const CHEVRON_ZOOM = 13;
 const CHEVRON_MIN_PX = 4.5;
-/** Train chevrons keep at least this gap, CSS px (twice the bus arrows' base, Anita, 2026-11-17). */
-const CHEVRON_GAP_PX = 300;
+/** Track and train chevrons sit this many ground metres apart at every zoom (Anita, 2026-11-18: 300 m). */
+export const CHEVRON_STEP_M = 300;
 
 /** The share of marks kept at a zoom: every `oneWayEvery`-th, from device px per ground metre (`spread`: step and gap both that much longer). */
 export function oneWayEvery(mPx: number, dpr: number, spread = 1, gapPx = ONE_WAY_GAP_PX): number {
@@ -42,7 +42,7 @@ export const CHEVRON_STRIDE = 11;
  * appended to `out`. */
 export function trainChevrons(s: Strokes, line: number, edgeUses: ReadonlyMap<number, number>, stops: readonly (readonly [number, number])[], width: number, skipFlags: number, out: number[]) {
   if (!s.count) return;
-  const k = kAtY(s.seg[1]), step = ONE_WAY_STEP_M * k;
+  const k = kAtY(s.seg[1]), step = CHEVRON_STEP_M * k;
   const B = s.band, S = 1 / 32767;
   const firstDist = s.dist[0];
   for (let i = 0; i < s.count; i++) {
@@ -68,7 +68,7 @@ export function trainChevrons(s: Strokes, line: number, edgeUses: ReadonlyMap<nu
  * the other way. A mark takes the line field -1, no band shift and the whole width. */
 export function oneWayTrackChevrons(s: Strokes, way: 1 | 2, stops: readonly (readonly [number, number])[], out: number[]) {
   if (!s.count) return;
-  const k = kAtY(s.seg[1]), step = ONE_WAY_STEP_M * k, sign = way === 2 ? -1 : 1;
+  const k = kAtY(s.seg[1]), step = CHEVRON_STEP_M * k, sign = way === 2 ? -1 : 1;
   for (let i = 0; i < s.count; i++) {
     const x0 = s.seg[i * 4], y0 = s.seg[i * 4 + 1], dx = s.seg[i * 4 + 2] - x0, dy = s.seg[i * 4 + 3] - y0;
     const len = Math.hypot(dx, dy), d0 = s.dist[i];
@@ -82,6 +82,62 @@ export function oneWayTrackChevrons(s: Strokes, way: 1 | 2, stops: readonly (rea
       out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, near / k, 1);
     }
   }
+}
+
+/** One one-way edge of the network, for `oneWayTrackRuns`: its end nodes, `way` 1 running a to b and 2 b to a. */
+export interface OneWayEdge { a: number; b: number; way: 1 | 2; strokes: Strokes }
+
+/** One-way track's chevrons (T-3607) by distance along a run of connected one-way edges, carried across
+ * the pieces (a street-snapped run is many short ones): a run goes on through a node where exactly one
+ * one-way edge comes in and one leaves, and starts afresh anywhere else. Marks sit in the middle of each
+ * step, so no piece forces one of its own. */
+export function oneWayTrackRuns(edges: readonly OneWayEdge[], stops: readonly (readonly [number, number])[], out: number[]) {
+  const from = (e: OneWayEdge) => (e.way === 1 ? e.a : e.b), to = (e: OneWayEdge) => (e.way === 1 ? e.b : e.a);
+  const outs = new Map<number, OneWayEdge[]>(), ins = new Map<number, OneWayEdge[]>();
+  for (const e of edges) {
+    (outs.get(from(e)) ?? outs.set(from(e), []).get(from(e))!).push(e);
+    (ins.get(to(e)) ?? ins.set(to(e), []).get(to(e))!).push(e);
+  }
+  const next = (e: OneWayEdge) => {
+    const o = outs.get(to(e)), i = ins.get(to(e));
+    return o?.length === 1 && i?.length === 1 && o[0] !== e ? o[0] : undefined;
+  };
+  const hasPrev = new Set<OneWayEdge>();
+  for (const e of edges) { const n = next(e); if (n) hasPrev.add(n); }
+  const done = new Set<OneWayEdge>();
+  const follow = (first: OneWayEdge) => {
+    let off = 0;
+    for (let e: OneWayEdge | undefined = first; e && !done.has(e); e = next(e)) {
+      done.add(e);
+      off += edgeMarks(e, off, stops, out);
+    }
+  };
+  for (const e of edges) if (!hasPrev.has(e)) follow(e);
+  for (const e of edges) follow(e);
+}
+
+/** The marks on one edge of a run that starts `off` local units before it; returns the edge's length. */
+function edgeMarks(e: OneWayEdge, off: number, stops: readonly (readonly [number, number])[], out: number[]): number {
+  const s = e.strokes, n = s.count;
+  if (!n) return 0;
+  const k = kAtY(s.seg[1]), step = CHEVRON_STEP_M * k, sign = e.way === 2 ? -1 : 1;
+  const segLen = (i: number) => Math.hypot(s.seg[i * 4 + 2] - s.seg[i * 4], s.seg[i * 4 + 3] - s.seg[i * 4 + 1]);
+  const L = s.dist[n - 1] + segLen(n - 1);
+  for (let m = Math.max(0, Math.ceil(off / step - 0.5)); (m + 0.5) * step < off + L; m++) {
+    const travel = (m + 0.5) * step - off;
+    if (travel < 0) continue;
+    const q = e.way === 1 ? travel : L - travel;
+    let lo = 0, hi = n - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (s.dist[mid] <= q) lo = mid; else hi = mid - 1; }
+    const x0 = s.seg[lo * 4], y0 = s.seg[lo * 4 + 1], dx = s.seg[lo * 4 + 2] - x0, dy = s.seg[lo * 4 + 3] - y0, len = Math.hypot(dx, dy);
+    if (!(len > 0)) continue;
+    const t = Math.min(1, Math.max(0, (q - s.dist[lo]) / len));
+    const x = x0 + t * dx, y = y0 + t * dy;
+    let near = Infinity;
+    for (const p of stops) near = Math.min(near, Math.hypot(p[0] - x, p[1] - y));
+    out.push(x, y, sign * dx / len, sign * dy / len, 0, 0, 0, -1, m, near / k, 1);
+  }
+  return L;
 }
 
 const VS = `#version 300 es
@@ -217,7 +273,7 @@ export class OneWayChevrons {
     gl.uniform1f(u.u_line, s.wLine);
     gl.uniform1f(u.u_band, s.band);
     gl.uniform1f(u.u_band_m, s.mPx);
-    gl.uniform1f(u.u_every, oneWayEvery(s.mPx, dpr, 1, CHEVRON_GAP_PX));
+    gl.uniform1f(u.u_every, 1);
     // clear of a station's box or dot and its rim
     gl.uniform1f(u.u_clear, 14 * dpr);
     gl.uniform1f(u.u_min, CHEVRON_MIN_PX * dpr);

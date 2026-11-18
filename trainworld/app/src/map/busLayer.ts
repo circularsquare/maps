@@ -7,7 +7,7 @@
 // is drawn like any other, on the route where it passes nearest the station (T-2982), in a second pass
 // after the stations (`drawStationStops`), so it reads over the station's mark where they meet
 // (T-2948); a thin dashed line in the map's ink, faint, runs from it to the station from zoom 13, the
-// transfer, and the same between two lines' stops at one place for demand (T-2992, game/busLinks.ts). A loop that runs one way has small arrowheads in its colour along it from zoom 13, sticking
+// transfer, and the same between two lines' stops at one place for demand (T-2992, game/busLinks.ts). A loop that runs one way has small arrowheads in its colour along it from zoom 12, sticking
 // out on both sides of the route (T-2991, oneWayMarks.ts).
 //
 // A ferry line (T-2194) has a bus line's row, so it is drawn here too: its route dashed on a continuous
@@ -76,7 +76,9 @@ const TRANSFER_PX = 1.5, TRANSFER_DASH_WIDTHS = 4.5, TRANSFER_ALPHA = 0.5;
  * corner leans with the turn; how far its barbs reach past the route each side, device px at least
  * and as a share of the route's width */
 const ARROW_TURN_M = 12;
-const ARROW_BARB_PX = 4, ARROW_BARB_SHARE = 1.1;
+const ARROW_BARB_PX = 4, ARROW_BARB_SHARE = 1.5;
+/** Bus arrows keep at least this gap, CSS px (Anita, 2026-11-18: seen from zoom 12, a chevron on every side of a small loop). */
+const BUS_ARROW_GAP_PX = 50;
 
 /** A bus line as the world gives it (lng, lat pairs flat). */
 interface BusSource {
@@ -337,7 +339,7 @@ out vec2 v_p;
 flat out vec3 v_color;
 flat out float v_alpha;
 void main() {
-  float w = u_size.y, l = w;   // twice as wide as it is long
+  float w = u_size.y, l = 0.8 * w, t = 2.0 * u_size.x;   // a chevron stroked as thick as the route
   if (mod(a_arrow2.z, u_every) > 0.5 || a_arrow2.w * u_m_px < u_clear + 0.5 * l) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   vec4 c0 = project(a_arrow.xy);
   vec4 c1 = project(a_arrow.xy + a_arrow.zw);
@@ -346,7 +348,7 @@ void main() {
   dir = length(dir) > 1e-6 ? normalize(dir) : vec2(1.0, 0.0);
   vec2 nrm = vec2(-dir.y, dir.x);
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
-  vec2 p = corner * (vec2(0.5 * l, w) + u_size.z + 1.0);
+  vec2 p = corner * (vec2(0.5 * (l + t), w + 0.5 * t) + u_size.z + 1.0);
   c0.xy += (dir * p.x + nrm * p.y) / half_vp * c0.w;
   gl_Position = c0;
   v_p = p;
@@ -368,10 +370,11 @@ flat in vec3 v_color;
 flat in float v_alpha;
 out vec4 o;
 void main() {
-  float w = u_size.y, l = w;
-  // a triangle, its point ahead: the two slanted sides and the back
+  float w = u_size.y, l = 0.8 * w, t = 2.0 * u_size.x;
+  // a chevron, its point ahead, its stroke as thick as the route
   vec2 q = vec2(v_p.x, abs(v_p.y));
-  float d = max(dot(q - vec2(0.5 * l, 0.0), normalize(vec2(w, l))), -(q.x + 0.5 * l));
+  vec2 pa = q - vec2(0.5 * l, 0.0), ba = vec2(-l, w);
+  float d = length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)) - 0.5 * t;
   float body = clamp(0.5 - d, 0.0, 1.0);
   // its casing only off the route, whose own casing is under it
   float rim = q.y > u_size.x ? clamp(0.5 - (d - u_size.z), 0.0, 1.0) : body;
@@ -775,7 +778,7 @@ export class BusLayer {
       setCamera(gl, a, lc);
       gl.uniform2f(a.u_viewport, vp[0], vp[1]);
       gl.uniform3f(a.u_size, 0.5 * bus, 0.5 * bus + Math.max(ARROW_BARB_PX * dpr, ARROW_BARB_SHARE * bus), s.casing * CASING_SHARE);
-      gl.uniform1f(a.u_every, oneWayEvery(mPx, dpr, ARROW_SPREAD));
+      gl.uniform1f(a.u_every, oneWayEvery(mPx, dpr, ARROW_SPREAD, BUS_ARROW_GAP_PX));
       gl.uniform1f(a.u_m_px, mPx);
       gl.uniform1f(a.u_clear, Math.max(MIN_RING_PX * 1.25 * dpr, bus * END_SHARE) + 2 * dpr);
       gl.uniform1i(a.u_sel, s.sel);
