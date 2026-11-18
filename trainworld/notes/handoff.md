@@ -12,14 +12,23 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    index). Each agent hands back text for CLAUDE.md, orchestrator.md, skills or .claude/settings.json; apply it in
    the main tree at landing (only they don't edit shared rule files).
 2. T-3651 (side platforms): checker sideplatcheck running; land after PASS (WASM rebuild), then 8800 rebuild.
-3. T-3670 connectors: maps .claude/settings.json has disableClaudeAiConnectors (worked live), deniedMcpServers
+3. T-3668 inbox live check PASSED 15:39 UTC (probe T-9997 captured as a handback). A probe agent's whole run cost
+   49.9k tokens with 0 tool calls (start was ~56k before the connectors change).
+   T-3670 connectors: maps .claude/settings.json has disableClaudeAiConnectors (worked live), deniedMcpServers
    aws-mcp + stripe (stripe still loaded in this session), skillOverrides off for 24 AWS skills + unity. In a fresh
    session check aws-mcp/stripe are gone and measure an agent's first call (was 56k); if not, she toggles them off
    with /mcp in a maps session. Then archive T-3670.
 4. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC; she reads the scan's emails).
-5. dayrun (Opus, main tree, <= 6 cores): T-3671 daytime rebuild batch (her 11-18 idea; Caribbean excluded). Hold
-   8800 rebuilds that touch packs during its join; its notes' top line says when gates run.
-6. After the workflow round: T-3660 (downtown Cairo, next night run), T-2136, T-1080, T-930; T-3620 (Caribbean,
+5. dayrun (Opus, main tree, 6 cores): T-3671 daytime rebuild running since ~16:05 UTC; gates serve a frozen copy,
+   so app/ and WASM landings are free; until kit dayrun.state says "PACKS FREE" (about 19:15 UTC) hold anything
+   writing data/packs or data/terrain, including 8800 rebuilds (snapbuild-frozen if one is needed).
+6. Started 15:55 UTC: corridor (Opus, T-2136, Vite 6199), regate (Opus, T-930 + T-3656; lands after dayrun's
+   join), sideplat2 (Opus, T-3672 P1, her caracas save), onewayarrow (Sonnet, T-3673). T-1080 waits for a world run
+   to reproduce on (dayrun's, if it hits the commit limit).
+7. Landed, waiting for an 8800 rebuild once dayrun says PACKS FREE (~19:15 UTC; the newest freeze 20261118-065950
+   lacks T-3623's Cairo places, so no frozen build): T-3673 3210be41 (one-way arrows, c026). tripswithin (Opus,
+   T-3509, her yes 15:55) started; demand change, checker before landing.
+8. After the workflow round: T-3660 (downtown Cairo, next night run), T-2136, T-1080, T-930; T-3620 (Caribbean,
    Bolivia, Paraguay) only when she says.
 
 ## Her words

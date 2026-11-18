@@ -147,7 +147,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Parallel GDAL readers in `osm_features` each commit a 6 GB node index, so reads failed with 31 GB RAM free (Wisconsin, Nebraska).
   - Goal: Reads no longer fail "Failed to open dataset" on this machine with a join and browsers open.
   - Other: See notes/T-1080.md.
-- T-930 [P2] {L:world-tooling} Join re-gate only checks what changed
+- T-930 [P2] {L:world-tooling} Join re-gate only checks what changed (taking, 2026-11-18, agent regate)
   - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
   - Goal: The re-gate checks only what a joint solve can change.
   - Other: See notes/T-928.md section 4.
@@ -155,14 +155,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
   - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
   - Other: notes/T-1635.md
-- T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache
+- T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (taking, 2026-11-18, agent regate)
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
   - Other: notes/T-3455.md "What ran (nightfix3)"
+- T-3672 [P1] {L:single-track} Side platforms still bugged after T-3651 (taking, 2026-11-18, agent sideplat2)
+  - Context: You, 2026-11-18, on 8800 866e3212 (T-3651 in it): "i just tried the side platform thing and it looks bugged. the train runs on all 3 tracks and backtracks." T-3651 was built and checked on Zui's layout (two side platforms with two middle tracks); yours has three tracks.
+  - Goal: Your layout (a split station, the third bypass track joining one of the split legs; screenshot artifacts/trainworld/board/20261118-104721-f812.png, save Downloads/trainsworld-caracas-day-53.save) runs each way on its own platform track with no backtracking, by a general rule for any number of platform and through tracks ("ideally we try to come up with a general fix, not one that works for just this situation"); T-3651's cases still pass.
+  - Other: notes/T-3651.md
 - T-3671 [P2] {L:region-redraws} Daytime rebuild batch on part of the cores (taking, 2026-11-18, agent dayrun)
   - Context: You, 2026-11-18: "if we find ourselves with substantial free compute that we're not using we can maybe just start some more world builds during the day, using just prart of the cores, they can run slowly while we also fill with thinking heavy tasks." Not the Caribbean (T-3620 waits for your word).
   - Goal: A batch of approved rebuild fixes and parked rows (T-3660 and others the planner picks) built, gated and joined on about 6 cores, without blocking the day's landings.
-- T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone
+- T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone (taking, 2026-11-18, agent dayrun)
   - Context: Found by T-3623: Qasr Al-Nile (1.2 km2, Tahrir and downtown, geoBoundaries EGY ADM2) is in no plan row, so cai's outline has a hole there and downtown Cairo's people and jobs are missing. Marsa Alam, North Coast and Port Suez are also Egyptian units in no zone.
   - Goal: Qasr Al-Nile joins cai and the other three join a zone or are written down as dead space on purpose; rebuilt in the next night run.
   - Other: notes/T-3623.md
@@ -190,7 +194,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3657 [P3] {L:accounts-server} Free fares inflate leaderboard points
   - Context: Put off by you, 2026-11-18, needs more thought: "im not sure if doing points and fares game-wide really helps that much. people can still cheese by running like 70% of their lines at 0x. i think this needs roe thought, lets put it off til later, but we sdhould definitely think about it." Considered so far: points scaled by fares over running costs, full from 100% (game-wide or per city); a line's points only while it makes money; a separate profit board. Your pad, 2026-11-18, from Discord: "u can cheese leaderboard scores by just dropping fares to zero ... how might we incorporate profit somehow? is there an easy way to only track like rides that are carried profitably or something? idk. not sure if thatd even be the best metric...?" Points are 20 a rail trip plus 1 a passenger-km on a forecast weekday; any line's fare multiple can go from 0 to 3, so free fares raise trips with nothing against it.
   - Goal: Free or near-free fares can't raise a leaderboard score; a network paying its way scores as today.
-- T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked
+- T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked (taking, 2026-11-18, agent dayrun)
   - Context: Chimaltenango's union error may be the reclaimed-land fault fixed 2026-11-18 (T-3455: make_valid on invalid pieces); try it first. From T-3399: Chimaltenango (0.73M) fails its build on a GEOS union error in its outline, Solola (0.56M) on the park check (6 of 31 parks off every cell by Lake Atitlan), Antigua Guatemala (0.25M) and Carora (0.20M) on one square holding 45% and 41% of their jobs. They are dead space beside built zones. Also 3 fine terrain blocks of Nueva Guinea's and Puerto Ayacucho's zones (miv, auo) failed to fetch.
   - Goal: Each of clt, scd, anu, tsx built and shipped, or left dead space with the reason in its notes; miv and auo terrain rebuilt on the 3 blocks.
   - Other: notes/T-3399.md
@@ -287,9 +291,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-3509 [P3] {L:map-look} {waits:Anita} Long trips inside one zone show nowhere
-  - Need from Anita: should a zone's longer trips between its own far-apart parts count in its "Trips within" (and so its train share goals)? I'd say yes, as trips within.
-  - Context: The regional layer has trips of 25 km and more between 6 km areas of one zone (New York 1.93M legs a day, 2.8% of its local trips; London 0.60M; median zone 0.13%). They ride the player's lines but are in no bubble and no zone figure, and T-3503 leaves them out too.
+- T-3509 [P3] {L:map-look} Long trips inside one zone show nowhere (taking, 2026-11-18, agent tripswithin)
+  - Context: You, 2026-11-18: "yes, all trips within should count" (a zone's longer trips between its own far-apart parts count in its Trips within, and so its train share goals). The regional layer has trips of 25 km and more between 6 km areas of one zone (New York 1.93M legs a day, 2.8% of its local trips; London 0.60M; median zone 0.13%). They ride the player's lines but are in no bubble and no zone figure, and T-3503 leaves them out too.
   - Goal: These trips show in the zone's bubbles and in one of its figures, and the bubbles still add up to the figures.
   - Other: notes/T-3503.md
 - T-3502 [P3] {L:airports} Big airports draw ground trips from farther away
@@ -416,7 +419,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Commute pairs under 1 person a day can be dealt in chunks; New York solve 34.3 to 29.6 s.
   - Goal: The chunked deal is in, with ceilings unchanged.
   - Other: Measured in notes/T-909.md option 1.
-- T-2136 [P2] {L:memory} World corridor table is 118 MB
+- T-2136 [P2] {L:memory} World corridor table is 118 MB (taking, 2026-11-18, agent corridor)
   - Context: The page holds a 5.9M-row world corridor table, 118 MB on the real save, growing with the square of the places.
   - Goal: The page keeps no full table; it asks a market's worker for a place's rows.
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.

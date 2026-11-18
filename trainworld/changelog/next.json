@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c026",
+      "text": "added an arrow for which way one-way track runs: at least one on every short piece, and in the track panel",
+      "edited": "added arrows for which way one way track runs, on short pieces too and in the track panel",
+      "hidden": false,
+      "task": "T-3673",
+      "by": "onewayarrow",
+      "at": "2026-11-18T16:06:48Z",
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-18T16:07:00Z"
+    },
+    {
       "id": "c025",
       "text": "fixed lines with a stop on each of two one way tracks taking the passing tracks between them instead, and turning back at the wrong station",
       "edited": null,
