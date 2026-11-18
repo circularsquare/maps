@@ -1291,7 +1291,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   "Guangzhou - kanocifer isn't saved." with Save. Its play time counts from its Save, as a slot's does.
 - **A copy never ranks**: its header carries `copy` (the share's id), the saves list marks it Copy (hover "Never on
   the leaderboards"), it sends no figures and no achievement counts, and sharing it tells the server it is a
-  sandbox, so it shows tagged Sandbox and only in Random. It plays as a normal game otherwise.
+  sandbox, with the reason (copy), so it shows tagged Copy and only in Random (a real sandbox shows Sandbox). It plays as a normal game otherwise.
 - **What goes up with the tick**: the save as the game writes it, minus the Getting started card's progress, and the
   game's name beside it (through the server's name filter on upload and on read, blanked if it fails; it names the
   copy and is shown nowhere else). Account and device ids, playtime and settings are never in a save. Line and group names are, and

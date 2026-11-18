@@ -26,7 +26,7 @@ export interface ShareRow {
   title?: string;
   /** T-3269: the sharer's flag, none while their name is hidden */
   flag?: string;
-  sandbox?: boolean; copy?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
+  sandbox?: boolean; copied?: boolean; copy?: boolean; liked?: boolean; mine?: boolean; rank?: number; game?: string; hidden?: unknown;
 }
 export interface ShareList { view: string; city: string; seed: string; count: number; rows: ShareRow[]; left?: number; perDay?: number }
 

@@ -393,8 +393,10 @@ function figures(): { day: number; points: number; cities: Record<string, number
 /** A game whose figures never rank: a sandbox, (T-3115) a copy of a shared network, or (T-3707) a modded game, which
  * the server is told is a sandbox so it never ranks there either, the copy's own play notwithstanding. */
 const unranked = (m: { mode: string; copy?: boolean; modded?: boolean }) => m.mode === "sandbox" || m.copy === true || m.modded === true;
-/** T-3707: the latch the server keeps for good; a modded game says so (older servers read it as a sandbox's) */
-const latch = (m: { modded?: boolean }) => (m.modded ? { mode: "sandbox", modded: true } : { mode: "sandbox" });
+/** T-3707: the latch the server keeps for good; a modded game says so (older servers read it as a sandbox's). T-3721: a
+ * copy played as a normal game says so too, which its share shows as Copy. */
+const latch = (m: { mode: string; copy?: boolean; modded?: boolean }) =>
+  m.modded ? { mode: "sandbox", modded: true } : m.mode !== "sandbox" && m.copy === true ? { mode: "sandbox", copy: true } : { mode: "sandbox" };
 
 /** T-3707: the server keeps scores only from the published game, and refused this page's (shonei-server
  * trainworld_builds.go): a dev page, or a tab open since a publish. Asked again after REFUSED_WAIT_MS, as a publish

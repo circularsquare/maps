@@ -95,7 +95,7 @@ function PointsLine({ row }: { row: ShareRow }) {
   return <div class="small muted num cm-facts">
     {city && <span>{city}</span>}
     {points && <span>{points}</span>}
-    {row.sandbox && <span class="save-sandbox small">{t("savesPanel.sandbox")}</span>}
+    {row.sandbox && <span class="save-sandbox small">{row.copied ? t("savesPanel.copyMark") : t("savesPanel.sandbox")}</span>}
   </div>;
 }
 
