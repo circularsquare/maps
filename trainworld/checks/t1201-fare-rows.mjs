@@ -66,7 +66,7 @@ try {
   // fares come back from the baseline's dollars rounded to a hundredth of a cent, times the scale
   const near = (a, b) => Math.abs(a - b) < 1e-3;
 
-  await page.click('button.tab[aria-label="Money"]');
+  await page.click('button.tab[data-guide-tab="money"]');
   await waitNodes(DEFAULT);
   const rows = await rowsText();
   const DS = toShown(D), rate1 = (DS[1][1] - DS[0][1]) / (DS[1][0] - DS[0][0]), rate2 = (DS[2][1] - DS[1][1]) / (DS[2][0] - DS[1][0]);
