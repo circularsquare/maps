@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3725 [P2] {L:cleanup} Refactoring round on the most confusing areas (2026-11-18): survey ranked 7 areas (track skipped for the rework); picked area 1 as T-3734, area 2 next. notes/refactor-survey-2026-11-18.md.
+- T-3733 [P2] {L:accounts-server} Server save check reads save level 22 (2026-11-18): shonei-server save check reads level 22 and LOS1 (line index, count, stop place + side 0-2); tests added; committed, not pushed or deployed; TestTwSaveCheckFollowsTheGame fails until T-3711 lands in the main tree.
 - T-3731 [P1] {L:stops} Stop edits lost on large saves (2026-11-18): stop clicks still waiting when stop editing ended were dropped; now each keeps its line and is sent however editing ends (busy tag 'Saving stops'), undo, saves and leaving wait for them; na476 with a slow worker: 6 of 8 lost before, 0 after. notes/T-3731.md.
 - T-3724 [P2] {L:route-choice} No transit route shown though a line joins the places (2026-11-18): Found and fixed: between big networks riders spread over many station pairs, and the intercity route pick asked the biggest pair (just over 0.5% of riders) for one route holding about 80% of it, so a split pair gave none and the panel said no transit route; now any period with rail riders lists its busiest route. Not the demand workers. On the player's own New York save 8 of 373 railed periods had no route, 0 after. notes/T-3724.md.
 - T-3657 [P2] {L:accounts-server} Free fares inflate leaderboard points (2026-11-18): points x min(1, weekday fares / running cost); honest networks -0.13% median; checker PASS. notes/T-3657.md.

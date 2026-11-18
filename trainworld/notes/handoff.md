@@ -12,16 +12,22 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    20:12 UTC (12d58a0, 662ed86, c960adc), pushed 22:35 UTC; from now on a server deploy's yes covers its push. Five
    wrongly latched normal games unlatched after publish (latched.py --wrong now 0). Old R2 versions: purge only on
    her word (r2_purge.py).
-1. Running:
-   - stopchk (Sonnet) checking T-3731 in tree stoplost (stop clicks lost when stop editing ends; "Leave site?"
-     prompt removed on her word; new string "Saving stops", acked pending). On PASS land (no WASM).
-2. Ready to land after a checker:
-   - oneway T-3711 in tree oneway: shift-click a stop to make it one way. Save LEVEL 22 + block LOS1: update
-     shonei-server savecheck (twSaveLevel 21) before it ships, deploy needs her word. Its DECISIONS line is in its
-     notes (add at landing). Her open question: shift on a stop-list row already means "end the line here".
-3. Up next: T-3718 (trips start with a walk, her yes, Opus), T-3721 (Copy label, server deploy), T-3726 (comments
-   A/B, her yes, after release), T-3725 (refactor round: list of confusing areas to her first), T-3732, T-3730,
-   T-2880, T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461; filed today T-3709,
+1. Her go 22:40 UTC: "lets start with all of group 1 and feel free to continue with group 2 and 3 as well. and also
+   continue with whatever else if you finish with that." Keep 4 cores free ("no need to be super strict"): cap 12.
+   T-3731 landed df82464f (next update's c001). Running (started ~22:45 UTC):
+   - walkstart (Opus) T-3718 trips start with a walk; panelstops (Sonnet) T-3732; localroute (Sonnet) T-3730;
+     savecheck22 (Sonnet) T-3733 in shonei-server (commits there, no push/deploy); onewaychk (Sonnet) checker on
+     T-3711 tree oneway; refactorlist (Opus) T-3725 survey -> notes/refactor-survey-2026-11-18.md for her.
+   - T-3733 done: shonei-server 0846bef (save check level 22), not pushed/deployed; its TestTwSaveCheckFollowsTheGame
+     fails until T-3711 lands in maps, and deploy.ps1 runs go test first, so land T-3711 before any server deploy.
+   - copylabel (Sonnet) T-3721 started 22:55 (server commit + game tree copylabel).
+   - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). I pick
+     from the survey and run it; tell her what and why.
+   - Next: T-3726 comments A/B tonight after
+     group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
+   - T-3711: on PASS land (DECISIONS line from its notes; WASM). Shift meaning different things on the map and
+     in the stop list: OK by her (22:50 UTC). Ships with a server deploy of T-3733 on her word.
+3. Up next: T-2880, T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461; filed today T-3709,
    T-3710, T-3712, T-3713, T-3720.
 4. T-3729 Steam: she picks screenshots this evening and says where; then agents make the store images from the
    landing page's "trains world!" logo (research/steam-page.md has sizes and rules).
@@ -44,7 +50,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   publish, deploy and push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- T-3711's shift-click question. Steam screenshots.
+- None open beyond text acks. Steam screenshots.
 - Text not yet acknowledged: "Saving stops" (T-3731).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
 

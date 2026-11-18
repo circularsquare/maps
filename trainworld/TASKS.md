@@ -164,15 +164,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
-- T-3732 [P2] {L:stops} Quick stop edits in the line panel can be dropped
+- T-3732 [P2] {L:stops} Quick stop edits in the line panel can be dropped (taking, 2026-11-18, agent panelstops)
   - Context: From T-3731: the line panel's own stop edits (`stopEdit`, `moveStop`) ignore a second click while one is out, and `setStops` builds from stale rows, so a quick second edit can be dropped or overwritten. Not the reported path.
   - Goal: Quick edits in the panel all apply, in order, as T-3731 made map clicks do.
   - Other: notes/T-3731.md
-- T-3730 [P3] {L:route-choice} Local trip panel can list no route while trains carry riders
+- T-3730 [P3] {L:route-choice} Local trip panel can list no route while trains carry riders (taking, 2026-11-18, agent localroute)
   - Context: From T-3724: `trip.rs` (about line 807, the local trip panel's "No route.") has the same route loop T-3724 fixed for intercity trips, with no keep-one rule. Not reported by players.
   - Goal: Checked on a real save; the local panel lists a route whenever rail carries riders, as T-3724's `pick_routes` does.
   - Other: notes/T-3724.md
-- T-3718 [P2] {L:route-choice} Trips can start with a walk to a station
+- T-3718 [P2] {L:route-choice} Trips can start with a walk to a station (taking, 2026-11-18, agent walkstart)
   - Context: From T-3689: a trip can end with a walk to another station (300 m, or within a station complex) but never start with one, and a commute's way home is its way out reversed, so commuters come home with a paid change mode choice never saw, and about 4,400 trips a day on a test network count as rail with no way home. You, 2026-11-18: "let trips start with walk".
   - Goal: A trip may start with the same walk it may end with, so the way home mirrors the way out; the 4,400 stranded trips gone; t-checks near demand pass and the two ceiling tests hold.
   - Other: notes/T-3689.md (real NYC save, transfer fare 0 / 100 / 1000: fare income 3.86B / 40.5B / 384.6B a day).
@@ -307,9 +307,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3461 [P3] {L:wiki} Code tour in the wiki
   - Context: You 11-16: the code tour (notes/code-tour.md, review/code-tour.png) is a nice resource and might belong in the wiki.
   - Goal: The tour is a wiki page kept current, per wiki/RULES.md (or an agents' section of it if the player wiki is the wrong home).
-- T-3725 [P2] {L:cleanup} Refactoring round on the most confusing areas
-  - Context: You, 2026-11-18: "we've added quite a bit of stuff since we last did dedicated refactoring round i think, so probably good to start that once we have some bandwidth. focusing on areas that are super confusing." A likely first target is who may write the save slot (T-2843's state machine C), behind today's T-3687, T-3611, T-3698 and T-3722.
-  - Goal: A short list of the most confusing areas, with evidence from recent tasks, goes to you before any refactor is built.
+- T-3734 [P2] {L:cleanup} One owner for the save slot and the playing game (taking, 2026-11-18, agent slotown)
+  - Context: Refactor survey area 1 (notes/refactor-survey-2026-11-18.md): who may write the save slot and which game the page thinks is playing caused T-3687, T-3611, T-3698 and T-3722's worker half today; each fix added a flag. Takes in T-2843's state machine C and T-3698.
+  - Goal: Four stages, each landed alone: (1) standing checks for the races already met; (2) one write-block answer (machine C); (3) every worker message stamped with its game; (4) the save code moved out of clock.worker.ts. Checks pass at each stage; no save format change.
+  - Other: notes/refactor-survey-2026-11-18.md
 - T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
   - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
@@ -380,7 +381,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
-- T-3721 [P2] {L:community} Copied network shares as Copy, not Sandbox
+- T-3721 [P2] {L:community} Copied network shares as Copy, not Sandbox (taking, 2026-11-18, agent copylabel)
   - Context: From T-3687: a Community network copied and played on as a normal game is shared with the Sandbox tag (T-3115). You, 2026-11-18: "it can show "copy" there instead of sandbox for copied network". Needs the server to record why a game is latched, so a server deploy.
   - Goal: Such a share shows Copy; real sandboxes still show Sandbox.
   - Other: notes/T-3687.md
