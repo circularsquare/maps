@@ -174,14 +174,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
   - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
   - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
-- T-3632 [P2] {L:route-choice} Trip explorer shows No route too often (taking, 2026-11-17, agent noroute2)
+- T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 built (noroute2, not landed yet): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
-- T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
-  - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
+- T-3298 [P2] {L:route-choice} {waits:Anita} Trips walk to a train instead of tram change
+  - Need from Anita: Riders change between two stations on foot only when they are under 300 m apart (or a passage links them); raise that to 600 m for every pair of stations, or only for tram stops to train stations, or keep 300 m and leave it to passages? Recommended: 600 m for all, after measuring search time and riders on the real save.
+  - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Cause found (inferred, his layout is gone): a tram stop beside a train station is always its own station, and over 300 m away there's no change at all (450 m: walk 33 min then the train; 250 m or a passage: tram then train, 14 min).
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
   - Other: Not the cause of T-3295 (walk onto the same line). Notes: notes/T-3298.md
+- T-3641 [P3] {L:route-choice} Trip panel head and periods disagree on transit share (taking, 2026-11-18, agent panelshare)
+  - Context: Seen in T-3298's scene: the trip panel's head says Transit 100% (stops 250 m apart) or 0% (450 m) while its "Transit by period" rows say 73% and 28% in every period. Scene script: notes/T-3298-scene.mjs.
+  - Goal: The head and the period rows agree, or show plainly that they count different things.
 - T-3624 [P3] {L:wealth-split} School trips lean to transit
   - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess."
   - Goal: Trips to school weigh driving less than other purposes do (students mostly can't drive), if it's a small change to the purpose rules; a demand rule change, so docs/demand-worldwide.md says it.
@@ -238,10 +242,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3629 [P3] {L:track-drawing} Track under a station can't be picked
-  - Context: A player (feedback e256b35f): track lying wholly under a station box can't be picked to edit or delete. Few players; not checked in the game.
-  - Goal: Track under a station can be picked (or the station's panel reaches it).
-  - Other: notes/feedback-triage-2026-11-18.md
 - T-3630 [P2] {L:feedback} Settings and feedback on the landing page
   - Context: Your pad, 2026-11-18, after a player on X couldn't load their save (stuck at "Calculating trips" 68%, about 2 minutes left, on an Osaka game): "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
@@ -300,7 +300,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
-- T-3597 [P3] {L:small-fixes} Every calculating tag says Calculating trips
+- T-3597 [P3] {L:small-fixes} Every calculating tag says Calculating trips (taking, 2026-11-18, agent calctag)
   - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
   - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
 - T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room
@@ -309,10 +309,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3638 [P3] {L:rebuild-track} Remove a set of selected track
   - Context: From T-3634 (shift+click builds a set of track pieces with one Rebuild). A set has no Remove, and the Delete key does nothing on it; touch has no way to build a set.
   - Goal: A set of track pieces can be removed in one go, as one piece can.
-- T-3589 [P3] {L:feedback} Graphics details in feedback reports
-  - Context: From T-3582: a player's WebGL2 crash couldn't be traced because reports carry no graphics details. Suspect, not proven: the map overlay takes about 92 bytes per screen pixel (about 760 MB on a 4K screen).
-  - Goal: Feedback reports include the browser's WebGL renderer, how many times the graphics were lost this session and the last creation error.
-  - Other: notes/T-3582.md
 - T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
   - Context: From T-3557: `restHeadwayStep` skips headways that need the same train count, so 12 and 13 min can be skipped. Now that a stepped headway is stored and run, they are different services.
   - Goal: The steppers stop at every headway the line can run.
@@ -603,6 +599,13 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Design is done and your questions are answered. The server part is built behind SHONEI_COMMUNITY=1; the game part is next. You parked it from the next release.
   - Goal: Players can share a map, browse others and like them.
   - Other: notes/T-2887.md
+- T-3639 [P2] {L:accounts-server} Leaderboard score swings after v0.4 (taking, 2026-11-18, agent scoreswing)
+  - Context: Your pad, 2026-11-18, a Discord report: "leaderboard position fluctuated from 450m to 550m and back. after updating to 0.4. thats weird, probably shouldtn be happening now that we take froecasted weekday? are the weekdays different?" T-3465 made every score the region's forecast weekday from the current solve.
+  - Goal: Find why a score moves about 20% and back with no edit, and fix it if it's a bug; a player's score holds steady between edits.
+- T-3640 [P2] {L:community} Big network still can't be shared (taking, 2026-11-18, agent bigshare)
+  - Context: Swattik's feedback (1794943989-cc4cce06): "This network could not be sent" when sharing to the community and making a drawing of the network; still failing after T-3440 doubled the size caps (your pad, 2026-11-18: "still having issues"). T-3440's caps answer "too big", so this is another failure.
+  - Goal: Find what fails for his network and fix it, or name the server change it needs.
+  - Other: notes/T-3440.md
 - T-2586 [P3] {L:translations} Place names in the player's language
   - Context: Localization stage 3, low priority and only if cheap: basemap name:ja and name:zh labels, the aliases Japan, China, Taiwan and Hong Kong already keep, zone names via Wikidata. Station names too: English for English speakers or non-local players (your idea 2026-11-09, T-2877); since T-3631 an English player still gets a CJK name where the data has no Latin one.
   - Goal: Place names show in the player's language where we have them, with no world rebuild of place lists. A setting picks English or local station names.
@@ -832,7 +835,7 @@ Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
   - Other: notes/T-2228.md section 8
 - T-2216 [P3] {L:islands} Islands: ground-only solve for island pairs
   - Context: Market zone pairs on two landmasses are "fixed, never solved" today (1.45M longer trips, 631,000 commutes a day).
-  - Goal: They solve with rail as the only ground mode; closes T-1396.
+  - Goal: They solve with rail as the only ground mode, with a point past which trips don't go by transit at all, so fares can't be raised without limit (your pad, 2026-11-18: "we should probably have a certain point at which transit is just not taken even if its the only option"); closes T-1396.
   - Other: Own worktree (intercity). notes/T-2216.md
 - T-2256 [P3] {L:islands} Islands: land-parts rule in local demand
   - Context: Local demand still lacks the rule in far-end selection and the regional layer's commutes (intercity.rs, cross.rs).

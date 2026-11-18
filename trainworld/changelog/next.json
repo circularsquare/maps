@@ -3,6 +3,42 @@
   "line": "",
   "items": [
     {
+      "id": "c007",
+      "text": "when you turn trains on or off on several lines a few seconds apart, each line's new riders show within seconds",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3616",
+      "by": "secondedit",
+      "at": "2026-11-18T05:56:40Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c006",
+      "text": "the intercity trip panel says why there is no transit route, like no train at night",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3632",
+      "by": "noroute2",
+      "at": "2026-11-18T05:49:16Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
+    },
+    {
+      "id": "c005",
+      "text": "fixed track lying under a station not being pickable",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3629",
+      "by": "trackpick",
+      "at": "2026-11-18T05:46:04Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c004",
       "text": "the trip hovers count money the same way for the train and the car, in the local currency",
       "edited": null,
