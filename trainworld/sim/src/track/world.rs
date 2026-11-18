@@ -932,6 +932,21 @@ impl TrackWorld {
         Ok((r, x))
     }
 
+    /// T-3528: an edit the game makes for the player (the cap lowering on load): applied and paid as
+    /// `apply_paid`, but on neither history, so an undo takes back the player's own last edit.
+    pub fn apply_unrecorded(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<(EditResult, f64), ChargeError> {
+        let phases = (self.net.line_phase.clone(), self.net.line_split.clone());
+        let (r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
+        let x = extra(self);
+        let need = r.charge + x;
+        if need > 1e-9 && need > cash + 1e-6 {
+            let _ = self.restore(inv);
+            (self.net.line_phase, self.net.line_split) = phases;
+            return Err(ChargeError::Money { need, have: cash });
+        }
+        Ok((r, x))
+    }
+
     /// Undo (or redo) and pay `extra` as `apply_paid` does: undoing a line's removal can need
     /// trains again. Nothing changes if it is refused.
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {

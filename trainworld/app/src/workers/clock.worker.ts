@@ -4156,7 +4156,7 @@ function applyInner(op: EditOp): Applied {
       return { r: r === 0 ? 0 : INSERT_REFUSED };
     }
     case "setTrainCount":
-      return { r: a.set_train_counts(op.line, ...op.trains) };
+      return { r: op.unrecorded ? a.set_train_counts_unrecorded(op.line, ...op.trains) : a.set_train_counts(op.line, ...op.trains) };
     case "setHeadway":
       return { r: op.seconds ? a.set_auto_headway(op.line, ...op.seconds) : a.clear_auto_headway(op.line) };
     case "weekendShare":

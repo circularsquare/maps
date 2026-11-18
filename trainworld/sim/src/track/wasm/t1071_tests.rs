@@ -446,3 +446,22 @@ fn t3521_running_cost_per_kind_of_day() {
         assert!(r > 0.4 && r < 0.65, "level {lev}: a weekend costs {r} of a weekday at 50%");
     }
 }
+
+/// T-3528: a count set without history (the cap lowering on load) changes the counts but leaves the
+/// undo and redo history as it was, so an undo takes back the player's edit before it.
+#[test]
+fn an_unrecorded_count_change_stays_off_the_undo_history() {
+    let depth = |mut a: TrackApi| { let mut n = 0; while a.can_undo() && a.undo() == 0 { n += 1; } n };
+    let (mut a, id) = line_api();
+    let (mut b, idb) = line_api();
+    for (t, i) in [(&mut a, id), (&mut b, idb)] {
+        assert_eq!(t.set_train_counts(i, 3, 3, 3), 0, "{}", t.issues());
+    }
+    assert_eq!(b.set_train_counts_unrecorded(idb, 4, 4, 4), 0, "{}", b.issues());
+    assert_eq!(depth(a), depth(b), "the lowering is not an undo step");
+    let (mut c, idc) = line_api();
+    assert_eq!(c.set_train_counts(idc, 3, 3, 3), 0, "{}", c.issues());
+    assert_eq!(c.undo(), 0, "{}", c.issues());
+    assert_eq!(c.set_train_counts_unrecorded(idc, 4, 4, 4), 0, "{}", c.issues());
+    assert!(c.can_redo(), "the lowering must not clear the redo history");
+}

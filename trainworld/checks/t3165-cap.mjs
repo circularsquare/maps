@@ -2,7 +2,8 @@
 // held and the held messages, the issue and the red headway show. On the real New York save:
 //  - typing the whole trains the track runs leaves the headway plain; plus at that gives one more, with that train held
 //    (`lineHeld` waits) and the headway red; another plus, and a typed number above, are refused with the shake;
-//  - a stored count far above the cap is lowered to it when the game loads (set high by an edit, downloaded, opened again).
+//  - a stored count far above the cap is lowered to it when the game loads (set high by an edit, downloaded, opened again),
+//    and that lowering is not on the undo stack (T-3528: an undo after the player's next edit undoes that edit).
 // Screenshots artifacts/trainworld/t3165-*.png.
 // From the maps root, on a Vite of your own:   node trainworld/checks/t3165-cap.mjs [dev url]
 import { ARTIFACTS, REAL_SAVE, collectErrors, demandFinal, launchChrome } from './lib.mjs';
@@ -98,10 +99,32 @@ try {
   const chunks = [];
   for await (const c of file) chunks.push(c);
   const saved = Buffer.concat(chunks);
+  // opening a file reloads the page: wait for the new page's game to be loaded and its demand final, as at the start
+  await page.evaluate(() => { window.__oldPage = true; });
   await page.evaluate(async (data) => { const m = await import('/src/workers/clockClient.ts'); await m.importGame(new File([Uint8Array.from(data)], 'over.save')); }, Array.from(saved));
-  await page.waitForFunction(([num, to]) => { const w = window.tw?.world?.value; const l = w?.save?.lines?.find((x) => x.num === num); return !!l && w.lineStats[l.id].trainsNeeded[0] === to; }, [line.num, W + 1], { timeout: 180000, polling: 500 }).catch(() => {});
+  await page.waitForFunction(() => !window.__oldPage, undefined, { timeout: 120000, polling: 200 });
+  await loaded();
+  await page.waitForFunction(([num, to]) => { const w = window.tw?.world?.value; const l = w?.save?.lines?.find((x) => x.num === num); return !!l && w.lineStats[l.id].trainsNeeded[0] === to; }, [line.num, W + 1], { timeout: 60000, polling: 500 }).catch(() => {});
   const after = await page.evaluate((num) => { const w = window.tw.world.value; const l = w.save.lines.find((x) => x.num === num); return w.lineStats[l.id].trainsNeeded.slice(); }, line.num);
   check(after[0] === W + 1, 'the count is lowered to the cap when the game loads', `${high} -> ${after[0]}`);
+  // T-3528: the lowering is not on the undo history: nothing to undo yet, and an undo right after the player's own edit takes that back
+  check(!(await page.evaluate(() => window.tw.world.value.canUndo)), 'the lowering on load leaves nothing on the undo stack');
+  const other = await page.evaluate((num) => {
+    const w = window.tw.world.value;
+    for (const l of w.save.lines) { const st = w.lineStats[l.id]; if (l.num !== num && st && st.status === 'running' && !st.bus && !st.autoS && st.trainsNeeded[0] >= 2 && st.trainsNeeded[0] < 40) return { num: l.num, id: l.id, trains: st.trainsNeeded.slice() }; }
+    return null;
+  }, line.num);
+  check(!!other, 'a second line to edit as the player');
+  if (other) {
+    const lvl = (id) => page.evaluate((i) => window.tw.world.value.lineStats[i].trainsNeeded.slice(), id);
+    await page.evaluate(async ([num, t]) => { const w = await import('/src/game/world.ts'); await w.edit({ op: 'setTrainCount', line: num, trains: [t[0] - 1, t[1], t[2]] }); }, [other.num, other.trains]);
+    await page.waitForFunction(([i, n]) => window.tw.world.value.lineStats[i].trainsNeeded[0] === n, [other.id, other.trains[0] - 1], { timeout: 120000, polling: 300 });
+    await page.evaluate(async () => { const w = await import('/src/game/world.ts'); await w.undo(); });
+    await page.waitForFunction(([i, n]) => window.tw.world.value.lineStats[i].trainsNeeded[0] === n, [other.id, other.trains[0]], { timeout: 120000, polling: 300 }).catch(() => {});
+    check((await lvl(other.id))[0] === other.trains[0], 'an undo right after load takes back the player edit', `${(await lvl(other.id))[0]}`);
+    const kept = await page.evaluate((num) => { const w = window.tw.world.value; const l = w.save.lines.find((x) => x.num === num); return w.lineStats[l.id].trainsNeeded[0]; }, line.num);
+    check(kept === W + 1, 'and the lowering stays', `${kept}`);
+  }
   check(after[1] <= high && after[2] <= high, 'other levels are not above what was stored', JSON.stringify(after));
   check(errors.length === 0, 'no page errors', errors.slice(0, 3).join(' | '));
 } catch (e) {

@@ -525,12 +525,18 @@ impl TrackApi {
     /// Allocate whole trains to the entire line, across both directions.
     /// T-3333: a line run on both pairs takes the whole line's counts, half for each pair.
     pub fn set_train_counts(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
+        self.train_counts(id, [high, medium, low], true)
+    }
+    /// T-3528: `set_train_counts` that stays off the undo and redo history, for the cap lowering a
+    /// game load makes (the player never made that edit, so an undo must not take it back).
+    pub fn set_train_counts_unrecorded(&mut self, id: u32, high: u32, medium: u32, low: u32) -> u32 {
+        self.train_counts(id, [high, medium, low], false)
+    }
+    fn train_counts(&mut self, id: u32, counts: [u32; 3], recorded: bool) -> u32 {
         let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let [high, medium, low] = if pairs_split(&self.w.net, id) { [high, medium, low].map(|x| x.div_ceil(2)) } else { [high, medium, low] };
-        if d.auto.is_some() {
-            return self.run(Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) });
-        }
-        self.run(Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph })
+        let [high, medium, low] = if pairs_split(&self.w.net, id) { counts.map(|x| x.div_ceil(2)) } else { counts };
+        let op = if d.auto.is_some() { Op::AutoTrains { id, auto: None, trains: Some([high, medium, low]) } } else { Op::TrainCounts { id, trains: Some([high, medium, low]), tph: d.tph } };
+        if recorded { self.run(op) } else { self.run_unrecorded(op) }
     }
 
     /// T-3521: a line's weekends: its percent, 1 where its counts are set by hand (else 0), then its

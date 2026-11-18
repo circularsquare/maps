@@ -25,7 +25,7 @@ async function lowerOverCap(my: number) {
       const s = d[36 + lev] > 0 ? d[36 + lev] : d[21 + 5 * lev];
       return s > 0 && !st.autoS?.[lev] ? Math.min(n, trainCap(st, st.roundTripByLevel[lev], s)) : n;
     }) as [number, number, number];
-    if (to.some((n, i) => n !== had[i])) await edit({ op: "setTrainCount", line: l.num, trains: to }, true, true);
+    if (to.some((n, i) => n !== had[i])) await edit({ op: "setTrainCount", line: l.num, trains: to, unrecorded: true }, true, true);
   }
 }
 

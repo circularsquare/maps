@@ -36,6 +36,16 @@ impl TrackApi {
         self.settle(r, &before)
     }
 
+    /// T-3528: an edit on neither undo nor redo (`apply_unrecorded`).
+    pub(super) fn run_unrecorded(&mut self, op: Op) -> u32 {
+        let fleet = self.fleet;
+        let at = self.edit_start();
+        let before = self.w.svc.before_edit(&self.w.net, at);
+        let cash = self.spendable();
+        let r = self.w.apply_unrecorded(op, cash, &|w| trains_to_buy(w, fleet));
+        self.settle(r, &before)
+    }
+
     /// A final, charged edit (see the module comment), trains included.
     pub(super) fn run_charged(&mut self, op: Op) -> u32 {
         let fleet = self.fleet;
