@@ -193,7 +193,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 landed (7d14a945): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
-- T-3624 [P2] {L:wealth-split} School trips lean to transit
+- T-3624 [P2] {L:wealth-split} School trips lean to transit (taking, 2026-11-18, agent schoolcar)
   - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess." You, 2026-11-18: yes to driving to school costing about twice what it costs for other purposes.
   - Goal: Driving to school costs about 2x other purposes in local and intercity choice; school's rail share rises, other purposes unchanged; the ceiling tests still pass; docs/demand-worldwide.md says it.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips
@@ -404,15 +404,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
   - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
   - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
-- T-3683 [P2] {L:community} Join the leaderboards at the top (taking, 2026-11-18, agent lbfix)
-  - Context: Your old TODO: "put "join the leaderboards" at the top instead of the bottom (but can leave "leave the leaderboards" at the bottom) (just so people know they can join...)". Found unfiled by the TODO sweep 2026-11-18.
-  - Goal: A player not on the leaderboards sees the join control at the top of the leaderboard panel; leave stays at the bottom.
-- T-3684 [P2] {L:community} Leaderboard flags wrong for some countries (taking, 2026-11-18, agent lbfix)
-  - Context: Your old TODO: "leaderboard flags are messed up, sierra leone's flag is antarctican flag". Flags came with T-3269. Reach: players of the affected countries.
+- T-3684 [P3] {L:community} {waits:Anita} Leaderboard flags wrong for some countries
+  - Need from Anita: Where you saw Sierra Leone with Antarctica's flag (which player, roughly when); otherwise close it as fixed by the second flag set.
+  - Context: Your old TODO: "leaderboard flags are messed up, sierra leone's flag is antarctican flag". Flags came with T-3269. Not reproduced 2026-11-18: all 336 pictures and codes check out (notes/T-3683.md); needs which build or player showed it. Reach: players of the affected countries.
   - Goal: Every country's leaderboard flag is its own; the cause found and the whole list checked, not only Sierra Leone.
-- T-3685 [P3] {L:community} Like button on an opened community game (taking, 2026-11-18, agent lbfix)
-  - Context: Your old TODO: after opening a shared game and looking around, "you have to find it again in community to like it which is kinda awkward ... maybe just show the like button on the top right below the day/night cycle thing if the game is opened from elsewhere this session (if you save it and load it again ... there is no liek button)".
-  - Goal: A shared game opened this session shows a like button under the day/night control; a saved-and-reloaded copy doesn't.
 - T-3687 [P3] {L:community} Sandbox save shown as normal in Community
   - Context: Your old TODO: "someoen (ylik) said their sandbox save they uploaded to community is actully a nromal mode, they dont know why its considered community". T-3144 handles the Sandbox tag. Few players.
   - Goal: The cause found (which mode a share records and shows) and fixed, or shown to be right.
@@ -574,7 +569,7 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
   - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
   - Other: Needs a registry rebuild and upload; fold into the next data batch with T-3033. notes/T-3074.md
-- T-3635 [P2] {L:map-look} Top bar fills with copies of the clock
+- T-3635 [P2] {L:map-look} Top bar fills with copies of the clock (taking, 2026-11-18, agent clockdup)
   - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced). You, 2026-11-18: "lets do this as relatively high prio cuz it does look pretty bad. should fix before saying its ok".
   - Goal: Reproduced (Chrome's page translation in Japanese, a game crossing a holiday, or another cause), fixed so the top bar can never hold more than one clock, then the reply goes to the player.
   - Other: notes/T-3635.md (draft reply to the player)

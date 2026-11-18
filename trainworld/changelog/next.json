@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c030",
+      "text": "moved the join control to the top of the leaderboards",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3683",
+      "by": "lbfix",
+      "at": "2026-11-18T16:46:54Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
+    },
+    {
+      "id": "c029",
+      "text": "added a like button under the day and night picture for a network opened from Community",
+      "edited": "added a like button to a network opened from Community",
+      "hidden": false,
+      "task": "T-3685",
+      "by": "lbfix",
+      "at": "2026-11-18T16:46:54Z",
+      "rev": 2,
+      "area": "community",
+      "fix": false,
+      "changed": "2026-11-18T16:47:21Z"
+    },
+    {
       "id": "c028",
       "text": "fixed community previews showing \"Could not load this network\" when switching tabs quickly",
       "edited": null,
@@ -43,14 +68,15 @@
     {
       "id": "c025",
       "text": "fixed lines with a stop on each of two one way tracks taking the passing tracks between them instead, and turning back at the wrong station",
-      "edited": null,
+      "edited": "fixed lines with a stop on each of two one way tracks taking the passing tracks or a bypass track between them instead, and turning back at the wrong station",
       "hidden": false,
       "task": "T-3651",
       "by": "sideplat",
       "at": "2026-11-18T15:27:00Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T16:44:38Z"
     },
     {
       "id": "c024",
