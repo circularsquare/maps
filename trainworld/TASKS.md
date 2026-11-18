@@ -251,9 +251,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3630 [P2] {L:feedback} Settings and feedback on the landing page (taking, 2026-11-18, agent landing)
-  - Context: You picked C, 2026-11-18: "oh i do like the footer line C. could we put the language toggle on the bototm, and also the gear to open mini settings with any other settings we might need from menu (liek submit feedback, calc intercity, whatever)". Proposal: notes/T-3630.md. Mid-load, feedback can already be reached, but only at the bottom of Settings; it can't be reached from the failure screen or after a reload, and that is where a stuck player ends up. Your pad, 2026-11-18: "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
-  - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
   - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.
@@ -298,9 +295,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen (taking, 2026-11-18, agent restarts)
-  - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
-  - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
 - T-3584 [P3] {L:timetables} {after:T-3557} Weekend lines sharing track are not paced
   - Context: From T-3521 and T-3557: weekday lines sharing track are paced together (`pace_merges`); weekends keep the weekday pace through `line_pace`, a known lie (notes/T-3521.md "Lies"). About an hour; touches net.rs and world.rs.
   - Goal: Weekend lines sharing track are paced from their own weekend headways.

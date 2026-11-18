@@ -19,12 +19,13 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   into its node); 26 packs change. cairo now shipping in the MAIN tree (backup data/work/pre-T3623, places on 26 ids,
   start_difficulty --fresh, zone_aliases, changelog). Commit its outputs after; archive T-3623. Filed T-3660
   (downtown Cairo unit in no zone, next night run) and T-3661 (zone centres on the wrong town).
-- restarts (Sonnet, .tw-trees/restarts, port 6189): T-3604 bounded fetches on worker restart (all-China).
+- T-3604 LANDED 2936bc8e (6 shared download places on reopen; 20/20 all-China restarts clean; rest factor 1.12;
+  c022 reworded to not claim the stuck pool, which wasn't reproduced). Not on 8800 yet.
 - T-3583 closed: done by T-3650. T-3298 closed on her word (300 m stays; passages), DECISIONS.
 - T-3647 proposals not built (from tramoneway): a string for "track runs the other way"; "Run trains one way on this
   track?" reads backwards when turning it off. She sends dattera's reply herself.
 - LANDED: T-3647 79783877 (tramcheck PASS; c018, c019 reworded), T-3658 87158649 (c020; not reproduced live,
-  her Test item). Not on 8800 yet: rebuild after cairo's places run finishes (it writes start-difficulty.json).
+  her Test item). T-3623 shipped to data/packs (26 places) and archived 58be946a. 8800 = 58be946a, master pushed.
   T-3662 filed (switching one kerbside piece breaks lines with no refusal; master too).
 - shonei-server DEPLOYED 13:30 UTC on her yes and pushed (4d07666: leaderboard country tables + T-3395 stages 1
   and 3, save levels 19-21, playtime cap). T-3395's game side (stage 2, on 8800) may ship with the next publish;
@@ -34,8 +35,9 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - landing (Opus, .tw-trees/landing, port 6191): T-3630 she picked C + footer language + gear mini settings;
   intercity becomes a setting everywhere, the checkbox replacing her 11-10 menu rule (tell her; DECISIONS).
 - She keeps both T-3647 rule changes; she'll send dattera's reply herself later.
-- workflow (Opus, background, no tree): research + ranked proposal for her ask (workflow improvements, code/test
-  trimming, agent tools) -> trainworld/research/workflow-2026-11-18.md. A design to her; nothing built until she picks.
+- Workflow research DONE: trainworld/research/workflow-2026-11-18.md (337584e5), 7 ranked proposals sent to her
+  ~14:20 UTC; waits on her picks (recommended start: 4 test builds, 6 landing guards, then 1 play/wait, 5 handoff
+  status + asks.py, 3 report inbox; 2 is her setup). T-3663 filed (t1550 hover-tag lines fail).
 
 ## In flight
 - Running: workflow (research), restarts (T-3604), landing (T-3630), cairo (T-3623 shipping in the main tree).

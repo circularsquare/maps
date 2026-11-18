@@ -3,6 +3,44 @@
   "line": "",
   "items": [
     {
+      "id": "c024",
+      "text": "added a settings gear, the language and submit feedback to the start menu's bottom line, and submit feedback to the failed to load screen",
+      "edited": "added a settings gear, language and submit feedback at the bottom of the start menu, and submit feedback on the failed to load screen",
+      "hidden": false,
+      "task": "T-3630",
+      "by": "landing",
+      "at": "2026-11-18T14:40:20Z",
+      "rev": 2,
+      "area": "other",
+      "fix": false,
+      "changed": "2026-11-18T14:40:43Z"
+    },
+    {
+      "id": "c023",
+      "text": "calculate intercity trips is a setting on computers too, and a game opened from the start menu follows it",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3630",
+      "by": "landing",
+      "at": "2026-11-18T14:40:20Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c022",
+      "text": "fixed the game getting stuck calculating trips after its memory restart on very big saves",
+      "edited": "very big games like all of China come back more reliably after the game frees memory",
+      "hidden": false,
+      "task": "T-3604",
+      "by": "restarts",
+      "at": "2026-11-18T14:31:29Z",
+      "rev": 2,
+      "area": "performance",
+      "fix": true,
+      "changed": "2026-11-18T14:31:39Z"
+    },
+    {
       "id": "c021",
       "text": "fixed Cairo's name sitting in the desert east of the city",
       "edited": null,
