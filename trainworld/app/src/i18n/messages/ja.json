@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, other {いいね#件}}",
   "community.linkCopied": "コピー済み",
   "community.mostLiked": "いいね順",
+  "community.newest": "新しい順",
   "community.next": "次のページ",
   "community.noMatch": "検索に合う路線網はありません",
   "community.offensive": "不快な内容",

@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, one {# me gusta} other {# me gusta}}",
   "community.linkCopied": "Enlace copiado",
   "community.mostLiked": "Con más me gusta",
+  "community.newest": "Más recientes",
   "community.next": "Página siguiente",
   "community.noMatch": "Ninguna red coincide con esa búsqueda",
   "community.offensive": "Ofensivo",

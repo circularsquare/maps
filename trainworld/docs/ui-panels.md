@@ -1216,7 +1216,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   `trainworldCommunityPreview` on a page opened with `?community`. Otherwise no button, and a share link opens nothing.
 - **Community** (people icon in the head of the saves panel and of the leaderboards, and in Settings between Help
   and the account button), headed "Community trains worlds", with the upload icon in its head to share the game
-  being played. [Random] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Biggest is
+  being played. [Random] [Newest] [Biggest] [Most liked] in [place]: Random is a shuffle (Shuffle for another); Newest (T-3652, shown only when the server config says `trainworldCommunityNewest`) is the newest network first, one per person, paged like Random; Biggest is
   by points in the place, one per person, never a sandbox game (a note under the list says "Sandbox games aren't
   counted"), top 50 ranked as the leaderboards are; Most liked is
   by likes, equals in random order (the panel's seed, kept while it is open, T-3258), one per person, top 50. The place is the world, a city, a country (as

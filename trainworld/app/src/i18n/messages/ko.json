@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, other {좋아요 #개}}",
   "community.linkCopied": "링크 복사됨",
   "community.mostLiked": "좋아요순",
+  "community.newest": "최신순",
   "community.next": "다음 페이지",
   "community.noMatch": "검색에 맞는 노선망이 없어요",
   "community.offensive": "불쾌한 내용",

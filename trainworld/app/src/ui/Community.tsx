@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
 import { accountOpen, boardSetting, loadBoardSetting, session, shareableSlot } from "../game/account";
-import { SEARCH_MAX, TITLE_MAX, communityOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
+import { SEARCH_MAX, TITLE_MAX, communityOn, communityNewestOn, communityPagesOn, communitySearchOn, communityOpen, copyName, currentShare, fetchShare, fetchShares, linkedShare, loadDrawing, releaseDrawing, myShares, newSeed, openSharedView, refreshMyShares, reportShare, setLiked, shareAgain, shareAsk, shareTick, sharedWhen, viewedRow, viewedShare, sharesLeft, shareLink, sharePhase, shareGame, stopSharing, type ReportReason, type ShareRow, type ShareView } from "../game/community";
 import { saveSlotsState } from "../workers/clockClient";
 import { pointsScore, pointsShort } from "../game/points";
 import { shade, theme as colourTheme } from "../game/ui";
@@ -305,7 +305,7 @@ function Browse() {
   // the player's own shares, for Share again on an opened one
   useEffect(() => { void refreshMyShares(); }, [signedIn]);
   // T-3402: Random is fetched a page at a time (the server's order is the seed's); the others arrive whole
-  const paged = view === "random" && communityPagesOn();
+  const paged = (view === "random" || view === "newest") && communityPagesOn();
   useEffect(() => { setPage(0); }, [view, city, seed, search, signedIn, shareTick.value]);
   useEffect(() => {
     let live = true;
@@ -321,7 +321,7 @@ function Browse() {
   if (picked) return <Detail key={picked.id} row={picked} onBack={() => setPicked(null)} onChange={change} />;
   if (linked || linkWait) return <p class="small muted">{t("leaderboard.loading")}</p>;
   const list = rows ?? [], total = paged ? count : list.length, pages = Math.max(1, Math.ceil(total / PAGE)), shown = paged ? list : list.slice(page * PAGE, (page + 1) * PAGE);
-  const views: [ShareView, string][] = [["random", t("community.random")], ["top", t("community.biggest")], ["liked", t("community.mostLiked")]];
+  const views: [ShareView, string][] = [["random", t("community.random")], ...(communityNewestOn() ? [["newest", t("community.newest")] as [ShareView, string]] : []), ["top", t("community.biggest")], ["liked", t("community.mostLiked")]];
   return <>
     <div class="cm-bar">
       <div class="cm-views" role="tablist">

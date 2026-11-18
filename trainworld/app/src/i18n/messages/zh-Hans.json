@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, other {#个赞}}",
   "community.linkCopied": "链接已复制",
   "community.mostLiked": "最多赞",
+  "community.newest": "最新",
   "community.next": "下一页",
   "community.noMatch": "没有符合搜索的线网",
   "community.offensive": "冒犯内容",

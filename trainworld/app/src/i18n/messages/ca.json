@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, one {# m’agrada} other {# m’agrada}}",
   "community.linkCopied": "Enllaç copiat",
   "community.mostLiked": "Amb més m’agrada",
+  "community.newest": "Més recents",
   "community.next": "Pàgina següent",
   "community.noMatch": "Cap xarxa no coincideix amb aquesta cerca",
   "community.offensive": "Contingut ofensiu",

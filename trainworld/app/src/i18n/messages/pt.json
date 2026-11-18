@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, one {# curtida} other {# curtidas}}",
   "community.linkCopied": "Link copiado",
   "community.mostLiked": "Mais curtidas",
+  "community.newest": "Mais recentes",
   "community.next": "Próxima página",
   "community.noMatch": "Nenhuma rede corresponde a essa busca",
   "community.offensive": "Ofensivo",

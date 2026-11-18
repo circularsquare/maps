@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, other {#個讚}}",
   "community.linkCopied": "已複製連結",
   "community.mostLiked": "最多讚",
+  "community.newest": "最新",
   "community.next": "下一頁",
   "community.noMatch": "沒有符合搜尋的路網",
   "community.offensive": "冒犯內容",

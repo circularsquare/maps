@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, one {# beğeni} other {# beğeni}}",
   "community.linkCopied": "Bağlantı kopyalandı",
   "community.mostLiked": "En çok beğenilen",
+  "community.newest": "En yeni",
   "community.next": "Sonraki sayfa",
   "community.noMatch": "Bu aramayla eşleşen ağ yok",
   "community.offensive": "Rahatsız edici",

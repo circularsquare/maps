@@ -566,6 +566,7 @@
   "community.likes": "{count, plural, one {# лайк} few {# лайка} many {# лайков} other {# лайка}}",
   "community.linkCopied": "Ссылка скопирована",
   "community.mostLiked": "Популярные",
+  "community.newest": "Новые",
   "community.next": "Следующая страница",
   "community.noMatch": "По этому запросу сетей нет",
   "community.offensive": "Оскорбительное",

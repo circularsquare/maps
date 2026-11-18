@@ -16,8 +16,8 @@ import { t, tDate } from "../i18n";
 import { accountList } from "./accountGames";
 import { playedText } from "./gameTime";
 
-/** T-3132: Random, Biggest (`top`, by points) and Most liked */
-export type ShareView = "random" | "top" | "liked";
+/** T-3132: Random, Biggest (`top`, by points) and Most liked; T-3652: Newest, shown only when the server says it has it */
+export type ShareView = "random" | "newest" | "top" | "liked";
 export type ReportReason = "offensive" | "fake-score" | "other";
 
 export interface ShareRow {
@@ -260,6 +260,7 @@ export async function stopSharing(id: string): Promise<void> {
 /** T-3402: the server's Random list takes an `offset`, so every game is on some page */
 export const communityPagesOn = () => accountConfig.value?.trainworldCommunityPages === true;
 export const communitySearchOn = () => accountConfig.value?.trainworldCommunitySearch === true;
+export const communityNewestOn = () => accountConfig.value?.trainworldCommunityNewest === true;
 /** the longest search the server takes */
 export const SEARCH_MAX = 40;
 

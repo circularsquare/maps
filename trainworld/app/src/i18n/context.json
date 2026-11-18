@@ -2765,6 +2765,7 @@
   "community.share": "Button and dialog title: publish a drawing of this game's rail network for other players to see",
   "community.stop": "Button: take this game's published network down",
   "community.again": "Button: replace the published drawing of this network with the current one",
+  "community.newest": "Browse tab: networks by when they were shared, newest first, one per person, in the chosen place",
   "community.random": "Browse tab: random shared networks",
   "community.shuffle": "Button: show another random set of networks",
   "community.report": "Button: tell the moderator something is wrong with this shared network",
