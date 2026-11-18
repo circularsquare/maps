@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3623 [P2] {L:new-countries} Cairo's place point sits in the desert (2026-11-18): places.py keeps a city node in a small hole of its pack's outline (closed by 500 m, held by no other pack) and merges a same-named area into its node; 26 packs rebuilt: Cairo at Tahrir (start score 38,139 -> 54,553, still easy), Jodhpur 2.5 km to its node; start tiers otherwise unchanged; T-3660, T-3661 filed. notes/T-3623.md.
+- T-3658 [P3] {L:small-fixes} Start-in-city pick shows 0 intercity trips (2026-11-18): intercityView renderCities skips the to-and-from row and bar when the market figure rounds to 0 (T-3074 covered no result yet); not reproduced live in headless play.
+- T-3647 [P1] {L:single-track} Tram lines on one-way stops broke in 0.4 (2026-11-18): cause T-3386 (0.4: a station no longer made single track two-way); three fixes; checker PASS (0.3.5 scene identical to 0.3.5 on all 12 lines, level 19+ saves unchanged, real save identical); Anita keeps both rule changes. notes/T-3647.md.
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change (2026-11-18): closed without code: Anita 2026-11-18: keep the 300 m walking change limit; a tram stop further from a train station gets a drawn passage ("i dont think we need this, i think we can just draw passages"). notes/T-3298.md.
 - T-3583 [P3] {L:timetables} Headway steppers skip headways with the same count (2026-11-18): done by T-3650 (021b9b38): the weekend stepper now uses the weekdays' exact headway steps, so no headway with the same train count is skipped.
 - T-3649 [P3] {L:help-tutorial} Help answer for the trip explorer (2026-11-18): help.qTripMode/aTripMode added in 13 languages.

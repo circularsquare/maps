@@ -3,16 +3,41 @@
   "line": "",
   "items": [
     {
+      "id": "c021",
+      "text": "fixed Cairo's name sitting in the desert east of the city",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3623",
+      "by": "cairo",
+      "at": "2026-11-18T14:00:24Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
+      "id": "c020",
+      "text": "fixed the new game city pick showing 0 intercity trips before they are calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3658",
+      "by": "zerorow",
+      "at": "2026-11-18T13:54:03Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c019",
       "text": "fixed lines taking long detours or saying their track is gone where a stop is on single track, in games saved before 0.4 and on single track out to a dead end",
-      "edited": null,
+      "edited": "fixed tram and single-track lines from before 0.4 taking long detours or saying their track is gone",
       "hidden": false,
       "task": "T-3647",
       "by": "tramoneway",
       "at": "2026-11-18T13:48:57Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": true
+      "fix": true,
+      "changed": "2026-11-18T13:54:10Z"
     },
     {
       "id": "c018",

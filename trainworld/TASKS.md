@@ -113,10 +113,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3623 [P2] {L:new-countries} {after:the night run (Egypt rows in it)} Cairo's place point sits in the desert (taking, 2026-11-18, agent cairo)
-  - Context: From T-3621: Cairo's real OSM node (Tahrir, 9.1M) is 0.25 km outside its pack's outline, in the gap along the Nile, so places.py dropped it; the only "Cairo" left in cai.places.json is a governorate-sized area whose box centre is desert 37 km east, population 0. Stations within 6 km of it may be named Cairo, and a search for Cairo may land there. Other big cities on a river gap may lose their node the same way.
-  - Goal: Cairo's place point is at Tahrir; places.py keeps a named city node just outside its pack's outline (a small tolerance), checked on a few river cities.
-  - Other: notes/T-3621.md
 - T-3620 [P2] {L:new-countries} {after:the night run (T-3511, T-3455)} Caribbean, Bolivia and Paraguay next
   - Context: Your pad, 2026-11-18: "i think for next new countries lets actually do caribbean, and also bolivia + paraguay since people have requetsed caribbean ( i have yet to have any asia or africa requests) and i think it'd be nice to finish off the americas. can come after the other rebuild fixes if they should happen at different times." Builds packs, so not alongside the night run.
   - Goal: The Caribbean countries, Bolivia and Paraguay built, shipped and joined, per docs/adding-a-country.md, with start tiers rerun.
@@ -163,9 +159,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
   - Other: notes/T-3455.md "What ran (nightfix3)"
-- T-3658 [P3] {L:small-fixes} Start-in-city pick shows 0 intercity trips (taking, 2026-11-18, agent zerorow)
-  - Context: Your pad, 2026-11-18: "when selecting a city to start in with "select on map" for new game, we're still showing "0 intercity trips to or from ..." we should just drop this row if we would say 0. cuz that just means we havent calculated it yet so we should not show it"
-  - Goal: Picking a start city on the map shows no intercity trips row while its figure is 0.
 - T-3660 [P2] {L:region-redraws} Downtown Cairo is in no zone
   - Context: Found by T-3623: Qasr Al-Nile (1.2 km2, Tahrir and downtown, geoBoundaries EGY ADM2) is in no plan row, so cai's outline has a hole there and downtown Cairo's people and jobs are missing. Marsa Alam, North Coast and Port Suez are also Egyptian units in no zone.
   - Goal: Qasr Al-Nile joins cai and the other three join a zone or are written down as dead space on purpose; rebuilt in the next night run.
@@ -174,6 +167,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
+- T-3662 [P3] {L:single-track} Switching one kerbside piece breaks lines quietly
+  - Context: Found checking T-3647: on a kerbside pair of one-way legs, switching one piece of a leg to both ways is accepted (no refusal) but breaks the lines using that leg (A1, A3, A4 in the test scene); master does the same. Switching every piece of the leg together works.
+  - Goal: The switch either takes the whole leg with it or is refused with a message naming the line it would break.
+  - Other: notes/T-3647.md
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
@@ -462,7 +459,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Found checking T-3482: adding a line on full track cuts the lines sharing it (Tokyo's line 42 from 23.12 to 15.00 trains an hour at the peak), and undoing the new line leaves them at 15.00, on master too; a later edit then shares the track out from there, so an undo and redo can end at different rates from the first build.
   - Goal: Undoing an edit puts the lines it cut back to their rates from before it.
   - Other: notes/T-3482.md
-- T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms
+- T-3651 [P2] {L:single-track} Train takes the passing tracks instead of the side platforms (taking, 2026-11-18, agent sideplat)
   - Context: Your pad, 2026-11-18, a Discord report (Zui), screenshot artifacts/trainworld/board/20261118-071350-c9cd.png: "The train is supposed to use the 2 side platforms in the top right station and then turn back at the single track platform on the left but it kept insisting to use the passing tracks in the center. it only correctly pathfinds after I remove the tracks it's not supposed to be using". You: "might be related to the amsterdam issue" (T-3647).
   - Goal: A line routes through the platforms of the stations it stops at, not through the station's passing tracks; or folded into T-3647 if it is the same cause.
 - T-3652 [P3] {L:community} Newest view in Community
@@ -482,9 +479,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A fix exists as notes/T-3231-fix.patch (trainGuard holdForPlaces): t1965-follow drops from 40-47 frames to 0-4, t2980 unchanged, but t2018-trail then halts the express 16-28 times and t3264's follow layout gains 4 overlap events, all from the express running later than the guard can draw (T-3271). Parked until T-3271, then re-measured.
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
-- T-3647 [P1] {L:single-track} Tram lines on one-way stops broke in 0.4 (taking, 2026-11-18, agent tramoneway)
-  - Context: Your pad, 2026-11-18, a player (dattera, save "Amsterdam"): since 0.4 tram lines are forced through one-way stations both ways, take long detours, and some say track is missing where none seems to be; deleting the stations or track doesn't help. Screenshot: artifacts/trainworld/board/20261118-070516-b9df.png. You: "could we look into whether its possible to support their sort of configuration? i think its rare but should try". 0.4 stopped pairing one-way stations (T-3605, T-3565).
-  - Goal: Saves built like his (tram stops as one-way stations on each side of the street) run as they did before 0.4, or each broken line says plainly what to change.
 - T-3101 [P3] {L:single-track} One-way track follow-ups
   - Context: The track panel's line list now counts a line that only uses a piece on its way back (fixed in tree bug-e, waiting to land). The Select bar still lacks switch and reverse for a picked single-track run: one confirmation and undo for several pieces, and the words, need a call.
   - Goal: Select bar switch and reverse work on single-track runs.

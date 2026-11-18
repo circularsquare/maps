@@ -21,14 +21,11 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   (downtown Cairo unit in no zone, next night run) and T-3661 (zone centres on the wrong town).
 - restarts (Sonnet, .tw-trees/restarts, port 6189): T-3604 bounded fetches on worker restart (all-China).
 - T-3583 closed: done by T-3650. T-3298 closed on her word (300 m stays; passages), DECISIONS.
-- tramoneway (maps-ca's) DONE T-3647 in .tw-trees/tramoneway: cause T-3386 (0.4 single track no longer two-way at
-  a station); fixes: broken line no longer blocks the way switch, dead-end branch with a station anywhere runs both
-  ways, saves level <= 18 pin those runs both ways on load. Tree changelog c014/c015 (renumbered by finish; reword
-  c014 shorter). Checker tramcheck (Sonnet, port 6185/6186) running. Her calls (I'd keep both; tell her): fix 2
-  reverses T-3386's own test; the old-save pinning brings back shared two-way single track (A1 534 -> 561 s).
-  Proposals not built: a string for "track runs the other way"; "Run trains one way on this track?" reads backwards
-  when turning it off. Reply draft for dattera is in my 13:40 message to her.
-- zerorow (Sonnet, .tw-trees/zerorow, port 6190): T-3658 (her pad) hide "0 intercity trips" on the start city pick.
+- T-3647 proposals not built (from tramoneway): a string for "track runs the other way"; "Run trains one way on this
+  track?" reads backwards when turning it off. She sends dattera's reply herself.
+- LANDED: T-3647 79783877 (tramcheck PASS; c018, c019 reworded), T-3658 87158649 (c020; not reproduced live,
+  her Test item). Not on 8800 yet: rebuild after cairo's places run finishes (it writes start-difficulty.json).
+  T-3662 filed (switching one kerbside piece breaks lines with no refusal; master too).
 - shonei-server DEPLOYED 13:30 UTC on her yes and pushed (4d07666: leaderboard country tables + T-3395 stages 1
   and 3, save levels 19-21, playtime cap). T-3395's game side (stage 2, on 8800) may ship with the next publish;
   close T-3395 after a day of clean scans (she leaves it to the scan's emails).
@@ -41,9 +38,9 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   trimming, agent tools) -> trainworld/research/workflow-2026-11-18.md. A design to her; nothing built until she picks.
 
 ## In flight
-- tramoneway (maps-ca's, Opus, .tw-trees/tramoneway, port 6194): T-3647 (P1) dattera's Amsterdam tram save on
-  one-way stops; reports reach maps-ca, which relays. Also asked to say if T-3651 (Zui, passing tracks over side
-  platforms) is the same cause. His real save needs her word for ssh.
+- Running: workflow (research), restarts (T-3604), landing (T-3630), cairo (T-3623 shipping in the main tree).
+- sideplat (Opus, .tw-trees/sideplat, port 6192): T-3651 (Zui, passing tracks over side platforms; not T-3647's
+  cause; her 14:00 "other people are having this issue"); also gathering similar inbox reports. Checker before landing.
 
 
 ## Waiting on Anita (asks.json)
