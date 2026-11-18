@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 49d5e3c4-3205-457a-b910-06fb8268277a, name maps-76, since 2026-11-18 19:20 UTC
-Updated: 2026-11-18 23:05 UTC (maps-76 past 500k, starting its successor)
+Orchestrator: session e152feed-f0d3-4dcd-84f4-e7cb5c5a0a5b, name maps-3f, since 2026-11-18 22:56 UTC
+Updated: 2026-11-18 23:05 UTC
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
@@ -14,26 +14,21 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    her word (r2_purge.py).
 1. Her go 22:40 UTC: "lets start with all of group 1 and feel free to continue with group 2 and 3 as well. and also
    continue with whatever else if you finish with that." Keep 4 cores free ("no need to be super strict"): cap 12.
-   T-3731 landed df82464f (next update's c001). Running (started ~22:45 UTC):
-   - walkstart (Opus) T-3718 trips start with a walk; panelstops (Sonnet) T-3732; localroute (Sonnet) T-3730;
-     savecheck22 (Sonnet) T-3733 in shonei-server (commits there, no push/deploy); onewaychk (Sonnet) checker on
-     T-3711 tree oneway; refactorlist (Opus) T-3725 survey -> notes/refactor-survey-2026-11-18.md for her.
-   - T-3733 done: shonei-server 0846bef (save check level 22), not pushed/deployed; its TestTwSaveCheckFollowsTheGame
-     fails until T-3711 lands in maps, and deploy.ps1 runs go test first, so land T-3711 before any server deploy.
-   - copylabel T-3721 done (archived): game tree copylabel + shonei-server fa61219 (not pushed/deployed); checker
-     copychk running. Server deploy (0846bef + fa61219) waits for T-3711 to land and her word.
-   - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). I pick
-     from the survey and run it; tell her what and why.
-   - slotown (Opus) T-3734 stage 1 (standing checks for the save-slot races, no game code), tree slotown; stage 2
-     after copylabel and panelstops land. Agents still running at handover (all maps-76's; reports come through
-     the inbox): walkstart, panelstops, localroute, onewaychk (on tree oneway), copychk (on tree copylabel), slotown.
-     Each needs: checker if risky (walkstart, panelstops, localroute: yes), then finish; 8800 rebuild per batch.
-   - Next: T-3726 comments A/B tonight after
-     group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
-   - T-3711: on PASS land (DECISIONS line from its notes; WASM). Shift meaning different things on the map and
-     in the stop list: OK by her (22:50 UTC). Ships with a server deploy of T-3733 on her word.
-3. Up next: T-2880, T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461; filed today T-3709,
-   T-3710, T-3712, T-3713, T-3720.
+   T-3731 landed df82464f (next update's c001).
+   - T-3711 PASS (onewaychk), landing 23:05 UTC (tools.ts conflict with T-3731 resolved by hand: master's
+     queueStopEdit plus oneWay; typecheck clean). Changelog c002.
+   - Server deploy (0846bef T-3733 + fa61219 T-3721, shonei-server, not pushed) waits for T-3711 landed and her word.
+   - Adopted from maps-76, reports via inbox: walkstart (Opus) T-3718; localroute (Sonnet) T-3730; slotown (Opus)
+     T-3734 stage 1 (stage 2 after copylabel and panelstops land); copychk checker on tree copylabel (T-3721).
+     Checker needed before landing: walkstart, localroute.
+   - panelstops T-3732 done in tree (its smoke: demand final timed out on 1 core, as oneway's did: watch the
+     batch smoke); my checker panelchk (Sonnet) running.
+   - Mine, started 23:00 UTC: hoverone (Sonnet) T-3710 port 6181; tramsplit (Sonnet) T-3709 port 6182;
+     servedpairs (Sonnet) T-2880 port 6183 (needs a checker: demand).
+   - Refactor: she leaves the pick to us ("i am not suited to make a call"), skip track (rework coming). T-3734 picked.
+   - Next: T-3726 comments A/B after group 1 lands (advisor's design in handoff-log 20:47); then the up-next list.
+3. Up next: T-3495, T-2054, T-2901, T-2380, T-3354, T-3525, T-3584, T-3518, T-2598, T-3461; filed today T-3712,
+   T-3713, T-3720 (T-3720 after T-3734: same slot code).
 4. T-3729 Steam: she picks screenshots this evening and says where; then agents make the store images from the
    landing page's "trains world!" logo (research/steam-page.md has sizes and rules).
 5. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC).
