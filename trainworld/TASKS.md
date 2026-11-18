@@ -246,9 +246,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: A player (feedback e256b35f): track lying wholly under a station box can't be picked to edit or delete. Few players; not checked in the game.
   - Goal: Track under a station can be picked (or the station's panel reaches it).
   - Other: notes/feedback-triage-2026-11-18.md
-- T-3631 [P1] {L:translations} New station names in the player's script (taking, 2026-11-17, agent nativenames)
-  - Context: You, 2026-11-18: "i didnt realize that the "name takes name of nearby station" only used latin letters. thats a little awkward for if are chinese or japanese. like its a regression i think. could we disable this for people with language set to something non latin characters, or find a source that actually gives the name in native language? given that the playerbase is like 60% japanese this is somewhat high prio". The place lists already carry native names as aliases (tyo: "Setagaya" with "世田谷区", "世田谷").
-  - Goal: A new station placed by a Japanese, Chinese or Korean player takes the nearby place's name in their script where the place list has one (a sensible form: 世田谷, not 世田谷区), else falls back sensibly; Latin-language players unchanged.
 - T-3630 [P2] {L:feedback} Settings and feedback on the landing page
   - Context: Your pad, 2026-11-18, after a player on X couldn't load their save (stuck at "Calculating trips" 68%, about 2 minutes left, on an Osaka game): "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.

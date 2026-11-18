@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c017",
+      "text": "new stations in japan, china, taiwan and korea take nearby names in the game's language",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3631",
+      "by": "nativenames",
+      "at": "2026-11-18T04:45:43Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
       "id": "c016",
       "text": "a city or map data that failed to download is tried again when you come back to the tab",
       "edited": null,

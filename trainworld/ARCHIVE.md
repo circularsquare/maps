@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3631 [P1] {L:translations} New station names in the player's script (2026-11-17): new stations take nearby names in the player's script for ja, zh-Hans, zh-TW and ko; undo-after-place ghost crash from T-3606 fixed. notes/T-3631.md.
 - T-3633 [P2] {L:trams} Terminal upgrade for tram stops (2026-11-17): Already built by T-3574 (commit 2f5e0ca8, on master): tram stops offer Terminal at the tram-table price, 15 to 30 an hour by the same turn_places rule; nothing to change. notes/T-3574.md.
 - T-3628 [P1] {L:feedback} Tokyo and Kansai fail to load on iPad (2026-11-17): Diagnosis (zone and ground failure reasons in the feedback report) and a retry on tab return or online added; cause of the WebKit download failures still unknown, next report will name the file. notes/T-3628.md.
 - T-3616 [P3] {L:solve-speed} A second edit waits for the first one's whole solve (2026-11-17): an edit made during a quick local solve goes at its local result instead of waiting for the whole solve (within 60 s of the first edit since a whole solve started; T-1734's hold kept past that); Kaohsiung edits 4-10 s apart showed in 4-15 s on busy cores, finals within 0.006% of a load solve. notes/T-3616.md.
