@@ -1659,10 +1659,8 @@ button.save-add:hover { color: var(--text); }
 :root { --map-chev: #fff; --map-chev-halo: rgba(0, 0, 0, .45); }
 :root[data-shade="dark"] { --map-chev: #15171a; --map-chev-halo: rgba(255, 255, 255, .4); }
 .tag-icon { width: calc(12px * var(--ui, 1)); height: calc(12px * var(--ui, 1)); flex: none; }
-/* T-3693: the track tool's mark by the pointer, a stroke a track in the track type's colour */
-.mode-mark { position: absolute; pointer-events: none; z-index: 4; }
-.mode-mark-svg { display: block; width: 18px; height: 18px; fill: none; stroke: var(--mode); stroke-width: 2.4; stroke-linecap: round;
-  filter: drop-shadow(0 0 1px var(--map-casing)) drop-shadow(0 0 1px var(--map-casing)); }
+/* T-3714: the placing tag's track count icon, the count buttons' strokes on a 16-unit window (trackTagRows.ts) */
+.tag-icon.tracks { width: calc(16px * var(--ui, 1)); height: calc(16px * var(--ui, 1)); stroke-width: 2; stroke-linecap: butt; }
 .mode-bar { display: flex; height: 3px; margin: 2px 0 3px; }
 .mode-bar i { display: block; height: 100%; }
 .demand-box { position: absolute; z-index: 4; pointer-events: none; border: 1px solid var(--map-ink);

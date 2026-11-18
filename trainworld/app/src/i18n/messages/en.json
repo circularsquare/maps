@@ -2300,6 +2300,7 @@
   "trackTagRows.speedLimit": "Speed limit",
   "trackTagRows.terrain": "Terrain",
   "trackTagRows.water": "Water",
+  "trackTagRows.trackCount": "{count, select, single {Single} double {Double} other {Quad}}",
   "trackTagRows.roads": "Roads",
   "trackTagRows.fastest": "{vehicle, select, bus {Fastest bus {speed}} boat {Fastest boat {speed}} tram {Fastest tram {speed}} other {Fastest train {speed}}}",
   "trackTagRows.terrainAdds": "{terrain} +{mult}x",

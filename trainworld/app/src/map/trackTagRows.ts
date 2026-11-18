@@ -8,7 +8,8 @@ import { bulletNode } from "../ui/bullet";
 import { shapeOf } from "../game/lineShapeState";
 import { describeIssues } from "../game/issues";
 import { idleLines } from "../game/lineRunning";
-import { inkOn, LEVEL_COLOURS, rgb, speedColour } from "../game/palette";
+import { inkOn, LEVEL_COLOURS, rgb, speedColour, TRACK_TYPE_COLOURS } from "../game/palette";
+import { buildMode, type BuildKind } from "../game/buildMode";
 import { BASE_M_PER_KM, trackMult } from "../ui/trackPrice";
 import { TERRAIN_COLOURS, TERRAIN_NAMES, TERRAIN_SURCHARGES, WATER_SURCHARGE } from "../game/terrain";
 import { guideVerbose, highSpeed, trackType, type TrackType } from "../game/ui";
@@ -74,6 +75,32 @@ export function elevationFact(level: number, ...also: number[]): HTMLSpanElement
     s.append(chip(levelLabel(l), LEVEL_COLOURS[l]));
   }
   return s;
+}
+
+/** The track count buttons' icons (ui/widgets.tsx `Icon.tracks1/2/4`), seen through a 16-unit window at 16 px so
+ * their 2-unit strokes land on whole pixels. */
+const TRACK_COUNT_PATHS = { 1: "M10 3v14", 2: "M6 3v14M14 3v14", 4: "M4 3v14M8 3v14M12 3v14M16 3v14" } as const;
+const TRACK_COUNT_NAMES = { 1: "toolBar.singleTrack", 2: "toolBar.doubleTrack", 4: "toolBar.quadTrack" } as const;
+
+/** T-3714: a track count as the count button's icon, in the track type's colour; by default what the track tool
+ * builds. */
+export function trackCountIcon(mode: BuildKind = buildMode(true).mode, count: 1 | 2 | 4 = buildMode(true).count): SVGSVGElement {
+  const svg = icon(TRACK_COUNT_PATHS[count], t(TRACK_COUNT_NAMES[count]));
+  svg.setAttribute("viewBox", "2 2 16 16");
+  svg.classList.add("tracks");
+  svg.style.color = TRACK_TYPE_COLOURS[mode];
+  return svg;
+}
+
+/** T-3714 (look B's row, T-3693): the track type and count of track under the pointer, each on the type's colour,
+ * the count after its icon. */
+export function trackKindRow(mode: BuildKind, count: 1 | 2 | 4): HTMLDivElement {
+  const c = TRACK_TYPE_COLOURS[mode];
+  const type = chip(t(mode === "tram" ? "toolBar.tram" : mode === "hsr" ? "toolBar.highSpeed" : "toolBar.regular"), c, 0.3);
+  const n = document.createElement("span");
+  n.className = "tag-fact";
+  n.append(trackCountIcon(mode, count), chip(t("trackTagRows.trackCount", { count: count === 1 ? "single" : count === 2 ? "double" : "quad" }), c, 0.3));
+  return factRow(type, n);
 }
 
 /** The icon and chip for a speed limit, on the Speed display's colour. */
@@ -222,7 +249,7 @@ export function headingChevron(colour: string, deg: number): HTMLSpanElement {
 }
 
 /** One line of the tag holding `facts`. */
-export function factRow(...facts: HTMLElement[]): HTMLDivElement {
+export function factRow(...facts: (HTMLElement | SVGElement)[]): HTMLDivElement {
   const d = document.createElement("div");
   d.className = "tag-facts";
   d.append(...facts);
@@ -235,8 +262,8 @@ const TOP_KMH = 160;
 const HSR_KMH = 320;
 
 /**
- * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the elevation being
- * placed and the route's lowest speed limit. The multiplier is on `costTint`'s colour. When the
+ * The track tool's tag (T-411, T-526): length, cost multiplier and price; then the track count (T-3714), the
+ * elevation being placed and the route's lowest speed limit. The multiplier is on `costTint`'s colour. When the
  * segment could not be built ending here, why first.
  */
 export function placementTag(pv: PreviewAnswer, level: number, share: { terrain: number; water: number } = { terrain: 1, water: 1 }): HTMLDivElement[] {
@@ -264,7 +291,7 @@ export function placementTag(pv: PreviewAnswer, level: number, share: { terrain:
   }
   if (pv.ok && pv.noFlyover) out.push(div(t("trackTagRows.noFlyover")));
   const [first, ...more] = placedLevels(pv.pts, level);
-  out.push(factRow(elevationFact(first, ...more), speedFact(top)));
+  out.push(factRow(trackCountIcon(), elevationFact(first, ...more), speedFact(top)));
   const ground = [terrainFact(pv.ground, share.terrain), waterFact(pv.ground, share.water), roadFact(pv.ground, (pv.lengthM / 1000) * groundShare(pv.pts))].filter((f) => f !== null);
   if (ground.length) out.push(factRow(...ground));
   return out;

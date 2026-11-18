@@ -58,8 +58,6 @@ import { marksLayer, placeAt } from "./screenPlace";
 import type { StopMarkers, StopTier } from "./stopMarkers";
 import type { BusStopMarkers } from "./busStops";
 import { curveLabels, legCurveLabels, placeCurveLabels, placementTag } from "./trackTagRows";
-import { buildMode } from "../game/buildMode";
-import { modeMarkSvg } from "./modeTag";
 import { firstAccepted, fractionAlong, layoutIssues, layoutOf, likelyFirst, nearestOn, orderOverlapping, pointAlong, roomNear, type Candidate, type Layout } from "./stationSnap";
 import { M_CROSSING, MARK_STRIDE } from "./markData";
 import { RealSnap, type RealClick, type RealRoute } from "./realSnap";
@@ -1388,7 +1386,7 @@ export class Tools {
       }
       lanes = sg;
     }
-    const s = strokesFromPreview(pts, !a.ok, speeds, true, a.marks, lanes, highSpeed.peek(), tramTrack.peek(), quadTrack.peek());
+    const s = strokesFromPreview(pts, !a.ok, speeds, true, a.marks, lanes, highSpeed.peek(), tramTrack.peek());
     s.chevrons = ghostChevrons(s, j);
     return s;
   }
@@ -2262,7 +2260,6 @@ export class Tools {
     // the platform ghost shows only while the station tool snaps (below)
     if (this.ghost) this.ghost.style.display = "none";
     if (this.rings) this.rings.style.display = "none";
-    if (this.modeMark) this.modeMark.style.display = "none";
     if (t === "bus") {
       this.ring.style.display = "none";
       this.bus.place();
@@ -2346,25 +2343,6 @@ export class Tools {
       if (lines.length) this.showTag(lines, false, ...at!);
       else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
-    this.modeMarkPlace(t === "track" ? at : null);
-  }
-
-  /** T-3693: the track tool's mark by the pointer, a stroke a track in the track type's colour. */
-  private modeMark: HTMLDivElement | null = null;
-  private modeMarkKey = "";
-  private modeMarkPlace(at: [number, number] | null) {
-    if (at) {
-      const b = buildMode(true), key = `${b.mode}${b.count}`;
-      if (!this.modeMark) {
-        this.modeMark = document.createElement("div");
-        this.modeMark.className = "mode-mark";
-        this.box.appendChild(this.modeMark);
-      }
-      if (key !== this.modeMarkKey) this.modeMark.replaceChildren(modeMarkSvg(b.mode, b.count));
-      this.modeMarkKey = key;
-      this.modeMark.style.display = "";
-      placeAt(this.modeMark, at[0], at[1], 10, -28);
-    } else if (this.modeMark) this.modeMark.style.display = "none";
   }
 
   /** T-3561: the pointer is over track of the other family (tram or train) that the family filter in `snap` skipped, with no snap of the picked family. */

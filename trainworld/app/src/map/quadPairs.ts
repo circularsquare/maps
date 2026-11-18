@@ -1,7 +1,7 @@
 // T-3693: quad track is two pairs of double track side by side (the sim's QUAD_SPACING, 8 m between their centres),
 // stored as two edges with nothing joining them. This finds each double edge's other pair by its drawn points:
-// another double edge running alongside, about that far off, at its middle. The stroke builder marks both pairs'
-// track and the lines over them (F_QUAD), so a halo can show four tracks there and two elsewhere.
+// another double edge running alongside, about that far off, at its middle. The track hover's tag says "Quad" there
+// (T-3714, quadTwin.ts).
 
 import { kAtY } from "./geo";
 

@@ -19,7 +19,6 @@ import { getWorldFrame, HOME_CITY } from "./game/cities";
 import { ZONE_LOAD_ZOOM } from "./game/zones";
 import { packToLngLat, lngLatToPack } from "./game/coords";
 import { ask, buildLevel, display, isBuildTool, mapShade, selection, shade, snapRealTram, snapRoads, snapStreets, stopEditing, tab, tool, tramTrack, VIDEO } from "./game/ui";
-import { quadTwin } from "./map/quadTwin";
 import { groupHover, lineGroups } from "./game/lineGroups";
 import { complexOf, dotGroups, inComplexView, openAlone, singleStation } from "./game/complexView";
 import { hot, onHot } from "./map/hovered";
@@ -289,9 +288,6 @@ const overlay = new Overlay(map, renderer, () => {
     hotStations: n ? hot().stations.map((id) => stationIndexOf(n, id)) : [],
     hotBuses: hot().buses,
     lineScale: d.lineWidth, // T-1248
-    // T-3693: a selected or hovered piece of quad track lights its other pair too
-    selTwin: sel?.kind === "track" ? quadTwin(n, world.peek()?.edges, sel.edge) : -1,
-    hotTwin: quadTwin(n, world.peek()?.edges, hot().edge ?? -1),
   };
 });
 onHot(() => overlay.invalidate()); // T-730: what the pointer is on lightens

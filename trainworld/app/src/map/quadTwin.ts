@@ -1,5 +1,4 @@
-// T-3693: the other pair of a quad track piece, for lighting both pairs of a selected or hovered piece
-// (map/quadPairs.ts finds them).
+// T-3693: the other pair of a quad track piece (map/quadPairs.ts finds them), for the track hover's count (T-3714).
 
 import type { TrackEdge } from "../game/types";
 import type { NetworkBuffers } from "./network";
