@@ -42,7 +42,7 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, renameSlot, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, writeSlot, SlotTakenError, renameSlot, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, listBackups, writeBackup, backupSlot, BACKUP_STEPS, headerUnread, nextGameName, newGameName, slotName, takePending, writePending, readSync, writeSync, sweepDeleted, makeRoom, lastSync, WHOLE_PANEL, type PendingLoad, type GameMode, type NewGameSpec, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
@@ -2738,6 +2738,7 @@ function autosave(): Promise<boolean> {
     return Promise.resolve(true);
   }
   const key = activeSlot; // an in-flight write must never move to the next slot
+  const lease = activeLease;
   const force = byHandNext;
   const wasEdited = edited;
   byHandNext = false;
@@ -2756,7 +2757,10 @@ function autosave(): Promise<boolean> {
       const lastName = activeName?.key === key ? activeName.name : undefined;
       // T-1829: a failed write tries once more, on a connection opened again and, when the browser
       // is out of room, with the demand caches dropped
-      const fresh = await writeSlot(key, record, lastName).catch(async (err) => { if (!await makeRoom(err)) throw err; return writeSlot(key, record, lastName); });
+      // T-3611: the lease may have been taken while the save was built, and the message saying so may not have
+      // arrived: the write itself refuses a slot another tab saved since this one read it
+      const write = () => { if (activeLease !== lease) throw new SlotTakenError(); return writeSlot(key, record, lastName, seenEdit); };
+      const fresh = await write().catch(async (err) => { if (err instanceof SlotTakenError || !await makeRoom(err)) throw err; return write(); });
       // T-1829: a slot this game had written found gone (the browser's storage cleared under it):
       // the game is written again above, and its tie to the account put back
       const first = fresh && unwritten === key;
@@ -2776,6 +2780,12 @@ function autosave(): Promise<boolean> {
     } catch (err) {
       dirty = true;
       edited ||= wasEdited;
+      if (err instanceof SlotTakenError) {
+        // another tab holds the slot now: autosave stays off here until a save by hand takes it back
+        if (activeLease === lease) { activeLease = null; leaseTaken = true; }
+        await publishSlots();
+        return false;
+      }
       if (isPanic(err)) { panicLater(err, "autosave"); return false; } // not the browser's fault, and rebuilt then saved
       savedAt = Date.now(); // retry on the next autosave interval, rather than every tick
       saveFailure = "clockWorker.browserCouldNotSave";
@@ -2792,6 +2802,7 @@ function autosave(): Promise<boolean> {
 async function keepOtherTabs(key: string) {
   const [stored, rec] = await Promise.all([readStored(key), readSync(key)]);
   if (!stored || editOf(stored) <= seenEdit) return;
+  seenEdit = editOf(stored); // read here now: this tab's next save is meant to replace it
   const to = "slot-" + crypto.randomUUID();
   const lease = await leaseSlot(to);
   try {

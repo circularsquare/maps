@@ -20,6 +20,7 @@ import successors from "../game/zone-successors.json";
 import { zoneName } from "../game/zoneNames";
 import { compressGzip, decompressGzip } from "./gzip";
 import { GZIP_DAMAGED } from "./gzipCore";
+import { editOf } from "./versions";
 import type { LineShape } from "../game/lineShape";
 
 export const SAVE_MAGIC = "TWG1";
@@ -620,13 +621,19 @@ export async function listSlots(): Promise<SaveSlot[]> {
   }).sort((a, b) => b.at - a.at);
 }
 
+/** T-3611: a write refused because another tab saved the slot since this one last read it. */
+export class SlotTakenError extends Error { constructor() { super("The slot was saved by another tab."); } } // i18n-ignore: internal, never shown
+
 /** Save while preserving a slot's latest name (it may have been renamed elsewhere; `lastName`, the
  * name last seen, where the slot has gone, T-1829) and its origin and latest change when `v` has none
- * (T-2037); true if the slot was not there before. */
-export async function writeSlot(key: string, v: StoredSave, lastName?: string): Promise<boolean> {
+ * (T-2037); true if the slot was not there before. With `seenEdit`, a slot whose latest change is newer
+ * is left as it is and a SlotTakenError thrown (T-3611). */
+export async function writeSlot(key: string, v: StoredSave, lastName?: string, seenEdit?: number): Promise<boolean> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
   const old = await req<StoredSave | undefined>(s.get(key));
+  // T-3611: the slot holds a change this tab never read (another tab saved it): nothing is written
+  if (seenEdit !== undefined && old && editOf(old) > seenEdit) throw new SlotTakenError();
   await req(s.put({ ...v, name: v.name ?? old?.name ?? lastName ?? slotName(key), origin: v.origin ?? old?.origin, edit: v.edit ?? old?.edit }, key));
   await done;
   return !old;
