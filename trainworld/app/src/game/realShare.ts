@@ -9,13 +9,13 @@ import { AVERAGE_DAY, PLAIN_KIND, type DemandDay } from "./days";
 
 /** % on a weekday, Saturday, Sunday, and the average day */
 const REAL_SHARE: Partial<Record<CityId, [number, number, number, number]>> = {
-  nyc: [16, 15, 14.9, 15.7],
-  lon: [20.5, 18.8, 18.7, 20.1],
-  par: [22.9, 22.1, 22.2, 22.7],
-  tyo: [21.3, 19.7, 19.6, 20.9],
-  seo: [22.3, 21, 20.8, 22.1],
-  tor: [7, 6.9, 6.9, 7],
-  sdj: [8.6, 8.7, 8.7, 8.6],
+  nyc: [17.1, 16, 15.9, 16.8],
+  lon: [21.7, 20, 20, 21.3],
+  par: [24.5, 23.8, 23.9, 24.3],
+  tyo: [23.1, 21.4, 21.3, 22.7],
+  seo: [24.2, 22, 21.7, 23.7],
+  tor: [7.7, 7.5, 7.4, 7.6],
+  sdj: [9.6, 9.7, 9.8, 9.7],
 };
 
 /** The real network's train share (%) in city `id` on demand day `day`, or null where there is none. */
