@@ -73,6 +73,9 @@ pub const BLOCKS: [&[u8; 4]; 27] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1",
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
 pub const LEVEL: u32 = 21;
+/// T-3647: the last level written by builds where a station on single track made its run two-way (v0.3.5 and
+/// older; T-3386 changed the rule after it, and v0.4.0 wrote 21).
+pub const OLD_STATION_WAYS: u32 = 18;
 
 /// An edge's kind in the flag bits 8-10. Regular and high speed write nothing here (high speed keeps
 /// bit 6), so their saves are byte for byte what earlier builds wrote and earlier builds read them.

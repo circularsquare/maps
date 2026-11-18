@@ -475,10 +475,41 @@ fn t3190_single_track_from_a_loose_end_joins_one_track() {
     }
 }
 
-/// T-3386: a station inside single track that runs one way by its join splits it into two pieces, both still
+/// A double (0, 0) to (4000, 0), split into two singles joined to its tracks through (5000, ±300), double again from
+/// (6000, 0) to (10000, 0); a station on the north single at (5000, 300) and one at (0, 0).
+fn split_with_a_station(right_hand: bool) -> TrackApi {
+    let mut a = api(right_hand);
+    assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(4000.0, 0.0)), &[], 2, false), 0);
+    assert_eq!(a.add_route(&ends(free(6000.0, 0.0), free(10000.0, 0.0)), &[], 2, false), 0);
+    let (j0, j1) = (node_near(&a, 4000.0, 0.0), node_near(&a, 6000.0, 0.0));
+    for dy in [300.0, -300.0] {
+        assert_eq!(a.add_route(&ends(at_node(&a, j0), at_node(&a, j1)), &[4600.0, dy, 0.0, 0.0, 5400.0, dy, 0.0, 0.0], 1, false), 0, "{}", a.issues());
+    }
+    assert!(singles(&a).iter().all(|&e| a.w.net.edge_way(e) != 0), "both singles one way by their joins");
+    let north = (0..a.w.net.edge_count() as u32).find(|&e| a.w.net.edge_ok(e) && a.w.net.edge_tracks[e as usize] == 1 && a.w.net.project(e, 5000.0, 300.0).1 < 1.0).unwrap();
+    assert_eq!(a.add_station(2, north, 5000.0, 300.0, 200, "N".into()), 0, "{}", a.issues());
+    let w = node_near(&a, 0.0, 0.0);
+    assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "W".into()), 0, "{}", a.issues());
+    a
+}
+
+/// T-3386: a station inside single track that runs one way by its joins splits it into two pieces, both still
 /// running that way.
 #[test]
 fn t3386_a_station_inside_the_run_keeps_its_way() {
+    for right_hand in [true, false] {
+        let a = split_with_a_station(right_hand);
+        let ways: Vec<u8> = singles(&a).into_iter().map(|e| a.w.net.edge_way(e)).collect();
+        assert_eq!(ways.len(), 4);
+        assert!(ways.iter().all(|&w| w != 0), "right hand {right_hand}: {ways:?}");
+    }
+}
+
+/// T-3647: single track off a double's track to a bare end runs one way by its join while it has no station, and
+/// both ways once a station is on it anywhere (a terminus with a tail past its platform), as with the station at
+/// the end (T-3386): trains go in, stop and come back.
+#[test]
+fn t3647_a_terminus_branch_runs_both_ways_wherever_its_station() {
     for right_hand in [true, false] {
         let mut a = api(right_hand);
         assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0);
@@ -486,13 +517,51 @@ fn t3386_a_station_inside_the_run_keeps_its_way() {
         a.set_route_join(&[6000.0, 2.0, f64::NAN, f64::NAN]);
         assert_eq!(a.add_route(&ends(at_node(&a, end), free(8000.0, 0.0)), &[], 1, false), 0, "{}", a.issues());
         let s = singles(&a)[0];
-        let before = a.w.net.edge_way(s);
-        assert_ne!(before, 0, "one way by its join");
-        assert_eq!(a.add_station(2, s, 7000.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
+        assert_ne!(a.w.net.edge_way(s), 0, "one way by its join with no station");
+        assert_eq!(a.add_station(2, s, 7500.0, 0.0, 200, "S".into()), 0, "{}", a.issues());
         let ways: Vec<u8> = singles(&a).into_iter().map(|e| a.w.net.edge_way(e)).collect();
-        assert_eq!(ways.len(), 2);
-        assert!(ways.iter().all(|&w| w != 0), "right hand {right_hand}: {ways:?}");
+        assert_eq!(ways, vec![0, 0], "right hand {right_hand}");
+        // a line to it runs in and back
+        let (w, st) = (node_near(&a, 0.0, 0.0), node_near(&a, 7500.0, 0.0));
+        assert_eq!(a.add_station(1, w, 0.0, 0.0, 200, "W".into()), 0, "{}", a.issues());
+        let l = a.new_line_id();
+        assert_eq!(a.set_line_with_trains(l, &[w, st], 4, 2, 0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
     }
+}
+
+/// T-3647: a game saved before 0.4 (save level 18) ran a single-track run with a station on it both ways; it
+/// loads pinned both ways, so its lines run as then. The same network saved now keeps its joins' way.
+#[test]
+fn t3647_an_old_save_keeps_its_station_runs_both_ways() {
+    let bytes = split_with_a_station(true).save();
+    // the way it loads at this build's level: each single one way by its joins
+    let mut b = api(true);
+    assert!(b.load(&bytes));
+    assert!(singles(&b).iter().all(|&e| b.w.net.edge_oneway[e as usize] == 0 && b.w.net.edge_way(e) != 0));
+    // from before 0.4: the north leg's pieces pinned both ways, the south leg (no station) keeps its way
+    let mut c = api(true);
+    c.set_load_level(18);
+    assert!(c.load(&bytes));
+    let (w, n) = (node_near(&c, 0.0, 0.0), node_near(&c, 5000.0, 300.0));
+    let net = &c.w.net;
+    let on_north = |e: u32| net.project(e, 5000.0, 300.0).1 < 400.0 && (0..2).any(|k| net.end_node(e, k) == n);
+    for e in singles(&c) {
+        if on_north(e) {
+            assert_eq!((net.edge_oneway[e as usize], net.edge_way(e)), (3, 0), "north piece {e}");
+        } else if net.project(e, 5000.0, -300.0).1 < 1.0 {
+            assert_eq!(net.edge_oneway[e as usize], 0, "south leg {e}");
+            assert_ne!(net.edge_way(e), 0, "south leg {e}");
+        }
+    }
+    let l = c.new_line_id();
+    assert_eq!(c.set_line_with_trains(l, &[w, n], 4, 2, 0, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", c.issues());
+    let p = c.w.net.line_path(l).to_vec();
+    assert!(p.len() <= 3, "in and back the way it came: {p:?}");
+    // a later load at this build's level reads the pins as saved
+    let again = c.save();
+    let mut d = api(true);
+    assert!(d.load(&again));
+    assert_eq!(singles(&d).iter().filter(|&&e| d.w.net.edge_oneway[e as usize] == 3).count(), singles(&c).iter().filter(|&&e| c.w.net.edge_oneway[e as usize] == 3).count());
 }
 
 /// T-3171: double track branching off single track makes no flat badge and the single trunk keeps running both

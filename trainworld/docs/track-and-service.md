@@ -253,7 +253,11 @@ Full design, numbers and sources: `notes/T-008.md`.
   them meet. Each run end votes: a join gives the way trains keep to on that track (the right track
   looking out along the piece carries trains away from the node with right-hand running), a bare track
   end says nothing, and anything else says both ways (a station at a bare end, double track or a crossover end to
-  end, a junction end with no join). A station inside the run, or at a join that counts, says nothing (T-3386). The run runs one way
+  end, a junction end with no join). A station inside the run, or at a join that counts, says nothing (T-3386), but a run
+  with a bare end and a station anywhere on it runs both ways, a terminus branch with a tail past its platform included
+  (T-3647). A game saved before 0.4 (save level 18 or lower), when any station on a run made it two-way, loads with
+  each such run that now takes a way pinned both ways (oneway 3, `Network::pin_station_runs`), so its lines run as
+  they did. The run runs one way
   where its join votes agree (at least one) and nothing says both; otherwise both ways, so a branch to
   a terminus runs both ways and a hand-laid flyover's legs, joined the way their trains come, each one
   way. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
@@ -273,7 +277,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   edit, because its way back is not on `lines_on_edge`. Setting the flag also moves the **forward** path of
   every line that ran against it, through its same stops (`route_hops_turn`), in the same edit (a Batch);
   the app asks first, listing the lines whose way changes ("{line} takes another way", `oneway_effects`),
-  and the edit is refused (`OneWayNoWay`) when a line has no other way. A line already on its way keeps it.
+  and the edit is refused (`OneWayNoWay`) when a line has no other way. A line already on its way keeps it. A line
+  already broken never refuses it (T-3647), and runs again when the edit gives it a way.
   Splitting a piece keeps the flag on both halves; pieces join only with the same way along the joined
   piece. Capacity: single track that runs one way, set or by its run, is a directed track like double
   (section = `edge_section_s` + v / `SIGNAL_BRAKE`, per direction, `capacity::directed`), not shared.

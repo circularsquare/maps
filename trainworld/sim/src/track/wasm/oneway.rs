@@ -97,6 +97,9 @@ impl TrackApi {
         hit.dedup();
         let lines: Vec<(u32, Vec<u32>, Vec<u32>, bool)> = hit.iter().map(|&l| (l, net.line_stops(l).to_vec(), net.line_path(l).to_vec(), net.line_runs_once(l))).collect();
         let was: Vec<Option<Vec<u32>>> = lines.iter().map(|x| net.back_path_of(&x.1, &x.2)).collect();
+        // T-3647: a line already broken loses nothing here, so it never refuses the edit (it was refusing every
+        // switch in the game, the one that would mend it included); it runs again if the edit gives it a way
+        let broken: Vec<bool> = lines.iter().map(|x| net.line_broken.get(x.0 as usize).copied().unwrap_or(false)).collect();
         let inv = self.w.sketch(op.clone(), false).map_err(|mut v| v.swap_remove(0))?;
         let net = &self.w.net;
         let mut rows = vec![];
@@ -104,6 +107,9 @@ impl TrackApi {
             let fwd_ok = path.iter().all(|&p| net.dir_ok(p));
             let new = if fwd_ok { Some(path.clone()) } else { net.route_hops(&stops).ok() };
             let new = new.filter(|np| once || net.back_path_of(&stops, np).is_some());
+            if new.is_none() && broken[k] {
+                continue;
+            }
             let moved = match &new {
                 Some(np) => *np != path || (!once && net.back_path_of(&stops, np) != was[k]),
                 None => true,

@@ -109,6 +109,27 @@ fn a_line_with_no_other_way_refuses_it_naming_the_line() {
     assert_eq!(a.edge_oneway(e[0]), 0, "nothing changed");
 }
 
+/// T-3647: a line already broken by one-way track (an older save's way changed on load) never refuses a switch:
+/// not one that leaves it broken, nor the one that mends it.
+#[test]
+fn a_broken_line_never_refuses_the_switch() {
+    let (mut a, n, e) = triangle();
+    let l = line(&mut a.w, &[n[0], n[1]], [8.0, 4.0, 2.0]);
+    // AB and CA set one way into A, as a load can leave a save's line (set by force: nothing reroutes it)
+    for (x, w) in [(e[0], 2u8), (e[2], 1)] {
+        let mut d = a.w.net.edge_data(x).unwrap();
+        d.oneway = w;
+        a.w.apply(Op::Edge { id: x, data: Some(d) }).unwrap();
+    }
+    assert!(a.w.net.line_broken[l as usize], "A - B has no way out of A");
+    // a switch that does not help it is not refused for it
+    assert_eq!(a.set_edge_oneway(e[1], 2), 0, "{}", a.issues());
+    assert!(a.w.net.line_broken[l as usize], "still no way out of A");
+    // the one that mends it: CA both ways, so A - B runs out by C and back on AB
+    assert_eq!(a.set_edge_oneway(e[2], 3), 0, "{}", a.issues());
+    assert!(!a.w.net.line_broken[l as usize], "A - B runs again");
+}
+
 #[test]
 fn deleting_the_track_a_return_run_uses_breaks_the_line() {
     let (mut a, n, e) = triangle();

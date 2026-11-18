@@ -154,6 +154,8 @@ pub struct TrackApi {
     /// T-2669: per line id, its running cost over the world price list (its countries' prices,
     /// `set_line_run_factors`); 1 for a line not listed. Never saved: the app sends it.
     run_factor: Vec<f64>,
+    /// T-3647: the save level of the game the next `load` opens (`set_load_level`), else this build's.
+    load_level: u32,
 }
 
 // T-2820: the last panic's message, as the demand module's (`demand::wasm`), for the clock worker's
@@ -401,6 +403,7 @@ impl TrackApi {
             link_charge: 0.0,
             last_port: u32::MAX,
             run_factor: vec![],
+            load_level: save::LEVEL,
         }
     }
 
@@ -712,8 +715,15 @@ impl TrackApi {
         }
     }
 
+    /// T-3647: the save level (the game header's `level`) of the player's game the next `load` opens, so a game
+    /// saved before 0.4 keeps the way its single track ran then (`Network::pin_station_runs`). Taken by that load.
+    pub fn set_load_level(&mut self, level: u32) {
+        self.load_level = level;
+    }
+
     /// Replace the network with a saved one. False if the bytes are not a save.
     pub fn load(&mut self, bytes: &[u8]) -> bool {
+        let level = std::mem::replace(&mut self.load_level, save::LEVEL);
         let (bytes, eras) = split_eras(bytes);
         match save::decode(bytes) {
             Ok(mut net) => {
@@ -736,6 +746,9 @@ impl TrackApi {
                 net.roads = self.w.net.roads.clone();
                 net.streets = self.w.net.streets.clone();
                 self.w = TrackWorld::new(net);
+                if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
+                    self.w.reload();
+                }
                 if stop_every_pass(&mut self.w.net) | legs::straighten_legs(&mut self.w.net) {
                     self.w.reload();
                 }

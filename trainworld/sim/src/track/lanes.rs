@@ -267,6 +267,29 @@ impl Network {
         }
     }
 
+    /// T-3647: a save from before 0.4 (save level 18 or lower) ran every single-track run with a station on it
+    /// both ways, whatever its joins said (the rule T-3386 replaced). Such a run that now takes a way by itself is
+    /// pinned both ways (`EdgeData::oneway` 3, as the track panel's switch stores), so the save's lines run as they
+    /// did; "Use automatic way" gives it the joins' way. Call after a derive; true when it pinned any (derive again).
+    pub fn pin_station_runs(&mut self) -> bool {
+        let mut pin = vec![];
+        let mut seen = std::collections::HashSet::new();
+        for e in 0..self.edge_count() as u32 {
+            if !self.in_run(e) || seen.contains(&e) || self.edge_oneway[e as usize] != 0 || self.edge_infer[e as usize] == 0 {
+                continue;
+            }
+            let (run, _) = self.run_through(e);
+            seen.extend(run.iter().map(|x| x.0));
+            if run.iter().any(|&(p, _)| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
+                pin.extend(run.iter().map(|x| x.0).filter(|&p| self.edge_oneway[p as usize] == 0));
+            }
+        }
+        for &p in &pin {
+            self.edge_oneway[p as usize] = 3;
+        }
+        !pin.is_empty()
+    }
+
     /// The run of single track through `e`: pieces (`in_run`) through nodes where just two of them
     /// meet, as (piece, walked a to b) from one end to the other;
     /// whether it closes on itself.
@@ -305,8 +328,8 @@ impl Network {
     /// one way where every join at its ends sends trains that way (at least one) and nothing says
     /// both; both ways where it meets other track that runs both ways (a taper, a junction with no
     /// join, a crossover), ends at a station, or its joins disagree (T-3386: a station inside the run, or
-    /// at a join, leaves its way). A bare end says nothing. Returns
-    /// the pieces whose way changed.
+    /// at a join, leaves its way). A bare end says nothing, unless a station is on the run (T-3647: a
+    /// terminus branch). Returns the pieces whose way changed.
     pub(super) fn derive_ways(&mut self, edges: &[u32], nodes: &[u32]) -> Vec<u32> {
         let mut seeds = vec![];
         for &e in edges {
@@ -335,7 +358,14 @@ impl Network {
             if !closed {
                 let (e0, f0) = run[0];
                 let (e1, f1) = run[run.len() - 1];
-                for (c, start) in [(e0 << 1 | !f0 as u32, true), (e1 << 1 | f1 as u32, false)] {
+                let ends = [(e0 << 1 | !f0 as u32, true), (e1 << 1 | f1 as u32, false)];
+                // T-3647: a run with a bare end and a station on it is a terminus branch, as one with its station at
+                // that end is: trains go in, stop and come back (a tail past the platform, or a stub that runs on)
+                let bare = ends.iter().any(|&(c, _)| self.node_ports[self.end_node(c >> 1, c & 1) as usize].n == 1);
+                if bare && run.iter().any(|&(p, _)| (0..2).any(|w| self.node_platform[self.end_node(p, w) as usize] > 0)) {
+                    both = true;
+                }
+                for (c, start) in ends {
                     match self.end_vote(c) {
                         Vote::None => {}
                         Vote::Both => both = true,

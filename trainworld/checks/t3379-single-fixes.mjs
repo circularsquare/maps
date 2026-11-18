@@ -1,7 +1,9 @@
 // T-3379, T-3380, T-3386, T-3411: single track's loose ends, in a new sandbox game (about 1 minute).
 //   a short single piece joined to one track of double track ends on its centre line at its far end (no jog),
 //   the Delete tool's red ghost over single track is one track wide,
-//   single track that runs one way by its join keeps its way once stations split it,
+//   single track that runs one way by its join to a bare end runs both ways once a station is on it (T-3647: a
+//   terminus branch; T-3386's way kept through a station on legs joined at both ends is the sim test
+//   t3386_a_station_inside_the_run_keeps_its_way),
 //   the end of single track takes a one-platform station.
 // From the tree root, on a Vite of your own (node trainworld/checks/dev-nowatch.mjs 6111):
 //   node trainworld/checks/t3379-single-fixes.mjs [dev url]
@@ -72,7 +74,7 @@ try {
     await sl(300);
     return { before, ways, sw, one: cl.lastNodes.find((n) => n.id === end.id)?.one };
   });
-  check(s.before !== 0 && s.ways.length >= 2 && s.ways.every((v) => v === s.before), 'one way by its join, and still after a station splits it', JSON.stringify(s));
+  check(s.before !== 0 && s.ways.length >= 2 && s.ways.every((v) => v === 0), 'one way by its join, and both ways once a station splits it (a terminus branch)', JSON.stringify(s));
   check(s.sw.ok && s.one === 2, 'the end of single track takes a one-platform station', JSON.stringify([s.sw, s.one]));
   const bad = errors.filter((e) => !/favicon|404/.test(String(e)));
   check(bad.length === 0, 'no console errors', bad.slice(0, 3).join(' | '));

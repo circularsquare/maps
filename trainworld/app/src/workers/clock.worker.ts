@@ -1723,14 +1723,16 @@ async function masksBeforeLoad(net: Uint8Array) {
   await ensureMasks(missing);
 }
 
-/** Put a network (in the world frame) in the track model, with the masks of the zones it meets. */
-async function openNetwork(net: Uint8Array) {
+/** Put a network (in the world frame) in the track model, with the masks of the zones it meets. `level`: the
+ * save level a player's game was written at (T-3647, `TrackApi.set_load_level`), absent for this build's. */
+async function openNetwork(net: Uint8Array, level?: number) {
   await worldWaterIntoModel();
   // T-3478: a stalled index holds the open no longer than its blocks may; the blocks follow when it lands
   await Promise.race([terrainIndexIntoModel(), new Promise((r) => setTimeout(r, LOAD_TERRAIN_WAIT_MS))]);
   await masksBeforeLoad(net);
+  if (level !== undefined) api!.set_load_level(level);
   if (!api!.load(net)) throw new Error(SAVE_DAMAGED);
-  await masksForLoaded(net);
+  await masksForLoaded(net, level);
   await terrainForLoaded();
   // T-1929: the roads under the blueprint, so its quote has them before Construct waits for them
   void roadsUnder(...blueprintPolylines());
@@ -1738,7 +1740,7 @@ async function openNetwork(net: Uint8Array) {
 
 /** After a network is loaded: the masks of every zone its track meets, then the network opened again
  * over them if any was missing (each mask installed on a loaded network would rework all of it). */
-async function masksForLoaded(net: Uint8Array) {
+async function masksForLoaded(net: Uint8Array, level?: number) {
   const a = api!;
   syncFrame();
   const xy: number[] = [];
@@ -1761,6 +1763,7 @@ async function masksForLoaded(net: Uint8Array) {
   if (!missing.length) return;
   a.load(emptyTrack!);
   await ensureMasks(missing);
+  if (level !== undefined) a.set_load_level(level);
   if (!a.load(net)) throw new Error(SAVE_DAMAGED);
 }
 
@@ -2931,7 +2934,8 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // T-1539: the demand result kept for this save's network can show while the network is worked out
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
-  await openNetwork(net);
+  // T-3647: a player's game saved before 0.4 keeps the way its single track ran then
+  await openNetwork(net, fresh ? undefined : decoded.header.level ?? 0);
   // T-3297: a real network started on the other side than its save keeps to
   if (fresh?.rightHand !== undefined && fresh.rightHand !== api!.right_hand()) api!.flip_right_hand();
   api!.set_fleet(h.fleet ?? 0);
