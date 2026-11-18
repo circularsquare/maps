@@ -408,6 +408,93 @@ fn t3565_way_off_and_on() {
     }
 }
 
+/// T-3651: double track straight through the middle of `pair_track`, between the legs' junctions:
+/// the passing tracks between two side platforms, quicker than either leg. Returns its pieces.
+fn add_centre(a: &mut TrackApi) -> Vec<u32> {
+    let (j0, j1) = (node_near(a, 2000.0, 0.0), node_near(a, 4000.0, 0.0));
+    assert_eq!(a.add_route(&ends(at_node(a, j0), at_node(a, j1)), &[], 2, false), 0, "{}", a.issues());
+    let net = &a.w.net;
+    let mid = |e: u32| (net.node_x[net.edge_a[e as usize] as usize] + net.node_x[net.edge_b[e as usize] as usize]) / 2.0;
+    (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 2 && mid(e) > 2000.0 && mid(e) < 4000.0).collect()
+}
+
+/// Neither run of line `l` uses any of `centre`.
+fn assert_off_centre(a: &TrackApi, l: u32, centre: &[u32], what: &str) {
+    for (r, run) in a.w.svc.lines[l as usize].runs.iter().enumerate() {
+        assert!(run.segs.iter().all(|&p| !centre.contains(&(p >> 1))), "{what}: run {r} runs on the passing tracks, stops {:?}", a.w.net.line_stops(l));
+    }
+}
+
+/// T-3651 (Zui, 2026-11-18): side platforms (a one-way station on each leg) with the passing tracks
+/// between them, and the line's far end a station at the end of single track (T, 1.5 km of single
+/// track west of the double). Given or clicked in either order, on both running sides, the line runs
+/// T to Q: each run through its own leg's platform, never the middle, turning back at T and Q only.
+/// Master made it [T, n, Q, s], its way back up and down the middle. A save holding that order loads
+/// as it should be.
+#[test]
+fn t3651_side_platforms_beside_passing_tracks() {
+    for right_hand in [true, false] {
+        for order in 0..2 {
+            let (mut a, [_, q, n, s]) = pair(right_hand, 40.0);
+            let p0 = node_near(&a, 0.0, 0.0);
+            assert_eq!(a.add_route(&ends(free(-1500.0, 0.0), at_node(&a, p0)), &[], 1, false), 0, "{}", a.issues());
+            let t = end_station(&mut a, -1500.0, 0.0);
+            let centre = add_centre(&mut a);
+            let what = format!("right hand {right_hand}, order {order}");
+            let mid = if order == 0 { [n, s] } else { [s, n] };
+            let l = new_line(&mut a, &[t, mid[0], mid[1], q]);
+            let ends_tq = |a: &TrackApi, l: u32| {
+                let st = a.w.net.line_stops(l);
+                (st[0], st[st.len() - 1]) == (t, q) || (st[0], st[st.len() - 1]) == (q, t)
+            };
+            assert!(ends_tq(&a, l), "{what}, set: ends T and Q, {:?}", a.w.net.line_stops(l));
+            assert_served_once(&a, l, &[n, s], &format!("{what}, set"));
+            assert_off_centre(&a, l, &centre, &format!("{what}, set"));
+            let c = new_line(&mut a, &[t, q]);
+            assert_eq!(a.add_stop(c, mid[0]), 0, "{what}: {}", a.issues());
+            assert_eq!(a.add_stop(c, mid[1]), 0, "{what}: {}", a.issues());
+            assert_eq!(a.w.net.line_stops(c).len(), 4, "{what}: both one-way stations are stops");
+            assert!(ends_tq(&a, c), "{what}, clicked: ends T and Q, {:?}", a.w.net.line_stops(c));
+            assert_served_once(&a, c, &[n, s], &format!("{what}, clicked"));
+            assert_off_centre(&a, c, &centre, &format!("{what}, clicked"));
+
+            // a save with the line as master made it: T, one leg's station, Q, the other's
+            let good = made(&a, l);
+            let first = if a.w.net.route_hops_plain(&[t, n, q]).is_ok_and(|p| a.w.net.path_reversals(&p).is_empty()) { n } else { s };
+            let bad = [t, first, q, if first == n { s } else { n }];
+            let mut d = a.w.net.line_data(l).unwrap();
+            d.path = a.w.net.route_hops_plain(&bad).unwrap();
+            d.stops = bad.to_vec();
+            assert!(a.w.net.set_line(l, Some(d)).is_ok());
+            assert_eq!(a.w.net.line_stops(l), &bad[..], "{what}: the save holds the broken order");
+            let mut b = api(right_hand);
+            assert!(b.load(&a.save()), "{what}: loads");
+            assert_eq!(made(&b, l), good, "{what}: the save's line comes back as it should be");
+            assert_served_once(&b, l, &[n, s], &format!("{what}, loaded"));
+            assert_off_centre(&b, l, &centre, &format!("{what}, loaded"));
+        }
+    }
+}
+
+/// T-3651: with the passing tracks, one to three stations a leg, every click order makes the same
+/// line, each one-way station served once by its own leg's run.
+#[test]
+fn t3651_passing_tracks_click_order_never_matters() {
+    for right_hand in [true, false] {
+        let rh = format!("right hand {right_hand}");
+        for (xn, xs, sample) in [(&[0.0][..], &[0.0][..], 0), (&[-300.0, 300.0][..], &[0.0][..], 80), (&[-400.0, 0.0, 400.0][..], &[-200.0, 200.0, 500.0][..], 60)] {
+            let (mut a, [ar, lo, e12, un], ns, ss) = pair_wide(right_hand, 40.0, xn, xs);
+            let centre = add_centre(&mut a);
+            let set: Vec<u32> = [ar, lo, e12, un].into_iter().chain(ns.iter().copied()).chain(ss.iter().copied()).collect();
+            let what = format!("{rh}, {} and {}", ns.len(), ss.len());
+            let l = same_line_every_order(&mut a, &set, sample, &what);
+            let legs: Vec<u32> = ns.iter().chain(&ss).copied().collect();
+            assert_served_once(&a, l, &legs, &what);
+            assert_off_centre(&a, l, &centre, &what);
+        }
+    }
+}
+
 /// Probe: a real save's rail lines (`T3565_NET`, from `python trainworld/checks/save_net.py <save>
 /// <out>`), one line each: id, name, broken, stops, both runs' lengths and reversals, round trip.
 ///   cargo test --release oneleg_probe -- --ignored --nocapture

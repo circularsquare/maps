@@ -1086,8 +1086,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   one-way single track (both its pieces single and one way; a one-track station on double track is none) is a
   one-way station. A line stopping at one is served there once a round trip, by the run whose track passes it, where
   that run passes it; the other run goes by on its own track, neither turning back nor looping to reach it. Routing
-  skips the one-way stations on the other run's track (`route_legs`, first in `route_hops`); one neither run's track
-  passes is routed through as any stop. The other run keeps the stop in its per-stop arrays as a pass (`run.pass`,
+  skips the one-way stations on the other run's track (`route_legs`, first in `route_hops`). One that neither run's
+  quickest route through the other stops passes (faster track beside its leg, as passing tracks between two side
+  platforms) is taken by the run that can reach it without turning back more often (T-3651, `leg_run`, `take_legs`);
+  one no run can take that way is routed through as any stop. The other run keeps the stop in its per-stop arrays as a pass (`run.pass`,
   `Run::away`; placed at its path's node nearest the station; no dwell, no riders, no departures there). A one-way
   station's place in the stop list comes from the track, never from click order: the line's other stops are a
   skeleton in the line's order (a click puts a new one where `best_slot` puts it), its one-way stations a set, each

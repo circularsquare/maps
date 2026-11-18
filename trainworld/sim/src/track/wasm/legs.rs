@@ -65,9 +65,24 @@ fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo) -> Optio
         left = sorted;
         (skel.to_vec(), route_memo(net, skel, memo)?)
     } else {
-        let fwd = route_memo(net, skel, memo).filter(|p| !p.is_empty())?;
+        let mut fwd = route_memo(net, skel, memo).filter(|p| !p.is_empty())?;
         let rs: Vec<u32> = skel.iter().rev().copied().collect();
-        let back = route_memo(net, &rs, memo).filter(|p| !p.is_empty())?;
+        let mut back = route_memo(net, &rs, memo).filter(|p| !p.is_empty())?;
+        // T-3651: one neither passes (faster track beside its leg) is taken by the run that can
+        let (fnodes, bnodes) = (nodes_of(net, &fwd), nodes_of(net, &back));
+        let off: Vec<u32> = sorted.iter().copied().filter(|s| !fnodes.contains(s) && !bnodes.contains(s)).collect();
+        if !off.is_empty() {
+            if let Some((_, p)) = net.take_legs(skel, &off) {
+                fwd = p;
+            }
+            let fnodes = nodes_of(net, &fwd);
+            let rest: Vec<u32> = off.into_iter().filter(|s| !fnodes.contains(s)).collect();
+            if !rest.is_empty() {
+                if let Some((_, p)) = net.take_legs(&rs, &rest) {
+                    back = p;
+                }
+            }
+        }
         let (fnodes, bnodes) = (nodes_of(net, &fwd), nodes_of(net, &back));
         let fat = super::super::net::match_stops(&fnodes, skel, &net.stop_reversals(&fwd))?;
         let bat = super::super::net::match_stops(&bnodes, &rs, &net.stop_reversals(&back))?;
