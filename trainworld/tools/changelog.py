@@ -1,7 +1,7 @@
 """The changelog for the next published update (T-3424).
 
 One JSON file per release under trainworld/changelog/. The unpublished one is next.json; publish renames it to
-<version>.json. An item: id (c001...), text (what the agent wrote), edited (Anita's wording, or null), hidden,
+<version>.json. An item: id (c001...; <tree>-1 inside an agent tree until finish moves it),text (what the agent wrote), edited (Anita's wording, or null), hidden,
 task, by, at, rev (counts changes, so a page saving over a newer change gets refused), area (its icon, T-3466: one of
 AREAS), fix (a bug fix: lighter text, after its area's other items), parent (the id of the group it sits under) and
 group (true for a group item, like "track bug fixes", that others sit under) and highlight (true on a top-level item or
@@ -125,6 +125,22 @@ def check_parent(d, parent, item_id=None):
         raise ValueError("%s is not a group" % parent)
 
 
+def tree_name():
+    """The agent tree this copy of the script sits in (maps/.tw-trees/<name>/...), else None."""
+    m = re.search(r"[\\/]\.tw-trees[\\/]([^\\/]+)[\\/]", ROOT + os.sep)
+    return m.group(1) if m else None
+
+
+def next_id(items):
+    """c### in the main tree. In an agent tree a provisional <tree>-1, <tree>-2: four trees each making c014 confused
+    reports. agent-tree.mjs finish moves the items to the main tree, which gives them their c###."""
+    tree = tree_name()
+    if tree:
+        mine = [int(m.group(1)) for i in items if (m := re.fullmatch(re.escape(tree) + r"-(\d+)", i["id"]))]
+        return "%s-%d" % (tree, max(mine + [0]) + 1)
+    return "c%03d" % (max([int(i["id"][1:]) for i in items if re.fullmatch(r"c\d+", i["id"])] + [0]) + 1)
+
+
 def add_item(text, task=None, by="agent", path=NEXT, area=None, fix=False, parent=None, group=False):
     text = " ".join(text.split())
     if not text:
@@ -133,8 +149,7 @@ def add_item(text, task=None, by="agent", path=NEXT, area=None, fix=False, paren
     with Locked(path):
         d = read(path)
         check_parent(d, parent)
-        n = max([int(i["id"][1:]) for i in d["items"]] + [0]) + 1
-        item = {"id": "c%03d" % n, "text": text, "edited": None, "hidden": False,
+        item = {"id": next_id(d["items"]), "text": text, "edited": None, "hidden": False,
                 "task": task, "by": by, "at": now(), "rev": 1, "area": area, "fix": bool(fix)}
         if parent:
             item["parent"] = parent

@@ -7,6 +7,10 @@
 //   node trainworld/checks/agent-tree.mjs finish <name> "<one sentence>" [--task T-1,T-2 --outcome "..." [--notes notes/T-1.md]]
 //        [--keep-tree] [--dry-run] [--log <file>]   orchestrator: land + archive in one go, one line per step (T-3554)
 //        [--coauthor "Name <email>"]   repeatable: a contributor credited in the commit's trailer
+// A rebase conflict in DECISIONS.md, ARCHIVE.md, notes/*.md or research/*.md keeps both sides (master's first); any other
+// conflict stops. If master will not fast-forward over the main tree's uncommitted edits, the message names the files
+// and the command. `remove` and `finish` name the processes that may hold a tree (never kill them), refuse when this
+// shell's cwd is inside it, and clean up an empty folder a failed removal left (T-3665).
 // `land` takes everything changed under trainworld/ in the tree (committed on the branch or not), rebases it
 // onto master, squashes it into one commit and fast-forwards master to it. Master's own uncommitted edits
 // stay; git stops the fast-forward if one of them is in a file the commit touches. A landing that
@@ -138,6 +142,108 @@ function restoreGameJson(dir) {
   fs.rmSync(copiedFile(dir), { force: true });
 }
 
+// T-3665: a rebase conflict in a doc that only ever grows (both sides added lines, or both added the same note) keeps
+// both texts, master's first; any other conflict stops as before. If one side already holds the other, that side is kept.
+const APPEND_ONLY = /^trainworld\/(DECISIONS\.md|ARCHIVE\.md|notes\/.+\.md|research\/.+\.md)$/;
+const CONFLICT = /^<<<<<<< [^\n]*\n([\s\S]*?)(?:^\|\|\|\|\|\|\| [^\n]*\n[\s\S]*?)?^=======\r?\n([\s\S]*?)^>>>>>>> [^\n]*(?:\n|$)/gm;
+function keepBoth(text) {
+  return text.replace(CONFLICT, (_, a, b) => {
+    const has = (big, small) => big.replace(/\r/g, '').includes(small.replace(/\r/g, '').trim());
+    if (has(b, a)) return b;
+    if (has(a, b)) return a;
+    return a + (a.endsWith('\n') || !a ? '' : '\n') + b;
+  });
+}
+function rebaseOntoMaster(dir) {
+  let last;
+  try { gitLoud(dir, 'rebase', '-q', 'master'); return; } catch (e) { last = e; }
+  for (let round = 0; round < 30; round++) {
+    const unmerged = git(dir, 'status', '--porcelain').split('\n').filter((l) => /^(AA|UU|DD|AU|UA|DU|UD) /.test(l));
+    if (!unmerged.length) fail(`the rebase onto master failed in ${dir} without a conflict: ${last.message}`);
+    const bad = unmerged.filter((l) => !/^(AA|UU) /.test(l) || !APPEND_ONLY.test(l.slice(3).trim()));
+    if (bad.length) {
+      fail(`the rebase onto master stopped on a conflict in ${dir}: ${bad.map((l) => l.slice(3).trim()).join(', ')}. Resolve there and \`git rebase --continue\`, or \`git rebase --abort\`; then land again ` +
+        `(only a conflict in DECISIONS.md, ARCHIVE.md, notes/*.md or research/*.md is merged by keeping both sides)`);
+    }
+    for (const l of unmerged) {
+      const rel = l.slice(3).trim();
+      const file = path.join(dir, rel);
+      const out = keepBoth(fs.readFileSync(file, 'utf8'));
+      if (/^(<<<<<<<|=======|>>>>>>>)/m.test(out)) fail(`could not merge the conflict markers in ${rel} (${dir}); resolve there by hand`);
+      fs.writeFileSync(file, out);
+      gitLoud(dir, 'add', '--', rel);
+      say(`rebase conflict in ${rel}: kept both sides, master's first`);
+    }
+    try { run('git', ['-C', dir, '-c', 'core.editor=true', 'rebase', '--continue']); return; } catch (e) { last = e; }
+  }
+  fail(`the rebase onto master in ${dir} kept conflicting after 30 rounds; resolve there by hand`);
+}
+
+// T-3665: what could be holding a tree open. A shell's cwd is not readable from outside, but this process inherits the
+// shell's cwd, which is the usual culprit (2026-11-18: an orchestrator shell inside the tree, "Permission denied").
+function cwdInside(dir) {
+  const norm = (p) => path.resolve(p).toLowerCase().replace(/\//g, '\\');
+  const here = norm(process.cwd()), mine = norm(dir);
+  return here === mine || here.startsWith(mine + '\\') ? `this shell's current directory is ${process.cwd()} (cd out of the tree first)` : null;
+}
+function holders(dir) {
+  const norm = (p) => path.resolve(p).toLowerCase().replace(/\//g, '\\');
+  const mine = norm(dir);
+  const found = [];
+  const c = cwdInside(dir);
+  if (c) found.push(c);
+  if (process.platform === 'win32') {
+    const r = spawnSync('powershell', ['-NoProfile', '-Command',
+      'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Compress'], { encoding: 'utf8', maxBuffer: 1 << 28 });
+    let list = [];
+    try { const j = JSON.parse(r.stdout); list = Array.isArray(j) ? j : [j]; } catch { /* no listing */ }
+    if (!list.length) found.push('(could not list processes)');
+    for (const p of list) {
+      if (p.ProcessId === process.pid || p.ProcessId === process.ppid || !p.CommandLine) continue;
+      if (/Get-CimInstance Win32_Process/.test(p.CommandLine)) continue;
+      if (norm(p.CommandLine.replace(/\//g, '\\')).includes(mine)) found.push(`pid ${p.ProcessId} ${p.Name}: ${p.CommandLine.slice(0, 160)}`);
+    }
+    found.push('(a shell sitting in the tree has no command line to find: look at your open shells too)');
+  }
+  return found;
+}
+
+const relink = (dir) => {
+  for (const rel of LINKS) {
+    const target = path.join(maps, rel), p = path.join(dir, rel);
+    if (!fs.existsSync(target) || fs.existsSync(p)) continue;
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.symlinkSync(target, p, 'junction');
+  }
+};
+
+// Removes a tree and its branch. Never kills anything; names what may hold it when git cannot remove it.
+function removeTree(dir, branch) {
+  const cwd = cwdInside(dir);
+  if (cwd) fail(`${dir} was not removed: ${cwd}`);
+  if (fs.existsSync(dir) && !fs.existsSync(path.join(dir, '.git'))) {
+    // left by an earlier failed removal
+    try { fs.rmdirSync(dir); say(`cleaned up the leftover folder ${dir}`); } catch {
+      fail(`${dir} is not a worktree and not empty (${fs.readdirSync(dir).slice(0, 5).join(', ')}); delete it by hand. Possibly held by:\n  ${holders(dir).join('\n  ')}`);
+    }
+    gitLoud(maps, 'worktree', 'prune');
+  }
+  if (fs.existsSync(dir)) {
+    unlinkJunctions(dir);
+    try { gitLoud(maps, 'worktree', 'remove', '--force', dir); } catch (e) {
+      // git can drop the checkout and leave the folder (empty, or holding what it could not delete)
+      if (fs.existsSync(dir) && !fs.existsSync(path.join(dir, '.git'))) { try { fs.rmdirSync(dir); } catch { /* not empty */ } }
+      if (fs.existsSync(dir)) {
+        if (fs.existsSync(path.join(dir, '.git'))) relink(dir);
+        const h = holders(dir);
+        fail(`${dir} was not removed (${e.message.split('\n')[0]}). Possibly held by:\n  ${h.join('\n  ')}\nClose or stop them yourself, then: node trainworld/checks/agent-tree.mjs remove ${path.basename(dir)}`);
+      }
+      gitLoud(maps, 'worktree', 'prune');
+    }
+  }
+  try { git(maps, 'branch', '-D', branch); } catch { /* already gone */ }
+}
+
 // Puts the tree's work on master as one commit; returns the trainworld/ files it changed.
 function landTree(dir, branch, message, coauthors = []) {
   if (!message) fail('land needs a commit message');
@@ -150,15 +256,23 @@ function landTree(dir, branch, message, coauthors = []) {
   // The links are untracked junctions; `add trainworld` must not see them as content.
   gitLoud(dir, 'add', '--all', '--', 'trainworld');
   if (git(dir, 'diff', '--cached', '--name-only')) gitLoud(dir, 'commit', '-q', '-m', 'agent-tree: work in progress');
-  try { gitLoud(dir, 'rebase', '-q', 'master'); } catch (e) {
-    fail(`the rebase onto master stopped on a conflict in ${dir}: resolve there and \`git rebase --continue\`, or \`git rebase --abort\`; then land again`);
-  }
+  rebaseOntoMaster(dir);
   gitLoud(dir, 'reset', '-q', '--soft', 'master');
   // one trailer paragraph, so GitHub credits a contributor (--coauthor) beside the agent
   const trailers = [...coauthors.map((c) => `Co-Authored-By: ${c}`), 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'];
   gitLoud(dir, 'commit', '-q', '-m', message, '-m', trailers.join('\n'));
   try { gitLoud(maps, 'merge', '-q', '--ff-only', branch); } catch (e) {
-    fail(`master did not fast-forward to ${branch} (an uncommitted edit in master's tree touches the same file, or master moved): the commit waits on the branch`);
+    const name = path.basename(dir);
+    const touched = new Set(git(maps, 'diff', '--name-only', `master..${branch}`).split('\n').filter(Boolean));
+    // not git(): its trim would eat the first line's leading space
+    const dirty = execFileSync('git', ['-C', maps, 'status', '--porcelain', '--untracked-files=no'], { encoding: 'utf8' }).split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^"|"$/g, ''));
+    const blockers = dirty.filter((f) => touched.has(f));
+    if (blockers.length) {
+      fail(`master did not fast-forward to ${branch}: the main tree has uncommitted edits in ${blockers.join(', ')}, which the landing commit also changes. The commit waits on the branch; nothing of the main tree was touched.\n` +
+        `Commit them first (they are the orchestrator's): git -C ${maps} commit -m "<one sentence>" -- ${blockers.join(' ')}\n` +
+        `then land again: node trainworld/checks/agent-tree.mjs ${LOG ? 'finish' : 'land'} ${name} <the same arguments as before>`);
+    }
+    fail(`master did not fast-forward to ${branch} (master moved while landing, or git refused for another reason; see the log): the commit waits on the branch; land again`);
   }
   say(`master is now ${git(maps, 'log', '-1', '--format=%h %s')}`);
   return tw;
@@ -225,6 +339,8 @@ function finishTree(args) {
   if (tasks.length && !o.outcome) { console.error('--task needs --outcome "..."'); process.exit(2); }
   const { dir, branch } = treeOf(name);
   if (!fs.existsSync(dir)) { console.error(`no tree ${dir}`); process.exit(1); }
+  const inside = o.keep ? null : cwdInside(dir);
+  if (inside) { console.error(`finish stopped before changing anything: ${inside}`); process.exit(1); }
   const logDir = fs.existsSync(path.join(maps, 'artifacts', 'trainworld')) ? path.join(maps, 'artifacts', 'trainworld') : os.tmpdir();
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
   LOG = o.log ? path.resolve(o.log) : path.join(logDir, `finish-${name}-${stamp}.log`);
@@ -256,7 +372,8 @@ function finishTree(args) {
         if (cl.baseText === null) { fs.rmSync(path.join(dir, CHANGELOG), { force: true }); try { git(dir, 'rm', '-q', '--cached', '--', CHANGELOG); } catch { /* untracked */ } }
         else gitLoud(dir, 'checkout', cl.base, '--', CHANGELOG);
         for (const it of fresh) {
-          const a2 = [path.join(maps, 'trainworld', 'tools', 'changelog.py'), 'add', it.text, '--area', it.area ?? 'other'];
+          // an item reworded inside the tree moves with its new wording
+          const a2 = [path.join(maps, 'trainworld', 'tools', 'changelog.py'), 'add', it.edited || it.text, '--area', it.area ?? 'other'];
           if (it.fix) a2.push('--fix');
           if (it.task) a2.push('--task', it.task);
           if (it.by) a2.push('--by', it.by);
@@ -294,9 +411,7 @@ function finishTree(args) {
     if (o.keep) line(4, `tree kept: ${dir}`);
     else {
       if (!o.dry) {
-        unlinkJunctions(dir);
-        gitLoud(maps, 'worktree', 'remove', '--force', dir);
-        try { git(maps, 'branch', '-D', branch); } catch { /* already gone */ }
+        removeTree(dir, branch);
         state.removed = true;
       }
       line(4, `tree ${o.dry ? 'would be removed' : 'removed'}: ${name}`);
@@ -372,13 +487,11 @@ if (cmd === 'new') {
 } else if (cmd === 'remove') {
   const { dir, branch } = treeOf(name);
   const force = rest.includes('--force');
-  if (fs.existsSync(dir)) {
+  if (fs.existsSync(path.join(dir, '.git'))) {
     const { tw, other } = changes(dir);
     if (!force && (tw.length || other.length)) fail(`${dir} has ${tw.length + other.length} changed files not on master; land them or pass --force`);
-    unlinkJunctions(dir);
-    gitLoud(maps, 'worktree', 'remove', '--force', dir);
   }
-  try { git(maps, 'branch', '-D', branch); } catch { /* already gone */ }
+  removeTree(dir, branch);
   console.log(`removed ${name}`);
 } else {
   console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(0, 12).join('\n'));
