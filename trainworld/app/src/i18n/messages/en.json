@@ -2464,6 +2464,7 @@
   "tripText.termCrossingTime": "crossing time",
   "tripText.termCrowding": "crowding",
   "tripText.termDrive": "drive",
+  "tripText.termDrivenByParent": "driven by a parent",
   "tripText.termDropOff": "drop-off",
   "tripText.termFare": "fare",
   "tripText.termFlight": "flight",

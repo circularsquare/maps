@@ -829,6 +829,32 @@ fn everyday_pairs_across_a_zone_line() {
     bad[0] = with_everyday(&packs[0], [1000., 100.], false);
     assert!(IntercityApi::new(&composition(&bad, Some(&rows))).is_err());
 }
+/// T-3624: a school outing across a zone line weighs its car twice in the choice: rail takes more of
+/// it than of the same outing as an errand, and the medical visits beside it do not move.
+#[test]
+fn school_outings_weigh_the_car_twice() {
+    let packs = world_packs();
+    let rows = rows_json(&packs);
+    let solved = |kinds: [usize; 2]| {
+        let mut v: serde_json::Value = serde_json::from_str(&with_everyday(&packs[0], [1000., 100.], true)).unwrap();
+        v["everyday_kind"] = serde_json::json!(kinds);
+        let mut e_packs = packs.clone();
+        e_packs[0] = v.to_string();
+        let mut a = IntercityApi::new(&composition(&e_packs, Some(&rows))).unwrap();
+        world_lines(&mut a, true, true);
+        solve_all(&mut a);
+        a
+    };
+    let (errands, school) = (solved([0, 5]), solved([crate::demand::everyday::SCHOOL, 5]));
+    let mut more = false;
+    for q in 0..PERIODS {
+        let (e, s) = (&errands.per(q).unwrap().e_frac, &school.per(q).unwrap().e_frac);
+        assert_eq!(e[1].to_bits(), s[1].to_bits(), "period {q}: the medical visits do not move");
+        assert!(s[0] >= e[0], "period {q}: {} {}", s[0], e[0]);
+        more |= s[0] > e[0] && e[0] > 0.;
+    }
+    assert!(more, "rail takes more of the school outing");
+}
 /// T-1229: the everyday pairs by purpose: in `part_summary` by kind and `everyday_by_place`, in a
 /// selection's blocks (all modes from the market alone, rail and the walkers rail takes from the
 /// network), and in the trip explorer between the two places.

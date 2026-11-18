@@ -12,7 +12,7 @@
 //! layer's `no_rail` does (straight walks: no pack's water routes span two packs). The regional
 //! layer carries those pairs.
 use super::{
-    everyday::{local_share, AIRPORT_CLEAR_M, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
+    everyday::{car_mul, local_share, AIRPORT_CLEAR_M, CENTRAL_DECAY_M, CENTRAL_SHARE, DECAY, KINDS},
     kernel::{zones_from_pack, Params, Zones, CELL_KM2},
     pack,
 };
@@ -263,18 +263,20 @@ impl CrossPack {
     }
 
     /// The share walking the whole way with no rail between home cell `h` (this pack) and activity
-    /// cell `a` (pack `q`), `d` metres apart: `EverydayApi::no_rail` with no water routes.
-    fn no_rail(&self, h: usize, q: &CrossPack, a: usize, d: f32) -> f32 {
+    /// cell `a` (pack `q`), `d` metres apart, purpose `kind`: `EverydayApi::no_rail` with no water
+    /// routes.
+    fn no_rail(&self, kind: usize, h: usize, q: &CrossPack, a: usize, d: f32) -> f32 {
         let p = &self.p;
         let cw = p.walk_trip_cost(d / 1000.0);
         let hp = p.home_park_at(self.home_dens[h]);
         let (hz, az) = (self.z.cell_zone[h] as usize, q.z.cell_zone[a] as usize);
         let f = p.road_detour;
+        let cm = car_mul(kind);
         let mut out = 0.0;
         for ((pu, u), (pv, v)) in [((self, hz), (q, az)), ((q, az), (self, hz))] {
             let (fixed, paid, free) = pv.park[v];
             let road = p.car_drive(p.drive_min_f(d, f, pu.place[u], pv.place[v]), d * 0.001 * f) + fixed + hp;
-            out += 0.5 * p.walk_no_rail(road, paid, free, cw);
+            out += 0.5 * p.walk_no_rail(road * cm, paid * cm, free, cw);
         }
         out
     }
@@ -502,7 +504,7 @@ pub fn run(packs: &mut [CrossPack], borders: &Value, threads: usize) -> Unit {
                                         for &c in &cells_j {
                                             let (a, c) = (a as usize, c as usize);
                                             let dm = ((p.cwx[a] - qp.cwx[c]).powi(2) + (p.cwy[a] - qp.cwy[c]).powi(2)).sqrt() as f32;
-                                            walk += if site_anchored(s) { qp.no_rail(c, p, a, dm) } else { p.no_rail(a, qp, c, dm) } as f64;
+                                            walk += if site_anchored(s) { qp.no_rail(slot_kind(s), c, p, a, dm) } else { p.no_rail(slot_kind(s), a, qp, c, dm) } as f64;
                                             nw += 1;
                                         }
                                     }
@@ -630,7 +632,7 @@ fn airport_draw(packs: &[CrossPack], grid: &HashMap<(i32, i32), Vec<(u32, u32)>>
                 for &(tc, f) in &a.cells {
                     let walk = if d <= WALK_PAIR_KM * 1000.0 {
                         let dm = ((q.cwx[c as usize] - p.cwx[tc as usize]).powi(2) + (q.cwy[c as usize] - p.cwy[tc as usize]).powi(2)).sqrt() as f32;
-                        q.no_rail(c as usize, p, tc as usize, dm) as f64
+                        q.no_rail(AIRPORT, c as usize, p, tc as usize, dm) as f64
                     } else {
                         0.0
                     };

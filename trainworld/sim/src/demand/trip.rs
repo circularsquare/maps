@@ -302,7 +302,10 @@ pub(crate) fn everyday_choice(ev: &TripInputs, sz: &Subzones, sk: &Skims, u: usi
     let car = p.car_drive(drive_min, distance * 0.001 * f);
     let road_free = car + fixed + sz.home_park[u];
     let park = fixed + (1.0 - free) * paid + sz.home_park[u];
-    let road = car + park;
+    // T-3624: the purpose's weight on the car, as the pass has it (`park` stays the parking alone)
+    let cm = ev.car_mul;
+    let (road_free, paid) = (road_free * cm, paid * cm);
+    let road = (car + park) * cm;
     let cw = p.walk_trip_cost(walk_on / 1000.0);
     let b_u = if by_ride { sz.bound_min(p, u) } else { m_u };
     let why = if b_u + m_v > p.pair_walk_max {
@@ -673,16 +676,17 @@ impl DemandApi {
             let car = p.car_drive(drive, rk);
             // walking against that drive, as the zones' totals have it (`NoRail::split`)
             let (fixed, paid, free) = p.park_parts(&self.z, j);
-            let pw = match m {
-                Model::Commute => p.walk_no_rail(car + fixed + hp, paid, free, walk_cost(self, i, j)),
-                Model::Everyday(ev) => ev.no_rail,
+            let (pw, cm) = match m {
+                Model::Commute => (p.walk_no_rail(car + fixed + hp, paid, free, walk_cost(self, i, j)), 1.0),
+                Model::Everyday(ev) => (ev.no_rail, ev.car_mul),
             };
             h[7] = dm as f64;
             h[8] = pw as f64;
             h[9] = drive as f64;
             h[10] = (drive * p.w_drive) as f64;
             h[11] = (park - p.car_own_min()) as f64;
-            h[12] = (car + park) as f64;
+            // T-3624: the car as the purpose weighs it (the parts above are a driver's own)
+            h[12] = ((car + park) * cm) as f64;
             h[32] = (p.car_own_min() + rk * p.car_own_km_min()) as f64;
             h[35] = rk as f64;
             let pw = if apart { 0.0 } else { pw };

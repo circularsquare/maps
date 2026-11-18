@@ -207,6 +207,8 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   fares, which leaves the 0.5.
 - Owning the car: $2.10 a trip plus $0.1365 a km, at 3 minutes a dollar. A typical trip pays $3.05
   to $5.50, and a driver's day comes to about $14. The long trips between cities pay none.
+- Going to school, all of the above counts twice: pupils don't drive, a parent drives them and
+  makes the trip too. So school trips walk and take the train more. University counts once.
 - Everyone can drive. "Walking" also stands for cycling and short bus trips (one reason its share
   runs above the census's), and "car" for driving, taxis and longer bus trips. The trip explorer's
   Walk and Drive rows say so in their hovers.

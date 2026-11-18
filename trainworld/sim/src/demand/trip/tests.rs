@@ -16,13 +16,24 @@ fn small() -> (DemandApi, Vec<f32>) {
 
 /// The same city and network for the everyday purposes (T-586).
 fn small_everyday() -> EverydayApi {
+    small_everyday_with(false)
+}
+
+/// With `school`, school pupils too (children in every cell, a school every 17th), whose car
+/// counts twice (T-3624).
+fn small_everyday_with(school: bool) -> EverydayApi {
     let (h, mut b, n) = small_pack();
     // errand and leisure attractors, uneven from cell to cell
     let jobs: Vec<f32> = (0..n).map(|c| ((c * 7919) % 13) as f32).collect();
     let mut h: serde_json::Value = serde_json::from_str(&h).unwrap();
-    for name in ["errand_jobs", "leisure_jobs"] {
+    let mut arrays: Vec<(&str, Vec<f32>)> = vec![("errand_jobs", jobs.clone()), ("leisure_jobs", jobs)];
+    if school {
+        arrays.push(("school_children", (0..n).map(|c| (c % 3) as f32 * 20.0).collect()));
+        arrays.push(("school_enrollment", (0..n).map(|c| if c % 17 == 0 { 500.0 } else { 0.0 }).collect()));
+    }
+    for (name, values) in arrays {
         let offset = b.len();
-        b.extend(jobs.iter().flat_map(|v| v.to_le_bytes()));
+        b.extend(values.iter().flat_map(|v| v.to_le_bytes()));
         h["arrays"].as_array_mut().unwrap().push(serde_json::json!({"name": name, "dtype": "f32", "per": "cell", "count": n, "offset": offset}));
     }
     let mut e = EverydayApi::new(&h.to_string(), &b).unwrap();
@@ -80,10 +91,33 @@ fn small_net() -> (Vec<f32>, Vec<u32>, Vec<f32>, Vec<f32>) {
 /// add up to 1; walking is the cells' share less the walkers rail takes.
 #[test]
 fn everyday_choice_reproduces_the_pass() {
+    // T-3624: and with school pupils, whose car counts twice in both
+    let mut with_school = small_everyday_with(true);
+    for q in [0usize, 2] {
+        assert!(with_school.solve(q));
+        reproduces_the_pass(&with_school, q, true);
+    }
     let mut e = small_everyday();
     for q in [0usize, 2] {
         assert!(e.solve(q));
+        reproduces_the_pass(&e, q, false);
+    }
+    // the query: a trip along line A answers, with routes, and its chances add up
+    let (sx, sy) = (-6000.0, 0.0);
+    let v = e.trip(0, 0, sx, sy, 6000.0, 0.0);
+    assert_eq!(v[0], 1.0);
+    assert!((v[17] + v[18] + v[19] - 1.0).abs() < 1e-6);
+    assert!(v[33] > 60.0, "a 12 km walk is over an hour: {}", v[33]);
+    assert_eq!(e.trip(0, 1, 0.0, 0.0, 1.0, 1.0)[0], 0.0, "period 1 is not solved");
+}
+
+fn reproduces_the_pass(e: &EverydayApi, q: usize, school: bool) {
+    {
         let samples = e.pair_samples(q);
+        if school {
+            let n = samples.iter().filter(|s| s.0 == crate::demand::everyday::SCHOOL).count();
+            assert!(n > 20, "school pairs checked: {n}");
+        }
         let api = e.engine();
         let sz = api.sz.as_ref().unwrap();
         let (mut worst, mut rail, mut checked) = (0f32, 0f32, 0);
@@ -110,13 +144,6 @@ fn everyday_choice_reproduces_the_pass() {
         assert!(checked > 100 && rail > 0.0);
         assert!(worst < 1e-6, "period {q}: rail chance off by {worst:.2e}");
     }
-    // the query: a trip along line A answers, with routes, and its chances add up
-    let (sx, sy) = (-6000.0, 0.0);
-    let v = e.trip(0, 0, sx, sy, 6000.0, 0.0);
-    assert_eq!(v[0], 1.0);
-    assert!((v[17] + v[18] + v[19] - 1.0).abs() < 1e-6);
-    assert!(v[33] > 60.0, "a 12 km walk is over an hour: {}", v[33]);
-    assert_eq!(e.trip(0, 1, 0.0, 0.0, 1.0, 1.0)[0], 0.0, "period 1 is not solved");
 }
 
 /// The pair choice is mode choice's: over every destination, an origin subzone's rail trips add

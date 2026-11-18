@@ -234,7 +234,7 @@ fn short_everyday_trips_walk_what_rail_leaves() {
     // proportion, so each cell walks its share of what rail leaves
     for c in 0..2 {
         let total = modes[c]+modes[3+c]+modes[6+c];
-        let pw = a.no_rail(c, 2, 400.0-city.x[c]);
+        let pw = a.no_rail(0, c, 2, 400.0-city.x[c]);
         assert!(pw>0.9, "{pw}");
         assert!(modes[c]>0.1*total, "rail takes some of them");
         assert!((modes[3+c]-(total-modes[c])*pw).abs()<1e-4*total, "cell {c}: walk {} rail {} total {total} pw {pw}", modes[3+c], modes[c]);

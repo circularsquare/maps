@@ -67,6 +67,8 @@ function timeEquation(tot: ReturnType<typeof routeTotals>): string {
 
 /** Walks over this straight-line distance are not offered by the model. */
 const WALK_REACH_M = 10000;
+/** T-3624: what a school trip's road cost holds beyond the drive, parking and ownership: the car's second weight. */
+const schoolExtra = (t: TripPeriod) => t.roadPerceived - t.drivePerceived - t.parkPerceived - t.carOwnPerceived;
 
 /** T-628, T-992: the headline gets a walk row when walking the whole way takes under this, real
  * minutes, or whatever it takes when walking has a share. */
@@ -483,6 +485,8 @@ export function TripInspector() {
           { label: termLabel("drive"), real: num1(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
           { label: termLabel("parking"), real: "", weight: 1, perceived: t.parkPerceived },
           ...(t.carOwnPerceived > 0 ? [{ label: termLabel("ownership"), real: usd(t.carOwnPerceived / carW), weight: carW, perceived: t.carOwnPerceived, usd: true }] : []),
+          // T-3624: a school trip weighs its car twice (sim everyday.rs SCHOOL_CAR_MUL); the rest of the road's cost is that
+          ...(v!.purpose === "school" && schoolExtra(t) > 0.05 ? [{ label: termLabel("driven by a parent"), real: "", weight: 1, perceived: schoolExtra(t) }] : []),
         ], avg ? t.roadPerceived : undefined) + (avg ? `\n${avgTip}` : "")}>
           <span class="grow">{tr("tripText.effectiveTime")}</span>
           <span class="val">{minText(t.roadPerceived)}</span>

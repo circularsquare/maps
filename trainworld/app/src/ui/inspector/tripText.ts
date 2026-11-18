@@ -65,6 +65,7 @@ export const modeName = (m: ModeId): string => t(MODE_KEYS[m]);
 const TERM_KEYS: Record<string, MessageKey> = {
   "starting the drive": "tripText.termStartingTheDrive",
   drive: "tripText.termDrive",
+  "driven by a parent": "tripText.termDrivenByParent",
   "drop-off": "tripText.termDropOff",
   "parking at the station": "tripText.termParkingAtStation",
   "parking at home": "tripText.termParkingAtHome",

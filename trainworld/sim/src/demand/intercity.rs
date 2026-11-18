@@ -19,7 +19,7 @@ use super::{
     api::{check_fare_curve, demand_back, demand_catches, demand_groups, demand_passages, demand_ups, fare_x_usd, merge_stations, put_fares, check_fare_mul, same_bits, span_for, scale_triples, DemandApi, Service, FARE_MIN_PER_USD, PEAK_HOUR_FACTOR, TO_HOME, TO_WORK},
     clock::now_ms,
     days::{everyday as everyday_purpose, lean_sign, load_factor, share_out, share_ret, LONGER, WEEKDAY, WORK},
-    everyday::{KIND_COUNT, OUTWARD, RETURN},
+    everyday::{car_mul, KIND_COUNT, OUTWARD, RETURN},
     kernel::*,
     network::PERIODS,
     pack::City,

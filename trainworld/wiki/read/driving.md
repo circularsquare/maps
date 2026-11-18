@@ -15,7 +15,9 @@ So a short trip in the city crawls and a long one is quick. Each minute behind t
 
 **Owning the car** costs too: $2.1 a trip plus $0.14 a km, turned into minutes. Long trips between cities pay for fuel and tolls instead.
 
+**School trips** weigh the car 2 times as heavily. Pupils don't drive. A parent drives them and makes the trip too, so more school trips walk or take the train.
+
 "The car" also stands for taxis and longer bus trips. "Walking" also stands for cycling and short bus trips. There's no separate count for those.
 
 Exact rule: `docs/demand-mode.md` "Weights, ferry fans, driving and parking" "Routed walking and driving". This page is commutes and everyday trips. Between cities the drive runs over a world road map with fuel and tolls, and pays no ownership cost: `docs/regional.md` "Mode choice".
-In the code: **main** `sim/src/demand/kernel.rs` `drive_min_f`, also `place_min_per_km`, `drive_factor`, `car_drive` `sim/src/demand/intercity/costs.rs` `routed_car`
+In the code: **main** `sim/src/demand/kernel.rs` `drive_min_f`, also `place_min_per_km`, `drive_factor`, `car_drive` `sim/src/demand/intercity/costs.rs` `routed_car` `sim/src/demand/everyday.rs` `car_mul`

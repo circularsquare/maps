@@ -40,6 +40,17 @@ fn has_central(kind: usize) -> bool {
 }
 /// The purposes' names in `set_extra` (`rate_errands`) and the pack's `everyday` block.
 pub const KINDS: [&str; KIND_COUNT] = ["errands", "social", "school", "university", "airport", "medical", "attractions"];
+pub const SCHOOL: usize = 2;
+/// T-3624: a trip to school weighs its car (time, money and parking alike) this many times, in
+/// mode choice only: pupils are driven by a parent who makes the drive too, so school leans to
+/// walking and transit (Anita, 2026-11-18: about twice; one factor, nothing else). University
+/// is its own kind and keeps 1.
+pub const SCHOOL_CAR_MUL: f32 = 2.0;
+/// The car's weight in purpose `kind`'s mode choice (`SCHOOL_CAR_MUL`).
+#[inline]
+pub fn car_mul(kind: usize) -> f32 {
+    if kind == SCHOOL { SCHOOL_CAR_MUL } else { 1.0 }
+}
 pub const OUTWARD: [[f32; 5]; KIND_COUNT] = [
     [0.10, 0.55, 0.30, 0.04, 0.01],
     [0.05, 0.35, 0.42, 0.17, 0.01],
@@ -402,6 +413,7 @@ mod tests;
 /// T-1222: the levels of detail against each other.
 #[cfg(test)]
 mod lod_tests;
+
 /// 0..n in pieces of 16k, for loops over every destination sample (3.2M on New York): each piece
 /// is one call of an out-of-line function, so the browser optimises it after the first few
 /// pieces (T-172; WebAssembly has no on-stack replacement).
@@ -1073,6 +1085,8 @@ pub(crate) struct TripInputs<'a> {
     pub pair: Option<(f32, f32)>,
     /// The two cells' share walking the whole way with no rail (`no_rail`).
     pub no_rail: f32,
+    /// The purpose's weight on the car (`car_mul`, T-3624).
+    pub car_mul: f32,
     /// The walk around water between the subzones' zones (T-275), as the pass weighs it.
     pub walk_factor: f32,
     /// The same between the two cells (T-720: the explorer's own trip).
@@ -1098,7 +1112,7 @@ impl EverydayApi {
             _ => self.walk_factor(c, d),
         };
         let walk_factor_cells = self.walk_factor(c, d);
-        Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(c, d, self.distance(c, d)), walk_factor, walk_factor_cells })
+        Some(TripInputs { engine: &self.engine, g: &st.g, p: &st.p, round: st.round, pair, no_rail: self.no_rail(kind, c, d, self.distance(c, d)), car_mul: car_mul(kind), walk_factor, walk_factor_cells })
     }
     /// One sample of every subzone pair: its purpose, home and activity cells, and the pair's
     /// rail chance outward in period `q` (trip.rs's check).
@@ -1150,8 +1164,9 @@ impl EverydayApi {
         self.ep.parts.as_ref().is_some_and(|pp| pp.cell[c] != pp.cell[d])
     }
     /// A sample's share walking the whole way with no rail (T-558, `Params::walk_no_rail`),
-    /// against the car each way (parking at the far end): the two ways' mean.
-    fn no_rail(&self, c: usize, d: usize, distance: f32) -> f32 {
+    /// against the car each way (parking at the far end, the car times purpose `kind`'s
+    /// `car_mul`): the two ways' mean.
+    fn no_rail(&self, kind: usize, c: usize, d: usize, distance: f32) -> f32 {
         let p = &self.ep;
         let z = &self.engine.z;
         let (hz, az) = (z.cell_zone[c] as usize, z.cell_zone[d] as usize);
@@ -1162,11 +1177,12 @@ impl EverydayApi {
         let mut out = 0.0;
         // T-854: the household's car is parked at home, so both ways pay the home end's parking
         let hp = p.home_park_cell(c);
+        let cm = car_mul(kind);
         for (u, v) in [(hz, az), (az, hz)] {
             let f = p.drive_factor(u, v);
             let (fixed, paid, free) = self.wpark[v];
             let road = p.car_drive(p.drive_min_f(distance, f, self.wplace[u], self.wplace[v]), distance * 0.001 * f) + fixed + hp;
-            out += 0.5 * p.walk_no_rail(road, paid, free, cw);
+            out += 0.5 * p.walk_no_rail(road * cm, paid * cm, free, cw);
         }
         out
     }
@@ -1278,7 +1294,7 @@ impl EverydayApi {
         };
         let kept = self.kept.get(kind).filter(|k| !k.is_empty()).map_or(1.0, |k| k[self.engine.z.cell_zone[if site_anchored(kind) { d } else { c }] as usize]);
         let weight = budget * self.rate[kind] * share * local_share(distance) * kept;
-        (weight, self.no_rail(c, d, distance))
+        (weight, self.no_rail(kind, c, d, distance))
     }
     fn edge(&self, k: usize) -> Option<(usize, usize, usize, f32, f32)> {
         let (kind, c, d, share) = self.ends(k)?;
@@ -1530,6 +1546,9 @@ impl EverydayApi {
                         pair.distance * 0.001 * f,
                     ) + fixed
                         + sz.home_park[h];
+                    // T-3624: the purpose's weight on the car, before anything reads it
+                    let cm = car_mul(pair.kind() as usize);
+                    let (road, paid) = (road * cm, paid * cm);
                     let rail = ma + mb + p.fare_min - fast_ln(sum) / th + off;
                     let bt = p.mode_beta(road);
                     let uw = bt * (road - cw) + p.asc_walk();

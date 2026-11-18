@@ -579,6 +579,19 @@ notes/T-420.md has the tables.
   Milan's Area C, Durham) join the list when a pack covers them. Check: a day's parking price in
   a city's main and secondary centres against the rule, and a free-parking-at-work survey where
   one exists.
+- **Driving to school** (T-3624, Anita 2026-11-18: "about twice", one factor and nothing else). A
+  school trip's car counts twice in mode choice, everything a driver pays (the drive, ownership,
+  parking at both ends) times `everyday::SCHOOL_CAR_MUL` 2: pupils don't drive, a parent drives them
+  and makes the trip too. It is read wherever the car is weighed for a school trip: the everyday
+  layer's choice against rail and walking, its share walking with no rail, the trip explorer, and
+  the outings across zone lines (`intercity/pass.rs`; their walking share with no rail is made by
+  `bin/cross_everyday.rs` with the factor, and takes it at the next world run). University is its
+  own purpose and keeps 1; commutes, the longer trips and the drive to a station keep 1 too.
+  Both rail and walking gain, walking most, as school trips are short (notes/T-3624.md). Why it may not carry
+  over: where pupils travel alone young (Japan, much of Europe) or by school bus (the US, where
+  "walking" also stands for that bus), the driving parent is rarer than this; where few households
+  have a car the factor matters little. Check: a country's travel survey mode shares for school trips
+  (NHTS, England's NTS) against the model's school shares.
 
 ### Walking and riding to a station
 

@@ -56,9 +56,10 @@ fn rail_cost(s: &Scen, p: &Params, d_m: f32, car_mean: f32) -> f32 {
 }
 
 /// [rail, walk, car]
-fn shares(p: &Params, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32, f32), home: f32, rk: f32) -> [f64; 3] {
+fn shares(p: &Params, sc: &Scen, d_m: f32, cw: f32, drive: f32, park: (f32, f32, f32), home: f32, rk: f32, cm: f32) -> [f64; 3] {
     let (fixed, paid, free) = park;
-    let road = p.car_drive(drive, rk) + fixed + home;
+    // T-3624: the purpose's weight on the car (T3624_OFF=1: none, today's)
+    let (road, paid) = ((p.car_drive(drive, rk) + fixed + home) * cm, paid * cm);
     let car_mean = road + (1.0 - free) * paid;
     let rail = rail_cost(sc, p, d_m, car_mean);
     let bt = p.mode_beta(road);
@@ -155,7 +156,7 @@ fn t1056() {
                 let drive = p.drive_min_f(d_km * 1000.0, f, place[i], place[j]);
                 dadd(g, t as f64, d_km * f, drive);
                 for (s, (_, sc)) in SCENS.iter().enumerate() {
-                    acc.add(s, g, t as f64, shares(p, sc, d_km * 1000.0, cw, drive, park[j], homes[i], d_km * f));
+                    acc.add(s, g, t as f64, shares(p, sc, d_km * 1000.0, cw, drive, park[j], homes[i], d_km * f, 1.0));
                 }
             }
         }
@@ -168,7 +169,8 @@ fn t1056() {
         let dres = zone_dens(pz, &pop);
         let homes: Vec<f32> = dres.iter().map(|&d| p.home_park_at(d)).collect();
         for k in 0..ev.destinations.len() {
-            let Some((_, c, dd, w, _)) = ev.edge(k) else { continue };
+            let Some((kind, c, dd, w, _)) = ev.edge(k) else { continue };
+            let cm = if std::env::var("T3624_OFF").is_ok() { 1.0 } else { car_mul(kind) };
             let dist = ev.distance(c, dd);
             let (hz, az) = (pz.cell_zone[c] as usize, pz.cell_zone[dd] as usize);
             let g = group(dres[hz]);
@@ -180,7 +182,7 @@ fn t1056() {
                     if s == 0 {
                         dadd(g, w as f64, dist * 0.001 * f, drive);
                     }
-                    acc.add(s, g, w as f64, shares(&p, sc, dist, cw, drive, park[v2], homes[hz], dist * 0.001 * f));
+                    acc.add(s, g, w as f64, shares(&p, sc, dist, cw, drive, park[v2], homes[hz], dist * 0.001 * f, cm));
                 }
             }
         }

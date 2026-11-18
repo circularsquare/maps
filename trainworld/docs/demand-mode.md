@@ -196,6 +196,13 @@ drivers' choices per pair, `Params::car_choice`); the regional layer's market pa
 site's mean over drivers (`site_park`), written by `pipeline/intercity.py park_by_cell`, which
 mirrors `park_parts` and `cordon_by_zone` and is used for every zone's pack.
 
+**Driving to school** (T-3624, Anita 2026-11-18; `everyday::car_mul`). A school trip's car, all of the above
+(drive, ownership, parking at both ends, a paid space's extra), counts `SCHOOL_CAR_MUL` 2 times in mode choice,
+before the logit's damping reads it: pupils are driven by a parent who makes the trip too. The everyday pass, its
+walking share with no rail, the trip explorer and the outings across zone lines (`intercity/pass.rs`, whose
+station-choice softening keeps the plain car) read it; university, commutes, the longer trips and the drive to a
+station keep 1 (docs/demand-worldwide.md "Driving to school").
+
 #### Routed walking and driving
 
 **Routed walking and driving** (T-275, notes/T-275.md). Drives go over bridges and tunnels,

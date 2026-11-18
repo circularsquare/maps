@@ -613,13 +613,16 @@ impl IntercityApi {
                     if sum <= 0. {
                         continue;
                     }
-                    let util = (pe.mode_beta(ep.car) * (ep.car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
+                    // T-3624: the purpose's weight on the car in the choice (the band's softening
+                    // above reads the plain car, a measure of the trip's length)
+                    let car = ep.car * car_mul(k);
+                    let util = (pe.mode_beta(car) * (car - rail_c) + pe.asc_rail).clamp(-80., 80.) as f64;
                     let w0 = ep.walk_e as f64 / (util.exp() + 1. + ep.walk_e as f64);
-                    let frac = (1. - w0) * pe.ratio_share(rail_c, ep.car) as f64;
+                    let frac = (1. - w0) * pe.ratio_share(rail_c, car) as f64;
                     e_frac[ei] = frac as f32;
                     let rd = rail_c + step(h, 1.);
-                    let ud = (pe.mode_beta(ep.car) * (ep.car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
-                    add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, ep.car) as f64 - frac), (out + ret) * frac, zkm(h, az));
+                    let ud = (pe.mode_beta(car) * (car - rd) + pe.asc_rail).clamp(-80., 80.) as f64;
+                    add(&mut rail_d, (out + ret) * ((1. - ep.walk_e as f64 / (ud.exp() + 1. + ep.walk_e as f64)) * pe.ratio_share(rd, car) as f64 - frac), (out + ret) * frac, zkm(h, az));
                     let (ro, rr_) = (out * frac, ret * frac);
                     e_rail += ro + rr_;
                     e_walk_lost += (ro + rr_) * pair.walk as f64;

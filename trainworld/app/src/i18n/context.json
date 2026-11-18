@@ -2461,6 +2461,7 @@
   "tripText.termCrossingTime": "A word in the effective time equation of a car trip (a hover), lower case. Minutes waiting for and riding a ferry or tunnel crossing.",
   "tripText.termCrowding": "A word in the effective time equation of a trip (a hover), lower case. Minutes added by riding in full trains.",
   "tripText.termDrive": "A word in the effective time equation of a trip (a hover), lower case, as in 'walk 8 × 1.5 + wait 3 + ride 6'. It starts with a capital when it comes first. Time driving.",
+  "tripText.termDrivenByParent": "Words in the effective time equation of a car trip to school (a hover), lower case, followed by minutes. A pupil is driven by a parent, who makes the drive too, so the car counts twice; this term is the second half.",
   "tripText.termDropOff": "A word in the effective time equation of a trip (a hover), lower case, as in 'walk 8 × 1.5 + wait 3 + ride 6'. Minutes lost being dropped off at a station.",
   "tripText.termFare": "A word in the effective time equation of a trip (a hover), lower case. Followed by a dollar amount, as in 'fare $2.90 × 3'.",
   "tripText.termFlight": "A word in the effective time equation of a plane trip (a hover), lower case. Minutes in the air.",

@@ -153,7 +153,7 @@ institutions** (prisons, nursing homes and the like, T-234).
   the rest on the ratio of their costs [T-918]: rail's share is 1 / (1 + (rail / car)^3), so twice
   as dear gets 1 in 9, symmetric for the car, fading to nothing from 3 to 4 times either way; no
   rail constant (time and money alone), car ownership $2.00 a trip plus $0.13 a km and 7 minutes to
-  park [T-636, T-637, T-938]. A fare dollar costs 4.4 x (GDP per head / $90,000)^-0.5 perceived
+  park [T-636, T-637, T-938]; a school trip's car counts twice, pupils being driven [T-3624]. A fare dollar costs 4.4 x (GDP per head / $90,000)^-0.5 perceived
   minutes in the trip's country, GDP at market rates (the US 4.4, Japan 7.0, China 11.2, India 25),
   the car's money 3 everywhere [T-1277, T-1166, T-1521, T-2670]. The regional market keeps a damped logit
   with the plane [T-495, T-502]; its longer trips come from three income groups per country, each
