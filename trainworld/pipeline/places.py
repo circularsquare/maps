@@ -8,7 +8,8 @@ Needs the pack's boundary (`data/packs/<id>.boundary.geojson`, from build_city.p
 config names a Geofabrik `extract` (tier 0) reads the extract's cached features
 (osm_features); any other, one Overpass request over the boundary's bounding box, cached in
 `data/raw/osm_places_<id>.json` (delete it to refetch; while it exists it is used for every
-city). Points outside the footprint are dropped. Writes
+city). Points outside the footprint are dropped, but for a node in a narrow gap of it that no other
+pack holds (`Gaps`, T-3623). Writes
 `data/packs/<id>.places.json`, a separate file so the `.bin` pack is untouched:
 
     {"format": 1, "city": "nyc", "kinds": ["city", "town", ...],
@@ -19,6 +20,7 @@ find South Philadelphia when OSM records it. Data (c) OpenStreetMap contributors
 """
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -42,6 +44,7 @@ STATUS = "https://overpass-api.de/api/status"
 KINDS = ["city", "town", "borough", "suburb", "quarter", "village", "neighbourhood", "hamlet"]
 OTHER_NAMES = ["alt_name", "short_name", "old_name", "official_name", "name:en"]
 DEDUP_M = 2000.0
+DROP = object()  # a twin meaning "another pack lists this place"
 LATIN_NAMES = ["name:en", "name:zh-Latn-pinyin", "name:zh_pinyin", "name:ja-Latn", "name:ko-Latn"]  # a city's "latin_names" (T-291)
 KANA_NAMES = ["name:ja-Hira", "name:ja-Kana", "name:ja_kana"]  # readings for "kana_romaji" (T-420)
 
@@ -99,8 +102,62 @@ def from_extract(extract, bbox):
                 els.append({"type": "node", "lon": r.geometry.x, "lat": r.geometry.y, "tags": tags})
             else:
                 x0, y0, x1, y1 = r.geometry.bounds
-                els.append({"type": "area", "center": {"lon": (x0 + x1) / 2, "lat": (y0 + y1) / 2}, "tags": tags})
+                els.append({"type": "area", "center": {"lon": (x0 + x1) / 2, "lat": (y0 + y1) / 2}, "tags": tags,
+                            "geom": r.geometry})
     return {"elements": els}
+
+
+class Gaps:
+    """T-3623: which place nodes just outside a pack's outline are still the pack's. Outlines have
+    small holes and inlets: admin units leave a river out (Elephantine Island's villages at Aswan), or
+    a small unit is in no pack (Cairo's node is in Qasr Al-Nile, 1.2 km2). A node in a gap of the
+    outline narrower than about 2 x GAP_M (the outline closed by GAP_M) and in no other pack's outline
+    is kept."""
+    GAP_M = 500.0
+
+    def __init__(self, city, foot):
+        self.city, self.foot, self._closed, self._others = city, foot, None, None
+
+    def _proj(self):
+        import pyproj
+        w, s, e, n = self.foot.bounds
+        crs = pyproj.CRS.from_proj4(f"+proj=aeqd +lat_0={(s + n) / 2} +lon_0={(w + e) / 2} +units=m")
+        return pyproj.Transformer.from_crs(4326, crs, always_xy=True).transform
+
+    def holds(self, lng, lat):
+        from shapely import dwithin
+        from shapely.geometry import Point
+        from shapely.ops import transform
+        if not dwithin(self.foot, Point(lng, lat), self.GAP_M / (111320 * max(0.1, math.cos(math.radians(lat))))):
+            return False
+        if self._closed is None:
+            self._fwd = self._proj()
+            self._closed = transform(self._fwd, self.foot).buffer(self.GAP_M).buffer(-self.GAP_M)
+            prepare(self._closed)
+        if not self._closed.contains(Point(self._fwd(lng, lat))):
+            return False
+        return not self.elsewhere(lng, lat)
+
+    def elsewhere(self, lng, lat):
+        """True when another pack's outline holds the point: every boundary file in data/packs, as
+        osm_units.cut_packs reads them, so packs built in the same run count before registering."""
+        if self._others is None:
+            import glob
+            import osm_units
+            paths = [p for p in glob.glob(os.path.join(PACKS, "*.boundary.geojson"))
+                     if os.path.basename(p).split(".")[0] != self.city]
+            self._others = {p: [box, None] for p, box in osm_units.pack_boxes(paths).items()}
+        for p, o in self._others.items():
+            w, s, e, n = o[0]
+            if not (w <= lng <= e and s <= lat <= n):
+                continue
+            if o[1] is None:
+                with open(p, encoding="utf-8") as f:
+                    o[1] = make_valid(shape(json.load(f)["features"][0]["geometry"]))
+                prepare(o[1])
+            if contains_xy(o[1], lng, lat):
+                return True
+        return False
 
 
 def norm(s):
@@ -109,13 +166,16 @@ def norm(s):
     return re.sub(r"[^\w]+", " ", s).strip()
 
 
-def build(city):
+def build(city, out_dir=None):
     with open(os.path.join(PACKS, f"{city}.boundary.geojson"), encoding="utf-8") as f:
         fc = json.load(f)
     foot = make_valid(shape(fc["features"][0]["geometry"]))
     prepare(foot)  # T-425
     w, s, e, n = foot.bounds
-    bbox = (round(s, 4), round(w, 4), round(n, 4), round(e, 4))
+    py = Gaps.GAP_M * 1.2 / 110540  # read Gaps' reach past the outline too
+    px = py / max(0.1, math.cos(math.radians(max(abs(s), abs(n)))))
+    bbox = (round(s - py, 4), round(w - px, 4), round(n + py, 4), round(e + px, 4))
+    gaps = Gaps(city, foot)
     import build_city
     cfg = build_city.CITIES.get(city, {})
     extract = None
@@ -128,7 +188,14 @@ def build(city):
     n_latin, name_src = 0, {}
     data = from_extract(extract, bbox) if extract else fetch(city, bbox)
     source = f"OpenStreetMap contributors, ODbL (Geofabrik {__import__('osm_features').label(extract)})" if extract else "OpenStreetMap contributors, ODbL (Overpass)"
-    rows = []
+    rows, n_gap = [], 0
+    # T-3623: an area holding a node of its own name is that node's place (Cairo's governorate-sized
+    # place=city area has its box centre in the desert 37 km from the city's node).
+    node_at = {}
+    for el in data.get("elements", []):
+        name = (el.get("tags", {}).get("name") or "").strip()
+        if el["type"] == "node" and el.get("tags", {}).get("place") in KINDS and name:
+            node_at.setdefault(norm(name), []).append((el["lon"], el["lat"]))
     for el in data.get("elements", []):
         tags = el.get("tags", {})
         kind = tags.get("place")
@@ -142,7 +209,12 @@ def build(city):
         else:
             continue
         if not contains_xy(foot, lng, lat):
-            continue
+            if el["type"] != "node" or not gaps.holds(lng, lat):
+                continue
+            n_gap += 1
+        fold = None
+        if el.get("geom") is not None:
+            fold = next((p for p in node_at.get(norm(name), []) if contains_xy(el["geom"], *p)), None)
         pop = 0
         m = re.match(r"^\s*(\d[\d,]*)", tags.get("population", ""))
         if m:
@@ -169,11 +241,14 @@ def build(city):
                 if v and norm(v) != norm(name) and v not in others:
                     others.append(v)
         rows.append({"name": name, "kind": kind, "lng": lng, "lat": lat, "pop": pop, "others": others,
-                     "node": el["type"] == "node"})
+                     "node": el["type"] == "node", "fold": fold})
     # One row per place: OSM often has a label node and a boundary for the same neighbourhood.
-    # Same name within DEDUP_M: keep the node, then the bigger kind; merge other names, population.
-    rows.sort(key=lambda r: (not r["node"], KINDS.index(r["kind"])))
-    kept, by_name = [], {}
+    # Same name within DEDUP_M, or an area holding its node: keep the node, then the bigger kind;
+    # merge other names, population. An area whose node another pack holds is dropped; one whose
+    # node is in no pack stays, the place's only row. A folded area still twins later same-name areas
+    # near it (OSM's second outline of a village), so they go where it went.
+    rows.sort(key=lambda r: (not r["node"], r["fold"] is None, KINDS.index(r["kind"])))
+    kept, by_name, at, n_fold = [], {}, {}, 0
     for r in rows:
         k = norm(r["name"])
         twin = None
@@ -181,8 +256,21 @@ def build(city):
             dx = (o["lng"] - r["lng"]) * 111320 * 0.76
             dy = (o["lat"] - r["lat"]) * 110540
             if (dx * dx + dy * dy) ** 0.5 < DEDUP_M:
-                twin = o
+                twin = o.get("to", o)
                 break
+        if twin is DROP:
+            continue
+        if r["node"]:
+            at[(r["lng"], r["lat"])] = twin or r
+        elif r["fold"] and not twin:
+            twin = at.get(r["fold"])
+            if not twin and gaps.elsewhere(*r["fold"]):
+                twin = DROP
+            if twin:
+                n_fold += 1
+                by_name.setdefault(k, []).append({"lng": r["lng"], "lat": r["lat"], "to": twin})
+            if twin is DROP:
+                continue
         if twin:
             twin["pop"] = twin["pop"] or r["pop"]
             twin["others"] += [v for v in r["others"] if v not in twin["others"]]
@@ -198,7 +286,7 @@ def build(city):
         places.append(row)
     out = {"format": 1, "city": city, "source": source,
            "built": datetime.date.today().isoformat(), "kinds": KINDS, "places": places}
-    path = os.path.join(PACKS, f"{city}.places.json")
+    path = os.path.join(out_dir or PACKS, f"{city}.places.json")
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
@@ -206,7 +294,8 @@ def build(city):
     counts = {k: 0 for k in KINDS}
     for r in kept:
         counts[r["kind"]] += 1
-    print(f"{city}: {len(places)} places ({len(rows)} before merging), {os.path.getsize(path) // 1024} KB: "
+    print(f"{city}: {len(places)} places ({len(rows)} before merging, {n_gap} in a gap of the outline, "
+          f"{n_fold} areas folded into their node), {os.path.getsize(path) // 1024} KB: "
           + ", ".join(f"{k} {v}" for k, v in counts.items() if v), flush=True)
     if latin:
         shown = sum(1 for r in kept if all(ord(c) < 0x2E80 for c in r["name"]))

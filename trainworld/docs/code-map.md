@@ -902,7 +902,9 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   `data/raw/osm/<extract>.points.fgb`, `.stations.fgb` (the gate's, T-770) and `.areas.fgb`; `read()` gives tier0.py, canada.py and
   places.py the rows a GDAL read of the .osm.pbf would (T-363).
 - `places.py [ids]` writes each city's OSM place list, `data/packs/<id>.places.json` (towns and
-  neighbourhoods inside the boundary; from the extract's cached features for a tier 0 city, else
+  neighbourhoods inside the boundary, or a node in a gap of it under about 1 km across that no other
+  pack's boundary holds, such as a Nile island at Aswan; an area holding a node of its own name is that
+  node's place, dropped where another pack holds the node, T-3623; from the extract's cached features for a tier 0 city, else
   one Overpass request a city cached in `data/raw/`; T-177), beside the pack, not in it.
 - `world_field_build.py` writes the world field for the long-trip market (T-362, T-375): Kontur
   at H3 r5 with country, GDP per head and landmass (joined by Wikidata fixed links) into
