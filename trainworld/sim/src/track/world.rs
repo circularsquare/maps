@@ -1144,8 +1144,10 @@ impl TrackWorld {
         if let Some(before) = before {
             // T-752: a switch between counts and headways never buys or sells a train
             self.switching = switch;
+            // the rescheduled lines themselves too: a bus or ferry line uses no capacity resource, so
+            // `svc.shared` never names it, and its new count would never be settled into a rate (T-3704)
             let mut seeds = lines.clone();
-            seeds.extend(svc.rebuilt.iter().chain(&svc.recomputed).chain(&svc.shared).chain(&t.weekend).copied());
+            seeds.extend(svc.rebuilt.iter().chain(&svc.recomputed).chain(&svc.shared).chain(&t.weekend).chain(&t.schedules).copied());
             self.settle_scope = Some(self.sharing_closure(&seeds));
             let mut edited: Vec<u32> = lines.iter().chain(&t.schedules).copied().collect();
             edited.sort_unstable();

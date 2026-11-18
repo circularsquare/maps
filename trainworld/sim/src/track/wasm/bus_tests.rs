@@ -433,3 +433,34 @@ fn a_bus_in_dense_streets_runs_slower_and_needs_more_buses() {
     assert!(a.load(&saved));
     assert!((*a.stop_times(b, 0, 0).last().unwrap() - slow).abs() < 1e-6);
 }
+
+/// T-3704: a bus line uses no track, so no capacity resource names it; a change to its buses or its
+/// headway still settles into the buses an hour it runs, on every edit.
+fn a_built_bus() -> (TrackApi, u32) {
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 900, 1800, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    (a, b)
+}
+
+#[test]
+fn a_bus_lines_rate_follows_its_buses() {
+    let (mut a, b) = a_built_bus();
+    let trip = a.w.svc.lines[b as usize].round_trip[0];
+    for n in [1u32, 2, 4, 8, 12, 20, 4, 2] {
+        assert_eq!(a.set_train_counts(b, n, 3, 2), 0, "{}", a.issues());
+        let tph = a.w.net.line_tph[b as usize][0] as f64;
+        assert!((tph - n as f64 * 3600.0 / trip).abs() < 0.01, "{n} buses: {tph} an hour over a {trip} s round trip");
+    }
+}
+
+#[test]
+fn a_bus_lines_rate_follows_its_headway() {
+    let (mut a, b) = a_built_bus();
+    for h in [600u32, 300, 1200, 240, 120] {
+        assert_eq!(a.set_auto_headway(b, h, 900, 1800), 0, "{}", a.issues());
+        let tph = a.w.net.line_tph[b as usize][0] as f64;
+        assert!((tph - 3600.0 / h as f64).abs() < 0.01, "a {h} s headway runs {tph} an hour");
+    }
+}

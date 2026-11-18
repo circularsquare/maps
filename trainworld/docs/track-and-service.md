@@ -961,9 +961,10 @@ delays on resources used by count schedules. Each level settles on its own (leve
 capacity): a level whose fleets already match their counts within 0.0001 trains is not stepped,
 so its rates and run times stay the same to the bit (T-415). On an edit, a line within 0.0001
 trains of its fleet is left as it is while the rest of its level steps (T-1787: on shared track
-each line moved re-times its neighbours), and only lines that share track with what the edit changed,
-directly or through others, are stepped at all: the rest keep their rates and run times to the bit
-(T-1863). The step's 1% probe reads each round trip's rise
+each line moved re-times its neighbours), and only the lines the edit changed and those that share
+track with them, directly or through others, are stepped at all: the rest keep their rates and run
+times to the bit (T-1863). A bus or ferry line shares no track, so it is stepped exactly when its own
+counts or headways change (T-3704). The step's 1% probe reads each round trip's rise
 from the capacity solve alone, as the change in the line's hold delays, so the run profiles are
 worked out once a round instead of twice. A save carries the settled rates to the bit, so a load
 settles from them with an edit's settle and changes nothing; a save without them (older ones, or
