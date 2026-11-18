@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c034",
+      "text": "added a search box to settings that finds a setting by its name or a few other words for it (\"miles\" finds units)",
+      "edited": "added a search box to settings, which also finds other words for a setting (miles finds units)",
+      "hidden": false,
+      "task": "T-3681",
+      "by": "setsearch",
+      "at": "2026-11-18T17:01:27Z",
+      "rev": 2,
+      "area": "other",
+      "fix": false,
+      "changed": "2026-11-18T17:01:53Z"
+    },
+    {
       "id": "c033",
       "text": "added a Newest tab to Community, with the most recently shared network of each player first",
       "edited": null,
