@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c047",
+      "text": "the game uses about 200 MB less memory",
+      "edited": null,
+      "hidden": false,
+      "task": "T-2136",
+      "by": "corridor",
+      "at": "2026-11-18T18:58:52Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c046",
       "text": "the track tool and a selected or hovered line or piece of track show their type by colour and their track count as rings",
       "edited": "the track tool and a selected or hovered line or track show the track type by colour and the number of tracks as rings",

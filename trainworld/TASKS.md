@@ -158,9 +158,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
-- T-3707 [P2] {L:accounts-server} Keep modded games off the leaderboards (taking, 2026-11-18, agent modmark)
-  - Context: You, 2026-11-18: players are vibe-coding mods already; "we might wanna do it soonish since people are going ahead already". Today the page sends its own score and the server trusts it.
-  - Goal: A save marked modded leaves the leaderboards for good, as a sandbox game does; the server takes scores only from pages on anita.garden running a build you published. Server change ships with your next server deploy. Spot checks that recalculate top scores stay an idea until cheating shows up.
 - T-3657 [P2] {L:accounts-server} Free fares inflate leaderboard points (taking, 2026-11-18, agent profitpts)
   - Context: Your rule, 2026-11-18: each line's points scale with its fare income over running cost, capped at 1 ("if fares cover 50% of expenses they should count as 50% points"; "lots of lines are like 550% revenue vs expenses"); a trip's legs each take their line's factor. Measure first. Earlier: Put off by you, 2026-11-18, needs more thought: "im not sure if doing points and fares game-wide really helps that much. people can still cheese by running like 70% of their lines at 0x. i think this needs roe thought, lets put it off til later, but we sdhould definitely think about it." Considered so far: points scaled by fares over running costs, full from 100% (game-wide or per city); a line's points only while it makes money; a separate profit board. Your pad, 2026-11-18, from Discord: "u can cheese leaderboard scores by just dropping fares to zero ... how might we incorporate profit somehow? is there an easy way to only track like rides that are carried profitably or something? idk. not sure if thatd even be the best metric...?" Points are 20 a rail trip plus 1 a passenger-km on a forecast weekday; any line's fare multiple can go from 0 to 3, so free fares raise trips with nothing against it.
   - Goal: Free or near-free fares can't raise a leaderboard score; a network paying its way scores as today.
@@ -200,6 +197,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
+- T-3708 [P3] {L:memory} Place rows lost in a worker restart wait
+  - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
+  - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
+  - Other: notes/T-2136.md
 - T-3686 [P2] {L:loading} Focused city takes minutes on a big save
   - Context: Your old TODO: "loading focused city demand still feels kinda too long... am waiting like >3 min in my big asia save. why does this need to scale with save size at all, anyways?" Nearest: T-3256, T-3373.
   - Goal: The time to a focused city's trips on a big save measured and split by step, and the steps that scale with save size cut or filed.
@@ -856,7 +857,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first that works for modders writing code by hand and with a coding assistant alike (you, 2026-11-18; player-facing text never says it is aimed at vibe-coders): a small stable mod API (hooks for prices, speeds, buttons, reading the network), a how-to page with two or three tiny example mods, notes in the open-source repo an assistant can read too, and loading a mod from a file or link; a loaded mod marks the save modded (T-3707).
-  - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this.
+  - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this. The mark's entry point exists: `trainsworld.markModded("<name>")` (notes/T-3707.md); a page on another site such as trainsworld.org already marks its games.
 - T-3376 [P2] {L:jobs-places} Industrial areas' jobs
   - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.
   - Goal: A sourced workforce figure and a way to place jobs on industrial land with tanks, as a proposal.
