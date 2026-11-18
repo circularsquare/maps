@@ -45,8 +45,9 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   for a {bus|...} with room."; T-3634 "{n} pieces of track", "Shift+click more track to rebuild it together",
   "Shift+click track to add it or take it out".
 - T-3604 (all-China worker restarts) held until the night run ends: memory-heavy beside the join.
-- T-3474 (partline) built, archived; checker check3474 (Sonnet, port 6198) running. Land with
-  "Co-Authored-By: CinnamonVII" (check his GitHub noreply form in notes/pr-survey-2026-11-17.md / the PR) and c010.
+- T-3474 LANDED 407cac3c (checker PASS; co-author Cinnamon <merlinannegarcia@gmail.com>, the form his earlier
+  commits use; c012; WASM rebuilt). PR 21 can be closed with a link after the next open-source sync (her OK on the
+  reply text first). Untested: a loop with only an arc built, one-way track on the built part.
 - T-3482 retitled "New line on full track gets its trains minutes late" (not the passage: track shares re-settle
   minutes after an edit); agent settle (Opus, .tw-trees/settle, port 6191) on it; checker before landing.
 - Night run: batch 1 (T-3511) joined and shipped 12 zones by 06:55 UTC; batch 2 (T-3455 coastal, 17 countries) began
@@ -56,6 +57,12 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   either way: the commit's registry still lists yhu and suc (the run merged them; its registry edits are uncommitted
   in the main tree), so those two zones don't open on 8800 until the run's game json is committed and 8800 rebuilt.
 - T-3643 LANDED ff3a04cd (c011).
+- T-3639 LANDED 545dcac4 (c013): score sent only from a whole final; cause was the 15 s tick sending mid-load
+  figures, worst the past-24h stand-in on a weekend clock (NYC Sunday reload sent 0.84 of the forecast; her report
+  0.82). Not ruled out: an old build posting under the same game id. T-3644 LANDED 37f50dfd: on-screen score
+  is a dash from a load's start to its first final, then the last final through edits.
+- Up next left: T-3604 (after the night run: all-China memory), T-2136, T-1080, T-930 (pipeline/world-run work:
+  after the night run). Only settle (T-3482) is running.
 - T-3630 proposal ready, waits on her (asks.json; sheet artifacts/trainworld/review/t3630-landing.png; B recommended).
 - oomscreen (Sonnet, .tw-trees/oomscreen, port 6196): T-3643 start menu covers the out of memory screen (found by
   T-3630's agent).

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3644 [P3] {L:accounts-server} Score shows only from a whole final (2026-11-18): The score on screen (Cities tab, city view, top bar hover) shows a dash with a calculating trips hover until the whole final, under the same gate the board send uses (scoreSettled in points.ts).
 - T-3639 [P2] {L:accounts-server} Leaderboard score swings after v0.4 (2026-11-18): Scores were sent mid-solve and held 2 minutes: on a reload with the game clock on a weekend the past-24-hours stand-in went up (NYC late Sunday 370.6M against 442.9M, the report's 0.82), and loads' early rounds too. account.ts now sends only from a whole final of the network as it is, the weekday row itself; real PUTs before/after in notes/T-3639.md.
 - T-3643 [P2] {L:feedback} Start menu covers the out of memory screen (2026-11-18): The start menu is no longer put up after a died load, so the out of memory screen is readable and Try again reloads to the menu.
 - T-3474 [P3] {L:open-source} Partly built lines run their built stretch (2026-11-18): partly built lines run their longest built stretch (CinnamonVII's PR 21, ported by hand); real NYC save bit-identical; notes/T-3474.md.
