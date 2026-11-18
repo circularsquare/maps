@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { baseFareOf, CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { baseFareOf, cityMinPerUsd, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -157,8 +157,8 @@ function RouteLegs({ t, r }: { t: TripPeriod; r: TripRoute }) {
 function FareRows({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const tot = routeTotals(t, r);
   const pair = t.pairs[r.pair];
-  const car = pair?.accessRide ? pair.rideCar / CAR_MIN_PER_USD : 0;
-  const parking = pair?.accessRide ? pair.rideStationMoney / CAR_MIN_PER_USD : 0;
+  const car = pair?.accessRide ? pair.rideCar / t.minPerUsd : 0;
+  const parking = pair?.accessRide ? pair.rideStationMoney / t.minPerUsd : 0;
   return (
     <>
       <li data-tip={tr("tripText.baseFare", { fare: usd(baseFareOf(t, r) / t.minPerUsd), xfer: tot.xferUsd > 0, xferFare: tot.xferUsd > 0 ? usd(tot.xferUsd / tot.changes) : "" })}>
@@ -408,6 +408,7 @@ export function TripInspector() {
   if (!t) return <>{head}<p class="muted">{tr("cityInspector.calculating")}</p></>;
   const main = t.routes[0];
   const tot = main ? routeTotals(t, main) : null;
+  const carW = cityMinPerUsd(t);
   const pair = main ? t.pairs[main.pair] : null;  // T-586: the trips the view counts between the two places, and the trip the routes are read for
   const mix = v!.mix;
   const n = mix ? mix.rail + mix.walk + mix.drive : 0;
@@ -475,13 +476,13 @@ export function TripInspector() {
         {t.carOwnPerceived > 0 && (
           <li data-tip={tr("tripInspector.ownershipTip", { unit: distUnit() })}>
             <span class="grow">{tr("tripInspector.carOwnership")}</span>
-            <span class="val">{usd(t.carOwnPerceived / CAR_MIN_PER_USD)}</span>
+            <span class="val">{usd(t.carOwnPerceived / carW)}</span>
           </li>
         )}
         <li data-tip={equation([
           { label: termLabel("drive"), real: num1(t.driveMin), weight: t.driveMin > 0 ? t.drivePerceived / t.driveMin : 1, perceived: t.drivePerceived },
           { label: termLabel("parking"), real: "", weight: 1, perceived: t.parkPerceived },
-          ...(t.carOwnPerceived > 0 ? [{ label: termLabel("ownership"), real: usd(t.carOwnPerceived / CAR_MIN_PER_USD), weight: CAR_MIN_PER_USD, perceived: t.carOwnPerceived, usd: true }] : []),
+          ...(t.carOwnPerceived > 0 ? [{ label: termLabel("ownership"), real: usd(t.carOwnPerceived / carW), weight: carW, perceived: t.carOwnPerceived, usd: true }] : []),
         ], avg ? t.roadPerceived : undefined) + (avg ? `\n${avgTip}` : "")}>
           <span class="grow">{tr("tripText.effectiveTime")}</span>
           <span class="val">{minText(t.roadPerceived)}</span>

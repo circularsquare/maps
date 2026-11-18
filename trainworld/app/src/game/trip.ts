@@ -9,7 +9,9 @@
 
 import { t as tr } from "../i18n";
 import { signal } from "@preact/signals";
-import { lngLatToPack } from "./coords";
+import { cityById, cityWithin } from "./cities";
+import { lngLatToPack, packToLngLat } from "./coords";
+import { fareWeight } from "./income";
 import { stationNameNear } from "./places";
 import type { Flows } from "./demand";
 import { PERIODS } from "./periods";
@@ -99,9 +101,6 @@ export interface TripPair {
 
 /** Why the train is not a choice for a trip. */
 export type NoRail = "" | "noStationStart" | "noStationEnd" | "walksTooLong" | "noRoute" | "walkFurther";
-/** Perceived minutes a dollar of the car's money (ownership, parking, a ride to a station): the
- * sim's `api::FARE_MIN_PER_USD`, whatever the country (T-1277). */
-export const CAR_MIN_PER_USD = 3;
 const WHY: NoRail[] = ["", "noStationStart", "noStationEnd", "walksTooLong", "noRoute", "walkFurther"];
 
 /** The trip in one period. Minutes are perceived where named so, else real. */
@@ -156,8 +155,8 @@ export interface TripPeriod {
   baseFarePerceived: number;
   /** T-1801: the transfer fare each change pays, perceived minutes (0 none) */
   xferFarePerceived: number;
-  /** perceived minutes a fare dollar, the riders' country's (T-1277); the car's money is at
-   * `CAR_MIN_PER_USD` */
+  /** perceived minutes a fare dollar, the riders' country's (T-1277); the car's money is shown at it too
+   * (T-3627: the sim counts it at 3 a dollar, so the dollars shown are its minutes over this) */
   minPerUsd: number;
   /** the cheapest perceived walk at each end */
   walkStartPerceived: number;
@@ -421,6 +420,16 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
   };
 }
 
+/** T-3627: perceived minutes a dollar weighs in the trip's city, for the car's money as shown. The sim counts that
+ * money at 3 a dollar whatever the country, so the dollars shown are its minutes over the fare weight, and a city's
+ * transit and car hovers use one figure. The period's own figure is the sim's default 3 where no train is offered,
+ * so the country's is read from the trip's start. */
+export function cityMinPerUsd(t: Pick<TripPeriod, "from" | "minPerUsd">): number {
+  const [lng, lat] = packToLngLat(t.from[0], t.from[1]);
+  const city = cityWithin(lng, lat);
+  return city ? fareWeight(cityById(city).country) : t.minPerUsd;
+}
+
 /** What a route's totals and terms read from its period; the market's has no transfer fare. */
 type RouteCosts = Pick<TripPeriod, "pairs" | "baseFarePerceived" | "minPerUsd"> & { xferFarePerceived?: number };
 
@@ -482,7 +491,7 @@ export function routeTerms(t: RouteCosts, r: TripRoute): CostTerm[] {
       out.push({ id: "drive", label: tr("trip.drive"), real: pair.accessMin, weight: pair.accessMin > 0 ? drive / pair.accessMin : 1, perceived: drive, unit: "min" });
       out.push({ id: pair.rideDropOff ? "drop-off" : "parking at the station", label: tr(pair.rideDropOff ? "trip.dropOff" : "trip.parkingStation"), real: 0, weight: 1, perceived: pair.rideStation, unit: "min" }); // i18n-ignore
       out.push({ id: "parking at home", label: tr("trip.parkingHome"), real: 0, weight: 1, perceived: pair.rideHome, unit: "min" }); // i18n-ignore
-      out.push({ id: "car", label: tr("trip.car"), real: pair.rideCar / CAR_MIN_PER_USD, weight: CAR_MIN_PER_USD, perceived: pair.rideCar, unit: "usd" });
+      out.push({ id: "car", label: tr("trip.car"), real: pair.rideCar / t.minPerUsd, weight: t.minPerUsd, perceived: pair.rideCar, unit: "usd" });
     }
     const walkPerc = pair.egressPerceived + (pair.accessRide ? 0 : pair.accessPerceived);
     if (tot.walkMin > 0) out.push({ id: "walk", label: tr("trip.walk"), real: tot.walkMin, weight: walkPerc / tot.walkMin, perceived: walkPerc, unit: "min" });

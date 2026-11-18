@@ -131,6 +131,16 @@ export function smallMoney(usd: number): string {
   return c.symbol + (Number.isInteger(r) ? r : r.toFixed(2));
 }
 
+/** What a minutes-per-US$ weight is for one whole unit of the shown currency, or for the smallest round amount
+ * (10, 100, ...) worth a minute or more where one unit is tiny: 4.65 a US$ in S$ -> "S$1" and 3.6, in yen ->
+ * "¥100" and 3.1. T-3627 */
+export function unitWeight(perUsd: number): { amount: string; w: number } {
+  const rate = cu().rate;
+  let n = 1;
+  while ((perUsd * n) / rate < 1 && n < 1e6) n *= 10;
+  return { amount: smallMoney(n / rate), w: (perUsd * n) / rate };
+}
+
 /** Three significant figures: 25.5, 133, 1.33. */
 export const sig3 = (v: number): string => {
   const r = Number(v.toPrecision(3));

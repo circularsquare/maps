@@ -5,7 +5,7 @@
 // stations are known only as felt minutes, averaged over the area.
 
 import { activeCity, cityById } from "../../game/cities";
-import { count, distance, distUnit, exact, moneyWhole, perDistance, roughDistance, smallMoney, speed, usingUsd } from "../../game/format";
+import { count, distance, distUnit, exact, moneyWhole, perDistance, roughDistance, smallMoney, speed, unitWeight, usingUsd } from "../../game/format";
 import {
   AIR_FARE_USD, AIR_FIXED_MIN, AIR_KMH, AIR_NO_DIRECT_MIN, AIR_TERMINAL_MIN, AIR_USD_PER_KM, AIR_WAIT_MIN, CAR_KMH, CAR_SHARED_BY, carPartsOf, corridorOf,
   crossingsOf, DRIVE_FIXED_MIN, driveOf, loadMarketRows, marketRow, marketRowsReady, pairCarUsd, ROAD_DETOUR, travelWeight, type CarCost, type Crossing, type Drive, type FlightCost,
@@ -37,6 +37,12 @@ const crossingTip = (c: Crossing) => tr("marketTrip.crossingTip", {
 });
 
 /** The car's effective time as an equation, its parts in the order of the rows. */
+/** "S$1" and "3.6" for a weight a US$ carries (T-3627: the same figure the equation above uses, in the shown currency) */
+function unitText(perUsd: number): { amount: string; w: string } {
+  const u = unitWeight(perUsd);
+  return { amount: u.amount, w: num1(u.w) };
+}
+
 function carEquation(c: CarCost): string {
   const terms: Term[] = [
     { label: termLabel("drive"), real: num1(c.driveMin), weight: 1, perceived: c.driveMin },
@@ -50,21 +56,22 @@ function carEquation(c: CarCost): string {
       { label: termLabel("crossing time"), real: num1(x.min), weight: 1, perceived: x.min },
     ]),
   ];
-  return `${equation(terms, c.total)}\n${tr("marketTrip.dollarWeight", { amount: smallMoney(1), w: num1(c.w) })}`;
+  return `${equation(terms, c.total)}\n${tr("marketTrip.dollarWeight", unitText(c.w))}`;
 }
 
 /** The train's effective time as an equation (T-3404): the main route's terms in the order of the rows, with
  * the walks as the felt minutes the market knows them by, and the model's figure, which pools every route
  * the riders use, as the last term. */
-function trainEquation(t: MarketPeriod, r: TripRoute, sc: number): string {
+function trainEquation(t: MarketPeriod, r: TripRoute, sc: number, w: number): string {
   const felt = { ...t, pairs: t.pairs.map((p) => ({ ...p, accessMin: p.accessPerceived, egressMin: p.egressPerceived })) };
   const terms: Term[] = routeTerms(felt, r).filter((x) => x.perceived !== 0 || x.unit === "usd").map((x) => {
-    // T-3622: the fare in the money the rider pays (the Fare row's), not in the curve's dollars
-    const s = x.id === "fare" ? sc : 1; // i18n-ignore: term id
+    // T-3622: the fare in the money the rider pays (the Fare row's), not in the curve's dollars. T-3627: at the
+    // travellers' weight, as the choice weighs it and the car and plane rows show it, not the route search's
+    if (x.id === "fare") return { label: termLabel(x.id), real: usd(x.real * sc), weight: w, perceived: x.real * sc * w, usd: true }; // i18n-ignore: term id
     return {
       label: termLabel(x.id),
-      real: x.unit === "usd" ? usd(x.real * s) : x.real > 0 ? num1(x.real) : "",
-      weight: x.weight / s,
+      real: x.unit === "usd" ? usd(x.real) : x.real > 0 ? num1(x.real) : "",
+      weight: x.weight,
       perceived: x.perceived,
       ...(x.unit === "usd" ? { usd: true } : {}),
     };
@@ -153,7 +160,7 @@ function PlaneRows({ f: f0, km, w }: { f: FlightCost; km: number; w: number }) {
         <span class="grow">{tr("tripText.fare")}</span>
         <span class="val">{usd(f.fareUsd)}</span>
       </li>
-      <li data-tip={`${equation(terms, f.total)}\n${tr("marketTrip.airDollarWeight", { amount: smallMoney(1), w: num1(f.fw) })}`}>
+      <li data-tip={`${equation(terms, f.total)}\n${tr("marketTrip.airDollarWeight", unitText(f.fw))}`}>
         <span class="grow">{tr("tripText.effectiveTime")}</span>
         <span class="val">{minText(f.total)}</span>
       </li>
@@ -487,7 +494,7 @@ export function MarketTrip({ m }: { m: MarketShown }) {
               </li>
             )}
             {Number.isFinite(t.railPerceived) && (
-              <li data-tip={trainEquation(t, main, sc)}>
+              <li data-tip={trainEquation(t, main, sc, travelWeight(startCountry))}>
                 <span class="grow">{tr("tripText.effectiveTime")}</span>
                 <span class="val">{minText(t.railPerceived)}</span>
               </li>
