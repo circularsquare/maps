@@ -282,7 +282,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3474 [P3] {L:open-source} Partly built lines run their built stretch
+- T-3474 [P3] {L:open-source} Partly built lines run their built stretch (taking, 2026-11-18, agent partline)
   - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
   - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
   - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
@@ -297,15 +297,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
-- T-3597 [P3] {L:small-fixes} Every calculating tag says Calculating trips (taking, 2026-11-18, agent calctag)
-  - Context: You, 2026-11-17: "calculating trips". The same wait after a change shows as "Calculating demand" (cityInspector, demandSelector, loadBar, networkTips, trackHover), "Calculating rides…" (linesTab.pendingTip, schedule.recalculating) or "Calculating trips…" (statusTag). The wording rule is in trainworld/CLAUDE.md "Speed and waiting".
-  - Goal: Every tag and hover for that wait says "Calculating trips" (with "…" where the tag already has one); the other languages are retranslated.
-- T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room
+- T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room (taking, 2026-11-18, agent busroom)
   - Context: Seen in T-3636's screenshot: a trip by bus has a panel row "Waiting for a train with room".
   - Goal: The row names the bus (or boat, tram) the trip rides, as the ride hover already does.
-- T-3638 [P3] {L:rebuild-track} Remove a set of selected track (taking, 2026-11-18, agent setremove)
-  - Context: From T-3634 (shift+click builds a set of track pieces with one Rebuild). A set has no Remove, and the Delete key does nothing on it; touch has no way to build a set.
-  - Goal: A set of track pieces can be removed in one go, as one piece can.
 - T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
   - Context: From T-3557: `restHeadwayStep` skips headways that need the same train count, so 12 and 13 min can be skipped. Now that a stepped headway is stored and run, they are different services.
   - Goal: The steppers stop at every headway the line can run.
@@ -342,7 +336,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
   - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
   - Other: notes/T-3395.md
-- T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve
+- T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve (taking, 2026-11-18, agent passage)
   - Context: On Tokyo-Sendai, a passage between stations (300 m to 1 km) is sometimes missed by long-distance demand after a quick update solve; only a reload counts it (found by feedsample, notes/T-3454.md).
   - Goal: A quick update solve and a reload give the same long-distance figures.
 - T-3483 [P3] {L:route-choice} Two real networks lower rail on Tokyo-Osaka

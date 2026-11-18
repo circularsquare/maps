@@ -90,14 +90,15 @@
     {
       "id": "c002",
       "text": "added shift+click to select several pieces of track and rebuild them together",
-      "edited": null,
+      "edited": "added shift+click to select several pieces of track and rebuild or remove them together",
       "hidden": false,
       "task": "T-3634",
       "by": "multitrack",
       "at": "2026-11-18T05:12:33Z",
-      "rev": 1,
+      "rev": 2,
       "area": "track",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T06:06:03Z"
     },
     {
       "id": "c001",

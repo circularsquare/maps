@@ -27,11 +27,18 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   settled; Japan-size case skipped). secondedit's idea for edits during the whole solve (gap = 1/7 of the solve,
   latest start 60 s; ~2-3 h): not filed yet.
 - T-3589 LANDED a0434306 (graphics line in feedback reports, no server change).
-- panelshare (Sonnet, .tw-trees/panelshare, port 6197): T-3641.
+- T-3641 LANDED 9680779d (c009) + DECISIONS a0eebb07: under 1 trip a day the explorer head shows model shares.
+- T-3597 LANDED a5cdd597 (14 keys -> Calculating trips, 13 languages; Lines tab cell fits in en/de).
+- T-3638 LANDED 94aa413c (Remove/Delete for a track set; c002 reworded "...rebuild or remove them together").
+  Known: the set (like the Select bar) leaves a 176 m stub under a middle station that single Remove trims; unfiled.
+- partline (Opus, .tw-trees/partline, port 6198): T-3474 port of CinnamonVII's PR 21; checker + co-author credit
+  at landing.
+- busroom (Sonnet, .tw-trees/busroom, port 6189): T-3637 "waiting for a bus with room".
+- passage (Opus, .tw-trees/passage, port 6191): T-3482 passage missed after quick update solve; checker after.
 - T-3640 LANDED 7daba9ff (c008): the share's 8 MB header cap removed; over 2 MB says too big. No checker (a cap
   removed in forShare, narrow); follow-ups filed as T-3642. Not on 8800 yet (after batch 2).
 - setremove (Sonnet, .tw-trees/setremove, port 6189): T-3638 Remove for a track set; proposes a c002 reword.
-- Batch 2 (T-3629, T-3632, T-3589, T-3616): 8800 rebuild at acfb779a + smoke running (batch2.ps1, ba94uc9sn).
+- Batch 2 (T-3629, T-3632, T-3589, T-3616): 8800 = acfb779a, smoke PASSED. master 6afeccaa (T-3640 on top).
 - T-3632 stage 2 LANDED 7d14a945 (checker PASS; c006; WASM rebuilt). New strings for her: marketTrip.noTrain "No
   train runs between the two ends this period.", marketTrip.noAlt "No road or flight joins these two places, so for
   now none of their trips go by transit." T-3632 stays open (wider goal).
