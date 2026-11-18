@@ -5,14 +5,15 @@
     {
       "id": "c044",
       "text": "driving to school counts twice now, since a parent drives the pupil and makes the trip too, so more school trips walk or take the train",
-      "edited": null,
+      "edited": "driving to school counts twice, so more school trips walk or take the train",
       "hidden": false,
       "task": "T-3624",
       "by": "schoolcar",
       "at": "2026-11-18T18:07:22Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-18T18:11:38Z"
     },
     {
       "id": "c043",

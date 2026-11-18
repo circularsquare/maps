@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.
+- T-930 [P2] {L:world-tooling} Join re-gate only checks what changed (2026-11-18): pack_gate --joint --since; own_pack_unchanged; Malaysia 262 -> 31 s, GB 261 -> 51 s; same status for every check on Malaysia. notes/T-930.md.
+- T-3624 [P2] {L:wealth-split} School trips lean to transit (2026-11-18): SCHOOL_CAR_MUL 2.0; NYC school rail 18.5% -> 33.6%, walk 30.9% -> 51.4%; other purposes within 0.02 pt; ceilings pass; checker schoolcheck PASS. notes/T-3624.md.
 - T-3672 [P1] {L:single-track} Side platforms still bugged after T-3651 (2026-11-18): her Caracas Line 3: 1,602 s -> 816 s, no turning back; 26 saves, only Caracas changes; checker sidecheck PASS. notes/T-3672.md.
 - T-3671 [P2] {L:region-redraws} Daytime rebuild batch on part of the cores (2026-11-18): cai (+Qasr Al-Nile), elm (+slw, one piece) and clt (+anu) rebuilt, gated and joined on 6 cores 10:47-12:52, all shipped; landings not held (frozen gate app); notes/T-3671.md.
 - T-3517 [P3] {L:new-countries} Four Guatemala and Venezuela zones left parked (2026-11-18): clt rebuilt with anu merged in (its outline builds now, consistent with the T-3455 fix), shipped 0.97M; miv and auo terrain rebuilt on the 3 fetched blocks; scd folded into T-1376 (same park check), tsx left dead space (one square 41% of its jobs, past the relax table); notes/T-3671.md.

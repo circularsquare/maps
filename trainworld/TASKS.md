@@ -14,6 +14,14 @@ tasks (except those an open task or the handoff cites) live in `notes/archive/` 
 
 ## World and countries
 Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline: notes/T-535.md "Stages".
+- T-3701 [P3] {L:region-redraws} {after:Venezuela's next join} Merge Carora into a neighbour
+  - Context: From T-3671: tsx (Carora) is parked because one square holds 41% of its jobs; no open task names it.
+  - Goal: Carora merged into a neighbouring zone at Venezuela's next join, and shipped.
+  - Other: notes/T-3671.md
+- T-3702 [P3] {L:translations} Chimaltenango's Japanese and Chinese names
+  - Context: From T-3671: the new zone clt (Chimaltenango, with Antigua Guatemala) has no ja or zh names; `place_names.mjs --zones` stalled for 13 minutes and wrote nothing.
+  - Goal: clt has its names in every language that has zone names, and the stall's cause is found or recorded.
+  - Other: notes/T-3671.md
 - T-3682 [P3] {L:world-tooling} Rates unchecked after a join
   - Context: From T-930 (regate): cross_everyday rewrites `everyday_kept_*` in every joint solve and the rates read them, but no gate checks rates after a join (before T-930 too).
   - Goal: A join's re-gate checks the rates a solve can change, or the reason it needn't is recorded.
@@ -132,14 +140,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Parallel GDAL readers in `osm_features` each commit a 6 GB node index, so reads failed with 31 GB RAM free (Wisconsin, Nebraska).
   - Goal: Reads no longer fail "Failed to open dataset" on this machine with a join and browsers open.
   - Other: See notes/T-1080.md.
-- T-930 [P2] {L:world-tooling} Join re-gate only checks what changed (taking, 2026-11-18, agent regate)
-  - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
-  - Goal: The re-gate checks only what a joint solve can change.
-  - Other: See notes/T-928.md section 4.
-- T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (taking, 2026-11-18, agent regate)
-  - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
-  - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
-  - Other: notes/T-3455.md "What ran (nightfix3)"
 - T-3660 [P2] {L:region-redraws} Two Egyptian units missing from the plan
   - Context: Downtown Cairo (Qasr Al-Nile) joined Cairo's zone on 2026-11-18 (T-3671); Marsa Alam is dead space by the reach rule; one North Coast unit is Alexandria's. Two geoBoundaries units are not in the plan's unit state at all (365 units in the file, 363 in the state): a second North Coast (11 km2 at 29.28, 30.86, in no zone) and Port Suez Police Department (5.6 km2, a quarter inside Al-Arbiin).
   - Goal: Find why world_plan's state lost the two, and give them a zone with Egypt's next rebuild if they hold people.
@@ -171,9 +171,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 landed (7d14a945): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
-- T-3624 [P2] {L:wealth-split} School trips lean to transit (taking, 2026-11-18, agent schoolcar)
-  - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess." You, 2026-11-18: yes to driving to school costing about twice what it costs for other purposes.
-  - Goal: Driving to school costs about 2x other purposes in local and intercity choice; school's rail share rises, other purposes unchanged; the ceiling tests still pass; docs/demand-worldwide.md says it.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips
   - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
   - Goal: A cheaper way to give local trips income groups, after an estimate.
