@@ -24,6 +24,7 @@ impl IntercityApi {
             per: (0..PERIODS).map(|_| None).collect(),
             fare_km: vec![],
             fare_mul: vec![],
+            base_mul: vec![],
             fare_per_km: 0.,
             fare_curve: vec![],
             zone_fx: vec![],

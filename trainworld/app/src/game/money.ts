@@ -22,7 +22,7 @@ import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
-import { faresFor, faresOf, lineFareMul, type Fares } from "./fareCurve";
+import { faresFor, faresOf, lineFareMul, ownLineFare, type Fares } from "./fareCurve";
 import { roundedDefault } from "./fareDefault";
 import { lineFares } from "./fareInEffect";
 import { fareScale } from "./income";
@@ -238,26 +238,38 @@ const BASE_BY_BOARDINGS = 0.5;
  * base fare a boarding (a trip pays one base whatever it rides), the excess going to the others by
  * the same weights. Pool and weights are network-wide, since a trip's own legs are not known on
  * the main thread: a short leg (a feeder bus) gets less than an even share and a long one more.
- * `byBoardings` 1 is the even share per boarding. */
+ * `byBoardings` 1 is the even share per boarding. T-3578: with a line's own fare multiple set, the pool also takes what the`r`n * multiples add past one base (demand's `LineDemand.baseX`), and each line's weights and cap are times its own multiple. */
 export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], byId: Map<string, StationInput>, byBoardings = BASE_BY_BOARDINGS): Map<string, number> {
   const out = new Map<string, number>();
   if (!dv) return out;
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const perBoarding = boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
-  const ids: string[] = [], cap: number[] = [], byB: number[] = [], byKm: number[] = [];
-  let sumB = 0, sumKm = 0, pool = 0;
+  const ids: string[] = [], cap: number[] = [], byB: number[] = [], byKm: number[] = [], own: number[] = [];
+  let sumB = 0, sumKm = 0, pool = 0, extra = 0;
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
     if (!st || st.status !== "running" || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
-    const g = lineGeo(w, l, byId), km = g.km;
-    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lineFares(dm, fares as Fares)).sc);
+    const g = lineGeo(w, l, byId), km = g.km, lf = lineFares(dm, fares as Fares);
+    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lf).sc);
+    // T-3578: what the trips riding it paid past one base, in base fares of its curve
+    if (dm.baseX && lf.base > 0) for (const x of dm.baseX) extra += x / lf.base;
     let pk = 0;
     for (const seg of lineLoadsFor(dv, l.id, "all", l.stops) ?? dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
     // a line with no passenger-km takes no fare in `incomeFor`, so none of the pool either
     if (!(pk > 0)) continue;
     const b = dm.ridersPerDay * sc;
-    ids.push(l.id); cap.push(b); byB.push(b); byKm.push(pk * sc);
+    ids.push(l.id); cap.push(b); byB.push(b); byKm.push(pk * sc); own.push(ownLineFare(lf, l.id));
     sumB += b; sumKm += pk * sc; pool += b * perBoarding;
+  }
+  // T-3578: a trip pays the base times the largest own multiple of its lines: the pool takes what that adds (or
+  // takes off), and each line's share and cap go by its own multiple, so a line at 0x takes none and none goes below 0
+  if (own.some((m) => m !== 1)) {
+    sumB = 0; sumKm = 0;
+    for (let i = 0; i < ids.length; i++) {
+      cap[i] *= own[i]; byB[i] *= own[i]; byKm[i] *= own[i];
+      sumB += byB[i]; sumKm += byKm[i];
+    }
+    pool = Math.max(0, pool + extra);
   }
   const kmPart = sumKm > 0 ? 1 - byBoardings : 0;
   const wt = ids.map((_, i) => (sumB > 0 ? (1 - kmPart) * byB[i] / sumB : 0) + (kmPart > 0 ? kmPart * byKm[i] / sumKm : 0));

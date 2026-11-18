@@ -71,6 +71,13 @@ impl IntercityApi {
             let k = *v;
             *v = (self.fare_per_km * k + g.fare_curve.extra(k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
         }
+        // T-3578: and the base times the trip's base multiplier less the base `FareX` adds
+        if !g.rn_base_mul.is_empty() {
+            trip_base_mul(g, st, dst, kw, dep);
+            for (v, &m) in col.iter_mut().zip(kw.iter()) {
+                *v += base_extra(g, m);
+            }
+        }
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).

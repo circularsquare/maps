@@ -58,6 +58,12 @@ pub struct Graph {
     /// once and the rest of its fare times its km-weighted multiplier.
     pub rn_fare_mul: Vec<f32>,
     pub rn_kmw: Vec<f32>,
+    /// T-3578: each route node's line's own fare multiplier, which the base takes too: a trip pays
+    /// the base times the largest of the lines it rides (`trip_base_mul`). Empty while every
+    /// line's is 1; with it, `rn_km` is filled whatever the curve.
+    pub rn_base_mul: Vec<f32>,
+    /// The base fare `rn_base_mul` scales, perceived minutes (`Params::fare_min`).
+    pub base_min: f32,
 }
 
 impl Graph {
@@ -300,6 +306,8 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         rn_km: vec![],
         rn_fare_mul: vec![],
         rn_kmw: vec![],
+        rn_base_mul: vec![],
+        base_min: 0.0,
     }
 }
 
@@ -640,6 +648,62 @@ pub(super) fn trip_km_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I],
     }
 }
 
+/// T-3578: each node's base multiplier towards `dst` under strategy `st`, into `mb` (node ids, change
+/// nodes from `g.n`): the largest own multiplier (`Graph::rn_base_mul`) of the lines ridden from it
+/// on, a station or change node averaging the departures it accepts by frequency as `trip_km` does;
+/// 0 at `dst`, where nothing is ridden. Exact on a single route; where riders split after a line, the
+/// mean of the branches' largest is taken before that line's own, a little under the mean of each
+/// rider's largest. Needs `g.rn_base_mul`.
+pub fn trip_base_mul(g: &Graph, st: Strategy, dst: usize, mb: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => trip_base_mul_in(g, st, dst, next, order, mb, dep),
+        (NodeIds::Long(next), NodeIds::Long(order)) => trip_base_mul_in(g, st, dst, next, order, mb, dep),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+pub(super) fn trip_base_mul_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], mb: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
+    let (s, n) = (g.n_st, g.n);
+    let end = n + st.change.len();
+    mb.clear();
+    mb.resize(end, 0.0);
+    let on_train = |v: usize| (s..n).contains(&next[v].ix());
+    let own = |r: usize| g.rn_base_mul.get(r).copied().unwrap_or(1.0);
+    for &id in order {
+        let id = id.ix();
+        if id == dst {
+            continue;
+        }
+        if id < s || id >= n {
+            departures(g, st.board, st.change, id, dep);
+            let (mut f, mut w) = (0f32, 0f32);
+            for &(e, a) in dep.iter() {
+                let r = g.adj_to[e as usize] as usize - s;
+                // a boarding rides a stop first (T-1055)
+                let k = if on_train(s + r) { mb[s + r] } else { own(r).max(mb[g.rn_next[r] as usize]) };
+                f += a;
+                w += a * k;
+            }
+            if f > 0.0 {
+                mb[id] = w / f;
+            }
+        } else {
+            let nx = next[id].ix();
+            if nx >= end {
+                continue;
+            }
+            mb[id] = own(id - s).max(mb[nx]);
+        }
+    }
+}
+
+/// T-3578: what the base multiplier adds to a trip's fare at its start station: the base times the
+/// multiplier less 1, perceived minutes (negative below 1).
+#[inline]
+pub fn base_extra(g: &Graph, mb: f32) -> f32 {
+    g.base_min * (mb - 1.0)
+}
+
 /// T-1626: a trip's km-weighted fare multiplier from its fare km and those km times their
 /// multipliers.
 #[inline]
@@ -654,15 +718,33 @@ pub fn fare_mul_of(km: f32, kmw: f32) -> f32 {
 /// its base and rate (T-1516): each trip's extra a km goes along its strategy as `assign` splits
 /// the riders and as `trip_km` counts the km. `q`: scratch.
 pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
+    // T-1626: a trip's extra a km lands on each km times its multiplier, so the trip pays it times
+    // its km-weighted multiplier, as `DestSearch::run` priced it
+    let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
+    let extra = |src: usize| g.fare_curve.extra(km[src]);
     match (st.next, st.order) {
-        (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, dep, q, out),
-        (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, dep, q, out),
+        (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
+        (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
         _ => unreachable!("a destination's ids in two widths"),
     }
 }
 
+/// T-3578: the base multiplier's part of the trips towards `dst` (`base_extra` on each start
+/// station's multiplier in `mb`, `trip_base_mul`), into `out` as `board_extra` puts the curve's: by
+/// the plain km ridden from each route node, so a line at 0 still takes its share.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], col: impl Fn(usize) -> f32, km: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
+pub fn board_base(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, km: &[f32], mb: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
+    let extra = |src: usize| base_extra(g, mb[src]);
+    match (st.next, st.order) {
+        (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, &g.rn_km, dep, q, out),
+        (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, &g.rn_km, dep, q, out),
+        _ => unreachable!("a destination's ids in two widths"),
+    }
+}
+
+/// Each trip's `extra(src)` spread along its strategy by `hops` a km of its `km`.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], col: impl Fn(usize) -> f32, km: &[f32], extra: impl Fn(usize) -> f32, hops: &[f32], dep: &mut Vec<(u32, f32)>, q: &mut Vec<f32>, out: &mut [f32]) {
     let (s, n) = (g.n_st, g.n);
     let end = n + st.change.len();
     q.clear();
@@ -673,7 +755,7 @@ pub(super) fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &
         if f == 0.0 || src == dst || !(km[src] > 0.0) {
             continue;
         }
-        let x = f * g.fare_curve.extra(km[src]);
+        let x = f * extra(src);
         if x != 0.0 {
             q[src] = x / km[src];
             any = true;
@@ -683,9 +765,6 @@ pub(super) fn board_extra_in<I: Id>(g: &Graph, st: Strategy, dst: usize, next: &
         return;
     }
     let on_train = |v: usize| (s..n).contains(&next[v].ix());
-    // T-1626: a trip's extra a km lands on each km times its multiplier, so the trip pays it times
-    // its km-weighted multiplier, as `DestSearch::run` priced it
-    let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
     let hop = |r: usize| hops.get(r).copied().unwrap_or(0.0);
     // the reverse of the settle order: every node is reached after all that feed it
     for &id in order.iter().rev() {
@@ -786,6 +865,7 @@ pub struct DestSearch<'a> {
     pub(super) q: Search<'a>,
     pub(super) km: Vec<f32>,
     pub(super) kmw: Vec<f32>,
+    pub(super) mb: Vec<f32>,
     pub(super) dep: Vec<(u32, f32)>,
     /// T-2652: with `TW_T2652_CHECK` set, every search is made again with no leaf stations and
     /// the two compared (`check_plain`).
@@ -799,6 +879,7 @@ impl<'a> DestSearch<'a> {
             q: Search::new(g, p),
             km: vec![],
             kmw: vec![],
+            mb: vec![],
             dep: vec![],
             #[cfg(test)]
             plain: None,
@@ -886,6 +967,11 @@ impl<'a> DestSearch<'a> {
             if weighed {
                 trip_km_on(q.g, d.view(), dst, &q.g.rn_kmw, &mut self.kmw, &mut self.dep);
             }
+            // T-3578: the base times the trip's largest own multiplier, less the base mode choice adds
+            let based = !q.g.rn_base_mul.is_empty();
+            if based {
+                trip_base_mul(q.g, d.view(), dst, &mut self.mb, &mut self.dep);
+            }
             q.entry_costs(dst);
             let mut entry = vec![];
             for src in 0..s {
@@ -896,9 +982,12 @@ impl<'a> DestSearch<'a> {
                 // The first boarding is not a transfer; the trip's base fare is added later.
                 let x = if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
                 let change = q.p.change_at(q.g.change_f(src));
-                put(src, q.dist[src] - change + x);
+                let b = if based { base_extra(q.g, self.mb[src]) } else { 0.0 };
+                let v = q.dist[src] - change + x;
+                put(src, if based { v + b } else { v });
                 if q.entry[src] < q.dist[src] - 1e-4 {
-                    entry.push((src as u32, q.entry[src] - change + x));
+                    let v = q.entry[src] - change + x;
+                    entry.push((src as u32, if based { v + b } else { v }));
                 }
             }
             d.entry = entry.into_boxed_slice();
@@ -1794,11 +1883,13 @@ pub(super) struct SkimKey {
     pub(super) fare_curve: FareCurve,
     pub(super) rn_km: Vec<f32>,
     pub(super) rn_kmw: Vec<f32>,
+    pub(super) rn_base_mul: Vec<f32>,
+    pub(super) base_min: f32,
 }
 
 impl SkimKey {
     pub(super) fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min }
     }
     pub(super) fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -1809,6 +1900,8 @@ impl SkimKey {
             && self.fare_curve == g.fare_curve
             && self.rn_km == g.rn_km
             && self.rn_kmw == g.rn_kmw
+            && self.rn_base_mul == g.rn_base_mul
+            && self.base_min.to_bits() == g.base_min.to_bits()
             && self.rn_dx == g.rn_dx
             && self.rn_dy == g.rn_dy
             && self.adj_off == g.adj_off

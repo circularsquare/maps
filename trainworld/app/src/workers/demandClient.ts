@@ -101,7 +101,7 @@ import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
-import { lineFareMul, type Fares } from "../game/fareCurve";
+import { lineFareMul, ownLineFare, type Fares } from "../game/fareCurve";
 import { takesMarketless } from "../game/fareInEffect";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
@@ -643,16 +643,20 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
   if (lines.some((l) => backOf(l))) net.back = new Uint32Array(nStops);
   // T-1626, T-2195: a high-speed, ferry or bus line's route nodes charge its multiplier, only where one is not 1;
   // T-3567: times the line's own
-  const muls = lines.map((l) => lineFareMul({ id: l.id, fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
-  if (muls.some((m) => m !== 1)) {
+  const perNode = (muls: number[]) => {
     const w = new Float32Array(2 * nStops).fill(1);
     let o = 0;
     lines.forEach((l, i) => {
       if (muls[i] !== 1) w.fill(muls[i], 2 * o, 2 * (o + l.stops.length));
       o += l.stops.length;
     });
-    net.fareW = w;
-  }
+    return w;
+  };
+  const muls = lines.map((l) => lineFareMul({ id: l.id, fast: l.fast, ferry: l.ferry, bus: !!l.catches && !l.ferry }, svc.fare));
+  if (muls.some((m) => m !== 1)) net.fareW = perNode(muls);
+  // T-3578: the line's own multiple scales the base too, a trip paying it times the largest of its lines'
+  const own = lines.map((l) => ownLineFare(svc.fare, l.id));
+  if (own.some((m) => m !== 1)) net.baseW = perNode(own);
   const span = net.span!;
   const layout: Solve["layout"] = [];
   let a = 0;

@@ -59,6 +59,8 @@ export interface TripRoute {
   /** index into `TripPeriod.pairs` */
   pair: number;
   legs: TripLeg[];
+  /** T-3578: the largest own fare multiple of the lines it rides, which its base fare is times; absent for 1 */
+  baseMul?: number;
 }
 
 /** A pair of stations to board at and leave from, with the walks to and from them. */
@@ -249,6 +251,8 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
     const pair = v[o], share = v[o + 1], n = v[o + 2];
     o += 3;
     const legs: TripLeg[] = [];
+    // T-3578: every leg carries its route's base multiplier
+    const baseMul = n > 0 ? v[o + 13] : 1;
     for (let i = 0; i < n; i++, o += LEG_LEN) {
       const l = v.subarray(o, o + LEG_LEN);
       if (l[0] === 1) {
@@ -266,7 +270,7 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
         legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0, fullWaitMin: 0 });
       }
     }
-    routes.push({ share, pair, legs });
+    routes.push({ share, pair, legs, ...(baseMul !== 1 ? { baseMul } : {}) });
   }
   return routes;
 }
@@ -420,6 +424,9 @@ export function mergeMarketPeriods(xs: (MarketPeriod | null)[], label: (r: TripR
 /** What a route's totals and terms read from its period; the market's has no transfer fare. */
 type RouteCosts = Pick<TripPeriod, "pairs" | "baseFarePerceived" | "minPerUsd"> & { xferFarePerceived?: number };
 
+/** T-3578: a route's base fare, perceived minutes: the trip's times the route's base multiplier. */
+export const baseFareOf = (t: Pick<TripPeriod, "baseFarePerceived">, r: Pick<TripRoute, "baseMul"> | undefined) => t.baseFarePerceived * (r?.baseMul ?? 1);
+
 /** A route's totals: real minutes driving to the station (a ride access), walking, waiting, riding
  * and walking between stations, the changes, and the fare in dollars (base fare and transfer fares
  * included; `xferUsd` the transfer fares alone). */
@@ -428,7 +435,7 @@ export function routeTotals(t: RouteCosts, r: TripRoute) {
   const driveMin = pair?.accessRide ? pair.accessMin : 0;
   const walkM = pair ? (pair.accessRide ? 0 : pair.accessM) + pair.egressM : 0;
   const walkMin = pair ? (pair.accessRide ? 0 : pair.accessMin) + pair.egressMin : 0;
-  let wait = 0, ride = 0, xfer = 0, fare = t.baseFarePerceived, rides = 0;
+  let wait = 0, ride = 0, xfer = 0, fare = baseFareOf(t, r), rides = 0;
   for (const l of r.legs) {
     if (l.kind === "ride") { wait += l.waitMin; ride += l.min; fare += l.farePerceived; rides++; }
     else xfer += l.min;

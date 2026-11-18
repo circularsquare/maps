@@ -21,16 +21,20 @@ pub struct Loads {
     /// The fare curve's extra on the km ridden from each route node, perceived minutes
     /// (`board_extra`; all 0 while the curve is a straight line).
     pub rn_fare_x: Vec<f32>,
+    /// T-3578: the base's own multiplier past 1 on the trips, on the km ridden from each route node,
+    /// perceived minutes (`board_base`; all 0 while no line has one). Kept apart from `rn_fare_x`: income shares
+    /// it out with the base fares, not by line.
+    pub rn_base_x: Vec<f32>,
 }
 
 impl Loads {
     pub fn zero(n_st: usize, n_rn: usize) -> Loads {
-        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn] }
+        Loads { seg: vec![0.0; n_rn], board: vec![0.0; n_st], alight: vec![0.0; n_st], rn_board: vec![0.0; n_rn], rn_alight: vec![0.0; n_rn], entry: vec![0.0; n_st], exit: vec![0.0; n_st], pax_min: 0.0, rn_fare_x: vec![0.0; n_rn], rn_base_x: vec![0.0; n_rn] }
     }
     /// Every figure times `k` (T-1538's estimate of one period from another).
     pub fn scaled(&self, k: f32) -> Loads {
         let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
-        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, rn_fare_x: s(&self.rn_fare_x) }
+        Loads { seg: s(&self.seg), board: s(&self.board), alight: s(&self.alight), rn_board: s(&self.rn_board), rn_alight: s(&self.rn_alight), entry: s(&self.entry), exit: s(&self.exit), pax_min: self.pax_min * k as f64, rn_fare_x: s(&self.rn_fare_x), rn_base_x: s(&self.rn_base_x) }
     }
 }
 
@@ -165,6 +169,7 @@ pub struct DestAssign {
     pub fares: bool,
     pub(super) km: Vec<f32>,
     pub(super) fx: Vec<f32>,
+    pub(super) mb: Vec<f32>,
 }
 
 impl DestAssign {
@@ -183,6 +188,7 @@ impl DestAssign {
             fares: true,
             km: vec![],
             fx: vec![],
+            mb: vec![],
         }
     }
     /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
@@ -215,11 +221,19 @@ impl DestAssign {
             self.head.fill(NONE);
             self.rec.clear();
         }
-        if self.fares && !g.fare_curve.is_line() {
+        let (bent, based) = (!g.fare_curve.is_line(), !g.rn_base_mul.is_empty());
+        if self.fares && (bent || based) {
             // the column taken is still in the stations' flows: the walk below adds the changes
             trip_km(g, st, dst, &mut self.km, &mut self.dep);
             let flow = &self.flow;
-            board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.fx, &mut self.l.rn_fare_x);
+            if bent {
+                board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.fx, &mut self.l.rn_fare_x);
+            }
+            // T-3578
+            if based {
+                trip_base_mul(g, st, dst, &mut self.mb, &mut self.dep);
+                board_base(g, st, dst, |src| flow[src], &self.km, &self.mb, &mut self.dep, &mut self.fx, &mut self.l.rn_base_x);
+            }
         }
         let mut w = DestWalk { g, s, n, dst, bits: st.board, cn: st.change, flow: &mut self.flow, l: &mut self.l, head: &mut self.head, rec: &mut self.rec, use_k: &mut self.use_k, dep: &mut self.dep, xf };
         match (st.next, st.order) {

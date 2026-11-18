@@ -154,6 +154,85 @@ fn a_feeders_share_of_the_fare_curve_extra_goes_by_its_km() {
     }
 }
 
+/// T-3578: a line's own multiplier scales the base, a trip paying it times the largest of the lines
+/// it rides: the feeder 0-1 at 1.5 and the line 1-2-3 at 2, so 0 -> 3 pays 2 bases, 0 -> 1 one and a
+/// half and 1 -> 3 two. The route costs carry the base's part past one base (below it at 0), on a
+/// straight curve or a bent one; the assignment puts it on the km ridden, a line at 0 included, and
+/// it adds up to the trips times it. Parallel lines from one station average by their trains.
+#[test]
+fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1], &[1, 2, 3]], &[12.0, 12.0], &[2.0, 6.0]);
+    let (base, rate) = (4.5f32, 0.3f32);
+    // route nodes: the feeder's 0, 1 and back 2, 3; the line's 4, 5, 6 and back 7, 8, 9
+    let km = [5.0, 0.0, 5.0, 0.0, 20.0, 20.0, 0.0, 20.0, 20.0, 0.0];
+    let graph = |mul: Option<[f32; 2]>, bent: bool| {
+        let mut g = build_graph(&net, &p);
+        g.rn_fare = km.iter().map(|k| k * rate).collect();
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        if bent {
+            g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate };
+            g.rn_km = km.to_vec();
+        }
+        if let Some(m) = mul {
+            g.rn_base_mul = g.rn_line.iter().map(|&l| m[l as usize]).collect();
+            g.base_min = base;
+            g.rn_km = km.to_vec();
+        }
+        g
+    };
+    let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+    for bent in [false, true] {
+        let plain_g = graph(None, bent);
+        let plain = skims(&plain_g, &p);
+        let ones = skims(&graph(Some([1.0, 1.0]), bent), &p);
+        assert!(plain.r.iter().zip(&ones.r).all(|(a, b)| a.to_bits() == b.to_bits()), "all 1 is no change");
+        let g = graph(Some([1.5, 2.0]), bent);
+        let sk = skims(&g, &p);
+        for (i, j, m) in [(0, 3, 2.0), (0, 1, 1.5), (1, 3, 2.0), (3, 0, 2.0), (1, 0, 1.5)] {
+            let d = at(&sk.r, i, j) - at(&plain.r, i, j);
+            assert!((d - base * (m - 1.0)).abs() < 1e-4, "bent {bent}: {i} -> {j} adds {d}, want {}", base * (m - 1.0));
+        }
+        // the largest, not the sum: the feeder at 3 and the line at 0.5 pays 3 bases
+        let sk3 = skims(&graph(Some([3.0, 0.5]), bent), &p);
+        assert!((at(&sk3.r, 0, 3) - at(&plain.r, 0, 3) - base * 2.0).abs() < 1e-4);
+        // a free feeder alone costs less than nothing past its wait and ride
+        let free = skims(&graph(Some([0.0, 1.0]), bent), &p);
+        assert!((at(&free.r, 0, 1) - at(&plain.r, 0, 1) + base).abs() < 1e-4);
+        assert!((at(&free.r, 0, 3) - at(&plain.r, 0, 3)).abs() < 1e-4, "the line at 1 sets the trip's");
+
+        let mut od = vec![0.0f32; 16];
+        od[3] = 10.0; // 0 -> 3
+        od[1] = 4.0; // 0 -> 1
+        let l0 = assign(&plain_g, &plain, &od);
+        let l = assign(&g, &sk, &od);
+        assert!(l0.rn_base_x.iter().all(|&v| v == 0.0) && l.rn_fare_x == l0.rn_fare_x, "bent {bent}: the curve's extra is its own");
+        let x = l.rn_base_x.clone();
+        let total: f32 = x.iter().sum();
+        let want = 10.0 * base * 1.0 + 4.0 * base * 0.5;
+        assert!((total - want).abs() < 1e-3, "bent {bent}: {total} against {want}: {x:?}");
+        // 0 -> 3's by km: 5 of 45 on the feeder; 0 -> 1's all on it
+        for (r, want) in [(0, 10.0 * base * 5.0 / 45.0 + 4.0 * base * 0.5), (4, 10.0 * base * 20.0 / 45.0), (5, 10.0 * base * 20.0 / 45.0)] {
+            assert!((x[r] - want).abs() < 1e-3, "bent {bent}: route node {r}: {x:?}");
+        }
+        let lf = assign(&graph(Some([0.0, 1.0]), bent), &free, &od);
+        let xf: f32 = lf.rn_base_x.iter().sum();
+        assert!((xf + 4.0 * base).abs() < 1e-3, "bent {bent}: only 0 -> 1 rides the free line alone: {xf}");
+    }
+    // two lines side by side from 0 to 2, 6 and 12 trains an hour: riders split a third and two
+    // thirds, and so does the base's multiplier
+    let net = common_test_net(&[&[0, 1, 2], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 2.0]);
+    let mut g = build_graph(&net, &p);
+    let plain = skims(&g, &p);
+    g.rn_base_mul = g.rn_line.iter().map(|&l| if l == 0 { 3.0 } else { 1.5 }).collect();
+    g.base_min = base;
+    g.rn_km = vec![1.0; g.rn_line.len()];
+    let sk = skims(&g, &p);
+    let want = base * ((3.0 + 2.0 * 1.5) / 3.0 - 1.0);
+    assert!((at(&sk.r, 0, 2) - at(&plain.r, 0, 2) - want).abs() < 1e-4, "{} against {want}", at(&sk.r, 0, 2) - at(&plain.r, 0, 2));
+}
+
 /// T-798: a circle 0-1-2-3-4-5-0, 12 tph, 2 minutes a stop and half a minute standing at 0.
 /// Riders take the short way round through 0 without changing; a line that is not a circle
 /// sends them the long way.

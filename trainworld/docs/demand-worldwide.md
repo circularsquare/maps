@@ -681,10 +681,20 @@ notes/T-420.md has the tables.
   a high-speed line a third of the riders 1.0 did (notes/T-3310.md). Why it may not carry
   over: where high-speed rail is priced near conventional rail (Spain's Avlo and other low-cost
   services) the default overcharges. Check: a country's high-speed fare a km against its ordinary one.
-  **A line's own fare multiple** (T-3567): 0 to 3, default 1, set in the line's panel; it times that line's
-  multiplier above (high-speed, bus, ferry, else 1), so it too scales only the fare above the base, by the
-  trip's km on the line, everywhere the high-speed one reaches. The base stays one per trip, whatever lines it
-  rides.
+  **A line's own fare multiple** (T-3567, T-3578): 0 to 3, default 1, set in the line's panel. It times that
+  line's multiplier above (high-speed, bus, ferry, else 1) on the fare above the base, by the trip's km on the
+  line, and it scales the base too: a trip pays one base, times the largest own multiple among the lines it
+  rides (Anita, 2026-11-17: "if a person's ride uses that line at all it gets charged the higher base"); the
+  high-speed, bus and ferry multipliers leave the base alone. It enters each station pair's route cost on its
+  strategy (`trip_base_mul`): where riders split between lines the pair takes the frequency-weighted mean of
+  each branch's largest, exact on a single route and a little under the riders' mean where a split follows a
+  line with a multiple. Mode choice, station choice, the market's income groups and the explain panel all read
+  that cost; choosing between routes inside a strategy does not see it, as with the curve's extra. Income
+  takes it as demand charged it: what the multiples add past one base (`base_extra`, below 0 under 1) goes into
+  the network's pool of base fares, which is shared between lines (T-2104) with each line's weights and its
+  cap of bases a boarding times its own multiple, and never below 0 (T-3578): a line at 0 takes no base, and no
+  line's fares go below 0. Which line's multiple set a trip's base is not traced; the pool's network-wide
+  shares stand in, as for the base itself.
   Ferry lines take the player's Ferry multiplier and bus lines the Bus multiplier (T-3028) the same way (default 1.00, T-2195; "Ferries as lines" below).
   **Transfer fare** (T-1801): the player's, $0 by default, paid on each change of line, times the
   country's scale and weighed at its `fare_w` like the curve; the regional market changes free. At

@@ -4,7 +4,7 @@ import type { FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 13 } as const;
+export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 14 } as const;
 /** `IntercityApi::market_trip`'s answer: `MT_HEAD` and `MT_PAIR_LEN` in market_trip.rs. */
 export const MARKET_TRIP_LAYOUT = { HEAD: 25, PAIR_LEN: 7 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).
@@ -56,6 +56,9 @@ export interface DemandNetwork {
   hopKm: Float32Array;
   /** T-1626 (`DemandApi.set_fare_mul`): each route node's fare multiplier, as `hopKm`; absent: all 1 */
   fareW?: Float32Array;
+  /** T-3578 (`DemandApi.set_base_mul`): each route node's line's own fare multiplier, which the base takes
+   * too, as `hopKm`; absent: all 1 */
+  baseW?: Float32Array;
   /** T-842 (`DemandApi.set_span`): per period and route node (`q * route nodes + r`, route nodes
    * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
    * 1 everywhere */
@@ -383,6 +386,10 @@ export type FromDemand =
       /** per route node, US$ in the period: the fare curve's extra on the trips first boarding there
        * (T-1143, the sims' `fare_extra`; all 0 for a straight line) */
       fareX?: Float32Array;
+      /** T-3578: per route node, US$ in the period: what the lines' own multiples add past one base (below 0
+       * under 1), on the km ridden (the sims' `base_extra`); all 0 while no line has one. Income adds it to the base
+       * fares it shares out (game/money.ts `baseTrips`), not to any line */
+      baseX?: Float32Array;
       /** riders boarding at each route node after changing lines in the period, every purpose
        * (T-1530, the sims' `transfers_in`), one block of route nodes per kind of day
        * (`DEMAND_DAYS` order), each population's scaled as its `transfers_day` scales its pairs:

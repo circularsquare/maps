@@ -10,7 +10,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { purposeName, purposeWords, type PurposeFilter } from "../../game/purposes";
 import { WALK_KMH } from "../../game/walks";
-import { CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
+import { baseFareOf, CAR_MIN_PER_USD, countsTrain, openRoute, peopleOf, routeCrowding, routeLabel, routeTerms, routeTotals, stationName, tripOpenedFrom, tripPeriod, tripView, wholePeople, type TripMix, type TripPeriod, type TripRoute } from "../../game/trip";
 import { purposeFilter, selection, shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -159,7 +159,7 @@ function FareRows({ t, r }: { t: TripPeriod; r: TripRoute }) {
   const parking = pair?.accessRide ? pair.rideStationMoney / CAR_MIN_PER_USD : 0;
   return (
     <>
-      <li data-tip={tr("tripText.baseFare", { fare: usd(t.baseFarePerceived / t.minPerUsd), xfer: tot.xferUsd > 0, xferFare: tot.xferUsd > 0 ? usd(tot.xferUsd / tot.changes) : "" })}>
+      <li data-tip={tr("tripText.baseFare", { fare: usd(baseFareOf(t, r) / t.minPerUsd), xfer: tot.xferUsd > 0, xferFare: tot.xferUsd > 0 ? usd(tot.xferUsd / tot.changes) : "" })}>
         <span class="grow">{tr("tripText.fare")}</span>
         <span class="val">{usd(tot.fareUsd)}</span>
       </li>

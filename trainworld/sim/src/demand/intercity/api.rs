@@ -177,6 +177,8 @@ pub struct IntercityApi {
     pub(super) fare_km: Vec<f32>,
     /// T-1626: `DemandApi::set_fare_mul`'s multipliers
     pub(super) fare_mul: Vec<f32>,
+    /// T-3578: DemandApi::set_base_mul's multipliers
+    pub(super) base_mul: Vec<f32>,
     pub(super) fare_per_km: f32,
     /// `DemandApi::set_fare_curve`'s knots (T-883)
     pub(super) fare_curve: Vec<f32>,

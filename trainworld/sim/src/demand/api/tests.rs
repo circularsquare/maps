@@ -528,6 +528,57 @@ fn a_fare_multiplier_on_one_line_loses_its_riders_and_scales_its_fares() {
     assert_eq!(api.summary(0)[2].to_bits(), plain.to_bits());
 }
 
+/// T-3578: a line's own multiplier on the base, through the setters, the solve and `fare_extra`, on a straight
+/// curve and a bent one: twice the base on the first line loses rail riders and charges more, the extra on the
+/// loads; none again is the same solve to the bit. A base of $40 with the line free (route costs below 0) solves
+/// to finite figures with more riders, and the loads carry the base taken off.
+#[test]
+fn a_lines_own_base_multiplier_reaches_the_solve_and_the_fares() {
+    for bent in [false, true] {
+        let (mut api, xy, n, stops, times, tph, cars) = small();
+        api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+        let mut km = vec![];
+        for &count in &n { for _ in 0..2 { for k in 0..count { km.push(if k + 1 == count { 0.0 } else { 1.0 }); } } }
+        api.set_fares(1.5, 0.1, &km).unwrap();
+        if bent {
+            api.set_fare_curve(&[0.0, 1.5, 3.0, 1.8, 100.0, 1.8 + 97.0]).unwrap();
+        }
+        api.solve(0);
+        let plain = api.summary(0)[2];
+        let x0 = api.fare_extra(0);
+        let first = 2 * n[0] as usize;
+        let mut mul = vec![1.0; km.len()];
+        api.set_base_mul(&mul).unwrap();
+        api.solve(0);
+        assert_eq!(api.summary(0)[2].to_bits(), plain.to_bits(), "bent {bent}: all 1 is none");
+        mul[..first].fill(2.0);
+        api.set_base_mul(&mul).unwrap();
+        assert_eq!(api.solved_mask(), 0);
+        api.solve(0);
+        let dear = api.summary(0)[2];
+        let x1: f32 = api.base_extra(0).iter().sum();
+        assert!(dear < plain, "bent {bent}: rail {dear} against {plain}");
+        assert!(x1 > 1.0, "bent {bent}: base extra {x1}");
+        assert!(bent || api.fare_extra(0).iter().all(|&v| v == 0.0), "the base's extra is not the curve's");
+        assert!(api.set_base_mul(&[2.0]).is_err());
+        api.set_base_mul(&[]).unwrap();
+        api.solve(0);
+        assert_eq!(api.summary(0)[2].to_bits(), plain.to_bits(), "bent {bent}: none again");
+        assert!(api.fare_extra(0).iter().zip(&x0).all(|(a, b)| a.to_bits() == b.to_bits()));
+
+        api.set_fares(40.0, 0.1, &km).unwrap();
+        api.solve(0);
+        let high = api.summary(0)[2];
+        mul[..first].fill(0.0);
+        api.set_base_mul(&mul).unwrap();
+        api.solve(0);
+        let free = api.summary(0)[2];
+        let xf: f32 = api.base_extra(0).iter().sum();
+        assert!(api.summary(0).iter().all(|v| v.is_finite()), "bent {bent}: {:?}", api.summary(0));
+        assert!(free > high && xf < 0.0 && xf.is_finite(), "bent {bent}: rail {free} against {high}, extra {xf}");
+    }
+}
+
 #[test]
 fn fare_distances_follow_each_runs_track_and_base_is_once() {
     let (mut api, xy, n, stops, times, tph, cars) = small();

@@ -221,6 +221,7 @@ pub(super) fn mirror_into(g: &Graph, l: &Loads, out: &mut Loads) {
                 out.rn_board[back + len - 1 - i] += l.rn_alight[k];
                 out.rn_alight[back + len - 1 - i] += l.rn_board[k];
                 out.rn_fare_x[k] += l.rn_fare_x[k];
+                out.rn_base_x[k] += l.rn_base_x[k];
             }
         }
         r = e;

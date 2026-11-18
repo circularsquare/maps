@@ -323,6 +323,9 @@ pub fn cap_loads(g: &Graph, fit: &Fit, ix: &XferIndex, l: &mut Loads, xfer: &mut
         if let Some(x) = l.rn_fare_x.get_mut(r) {
             *x *= fit.seg[r];
         }
+        if let Some(x) = l.rn_base_x.get_mut(r) {
+            *x *= fit.seg[r];
+        }
         let left = (1.0 - fit.alight[r]) * a;
         l.rn_alight[r] = a - left;
         l.alight[st] = (l.alight[st] - left).max(0.0);
@@ -350,7 +353,7 @@ pub fn cap_loads(g: &Graph, fit: &Fit, ix: &XferIndex, l: &mut Loads, xfer: &mut
         l.entry[st] *= keep[st];
     }
     // the fare curve's extra goes with the trips (T-1143)
-    for x in l.rn_fare_x.iter_mut() {
+    for x in l.rn_fare_x.iter_mut().chain(l.rn_base_x.iter_mut()) {
         *x *= spread as f32;
     }
     let all = if before > 0.0 { after * spread / before } else { 1.0 };

@@ -89,19 +89,28 @@ pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_
 }
 
 /// Each ride edge's distance fare (`per_km` a fare km, perceived minutes) times its route node's
-/// multiplier in `mul` (T-1626; empty: all 1), and the fare curve (`put_fare_curve`).
+/// multiplier in `mul` (T-1626; empty: all 1), the fare curve (`put_fare_curve`), and the base's
+/// multiplier per route node in `base_mul` (T-3578, each line's own; empty: all 1).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], hop_km: &[f32], mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
+pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], hop_km: &[f32], mul: &[f32], base_mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
     let km = |r: usize| hop_km.get(r).copied().unwrap_or(0.0);
     let m = |r: usize| mul.get(r).copied().unwrap_or(1.0);
     for (r, fare) in g.rn_fare.iter_mut().enumerate() {
         *fare = km(r) * per_km * m(r);
     }
     put_fare_curve(g, knots, hop_km, fare_min, per_km, fare_w);
+    let n = g.rn_fare.len();
     if mul.iter().any(|&v| v != 1.0) {
-        let n = g.rn_fare.len();
         g.rn_fare_mul = (0..n).map(m).collect();
         g.rn_kmw = (0..n).map(|r| km(r) * m(r)).collect();
+    }
+    if base_mul.iter().any(|&v| v != 1.0) {
+        g.rn_base_mul = (0..n).map(|r| base_mul.get(r).copied().unwrap_or(1.0)).collect();
+        g.base_min = fare_min;
+        // the base's share goes on the km ridden, a straight curve's too (`board_base`)
+        if g.rn_km.is_empty() {
+            g.rn_km = (0..n).map(km).collect();
+        }
     }
 }
 
@@ -544,6 +553,8 @@ pub struct DemandApi {
     pub(crate) fare_km: Vec<f32>,
     /// T-1626: each route node's fare multiplier (`set_fare_mul`); empty: all 1.
     pub(crate) fare_mul: Vec<f32>,
+    /// T-3578: each route node's base multiplier (`set_base_mul`); empty: all 1.
+    pub(crate) base_mul: Vec<f32>,
     /// The fare curve's knots, km and US$ in pairs (T-883, `set_fare_curve`); empty for the straight line.
     pub(crate) fare_curve: Vec<f32>,
     open_ms: f64,
@@ -599,7 +610,7 @@ impl DemandApi {
         if let Some(s) = &self.sz {
             mem::subzones(s, r, at);
         }
-        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in));
+        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.base_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in));
         let (mut net, mut g, mut avg, mut od, mut sub, mut rest) = (0, 0, 0, 0, 0, 0);
         for p in self.per.iter().flatten() {
             net += mem::network(&p.net);
@@ -1048,6 +1059,7 @@ impl DemandApi {
             fare_per_km: 0.0,
             fare_km: vec![],
             fare_mul: vec![],
+            base_mul: vec![],
             fare_curve: vec![],
             open_ms: 0.0,
             complex_in: vec![],
@@ -1168,7 +1180,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1313,6 +1325,7 @@ impl DemandApi {
         if !self.layout_same {
             self.fare_km.clear();
             self.fare_mul.clear();
+            self.base_mul.clear();
             self.sz = None;
             self.want.clear();
             self.od_st.clear();
@@ -1367,6 +1380,20 @@ impl DemandApi {
         let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
         if !same_bits(mul, &self.fare_mul) {
             self.fare_mul = mul.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
+    /// T-3578: each route node's base multiplier, in `set_fares`' layout (its line's own fare
+    /// multiplier, the high-speed, bus and ferry ones left out); empty when every one is 1. A trip
+    /// pays the base times the largest of the lines it rides.
+    pub fn set_base_mul(&mut self, mul: &[f32]) -> Result<(), String> {
+        check_fare_mul(mul, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
+        let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
+        if !same_bits(mul, &self.base_mul) {
+            self.base_mul = mul.to_vec();
             self.per.iter_mut().for_each(|p| *p = None);
             self.same = 0;
         }
@@ -1461,7 +1488,7 @@ impl DemandApi {
         let walk0 = self.walk_all * p.period_share as f64;
         let net = Self::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -1496,7 +1523,7 @@ impl DemandApi {
         if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
             return false;
         }
-        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -1568,6 +1595,7 @@ impl DemandApi {
             msa(&mut st.avg.entry, &l.entry, r);
             msa(&mut st.avg.exit, &l.exit, r);
             msa(&mut st.avg.rn_fare_x, &l.rn_fare_x, r);
+            msa(&mut st.avg.rn_base_x, &l.rn_base_x, r);
             st.sub.msa(&sub, r);
             let w = 1.0 / (r as f64 + 1.0);
             st.rail += (rail - st.rail) * w;
@@ -1712,6 +1740,11 @@ impl DemandApi {
     /// the transfer fares (T-1801) at the route nodes riders board after changing.
     pub fn fare_extra(&self, q: usize) -> Vec<f32> {
         self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_extra_usd(&st.avg.rn_fare_x, &st.p, &st.g, &st.xi, &st.xfer))
+    }
+    /// T-3578: what the base's own multiples add past one base in period `q`, US$ (below 0 under 1), on the km
+    /// ridden from each route node; all 0 while no line has one. Income adds it to the base fares it shares out.
+    pub fn base_extra(&self, q: usize) -> Vec<f32> {
+        self.per.get(q).and_then(|p| p.as_ref()).map_or(vec![], |st| fare_x_usd(&st.avg.rn_base_x, st.p.fare_w))
     }
     /// Riders in period `q` boarding at each route node after changing lines (T-1530); empty when
     /// the period has no result.

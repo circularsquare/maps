@@ -353,10 +353,14 @@ function catchesOf(n: DemandNetwork, at: number[]): { catchN?: Uint32Array; catc
 }
 
 /** T-1626: the whole network's fare multipliers for the route nodes `nodeGlobal` names, where any is not 1. */
-function fareWOf(n: DemandNetwork, nodeGlobal: Uint32Array): { fareW?: Float32Array } {
-  if (!n.fareW) return {};
-  const w = Float32Array.from(nodeGlobal, (r) => n.fareW![r]);
-  return w.some((v) => v !== 1) ? { fareW: w } : {};
+function fareWOf(n: DemandNetwork, nodeGlobal: Uint32Array): { fareW?: Float32Array; baseW?: Float32Array } {
+  const pick = (all: Float32Array | undefined) => {
+    const w = all && Float32Array.from(nodeGlobal, (r) => all[r]);
+    return w?.some((v) => v !== 1) ? w : undefined;
+  };
+  // T-3578: and the base's
+  const fareW = pick(n.fareW), baseW = pick(n.baseW);
+  return { ...(fareW ? { fareW } : {}), ...(baseW ? { baseW } : {}) };
 }
 
 /** T-3348: a view's run 1 stations, where any differs from its stop */
@@ -404,7 +408,7 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.transfer ? `|x${n.fare.transfer}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   const levelSig = [0, 1, 2].map((lev) => {

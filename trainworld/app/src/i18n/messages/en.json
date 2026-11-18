@@ -1219,7 +1219,7 @@
   "lineMoney.fare": "Fare multiple",
   "lineMoney.fareBack": "Back to {value}",
   "lineMoney.fareLabel": "fare multiple",
-  "lineMoney.fareTip": "Multiplies the fare above the base for rides on this line",
+  "lineMoney.fareTip": "Multiplies the fare for rides on this line, base included. A trip over several lines pays the highest base among them",
   "lineMoney.fares": "Fares {amount}",
   "lineMoney.title": "{revenue} and {expenses}",
   "lineMoney.net": "Net {amount}",

@@ -37,9 +37,12 @@ export interface LineDemand {
    * it would ride if the trains had room, and a full platform turns them away */
   arrive?: Float32Array[];
   /** per period, US$: what the fare curve adds beyond its first stretch's base and rate on the
-   * trips that first board this line (T-1143, the sim's `fare_extra`); absent or 0 while the
-   * curve is a straight line */
+   * trips that ride this line, by km (T-1143, T-1516, the sim's `fare_extra`); absent or 0 while the curve is a
+   * straight line */
   fareX?: number[];
+  /** T-3578: per period, US$: what the lines' own multiples add past one base on the trips riding this line, by
+   * km (the sim's `base_extra`); income adds the network's to the base fares `baseTrips` shares out */
+  baseX?: number[];
   /** T-324: from the free-flow estimate of a solve still running. A line new or changed since the
    * shown final result gets these first figures early, and the final round replaces them. */
   estimate?: boolean;

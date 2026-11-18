@@ -1,7 +1,7 @@
 // T-3567: a line's own fare multiple, set through its panel. On the real save a busy rail line's panel shows a
 // Fare multiple row at 1.00x, right above the revenue and expenses chart (T-3566, the panel's last section).
 // Typed 1.2 it reads 1.20x and, once demand's final is in, the line's fare a ride is higher and its riders fewer;
-// 5 is held to 3.00x, 0 reads 0.00x with the fare a ride below the start's; the undo button puts it back to
+// 5 is held to 3.00x, 0 reads 0.00x with the fare a ride below the start's (none at all since T-3578); the undo button puts it back to
 // 1.00x and every figure is as it started (rail trips, each line's riders and revenue, to the bit). At 1.20x
 // again the game is exported and opened again: the row still reads 1.20x and the save's fares carry it. Shots of
 // the panel's bottom, light and dark, in artifacts/trainworld/. From the maps root (or a tree's root):
@@ -85,7 +85,7 @@ try {
   await typeFare('0');
   const fz = await figures();
   check((await row()) === '0.00x', `typed 0: the row reads ${await row()}`);
-  check(fz.perRide < f0.perRide && fz.riders > f0.riders && fz.revenue > 0, `at 0.00x (the base is still paid): ${fmt(fz)}`);
+  check(!(fz.perRide >= f0.perRide) && fz.riders > f0.riders && fz.revenue >= 0, `at 0.00x (T-3578: a free line takes no fare, base included): ${fmt(fz)}`);
 
   const v = await page.evaluate(() => window.twDemand.view().version);
   await g.act.click('Back to 1.00x', { within: '#inspector' });

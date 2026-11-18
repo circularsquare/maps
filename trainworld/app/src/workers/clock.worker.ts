@@ -116,14 +116,30 @@ function setLineFare(a: TrackApi, line: number, mul: number): boolean {
  * is sent to demand, so a deleted line's number never carries a multiple to a later line. Integer keys keep
  * ascending order in any object, so two of the same multiples compare equal as JSON. */
 function tidyLineFares(a: TrackApi): void {
-  if (!fares.lines) return;
-  const li = a.lines_info(), own: Record<string, number> = {};
+  if (!fares.lines && !goneLineFares.size) return;
+  const li = a.lines_info(), own: Record<string, number> = {}, had = fares.lines ?? {};
   for (let i = 0; i < li.length; i += 22) {
-    const id = li[i], of = a.line_twin_of(id), v = fares.lines[String(of >= 0 ? of : id)];
+    const id = li[i], key = String(a.line_twin_of(id) >= 0 ? a.line_twin_of(id) : id), v = had[key] ?? goneLineFares.get(key);
     if (v !== undefined) own[String(id)] = v;
   }
-  if (JSON.stringify(own) === JSON.stringify(fares.lines)) return;
+  // T-3581: a deleted line's multiple stays in hand for an undo that brings the line back
+  for (const id of Object.keys(own)) goneLineFares.delete(id);
+  for (const [id, v] of Object.entries(had)) if (!(id in own)) goneLineFares.set(id, v);
+  if (JSON.stringify(own) === JSON.stringify(had)) return;
   const { lines: _, ...rest } = fares;
+  fares = Object.keys(own).length ? { ...rest, lines: own } : rest;
+}
+/** T-3581: the own fare multiples of deleted lines, by id, until an undo brings one back or a new line takes its
+ * id; never saved. */
+const goneLineFares = new Map<string, number>();
+/** T-3581: a new line starts at 1.00x, whatever a deleted line of its id had. */
+function newLineFare(op: EditOp, line: number) {
+  if (op.op !== "addLine" && op.op !== "addBusLine" && op.op !== "addFerryLine" && op.op !== "copyLine") return;
+  const id = String(line);
+  goneLineFares.delete(id);
+  if (fares.lines?.[id] === undefined) return;
+  const { [id]: _, ...own } = fares.lines;
+  const { lines: __, ...rest } = fares;
   fares = Object.keys(own).length ? { ...rest, lines: own } : rest;
 }
 /** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
@@ -2920,6 +2936,7 @@ async function loadGame(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   api!.set_fleet_ferry(h.fleetFerry ?? 0);
   api!.set_fleet_tram(h.fleetTram ?? 0);
   fares = fresh ? startFares(fresh) : loadFares(h.fares);
+  goneLineFares.clear();
   setStartZone(h.start, h.dayShift); // before the ledgers, whose days follow its local time
   ledger = mergeLedger(h.ledger, (d) => d.day);
   hourLedger = mergeLedger(h.hours, (d) => d.hour);
@@ -2977,6 +2994,7 @@ function setNewGame(spec?: NewGameSpec) {
   home = undefined;
   copyOf = undefined;
   fares = startFares(spec);
+  goneLineFares.clear();
 }
 
 /** After a slot's save was converted on load: keep the old-format copy under a key the saves list
@@ -4755,7 +4773,10 @@ async function handleMessage(msg: ToClock) {
     const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     dirty = edited = true; editAt = Date.now();
-    if (line !== undefined) newLineShape(op, line);
+    if (line !== undefined) { newLineShape(op, line); newLineFare(op, line); }
+    // T-3581: a line deleted or brought back by an undo or redo has its fare multiple dropped or given back in the
+    // state this edit sends, not only at the next network for demand
+    if (op.op === "removeLine" || op.op === "undo" || op.op === "redo") tidyLineFares(api);
     if (charge > 0) bookCharge(seq, charge, trainCharge ?? api.last_train_charge());
     forget();
     const demand = api.dirty_demand_lines();

@@ -284,7 +284,7 @@ export function flowsBody(p: Float32Array, purposeParts: PurposePart[]): Omit<Fl
 // ---------------------------------------------------------------- the views of each kind of day (T-1208)
 
 /** The parts of a period's result (`FromDemand` "result") the day views read. */
-export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "everydayPlaces" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
+export type DayResult = Pick<Extract<FromDemand, { kind: "result" }>, "summary" | "citySummary" | "cityParts" | "intercitySummary" | "intercityParts" | "corridorKey" | "corridorShares" | "corridorRail" | "elsewhere" | "everydayPlaces" | "seg" | "board" | "alight" | "arrive" | "loadOfCrush" | "fareX" | "baseX" | "xferIn" | "parts" | "fareSense"> & { corridorDay?: [number, number] };
 type PeriodResult = Extract<FromDemand, { kind: "result" }>;
 /**
  * T-1543: one period's result from its parts (`result.part`, one from each solving worker, a part
@@ -350,6 +350,7 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
     arrive,
     loadOfCrush: sum((r) => r.loadOfCrush)!,
     fareX: sum((r) => r.fareX),
+    baseX: sum((r) => r.baseX),
     xferIn: sum((r) => r.xferIn),
     parts: first.parts && { keys: first.parts.keys, seg: sum((r) => r.parts?.seg)!, board: sum((r) => r.parts?.board)!, alight: sum((r) => r.parts?.alight)!, ...(list.some((r) => r.parts?.lean) ? { lean: sum((r) => r.parts?.lean) } : {}) },
     ms: most((r) => r.ms),
@@ -361,8 +362,8 @@ export function addParts(list: readonly PeriodResult[]): PeriodResult {
 /** A result's fields `DayResult` names, without the rest (the corridor table and modes are large and
  * read elsewhere). */
 export function dayResultOf(r: DayResult): DayResult {
-  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense } = r;
-  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, xferIn, parts, fareSense };
+  const { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, baseX, xferIn, parts, fareSense } = r;
+  return { summary, citySummary, cityParts, intercitySummary, intercityParts, corridorKey, corridorShares, corridorRail, elsewhere, everydayPlaces, seg, board, alight, arrive, loadOfCrush, fareX, baseX, xferIn, parts, fareSense };
 }
 
 /** What a solve's views are worked out from: its version, the round published and whether it is
@@ -499,6 +500,7 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const loadOfCrush = r.loadOfCrush.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
   // the fare curve's extra follows the riders on the stretch where it is counted (T-1516)
   const fareX = r.fareX?.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
+  const baseX = r.baseX?.map((v, j) => (r.seg[j] > 0 ? (v * seg[j]) / r.seg[j] : 0));
   // T-1255: the riders coming to a platform follow its boardings
   const arrive = r.arrive?.map((v, j) => (r.board[j] > 0 ? (v * board[j]) / r.board[j] : v));
   const citySummary: Record<CityId, number[]> = {};
@@ -530,7 +532,7 @@ function dayResult(dayTable: ArrayLike<number>, r: DayResult, q: number, day: De
   const by = (day: number, raw: number) => (raw > 0 ? day / raw : 1);
   const fareSense = r.fareSense && [r.fareSense[0] * by(railOf(citySummary), railOf(r.citySummary)), r.fareSense[1] * by(intercitySummary[2] ?? 0, r.intercitySummary[2] ?? 0), r.fareSense[2], r.fareSense[3]] as [number, number, number, number];
   // the corridors keep the weekday's numbers and their factors, applied as `dayCorridors` adds them (T-789)
-  return { ...r, fareSense, seg, board, alight, arrive, loadOfCrush, fareX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, everydayPlaces, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
+  return { ...r, fareSense, seg, board, alight, arrive, loadOfCrush, fareX, baseX, citySummary, intercitySummary, intercityParts, corridorDay: [fl, fw], elsewhere, everydayPlaces, summary, parts: { keys: p.keys, seg: ps, board: pb, alight: pa } };
 }
 
 /**
@@ -588,11 +590,13 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
     const boardings = stops.map(() => 0);
     let fullest = 0;
     const loads: Float32Array[] = [], board: Float32Array[] = [], alight: Float32Array[] = [], arrive: Float32Array[] = [];
-    const fareX: number[] = [];
+    const fareX: number[] = [], baseX: number[] = [];
     res.forEach((r, q) => {
-      let fx = 0;
+      let fx = 0, bx = 0;
       if (r.fareX) for (let k = o; k < o + 2 * n; k++) fx += r.fareX[k];
+      if (r.baseX) for (let k = o; k < o + 2 * n; k++) bx += r.baseX[k];
       fareX.push(fx);
+      baseX.push(bx);
       for (let k = 0; k < n; k++) {
         // stop k is route node o + k on run 0 and o + n + (n - 1 - k) on run 1
         const a = o + k, b = o + 2 * n - 1 - k;
@@ -627,7 +631,7 @@ function dayViewsOf(input: DayInput, day: DemandDay, res: DayResult[]): DayViews
       if (PERIODS[q].demand === "high")
         for (let k = 0; k < 2 * n; k++) fullest = Math.max(fullest, r.loadOfCrush[o + k]);
     });
-    lines.set(id, { ridersPerDay: boardings.reduce((x, y) => x + y, 0), fullestPct: Math.round(100 * fullest), boardings, loads, board, alight, arrive, fareX });
+    lines.set(id, { ridersPerDay: boardings.reduce((x, y) => x + y, 0), fullestPct: Math.round(100 * fullest), boardings, loads, board, alight, arrive, fareX, baseX });
   }
   const network: DemandView = {
     version: input.version,
@@ -727,6 +731,7 @@ export function packDays(views: DayViews[], layout: DayInput["layout"], periods:
       f64.push(l.ridersPerDay, l.fullestPct);
       put64(l.boardings);
       put64(l.fareX!);
+      put64(l.baseX!);
       for (let q = 0; q < periods; q++) { put32(l.loads[q]); put32(l.board![q]); put32(l.alight![q]); put32(l.arrive![q]); }
     }
     const nStations = stationsOf(stations);
@@ -766,10 +771,10 @@ export function unpackDays(p: PackedDays, layout: DayInput["layout"], periods: n
     const lines = new Map<string, LineDemand>();
     for (const { id, n } of layout) {
       const ridersPerDay = f64[b++], fullestPct = f64[b++];
-      const boardings = take64(n), fareX = take64(periods);
+      const boardings = take64(n), fareX = take64(periods), baseX = take64(periods);
       const loads: Float32Array[] = [], board: Float32Array[] = [], alight: Float32Array[] = [], arrive: Float32Array[] = [];
       for (let q = 0; q < periods; q++) { loads.push(take32(2 * (n - 1))); board.push(take32(2 * n)); alight.push(take32(2 * n)); arrive.push(take32(2 * n)); }
-      lines.set(id, { ridersPerDay, fullestPct, boardings, loads, board, alight, arrive, fareX });
+      lines.set(id, { ridersPerDay, fullestPct, boardings, loads, board, alight, arrive, fareX, baseX });
     }
     const stations = stationsOf(d.stations);
     const purposes = new Map<PurposeKey, PurposeDemand>();
