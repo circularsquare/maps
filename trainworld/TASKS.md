@@ -297,9 +297,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
-- T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room (taking, 2026-11-18, agent busroom)
-  - Context: Seen in T-3636's screenshot: a trip by bus has a panel row "Waiting for a train with room".
-  - Goal: The row names the bus (or boat, tram) the trip rides, as the ride hover already does.
 - T-3583 [P3] {L:timetables} {after:T-3557} Headway steppers skip headways with the same count
   - Context: From T-3557: `restHeadwayStep` skips headways that need the same train count, so 12 and 13 min can be skipped. Now that a stepped headway is stored and run, they are different services.
   - Goal: The steppers stop at every headway the line can run.

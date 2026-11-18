@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c010",
+      "text": "fixed bus trips saying they wait for a train with room",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3637",
+      "by": "busroom",
+      "at": "2026-11-18T06:55:05Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
       "id": "c009",
       "text": "fixed the trip panel showing transit as 100% or 0% for trips that happen less than once a day",
       "edited": null,

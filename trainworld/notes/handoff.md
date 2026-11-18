@@ -33,7 +33,22 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   Known: the set (like the Select bar) leaves a 176 m stub under a middle station that single Remove trims; unfiled.
 - partline (Opus, .tw-trees/partline, port 6198): T-3474 port of CinnamonVII's PR 21; checker + co-author credit
   at landing.
-- busroom (Sonnet, .tw-trees/busroom, port 6189): T-3637 "waiting for a bus with room".
+- T-3637 LANDED 3d524ff5 (c010).
+- Strings for her (old -> new), to list in the morning report: T-3632 noTrain/noAlt (new); T-3597's 14 keys ->
+  "Calculating trips" (cityInspector/demandSelector/loadBar/networkTips/trackHover "Calculating demand", linesTab
+  /schedule "Calculating rides…", lineFigures.pendingNew/schedule.calculating "calculating...", trainInspector
+  "Calculating", statusTag.recomputingCities "Trips in {count} cities being recomputed…" -> "Calculating trips in
+  {count} cities…", recomputingHere -> "Calculating trips here…", topBar "(trips being recomputed…)" -> "(calculating
+  trips…)", freedMemory -> "Calculating trips again after freeing memory"); T-3637 "Waiting for a train with room" ->
+  "Waiting for a {bus|train|tram|boat|ride} with room", fullWaitTip "Riders left at the platform by full trains wait
+  {min} more on average for a train with room." -> "Riders left behind by full {buses|...} wait {min} more on average
+  for a {bus|...} with room."; T-3634 "{n} pieces of track", "Shift+click more track to rebuild it together",
+  "Shift+click track to add it or take it out".
+- T-3604 (all-China worker restarts) held until the night run ends: memory-heavy beside the join.
+- landing (Opus, .tw-trees/landing, port 6196): T-3630 proposal only (settings list, feedback, A/B/C sheet
+  artifacts/trainworld/t3630-landing.png); sets {waits:Anita}.
+- T-3433 closed, not a bug (trips on Kobe's terminals; basemap's own airport icon on the runway); left as is, DECISIONS.
+- Night run 06:47 UTC: in the join (night1117b-T3511-join.log), roc+per joint group done 06:30; alive.
 - passage (Opus, .tw-trees/passage, port 6191): T-3482 passage missed after quick update solve; checker after.
 - T-3640 LANDED 7daba9ff (c008): the share's 8 MB header cap removed; over 2 MB says too big. No checker (a cap
   removed in forShare, narrow); follow-ups filed as T-3642. Not on 8800 yet (after batch 2).
