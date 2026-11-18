@@ -425,7 +425,10 @@ impl IntercityApi {
             })
             .collect();
         let moved = self.refresh_window(svc);
-        if moved || served != self.served || comp != self.served_comp {
+        // T-2880: the pairs read only which zones share a component, so renumbering alone keeps them
+        if !moved && served == self.served && comp != self.served_comp && same_joins(&self.served_comp, &comp) {
+            self.served_comp = comp;
+        } else if moved || served != self.served || comp != self.served_comp {
             match part.filter(|p| self.same_pairs_as(p, &served, &comp)) {
                 Some(p) => self.set_served_from(p, served, comp),
                 None => self.set_served(served, comp),

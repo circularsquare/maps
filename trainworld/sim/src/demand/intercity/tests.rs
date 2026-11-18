@@ -2806,6 +2806,43 @@ fn t2878_ab() {
         assert_eq!(same, "the same to the bit");
     }
 }
+/// T-2880: a market part moved from the `before` network to the `after` one in place (its pairs kept
+/// when only component numbers moved) against one set up on `after` from nothing: tables and every
+/// figure to the bit. `TW_T2878_BEFORE=<net> TW_T2878_AFTER=<net> cargo test --release --features demand --lib t2880_ab -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn t2880_ab() {
+    let read = |k: &str| -> serde_json::Value { serde_json::from_str(&std::fs::read_to_string(std::env::var(k).unwrap()).unwrap()).unwrap() };
+    let (before, after) = (read("TW_T2878_BEFORE"), read("TW_T2878_AFTER"));
+    let ids: Vec<String> = before["markets"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+    let idr: Vec<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let root = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
+    let mut moved = IntercityApi::new(&real_world(root, Some(&idr))).unwrap();
+    moved.set_chunk(MARKET_CHUNK);
+    t2878_set(&mut moved, &before, None);
+    let old_comp = moved.served_comp.clone();
+    let ms_moved = t2878_set(&mut moved, &after, None);
+    let mut fresh = IntercityApi::new(&real_world(root, Some(&idr))).unwrap();
+    fresh.set_chunk(MARKET_CHUNK);
+    let ms_fresh = t2878_set(&mut fresh, &after, None);
+    eprintln!("in place {ms_moved:.0} ms, from nothing {ms_fresh:.0} ms; components equal {}, joined alike {}", old_comp == fresh.served_comp, super::setup::same_joins(&old_comp, &fresh.served_comp));
+    assert_eq!(moved.served, fresh.served);
+    assert_eq!(moved.served_at, fresh.served_at);
+    assert_eq!(moved.pairs.len(), fresh.pairs.len());
+    for (a, b) in moved.pairs.iter().zip(&fresh.pairs) {
+        assert!(a.a == b.a && a.b == b.b && a.trips.to_bits() == b.trips.to_bits() && a.corridor == b.corridor && a.car == b.car && a.band == b.band, "a pair differs");
+    }
+    assert_eq!(moved.cpairs.len(), fresh.cpairs.len());
+    assert_eq!(moved.epairs.len(), fresh.epairs.len());
+    assert_eq!(moved.st_pat.off, fresh.st_pat.off);
+    assert_eq!(moved.want, fresh.want);
+    for q in 0..PERIODS {
+        assert!(moved.solve(q) && fresh.solve(q));
+        let same = figures_differ(&pass_figures(&moved, q), &pass_figures(&fresh, q));
+        eprintln!("period {q}: {same}");
+        assert_eq!(same, "the same to the bit");
+    }
+}
 /// T-2653: the market's pass on a captured net with the far-zone table filled by row (`0`) and by
 /// column (`1`) per `TW_MODES`, back to back in one process (`TW_REPS` rounds), every figure of each
 /// compared with the first's to the bit, the pass's sections timed and the memory printed.
