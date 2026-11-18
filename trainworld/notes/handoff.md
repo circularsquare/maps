@@ -45,8 +45,15 @@ said she's heading to bed: overnight, knock off Up next tasks with spare cores.
   for a {bus|...} with room."; T-3634 "{n} pieces of track", "Shift+click more track to rebuild it together",
   "Shift+click track to add it or take it out".
 - T-3604 (all-China worker restarts) held until the night run ends: memory-heavy beside the join.
-- landing (Opus, .tw-trees/landing, port 6196): T-3630 proposal only (settings list, feedback, A/B/C sheet
-  artifacts/trainworld/t3630-landing.png); sets {waits:Anita}.
+- T-3474 (partline) built, archived; checker check3474 (Sonnet, port 6198) running. Land with
+  "Co-Authored-By: CinnamonVII" (check his GitHub noreply form in notes/pr-survey-2026-11-17.md / the PR) and c010.
+- T-3482 retitled "New line on full track gets its trains minutes late" (not the passage: track shares re-settle
+  minutes after an edit); agent settle (Opus, .tw-trees/settle, port 6191) on it; checker before landing.
+- Night run: batch 1 (T-3511) joined and shipped 12 zones by 06:55 UTC; batch 2 (T-3455 coastal, 17 countries) began
+  06:57 UTC with backup.py. Watch: background task bglwdb3jw prints when pid 39588 exits.
+- T-3630 proposal ready, waits on her (asks.json; sheet artifacts/trainworld/review/t3630-landing.png; B recommended).
+- oomscreen (Sonnet, .tw-trees/oomscreen, port 6196): T-3643 start menu covers the out of memory screen (found by
+  T-3630's agent).
 - T-3433 closed, not a bug (trips on Kobe's terminals; basemap's own airport icon on the runway); left as is, DECISIONS.
 - Night run 06:47 UTC: in the join (night1117b-T3511-join.log), roc+per joint group done 06:30; alive.
 - passage (Opus, .tw-trees/passage, port 6191): T-3482 passage missed after quick update solve; checker after.

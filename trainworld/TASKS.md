@@ -239,9 +239,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3630 [P2] {L:feedback} Settings and feedback on the landing page (taking, 2026-11-18, agent landing)
-  - Context: Your pad, 2026-11-18, after a player on X couldn't load their save (stuck at "Calculating trips" 68%, about 2 minutes left, on an Osaka game): "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
+- T-3630 [P2] {L:feedback} {waits:Anita} Settings and feedback on the landing page
+  - Need from Anita: Pick A, B or C on artifacts/trainworld/t3630-landing.png and confirm the settings list; I recommend B (a Settings and Submit feedback row in the card) with Calculate intercity trips (made a setting on computers too), Use more cores and Panel and text size, language staying where it is.
+  - Context: The proposal is ready (notes/T-3630.md). Mid-load, feedback can already be reached, but only at the bottom of Settings; it can't be reached from the failure screen or after a reload, and that is where a stuck player ends up. Your pad, 2026-11-18: "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
   - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
+- T-3643 [P2] {L:feedback} Start menu covers the out of memory screen (taking, 2026-11-18, agent oomscreen)
+  - Context: Found by T-3630's agent: after a load that died (the iOS out-of-memory reload), the start menu draws over the "Ran out of memory" screen and its text is unreadable under the logo. notes/T-3630.md.
+  - Goal: After a died load the player can read the out of memory screen; the start menu shows only once it is closed.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
   - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.
@@ -282,10 +286,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Open-source issue 6: Suzhou to Shanghai's airports, Seoul to Incheon. Ground trips fade out from 40 km and stop at 80 km. You, 2026-11-17: "sure we can do big airports drawing ground trips from far away, not super high prio tho."
   - Goal: Hubs above a passenger threshold draw from cities 80-150 km away, sized by passengers, measured on a few hubs against published catchments.
   - Other: notes/T-3485.md
-- T-3474 [P3] {L:open-source} Partly built lines run their built stretch (taking, 2026-11-18, agent partline)
-  - Context: From CinnamonVII's PR 12 (its earlier PR 3). You, 2026-11-16: take it, not high priority. About 4-6 h.
-  - Goal: A line whose plan is not fully built runs on its built stretch, Cinnamon credited.
-  - Other: PR 21 is the same change rebased with PR 12's fixes; port it by hand with a real-save bit check (notes/pr-survey-2026-11-17.md).
 - T-3542 [P2] {L:timetables} {after:T-3521 and T-3346 stage 2} Four or five service periods
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: A design for you first, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
@@ -333,9 +333,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3395's second check: the scan never moves a pin that is still intact, so when the game ships a save format before the server knows it, a game's restore copy stays on an older save until the player saves again (335 of 13,023 games in the test store).
   - Goal: The scan moves a pin to the newest intact save when it is older, with the good-save tests still passing.
   - Other: notes/T-3395.md
-- T-3482 [P3] {L:route-choice} Station passage missed after a quick update solve (taking, 2026-11-18, agent passage)
-  - Context: On Tokyo-Sendai, a passage between stations (300 m to 1 km) is sometimes missed by long-distance demand after a quick update solve; only a reload counts it (found by feedsample, notes/T-3454.md).
-  - Goal: A quick update solve and a reload give the same long-distance figures.
+- T-3482 [P3] {L:timetables} New line on full track gets its trains minutes late (taking, 2026-11-18, agent settle)
+  - Context: Not the passage (2026-11-18): demand counts it every time, and a quick update and a reload of the same game agree (5,913 both). What swings is the test line's peak trains: 0 an hour in low runs, 2.35 in high ones, on capacity it shares with four Tokyo metro lines that stay at 15 or drop to 13.83; the shares moved minutes after the build with no edit, and the figure went from 5.9k to 30.4k. A fix would change how lines share full track on an edit, which is track work.
+  - Goal: A new line on track that other lines already fill gets its share of peak trains at the edit (Tokyo-Sendai: 2.35 an hour, not 0), and the shares don't move minutes later with no edit. Likely in settle_counts and fill (sim/src/track/world.rs, T-1787). Then check T-3483, which may be the same.
+  - Other: notes/T-3482.md
 - T-3483 [P3] {L:route-choice} Two real networks lower rail on Tokyo-Osaka
   - Context: Adding both real networks gives less rail than the line alone, with and without the T-3426 fix; guess: the 10-access-station cap pushes the terminal out of dense zones' sets (notes/T-3454.md). Also from feedsample: T-3426's London-Paris real figure was high, about 20k/day is closer.
   - Goal: Adding a real network never lowers rail on a pair, or the reason is written down.

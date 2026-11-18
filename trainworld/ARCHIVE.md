@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3474 [P3] {L:open-source} Partly built lines run their built stretch (2026-11-18): partly built lines run their longest built stretch (CinnamonVII's PR 21, ported by hand); real NYC save bit-identical; notes/T-3474.md.
 - T-3637 [P3] {L:small-fixes} Bus trips say waiting for a train with room (2026-11-18): The wait for room row, its hover, the equation term and the cost term name the bus, boat or tram the trip rides; a row summing rides of different kinds says a ride (all 13 languages).
 - T-3433 [P3] {L:airports} Kobe Airport demand is offset from the terminal (2026-11-18): Not a bug: Kobe's trips sit on the OSM terminal buildings (cells 130-150 m off them); the offset seen is the basemap's own airport icon on the runway, 470 m south. Same rule gives terminal-based placement at KIX, Chubu, Haneda, Hong Kong, Incheon.
 - T-3638 [P3] {L:rebuild-track} Remove a set of selected track (2026-11-18): Remove track on a set's panel and the Delete key remove the set in one edit (removePieces, as the Select bar), one question with the total length, final; touch still cannot build a set.
