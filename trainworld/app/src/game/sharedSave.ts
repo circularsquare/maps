@@ -17,7 +17,7 @@
 
 import { isLineShape } from "./lineShape";
 import { decompressGzip } from "../workers/gzip";
-import { encodeSave, isRetiredTrackFormat, isThisWorld, SAVE_FORMAT, SAVE_HEADER_FIELDS, SAVE_MAGIC, type SaveHeader } from "../workers/saveFile";
+import { encodeSave, isRetiredTrackFormat, isThisWorld, NEW_HEADWAY_KINDS, SAVE_FORMAT, SAVE_HEADER_FIELDS, SAVE_MAGIC, type SaveHeader } from "../workers/saveFile";
 
 /** shonei-server's MaxTwCommunitySave and MaxTwCommunitySaveUnpacked */
 export const MAX_SHARED_SAVE = 2 << 20;
@@ -58,7 +58,7 @@ const FIELDS: Record<keyof SaveHeader, (v: unknown) => boolean> = {
   notes: opt(rec((n) => Array.isArray(n) && n.length === 2 && num(n[0]) && str(n[1]))),
   shapes: opt(rec(isLineShape)), hidden: opt(arr(str)),
   mode: opt((m) => m === "normal" || m === "sandbox"), start: opt(str), dayShift: opt((v) => typeof v === "number" && Number.isFinite(v)), opened: opt(arr(str)),
-  demandFine: opt(arr(str)), demandBuilt: opt(arr(arr(str))), newCars: opt(num), newWeekendShare: opt(num), newHeadway: opt((v) => plain(v) && Object.keys(v).every((k) => k === "rail" || k === "tram" || k === "fast") && Object.values(v).every((h) => Array.isArray(h) && h.length === 3 && h.every(num))), level: opt(num),
+  demandFine: opt(arr(str)), demandBuilt: opt(arr(arr(str))), newCars: opt(num), newWeekendShare: opt(num), newHeadway: opt((v) => plain(v) && Object.keys(v).every((k) => (NEW_HEADWAY_KINDS as readonly string[]).includes(k)) && Object.values(v).every((h) => Array.isArray(h) && h.length === 3 && h.every(num))), level: opt(num),
   guide: opt(plain), achievements: opt(rec((a) => plain(a) && num(a.at) && opt(str)(a.of) && opt(num)(a.v) && opt(arr(str))(a.in))),
   home: opt(str), copy: opt(str), modded: opt(arr(str)),
 };

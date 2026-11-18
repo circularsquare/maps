@@ -2,7 +2,8 @@
 // from its panel's schedule heading: the schedule in Simple mode on the left (the line panel's own
 // table, steppers and dots), its departures board and timetable chart on the right. A group's,
 // opened from the group view: the group's chart, the longest line's stops down its side and the
-// others drawn where they share its track. docs/ui-panels.md "Schedule panel".
+// others drawn where they share its track. A bus or ferry line's (T-3703) is the left side without the board.
+// docs/ui-panels.md "Schedule panel".
 
 import { signal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
@@ -34,8 +35,10 @@ const DAY_START_H = 4;
 
 const DAY = 86400, HOUR = 3600;
 
-/** A rail line the panel can show: running, with track and two stops. */
-const charted = (st: LineStats | undefined, l: LineInput | undefined): st is LineStats => !!st && !!l && !st.bus && st.status === "running" && l.stops.length >= 2;
+/** A line the panel opens for: running, with two stops (T-3703: a bus or ferry line too). */
+const scheduled = (st: LineStats | undefined, l: LineInput | undefined): st is LineStats => !!st && !!l && st.status === "running" && l.stops.length >= 2;
+/** A line the board and chart can show: a scheduled rail line (the sim keeps no bus or ferry timetable). */
+const charted = (st: LineStats | undefined, l: LineInput | undefined): st is LineStats => scheduled(st, l) && !st.bus;
 
 // ---------------------------------------------------------------- departures
 
@@ -171,6 +174,18 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   );
 }
 
+/** T-3703: a bus or ferry line's: the left side alone, with no track limits (no track) and no board (no timetable). */
+function BusBody({ l, st }: { l: LineInput; st: LineStats }) {
+  const { periods } = useLinePeriods(l.id, l);
+  return (
+    <div class="sp-body">
+      <div class="sp-left">
+        <Schedule l={l} st={st} now={demandAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends />
+      </div>
+    </div>
+  );
+}
+
 function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; others: LineInput[] }) {
   const links = useChartLinks(axis, st);
   // kept while the group's lines are the same: the chart redraws its trains when it changes
@@ -189,12 +204,12 @@ function GroupBody({ axis, st, others }: { axis: LineInput; st: LineStats; other
 /** The modes the heading offers; the choice is drawn only once there is more than Simple (Detailed and Exact, T-3346 stages 3 and 6). */
 const scheduleModes = (): [string, string][] => [["simple", t("schedulePanel.simple")]];
 
-function Frame({ label, title, mode, children }: { label: string; title: ComponentChildren; mode?: ComponentChildren; children: ComponentChildren }) {
+function Frame({ label, title, mode, narrow = false, children }: { label: string; title: ComponentChildren; mode?: ComponentChildren; narrow?: boolean; children: ComponentChildren }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, true);
   const close = () => (scheduleShown.value = null);
   return (
-    <dialog class="saves-panel sched-panel" ref={dialog} aria-label={label}
+    <dialog class={"saves-panel sched-panel" + (narrow ? " narrow" : "")} ref={dialog} aria-label={label}
       onCancel={(e) => { e.preventDefault(); close(); }}
       onClick={(e) => { if (e.target === e.currentTarget) close(); }}
       onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); close(); } }}>
@@ -217,11 +232,11 @@ export function SchedulePanel() {
   let body: ComponentChildren = null;
   if (s && w && s.kind === "line") {
     const l = linesById(w).get(s.line), st = l ? w.lineStats[l.id] : undefined;
-    if (l && charted(st, l)) {
+    if (l && scheduled(st, l)) {
       body = (
-        <Frame label={t("schedulePanel.label", { line: l.name })} title={<><Chip line={l} plain /><span class="sp-name">{l.name}</span></>}
+        <Frame label={t("schedulePanel.label", { line: l.name })} title={<><Chip line={l} plain /><span class="sp-name">{l.name}</span></>} narrow={!!st.bus}
           mode={scheduleModes().length > 1 ? <span class="sp-mode"><Segmented options={scheduleModes()} value="simple" onChange={() => {}} /></span> : undefined}>
-          <LineBody l={l} st={st} />
+          {st.bus ? <BusBody l={l} st={st} /> : <LineBody l={l} st={st} />}
         </Frame>
       );
     }
@@ -239,14 +254,14 @@ export function SchedulePanel() {
       );
     }
   }
-  // its line gone, stopped or now a bus line: closed, so it does not come back by itself
+  // its line gone or stopped: closed, so it does not come back by itself
   useEffect(() => { if (s && w && !body) scheduleShown.value = null; }, [s, w, !body]);
   return <>{body}</>;
 }
 
 /** The line panel's icon beside its schedule: the schedule panel (T-3543: a size bigger than the others there). */
 export function ScheduleButton({ l, st }: { l: LineInput; st: LineStats }) {
-  if (!charted(st, l)) return null;
+  if (!scheduled(st, l)) return null;
   const tip = t("schedulePanel.open");
   return <button class="btn icon mini sched-open" aria-label={tip} data-tip={tip} onClick={() => (scheduleShown.value = { kind: "line", line: l.id })}><Icon.timetable /></button>;
 }

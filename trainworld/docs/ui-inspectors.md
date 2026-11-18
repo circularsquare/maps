@@ -660,9 +660,9 @@ A bus line's panel (T-1464, ui/inspector/BusInspector.tsx) is the line panel cut
 in place of Edit stops (Save route while the route is open, which saves it; T-1514), Copy line (a planned copy) and Delete line (a constructed route refunds
 nothing, so it is asked about; a planned line goes at once); while planned, its Construct price with the route and the buses in the hover. Its title,
 schedule and counts block are the line panel's own parts (`LineTitle.tsx`, `schedule.tsx`, T-2373), in
-buses: buses or a headway per demand level with the same hovers, the crowding dots, the schedule's copy and
-paste buttons (between a bus or ferry line and any other line only the buses or headways are carried, the
-hovers saying so: "Headways 8 min, 15 min and 30 min", "4, 3 and 2 buses"; no timetable chart), the waiting
+buses: buses or a headway per demand level with the same hovers, the crowding dots, beside the heading the
+schedule panel button of a running line (its weekends and new bus lines' headways, no board or timetable chart,
+[ui-panels.md](ui-panels.md#schedule-panel), T-3703; no chart toggle), the waiting
 spinner on a level with buses while demand loads, and the average speed; no track limits (T-2919). Stops: the ends and the
 train stations met, the street stops between folded into one row each, in the line panel's order (north or
 west end on top) with its stop times (the time from the stop on top after each name, "12m30s").

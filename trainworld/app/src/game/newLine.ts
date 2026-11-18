@@ -1,6 +1,8 @@
 // What a new line starts with, by mode (T-2919): the one place for these. The clock worker passes
 // them to the sim when it makes the line; nothing lets the player change dwell or turnaround after.
 
+import type { NewHeadways } from "../workers/saveFile";
+
 type Levels = [number, number, number];
 
 export const NEW_LINE = {
@@ -13,3 +15,11 @@ export const NEW_LINE = {
   /** A boat every 20, 30 and 60 minutes (T-2273; the low-demand boat is T-3400). */
   ferry: { headwayS: [1200, 1800, 3600] as Levels, dwellS: 60, turnaroundS: 300 },
 };
+
+/** The headways a new line of `kind` starts with: the player's default for it (T-3543, T-3703), else a bus's or
+ * ferry's own above; null for a rail kind with none set (it starts on counts). */
+export function headwaysFor(kind: keyof NewHeadways, set: NewHeadways): Levels | null {
+  const h = set[kind];
+  if (h) return [h[0], h[1], h[2]];
+  return kind === "bus" || kind === "ferry" ? [...NEW_LINE[kind].headwayS] : null;
+}

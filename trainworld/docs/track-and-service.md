@@ -2144,7 +2144,7 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
 - **Money**: US$1M a road-km, paid on Construct with US$0.6M a bus, a fleet of its own with spares
   shared between bus lines; running US$6 a bus-km and upkeep US$30 a road-km a day (real figures,
   `ECONOMY` times in the game). Removing or redrawing a constructed route is final and refunds
-  nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09), 30 s dwell at
+  nothing. A new bus line starts at a bus every 8, 15 and 30 minutes by level (Anita, 2026-11-09; the bus default for new lines instead once set, T-3703), 30 s dwell at
   train stations and 120 s turnaround (`NEW_LINE` in app/src/game/newLine.ts, the one place for what a new
   line of each mode starts with). A copy is planned.
 - **Loops** (T-2899; `bus::is_closed`): a route of four points or more whose last point is its first is a loop.
@@ -2250,7 +2250,7 @@ ports stations, a boat two cars). Code: `track/ferry.rs`, exports `wasm/ferry.rs
   times in the game). The route is free, and redrawing it is free; removing a ferry line leaves its
   ports and is undoable. The Construct quote lists ports as kind 12, boats as kind 13 and the route's
   metres (free) as kind 14. A new ferry line starts at a boat every 20, 30 and 60 minutes at high, medium
-  and low demand (T-2273, T-3400), 60 s dwell, 300 s
+  and low demand (T-2273, T-3400; the ferry default for new lines instead once set, T-3703), 60 s dwell, 300 s
   turnaround (`NEW_LINE.ferry` in app/src/game/newLine.ts, which the app passes).
 - **Loops** (T-2899; `ferry::is_closed`): a line of four stops or more whose last port is its first is a loop,
   as for a bus line (6.7): a circle in the service, one way unless set both ways (T-2981). The route runs from the first

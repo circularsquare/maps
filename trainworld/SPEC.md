@@ -254,7 +254,8 @@ only way around [T-798]. While a line's stops are edited a click on a station ad
 junction conflicts add delay, computed from the schedules in the clock worker before demand runs,
 and no track, platform or junction carries more trains than its capacity: a line's fleet past that
 waits at its ends [T-517]. A line's schedule panel shows its schedule beside a station's departures board and its
-timetable chart, and a line group's chart [T-3346 stage 1; more modes to come, notes/T-3346.md].
+timetable chart (a bus or ferry line's its schedule alone, weekends included, T-3703), and a line group's chart
+[T-3346 stage 1; more modes to come, notes/T-3346.md].
 The clock worker owns edits (with undo for reversible changes), capacity, fleet, costs, money and
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
 drain evenly [T-284], each hour's share following when riders travel and trains run, fares
@@ -303,7 +304,7 @@ under 1.3 times the shortest, with bends up to 300 m and a speed each point by i
 at 0.15 m/s²; US$10M a port, US$8M a boat and US$40 a boat-km to run. The player places ports only with
 the Ferry tool (beside Bus, key O; T-2194); the line draws dashed, boats as pointed hulls, with a panel
 like a bus line's whose port list takes a port out by its dot or moves one by dragging (T-2275), and a
-Ferry fare row in the Money tab. A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400). In demand (T-2195) a ferry line is a line like
+Ferry fare row in the Money tab. A new line runs a boat every 20, 30 and 60 minutes at high, medium and low demand (T-2273, T-3400), or the ferry default once one is set (T-3703). In demand (T-2195) a ferry line is a line like
 any other, its ports stations, with no boarding cost; its rides pay the curve's part above the base
 times the Ferry multiple, and trips by ferry are the network's. A tenth of visits and attractions
 trips are ferry fans, for whom each minute aboard a ferry counts 0.1 (T-2196, docs/demand-mode.md).

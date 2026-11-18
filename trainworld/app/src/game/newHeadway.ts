@@ -1,14 +1,16 @@
 // T-3543, T-3588: the headways every new line starts with, one set per kind of line (normal train, tram,
-// high speed), set from the timetables window. Saved with the game (the header's `newHeadway`, kept by the
-// clock worker, outside the undo history). A new game has none: a new line starts on train counts until
-// the player sets a default for its kind. Buses and ferries have their own.
+// high speed, bus, ferry; T-3703), set from the timetables window. Saved with the game (the header's `newHeadway`,
+// kept by the clock worker, outside the undo history). A new game has none: a new rail line starts on train counts
+// until the player sets a default for its kind, and a new bus or ferry line on its tool's headways (`NEW_LINE`).
 
 import { signal } from "@preact/signals";
 import type { NewHeadways, Headways } from "../workers/saveFile";
+import { headwaysFor } from "./newLine";
 import { world, headwayShown, headwaysOfTrains, setAutoTrains, setHeadways } from "./world";
 
 export type { Headways, NewHeadways };
-export type LineKind = "rail" | "tram" | "fast";
+export { headwaysFor };
+export type LineKind = keyof NewHeadways;
 
 /** The defaults as the clock worker has them. */
 export const newHeadway = signal<NewHeadways>({});
@@ -20,10 +22,11 @@ export function setNewHeadwaySink(f: (seconds: NewHeadways) => void) { sink = f;
 /** The defaults as the clock worker has them: on a load. */
 export function takeNewHeadway(seconds: NewHeadways) { newHeadway.value = seconds; }
 
-/** The kind of default line `id` takes, null for a bus or ferry line (they have their own). */
+/** The kind of default line `id` takes. */
 export function lineKind(id: string): LineKind | null {
   const st = world.value?.lineStats[id];
-  if (!st || st.bus) return null;
+  if (!st) return null;
+  if (st.bus) return st.bus.ferry ? "ferry" : "bus";
   return st.tram ? "tram" : st.fast ? "fast" : "rail";
 }
 
@@ -47,7 +50,7 @@ export function makeDefaultHeadway(id: string): boolean {
 /** Give line `id` the default headways of its kind, as the edit a player's own headway change is; false
  * when its kind has no default. */
 export function applyDefaultHeadway(id: string): boolean {
-  const kind = lineKind(id), h = kind && newHeadway.value[kind];
+  const kind = lineKind(id), h = kind && headwaysFor(kind, newHeadway.value);
   if (!h) return false;
   setHeadways(id, h);
   return true;

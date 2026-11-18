@@ -2,7 +2,7 @@
 // its stops with the street stops folded into a row, and the past 24 hours with the riders changing to
 // trains. No train kind, length, stop editor or related-lines diagram. LineInspector.tsx hands a bus
 // line over to it. T-2194: a ferry line too (its row is a bus row with `ferry` set), in boats, its
-// stops its ports. The schedule with its crowding dots and copy buttons, the title, the past 24 hours,
+// stops its ports. The schedule with its crowding dots and schedule panel button (T-3703), the title, the past 24 hours,
 // the stop times, the north-up order and the round trip are the rail panel's (schedule.tsx,
 // LineTitle.tsx, LineInspector.tsx; T-2373, T-2919).
 
@@ -25,7 +25,7 @@ import { demandView, complexTransfers } from "../../game/demand";
 import { placesNear, hoodsNear, townsNear } from "../../game/placeList";
 import { endsInStation, placeName } from "../../map/stationNames";
 import type { ClockBus } from "../../workers/protocol";
-import { RoundTrip, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
+import { RoundTrip, ScheduleButtons, StopToday, StopTransfers, StretchHalf, stretchLooks } from "./LineInspector";
 import { LineFare, LineMoney } from "./LineMoney";
 import { PurposeSplit } from "./PurposeSplit";
 import { drawnReversed } from "../../game/northUp";
@@ -385,7 +385,7 @@ export function BusInspector({ id }: { id: string }) {
         <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
-      <Schedule l={l} st={st} now={now} crowd={periods} />
+      <Schedule l={l} st={st} now={now} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />
       <ul class="rows">
         <AverageSpeed st={st} lev={lev} />
       </ul>

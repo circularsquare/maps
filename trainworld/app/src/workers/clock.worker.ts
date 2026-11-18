@@ -14,7 +14,7 @@ import { CITIES, cityById, cityWithin, HOME_CITY, NEW_GAME_FRAME, WORLD_ID, zone
 import { blockFile, blocksTouching, indexHas, parseBlockIndex, type BlockIndex } from "../game/terrainBlocks";
 import { frameKindName, frameKindNumber, M_PER_DEG, makeFrame, mercK, type Frame, type FrameSpec } from "../game/frame";
 import { PERIODS } from "../game/periods";
-import { NEW_LINE } from "../game/newLine";
+import { headwaysFor, NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
@@ -3828,6 +3828,15 @@ function addPorts(a: TrackApi, ports: FerryPortIn[]): Uint32Array | null {
   return Uint32Array.from(out);
 }
 
+/** T-3588, T-3703: a new bus or ferry line (`r` its edit's answer) at the weekend percent "Apply to all lines" set for
+ * new lines, as a second edit, as a rail line's; both edits' charges. */
+function newLineWeekends(a: TrackApi, r: number, line: number): { r: number; line: number; charge?: number; trainCharge?: number } {
+  if (r !== 0 || newLineWeekendShare === null || newLineWeekendShare === 100) return { r, line };
+  const charge = a.last_charge(), trainCharge = a.last_train_charge();
+  if (a.set_line_weekend_share(line, newLineWeekendShare) !== 0) return { r, line, charge, trainCharge };
+  return { r, line, charge: charge + a.last_charge(), trainCharge: trainCharge + a.last_train_charge() };
+}
+
 /** T-1475: a new bus line's name, "Bus n" with n the sim's next free line number (T-2194: "Ferry n"). */
 function nextBusName(a: TrackApi, word = "Bus "): string { // i18n-ignore: a line's saved name
   const taken = new Set<string>();
@@ -4097,8 +4106,9 @@ function applyInner(op: EditOp): Applied {
       return { r: a.construct_line(op.line) };
     case "addBusLine": {
       const id = a.new_line_id();
-      const { headwayS: [h, m, l], dwellS, turnaroundS } = NEW_LINE.bus;
-      return { r: a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), line: id };
+      const { dwellS, turnaroundS } = NEW_LINE.bus;
+      const [h, m, l] = headwaysFor("bus", newLineHeadway)!;
+      return newLineWeekends(a, a.set_bus_line(id, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a)), id);
     }
     case "busRoute":
       return { r: a.set_bus_route(op.line, Float64Array.from(op.route)) };
@@ -4112,8 +4122,9 @@ function applyInner(op: EditOp): Applied {
       const ports = addPorts(a, op.ports);
       if (!ports) return { r: 1 };
       const id = a.new_line_id();
-      const { headwayS: [h, m, l], dwellS, turnaroundS } = NEW_LINE.ferry;
-      return { r: a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), line: id }; // i18n-ignore: a line's saved name
+      const { dwellS, turnaroundS } = NEW_LINE.ferry;
+      const [h, m, l] = headwaysFor("ferry", newLineHeadway)!;
+      return newLineWeekends(a, a.set_ferry_line(id, ports, Float64Array.from(op.route), h, m, l, dwellS, turnaroundS, colourInt(op.colour), op.name || nextBusName(a, "Ferry ")), id); // i18n-ignore: a line's saved name
     }
     case "ferryRoute": {
       const ports = addPorts(a, op.ports);

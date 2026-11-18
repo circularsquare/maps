@@ -21,7 +21,7 @@ import { ask } from "../../game/ui";
 import { useClockQuery } from "../useClockQuery";
 import { DEMAND_INDEX, DEMANDS, loopHalves, type Demand, type LineInput, type LineStats } from "../../game/types";
 import { pendingLabel } from "../../game/lineFigures";
-import { lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
+import { headwaysFor, lineKind, makeDefaultHeadway, newHeadway, applyDefaultHeadway } from "../../game/newHeadway";
 import { liveMoney, moneyState, type MoneyState } from "../../game/money";
 import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, headwayShown, nextHeadway, refusedForCash, restHeadwayStep, restTphShown, setAutoTrains, setHeadway, setTrainCount, setWeekendCount, setWeekendShare, setWeekendShareAll, stepHeadway, stepTrainCount, stepWeekendCount, stepWeekendHeadway, trainCap, typeWeekendHeadway, trainsShown, weekendShown, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
@@ -340,12 +340,12 @@ export function Schedule({ l, st, now, limits = NO_LIMITS, crowd = null, canAuto
 }
 
 /** T-3543, T-3588: the headways every new line of this line's kind starts with, in the schedule panel: what they
- * are now, the button that makes this line's the default for the kind, and the way back. A bus or
- * ferry line has none. */
+ * are now, the button that makes this line's the default for the kind, and the way back. A bus or ferry line's
+ * (T-3703) are its tool's until one is set. */
 function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, number] | null }) {
   const kind = lineKind(id);
   if (!kind) return null;
-  const now = newHeadway.value[kind] ?? null;
+  const now = headwaysFor(kind, newHeadway.value);
   const same = !!auto && !!now && auto.every((s, i) => s === now[i]);
   return (
     <div class="sched-default">
@@ -358,7 +358,7 @@ function DefaultHeadways({ id, auto }: { id: string; auto: [number, number, numb
     </div>
   );
 }
-const KIND_TITLE = { rail: "schedule.defaultTitle", tram: "schedule.defaultTitleTram", fast: "schedule.defaultTitleFast" } as const;
+const KIND_TITLE = { rail: "schedule.defaultTitle", tram: "schedule.defaultTitleTram", fast: "schedule.defaultTitleFast", bus: "schedule.defaultTitleBus", ferry: "schedule.defaultTitleFerry" } as const;
 
 /** T-3521: the schedule panel's table body: a Weekdays section and a Weekends section, each a row a
  * level. Today's kind of day bolds its level now, as the line panel does, and has `crowd`'s dots;

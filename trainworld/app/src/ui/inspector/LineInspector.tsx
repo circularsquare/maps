@@ -634,9 +634,8 @@ function stretchTip(s: { reached: number; limit: number; why: number } | undefin
 }
 
 /** The chart and schedule panel buttons beside the Schedule heading (T-3543: the copy and paste buttons are gone;
- * a default for new lines is set in the schedule panel). */
+ * a default for new lines is set in the schedule panel). A bus or ferry line has the schedule panel's alone (T-3703). */
 export function ScheduleButtons({ l, st }: { l: LineInput; st: LineStats }) {
-  if (st.bus) return null;
   return (
     <span class="sched-copy">
       <MareyButton st={st} />

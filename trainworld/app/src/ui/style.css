@@ -253,6 +253,9 @@ svg .stroke2 { stroke-width: 2; }
 .marey-now { stroke: var(--accent); stroke-width: 1.5; }
 /* T-3346: the schedule panel (SchedulePanel.tsx), centred like Community */
 .saves-panel.sched-panel { width: min(1320px, calc(100vw - 40px)); }
+/* T-3703: a bus or ferry line's, the schedule alone */
+.saves-panel.sched-panel.narrow { width: min(360px, calc(100vw - 40px)); }
+.sched-panel.narrow .sp-left { flex: 1 1 auto; }
 .saves-head.sp-title h2 { display: flex; align-items: center; gap: 8px; flex: none; min-width: 0; }
 .sp-title .sp-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-title .sp-word { color: var(--muted); font-weight: 400; font-size: 14px; }

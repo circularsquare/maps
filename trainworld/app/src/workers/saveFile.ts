@@ -72,14 +72,16 @@ export function addEntry(to: Omit<DayLedger, "day">, e: Omit<DayLedger, "day">, 
 
 /** T-3543, T-3588: the headways new lines start with (seconds at high, medium and low demand), by kind of line */
 export type Headways = [number, number, number];
-export type NewHeadways = { rail?: Headways; tram?: Headways; fast?: Headways };
+export type NewHeadways = { rail?: Headways; tram?: Headways; fast?: Headways; bus?: Headways; ferry?: Headways };
+/** The kinds of line a default headway is kept for (T-3703: bus and ferry too) */
+export const NEW_HEADWAY_KINDS = ["rail", "tram", "fast", "bus", "ferry"] as const;
 const isHeadways = (v: unknown): v is Headways => Array.isArray(v) && v.length === 3 && v.every((s) => typeof s === "number" && Number.isFinite(s) && s >= 0);
 /** A header's `newHeadway` read back: the kinds it holds well-formed, none from anything else. */
 export function cleanNewHeadways(v: unknown): NewHeadways {
   const out: NewHeadways = {};
   if (v && typeof v === "object" && !Array.isArray(v)) {
     const o = v as Record<string, unknown>;
-    for (const k of ["rail", "tram", "fast"] as const) if (isHeadways(o[k])) out[k] = [o[k][0], o[k][1], o[k][2]];
+    for (const k of NEW_HEADWAY_KINDS) if (isHeadways(o[k])) out[k] = [o[k][0], o[k][1], o[k][2]];
   }
   return out;
 }

@@ -14,7 +14,7 @@ import { cityById, cityWithin, outlinesIn } from "./cities";
 import { awayNear, awaySoon, dateRange, rushRun, rushSoon, whenAway, whenBack, whenOut } from "./days";
 import { holidayName, kindOfIn, rowOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
-import { world } from "./world";
+import { busStopsById, world } from "./world";
 import { t, type MessageKey } from "../i18n";
 import { countryName as countryNameIn } from "../i18n/intl";
 
@@ -53,9 +53,16 @@ export function lineCountry(stops: readonly string[]): string | null {
   // T-2404: asked per line on every state (the Lines tab), ~200 ms on all of Japan done by search
   let byId = stationsById.get(st);
   if (!byId) stationsById.set(st, (byId = new Map(st.map((x) => [x.id, x]))));
-  const s = byId.get(stops[0]);
-  if (!s) return null;
   const outlines = outlinesIn.value;
+  const s = byId.get(stops[0]);
+  if (!s) {
+    // T-3703: a bus line starting at a street stop, as the clock worker places it (`lineFirstStops`)
+    const b = busStopsById(world.value!).get(stops[0]);
+    if (!b) return null;
+    let c = busStopCountry.get(b.id);
+    if (!c || c.outlines !== outlines || c.lng !== b.lng || c.lat !== b.lat) busStopCountry.set(b.id, (c = { outlines, lng: b.lng, lat: b.lat, country: countryAt(b.lng, b.lat) }));
+    return c.country;
+  }
   let c = stationCountry.get(s);
   if (!c || c.outlines !== outlines) stationCountry.set(s, (c = { outlines, country: countryAt(s.lng, s.lat) }));
   return c.country;
@@ -64,6 +71,8 @@ export function lineCountry(stops: readonly string[]): string | null {
  * station is a new object) */
 const stationsById = new WeakMap<readonly object[], Map<string, { lng: number; lat: number }>>();
 const stationCountry = new WeakMap<object, { outlines: unknown; country: string | null }>();
+/** a bus line's first street stop's country by stop id (its stop objects are new with each state) */
+const busStopCountry = new Map<string, { outlines: unknown; lng: number; lat: number; country: string | null }>();
 
 const regionNames = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
 export const countryName = (cc: string): string => regionNames ? countryNameIn("en", cc) : cc;
