@@ -7,6 +7,23 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
+-6. 21:55 UTC her word: "please also make sure no uploads, experiencing a bit of lag". No pushes, deploys, rclone or
+   server reads until she says she's done. Translations all merged (i18n clean after a glossary except for
+   updates.v042Change31); back042 (Sonnet) back-translating, then an Opus review pass.
+-5. 21:45 UTC: T-3724 landed 48a7d6c0 (c058 in demand). Changelog published as v0.4.2 (41 updates keys);
+   tr042 translating them (resumed). She's playing League: core cap set to 12 (her ask: keep 4 free; set back to
+   14 when she says). New zones exist (Perth, Turkey, Argentina, Guatemala; image made), so deploy needs a DATA
+   upload (new --version, e.g. 2026-11-18b, not --skip-data): rclone can saturate her upload, so hold the upload
+   until she's off League. stoplost (Opus) T-3731 started (stop edits lost on big saves; her P1, not in v0.4.2).
+-4. 21:35 UTC her word: "ok edited changelog. looks good to me now. lets actually just wait for the "no route"
+   fix, put that in, and then do translations and then send it. im tired so i wont be able to do any work for a
+   bit". So: routechk PASS -> land railnone (WASM), move its item into demand; changelog publish v0.4.2; tr042 gets
+   the updates.v042* keys; back-translate + review; commit; snap8800; smoke8800 light+dark; new_zones_map.py if
+   zones changed (data upload needs a new --version; v0.4.1 was --skip-data 2026-11-18); deploy.py dry-run, then
+   --smoked; website push; --verify --page; opensource export push. If routechk FAILS, ask her (ship without).
+-3. 21:22 UTC: T-3722 landed 62809406 (c057). Text all acknowledged ("text ok"). She is editing the changelog on
+   the board. tr042 (Opus) translating new/stale keys in the main tree (12 languages); send it the updates.v042*
+   keys after changelog publish, then a back-translate (Sonnet) and review (Opus) pass. routechk still running.
 -2. 21:20 UTC: landed since: T-3727, T-3728, T-3657 (c056 starred). Checkers running: exitchk (T-3722) and
    routechk (T-3724, tree railnone: intercity "no route" with riders, cause found on a player's save; sim, WASM
    rebuild at landing; in v0.4.2 if it passes). Filed T-3730 (same loop in trip.rs). She is editing the board.

@@ -164,6 +164,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
+- T-3731 [P1] {L:stops} Stop edits lost on large saves (taking, 2026-11-18, agent stoplost)
+  - Context: A Discord report, and you've seen it too, 2026-11-18: "sometimes on large saves ediiting stops is laggy ... a player can edit some stops and it looks like the changes goes through, then they click "done editing stops" or otherwise exit editing stops mode. but the change doesnt actually get saved, and doesnt get applied. if they edit stops again it just shows that the edits were not applied. ideally we save these somehow and ensure they dont get lost even if its slow".
+  - Goal: Every stop edit shown on the map is applied and saved, however slow, including when stop editing is left at once; reproduced on a large save before and after.
 - T-3730 [P3] {L:route-choice} Local trip panel can list no route while trains carry riders
   - Context: From T-3724: `trip.rs` (about line 807, the local trip panel's "No route.") has the same route loop T-3724 fixed for intercity trips, with no keep-one rule. Not reported by players.
   - Goal: Checked on a real save; the local panel lists a route whenever rail carries riders, as T-3724's `pick_routes` does.
