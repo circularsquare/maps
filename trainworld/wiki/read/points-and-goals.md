@@ -6,7 +6,7 @@ Each region gets a score for how good its network is, and goals to reach.
 
 A trip is a rider's whole rail journey, however many lines it uses, and counts in the region it starts in. Passenger-km count where riders get on. A region whose riders all board in another region's stations scores no trips.
 
-**Goals.** A region's goal is the share of its trips that go by train. The first goal is 10%, then 20%, 30% and 40%. The share is measured on the average day, so switching the day you are viewing earns nothing. Each goal is kept once it is reached, even if the share falls back again. The first one is the star.
+**Goals.** A region's goal is the share of the trips within it that go by train: its own trips, the long ones between its far-apart parts too, but not the ones to other places. The first goal is 10%, then 20%, 30% and 40%. The share is measured on the average day, so switching the day you are viewing earns nothing. Each goal is kept once it is reached, even if the share falls back again. The first one is the star.
 
 **Where the money goes.** The Money tab also keeps fares, running costs and rides for each region, and the regions add up to the whole network. Fares are split by where riders board and by the km they ride, each stretch between two stops going half to each stop's region. Running cost is shared by route km. Construction goes to the regions the new track or stations are in.
 

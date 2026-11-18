@@ -1119,6 +1119,13 @@ notes/T-420.md has the tables.
   (New York - Philadelphia about 2.5-6x plausible, notes/T-379.md, T-438). Check: each country's national travel survey by distance band (MiD Germany, ENTD France,
   NTS England, Japan's Inter-Regional Travel Survey) and its cross-border counts; another open
   area, or a factor per country pair, where they disagree (with country tailoring).
+- **Trips within one zone** (T-3509, Anita 2026-11-18: "yes, all trips within should count"). The
+  market's trips between two 6 km zones of one zone, its longer trips (25 km and more apart) and the
+  long commutes that stay in their own zone (T-1000), count in that zone's Trips within, so in its
+  train share and goals, with its local trips; its bubbles count them at both ends as its trips with
+  other places (ui-demand-views.md "Local trip bubbles"). New York about 2.4M legs on the average
+  day (3.5% of its local), driving unless by rail. Before a game's first line there is no market, and
+  the figure is the local trips alone.
 - **Resort towns** (T-3280, docs/regional.md 5.1 "Resort towns"; Anita 2026-11-12, a local factor for Japan).
   79 Japanese resort municipalities' published visitors a year, each visit a day counting as 4 people, join the
   ground attraction of their sites; fitted under Hakone's and Atami's rail counts. Why it may not carry over:

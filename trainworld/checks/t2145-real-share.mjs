@@ -40,12 +40,14 @@ try {
       const t = Date.now();
       await demandFinal(page, { timeout: 4 * 3600000, polling: 5000, lines: 3 });
       const solveS = (Date.now() - t) / 1000;
-      const g = await page.evaluate((DAYS) => {
+      const g = await page.evaluate(async (DAYS) => {
+        // T-3509: the Within bar's trips, the market's between the zone's own far-apart parts included
+        const { zoneViews } = await import('/src/game/demand.ts');
         const days = window.twDemand.days(), out = {};
         for (const [k, name] of DAYS) {
           const d = days[k];
           if (!d?.cities) continue;
-          for (const [zone, v] of d.cities) {
+          for (const [zone, v] of zoneViews(d)) {
             const train = v.railTripsPerDay, walk = v.tripsPerDay * v.split.walk / 100, drive = v.tripsPerDay * v.split.drive / 100;
             const all = train + walk + drive;
             if (!(train > 0)) continue;

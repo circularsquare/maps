@@ -997,6 +997,7 @@ fn zone_legs_add_up_to_a_whole_place_selection() {
     let all_q = (1u32 << PERIODS) - 1;
     let etail = 1 + 8 * np + 11 * ng + 4 * np;
     let every = u32::MAX;
+    let mut own = 0f64;
     for place in 0..2usize {
         let g = a.m.groups.iter().find(|g| a.m.zones[a.m.cell_zone[g.lo]].place == place).unwrap();
         let xy: Vec<f32> = (0..g.city.len()).flat_map(|i| [g.city.x[i], g.city.y[i]]).collect();
@@ -1009,9 +1010,13 @@ fn zone_legs_add_up_to_a_whole_place_selection() {
             for end in 0..2 {
                 let sum = |v: &[f64], j: usize| v.chunks_exact(6).map(|c| c[3 * end + j]).sum::<f64>();
                 let (mut want, mut want_rail, mut want_walk) = (0f64, 0f64, 0f64);
-                for p in (0..np).filter(|&p| p != place) {
+                for p in 0..np {
+                    // T-3509: longer trips and commutes with the place's own zones too
                     want += all[1 + 8 * p + 4 * end];
                     want_rail += rail[1 + 8 * p + 4 * end + 1];
+                    if p == place {
+                        own += all[1 + 8 * p + 4 * end];
+                    }
                     let o = 1 + 8 * np + 7 * ng + 4 * p + 2 * end;
                     want += all[o];
                     want_rail += rail[o + 1];
@@ -1035,6 +1040,7 @@ fn zone_legs_add_up_to_a_whole_place_selection() {
             }
         }
     }
+    assert!(own > 0., "the world has longer trips within a place");
     // only the outings: place 0's homes and place 1's activities each count them once
     let q = 1;
     let v = a.everyday_place_legs(q);

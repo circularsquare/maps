@@ -8,7 +8,7 @@ import { computed, effect, signal } from "@preact/signals";
 import { activeCity, cityById, viewedZone } from "./cities";
 import { clock } from "./clock";
 import { AVERAGE_DAY } from "./days";
-import { cityDemandViews, demandByDay } from "./demand";
+import { cityDemandViews, demandByDay, zoneView } from "./demand";
 import { moneyState } from "./money";
 import { display, guideFinished, guideVerbose, selection, tab, type MapRow } from "./ui";
 import { trainsShown, world } from "./world";
@@ -122,7 +122,7 @@ function secondSteps(w: WorldView, trains: (line: string) => readonly number[] |
   // levels with a train on the rail line with most (bus lines start with buses at every level)
   const levels = lines.reduce((m, l) => (w.lineStats[l.id]?.bus ? m : Math.max(m, (trains(l.id) ?? []).filter((n) => n >= 1).length)), 0);
   const city = activeCity.value;
-  const share = demandByDay.value[AVERAGE_DAY]?.cities.get(city)?.split.train ?? 0;
+  const share = zoneView(demandByDay.value[AVERAGE_DAY], city)?.split.train ?? 0;
   const starred = Object.keys(moneyState.value?.stars ?? {}).length > 0;
   return [
     step("trains", anyTrain, { have: anyTrain ? 1 : 0, goal: 1 }),

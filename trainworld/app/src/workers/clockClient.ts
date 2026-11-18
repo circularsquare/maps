@@ -22,10 +22,10 @@ import { zonesLoaded } from "../game/zones";
 import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { GOAL_SHARES, linePoints, STAR_SHARE } from "../game/points";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
-import { demandByDay, demandView, platformTransfers, roughZones } from "../game/demand";
+import { demandByDay, demandView, marketIn, platformTransfers, roughZones, zoneViews } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
-import { ask, designSpeed, guideFinished, lineDraft, selection, tool } from "../game/ui";
+import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { flipSites, rightHand, say, setEditSink, world, worldIsRows } from "../game/world";
 import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
@@ -826,7 +826,11 @@ export class ClockClient {
     effect(() => {
       const m = moneyState.value;
       if (!m) return;
-      for (const [id, v] of demandByDay.value[AVERAGE_DAY]?.cities ?? []) {
+      // (T-3509: the trips within the zone, those between its far-apart parts included, so never
+      // from figures before the market's result while the game has one)
+      const d = demandByDay.value[AVERAGE_DAY];
+      if (!marketIn(d) && !marketOff()) return;
+      for (const [id, v] of zoneViews(d)) {
         // (T-1223: never from rough figures, whose noise could cross a mark)
         if (!v.final || roughZones.value.has(id)) continue;
         if (v.split.train >= STAR_SHARE && m.stars?.[id] === undefined) this.post({ kind: "star", zone: id });

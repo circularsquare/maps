@@ -1842,7 +1842,8 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   fares land (each line at its local period), into a `points` figure in every day and hour entry
   (saved with the ledgers; older entries read as 0). A region's points are the sum of its last 24
   closed hour entries; the Cities list shows them, the top bar's city name in its hover.
-- **Stars** (T-685): a region earns a star the first time a final solve's train share for it, on
+- **Stars** (T-685): a region earns a star the first time a final solve's train share for it (of
+  its Trips within: its local trips and the market's between its own far-apart parts, T-3509), on
   the average day (the top bar's goal number as it shows by default; never the weekday or weekend
   view, so switching the day shown earns nothing), reaches 10%. The header keeps the game second it was
   earned (`stars`), and it stays if the share falls. The star is the first of a region's goals,

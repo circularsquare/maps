@@ -131,8 +131,10 @@ wide so a longer date moves nothing [T-1868].
 ### The goal number
 
 - **The goal number**: the focused zone's mode split as one bar (driving, train, walking, in the
-  mode colours whatever the theme), the split of all its modelled local trip legs (commutes,
-  everyday outings, school and university), so the shares are of trips per day, not people [T-342].
+  mode colours whatever the theme), the split of all its trip legs within it, as the city view's Trips
+  within (its modelled local legs: commutes, everyday outings, school and university; and the
+  market's longer trips and long commutes between its own far-apart parts, T-3509), so the shares
+  are of trips per day, not people [T-342]. The Distance row's km are the local legs' alone.
   The train share follows the bar ("18.5%"; no word "Train" [T-650] and no rides count [T-832]). The
   bar's hover [T-1107, T-2365, `splitTable` in `game/splitTip.ts`; the city view's Train share row has the same] is a
   title, "Per day in New York", then a small table: **Trip count**, a strip of the modes as wide as their trips and

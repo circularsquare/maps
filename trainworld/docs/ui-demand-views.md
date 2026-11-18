@@ -163,12 +163,15 @@ hover and clicks. They do not enlarge the station's click target.
   below). A local leg has both ends in the zone, a regional one one, so Homes adds up to the zone's
   local legs L plus its regional legs leaving, Destinations to L plus those arriving, Total to 2L
   plus all of them, and zoomed out (below) the zone's bubble is L plus all of them under either
-  button. Longer trips between two parts of one zone (T-3509) and trips with places that have no
-  zone are left out, as the zone figures leave them out. Each 600 m square takes its 6 km zone's
+  button. The market's trips between two parts of one zone (its longer trips and long commutes,
+  T-3509) count the same way (a longer trip under Homes where it starts and under Destinations
+  where it ends, a commute at the home and at the job) and are in L, the zone's Trips within;
+  trips with places that have no zone are left out, as the zone
+  figures leave them out. Each 600 m square takes its 6 km zone's
   share as a selection counts it, by people at the homes, attraction at the destinations, jobs at a
   commute's work end (`IntercityApi::zone_legs_day`), and its cells their share of it by their own
   commuters at that end, so a selected bubble's count is its far end's, local and regional.
-  Under the purpose filter each purpose counts its own: Work the commutes between places, the
+  Under the purpose filter each purpose counts its own: Work the market's commutes, the
   everyday purposes their outings across a zone line, longer trips only under All purposes.
   Rail is rail, walking walking, the car and the plane driving. The all-mode legs need no
   network and are kept in each worker per market and day; the rail comes with each round, and until
@@ -452,7 +455,7 @@ inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, an ico
 that moves the camera to its centre and clears the selection [T-220, T-1134], then the city view's
 own rows ([ui-inspectors.md](ui-inspectors.md#the-city-view), T-1438), then two figures, each with a thin mode bar
 under it (the game's mode colours; every segment and number has a hover with its count and share):
-"Trips within Philadelphia" [T-2365] (train, walking, car and, where there are any, No route from the open zone's split, the
+"Trips within Philadelphia" [T-2365] (the zone's local trips and the market's trips between its own far-apart parts, T-3509: train, walking, car and, where there are any, No route, the
 last part's hover adding "No road joins their two ends" [T-2215]; the count alone for a zone not loaded) and "To other places" (the inter-city trips, both directions, with the everyday outings across its
 lines [T-3503], train blue, walking green, car red and planes in the muted grey), then both by trip length as a graph ([ui-inspectors.md](ui-inspectors.md#the-city-view)), then the three places with the most trips, name and trips a day. No table of every place.
 For a zone with stations the city view goes on with its boardings by purpose and its top lines and stations.

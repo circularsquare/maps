@@ -8,14 +8,14 @@
 import { t } from "../i18n";
 import { shareOf } from "./corridorShares";
 import { computed, signal } from "@preact/signals";
-import { activeCity, CITIES, REGISTRY, viewedZone, type CityId } from "./cities";
+import { activeCity, CITIES, cityById, REGISTRY, viewedZone, type CityId } from "./cities";
 import { carryLoads, type StopKey } from "./carryLoads";
 import { DEMAND_DAYS, type DemandDay } from "./days";
 import type { TripLengths } from "./tripLengths";
 import type { Fares } from "./fareCurve";
 import { shownDay } from "./ui";
 import type { PurposeFilter, PurposeKey } from "./purposes";
-import type { ModeSplit } from "./types";
+import { splitOf, type ModeSplit } from "./types";
 
 export interface LineDemand {
   /** boardings onto the line a day, both directions, transfers included */
@@ -215,8 +215,50 @@ export const demandByDay = signal<DayDemand[]>(DEMAND_DAYS.map(noDay));
 
 /** The newest finished solve on the day shown (`shownDay`); null until the first lands. */
 export const demandView = computed<DemandView | null>(() => demandByDay.value[shownDay.value]?.view ?? null);
-/** Local purpose shares (everyday trips included), separate from network-wide totals. */
-export const cityDemandViews = computed<Map<CityId, DemandView>>(() => demandByDay.value[shownDay.value]?.cities ?? new Map());
+/** Each zone's trips within it on the day shown (`zoneViews`), separate from network-wide totals. */
+export const cityDemandViews = computed<Map<CityId, DemandView>>(() => zoneViews(demandByDay.value[shownDay.value]));
+
+/** T-3509: each corridor table's row of the trips within each place (`from === to`), by place */
+const withinRows = new WeakMap<CorridorTable, Map<number, number>>();
+/** T-3509: the market's legs a day between two 6 km zones of place `place` (its longer trips 25 km and
+ * more apart, and the long commutes that stay in it), and those by rail; null with no market result. */
+export function withinOf(ic: IntercityDemand | null | undefined, place: number): { trips: number; rail: number } | null {
+  const c = ic?.corridors;
+  if (!c) return null;
+  let rows = withinRows.get(c.table);
+  if (!rows) {
+    rows = new Map();
+    const { from, to, n } = c.table;
+    for (let j = 0; j < n; j++) if (from[j] === to[j]) rows.set(from[j], j);
+    withinRows.set(c.table, rows);
+  }
+  const j = rows.get(place);
+  if (j === undefined) return null;
+  const v = corridorAt(c, j);
+  return v.trips > 0 ? { trips: v.trips, rail: Math.min(v.rail, v.trips) } : null;
+}
+
+/** T-3509 (Anita, 2026-11-18: "yes, all trips within should count"): zone `id`'s view on day `d` with
+ * the market's trips between its own far-apart parts (`withinOf`) added to its local ones: its Trips
+ * within, the figure its train share, goals and rides read. Driving unless by rail, as its bubbles
+ * count them; the per-period shares stay the local trips'. */
+export function zoneView(d: DayDemand | undefined, id: CityId): DemandView | undefined {
+  const v = d?.cities.get(id);
+  const w = v && withinOf(d?.intercity, cityById(id)?.place ?? -1);
+  if (!v || !w) return v;
+  const trips = v.tripsPerDay + w.trips, rail = v.railTripsPerDay + w.rail;
+  const walk = (v.tripsPerDay * v.split.walk) / 100, none = (v.tripsPerDay * (v.split.none ?? 0)) / 100;
+  return { ...v, tripsPerDay: trips, railTripsPerDay: rail, split: splitOf(trips, rail, walk, none) };
+}
+/** T-3509: day `d` has the market's result (its corridor table), so `zoneView` holds the trips between
+ * a zone's own parts. A load shows final local figures before it: a goal waits for it. */
+export const marketIn = (d: DayDemand | undefined): boolean => (d?.intercity?.corridors?.table.n ?? 0) > 0;
+/** `zoneView` of every zone with a view on day `d`. */
+export function zoneViews(d: DayDemand | undefined): Map<CityId, DemandView> {
+  const out = new Map<CityId, DemandView>();
+  if (d) for (const id of d.cities.keys()) out.set(id, zoneView(d, id)!);
+  return out;
+}
 /** Distinct, synthetic intercity trips: never included in local commute denominators. */
 export const intercityDemand = computed<IntercityDemand | null>(() => demandByDay.value[shownDay.value]?.intercity ?? null);
 /** A solve is running for a newer network than the one `demandView` shows (or, T-328, the shown

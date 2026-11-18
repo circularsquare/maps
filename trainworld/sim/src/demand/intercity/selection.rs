@@ -528,8 +528,9 @@ impl IntercityApi {
         out
     }
     /// T-3503: the regional layer's legs at 600 m squares `xy` (market metres) of place `market` on a
-    /// kind of day over the periods of `mask`, with other places only (a zone's own place's pairs
-    /// and places with no zone left out, as the zone figures count them). Six numbers a square: at
+    /// kind of day over the periods of `mask`, as the zone figures count them: with other places, and
+    /// (T-3509) the longer trips and long commutes between the place's own zones; places with no zone
+    /// left out. Six numbers a square: at
     /// the home end (legs leaving: longer trips starting there, commutes and everyday outings of the
     /// people living there) legs, rail legs and walking legs, then the same at the destination end
     /// (longer trips arriving, commutes of the people working there, outings coming there; airports'
@@ -572,7 +573,6 @@ impl IntercityApi {
             e[1] += v[1];
             e[2] += v[2];
         };
-        let other = |a: usize, b: usize| m.zones[a].place != m.zones[b].place;
         let sign = lean_sign(day);
         let lean = |dir: usize, l: f32| if sign == 0. { 1. } else { 1. + (sign * if dir == 0 { l } else { -l }) as f64 };
         let periods: Vec<usize> = (0..PERIODS).filter(|&q| mask >> q & 1 == 1 && (!rail || self.per(q).is_some())).collect();
@@ -591,9 +591,6 @@ impl IntercityApi {
                         }
                         let base = &self.pairs[p & !1];
                         let (a, b) = if p & 1 == 0 { (base.a as usize, base.b as usize) } else { (base.b as usize, base.a as usize) };
-                        if !other(a, b) {
-                            continue;
-                        }
                         let (za, zb) = (&m.zones[a], &m.zones[b]);
                         if need[a] {
                             add(&mut zl, a, 0, [0., r * f * lean(0, m.zone_lean(za, zb)), 0.]);
@@ -614,7 +611,7 @@ impl IntercityApi {
                     for (i, cp) in self.cpairs.iter().enumerate() {
                         let (h, wg, nc) = m.commutes[cp.c as usize];
                         let (h, w) = (h as usize, m.comp_of_gid[wg as usize]);
-                        if w == u32::MAX || !other(h, w as usize) {
+                        if w == u32::MAX {
                             continue;
                         }
                         let r = nc as f64 * rail_legs * per.c_frac.get(i).copied().unwrap_or(0.) as f64;
@@ -629,10 +626,7 @@ impl IntercityApi {
                     for (end, (off, items)) in [(0usize, &m.c_home), (1, &m.c_work)] {
                         for z in (0..nz).filter(|&z| need[z]) {
                             for &c in &items[off[z] as usize..off[z + 1] as usize] {
-                                let (h, wg, nc) = m.commutes[c as usize];
-                                if m.gid_place[wg as usize] as usize == m.zones[h as usize].place {
-                                    continue;
-                                }
+                                let nc = m.commutes[c as usize].2;
                                 add(&mut zl, z, 2 + end, [nc as f64 * legs, 0., 0.]);
                             }
                         }
@@ -691,9 +685,10 @@ impl IntercityApi {
         }
         out
     }
-    /// T-3503: every zone in `need`'s longer trips a day with other places' zones, all modes, at
+    /// T-3503: every zone in `need`'s longer trips a day with its own place's other zones (T-3509)
+    /// and other places' zones, all modes, at
     /// `sh` (the periods' outward shares summed): `f(zone, 0, leaving)` and `f(zone, 1, arriving)`.
-    /// Near places' open zones pair zone to zone as `zone_row`; every other place by the zone's share
+    /// Its own and near places' open zones pair zone to zone as `zone_row`; every other place by the zone's share
     /// (`zone_place_eachway`), which for far places is linear in the zone's normalisers, so off a
     /// rush day their sum is worked out once for the zone's place.
     fn zone_longer_all(&self, need: &[bool], sh: f64, mut f: impl FnMut(usize, usize, f64), lean: &dyn Fn(usize, f32) -> f64) {
@@ -738,6 +733,17 @@ impl IntercityApi {
                 o
             });
             let (mut out, mut back) = (0f64, 0f64);
+            // T-3509: the longer trips between the place's own zones count in its figures too
+            if let Some((a, b)) = span_of[i] {
+                for zb in (a..b).filter(|&w| w != z).map(|w| &m.zones[w]) {
+                    let t = m.eachway(zz, zb);
+                    if t >= m.rule.min_trips {
+                        let l = m.zone_lean(zz, zb);
+                        out += t * lean(0, l);
+                        back += t * lean(1, l);
+                    }
+                }
+            }
             for &j in &o.near {
                 if let Some((a, b)) = span_of[j] {
                     for zb in &m.zones[a..b] {
