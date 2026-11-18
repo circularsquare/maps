@@ -19,7 +19,7 @@
 
 import { effect, signal } from "@preact/signals";
 import { moneyState } from "./money";
-import { pointsPerDay, scoreSettled } from "./points";
+import { pointsBeforeCover, pointsPerDay, scoreSettled } from "./points";
 import { startPlaytime } from "./playtime";
 import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
@@ -383,7 +383,8 @@ function figures(): { day: number; points: number; cities: Record<string, number
   // the server refuses a figure over 1e12 (twMaxPoints), which would leave a bigger game stuck on its last accepted one
   const cap = (v: number) => Math.min(Math.round(v), 1e12);
   const points = cap(per.reduce((a, [, v]) => a + v, 0));
-  if (points <= 0 && how !== "idle") return null; // running lines whose points are not in yet
+  // running lines whose points are not in yet; T-3657: unless fares pay none of the running cost, a real 0
+  if (points <= 0 && how !== "idle" && !pointsBeforeCover.peek()) return null;
   const cities: Record<string, number> = {};
   for (const [id, v] of per.slice(0, MAX_CITIES)) cities[id] = cap(v);
   return { day: Math.floor(hour / 24), points, cities };

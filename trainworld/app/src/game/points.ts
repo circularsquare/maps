@@ -8,6 +8,9 @@
 // Passenger-km are each line's loads times its stretches' lengths, period by period, carried by
 // that period's boardings onto the line (each boarding the line's average km), so the km count in
 // the region where riders get on. The clock worker settles both as fares land (clock.worker.ts).
+//
+// T-3657: each line's points are times its cover, its fares over its running cost, at most 1, so free fares cannot
+// buy points. A trip's points sit on its boardings, so each leg takes its own line's cover.
 
 import { computed, effect, signal } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
@@ -16,11 +19,13 @@ import { demandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type
 import { loadProgress } from "./loading";
 import { t } from "../i18n";
 import { compactOf, sig3 } from "./format";
-import { lineGeo, moneyState, moneyWorld } from "./money";
+import { incomeByDay, lineGeo, moneyState, moneyWorld } from "./money";
 import { PERIODS } from "./periods";
+import { lineRunFactor } from "./regionMoney";
 import { stopsById } from "./world";
 import { zonesLoaded } from "./zones";
-import type { WorldView } from "./types";
+import { DEMAND_INDEX, type WorldView } from "./types";
+import type { MoneyState } from "../workers/protocol";
 
 export const POINTS_PER_TRIP = 20;
 export const POINTS_PER_KM = 1;
@@ -122,13 +127,56 @@ function dayPoints(w: WorldView, d: DayDemand): Map<number, Map<string, number[]
   return out;
 }
 
+type RunPrices = Pick<MoneyState, "runCostTrainKm" | "runCostCarKm" | "hsRunCostTrainKm" | "hsRunCostCarKm" | "runCostBusKm" | "runCostBoatKm" | "economy">;
+let runKey = "", runSame: RunPrices | null = null;
+/** The running cost prices, the same object while they are the same (the money state changes every settle). */
+const runPrices = computed<RunPrices | null>(() => {
+  const m = moneyState.value;
+  if (!m) return (runKey = "", runSame = null);
+  const p: RunPrices = { runCostTrainKm: m.runCostTrainKm, runCostCarKm: m.runCostCarKm, hsRunCostTrainKm: m.hsRunCostTrainKm, hsRunCostCarKm: m.hsRunCostCarKm, runCostBusKm: m.runCostBusKm, runCostBoatKm: m.runCostBoatKm, economy: m.economy };
+  const key = JSON.stringify(p);
+  if (key !== runKey || !runSame) { runKey = key; runSame = p; }
+  return runSame;
+});
+
+/** T-3657: each running line's cover, by line number: its fare income on the forecast weekday over its running cost
+ * that day, at the trains and cars its riders were solved with (the running cost the line's money chart counts, no
+ * upkeep), at most 1; 1 with no running cost. A line run on both pairs of quad track and its hidden twin share one,
+ * from the two together. */
+export const lineCover = computed<Map<number, number>>(() => {
+  const out = new Map<number, number>();
+  const w = moneyWorld.value, r = runPrices.value, inc = incomeByDay.value[0], dv = demandByDay.value[0]?.view;
+  if (!w || !r || !inc) return out;
+  const pair = new Map<string, { fares: number; run: number; nums: number[] }>();
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id];
+    if (!st || st.status !== "running") continue;
+    let fares = 0;
+    inc.lines.get(l.id)?.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
+    const dm = dv?.lines.get(l.id);
+    const tph = dm?.tph ?? [l.tph.high, l.tph.medium, l.tph.low], cars = dm?.cars ?? st.cars;
+    const [train, car] = st.fast ? [r.hsRunCostTrainKm, r.hsRunCostCarKm] : [r.runCostTrainKm, r.runCostCarKm];
+    const perKm = st.bus?.ferry ? r.runCostBoatKm : st.bus ? r.runCostBusKm : train + cars * car;
+    let run = 0;
+    PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
+    run *= lineRunFactor(l.num); // T-2669
+    const key = st.twinOf ?? l.id;
+    let e = pair.get(key);
+    if (!e) pair.set(key, (e = { fares: 0, run: 0, nums: [] }));
+    e.fares += fares; e.run += run; e.nums.push(l.num);
+  }
+  for (const { fares, run, nums } of pair.values()) {
+    const c = run > 0 ? Math.max(0, Math.min(1, fares / run)) : 1;
+    for (const n of nums) out.set(n, c);
+  }
+  return out;
+});
+
 type LinePoints = { line: number; regions: [string, number[][]][] }[];
 let pointsMemo: { w: WorldView; zl: number; days: DayDemand[]; per: Map<number, Map<string, number[]>>[]; out: LinePoints } | null = null;
 const sameDay = (a: DayDemand, b: DayDemand) => a.view === b.view && a.cities === b.cities && a.intercity === b.intercity;
-/** Every running line's points per game hour, `[region, perHour[dayKind][period]]` by line number,
- * as the clock worker settles them. A kind of day not solved yet takes the weekday's. A day is
- * redone only when its views, the network or the zone boundaries change (T-1209). */
-export const linePoints = computed<LinePoints>(() => {
+/** Every running line's points per game hour before its cover (`lineCover`). */
+export const fullPoints = computed<LinePoints>(() => {
   const w = moneyWorld.value;
   if (!w) return [];
   const zl = zonesLoaded.value; // boundaries arriving re-place the stations
@@ -144,6 +192,17 @@ export const linePoints = computed<LinePoints>(() => {
   const out = base < 0 ? [] : assemble(days, per, base);
   pointsMemo = { w, zl, days, per, out };
   return out;
+});
+/** Every running line's points per game hour, `[region, perHour[dayKind][period]]` by line number,
+ * as the clock worker settles them, times the line's cover (`lineCover`, the weekday's on every kind of day). A kind of
+ * day not solved yet takes the weekday's. A day is redone only when its views, the network or the zone boundaries
+ * change (T-1209). */
+export const linePoints = computed<LinePoints>(() => {
+  const cover = lineCover.value;
+  return fullPoints.value.map(({ line, regions }) => {
+    const c = cover.get(line) ?? 1;
+    return c === 1 ? { line, regions } : { line, regions: regions.map(([z, per]): [string, number[][]] => [z, per.map((d) => d.map((v) => v * c))]) };
+  });
 });
 
 function assemble(days: DayDemand[], per: Map<number, Map<string, number[]>>[], base: number): LinePoints {
@@ -191,9 +250,18 @@ export const pointsPerDay = computed<Map<string, number[]>>(() => {
  * what the region earned in the past 24 game hours. */
 export const pointsScore = computed<Map<string, number>>(() => {
   const out = new Map<string, number>();
-  for (const [z, r] of pointsPerDay.value) if (z && r[0] > 0) out.set(z, Math.round(r[0]));
-  return out.size ? out : pointsPast24h.value;
+  let any = false;
+  for (const [z, r] of pointsPerDay.value) {
+    if (z) any = true;
+    if (z && r[0] > 0) out.set(z, Math.round(r[0]));
+  }
+  // (T-3657: a region whose lines' fares pay none of their running cost has points of 0, not the past 24 hours')
+  return any ? out : pointsPast24h.value;
 });
+
+/** T-3657: whether the network's riders earn points before cover, so a score of 0 is its fares paying none of the
+ * running cost and goes up to the boards like any other. */
+export const pointsBeforeCover = computed<boolean>(() => fullPoints.value.some(({ regions }) => regions.some(([z, per]) => !!z && per[0].some((v) => v > 0))));
 
 /** T-3639, T-3644: whether the figures are a whole final of the network as it is ("solved"), or there is nothing running
  * to solve ("idle"). Before that a score is a load's or an edit's early figure, the past 24 hours' before any solve, or

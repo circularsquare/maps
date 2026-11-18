@@ -6,6 +6,8 @@ Each region gets a score for how good its network is, and goals to reach.
 
 A trip is a rider's whole rail journey, however many lines it uses, and counts in the region it starts in. Passenger-km count where riders get on. A region whose riders all board in another region's stations scores no trips.
 
+Each line's points also depend on how much of its running cost its fares pay on that weekday. A line whose fares pay half its running cost gets half its points, and one whose fares pay all of it or more gets them all. Upkeep is not counted. A trip that changes lines gets its points from each line it rides, so a free feeder bus costs the paying line it feeds nothing. A line with free fares gets no points.
+
 **Goals.** A region's goal is the share of the trips within it that go by train: its own trips, the long ones between its far-apart parts too, but not the ones to other places. The first goal is 10%, then 20%, 30% and 40%. The share is measured on the average day, so switching the day you are viewing earns nothing. Each goal is kept once it is reached, even if the share falls back again. The first one is the star.
 
 **Where the money goes.** The Money tab also keeps fares, running costs and rides for each region, and the regions add up to the whole network. Fares are split by where riders board and by the km they ride, each stretch between two stops going half to each stop's region. Running cost is shared by route km. Construction goes to the regions the new track or stations are in.
@@ -13,4 +15,4 @@ A trip is a rider's whole rail journey, however many lines it uses, and counts i
 Money is settled as the game runs, not once an hour, so cash moves smoothly. A day runs midnight to midnight in the start zone's local time.
 
 Exact rule: `docs/track-and-service.md` "Regions, points and stars" for points and stars and the regional split of money, "Fares and the ledgers" for how a day and an hour settle.
-In the code: **main** `app/src/game/points.ts` `POINTS_PER_TRIP`, `GOAL_SHARES`, `railTripsByRegion`, `pointsScore` `app/src/game/regionMoney.ts` `lineShares`
+In the code: **main** `app/src/game/points.ts` `POINTS_PER_TRIP`, `GOAL_SHARES`, `railTripsByRegion`, `lineCover`, `pointsScore` `app/src/game/regionMoney.ts` `lineShares`

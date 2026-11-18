@@ -1852,7 +1852,15 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   region's stations, so a region's day is exact and the hour follows its boardings (a region whose
   riders all board at another region's stations scores no trips). Passenger-km are each line's
   period loads times its stretches' lengths, carried by the period's boardings onto the line
-  (each boarding the line's average km), so they count where riders get on. The main thread sends
+  (each boarding the line's average km), so they count where riders get on. **Cover** (T-3657,
+  `lineCover`): each line's points are times its fare income on the forecast weekday over its running
+  cost that day (the trains, buses or boats it runs at the service its riders were solved with, as the
+  line's money chart counts it; upkeep not included), at most 1, and 1 for a line with no running
+  cost; a quad-track line and its hidden twin take the pair's together. A trip's points sit on its
+  boardings, so each leg takes its own line's cover (a free feeder costs the paying line it feeds
+  nothing), and free fares cannot raise a score. The same weekday cover scales every kind of day's
+  points. A region whose lines all have a cover of 0 shows 0 (not the past 24 hours), and a game
+  whose riders earn points before cover sends a 0 to the boards like any other score. The main thread sends
   each line's points per game hour by region, kind of day and period; the worker settles them as
   fares land (each line at its local period), into a `points` figure in every day and hour entry
   (saved with the ledgers; older entries read as 0). A region's points are the sum of its last 24
