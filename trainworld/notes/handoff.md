@@ -33,20 +33,35 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
   Her: car cost should scale like fares; "lets test out how big of a change that is. dont necessarily want to do it".
   carmoney (Opus, .tw-trees/carmoney, port 6193): T-3627 trial A (equal) and B (US anchored), patch only; plus C
   (her idea: same numbers restated as cheaper car costs in poorer countries, "cuz of mopeds"; check vs real costs).
+- nativenames (Opus, .tw-trees/nativenames, port 6195): T-3631 P1 (her: "somewhat high prio", ~60% of players
+  Japanese): new station names in the player's script from the place lists' native aliases.
+- T-3630 filed (settings + feedback on the landing page); twitter reply sent by her.
 - T-3626 LANDED 4065b244 (c015; strings "Email (optional)", "Email" removed; privacy page line changed).
-- secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 (her go 11-18): later edits wait ~170 s behind the
-  first whole solve (T-1734 hold). Told to rebase onto 63bacf31 (T-3599's editLeft doubling while an edit waits).
+- secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 built (edits within 60 s of a local solve go when it
+  shows; c007 reworded). Resumed for: t3599-time-left fails only with the change; options for edits >13 s apart
+  (still wait 150-170 s). Then a checker, then land (after nightfix's gates).
 - T-3619 DONE f2894ea1 (351 starts had no tier; c011); T-3621 DONE 5acbd214 (Cairo's centre was a desert box
   centre; now easy). Filed T-3623 (Cairo's place point) {after: night run}. Tiers rerun once more after the joins.
 - Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}; T-3624 school trips to transit (P3), T-3625 hide
   stations toggle (P3). T-3618 closed on her word (track rework covers it).
 - Feedback triage DONE: notes/feedback-triage-2026-11-18.md (78 reports: 4 close, 49 reply+close, 11 reply+keep,
-  14 her call) given to her. Filed T-3628 (P1, Tokyo/Kansai fail to load on iPad; ipadload Opus investigating,
-  read-only) and T-3629 (P3). Two more bugs wait on player answers (30911903, c742b993). Inbox rate-limits.
+  14 her call) given to her. Feedback inbox (twfeedback on 8800) got a search box (34c0dbaa). Filed T-3629 (P3).
+- T-3628 (P1, iPad "Tokyo could not load"): ipadload found WebKit "Load failed" on mask downloads, not memory
+  (notes/T-3628.md). loadretry (Sonnet, .tw-trees/loadretry, port 6194) builds: failure reasons in diagnosis(),
+  one retry on visibilitychange/online. Two more bugs wait on player answers (30911903, c742b993). Inbox rate-limits.
 - Her: intercity minutes-per-money should be consistent too -> sent to carmoney (3.55 vs 3.58, dual display).
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
-## Night run RUNNING (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)
+## Night run b RUNNING since 04:01 UTC: kit\night1117b.ps1 (trimmed copy; -Want 9 -NoCif), script pid 39588 (cmd
+  31772), log artifacts/trainworld/night1117b.log; stop: world_run\STOP then kill 39588 only. nightfix found the
+  first stop was stale zone origins (sve, roc moved with zone_new_origins.py), jau relaxed (pop_vs_fua 1.61, two
+  rural tehsils); gates serve a frozen app/ copy, so landings are safe. maps-86 watches the log (Monitor). Disk was
+  30 GB free, backups ~20 GB: watch it. After it ends: tasks.py done T-3511/T-3455, notes/T-3455.md "What ran".
+- HOTFIX v0.4.1 (her ask 11-18 04:05 UTC, she's up ~2 h): app-only (`deploy.py --skip-data`, data 2026-11-18:
+  data/packs is mid night run, must not ship). Candidates: everything on master + T-3631 + T-3628 retry if ready.
+  l10n041 (Sonnet) translating T-3599's 3 strings. Needs: changelog publish v0.4.1, translate updates keys,
+  8800 rebuild, smoke8800, her test + her yes to each step.
+## Night run (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)
 - T-3511 enclave shifts + T-3455 coastal rows (+ cif-ph if time, -Until 10:00 local), plan notes/T-3455.md, ~8 h.
   Started 02:34 UTC via kit\night1118.cmd (= night1117.ps1 -Want 9), cmd pid 23028, script pid 30872 (claim
   nightqueue, 9 cores; 5 free for day work). Log artifacts/trainworld/night1117.log; state kit\night1117.state;

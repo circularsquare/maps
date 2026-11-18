@@ -238,14 +238,16 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
-- T-3628 [P1] {L:feedback} Tokyo and Kansai fail to load on iPad
-  - Context: Two players, 2026-11-16 and 11-17 (feedback 17240a38, e4db8ec6): on iPad / iOS Safari, Tokyo or Kansai shows "{name} could not load" and no track can be built; the same game on an Android phone works. Investigated 2026-11-17: not memory (no worker died, the small-device pool was in use); both reports carry a WebKit fetch failure ("Load failed") for water data, which also blocks building. Which download failed for demand is not in the reports.
-  - Goal: Tokyo and Kansai load on an iPad, or the cause is found and a fix filed.
-  - Other: notes/feedback-triage-2026-11-18.md, notes/T-3628.md
 - T-3629 [P3] {L:track-drawing} Track under a station can't be picked
   - Context: A player (feedback e256b35f): track lying wholly under a station box can't be picked to edit or delete. Few players; not checked in the game.
   - Goal: Track under a station can be picked (or the station's panel reaches it).
   - Other: notes/feedback-triage-2026-11-18.md
+- T-3631 [P1] {L:translations} New station names in the player's script (taking, 2026-11-17, agent nativenames)
+  - Context: You, 2026-11-18: "i didnt realize that the "name takes name of nearby station" only used latin letters. thats a little awkward for if are chinese or japanese. like its a regression i think. could we disable this for people with language set to something non latin characters, or find a source that actually gives the name in native language? given that the playerbase is like 60% japanese this is somewhat high prio". The place lists already carry native names as aliases (tyo: "Setagaya" with "世田谷区", "世田谷").
+  - Goal: A new station placed by a Japanese, Chinese or Korean player takes the nearby place's name in their script where the place list has one (a sensible form: 世田谷, not 世田谷区), else falls back sensibly; Latin-language players unchanged.
+- T-3630 [P2] {L:feedback} Settings and feedback on the landing page
+  - Context: Your pad, 2026-11-18, after a player on X couldn't load their save (stuck at "Calculating trips" 68%, about 2 minutes left, on an Osaka game): "i think if they cant load in they might not be abe to even submit a feedback. semiseparately maybe we shoudl add a condensed settings to the landing page."
+  - Goal: Before a game is loaded, a player can reach a short settings list (the ones that matter before loading, like intercity trips and language) and Submit feedback; propose which settings first.
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
   - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.
@@ -298,10 +300,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h). You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; possibly a currency or locale shown differently per device.
   - Goal: The cause found and fixed, or shown to be a display setting with the setting made clear.
-- T-3616 [P3] {L:solve-speed} A second edit waits for the first one's whole solve (taking, 2026-11-17, agent secondedit)
-  - Context: From T-3600 (option a landed): only the first edit of a quick batch updates in seconds; an edit made while that first quick solve runs waits behind its whole solve (the T-1734 hold), about 170 s on your Kaohsiung save. Levers in notes/T-3600.md: that hold, and the 8 s wait before the whole solve (option c).
-  - Goal: Edits made a few seconds apart on the Kaohsiung save each show their quick numbers within about 10 s.
-  - Other: notes/T-3600.md
 - T-3604 [P3] {L:memory} Restarted demand workers sometimes never reopen
   - Context: From T-3492: once in seven worker restarts on all-China the three replacements never reopened, with about 2,700 ERR_INSUFFICIENT_RESOURCES, likely each fetching all 541 items at once. Also found: needOf's 1.38 factor is stale, so T-1205's restart never fires on all-China. notes/T-3492.md.
   - Goal: A worker restart reopens every time (20 restarts in a row on all-China), fetching in bounded batches.
