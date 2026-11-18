@@ -3,6 +3,20 @@
   "line": "update v0.4.2: bus and ferry schedules, bug fixes",
   "items": [
     {
+      "id": "c056",
+      "text": "leaderboard points from a line now scale with how much of its running cost its fares pay",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3657",
+      "by": "profitpts",
+      "at": "2026-11-18T21:14:29Z",
+      "rev": 2,
+      "area": "fares",
+      "fix": false,
+      "highlight": true,
+      "changed": "2026-11-18T21:14:43Z"
+    },
+    {
       "id": "c055",
       "text": "the transfer fare can't be set higher than the base fare",
       "edited": null,
@@ -121,15 +135,15 @@
     {
       "id": "c046",
       "text": "the track tool and a selected or hovered line or piece of track show their type by colour and their track count as rings",
-      "edited": "the track tool shows the track type by colour and the number of tracks in its tag, and the tag over track or a line names both",
+      "edited": "the track tool shows the track type by colour and the number of tracks as an icon in its tag, and the tag over track or a line has the same icon",
       "hidden": false,
       "task": "T-3693",
       "by": "modelook",
       "at": "2026-11-18T18:20:21Z",
-      "rev": 6,
+      "rev": 7,
       "area": "track",
       "fix": false,
-      "changed": "2026-11-18T20:24:37Z"
+      "changed": "2026-11-18T20:57:24Z"
     },
     {
       "id": "c045",

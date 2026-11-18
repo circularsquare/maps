@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3657 [P2] {L:accounts-server} Free fares inflate leaderboard points (2026-11-18): points x min(1, weekday fares / running cost); honest networks -0.13% median; checker PASS. notes/T-3657.md.
+- T-3728 [P1] {L:small-fixes} Settings search with a magnifying glass and a divider (2026-11-18): settings search box shows the find-place magnifying glass at the left (muted, no placeholder text; aria-label kept), with a faint rule under it, 9 px above and below. FindInput got an optional icon; SearchIcon shared with the find place tool.
+- T-3727 [P1] {L:map-look} Track hover shows only the count icon (2026-11-18): the hover over track or a line has no extra row: the 1, 2 or 4 track icon in the type's hue sits left of the level chip on its row; trackCount string removed.
+- T-3711 [P2] {L:single-track} Shift-click a stop to make it one way (2026-11-18): shift-click in the line tool makes a stop served one way only, the way that turns back less (else the way the line goes there); the Caracas side platforms run without the zigzag; saved in LOS1. notes/T-3711.md.
 - T-3722 [P2] {L:small-fixes} Exit to main menu sometimes missing (2026-11-18): The button waited for the first game's demand to finish loading (a minute or more on a big save); it now shows whenever a game is open, and a leave during a file's open no longer drops the file. notes/T-3722.md.
 - T-3719 [P2] {L:timetables} Switching to sandbox lowers some lines' train counts (2026-11-18): closed without code: Not a sandbox effect: T-3165's load cap lowering (game/capLoad.ts) lowers counts set above the cap once the loaded game's trips are first calculated (~90 s in), which the checker's snapshots straddled; sandbox alone changes 0 of 109 lines. Intended, in v0.4.1 too (notes/T-3719.md).
 - T-3723 [P1] {L:route-choice} Review sheet of every no transit route message (2026-11-18): closed without code: Anita read the review page: the messages are ok as they are. notes/T-3632.md.

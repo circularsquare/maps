@@ -7,6 +7,16 @@ Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
+-1. 21:05 UTC: everything for v0.4.2 so far is on 8800 (75f0b3bf, master pushed, smoke passed). Waiting on her:
+   board changelog OK, text acks (consolidated list sent). Asks answered 20:55: profitpts in v0.4.2 on PASS; T-3726
+   after release; hover row trimmed to the icon (hovericon, Sonnet, T-3727, for v0.4.2); shonei-server push: her
+   yes came via the board and the permission check refused, asked her in chat. Checkers running: exitchk (T-3722,
+   tree exitmenu) and ptschk (T-3657, tree profitpts). oneway T-3711 done in tree
+   oneway: NOT for v0.4.2 (save LEVEL 22, new block LOS1; server savecheck twSaveLevel=21 marks such saves
+   unverified, so update shonei-server savecheck before it ships); needs a checker; its DECISIONS line is in its
+   notes (add at landing); her question: shift on a stop-list row already means "end the line here".
+   Then: changelog publish, one translation pass (all stale/new keys + updates.v042*), smoke8800, new_zones_map,
+   deploy on her yes.
 0. PUBLISH v0.4.2 (her ask ~20:15 UTC: "more people complaining about bus/ferry schedules so i think its pretty high
    prio to get a fix out ... along with whatever safe stuff is ready to go in. as usual ill want to review changelog
    before it goes out"; 20:35: v0.4.2 OK, "dont worry about time. its not a hard deadline"). Rough aim: deploy
@@ -61,9 +71,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 - Running for her: exitmenu (Opus) T-3722 exit-to-menu missing; noroute (Sonnet) T-3723 review page
   artifacts/trainworld/review/t3723-no-route.md (she reviews each no-route message herself; she never saw them).
   T-3721 (Copy label, server deploy) after the release.
-- Text acknowledgements not yet given: settings search ("Search settings", "No settings match"), "Stations",
-  time controls ("Slower (,)", "Faster (.)", "Slow down or speed up"), "driven by a parent" hover, leaderboard
-  "Modded games are not listed" / "Scores from this version are not listed. Reload the page for the newest.".
+- Text acknowledged 21:05 UTC ("other strings look good"), except "driven by a parent" (explained to her, waiting)
+  and "Search settings" (being replaced by an icon, T-3728, setsearch2 running). Points rule line not yet shown.
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md). Ask natteru (Discord) about Firefox's
   resist-fingerprinting if she likes (T-3705).
 

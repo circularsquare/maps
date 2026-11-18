@@ -60,6 +60,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - open-source | Open source and mods | The public trainsworld repo, contributors' pull requests, and mod support.
 - accounts-server | Accounts and server | Accounts, security, server backups and the website.
 - achievements | Achievements | Achievements and other marks of progress: sea crossings, named crossings, city stamps.
+- steam | Steam | A free downloadable version on Steam: the store page first, then the standalone build.
 
 ## Interface {area:interface}
 

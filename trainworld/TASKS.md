@@ -158,9 +158,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3659 [P3] {L:solve-speed} {after:the next performance round} Contributors' speed-up pull requests
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance. they might help." Open on the public repo: caelum418's 24 (station facility and building layout after edits) and 23 (less repeated work in intercity passenger assignment); also CinnamonVII's 18 and 19 (demand CPU speed-ups, bit-exact, SIMD), filed nowhere yet.
   - Goal: Each one measured on our saves, then ported with credit, or closed with a reply you've seen.
-- T-3657 [P2] {L:accounts-server} Free fares inflate leaderboard points (taking, 2026-11-18, agent profitpts)
-  - Context: Your rule, 2026-11-18: each line's points scale with its fare income over running cost, capped at 1 ("if fares cover 50% of expenses they should count as 50% points"; "lots of lines are like 550% revenue vs expenses"); a trip's legs each take their line's factor. Measure first. Earlier: Put off by you, 2026-11-18, needs more thought: "im not sure if doing points and fares game-wide really helps that much. people can still cheese by running like 70% of their lines at 0x. i think this needs roe thought, lets put it off til later, but we sdhould definitely think about it." Considered so far: points scaled by fares over running costs, full from 100% (game-wide or per city); a line's points only while it makes money; a separate profit board. Your pad, 2026-11-18, from Discord: "u can cheese leaderboard scores by just dropping fares to zero ... how might we incorporate profit somehow? is there an easy way to only track like rides that are carried profitably or something? idk. not sure if thatd even be the best metric...?" Points are 20 a rail trip plus 1 a passenger-km on a forecast weekday; any line's fare multiple can go from 0 to 3, so free fares raise trips with nothing against it.
-  - Goal: Free or near-free fares can't raise a leaderboard score; a network paying its way scores as today.
 - T-3518 [P3] {L:new-countries} University students in Venezuela and Nicaragua
   - Context: From T-3399: the World Bank has no tertiary enrolment for Venezuela or Nicaragua since 2010, so their zones count only OSM campuses, unscaled (Zamora's zone 257 students for 1M people); seven rows shipped with the gate's university check relaxed.
   - Goal: A national figure for each in tier0's NATIONAL_TERTIARY (as Taiwan's, T-3273), taken up at their next rebuild.
@@ -309,9 +306,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3725 [P2] {L:cleanup} Refactoring round on the most confusing areas
   - Context: You, 2026-11-18: "we've added quite a bit of stuff since we last did dedicated refactoring round i think, so probably good to start that once we have some bandwidth. focusing on areas that are super confusing." A likely first target is who may write the save slot (T-2843's state machine C), behind today's T-3687, T-3611, T-3698 and T-3722.
   - Goal: A short list of the most confusing areas, with evidence from recent tasks, goes to you before any refactor is built.
-- T-3726 [P3] {L:cleanup} {waits:Anita} Are code comments worth keeping, A/B test
-  - Need from Anita: Run the test as proposed (about 8-10 agent runs at 100-250k tokens each)?
-  - Context: You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
+- T-3726 [P3] {L:cleanup} {after:v0.4.2 publish} Are code comments worth keeping, A/B test
+  - Context: You said yes, after the release (2026-11-18). You, 2026-11-18: "deciding whether or not code comments rae actually helpful ... what procedure do you think we might be able to try to get a rough sense of whether this would be really harmful? ... just a rough measured anecdotal sense." Proposal: replay 2-3 tasks landed today from their parent commits, one tree with comments and one with them stripped by script, same blind brief, scored on the real fix's tests first, then wrong causes, tokens and time; one task run twice per arm to see the noise.
   - Goal: A rough answer: no visible difference, comments help, or comments hurt; any mass strip only when no trees are open.
 - T-2843 [P3] {L:cleanup} Code review and state machines
   - Context: Report is done and state machine A is built (T-2848); B (demand health) and C (who may write the save slot) are open.
@@ -375,6 +371,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
+- T-3729 [P2] {L:steam} {waits:Anita} Steam store page
+  - Need from Anita: Start the Steamworks account and put your screenshot picks (from your Twitter posts) in a folder; then agents make the store images from the landing page's "trains world!" logo.
+  - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
+  - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
+  - Other: research/steam-page.md
 - T-3721 [P2] {L:community} Copied network shares as Copy, not Sandbox
   - Context: From T-3687: a Community network copied and played on as a normal game is shared with the Sandbox tag (T-3115). You, 2026-11-18: "it can show "copy" there instead of sandbox for copied network". Needs the server to record why a game is latched, so a server deploy.
   - Goal: Such a share shows Copy; real sandboxes still show Sandbox.
@@ -878,10 +879,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
   - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.
   - Other: You raised it again 2026-11-16 on the board: the pressing schematic issues are local, "disconnected rivers" and "cities getting squished too much". notes/T-3358.md
-- T-3711 [P2] {L:single-track} Shift-click a stop to make it one way (taking, 2026-11-18, agent oneway)
-  - Context: From T-3672: a bypass joined to the other track of a split leaves a leg two-way, so a line through both side platforms stops at the two-way one in both directions and zigzags. You, 2026-11-18: "maybe we should just make it so that if we shift click we force a one way stop in the way that makes sense? then people can specify more unambiguously".
-  - Goal: Shift-clicking a station while editing a line adds it as a one-way stop, served only in the direction the line is going there; the Caracas side platform case runs without the zigzag.
-  - Other: notes/T-3672.md (cases 1-3)
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
   - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
   - Goal: The platform stays put through the turn.
