@@ -2688,6 +2688,7 @@ class DemandClient {
     this.onOpen.splice(0).forEach(w => w.f(false));
     for (const q of this.pendingQueries.values()) q.done([]);
     this.pendingQueries.clear();
+    this.releaseRespawnWaits();
     this.endJob();
     this.hold = null;
     this.cacheSolve = null;
@@ -2704,6 +2705,16 @@ class DemandClient {
    * memory (T-1205), not after a panic. Each is cleared by its replacement's first `done`. */
   private respawn = new Map<number, { left: Set<string> | null; solving: boolean; planned: boolean }>();
   private respawns = 0;
+  /** T-3492: questions waiting for the solve that follows a replacement to be sent (`reopening`) */
+  private respawnWaits: (() => void)[] = [];
+  /** a replacement is still opening what its worker held: the pool can answer nothing yet */
+  private reopening(): boolean {
+    return !this.failed && [...this.respawn.values()].some((r) => !r.solving);
+  }
+  private releaseRespawnWaits() {
+    if (this.reopening()) return;
+    for (const r of this.respawnWaits.splice(0)) r();
+  }
   /** the next solve has every worker make its market parts afresh (`reopened`, `shrink`) */
   private freshParts = false;
 
@@ -2828,7 +2839,7 @@ class DemandClient {
     this.freshParts = true;
     if (this.waiting) this.flush(true);
     else if (this.cur) this.dispatch(this.cur.svc, performance.now());
-    else this.respawn.clear();
+    else { this.respawn.clear(); this.releaseRespawnWaits(); }
   }
 
   /** `item` is open in no worker. */
@@ -3875,6 +3886,7 @@ class DemandClient {
     this.postSolve(msg);
     if (barrier) this.askTurn();
     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
+    this.releaseRespawnWaits();
   }
 
   /** A solve to every worker, each solving worker told its part of the origins (T-1543). */
@@ -3979,6 +3991,9 @@ class DemandClient {
     // T-2533: the zone in view of a cached result, which the focus pool is about to solve: asked of that solve
     if (this.focusComing()) return new Promise<void>((r) => this.fsent.push(r)).then(() => this.viaRound(key, run, tries));
     const t = this.target();
+    // T-3492: a worker being replaced holds nothing yet: asked once the pool's solve again is out (`target` then
+    // waits for its final); not a question for the focus pool, whose workers were not replaced
+    if (this.reopening() && !(t && this.fversions.has(t.version))) return new Promise<void>((r) => this.respawnWaits.push(r)).then(() => this.viaRound(key, run, tries));
     if (!t) return Promise.resolve(null);
     if (!t.wait) return run(t);
     const dv = demandView.peek();
@@ -4246,6 +4261,7 @@ class DemandClient {
    * round and day; null while not known. */
   tripLengths(zone?: CityId, ahead?: Target): Promise<TripLengths | null> {
     this.syncFocus();
+    if (!ahead && this.reopening()) return new Promise<void>((r) => this.respawnWaits.push(r)).then(() => this.tripLengths(zone)); // (T-3492, as `viaRound`)
     const dv = demandView.peek();
     if (!dv && !ahead) return Promise.resolve(null);
     const city = zone ?? activeCity.peek(), day = shownDay.peek(), version = dv?.version ?? ahead!.version, round = dv?.round ?? -1;
