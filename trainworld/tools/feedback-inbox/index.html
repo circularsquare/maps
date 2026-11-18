@@ -73,7 +73,7 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
 .share .head .name { overflow-wrap: anywhere; }
 .share canvas { display: block; width: 100%; height: 460px; background: #fbf5ef; border: 1px solid var(--line); touch-action: none; cursor: grab; margin-top: 8px; }
 #nameTools, #cutTools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
-#nameQ { padding: 4px 8px; width: min(320px, 100%); }
+#nameQ, #fQ { padding: 4px 8px; width: min(320px, 100%); }
 .nrow { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; border-top: 1px solid var(--line); padding: 8px 0; }
 .nrow .name { font-weight: 600; overflow-wrap: anywhere; }
 .nrow.off .name { color: var(--dim); text-decoration: line-through; }
@@ -131,6 +131,7 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
     <div id="threadsView">
     <button type="button" id="ping" hidden></button>
     <div id="filters">
+      <input id="fQ" type="search" autocomplete="off" placeholder="Search id, name or text" aria-label="Search threads">
       <label><input type="checkbox" id="fUnread"> Unread only</label>
       <label>Status
         <select id="fStatus"><option value="open">Open</option><option value="closed">Closed</option><option value="all">All</option></select>
@@ -207,6 +208,7 @@ $("unlock").addEventListener("submit", (ev) => {
 $("forget").addEventListener("click", (ev) => { ev.preventDefault(); storeKey(""); key = ""; showUnlock("Key forgotten on this browser."); });
 $("fUnread").addEventListener("change", renderList);
 $("fStatus").addEventListener("change", renderList);
+$("fQ").addEventListener("input", renderList);
 
 const whoOf = (r) => r.accountName || r.name || "anon";
 function ago(t) {
@@ -219,6 +221,9 @@ function ago(t) {
 const when = (t) => new Date(t * 1000).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
 function passes(r) {
+  // A search looks across every status and tag, so a pasted id always finds its thread.
+  const q = $("fQ").value.trim().toLowerCase();
+  if (q) return [r.id, whoOf(r), r.first || ""].some((s) => String(s).toLowerCase().includes(q));
   if ($("fUnread").checked && !r.unread) return false;
   const status = $("fStatus").value;
   if (status !== "all" && r.status !== status) return false;

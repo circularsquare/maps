@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3626 [P2] {L:feedback} Feedback stops asking for an email (2026-11-17): Email box removed from the feedback form, its i18n keys dropped, privacy page updated; server untouched.
 - T-3618 [P4] {L:single-track} Split still marked when the straight single was drawn first (2026-11-17): closed without code: her word 11-18: still seen on 8800 but drawing it differently clears it, 'people can figure it out', the full track rework (T-3444) covers it.
 - T-3621 [P2] {L:new-countries} Cairo scores as a hard start (2026-11-17): Cairo's centre had landed on a desert area's box centre 37 km east (the real Cairo node sits just outside the pack footprint); centre() now skips a name match whose 10 km circle holds under half the registry centre's people; Cairo 439 hard -> 38,139 easy, no other start's centre moved. notes/T-3621.md.
 - T-3609 [P2] {L:single-track} Double track splitting into two singles marked a flat junction (2026-11-17): two drawing fixes, checker PASS (notes/T-3609-check.md); drawn-first and one-way-switch cases continue as T-3618. notes/T-3609.md.

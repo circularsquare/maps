@@ -174,6 +174,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Your pad, 2026-11-18, a player: "is it intended behaviour that the cost to time ratio is 8.86 min/S$ for transit and 2.31 min/S$ for driving in Malaysia". Both figures are right: within a city a fare dollar weighs by the country's income (11.5 minutes per US$ in Malaysia), the car's money 3 minutes per US$ everywhere, left that way since T-1277 as "a separate oddity". Between cities they already match.
   - Goal: Within a city, transit and driving weigh money the same, or the hover says why they don't.
   - Other: The market trip hover's fare was fixed on the way (landed 2353f5ee, c014). notes/T-3622.md
+- T-3627 [P2] {L:route-choice} Measure car money weighed like fares (taking, 2026-11-17, agent carmoney)
+  - Context: From T-3622. You, 2026-11-18: "i dont really see why a fare dollar should cont 8x mroe than a car dollar in india. i think car cost should be changed to scale the same way as fares. lets test out how big of a change that is. dont necessarily want to do it. but want to see."
+  - Goal: A trial (not landed) where a dollar of car costs inside a city weighs what a fare dollar weighs in that country, with the change in rail and car share shown for a few countries and your two ceiling tests, so you can decide.
+  - Other: notes/T-3622.md
 - T-3298 [P2] {L:route-choice} Trips walk to a train instead of tram change
   - Context: Player report (Caio, 2026-11-11/12): tram A to B, train B to C shows as a walk to B and the train. Needs a scene; no screenshot yet.
   - Goal: A tram-then-train trip changes at the station instead of walking across town.
@@ -234,6 +238,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: T-2830 left parts unmeasured: slow connections, laptops, Firefox, Safari, and North America's cached reload.
   - Goal: Those cases are measured and any slow one is filed.
   - Other: Scripts are in ../artifacts/trainworld/t2830/scripts/.
+- T-3628 [P1] {L:feedback} Tokyo and Kansai fail to load on iPad
+  - Context: Two players, 2026-11-16 and 11-17 (feedback 17240a38, e4db8ec6): on iPad / iOS Safari, Tokyo or Kansai shows "{name} could not load" and no track can be built; the same game on an Android phone works. Investigated 2026-11-17: not memory (no worker died, the small-device pool was in use); both reports carry a WebKit fetch failure ("Load failed") for water data, which also blocks building. Which download failed for demand is not in the reports.
+  - Goal: Tokyo and Kansai load on an iPad, or the cause is found and a fix filed.
+  - Other: notes/feedback-triage-2026-11-18.md, notes/T-3628.md
+- T-3629 [P3] {L:track-drawing} Track under a station can't be picked
+  - Context: A player (feedback e256b35f): track lying wholly under a station box can't be picked to edit or delete. Few players; not checked in the game.
+  - Goal: Track under a station can be picked (or the station's panel reaches it).
+  - Other: notes/feedback-triage-2026-11-18.md
 - T-2866 [P2] {L:feedback} Feedback panel follow-ups
   - Context: The feedback panel (T-2853) is built and its strings are translated and reviewed. Phone-width touch buttons are untested on a real device.
   - Goal: Panel checked on a real touch device, then deployed: shonei-server first with SHONEI_FEEDBACK_THREADS=1, then the game.

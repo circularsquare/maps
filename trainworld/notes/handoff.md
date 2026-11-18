@@ -29,17 +29,21 @@ git history. Read trainworld/CLAUDE.md and docs/orchestrator.md first. Her local
 - splitflat: T-3609 DONE in tree (two drawing fixes, sim draw.rs; c001 in tree "fixed single track drawn where a
   double track splits sometimes joining the wrong track and making a flat junction"). Checker fcheck (Sonnet, port
   6188) running -> notes/T-3609-check.md; land on PASS. Rest of her case filed T-3618.
-- vot (Opus, .tw-trees/vot, port 6189): T-3622 player report, transit 8.86 vs driving 2.31 min/S$ in Malaysia.
-  A demand-number change waits for her. She: "potentially pretty huge bug", report to her as soon as it lands.
+- T-3622: both rates right (fares weigh by income, car money flat 3 min/US$), display fix landed 2353f5ee (c014).
+  Her: car cost should scale like fares; "lets test out how big of a change that is. dont necessarily want to do it".
+  carmoney (Opus, .tw-trees/carmoney, port 6193): T-3627 trial A (equal) and B (US anchored), patch only; plus C
+  (her idea: same numbers restated as cheaper car costs in poorer countries, "cuz of mopeds"; check vs real costs).
+- T-3626 LANDED 4065b244 (c015; strings "Email (optional)", "Email" removed; privacy page line changed).
 - secondedit (Opus, .tw-trees/secondedit, port 6191): T-3616 (her go 11-18): later edits wait ~170 s behind the
   first whole solve (T-1734 hold). Told to rebase onto 63bacf31 (T-3599's editLeft doubling while an edit waits).
 - T-3619 DONE f2894ea1 (351 starts had no tier; c011); T-3621 DONE 5acbd214 (Cairo's centre was a desert box
   centre; now easy). Filed T-3623 (Cairo's place point) {after: night run}. Tiers rerun once more after the joins.
 - Filed T-3620 Caribbean + Bolivia + Paraguay {after: night run}; T-3624 school trips to transit (P3), T-3625 hide
   stations toggle (P3). T-3618 closed on her word (track rework covers it).
-- fbtriage (Opus, no tree): her ask "what feedbacks should i close and what responses should i give": 78 open
-  unanswered reports (dump scratchpad \fb\unanswered.txt) -> notes/feedback-triage-2026-11-18.md for her; file
-  its "bugs with no task". The inbox rate-limits: fetch slowly (1.2 s apart).
+- Feedback triage DONE: notes/feedback-triage-2026-11-18.md (78 reports: 4 close, 49 reply+close, 11 reply+keep,
+  14 her call) given to her. Filed T-3628 (P1, Tokyo/Kansai fail to load on iPad; ipadload Opus investigating,
+  read-only) and T-3629 (P3). Two more bugs wait on player answers (30911903, c742b993). Inbox rate-limits.
+- Her: intercity minutes-per-money should be consistent too -> sent to carmoney (3.55 vs 3.58, dual display).
 - Parked: T-3231 as notes/T-3231-fix.patch {after:T-3271}.
 
 ## Night run RUNNING (her yes 11-18 02:30 UTC; "leave a few cores open", she's up a few more hours)

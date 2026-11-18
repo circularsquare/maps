@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c015",
+      "text": "the feedback form no longer asks for an email",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3626",
+      "by": "noemail",
+      "at": "2026-11-18T03:30:04Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
+    },
+    {
       "id": "c014",
       "text": "fixed the train's effective time hover for trips between cities showing a different fare from the fare row when the trip starts in another country than the game",
       "edited": "fixed the fare in the train's effective time hover between cities, which was off for trips starting in a different country from your starting city",
