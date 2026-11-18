@@ -1,7 +1,6 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session f171f68d-958c-4fdd-a988-a53db2329545, name maps-ca, since 2026-11-18 04:48 UTC
-Previous: session c8a9be2a-ffb0-43df-9308-d516bb9169f7, name maps-86, handed over 2026-11-18 04:48 UTC, finishing in-flight work
 Updated: 2026-11-18 04:48 UTC
 
 A short state page, rewritten (not appended) as things change. The diary is notes/handoff-log.md; older detail is in
@@ -28,7 +27,11 @@ local she'd be up "another two hours or so".
   (16 items, line "update v0.4.1: station names in japanese, chinese and korean, plus fixes", uncommitted:
   updates.ts, en.json, context.json, changelog/v0.4.1.json, next.json). c004 (T-3515, data) held out and re-added as
   next.json c001; c007 reverted to its pre-T-3616 wording (T-3616's landing adds its own item). Agent l10n041b
-  translating the 17 keys in the main tree. Then: commit, snap8800, smoke8800, her yes per step.
+  translating the 17 keys in the main tree. Translated and committed fc222c36 (pushed); 8800 = fc222c36, smoke8800
+  light and dark PASSED (12 checks each). She trimmed it (05:30 UTC): dropped T-3615, T-3626, T-3619 items, c007 ->
+  "show new riders faster"; updates.ts/en/context/v0.4.1.json edited, l10n041b retranslating; then commit, snap8800,
+  smoke8800, and her yes per step: deploy.py --skip-data
+  --version 2026-11-18, website push, --verify --page, export.py + push.
 - Older plan, for reference: smoke on the 8800 URL (not a main-tree Vite: its game json carries the night run's
   registry), she tests station names on 8800, `changelog.py publish --version v0.4.1` (highlights only if >~20
   items), translate the new updates.v041* keys (l10n workflow, like l10n041 did), commit, snap8800 again, smoke8800,
@@ -36,17 +39,19 @@ local she'd be up "another two hours or so".
 
 ## In flight
 - DECISIONS.md: secondedit's T-3616 line uncommitted (commit with its landing).
-- secondedit (maps-86's, Opus, .tw-trees/secondedit, port 6191): T-3616 built, archived early. Resumed for: t3599-time-left
-  fails only with the change; scoping edits >13 s apart. Then a checker (demand scheduling), then I land it.
+- secondedit (.tw-trees/secondedit, rebased on fc222c36): T-3616 built, archived early; t3599 flake is the check's,
+  not the change's. Checker check3616 (Sonnet, port 6191) running; then land (its c002 item + DECISIONS line). Its
+  idea for edits during the whole solve (gap = 1/7 of the solve, latest start 60 s; ~2-3 h): not filed yet.
 - bushover (Sonnet, .tw-trees/bushover, port 6194): T-3636 fixed app-side (hover subtracts the 4-min bus boarding
-  cost, BUS_BOARD_FELT_MIN in tripText.ts mirrors sim), archived, c018. Resumed for its screenshot; then land.
+  cost, BUS_BOARD_FELT_MIN in tripText.ts mirrors sim), archived, c018. Screenshot good (artifacts/trainworld/t3636-hover.png). Land right after v0.4.1 deploys (keeps
+  8800 = hotfix). Noticed: a bus trip's panel row says "Waiting for a train with room" (train for bus); small, unfiled.
 - multitrack (Opus, .tw-trees/multitrack, port 6196): T-3634 shift+click track selection + one Rebuild.
 - noroute2 (Opus, .tw-trees/noroute2, port 6195): T-3632 stage 2, the "By transit" line says which reason (no train
   that period, no road or flight, stand-in answer). Sim + worker + panel + 12 languages; checker before landing. Avoid
   MarketTrip.tsx conflicts with the T-3627 display patch.
-- T-3627 done (carmoney tree removed; notes, trial patch, display patch, ceiling harness copied to notes/). Waits on her
-  (asks.json). notes/T-3627-display.patch (MarketTrip.tsx fare weight 0.40 -> income-group mean, display only, no
-  changelog) lands after the hotfix ships, so 8800 stays what she tested.
+- carhover (Sonnet, .tw-trees/carhover, port 6197): T-3627, her call "keep todays demand and just fix hovers ... same
+  dollar to minute ratio regardless of mode": notes items 1-3 incl. the display patch; congestion charges keep real
+  prices (the one exception). Lands after v0.4.1 ships.
 - Night run b: kit\night1117b.ps1 (-Want 9 -NoCif), script pid 39588 (cmd 31772), log
   artifacts/trainworld/night1117b.log (step logs night1117b-*.log). On the rerun of sve,roc,jau since 23:01 local.
   Stop: create trainworld\data\work\world_run\STOP, then kill 39588 only; on failure it writes the restore command.
@@ -55,7 +60,8 @@ local she'd be up "another two hours or so".
   start_difficulty.py --fresh once more, 8800 rebuild, then T-3620 and T-3623 can start.
 
 ## Waiting on Anita
-- notes/asks.json: T-3631 Japanese names in China; T-3627 car cost in poorer cities.
+- notes/asks.json: the v0.4.1 start menu line. (She answered 05:10 UTC: keep today's demand + fix hovers; Chinese
+  names for Japanese players in China are fine.)
 - She does a feedback pass tomorrow with artifacts/trainworld/review/feedback-triage-2026-11-18.md; the inbox has a
   search box now. T-3635 has a reply draft for the player in her last message.
 

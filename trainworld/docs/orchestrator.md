@@ -129,6 +129,9 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
 
 - Game: notes/T-924.md "Commands" (`tools/deploy.py --dry-run --version X`, then `--smoked`, website push, `--verify`).
   Every publish gets a version and an entry in `app/src/ui/updates.ts`, written from the board's changelog (T-3424):
+  first the items she will see go on the board's Changelog view (hide what won't ship, set the start-menu line) and
+  she edits them there before you publish (Anita, 2026-11-18: "ill amost always want to edit it unless we only have
+  like 2 things in the update"; publish empties the board's list), then
   `tools/changelog.py line "update vX.Y.Z: ..."`, `publish --version vX.Y.Z --dry-run`, then without `--dry-run`
   (her wording, hidden items left out, sorted by area, groups' items under them; it refuses an item with no area:
   `changelog.py set <id> --area ...`), translate the new `updates.vXYZ*` keys, then deploy.py. Re-read the items
