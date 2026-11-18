@@ -33,7 +33,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    Checkers running: leasecheck (T-3611), selcheck (T-3101, sim), withincheck (T-3509 tripswithin, adopted). On
    landing T-3509 (her OK 17:25 UTC: in-zone long commutes count, share drop fine): rerun checks/t2145-real-share.mjs (~25 min) and paste its rows into REAL_SHARE (realShare.ts).
    Smoke's t1053-zone-ids fails in trees on `slw` removed from registry.json (dayrun's uncommitted game json): expect
-   it until dayrun lands. modelook (Opus, T-3693) makes the three-look sheet; I land my pick, she swaps by letter.
+   it until dayrun lands.
+   Waiting for dayrun to end (pipeline files in use): regate (T-930/T-3656) and qwpre (T-2002/T-2299/T-2001, edits
+   pipeline/world_plan.py GB_SPLIT_FAR, preflight flags advisory only; tasks already archived): land both then.
+   Landed since: autolease, clockdup (c037), tripswithin (c038, realshare agent re-measuring REAL_SHARE), timectl
+   (c039), selway (c040). T-3700 (one-way leg back stops, t3348 fails on master): look after sideplat2 lands.
+   schoolcheck checking T-3624 (her questions: keep 2x, hover term "driven by a parent"). modelook (Opus, T-3693) makes the three-look sheet; I land my pick, she swaps by letter.
 11. Windows popping on her screen (her 16:45): checks' children lacked windowsHide; play.mjs's background game has no
    console so each python/powershell child flashed. Fixed in cores.mjs/lib.mjs/smoke.mjs, copied into running trees;
    CLAUDE.md Shell rule added. If she still sees windows, look at dayrun's world_run children next.
