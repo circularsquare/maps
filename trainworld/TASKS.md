@@ -970,6 +970,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-3698 [P3] {L:accounts-server} Refused save by hand says it could not be saved
+  - Context: From T-3611's checker: when another tab wrote the slot while this tab still held its lease (a late lock message), this tab's save by hand is refused by the new edit check and shows "This game could not be saved. Download it as a file to keep it."; the next save by hand takes the slot back and works. Rare (two tabs, a narrow race).
+  - Goal: That save by hand takes the slot back as the keepOtherTabs path does, or says the game was saved in another tab.
+  - Other: notes/T-3611.md
 - T-3697 [P3] {L:checks} Old-layout diagram checks fail
   - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
   - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
@@ -978,10 +982,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Stages 1 (upload checks) and 3 (the daily scan) deployed 2026-11-18 13:30 UTC on your yes. Stage 2 (the game) landed 7cd2f5ac and is on 8800; it can ship with the next publish now. Left: a day of the scan running clean, then close.
   - Goal: A damaged save is caught on upload and in a recurring scan, its bytes are kept, and the last intact version is pinned outside backup rotation with a way for the player to restore it.
   - Other: Requested by you 2026-11-15. notes/T-3395.md
-- T-3611 [P2] {L:accounts-server} Autosave lands after another tab took the slot (taking, 2026-11-18, agent autolease)
-  - Context: From T-3397, by reading the code, not reproduced. When a tab saves by hand it takes the slot's lock from the other tab, and the other tab's code keeps running (MDN). Autosave checks the lock only when it starts, so a write already under way can land around the other tab's save, and one tab's change is lost.
-  - Goal: An autosave whose lock was lost before its write leaves the slot as the other tab wrote it.
-  - Other: notes/T-3397.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.

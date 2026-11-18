@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c036",
+      "text": "fixed a save made in one tab being overwritten by an autosave from another tab of the same game",
+      "edited": "fixed a save by hand being overwritten by an autosave from another tab open on the same game",
+      "hidden": false,
+      "task": "T-3611",
+      "by": "autolease",
+      "at": "2026-11-18T17:11:28Z",
+      "rev": 2,
+      "area": "other",
+      "fix": true,
+      "changed": "2026-11-18T17:11:32Z"
+    },
+    {
       "id": "c035",
       "text": "added a Stations checkbox in Settings that hides stations and their names",
       "edited": null,

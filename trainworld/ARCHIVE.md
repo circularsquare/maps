@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3611 [P2] {L:accounts-server} Autosave lands after another tab took the slot (2026-11-18): autosave re-checks its lease before the slot write and writeSlot refuses inside its transaction when the slot has an edit this tab never read; two-tab probe: before the other tab's save was lost, after it is kept (notes/T-3611.md)
 - T-3625 [P2] {L:map-look} A toggle to hide stations (2026-11-18): Settings > Show > Stations checkbox hides stations and names, unpickable; station tool shows them while active (notes/T-3625.md)
 - T-3101 [P3] {L:single-track} One-way track follow-ups (2026-11-18): Select bar has Run trains one way and Reverse direction for every picked single-track piece: one confirm listing the re-routed lines, one undo (new set_edges_oneway in sim oneway.rs)
 - T-3681 [P2] {L:small-fixes} Search box in settings (2026-11-18): Settings has a search box at the top: typing hides rows whose label, section or keywords (26 entries, English plus the player's language) don't match; No settings match when none; changelog setsearch-1; notes/T-3681.md.
