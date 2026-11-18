@@ -806,9 +806,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3703 [P2] {L:buses} Schedules for buses and ferries like trains
   - Context: You, 2026-11-18: "some ppl on discord are complaining about schedule feature not being enabled for buses / ferries also. we should get that working. we can leave out the marey diagram / timetable part for now if thats harder to add but yeah want to bring buses and ferries to be more consistent with trains. not necessarily super high prio but would be nice to get out in next few updates". Then: the Discord fleet complaints (T-3704) and this both count: "both whats pictured and what i mentioned should be things we try to get consistent".
   - Goal: Bus and ferry lines get the train lines' schedule controls (periods, weekend, headway steps), the timetable chart optional; a list of what differs goes in the notes first.
-- T-3705 [P2] {L:track-drawing} Can't build on Firefox (taking, 2026-11-18, agent firefox)
-  - Context: Discord bug-reports 2026-11-18 (natteru): "Anyone else can't build on firefox?". Reach: Firefox players, likely all of them if it reproduces.
-  - Goal: Reproduced in Firefox (or shown not to), fixed, and a building check run in Firefox once.
 - T-3700 [P2] {L:single-track} Way back skips the other one-way leg's station
   - Context: Found by T-3101's checks 2026-11-18: t3348-perdir fails on master. A West to East line over a station split into two one-way legs gets stops [0,4,3] and no back stops, so the way back doesn't stop at the north leg (riders 8623 north, 0 south). Possibly from T-3651's side-platform change (72793e68, today) or T-3647; sideplat2 (T-3672) is in the same code.
   - Goal: The way back stops at the other leg's station again and t3348-perdir passes; checked after T-3672 lands.

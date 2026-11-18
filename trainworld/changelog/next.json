@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c049",
+      "text": "games played with a mod, or on a copy of the game hosted somewhere else, stay off the leaderboards",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3707",
+      "by": "modmark",
+      "at": "2026-11-18T19:11:30Z",
+      "rev": 1,
+      "area": "community",
+      "fix": false
+    },
+    {
       "id": "c048",
       "text": "fixed colored bars over the map in Firefox with resist fingerprinting turned on",
       "edited": "fixed colored bars covering the map in Firefox set to resist fingerprinting",

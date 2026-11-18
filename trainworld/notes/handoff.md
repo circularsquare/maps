@@ -58,6 +58,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 7. Play/wait tools (T-3666) landed: CLAUDE.md now says smoke is waited on through its log (an agent saw shell
    calls moved to the background at 180 s). Watch whether agents' smoke runs still behave.
 
+## Server deploy waiting (her word)
+- shonei-server unpushed and undeployed: 12d58a0 (T-3652 Newest tab), 662ed86 (T-3707 published builds + modded
+  latch). After that deploy the Newest tab shows; v0.4.1's unstamped scores stay accepted 48 h after the server first
+  reads builds.json, so the next game publish (which writes builds.json via deploy.py) should follow within 2 days.
+
 ## Her words
 - 11-18 18:40 UTC: modded games off the leaderboards "soonish ... p2" (T-3707, modmark running: modded mark +
   scores only from published builds on anita.garden; server deploy hers). Points scale with each line's cost
