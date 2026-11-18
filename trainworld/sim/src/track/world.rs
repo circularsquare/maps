@@ -1420,7 +1420,8 @@ impl TrackWorld {
             }
             let stops = net.line_stops(l);
             let once = net.line_runs_once(l);
-            let path = net.route_hops(stops).ok().filter(|p| once || net.back_path_of(stops, p).is_some());
+            let ones = net.line_ones(l);
+            let path = net.route_hops(stops, ones).ok().filter(|p| once || net.back_path_of(stops, p, ones).is_some());
             match (path, net.line_data(l)) {
                 (Some(path), Some(mut d)) => {
                     d.path = path;
@@ -1482,7 +1483,8 @@ impl TrackWorld {
             let stops = net.line_stops(l);
             let once = net.line_runs_once(l);
             let turns = net.path_reversals(net.line_path(l)).len();
-            let Some(path) = net.route_hops(stops).ok().filter(|p| (once || net.back_path_of(stops, p).is_some()) && (!turned.contains(&l) || net.path_reversals(p).len() <= turns)) else { continue };
+            let ones = net.line_ones(l);
+            let Some(path) = net.route_hops(stops, ones).ok().filter(|p| (once || net.back_path_of(stops, p, ones).is_some()) && (!turned.contains(&l) || net.path_reversals(p).len() <= turns)) else { continue };
             if let Some(mut d) = net.line_data(l).filter(|d| d.path != path) {
                 d.path = path;
                 ops.push(Op::Line { id: l, data: Some(d) });
@@ -1585,7 +1587,7 @@ impl TrackWorld {
                 let mut inv = vec![Op::Edge { id, data: n.set_edge(id, None)? }];
                 for (l, turns) in users.into_iter().zip(turns) {
                     let mut d = self.net.line_data(l).unwrap();
-                    if let Some(path) = self.net.route(&d.stops).filter(|p| self.net.turn_count(&d.stops, p) <= turns) {
+                    if let Some(path) = self.net.route(&d.stops, &d.ones).filter(|p| self.net.turn_count(&d.stops, p) <= turns) {
                         d.path = path;
                         let old = self.net.set_line(l, Some(d))?;
                         inv.push(Op::Line { id: l, data: old });

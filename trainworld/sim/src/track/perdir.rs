@@ -101,30 +101,79 @@ impl Network {
         self.leg_heading(s).is_some()
     }
 
-    /// Per stop of a line, whether it is a one-way station served once (`leg_stop`); never an end,
-    /// nor any stop of a loop.
-    pub fn legs(&self, stops: &[u32]) -> Vec<bool> {
+    /// T-3711: the side of station `s` (its port side) trains arrive by where a line's one-way stop
+    /// the player set (`ones`, `LineData::ones`) serves them; None where `s` is none, its side is not
+    /// fixed yet, or the station is a one-way station already (its track says the way) or no plain
+    /// two-port station.
+    pub fn one_stop_side(&self, ones: &[(u32, u8)], s: u32) -> Option<u8> {
+        let &(_, w) = ones.iter().find(|x| x.0 == s && x.1 < 2)?;
+        self.can_one_stop(s).then_some(w)
+    }
+
+    /// T-3711: station `s` can be made a one-way stop: a plain station through which track runs
+    /// (two port sides), serving both ways (no one-way station, no platform on one track only).
+    pub fn can_one_stop(&self, s: u32) -> bool {
+        let i = s as usize;
+        self.node_ok(s) && self.is_station(s) && self.node_berth[i].is_none() && self.one_side(s).is_none() && self.node_ports[i].n == 2 && !self.leg_stop(s)
+    }
+
+    /// The port side of the node a path's entry `p` arrives at, by which it arrives.
+    pub fn arrive_side(&self, p: u32) -> Option<u8> {
+        self.port_side(path_edge(p), 1 - path_dir(p))
+    }
+
+    /// Whether a run on `path` stops at stop `s` a line serves once (`legs`): its path passes the
+    /// station, arriving by the side a one-way stop the player set serves (`one_stop_side`).
+    pub fn path_serves(&self, path: &[u32], s: u32, ones: &[(u32, u8)]) -> bool {
+        match self.one_stop_side(ones, s) {
+            None => self.path_has_node(path, s),
+            Some(w) => path.iter().any(|&p| self.path_nodes(p).1 == s && self.arrive_side(p) == Some(w)),
+        }
+    }
+
+    /// Per stop of a line, whether it is served once a round trip: a one-way station (`leg_stop`)
+    /// or a one-way stop the player set (`one_stop_side`, T-3711); never an end, nor any stop of a
+    /// loop.
+    pub fn legs(&self, stops: &[u32], ones: &[(u32, u8)]) -> Vec<bool> {
         let n = stops.len();
-        if n < 3 || stops[0] == stops[n - 1] || !stops[1..n - 1].iter().any(|&s| self.leg_heading(s).is_some()) {
+        let leg = |s: u32| self.leg_stop(s) || self.one_stop_side(ones, s).is_some();
+        if n < 3 || stops[0] == stops[n - 1] || !stops[1..n - 1].iter().any(|&s| leg(s)) {
             return vec![false; n];
         }
-        (0..n).map(|j| j > 0 && j + 1 < n && self.leg_stop(stops[j])).collect()
+        (0..n).map(|j| j > 0 && j + 1 < n && leg(stops[j])).collect()
     }
 
     /// `match_stops` for one run of a line: where each of `stops` is among the run's path `nodes`
-    /// (`must`: where it turns back), and whether the run stops there. A one-way station (`legs`)
+    /// (`must`: where it turns back), and whether the run stops there. A stop served once (`legs`)
     /// on the other run's way is passed: it keeps a place between its neighbours, at the node there
-    /// nearest it, so every per-stop array keeps the line's stops. None when the stops do not match.
-    pub fn match_run(&self, nodes: &[u32], stops: &[u32], must: &[usize]) -> Option<(Vec<usize>, Vec<bool>)> {
+    /// nearest it, so every per-stop array keeps the line's stops. A one-way stop the player set
+    /// (`ones`) is stopped at only where the run arrives by its side, read from `path` (the run's
+    /// path, whose nodes `nodes` are). None when the stops do not match.
+    pub fn match_run(&self, nodes: &[u32], stops: &[u32], must: &[usize], ones: &[(u32, u8)], path: &[u32]) -> Option<(Vec<usize>, Vec<bool>)> {
+        let legs = self.legs(stops, ones);
+        // each kept one-way stop the player set arrived at by its side (`at` per kept stop)
+        let sides_ok = |keep: &[bool], at: &[usize]| {
+            let mut q = 0;
+            (0..stops.len()).all(|j| {
+                if !keep[j] {
+                    return true;
+                }
+                let k = at[q];
+                q += 1;
+                !legs[j] || self.one_stop_side(ones, stops[j]).map_or(true, |w| k > 0 && k <= path.len() && self.arrive_side(path[k - 1]) == Some(w))
+            })
+        };
+        let all = vec![true; stops.len()];
         if let Some(at) = match_stops(nodes, stops, must) {
-            return Some((at, vec![true; stops.len()]));
+            if sides_ok(&all, &at) {
+                return Some((at, all));
+            }
         }
-        let legs = self.legs(stops);
         if !legs.contains(&true) {
             return None;
         }
-        // the rest must match; then each one-way station on the run's path, in the line's order, is
-        // stopped at where the stops kept so far still match with it
+        // the rest must match; then each one stopped at once on the run's path, in the line's order,
+        // is stopped at where the stops kept so far still match with it
         let mut keep: Vec<bool> = legs.iter().map(|&l| !l).collect();
         let kept = |keep: &[bool]| -> Vec<u32> { stops.iter().zip(keep).filter(|x| *x.1).map(|x| *x.0).collect() };
         let mut kat = match_stops(nodes, &kept(&keep), must)?;
@@ -133,7 +182,7 @@ impl Network {
                 continue;
             }
             keep[j] = true;
-            match match_stops(nodes, &kept(&keep), must) {
+            match match_stops(nodes, &kept(&keep), must).filter(|at| sides_ok(&keep, at)) {
                 Some(at) => kat = at,
                 None => keep[j] = false,
             }
@@ -163,30 +212,30 @@ impl Network {
     /// (`leg_run`). One neither way stops at even so (off both ways' track, or listed against the
     /// way its track runs) is routed through as any stop. None when no stop is a one-way station, or
     /// that still leaves one neither way stops at: then the route goes through every stop.
-    pub fn route_legs(&self, stops: &[u32]) -> Option<Vec<u32>> {
-        let mut legs = self.legs(stops);
+    pub fn route_legs(&self, stops: &[u32], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
+        let mut legs = self.legs(stops, ones);
         let nodes = |p: &[u32]| -> Vec<u32> { std::iter::once(self.path_nodes(p[0]).0).chain(p.iter().map(|&q| self.path_nodes(q).1)).collect() };
         let n = stops.len();
         let rs: Vec<u32> = stops.iter().rev().copied().collect();
+        let on = |p: &[u32], s: u32| self.path_serves(p, s, ones);
         while legs.contains(&true) {
             let through: Vec<u32> = (0..n).filter(|&j| !legs[j]).map(|j| stops[j]).collect();
             let mut base = self.route_hops_plain(&through).ok().filter(|p| !p.is_empty())?;
             let back: Vec<u32> = through.iter().rev().copied().collect();
             let mut back = self.route_hops_plain(&back).ok().filter(|p| !p.is_empty())?;
-            // the one-way stations neither run passes yet, which a run then takes where it can
-            let off: Vec<bool> = (0..n).map(|j| legs[j] && !self.path_has_node(&base, stops[j]) && !self.path_has_node(&back, stops[j])).collect();
+            // the ones served once that neither run passes yet, which a run then takes where it can
+            let off: Vec<bool> = (0..n).map(|j| legs[j] && !on(&base, stops[j]) && !on(&back, stops[j])).collect();
             if off.contains(&true) {
-                base = self.leg_run(stops, &legs, &off)?;
+                base = self.leg_run(stops, &legs, &off, ones)?;
                 let roff: Vec<bool> = off.iter().rev().copied().collect();
                 let rlegs: Vec<bool> = legs.iter().rev().copied().collect();
-                let taken = |p: &[u32], j: usize| self.path_has_node(p, stops[j]);
-                let still: Vec<bool> = (0..n).map(|j| roff[j] && !taken(&base, n - 1 - j)).collect();
+                let still: Vec<bool> = (0..n).map(|j| roff[j] && !on(&base, stops[n - 1 - j])).collect();
                 if still.contains(&true) {
-                    back = self.leg_run(&rs, &rlegs, &still)?;
+                    back = self.leg_run(&rs, &rlegs, &still, ones)?;
                 }
             }
-            let (_, fwd) = self.match_run(&nodes(&base), stops, &self.stop_reversals(&base))?;
-            let (_, rev) = self.match_run(&nodes(&back), &rs, &self.stop_reversals(&back))?;
+            let (_, fwd) = self.match_run(&nodes(&base), stops, &self.stop_reversals(&base), ones, &base)?;
+            let (_, rev) = self.match_run(&nodes(&back), &rs, &self.stop_reversals(&back), ones, &back)?;
             let missed: Vec<usize> = (0..n).filter(|&j| !fwd[j] && !rev[n - 1 - j]).collect();
             if missed.is_empty() {
                 return Some(base);
@@ -206,17 +255,18 @@ impl Network {
     /// back more often. The quickest route through the rest alone may pass none of them where faster
     /// track runs beside the legs (passing tracks between two side platforms), and then neither run
     /// would stop there.
-    fn leg_run(&self, stops: &[u32], legs: &[bool], want: &[bool]) -> Option<Vec<u32>> {
+    fn leg_run(&self, stops: &[u32], legs: &[bool], want: &[bool], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
         let mut keep: Vec<bool> = legs.iter().map(|&l| !l).collect();
         let kept = |keep: &[bool]| -> Vec<u32> { stops.iter().zip(keep).filter(|x| *x.1).map(|x| *x.0).collect() };
         let mut path = self.route_hops_plain(&kept(&keep)).ok().filter(|p| !p.is_empty())?;
         let turns = self.path_reversals(&path).len();
         for j in 0..stops.len() {
-            if !want[j] || self.path_has_node(&path, stops[j]) {
+            if !want[j] || self.path_serves(&path, stops[j], ones) {
                 continue;
             }
             keep[j] = true;
-            match self.route_hops_plain(&kept(&keep)).ok().filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns) {
+            // a one-way stop the player set only where the run arrives by its side (T-3711)
+            match self.route_hops_plain(&kept(&keep)).ok().filter(|p| !p.is_empty() && self.path_reversals(p).len() <= turns && self.path_serves(p, stops[j], ones)) {
                 Some(p) => path = p,
                 None => keep[j] = false,
             }
@@ -299,15 +349,15 @@ impl Network {
     /// way (its platform on the other track, or its track not running that way) is that run's
     /// `way_station` where there is one; run 0's only where the forward path passes it. Ends, and
     /// stops where trains turn back, keep theirs. None when the stops do not match the path.
-    pub fn way_stops(&self, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    pub fn way_stops(&self, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
         if path.is_empty() || !stops.iter().any(|&s| self.node_ok(s) && self.way_limited(s)) {
             return Some((stops.to_vec(), stops.to_vec()));
         }
         let nodes: Vec<u32> = std::iter::once(self.path_nodes(path[0]).0).chain(path.iter().map(|&p| self.path_nodes(p).1)).collect();
         let turns = self.stop_reversals(path);
-        let (at, stopped) = self.match_run(&nodes, stops, &turns)?;
+        let (at, stopped) = self.match_run(&nodes, stops, &turns, ones, path)?;
         let rev = self.path_reversals(path);
-        let legs = self.legs(stops);
+        let legs = self.legs(stops, ones);
         let arrive = |p: u32| self.port_side(path_edge(p), 1 - path_dir(p));
         let (mut fwd, mut back) = (stops.to_vec(), stops.to_vec());
         for j in 1..stops.len().saturating_sub(1) {
@@ -332,44 +382,44 @@ impl Network {
                 }
             }
         }
-        if fwd != stops && self.match_run(&nodes, &fwd, &turns).is_none() {
+        if fwd != stops && self.match_run(&nodes, &fwd, &turns, ones, path).is_none() {
             fwd = stops.to_vec();
         }
         Some((fwd, back))
     }
 
     /// Run 0's stop nodes in its order (`way_stops`).
-    pub fn fwd_stops_of(&self, stops: &[u32], path: &[u32]) -> Vec<u32> {
-        self.way_stops(stops, path).map_or_else(|| stops.to_vec(), |w| w.0)
+    pub fn fwd_stops_of(&self, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Vec<u32> {
+        self.way_stops(stops, path, ones).map_or_else(|| stops.to_vec(), |w| w.0)
     }
 
     /// Run 1's stop nodes in its own order and its path (T-3094, T-3348): the forward path run
     /// backward where every way allows it and it passes them in order; else the route through them;
     /// failing that, the route through the line's own stops reversed. None when there is no way back.
-    pub fn back_run_of(&self, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+    pub fn back_run_of(&self, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
         let rs: Vec<u32> = stops.iter().rev().copied().collect();
-        let mut own = self.way_stops(stops, path).map_or_else(|| stops.to_vec(), |w| w.1);
+        let mut own = self.way_stops(stops, path, ones).map_or_else(|| stops.to_vec(), |w| w.1);
         own.reverse();
         let back: Vec<u32> = path.iter().rev().map(|p| p ^ 1).collect();
         // T-3651: a one-way station off the forward path is the way back's to stop at, so the forward
         // path run backward (the same track) will not do
-        let legs = self.legs(stops);
-        let legs_on = stops.iter().zip(&legs).all(|(&s, &l)| !l || self.path_has_node(path, s));
+        let legs = self.legs(stops, ones);
+        let legs_on = stops.iter().zip(&legs).all(|(&s, &l)| !l || self.path_serves(path, s, ones));
         // (an empty path has no stops to move, so `own == rs`)
         if legs_on && back.iter().all(|&p| self.dir_ok(p)) {
             let fits = own == rs || {
                 let nodes: Vec<u32> = std::iter::once(self.path_nodes(back[0]).0).chain(back.iter().map(|&p| self.path_nodes(p).1)).collect();
-                self.match_run(&nodes, &own, &self.stop_reversals(&back)).is_some()
+                self.match_run(&nodes, &own, &self.stop_reversals(&back), ones, &back).is_some()
             };
             if fits {
                 return Some((own, back));
             }
         }
-        if let Ok(p) = self.route_hops(&own) {
+        if let Ok(p) = self.route_hops(&own, ones) {
             return Some((own, p));
         }
         if own != rs {
-            if let Ok(p) = self.route_hops(&rs) {
+            if let Ok(p) = self.route_hops(&rs, ones) {
                 return Some((rs, p));
             }
         }
@@ -378,6 +428,6 @@ impl Network {
 
     /// `back_run_of` for line `l`.
     pub fn back_run(&self, l: u32) -> Option<(Vec<u32>, Vec<u32>)> {
-        self.back_run_of(self.line_stops(l), self.line_path(l))
+        self.back_run_of(self.line_stops(l), self.line_path(l), self.line_ones(l))
     }
 }

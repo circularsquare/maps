@@ -244,7 +244,7 @@ impl Network {
                 _ => return Err(Why::Stop(k)),
             }
         }
-        let path = self.route_hops(&twin).map_err(Why::Hop)?;
+        let path = self.route_hops(&twin, &[]).map_err(Why::Hop)?;
         let once = self.line_runs_once(l);
         if self.check_route(l, &twin, &path, once).is_err() {
             return Err(Why::Route);

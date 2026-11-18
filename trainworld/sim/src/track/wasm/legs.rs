@@ -24,19 +24,19 @@ pub(super) fn split(net: &Network, stops: &[u32]) -> Option<(Vec<u32>, Vec<u32>)
 /// cost least (`best_slot`), in station order, tried with the skeleton both ways round and the
 /// cheaper kept, so the line is the same whichever way round the skeleton came. None when that
 /// leaves no route or no way back.
-pub(super) fn flatten(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+pub(super) fn flatten(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     if skel.windows(2).any(|w| w[0] == w[1]) {
         return None;
     }
     let rs: Vec<u32> = skel.iter().rev().copied().collect();
-    let (a, left) = match place(net, skel, legs, memo) {
+    let (a, left) = match place(net, skel, legs, memo, ones) {
         Some((a, left)) => (Some(a), left),
         None => (None, true),
     };
     if !left || skel.len() < 2 {
         return a;
     }
-    let b = place(net, &rs, legs, memo).map(|x| x.0);
+    let b = place(net, &rs, legs, memo, ones).map(|x| x.0);
     let key = |x: &(Vec<u32>, Vec<u32>)| (order_cost(net, &x.1), x.0.clone().min(x.0.iter().rev().copied().collect()));
     let take_b = match (&a, &b) {
         (Some(a), Some(b)) => {
@@ -51,41 +51,47 @@ pub(super) fn flatten(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopM
     }
     // that line run the other way round, so the skeleton keeps its order
     let stops: Vec<u32> = b?.0.into_iter().rev().collect();
-    let path = route_memo(net, &stops, memo)?;
-    net.back_run_of(&stops, &path).is_some().then_some((stops, path))
+    let path = route_memo(net, &stops, memo, ones)?;
+    net.back_run_of(&stops, &path, ones).is_some().then_some((stops, path))
 }
 
 /// `flatten` with the skeleton as given, and whether some one-way station went in by cost.
-fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo) -> Option<((Vec<u32>, Vec<u32>), bool)> {
+fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<((Vec<u32>, Vec<u32>), bool)> {
     let mut sorted = legs.to_vec();
     sorted.sort_unstable();
     sorted.dedup();
     let mut left: Vec<u32> = vec![];
     let (mut stops, mut path) = if skel.len() < 2 {
         left = sorted;
-        (skel.to_vec(), route_memo(net, skel, memo)?)
+        (skel.to_vec(), route_memo(net, skel, memo, ones)?)
     } else {
-        let mut fwd = route_memo(net, skel, memo).filter(|p| !p.is_empty())?;
+        let mut fwd = route_memo(net, skel, memo, ones).filter(|p| !p.is_empty())?;
         let rs: Vec<u32> = skel.iter().rev().copied().collect();
-        let mut back = route_memo(net, &rs, memo).filter(|p| !p.is_empty())?;
+        let mut back = route_memo(net, &rs, memo, ones).filter(|p| !p.is_empty())?;
         // T-3651: one neither passes (faster track beside its leg) is taken by the run that can
         let (fnodes, bnodes) = (nodes_of(net, &fwd), nodes_of(net, &back));
         let off: Vec<u32> = sorted.iter().copied().filter(|s| !fnodes.contains(s) && !bnodes.contains(s)).collect();
         if !off.is_empty() {
-            if let Some((_, p)) = net.take_legs(skel, &off) {
+            // T-3711: a run need not reach a one-way stop the player set that the other run serves
+            let own = |s: &[u32], p: &[u32]| -> Vec<u32> {
+                let n = s.len();
+                (0..n).filter(|&j| j == 0 || j + 1 == n || net.one_stop_side(ones, s[j]).is_none() || net.path_serves(p, s[j], ones)).map(|j| s[j]).collect()
+            };
+            if let Some((_, p)) = net.take_legs(&own(skel, &fwd), &off) {
                 fwd = p;
             }
             let fnodes = nodes_of(net, &fwd);
             let rest: Vec<u32> = off.into_iter().filter(|s| !fnodes.contains(s)).collect();
             if !rest.is_empty() {
-                if let Some((_, p)) = net.take_legs(&rs, &rest) {
+                if let Some((_, p)) = net.take_legs(&own(&rs, &back), &rest) {
                     back = p;
                 }
             }
         }
         let (fnodes, bnodes) = (nodes_of(net, &fwd), nodes_of(net, &back));
-        let fat = super::super::net::match_stops(&fnodes, skel, &net.stop_reversals(&fwd))?;
-        let bat = super::super::net::match_stops(&bnodes, &rs, &net.stop_reversals(&back))?;
+        // (a one-way stop the player set, T-3711, is in the skeleton and passed by one run: placed)
+        let fat = net.match_run(&fnodes, skel, &net.stop_reversals(&fwd), ones, &fwd)?.0;
+        let bat = net.match_run(&bnodes, &rs, &net.stop_reversals(&back), ones, &back)?.0;
         let m = skel.len();
         // per gap g (between skel[g] and skel[g + 1]): (run, place along that run's path, station)
         let mut gaps: Vec<Vec<(u8, usize, u32)>> = vec![vec![]; m - 1];
@@ -105,29 +111,29 @@ fn place(net: &Network, skel: &[u32], legs: &[u32], memo: &mut HopMemo) -> Optio
             stops.extend(gap.iter().map(|x| x.2));
             stops.push(skel[g + 1]);
         }
-        let path = if stops.len() == m { fwd } else { route_memo(net, &stops, memo)? };
+        let path = if stops.len() == m { fwd } else { route_memo(net, &stops, memo, ones)? };
         (stops, path)
     };
     let by_cost = !left.is_empty();
     for s in left {
-        (stops, path) = best_slot(net, &stops, s, memo)?;
+        (stops, path) = best_slot(net, &stops, s, memo, ones)?;
     }
-    (stops.len() < 2 || net.back_run_of(&stops, &path).is_some()).then_some(((stops, path), by_cost))
+    (stops.len() < 2 || net.back_run_of(&stops, &path, ones).is_some()).then_some(((stops, path), by_cost))
 }
 
 /// `stops` with their one-way stations where `flatten` puts them, the skeleton kept in its order
 /// unless it turns back and a straighter one exists (T-1899, `straighten`); None for a line with
 /// none, or where `flatten` gives nothing.
-pub(super) fn ordered(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+pub(super) fn ordered(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let (skel, legs) = split(net, stops)?;
-    let skel = route_memo(net, &skel, memo).and_then(|p| straighten(net, &skel, &p)).map_or(skel, |s| s.0);
-    flatten(net, &skel, &legs, memo)
+    let skel = route_memo(net, &skel, memo, ones).and_then(|p| straighten(net, &skel, &p, ones)).map_or(skel, |s| s.0);
+    flatten(net, &skel, &legs, memo, ones)
 }
 
 /// A click adding `station` to an open line with `old` stops (`best_insert`): a one-way station
 /// joins the set, any other goes into the skeleton where `best_slot` puts it; then `flatten`.
 /// None when the line would have no one-way station, for `best_slot` over all the stops.
-pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     if old.contains(&station) || closed(old) || !old.iter().chain(std::iter::once(&station)).any(|&s| net.leg_heading(s).is_some()) {
         return None;
     }
@@ -136,23 +142,23 @@ pub(super) fn insert(net: &Network, old: &[u32], station: u32, memo: &mut HopMem
         legs.push(station);
         skel
     } else {
-        best_slot(net, &skel, station, memo)?.0
+        best_slot(net, &skel, station, memo, ones)?.0
     };
     if legs.is_empty() {
         return None;
     }
-    flatten(net, &skel, &legs, memo)
+    flatten(net, &skel, &legs, memo, ones)
 }
 
 /// `sort_stops` for a line with one-way stations: the skeleton put in again one stop at a time as
 /// clicks would, then `flatten`. None for a line with none.
-pub(super) fn sorted(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+pub(super) fn sorted(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let (skel, legs) = split(net, stops)?;
     let mut s: Vec<u32> = vec![];
     for &x in &skel {
-        s = best_slot(net, &s, x, memo)?.0;
+        s = best_slot(net, &s, x, memo, ones)?.0;
     }
-    flatten(net, &s, &legs, memo)
+    flatten(net, &s, &legs, memo, ones)
 }
 
 /// Every open rail line of a loaded save, not ordered by hand, with its one-way stations where
@@ -165,7 +171,7 @@ pub(super) fn straighten_legs(net: &mut Network) -> bool {
         if !net.line_ok(l) || net.line_bus[l as usize].is_some() || net.line_ferry[l as usize].is_some() || net.line_hand[l as usize] {
             continue;
         }
-        let Some((stops, path)) = ordered(net, net.line_stops(l), &mut memo) else { continue };
+        let Some((stops, path)) = ordered(net, net.line_stops(l), &mut memo, net.line_ones(l)) else { continue };
         if stops == net.line_stops(l) && path == net.line_path(l) {
             continue;
         }

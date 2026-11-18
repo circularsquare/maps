@@ -545,12 +545,12 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
     let mut run = Run::default();
     // T-3348: each run's own stop nodes, run 1's in its order
     let stops = if rev {
-        let (stops, segs) = net.back_run_of(on.stops, path)?;
+        let (stops, segs) = net.back_run_of(on.stops, path, net.line_ones(l))?;
         run.segs = segs;
         stops
     } else {
         run.segs = path.to_vec();
-        net.fwd_stops_of(on.stops, path)
+        net.fwd_stops_of(on.stops, path, net.line_ones(l))
     };
     let mut s = 0.0;
     run.nodes.push(net.path_nodes(run.segs[0]).0);
@@ -586,7 +586,7 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
         f[0] = 0.0;
     }
     let turns = net.stop_reversals(&run.segs);
-    let (at, stopped) = net.match_run(&run.nodes, &stops, &turns)?;
+    let (at, stopped) = net.match_run(&run.nodes, &stops, &turns, net.line_ones(l), &run.segs)?;
     run.stop_idx = at.into_iter().map(|k| k as u32).collect();
     run.away = stopped.iter().enumerate().filter(|x| !*x.1).map(|(j, _)| (j as u32, stops[j])).collect();
     if stops.iter().any(|&s| net.one_side(s).is_some()) || !run.away.is_empty() {
@@ -750,7 +750,7 @@ fn build_on(net: &Network, l: u32, stops: &[u32], path: &[u32], running: bool) -
     ls.kind = net.loop_kind(stops, path);
     ls.one_way = ls.is_loop() && net.line_one_way[l as usize];
     // T-3348: the platforms each run stops at
-    let ways = net.way_stops(stops, path).unwrap_or_default();
+    let ways = net.way_stops(stops, path, net.line_ones(l)).unwrap_or_default();
     let min_plat = stops.iter().chain(&ways.0).chain(&ways.1).map(|&s| net.node_platform[s as usize]).min().unwrap_or(0) as f64;
     let fit = (min_plat / CAR_LEN).floor().max(1.0) as u32;
     let want = net.line_cars[l as usize] as u32;

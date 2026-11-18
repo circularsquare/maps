@@ -1115,6 +1115,19 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   other leg, however close (T-3605, Anita 2026-11-17): it is a stop of its own (no way_group), so the stop list and
   its half dot say where trains stop, and taking one of two side by side out leaves the other served one way. Any
   number may sit on a leg, none on the other included. Half dots and the departures board show each one way.
+- **One-way stops the player sets** (T-3711, Anita 2026-11-18; `LineData::ones`, `Network::one_stop_side`,
+  `settle_ones` in `track/wasm/lines.rs`): a shift-click in the line tool makes a stop of an open rail line served one
+  way only, at any plain station through which track runs both ways (not a one-way station, which is one already,
+  nor one with its platform on one track). It is served once a round trip as a one-way station is (routing, passes,
+  half dots, departures), by the run arriving by the side it keeps (its port side); the other run passes through it
+  without stopping or keeps to other track. Its way is the one that makes sense: of the two, the one whose line turns
+  back fewer times over both runs; on a tie the way it had, or for one just set, the way the line goes there in its
+  stop list. Every stop edit weighs it again (a side kept leaves the edit's own route), so a stop set before the
+  station on the other leg is added turns to the other way once that station is a stop. Unlike a one-way station its place in the stop list comes from the
+  clicks, as any other stop's. A stop at an end, or of a loop, is served as any stop while it is one. Shift-clicked
+  again, it is served both ways. Taken out, it loses the setting. Saved in `LOS1`. The case: legs that split and
+  join again with one leg two-way (a bypass joined to the far track, notes/T-3672.md), where a line listing both
+  side platforms otherwise stops at the two-way one both ways and zigzags.
 
 #### Line groups
 

@@ -195,7 +195,7 @@ pub fn synth(km: f64, stations: usize, lines: usize, seed: u64) -> Network {
         let express = k >= ends.len();
         k += 1;
         let (a, b) = ends[c];
-        let Some(path) = net.route(&[a, b]) else { continue };
+        let Some(path) = net.route(&[a, b], &[]) else { continue };
         let mut stops = station_nodes(net, &path);
         if express {
             let last = *stops.last().unwrap();
@@ -209,7 +209,7 @@ pub fn synth(km: f64, stations: usize, lines: usize, seed: u64) -> Network {
         }
         let id = net.alloc_line();
         let tph = if express { [6.0, 3.0, 0.0] } else { [12.0, 6.0, 3.0] };
-        net.set_line(id, Some(LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops, path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() })).unwrap();
+        net.set_line(id, Some(LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops, path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] })).unwrap();
         made += 1;
     }
     let TrackWorld { net, .. } = w;

@@ -210,7 +210,7 @@ fn fingerprint(a: &TrackApi) -> (String, Vec<(String, f64)>) {
     s += "## reroute\n";
     let t = Instant::now();
     for &l in &rail {
-        writeln!(s, "{l} {:?}", net.route(net.line_stops(l))).unwrap();
+        writeln!(s, "{l} {:?}", net.route(net.line_stops(l), net.line_ones(l))).unwrap();
     }
     times.push(("reroute every rail line".into(), ms(t)));
     s += "## pairs\n";

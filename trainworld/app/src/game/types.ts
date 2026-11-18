@@ -232,6 +232,8 @@ export interface LineStats {
   /** T-3348: the stations the return run stops at, first stop to last, where one is a platform beside
    * the listed stop (`TrackApi::line_back_stops`) */
   backStops?: string[];
+  /** T-3711: the stops the player made one way with a shift-click; absent for none */
+  oneStops?: string[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
   /** a loop (T-798): its last stop is its first; a circle carries on round there, a balloon turns

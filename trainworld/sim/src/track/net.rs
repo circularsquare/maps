@@ -264,6 +264,11 @@ pub struct LineData {
     /// T-2895: the player set the stop order by hand, so no stop edit puts the stops in a
     /// straighter order (`straighten`).
     pub hand: bool,
+    /// T-3711: the stops the player made one way (a shift-click): station and the port side of it
+    /// trains arrive by where they stop (`settle_ones` in wasm/lines.rs picks it); 2 while not yet
+    /// fixed (set on a line with no route). Served once a round trip, as a one-way station is
+    /// (`Network::legs`). Only stations among `stops`; saved in `LOS1`.
+    pub ones: Vec<(u32, u8)>,
     /// T-2981: a loop runs one way, round in the direction its stops or route were drawn (run 0
     /// alone); otherwise both ways. Kept on an open line, which ignores it, so it carries over a
     /// close. A new bus or ferry line starts one way, a train line both ways.
@@ -547,6 +552,8 @@ pub struct Network {
     pub line_alive: Vec<bool>,
     pub line_day: Vec<u32>,
     pub line_hand: Vec<bool>,
+    /// T-3711: per line, its one-way stops the player set (`LineData::ones`).
+    pub line_ones: Vec<Vec<(u32, u8)>>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
     /// T-3521: `LineData::weekend`.
@@ -935,6 +942,7 @@ impl Network {
             line_alive: vec![],
             line_day: vec![],
             line_hand: vec![],
+            line_ones: vec![],
             line_one_way: vec![],
             line_limit: vec![],
             line_weekend: vec![],
@@ -1197,6 +1205,7 @@ impl Network {
         self.line_broken.push(false);
         self.line_day.push(0);
         self.line_hand.push(false);
+        self.line_ones.push(vec![]);
         self.line_one_way.push(false);
         self.line_limit.push(0);
         self.line_weekend.push(Weekend::default());
@@ -1274,6 +1283,7 @@ impl Network {
                 group_look: self.line_group_look[i].clone(),
                 day: self.line_day[i],
                 hand: self.line_hand[i],
+                ones: self.line_ones[i].clone(),
                 one_way: self.line_one_way[i],
                 limit: self.line_limit[i],
                 twin: self.line_twin[i],
@@ -1382,6 +1392,10 @@ impl Network {
     }
     pub fn line_stops(&self, l: u32) -> &[u32] {
         self.stops.get(self.line_stops[l as usize])
+    }
+    /// T-3711: a line's one-way stops the player set (`LineData::ones`).
+    pub fn line_ones(&self, l: u32) -> &[(u32, u8)] {
+        self.line_ones.get(l as usize).map_or(&[], |v| &v[..])
     }
     pub fn lines_on_edge(&self, e: u32) -> &[u32] {
         let i = e as usize;
@@ -1698,7 +1712,7 @@ impl Network {
                 // track beside it): without it the line has no way back
                 if self.way_limited(node) {
                     for l in 0..self.line_count() as u32 {
-                        if self.line_ok(l) && self.way_stops(self.line_stops(l), self.line_path(l)).is_some_and(|(f, b)| f.contains(&node) || b.contains(&node)) {
+                        if self.line_ok(l) && self.way_stops(self.line_stops(l), self.line_path(l), self.line_ones(l)).is_some_and(|(f, b)| f.contains(&node) || b.contains(&node)) {
                             return Err(Issue::StationInUse { node, line: l });
                         }
                     }
@@ -1789,6 +1803,7 @@ impl Network {
                 self.line_cars[i] = d.cars;
                 self.line_fast[i] = d.fast;
                 self.line_hand[i] = d.hand && d.bus.is_none() && d.ferry.is_none();
+                self.line_ones[i] = if d.bus.is_some() || d.ferry.is_some() { vec![] } else { d.ones.iter().copied().filter(|x| d.stops.contains(&x.0)).collect() };
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
                 self.line_weekend[i] = d.weekend;
@@ -1807,6 +1822,7 @@ impl Network {
                 self.line_alive[i] = false;
                 self.line_day[i] = 0;
                 self.line_hand[i] = false;
+                self.line_ones[i].clear();
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
                 self.line_weekend[i] = Weekend::default();
@@ -2603,21 +2619,22 @@ impl Network {
             return Err(Issue::LineStops { line: l });
         }
         let turns = self.stop_reversals(path);
-        let Some((at, _)) = self.match_run(&nodes, stops, &turns) else {
+        let ones = self.line_ones(l);
+        let Some((at, _)) = self.match_run(&nodes, stops, &turns, ones, path) else {
             return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
         };
         // the return run goes round one-way track when the path back is against it (T-3094), and each
         // run stops at the platform on its own track (T-3348)
         let back = if once { None } else {
-            match self.back_run_of(stops, path) {
+            match self.back_run_of(stops, path, ones) {
                 Some(b) => Some(b),
                 None => return Err(Issue::NoWayBack { line: l }),
             }
         };
-        let fwd = self.fwd_stops_of(stops, path);
+        let fwd = self.fwd_stops_of(stops, path, ones);
         let one = |s: &[u32]| s.iter().any(|&s| self.one_side(s).is_some());
         if one(stops) || one(&fwd) || back.as_ref().is_some_and(|b| one(&b.0)) {
-            let at = if fwd == stops { at } else { self.match_run(&nodes, &fwd, &turns).map(|m| m.0).ok_or(Issue::LinePath { line: l })? };
+            let at = if fwd == stops { at } else { self.match_run(&nodes, &fwd, &turns, ones, path).map(|m| m.0).ok_or(Issue::LinePath { line: l })? };
             self.check_one_track(l, stops, path, &at, back.as_ref().map(|b| (&b.0[..], &b.1[..])))?;
         }
         Ok(nodes)
@@ -2634,7 +2651,7 @@ impl Network {
         let rev = match back {
             Some((rs, b)) => {
                 let nodes: Vec<u32> = std::iter::once(self.path_nodes(b[0]).0).chain(b.iter().map(|&p| self.path_nodes(p).1)).collect();
-                let ra = self.match_run(&nodes, rs, &self.stop_reversals(b)).map(|m| m.0).ok_or(Issue::LinePath { line: l })?;
+                let ra = self.match_run(&nodes, rs, &self.stop_reversals(b), self.line_ones(l), b).map(|m| m.0).ok_or(Issue::LinePath { line: l })?;
                 let mut r = self.run_passes(b, &ra.into_iter().map(|k| k as u32).collect::<Vec<_>>(), circle);
                 r.reverse();
                 Some(r)
@@ -3044,7 +3061,8 @@ impl Network {
             return None;
         }
         let nodes: Vec<u32> = std::iter::once(self.path_nodes(path[0]).0).chain(path.iter().map(|&p| self.path_nodes(p).1)).collect();
-        let (pos, _) = self.match_run(&nodes, stops, &self.stop_reversals(path))?;
+        let ones = self.line_ones(l);
+        let (pos, _) = self.match_run(&nodes, stops, &self.stop_reversals(path), ones, path)?;
         let one_way = self.line_one_way.get(i).copied().unwrap_or(false);
         let mut best: Option<(Stretch, f64, usize)> = None;
         for a in 0..stops.len() {
@@ -3062,7 +3080,7 @@ impl Network {
                 end = next;
                 let (ss, sp) = (&stops[a..=b], &path[pos[a]..end]);
                 let once = one_way && self.loop_kind(ss, sp) != LoopKind::None;
-                if !once && !self.back_run_of(ss, sp).is_some_and(|(_, back)| back.iter().all(|&p| built_edge(path_edge(p)))) {
+                if !once && !self.back_run_of(ss, sp, ones).is_some_and(|(_, back)| back.iter().all(|&p| built_edge(path_edge(p)))) {
                     continue;
                 }
                 let n = b - a + 1;
@@ -3114,12 +3132,12 @@ impl Network {
     /// The path of a line's return run (T-3094): its path run backward, or where that runs against a
     /// one-way track, the route back through its run 1 stops (`back_run_of`, T-3348). None when
     /// there is no way back.
-    pub fn back_path_of(&self, stops: &[u32], path: &[u32]) -> Option<Vec<u32>> {
-        self.back_run_of(stops, path).map(|r| r.1)
+    pub fn back_path_of(&self, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
+        self.back_run_of(stops, path, ones).map(|r| r.1)
     }
 
     pub fn back_path(&self, l: u32) -> Option<Vec<u32>> {
-        self.back_path_of(self.line_stops(l), self.line_path(l))
+        self.back_path_of(self.line_stops(l), self.line_path(l), self.line_ones(l))
     }
 
     /// Rail lines whose return run takes a way of its own, round one-way track: their tracks are not
@@ -3217,16 +3235,16 @@ impl Network {
     }
 
     /// Fastest path through a list of stops, hop by hop; it may turn back at a stop.
-    pub fn route(&self, stops: &[u32]) -> Option<Vec<u32>> {
+    pub fn route(&self, stops: &[u32], ones: &[(u32, u8)]) -> Option<Vec<u32>> {
         if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) { return None; }
-        self.route_hops(stops).ok()
+        self.route_hops(stops, ones).ok()
     }
 
     /// `route` over stops that are all stations, or the first hop with no path (T-2895: hop k runs
     /// from stop k to stop k + 1). Past a one-way station on the way back's track (T-3565,
-    /// `route_legs`).
-    pub fn route_hops(&self, stops: &[u32]) -> Result<Vec<u32>, usize> {
-        if let Some(p) = self.route_legs(stops) {
+    /// `route_legs`), and a one-way stop the player set (`ones`, T-3711) the other way.
+    pub fn route_hops(&self, stops: &[u32], ones: &[(u32, u8)]) -> Result<Vec<u32>, usize> {
+        if let Some(p) = self.route_legs(stops, ones) {
             return Ok(p);
         }
         self.route_hops_plain(stops)

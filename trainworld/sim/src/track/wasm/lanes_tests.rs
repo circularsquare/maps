@@ -151,7 +151,7 @@ fn t3137_routing_reads_the_table() {
     m.to[i] &= !(1 << j);
     m.to[j] &= !(1 << i);
     assert!(!a.w.net.move_ok(p, q));
-    assert_eq!(a.w.net.route(&[w, b]), None);
+    assert_eq!(a.w.net.route(&[w, b], &[]), None);
     assert!(a.w.net.check_line(l).is_err());
     let left: Vec<usize> = (0..ports.n as usize).flat_map(|i| ends_in(a.w.net.node_moves[y as usize].to[i])).collect();
     assert_eq!(left.len(), 2, "only the main's two moves are left");

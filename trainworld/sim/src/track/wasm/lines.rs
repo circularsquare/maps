@@ -11,17 +11,20 @@ impl TrackApi {
     /// Add a line with a whole-line fleet at each demand level.
     #[allow(clippy::too_many_arguments)]
     pub fn set_line_with_trains(&mut self, id: u32, stops: &[u32], high: u32, medium: u32, low: u32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, false) else {
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, false, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] }) })
     }
     /// Change a line's stops, keeping everything else; the path is found again.
     pub fn set_stops(&mut self, id: u32, stops: &[u32]) -> u32 {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, d.hand, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
         self.run(Op::Line { id, data: Some(d) })
     }
     /// T-2895: the line's stops in the order the player gave, which the line then keeps: no later
@@ -31,10 +34,13 @@ impl TrackApi {
         if d.bus.is_some() || d.ferry.is_some() {
             return self.refuse(Issue::LinePath { line: id });
         }
-        let Some((stops, path)) = edited_stops(&self.w.net, stops, true) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, stops, true, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         d.hand = true;
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
         self.run(Op::Line { id, data: Some(d) })
     }
     /// T-2895: back to the game's own order. An open line's stops, each station once, go in again
@@ -53,19 +59,25 @@ impl TrackApi {
             }
             let mut memo = HopMemo::new();
             // T-3565: one-way stations go where the track puts them, whatever the cost
-            if let Some((stops, path)) = super::legs::sorted(net, &once, &mut memo) {
+            if let Some((stops, path)) = super::legs::sorted(net, &once, &mut memo, &d.ones) {
                 (d.stops, d.path) = (stops, path);
+                if !settle_ones(&self.w.net, &mut d) {
+                    return self.refuse(Issue::LinePath { line: id });
+                }
                 return self.run(Op::Line { id, data: Some(d) });
             }
             let mut best = Some((vec![], vec![]));
             for &s in &once {
-                best = best.and_then(|b| best_slot(net, &b.0, s, &mut memo));
+                best = best.and_then(|b| best_slot(net, &b.0, s, &mut memo, &d.ones));
             }
             let repeats = once.len() < d.stops.len();
             if let Some((stops, path)) = best.filter(|b| repeats || order_cost(net, &b.1) < order_cost(net, &d.path) - 0.001) {
                 d.stops = stops;
                 d.path = path;
             }
+        }
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
         }
         self.run(Op::Line { id, data: Some(d) })
     }
@@ -83,7 +95,7 @@ impl TrackApi {
         if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
             return vec![];
         }
-        match net.route_hops(&stops) {
+        match net.route_hops(&stops, &[]) {
             Ok(_) => vec![],
             Err(k) => vec![if net.joined(stops[k], stops[k + 1]) { 1.0 } else { 0.0 }, stops[k] as f64, stops[k + 1] as f64],
         }
@@ -110,11 +122,14 @@ impl TrackApi {
         let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
         let Some(stops) = stopped_at(&self.w.net, &d, station) else { return self.refuse(Issue::LinePath { line: id }) };
         // T-3565: a one-way station goes where the track puts it
-        if let Some((s, p)) = (!d.hand).then(|| super::legs::ordered(&self.w.net, &stops, &mut HopMemo::new())).flatten() {
+        if let Some((s, p)) = (!d.hand).then(|| super::legs::ordered(&self.w.net, &stops, &mut HopMemo::new(), &d.ones)).flatten() {
             d.path = p;
             d.stops = s;
         } else {
             d.stops = stops;
+        }
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
         }
         self.run(Op::Line { id, data: Some(d) })
     }
@@ -124,6 +139,9 @@ impl TrackApi {
         let Some((stops, path)) = dropped(&self.w.net, &d, lo, hi) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
         self.run(Op::Line { id, data: Some(d) })
     }
     /// Rename or recolour a line; its path stays.
@@ -283,9 +301,56 @@ impl TrackApi {
             self.money_short = None;
             return 2;
         };
-        let Some((stops, path)) = edited_stops(&self.w.net, &stops, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, &stops, d.hand, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
         (d.stops, d.path) = (stops, path);
+        if !settle_ones(&self.w.net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
         self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3711, the line tool's shift-click: `station` made a stop served one way only, the way that
+    /// makes sense (`settle_ones`: the way the line goes there unless the other turns back less), put
+    /// in where `add_stop` puts it if it is no stop yet; the other run passes it, or keeps to its own
+    /// track. On such a stop already, it is
+    /// served both ways again. A one-way station, or one with its platform on one track, is one way
+    /// already: it goes in as `add_stop` puts it. 2 when there is nowhere to put it.
+    pub fn one_way_stop(&mut self, id: u32, station: u32) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let net = &self.w.net;
+        if d.bus.is_some() || d.ferry.is_some() || !net.is_station(station) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        if !net.can_one_stop(station) {
+            return if d.stops.contains(&station) { 0 } else { self.add_stop(id, station) };
+        }
+        if d.stops.contains(&station) {
+            if let Some(k) = d.ones.iter().position(|x| x.0 == station) {
+                d.ones.remove(k);
+            } else {
+                d.ones.push((station, 2));
+            }
+        } else {
+            let Some((stops, _)) = best_insert(net, id, station, &mut HopMemo::new()) else {
+                self.issues.clear();
+                self.money_short = None;
+                return 2;
+            };
+            let Some((stops, path)) = edited_stops(net, &stops, d.hand, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
+            (d.stops, d.path) = (stops, path);
+            d.ones.retain(|x| x.0 != station);
+            d.ones.push((station, 2));
+        }
+        // the way it is served comes from the route with it a plain stop; then the route with it one way
+        let Some((stops, path)) = edited_stops(net, &d.stops, d.hand, &d.ones) else { return self.refuse(Issue::LinePath { line: id }) };
+        (d.stops, d.path) = (stops, path);
+        if !settle_ones(net, &mut d) {
+            return self.refuse(Issue::LinePath { line: id });
+        }
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3711: the stations of a line's one-way stops the player set.
+    pub fn line_one_stops(&self, id: u32) -> Vec<u32> {
+        self.w.net.line_ones(id).iter().map(|x| x.0).collect()
     }
 
     /// The stations a line passes without stopping (T-646): `[gap, node]` pairs in path order, gap
@@ -397,7 +462,7 @@ impl TrackApi {
             return self.refuse(Issue::LinePath { line: id });
         }
         let open = d.stops[..=open_prefix(&d.stops)].to_vec();
-        let Some((stops, path)) = edited_stops(&self.w.net, &open, d.hand) else { return self.refuse(Issue::LinePath { line: id }) };
+        let Some((stops, path)) = edited_stops(&self.w.net, &open, d.hand, &[]) else { return self.refuse(Issue::LinePath { line: id }) };
         d.stops = stops;
         d.path = path;
         self.run(Op::Line { id, data: Some(d) })
@@ -453,7 +518,10 @@ impl TrackApi {
             let mut legs: Vec<u32> = ls.runs.iter().flat_map(|r| r.away.iter().map(|x| x.1)).collect();
             legs.sort_unstable();
             legs.dedup();
-            let legs: Vec<f64> = legs.into_iter().filter_map(|n| net.leg_heading(n).map(|th| [n as f64, th])).flatten().collect();
+            // T-3711: a one-way stop the player set, the way trains arriving by its side run
+            let ones = net.line_ones(line);
+            let forced = |n: u32| net.one_stop_side(ones, n).map(|w| net.node_heading[n as usize] + if w == 0 { 0.0 } else { PI });
+            let legs: Vec<f64> = legs.into_iter().filter_map(|n| net.leg_heading(n).or_else(|| forced(n)).map(|th| [n as f64, th])).flatten().collect();
             if ls.is_bus() || !ls.stops.iter().any(|&n| net.one_side(n).is_some()) {
                 return legs;
             }
@@ -707,17 +775,17 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 /// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`),
 /// unless the player set its order by hand (`hand`, T-2895). A loop stops at every pass of a station
 /// it stops at (T-3122, `every_pass`).
-fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, Vec<u32>)> {
+fn edited_stops(net: &Network, stops: &[u32], hand: bool, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
     // T-3565: one-way stations where the track puts them
     if !hand {
-        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new()) {
+        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new(), ones) {
             return Some(r);
         }
     }
-    let path = net.route(&stops)?;
+    let path = net.route(&stops, ones)?;
     if !closed(&stops) {
-        return Some(if hand { (stops, path) } else { straighten(net, &stops, &path).unwrap_or((stops, path)) });
+        return Some(if hand { (stops, path) } else { straighten(net, &stops, &path, ones).unwrap_or((stops, path)) });
     }
     let n = path.len();
     if n == 0 || (0..n).any(|i| path[i] != path[n - 1 - i] ^ 1) {
@@ -727,8 +795,53 @@ fn edited_stops(net: &Network, stops: &[u32], hand: bool) -> Option<(Vec<u32>, V
     let at = super::super::net::match_stops(&nodes, &stops, &net.stop_reversals(&path))?;
     let kept: Vec<u32> = stops.iter().zip(&at).filter(|x| *x.1 <= n / 2).map(|x| *x.0).collect();
     let kept = distinct_stops(&kept);
-    let path = net.route(&kept)?;
+    let path = net.route(&kept, &[])?;
     Some((kept, path))
+}
+
+/// T-3711: each one-way stop of `d` the player set (a shift-click) is served the way that makes
+/// sense: of its two ways, the one whose line turns back fewer times (both runs); on a tie the way it
+/// has, or for one just set, the way the line goes there now (run 0 on `d.path`, in the stop list's
+/// order; at the first stop, the way it leaves). So a stop clicked one way before the station on the
+/// other leg goes the other way once that station is a stop. The line is routed with each so; where
+/// it has no route yet a new one waits. Stops no longer on the line drop out. False when neither
+/// way has a route.
+fn settle_ones(net: &Network, d: &mut LineData) -> bool {
+    let stops = d.stops.clone();
+    d.ones.retain(|x| stops.contains(&x.0));
+    for k in 0..d.ones.len() {
+        if d.path.is_empty() || closed(&d.stops) {
+            break;
+        }
+        let (s, w) = d.ones[k];
+        let now = if w < 2 {
+            w
+        } else {
+            let fixed: Vec<(u32, u8)> = d.ones.iter().copied().filter(|x| x.1 < 2).collect();
+            let nodes = path_node_list(net, &d.path);
+            let at = net.match_run(&nodes, &d.stops, &net.stop_reversals(&d.path), &fixed, &d.path).and_then(|m| d.stops.iter().position(|&x| x == s).map(|j| m.0[j]));
+            let p = &d.path;
+            at.and_then(|at| if at > 0 { net.arrive_side(p[at - 1]) } else { net.port_side(p[0] >> 1, p[0] & 1).map(|x| 1 - x) }).unwrap_or(0)
+        };
+        let mut best: Option<(usize, LineData)> = None;
+        for side in [now, 1 - now] {
+            let mut t = d.clone();
+            t.ones[k].1 = side;
+            let Some((st, path)) = edited_stops(net, &t.stops, t.hand, &t.ones) else { continue };
+            let Some((_, back)) = net.back_run_of(&st, &path, &t.ones) else { continue };
+            let score = net.path_reversals(&path).len() + net.path_reversals(&back).len();
+            (t.stops, t.path) = (st, path);
+            if best.as_ref().map_or(true, |b| score < b.0) {
+                best = Some((score, t));
+            }
+        }
+        let Some((_, t)) = best else { return false };
+        // a side kept leaves the stops and path as the edit made them (a drop keeps its path, T-1791)
+        if t.ones[k].1 != w {
+            *d = t;
+        }
+    }
+    true
 }
 
 /// A path's node list, `path.len() + 1` nodes.
@@ -747,21 +860,25 @@ fn dropped(net: &Network, d: &LineData, lo: usize, hi: usize) -> Option<(Vec<u32
     if closed(&d.stops) && (lo == 0 || hi == n - 1 || n - (hi - lo + 1) < 3) {
         return None;
     }
-    let at = net.match_run(&path_node_list(net, &d.path), &d.stops, &net.stop_reversals(&d.path))?.0;
+    let at = net.match_run(&path_node_list(net, &d.path), &d.stops, &net.stop_reversals(&d.path), &d.ones, &d.path)?.0;
     let stops: Vec<u32> = d.stops[..lo].iter().chain(&d.stops[hi + 1..]).copied().collect();
     if stops.windows(2).any(|w| w[0] == w[1]) {
         return None;
     }
     // T-3565: with one-way stations the path is found again, as they go where the track puts them
     if !d.hand {
-        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new()) {
+        if let Some(r) = super::legs::ordered(net, &stops, &mut HopMemo::new(), &d.ones) {
             return Some(r);
         }
+    }
+    // T-3711: a one-way stop the player set may be one the forward path only passes: found again
+    if stops.iter().any(|s| d.ones.iter().any(|x| x.0 == *s)) {
+        return edited_stops(net, &stops, d.hand, &d.ones);
     }
     let first = if lo == 0 { hi + 1 } else { 0 };
     let last = if hi == n - 1 { lo - 1 } else { n - 1 };
     let path = d.path[at[first]..at[last]].to_vec();
-    net.match_run(&path_node_list(net, &path), &stops, &net.stop_reversals(&path))?;
+    net.match_run(&path_node_list(net, &path), &stops, &net.stop_reversals(&path), &d.ones, &path)?;
     Some((stops, path))
 }
 
@@ -773,7 +890,7 @@ fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
     }
     let nodes = path_node_list(net, &d.path);
     let must = net.stop_reversals(&d.path);
-    let at = net.match_run(&nodes, &d.stops, &must)?.0;
+    let at = net.match_run(&nodes, &d.stops, &must, &d.ones, &d.path)?.0;
     nodes.iter().enumerate().filter(|x| *x.1 == station).find_map(|(k, _)| {
         let pos = at.iter().filter(|&&a| a < k).count();
         let mut stops = d.stops.clone();
@@ -781,7 +898,7 @@ fn stopped_at(net: &Network, d: &LineData, station: u32) -> Option<Vec<u32>> {
             return None;
         }
         stops.insert(pos, station);
-        net.match_run(&nodes, &stops, &must).map(|_| stops)
+        net.match_run(&nodes, &stops, &must, &d.ones, &d.path).map(|_| stops)
     })
 }
 

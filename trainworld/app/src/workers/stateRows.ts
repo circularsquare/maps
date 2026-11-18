@@ -64,6 +64,7 @@ interface Heavy {
   reversals: number[];
   endTurns: number[];
   ways: number[];
+  oneStops: number[];
   /** T-2895: the player set its stop order by hand (`TrackApi::line_hand`) */
   hand: boolean;
 }
@@ -384,6 +385,7 @@ export class StateRows {
         reversals: heavy.reversals,
         endTurns: heavy.endTurns,
         ways: heavy.ways,
+        oneStops: heavy.oneStops,
         hand: heavy.hand,
         loopKind,
         oneWay,
@@ -502,6 +504,7 @@ export class StateRows {
       reversals: [...a.line_reversals(id)],
       endTurns: [...a.line_end_turns(id)],
       ways: [...a.line_stop_ways(id)],
+      oneStops: [...a.line_one_stops(id)],
       hand: a.line_hand(id),
     };
   }

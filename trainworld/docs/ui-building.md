@@ -1079,6 +1079,12 @@ running line's trains stop at then wins over one they do; then the nearest.
   worker fits the station in where `TrackApi::insert_stop` puts it, among the stops it holds then, and never turns
   the line around a loop (`TrackApi::add_stop`, T-3140, track-and-service.md "Only the right click turns an end"); on a stop it
   takes out every visit of it (`setStops`), and a loop that loses its first stop closes again on its new first stop.
+  A **shift-click** (T-3711, mouse only; `oneWayStop`, `TrackApi::one_way_stop`) adds the station as a stop served
+  one way only, or makes a stop one way, or serves a stop so made both ways again (track-and-service.md "One-way
+  stops the player sets"); its stop list row and marker show it as any stop served one way. The tag offers it under
+  the click's row: "Shift click to add a one way stop" on a station that can be added (not on a loop), "Shift click
+  to stop one way only" on a stop between the ends of an open line served both ways, "Shift click to stop both
+  ways" on one made one way.
   A **right click** (or a finger held 500 ms on the marker, moving up to 8 px; the lift adds nothing) closes, opens
   or turns a loop where the marker offers one (the loop items below); anywhere else it changes nothing and the tag
   says "Can't loop back here" for four seconds. The strip at the bottom says "Click a circle to add or remove a

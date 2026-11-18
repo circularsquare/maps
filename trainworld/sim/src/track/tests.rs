@@ -43,9 +43,9 @@ pub fn terminals_at_dead_ends(w: &mut TrackWorld) {
 }
 
 pub fn line(w: &mut TrackWorld, stops: &[u32], tph: [f32; 3]) -> u32 {
-    let path = w.net.route(stops).expect("no route");
+    let path = w.net.route(stops, &[]).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() };
+    let d = LineData { symbol: String::new(), trains: None, auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph, dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -1215,9 +1215,9 @@ fn shared_track_splits_its_capacity() {
 
 /// A line as the game adds one (`TrackApi::set_line_with_trains`): its trains and a starting rate.
 fn new_line(w: &mut TrackWorld, stops: &[u32], trains: [u32; 3]) -> u32 {
-    let path = w.net.route(stops).expect("no route");
+    let path = w.net.route(stops, &[]).expect("no route");
     let id = w.net.alloc_line();
-    let d = LineData { symbol: String::new(), trains: Some(trains), auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() };
+    let d = LineData { symbol: String::new(), trains: Some(trains), auto: None, name: format!("L{id}"), colour: 0, stops: stops.to_vec(), path, tph: [6.0, 3.0, 1.0], dwell_s: 30.0, turnaround_s: 180.0, cars: 0, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] };
     w.apply(Op::Line { id, data: Some(d) }).unwrap();
     id
 }
@@ -1384,9 +1384,9 @@ fn a_route_without_a_reversal_wins_when_similar() {
         station(&mut w, n, 200);
     }
     let len = |w: &TrackWorld, path: &[u32]| path.iter().map(|&x| w.net.edge_len[(x >> 1) as usize]).sum::<f64>();
-    let path = w.net.route(&[p, s, q]).unwrap();
+    let path = w.net.route(&[p, s, q], &[]).unwrap();
     assert!(w.net.path_reversals(&path).is_empty());
-    let back = 6000.0 + len(&w, &w.net.route(&[p, q]).unwrap());
+    let back = 6000.0 + len(&w, &w.net.route(&[p, q], &[]).unwrap());
     let fwd = len(&w, &path);
     assert!(fwd > back && fwd < back + 3000.0, "{fwd} vs {back}");
     // A stop on the far side of the loop only by turning back is still found.
@@ -2060,7 +2060,7 @@ fn loops_save_round_trip_and_open_again() {
     // opening the loop again (the closing stop removed) makes a plain line
     let mut d = w.net.line_data(c).unwrap();
     d.stops.pop();
-    d.path = w.net.route(&d.stops).unwrap();
+    d.path = w.net.route(&d.stops, &[]).unwrap();
     w.apply(Op::Line { id: c, data: Some(d) }).unwrap();
     let ls = &w.svc.lines[c as usize];
     assert!(ls.ok && ls.kind == LoopKind::None);

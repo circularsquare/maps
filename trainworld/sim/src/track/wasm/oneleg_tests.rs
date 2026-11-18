@@ -293,7 +293,7 @@ fn same_line_every_order(a: &mut TrackApi, set: &[u32], sample: usize, what: &st
         }
         let got = made(a, l);
         assert!(!a.w.net.line_broken[l as usize], "{what}, order {k} {order:?}: runs");
-        let again = legs::ordered(&a.w.net, &got.0, &mut HopMemo::new());
+        let again = legs::ordered(&a.w.net, &got.0, &mut HopMemo::new(), &[]);
         assert!(again.as_ref().map_or(true, |x| x.0 == got.0 && x.1 == got.1), "{what}, order {k}: ordered again {:?} from {:?}", again.map(|x| x.0), got.0);
         match &first {
             None => first = Some(got),
@@ -662,5 +662,96 @@ fn oneleg_probe() {
                 println!("  run {r} {:?} pass {:?} away {:?}", nodes, run.pass, away);
             }
         }
+    }
+}
+
+/// T-3711: `split_bypass` with the north side pinned both ways (as a bypass joined to the other
+/// track leaves it, notes/T-3672.md case 1): the south platform a one-way station, the north one
+/// an ordinary two-way stop. Returns the api and [P, Q, N, S].
+fn split_two_way_north(right_hand: bool) -> (TrackApi, [u32; 4]) {
+    let (mut a, pqns, _) = split_bypass(right_hand, 80.0, Some(true));
+    let net = &a.w.net;
+    let north: Vec<u32> = (0..net.edge_count() as u32).filter(|&e| net.edge_ok(e) && net.edge_tracks[e as usize] == 1 && (net.node_y[net.edge_a[e as usize] as usize] + net.node_y[net.edge_b[e as usize] as usize]) > 0.0).collect();
+    for &e in &north {
+        assert_eq!(a.set_edge_oneway(e, 3), 0, "{}", a.issues());
+    }
+    let [_, _, n, s] = pqns;
+    assert!(a.w.net.leg_heading(n).is_none() && a.w.net.leg_heading(s).is_some(), "north two-way, south one way");
+    (a, pqns)
+}
+
+/// T-3711 (Anita 2026-11-18): a line through both side platforms of a split whose north leg runs both
+/// ways stops at the north one both ways and zigzags; shift-clicked (`one_way_stop`), the north
+/// platform is served once, the way the line goes there, and each run keeps to its own leg without
+/// turning back. Set on a line given, or clicked in either order; kept by a save; a second shift-click
+/// serves it both ways again.
+#[test]
+fn t3711_one_way_stop_at_a_two_way_platform() {
+    for right_hand in [true, false] {
+        let rh = format!("right hand {right_hand}");
+        let (mut a, [p, q, n, s]) = split_two_way_north(right_hand);
+        let l = new_line(&mut a, &[p, n, s, q]);
+        let zig = a.w.svc.lines[l as usize].runs.iter().any(|r| !a.w.net.path_reversals(&r.segs).is_empty());
+        assert!(zig, "{rh}: the line zigzags without it, stops {:?}", a.w.net.line_stops(l));
+        assert_eq!(a.one_way_stop(l, n), 0, "{rh}: {}", a.issues());
+        assert!(a.w.net.line_ones(l).iter().any(|&(x, w)| x == n && w < 2), "{rh}: N one way, {:?}", a.w.net.line_ones(l));
+        assert_served_once(&a, l, &[n, s], &format!("{rh}, given"));
+        let mut b = api(right_hand);
+        assert!(b.load(&a.save()), "{rh}: loads");
+        assert_eq!(b.w.net.line_ones(l), a.w.net.line_ones(l), "{rh}: the save keeps it");
+        assert_eq!(made(&b, l), made(&a, l), "{rh}: the line loads as it was");
+        assert_served_once(&b, l, &[n, s], &format!("{rh}, loaded"));
+        assert_eq!(a.one_way_stop(l, n), 0, "{rh}: {}", a.issues());
+        assert!(a.w.net.line_ones(l).is_empty(), "{rh}: both ways again");
+        assert!(a.w.net.check_line(l).is_ok(), "{rh}: runs");
+        for order in 0..2 {
+            let what = format!("{rh}, clicked, order {order}");
+            let c = new_line(&mut a, &[p, q]);
+            if order == 0 {
+                assert_eq!(a.add_stop(c, s), 0, "{what}: {}", a.issues());
+                assert_eq!(a.one_way_stop(c, n), 0, "{what}: {}", a.issues());
+            } else {
+                assert_eq!(a.one_way_stop(c, n), 0, "{what}: {}", a.issues());
+                assert_eq!(a.add_stop(c, s), 0, "{what}: {}", a.issues());
+            }
+            assert_eq!(a.w.net.line_stops(c).len(), 4, "{what}: {:?}", a.w.net.line_stops(c));
+            assert_served_once(&a, c, &[n, s], &what);
+        }
+        // an end taken off, or the line ended, beside it: refused or the line still runs
+        for (k, end) in [(0, false), (3, false), (1, true), (2, true)] {
+            let what = format!("{rh}, cut {k} end {end}");
+            let c = new_line(&mut a, &[p, n, s, q]);
+            assert_eq!(a.one_way_stop(c, n), 0, "{what}: {}", a.issues());
+            let r = if end { a.end_line_at(c, k) } else { a.drop_stop(c, k) };
+            let net = &a.w.net;
+            assert!(!net.line_broken[c as usize] && net.check_line(c).is_ok(), "{what}: answer {r}, the line runs, {:?}", net.line_stops(c));
+            assert_all_served(&a, c, &what);
+        }
+        // built from one end, one stop at a time: the shift-clicked stop the end at first
+        let what = format!("{rh}, built in order");
+        let c = new_line(&mut a, &[p]);
+        assert_eq!(a.add_stop(c, s), 0, "{what}: {}", a.issues());
+        assert_eq!(a.one_way_stop(c, n), 0, "{what}: {}", a.issues());
+        assert_eq!(a.add_stop(c, q), 0, "{what}: {}", a.issues());
+        assert_served_once(&a, c, &[n, s], &what);
+    }
+}
+
+/// T-3711: a two-way station on double track made a one-way stop: run 0 stops there, run 1 passes on
+/// the other track; the route is as before.
+#[test]
+fn t3711_one_way_stop_on_double_track() {
+    for right_hand in [true, false] {
+        let mut a = api(right_hand);
+        assert_eq!(a.add_route(&ends(free(0.0, 0.0), free(6000.0, 0.0)), &[], 2, false), 0, "{}", a.issues());
+        let (p, q) = (end_station(&mut a, 0.0, 0.0), end_station(&mut a, 6000.0, 0.0));
+        let m = station_near(&mut a, 3000.0, 0.0);
+        let l = new_line(&mut a, &[p, m, q]);
+        let path = a.w.net.line_path(l).to_vec();
+        assert_eq!(a.one_way_stop(l, m), 0, "{}", a.issues());
+        assert_eq!(a.w.net.line_path(l), &path[..], "right hand {right_hand}: the route kept");
+        assert_served_once(&a, l, &[m], &format!("right hand {right_hand}"));
+        let ls = &a.w.svc.lines[l as usize];
+        assert!(!ls.runs[0].passes(1) && ls.runs[1].passes(1), "right hand {right_hand}: served the way the line goes");
     }
 }

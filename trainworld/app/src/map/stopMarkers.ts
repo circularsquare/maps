@@ -165,6 +165,8 @@ export class StopMarkers {
   /** T-3041: the stops of a turned line served one way, with the stops either side of them on the walk */
   /** T-3122: the stops the line serves one way, to the heading of its trains there (`LineStats.oneWayAt`) */
   private oneWay = new Map<string, number>();
+  /** T-3711: the stops the player made one way with a shift-click (`LineStats.oneStops`) */
+  private oneStops = new Set<string>();
   private index = new Map<string, number>();
   private netSeen: unknown = null;
   private size = 0;
@@ -192,7 +194,7 @@ export class StopMarkers {
   /** the tap a long press leaves behind is not a click on the marker */
   private swallow = false;
 
-  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number) => void, private loop: (station: number, tier: StopTier) => void) {
+  constructor(private map: MlMap, private overlay: Overlay, private toggle: (station: number, oneWay: boolean) => void, private loop: (station: number, tier: StopTier) => void) {
     this.gap = new GapFlash(map, overlay);
     this.box = document.createElement("div");
     this.box.className = "stop-marks";
@@ -257,6 +259,7 @@ export class StopMarkers {
       this.colour = this.line.colour;
       this.tram = !!w.lineStats[this.line.id]?.tram;
       this.oneWay = new Map(Object.entries(w.lineStats[this.line.id]?.oneWayAt ?? {}));
+      this.oneStops = new Set(w.lineStats[this.line.id]?.oneStops ?? []);
       this.box.style.setProperty("--c", this.colour);
       this.names = new Map(w.save.stations.map((s) => [s.id, s.name]));
       // After an edit to the same line the worker's last tiers stand until its new answer, with only
@@ -436,17 +439,22 @@ export class StopMarkers {
   /** What hovering a marker says: a stop's click, then its right click where that does something (T-3109). */
   private words(id: string): string[] {
     const name = this.names.get(id) ?? t("stopMarkers.station");
+    // T-3711: the shift-click, a stop between the ends of an open line served one way or both ways again
+    const ends = this.line ? planStopsOf(this.line) : [];
+    const middle = ends.length >= 3 && ends[0] !== ends[ends.length - 1] && id !== ends[0] && id !== ends[ends.length - 1];
+    const shift = touchInput.peek() ? [] : this.oneStops.has(id) ? [t("stopMarkers.shiftBothWays")] : middle && !this.oneWay.has(id) ? [t("stopMarkers.shiftOneWay")] : [];
+    const shiftAdd = touchInput.peek() || this.closedLine() ? [] : [t("stopMarkers.shiftAddOneWay")];
     switch (this.tierOf(id)) {
-      case "on": return [name, t("stopMarkers.remove"), ...(this.closedLine() ? [t("stopMarkers.rightOpen")] : [])];
+      case "on": return [name, t("stopMarkers.remove"), ...shift, ...(this.closedLine() ? [t("stopMarkers.rightOpen")] : [])];
       case "close": return [name, t("stopMarkers.remove"), t("stopMarkers.rightClose")];
       case "open": return [name, t("stopMarkers.remove"), t("stopMarkers.rightOpen")];
-      case "turn": return [name, t("stopMarkers.remove"), t("stopMarkers.rightLoopBack")];
+      case "turn": return [name, t("stopMarkers.remove"), ...shift, t("stopMarkers.rightLoopBack")];
       case "unturn": return [name, t("stopMarkers.remove"), t("stopMarkers.rightStopLooping")];
-      case "route": return [name, t("stopMarkers.add")];
-      case "reroute": return [name, t("stopMarkers.addReroute")];
+      case "route": return [name, t("stopMarkers.add"), ...shiftAdd];
+      case "reroute": return [name, t("stopMarkers.addReroute"), ...shiftAdd];
       case "reverse": {
         const at = this.revAt.get(id);
-        return [name, at === "" ? t("stopMarkers.reverseEnd", { tram: this.tram }) : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? ""), tram: this.tram }) : t("stopMarkers.reverseSome", { tram: this.tram })];
+        return [name, at === "" ? t("stopMarkers.reverseEnd", { tram: this.tram }) : this.names.get(at ?? "") ? t("stopMarkers.reverseAt", { name: this.names.get(at ?? ""), tram: this.tram }) : t("stopMarkers.reverseSome", { tram: this.tram }), ...shiftAdd];
       }
       default: return [name, t("stopMarkers.noTrack")];
     }
@@ -477,8 +485,9 @@ export class StopMarkers {
     if (this.reasonFor === null) this.showTag(this.words(id), px, py);
   }
 
-  /** A click on the marker of station `id`: the stop added or taken out. */
-  activate(id: string, px: number, py: number) {
+  /** A click on the marker of station `id`: the stop added or taken out; with Shift held (T-3711) added as a stop
+   * served one way, or a stop made one way or both ways again. */
+  activate(id: string, px: number, py: number, shift = false) {
     if (this.swallow) return void (this.swallow = false);
     // T-3118: the touch Loop button was on
     if (loopTap.peek()) {
@@ -495,8 +504,9 @@ export class StopMarkers {
       return;
     }
     this.hideTag();
-    this.guessClick(id);
-    this.toggle(Number(id));
+    // a shift-click on a stop keeps it a stop
+    if (!(shift && this.tierOf(id) === "on")) this.guessClick(id);
+    this.toggle(Number(id), shift);
   }
 
   /** T-3109: a right click (or a long press) on the marker of station `id`: the loop there closed, opened or

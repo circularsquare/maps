@@ -323,6 +323,7 @@ function toWorld(s: ClockState): WorldView {
       endTurns: l.endTurns,
       oneWayAt: Object.fromEntries(Array.from({ length: l.ways.length >> 1 }, (_, k) => [String(l.ways[2 * k]), l.ways[2 * k + 1]])),
       ...(l.backStops?.length ? { backStops: l.backStops.map(String) } : {}),
+      ...(l.oneStops?.length ? { oneStops: l.oneStops.map(String) } : {}),
       hand: l.hand,
       loop: l.loopKind === 1 ? "circle" : l.loopKind === 2 ? "balloon" : null, // i18n-ignore
       oneWay: l.oneWay,

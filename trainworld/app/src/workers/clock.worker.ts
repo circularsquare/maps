@@ -4198,6 +4198,11 @@ function applyInner(op: EditOp): Applied {
       const out = op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
       return out.r === 2 ? { ...out, r: INSERT_REFUSED } : out;
     }
+    case "oneWayStop": {
+      const set = () => a.one_way_stop(op.line, op.station);
+      const out = op.autoFast ? withAutoFast(a, op.line, set) : { r: set() };
+      return out.r === 2 ? { ...out, r: INSERT_REFUSED } : out;
+    }
     case "dropStop": {
       const r = a.drop_stop(op.line, op.index);
       return { r: r === 0 ? 0 : DROP_REFUSED };

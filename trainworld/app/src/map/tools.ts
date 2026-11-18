@@ -1708,7 +1708,7 @@ export class Tools {
     // a toggle marker (T-233, map/stopMarkers.ts) is on top of the station
     const marker = this.stops?.pick(e.point.x, e.point.y);
     if (marker) {
-      this.stops!.activate(marker, e.point.x, e.point.y);
+      this.stops!.activate(marker, e.point.x, e.point.y, e.originalEvent.shiftKey);
       return;
     }
     const station=this.overlay.renderer.stationAt(e.point.x,e.point.y,(x,y)=>this.screen(x,y),7);
@@ -1717,13 +1717,14 @@ export class Tools {
       say(mobileDevice() ? tr("toolNotes.lineHint", { touch: true }) : tr("tools.lineHelp"));
       return;
     }
-    this.toggleStop(hit);
+    this.toggleStop(hit, e.originalEvent.shiftKey);
   }
 
   /** Add the station as a stop, or take it out if the line stops there (T-233), every visit of it (T-3109: a click
-   * does nothing else). Clicks queue and each reads the latest stops. */
-  toggleStop(station: number) {
-    this.queueStop(station);
+   * does nothing else). With `oneWay` (a shift-click, T-3711) it goes in as a stop served one way, or a stop of the
+   * line is made one way or both ways again. Clicks queue and each reads the latest stops. */
+  toggleStop(station: number, oneWay = false) {
+    this.queueStop(station, undefined, oneWay);
   }
 
   /** T-3109, a right click or a long press on a stop: close the line into a loop or open it (`tier` "close", "open",
@@ -1734,15 +1735,17 @@ export class Tools {
 
   /** T-3731: the click's line and game are taken now; it is sent however stop editing has ended meanwhile, and
    * dropped only when another game has loaded (its ids are another game's) or the line is gone. */
-  private queueStop(station: number, tier?: StopTier) {
+  private queueStop(station: number, tier?: StopTier, oneWay = false) {
     const id = lineDraft.peek().line, game = gamesLoaded.peek();
     if (id === null) return;
     if (!tier) {
       const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       // T-3474: the panel's rows are the stops its trains serve, which a guess matches only while they are the plan
-      if (line && !line.planStops) guessRow(String(station), line.stops.includes(String(station)), line.num);
+      // (a shift-click on a stop keeps the row)
+      const on = !!line?.stops.includes(String(station));
+      if (line && !line.planStops && !(oneWay && on)) guessRow(String(station), on, line.num);
     }
-    void queueStopEdit(() => this.toggle(station, id, game, tier)).catch(() => {
+    void queueStopEdit(() => this.toggle(station, id, game, tier, oneWay)).catch(() => {
       if (game === gamesLoaded.peek()) say(tr("tools.stopFailed"), true);
     }).finally(() => {
       if (tier) return;
@@ -1752,7 +1755,7 @@ export class Tools {
     });
   }
 
-  private async toggle(station: number, id: number, game: number, tier?: StopTier) {
+  private async toggle(station: number, id: number, game: number, tier?: StopTier, oneWay = false) {
     if (game !== gamesLoaded.peek()) return;
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
     if (!line) return;
@@ -1776,6 +1779,9 @@ export class Tools {
       change = { op: "setStops", line: id, stops: [...before, before[0]], autoFast: this.autoFast(id) };
     } else if (tier) {
       return;
+    } else if (oneWay) {
+      // T-3711: served one way, the way that makes sense (the worker's), or both ways again
+      change = { op: "oneWayStop", line: id, station, autoFast: this.autoFast(id) };
     } else if (!before.includes(station)) {
       // the worker fits it in among the stops it holds then (T-648), so a queued click never works
       // from stops an earlier one changed

@@ -471,7 +471,7 @@ impl TrackApi {
             for (l, turns, mut d) in users {
                 let mut stops: Vec<u32> = d.stops.iter().copied().filter(|s| st.binary_search(s).is_err()).collect();
                 stops.dedup();
-                if let Some(p) = self.w.net.route(&stops).filter(|p| self.w.net.turn_count(&stops, p) <= turns) {
+                if let Some(p) = self.w.net.route(&stops, &d.ones).filter(|p| self.w.net.turn_count(&stops, p) <= turns) {
                     d.path = p;
                 }
                 d.stops = stops;

@@ -948,11 +948,11 @@ type HopMemo = std::collections::HashMap<(u32, u32, u8, u8), Option<(Vec<u32>, u
 /// `Network::route`, with each hop's search kept in `memo`: the same answer, but trying a stop in
 /// every slot searches each hop once. A loop's closing hop takes the side that carries on round
 /// (T-798) when that is worth it (`Network::carry_worth`), as `route` does.
-fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
+fn route_memo(net: &Network, stops: &[u32], memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<Vec<u32>> {
     if stops.iter().any(|&s| !net.node_ok(s) || net.node_platform[s as usize] == 0) {
         return None;
     }
-    if let Some(p) = net.route_legs(stops) {
+    if let Some(p) = net.route_legs(stops, ones) {
         return Some(p);
     }
     let mut path = vec![];
@@ -988,7 +988,7 @@ fn close_path(net: &Network, line: u32, memo: &mut HopMemo) -> Option<Vec<u32>> 
     }
     let mut s = stops.to_vec();
     s.push(stops[0]);
-    let path = route_memo(net, &s, memo)?;
+    let path = route_memo(net, &s, memo, &[])?;
     let open = net.line_path(line);
     let back_over = path.len() < open.len() || path[open.len()..].iter().any(|&p| open.iter().any(|&q| q >> 1 == p >> 1));
     (!back_over && net.path_reversals(&path).len() == net.path_reversals(open).len() && net.loop_kind(&s, &path) == LoopKind::Circle).then_some(path)
@@ -1037,7 +1037,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
     let old = round_guess(net, line, stops, path);
     let nodes = nodes_of(net, path);
     let (_, k) = net.loop_back(path, true, nodes.len(), old + turn_allowance(old))?;
-    let at = net.match_run(&nodes, stops, &net.stop_reversals(path))?.0;
+    let at = net.match_run(&nodes, stops, &net.stop_reversals(path), net.line_ones(line), path)?.0;
     let branch = (0..n).rev().find(|&i| at[i] <= k)?;
     let mut new = stops.to_vec();
     new.extend((0..n - 1).rev().filter(|&i| at[i] <= k).map(|i| stops[i]));
@@ -1049,7 +1049,7 @@ fn turn_last(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut H
 fn turn_first(net: &Network, line: u32, stops: &[u32], path: &[u32], memo: &mut HopMemo) -> Option<Turn> {
     let n = stops.len();
     let nodes = nodes_of(net, path);
-    let at = net.match_run(&nodes, stops, &net.stop_reversals(path))?.0;
+    let at = net.match_run(&nodes, stops, &net.stop_reversals(path), &[], path)?.0;
     let old = round_guess(net, line, stops, path);
     let (_, k) = net.loop_back(path, false, at[open_prefix(stops)], old + turn_allowance(old))?;
     let mut new: Vec<u32> = (1..n).filter(|&i| at[i] > k).map(|i| stops[i]).collect();
@@ -1071,14 +1071,14 @@ fn turned(net: &Network, line: u32, stops: Vec<u32>, branch: u32, old: f64, turn
         let s = every_pass(net, &stops, &path);
         ok(&s, &path).then_some(Turn { stops: s, path, branch })
     };
-    route_memo(net, &stops, memo).and_then(take).or_else(|| route_plain_close(net, &stops, memo).and_then(take))
+    route_memo(net, &stops, memo, &[]).and_then(take).or_else(|| route_plain_close(net, &stops, memo).and_then(take))
 }
 
 /// `route_memo` for a loop's stops with the closing hop the quickest way, turning back at the
 /// first stop if that is it.
 fn route_plain_close(net: &Network, stops: &[u32], memo: &mut HopMemo) -> Option<Vec<u32>> {
     let n = stops.len();
-    let mut path = route_memo(net, &stops[..n - 1], memo)?;
+    let mut path = route_memo(net, &stops[..n - 1], memo, &[])?;
     let &last = path.last()?;
     let side = net.port_side(last >> 1, 1 - (last & 1));
     let hop = memo.entry((stops[n - 2], stops[n - 1], side.unwrap_or(2), 2)).or_insert_with(|| net.find_path_side(stops[n - 2], stops[n - 1], side, None));
@@ -1126,7 +1126,7 @@ fn unturn_branch(net: &Network, line: u32, memo: &mut HopMemo) -> Option<u32> {
         return None;
     }
     let open = &stops[..=open_prefix(stops)];
-    let path = route_memo(net, open, memo)?;
+    let path = route_memo(net, open, memo, &[])?;
     let t = turn_last(net, line, open, &path, memo)?;
     (t.stops == stops).then_some(t.branch)
 }
@@ -1195,7 +1195,8 @@ fn reroute_against_ways(net: &mut Network) -> bool {
         }
         let stops = net.line_stops(l).to_vec();
         let once = net.line_runs_once(l);
-        let Some(path) = net.route_hops(&stops).ok().filter(|p| !p.is_empty() && (once || net.back_path_of(&stops, p).is_some())) else { continue };
+        let ones = net.line_ones(l);
+        let Some(path) = net.route_hops(&stops, ones).ok().filter(|p| !p.is_empty() && (once || net.back_path_of(&stops, p, ones).is_some())) else { continue };
         let mut d = net.line_data(l).unwrap();
         d.path = path;
         changed |= net.set_line(l, Some(d)).is_ok();
@@ -1220,11 +1221,11 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
     }
     // T-3565: a line with one-way stations served once orders them by the track
     if !net.line_hand[line as usize] {
-        if let Some(r) = legs::insert(net, net.line_stops(line), station, memo) {
+        if let Some(r) = legs::insert(net, net.line_stops(line), station, memo, net.line_ones(line)) {
             return Some(r);
         }
     }
-    let (stops, path) = best_slot(net, net.line_stops(line), station, memo)?;
+    let (stops, path) = best_slot(net, net.line_stops(line), station, memo, net.line_ones(line))?;
     Some((every_pass(net, &stops, &path), path))
 }
 
@@ -1232,7 +1233,7 @@ fn best_insert(net: &Network, line: u32, station: u32, memo: &mut HopMemo) -> Op
 /// the route search `set_stops` uses. Between slots with the same path (a stretch the line runs out
 /// and back over), the one whose stops lie closest together along it wins (T-1674), then the end.
 /// None if no slot has a route, or it is a stop already.
-fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Option<(Vec<u32>, Vec<u32>)> {
+fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     if old.contains(&station) {
         return None;
     }
@@ -1242,7 +1243,7 @@ fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Op
     // a loop takes new stops between its first stop and its closing one (T-798); a balloon also
     // past the stop it turns back at, which the new stop then is (T-3122: its stem grows)
     let slots = if closed(old) { 1..=old.len() - 1 } else { 0..=old.len() };
-    let balloon = closed(old) && route_memo(net, old, memo).is_some_and(|p| net.loop_kind(old, &p) == LoopKind::Balloon);
+    let balloon = closed(old) && route_memo(net, old, memo, &[]).is_some_and(|p| net.loop_kind(old, &p) == LoopKind::Balloon);
     // T-3348: a station serving one way may go in as another of its group serving one way, which
     // ever runs best (the clicked one first, so it wins a tie); the return run finds its own
     let stations: Vec<u32> = std::iter::once(station).chain(net.way_others(station).into_iter().filter(|s| !old.contains(s))).collect();
@@ -1258,15 +1259,15 @@ fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Op
         }
     }
     for stops in tries {
-        if let Some(path) = route_memo(net, &stops, memo) {
+        if let Some(path) = route_memo(net, &stops, memo, ones) {
             let len = order_cost(net, &path);
             let wins = if len < best_len - 0.001 {
                 best_spread = None;
                 true
             } else if len <= best_len + 0.001 && best.as_ref().is_some_and(|b| b.1 == path) {
                 let b = best.as_ref().unwrap();
-                let held = *best_spread.get_or_insert_with(|| stop_spread(net, &b.0, &b.1));
-                let s = stop_spread(net, &stops, &path);
+                let held = *best_spread.get_or_insert_with(|| stop_spread(net, &b.0, &b.1, ones));
+                let s = stop_spread(net, &stops, &path, ones);
                 if s < held - 0.001 { best_spread = Some(s); true } else { false }
             } else {
                 false
@@ -1284,7 +1285,7 @@ fn best_slot(net: &Network, old: &[u32], station: u32, memo: &mut HopMemo) -> Op
 /// as a click puts a stop in (`best_slot`): that order and its path if it turns back fewer times
 /// and costs less. Catches lines an edit left going back and forth along one way, whichever
 /// edit it was.
-fn straighten(net: &Network, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, Vec<u32>)> {
+fn straighten(net: &Network, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let turns = net.path_reversals(path).len();
     if turns == 0 || stops.len() < 3 || closed(stops) {
         return None;
@@ -1292,7 +1293,7 @@ fn straighten(net: &Network, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, V
     let mut memo = HopMemo::new();
     let mut best: (Vec<u32>, Vec<u32>) = (vec![], vec![]);
     for &s in stops {
-        best = best_slot(net, &best.0, s, &mut memo)?;
+        best = best_slot(net, &best.0, s, &mut memo, ones)?;
     }
     (net.path_reversals(&best.1).len() < turns && order_cost(net, &best.1) < order_cost(net, path) - 0.001).then_some(best)
 }
@@ -1300,10 +1301,10 @@ fn straighten(net: &Network, stops: &[u32], path: &[u32]) -> Option<(Vec<u32>, V
 /// The sum of the distances along `path` between every two of `stops`, as the line's trains run
 /// it: smaller when a stop on a stretch run out and back is served on the pass nearer the rest
 /// of the line (T-1674). Infinite if the stops do not match the path.
-fn stop_spread(net: &Network, stops: &[u32], path: &[u32]) -> f64 {
+fn stop_spread(net: &Network, stops: &[u32], path: &[u32], ones: &[(u32, u8)]) -> f64 {
     let Some(&first) = path.first() else { return 0.0 };
     let nodes: Vec<u32> = std::iter::once(net.path_nodes(first).0).chain(path.iter().map(|&p| net.path_nodes(p).1)).collect();
-    let Some((at, _)) = net.match_run(&nodes, stops, &net.stop_reversals(path)) else { return f64::INFINITY };
+    let Some((at, _)) = net.match_run(&nodes, stops, &net.stop_reversals(path), ones, path) else { return f64::INFINITY };
     let mut off = Vec::with_capacity(path.len() + 1);
     off.push(0.0);
     for &p in path {
@@ -2209,10 +2210,10 @@ impl TrackApi {
     /// the stops, and the next settle gives it whole trains (T-1146).
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn set_line(&mut self, id: u32, stops: &[u32], high: f32, medium: f32, low: f32, dwell_s: f32, turnaround_s: f32, cars: u8, colour: u32, name: String) -> u32 {
-        let Some(path) = self.w.net.route(stops) else {
+        let Some(path) = self.w.net.route(stops, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }) })
+        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] }) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })
