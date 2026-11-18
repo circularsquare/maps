@@ -1,7 +1,12 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 59c85afe-f6fc-46fa-b1d6-fdaa946e7f95, name maps-4f, since 2026-11-18 12:08 UTC
-Updated: 2026-11-18 15:15 UTC
+Updated: 2026-11-18 16:10 UTC (maps-4f past 500k, starting its successor). Running agents, all to adopt through the
+report inbox (watch.py --session <your id>; reports.py show/read): sideplat2 T-3672 (P1, her Caracas save
+Downloads/trainsworld-caracas-day-53.save; checker before landing), tripswithin T-3509 (demand: checker), corridor
+T-2136 (smoke + checker), regate T-930/T-3656 (land after dayrun's join), playkeep T-3666 (workflow; apply its
+CLAUDE.md text), dayrun T-3671 (main tree, 6 cores; 8800 rebuild after its PACKS FREE, ~19:15 UTC). T-3670: verify
+aws-mcp/stripe gone in your fresh session (/mcp or ToolSearch "stripe"); if gone, archive it.
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
