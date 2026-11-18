@@ -135,7 +135,9 @@ facts, sensible defaults, visible calls, zone and region names. A slip gets a fi
   demand workers take about a core each: cap them to your claim.
 - **Data runs, packs, joins, AWS**: read the rules at the top of `docs/world-run.md` first.
 - **Shell**: scripts in a file in your scratchpad. Pin processes from PowerShell or a `.cmd`, never
-  `cmd /c start ... /b` through Git Bash (it pops dialogs on her screen).
+  `cmd /c start ... /b` through Git Bash (it pops dialogs on her screen). Nothing may open a window on her screen: a
+  process you start from code gets `windowsHide: true` (Node) or `creationflags=subprocess.CREATE_NO_WINDOW`
+  (Python), since a background process has no console and each child without it flashes a terminal (2026-11-18).
 - **Screenshots** go in `../artifacts/trainworld/`. For UI work, judge your own screenshots before reporting.
 - **Advisor** (when your session has one): call it for a call nobody has made, when stuck (the same failure twice or
   about 30 minutes without progress) or before giving up, and before claiming a cause; about once a task. Not for

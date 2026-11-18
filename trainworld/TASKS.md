@@ -147,10 +147,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: The GB join spent 9.8 of its 31 minutes re-checking every figure of every member.
   - Goal: The re-gate checks only what a joint solve can change.
   - Other: See notes/T-928.md section 4.
-- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads (taking, 2026-11-18, agent qwcheck)
-  - Context: A pack's whole-file fetch after Range reads can fail once with a cache error; the retry works but logs a console error.
-  - Goal: After the next publish, a game load shows no ERR_CACHE_OPERATION_NOT_SUPPORTED (Range reads skip the cache since 2026-11-16; fallback in the notes).
-  - Other: notes/T-1635.md
 - T-3656 [P3] {L:world-tooling} Join fails old zones on a newer water cache (taking, 2026-11-18, agent regate)
   - Context: Night of 2026-11-18 (T-3455): Malaysia's join failed because Kuala Terengganu (built 11-02, passed 35/35 then) scored 0.92 on water_points_in_water against the water cache rebuilt 11-13 from newer OSM, which has 3 small ponds its own mask lacks. The check was relaxed for that zone. Any group whose cache is newer than a member's build can fail the same way.
   - Goal: A join re-gates an older member against the water it was built with, or skips that check for unchanged members, so a cache refresh never parks a whole group.
@@ -190,13 +186,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3399.md
 
 ## Demand
+- T-3689 [P2] {L:fares} Transfer fare at the cap still pays
+  - Context: Your old TODO: "people can do money exploit by setting transfer fare to 1000 dollars? apparently people make a lot of money this way". T-3303 caps fares and the transfer fare at US$1,000 (DECISIONS 2026-11-12), which is the exploit's own figure, so the cap doesn't stop it. You, 2026-11-18: file it.
+  - Goal: The cause found (which riders keep paying a huge transfer fare and why demand doesn't drop them); a proposal to you if the fix changes fare rules or numbers.
 - T-3632 [P2] {L:route-choice} Trip explorer shows No route too often
   - Context: You, 2026-11-18: "i think showing "no trip found" is a separate type of bug that we shuold probably address individually. it is a fairly common complaint i think". Stage 1 done: the inbox has 3 direct reports (New York - Philadelphia and Milan - Bologna, not reproduced on today's code; Seattle - Victoria, islands) and 18 cousins (a route found but not taken, areas with no trips, odd routes, cities not loading). Stage 2 landed (7d14a945): the panel's By transit line now says which cause applies (no train that period, no road or flight between the places, or no route); the worker's stand-in answer was never seen in practice. Next: T-2216 for islands.
   - Goal: Every player report of a missing route since v0.3 gathered and grouped by cause (islands, walk limits, unbuilt packs, a real bug), with the common causes fixed or filed one by one.
   - Other: notes/T-3632.md
-- T-3624 [P3] {L:wealth-split} School trips lean to transit
-  - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess."
-  - Goal: Trips to school weigh driving less than other purposes do (students mostly can't drive), if it's a small change to the purpose rules; a demand rule change, so docs/demand-worldwide.md says it.
+- T-3624 [P2] {L:wealth-split} School trips lean to transit
+  - Context: Your pad, 2026-11-18: "someone recommends that peopel going to school should use transit more. if easy, i think thatd be nice to do. kinda like the wealth split, but slightly different i guess." You, 2026-11-18: yes to driving to school costing about twice what it costs for other purposes.
+  - Goal: Driving to school costs about 2x other purposes in local and intercity choice; school's rail share rises, other purposes unchanged; the ceiling tests still pass; docs/demand-worldwide.md says it.
 - T-3246 [P2] {L:wealth-split} Income groups for local trips
   - Context: Your TODO 2026-11-15: "maybe actually we do add the wealth split ... we could also consider doing like 20/70/10 or something like that ... perhaps we can even display this to the player". Three groups cost about 2.4x the local solve when measured (T-1431).
   - Goal: A cheaper way to give local trips income groups, after an estimate.
@@ -213,18 +212,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Part 1 is done (2026-11-03): five cities from the jpn7 save came out 0.35-0.52 of S12.
   - Goal: The remaining cities are checked against S12.
   - Other: Notes: notes/T-2093.md
-- T-1753 [P3] {L:ridership-checks} Rapid and express service on Tokyo suburban lines
-  - Context: Real save has no rapid or express patterns for the long lines (about +2%). ODPT, the timetable source, needs an account.
-  - Goal: Tokyo long lines carry rapid and express patterns.
-  - Other: Notes: notes/T-1750.md
 - T-1503 [P3] {L:demand-ideas} Superholiday rush on networks past 8,000 stations
   - Context: Past about 8,000 stations the longer trips go unleaned. The old table is gone since T-1545, so lifting the gate only costs time.
   - Goal: Networks that big get the lean on longer trips too.
   - Other: Notes: notes/T-264.md
-- T-1233 [P2] {L:ridership-checks} Cross-city trips check for Guangdong (taking, 2026-11-18, agent qwcheck)
-  - Context: Waits until Guangdong market packs carry the city pairs. Then run the T-1177 cross-everyday check on gua and fos.
-  - Goal: Each purpose's local legs plus pairs match the old totals.
-  - Other: Notes: notes/T-1233.md
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
@@ -298,9 +289,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3556 [P4] {L:checks} Agent playtest harness, outside agents and attach my game
   - Context: Stage 1 (the shared harness in checks/lib) landed 47c98437. Left, as P4 on your word 2026-11-17 ("do it as like p4"): stage 2, an MCP server so outside agents can play (3-4 h local, 8-12 h more hosted, a server deploy); stage 3, "Attach my game" in feedback (2-3 h). Sketches in notes/T-3556.md. You, 2026-11-17: "yeah we should maybe start work on playtest harness in the short term. if its easy we can also have it be a thing that allows other agents to potentially play the game in the long run lol. like random other agents floating around on the internet. coould be fun potentially." Today every agent writes its own Playwright driver, builds fixtures through internal calls instead of the player's path, and can't reproduce a bug without your save.
   - Goal: One shared harness in checks/ that loads a save or a city, waits for demand, draws track from lon/lat through the pointer's path, clicks panel controls by label, reads line and money figures and crops screenshots; built so a public surface for outside agents can sit on top later (its design to you first).
-- T-3558 [P3] {L:timetables} Holiday departures before the day's edits (taking, 2026-11-18, agent qwcheck)
-  - Context: In T-3521's screenshot (artifacts/trainworld/t3521_headway.png) the 11:00 and 12:00 rows on a holiday show 15-minute departures from before edits made at 13:00. Not looked into; may be correct history.
-  - Goal: The departures table shows what ran, or the cause is recorded as right.
 - T-3568 [P2] {L:terrain} {after:tonight's night run} OSM water for the TIGER packs
   - Context: From T-3553: NYC and 8 other US packs (nyc, phl, bos, wdc, bal, pvd, nhv, spf, wor) use TIGER water, up to 116-178 m off the drawn water around Brooklyn's piers, the biggest shore error in the game. You, 2026-11-17: "sure queue it for a night run". osm_water.py must cut piers first; built track there gets re-priced.
   - Goal: Those 9 packs' water comes from OSM with piers cut out, rebuilt on a night run; NYC's shore error within the OSM packs' range (p99 about 13-20 m).
@@ -349,9 +337,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: An emulated phone uses about 600 MB at the first line, peaking at 825; MapLibre's worker, Blink buffers, ArrayBuffers and WebGL hold most of the rest. T-3472 (desktop Chrome): 1.0 GB at the start menu, 1.6 GB in a one-city game. You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones. if we can get that working itll increase reach."
   - Goal: Phone memory comes down by trimming the biggest pieces, measured before and after at the start menu and in a one-city game.
   - Other: notes/T-2802.md, "What is left".
-- T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode
-  - Context: You see a hitch at about state scale, also at ?pace=2; video2 could not reproduce it (T-2774).
-  - Goal: Find the cause and remove the hitch.
 - T-2767 [P3] {L:edit-speed} Station on built track takes 2-4 s
   - Context: Placing a station on built track takes 0.2-0.9 s in the worker, almost all in the line bands (the neighbour search and 8-15 lines worked out again); the strokes are 15-150 ms.
   - Goal: Keep the bands of lines and neighbours that a split leaves unchanged.
@@ -410,6 +395,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-2122.md, notes/T-2136.md, notes/T-2485.md.
 
 ## Interface
+- T-3693 [P2] {L:map-look} Show which mode you're building
+  - Context: Your old TODO: "make more obvious when ur building single track or double or quad, and when ur looking at it. also maybe make it more obvious when ur looking at a bus line or tram or train or hsr". You, 2026-11-18: "yeah they should have slightly different halo colors i guess, maybe some more indicators too if u have ideas".
+  - Goal: Three clearly different versions on one sheet (halo colour per mode plus other cues for track count), you pick by letter, then it's built.
+- T-3695 [P3] {L:map-look} Travel by mode overview
+  - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
+  - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
+- T-3696 [P4] {L:money} Lines' money and ridership changes as a list
+  - Context: Your old TODO: "someone requested notifications for like money going up/down and ridership going up/down as a list... i guess as like a list of all individual lines separately. i guess we can add this as a setting". Per-line money history exists (T-2787). You, 2026-11-18: "idk exactly what ridership change list means, but can file to think about it".
+  - Goal: Worked out what players want from it (the Discord ask), then a proposal to you.
 - T-3683 [P2] {L:community} Join the leaderboards at the top (taking, 2026-11-18, agent lbfix)
   - Context: Your old TODO: "put "join the leaderboards" at the top instead of the bottom (but can leave "leave the leaderboards" at the bottom) (just so people know they can join...)". Found unfiled by the TODO sweep 2026-11-18.
   - Goal: A player not on the leaderboards sees the join control at the top of the leaderboard panel; leave stays at the bottom.
@@ -450,10 +444,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seattle and Victoria are on two landmasses with no car or plane link, so the market never offers their trips to any network: 0 riders and no route. T-3400 did not cause it.
   - Goal: The ferry carries trips once T-2216 solves island pairs; check this line then.
   - Other: notes/T-3431.md
-- T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia
-  - Context: Player report 2026-11-16 (board group g004): two lines built between them, the trip explorer finds no inter-city trip. Needs a repro first. May share a cause with T-3426 (feeders).
-  - Goal: Reproduce; inter-city trips between the two show up on a built line.
-  - Other: Not reproduced 2026-11-16 (bugs3); needs the player's save; may share a cause with T-3426. notes/T-3432.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
   - Goal: Sabang (Weh Island) has its homes and jobs in a zone.
@@ -479,10 +469,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3482.md
 - T-3652 [P3] {L:community} Newest view in Community
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "sort community by newest". Community has Random, Biggest and Most liked today.
-  - Goal: Community has a Newest view beside the other three; a server change goes to you before deploy.
+  - Goal: Community has a Newest tab (newest share first, one per person like Random) beside the other three; its server change ships with the next server deploy (your yes 2026-11-18).
 - T-3653 [P3] {L:small-fixes} Time controls as slow down and speed up
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "rework time controls to just be like comma and period speed up or slow down? someone suggested this is how it works in KSP. maybe instead of having 1x 4x 16x(flexible) we could just do like slow down flexible speed up. and period speeds up and comma slows down by one step."
-  - Goal: A proposal to you first (the steps, what shows between the buttons, the keys), then the change.
+  - Goal: 1x / 4x / 16x become a slow-down button, the speed shown, and a speed-up button stepping through today's slider stops; comma slows and period speeds up by one step; the double-click picker on the speed stays (your yes 2026-11-18).
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
@@ -495,8 +485,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: t1965-follow passes without breaking t2980. Part of T-3264.
   - Other: notes/T-3231.md
 - T-3101 [P3] {L:single-track} One-way track follow-ups
-  - Context: The track panel's line list now counts a line that only uses a piece on its way back (fixed in tree bug-e, waiting to land). The Select bar still lacks switch and reverse for a picked single-track run: one confirmation and undo for several pieces, and the words, need a call.
-  - Goal: Select bar switch and reverse work on single-track runs.
+  - Context: The track panel's line list counts a line that only uses a piece on its way back (landed 5a15e44d). The Select bar still lacks switch and reverse for a picked single-track run. You, 2026-11-18: yes to one confirm listing every re-routed line, one undo, and the track panel's words ("Run trains one way", "Reverse direction").
+  - Goal: Select bar switch and reverse work on picked single-track runs with one confirm and one undo.
   - Other: notes/T-3101.md
 Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese first, Spanish and German second; no human reviewer, Claude translates and reviews for meaning; plan in research/localization.md):
 - T-2624 [P2] {L:solve-speed} Lines in view wait on a whole solve
@@ -584,9 +574,9 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
   - Context: Your 2026-11-10 note: "we should like precompute and save this so that it displays normally". The hover has no figure before a solve.
   - Goal: Each city's inter-city trips are precomputed into registry.json (interTrips) by pipeline/zones.py.
   - Other: Needs a registry rebuild and upload; fold into the next data batch with T-3033. notes/T-3074.md
-- T-3635 [P3] {L:map-look} Top bar fills with copies of the clock
-  - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced).
-  - Goal: The player confirms it's gone (or their extensions explain it); reproduce with Chrome's page translation on a game crossing a holiday.
+- T-3635 [P2] {L:map-look} Top bar fills with copies of the clock
+  - Context: A Japanese player on desktop Chrome (feedback 1794744778-ef2051d1) saw a row of old clocks (holiday dates at 02:00) after the real one, squeezing the trips bar; they took it for save times. The code mounts one clock; a page translator rewriting the date's text likely breaks the holiday dot's diff. The clock now has translate off (guess, not reproduced). You, 2026-11-18: "lets do this as relatively high prio cuz it does look pretty bad. should fix before saying its ok".
+  - Goal: Reproduced (Chrome's page translation in Japanese, a game crossing a holiday, or another cause), fixed so the top bar can never hold more than one clock, then the reply goes to the player.
   - Other: notes/T-3635.md (draft reply to the player)
 - T-3060 [P2] {L:rebuild-track} Rebuild preview before spending
   - Context: Stage 2 of T-3052. Design approved with T-3059; comes after it.
@@ -701,7 +691,7 @@ Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in 
   - Goal: Build it only if a real save shows the problem.
   - Other: Follow-up to T-2290.
 Her notes from testing the 11-02 landings (verbatim in notes/todo-2026-11-02c.md):
-- T-2043 [P3] {L:checks} Old cloud check needs updating
+- T-2043 [P3] {L:checks} Old cloud check needs updating (taking, 2026-11-18, agent qwpulse)
   - Context: checks/t988-cloud.mjs expects a fork slot the page now splits off in place (T-2037); it needs a local shonei-server.
   - Goal: Steps 4 and 7 on of t988-cloud.mjs follow the T-2037 sync rules, and step 3 finds the account game on the new origin-grouped cards (it failed on the new card markup; about 1.5 h, rules in the notes).
   - Other: See notes/T-2043.md.
@@ -880,6 +870,19 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
+- T-3690 [P2] {L:station-placement} Too close to the end of a piece of track
+  - Context: Your old TODO: "what exactly is "too close to end of track" placement error supposed to accomplish? seems like its frustrating a lot of people". The refusal is `issues.splitPoint` ("Stations, junctions and branches need 5 m of track on each side"); T-2268 covers ramps. You, 2026-11-18: file it.
+  - Goal: The reason for the 5 m found; then the refusal relaxed, or the click slid to the nearest spot that works, so players rarely see it; refusals counted before and after on a fixture.
+- T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
+  - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
+  - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
+  - Goal: Levels -5 to +5 with those colours, where you place it.
+- T-3692 [P3] {L:track-drawing} Bezier track as a setting
+  - Context: Your old TODO: "bezier track placement, toggleable". You, 2026-11-18: "bezier track should be toggleable in settings yes".
+  - Goal: A design to you first (how a curve is drawn and edited, what speed rules apply), then a settings toggle for bezier placement.
+- T-3694 [P3] {L:stops} One panel for station improvements
+  - Context: Your old TODO: "make line improvements into a general interface for quick adding or removing station improvements at each station". You, 2026-11-18: "yes we should do one interface for station improvement".
+  - Goal: A design to you first, then one place to add or remove improvements at each station of a line.
 - T-3335 [P3] {L:quad-track} {after:T-3444} Line panel on both quad pairs
   - Context: Several parts of a line's panel still show only its own pair: timetable, held trains, delays, riders, boardings.
   - Goal: Each part folds in the twin line, as `foldTwins` does.
@@ -908,7 +911,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3377 [P3] {L:open-source} Mod support beyond forks
   - Context: Level 1 (data open to any site) is done. Levels 2-4 are data-file mods, a JavaScript mod API, then city packs.
   - Goal: A design for you first; waits for modders' asks.
-  - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki and hosts her mod there; look at how that mod is set up when designing this. Link not recorded yet.
+  - Other: Reference (you, 2026-11-18): peanutmow (Alice) runs an unofficial wiki, trainsworld.org, and hosts her mod there; look at how that mod is set up when designing this.
 - T-3376 [P2] {L:jobs-places} Industrial areas' jobs
   - Context: Your 2026-11-13 note: "semi high prio to try to fit industrial areas in general later". Jurong Island holds 128,000 jobs, the published figure is over 27,000.
   - Goal: A sourced workforce figure and a way to place jobs on industrial land with tanks, as a proposal.
@@ -976,7 +979,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: A headway edit on New York's busiest shared-track line still takes 150-400 ms, and Paris placements 237 ms at p95.
   - Goal: Those edits take under 100 ms.
   - Other: Options in notes/T-1779.md "T-1787", notes/T-1794.md.
-- T-1816 [P3] {L:route-choice} Transfer pulses missing after panning away
+- T-1816 [P3] {L:route-choice} Transfer pulses missing after panning away (taking, 2026-11-18, agent qwpulse)
   - Context: Demand asks for transfers by the zone in view, so panning off then editing may show no pulses. Found in T-1814, untested.
   - Goal: Transfers are asked by the edited network's zones.
   - Other: Notes: notes/T-1810.md "T-1814"

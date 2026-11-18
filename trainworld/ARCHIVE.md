@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3432 [P3] {L:route-choice} No inter-city trip between New York and Philadelphia (2026-11-18): closed without code: not reproduced (bugs3, 2026-11-16) and the likely shared cause T-3426 landed; Anita 2026-11-18 thinks it a duplicate; reopen if the player sends a save.
+- T-1753 [P3] {L:ridership-checks} Rapid and express service on Tokyo suburban lines (2026-11-18): closed without code: Anita 2026-11-18: an ODPT account for about +2% on Tokyo isn't worth it.
+- T-2778 [P3] {L:frame-rate} Hitch when zooming out in video mode (2026-11-18): closed without code: Anita 2026-11-18: no more videos planned, close.
+- T-1233 [P2] {L:ridership-checks} Cross-city trips check for Guangdong (2026-11-18): IDS=gua,fos passes; local legs plus pairs match the old totals: errands, social, medical within 0.2%, school and university shift between gua and fos (+0.2%, +0.9% together), airports add outside people by design (notes/T-1233.md)
+- T-3558 [P3] {L:timetables} Holiday departures before the day's edits (2026-11-18): not a bug: the board lists the next 24 h from this hour, so rows 11 and 12 on a holiday afternoon are tomorrow's weekday trains (notes/T-1233.md)
+- T-1635 [P3] {L:loading} Whole-file fetch fails once after Range reads (2026-11-18): live page loaded once in headless Chrome (sed, data 2026-11-18, 48 Range requests): no ERR_CACHE_OPERATION_NOT_SUPPORTED; the no-store Range reads hold.
 - T-1970 [P3] {L:station-placement} Slide a station off a ramp near its end (2026-11-18): closed without code: folded into T-2268; the 1,012 of 6,851 ramp refusals (notes/T-1964.md) are its measure.
 - T-2148 [P3] {L:money} Save size from money history (2026-11-18): closed without code: folded into T-3642, which measured the per-day ledger growth; its goal now covers the save's own ledgers.
 - T-2320 [P3] {L:stops} Drag stops into another order (2026-11-18): closed without code: folded into T-3079; exact ordering is how players will put stops in their own order.
