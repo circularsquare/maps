@@ -2016,6 +2016,12 @@ button.save-add:hover { color: var(--text); }
   .tool-bar-pop .btn.lv { min-width: calc(40px / var(--ui, 1)); }
   /* the tool notes (the mode's descriptor first) right above a bar */
   #main:has(.tool-bar, .blueprint-bar) #tools { bottom: calc(36px / var(--ui, 1) + 26px); }
+  /* T-3516: the track bar's one row is about 500 px of buttons, so on a phone the snap buttons take a row of their own under the rest */
+  @media (max-width: 540px) {
+    .track-bar { flex-wrap: wrap; overflow-x: hidden; }
+    .track-bar .build-toggles { order: 5; flex-basis: 100%; }
+    #main:has(.track-bar) #tools, #main:has(.track-bar) .tool-bar-pop { bottom: calc(76px / var(--ui, 1) + 30px); }
+  }
   #main:has(.tool-bar-pop, .blueprint-levels) #tools { visibility: hidden; }
   .blueprint-bar > * { flex: none; }
   .blueprint-bar .bp-label { display: none; }
