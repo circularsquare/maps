@@ -238,8 +238,8 @@ carries `"gate_relax": {"<check>": "<why>"}` and that check's FAIL counts as a W
 The gate uses no network. Its OSM stations (railway=station|halt nodes, for `stations_on_land` and
 the test line) come from `data/work/<id>.stations.json`, which `pack_gate.py stations <id> --extracts
 <a,b>` writes from the extracts' `.stations.fgb` caches (`osm_features`, made in the points pass);
-the runner does this as a build step, since the caches go after the region and a joint re-gate
-comes later (T-770). Without that file the gate makes it from the caches if they are on disk, else
+the runner does this as a build step, since the caches go after the region and the row may be
+gated after that (T-770; the join's re-gate reads no stations, T-930). Without that file the gate makes it from the caches if they are on disk, else
 reads the Overpass answer cached for packs gated before T-770 (`data/raw/stations/`), else the
 check SKIPs.
 

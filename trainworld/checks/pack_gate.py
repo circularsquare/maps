@@ -3,6 +3,8 @@ by numeric thresholds, so a city is built with no agent judgement.
 
     python checks/pack_gate.py <id> [<id> ...] [--all] [--browser] [--no-rust] [--log <id>=<build log>]
                                [--since <snapshot.json>] [--out <dir>] [--work <dir of joint reports>]
+    python checks/pack_gate.py <id> ... --joint --since <snapshot.json>   the re-gate after a joint solve:
+                               only the checks of what the solve writes, each pack held to the snapshot (T-930)
     python checks/pack_gate.py <id> --browser-only        the browser check alone (BASE: the Vite); exit 1 on a fail
     python checks/pack_gate.py snapshot <snapshot.json>   every pack's arrays hashed, before a build
     python checks/pack_gate.py fleet                      checks/pack_gate_fleet.json from the results in --out
@@ -103,8 +105,7 @@ GRAVITY_ONLY = {"zone_row", "zone_col", "zone_home", "zone_work"} | {f"everyday_
 # ---------------------------------------------------------------- reading a pack
 
 def registry():
-    with open(REGISTRY, encoding="utf-8") as f:
-        return {c["id"]: c for c in json.load(f)["cities"]}
+    return {c["id"]: c for c in read_json(REGISTRY)["cities"]}
 
 
 def load(city):
@@ -355,11 +356,24 @@ def fua_people(moll, plan_row):
     return float(df.FUA_p_2015.sum()), [str(x) for x in df.eFUA_name]
 
 
+_files = {}
+
+
+def read_json(path):
+    """A JSON file, read again only when its size or time changes: the plan, the registry and a
+    snapshot are megabytes each, and a gate of many packs reads them once a pack (T-930)."""
+    st = os.stat(path)
+    key = (st.st_mtime_ns, st.st_size)
+    if _files.get(path, (None,))[0] != key:
+        with open(path, encoding="utf-8") as f:
+            _files[path] = (key, json.load(f))
+    return _files[path][1]
+
+
 def plan_row(city, header):
     if not os.path.exists(PLAN):
         return None
-    with open(PLAN, encoding="utf-8") as f:
-        rows = json.load(f).get("metros", [])
+    rows = read_json(PLAN).get("metros", [])
     lo, la = header["origin"]["lon"], header["origin"]["lat"]
     for r in rows:
         w, s, e, n = r.get("bbox", (0, 0, 0, 0))
@@ -500,6 +514,20 @@ def skip(name, why):
     return {"name": name, "status": "SKIP", "value": None, "detail": why}
 
 
+_report_packs = {}
+
+
+def report_packs(path):
+    """A joint report's packs, kept while the file is unchanged: every report was read once a pack
+    gated (1.5 s), and all of them held would be 62 MB of JSON a process (T-930)."""
+    st = os.stat(path)
+    key = (st.st_mtime_ns, st.st_size)
+    if _report_packs.get(path, (None,))[0] != key:
+        with open(path, encoding="utf-8") as f:
+            _report_packs[path] = (key, set(json.load(f).get("packs", [])))
+    return _report_packs[path][1]
+
+
 def joint_borders(city, header, work=None):
     """T-591: after a joint solve, every border pair in the group's joint report is between the
     countries the registry gives its packs (`country`). A pack whose header lacked a
@@ -510,10 +538,9 @@ def joint_borders(city, header, work=None):
         return skip("joint_borders", "not in a joint group")
     reports = []
     for p in sorted(glob.glob(os.path.join(work, "*joint_report.json"))):
-        with open(p, encoding="utf-8") as f:
-            r = json.load(f)
-        if set(r.get("packs", [])) == set(group):
-            reports.append((os.path.basename(p), r))
+        if report_packs(p) == set(group):
+            with open(p, encoding="utf-8") as f:
+                reports.append((os.path.basename(p), json.load(f)))
     if not reports:
         return skip("joint_borders", "no joint report for " + "+".join(group))
     reg = registry()
@@ -629,13 +656,46 @@ def checks_of(city, f, rates, browser, changed, joint=None):
             c.append(judge("osm_top_place_jobs_share", o["top_place_jobs_share"], f"{o['top_place']} {o['top_place_name']}"))
         else:  # a table's jobs are spread within its units, so one place takes at most its unit's share
             c.append(skip("osm_top_place_jobs_share", "jobs from a table, spread within its units"))
-    # a plan row's `gate_relax` {check: why}: that check's FAIL counts as a WARN for this row only
+    return relaxed(c, f)
+
+
+def relaxed(c, f):
+    """A plan row's `gate_relax` {check: why}: that check's FAIL counts as a WARN for this row only;
+    then the fleet's ranges."""
     for k in c:
         why = f.get("gate_relax", {}).get(k["name"])
         if why and k["status"] == "FAIL":
             k["status"], k["detail"] = "WARN", f"{k.get('detail') or ''}; relaxed for this row: {why}"
     fleet_check(c)
     return c
+
+
+def joint_figures(city, reg):
+    """T-930: the figures of the re-gate after a joint solve (--joint): only those reading what the
+    solve writes (GRAVITY_ONLY, the header's gravity block, the joint report). Every other check reads
+    the pack's own build or a file beside it (the water cache, GHSL, the FUAs, the plan's people, the
+    station file, the audits) and was answered at the pack's own gate; the pack is held to the snapshot
+    instead (own_pack_unchanged), so a change outside the gravity still FAILs and a newer cache cannot
+    park its group (T-3656: Kuala Terengganu on a water cache rebuilt after its build)."""
+    out = {"read_pack": fig_read_pack(city), "kind": reg.get("kind", "city")}
+    with open(os.path.join(PACKS, f"{city}.json"), encoding="utf-8") as fh:
+        header = json.load(fh)
+    out["mean_commute_km"] = header["gravity"].get("mean_trip_km")
+    out["gate_relax"] = (plan_row(city, header) or {}).get("gate_relax") or {}
+    return out, header
+
+
+def joint_checks_of(f, own, changed, joint):
+    """`own`: what of the pack itself changed since the snapshot outside the gravity."""
+    rp = f["read_pack"]
+    c = [joint, {"name": "read_pack", "status": "PASS" if rp["ok"] else "FAIL", "value": None, "detail": rp["detail"]},
+         {"name": "own_pack_unchanged", "status": "FAIL" if own else "PASS", "value": len(own),
+          "detail": ", ".join(own[:10]) or "only its gravity changed"},
+         {"name": "other_packs_unchanged", "status": "FAIL" if changed else "PASS", "value": len(changed),
+          "detail": "; ".join(changed[:10]) or None},
+         judge("mean_commute_km", f["mean_commute_km"]),
+         skip("own_build", "the other checks read the pack's own build, unchanged since its gate (T-930)")]
+    return relaxed(c, f)
 
 
 def fleet_check(c):
@@ -1069,11 +1129,28 @@ def pack_hashes(city):
 _hashes = {}
 
 
-def pack_hashes_now(city):
-    """pack_hashes, kept while the pack's files are unchanged: a gate of many packs compares every
-    other pack once, not once a pack (T-928)."""
-    key = tuple((os.stat(p).st_mtime_ns, os.stat(p).st_size) if os.path.exists(p) else None
-                for p in (os.path.join(PACKS, f"{city}{x}") for x in (".json", ".bin", ".boundary.geojson")))
+def pack_stats():
+    """{file name: (modified ns, size)} of every file in data/packs, from one directory read: a stat
+    of each pack's files took 2.5 s a pack gated (T-930)."""
+    out = {}
+    with os.scandir(PACKS) as it:
+        for e in it:
+            st = e.stat()
+            out[e.name] = (st.st_mtime_ns, st.st_size)
+    return out
+
+
+def pack_hashes_now(city, stats=None):
+    """pack_hashes, kept while the pack's files are unchanged (`stats`: pack_stats, else each file's
+    own): a gate of many packs compares every other pack once, not once a pack (T-928)."""
+    names = [f"{city}{x}" for x in (".json", ".bin", ".boundary.geojson")]
+    if stats is None:
+        stats = {}
+        for n in names:
+            with contextlib.suppress(FileNotFoundError):
+                st = os.stat(os.path.join(PACKS, n))
+                stats[n] = (st.st_mtime_ns, st.st_size)
+    key = tuple(stats.get(n) for n in names)
     if _hashes.get(city, (None,))[0] != key:
         _hashes[city] = (key, pack_hashes(city))
     return _hashes[city][1]
@@ -1087,24 +1164,29 @@ def snapshot(path):
 
 
 def changed_since(city, header, path):
-    with open(path) as f:
-        snap = json.load(f)
+    snap = read_json(path)
     group = set((header.get("gravity", {}).get("joint") or {}).get("packs", []))
     bad = []
     now = registry()
+    stats = pack_stats()
     for other, before in snap.items():
         # a pack taken out of the registry since (another run's park or rebuild, T-786) is no concern of this gate
         if other == city or other not in now:
             continue
-        if not os.path.exists(os.path.join(PACKS, f"{other}.json")):
+        if f"{other}.json" not in stats:
             bad.append(f"{other} gone")
             continue
-        h = pack_hashes_now(other)
-        allowed = GRAVITY_ONLY | {"header:gravity", "header:merged_source"} if other in group else set()
-        diff = sorted(k for k in set(before) | set(h) if before.get(k) != h.get(k) and k not in allowed)
+        diff = changed_items(other, before, other in group, stats)
         if diff:
             bad.append(f"{other}: {', '.join(diff[:6])}")
     return bad
+
+
+def changed_items(city, before, solved, stats=None):
+    """What of the pack differs from its snapshot hashes `before`, its gravity allowed when `solved`."""
+    h = pack_hashes_now(city, stats)
+    allowed = GRAVITY_ONLY | {"header:gravity", "header:merged_source"} if solved else set()
+    return sorted(k for k in set(before) | set(h) if before.get(k) != h.get(k) and k not in allowed)
 
 
 # ---------------------------------------------------------------- main
@@ -1136,7 +1218,26 @@ def verdict_of(city, reg, f, header, rates, br, opts):
             "verdict": verdict, "checks": checks, "browser": br}
 
 
+def run_joint(city, reg, opts):
+    """T-930: the re-gate after a joint solve (joint_figures)."""
+    try:
+        f, header = joint_figures(city, reg)
+        own = changed_items(city, read_json(opts["since"])[city], True)
+        changed = changed_since(city, header, opts["since"])
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"city": city, "verdict": "park", "checks": [{"name": "figures", "status": "FAIL", "value": None,
+                                                             "detail": f"{type(e).__name__}: {e}"}]}
+    checks = joint_checks_of(f, own, changed, joint_borders(city, header, opts.get("work")))
+    return {"city": city, "kind": reg.get("kind", "city"), "gated": datetime.datetime.now().isoformat(timespec="seconds"),
+            "verdict": "park" if any(c["status"] == "FAIL" for c in checks) else "ship", "checks": checks, "joint": True}
+
+
 def run(city, reg, logs, rates, opts):
+    # a pack not in the snapshot (registered after it) has nothing to be held to: the whole gate
+    if opts.get("joint") and city in read_json(opts["since"]):
+        return run_joint(city, reg, opts)
     got = prepare(city, reg, logs)
     if isinstance(got, dict):
         return got
@@ -1248,8 +1349,11 @@ def main(argv):
     logs = dict(x.split("=", 1) for i, x in enumerate(argv) if i and argv[i - 1] == "--log")
     if "--browser-only" in argv:  # T-2399: the browser check alone, for smoke.mjs; BASE names the Vite
         return browser_only([i for i in ids if i in reg], reg, logs, out)
-    rates = None if "--no-rust" in argv else everyday_rates(ids)
-    opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out, "work": opt("--work")}
+    joint = "--joint" in argv
+    if joint and (not opt("--since") or "--browser" in argv):
+        raise SystemExit("--joint needs --since <the snapshot before the solve> and takes no --browser")
+    rates = None if "--no-rust" in argv or joint else everyday_rates(ids)
+    opts = {"browser": "--browser" in argv, "since": opt("--since"), "out": out, "work": opt("--work"), "joint": joint}
     lines = []
     for city in [i for i in ids if i not in reg]:
         print(f"{city}: not in the registry", flush=True)

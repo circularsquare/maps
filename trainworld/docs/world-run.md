@@ -186,8 +186,14 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
   spanning countries with its neighbours held fixed, docs/zones.md 4) is solved once (members back
   to res-9, `intercity.py --solve <members> --fixed <neighbours> --name <unit>` on every core of
   `--jobs`, with four times the step limit for a unit of over 100 packs, merged again) and gated
-  again without the browser
-  or rates; a FAIL restores every member from the backup taken before. When only new packs FAIL,
+  again on what the solve writes only (`pack_gate.py --joint`, T-930): `read_pack` (its gravity check
+  included), `joint_borders`, `mean_commute_km`, every other pack against the snapshot taken before the
+  solve, and each member against it too, only its gravity allowed to change (`own_pack_unchanged`). The
+  checks of a pack's own build (water, stations, people, jobs, routes, schools, hospitals, OSM signals)
+  are not run again: the pack is held unchanged, and they read files beside it that may be newer than
+  its build (a water cache rebuilt since failed Kuala Terengganu, T-3656). The browser check and the
+  rates are not part of it. A member missing from the snapshot gets the whole gate. A FAIL restores
+  every member from the backup taken before. When only new packs FAIL,
   they park and the group is solved once more without them (a FAIL then parks every new pack of
   that solve); when an older member FAILs, every new pack parks (T-773). A unit's fixed list is
   cut to the packs registered when that unit runs, so a unit that parked earlier takes no later

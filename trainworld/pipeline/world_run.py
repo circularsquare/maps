@@ -1623,7 +1623,8 @@ class Run:
                 break
         if fail is None:
             gd = Path(f"{tag}-gate")
-            ok, _, tail = self.step("pack_gate", g + ["--no-rust", "--since", str(snap), "--out", str(gd)], f"{tag}.gate.log")
+            # T-930: only what the solve writes; the rest was gated with each member's own build
+            ok, _, tail = self.step("pack_gate", g + ["--joint", "--since", str(snap), "--out", str(gd)], f"{tag}.gate.log")
             none = [i for i in g if not (gd / f"{i}.json").exists()]
             if none:
                 self.restore(g, bak)
