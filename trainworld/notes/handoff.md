@@ -23,6 +23,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    start each as its blocker frees: T-3625 after setsearch (SettingsTab), T-3611 after qwapp (clock.worker),
    T-2880 after corridor, T-3495/T-2054/T-2901/T-2380 after dayrun's PACKS FREE and regate's landing, T-3354 after
    sideplat2. Her 10 open asks (asks.py list) carry the Needs-her items.
+10. Her answers 16:50 UTC (all asks answered, in asks-log): started clockdup (Opus, T-3635 P2, she wants it fixed
+   before the reply goes), schoolcar (Opus, T-3624, demand: checker before landing), newest (T-3652, commits in
+   shonei-server, deploy hers), selway (T-3101). Landed qwcheck, lbfix (c029, c030; T-3684 waits on her). T-3653 time
+   controls next, after clockdup lands (both in TopBar.tsx). Filed T-3689-3696 from her answers.
+11. Windows popping on her screen (her 16:45): checks' children lacked windowsHide; play.mjs's background game has no
+   console so each python/powershell child flashed. Fixed in cores.mjs/lib.mjs/smoke.mjs, copied into running trees;
+   CLAUDE.md Shell rule added. If she still sees windows, look at dayrun's world_run children next.
+   Empty locked folder .tw-trees/touchrule (not a worktree): remove once whatever holds it exits.
 9. tasks.py lost T-1970 when ARCHIVE.md's replace was refused (Windows lock); recovered by hand, and tasks.py now
    writes ARCHIVE first and retries the replace.
 3. dayrun: until kit dayrun.state (notes/T-3671/kit) says "PACKS FREE" (about 19:15 UTC) hold anything writing
