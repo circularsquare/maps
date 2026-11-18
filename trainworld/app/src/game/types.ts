@@ -330,6 +330,8 @@ export type Selection =
   | { kind: "busStop"; lines: LineId[]; stop: string }
   | { kind: "station"; station: StationId }
   | { kind: "track"; edge: EdgeId }
+  /** T-3634: two or more built pieces Shift+clicked together, for the track panel's Rebuild (game/trackSet.ts) */
+  | { kind: "tracks"; edges: EdgeId[] }
   | { kind: "junction"; node: NodeId }
   /** a train: its profile (line, run, demand level) and departure, absolute game seconds */
   | { kind: "train"; line: LineId; profile: number; dep: number }

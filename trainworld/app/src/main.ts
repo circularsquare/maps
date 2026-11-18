@@ -53,7 +53,8 @@ import { StationLabels } from "./map/stationLabels";
 import { stationIndexOf, tripAt } from "./map/network";
 import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
-import { carryGrids, pick } from "./map/pick";
+import { carryGrids, pick, SLOP_PX, topSeg } from "./map/pick";
+import { selectedPieces, shiftTrack } from "./game/trackSet";
 import { carryEdgeGrid } from "./map/snapIndex";
 import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
@@ -565,6 +566,8 @@ map.on("dblclick", (e) => {
 function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
+  // T-3634: Shift with built track selected adds or takes out the track under the pointer, a line on it or not
+  else if (add && shiftTrackAt(x, y)) return;
   // lines, stations and trains, then commuter bubbles while they are shown, then the rest (T-1515)
   else {
     const cur = selection.peek();
@@ -580,6 +583,23 @@ function selectAt(x: number, y: number, add: boolean) {
   }
 }
 capacity.selectClick = selectAt;
+/** The piece of track drawn at (x, y) px, or -1. */
+function trackAt(x: number, y: number): number {
+  const n = renderer.net;
+  if (!n) return -1;
+  const [ti] = topSeg(overlay, n.track.seg, n.track.count, x, y, SLOP_PX * SLOP_PX + 1);
+  return ti >= 0 ? n.track.edge[ti] : -1;
+}
+function shiftTrackAt(x: number, y: number): boolean {
+  const edge = trackAt(x, y);
+  return edge >= 0 && shiftTrack(edge);
+}
+// T-3634: a Shift press on track with built track selected is a click, not the start of MapLibre's zoom box
+// (which would swallow the click); elsewhere Shift+drag zooms as before
+map.on("mousedown", (e) => {
+  const o = e.originalEvent;
+  if (o.shiftKey && o.button === 0 && tool.peek() === "select" && linking.peek() === null && selectedPieces() && trackAt(e.point.x, e.point.y) >= 0) e.preventDefault();
+});
 // Linking stops when its station is no longer the selection or a tool is picked.
 effect(() => {
   const s = selection.value, from = linking.value;

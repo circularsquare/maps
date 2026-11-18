@@ -14,7 +14,7 @@
 import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { bpHover } from "../game/blueprintStretches";
-import { rebuildQuote } from "../game/rebuild";
+import { panelQuote, rebuildQuote } from "../game/rebuild";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
 import { SWITCH_PICK_KEY } from "../ui/toolKeys";
 import { designSpeed, selection, tool } from "../game/ui";
@@ -117,6 +117,7 @@ export class BlueprintBox {
       bpPicked.value;
       bpHover.value;
       rebuildQuote.value;
+      panelQuote.value;
       selection.value;
       world.value;
       tool.value;
@@ -227,7 +228,10 @@ export class BlueprintBox {
     const n = this.overlay.renderer.net;
     // T-1679: the track inspector's piece too; T-2269: the Build tab's breakdown row under the pointer first
     const sel = selection.peek();
-    const edges = bpHover.peek().length ? bpHover.peek() : bpPicked.peek().edges.length ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : [];
+    const picked = bpPicked.peek().edges.length > 0;
+    const edges = bpHover.peek().length ? bpHover.peek() : picked ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : sel?.kind === "tracks" ? sel.edges : [];
+    // T-3634: the track panel's Rebuild quote, its refused pieces and ramps drawn as the bar's
+    const quote = picked ? rebuildQuote.peek() : panelQuote.peek();
     if (!n || !edges.length) {
       this.overlay.renderer.setHighlight(null);
     } else {
@@ -237,7 +241,7 @@ export class BlueprintBox {
         if (a) pts.push(a);
       }
       // T-3241: the track beyond the pick that the stations' ramps take, as far as it changes
-      const q = rebuildQuote.peek(), w = world.peek();
+      const q = quote, w = world.peek();
       if (q && w && !bpHover.peek().length) for (const b of q.beyond) {
         const a = n.edgePts.get(b.edge), e = w.edges.find((x) => x.id === b.edge);
         if (a && e && e.lengthM > 0) pts.push(stretchOf(a, e.a === b.from, b.m / e.lengthM));
@@ -245,7 +249,7 @@ export class BlueprintBox {
       this.overlay.renderer.setHighlight(strokesFromEdges(pts));
     }
     // T-3059: the pieces a rebuild would refuse for their own sake, in red over the pick (T-3088)
-    const refused = rebuildQuote.peek()?.red ?? [];
+    const refused = quote?.red ?? [];
     const rp: Float32Array[] = [];
     if (n && !bpHover.peek().length) for (const e of refused) {
       const a = n.edgePts.get(e);

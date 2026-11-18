@@ -11,7 +11,7 @@ import { BusStopInspector } from "./BusStopInspector";
 import { TripInspector } from "./TripInspector";
 import { JunctionInspector } from "./JunctionInspector";
 import { StationInspector } from "./StationInspector";
-import { TrackInspector } from "./TrackInspector";
+import { TrackInspector, TracksInspector } from "./TrackInspector";
 import { TrainInspector } from "./TrainInspector";
 import { effect } from "@preact/signals";
 import { world } from "../../game/world";
@@ -32,6 +32,7 @@ export function Inspector() {
   else if (s.kind === "station") body = <StationInspector id={s.station} />;
   else if (s.kind === "train") body = <TrainInspector line={s.line} profile={s.profile} dep={s.dep} />;
   else if (s.kind === "track") body = <TrackInspector edge={s.edge} />;
+  else if (s.kind === "tracks") body = <TracksInspector edges={s.edges} />;
   else if (s.kind === "junction") body = <JunctionInspector node={s.node} />;
   else if (s.kind === "commuters") body = <CommutersInspector />;
   else if (s.kind === "city") body = <CityInspector key={s.city} id={s.city} />;

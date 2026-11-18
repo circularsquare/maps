@@ -984,6 +984,21 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   (below) for a pick of this one piece and no stations: the same choices (picking what the piece has drops the
   choice), quote, hover, question, price and notice, through the same code (`rebuildPieces` in `game/rebuild.ts`),
   and final like it. Greyed Rebuild has no hover.
+- **Several pieces in the track inspector** [T-3634; `game/trackSet.ts`, `TracksInspector` in
+  `ui/inspector/TrackInspector.tsx`]: with built track selected (one piece or a set), Shift+click on built track that
+  is not a crossover adds the piece, a line on it or not, and Shift+click on a piece in the set takes it out; a set of
+  one is the plain track inspector again, and a plain click selects as always. Any other track Shift+clicked leaves
+  the set as it is; Shift+click with anything else selected does what it did. A Shift press on track then is a
+  click, so MapLibre's Shift+drag zoom starts only off track. The set is the selection (`{ kind: "tracks" }`), apart
+  from the Select tool's pick, whose Shift+click adds the way between. Its inspector is titled "3 pieces of track",
+  with the total length, the kind when all share it and the level or range under it; then the rebuild choices with
+  every level and every type offered, as on the bar, the set's own level, count and type on when all share it;
+  Rebuild and the Select tool line; Cost to construct and Upkeep summed; the lines on any of them. No Remove yet.
+  Rebuild is the bar's for a pick of these pieces and no stations: one quote, question and charge for all, final;
+  the pieces it would refuse are red on the map and the ramps beyond in the band, as for the bar (one piece's panel
+  draws its quote that way too). The set is drawn in the pick's band; pieces gone after an edit drop out of it.
+  Hover tags carry the gesture (none on a touch screen): one built piece's title "Shift+click more track to rebuild
+  it together", a set's "Shift+click track to add it or take it out".
 - **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
   elevation controls; it shows the slowest curve, the price of both diagonals, Construct
   (builds both) and Remove crossover.

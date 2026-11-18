@@ -42,6 +42,8 @@ export interface RebuildQuote {
 
 /** The quote for the pick and choices now; null with nothing chosen, or while it is being worked out. */
 export const rebuildQuote = signal<RebuildQuote | null>(null);
+/** T-3634: the track panel's quote for its piece or pieces and choices, drawn on the map as the bar's is. */
+export const panelQuote = signal<RebuildQuote | null>(null);
 
 const KIND = { regular: 1, hsr: 2, tram: 3 } as const;
 const version = computed(() => world.value?.version);

@@ -1,14 +1,15 @@
-// T-3408: the Select bar's rebuild (game/rebuild.ts) for the one built piece in the track panel: its level,
-// single or double track, and regular, high-speed or tram track. Same quote, hover, question and edit as the bar's
-// pick of that piece. A level or a change of family (rail and tram) is offered only where the track model would
-// take it for this piece alone: the track joined to it often ties both.
+// T-3408: the Select bar's rebuild (game/rebuild.ts) for the built piece in the track panel, or the pieces
+// Shift+clicked together (T-3634): their level, single or double track, and regular, high-speed or tram track.
+// Same quote, hover, question and edit as the bar's pick of those pieces. For one piece, a level or a change of
+// family (rail and tram) is offered only where the track model would take it for this piece alone: the track
+// joined to it often ties both. A set offers everything, as the bar does, its refused pieces drawn red.
 
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { levelLabel, levelName } from "../../game/format";
 import { t, lowerWord } from "../../i18n";
 import { LEVELS, type Level, type TrackEdge } from "../../game/types";
-import { canRebuild, fetchRebuildQuote, rebuildPieces, rebuildTipFor, rebuildWhole, type RebuildChoice, type RebuildKind, type RebuildQuote } from "../../game/rebuild";
+import { canRebuild, fetchRebuildQuote, panelQuote, rebuildPieces, rebuildTipFor, rebuildWhole, type RebuildChoice, type RebuildKind, type RebuildQuote } from "../../game/rebuild";
 import { HSR_COST } from "../../game/trackKinds";
 import { world } from "../../game/world";
 import { mobileDevice } from "../../workers/deviceMemory";
@@ -16,27 +17,37 @@ import { TOOLS } from "../toolKeys";
 import { Actions, Icon, LevelButtons, TrackCountButtons } from "../widgets";
 
 const NONE: RebuildChoice = { level: null, kind: null, tracks: null };
+const ALL_KINDS: RebuildKind[] = ["regular", "hsr", "tram"];
 
-export function PieceRebuild({ e, children }: { e: TrackEdge; children: ComponentChildren }) {
+/** What every piece in `edges` has, or null when they differ. */
+function common<T>(edges: TrackEdge[], of: (e: TrackEdge) => T | null): T | null {
+  const v = of(edges[0]);
+  return edges.every((e) => of(e) === v) ? v : null;
+}
+
+export function PieceRebuild({ edges, children }: { edges: TrackEdge[]; children?: ComponentChildren }) {
   const [choice, setChoice] = useState<RebuildChoice>(NONE);
-  // the quote with the choice it is for, so a quote still on its way for an older choice is never offered
+  // the quote with the choice and pieces it is for, so a quote still on its way for older ones is never offered
   const [quoted, setQuoted] = useState<{ key: string; q: RebuildQuote } | null>(null);
-  // the levels and the other family's kinds this piece can take alone
+  // the levels and the other family's kinds one piece can take alone
   const [open, setOpen] = useState<{ levels: Level[]; kinds: RebuildKind[] } | null>(null);
   const version = world.value?.version;
-  const key = `${choice.level}/${choice.kind}/${choice.tracks}`;
+  const ids = edges.map((e) => e.id), one = edges.length === 1 ? edges[0] : null;
+  const idKey = ids.join(",");
+  const key = `${idKey}/${choice.level}/${choice.kind}/${choice.tracks}`;
   const chosen = choice.level !== null || choice.kind !== null || choice.tracks !== null;
-  const target = { edges: [e.id], stations: [] };
-  const ownLevel = e.levelMin === e.levelMax ? e.levelMin : null;
-  const ownKind: RebuildKind = e.kind ? "tram" : e.hsr ? "hsr" : "regular";
-  const ownTracks = e.tracks === 1 ? 1 : 2;
+  const target = { edges: ids, stations: [] };
+  const ownLevel = common(edges, (e) => (e.levelMin === e.levelMax ? e.levelMin : null));
+  const ownKind = common<RebuildKind>(edges, (e) => (e.kind ? "tram" : e.hsr ? "hsr" : "regular"));
+  const ownTracks = common<1 | 2>(edges, (e) => (e.tracks === 1 ? 1 : 2));
   useEffect(() => {
     if (!chosen) return;
     let on = true;
     void fetchRebuildQuote(target, choice).then((q) => { if (on && q) setQuoted({ key, q }); });
     return () => { on = false; };
-  }, [e.id, key, version]);
+  }, [key, version]);
   useEffect(() => {
+    if (!one) return setOpen({ levels: LEVELS.filter((l) => l !== ownLevel), kinds: ALL_KINDS });
     let on = true;
     void (async () => {
       const levels: Level[] = [], kinds: RebuildKind[] = [];
@@ -45,15 +56,18 @@ export function PieceRebuild({ e, children }: { e: TrackEdge; children: Componen
         if (rebuildWhole(await fetchRebuildQuote(target, { ...NONE, level }))) levels.push(level);
         if (!on) return;
       }
-      for (const kind of (e.kind ? ["regular", "hsr"] : ["tram"]) as RebuildKind[]) {
+      for (const kind of (one.kind ? ["regular", "hsr"] : ["tram"]) as RebuildKind[]) {
         if (rebuildWhole(await fetchRebuildQuote(target, { ...NONE, kind }))) kinds.push(kind);
         if (!on) return;
       }
       setOpen({ levels, kinds });
     })();
     return () => { on = false; };
-  }, [e.id, version]);
+  }, [idKey, version]);
   const q = quoted?.key === key && chosen ? quoted.q : null;
+  // the quote on the map: its refused pieces red and its ramps beyond in the band (map/blueprintBox.ts)
+  useEffect(() => { panelQuote.value = q; }, [q]);
+  useEffect(() => () => { panelQuote.value = null; }, []);
   // picking what the piece has already drops that choice, as the bar's track count does
   const pick = (c: Partial<RebuildChoice>) => setChoice({
     level: c.level === undefined ? choice.level : c.level === ownLevel ? null : c.level,
@@ -62,7 +76,7 @@ export function PieceRebuild({ e, children }: { e: TrackEdge; children: Componen
   });
   const shownKind = choice.kind ?? ownKind;
   // the piece's own family's kinds, and the other family's where open; the group only when it offers a change
-  const kinds = (["regular", "hsr", "tram"] as RebuildKind[]).filter((k) => (k === "tram") === !!e.kind || open?.kinds.includes(k));
+  const kinds = ALL_KINDS.filter((k) => (one && (k === "tram") === !!one.kind) || open?.kinds.includes(k));
   const levels = open?.levels.length ? LEVELS.filter((l) => l === ownLevel || open.levels.includes(l)) : [];
   const levelTip = (l: Level) => t("blueprint.levelTip", { level: lowerWord(levelName(l)), label: levelLabel(l) });
   const selectKey = TOOLS.find(([id]) => id === "blueprint")?.[3] ?? "4";
@@ -84,7 +98,7 @@ export function PieceRebuild({ e, children }: { e: TrackEdge; children: Componen
         )}
       </div>
       <Actions>
-        <button class="btn text" data-tip={q ? rebuildTipFor(q, choice, 1) : undefined} disabled={!canRebuild(q)}
+        <button class="btn text" data-tip={q ? rebuildTipFor(q, choice, ids.length) : undefined} disabled={!canRebuild(q)}
           onClick={() => rebuildPieces(target, choice, q, () => setChoice(NONE))}>
           <Icon.wrench />{t("blueprint.rebuild")}
         </button>
