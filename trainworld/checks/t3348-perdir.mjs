@@ -1,9 +1,9 @@
-// T-3348 stage 1: per-direction stops, Anita's case (reports/t3348-split-legs.png). A double track splits
-// into two one-way single legs 150 m apart, a station on each, and rejoins as double; a line West - East run
-// both ways, the stop clicked on the leg its trains run the other way along. The line keeps one stop there,
-// on the leg it runs out along, and its return run stops at the other leg's station: its trains board and
-// alight each way on their own leg (boarding reads each run's stop node), and demand's riders board the
-// way back at the north leg's station (the snapshot's backStops, the kernel's reverse run). Picture in
+// One-way stations on a split, Anita's case (reports/t3348-split-legs.png). A double track splits into two
+// one-way single legs 150 m apart, a station on each, and rejoins as double; a line West - East run both
+// ways. Each leg's station is a stop of its own, served once a round trip by the run along its leg and
+// passed by the other (T-3565, T-3605: never paired across the split; T-3348's pairing was dropped). Clicked
+// on the north (westbound) leg, the line lists it and only the way back stops there; with the south leg's
+// station added too, each run stops at its own leg's station, and demand's riders board at both. Picture in
 // artifacts/trainworld/t3348-perdir.png. From the maps root, on a Vite of your own
 // (node trainworld/checks/dev-nowatch.mjs 6170):
 //   node trainworld/checks/t3348-perdir.mjs [dev url]
@@ -67,17 +67,30 @@ try {
   const I = made.ids;
   const line = await edit({ op: 'addLine', stops: [I.West, I.East], name: 'L', colour: '#d6336c' });
   check(line?.ok, 'a line West - East, both ways', JSON.stringify(line));
-  // the click lands on the north leg, which runs westbound: the way out is eastbound
+  // each one-way stop's heading (`oneWayAt`, world frame): east is cos > 0
+  const read = () => page.evaluate((num) => {
+    const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num), s = w.lineStats[l.id];
+    const ways = Object.fromEntries(Object.entries(s.oneWayAt ?? {}).map(([k, h]) => [k, Math.cos(h) > 0 ? 'east' : 'west']));
+    return { stops: l.stops.map(Number), ways, backStops: s.backStops?.map(Number) ?? null, stopS: s.stopS.map((r) => r.length), broken: l.broken ?? false };
+  }, line.line);
+  // the click lands on the north leg, which runs westbound: only the way back stops there
   const ins = await edit({ op: 'insertStop', line: line.line, station: I.north });
   await wait(800);
-  const st = await page.evaluate((num) => { const w = window.tw.world.value, l = w.save.lines.find((x) => x.num === num); const s = w.lineStats[l.id]; return { stops: l.stops.map(Number), backStops: s.backStops?.map(Number) ?? null, back: s.backStops ? 1 : 0, stopS: s.stopS.map((r) => r.length), broken: l.broken ?? false }; }, line.line);
-  check(ins?.ok && st.stops.length === 3 && st.stops[1] === I.south, 'one stop at Noordeinde, kept on the leg the way out runs along', JSON.stringify(st));
-  check(JSON.stringify(st.backStops) === JSON.stringify([I.West, I.north, I.East]), 'the way back stops at the north leg station', JSON.stringify(st.backStops));
-  check(st.back > 0 && st.stopS[0] === 3 && st.stopS[1] === 3 && !st.broken, 'both runs run, the way back round the other leg', JSON.stringify(st));
+  const st = await read();
+  check(ins?.ok && JSON.stringify(st.stops) === JSON.stringify([I.West, I.north, I.East]), 'the north leg station clicked is the stop', JSON.stringify(st));
+  check(st.ways[I.north] === 'west' && Object.keys(st.ways).length === 1 && !st.backStops, 'served one way, by the way back (westbound); no pairing with the south leg', JSON.stringify(st));
+  check(st.stopS[0] === 3 && st.stopS[1] === 3 && !st.broken, 'both runs run', JSON.stringify(st));
+  // the south leg's station too: each run stops at its own leg's station
+  const ins2 = await edit({ op: 'insertStop', line: line.line, station: I.south });
+  await wait(800);
+  const st2 = await read();
+  check(ins2?.ok && st2.stops.length === 4 && st2.stops.includes(I.north) && st2.stops.includes(I.south) && !st2.broken, 'both leg stations are stops', JSON.stringify(st2));
+  check(st2.ways[I.north] === 'west' && st2.ways[I.south] === 'east' && !st2.backStops, 'each served once, by the run along its leg', JSON.stringify(st2));
   await edit({ op: 'setTrainCount', line: line.line, trains: [6, 4, 2] });
   await edit({ op: 'constructAll' });
   await page.evaluate(() => { const tw = window.tw; tw.clock.setRunning(false); tw.clock.set(Math.floor(tw.clock.now() / 86400) * 86400 + 9.2 * 3600); });
   // demand: the way back's riders board and alight at the north leg's station, the way out's at the south's
+  // (`backStops` stays empty here: no stop is paired)
   await demandFinal(page, { timeout: 600000, polling: 2000, lines: 0 });
   const riders = await page.evaluate(([ids, num]) => {
     const w = window.tw.world.value, v = window.twDemand.view(), l = w.save.lines.find((x) => x.num === num);
