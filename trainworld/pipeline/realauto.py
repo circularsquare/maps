@@ -19,6 +19,10 @@ rail, tram, monorail) with two or more stops in the pack's boundary (+1 km), les
   - routes whose ways are mostly high-speed track, or mostly preserved or tourist railway;
   - routes mostly outside the pack: under half their stops inside, unless 8 or more are;
   - routes whose stops inside lie over 15 km apart on average (intercity trains).
+A relation's stops are put right by its own ways (`tidy_stops`: sorted along the track when listed out of order,
+off-track and repeated stops out, a shuttle's out-and-back relation read as its first half, and for train and
+subway routes a station the track passes that the relation leaves out added between its first and last stop,
+see notes/T-3782.md); the extract counts `reordered` and `stops_added`.
 A station is the stops of one name within 400 m (realnet's `osm` adapter: the extract keeps no
 stop areas). Names in Latin letters: OSM's `name` where it is, else `name:en`, `int_name` or
 `name:latin`, else Cyrillic transliterated and (China, Hong Kong, Taiwan) Han characters in pinyin
@@ -251,16 +255,52 @@ def cut(pack, rels, stops, ways, xy_of):
             nodes[r] = ll
     kept = set(keep)
     shapes = defaultdict(list)
-    reordered = {}
+    reordered, added = {}, Counter()
+
+    def in_pack(ll):
+        return w <= ll[0] <= e and s <= ll[1] <= n and bnd.contains(Point(ll))
+    import numpy as np
+    stop_ids = np.array(sorted(stops), dtype=np.int64)
+
+    def stop_tags(r):
+        return stops[r][0] if r in stops else {}
+    pending = {}
     for rid in keep:
-        ms = rels[rid][1]
-        q = chain([ways[r][1] for ty, r, role in ms if ty == "w" and r in ways and role in ("", "forward", "backward")], xy_of, k)
+        t, ms = rels[rid]
+        wl = [ways[r][1] for ty, r, role in ms if ty == "w" and r in ways and role in ("", "forward", "backward")]
+        q = chain(wl, xy_of, k)
         if len(q) >= 2:
-            fixed = along_order([(r, nodes[r]) for ty, r, role in ms if ty == "n" and r in nodes and role.startswith("stop")], q, k)
-            if fixed:
-                reordered[rid] = fixed
+            label = " ".join(str(x) for x in [t.get("name"), t.get("name:en"), t.get("ref"), t.get("service")] + [rels[m][0].get("name") for m in masters.get(rid, [])])
+            cands = [] if SKIPS_STOPS.search(label) or t.get("route") not in ADD_KINDS else track_stops(t, masters.get(rid), rels, wl, stops, stop_ids, nodes)
+            listed_stops = [(r, nodes[r]) for ty, r, role in ms if ty == "n" and r in nodes and role.startswith("stop")]
+            fixed, n_add = tidy_stops(listed_stops, q, k, cands, stop_tags=stop_tags, inside=in_pack, train=t.get("route") == "train")
+            pending[rid] = (q, cands, listed_stops, fixed, n_add)
             key = f"m{max(masters[rid])}" if masters.get(rid) else f"r{rid}"
             shapes[key].append([[round(a, 6), round(b, 6)] for a, b in q])
+    # the other direction of a route master was given a stop the relation lacks: this one gets it too
+    # (JR Tokaido Main Line's two relations each miss different stations), with no count limit
+    gave = defaultdict(set)
+    for rid, (q, cands, listed_stops, fixed, n_add) in pending.items():
+        if fixed and n_add:
+            have = {x for x, _ in listed_stops}
+            for m in masters.get(rid, []):
+                gave[m] |= {stop_tags(x).get("name") for x in fixed if x not in have}
+    for rid, (q, cands, listed_stops, fixed, n_add) in pending.items():
+        t = rels[rid][0]
+        names = set().union(*[gave[m] for m in masters.get(rid, [])]) if masters.get(rid) else set()
+        base = [(r, nodes.get(r) or (stops[r][1], stops[r][2])) for r in fixed] if fixed else listed_stops
+        have = {stop_tags(x).get("name") for x, _ in base}
+        more = [c for c in cands if stop_tags(c[0]).get("name") in names - have]
+        if more:
+            f2, n2 = tidy_stops(base, q, k, more, stop_tags=stop_tags, inside=in_pack, train=t.get("route") == "train", limit=False)
+            if f2:
+                fixed, n_add = f2, n_add + n2
+        if fixed:
+            reordered[rid] = fixed
+            added[rid] = n_add
+            for r in fixed:
+                if r not in nodes:
+                    nodes[r] = (stops[r][1], stops[r][2])
     el = []
     for rid in keep:
         t, ms = rels[rid]
@@ -286,31 +326,67 @@ def cut(pack, rels, stops, ways, xy_of):
     lines = [[r"\| r(" + "|".join(str(r) for r in heavy) + r")$",
               {"train_m": realnet.OSM_TRAIN_M["commuter"], "kmh": realnet.OSM_KMH["commuter"]}]] if heavy else []
     return {"elements": el, "shapes": shapes, "lines": lines,
-            "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "reordered": len(reordered), "dropped": dict(why),
+            "realauto": {"kept": len(keep), "kinds": dict(kinds), "heavy_light_rail": len(heavy), "reordered": len(reordered), "stops_added": sum(added.values()), "dropped": dict(why),
                          "dropped_routes": {k: sorted(v) for k, v in gone.items()}}}
 
 
-ORDER_RATIO = 2.5
+ORDER_RATIO = 1.1
 ORDER_NEAR_M = 300.0
+ADD_FRAC = 0.15
+ADD_KINDS = ("train", "subway")
+SKIPS_STOPS = re.compile(r"express|rapid|limited|semi|\bexp\b|liner|rapide|expres|\bRE\d|\bICE?\b|快|急|特|準|экспресс|ekspres", re.I)
+ADD_TRAIN_SPACING_M = 5000.0
+UNOPENED = re.compile(r"planned|opening soon|under construction|proposed|zaijian|future|closed", re.I)
+_ONTRACK_KINDS = ("train", "subway", "light_rail", "tram", "monorail")
 
 
-def along_order(stops, q, k):
-    """T-3777: a relation whose stop members are not in line order (JR Tokaido Main Line's two relations
-    list Tokyo, Mishima, Bentenjima, Araimachi, Futagawa...: a route 5 times longer than the track) gets
-    its stops sorted by where they lie along its own chained ways. `stops` is [(node id, (lon, lat))] in
-    member order. Returns the node ids in order, or None when the order is fine (the member order is under
-    ORDER_RATIO times the length of the sorted one) or the ways do not carry the stops (under 90% of them
-    within ORDER_NEAR_M of the chain: a branching or broken chain)."""
-    if len(stops) < 4:
+def _point_at(q, k, d):
+    """The (lon, lat) `d` metres along chain `q`."""
+    run = 0.0
+    for a, b in zip(q, q[1:]):
+        seg = math.hypot((b[0] - a[0]) * k, b[1] - a[1]) * 111195.0
+        if run + seg >= d and seg > 0:
+            f = (d - run) / seg
+            return (a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f)
+        run += seg
+    return q[-1]
+
+
+def retrace_half(q, k):
+    """A relation that lists its ways out and back along the same track (a shuttle's one relation for
+    both directions: Nishitetsu Kaizuka Line, JR Kagoshima Main Line's Hakata - Omuta relations) is its
+    first half; None for any other chain. The chain's points a tenth to four tenths along it lie within
+    200 m of the ones the same distance from its end."""
+    if len(q) < 4:
         return None
+    total = sum(math.hypot((b[0] - a[0]) * k, b[1] - a[1]) for a, b in zip(q, q[1:])) * 111195.0
+    if total < 2000.0:
+        return None
+    for f in (0.1, 0.2, 0.3, 0.4):
+        a, b = _point_at(q, k, f * total), _point_at(q, k, (1 - f) * total)
+        if math.hypot((a[0] - b[0]) * k, a[1] - b[1]) * 111195.0 > 200.0:
+            return None
+    half, run = [q[0]], 0.0
+    for a, b in zip(q, q[1:]):
+        seg = math.hypot((b[0] - a[0]) * k, b[1] - a[1]) * 111195.0
+        if run + seg >= total / 2:
+            half.append(_point_at(q, k, total / 2))
+            break
+        half.append(b)
+        run += seg
+    return half
+
+
+def _arcs(stops, q, k):
+    """For each (node id, (lon, lat)) its distance to the chain `q` and its arc position along it, metres."""
     P = [(lon * k * 111195.0, lat * 111195.0) for lon, lat in q]
-    A = [P[i] for i in range(len(P) - 1)]
+    A = P[:-1]
     sx = [(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]) for i in range(len(P) - 1)]
     L = [math.hypot(*d) for d in sx]
     cum = [0.0]
     for v in L:
         cum.append(cum[-1] + v)
-    at, near = [], 0
+    out = []
     for _, (lon, lat) in stops:
         cx, cy = lon * k * 111195.0, lat * 111195.0
         best = (1e18, 0.0)
@@ -320,17 +396,125 @@ def along_order(stops, q, k):
             dist = math.hypot(cx - a[0] - d[0] * t, cy - a[1] - d[1] * t)
             if dist < best[0]:
                 best = (dist, cum[i] + t * L[i])
-        near += best[0] <= ORDER_NEAR_M
-        at.append(best[1])
-    if near < 0.9 * len(stops):
-        return None
-    order = sorted(range(len(stops)), key=lambda i: at[i])
+        out.append(best)
+    return out, cum[-1]
 
-    def length(idx):
-        return sum(math.hypot((stops[a][1][0] - stops[b][1][0]) * k, stops[a][1][1] - stops[b][1][1]) for a, b in zip(idx, idx[1:])) * 111195.0
-    if length(range(len(stops))) < ORDER_RATIO * length(order):
-        return None
-    return [stops[i][0] for i in order]
+
+def _span(stops, idx, k):
+    return sum(math.hypot((stops[a][1][0] - stops[b][1][0]) * k, stops[a][1][1] - stops[b][1][1]) for a, b in zip(idx, idx[1:])) * 111195.0
+
+
+def tidy_stops(stops, q, k, cands=(), stop_tags=None, inside=lambda ll: True, train=False, limit=True):
+    """T-3777, T-3782: a relation's stop members put right by its own chained ways `q`. `stops` is
+    [(node id, (lon, lat))] in member order. Nothing changes unless the ways carry the stops (90% of
+    them within ORDER_NEAR_M of the chain: not a branching or broken chain). Then
+      - stops off the chain by more than ORDER_NEAR_M go (a depot's or yard's stop, a platform
+        mapped elsewhere), which made a train run out to it and back;
+      - stops listed out of line order (JR Tokaido Main Line's two relations list Tokyo, Mishima,
+        Bentenjima, Araimachi, Futagawa...) are sorted along the chain, when the member order is
+        ORDER_RATIO times longer than the sorted one;
+      - `cands`, [(node id, (lon, lat))] passenger stops lying on the relation's ways that the relation
+        does not list (JR Tokaido Main Line skips Nagoya), are added in track order when the relation
+        misses at most 3 stops or 15% as many as it lists, and the stop is not within 400 m of a
+        same-named listed one (150 m of any other). A train route also needs its listed stops under
+        ADD_TRAIN_SPACING_M apart on average, and the relation not to name itself an express or
+        rapid (SKIPS_STOPS): those skip stations on purpose. Only train and subway routes, and only
+        between the relation's own first and last stop (a tram's or light rail's shared track makes
+        added stops break junction turns).
+    `limit` False (a stop the route master's other direction was given) skips the count and spacing limits.
+    Stops count only where `inside` (the pack): the line is cut to it anyway. Returns (node ids in order
+    or None when nothing changed, number added)."""
+    if len(stops) < 4:
+        return None, 0
+    back = retrace_half(q, k)
+    if back:
+        q = back
+    elif math.hypot((q[0][0] - q[-1][0]) * k, q[0][1] - q[-1][1]) * 111195.0 < 300.0:
+        return None, 0  # a loop (a circle line, a circular light rail): its order is the ring
+    ar, total = _arcs(stops, q, k)
+    if sum(d <= ORDER_NEAR_M for d, _ in ar) < 0.9 * len(stops):
+        return None, 0
+    # a terminus a little past the track's end (its building off the last way) stays
+    idx = [i for i in range(len(stops)) if ar[i][0] <= ORDER_NEAR_M or (ar[i][0] <= 1500.0 and (ar[i][1] < 1.0 or ar[i][1] > total - 1.0))]
+    changed = len(idx) != len(stops) or bool(back)
+    # a station listed again later (the return end of a shuttle, a depot stop, a platform listed twice) is
+    # listed once, unless the line is a loop that closes on its first station
+    loop = not back and len(idx) > 3 and stop_tags(stops[idx[0]][0]).get("name") and         stop_tags(stops[idx[0]][0]).get("name") == stop_tags(stops[idx[-1]][0]).get("name")
+    seen, once = [], []
+    for i in idx:
+        nm = stop_tags(stops[i][0]).get("name")
+        if nm and any(n == nm and math.hypot((stops[i][1][0] - p[0]) * k, stops[i][1][1] - p[1]) * 111195.0 < 400.0 for n, p in seen) and not (loop and i == idx[-1]):
+            continue
+        seen.append((nm, stops[i][1]))
+        once.append(i)
+    changed = changed or len(once) != len(idx)
+    idx = once
+    if len(idx) >= 4 and _span(stops, idx, k) >= ORDER_RATIO * _span(stops, sorted(idx, key=lambda i: ar[i][1]), k):
+        idx = sorted(idx, key=lambda i: ar[i][1])
+        changed = True
+    ids = [stops[i][0] for i in idx]
+    pos = {stops[i][0]: stops[i][1] for i in idx}
+    added = 0
+    if cands:
+        arc = {stops[i][0]: ar[i][1] for i in idx}
+        a0, a1 = arc[ids[0]], arc[ids[-1]]
+        mono = all((arc[b] - arc[a]) * (1 if a1 >= a0 else -1) >= -50.0 for a, b in zip(ids, ids[1:]))
+        names = [(stop_tags(r).get("name"), pos[r]) for r in ids]
+        new = []
+        for r, ll in cands:
+            nm = stop_tags(r).get("name")
+            if not nm or r in pos or not inside(ll):
+                continue
+            if any(math.hypot((ll[0] - p[0]) * k, ll[1] - p[1]) * 111195.0 < (400.0 if n == nm else 150.0) for n, p in names + [(stop_tags(x).get("name"), l) for x, l in new]):
+                continue
+            new.append((r, ll))
+        served = len({stop_tags(r).get("name") for r in ids if inside(pos[r])})
+        inner = [pos[r] for r in ids if inside(pos[r])]
+        gap = _span([(0, p) for p in inner], range(len(inner)), k) / max(1, len(inner) - 1)
+        if mono and new and (not limit or ((not train or gap <= ADD_TRAIN_SPACING_M) and len(new) <= max(3, ADD_FRAC * served))):
+            ar_new, _ = _arcs(new, q, k)
+            lo, hi = min(arc.values()), max(arc.values())
+            ok = [(a, r, ll) for (r, ll), (d, a) in zip(new, ar_new) if d <= ORDER_NEAR_M and lo < a < hi]
+            fwd = a1 >= a0
+            merged = sorted([(arc[r], r) for r in ids] + [(a, r) for a, r, _ in ok], reverse=not fwd)
+            if ok:
+                ids = [r for _, r in merged]
+                added = len(ok)
+                changed = True
+    return (ids if changed else None), added
+
+
+def track_stops(t, master_ids, rels, wl, stops, stop_ids, listed_nodes):
+    """Passenger stops (railway stop or halt) on the ways of a relation `t`, that its own network or
+    operator allows: a stop tagged with a network (or operator) must carry the relation's own
+    (`network`/`operator`, its name or its route master's); a stop for another kind of train
+    (`subway=yes` on a train route) is not this route's. [(node id, (lon, lat))]."""
+    import numpy as np
+    if not wl:
+        return []
+    on = np.intersect1d(stop_ids, np.unique(np.concatenate([np.asarray(w, dtype=np.int64) for w in wl])))
+    mine = {t.get("network"), t.get("operator"), t.get("name"), t.get("name:en")}
+    for m in master_ids or []:
+        mt = rels[m][0]
+        mine |= {mt.get("network"), mt.get("operator"), mt.get("name"), mt.get("name:en")}
+    mine.discard(None)
+    mine.discard("")
+    out = []
+    for r in on:
+        r = int(r)
+        tg = stops[r][0]
+        if tg.get("railway") not in ("stop", "halt") and tg.get("public_transport") != "stop_position":
+            continue
+        modes = {m for m in _ONTRACK_KINDS if tg.get(m) == "yes"}
+        if modes and t.get("route") not in modes:
+            continue
+        own = {tg.get("network"), tg.get("operator")} - {None, ""}
+        if own and mine and not own & mine:
+            continue
+        if not tg.get("name") or UNOPENED.search(tg.get("name", "") + " " + tg.get("name:en", "")) or                 any(tg.get(f"{x}:railway") or tg.get(x) for x in ("disused", "proposed", "construction", "abandoned")):
+            continue
+        out.append((r, (stops[r][1], stops[r][2])))
+    return out
 
 
 def chain(wlist, xy_of, k):
