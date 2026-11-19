@@ -21,8 +21,11 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    no-worker routes; free plan, her pick). Left: she clicks fail open in the dashboard (no API field), pastes a link
    in Discord; watch daily Workers requests vs 100k for a week; then close T-3738 (c009). Undo = delete the route.
    Seen: the page's CSP blocks Cloudflare Web Analytics' injected script (pre-existing; told her).
-3. Waiting on her: ask 28 fares design (notes/T-3739.md: four calls, build T-3739 now?). T-3742 nudges: design done,
-   {after:v0.4.3} ("not in the same round"); its questions go to her when that round starts.
+3. Fares: her answers 03:00 UTC in notes/T-3739.md "Her answers" (no Steps, Add point + click snapped monotonic;
+   zones A+B, new stations take neighbours' zone). advfares (Opus) building T-3739 port 6108. T-3740 zones and
+   T-3744 per-stop fare (new, design first) after it. "Saving stops" acked. T-3742 nudges: {after:v0.4.3}.
+   Cloudflare fail-open: no field on the zone's route edit; docs say only "toggle the route"; she can try Workers &
+   Pages > trainsworld-sharepreview > Settings > Domains & Routes; else leave it (35-51k/day vs 100k).
 4. Landed since: T-2054, T-3734 stages 3-4 (closed), T-3518, T-2901 stage 4 (70eec98a). Smoke on 6af04bd4 PASSED.
    8800 = 6af04bd4 (next snapbuild proves no dist/packs/terrain). After periods0 lands: delete
    data/terrain/*.terrain (4,631 files, 704 MB; keep world.water). Running: periods0, autolatch (T-3720).

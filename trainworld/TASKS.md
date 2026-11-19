@@ -329,13 +329,15 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3739 [P2] {L:fares} {waits:Anita} Advanced fare panel with a fare curve
-  - Need from Anita: Say yes to the design in notes/T-3739.md (curve all Lines or all Steps; build now for v0.4.3, about 7-11 h).
-  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and nodes you can add to the fare curve to make a staircase or any other shape. Design done.
-  - Other: notes/T-3739.md
-- T-3740 [P2] {L:fares} {waits:Anita} Zone fares players draw
-  - Need from Anita: Say yes to the zone design in notes/T-3739.md section 2 (painted stations with a rings helper; zone price replaces the distance curve; a trip leaving its fare area pays distance), about 14-20 h after T-3739.
-  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these. in a city that kinda makes sense but idk how multi-city fare zones would work." Design done.
+- T-3739 [P2] {L:fares} Advanced fare panel with a fare curve (taking, 2026-11-18, agent advfares)
+  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and points you add to the fare curve. Design agreed 11-19 with Lines only, no Steps ("we can just make steps with lines"), and "Add point" then a click on the graph.
+  - Goal: Built and landed, about 7-11 h; a game whose player never opens it gets the same trips to the trip.
+  - Other: notes/T-3739.md ("Her answers")
+- T-3740 [P2] {L:fares} {after:T-3739} Zone fares players draw
+  - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
+- T-3744 [P3] {L:fares} {after:T-3739} Fare per stop made
+  - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
+  - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
   - Other: notes/T-3739.md (section 2); research/fares-zones-2026-11-18.md
 - T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharebuild)
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
@@ -346,10 +348,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18: a free downloadable version on Steam, no paid DLC, a Ko-fi link if allowed; disclose AI code and translations regardless; "idrc about art style ... a low effort way to get another thing that might have a chance to get algo boosted". Checklist done (research/steam-page.md). Valve bans links in the description since 2024-09; the store page's website link field is allowed. No standalone build yet.
   - Goal: A live Coming soon page, then the downloadable build at least 2 weeks later.
   - Other: research/steam-page.md
-- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch (taking, 2026-11-18, agent autolatch)
-  - Context: From T-3687 (possible, not reproduced): a new game in the reused `autosave` slot could inherit a deleted sandbox game's id and so its latch, keeping it off the leaderboards.
-  - Goal: Reproduced or ruled out; a new game never carries an old game's id.
-  - Other: notes/T-3687.md
 - T-3695 [P3] {L:map-look} Travel by mode overview
   - Context: Your old TODO: "see overall travel by train / high speed / bus / tram / etc (in city / world view?) or also toggle in top? a trip that takes multiple can just be evenly split between their transit legs". You, 2026-11-18: "yes should do".
   - Goal: A design to you first (where it shows, city and world), then a view of rides split by mode, a multi-mode trip shared evenly across its legs.
@@ -753,6 +751,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
+- T-3745 [P2] {L:small-fixes} Hide flat junction marks no line uses (taking, 2026-11-18, agent flatmarks)
+  - Context: You, 2026-11-19: "if we have a flat junction or a flat merge but no line actually uses it, it doesnt cause any capacity impact. so maybe we should juts hide it. am i understanding the situation correctly?"
+  - Goal: Confirmed or corrected from the code; if no line crosses or merges there, no mark shows.
+- T-3746 [P2] {L:rebuild-track} One selection for track, shared by the track tool and Select (taking, 2026-11-18, agent onesel)
+  - Context: You, 2026-11-19: shift-clicking a run of built track in the track tool (T-3634's several-pieces panel) loses the speed limit; "could we just unify these and have selecting highlight the track segments in the track view actually? i think this duplicated functionality is quite confusing, and not necessary." Also: "if we shift click to add to the track segment, could we also just add all track between the newly added segment and whatever we already have selected? is that feasible? not sure if its well defined."
+  - Goal: A short design for you first (what the shift-click selection becomes, what goes away, the fill-between rule), then built.
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
   - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
