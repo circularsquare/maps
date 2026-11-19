@@ -150,6 +150,12 @@ headless Chrome, about 3 minutes; `$env:TW_CORES='4'` for a light run on your ow
   pick 1-8 of the biggest changes for a player and mark them (`changelog.py highlight <id>`, `--off` to clear; a
   top-level item or a group); the game lists them first, then the rest by area, and she adjusts the star on the
   board. Under about 20 items, none. When landing agent work, check its changelog item exists and has an area.
+- Playtest list (Anita, 2026-11-19: "maybe we were a bit too hasty to deploy last update ... before every update
+  deploy, please give me like a full list of things to test"): when an update is about ready to publish, give her one
+  list covering everything shipping, from the unpublished changelog and the landings since the last publish
+  (`git log` since the last publish commit), hidden items included. General steps, not exact ones ("make a bus line
+  and add buses", "paint a fare zone, save and reload"), grouped by area, with the riskiest first; on 8800, before
+  asking for the publish yes. Only then, not throughout.
 - Changelog review (Anita, 2026-11-18: "we need to be less willing to put stuff on the changelog"): before she
   edits an update's changelog on the board, and after a big batch of landings, a fresh Sonnet agent reads every
   shown item not yet reviewed and asks as a player "would i ever care about this / want to read it in a
