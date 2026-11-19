@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "behoben: Nahverkehrszüge verließen eine Überholstation, kurz bevor der Express sie überholte",
   "updates.v043Change9": "neu: das Panel Erweiterte Fahrpreise, mit weiteren Punkten auf der Fahrpreiskurve",
   "updates.v043Line": "Update v0.4.3: Spitzen als eigene Tageszeiten, erweiterte Fahrpreise, Karibik!",
+  "updates.v044Change1": "behoben: Ringe echter Stationen verrutschten auf manchen Bildschirmen von ihren Stationen weg; sie zeigen jetzt beim Darüberfahren Namen und enthalten auch Haltestellen der Straßenbahn, kleiner gezeichnet",
+  "updates.v044Line": "Update v0.4.4: Stationsringe bleiben an ihrem Platz",
   "upgrades.parking": "Parkplatz",
   "upgrades.parkingDoes": "Die Anreise zu dieser Station aus der Ferne fühlt sich 10 Minuten kürzer an.",
   "upgrades.parkingDoesAll": "Die Anreise zu jeder Station dieses Komplexes aus der Ferne fühlt sich 10 Minuten kürzer an.",

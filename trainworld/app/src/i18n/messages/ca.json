@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "arreglat: els trens locals sortien d’una estació d’avançament just abans que l’exprés els passés",
   "updates.v043Change9": "nou: quadre de tarifes avançades, per afegir més punts a la corba de tarifa",
   "updates.v043Line": "actualització v0.4.3: períodes d’hora punta separats, tarifes avançades, Carib!",
+  "updates.v044Change1": "arreglat: els anells de les estacions reals se separaven de les seves estacions en algunes pantalles; ara mostren el nom en passar-hi el cursor i inclouen les parades de tramvia, dibuixades més petites",
+  "updates.v044Line": "actualització v0.4.4: els anells d’estació ja no es mouen",
   "upgrades.parking": "Aparcament",
   "upgrades.parkingDoes": "Venir a aquesta estació des de lluny sembla 10 minuts més curt.",
   "upgrades.parkingDoesAll": "Venir a qualsevol estació d’aquest complex des de lluny sembla 10 minuts més curt.",

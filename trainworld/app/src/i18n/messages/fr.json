@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "corrigé : les omnibus quittaient une gare d’évitement juste avant que l’express les dépasse",
   "updates.v043Change9": "ajout du panneau des tarifs avancés, pour ajouter des points à la courbe de tarif",
   "updates.v043Line": "mise à jour v0.4.3 : périodes de pointe séparées, tarifs avancés, Caraïbes !",
+  "updates.v044Change1": "correction : les anneaux des stations réelles s’écartaient de leurs stations sur certains écrans ; ils affichent maintenant le nom au survol et incluent les arrêts de tram, dessinés plus petits",
+  "updates.v044Line": "mise à jour v0.4.4 : les anneaux de station restent en place",
   "upgrades.parking": "Parking",
   "upgrades.parkingDoes": "Venir de loin jusqu’à cette station paraît 10 minutes plus court.",
   "upgrades.parkingDoesAll": "Venir de loin jusqu’à n’importe quelle station de ce pôle paraît 10 minutes plus court.",

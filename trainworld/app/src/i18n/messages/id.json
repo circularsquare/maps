@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "diperbaiki: kereta lokal berangkat dari stasiun penyusulan tepat sebelum kereta ekspres menyusulnya",
   "updates.v043Change9": "panel tarif lanjutan ditambahkan, untuk menambah titik pada kurva tarif",
   "updates.v043Line": "update v0.4.3: periode jam sibuk terpisah, tarif lanjutan, karibia!",
+  "updates.v044Change1": "diperbaiki: cincin stasiun dunia nyata bergeser dari stasiunnya di beberapa layar; sekarang menampilkan nama saat disorot kursor dan mencakup halte trem, digambar lebih kecil",
+  "updates.v044Line": "update v0.4.4: cincin stasiun tidak bergeser lagi",
   "upgrades.parking": "Tempat parkir",
   "upgrades.parkingDoes": "Datang ke stasiun ini dari jauh terasa 10 menit lebih singkat.",
   "upgrades.parkingDoesAll": "Datang ke stasiun mana pun di kompleks ini dari jauh terasa 10 menit lebih singkat.",

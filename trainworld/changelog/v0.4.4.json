@@ -1,0 +1,20 @@
+{
+  "release": "v0.4.4",
+  "line": "update v0.4.4: station rings stay put",
+  "items": [
+    {
+      "id": "ringfix-1",
+      "text": "fixed real world station rings drifting off their stations while zooming on large screens; they now show names on hover and include tram stops",
+      "edited": "fixed real world station rings drifting off their stations on some screens; they now show names on hover and include tram stops, drawn smaller",
+      "hidden": false,
+      "task": "T-3802",
+      "by": "ringfix",
+      "at": "2026-11-19T22:35:09Z",
+      "rev": 2,
+      "area": "track",
+      "fix": true,
+      "changed": "2026-11-19T22:35:14Z"
+    }
+  ],
+  "published": "2026-11-19T22:52:58Z"
+}

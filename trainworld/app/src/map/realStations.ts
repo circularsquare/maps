@@ -5,7 +5,8 @@
 // Marks: soft purple dots (the real metro colour, low opacity) over the real network from MIN_ZOOM, and while the station tool is active purple rings with a pale halo over the game's own network too, when Settings > Real world network > Show stations
 // is on (off by default) and the network itself is shown; the name only on hover. A station whose every line
 // is a tram, funicular, monorail or narrow gauge one shows only where those lines do (All, or tram track
-// snapping), which takes the region's lines.json too (only while the marks are on).
+// snapping), which takes the region's lines.json too (only while the marks are on); as rings, tram stops
+// show always, smaller (T-3802).
 //
 // Names: a station placed within NAME_M of a real one is first suggested its name (map/stationNames.ts),
 // written as the game writes place names: Latin letters, the local name where it is in them, else the
@@ -175,6 +176,11 @@ type Shown = "passenger" | "tram" | "all";
 /** line kinds the Passenger setting leaves out (map/realNetwork.ts) */
 const NOT_PASSENGER = new Set(["tram", "funicular", "monorail", "narrow_gauge"]);
 
+let nameUnder: (lng: number, lat: number) => string | null = () => null;
+/** The name the hover gives the real station mark under (lng, lat) as drawn now, or null (the station
+ * tool's own tag shows it while placing, since that tag holds the demand hover back, T-3802). */
+export const realStationUnder = (lng: number, lat: number) => nameUnder(lng, lat);
+
 export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
   /** line id -> kind, per region, read for the marks only */
   const kinds = new Map<string, Promise<Map<string, string> | null>>();
@@ -206,6 +212,13 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
       return !NOT_PASSENGER.has(k) || (shown === "tram" && k === "tram");
     });
   };
+  /** every line is a tram (or the like) and one is a tram: a smaller ring, shown while placing whatever the setting */
+  const tramStop = (r: { st: Stations; kinds: Map<string, string> | null }, i: number) => {
+    const ls = r.st.lines[i], k = r.kinds;
+    return !!k && ls.length > 0 && ls.every((l) => NOT_PASSENGER.has(k.get(l) ?? "")) && ls.some((l) => k.get(l) === "tram");
+  };
+  /** what a station is drawn as: 0 nothing, 1 a station, 2 a tram stop (rings only; the dots keep `keep`) */
+  const mark = (r: { st: Stations; kinds: Map<string, string> | null }, i: number) => (placing && tramStop(r, i) ? 2 : keep(r, i) ? 1 : 0);
 
   const data = () => {
     const features: Feature[] = [];
@@ -260,37 +273,46 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
       if (z <= RADIUS[k][0]) return RADIUS[k - 1][1] + ((RADIUS[k][1] - RADIUS[k - 1][1]) * (z - RADIUS[k - 1][0])) / (RADIUS[k][0] - RADIUS[k - 1][0]);
     return RADIUS[RADIUS.length - 1][1];
   };
+  /** a tram stop's ring, radius and strokes, to a station's */
+  const TRAM_RING = 0.65;
 
   const draw = () => {
     const z = map.getZoom();
     const live = on && placing && z >= MIN_ZOOM && drawn.size > 0;
     fitSparse(canvas, map, live);
     if (!live) return;
-    const dpr = map.getPixelRatio();
+    // device px per CSS px as the canvas really is: MapLibre draws at less than its pixel ratio past
+    // maxCanvasSize, and does not resize when the ratio changes alone (a window moved to another screen)
+    const k = canvas.width / Math.max(1, overlay.cssW);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(k, 0, 0, k, 0, 0);
     const b = map.getBounds(), r = radius(z), pad = 0.002;
     const w = b.getWest() - pad, e = b.getEast() + pad, s = b.getSouth() - pad, n = b.getNorth() + pad;
-    const path = new Path2D();
+    const paths = [new Path2D(), new Path2D()];
     for (const g of drawn.values())
       for (let i = 0; i < g.st.lng.length; i++) {
         const lng = g.st.lng[i], lat = g.st.lat[i];
-        if (lng < w || lng > e || lat < s || lat > n || !keep(g, i)) continue;
-        const p = map.project([lng, lat]);
-        path.moveTo(p.x + r, p.y);
-        path.arc(p.x, p.y, r, 0, 2 * Math.PI);
+        if (lng < w || lng > e || lat < s || lat > n) continue;
+        const m = mark(g, i);
+        if (!m) continue;
+        const p = map.project([lng, lat]), ri = m === 2 ? r * TRAM_RING : r;
+        paths[m - 1].moveTo(p.x + ri, p.y);
+        paths[m - 1].arc(p.x, p.y, ri, 0, 2 * Math.PI);
       }
     const c = SHADES[mapShade.peek()];
-    // a halo in the map's casing colour keeps the ring readable on track and on both themes
-    ctx.globalAlpha = 0.7;
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = shadeColours().casing;
-    ctx.stroke(path);
-    ctx.globalAlpha = c.realStationOpacity;
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = c.realMetro;
-    ctx.stroke(path);
+    paths.forEach((path, j) => {
+      const thin = j === 1 ? TRAM_RING : 1;
+      // a halo in the map's casing colour keeps the ring readable on track and on both themes
+      ctx.globalAlpha = 0.7;
+      ctx.lineWidth = 4 * thin;
+      ctx.strokeStyle = shadeColours().casing;
+      ctx.stroke(path);
+      ctx.globalAlpha = c.realStationOpacity;
+      ctx.lineWidth = 2 * thin;
+      ctx.strokeStyle = c.realMetro;
+      ctx.stroke(path);
+    });
     ctx.globalAlpha = 1;
   };
   overlay.afterMapFrame.push(draw);
@@ -336,20 +358,23 @@ export function startRealStations(map: maplibregl.Map, overlay: Overlay) {
 
   const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
   // the hover: the name only; above the bubbles (10), under the airports (11)
-  addFinder(10.5, (p) => {
-    if (!on || map.getZoom() < MIN_ZOOM || hiddenOnGlobe(p.lng, p.lat)) return null;
-    const at = map.project([p.lng, p.lat]);
+  nameUnder = (lng, lat) => {
+    if (!on || map.getZoom() < MIN_ZOOM || hiddenOnGlobe(lng, lat)) return null;
+    const at = map.project([lng, lat]);
     const edge = map.unproject([at.x + HOVER_PX, at.y]);
-    const m = Math.abs(edge.lng - p.lng) * M_PER_DEG * Math.cos((p.lat * Math.PI) / 180);
-    for (const n of nearby(p.lng, p.lat, Math.max(m, 1))) {
+    const m = Math.abs(edge.lng - lng) * M_PER_DEG * Math.cos((lat * Math.PI) / 180);
+    for (const n of nearby(lng, lat, Math.max(m, 1))) {
       const r = [...drawn.values()].find((x) => x.st === n.st);
-      if (!r || !keep(r, n.i)) continue;
+      if (!r || !mark(r, n.i)) continue;
       const s = map.project([n.st.lng[n.i], n.st.lat[n.i]]);
       if (Math.hypot(s.x - at.x, s.y - at.y) > HOVER_PX) continue;
-      const name = n.st.name[n.i] ?? n.st.local[n.i];
-      return name ? [escape(name)] : null;
+      return n.st.name[n.i] ?? (n.st.local[n.i] || null);
     }
     return null;
+  };
+  addFinder(10.5, (p) => {
+    const name = nameUnder(p.lng, p.lat);
+    return name ? [escape(name)] : null;
   });
   if (location.search.includes("debug=1"))
     (window as any).twRealStations = (lng?: number, lat?: number, m = NAME_M) => ({

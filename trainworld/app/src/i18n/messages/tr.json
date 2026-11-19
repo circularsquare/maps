@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "her durakta duran trenlerin, ekspres onları geçmeden hemen önce sollama istasyonundan çıkması düzeltildi",
   "updates.v043Change9": "ücret eğrisine ek noktalar koymayı sağlayan gelişmiş ücret paneli eklendi",
   "updates.v043Line": "v0.4.3 güncellemesi: ayrı yoğun saat dönemleri, gelişmiş ücretler, karayipler!",
+  "updates.v044Change1": "düzeltildi: gerçek dünya istasyon halkaları bazı ekranlarda istasyonlarından kayıyordu; artık üzerine gelince isimleri gösteriyor ve daha küçük çizilen tramvay duraklarını da içeriyor",
+  "updates.v044Line": "v0.4.4 güncellemesi: istasyon halkaları yerinde duruyor",
   "upgrades.parking": "Otopark",
   "upgrades.parkingDoes": "Bu istasyona uzaktan gelmek 10 dakika daha kısa hissettirir.",
   "upgrades.parkingDoesAll": "Bu kompleksteki herhangi bir istasyona uzaktan gelmek 10 dakika daha kısa hissettirir.",

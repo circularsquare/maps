@@ -1273,7 +1273,10 @@ then removed from the address bar; other URL parameters are untouched [T-310, T-
   [T-988 stage 3]; then, when the games list carries `played` (seconds), "3 h 20 min played" and, when `/trainworld/me` says
   `nameHidden`, a red "Your name is hidden from others. Pick another." [T-3230]; then the **flag and display name**
   (T-3269, T-3279, as City Circles' quiz; when `/noritetsu/config` says `trainworldFlags`): the flag, or an empty 4:3
-  outline while there is none, then the leaderboard name. The flag opens a picker over the page (300 px wide, up to
+  outline while there is none, then the leaderboard name and, once the account has a name and the server says
+  `trainworldRename`, **Change name** at the row's end (T-3807): a field with the name in its place, Save and Back;
+  the server allows two changes a day (a first name, set by Join or Share, is not one), and past that the row says
+  "You can change your name twice a day. Try again in 5 hours.", as Join and Share do when they would change it. The flag opens a picker over the page (300 px wide, up to
   480 px tall, under the flag or above it when there is more room, free to reach past the panel): No flag (only while
   one is picked), the country the player is probably in, then every country, then other places (the EU, Amsterdam,
   Chicago, Washington, D.C., New York City and Japan's 47 prefectures, each with its country in grey), then the game's

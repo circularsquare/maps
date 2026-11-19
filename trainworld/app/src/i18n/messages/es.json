@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "arreglado: los trenes locales salían de una estación de adelantamiento justo antes de que el exprés los pasara",
   "updates.v043Change9": "nuevo: panel de tarifas avanzadas, para añadir más puntos a la curva de tarifa",
   "updates.v043Line": "actualización v0.4.3: horas pico en franjas propias, tarifas avanzadas, ¡Caribe!",
+  "updates.v044Change1": "arreglado: los anillos de las estaciones reales se desplazaban de sus estaciones en algunas pantallas; ahora muestran el nombre al pasar el cursor e incluyen las paradas de tranvía, dibujadas más pequeñas",
+  "updates.v044Line": "actualización v0.4.4: los anillos de estación se quedan en su sitio",
   "upgrades.parking": "Estacionamiento",
   "upgrades.parkingDoes": "Llegar a esta estación desde lejos se siente 10 minutos más corto.",
   "upgrades.parkingDoesAll": "Llegar a cualquier estación de este complejo desde lejos se siente 10 minutos más corto.",

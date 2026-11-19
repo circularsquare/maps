@@ -3,7 +3,7 @@
 
 import { FindInput } from "./FindInput";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
-import { boardSetting } from "../game/account";
+import { boardSetting, renameOn, setDisplayName } from "../game/account";
 import { flagCountry, flagGroups, flagName, flagUrl, flagsOn, homeCountry, isFlag, setFlag } from "../game/flags";
 import { normalise } from "../game/search";
 import { t } from "../i18n";
@@ -27,14 +27,18 @@ const collate = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 const hit = (name: string, q: string) => !!name && ` ${normalise(name)}`.includes(` ${normalise(q)}`);
 const byName = (codes: readonly string[]) => [...codes].sort((a, b) => collate(flagName(a), flagName(b)));
 
-/** The account panel's row: the flag (an empty outline while there is none) and the display name after it. The flag
- * opens the picker. */
+/** The account panel's row: the flag (an empty outline while there is none), the display name after it and Change
+ * name (T-3807), which puts a field in the name's place. The flag opens the picker. */
 export function FlagSetting() {
   const b = boardSetting.value;
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
-  if (!flagsOn() || !b) return null;
+  const flags = flagsOn(), rename = renameOn() && !!b?.name; // T-3807: a first name still comes with Join or Share
+  if ((!flags && !rename) || !b) return null;
   const current = isFlag(b.flag) ? b.flag : "";
   const pick = (code: string) => {
     setOpen(false);
@@ -42,15 +46,30 @@ export function FlagSetting() {
     setMsg("");
     setFlag(code).catch((e) => setMsg(e.message));
   };
+  const save = () => {
+    const n = name.trim();
+    if (!n) return;
+    if (n === b.name) { setEditing(false); return; }
+    setMsg("");
+    setBusy(true);
+    setDisplayName(n).then(() => setEditing(false), (e) => setMsg(e.message)).finally(() => setBusy(false));
+  };
   return <div class="acct-flag">
     <div class="acct-flag-row">
-      <button type="button" class="acct-flag-btn" ref={btn} aria-haspopup="listbox" aria-expanded={open}
+      {flags && <button type="button" class="acct-flag-btn" ref={btn} aria-haspopup="listbox" aria-expanded={open}
         aria-label={current ? flagName(current) : t("accountPanel.flag")}
         data-tip={(current ? flagName(current) + "\n" : "") + t("accountPanel.flagTip")}
         onClick={() => setOpen(!open)}>
         {current ? <img class="flag" src={flagUrl(current)} alt="" decoding="async" /> : <span class="flag flag-none" />}
-      </button>
-      {b.name && <span class="acct-flag-name">{b.name}</span>}
+      </button>}
+      {b.name && !editing && <span class="acct-flag-name">{b.name}</span>}
+      {rename && !editing && <button type="button" class="btn text acct-rename" onClick={() => { setName(b.name); setMsg(""); setEditing(true); }}>{t("accountPanel.changeName")}</button>}
+      {editing && <form class="acct-row acct-rename-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
+        <input maxLength={24} placeholder={t("leaderboard.name")} aria-label={t("leaderboard.name")} value={name} disabled={busy} autoFocus
+          onInput={(e) => setName((e.target as HTMLInputElement).value)} />
+        <button class="btn text acct-go" type="submit" disabled={busy || !name.trim()}>{t("accountPanel.save")}</button>
+        <button class="btn text" type="button" disabled={busy} onClick={() => { setEditing(false); setMsg(""); }}>{t("accountPanel.back")}</button>
+      </form>}
     </div>
     {open && <FlagPicker anchor={btn} current={current} onPick={pick} onClose={() => setOpen(false)} />}
     {msg && <p class="acct-msg">{msg}</p>}

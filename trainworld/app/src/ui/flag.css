@@ -18,6 +18,10 @@
 .acct-flag-btn:hover .flag-none, .acct-flag-btn[aria-expanded="true"] .flag-none { box-shadow: inset 0 0 0 1px var(--accent); }
 .acct-flag-btn:hover .flag:not(.flag-none), .acct-flag-btn[aria-expanded="true"] .flag:not(.flag-none) { box-shadow: 0 0 0 1px var(--accent); }
 .acct-flag-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* T-3807: Change name at the row's end; the field takes the name's place */
+.acct-rename { flex: none; margin-left: auto; }
+.acct-rename-form { flex: 1; min-width: 0; }
+.acct-rename-form input { min-width: 0; }
 
 /* the picker: over the page, free to reach past the panel */
 .flag-pop { position: fixed; z-index: 20; width: 300px; display: flex; flex-direction: column; padding: 8px; background: var(--bg);

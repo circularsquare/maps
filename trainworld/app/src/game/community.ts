@@ -7,7 +7,7 @@
 // game of their own (game/sharedSave.ts checks it both ways).
 
 import { effect, signal } from "@preact/signals";
-import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, session, slotOfGame } from "./account";
+import { accountConfig, accountState, api, ApiError, fetchBytes, gameForShare, loadBoardSetting, playingGameId, renameRefused, session, slotOfGame } from "./account";
 import { diagramForShare } from "../diagram/view";
 import { decodeShared, packShared, type DecodedShare, type SharedDrawing } from "../diagram/shared";
 import { exportForShare, manageSaveSlot, openView, saveSlotsState } from "../workers/clockClient";
@@ -148,6 +148,7 @@ function plain(e: unknown, act: "share" | "like" | "report"): Error {
     case "full": return new Error(t("community.errFull"));
     case "broken": return new Error(t("community.errDown"));
     case "own": return new Error(t("community.errOwn"));
+    case "rename-limit": return renameRefused(e)!;
   }
   if (err.status === 404) return new Error(t("community.errGone"));
   if (err.status === 429) return new Error(t("community.errBusy"));

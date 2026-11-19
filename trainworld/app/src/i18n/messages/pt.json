@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "corrigido: trens paradores saíam de uma estação com desvio de ultrapassagem logo antes de o expresso passar por eles",
   "updates.v043Change9": "novo: painel de tarifas avançadas, para pôr mais pontos na curva de tarifa",
   "updates.v043Line": "atualização v0.4.3: períodos de pico separados, tarifas avançadas, caribe!",
+  "updates.v044Change1": "corrigido: os anéis das estações do mundo real saíam de cima das suas estações em algumas telas; agora mostram o nome ao passar o cursor e incluem as paradas de bonde, desenhadas menores",
+  "updates.v044Line": "atualização v0.4.4: os anéis das estações ficam no lugar",
   "upgrades.parking": "Estacionamento",
   "upgrades.parkingDoes": "Chegar a esta estação de longe parece 10 minutos mais curto.",
   "upgrades.parkingDoesAll": "Chegar a qualquer estação deste complexo de longe parece 10 minutos mais curto.",

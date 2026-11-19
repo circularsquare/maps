@@ -48,8 +48,10 @@ default, draws a soft dot on each real station (`realMetro` purple, 36% opaque i
 a pale halo outside it, `realStationOpacity`; radius 3 px at zoom 10 to 8.5 at 18) on a canvas above the network,
 so over blueprints, built track and platforms and under the labels and stop marks, taking no clicks.
 Hovering a mark shows the station's name and nothing else (the name the
-station tool would give it, else the local name). A station whose every line is a tram, funicular, monorail or
-narrow gauge one shows only where those lines do: under All, or while tram track snaps. The stations are
+station tool would give it, else the local name); over a ring the name is the first row of the station tool's
+own tag, which holds the other hovers back (T-3802). A dot on a station whose every line is a tram, funicular, monorail or
+narrow gauge one shows only where those lines do: under All, or while tram track snaps. As rings, tram stops (every
+line a tram or the like, one a tram) show always, at 0.65 of a station's ring (T-3802). The stations are
 noritetsu's model's (`data/<cc>/stations.json`, junction points left out; the tram test reads the region's
 `lines.json`), fetched per region when the view at zoom 10 or closer first touches it with the setting on.
 Snapping is unchanged.

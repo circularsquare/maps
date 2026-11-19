@@ -2994,6 +2994,8 @@
   "updates.v043Change8": "修正區間車在待避站裡，剛好在快車通過前發車的問題",
   "updates.v043Change9": "新增進階票價面板，可在票價曲線上加入更多點",
   "updates.v043Line": "更新v0.4.3：分開尖峰時段、進階票價、加勒比海！",
+  "updates.v044Change1": "修正部分螢幕上真實世界車站的圓圈偏離車站的問題；現在滑鼠停留會顯示名稱，並包含以較小尺寸繪製的電車站",
+  "updates.v044Line": "更新v0.4.4：車站圓圈不再跑位",
   "upgrades.parking": "停車場",
   "upgrades.parkingDoes": "從遠處前往這座車站，感覺少花10分鐘。",
   "upgrades.parkingDoesAll": "從遠處前往這個轉乘站的任何一座車站，感覺少花10分鐘。",

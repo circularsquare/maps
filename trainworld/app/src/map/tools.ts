@@ -37,7 +37,7 @@ import { ask, autoRamp, buildLevel, buildPlatform, buildTramPlatform, designSpee
 import { describeRemovable, removeThing, stationStub, stationTrim, type Removable } from "../game/remove";
 import { loadPlacesAt } from "../game/placeList";
 import { newStationName, trackDirection, warmStreetNames } from "./stationNames";
-import { loadRealStationsAt } from "./realStations";
+import { loadRealStationsAt, realStationUnder } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { hidden, levelHidden } from "./visibility";
@@ -2314,10 +2314,12 @@ export class Tools {
     const h = t === "station" ? (this.ghostSpent ? null : this.stationSpot()) : this.hover;
     const v = t === "station" ? this.verdict() : null;
     if (t === "station") this.shown = h && h.kind !== "free" ? v : null;
+    // T-3802: the real station ring under the pointer, named first in the tag (it holds the hover's back)
+    const real = t === "station" && this.pointer ? realStationUnder(this.pointer.lng, this.pointer.lat) : null;
     if (t === "station" && h?.kind === "free") {
       // T-1820: open ground takes no station; no ghost, only the reason by the pointer
       this.ring.style.display = "none";
-      this.showTag(notOnTrack(), true, ...this.screen(h.lx, h.ly));
+      this.showTag(...withName(real, notOnTrack()), ...this.screen(h.lx, h.ly));
       return;
     }
     // T-1721: the track tool's point: red branching off a piece, yellow joining at a node, blue beside track
@@ -2359,9 +2361,9 @@ export class Tools {
       this.showTag(rows, false, ...at!);
     } else if (t === "station" && h && h.kind !== "free" && v?.ok === false) {
       // why a click here would be refused (T-311)
-      this.showTag(v.why, true, ...at!);
+      this.showTag(...withName(real, v.why), ...at!);
     } else if (t === "station" && h && h.kind !== "free") {
-      const lines = this.helpLines(h, null);
+      const lines = this.helpLines(h, real);
       if (lines.length) this.showTag(lines, false, ...at!);
       else this.tag.style.display = "none";
     } else this.tag.style.display = "none";
@@ -2400,6 +2402,13 @@ export class Tools {
     }
     return lines;
   }
+}
+
+/** A refusal's tag content and redness, with `name` above it in the ordinary ink when there is one. */
+function withName(name: string | null, why: string): [string | HTMLDivElement[], boolean] {
+  if (!name) return [why, true];
+  const row = (s: string, cls = "") => Object.assign(document.createElement("div"), { textContent: s, className: cls });
+  return [[row(name), row(why, "bad")], false];
 }
 
 function sameStops(a: readonly number[], b: readonly number[]) {
