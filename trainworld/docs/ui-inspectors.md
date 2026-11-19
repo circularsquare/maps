@@ -287,10 +287,9 @@ purpose filter the purpose drawn is ringed in the bar.
   Above it, for a line in a group [T-1791, T-1813, T-1818], a row reading "Part of [bullet]
   group", the group's bullet inline (a click opens the group view, hover "Open the group", led
   by the group's full name where the bullet reads it shorter; a long name is cut with an
-  ellipsis), and a Leave group button at the right (an arrow out of a box, hover "Leave group"),
-  there for touch, where dragging rows is not; a bus line's panel has the same row, and so does a
-  group's view for a group in another (T-3423). Leaving moves out one level, into the group around
-  the one left, if any. The row
+  ellipsis); a bus line's panel has the same row, and so does a group's view for a group in
+  another (T-3423). There is no Leave group button: a line leaves by dragging it out in the Lines
+  tab (T-3810). The row
   starts 6 px below the title, which covers that much of whatever follows it.
 - **Actions** at the top, under the title and the planned or broken notice: Edit stops (hover; while stops are being edited it reads "Stop editing" and shows pressed, the button as wide in both states so the row never wraps differently, T-2525, T-2601), Copy line (duplicates route and settings with no trains, T-1161;
   the copy joins its source's group, making one of the

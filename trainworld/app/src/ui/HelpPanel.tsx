@@ -49,6 +49,7 @@ function questions(): [string, string][] {
     [t("help.qBranch"), t("help.aBranch", { copy })],
     [t("help.qExpress"), t("help.aExpress", { copy })],
     [t("help.qLoop"), t("help.aLoop", { touch })],
+    [t("help.qGroup"), t("help.aGroup")],
   ];
   if (marketOff()) list.push([t("help.qIntercity"), t("help.aIntercity", { setting: m(t("settingsTab.mobileIntercity")) })]);
   list.push(

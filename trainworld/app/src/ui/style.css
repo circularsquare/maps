@@ -487,7 +487,6 @@ body.resizing, body.resizing * { user-select: none; }
 .line-group { display: flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 6px; color: var(--muted); white-space: nowrap; }
 .line-group > .muted { flex: none; }
 .line-group .group-pill { flex: 0 1 auto; }
-.line-group > .btn { margin-left: auto; }
 .sub.flush { margin-left: 0; }
 /* T-1813: a group's bullet, see-through, outlined and lettered in its colour */
 .group-pill { display: inline-block; vertical-align: middle; flex: none; min-width: 0; max-width: 100%; height: 20px; padding: 0 7px; box-sizing: border-box;
