@@ -1,0 +1,16 @@
+# T-3738: share links' previews. Deploy steps (and the no-worker routes that keep the game's own files off this
+# Worker, which this file cannot declare): trainworld/notes/T-3738.md.
+name = "trainsworld-sharepreview"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = false
+
+# Cloudflare's route patterns ignore nothing: a pattern without a trailing * never matches a URL with ?share= on it,
+# so the route takes the whole folder and the folder's files are excluded route by route (notes/T-3738.md).
+routes = [
+  { pattern = "anita.garden/trainsworld/*", zone_name = "anita.garden" },
+]
+
+[vars]
+SHARE_API = "https://market.anita.garden"
+SITE = "https://anita.garden"

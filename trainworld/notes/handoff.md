@@ -26,8 +26,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      (Sonnet) T-3495 port 6195 (graph build, ~100 MB); faredesign (Opus) T-3739+T-3740 design only;
      periods0 (Opus) T-3542 stage 0 port 6199 (T-3542 before T-3346 stage 2: DECISIONS 11-18; tt2 untouched).
    - T-3738 share previews: her yes 00:12 UTC ("built as described yes, as long as theres no substantial new costs";
-     schematic with no names OK). sharebuild (Opus) building server route + worker, commits in shonei-server, no
-     deploy; then the server deploy and her `wrangler login` + deploy, each on her word.
+     schematic with no names OK). Built: shonei-server 5c0a276 + debd1e1 (not pushed/deployed), worker in
+     trainworld/tools/sharepreview/ (uncommitted). Ask 29: free worker (35-51% of 100k/day, shared with graffiti)
+     or $5/mo or short link. Then server deploy on her word, her `wrangler login`, steps at end of notes/T-3738.md.
+   - T-3495 freight snap: checker found +2.2 s and +200 MB for US players; freightsnap resumed to split kinds 8/9
+     into a per-country file loaded only under All, router ignores them otherwise, fix old-app `< 0` tests.
+   - 8800 = 4bc06cc9 (T-3718, T-3734 stage 2). Smoke on 59544550+T-3718 master PASSED.
    - "Train adjustments": she doesn't recall; dropped. T-3346 stage 2's failing 30/10 case: she's open to fixing it
      "if we think its worthwhile" (part of porting stage 2 after T-3542).
    - Text acked: "Can't branch off a ramp. Use a flat stretch of track."; T-3698's "This game was saved in another tab
