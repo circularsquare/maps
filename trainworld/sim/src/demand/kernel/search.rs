@@ -70,6 +70,9 @@ pub struct Graph {
     pub rn_base_mul: Vec<f32>,
     /// The base fare `rn_base_mul` scales, perceived minutes (`Params::fare_min`).
     pub base_min: f32,
+    /// T-3784: the transfer fare in the boarding edges' costs (`Params::xfer_fare`), which a change
+    /// inside a fare zone run does not pay (`ZoneWork`)
+    pub xfer_fare: f32,
 }
 
 impl Graph {
@@ -390,6 +393,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         rn_kmw: vec![],
         rn_base_mul: vec![],
         base_min: 0.0,
+        xfer_fare: p.xfer_fare,
     }
 }
 
@@ -1154,7 +1158,7 @@ impl<'a> DestSearch<'a> {
                     continue;
                 }
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                let x = if zoned { self.zw.extra(src) } else if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
+                let x = if zoned { self.zw.extra_less_free(src, q.g.xfer_fare) } else if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
                 let change = q.p.change_at(q.g.change_f(src));
                 let b = if based { base_extra(q.g, self.mb[src]) } else { 0.0 };
                 col.push(q.dist[src] - change + x + b);
@@ -2102,6 +2106,8 @@ pub(super) struct SkimKey {
     pub(super) rn_dx: Vec<f32>,
     pub(super) rn_dy: Vec<f32>,
     pub(super) transfer_min: f32,
+    /// T-3784: the transfer fare alone, which zone runs take off the route costs
+    pub(super) xfer_fare: f32,
     pub(super) st_wait: Vec<f32>,
     pub(super) st_bld: Vec<bool>,
     pub(super) fare_curve: FareCurve,
@@ -2115,7 +2121,7 @@ pub(super) struct SkimKey {
 
 impl SkimKey {
     pub(super) fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone() }
     }
     pub(super) fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -2123,6 +2129,7 @@ impl SkimKey {
             && self.st_walk_to == g.st_walk_to
             && self.st_walk_min == g.st_walk_min
             && self.transfer_min == p.change_min()
+            && self.xfer_fare.to_bits() == g.xfer_fare.to_bits()
             && self.st_wait == g.st_wait
             && self.st_bld == g.st_bld
             && self.fare_curve == g.fare_curve

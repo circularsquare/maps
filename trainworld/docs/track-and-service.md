@@ -1876,7 +1876,11 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   nothing). Every other ride, one to or from a bus stop that is no station included, is a distance ride. A trip pays
   base x M + (curve(distance rides' km) - base) x their multiplier + the sum over its runs of (price - base) x each
   run's multiplier, a zone, distance, zone trip paying two runs (`kernel::ZoneWork`; exact on a single route, where
-  riders split onto runs in one area their lowest and highest zones are averaged before pricing). Income puts each
+  riders split onto runs in one area their lowest and highest zones are averaged before pricing). A change between two
+  rides of one run pays no transfer fare [T-3784, Anita 2026-11-19]; every other change (to or from a distance ride,
+  or between two runs) pays it. Route cost, mode choice, income and the trip explorer take it off; route choice
+  inside the network still weighs it, as it weighs only the straight line and never the zone prices (DECISIONS
+  2026-11-19). Income puts each
   trip's run part on its zone rides and its distance part on its distance rides, by weighted km. Prices are curve
   units: a city's populations take them times their country's rate multiple (`countryFareScales`), the market as set.
   The player sets them with the Fare zones tool and the Advanced fares panel
@@ -1889,7 +1893,7 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   groups weigh the same fares (`IntercityApi::fare_col`). Fare income takes the rate times it on
   that line's passenger-km. **Transfer fare** [T-1801]: `Fares.transfer` (curve units, absent for
   $0, saved in the header; an older save loads with none) is paid on each boarding after a trip's
-  first, never above the base fare (T-3689: `transferFare` holds it at read, and a lowered base, a typed fare and a
+  first except a change inside a fare zone run (above), never above the base fare (T-3689: `transferFare` holds it at read, and a lowered base, a typed fare and a
   loaded save bring the stored one down; a base of 0 leaves none), times the trip's country's scale, in route choice and mode choice (docs/demand-mode.md)
   and in fare income on the line boarded after the change (`fare_extra`, so inside `LineDemand.fareX`);
   the regional market's trips change free. Fare income is the first stretch's base on

@@ -5,7 +5,7 @@ import type { FareArea } from "../game/fareCurve";
 import { PERIODS } from "../game/periods";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
-export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 14 } as const;
+export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 15 } as const;
 /** `IntercityApi::market_trip`'s answer: `MT_HEAD` and `MT_PAIR_LEN` in market_trip.rs. */
 export const MARKET_TRIP_LAYOUT = { HEAD: 25, PAIR_LEN: 7 } as const;
 // Messages between the main thread and the demand workers (T-026, T-021; notes/T-026.md).

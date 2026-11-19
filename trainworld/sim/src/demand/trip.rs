@@ -34,7 +34,7 @@ pub const ATTRACTION_REACH_M: f32 = 2000.0;
 /// Numbers in the answer's head, per station pair, and per leg (`DemandApi::trip`).
 pub const HEAD: usize = 48;
 pub const PAIR_LEN: usize = 20;
-pub const LEG_LEN: usize = 14;
+pub const LEG_LEN: usize = 15;
 
 /// Why rail is not offered for a trip (`HEAD` slot 26).
 pub const RAIL_OFFERED: u32 = 0;
@@ -372,6 +372,8 @@ pub(crate) struct Leg {
     /// T-3578: the route's base multiplier, the largest own multiple of the lines it rides (1 with none
     /// set): its base fare is the trip's times this
     pub base_mul: f32,
+    /// T-3784: a ride whose change onto it is inside a fare zone run, so pays no transfer fare
+    pub free: bool,
 }
 
 impl Leg {
@@ -380,7 +382,7 @@ impl Leg {
         let to = if self.rn_to == NONE { -1.0 } else { self.rn_to as f64 };
         // a start walk's station may have no route node (T-3718)
         let from = if self.rn_from == NONE { -1.0 } else { self.rn_from as f64 };
-        [self.kind as f64, from, to, self.st_from as f64, self.st_to as f64, self.min as f64, self.perc as f64, self.fare as f64, self.wait_min as f64, self.wait_perc as f64, self.stops as f64, self.change as f64, self.full_wait as f64, self.base_mul as f64]
+        [self.kind as f64, from, to, self.st_from as f64, self.st_to as f64, self.min as f64, self.perc as f64, self.fare as f64, self.wait_min as f64, self.wait_perc as f64, self.stops as f64, self.change as f64, self.full_wait as f64, self.base_mul as f64, if self.free { 1.0 } else { 0.0 }]
     }
 }
 
@@ -406,7 +408,7 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
         Some(&(_, b)) => {
             let i = (g.st_walk_off[a] as usize..g.st_walk_off[a + 1] as usize).find(|&i| g.st_walk_to[i] == b).unwrap();
             let min = g.st_walk_min[i];
-            legs.push(Leg { kind: 2, rn_from: rep[a], rn_to: rep[b as usize], st_from: a as u32, st_to: b, min, perc: min * p.w_xfer, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0 });
+            legs.push(Leg { kind: 2, rn_from: rep[a], rn_to: rep[b as usize], st_from: a as u32, st_to: b, min, perc: min * p.w_xfer, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0, free: false });
             walk(&at, b as usize, None, true, 1.0, &mut legs, &mut out);
         }
         None => walk(&at, a, None, false, 1.0, &mut legs, &mut out),
@@ -415,9 +417,10 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
         // T-3758: under fare zones each route's fare follows its rides, as `ZoneWork` prices one route
         for (_, legs) in &mut out {
             let rides: Vec<(usize, usize, f32, f32)> = legs.iter().filter(|l| l.kind == 1).map(|l| (l.rn_from as usize, l.rn_to as usize, l.km, l.km * g.fare_mul(l.rn_from as usize))).collect();
-            let fares = route_fares(g, &rides);
-            for (l, x) in legs.iter_mut().filter(|l| l.kind == 1).zip(fares) {
+            let (fares, free) = route_fares(g, &rides);
+            for ((l, x), f) in legs.iter_mut().filter(|l| l.kind == 1).zip(fares).zip(free) {
                 l.fare += x;
+                l.free = f;
             }
         }
     } else if !g.fare_curve.flat() {
@@ -519,7 +522,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
                 }
                 _ => {
                     let c = came.unwrap();
-                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0 });
+                    legs.push(Leg { kind: 2, rn_from: (c - s) as u32, rn_to: (r0 - s) as u32, st_from: v as u32, st_to: v as u32, min: plat / p.w_xfer, perc: plat, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0, free: false });
                     pushed += 1;
                 }
             }
@@ -529,13 +532,13 @@ fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: 
         // due within their tolerance (T-842) weigh on the perceived wait only
         let (left, span) = (g.rn_left[r0 - s], g.rn_span[r0 - s] + g.rn_bus[r0 - s]);
         let change = if came.is_some() { p.transfer_min * g.change_f(v) } else { 0.0 };
-        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: g.st_wait[v] * wait_min + left, full_wait: left - span, stops, change, base_mul: 1.0 });
+        legs.push(Leg { kind: 1, rn_from: (r0 - s) as u32, rn_to: (r - s) as u32, st_from: v as u32, st_to: here, min, perc, fare, km, wait_min: wait_min + left - span, wait_perc: g.st_wait[v] * wait_min + left, full_wait: left - span, stops, change, base_mul: 1.0, free: false });
         pushed += 1;
         let to = if (nx as usize) < s { nx } else { cn.st[nx as usize - g.n] };
         if to != here {
             // a walking transfer from this route node to a station nearby
             let cost = (g.adj_off[r] as usize..g.adj_off[r + 1] as usize).find(|&k| g.adj_to[k] == to).map_or(0.0, |k| g.adj_cost[k]);
-            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0 });
+            legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0, free: false });
             pushed += 1;
         }
         walk(at, nx as usize, Some(r), false, sh, legs, out);
@@ -886,8 +889,9 @@ impl DemandApi {
     /// between the platforms of one, T-717), route nodes from and to, demand stations from and
     /// to, real minutes, perceived minutes, distance fare (perceived minutes), wait (real and
     /// perceived minutes), stops ridden, a ride's fixed cost of the change onto it (perceived
-    /// minutes, 0 on the first ride), the part of its wait that is for a train with room, and its
-    /// route's base multiplier (T-3578: the base fare is the trip's times it).
+    /// minutes, 0 on the first ride), the part of its wait that is for a train with room, its
+    /// route's base multiplier (T-3578: the base fare is the trip's times it), and 1 when the change
+    /// onto a ride pays no transfer fare, being inside a fare zone run (T-3784), else 0.
     pub fn trip(&self, q: usize, ox: f32, oy: f32, dx: f32, dy: f32) -> Vec<f64> {
         let mut h = vec![0f64; HEAD];
         let Some(st) = self.period(q) else { return h };

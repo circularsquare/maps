@@ -1157,8 +1157,8 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   station, each line ridden with its chip and the station it goes to, each change and walk, the
   walk from the last station; each row's minutes its wait and ride; a ride access [T-374] reads
   "Drive to" with its drive minutes; the hovers give real minutes only), the fare (with any
-  transfer fares [T-1801], its hover the base fare and, where one is set, the transfer fare at each
-  change), and on a route
+  transfer fares [T-1801], none on a change inside a fare zone run [T-3784], its hover the base
+  fare and, where one is paid, the transfer fare at each change), and on a route
   that starts with a drive to the station a **Car** row [T-915] (dollars: the car's cost per trip
   and per km on the road to the station plus any paid parking there, its hover the two apart),
   where full trains add anything a **Crowding** row (the rides' perceived minutes beyond their

@@ -51,6 +51,8 @@ struct ZState {
     /// the distance rides: km and weighted km
     d: f32,
     dw: f32,
+    /// T-3784: the expected changes between two zone rides of one run, which pay no transfer fare
+    fr: f32,
 }
 
 /// One destination's fares under fare zones (`run`), and scratch for spreading them over the lines
@@ -66,8 +68,15 @@ pub struct ZoneWork {
     pub zk: Vec<f32>,
     pub dx: Vec<f32>,
     pub dk: Vec<f32>,
+    /// T-3784: per station, the trip's expected changes that pay no transfer fare
+    pub fr: Vec<f32>,
     q: Vec<[f32; 2]>,
     qd: Vec<[f32; 2]>,
+    /// T-3784, `spread` with a transfer fare: per node its riders; of those, on a route node the
+    /// ones on a zone ride, at a station or change node the ones who left a zone ride the run after
+    /// it continues
+    nr: Vec<f32>,
+    nz: Vec<f32>,
     br: Vec<(f32, ZState)>,
 }
 
@@ -76,6 +85,13 @@ impl ZoneWork {
     #[inline]
     pub fn extra(&self, src: usize) -> f32 {
         self.zx[src] + self.dx[src]
+    }
+
+    /// `extra` less the transfer fare `xfer` (perceived minutes) the search charged on the changes
+    /// inside zone runs, which pay none (T-3784).
+    #[inline]
+    pub fn extra_less_free(&self, src: usize, xfer: f32) -> f32 {
+        if xfer > 0.0 { self.extra(src) - xfer * self.fr[src] } else { self.extra(src) }
     }
 
     /// Each station's fare towards `dst` under strategy `st` (`zx`, `dx`), on `hop_km` a route node
@@ -141,6 +157,7 @@ impl ZoneWork {
         self.zk.clear();
         self.dx.clear();
         self.dk.clear();
+        self.fr.clear();
         let curve = &g.fare_curve;
         for v in 0..s {
             let t = &self.zs[v];
@@ -148,23 +165,27 @@ impl ZoneWork {
             self.zk.push(t.zk + t.p * t.okw);
             self.dx.push(if t.d > 0.0 { curve.extra(t.d) * t.dw / t.d } else { 0.0 });
             self.dk.push(t.dw);
+            self.fr.push(t.fr);
         }
     }
 
     /// Each trip's fare over the base and rate (after `run`, `col(src)` riders from each station)
     /// into `out` per route node, as `board_extra` puts the curve's: the zone runs' part by the
     /// weighted km of its trips' zone rides, the distance part by those of their distance rides.
+    /// With a transfer fare `xfer` (perceived minutes, 0 none), less that fare on the route node
+    /// boarded at each change inside a zone run, which pays none (T-3784): the transfers counted
+    /// there charge it (`api::fare_extra_usd`).
     #[allow(clippy::too_many_arguments)]
-    pub fn spread(&mut self, g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, hop_kmw: &[f32], dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
+    pub fn spread(&mut self, g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f32, hop_kmw: &[f32], xfer: f32, dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
         match (st.next, st.order) {
-            (NodeIds::Short(next), NodeIds::Short(order)) => self.spread_in(g, st, dst, next, order, col, hop_kmw, dep, out),
-            (NodeIds::Long(next), NodeIds::Long(order)) => self.spread_in(g, st, dst, next, order, col, hop_kmw, dep, out),
+            (NodeIds::Short(next), NodeIds::Short(order)) => self.spread_in(g, st, dst, next, order, col, hop_kmw, xfer, dep, out),
+            (NodeIds::Long(next), NodeIds::Long(order)) => self.spread_in(g, st, dst, next, order, col, hop_kmw, xfer, dep, out),
             _ => unreachable!("a destination's ids in two widths"),
         }
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn spread_in<I: Id>(&mut self, g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], col: impl Fn(usize) -> f32, hop_kmw: &[f32], dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
+    fn spread_in<I: Id>(&mut self, g: &Graph, st: Strategy, dst: usize, next: &[I], order: &[I], col: impl Fn(usize) -> f32, hop_kmw: &[f32], xfer: f32, dep: &mut Vec<(u32, f32)>, out: &mut [f32]) {
         let (s, n) = (g.n_st, g.n);
         let end = n + st.change.len();
         let z = &g.fare_curve.zones;
@@ -174,6 +195,13 @@ impl ZoneWork {
         self.q.resize(end, [0.0; 2]);
         self.qd.clear();
         self.qd.resize(n - s, [0.0; 2]);
+        let free = xfer > 0.0;
+        if free {
+            self.nr.clear();
+            self.nr.resize(end, 0.0);
+            self.nz.clear();
+            self.nz.resize(end, 0.0);
+        }
         let mut any = false;
         for src in 0..s {
             let f = col(src);
@@ -184,6 +212,10 @@ impl ZoneWork {
             let rd = if self.dk[src] > 0.0 { f * self.dx[src] / self.dk[src] } else { 0.0 };
             if rz != 0.0 || rd != 0.0 {
                 self.q[src] = [rz, rd];
+                any = true;
+            }
+            if free {
+                self.nr[src] = f;
                 any = true;
             }
         }
@@ -199,7 +231,8 @@ impl ZoneWork {
             }
             if id < s || id >= n {
                 let v = self.q[id];
-                if v == [0.0; 2] {
+                let riders = if free { self.nr[id] } else { 0.0 };
+                if v == [0.0; 2] && riders == 0.0 {
                     continue;
                 }
                 departures(g, st.board, st.change, id, dep);
@@ -207,11 +240,16 @@ impl ZoneWork {
                 if !(sum > 0.0) {
                     continue;
                 }
+                // riders off a zone ride whose run goes on here ride on free (`board`'s join)
+                let joining = if free && self.zs[id].p > 0.0 { self.nz[id] } else { 0.0 };
                 for &(e, a) in dep.iter() {
                     let r = g.adj_to[e as usize] as usize - s;
                     let w = [v[0] * a / sum, v[1] * a / sum];
                     let (to, rd) = if on_train(s + r) { (s + r, self.ride[r]) } else { (g.rn_next[r] as usize, self.ride[g.rn_next[r] as usize - s]) };
                     let zone = is_zone_ride(z, g, r, rd.a);
+                    if zone && joining > 0.0 {
+                        out[r] -= xfer * joining * a / sum;
+                    }
                     if !on_train(s + r) {
                         out[r] += w[if zone { 0 } else { 1 }] * hopw(r);
                         if to >= end {
@@ -221,10 +259,18 @@ impl ZoneWork {
                     let q = if zone { &mut self.q[to] } else { &mut self.qd[to - s] };
                     q[0] += w[0];
                     q[1] += w[1];
+                    if free {
+                        let k = riders * a / sum;
+                        self.nr[to] += k;
+                        if zone {
+                            self.nz[to] += k;
+                        }
+                    }
                 }
             } else {
                 let (vz, vd) = (self.q[id], self.qd[id - s]);
-                if vz == [0.0; 2] && vd == [0.0; 2] {
+                let (riders, on_zone) = if free { (self.nr[id], self.nz[id]) } else { (0.0, 0.0) };
+                if vz == [0.0; 2] && vd == [0.0; 2] && riders == 0.0 {
                     continue;
                 }
                 let nx = next[id].ix();
@@ -239,10 +285,22 @@ impl ZoneWork {
                     let q = &mut self.qd[nx - s];
                     q[0] += vd[0];
                     q[1] += vd[1];
+                    if free {
+                        self.nr[nx] += riders;
+                        self.nz[nx] += on_zone;
+                    }
                 } else {
                     let q = &mut self.q[nx];
                     q[0] += vz[0] + vd[0];
                     q[1] += vz[1] + vd[1];
+                    if free {
+                        self.nr[nx] += riders;
+                        // the zone ride's area is its alighting station's (`run`'s `Ride::a`)
+                        let a = z.code(g.rn_station[id - s] as usize) >> 8;
+                        if on_zone > 0.0 && a != 0 && self.zs[nx].a == a {
+                            self.nz[nx] += on_zone;
+                        }
+                    }
                 }
             }
         }
@@ -310,6 +368,7 @@ fn board(z: &FareZones, g: &Graph, r: usize, rd: Ride, c: ZState) -> ZState {
             hi: p * hi.max(c.hi) + (1.0 - p) * hi,
             ok: rd.km + p * c.ok,
             okw: rd.kmw + p * c.okw,
+            fr: c.fr + p,
             ..c
         };
     }
@@ -333,6 +392,7 @@ fn mix(z: &FareZones, g: &Graph, br: &mut [(f32, ZState)], f: f32) -> ZState {
         out.zk += w * t.zk;
         out.d += w * t.d;
         out.dw += w * t.dw;
+        out.fr += w * t.fr;
         if t.p > 0.0 {
             let wp = w * t.p;
             out.p += wp;
@@ -354,12 +414,14 @@ fn mix(z: &FareZones, g: &Graph, br: &mut [(f32, ZState)], f: f32) -> ZState {
 /// T-3758: the fare over the base and rate of one route of rides (`(route node boarded, route node
 /// alighted, km, weighted km)` each, in order), as `ZoneWork` prices a single route: per ride its
 /// share as `ZoneWork::spread` puts it, the zone runs' part by weighted km over the zone rides, the
-/// distance part over the distance rides.
-pub fn route_fares(g: &Graph, rides: &[(usize, usize, f32, f32)]) -> Vec<f32> {
+/// distance part over the distance rides. Also per ride whether the change onto it is inside a zone
+/// run, so pays no transfer fare (T-3784).
+pub fn route_fares(g: &Graph, rides: &[(usize, usize, f32, f32)]) -> (Vec<f32>, Vec<bool>) {
     let z = &g.fare_curve.zones;
     let c = &g.fare_curve;
     let st = |r: usize| g.rn_station[r] as usize;
     let mut out = vec![0f32; rides.len()];
+    let mut joins = vec![false; rides.len()];
     let (mut d, mut dw) = (0f32, 0f32);
     let mut zone = vec![false; rides.len()];
     // runs: (area, lo, hi, km, weighted km, first ride, last ride)
@@ -402,6 +464,7 @@ pub fn route_fares(g: &Graph, rides: &[(usize, usize, f32, f32)]) -> Vec<f32> {
                 x.3 += km;
                 x.4 += kmw;
                 x.6 = i;
+                joins[i] = true;
             }
             _ => runs.push((a, lo, hi, km, kmw, i, i)),
         }
@@ -419,5 +482,5 @@ pub fn route_fares(g: &Graph, rides: &[(usize, usize, f32, f32)]) -> Vec<f32> {
             out[i] += x * r.3 / w;
         }
     }
-    out
+    (out, joins)
 }

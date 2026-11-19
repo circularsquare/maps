@@ -71,7 +71,10 @@ round not one, in the curve's units times the trip's country's scale like the cu
 It is in each boarding's cost with the change's fixed minutes (`Params::change_min`), which the
 trip's first boarding takes off again, so route choice sees it on each strategy's expected
 changes and mode choice on the skim; fare income counts it at the route node boarded after the
-change (`fare_extra`, from `transfers_in`). The regional market's trips change free: its fares
+change (`fare_extra`, from `transfers_in`). A change between two zone rides of one fare zone run
+pays none (T-3784): `ZoneWork` counts each station's expected such changes on its strategy, the
+route cost takes the fare off for them, and the assignment takes it off the route node boarded
+there; route choice still sees it on every change. The regional market's trips change free: its fares
 weigh by origin and income group on the base and km, which a cost inside the skim would miss. The regional market takes the curve unscaled at `curveWeight` (India's weight times its scale, the
 same perceived fare as every country at its default scale, T-2670), times each income group's factor on the longer trips, and the plane's fare at the group's weight. Route choice sees its first stretch as a base plus a rate per km on each ride; mode choice
 sees the whole curve, each station pair's cost corrected to the curve's fare at the expected km of

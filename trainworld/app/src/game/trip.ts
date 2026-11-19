@@ -53,6 +53,8 @@ export interface TripLeg {
   changePerceived: number;
   /** the part of `waitMin` (and of `waitPerceived`) spent waiting for a train with room (T-188) */
   fullWaitMin: number;
+  /** T-3784: a ride whose change onto it is inside a fare zone run, so pays no transfer fare */
+  freeChange?: boolean;
 }
 
 /** A sequence of boardings the train riders take, and its share of them. */
@@ -264,7 +266,7 @@ function readRoutes(v: Float64Array, o: number, nr: number, at: RouteNodes): Tri
           if (rn === l[2]) break;
         }
         const wrapN = l[1] > l[2] ? at[l[1]]?.n ?? 0 : 0;
-        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11], fullWaitMin: l[12] });
+        legs.push({ kind: "ride", line: at[l[1]]?.line ?? "", from: st(l[1]), to: st(l[2]), stations, k0: at[l[1]]?.k ?? -1, k1: at[l[2]]?.k ?? -1, ...(wrapN ? { wrapN } : {}), stops: l[10], min: l[5], perceived: l[6], farePerceived: l[7], waitMin: l[8], waitPerceived: l[9], changePerceived: l[11], fullWaitMin: l[12], ...(l[14] === 1 ? { freeChange: true } : {}) });
       } else {
         const from = st(l[1]), to = st(l[2]);
         legs.push({ kind: "walk", line: "", from, to, stations: [from, to], k0: -1, k1: -1, stops: 0, min: l[5], perceived: l[6], farePerceived: 0, waitMin: 0, waitPerceived: 0, changePerceived: 0, fullWaitMin: 0 });
@@ -447,12 +449,13 @@ export function routeTotals(t: RouteCosts, r: TripRoute) {
   const driveMin = pair?.accessRide ? pair.accessMin : 0;
   const walkM = pair ? (pair.accessRide ? 0 : pair.accessM) + pair.egressM : 0;
   const walkMin = pair ? (pair.accessRide ? 0 : pair.accessMin) + pair.egressMin : 0;
-  let wait = 0, ride = 0, xfer = 0, fare = baseFareOf(t, r), rides = 0;
+  let wait = 0, ride = 0, xfer = 0, fare = baseFareOf(t, r), rides = 0, paid = 0;
   for (const l of r.legs) {
-    if (l.kind === "ride") { wait += l.waitMin; ride += l.min; fare += l.farePerceived; rides++; }
+    if (l.kind === "ride") { wait += l.waitMin; ride += l.min; fare += l.farePerceived; if (rides > 0 && !l.freeChange) paid++; rides++; }
     else xfer += l.min;
   }
-  const changes = Math.max(0, rides - 1), xferFare = changes * (t.xferFarePerceived ?? 0);
+  // T-3784: a change inside a fare zone run pays no transfer fare
+  const changes = Math.max(0, rides - 1), xferFare = paid * (t.xferFarePerceived ?? 0);
   return { driveMin, walkMin, walkM, wait, ride, xfer, changes, fareUsd: (fare + xferFare) / t.minPerUsd, xferUsd: xferFare / t.minPerUsd, total: driveMin + walkMin + wait + ride + xfer };
 }
 

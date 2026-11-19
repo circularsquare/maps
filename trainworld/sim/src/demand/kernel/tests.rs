@@ -265,6 +265,92 @@ fn distance_lines_split_a_trip_into_its_zone_runs() {
     }
 }
 
+/// T-3784: a change inside a fare zone run pays no transfer fare; every other change pays it. Lines A
+/// 0-1, B 1-3 (12 trains an hour) and D 1-3 (6), 20 km a stretch, all stations in area 1: from 0 to 3
+/// riders change at 1 onto B or D by their trains, 2/3 and 1/3. With every line on zones both
+/// changes are free; with D on the distance fare the change onto it pays. The route cost carries the
+/// fare on the paid share alone, the assignment takes it off B's boarding, where its counted
+/// transfers charge it (so B earns none, D all), and the explorer marks the change onto B free. Then
+/// a walk between two runs: A 0-1 in area 1, 100 m on foot to C 2-3 in area 2 pays the fare; with 2
+/// and 3 in area 1 it is one run and free.
+#[test]
+fn a_change_inside_a_zone_run_pays_no_transfer_fare() {
+    let xf = 3.0f32;
+    let (base, rate) = (4.5f32, 0.05f32);
+    let code = |area: u32, zone: u32| area << 8 | zone;
+    let km: Vec<f32> = (0..12).map(|r| if r % 2 == 0 { 20.0 } else { 0.0 }).collect();
+    let graph = |net: &Network, p: &Params, z: FareZones| {
+        let mut g = build_graph(net, p);
+        let km = &km[..g.rn_ride.len()];
+        g.rn_fare = km.iter().map(|k| k * rate).collect();
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
+        g.rn_km = km.to_vec();
+        g
+    };
+    let p0 = common_test_params();
+    let px = Params { xfer_fare: xf, ..p0.clone() };
+    // route nodes: A 0, 1 and back 2, 3; B 4-7; D 8-11
+    let net = common_test_net(&[&[0, 1], &[1, 3], &[1, 3]], &[12.0, 12.0, 6.0], &[6.0, 6.0, 6.0]);
+    let zones = |d_dist: bool| FareZones {
+        st: vec![code(1, 1), code(1, 1), code(1, 1), code(1, 2)],
+        off: vec![0, 3],
+        min: vec![5.0, 7.0, 9.0],
+        dist: if d_dist { (0..12).map(|r| r >= 8).collect() } else { vec![] },
+        ..Default::default()
+    };
+    let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+    let pb = 2.0 / 3.0;
+    for (d_dist, paid) in [(false, 0.0), (true, 1.0 - pb)] {
+        let (g0, gx) = (graph(&net, &p0, zones(d_dist)), graph(&net, &px, zones(d_dist)));
+        let (sk0, skx) = (skims(&g0, &p0), skims(&gx, &px));
+        let d = at(&skx.r, 0, 3) - at(&sk0.r, 0, 3);
+        assert!((d - xf * paid).abs() < 1e-4, "D on distance {d_dist}: 0 -> 3 adds {d}, want {}", xf * paid);
+        let mut od = vec![0.0f32; 16];
+        od[3] = 10.0;
+        let ix = xfer_index(&gx);
+        let (mut x0, mut xx) = (vec![0.0; ix.len], vec![0.0; ix.len]);
+        let l0 = assign_with_transfers(&g0, &sk0, &od, &ix, &mut x0);
+        let lx = assign_with_transfers(&gx, &skx, &od, &ix, &mut xx);
+        let free_b = 10.0 * pb * xf;
+        let free_d = if d_dist { 0.0 } else { 10.0 * (1.0 - pb) * xf };
+        for r in 0..12 {
+            let want = match r {
+                4 => -free_b,
+                8 => -free_d,
+                _ => 0.0,
+            };
+            let got = lx.rn_fare_x[r] - l0.rn_fare_x[r];
+            assert!((got - want).abs() < 1e-3, "D on distance {d_dist}: route node {r} gets {got}, want {want}");
+        }
+        // income: the refund and the counted transfers' fare cancel on B; D keeps its fare when paid
+        let (u0, ux) = (crate::demand::api::fare_extra_usd(&l0.rn_fare_x, &p0, &g0, &ix, &x0), crate::demand::api::fare_extra_usd(&lx.rn_fare_x, &px, &gx, &ix, &xx));
+        let paid_d = if d_dist { 10.0 * (1.0 - pb) * xf / px.fare_w } else { 0.0 };
+        assert!((ux[4] - u0[4]).abs() < 1e-3 && (ux[8] - u0[8] - paid_d).abs() < 1e-3, "D on distance {d_dist}: B {} -> {}, D {} -> {}", u0[4], ux[4], u0[8], ux[8]);
+        // the explorer: the change onto B is free, onto D free only on zones
+        let routes = crate::demand::trip::routes(&gx, &skx, &px, 0, 3, 0.01);
+        assert_eq!(routes.len(), 2);
+        for (_, legs) in &routes {
+            let rides: Vec<_> = legs.iter().filter(|l| l.kind == 1).collect();
+            let want = rides[1].rn_from == 4 || !d_dist;
+            assert_eq!(rides.iter().map(|l| l.free).collect::<Vec<_>>(), vec![false, want], "D on distance {d_dist}: rides from {:?}", rides.iter().map(|l| l.rn_from).collect::<Vec<_>>());
+        }
+    }
+
+    // a walk between two runs pays; the same walk inside one run is free
+    let p0 = Params { xfer_walk_m: 300.0, ..p0 };
+    let px = Params { xfer_fare: xf, ..p0.clone() };
+    let mut net = common_test_net(&[&[0, 1], &[2, 3]], &[12.0, 12.0], &[6.0, 6.0]);
+    (net.st_x, net.st_y) = (vec![0.0, 2000.0, 2100.0, 4100.0], vec![0.0; 4]);
+    let two = FareZones { st: vec![code(1, 1), code(1, 1), code(2, 1), code(2, 1)], off: vec![0, 1, 2], min: vec![5.0, 6.0], ..Default::default() };
+    let one = FareZones { st: vec![code(1, 1); 4], off: vec![0, 1], min: vec![5.0], ..Default::default() };
+    for (z, paid) in [(two, 1.0), (one, 0.0)] {
+        let d = at(&skims(&graph(&net, &px, z.clone()), &px).r, 0, 3) - at(&skims(&graph(&net, &p0, z), &p0).r, 0, 3);
+        assert!((d - xf * paid).abs() < 1e-4, "walk: 0 -> 3 adds {d}, want {}", xf * paid);
+    }
+}
+
 /// T-3740: a population's fare zones reach the graph through `put_fare_curve` on a straight curve
 /// too: its base and rate set, the fare km filled, every price in minutes and held to the base; the
 /// merge gives a demand station the first zone among the stations merged into it.

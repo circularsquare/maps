@@ -236,7 +236,9 @@ impl DestAssign {
             if !g.fare_curve.zones.is_empty() {
                 let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
                 self.zw.run(g, st, dst, &g.rn_km, &g.rn_kmw, &mut self.dep);
-                self.zw.spread(g, st, dst, |src| flow[src], hops, &mut self.dep, &mut self.l.rn_fare_x);
+                // T-3784: a change inside a zone run is refunded the transfer fare its counted transfer charges
+                let xfer = if xf.is_some() { g.xfer_fare } else { 0.0 };
+                self.zw.spread(g, st, dst, |src| flow[src], hops, xfer, &mut self.dep, &mut self.l.rn_fare_x);
             } else if bent {
                 board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.fx, &mut self.l.rn_fare_x);
             }

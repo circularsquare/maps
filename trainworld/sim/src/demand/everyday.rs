@@ -642,7 +642,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
                 if !g.fare_curve.zones.is_empty() {
                     let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
                     zw.run(g, st, dst, &g.rn_km, &g.rn_kmw, &mut dep);
-                    zw.spread(g, st, dst, |src| flow[src].iter().sum(), hops, &mut dep, &mut l.rn_fare_x);
+                    zw.spread(g, st, dst, |src| flow[src].iter().sum(), hops, if counting { g.xfer_fare } else { 0.0 }, &mut dep, &mut l.rn_fare_x);
                 } else if bent {
                     board_extra(g, st, dst, |src| flow[src].iter().sum(), &km, &mut dep, &mut fxq, &mut l.rn_fare_x);
                 }
