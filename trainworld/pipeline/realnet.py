@@ -66,8 +66,9 @@ WORK = os.path.join(ROOT, "data", "work", "realnet")
 # rebuild elsewhere while something else owns data/ (T-1303)
 OUT = os.environ.get("REALNET_OUT", WORK)
 PACKS = os.path.join(ROOT, "data", "packs")
-# the real-network graphs `route` and `corridors` read: REALGRAPH_DIR stages a rebuilt set (T-1773)
-REALGRAPH = os.environ.get("REALGRAPH_DIR", os.path.join(PACKS, "realgraph"))
+# the graphs `route` and `corridors` read: realgraph.py's lines graphs, not the snapping graphs in packs/realgraph
+# (T-3790); REALGRAPH_DIR stages a rebuilt set (T-1773)
+REALGRAPH = os.environ.get("REALGRAPH_DIR", os.path.join(ROOT, "data", "work", "realgraph-lines"))
 R_EARTH = 6371008.8
 
 NYCRIDERS = os.path.join(MAPS, "riders", "nycriders")
@@ -1187,7 +1188,7 @@ def out_or_work(name):
     return p if os.path.exists(p) else os.path.join(WORK, name)
 
 
-# T-1303: each real network's region in data/packs/realgraph/ (noritetsu's region codes)
+# T-1303: each real network's region, the graph file it is routed on (noritetsu's region codes)
 REGION = {"nyc": "us", "lon": "gb", "par": "fr", "tyo": "jp", "seo": "kr", "tor": "ca", "sdj": "jp"}
 ROUTE_R = 150.0
 ROUTE_SLACK = 1.5

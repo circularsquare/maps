@@ -600,7 +600,8 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   tracks and line paths from them, and (`reallevels.py`, T-1773) each node's level and each edge's
   stretches of level from OSM's layer, tunnel and bridge tags (rules in its docstring, notes/T-1773.md),
   which `realsave --shared` builds into the save, a ramp per change placed clear of platforms
-  (`REALGRAPH_DIR` reads a staged set of graphs) (`--slow` also
+  (routed on realgraph.py's lines graphs in `data/work/realgraph-lines/`, T-3790; `REALGRAPH_DIR` reads a staged
+  set) (`--slow` also
   prints where trains lose time: curves, the capacity pass's holds by node, resources over 90%, and
   writes `<city>_holds.json`). Each line has its real colour (T-1770,
   `realcolour.py`, called by `net`; `realnet.py colours <city>` adds it to an older network JSON, staged
@@ -624,19 +625,21 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   reason (`dropped_routes`) and its own `lines` overrides, which the `osm` adapter reads after the
   source's (S-Bahn mapped as light rail, T-3265); `build [ids] [--jobs N]`
   runs net, geom, corridors, `realsave --shared --slow` and gamesave per city, builds a city again
-  without the routes whose lines did not run (`auto_<id>_skip.json`), and writes a report per city
+  without the lines that did not run (`auto_<id>_drop.json`) until every line runs (`BUILD_PASSES`), and writes a report per city
   (`auto_<id>.json`: stations, lines running, names in Latin letters, km off the graph, holds);
   `ship` ships the listed cities that passed and writes `app/src/game/realNetworks.json`. `realnet.py`
   makes each listed city a `CITIES` entry (`auto_city`). Rules in its docstring; notes/T-3225.md.
   Browser check: `checks/t3225-real-load.mjs` (every city from the new game sheet to playable).
-- `realgraph.py <cc ...> [--check] [--out DIR] [--nori DIR]` (T-727b; freight from the extract's ways and abandoned rail from the region's `_extra.pmtiles`, kinds 8 and 9, T-3495; run with the system Python, which has pmtiles and mapbox_vector_tile): the real network the layer draws as a routing
+- `realgraph.py <cc ...> [--check] [--out DIR] [--nori DIR] [--lines DIR] [--lines-only]` (T-727b; freight from the extract's ways and abandoned rail from the region's `_extra.pmtiles`, kinds 8 and 9, T-3495; run with the system Python, which has pmtiles and mapbox_vector_tile): the real network the layer draws as a routing
   graph per noritetsu region, plus short undrawn track that fills its gaps (T-816), from noritetsu's
   extract, `ways.json` and `track_extra.json` (the ways tiles flag `x`, T-3043; read only), into `data/packs/realgraph/<cc>.rgr` (gzip, layout in its
   docstring, which has each chain's OSM `layer` in its flags' top bits for the real networks' levels,
   T-1773; 0.01-7.5 MB, 1-32 s a region) and `index.json` (the regions built, which the track
   tool snaps inside, T-913; no regions given rewrites only it). Built for all 118 noritetsu regions
-  with drawn track (44.2 MB, about 5 min on 1 core; T-727e, T-3043), copied into the build. Rerun after
-  noritetsu rebuilds a region.
+  with drawn track (44.2 MB, about 5 min on 1 core; T-727e, T-3043), copied into the build. Each region also
+  gets its lines graph, `data/work/realgraph-lines/<cc>.rgr` (only track a line runs over plus gap fillers, cut only
+  where those meet; the real networks are routed on it, never deployed, T-3790; `--lines-only` writes just these,
+  in the venv). Rerun after noritetsu rebuilds a region.
 - Basemap glyph tiles (`app/public/fonts/`, checked in): `glyphs.py` rebuilds them, after a
   one-off `cargo install build_pbf_glyphs --locked` (on Windows set `CFLAGS` to a libz-sys zlib
   folder first, notes/T-056.md). Only needed to change the font, weights or fallback.

@@ -3,7 +3,9 @@
     python realgraph.py jp us gb fr de      build these regions
     python realgraph.py --check jp ...      read the files back and print what they hold
     python realgraph.py                     only rewrite index.json from the files there
-    --out DIR                               write or read the files there instead
+    --out DIR                               write or read the files there instead (the lines graphs in DIR/lines)
+    --lines DIR                             write the lines graphs there instead
+    --lines-only                            write only the lines graphs (no pack file, no index)
 
 Reads noritetsu's extract (`noritetsu/data/proc/<cc>/ways.pkl`, `rels.pkl`, `coords.npz`) and its
 line model (`noritetsu/dist/data/<cc>/ways.json`); never writes there. Keeps the ways the game's
@@ -18,7 +20,12 @@ on one.
 
 Writes `data/packs/realgraph/<cc>.rgr`, and `index.json` listing every region built there (the
 track tool tries to snap only inside those, T-913); gzip of the little-endian layout below; the app reads it
-with `game/realGraph.ts` and a production build copies it (vite.config.ts). Coordinates are
+with `game/realGraph.ts` and a production build copies it (vite.config.ts). Also writes the region's lines
+graph, `data/work/realgraph-lines/<cc>.rgr` in the same layout, which the real networks are built on
+(realnet.py `route`, realcorridors.py; T-3790): only track a line in ways.json runs over plus its gap fillers,
+cut only where those meet. The snapping graph's unused, freight and abandoned track cut its chains at every
+place they meet a line's track, and the real networks' corridors then build a model where more lines meet
+the sim's 8-end and turn-back limits (Moscow 95 lines running against 110, notes/T-3790.md). Coordinates are
 degrees times 1e6 (0.1 m). Vertices are thinned to 3 m (Douglas-Peucker; tram 0.5 m, T-3515), chain ends kept.
 
     "TWRG" u32 version=2, u32 junctions J, u32 chains C, u32 vertices V, u32 shared S
@@ -51,6 +58,9 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 NORI = HERE.parents[1] / "noritetsu"
 OUT = HERE.parent / "data" / "packs" / "realgraph"
+# T-3790: outside data/packs, since a production build, freeze and deploy take every .rgr in realgraph/; read by
+# realnet.py, never by the game
+LINES = HERE.parent / "data" / "work" / "realgraph-lines"
 # 2 from T-3069: the kinds below; a page that reads only version 1 then finds no graph rather than
 # taking tram chains for rail
 VERSION = 2
@@ -317,7 +327,7 @@ def neighbour_ids(cc, boxes):
     return np.unique(np.concatenate(ids)) if ids else np.zeros(0, np.int64)
 
 
-def build(cc, boxes):
+def build(cc, boxes, lines_only=False):
     t0 = time.time()
     d = NORI / "data" / "proc" / cc
     with open(d / "ways.pkl", "rb") as f:
@@ -340,6 +350,7 @@ def build(cc, boxes):
     del rels
 
     keep, spare, freight = [], [], []
+    line_keep, line_spare = [], []  # the lines graph's (T-3790): only track a line runs over, plus gap fillers
     for wid, (tags, nodes) in ways.items():
         rw = tags.get("railway")
         if rw not in KIND:
@@ -353,17 +364,27 @@ def build(cc, boxes):
             rank = 1
         if rank >= 2:
             shown = False
-        elif not shown:
+        on_a_line = shown
+        if rank < 2 and not shown:
             shown = True  # track no line runs over is drawn in All, so it is snapped to (T-3495)
         # a way the layer leaves out is kept aside: it may fill a gap between drawn track (T-816)
         service = tags.get("service")
-        left_out = not shown and ((service not in (None, "crossover") and not (rw == "tram" and service in SPARE_TRAM_SERVICE))
-                                  or tags.get("usage") in SPARE_USAGE)
+        spare_ok = (service not in (None, "crossover") and not (rw == "tram" and service in SPARE_TRAM_SERVICE)) \
+            or tags.get("usage") in SPARE_USAGE
+        left_out = not shown and spare_ok
         is_freight = not shown and freight_way(tags)  # drawn from the extra tiles under All, so snapped to (T-3495)
-        if left_out and not is_freight:
+        line_left_out = not on_a_line and spare_ok
+        if left_out and not is_freight and line_left_out:
             continue
         pos = node_positions(cid, nodes)
         if pos is None:
+            continue
+        flags = (1 if pax else 0) | (2 if tags.get("bridge") not in (None, "no") else 0) \
+            | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0) \
+            | (layer_tag(tags.get("layer")) & 15) << 4
+        if not line_left_out:
+            (line_keep if on_a_line else line_spare).append((pos, KIND[rw], min(rank, 1), flags))
+        if left_out and not is_freight:
             continue
         if is_freight:
             fl = (2 if tags.get("bridge") not in (None, "no") else 0) | (4 if tags.get("tunnel") not in (None, "no") else 0) \
@@ -371,11 +392,14 @@ def build(cc, boxes):
             freight.append((pos, KIND_EXTRA["freight"], 1, fl))
             if left_out:
                 continue
-        flags = (1 if pax else 0) | (2 if tags.get("bridge") not in (None, "no") else 0) \
-            | (4 if tags.get("tunnel") not in (None, "no") else 0) | (8 if tags.get("highspeed") == "yes" else 0) \
-            | (layer_tag(tags.get("layer")) & 15) << 4
         (keep if shown else spare).append((pos, KIND[rw], min(rank, 1), flags))
     del ways
+    if line_keep:
+        print("  lines graph:", flush=True)
+        write_graph(cc, line_keep + gap_fillers(line_keep, line_spare, cx, cy, cid.size), cid, cx, cy, boxes,
+                    np.zeros(0, np.int64), f"{cc}.rgr", t0, LINES)
+    if lines_only:
+        return
     fill = gap_fillers(keep, spare, cx, cy, cid.size)
     keep += fill
     if not keep:
@@ -399,7 +423,7 @@ def build(cc, boxes):
         write_graph(cc, extra, cid, cx, cy, boxes, both, f"{cc}.x.rgr", t0)
 
 
-def write_graph(cc, keep, cid, cx, cy, boxes, both, name, t0):
+def write_graph(cc, keep, cid, cx, cy, boxes, both, name, t0, out=None):
     allpos = np.concatenate([k[0] for k in keep])
     uniq, counts = np.unique(allpos, return_counts=True)
     isj = np.zeros(cid.size, bool)
@@ -447,13 +471,14 @@ def write_graph(cc, keep, cid, cx, cy, boxes, both, name, t0):
         off.astype("<u4").tobytes(), varints(np.column_stack([dlon, dlat]).ravel()),
         shared_j.astype("<u4").tobytes(), shared_ids.astype("<f8").tobytes(),
     ])
-    OUT.mkdir(parents=True, exist_ok=True)
-    tmp = OUT / f"{name}.tmp"
+    out = out or OUT
+    out.mkdir(parents=True, exist_ok=True)
+    tmp = out / f"{name}.tmp"
     with open(tmp, "wb") as f:
         f.write(gzip.compress(body, 9))
-    os.replace(tmp, OUT / name)
-    size = (OUT / name).stat().st_size
-    print(f"{name}: {C:,} chains, {J:,} junctions, {V:,} vertices, {S} shared with neighbours; "
+    os.replace(tmp, out / name)
+    size = (out / name).stat().st_size
+    print(f"{out.name}/{name}: {C:,} chains, {J:,} junctions, {V:,} vertices, {S} shared with neighbours; "
           f"{size / 1e6:.2f} MB in {time.time() - t0:.0f} s", flush=True)
 
 
@@ -512,19 +537,24 @@ def main():
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--out", help="write or check the files here instead")
     ap.add_argument("--nori", help="the noritetsu folder to read, for a tree that has no data of its own")
+    ap.add_argument("--lines", help="write the lines graphs here instead")
+    ap.add_argument("--lines-only", action="store_true", help="write only the lines graphs")
     args = ap.parse_args()
+    global NORI, OUT, LINES
     if args.nori:
-        global NORI
         NORI = Path(args.nori)
     if args.out:
-        global OUT
         OUT = Path(args.out)
+        LINES = OUT / "lines"  # a staged run never replaces the graphs the real networks are built on
+    if args.lines:
+        LINES = Path(args.lines)
     if args.check:
         sys.exit(0 if all([check(cc) for cc in args.regions]) else 1)
     boxes = region_boxes()
     for cc in args.regions:
-        build(cc, boxes)
-    write_index()
+        build(cc, boxes, args.lines_only)
+    if not args.lines_only:
+        write_index()
 
 
 def write_index():

@@ -41,7 +41,7 @@ track, terminals and pacing as for the hand-made ones (realcorridors.py, reallev
 `build` runs each city's steps as subprocesses, `--jobs` cities at once (default 2), each city's log
 in $REALNET_OUT/auto_<id>.log. Lines the track model cannot run (a terminal or junction with more
 tracks than a game node's 8 ends) go into auto_<id>_drop.json, `drop` takes them out of the network
-JSON after `net`, and the city is built once more. It writes $REALNET_OUT/auto_<id>.json: stations,
+JSON after `net`, and the city is built again, until every line runs (at most BUILD_PASSES builds). It writes $REALNET_OUT/auto_<id>.json: stations,
 lines, lines running, names in Latin letters, track km off the real-network graph, high-demand holds
 against the free run, the network's price, the save's size, and `pass`: the save was written, 2 or
 more lines, at least 90% of them running.
@@ -74,6 +74,9 @@ MAX_SPACING_M = 15000.0
 MOSTLY = 0.5
 PASS_RUNNING = 0.9
 SUBURBAN_INTERVAL = "30"
+# T-3790: leaving lines out changes the track model, so other lines can stop running (Saint Petersburg: 19 left out,
+# then 9 more broken in the save); the city is built again until every line runs, at most this many times in all
+BUILD_PASSES = 4
 # T-3265: a light-rail route on main-line track (Berlin's and Hamburg's S-Bahn, Copenhagen's S-tog:
 # `railway=light_rail` with `usage` main or branch, or plain rail) with stops this far apart on
 # average and this many inside runs commuter trains at commuter speed; it keeps light rail's own
@@ -627,7 +630,8 @@ def not_running(city):
 
 def build_one(city, exe):
     """The city's steps; when some lines do not run (a terminal with more tracks than a game node
-    takes), they are left out (`drop`) and the city is built once more."""
+    takes), they are left out (`drop`) and the city is built again, until every line runs or
+    BUILD_PASSES builds."""
     log = os.path.join(OUT, f"auto_{city}.log")
     env = {**os.environ, "REALNET_OUT": OUT, "OMP_NUM_THREADS": "1", "PYTHONIOENCODING": "utf-8"}
     steps = [("net", py(os.path.join(HERE, "realnet.py"), "net", city)),
@@ -640,9 +644,9 @@ def build_one(city, exe):
     # a drop list from an earlier build would leave out lines this one could run
     if os.path.exists(os.path.join(OUT, f"auto_{city}_drop.json")):
         os.remove(os.path.join(OUT, f"auto_{city}_drop.json"))
-    for attempt in (0, 1):
+    for attempt in range(BUILD_PASSES):
         with open(log, "a" if attempt else "w", encoding="utf-8") as f:
-            for name, cmd in steps[attempt:]:  # the second time from the network JSON already made
+            for name, cmd in steps[min(attempt, 1):]:  # again from the network JSON already made
                 t0 = time.time()
                 f.write(f"== {name}: {' '.join(cmd)}\n")
                 f.flush()
@@ -652,7 +656,7 @@ def build_one(city, exe):
                     f.write(f"== {name} failed ({r.returncode})\n")
                     return report(city, times, failed=name)
         bad = not_running(city)
-        if not bad or attempt:
+        if not bad or attempt == BUILD_PASSES - 1:
             break
         drop = {**dropped(city), **bad}
         json.dump(drop, open(os.path.join(OUT, f"auto_{city}_drop.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
