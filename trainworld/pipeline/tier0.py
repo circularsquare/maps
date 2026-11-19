@@ -111,6 +111,7 @@ PRODUCTS = {
 }
 MOLL_X0, MOLL_Y0, TILE_M, PIX_M = -18041000.0, 9000000.0, 1_000_000.0, 100.0
 WORLDBANK = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.ZS;SP.POP.0014.TO.ZS?source=2&format=json&date=2015:2025&per_page=100"
+WB_COUNTRIES = "https://api.worldbank.org/v2/country?format=json&per_page=400"
 WORLDBANK_NE = "https://api.worldbank.org/v2/country/{iso2}/indicator/SL.EMP.TOTL.SP.NE.ZS?format=json&date=2015:2025&per_page=100"
 WIKIDATA = "https://query.wikidata.org/sparql"
 
@@ -462,6 +463,16 @@ def worldbank(iso2):
             for x in json.load(f)[1] or []:
                 if x["value"] is not None and x["date"] in by:
                     by[x["date"]]["SL.EMP.TOTL.SP.ZS"] = x["value"] / 100.0
+    if not any(len(v) == 2 for v in by.values()):
+        # no ratio of its own either (Aruba, Dominica, Saint Kitts and Nevis, T-3620): its World Bank region's
+        path = netget.cached_json(WB_COUNTRIES, raw("worldbank_countries.json"), timeout=60)
+        with open(path) as f:
+            region = next(c["region"]["iso2code"] for c in json.load(f)[1] if c["iso2Code"] == iso2)
+        path = netget.cached_json(WORLDBANK.format(iso2=region), raw(f"worldbank_{region}.json"), timeout=60)
+        with open(path) as f:
+            for x in json.load(f)[1] or []:
+                if x["value"] is not None and x["indicator"]["id"] == "SL.EMP.TOTL.SP.ZS" and x["date"] in by:
+                    by[x["date"]]["SL.EMP.TOTL.SP.ZS"] = x["value"] / 100.0
     year = max(y for y, v in by.items() if len(v) == 2)
     emp, kids = by[year]["SL.EMP.TOTL.SP.ZS"], by[year]["SP.POP.0014.TO.ZS"]
     return emp * (1 - kids), kids, int(year)
@@ -484,6 +495,11 @@ NATIONAL_TERTIARY = {
            "so about 653,000 students, over the 2023 population 28,300,854. Government's last count, 2018, is "
            "1,666,157, not used (T-3518)",
            "https://cotejo.info/2024/10/ct-nicolas-maduro-el-alcance-de-la-educacion-universitaria-en-venezuela-supera-a-cualquier-pais-en-la-region-mentira/"),
+    # the World Bank has no tertiary enrolment for Bolivia since 2010 (T-3620)
+    "BO": (476_270 / 0.784 / 11_816_299, 2020, "INE: 476,270 students in public universities in 2020 (as cited by Los "
+           "Tiempos, 2022-06-10), over the public share of tertiary enrolment, 78.4% in 2021 (Red IndicES as cited by "
+           "Chequeado): about 607,000 students, over the World Bank's 2020 population, 11,816,299 (T-3620)",
+           "https://www.lostiempos.com/node/570312"),
 }
 
 

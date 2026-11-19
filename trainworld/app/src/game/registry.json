@@ -30494,6 +30494,418 @@
       {
         "name": "Chimaltenango",
         "regionName": "Chimaltenango region"
+      },
+      {
+        "name": "Santo Domingo",
+        "regionName": "Santo Domingo region"
+      },
+      {
+        "name": "Port-au-Prince",
+        "regionName": "Port-au-Prince region"
+      },
+      {
+        "name": "Santiago de los Caballeros",
+        "regionName": "Santiago de los Caballeros region"
+      },
+      {
+        "name": "Moca",
+        "regionName": "Moca region"
+      },
+      {
+        "name": "Salvaleón de Higüey",
+        "regionName": "Salvaleón de Higüey region"
+      },
+      {
+        "name": "Baní",
+        "regionName": "Baní region"
+      },
+      {
+        "name": "San Juan de la Maguana",
+        "regionName": "San Juan de la Maguana region"
+      },
+      {
+        "name": "Concepción de la Vega",
+        "regionName": "Concepción de la Vega region"
+      },
+      {
+        "name": "Gonaives",
+        "regionName": "Gonaives region"
+      },
+      {
+        "name": "Port de Paix",
+        "regionName": "Port de Paix region"
+      },
+      {
+        "name": "Dajabón",
+        "regionName": "Dajabón region"
+      },
+      {
+        "name": "Cap Haitien",
+        "regionName": "Cap Haitien region"
+      },
+      {
+        "name": "Saint-Marc",
+        "regionName": "Saint-Marc region"
+      },
+      {
+        "name": "Hinche",
+        "regionName": "Hinche region"
+      },
+      {
+        "name": "Les Cayes",
+        "regionName": "Les Cayes region"
+      },
+      {
+        "name": "Jacmel",
+        "regionName": "Jacmel region"
+      },
+      {
+        "name": "Leogane",
+        "regionName": "Leogane region"
+      },
+      {
+        "name": "Jeremie",
+        "regionName": "Jeremie region"
+      },
+      {
+        "name": "Ouanaminthe",
+        "regionName": "Ouanaminthe region"
+      },
+      {
+        "name": "Miragoane",
+        "regionName": "Miragoane region"
+      },
+      {
+        "name": "Ganthier",
+        "regionName": "Ganthier region"
+      },
+      {
+        "name": "Anse a Galets",
+        "regionName": "Anse a Galets region"
+      },
+      {
+        "name": "Santa Cruz de la Sierra",
+        "regionName": "Santa Cruz de la Sierra region"
+      },
+      {
+        "name": "La Paz",
+        "regionName": "La Paz region"
+      },
+      {
+        "name": "Cochabamba",
+        "regionName": "Cochabamba region"
+      },
+      {
+        "name": "Oruro",
+        "regionName": "Oruro region"
+      },
+      {
+        "name": "Tarija",
+        "regionName": "Tarija region"
+      },
+      {
+        "name": "Potosí",
+        "regionName": "Potosí region"
+      },
+      {
+        "name": "Achacachi",
+        "regionName": "Achacachi region"
+      },
+      {
+        "name": "La Asunta",
+        "regionName": "La Asunta region"
+      },
+      {
+        "name": "Riberalta",
+        "regionName": "Riberalta region"
+      },
+      {
+        "name": "Warnes",
+        "regionName": "Warnes region"
+      },
+      {
+        "name": "Havana",
+        "regionName": "Havana region"
+      },
+      {
+        "name": "Santa Clara",
+        "regionName": "Santa Clara region"
+      },
+      {
+        "name": "Santiago de Cuba",
+        "regionName": "Santiago de Cuba region"
+      },
+      {
+        "name": "Holguín",
+        "regionName": "Holguín region"
+      },
+      {
+        "name": "Bayamo",
+        "regionName": "Bayamo region"
+      },
+      {
+        "name": "Matanzas",
+        "regionName": "Matanzas region"
+      },
+      {
+        "name": "Guantánamo",
+        "regionName": "Guantánamo region"
+      },
+      {
+        "name": "Sancti Spiritus",
+        "regionName": "Sancti Spiritus region"
+      },
+      {
+        "name": "Artemisa",
+        "regionName": "Artemisa region"
+      },
+      {
+        "name": "Ciego de Ávila",
+        "regionName": "Ciego de Ávila region"
+      },
+      {
+        "name": "Sucre",
+        "regionName": "Sucre region"
+      },
+      {
+        "name": "Villa Tunari",
+        "regionName": "Villa Tunari region"
+      },
+      {
+        "name": "Montero",
+        "regionName": "Montero region"
+      },
+      {
+        "name": "San Ignacio",
+        "regionName": "San Ignacio region"
+      },
+      {
+        "name": "Trinidad",
+        "regionName": "Trinidad region"
+      },
+      {
+        "name": "Pucarani",
+        "regionName": "Pucarani region"
+      },
+      {
+        "name": "Cobija",
+        "regionName": "Cobija region"
+      },
+      {
+        "name": "San José",
+        "regionName": "San José region"
+      },
+      {
+        "name": "San Borja",
+        "regionName": "San Borja region"
+      },
+      {
+        "name": "Asuncion",
+        "regionName": "Asuncion region"
+      },
+      {
+        "name": "Pedro Juan Caballero",
+        "regionName": "Pedro Juan Caballero region"
+      },
+      {
+        "name": "Encarnacion",
+        "regionName": "Encarnacion region"
+      },
+      {
+        "name": "Ciudad Del Este",
+        "regionName": "Ciudad Del Este region"
+      },
+      {
+        "name": "Caaguazu",
+        "regionName": "Caaguazu region"
+      },
+      {
+        "name": "Villarrica",
+        "regionName": "Villarrica region"
+      },
+      {
+        "name": "Tobati",
+        "regionName": "Tobati region"
+      },
+      {
+        "name": "Concepcion",
+        "regionName": "Concepcion region"
+      },
+      {
+        "name": "Mariscal Estigarribia",
+        "regionName": "Mariscal Estigarribia region"
+      },
+      {
+        "name": "Saint Catherine",
+        "regionName": "Saint Catherine region"
+      },
+      {
+        "name": "Kingston",
+        "regionName": "Kingston region"
+      },
+      {
+        "name": "Saint James",
+        "regionName": "Saint James region"
+      },
+      {
+        "name": "Camagüey",
+        "regionName": "Camagüey region"
+      },
+      {
+        "name": "Pinar del Río",
+        "regionName": "Pinar del Río region"
+      },
+      {
+        "name": "Las Tunas",
+        "regionName": "Las Tunas region"
+      },
+      {
+        "name": "Isle of Youth",
+        "regionName": "Isle of Youth region"
+      },
+      {
+        "name": "Tunapuna-Piarco",
+        "regionName": "Tunapuna-Piarco region"
+      },
+      {
+        "name": "Tobago",
+        "regionName": "Tobago region"
+      },
+      {
+        "name": "Castries",
+        "regionName": "Castries region"
+      },
+      {
+        "name": "CUW",
+        "regionName": "CUW region"
+      },
+      {
+        "name": "Saint George",
+        "regionName": "Saint George region"
+      },
+      {
+        "name": "Saint George",
+        "regionName": "Saint George region"
+      },
+      {
+        "name": "ABW",
+        "regionName": "ABW region"
+      },
+      {
+        "name": "Saint John",
+        "regionName": "Saint John region"
+      },
+      {
+        "name": "Saint George",
+        "regionName": "Saint George region"
+      },
+      {
+        "name": "CYM",
+        "regionName": "CYM region"
+      },
+      {
+        "name": "New Providence",
+        "regionName": "New Providence region"
+      },
+      {
+        "name": "City of Freeport",
+        "regionName": "City of Freeport region"
+      },
+      {
+        "name": "Saint Michael",
+        "regionName": "Saint Michael region"
+      },
+      {
+        "name": "Port-au-Prince",
+        "regionName": "Port-au-Prince region"
+      },
+      {
+        "name": "Moca",
+        "regionName": "Moca region"
+      },
+      {
+        "name": "Dajabón",
+        "regionName": "Dajabón region"
+      },
+      {
+        "name": "Gonaives",
+        "regionName": "Gonaives region"
+      },
+      {
+        "name": "Port de Paix",
+        "regionName": "Port de Paix region"
+      },
+      {
+        "name": "Hinche",
+        "regionName": "Hinche region"
+      },
+      {
+        "name": "Les Cayes",
+        "regionName": "Les Cayes region"
+      },
+      {
+        "name": "Jacmel",
+        "regionName": "Jacmel region"
+      },
+      {
+        "name": "Ganthier",
+        "regionName": "Ganthier region"
+      },
+      {
+        "name": "Cochabamba",
+        "regionName": "Cochabamba region"
+      },
+      {
+        "name": "Pucarani",
+        "regionName": "Pucarani region"
+      },
+      {
+        "name": "Cobija",
+        "regionName": "Cobija region"
+      },
+      {
+        "name": "San José",
+        "regionName": "San José region"
+      },
+      {
+        "name": "Holguín",
+        "regionName": "Holguín region"
+      },
+      {
+        "name": "Isle of Youth",
+        "regionName": "Isle of Youth region"
+      },
+      {
+        "name": "Concepcion",
+        "regionName": "Concepcion region"
+      },
+      {
+        "name": "Tobago",
+        "regionName": "Tobago region"
+      },
+      {
+        "name": "Saint Michael",
+        "regionName": "Saint Michael region"
+      },
+      {
+        "name": "Saint George",
+        "regionName": "Saint George region"
+      },
+      {
+        "name": "Saint George",
+        "regionName": "Saint George region"
+      },
+      {
+        "name": "Saint John",
+        "regionName": "Saint John region"
+      },
+      {
+        "name": "Dajabón",
+        "regionName": "Dajabón region"
+      },
+      {
+        "name": "Pucarani",
+        "regionName": "Pucarani region"
       }
     ],
     "rule": {
@@ -137540,6 +137952,2053 @@
       "country": "GT",
       "localTrips": 2422199.0,
       "realm": "central-america"
+    },
+    {
+      "id": "sat",
+      "name": "Santo Domingo",
+      "origin": {
+        "lon": -69.9835,
+        "lat": 18.4698
+      },
+      "center": [
+        -69.9835,
+        18.4698
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.308,
+        18.211,
+        -69.313,
+        19.01
+      ],
+      "place": 7619,
+      "country": "DO",
+      "localTrips": 14722712.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "sgl",
+      "name": "Santiago de los Caballeros",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.6783,
+        "lat": 19.4696
+      },
+      "center": [
+        -70.6783,
+        19.4696
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.278,
+        19.002,
+        -70.348,
+        19.951
+      ],
+      "place": 7621,
+      "country": "DO",
+      "localTrips": 3853766.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "svl",
+      "name": "Salvaleón de Higüey",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.7215,
+        "lat": 18.6184
+      },
+      "center": [
+        -68.7215,
+        18.6184
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.644,
+        18.175,
+        -68.303,
+        19.122
+      ],
+      "place": 7623,
+      "country": "DO",
+      "localTrips": 3294618.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "bca",
+      "name": "Baní",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.3377,
+        "lat": 18.2801
+      },
+      "center": [
+        -70.3377,
+        18.2801
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -71.181,
+        18.175,
+        -69.899,
+        19.021
+      ],
+      "place": 7624,
+      "country": "DO",
+      "localTrips": 2022970.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "sjd",
+      "name": "San Juan de la Maguana",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.2259,
+        "lat": 18.8083
+      },
+      "center": [
+        -71.2259,
+        18.8083
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -72.028,
+        17.452,
+        -70.859,
+        19.303
+      ],
+      "place": 7625,
+      "country": "DO",
+      "localTrips": 2060832.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "cov",
+      "name": "Concepción de la Vega",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.5291,
+        "lat": 19.2215
+      },
+      "center": [
+        -70.5291,
+        19.2215
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.98,
+        18.666,
+        -70.202,
+        19.419
+      ],
+      "place": 7626,
+      "country": "DO",
+      "localTrips": 1743042.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "cpe",
+      "name": "Cap Haitien",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.2212,
+        "lat": 19.7343
+      },
+      "center": [
+        -72.2212,
+        19.7343
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.707,
+        19.236,
+        -71.951,
+        19.898
+      ],
+      "place": 7630,
+      "country": "HT",
+      "localTrips": 3198785.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "scq",
+      "name": "Saint-Marc",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6937,
+        "lat": 19.1223
+      },
+      "center": [
+        -72.6937,
+        19.1223
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.844,
+        18.664,
+        -72.2,
+        19.313
+      ],
+      "place": 7631,
+      "country": "HT",
+      "localTrips": 2638367.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "leg",
+      "name": "Leogane",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6335,
+        "lat": 18.5111
+      },
+      "center": [
+        -72.6335,
+        18.5111
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.093,
+        18.24,
+        -72.43,
+        18.584
+      ],
+      "place": 7635,
+      "country": "HT",
+      "localTrips": 1564309.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "jei",
+      "name": "Jeremie",
+      "kind": "zone",
+      "origin": {
+        "lon": -74.1205,
+        "lat": 18.6349
+      },
+      "center": [
+        -74.1205,
+        18.6349
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.501,
+        18.338,
+        -73.679,
+        18.694
+      ],
+      "place": 7636,
+      "country": "HT",
+      "localTrips": 1441932.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "oun",
+      "name": "Ouanaminthe",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.7254,
+        "lat": 19.5523
+      },
+      "center": [
+        -71.7254,
+        19.5523
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.142,
+        19.241,
+        -71.659,
+        19.754
+      ],
+      "place": 7637,
+      "country": "HT",
+      "localTrips": 1120395.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "mbq",
+      "name": "Miragoane",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.0903,
+        "lat": 18.4451
+      },
+      "center": [
+        -73.0903,
+        18.4451
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.8,
+        18.203,
+        -72.975,
+        18.607
+      ],
+      "place": 7638,
+      "country": "HT",
+      "localTrips": 994229.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "sac",
+      "name": "Santa Cruz de la Sierra",
+      "origin": {
+        "lon": -63.1829,
+        "lat": -17.7936
+      },
+      "center": [
+        -63.1829,
+        -17.7936
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.238,
+        -20.482,
+        -58.851,
+        -17.133
+      ],
+      "place": 7641,
+      "country": "BO",
+      "localTrips": 7276011.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "lap",
+      "name": "La Paz",
+      "origin": {
+        "lon": -68.1257,
+        "lat": -16.5098
+      },
+      "center": [
+        -68.1257,
+        -16.5098
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -68.994,
+        -17.12,
+        -67.227,
+        -15.542
+      ],
+      "place": 7642,
+      "country": "BO",
+      "localTrips": 7025502.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "orr",
+      "name": "Oruro",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.1109,
+        "lat": -17.9667
+      },
+      "center": [
+        -67.1109,
+        -17.9667
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.165,
+        -19.905,
+        -66.058,
+        -16.228
+      ],
+      "place": 7644,
+      "country": "BO",
+      "localTrips": 2650554.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "tjx",
+      "name": "Tarija",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.7341,
+        "lat": -21.5178
+      },
+      "center": [
+        -64.7341,
+        -21.5178
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.011,
+        -22.893,
+        -62.173,
+        -19.011
+      ],
+      "place": 7645,
+      "country": "BO",
+      "localTrips": 2643683.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "pbf",
+      "name": "Potosí",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.7696,
+        "lat": -19.5771
+      },
+      "center": [
+        -65.7696,
+        -19.5771
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -68.793,
+        -22.047,
+        -64.695,
+        -17.782
+      ],
+      "place": 7646,
+      "country": "BO",
+      "localTrips": 2355350.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "ach",
+      "name": "Achacachi",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.6815,
+        "lat": -16.0497
+      },
+      "center": [
+        -68.6815,
+        -16.0497
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.384,
+        -16.321,
+        -66.898,
+        -11.829
+      ],
+      "place": 7647,
+      "country": "BO",
+      "localTrips": 836255.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "ltx",
+      "name": "La Asunta",
+      "kind": "zone",
+      "origin": {
+        "lon": -67.1937,
+        "lat": -16.1236
+      },
+      "center": [
+        -67.1937,
+        -16.1236
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -68.539,
+        -16.868,
+        -66.783,
+        -14.902
+      ],
+      "place": 7648,
+      "country": "BO",
+      "localTrips": 703620.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "rbe",
+      "name": "Riberalta",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.0619,
+        "lat": -11.005
+      },
+      "center": [
+        -66.0619,
+        -11.005
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -68.519,
+        -12.507,
+        -65.001,
+        -9.65
+      ],
+      "place": 7649,
+      "country": "BO",
+      "localTrips": 609161.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "wae",
+      "name": "Warnes",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.1416,
+        "lat": -17.6041
+      },
+      "center": [
+        -63.1416,
+        -17.6041
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -63.288,
+        -17.703,
+        -61.549,
+        -17.008
+      ],
+      "place": 7650,
+      "country": "BO",
+      "localTrips": 498830.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "hav",
+      "name": "Havana",
+      "origin": {
+        "lon": -82.2916,
+        "lat": 23.1175
+      },
+      "center": [
+        -82.2916,
+        23.1175
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.616,
+        22.637,
+        -81.649,
+        23.206
+      ],
+      "place": 7651,
+      "country": "CU",
+      "localTrips": 6806091.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "scm",
+      "name": "Santa Clara",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.9638,
+        "lat": 22.4084
+      },
+      "center": [
+        -79.9638,
+        22.4084
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.963,
+        21.802,
+        -78.938,
+        23.164
+      ],
+      "place": 7652,
+      "country": "CU",
+      "localTrips": 3132424.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "sgb",
+      "name": "Santiago de Cuba",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.8287,
+        "lat": 20.0241
+      },
+      "center": [
+        -75.8287,
+        20.0241
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.082,
+        19.864,
+        -75.357,
+        20.585
+      ],
+      "place": 7653,
+      "country": "CU",
+      "localTrips": 2870026.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "bym",
+      "name": "Bayamo",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.6423,
+        "lat": 20.3804
+      },
+      "center": [
+        -76.6423,
+        20.3804
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.761,
+        19.808,
+        -76.177,
+        20.78
+      ],
+      "place": 7655,
+      "country": "CU",
+      "localTrips": 2253699.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "mtz",
+      "name": "Matanzas",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.5834,
+        "lat": 23.0507
+      },
+      "center": [
+        -81.5834,
+        23.0507
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -82.178,
+        22.019,
+        -80.5,
+        23.224
+      ],
+      "place": 7656,
+      "country": "CU",
+      "localTrips": 2086926.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "gta",
+      "name": "Guantánamo",
+      "kind": "zone",
+      "origin": {
+        "lon": -75.2098,
+        "lat": 20.1401
+      },
+      "center": [
+        -75.2098,
+        20.1401
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -75.514,
+        19.86,
+        -74.112,
+        20.573
+      ],
+      "place": 7657,
+      "country": "CU",
+      "localTrips": 1351543.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "scp",
+      "name": "Sancti Spiritus",
+      "kind": "zone",
+      "origin": {
+        "lon": -79.4414,
+        "lat": 21.9337
+      },
+      "center": [
+        -79.4414,
+        21.9337
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -80.133,
+        21.525,
+        -78.904,
+        22.47
+      ],
+      "place": 7658,
+      "country": "CU",
+      "localTrips": 1231320.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "art",
+      "name": "Artemisa",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.7554,
+        "lat": 22.817
+      },
+      "center": [
+        -82.7554,
+        22.817
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.421,
+        22.469,
+        -82.175,
+        23.069
+      ],
+      "place": 7659,
+      "country": "CU",
+      "localTrips": 1153487.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "cev",
+      "name": "Ciego de Ávila",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.762,
+        "lat": 21.8422
+      },
+      "center": [
+        -78.762,
+        21.8422
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.152,
+        21.51,
+        -78.044,
+        22.634
+      ],
+      "place": 7660,
+      "country": "CU",
+      "localTrips": 1149770.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "suc",
+      "name": "Sucre",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.2518,
+        "lat": -19.0314
+      },
+      "center": [
+        -65.2518,
+        -19.0314
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -65.716,
+        -20.492,
+        -62.677,
+        -17.4
+      ],
+      "place": 7661,
+      "country": "BO",
+      "localTrips": 1868250.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "vlt",
+      "name": "Villa Tunari",
+      "kind": "zone",
+      "origin": {
+        "lon": -65.5208,
+        "lat": -16.8304
+      },
+      "center": [
+        -65.5208,
+        -16.8304
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.371,
+        -18.7,
+        -64.224,
+        -15.771
+      ],
+      "place": 7662,
+      "country": "BO",
+      "localTrips": 1376335.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "mte",
+      "name": "Montero",
+      "kind": "zone",
+      "origin": {
+        "lon": -63.2494,
+        "lat": -17.3406
+      },
+      "center": [
+        -63.2494,
+        -17.3406
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.867,
+        -17.648,
+        -63.004,
+        -15.783
+      ],
+      "place": 7663,
+      "country": "BO",
+      "localTrips": 977498.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "scw",
+      "name": "San Ignacio",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.9625,
+        "lat": -16.3783
+      },
+      "center": [
+        -60.9625,
+        -16.3783
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -64.749,
+        -17.421,
+        -59.476,
+        -13.459
+      ],
+      "place": 7664,
+      "country": "BO",
+      "localTrips": 680112.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "tda",
+      "name": "Trinidad",
+      "kind": "zone",
+      "origin": {
+        "lon": -64.9081,
+        "lat": -14.8358
+      },
+      "center": [
+        -64.9081,
+        -14.8358
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.733,
+        -16.438,
+        -63.362,
+        -13.996
+      ],
+      "place": 7665,
+      "country": "BO",
+      "localTrips": 504355.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "srj",
+      "name": "San Borja",
+      "kind": "zone",
+      "origin": {
+        "lon": -66.7468,
+        "lat": -14.8604
+      },
+      "center": [
+        -66.7468,
+        -14.8604
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -67.585,
+        -15.79,
+        -65.005,
+        -11.981
+      ],
+      "place": 7669,
+      "country": "BO",
+      "localTrips": 295664.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "asu",
+      "name": "Asuncion",
+      "origin": {
+        "lon": -57.5262,
+        "lat": -25.0939
+      },
+      "center": [
+        -57.5262,
+        -25.0939
+      ],
+      "zoom": 11.2,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -59.438,
+        -25.971,
+        -56.791,
+        -23.044
+      ],
+      "place": 7670,
+      "country": "PY",
+      "localTrips": 6231947.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "peu",
+      "name": "Pedro Juan Caballero",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.7393,
+        "lat": -22.5418
+      },
+      "center": [
+        -55.7393,
+        -22.5418
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -57.493,
+        -25.023,
+        -54.238,
+        -22.252
+      ],
+      "place": 7671,
+      "country": "PY",
+      "localTrips": 2552074.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "enc",
+      "name": "Encarnacion",
+      "kind": "zone",
+      "origin": {
+        "lon": -55.8644,
+        "lat": -27.3277
+      },
+      "center": [
+        -55.8644,
+        -27.3277
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -58.685,
+        -27.61,
+        -54.628,
+        -25.749
+      ],
+      "place": 7672,
+      "country": "PY",
+      "localTrips": 2451345.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "cda",
+      "name": "Ciudad Del Este",
+      "kind": "zone",
+      "origin": {
+        "lon": -54.6095,
+        "lat": -25.5141
+      },
+      "center": [
+        -54.6095,
+        -25.5141
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -55.571,
+        -26.276,
+        -54.322,
+        -24.467
+      ],
+      "place": 7673,
+      "country": "PY",
+      "localTrips": 2509127.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "cgz",
+      "name": "Caaguazu",
+      "kind": "zone",
+      "origin": {
+        "lon": -56.0195,
+        "lat": -25.4636
+      },
+      "center": [
+        -56.0195,
+        -25.4636
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.877,
+        -25.727,
+        -54.903,
+        -24.447
+      ],
+      "place": 7674,
+      "country": "PY",
+      "localTrips": 1778146.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "vlr",
+      "name": "Villarrica",
+      "kind": "zone",
+      "origin": {
+        "lon": -56.4426,
+        "lat": -25.7834
+      },
+      "center": [
+        -56.4426,
+        -25.7834
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -56.87,
+        -26.813,
+        -55.228,
+        -25.505
+      ],
+      "place": 7675,
+      "country": "PY",
+      "localTrips": 1287714.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "tbi",
+      "name": "Tobati",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.087,
+        "lat": -25.2619
+      },
+      "center": [
+        -57.087,
+        -25.2619
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -57.769,
+        -26.638,
+        -56.541,
+        -24.825
+      ],
+      "place": 7676,
+      "country": "PY",
+      "localTrips": 1127891.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "msg",
+      "name": "Mariscal Estigarribia",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.1284,
+        "lat": -22.6502
+      },
+      "center": [
+        -60.1284,
+        -22.6502
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -62.661,
+        -24.517,
+        -57.644,
+        -20.07
+      ],
+      "place": 7678,
+      "country": "PY",
+      "localTrips": 314899.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "scz",
+      "name": "Saint Catherine",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.9165,
+        "lat": 17.9997
+      },
+      "center": [
+        -76.9165,
+        17.9997
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.972,
+        17.687,
+        -76.679,
+        18.498
+      ],
+      "place": 7679,
+      "country": "JM",
+      "localTrips": 4280294.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "kgt",
+      "name": "Kingston",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.7863,
+        "lat": 17.9749
+      },
+      "center": [
+        -76.7863,
+        17.9749
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.909,
+        17.832,
+        -76.163,
+        18.285
+      ],
+      "place": 7680,
+      "country": "JM",
+      "localTrips": 2508269.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "stj",
+      "name": "Saint James",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.9055,
+        "lat": 18.4863
+      },
+      "center": [
+        -77.9055,
+        18.4863
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.388,
+        18.044,
+        -77.422,
+        18.544
+      ],
+      "place": 7681,
+      "country": "JM",
+      "localTrips": 1462262.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "cge",
+      "name": "Camagüey",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.9197,
+        "lat": 21.3848
+      },
+      "center": [
+        -77.9197,
+        21.3848
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -78.67,
+        20.675,
+        -76.93,
+        22.336
+      ],
+      "place": 7682,
+      "country": "CU",
+      "localTrips": 2073532.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "pde",
+      "name": "Pinar del Río",
+      "kind": "zone",
+      "origin": {
+        "lon": -83.6957,
+        "lat": 22.4168
+      },
+      "center": [
+        -83.6957,
+        22.4168
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -84.972,
+        21.736,
+        -83.061,
+        22.92
+      ],
+      "place": 7683,
+      "country": "CU",
+      "localTrips": 1528134.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "lss",
+      "name": "Las Tunas",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.9411,
+        "lat": 20.9695
+      },
+      "center": [
+        -76.9411,
+        20.9695
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.854,
+        20.624,
+        -76.288,
+        21.476
+      ],
+      "place": 7684,
+      "country": "CU",
+      "localTrips": 1433330.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "tnp",
+      "name": "Tunapuna-Piarco",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.3951,
+        "lat": 10.6548
+      },
+      "center": [
+        -61.3951,
+        10.6548
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.95,
+        10.024,
+        -60.89,
+        10.862
+      ],
+      "place": 7686,
+      "country": "TT",
+      "localTrips": 4088254.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "csr",
+      "name": "Castries",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.9893,
+        "lat": 14.017
+      },
+      "center": [
+        -60.9893,
+        14.017
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.099,
+        13.689,
+        -60.854,
+        14.129
+      ],
+      "place": 7688,
+      "country": "LC",
+      "localTrips": 507171.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "cuw",
+      "name": "CUW",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.8528,
+        "lat": 12.1054
+      },
+      "center": [
+        -68.8528,
+        12.1054
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.182,
+        12.016,
+        -68.718,
+        12.411
+      ],
+      "place": 7689,
+      "country": "CW",
+      "localTrips": 510963.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "abw",
+      "name": "ABW",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.0356,
+        "lat": 12.5297
+      },
+      "center": [
+        -70.0356,
+        12.5297
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.083,
+        12.393,
+        -69.846,
+        12.642
+      ],
+      "place": 7692,
+      "country": "AW",
+      "localTrips": 308634.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sdm",
+      "name": "Saint George",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.3845,
+        "lat": 15.303
+      },
+      "center": [
+        -61.3845,
+        15.303
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.499,
+        15.189,
+        -61.221,
+        15.659
+      ],
+      "place": 7694,
+      "country": "DM",
+      "localTrips": 192923.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "cym",
+      "name": "CYM",
+      "kind": "zone",
+      "origin": {
+        "lon": -81.3756,
+        "lat": 19.2959
+      },
+      "center": [
+        -81.3756,
+        19.2959
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -81.44,
+        19.244,
+        -79.703,
+        19.776
+      ],
+      "place": 7695,
+      "country": "KY",
+      "localTrips": 205809.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "nep",
+      "name": "New Providence",
+      "kind": "zone",
+      "origin": {
+        "lon": -77.3376,
+        "lat": 25.0519
+      },
+      "center": [
+        -77.3376,
+        25.0519
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -77.575,
+        24.959,
+        -77.025,
+        25.178
+      ],
+      "place": 7696,
+      "country": "BS",
+      "localTrips": 908864.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "cyf",
+      "name": "City of Freeport",
+      "kind": "zone",
+      "origin": {
+        "lon": -78.6986,
+        "lat": 26.5334
+      },
+      "center": [
+        -78.6986,
+        26.5334
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -79.02,
+        26.472,
+        -78.346,
+        26.752
+      ],
+      "place": 7697,
+      "country": "BS",
+      "localTrips": 136631.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "poa",
+      "name": "Port-au-Prince",
+      "origin": {
+        "lon": -72.3675,
+        "lat": 18.5194
+      },
+      "center": [
+        -72.3675,
+        18.5194
+      ],
+      "zoom": 11.2,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.589,
+        18.293,
+        -71.933,
+        18.837
+      ],
+      "place": 7699,
+      "country": "HT",
+      "localTrips": 5601104.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "mbp",
+      "name": "Moca",
+      "kind": "zone",
+      "origin": {
+        "lon": -70.5238,
+        "lat": 19.3951
+      },
+      "center": [
+        -70.5238,
+        19.3951
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -70.63,
+        18.823,
+        -69.131,
+        19.733
+      ],
+      "place": 7700,
+      "country": "DO",
+      "localTrips": 3222475.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "gox",
+      "name": "Gonaives",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.6834,
+        "lat": 19.4613
+      },
+      "center": [
+        -72.6834,
+        19.4613
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.156,
+        19.091,
+        -72.181,
+        19.834
+      ],
+      "place": 7702,
+      "country": "HT",
+      "localTrips": 3531960.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "ptp",
+      "name": "Port de Paix",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.8369,
+        "lat": 19.933
+      },
+      "center": [
+        -72.8369,
+        19.933
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.476,
+        19.603,
+        -72.541,
+        20.108
+      ],
+      "place": 7703,
+      "country": "HT",
+      "localTrips": 2516525.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "hnc",
+      "name": "Hinche",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.008,
+        "lat": 19.1471
+      },
+      "center": [
+        -72.008,
+        19.1471
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.384,
+        18.666,
+        -71.602,
+        19.353
+      ],
+      "place": 7704,
+      "country": "HT",
+      "localTrips": 2271492.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "lse",
+      "name": "Les Cayes",
+      "kind": "zone",
+      "origin": {
+        "lon": -73.7612,
+        "lat": 18.2141
+      },
+      "center": [
+        -73.7612,
+        18.2141
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -74.47,
+        18.003,
+        -72.982,
+        18.452
+      ],
+      "place": 7705,
+      "country": "HT",
+      "localTrips": 2213394.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "jcm",
+      "name": "Jacmel",
+      "kind": "zone",
+      "origin": {
+        "lon": -72.542,
+        "lat": 18.2388
+      },
+      "center": [
+        -72.542,
+        18.2388
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -73.035,
+        18.013,
+        -71.705,
+        18.424
+      ],
+      "place": 7706,
+      "country": "HT",
+      "localTrips": 1857311.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "gne",
+      "name": "Ganthier",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.959,
+        "lat": 18.4946
+      },
+      "center": [
+        -71.959,
+        18.4946
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -72.267,
+        18.255,
+        -71.676,
+        18.792
+      ],
+      "place": 7707,
+      "country": "HT",
+      "localTrips": 517395.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "coc",
+      "name": "Cochabamba",
+      "origin": {
+        "lon": -66.1628,
+        "lat": -17.3735
+      },
+      "center": [
+        -66.1628,
+        -17.3735
+      ],
+      "zoom": 11.2,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -66.941,
+        -17.995,
+        -65.206,
+        -15.655
+      ],
+      "place": 7708,
+      "country": "BO",
+      "localTrips": 4883252.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "coj",
+      "name": "Cobija",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.7591,
+        "lat": -11.0213
+      },
+      "center": [
+        -68.7591,
+        -11.0213
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.591,
+        -12.516,
+        -67.956,
+        -10.907
+      ],
+      "place": 7710,
+      "country": "BO",
+      "localTrips": 294149.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "sjx",
+      "name": "San José",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.7997,
+        "lat": -18.9653
+      },
+      "center": [
+        -57.7997,
+        -18.9653
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.283,
+        -20.186,
+        -57.433,
+        -16.243
+      ],
+      "place": 7711,
+      "country": "BO",
+      "localTrips": 288269.0,
+      "realm": "bolivia"
+    },
+    {
+      "id": "hol",
+      "name": "Holguín",
+      "kind": "zone",
+      "origin": {
+        "lon": -76.2592,
+        "lat": 20.8864
+      },
+      "center": [
+        -76.2592,
+        20.8864
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -76.752,
+        20.365,
+        -74.694,
+        21.267
+      ],
+      "place": 7712,
+      "country": "CU",
+      "localTrips": 2787482.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "isx",
+      "name": "Isle of Youth",
+      "kind": "zone",
+      "origin": {
+        "lon": -82.8099,
+        "lat": 21.8838
+      },
+      "center": [
+        -82.8099,
+        21.8838
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -83.212,
+        21.42,
+        -81.339,
+        22.085
+      ],
+      "place": 7713,
+      "country": "CU",
+      "localTrips": 216897.0,
+      "realm": "cuba"
+    },
+    {
+      "id": "ccp",
+      "name": "Concepcion",
+      "kind": "zone",
+      "origin": {
+        "lon": -57.4452,
+        "lat": -23.4099
+      },
+      "center": [
+        -57.4452,
+        -23.4099
+      ],
+      "zoom": 10.5,
+      "utcOffset": -3,
+      "market": -1,
+      "box": [
+        -61.943,
+        -23.528,
+        -56.106,
+        -19.269
+      ],
+      "place": 7714,
+      "country": "PY",
+      "localTrips": 851956.0,
+      "realm": "paraguay"
+    },
+    {
+      "id": "tog",
+      "name": "Tobago",
+      "kind": "zone",
+      "origin": {
+        "lon": -60.7714,
+        "lat": 11.2249
+      },
+      "center": [
+        -60.7714,
+        11.2249
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -60.865,
+        11.116,
+        -60.499,
+        11.365
+      ],
+      "place": 7715,
+      "country": "TT",
+      "localTrips": 189434.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sdc",
+      "name": "Saint Michael",
+      "kind": "zone",
+      "origin": {
+        "lon": -59.6094,
+        "lat": 13.1177
+      },
+      "center": [
+        -59.6094,
+        13.1177
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -59.67,
+        13.026,
+        -59.401,
+        13.354
+      ],
+      "place": 7716,
+      "country": "BB",
+      "localTrips": 830781.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sdd",
+      "name": "Saint George",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.758,
+        "lat": 12.0157
+      },
+      "center": [
+        -61.758,
+        12.0157
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.821,
+        11.969,
+        -61.359,
+        12.549
+      ],
+      "place": 7717,
+      "country": "GD",
+      "localTrips": 355305.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sdf",
+      "name": "Saint George",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.2055,
+        "lat": 13.1422
+      },
+      "center": [
+        -61.2055,
+        13.1422
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.48,
+        12.514,
+        -61.096,
+        13.402
+      ],
+      "place": 7718,
+      "country": "VC",
+      "localTrips": 285388.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "sdk",
+      "name": "Saint John",
+      "kind": "zone",
+      "origin": {
+        "lon": -61.8463,
+        "lat": 17.1101
+      },
+      "center": [
+        -61.8463,
+        17.1101
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -61.926,
+        16.979,
+        -61.654,
+        17.192
+      ],
+      "place": 7719,
+      "country": "AG",
+      "localTrips": 275340.0,
+      "realm": "caribbean"
+    },
+    {
+      "id": "dja",
+      "name": "Dajabón",
+      "kind": "zone",
+      "origin": {
+        "lon": -71.0759,
+        "lat": 19.5557
+      },
+      "center": [
+        -71.0759,
+        19.5557
+      ],
+      "zoom": 10.5,
+      "utcOffset": -5,
+      "market": -1,
+      "box": [
+        -71.806,
+        19.15,
+        -70.855,
+        19.931
+      ],
+      "place": 7720,
+      "country": "DO",
+      "localTrips": 1255007.0,
+      "realm": "hispaniola"
+    },
+    {
+      "id": "pca",
+      "name": "Pucarani",
+      "kind": "zone",
+      "origin": {
+        "lon": -68.4757,
+        "lat": -16.3995
+      },
+      "center": [
+        -68.4757,
+        -16.3995
+      ],
+      "zoom": 10.5,
+      "utcOffset": -4,
+      "market": -1,
+      "box": [
+        -69.664,
+        -18.063,
+        -68.134,
+        -15.99
+      ],
+      "place": 7721,
+      "country": "BO",
+      "localTrips": 361565.0,
+      "realm": "bolivia"
     }
   ]
 }

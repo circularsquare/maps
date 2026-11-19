@@ -22,7 +22,7 @@ output go in `artifacts/trainworld/`. `<kit>` is your own scratchpad folder; `<t
 | `restore.py <task> <stage> [--go]` | puts a backup back (lists without `--go`) |
 | `setbuilt.py <ids> [<check> "<reason>"] [--dry]` | parked rows back to built, optionally relaxing one gate check; `--hold "<reason>"` holds planned or parked rows instead (no run or join takes them) |
 | `stale.py [--cmd <file>]` | market packs naming a place with no pack; writes the .cmd that rewrites them |
-| `checks/market_check.py [--save f] [--against f] [--cells]` | every registered market pack read: array lengths, commute and outing indexes, zones against the file's own sites (and cells); run before and after a join, about 2 minutes, exit 1 on any problem |
+| `<tw>\checks\market_check.py [--save f] [--against f] [--cells]` (in `checks`, not `<tc>`) | every registered market pack read: array lengths, commute and outing indexes, zones against the file's own sites (and cells); run before and after a join, about 2 minutes, exit 1 on any problem |
 | `start_hidden.ps1 <cmd>` | starts a .cmd detached, no window; prints its PID and its children |
 | `waitany.ps1 <pid,pid>` | waits for any of the PIDs to exit |
 
@@ -56,6 +56,10 @@ Take the first that holds; never take a source from memory.
    in its `ZONE_RULES` row and ARCHETYPE C; a built row takes it only when rebuilt (status planned, which clears its
    signal cache), and its `pop_vs_plan` is relaxed with the census figure.
 4. Everything else (jobs by small area, commute flows, travel surveys, schools): not in the first pass.
+
+National figures, every archetype: call `tier0.worldbank(<ISO2>)` and `tier0.tertiary_share(<ISO2>)` for each country
+before the run. A tertiary share of None parks every zone with a campus on `university_rate`: find a national count
+for `tier0.NATIONAL_TERTIARY` (Bolivia's, T-3620), or relax those rows after the gate as Venezuela's (T-3399).
    Record what you found in the register (N, G or ?) and file a P3 task for anything usable.
 
 An official server that refuses scripts: look for a mirror for 15 minutes, then put the URL in the notes
@@ -242,6 +246,8 @@ Read the batch report and `world_run.py status`. For each parked row:
 | `mean_commute_km` on a zone over 20,000 km² | relax |
 | `pop_vs_plan` on a row with a census hook | relax with the census figure |
 | `browser` failing only "no page errors", every row checked in the same few minutes | the app changed under the gate's Vite (a landing, a WASM rebuild): rerun, no relax |
+| `browser` failing "page.waitForFunction: Timeout" on a rerun too | the row's centre lies in another zone (a border town: Dajabon by Ouanaminthe; a metro's edge: Pucarani's densest pixel on El Alto's), so the zone never becomes the active city: move the origin to the zone's own town (status planned, rebuilt) |
+| `university_rate` near 0 in a country with no tertiary figure (section 1) | relax, naming the missing figure |
 | `browser` (few riders, a purpose missing) | open `world_run/<batch>/gate/<id>-line.png`. The line leaves the town or crosses a border: move the origin (section 3 item 1), never relax. Otherwise relax with what the picture shows |
 | `register failed ... invalid commute between zones` | `<tc>\stale.py --cmd <kit>\fix.cmd`, start the .cmd as in 5 and wait, then `stale.py` again: 0 |
 | a build step error | an old cache (ZeroDivisionError in `osm_signal_line`): delete it. "Failed to open dataset": memory, rerun with fewer jobs. Else a code fault: leave parked, file a task |

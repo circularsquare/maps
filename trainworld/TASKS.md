@@ -103,9 +103,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3620 [P2] {L:new-countries} {after:the night run (T-3511, T-3455)} Caribbean, Bolivia and Paraguay next
-  - Context: Your pad, 2026-11-18: "i think for next new countries lets actually do caribbean, and also bolivia + paraguay since people have requetsed caribbean ( i have yet to have any asia or africa requests) and i think it'd be nice to finish off the americas. can come after the other rebuild fixes if they should happen at different times." Builds packs, so not alongside the night run.
-  - Goal: The Caribbean countries, Bolivia and Paraguay built, shipped and joined, per docs/adding-a-country.md, with start tiers rerun.
+- T-3754 [P3] {L:region-redraws} La Gonave zone parked
+  - Context: From T-3620: ase (La Gonave, Haiti) is parked at top_zone_jobs_share 0.43 (one zone holds too many of its jobs).
+  - Goal: Merged into a neighbouring Haitian zone and shipped, or left out with the reason in DECISIONS.md.
+  - Other: notes/T-3620.md
+- T-3755 [P3] {L:new-countries} University students for the new Caribbean countries
+  - Context: From T-3620: Haiti, Trinidad and Tobago, the Bahamas, Dominica and the Cayman Islands have no tertiary figure (Haiti's gate relaxed), as Venezuela and Nicaragua had before T-3518.
+  - Goal: National tertiary figures in tier0.NATIONAL_TERTIARY with sources, taken up at their next rebuild.
+  - Other: notes/T-3518.md for the method
+- T-3756 [P3] {L:translations} Japanese and Chinese names for the 79 new zones
+  - Context: From T-3620: the Caribbean, Bolivia and Paraguay zones (shipped 2026-11-19) have English names only.
+  - Goal: Each new zone has Japanese and Chinese names, as earlier countries' zones do.
+  - Other: notes/T-3620.md
 - T-1738 [P3] {L:new-countries} Myanmar, Laos and Timor-Leste
   - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet.
   - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
@@ -329,12 +338,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
+- T-3753 [P3] {L:fares} Cross-border trips still about 1% off the fare curve
+  - Context: After T-3748, a two-country line (Detroit to Windsor, scales 1 and 0.784) earns 0.990 of the hand figure (0.866 before); exact when both scales are 1. Unexplained; a guess is city populations charged at their zone's scale while income uses the stop's. Also the base extra is charged at the scale of the stop each leg leaves, where the docs say the boarding stop's. Reach: few, border lines with differing scales.
+  - Goal: Cross-border income matches the hand figure to the cent, or the lie is named in DECISIONS.md.
+  - Other: notes/T-3748.md; checker probes in the orchestrator's scratchpad farefixchk
 - T-3740 [P2] {L:fares} Zone fares players draw
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
-- T-3748 [P2] {L:fares} Income short of the fare curve on bent curves
-  - Context: Found by advfares building T-3739, on master too: on a curve where every trip's extra is exactly $1.50, income shows $1.458 a trip; a three-point ramp master already allows is about 7% short. Suspect, not proven: the regional market's extra comes back in curve units without the country's fare scale.
-  - Goal: Income per trip matches what the curve charges, to the cent, on a bent curve and a staircase.
-  - Other: notes/T-3739.md ("Built", in tree advfares until it lands)
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.

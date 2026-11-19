@@ -85,6 +85,11 @@
     { "id": "egypt", "name": "Egypt", "countries": ["EG"] },
     { "id": "levant", "name": "Levant", "countries": ["IL", "PS"] },
     { "id": "central-america", "name": "Central America", "countries": ["GT", "BZ", "SV", "HN", "NI", "CR", "PA"] },
-    { "id": "venezuela", "name": "Venezuela", "countries": ["VE"] }
+    { "id": "venezuela", "name": "Venezuela", "countries": ["VE"] },
+    { "id": "cuba", "name": "Cuba", "countries": ["CU"] },
+    { "id": "hispaniola", "name": "Hispaniola", "countries": ["DO", "HT"] },
+    { "id": "caribbean", "name": "Caribbean", "countries": ["JM", "TT", "BS", "BB", "LC", "CW", "GD", "VC", "AW", "AG", "DM", "KY"] },
+    { "id": "bolivia", "name": "Bolivia", "countries": ["BO"] },
+    { "id": "paraguay", "name": "Paraguay", "countries": ["PY"] }
   ]
 }

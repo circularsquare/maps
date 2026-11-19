@@ -267,7 +267,21 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
               # Venezuela on Colombia's rule: at the default 20 a km2 the Llanos and Guayana left 2.89M dead (Tucupita,
               # Calabozo, Valle de la Pascua, Machiques, Upata); the Amazon beyond reach stays dead (T-3399)
               "VEN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
-                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True, "task": "T-3399"}}
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True, "task": "T-3399"},
+              # the Greater Antilles' municipios and communes as Central America's (T-3620)
+              **{iso: {"min_density": 0.0, "contiguous": True, "plan_units": True, "fua_whole": 300_000, "task": "T-3620"}
+                 for iso in ("CUB", "DOM", "HTI")},
+              # Bolivia on Venezuela's rule: the Andes' valley towns and the lowlands' river towns round empty land; without
+              # `join_km` Trinidad's zone ran from Cobija over the Yungas to Lake Titicaca (T-3620)
+              "BOL": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True, "task": "T-3620"},
+              # Paraguay as Uruguay (the Chaco's Mennonite towns a zone), with `join_km` 150: without it Encarnacion's zone
+              # took Pedro Juan Caballero 330 km north (T-3620)
+              "PRY": {"min_density": 0.0, "contiguous": True, "plan_units": True, "join_km": 150.0, "task": "T-3620"},
+              # islands with no metro row, so no units in the plan state (no `plan_units`, as Oman); Jamaica's and Saint
+              # Lucia's finest units are communities, grouped by parish and quarter (T-3620)
+              **{iso: {"contiguous": True, "task": "T-3620", **({"group_level": 0} if iso in ("JAM", "LCA") else {})}
+                 for iso in ("JAM", "TTO", "BHS", "BRB", "LCA", "CUW", "GRD", "VCT", "ABW", "ATG", "DMA", "CYM")}}
 # T-3287 (Anita, 2026-11-12): blocs come out whole. In these countries a unit the density test leaves dead is a zone
 # anyway when it sits between built land (`gap_fill.pick`: the line between two towns of 50,000 within 300 km runs
 # 15 km over it, it holds such a town and touches built land, or built land holds 75% of its land border); a pick
