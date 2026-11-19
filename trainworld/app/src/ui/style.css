@@ -144,6 +144,7 @@ select, option, optgroup { background-color: var(--bg); color: var(--text); }
 .group.speed { position: relative; }
 .btn.icon.rate { width: 40px; padding: 0; font-size: 12px; font-variant-numeric: tabular-nums; }
 .btn.held { opacity: 0.55; }
+.btn.icon.rate.legacy { width: 36px; }
 .slider.speed-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; margin: 0; width: 200px; padding: 8px 10px;
   background: var(--bg); border: 1px solid var(--rule); }
 svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5;

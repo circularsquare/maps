@@ -118,6 +118,8 @@ export interface DisplaySettings {
   busOneWay: boolean;
   /** T-3268: the plus and minus buttons at the map's right edge (ui/ZoomButtons.tsx) */
   zoomButtons: boolean;
+  /** T-3765: the top bar's pause, 1x, 4x and custom-speed buttons instead of pause, slower, speed and faster (ui/TopBar.tsx `Speed`) */
+  legacyTime: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
   chartOtherLines: boolean;
   /** T-2838, T-3630: trips between cities are calculated (the market opens); per browser, since it is about the
@@ -174,6 +176,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   hillshade: true,
   rotateMap: false,
   zoomButtons: true,
+  legacyTime: false,
   busOneWay: false,
   chartOtherLines: true,
   intercityTrips: !mobileDevice(),

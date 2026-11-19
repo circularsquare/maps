@@ -193,6 +193,9 @@ export function SettingsTab() {
         <Check checked={d.zoomButtons} onChange={(v) => setDisplay("zoomButtons", v)}>
           {t("settingsTab.zoomButtons")}
         </Check>
+        <Check checked={d.legacyTime} onChange={(v) => setDisplay("legacyTime", v)}>
+          {t("settingsTab.legacyTime")}
+        </Check>
       </div>
       <div class="h">{t("settingsTab.theme")}</div>
       <div class="stack">

@@ -2,6 +2,7 @@
 // train share), cash, the time and date on one line (T-1853), speed and pause. The clock is its own
 // component so a game minute re-renders only it. The sky and demand band are `MapSky`, on the map.
 
+import type { ComponentChildren } from "preact";
 import { clock, DEMAND_CAP, REAL4_SPEED, REAL_SPEED, SLIDER_STOPS, SPEEDS } from "../game/clock";
 import { activeCity, cityById, viewedZone } from "../game/cities";
 import { demandAskTurn, demandView, modeRides, modeSplit, viewRecomputing, viewUpdating } from "../game/demand";
@@ -240,6 +241,38 @@ function Speed() {
   const chosen = clock.chosenRate.value / SPEEDS[0];
   const held = capped && chosen > DEMAND_CAP;
     const stop = Math.max(0, SLIDER_STOPS.findIndex((s) => s >= chosen - 1e-9));
+  const slider = open && (
+    <div class="slider speed-pop">
+      <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label={t("topBar.clockSpeed")}
+        onInput={(e) => clock.setMultiple(SLIDER_STOPS[Number((e.target as HTMLInputElement).value)])} />
+      <span class="num">{times(chosen)}</span>
+    </div>
+  );
+  if (display.value.legacyTime) {
+    // T-3765: the buttons from before T-3653; the third shows its speed and opens the slider on a double click
+    const speed = clock.speed.value;
+    const custom = clock.custom.value;
+    const heldTip = (title: string) => (held ? t("topBar.speedCapped", { speed: times(chosen), cap: times(DEMAND_CAP) }) : title);
+    const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
+      const on = running && (custom !== null ? 2 : speed) === i;
+      return (
+        <button class={"btn icon" + (on ? " on" : "") + (on && held ? " held" : "") + (i === 2 ? " rate legacy" : "")} data-tip={on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
+          {i === 2 ? times(custom ?? SPEEDS[2] / SPEEDS[0]) : icon}
+        </button>
+      );
+    };
+    return (
+      <div class="group speed" ref={box}>
+        <button class={"btn icon" + (!running ? " on" : "")} data-tip={t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
+          <Icon.pause />
+        </button>
+        {btn(0, <Icon.play1 />, t("topBar.normalSpeed"), { "data-guide": "play" })}
+        {btn(1, <Icon.play2 />, t("topBar.speed", { speed: times(SPEEDS[1] / SPEEDS[0]) }))}
+        {btn(2, null, t("topBar.speedPickLegacy", { speed: times(custom ?? SPEEDS[2] / SPEEDS[0]) }), { onDblClick: () => setOpen((o) => !o) })}
+        {slider}
+      </div>
+    );
+  }
   return (
     <div class="group speed" ref={box}>
       <button class={"btn icon" + (!running ? " on" : "")} data-guide="play" data-tip={t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
@@ -254,13 +287,7 @@ function Speed() {
       <button class="btn icon" data-tip={t("topBar.faster")} aria-label={t("topBar.faster")} disabled={stop >= SLIDER_STOPS.length - 1} onClick={() => clock.stepSpeed(1)}>
         <Icon.play2 />
       </button>
-      {open && (
-        <div class="slider speed-pop">
-          <input type="range" min={0} max={SLIDER_STOPS.length - 1} step={1} value={stop} aria-label={t("topBar.clockSpeed")}
-            onInput={(e) => clock.setMultiple(SLIDER_STOPS[Number((e.target as HTMLInputElement).value)])} />
-          <span class="num">{times(chosen)}</span>
-        </div>
-      )}
+      {slider}
     </div>
   );
 }
