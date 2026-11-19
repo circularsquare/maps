@@ -1804,14 +1804,20 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   base and rate, loads as the three nodes on their line (one below $0 at 0 km starting at $0 instead),
   any other count as the line through its first and last node (`simpleNodes`).
   The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1
-  reads back as typed. A trip that changes lines pays it once on its whole length, at the scale of
-  the country it starts in: each zone's populations get the curve times their country's scale, and
-  the regional market the curve itself. Fare income takes each stretch at its starting stop's
-  country's scale and the base at the boarding stop's (`stopFareScales`, game/money.ts), and so does
-  the split between regions. The market's curve extra and base extra come back in the curve's dollars
-  and are charged the same way, each route node's at the scale of the stop it leaves (`DemandNetwork`
-  `fareS` and `baseS`, read by the demand worker as it adds up the market's figures; T-3748), so income is
-  the curve times the scale on every trip. In
+  reads back as typed. A trip that changes lines pays it once on its whole length. Riders weigh it at
+  their own country's scale (each zone's populations get the curve times their country's scale, the
+  regional market the curve itself), but **income charges every ride by the stops it uses**: the
+  base at the stop it boards at, each stretch at the scale of the stop it leaves (`stopFareScales`,
+  game/money.ts, from `countryFareScales`, game/fareDefault.ts), and so does the split between regions.
+  The curve extra and base extra each population's trips add come back in its own dollars (a zone's at
+  its country's scale, the market's in the curve's) and are converted to the same rule, each route
+  node's at the scale of the stop it leaves (`DemandNetwork` `fareS` and `baseS`, the demand worker's
+  `sumAll`; T-3748, T-3753), so a transfer fare is charged at the scale of the stop where the rider
+  changes, and income is the curve times the stop's scale on every ride, a cross-border one too. Two
+  approximations are left (DECISIONS 2026-11-19, T-3753): a base extra (a line's own multiple, T-3578)
+  spread over a line's later stretches pays the stop each leaves, not the boarding stop; and a
+  country on its rounded default fares charges trips other than its own zones' the curve times its
+  rounded first stretch's ratios, not its rounded curve. In
   demand, route search charges the first stretch as a base and a rate per km on each ride
   (`set_fares`; T-3739: a first stretch shorter than 10 km charges no more a km than the curve's average
   over its first 10 km, `firstStretch`, so a step 0.1 km out does not price every long ride at the step's

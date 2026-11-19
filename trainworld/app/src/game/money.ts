@@ -23,7 +23,7 @@ import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
 import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, ownLineFare, type Fares } from "./fareCurve";
-import { roundedDefault } from "./fareDefault";
+import { countryFareScales } from "./fareDefault";
 import { lineFares } from "./fareInEffect";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
@@ -326,13 +326,11 @@ export function scalesOf(g: LineGeo, l: LineInput, byId: Map<string, StationInpu
   }
   return g.scales;
 }
-/** A stop's multipliers on the curve as set (T-1277): on the base of a boarding there and on the rate of a stretch
- * from there, its country's fare scale (T-1662: a country's rounded default fares are not the curve times its scale).
- * T-3748: the regional market's curve extra and base extra are charged at these too (demandClient `packService`). */
+/** A stop's multipliers on the curve as set: its country's (`countryFareScales`), on the base of a boarding there
+ * and on the rate of a stretch from there. T-3748, T-3753: every trip's curve extra and base extra are charged at
+ * these too, each route node's at the stop it leaves (demandClient `packService`, the demand worker's `sumAll`). */
 export function stopFareScales(s: Pick<StationInput, "id" | "lng" | "lat"> | undefined, fares: Pick<Fares, "base" | "perKm" | "scales"> & { nodes?: Fares["nodes"] }): { base: number; rate: number } {
-  const c = (s && stationCountry(s)) ?? undefined;
-  const scale = fareScale(c, fares.scales), r = roundedDefault(fares, c);
-  return { base: r && fares.base > 0 ? r.base / fares.base : scale, rate: r && fares.perKm > 0 ? r.perKm / fares.perKm : scale };
+  return countryFareScales((s && stationCountry(s)) ?? undefined, fares);
 }
 
 /** T-1277: the country of the zone a station is in (null outside every zone). */

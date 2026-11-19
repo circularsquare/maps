@@ -28,7 +28,7 @@ import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
 import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots, transferFare } from "../game/fareCurve";
-import { roundedDefault } from "../game/fareDefault";
+import { countryFareScales, roundedDefault } from "../game/fareDefault";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorBook, CorridorRows } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
@@ -269,6 +269,8 @@ function keepCapRatio(sig: string, q: number, before: Float32Array, after: Float
 /** T-1862: per population, the cluster it holds whole-solved (`sig` and `psig` as `held` and `heldQ`
  * hold them, re-keyed by a keep within noise), its `shape`, and the network it was solved on */
 const heldOn = new WeakMap<Population, { sig: string; psig: string[]; shape: string; net: DemandNetwork }>();
+/** T-3753: each city population's multiples of the curve as set (`countryFareScales`), the fares its riders pay */
+const popScales = new WeakMap<Population, { base: number; rate: number }>();
 /** T-1862: the settle moves lines no edit touched by float noise (0.12 s and 0.08% seen, T-1850);
  * one train on a line of under 500 an hour is past 0.2%. Span is compared exactly */
 const NOISE_RUN_S = 0.5;
@@ -2029,6 +2031,7 @@ async function run() {
             p.set_fare_weight(fareWeight(country));
             scale = fareScale(country, m.fare.scales);
             rounded = roundedDefault(m.fare, country); // T-1662
+            popScales.set(p, countryFareScales(country, m.fare));
             const xy = m.stXY.slice();
             for (let k = 0; k < xy.length; k += 2) {
               const w = worldToCity(xy[k], xy[k + 1], city);
@@ -2163,13 +2166,20 @@ async function run() {
       let stale = false;
       // the clusters' loads, all their populations', per route node of the whole network
       // (`pick`: only those populations, T-1607; `market`: the market's times this per route node, T-3748)
-      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array, out = new Float32Array(jobNodes), at = 0, pick?: (a: Population) => boolean, market?: Float32Array): Float32Array => {
+      // `fare`: the values are a fare extra, in the population's own dollars (a city's: the curve at its country's
+      // multiple, `popScales`; the market's: the curve as set). T-3753: each route node's is charged at the multiple
+      // of the stop it leaves (`fare.at`, absent: all 1), the base's or the rate's (`fare.of`)
+      const sumAll = (cs: JobCluster[], read: (a: Population) => Float32Array, out = new Float32Array(jobNodes), at = 0, pick?: (a: Population) => boolean, fare?: { at?: Float32Array; of: "base" | "rate" }): Float32Array => {
         for (const c of cs) {
           for (const a of c.pops) {
             if (pick && !pick(a)) continue;
-            const map = viewOf(c, a).nodeGlobal, v = read(a), s = a instanceof IntercityApi ? market : undefined;
-            if (s) for (let k = 0; k < map.length; k++) out[at + map[k]] += (v[k] ?? 0) * s[map[k]];
-            else for (let k = 0; k < map.length; k++) out[at + map[k]] += v[k] ?? 0;
+            const map = viewOf(c, a).nodeGlobal, v = read(a);
+            const own = fare && !(a instanceof IntercityApi) ? popScales.get(a)?.[fare.of] ?? 1 : 1, s = fare?.at;
+            if (s || own !== 1) {
+              // a stop in the population's own country adds its value as it is (f32 multiples, so compared as f32)
+              const o = Math.fround(own);
+              for (let k = 0; k < map.length; k++) { const x = s ? s[map[k]] : 1; out[at + map[k]] += x === o ? v[k] ?? 0 : (v[k] ?? 0) * x / own; }
+            } else for (let k = 0; k < map.length; k++) out[at + map[k]] += v[k] ?? 0;
           }
         }
         return out;
@@ -2317,7 +2327,7 @@ async function run() {
         // the market's figures are all its parts' as they stand, whichever clusters are asked for
         const hasMarket = !!regional && cs.some((c) => c.market);
         const market = hasMarket && !part?.noMarket ? marketFigures(jobClusters.flatMap((c) => c.part ? [c.part] : []), q) : null;
-        const seg = sumAll(cs, a => a.seg(q), undefined, 0, pick), board = sumAll(cs, a => a.board(q), undefined, 0, pick), alight = sumAll(cs, a => a.alight(q), undefined, 0, pick), loadOfCrush = sumAll(cs, a => a.load_of_crush(q), undefined, 0, pick), fareX = sumAll(cs, a => a.fare_extra(q), undefined, 0, pick, n.fareS), baseX = sumAll(cs, a => a.base_extra(q), undefined, 0, pick, n.baseS), xferIn = xferDays(cs, q, pick);
+        const seg = sumAll(cs, a => a.seg(q), undefined, 0, pick), board = sumAll(cs, a => a.board(q), undefined, 0, pick), alight = sumAll(cs, a => a.alight(q), undefined, 0, pick), loadOfCrush = sumAll(cs, a => a.load_of_crush(q), undefined, 0, pick), fareX = sumAll(cs, a => a.fare_extra(q), undefined, 0, pick, { at: n.fareS, of: "rate" }), baseX = sumAll(cs, a => a.base_extra(q), undefined, 0, pick, { at: n.baseS, of: "base" }), xferIn = xferDays(cs, q, pick);
         if (extra) for (let k = 0; k < jobNodes; k++) { seg[k] += extra[k]; board[k] += extra[jobNodes + k]; alight[k] += extra[2 * jobNodes + k]; }
         // (less a window's old loads, which can pass a node's own)
         if (delta?.[0]) { const d = delta[0]; for (let k = 0; k < jobNodes; k++) { seg[k] = Math.max(0, seg[k] + d[k]); board[k] = Math.max(0, board[k] + d[jobNodes + k]); alight[k] = Math.max(0, alight[k] + d[2 * jobNodes + k]); } }

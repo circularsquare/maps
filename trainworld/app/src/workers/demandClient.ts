@@ -693,7 +693,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
   // T-3578: the line's own multiple scales the base too, a trip paying it times the largest of its lines'
   const own = lines.map((l) => ownLineFare(svc.fare, l.id));
   if (own.some((m) => m !== 1)) net.baseW = perNode(own);
-  // T-3748: the market's extras are charged at the scale of the stop each route node leaves
+  // T-3748, T-3753: every trip's extras are charged at the scale of the stop each route node leaves
   const w = world.peek();
   if (w) {
     const byId = stopsById(w), fareS = new Float32Array(2 * nStops).fill(1), baseS = new Float32Array(2 * nStops).fill(1);

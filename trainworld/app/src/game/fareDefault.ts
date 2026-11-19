@@ -5,7 +5,7 @@
 // had as a new game's. Demand, income and the Money tab all read this one curve.
 
 import { firstStretch, scaleNodes, START_NODES, type FareNode } from "./fareCurve";
-import { EVERY, incomeScale, START } from "./income";
+import { EVERY, fareScale, incomeScale, START } from "./income";
 
 /** `v` to the step for its size: a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar, 5 dollars from $1,000. */
 export function roundFare(v: number): number {
@@ -34,6 +34,15 @@ export function roundedDefault(f: { nodes?: FareNode[]; scales?: Record<string, 
     nodes = scaleNodes(f.nodes, incomeScale(country)).map(([k, v]) => [k, roundFare(v)] as FareNode);
   }
   return { ...firstStretch(nodes), nodes };
+}
+
+/** A country's multipliers on the curve as set (T-1277): on the base and on the rate, its fare scale (a rounded
+ * default's ratios to the curve's first stretch, T-1662). The one rule for which multiple a fare is charged at: a
+ * stop's (its country's) for income, a city population's (its country's) for the fares its riders were solved with
+ * (T-3753: income converts the second to the first). */
+export function countryFareScales(country: string | undefined, fares: { base: number; perKm: number; nodes?: FareNode[]; scales?: Record<string, number> }): { base: number; rate: number } {
+  const scale = fareScale(country, fares.scales), r = roundedDefault(fares, country);
+  return { base: r && fares.base > 0 ? r.base / fares.base : scale, rate: r && fares.perKm > 0 ? r.perKm / fares.perKm : scale };
 }
 
 /** T-1906: a new game's base fare in the US, US$. */

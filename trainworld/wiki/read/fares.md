@@ -8,7 +8,7 @@ A new game starts with a base of US$2.5 where you start in the US. The fare at 2
 
 **Fares by country.** Each country charges the curve times its own scale. The default scale follows income: the US's scale times a country's income per head over the US's, raised to the power 0.5. Poorer places charge less, and a dollar of fare weighs more in minutes there ([perceived minutes](perceived-minutes.md)), so a default fare feels about the same everywhere. A new game's curve is set once for the country it starts in. You can set your own scale for a country as a multiple of a reference country's fares.
 
-A trip pays the scale of the country it starts in, on its whole length, even if it changes lines.
+A trip that changes lines still pays the curve once, on its whole length. Each part of it pays the scale of the country it leaves from: the base fare at the stop where it boards, each stretch at the stop where that stretch starts.
 
 **Faster lines.** A line with high-speed trains charges the part of the curve above the base times 1.25, unless you set another. A ferry line has its own multiplier, 1 to start. Any one line can also get its own fare multiple, from nothing up to 3, at the bottom of its panel; it works the same way, on top of the others, and it scales the base too. The base is paid once a trip, times the highest multiple among the lines the trip rides, so a trip that changes onto a dearer line pays that line's base.
 
