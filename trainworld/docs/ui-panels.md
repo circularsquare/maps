@@ -893,9 +893,9 @@ left below the fare zones for a fare per stop (T-3744).
 **Fare zones** [T-3740, `AdvancedFares.tsx` `FareAreas`, the rule in track-and-service.md "Fares and the ledgers"]:
 above the countries, the heading "Fare zones" (bold, over a rule, with a hover on the charging rule), then each fare area: its name in a box that reads
 as plain text until hovered (typed over, Enter or leaving it renames; no recalculation), "Paint stations" with a
-brush, which closes the panel and starts the Fare zones tool on that area, and a bin ("Remove fare area", asking
+brush, which closes the panel and starts the Fare zones tool on that area, and, left of a bin ("Remove fare area", asking
 "Remove {name}? Trips between its stations pay by distance again."; its stations keep their codes, which count as
-none until Z3 tidies them); under it an "Enable" checkbox (T-3778: off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
+none until Z3 tidies them), an on/off icon (a ticked circle when on, a struck one when off; hover "Disable {name}" or "Enable {name}"; T-3783; off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
 highest zone painted and at least three, each its price as charged in the panel's country (a hover on each: what rides it is for; the stored price times
 that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
 change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
