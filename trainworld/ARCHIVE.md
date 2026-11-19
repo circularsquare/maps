@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3382 [P3] {L:twstats} Where people play in twstats (2026-11-19): twstats lists minutes per city (the focused city at each play-time ping); needs shonei-server 5bf10c7 deployed and the next game publish. notes/T-3382.md.
+- T-3759 [P1] {L:station-placement} Station names bound to their complex by choice (2026-11-19): Each station is bound to its complex's name or has its own: a toggle on the station panel, a game setting for new stations (on by default) that offers to bind all when turned on; save level 27 (LSN1); older saves keep what they showed. notes/T-3759.md.
 - T-3760 [P2] {L:real-networks} Real world stations over blueprints, as rings (2026-11-19): real stations drawn as hollow rings on a canvas above the network (over blueprints, track, platforms; under labels; no clicks)
 - T-3761 [P2] {L:timetables} Period hours error says what's wrong (2026-11-19): schedule hours red line reads 'Each period needs at least 2 hours' and 'High needs at least 6 hours' (new key schedule.hoursShortHigh); it already sits under the typed row in the weekday block.
 - T-3542 [P2] {L:timetables} Tweakable hours for the service periods (2026-11-19): Period hours you can move (whole hours, 2 h rows at least), set for the game or with a line's own periods in the schedule window; rows crossing a period averaged into its slot; default-hours games match master to the bit; save level 25 (LHR1, ERA4) notes/T-3542.md.

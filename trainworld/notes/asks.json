@@ -5,5 +5,12 @@
     "text": "T-3746 text (landed, on 8800): panel title hover 'Shift+click to add to selection.' (reused); removed panel strings ('3 pieces of track', 'Limit', 'Remove track', 'Use the Select tool (4) to rebuild longer stretches', Double up label); bar length hover gains 'Upkeep $40k/day'; Remove hover 'Remove the selection (Delete)'; changelog c005 'moved track controls to the bar at the top for one piece or many, speed limit included, and shift click now selects the track in between'. Text acknowledged, or name lines?",
     "since": "2026-11-19",
     "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-10",
+    "title": "Deploy twstats where-people-play",
+    "text": "shonei-server 5bf10c7: the play-time ping accepts a city, playtime days gain a per-city minutes map (capped at 400 a day, like starts), and stats responses gain cities, so twstats can show Where people play (T-3382). No migration; old clients still work. Deploy (and push shonei-server)?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
   }
 ]
