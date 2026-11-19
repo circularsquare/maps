@@ -437,7 +437,7 @@ function DaySections({ l, st, now, limits, crowd, auto, flip, hours }: { l: Line
                 {hours && <td>{row === 0 && <HoursBox l={l} st={st} n={f.n} r={lev} onShort={(need) => setShort(need ? { r: lev, need } : null)} />}</td>}
                 {row === 0 ? <LevelCells l={l} st={st} lev={lev} auto={auto} limits={limits} /> : <WeekendCells l={l} st={st} lev={lev} auto={auto !== null} limits={limits} />}
               </tr>
-              {row === 0 && short?.r === lev && <tr class="sched-short"><td colSpan={cols} class="bad">{t("schedule.hoursShort", { count: short.need })}</td></tr>}
+              {row === 0 && short?.r === lev && <tr class="sched-short"><td colSpan={cols} class="bad">{t(short.need > 2 ? "schedule.hoursShortHigh" : "schedule.hoursShort", { count: short.need })}</td></tr>}
               </>
             );
           })}
