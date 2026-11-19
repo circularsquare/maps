@@ -2,7 +2,7 @@
 
 One fare curve covers the whole network. It says what a trip of a given length costs, and you set it in the Money tab.
 
-**The curve** is three points: a base fare for a trip of no length, then a fare at 20 km and one at 100 km. Between points it runs in straight lines, and past the last it keeps the same slope. A point can't be cheaper than the one before, so a fare never falls as a trip gets longer and never goes under the base. No point can go over 1,000 (US$, before a country's scale).
+**The curve** is three points in the Money tab: a base fare for a trip of no length, then a fare at 20 km and one at 100 km. The Advanced fares panel, opened from the Money tab, can give it anywhere from one point (one flat fare for every trip) to 12; two points 0.1 km apart make a step, so a curve can be a staircase of fare bands. Between points it runs in straight lines, and past the last it keeps the same slope. A point can't be cheaper than the one before, so a fare never falls as a trip gets longer and never goes under the base. No point can go over 1,000 (US$, before a country's scale).
 
 A new game starts with a base of US$2.5 where you start in the US. The fare at 20 km is about 2.6 times the base, and at 100 km about 9.0 times.
 

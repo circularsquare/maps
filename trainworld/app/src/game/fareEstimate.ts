@@ -39,6 +39,12 @@ const settled = computed(() => {
   return !p || (!!v && v.final && v.version > p.version && !demandUpdating.value);
 });
 
+/** T-3739: a line's riders ride a spread of lengths around its mean, so the fare change is averaged
+ * over a spread from 0.4 to 1.6 times it: a step moved across the mean then moves the estimate
+ * gradually, and one moved well away from every line's mean still shows. */
+const SPREAD = [0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6];
+const spreadAt = (nodes: FareNode[], km: number) => SPREAD.reduce((a, s) => a + fareAt(nodes, s * km), 0) / SPREAD.length;
+
 /** Over every running line, on `lines` (all riders or one purpose's), each period's trips times the
  * curve's change at their mean trip length: in curve dollars and as charged (times the line's fare
  * scale), and the trips. */
@@ -65,8 +71,8 @@ function curveChange(dv: DemandView, lines: Map<string, { ridersPerDay: number; 
     for (const pk of pkm) {
       const t = (rides * pk) / total;
       if (!(t > 0)) continue;
-      const d = fareAt(to, pk / t) - fareAt(from, pk / t);
-      const dr = reach === 1 ? d : fareAt(to, (reach * pk) / t) - fareAt(from, (reach * pk) / t);
+      const d = spreadAt(to, pk / t) - spreadAt(from, pk / t);
+      const dr = reach === 1 ? d : spreadAt(to, (reach * pk) / t) - spreadAt(from, (reach * pk) / t);
       trips += t;
       dCurve += t * dr;
       dCharged += t * d * scale;

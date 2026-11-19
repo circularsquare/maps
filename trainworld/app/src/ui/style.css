@@ -800,6 +800,27 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .tg-label { fill: var(--muted); font-size: 11px; }
 .tg-band { fill: var(--text); fill-opacity: .1; pointer-events: none; }
 .tg-hover { fill: transparent; cursor: crosshair; }
+/* T-3739: "Add point" pressed: the plot takes every click, the curve with the new point dashed over the
+   curve as it is */
+.fg-adding .fg-node, .fg-adding .fg-off { pointer-events: none; }
+.fg-curve.fg-under { stroke-opacity: .35; }
+.fg-curve.fg-ghost { stroke-dasharray: 4 3; }
+.fg-ghost-knob { fill: var(--bg); stroke: var(--accent); pointer-events: none; }
+/* T-3739: the Advanced fares panel */
+/* its top stays put as rows come and go under the graph (the estimate, a point added), so the graph never
+   moves under the pointer */
+.saves-panel.fares-panel { width: min(600px, calc(100vw - 40px)); margin-top: max(20px, 6vh); margin-bottom: auto; }
+.fares-panel .af-tools { display: flex; align-items: center; gap: 8px; margin: 4px 0 2px; }
+.fares-panel .af-tools .right { margin-left: auto; }
+.fares-panel .af-country { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fare-rows .fr-end { display: inline-flex; align-items: center; gap: 6px; }
+.fare-rows .fr-what.fr-custom { grid-column: 1 / -1; }
+.fare-rows .af-add .btn { margin-right: 6px; }
+.fare-rows .af-add .btn svg { width: 12px; height: 12px; margin-right: 2px; vertical-align: -2px; }
+.rows.fare-rows.af-countries { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.af-countries .af-head > span { color: var(--muted); align-self: end; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
+.af-countries .af-base { justify-self: end; font-variant-numeric: tabular-nums; }
+.fares-panel .check { margin-top: 8px; }
 .fg-off { cursor: pointer; }
 .fg-arrow { fill: var(--accent); stroke: var(--bg); stroke-width: 1; }
 .fg-off:hover .fg-arrow { stroke: var(--text); }
@@ -1786,6 +1807,9 @@ button.save-add:hover { color: var(--text); }
   .rows.fare-rows { grid-template-columns: auto minmax(0, 1fr); }
   .fare-rows .fr-what { grid-column: 1 / -1; }
   .fare-rows .stepper.wide .v { min-width: 44px; }
+  /* T-3739: the country list keeps its four columns, the name narrowing */
+  .rows.fare-rows.af-countries { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+  .af-countries .fr-what { grid-column: auto; }
 }
 
 /* Browser save slots (T-068). */

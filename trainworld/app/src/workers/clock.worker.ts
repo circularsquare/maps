@@ -20,7 +20,7 @@ import { startNodes } from "../game/fareDefault";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
-import { capTransfer, faresOf, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
+import { capTransfer, faresOf, simpleNodes, START_FARE, START_NODES, tidyHsr, tidyLineFare, tidyTransfer, type Fares } from "../game/fareCurve";
 import { EVERY, FARE_BASELINE, FARE_E, incomeScale, keepOwn, OLD_FARE_E, oldCurveFactor, oldIncomeScale, runFactorOf, scaleFromOld, START, startFromOld, tidyOwn } from "../game/income";
 import { SHADES } from "../game/shadeTable";
 import { DAY_KINDS, dayKindOf } from "../game/days";
@@ -93,7 +93,8 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   for (const [id, v] of Object.entries(f.lines ?? {})) if (typeof v === "number" && Number.isFinite(v) && tidyLineFare(v) !== 1) own[id] = tidyLineFare(v);
   const lines = Object.keys(own).length ? { lines: own } : {};
   // T-2559: an old save's base and rate are taken from its rounded nodes (what the slot writes next), so the first reload's network is the later ones'
-  const curve = faresOf(g, START_FARES);
+  // T-3739: a save from before the market-rate rule had three nodes (two before T-1143): any other count is its line
+  const curve = faresOf(old && g.nodes ? { ...g, nodes: simpleNodes(g.nodes) } : g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
   return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines });
 }

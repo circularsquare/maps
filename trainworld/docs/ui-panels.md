@@ -776,7 +776,10 @@ line's slope on screen never changes with zoom ($30 at 200 km). The fare axis st
 where the base fare would otherwise stand above a quarter of the height: then the base fare sits at a
 quarter of the height. Fare ticks fall at every multiple of the smallest nice step of at least a
 quarter of the fare shown, distance ticks every nice step of at least a fifth of the distance shown,
-the last labelled with the unit. The curve has exactly three nodes. The first, the base fare, stays
+the last labelled with the unit. The Money tab sets three nodes; a curve of any other count (set in
+"Advanced fares" below) still shows and drags here, and the rows under the graph give way to one line, "Set in
+Advanced fares" [T-3739]. An "Advanced" button left of the graph's undo opens that panel on the tab's country.
+The first node, the base fare, stays
 at 0 km and drags up and down only; the other two drag either sideways (distance) or up and down
 (fare), whichever way the pointer first moves 3 graph units, and only that way for the rest of the
 drag. Hovering a node draws small grey arrows the ways it drags (two for the base fare, four for the
@@ -842,6 +845,31 @@ country's scale: in a save from before T-1906 a country's fares are the curve ti
 rounded to a cent under $0.25, 5 cents under $10, 50 cents under $100, then a dollar; in a newer game
 each country charges the round start curve it would have had as a new game's [T-1662, T-1906, `game/fareDefault.ts`]. Rules: [track-and-service.md](track-and-service.md)
 6.4. The economy's 100x scaling is in the hover of "A day at this schedule".
+
+### Advanced fares
+
+[T-3739, `ui/AdvancedFares.tsx`, notes/T-3739.md] A centred modal like the schedule panel's, 600 px wide, its top
+fixed (rows coming and going under the graph never move the graph under the pointer); closed by its x, Esc or a
+click outside. Top to bottom: "Fares in [country]" (a picker of the listed countries, starting on the Money tab's)
+with the graph's undo and zoom; the fare graph at 560 by 260 units, the Money tab's rules but for drags, which may
+come right up to a neighbour (0.1 km) so a drag can make a step; the rows as the Money tab's, each stretch's with a
+bin ("Remove point"; the base fare has none); "Add point" (pressed while armed; off at 12 points, hover "At most 12
+points") and, for a curve of other than three points, "Use the simple curve", which asks "Go back to three points at
+0, 20 and 100 km? The other points are dropped." and keeps the fares at those distances; the high-speed, bus, ferry
+and transfer rows as the Money tab shows them; the estimate rows while a change is unsolved; "Fares by country":
+the reference country, then every country with a built station by name, with "Show all countries" every other
+country of the game's cities, each row its multiple (the reference a plain 1.00x), its base fare as charged and the
+anchor and undo buttons, under the column heads "Multiple" and "Base fare". **Add point**: pressed, the next click
+on the graph adds a point there (the dock's graph never adds), and the button lets go; Esc lets go first, a second
+Esc closes. While armed the points take no clicks, the curve with the new point is drawn dashed over the faded one
+with a hollow dot where it would go, and the plot's hover reads "Click to add a point here" over its distance and
+fare. The point's distance snaps as a drag's; within 8 graph units of a point sideways it goes 0.1 km after it when
+the pointer is above that point's fare and 0.1 km before it when below, so a click over a point makes a step. Its
+fare snaps as a drag's, is taken as a neighbour's within one snap step, and is held between its neighbours' fares;
+where nothing fits (before the base, between two points 0.1 km apart) the click does nothing. Each add and remove is
+one fare edit (one recalculation, Ctrl+Z, which the panel passes on). The drag estimate averages each line's fare
+change over trips 0.4 to 1.6 times its mean length (`fareEstimate.ts`), so moving a step shows gradually. Room is
+left below the countries for fare zones (T-3740) and a fare per stop (T-3744).
 
 ## Cities tab
 

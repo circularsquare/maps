@@ -1748,8 +1748,10 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   and this hour's ledger four times a wall second while the clock runs; the top bar shows the cash to the dollar,
   and only it and the Money tab's cash, Today column and History re-render. The fare for a trip
   follows one curve of trip length for the network, set in the Money tab [T-883, T-1112, T-1143,
-  `app/src/game/fareCurve.ts`]: straight stretches through the player's three nodes, carried on
-  past the last at its slope. The first node is the base fare at 0 km; each later one is farther and
+  `app/src/game/fareCurve.ts`]: straight stretches through the player's nodes, carried on
+  past the last at its slope: three in the Money tab, 1 to `MAX_NODES` 12 set in the Advanced fares panel
+  (T-3739; one node is a flat fare, a step is two nodes 0.1 km apart, `NODE_GAP_KM`). The first node is the
+  base fare at 0 km; each later one is farther and
   never cheaper, so no fare is below the base or falls with distance, and none (nor the transfer fare)
 is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into every money sum;
 `tidyNodes` holds it, so a loaded save is held too). **Fares by country**
@@ -1794,8 +1796,10 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   A save from before T-1521, or one with no nodes, takes its base and rate from its tidied (rounded)
   nodes as it loads, the same as the slot writes next, so its first reload's network is every later one's
   and the demand cache hits on it (`loadFares`, T-2559).
-  An older save's two nodes, or a base and rate, load as the three nodes on their line (one below
-  $0 at 0 km starting at $0 instead), any other curve as the line through its first and last node.
+  A save keeps its nodes as set, 1 to 12 (no other field; an older build loads a count other than
+  three as the line through its first and last node). A save from before T-1521 with two nodes, or a
+  base and rate, loads as the three nodes on their line (one below $0 at 0 km starting at $0 instead),
+  any other count as the line through its first and last node (`simpleNodes`).
   The curve's fares are kept to a hundredth of a cent, so a fare typed where the scale is not 1
   reads back as typed. A trip that changes lines pays it once on its whole length, at the scale of
   the country it starts in: each zone's populations get the curve times their country's scale, and
@@ -1803,7 +1807,9 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   country's scale and the base at the boarding stop's (`stopScales`, game/money.ts), and so does
   the split between regions. In
   demand, route search charges the first stretch as a base and a rate per km on each ride
-  (`set_fares`), and each station pair's cost adds what the rest of the curve adds at the expected
+  (`set_fares`; T-3739: a first stretch shorter than 10 km charges no more a km than the curve's average
+  over its first 10 km, `firstStretch`, so a step 0.1 km out does not price every long ride at the step's
+  slope; what riders pay is still the curve, the pair's extra making up the difference), and each station pair's cost adds what the rest of the curve adds at the expected
   km of its strategy (the riders' split over lines by their departures; `set_fare_curve`,
   `kernel::trip_km`). The assignment puts that extra, the trips times the curve's extra at their
   pair's km, on the stretches they ride, each by its km, split as they split (`Loads::rn_fare_x`,

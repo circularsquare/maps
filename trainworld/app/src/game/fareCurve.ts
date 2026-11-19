@@ -163,11 +163,22 @@ export function fareAt(nodes: FareNode[], km: number): number {
   return Math.max(0, f0 + ((f1 - f0) * (km - k0)) / (k1 - k0));
 }
 
-/** The first stretch as a line: its fare at 0 km (not below 0) and its slope. */
+/** T-3739: route search charges the line's rate on every ride, so a steep first stretch (a jump a
+ * point 0.1 km out) would price every long ride as if the jump went on. Its rate is held to the curve's
+ * average slope over this far; each pair's curve extra makes up what riders pay. */
+const SEARCH_SLOPE_KM = 10;
+
+/** The first stretch as a line: its fare at 0 km (not below 0) and its slope, no steeper than the
+ * curve's average over its first `SEARCH_SLOPE_KM`. */
 export function firstStretch(nodes: FareNode[]): { base: number; perKm: number } {
   if (nodes.length < 2) return { base: nodes[0]?.[1] ?? 0, perKm: 0 };
   const [[k0, f0], [k1, f1]] = nodes;
-  const perKm = (f1 - f0) / (k1 - k0);
+  let perKm = (f1 - f0) / (k1 - k0);
+  if (k1 < SEARCH_SLOPE_KM && nodes.length > 2) {
+    const avg = (fareAt(nodes, SEARCH_SLOPE_KM) - f0) / (SEARCH_SLOPE_KM - k0);
+    // only when materially gentler: a straight line's own rate stays as it was to the last bit
+    if (avg < perKm * (1 - 1e-6)) perKm = Math.max(0, avg);
+  }
   return { base: Math.max(0, f0 - perKm * k0), perKm };
 }
 
@@ -176,30 +187,45 @@ const cents = (v: number) => Math.round(v * 100) / 100;
  * reads back as typed */
 const fine = (v: number) => Math.round(v * 1e4) / 1e4;
 
-/** Three nodes, the first at 0 km: in order and apart by `NODE_GAP_KM` within range, fares to a
- * hundredth of a cent, and
- * never falling in fare. Any other curve (an older save's two nodes, or more) becomes its line
- * through its first and last node, at `NODE_KM`. */
+/** T-3739: the most points a curve has (the base fare's included). */
+export const MAX_NODES = 12;
+/** Whether a curve is other than the Money tab's three points: set in the Advanced fares panel. */
+export const isCustomCurve = (nodes: readonly FareNode[]): boolean => nodes.length !== NODE_KM.length;
+
+/** `nodes` as the curve's line through its first and last node, at `NODE_KM`. */
+function asLine(sorted: FareNode[]): FareNode[] {
+  const [k0, f0] = sorted[0], [k1, f1] = sorted[sorted.length - 1];
+  const perKm = k1 > k0 ? Math.max(0, (f1 - f0) / (k1 - k0)) : 0;
+  return lineNodes(Math.max(0, f0 - perKm * k0), perKm);
+}
+
+/** 1 to `MAX_NODES` nodes, the first at 0 km: in order and apart by `NODE_GAP_KM` within range, fares
+ * to a hundredth of a cent, and never falling in fare (T-3739: any count, set in the Advanced fares
+ * panel). A curve not starting at 0 km, or none, becomes its line through its first and last node at
+ * `NODE_KM`; past `MAX_NODES` the first ones and the last are kept. */
 export function tidyNodes(nodes: FareNode[]): FareNode[] {
-  const sorted = [...nodes].sort((a, b) => a[0] - b[0]);
-  let out: FareNode[];
-  if (sorted.length === 3 && sorted[0][0] === 0) out = sorted.map(([k, f]) => [k, f] as FareNode);
-  else {
-    const [k0, f0] = sorted[0], [k1, f1] = sorted[sorted.length - 1];
-    const perKm = k1 > k0 ? Math.max(0, (f1 - f0) / (k1 - k0)) : 0;
-    out = lineNodes(Math.max(0, f0 - perKm * k0), perKm);
-  }
+  if (!nodes.length) return START_NODES.map(([k, f]) => [k, f] as FareNode);
+  let sorted = [...nodes].sort((a, b) => a[0] - b[0]);
+  if (sorted.length > MAX_NODES) sorted = [...sorted.slice(0, MAX_NODES - 1), sorted[sorted.length - 1]];
+  const out: FareNode[] = sorted[0][0] === 0 ? sorted.map(([k, f]) => [k, f] as FareNode) : asLine(sorted);
+  const n = out.length;
   out[0][0] = 0;
-  out[1][0] = Math.min(MAX_KM - NODE_GAP_KM, Math.max(NODE_GAP_KM, cents(out[1][0])));
-  out[2][0] = Math.min(MAX_KM, Math.max(out[1][0] + NODE_GAP_KM, cents(out[2][0])));
+  for (let i = 1; i < n; i++) out[i][0] = Math.min(MAX_KM - NODE_GAP_KM * (n - 1 - i), Math.max(out[i - 1][0] + NODE_GAP_KM, cents(out[i][0])));
   out[0][1] = capFare(fine(out[0][1]));
-  for (let i = 1; i < 3; i++) out[i][1] = Math.max(out[i - 1][1], capFare(fine(out[i][1])));
+  for (let i = 1; i < n; i++) out[i][1] = Math.max(out[i - 1][1], capFare(fine(out[i][1])));
   return out;
+}
+
+/** An older save's curve (before T-3739, a two-node one before T-1143): three nodes, any other count
+ * its line through its first and last node. */
+export function simpleNodes(nodes: FareNode[]): FareNode[] {
+  const sorted = [...nodes].sort((a, b) => a[0] - b[0]);
+  return tidyNodes(sorted.length === 3 && sorted[0][0] === 0 ? sorted : sorted.length ? asLine(sorted) : sorted);
 }
 
 /** Fares from nodes the player set, or from a base and rate (an old save, a check). */
 export function faresOf(f: { base?: number; perKm?: number; nodes?: FareNode[] } | undefined, fallback: { base: number; perKm: number }): Fares {
-  if (f?.nodes && f.nodes.length >= 2) {
+  if (f?.nodes && f.nodes.length >= 1) {
     const nodes = tidyNodes(f.nodes);
     // a base and rate given with nodes on their line stay as given, to the last digit
     if (f.base !== undefined && f.perKm !== undefined && isStraight({ base: f.base, perKm: f.perKm, nodes })) return { base: f.base, perKm: f.perKm, nodes };

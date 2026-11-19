@@ -6,7 +6,7 @@ import { borrow, repay, setFareBus, setFareFerry, setFareHsr, setFareRef, setFar
 import { LOAN_AMOUNTS, LOAN_RATE, LOAN_TERM, loanAllowed, loanBalance, loanPayment, loanProfit, type Loan } from "../game/loan";
 import { liveMoney, moneyState, stationCountry } from "../game/money";
 import { cityById, HOME_CITY, isCity, viewedZone } from "../game/cities";
-import { BUS_FARE, busFare, FERRY_FARE, ferryFare, HSR_FARE, hsrFare, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
+import { BUS_FARE, busFare, FERRY_FARE, ferryFare, HSR_FARE, hsrFare, isCustomCurve, scaleNodes, tidyHsr, tidyTransfer, transferFare, type FareNode, type Fares } from "../game/fareCurve";
 import { shownEstimate } from "../game/fareEstimate";
 import { roundedDefault } from "../game/fareDefault";
 import { defaultScale, FARE_BASELINE, fareScale, runScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
@@ -18,7 +18,7 @@ import type { DayLedger, MoneyState } from "../workers/protocol";
 import { Icon, Row, Stepper } from "./widgets";
 import { Money } from "./MoneyText";
 import { START_CASH } from "../workers/saveFile";
-import { FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
+import { advancedFares, FareButtons, FareGraph, FareNodeRows, farePreview } from "./FareGraph";
 import { MoneyHistory } from "./MoneyHistory";
 import { ScopeToggle } from "./listParts";
 import { t, tCountry, tNumber } from "../i18n";
@@ -71,7 +71,7 @@ function nearestBuilt(w: NonNullable<typeof world.value>): string | null {
 
 /** T-1277: the country whose fares the panel shows: the selected station's or city's, else the
  * nearest country the player has built in (T-1690), else the zone in view's, else the home city's. */
-function fareCountry(): string {
+export function fareCountry(): string {
   const s = selection.value, w = world.value;
   let c: string | null | undefined = null;
   if (s?.kind === "station" && w) {
@@ -89,7 +89,7 @@ function fareCountry(): string {
 
 /** T-2679: the reference country, whose fares the panel's multiples are of: the game's (its first
  * built station's, or the player's pick), else the start zone's, else the home city's. */
-function fareRef(f: Fares): string {
+export function fareRef(f: Fares): string {
   const z = gameStartZone();
   return f.ref ?? (z && isCity(z) ? cityById(z).country : undefined) ?? cityById(HOME_CITY).country ?? FARE_BASELINE;
 }
@@ -98,7 +98,7 @@ function fareRef(f: Fares): string {
  * the reference itself a plain 1.00x; any other a stepper to the next 0.05x up or down (a default is
  * an odd multiple like 0.63x), typed on a click, a button that
  * makes it the reference, and one back to its default once the player has set one. */
-function FareScaleRow({ country, scale, own, scales, refCountry: ref }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined; refCountry: string }) {
+export function FareScaleRow({ country, scale, own, scales, refCountry: ref }: { country: string; scale: number; own: boolean; scales: Record<string, number> | undefined; refCountry: string }) {
   const name = tCountry(country);
   const text = (v: number) => `${fix2(v)}x`;
   if (country === ref) {
@@ -128,7 +128,7 @@ function FareScaleRow({ country, scale, own, scales, refCountry: ref }: { countr
 
 /** T-1626: the fare multiplier on high-speed lines: a stepper by 0.05, typed on a click, and a
  * button back to the default once the player has set another. */
-function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
+export function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
   const set = (v: number) => void setFareHsr(tidyHsr(v));
   const text = (v: number) => `${fix2(v)}x`;
   return (
@@ -144,7 +144,7 @@ function HsrFareRow({ mul, own }: { mul: number; own: boolean }) {
 }
 
 /** T-3028: the fare multiplier on bus lines, as the ferry one. */
-function BusFareRow({ mul }: { mul: number }) {
+export function BusFareRow({ mul }: { mul: number }) {
   const set = (v: number) => void setFareBus(tidyHsr(v));
   const text = (v: number) => `${fix2(v)}x`;
   return (
@@ -160,7 +160,7 @@ function BusFareRow({ mul }: { mul: number }) {
 }
 
 /** T-2194: the fare multiplier on ferry lines, as the high-speed one (notes/T-2177.md 3.7). */
-function FerryFareRow({ mul }: { mul: number }) {
+export function FerryFareRow({ mul }: { mul: number }) {
   const set = (v: number) => void setFareFerry(tidyHsr(v));
   const text = (v: number) => `${fix2(v)}x`;
   return (
@@ -177,7 +177,7 @@ function FerryFareRow({ mul }: { mul: number }) {
 
 /** T-1801: the transfer fare as charged where the panel looks (times its scale): a stepper by
  * $0.25, typed on a click, as the base fare. */
-function TransferFareRow({ fare, base, scale }: { fare: number; base: number; scale: number }) {
+export function TransferFareRow({ fare, base, scale }: { fare: number; base: number; scale: number }) {
   const shown = fare * scale, baseShown = base * scale; // T-3689: at most the base fare
   const set = (v: number) => void setFareTransfer(tidyTransfer(Math.min(Math.max(0, v), baseShown) / scale));
   return (
@@ -193,7 +193,7 @@ function TransferFareRow({ fare, base, scale }: { fare: number; base: number; sc
 
 /** T-1300: what the fare being dragged, or one demand has yet to solve, would do to rail trips and
  * fare income a day; nothing otherwise. */
-function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: number }) {
+export function FareEffect({ preview, scale }: { preview: FareNode[] | null; scale: number }) {
   const e = shownEstimate(preview && scaleNodes(preview, 1 / scale));
   if (!e) return null;
   const dr = e.riders / e.ridersNow - 1, df = e.fares - e.faresNow;
@@ -285,9 +285,13 @@ export function MoneyTab() {
           <TodayCell zone={zone} v={ledgerNet} />
         </tr>
       </table>
-      <div class="h">{t("moneyTab.fare")}<span class="right"><FareButtons nodes={f} /></span></div>
+      <div class="h">{t("moneyTab.fare")}<span class="right">
+        {/* T-3739: the Advanced fares panel, opened on this country */}
+        <button class="btn text mini fare-advanced" aria-pressed={advancedFares.value !== null} onClick={() => (advancedFares.value = country)}>{t("moneyTab.advanced")}</button>
+        <FareButtons nodes={f} />
+      </span></div>
       <FareGraph nodes={shown} scale={scale} />
-      <FareNodeRows nodes={f} scale={scale}
+      <FareNodeRows nodes={f} scale={scale} custom={isCustomCurve(m.fares.nodes) ? t("moneyTab.fareCustom") : undefined}
         last={<>
           {hsr !== null && <HsrFareRow mul={hsr} own={hsr !== HSR_FARE} />}
           {busLine !== null && <BusFareRow mul={busLine} />}

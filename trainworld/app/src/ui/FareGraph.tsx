@@ -7,10 +7,10 @@
 // and the figures below it; the fare goes to the game once, on release, since each change starts
 // the demand again.
 
-import { signal } from "@preact/signals";
+import { signal, type Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
-import { fareAt, MAX_KM, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
+import { fareAt, MAX_KM, MAX_NODES, NODE_GAP_KM, scaleNodes, type FareNode } from "../game/fareCurve";
 import { currencySpec, fromShown, price, priceTyped, toShown, typedPrice, unitMetres, unitShort } from "../game/format";
 import { roundTo } from "../game/currency";
 import { canUndoFares, changeFares, undo } from "../game/fareUndo";
@@ -28,7 +28,10 @@ export const farePreview = signal<FareNode[] | null>(null);
  * fits the nodes. Kept while the game is open. */
 const fareSpan = signal<number | null>(null);
 
-const W = 300, H = 150, L = 6, R = 294, T = 10, B = 134;
+/** The plot's frame in its viewBox units: the dock's, and T-3739's bigger one in the Advanced fares
+ * panel (its own units, so labels and lines keep their size). */
+const SMALL = { W: 300, H: 150, L: 6, R: 294, T: 10, B: 134 };
+const BIG = { W: 560, H: 260, L: 6, R: 554, T: 10, B: 244 };
 const MIN_SPAN = 1;
 /** The fare the plot's height shows per km of the distance shown, US$: the fixed ratio of the two
  * scales (the default view, 200 km, shows $30). */
@@ -54,6 +57,9 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 // T-2798: fares are US$ underneath and read in the shown currency (game/format.ts `price`)
 const usd = price;
 const distText = (u: number) => (u < 10 ? tNumber(Math.round(u * 10) / 10, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : tNumber(Math.round(u)));
+/** A point's distance: as `distText`, with its tenth kept past 10 when it has one (a step's riser at
+ * 11.1 reads apart from 11). */
+const nodeDist = (u: number) => (u >= 10 && Math.abs(u - Math.round(u)) >= 0.05 ? tNumber(Math.round(u * 10) / 10, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : distText(u));
 const maxSpan = (kpu: number) => MAX_KM / kpu;
 const clampSpan = (s: number, kpu: number) => clamp(s, MIN_SPAN, maxSpan(kpu));
 
@@ -97,13 +103,43 @@ export function FareButtons({ nodes }: { nodes: FareNode[] }) {
 }
 
 /** How far node `i` may go, km and US$: past the node before it and short of the one after, by
- * `gap` km, and never cheaper than the one before or dearer than the one after. */
+ * `gap` km (T-3739: or by as little as it already is, so a step's riser keeps its spacing), and never
+ * cheaper than the one before or dearer than the one after. */
 function limits(nodes: FareNode[], i: number, gap = NODE_GAP_KM) {
-  const prev = nodes[i - 1], next = nodes[i + 1];
+  const prev = nodes[i - 1], next = nodes[i + 1], k = nodes[i][0];
+  const near = (d: number) => Math.min(gap, Math.max(NODE_GAP_KM, d));
   return {
-    kLo: prev ? prev[0] + gap : 0, kHi: next ? next[0] - gap : MAX_KM,
+    kLo: prev ? prev[0] + near(k - prev[0]) : 0, kHi: next ? next[0] - near(next[0] - k) : MAX_KM,
     fLo: prev ? prev[1] : 0, fHi: next ? next[1] : Infinity,
   };
+}
+
+/** T-3739: a point added at `u` display units and fare `fare` (US$ shown). Within `magnet` km of a
+ * point (a few pixels), it goes right beside it, after it when the pointer is above it and before it
+ * when below, so a click over a point makes a step; elsewhere its distance snaps as a drag's. Its fare
+ * snaps and is held between its neighbours' so fares never fall. The new nodes and its index, or null
+ * where no point fits (before the base, between two points closer than two gaps, or the curve full). */
+function placeAt(nodes: FareNode[], u: number, fare: number, span: number, h: number, kpu: number, magnet: number): { nodes: FareNode[]; i: number } | null {
+  if (nodes.length >= MAX_NODES) return null;
+  const raw = u * kpu;
+  const closest = (k: number) => nodes.reduce((a, n) => (Math.abs(n[0] - k) < Math.abs(a[0] - k) ? n : a), nodes[0]);
+  const beside = (n: FareNode) => (fare >= n[1] ? n[0] + NODE_GAP_KM : n[0] - NODE_GAP_KM);
+  let km = snap(u, niceUp(span / 200)) * kpu;
+  const by = closest(raw);
+  if (Math.abs(by[0] - raw) < magnet) km = beside(by);
+  else { const near = closest(km); if (Math.abs(near[0] - km) < NODE_GAP_KM - 1e-9) km = beside(near); }
+  if (km < NODE_GAP_KM - 1e-9 || km > MAX_KM) return null;
+  const i = nodes.findIndex((n) => n[0] > km), at = i < 0 ? nodes.length : i;
+  const prev = nodes[at - 1], next = nodes[at];
+  if (km < prev[0] + NODE_GAP_KM - 1e-9 || (next && km > next[0] - NODE_GAP_KM + 1e-9)) return null;
+  const rate = currencySpec().rate, step = Math.max(currencySpec().grain, niceUp((h * rate) / 250));
+  let f = clamp(snap(fare * rate, step) / rate, prev[1], next ? next[1] : Infinity);
+  // a fare within a step of a neighbour's is its, so a flat stretch comes out flat
+  if (Math.abs(f - prev[1]) * rate <= step) f = prev[1];
+  else if (next && Math.abs(f - next[1]) * rate <= step) f = next[1];
+  const out = nodes.map((n) => [...n] as FareNode);
+  out.splice(at, 0, [km, f]);
+  return { nodes: out, i: at };
 }
 
 /** US$ to the shown currency's finest step (a cent, a yen, ten won), as US$ */
@@ -135,8 +171,10 @@ function fromRows(base: number, stretches: [number, number][]): FareNode[] {
  * rate per unit (stepped by whole cents, or typed). A row's change keeps the other rows' values, so a
  * rate or base change moves every later node's fare by the same amount; a drag on the graph sets
  * fares instead. One grid across the rows, so the steppers line up. */
-export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale: number; last?: ComponentChildren }) {
+export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { nodes: FareNode[]; scale: number; last?: ComponentChildren; remove?: boolean; custom?: ComponentChildren }) {
   const setFares = (ns: FareNode[]) => sendFares(ns, scale);
+  // T-3739: a curve set in the Advanced fares panel shows one line here instead of its points
+  if (custom) return <ul class="rows fare-rows"><li><span class="fr-what fr-custom">{custom}</span></li>{last}</ul>;
   const kpu = unitMetres() / 1000;
   const unit = unitShort();
   const stretches = nodes.slice(1).map((n, j) => [n[0], rateOf(nodes, j + 1)] as [number, number]);
@@ -156,7 +194,7 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
         const i = j + 1;
         const lim = limits(nodes, i);
         const from = nodes[i - 1][0] / kpu, u = km / kpu;
-        const fromText = from === 0 ? "0" : distText(from);
+        const fromText = from === 0 ? "0" : nodeDist(from);
         const rateU = rate * kpu;
         const last = i === nodes.length - 1;
         const setU = (v: number) => { if (lim.kLo <= lim.kHi) put(base, stretches.map((s, k) => (k === j ? [clamp(v * kpu, lim.kLo, lim.kHi), s[1]] : s))); };
@@ -182,10 +220,14 @@ export function FareNodeRows({ nodes, scale, last }: { nodes: FareNode[]; scale:
             {last
               ? <span class="fr-what">{t("fareGraph.past", { from: fromText, unit })}</span>
               : <span class="fr-what">{tRich("fareGraph.stretchEnd", { from: fromText, unit, end: <TypedValue label={t("fareGraph.endLabel", { n: tNumber(i) })}
-                  type={{ text: distText(u), set: setU, tip: t("fareGraph.endTip", { unit }) }}>{distText(u)}</TypedValue> })}</span>}
+                  type={{ text: nodeDist(u), set: setU, tip: t("fareGraph.endTip", { unit }) }}>{nodeDist(u)}</TypedValue> })}</span>}
             <Stepper value={`+${rateText(rateU)}`} wide label={t("fareGraph.rateLabel", { n: tNumber(i) })} onStep={stepRate}
-              type={{ text: rateTyped(rateU), set: setRate, tip: t("fareGraph.rateTip", { last, rate: rateText(rateU), unit, from: fromText, to: distText(u) }) }} />
-            <span>{t("fareGraph.perUnit", { unit })}</span>
+              type={{ text: rateTyped(rateU), set: setRate, tip: t("fareGraph.rateTip", { last, rate: rateText(rateU), unit, from: fromText, to: nodeDist(u) }) }} />
+            {remove
+              ? <span class="fr-end">{t("fareGraph.perUnit", { unit })}
+                  <button class="btn icon mini" aria-label={t("fareGraph.removePoint")} data-tip={t("fareGraph.removePoint")}
+                    onClick={() => { playBuild("pop"); void setFares(nodes.filter((_, k) => k !== i)); }}><Icon.bin /></button></span>
+              : <span>{t("fareGraph.perUnit", { unit })}</span>}
           </li>
         );
       })}
@@ -204,7 +246,18 @@ interface Drag {
   span: number; y0: number; h: number;
 }
 
-export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }) {
+/** T-3739: the Advanced fares panel, open on the country it shows first; null closed. */
+export const advancedFares = signal<string | null>(null);
+/** T-3739: the Advanced fares panel's "Add point" is pressed: the next click on its graph adds one there. */
+export const fareAdding = signal(false);
+
+/** `big`: the Advanced fares panel's, with its own `preview` (its country's scale may differ from the
+ * dock's) and the add-point click while `fareAdding`. */
+export function FareGraph({ nodes, scale, big = false, preview = farePreview }: { nodes: FareNode[]; scale: number; big?: boolean; preview?: Signal<FareNode[] | null> }) {
+  const { W, H, L, R, T, B } = big ? BIG : SMALL;
+  const farePreview = preview;
+  const adding = big && fareAdding.value;
+  const [ghost, setGhost] = useState<{ nodes: FareNode[]; i: number } | null>(null);
   const setFares = (ns: FareNode[]) => sendFares(ns, scale);
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -232,12 +285,29 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   const unitAt = (px: number) => ((px - L) / (R - L)) * span;
 
   // the curve is straight between its corners: 0, the nodes and the right edge
-  const corners = [...new Set([...shown.map((n) => n[0] / kpu), span])].filter((u) => u >= 0 && u <= span).sort((a, b) => a - b);
-  const curve = corners.map((u, i) => `${i ? "L" : "M"}${x(u).toFixed(1)},${y(fareU(u)).toFixed(1)}`).join("");
+  const pathOf = (ns: FareNode[]) => [...new Set([...ns.map((n) => n[0] / kpu), span])].filter((u) => u >= 0 && u <= span).sort((a, b) => a - b)
+    .map((u, i) => `${i ? "L" : "M"}${x(u).toFixed(1)},${y(fareAt(ns, u * kpu)).toFixed(1)}`).join("");
+  const curve = pathOf(shown);
 
-  const pointer = (e: PointerEvent) => {
+  const pointer = (e: PointerEvent | MouseEvent) => {
     const r = svg.current!.getBoundingClientRect();
     return { x: ((e.clientX - r.left) * W) / r.width, y: ((e.clientY - r.top) * H) / r.height };
+  };
+  // T-3739: where a click would add a point, from the pointer
+  const placing = (e: PointerEvent | MouseEvent) => {
+    const p = pointer(e);
+    // within 8 graph units of a point sideways counts as over it
+    return placeAt(nodes, unitAt(clamp(p.x, L, R)), y0 + ((B - clamp(p.y, T, B)) / (B - T)) * h, span, h, kpu, (8 / (R - L)) * span * kpu);
+  };
+  useEffect(() => { if (!adding) setGhost(null); }, [adding]);
+  const add = (e: MouseEvent) => {
+    if (!adding) return;
+    const g = placing(e);
+    if (!g) return;
+    setGhost(null);
+    fareAdding.value = false;
+    playBuild("pop");
+    void setFares(g.nodes);
   };
   const onNode = (i: number) => (e: PointerEvent) => {
     if (e.button !== 0 || pinch.current) return;
@@ -258,7 +328,8 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       d.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
     }
     const ns = nodes.map((n) => [...n] as FareNode);
-    const lim = limits(ns, d.i, Math.max(NODE_GAP_KM, 0.02 * d.span * kpu));
+    // T-3739: the panel's graph lets a point be dragged right up to its neighbour, so a drag can make a step
+    const lim = limits(ns, d.i, big ? NODE_GAP_KM : Math.max(NODE_GAP_KM, 0.02 * d.span * kpu));
     if (d.axis === "x") {
       const hi = Math.min(d.span, lim.kHi / kpu), lo = lim.kLo / kpu;
       ns[d.i][0] = (lo > hi ? d.u0 : clamp(snap(d.u0 + (dx / (R - L)) * d.span, niceUp(d.span / 200)), lo, hi)) * kpu;
@@ -306,6 +377,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       if (pc.ids.size === 2 && pc.d0 > 0) fareSpan.value = clampSpan((pc.span0 * pc.d0) / Math.max(1, apart(pc.ids)), kpu);
     }
     if (!drag.current) setHoverX(Math.max(L, Math.min(R, pointer(e).x)));
+    if (adding && e.pointerType !== "touch") setGhost(placing(e));
   };
   const plotUp = (e: PointerEvent) => {
     const pc = pinch.current;
@@ -316,7 +388,11 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   };
 
   const hoverU = hoverX === null ? null : unitAt(hoverX);
-  const hoverTip = hoverU === null ? undefined : t("fareGraph.hoverTip", { distance: distText(hoverU), unit, fare: usd(fareU(hoverU)) });
+  const ghostAt = ghost && ghost.nodes[ghost.i];
+  const hoverTip = adding
+    ? t("fareGraph.addTip") + (ghostAt ? "\n" + t("fareGraph.hoverTip", { distance: nodeDist(ghostAt[0] / kpu), unit, fare: usd(ghostAt[1]) }) : "")
+    : hoverU === null ? undefined : t("fareGraph.hoverTip", { distance: distText(hoverU), unit, fare: usd(fareU(hoverU)) });
+  const clipId = big ? "fare-clip-big" : "fare-clip";
   const xStep = niceUp(span / 5);
   const xTicks = Array.from({ length: Math.floor(span / xStep + 1e-9) }, (_, i) => (i + 1) * xStep);
   // the fare axis in the shown currency (T-2798): ticks `yTicks` are in it, and drawn at their US$ height
@@ -340,8 +416,8 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
   };
 
   return (
-    <svg class={"fare-graph" + (d?.axis ? ` fg-drag-${d.axis}` : "")} ref={svg} viewBox={`0 0 ${W} ${H}`} onWheel={onWheel}>
-      <defs><clipPath id="fare-clip"><rect x={L} y={T} width={R - L} height={B - T} /></clipPath></defs>
+    <svg class={"fare-graph" + (big ? " big" : "") + (adding ? " fg-adding" : "") + (d?.axis ? ` fg-drag-${d.axis}` : "")} ref={svg} viewBox={`0 0 ${W} ${H}`} onWheel={onWheel}>
+      <defs><clipPath id={clipId}><rect x={L} y={T} width={R - L} height={B - T} /></clipPath></defs>
       {xTicks.map((tk) => <line class="fg-grid" x1={x(tk)} x2={x(tk)} y1={T} y2={B} />)}
       {yTicks.map((v) => <line class="fg-grid" x1={L} x2={R} y1={y(v / rate)} y2={y(v / rate)} />)}
       <line class="fg-axis" x1={L} x2={R} y1={B} y2={B} />
@@ -352,12 +428,14 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       ))}
       {/* a label the base fare's node would cover is left out */}
       {yTicks.filter((v) => Math.abs(y(v / rate) - y(shown[0][1])) > 12).map((v) => <text class="fg-label" x={L + 3} y={y(v / rate) - 2}>{fareText(v)}</text>)}
-      <path class="fg-curve" d={curve} clip-path="url(#fare-clip)" />
+      {ghost && <path class="fg-curve fg-ghost" d={pathOf(ghost.nodes)} clip-path={`url(#${clipId})`} />}
+      <path class={"fg-curve" + (ghost ? " fg-under" : "")} d={curve} clip-path={`url(#${clipId})`} />
       <rect class="fg-hover" x={L} y={T} width={R - L} height={B - T} data-tip={hoverTip}
         onPointerDown={plotDown} onPointerMove={(e) => { if (drag.current) move(e); else plotMove(e); }}
         onPointerUp={(e) => { if (drag.current) end(); plotUp(e); }} onPointerCancel={(e) => { if (drag.current) end(); plotUp(e); }}
-        onPointerLeave={() => setHoverX(null)} />
-      {hoverU !== null && (
+        onPointerLeave={() => { setHoverX(null); setGhost(null); }} onClick={add} />
+      {ghostAt && <circle class="fg-knob fg-ghost-knob" cx={x(ghostAt[0] / kpu)} cy={y(ghostAt[1])} r={4.5} />}
+      {!adding && hoverU !== null && (
         <>
           <line class="fg-guide" x1={x(hoverU)} x2={x(hoverU)} y1={Math.max(T, y(fareU(hoverU)))} y2={B} />
           {y(fareU(hoverU)) >= T && <circle class="fg-dot" cx={x(hoverU)} cy={y(fareU(hoverU))} r={2.5} />}
@@ -365,7 +443,7 @@ export function FareGraph({ nodes, scale }: { nodes: FareNode[]; scale: number }
       )}
       {shown.map(([km, f], i) => {
         const cx = x(km / kpu), cy = y(f);
-        const tip = i === 0 ? t("fareGraph.baseNodeTip", { fare: usd(f) }) : t("fareGraph.nodeTip", { distance: distText(km / kpu), unit, fare: usd(f) });
+        const tip = i === 0 ? t("fareGraph.baseNodeTip", { fare: usd(f) }) : t("fareGraph.nodeTip", { distance: nodeDist(km / kpu), unit, fare: usd(f) });
         if (cx <= R + 0.5 && cy >= T - 0.5) {
           return (
             <g class={"fg-node" + (i === 0 ? " ns" : "")} onPointerDown={onNode(i)} onPointerEnter={() => setHoverNode(i)} onPointerLeave={() => setHoverNode(null)} {...dragProps}>
