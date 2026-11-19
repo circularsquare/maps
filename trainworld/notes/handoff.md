@@ -27,10 +27,12 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      periods0 (Opus) T-3542 stage 0 port 6199 (T-3542 before T-3346 stage 2: DECISIONS 11-18; tt2 untouched).
    - T-3738 share previews: her yes 00:12 UTC ("built as described yes, as long as theres no substantial new costs";
      schematic with no names OK). Built: shonei-server 5c0a276 + debd1e1 (not pushed/deployed), worker in
-     trainworld/tools/sharepreview/ (uncommitted). Ask 29: free worker (35-51% of 100k/day, shared with graffiti)
-     or $5/mo or short link. Then server deploy on her word, her `wrangler login`, steps at end of notes/T-3738.md.
-   - T-3495 freight snap: checker found +2.2 s and +200 MB for US players; freightsnap resumed to split kinds 8/9
-     into a per-country file loaded only under All, router ignores them otherwise, fix old-app `< 0` tests.
+     trainworld/tools/sharepreview/ (committed). Free worker, fail open (her pick). Logo 962fcae. Server DEPLOYED
+     01:03 UTC on her "ok lets deploy!" and pushed; live previews verified (200 image/png). Left: her
+     `npx wrangler@4.151.0 login` (she's on a walk), then steps 3-7 at the end of notes/T-3738.md.
+   - T-3495 landed d997c203 (c008): kinds 8/9 in <cc>.x.rgr loaded only under All; data/packs/realgraph swapped
+     (154 MB; old folder at data/packs/realgraph.old: delete once 8800 at d997c203 snaps fine). All hover now
+     ends "Uses more memory" (acked). realgraph.old deleted; 8800 = d997c203 serves the new graphs.
    - 8800 = 4bc06cc9 (T-3718, T-3734 stage 2). Smoke on 59544550+T-3718 master PASSED.
    - "Train adjustments": she doesn't recall; dropped. T-3346 stage 2's failing 30/10 case: she's open to fixing it
      "if we think its worthwhile" (part of porting stage 2 after T-3542).
