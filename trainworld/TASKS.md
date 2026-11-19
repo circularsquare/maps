@@ -411,9 +411,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
   - Goal: realgraph also writes a real-networks graph by the old chain rule (outside data/packs/realgraph, not deployed), which brings Saint Petersburg and Berlin back whole; then the sim's 8-end and turn-back limits for Moscow's last 8 routes; Moscow, Saint Petersburg and Berlin reshipped with nothing lost.
   - Other: plan in notes/T-3790.md
-- T-3793 [P1] {L:edit-speed} Station rename takes about 4 s to show up (taking, 2026-11-19, agent renamefast)
-  - Context: You, 2026-11-19: "station renaming takes a long time to show up. it looks like it doesnt go through for a while ... takes like ~4s to update on my large save."
-  - Goal: A rename shows up on the map and panels within about half a second on a large save.
 - T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab
   - Context: Your pad, 2026-11-19: "commonly requested feature: sort lines by type (tram, ferry, hsr, bus, etc)".
   - Goal: The Lines tab can sort by kind (tram, ferry, high speed, bus and the rest), beside its other sorts.
@@ -423,6 +420,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3800 [P3] {L:translations} One word for a demand period in German and Catalan
   - Context: From the v0.4.3 review, 2026-11-19: the schedule window now says Tageszeit (de) and període (ca), but marketTrip.*, oneRider.*, tripInspector.* and routeParts.byPeriod still say Zeitraum and franja.
   - Goal: Every key in de and ca uses the one word, with the glossary's rendering changed to match.
+- T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit
+  - Context: T-3793 found a station rename waiting 1-5.5 s in the clock worker's queue behind the station panel's 250 ms "today" polling (140-745 ms each on a 2,647-station save) and a full network rebuild. You, 2026-11-19: "i could imagine like we build some future feature and it fails like this ... also can check to see if there are any current parallel failures". Leads from T-3793 (landed 366f1078): the hourly `epoch` once took 4.3 s in the worker; `linesPeriods` bursts (up to 9 in flight) and a second `today` asker aren't paced; undo/redo of a rename and the new unbindAll still take the slow path.
+  - Goal: Every panel or window that polls the clock worker is listed with its cost on a big save; any that can hold an edit up is fixed the T-3793 way (poll waits on its own cost, edits go first); a rule in the docs so new polls follow it.
 - T-3325 [P3] {L:real-networks} {after:real-network rebuild batch} Rebuild Sendai so Senzan Line stops at Toshogu
   - Context: You parked this 2026-11-12 since few players open Sendai. The fix is in realnet.py build_lines.
   - Other: Commands in notes/T-3318.md.

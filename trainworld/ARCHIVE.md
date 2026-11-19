@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3793 [P1] {L:edit-speed} Station rename takes about 4 s to show up (2026-11-19): rename 0.65-0.8 s to 0.2-0.3 s on a 2,647-station save; panel shows the name at once. notes/T-3793.md.
 - T-3795 [P1] {L:edit-speed} Schedule window periods row layout and lag (2026-11-19): rows share a line; her hover; period count shows in about 0.4 s on NYC (was 1.3-4.6 s) notes/T-3795.md.
 - T-3796 [P2] {L:fares} Fare zone leftovers after T-3791 (2026-11-19): link asks with T-3791's confirm; none loop; area named for the city under the map centre.
 - T-3797 [P3] {L:small-fixes} Tram line panel shows a Vehicle Tram row (2026-11-19): row shown only for non-tram lines, where it is the Normal/High speed picker.

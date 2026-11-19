@@ -48,6 +48,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 6. Later: T-3744 per-stop fare, T-3754, T-3747, busverify's train 4.14 min gap read (a short probe).
 
 ## Her words
+- 11-19 ~20:40: note the rename-queued-behind-polling shape for future features, and check for current parallel
+  failures, "no rush": T-3801 filed (after T-3793 lands; also a docs rule for new polls).
 - 11-19 ~19:30 (heading out, remote control on): "changelog looks good (i think lets not change it at all)"; she
   approves the final deploy remotely. Plan: last agents land, smoke master, 8800 rebuild, smoke8800 light+dark,
   translate new keys, then ONE ask: server deploy + restore key + Rus restore, data upload, publish + website
