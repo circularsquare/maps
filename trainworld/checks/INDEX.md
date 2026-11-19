@@ -363,7 +363,7 @@ t3599-time-left.mjs | check | - | 13 | 2026-11-17 | the calculating trips hover'
 t3603-weekend-flash.mjs | check | - | 13 | 2026-11-17 | a weekend or weekday headway edit in the timetables window never shows a decimal headway ("6.34...
 t3734-load-gap.mjs | check | - | 22 |  | stage 1: the gap while another game loads into the page (T-3687, T-3722)
 t3734-stops-out.mjs | check | - | 6 |  | stage 1: stop clicks still being sent when the player saves or leaves (T-3731)
-t3734-two-tabs.mjs | check | - | 7 |  | stage 1: two tabs on one save slot (T-3611, T-3698)
+t3734-two-tabs.mjs | check | - | 7 |  | stages 1-2: two tabs on one save slot (T-3611, T-3698, T-2843 finding 4)
 t409-worker-check.mjs | check | - | 16 | 2026-11-05 | the market's pairs split by track network
 t486-click-on-top.mjs | check | - | 0 | 2026-10-27 | clicks reach only what is drawn on top
 t671-ghost-hover.mjs | check | - | 4 | 2026-10-30 | The station ghost's first frame against the worker's answer (T-695), the browser stage of...

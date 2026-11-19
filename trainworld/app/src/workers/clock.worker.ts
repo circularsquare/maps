@@ -509,8 +509,29 @@ function heldNew() {
   seenEdit = 0;
 }
 
+/** T-3734: why the game in hand may not be written to its slot now, first match in the order the saves panel names
+ * it; null if it may. `attempting`: for a write about to be tried, which is itself the retry of a failed write or
+ * of missing storage, so those two do not block it. */
+type WriteBlock = "newer" | "failed" | "storage" | "otherDevice" | "viewing" | "testPage" | "otherTab" | "noLease" | "switching";
+function writeBlock(attempting = false): WriteBlock | null {
+  if (newer) return "newer";
+  if (!attempting && saveFailure) return "failed";
+  if (!attempting && !storageReady) return "storage";
+  if (activeSlot && cloudTaken === activeSlot) return "otherDevice";
+  if (!activeLease) return viewing !== null ? "viewing" : testPage ? "testPage" : leaseTaken ? "otherTab" : "noLease";
+  if (switching) return "switching";
+  return null;
+}
+/** the slot is someone else's to write, or nobody's: leaving loses only a player's change */
+const NOT_MINE: ReadonlySet<WriteBlock | null> = new Set(["newer", "otherDevice", "viewing", "testPage", "otherTab", "noLease"]);
+const BLOCK_REASON: Record<Exclude<WriteBlock, "failed" | "switching">, MessageKey> = {
+  newer: NEWER, storage: "clockWorker.noStorage", otherDevice: "clockWorker.otherDevice", viewing: "clockWorker.viewing",
+  testPage: "clockWorker.testPage", otherTab: "clockWorker.otherTabSaved", noLease: "clockWorker.otherTabOpened",
+};
+/** a swap lasts a moment and the slot stays this page's, so the page is told it is writable meanwhile */
 function writableNow(): boolean {
-  return !!activeLease && storageReady && !saveFailure && !(!!activeSlot && cloudTaken === activeSlot) && !newer;
+  const b = writeBlock();
+  return b === null || b === "switching";
 }
 /** T-1826: tell the page whether closing it would lose a change: one made while nothing can write it. */
 function noteUnsaved() {
@@ -527,15 +548,13 @@ async function publishSlots(error?: string) {
   } catch { storageReady = false; }
   const mine = slots.find((s) => s.key === activeSlot);
   if (mine) activeName = { key: mine.key, name: mine.name };
-  const taken = !!activeSlot && cloudTaken === activeSlot;
+  const block = writeBlock();
   const writable = writableNow();
   noteUnsaved();
-  const reason: MessageKey | string | undefined = newer ? NEWER : saveFailure || (!storageReady ? "clockWorker.noStorage"
-    : taken ? "clockWorker.otherDevice"
-    : !activeLease ? viewing !== null ? "clockWorker.viewing" : testPage ? "clockWorker.testPage"
-      : leaseTaken ? "clockWorker.otherTabSaved"
-      : navigator.locks ? "clockWorker.otherTabOpened"
-      : "clockWorker.noLocks" : undefined);
+  const reason: MessageKey | string | undefined = block === null || block === "switching" ? undefined
+    : block === "failed" ? saveFailure
+    : block === "noLease" && !navigator.locks ? "clockWorker.noLocks"
+    : BLOCK_REASON[block];
   const view = viewing !== null ? { viewing: { ...viewCard, key: "", name: viewing, at: 0, day: Math.floor(gameNow() / 86400) } } : {};
   send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}), ...view });
 }
@@ -545,9 +564,12 @@ let activeName: { key: string; name: string } | null = null;
 async function flushBeforeSwitch() {
   // T-3257: a viewed game is let go unsaved (the page asked the player first)
   if (viewing !== null) return;
-  // T-1826: a newer game's slot is left as it was; only a change made here would be lost
-  if (newer && !edited) return;
-  if (dirty && (!activeLease || cloudTaken === activeSlot || newer)) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
+  // T-1826, T-2843 finding 4: a slot this page may not write is left as it was; only a change the player made here
+  // would be lost (the clock's own settling is not one)
+  if (NOT_MINE.has(writeBlock(true))) {
+    if (edited) throw new Error("Make a copy of this game before leaving it, or download it as a file and reload this page.");
+    return;
+  }
   if (!await autosave()) throw new Error("This game could not be saved. Download it as a file before leaving it.");
 }
 
@@ -2744,7 +2766,7 @@ async function slotSummary(): Promise<SlotSummary> {
 function autosave(): Promise<boolean> {
   if (saveInFlight) return saveInFlight.then(ok => dirty && ok ? autosave() : ok);
   if (!api || !dirty) return Promise.resolve(true);
-  if (!activeLease || switching || cloudTaken === activeSlot || newer) return Promise.resolve(false);
+  if (writeBlock(true)) return Promise.resolve(false);
   // T-677: a new game whose slot was never written is not kept while its network is empty
   if (unwritten === activeSlot && !api.nodes_info().length && !api.lines_info().length) {
     dirty = edited = false;
@@ -2846,7 +2868,8 @@ async function saveByHand() {
     saveFailure = undefined;
     dirty = true;
     byHandNext = true;
-    if (!await autosave()) throw new Error(saveFailure ?? "clockWorker.couldNotSave");
+    // T-3698: a write refused because another tab saved the slot meanwhile; the next save by hand takes it back
+    if (!await autosave()) throw new Error(writeBlock(true) === "otherTab" ? "clockWorker.savedInOtherTab" : saveFailure ?? "clockWorker.couldNotSave");
     send({ kind: "savedByHand", at: savedAt });
   } catch (err) {
     send({ kind: "savedByHand", error: (err as Error).message });

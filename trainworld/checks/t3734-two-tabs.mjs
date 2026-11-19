@@ -1,16 +1,18 @@
-// T-3734 stage 1: two tabs on one save slot (T-3611, T-3698). One Chrome profile, tabs A and B on the same slot.
+// T-3734 stages 1-2: two tabs on one save slot (T-3611, T-3698, T-2843 finding 4). One Chrome profile, tabs A and B on the same slot.
 //   1. build: A's save is held while it is being built; B changes the game and saves it manually (taking the
-//      slot); A is let go. B's save must still be in the slot (T-3611, the lost-lease message arriving in time).
+//      slot); A is let go. B's save must still be in the slot (T-3611, the lost-lease message arriving in time),
+//      and A's held manual save must say the game was saved in another tab, not "could not be saved" (T-3734).
 //   2. write: the same with the roles swapped and the hold just before the slot write, after the lease was
 //      checked (T-3611, the message too late; the write itself must refuse).
-//   3. T-3698 (open, expected to fail): the other tab writes the slot while this one still holds its lease (a
-//      late lock message, stood in for by a write from B's page without the lease); then A saves manually. It
-//      should take the slot back or say the game was saved in another tab, not "could not be saved". Printed as
-//      XFAIL while it fails and XPASS once fixed (then make it a plain line); neither changes the exit code.
+//   3. T-3698: the other tab writes the slot while this one still holds its lease (a late lock message, stood in
+//      for by a write from B's page without the lease); then A saves manually. It must say the game was saved in
+//      another tab and leave the slot as it is; A's next manual save takes the slot back.
+//   4. T-2843 finding 4: a third tab C opens the slot read-only (A holds it), its clock runs, and nothing of the
+//      player's changes; Save and quit to main menu must reach the start menu.
 // The holds are stand-ins for a slow worker: saveFile.ts (the storage layer, which the refactor keeps) is patched
 // in each tab's clock worker so `encodeSave` or `writeSlot` waits on a BroadcastChannel message naming that tab.
 //   node trainworld/checks/t3734-two-tabs.mjs [url]     (from the maps root; default localhost:6177)
-// Prints PASS / FAIL / XFAIL lines and exits 1 on a FAIL. About 40 s on three cores.
+// Prints PASS / FAIL lines and exits 1 on a FAIL. About 75 s on three cores.
 import { createHash } from 'node:crypto';
 import { launchChrome, collectErrors, ANGLE, acrossLine } from './lib.mjs';
 
@@ -26,7 +28,9 @@ const gate = (tab) => `const __tw3734 = (() => { if (typeof WorkerGlobalScope ==
     if (d.cmd === "hold") { armed = d.at; c.postMessage({ tab: ${JSON.stringify(tab)}, armed: d.at }); } else if (d.cmd === "release") { armed = null; open?.(); open = null; } };
   return async (at) => { if (armed !== at) return; armed = null; c.postMessage({ tab: ${JSON.stringify(tab)}, held: at }); await new Promise((r) => { open = r; }); };
 })();\n`;
-const patched = { A: 0, B: 0 };
+const patched = { A: 0, B: 0, C: 0 };
+/** a manual save's answer when another tab saved the slot meanwhile: the worker's message key */
+const OTHER_TAB = /^clockWorker\.savedInOtherTab$/;
 
 const { ctx, close } = await launchChrome({ prefix: 'tw-t3734-tabs-', size: [1300, 900], args: ANGLE });
 const errors = [];
@@ -48,7 +52,14 @@ try {
       const W = window.Worker;
       window.__byHand = [];
       window.Worker = class extends W {
-        constructor(u, o) { super(u, o); this.addEventListener('message', (e) => { if (e.data?.kind === 'savedByHand') window.__byHand.push(e.data.error ?? 'ok'); }); }
+        constructor(u, o) {
+          super(u, o);
+          this.addEventListener('message', (e) => {
+            if (e.data?.kind === 'savedByHand') window.__byHand.push(e.data.error ?? 'ok');
+            // kept over the reload a leave ends in
+            if (e.data?.kind === 'left') sessionStorage.setItem('t3734-left', e.data.error ?? 'ok');
+          });
+        }
       };
     });
     await page.goto(`${BASE}?debug=1&paused=1&lang=en&v=${Date.now()}`);
@@ -112,8 +123,11 @@ try {
     const wAnswer = await wSave;
     await pause(1500);
     const final = await record(taker, key);
+    const wNow = await slots(writer);
     report(`${name}: the manual save of the tab that took the slot is kept`, tSave === 'ok' && final === afterTake,
-      `(taker's save ${tSave}; slot after it ${afterTake}, at the end ${final}; held writer's save ${wAnswer}; writer now ${JSON.stringify(await slots(writer))})`);
+      `(taker's save ${tSave}; slot after it ${afterTake}, at the end ${final}; held writer's save ${wAnswer}; writer now ${JSON.stringify(wNow)})`);
+    report(`${name}: the held writer's manual save says another tab saved the game`, OTHER_TAB.test(wAnswer) && /another tab/i.test(wNow.error),
+      `(answer "${wAnswer}"; shown "${wNow.error}")`);
   };
   await race('build', A, 'A', B, 'build');
   await race('write', B, 'B', A, 'write');
@@ -130,9 +144,36 @@ try {
   const answer = await saveByHand(A);
   const after = await record(A, key);
   const s3 = await slots(A);
-  // the answer is a message key (clockWorker.otherTabSaved) or text; `reason` already says "another tab" today
-  const ok = answer === 'ok' && after !== forged || /otherTab|another tab/i.test(answer) || /another tab/i.test(s3.error);
-  console.log(`${ok ? 'XPASS (T-3698 looks fixed: make this a plain PASS line)' : 'XFAIL (T-3698, open)'}  a manual save after the slot was written under this tab's lease takes it back or says another tab saved it  (A before ${JSON.stringify(a3)}; answer "${answer}"; slot ${forged} -> ${after}; A after ${JSON.stringify(s3)})`);
+  report('T-3698: a manual save after the slot was written under this tab\'s lease says another tab saved it', OTHER_TAB.test(answer) && after === forged,
+    `(A before ${JSON.stringify(a3)}; answer "${answer}"; slot ${forged} -> ${after}; A after ${JSON.stringify(s3)})`);
+  const again = await saveByHand(A);
+  const taken = await record(A, key);
+  const s3b = await slots(A);
+  report('T-3698: the next manual save takes the slot back', again === 'ok' && taken !== forged && s3b.writable,
+    `(answer "${again}"; slot ${forged} -> ${taken}; A now ${JSON.stringify(s3b)})`);
+
+  // ---- 4. T-2843 finding 4: a read-only tab with its clock running and no change of the player's leaves
+  const C = await open('C');
+  const c0 = await slots(C);
+  if (c0.active !== key || c0.writable) throw new Error(`finding 4 set-up: C on ${c0.active}, writable ${c0.writable} (want ${key}, read-only)`);
+  await C.bringToFront();
+  const ran = await C.evaluate(async () => {
+    const { clock } = await import('/src/game/clock.ts');
+    const t0 = clock.now(), w0 = performance.now();
+    clock.setRunning(true);
+    // the clock can be held a while yet by the load; the worker settles a few times once it moves
+    while (clock.now() - t0 < 120 && performance.now() - w0 < 60000) await new Promise((r) => setTimeout(r, 250));
+    await new Promise((r) => setTimeout(r, 3000));
+    return { s: Math.round(clock.now() - t0), ticking: clock.ticking, hidden: clock.isHidden };
+  });
+  if (ran.s < 120) throw new Error(`finding 4 set-up: C's clock never ran (${JSON.stringify(ran)})`);
+  await C.evaluate(async () => { (await import('/src/workers/clockClient.ts')).leaveToMenu(() => {}); });
+  const refused = C.waitForFunction(() => { const v = sessionStorage.getItem('t3734-left'); return v && v !== 'ok' ? v : null; }, undefined, { timeout: 90000 })
+    .then((h) => h.jsonValue(), () => new Promise(() => {}));
+  const end = await Promise.race([C.waitForSelector('.start-menu', { timeout: 90000 }).then(() => 'start menu', () => 'neither in 90 s'), refused.then((e) => `refused: ${e}`)]);
+  const leftAnswer = await C.evaluate(() => sessionStorage.getItem('t3734-left')).catch(() => '?');
+  report('finding 4: a read-only tab with its clock running and nothing changed reaches the start menu', end === 'start menu' && leftAnswer === 'ok',
+    `(clock ran ${ran.s} game s; ${end}; leave answered "${leftAnswer}")`);
 
   const real = errors.filter((e) => !/WebGL|GPU/i.test(e));
   report('no page errors', real.length === 0, real.slice(0, 3).join(' | '));
