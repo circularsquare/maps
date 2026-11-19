@@ -257,5 +257,27 @@ impl TrackApi {
     pub fn line_stop_s(&self, line: u32, run: usize) -> Vec<f64> {
         self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.runs[run].stop_s.clone())
     }
+    /// T-3758: per hop of a run (stop to stop in its order, as `line_stop_s`), the fare zone codes
+    /// (`StationData::fare`) of the stations its trains pass on the way without stopping there:
+    /// a count, then the codes. Empty for no such line; a bus or ferry passes none.
+    pub fn line_pass_fares(&self, line: u32, run: usize) -> Vec<u32> {
+        let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let (net, r) = (&self.w.net, &l.runs[run]);
+        let mut out = vec![];
+        for w in r.stop_idx.windows(2) {
+            let (a, b) = (w[0] as usize + 1, w[1] as usize);
+            let at = out.len();
+            out.push(0);
+            if a < b && b <= r.nodes.len() {
+                for &n in &r.nodes[a..b] {
+                    if net.is_station(n) && net.node_fare[n as usize] != 0 {
+                        out.push(net.node_fare[n as usize]);
+                    }
+                }
+            }
+            out[at] = (out.len() - at - 1) as u32;
+        }
+        out
+    }
 
 }

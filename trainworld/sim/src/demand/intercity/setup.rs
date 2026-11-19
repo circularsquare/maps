@@ -68,9 +68,21 @@ impl IntercityApi {
         if weighed {
             trip_km_on(g, st, dst, &g.rn_kmw, kw, dep);
         }
-        for (i, v) in col.iter_mut().enumerate() {
-            let k = *v;
-            *v = (self.fare_per_km * k + g.fare_curve.pair_extra(i, dst, k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
+        if g.fare_curve.zones.is_empty() {
+            for (i, v) in col.iter_mut().enumerate() {
+                let k = *v;
+                *v = (self.fare_per_km * k + g.fare_curve.extra(k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
+            }
+        } else {
+            // T-3758: under fare zones each trip's fare follows its rides
+            ZONE_WORK.with(|zw| {
+                let mut zw = zw.borrow_mut();
+                zw.run(g, st, dst, &self.fare_km, &g.rn_kmw, dep);
+                for (i, v) in col.iter_mut().enumerate() {
+                    let k = *v;
+                    *v = self.fare_per_km * k * if weighed { fare_mul_of(k, kw[i]) } else { 1. } + if i < g.n_st { zw.extra(i) } else { 0. };
+                }
+            });
         }
         // T-3578: and the base times the trip's base multiplier less the base `FareX` adds
         if !g.rn_base_mul.is_empty() {
@@ -566,4 +578,9 @@ impl IntercityApi {
         self.svc = Some(svc);
         Ok(now_ms() - t)
     }
+}
+
+thread_local! {
+    /// T-3758: `fare_col`'s scratch under fare zones.
+    static ZONE_WORK: std::cell::RefCell<ZoneWork> = std::cell::RefCell::new(ZoneWork::default());
 }

@@ -251,6 +251,8 @@ export interface LineStats {
   oneWay: boolean;
   /** T-2987: the player's speed limit for the line's trains, km/h; 0 for none */
   limit: number;
+  /** T-3758: its rides pay the distance fare where the game has fare zones; absent: zone fares */
+  fareDist?: true;
   /** T-3521: the line's weekends (`ClockLine.weekend`): its percent, 1 where its counts are set by
    * hand, then its whole trains on weekends, high, medium, low, then the headways stepped to in
    * seconds (0 none); absent: the weekdays' at 100% */

@@ -298,6 +298,9 @@ pub struct LineData {
     pub rows: u8,
     /// T-3542: its midday and afternoon rows, read only on a line of four or five rows.
     pub x: Extra,
+    /// T-3758: its rides pay the distance fare where the game has fare zones (else zone fares).
+    /// Saved in `LFD1`.
+    pub fare_dist: bool,
 }
 
 /// T-3542: a line's midday and afternoon rows (places 3 and 4, `params::places`): its rates, trains
@@ -663,6 +666,8 @@ pub struct Network {
     pub line_ones: Vec<Vec<(u32, u8)>>,
     pub line_one_way: Vec<bool>,
     pub line_limit: Vec<u16>,
+    /// T-3758: `LineData::fare_dist`.
+    pub line_fare_dist: Vec<bool>,
     /// T-3521: `LineData::weekend`.
     pub line_weekend: Vec<Weekend>,
     /// T-3521: each line's settled rates on weekends, as `line_tph` on weekdays
@@ -1377,6 +1382,7 @@ impl Network {
             line_ones: vec![],
             line_one_way: vec![],
             line_limit: vec![],
+            line_fare_dist: vec![],
             line_weekend: vec![],
             line_tph_rest: vec![],
             rest_solved: false,
@@ -1652,6 +1658,7 @@ impl Network {
         self.line_ones.push(vec![]);
         self.line_one_way.push(false);
         self.line_limit.push(0);
+        self.line_fare_dist.push(false);
         self.line_weekend.push(Weekend::default());
         self.line_twin.push(Default::default());
         self.line_rows.push(0);
@@ -1736,6 +1743,7 @@ impl Network {
                 weekend: self.line_weekend[i],
                 rows: self.line_rows[i],
                 x: Extra { tph: self.extra_of(self.line_tph[i]), ..self.line_x[i] },
+                fare_dist: self.line_fare_dist[i],
             }
         })
     }
@@ -2259,6 +2267,7 @@ impl Network {
                 self.line_ones[i] = if d.bus.is_some() || d.ferry.is_some() { vec![] } else { d.ones.iter().copied().filter(|x| d.stops.contains(&x.0)).collect() };
                 self.line_one_way[i] = d.one_way;
                 self.line_limit[i] = d.limit;
+                self.line_fare_dist[i] = d.fare_dist;
                 self.line_weekend[i] = d.weekend;
                 self.line_twin[i] = if d.bus.is_some() || d.ferry.is_some() { Default::default() } else { d.twin };
                 self.line_bus[i] = d.bus;
@@ -2280,6 +2289,7 @@ impl Network {
                 self.line_ones[i].clear();
                 self.line_one_way[i] = false;
                 self.line_limit[i] = 0;
+                self.line_fare_dist[i] = false;
                 self.line_weekend[i] = Weekend::default();
                 self.line_twin[i] = Default::default();
                 self.line_rows[i] = 0;

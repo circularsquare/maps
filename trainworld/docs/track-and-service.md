@@ -1867,13 +1867,21 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   **Fare zones** [T-3740, `game/fareZones.ts`]: a station may carry a fare area and zone number (`StationData::fare`,
   area id << 8 | zone 1-255, saved in `LFZ1`, an undoable edit); the areas and their prices (one per zone count,
   1 to `MAX_ZONES` 12, the last for any more, never falling, held to `FARE_MAX`, and as charged never below the base)
-  are `Fares.zones` in the header, with `zoneNext` so no area id is used twice. A trip whose first boarding station
-  and destination station are in one area pays that area's price for the zones from the lower number to the higher,
-  both counted, in the curve's place in the formula above (`FareCurve::pair_extra`); any other trip, a bus stop that
-  is no station included, pays the curve. Prices are curve units: a city's populations take them times their
-  country's rate multiple (`countryFareScales`), the market as set. The player sets them with the Fare zones tool and
-  the Advanced fares panel ([ui-panels.md](ui-panels.md#advanced-fares), notes/T-3740.md). An area's name, its next
-  id and an area no station is in reach no demand input, so naming or making one recalculates no trips.
+  are `Fares.zones` in the header, with `zoneNext` so no area id is used twice. Each line (rail, bus or ferry) is set
+  to zone fares, the default, or the distance fare [T-3758] (`LineData::fare_dist`, saved in `LFD1`, an undoable
+  edit a copy keeps; the line panel's Fares row, shown only once the game has an area). A ride on a zone line whose
+  boarding and alighting stations are in one area is a zone ride; zone rides one after another in one area
+  (changes between them allowed) are a run, paying that area's price for the zones from the lowest to the highest
+  of its stations the rides stop at or pass (2 -> 1 -> 2 is 2 zones; stations without a zone between count
+  nothing). Every other ride, one to or from a bus stop that is no station included, is a distance ride. A trip pays
+  base x M + (curve(distance rides' km) - base) x their multiplier + the sum over its runs of (price - base) x each
+  run's multiplier, a zone, distance, zone trip paying two runs (`kernel::ZoneWork`; exact on a single route, where
+  riders split onto runs in one area their lowest and highest zones are averaged before pricing). Income puts each
+  trip's run part on its zone rides and its distance part on its distance rides, by weighted km. Prices are curve
+  units: a city's populations take them times their country's rate multiple (`countryFareScales`), the market as set.
+  The player sets them with the Fare zones tool and the Advanced fares panel
+  ([ui-panels.md](ui-panels.md#advanced-fares), notes/T-3740.md). An area's name, its next id and an area no station
+  is in reach no demand input, so naming or making one recalculates no trips.
   Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,

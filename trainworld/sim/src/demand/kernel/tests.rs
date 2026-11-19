@@ -120,15 +120,28 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
         assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "route node {r}: {:?}", l.rn_fare_x);
     }
     assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
+    // T-3758: under fare zones with every line on the distance fare, every ride is a distance ride and
+    // the trips pay the curve on their km as above, split over the two lines alike
+    let mut zg = graph(&[(0.0, base), (30.0, knee), (100.0, knee + 70.0 * steep)]);
+    zg.fare_curve.zones = FareZones { st: vec![1 << 8 | 1; 4], off: vec![0, 1], min: vec![base], dist: vec![true; zg.rn_ride.len()], ..Default::default() };
+    let zsk = skims(&zg, &p);
+    for (a, b) in zsk.r.iter().zip(&bent_sk.r) {
+        assert!((a - b).abs() < 1e-3, "{a} {b}");
+    }
+    let zl = assign(&zg, &zsk, &od);
+    for (r, (a, b)) in zl.rn_fare_x.iter().zip(&l.rn_fare_x).enumerate() {
+        assert!((a - b).abs() < 1e-3, "route node {r}: {a} {b}");
+    }
 }
 
-/// T-3740: fare zones on a straight curve. One line 0-1-2-3 of 20 km stretches; stations 0, 1, 2 in
-/// area 1 at zones 2, 1, 2 and station 3 in area 2. A trip counts its start and end zones only: 0 -> 2
-/// rides through zone 1 and pays 1 zone, 0 -> 1 pays 2; 2 -> 3 crosses areas and pays the line. The
-/// route cost carries the zone price in the line's place, the assignment puts the difference on the
-/// km ridden, and the trip explorer's legs add up to the price over the base. No zones is no change.
+/// T-3740, T-3758: fare zones on a straight curve. One line 0-1-2-3 of 20 km stretches; stations 0, 1,
+/// 2 in area 1 at zones 2, 1, 2 and station 3 in area 2. A trip counts the zones from the lowest to the
+/// highest it touches: 0 -> 2 rides through zone 1 and pays 2 zones, as 0 -> 1 does; 2 -> 3 crosses
+/// areas and pays the line. The route cost carries the zone price in the line's place, the assignment
+/// puts the difference on the km ridden, and the trip explorer's legs add up to the price over the
+/// base. No zones is no change.
 #[test]
-fn fare_zones_charge_the_start_and_end_zones_in_the_curves_place() {
+fn fare_zones_count_every_zone_a_trip_touches_in_the_curves_place() {
     let p = common_test_params();
     let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[6.0]);
     let (base, rate) = (4.5f32, 0.05f32);
@@ -145,13 +158,13 @@ fn fare_zones_charge_the_start_and_end_zones_in_the_curves_place() {
         g
     };
     let code = |area: u32, zone: u32| area << 8 | zone;
-    let zones = FareZones { st: vec![code(1, 2), code(1, 1), code(1, 2), code(2, 1)], off: vec![0, 3, 4], min: vec![5.0, 7.0, 9.0, 6.0] };
+    let zones = FareZones { st: vec![code(1, 2), code(1, 1), code(1, 2), code(2, 1)], off: vec![0, 3, 4], min: vec![5.0, 7.0, 9.0, 6.0], ..Default::default() };
     let plain_g = graph(None);
     let plain = skims(&plain_g, &p);
     let g = graph(Some(zones.clone()));
     let sk = skims(&g, &p);
     let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
-    for (i, j, price, k) in [(0, 2, 5.0, 40.0), (2, 0, 5.0, 40.0), (0, 1, 7.0, 20.0), (1, 2, 7.0, 20.0), (1, 0, 7.0, 20.0)] {
+    for (i, j, price, k) in [(0, 2, 7.0, 40.0), (2, 0, 7.0, 40.0), (0, 1, 7.0, 20.0), (1, 2, 7.0, 20.0), (1, 0, 7.0, 20.0)] {
         let d = at(&sk.r, i, j) - at(&plain.r, i, j);
         let want = price - base - rate * k;
         assert!((d - want).abs() < 1e-4, "{i} -> {j} adds {d}, want {want}");
@@ -164,7 +177,7 @@ fn fare_zones_charge_the_start_and_end_zones_in_the_curves_place() {
     od[2] = 10.0;
     od[2 * 4 + 3] = 4.0;
     let l = assign(&g, &sk, &od);
-    let x = 10.0 * (5.0 - base - rate * 40.0);
+    let x = 10.0 * (7.0 - base - rate * 40.0);
     let total: f32 = l.rn_fare_x.iter().sum();
     assert!((total - x).abs() < 1e-3, "{total} against {x}: {:?}", l.rn_fare_x);
     assert!((l.rn_fare_x[0] - x / 2.0).abs() < 1e-3 && (l.rn_fare_x[1] - x / 2.0).abs() < 1e-3, "{:?}", l.rn_fare_x);
@@ -173,15 +186,83 @@ fn fare_zones_charge_the_start_and_end_zones_in_the_curves_place() {
     assert!(!routes.is_empty());
     for (_, legs) in &routes {
         let fare: f32 = legs.iter().map(|l| l.fare).sum();
-        assert!((fare - (5.0 - base)).abs() < 1e-4, "explorer fare {fare}");
+        assert!((fare - (7.0 - base)).abs() < 1e-4, "explorer fare {fare}");
     }
-    // a station with no zone, or prices for fewer zones than counted: the last price holds
+    // prices for fewer zones than counted: the last price holds; between two counts the line between
     let short = FareZones { off: vec![0, 1, 2], min: vec![5.0, 6.0], ..zones.clone() };
-    assert_eq!(short.price(0, 1), Some(5.0));
-    assert_eq!(FareZones { st: vec![code(1, 2), 0, code(1, 2), 0], ..zones }.price(0, 1), None);
+    assert_eq!(short.price_of(1, 1.0, 2.0), Some(5.0));
+    assert_eq!(zones.price_of(1, 1.0, 2.5), Some(8.0));
+    assert_eq!(zones.price_of(3, 1.0, 1.0), None);
     // all zones empty is the plain line to the bit
     let none = skims(&graph(Some(FareZones::default())), &p);
     assert!(none.r.iter().zip(&plain.r).all(|(a, b)| a.to_bits() == b.to_bits()));
+}
+
+/// T-3758: lines that pay the distance fare. Three lines in a row, A 0-1, B 1-2, C 2-3, 20 km each, all
+/// stations in area 1 at zones 1, 2, 3, 3 (prices 5, 7, 9). With every line on zones, 0 -> 3 is one
+/// run of 3 zones. With B on distance it is two runs, zones 1-2 on A and zone 3 on C, the base once and
+/// B's 20 km at the rate; a station C passes without stopping counts for C's run. The assignment's
+/// extra adds up to the trips' and goes on the zone rides by km, and the trip explorer agrees.
+#[test]
+fn distance_lines_split_a_trip_into_its_zone_runs() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1], &[1, 2], &[2, 3]], &[12.0, 12.0, 12.0], &[6.0, 6.0, 6.0]);
+    let (base, rate) = (4.5f32, 0.05f32);
+    // route nodes: A 0, 1 and back 2, 3; B 4, 5, back 6, 7; C 8, 9, back 10, 11
+    let km: Vec<f32> = (0..12).map(|r| if r % 2 == 0 { 20.0 } else { 0.0 }).collect();
+    let code = |zone: u32| 1 << 8 | zone;
+    let graph = |dist: &[usize], pass: Option<(usize, u32)>| {
+        let mut g = build_graph(&net, &p);
+        g.rn_fare = km.iter().map(|k| k * rate).collect();
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        let mut z = FareZones { st: vec![code(1), code(2), code(3), code(3)], off: vec![0, 3], min: vec![5.0, 7.0, 9.0], ..Default::default() };
+        if !dist.is_empty() {
+            z.dist = (0..12).map(|r| dist.contains(&r)).collect();
+        }
+        if let Some((r, c)) = pass {
+            z.pass_off = (0..=12).map(|k| u32::from(k > r)).collect();
+            z.pass = vec![c];
+        }
+        g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
+        g.rn_km = km.clone();
+        g
+    };
+    let plain = {
+        let mut g = build_graph(&net, &p);
+        g.rn_fare = km.iter().map(|k| k * rate).collect();
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        skims(&g, &p).r
+    };
+    let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+    let b_dist = [4, 5, 6, 7];
+    for (dist, pass, want03, want12) in [
+        (&[][..], None, 9.0 - base - rate * 60.0, 7.0 - base - rate * 20.0),
+        (&b_dist[..], None, (7.0 - base - rate * 20.0) + (5.0 - base - rate * 20.0), 0.0),
+        (&b_dist[..], Some((8, code(1))), (7.0 - base - rate * 20.0) + (9.0 - base - rate * 20.0), 0.0),
+    ] {
+        let g = graph(dist, pass);
+        let sk = skims(&g, &p);
+        for (i, j, want) in [(0, 3, want03), (3, 0, if pass.is_some() { (7.0 - base - rate * 20.0) + (5.0 - base - rate * 20.0) } else { want03 }), (1, 2, want12)] {
+            let d = at(&sk.r, i, j) - at(&plain, i, j);
+            assert!((d - want).abs() < 1e-4, "{dist:?} {pass:?}: {i} -> {j} adds {d}, want {want}");
+        }
+        let mut od = vec![0.0f32; 16];
+        od[3] = 10.0;
+        let l = assign(&g, &sk, &od);
+        let total: f32 = l.rn_fare_x.iter().sum();
+        assert!((total - 10.0 * want03).abs() < 1e-3, "{total} against {}: {:?}", 10.0 * want03, l.rn_fare_x);
+        let zone_rides: Vec<usize> = [0, 4, 8].into_iter().filter(|r| !dist.contains(r)).collect();
+        for r in [0, 4, 8] {
+            let want = if zone_rides.contains(&r) { 10.0 * want03 / zone_rides.len() as f32 } else { 0.0 };
+            assert!((l.rn_fare_x[r] - want).abs() < 1e-3, "{dist:?} route node {r}: {:?}", l.rn_fare_x);
+        }
+        let routes = crate::demand::trip::routes(&g, &sk, &p, 0, 3, 0.01);
+        assert_eq!(routes.len(), 1);
+        let fare: f32 = routes[0].1.iter().map(|l| l.fare).sum();
+        assert!((fare - (want03 + rate * 60.0)).abs() < 1e-4, "explorer fare {fare}");
+    }
 }
 
 /// T-3740: a population's fare zones reach the graph through `put_fare_curve` on a straight curve
@@ -193,16 +274,23 @@ fn fare_zones_reach_the_graph_on_a_straight_curve() {
     let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[6.0]);
     let mut g = build_graph(&net, &p);
     let hop: Vec<f32> = vec![20.0; g.rn_ride.len()];
-    let z = crate::demand::api::demand_fare_zones(&[0, 1, 1, 2, 3], 4, &[0, 0, 1 << 8 | 3, 1 << 8 | 1, 1 << 8 | 2], &[0, 2], &[1.0, 3.0]);
+    let z = crate::demand::api::demand_fare_zones(&[0, 1, 1, 2, 3], 4, &[0, 0, 1 << 8 | 3, 1 << 8 | 1, 1 << 8 | 2], &[0, 2], &[1.0, 3.0], &[0; 8], &[], &[]);
+    assert!(z.dist.is_empty() && z.pass.is_empty());
     assert_eq!(z.st, vec![0, 1 << 8 | 3, 1 << 8 | 1, 1 << 8 | 2]);
     crate::demand::api::put_fare_curve(&mut g, &[], &z, &hop, 6.0, 0.6, 3.0);
     assert!(g.fare_curve.is_line() && !g.fare_curve.flat());
     assert_eq!((g.fare_curve.base, g.fare_curve.rate), (6.0, 0.6));
     assert_eq!(g.fare_curve.zones.min, vec![6.0, 9.0]);
     assert_eq!(g.rn_km.len(), g.rn_ride.len());
-    assert!(crate::demand::api::check_fare_zones(&[3 << 8 | 1], &[0, 2], &[1.0, 3.0]).is_err());
-    assert!(crate::demand::api::check_fare_zones(&[1 << 8], &[0, 2], &[1.0, 3.0]).is_err());
-    assert!(crate::demand::api::check_fare_zones(&[], &[], &[]).is_ok());
+    let check = |st: &[u32], dist: &[u8], off: &[u32], pass: &[u32]| crate::demand::api::check_fare_zones(st, &[0, 2], &[1.0, 3.0], dist, off, pass, 4);
+    assert!(check(&[3 << 8 | 1], &[], &[], &[]).is_err());
+    assert!(check(&[1 << 8], &[], &[], &[]).is_err());
+    assert!(crate::demand::api::check_fare_zones(&[], &[], &[], &[], &[], &[], 4).is_ok());
+    // T-3758: a mode per route node, passed codes as stations'
+    assert!(check(&[1 << 8 | 1], &[0, 1, 0, 0], &[0, 1, 1, 1, 1], &[1 << 8 | 2]).is_ok());
+    assert!(check(&[1 << 8 | 1], &[0, 1, 0], &[], &[]).is_err());
+    assert!(check(&[1 << 8 | 1], &[], &[0, 1, 1, 1], &[1 << 8 | 2]).is_err());
+    assert!(check(&[1 << 8 | 1], &[], &[0, 1, 1, 1, 1], &[3 << 8 | 2]).is_err());
 }
 
 /// T-1516: a 5 km feeder 0-1 into a line 1-2-3 of 20 km stretches, under a fare curve that is flat

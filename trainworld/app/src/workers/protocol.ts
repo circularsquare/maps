@@ -202,6 +202,8 @@ export type EditOp =
   | { op: "linePairs"; line: number; on: boolean }
   /** T-2987: a rail line's speed limit in km/h, 0 for none */
   | { op: "lineLimit"; line: number; kmh: number }
+  /** T-3758: a line (any kind) pays the distance fare where the game has fare zones, or zone fares */
+  | { op: "lineFareDist"; line: number; dist: boolean }
   /** T-1791: put lines in a group (a line's group number, "new" for a fresh one, 0 for none), or name one ("" for its oldest line's name); one undoable edit, no service change */
   | { op: "lineGroup"; lines: number[]; group: number | "new" }
   | { op: "groupName"; group: number; name: string }
@@ -660,6 +662,9 @@ export interface ClockLine {
   oneWay: boolean;
   /** T-2987: the line's speed limit, km/h; 0 for none (`TrackApi::line_limit`) */
   limit: number;
+  /** T-3758: its rides pay the distance fare where the game has fare zones (`TrackApi::line_fare_dist`); absent:
+   * zone fares */
+  fareDist?: true;
   /** T-3521: the line's weekends (`TrackApi::line_weekend`): its percent, 1 where its counts are set
    * by hand, then its whole trains on weekends, high, medium, low; absent: the weekdays' at 100% */
   weekend?: number[];
@@ -1055,6 +1060,11 @@ export interface SnapshotLine {
   hopKm?: number[][];
   /** T-1626: high-speed trains, whose fares are times the high-speed multiplier */
   fast?: boolean;
+  /** T-3758: its rides pay the distance fare where the game has fare zones; only while the fares have areas */
+  fareDist?: boolean;
+  /** T-3758: per run and hop (as `hopKm`), the fare zone codes of the stations it passes without stopping; only
+   * while the fares have areas and some hop passes a station with a zone */
+  passFares?: number[][][];
   /** T-2195: a ferry line, whose fares are times the ferry multiplier; its stops are ports */
   ferry?: boolean;
   /** T-2926: a line on tram track (`DemandApi.set_tram_lines`) */

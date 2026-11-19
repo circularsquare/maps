@@ -56,6 +56,13 @@ export interface DemandNetwork {
   /** T-3740 (`DemandApi.set_fare_zones`): each station's fare zone code (game/fareZones.ts, the fare area's id), 0
    * for none; absent where none has one */
   fz?: Uint32Array;
+  /** T-3758 (`set_fare_zones`): per route node (as `hopKm`) 1 where its line pays the distance fare; absent with no
+   * `fz` or none */
+  fzDist?: Uint8Array;
+  /** T-3758: per route node the fare zone codes of the stations its trains pass to the next stop without stopping,
+   * `fzPass[fzPassOff[r]..fzPassOff[r + 1]]`; absent with no `fz` or none */
+  fzPassOff?: Uint32Array;
+  fzPass?: Uint32Array;
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
   /** T-1626 (`DemandApi.set_fare_mul`): each route node's fare multiplier, as `hopKm`; absent: all 1 */

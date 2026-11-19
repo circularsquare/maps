@@ -1,7 +1,9 @@
 // T-3740: fare zones. The player gives stations a fare area and a zone number (the track model keeps each
-// station's code, `StationData::fare`); the fares keep the areas and their prices. A trip with its first boarding
-// and its destination in one area pays the price for the zones from the lower number to the higher, both counted,
-// in the distance curve's place; any other trip pays the curve (notes/T-3740.md, DECISIONS 2026-11-19).
+// station's code, `StationData::fare`); the fares keep the areas and their prices. T-3758: a ride on a line set to
+// zone fares (the default; `LineData::fare_dist` off) between two stations of one area is a zone ride; zone rides
+// one after another in one area pay one price, for the zones from the lowest to the highest of that area's stations
+// they stop at or pass, and the other rides pay the distance curve on their km, the base once (notes/T-3740.md,
+// DECISIONS 2026-11-19).
 
 import { FARE_MAX, fareAt, type FareArea, type FareNode, type Fares } from "./fareCurve";
 
@@ -57,18 +59,34 @@ export function chargedPrices(f: { nodes?: FareNode[] }, a: FareArea): number[] 
   return a.prices.map((v) => Math.max(v, base));
 }
 
+/** What a demand population is given (`set_fare_zones`), all empty for no zones. */
+export interface DemandZones { st: Uint32Array; off: Uint32Array; usd: Float32Array; dist: Uint8Array; passOff: Uint32Array; pass: Uint32Array }
+
 /**
  * What a demand population is given (`set_fare_zones`): per station of `codes` (the stations' codes) its code with
  * the area's place among `f.zones` in place of its id (0 for none or a gone area), and the areas' prices one after
- * another times `scale` (its country's, `countryFareScales` rate; 1 for the market) with their offsets.
+ * another times `scale` (its country's, `countryFareScales` rate; 1 for the market) with their offsets. T-3758: per
+ * route node `lines.dist` (1 where its line pays the distance fare) and the codes of the stations passed
+ * (`lines.pass[lines.passOff[r]..]`), those codes as the stations' and only the ones of an area kept.
  */
-export function demandZones(f: { nodes?: FareNode[]; zones?: FareArea[] }, codes: Uint32Array | undefined, scale: number): { st: Uint32Array; off: Uint32Array; usd: Float32Array } {
+export function demandZones(f: { nodes?: FareNode[]; zones?: FareArea[] }, codes: Uint32Array | undefined, scale: number, lines: { dist?: Uint8Array; passOff?: Uint32Array; pass?: Uint32Array } = {}): DemandZones {
   const areas = f.zones ?? [];
-  if (!codes || !areas.length) return { st: new Uint32Array(0), off: new Uint32Array(0), usd: new Float32Array(0) };
+  const none = { st: new Uint32Array(0), off: new Uint32Array(0), usd: new Float32Array(0), dist: new Uint8Array(0), passOff: new Uint32Array(0), pass: new Uint32Array(0) };
+  if (!codes || !areas.length) return none;
   const at = new Map(areas.map((a, i) => [a.id, i + 1]));
-  const st = Uint32Array.from(codes, (c) => { const k = at.get(areaOfCode(c)); return k && zoneOfCode(c) ? zoneCode(k, zoneOfCode(c)) : 0; });
-  if (!st.some((c) => c)) return { st: new Uint32Array(0), off: new Uint32Array(0), usd: new Float32Array(0) };
+  const recode = (c: number) => { const k = at.get(areaOfCode(c)); return k && zoneOfCode(c) ? zoneCode(k, zoneOfCode(c)) : 0; };
+  const st = Uint32Array.from(codes, recode);
+  if (!st.some((c) => c)) return none;
   const off = [0], usd: number[] = [];
   for (const a of areas) { for (const v of chargedPrices(f, a)) usd.push(v * scale); off.push(usd.length); }
-  return { st, off: Uint32Array.from(off), usd: Float32Array.from(usd) };
+  let passOff = new Uint32Array(0), pass = new Uint32Array(0);
+  if (lines.pass?.length && lines.passOff) {
+    const o = new Uint32Array(lines.passOff.length), kept: number[] = [];
+    for (let r = 0; r + 1 < lines.passOff.length; r++) {
+      for (let i = lines.passOff[r]; i < lines.passOff[r + 1]; i++) { const c = recode(lines.pass[i]); if (c) kept.push(c); }
+      o[r + 1] = kept.length;
+    }
+    if (kept.length) { passOff = o; pass = Uint32Array.from(kept); }
+  }
+  return { st, off: Uint32Array.from(off), usd: Float32Array.from(usd), dist: lines.dist ?? new Uint8Array(0), passOff, pass };
 }

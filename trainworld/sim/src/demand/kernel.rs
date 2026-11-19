@@ -933,6 +933,7 @@ mod search;
 mod mode;
 mod assign;
 mod stalls;
+mod fare_zones;
 pub use gravity::*;
 pub use access::*;
 pub use subzones::*;
@@ -940,6 +941,7 @@ pub use search::*;
 pub use mode::*;
 pub use assign::*;
 pub use stalls::*;
+pub use fare_zones::*;
 
 #[cfg(test)]
 mod tests;

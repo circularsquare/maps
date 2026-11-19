@@ -21,7 +21,7 @@ impl TrackApi {
         let Some((stops, path)) = edited_stops(&self.w.net, stops, false, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] };
+        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([high, medium, low]), auto: None, name, colour, tph: if stops.len() < 2 { [0.0; 3] } else { [6.0, 3.0, 1.0] }, stops, path, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
         // T-3542: a line of four or five rows runs its high count at midday and in the afternoon too
         d.x = Extra::of_high(&d);
         self.run(Op::Line { id, data: Some(d) })
@@ -500,6 +500,22 @@ impl TrackApi {
         }
         let top = (self.w.net.line_top(id) * 3.6).round() as u32;
         d.limit = if kmh == 0 { 0 } else { kmh.clamp(LINE_LIMIT_MIN, top) as u16 };
+        self.run(Op::Line { id, data: Some(d) })
+    }
+    /// T-3758: whether a line (any kind) pays the distance fare where the game has fare zones.
+    pub fn line_fare_dist(&self, line: u32) -> bool {
+        self.w.net.line_ok(line) && self.w.net.line_fare_dist[line as usize]
+    }
+    /// T-3758: set a line (rail, bus or ferry) to pay the distance fare (`dist`) or zone fares, one
+    /// undoable edit, free; 1 when it already does (no edit). A copy keeps it (`copy_line`).
+    pub fn set_line_fare_dist(&mut self, id: u32, dist: bool) -> u32 {
+        let Some(mut d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        if d.fare_dist == dist {
+            self.money_short = None;
+            self.issues.clear();
+            return 1;
+        }
+        d.fare_dist = dist;
         self.run(Op::Line { id, data: Some(d) })
     }
 

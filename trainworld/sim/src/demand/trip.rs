@@ -411,12 +411,19 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
         }
         None => walk(&at, a, None, false, 1.0, &mut legs, &mut out),
     }
-    if !g.fare_curve.flat() {
-        // T-3740: zones as `DestSearch::run` prices them, from the station boarded at (after a start walk)
-        let first = sk.start[slot as usize].iter().find(|x| x.0 as usize == a).map_or(a, |x| x.1 as usize);
+    if !g.fare_curve.zones.is_empty() {
+        // T-3758: under fare zones each route's fare follows its rides, as `ZoneWork` prices one route
+        for (_, legs) in &mut out {
+            let rides: Vec<(usize, usize, f32, f32)> = legs.iter().filter(|l| l.kind == 1).map(|l| (l.rn_from as usize, l.rn_to as usize, l.km, l.km * g.fare_mul(l.rn_from as usize))).collect();
+            let fares = route_fares(g, &rides);
+            for (l, x) in legs.iter_mut().filter(|l| l.kind == 1).zip(fares) {
+                l.fare += x;
+            }
+        }
+    } else if !g.fare_curve.flat() {
         for (_, legs) in &mut out {
             let total: f32 = legs.iter().filter(|l| l.kind == 1).map(|l| l.km).sum();
-            let extra = g.fare_curve.pair_extra(first, t, total);
+            let extra = g.fare_curve.extra(total);
             let rides = legs.iter().filter(|l| l.kind == 1).count() as f32;
             for l in legs.iter_mut().filter(|l| l.kind == 1) {
                 // T-1626: a leg's share by km, times its line's fare multiplier

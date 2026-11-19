@@ -3190,6 +3190,9 @@ function buildSnapshot(): NetworkSnapshot {
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
       ...(!bus && !ferry && a.line_tram(id) ? { tram: true } : {}),
+      // T-3758: what fare zones read, only while the fares have areas
+      ...(fares.zones && a.line_fare_dist(id) ? { fareDist: true } : {}),
+      ...(fares.zones && !bus && !ferry ? passFaresOf(a, id) : {}),
       turnaroundS: li[i + 20], cars: bus ? BUS_DEMAND_CARS : ferry ? BOAT_DEMAND_CARS : li[i + 21],
       ...(bus ? { catches: bus } : {}),
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
@@ -3200,6 +3203,21 @@ function buildSnapshot(): NetworkSnapshot {
   snapStations = stationsKey(ni);
   tidyLineFares(a);
   return { version: ++snapVersion, city, frame: frameSpec(), stations, lines, fare: demandFares(), ...(passages.length ? { passages } : {}) };
+}
+
+/** T-3758: per run and hop, the fare zone codes of the stations line `id` passes without stopping; nothing where
+ * it passes none with a zone. */
+function passFaresOf(a: TrackApi, id: number): { passFares?: number[][][] } {
+  let any = false;
+  const runs = [0, 1].map((run) => {
+    const v = a.line_pass_fares(id, run), out: number[][] = [];
+    for (let k = 0; k < v.length; k += 1 + v[k]) {
+      out.push(Array.from(v.subarray(k + 1, k + 1 + v[k])));
+      if (v[k]) any = true;
+    }
+    return out;
+  });
+  return any ? { passFares: runs } : {};
 }
 
 /** T-1464: a bus line's row (`ClockBus`); its stops that are no station join `nodes` once each,
@@ -3750,6 +3768,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_line_pairs(op.line, op.on) };
     case "lineLimit":
       return { r: a.set_line_limit(op.line, op.kmh) };
+    case "lineFareDist":
+      return { r: a.set_line_fare_dist(op.line, op.dist) };
     case "lineGroup":
       return { r: a.set_line_group(new Uint32Array(op.lines), op.group === "new" ? a.new_line_group() : op.group) };
     case "groupName":
@@ -4384,7 +4404,8 @@ async function handleMessage(msg: ToClock) {
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
     // date when it arrives) after the previews asked meanwhile
     const rest = () => {
-      if (demand.length || op.op === "undo" || op.op === "redo" || stationsKey() !== snapStations) scheduleSnapshot();
+      // T-3758: a line's fare mode changes no train's run, yet demand reads it
+      if (demand.length || op.op === "undo" || op.op === "redo" || op.op === "lineFareDist" || stationsKey() !== snapStations) scheduleSnapshot();
       if (!early && !stops) answer();
       keep();
       // Paid for something: keep it (T-029, autosave on construct).

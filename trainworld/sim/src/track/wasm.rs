@@ -2241,7 +2241,7 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] };
+        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![], fare_dist: false };
         d.x = crate::track::net::Extra::of_high(&d);
         self.run(Op::Line { id, data: Some(d) })
     }

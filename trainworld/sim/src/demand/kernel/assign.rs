@@ -170,6 +170,8 @@ pub struct DestAssign {
     pub(super) km: Vec<f32>,
     pub(super) fx: Vec<f32>,
     pub(super) mb: Vec<f32>,
+    /// T-3758: the fares under fare zones
+    pub(super) zw: ZoneWork,
 }
 
 impl DestAssign {
@@ -189,6 +191,7 @@ impl DestAssign {
             km: vec![],
             fx: vec![],
             mb: vec![],
+            zw: ZoneWork::default(),
         }
     }
     /// Take destination `dst`'s column of the OD, `col(src)` riders from each station; false
@@ -229,7 +232,12 @@ impl DestAssign {
             // the column taken is still in the stations' flows: the walk below adds the changes
             trip_km(g, st, dst, &mut self.km, &mut self.dep);
             let flow = &self.flow;
-            if bent {
+            // T-3758: under fare zones each trip's fare follows its rides
+            if !g.fare_curve.zones.is_empty() {
+                let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
+                self.zw.run(g, st, dst, &g.rn_km, &g.rn_kmw, &mut self.dep);
+                self.zw.spread(g, st, dst, |src| flow[src], hops, &mut self.dep, &mut self.l.rn_fare_x);
+            } else if bent {
                 board_extra(g, st, dst, |src| flow[src], &self.km, &mut self.dep, &mut self.fx, &mut self.l.rn_fare_x);
             }
             // T-3578

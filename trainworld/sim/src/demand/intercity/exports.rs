@@ -295,9 +295,10 @@ impl IntercityApi {
         Ok(())
     }
     /// T-3740: `DemandApi::set_fare_zones`, at the curve's fares as set (as the market's curve).
-    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
-        crate::demand::api::check_fare_zones(st, off, usd)?;
-        let z = self.svc.as_ref().map_or_else(Default::default, |s| crate::demand::api::demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd));
+    #[allow(clippy::too_many_arguments)]
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> Result<(), String> {
+        crate::demand::api::check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
+        let z = self.svc.as_ref().map_or_else(Default::default, |s| crate::demand::api::demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, dist, pass_off, pass));
         if z != self.fare_zones {
             self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);

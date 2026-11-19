@@ -270,7 +270,7 @@ interface Service {
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number; fare?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
    * where a stop's way back is at a platform beside it (T-3348, `SnapshotLine.backStops`) */
-  lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
+  lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; fareDist?: boolean; passFares?: number[][][]; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
   /** T-2410: stations no line stops at, left out of `stations`: their positions only reach zones
@@ -632,7 +632,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
     stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}), ...(st.fare ? { fare: st.fare } : {}) })),
-    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
+    lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
   };
@@ -714,6 +714,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     if (baseS.some((v) => v !== 1)) net.baseS = baseS;
   }
   const span = net.span!;
+  const passAt = new Map<number, number[]>();
   const layout: Solve["layout"] = [];
   let a = 0;
   for (const l of lines) {
@@ -739,6 +740,11 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       const from = svc.stations[index.get(l.stops[i])!], to = svc.stations[index.get(l.stops[j])!];
       net.hopKm[2 * a + run * n + k] = l.hopKm?.[run]?.[k] ?? Math.hypot(to.x - from.x, to.y - from.y) / 1000;
     }
+    // T-3758: the stations each route node's trains pass to the next stop, as `hopKm`
+    if (net.fz && l.passFares) for (let run = 0; run < 2; run++) for (let k = 0; k < n - 1; k++) {
+      const c = l.passFares[run]?.[k];
+      if (c?.length) passAt.set(2 * a + run * n + k, c);
+    }
     if (l.span?.length === PERIODS.length * 2 * n) {
       for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < 2 * n; r++) span[q * 2 * nStops + 2 * a + r] = l.span[q * 2 * n + r];
     }
@@ -757,6 +763,16 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
       }
     }
     net.catchXY = new Float32Array(pts);
+  }
+  // T-3758: lines paying the distance fare and the stations passed, only with fare zones
+  if (net.fz) {
+    if (lines.some((l) => l.fareDist)) net.fzDist = Uint8Array.from(perNode(lines.map((l) => (l.fareDist ? 0 : 1))), (v) => (v === 0 ? 1 : 0));
+    if (passAt.size) {
+      const off = new Uint32Array(2 * nStops + 1), codes: number[] = [];
+      for (let r = 0; r < 2 * nStops; r++) { for (const c of passAt.get(r) ?? []) codes.push(c); off[r + 1] = codes.length; }
+      net.fzPassOff = off;
+      net.fzPass = Uint32Array.from(codes);
+    }
   }
   return { net, layout, ids: { lines: layout.map((l) => l.id), stations: svc.stations.map((s) => s.id) } };
 }

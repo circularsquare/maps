@@ -93,11 +93,15 @@ pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], zones: &FareZones, ho
 /// T-3740: the fare zones of the demand stations, from `st` (one code per station given to
 /// `set_network`, `FareZones::st`) through the stations' merge `st_map`: a demand station takes
 /// the zone of the first given station merged into it that has one. Empty when `st` does not
-/// match or names no zone.
-pub(crate) fn demand_fare_zones(st_map: &[u32], n: usize, st: &[u32], off: &[u32], usd: &[f32]) -> FareZones {
+/// match or names no zone. T-3758: the route nodes' `dist` and `pass_off`/`pass` as given (route
+/// nodes are never merged), none while every line zones and none passes a station with a zone.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn demand_fare_zones(st_map: &[u32], n: usize, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> FareZones {
     if st.len() != st_map.len() || st.iter().all(|&c| c == 0) || off.is_empty() {
         return FareZones::default();
     }
+    let dist: Vec<bool> = if dist.iter().any(|&d| d != 0) { dist.iter().map(|&d| d != 0).collect() } else { vec![] };
+    let (pass_off, pass) = if pass.is_empty() { (vec![], vec![]) } else { (pass_off.to_vec(), pass.to_vec()) };
     let mut out = vec![0u32; n];
     for (i, &c) in st.iter().enumerate() {
         let d = &mut out[st_map[i] as usize];
@@ -105,16 +109,22 @@ pub(crate) fn demand_fare_zones(st_map: &[u32], n: usize, st: &[u32], off: &[u32
             *d = c;
         }
     }
-    FareZones { st: out, off: off.to_vec(), min: usd.to_vec() }
+    FareZones { st: out, off: off.to_vec(), min: usd.to_vec(), dist, pass_off, pass }
 }
 
 /// T-3740: checks fare zones (`set_fare_zones`): areas' price offsets rising from 0 to the prices'
-/// count, prices finite and not below 0, each code's area among them and its zone from 1.
-pub(crate) fn check_fare_zones(st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
+/// count, prices finite and not below 0, each code's area among them and its zone from 1. T-3758:
+/// `dist` one per route node (`routes` of them) or none; `pass_off` one more than the route nodes,
+/// rising from 0 to the codes' count, or none with no codes; each passed code as a station's.
+pub(crate) fn check_fare_zones(st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32], routes: usize) -> Result<(), String> {
     let areas = off.len().saturating_sub(1);
+    let code_ok = |c: u32| c == 0 || ((c >> 8) as usize >= 1 && (c >> 8) as usize <= areas && c & 255 >= 1);
     let ok = (off.is_empty() || (off[0] == 0 && *off.last().unwrap() as usize == usd.len() && off.windows(2).all(|w| w[0] <= w[1])))
         && usd.iter().all(|v| v.is_finite() && *v >= 0.0)
-        && st.iter().all(|&c| c == 0 || ((c >> 8) as usize >= 1 && (c >> 8) as usize <= areas && c & 255 >= 1));
+        && st.iter().all(|&c| code_ok(c))
+        && (dist.is_empty() || dist.len() == routes)
+        && (if pass.is_empty() { pass_off.is_empty() || pass_off.iter().all(|&o| o == 0) } else { pass_off.len() == routes + 1 && pass_off[0] == 0 && *pass_off.last().unwrap() as usize == pass.len() && pass_off.windows(2).all(|w| w[0] <= w[1]) })
+        && pass.iter().all(|&c| c != 0 && code_ok(c));
     if ok { Ok(()) } else { Err("invalid fare zones".into()) }
 }
 
@@ -1467,12 +1477,15 @@ impl DemandApi {
 
     /// T-3740: the player's fare zones, after `set_network`: per station it was given 0 for none,
     /// else (area index + 1) << 8 | zone number (1-255); per area its prices for 1, 2, ... zones,
-    /// US$ as this population pays them, `usd[off[a]..off[a + 1]]`. All empty: none. A trip with both
-    /// ends in one area pays the price for the zones from the lower to the higher, both counted, in
-    /// the curve's place.
-    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
-        check_fare_zones(st, off, usd)?;
-        let z = self.svc.as_ref().map_or_else(FareZones::default, |s| demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd));
+    /// US$ as this population pays them, `usd[off[a]..off[a + 1]]`. All empty: none. T-3758: per
+    /// route node in `set_fares`' layout 1 where its line pays the distance fare (`dist`, empty for
+    /// none), and the codes of the stations its trains pass to the next stop without stopping
+    /// (`pass[pass_off[r]..pass_off[r + 1]]`, both empty for none). Zone rides in one area pay one
+    /// price, for the zones from the lowest to the highest they touch (`kernel::ZoneWork`).
+    #[allow(clippy::too_many_arguments)]
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> Result<(), String> {
+        check_fare_zones(st, off, usd, dist, pass_off, pass, self.svc.as_ref().map_or(0, |s| 2 * s.stops.len()))?;
+        let z = self.svc.as_ref().map_or_else(FareZones::default, |s| demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd, dist, pass_off, pass));
         if z != self.fare_zones {
             self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);

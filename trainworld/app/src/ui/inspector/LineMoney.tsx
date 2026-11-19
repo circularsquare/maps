@@ -7,24 +7,33 @@ import { dateName, shortDate } from "../../game/days";
 import { LINE_FARE_MAX, ownLineFare, tidyLineFare } from "../../game/fareCurve";
 import { money } from "../../game/format";
 import { liveMoney, moneyState } from "../../game/money";
-import { setLineFare } from "../../game/world";
+import { edit, setLineFare, world } from "../../game/world";
 import type { LineInput } from "../../game/types";
 import { t, tNumber, tRich } from "../../i18n";
 import { barTop, FareCostBars, type BarCol } from "../MoneyHistory";
-import { Icon, Stepper } from "../widgets";
+import { Icon, Segmented, Stepper } from "../widgets";
 
 const H = 64, DAYS = 30;
 
 /** T-3567: the line's own fare multiple, on top of the Money tab's fares: a stepper by 0.05, typed on a click, as
- * the Money tab's multiples, and a button back to 1.00x once set. */
+ * the Money tab's multiples, and a button back to 1.00x once set. T-3758: above it, while the game has a fare area,
+ * whether the line's rides pay zone fares or the distance fare. */
 export function LineFare({ l }: { l: LineInput }) {
   const m = moneyState.value;
   if (!m) return null;
   const mul = ownLineFare(m.fares, l.id);
   const text = (v: number) => `${tNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`;
   const set = (v: number) => void setLineFare(l.num, tidyLineFare(v));
+  const dist = !!world.value?.lineStats[l.id]?.fareDist;
   return (
     <ul class="rows">
+      {!!m.fares.zones?.length && (
+        <li>
+          <span class="grow">{t("lineMoney.fareMode")}</span>
+          <Segmented<boolean> options={[[false, t("lineMoney.fareZones")], [true, t("lineMoney.fareDistance")]]} value={dist}
+            onChange={(to) => { if (to !== dist) void edit({ op: "lineFareDist", line: l.num, dist: to }); }} />
+        </li>
+      )}
       <li>
         <span class="grow" data-tip={t("lineMoney.fareTip")}>{t("lineMoney.fare")}</span>
         {mul !== 1 && <button class="btn icon" aria-label={t("lineMoney.fareBack", { value: text(1) })} data-tip={t("lineMoney.fareBack", { value: text(1) })} onClick={() => set(1)}><Icon.undo /></button>}

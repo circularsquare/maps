@@ -114,39 +114,65 @@ pub struct FareCurve {
     pub min: Vec<f32>,
     pub base: f32,
     pub rate: f32,
-    /// T-3740: the fare zones, which take the curve's place for a trip with both ends in one area
-    /// (`pair_extra`); empty with none. `base` and `rate` are set whenever these are.
+    /// T-3740, T-3758: the fare zones, which take the curve's place on zone rides (`ZoneWork`); empty
+    /// with none. `base` and `rate` are set whenever these are.
     pub zones: FareZones,
 }
 
-/// T-3740: the player's fare zones. Per station 0 for none, else (area index + 1) << 8 | zone
+/// T-3740, T-3758: the player's fare zones. Per station 0 for none, else (area index + 1) << 8 | zone
 /// number; per area its prices for 1, 2, ... zones (`min[off[a]..off[a + 1]]`, the last for any
-/// more), US$ as set or perceived minutes on a graph. A trip counts its start and end zones only.
+/// more), US$ as set or perceived minutes on a graph. A ride on a zone line between two stations of
+/// one area is a zone ride; consecutive zone rides in one area pay one price, for the zones from the
+/// lowest to the highest of that area's stations they stop at or pass (`ZoneWork`).
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct FareZones {
     pub st: Vec<u32>,
     pub off: Vec<u32>,
     pub min: Vec<f32>,
+    /// T-3758: per route node, whether its line pays the distance fare; empty while none does.
+    pub dist: Vec<bool>,
+    /// T-3758: per route node, the codes of the stations with a zone its trains pass without
+    /// stopping on the way to the next stop, `pass[pass_off[r]..pass_off[r + 1]]`; both empty while
+    /// none passes one.
+    pub pass_off: Vec<u32>,
+    pub pass: Vec<u32>,
 }
 
 impl FareZones {
     pub fn is_empty(&self) -> bool {
         self.st.is_empty()
     }
-    /// The zone price of a trip from station `a` to station `b`, if both are in one area.
+    /// Station `v`'s code, 0 for none.
     #[inline]
-    pub fn price(&self, a: usize, b: usize) -> Option<f32> {
-        let (x, y) = (*self.st.get(a)?, *self.st.get(b)?);
-        if x == 0 || y == 0 || x >> 8 != y >> 8 {
+    pub fn code(&self, v: usize) -> u32 {
+        self.st.get(v).copied().unwrap_or(0)
+    }
+    /// Whether route node `r`'s line pays the distance fare.
+    #[inline]
+    pub fn is_dist(&self, r: usize) -> bool {
+        self.dist.get(r).copied().unwrap_or(false)
+    }
+    /// The codes of the stations passed after route node `r`.
+    #[inline]
+    pub fn passed(&self, r: usize) -> &[u32] {
+        match (self.pass_off.get(r), self.pass_off.get(r + 1)) {
+            (Some(&a), Some(&b)) if a <= b && b as usize <= self.pass.len() => &self.pass[a as usize..b as usize],
+            _ => &[],
+        }
+    }
+    /// Area `a`'s (index + 1) price for zones `lo` to `hi` (both counted); between two counts, as
+    /// averaged zones are, the line between their prices. None for no such area.
+    pub fn price_of(&self, a: u32, lo: f32, hi: f32) -> Option<f32> {
+        let area = (a as usize).checked_sub(1)?;
+        let (o, e) = (*self.off.get(area)? as usize, *self.off.get(area + 1)? as usize);
+        if e <= o || e > self.min.len() {
             return None;
         }
-        let area = (x >> 8) as usize - 1;
-        let (lo, hi) = (*self.off.get(area)? as usize, *self.off.get(area + 1)? as usize);
-        if hi <= lo || hi > self.min.len() {
-            return None;
-        }
-        let k = (x & 255).abs_diff(y & 255) as usize;
-        Some(self.min[(lo + k).min(hi - 1)])
+        let k = (hi - lo).max(0.0);
+        let i = k.floor() as usize;
+        let at = |j: usize| self.min[(o + j).min(e - 1)];
+        let (p0, p1) = (at(i), at(i + 1));
+        Some(p0 + (p1 - p0) * (k - i as f32))
     }
 }
 
@@ -158,15 +184,6 @@ impl FareCurve {
     /// never needed.
     pub fn flat(&self) -> bool {
         self.is_line() && self.zones.is_empty()
-    }
-    /// T-3740: `extra` for a trip of `km` from station `src` to station `dst`: the zone price's
-    /// part over the base and rate where both are in one fare area, else the curve's.
-    #[inline]
-    pub fn pair_extra(&self, src: usize, dst: usize, km: f32) -> f32 {
-        match self.zones.price(src, dst) {
-            Some(m) => m - self.base - self.rate * km,
-            None => self.extra(km),
-        }
     }
     /// The curve's fare for a trip of `km`, perceived minutes.
     pub fn at(&self, km: f32) -> f32 {
@@ -826,7 +843,7 @@ pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f
     // T-1626: a trip's extra a km lands on each km times its multiplier, so the trip pays it times
     // its km-weighted multiplier, as `DestSearch::run` priced it
     let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
-    let extra = |src: usize| g.fare_curve.pair_extra(src, dst, km[src]);
+    let extra = |src: usize| g.fare_curve.extra(km[src]);
     match (st.next, st.order) {
         (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
         (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
@@ -1008,6 +1025,8 @@ pub struct DestSearch<'a> {
     pub(super) col: Vec<f32>,
     pub(super) ent: Vec<f32>,
     pub(super) fold: Vec<(usize, f32, f32)>,
+    /// T-3758: the fares under fare zones
+    pub(super) zw: ZoneWork,
     /// T-2652: with `TW_T2652_CHECK` set, every search is made again with no leaf stations and
     /// the two compared (`check_plain`).
     #[cfg(test)]
@@ -1025,6 +1044,7 @@ impl<'a> DestSearch<'a> {
             col: vec![],
             ent: vec![],
             fold: vec![],
+            zw: ZoneWork::default(),
             #[cfg(test)]
             plain: None,
         }
@@ -1104,8 +1124,13 @@ impl<'a> DestSearch<'a> {
         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]), start };
         if let Some(mut put) = put {
             let curve = &q.g.fare_curve;
-            let bent = !curve.flat();
+            // T-3758: under fare zones a trip's fare follows its rides (`ZoneWork`)
+            let zoned = !curve.zones.is_empty();
+            let bent = !curve.flat() && !zoned;
             let weighed = bent && !q.g.rn_kmw.is_empty();
+            if zoned {
+                self.zw.run(q.g, d.view(), dst, &q.g.rn_km, &q.g.rn_kmw, &mut self.dep);
+            }
             if bent {
                 trip_km(q.g, d.view(), dst, &mut self.km, &mut self.dep);
             }
@@ -1129,7 +1154,7 @@ impl<'a> DestSearch<'a> {
                     continue;
                 }
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                let x = if bent { curve.pair_extra(src, dst, self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
+                let x = if zoned { self.zw.extra(src) } else if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
                 let change = q.p.change_at(q.g.change_f(src));
                 let b = if based { base_extra(q.g, self.mb[src]) } else { 0.0 };
                 col.push(q.dist[src] - change + x + b);

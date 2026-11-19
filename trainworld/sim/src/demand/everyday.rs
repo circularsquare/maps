@@ -602,6 +602,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let mut km: Vec<f32> = vec![];
     let mut fxq: Vec<f32> = vec![];
     let mut mb: Vec<f32> = vec![];
+    let mut zw = ZoneWork::default();
     let bent = !g.fare_curve.flat();
     // T-3578
     let based = !g.rn_base_mul.is_empty();
@@ -637,7 +638,12 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
             if bent || based {
                 let st = sk.strategy(slot);
                 trip_km(g, st, dst, &mut km, &mut dep);
-                if bent {
+                // T-3758: under fare zones each trip's fare follows its rides
+                if !g.fare_curve.zones.is_empty() {
+                    let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
+                    zw.run(g, st, dst, &g.rn_km, &g.rn_kmw, &mut dep);
+                    zw.spread(g, st, dst, |src| flow[src].iter().sum(), hops, &mut dep, &mut l.rn_fare_x);
+                } else if bent {
                     board_extra(g, st, dst, |src| flow[src].iter().sum(), &km, &mut dep, &mut fxq, &mut l.rn_fare_x);
                 }
                 if based {
@@ -2143,8 +2149,9 @@ impl EverydayApi {
         Ok(())
     }
     /// T-3740: `DemandApi::set_fare_zones`.
-    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
-        self.engine.set_fare_zones(st, off, usd)?;
+    #[allow(clippy::too_many_arguments)]
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32], dist: &[u8], pass_off: &[u32], pass: &[u32]) -> Result<(), String> {
+        self.engine.set_fare_zones(st, off, usd, dist, pass_off, pass)?;
         if self.engine.same == 0 {
             self.per.iter_mut().for_each(|v| *v = None);
         }

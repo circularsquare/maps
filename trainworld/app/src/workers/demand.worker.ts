@@ -2052,8 +2052,8 @@ async function run() {
           p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
           // T-3740: a city's at its country's multiple of the curve, as its extras are charged (`popScales`); the
           // market's as set
-          const fz = demandZones(m.fare, m.fz, p instanceof IntercityApi ? 1 : popScales.get(p)?.rate ?? scale);
-          p.set_fare_zones(fz.st, fz.off, fz.usd);
+          const fz = demandZones(m.fare, m.fz, p instanceof IntercityApi ? 1 : popScales.get(p)?.rate ?? scale, { dist: m.fzDist, passOff: m.fzPassOff, pass: m.fzPass });
+          p.set_fare_zones(fz.st, fz.off, fz.usd, fz.dist, fz.passOff, fz.pass);
           // T-1801: the market's trips change lines free (its fares weigh by income group)
           if (!(p instanceof IntercityApi)) p.set_transfer_fare(Math.min(transferFare(m.fare) * scale, rounded ? rounded.base : m.fare.base * scale)); // T-3689: never above the base fare charged
         }
