@@ -3,7 +3,7 @@
 // they follow the player to other devices. Each slot's tie is its `SyncRecord` (`sync:<slot>`).
 //
 // Plain functions of a `CloudContext`, so both threads use them: the clock worker uploads after each
-// write and claims the game it opens (clock.worker.ts); the main thread settles every slot on the
+// write and claims the game it opens (slots.ts); the main thread settles every slot on the
 // start menu before the worker starts, and downloads or deletes the account's other games.
 
 import { t } from "../i18n";

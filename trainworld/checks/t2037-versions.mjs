@@ -104,7 +104,7 @@ try {
       openedThere: await run('e', edited, (id) => game(id, 5, T, 'dev-b')),
       mine: await run('f', edited, (id) => game(id, 5, T)),
     };
-    // the elsewhere rule (clock.worker upNow): a writer at this slot's rev changed nothing it lacks
+    // the elsewhere rule (slots.ts upNow): a writer at this slot's rev changed nothing it lacks
     const rec = { id: 'x', rev: 5, syncedAt: T + 1000, edit: T };
     r.elsewhere = { idleWriter: cloud.editedThere(game('x', 5, T), rec), clockWriter: cloud.editedThere(game('x', 6, T), rec), busyWriter: cloud.editedThere(game('x', 6, T + 1), rec) };
     // the split version and the account's copy still make one card, the later change on top

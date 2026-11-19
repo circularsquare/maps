@@ -315,8 +315,11 @@ the screen when demand cannot load, T-149, T-172, T-180); `StartMenu.tsx` (the s
 
 `realRoute.worker.ts` (the real-network router: graphs joined at borders, A* with the turn limit
 and families, then the fit in steps on a track model of its own, dropped for a newer request, T-727d, T-754; the outlines of the regions with a graph sent to the page, T-913); `protocol.ts` (edit ops, `RouteAsk` for a route edit and its preview, clock messages, the network snapshot for demand), `clock.worker.ts` (owns
-the network: `TrackApi`, notes/T-025.md; money and autosave too; an edit's follow-up (state, trips, boarding hour, answer) waits behind the previews asked meanwhile, `later`, T-1407, an early track segment's until the pointer rests, `holdOn`, T-2404; `slotSummary`, a save's picture
-with a panel per city, T-894), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
+the network: `TrackApi`, notes/T-025.md; money too; an edit's follow-up (state, trips, boarding hour, answer) waits behind the previews asked meanwhile, `later`, T-1407, an early track segment's until the pointer rests, `holdOn`, T-2404; `slotSummary`, a save's picture
+with a panel per city, T-894), `slots.ts` (the save slot of the game in hand, T-3734: `writeBlock`, whether and why the
+slot may not be written now; `publishSlots`, autosave, the save by hand, the saves panel's actions, the slot's lease
+against other tabs, the cloud queue; its state is the one object `saves`, which the clock worker also reads and
+writes, and it reaches the game through the `SlotHost` the worker binds), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format
