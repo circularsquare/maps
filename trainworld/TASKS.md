@@ -111,23 +111,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A "lost my save" report carries nothing about saves today, so it can't be placed in a cause.
   - Goal: The report's context lists slot count, slots marked damaged, unreadable copies, signed in or not, the playing slot's last sync error, whether storage is persisted, and the last failed open's reason; counts only, no save contents; about 1 hour.
   - Other: notes/T-3772.md
-- T-3775 [P2] {L:accounts-server} Save health readable without ssh
+- T-3775 [P2] {L:accounts-server} Save health readable without ssh (taking, 2026-11-19, agent savehealth)
   - Context: The daily scan's reports and the quarantine records are only on the box, so counting damaged saves needs ssh and your yes each time.
   - Goal: An inbox-key GET gives the latest scan report and a quarantine summary (by verdict, reason, level and day; ids and counts only), and a small tool prints it; about 1.5 hours plus a server deploy on your yes.
-  - Other: notes/T-3772.md
-- T-3776 [P2] {L:small-fixes} Startup crash when graphics go before the game starts (taking, 2026-11-19, agent gfxcrash)
-  - Context: A player's v0.4.2 Safari 17 report (1795070377-56c9adc9) stopped at startup with "undefined is not an object (evaluating 'W9.saveBeforeReload')" after the graphics were lost twice: main.ts line 210 registers `onGraphicsGone(() => client.saveBeforeReload())` before `const client` is set at line 316.
-  - Goal: Graphics lost before the clock client exists show the graphics screen without the crash (skip the save when there is no client); about 30 minutes.
   - Other: notes/T-3772.md
 - T-3777 [P2] {L:real-networks} Nagoya's Tokaido Main Line takes a weird route (taking, 2026-11-19, agent realjapan)
   - Context: You, 2026-11-19: "nagoya looks good. theres a lot of "reversal" alerts for the jr tokaido main line tho. seemst o be taking a really weird route". Nagoya was built by realauto in T-3769.
   - Goal: The Tokaido Main Line runs its real route through Nagoya with no reversal alerts, and the cause is fixed in realauto if other cities share it.
-- T-3778 [P2] {L:fares} {after:T-3758 landing} Fare zone hovers explain the rule
-  - Context: You, 2026-11-19: "on fare zones tooltip lets say like "by default, trips will be charged based on the number of fare zones passed through. trips that have endpoints outside the fare zones will .... [idk what happens here actually, but regardless we should explain it]". and on hover of "1 fare zone" we should say that like "fare charged for trips that stay in one fare zone" or "Fare charged for trips that stay within 2 adjacent fare zones"".
-  - Goal: Hovers on the Fare zones heading and each price row, worded from the drafts she reviews.
-- T-3771 [P2] {L:money} {after:T-3757 landing} Per-line money history kept one month (taking, 2026-11-19, agent linehist)
-  - Context: You, 2026-11-19: "most of the money history is like per-line money history right? we can probably drop that after like an in game month. its not that important to keep. just wanna keep the global record forever." Also: "people do probably leave this game running for a while at like 100x speed". T-3757 (tree savesize, being checked) folds day ledgers older than 120 days into months; this goes further for per-line history only.
-  - Goal: Per-line money history keeps the last in-game month; the whole network's money history is kept for ever (by month, as T-3757 folds it); old saves trim on load.
+- T-3778 [P2] {L:fares} {after:T-3758 landing} Fare zones follow-ups: hovers, off switch, loop in world space, order
+  - Context: You, 2026-11-19, on Z2 on 8800: hovers explaining the rule (drafts agreed, ending "...pays by distance instead."); "add a button to disable fare zones without deleting it entirely"; "when drawing fare zones and we are zooming in and out while holdign down the mouse to continue drawing, we should have the shape be pinned to world space rather than screen space"; "put fare zones above fares by coutnry".
+  - Goal: The four done: heading and price-row hovers; an area can be switched off and on with its paint kept; a loop being drawn stays fixed to the map while zooming; Fare zones sits above the country fares in Advanced fares.
 - T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
   - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
   - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.

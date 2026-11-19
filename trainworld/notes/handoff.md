@@ -12,25 +12,28 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    (d4195ede, game side). maps-6b handed over ~14:25 UTC at 500k.
 1. Agents running (maps-6b's; reports reach you through the inbox; follow-ups go to fresh agents on their trees):
    - T-3757 landed 305b446c (c022, c023; checker passed 1-4, undo/redo of a build's money inconclusive).
-     linehist (Sonnet, T-3771, tree, 6181): per-line history 30 days, network for ever; also answers whether undo
-     refunds on master.
+     T-3771 landed b8b48d5a: per-line history was already 31 days (T-3566); stopped lines' old days now dropped.
+     Built track is not undoable after Construct (no refund); unchanged.
    - zonerule (Opus, T-3758, tree zonerule, 6155): zones counted lowest-to-highest the route touches; per-line
      zone/distance mode kept on copy; may take a save level. Checker. Lands AFTER Z2; fix the wiki rule line then.
-   - From her pad 15:00: settingslayout (Opus, T-3768, tree, 6172): done (settings flex column 8 px gap, new
-     t3768-panel-gaps check); resumed for 3 phone Finances overflows and an edge/clip test, then land and realjapan (Sonnet, T-3769, tree, 6173: realauto starts for Nagoya, Fukuoka,
+   - T-3768 landed ab8c9bf4 (settings 8 px gap, phone Finances fixed, t3768-panel-gaps check ~5 min); and realjapan (Sonnet, T-3769, tree, 6173: realauto starts for Nagoya, Fukuoka,
      Sapporo, Hiroshima and more; writes only new cities under data/packs/real).
    - realjapan resumed on T-3777 (tree nagoyafix, 6173): Tokaido Main Line reversals in Nagoya. T-3778 (fare zone
      hovers) after zonerule lands; drafts went to her 11-19.
    - busverify: bus and ferry fleet/headway edits recalculate on master (28 clean steps). Its train control read a
      4.14 min departure gap at every count (it calls its read invalid for trains): a short probe someday.
-   - 8800 = ec9841de since ~15:40 (Z2, Japan starts, T-3770).
+   - 8800 = ab8c9bf4 since ~15:58 (Z2, Japan starts, T-3757, T-3768). T-3776 landed 638e3289 (c024) after it.
    - namebind T-3759 landed 9fa4bf6e (checker 5/5 pass; c019); T-956 Safari 1c1b3d21 (c018); T-3765 1e793d04 (c017).
    - ttport (T-3346 stage 2, r-e302ee5c): ported in tree ttport (locals wait for the express; 30/10 floored to
-     master's waits; NYC to the bit; no level). Checker ttportchk (6175/6176) running. Same schedule code as
+     master's waits; NYC to the bit; no level). Checker partial: t2233-passing-map fails at 10/10 (map 50 s vs
+     bar 52, master 67), an extra pass at a non-passing place, reload untested. ttfix (Opus, 6175/6176) fixing. Same schedule code as
      periods5: land whichever is first, the other rebases. Remove tt2 after ttport lands. Follow-up: round trips
      on actual waits (design note first, 4-6 h).
-   - savelost (Opus, T-3772 P1, no tree, 6177): lost/damaged saves in 2 weeks, causes, fixes (may file T-3773-3776);
-     no ssh: it lists server read commands for her yes.
+   - T-3772 done (notes/T-3772.md): 3 truncated cloud saves on 11-15, nothing else measurable without the box;
+     ask a-2026-11-19-12 (ssh read script). Started gfxcrash (Sonnet, T-3776, 6182) and failopen (Opus, T-3773,
+     6183) and savehealth (Sonnet, T-3775: inbox GET for scan + quarantine, commits in shonei-server, no deploy).
+     Queued: T-3774 (after T-3773). rus: wait for their reply (her 11-19). Scan email 11-19: 2 corrupt revs;
+     ask a-2026-11-19-13 to read them over ssh. T-3778 now holds all four of her Z2 follow-ups.
    - realjapan T-3769 landed aa41f74e (c020): 4 new packs in data/packs/real need the next data upload.
    - focusload (Opus, T-3686, tree focusload, 6160): focused city slow on big saves; measure, cut save-size steps.
    - commentab (T-3726): setup done (r-c119e957; <S> = maps-6b's scratchpad\commentab, scoring.md there). Arms run
