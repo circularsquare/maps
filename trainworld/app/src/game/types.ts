@@ -47,6 +47,8 @@ export interface StationInput {
   off?: boolean;
   /** its upgrades, `UPGRADE` bits (game/upgrades.ts, T-1281) */
   upgrades?: number;
+  /** T-3740: its fare zone's code (game/fareZones.ts), only where it has one; its area may be gone */
+  fare?: number;
   /** the player typed its name (T-2683): a complex shows it above the others' */
   named?: true;
   /** T-3759: not bound to its complex's name: `name` is its own */

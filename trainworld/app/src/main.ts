@@ -68,6 +68,7 @@ import { StopMarkers } from "./map/stopMarkers";
 import { BusStopMarkers } from "./map/busStops";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
+import { FareZoneTool } from "./map/fareZoneTool";
 import { bpPicked, clearBpPicked, dropPicked, levelPicked, pickedState, removePicked, selectPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
@@ -396,6 +397,8 @@ watchInput();
 render(h(TouchBar, null), tools.touchHost);
 // The blueprint tool: a drag box picks blueprint track and stations to switch off or on (T-333).
 const blueprintBox = new BlueprintBox(map, overlay, client);
+// T-3740: the Fare zones tool: a click or a loop gives stations a fare zone; the tint while it is on
+const fareZoneTool = new FareZoneTool(map, overlay);
 live.tools = tools;
 // Stop editing (T-233): a toggle marker on every station; the page class hides the demand views
 tools.stops = new StopMarkers(map, overlay, (station, oneWay) => tools.toggleStop(station, oneWay), (station, tier) => tools.loopStop(station, tier));
@@ -480,6 +483,7 @@ effect(() => {
 });
 
 const labels = new StationLabels(map.getContainer(), overlay, map);
+fareZoneTool.nameBoxes = () => labels.shownBoxes();
 effect(() => {
   const w = world.value;
   if (w && !SYNTH) labels.set(w);
@@ -553,7 +557,7 @@ effect(() => {
 // ---- picking and tools ----
 map.on("click", (e) => {
   if (tool.peek() === "trip") tripTool.click(e); // T-195
-  else if (tool.peek() === "blueprint") return; // its pointer handlers pick (map/blueprintBox.ts)
+  else if (tool.peek() === "blueprint" || tool.peek() === "fares") return; // their pointer handlers pick (map/blueprintBox.ts, map/fareZoneTool.ts)
   else if (tool.peek() !== "select") touchInput.peek() ? tools.tap(e) : tools.click(e);
   else selectAt(e.point.x, e.point.y, e.originalEvent.shiftKey);
 });
@@ -615,7 +619,7 @@ if (!SYNTH && !perfOff("hover")) // ?perfOff=hover: T-045 measurement only
       if (map.getCanvas().style.cursor !== c) map.getCanvas().style.cursor = c;
       return;
     }
-    if (tool.peek() === "blueprint") return;
+    if (tool.peek() === "blueprint" || tool.peek() === "fares") return;
     if (tool.peek() !== "select") return tools.move(e);
     // a blueprint point drags even over a demand bubble (T-474), so its grab cursor comes first
     const cur = linking.peek() !== null ? (pick(overlay, e.point.x, e.point.y, false)?.kind === "station" ? "pointer" : "crosshair") : nodeDrag.hit(e.point.x, e.point.y)?.movable ? "grab" : demandHover?.(e.point.x, e.point.y) ? "pointer" : pick(overlay, e.point.x, e.point.y, display.peek().trains) ? "pointer" : "";
@@ -646,7 +650,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  if (e.key === "Escape" && (nodeDrag.cancel() || edgeEditor.cancel() || cancelLink() || blueprintBox.cancel())) {
+  if (e.key === "Escape" && (nodeDrag.cancel() || edgeEditor.cancel() || cancelLink() || blueprintBox.cancel() || fareZoneTool.cancel())) {
     e.preventDefault();
     return;
   }
@@ -902,6 +906,7 @@ if (DEBUG) {
     figures: { peaks: figuresPeaks, stopped: figuresStopped }, // T-3314: the longest quiet seen, and the notice's signal
     soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, singleStation, complexOf, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
     profiles: PROFILES, // T-3542: a trip's profile index, for checks (map/profiles.ts)
+    fareZoneTool, // T-3740: its draw and last numbers, for checks
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,

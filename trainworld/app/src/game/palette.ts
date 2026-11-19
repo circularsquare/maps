@@ -308,7 +308,13 @@ export const CLICK_MODE_COLOURS = {
   trip: "#268769",
   building: "#a15b7b",
   passage: "#b0866a",
+  fares: "#e06a4e",
 } as const;
+
+/** T-3740: each fare zone number's colour, 1 to 12, on the map's tint, the tool's stepper and the station panel;
+ * 30 degrees of hue apart in order, so neighbouring zones differ and the order still reads. */
+export const FARE_ZONE_COLOURS = ["#e8607a", "#f08a3c", "#e2bb2e", "#97c444", "#4fb07a", "#36b1ad", "#4a9be0", "#5b74d6", "#8a64d0", "#c160c0", "#a07858", "#7d8a96"] as const;
+export const fareZoneColour = (zone: number): string => FARE_ZONE_COLOURS[(Math.max(1, zone) - 1) % FARE_ZONE_COLOURS.length];
 
 /** T-3693, T-3714: each track type's colour for the track tool's aura and descriptor square and the track count
  * icon in its placing tag (game/buildMode.ts). Regular is the track tool's own colour. */

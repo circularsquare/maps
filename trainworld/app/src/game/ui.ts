@@ -284,8 +284,8 @@ export const mapShade = computed<Shade>(() => (display.value.satellite && (shade
 effect(() => setBubbleShade(mapShade.value));
 
 /** What a click on the map does: select (pick), draw track, place a station, add stops to a line,
- * remove what is clicked (T-096), pick a trip's two ends (T-195). */
-export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus" | "ferry" | "building";
+ * remove what is clicked (T-096), pick a trip's two ends (T-195), give stations a fare zone (T-3740). */
+export type Tool = "select" | "track" | "station" | "line" | "delete" | "trip" | "blueprint" | "bus" | "ferry" | "building" | "fares";
 export const tool = signal<Tool>("select");
 /** T-1207: the map's camera is moving (set by map/overlay.ts); live counts in panels wait for it. */
 export const cameraMoving = { now: false };

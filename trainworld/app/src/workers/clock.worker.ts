@@ -17,7 +17,7 @@ import { PERIODS } from "../game/periods";
 import { headwaysFor, NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
-import { zonesOf } from "../game/fareZones";
+import { areaOfCode, zonesOf } from "../game/fareZones";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
@@ -149,8 +149,13 @@ function newLineFare(op: EditOp, line: number) {
 }
 /** T-2679: the fares as demand reads them, without the reference country, which changes no fare. */
 function demandFares(): Fares {
-  const { ref: _, ...rest } = fares;
-  return rest;
+  const { ref: _, zones, zoneNext: __, ...rest } = fares;
+  if (!zones) return rest;
+  // T-3740: nor do an area's name, the next id or an area no station is in, so none of them starts a solve
+  const codes = api?.station_fares() ?? [], used = new Set<number>();
+  for (let k = 1; k < codes.length; k += 2) used.add(areaOfCode(codes[k]));
+  const kept = zones.filter((a) => used.has(a.id)).map((a) => ({ id: a.id, name: "", prices: a.prices }));
+  return kept.length ? { ...rest, zones: kept } : rest;
 }
 /** T-2679: the first built station's lng and lat (lowest node id), as the last state was built. */
 let firstBuiltAt: [number, number] | null = null;

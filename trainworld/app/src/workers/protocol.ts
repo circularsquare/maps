@@ -476,7 +476,7 @@ export interface MoneyState {
   economy: number;
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
-  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number> };
+  fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[]; zoneNext?: number };
   /** running cost per game hour in each demand period on weekdays (T-3542: five, `PERIODS`) */
   runningPerHour: number[];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
@@ -557,6 +557,8 @@ export interface ClockNode {
   stationOff: boolean;
   /** the station's upgrades, `UPGRADE` bits (T-1281) */
   upgrades: number;
+  /** T-3740: the station's fare zone code (game/fareZones.ts), only where it has one */
+  fare?: number;
   /** T-3332: a one-track station: 1 on double track (`oneHeading` its trains' way), 2 on single track, where trains cannot pass */
   one?: 1 | 2;
   /** T-3332: the heading of a one-track station's trains on double track, rad, counter-clockwise from east */

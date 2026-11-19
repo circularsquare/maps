@@ -6,14 +6,17 @@
 
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareNode, type Fares } from "../game/fareCurve";
-import { roundedDefault } from "../game/fareDefault";
+import { busFare, fareAt, ferryFare, HSR_FARE, hsrFare, isCustomCurve, MAX_NODES, NODE_KM, scaleNodes, transferFare, type FareArea, type FareNode, type Fares } from "../game/fareCurve";
+import { chargedPrices, MAX_ZONES } from "../game/fareZones";
+import { newArea, removeArea, renameArea, setZonePrice, startPainting, topZone } from "../game/fareZonePaint";
+import { roundTo } from "../game/currency";
+import { countryFareScales, roundedDefault } from "../game/fareDefault";
 import { defaultScale, fareScale, SHOWN_STEP, shownScale, storedScale } from "../game/income";
 import { moneyState, stationCountry } from "../game/money";
 import { redo, undo, changeFares } from "../game/fareUndo";
 import { ask } from "../game/ui";
 import { setFareRef, setFareScale, world } from "../game/world";
-import { price, unitMetres, unitShort } from "../game/format";
+import { currencySpec, fromShown, price, priceTyped, toShown, unitMetres, unitShort } from "../game/format";
 import { playBuild } from "../map/buildSound";
 import { t, tCountry, tNumber, tRich } from "../i18n";
 import { useModalDialog } from "./Modal";
@@ -71,6 +74,61 @@ function CountryRow({ f, country, refCountry }: { f: Fares; country: string; ref
         {scales?.[country] !== undefined && <button class="btn icon" aria-label={t("moneyTab.backToDefault")} data-tip={t("moneyTab.backTo", { value: mulText(shownScale(defaultScale(country, scales), refScale)) })} onClick={() => void setFareScale(country, null)}><Icon.undo /></button>}
       </span>
     </li>
+  );
+}
+
+/** T-3740: the fare areas, each its name, the brush that starts the Fare zones tool on it, its bin, and its price
+ * for 1, 2, 3 ... fare zones (as many as its highest zone painted, at least three) as charged in the panel's
+ * country (times its rate multiple, as demand charges them: `countryFareScales`); then New fare area, which starts the
+ * tool on a new one. */
+function FareAreas({ f, country }: { f: Fares; country: string }) {
+  const areas = f.zones ?? [];
+  const scale = countryFareScales(country, f).rate;
+  const sp = currencySpec();
+  const paint = (id: number) => { advancedFares.value = null; startPainting(id); };
+  const remove = (a: FareArea) => {
+    ask.value = { text: t("advancedFares.removeAreaAsk", { name: a.name }), yes: t("advancedFares.removeArea"), no: t("toolNotes.cancel"), run: () => removeArea(a.id) };
+  };
+  return (
+    <ul class="rows fare-rows af-zones">
+      <li class="af-head"><span class="af-title">{t("advancedFares.zones")}</span><span /><span /></li>
+      {areas.map((a) => {
+        const n = Math.min(MAX_ZONES, Math.max(3, topZone(a.id)));
+        const charged = chargedPrices(f, a);
+        return (
+          <>
+            <li class="af-area">
+              <span class="fr-what">
+                <input class="af-name" value={a.name} aria-label={t("advancedFares.areaLabel")} maxLength={80}
+                  onChange={(e) => renameArea(a.id, e.currentTarget.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} />
+              </span>
+              <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
+              <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.bin /></button>
+            </li>
+            {Array.from({ length: n }, (_, k) => {
+              const shown = (charged[Math.min(k, charged.length - 1)] ?? 0) * scale;
+              const set = (v: number) => setZonePrice(a.id, k + 1, Math.max(0, v) / scale);
+              return (
+                <li>
+                  <span class="fr-what">{t("advancedFares.zonePrice", { count: k + 1 })}</span>
+                  <Stepper value={price(shown)} wide label={t("advancedFares.zonePriceLabel", { count: k + 1 })}
+                    onStep={(d) => set(fromShown(roundTo(toShown(shown), sp.grain) + d * sp.fareStep))}
+                    type={{ text: priceTyped(shown), set: (v) => set(fromShown(v)) }} />
+                  <span />
+                </li>
+              );
+            })}
+          </>
+        );
+      })}
+      <li class="af-add">
+        <span class="fr-what">
+          <button class="btn text mini" onClick={() => void newArea().then((id) => { if (id !== null) paint(id); })}><Icon.plus />{t("advancedFares.newArea")}</button>
+        </span>
+        <span /><span />
+      </li>
+    </ul>
   );
 }
 
@@ -162,6 +220,7 @@ function Panel({ start }: { start: string }) {
           <li class="af-head"><span class="af-title">{t("advancedFares.byCountry")}</span><span>{t("advancedFares.multiple")}</span><span>{t("fareGraph.baseFare")}</span><span /></li>
           {listed.map((c) => <CountryRow f={f} country={c} refCountry={ref} />)}
         </ul>
+        <FareAreas f={f} country={country} />
       </div>
     </dialog>
   );

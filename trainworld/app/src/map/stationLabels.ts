@@ -527,6 +527,21 @@ export class StationLabels {
 
   /** T-1621: between full placements, for a camera change other than a flat pan (zoom, rotation,
    * pitch, globe), every shown name keeps its place beside its station each frame. */
+  /** The names shown, as boxes (left, top, right, bottom) in CSS px where they are this frame; T-3740: the fare zone
+   * numbers keep clear of them. */
+  shownBoxes(): number[][] {
+    if (!this.shown) return [];
+    const p = this.projected, out: number[][] = [];
+    for (const l of this.shownLabels) {
+      if (l.hidden) continue;
+      this.overlay.toScreenInto(l.x, l.y, p);
+      if (Number.isNaN(p[0])) continue;
+      const x = p[0] + l.ox!, y = p[1] + l.oy!;
+      out.push([x, y, x + l.w, y + l.h]);
+    }
+    return out;
+  }
+
   private follow() {
     if (this.plane.style.transform) this.plane.style.transform = "";
     const p = this.projected;

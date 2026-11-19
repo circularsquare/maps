@@ -38,6 +38,8 @@ import { PurposeSplit } from "./PurposeSplit";
 import { StationUpgrades, TerminalButton } from "./StationUpgrades";
 import { PlatformTracks } from "../ToolBar";
 import { StationSides } from "./StationSides";
+import { FareZoneRow } from "../FareZoneParts";
+import { fareAreas } from "../../game/fareZonePaint";
 
 /** Open station `m` on its own, in station view, from its complex (T-246, T-249). */
 function openStation(m: string) {
@@ -267,6 +269,8 @@ export function StationInspector({ id }: { id: string }) {
       {/* T-3419: a port takes the waiting room only; in a complex view its upgrades are the complex's */}
       {(!s.port || !asComplex) && <div class="h">{tr("stationUpgrades.group")}</div>}
       {(!s.port || !asComplex) && <StationUpgrades s={s} members={asComplex ? members : undefined} />}
+      {/* T-3740: only while the fares have a fare area */}
+      {asComplex && fareAreas().length > 0 && <ul class="rows"><FareZoneRow members={members.flatMap((m) => stationsById(w).get(m) ?? [])} /></ul>}
       {asComplex ? (
         <ComplexSummary id={id} members={members} />
       ) : (
@@ -395,6 +399,7 @@ function StationDetails({ s, lines, props }: {
             : <PlatformTracks one={!!s.one} oneTip={tr("stationInspector.noLoop")} bothTip={tr("stationInspector.loop")}
                 onPick={(one) => void edit({ op: "stationTracks", node: s.num, one })} />}
         </li>}
+        <FareZoneRow members={[s]} />
         {s.built && m && (
           <Row label={tr("trackInspector.upkeep")}>
             {s.port

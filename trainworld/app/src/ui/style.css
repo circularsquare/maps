@@ -846,6 +846,21 @@ svg.trip-graph { display: block; width: 100%; height: auto; margin: 2px 0 4px; u
 .af-countries .af-head > span { color: var(--muted); align-self: end; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
 .af-countries .af-head > span.af-title { color: var(--text); font-weight: 700; }
 .af-countries .af-base { justify-self: end; font-variant-numeric: tabular-nums; }
+/* T-3740: the fare areas under the countries: a name box (plain text until hovered), the brush and bin, the prices */
+.rows.fare-rows.af-zones { margin-top: 14px; }
+.af-zones .af-head > span { align-self: end; padding-bottom: 2px; border-bottom: 1px solid var(--rule); }
+.af-zones .af-head > span.af-title { font-weight: 700; }
+.af-zones input.af-name { flex: 1; min-width: 0; height: 24px; box-sizing: border-box; margin: 0 0 0 -5px; padding: 0 4px; font: inherit; color: var(--text);
+  background: none; border: 1px solid transparent; }
+.af-zones input.af-name:hover { border-color: var(--rule); }
+.af-zones input.af-name:focus { border-color: var(--accent); outline: 0; }
+.af-zones .af-area > .btn.text svg { width: 12px; height: 12px; margin-right: 4px; vertical-align: -2px; }
+.af-zones .af-area > .btn.icon { justify-self: start; }
+.af-zones .af-area ~ .af-area > * { margin-top: 10px; }
+/* a fare zone's number on its colour (the tool's bar, the station panel) */
+.fz-chip { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 3px; box-sizing: border-box; font-weight: 700;
+  text-align: center; font-variant-numeric: tabular-nums; }
+.fare-bar .fz-area { font-weight: 700; }
 .fg-off { cursor: pointer; }
 .fg-arrow { fill: var(--accent); stroke: var(--bg); stroke-width: 1; }
 .fg-off:hover .fg-arrow { stroke: var(--text); }
@@ -1374,6 +1389,7 @@ button.save-add:hover { color: var(--text); }
 #map canvas.overlay.demand { z-index: 2; }
 /* T-1448: the station ridership circles, over the bubbles (later in the map, the same z) */
 #map canvas.overlay.stations { z-index: 2; }
+#map canvas.overlay.fare-marks { z-index: 2; }
 /* T-1435: where people drive, between the bubbles and the circles (the same z) */
 #map .maplibregl-control-container { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .stn-labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }

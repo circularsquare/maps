@@ -879,7 +879,42 @@ fare snaps as a drag's, is taken as a neighbour's within one snap step, and is h
 where nothing fits (before the base, between two points 0.1 km apart) the click does nothing. Each add and remove is
 one fare edit (one recalculation, Ctrl+Z, which the panel passes on). The drag estimate averages each line's fare
 change over trips 0.4 to 1.6 times its mean length (`fareEstimate.ts`), so moving a step shows gradually. Room is
-left below the countries for fare zones (T-3740) and a fare per stop (T-3744).
+left below the fare zones for a fare per stop (T-3744).
+
+**Fare zones** [T-3740, `AdvancedFares.tsx` `FareAreas`, the rule in track-and-service.md "Fares and the ledgers"]:
+under the countries, the heading "Fare zones" (bold, over a rule), then each fare area: its name in a box that reads
+as plain text until hovered (typed over, Enter or leaving it renames; no recalculation), "Paint stations" with a
+brush, which closes the panel and starts the Fare zones tool on that area, and a bin ("Remove fare area", asking
+"Remove {name}? Trips between its stations pay by distance again."; its stations keep their codes, which count as
+none until Z3 tidies them); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
+highest zone painted and at least three, each its price as charged in the panel's country (the stored price times
+that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
+change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
+which makes an area named "{city} fare zones" for the city in view ("Fare area 2" with none), its prices the curve's
+fares at 5, 10, 15 km and so on, and starts the tool on it. A game with no fare area shows only the heading and
+that button; nothing else in the game changes.
+
+**The Fare zones tool** [`map/fareZoneTool.ts`, `game/fareZonePaint.ts`, `ui/FareZoneParts.tsx`], tool id `fares`
+(no Build tab button; started from the panel): its bar at the map's top centre, as the station tool's, with the area
+(a picker once there are two) and "Fare zone" with a stepper of the zone a click gives, 1 to 12 on its colour or
+"none" (which takes stations out of their fare zone); the click mode's descriptor "Painting fare zones" and the hint
+"Click a station or drag around several." ("Tap a station or draw around several." on touch). A click on a station
+(within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop, dashed and shaded in the
+zone's colour, ringing the stations it would take, and on release every station inside (and their complexes) takes
+it. Each click or loop is one `stationFares` edit (one recalculation of trips, one Ctrl+Z), and none when no station
+would change. The right or middle button drags the map; on touch one finger draws the loop, a tap paints, two
+fingers pan and zoom (MapLibre's touch pan held to two fingers while the tool is on). Esc drops a loop being drawn,
+then leaves the tool. While the tool is on the ground near each painted station is tinted in its zone's colour (one
+colour per zone number, `FARE_ZONE_COLOURS`), under the network: each painted complex (or lone station) owns its
+cell, the ground nearer it than any other painted one (every area's in one diagram, so cells never overlap) within
+650 m (at least 7 px on screen), drawn as vector shapes at 22% with a 2.5 px band at 80% inside each zone's edge (the
+cell's arcs, and sides facing another zone or area; none between cells of one zone). A complex takes the zone of its
+first painted station, as the station panel and demand do. Every painted complex or lone station has a disc with its
+zone number beside it, above left first, else the first of seven other spots clear of the station names and the
+numbers already drawn; where none is clear (stations crowded far out) it is left out. Off the tool nothing is drawn.
+The station panel has a "Fare zone" row (a stepper, the same values) while the fares have an area: a station's own,
+or in the complex view the complex's, stepping every station of the complex at once in its area (or the tool's when
+it has none), the area's name in the label's hover when there are two or more.
 
 ## Cities tab
 

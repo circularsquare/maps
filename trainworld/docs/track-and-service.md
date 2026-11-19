@@ -1869,7 +1869,9 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   and destination station are in one area pays that area's price for the zones from the lower number to the higher,
   both counted, in the curve's place in the formula above (`FareCurve::pair_extra`); any other trip, a bus stop that
   is no station included, pays the curve. Prices are curve units: a city's populations take them times their
-  country's rate multiple (`countryFareScales`), the market as set. The player's tool is not built yet (notes/T-3740.md).
+  country's rate multiple (`countryFareScales`), the market as set. The player sets them with the Fare zones tool and
+  the Advanced fares panel ([ui-panels.md](ui-panels.md#advanced-fares), notes/T-3740.md). An area's name, its next
+  id and an area no station is in reach no demand input, so naming or making one recalculates no trips.
   Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,

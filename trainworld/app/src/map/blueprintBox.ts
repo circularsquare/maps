@@ -106,8 +106,9 @@ export class BlueprintBox {
     }));
     // the left button is the box's while the tool is on; the map's own drag would pan under it. A
     // finger pans as everywhere, and draws a box after a hold (T-1260)
+    // (the Fare zones tool's loop too, T-3740: map/fareZoneTool.ts)
     effect(() => {
-      if (tool.value === "blueprint" && !touchInput.value) map.dragPan.disable();
+      if ((tool.value === "blueprint" || tool.value === "fares") && !touchInput.value) map.dragPan.disable();
       else map.dragPan.enable();
       if (tool.value !== "blueprint") this.cancel();
     });

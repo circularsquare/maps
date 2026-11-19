@@ -19,6 +19,7 @@ import { levelTip, multText, trackMult, unitPrice, upkeepAt } from "./trackPrice
 import { Icon, LevelButtons, Segmented, Stepper, TrackCountButtons } from "./widgets";
 import { t, tRich } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
+import { FareBar } from "./FareZoneParts";
 
 export type ClickMode = keyof typeof CLICK_MODE_COLOURS | "select";
 /** What a click on the map does now: the tool, or picking a passage's other station (T-197). */
@@ -212,7 +213,7 @@ export function MapToolBar() {
   return (
     <>
       {mode !== "select" && <div class="mode-aura" style={{ "--mode": clickColour(mode) }} />}
-      {tl === "track" ? <TrackBar /> : tl === "station" ? <StationBar /> : null}
+      {tl === "track" ? <TrackBar /> : tl === "station" ? <StationBar /> : tl === "fares" ? <FareBar /> : null}
     </>
   );
 }
