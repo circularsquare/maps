@@ -337,6 +337,60 @@ mod tests {
         assert_eq!(b.save(), bytes);
     }
 
+    /// T-3759: unbinding gives a station its stored name to show and leaves that name its part in the
+    /// complex's; a rename of an unbound one changes only what it shows, or both for one alone; binding
+    /// all is one undo; new stations start unbound while the setting is off; a save keeps all of it, and
+    /// an older save reports itself once for the app's pass.
+    #[test]
+    fn stations_bind_and_unbind() {
+        let (mut a, st) = net();
+        assert!(a.unbound_stations().is_empty());
+        assert_eq!(a.set_station_bound(st[1], false), 0, "{}", a.issues());
+        assert_eq!((a.station_own(st[1]), a.node_name(st[1])), ("East".to_string(), "East".to_string()));
+        assert_eq!(a.set_station_own(st[1], "East Gate".into(), false), 0);
+        assert_eq!((a.station_own(st[1]), a.node_name(st[1])), ("East Gate".to_string(), "East".to_string()));
+        assert_eq!(a.set_station_own(st[3], "Low Hall".into(), true), 0);
+        assert_eq!((a.station_own(st[3]), a.node_name(st[3])), ("Low Hall".to_string(), "Low Hall".to_string()));
+        assert_eq!(a.named_stations(), vec![st[3]], "both names the player's");
+        assert_eq!(a.unbound_stations(), vec![st[1], st[3]]);
+        let bytes = a.save();
+        assert_eq!(a.bind_stations(&[st[0], st[1], st[3]]), 0);
+        assert!(a.unbound_stations().is_empty());
+        assert_eq!(a.node_name(st[1]), "East", "binding keeps the stored name");
+        a.undo();
+        assert_eq!(a.unbound_stations(), vec![st[1], st[3]], "one undo for all");
+        assert_eq!(a.set_station_bound(st[1], true), 0);
+        assert_eq!(a.station_own(st[1]), "");
+        // the setting: new stations start unbound with their own name
+        a.set_bind_new(false);
+        let e = {
+            let n = &a.w.net;
+            (0..n.edge_count() as u32)
+                .find(|&e| {
+                    let (p, q) = (n.edge_a[e as usize] as usize, n.edge_b[e as usize] as usize);
+                    n.edge_ok(e) && n.node_y[p].abs() < 1.0 && n.node_x[p].min(n.node_x[q]) < 1600.0 && n.node_x[p].max(n.node_x[q]) > 1600.0
+                })
+                .unwrap()
+        };
+        assert_eq!(a.add_station(2, e, 1600.0, 0.0, 200, "Far".into()), 0, "{}", a.issues());
+        let far = (0..a.w.net.node_count() as u32).find(|&m| a.w.net.is_station(m) && (a.w.net.node_x[m as usize] - 1600.0).abs() < 1.0).unwrap();
+        assert_eq!(a.station_own(far), "Far");
+        a.set_bind_new(true);
+        // a save keeps the own names; this level is no older save
+        let mut b = TrackApi::new(-73.985, 40.758, true);
+        assert!(b.load(&bytes));
+        assert_eq!((b.station_own(st[1]), b.station_own(st[3])), ("East Gate".to_string(), "Low Hall".to_string()));
+        assert!(!b.take_old_names());
+        assert_eq!(b.save(), bytes);
+        let mut c = TrackApi::new(-73.985, 40.758, true);
+        c.set_load_level(crate::track::save::OLD_BOUND_NAMES);
+        assert!(c.load(&bytes));
+        assert!(c.take_old_names() && !c.take_old_names(), "once");
+        assert_eq!(c.adopt_old_names(&[st[0]]), 0);
+        assert_eq!(c.station_own(st[0]), "Central / Main");
+        assert!(!c.can_undo(), "not on undo");
+    }
+
     /// After T-2193: a save with ferries and buildings writes LFR3 then BLD1 and loads both; the
     /// ferry save from before the building reads back without buildings, to the bit.
     #[test]

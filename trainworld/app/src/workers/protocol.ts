@@ -104,14 +104,21 @@ export type EditOp =
   | { op: "oneWays"; edges: EdgeId[]; dirs: (0 | 1 | 2 | 3)[] }
   /** T-3405: a speed limit on pieces of track, km/h, 0 for none; free */
   | { op: "pieceLimit"; edges: EdgeId[]; kmh: number }
+  /** a station's platform; a `name` other than the one it shows renames it as `renameStation` does */
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
+  /** T-3759: rename a station: an unbound one alone, a bound one renames its complex */
+  | { op: "renameStation"; node: NodeId; name: string }
+  /** T-3759: rename the complex station `node` is in (its unbound stations keep their names) */
+  | { op: "renameComplex"; node: NodeId; name: string }
+  /** T-3759: bind a station to its complex's name, or unbind it */
+  | { op: "bindStation"; node: NodeId; bound: boolean }
+  /** T-3759: bind every station to its complex's name, one undo */
+  | { op: "bindAll" }
   /** T-3332: a station's platforms on one track (`one`) or both; a constructed one pays the difference to both, nothing back to one */
   | { op: "stationTracks"; node: NodeId; one: boolean }
   | { op: "stationWay"; node: NodeId; heading: number }
   /** T-3332: a one-track station on double track turned round, its platform on the other track */
   | { op: "reverseStation"; node: NodeId }
-  /** T-3288: the name a complex goes by, set on the station the others follow; no typed name */
-  | { op: "stationName"; node: NodeId; name: string }
   | { op: "removeStation"; node: NodeId }
   /** `buses` (T-1464): bus lines whose routes to construct */
   | { op: "construct"; edges: EdgeId[]; stations: NodeId[]; buses?: number[] }
@@ -376,6 +383,8 @@ export type ToClock =
   | { kind: "lineShape"; line: string; shape: LineShape | null }
   /** T-3543: the headways (seconds at high, medium, low) new lines start with, null for the game's counts; outside the undo history */
   | { kind: "newHeadway"; seconds: import("./saveFile").NewHeadways }
+  /** T-3759: new stations start bound to their complex's name (the player's setting, `DisplaySettings.bindNew`) */
+  | { kind: "bindNew"; on: boolean }
   /** T-3420: the line ids the player hid on the map; outside the undo history */
   | { kind: "hideLines"; lines: string[] }
   /** `restore`: `key` is a backup's (T-744) */
@@ -554,9 +563,14 @@ export interface ClockNode {
   oneHeading?: number;
   /** one platform track (a one way station, or a stop on single track with no passing loop): pays `upkeepOnePlatform` of the station upkeep */
   onePlatform?: true;
+  /** the name it shows (T-3759, `StateRows.foldNames`): its own while unbound, else its complex's */
   name: string;
   /** the player typed the name (T-2683) */
   named?: true;
+  /** T-3759: not bound to its complex's name: the name it shows, its own */
+  own?: string;
+  /** T-3759: its complex's name, where that is not the name it shows */
+  hub?: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
   /** a station's platform line (T-1859, `StationInput.line`, workers/platformLines.ts) */

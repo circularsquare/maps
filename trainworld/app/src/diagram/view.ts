@@ -39,6 +39,7 @@ import { toLocal } from "../map/geo";
 import { afterPaint, hideBusy, showBusy } from "../game/busy";
 import { world } from "../game/world";
 import { complexes } from "../game/complexView";
+import { complexTitle } from "../game/complexLead";
 import { purposeFilter, selection, shade, shownDayPhrase, theme as colourTheme, tool } from "../game/ui";
 import type { LineInput, Selection } from "../game/types";
 import { lineGroups } from "../game/lineGroups";
@@ -180,7 +181,7 @@ function namesOf(g: DiagramGraph): DiagramNames {
     const id = String(key), c = cx.of.get(id), members = c === undefined ? [id] : cx.members[c];
     return pickName(members.flatMap((m) => {
       const s = byId.get(m);
-      return s ? [{ name: s.name, lines: (stops.get(m) ?? 0) + (s.named ? 1e6 : 0) }] : []; // T-2683: a typed name outranks any line count
+      return s ? [{ name: complexTitle(s), lines: (stops.get(m) ?? 0) + (s.named ? 1e6 : 0) }] : []; // T-2683: a typed name outranks any line count
     }));
   });
   const wOf = (t: string) => widthOf(t, f);

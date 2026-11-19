@@ -13,6 +13,7 @@ import { setDemandFineSink, setGameOpened, setOpenedSink } from "../game/openedZ
 import { setHandOrderSink, takeHandOrder } from "../game/handOrder";
 import { setLineShapeSink, takeLineShapes } from "../game/lineShapeState";
 import { setNewHeadwaySink, takeNewHeadway } from "../game/newHeadway";
+import { bindNewStations } from "../game/stationBinding";
 import { setHiddenLinesSink, takeHiddenLines } from "../game/lineVisibility";
 import { hiddenZones, setGameStart } from "../game/realms";
 import { home } from "../game/home";
@@ -269,7 +270,7 @@ function toWorld(s: ClockState): WorldView {
     .map((n) => {
       let v = stationViews.get(n);
       if (!v) stationViews.set(n, v = {
-        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.named ? { named: true as const } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.kind && n.kind >= 2 ? { tram: true as const } : {}),
+        id: String(n.id), num: n.id, name: n.name, lng: n.lng, lat: n.lat, x: n.x, y: n.y, level: n.level as any, length: n.platform, built: n.stationBuilt, off: n.stationOff, upgrades: n.upgrades, heading: n.heading, ...(n.named ? { named: true as const } : {}), ...(n.own ? { unbound: true as const } : {}), ...(n.hub !== undefined ? { hub: n.hub } : {}), ...(n.line ? { line: n.line } : {}), ...(n.port ? { port: n.port } : {}), ...(n.kind && n.kind >= 2 ? { tram: true as const } : {}),
         ...(n.one ? { one: n.one } : {}), ...(n.oneHeading !== undefined ? { oneHeading: n.oneHeading } : {}), ...(n.onePlatform ? { onePlatform: true as const } : {}),
       });
       return v;
@@ -759,6 +760,9 @@ export class ClockClient {
     setLineShapeSink((line, shape) => this.post({ kind: "lineShape", line, shape }));
     setHiddenLinesSink((lines) => this.post({ kind: "hideLines", lines }));
     setNewHeadwaySink((seconds) => this.post({ kind: "newHeadway", seconds }));
+    // T-3759: the player's setting for new stations, again on each change (a worker with no game yet drops it,
+    // so each load sends it too)
+    effect(() => this.post({ kind: "bindNew", on: bindNewStations.value }));
     current = this;
     if (moddedWhy.length) this.post({ kind: "modded", why: moddedWhy });
     // The worker settles money from the clock (T-028, T-284): tell it each time the
@@ -1231,6 +1235,7 @@ export class ClockClient {
       case "loaded":
         // the game now in the worker may be in the other frame (T-125); first, before anything reads positions
         setWorldFrame(msg.frame);
+        this.post({ kind: "bindNew", on: bindNewStations.peek() });
         this.lastLoad = { from: msg.from, converted: !!msg.converted };
         this.fitState = this.fitNext && msg.from !== "new" && !msg.error;
         this.fitNext = false;

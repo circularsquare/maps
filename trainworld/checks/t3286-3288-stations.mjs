@@ -1,6 +1,7 @@
 // T-3286: a platform lengthens through a node that is only a clicked corner of a drawn run.
-// T-3288, T-3750: the stations of a complex nobody typed a name for show the complex's name (the oldest typed
-// name, else the oldest station's), and so does a station building nobody named, at every zoom and after a load.
+// T-3288, T-3750, T-3759: the stations of a complex bound to its name show the complex's name (the oldest typed
+// name, else the oldest station's), and so does a station building nobody named, at every zoom and after a load;
+// an unbound station keeps its own name, beside the building's too.
 // Screenshots go to artifacts/trainworld/t3286/.
 // From the worktree root:   node trainworld/checks/t3286-3288-stations.mjs [url]
 import { launchChrome, collectErrors, importSave, ARTIFACTS } from './lib.mjs';
@@ -105,22 +106,33 @@ try {
   console.log(JSON.stringify(r5));
   ok(r5.names.filter(([n]) => n === 'Hand Name').length === 3 && r5.names.filter(([, t]) => t).length === 1, 'renaming one station of a complex names the complex (T-3750)');
   await shot(page, 't3288-one-renamed.png', at(60, base + 40), 17.4);
+  // T-3759: a station unbound from its complex's name keeps a name of its own; the complex's rename leaves it
   const r6 = await page.evaluate(async () => {
     const { tw, c, pause, xy, free, near, stations, edgeAt } = window.H;
+    const names = () => stations().filter((s) => s.name !== 'Clicked').sort((a, b) => a.num - b.num).map((x) => x.name);
     const gamma = stations().filter((s) => !s.named).sort((a, b) => b.num - a.num)[0];
-    const a = await c.edit({ op: 'stationProps', node: gamma.num, platform: gamma.length, name: 'Other' });
-    await pause(500);
-    return { ok: a.ok, names: stations().map((x) => [x.name, !!x.named]) };
+    const bound = await c.edit({ op: 'stationProps', node: gamma.num, platform: gamma.length, name: 'Other' }); await pause(500);
+    const afterBound = names();
+    await c.edit({ op: 'undo' }); await pause(400);
+    const u = await c.edit({ op: 'bindStation', node: gamma.num, bound: false }); await pause(500);
+    const unbound = names();
+    const o = await c.edit({ op: 'renameStation', node: gamma.num, name: 'Other' }); await pause(500);
+    const own = names();
+    const cx = await c.edit({ op: 'renameComplex', node: gamma.num, name: 'Hall' }); await pause(500);
+    const hall = names(), hub = stations().find((s) => s.num === gamma.num)?.hub;
+    return { ok: [bound.ok, u.ok, o.ok, cx.ok], afterBound, unbound, own, hall, hub };
   });
   console.log(JSON.stringify(r6));
-  ok(r6.names.filter(([n]) => n === 'Hand Name').length === 2 && r6.names.filter(([n]) => n === 'Other').length === 1, 'a second typed name keeps its own; the rest follow the oldest typed one');
+  ok(r6.afterBound.every((n) => n === 'Other'), 'renaming a bound station names its complex ' + JSON.stringify(r6.afterBound));
+  ok(r6.ok.every(Boolean) && r6.unbound.join() === 'Hand Name,Hand Name,Gamma', 'unbinding a station shows its own stored name ' + JSON.stringify(r6.unbound));
+  ok(r6.own.join() === 'Hand Name,Hand Name,Other', 'an unbound station is renamed alone ' + JSON.stringify(r6.own));
+  ok(r6.hall.join() === 'Hall,Hall,Other' && r6.hub === 'Hall', 'the complex\'s rename leaves the unbound station its name ' + JSON.stringify(r6.hall));
   const r6u = await page.evaluate(async () => {
     const { c, pause, stations } = window.H;
-    await c.edit({ op: 'undo' });
-    await pause(400);
-    return stations().filter((s) => s.name !== 'Clicked').map((x) => x.name);
+    for (let k = 0; k < 3; k++) { await c.edit({ op: 'undo' }); await pause(400); }
+    return stations().filter((s) => s.name !== 'Clicked').map((x) => [x.name, !!x.unbound]);
   });
-  ok(r6u.length === 3 && r6u.every((n) => n === 'Hand Name'), 'undo gives the second station the complex\'s name back ' + JSON.stringify(r6u));
+  ok(r6u.length === 3 && r6u.every(([n, u]) => n === 'Hand Name' && !u), 'undo binds it again with the complex\'s name ' + JSON.stringify(r6u));
 
   // ---- T-3750: a station building nobody named shows the complex's name, whatever renames it, at every
   // zoom (its name from 13 in, the stations' below) and after a save and load
@@ -155,6 +167,33 @@ try {
   const l8 = await shown();
   console.log(JSON.stringify(r8), JSON.stringify(l8));
   ok(r8.buildings.join() === 'Union' && r8.names.every((n) => n === 'Union') && [l8.z17, l8.z14, l8.z12].every((l) => l.join() === 'Union'), 'the same after a save and load');
+  // T-3759: a station unbound from the complex's name keeps its own label beside the building's, at every zoom
+  const r9 = await page.evaluate(async () => {
+    const { c, pause, stations } = window.H;
+    const g = stations().filter((s) => s.name !== 'Clicked').sort((a, b) => b.num - a.num)[0];
+    const a = await c.edit({ op: 'bindStation', node: g.num, bound: false }); await pause(600);
+    return { ok: a.ok, buildings: window.tw.world.value.save.buildings.map((x) => x.name), names: stations().filter((x) => x.name !== 'Clicked').sort((a, b) => a.num - b.num).map((x) => x.name) };
+  });
+  const l9 = await shown();
+  console.log(JSON.stringify(r9), JSON.stringify(l9));
+  ok(r9.ok && r9.buildings.join() === 'Union' && r9.names.join() === 'Union,Union,Gamma', 'an unbound station shows its own name, the building the complex\'s');
+  // (40 m apart, the two names collide at zoom 14: one is drawn); far out the complex goes by its own name
+  ok(l9.z17.slice().sort().join() === 'Gamma,Union' && l9.z14.length > 0 && l9.z14.every((n) => n === 'Union' || n === 'Gamma'), 'both names close in: ' + JSON.stringify(l9));
+  ok(l9.z12.join() === 'Union', 'far out, the complex\'s name only: ' + JSON.stringify(l9.z12));
+  // with no building, and every station unbound, far out still shows the complex's name
+  const r10 = await page.evaluate(async () => {
+    const { c, pause, stations } = window.H;
+    await c.edit({ op: 'removeBuilding', id: window.tw.world.value.save.buildings[0].id }); await pause(400);
+    for (const s of stations().filter((x) => x.name !== 'Clicked' && !x.unbound)) { await c.edit({ op: 'bindStation', node: s.num, bound: false }); await pause(300); }
+    const g = stations().filter((s) => s.name !== 'Clicked').sort((a, b) => a.num - b.num)[0];
+    await c.edit({ op: 'renameStation', node: g.num, name: 'First' }); await pause(400);
+    await c.edit({ op: 'renameComplex', node: g.num, name: 'Whole' }); await pause(500);
+    return { buildings: (window.tw.world.value.save.buildings ?? []).length, names: stations().filter((x) => x.name !== 'Clicked').sort((a, b) => a.num - b.num).map((x) => [x.name, !!x.unbound, x.hub ?? null]) };
+  });
+  const l10 = await shown();
+  console.log(JSON.stringify(r10), JSON.stringify(l10));
+  ok(r10.buildings === 0 && r10.names.every(([, u, h]) => u && h === 'Whole') && l10.z17.includes('First') && !l10.z17.includes('Whole') && l10.z12.join() === 'Whole', 'all unbound: close in their own names, far out the complex\'s: ' + JSON.stringify(l10));
+  await shot(page, 't3759-unbound-building.png', at(50, base + 40), 17);
   ok(errors.length === 0, 'no console errors ' + errors.slice(0, 2).join(' | '));
 } finally {
   await chrome.close();

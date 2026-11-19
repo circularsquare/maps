@@ -1535,7 +1535,16 @@ function buildState(): ClockState {
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ups = upgradesOf(a);
   platformLines.sync(edges);
-  const nodes = stateRows.nodes(a, rowEnv, ups);
+  let nodes = stateRows.nodes(a, rowEnv, ups);
+  // T-3759: an older save's typed stations that showed their own names keep them, unbound (once a load,
+  // not on undo)
+  if (a.take_old_names()) {
+    const apart = stateRows.oldApart();
+    if (apart.length && a.adopt_old_names(new Uint32Array(apart)) === 0) {
+      forget();
+      nodes = stateRows.nodes(a, rowEnv, ups);
+    }
+  }
   const stationCount = nodes.length;
   const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
   const lines = stateRows.lines(a, rowEnv, nodes);
@@ -3070,6 +3079,19 @@ function shownBuildings(a: TrackApi, nodes: readonly ClockNode[]) {
     return { ...b, name: name.split("/")[0].trim() };
   });
 }
+/** T-3759: rename a station as its panel does: an unbound one takes the name alone (and, alone in its
+ * complex, as its part in the complex's name too, so a complex it forms later is called what the player
+ * saw); a bound one renames its complex. */
+function renameStation(a: TrackApi, node: number, name: string): number {
+  if (a.station_own(node)) return a.set_station_own(node, name, stateRows.complexSize(node) <= 1);
+  return renameComplex(a, node, name);
+}
+/** T-3759: rename the complex station `node` is in: its name source (`nameSource`, the worker's last rows)
+ * takes the name as the player's, so every bound station shows it; unbound ones keep their own. */
+function renameComplex(a: TrackApi, node: number, name: string): number {
+  if (stateRows.complexSize(node) <= 1 && a.station_own(node)) return a.set_station_own(node, name, true);
+  return a.type_station_name(stateRows.headOf(node) ?? node, name);
+}
 /** The complexes of `geo` with the player's `links` and the station buildings' members (T-2217). */
 function complexesOf(builder: ComplexBuilder, geo: StationGeo[], playerLinks: [string, string][]): Complexes {
   const links = withBuildingLinks(playerLinks, buildingsOf(api!), geo, groundK);
@@ -3508,14 +3530,21 @@ function applyInner(op: EditOp): Applied {
     case "reverseStation":
       return { r: a.reverse_station(op.node) };
     case "stationProps": {
-      // the name a complex's station shows is not its own: sent back unchanged it is no typing (T-3288);
-      // its own name typed over the one it shows is (T-3750)
-      const own = a.node_name(op.node), shown = stateRows.shownName(op.node);
-      if (shown !== undefined && op.name === own && op.platform === stateRows.nodeRow(op.node)?.platform) return { r: a.type_station_name(op.node, own) };
-      return { r: a.set_station_props(op.node, op.platform, op.name !== own && op.name === shown ? own : op.name) };
+      // the name a station shows is not always its stored one (T-3288, T-3759): sent back as shown, it is
+      // no rename; another name with the platform as it is renames as the station panel does
+      const stored = a.node_name(op.node), shown = stateRows.shownName(op.node) ?? stored;
+      if (op.name === shown) return { r: a.set_station_props(op.node, op.platform, stored) };
+      if (op.platform === stateRows.nodeRow(op.node)?.platform) return { r: renameStation(a, op.node, op.name) };
+      return { r: a.set_station_props(op.node, op.platform, op.name) };
     }
-    case "stationName":
-      return { r: a.set_station_name(op.node, op.name) };
+    case "renameStation":
+      return { r: renameStation(a, op.node, op.name) };
+    case "renameComplex":
+      return { r: renameComplex(a, op.node, op.name) };
+    case "bindStation":
+      return { r: a.set_station_bound(op.node, op.bound) };
+    case "bindAll":
+      return { r: a.bind_stations(a.unbound_stations()) };
     case "removeStation":
       return { r: a.remove_station(op.node) };
     case "construct":
@@ -4188,6 +4217,8 @@ async function handleMessage(msg: ToClock) {
   } else if (msg.kind === "newHeadway") {
     newLineHeadway = msg.seconds;
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
+  } else if (msg.kind === "bindNew") {
+    api.set_bind_new(msg.on);
   } else if (msg.kind === "hideLines") {
     hiddenLines = new Set(msg.lines);
     saves.dirty = saves.edited = true; saves.editAt = Date.now();

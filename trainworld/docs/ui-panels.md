@@ -716,7 +716,8 @@ track turned around, lines rerouted), each row a click that shows the place and 
 and closes the list; under the row "3 places to fix after the switch" (or "Nothing left to fix after the switch")
 with Show list, until another game opens. In a normal game a
 row "Tutorial" with a Start again button (restarts the [tutorial card](#tutorial-card))
-sits under the mode [T-1822, T-1835]. Last in the section, "Buses obey one-way streets" [T-3480; moved here from Show, T-3579], off by default and remembered
+sits under the mode [T-1822, T-1835]. Then "Name new stations after their complex" [T-3759], on by default
+and remembered in the browser, shown before a game is loaded too ([ui-inspectors.md](ui-inspectors.md) "Renaming"). Last in the section, "Buses obey one-way streets" [T-3480; moved here from Show, T-3579], off by default and remembered
 in the browser: a bus route runs a one-way street only its way, with arrows on those streets in the bus tool. It shows before a game is loaded too.
 
 ## Finances tab (id `money`)

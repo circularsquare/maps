@@ -878,18 +878,24 @@ order, kept and dropped as the Lines tab's is [T-1813]. Riders follows the rider
   station on screen at zoom 13 or closer; with nothing else to offer it says "No other name is
   suggested here." **A name the player typed stays** [T-2683]: a rename or a pick of the cycle button
   marks the station's name as the player's (saved), and nothing renames it afterwards (not adding a
-  station or a line to its complex, a complex splitting or merging, loading). **A complex has one name
-  by default** [T-3288, T-3750]: the complex's name is its oldest typed name, else its oldest
-  station's (`nameSource`), and every station nobody typed a name for shows it, as does a station
-  building nobody named (the part before any slash); the model keeps each station's own, so a split
-  complex gives them back, and a station joining takes it at once. So a rename anywhere (the station
-  panel, a station opened alone from the complex's list, a Stations tab row, separate or not) names the
-  whole complex unless another station of it has an older typed name; a station with a typed name
-  keeps its own. Renaming from the complex view (the title of a station showing the complex's name,
-  the cycle button) or from a Stations tab row of an untyped complex renames the station whose name it
-  is, keeping its typed flag as it was (`complexRename`). In the Stations tab row and the diagram a complex goes by its member with
-  a typed name, else the one with the most lines (`game/complexLead.ts`), which with one typed name or
-  none is the complex's name; the map labels every distinct name. A line group's name
+  station or a line to its complex, a complex splitting or merging, loading). **Stations bound to their
+  complex's name** [T-3288, T-3750, T-3759]: the complex's name is its oldest typed name, else its oldest
+  station's (`nameSource`, over every station of it), and every bound station shows it, as does a
+  station building nobody named (the part before any slash); an unbound station shows a name of its
+  own. The model keeps each station's stored name, so a split complex gives them back, and a bound
+  station joining takes the complex's name at once. Renaming a bound station (its panel, the cycle
+  button, a Stations tab row with "Show stations separately") renames the complex; renaming an unbound
+  one names it alone (alone in its complex, its stored name too, so a complex it forms later is called
+  that). The complex view's title, and a Stations tab row of a complex, show and rename the complex's
+  name, which unbound stations keep out of (the worker resolves every rename: `renameStation`,
+  `renameComplex` in `workers/clock.worker.ts`). A station opened on its own from its complex's list,
+  in a complex of several, has a toggle beside its name (link icon, hover "Use the complex's name",
+  lit while bound): unbinding shows its stored name again, binding shows the complex's; each is one
+  undo. New stations start bound while Settings, Game "Name new stations after their complex" is ticked
+  (on by default; the player's own, remembered in the browser and used in every game,
+  `DisplaySettings.bindNew`); a change applies to stations placed from then on. Ticking it while some stations are unbound asks "Name existing stations after their
+  complex too?" ("Rename all stations" binds every station, one undo; "Only new stations" or Escape
+  leaves them). The map labels every distinct name a complex's stations show. A line group's name
   typed in its title stays even when it equals its first line's name.
 
 ## The complex map

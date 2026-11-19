@@ -556,13 +556,16 @@ centres are within 100 m (demand's merge distance) are linked too, whatever thei
 directly or through others, plus the player's links [T-197] and every station touching one station
 building [T-2217]. Worked out whenever stations or links change; only links and buildings are saved.
 Riders change between any two stations of a complex on foot [T-161, [demand-kernel.md](demand-kernel.md) 4.4].
-A complex has one name by default [T-3288, T-3750]: its oldest typed name, else its oldest station's
+A complex has one name [T-3288, T-3750]: its oldest typed name, else its oldest station's, bound stations or not
 (`game/complexLead.ts` `nameSource`, applied in `workers/stateRows.ts` `foldNames`; the model keeps each station's
-own name). Every station nobody typed a name for shows it, so the map labels it once, and so does a station
-building nobody named; a station with a typed name keeps its own. Where one name stands for the complex (Stations tab row, diagram label)
-it is the member's whose name the player typed, else the one with the most lines [T-2683, `game/complexLead.ts`].
-A splitting or merging complex changes no typed name; stations that were following a name show the shared name of
-their new complex, or their own if they are alone.
+stored name). Every station bound to it shows it, so the map labels it once, and so does a station building nobody
+named; an unbound station shows its own name [T-3759, ui-inspectors.md "Renaming"], beside its building's name too.
+Far out (below zoom 13, where buildings' names start) a complex has one label, its complex's name, at its name with
+the most lines (`stationLabels.complexWide`); close in each station shows its own. Every label, panel and list
+takes a station's name from the one row `foldNames` makes. Where one name stands for the complex (Stations tab row,
+complex view title, diagram label) it is the complex's name (`complexTitle`); a complex of one station goes by what
+that station shows. A splitting or merging complex changes no typed name; bound stations show the name of their new
+complex, or their own stored one if they are alone.
 
 **Station buildings on the map** [T-2219, `map/buildingFloors.ts` drawing what `map/buildingNet.ts`
 works out in the clock worker, the inside's geometry `game/buildingLayout.ts`; the tool and panel in

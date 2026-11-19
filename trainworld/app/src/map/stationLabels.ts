@@ -28,8 +28,9 @@ import { buildingMembersById } from "../game/buildingView";
 import { buildingFrame } from "../game/buildingLayout";
 import { insideOutline } from "../game/buildings";
 import { groundScale, packToLngLat } from "../game/coords";
-import { listedLines, world } from "../game/world";
+import { listedLines, stationsById, world } from "../game/world";
 import { FLOOR_ZOOM } from "./buildingFloors";
+import { complexTitle } from "../game/complexLead";
 
 /** a station building's name goes in its cross-hall from here in (the floor's full zoom) */
 const FLOOR_FULL_ZOOM = 14;
@@ -39,6 +40,8 @@ const NO_LABELS = perfOff("labels");
 
 interface Label {
   el: HTMLDivElement;
+  /** its name group's name; the text shown is its complex's name instead far out (T-3759, `place`) */
+  name?: string;
   x: number;
   y: number;
   /** label to the right of the dot (track runs north-south) or below it (east-west) */
@@ -171,7 +174,7 @@ export class StationLabels {
     // been painted
     let fresh = 0;
     if (plan.full && !painted && stations.length - this.labels.length > DEFER_NAMES) {
-      const had = new Set(this.labels.map((l) => l.el.textContent));
+      const had = new Set(this.labels.map((l) => l.name));
       for (const s of stations) if (!had.has(s.name) && ++fresh > DEFER_NAMES) break;
     }
     if (fresh > DEFER_NAMES) {
@@ -202,11 +205,11 @@ export class StationLabels {
     el.className = cls;
     el.textContent = g.name;
     this.plane.appendChild(el);
-    return { el, x, y, below, w: 0, h: 0 };
+    return { el, name: g.name, x, y, below, w: 0, h: 0 };
   }
 
   private keepSpare(spare: Map<string, Label[]>, l: Label) {
-    const k = l.el.className + "\u0000" + l.el.textContent;
+    const k = l.el.className + "\u0000" + (l.name ?? l.el.textContent);
     const v = spare.get(k);
     if (v) v.push(l);
     else spare.set(k, [l]);
@@ -277,7 +280,7 @@ export class StationLabels {
     for (let i = 0; !bad && i < want.length; i++) {
       const g = want[i], l = this.labels[i], below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
       const f = feats[i] as unknown as { properties: { name: string }; geometry: { coordinates: number[] } };
-      if (l.el.textContent !== g.name || l.below !== below || l.el.className.includes("plan") === g.built) bad = `label ${i} (${g.name})`; // i18n-ignore
+      if (l.name !== g.name || l.below !== below || l.el.className.includes("plan") === g.built) bad = `label ${i} (${g.name})`; // i18n-ignore
       else if (f.properties.name !== g.name || f.geometry.coordinates[0] !== g.lng || f.geometry.coordinates[1] !== g.lat || this.shadowKeys[i] !== shadowText(g, below)) bad = `shadow feature ${i} (${g.name})`; // i18n-ignore
     }
     if (bad) console.error(`T-1380 check: the station names patched from changes differ from a whole build: ${bad}`);
@@ -335,6 +338,8 @@ export class StationLabels {
       if (l.hidden !== true) l.el.style.visibility = "hidden";
       l.hidden = true;
     };
+    // T-3759: far out a complex shows one name, its own, even where some of its stations have names of their own
+    const farOut = this.complexWide(zoom);
     // measure every new label first, then move them: reads between writes force a layout each
     let metrics: LabelFont | null | undefined;
     for (const l of this.labels) {
@@ -366,6 +371,10 @@ export class StationLabels {
         hide(l);
         continue;
       }
+      if (farOut?.hidden.has(i)) {
+        hide(l);
+        continue;
+      }
       const [sx, sy] = this.overlay.toScreen(l.x, l.y);
       const x = l.below ? sx - l.w / 2 : sx + gap;
       const y = l.below ? sy + gap - 2 : sy - l.h / 2;
@@ -387,6 +396,45 @@ export class StationLabels {
       l.ox = rx - sx;
       l.oy = ry - sy;
     }
+  }
+
+  /** some label shows its complex's name in place of its own (`complexWide`) */
+  private farText = false;
+  /** T-3759: far out (below FLOOR_ZOOM, where station buildings' names start) a complex has one label, with its
+   * complex's name: the first of its names in the list (the most lines) shows it and the others hide; close in
+   * each label shows its own name. Writes each label's text; the labels hidden far out, null close in. */
+  private complexWide(zoom: number): { hidden: Set<number> } | null {
+    const far = zoom < FLOOR_ZOOM;
+    if (!far && !this.farText) return null;
+    this.farText = far;
+    const w = world.peek(), byId = far && w ? stationsById(w) : null, cx = complexes.peek();
+    const hidden = new Set<number>(), seen = new Set<number | string>();
+    for (let i = 0; i < this.labels.length; i++) {
+      const l = this.labels[i], first = this.names.list[i]?.members[0];
+      let text = l.name ?? "";
+      if (far && first) {
+        const k = cx.of.get(first.id) ?? first.id;
+        if (seen.has(k)) hidden.add(i);
+        else {
+          seen.add(k);
+          const s = byId?.get(first.id);
+          if (s) text = complexTitle(s);
+        }
+      }
+      if (l.el.textContent !== text) {
+        l.el.textContent = text;
+        l.w = 0;
+      }
+    }
+    return far ? { hidden } : null;
+  }
+
+  private unboundSeen: { stations: readonly StationInput[]; ids: Set<StationId> } | null = null;
+  /** T-3759: the stations not bound to their complex's name */
+  private unboundIds(): Set<StationId> {
+    const stations = world.peek()?.save.stations ?? [];
+    if (this.unboundSeen?.stations !== stations) this.unboundSeen = { stations, ids: new Set(stations.filter((s) => s.unbound).map((s) => s.id)) };
+    return this.unboundSeen.ids;
   }
 
   private tramSeen: { stations: readonly StationInput[]; ids: Set<StationId> } | null = null;
@@ -428,8 +476,12 @@ export class StationLabels {
       });
       for (const l of spare.values()) l.el.remove();
     }
+    // T-3759: a station unbound from its complex's name keeps its own label beside the building's
     const out = new Set<string>();
-    for (const b of named) for (const id of members.get(b.id) ?? []) out.add(id);
+    if (named.length) {
+      const unbound = this.unboundIds();
+      for (const b of named) for (const id of members.get(b.id) ?? []) if (!unbound.has(id)) out.add(id);
+    }
     const hide = (l: Label) => { if (l.hidden !== true) l.el.style.visibility = "hidden"; l.hidden = true; };
     for (const l of this.bldLabels) {
       if (!l.w) { l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; }

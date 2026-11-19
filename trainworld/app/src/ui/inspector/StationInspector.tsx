@@ -30,7 +30,7 @@ import { stationUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
-import { complexRename, nameSource } from "../../game/complexLead";
+import { complexTitle } from "../../game/complexLead";
 import { locateStation } from "../locate";
 import { ComplexMap } from "./ComplexMap";
 import { ClosestStations } from "./ClosestStations";
@@ -201,21 +201,20 @@ export function StationInspector({ id }: { id: string }) {
   const asComplex = members.length > 1 && inComplexView(id);
   const lines = linesAt(id);
   const props = (platform: number, name = s.name) => edit({ op: "stationProps", node: s.num, platform, name }).then((a) => a.ok);
-  // T-3288, T-3750: in the complex view a station showing the complex's name renames the complex: the
-  // station whose name it is takes the new one, so every station that follows shows it
-  const head = asComplex && !s.named ? nameSource(members.flatMap((m) => stationsById(w).get(m) ?? []), (m) => m.num, (m) => !!m.named) : undefined;
-  const rename = (platform: number, name: string) => (head ? edit(complexRename(head, name)).then((a) => a.ok) : props(platform, name));
+  // T-3759: the complex view names the complex (its unbound stations keep theirs); a station on its own
+  // takes the name alone when unbound, else renames its complex (T-3750)
+  const title = asComplex ? complexTitle(s) : s.name;
+  const rename = (name: string) => edit({ op: asComplex ? "renameComplex" : "renameStation", node: s.num, name }).then((a) => a.ok);
   // T-534: the next of the station's suggested names, worked out now from where it stands
   const cycle = async () => {
     if (cycling || !live.map) return;
     setCycling(true);
     try {
       const others = () => new Set(world.peek()?.save.stations.filter((o) => o.id !== id).map((o) => o.name) ?? []);
-      const next = await nextSuggestion(live.map, s.lng, s.lat, s.name, others, live.overlay?.renderer.net ?? null);
+      const next = await nextSuggestion(live.map, s.lng, s.lat, title, others, live.overlay?.renderer.net ?? null);
       const w = world.peek();
-      const now = w && stationsById(w).get(id);
-      if (!now) return;
-      if (next) void (head ? edit(complexRename(head, next)) : edit({ op: "stationProps", node: now.num, platform: now.length, name: next }));
+      if (!w || !stationsById(w).get(id)) return;
+      if (next) void rename(next);
       else say(tr("stationInspector.noName"));
     } finally {
       setCycling(false);
@@ -231,7 +230,14 @@ export function StationInspector({ id }: { id: string }) {
     <>
       <div class="title">
         <span class="st-glyph" />
-        <NameEdit key={id} name={s.name} onRename={(n) => rename(s.length, n)}>
+        <NameEdit key={id} name={title} onRename={(n) => rename(n)}>
+          {/* T-3759: one station of a complex, bound to the complex's name or not */}
+          {!asComplex && !s.port && members.length > 1 && (
+            <button class={"btn icon" + (s.unbound ? "" : " on")} aria-pressed={!s.unbound} data-tip={tr("stationInspector.bound")} aria-label={tr("stationInspector.bound")}
+              onClick={() => void edit({ op: "bindStation", node: s.num, bound: !!s.unbound })}>
+              <Icon.link />
+            </button>
+          )}
           <button class="btn icon" data-tip={tr("stationInspector.nextName")} aria-label={tr("stationInspector.nextName")} onClick={() => void cycle()}>
             <Icon.cycle />
           </button>

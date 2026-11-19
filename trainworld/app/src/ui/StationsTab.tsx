@@ -8,7 +8,7 @@ import { count } from "../game/format";
 import { type LineInput, type StationInput } from "../game/types";
 import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
-import { complexRename, leadOf, nameSource } from "../game/complexLead";
+import { complexTitle, leadOf } from "../game/complexLead";
 import type { EditOp } from "../workers/protocol";
 import { listedLines, edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
@@ -126,10 +126,12 @@ function MoreRows({ more }: { more: () => void }) {
 
 /** A Stations tab row: a station complex (T-530), or a station on its own. */
 interface StationRow {
-  /** the member a click selects, whose name the row takes (`leadOf`: a typed name, then most lines) */
+  /** the member a click selects (`leadOf`: a typed name, then most lines) */
   lead: StationInput;
-  /** the station the complex's other untyped names follow, when a rename of the row names the complex (T-3288) */
-  head?: StationInput;
+  /** the name the row shows: the complex's (`complexTitle`), or with "Show stations separately" the station's (T-3759) */
+  name: string;
+  /** "Show stations separately": a rename names the station, not its complex */
+  apart: boolean;
   members: string[];
   lines: LineInput[];
   built: boolean;
@@ -163,16 +165,14 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
       if (dm !== undefined && (d === undefined || dm < d)) d = dm;
     }
     const lead = present.length ? leadOf(present, (id) => lineIdx.get(id)?.length ?? 0) : s;
-    const head = !apart && present.length > 1 && !lead.named ? nameSource(present, (m) => m.num, (m) => !!m.named) : undefined;
-    rows.push({ lead, ...(head ? { head } : {}), members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
+    rows.push({ lead, name: apart ? lead.name : complexTitle(lead), apart, members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
   }
   return rows;
 }
 
-/** The edit a row's rename makes (T-3288): in a complex where nobody typed a name, the station the
- * others follow takes it with no typed flag, so the whole complex shows it; otherwise the lead's own. */
+/** The edit a row's rename makes (T-3759): a complex's row names the complex, a station's row the station. */
 function rowName(r: StationRow, name: string): EditOp {
-  return r.head ? complexRename(r.head, name) : { op: "stationProps", node: r.lead.num, platform: r.lead.length, name };
+  return { op: r.apart ? "renameStation" : "renameComplex", node: r.lead.num, name };
 }
 
 /** T-2788: list each station of a complex on its own row (off: one row per complex) */
@@ -202,7 +202,7 @@ export function StationsTab() {
   const order = (a: StationRow, b: StationRow) =>
     (key === "riders" ? (riders(a) - riders(b)) * dir
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
-    || natural(a.lead.name, b.lead.name) * (key === "name" ? dir : 1);
+    || natural(a.name, b.name) * (key === "name" ? dir : 1);
   const inOrder = (rows: StationRow[]) => (hand.length ? byHand(rows.sort(order), (r) => r.members, hand) : rows.sort(order));
   const st = inOrder(stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value));
   // T-1813: a row dragged into the gap above or below another goes there; the order then covers
@@ -265,15 +265,15 @@ export function StationsTab() {
           <li class={(sel?.kind === "station" && r.members.includes(sel.station) ? "on" : "") + mark(r)} data-drop={r.members[0]} onPointerDown={(e) => pointerDown(e, r.members[0])}
             onClick={() => { if (!dragged.current) selection.value = { kind: "station", station: r.lead.id }; }} onDblClick={() => locateStation(r.lead.lng, r.lead.lat)}>
             {renamingStation === r.lead.id ? (
-              <input class="name-edit grow" value={r.lead.name} aria-label={t("stationsTab.stationName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
+              <input class="name-edit grow" value={r.name} aria-label={t("stationsTab.stationName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
                 onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
-                onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.lead.name) void edit(rowName(r, n)); }}
+                onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.name) void edit(rowName(r, n)); }}
                 onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingStation(null); }} />
             ) : (
               // T-2786: a triple click renames (a double click snaps the camera)
-              <span class={"grow" + (r.built ? "" : " muted")}><span onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingStation(r.lead.id); } }}>{r.lead.name}</span></span>
+              <span class={"grow" + (r.built ? "" : " muted")}><span onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingStation(r.lead.id); } }}>{r.name}</span></span>
             )}
-            <Chips lines={r.lines} name={r.lead.name} />
+            <Chips lines={r.lines} name={r.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">{t("stationsTab.plan")}</span>}
             {key === "near" && <Near m={r.dist} />}
           </li>
@@ -282,7 +282,7 @@ export function StationsTab() {
       </ul>
       {ghost && drag && (
         // the dock is zoomed by the UI scale, the pointer is not
-        <div class="row-ghost" style={{ left: (drag.x + 12) / uiScale.value + "px", top: (drag.y + 8) / uiScale.value + "px" }}><span>{ghost.lead.name}</span></div>
+        <div class="row-ghost" style={{ left: (drag.x + 12) / uiScale.value + "px", top: (drag.y + 8) / uiScale.value + "px" }}><span>{ghost.name}</span></div>
       )}
       {st.length > 0 && (
         <div class="pane-foot">

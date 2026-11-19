@@ -159,6 +159,10 @@ pub struct TrackApi {
     run_factor: Vec<f64>,
     /// T-3647: the save level of the game the next `load` opens (`set_load_level`), else this build's.
     load_level: u32,
+    /// T-3759: new stations start bound to their complex's name (the game's setting, sent by the app).
+    bind_new: bool,
+    /// T-3759: the last load was a save from before stations could be unbound (`take_old_names`).
+    old_names: bool,
 }
 
 // T-2820: the last panic's message, as the demand module's (`demand::wasm`), for the clock worker's
@@ -417,6 +421,8 @@ impl TrackApi {
             last_port: u32::MAX,
             run_factor: vec![],
             load_level: save::LEVEL,
+            bind_new: true,
+            old_names: false,
         }
     }
 
@@ -766,6 +772,7 @@ impl TrackApi {
                     }
                 }
                 self.w = TrackWorld::new(net);
+                self.old_names = level <= save::OLD_BOUND_NAMES;
                 if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
                     self.w.reload();
                 }
@@ -2169,7 +2176,7 @@ impl TrackApi {
         self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0 }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).

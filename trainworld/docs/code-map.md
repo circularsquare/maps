@@ -121,7 +121,8 @@ for the demand workers (two modules from the one crate, notes/T-051.md).
   crossing a line, T-1168) and `relatedLayout.ts` (their diagram's rows, columns, turns, pills and
   the pills' hovers, drawn by `ui/inspector/RelatedStops.tsx`), `complexView.ts` (a click selecting the complex, a station opened alone, the
   zoomed-out dot groups; T-217, T-249), `complexLead.ts` (the member a complex goes by: a typed name, then
-  most lines; check `checks/t2683-keep-names.mjs`, T-2683), `links.ts` (the player's links, T-197), `lineActions.ts`
+  most lines; the complex's name, `nameSource`, `complexTitle`; check `checks/t2683-keep-names.mjs`, T-2683), `stationBinding.ts` (the
+  setting for new stations' names, T-3759), `links.ts` (the player's links, T-197), `lineActions.ts`
   (new and copied lines, Edit stops, construct blueprints: the N, L and C keys, T-670), `colourPick.ts`
   (the automatic line colour pick as pure functions: palette pick, CIEDE2000, the lines beside a line, T-2291;
   `lineColour.ts` re-picks a new line's colour after its stop edits; `checks/t2291-line-colour.mjs` in Node and

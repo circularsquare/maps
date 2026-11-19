@@ -153,10 +153,19 @@ export class StateRows {
   private edgeRows = new Map<number, ClockEdge>();
   private nodeRows = new Map<number, ClockNode>();
   /** T-3288: the rows shown with a complex's name, by station (`foldNames`) */
-  private folded = new Map<number, { from: ClockNode; name: string; row: ClockNode }>();
+  private folded = new Map<number, { from: ClockNode; name: string; hub: string | undefined; row: ClockNode }>();
   /** T-3750: each station's complex's name (`nameSource`), for the station buildings nobody named */
   private complexNames = new Map<number, string>();
   private names = new Map<number, string>();
+  /** T-3759: each unbound station's own name, read once per change */
+  private owns = new Map<number, string>();
+  /** T-3759: each station's complex's name source (`nameSource`), by station, as the last rows read it */
+  private heads = new Map<number, number>();
+  /** T-3759: how many stations each station's complex has, as the last rows read it */
+  private sizes = new Map<number, number>();
+  /** T-3759: typed bound stations whose stored name is not their complex's, as the last rows read them
+   * (an older save's, `takeOldNames`) */
+  private apart: number[] = [];
   private lineKept = new Map<number, LineKept>();
   /** each line's phase tables (`line_phases`), by id, and all of them laid end to end as `phases`
    * answers (T-1540): the same array until a line's tables change */
@@ -183,6 +192,10 @@ export class StateRows {
     this.folded.clear();
     this.complexNames.clear();
     this.names.clear();
+    this.owns.clear();
+    this.heads.clear();
+    this.sizes.clear();
+    this.apart = [];
     this.lineKept.clear();
     this.phaseTables.clear();
     this.phaseAll = null;
@@ -209,8 +222,18 @@ export class StateRows {
   /** Take the model's name changes into the kept names. Called before any name is looked up. */
   private syncNames(a: TrackApi) {
     const changed = a.take_name_changes();
-    if (changed.length && changed[0] === ALL) this.names.clear();
-    else for (const id of changed) this.names.delete(id);
+    if (changed.length && changed[0] === ALL) { this.names.clear(); this.owns.clear(); }
+    else for (const id of changed) { this.names.delete(id); this.owns.delete(id); }
+  }
+
+  /** T-3759: a station's own name, "" while bound: kept, read once per change. */
+  private own(a: TrackApi, id: number): string {
+    let n = this.owns.get(id);
+    if (n === undefined) {
+      n = a.station_own(id);
+      this.owns.set(id, n);
+    }
+    return n;
   }
 
   /** A station's name: kept, read once per change. */
@@ -276,6 +299,7 @@ export class StateRows {
     const ni = a.nodes_info();
     const offStations = new Set<number>(a.off_stations());
     const namedStations = new Set<number>(a.named_stations());
+    const unbound = new Set<number>(a.unbound_stations());
     // T-3332: one-track stations, 1 on double track, 2 on single
     const ot = a.one_track_stations(), ones = new Map<number, 1 | 2>();
     for (let k = 0; k + 1 < ot.length; k += 2) ones.set(ot[k], ot[k + 1] as 1 | 2);
@@ -290,6 +314,7 @@ export class StateRows {
       const unusable = ((ni[i + 6] >> 2) & 3) as 0 | 1 | 2 | 3;
       const name = platform > 0 ? this.name(a, id) : "";
       const named = platform > 0 && namedStations.has(id);
+      const own = platform > 0 && unbound.has(id) ? this.own(a, id) : "";
       // T-2194: a port has no track, so no platform line
       const port = platform > 0 && a.is_port(id);
       const kind = a.node_kind(id) >= 2 ? a.node_kind(id) : 0;
@@ -297,11 +322,11 @@ export class StateRows {
       const line = platform > 0 && !port ? env.platformLine?.(a, id, ni[i + 1], ni[i + 2], platform) : undefined;
       let r = kept.get(id);
       if (!r || r.x !== ni[i + 1] || r.y !== ni[i + 2] || r.level !== ni[i + 3] || r.ports !== ni[i + 4] || r.builtPorts !== ni[i + 5] || r.flying !== flying || !!r.crosses !== crosses || (r.unusable ?? 0) !== unusable || r.platform !== platform
-        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind
+        || r.stationBuilt !== stationBuilt || r.stationOff !== stationOff || r.upgrades !== upgrades || r.name !== name || !!r.named !== named || (r.own ?? "") !== own || !Object.is(r.heading, ni[i + 9]) || r.line !== line || !!r.port !== port || (r.kind ?? 0) !== kind
         || (r.one ?? 0) !== one || r.oneHeading !== oneHeading || !!r.onePlatform !== onePlatform) {
         const [lng, lat] = env.lngLat(ni[i + 1], ni[i + 2]);
         const berth = port ? a.port_berth(id) : null;
-        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
+        r = { id, x: ni[i + 1], y: ni[i + 2], lng, lat, level: ni[i + 3], ports: ni[i + 4], builtPorts: ni[i + 5], flying, ...(crosses ? { crosses: true as const } : {}), ...(unusable ? { unusable } : {}), platform, stationBuilt, stationOff, upgrades, name, heading: ni[i + 9], ...(named ? { named: true as const } : {}), ...(own ? { own } : {}), ...(line ? { line } : {}), ...(kind ? { kind } : {}),
           ...(one ? { one } : {}), ...(oneHeading !== undefined ? { oneHeading } : {}), ...(onePlatform ? { onePlatform: true as const } : {}),
           ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}) };
         kept.set(id, r);
@@ -312,19 +337,20 @@ export class StateRows {
     if (kept.size !== seen.size) for (const id of kept.keys()) if (!seen.has(id)) kept.delete(id);
     // a station no longer there keeps no name
     if (this.names.size > seen.size) for (const id of this.names.keys()) if (!seen.has(id)) this.names.delete(id);
-    if (env.complexes) this.foldNames(out, env.complexes);
+    this.foldNames(out, env.complexes);
     return out;
   }
 
-  /** T-3288, T-3750: the name a station of a complex shows, where it is not its own: the stations
-   * nobody typed a name for show the complex's name (`nameSource`: the oldest typed name, else the
-   * oldest station's). The model keeps every station's own name; a split complex gives each part's
-   * stations theirs back. The replaced rows are kept, so an unchanged one is the same object as before. */
-  private foldNames(out: ClockNode[], complexesOf: NonNullable<RowEnv["complexes"]>) {
+  /** T-3288, T-3750, T-3759: the name each station shows (`ClockNode.name`): an unbound one its own,
+   * a bound one its complex's (`nameSource`: the oldest typed name, else the oldest station's, over
+   * every member, bound or not). The model keeps every station's stored name, its part in the complex's;
+   * a split complex gives each part's stations theirs back. The replaced rows are kept, so an unchanged
+   * one is the same object as before. */
+  private foldNames(out: ClockNode[], complexesOf: RowEnv["complexes"]) {
     const stations = out.filter((r) => r.platform > 0 && !r.port);
-    const cx = complexesOf(stations);
+    const cx = complexesOf?.(stations);
     const groups = new Map<number, ClockNode[]>();
-    for (const r of stations) {
+    if (cx) for (const r of stations) {
       const c = cx.of.get(String(r.id));
       if (c === undefined) continue;
       const g = groups.get(c);
@@ -333,29 +359,62 @@ export class StateRows {
     }
     const source = new Map<number, ClockNode>();
     this.complexNames.clear();
+    this.heads.clear();
+    this.sizes.clear();
+    this.apart = [];
     for (const [c, g] of groups) {
       const s = nameSource(g, (r) => r.id, (r) => !!r.named)!;
+      // a station alone is its own complex: the complex is called what the station shows
+      if (g.length === 1) {
+        this.complexNames.set(s.id, s.own || s.name);
+        this.heads.set(s.id, s.id);
+        this.sizes.set(s.id, 1);
+        continue;
+      }
       source.set(c, s);
-      for (const r of g) this.complexNames.set(r.id, s.name);
+      for (const r of g) {
+        this.complexNames.set(r.id, s.name);
+        this.heads.set(r.id, s.id);
+        this.sizes.set(r.id, g.length);
+        if (r.named && !r.own && r !== s && r.name !== s.name) this.apart.push(r.id);
+      }
     }
     const seen = new Set<number>();
     for (let k = 0; k < out.length; k++) {
       const r = out[k];
-      if (r.platform <= 0 || r.port || r.named) continue;
-      const c = cx.of.get(String(r.id));
-      const s = c === undefined ? undefined : source.get(c);
-      if (!s || s.name === r.name) continue;
+      if (r.platform <= 0 || r.port) continue;
+      const c = cx?.of.get(String(r.id));
+      const complex = c === undefined ? undefined : source.get(c)?.name;
+      const name = r.own || complex || r.name;
+      const hub = complex !== undefined && complex !== name ? complex : undefined;
+      if (name === r.name && hub === undefined) continue;
       let f = this.folded.get(r.id);
-      if (!f || f.from !== r || f.name !== s.name) this.folded.set(r.id, (f = { from: r, name: s.name, row: { ...r, name: s.name } }));
+      if (!f || f.from !== r || f.name !== name || f.hub !== hub) this.folded.set(r.id, (f = { from: r, name, hub, row: { ...r, name, ...(hub !== undefined ? { hub } : {}) } }));
       seen.add(r.id);
       out[k] = f.row;
     }
     if (this.folded.size !== seen.size) for (const id of this.folded.keys()) if (!seen.has(id)) this.folded.delete(id);
   }
 
-  /** The name a station of a complex shows when that is not its own (`foldNames`), if it does. */
+  /** The name a station shows when that is not its stored one (`foldNames`), if it does. */
   shownName(id: number): string | undefined {
     return this.folded.get(id)?.name;
+  }
+
+  /** T-3759: the station whose stored name is its complex's (`nameSource`), as the last rows read it. */
+  headOf(id: number): number | undefined {
+    return this.heads.get(id);
+  }
+
+  /** T-3759: how many stations the complex of station `id` has, as the last rows read it (0: none known). */
+  complexSize(id: number): number {
+    return this.sizes.get(id) ?? 0;
+  }
+
+  /** T-3759: the typed stations that are bound but whose stored name is not their complex's, as the last
+   * rows read them: an older save's, which showed their own names (`TrackApi.adopt_old_names`). */
+  oldApart(): number[] {
+    return this.apart;
   }
 
   /** The name of the complex station `id` is in (`nameSource`), as the last rows read it. */

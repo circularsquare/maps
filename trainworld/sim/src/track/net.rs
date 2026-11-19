@@ -234,6 +234,9 @@ pub struct StationData {
     /// T-3740: its fare zone, set by the player: 0 none, else the fare area's id (the fares'
     /// `zones`, the app's) << 8 | the zone number, 1-255.
     pub fare: u32,
+    /// T-3759: the name it shows when it is not bound to its complex's name; empty while bound. `name`
+    /// stays its part in the complex's name (the app's `nameSource`) either way.
+    pub own: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -601,6 +604,8 @@ pub struct Network {
     pub node_one: Vec<u8>,
     /// `StationData::fare` (T-3740).
     pub node_fare: Vec<u32>,
+    /// `StationData::own` (T-3759).
+    pub node_own: Vec<String>,
     /// A port's berth (`StationData::berth`, T-2193); None for every other node.
     pub node_berth: Vec<Option<[f64; 2]>>,
     pub node_ports: Vec<Ports>,
@@ -1329,6 +1334,7 @@ impl Network {
             node_upgrades: vec![],
             node_one: vec![],
             node_fare: vec![],
+            node_own: vec![],
             node_berth: vec![],
             node_ports: vec![],
             node_moves: vec![],
@@ -1587,6 +1593,7 @@ impl Network {
         self.node_upgrades.push(0);
         self.node_one.push(0);
         self.node_fare.push(0);
+        self.node_own.push(String::new());
         self.node_berth.push(None);
         self.node_ports.push(Ports::default());
         self.node_moves.push(Moves::default());
@@ -1697,7 +1704,7 @@ impl Network {
     }
     pub fn station_data(&self, n: u32) -> Option<StationData> {
         (self.node_ok(n) && self.node_platform[n as usize] > 0)
-            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize], one: self.node_one[n as usize], fare: self.node_fare[n as usize] })
+            .then(|| StationData { platform: self.node_platform[n as usize], name: self.node_name[n as usize].clone(), named: self.node_named[n as usize], built: self.node_built[n as usize], off: self.node_off[n as usize], upgrades: self.node_upgrades[n as usize], berth: self.node_berth[n as usize], day: self.node_day[n as usize], one: self.node_one[n as usize], fare: self.node_fare[n as usize], own: self.node_own[n as usize].clone() })
     }
     pub fn line_data(&self, l: u32) -> Option<LineData> {
         self.line_ok(l).then(|| {
@@ -2167,6 +2174,7 @@ impl Network {
                 self.node_upgrades[i] = 0;
                 self.node_one[i] = 0;
                 self.node_fare[i] = 0;
+                self.node_own[i].clear();
                 self.node_berth[i] = None;
             }
             Some(d) => {
@@ -2179,6 +2187,7 @@ impl Network {
                 self.node_upgrades[i] = d.upgrades & super::upgrades::ALL;
                 self.node_one[i] = d.one.min(2);
                 self.node_fare[i] = d.fare;
+                self.node_own[i] = d.own;
                 self.node_berth[i] = d.berth;
             }
         }

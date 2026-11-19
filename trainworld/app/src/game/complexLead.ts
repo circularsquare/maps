@@ -2,12 +2,10 @@
 // row, a search hit, the diagram's label), it is the member whose name the player typed; with several
 // of those, or none, the member with the most lines, then a constructed one, then the first in save
 // order. Nothing else picks the name, so adding a station or a line never changes a typed name.
-// T-3288, T-3750: the members nobody typed a name for all show one name already, the complex's
-// (`nameSource`, applied where the worker reads its rows), so the lead's name is that one unless two
-// members have typed names.
+// T-3288, T-3750, T-3759: the bound members all show one name already, the complex's (`nameSource`,
+// applied where the worker reads its rows); `complexTitle` gives it for any member, bound or not.
 
 import type { StationInput } from "./types";
-import type { EditOp } from "../workers/protocol";
 
 /** The lead of `members` (not empty), `lines` the number of lines stopping at a member. */
 export function leadOf<S extends { id: string; built?: boolean; named?: true }>(members: readonly S[], lines: (id: string) => number): S {
@@ -20,9 +18,9 @@ export function leadOf<S extends { id: string; built?: boolean; named?: true }>(
   return lead;
 }
 
-/** The member whose name is the complex's (T-3288, T-3750): the oldest (lowest `key`) member whose name
- * the player typed, else the oldest member. Every member with no typed name shows it, and so does a
- * station building nobody named; a member with a typed name shows its own. The one rule for the
+/** The member whose stored name is the complex's (T-3288, T-3750): the oldest (lowest `key`) member whose
+ * name the player typed, else the oldest member, bound or not. Every bound member shows it, and so does a
+ * station building nobody named; an unbound member shows its own (T-3759). The one rule for the
  * complex's name: the worker's rows (`StateRows.foldNames`) and the renames go through it. */
 export function nameSource<S>(members: readonly S[], key: (s: S) => number, typed: (s: S) => boolean): S | undefined {
   let best: S | undefined;
@@ -34,11 +32,10 @@ export function nameSource<S>(members: readonly S[], key: (s: S) => number, type
   return best;
 }
 
-/** The edit that renames a complex through its name source `head` (`nameSource`): a typed name stays
- * typed; an untyped one is set with no typed flag, so it stays the one the others follow (T-3288). */
-export function complexRename(head: Pick<StationInput, "num" | "length" | "named">, name: string): EditOp {
-  return head.named ? { op: "stationProps", node: head.num, platform: head.length, name } : { op: "stationName", node: head.num, name };
-}
+/** T-3759: the name of the complex station `s` is in, as the worker's rows give it: its own `name`
+ * unless it is unbound with another (`hub`). Where one name stands for the complex: a Stations tab row,
+ * the complex view's title. */
+export const complexTitle = (s: Pick<StationInput, "name" | "hub">): string => s.hub ?? s.name;
 
 /** The lead of the complex holding `id`, for the checks and anything holding the lists: `members`
  * the ids of that complex. */

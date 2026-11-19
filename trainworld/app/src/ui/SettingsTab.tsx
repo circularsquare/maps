@@ -29,6 +29,8 @@ import { t, tNumber, type MessageKey } from "../i18n";
 import { LanguageSelect } from "./LanguageSelect";
 import { SideRow } from "./SideSwitch";
 import { SettingsSearch } from "./SettingsSearch";
+import { bindNewStations, setBindNew } from "../game/stationBinding";
+import { edit, world } from "../game/world";
 
 const THEME_NAME: Record<Theme, MessageKey> = { pink: "settingsTab.pink", blue: "settingsTab.blue", green: "settingsTab.green" };
 const SHADE_NAME: Record<Shade, MessageKey> = { light: "settingsTab.light", dark: "settingsTab.dark" };
@@ -295,18 +297,30 @@ function Slider({ label, min, max, step, value, tip, percent: pct, set }: { labe
   );
 }
 
+/** T-3759: new stations named after their complex or not; turned on with stations already unbound, a
+ * question offers to bind them too (one undo). */
+function bindNew(on: boolean) {
+  setBindNew(on);
+  if (!on || !world.peek()?.save.stations.some((s) => s.unbound)) return;
+  ask.value = { text: t("settingsTab.bindAllQuestion"), yes: t("settingsTab.bindAll"), no: t("settingsTab.bindNewOnly"), run: () => void edit({ op: "bindAll" }) };
+}
+
 /** T-728: the game's mode; a normal game can be made a sandbox once, after a confirmation, never back. */
 function GameMode() {
   const m = moneyState.value;
   const sandbox = m?.mode === "sandbox";
-  const busOneWay = (
+  // the player's own, in every game and before one is loaded
+  const playerChecks = (
     <div class="checks">
+      <Check checked={bindNewStations.value} onChange={bindNew}>
+        {t("settingsTab.bindNew")}
+      </Check>
       <Check checked={display.value.busOneWay} onChange={(v) => setDisplay("busOneWay", v)}>
         {t("settingsTab.busOneWay")}
       </Check>
     </div>
   );
-  if (!m) return <><div class="h">{t("settingsTab.game")}</div>{busOneWay}</>;
+  if (!m) return <><div class="h">{t("settingsTab.game")}</div>{playerChecks}</>;
   return (
     <>
       <div class="h">{t("settingsTab.game")}</div>
@@ -324,7 +338,7 @@ function GameMode() {
           <button class="btn text" data-guide-restart onClick={() => saveGuide({ done: 0 })}>{t("settingsTab.startAgain")}</button>
         </div>
       )}
-      {busOneWay}
+      {playerChecks}
     </>
   );
 }

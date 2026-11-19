@@ -71,6 +71,9 @@ use super::twin::Twin;
 /// and five); without it every line splits it at the default hours.
 /// A trailing `LFZ1` block (T-3740) gives the stations with a fare zone (`StationData::fare`): count,
 /// then node index and code; without it none has one. Level 26 also brings the header's `fares.zones`.
+/// A trailing `LSN1` block (T-3759) gives the stations not bound to their complex's name
+/// (`StationData::own`): count, then node index and the name the station shows; without it every station
+/// is bound.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -83,12 +86,15 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 31] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1"];
+pub const BLOCKS: [&[u8; 4]; 32] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 26;
+pub const LEVEL: u32 = 27;
+/// T-3759: the last level from before stations could be unbound from their complex's name; a typed
+/// station there showed its own name, so loading one makes such a station unbound (the app's pass).
+pub const OLD_BOUND_NAMES: u32 = 26;
 /// T-3750: the last level whose station buildings all carry a name, a copy of a station's for one the
 /// player never named; from 24 an empty name is none, and the building shows its complex's.
 pub const OLD_BUILDING_NAMES: u32 = 23;
@@ -687,6 +693,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(c as u64);
         }
     }
+    // T-3759: after LFZ1, only where some station is not bound to its complex's name: count, then
+    // node index and the name it shows
+    let apart: Vec<(usize, &str)> = nodes.iter().enumerate().filter(|(_, &n)| net.is_station(n) && !net.node_own[n as usize].is_empty()).map(|(i, &n)| (i, net.node_own[n as usize].as_str())).collect();
+    if !apart.is_empty() {
+        w.0.extend_from_slice(b"LSN1");
+        w.u(apart.len() as u64);
+        for (i, s) in apart {
+            w.u(i as u64);
+            w.s(s);
+        }
+    }
     w.0
 }
 
@@ -812,7 +829,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8, fare: 0 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8, fare: 0, own: String::new() })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -1239,6 +1256,15 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LSN1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, s) = (r.u()? as usize, r.s()?);
+            if i < net.node_own.len() && net.is_station(i as u32) && !s.is_empty() {
+                net.node_own[i] = s;
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1330,7 +1356,7 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0 })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new() })).unwrap();
         }
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
@@ -1473,7 +1499,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (26, 31), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (27, 32), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as
@@ -1514,6 +1540,28 @@ mod tests {
         assert_eq!(encode(&back), with);
         w.undo().unwrap().unwrap();
         assert_eq!(w.net.node_fare[1], 0);
+        assert_eq!(encode(&w.net), bytes);
+    }
+
+    /// T-3759: a station's own name (unbound from its complex's) comes back as it was, after a network
+    /// where every station is bound ends as it did; unbinding is an edit that undoes.
+    #[test]
+    fn unbound_station_names_round_trip_and_undo() {
+        let mut w = crate::track::world::TrackWorld::new(decode(&sample()).unwrap());
+        let bytes = encode(&w.net);
+        assert!(!bytes.windows(4).any(|x| x == b"LSN1"), "all bound: no block");
+        let d = w.net.station_data(1).unwrap();
+        w.apply(crate::track::world::Op::Station { node: 1, data: Some(StationData { own: "Own ✓".into(), ..d }) }).unwrap();
+        let with = encode(&w.net);
+        assert_eq!(&with[..bytes.len()], &bytes[..]);
+        assert_eq!(&with[bytes.len()..bytes.len() + 4], b"LSN1");
+        let (back, unread) = decode_read(&with).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!((back.node_own[0].as_str(), back.node_own[1].as_str()), ("", "Own ✓"));
+        assert_eq!(back.node_name[1], w.net.node_name[1], "its part in the complex's name stays");
+        assert_eq!(encode(&back), with);
+        w.undo().unwrap().unwrap();
+        assert!(w.net.node_own[1].is_empty());
         assert_eq!(encode(&w.net), bytes);
     }
 }

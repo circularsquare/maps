@@ -116,6 +116,8 @@ export interface DisplaySettings {
   /** T-3480: a bus route drives a one-way street only the way it runs (map/busRoads.ts, map/roadGraph.ts); off, any
    * street runs both ways. Renkon's change (open-source PR 1). */
   busOneWay: boolean;
+  /** T-3759: new stations start bound to their complex's name (game/stationBinding.ts), in every game */
+  bindNew: boolean;
   /** T-3268: the plus and minus buttons at the map's right edge (ui/ZoomButtons.tsx) */
   zoomButtons: boolean;
   /** T-3765: the top bar's pause, 1x, 4x and custom-speed buttons instead of pause, slower, speed and faster (ui/TopBar.tsx `Speed`) */
@@ -178,6 +180,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   zoomButtons: true,
   legacyTime: false,
   busOneWay: false,
+  bindNew: true,
   chartOtherLines: true,
   intercityTrips: !mobileDevice(),
   modeShapes: { ...MODE_SHAPES },

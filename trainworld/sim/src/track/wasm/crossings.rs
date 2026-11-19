@@ -406,6 +406,69 @@ impl TrackApi {
         self.run(Op::Station { node, data: Some(StationData { name, named: true, ..old }) })
     }
 
+    /// T-3759: whether new stations start bound to their complex's name (the game's setting).
+    pub fn set_bind_new(&mut self, on: bool) {
+        self.bind_new = on;
+    }
+
+    /// T-3759: the own name a new station named `name` starts with: none while new stations start bound.
+    pub(super) fn new_own(&self, name: &str) -> String {
+        if self.bind_new { String::new() } else { name.to_string() }
+    }
+
+    /// T-3759: true once after loading a save from before stations could be unbound (`save::OLD_BOUND_NAMES`):
+    /// the app then unbinds the typed stations whose names differed from their complex's (`adopt_old_names`).
+    pub fn take_old_names(&mut self) -> bool {
+        std::mem::take(&mut self.old_names)
+    }
+
+    /// T-3759: the stations not bound to their complex's name, by node id.
+    pub fn unbound_stations(&self) -> Vec<u32> {
+        let net = &self.w.net;
+        (0..net.node_count() as u32).filter(|&n| net.node_ok(n) && net.is_station(n) && !net.node_own[n as usize].is_empty()).collect()
+    }
+
+    /// T-3759: the name an unbound station shows; "" for a bound one.
+    pub fn station_own(&self, node: u32) -> String {
+        self.w.net.node_own.get(node as usize).cloned().unwrap_or_default()
+    }
+
+    /// T-3759: bind a station to its complex's name, or unbind it, when it shows its own stored name
+    /// again (as a station split off its complex does).
+    pub fn set_station_bound(&mut self, node: u32, bound: bool) -> u32 {
+        let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+        let own = if bound { String::new() } else if old.own.is_empty() { old.name.clone() } else { old.own.clone() };
+        self.run(Op::Station { node, data: Some(StationData { own, ..old }) })
+    }
+
+    /// T-3759: rename an unbound station (or unbind it with this name). `also_name`: its part in the
+    /// complex's name takes the name too, as the player's (a station alone, so a complex it later forms is
+    /// called what the player saw).
+    pub fn set_station_own(&mut self, node: u32, own: String, also_name: bool) -> u32 {
+        let Some(old) = self.w.net.station_data(node) else { return self.refuse(Issue::NoSuchNode { node }) };
+        let data = if also_name { StationData { name: own.clone(), named: true, own, ..old } } else { StationData { own, ..old } };
+        self.run(Op::Station { node, data: Some(data) })
+    }
+
+    /// T-3759: bind these stations to their complexes' names, one undoable edit.
+    pub fn bind_stations(&mut self, nodes: &[u32]) -> u32 {
+        let ops: Vec<Op> = nodes.iter().filter_map(|&node| self.w.net.station_data(node).filter(|d| !d.own.is_empty()).map(|d| Op::Station { node, data: Some(StationData { own: String::new(), ..d }) })).collect();
+        if ops.is_empty() {
+            return 0;
+        }
+        self.run(Op::Batch(ops))
+    }
+
+    /// T-3759: after an older save loads (`take_old_names`), these typed stations keep showing their own
+    /// names: each is unbound with its stored name. Not an edit the player made, so not on undo.
+    pub fn adopt_old_names(&mut self, nodes: &[u32]) -> u32 {
+        let ops: Vec<Op> = nodes.iter().filter_map(|&node| self.w.net.station_data(node).filter(|d| d.own.is_empty() && !d.name.is_empty()).map(|d| Op::Station { node, data: Some(StationData { own: d.name.clone(), ..d }) })).collect();
+        if ops.is_empty() {
+            return 0;
+        }
+        self.run_unrecorded(Op::Batch(ops))
+    }
+
     /// `station` (an `Op::Station` on `node`) preceded by the joins a longer platform needs
     /// (T-3286): the pieces of track that only meet at a clicked corner become one edge under the
     /// platform's reach, as for a new station (`unjoin_near`); a junction, another station or a joint

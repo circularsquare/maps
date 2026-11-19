@@ -49,6 +49,10 @@ export interface StationInput {
   upgrades?: number;
   /** the player typed its name (T-2683): a complex shows it above the others' */
   named?: true;
+  /** T-3759: not bound to its complex's name: `name` is its own */
+  unbound?: true;
+  /** T-3759: its complex's name, where that is not `name` (`complexTitle`) */
+  hub?: string;
   /** track heading through it, rad, counter-clockwise from east */
   heading: number;
   /** its platform's centre line along its track, as drawn: x, y offsets from x, y in world units

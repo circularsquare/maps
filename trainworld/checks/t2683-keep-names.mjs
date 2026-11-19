@@ -1,8 +1,8 @@
 // T-2683: a name the player set survives edits. A new game with three parallel tracks 40 m apart,
 // a station at the west end of each (one complex: platforms within 50 m). The player renames the
 // first, then a station is added to the complex and a line is built to the second, which then has
-// the most lines; the first keeps its name and the complex still shows it (`complexLead`, what the
-// Stations tab, search and diagram take as the complex's name).
+// the most lines; the first keeps its name and the complex still shows it (`complexTitle` of the
+// complex's lead, what the Stations tab row and the diagram show, T-3759).
 // From the maps root:   node trainworld/checks/t2683-keep-names.mjs [url]
 import { launchChrome, collectErrors } from './lib.mjs';
 
@@ -55,7 +55,7 @@ try {
     const named = st.find((s) => s.named);
     const members = cv.complexOf(named.id);
     const lead = mod.complexLead(st, w.save.lines, members);
-    return { shown: lead?.name, members: members.length, flagged: st.filter((s) => s.named).map((s) => s.name) };
+    return { shown: lead && mod.complexTitle(lead), members: members.length, flagged: st.filter((s) => s.named).map((s) => s.name) };
   });
   console.log(JSON.stringify(lead));
   ok(lead.members === 3 && lead.flagged?.length === 1 && lead.flagged[0] === 'Hand Name', 'the three stations are one complex and only the typed name is flagged: ' + JSON.stringify(lead));
