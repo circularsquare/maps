@@ -190,17 +190,21 @@ pub fn last_panic() -> String {
 /// `ERA2` (T-1925) eras carry departure phases; `ERA1`, older saves', do not.
 const ERAS_TAG: &[u8; 4] = b"ERA2";
 const ERAS_TAG_1: &[u8; 4] = b"ERA1";
+/// T-3542: `ERA3` eras carry every slot and each period's slot, written only where some era runs
+/// other slots than three rows' (`Service::eras_wide`).
+const ERAS_TAG_3: &[u8; 4] = b"ERA3";
 
-/// A save's network bytes and its eras, if it has any, and whether they carry phases.
-fn split_eras(bytes: &[u8]) -> (&[u8], Option<(&[u8], bool)>) {
+/// A save's network bytes and its eras, if it has any, whether they carry phases and whether
+/// every slot (`ERA3`).
+fn split_eras(bytes: &[u8]) -> (&[u8], Option<(&[u8], bool, bool)>) {
     let n = bytes.len();
-    if n < 8 || (&bytes[n - 4..] != ERAS_TAG && &bytes[n - 4..] != ERAS_TAG_1) {
+    if n < 8 || ![ERAS_TAG, ERAS_TAG_1, ERAS_TAG_3].iter().any(|t| &bytes[n - 4..] == *t) {
         return (bytes, None);
     }
-    let phases = &bytes[n - 4..] == ERAS_TAG;
+    let (phases, wide) = (&bytes[n - 4..] != ERAS_TAG_1, &bytes[n - 4..] == ERAS_TAG_3);
     let len = u32::from_le_bytes(bytes[n - 8..n - 4].try_into().unwrap()) as usize;
     match (n - 8).checked_sub(len) {
-        Some(start) => (&bytes[..start], Some((&bytes[start..n - 8], phases))),
+        Some(start) => (&bytes[..start], Some((&bytes[start..n - 8], phases, wide))),
         None => (bytes, None),
     }
 }
@@ -238,7 +242,9 @@ fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
     // T-3521: a train runs on whichever kind of day needs the most at any level
     let mut weekend = vec![0u32; w.svc.lines.len()];
     for (l, c) in w.weekend_own() {
-        if let Some(x) = weekend.get_mut(l) { *x = c.iter().copied().max().unwrap_or(0); }
+        // (T-3542: at the places its rows use)
+        let used = ROW_PLACES[w.net.rows(l) - ROWS_MIN];
+        if let Some(x) = weekend.get_mut(l) { *x = used.iter().map(|&k| c[k]).max().unwrap_or(0); }
     }
     for (i, l) in w.svc.lines.iter().enumerate() {
         if l.running {
@@ -764,8 +770,8 @@ impl TrackApi {
                     self.w.reload();
                 }
                 // a save made while trains changed over loads with them where they were (T-1071)
-                if let Some((e, phases)) = eras {
-                    if self.w.svc.decode_eras(e, phases).is_err() {
+                if let Some((e, phases, wide)) = eras {
+                    if self.w.svc.decode_eras(e, phases, wide).is_err() {
                         self.w.svc.eras.clear();
                         self.w.svc.shifts.clear();
                     }
@@ -850,7 +856,7 @@ impl TrackApi {
             let n = eras.len() as u32;
             out.extend(eras);
             out.extend(n.to_le_bytes());
-            out.extend_from_slice(ERAS_TAG);
+            out.extend_from_slice(if self.w.svc.eras_wide(&self.w.net) { ERAS_TAG_3 } else { ERAS_TAG });
         }
         out
     }
@@ -2218,7 +2224,9 @@ impl TrackApi {
         let Some(path) = self.w.net.route(stops, &[]) else {
             return self.refuse(Issue::LinePath { line: id });
         };
-        self.run(Op::Line { id, data: Some(LineData { symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] }) })
+        let mut d = LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: None, auto: None, name, colour, stops: stops.to_vec(), path, tph: [high, medium, low], dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] };
+        d.x = crate::track::net::Extra::of_high(&d);
+        self.run(Op::Line { id, data: Some(d) })
     }
     pub(crate) fn set_schedule(&mut self, id: u32, high: f32, medium: f32, low: f32) -> u32 {
         self.run(Op::Schedule { id, tph: [high, medium, low] })

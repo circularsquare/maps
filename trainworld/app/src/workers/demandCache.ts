@@ -81,7 +81,7 @@ function withoutEras(track: Uint8Array): Uint8Array {
   const n = track.length;
   if (n < 8) return track;
   const tag = String.fromCharCode(...track.subarray(n - 4));
-  if (tag !== "ERA2" && tag !== "ERA1") return track;
+  if (tag !== "ERA2" && tag !== "ERA1" && tag !== "ERA3") return track;
   const len = new DataView(track.buffer, track.byteOffset, n).getUint32(n - 8, true);
   return len <= n - 8 ? track.subarray(0, n - 8 - len) : track;
 }
@@ -93,6 +93,18 @@ interface Svc {
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   lines: { id: string; stops: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
   passages?: [string, string][];
+}
+
+/** T-3542: five periods' values (morning, midday, afternoon, evening, night) as the three rows they
+ * were keyed by before periods, where the day's three agree, so a game of three rows keeps its keys. */
+function asRows(v: unknown): unknown {
+  if (!Array.isArray(v) || v.length !== 5) return v;
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  return same(v[0], v[1]) && same(v[1], v[2]) ? [v[0], v[3], v[4]] : v;
+}
+/** `asRows` of each run's periods. */
+function runsAsRows(v: unknown): unknown {
+  return Array.isArray(v) ? v.map(asRows) : v;
 }
 
 /** The network as demand reads it with ids replaced by places (stations, lines) and complexes
@@ -107,7 +119,7 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
   });
   // a circle's stand (T-798) and a service span (T-842) only where there is one, so other
   // networks keep their keys
-  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
+  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), tph: asRows(l.tph), hopS: runsAsRows(l.hopS), hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: runsAsRows(l.dwellS), ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
   // passages (T-1281) only where there are any
   const passages = svc.passages?.length ? { passages: svc.passages.map(([a, b]) => [place.get(a) ?? -1, place.get(b) ?? -1]) } : {};
   return { text: JSON.stringify({ frame: svc.frame, fare: svc.fare, stations, lines, ...passages }), stationIds: svc.stations.map((s) => s.id), lineIds: svc.lines.map((l) => l.id) };

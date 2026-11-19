@@ -1110,7 +1110,7 @@ impl Service {
     pub fn spare(&self, net: &Network, l: usize, lev: usize) -> f64 {
         let Some(ls) = self.lines.get(l) else { return 0.0 };
         let t = net.line_tph.get(l).map_or(0.0, |x| x[lev] as f64);
-        let paced = net.line_auto.get(l).copied().flatten().is_some_and(|a| a[net.slot_row(l, lev)] > 0) || net.line_pace_of(l as u32)[lev] > 0.0;
+        let paced = net.auto_at(l, lev).is_some_and(|a| a > 0) || net.line_pace_of(l as u32)[lev] > 0.0;
         if t <= 0.0 || ls.is_loop() || !paced {
             return 0.0;
         }
@@ -1152,7 +1152,7 @@ impl Service {
         let week = Lattice { tph, off, lead, shift: ls.shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot: net.period_slot() };
         // T-3521: no line runs other trains on weekends: every day the weekdays' pattern, at no cost
         if !net.rest_solved {
-            return Some(week);
+            return Some(self.joined(net, l, week));
         }
         // weekends at their own settled rates, which a line running its weekday counts then has too
         // where others' counts change what the shared track lets it run
@@ -1175,10 +1175,29 @@ impl Service {
         // rates equal to the weekdays' run the weekdays' pattern, so they keep `rest_on` off and the
         // lattice equal to one read back from a save, whose eras keep no weekend rates
         if rest_tph == tph && rest_off == off && rest_phase == phase {
-            return Some(week);
+            return Some(self.joined(net, l, week));
         }
         let cal = self.cal.get(l).copied().unwrap_or(Cal::NONE);
-        Some(Lattice { rest_tph, rest_off, rest_phase, rest_on: true, cal, ..week })
+        Some(self.joined(net, l, Lattice { rest_tph, rest_off, rest_phase, rest_on: true, cal, ..week }))
+    }
+
+    /// T-3542: `lat` with the day's periods of one row of line `l` that run alike joined into one
+    /// slot, so they lay out one stretch of departures with one headway (`level_stretches`): a line
+    /// of three rows in a game of five keeps one high stretch 6-20 while its morning, midday and
+    /// afternoon slots settle to the same rates, offsets, phases and round trips. Only consecutive
+    /// periods of a row join (morning, midday, afternoon), never two rows.
+    fn joined(&self, net: &Network, l: usize, mut lat: Lattice) -> Lattice {
+        let Some(ls) = self.lines.get(l) else { return lat };
+        let ps = &mut lat.period_slot;
+        for (q, p) in [(0, 1), (1, 2)] {
+            let (j, s) = (ps[q], ps[p]);
+            let same = |a: &[f64; SLOTS]| a[j].to_bits() == a[s].to_bits();
+            if s != j && net.place(l, s) == net.place(l, j) && lat.tph[j].to_bits() == lat.tph[s].to_bits() && lat.rest_tph[j].to_bits() == lat.rest_tph[s].to_bits()
+                && same(&lat.off) && same(&lat.phase) && same(&lat.rest_off) && same(&lat.rest_phase) && same(&ls.round_trip) {
+                ps[p] = j;
+            }
+        }
+        lat
     }
 
     /// Every line's local time again, after the time zone table changed (T-309).
@@ -1302,7 +1321,10 @@ impl Service {
     /// with them where they were: per line that has any, its place among the live lines (as
     /// `save::encode` numbers them), then each era and each shift, little-endian. Empty when no
     /// line has any.
+    /// T-3542 (`ERA3`, `wide`): every slot of each era and the slot of each period, where some era
+    /// runs other slots than three rows' (`eras_wide`); otherwise each row's slot, as before slots.
     pub fn encode_eras(&self, net: &Network) -> Vec<u8> {
+        let wide = self.eras_wide(net);
         let mut out = vec![];
         let mut n = 0u32;
         let mut body = vec![];
@@ -1316,13 +1338,23 @@ impl Service {
             body.extend((eras.len() as u32).to_le_bytes());
             for e in eras {
                 body.extend(e.until.to_le_bytes());
-                // T-3542: per row (a 3-row line's slots, `ROW_SLOT`), as before slots
-                slots_to_rows(e.lat.tph).iter().for_each(|x| body.extend(x.to_le_bytes()));
-                slots_to_rows(e.lat.off).iter().for_each(|x| body.extend(x.to_le_bytes()));
+                // T-3542: per row (a 3-row line's slots, `ROW_SLOT`), as before slots, or every slot
+                if wide {
+                    e.lat.tph.iter().for_each(|x| body.extend(x.to_le_bytes()));
+                    e.lat.off.iter().for_each(|x| body.extend(x.to_le_bytes()));
+                } else {
+                    slots_to_rows(e.lat.tph).iter().for_each(|x| body.extend(x.to_le_bytes()));
+                    slots_to_rows(e.lat.off).iter().for_each(|x| body.extend(x.to_le_bytes()));
+                }
                 body.extend(e.lat.lead.to_le_bytes());
                 body.extend(e.lat.shift.to_le_bytes());
                 // T-1925 (`ERA2`): the departure phases
-                slots_to_rows(e.lat.phase).iter().for_each(|x| body.extend(x.to_le_bytes()));
+                if wide {
+                    e.lat.phase.iter().for_each(|x| body.extend(x.to_le_bytes()));
+                    body.extend(e.lat.period_slot.map(|s| s as u8));
+                } else {
+                    slots_to_rows(e.lat.phase).iter().for_each(|x| body.extend(x.to_le_bytes()));
+                }
                 body.extend((e.drawn.len() as u32).to_le_bytes());
                 for &(r, d) in &e.drawn {
                     body.push(r);
@@ -1345,7 +1377,14 @@ impl Service {
 
     /// Eras and shifts from `encode_eras`, onto a service just built from the saved network.
     /// `phases`: the eras carry departure phases (`ERA2`, T-1925); older ones (`ERA1`) do not.
-    pub fn decode_eras(&mut self, bytes: &[u8], phases: bool) -> Result<(), String> {
+    /// T-3542: some era of a live line runs other slots than a line of three rows in a game of three
+    /// (`encode_eras` then writes `ERA3`).
+    pub fn eras_wide(&self, net: &Network) -> bool {
+        (0..net.line_count()).filter(|&l| net.line_ok(l as u32)).any(|l| self.eras_of(l).iter().any(|e| e.lat.period_slot != PERIOD_SLOT_3))
+    }
+
+    /// `wide`: `ERA3` eras, with every slot and each period's slot (T-3542).
+    pub fn decode_eras(&mut self, bytes: &[u8], phases: bool, wide: bool) -> Result<(), String> {
         let mut at = 0usize;
         let mut take = |n: usize| -> Result<&[u8], String> {
             let b = bytes.get(at..at + n).ok_or("truncated eras")?;
@@ -1365,17 +1404,28 @@ impl Service {
             let mut v = vec![];
             for _ in 0..num!(u32) {
                 let until = num!(f64);
-                let tph = rows_to_slots([num!(f32), num!(f32), num!(f32)], 0.0);
-                let off = rows_to_slots([num!(f64), num!(f64), num!(f64)], 0.0);
+                let (mut tph, mut off, mut phase, mut period_slot) = ([0.0f32; SLOTS], [0.0; SLOTS], [0.0; SLOTS], PERIOD_SLOT_3);
+                if wide {
+                    for v in tph.iter_mut() { *v = num!(f32); }
+                    for v in off.iter_mut() { *v = num!(f64); }
+                } else {
+                    tph = rows_to_slots([num!(f32), num!(f32), num!(f32)], 0.0);
+                    off = rows_to_slots([num!(f64), num!(f64), num!(f64)], 0.0);
+                }
                 let (lead, shift) = (num!(f64), num!(f64));
-                let phase = if phases { rows_to_slots([num!(f64), num!(f64), num!(f64)], 0.0) } else { [0.0; SLOTS] };
+                if wide {
+                    for v in phase.iter_mut() { *v = num!(f64); }
+                    for v in period_slot.iter_mut() { *v = (num!(u8) as usize).min(SLOTS - 1); }
+                } else if phases {
+                    phase = rows_to_slots([num!(f64), num!(f64), num!(f64)], 0.0);
+                }
                 let mut drawn = vec![];
                 for _ in 0..num!(u32) {
                     drawn.push((num!(u8), num!(f64)));
                 }
                 // T-3521: weekend trains are not in the era bytes: an old pattern loads running its
                 // weekday trains every day
-                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot: PERIOD_SLOT_3 }, drawn });
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot }, drawn });
             }
             let mut s = vec![];
             for _ in 0..num!(u32) {

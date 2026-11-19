@@ -23,7 +23,7 @@ use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
 use super::network::{Network, PERIODS, TRAM_CARS};
 use super::pack::{self, City};
-use crate::track::params::{ROWS, PERIOD_HOURS, PERIOD_ROW};
+use crate::track::params::{PERIOD_HOURS, PERIOD_ROW};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
@@ -316,12 +316,13 @@ pub(crate) struct Service {
     pub(crate) stops: Vec<u32>,
     /// Each stop's platform, x and y: its snapshot station's position (`Network::stop_x`).
     pub(crate) stop_xy: Vec<f32>,
-    /// Seconds, 6 per stop: per run and level, `(run * 3 + level) * n + k` from the line's
-    /// offset x 6. Run 0: stop k to k + 1 (0 at the last); run 1: stop k to k - 1 (0 at the first).
-    /// On a circle (T-798) the last of run 0 and the first of run 1 are the stand at the first stop,
-    /// riding on round.
+    /// Seconds, 10 per stop: per run and period (T-3542; per level before), `(run * 5 + period) *
+    /// n + k` from the line's offset x 10. Run 0: stop k to k + 1 (0 at the last); run 1: stop k to
+    /// k - 1 (0 at the first). On a circle (T-798) the last of run 0 and the first of run 1 are the
+    /// stand at the first stop, riding on round.
     pub(crate) times: Vec<f32>,
-    pub(crate) tph: Vec<[f32; ROWS]>,
+    /// Trains an hour per line and period.
+    pub(crate) tph: Vec<[f32; PERIODS]>,
     pub(crate) cars: Vec<f32>,
     /// Each demand station's complex (`demand_groups`), empty if none were given.
     pub(crate) group: Vec<u32>,
@@ -371,19 +372,19 @@ impl Service {
             && self.back == o.back
     }
     /// T-124: the periods (bit q) whose inputs are the same in `o`: the same layout, and the run
-    /// times and trains an hour of the period's level. A period reads no other level's.
+    /// times and trains an hour of the period. A period reads no other period's.
     pub(crate) fn same_periods(&self, o: &Service) -> u32 {
         if !self.same_layout(o) {
             return 0;
         }
-        let level_same = |lev: usize| {
-            self.tph.iter().zip(&o.tph).all(|(a, b)| a[lev].to_bits() == b[lev].to_bits())
+        let period_same = |q: usize| {
+            self.tph.iter().zip(&o.tph).all(|(a, b)| a[q].to_bits() == b[q].to_bits())
                 && self.line_off.windows(2).all(|w| {
                     let (a, n) = (w[0] as usize, (w[1] - w[0]) as usize);
-                    [lev, 3 + lev].iter().all(|&r| same_bits(&self.times[6 * a + r * n..6 * a + (r + 1) * n], &o.times[6 * a + r * n..6 * a + (r + 1) * n]))
+                    [q, PERIODS + q].iter().all(|&r| same_bits(&self.times[TIMES_PER_STOP * a + r * n..TIMES_PER_STOP * a + (r + 1) * n], &o.times[TIMES_PER_STOP * a + r * n..TIMES_PER_STOP * a + (r + 1) * n]))
                 })
         };
-        let same: [bool; ROWS] = std::array::from_fn(level_same);
+        let same: [bool; PERIODS] = std::array::from_fn(period_same);
         let nr = 2 * self.stops.len();
         let span_same = |q: usize| {
             fn at(s: &Service, q: usize, nr: usize) -> Option<&[f32]> {
@@ -395,8 +396,36 @@ impl Service {
                 (Some(a), None) | (None, Some(a)) => a.iter().all(|&v| v == 1.0),
             }
         };
-        (0..PERIODS).filter(|&q| same[PERIOD_ROW[q]] && span_same(q)).fold(0, |m, q| m | 1 << q)
+        (0..PERIODS).filter(|&q| same[q] && span_same(q)).fold(0, |m, q| m | 1 << q)
     }
+}
+
+/// T-3542: run times per stop in `Service::times`: two runs by five periods.
+pub(crate) const TIMES_PER_STOP: usize = 2 * PERIODS;
+
+/// T-3542: a snapshot's run times and trains an hour per period, from `times` and `tph` given per
+/// period (10 a stop, 5 a line) or per row as before periods (6 a stop and 3 a line: high, medium,
+/// low, spread over their periods by `PERIOD_ROW`); None for any other length. `line_off`: each
+/// line's first stop, and the stop count last.
+pub(crate) fn per_period(line_off: &[u32], times: &[f32], tph: &[f32]) -> Option<(Vec<f32>, Vec<[f32; PERIODS]>)> {
+    let (nstops, nl) = (*line_off.last()? as usize, line_off.len() - 1);
+    if times.len() == TIMES_PER_STOP * nstops && tph.len() == PERIODS * nl {
+        return Some((times.to_vec(), tph.chunks_exact(PERIODS).map(|c| std::array::from_fn(|q| c[q])).collect()));
+    }
+    if times.len() != 6 * nstops || tph.len() != 3 * nl {
+        return None;
+    }
+    let mut out = vec![0f32; TIMES_PER_STOP * nstops];
+    for w in line_off.windows(2) {
+        let (a, n) = (w[0] as usize, (w[1] - w[0]) as usize);
+        for run in 0..2 {
+            for q in 0..PERIODS {
+                let (to, from) = (TIMES_PER_STOP * a + (run * PERIODS + q) * n, 6 * a + (run * 3 + PERIOD_ROW[q]) * n);
+                out[to..to + n].copy_from_slice(&times[from..from + n]);
+            }
+        }
+    }
+    Some((out, tph.chunks_exact(3).map(|c| PERIOD_ROW.map(|r| c[r])).collect()))
 }
 
 pub(crate) struct Period {
@@ -690,7 +719,6 @@ impl DemandApi {
     /// period's headway (a line with no trains in a period has an infinite headway, so nobody
     /// boards it, and keeps its route nodes so results line up across periods).
     pub(crate) fn period_net(svc: &Service, q: usize) -> Network {
-        let lev = PERIOD_ROW[q];
         let nl = svc.cars.len();
         let mut net = Network {
             st_x: svc.st_x.clone(),
@@ -720,15 +748,16 @@ impl DemandApi {
         for l in 0..nl {
             let (a, b) = (svc.line_off[l] as usize, svc.line_off[l + 1] as usize);
             let n = b - a;
+            let o = TIMES_PER_STOP * a;
             for k in 0..n {
-                net.hop_min[a + k] = svc.times[6 * a + lev * n + k] / 60.0;
-                net.hop_back[a + k] = svc.times[6 * a + (3 + lev) * n + k] / 60.0;
+                net.hop_min[a + k] = svc.times[o + q * n + k] / 60.0;
+                net.hop_back[a + k] = svc.times[o + (PERIODS + q) * n + k] / 60.0;
             }
             // T-798: a circle is a line whose last stop is its first, with a time to ride on
             // round from it (`Service::times`)
-            net.line_wrap[l] = n >= 3 && svc.stops[a] == svc.stops[b - 1] && svc.times[6 * a + lev * n + n - 1] > 0.0;
+            net.line_wrap[l] = n >= 3 && svc.stops[a] == svc.stops[b - 1] && svc.times[o + q * n + n - 1] > 0.0;
             let hw: [f32; PERIODS] = std::array::from_fn(|p| {
-                let t = svc.tph[l][PERIOD_ROW[p]];
+                let t = svc.tph[l][p];
                 if t > 0.0 { 60.0 / t } else { f32::INFINITY }
             });
             net.line_headway_min.push(hw);
@@ -1266,8 +1295,9 @@ impl DemandApi {
     }
 
     /// The network to solve on, packed: station x, y pairs (metres in the pack's frame); stops
-    /// per line; the stops (station indices) line after line; 6 times per stop (seconds, see
-    /// `Service::times`); trains an hour, 3 per line (high, medium, low); cars per line.
+    /// per line; the stops (station indices) line after line; 10 times per stop (seconds, see
+    /// `Service::times`); trains an hour, 5 per line (a period each); cars per line. Times and
+    /// trains an hour per row (6 and 3) are taken too (`per_period`).
     /// Rebuilds station access and subzones (shared by every period) unless stations, lines,
     /// stops, cars and complexes are unchanged, and forgets the results of every period whose
     /// level's run times or trains an hour changed (T-124; all of them with a new layout).
@@ -1281,9 +1311,10 @@ impl DemandApi {
             line_off.push(line_off.last().unwrap() + n);
         }
         let nstops = *line_off.last().unwrap() as usize;
-        if stops.len() != nstops || times.len() != 6 * nstops || tph.len() != 3 * nl || cars.len() != nl {
+        let per = per_period(&line_off, times, tph);
+        let Some((times, tph)) = per.filter(|_| stops.len() == nstops && cars.len() == nl) else {
             return Err(format!("network arrays disagree: {nl} lines, {nstops} stops, {} stop entries, {} times, {} tph, {} cars", stops.len(), times.len(), tph.len(), cars.len()));
-        }
+        };
         if stops.iter().any(|&s| s as usize >= ns) {
             return Err("a stop names a station that is not in the list".into());
         }
@@ -1304,8 +1335,8 @@ impl DemandApi {
             line_off,
             stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
             stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
-            times: times.to_vec(),
-            tph: tph.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect(),
+            times,
+            tph,
             cars: cars.iter().enumerate().map(|(l, &c)| if tram_line.get(l).copied().unwrap_or(false) { c * TRAM_CARS } else { c }).collect(),
             group,
             span: span_for(&self.span_in, nstops),

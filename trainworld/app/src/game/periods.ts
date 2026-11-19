@@ -26,6 +26,11 @@ export const PERIODS: readonly Period[] = [
 
 const LEVEL_INDEX: Record<Demand, number> = { high: 0, medium: 1, low: 2 };
 
+/** T-3542: a demand network's run times per stop, two runs by five periods (`(run * 5 + period) * n
+ * + k` from the line's stops x 10; sim/src/demand/api.rs `TIMES_PER_STOP`); trains an hour are one
+ * per period. */
+export const TIMES_PER_STOP = 2 * PERIODS.length;
+
 /** An hour of the day as the clock writes it, "06:00"; the day's end is "24:00" (T-2271). */
 export const hourText = (h: number): string => `${String(h).padStart(2, "0")}:00`;
 /** Hours `a` to `b` as players read them: "06:00-10:00". */

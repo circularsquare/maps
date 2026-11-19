@@ -6,7 +6,7 @@
 // clusters that share nothing costs only time, splitting two that share riders would change figures.
 
 import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
-import { PERIODS } from "../game/periods";
+import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { curveKnots, transferFare } from "../game/fareCurve";
 import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
@@ -293,8 +293,8 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
   const { stLocal, stXY, complex } = stationsOf(n, stations);
   const nStops = spans.reduce((t, [, a, b]) => t + b - a + 1, 0);
   const lineN = Uint32Array.from(spans, ([, a, b]) => b - a + 1);
-  const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
-  const tph = new Float32Array(3 * spans.length), cars = new Float32Array(spans.length);
+  const stops = new Uint32Array(nStops), times = new Float32Array(TIMES_PER_STOP * nStops), hopKm = new Float32Array(2 * nStops);
+  const tph = new Float32Array(PERIODS.length * spans.length), cars = new Float32Array(spans.length);
   const nodeGlobal = new Uint32Array(2 * nStops), pads: number[] = [];
   const back = n.back ? new Uint32Array(nStops) : null;
   let o = 0;
@@ -302,11 +302,11 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     const m = n.lineN[l], g = lineOff[l], p = b - a + 1;
     for (let k = 0; k < p; k++) stops[o + k] = stLocal[n.stops[g + a + k]];
     if (back) for (let k = 0; k < p; k++) back[o + k] = stLocal[n.back![g + a + k]];
-    for (let r = 0; r < 6; r++) {
-      times.set(n.times.subarray(6 * g + r * m + a, 6 * g + r * m + b + 1), 6 * o + r * p);
+    for (let r = 0; r < TIMES_PER_STOP; r++) {
+      times.set(n.times.subarray(TIMES_PER_STOP * g + r * m + a, TIMES_PER_STOP * g + r * m + b + 1), TIMES_PER_STOP * o + r * p);
       // run 0 ends at the span's last stop, run 1 at its first; a whole circle keeps its ride on
       // round through its first stop (T-798)
-      if (a > 0 || b < m - 1) times[6 * o + r * p + (r < 3 ? p - 1 : 0)] = 0;
+      if (a > 0 || b < m - 1) times[TIMES_PER_STOP * o + r * p + (r < PERIODS.length ? p - 1 : 0)] = 0;
     }
     // route nodes: the span's p stops in order, then reversed (the whole line's alike)
     for (let j = 0; j < p; j++) {
@@ -317,7 +317,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     }
     if (a > 0) pads.push(2 * o);
     if (b < m - 1) pads.push(2 * o + p);
-    tph.set(n.tph.subarray(3 * l, 3 * l + 3), 3 * i);
+    tph.set(n.tph.subarray(PERIODS.length * l, PERIODS.length * (l + 1)), PERIODS.length * i);
     cars[i] = n.cars[l];
     o += p;
   });
@@ -387,8 +387,8 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const { stLocal, stXY, complex } = stationsOf(n, stations);
   const nStops = lines.reduce((a, l) => a + n.lineN[l], 0);
   const lineN = Uint32Array.from(lines, (l) => n.lineN[l]);
-  const stops = new Uint32Array(nStops), times = new Float32Array(6 * nStops), hopKm = new Float32Array(2 * nStops);
-  const tph = new Float32Array(3 * lines.length), cars = new Float32Array(lines.length);
+  const stops = new Uint32Array(nStops), times = new Float32Array(TIMES_PER_STOP * nStops), hopKm = new Float32Array(2 * nStops);
+  const tph = new Float32Array(PERIODS.length * lines.length), cars = new Float32Array(lines.length);
   const nodeGlobal = new Uint32Array(2 * nStops);
   const back = n.back ? new Uint32Array(nStops) : null;
   let o = 0;
@@ -396,11 +396,11 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     const m = n.lineN[l], g = lineOff[l];
     for (let k = 0; k < m; k++) stops[o + k] = stLocal[n.stops[g + k]];
     if (back) for (let k = 0; k < m; k++) back[o + k] = stLocal[n.back![g + k]];
-    times.set(n.times.subarray(6 * g, 6 * (g + m)), 6 * o);
+    times.set(n.times.subarray(TIMES_PER_STOP * g, TIMES_PER_STOP * (g + m)), TIMES_PER_STOP * o);
     // route nodes: each line's 2m nodes in a row, its runs' stops (`hopKm` alike)
     hopKm.set(n.hopKm.subarray(2 * g, 2 * (g + m)), 2 * o);
     for (let r = 0; r < 2 * m; r++) { nodeGlobal[2 * o + r] = 2 * g + r; }
-    tph.set(n.tph.subarray(3 * l, 3 * l + 3), 3 * i);
+    tph.set(n.tph.subarray(PERIODS.length * l, PERIODS.length * (l + 1)), PERIODS.length * i);
     cars[i] = n.cars[l];
     o += m;
   });
@@ -411,19 +411,21 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
-  const levelSig = [0, 1, 2].map((lev) => {
+  // T-3542: each period's own run times and trains an hour
+  const P = PERIODS.length;
+  const periodSig = PERIODS.map((_, q) => {
     const lt = new Float32Array(2 * nStops), lp = new Float32Array(lines.length);
     let a = 0;
     lineN.forEach((m, i) => {
-      lt.set(times.subarray(6 * a + lev * m, 6 * a + (lev + 1) * m), 2 * a);
-      lt.set(times.subarray(6 * a + (3 + lev) * m, 6 * a + (4 + lev) * m), 2 * a + m);
-      lp[i] = tph[3 * i + lev];
+      lt.set(times.subarray(TIMES_PER_STOP * a + q * m, TIMES_PER_STOP * a + (q + 1) * m), 2 * a);
+      lt.set(times.subarray(TIMES_PER_STOP * a + (P + q) * m, TIMES_PER_STOP * a + (P + q + 1) * m), 2 * a + m);
+      lp[i] = tph[P * i + q];
       a += m;
     });
-    return hashOf([`${head}|level ${lev}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]); // i18n-ignore
+    return hashOf([`${head}|period ${q}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]); // i18n-ignore
   });
   // T-842: a period's own span, where there is one
   const nr = 2 * nStops;
-  const psig = PERIODS.map((p, q) => span.length ? hashOf([levelSig[LEVEL[p.demand]], span.subarray(q * nr, (q + 1) * nr)]) : levelSig[LEVEL[p.demand]]);
+  const psig = PERIODS.map((_, q) => span.length ? hashOf([periodSig[q], span.subarray(q * nr, (q + 1) * nr)]) : periodSig[q]);
   return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, sig, shape, psig };
 }

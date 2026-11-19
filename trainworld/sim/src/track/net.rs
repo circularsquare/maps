@@ -288,6 +288,30 @@ pub struct LineData {
     pub twin: super::twin::Twin,
     /// T-3521: the line's trains on weekends (`params::WEEKEND`). Saved in `LWE1`.
     pub weekend: Weekend,
+    /// T-3542: the rows the line sets its trains in (3, 4 or 5), 0 for the game's (`Network::rows`).
+    pub rows: u8,
+    /// T-3542: its midday and afternoon rows, read only on a line of four or five rows.
+    pub x: Extra,
+}
+
+/// T-3542: a line's midday and afternoon rows (places 3 and 4, `params::places`): its rates, trains
+/// and headways as `LineData::tph`, `trains` and `auto` (read only beside those), and its weekend
+/// counts and headways set by hand as `Weekend::counts` and `headways`. Saved in `LPD1`.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Extra {
+    pub tph: [f32; 2],
+    pub trains: [u32; 2],
+    pub auto: [u32; 2],
+    pub weekend_counts: [u32; 2],
+    pub weekend_headways: [u32; 2],
+}
+
+impl Extra {
+    /// Midday and afternoon as the high row of `d` (a new line, a row split off high).
+    pub fn of_high(d: &LineData) -> Extra {
+        let h = |a: Option<[u32; 3]>| [a.map_or(0, |a| a[0]); 2];
+        Extra { tph: [d.tph[0]; 2], trains: h(d.trains), auto: h(d.auto), weekend_counts: h(d.weekend.counts), weekend_headways: [d.weekend.headways[0]; 2] }
+    }
 }
 
 /// T-3521: how a line runs on weekends and public holidays. The default, 100% and no counts of its
@@ -649,6 +673,13 @@ pub struct Network {
     /// (`set_period_slot`). With the slots it uses, in order, and how many, as `slots` reads them.
     period_slot: [usize; 5],
     slot_list: ([usize; SLOTS], usize),
+    /// T-3542: the rows (3, 4 or 5) a line following the game's sets its trains in.
+    pub rows_default: u8,
+    /// `LineData::rows` and `x` by line.
+    pub line_rows: Vec<u8>,
+    pub line_x: Vec<Extra>,
+    #[cfg(test)]
+    slots_pinned: bool,
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -815,17 +846,107 @@ impl Network {
         self.frame
     }
 
-    /// T-3542: the slot serving each period (`params::SLOTS`). Every line sets three rows, so a row's
-    /// periods share its first period's slot (`PERIOD_SLOT_3`); a line of four or five rows will
-    /// split them.
+    /// T-3542: the slot serving each period (`params::SLOTS`): each period's row's earliest period
+    /// on the line with the most rows (`refresh_slots`, `PERIOD_SLOT_N`). With every line on three
+    /// rows it is `PERIOD_SLOT_3`, and a game costs and figures what it did with three levels.
     pub fn period_slot(&self) -> [usize; 5] {
         self.period_slot
     }
-    /// Sets `period_slot` (tests: every period its own slot).
+    /// Sets `period_slot` and keeps it through `refresh_slots` (tests: every period its own slot).
     #[cfg(test)]
     pub(crate) fn set_period_slot(&mut self, p: [usize; 5]) {
         self.period_slot = p;
         self.slot_list = slot_list(p);
+        self.slots_pinned = true;
+    }
+    /// T-3542: `period_slot` from the lines' rows as they stand; true when it changed (the slots a
+    /// change newly splits or joins are seeded or cleared by `TrackWorld::reslot`).
+    pub fn refresh_slots(&mut self) -> bool {
+        #[cfg(test)]
+        if self.slots_pinned { return false; }
+        let n = (0..self.line_count()).filter(|&l| self.line_ok(l as u32)).map(|l| self.rows(l)).max().unwrap_or(ROWS_MIN);
+        let p = PERIOD_SLOT_N[n - ROWS_MIN];
+        if p == self.period_slot { return false; }
+        self.period_slot = p;
+        self.slot_list = slot_list(p);
+        true
+    }
+    /// T-3542: after `period_slot` changed from `old`: each slot now worked out that was not takes
+    /// what its periods' slot had (rates both kinds of day, phase, split, pace, kept lines), so the
+    /// service starts from where it was; each no longer worked out goes back to as made (0, a split
+    /// of half, no kept lines), as the slots no period uses stay.
+    pub fn seed_slots(&mut self, old: [usize; 5]) {
+        let was = slot_list(old);
+        let before = |s: usize| was.0[..was.1].contains(&s);
+        let new: Vec<(usize, usize)> = (0..SLOTS).filter(|&s| self.slot_worked(s) && !before(s)).map(|s| (s, old[s])).collect();
+        let gone: Vec<usize> = (0..SLOTS).filter(|&s| !self.slot_worked(s) && before(s)).collect();
+        fn fix<T: Copy>(v: &mut [[T; SLOTS]], new: &[(usize, usize)], gone: &[usize], none: T) {
+            for a in v {
+                for &(s, from) in new { a[s] = a[from]; }
+                for &s in gone { a[s] = none; }
+            }
+        }
+        fix(&mut self.line_tph, &new, &gone, 0.0);
+        fix(&mut self.line_tph_rest, &new, &gone, 0.0);
+        fix(&mut self.line_phase, &new, &gone, 0.0);
+        fix(&mut self.line_split, &new, &gone, 0.5);
+        fix(&mut self.line_pace, &new, &gone, 0.0);
+        for kept in [&mut self.settle_kept, &mut self.settle_kept_rest] {
+            kept.retain(|k| !gone.contains(&k.1));
+            let add: Vec<_> = kept.iter().flat_map(|k| new.iter().filter(move |n| n.1 == k.1).map(move |n| (k.0, n.0, k.2, k.3, k.4))).collect();
+            kept.extend(add);
+        }
+    }
+    /// T-3542: the rows line `l` sets its trains in (3, 4 or 5): its own, else the game's
+    /// (`rows_default`). A bus or ferry line always sets three; a quad twin its line's.
+    pub fn rows(&self, l: usize) -> usize {
+        let l = match self.line_twin.get(l) { Some(super::twin::Twin::Of(p)) => *p as usize, _ => l };
+        if self.line_bus.get(l).is_some_and(|b| b.is_some()) || self.line_ferry.get(l).is_some_and(|f| f.is_some()) {
+            return ROWS_MIN;
+        }
+        (match self.line_rows.get(l).copied().unwrap_or(0) { 0 => self.rows_default, r => r } as usize).clamp(ROWS_MIN, ROWS_MAX)
+    }
+    /// The place (`params::places`) whose value line `l` runs in slot `s`.
+    pub fn place(&self, l: usize, s: usize) -> usize {
+        PERIOD_PLACE[self.rows(l) - ROWS_MIN][s]
+    }
+    /// Line `l`'s rows in the day's order: each its place and the slots worked out it covers (one
+    /// or more: a row of three rows covers three in a game of five).
+    pub fn row_slots(&self, l: usize) -> Vec<(usize, Vec<usize>)> {
+        let n = self.rows(l) - ROWS_MIN;
+        ROW_PLACES[n].iter().map(|&k| {
+            let mut s: Vec<usize> = (0..5).filter(|&p| PERIOD_PLACE[n][p] == k).map(|p| self.period_slot[p]).collect();
+            s.dedup();
+            (k, s)
+        }).collect()
+    }
+    /// Line `l`'s whole trains at its five places, None while it has none allocated.
+    pub fn trains_of(&self, l: usize) -> Option<[u32; 5]> {
+        let t = self.line_trains.get(l).copied().flatten()?;
+        Some(places(t, self.line_x.get(l).map_or([0; 2], |x| x.trains)))
+    }
+    /// Line `l`'s headways at its five places, None for a line set by count.
+    pub fn auto_of(&self, l: usize) -> Option<[u32; 5]> {
+        let a = self.line_auto.get(l).copied().flatten()?;
+        Some(places(a, self.line_x.get(l).map_or([0; 2], |x| x.auto)))
+    }
+    /// Line `l`'s whole trains in slot `s` (0 for none).
+    pub fn trains_at(&self, l: usize, s: usize) -> u32 {
+        self.trains_of(l).map_or(0, |t| t[self.place(l, s)])
+    }
+    /// Line `l`'s headway in slot `s`, None for a line set by count.
+    pub fn auto_at(&self, l: usize, s: usize) -> Option<u32> {
+        self.auto_of(l).map(|a| a[self.place(l, s)])
+    }
+    /// Sets line `l`'s trains from its five places.
+    pub fn set_trains_of(&mut self, l: usize, t: Option<[u32; 5]>) {
+        self.line_trains[l] = t.map(|t| unplace(t).0);
+        if let Some(t) = t { self.line_x[l].trains = unplace(t).1; }
+    }
+    /// Sets line `l`'s headways from its five places.
+    pub fn set_auto_of(&mut self, l: usize, a: Option<[u32; 5]>) {
+        self.line_auto[l] = a.map(|a| unplace(a).0);
+        if let Some(a) = a { self.line_x[l].auto = unplace(a).1; }
     }
     /// The slots worked out, in order: those serving some period. The others are never written
     /// or read (they keep their defaults).
@@ -833,18 +954,20 @@ impl Network {
         let (l, n) = self.slot_list;
         l.into_iter().take(n)
     }
-    /// The row of line `l` that sets slot `s`'s trains.
-    pub fn slot_row(&self, _l: usize, s: usize) -> usize {
-        SLOT_ROW[s]
-    }
-    /// The slot line `l`'s row `r` is kept in and read back from (`ROW_SLOT`).
+    /// The slot a readout of three rows (high, medium, low) reads row `r` of line `l` from: a line
+    /// of four or five rows shows its rush or morning, evening and night there (`ROW_SLOT`).
     pub fn row_slot(&self, _l: usize, r: usize) -> usize {
         ROW_SLOT[r]
     }
-    /// A row array (`LineData`'s) spread over the slots worked out, `none` in the others.
+    /// A slot array of three rows' values (a save's, by the row each slot's periods have on a line
+    /// of three rows) spread over the slots worked out, `none` in the others.
     pub fn rows_in<T: Copy>(&self, r: [T; ROWS], none: T) -> [T; SLOTS] {
-        let p = self.period_slot();
-        std::array::from_fn(|s| if p.contains(&s) { r[self.slot_row(0, s)] } else { none })
+        std::array::from_fn(|s| if self.slot_worked(s) { r[SLOT_ROW[s]] } else { none })
+    }
+    /// Line `l`'s five places (`params::places`) spread over the slots worked out, each slot from
+    /// the place it runs, `none` in the others.
+    pub fn places_in<T: Copy>(&self, l: usize, p: [T; 5], none: T) -> [T; SLOTS] {
+        std::array::from_fn(|s| if self.slot_worked(s) { p[self.place(l, s)] } else { none })
     }
     /// Whether slot `s` is worked out (`slots`).
     pub fn slot_worked(&self, s: usize) -> bool {
@@ -854,15 +977,34 @@ impl Network {
     pub fn rows_of<T: Copy>(&self, s: [T; SLOTS]) -> [T; ROWS] {
         slots_to_rows(s)
     }
+    /// A slot array back as line `l`'s five places: each the most of the slots worked out it runs in
+    /// (a row tied across slots takes its busiest's), a place the line does not use (midday on a line
+    /// of three rows) its first row's.
+    pub fn places_most<T: Copy + PartialOrd>(&self, l: usize, s: [T; SLOTS]) -> [T; 5] {
+        let mut out: [Option<T>; 5] = [None; 5];
+        for k in self.slots() {
+            let o = &mut out[self.place(l, k)];
+            if o.map_or(true, |v| s[k] > v) { *o = Some(s[k]); }
+        }
+        let first = out[0].unwrap_or(s[HIGH]);
+        out.map(|v| v.unwrap_or(first))
+    }
+    /// Whether two of line `l`'s five places agree at every place its rows use (`row_slots`).
+    pub fn same_places<T: Copy + PartialEq>(&self, l: usize, a: [T; 5], b: [T; 5]) -> bool {
+        ROW_PLACES[self.rows(l) - ROWS_MIN].iter().all(|&k| a[k] == b[k])
+    }
+    /// A slot array's midday and afternoon slots (places 3 and 4), as `Extra` keeps them.
+    pub fn extra_of<T: Copy>(&self, s: [T; SLOTS]) -> [T; 2] {
+        [s[1], s[2]]
+    }
 
     /// T-2607: the trains line `l` runs at level `lev` over a round trip of `trip_s`: its count, but
     /// on a line keeping a headway no more than the headway needs (a fraction), the time left over
     /// spent waiting at the ends, so the headway set is the headway run.
     pub fn running_trains(&self, l: usize, lev: usize, trip_s: f64) -> f64 {
-        let row = self.slot_row(l, lev);
-        let n = self.line_trains.get(l).copied().flatten().map_or(0.0, |c| c[row] as f64);
-        match self.line_auto.get(l).copied().flatten() {
-            Some(a) if a[row] > 0 && trip_s > 0.0 => n.min(trip_s / a[row] as f64),
+        let n = self.trains_at(l, lev) as f64;
+        match self.auto_at(l, lev) {
+            Some(a) if a > 0 && trip_s > 0.0 => n.min(trip_s / a as f64),
             _ => {
                 // T-2973: a count line in step with others at a merge
                 let p = self.line_pace_of(l as u32)[lev];
@@ -1047,6 +1189,11 @@ impl Network {
             phases_placed: false,
             period_slot: PERIOD_SLOT_3,
             slot_list: slot_list(PERIOD_SLOT_3),
+            rows_default: ROWS_MIN as u8,
+            line_rows: vec![],
+            line_x: vec![],
+            #[cfg(test)]
+            slots_pinned: false,
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -1278,6 +1425,8 @@ impl Network {
         self.line_limit.push(0);
         self.line_weekend.push(Weekend::default());
         self.line_twin.push(Default::default());
+        self.line_rows.push(0);
+        self.line_x.push(Extra::default());
     }
     fn claim_node(&mut self, id: u32) {
         while self.node_alive.len() <= id as usize {
@@ -1356,6 +1505,8 @@ impl Network {
                 limit: self.line_limit[i],
                 twin: self.line_twin[i],
                 weekend: self.line_weekend[i],
+                rows: self.line_rows[i],
+                x: Extra { tph: self.extra_of(self.line_tph[i]), ..self.line_x[i] },
             }
         })
     }
@@ -1847,7 +1998,7 @@ impl Network {
                 if let Some((stops, path)) = self.branch_end(&d) {
                     (d.stops, d.path) = (stops, path);
                 }
-                if d.tph.iter().any(|t| !t.is_finite() || *t < 0.0) || d.dwell_s < 0.0 || d.turnaround_s < 0.0 {
+                if d.tph.iter().chain(&d.x.tph).any(|t| !t.is_finite() || *t < 0.0) || d.dwell_s < 0.0 || d.turnaround_s < 0.0 || (d.rows != 0 && !(ROWS_MIN..=ROWS_MAX).contains(&(d.rows as usize))) {
                     return Err(Issue::LineSchedule { line: id });
                 }
                 if d.fast && d.stops.first().is_some_and(|&n| self.node_ok(n) && self.node_kind(n).spec().family != 0) {
@@ -1863,9 +2014,10 @@ impl Network {
                 self.line_colour[i] = d.colour;
                 self.line_stops[i] = self.stops.replace(self.line_stops[i], &d.stops);
                 self.line_path[i] = self.paths.replace(self.line_path[i], &d.path);
-                self.line_tph[i] = self.rows_in(d.tph, 0.0);
                 self.line_trains[i] = d.trains;
                 self.line_auto[i] = d.auto.filter(|_| d.trains.is_some());
+                self.line_rows[i] = d.rows;
+                self.line_x[i] = d.x;
                 self.line_dwell[i] = d.dwell_s;
                 self.line_turn[i] = d.turnaround_s;
                 self.line_cars[i] = d.cars;
@@ -1878,6 +2030,8 @@ impl Network {
                 self.line_twin[i] = if d.bus.is_some() || d.ferry.is_some() { Default::default() } else { d.twin };
                 self.line_bus[i] = d.bus;
                 self.line_ferry[i] = d.ferry;
+                // after its kind and twin, which decide its rows (`rows`)
+                self.line_tph[i] = self.places_in(i, places(d.tph, d.x.tph), 0.0);
                 self.line_group[i] = d.group;
                 self.line_group_name[i] = if d.group == 0 { String::new() } else { d.group_name };
                 self.line_group_look[i] = if d.group == 0 { GroupLook::default() } else { d.group_look };
@@ -1895,6 +2049,8 @@ impl Network {
                 self.line_limit[i] = 0;
                 self.line_weekend[i] = Weekend::default();
                 self.line_twin[i] = Default::default();
+                self.line_rows[i] = 0;
+                self.line_x[i] = Extra::default();
                 self.line_bus[i] = None;
                 self.line_ferry[i] = None;
                 self.line_group[i] = 0;
@@ -1920,7 +2076,9 @@ impl Network {
             return Err(Issue::LineSchedule { line: id });
         }
         let old = self.rows_of(self.line_tph[id as usize]);
-        self.line_tph[id as usize] = self.rows_in(tph, 0.0);
+        // T-3542: a line of four or five rows keeps its midday and afternoon rates
+        let x = self.extra_of(self.line_tph[id as usize]);
+        self.line_tph[id as usize] = self.places_in(id as usize, places(tph, x), 0.0);
         self.touch.schedules.push(id);
         Ok(old)
     }
@@ -1944,6 +2102,39 @@ impl Network {
             return Err(Issue::NoSuchLine { line: id });
         }
         let old = std::mem::replace(&mut self.line_weekend[id as usize], weekend);
+        self.touch.weekend.push(id);
+        Ok(old)
+    }
+
+    /// T-3542: the rows the game's lines set (`line` None: 3 to 5) or line `line`'s own (0 for the
+    /// game's); returns the old setting. Every line it moves is rescheduled.
+    pub fn set_rows(&mut self, line: Option<u32>, rows: u8) -> Result<u8, Issue> {
+        let ok = |r: u8| (ROWS_MIN..=ROWS_MAX).contains(&(r as usize));
+        let old = match line {
+            None if ok(rows) => std::mem::replace(&mut self.rows_default, rows),
+            Some(id) if self.line_ok(id) && (rows == 0 || ok(rows)) => std::mem::replace(&mut self.line_rows[id as usize], rows),
+            Some(id) if !self.line_ok(id) => return Err(Issue::NoSuchLine { line: id }),
+            _ => return Err(Issue::LineSchedule { line: line.unwrap_or(u32::MAX) }),
+        };
+        // a twin follows its line (`rows`)
+        let moved: Vec<u32> = (0..self.line_count() as u32).filter(|&l| self.line_ok(l) && match line {
+            None => true,
+            Some(id) => l == id || self.line_twin_of(l) == super::twin::Twin::Of(id),
+        }).collect();
+        self.touch.schedules.extend(moved);
+        Ok(old)
+    }
+
+    /// T-3542: a line's midday and afternoon rows (`LineData::x`); returns the old ones.
+    pub fn set_extra(&mut self, id: u32, x: Extra) -> Result<Extra, Issue> {
+        if !self.line_ok(id) {
+            return Err(Issue::NoSuchLine { line: id });
+        }
+        if x.tph.iter().any(|t| !t.is_finite() || *t < 0.0) {
+            return Err(Issue::LineSchedule { line: id });
+        }
+        let old = std::mem::replace(&mut self.line_x[id as usize], x);
+        self.touch.schedules.push(id);
         self.touch.weekend.push(id);
         Ok(old)
     }

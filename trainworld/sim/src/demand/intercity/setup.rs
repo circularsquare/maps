@@ -1,4 +1,5 @@
 use super::*;
+use crate::demand::api::per_period;
 
 /// T-1175: an everyday pair's home zone and activity zone (open zones).
 fn ep_zone(m: &Market, ep: &EPairOn) -> (u32, u32) {
@@ -519,9 +520,10 @@ impl IntercityApi {
         for &n in line_n {
             off.push(off.last().unwrap() + n)
         }
-        if st_xy.len() % 2 != 0 || stops.len() != *off.last().unwrap() as usize || times.len() != 6 * stops.len() || tph.len() != 3 * cars.len() || cars.len() != line_n.len() || stops.iter().any(|&s| s as usize >= st_xy.len() / 2) {
+        let per = per_period(&off, times, tph);
+        let Some((times, tph)) = per.filter(|_| st_xy.len() % 2 == 0 && stops.len() == *off.last().unwrap() as usize && cars.len() == line_n.len() && stops.iter().all(|&s| (s as usize) < st_xy.len() / 2)) else {
             return Err("intercity network arrays disagree".into());
-        }
+        };
         let (st_x, st_y, st_map) = merge_stations(st_xy, &off, stops, self.base.station_merge_m);
         let group = demand_groups(&st_map, st_x.len(), &self.complex_in);
         let ups = demand_ups(&st_map, st_x.len(), &self.ups_in);
@@ -537,8 +539,8 @@ impl IntercityApi {
             line_off: off,
             stops: stops.iter().map(|&s| st_map[s as usize]).collect(),
             stop_xy: stops.iter().flat_map(|&s| [st_xy[2 * s as usize], st_xy[2 * s as usize + 1]]).collect(),
-            times: times.to_vec(),
-            tph: tph.chunks_exact(3).map(|v| [v[0], v[1], v[2]]).collect(),
+            times,
+            tph,
             cars: cars.to_vec(),
             group,
             span: span_for(&self.span_in, stops.len()),

@@ -278,6 +278,10 @@ pub fn halve(d: &mut LineData) {
     d.weekend.headways = d.weekend.headways.map(|h| h * 2);
     d.tph = d.tph.map(|t| t / 2.0);
     d.auto = d.auto.map(|a| a.map(|h| h * 2));
+    // T-3542: the midday and afternoon rows alike
+    let x = &mut d.x;
+    (x.trains, x.weekend_counts, x.weekend_headways) = (x.trains.map(|v| v.div_ceil(2)), x.weekend_counts.map(|v| v.div_ceil(2)), x.weekend_headways.map(|h| h * 2));
+    (x.tph, x.auto) = (x.tph.map(|t| t / 2.0), x.auto.map(|h| h * 2));
 }
 
 /// The whole line's trains from one pair's: `halve` undone (an odd count stays even).
@@ -287,6 +291,9 @@ pub fn double(d: &mut LineData) {
     d.weekend.headways = d.weekend.headways.map(|h| h / 2);
     d.tph = d.tph.map(|t| t * 2.0);
     d.auto = d.auto.map(|a| a.map(|h| h / 2));
+    let x = &mut d.x;
+    (x.trains, x.weekend_counts, x.weekend_headways) = (x.trains.map(|v| v * 2), x.weekend_counts.map(|v| v * 2), x.weekend_headways.map(|h| h / 2));
+    (x.tph, x.auto) = (x.tph.map(|t| t * 2.0), x.auto.map(|h| h / 2));
 }
 
 /// The twin line's data for `parent` (its data now) on `stops` and `path`, keeping `was` (the
@@ -302,8 +309,10 @@ pub fn twin_data(parent: u32, p: &LineData, stops: Vec<u32>, path: Vec<u32>, was
     d.twin = Twin::Of(parent);
     if let Some(w) = was {
         d.tph = w.tph;
+        d.x.tph = w.x.tph;
         if p.auto.is_some() && w.auto.is_some() {
             d.trains = w.trains;
+            d.x.trains = w.x.trains;
         }
     }
     d

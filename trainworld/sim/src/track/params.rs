@@ -492,6 +492,30 @@ pub fn rows_to_slots<T: Copy>(r: [T; ROWS], none: T) -> [T; SLOTS] {
 pub fn slots_to_rows<T: Copy>(s: [T; SLOTS]) -> [T; ROWS] {
     ROW_SLOT.map(|k| s[k])
 }
+const _: () = assert!(SLOTS == 5, "4 and 5 rows (T-3542) need a slot per period");
+/// T-3542: a line sets its trains in 3, 4 or 5 rows (`Network::rows`). A row's value is kept in one
+/// of five places: 0-2 the three rows' arrays (`LineData::tph`, `trains`, `auto`, `Weekend`: high,
+/// medium and low demand on a line of three rows; rush or morning, evening, night on one of four
+/// or five), 3 and 4 the midday and afternoon rows (`Extra`).
+pub const ROWS_MIN: usize = 3;
+pub const ROWS_MAX: usize = 5;
+/// The place each period reads, for a line of `n` rows (index `n - ROWS_MIN`): four rows split
+/// midday out of high demand (rush is the morning and afternoon peaks), five the afternoon too.
+pub const PERIOD_PLACE: [[usize; 5]; 3] = [[0, 0, 0, 1, 2], [0, 3, 0, 1, 2], [0, 3, 4, 1, 2]];
+/// The slot serving each period when the finest line sets `n` rows: each period joins its row's
+/// earliest. The choices nest (each splits a row of the one before), so this is the game's
+/// `Network::period_slot` and every line's rows are whole slots.
+pub const PERIOD_SLOT_N: [[usize; 5]; 3] = [[0, 0, 0, 3, 4], [0, 1, 0, 3, 4], [0, 1, 2, 3, 4]];
+/// A line's rows in the day's order, as places.
+pub const ROW_PLACES: [&[usize]; 3] = [&[0, 1, 2], &[0, 3, 1, 2], &[0, 3, 4, 1, 2]];
+/// Three rows' values and the midday and afternoon ones as the five places.
+pub fn places<T: Copy>(m: [T; ROWS], x: [T; 2]) -> [T; 5] {
+    [m[0], m[1], m[2], x[0], x[1]]
+}
+/// The places back as three rows' values and the midday and afternoon ones.
+pub fn unplace<T: Copy>(p: [T; 5]) -> ([T; ROWS], [T; 2]) {
+    ([p[0], p[1], p[2]], [p[3], p[4]])
+}
 /// The kinds of day a line sets its trains for (`LineData::weekend`): weekdays (a superholiday's
 /// days too) and weekends (Saturday and Sunday or the country's own weekend, and public holidays).
 pub const WEEKDAYS: usize = 0;

@@ -58,6 +58,14 @@ use super::twin::Twin;
 /// A trailing `LOS1` block (T-3711) gives the lines with stops the player made one way
 /// (`LineData::ones`): count, then per line its index, its count and per stop its place in the line's
 /// stops and the side (2 not yet fixed); without it no line has one.
+/// A trailing `LPD1` block (T-3542) is written when the game or some line sets other than three rows
+/// (`Network::rows`): the game's rows, the lines with their own (count, index, rows), the lines of four
+/// or five rows' midday and afternoon trains, headways, weekend counts and weekend headways (count,
+/// index, eight numbers), then a mask of the midday and afternoon slots worked out and, if any, per
+/// line their phase, split and pace bits, then per kind of day settled (weekdays, then weekends) the
+/// rated lines' rates there and the kept lines there as `LRT1`'s with the slot in place of the row.
+/// The other blocks keep three rows: each from the row's slot (`ROW_SLOT`), so a line of four or five
+/// rows reads there as its rush or morning, evening and night. Without it every line sets three.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -70,12 +78,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 28] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1"];
+pub const BLOCKS: [&[u8; 4]; 29] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 22;
+pub const LEVEL: u32 = 23;
 /// T-3647: the last level written by builds where a station on single track made its run two-way (v0.3.5 and
 /// older; T-3386 changed the rule after it, and v0.4.0 wrote 21).
 pub const OLD_STATION_WAYS: u32 = 18;
@@ -317,11 +325,12 @@ pub fn encode(net: &Network) -> Vec<u8> {
             // T-3542: per row, each from its slot, as before slots: a line of three rows has no others
             for r in net.rows_of(net.line_tph[lines[i] as usize]) { w.u(r.to_bits() as u64); }
         }
-        let kept: Vec<_> = net.settle_kept.iter().filter(|k| index.get(k.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
+        // T-3542: the rows' slots; the midday and afternoon slots' go in LPD1
+        let kept: Vec<_> = net.settle_kept.iter().filter(|k| ROW_SLOT.contains(&k.1) && index.get(k.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
         w.u(kept.len() as u64);
         for &(l, lev, rate, trip, trains) in kept {
             w.u(index[l as usize] as u64);
-            w.u(net.slot_row(l as usize, lev) as u64);
+            w.u(SLOT_ROW[lev] as u64);
             w.u(rate as u64);
             w.u(trip);
             w.u(trains as u64);
@@ -571,11 +580,11 @@ pub fn encode(net: &Network) -> Vec<u8> {
                 w.u(i as u64);
                 for r in net.rows_of(net.line_tph_rest[lines[i] as usize]) { w.u(r.to_bits() as u64); }
             }
-            let kept: Vec<_> = net.settle_kept_rest.iter().filter(|x| index.get(x.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
+            let kept: Vec<_> = net.settle_kept_rest.iter().filter(|x| ROW_SLOT.contains(&x.1) && index.get(x.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
             w.u(kept.len() as u64);
             for &(l, lev, rate, trip, trains) in kept {
                 w.u(index[l as usize] as u64);
-                w.u(net.slot_row(l as usize, lev) as u64); w.u(rate as u64); w.u(trip); w.u(trains as u64);
+                w.u(SLOT_ROW[lev] as u64); w.u(rate as u64); w.u(trip); w.u(trains as u64);
             }
         }
     }
@@ -594,6 +603,58 @@ pub fn encode(net: &Network) -> Vec<u8> {
             for (j, side) in v {
                 w.u(j as u64);
                 w.u(side as u64);
+            }
+        }
+    }
+    // T-3542: after LOS1, only in a game where some line or the game's choice is other than three
+    // rows, so every other save is byte for byte as it was
+    let own: Vec<(usize, u8)> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_rows[l as usize])).filter(|x| x.1 != 0).collect();
+    if net.rows_default as usize != ROWS_MIN || !own.is_empty() || net.period_slot() != PERIOD_SLOT_3 {
+        w.0.extend_from_slice(b"LPD1");
+        w.u(net.rows_default as u64);
+        w.u(own.len() as u64);
+        for (i, r) in own {
+            w.u(i as u64);
+            w.u(r as u64);
+        }
+        // the midday and afternoon rows of the lines that set them
+        let more: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.rows(l as usize) > ROWS_MIN).map(|(i, _)| i).collect();
+        w.u(more.len() as u64);
+        for &i in &more {
+            let x = net.line_x[lines[i] as usize];
+            w.u(i as u64);
+            for v in x.trains.into_iter().chain(x.auto).chain(x.weekend_counts).chain(x.weekend_headways) { w.u(v as u64); }
+        }
+        // the midday and afternoon slots worked out (bit 0 midday, bit 1 afternoon), then per line
+        // their phases, splits and pacing, and the settled rates and kept lines as LRT1 and LWE1 give
+        // the three rows', each with its slot
+        let extra: Vec<usize> = [1, 2].into_iter().filter(|&s| net.slot_worked(s)).collect();
+        w.u(extra.iter().map(|&s| 1u64 << (s - 1)).sum());
+        if !extra.is_empty() {
+            w.u(lines.len() as u64);
+            for &l in &lines {
+                let (p, s, c) = (net.line_phase_of(l), net.line_split_of(l), net.line_pace_of(l));
+                for &k in &extra { for v in [p[k], s[k], c[k]] { w.u(v.to_bits() as u64); } }
+            }
+            let rated: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_trains[l as usize].is_some()).map(|(i, _)| i).collect();
+            let days: Vec<(&Vec<[f32; SLOTS]>, &Vec<(u32, usize, u32, u64, u32)>)> = [(net.rates_settled, &net.line_tph, &net.settle_kept), (net.rates_settled && net.rest_solved, &net.line_tph_rest, &net.settle_kept_rest)]
+                .into_iter().filter(|x| x.0).map(|x| (x.1, x.2)).collect();
+            w.u(days.len() as u64);
+            for (rates, kept) in days {
+                w.u(rated.len() as u64);
+                for &i in &rated {
+                    w.u(i as u64);
+                    for &k in &extra { w.u(rates[lines[i] as usize][k].to_bits() as u64); }
+                }
+                let kept: Vec<_> = kept.iter().filter(|k| extra.contains(&k.1) && index.get(k.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
+                w.u(kept.len() as u64);
+                for &&(l, lev, rate, trip, trains) in &kept {
+                    w.u(index[l as usize] as u64);
+                    w.u(lev as u64);
+                    w.u(rate as u64);
+                    w.u(trip);
+                    w.u(trains as u64);
+                }
             }
         }
     }
@@ -796,7 +857,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             let e = if (e as usize) < n_edges { e } else { *dead_edge.get_or_insert_with(|| net.alloc_edge()) };
             path.push(e << 1 | (v & 1) as u32);
         }
-        net.set_line(id, Some(LineData { symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] })).map_err(|e| format!("{e:?}"))?;
+        net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph, dwell_s, turnaround_s, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] })).map_err(|e| format!("{e:?}"))?;
     }
     net.next_line_number = n_lines as u32 + 1;
     if r.0.get(r.1..r.1 + 4) == Some(b"LUI1") {
@@ -1122,11 +1183,74 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LPD1") {
+        r.1 += 4;
+        read_lpd1(&mut r, &mut net, n_lines)?;
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
     net.take_touch();
     Ok((net, bytes.len() - r.1 + unknown))
+}
+
+/// T-3542: an `LPD1` block (`encode`): the rows, the midday and afternoon rows, then the slots they
+/// split off seeded from the high row's (`Network::seed_slots`) and set to what was saved.
+fn read_lpd1(r: &mut R, net: &mut Network, n_lines: usize) -> Result<(), String> {
+    let rows = |v: u64| (v as usize).clamp(ROWS_MIN, ROWS_MAX) as u8;
+    net.rows_default = rows(r.u()?);
+    for _ in 0..r.u()? {
+        let (i, v) = (r.u()? as usize, r.u()?);
+        if i < n_lines { net.line_rows[i] = if v == 0 { 0 } else { rows(v) }; }
+    }
+    for _ in 0..r.u()? {
+        let i = r.u()? as usize;
+        let mut v = [0u32; 8];
+        for x in v.iter_mut() { *x = r.u()?.min(u32::MAX as u64) as u32; }
+        if i < n_lines {
+            let x = &mut net.line_x[i];
+            (x.trains, x.auto, x.weekend_counts, x.weekend_headways) = ([v[0], v[1]], [v[2], v[3]], [v[4], v[5]], [v[6], v[7]]);
+        }
+    }
+    let old = net.period_slot();
+    if net.refresh_slots() { net.seed_slots(old); }
+    let mask = r.u()?;
+    let extra: Vec<usize> = [1, 2].into_iter().filter(|&s| mask >> (s - 1) & 1 == 1).collect();
+    if extra.is_empty() { return Ok(()); }
+    let bits = |r: &mut R| -> Result<f32, String> { Ok(f32::from_bits(r.u()? as u32)) };
+    let n = r.u()? as usize;
+    for i in 0..n {
+        for &k in &extra {
+            let (p, s, c) = (bits(r)?, bits(r)?, bits(r)?);
+            // a slot this build does not work out (it reads the lines' rows otherwise) is left as made
+            if i < n_lines && net.slot_worked(k) {
+                net.line_phase.resize(net.line_phase.len().max(i + 1), [0.0; SLOTS]);
+                net.line_split.resize(net.line_split.len().max(i + 1), [0.5; SLOTS]);
+                net.line_pace.resize(net.line_pace.len().max(i + 1), [0.0; SLOTS]);
+                (net.line_phase[i][k], net.line_split[i][k], net.line_pace[i][k]) = (p, s, c);
+            }
+        }
+    }
+    for day in 0..r.u()? {
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            for &k in &extra {
+                let v = bits(r)?;
+                if i < n_lines && net.slot_worked(k) {
+                    if day == 0 { net.line_tph[i][k] = v } else { net.line_tph_rest[i][k] = v }
+                }
+            }
+        }
+        // the kept lines seeded into these slots give way to the saved ones
+        (if day == 0 { &mut net.settle_kept } else { &mut net.settle_kept_rest }).retain(|x| !extra.contains(&x.1));
+        for _ in 0..r.u()? {
+            let (l, lev, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
+            if (l as usize) < n_lines && extra.contains(&lev) && net.slot_worked(lev) {
+                (if day == 0 { &mut net.settle_kept } else { &mut net.settle_kept_rest }).push((l, lev, rate, trip, trains));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// A line saved in manual mode (T-3023) whose stops and path read the same both ways, `[A, B, C, B, A]`,
@@ -1159,7 +1283,7 @@ mod tests {
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
         let l = net.alloc_line();
-        net.set_line(l, Some(LineData { symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] })).unwrap();
+        net.set_line(l, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains: Some([2, 2, 1]), auto: None, name: "A".into(), colour: 0xff0000, stops: vec![0, 1], path: vec![0], tph: [0.0; 3], dwell_s: 30.0, turnaround_s: 120.0, cars: 4, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] })).unwrap();
         encode(&net)
     }
 
@@ -1297,7 +1421,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (22, 28), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (23, 29), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as

@@ -3090,14 +3090,15 @@ function buildSnapshot(): NetworkSnapshot {
     for (let run = 0; run < 2; run++) {
       hopS.push([]);
       dwellS.push([]);
-      for (let lev = 0; lev < 3; lev++) {
-        const arr = a.stop_times(id, run, lev), dep = a.stop_departures(id, run, lev);
+      // T-3542: per demand period (its slot's times)
+      for (let q = 0; q < PERIODS.length; q++) {
+        const arr = a.stop_times_in(id, run, q), dep = a.stop_departures_in(id, run, q);
         hopS[run].push(Array.from({ length: arr.length - 1 }, (_, k) => arr[k + 1] - dep[k]));
         dwellS[run].push(Array.from(arr, (t, k) => (k === 0 || k === arr.length - 1 ? 0 : dep[k] - t)));
       }
     }
     lines.push({
-      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: [li[i + 5], li[i + 6], li[i + 7]], hopS, dwellS,
+      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: Array.from(a.line_tph_by_period(id)), hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
@@ -3616,6 +3617,12 @@ function applyInner(op: EditOp): Applied {
       newLineWeekendShare = op.share;
       saves.dirty = true;
       return { r: a.set_weekend_share_all(op.share) };
+    case "setPeriods":
+      return { r: op.line === undefined ? a.set_game_periods(op.rows) : a.set_line_periods(op.line, op.rows) };
+    case "setRowTrains":
+      return { r: a.set_line_row_trains(op.line, Uint32Array.from(op.trains)) };
+    case "setRowHeadways":
+      return { r: a.set_line_row_headways(op.line, Uint32Array.from(op.seconds)) };
     case "lineLook": {
       let colour = 0;
       if (op.colour === undefined) {
@@ -4222,7 +4229,7 @@ async function handleMessage(msg: ToClock) {
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     // T-1073: so is an undo or redo of one
-    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll"
+    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll" || msg.op.op === "setPeriods" || msg.op.op === "setRowTrains" || msg.op.op === "setRowHeadways"
       || ((msg.op.op === "undo" || msg.op.op === "redo") && api.step_is_service(msg.op.op === "redo"));
     if (service) {
       api.set_now(gameNow());

@@ -25,7 +25,7 @@ import { CITIES, REGISTRY, cityById, cityToMarket, cityToWorld, lonLatToCity, ma
 import { loadAttractions, type Attraction } from "../game/attractions";
 import { initWasm } from "./wasmInit";
 import { EVERYDAY_KEYS, EVERYDAY_NAMES } from "../game/purposes";
-import { PERIODS } from "../game/periods";
+import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots, transferFare } from "../game/fareCurve";
 import { roundedDefault } from "../game/fareDefault";
@@ -381,26 +381,26 @@ function editedStations(a: NonNullable<typeof lastNet>, b: NonNullable<typeof la
     // an edit's knock-on trains on whole far lines would open a window for a city line)
     const off = (x: number, y: number, tol: number) => x !== y && Math.abs(x - y) > tol * Math.max(1, Math.abs(x));
     let changed = false;
-    // (times: per line, two directions by three levels of a value per stop)
-    const ta = 6 * oa[la], tb = 6 * ob[lb], na = a.lineN[la], nb = b.lineN[lb];
-    for (let r = 0; r < 6 && !changed; r++) changed = off(a.times[ta + r * na + (ia - oa[la])], b.times[tb + r * nb + (ib - ob[lb])], VIEW_TOLERANCE);
+    // (times: per line, two directions by five periods of a value per stop, T-3542)
+    const ta = TIMES_PER_STOP * oa[la], tb = TIMES_PER_STOP * ob[lb], na = a.lineN[la], nb = b.lineN[lb];
+    for (let r = 0; r < TIMES_PER_STOP && !changed; r++) changed = off(a.times[ta + r * na + (ia - oa[la])], b.times[tb + r * nb + (ib - ob[lb])], VIEW_TOLERANCE);
     if (changed) { mark(sa, la, ia); widen(spanB, lb, ib); }
   }
   for (let m = 0; m < hit.length; m++) if (!hit[m]) { const lb = lineOf(ob, m), ib = stopOf(b.lineN, ob, lb, m); now[b.stops[ib]] = 1; widen(spanB, lb, ib); }
-  // (run times are seconds, the first row each hop's on from its stop one way at the first level)
+  // (run times are seconds, the first row each hop's on from its stop one way at the first period)
   const run = (n: NonNullable<typeof lastNet>, o: number[], spans: Map<number, [number, number]>) => {
     let most = 0;
-    for (const [l, [i, j]] of spans) { let s = 0; for (let k = i; k < j; k++) s += n.times[6 * o[l] + (k - o[l])] || 0; most = Math.max(most, s); }
+    for (const [l, [i, j]] of spans) { let s = 0; for (let k = i; k < j; k++) s += n.times[TIMES_PER_STOP * o[l] + (k - o[l])] || 0; most = Math.max(most, s); }
     return most / 60;
   };
-  // (tph: three levels per line)
+  // (tph: five periods per line, T-3542)
   const lineA = new Map(a.lines.map((id, l) => [id, l]));
   let switched = false;
   b.lines.forEach((id, lb) => {
     const la = lineA.get(id);
     if (la === undefined) return;
     let flip = false;
-    for (let v = 0; v < 3; v++) flip ||= a.tph[3 * la + v] > 0 !== b.tph[3 * lb + v] > 0;
+    for (let v = 0; v < PERIODS.length; v++) flip ||= a.tph[PERIODS.length * la + v] > 0 !== b.tph[PERIODS.length * lb + v] > 0;
     if (!flip) return;
     switched = true;
     for (let i = oa[la]; i < oa[la + 1]; i++) was[a.stops[i]] = 1;

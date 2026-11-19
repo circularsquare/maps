@@ -115,6 +115,24 @@ fn main() {
         let sum = |row: u32| -> Vec<f32> { (0..3).map(|lev| lines.iter().map(|&l| a.line_tph_on(l, row, lev)).sum()).collect() };
         eprintln!("trains an hour, all lines: weekdays {:?}, weekends {:?}", sum(0), sum(1));
     }
+    // T-3542: `TW_PERIODS=<3|4|5>` sets the game's rows first (timed, not in the mean, the clock
+    // left as it is), so every line runs that many; `TW_PERIODS_BACK=1` sets three again after it
+    if let Some(p) = std::env::var("TW_PERIODS").ok().and_then(|s| s.parse::<u32>().ok()) {
+        let t = Instant::now();
+        let r = a.set_game_periods(p);
+        eprintln!("periods {p} (game) {:.1} ms r={r}, slots {:?}", t.elapsed().as_secs_f64() * 1e3, a.period_slots());
+        if std::env::var("TW_PERIODS_BACK").is_ok() {
+            let t = Instant::now();
+            let r = a.set_game_periods(3);
+            eprintln!("periods 3 (game) {:.1} ms r={r}, slots {:?}", t.elapsed().as_secs_f64() * 1e3, a.period_slots());
+        }
+    }
+    // `TW_PERIODS_LINE=<4|5>`: the busiest line alone sets that many rows, the rest three
+    if let Some(p) = std::env::var("TW_PERIODS_LINE").ok().and_then(|s| s.parse::<u32>().ok()) {
+        let t = Instant::now();
+        let r = a.set_line_periods(best, p);
+        eprintln!("periods {p} (line {best}) {:.1} ms r={r}, slots {:?}", t.elapsed().as_secs_f64() * 1e3, a.period_slots());
+    }
     let mut all = vec![];
     all.push(time(&mut a, "headway 300/600/1200", &|a| a.set_auto_headway(best, 300, 600, 1200)));
     for i in 0..reps {
@@ -127,6 +145,16 @@ fn main() {
         all.push(time(&mut a, &format!("trains 20/{n}/4"), &|a| a.set_train_counts(best, 20, n, 4)));
     }
     all.push(time(&mut a, "undo", &|a| a.undo()));
+    // T-3542: with more than three rows, one row's trains alone (the first: rush or morning)
+    if a.game_periods() > 3 {
+        let mut one = vec![];
+        for i in 0..reps as u32 {
+            let mut t = a.line_row_trains(best);
+            t[0] += 1 + i;
+            one.push(time(&mut a, &format!("first row {}", t[0]), &|a| a.set_line_row_trains(best, t.clone())));
+        }
+        eprintln!("first row edits {}: mean {:.1} ms", one.len(), one.iter().sum::<f64>() / one.len() as f64);
+    }
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(format!("{path}.end"), format!("{:?}\n", a.lines_info())).unwrap();
         std::fs::write(format!("{path}.end.save"), a.save()).unwrap();
@@ -137,6 +165,13 @@ fn main() {
         assert!(b.load(&a.save()), "not a save");
         eprintln!("reload {:.0} ms", t.elapsed().as_secs_f64() * 1e3);
         std::fs::write(format!("{path}.reload"), format!("{:?}\n", b.lines_info())).unwrap();
+        // T-3542: and its save and figures, the same as `.end.save` and `.end.figs`
+        if std::env::var("TW_RELOAD_FIGS").is_ok() {
+            b.set_unlimited(true);
+            b.set_now(now);
+            std::fs::write(format!("{path}.reload.save"), b.save()).unwrap();
+            std::fs::write(format!("{path}.reload.figs"), figures(&b, &lines)).unwrap();
+        }
     }
     let mean = all.iter().sum::<f64>() / all.len() as f64;
     let mut s = all.clone();

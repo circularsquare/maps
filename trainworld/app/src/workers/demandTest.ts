@@ -6,6 +6,8 @@
 
 import type { NetworkSnapshot } from "./protocol";
 import { HOME_CITY, LEGACY_FRAME } from "../game/cities";
+import { PERIODS } from "../game/periods";
+import { LEVEL } from "./demandClusters";
 
 type Kind = "subway" | "light" | "commuter" | "orbital";
 const KIND: Record<Kind, { speed: number; tph: [number, number, number]; cars: number; spacing: (r: number) => number }> = {
@@ -79,9 +81,10 @@ export function demandTestSnapshot(version = 1): NetworkSnapshot {
     const back = hops.slice().reverse();
     const zero = stops.map(() => 0);
     return {
-      id, name, stops, tph: k.tph,
-      hopS: [[hops, hops, hops], [back, back, back]],
-      dwellS: [[zero, zero, zero], [zero, zero, zero]],
+      // T-3542: one per demand period, from the rows (high, medium, low)
+      id, name, stops, tph: PERIODS.map((p) => k.tph[LEVEL[p.demand]]),
+      hopS: [PERIODS.map(() => hops), PERIODS.map(() => back)],
+      dwellS: [PERIODS.map(() => zero), PERIODS.map(() => zero)],
       turnaroundS: 180, cars: k.cars,
     };
   });

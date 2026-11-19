@@ -87,7 +87,7 @@ import { choosing, demandIdle, endCardFull, gameLoadArmed, gameLoadSeq, viewFigu
 import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
-import { PERIODS, periodsMatch } from "../game/periods";
+import { PERIODS, TIMES_PER_STOP, periodsMatch } from "../game/periods";
 import { EVERYDAY_KEYS, membersOf, type PurposeFilter } from "../game/purposes";
 import { perfOff } from "../perfFlags";
 import { LEVEL, marketZonesNear } from "./demandClusters";
@@ -166,6 +166,11 @@ function cityOfPlace(place: number) {
  * to one level's trains re-solves only that level's periods (T-124), so they go to different workers.
  */
 function periodsOfWorker(i: number, n: number): number[] {
+  // T-3542: two workers deal the morning with the evening and night and the midday with the
+  // afternoon: a rush edit (four rows: morning and afternoon) then waits on one period, high
+  // demand's three still go two to one worker, and each worker has the same work as before
+  // (`PERIOD_COST`); any more workers already part morning and afternoon by index
+  if (n === 2 && PERIODS.length === 5) return i === 0 ? [0, 3, 4] : [1, 2];
   const qs = PERIODS.map((_, q) => q);
   const clash = qs.some((q) => qs.some((s) => s > q && PERIODS[s].demand === PERIODS[q].demand && s % n === q % n));
   const order = clash ? qs.slice().sort((a, b) => LEVEL[PERIODS[a].demand] - LEVEL[PERIODS[b].demand] || a - b) : qs;
@@ -264,7 +269,7 @@ interface Service {
   stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
    * where a stop's way back is at a platform beside it (T-3348, `SnapshotLine.backStops`) */
-  lines: { id: string; stops: string[]; back?: string[]; tph: [number, number, number]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
+  lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
   /** station pairs joined by a passage (T-1281) */
   passages?: [string, string][];
   /** T-2410: stations no line stops at, left out of `stations`: their positions only reach zones
@@ -658,7 +663,7 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     ...(svc.passages?.length ? { passages: Uint32Array.from(svc.passages.filter(([p, q]) => index.has(p) && index.has(q)).flatMap(([p, q]) => [index.get(p)!, index.get(q)!])) } : {}),
     lineN: new Uint32Array(lines.map((l) => l.stops.length)),
     stops: new Uint32Array(nStops),
-    times: new Float32Array(6 * nStops),
+    times: new Float32Array(TIMES_PER_STOP * nStops),
     tph: new Float32Array(lines.flatMap((l) => l.tph)),
     cars: new Float32Array(lines.map((l) => l.cars)),
     fare: svc.fare,
@@ -714,10 +719,11 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     layout.push({ id: l.id, o: 2 * a, n, stops: l.stops, ...(back ? { back } : {}) });
     l.stops.forEach((s, k) => (net.stops[a + k] = index.get(s)!));
     if (net.back) (back ?? l.stops).forEach((s, k) => (net.back![a + k] = index.get(s)!));
-    for (let lev = 0; lev < 3; lev++) {
-      const at = (run: number) => 6 * a + (run * 3 + lev) * n;
-      const h0 = l.hopS[0]?.[lev] ?? [], d0 = l.dwellS[0]?.[lev] ?? [];
-      const h1 = l.hopS[1]?.[lev] ?? [], d1 = l.dwellS[1]?.[lev] ?? [];
+    // T-3542: per demand period
+    for (let q = 0; q < PERIODS.length; q++) {
+      const at = (run: number) => TIMES_PER_STOP * a + (run * PERIODS.length + q) * n;
+      const h0 = l.hopS[0]?.[q] ?? [], d0 = l.dwellS[0]?.[q] ?? [];
+      const h1 = l.hopS[1]?.[q] ?? [], d1 = l.dwellS[1]?.[q] ?? [];
       for (let k = 0; k < n - 1; k++) net.times[at(0) + k] = (h0[k] ?? 0) + (d0[k] ?? 0);
       // run 1 travels the stops reversed: its j-th hop leaves stop n - 1 - j
       for (let j = 0; j < n - 1; j++) net.times[at(1) + n - 1 - j] = (h1[j] ?? 0) + (d1[j] ?? 0);
@@ -5012,7 +5018,9 @@ class DemandClient {
       // its service, so a panel's running cost moves with the fares these figures give
       for (const l of layout) {
         const d = v.view?.lines.get(l.id), sl = service.get(l.id);
-        if (d) { d.stops = l.stops; if (sl) { d.tph = sl.tph; d.cars = sl.cars; } }
+        // (T-3542: the service's trains an hour are per period; the figures read them per row, high
+        // from the morning's, as every readout of three rows does)
+        if (d) { d.stops = l.stops; if (sl) { d.tph = [sl.tph[0], sl.tph[3], sl.tph[4]]; d.cars = sl.cars; } }
       }
       if (fares) for (const d of v.view?.lines.values() ?? []) d.solvedFares = fares;
       // T-325: and the zones open bare, from their own figures

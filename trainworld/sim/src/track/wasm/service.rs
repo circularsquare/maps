@@ -16,6 +16,16 @@ impl TrackApi {
         let lev = self.w.net.row_slot(line as usize, level.min(ROWS - 1));
         self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.runs[run].prof[lev].dep.clone())
     }
+    /// T-3542: `stop_times` in demand period `period` (0-4, `PERIOD_HOURS`): its slot's.
+    pub fn stop_times_in(&self, line: u32, run: usize, period: usize) -> Vec<f64> {
+        let lev = self.w.net.period_slot()[period.min(4)];
+        self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.cumulative(run, lev).to_vec())
+    }
+    /// T-3542: `stop_departures` in demand period `period`.
+    pub fn stop_departures_in(&self, line: u32, run: usize, period: usize) -> Vec<f64> {
+        let lev = self.w.net.period_slot()[period.min(4)];
+        self.w.svc.lines.get(line as usize).filter(|l| l.ok).map_or(vec![], |l| l.runs[run].prof[lev].dep.clone())
+    }
     /// T-842: the share of each period's riders at each stop with a train due within their
     /// tolerance (`span::line_span`), `[(period * 2 + run) * n + stop]`, each run's stops in its
     /// travel order; empty when the line is not running. Worked out again only when the line's

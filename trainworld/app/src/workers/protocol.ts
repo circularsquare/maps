@@ -168,6 +168,13 @@ export type EditOp =
   /** T-3521: every line's weekends at a percent of its weekdays, as one edit
    * (`TrackApi.set_weekend_share_all`) */
   | { op: "weekendShareAll"; share: number }
+  /** T-3542: the rows (3, 4 or 5) the lines set their trains in: the game's (no `line`) or one line's
+   * own (0: the game's), rows joined taking the most of theirs (`TrackApi.set_game_periods`,
+   * `set_line_periods`); and one line's whole trains or headways per row, in the day's order
+   * (`set_line_row_trains`, `set_line_row_headways`) */
+  | { op: "setPeriods"; line?: number; rows: number }
+  | { op: "setRowTrains"; line: number; trains: number[] }
+  | { op: "setRowHeadways"; line: number; seconds: number[] }
   /** a field left out keeps the line's own as the worker has it now, so an edit never carries a stale
    * name, colour or symbol over one still on its way (T-1812); `letter` is the symbol set by hand, "" for none */
   | { op: "lineLook"; line: number; name?: string; colour?: string; letter?: string }
@@ -988,12 +995,12 @@ export interface SnapshotLine {
   /** T-3348: run 1's stations in `stops` order, where a stop's way back is at a platform beside it
    * (`TrackApi.line_back_stops`, one-way track); absent where every stop is the same both ways */
   backStops?: number[];
-  /** trains an hour at high, medium, low demand (SPEC 6.3; periods in sim/src/track/params.rs) */
-  tph: [number, number, number];
+  /** trains an hour in each demand period (`PERIODS`, T-3542; SPEC 6.3) */
+  tph: number[];
   /**
-   * Per run (0 = stops in order, 1 = reversed), per demand level (0 high, 1 medium, 2 low):
+   * Per run (0 = stops in order, 1 = reversed), per demand period (`PERIODS`, T-3542):
    * seconds from leaving stop i to arriving at stop i + 1, capacity holds on the way included.
-   * `hopS[run][level].length === stops.length - 1`; run 1's hops are in its own travel order.
+   * `hopS[run][period].length === stops.length - 1`; run 1's hops are in its own travel order.
    */
   hopS: number[][][];
   /** Actual track km per segment, in each run's travel order. Legacy snapshots omit it. */
@@ -1004,7 +1011,7 @@ export interface SnapshotLine {
   ferry?: boolean;
   /** T-2926: a line on tram track (`DemandApi.set_tram_lines`) */
   tram?: boolean;
-  /** dwell at each stop, s, per run and level, in the run's own stop order (0 at both ends) */
+  /** dwell at each stop, s, per run and period, in the run's own stop order (0 at both ends) */
   dwellS: number[][][];
   /** layover at each end, s */
   turnaroundS: number;
