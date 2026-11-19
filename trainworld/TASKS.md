@@ -107,15 +107,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: One player hit it twice on v0.4.2 (feedback 1795092485-688b2e15, 1795083347-52a31102); the only such reports in 7 days. Their saves load normally on master. A stuck load now restarts once, and the report names the stuck worker and period (tree demandload).
   - Goal: The cause found from the next report's diagnosis, or closed if no report comes.
   - Other: notes/T-3781.md
-- T-3785 [P3] {L:schematic} {after:the next schematic work} Hidden lines leave the schematic (taking, 2026-11-19, agent schembus)
-  - Context: A player asked, 2026-11-19; you: "hidden lines should hide on the schematic (we should hide them fully, instead of just fading them), we can do that later when we do other schematic work".
-  - Goal: A line hidden on the map is not drawn on the schematic at all.
 - T-3780 [P2] {L:timetables} {after:T-3346 stage 2 landing} Station and complex timetables
   - Context: Your pad, 2026-11-19: players ask for per-station timetables, "could be cool and not so hard". Per station and per complex, every line in its line colour; for a complex, pick the direction most platforms roughly align with and show trains as that way or the opposite ("eastbound"), "people should mostly use the station timetables anyways"; line numbers show the bullet and line name on hover; opened by a timetable icon button on the station or complex view, like the line's schedule button. Waits for the timetables port so it reads the new departure times.
   - Goal: A timetable icon on the station and complex views opens departures by line in line colours, a complex's split into two directions, with bullet and line name on hover.
-- T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
-  - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
-  - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.
 - T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean (taking, 2026-11-19, agent guianas)
   - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." And: "we should probably also try to add martinique / the other european caribbean parts... otherwise can't really island hop here which is i think what most people would want to do." Left out by T-3620: Guadeloupe and Martinique (inside France's Natural Earth feature, like French Guiana: planner work), the US Virgin Islands and Saint Kitts and Nevis (under the zone floor); also Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, the British Virgin Islands, Turks and Caicos. A world run: overnight.
   - Goal: Every inhabited Caribbean island group playable so a player can island hop, plus Guyana, Suriname and French Guiana.
@@ -346,7 +340,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3740 [P2] {L:fares} Zone fares, stage Z3
+- T-3740 [P2] {L:fares} Zone fares, stage Z3 (taking, 2026-11-19, agent zonez3)
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Z1 (sim and saves) and Z2 (paint tool, tint, panels) landed 2026-11-19; drawn outlines (C) were agreed for later.
   - Goal: A "Set zones by distance" rings helper, new stations and plain bus stops take their neighbours' zone, a deleted area's stations tidied; about 3-4 h.
   - Other: notes/T-3740.md
@@ -394,19 +388,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-3431.md
 - T-3434 [P3] {L:region-redraws} Sabang Island missing from the Banda Aceh zone
   - Context: Player report 2026-11-16. Reach: few.
-- T-3790 [P1] {L:real-networks} Real network rebuilds drop lines (taking, 2026-11-19, agent corridors)
-  - Context: v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
-  - Goal: Moscow reshipped with nothing lost (8 routes and 25 stations short now, Kazansky station among them), by easing the sim's 8-end junction and turn-back limits; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
+- T-3790 [P1] {L:real-networks} {waits:Anita} Real network rebuilds drop lines
+  - Need from Anita: Fix the 8-end and turn-back limits inside the real-network build only (players unchanged), keeping Moscow near v0.4.2's 106 lines rather than all 358? Recommended: yes to both.
+  - Context: Both limits bind player track too (limitcheck 11-19: a 9th track shows "Too many tracks meet here."; a player line turns back at the nearest dead end instead). Moscow's losses are all from the 8-end limit; 194 nodes are over it, the biggest has 51 ends. v0.4.3 keeps v0.4.2's Moscow, Saint Petersburg and Berlin saves (DECISIONS 11-19). The sim isn't the cause: a junction given a 9th track end refuses an edge, or a line turns back at a node it doesn't stop at, and realauto build leaves those lines out; small upstream changes decide which (today's graph and T-3782's extract: Moscow 110 to 90; T-3318's pattern order: Berlin tram 93). Since 664cffd5 ship refuses a city that loses a route or station, and each build starts with a fresh drop list.
+  - Goal: Moscow reshipped with nothing lost (8 routes and 25 stations short now, Kazansky station among them), getting past the 8-end junction limit; Berlin tram 93's Bisamkiez pattern back. Saint Petersburg and Berlin were reshipped 11-19 on the lines graph (7b5ea227), not yet published.
   - Other: plan in notes/T-3790.md
-- T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab (taking, 2026-11-19, agent linesort)
-  - Context: Your pad, 2026-11-19: "commonly requested feature: sort lines by type (tram, ferry, hsr, bus, etc)".
-  - Goal: The Lines tab can sort by kind (tram, ferry, high speed, bus and the rest), beside its other sorts.
 - T-3799 [P2] {L:small-fixes} Choose which Lines tab columns show
   - Context: Your pad, 2026-11-19: "perhaps have the column headers that are shown be customizable so that we dont have too many columns".
   - Goal: A short design for you first (where the choice lives, which columns show by default), then built.
-- T-3800 [P3] {L:translations} One word for a demand period in German and Catalan
-  - Context: From the v0.4.3 review, 2026-11-19: the schedule window now says Tageszeit (de) and període (ca), but marketTrip.*, oneRider.*, tripInspector.* and routeParts.byPeriod still say Zeitraum and franja.
-  - Goal: Every key in de and ca uses the one word, with the glossary's rendering changed to match.
+- T-3802 [P1] {L:real-networks} Real world station rings drift while zooming (taking, 2026-11-19, agent ringfix)
+  - Context: You, relaying a player, 11-19: "bugs out when zooming and is like completely offset from the actual tracks (no fixed position). Also i would like it to keep showing the station name on hover like with the normal dot. And also show it for tram lines which it currently doesnt, maybe have the dot a little smaller or smth to differentiate from train... would be nice to prepare this for a potential hotfix". T-3760's ring canvas, shown only while placing stations since T-3792.
+  - Goal: Rings stay on their stations at every zoom and while zooming, hover shows the station name, tram stops show as smaller rings; ready as hotfix v0.4.4 on a tree from d39db027 (before save level 30).
 - T-3801 [P2] {L:edit-speed} Edits stuck behind panel polling, audit (taking, 2026-11-19, agent pollaudit)
   - Context: T-3793 found a station rename waiting 1-5.5 s in the clock worker's queue behind the station panel's 250 ms "today" polling (140-745 ms each on a 2,647-station save) and a full network rebuild. You, 2026-11-19: "i could imagine like we build some future feature and it fails like this ... also can check to see if there are any current parallel failures". Leads from T-3793 (landed 366f1078): the hourly `epoch` once took 4.3 s in the worker; `linesPeriods` bursts (up to 9 in flight) and a second `today` asker aren't paced; undo/redo of a rename and the new unbindAll still take the slow path.
   - Goal: Every panel or window that polls the clock worker is listed with its cost on a big save; any that can hold an edit up is fixed the T-3793 way (poll waits on its own cost, edits go first); a rule in the docs so new polls follow it.
@@ -764,15 +756,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You asked 2026-11-16 to replace the list: Indonesian first, then Italian, Polish, Arabic (interface mirrors), maybe Malay, Dutch, Thai. It replaces T-2851. Indonesian was added 2026-11-17 (no native read yet; "halte" for bus stops and "Pendapatan tarif" for fare income are open wording calls).
   - Goal: Italian, Polish, Arabic added in order.
   - Other: Non-Latin scripts need a font and place-name check. research/localization.md
-- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities
+- T-3409 [P2] {L:schematic} Schematic of one city or chosen cities (taking, 2026-11-19, agent cityschem)
   - Context: Your TODO 2026-11-15 asks whether building far away hurts the local schematic, and wants a schematic of just one city or a set.
   - Goal: Answer your question, and add a way to draw a schematic of chosen cities.
 - T-3413 [P3] {L:community} Save lineage, original author and copies
   - Context: Your TODO 2026-11-15: on metrodreamin people "steal" maps. You want saves to record the original author and who copied it.
   - Goal: A design for you first; then a save traces back to its original.
-- T-3423 [P3] {L:small-fixes} Line groups inside line groups (taking, 2026-11-19, agent linesort)
-  - Context: Your scratch pad 2026-11-16: players asked for line group groups; nested many levels deep.
-  - Goal: Groups nest without limit in the lines list and group view; saves keep loading.
 - T-3417 [P3] {L:map-look} Pixel-art city map style
   - Context: Your TODO 2026-11-15: a pixel-art style like the city maps going around Twitter. An idea.
   - Goal: A mock for you first.
@@ -824,9 +813,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Ports, industrial estates and airports with no residents stay dark (Tuas and Jurong were fixed by hand 11-13). Half done: units keep outlines with 0.2 km2 of built surface.
   - Goal: A free unit under the floor sharing half its land border with one metro joins it, after a worldwide count.
   - Other: notes/T-3287.md
-- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries (taking, 2026-11-19, agent schembus)
-  - Context: Your TODO 2026-11-12: schematic settings to show buses and ferries. It follows T-3345's stage 2 (same code) and takes in T-3019. Your pad, 2026-11-17: "want buses and ferries drawn on schematic map eventually, also p3 prob. also want the ability to toggle their visibility, as well as tram and train visibility i guess with buttons on the top. can use icons. when we draw the buses, they can just appear as really thin lines, stops not labelled, and i think we can basically just draw them as the last step, and not have them impact distortion ... i suppose this should be relaxed in cases where people are building bus-only networks but yeah like they should definitely not be a priority. same for ferries, not have much distortion power."
-  - Goal: Buses and ferries are drawn last as very thin lines with unlabelled stops, fitted into the layout the rail lines set (little or no pull on it, except on a bus-only network), with icon buttons at the top to show or hide trains, trams, buses and ferries.
 - T-3358 [P2] {L:schematic-rivers} Schematic river continuity
   - Context: Paused by you 2026-11-12: you do not like the river look but want it straightened. Prototype 2 (no straightening near rivers) cut wrong-bank pairs in London from 97 to 27.
   - Goal: Rivers read as one course each with stations on their own bank. Next (6-8 h): land prototype 2.

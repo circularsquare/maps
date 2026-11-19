@@ -1,6 +1,12 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-3785 [P3] {L:schematic} Hidden lines leave the schematic (2026-11-19): Buses and ferries thin with white stops (option A), bus-only networks laid out on their own, mode buttons when a game has two or more kinds, hidden lines left out at paint time; rail layout hashes unchanged. notes/T-3360.md.
+- T-3360 [P2] {L:schematic} Schematic settings for buses and ferries (2026-11-19): Buses and ferries thin with white stops (option A), bus-only networks laid out on their own, mode buttons when a game has two or more kinds, hidden lines left out at paint time; rail layout hashes unchanged. notes/T-3360.md.
+- T-3766 [P2] {L:fares} Fare multiples by city (2026-11-19): Fares by country or city switch in advanced fares; one fare resolver for income, demand, zones, market and panels; checker cityfchk passed money, mode switch, saves, zone fares and demand. notes/T-3766.md.
+- T-3423 [P3] {L:small-fixes} Line groups inside line groups (2026-11-19): Type sort header in the Lines tab with a new high-speed icon; groups nest without limit (LGN1, level 30), leave group moves out one level, a group left with one member hands it up; checker linechk passed saves, undo, copy, drag and sort. notes/T-3423.md.
+- T-3798 [P2] {L:small-fixes} Sort lines by kind in the Lines tab (2026-11-19): Type sort header in the Lines tab with a new high-speed icon; groups nest without limit (LGN1, level 30), leave group moves out one level, a group left with one member hands it up; checker linechk passed saves, undo, copy, drag and sort. notes/T-3423.md.
+- T-3800 [P3] {L:translations} One word for a demand period in German and Catalan (2026-11-19): de uses Tageszeit and ca uses periode for a demand period in all 9 keys that said Zeitraum or franja, articles fixed; glossary entry narrowed to match. notes/T-3800.md.
 - T-3775 [P2] {L:accounts-server} Save health route deployed (2026-11-19): deployed 11-19; save_health.py reads the live route.
 - T-3786 [P1] {L:accounts-server} Give Rus back the recovered Java save (2026-11-19): deleted 11-19 10:13 UTC by a delete from their browser; day 423 copy from the R2 backup restored into the account as 35kkah6wvvxq. notes/T-3786.md.
 - T-3789 [P1] {L:accounts-server} Deleted games kept 7 days, deploy and Rus's restore (2026-11-19): deployed 11-19 20:46 with SHONEI_GAMES_ADMIN_KEY; Rus's game restored as 35kkah6wvvxq. notes/T-3789.md.

@@ -1,36 +1,29 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a0ff2795-d3f6-4076-b0f1-e96b327ba6cf, name maps-e8, since 2026-11-19 17:00 UTC
-Updated: 2026-11-19 21:25 UTC (maps-e8 past 500k, starting its successor; agents linesort, schembus, pollaudit,
-guianas run in maps-e8's tab and report to the inbox)
+Orchestrator: session 953236ac-bf0a-4ac1-9b7d-bcd87f6165e0, name maps-c2, since 2026-11-19 21:24 UTC
+Updated: 2026-11-19 21:30 UTC (maps-e8 wound down, all committed at 7fb47f75; its agents linesort, schembus,
+pollaudit, guianas still run in its tab and report to the inbox; maps-c2 started limitcheck, cityfares, periodword)
 
 Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status` (T-3667). This file is plan and her words.
 Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
-0. Live v0.4.2. Master 8c4c00b2 = the v0.4.3 candidate (changelog published into the game, 12 languages
-   translated, back-translated and reviewed). Cap 14. shonei-server not deployed or pushed: e604291 (levels 27-29),
-   93718d1 (T-3775), 5bf10c7 (T-3382), 6ab8b68 / ada0bce / 8ba8657 (T-3789 deleted games kept 7 days).
-1. v0.4.3 release, her out with remote control (~19:30: "ill enable remote control and approve final deploy while
-   outside"). 20:30: smoke on master + snap8800 8c4c00b2 running; then smoke8800 light and dark; then ONE ask to
-   her: (a) server deploy (`.\deploy\deploy.ps1` in shonei-server, then push) with SHONEI_GAMES_ADMIN_KEY set on
-   the box and in ~/shonei-games-admin-key.txt (her yes to the key given ~18:05), then Rus's restore
-   (`restore_game.py put uef1fbdd21e42c812 "artifacts/trainworld/rus-recovery/Jakarta 3.save" --name "Jakarta 3"
-   --stations 1855 --lines 85`, dry run then --yes; delete rus-recovery after); (b) data upload (deploy.py, data/packs
-   incl. real saves: 19 new, mos/sai/ber kept at v0.4.2); (c) publish (deploy.py --smoked, website push, --verify
-   --page, open-source export + push). New zones image: `tools/release/new_zones_map.py --version v0.4.3` first.
-   ~20:47 server deployed + pushed, key set (shonei.env line 11), Rus restored as 35kkah6wvvxq, rus-recovery deleted;
-   T-3775/3786/3789 closed. v0.4.3 PUBLISHED ~21:05: data 2026-11-19 on R2, website e0bf45e pushed, --verify --page
-   all PASS, open-source f7446ec pushed. Old R2 versions (2026-11-13 etc.) can be purged with r2_purge.py later.
-   Running for the next round (her ~20:50 "lets also pick up and start work for the next round"): linesort (Opus,
-   T-3798 + T-3423 nested groups, 6170), schembus (Opus, T-3360 [+T-3785], 6171), pollaudit (Opus, T-3801, 6172),
-   T-3790 3b landed 7b5ea227 (lines graph in data/work/realgraph-lines, filled; sai and ber reshipped into
-   data/packs/real for the next update; Moscow waits for step 4, the sim limits), guianas (Opus, T-3762, 6173, writes data/packs; started
-   ~21:10 after the upload). T-1738 / T-3763 countries after it.
-2. After the release: T-3790 step 4 (old-rule real-networks graph, ~1 h + rebuild; notes/T-3790.md, saves in
-   artifacts/trainworld/t3790/corridors), T-3801 (edits stuck behind panel polling + docs rule), T-3798 / T-3799
-   (Lines tab sort and columns; T-3799 design to her first), T-3800 (de/ca period word), T-3766 (fares by city),
-   T-3780 (station timetables), countries T-3762 / T-1738 / T-3763, T-3726 commentab pairs 1 and 3, T-3740 Z3.
+0. Live v0.4.3 (published 21:05; server deployed, Rus restored). Cap 14. Old R2 versions can be purged later
+   (r2_purge.py). Sai and ber reshipped into data/packs/real for the next update (7b5ea227).
+1. Running: linesort (Opus, T-3798 + T-3423, 6170), schembus (Opus, T-3360 [+T-3785], 6171), pollaudit (Opus,
+   T-3801, 6172), guianas (Opus, T-3762, 6173, writes data/packs) - all in maps-e8's tab, reports via the inbox;
+   cityfares (Opus, T-3766, tree, 6175; checker before landing). Landed: T-3800 d39db027; T-3798 + T-3423
+   2997f81b (save level 30, LGN1; linechk passed). shonei-server 4ba1627 (savecheck level 30) committed, not pushed
+   or deployed: that deploy must go out before the next game publish. Rebuild 8800 once after
+   this round's landings (board's master hash stale till then).
+1b. HOTFIX v0.4.4 (her ~21:35 via maps-e8, which relays her by remote control ~2 h): ringfix (Opus, T-3802, tree
+   from d39db027, i.e. v0.4.3 + de/ca, NOT master's level 30; 6178). Publish from that branch only, with only its
+   changelog item; work out before publishing how deploy.py builds a non-master commit and keep c001/c002 and
+   cityfares' items unpublished. Then land the fix on master too. T-3766 landed 87c811bf (cityfchk passed; next
+   translation pass drops advancedFares.byCountry). zonez3 (Opus, T-3740 Z3, tree from 87c811bf, 6180) running.
+2. Next to start: T-3740 Z3 after cityfares lands (same fare panels); T-1738 / T-3763 after guianas; T-3790 step 4
+   once she answers a-2026-11-19-20 (limitcheck's answer in notes/T-3790.md); T-3780 timetables, T-3799 design to
+   her, T-3726 commentab pairs 1 and 3.
 3. T-3781 stays open for the next report's diagnosis; T-3786 / T-3789 close once Rus has the game; T-3775 closes
    once save_health.py reads the live route after the deploy.
 4. Steam (T-3729): fee paid, tax form in; her screenshots go in artifacts/trainworld/steam/screenshots.
@@ -60,9 +53,7 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
   push needs her yes to that action, none overnight; advisor trial (log calls in handoff-log).
 
 ## Waiting on her (asks.py list has the open ones)
-- Asked 21:25 in chat: Moscow's last 8 routes (T-3790 step 4) need the sim's 8-end junction and turn-back limits
-  relaxed; first find out whether those limits also bind player-built track (then it's her call). She'll tell Rus
-  their game is back herself.
+- a-2026-11-19-20: Moscow limits, build-only fix and keep Moscow near 106 lines? (T-3790). She tells Rus herself.
 - a-1 (T-3746 text), a-13 (read today's 2 damaged saves over ssh; or wait for the deploy), a-14 (drop the load
   card once the city in view is ready), a-15 (server deploy: part of the one release ask).
 - She sends the T-3635 player reply herself (draft in notes/T-3635.md).
