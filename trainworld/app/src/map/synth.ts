@@ -5,6 +5,7 @@
 import { LINE_PALETTE, rgb } from "../game/palette";
 import { MERC_K } from "./geo";
 import type { NetworkBuffers, Strokes } from "./network";
+import { META_PER_LINE, profileOf } from "./profiles";
 
 function mulberry32(seed: number) {
   return () => {
@@ -70,7 +71,7 @@ export function makeSynth(lineCount: number, trainCount: number, seed = 7): Netw
   const seg: number[] = [], colour: number[] = [], samples: number[] = [];
   const lineTable = new Float32Array(lineCount * 4);
   const lineColours = new Uint8Array(lineCount * 4);
-  const meta = new Float32Array(lineCount * 6 * 4);
+  const meta = new Float32Array(lineCount * META_PER_LINE);
   const phases = new Float32Array(lineCount * 2 * 4);
   const trips: number[] = [];
   const perLine = Math.max(1, Math.round(trainCount / lineCount));
@@ -101,7 +102,7 @@ export function makeSynth(lineCount: number, trainCount: number, seed = 7): Netw
     const v = 12 + rnd() * 18, tripS = lenM / v;
     for (let run = 0; run < 2; run++) {
       phases.set([0, 0, v, 0], (li * 2 + run) * 4);
-      meta.set([li * 2 + run, 1, tripS, lenM], ((li * 2 + run) * 3) * 4);
+      meta.set([li * 2 + run, 1, tripS, lenM], profileOf(li, run, 0) * 4);
     }
     const hw = (2 * tripS) / perLine;
     for (let dep = -tripS - rnd() * hw, k = 0; dep < 3600; dep += hw, k++) trips.push((li * 2 + (k % 2)) * 3, dep);

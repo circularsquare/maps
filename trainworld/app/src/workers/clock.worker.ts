@@ -52,6 +52,7 @@ import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, Fer
 import { stampAll } from "./cloud";
 import { loadFailKey } from "../game/loadText";
 import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
+import { META_PER_LINE, profileOf, SLOTS } from "../map/profiles";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
 const SAMPLE_STEP = 50;
@@ -544,6 +545,8 @@ function panicNow() {
 function newModel(): TrackApi {
   const a = new TrackApi(NEW_GAME_FRAME.lon, NEW_GAME_FRAME.lat, true);
   api = a;
+  // T-3542: trips name profiles by map/profiles.ts's stride, the sim's `params::SLOTS`
+  if (a.profile_slots() !== SLOTS) console.error("clock: map/profiles.ts SLOTS disagrees with sim/src/track/params.rs SLOTS", a.profile_slots()); // i18n-ignore
   xferSet = null;
   worldWaterIn = false;
   terrainIndexIn = false;
@@ -1554,7 +1557,7 @@ function buildState(): ClockState {
   // takes its own way back (T-3094) has that run resampled too, in the table's second half (T-3250,
   // network.ts `backSlot`)
   const meta = a.profile_meta();
-  const nLines = meta.length / 24;
+  const nLines = meta.length / META_PER_LINE;
   const backs = lines.filter((l) => l.ok && l.back?.length && l.id < nLines);
   const lineTable = new Float32Array(Math.max(1, nLines) * (backs.length ? 8 : 4));
   const runs: Float32Array[] = [];
@@ -1570,7 +1573,7 @@ function buildState(): ClockState {
     const d = drawnBack(a, l.id, l.back!);
     if (d.length < 4) continue;
     runs.push(d);
-    lineTable.set([nSamples, d.length / 2, meta[(l.id * 6 + 3) * 4 + 3] || l.lengthM, SAMPLE_STEP], (nLines + l.id) * 4);
+    lineTable.set([nSamples, d.length / 2, meta[profileOf(l.id, 1, 0) * 4 + 3] || l.lengthM, SAMPLE_STEP], (nLines + l.id) * 4);
     nSamples += d.length / 2;
   }
   const samples = new Float32Array(nSamples * 2);

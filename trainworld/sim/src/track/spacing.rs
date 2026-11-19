@@ -9,7 +9,7 @@
 
 use super::capacity::ResKind;
 use super::net::Network;
-use super::params::LEVELS;
+use super::params::SLOTS;
 use super::profile;
 use super::service::Service;
 
@@ -90,9 +90,9 @@ fn crowding(meets: &[Meet], h: f64, phase: f64, shift: f64) -> f64 {
 /// as needed). The lines they meet with spare time then move only where theirs stands, against them,
 /// and `lines` are placed once more (T-2972: two branches into one terminus both stand theirs at
 /// the far ends, which neither reaches alone). Returns the lines whose phase or split moved.
-pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; LEVELS]>, split: &mut Vec<[f32; LEVELS]>) -> Vec<u32> {
-    phase.resize(phase.len().max(net.line_count()), [0.0; LEVELS]);
-    split.resize(split.len().max(net.line_count()), [0.5; LEVELS]);
+pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; SLOTS]>, split: &mut Vec<[f32; SLOTS]>) -> Vec<u32> {
+    phase.resize(phase.len().max(net.line_count()), [0.0; SLOTS]);
+    split.resize(split.len().max(net.line_count()), [0.5; SLOTS]);
     // where its spare time would stand with nothing else known: at the end it does not share
     for &l in lines {
         seed_split(net, svc, l, split);
@@ -110,7 +110,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
             continue;
         }
         for u in us {
-            if !mine[u.line as usize] && (0..LEVELS).any(|lev| svc.spare(net, u.line as usize, lev) >= 1.0) {
+            if !mine[u.line as usize] && net.slots().any(|lev| svc.spare(net, u.line as usize, lev) >= 1.0) {
                 others.push(u.line);
             }
         }
@@ -137,7 +137,7 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
 /// T-2972: a line with spare time whose track is shared at one end only stands it at the other (a
 /// branch into a shared terminus waits out at its own far end, so the order its trains leave the
 /// terminus in is the order they come back in). True when its split moved.
-fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; LEVELS]]) -> bool {
+fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; SLOTS]]) -> bool {
     // T-3474: the ends of the part of its plan it runs
     let path = match svc.lines.get(l as usize).filter(|x| x.part.is_some()) {
         Some(x) => &x.runs[0].segs[..],
@@ -151,7 +151,7 @@ fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; LEVELS]])
         _ => return false,
     };
     let mut moved = false;
-    for lev in 0..LEVELS {
+    for lev in net.slots() {
         if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want {
             split[l as usize][lev] = want;
             moved = true;
@@ -161,7 +161,7 @@ fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; LEVELS]])
 }
 
 /// One pass of `place`; `split_only`: each line keeps its phase.
-fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; LEVELS]>, split: &mut Vec<[f32; LEVELS]>, split_only: bool) -> Vec<u32> {
+fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; SLOTS]>, split: &mut Vec<[f32; SLOTS]>, split_only: bool) -> Vec<u32> {
     let cap = &svc.cap;
     let mut todo: Vec<u32> = lines.iter().copied().filter(|&l| svc.lines.get(l as usize).is_some_and(|x| x.running && !x.is_bus())).collect();
     todo.sort_unstable();
@@ -192,7 +192,10 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
     }
     // T-2231, T-2419: following pairs timetabled together, by level: (faster line, its run), (slower
     // line, its run), how far behind it belongs (s)
-    let paired: [Vec<((u32, u8), (u32, u8), f64)>; LEVELS] = std::array::from_fn(|lev| {
+    let paired: [Vec<((u32, u8), (u32, u8), f64)>; SLOTS] = std::array::from_fn(|lev| {
+        if !net.slot_worked(lev) {
+            return vec![];
+        }
         let mut v = cap.follow_targets(net, lev);
         v.retain(|x| want[x.0 .0 as usize] || want[x.1 .0 as usize]);
         v
@@ -221,7 +224,7 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
         let Some(Some(lat)) = lats[l as usize] else { continue };
         let mut p = phase[l as usize];
         let mut x = split[l as usize];
-        for lev in 0..LEVELS {
+        for lev in net.slots() {
             let tph = lat.tph[lev] as f64;
             if tph <= 0.0 {
                 continue;
@@ -330,8 +333,8 @@ mod tests {
         assert_eq!(da.len(), 6);
         let gap = closest(&da, &db);
         assert!(gap > 0.4 * 600.0, "the two lines leave {gap:.0} s apart: {da:?} {db:?}");
-        assert_eq!(w.net.line_phase_of(a), [0.0; 3], "the first line keeps its times");
-        assert_eq!(w.net.line_phase_of(alone), [0.0; 3], "nothing shares its track");
+        assert_eq!(w.net.line_phase_of(a), [0.0; crate::track::params::SLOTS], "the first line keeps its times");
+        assert_eq!(w.net.line_phase_of(alone), [0.0; crate::track::params::SLOTS], "nothing shares its track");
         // a third line on the same track takes the gaps that are left
         let c = line(&mut w, &n, [6.0, 4.0, 2.0]);
         let dc = deps(&w, c);
@@ -468,11 +471,11 @@ mod tests {
             // the pacing has held through a settle, an edit that moves nothing paces nothing again
             let state = |w: &TrackWorld| ls.iter().map(|&l| (w.net.line_pace_of(l), w.net.line_tph[l as usize], w.net.line_trains[l as usize])).collect::<Vec<_>>();
             let before = state(&w);
-            let tph = w.net.line_tph[ls[0] as usize];
+            let tph = crate::track::params::slots_to_rows(w.net.line_tph[ls[0] as usize]);
             let refused = w.apply_paid(Op::TrainCounts { id: ls[0], trains: Some([5, 2, 0]), tph }, 0.0, false, &|_| 1.0);
             assert!(matches!(refused, Err(super::super::world::ChargeError::Money { .. })));
             assert_eq!(before, state(&w));
-            let same = |w: &mut TrackWorld| w.apply(Op::TrainCounts { id: ls[1], trains: w.net.line_trains[ls[1] as usize], tph: w.net.line_tph[ls[1] as usize] }).unwrap();
+            let same = |w: &mut TrackWorld| w.apply(Op::TrainCounts { id: ls[1], trains: w.net.line_trains[ls[1] as usize], tph: crate::track::params::slots_to_rows(w.net.line_tph[ls[1] as usize]) }).unwrap();
             same(&mut w);
             let held = state(&w);
             assert!(held.iter().all(|x| x.0[HIGH] > 0.0), "still in step: {held:?}");

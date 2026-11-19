@@ -9,7 +9,7 @@ Periods, kinds of day and the average day.
 Five periods: morning peak 6-10, midday 10-16, evening peak 16-20, evening 20-24, night 0-6. They
 are the player's scheduling periods too (section 6.3: high demand 6-20, the morning peak, midday
 and evening peak; medium 20-24; low 0-6), defined once in `sim/src/track/params.rs` (`PERIOD_HOURS`,
-`PERIOD_LEVEL`) for schedules and demand alike. A level is a set of whole periods: each period is
+`PERIOD_ROW`) for schedules and demand alike. A level is a set of whole periods: each period is
 solved on its own level's trains, with its own share tables and busiest-hour factor, so the three
 periods of high demand are three solves on the same trains. The hours are local time (T-309,
 docs/world.md "Local time"): each line's periods, boarding hours and kind of day are its first

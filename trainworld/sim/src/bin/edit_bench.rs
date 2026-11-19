@@ -17,6 +17,49 @@ fn trains(a: &TrackApi, line: u32) -> [f64; 3] {
     info.chunks(22).find(|c| c[0] as u32 == line).map_or([0.0; 3], |c| [c[13], c[14], c[15]])
 }
 
+/// T-3542: figures to compare two builds to the bit: per line `line_summary`, the running cost per
+/// hour at each level of both kinds of day, and every trip drawn over a weekday and a Saturday with
+/// its train's position halfway (profile index cut to line and run, `TW_STRIDE` profiles a run).
+fn figures(a: &TrackApi, lines: &[u32]) -> String {
+    let stride: u32 = std::env::var("TW_STRIDE").ok().and_then(|s| s.parse().ok()).unwrap_or(a.profile_slots());
+    let slot_of = |k: u32| if stride == 3 { k } else { [0, 0, 0, 1, 2][k as usize] };
+    let mut s = String::new();
+    for &l in lines {
+        s += &format!("summary {l} {:?}\n", a.line_summary(l));
+    }
+    s += &format!("running {:?}\n", (0..6).map(|k| a.running_cost(k)).collect::<Vec<_>>());
+    // T-3542: the readouts that take or give a row (`TW_ROWS=1`; master's API may lack some)
+    if std::env::var("TW_ROWS").is_ok() {
+        for r in 0..3 {
+            s += &format!("markers {r} {:?}\nfull {r} {:?}\n", a.markers(r), a.full_track(r));
+        }
+        s += &format!("upkeep {:?}\n", a.line_upkeep(&[14.0, 4.0, 6.0]));
+        for &l in lines {
+            s += &format!("held {l} {:?}\nrest {l} {:?}\nweekend {l} {:?}\n", a.line_held(l), a.line_tph_rest(l), a.line_weekend(l));
+            for r in 0..3 {
+                s += &format!("delays {l} {r} {:?}\nwaits {l} {r} {:?}\n", a.line_delays(l, r), a.line_waits(l, r));
+            }
+            for &n in a.line_stops(l).iter() {
+                s += &format!("junction {n} {:?}\n", a.junction_info(n));
+            }
+        }
+    }
+    let meta = a.profile_meta();
+    for day in [2.0, 6.0] {
+        for h in 0..24 {
+            let epoch = day * 86400.0 + h as f64 * 3600.0;
+            for t in a.trips(epoch).chunks(4) {
+                let p = t[0] as u32;
+                let (line, run, lev) = (p / (2 * stride), (p / stride) % 2, p % stride);
+                let (draw, end) = (epoch + t[1] as f64, epoch + t[2] as f64);
+                let at = a.train_at(line, run as usize, lev as usize, draw, (draw + end) / 2.0);
+                s += &format!("trip {line} {run} {} {:?} {:?} {:?}\n", slot_of(lev), &t[1..], &meta[p as usize * 4 + 1..p as usize * 4 + 4], at);
+            }
+        }
+    }
+    s
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let bytes = std::fs::read(&args[0]).expect("track bytes");
@@ -49,6 +92,9 @@ fn main() {
     };
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(&path, format!("{:?}\n", a.lines_info())).unwrap();
+        // T-3542: the save bytes after the load and after the edits, to compare two builds' saves
+        std::fs::write(format!("{path}.save"), a.save()).unwrap();
+        std::fs::write(format!("{path}.figs"), figures(&a, &lines)).unwrap();
     }
     // T-1924: per line after the load, tab-separated: id, name, km, then per level (high, medium,
     // low) trains an hour, round trip s, delay s and trains, to compare two builds' run times
@@ -83,6 +129,8 @@ fn main() {
     all.push(time(&mut a, "undo", &|a| a.undo()));
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(format!("{path}.end"), format!("{:?}\n", a.lines_info())).unwrap();
+        std::fs::write(format!("{path}.end.save"), a.save()).unwrap();
+        std::fs::write(format!("{path}.end.figs"), figures(&a, &lines)).unwrap();
         // saved and loaded again (T-1787): the same figures, to the bit
         let mut b = TrackApi::new(-73.985, 40.758, true);
         let t = Instant::now();

@@ -291,7 +291,7 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
         }
     };
     add(ls.stops.len() as u64);
-    for lev in 0..LEVELS {
+    for lev in 0..SLOTS {
         add(lat.tph[lev].to_bits() as u64);
         add(lat.off[lev].to_bits());
         add(lat.phase[lev].to_bits());
@@ -301,7 +301,7 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
         for (k, _) in ls.runs[r].pass.iter().enumerate().filter(|x| *x.1) {
             add(k as u64 | 1 << 40);
         }
-        for lev in 0..LEVELS {
+        for lev in 0..SLOTS {
             for &v in ls.runs[r].prof[lev].dep.iter() {
                 add(v.to_bits());
             }

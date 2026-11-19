@@ -8,6 +8,7 @@
 // holds one whose place is still taken.
 import type { ClockEdge, ClockLine, ClockNode } from "../workers/protocol";
 import { hasUpgrade, UPGRADE } from "../game/upgrades";
+import { META_PER_LINE, PROFILES_PER_LINE, profileLine, profileRun } from "./profiles";
 
 /** Length of a turn-back crossover's diagonal, m (T-658d). */
 export const TURNBACK_M = 50;
@@ -193,8 +194,8 @@ export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockN
 export function profileTimes(meta: Float32Array, lines: Iterable<number>, phases: (line: number) => Float32Array): Map<number, ProfileTimes> {
   const out = new Map<number, ProfileTimes>();
   for (const l of lines) {
-    const ph = phases(l), base = meta[l * 6 * 4];
-    for (let p = l * 6; p < l * 6 + 6; p++) {
+    const ph = phases(l), base = meta[l * META_PER_LINE];
+    for (let p = l * PROFILES_PER_LINE; p < (l + 1) * PROFILES_PER_LINE; p++) {
       const first = meta[p * 4] - base, count = meta[p * 4 + 1];
       if (!count || (first + count) * 4 > ph.length) continue;
       const k = (first + count - 1) * 4, a = ph[k + 3];
@@ -241,7 +242,7 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
   const byKey = new Map<string, Trip>();
   const add = (raw: Float32Array, e: number, own: boolean) => {
     for (let k = 0; k < raw.length / 4; k++) {
-      const profile = raw[k * 4], line = Math.floor(profile / 6);
+      const profile = raw[k * 4], line = profileLine(profile);
       if (!ends.has(line)) continue;
       const t: Trip = { profile, draw: raw[k * 4 + 1] + e, end: raw[k * 4 + 2] + e, next: raw[k * 4 + 3] + e, i: own ? k : -1 };
       const kk = key(profile, t.draw);
@@ -257,12 +258,12 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
   if (prev) add(prev, epoch - BAY_LOOKBACK_S, false);
   add(cur, epoch, true);
   // per group, by arrival: each train takes the place that frees first, its own track on a tie
-  const endOf = (t: Trip) => ends.get(Math.floor(t.profile / 6))![Math.floor(t.profile / 3) % 2];
+  const endOf = (t: Trip) => ends.get(profileLine(t.profile))![profileRun(t.profile)];
   // a trip by line, run and departure (its next trip can be of another level)
   const runKey = (line: number, run: number, draw: number) => `${line}|${run}|${Math.round(draw * 100)}`;
   const byRun = new Map<string, Trip>();
-  for (const t of trips) byRun.set(runKey(Math.floor(t.profile / 6), Math.floor(t.profile / 3) % 2, t.draw), t);
-  const nextOf = (t: Trip) => (Number.isFinite(t.next) ? byRun.get(runKey(Math.floor(t.profile / 6), 1 - (Math.floor(t.profile / 3) % 2), t.next)) : undefined);
+  for (const t of trips) byRun.set(runKey(profileLine(t.profile), profileRun(t.profile), t.draw), t);
+  const nextOf = (t: Trip) => (Number.isFinite(t.next) ? byRun.get(runKey(profileLine(t.profile), 1 - profileRun(t.profile), t.next)) : undefined);
   const arrivals = trips.map((t) => ({ t, at: t.draw + (times(t.profile)?.arrive ?? 0) })).sort((a, b) => a.at - b.at || a.t.profile - b.t.profile);
   const free = new Map<number, [number, number]>();
   const endCode = new Map<Trip, number>();
@@ -279,7 +280,7 @@ export function assignBays(cur: Float32Array, epoch: number, prev: Float32Array 
     endCode.set(t, BAY_OWN + k);
   }
   for (const t of trips) {
-    const line = Math.floor(t.profile / 6), run = Math.floor(t.profile / 3) % 2;
+    const line = profileLine(t.profile), run = profileRun(t.profile);
     const end = ends.get(line)![run];
     if (!end) continue;
     const code = endCode.get(t);

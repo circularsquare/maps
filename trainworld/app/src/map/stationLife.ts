@@ -29,6 +29,7 @@ import { lineNote, popsFor, StationSound } from "./stationSound";
 import { stationZone } from "../game/listScope";
 import { moneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
+import { profileLine, profileRun } from "./profiles";
 
 /** Samples a second. */
 const SAMPLE_MS = 125;
@@ -211,11 +212,11 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
     const speed = clock.speed.peek();
     for (let i = 0; i < r.tripCount; i++) {
       const profile = trips[i * 2];
-      const vl = lines.get(String(Math.floor(profile / 6)));
+      const vl = lines.get(String(profileLine(profile)));
       if (!vl) continue;
       const dep = trips[i * 2 + 1] + epoch, tau = now - dep;
       if (tau < 0) continue;
-      const run = Math.floor(profile / 3) % 2;
+      const run = profileRun(profile);
       const S = w.lineStats[vl.line.id]?.stopS[run];
       if (!S) continue;
       const sNow = profileS(net, profile, tau), sPrev = profileS(net, profile, Math.max(0, prev - dep));

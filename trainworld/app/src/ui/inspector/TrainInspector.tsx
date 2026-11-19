@@ -16,6 +16,7 @@ import { following, toggleFollow } from "../../map/cameraFollow";
 import { Chip, Icon, Row } from "../widgets";
 import { OneRider } from "./OneRider";
 import { TrainStops } from "./TrainStops";
+import { profileLine, profileRun } from "../../map/profiles";
 
 export function TrainInspector({ line, profile, dep }: { line: string; profile: number; dep: number }) {
   const w = world.value;
@@ -28,7 +29,7 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
   const ren = live.overlay!.renderer, ti = ren.tripIndex(profile, dep - ren.tripsEpoch);
   const at = tripAt(net, profile, dep + ren.tripLag(ti), clock.now(), ti >= 0 && ren.tripEnds ? ren.tripEnds[ti] + ren.tripsEpoch : -Infinity);
   const name = stationNames(w);
-  const run = Math.floor(profile / 3) % 2;
+  const run = profileRun(profile);
   const stops = run === 0 ? l.stops : [...l.stops].reverse();
   const stopS = st.stopS[run] ?? [];
   const next = at ? stopS.findIndex((s) => s > at.s + 1) : -1;
@@ -95,7 +96,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   const b = r!.board!, stretch = run === 0 ? seg : n - 2 - seg;
   for (let k = 0; k < r!.tripCount; k++) {
     const pk = r!.trips[k * 2];
-    if (Math.floor(pk / 6) !== Math.floor(profile / 6) || Math.floor(pk / 3) % 2 !== run) continue;
+    if (profileLine(pk) !== profileLine(profile) || profileRun(pk) !== run) continue;
     const v = tripLoad(b, k, stretch);
     if (v !== null) { sum += v; many++; }
   }

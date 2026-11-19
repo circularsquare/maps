@@ -117,7 +117,7 @@ try {
       for (let i = 0; i < r.tripCount && late.length < 24; i++) {
         if (!(g.lag[i] > 30)) continue;
         const p = r.trips[i * 2], pos = tw.tripAt(n, p, r.trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i), g.lastTime, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
-        late.push([Math.floor(p / 6), Math.floor(p / 3) % 2, pos ? Math.round(pos.s) : null, Math.round(n.meta[p * 4 + 3]), Math.round(g.lag[i])]);
+        late.push([window.tw.profiles.profileLine(p), window.tw.profiles.profileRun(p), pos ? Math.round(pos.s) : null, Math.round(n.meta[p * 4 + 3]), Math.round(g.lag[i])]);
       }
       w.late = late;
       return { ...w, heldMean: +(w.heldSum / Math.max(1, w.frames)).toFixed(2), lagMax: +w.lagMax.toFixed(0), conflictWaits: g.conflictWaits, conflictMean: +(g.conflictWaitSum / Math.max(1, g.conflictWaits)).toFixed(1), conflictLongest: +g.conflictLongest.toFixed(0), letThrough: g.conflictLetThrough };

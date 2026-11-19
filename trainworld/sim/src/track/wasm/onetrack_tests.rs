@@ -70,7 +70,7 @@ fn a_one_track_station_on_double_track_stops_one_way() {
     assert!(ls.running);
     assert_eq!(ls.runs[0].pass, Vec::<bool>::new(), "eastbound stops");
     assert_eq!(ls.runs[1].pass, vec![false, true, false], "westbound passes");
-    for lev in 0..2 {
+    for lev in [crate::track::params::HIGH, crate::track::params::MEDIUM] {
         let (p0, p1) = (&ls.runs[0].prof[lev], &ls.runs[1].prof[lev]);
         assert!(p0.dep[1] - p0.arr[1] >= 29.0, "a dwell eastbound");
         assert_eq!(p1.arr[1], p1.dep[1], "no stand westbound");

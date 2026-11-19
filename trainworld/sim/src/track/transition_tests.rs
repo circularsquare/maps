@@ -129,7 +129,7 @@ fn edit_at(w: &mut TrackWorld, now: f64, what: &str, edit: impl FnOnce(&mut Trac
 }
 
 fn counts(w: &mut TrackWorld, id: u32, trains: [u32; 3]) {
-    let tph = w.net.line_tph[id as usize];
+    let tph = slots_to_rows(w.net.line_tph[id as usize]);
     w.apply(Op::TrainCounts { id, trains: Some(trains), tph }).unwrap();
 }
 

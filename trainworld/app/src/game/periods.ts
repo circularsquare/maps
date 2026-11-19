@@ -1,6 +1,6 @@
 // The five periods of the day (SPEC 4.2, 6.3): when each demand level is scheduled (high 6-20,
 // medium 20-24, low 0-6), and the periods demand is solved for. The definition is `PERIOD_HOURS`
-// and `PERIOD_LEVEL` in sim/src/track/params.rs; this is its copy for the main thread, which has
+// and `PERIOD_ROW` in sim/src/track/params.rs; this is its copy for the main thread, which has
 // no WASM. The demand
 // workers report the Rust table when they start and the demand client checks the two agree
 // (workers/demandClient.ts), so an edit to one without the other shows up as a console error.

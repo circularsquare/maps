@@ -36,6 +36,7 @@ import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";
  * code counts from its own run, whose other track is theirs), -1 none. */
 const leftFrom = (v: number) => (v < 4 ? -1 : v - (v % 4) + 1 - (v % 4));
 import { perfOff } from "../perfFlags";
+import { META_PER_LINE, profileLine, profileRun } from "./profiles";
 
 /** Room left between a held train's front and the back of the train ahead, m. */
 export const GUARD_GAP_M = 30;
@@ -226,7 +227,7 @@ export class TrainGuard {
     if (!T || !E) return;
     this.readConflicts(n.conflicts);
     // a row of the path table past the lines is a return run's own way back, its line's (T-3250)
-    const base = n.meta.length / 24, lineOf = (l: number) => (base > 0 && l >= base ? l - base : l);
+    const base = n.meta.length / META_PER_LINE, lineOf = (l: number) => (base > 0 && l >= base ? l - base : l);
     // a track key is shared when two lines use it
     const owner = new Map<number, number>();
     const shared = new Set<number>();
@@ -357,7 +358,7 @@ export class TrainGuard {
     const lines = this.guardedTrack.length, cars = this.net?.lineCars;
     for (let i = 0; i < f.trips.length / 2; i++) {
       if (B[i * BAY_STRIDE + 2] < 4) continue;
-      const l = Math.floor(f.trips[i * 2] / 6);
+      const l = profileLine(f.trips[i * 2]);
       if (l < lines && (cars?.[l] ?? 8) >= 1) this.guardedTrack[l] = this.guardedAll[l] = 1;
     }
     return true;
@@ -390,8 +391,8 @@ export class TrainGuard {
     this.epoch = f.epoch;
     this.nextIndex.clear();
     for (let i = 0; i < n; i++) {
-      const line = Math.floor(f.trips[i * 2] / 6);
-      if (this.guardedAll[line]) this.nextIndex.set((line * 2 + (Math.floor(f.trips[i * 2] / 3) % 2)) * 1e7 + Math.round(f.trips[i * 2 + 1] * 100), i);
+      const line = profileLine(f.trips[i * 2]);
+      if (this.guardedAll[line]) this.nextIndex.set((line * 2 + profileRun(f.trips[i * 2])) * 1e7 + Math.round(f.trips[i * 2 + 1] * 100), i);
     }
   }
 
@@ -431,7 +432,7 @@ export class TrainGuard {
     const seen = this.seen.length === this.guarded.length ? this.seen.fill(2) : (this.seen = new Uint8Array(this.guarded.length).fill(2));
     const box = this.boxes;
     for (let i = 0; i < nTrips; i++) {
-      const p = f.trips[i * 2], line = Math.floor(p / 6);
+      const p = f.trips[i * 2], line = profileLine(p);
       const l0 = lag[i];
       const li = l0 > decay ? l0 - decay : 0;
       if (this.guarded[line] && seen[line] === 2) {
@@ -503,7 +504,7 @@ export class TrainGuard {
     const sNew = cs.slice();
     for (let c = 0; c < cand.length; c++) {
       // (a return run on its own way back takes that way's entries, as a run 0, T-3250)
-      const i = cand[c], p = f.trips[i * 2], line = Math.floor(p / 6), { geo, gr: run } = trainFrame(n, p, 0);
+      const i = cand[c], p = f.trips[i * 2], line = profileLine(p), { geo, gr: run } = trainFrame(n, p, 0);
       // on a line here for its conflicts alone (it shares no track), a train standing out its turn
       // at the end of its run holds no one: the next one, late from a wait, would queue behind it
       // there and pass its lateness on to the one after, and so on (lags to the 20-minute cap)
@@ -552,7 +553,7 @@ export class TrainGuard {
     const outer = this.passStops.size ? this.outerAt(f, cand, cs, half) : null;
     const beside = (a: number, b: number) => {
       const p = f.trips[cand[a] * 2], q = f.trips[cand[b] * 2];
-      return (outer![a] >= 0 && !!this.passThrough.get(Math.floor(q / 6))?.has(outer![a])) || (outer![b] >= 0 && !!this.passThrough.get(Math.floor(p / 6))?.has(outer![b]));
+      return (outer![a] >= 0 && !!this.passThrough.get(profileLine(q))?.has(outer![a])) || (outer![b] >= 0 && !!this.passThrough.get(profileLine(p))?.has(outer![b]));
     };
     const besideIn = outer ? lists.map((v) => {
       for (let j = 0; j < v.length; j += REG) if (outer[v[j]] >= 0) return true;
@@ -601,8 +602,8 @@ export class TrainGuard {
         const dep = f.trips[i * 2 + 1], arrive = dep + meta[p * 4 + 2] + lag[i], next = f.nexts[i];
         if (arrive > f.ends[i] && Number.isFinite(next)) {
           // (the other run, but for a loop)
-          const at = (run: number) => this.nextIndex.get((Math.floor(p / 6) * 2 + run) * 1e7 + Math.round(next * 100));
-          const j = at(1 - (Math.floor(p / 3) % 2)) ?? at(Math.floor(p / 3) % 2);
+          const at = (run: number) => this.nextIndex.get((profileLine(p) * 2 + run) * 1e7 + Math.round(next * 100));
+          const j = at(1 - profileRun(p)) ?? at(profileRun(p));
           if (j !== undefined && lag[j] < Math.min(LAG_MAX, arrive - next)) { lag[j] = Math.min(LAG_MAX, arrive - next); changed = true; }
         }
       }
@@ -664,7 +665,7 @@ export class TrainGuard {
     if (this.tauPhases !== n.phases) { this.tauCache.clear(); this.tauPhases = n.phases; }
     const uTime = f.time - f.epoch;
     // per candidate: on a tram line (T-3032), which yields to trains at a flat crossing
-    const tram = cand.map((i) => ((n.lineCars?.[Math.floor(f.trips[i * 2] / 6)] ?? 8) % 1) === TRAM_MARK);
+    const tram = cand.map((i) => ((n.lineCars?.[profileLine(f.trips[i * 2])] ?? 8) % 1) === TRAM_MARK);
     // per conflict: candidate, its route there (the edge at a crossing, the move at a junction), its
     // offset along its run
     const regs = new Map<number, number[]>();
@@ -968,10 +969,10 @@ export class TrainGuard {
   private outerAt(f: GuardFrame, cand: number[], cs: number[], half: number[]): Int32Array {
     const meta = this.net!.meta, out = new Int32Array(cand.length).fill(-1);
     for (let c = 0; c < cand.length; c++) {
-      const p = f.trips[cand[c] * 2], st = this.passStops.get(Math.floor(p / 6));
+      const p = f.trips[cand[c] * 2], st = this.passStops.get(profileLine(p));
       // (the stops are along its path: a return run on its own way back is not looked for on them, T-3250)
-      if (!st || trainFrame(this.net!, p, 0).geo !== Math.floor(p / 6)) continue;
-      const run0 = Math.floor(p / 3) % 2 === 0, L = meta[p * 4 + 3], s = cs[c], h = half[c];
+      if (!st || trainFrame(this.net!, p, 0).geo !== profileLine(p)) continue;
+      const run0 = profileRun(p) === 0, L = meta[p * 4 + 3], s = cs[c], h = half[c];
       for (let k = 0; k < st.length; k += 5) {
         // the outer track's leads in its travel direction: in before the platform, out after it
         const at = run0 ? st[k] : L - st[k], ph = st[k + 1], [lin, lout] = run0 ? [st[k + 3], st[k + 4]] : [st[k + 4], st[k + 3]];

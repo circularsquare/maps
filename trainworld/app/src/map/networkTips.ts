@@ -26,6 +26,7 @@ import { circleColour, circleColours, circleList, stationCircles, type Circle } 
 import { factRow, lineBullet, lineBullets } from "./trackTagRows";
 import { shapeOf } from "../game/lineShapeState";
 import { headingOnScreen } from "./stopHeading";
+import { profileRun } from "./profiles";
 
 /** A line of a tag: plain text, or a row built as DOM. */
 export type TipLine = string | HTMLElement;
@@ -76,7 +77,7 @@ export function trainTip(ov: Overlay, w: WorldView, line: string, profile: numbe
   if (!at || !st) return [name];
   const dv = demandView.peek();
   if (!dv) return [name, t("networkTips.calculating")];
-  const n = l.stops.length, run = Math.floor(profile / 3) % 2;
+  const n = l.stops.length, run = profileRun(profile);
   const stopS = st.stopS[run] ?? [];
   let seg = 0;
   while (seg + 1 < n - 1 && stopS[seg + 1] <= at.s + 1) seg++;

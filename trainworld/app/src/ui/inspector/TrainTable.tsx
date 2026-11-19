@@ -15,6 +15,7 @@ import { shade as uiShade } from "../../game/ui";
 import type { LineInput, LineStats } from "../../game/types";
 import { linesById, stationNames, stationsById, world } from "../../game/world";
 import { t } from "../../i18n";
+import { profileRun } from "../../map/profiles";
 import { live } from "../../map/live";
 import type { NetworkBuffers } from "../../map/network";
 import { queryClock } from "../../workers/clockClient";
@@ -40,7 +41,7 @@ const markText = (h0: number, s: number) => `${(h0 + Math.floor(s / HOUR)) % 24}
 const DEBUG = typeof location !== "undefined" && new URLSearchParams(location.search).has("debug");
 
 /** The run of profile `p`. Stage 2 (T-3346) makes this `profileRun`. */
-const runOf = (p: number) => Math.floor(p / 3) % 2;
+const runOf = (p: number) => profileRun(p);
 
 /** Seconds into a trip at which profile `p` leaves each of its stops at offsets `offs`: as it
  * first moves on after its stand there (at once from the first stop); the last stop's is its

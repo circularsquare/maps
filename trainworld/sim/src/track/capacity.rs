@@ -99,11 +99,11 @@ enum Tag {
 pub struct Capacity {
     pub res: Vec<Resource>,
     pub users: Vec<User>,
-    /// Utilisation per demand level (high, medium, low).
-    pub rho: Vec<[f64; 3]>,
+    /// Utilisation per slot (`params::SLOTS`).
+    pub rho: Vec<[f64; SLOTS]>,
     /// Delay per train per level: continuous for resources used by count schedules; legacy-only
     /// resources round to whole seconds and omit holds under 2 s.
-    pub delay: Vec<[f64; 3]>,
+    pub delay: Vec<[f64; SLOTS]>,
     tag: Vec<Tag>,
     keys: Vec<u32>,
     /// T-2231: per resource, the overtake plans it reads: a following loss's, one per slower user
@@ -112,6 +112,8 @@ pub struct Capacity {
     /// Entries of `users` and `keys` no resource points at any more; compacted past half.
     dead_users: usize,
     dead_keys: usize,
+    /// T-3542: the slots worked out when it was last built or updated (`Network::slot_worked`).
+    worked: [bool; SLOTS],
 }
 
 impl Capacity {
@@ -180,12 +182,12 @@ impl Capacity {
     }
 
     /// Per line and level, its fullest limiting resource: (utilisation, resource), or (0, MAX).
-    pub fn bottlenecks(&self, lines: usize) -> Vec<[(f64, u32); 3]> {
-        let mut out = vec![[(0.0, u32::MAX); 3]; lines];
+    pub fn bottlenecks(&self, lines: usize) -> Vec<[(f64, u32); SLOTS]> {
+        let mut out = vec![[(0.0, u32::MAX); SLOTS]; lines];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             for u in self.users_of(r).iter().filter(|u| self.caps(r, u)) {
                 let b = &mut out[u.line as usize];
-                for lev in 0..LEVELS {
+                for lev in (0..SLOTS).filter(|&s| self.worked[s]) {
                     if self.rho[r][lev] > b[lev].0 {
                         b[lev] = (self.rho[r][lev], r as u32);
                     }
@@ -198,18 +200,18 @@ impl Capacity {
     /// T-679: per line and level, the most trains an hour it can run with every other line's rate
     /// as it stands, and the limiting resource that sets it: (trains an hour, resource), or
     /// (infinity, MAX) where nothing limits it. `fill` cuts a line at the same rate.
-    pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); 3]> {
+    pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); SLOTS]> {
         self.line_limits_lone(net, true)
     }
 
     /// `line_limits`, with `lone` false counting single track's margin for a lone train too
     /// (T-3526): the limit a second train would meet, which a line's train count is capped by.
-    pub fn line_limits_lone(&self, net: &Network, lone: bool) -> Vec<[(f64, u32); 3]> {
-        let mut out = vec![[(f64::INFINITY, u32::MAX); 3]; net.line_count()];
+    pub fn line_limits_lone(&self, net: &Network, lone: bool) -> Vec<[(f64, u32); SLOTS]> {
+        let mut out = vec![[(f64::INFINITY, u32::MAX); SLOTS]; net.line_count()];
         let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
             let single = self.res[r].kind == ResKind::SingleTrack;
-            for lev in 0..LEVELS {
+            for lev in net.slots() {
                 own.clear();
                 for u in self.users_of(r) {
                     let occ = if lone { occ_at(net, self.users_of(r), single, u, lev) } else { u.occ } / 3600.0;
@@ -357,8 +359,8 @@ fn push_res(cap: &mut Capacity, kind: ResKind, x: f64, y: f64, node: u32, edge: 
     cap.users.extend_from_slice(users);
     cap.tag.push(tag);
     cap.plans.push(vec![]);
-    cap.rho.push([0.0; 3]);
-    cap.delay.push([0.0; 3]);
+    cap.rho.push([0.0; SLOTS]);
+    cap.delay.push([0.0; SLOTS]);
 }
 
 fn hold_back(lines: &[LineSvc], l: usize) -> f64 {
@@ -1123,7 +1125,7 @@ impl Capacity {
 
 /// Every resource and who uses it, from the lines' runs (paths, stops, free profiles).
 pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
-    let mut cap = Capacity::default();
+    let mut cap = Capacity { worked: std::array::from_fn(|s| net.slot_worked(s)), ..Default::default() };
     let all: Vec<u32> = (0..lines.len() as u32).collect();
     build_sections(net, lines, &all, &|_| true, &mut cap);
     build_nodes(net, lines, &all, &|_| true, &mut cap);
@@ -1137,17 +1139,17 @@ pub fn build(net: &Network, lines: &[LineSvc]) -> Capacity {
 /// runs over has no train to keep the margin from, so it takes the track for its transit alone;
 /// with two or more trains, or another line on the track, the margin counts.
 fn occ_at(net: &Network, us: &[User], single: bool, u: &User, lev: usize) -> f64 {
-    let lone = single && net.line_trains[u.line as usize].map_or(false, |t| t[lev] <= 1) && us.iter().all(|x| x.line == u.line);
+    let lone = single && net.line_trains[u.line as usize].map_or(false, |t| t[net.slot_row(u.line as usize, lev)] <= 1) && us.iter().all(|x| x.line == u.line);
     if lone { (u.occ - SINGLE_TRACK_MARGIN_S).max(0.0) } else { u.occ }
 }
 
-fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, single: bool, plans: &[Arc<Plan>]) -> ([f64; 3], [f64; 3]) {
-    let (mut rho_r, mut delay_r) = ([0.0; 3], [0.0; 3]);
+fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, tag: Tag, single: bool, plans: &[Arc<Plan>]) -> ([f64; SLOTS], [f64; SLOTS]) {
+    let (mut rho_r, mut delay_r) = ([0.0; SLOTS], [0.0; SLOTS]);
     let continuous = us.iter().any(|u| net.line_trains[u.line as usize].is_some());
     if matches!(tag, Tag::Follow { .. } | Tag::Wait { .. }) {
         // T-1924: no utilisation, so no map dot; only the faster line's loss, or (T-2231) the
         // slower line's wait at a passing station
-        for (lev, d) in delay_r.iter_mut().enumerate() {
+        for (lev, d) in delay_r.iter_mut().enumerate().filter(|(lev, _)| net.slot_worked(*lev)) {
             let w = match tag {
                 Tag::Wait { point, .. } => plans.first().map_or(0.0, |p| p.outcome(net, lev).waits[point as usize]),
                 _ => follow_loss(us, net, lev, plans).0,
@@ -1156,7 +1158,7 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
         }
         return (rho_r, delay_r);
     }
-    for lev in 0..LEVELS {
+    for lev in net.slots() {
         let (mut load, mut trains) = (0.0, 0.0);
         streams.clear();
         for u in us {
@@ -1193,8 +1195,8 @@ fn solve_one(us: &[User], net: &Network, streams: &mut Vec<((u32, u8), f64)>, ta
 pub fn solve(cap: &mut Capacity, net: &Network) {
     let mut streams = vec![];
     let n = cap.res.len();
-    cap.rho.resize(n, [0.0; 3]);
-    cap.delay.resize(n, [0.0; 3]);
+    cap.rho.resize(n, [0.0; SLOTS]);
+    cap.delay.resize(n, [0.0; SLOTS]);
     for r in 0..n {
         let (rho, delay) = solve_one(cap.users_of(r), net, &mut streams, cap.tag[r], cap.res[r].kind == ResKind::SingleTrack, &cap.plans[r]);
         cap.rho[r] = rho;
@@ -1210,6 +1212,7 @@ impl Capacity {
     /// hour changed. Returns, per line, whether it owns a resource that was rebuilt or re-solved
     /// to a different delay, i.e. whether its holds may have changed.
     pub fn update(&mut self, net: &Network, lines: &[LineSvc], edges: &[u32], nodes: &[u32], rescheduled: &[u32]) -> Vec<bool> {
+        self.worked = std::array::from_fn(|s| net.slot_worked(s));
         let (ne, nn) = (net.edge_count(), net.node_count());
         let mut de = vec![false; ne];
         for &e in edges {
@@ -1369,6 +1372,42 @@ impl Capacity {
         affected
     }
 
+    /// T-3542: what `update` with no track touched and `rescheduled` lines' rates moved would leave,
+    /// leaving the capacity as it is (an edit's settle probes with it each round, `Service::probe_trips`,
+    /// where a clone of the whole capacity cost about half a millisecond a round in London): every
+    /// resource's delays as they would be, and per line whether it owns one that moved. A following
+    /// loss or a wait of a line no longer running, which `update` drops, has no delay.
+    pub fn probe(&self, net: &Network, lines: &[LineSvc], rescheduled: &[u32]) -> (Vec<[f64; SLOTS]>, Vec<bool>) {
+        let mut affected = vec![false; lines.len()];
+        let mut delay = self.delay.clone();
+        let mut rs = vec![false; lines.len()];
+        for &l in rescheduled {
+            if let Some(x) = rs.get_mut(l as usize) {
+                *x = true;
+            }
+        }
+        let mut streams = vec![];
+        for r in 0..self.res.len() {
+            let dead = matches!(self.tag[r], Tag::Follow { line } | Tag::Wait { line, .. } if !lines.get(line as usize).is_some_and(|l| l.running));
+            let new = if dead {
+                [0.0; SLOTS]
+            } else if !rescheduled.is_empty() && self.users_of(r).iter().any(|u| rs[u.line as usize]) {
+                solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind == ResKind::SingleTrack, &self.plans[r]).1
+            } else {
+                continue;
+            };
+            if dead || new != delay[r] {
+                delay[r] = new;
+                for u in self.users_of(r) {
+                    if u.owner {
+                        affected[u.line as usize] = true;
+                    }
+                }
+            }
+        }
+        (delay, affected)
+    }
+
     /// Drop dead users and keys once they are more than half of their vectors.
     fn compact(&mut self) {
         if self.dead_users * 2 > self.users.len() {
@@ -1397,7 +1436,7 @@ impl Capacity {
 
     /// The resources as a sorted list of (resource, users, rho, delay), for comparing two passes
     /// that built them in different orders (tests and checks).
-    pub fn canonical(&self) -> Vec<(Resource, Vec<User>, [f64; 3], [f64; 3])> {
+    pub fn canonical(&self) -> Vec<(Resource, Vec<User>, [f64; SLOTS], [f64; SLOTS])> {
         let mut v: Vec<_> = (0..self.res.len())
             .map(|r| {
                 let mut res = self.res[r].clone();
@@ -1405,7 +1444,7 @@ impl Capacity {
                 (res, self.users_of(r).to_vec(), self.rho[r], self.delay[r])
             })
             .collect();
-        let key = |x: &(Resource, Vec<User>, [f64; 3], [f64; 3])| {
+        let key = |x: &(Resource, Vec<User>, [f64; SLOTS], [f64; SLOTS])| {
             let us: Vec<_> = x.1.iter().map(|u| (u.line, u.run, u.owner, u.stop, u.at.to_bits(), u.occ.to_bits())).collect();
             (x.0.kind as u8, x.0.node, x.0.edge, x.0.x.to_bits(), x.0.y.to_bits(), us)
         };
@@ -1414,21 +1453,26 @@ impl Capacity {
     }
 }
 
-/// Holds per (line, run, level): track holds and extra dwell per stop, from the solved delays.
+/// Holds per (line, run, slot): track holds and extra dwell per stop, from the solved delays.
 /// With `want`, only for the lines it marks (the others come back empty).
-pub type LineHolds = [[(Vec<Hold>, Vec<f64>); 3]; 2];
+pub type LineHolds = [[(Vec<Hold>, Vec<f64>); SLOTS]; 2];
 
 pub fn holds(cap: &Capacity, lines: &[LineSvc]) -> Vec<LineHolds> {
     holds_for(cap, lines, None)
 }
 
 pub fn holds_for(cap: &Capacity, lines: &[LineSvc], want: Option<&[bool]>) -> Vec<LineHolds> {
+    holds_with(cap, &cap.delay, lines, want)
+}
+
+/// `holds_for` with each resource's delays from `delay` in place of the capacity's own (`probe`).
+pub fn holds_with(cap: &Capacity, delay: &[[f64; SLOTS]], lines: &[LineSvc], want: Option<&[bool]>) -> Vec<LineHolds> {
     let wanted = |l: usize| want.map_or(true, |w| w.get(l).copied().unwrap_or(false));
     let mut out: Vec<LineHolds> = lines
         .iter()
         .enumerate()
         .map(|(l, ls)| {
-            std::array::from_fn(|r| std::array::from_fn(|_| (vec![], if wanted(l) { vec![0.0; ls.runs[r].stop_s.len()] } else { vec![] })))
+            std::array::from_fn(|r| std::array::from_fn(|s| (vec![], if wanted(l) && cap.worked[s] { vec![0.0; ls.runs[r].stop_s.len()] } else { vec![] })))
         })
         .collect();
     for r in 0..cap.res.len() {
@@ -1439,8 +1483,8 @@ pub fn holds_for(cap: &Capacity, lines: &[LineSvc], want: Option<&[bool]>) -> Ve
                 continue;
             }
             for u in cap.users_of(r).iter().filter(|u| u.owner) {
-                for lev in 0..LEVELS {
-                    let d = cap.delay[r][lev];
+                for lev in (0..SLOTS).filter(|&s| cap.worked[s]) {
+                    let d = delay[r][lev];
                     if d > 0.0 {
                         out[u.line as usize][u.run as usize][lev].0.push(Hold { s: u.at, delay: d, span: (u.occ - u.at).max(0.0) });
                     }
@@ -1452,8 +1496,8 @@ pub fn holds_for(cap: &Capacity, lines: &[LineSvc], want: Option<&[bool]>) -> Ve
             if !u.owner || !wanted(u.line as usize) {
                 continue;
             }
-            for lev in 0..LEVELS {
-                let d = cap.delay[r][lev];
+            for lev in (0..SLOTS).filter(|&s| cap.worked[s]) {
+                let d = delay[r][lev];
                 if d <= 0.0 {
                     continue;
                 }

@@ -1094,8 +1094,8 @@ fn same_fare_weight_keeps_periods() {
     a.set_fare_weight(w).unwrap();
     assert_eq!(a.solved_mask(), 0b11111);
     network(&mut a, 4000.0, [12.0, 12.0, 6.0]);
-    use crate::track::params::{LOW, PERIOD_LEVEL};
-    let low: u32 = (0..PERIODS).filter(|&q| PERIOD_LEVEL[q] == LOW).fold(0, |m, q| m | 1 << q);
+    use crate::track::params::PERIOD_ROW;
+    let low: u32 = (0..PERIODS).filter(|&q| PERIOD_ROW[q] == 2).fold(0, |m, q| m | 1 << q);
     assert!(low != 0);
     assert_eq!(a.solved_mask(), 0b11111 & !low);
     a.set_fare_weight(w * 2.0).unwrap();

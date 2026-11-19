@@ -161,14 +161,15 @@ impl TrackApi {
             let ok = svc.map_or(false, |s| s.ok);
             let running = svc.map_or(false, |s| s.running);
             out.extend([l as f64, n.line_colour[i] as f64, ok as u8 as f64, running as u8 as f64, n.line_broken[i] as u8 as f64]);
-            out.extend(n.line_tph[i].iter().map(|&t| t as f64));
+            // per row (high, medium, low), each from its slot
+            out.extend(n.rows_of(n.line_tph[i]).iter().map(|&t| t as f64));
             out.push(n.line_cars[i] as f64);
             match svc.filter(|s| s.ok) {
                 Some(s) => {
                     out.push(s.runs[0].len);
-                    out.extend(s.round_trip);
-                    out.extend(s.trains.iter().map(|&t| t as f64));
-                    out.extend(s.delay);
+                    out.extend(n.rows_of(s.round_trip));
+                    out.extend(n.rows_of(s.trains).iter().map(|&t| t as f64));
+                    out.extend(n.rows_of(s.delay));
                     out.extend([n.line_dwell[i] as f64, n.line_turn[i] as f64, s.cars as f64]);
                 }
                 None => {

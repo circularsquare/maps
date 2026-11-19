@@ -2176,12 +2176,13 @@ impl TrackApi {
         let Some(&s) = stops.iter().min_by_key(|&&s| net.node_platform[s as usize]) else { return vec![] };
         vec![((net.node_platform[s as usize] as f64 / CAR_LEN).floor().max(1.0)) as u32, s]
     }
-    /// Per demand level (high, medium, low): round trip s, trains needed, delay s.
+    /// Per row (high, medium, low): round trip s, trains needed, delay s.
     pub fn line_summary(&self, line: u32) -> Vec<f64> {
         let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
-        (0..LEVELS).flat_map(|k| [l.round_trip[k], l.trains[k] as f64, l.delay[k]]).collect()
+        (0..ROWS).map(|row| self.w.net.row_slot(line as usize, row)).flat_map(|k| [l.round_trip[k], l.trains[k] as f64, l.delay[k]]).collect()
     }
-    /// Where a line's train is at game time `t` on a trip that left at `dep`: x, y (checks).
+    /// Where a line's train is at game time `t` on a trip that left at `dep`: x, y (checks). `level`
+    /// is the trip's slot (its profile index mod `SLOTS`).
     pub fn train_at(&self, line: u32, run: usize, level: usize, dep: f64, t: f64) -> Vec<f64> {
         let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
         let (s, _) = profile::state_at(&l.runs[run].prof[level].phases, t - dep);

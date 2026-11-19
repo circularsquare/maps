@@ -314,13 +314,14 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(rated.len() as u64);
         for i in rated {
             w.u(i as u64);
-            for r in net.line_tph[lines[i] as usize] { w.u(r.to_bits() as u64); }
+            // T-3542: per row, each from its slot, as before slots: a line of three rows has no others
+            for r in net.rows_of(net.line_tph[lines[i] as usize]) { w.u(r.to_bits() as u64); }
         }
         let kept: Vec<_> = net.settle_kept.iter().filter(|k| index.get(k.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
         w.u(kept.len() as u64);
         for &(l, lev, rate, trip, trains) in kept {
             w.u(index[l as usize] as u64);
-            w.u(lev as u64);
+            w.u(net.slot_row(l as usize, lev) as u64);
             w.u(rate as u64);
             w.u(trip);
             w.u(trains as u64);
@@ -381,7 +382,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
     }
     // T-1925: the lines' departure phases, after LOR1 and only when some line has one: count, then
     // per line its index and three f32 bits
-    let phased: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_phase_of(l))).filter(|x| x.1 != [0.0; 3]).collect();
+    let phased: Vec<(usize, [f32; ROWS])> = lines.iter().enumerate().map(|(i, &l)| (i, net.rows_of(net.line_phase_of(l)))).filter(|x| x.1 != [0.0; ROWS]).collect();
     if !phased.is_empty() {
         w.0.extend_from_slice(b"LPH1");
         w.u(phased.len() as u64);
@@ -392,7 +393,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
     }
     // T-2972: where the lines' spare time stands, after LPH1 and only when some line's is not half at
     // each end: count, then per line its index and three f32 bits
-    let split: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_split_of(l))).filter(|x| x.1 != [0.5; 3]).collect();
+    let split: Vec<(usize, [f32; ROWS])> = lines.iter().enumerate().map(|(i, &l)| (i, net.rows_of(net.line_split_of(l)))).filter(|x| x.1 != [0.5; ROWS]).collect();
     if !split.is_empty() {
         w.0.extend_from_slice(b"LSP1");
         w.u(split.len() as u64);
@@ -511,7 +512,7 @@ pub fn encode(net: &Network) -> Vec<u8> {
         }
     }
     // T-3233: the pacing the settled rates were settled with, so a load starts settled
-    let paced: Vec<(usize, [f32; 3])> = lines.iter().enumerate().map(|(i, &l)| (i, net.line_pace_of(l))).filter(|(_, p)| p.iter().any(|&x| x != 0.0)).collect();
+    let paced: Vec<(usize, [f32; ROWS])> = lines.iter().enumerate().map(|(i, &l)| (i, net.rows_of(net.line_pace_of(l)))).filter(|(_, p)| p.iter().any(|&x| x != 0.0)).collect();
     if net.rates_settled && lines.iter().any(|&l| net.line_trains[l as usize].is_some()) && !paced.is_empty() {
         w.0.extend_from_slice(b"LPC1");
         w.u(paced.len() as u64);
@@ -568,13 +569,13 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(rated.len() as u64);
             for &i in &rated {
                 w.u(i as u64);
-                for r in net.line_tph_rest[lines[i] as usize] { w.u(r.to_bits() as u64); }
+                for r in net.rows_of(net.line_tph_rest[lines[i] as usize]) { w.u(r.to_bits() as u64); }
             }
             let kept: Vec<_> = net.settle_kept_rest.iter().filter(|x| index.get(x.0 as usize).is_some_and(|&i| i != u32::MAX)).collect();
             w.u(kept.len() as u64);
             for &(l, lev, rate, trip, trains) in kept {
                 w.u(index[l as usize] as u64);
-                w.u(lev as u64); w.u(rate as u64); w.u(trip); w.u(trains as u64);
+                w.u(net.slot_row(l as usize, lev) as u64); w.u(rate as u64); w.u(trip); w.u(trains as u64);
             }
         }
     }
@@ -854,11 +855,11 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let rates = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
-            if i < n_lines && net.line_trains[i].is_some() { net.line_tph[i] = rates; }
+            if i < n_lines && net.line_trains[i].is_some() { net.line_tph[i] = net.rows_in(rates, 0.0); }
         }
         for _ in 0..r.u()? {
-            let (l, lev, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
-            if (l as usize) < n_lines && lev < 3 { net.settle_kept.push((l, lev, rate, trip, trains)); }
+            let (l, row, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
+            if (l as usize) < n_lines && row < ROWS { net.settle_kept.push((l, net.row_slot(l as usize, row), rate, trip, trains)); }
         }
         net.rates_settled = true;
         net.rates_from_save = true;
@@ -900,22 +901,22 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LPH1") {
         r.1 += 4;
-        let mut phase = vec![[0.0f32; 3]; n_lines];
+        let mut phase = vec![[0.0f32; SLOTS]; n_lines];
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
-            if i < n_lines { phase[i] = p; }
+            if i < n_lines { phase[i] = net.rows_in(p, 0.0); }
         }
         net.line_phase = phase;
         net.phases_placed = true;
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LSP1") {
         r.1 += 4;
-        let mut split = vec![[0.5f32; 3]; n_lines];
+        let mut split = vec![[0.5f32; SLOTS]; n_lines];
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
-            if i < n_lines { split[i] = p; }
+            if i < n_lines { split[i] = net.rows_in(p, 0.5); }
         }
         net.line_split = split;
     }
@@ -1039,11 +1040,11 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LPC1") {
         r.1 += 4;
-        let mut pace = vec![[0.0f32; 3]; n_lines];
+        let mut pace = vec![[0.0f32; SLOTS]; n_lines];
         for _ in 0..r.u()? {
             let i = r.u()? as usize;
             let p = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
-            if i < n_lines { pace[i] = p; }
+            if i < n_lines { pace[i] = net.rows_in(p, 0.0); }
         }
         net.line_pace = pace;
         net.pace_from_save = net.rates_from_save;
@@ -1096,11 +1097,11 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
             for _ in 0..r.u()? {
                 let i = r.u()? as usize;
                 let rates = [r.u()? as u32, r.u()? as u32, r.u()? as u32].map(f32::from_bits);
-                if i < n_lines { net.line_tph_rest[i] = rates; }
+                if i < n_lines { net.line_tph_rest[i] = net.rows_in(rates, 0.0); }
             }
             for _ in 0..r.u()? {
-                let (l, lev, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
-                if (l as usize) < n_lines && lev < 3 { net.settle_kept_rest.push((l, lev, rate, trip, trains)); }
+                let (l, row, rate, trip, trains) = (r.u()? as u32, r.u()? as usize, r.u()? as u32, r.u()?, r.u()? as u32);
+                if (l as usize) < n_lines && row < ROWS { net.settle_kept_rest.push((l, net.row_slot(l as usize, row), rate, trip, trains)); }
             }
             net.rest_solved = true;
         }

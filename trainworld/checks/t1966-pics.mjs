@@ -48,7 +48,7 @@ try {
         // standing 10-20 s already: a wait long enough to see
         if (since < 10) continue;
         if (since > 20) { seen.add(i); continue; }
-        const p = r.trips[i * 2], line = Math.floor(p / 6), dep = r.trips[i * 2 + 1] + r.tripsEpoch;
+        const p = r.trips[i * 2], line = window.tw.profiles.profileLine(p), dep = r.trips[i * 2 + 1] + r.tripsEpoch;
         const at = tw.tripAt(n, p, dep + r.tripLag(i), g.lastTime);
         if (!at) continue;
         // the conflict point: its front's hold point plus the margin

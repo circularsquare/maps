@@ -23,7 +23,7 @@ use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
 use super::network::{Network, PERIODS, TRAM_CARS};
 use super::pack::{self, City};
-use crate::track::params::{LEVELS, PERIOD_HOURS, PERIOD_LEVEL};
+use crate::track::params::{ROWS, PERIOD_HOURS, PERIOD_ROW};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
@@ -321,7 +321,7 @@ pub(crate) struct Service {
     /// On a circle (T-798) the last of run 0 and the first of run 1 are the stand at the first stop,
     /// riding on round.
     pub(crate) times: Vec<f32>,
-    pub(crate) tph: Vec<[f32; LEVELS]>,
+    pub(crate) tph: Vec<[f32; ROWS]>,
     pub(crate) cars: Vec<f32>,
     /// Each demand station's complex (`demand_groups`), empty if none were given.
     pub(crate) group: Vec<u32>,
@@ -383,7 +383,7 @@ impl Service {
                     [lev, 3 + lev].iter().all(|&r| same_bits(&self.times[6 * a + r * n..6 * a + (r + 1) * n], &o.times[6 * a + r * n..6 * a + (r + 1) * n]))
                 })
         };
-        let same: [bool; LEVELS] = std::array::from_fn(level_same);
+        let same: [bool; ROWS] = std::array::from_fn(level_same);
         let nr = 2 * self.stops.len();
         let span_same = |q: usize| {
             fn at(s: &Service, q: usize, nr: usize) -> Option<&[f32]> {
@@ -395,7 +395,7 @@ impl Service {
                 (Some(a), None) | (None, Some(a)) => a.iter().all(|&v| v == 1.0),
             }
         };
-        (0..PERIODS).filter(|&q| same[PERIOD_LEVEL[q]] && span_same(q)).fold(0, |m, q| m | 1 << q)
+        (0..PERIODS).filter(|&q| same[PERIOD_ROW[q]] && span_same(q)).fold(0, |m, q| m | 1 << q)
     }
 }
 
@@ -652,7 +652,7 @@ pub fn demand_periods() -> Vec<f64> {
     (0..PERIODS)
         .flat_map(|q| {
             let (h0, h1) = PERIOD_HOURS[q];
-            [h0, h1, PERIOD_LEVEL[q] as f64, TO_WORK[q] as f64, TO_HOME[q] as f64, PEAK_HOUR_FACTOR[q] as f64]
+            [h0, h1, PERIOD_ROW[q] as f64, TO_WORK[q] as f64, TO_HOME[q] as f64, PEAK_HOUR_FACTOR[q] as f64]
         })
         .collect()
 }
@@ -690,7 +690,7 @@ impl DemandApi {
     /// period's headway (a line with no trains in a period has an infinite headway, so nobody
     /// boards it, and keeps its route nodes so results line up across periods).
     pub(crate) fn period_net(svc: &Service, q: usize) -> Network {
-        let lev = PERIOD_LEVEL[q];
+        let lev = PERIOD_ROW[q];
         let nl = svc.cars.len();
         let mut net = Network {
             st_x: svc.st_x.clone(),
@@ -728,7 +728,7 @@ impl DemandApi {
             // round from it (`Service::times`)
             net.line_wrap[l] = n >= 3 && svc.stops[a] == svc.stops[b - 1] && svc.times[6 * a + lev * n + n - 1] > 0.0;
             let hw: [f32; PERIODS] = std::array::from_fn(|p| {
-                let t = svc.tph[l][PERIOD_LEVEL[p]];
+                let t = svc.tph[l][PERIOD_ROW[p]];
                 if t > 0.0 { 60.0 / t } else { f32::INFINITY }
             });
             net.line_headway_min.push(hw);

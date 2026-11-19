@@ -122,6 +122,7 @@ import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
 import { modeColours } from "./game/palette";
 import { setClockDiagnosis } from "./game/diagnostics";
+import { PROFILES } from "./map/profiles";
 
 // The mode colours are the network's, not the theme's (T-084): the top bar's split uses them. They
 // follow the bubble scheme (T-833).
@@ -903,6 +904,7 @@ if (DEBUG) {
     failDemand: (why = "forced by ?debug=1") => loadCannotFinish(why), // T-2657: stop demand as if a worker died
     figures: { peaks: figuresPeaks, stopped: figuresStopped }, // T-3314: the longest quiet seen, and the notice's signal
     soundLog, map, overlay, renderer, labels, capacity, clock, world, selection, singleStation, complexOf, display, shade, tools, client, checkPrecision, moneyState, incomeByDay, lastSaved, pick, tripAt, lineRunFactor,
+    profiles: PROFILES, // T-3542: a trip's profile index, for checks (map/profiles.ts)
     // the current draw anchor (T-307), mercator 0..1, and conversions with it
     get originMerc() { return anchor().merc; },
     anchor, toLocal, toLngLat,

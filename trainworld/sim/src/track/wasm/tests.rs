@@ -320,15 +320,15 @@ fn an_express_added_over_constructed_track_runs() {
     // (it turns where the all-stops line does, so takes its time, T-1965: a medium headway well
     // clear of a whole number of trains)
     assert_eq!(a.set_auto_headway(ex, 900, 1500, 0), 0, "{}", a.issues());
-    let (trip, tph) = (a.w.svc.lines[ex as usize].round_trip, a.w.net.line_tph[ex as usize]);
-    assert_eq!(a.w.svc.lines[ex as usize].trains, [auto_trains(trip[0], 900), auto_trains(trip[1], 1500), 0]);
+    let (trip, tph) = (slots_to_rows(a.w.svc.lines[ex as usize].round_trip), slots_to_rows(a.w.net.line_tph[ex as usize]));
+    assert_eq!(slots_to_rows(a.w.svc.lines[ex as usize].trains), [auto_trains(trip[0], 900), auto_trains(trip[1], 1500), 0]);
     assert!(tph[0] > 3.9 && tph[1] > 2.3 && tph[2] == 0.0, "{tph:?}");
     // nothing to construct: refused, and the issue says so
     assert_eq!(a.construct_line(ex), 1);
     assert_eq!(a.issue_kinds(), "NothingToConstruct");
     assert_eq!(a.construct_all(), 1);
     assert_eq!(a.issue_kinds(), "NothingToConstruct");
-    assert_eq!(a.w.net.line_tph[ex as usize], tph);
+    assert_eq!(slots_to_rows(a.w.net.line_tph[ex as usize]), tph);
 }
 
 #[test]
@@ -399,13 +399,13 @@ fn insert_stop_infill_ends_and_reduce_to_empty() {
     let copy = a.new_line_id();
     assert_eq!(a.copy_line(id, copy, "Copy".into()), 0);
     assert_eq!(a.w.net.line_data(copy).unwrap().trains, Some([0, 0, 0]), "a copy starts with no trains (T-1161)");
-    assert_eq!(a.w.svc.lines[copy as usize].trains, [0, 0, 0]);
-    assert_eq!(a.w.svc.lines[id as usize].trains, [2, 1, 0], "the source keeps its trains");
+    assert_eq!(slots_to_rows(a.w.svc.lines[copy as usize].trains), [0, 0, 0]);
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), [2, 1, 0], "the source keeps its trains");
     assert_eq!(a.set_auto_headway(id, 600, 900, 0), 0);
     let copy2 = a.new_line_id();
     assert_eq!(a.copy_line(id, copy2, "Copy 2".into()), 0);
     assert_eq!(a.line_auto(copy2), [0.0; 3], "a headway line's copy keeps headways, at none");
-    assert_eq!(a.w.svc.lines[copy2 as usize].trains, [0, 0, 0]);
+    assert_eq!(slots_to_rows(a.w.svc.lines[copy2 as usize].trains), [0, 0, 0]);
     assert_eq!(a.remove_line(copy2), 0);
     assert_eq!(a.clear_auto_headway(id), 0);
     assert_eq!(a.set_stops(id, &[first]), 0);
@@ -533,7 +533,7 @@ fn render_segment_speeds_and_whole_line_fleet_charge() {
     assert_eq!(a.add_station(1, n1, 0.0, 0.0, 200, "East".into()), 0);
     let id = a.new_line_id();
     assert_eq!(a.set_line_with_trains(id, &[n0, n1], 8, 4, 2, 30.0, 180.0, 0, 0xd7263d, "Line".into()), 0);
-    assert_eq!(a.w.svc.lines[id as usize].trains, [8, 4, 2]);
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), [8, 4, 2]);
     let before = a.save();
     let (cash_before, undo_before) = (a.cash(), a.can_undo());
     let quoted: f64 = a.blueprint_cost_items().chunks(7).map(|r| r[6]).sum();
@@ -548,11 +548,11 @@ fn render_segment_speeds_and_whole_line_fleet_charge() {
     let cash = a.cash();
     assert_eq!(a.set_train_counts(id, 9, 4, 0), 0);
     assert!((cash - a.cash() - cars as f64 * CAR_PRICE).abs() < 0.000001);
-    assert_eq!(a.w.svc.lines[id as usize].trains, [9, 4, 0]);
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), [9, 4, 0]);
     let snapshot = a.save();
     let mut b = api();
     assert!(b.load(&snapshot));
-    assert_eq!(b.w.svc.lines[0].trains, [9, 4, 0]);
+    assert_eq!(slots_to_rows(b.w.svc.lines[0].trains), [9, 4, 0]);
 }
 
 #[test]
@@ -627,7 +627,7 @@ fn full_track_lists_the_edges_of_full_sections() {
 #[test]
 fn a_headway_at_the_track_limit_holds_no_train_out() {
     let (mut a, id) = four_minute_line();
-    let limit = &a.line_held(id)[7 * LEVELS..7 * LEVELS + 5];
+    let limit = &a.line_held(id)[7 * ROWS..7 * ROWS + 5];
     assert!((limit[0] - 240.0).abs() < 0.01, "the terminus limits the line to 4:00: {limit:?}");
     assert_eq!(limit[1], 3.0, "named as a terminus");
     let trip = a.w.svc.lines[id as usize].round_trip[0];
@@ -647,7 +647,7 @@ fn a_headway_at_the_track_limit_holds_no_train_out() {
     assert_eq!(s.trains[0], up - 1, "clamped at the limit");
     assert!(s.round_trip[0] / s.trains[0] as f64 >= 240.0 - 1e-6, "the real headway is just over the typed one");
     assert_eq!(s.trains[1], auto_trains(s.round_trip[1], 480), "a headway over the limit is untouched");
-    assert!(a.line_held(id)[..7 * LEVELS].iter().all(|&v| v == 0.0), "no train held out: {:?}", a.line_held(id));
+    assert!(a.line_held(id)[..7 * ROWS].iter().all(|&v| v == 0.0), "no train held out: {:?}", a.line_held(id));
     assert_eq!(a.line_auto(id), vec![240.0, 480.0, 0.0], "the typed headway stays");
 
     // well under the limit the count is the player's, and the panel warns
@@ -681,18 +681,18 @@ fn switching_to_headways_on_overfull_track_keeps_every_train() {
     // 20 an hour by rate against the termini's 15: over-full before the counted line runs at all
     assert_eq!(a.set_line(other, &stops, 20.0, 4.0, 2.0, 30.0, 420.0, 0, 0x2a7de1, "Rate".into()), 0, "{}", a.issues());
     assert_eq!(a.set_train_counts(id, 6, 2, 2), 0, "{}", a.issues());
-    let (trains, fleet) = (a.w.svc.lines[id as usize].trains, a.fleet());
+    let (trains, fleet) = (slots_to_rows(a.w.svc.lines[id as usize].trains), a.fleet());
     assert_eq!(trains, [6, 2, 2]);
     assert!(a.line_held(id)[0] > 0.0, "the high level's trains wait at the ends");
     let trip = a.w.svc.lines[id as usize].round_trip;
     let h: [u32; 3] = std::array::from_fn(|lev| (trip[lev] / trains[lev] as f64).ceil() as u32);
     assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
     assert_eq!(a.line_auto(id).len(), 3);
-    assert_eq!(a.w.svc.lines[id as usize].trains, trains, "no train sold by the switch");
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), trains, "no train sold by the switch");
     assert_eq!(a.w.net.line_trains[id as usize], Some(trains));
     assert!(a.line_held(id)[0] > 0.0, "held out of service instead");
     assert_eq!(a.clear_auto_headway(id), 0, "{}", a.issues());
-    assert_eq!(a.w.svc.lines[id as usize].trains, trains, "and none by the switch back");
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), trains, "and none by the switch back");
     assert_eq!(a.fleet(), fleet, "no train bought");
     // another edit on the headway line keeps the held trains too: the track is over-full
     assert_eq!(a.set_auto_headway(id, h[0], h[1], h[2]), 0, "{}", a.issues());
@@ -720,13 +720,13 @@ fn headway_lines_follow_their_round_trip() {
     assert_eq!(a.set_line_with_trains(id, &[n0, n1], 2, 2, 2, 30.0, 180.0, 0, 0xd7263d, "Line".into()), 0, "{}", a.issues());
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     assert!(a.line_auto(id).is_empty());
-    let manual = a.w.svc.lines[id as usize].trains;
+    let manual = slots_to_rows(a.w.svc.lines[id as usize].trains);
 
     // a headway that takes three trains over the round trip as it is now
     let rt0 = a.w.svc.lines[id as usize].round_trip[0];
     let h = (rt0 / 3.0).ceil() as u32;
     assert_eq!(a.set_auto_headway(id, 2 * h, 2 * h, 2 * h), 0, "{}", a.issues());
-    assert_eq!(a.w.svc.lines[id as usize].trains, manual, "the switch to headways keeps the trains (T-752)");
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), manual, "the switch to headways keeps the trains (T-752)");
     assert_eq!(a.set_auto_headway(id, h, 0, 2 * h), 0, "{}", a.issues());
     let s = &a.w.svc.lines[id as usize];
     assert_eq!(s.trains[0], 3);
@@ -775,7 +775,7 @@ fn headway_lines_follow_their_round_trip() {
     assert_eq!(a.line_auto(id).len(), 3);
     assert_eq!(a.set_train_counts(id, 5, 5, 5), 0);
     assert!(a.line_auto(id).is_empty(), "a hand-set count ends the headways");
-    assert_eq!(a.w.svc.lines[id as usize].trains, [5, 5, 5]);
+    assert_eq!(slots_to_rows(a.w.svc.lines[id as usize].trains), [5, 5, 5]);
     assert_ne!(manual, [5, 5, 5]);
     assert_eq!(a.undo(), 0);
     assert_eq!(a.line_auto(id).len(), 3, "undo brings the headways back");

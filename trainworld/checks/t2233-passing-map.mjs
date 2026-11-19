@@ -210,7 +210,7 @@ try {
           if (a && (a.line === LOCAL || a.line === EXPRESS)) at.push(a);
         }
         const L = n.meta[0 * 4 + 3];
-        const dOf = (a) => (a.run === 0 ? a.s : n.meta[(a.line * 6 + a.run * 3) * 4 + 3] - a.s);
+        const dOf = (a) => (a.run === 0 ? a.s : n.meta[window.tw.profiles.profileOf(a.line, a.run, 0) * 4 + 3] - a.s);
         const loc = at.find((a) => a.line === LOCAL && Math.abs(dOf(a) - eD) < 30);
         const ex = loc && at.find((a) => a.line === EXPRESS && a.run === loc.run && Math.abs(dOf(a) - eD) < 250);
         if (loc && ex) { c.setRunning(false); return done({ x: loc.x, y: loc.y, t, L }); }

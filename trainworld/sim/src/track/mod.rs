@@ -74,6 +74,8 @@ mod frame_tests;
 #[cfg(test)]
 mod merc_tests;
 #[cfg(test)]
+mod slot_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod transition_tests;

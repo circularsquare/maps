@@ -9,6 +9,7 @@ import { PROJECT_GLSL } from "./gl";
 import { LEVEL_FADE, LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
 import { ONE_BULGE_K, ONE_BUMP, ONE_END, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
+import { PROFILES_PER_LINE, SLOTS } from "./profiles";
 
 /** T-2926: tram track and the lines over it as a share of a rail line's width; a tram stop's dot as a share of a station's */
 export const TRAM_WIDTH = 0.75;
@@ -925,8 +926,8 @@ bool trainDist(out vec4 L, out float d, out int line) {
     // braking into a stand: not there yet, though the stretch ahead may already be the next one
     else if (p.w < 0.0 && p1.z == 0.0 && p1.w == 0.0) g_stand = 0.0;
   }
-  line = prof / 6;
-  int run = (prof / 3) % 2;
+  line = prof / ${PROFILES_PER_LINE};
+  int run = (prof / ${SLOTS}) % 2;
   d = run == 0 ? s : M.w - s;
   L = texelFetch(u_lines, tc(line, ${LINES_W}), 0);
   if (run == 1 && u_back_base > 0 && line < u_back_base) {
@@ -1066,7 +1067,7 @@ void main() {
   float pitchM = totalM / cars;
   int prof = int(a_trip.x + 0.5);
   vec4 M = texelFetch(u_meta, tc(prof, ${TEX_W}), 0);
-  g_run = g_own ? 0 : (prof / 3) % 2;
+  g_run = g_own ? 0 : (prof / ${SLOTS}) % 2;
   g_len = M.w;
   // T-3053: at a through end it stands with its middle at the stop, so up to half its length past the line's end
   float cLo = endClear(g_run == 0 ? a_bay.y : a_bay.w, totalM);
@@ -1158,7 +1159,7 @@ void main() {
   v_color = lc * 0.48;
   v_alpha = (selectedLine(line) ? 1.0 : u_dim) * lvShown;
   // How full it is (T-084): the stretch it runs, from the sample ahead of it on its way.
-  int run = (int(a_trip.x + 0.5) / 3) % 2;
+  int run = (int(a_trip.x + 0.5) / ${SLOTS}) % 2;
   float i = floor(clamp(d, 0.0, L.z) / L.w) + (g_run == 0 ? 1.0 : 0.0);
   int si = int(L.x + clamp(i, 0.0, L.y - 1.0));
   vec2 f = texelFetch(u_fill, tc(si, ${TEX_W}), 0).xy;

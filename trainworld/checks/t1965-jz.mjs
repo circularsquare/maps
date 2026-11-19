@@ -49,7 +49,7 @@ try {
       };
       const zs = [], js = [];
       for (let i = 0; i < r.tripCount; i++) {
-        const line = Math.floor(r.trips[i * 2] / 6);
+        const line = window.tw.profiles.profileLine(r.trips[i * 2]);
         if (line === Z || line === J) { const pl = place(i); if (pl) (line === Z ? zs : js).push(pl); }
       }
       for (const a of zs) for (const b of js) if (a.key === b.key && b.into > a.into && b.into - a.into < 260 && a.lag > 5 && a.at.s > 2000) {

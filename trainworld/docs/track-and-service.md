@@ -1254,7 +1254,9 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
 - **Scheduling** (T-104, Anita): every line sets a whole number of trains on the entire line,
   both directions together, for **high, medium and low demand** (the column header is "Demand").
   High runs 6-20 (the morning peak, midday and evening peak), medium 20-24, low 0-6
-  (`PERIOD_LEVEL`; Anita, 2026-10-27, T-1536) on every kind of day. **Weekends** (T-3521, from
+  (`PERIOD_ROW`; Anita, 2026-10-27, T-1536) on every kind of day. The track side keeps its figures
+  per period (`SLOTS`, slot = period, T-3542); a row's periods share its first period's slot
+  (`Network::period_slot`), so only three are worked out. **Weekends** (T-3521, from
   GabrielMoraez's PR 13; `LineData::weekend`): Saturday and Sunday (a country's own weekend) and
   public holidays run a line's weekend trains; a superholiday's days and the weekend days a country
   works run its weekday ones (`rowOfIn` in `game/holidayCalendar.ts`, sent per line as

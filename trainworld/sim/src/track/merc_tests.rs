@@ -107,7 +107,7 @@ fn track_near_new_york_is_the_same_in_mercator_as_in_the_conic() {
     for &l in &lines {
         let (a, b) = (&lcc.svc.lines[l as usize], &merc.svc.lines[l as usize]);
         assert!(a.ok && b.ok);
-        for lev in 0..LEVELS {
+        for lev in ROW_SLOT {
             assert!(rel(b.round_trip[lev], a.round_trip[lev]) < 1e-4, "line {l} round trip");
             assert_eq!(a.trains[lev], b.trains[lev], "line {l} fleet");
         }
@@ -355,10 +355,10 @@ fn t308_real_save_conversion_report() {
         name: String,
         len_o: f64,
         len_n: f64,
-        rt_o: [f64; 3],
-        rt_n: [f64; 3],
-        tr_o: [u32; 3],
-        tr_n: [u32; 3],
+        rt_o: [f64; SLOTS],
+        rt_n: [f64; SLOTS],
+        tr_o: [u32; SLOTS],
+        tr_n: [u32; SLOTS],
         ok_o: bool,
         ok_n: bool,
     }

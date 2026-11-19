@@ -41,6 +41,7 @@ import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
 import { busStopLinks } from "../game/busLinks";
+import { ROW_SLOT, profileOf } from "./profiles";
 
 /** Street stops are drawn from this zoom, ends from `END_ZOOM` (T-2950). */
 export const BUS_RING_ZOOM = 13;
@@ -1039,7 +1040,7 @@ function runSpeed(l: BusSource, k: number, f: number, phases: Float32Array, meta
   if (!S || k < 0 || k > n - 2) return null;
   let best: number | null = null;
   for (const run of [0, 1]) {
-    const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    const m = profileOf(l.id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
     const first = meta[m], count = meta[m + 1];
     if (!(count > 0)) continue;
     // run 1 runs the stops backwards: its stretch n - 2 - k is run 0's k

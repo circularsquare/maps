@@ -7,6 +7,7 @@
 
 import type { Selection } from "../game/types";
 import type { NetworkRenderer } from "./renderer";
+import { profileLine, profileRun } from "./profiles";
 
 /** The selection after following the selected train through any hand-overs up to game time `t`;
  * the same object when nothing changed. */
@@ -22,11 +23,11 @@ export function followTrain(r: NetworkRenderer, sel: Selection, t: number): Sele
     const lag = r.tripLag(i), late = lag > 0 && r.net ? dep + r.net.meta[profile * 4 + 2] + lag : -Infinity;
     const end = Math.max(r.tripEnds[i] + epoch, late), next = r.tripNexts[i];
     if (t < end || !Number.isFinite(next)) break;
-    const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
+    const line = profileLine(profile), run = profileRun(profile);
     let j = -1;
     for (let k = 0; k < r.tripCount; k++) {
       const pk = trips[k * 2];
-      if (Math.floor(pk / 6) === line && Math.floor(pk / 3) % 2 !== run && Math.abs(trips[k * 2 + 1] - next) < 0.01) { j = k; break; }
+      if (profileLine(pk) === line && profileRun(pk) !== run && Math.abs(trips[k * 2 + 1] - next) < 0.01) { j = k; break; }
     }
     if (j < 0) break;
     profile = trips[j * 2];

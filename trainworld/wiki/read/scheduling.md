@@ -21,4 +21,4 @@ If the round trip leaves time over, the extra trains wait at the ends, half at e
 **Cars.** Each line also sets its train length. A new line starts at 5 cars, or at the length you set last. A platform shorter than the train caps it ([full trains](full-trains.md)).
 
 Exact rule: `docs/track-and-service.md` "Scheduling", "Trains on a running line" and "Train length".
-In the code: **main** `sim/src/track/service.rs` `build_line` `sim/src/track/params.rs` `PERIOD_LEVEL` `WEEKEND_SHARE_MIN` `WEEKEND_SHARE_MAX` `sim/src/track/world.rs` `weekend_counts` `settle_weekend` `app/src/game/world.ts` `HEADWAY_MAX_S` `app/src/workers/saveFile.ts` `NEW_LINE_CARS`
+In the code: **main** `sim/src/track/service.rs` `build_line` `sim/src/track/params.rs` `PERIOD_ROW` `WEEKEND_SHARE_MIN` `WEEKEND_SHARE_MAX` `sim/src/track/world.rs` `weekend_counts` `settle_weekend` `app/src/game/world.ts` `HEADWAY_MAX_S` `app/src/workers/saveFile.ts` `NEW_LINE_CARS`

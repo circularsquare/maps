@@ -23,6 +23,7 @@ import { queryClock } from "../../workers/clockClient";
 import { useClockQuery } from "../useClockQuery";
 import { Chip, Icon } from "../widgets";
 import { clipPath, gradePasses, sharedStretches, type Pass, type Shared } from "./mareyShare";
+import { profileRun } from "../../map/profiles";
 
 /** Whether the chart is open; it shows the selected rail line, and closes when no line is selected. */
 export const mareyOpen = signal(false);
@@ -216,7 +217,7 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
     const paths = new Map<number, { d: string; pts: number[]; run: number }>();
     for (const t of answer.trips) {
       if (paths.has(t.p) || !net.meta[t.p * 4 + 1]) continue;
-      const run = Math.floor(t.p / 3) % 2, pts = profilePoints(net, t.p);
+      const run = profileRun(t.p), pts = profilePoints(net, t.p);
       let d = "";
       for (let i = 0; i < pts.length; i += 2) d += `${i ? "L" : "M"}${(pts[i] * k).toFixed(1)} ${yOf(toRun0(st.stopS, run, pts[i + 1])).toFixed(1)}`;
       paths.set(t.p, { d, pts, run });
@@ -248,7 +249,7 @@ export function MareyBody({ l, st, links, width = W_PX, plotH, group, view, dir,
       const pts = new Map<number, { pts: number[]; d: string; run: number; len: number }>();
       for (const t of trips) {
         if (pts.has(t.p) || !net.meta[t.p * 4 + 1]) continue;
-        const run = Math.floor(t.p / 3) % 2, len = net.meta[t.p * 4 + 3], raw = profilePoints(net, t.p);
+        const run = profileRun(t.p), len = net.meta[t.p * 4 + 3], raw = profilePoints(net, t.p);
         let d = "";
         if (shared.length) {
           const s0 = run === 0 ? raw : raw.map((v, i) => (i % 2 ? len - v : v));

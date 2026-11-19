@@ -45,7 +45,7 @@ try {
       const at = new Map();
       const add = (res, route, i) => { const v = at.get(res); if (v) v.push(route, i); else at.set(res, [route, i]); };
       for (let i = 0; i < r.tripCount; i++) {
-        const p = r.trips[i * 2], line = Math.floor(p / 6);
+        const p = r.trips[i * 2], line = window.tw.profiles.profileLine(p);
         if (!g.guardedAll[line]) continue;
         const pos = tw.tripAt(n, p, r.trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i), t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity);
         if (!pos || !b.contains(tw.toLngLat(pos.x, pos.y))) continue;

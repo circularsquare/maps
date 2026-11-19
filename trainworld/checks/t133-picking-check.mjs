@@ -2,6 +2,7 @@
 // ones. Run from maps: node trainworld/checks/t133-picking-check.mjs
 import assert from 'node:assert/strict';
 import { loadApp } from './lib.mjs';
+import { PROFILES_PER_LINE } from './lib/profiles.mjs';
 class Element {
   style = {}; children = []; childNodes = []; content = { childNodes: [] }; listeners = {}; offsetWidth = 40; offsetHeight = 20;
   classList = { add() {}, remove() {}, toggle() {} };
@@ -28,12 +29,12 @@ const n = {
   stations: F([0, 0, 0, 3, 0, 0]), stationIds: ['under', 'over'], stationCount: 2,
   lines: strokes([0, 3], [1, 2]), track: strokes([0, 3], [10, 20]),
   junctionIds: [], junctions: F([]),
-  meta: F(Array.from({ length: 7 }, (_, i) => i === 0 || i === 6 ? [0, 1, 100, 100] : [0, 0, 0, 0]).flat()),
+  meta: F(Array.from({ length: PROFILES_PER_LINE + 1 }, (_, i) => i === 0 || i === PROFILES_PER_LINE ? [0, 1, 100, 100] : [0, 0, 0, 0]).flat()),
   phases: F([0, 0, 0, 0]), lineTable: F([0, 2, 100, 100, 2, 2, 100, 100]),
   samples: F([0, 0, 100, 0, 3, 0, 103, 0]),
 };
 const ov = { camMatrix: [], toScreen: (x, y) => [x, y], toScreenInto: (x, y, out, at = 0) => { out[at] = x; out[at + 1] = y; }, renderer: Object.assign(new NetworkRenderer(), {
-  net: n, slotPx: 6, trips: F([0, 0, 6, 0]), tripEpoch: 0, tripCount: 2, detailedTrains: false,
+  net: n, slotPx: 6, trips: F([0, 0, PROFILES_PER_LINE, 0]), tripEpoch: 0, tripCount: 2, detailedTrains: false,
 }) };
 // a station under the pointer wins over a train there (T-1414); trains stay clickable elsewhere
 assert.equal(pick(ov, 0, 0, true).station, 'under', 'a station wins over a train at the same spot');

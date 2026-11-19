@@ -72,7 +72,7 @@ try {
         // where it stands at its first and last stop: its offset at the start and the end of its trip
         const dep = r.trips[i * 2 + 1] + r.tripsEpoch, dur = n.meta[p * 4 + 2];
         const s0 = tw.tripAt(n, p, dep, dep)?.s ?? 0, s1 = tw.tripAt(n, p, dep, dep + dur)?.s ?? n.meta[p * 4 + 3];
-        const L = n.meta[p * 4 + 3], len = Math.min(Math.max(1, n.lineCars?.[Math.floor(p / 6)] ?? 8) * 20, L);
+        const L = n.meta[p * 4 + 3], len = Math.min(Math.max(1, n.lineCars?.[window.tw.profiles.profileLine(p)] ?? 8) * 20, L);
         const d = Math.max(pos.lo, Math.min(Math.max(pos.lo, pos.hi), pos.run === 0 ? pos.s : L - pos.s));
         const lat = (pos.run === 0 ? 2 : -2) * laneAt(pos.line, d) * pos.across(d);
         trains.push({ i, key: p + '|' + Math.round(dep), run: pos.run, s: pos.s, d, lat, len, lo: s0, hi: s1, on: pos.s > s0 + 15 && pos.s < s1 - 15, lag: r.tripLag(i) });

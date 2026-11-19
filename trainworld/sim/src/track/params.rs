@@ -450,17 +450,48 @@ pub const DEMAND_TIME_EPS_S: f64 = 5.0;
 /// A rate an edit's settle moves on another line by this much or more (trains an hour) wakes demand
 /// for that line (T-1805: a train every 100 hours changes no wait anyone could see).
 pub const DEMAND_TPH_EPS: f32 = 0.01;
-/// Demand levels: index into a line's `tph`.
-pub const HIGH: usize = 0;
-pub const MEDIUM: usize = 1;
-pub const LOW: usize = 2;
-pub const LEVELS: usize = 3;
+/// The rows a line sets its trains in (high, medium and low demand): what the player sets, a save
+/// keeps and the app reads (`LineData::trains`, `auto`, `tph`, `Weekend`), as a row index.
+pub const ROWS: usize = 3;
+/// T-3542: service slots, one per demand period (`PERIOD_HOURS`, slot = period): what the track
+/// side keeps per period (rates, capacity, holds, profiles, round trips, pacing, departures). Slots
+/// that every line runs alike share one (`Network::period_slot`): only those are worked out and
+/// read, so a game of 3-row lines costs what three levels did. The app's copy is
+/// app/src/map/profiles.ts `SLOTS` (a trip's profile is `(line * 2 + run) * SLOTS + slot`).
+pub const SLOTS: usize = 5;
 /// The five periods of SPEC 4.2 in the demand kernel's order (morning peak, midday, evening
-/// peak, evening, night): start and end hour, and which demand level schedules them. High runs
-/// 6-20, medium 20-24, low 0-6 (Anita, 2026-10-27, T-1536). A level is a set of whole periods:
-/// demand solves each period on its own level's trains.
+/// peak, evening, night): start and end hour, and which row schedules them. High runs 6-20,
+/// medium 20-24, low 0-6 (Anita, 2026-10-27, T-1536). A row is a set of whole periods: demand
+/// solves each period on its own row's trains.
 pub const PERIOD_HOURS: [(f64, f64); 5] = [(6.0, 10.0), (10.0, 16.0), (16.0, 20.0), (20.0, 24.0), (0.0, 6.0)];
-pub const PERIOD_LEVEL: [usize; 5] = [HIGH, HIGH, HIGH, MEDIUM, LOW];
+pub const PERIOD_ROW: [usize; 5] = [0, 0, 0, 1, 2];
+/// The slot that serves each period when every line sets three rows: its row's first period's.
+pub const PERIOD_SLOT_3: [usize; 5] = if SLOTS == 5 { [0, 0, 0, 3, 4] } else { [0, 0, 0, 1, 2] };
+/// The slot each row is kept in (its first period's), for a line of three rows.
+pub const ROW_SLOT: [usize; ROWS] = [PERIOD_SLOT_3[0], PERIOD_SLOT_3[3], PERIOD_SLOT_3[4]];
+/// The slots of the three rows: high, medium and low demand, as indices into a per-slot array.
+pub const HIGH: usize = ROW_SLOT[0];
+pub const MEDIUM: usize = ROW_SLOT[1];
+pub const LOW: usize = ROW_SLOT[2];
+/// The row that sets each slot's trains on a line of three rows.
+pub const SLOT_ROW: [usize; SLOTS] = {
+    let mut a = [0; SLOTS];
+    let mut s = 0;
+    while s < SLOTS {
+        a[s] = if SLOTS == 5 { PERIOD_ROW[s] } else { s };
+        s += 1;
+    }
+    a
+};
+/// A row array of a line of three rows in its slots (`PERIOD_SLOT_3`), `none` in the slots no
+/// period uses (`Network::rows_in`).
+pub fn rows_to_slots<T: Copy>(r: [T; ROWS], none: T) -> [T; SLOTS] {
+    std::array::from_fn(|s| if PERIOD_SLOT_3.contains(&s) { r[SLOT_ROW[s]] } else { none })
+}
+/// A slot array read back per row (each row from its slot, `ROW_SLOT`).
+pub fn slots_to_rows<T: Copy>(s: [T; SLOTS]) -> [T; ROWS] {
+    ROW_SLOT.map(|k| s[k])
+}
 /// The kinds of day a line sets its trains for (`LineData::weekend`): weekdays (a superholiday's
 /// days too) and weekends (Saturday and Sunday or the country's own weekend, and public holidays).
 pub const WEEKDAYS: usize = 0;

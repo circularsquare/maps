@@ -359,7 +359,7 @@ pub fn run(km: f64, stations: usize, lines: usize, reps: usize) -> (String, Vec<
     out += &report(&format!("move a PI 3 m on a quiet edge ({} lines)", w.net.lines_on_edge(quiet).len()), &mut w, &|w| nudge(quiet, w));
     out += &report("change one line's trains", &mut w, &|w| {
         let t = w.net.line_trains[l0 as usize].unwrap_or([0; 3]);
-        Op::TrainCounts { id: l0, trains: Some([t[0] + 2, t[1], t[2]]), tph: w.net.line_tph[l0 as usize] }
+        Op::TrainCounts { id: l0, trains: Some([t[0] + 2, t[1], t[2]]), tph: w.net.rows_of(w.net.line_tph[l0 as usize]) }
     });
     out += &report("split the busiest edge (new node)", &mut w, &|w| {
         let s = w.net.edge_len[busiest as usize] * 0.37;

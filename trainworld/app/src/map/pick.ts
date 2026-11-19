@@ -19,6 +19,7 @@ import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
 import { floorAt } from "./buildingFloors";
 import { buildingMembersById } from "../game/buildingView";
 import { hidden, levelHidden, pickSkip } from "./visibility";
+import { profileLine } from "./profiles";
 
 export const SLOP_PX = 7;
 /** projected points, reused (topSeg runs over every segment on each pointer move) */
@@ -303,7 +304,7 @@ function markNearBlocks(n: NetworkBuffers, lx: number, ly: number, reach: number
 function tripMayBeNear(n: NetworkBuffers, lb: LineBlocks, profile: number, dep: number, t: number): boolean {
   const tau = t - dep;
   if (tau < 0 || !n.meta[profile * 4 + 1]) return false;
-  const line = Math.floor(profile / 6);
+  const line = profileLine(profile);
   if (line * 4 + 3 >= n.lineTable.length) return true;
   // (a return run on its own way back is placed along its own slot, T-3250)
   const { geo, d } = trainFrame(n, profile, profileS(n, profile, tau));
@@ -411,7 +412,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
       // drawn where the guard holds it (T-1965)
       const prof = trips[i * 2], dep = trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i);
       if (marked && !tripMayBeNear(n, marked, prof, dep, t)) continue;
-      if (hidden.lines.has(Math.floor(prof / 6))) continue; // T-3420
+      if (hidden.lines.has(profileLine(prof))) continue; // T-3420
       const at = tripAt(n, prof, dep, t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, r.laneShiftM, r.bandShiftM, r.sampleBand, r.bandOn, r.passShiftM, r.tripBays ?? undefined, i * BAY_STRIDE);
       if (!at || r.tripOnOffLevel(at)) continue; // T-3560
       if (r.detailedTrains) {

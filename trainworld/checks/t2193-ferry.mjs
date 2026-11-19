@@ -7,6 +7,7 @@
 // saves, loads into a fresh model, and follows its boats over an hour. Exits 1 on any failure.
 import { readFileSync } from 'node:fs';
 import init, { TrackApi } from '../app/src/wasm/track/sim.js';
+import { PROFILES_PER_LINE, SLOTS } from './lib/profiles.mjs';
 
 await init({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 let failed = 0;
@@ -79,7 +80,7 @@ check(info[0] === line && info[3] === 1, 'running after the load');
 // its boats over an hour of a weekday morning: where each is from its trip's phases
 const epoch = 86400 + 8 * 3600;
 const trips = back.trips(epoch), meta = back.profile_meta(), phases = back.line_phases(line);
-const first = meta[line * 6 * 4];
+const first = meta[line * PROFILES_PER_LINE * 4];
 const stateAt = (p, tau) => {
   let k = 0;
   for (let i = 0; i < p.length; i += 4) if (p[i] <= tau) k = i;
@@ -91,8 +92,8 @@ const stateAt = (p, tau) => {
 let mine = 0, seen = 0, worst = 0;
 const poly = [back.run_polyline(line, 0, 10), back.run_polyline(line, 1, 10)];
 for (let i = 0; i < trips.length; i += 4) {
-  const prof = trips[i], r = Math.floor(prof / 3) % 2;
-  if (Math.floor(prof / 6) !== line) continue;
+  const prof = trips[i], r = Math.floor(prof / SLOTS) % 2;
+  if (Math.floor(prof / PROFILES_PER_LINE) !== line) continue;
   mine++;
   const m = meta.slice(prof * 4, prof * 4 + 4);
   const p = phases.slice((m[0] - first) * 4, (m[0] - first + m[1]) * 4);

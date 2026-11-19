@@ -148,7 +148,8 @@ impl TrackApi {
         for (l, s) in self.w.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 // T-2669: priced in its countries' money, so a km costs the factor's share
-                let (row, lev) = ((level / LEVELS).min(DAY_ROWS - 1), level % LEVELS);
+                // `level`: a row (high, medium, low), plus 3 for weekends
+                let (row, lev) = ((level / ROWS).min(DAY_ROWS - 1), n.row_slot(l, level % ROWS));
                 let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
                 let k = fleet_kind(n, l);
                 train_km[k] += tk;
@@ -192,7 +193,7 @@ impl TrackApi {
         let n = &self.w.net;
         let w: Vec<f64> = self.w.svc.lines.iter().enumerate().map(|(l, s)| {
             if !s.running { return 0.0 }
-            (0..LEVELS).map(|k| n.line_tph[l][k] as f64 * hours.get(k).copied().unwrap_or(0.0)).sum()
+            (0..ROWS).map(|k| n.line_tph[l][n.row_slot(l, k)] as f64 * hours.get(k).copied().unwrap_or(0.0)).sum()
         }).collect();
         let svc = &self.w.svc.lines;
         let weight = |l: u32| w.get(l as usize).copied().unwrap_or(0.0);

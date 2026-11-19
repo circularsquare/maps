@@ -118,7 +118,7 @@ try {
     for (let i = 0; i < Ls.count; i++) if (Ls.colour[i] === line) segs.push(i);
     const segLen = (i) => Math.hypot(Ls.seg[i * 4 + 2] - Ls.seg[i * 4], Ls.seg[i * 4 + 3] - Ls.seg[i * 4 + 1]);
     const total = segs.length ? Ls.dist[segs[segs.length - 1]] + segLen(segs[segs.length - 1]) - Ls.dist[segs[0]] : 0;
-    const L = n.meta[line * 6 * 4 + 3];
+    const L = n.meta[window.tw.profiles.profileOf(line, 0, 0) * 4 + 3];
     const drawnAt = (share) => {
       const want = Ls.dist[segs[0]] + share * total;
       for (const i of segs) {
@@ -227,7 +227,7 @@ try {
         const n = r.net, t = r.guard.lastTime, seen = [];
         for (let i = 0; i < r.tripCount; i++) {
           const p = r.trips[i * 2];
-          if (Math.floor(p / 6) !== line) continue;
+          if (window.tw.profiles.profileLine(p) !== line) continue;
           const pos = tw.tripAt(n, p, r.trips[i * 2 + 1] + r.tripsEpoch + r.tripLag(i), t, r.tripEnds ? r.tripEnds[i] + r.tripsEpoch : -Infinity, 0, 0, undefined, 0, 0, r.tripBays ?? undefined, i * 4);
           if (!pos) continue;
           const L = n.meta[p * 4 + 3];

@@ -1,6 +1,6 @@
 use super::super::capacity::ResKind;
 use super::super::net::EdgeData;
-use super::super::params::PLATFORM_MARGIN_S;
+use super::super::params::{HIGH, MEDIUM, PLATFORM_MARGIN_S, SLOTS};
 use super::super::service::Service;
 use super::super::tests::{line, node, station, world};
 use super::super::upgrades::{self, PASSING};
@@ -74,13 +74,13 @@ fn passing_tracks_let_the_express_by() {
     // without them, timetabled just ahead of a local (T-2419): every 10 minutes each it still catches
     // the local ahead and loses most of its 10.7 minute gain; with locals every 30 most trips get
     // through first
-    for (lev, most) in [(0, 8.0), (1, 2.0)] {
+    for (lev, most) in [(HIGH, 8.0), (MEDIUM, 2.0)] {
         eprintln!("level {lev} without: local +{:.1?} express +{:.1?}", over(&w, local, lev), over(&w, express, lev));
         assert!(over(&w, express, lev).iter().all(|&m| m > most), "level {lev}: without passing tracks the express trails the local");
     }
     set_passing(&mut w, &n[1..6], true);
     same_as_global(&w, "passing B to F");
-    for lev in 0..2 {
+    for lev in [HIGH, MEDIUM] {
         let (lo, ex) = (over(&w, local, lev), over(&w, express, lev));
         eprintln!("level {lev} with: local +{lo:.1?} express +{ex:.1?}");
         // the overtakes' part of it (kind 11); the rest is the queue on track two lines share, which
@@ -114,7 +114,7 @@ fn passing_tracks_let_the_express_by() {
     let waits: Vec<usize> = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 13).collect();
     assert!(!waits.is_empty());
     for &r in &waits {
-        assert_eq!(cap.rho[r], [0.0; 3], "no utilisation, no dot");
+        assert_eq!(cap.rho[r], [0.0; SLOTS], "no utilisation, no dot");
         assert!(!cap.limits(r));
         assert_eq!(cap.wait_for(r), Some(express));
         assert!(n[1..6].contains(&cap.res[r].node));
@@ -258,7 +258,7 @@ fn a_rare_local_behind_a_frequent_express_settles() {
     w.apply(Op::TrainCounts { id: express, trains: Some([24, 24, 0]), tph: [12.0, 12.0, 0.0] }).unwrap();
     w.apply(Op::TrainCounts { id: local, trains: Some([2, 2, 0]), tph: [1.0, 1.0, 0.0] }).unwrap();
     let took = t.elapsed().as_secs_f64();
-    for lev in 0..2 {
+    for lev in [HIGH, MEDIUM] {
         let (tph, trip) = (w.net.line_tph[local as usize][lev] as f64, w.svc.lines[local as usize].round_trip[lev]);
         let hf = 3600.0 / w.net.line_tph[express as usize][lev] as f64;
         let holds: f64 = w.svc.lines[local as usize].runs[0].stop_holds[lev].iter().sum();

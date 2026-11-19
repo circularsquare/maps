@@ -128,8 +128,9 @@ pub fn plan(net: &Network, fast: (u32, u8), fr: &Run, slow: (u32, u8), sr: &Run,
 /// lines both set to 10 minutes then meet at the same stations every trip rather than drift apart.
 pub fn pattern_tph(net: &Network, l: u32, lev: usize) -> f32 {
     let tph = net.line_tph[l as usize][lev];
+    let row = net.slot_row(l as usize, lev);
     match net.line_auto[l as usize] {
-        Some(a) if a[lev] > 0 && tph as f64 * a[lev] as f64 * AUTO_SLACK >= 3600.0 - 1e-6 => (3600.0 / a[lev] as f64) as f32,
+        Some(a) if a[row] > 0 && tph as f64 * a[row] as f64 * AUTO_SLACK >= 3600.0 - 1e-6 => (3600.0 / a[row] as f64) as f32,
         _ => tph,
     }
 }

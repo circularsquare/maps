@@ -3600,7 +3600,7 @@ class DemandClient {
       // T-173: worker 0 has warmed the everyday code up; the held city packs may go
       if (i === 0 && this.held) { const held = this.held; this.held = null; held.forEach((send) => send()); this.postMarkets(); }
       if (!periodsMatch(msg.periods, PERIOD_STRIDE))
-        console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_LEVEL", msg.periods);
+        console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_ROW", msg.periods);
       if (!this.periodTable.length && i < this.computeN) this.periodTable = msg.periods;
       if (!this.dayTable.length && i < this.computeN) this.dayTable = msg.days;
       if (this.respawn.has(i)) {

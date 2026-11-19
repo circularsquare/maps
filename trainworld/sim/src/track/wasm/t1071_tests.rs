@@ -151,7 +151,7 @@ fn t3521_a_headway_weekend_rounds_down_to_a_minute() {
     assert_eq!(a.set_line_weekend_share(id, 50), 0, "{}", a.issues());
     let trip = a.w.svc.lines[id as usize].round_trip;
     let most = a.w.svc.cap.line_limits(&a.w.net);
-    let want: Vec<f64> = (0..3).map(|lev| crate::track::world::clamp_auto(auto_trains(trip[lev], 240), trip[lev], 240, most[id as usize][lev].0).min(week[lev]) as f64).collect();
+    let want: Vec<f64> = (0..3).map(|row| { let lev = ROW_SLOT[row]; crate::track::world::clamp_auto(auto_trains(trip[lev], 240), trip[lev], 240, most[id as usize][lev].0).min(week[row]) as f64 }).collect();
     assert_eq!(weekend_of(&a, id), want);
     assert!(want.iter().zip(week).all(|(w, k)| *w <= k as f64), "{want:?} on weekends, {week:?} on weekdays: never more under 100%");
 }
@@ -173,9 +173,9 @@ fn t3521_a_headway_weekend_runs_its_headway() {
     assert_eq!(a.set_auto_headway(id, 480, 480, 480), 0, "{}", a.issues());
     assert_eq!(a.set_auto_headway(id, 480, 480, 480), 0, "{}", a.issues());
     let week = a.w.net.line_tph[id as usize].map(f32::to_bits);
-    assert!(a.w.net.line_tph[id as usize].iter().all(|&t| (3600.0 / t as f64 - 480.0).abs() < 2.0), "the weekdays every 8 minutes: {:?}", a.w.net.line_tph[id as usize]);
+    assert!(slots_to_rows(a.w.net.line_tph[id as usize]).iter().all(|&t| (3600.0 / t as f64 - 480.0).abs() < 2.0), "the weekdays every 8 minutes: {:?}", a.w.net.line_tph[id as usize]);
     let trip = a.w.svc.lines[id as usize].round_trip;
-    assert!(trip.iter().all(|&t| t > 600.0), "a round trip of a few headways: {trip:?}");
+    assert!(slots_to_rows(trip).iter().all(|&t| t > 600.0), "a round trip of a few headways: {trip:?}");
     // 8 minutes at 70% is 11:26, down to 11 minutes; at 150%, 5:20, down to 5
     for (share, h) in [(70, 660.0), (50, 960.0), (150, 300.0)] {
         assert_eq!(a.set_line_weekend_share(id, share), 0, "{}", a.issues());
@@ -188,7 +188,7 @@ fn t3521_a_headway_weekend_runs_its_headway() {
     let more = a.w.net.line_trains[id as usize].unwrap().map(|x| x + 2);
     assert_eq!(a.set_line_weekend_counts(id, more[0], more[1], more[2]), 0, "{}", a.issues());
     let rest = a.line_tph_rest(id);
-    assert!((0..3).all(|lev| rest[lev] > a.w.net.line_tph[id as usize][lev] * 1.2), "two trains more run more often: {rest:?}");
+    assert!((0..3).all(|lev| rest[lev] > a.w.net.line_tph[id as usize][ROW_SLOT[lev]] * 1.2), "two trains more run more often: {rest:?}");
 }
 
 /// T-3521: a headway line whose weekend count is its weekday count (one train) still runs the

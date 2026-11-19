@@ -41,7 +41,7 @@ fn real_save_figures() {
             let bits = |v: &[f64]| v.iter().map(|x| format!("{:x}", x.to_bits())).collect::<Vec<_>>().join(",");
             writeln!(s, "line {l} {} {} rt {} trains {:?} delay {} tph {:?} phase {:?}", ls.ok, ls.running, bits(&ls.round_trip), ls.trains, bits(&ls.delay), w.net.line_tph.get(l), w.net.line_phase_of(l as u32)).unwrap();
             for (r, run) in ls.runs.iter().enumerate() {
-                for lev in 0..LEVELS {
+                for lev in 0..SLOTS {
                     let h: Vec<f64> = run.holds[lev].iter().flat_map(|h| [h.s, h.delay, h.span]).collect();
                     writeln!(s, "  {r} {lev} dur {} holds {} stops {}", bits(&[run.prof[lev].duration]), bits(&h), bits(&run.stop_holds[lev])).unwrap();
                 }
@@ -184,7 +184,7 @@ fn a_lone_train_on_single_track_keeps_no_margin_from_itself() {
     station(&mut w, b, 200);
     let l = line(&mut w, &[a, b], [5.0, 0.0, 0.0]);
     for (n, margin) in [(1u32, false), (2, true)] {
-        let tph = w.net.line_tph[l as usize];
+        let tph = slots_to_rows(w.net.line_tph[l as usize]);
         w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
         let cap = &w.svc.cap;
         let r = cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
@@ -221,7 +221,7 @@ fn a_line_alone_on_single_track_does_not_queue_against_itself() {
     let l = line(&mut w, &[a, c, b], [2.0, 0.0, 0.0]);
     let single = |w: &TrackWorld| w.svc.cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
     for n in [1u32, 2, 3] {
-        let tph = w.net.line_tph[l as usize];
+        let tph = slots_to_rows(w.net.line_tph[l as usize]);
         w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
         let r = single(&w);
         let rho = w.svc.cap.rho[r][0];
@@ -232,7 +232,7 @@ fn a_line_alone_on_single_track_does_not_queue_against_itself() {
         assert!((cap_lim - 3600.0 / both).abs() < 1e-6, "{n} trains: the cap's limit {cap_lim} an hour, not the margin's {}", 3600.0 / both);
     }
     let o = line(&mut w, &[a, b], [2.0, 0.0, 0.0]);
-    let tph = w.net.line_tph[o as usize];
+    let tph = slots_to_rows(w.net.line_tph[o as usize]);
     w.apply(Op::TrainCounts { id: o, trains: Some([1, 0, 0]), tph }).unwrap();
     let r = single(&w);
     assert!(w.svc.cap.delay[r][0] > 0.0, "two lines on one stretch wait for each other (rho {})", w.svc.cap.rho[r][0]);
@@ -255,7 +255,7 @@ fn a_second_train_on_a_lone_shuttle_cuts_it_to_the_stretch() {
     station(&mut w, b, 200);
     let l = line(&mut w, &[a, b], [2.0, 0.0, 0.0]);
     for n in [1u32, 2, 3] {
-        let tph = w.net.line_tph[l as usize];
+        let tph = slots_to_rows(w.net.line_tph[l as usize]);
         w.apply(Op::TrainCounts { id: l, trains: Some([n, 0, 0]), tph }).unwrap();
         let r = w.svc.cap.res.iter().position(|r| r.kind == ResKind::SingleTrack).expect("a single-track stretch");
         let rho = w.svc.cap.rho[r][0];
@@ -318,16 +318,16 @@ fn blueprint_extension_does_not_change_dead_end_turnaround_capacity() {
 fn short_turn_counts_settle_against_shared_platform_and_crossover_delays() {
     let (mut w, _, through, short) = turnback_fixture(false, false);
     for (id, counts) in [(through, [4, 4, 2]), (short, [1, 0, 0])] {
-        let tph = w.net.line_tph[id as usize];
+        let tph = slots_to_rows(w.net.line_tph[id as usize]);
         w.apply(Op::TrainCounts { id, trains: Some(counts), tph }).unwrap();
     }
     for id in [through, short] {
         let ls = &w.svc.lines[id as usize];
         let counts = w.net.line_trains[id as usize].unwrap();
-        assert_eq!(ls.trains, counts);
-        for lev in 0..LEVELS {
+        assert_eq!(slots_to_rows(ls.trains), counts);
+        for (row, lev) in ROW_SLOT.into_iter().enumerate() {
             let implied = w.net.line_tph[id as usize][lev] as f64 * ls.round_trip[lev] / 3600.0;
-            assert!((implied - counts[lev] as f64).abs() < 0.001, "count residual {implied}, target {}", counts[lev]);
+            assert!((implied - counts[row] as f64).abs() < 0.001, "count residual {implied}, target {}", counts[row]);
         }
     }
     assert!(w.svc.lines[through as usize].delay[0] > 0.0);
@@ -697,8 +697,8 @@ fn following_loss_formula() {
     use super::super::tests::world;
     let mut w = world();
     let (f, s) = (w.net.alloc_line(), w.net.alloc_line());
-    w.net.line_tph[f as usize] = [6.0, 6.0, 0.0];
-    w.net.line_tph[s as usize] = [10.0, 1.0, 10.0];
+    w.net.line_tph[f as usize] = rows_to_slots([6.0, 6.0, 0.0], 0.0);
+    w.net.line_tph[s as usize] = rows_to_slots([10.0, 1.0, 10.0], 0.0);
     let us = [
         User { line: f, run: 0, owner: true, occ: 0.0, at: 100.0, stop: -1 },
         User { line: s, run: 0, owner: false, occ: 990.0, at: 107.0, stop: -1 },
@@ -706,9 +706,9 @@ fn following_loss_formula() {
     let (high, who) = follow_loss(&us, &w.net, 0, &[]);
     assert!((high - (990.0 - (360.0 - 107.0) / 2.0)).abs() < 1e-9, "{high}");
     assert_eq!(who, s);
-    let (rare, _) = follow_loss(&us, &w.net, 1, &[]);
+    let (rare, _) = follow_loss(&us, &w.net, MEDIUM, &[]);
     assert!((rare - 990.0 * 990.0 / (2.0 * (3600.0 - 107.0))).abs() < 1e-9, "{rare}");
-    assert_eq!(follow_loss(&us, &w.net, 2, &[]).0, 0.0, "no express trains, no loss");
+    assert_eq!(follow_loss(&us, &w.net, LOW, &[]).0, 0.0, "no express trains, no loss");
 }
 
 /// T-2419: the timetabled loss. At one headway each, `D + 2s - H`, or nothing where the gap holds the
@@ -769,10 +769,10 @@ fn express_behind_local_takes_about_its_time() {
     assert_eq!(run.stop_holds[0][0], 0.0);
     never_stands_between_stops(run, 0);
     // at medium the locals run every 15 minutes: some trips get through first, so it loses less
-    let (lo1, ex1) = (dur(&w, local, 1), dur(&w, express, 1));
+    let (lo1, ex1) = (dur(&w, local, MEDIUM), dur(&w, express, MEDIUM));
     assert!(ex1 < ex - 60.0 && ex1 < lo1, "medium: express {ex1}, high {ex}");
     // at low no local runs: no loss
-    assert!((dur(&w, express, 2) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0);
+    assert!((dur(&w, express, LOW) - w.svc.lines[express as usize].runs[0].free.duration).abs() < 1.0);
     // the panel's split names the local
     let r = (0..w.svc.cap.res.len()).find(|&r| matches!(w.svc.cap.tag[r], Tag::Follow { line } if line == express)).unwrap();
     assert_eq!(w.svc.cap.follow_leader(&w.net, r, 0), Some(local));
@@ -815,13 +815,13 @@ fn express_on_the_locals_path_leaves_just_ahead_of_it() {
     let dur = |w: &TrackWorld, l: u32, lev: usize| w.svc.lines[l as usize].runs[0].prof[lev].duration;
     let free = |w: &TrackWorld, l: u32| w.svc.lines[l as usize].runs[0].free.duration;
     let gain = free(&w, local) - free(&w, express);
-    for lev in 0..2 {
+    for lev in [HIGH, MEDIUM] {
         eprintln!("level {lev}: local {:.0} s, express {:.0} s (free {:.0} s, gain {gain:.0} s)", dur(&w, local, lev), dur(&w, express, lev), free(&w, express));
     }
     let lost = dur(&w, express, 0) - free(&w, express);
     assert!(lost > gain - 900.0 && lost < gain - 600.0, "a local every 15 minutes: the express loses its gain less the gap: {lost:.0} of {gain:.0} s");
-    assert!(dur(&w, express, 1) - free(&w, express) < 60.0, "a local an hour: the express gets through");
-    assert!((dur(&w, express, 2) - free(&w, express)).abs() < 1.0, "no local at low");
+    assert!(dur(&w, express, MEDIUM) - free(&w, express) < 60.0, "a local an hour: the express gets through");
+    assert!((dur(&w, express, LOW) - free(&w, express)).abs() < 1.0, "no local at low");
     // T-2018: it runs the whole way at a lowered speed, never standing between its two stops
     for r in 0..2 {
         never_stands_between_stops(&w.svc.lines[express as usize].runs[r], 0);
@@ -859,7 +859,7 @@ fn seven_express_and_local_on_one_double_track() {
     let run = |l: u32| &w.svc.lines[l as usize].runs[0];
     let gain = run(local).free.duration - run(express).free.duration;
     let rho = |lev: usize| (0..w.svc.cap.res.len()).filter(|&r| w.svc.cap.res[r].kind == ResKind::Section).map(|r| w.svc.cap.rho[r][lev]).fold(0.0, f64::max);
-    for lev in 0..2 {
+    for lev in [HIGH, MEDIUM] {
         let lost = run(express).prof[lev].duration - run(express).free.duration;
         let cap = &w.svc.cap;
         let behind = (0..cap.res.len()).filter(|&r| cap.wire_kind(r) == 11 && cap.users_of(r).iter().any(|u| u.owner && u.line == express && u.run == 0)).map(|r| cap.delay[r][lev]).fold(0.0, f64::max);

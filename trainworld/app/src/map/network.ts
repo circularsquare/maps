@@ -2,7 +2,7 @@
 // worker's state (T-025): track strokes per edge, line strokes along each line's path, station
 // dots, and the keyframe tables trains are positioned from (notes/T-040.md "Keyframes").
 //
-// Trains: each trip is (profile, departure - epoch); profile p = (line * 2 + run) * 3 + level has
+// Trains: each trip is (profile, departure - epoch); profile p = (line * 2 + run) * SLOTS + slot has
 // a phase table (t, s, v, a) and meta (first phase, count, trip seconds, path length m); run 0 of
 // each line is resampled every 50 m into `samples`; run 1's offset s is `length - s` on run 0.
 
@@ -22,6 +22,7 @@ import { bridgeEnds, PASS_LEAD_M, passBow, PLATFORM_HALF_M, PLATFORM_POINTS, pla
 import { planStrokes, strokesOfPieces, type StrokeKind, type StrokeMode, type StrokePiece } from "./strokePost";
 import { oneWayTrackChevrons, oneWayTrackRuns, trainChevrons, type OneWayEdge } from "./oneWayMarks";
 import { stationOutside } from "./stationSide";
+import { META_PER_LINE, ROW_SLOT, profileLine, profileOf, profileRun } from "./profiles";
 
 /** A bus line's `lineCars` (T-1464): one car of this share of a train car's 20 m (a bus is 12 m),
  * narrower than a train's (rendererShaders.ts); below 1, so it tells a bus from a train. */
@@ -1054,7 +1055,7 @@ export function speedAt(ph: Float32Array, first: number, count: number, x: numbe
 function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"], strokesOf: (e: number) => Strokes | undefined, lens: number[], built: (e: number) => boolean): (Float32Array | null)[] | null {
   if (!l.ok || !l.running || Math.max(...l.trains) <= 0) return null;
   const runs = [0, 1].map((run) => {
-    const m = ((l.id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    const m = profileOf(l.id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
     return { first: r.meta[m], count: r.meta[m + 1], len: r.meta[m + 3] };
   });
   if (runs.some((p) => !(p.count > 0))) return null;
@@ -1085,7 +1086,7 @@ function speedPhases(id: number, r: ClockState["render"]): Float32Array {
   let n = 0;
   const at: [number, number][] = [];
   for (const run of [0, 1]) {
-    const m = ((id * 2 + run) * 3 + SPEED_LEVEL) * 4;
+    const m = profileOf(id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
     const first = r.meta[m], count = r.meta[m + 1];
     parts.push(r.meta[m + 1], r.meta[m + 3]);
     at.push([first, count > 0 ? count : 0]);
@@ -2168,7 +2169,7 @@ export function tripAt(n: NetworkBuffers, profile: number, dep: number, t: numbe
   const tripS = n.meta[profile * 4 + 2];
   // `end`: drawn until then, standing at the terminal for its next departure (T-206)
   if (tau < 0 || (tau > tripS && t > end) || !n.meta[profile * 4 + 1]) return null;
-  const line = Math.floor(profile / 6), run = Math.floor(profile / 3) % 2;
+  const line = profileLine(profile), run = profileRun(profile);
   const s = profileS(n, profile, tau);
   const len = n.meta[profile * 4 + 3];
   const trainM = trainLengthM(n, line);
@@ -2192,14 +2193,14 @@ export function backSlotOf(table: ArrayLike<number>, meta: ArrayLike<number>, li
 /** T-3250: the lines in the line table when it has a second half of return runs' own slots, else 0
  * (the train shader's `u_back_base`). */
 export function backBaseOf(table: ArrayLike<number>, meta: ArrayLike<number>): number {
-  const lines = meta.length / 24;
+  const lines = meta.length / META_PER_LINE;
   return lines > 0 && table.length >= lines * 8 ? lines : 0;
 }
 
 /** Where profile `p`'s train `s` m along its run is drawn: the line table's row (`geo`, its line or
  * its return run's own slot), the run it is drawn as (`gr`) and the offset along that row. */
 export function trainFrame(n: Pick<NetworkBuffers, "lineTable" | "meta">, p: number, s: number): { geo: number; gr: number; d: number } {
-  const line = Math.floor(p / 6), run = Math.floor(p / 3) % 2;
+  const line = profileLine(p), run = profileRun(p);
   const slot = run === 1 ? backSlotOf(n.lineTable, n.meta, line) : -1;
   return slot >= 0 ? { geo: slot, gr: 0, d: s } : { geo: line, gr: run, d: run === 0 ? s : n.meta[p * 4 + 3] - s };
 }

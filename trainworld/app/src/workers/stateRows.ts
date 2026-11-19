@@ -17,6 +17,7 @@
 import type { TrackApi } from "../wasm/track/sim";
 import type { ClockEdge, ClockLine, ClockNode } from "./protocol";
 import type { Complexes } from "../game/complexes";
+import { META_PER_LINE, PROFILES_PER_LINE } from "../map/profiles";
 
 /** what the model answers for "every one" in `take_changed_lines` and `take_name_changes` */
 const ALL = 0xffffffff;
@@ -446,10 +447,10 @@ export class StateRows {
     const whole = a.phases(), meta = a.profile_meta();
     this.phaseTables.clear();
     for (const id of this.phaseSeen) {
-      const m = id * 6 * 4;
-      if (m + 24 > meta.length) continue;
+      const m = id * META_PER_LINE;
+      if (m + META_PER_LINE > meta.length) continue;
       let count = 0;
-      for (let p = 0; p < 6; p++) count += meta[m + p * 4 + 1];
+      for (let p = 0; p < PROFILES_PER_LINE; p++) count += meta[m + p * 4 + 1];
       if (count > 0) this.phaseTables.set(id, whole.subarray(meta[m] * 4, (meta[m] + count) * 4));
     }
     this.phaseAll = whole;

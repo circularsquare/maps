@@ -131,7 +131,7 @@ try {
   out.line = pick;
   log('line', JSON.stringify(pick));
   // a sampler on every draw: every train, from the buffers the GPU reads, as [line, run, offset along
-  // run 0]; a trip's profile is (line * 2 + run) * 3 + level
+  // run 0]; a trip's profile is (line * 2 + run) * SLOTS + slot (map/profiles.ts)
   await page.evaluate(async () => {
     const tw = window.tw, r = tw.renderer;
     const nw = await import('/src/map/network.ts');
@@ -152,7 +152,7 @@ try {
         if (!at) continue;
         const len = n.meta[p * 4 + 3], tau = time - dep;
         const term = tau <= fresh + 1 || Math.abs(at.s - nw.profileS(n, p, 1e7)) < 0.5;
-        tr.push([Math.floor(p / 6), at.run, at.run === 0 ? at.s : len - at.s, term ? 1 : 0]);
+        tr.push([window.tw.profiles.profileLine(p), at.run, at.run === 0 ? at.s : len - at.s, term ? 1 : 0]);
       }
       return tr;
     };

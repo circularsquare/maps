@@ -235,8 +235,8 @@ pub struct RunAccount {
     /// Departures from the first stop, seconds into the day, sorted (one periodic day).
     pub deps: Vec<f64>,
     pub levels: Vec<u8>,
-    /// The departure times from each stop, from the trip's start, per demand level.
-    pub stop_dep: [Vec<f64>; LEVELS],
+    /// The departure times from each stop, from the trip's start, per slot (`params::SLOTS`).
+    pub stop_dep: [Vec<f64>; SLOTS],
     /// `[trip * n + stop]`: riders aboard leaving the stop (0 at the last); riders left on the
     /// platform as it leaves; riders on the platform as it arrived.
     pub load: Vec<f32>,
@@ -505,7 +505,7 @@ impl Boarding {
         h.add(net.line_trains[l].is_some() as u64);
         h.f(net.line_turn[l] as f64);
         // the lattice's waits under a headway (T-2607), which the arrival masks read
-        for lev in 0..3 {
+        for lev in 0..ROWS {
             h.add(net.line_auto[l].map_or(0, |a| a[lev] as u64 + 1));
         }
         h.f(ls.shift);
@@ -517,7 +517,7 @@ impl Boarding {
         }
         // T-3521: the weekend rates, which the weekend accounts run
         if net.rest_solved {
-            for lev in 0..LEVELS {
+            for lev in net.slots() {
                 h.f(net.line_tph_on(l, WEEKEND, lev) as f64);
             }
         }
@@ -528,7 +528,7 @@ impl Boarding {
         // the patterns before recent changes (T-206): the account's day holds their departures
         for e in svc.eras_of(l) {
             h.f(e.until);
-            for lev in 0..LEVELS {
+            for lev in net.slots() {
                 h.f(e.lat.tph[lev] as f64);
                 h.f(e.lat.off[lev]);
                 h.f(e.lat.phase[lev]);
@@ -537,7 +537,7 @@ impl Boarding {
             h.f(e.lat.shift);
         }
         for r in 0..2 {
-            for lev in 0..LEVELS {
+            for lev in net.slots() {
                 let p = &ls.runs[r].prof[lev];
                 h.f(p.duration);
                 for &v in p.dep.iter() {
@@ -1524,7 +1524,7 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     }
     trips.sort_by(|a, b| a.dep.total_cmp(&b.dep));
     let m = trips.len();
-    let stop_dep: [Vec<f64>; LEVELS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
+    let stop_dep: [Vec<f64>; SLOTS] = std::array::from_fn(|lev| ls.runs[r].prof[lev].dep.clone());
     let arrivals: Vec<Arrivals> = (0..n)
         .map(|k| {
             let per = std::array::from_fn(|p| {

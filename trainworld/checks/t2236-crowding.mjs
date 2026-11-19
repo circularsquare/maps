@@ -44,7 +44,7 @@ try {
         const o = b.offs[i * 2];
         if (!(o >= 0)) continue;
         const prof = d[i * 2], dep = e + d[i * 2 + 1];
-        const line = Math.floor(prof / 6), run = Math.floor(prof / 3) % 2, level = prof % 3;
+        const line = window.tw.profiles.profileLine(prof), run = window.tw.profiles.profileRun(prof), level = window.tw.profiles.profileRow(prof);
         const n = window.tw.world.value.save.lines.find((l) => l.num === line)?.stops.length ?? 0;
         if (n < 2) continue;
         out[`${prof}|${Math.round(dep)}`] = { line, run, level, dep, loads: Array.from(b.loads.subarray(o, o + n - 1)) };

@@ -311,6 +311,16 @@ impl Default for Weekend {
     }
 }
 
+/// T-3542: the slots `period_slot` uses, in order, and how many (`Network::slots`).
+fn slot_list(p: [usize; 5]) -> ([usize; SLOTS], usize) {
+    let (mut l, mut n) = ([0; SLOTS], 0);
+    for s in (0..SLOTS).filter(|s| p.contains(s)) {
+        l[n] = s;
+        n += 1;
+    }
+    (l, n)
+}
+
 /// T-3521: a headway on weekends at `share` percent of the weekdays': `headway_s` divided by the
 /// share, rounded down to a whole minute (a headway under a minute to the second); 0 stays none.
 pub fn weekend_headway(headway_s: u32, share: u16) -> u32 {
@@ -571,7 +581,7 @@ pub struct Network {
     /// T-3521: each line's settled rates on weekends, as `line_tph` on weekdays
     /// (`TrackWorld::settle_counts`): every line's, since a line running its weekday trains then
     /// still shares the track with lines that do not. Read only where `rest_solved` says so.
-    pub line_tph_rest: Vec<[f32; 3]>,
+    pub line_tph_rest: Vec<[f32; SLOTS]>,
     /// T-3521: weekends were settled on their own, as some line runs other trains then. Otherwise
     /// every line runs its weekday rates then, at no settle's cost.
     pub rest_solved: bool,
@@ -588,7 +598,7 @@ pub struct Network {
     pub line_colour: Vec<u32>,
     pub line_stops: Vec<Span>,
     pub line_path: Vec<Span>,
-    pub line_tph: Vec<[f32; 3]>,
+    pub line_tph: Vec<[f32; SLOTS]>,
     pub line_trains: Vec<Option<[u32; 3]>>,
     pub line_auto: Vec<Option<[u32; 3]>>,
     /// T-1787: `line_tph` holds settled rates (a settle has run, or a save carried them), so a save
@@ -621,19 +631,24 @@ pub struct Network {
     /// T-1925: by line id, how many seconds after its pattern's own times each level's departures
     /// leave, so lines sharing track or a flat junction do not leave together (`spacing::place`);
     /// shorter than a missing entry is 0. Outside the undo history; saved in `LPH1`.
-    pub line_phase: Vec<[f32; 3]>,
+    pub line_phase: Vec<[f32; SLOTS]>,
     /// T-2972: by line id, the share of a headway line's spare time (`Service::spare`) its trains
     /// stand at the end of run 0 (its last stop) per level, the rest at its first: where it stands
     /// times the reverse departures (`spacing::place`); 0.5 where none is set. Outside the undo
     /// history; saved in `LSP1`.
-    pub line_split: Vec<[f32; 3]>,
+    pub line_split: Vec<[f32; SLOTS]>,
     /// T-2973: derived, by line id and level: the headway a line set by train count keeps so it runs
     /// in step with the lines it meets at a merge (`TrackWorld::pace_merges`), s; 0 none. Its trains
     /// stand the time over at its ends, as a headway line's do. Not saved: every settle works it out.
-    pub line_pace: Vec<[f32; 3]>,
+    pub line_pace: Vec<[f32; SLOTS]>,
     /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
     /// reload keeps it rather than placing every line
     pub phases_placed: bool,
+    /// T-3542: the slot serving each period (`period_slot`). Every line sets three rows, so it is
+    /// `PERIOD_SLOT_3`; a test may set every period its own slot to work all five out
+    /// (`set_period_slot`). With the slots it uses, in order, and how many, as `slots` reads them.
+    period_slot: [usize; 5],
+    slot_list: ([usize; SLOTS], usize),
     /// Derived: the path uses a deleted edge or no longer fits the stops.
     pub line_broken: Vec<bool>,
     line_free: Vec<u32>,
@@ -800,13 +815,54 @@ impl Network {
         self.frame
     }
 
+    /// T-3542: the slot serving each period (`params::SLOTS`). Every line sets three rows, so a row's
+    /// periods share its first period's slot (`PERIOD_SLOT_3`); a line of four or five rows will
+    /// split them.
+    pub fn period_slot(&self) -> [usize; 5] {
+        self.period_slot
+    }
+    /// Sets `period_slot` (tests: every period its own slot).
+    #[cfg(test)]
+    pub(crate) fn set_period_slot(&mut self, p: [usize; 5]) {
+        self.period_slot = p;
+        self.slot_list = slot_list(p);
+    }
+    /// The slots worked out, in order: those serving some period. The others are never written
+    /// or read (they keep their defaults).
+    pub fn slots(&self) -> impl Iterator<Item = usize> + Clone {
+        let (l, n) = self.slot_list;
+        l.into_iter().take(n)
+    }
+    /// The row of line `l` that sets slot `s`'s trains.
+    pub fn slot_row(&self, _l: usize, s: usize) -> usize {
+        SLOT_ROW[s]
+    }
+    /// The slot line `l`'s row `r` is kept in and read back from (`ROW_SLOT`).
+    pub fn row_slot(&self, _l: usize, r: usize) -> usize {
+        ROW_SLOT[r]
+    }
+    /// A row array (`LineData`'s) spread over the slots worked out, `none` in the others.
+    pub fn rows_in<T: Copy>(&self, r: [T; ROWS], none: T) -> [T; SLOTS] {
+        let p = self.period_slot();
+        std::array::from_fn(|s| if p.contains(&s) { r[self.slot_row(0, s)] } else { none })
+    }
+    /// Whether slot `s` is worked out (`slots`).
+    pub fn slot_worked(&self, s: usize) -> bool {
+        self.slot_list.0[..self.slot_list.1].contains(&s)
+    }
+    /// A slot array read back per row, each from the row's slot (`ROW_SLOT`).
+    pub fn rows_of<T: Copy>(&self, s: [T; SLOTS]) -> [T; ROWS] {
+        slots_to_rows(s)
+    }
+
     /// T-2607: the trains line `l` runs at level `lev` over a round trip of `trip_s`: its count, but
     /// on a line keeping a headway no more than the headway needs (a fraction), the time left over
     /// spent waiting at the ends, so the headway set is the headway run.
     pub fn running_trains(&self, l: usize, lev: usize, trip_s: f64) -> f64 {
-        let n = self.line_trains.get(l).copied().flatten().map_or(0.0, |c| c[lev] as f64);
+        let row = self.slot_row(l, lev);
+        let n = self.line_trains.get(l).copied().flatten().map_or(0.0, |c| c[row] as f64);
         match self.line_auto.get(l).copied().flatten() {
-            Some(a) if a[lev] > 0 && trip_s > 0.0 => n.min(trip_s / a[lev] as f64),
+            Some(a) if a[row] > 0 && trip_s > 0.0 => n.min(trip_s / a[row] as f64),
             _ => {
                 // T-2973: a count line in step with others at a merge
                 let p = self.line_pace_of(l as u32)[lev];
@@ -830,16 +886,16 @@ impl Network {
         self.line_weekend.iter().any(|w| *w != Weekend::default())
     }
     /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
-    pub fn line_phase_of(&self, l: u32) -> [f32; 3] {
-        self.line_phase.get(l as usize).copied().unwrap_or([0.0; 3])
+    pub fn line_phase_of(&self, l: u32) -> [f32; SLOTS] {
+        self.line_phase.get(l as usize).copied().unwrap_or([0.0; SLOTS])
     }
     /// T-2973: the headway a count line keeps to run in step at a merge per level (`line_pace`).
-    pub fn line_pace_of(&self, l: u32) -> [f32; 3] {
-        self.line_pace.get(l as usize).copied().unwrap_or([0.0; 3])
+    pub fn line_pace_of(&self, l: u32) -> [f32; SLOTS] {
+        self.line_pace.get(l as usize).copied().unwrap_or([0.0; SLOTS])
     }
     /// T-2972: the share of a line's spare time stood at its last stop per level (`line_split`).
-    pub fn line_split_of(&self, l: u32) -> [f32; 3] {
-        self.line_split.get(l as usize).copied().unwrap_or([0.5; 3])
+    pub fn line_split_of(&self, l: u32) -> [f32; SLOTS] {
+        self.line_split.get(l as usize).copied().unwrap_or([0.5; SLOTS])
     }
     /// Seconds a line's local time runs ahead of the game clock (T-309): the region of its first
     /// stop's. 0 without a time zone table or stops.
@@ -989,6 +1045,8 @@ impl Network {
             line_split: vec![],
             line_pace: vec![],
             phases_placed: false,
+            period_slot: PERIOD_SLOT_3,
+            slot_list: slot_list(PERIOD_SLOT_3),
             line_broken: vec![],
             line_free: vec![],
             stops: Pool::default(),
@@ -1199,8 +1257,8 @@ impl Network {
         self.line_colour.push(0);
         self.line_stops.push(Span::default());
         self.line_path.push(Span::default());
-        self.line_tph.push([0.0; 3]);
-        self.line_tph_rest.push([0.0; 3]);
+        self.line_tph.push([0.0; SLOTS]);
+        self.line_tph_rest.push([0.0; SLOTS]);
         self.line_trains.push(None);
         self.line_auto.push(None);
         self.line_dwell.push(DEFAULT_DWELL_S);
@@ -1279,7 +1337,7 @@ impl Network {
                 colour: self.line_colour[i],
                 stops: self.stops.get(self.line_stops[i]).to_vec(),
                 path: self.paths.get(self.line_path[i]).to_vec(),
-                tph: self.line_tph[i],
+                tph: self.rows_of(self.line_tph[i]),
                 trains: self.line_trains[i],
                 auto: self.line_auto[i],
                 dwell_s: self.line_dwell[i],
@@ -1805,7 +1863,7 @@ impl Network {
                 self.line_colour[i] = d.colour;
                 self.line_stops[i] = self.stops.replace(self.line_stops[i], &d.stops);
                 self.line_path[i] = self.paths.replace(self.line_path[i], &d.path);
-                self.line_tph[i] = d.tph;
+                self.line_tph[i] = self.rows_in(d.tph, 0.0);
                 self.line_trains[i] = d.trains;
                 self.line_auto[i] = d.auto.filter(|_| d.trains.is_some());
                 self.line_dwell[i] = d.dwell_s;
@@ -1861,8 +1919,8 @@ impl Network {
         if tph.iter().any(|t| !t.is_finite() || *t < 0.0) {
             return Err(Issue::LineSchedule { line: id });
         }
-        let old = self.line_tph[id as usize];
-        self.line_tph[id as usize] = tph;
+        let old = self.rows_of(self.line_tph[id as usize]);
+        self.line_tph[id as usize] = self.rows_in(tph, 0.0);
         self.touch.schedules.push(id);
         Ok(old)
     }

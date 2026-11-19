@@ -619,18 +619,18 @@ impl TrackApi {
         let h = if w.counts.is_some() { w.headways.map(|h| h / k) } else { [0; 3] };
         vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64, h[0] as f64, h[1] as f64, h[2] as f64]
     }
-    /// T-3521: a line's trains an hour at level `lev` on kind of day `row` (0 weekdays, 1 weekends;
-    /// `Network::line_tph_on`).
+    /// T-3521: a line's trains an hour at level `lev` (a row: high, medium, low) on kind of day
+    /// `row` (0 weekdays, 1 weekends; `Network::line_tph_on`).
     pub fn line_tph_on(&self, id: u32, row: u32, lev: u32) -> f32 {
-        if id as usize >= self.w.net.line_count() || lev as usize >= LEVELS { return 0.0 }
-        self.w.net.line_tph_on(id as usize, (row as usize).min(DAY_ROWS - 1), lev as usize)
+        if id as usize >= self.w.net.line_count() || lev as usize >= ROWS { return 0.0 }
+        self.w.net.line_tph_on(id as usize, (row as usize).min(DAY_ROWS - 1), self.w.net.row_slot(id as usize, lev as usize))
     }
     /// T-3521: a line's trains an hour on weekends, high, medium, low (`line_tph_on`), with its hidden
     /// twin's for a line on both pairs, as its panel shows the weekdays' (T-3333).
     pub fn line_tph_rest(&self, id: u32) -> Vec<f32> {
         let net = &self.w.net;
         let twin = net.twin_line(id);
-        (0..LEVELS).map(|lev| net.line_tph_on(id as usize, WEEKEND, lev) + twin.map_or(0.0, |t| net.line_tph_on(t as usize, WEEKEND, lev))).collect()
+        (0..ROWS).map(|row| net.line_tph_on(id as usize, WEEKEND, net.row_slot(id as usize, row)) + twin.map_or(0.0, |t| net.line_tph_on(t as usize, WEEKEND, net.row_slot(t as usize, row)))).collect()
     }
     /// T-3521: run a line's weekends at `share` percent of its weekdays (10 to 200), its counts set by
     /// hand dropped. One undoable edit, charged for the trains it makes the line need (`cars_needed`).
@@ -693,10 +693,10 @@ impl TrackApi {
         if !self.w.net.line_ok(id) { return self.refuse(Issue::NoSuchLine { line: id }) }
         let auto = if pairs_split(&self.w.net, id) { [high, medium, low].map(|h| h * 2) } else { [high, medium, low] };
         let svc = self.w.svc.lines.get(id as usize);
-        let trip = svc.map_or([0.0; 3], |s| s.round_trip);
+        let trip = svc.map_or([0.0; ROWS], |s| slots_to_rows(s.round_trip));
         let trains = match (self.w.net.line_auto[id as usize], self.w.net.line_trains[id as usize]) {
             (None, Some(t)) => t,
-            (None, None) => svc.map_or([0; 3], |s| s.trains),
+            (None, None) => svc.map_or([0; ROWS], |s| slots_to_rows(s.trains)),
             _ => std::array::from_fn(|lev| auto_trains(trip[lev], auto[lev])),
         };
         self.run(Op::AutoTrains { id, auto: Some(auto), trains: Some(trains) })

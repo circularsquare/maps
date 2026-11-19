@@ -18,6 +18,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, staleTempProfiles, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
+import { PROFILES_PER_LINE } from './lib/profiles.mjs';
 
 const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
 // a glyph range glyphs.py leaves out on purpose: its 404 makes MapLibre draw the codepoints locally
@@ -234,15 +235,15 @@ async function browserChecks(BASE) {
       await page.waitForFunction(() => window.tw.renderer.tripCount > 0, undefined, { timeout: 60000 });
       let got = null, tried = 0;
       for (let k = 0; k < 8 && !got; k++) {
-        const target = await page.evaluate((k) => {
+        const target = await page.evaluate(({ k, perLine }) => {
           const tw = window.tw, r = tw.renderer, gpu = r.probe(tw.clock.now()), a = r.net?.anchor ?? tw.anchor();
           const live = [];
           for (let i = 0; i < r.tripCount; i++) if (gpu[i * 2] < 1e8) live.push(i);
           const i = live[Math.floor((live.length * (k + 0.5)) / 8)];
           if (i === undefined) return null;
           const [lng, lat] = tw.toLngLat(gpu[i * 2], gpu[i * 2 + 1], a);
-          return { lng, lat, line: Math.floor(r.trips[i * 2] / 6) };
-        }, k);
+          return { lng, lat, line: Math.floor(r.trips[i * 2] / perLine) };
+        }, { k, perLine: PROFILES_PER_LINE });
         if (!target) break;
         tried++;
         await page.evaluate((t) => { window.tw.map.jumpTo({ center: [t.lng, t.lat], zoom: 16 }); window.tw.overlay.invalidate(); }, target);

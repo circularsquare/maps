@@ -13,6 +13,7 @@ import { LINE_PALETTE, rgb } from "../game/palette";
 import { makeAnchor, pxPerUnitAt, unitPerPxAt } from "./geo";
 import type { NetworkBuffers, Strokes } from "./network";
 import { PLATFORM_HALF_M, platformPoints, platformShape } from "./stationGeometry";
+import { META_PER_LINE, profileOf } from "./profiles";
 
 /** The zoom the logo is drawn at: boxes as the game draws them close in. */
 export const LOGO_ZOOM = 15;
@@ -288,7 +289,7 @@ export function logoNetwork(): LogoNetwork {
     const tripS = Math.max(r0.t, r1.t);
     const cycle = CYCLES.find((c) => c >= 2 * (tripS + TURN)) ?? 3600;
     for (const [run, r] of [[0, r0], [1, r1]] as const) {
-      const prof = (li * 2 + run) * 3;
+      const prof = profileOf(li, run, 0);
       meta[prof * 4] = phases.length / 4;
       meta[prof * 4 + 1] = r.ph.length / 4;
       meta[prof * 4 + 2] = r.t;
@@ -298,13 +299,13 @@ export function logoNetwork(): LogoNetwork {
     // the train leaves at a different moment on each line, so they are not all in step
     const off = ((li * 0.37) % 1) * cycle;
     for (let dep = off - 2 * cycle; !s.bare && dep < 3600 + cycle; dep += cycle) {
-      trips.push(li * 6, dep);
+      trips.push(profileOf(li, 0, 0), dep);
       ends.push(dep + cycle / 2);
-      trips.push(li * 6 + 3, dep + cycle / 2);
+      trips.push(profileOf(li, 1, 0), dep + cycle / 2);
       ends.push(dep + cycle);
     }
   });
-  for (let i = 0; i < strokes.length * 6 * 4; i++) meta[i] ??= 0;
+  for (let i = 0; i < strokes.length * META_PER_LINE; i++) meta[i] ??= 0;
   // interchanges: a station another's box overlaps
   const S = stations;
   for (let i = 0; i < S.length / 3; i++)

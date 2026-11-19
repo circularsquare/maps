@@ -62,7 +62,7 @@ impl TrackApi {
     /// flat, largest first.
     pub fn line_waits(&self, line: u32, level: usize) -> Vec<f64> {
         let cap = &self.w.svc.cap;
-        let lev = level.min(crate::track::params::LEVELS - 1);
+        let lev = self.w.net.row_slot(line as usize, level.min(crate::track::params::ROWS - 1));
         let mut v: Vec<[f64; 3]> = (0..cap.res.len())
             .filter_map(|r| {
                 let f = cap.wait_for(r)?;
