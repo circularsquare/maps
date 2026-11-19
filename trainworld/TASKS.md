@@ -106,10 +106,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-3757 [P1] {L:memory} Saves of 6-14 GB crash players' games (taking, 2026-11-19, agent savesize)
   - Context: You, 2026-11-19: "people are having issues with their saves getting too big and crashing. on their computers they're reporting big saves that say like 6GB or even like 14GB used ... i tried loading someones 14GB save and it was using 6GB of ram on my system." Then: the number is the game's estimated memory usage readout, and "its a general pattern that sometimes people are reporting way higher "estimated memory usage" than on our end."
   - Goal: The cause named and fixed so saves stay their normal size, with existing huge saves loading.
-- T-3758 [P1] {L:fares} Fare zones count the zones a trip passes, and lines choose zone or distance (taking, 2026-11-19, agent zonerule)
-  - Context: You, 2026-11-19: "if a trip from zone 2 to 2 counts as 1 that does feel pretty weird to me"; "lets also maybe allow setting specific lines to use distance-based or zone-based. so that like you can exempt metro lines from zones and only include what you consider as commuter or whatever. copying lines should do the same thing."
-  - Goal: A trip pays from the lowest to the highest zone its route touches; each line is set to zone or distance fares (default zone), kept when a line is copied.
-  - Other: notes/T-3740.md
+- T-3767 [P1] {L:timetables} Five service periods for new lines, buses and ferries (taking, 2026-11-19, agent periods5)
+  - Context: You, 2026-11-19: "do the auto headways for new lines work with 5 period schedules? they should. currently it just says "14 min, 22 min and 85 min" even if u have 5 intervals", and "the 5 intervals should work for buses/ferries too". T-3542 gave rail lines 3, 4 or 5 period rows; the schedule window opens on rail lines only.
+  - Goal: A new line's automatic headways fill every period the game uses (five values with five rows), and bus and ferry lines take 3, 4 or 5 periods like rail lines.
+- T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
+  - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
+  - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.
 - T-3762 [P2] {L:new-countries} Guyana, Suriname, French Guiana and the rest of the Caribbean
   - Context: You, 2026-11-19: "yeah we could also cover guyana/suriname/guiana sure." And: "we should probably also try to add martinique / the other european caribbean parts... otherwise can't really island hop here which is i think what most people would want to do." Left out by T-3620: Guadeloupe and Martinique (inside France's Natural Earth feature, like French Guiana: planner work), the US Virgin Islands and Saint Kitts and Nevis (under the zone floor); also Sint Maarten and Saint-Martin, the Caribbean Netherlands, Montserrat, Anguilla, the British Virgin Islands, Turks and Caicos. A world run: overnight.
   - Goal: Every inhabited Caribbean island group playable so a player can island hop, plus Guyana, Suriname and French Guiana.
@@ -120,14 +122,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3620.md
 - T-1738 [P2] {L:new-countries} Myanmar, Laos and Timor-Leste
   - Context: Eight countries shipped 2026-10-28 to 11-03 (516 rows). Myanmar has thin OSM; Laos and Timor-Leste have no plan rows or unit source yet. You, 2026-11-19: players asked for Laos and Myanmar; they're next after Guyana, Suriname and French Guiana.
+  - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
+  - Other: notes/T-1738.md section 5
 - T-3763 [P2] {L:new-countries} Iraq and Iran
   - Context: You, 2026-11-19: players asked for Iraq and Iran; next with Laos and Myanmar.
   - Goal: Iraq and Iran built, shipped and joined per docs/adding-a-country.md.
 - T-3764 [P3] {L:new-countries} Fill the gaps, Pakistan, Bangladesh and Central Asia
   - Context: You, 2026-11-19: "after that i guess we fill in the gaps (pakistan/bangladesh, central asia, etc)". After T-1738 and T-3763.
   - Goal: The countries still missing between built regions listed, then built in batches.
-  - Goal: Myanmar, Laos and Timor-Leste are built and shipped.
-  - Other: notes/T-1738.md section 5
 - T-1765 [P3] {L:region-redraws} Origins on the densest pixel, far from town
   - Context: Zones whose origin was set on the densest pixel over 25 km outside their unit. Canada, Greece, Poland and China's city zones were fixed on 2026-10-29.
   - Goal: China's other 61 county-town zones (Guyang 235 km off) are rebuilt.
@@ -1280,10 +1282,6 @@ Judged 2026-10-26: under about 2 hours of agent work each, self-contained, no da
   - Context: Outlines load all at once today.
   - Goal: Outlines fetch per region.
   - Other: notes/T-975.md
-- T-956 [P4] {L:map-look} Homes bubbles stay drawn in WebKit
-  - Context: WebKit keeps Homes bubbles after Homes is off. Seen only in Playwright's Windows WebKit; real Safari is unknown, and neither is installed here.
-  - Goal: Bubbles clear when Homes is off.
-  - Other: notes/someday.md
 - T-166 [P4] {L:map-look} Riders by purpose at a station
   - Context: Idea.
   - Goal: A station's riders by purpose show on the map.
