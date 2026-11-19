@@ -2763,9 +2763,9 @@ function postDiagram() {
   };
   const whole = build(lines, diagramIn.pts), groups = regionGroups(whole);
   let graphs = [whole];
-  if (groups.length > 1) {
-    // each region: its lines, their track, and other track within REGION_TRACK_M of its stations' box (as a network of that
-    // region alone has), so its origin is the one it has alone
+  if (groups.length >= 1) {
+    // each region (a lone one too, so track with no line far away never moves it): its lines, their track, and other track
+    // within REGION_TRACK_M of its stations' box (as a network of that region alone has), so its origin is the one it has alone
     const { lng, lat } = nodeLngLat(whole), a = anchor(), pad = REGION_TRACK_M / EARTH_C / Math.cos((whole.origin[1] * Math.PI) / 180);
     const regionOf = new Int32Array(whole.key.length), boxes = groups.map((nodes, r) => {
       const b = [Infinity, Infinity, -Infinity, -Infinity];
