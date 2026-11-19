@@ -17,8 +17,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 2. shonei-server f5309bf (save levels 23-24) committed, not pushed or deployed; `go test` passes against master.
    Deploy needs her yes (ask a-2026-11-19-5), with or before the v0.4.3 publish.
 3. Open asks a-2026-11-19-1..5: text acks (T-3746, T-3542 1b, c013), Guyana/Suriname/French Guiana, the deploy.
-4. Running: periods2 (Opus, T-3542 stage 2 period hours, tree periods2, port 6144; save level 25, rewords c015;
-   needs a checker, and the server needs level 25 before publish). T-3753 LANDED 20147ede (not on 8800 yet;
+4. T-3542 DONE: stage 2 (period hours, level 25) LANDED 875b0070 after periods2chk passed; c015 reworded.
+   shonei-server 1f29b5a (levels 23-25) committed, not pushed or deployed (ask a-2026-11-19-6). T-3753 LANDED 20147ede (not on 8800 yet;
    rebuild with periods2's landing). Then T-3346 stage 2 ports (tree
    tt2). Fares: T-3740 zones (14-20 h: stage it first), T-3744 per-stop fare (design for her first), T-3753 (P3).
    T-3754 La Gonave, T-3747 Brazil RAIS (ends in a rebuild run: overnight).

@@ -28,9 +28,16 @@
     "by": "maps-6b"
   },
   {
-    "id": "a-2026-11-19-5",
-    "title": "Deploy server save levels 23-24",
-    "text": "shonei-server f5309bf teaches the server's save check levels 23 (service periods) and 24 (station names); go test passes against master. It must go out with or before the next publish; early is harmless. Deploy now?",
+    "id": "a-2026-11-19-6",
+    "title": "Deploy server save levels 23-25",
+    "text": "shonei-server 1f29b5a (on f5309bf) teaches the server's save check levels 23 (service periods), 24 (station names) and 25 (period hours); tests pass against the game's code. It must go out with or before the next publish; early is harmless (it only accepts more). Deploy, and push shonei-server after?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-7",
+    "title": "Period hours text",
+    "text": "T-3542 stage 2 text: column head 'Hours', boxes like '6-10', error ' 2 hours at least' (or '6 hours at least' for High on 3-period lines), period hovers with the line's own hours ('Morning: 05:00-10:00'), screen reader 'hours of Morning'; changelog c015 reworded to 'added 4 and 5 service periods with hours you can move, set for the whole game or per line in the schedule window'. Text acknowledged, or name lines?",
     "since": "2026-11-19",
     "by": "maps-6b"
   }
