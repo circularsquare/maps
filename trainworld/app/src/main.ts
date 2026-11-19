@@ -205,17 +205,20 @@ render(h(MapTopLeft, null), demandSelectorRoot); // the demand buttons and the s
 // T-2657: demand stopped for good: the notice at the top centre; Reload writes the autosave first
 const demandStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(demandStoppedRoot);
-render(h(DemandStopped, { save: () => client.saveBeforeReload() }), demandStoppedRoot);
+// the notices below can fire before the clock client exists (the graphics lost while the game loads): nothing to save then
+let earlyClient: ClockClient | null = null;
+const saveGame = () => earlyClient ? earlyClient.saveBeforeReload() : Promise.resolve();
+render(h(DemandStopped, { save: saveGame }), demandStoppedRoot);
 // T-3582: the browser refused the page graphics mid-game: the game is saved before the player restarts the browser
-onGraphicsGone(() => { void client.saveBeforeReload(); });
+onGraphicsGone(() => { void saveGame(); });
 // T-2962: a file of this tab gone from the server after a publish: a notice with Reload, which saves first
 const newVersionRoot = document.createElement("div");
 map.getContainer().appendChild(newVersionRoot);
-render(h(NewVersion, { save: () => client.saveBeforeReload() }), newVersionRoot);
+render(h(NewVersion, { save: saveGame }), newVersionRoot);
 // T-3314: the clock worker or the demand pool has gone quiet for minutes: a notice with Reload
 const figuresStoppedRoot = document.createElement("div");
 map.getContainer().appendChild(figuresStoppedRoot);
-render(h(FiguresStopped, { save: () => client.saveBeforeReload() }), figuresStoppedRoot);
+render(h(FiguresStopped, { save: saveGame }), figuresStoppedRoot);
 // T-2802, T-2839: a phone has no trips between cities, and a device reporting 4 GB or less may not run well; said once per game load
 if (deviceNoteApplies()) {
   const noMarketRoot = document.createElement("div");
@@ -314,6 +317,7 @@ startOpenFit(); // T-895
 
 // ---- the clock worker: owns the network; its states and trips go to the renderer ----
 const client = new ClockClient();
+earlyClient = client;
 setClockDiagnosis(() => client.diagnosis()); // T-3313: for feedback reports
 // T-3628: a download that failed while the tab was in the background or offline (iOS suspends fetches) is tried again once on return
 const retryDownloads = () => { retryPackDownloads(); retryGround(); };
