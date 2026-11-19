@@ -895,23 +895,26 @@ above the countries, the heading "Fare zones" (bold, over a rule, with a hover o
 as plain text until hovered (typed over, Enter or leaving it renames; no recalculation), "Paint stations" with a
 brush, which closes the panel and starts the Fare zones tool on that area, and, left of a bin ("Remove fare area", asking
 "Remove {name}? Trips between its stations pay by distance again."; its stations keep their codes, which count as
-none until Z3 tidies them), an on/off icon (a ticked circle when on, a struck one when off; hover "Disable {name}" or "Enable {name}"; T-3783; off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
+none until Z3 tidies them), the game's usual checkbox with no text, ticked while the area is on (hover "Disable {name}" or "Enable {name}"; T-3783, T-3791; off, trips pay by distance as if the area did not exist, its paint, name and prices kept and its price rows dimmed; `FareArea.off` in the header's `fares.zones`, sent as a `fareZones` edit like removal, so not undone; `demandFares()` leaves an off area out); then one row per zone count, "1 fare zone", "2 fare zones" ..., as many as the area's
 highest zone painted and at least three, each its price as charged in the panel's country (a hover on each: what rides it is for; the stored price times
 that country's rate multiple, `countryFareScales`, as demand charges it; never below the base fare) in a stepper by the base fare's step, typed on a click. A price
 change keeps prices from falling: the later ones rise to it, the earlier ones come down to it. Last, "New fare area",
-which makes an area named "{city} fare zones" for the city in view ("Fare area 2" with none), its prices the curve's
+which makes an area named "{city} fare zones" for the city in view ("Fare area 2" with none), "{city} fare zones 2",
+3 ... when an area has that name already (T-3791: names never repeat, so an area made twice by mistake shows), its prices the curve's
 fares at 5, 10, 15 km and so on, and starts the tool on it. A game with no fare area shows only the heading and
 that button; nothing else in the game changes.
 
 **The Fare zones tool** [`map/fareZoneTool.ts`, `game/fareZonePaint.ts`, `ui/FareZoneParts.tsx`], tool id `fares`
 (no Build tab button; started from the panel): its bar at the map's top centre, as the station tool's, with the area
 (a picker once there are two) and "Fare zone" with a stepper of the zone a click gives, 1 to 12 on its colour or
-"none" (which takes stations out of their fare zone); the click mode's descriptor "Painting fare zones" and the hint
+"none" (which takes stations of that area out of it, leaving other areas' stations alone); the click mode's descriptor "Painting fare zones" and the hint
 "Click a station or drag around several." ("Tap a station or draw around several." on touch). A click on a station
 (within 14 px, from zoom 9 where stations are drawn) gives it and its whole complex the zone; a left drag draws a loop (kept in map coordinates, so zooming or panning mid-drag leaves it on the ground), dashed and shaded in the
 zone's colour, ringing the stations it would take, and on release every station inside (and their complexes) takes
-it. Each click or loop is one `stationFares` edit (one recalculation of trips, one Ctrl+Z), and none when no station
-would change. The right or middle button drags the map; on touch one finger draws the loop, a tap paints, two
+it. A station is in one fare area at most (T-3791): when a click or loop takes in a complex shown in another area, the
+game asks first ("Some of these stations are in another fare area. Move them to this one?", "Move stations" or
+Cancel); Move stations moves them into this area, Cancel (or Esc) paints only the others. Each click or loop is one
+`stationFares` edit (one recalculation of trips, one Ctrl+Z), and none when no station would change. The right or middle button drags the map; on touch one finger draws the loop, a tap paints, two
 fingers pan and zoom (MapLibre's touch pan held to two fingers while the tool is on). Esc drops a loop being drawn,
 then leaves the tool. While the tool is on the ground near each painted station is tinted in its zone's colour (one
 colour per zone number, `FARE_ZONE_COLOURS`), under the network: each painted complex (or lone station) owns its

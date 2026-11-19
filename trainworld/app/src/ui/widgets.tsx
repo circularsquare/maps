@@ -332,10 +332,11 @@ export function Segmented<T>(p: { options: [T, ComponentChildren][]; value: T; o
   );
 }
 
-export function Check(p: { checked: boolean; onChange: (v: boolean) => void; children: ComponentChildren }) {
+/** With no `children` the box stands alone: give it a `label` for screen readers (and a `tip` if it needs one). */
+export function Check(p: { checked: boolean; onChange: (v: boolean) => void; children?: ComponentChildren; label?: string; tip?: string }) {
   return (
-    <label class="check">
-      <input type="checkbox" checked={p.checked} onChange={(e) => p.onChange((e.target as HTMLInputElement).checked)} />
+    <label class="check" data-tip={p.tip}>
+      <input type="checkbox" checked={p.checked} aria-label={p.label} onChange={(e) => p.onChange((e.target as HTMLInputElement).checked)} />
       {p.children}
     </label>
   );

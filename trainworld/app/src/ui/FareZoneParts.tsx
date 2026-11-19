@@ -2,7 +2,7 @@
 // panel's Fare zone row, shown only while the fares have an area. docs/ui-panels.md "Advanced fares".
 
 import { MAX_ZONES, zoneCode, zoneOfCode, areaOfCode } from "../game/fareZones";
-import { currentArea, fareAreas, liveCode, paintArea, paintZone, setStationCodes } from "../game/fareZonePaint";
+import { complexCode, currentArea, fareAreas, paintArea, paintZone, setStationCodes } from "../game/fareZonePaint";
 import { CLICK_MODE_COLOURS, fareZoneColour, inkOn } from "../game/palette";
 import type { StationInput } from "../game/types";
 import { t } from "../i18n";
@@ -45,7 +45,7 @@ export function FareBar() {
 export function FareZoneRow({ members }: { members: StationInput[] }) {
   const areas = fareAreas();
   if (!areas.length || !members.length) return null;
-  const code = members.map((s) => liveCode(s.fare, areas)).find((c) => c) ?? 0;
+  const code = complexCode(members, areas);
   const area = code ? areas.find((x) => x.id === areaOfCode(code))! : currentArea(areas);
   const z = code ? zoneOfCode(code) : 0;
   return (

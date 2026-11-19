@@ -22,7 +22,7 @@ import { t, tCountry, tNumber, tRich } from "../i18n";
 import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
 import { BusFareRow, FareEffect, fareRef, FerryFareRow, HsrFareRow, TransferFareRow } from "./MoneyTab";
-import { Icon, Stepper } from "./widgets";
+import { Check, Icon, Stepper } from "./widgets";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
 const panelPreview = signal<FareNode[] | null>(null);
@@ -95,6 +95,7 @@ function FareAreas({ f, country }: { f: Fares; country: string }) {
       {areas.map((a) => {
         const n = Math.min(MAX_ZONES, Math.max(3, topZone(a.id)));
         const charged = chargedPrices(f, a);
+        const onOff = a.off ? t("advancedFares.enableArea", { name: a.name }) : t("advancedFares.disableArea", { name: a.name });
         return (
           <>
             <li class="af-area">
@@ -105,8 +106,7 @@ function FareAreas({ f, country }: { f: Fares; country: string }) {
               </span>
               <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
               <span class="group">
-                <button class="btn icon mini" aria-pressed={!a.off} aria-label={a.off ? t("advancedFares.enableArea", { name: a.name }) : t("advancedFares.disableArea", { name: a.name })}
-                  data-tip={a.off ? t("advancedFares.enableArea", { name: a.name }) : t("advancedFares.disableArea", { name: a.name })} onClick={() => setAreaOff(a.id, !a.off)}>{a.off ? <Icon.switchOff /> : <Icon.switchOn />}</button>
+                <Check checked={!a.off} onChange={(on) => setAreaOff(a.id, !on)} label={onOff} tip={onOff} />
                 <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.bin /></button>
               </span>
             </li>
