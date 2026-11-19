@@ -16,7 +16,9 @@ async function lowerOverCap(my: number) {
   for (const l of linesByNum(w).values()) {
     if (my !== seq) return;
     const st = world.peek()?.lineStats[l.id];
-    if (!st || st.trainsNeeded.every((n) => n <= 1)) continue;
+    // T-3542: a line of four or five rows keeps its counts (a three-row edit would set its midday and
+    // afternoon to the morning's)
+    if (!st || st.rows || st.trainsNeeded.every((n) => n <= 1)) continue;
     const d = await queryClock({ what: "lineHeld", line: l.num });
     if (!d || my !== seq) continue;
     const had = st.trainsNeeded;

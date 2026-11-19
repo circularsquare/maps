@@ -14,7 +14,7 @@ import { peakLoadText, today, useToday } from "../../game/today";
 import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretch } from "../../game/boarding";
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
-import { DEMAND_INDEX, DEMANDS, loopHalves, planStopsOf, type Demand, type LineInput, type LineStats, type StationInput } from "../../game/types";
+import { DEMAND_INDEX, loopHalves, planStopsOf, type LineInput, type LineStats, type StationInput } from "../../game/types";
 import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
@@ -25,7 +25,8 @@ import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
 import { gameStamp } from "../../workers/clockClient";
-import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit } from "../../game/world";
+import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit, rowCount, fleetOf } from "../../game/world";
+import { periodAt, rowOfPeriod } from "../../game/periods";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
 import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel } from "../widgets";
@@ -46,7 +47,7 @@ import { LineTopSpeed } from "./LineTopSpeed";
 import { LineFare, LineMoney } from "./LineMoney";
 import type { EditOp } from "../../workers/protocol";
 import { hasUpgrade, UPGRADE } from "../../game/upgrades";
-import { AverageSpeed, carsBought, carsText, demandLabel, type Limit, NO_LIMITS, PastDay, Schedule, useLinePeriods, vehicleOf } from "./schedule";
+import { AverageSpeed, carsBought, carsText, type Limit, rowLabel, NO_LIMITS, PastDay, Schedule, useLinePeriods, vehicleOf } from "./schedule";
 import { LineTitle, useLineTitle } from "./LineTitle";
 import { TRACK_SPECS } from "../../game/trackKinds";
 
@@ -104,29 +105,32 @@ function waitSpotsFrom(d: Float64Array, v: Vehicle): Spot[] {
 }
 
 /** Where full track holds a line's fleet back, per level (T-517): from `TrackApi.line_held`. */
-interface Held { d: Demand; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
+/** `row`: its row (T-3542: of `rows`, 3 to 5; high, medium, low for three) */
+interface Held { row: number; rows: number; wait: number; place: string; head: string; name: string; tail: string; at: { id: string; lng: number; lat: number } | null; tip: string }
+/** T-3542: `line_held` holds 13 numbers a row (`line_row_held` for four or five rows). */
+const rowsIn = (v: Float64Array) => Math.round(v.length / 13);
 function heldFrom(v: Float64Array, vehicle: Vehicle): Held[] {
   const st = stationsNow();
-  const out: Held[] = [];
-  DEMANDS.forEach((d, lev) => {
+  const out: Held[] = [], rows = rowsIn(v);
+  for (let lev = 0; lev < rows; lev++) {
     const [wait, kind, node, x, y, , most] = v.subarray(7 * lev, 7 * lev + 7);
-    if (!(wait > 0)) return;
+    if (!(wait > 0)) continue;
     const s = (node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y);
     const name = s?.name ?? "";
-    out.push({ d, wait, place: fullTitle(kind, name, vehicle), ...fullParts(kind, name, vehicle), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most, vehicle, hasUpgrade(node >= 0 ? st.get(node)?.upgrades : undefined, UPGRADE.terminal)) });
-  });
+    out.push({ row: lev, rows, wait, place: fullTitle(kind, name, vehicle), ...fullParts(kind, name, vehicle), name, at: s ? { id: s.id, lng: s.lng, lat: s.lat } : null, tip: fullTip(kind, most, vehicle, hasUpgrade(node >= 0 ? st.get(node)?.upgrades : undefined, UPGRADE.terminal)) });
+  }
   return out;
 }
 
-/** What limits a line per level (T-679, `Limit`); null where nothing does. From the tail of
- * `TrackApi.line_held`. */
+/** What limits a line per row (T-679, `Limit`); null where nothing does. From the tail of
+ * `TrackApi.line_held` (`line_row_held`). */
 export function limitsFrom(v: Float64Array, vehicle: Vehicle): (Limit | null)[] {
-  const st = stationsNow();
-  return DEMANDS.map((_, lev) => {
-    const [s, kind, node, x, y] = v.subarray(21 + 5 * lev, 26 + 5 * lev);
+  const st = stationsNow(), n = rowsIn(v);
+  return Array.from({ length: n }, (_, lev) => {
+    const [s, kind, node, x, y] = v.subarray(7 * n + 5 * lev, 7 * n + 5 + 5 * lev);
     if (!(s > 0)) return null;
     const name = ((node >= 0 ? st.get(node) : undefined) ?? nearestStation(x, y))?.name ?? "";
-    const capS = v[36 + lev];
+    const capS = v[12 * n + lev];
     return { s, what: fullParts(kind, name, vehicle).head + name, capS: capS > 0 ? capS : s };
   });
 }
@@ -442,7 +446,7 @@ function LongerPlatforms({ l, st, stations, cars, to, onDone }: { l: LineInput; 
   const busy = useRef(false);
   const m = moneyState.value;
   const k = m && trainKind(m, st.fast, st.tram);
-  const trains = Math.max(...st.trainsNeeded);
+  const trains = fleetOf(st);
   const carsPrice = k && st.status === "running" ? Math.max(0, (to - cars) * trains - k.spare) * k.carPrice : 0;
   if (!short.length) return null;
   const n = short.length;
@@ -598,7 +602,7 @@ function TrainType({ l, st, lev }: { l: LineInput; st: LineStats; lev: number })
   const tip = (fast: boolean) => {
     const k = m && trainKind(m, fast);
     let t = tr(fast ? "lineInspector.fastTip" : "lineInspector.normalTip");
-    const need = Math.max(...st.trainsNeeded) * st.cars;
+    const need = fleetOf(st) * st.cars;
     if (k && fast !== st.fast && st.status === "running" && need > 0) t += "\n" + carsBought(k, need);
     return t;
   };
@@ -662,12 +666,15 @@ function RailLineInspector({ id }: { id: string }) {
   const title = useLineTitle(id, l);
   // T-309: the demand level now in the line's own local time
   const now = demandAt(lineSeconds(w?.lineStats[id]));
-  const lev = DEMAND_INDEX[now];
-  // where it loses time to busy track, asked again after every edit and when the level turns
+  // T-3542: a line of four or five rows reads its row now (`lev` indexes its rows' figures) and asks by period
   const own = w?.lineStats[id], rv: Vehicle = own ? vehicleOf(own) : "train";
-  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => spotsFrom(d, rv)) ?? NO_SPOTS;
-  const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: lev } : null, [l?.num, w?.version, lev, rv], (d) => waitSpotsFrom(d, rv)) ?? [];
-  const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num } : null, [l?.num, w?.version, rv], (d) => ({ held: heldFrom(d, rv), limits: limitsFrom(d, rv) }));
+  const period = periodAt(lineSeconds(own)), byRow = !!own?.rows;
+  const lev = byRow ? rowOfPeriod(rowCount(own), period) : DEMAND_INDEX[now];
+  const at = byRow ? { period } : {};
+  // where it loses time to busy track, asked again after every edit and when the level turns
+  const spots = useClockQuery(l ? { what: "lineDelays", line: l.num, level: DEMAND_INDEX[now], ...at } : null, [l?.num, w?.version, lev, rv, byRow], (d) => spotsFrom(d, rv)) ?? NO_SPOTS;
+  const waitSpots = useClockQuery(l ? { what: "lineWaits", line: l.num, level: DEMAND_INDEX[now], ...at } : null, [l?.num, w?.version, lev, rv, byRow], (d) => waitSpotsFrom(d, rv)) ?? [];
+  const heldAnswer = useClockQuery(l ? { what: "lineHeld", line: l.num, rows: true } : null, [l?.num, w?.version, rv], (d) => ({ held: heldFrom(d, rv), limits: limitsFrom(d, rv) }));
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
@@ -692,7 +699,9 @@ function RailLineInspector({ id }: { id: string }) {
   const traffic = display.value.trackColour === "traffic" && !editingStops;
   const crowded = useCrowded(l?.num ?? -1, (l?.stops.length ?? 1) - 1, traffic && display.value.fullMarks);
   if (!w || !l) return null;
-  const st = pairStats(w, w.lineStats[l.id]);
+  const st0 = pairStats(w, w.lineStats[l.id]);
+  // T-3542: the round trip and delay at the row now (`lev`)
+  const st = st0.rows ? { ...st0, roundTripByLevel: st0.rows.roundTrip as LineStats["roundTripByLevel"], delayS: st0.rows.delay as LineStats["delayS"] } : st0;
   const name = stationNames(w);
   const looks = traffic && st.status === "running" ? stretchLooks(l, l.stops.map((s) => name.get(s) ?? ""), crowded) : null;
   const times = st.fromStartByLevel[lev] ?? st.fromStartS;
@@ -1054,7 +1063,7 @@ function RailLineInspector({ id }: { id: string }) {
       </div>
       {editingStops && stopsBlock}
 
-      <Schedule l={l} st={st} now={now} limits={limits} crowd={periods} canAuto={canAuto} copy={<ScheduleButtons l={l} st={st} />} />
+      <Schedule l={l} st={st} period={period} limits={limits} crowd={periods} canAuto={canAuto} copy={<ScheduleButtons l={l} st={st} />} />
       {st.status !== "broken" && <TrainType l={l} st={st} lev={lev} />}
       {st.status !== "broken" && <TrainLength l={l} st={st} />}
       {st.status !== "broken" && <LinePairs l={l} st={st} />}
@@ -1065,7 +1074,7 @@ function RailLineInspector({ id }: { id: string }) {
             return (
               <Alert tip={h0.tip}>
                 {h0.head}{h0.at ? <span class="place-link" onClick={() => { locateStation(h0.at!.lng, h0.at!.lat); selection.value = { kind: "station", station: h0.at!.id }; }}>{h0.name}</span> : h0.name}{h0.tail}
-                {hs.filter((h) => heldTrains(h.wait) > 0).map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip(vehicleOf(st))}>{tr("lineInspector.heldLevel", { level: demandLabel(h.d), text: heldText(h.wait, vehicleOf(st)) })}</div>)}
+                {hs.filter((h) => heldTrains(h.wait) > 0).map((h) => <div class="detail" data-tip={h.tip + "\n" + heldTip(vehicleOf(st))}>{tr("lineInspector.heldLevel", { level: rowLabel(h.rows, h.row), text: heldText(h.wait, vehicleOf(st)) })}</div>)}
               </Alert>
             );
           })}

@@ -251,8 +251,14 @@ impl TrackApi {
     /// second number is the slower line it follows (or -1), and the delay its one direction's loss
     /// on that stretch.
     pub fn line_delays(&self, line: u32, level: usize) -> Vec<f64> {
+        self.line_delays_at(line, self.w.net.row_slot(line as usize, level.min(ROWS - 1)))
+    }
+    /// T-3542: `line_delays` in demand period `period` (0-4), at the slot serving it.
+    pub fn line_delays_in(&self, line: u32, period: usize) -> Vec<f64> {
+        self.line_delays_at(line, self.w.net.period_slot()[period.min(4)])
+    }
+    fn line_delays_at(&self, line: u32, lev: usize) -> Vec<f64> {
         let cap = &self.w.svc.cap;
-        let lev = self.w.net.row_slot(line as usize, level.min(ROWS - 1));
         let mut v: Vec<(usize, f64)> = vec![];
         for r in 0..cap.res.len() {
             let d = cap.delay[r][lev];
@@ -283,9 +289,11 @@ impl TrackApi {
     /// Capacity markers for a level (SPEC 6.2 shows 75% and up): x, y, utilisation, delay s, kind,
     /// trains an hour through it, and 1 when it is full and holds back some line's trains (T-517).
     pub fn markers(&self, level: usize) -> Vec<f32> {
-        let (cap, net) = (&self.w.svc.cap, &self.w.net);
         // `level` is a row (high, medium, low); every line of three rows keeps it in one slot
-        let level = ROW_SLOT[level.min(ROWS - 1)];
+        self.markers_at(ROW_SLOT[level.min(ROWS - 1)])
+    }
+    fn markers_at(&self, level: usize) -> Vec<f32> {
+        let (cap, net) = (&self.w.svc.cap, &self.w.net);
         self.w
             .busy(level)
             .iter()
@@ -302,8 +310,10 @@ impl TrackApi {
     /// crossing (`Capacity::track_edges`), `[edge, utilisation, trains an hour through it]`, the
     /// fullest resource where several are.
     pub fn full_track(&self, level: usize) -> Vec<f64> {
+        self.full_track_at(ROW_SLOT[level.min(ROWS - 1)])
+    }
+    fn full_track_at(&self, level: usize) -> Vec<f64> {
         let (cap, net) = (&self.w.svc.cap, &self.w.net);
-        let level = ROW_SLOT[level.min(ROWS - 1)];
         let mut by: std::collections::HashMap<u32, (f64, f64)> = std::collections::HashMap::new();
         for r in 0..cap.res.len() {
             let rho = cap.rho[r][level];
@@ -381,6 +391,50 @@ impl TrackApi {
             out[7 * row..7 * row + 7].copy_from_slice(&[wait, cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y, tph, tph / rho]);
         }
         out
+    }
+
+    /// T-3542: `line_held` per row of the line in the day's order (`line_period_count` rows): `7 *
+    /// n` held numbers, `5 * n` limit numbers, `n` capped headways, laid out as `line_held`'s. A row
+    /// over several slots takes the slot that holds the most trains back, and the tightest limit.
+    pub fn line_row_held(&self, line: u32) -> Vec<f64> {
+        let net = &self.w.net;
+        if !net.line_ok(line) { return vec![] }
+        let rows = net.row_slots(line as usize);
+        let n = rows.len();
+        let mut out = vec![0.0; 13 * n];
+        let cap = &self.w.svc.cap;
+        let most = cap.line_limits(net)[line as usize];
+        let lone = net.line_trains[line as usize].map_or(true, |t| t.iter().any(|&n| n <= 1));
+        let paired = if lone { cap.line_limits_lone(net, false)[line as usize] } else { most };
+        let worst = cap.bottlenecks(net.line_count())[line as usize];
+        // a limit's shortest headway, longest first: infinite for a full stretch
+        let limit_s = |tph: f64| if tph > 0.0 { 3600.0 / tph } else { f64::INFINITY };
+        for (row, (_, slots)) in rows.iter().enumerate() {
+            let tight = slots.iter().copied().filter(|&s| paired[s].1 != u32::MAX).map(|s| limit_s(paired[s].0)).fold(0.0, f64::max);
+            out[12 * n + row] = tight;
+            if let Some(s) = slots.iter().copied().filter(|&s| most[s].1 != u32::MAX).max_by(|&a, &b| limit_s(most[a].0).total_cmp(&limit_s(most[b].0))) {
+                let (tph, r) = most[s];
+                let res = &cap.res[r as usize];
+                out[7 * n + 5 * row..7 * n + 5 * row + 5].copy_from_slice(&[limit_s(tph), cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y]);
+            }
+            let held = slots.iter().copied().map(|s| (s, self.waiting(line, s))).filter(|&(s, w)| worst[s].0 >= FULL_RHO && worst[s].1 != u32::MAX && w > 0.0).max_by(|a, b| a.1.total_cmp(&b.1));
+            if let Some((lev, wait)) = held {
+                let (rho, r) = worst[lev];
+                let res = &cap.res[r as usize];
+                let tph = cap.trains(net, r as usize, lev);
+                out[7 * row..7 * row + 7].copy_from_slice(&[wait, cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y, tph, tph / rho]);
+            }
+        }
+        out
+    }
+
+    /// T-3542: `markers` in demand period `period` (0-4): at the slot serving it.
+    pub fn markers_in(&self, period: usize) -> Vec<f32> {
+        self.markers_at(self.w.net.period_slot()[period.min(4)])
+    }
+    /// T-3542: `full_track` in demand period `period` (0-4).
+    pub fn full_track_in(&self, period: usize) -> Vec<f64> {
+        self.full_track_at(self.w.net.period_slot()[period.min(4)])
     }
 
     /// T-1966: the conflicts the map's train guard holds trains at: `[flat crossings, per crossing:

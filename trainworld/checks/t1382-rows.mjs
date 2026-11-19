@@ -34,7 +34,7 @@ const saveBytes = raw.subarray(8 + raw.readUInt32LE(4));
 
 const env = {
   lngLat: (x, y) => [x / 1000, y / 1000],
-  levelHours: new Float64Array([6, 14, 4]),
+  periodHours: new Float64Array([4, 6, 4, 4, 6]),
   // the worker's bus row, shortened: a bus line's stops that are no station join the nodes
   busRow: (a, id, nodes) => {
     const r = a.bus_route(id), st = a.bus_stops(id), stops = [];

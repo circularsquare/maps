@@ -988,15 +988,15 @@ at the resource's entry: a slower approach when the delay is shorter than what b
 and starting again there would cost, otherwise a stop in front of it. So trains visibly crawl or
 queue at a tangle.
 
-**Shown** on the map as a round dot on every resource at 75% and up, for the demand level in
-force; nothing shows below 75%. It is a gauge (T-1893; before it a clock face whose hand was the
+**Shown** on the map as a round dot on every resource at 75% and up, for the demand period in
+force (T-3542: its slot's); nothing shows below 75%. It is a gauge (T-1893; before it a clock face whose hand was the
 wait): a white disc with a ring whose colour runs from yellow at 75% through orange at 90% to red
 at 100%, red when over 100% or full with some line's trains waiting for room (overloaded). Inside,
 a three quarter dial and a needle at the utilisation (full scale at 100%, so lower right when full
 or over). No number on the dot (T-1772); the wait is in the hover. Hovering it shows three lines: what it is and its
 utilisation ("shared track at 81% of capacity", ">100%" when over), its trains an hour against the
-most it takes ("20/25 trains per hour"), and the wait per train at the level in force ("at high
-demand, slows trains by 1m21s"; no line without a wait). Each resource has a kind the app words by
+most it takes ("20/25 trains per hour"), and the wait per train in the period in force ("Slows
+trains by 1m21s in the morning peak", at midday, in the evening peak, in the evening, at night; no line without a wait). Each resource has a kind the app words by
 (`Capacity::wire_kind`, `game/capacityKinds.ts`, the hover's word in brackets): track, single track,
 platform, turning (kind 3, the pooled turn of 6.2, worded "Turning at Nerul Village is full"; T-3107
 folded the older kinds 6, 8, 9, 10 and 14 into it, and they are no longer made), junction, flat

@@ -817,6 +817,87 @@ impl TrackApi {
         net.period_slot().iter().map(|&s| t[s]).collect()
     }
 
+    /// T-3542: line `id`'s trains an hour in demand period `period` (0-4) on kind of day `row` (0
+    /// weekdays, 1 weekends), its slot's (`line_tph_on`).
+    pub fn line_tph_period_on(&self, id: u32, row: u32, period: u32) -> f32 {
+        if id as usize >= self.w.net.line_count() { return 0.0 }
+        self.w.net.line_tph_on(id as usize, (row as usize).min(DAY_ROWS - 1), self.w.net.period_slot()[(period as usize).min(4)])
+    }
+    /// T-3542: line `id`'s figures per row in the day's order (`line_period_count` rows), `ROW_FIGS`
+    /// numbers each: round trip s, trains the service runs, capacity delay over the round trip s,
+    /// trains an hour on weekdays, and on weekends with its hidden twin's (as `line_tph_rest`). A row
+    /// over several slots (rush; a row of three in a game of five) shows the longest round trip, the
+    /// most trains and delay, and the fewest trains an hour (its longest headway) of them. Empty for
+    /// no line.
+    pub fn line_rows(&self, id: u32) -> Vec<f64> {
+        let (net, l) = (&self.w.net, id as usize);
+        if !net.line_ok(id) { return vec![] }
+        let svc = self.w.svc.lines.get(l).filter(|s| s.ok);
+        let twin = net.twin_line(id);
+        let rest = |s: usize| net.line_tph_on(l, WEEKEND, s) + twin.map_or(0.0, |t| net.line_tph_on(t as usize, WEEKEND, s));
+        let placed = net.trains_of(l).unwrap_or([0; 5]);
+        let mut out = vec![];
+        for (k, slots) in net.row_slots(l) {
+            let most = |f: &dyn Fn(usize) -> f64| slots.iter().map(|&s| f(s)).fold(f64::NEG_INFINITY, f64::max).max(0.0);
+            let least = |f: &dyn Fn(usize) -> f64| slots.iter().map(|&s| f(s)).fold(f64::INFINITY, f64::min);
+            match svc {
+                Some(s) => out.extend([most(&|x| s.round_trip[x]), most(&|x| s.trains[x] as f64), most(&|x| s.delay[x])]),
+                None => out.extend([0.0, placed[k] as f64, 0.0]),
+            }
+            let tph = least(&|x| net.line_tph[l][x] as f64);
+            let rest = least(&|x| rest(x) as f64);
+            out.extend([if tph.is_finite() { tph } else { 0.0 }, if rest.is_finite() { rest } else { 0.0 }]);
+        }
+        out
+    }
+    /// T-3542: line `id`'s weekends per row as `line_weekend` gives them for three: its percent, 1
+    /// where its counts are set by hand, then its whole trains per row on weekends (whole-line counts)
+    /// and the headways stepped to per row (seconds, 0 none), rows in the day's order.
+    pub fn line_row_weekend(&self, id: u32) -> Vec<f64> {
+        let (net, l) = (&self.w.net, id as usize);
+        if !net.line_ok(id) { return vec![] }
+        let (Some(w), Some(t)) = (net.line_weekend.get(l).copied(), net.trains_of(l)) else { return vec![] };
+        let k = if pairs_split(net, id) { 2 } else { 1 };
+        let c = self.w.weekend_places(l).unwrap_or(t);
+        let h = if w.counts.is_some() { places(w.headways, net.line_x[l].weekend_headways).map(|h| h / k) } else { [0; 5] };
+        let rows = ROW_PLACES[net.rows(l) - ROWS_MIN];
+        let mut out = vec![w.share as f64, w.counts.is_some() as u8 as f64];
+        out.extend(rows.iter().map(|&p| (c[p] * k) as f64));
+        out.extend(rows.iter().map(|&p| h[p] as f64));
+        out
+    }
+    /// T-3542: set line `id`'s whole trains on weekends per row by hand (`line_period_count` of them,
+    /// the day's order), as `set_line_weekend_counts` does for three rows; `headways` per row in
+    /// seconds (0 = a row run by count), as `set_line_weekend_headways`, or empty to keep only the
+    /// headways of rows whose count did not change. One undoable edit.
+    pub fn set_line_row_weekend(&mut self, id: u32, counts: Vec<u32>, headways: Vec<u32>) -> u32 {
+        let Some(d) = self.w.net.line_data(id) else { return self.refuse(Issue::NoSuchLine { line: id }) };
+        let (net, l) = (&self.w.net, id as usize);
+        let rows = ROW_PLACES[net.rows(l) - ROWS_MIN];
+        if counts.len() != rows.len() || !(headways.is_empty() || headways.len() == rows.len()) { return self.refuse(Issue::LineSchedule { line: id }) }
+        let split = pairs_split(net, id);
+        let now = self.w.weekend_places(l).or(net.trains_of(l)).unwrap_or([0; 5]);
+        let was_h = places(d.weekend.headways, d.x.weekend_headways);
+        let (mut c, mut h) = (now, if d.weekend.counts.is_some() { was_h } else { [0; 5] });
+        let cur = self.w.weekend_auto(l);
+        for (i, &p) in rows.iter().enumerate() {
+            c[p] = if split { counts[i].div_ceil(2) } else { counts[i] };
+            if headways.is_empty() {
+                // a headway stepped to stays only at a row whose count did not change
+                if c[p] != now[p] { h[p] = 0; }
+            } else {
+                h[p] = if split { headways[i] * 2 } else { headways[i] };
+                // a row not stepped keeps the headway the weekends ran there (`set_line_weekend_headways`)
+                if h[p] == 0 && c[p] > 0 { if let Some(a) = cur { h[p] = a[p]; } }
+            }
+        }
+        let ((cm, cx), (hm, hx)) = (unplace(c), unplace(h));
+        let weekend = Weekend { counts: Some(cm), headways: hm, ..d.weekend };
+        let x = Extra { weekend_counts: cx, weekend_headways: hx, ..d.x };
+        if weekend == d.weekend && x == d.x { return 0; }
+        self.run(Op::Batch(vec![Op::Weekend { id, weekend }, Op::Extra { id, x }]))
+    }
+
     /// The line's headways in seconds per level when its counts follow them, else empty (T-625).
     pub fn line_auto(&self, id: u32) -> Vec<f64> {
         if !self.w.net.line_ok(id) { return vec![]; }

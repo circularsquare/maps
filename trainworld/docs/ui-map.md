@@ -979,7 +979,8 @@ those who got on, less the load carried on.
   day's trips hold at the rated load (160 a car), the line panel's Average load for one stretch, the trips counted
   from the boarding account for the day shown (the average day 5 weekdays, a Saturday and a Sunday
   over 7), able to pass 100% up to crush's 150% [T-2186], no row until the account answers or where no trips run [T-2007];
-  and on track at capacity "Track at capacity at high demand" in red [T-819]. Whatever the display [T-473], the tag also carries one row
+  and on track at capacity in the period in force "Track at capacity in the morning peak" (at midday, in the evening
+  peak, in the evening, at night; T-3542) in red [T-819]. Whatever the display [T-473], the tag also carries one row
   for the level at that point (an up and down arrow, then "+1" on its Level colour) and
   the speed limit beside it (two right chevrons, then "120 km/h" on its Speed colour) [T-2007], each colour at
   half strength behind dark text, 2 px short at the bottom so rows' colours leave a gap

@@ -72,7 +72,7 @@ function OnBoard({ line, run, s, stopS, cars, what, profile, dep }: { line: Line
   const n = line.stops.length;
   // T-309: the period in the line's own local time
   const p = periodAt(clock.minute.value * 60 + (world.value?.lineStats[line.id]?.shift ?? 0));
-  const tph = line.tph[PERIODS[p].demand];
+  const tph = line.tphP[p];
   const trains = tph * (PERIODS[p].to - PERIODS[p].from);
   let seg = 0;
   while (seg + 1 < n - 1 && stopS[seg + 1] <= s + 1) seg++;

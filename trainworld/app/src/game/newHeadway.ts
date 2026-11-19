@@ -6,7 +6,7 @@
 import { signal } from "@preact/signals";
 import type { NewHeadways, Headways } from "../workers/saveFile";
 import { headwaysFor } from "./newLine";
-import { world, headwayShown, headwaysOfTrains, setAutoTrains, setHeadways } from "./world";
+import { world, headwayShown, headwaysOfTrains, setHeadways, setRowAuto } from "./world";
 
 export type { Headways, NewHeadways };
 export { headwaysFor };
@@ -40,7 +40,8 @@ export function makeDefaultHeadway(id: string): boolean {
   if (!h) {
     h = headwaysOfTrains(id);
     if (!h) return false;
-    setAutoTrains(id, true);
+    // T-3542: a line of four or five rows switches each of its rows (setRowAuto)
+    setRowAuto(id, true);
   }
   newHeadway.value = { ...newHeadway.value, [kind]: h };
   sink?.(newHeadway.value);

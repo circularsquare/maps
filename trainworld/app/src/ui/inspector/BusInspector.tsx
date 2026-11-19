@@ -10,6 +10,7 @@ import { ConstructButton } from "./ConstructButton";
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
+import { periodAt } from "../../game/periods";
 import { count, distance, duration, metresFromShown, metresToShown, money, shortDistance } from "../../game/format";
 import { t } from "../../i18n";
 import { useToday } from "../../game/today";
@@ -385,7 +386,7 @@ export function BusInspector({ id }: { id: string }) {
         <button class="btn text danger" onClick={remove}>{t("busInspector.deleteYes")}</button>
       </div>
 
-      <Schedule l={l} st={st} now={now} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />
+      <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} copy={<ScheduleButtons l={l} st={st} />} />
       <ul class="rows">
         <AverageSpeed st={st} lev={lev} />
       </ul>

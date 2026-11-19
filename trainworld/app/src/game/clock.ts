@@ -59,6 +59,8 @@ class GameClock {
    * demand level and every "now" a view shows */
   readonly local = computed(() => this.minute.value + viewShift.value / 60);
   readonly demand = computed(() => demandAt(this.local.value * 60));
+  /** T-3542: the demand period now (an index into `PERIODS`), as `demand` */
+  readonly period = computed(() => periodAt(this.local.value * 60));
   /** the game hour of world time: periods and offsets are whole hours, so a line's level in its
    * own local time changes only with it (T-309) */
   readonly hour = computed(() => Math.floor(this.minute.value / 60));

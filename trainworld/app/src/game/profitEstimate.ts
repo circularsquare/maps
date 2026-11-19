@@ -13,17 +13,16 @@ import { fareScale, fareWeight } from "./income";
 import { lineCountry } from "./holidays";
 import type { Income } from "./money";
 import { PERIODS } from "./periods";
-import { DEMAND_INDEX, type WorldView } from "./types";
+import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 
 const PERIOD_HOURS = PERIODS.map((p) => p.to - p.from);
-const PERIOD_LEVEL = PERIODS.map((p) => DEMAND_INDEX[p.demand]);
 
 /** What the last settled state gives the estimate. */
 export interface EstimateBase {
   /** running cost a day then, US$ */
   running: number;
-  /** per line id: the trains an hour (high, medium, low) its riders were solved with, and its boardings per period */
+  /** per line id: the trains an hour (in each period, T-3542) its riders were solved with, and its boardings per period */
   lines: Map<string, { tph: number[]; board: number[] }>;
   /** per perceived minute added to every rail trip: the share of rail trips lost (negative) */
   perMinute: number;
@@ -31,10 +30,10 @@ export interface EstimateBase {
   farePerTrip: number;
 }
 
-/** Running cost a day, US$: the clock's running cost an hour at each level, over the day's periods. */
+/** Running cost a day, US$: the clock's running cost an hour in each of the day's periods. */
 export function runningADay(m: MoneyState): number {
   let run = 0;
-  PERIODS.forEach((_, i) => { run += m.runningPerHour[PERIOD_LEVEL[i]] * PERIOD_HOURS[i]; });
+  PERIODS.forEach((_, i) => { run += m.runningPerHour[i] * PERIOD_HOURS[i]; });
   return run * 1e6;
 }
 
@@ -47,7 +46,7 @@ export function estimateBase(w: WorldView, dv: DemandView, inc: Income, m: Money
     const ld = dv.lines.get(l.id);
     if (!ld || w.lineStats[l.id]?.status !== "running") continue;
     const board = PERIODS.map((_, p) => { const b = ld.board?.[p]; let s = 0; if (b) for (let k = 0; k < b.length; k++) s += b[k]; return s; });
-    lines.set(l.id, { tph: ld.tph ?? [l.tph.high, l.tph.medium, l.tph.low], board });
+    lines.set(l.id, { tph: ld.tph ?? l.tphP, board });
     // the minutes a curve dollar costs, by the country the line is in, as the solve's sensitivity weighed it
     const c = lineCountry(l.stops) ?? undefined, b = board.reduce((a, v) => a + v, 0);
     boardings += b;
@@ -72,9 +71,9 @@ export function estimateChange(b: EstimateBase, w: WorldView, m: MoneyState): Pr
   for (const l of w.save.lines) {
     const was = b.lines.get(l.id);
     if (!was || w.lineStats[l.id]?.status !== "running") continue;
-    const now = [l.tph.high, l.tph.medium, l.tph.low];
+    const now = l.tphP;
     for (let p = 0; p < PERIODS.length; p++) {
-      const t0 = was.tph[PERIOD_LEVEL[p]], t1 = now[PERIOD_LEVEL[p]];
+      const t0 = was.tph[p], t1 = now[p];
       if (!(t0 > 0) || t1 === t0 || !(was.board[p] > 0)) continue;
       // a line with no trains left loses all its riders
       trips += was.board[p] * (t1 > 0 ? Math.exp(b.perMinute * 0.5 * (60 / t1 - 60 / t0)) - 1 : -1);

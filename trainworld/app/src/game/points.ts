@@ -24,7 +24,7 @@ import { PERIODS } from "./periods";
 import { lineRunFactor } from "./regionMoney";
 import { stopsById } from "./world";
 import { zonesLoaded } from "./zones";
-import { DEMAND_INDEX, type WorldView } from "./types";
+import type { WorldView } from "./types";
 import type { MoneyState } from "../workers/protocol";
 
 export const POINTS_PER_TRIP = 20;
@@ -154,11 +154,11 @@ export const lineCover = computed<Map<number, number>>(() => {
     let fares = 0;
     inc.lines.get(l.id)?.perHour.forEach((v, p) => { fares += v * PERIOD_HOURS[p] * 1e6; });
     const dm = dv?.lines.get(l.id);
-    const tph = dm?.tph ?? [l.tph.high, l.tph.medium, l.tph.low], cars = dm?.cars ?? st.cars;
+    const tph = dm?.tph ?? l.tphP, cars = dm?.cars ?? st.cars;
     const [train, car] = st.fast ? [r.hsRunCostTrainKm, r.hsRunCostCarKm] : [r.runCostTrainKm, r.runCostCarKm];
     const perKm = st.bus?.ferry ? r.runCostBoatKm : st.bus ? r.runCostBusKm : train + cars * car;
     let run = 0;
-    PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
+    PERIODS.forEach((_, i) => { run += tph[i] * (st.oneWay ? 1 : 2) * st.km * perKm * r.economy * PERIOD_HOURS[i]; });
     run *= lineRunFactor(l.num); // T-2669
     const key = st.twinOf ?? l.id;
     let e = pair.get(key);

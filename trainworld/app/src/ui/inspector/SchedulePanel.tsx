@@ -8,12 +8,13 @@
 import { signal } from "@preact/signals";
 import type { ComponentChildren } from "preact";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
-import { clock, demandAt, lineSeconds } from "../../game/clock";
+import { clock, lineSeconds } from "../../game/clock";
+import { periodAt, rowsOf } from "../../game/periods";
 import { groupName, lineGroups } from "../../game/lineGroups";
 import type { LineInput, LineStats } from "../../game/types";
-import { display, setDisplay } from "../../game/ui";
-import { linesById, listedLines, noteHeadwayLimits, stationNames, stationsById, world } from "../../game/world";
-import { t } from "../../i18n";
+import { ask, display, setDisplay } from "../../game/ui";
+import { linesById, listedLines, noteHeadwayLimits, rowCount, rowHeadwayShown, rowTrainsShown, setPeriods, stationNames, stationsById, world } from "../../game/world";
+import { t, tList, tNumber } from "../../i18n";
 import { queryClock } from "../../workers/clockClient";
 import { GroupPill } from "../GroupPill";
 import { useModalDialog } from "../Modal";
@@ -22,7 +23,7 @@ import { Chip, Icon, Segmented } from "../widgets";
 import { limitsFrom } from "./LineInspector";
 import { useChartLinks } from "./MareyChart";
 import { TrainTable } from "./TrainTable";
-import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf } from "./schedule";
+import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf, vehiclesText } from "./schedule";
 
 /** What the panel shows: a line's schedule, or a group's chart; null closed. */
 export type ScheduleShown = { kind: "line"; line: string } | { kind: "group"; group: number };
@@ -153,10 +154,68 @@ function OthersToggle({ any }: { any: boolean }) {
     onClick={() => setDisplay("chartOtherLines", !on)}><Icon.related /></button>;
 }
 
+// ---------------------------------------------------------------- periods (T-3542)
+
+const PERIOD_CHOICES: [number, string][] = [[3, "3"], [4, "4"], [5, "5"]];
+
+/** The rows of a line of `from` rows that a switch to `to` joins into one (none when `to` is not fewer):
+ * five to three joins morning, midday and afternoon, five to four morning and afternoon, four to three
+ * rush and midday. */
+function joinedRows(from: number, to: number): number[] {
+  if (to >= from) return [];
+  const into = rowsOf(to), was = rowsOf(from);
+  for (const r of into) {
+    const olds = was.flatMap((o, i) => (o.periods.some((p) => r.periods.includes(p)) ? [i] : []));
+    if (olds.length > 1) return olds;
+  }
+  return [];
+}
+/** "Morning, midday and afternoon" for a line of `n` rows' rows `rs`. */
+function rowList(n: number, rs: number[]): string {
+  const s = tList(rs.map((r) => t("schedulePanel.rowWord", { row: rowsOf(n)[r].code })));
+  return s.charAt(0).toLocaleUpperCase() + s.slice(1);
+}
+
+/** Switch to `to` rows, after a question where rows are joined (Anita, 2026-11-17). `line`: this line's
+ * own choice (0: the game's), else the game's. `from`: the rows the switch moves from, for the question. */
+function switchPeriods(l: LineInput, to: number, line: boolean, from: number, after: number) {
+  const send = () => setPeriods(to, line ? l.id : undefined);
+  const join = joinedRows(from, after);
+  if (!join.length) return send();
+  const rows = rowList(from, join), count = join.length;
+  let text: string;
+  if (!line) text = t("schedulePanel.joinAskGame", { rows, count });
+  else {
+    const auto = rowHeadwayShown(l.id), trains = rowTrainsShown(l.id) ?? [];
+    const h = auto ? Math.min(...join.map((r) => auto[r]).filter((x) => x > 0)) : 0;
+    text = auto && Number.isFinite(h) && h > 0 ? t("schedulePanel.joinAskHeadway", { rows, count, headway: t("inspector.min", { n: tNumber(h / 60, { maximumFractionDigits: 2 }) }) })
+      : t("schedulePanel.joinAskTrains", { rows, count, trains: vehiclesText(vehicleOf(world.value!.lineStats[l.id]), Math.max(0, ...join.map((r) => trains[r] ?? 0))) });
+  }
+  ask.value = { text, yes: t("schedulePanel.usePeriods", { n: after }), no: t("schedulePanel.keepPeriods", { n: from }), run: send };
+}
+
+/** The window's periods: the game's 3 / 4 / 5 (every line on the game's), then this line's own as an extra step. */
+function Periods({ l, st }: { l: LineInput; st: LineStats }) {
+  const w = world.value!, game = w.periods, own = st.periodsOwn, n = rowCount(st);
+  return (
+    <div class="sp-periods">
+      <span class="sp-periods-label">{t("schedulePanel.periods")}</span>
+      <Segmented<number> options={PERIOD_CHOICES} value={game} onChange={(to) => switchPeriods(l, to, false, game, to)} />
+      {own > 0 && <span class="sp-periods-label">{t("schedulePanel.thisLine")}</span>}
+      {own > 0 && <Segmented<number> options={PERIOD_CHOICES} value={own} onChange={(to) => switchPeriods(l, to, true, n, to)} />}
+      <span class="sp-periods-own">
+        {own > 0
+          ? <button type="button" class="btn text mini" onClick={() => switchPeriods(l, 0, true, n, game)}>{t("schedulePanel.useGame")}</button>
+          : <button type="button" class="btn text mini" onClick={() => setPeriods(n, l.id)}>{t("schedulePanel.setForLine")}</button>}
+      </span>
+    </div>
+  );
+}
+
 function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   const w = world.value!;
   const rv = vehicleOf(st);
-  const limits = useClockQuery({ what: "lineHeld", line: l.num }, [l.num, w.version, rv], (d) => limitsFrom(d, rv)) ?? NO_LIMITS;
+  const limits = useClockQuery({ what: "lineHeld", line: l.num, rows: true }, [l.num, w.version, rv], (d) => limitsFrom(d, rv)) ?? NO_LIMITS;
   if (limits !== NO_LIMITS) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const { periods } = useLinePeriods(l.id, l);
   const links = useChartLinks(l, st);
@@ -164,7 +223,7 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <div class="sp-body">
       <div class="sp-left">
-        <Schedule l={l} st={st} now={demandAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends />
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends above={<Periods l={l} st={st} />} />
         <Board key={l.num} l={l} st={st} />
       </div>
       <div class="sp-right">
@@ -180,7 +239,7 @@ function BusBody({ l, st }: { l: LineInput; st: LineStats }) {
   return (
     <div class="sp-body">
       <div class="sp-left">
-        <Schedule l={l} st={st} now={demandAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends />
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} crowd={periods} label={t("schedulePanel.setBy")} weekends />
       </div>
     </div>
   );

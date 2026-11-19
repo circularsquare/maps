@@ -143,26 +143,19 @@ impl TrackApi {
     }
     /// `running_cost` of the lines on one local time (`running_shifts`, T-309); NaN: every line.
     pub fn running_cost_in(&self, level: usize, shift: f64) -> f64 {
-        let n = &self.w.net;
-        let (mut train_km, mut car_km) = ([0.0; FLEETS], [0.0; FLEETS]);
-        for (l, s) in self.w.svc.lines.iter().enumerate() {
-            if s.running && (shift.is_nan() || s.shift == shift) {
-                // T-2669: priced in its countries' money, so a km costs the factor's share
-                // `level`: a row (high, medium, low), plus 3 for weekends
-                let (row, lev) = ((level / ROWS).min(DAY_ROWS - 1), n.row_slot(l, level % ROWS));
-                let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
-                let k = fleet_kind(n, l);
-                train_km[k] += tk;
-                car_km[k] += tk * s.cars as f64;
-            }
-        }
-        let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
-        let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
-        let bus = train_km[2] * RUN_COST_BUS_KM;
-        let boats = train_km[3] * RUN_COST_BOAT_KM;
-        let tram = &TrackKind::Tram.spec().car;
-        let trams = train_km[4] * tram.run_train_km + car_km[4] * tram.run_car_km;
-        (ordinary + fast + bus + boats + trams) * ECONOMY / 1e6
+        // `level`: a row (high, medium, low), plus 3 for weekends
+        let (row, slot) = ((level / ROWS).min(DAY_ROWS - 1), ROW_SLOT[level % ROWS]);
+        self.running_cost_at(row, slot, shift)
+    }
+    /// T-3542: `running_cost` in demand period `k % 5` (`PERIOD_HOURS`) on kind of day `k / 5`
+    /// (weekdays, weekends): at the slot serving the period.
+    pub fn running_cost_period(&self, k: usize) -> f64 {
+        self.running_cost_period_in(k, f64::NAN)
+    }
+    /// T-3542: `running_cost_period` of the lines on one local time, as `running_cost_in`.
+    pub fn running_cost_period_in(&self, k: usize, shift: f64) -> f64 {
+        let row = (k / 5).min(DAY_ROWS - 1);
+        self.running_cost_at(row, self.w.net.period_slot()[k % 5], shift)
     }
     /// Upkeep a game day (T-867): [total US$M, track US$M, stations US$M, route-km of constructed
     /// track, constructed stations, bus routes US$M, road-km of constructed bus route (T-1464), ports
@@ -195,6 +188,49 @@ impl TrackApi {
             if !s.running { return 0.0 }
             (0..ROWS).map(|k| n.line_tph[l][n.row_slot(l, k)] as f64 * hours.get(k).copied().unwrap_or(0.0)).sum()
         }).collect();
+        self.upkeep_shares(w)
+    }
+    /// T-3542: `line_upkeep` with `hours` a day in each demand period (`PERIOD_HOURS`), each period
+    /// at the slot serving it; periods sharing a slot weigh as one stretch, so with every line on
+    /// three rows it gives `line_upkeep`'s shares.
+    pub fn line_upkeep_periods(&self, hours: &[f64]) -> Vec<f64> {
+        let n = &self.w.net;
+        let mut slot_hours = [0.0; SLOTS];
+        for (p, &s) in n.period_slot().iter().enumerate() { slot_hours[s] += hours.get(p).copied().unwrap_or(0.0); }
+        let w: Vec<f64> = self.w.svc.lines.iter().enumerate().map(|(l, s)| {
+            if !s.running { return 0.0 }
+            n.slots().map(|k| n.line_tph[l][k] as f64 * slot_hours[k]).sum()
+        }).collect();
+        self.upkeep_shares(w)
+    }
+}
+
+impl TrackApi {
+    /// The running lines' running cost per hour on kind of day `row` with each line at its rate in
+    /// slot `lev`, US$M (`running_cost`).
+    fn running_cost_at(&self, row: usize, lev: usize, shift: f64) -> f64 {
+        let n = &self.w.net;
+        let (mut train_km, mut car_km) = ([0.0; FLEETS], [0.0; FLEETS]);
+        for (l, s) in self.w.svc.lines.iter().enumerate() {
+            if s.running && (shift.is_nan() || s.shift == shift) {
+                // T-2669: priced in its countries' money, so a km costs the factor's share
+                let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
+                let k = fleet_kind(n, l);
+                train_km[k] += tk;
+                car_km[k] += tk * s.cars as f64;
+            }
+        }
+        let ordinary = train_km[0] * RUN_COST_TRAIN_KM + car_km[0] * RUN_COST_CAR_KM;
+        let fast = train_km[1] * HS_RUN_COST_TRAIN_KM + car_km[1] * HS_RUN_COST_CAR_KM;
+        let bus = train_km[2] * RUN_COST_BUS_KM;
+        let boats = train_km[3] * RUN_COST_BOAT_KM;
+        let tram = &TrackKind::Tram.spec().car;
+        let trams = train_km[4] * tram.run_train_km + car_km[4] * tram.run_car_km;
+        (ordinary + fast + bus + boats + trams) * ECONOMY / 1e6
+    }
+    /// The upkeep shares from each line's weight (its trains a day), as `line_upkeep` gives them.
+    fn upkeep_shares(&self, w: Vec<f64>) -> Vec<f64> {
+        let n = &self.w.net;
         let svc = &self.w.svc.lines;
         let weight = |l: u32| w.get(l as usize).copied().unwrap_or(0.0);
         // T-3474: a line running part of its plan shares only the track its trains take
@@ -245,6 +281,10 @@ impl TrackApi {
         out.extend([-1.0, rest]);
         out
     }
+}
+
+#[wasm_bindgen]
+impl TrackApi {
     /// What the trains a planned line needs would cost once it runs, US$M, after the spare cars of
     /// its kind.
     pub fn line_train_cost(&self, line: u32) -> f64 {

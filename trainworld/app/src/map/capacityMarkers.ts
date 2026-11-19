@@ -1,5 +1,5 @@
 // Capacity markers (SPEC 6.2, T-031, T-1772): a round dot on every resource at 75% and up for the
-// demand level in force, a gauge ringed yellow at 75% to red when overloaded (over 100%, or full
+// demand period in force (T-3542), a gauge ringed yellow at 75% to red when overloaded (over 100%, or full
 // with some line's trains waiting for room, T-517), its needle at the utilisation (T-1893).
 // Nothing shows below 75% or zoom 12. Each dot sits on its resource's anchor; dots keep a little
 // room between them and the worst delays win. Station names draw over them and never move them.
@@ -11,6 +11,7 @@ import { effect } from "@preact/signals";
 import { capacityKind } from "../game/capacityKinds";
 import type { Vehicle } from "../game/vehicle";
 import { duration } from "../game/format";
+import { PERIOD_CODE } from "../game/periods";
 import type { Selection, WorldView } from "../game/types";
 import { selection, tool } from "../game/ui";
 import { hoverAt } from "./demandHover";
@@ -28,7 +29,6 @@ const NO_MARKERS = perfOff("markers");
 const DOT = 16;
 /** room kept clear round a shown dot, CSS px, zoomed out and from zoom 14 */
 const PAD_FAR = 6, PAD_NEAR = 3;
-const DEMAND = ["high", "medium", "low"];
 
 /** The dot's colour by utilisation: yellow at 75%, orange at 90%, red at 100% and over. */
 const RAMP: [number, [number, number, number]][] = [[0.75, [232, 180, 37]], [0.9, [229, 122, 36]], [1, [204, 58, 44]]];
@@ -58,12 +58,12 @@ export function capacityDot(rho: number, over: boolean): string {
 }
 
 /** The dot's hover: what it is at what utilisation, its trains an hour against the most it takes,
- * and each train's wait at the level in force. */
-export function capacityTip(kind: number, rho: number, tph: number, waitS: number, level: number, vehicle: Vehicle = "train"): string[] {
+ * and each train's wait in the period in force (`period`, an index into `PERIODS`; T-3542). */
+export function capacityTip(kind: number, rho: number, tph: number, waitS: number, period: number, vehicle: Vehicle = "train"): string[] {
   const k = capacityKind(kind, vehicle);
   const tip = [t("capacityMarkers.use", { kind: k.short, load: rho > 1.005 ? ">100%" : `${tNumber(Math.round(rho * 100))}%` })];
   if (rho > 0) tip.push(t("capacityMarkers.tph", { now: tNumber(Math.round(tph)), max: tNumber(Math.round(tph / rho)), vehicle }));
-  if (Math.round(waitS) >= 2) tip.push(DEMAND[level] ? t("capacityMarkers.slows", { demand: t("inspector.demand", { demand: DEMAND[level] }), wait: duration(waitS), vehicle }) : t("capacityMarkers.slowsThis", { wait: duration(waitS), vehicle }));
+  if (Math.round(waitS) >= 2) tip.push(PERIOD_CODE[period] ? t("capacityMarkers.slowsIn", { period: PERIOD_CODE[period], wait: duration(waitS), vehicle }) : t("capacityMarkers.slowsThis", { wait: duration(waitS), vehicle }));
   return tip;
 }
 
@@ -107,6 +107,7 @@ export class CapacityMarkers {
     map.on("movestart", () => (this.tip.style.display = "none"));
   }
 
+  /** `level`: the demand period in force (T-3542) */
   set(w: WorldView, level: number) {
     // Keep the worst bottlenecks when several compete for the same screen space.
     const sorted = [...(w.capacity[level] ?? [])].sort((a, b) => b.delayS - a.delayS || b.rho - a.rho || a.kind - b.kind || a.x - b.x || a.y - b.y);

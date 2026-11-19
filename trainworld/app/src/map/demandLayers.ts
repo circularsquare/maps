@@ -87,7 +87,7 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpos
     const perDay = stretchDay(dv, l.id, l.stops, purpose, key);
     if (!st || st.status !== "running" || !perDay || n < 2) continue;
     if (!loads || loads.length !== 2 * (n - 1)) { out.set(l.num, { perDay, g0: null, g1: null }); continue; }
-    const trains = l.tph[P.demand] * hours;
+    const trains = l.tphP[period] * hours;
     const factor = dv.peakHourFactor[period] ?? 1;
     const g0 = new Float32Array(n - 1), g1 = new Float32Array(n - 1);
     for (let k = 0; k < n - 1; k++) {

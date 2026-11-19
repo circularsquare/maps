@@ -27,7 +27,7 @@ import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
-import type { LineInput, LineStats, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
+import type { LineInput, LineStats, RowFigs, StationInput, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, NetworkSnapshot, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
@@ -48,6 +48,12 @@ import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "..
 import { letterOf } from "../game/lineLetter";
 
 /** Text from the clock worker: it sends message keys (docs/localization.md "Workers"), worded here; anything else as it is. */
+/** T-3542: a line of four or five rows' figures (`ClockLine.rows`) as the panels read them. */
+function rowFigsOf(r: NonNullable<ClockLine["rows"]>): RowFigs {
+  const n = r.set.length, f = (k: number) => Array.from({ length: n }, (_, i) => r.figs[i * 5 + k] ?? 0);
+  return { roundTrip: f(0), trains: f(1), delay: f(2), tph: f(3), restTph: f(4), auto: r.auto ?? null, weekend: r.weekend };
+}
+
 export function workerText(s: string): string;
 export function workerText(s: string | undefined): string | undefined;
 export function workerText(s: string | undefined): string | undefined {
@@ -281,6 +287,7 @@ function toWorld(s: ClockState): WorldView {
       ...(l.planStops ? { planStops: l.planStops.map(String), stopStart: l.stopStart ?? 0 } : {}),
       ...(l.group ? { group: l.group, groupName: l.groupName, groupSymbol: l.groupSymbol, groupColour: l.groupColour } : {}),
       tph: { high: l.tph[0], medium: l.tph[1], low: l.tph[2] },
+      tphP: l.tphP,
       ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
     });
     return v;
@@ -333,6 +340,9 @@ function toWorld(s: ClockState): WorldView {
       ...(l.restTph ? { restTph: l.restTph } : {}),
       ...(l.pairs ? { pairs: l.pairs } : {}),
       ...(l.twinOf !== undefined ? { twinOf: String(l.twinOf) } : {}),
+      periods: l.periods,
+      periodsOwn: l.periodsOwn,
+      ...(l.rows ? { rows: rowFigsOf(l.rows) } : {}),
       ...(l.bus ? { bus: l.bus } : {}),
     };
   }
@@ -348,6 +358,7 @@ function toWorld(s: ClockState): WorldView {
   }
   return {
     version: s.version,
+    periods: s.periods,
     capacity: s.markers,
     fullTrack: (s.fullTrack ?? []).map((v) => {
       const m = new Map<number, { rho: number; tph: number }>();

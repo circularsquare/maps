@@ -175,6 +175,9 @@ export type EditOp =
   | { op: "setPeriods"; line?: number; rows: number }
   | { op: "setRowTrains"; line: number; trains: number[] }
   | { op: "setRowHeadways"; line: number; seconds: number[] }
+  /** T-3542: a line of four or five rows' weekend trains per row by hand, and the headways stepped
+   * to (empty: kept where the count did not change; `TrackApi.set_line_row_weekend`) */
+  | { op: "rowWeekend"; line: number; counts: number[]; headways: number[] }
   /** a field left out keeps the line's own as the worker has it now, so an edit never carries a stale
    * name, colour or symbol over one still on its way (T-1812); `letter` is the symbol set by hand, "" for none */
   | { op: "lineLook"; line: number; name?: string; colour?: string; letter?: string }
@@ -379,7 +382,7 @@ export type ToClock =
   | {
       kind: "query";
       seq: number;
-      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number } | { what: "lineWaits"; line: number; level: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "stationDeps"; line: number; node: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "tracksCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWays"; edges: number[]; dirs: number[] } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number; tracks: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] } | { what: "linePairs"; line: number };
+      q: { what: "insertStop"; line: number; station: number } | { what: "stopTiers"; line: number } | { what: "stopGap"; line: number; station: number } | { what: "passedStations"; line: number } | { what: "junction"; node: number } | { what: "lineDelays"; line: number; level: number; period?: number } | { what: "lineWaits"; line: number; level: number; period?: number } | { what: "passingSpots"; line: number } | { what: "lineHeld"; line: number; rows?: boolean } | { what: "lineMarks"; line: number } | { what: "lineProfile"; line: number } |{ what: "lineRelated"; line: number } | { what: "lineTrips"; line: number; t0: number; t1: number } | { what: "stationDeps"; line: number; node: number; t0: number; t1: number } | { what: "edgePis"; edge: number } | { what: "flyover"; node: number } | { what: "upgradeCost"; node: number } | { what: "tracksCost"; node: number } | { what: "upgradeCosts"; nodes: number[]; bit: number } |{ what: "platformCost"; nodes: number[]; platform: number } | { what: "doubleUp"; edge: number } | { what: "oneWays"; edges: number[]; dirs: number[] } | { what: "lineAccount"; line: number; day: number } | { what: "linePeriods"; line: number; day: number } | { what: "linesPeriods"; lines: number[]; day: number } |{ what: "today" } | { what: "removal"; edges: number[]; stations: number[] } | { what: "busQuote"; line: number; route: number[] } | { what: "rebuildQuote"; edges: number[]; stations: number[]; level: number | null; kind: number; tracks: number } | { what: "blueprintQuote" } | { what: "blueprintPieces" } | { what: "lineCost"; line: number } | { what: "buildingQuote"; id: number | null; corners: number[] } | { what: "linePairs"; line: number };
     };
 
 /** T-531: each region's today and this hour, as the "cash" message carries them. */
@@ -456,8 +459,8 @@ export interface MoneyState {
   /** T-1661, T-2022: the loan out, null for none */
   loan: Loan | null;
   fares: { base: number; perKm: number; nodes: [number, number][]; scales?: Record<string, number>; baseline?: string; basis?: "usd"; income?: number; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number> };
-  /** running cost per game hour at high, medium, low demand */
-  runningPerHour: [number, number, number];
+  /** running cost per game hour in each demand period on weekdays (T-3542: five, `PERIODS`) */
+  runningPerHour: number[];
   /** recent game days, oldest first; the last is today so far (as of the last whole hour; the
    * "cash" message carries today as fares land, T-284) */
   ledger: DayLedger[];
@@ -644,6 +647,16 @@ export interface ClockLine {
   pairs?: 1 | 2;
   /** T-3333: a hidden twin, the line it runs the other pair for (`TrackApi::line_twin_of`) */
   twinOf?: number;
+  /** T-3542: its trains an hour in each of the five periods, weekdays (`TrackApi::line_tph_by_period`) */
+  tphP: number[];
+  /** T-3542: the rows it sets its trains in (3, 4 or 5; `line_period_count`) and its own choice (0:
+   * the game's; `line_periods_own`) */
+  periods: number;
+  periodsOwn: number;
+  /** T-3542: a line of four or five rows: per row in the day's order its figures (`line_rows`), its
+   * whole trains as set (`line_row_trains`), its headways (`line_row_headways`, absent on counts) and
+   * its weekends (`line_row_weekend`) */
+  rows?: { figs: number[]; set: number[]; auto?: number[]; weekend: number[] };
   /** T-1464: a bus line's route and stops; absent for a rail line, whose `path` this replaces
    * (a bus line's `path` is empty, its `stops` its `bus.stops`' ids) */
   bus?: ClockBus;
@@ -733,11 +746,13 @@ export interface RowsDelta<T> {
 
 export interface ClockState {
   version: number;
-  /** busy resources per demand level (high, medium, low) */
+  /** busy resources per demand period (T-3542: five, `PERIODS`; periods served by one slot share one array) */
   markers: CapacityMarker[][];
-  /** T-819: per demand level, track sections at capacity, `TrackApi.full_track`: per edge on one
+  /** T-819: per demand period, track sections at capacity, `TrackApi.full_track_in`: per edge on one
    * edge id, utilisation, trains an hour */
   fullTrack: Float64Array[];
+  /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in (`TrackApi.game_periods`) */
+  periods: number;
   /** US$M */
   cash: number;
   builtCost: number;

@@ -49,9 +49,9 @@ export interface LineDemand {
   /** T-1419: the stops (station ids) the figures above are for, so they can be carried onto the
    * line's stops after an edit (`lineLoadsFor`); absent from a cached result */
   stops?: string[];
-  /** T-1492: the trains an hour (high, medium, low) and cars the figures were solved with; absent
-   * from a cached result */
-  tph?: [number, number, number];
+  /** T-1492: the trains an hour (T-3542: in each of the five periods) and cars the figures were
+   * solved with; absent from a cached result */
+  tph?: number[];
   cars?: number;
   /** T-2266, T-2286: the fares the figures were solved with, which its riders pay
    * (game/fareInEffect.ts); absent from a cached result */

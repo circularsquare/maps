@@ -8,13 +8,18 @@ import { computed } from "@preact/signals";
 import { demandAt, lineSeconds } from "./clock";
 import { lineCountry, rowIn } from "./holidays";
 import { DEMAND_INDEX, type LineStats } from "./types";
-import { linesById, restShown, world } from "./world";
+import { linesById, restShown, rowTrainsShown, rowWeekendShown, world } from "./world";
+import { periodAt, rowOfPeriod } from "./periods";
 
 /** T-3521: a line's trains at level `lev` on its kind of day now in its own local time (weekdays or
  * weekends, by its country's calendar; `restShown`). */
 export function trainsNowAt(id: string, lev: number): number {
   const row = rowNow(id);
-  return row === null ? 0 : restShown(id, row)?.[lev] ?? 0;
+  if (row === null) return 0;
+  // T-3542: a line of four or five rows reads its row now, by the period in its local time
+  const st = world.value?.lineStats[id];
+  if (st?.rows) return (row === 0 ? rowTrainsShown(id) : rowWeekendShown(id)?.counts)?.[rowOfPeriod(st.periods, periodAt(lineSeconds(st)))] ?? 0;
+  return restShown(id, row)?.[lev] ?? 0;
 }
 
 /** A line's kind of day now in its own local time (0 weekdays, 1 weekends), by its country's

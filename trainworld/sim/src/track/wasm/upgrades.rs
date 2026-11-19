@@ -61,8 +61,14 @@ impl TrackApi {
     /// kind 13): per station, direction and faster line, `[station, faster line, wait per train s]`,
     /// flat, largest first.
     pub fn line_waits(&self, line: u32, level: usize) -> Vec<f64> {
+        self.line_waits_at(line, self.w.net.row_slot(line as usize, level.min(crate::track::params::ROWS - 1)))
+    }
+    /// T-3542: `line_waits` in demand period `period` (0-4), at the slot serving it.
+    pub fn line_waits_in(&self, line: u32, period: usize) -> Vec<f64> {
+        self.line_waits_at(line, self.w.net.period_slot()[period.min(4)])
+    }
+    fn line_waits_at(&self, line: u32, lev: usize) -> Vec<f64> {
         let cap = &self.w.svc.cap;
-        let lev = self.w.net.row_slot(line as usize, level.min(crate::track::params::ROWS - 1));
         let mut v: Vec<[f64; 3]> = (0..cap.res.len())
             .filter_map(|r| {
                 let f = cap.wait_for(r)?;

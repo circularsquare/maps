@@ -5018,9 +5018,8 @@ class DemandClient {
       // its service, so a panel's running cost moves with the fares these figures give
       for (const l of layout) {
         const d = v.view?.lines.get(l.id), sl = service.get(l.id);
-        // (T-3542: the service's trains an hour are per period; the figures read them per row, high
-        // from the morning's, as every readout of three rows does)
-        if (d) { d.stops = l.stops; if (sl) { d.tph = [sl.tph[0], sl.tph[3], sl.tph[4]]; d.cars = sl.cars; } }
+        // (T-3542: per period, as the service's)
+        if (d) { d.stops = l.stops; if (sl) { d.tph = Array.from(sl.tph); d.cars = sl.cars; } }
       }
       if (fares) for (const d of v.view?.lines.values() ?? []) d.solvedFares = fares;
       // T-325: and the zones open bare, from their own figures

@@ -13,7 +13,8 @@ import { hasUpgrade, UPGRADE } from "../game/upgrades";
 import { count, duration } from "../game/format";
 import { nearestStation, stationNameNear } from "../game/places";
 import { readToday, type LineToday } from "../game/today";
-import { DEMAND_INDEX, type LineInput, type Selection, type WorldView } from "../game/types";
+import type { LineInput, Selection, WorldView } from "../game/types";
+import { PERIOD_CODE } from "../game/periods";
 import { selection, tool } from "../game/ui";
 import { runsAgainstOneWay } from "../game/oneWay";
 import { listedLines, world } from "../game/world";
@@ -27,7 +28,7 @@ import { Chip, Icon } from "./widgets";
 import { t, tNumber } from "../i18n";
 
 const STORE = "anitabuilder-trouble-open";
-const DEMAND_WORD = ["high", "medium", "low"];   // i18n-ignore (codes for troubleList.waits)
+
 /** capacity kinds tied to one station (`CAPACITY_KINDS`): platform, terminus, turning, reversing, sidings, a terminus on one platform */
 const AT_STATION = new Set([2, 3, 6, 8, 9, 10, 14]);
 
@@ -112,7 +113,7 @@ function itemsOf(w: WorldView, level: number, day: Map<string, LineToday>): Item
     const cls = over ? "over" : "near";
     const tip = [t("troubleList.capacity", { name: k.name, pct: tNumber(Math.round(m.rho * 100)) })];
     if (m.held) tip.push(t("troubleList.held", { vehicle }));
-    if (d >= 2) tip.push(t("troubleList.waits", { time: duration(d), level: DEMAND_WORD[level] ?? "other", vehicle }));
+    if (d >= 2) tip.push(t("troubleList.waitsIn", { time: duration(d), period: PERIOD_CODE[level] ?? "other", vehicle }));
     tip.push(k.fix); // T-2933: the last line of a hover is what to try
     spots.set(key, { key, tier: over ? 2 : 4, size: d + m.rho, lead: <i class={"trouble-mark " + cls}><Icon.alert /></i>,
       label: place ? t("troubleList.spot", { name: k.name, prep: k.prep, place }) : k.name,
@@ -140,7 +141,7 @@ function TroubleList() {
 }
 
 function Trouble({ w }: { w: WorldView }) {
-  const hour = clock.hour.value, level = DEMAND_INDEX[clock.demand.value], acct = accountVersion.value;
+  const hour = clock.hour.value, level = clock.period.value, acct = accountVersion.value;
   const [day, setDay] = useState<Map<string, LineToday>>(new Map());
   const [open, setOpen] = useState(readOpen);
   // the past 24 hours once a game hour and when the riders are worked out again, not the panels'

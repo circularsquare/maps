@@ -24,13 +24,10 @@ import { faresOf, lineFareMul, type Fares } from "./fareCurve";
 import { lineFares } from "./fareInEffect";
 import { trainKind } from "./format";
 import { baseTrips, lineGeo, moneyState, moneyTerms, moneyWorld, scalesOf, type MoneyTerms } from "./money";
-import { PERIODS } from "./periods";
+import { trainsADay } from "./periods";
 import { edgeUpkeep, lineRunFactor, stationUpkeepOf } from "./regionMoney";
 import { stopsById, world } from "./world";
 import type { LineInput, WorldView } from "./types";
-
-/** Hours a day at high, medium and low demand, as the clock worker's `LEVEL_HOURS`. */
-const LEVEL_HOURS = (["high", "medium", "low"] as const).map((lev) => PERIODS.reduce((s, p) => s + (p.demand === lev ? p.to - p.from : 0), 0));
 
 /** US$ a day. */
 export interface Money3 { fares: number; running: number; upkeep: number }
@@ -68,7 +65,7 @@ export const stretchMoney = computed<StretchMoney | null>(() => {
   const shape = moneyWorld.value, w = world.value, t = moneyTerms.value, dv = demandView.value, m = moneyState.peek();
   if (!shape || !w || !t || !dv || !m) return null;
   let run = [m.runCostTrainKm, m.runCostCarKm, m.hsRunCostTrainKm, m.hsRunCostCarKm, m.runCostBusKm, m.runCostBoatKm, m.economy].join();
-  for (const l of w.save.lines) run += `|${l.tph.high},${l.tph.medium},${l.tph.low},${w.lineStats[l.id]?.cars},${lineRunFactor(l.num)}`;
+  for (const l of w.save.lines) run += `|${l.tphP.join()},${w.lineStats[l.id]?.cars},${lineRunFactor(l.num)}`;
   for (const e of w.edges) if (e.built) run += `,${e.id}`;
   if (memo && memo.shape === shape && memo.t === t && memo.dv === dv && memo.run === run) return memo.out;
   const out = stretchMoneyOf(w, t, dv, shape);
@@ -94,7 +91,7 @@ export function stretchMoneyOf(w: WorldView, t: MoneyTerms, dv: DemandView, shap
   const weight = new Map<string, number>();
   for (const l of w.save.lines) {
     if (w.lineStats[l.id]?.status !== "running") continue;
-    weight.set(l.id, l.tph.high * LEVEL_HOURS[0] + l.tph.medium * LEVEL_HOURS[1] + l.tph.low * LEVEL_HOURS[2]);
+    weight.set(l.id, trainsADay(l.tphP));
   }
   /** running rail lines with no demand figures for their stops yet (the game loading, a new line) */
   const dark = new Set<string>();

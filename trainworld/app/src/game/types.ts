@@ -82,6 +82,8 @@ export interface LineInput {
   planStops?: StationId[];
   stopStart?: number;
   tph: Tph;
+  /** T-3542: trains an hour in each of the five periods (`PERIODS`), weekdays */
+  tphP: number[];
   /** the player's line group (T-1791), absent for none, and its name, "" for its oldest line's */
   group?: number;
   groupName?: string;
@@ -256,9 +258,31 @@ export interface LineStats {
   twin?: LineId;
   /** T-3333: a hidden twin, the line it runs the other pair for */
   twinOf?: LineId;
+  /** T-3542: the rows it sets its trains in (3, 4 or 5) and its own choice (0: the game's) */
+  periods: number;
+  periodsOwn: number;
+  /** T-3542: a line of four or five rows: its figures per row in the day's order (`RowFigs`) */
+  rows?: RowFigs;
   /** T-1464: a bus line's route and stops (its stops that are no station are in `nodes` only,
    * never in the save's stations); absent for a rail line */
   bus?: import("../workers/protocol").ClockBus;
+}
+
+/** T-3542: a line of four or five rows, per row in the day's order (sim `line_rows`, `line_row_trains`,
+ * `line_row_headways`, `line_row_weekend`). A row over several slots shows the longest round trip,
+ * the most trains and the fewest trains an hour of them. */
+export interface RowFigs {
+  roundTrip: number[];
+  /** trains the service runs (as `LineStats.trainsNeeded`) */
+  trains: number[];
+  delay: number[];
+  /** trains an hour on weekdays; on weekends with a hidden twin's (as `restTph`) */
+  tph: number[];
+  restTph: number[];
+  /** headway in seconds when the trains follow it, else null (as `autoS`) */
+  auto: number[] | null;
+  /** weekends as `LineStats.weekend`: percent, 1 set by hand, counts per row, headways per row */
+  weekend: number[];
 }
 
 export interface ModeSplit {
@@ -311,11 +335,13 @@ export interface BlueprintItem {
 export interface WorldView {
   /** the clock worker's state version */
   version: number;
-  /** busy resources per demand level (SPEC 6.2), local units */
+  /** busy resources per demand period (SPEC 6.2; T-3542: five, `PERIODS`), local units */
   capacity: { x: number; y: number; rho: number; delayS: number; kind: number; tph: number; held: boolean }[][];
-  /** T-819: per demand level, the edges whose track is at capacity, with the fuller direction's
+  /** T-819: per demand period, the edges whose track is at capacity, with the fuller direction's
    * utilisation and trains an hour */
   fullTrack: Map<EdgeId, { rho: number; tph: number }>[];
+  /** T-3542: the rows (3, 4 or 5) lines following the game's set their trains in */
+  periods: number;
   save: Save;
   lineStats: Record<LineId, LineStats>;
   /** T-3333: each hidden twin's line (twin id to line id) */

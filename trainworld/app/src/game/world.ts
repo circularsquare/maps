@@ -15,8 +15,8 @@ import { vehicleOf, type Vehicle } from "./vehicle";
 import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist } from "./coords";
 import { noteEdit } from "./editCap";
-import type { Demand, LineId, LineInput, LineStats, Save, StationInput, WorldView } from "./types";
-import { DEMAND_INDEX, loopHalves } from "./types";
+import type { Demand, LineId, LineInput, LineStats, RowFigs, Save, StationInput, WorldView } from "./types";
+import { DEMAND_INDEX, DEMANDS, loopHalves } from "./types";
 
 export const world = signal<WorldView | null>(null);
 /** T-3159: the world just set is a stop click's rows alone (`ClockState.rows`); the network it goes with comes later */
@@ -127,7 +127,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   return a;
 }
 
-const TRAIN_OPS = new Set(["setStops", "insertStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "lineCars", "copyLine", "undo", "redo"]);
+const TRAIN_OPS = new Set(["setStops", "insertStop", "oneWayStop", "dropStop", "endLineAt", "stopPassed", "orderStops", "sortStops", "turnEnd", "openLoop", "setTrainCount", "setHeadway", "weekendShare", "weekendCounts", "weekendShareAll", "setPeriods", "setRowTrains", "setRowHeadways", "rowWeekend", "lineCars", "copyLine", "undo", "redo"]);
 const BUILD_OPS = new Set(["route", "construct", "constructAll", "constructLine", "addStation", "crossover", "doubleUp", "stationUpgrade", "rebuild"]);
 /** What a refused-for-money edit would have paid for: line edits cost trains only, track edits construction. */
 function buysOf(op: EditOp): Buys | undefined {
@@ -453,7 +453,7 @@ export function stepLineCars(id: LineId, shown: number, cap: number, by: number,
   const to = Math.max(1, Math.min(cap, now + by));
   if (to === now) return false;
   const st = world.peek()?.lineStats[id];
-  const short = checkCash && st && to > st.cars ? carBuyCheck?.(id, (to - st.cars) * Math.max(...st.trainsNeeded)) : null;
+  const short = checkCash && st && to > st.cars ? carBuyCheck?.(id, (to - st.cars) * fleetOf(st)) : null;
   if (short) {
     say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
     return Promise.resolve(false);
@@ -596,18 +596,266 @@ export function headwaysOfTrains(id: LineId): [number, number, number] | null {
   const st = world.value?.lineStats[id];
   if (!st) return null;
   const n = trainsShown(id) ?? st.trainsNeeded;
-  // the headway its trains give, rounded to the coarsest of 1 minute, 30, 10 or 5 seconds that keeps them
-  const seconds = n.map((k, lev) => {
-    const trip = st.roundTripByLevel[lev];
-    if (!(k > 0) || !(trip > 0)) return 0;
-    const exact = Math.ceil(trip / k);
-    for (const step of [60, 30, 10, 5]) {
-      const h = Math.ceil(exact / step) * step;
-      if (autoTrainsFor(trip, h, 0, loopHalves(st)) === k) return h;
+  return n.map((k, lev) => headwayOfTrains(st, st.roundTripByLevel[lev], k)) as [number, number, number];
+}
+
+/** The headway `k` trains give over round trip `trip`, rounded to the coarsest of 1 minute, 30, 10 or
+ * 5 seconds that keeps them; 0 for none. */
+function headwayOfTrains(st: LineStats, trip: number, k: number): number {
+  if (!(k > 0) || !(trip > 0)) return 0;
+  const exact = Math.ceil(trip / k);
+  for (const step of [60, 30, 10, 5]) {
+    const h = Math.ceil(exact / step) * step;
+    if (autoTrainsFor(trip, h, 0, loopHalves(st)) === k) return h;
+  }
+  return exact;
+}
+
+// ---- T-3542: rows. A line sets its trains in 3, 4 or 5 rows (game/periods.ts `ROWS_OF`). One of
+// three edits through the functions above (its rows are high, medium and low); one of four or five
+// through the row edits (`setRowTrains`, `setRowHeadways`, `rowWeekend`), every value an array in the
+// day's order. The functions below take a row index and pick the way by the line.
+
+/** A line's busiest row's trains (its own, without a hidden twin's): the fleet it runs. */
+export const fleetOf = (st: LineStats): number => Math.max(...(st.rows?.trains ?? st.trainsNeeded));
+
+/** A line's rows as its panels show them (3, 4 or 5). */
+export const rowCount = (st: LineStats | undefined): number => st?.periods ?? 3;
+
+/** A line of four or five rows' figures with its hidden twin's trains added (T-3333, as `pairStats`;
+ * the sim's row headways and weekends are whole-line already); undefined for a line of three. */
+export function pairRows(w: WorldView, st: LineStats): RowFigs | undefined {
+  const r = st.rows, tw = r && st.twin ? w.lineStats[st.twin]?.rows : undefined;
+  if (!r || !tw) return r;
+  return { ...r, trains: r.trains.map((n, i) => n + (tw.trains[i] ?? 0)), tph: r.tph.map((x, i) => x + (tw.tph[i] ?? 0)) };
+}
+
+const pendingRowTrains = signal<ReadonlyMap<LineId, number[]>>(new Map());
+const pendingRowHeadway = signal<ReadonlyMap<LineId, number[] | null>>(new Map());
+const pendingRowWeekend = signal<ReadonlyMap<LineId, WeekendRows>>(new Map());
+
+/** A line's trains per row as the player last set them (`trainsShown` for a line of three). */
+export function rowTrainsShown(id: LineId): number[] | null {
+  const w = world.value, st = w?.lineStats[id];
+  if (!st?.rows) return trainsShown(id);
+  const p = pendingRowTrains.value.get(id);
+  return p && p.length === st.periods ? p : pairRows(w!, st)!.trains;
+}
+
+/** A line's headways per row as last set, or null on counts (`headwayShown` for a line of three). */
+export function rowHeadwayShown(id: LineId): number[] | null {
+  const w = world.value, st = w?.lineStats[id];
+  if (!st?.rows) return headwayShown(id);
+  const p = pendingRowHeadway.value;
+  if (p.has(id)) {
+    const v = p.get(id) ?? null;
+    if (!v || v.length === st.periods) return v;
+  }
+  return st.rows.auto;
+}
+
+const sendRowTrains = folded(pendingRowTrains, async (id, trains) => {
+  const had = world.peek()?.lineStats[id]?.rows?.trains;
+  const a = await edit({ op: "setRowTrains", line: num(id), trains }, false, true);
+  noteAnswer(id, a, trains, had);
+  return a.ok;
+});
+const sendRowHeadway = folded(pendingRowHeadway, async (id, secs) => {
+  const had = world.peek()?.lineStats[id]?.rows?.auto;
+  const a = await edit(secs ? { op: "setRowHeadways", line: num(id), seconds: secs } : { op: "setHeadway", line: num(id), seconds: null }, false, true);
+  if (secs) noteAnswer(id, a, secs, had);
+  return a.ok;
+});
+
+/** A line of four or five rows' new counts, as `setTrainCounts`: refused here when the cash cannot cover them. */
+function setRowCounts(id: LineId, trains: number[]) {
+  const was = rowTrainsShown(id);
+  const short = trainBuyCheck?.(id, trains);
+  if (short) {
+    refusedForCash.value = { id, levs: trains.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
+    say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
+    return;
+  }
+  if (!was || trains.some((n, i) => n !== was[i])) clickSound({ op: "setTrainCount" });
+  sendRowTrains(id, trains);
+}
+
+function changeRow(id: LineId, row: number, to: (now: number, step: number) => number): boolean {
+  const base = rowTrainsShown(id);
+  if (!base) return true;
+  const t = [...base], k = trainStep(id);
+  t[row] = to(t[row], k);
+  if (t[row] === base[row]) return false;
+  setRowCounts(id, t);
+  return true;
+}
+
+/** Step a line's trains in row `row` (`stepTrainCount`). */
+export function stepRowCount(id: LineId, row: number, by: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return stepTrainCount(id, DEMANDS[row], by);
+  return changeRow(id, row, (now, k) => Math.max(0, Math.round(now / k + by) * k));
+}
+/** Set a line's trains in row `row` (`setTrainCount`). */
+export function setRowCount(id: LineId, row: number, trains: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return setTrainCount(id, DEMANDS[row], trains);
+  return changeRow(id, row, (_, k) => Math.max(0, Math.ceil(Math.round(trains) / k) * k));
+}
+
+/** The trains a row headway edit leaves each row with, as `headwayTrains`, or null when the panel cannot tell. */
+function rowHeadwayTrains(id: LineId, secs: readonly number[], was: readonly number[] | null): number[] | null {
+  const st = world.peek()?.lineStats[id], r = st?.rows, lim = headwayLimits.get(id);
+  if (!st || !r || st.bus || !lim) return null;
+  const out: number[] = [];
+  for (let i = 0; i < secs.length; i++) {
+    if (secs[i] === was?.[i]) out.push(r.trains[i]);
+    else if (secs[i] * AUTO_SLACK < lim[i]) return null;
+    else out.push(autoTrainsFor(r.roundTrip[i], secs[i], lim[i], loopHalves(st)));
+  }
+  return out;
+}
+function queueRowHeadway(id: LineId, secs: number[] | null) {
+  const was = rowHeadwayShown(id);
+  const trains = secs && trainBuyCheck ? rowHeadwayTrains(id, secs, was) : null;
+  if (trains) {
+    const short = trainBuyCheck!(id, trains);
+    if (short) {
+      refusedForCash.value = { id, levs: secs!.map((v, i) => v !== was?.[i]), at: performance.now(), need: short.need };
+      say(describeIssues([`Money:${short.need.toFixed(1)}:${short.have.toFixed(1)}`], "trains", lineVehicle(id)), true); // i18n-ignore
+      return;
     }
-    return exact;
-  }) as [number, number, number];
-  return seconds;
+  }
+  if (JSON.stringify(secs) !== JSON.stringify(was)) clickSound({ op: "setHeadway" });
+  sendRowHeadway(id, secs);
+}
+
+/** Set a line's headway in row `row` (`setHeadway`). */
+export function setRowHeadway(id: LineId, row: number, seconds: number) {
+  if (!world.value?.lineStats[id]?.rows) return setHeadway(id, DEMANDS[row], seconds);
+  const base = rowHeadwayShown(id);
+  if (!base) return;
+  const h = [...base];
+  h[row] = seconds;
+  queueRowHeadway(id, h);
+}
+/** Step a line's headway in row `row` (`stepHeadway`). */
+export function stepRowHeadway(id: LineId, row: number, dir: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return stepHeadway(id, DEMANDS[row], dir);
+  const base = rowHeadwayShown(id);
+  if (!base) return true;
+  const now = base[row], to = nextHeadway(now, Math.sign(dir), Math.abs(dir));
+  if (to === now) return false;
+  setRowHeadway(id, row, to);
+  return true;
+}
+/** Switch a line between counts and a headway (`setAutoTrains`), any number of rows. */
+export function setRowAuto(id: LineId, on: boolean) {
+  const st = world.value?.lineStats[id];
+  if (!st?.rows) return setAutoTrains(id, on);
+  if (!on) return queueRowHeadway(id, null);
+  const n = rowTrainsShown(id) ?? st.rows.trains;
+  queueRowHeadway(id, n.map((k, i) => headwayOfTrains(st, st.rows!.roundTrip[i], k)));
+}
+
+/** A line's weekends per row as they show (`WeekendShown` for any number of rows). */
+export interface WeekendRows { share: number; custom: boolean; counts: number[]; headways?: number[] }
+
+/** A line's weekends as they show, per row (`weekendShown` for a line of three). */
+export function rowWeekendShown(id: LineId): WeekendRows | null {
+  const st = world.value?.lineStats[id];
+  if (!st?.rows) return weekendShown(id);
+  const p = pendingRowWeekend.value.get(id);
+  if (p && p.counts.length === st.periods) return p;
+  const n = st.periods, x = st.rows.weekend, wk = rowTrainsShown(id) ?? st.rows.trains;
+  const share = x[0] ?? 100, custom = x[1] === 1, counts = x.slice(2, 2 + n), hw = x.slice(2 + n, 2 + 2 * n);
+  if (custom || st.rows.auto || !pendingRowTrains.value.has(id)) return { share, custom, counts, headways: hw.some(Boolean) ? hw : undefined };
+  return { share, custom, counts: wk.map((k) => weekendCount(k, share)) };
+}
+
+function sendRowWeekend(id: LineId, next: WeekendRows, op: EditOp) {
+  pendingRowWeekend.value = new Map(pendingRowWeekend.value).set(id, next);
+  void edit(op, false, true).finally(() => {
+    if (pendingRowWeekend.peek().get(id) !== next) return;
+    const m = new Map(pendingRowWeekend.peek());
+    m.delete(id);
+    pendingRowWeekend.value = m;
+  });
+}
+
+/** Run a line's weekends at `share` percent (`setWeekendShare`, any number of rows). */
+export function setRowWeekendShare(id: LineId, share: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return setWeekendShare(id, share);
+  const cur = rowWeekendShown(id), wk = rowTrainsShown(id);
+  if (!cur || !wk) return false;
+  const s = Math.max(WEEKEND_SHARE_MIN, Math.min(WEEKEND_SHARE_MAX, Math.round(share)));
+  if (s === cur.share && !cur.custom) return false;
+  sendRowWeekend(id, { share: s, custom: false, counts: wk.map((n) => weekendCount(n, s)) }, { op: "weekendShare", line: num(id), share: s });
+  return true;
+}
+
+/** Set a line's weekend trains in row `row` (`setWeekendCount`). */
+export function setRowWeekendCount(id: LineId, row: number, want: number, most: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return setWeekendCount(id, DEMANDS[row], want, most);
+  const cur = rowWeekendShown(id);
+  if (!cur) return false;
+  const to = Math.max(0, Math.min(most, want));
+  if (to === cur.counts[row]) return false;
+  const counts = [...cur.counts];
+  counts[row] = to;
+  const headways = cur.headways?.map((h, k) => (k === row ? 0 : h));
+  sendRowWeekend(id, { share: cur.share, custom: true, counts, headways: headways?.some(Boolean) ? headways : undefined }, { op: "rowWeekend", line: num(id), counts, headways: [] });
+  return true;
+}
+/** Step a line's weekend trains in row `row` (`stepWeekendCount`). */
+export function stepRowWeekendCount(id: LineId, row: number, by: number, most: number): boolean {
+  const n = rowWeekendShown(id)?.counts[row];
+  return n !== undefined && setRowWeekendCount(id, row, n + by * trainStep(id), most);
+}
+
+/** The trains an hour a line's weekend row `row` shows with `n` trains (`restTphShown`). */
+export function restRowTphShown(id: LineId, st: LineStats, row: number, n: number): number {
+  const r = st.rows;
+  if (!r) return restTphShown(id, st, row, n);
+  const trip = r.roundTrip[row], wk = rowWeekendShown(id), auto = rowHeadwayShown(id);
+  if (n > 0 && wk) {
+    const given = wk.custom ? wk.headways?.[row] ?? 0 : auto ? weekendHeadwayAt(auto[row], wk.share) : 0;
+    if (given > 0) return 3600 / given;
+  }
+  const ran = r.weekend[2 + row];
+  if (!pendingRowWeekend.value.has(id) && n === ran) return r.restTph[row];
+  return trip > 0 ? (n * 3600) / trip : 0;
+}
+
+/** Set a line's weekend trains in row `row` to `to` with the headway they run (`setWeekendHeadway`). */
+function setRowWeekendHeadway(id: LineId, row: number, to: number, h: number, most: number): boolean {
+  const st = world.value?.lineStats[id], cur = rowWeekendShown(id);
+  if (!st || !cur) return false;
+  const n = Math.max(0, Math.min(most, to)), sec = n > 0 ? Math.round(h) : 0;
+  if (cur.custom && n === cur.counts[row] && sec === (cur.headways?.[row] ?? 0)) return false;
+  const counts = [...cur.counts];
+  counts[row] = n;
+  const shown = (k: number, c: number) => { const tph = c > 0 ? restRowTphShown(id, st, k, c) : 0, s = tph > 0 ? 3600 / tph : 0; return s >= 60 ? Math.round(s / 60) * 60 : Math.round(s); };
+  const headways = cur.counts.map((c, k) => cur.headways?.[k] || shown(k, c));
+  headways[row] = sec;
+  sendRowWeekend(id, { share: cur.share, custom: true, counts, headways }, { op: "rowWeekend", line: num(id), counts, headways });
+  return true;
+}
+/** Step a line's weekend headway in row `row` (`stepWeekendHeadway`). */
+export function stepRowWeekendHeadway(id: LineId, row: number, dir: number, trip: number, limitS: number, loop: boolean, most: number, shown: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return stepWeekendHeadway(id, DEMANDS[row], dir, trip, limitS, loop, most, shown);
+  const n = rowWeekendShown(id)?.counts[row];
+  const step = n === undefined ? null : restHeadwayStep(n, dir, trip, limitS, loop, shown);
+  return step !== null && setRowWeekendHeadway(id, row, step.to, step.h, most);
+}
+/** A weekend headway typed in row `row` (`typeWeekendHeadway`). */
+export function typeRowWeekendHeadway(id: LineId, row: number, minutes: number, trip: number, limitS: number, loop: boolean, most: number): boolean {
+  if (!world.value?.lineStats[id]?.rows) return typeWeekendHeadway(id, DEMANDS[row], minutes, trip, limitS, loop, most);
+  const h = headwayFromMinutes(minutes);
+  return setRowWeekendHeadway(id, row, h > 0 ? autoTrainsFor(trip, h, limitS, loop) : 0, h, most);
+}
+
+/** Set the game's rows (`line` undefined) or line `line`'s own (0: the game's). */
+export function setPeriods(rows: number, line?: LineId) {
+  void edit(line === undefined ? { op: "setPeriods", rows } : { op: "setPeriods", line: num(line), rows });
 }
 
 /** The fare curve for the whole network (T-883, game/fareCurve.ts): its nodes, km and US$. */

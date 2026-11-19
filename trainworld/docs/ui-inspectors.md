@@ -328,7 +328,9 @@ shows an earlier edit's figures [T-1276]; each button's hover names the train
   level's times of day in the line's local time, the same every kind of day (T-2335), from the period table in
   `game/periods.ts`: "High demand period: 06:00-20:00", "Medium demand period: 20:00-24:00", "Low demand
   period: 00:00-06:00" (hours as the clock writes them, `hourSpan`, T-2271; `levelTimes`) [T-406, T-1536,
-  T-1797]; on a
+  T-1797]; a line set in four or five periods (T-3542, the schedule panel's Periods) has a row each, Rush or
+  Morning, Midday, (Afternoon,) Evening and Night under "Period", each hover its hours ("Rush: 06:00-10:00,
+  16:00-20:00"), the row now bold, weekdays only; on a
   running line one dot before the name of each level that runs trains (none for a level with 0 trains or no headway, T-1783) grades the level on the kind of day the clock is on [T-1671], by the
   load past the rated load, as in Trains to add [T-2236]: each interval's load is the busiest hour's mean load
   of the trains on it (the fuller direction) over the level's periods (High is its three periods, 6-10, 10-16

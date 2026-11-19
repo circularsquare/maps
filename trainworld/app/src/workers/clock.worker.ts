@@ -167,11 +167,11 @@ const AUTOSAVE_MS = 60_000;
  * in the hourly one (T-447). */
 const LEDGER_DAYS = Infinity;
 const LEDGER_HOURS = 48;
-const LEVEL_OF = { high: 0, medium: 1, low: 2 } as const;
-/** T-3521: each level on each kind of day, weekdays' first, then weekends' (`TrackApi.running_cost`). */
-const SIX = [0, 1, 2, 3, 4, 5];
-/** T-867: hours a day at each demand level, which weigh each line's trains a day for its upkeep share */
-const LEVEL_HOURS = new Float64Array([0, 1, 2].map((l) => PERIODS.reduce((s, p) => s + (LEVEL_OF[p.demand] === l ? p.to - p.from : 0), 0)));
+/** T-3521, T-3542: each period on each kind of day, weekdays' first, then weekends' (`TrackApi.running_cost_period`). */
+const TEN = Array.from({ length: 2 * PERIODS.length }, (_, k) => k);
+/** T-867: hours a day in each demand period, which weigh each line's trains a day for its upkeep share
+ * (T-3542: `TrackApi.line_upkeep_periods`) */
+const PERIOD_HOURS = new Float64Array(PERIODS.map((p) => p.to - p.from));
 
 let api: TrackApi | null = null;
 /** the world's home zone, written into saves and snapshots; never the map's focused zone */
@@ -286,20 +286,21 @@ function syncRows(): boolean {
 const rowOfLine = (id: number) => rowOfIn(holidayData, lineCountries.get(id));
 // T-835: trains run from half a run before their period to half a run into it; `tail`, the cost a
 // day a period adds by running to its own end before no service (`runTail`), spread over it.
-// T-3521: `run` per hour by level and kind of day (weekdays' high, medium, low, then weekends';
-// `TrackApi.running_cost`), each day's kind by `rowOf` (the week's unless given).
+// T-3521: `run` per hour by period and kind of day (T-3542: weekdays' five periods, then weekends';
+// `TrackApi.running_cost_period`), each day's kind by `rowOf` (the week's unless given).
+const NP = PERIODS.length;
 const costHour = (run: number[], tl: number, tail: number[][] | undefined, rowOf: (day: number) => DayRow = rowOfDay) => lagged(((r, p) =>
-  run[r * 3 + LEVEL_OF[PERIODS[p].demand]] + (tail?.[r]?.[p] ?? 0) / (PERIODS[p].to - PERIODS[p].from)) as PerHour, null, tl, moneyLag, moneyLag / 2, rowOf);
+  run[r * NP + p] + (tail?.[r]?.[p] ?? 0) / (PERIODS[p].to - PERIODS[p].from)) as PerHour, null, tl, moneyLag, moneyLag / 2, rowOf);
 /** T-835 (service.rs `period_points`): a period followed by no service runs to its own end, not
  * half a run before it, so its line runs that much longer a day at its level; `run` per hour by
- * level and kind of day as `costHour`'s, `tph` trains an hour likewise, from `lines_info` entry `i`.
+ * period and kind of day as `costHour`'s, `tph` trains an hour likewise, from `lines_info` entry `i`.
  * Per kind of day and period, US$M a day (the period after the day's last taken on the same kind). */
 function runTail(li: ArrayLike<number>, i: number, run: number[], tph: number[]): number[][] {
   const lead = Math.min(7200, Math.max(0, (li[i + 11] - 2 * li[i + 20]) / 4));
   return [0, 1].map((r) => PERIODS.map((p, q) => {
     const next = PERIODS.findIndex((x) => x.from === p.to % 24);
-    const nextTph = next >= 0 ? tph[r * 3 + LEVEL_OF[PERIODS[next].demand]] : 0;
-    return nextTph > 0 ? 0 : (run[r * 3 + LEVEL_OF[PERIODS[q].demand]] * lead) / 3600;
+    const nextTph = next >= 0 ? tph[r * NP + next] : 0;
+    return nextTph > 0 ? 0 : (run[r * NP + q] * lead) / 3600;
   }));
 }
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
@@ -1456,7 +1457,7 @@ function rowComplexes(rows: readonly ClockNode[]): Complexes {
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   return complexesOf(nodeComplexes, geo, links);
 }
-const rowEnv: RowEnv = { lngLat: packLngLat, levelHours: LEVEL_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes };
+const rowEnv: RowEnv = { lngLat: packLngLat, periodHours: PERIOD_HOURS, busRow, platformLine: platformLineOf, complexes: rowComplexes };
 /** the rows of the last states, read again only where the track model says something changed (T-1382);
  * `?patch=0` reads them whole */
 const stateRows = new StateRows();
@@ -1579,13 +1580,19 @@ function buildState(): ClockState {
   }
   const samples = new Float32Array(nSamples * 2);
   runs.reduce((o, d) => (samples.set(d, o), o + d.length), 0);
-  const markers = [0, 1, 2].map((lev) => {
-    const m = a.markers(lev);
+  // T-3542: per period, read once per slot serving periods
+  const slots = a.period_slots();
+  const bySlot = new Map<number, ClockState["markers"][number]>();
+  const markers = PERIODS.map((_, p) => {
+    const had = bySlot.get(slots[p]);
+    if (had) return had;
+    const m = a.markers_in(p);
     const out: ClockState["markers"][number] = [];
     for (let k = 0; k < m.length; k += 7) {
       const [x, y] = packLocal(m[k], m[k + 1]);
       out.push({ x, y, rho: m[k + 2], delayS: m[k + 3], kind: m[k + 4], tph: m[k + 5], held: m[k + 6] > 0 });
     }
+    bySlot.set(slots[p], out);
     return out;
   });
   const conflicts = a.guard_conflicts();
@@ -1597,7 +1604,8 @@ function buildState(): ClockState {
     if (info[k + 2] === 0) crossings[j + 3] = packCross(info[k + 3], info[k + 5]);
   }
   const tq4 = performance.now(); timing.sRest = tq4 - tq3;
-  const fullTrack = [0, 1, 2].map((lev) => a.full_track(lev));
+  const fullBySlot = new Map<number, Float64Array>();
+  const fullTrack = PERIODS.map((_, p) => fullBySlot.get(slots[p]) ?? fullBySlot.set(slots[p], a.full_track_in(p)).get(slots[p])!);
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;
   const [totalCost, builtCost] = a.costs();
   const blueprintCost = Math.max(totalCost - builtCost, 0);
@@ -1609,6 +1617,7 @@ function buildState(): ClockState {
     version: ++version,
     markers,
     fullTrack,
+    periods: a.game_periods(),
     crossings,
     conflicts,
     singles,
@@ -1746,7 +1755,7 @@ function regionLines() {
     const f = a.line_run_factor(id); // T-2669: its countries' prices
     const ways = a.line_one_way(id) ? 1 : 2; // T-2981
     // the rates from the track model, so the cost drained is that of the trains it runs
-    const tph = SIX.map((k) => a.line_tph_on(id, Math.floor(k / 3), k % 3));
+    const tph = TEN.map((k) => a.line_tph_period_on(id, Math.floor(k / NP), k % NP));
     const run = tph.map((t) => t * ways * km * (perTrainKm + perCarKm * cars) * unit * f);
     costs.push({ id, shift: a.line_shift(id), run, tail: runTail(li, i, run, tph), rowOf: rowOfLine(id), shares: lineShares.get(id)?.run ?? [] });
   }
@@ -1895,7 +1904,7 @@ function moneyState(): MoneyState {
     upkeep: upkeepNow(),
     loan: loan && { ...loan },
     fares: { ...fares },
-    runningPerHour: [0, 1, 2].map((l) => a.running_cost(l)) as [number, number, number],
+    runningPerHour: PERIODS.map((_, p) => a.running_cost_period(p)),
     ledger: ledger.map((d) => ({ ...d })),
     hours: hourLedger.map((d) => ({ ...d })),
     regions: savedRegions(),
@@ -1951,7 +1960,7 @@ function localGroups(): { shift: number; costs: CostPart[]; parts: CountryPart[]
     return [{ run: running, tail, rowOf: countries.length === 1 ? rowOfIn(holidayData, countries[0]) : rowOfDay }];
   };
   const one = shifts.length <= 1;
-  if (one && countries.length <= 1) return [{ shift: shifts[0] ?? 0, costs: costParts(null, SIX.map((l) => a.running_cost(l))), parts: [{ kindOf: kindOfIn(holidayData, countries[0]), income: incomePerHour, rides: ridesPerHour }] }];
+  if (one && countries.length <= 1) return [{ shift: shifts[0] ?? 0, costs: costParts(null, TEN.map((k) => a.running_cost_period(k))), parts: [{ kindOf: kindOfIn(holidayData, countries[0]), income: incomePerHour, rides: ridesPerHour }] }];
   return (one ? [shifts[0] ?? 0] : shifts).map((s) => {
     const sum = (zero: number[][], by: Map<number, number[][]>, c: string) => {
       const out = zero.map((p) => p.map(() => 0));
@@ -1962,7 +1971,7 @@ function localGroups(): { shift: number; costs: CostPart[]; parts: CountryPart[]
       return out;
     };
     const parts = countries.map((c) => ({ kindOf: kindOfIn(holidayData, c), income: sum(incomePerHour, lineIncome, c), rides: sum(ridesPerHour, lineRides, c) }));
-    return { shift: s, costs: costParts(one ? null : s, SIX.map((l) => (one ? a.running_cost(l) : a.running_cost_in(l, s)))), parts };
+    return { shift: s, costs: costParts(one ? null : s, TEN.map((k) => (one ? a.running_cost_period(k) : a.running_cost_period_in(k, s)))), parts };
   });
 }
 
@@ -3647,6 +3656,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_line_row_trains(op.line, Uint32Array.from(op.trains)) };
     case "setRowHeadways":
       return { r: a.set_line_row_headways(op.line, Uint32Array.from(op.seconds)) };
+    case "rowWeekend":
+      return { r: a.set_line_row_weekend(op.line, Uint32Array.from(op.counts), Uint32Array.from(op.headways)) };
     case "lineLook": {
       let colour = 0;
       if (op.colour === undefined) {
@@ -4253,7 +4264,7 @@ async function handleMessage(msg: ToClock) {
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
     // T-1073: so is an undo or redo of one
-    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll" || msg.op.op === "setPeriods" || msg.op.op === "setRowTrains" || msg.op.op === "setRowHeadways"
+    const service = msg.op.op === "setTrainCount" || msg.op.op === "setHeadway" || msg.op.op === "weekendShare" || msg.op.op === "weekendCounts" || msg.op.op === "weekendShareAll" || msg.op.op === "setPeriods" || msg.op.op === "setRowTrains" || msg.op.op === "setRowHeadways" || msg.op.op === "rowWeekend"
       || ((msg.op.op === "undo" || msg.op.op === "redo") && api.step_is_service(msg.op.op === "redo"));
     if (service) {
       api.set_now(gameNow());
@@ -4445,7 +4456,7 @@ async function handleMessage(msg: ToClock) {
       : q.what === "linePeriods" ? api.line_periods(q.line, q.day)
       : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)
       : q.what === "today" ? today()
-      : q.what === "lineHeld" ? api.line_held(q.line)
+      : q.what === "lineHeld" ? (q.rows && api.line_period_count(q.line) > 3 ? api.line_row_held(q.line) : api.line_held(q.line))
       : q.what === "lineMarks" ? api.line_marks(q.line)
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       // T-2603: the line's timetable chart, four numbers a trip (`TrackApi.line_trips`)
@@ -4460,10 +4471,10 @@ async function handleMessage(msg: ToClock) {
       : q.what === "lineCost" ? new Float64Array([api.line_build_cost(q.line), api.line_train_cost(q.line)])
       : q.what === "linePairs" ? new Float64Array([api.line_pairs_ok(q.line) ? 1 : 0, ...api.line_pairs_why(q.line)])
       : q.what === "buildingQuote" ? buildingQuoteAnswer(q.id, q.corners)
-      : q.what === "lineWaits" ? api.line_waits(q.line, q.level)
+      : q.what === "lineWaits" ? (q.period !== undefined ? api.line_waits_in(q.line, q.period) : api.line_waits(q.line, q.level))
       // T-2232: [station, its passing tracks' price] pairs
       : q.what === "passingSpots" ? Float64Array.from(Array.from(api.passing_spots(q.line), (n) => [n, api!.station_upgrade_cost(n, UPGRADE.passing)]).flat())
-      : api.line_delays(q.line, q.level);
+      : q.period !== undefined ? api.line_delays_in(q.line, q.period) : api.line_delays(q.line, q.level);
     send({ kind: "answer", seq: msg.seq, data }, [data.buffer]);
   } else if (msg.kind === "previewStation") {
     const at = msg.at;

@@ -26,6 +26,34 @@ export const PERIODS: readonly Period[] = [
 
 const LEVEL_INDEX: Record<Demand, number> = { high: 0, medium: 1, low: 2 };
 
+/** T-3542: each period's code for a message's select ("in the morning peak", "at midday", ...) */
+export const PERIOD_CODE = ["morning", "midday", "afternoon", "evening", "night"] as const; // i18n-ignore (select codes)
+
+/** T-3542: the rows a line of 3, 4 or 5 rows sets its trains in, in the day's order: each its code
+ * (`schedule.rowName`) and its periods. Three rows are high, medium and low demand; four split midday
+ * out of high (rush is the morning and evening peaks), five the afternoon too (sim params.rs
+ * `ROW_PLACES`, `PERIOD_PLACE`). */
+export interface Row { code: "high" | "medium" | "low" | "rush" | "morning" | "midday" | "afternoon" | "evening" | "night"; periods: number[] }
+export const ROWS_OF: Record<3 | 4 | 5, Row[]> = {
+  3: [{ code: "high", periods: [0, 1, 2] }, { code: "medium", periods: [3] }, { code: "low", periods: [4] }],
+  4: [{ code: "rush", periods: [0, 2] }, { code: "midday", periods: [1] }, { code: "evening", periods: [3] }, { code: "night", periods: [4] }],
+  5: [{ code: "morning", periods: [0] }, { code: "midday", periods: [1] }, { code: "afternoon", periods: [2] }, { code: "evening", periods: [3] }, { code: "night", periods: [4] }],
+};
+/** The rows of a line of `n` rows (3 where `n` is none of 3, 4, 5). */
+export const rowsOf = (n: number): Row[] => ROWS_OF[(n === 4 || n === 5 ? n : 3) as 3 | 4 | 5];
+/** The row of a line of `n` rows that period `p` is in. */
+export const rowOfPeriod = (n: number, p: number): number => rowsOf(n).findIndex((r) => r.periods.includes(p));
+/** A row's hours, [from, to) in order, neighbouring periods joined (as `levelHours`). */
+export function rowHours(r: Row): [number, number][] {
+  const out: [number, number][] = [];
+  for (const p of r.periods.map((i) => PERIODS[i]).sort((a, b) => a.from - b.from)) {
+    const last = out[out.length - 1];
+    if (last && last[1] === p.from) last[1] = p.to;
+    else out.push([p.from, p.to]);
+  }
+  return out;
+}
+
 /** T-3542: a demand network's run times per stop, two runs by five periods (`(run * 5 + period) * n
  * + k` from the line's stops x 10; sim/src/demand/api.rs `TIMES_PER_STOP`); trains an hour are one
  * per period. */
@@ -52,6 +80,18 @@ export function levelHours(level: Demand): [number, number][] {
     const last = out[out.length - 1];
     if (last && last[1] === p.from) last[1] = p.to;
     else out.push([p.from, p.to]);
+  }
+  return out;
+}
+
+/** T-3542: trains a day from trains an hour in each period (`tphP`): each level's periods at one rate
+ * taken as one stretch, so a line of three rows gives the sum by level to the bit. */
+export function trainsADay(tphP: readonly number[]): number {
+  let out = 0;
+  for (const lev of ["high", "medium", "low"] as const) {
+    const ps = PERIODS.flatMap((p, i) => (p.demand === lev ? [i] : []));
+    if (ps.every((i) => tphP[i] === tphP[ps[0]])) out += tphP[ps[0]] * ps.reduce((s, i) => s + PERIODS[i].to - PERIODS[i].from, 0);
+    else for (const i of ps) out += tphP[i] * (PERIODS[i].to - PERIODS[i].from);
   }
   return out;
 }

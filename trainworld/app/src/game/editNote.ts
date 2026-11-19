@@ -24,7 +24,7 @@ import { loadProgress } from "./loading";
 import { incomeByDay, moneyState, type Income } from "./money";
 import { PERIODS } from "./periods";
 import { estimateBase, estimateChange, runningADay, type EstimateBase, type ProfitEstimate } from "./profitEstimate";
-import { DEMAND_INDEX, type WorldView } from "./types";
+import type { WorldView } from "./types";
 import { shownDay, shownDayPhrase } from "./ui";
 import { world } from "./world";
 import type { MoneyState } from "../workers/protocol";
@@ -78,7 +78,7 @@ export function shownChange(delta: number, at: number, now = performance.now(), 
 }
 
 /** The edits an estimate covers: only service on lines that already run. */
-const ESTIMABLE = new Set(["setTrainCount", "setHeadway", "lineCars"]);
+const ESTIMABLE = new Set(["setTrainCount", "setHeadway", "setRowTrains", "setRowHeadways", "lineCars"]);
 
 interface Figures {
   /** T-2626: what the estimate is worked out against; null with nothing running */
@@ -139,8 +139,7 @@ function figuresOf(w: WorldView, d: DayDemand | null, kind: number, inc: Income,
       // as `runningToday` (game/today.ts), over the whole day of this kind
       const k = trainKind(m, st.fast, st.tram);
       const perKm = st.bus?.ferry ? m.runCostBoatKm : st.bus ? m.runCostBusKm : k.runCostTrainKm + st.cars * k.runCostCarKm;
-      const tph = [l.tph.high, l.tph.medium, l.tph.low];
-      PERIODS.forEach((p, i) => { run += tph[DEMAND_INDEX[p.demand]] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
+      PERIODS.forEach((_, i) => { run += l.tphP[i] * 2 * st.km * perKm * m.economy * PERIOD_HOURS[i]; });
       run *= lineRunFactor(l.num); // T-2669
     }
     lines.set(l.id, { riders: r, money: fares - run - st.upkeep });

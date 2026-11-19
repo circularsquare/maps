@@ -10,9 +10,10 @@
 import { effect } from "@preact/signals";
 import type { Map as MlMap } from "maplibre-gl";
 import { clock } from "../game/clock";
+import { PERIOD_CODE } from "../game/periods";
 import { demandView, lineLoadsFor, type DemandView } from "../game/demand";
 import { purposeName, type PurposeFilter } from "../game/purposes";
-import { DEMAND_INDEX, type LineInput, type WorldView } from "../game/types";
+import type { LineInput, WorldView } from "../game/types";
 import { ask, display, isBuildTool, purposeFilter, selection, shownDay, shownDayPhrase, tool } from "../game/ui";
 import { world } from "../game/world";
 import { hoverAt } from "./demandHover";
@@ -69,7 +70,7 @@ export function lineSizeAt(ov: Overlay, num: number, seg: number): number {
   const k = ov.renderer.net?.lines.stretch?.[seg] ?? -1;
   const day = dailyRiders(demandView.peek(), l.id, l.stops, k);
   if (day !== null) return day + 1;
-  return ((l.tph[clock.demand.peek()] ?? 0) * (w.lineStats[l.id]?.cars ?? 1)) / 1e6;
+  return ((l.tphP[clock.period.peek()] ?? 0) * (w.lineStats[l.id]?.cars ?? 1)) / 1e6;
 }
 
 /** The tag's lines for a line stroke segment `i`. */
@@ -98,9 +99,10 @@ function lineTip(n: NetworkBuffers, w: WorldView | null, dv: DemandView | null, 
   const load = st && w && all !== null ? stretchLoad(num, w.version, st.cars, shownDay.peek(), all) : null;
   if (load !== null && load !== undefined) out.push(t("trackHover.avgLoad", { share: tNumber(Math.round(load * 100)) }));
   // T-819: the red outline drawn on track at capacity, at the level in force as the capacity tags
-  const lev = DEMAND_INDEX[clock.demand.peek()];
-  if (display.peek().fullMarks && w?.fullTrack[lev]?.has(n.lines.edge[i])) {
-    out.push(Object.assign(document.createElement("div"), { textContent: t("trackHover.atCapacity", { demand: t("inspector.demand", { demand: clock.demand.peek() }) }), style: "color: var(--bad)" }));
+  // (T-3542: the period's)
+  const p = clock.period.peek();
+  if (display.peek().fullMarks && w?.fullTrack[p]?.has(n.lines.edge[i])) {
+    out.push(Object.assign(document.createElement("div"), { textContent: t("trackHover.atCapacityIn", { period: PERIOD_CODE[p] }), style: "color: var(--bad)" }));
   }
   // T-2236: the crowding mark's load (the boarding account's busiest hour), on its crowding colour
   // as the line panel's dots

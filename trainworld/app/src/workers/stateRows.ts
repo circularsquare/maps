@@ -27,7 +27,8 @@ export interface RowEnv {
   /** world metres to longitude and latitude */
   lngLat(x: number, y: number): [number, number];
   /** hours of each demand level in a day, for `line_upkeep` */
-  levelHours: Float64Array;
+  /** hours a day in each demand period (T-3542) */
+  periodHours: Float64Array;
   /** a bus line's row, and the nodes for its stops that are no station (`nodes` is the list so far) */
   busRow(a: TrackApi, id: number, nodes: ClockNode[]): NonNullable<ClockLine["bus"]>;
   /** a station's platform line, the same array while unchanged (T-1859, workers/platformLines.ts) */
@@ -103,6 +104,19 @@ interface LineRead {
   /** T-3333: `line_pairs`, `line_twin_of` */
   pairs: number;
   twinOf: number;
+  /** T-3542 */
+  tphP: number[];
+  periods: number;
+  periodsOwn: number;
+  rows: ClockLine["rows"];
+}
+
+/** T-3542: a line's trains an hour per period and its rows; for four or five rows, its figures per row. */
+function periodsOf(a: TrackApi, id: number): Pick<LineRead, "tphP" | "periods" | "periodsOwn" | "rows"> {
+  const periods = a.line_period_count(id), periodsOwn = a.line_periods_own(id), tphP = Array.from(a.line_tph_by_period(id));
+  if (periods <= 3) return { tphP, periods, periodsOwn, rows: undefined };
+  const auto = a.line_row_headways(id);
+  return { tphP, periods, periodsOwn, rows: { figs: Array.from(a.line_rows(id)), set: Array.from(a.line_row_trains(id)), ...(auto.length ? { auto: Array.from(auto) } : {}), weekend: Array.from(a.line_row_weekend(id)) } };
 }
 
 export function upgradesOf(a: TrackApi): Map<number, number> {
@@ -353,7 +367,7 @@ export class StateRows {
     const all = changed.length > 0 && changed[0] === ALL;
     const dirty = new Set<number>(all ? [] : changed);
     const li = a.lines_info();
-    const lu = a.line_upkeep(env.levelHours), upkeepOf = new Map<number, number>();
+    const lu = a.line_upkeep_periods(env.periodHours), upkeepOf = new Map<number, number>();
     for (let k = 0; k + 1 < lu.length; k += 2) upkeepOf.set(lu[k], lu[k + 1]);
     const kept = this.lineKept;
     const seen = new Set<number>();
@@ -371,16 +385,18 @@ export class StateRows {
         i, id, ok, running, bus, prev, fresh,
         heavy: fresh ? this.heavy(a, id, ok) : prev!.heavy,
         auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), limit: a.line_limit(id), weekend: weekendOf(a, id), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id), upkeep: upkeepOf.get(id) ?? 0,
+        ...periodsOf(a, id),
         busRow: bus ? env.busRow(a, id, nodes ?? []) : undefined,
         pairs: bus ? 0 : a.line_pairs(id), twinOf: bus ? -1 : a.line_twin_of(id),
       });
     }
     const out: ClockLine[] = [];
     for (const r of read) {
-      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, weekend, restTph, shift, upkeep, pairs, twinOf } = r;
+      const { i, id, ok, running, prev, fresh, heavy, auto, fast, tram, loopKind, oneWay, limit, weekend, restTph, shift, upkeep, pairs, twinOf, tphP, periods, periodsOwn, rows } = r;
       // the numbers behind the cheap fields: when all are as kept (and the heavy parts are), the row is the kept one
       const raw = li.slice(i, i + 22);
-      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph];
+      const extra = [upkeep, fast ? 1 : 0, tram ? 1 : 0, loopKind, oneWay ? 1 : 0, limit, shift, pairs, twinOf, ...auto, weekend.length, ...weekend, ...restTph,
+        ...tphP, periods, periodsOwn, ...(rows ? [rows.figs.length, ...rows.figs, rows.set.length, ...rows.set, rows.auto?.length ?? -1, ...(rows.auto ?? []), rows.weekend.length, ...rows.weekend] : [])];
       if (!fresh && prev && sameNumbers(raw, prev.raw) && sameNumbers(extra, prev.extra)) {
         out.push(prev.row);
         continue;
@@ -410,6 +426,8 @@ export class StateRows {
         limit,
         ...(weekend.length ? { weekend } : {}),
         restTph,
+        tphP, periods, periodsOwn,
+        ...(rows ? { rows } : {}),
         ...(pairs === 1 || pairs === 2 ? { pairs } : {}),
         ...(twinOf >= 0 ? { twinOf } : {}),
         ...(r.busRow ? { bus: r.busRow } : {}),

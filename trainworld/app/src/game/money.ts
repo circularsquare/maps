@@ -28,7 +28,7 @@ import { lineFares } from "./fareInEffect";
 import { fareScale } from "./income";
 import { stationZone } from "./listScope";
 import { PERIODS } from "./periods";
-import { pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
+import { pairRows, pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { MoneyState, RegionNow } from "../workers/protocol";
@@ -52,7 +52,8 @@ export function setMoneyState(m: MoneyState) {
 export function trainShortfall(id: LineId, trains: readonly number[]): { need: number; have: number } | null {
   const w = world.peek(), raw = w?.lineStats[id], st = raw && pairStats(w!, raw);
   if (!st) return null;
-  const more = Math.max(...trains) - Math.max(...st.trainsNeeded);
+  // T-3542: a line of four or five rows needs its busiest row's
+  const more = Math.max(...trains) - Math.max(...(raw.rows ? pairRows(w!, raw)!.trains : st.trainsNeeded));
   return more > 0 ? carShortfall(id, more * (st.bus ? 1 : st.cars)) : null;
 }
 /** The same rule for `more` cars (buses on a bus line) a running line would need beyond the ones in

@@ -83,7 +83,7 @@ import { openings, startOpeningDay } from "./game/openingDay";
 import { startLineFigures } from "./game/lineFigures";
 import { startEditNote } from "./game/editNote";
 import { perfOff } from "./perfFlags";
-import { DEMAND_INDEX, type Selection } from "./game/types";
+import type { Selection } from "./game/types";
 import { anchor, kAtY, toLngLat, toLocal } from "./map/geo";
 import { Debug, perfText } from "./ui/Debug";
 import { Dock } from "./ui/Dock";
@@ -497,14 +497,14 @@ const capacity = new CapacityMarkers(map.getContainer(), overlay, map);
 capacity.demandClick = demandOnTop;
 effect(() => {
   const w = world.value;
-  const level = DEMAND_INDEX[clock.demand.value];
-  if (w && !SYNTH) capacity.set(w, level);
+  // T-3542: the period's markers
+  if (w && !SYNTH) capacity.set(w, clock.period.value);
 });
 effect(() => capacity.setVisible(display.value.capacity && !SYNTH));
 // T-819, T-1125: in the traffic view, lines on track at capacity at the level in force, and those whose trains usually run full, get a red outline
 effect(() => {
   const w = world.value, traffic = display.value.trackColour === "traffic" && display.value.fullMarks; // T-1152's switch
-  const full = w?.fullTrack[DEMAND_INDEX[clock.demand.value]];
+  const full = w?.fullTrack[clock.period.value];
   renderer.setFull(traffic && full ? new Set(full.keys()) : null, traffic);
   overlay.invalidate();
 });

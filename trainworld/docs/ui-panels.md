@@ -363,7 +363,8 @@ the button is gone.
 - **Rows, worst first** (12 px type, one row each, the whole row's hover giving the figures):
   lines whose track is gone (its chip, a red alert mark); places where lines reverse partway (an
   amber U-turn disc, the station or "Track end", up to three of the lines' chips); orange and red
-  capacity tags, the map's tags at 90% and up (`NEAR_RHO`) at the demand level in force that are over capacity or
+  capacity tags, the map's tags at 90% and up (`NEAR_RHO`) in the demand period in force (T-3542; the hover's wait names
+  it, "Each train waits 1m20s here in the morning peak") that are over capacity or
   make trains wait 2 s or more (a line alone queues only once over capacity, so a 99% tag with no wait is no problem) [T-2945], one row per
   kind by one station with the worst delay, red ones first ("Flat crossing near 14 St/6 Av", then
   the tag's "+3:40" or "104%"); lines leaving riders at the platform (a person and the count, both red; the row reads "{line} crowding") [T-2934, T-2944] where
@@ -1343,16 +1344,25 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   line's bullet and name, "schedule" in grey, then the mode choice, drawn only once Detailed and
   Exact are built (stages 3 and 6; Simple alone shows no choice). A player who never opens it sees nothing else new.
 - **Left**: the line panel's schedule table, its steppers, dots and hovers, under a "Set by" Trains / Headway
-  switch; an edit here is the line panel's edit. The table has two sections (T-3521), each a bold heading row
+  switch; an edit here is the line panel's edit. **Periods** (T-3542, a rail line's window only): under Set by,
+  "Periods" 3 / 4 / 5 sets every line's rows for the whole game (lines with their own setting aside); "Set for this
+  line" under it gives the line its own (at the rows it has), shown as a "This line" 3 / 4 / 5 under the game's and a
+  "Same as game" button in the same place. Three rows are High, Medium, Low under "Demand" (as before); four are
+  Rush (06:00-10:00 and 16:00-20:00), Midday, Evening, Night and five Morning, Midday, Afternoon, Evening, Night,
+  under "Period", each name's hover its hours ("Rush: 06:00-10:00, 16:00-20:00"). A switch to fewer rows (the game's,
+  this line's, or Same as game) first asks "Confirm?" with the rows it joins and what they run: "Morning, midday and
+  afternoon will run 26 trains, the most of the three" (a headway line: "will run every 4 min, the shortest of the
+  three"; the game's: "... will run the most trains of the three on every line without its own periods"), yes "Use 3
+  periods" in red, no "Keep 5 periods". The line panel shows the line's rows (weekdays only) and nothing else of periods. The table has two sections (T-3521), each a bold heading row
   with room above it: **Weekdays**, the line panel's rows, and **Weekends** (hover "Weekends and public
-  holidays"), a row a level with the same steppers on the line's weekend counts (under headways a headway
+  holidays"), a row for each weekday row with the same steppers on the line's weekend counts (under headways a headway
   stepper, the count beside it; the headway stepped to is kept with the counts and the weekends run it, T-3557),
   its headway the rate settled for weekends. Beside the Weekends heading the
   line's percent of its weekdays in a stepper (5% a click, typed 10-200), greyed with the hover "Weekend service
   set by hand" once a weekend count is stepped, and "Apply to all lines", which asks "Set weekends to 70% of weekdays on every line, and on new lines too?" first (new lines start on that percent, `SaveHeader.newWeekendShare`, T-3588). The level in force is bold in today's section only; each section's dots are its
   own kind of day's (today's, else a weekday's or a Saturday's). A stepper's hover counts the fleet over both
   kinds of day. Under the table, **Headways for new regular, tram, high-speed, bus or ferry lines** (the heading names the selected line's kind): the headways every new line of that kind starts with, "Default not set" until the player sets one (a new game has none, so a first rail line runs on train counts; without a default a rail line starts on counts, which give no fixed headway to show; a bus or ferry line shows its tool's headways until one is set, 8, 15 and 30 min for a bus, 20, 30 and 60 for a boat, `NEW_LINE`), a "Set as default" button that makes this line's headways the default for its kind (a line on counts is switched to Headway first at the headways its trains give, so it runs the same service; off while they already are) and "Use default", which gives the line its kind's default (off while there is none or the line already runs it). The row uses the table's 12 px text
-  (T-3543, T-3588, T-3703; saved with the game, `SaveHeader.newHeadway` {rail, tram, fast, bus, ferry}; the clock worker applies them to each new rail line after it is
+  (T-3542: the defaults are three headways; a line of four or five rows gives its rush or morning, evening and night, and Use default runs midday and afternoon at the first) (T-3543, T-3588, T-3703; saved with the game, `SaveHeader.newHeadway` {rail, tram, fast, bus, ferry}; the clock worker applies them to each new rail line after it is
   made, as a second edit, a line that cannot pay for the trains they ask staying on its counts, and makes a new bus or ferry line at them; a new bus or ferry line takes the weekend percent for new lines as a rail line does). Then the departures board.
 - **A bus or ferry line's** (T-3703): the left side alone, in buses or boats, in a panel 360 px wide: the table with
   its Weekdays and Weekends sections and the default headways, with no track limits and no departures board or
