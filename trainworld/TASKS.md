@@ -502,10 +502,6 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3027 [P3] {L:track-speed} Slopes slow trains
   - Context: You asked 2026-11-10 how slopes could slow trains without annoying people; a player suggested using the cross section.
   - Goal: A design for slope slowing, then built if you agree.
-- T-2901 [P2] {L:terrain} Remove the old zone terrain (taking, 2026-11-18, agent terrain4)
-  - Context: Terrain worldwide stages 1-3 are done: blocks are on R2 and the game reads them. Stage 4 removes the old zone terrain after a release has run on blocks.
-  - Goal: Zone terrain removed, with the 553 wrongly flat zones fixed by the blocks.
-  - Other: notes/T-2901.md.
 - T-3642 [P3] {L:community} Long-played networks near the share limits
   - Context: From T-3640: a shared save's header keeps every region's ledger, one entry per game day (Swattik's 173 regions add about 20 KB a day), so at his pace he passes the server's 2 MB shared-save cap in about 400 more game days and gets "too big". His drawing took 166 s (Japan 184 s) against the 5-minute share wait, so a slower machine sees "The diagram could not be drawn". checks/safari-save-browser.mjs treats forShare's new "big" answer as success.
   - Goal: A network played for years still shares: the shared copy thins or packs the per-day ledgers (no server change), the save's own per-day ledgers fold or pack once they pass some age (folded in T-2148), and the drawing finishes well inside the wait.
@@ -872,6 +868,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-3743 [P3] {L:checks} Pack gate's runner test 5 crashes
+  - Context: From T-2901: runner_fixes test 5 crashes in `pack_gate.browser_run` on `open('')`, on master too, so tests 6 and 7 never run.
+  - Goal: Tests 5-7 run and pass, or the dead ones are removed.
+  - Other: notes/T-2901.md
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
