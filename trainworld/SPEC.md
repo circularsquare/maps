@@ -391,7 +391,9 @@ games"]. Each slot keeps backups reaching back about 10 minutes, an hour, a day 
 one from before the account's copy last replaced it, each restorable as a new slot [T-744,
 T-1826]. A damaged save (cut short, or unreadable) is never uploaded, written over a slot or kept as a
 backup; its card offers its last undamaged copy, from this browser or the account, opened as a new slot
-[T-3395]. A save that fails for a full disk frees the demand caches and tries again, and a
+[T-3395]. A game that fails to open (damaged, a crash or running out of memory while loading) goes back to
+the start menu with the reason on its card, its slot and account copy untouched and nothing new saved
+[T-3773]. A save that fails for a full disk frees the demand caches and tries again, and a
 database cleared under a running game is made again with the game in it [T-1829]. A game saved by a newer build with parts this one cannot read plays but is never written
 or uploaded here [T-1826]; closing the page asks first only while a change cannot be saved. Beside each slot the page keeps its last final demand result, shown at once
 on reload when the network, packs and build match [T-328].

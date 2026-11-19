@@ -45,15 +45,15 @@ import { buildingMembers, buildingsFrom, withBuildingLinks } from "../game/build
 import { IN_BUILDING, UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
 import { fetchRange } from "./rangeFetch";
-import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, nextGameName, newGameName, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
+import { newDay, newHour, addEntry, currentZones, decodeSave, encodeSave, isThisWorld, isRetiredTrackFormat, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, headerUnread, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type GameMode, type NewGameSpec, type SlotSummary, type DayLedger, type HourLedger, type SaveHeader, type NewHeadways, cleanNewHeadways, type GuideSave, type Achieved } from "./saveFile";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
 import { lineProfile } from "./lineProfile";
 import { RoadFeed } from "./roadFeed";
 import type { ClockBus, ClockEdge, ClockLine, ClockNode, ClockState, EditOp, FerryPortIn, FerryRow, FromClock, MoneyState, NetworkSnapshot, PiInput, RegionNow, RouteAsk, RouteEnd, StationAt, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
-import { loadFailKey } from "../game/loadText";
-import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
+import { isMemoryFailure, loadFailKey } from "../game/loadText";
+import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
 import { META_PER_LINE, profileOf, SLOTS } from "../map/profiles";
 
 /** Run 0 of each line is resampled this often (m) for the renderer's line texture. */
@@ -535,6 +535,8 @@ let modelDown = false;
 let recoveredAt = 0;
 /** `?debug=1` probes (dev server only): the next edit panics after it is applied */
 let panicAfterEdit = false;
+/** T-3773 probes (dev server only): the next game opened panics after its decode (`?debug=1&loadPanic=1`) */
+let panicOnLoad = false;
 
 function isPanic(err: unknown): boolean {
   return err instanceof WebAssembly.RuntimeError || (err instanceof Error && /recursive use of an object|null pointer passed to rust/.test(err.message));
@@ -591,6 +593,14 @@ function afterLoadPanic(err: unknown): string {
   console.error("Rust panic while opening a game:", why); // i18n-ignore
   replaceModel();
   return why;
+}
+
+/** T-3773: what a game that failed to open says (`panicked`: its panic's message): a failed allocation, as a panic
+ * or a JS error, is the device's out-of-memory line, so its card tells "won't open here" from damaged */
+function openFailReason(err: unknown, panicked: string | null, otherwise: string): { error: string; why?: string } {
+  const text = panicked ?? String(err);
+  if (isMemoryFailure(text)) return { error: loadFailKey(text) };
+  return panicked !== null ? { error: SAVE_PANIC, why: panicked } : { error: otherwise };
 }
 
 async function rebuildModel(fromKept: boolean) {
@@ -2422,6 +2432,7 @@ async function openSave(bytes: Uint8Array, from: "autosave" | "file" | "new", fr
   // (China's 17-42 s); awaited here, since the load below holds the worker
   if (st.length > 3) await saveNetKey(net, h).then((key) => send({ kind: "netAhead", key }), () => {});
   // T-3647: a player's game saved before 0.4 keeps the way its single track ran then
+  if (import.meta.env.DEV && panicOnLoad) { panicOnLoad = false; panicNow(); }
   await openNetwork(net, fresh ? undefined : decoded.header.level ?? 0);
   // T-3297: a real network started on the other side than its save keeps to
   if (fresh?.rightHand !== undefined && fresh.rightHand !== api!.right_hand()) api!.flip_right_hand();
@@ -4031,8 +4042,9 @@ async function processMessage(msg: ToClock) {
       guideWanted = msg.guide === true;
       if (msg.backupMs && msg.backupMs > 0) saves.backupSteps = BACKUP_STEPS.map((s) => s / BACKUP_STEPS[0] * msg.backupMs!);
       if (msg.readFails) failReads(msg.readFails);
+      if (import.meta.env.DEV && msg.loadPanic) panicOnLoad = true;
       // T-1196: the game picked in the saves panel before the page reloaded; a file or backup goes
-      // into a slot of its own below, the slot it was picked from kept to fall back on
+      // into a slot of its own below, the slot it was picked from held until then (one that fails goes to the start menu, T-3773)
       const pending = msg.pending ? await takePending() : null;
       await sweepDeleted(); // T-1827's leftovers, if any
       let incoming: Awaited<ReturnType<typeof pendingGame>> = null;
@@ -4063,14 +4075,18 @@ async function processMessage(msg: ToClock) {
       }
       await publishSlots();
       if (incoming) {
+        const g = incoming;
         try {
-          const g = incoming;
           if (g.view) await intoView(g.name, () => loadGame(g.bytes, "file"));
           else await intoNewSlot(g.name, () => loadGame(g.bytes, "file"), true, g.version);
           return;
         } catch (err) {
-          if (isPanic(err)) send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: SAVE_PANIC, why: afterLoadPanic(err), game });
-          else send({ kind: "loaded", from: "file", clock: START_CLOCK, frame: frameSpec(), error: (err as Error).message, game });
+          // T-3773: to the start menu, the game the player came from left as it is in storage
+          const panicked = isPanic(err) ? afterLoadPanic(err) : null;
+          letGoSlot();
+          const from = g.view ? "view" : pending?.kind === "restore" ? "restore" : "file";
+          send({ kind: "openFailed", from, slot: pending?.kind === "restore" ? backupSlot(pending.key) : undefined, name: g.name, ...openFailReason(err, panicked, (err as Error).message) });
+          return;
         }
       }
       if (!msg.fresh && !msg.newSlot) await stampAll(null).catch(() => {}); // T-2037
@@ -4104,23 +4120,18 @@ async function processMessage(msg: ToClock) {
         } catch (err) {
           // T-2820: first, so a panic's stopped model is out of the way of everything below
           const panicked = isPanic(err) ? afterLoadPanic(err) : null;
-          // Keep the unreadable save aside, and its slot as it is: the new game gets a slot of its own (T-743).
-          await writeStored(unreadableKey(saves.activeSlot, stored.at), stored);
-          // T-3395: a damaged slot is marked so (never uploaded) and its last good copy found; the new game
-          // below has a new slot and no sync record, so nothing of it is written over the game
+          const key = saves.activeSlot;
+          // Keep the unreadable save aside (T-743), its slot as it is
+          await writeStored(unreadableKey(key, stored.at), stored).catch(() => {});
+          // T-3395: a damaged slot is marked so (never uploaded) and its last good copy found
           const damaged = isDamagedError(err);
-          if (damaged && saves.activeLease) { await markDamaged(saves.activeSlot, stored.at); await rescueGood(saves.activeSlot); }
-          if (saves.activeLease) {
-            saves.activeLease.release();
-            saves.activeSlot = "slot-" + crypto.randomUUID();
-            saves.newSlotName = { key: saves.activeSlot, name: nextGameName(await listSlots().catch(() => [])) };
-            saves.unwritten = saves.activeSlot;
-            heldNew();
-            hold(await leaseSlot(saves.activeSlot));
-            await publishSlots();
-          }
-          if (panicked !== null) send({ kind: "loaded", from: "new", clock: START_CLOCK, error: SAVE_PANIC, why: panicked, frame: frameSpec(), game });
-          else send({ kind: "loaded", from: "new", clock: START_CLOCK, error: (console.error("last game did not load:", err), damaged ? SAVE_DAMAGED : loadFailKey(String(err))), frame: frameSpec(), game });
+          if (damaged && saves.activeLease) { await markDamaged(key, stored.at).catch(() => {}); await rescueGood(key).catch(() => {}); }
+          // T-3773: no game of its own takes over (an empty one read as the save lost): the page goes to the start
+          // menu, holding no slot meanwhile
+          letGoSlot();
+          send({ kind: "openFailed", from: "slot", slot: key, name: slotName(key, stored), ...openFailReason(err, panicked, damaged ? SAVE_DAMAGED : loadFailKey(String(err))) });
+          if (panicked === null) console.error("last game did not load:", err);
+          return;
         }
       }
       keep();
@@ -4130,11 +4141,7 @@ async function processMessage(msg: ToClock) {
       send({ kind: "snapshot", snapshot: buildSnapshot() });
     })().catch((err) => {
       // T-2703: a start that failed (a slot that could not be read among the causes) writes no slot
-      saves.activeLease?.release();
-      hold(null);
-      saves.activeSlot = "";
-      saves.unwritten = null;
-      saves.newSlotName = null;
+      letGoSlot();
       const storage = err instanceof StorageReadError;
       // T-2820: after a panic nothing more is asked of the model, and the error is the first one
       if (isPanic(err)) modelDown = true;

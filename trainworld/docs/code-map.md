@@ -320,7 +320,8 @@ the network: `TrackApi`, notes/T-025.md; money too; an edit's follow-up (state, 
 with a panel per city, T-894), `slots.ts` (the save slot of the game in hand, T-3734: `writeBlock`, whether and why the
 slot may not be written now; `publishSlots`, autosave, the save by hand, the saves panel's actions, the slot's lease
 against other tabs, the cloud queue; its state is the one object `saves`, which the clock worker also reads and
-writes, and it reaches the game through the `SlotHost` the worker binds), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
+writes, and it reaches the game through the `SlotHost` the worker binds; `letGoSlot` for a start or open that failed,
+whose record is game/openFailures.ts, T-3773), `stateRows.ts` (`StateRows`: the state's edge, node and line rows
 kept between edits and read from the track model again only where `take_changed_lines` and
 `take_name_changes` say they changed; station names kept by node, phase tables per line; T-1382, T-1540), `platformLines.ts` (each
 station's drawn platform line in world units, on its node row, for the complexes; T-1859), `saveFile.ts` (the save format

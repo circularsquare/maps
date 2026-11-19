@@ -31,6 +31,7 @@ import { CommunityButton } from "./Community";
 import { dismissUpdate, updateToShow } from "./updates";
 import { accountBackupFile, accountList, accountOnly, cardOf, damagedAccount, deleteOwed, deleteVersions, downloadAccountGame, downloadFailure, pinnedFile, settleOnStart, slotsChanged, stopStartSettle } from "../game/accountGames";
 import { t } from "../i18n";
+import { takeOpenFailNotice } from "../game/openFailures";
 
 declare const __TW_VERSION__: string | undefined;
 /** The build's commit count (vite.config.ts), "dev" on a dev server. */
@@ -179,7 +180,8 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
   const changed = slotsChanged.value;
   useEffect(() => { if (changed) void listSlots().then(setSlots, () => {}); }, [changed]);
   // T-1197: a saved game too big for this device is refused with the reason
-  const [refused, setRefused] = useState<string | null>(null);
+  // T-3773: or why the game the page went to did not open (it came back here)
+  const [refused, setRefused] = useState<string | null>(takeOpenFailNotice);
   // T-3061: the device check is a guess (browsers round a device's memory down), so it warns and offers to load anyway
   // T-3073: `go(true)` loads it without inter-city trips; any other pick here has them again
   const [warned, setWarned] = useState<{ text: string; go: (lite?: boolean) => void } | null>(null);

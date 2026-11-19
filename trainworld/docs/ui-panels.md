@@ -1166,6 +1166,10 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
   versions start open, the first row "Last undamaged copy · Saved Nov 14 at 15:31 · Day 26 · 164
   stations" with "Open a copy" (a new slot, as a backup opens); with none, a muted line under the
   card's foot, "No undamaged copy of this game is left".
+- **A game that failed to open** [T-3773; architecture.md "No slot is written over"]: the page is back on the
+  start menu, whose grey line says "Cut short could not be opened." once (a file, a
+  backup or a viewed network: the reason alone), and the card's red line gives the reason until the game opens:
+  "This save is damaged.", "This save could not be opened (<panic>).", or the device's out-of-memory line.
 - **A game saved by a newer version** [T-1826; architecture.md "Saves from a newer build"]: the
   top bar and the callout say "This game was saved by a newer version. Reload the page to
   update."; Save refuses with the same words (its hover too). Download's hover is "Download as a

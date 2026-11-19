@@ -115,6 +115,16 @@ export function hold(lease: SlotLease | null) {
   });
 }
 
+/** T-2703, T-3773: a start or an open that failed holds no slot (`writeBlock` "noLease"), so nothing it does
+ * afterwards can write one */
+export function letGoSlot() {
+  saves.activeLease?.release();
+  hold(null);
+  saves.activeSlot = "";
+  saves.unwritten = null;
+  saves.newSlotName = null;
+}
+
 const slotChanges = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("anitabuilder-save-slots");
 slotChanges?.addEventListener("message", () => { if (host.api()) void publishSlots(); });
 const NEWER: MessageKey = "clockWorker.newer";

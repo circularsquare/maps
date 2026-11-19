@@ -6,8 +6,8 @@
 //      again (one PUT over two loads); a slot whose account copy is damaged is left as it is; an account game
 //      whose copy is damaged says so on Open, lists its pinned copy as "Last undamaged copy", and "Open a
 //      copy" opens it as a new game; one with no pin says none is left; a damaged tied slot that fails to
-//      load starts a new game in a new slot and nothing is uploaded over the account's copy, and its
-//      Saves card lists the pinned copy, which opens as a copy.
+//      load goes back to the start menu (T-3773), no slot is added and nothing is uploaded over the account's
+//      copy, and its card there lists the pinned copy, which opens as a copy.
 //   L: a damaged slot's newest intact backup becomes its good copy and opens as a copy; with no backup the
 //      card says none is left; a damaged file says "This save is damaged.", a non-save "not a saved game";
 //      a damaged slot never becomes a pull backup; autosave backups keep a good copy.
@@ -59,15 +59,16 @@ const NETCUT = (() => {
   const raw = gunzipSync(REAL), n = raw.readUInt32LE(4);
   return new Uint8Array(gzipSync(raw.subarray(0, 8 + n + Math.floor((raw.length - 8 - n) * 0.6))));
 })();
-/** the real save at save level 19: whole, but past what the server's check reads, so stored unverified and never pinned */
-const LEVEL19 = (() => {
+/** the real save at save level `level`: past what the server's check reads, it is stored unverified and never pinned
+ * (the browser only ever meets these copies cut short) */
+const atLevel = (level) => {
   const raw = gunzipSync(REAL), n = raw.readUInt32LE(4);
   const h = JSON.parse(raw.subarray(8, 8 + n).toString('utf8'));
-  h.level = 19;
+  h.level = level;
   const json = Buffer.from(JSON.stringify(h)), head = Buffer.alloc(8);
   head.write('TWG1', 0, 'latin1'); head.writeUInt32LE(json.length, 4);
   return new Uint8Array(gzipSync(Buffer.concat([head, json, raw.subarray(8 + n)])));
-})();
+};
 
 // ---- the server
 let server = null;
@@ -90,6 +91,10 @@ function buildServer(rev, name) {
 }
 const head = spawnSync('git', ['-C', src, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
 const exe = EXE ?? buildServer(head, 'shonei');
+/** one past the level the server's check reads (`twSaveLevel` at the server's HEAD); a fixed level went stale as the
+ * server learned each new one */
+const PAST_LEVEL = Number(/twSaveLevel\s*=\s*(\d+)/.exec(spawnSync('git', ['-C', src, 'show', head + ':trainworld_savecheck.go'], { encoding: 'utf8' }).stdout)?.[1]) + 1;
+const LEVEL19 = atLevel(PAST_LEVEL);
 if (!OLD_EXE && OLD_REV) OLD_EXE = buildServer(OLD_REV, 'shonei-old');
 const run = join(dataDir, 'run');
 mkdirSync(run);
@@ -134,7 +139,7 @@ const r1 = await put(G1, REAL, 0, NAMES[G1]);
 report('a whole save goes up and is pinned', r1.status === 200 && r1.json?.check === 'intact', JSON.stringify(r1.json));
 await put(G2, REAL, 0, NAMES[G2]);
 const r2 = await put(G2, LEVEL19, 1, NAMES[G2]);
-report('a level 19 save is stored unverified', r2.status === 200 && r2.json?.check === 'unverified', JSON.stringify(r2.json));
+report('a level ' + PAST_LEVEL + ' save is stored unverified', r2.status === 200 && r2.json?.check === 'unverified', JSON.stringify(r2.json));
 cutStored(G2, 2);
 await put(G3, LEVEL19, 0, NAMES[G3]);
 cutStored(G3, 1);
@@ -176,10 +181,6 @@ async function open(d, query = '') {
 const inGame = (p) => p.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
 const startMenu = (p, saves = true) => p.waitForSelector(saves ? '.start-menu .start-saves' : '.start-menu', { timeout: 120000 });
 const theme = (p, shade) => p.evaluate(async (shade) => { (await import('/src/game/ui.ts')).shade.value = shade; }, shade);
-const panel = async (p, on = true) => {
-  await p.evaluate(async (on) => { (await import('/src/ui/SavesPanel.tsx')).savesOpen.value = on; }, on);
-  if (on) { await p.waitForSelector('.saves-panel .save-files'); await p.waitForTimeout(1200); }
-};
 /** what IndexedDB holds for a slot (bytes length, damaged, its record) and every key */
 const storeOf = (p, key) => p.evaluate(async (key) => {
   const sf = await import('/src/workers/saveFile.ts');
@@ -267,31 +268,29 @@ try {
   await s.waitForTimeout(6000);
   report('the refused bytes are sent once over two loads; the cut-short ones never', S.puts[G1] === 1 && !S.puts[G7], JSON.stringify(S.puts));
 
-  // G4: opening the damaged tied slot
+  // G4: opening the damaged tied slot: back to the start menu, the slot as it was (T-3773)
   const putsBefore = S.puts[G4] ?? 0;
+  const keys4 = (await slotsOf(s)).map((x) => x.key).sort().join();
   s = await open(S, '&slot=slot-g4&paused=1');
-  await inGame(s);
-  const said = await until(() => s.evaluate(() => document.body.innerText.includes('This save is damaged.')), 20000);
-  report('failed load says the save is damaged', !!said);
+  const said = await until(() => s.evaluate(() => document.querySelector('.start-menu .start-refused')?.textContent ?? ''), 60000);
+  report('failed load: back on the start menu, saying so', said === 'Failed load could not be opened.', JSON.stringify(said));
+  await startMenu(s);
   await s.waitForTimeout(8000);
-  const act4 = await s.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active);
-  const g4 = await storeOf(s, 'slot-g4'), rec4 = await s.evaluate(async (k) => (await import('/src/workers/saveFile.ts')).readSync(k), act4);
-  report('failed load: a new slot with no tie to the game', act4 !== 'slot-g4' && act4.startsWith('slot-') && (!rec4 || rec4.id !== G4), JSON.stringify({ act4, rec4 }));
+  const g4 = await storeOf(s, 'slot-g4');
+  report('failed load: no slot added', (await slotsOf(s)).map((x) => x.key).sort().join() === keys4, JSON.stringify((await slotsOf(s)).map((x) => x.key)));
   report('failed load: the damaged slot is kept and marked', g4.bytes === DAMAGED.length && g4.damaged && g4.rec?.id === G4 && g4.keys.some((k) => String(k).startsWith('unreadable-')), JSON.stringify({ bytes: g4.bytes, damaged: g4.damaged }));
   const a4 = await gameOf(G4);
   report('failed load: nothing went up over the account game', (S.puts[G4] ?? 0) === putsBefore && a4?.rev === 1, JSON.stringify({ puts: S.puts[G4] ?? 0, rev: a4?.rev }));
-  await panel(s);
-  const card4 = 'li[data-slot="slot-g4"]';
+  const card4 = '.start-saves > li:has(button[data-slot="slot-g4"])';
   const row4 = card4 + ' li[data-kind="pinned"]';
   await until(() => s.locator(row4).count(), 10000);
-  report('Saves: the damaged card says so', (await text(s, card4 + ' .save-damaged')) === 'This save is damaged.');
-  report('Saves: its last undamaged copy is listed, open', /^Last undamaged copy · Saved/.test((await text(s, row4 + ' .save-version')).replace(/\s+/g, ' ')) && (await text(s, row4 + ' .save-version-open')) === 'Open a copy');
+  report('menu: the damaged card says so', (await text(s, card4 + ' .save-damaged')) === 'This save is damaged.');
+  report('menu: its last undamaged copy is listed, open', /^Last undamaged copy · Saved/.test((await text(s, row4 + ' .save-version')).replace(/\s+/g, ' ')) && (await text(s, row4 + ' .save-version-open')) === 'Open a copy');
   for (const sh of ['light', 'dark']) { await theme(s, sh); await s.waitForTimeout(500); await s.locator(card4).scrollIntoViewIfNeeded(); await shot(s, 't3395-restore-' + sh + '.png'); }
   await theme(s, 'light');
   await s.click(row4 + ' .save-version-open');
-  await s.waitForURL((u) => !u.searchParams.has('slot'), { timeout: 60000 }).catch(() => {});
   await inGame(s);
-  const opened4 = await until(async () => { const l = await slotsOf(s); const act = await s.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active); const x = l.find((y) => y.key === act); return x?.lines && act !== act4 && act !== 'slot-g4' ? { x, act } : null; }, 60000);
+  const opened4 = await until(async () => { const l = await slotsOf(s); const act = await s.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active); const x = l.find((y) => y.key === act); return x?.lines && act !== 'slot-g4' ? { x, act } : null; }, 60000);
   report('Open a copy: the pinned copy plays in a slot of its own', !!opened4 && opened4.x.lines > 100, JSON.stringify(opened4?.x));
   const after4 = await storeOf(s, 'slot-g4');
   report('Open a copy: the damaged original stays', after4.bytes === DAMAGED.length && (await gameOf(G4))?.rev === 1);
@@ -331,23 +330,23 @@ try {
   report('deleting a slot removes its copy kept aside', unit.keptAside && !unit.asideAfterDelete);
   report('an autosave backup keeps the good copy beside tier 0', unit.backupGood);
 
+  // T-3773: each fails to open and the page goes back to the start menu
+  const backOnMenu = async (name) => /could not be opened/.test(await until(() => l.evaluate(() => document.querySelector('.start-menu .start-refused')?.textContent ?? ''), 60000) ?? '') && !!await startMenu(l);
   l = await open(L, '&slot=slot-l2&paused=1');
-  await inGame(l);
-  await until(() => l.evaluate(() => document.body.innerText.includes('This save is damaged.')), 20000);
+  report('a damaged browser game goes back to the menu', await backOnMenu());
   l = await open(L, '&slot=slot-l1&paused=1');
-  await inGame(l);
-  await until(() => l.evaluate(() => document.body.innerText.includes('This save is damaged.')), 20000);
+  report('another damaged browser game goes back to the menu', await backOnMenu());
   const l1 = await until(async () => { const x = await storeOf(l, 'slot-l1'); return x.keys.includes('backup:slot-l1:good') ? x : null; }, 15000);
   const good = await l.evaluate(async () => (await (await import('/src/workers/saveFile.ts')).readStored('backup:slot-l1:good'))?.bytes.length);
   report('damaged slot: its newest whole backup becomes the good copy', !!l1 && l1.damaged && good === REAL.length, JSON.stringify({ good }));
-  await panel(l);
-  const none2 = await text(l, 'li[data-slot="slot-l2"] .save-none-left');
+  const cardL = (key) => `.start-saves > li:has(button[data-slot="${key}"])`;
+  await until(() => l.locator(cardL('slot-l1') + ' li[data-version]').count(), 10000);
+  const none2 = await text(l, cardL('slot-l2') + ' .save-none-left');
   report('a damaged browser game with no whole backup: none left', none2 === 'No undamaged copy of this game is left', JSON.stringify(none2));
-  const row1 = 'li[data-slot="slot-l1"] li[data-version="backup:slot-l1:good"]';
-  report('Saves: the good copy is listed first, as the last undamaged copy',
-    (await l.locator('li[data-slot="slot-l1"] li[data-version]').first().getAttribute('data-version')) === 'backup:slot-l1:good' && /^Last undamaged copy/.test(await text(l, row1)));
+  const row1 = cardL('slot-l1') + ' li[data-version="backup:slot-l1:good"]';
+  report('menu: the good copy is listed first, as the last undamaged copy',
+    (await l.locator(cardL('slot-l1') + ' li[data-version]').first().getAttribute('data-version')) === 'backup:slot-l1:good' && /^Last undamaged copy/.test(await text(l, row1)));
   await l.click(row1 + ' .save-version-open');
-  await l.waitForURL((u) => !u.searchParams.has('slot'), { timeout: 60000 }).catch(() => {});
   await inGame(l);
   const openedL = await until(async () => { const ls = await slotsOf(l); const act = await l.evaluate(async () => (await import('/src/workers/clockClient.ts')).saveSlotsState.value.active); const x = ls.find((y) => y.key === act); return x?.lines && !['slot-l1', 'slot-l2'].includes(act) ? x : null; }, 60000);
   report('the good copy opens as a copy; the damaged slot stays', !!openedL && openedL.lines > 100 && (await storeOf(l, 'slot-l1')).bytes === DAMAGED.length, JSON.stringify(openedL));

@@ -32,6 +32,7 @@ import { Money } from "./MoneyText";
 import { gameSeconds, playedText } from "../game/gameTime";
 import { NewGameSheet } from "./NewGame";
 import { t, tDate, tList } from "../i18n";
+import { openFailText } from "../game/openFailures";
 import { tPlace } from "../i18n/places";
 
 /** The saves panel is open. */
@@ -89,6 +90,7 @@ export function SlotThumb({ slot }: { slot: SaveSlot }) {
 export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveSlot; now: number; autosaved?: boolean; mark?: ComponentChildren; /** T-3257: a viewed network, never saved */ unsaved?: boolean }) {
   const when = savedWhen(slot.at, now, !!autosaved);
   const cities = cityList(slot.cities ?? []), played = slot.key ? gameSeconds(slot.key) : undefined;
+  const failed = slot.key ? openFailText(slot.key) : null;
   // T-3610: a record the browser could not read has no time or day, only the damaged line below
   if (slot.unreadable) return <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div>;
   return <>
@@ -108,9 +110,11 @@ export function SlotFacts({ slot, now, autosaved, mark, unsaved }: { slot: SaveS
       </>}
     </div>}
     {!!slot.stations && <div class={"small num " + (overBudget(slot.stations) ? "memory-bad" : "muted")} data-tip={t("savesPanel.memoryTip", { gb: gbText(estimateGB(slot.stations)) })}>{t("savesPanel.memory", { gb: gbText(estimateGB(slot.stations)) })}</div>}
-    {/* T-3395: the account refused this copy as damaged, or it failed to load as damaged */}
+    {/* T-3395: the account refused this copy as damaged, or it failed to load as damaged; T-3773: or why it last
+        failed to open here */}
     {slot.cloud?.error === WHY_DAMAGED ? <div class="small bad save-damaged">{whyText(WHY_DAMAGED)}</div>
-      : slot.damaged ? <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div> : null}
+      : slot.damaged ? <div class="small bad save-damaged">{t("clockWorker.saveDamaged")}</div>
+      : failed ? <div class="small bad save-damaged save-open-failed">{failed}</div> : null}
   </>;
 }
 

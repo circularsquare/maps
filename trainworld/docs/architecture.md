@@ -556,10 +556,17 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   named after the file without `.save` and written at once; a restored backup's (this browser's or
   the account's) takes the name of the game it backs up and is a version of that game (T-2037,
   "Versions of one game" below). A tab without its slot's lock must make a copy before leaving a changed
-  game. On a test page the game is replaced in the page and owns no slot. A slot that cannot be
-  read on start stays as it is (its bytes also under `unreadable-<time>:<slot>`, deleted with the slot) and the new game gets a
-  slot of its own ("Game N"), with no sync record, so nothing of it is uploaded over the account's
-  copy; one that fails as damaged is marked so ("Damaged saves" below). The start menu's New game always takes a new slot, even with nothing
+  game. On a test page the game is replaced in the page and owns no slot. **A game that fails to open goes
+  back to the start menu** [T-3773]: a saved game (Saved games, an account game, the slot resumed at page
+  load), a file, a backup or a viewed network whose load throws in the clock worker (damaged, a panic, a
+  failed allocation). The worker lets go of every slot (`letGoSlot`, the "noLease" write block, as a start
+  that failed, T-2703), starts no game, and sends `openFailed`; the page records it and reloads to the menu,
+  so nothing is written to any slot and nothing goes up to the account. The slot stays as it is (its bytes also
+  under `unreadable-<time>:<slot>`, deleted with the slot); one that fails as damaged is marked so ("Damaged
+  saves" below). The record, `localStorage` `tw-open-failures` (`game/openFailures.ts`: a count and the last
+  10 failures, each with slot, name, what was opened, the reason and the build), gives the menu its notice
+  (once) and the saved game's card its reason until that slot opens, and is there for feedback reports (T-3774). A
+  real network's new game that fails still starts empty in its new slot. The start menu's New game always takes a new slot, even with nothing
   saved (T-728); the original slot `autosave` is only ever an old one.
 - **Real networks** [T-731]: `packs/real/<id>.save` for New York, London, Paris, Tokyo, Seoul,
   Toronto and Sendai, made by hand from timetables, and [T-3225] the cities in `pipeline/realauto.json`

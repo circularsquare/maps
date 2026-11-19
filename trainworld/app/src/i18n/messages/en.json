@@ -2019,6 +2019,7 @@
   "startMenu.loadFile": "Load from file",
   "startMenu.loadWithoutIntercity": "Load without intercity trips",
   "startMenu.newGame": "New game",
+  "startMenu.openFailed": "{name} could not be opened.",
   "startMenu.openElsewhere": "That game is open in another tab. Close it before deleting it.",
   "startMenu.savedGames": "Saved games",
   "startMenu.welcome": "Welcome to trainsworld!",

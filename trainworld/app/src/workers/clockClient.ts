@@ -35,6 +35,7 @@ import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry, perfOff } from "../perfFlags";
 import { anchor, anchorWanted, EARTH_C, HOME_ANCHOR, makeAnchor, setAnchor, type Anchor } from "../map/geo";
 import { loadFailText } from "../game/loadText";
+import { noteOpenFailure, openedFine } from "../game/openFailures";
 import { decodeSave, isDamagedError, isUncheckedError, readStored, writePending, type GuideSave, type NewGameSpec, type PendingLoad, type SaveSlot } from "./saveFile";
 import type { CloudContext } from "./cloud";
 import type { FrameSpec } from "../game/frame";
@@ -709,9 +710,10 @@ export class ClockClient {
     if (!choice.slot) try { slot = localStorage.getItem("anitabuilder-save-slot") || slot; } catch { /* storage unavailable */ }
     const backupMs = Number(q.get("backupMs")) || undefined;
     const readFails = q.get("debug") === "1" ? Number(q.get("readFails")) || undefined : undefined;
+    const loadPanic = (q.get("debug") === "1" && q.get("loadPanic") === "1") || undefined;
     this.patchMode = q.get("patch") ?? "1";
     // (first, before any message posted ahead of the start)
-    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
+    this.waiting.unshift([{ kind: "init", pack: dataUrl(this.cityId), terrain: TERRAIN_BASE, fresh, testPage: this.testPage, slot, newSlot: choice.newSlot, backupMs, game: choice.game, pending: choice.pending, patch: this.patchMode, guide: !guideFinished.peek(), bandMode: bandTry(), readFails, loadPanic, heapStep: heapStep() } satisfies ToClock, choice.game?.real ? [choice.game.real] : []]);
     // T-2802: the page's parse of the outlines, copied, in place of the worker's own fetch and parse
     void packedOutlines().then((packed) => this.post({ kind: "outlines", packed }));
   }
@@ -1261,6 +1263,13 @@ export class ClockClient {
         clock.set(msg.clock);
         if (msg.from === "file") say(t("clockClient.loaded", { day: Math.floor(msg.clock / 86400) }));
         if (msg.from === "new" && !msg.error) say(t("clockClient.newGame"));
+        if (!msg.error && msg.from === "autosave") openedFine(msg.slot);
+        break;
+      case "openFailed":
+        // T-3773: the worker holds no slot now; the start menu says why, and the saved game is as it was
+        console.warn("clock worker: a game did not open, back to the start menu:", msg.why ?? msg.error); // i18n-ignore (the worker logged the error)
+        noteOpenFailure({ from: msg.from, slot: msg.slot, name: msg.name, error: msg.error, why: msg.why });
+        toStartMenu();
         break;
       case "left": {
         const then = this.onLeft;

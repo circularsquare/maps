@@ -2016,6 +2016,7 @@
   "startMenu.loadFile": "Button on the start menu: picks a .save file from the computer.",
   "startMenu.loadWithoutIntercity": "Button on the start menu beside Load anyway, shown with the memory warning: loads the save without trips between cities, which takes less memory. The save itself is not changed.",
   "startMenu.newGame": "Button on the start menu, and the heading of the new game sheet on it.",
+  "startMenu.openFailed": "Grey text on the start menu after a saved game failed to open (damaged, or the game crashed or ran out of memory while opening it) and the page came back to the menu. {name} is the saved game's name. The save is left untouched; its card on the menu says why it failed.",
   "startMenu.openElsewhere": "Grey text on the start menu when the player deletes a game that another browser tab has open.",
   "startMenu.savedGames": "Heading above the list of saved games on the start menu.",
   "startMenu.welcome": "Heading of the start menu when the logo is turned off (a debug switch).",
