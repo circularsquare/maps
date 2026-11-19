@@ -1856,7 +1856,16 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   `baseTrips`; docs/demand-worldwide.md).
   A quad-track twin carries its line's; a deleted line's is kept in hand, not saved, until an undo brings the line
   back or a new line takes its id [T-3581] (the clock's `tidyLineFares`). So a trip pays base x M + (curve(km) - base) x
-  (1 + (m - 1) x its share of km on high-speed lines), M its lines' largest own multiple. Demand takes it as each route node's
+  (1 + (m - 1) x its share of km on high-speed lines), M its lines' largest own multiple.
+  **Fare zones** [T-3740, `game/fareZones.ts`]: a station may carry a fare area and zone number (`StationData::fare`,
+  area id << 8 | zone 1-255, saved in `LFZ1`, an undoable edit); the areas and their prices (one per zone count,
+  1 to `MAX_ZONES` 12, the last for any more, never falling, held to `FARE_MAX`, and as charged never below the base)
+  are `Fares.zones` in the header, with `zoneNext` so no area id is used twice. A trip whose first boarding station
+  and destination station are in one area pays that area's price for the zones from the lower number to the higher,
+  both counted, in the curve's place in the formula above (`FareCurve::pair_extra`); any other trip, a bus stop that
+  is no station included, pays the curve. Prices are curve units: a city's populations take them times their
+  country's rate multiple (`countryFareScales`), the market as set. The player's tool is not built yet (notes/T-3740.md).
+  Demand takes it as each route node's
   multiplier (`set_fare_mul`, `Graph::rn_fare_mul`): ride edges charge their rate times it, a
   station pair's curve extra is times the strategy's expected high-speed-weighted km over its km,
   and the assignment spreads the extra over each km times its multiplier; the market's income

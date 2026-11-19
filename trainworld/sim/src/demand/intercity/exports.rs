@@ -146,7 +146,7 @@ impl IntercityApi {
         };
         let net = DemandApi::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_zones, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let (mut fac, mut uniform) = (no_crowding, true);
@@ -290,6 +290,16 @@ impl IntercityApi {
         let mul = if mul.iter().all(|&v| v == 1.) { &[][..] } else { mul };
         if !same_bits(mul, &self.base_mul) {
             self.base_mul = mul.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+        }
+        Ok(())
+    }
+    /// T-3740: `DemandApi::set_fare_zones`, at the curve's fares as set (as the market's curve).
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
+        crate::demand::api::check_fare_zones(st, off, usd)?;
+        let z = self.svc.as_ref().map_or_else(Default::default, |s| crate::demand::api::demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd));
+        if z != self.fare_zones {
+            self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);
         }
         Ok(())

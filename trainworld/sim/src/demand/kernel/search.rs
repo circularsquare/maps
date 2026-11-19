@@ -114,11 +114,59 @@ pub struct FareCurve {
     pub min: Vec<f32>,
     pub base: f32,
     pub rate: f32,
+    /// T-3740: the fare zones, which take the curve's place for a trip with both ends in one area
+    /// (`pair_extra`); empty with none. `base` and `rate` are set whenever these are.
+    pub zones: FareZones,
+}
+
+/// T-3740: the player's fare zones. Per station 0 for none, else (area index + 1) << 8 | zone
+/// number; per area its prices for 1, 2, ... zones (`min[off[a]..off[a + 1]]`, the last for any
+/// more), US$ as set or perceived minutes on a graph. A trip counts its start and end zones only.
+#[derive(Clone, Default, PartialEq, Debug)]
+pub struct FareZones {
+    pub st: Vec<u32>,
+    pub off: Vec<u32>,
+    pub min: Vec<f32>,
+}
+
+impl FareZones {
+    pub fn is_empty(&self) -> bool {
+        self.st.is_empty()
+    }
+    /// The zone price of a trip from station `a` to station `b`, if both are in one area.
+    #[inline]
+    pub fn price(&self, a: usize, b: usize) -> Option<f32> {
+        let (x, y) = (*self.st.get(a)?, *self.st.get(b)?);
+        if x == 0 || y == 0 || x >> 8 != y >> 8 {
+            return None;
+        }
+        let area = (x >> 8) as usize - 1;
+        let (lo, hi) = (*self.off.get(area)? as usize, *self.off.get(area + 1)? as usize);
+        if hi <= lo || hi > self.min.len() {
+            return None;
+        }
+        let k = (x & 255).abs_diff(y & 255) as usize;
+        Some(self.min[(lo + k).min(hi - 1)])
+    }
 }
 
 impl FareCurve {
     pub fn is_line(&self) -> bool {
         self.km.len() < 2
+    }
+    /// Whether every trip pays the straight line (no curve, no fare zones): its fare km are then
+    /// never needed.
+    pub fn flat(&self) -> bool {
+        self.is_line() && self.zones.is_empty()
+    }
+    /// T-3740: `extra` for a trip of `km` from station `src` to station `dst`: the zone price's
+    /// part over the base and rate where both are in one fare area, else the curve's.
+    #[inline]
+    pub fn pair_extra(&self, src: usize, dst: usize, km: f32) -> f32 {
+        match self.zones.price(src, dst) {
+            Some(m) => m - self.base - self.rate * km,
+            None => self.extra(km),
+        }
     }
     /// The curve's fare for a trip of `km`, perceived minutes.
     pub fn at(&self, km: f32) -> f32 {
@@ -778,7 +826,7 @@ pub fn board_extra(g: &Graph, st: Strategy, dst: usize, col: impl Fn(usize) -> f
     // T-1626: a trip's extra a km lands on each km times its multiplier, so the trip pays it times
     // its km-weighted multiplier, as `DestSearch::run` priced it
     let hops = if g.rn_kmw.is_empty() { &g.rn_km } else { &g.rn_kmw };
-    let extra = |src: usize| g.fare_curve.extra(km[src]);
+    let extra = |src: usize| g.fare_curve.pair_extra(src, dst, km[src]);
     match (st.next, st.order) {
         (NodeIds::Short(next), NodeIds::Short(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
         (NodeIds::Long(next), NodeIds::Long(order)) => board_extra_in(g, st, dst, next, order, col, km, extra, hops, dep, q, out),
@@ -1056,7 +1104,7 @@ impl<'a> DestSearch<'a> {
         let mut d = DestStrategy { next: NodeIds::of(&q.next, ids), board: std::mem::take(&mut q.board), order: NodeIds::of(&q.order, ids), change: q.change_nodes(), entry: Box::new([]), start };
         if let Some(mut put) = put {
             let curve = &q.g.fare_curve;
-            let bent = !curve.is_line();
+            let bent = !curve.flat();
             let weighed = bent && !q.g.rn_kmw.is_empty();
             if bent {
                 trip_km(q.g, d.view(), dst, &mut self.km, &mut self.dep);
@@ -1081,7 +1129,7 @@ impl<'a> DestSearch<'a> {
                     continue;
                 }
                 // The first boarding is not a transfer; the trip's base fare is added later.
-                let x = if bent { curve.extra(self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
+                let x = if bent { curve.pair_extra(src, dst, self.km[src]) * if weighed { fare_mul_of(self.km[src], self.kmw[src]) } else { 1.0 } } else { 0.0 };
                 let change = q.p.change_at(q.g.change_f(src));
                 let b = if based { base_extra(q.g, self.mb[src]) } else { 0.0 };
                 col.push(q.dist[src] - change + x + b);

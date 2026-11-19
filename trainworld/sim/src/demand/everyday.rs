@@ -602,7 +602,7 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
     let mut km: Vec<f32> = vec![];
     let mut fxq: Vec<f32> = vec![];
     let mut mb: Vec<f32> = vec![];
-    let bent = !g.fare_curve.is_line();
+    let bent = !g.fare_curve.flat();
     // T-3578
     let based = !g.rn_base_mul.is_empty();
     let used: Vec<(usize, &[u32])> = cols.off.iter().enumerate().filter(|(_, o)| !o.is_empty()).map(|(k, o)| (k, &o[..])).collect();
@@ -2142,6 +2142,14 @@ impl EverydayApi {
         }
         Ok(())
     }
+    /// T-3740: `DemandApi::set_fare_zones`.
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
+        self.engine.set_fare_zones(st, off, usd)?;
+        if self.engine.same == 0 {
+            self.per.iter_mut().for_each(|v| *v = None);
+        }
+        Ok(())
+    }
     /// T-2196: which lines are ferries, a byte a line in `set_network`'s order (1 a ferry), after
     /// it; empty with none. Their fans ride them (`FAN_SHARE`).
     pub fn set_ferry(&mut self, lines: &[u8]) -> Result<(), String> {
@@ -2199,7 +2207,7 @@ impl EverydayApi {
         };
         let net = DemandApi::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_km, &self.engine.fare_mul, &self.engine.base_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_zones, &self.engine.fare_km, &self.engine.fare_mul, &self.engine.base_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);
@@ -2257,7 +2265,7 @@ impl EverydayApi {
         if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
             return false;
         }
-        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_km, &self.engine.fare_mul, &self.engine.base_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+        put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_zones, &self.engine.fare_km, &self.engine.fare_mul, &self.engine.base_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
         let fac = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &fac);
         let xi = xfer_index(&g);

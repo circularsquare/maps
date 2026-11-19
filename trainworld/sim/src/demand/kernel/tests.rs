@@ -85,7 +85,7 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
         if knots.len() >= 2 {
-            g.fare_curve = FareCurve { km: knots.iter().map(|k| k.0).collect(), min: knots.iter().map(|k| k.1).collect(), base, rate };
+            g.fare_curve = FareCurve { km: knots.iter().map(|k| k.0).collect(), min: knots.iter().map(|k| k.1).collect(), base, rate, ..Default::default() };
             g.rn_km = vec![20.0; g.rn_ride.len()];
         }
         g
@@ -122,6 +122,89 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
     assert!(assign(&graph(&[]), &skims(&graph(&[]), &p), &od).rn_fare_x.iter().all(|&x| x == 0.0));
 }
 
+/// T-3740: fare zones on a straight curve. One line 0-1-2-3 of 20 km stretches; stations 0, 1, 2 in
+/// area 1 at zones 2, 1, 2 and station 3 in area 2. A trip counts its start and end zones only: 0 -> 2
+/// rides through zone 1 and pays 1 zone, 0 -> 1 pays 2; 2 -> 3 crosses areas and pays the line. The
+/// route cost carries the zone price in the line's place, the assignment puts the difference on the
+/// km ridden, and the trip explorer's legs add up to the price over the base. No zones is no change.
+#[test]
+fn fare_zones_charge_the_start_and_end_zones_in_the_curves_place() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[6.0]);
+    let (base, rate) = (4.5f32, 0.05f32);
+    let km = [20.0, 20.0, 20.0, 0.0, 20.0, 20.0, 20.0, 0.0];
+    let graph = |zones: Option<FareZones>| {
+        let mut g = build_graph(&net, &p);
+        g.rn_fare = km.iter().map(|k| k * rate).collect();
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        if let Some(z) = zones {
+            g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
+            g.rn_km = km.to_vec();
+        }
+        g
+    };
+    let code = |area: u32, zone: u32| area << 8 | zone;
+    let zones = FareZones { st: vec![code(1, 2), code(1, 1), code(1, 2), code(2, 1)], off: vec![0, 3, 4], min: vec![5.0, 7.0, 9.0, 6.0] };
+    let plain_g = graph(None);
+    let plain = skims(&plain_g, &p);
+    let g = graph(Some(zones.clone()));
+    let sk = skims(&g, &p);
+    let at = |r: &[f32], i: usize, j: usize| r[i * 4 + j];
+    for (i, j, price, k) in [(0, 2, 5.0, 40.0), (2, 0, 5.0, 40.0), (0, 1, 7.0, 20.0), (1, 2, 7.0, 20.0), (1, 0, 7.0, 20.0)] {
+        let d = at(&sk.r, i, j) - at(&plain.r, i, j);
+        let want = price - base - rate * k;
+        assert!((d - want).abs() < 1e-4, "{i} -> {j} adds {d}, want {want}");
+    }
+    for (i, j) in [(2, 3), (3, 2), (0, 3), (3, 0)] {
+        assert_eq!(at(&sk.r, i, j).to_bits(), at(&plain.r, i, j).to_bits(), "{i} -> {j} pays the line");
+    }
+    // the assignment: 10 trips 0 -> 2 and 4 trips 2 -> 3, the latter adding nothing
+    let mut od = vec![0.0f32; 16];
+    od[2] = 10.0;
+    od[2 * 4 + 3] = 4.0;
+    let l = assign(&g, &sk, &od);
+    let x = 10.0 * (5.0 - base - rate * 40.0);
+    let total: f32 = l.rn_fare_x.iter().sum();
+    assert!((total - x).abs() < 1e-3, "{total} against {x}: {:?}", l.rn_fare_x);
+    assert!((l.rn_fare_x[0] - x / 2.0).abs() < 1e-3 && (l.rn_fare_x[1] - x / 2.0).abs() < 1e-3, "{:?}", l.rn_fare_x);
+    // the trip explorer: the legs' fares add up to the zone price over the base
+    let routes = crate::demand::trip::routes(&g, &sk, &p, 0, 2, 0.01);
+    assert!(!routes.is_empty());
+    for (_, legs) in &routes {
+        let fare: f32 = legs.iter().map(|l| l.fare).sum();
+        assert!((fare - (5.0 - base)).abs() < 1e-4, "explorer fare {fare}");
+    }
+    // a station with no zone, or prices for fewer zones than counted: the last price holds
+    let short = FareZones { off: vec![0, 1, 2], min: vec![5.0, 6.0], ..zones.clone() };
+    assert_eq!(short.price(0, 1), Some(5.0));
+    assert_eq!(FareZones { st: vec![code(1, 2), 0, code(1, 2), 0], ..zones }.price(0, 1), None);
+    // all zones empty is the plain line to the bit
+    let none = skims(&graph(Some(FareZones::default())), &p);
+    assert!(none.r.iter().zip(&plain.r).all(|(a, b)| a.to_bits() == b.to_bits()));
+}
+
+/// T-3740: a population's fare zones reach the graph through `put_fare_curve` on a straight curve
+/// too: its base and rate set, the fare km filled, every price in minutes and held to the base; the
+/// merge gives a demand station the first zone among the stations merged into it.
+#[test]
+fn fare_zones_reach_the_graph_on_a_straight_curve() {
+    let p = common_test_params();
+    let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[6.0]);
+    let mut g = build_graph(&net, &p);
+    let hop: Vec<f32> = vec![20.0; g.rn_ride.len()];
+    let z = crate::demand::api::demand_fare_zones(&[0, 1, 1, 2, 3], 4, &[0, 0, 1 << 8 | 3, 1 << 8 | 1, 1 << 8 | 2], &[0, 2], &[1.0, 3.0]);
+    assert_eq!(z.st, vec![0, 1 << 8 | 3, 1 << 8 | 1, 1 << 8 | 2]);
+    crate::demand::api::put_fare_curve(&mut g, &[], &z, &hop, 6.0, 0.6, 3.0);
+    assert!(g.fare_curve.is_line() && !g.fare_curve.flat());
+    assert_eq!((g.fare_curve.base, g.fare_curve.rate), (6.0, 0.6));
+    assert_eq!(g.fare_curve.zones.min, vec![6.0, 9.0]);
+    assert_eq!(g.rn_km.len(), g.rn_ride.len());
+    assert!(crate::demand::api::check_fare_zones(&[3 << 8 | 1], &[0, 2], &[1.0, 3.0]).is_err());
+    assert!(crate::demand::api::check_fare_zones(&[1 << 8], &[0, 2], &[1.0, 3.0]).is_err());
+    assert!(crate::demand::api::check_fare_zones(&[], &[], &[]).is_ok());
+}
+
 /// T-1516: a 5 km feeder 0-1 into a line 1-2-3 of 20 km stretches, under a fare curve that is flat
 /// past 5 km. A trip 0 -> 3 (45 km) pays the curve's extra on each stretch by its km, so the feeder
 /// takes 5/45 of it and no stretch's rate plus extra is below zero (it took all of it, and went
@@ -137,7 +220,7 @@ fn a_feeders_share_of_the_fare_curve_extra_goes_by_its_km() {
     g.rn_fare = km.iter().map(|k| k * rate).collect();
     let ones = vec![1.0; g.rn_ride.len()];
     set_crowding(&mut g, &ones);
-    g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate };
+    g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate, ..Default::default() };
     g.rn_km = km.to_vec();
     let sk = skims(&g, &p);
     let mut od = vec![0.0f32; 16];
@@ -172,7 +255,7 @@ fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
         if bent {
-            g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate };
+            g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate, ..Default::default() };
             g.rn_km = km.to_vec();
         }
         if let Some(m) = mul {

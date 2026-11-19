@@ -17,6 +17,7 @@ import { PERIODS } from "../game/periods";
 import { headwaysFor, NEW_LINE } from "../game/newLine";
 import { LOAN_AMOUNTS, loanAllowed, loanBalance, loanDrain, loanFromSave, loanProfit, loanToSave, newLoan, type Loan } from "../game/loan";
 import { startNodes } from "../game/fareDefault";
+import { zonesOf } from "../game/fareZones";
 import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { shapesFrom, type LineShape } from "../game/lineShape";
@@ -96,7 +97,8 @@ function loadFares(f: SaveHeader["fares"] | undefined): Fares {
   // T-3739: a save from before the market-rate rule had three nodes (two before T-1143): any other count is its line
   const curve = faresOf(old && g.nodes ? { ...g, nodes: simpleNodes(g.nodes) } : g, START_FARES);
   const fare = old || !f.nodes ? faresOf({ nodes: curve.nodes }, START_FARES) : curve;
-  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines });
+  // T-3740: fare areas; a save from before has none
+  return capTransfer({ ...fare, scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...hsr, ...ferry, ...bus, ...(transfer > 0 ? { transfer } : {}), ...ref, ...lines, ...zonesOf(f) });
 }
 /** T-3567: line `line`'s own fare multiple set to `mul` (1 clears it), its quad-track twin's with it; false for
  * no such line. */
@@ -3088,10 +3090,13 @@ function buildSnapshot(): NetworkSnapshot {
   const stations: NetworkSnapshot["stations"] = [];
   const geo: StationGeo[] = [];
   const ups = upgradesOf(a);
+  // T-3740: the stations' fare zones, where any has one
+  const fz = new Map<number, number>(), zl = fares.zones ? a.station_fares() : [];
+  for (let k = 0; k + 1 < zl.length; k += 2) fz.set(zl[k], zl[k + 1]);
   for (let i = 0; i < ni.length; i += 10) {
     if (ni[i + 7] > 0 && ni[i + 8] === 1) {
-      const u = ups.get(ni[i]);
-      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}) });
+      const u = ups.get(ni[i]), z = fz.get(ni[i]);
+      stations.push({ id: ni[i], name: stateRows.nameOf(a, ni[i], frame), x: ni[i + 1], y: ni[i + 2], level: ni[i + 3] as any, platform: ni[i + 7], ...(u ? { upgrades: u } : {}), ...(z ? { fare: z } : {}) });
       geo.push(stationGeo(a, ni, i));
     }
   }
@@ -3311,7 +3316,8 @@ function stationsKey(ni = api!.nodes_info()): string {
   // moves nothing demand reads: the axis as its doubled angle, to a milliradian
   const axis = (h: number) => `${Math.round(Math.cos(2 * h) * 1e3)};${Math.round(Math.sin(2 * h) * 1e3)}`;
   for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0 && ni[i + 8] === 1) out.push(ni[i], ni[i + 1], ni[i + 2], ni[i + 3], ni[i + 7], axis(ni[i + 9]));
-  return `${out.join(",")}|${api!.station_upgrades().join(",")}`;
+  // T-3740: and their fare zones, where the fares have areas (the snapshot's only then)
+  return `${out.join(",")}|${api!.station_upgrades().join(",")}${fares.zones ? `|${api!.station_fares().join(",")}` : ""}`;
 }
 
 /** T-1168: each node's station complex for `line_related`, over every station (blueprints too,
@@ -3694,8 +3700,16 @@ function applyInner(op: EditOp): Applied {
     case "groupLook":
       return { r: a.set_line_group_look(op.group, op.symbol.trim(), op.colour === null ? -1 : colourInt(op.colour)) };
     case "fares":
-      fares = capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}) });
+      fares = capTransfer({ ...(op.nodes ? faresOf({ nodes: op.nodes }, fares) : faresOf({ base: op.base, perKm: op.perKm }, fares)), scales: fares.scales, baseline: FARE_BASELINE, basis: "usd", income: FARE_E, ...(fares.hsr !== undefined ? { hsr: fares.hsr } : {}), ...(fares.ferry !== undefined ? { ferry: fares.ferry } : {}), ...(fares.bus !== undefined ? { bus: fares.bus } : {}), ...(fares.transfer !== undefined ? { transfer: fares.transfer } : {}), ...(fares.ref ? { ref: fares.ref } : {}), ...(fares.lines ? { lines: fares.lines } : {}), ...zonesOf(fares) });
       return { r: 0 };
+    case "fareZones": {
+      // T-3740: the fare areas as a whole; an id is never used twice
+      const { zones: _, zoneNext: __, ...rest } = fares;
+      fares = { ...rest, ...zonesOf({ zones: op.zones, zoneNext: Math.max(fares.zoneNext ?? 1, op.zoneNext ?? 1) }) };
+      return { r: 0 };
+    }
+    case "stationFares":
+      return { r: a.set_station_fares(new Uint32Array(op.nodes), new Uint32Array(op.codes)) };
     case "fareLine":
       return { r: Number.isFinite(op.mul) && setLineFare(a, op.line, op.mul) ? 0 : 1 };
     case "fareHsr":
@@ -4195,7 +4209,7 @@ async function handleMessage(msg: ToClock) {
     sendMoney();
     void autosave(); // the slot's card shows the mark at once
   } else if (msg.kind === "edit") {
-    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer" || msg.op.op === "fareLine") {
+    if (msg.op.op === "fares" || msg.op.op === "fareScale" || msg.op.op === "fareHsr" || msg.op.op === "fareFerry" || msg.op.op === "fareBus" || msg.op.op === "fareTransfer" || msg.op.op === "fareLine" || msg.op.op === "fareZones") {
       // T-3567: a line's own multiple for a line that is gone is refused
       const ok = apply(msg.op).r === 0 || msg.op.op !== "fareLine";
       if (ok) {

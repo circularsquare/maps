@@ -46,7 +46,16 @@ export interface Fares {
    * it. Absent until a station is built, and in a save from before, whose own scales are then
    * rounded as they load (game/income.ts `tidyOwn`). */
   ref?: string;
+  /** T-3740: the fare areas (game/fareZones.ts), absent while there are none. The stations' zones are the track
+   * model's (`StationData::fare`, area id << 8 | zone). */
+  zones?: FareArea[];
+  /** T-3740: the id the next fare area takes, so no id is ever used twice; absent until one is made */
+  zoneNext?: number;
 }
+
+/** T-3740: a fare area: its id (in its stations' codes), name and prices for 1, 2, ... zones in the curve's units
+ * (the last for any more), never falling. */
+export interface FareArea { id: number; name: string; prices: number[] }
 
 /** The base fare of `f` (the curve's first node), curve units. */
 function baseOf(f: { base?: number; nodes?: FareNode[] }): number {

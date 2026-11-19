@@ -224,7 +224,7 @@ impl DestAssign {
         // T-3718: riders whose trip starts with a walk board at the station walked to (their entry
         // stays where the trip starts, as an exit after a walk is counted where it ends)
         st.fold_start(&mut self.flow);
-        let (bent, based) = (!g.fare_curve.is_line(), !g.rn_base_mul.is_empty());
+        let (bent, based) = (!g.fare_curve.flat(), !g.rn_base_mul.is_empty());
         if self.fares && (bent || based) {
             // the column taken is still in the stations' flows: the walk below adds the changes
             trip_km(g, st, dst, &mut self.km, &mut self.dep);

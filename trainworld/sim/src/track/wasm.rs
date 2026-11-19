@@ -2169,7 +2169,7 @@ impl TrackApi {
         self.run(Op::Edge { id, data: Some(EdgeData { a, b, tracks, pis: pis_from(pis), built: false, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 }) })
     }
     pub fn set_station(&mut self, node: u32, platform: u16, name: String) -> u32 {
-        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0 }) })
+        self.run(Op::Station { node, data: Some(StationData { platform, name, named: false, built: false, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0 }) })
     }
     /// What constructing these would cost now, US$M (junctions and crossings they complete
     /// included).

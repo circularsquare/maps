@@ -75,30 +75,60 @@ pub(crate) fn check_fare_curve(knots: &[f32]) -> Result<(), String> {
 /// Gives `g` the fare curve `knots` (US$, `check_fare_curve`) over the straight line the ride
 /// edges and base fare already charge (perceived minutes, `fare_w` a dollar), with each route
 /// node's fare km.
-pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], hop_km: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
-    if knots.len() < 4 {
+pub(crate) fn put_fare_curve(g: &mut Graph, knots: &[f32], zones: &FareZones, hop_km: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
+    if knots.len() < 4 && zones.is_empty() {
         return;
     }
     g.fare_curve = FareCurve {
-        km: knots.iter().step_by(2).copied().collect(),
-        min: knots.iter().skip(1).step_by(2).map(|v| v * fare_w).collect(),
+        km: if knots.len() < 4 { vec![] } else { knots.iter().step_by(2).copied().collect() },
+        min: if knots.len() < 4 { vec![] } else { knots.iter().skip(1).step_by(2).map(|v| v * fare_w).collect() },
         base: fare_min,
         rate: per_km,
+        // T-3740: a zone price is never below the base fare charged
+        zones: FareZones { min: zones.min.iter().map(|v| (v * fare_w).max(fare_min)).collect(), ..zones.clone() },
     };
     g.rn_km = (0..g.rn_fare.len()).map(|r| hop_km.get(r).copied().unwrap_or(0.0)).collect();
 }
 
+/// T-3740: the fare zones of the demand stations, from `st` (one code per station given to
+/// `set_network`, `FareZones::st`) through the stations' merge `st_map`: a demand station takes
+/// the zone of the first given station merged into it that has one. Empty when `st` does not
+/// match or names no zone.
+pub(crate) fn demand_fare_zones(st_map: &[u32], n: usize, st: &[u32], off: &[u32], usd: &[f32]) -> FareZones {
+    if st.len() != st_map.len() || st.iter().all(|&c| c == 0) || off.is_empty() {
+        return FareZones::default();
+    }
+    let mut out = vec![0u32; n];
+    for (i, &c) in st.iter().enumerate() {
+        let d = &mut out[st_map[i] as usize];
+        if *d == 0 {
+            *d = c;
+        }
+    }
+    FareZones { st: out, off: off.to_vec(), min: usd.to_vec() }
+}
+
+/// T-3740: checks fare zones (`set_fare_zones`): areas' price offsets rising from 0 to the prices'
+/// count, prices finite and not below 0, each code's area among them and its zone from 1.
+pub(crate) fn check_fare_zones(st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
+    let areas = off.len().saturating_sub(1);
+    let ok = (off.is_empty() || (off[0] == 0 && *off.last().unwrap() as usize == usd.len() && off.windows(2).all(|w| w[0] <= w[1])))
+        && usd.iter().all(|v| v.is_finite() && *v >= 0.0)
+        && st.iter().all(|&c| c == 0 || ((c >> 8) as usize >= 1 && (c >> 8) as usize <= areas && c & 255 >= 1));
+    if ok { Ok(()) } else { Err("invalid fare zones".into()) }
+}
+
 /// Each ride edge's distance fare (`per_km` a fare km, perceived minutes) times its route node's
-/// multiplier in `mul` (T-1626; empty: all 1), the fare curve (`put_fare_curve`), and the base's
-/// multiplier per route node in `base_mul` (T-3578, each line's own; empty: all 1).
+/// multiplier in `mul` (T-1626; empty: all 1), the fare curve and fare zones (`put_fare_curve`), and
+/// the base's multiplier per route node in `base_mul` (T-3578, each line's own; empty: all 1).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], hop_km: &[f32], mul: &[f32], base_mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
+pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], zones: &FareZones, hop_km: &[f32], mul: &[f32], base_mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
     let km = |r: usize| hop_km.get(r).copied().unwrap_or(0.0);
     let m = |r: usize| mul.get(r).copied().unwrap_or(1.0);
     for (r, fare) in g.rn_fare.iter_mut().enumerate() {
         *fare = km(r) * per_km * m(r);
     }
-    put_fare_curve(g, knots, hop_km, fare_min, per_km, fare_w);
+    put_fare_curve(g, knots, zones, hop_km, fare_min, per_km, fare_w);
     let n = g.rn_fare.len();
     if mul.iter().any(|&v| v != 1.0) {
         g.rn_fare_mul = (0..n).map(m).collect();
@@ -584,6 +614,8 @@ pub struct DemandApi {
     pub(crate) fare_mul: Vec<f32>,
     /// T-3578: each route node's base multiplier (`set_base_mul`); empty: all 1.
     pub(crate) base_mul: Vec<f32>,
+    /// T-3740: the fare zones of the demand stations (`set_fare_zones`), US$; empty: none.
+    pub(crate) fare_zones: FareZones,
     /// The fare curve's knots, km and US$ in pairs (T-883, `set_fare_curve`); empty for the straight line.
     pub(crate) fare_curve: Vec<f32>,
     open_ms: f64,
@@ -1089,6 +1121,7 @@ impl DemandApi {
             fare_km: vec![],
             fare_mul: vec![],
             base_mul: vec![],
+            fare_zones: FareZones::default(),
             fare_curve: vec![],
             open_ms: 0.0,
             complex_in: vec![],
@@ -1209,7 +1242,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1357,6 +1390,7 @@ impl DemandApi {
             self.fare_km.clear();
             self.fare_mul.clear();
             self.base_mul.clear();
+            self.fare_zones = FareZones::default();
             self.sz = None;
             self.want.clear();
             self.od_st.clear();
@@ -1425,6 +1459,22 @@ impl DemandApi {
         let mul = if mul.iter().all(|&v| v == 1.0) { &[][..] } else { mul };
         if !same_bits(mul, &self.base_mul) {
             self.base_mul = mul.to_vec();
+            self.per.iter_mut().for_each(|p| *p = None);
+            self.same = 0;
+        }
+        Ok(())
+    }
+
+    /// T-3740: the player's fare zones, after `set_network`: per station it was given 0 for none,
+    /// else (area index + 1) << 8 | zone number (1-255); per area its prices for 1, 2, ... zones,
+    /// US$ as this population pays them, `usd[off[a]..off[a + 1]]`. All empty: none. A trip with both
+    /// ends in one area pays the price for the zones from the lower to the higher, both counted, in
+    /// the curve's place.
+    pub fn set_fare_zones(&mut self, st: &[u32], off: &[u32], usd: &[f32]) -> Result<(), String> {
+        check_fare_zones(st, off, usd)?;
+        let z = self.svc.as_ref().map_or_else(FareZones::default, |s| demand_fare_zones(&s.st_map, s.st_x.len(), st, off, usd));
+        if z != self.fare_zones {
+            self.fare_zones = z;
             self.per.iter_mut().for_each(|p| *p = None);
             self.same = 0;
         }
@@ -1519,7 +1569,7 @@ impl DemandApi {
         let walk0 = self.walk_all * p.period_share as f64;
         let net = Self::period_net(svc, q);
         let mut g = build_graph(&net, &p);
-        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_zones, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);
@@ -1554,7 +1604,7 @@ impl DemandApi {
         if g.rn_ride.len() != src.g.rn_ride.len() || g.n != src.g.n {
             return false;
         }
-        put_fares(&mut g, &self.fare_curve, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+        put_fares(&mut g, &self.fare_curve, &self.fare_zones, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
         let no_crowding = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &no_crowding);
         let xi = xfer_index(&g);

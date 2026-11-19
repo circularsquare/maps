@@ -70,7 +70,7 @@ impl IntercityApi {
         }
         for (i, v) in col.iter_mut().enumerate() {
             let k = *v;
-            *v = (self.fare_per_km * k + g.fare_curve.extra(k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
+            *v = (self.fare_per_km * k + g.fare_curve.pair_extra(i, dst, k)) * if weighed { fare_mul_of(k, kw[i]) } else { 1. };
         }
         // T-3578: and the base times the trip's base multiplier less the base `FareX` adds
         if !g.rn_base_mul.is_empty() {

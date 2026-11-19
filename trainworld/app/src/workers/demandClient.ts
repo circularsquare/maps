@@ -110,7 +110,7 @@ import { demandTestSnapshot } from "./demandTest";
 import type { NetworkSnapshot } from "./protocol";
 import { dataUrl } from "../game/dataBase";
 import { fetchMarketDrives } from "../game/marketRule";
-import { lineFareMul, ownLineFare, type Fares } from "../game/fareCurve";
+import { lineFareMul, ownLineFare, type FareArea, type Fares } from "../game/fareCurve";
 import { takesMarketless } from "../game/fareInEffect";
 import { saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
@@ -264,9 +264,9 @@ function rememberPoolCap(n: number) {
 /** The service demand reads, with the UI's ids. */
 interface Service {
   frame: FrameSpec;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number> };
-  /** `complex`: the station's complex (T-161); absent = a complex of its own */
-  stations: { id: string; x: number; y: number; complex?: number; upgrades?: number }[];
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
+  /** `complex`: the station's complex (T-161); absent = a complex of its own; `fare`: its fare zone's code (T-3740) */
+  stations: { id: string; x: number; y: number; complex?: number; upgrades?: number; fare?: number }[];
   /** `wrapS`: a circle's stand at its first stop, riding on round (T-798); `back`: run 1's stations
    * where a stop's way back is at a platform beside it (T-3348, `SnapshotLine.backStops`) */
   lines: { id: string; stops: string[]; back?: string[]; tph: number[]; hopS: number[][][]; hopKm?: number[][]; fast?: boolean; ferry?: boolean; tram?: boolean; dwellS: number[][][]; wrapS?: number; cars: number; span?: number[]; catches?: number[][] }[];
@@ -630,7 +630,7 @@ function serviceFromSnapshot(s: NetworkSnapshot): Service {
   return {
     frame: s.frame ?? LEGACY_FRAME,
     fare: s.fare ?? { base: 2, perKm: 0 }, // legacy fixed 6 perceived minutes
-    stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}) })),
+    stations: s.stations.filter((st) => used.has(String(st.id))).map((st) => ({ id: String(st.id), x: st.x, y: st.y, complex: st.complex, ...(st.upgrades ? { upgrades: st.upgrades } : {}), ...(st.fare ? { fare: st.fare } : {}) })),
     lines: s.lines.map((l) => ({ id: String(l.id), stops: l.stops.map(String), ...(l.backStops?.length === l.stops.length ? { back: l.backStops.map(String) } : {}), tph: l.tph, hopS: l.hopS, hopKm: l.hopKm, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.tram ? { tram: true } : {}), dwellS: l.dwellS, ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ?{ span: l.span } : {}), ...(l.catches ? { catches: l.catches } : {}) })),
     ...(passages.length ? { passages: passages.map(([a, b]) => [String(a), String(b)] as [string, string]) } : {}),
     ...(alone.length ? { alone } : {}),
@@ -660,6 +660,8 @@ function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"
     // a station without a complex number is one of its own: numbered past every complex
     complex: new Uint32Array(svc.stations.map((s, i) => s.complex ?? svc.stations.length + i)),
     ...(svc.stations.some((s) => s.upgrades) ? { ups: Uint8Array.from(svc.stations, (s) => s.upgrades ?? 0) } : {}),
+    // T-3740: the stations' fare zones, only where the fares have areas and a station has one
+    ...(svc.fare.zones?.length && svc.stations.some((s) => s.fare) ? { fz: Uint32Array.from(svc.stations, (s) => s.fare ?? 0) } : {}),
     ...(svc.passages?.length ? { passages: Uint32Array.from(svc.passages.filter(([p, q]) => index.has(p) && index.has(q)).flatMap(([p, q]) => [index.get(p)!, index.get(q)!])) } : {}),
     lineN: new Uint32Array(lines.map((l) => l.stops.length)),
     stops: new Uint32Array(nStops),

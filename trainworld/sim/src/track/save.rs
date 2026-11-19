@@ -69,6 +69,8 @@ use super::twin::Twin;
 /// A trailing `LHR1` block (T-3542) gives the hours lines split their day at (`params::Cuts`) where
 /// they are other than the default: the game's five, then the lines with their own (count, then index
 /// and five); without it every line splits it at the default hours.
+/// A trailing `LFZ1` block (T-3740) gives the stations with a fare zone (`StationData::fare`): count,
+/// then node index and code; without it none has one. Level 26 also brings the header's `fares.zones`.
 const MAGIC: &[u8; 4] = b"TWT4";
 /// TWT5 (T-125) is TWT4 byte for byte except that the metres are in the Lambert conformal world
 /// frame (`frame.rs`). TWT4 and older are always the legacy equirectangular frame, and a network
@@ -81,12 +83,12 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 30] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1"];
+pub const BLOCKS: [&[u8; 4]; 31] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over. Saves from before it have none, read as 0.
-pub const LEVEL: u32 = 25;
+pub const LEVEL: u32 = 26;
 /// T-3750: the last level whose station buildings all carry a name, a copy of a station's for one the
 /// player never named; from 24 an empty name is none, and the building shows its complex's.
 pub const OLD_BUILDING_NAMES: u32 = 23;
@@ -675,6 +677,16 @@ pub fn encode(net: &Network) -> Vec<u8> {
             for h in c { w.u(h as u64); }
         }
     }
+    // T-3740: after LHR1, only where some station has a fare zone: count, then node index and code
+    let zoned: Vec<(usize, u32)> = nodes.iter().enumerate().filter(|(_, &n)| net.is_station(n)).map(|(i, &n)| (i, net.node_fare[n as usize])).filter(|x| x.1 != 0).collect();
+    if !zoned.is_empty() {
+        w.0.extend_from_slice(b"LFZ1");
+        w.u(zoned.len() as u64);
+        for (i, c) in zoned {
+            w.u(i as u64);
+            w.u(c as u64);
+        }
+    }
     w.0
 }
 
@@ -800,7 +812,7 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         if flags & 2 != 0 {
             let platform = r.u()? as u16;
             let name = r.s()?;
-            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8 })).map_err(|e| format!("{e:?}"))?;
+            net.set_station(id, Some(StationData { platform, name, named: flags >> 8 & 1 != 0, built: flags & 4 != 0, off: flags & 8 != 0, upgrades: (flags >> 4) as u8, berth: None, day: 0, one: (flags >> 9 & 3) as u8, fare: 0 })).map_err(|e| format!("{e:?}"))?;
         }
     }
     let n_edges = r.u()? as usize;
@@ -1218,6 +1230,15 @@ pub fn decode_read(bytes: &[u8]) -> Result<(Network, usize), String> {
         }
         net.refresh_mix();
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LFZ1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, c) = (r.u()? as usize, r.u()?);
+            if i < net.node_fare.len() && net.is_station(i as u32) && c <= u32::MAX as u64 {
+                net.node_fare[i] = c as u32;
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1309,7 +1330,7 @@ mod tests {
         for x in [0.0f64, 1000.0] {
             let n = net.alloc_node();
             net.set_node(n, Some(NodeData { x, y: 0.0, level: 0, flying: false })).unwrap();
-            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0 })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: format!("S{x}"), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0 })).unwrap();
         }
         let e = net.alloc_edge();
         net.set_edge(e, Some(EdgeData { a: 0, b: 1, tracks: 2, pis: vec![], built: true, off: false, thru: vec![], crossover: false, kind: TrackKind::Regular, sep: false, day: 0, oneway: 0, join: [0; 2], limit: 0 })).unwrap();
@@ -1452,7 +1473,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (25, 30), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (26, 31), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-2217: buildings come back as they were, in their order; a network without them encodes as
@@ -1472,5 +1493,27 @@ mod tests {
         assert_eq!(unread, 0);
         assert_eq!(back.buildings, vec![Some(hall("West", -150.0)), Some(hall("East ✓", 850.0))], "renumbered densely");
         assert_eq!(encode(&back), with);
+    }
+
+    /// T-3740: stations' fare zones come back as they were, after a network that has none ends as it
+    /// did; painting one is an edit that undoes, and a deleted station takes its zone with it.
+    #[test]
+    fn fare_zones_round_trip_and_undo() {
+        let mut w = crate::track::world::TrackWorld::new(decode(&sample()).unwrap());
+        // (the world settles its rates: LRT1)
+        let bytes = encode(&w.net);
+        assert!(!bytes.windows(4).any(|x| x == b"LFZ1"), "no zones: no block");
+        let d = w.net.station_data(1).unwrap();
+        w.apply(crate::track::world::Op::Station { node: 1, data: Some(StationData { fare: 3 << 8 | 2, ..d }) }).unwrap();
+        let with = encode(&w.net);
+        assert_eq!(&with[..bytes.len()], &bytes[..]);
+        assert_eq!(&with[bytes.len()..bytes.len() + 4], b"LFZ1");
+        let (back, unread) = decode_read(&with).unwrap();
+        assert_eq!(unread, 0);
+        assert_eq!((back.node_fare[0], back.node_fare[1]), (0, 3 << 8 | 2));
+        assert_eq!(encode(&back), with);
+        w.undo().unwrap().unwrap();
+        assert_eq!(w.net.node_fare[1], 0);
+        assert_eq!(encode(&w.net), bytes);
     }
 }

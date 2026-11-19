@@ -12,6 +12,7 @@ import type { BuildingInput, EdgeId, Level, NodeId } from "../game/types";
 import type { FrameSpec } from "../game/frame";
 import type { LineShape } from "../game/lineShape";
 import type { Loan } from "../game/loan";
+import type { FareArea } from "../game/fareCurve";
 import type { Achieved, DayLedger, GameMode, GuideSave, HourLedger, NewGameSpec, PendingLoad, SaveSlot, SlotBackup } from "./saveFile";
 import type { NetworkBuffers } from "../map/network";
 import type { CloudContext } from "./cloud";
@@ -213,6 +214,10 @@ export type EditOp =
   /** T-3567: line `line`'s own fare multiplier, 0 to 3 (1: none); refused for a line that is gone */
   | { op: "fareLine"; line: number; mul: number }
   | { op: "fareTransfer"; usd: number }
+  /** T-3740: the fare areas as a whole (game/fareZones.ts), and at least this next id; a setting, not undoable */
+  | { op: "fareZones"; zones: FareArea[]; zoneNext?: number }
+  /** T-3740: stations' fare zone codes (one each, or one for all; 0 none), one undoable edit */
+  | { op: "stationFares"; nodes: NodeId[]; codes: number[] }
   /** T-1661: take a loan of `amount` US$M (one of `LOAN_AMOUNTS`, none out), or pay off what is left of it; refused otherwise */
   | { op: "borrow"; amount: number }
   | { op: "repay" }
@@ -985,7 +990,7 @@ export interface NetworkSnapshot {
   stations: SnapshotStation[];
   lines: SnapshotLine[];
   /** The player's fare curve (game/fareCurve.ts): its first stretch as a base and rate, and its nodes. */
-  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number> };
+  fare?: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; zones?: FareArea[] };
   /** station pairs joined by a passage (T-1281), node ids; absent when there are none */
   passages?: [number, number][];
 }
@@ -1006,6 +1011,8 @@ export interface SnapshotStation {
   complex?: number;
   /** its upgrades, `UPGRADE` bits (T-1281), only where it has any */
   upgrades?: number;
+  /** T-3740: its fare zone's code (game/fareZones.ts), only where it has one and the fares have areas */
+  fare?: number;
   /** T-1464: a bus stop that is no station (id from `bus::STOP_ID_BASE` up, platform 0), reached
    * only through its line's corridor (`SnapshotLine.catches`) */
   bus?: true;

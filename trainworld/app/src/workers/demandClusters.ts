@@ -8,6 +8,7 @@
 import { CITIES, worldToCity, worldToLonLat, zoneBox, zonesNearBox, type CityId } from "../game/cities";
 import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { curveKnots, transferFare } from "../game/fareCurve";
+import { chargedPrices } from "../game/fareZones";
 import { M_PER_DEG } from "../game/frame";
 import type { DemandNetwork } from "./demandProtocol";
 
@@ -327,9 +328,11 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
 
 /** T-1281: the upgrades of `stations` (whole-network indices), where any of them has one, and the
  * passages with both ends among them, renumbered by `stLocal`. */
-function upsOf(n: DemandNetwork, stations: number[], stLocal: Int32Array): { ups?: Uint8Array; passages?: Uint32Array } {
-  const out: { ups?: Uint8Array; passages?: Uint32Array } = {};
+function upsOf(n: DemandNetwork, stations: number[], stLocal: Int32Array): { ups?: Uint8Array; passages?: Uint32Array; fz?: Uint32Array } {
+  const out: { ups?: Uint8Array; passages?: Uint32Array; fz?: Uint32Array } = {};
   if (n.ups && stations.some((s) => n.ups![s])) out.ups = Uint8Array.from(stations, (s) => n.ups![s]);
+  // T-3740: and their fare zones
+  if (n.fz && stations.some((s) => n.fz![s])) out.fz = Uint32Array.from(stations, (s) => n.fz![s]);
   const pairs: number[] = [];
   for (let k = 0; k + 1 < (n.passages?.length ?? 0); k += 2) {
     const a = stLocal[n.passages![k]], b = stLocal[n.passages![k + 1]];
@@ -406,9 +409,9 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const net: DemandNetwork = { frame: n.frame, stXY, complex, ...upsOf(n, stations, stLocal), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), span, ...catchesOf(n, lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k))), ...ferryOf(n, lines) };
-  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}`;
+  const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}${net.fz && n.fare.zones?.length ? `|z${JSON.stringify(n.fare.zones.map((a) => [a.id, chargedPrices(n.fare, a)]))}` : ""}`;
   // station upgrades and passages (T-1281) only where there are any, so other networks keep their signatures
-  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : [])];
+  const ups = [...(net.ups ? [net.ups] : []), ...(net.passages ? [net.passages] : []), ...(net.catchN ? [net.catchN, net.catchXY!] : []), ...(net.fareW ? [net.fareW] : []), ...(net.baseW ? [net.baseW] : []), ...(net.ferry ? [net.ferry] : []), ...(net.back ? [net.back] : []), ...(net.fz ? [net.fz] : [])];
   const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   // T-3542: each period's own run times and trains an hour

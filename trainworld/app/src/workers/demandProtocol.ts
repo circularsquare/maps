@@ -1,6 +1,7 @@
 import type { CityId } from "../game/cities";
 import type { CorridorBook, CorridorRows } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
+import type { FareArea } from "../game/fareCurve";
 import { PERIODS } from "../game/periods";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
@@ -51,7 +52,10 @@ export interface DemandNetwork {
   tph: Float32Array;
   /** cars per train, per line */
   cars: Float32Array;
-  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number> };
+  fare: { base: number; perKm: number; nodes?: [number, number][]; scales?: Record<string, number>; hsr?: number; ferry?: number; bus?: number; transfer?: number; lines?: Record<string, number>; zones?: FareArea[] };
+  /** T-3740 (`DemandApi.set_fare_zones`): each station's fare zone code (game/fareZones.ts, the fare area's id), 0
+   * for none; absent where none has one */
+  fz?: Uint32Array;
   /** km per route node: each line's forward stops then reverse stops, 0 at each end */
   hopKm: Float32Array;
   /** T-1626 (`DemandApi.set_fare_mul`): each route node's fare multiplier, as `hopKm`; absent: all 1 */

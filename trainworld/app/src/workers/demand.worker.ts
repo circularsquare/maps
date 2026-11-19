@@ -29,6 +29,7 @@ import { PERIODS, TIMES_PER_STOP } from "../game/periods";
 import { DEMAND_DAYS } from "../game/days";
 import { curveKnots, scaledKnots, transferFare } from "../game/fareCurve";
 import { countryFareScales, roundedDefault } from "../game/fareDefault";
+import { demandZones } from "../game/fareZones";
 import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
 import type { CorridorBook, CorridorRows } from "../game/demand";
 import { ALL_PERIODS, arriveOf, comeMax, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type BareFigures, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
@@ -2049,6 +2050,10 @@ async function run() {
           p.set_fare_mul(m.fareW ?? new Float32Array(0));
           p.set_base_mul(m.baseW ?? new Float32Array(0)); // T-3578
           p.set_fare_curve(rounded ? curveKnots(rounded) : scaledKnots(m.fare, scale));
+          // T-3740: a city's at its country's multiple of the curve, as its extras are charged (`popScales`); the
+          // market's as set
+          const fz = demandZones(m.fare, m.fz, p instanceof IntercityApi ? 1 : popScales.get(p)?.rate ?? scale);
+          p.set_fare_zones(fz.st, fz.off, fz.usd);
           // T-1801: the market's trips change lines free (its fares weigh by income group)
           if (!(p instanceof IntercityApi)) p.set_transfer_fare(Math.min(transferFare(m.fare) * scale, rounded ? rounded.base : m.fare.base * scale)); // T-3689: never above the base fare charged
         }
