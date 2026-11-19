@@ -754,9 +754,11 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3745 [P2] {L:small-fixes} Hide flat junction marks no line uses (taking, 2026-11-18, agent flatmarks)
   - Context: You, 2026-11-19: "if we have a flat junction or a flat merge but no line actually uses it, it doesnt cause any capacity impact. so maybe we should juts hide it. am i understanding the situation correctly?"
   - Goal: Confirmed or corrected from the code; if no line crosses or merges there, no mark shows.
-- T-3746 [P2] {L:rebuild-track} One selection for track, shared by the track tool and Select (taking, 2026-11-18, agent onesel)
+- T-3746 [P2] {L:rebuild-track} {waits:Anita} One selection for track, shared by the track tool and Select
+  - Need from Anita: Two calls in notes/T-3746.md: 2+ pieces show in the Select bar (my pick) or the track panel; shift-click always fills the track between, except a big detour (my pick: yes).
   - Context: You, 2026-11-19: shift-clicking a run of built track in the track tool (T-3634's several-pieces panel) loses the speed limit; "could we just unify these and have selecting highlight the track segments in the track view actually? i think this duplicated functionality is quite confusing, and not necessary." Also: "if we shift click to add to the track segment, could we also just add all track between the newly added segment and whatever we already have selected? is that feasible? not sure if its well defined."
   - Goal: A short design for you first (what the shift-click selection becomes, what goes away, the fill-between rule), then built.
+  - Other: design written, two questions for you in it; notes/T-3746.md.
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
   - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".
