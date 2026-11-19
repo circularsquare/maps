@@ -863,6 +863,76 @@ fn a_walk_off_a_line_never_rides_it_back() {
     assert_eq!(loads.rn_board[z_on], 100.0);
 }
 
+/// T-3718: a trip may start with the walk it may end with, so the way home mirrors the way out. A
+/// 0-1-2-3 west to east 1 km a stop, B 4-5-6 from 160 m south of A's 1 and 2, then south. Out
+/// from 6 to 1 rides B to 4 and walks; home from 1 to 6 walks to 4 and rides B, never riding A a
+/// stop to change at 2 and 5 (a paid change mode choice never saw, T-3689). Its riders enter at 1
+/// and board at 4. With B ending at 4, home had no way at all.
+#[test]
+fn a_trip_starts_with_the_walk_it_may_end_with() {
+    let p = Params { xfer_walk_m: 300.0, xfer_fare: 1000.0, ..common_test_params() };
+    let mut net = common_test_net(&[&[0, 1, 2, 3], &[4, 5, 6]], &[12.0, 12.0], &[2.0, 2.0]);
+    (net.st_x, net.st_y) = (vec![0.0, 1000.0, 2000.0, 3000.0, 1000.0, 2000.0, 2000.0], vec![0.0, 0.0, 0.0, 0.0, -160.0, -160.0, -2160.0]);
+    let g = build_graph(&net, &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    let walk = p.xfer_min(160.0) * p.w_xfer;
+    let (out, home) = (sk.r[6 * s + 1], sk.r[s + 6]);
+    let want = 2.5 + 4.0 + walk;
+    assert!((out - want).abs() < 1e-3 && (home - want).abs() < 1e-3, "out {out} home {home} against {want}");
+    let mut od = vec![0.0; s * s];
+    od[s + 6] = 100.0;
+    od[6 * s + 1] = 100.0;
+    let ix = xfer_index(&g);
+    let mut xfer = vec![0.0; ix.len];
+    let loads = assign_with_transfers(&g, &sk, &od, &ix, &mut xfer);
+    assert_eq!(xfer.iter().sum::<f32>(), 0.0, "no changes");
+    assert_eq!((loads.entry[1], loads.board[4], loads.board.iter().sum::<f32>()), (100.0, 100.0, 200.0));
+    assert_eq!((loads.exit[1], loads.alight[4]), (100.0, 100.0));
+    let legs = &super::super::trip::routes(&g, &sk, &p, 1, 6, 0.005)[0].1;
+    let kinds: Vec<_> = legs.iter().map(|l| (l.kind, l.st_from, l.st_to)).collect();
+    assert_eq!(kinds, vec![(2, 1, 4), (1, 4, 6)], "walk to B, ride");
+    assert!((legs[0].perc + legs[1].perc + legs[1].wait_perc - home).abs() < 1e-3);
+    // nobody takes the walk on a change, nor to the destination
+    assert!(sk.r[3 * s + 6].is_infinite() || sk.r[3 * s + 6] > 1000.0, "A's 3 to B's 6 changes, at its fare: {}", sk.r[3 * s + 6]);
+    assert!(sk.r[s + 4] > 1000.0, "1 to 4 is no walk-only rail trip: {}", sk.r[s + 4]);
+
+    // B ending at 4 beside A's 1: home from 1 to 4's line had no way; now the walk
+    let mut net = common_test_net(&[&[0, 1, 2], &[4, 3]], &[12.0, 12.0], &[2.0, 2.0]);
+    (net.st_x, net.st_y) = (vec![0.0, 1000.0, 2000.0, 1000.0, 1000.0], vec![0.0, 0.0, 0.0, -2160.0, -160.0]);
+    let g = build_graph(&net, &p);
+    let s = g.n_st;
+    let sk = skims(&g, &p);
+    assert!((sk.r[s + 3] - (2.5 + 2.0 + walk)).abs() < 1e-3, "{}", sk.r[s + 3]);
+    assert!((sk.r[3 * s + 1] - sk.r[s + 3]).abs() < 1e-3);
+}
+
+/// T-3718: no walk follows another. P, Q and R in a row 250 m apart (P and R out of reach), each
+/// with a line of its own to D, faster from P to R: Q's riders walk to R, and P's walk to Q and
+/// board there, whatever order the stations come in.
+#[test]
+fn a_start_walk_never_walks_on() {
+    let p = Params { xfer_walk_m: 300.0, ..common_test_params() };
+    for order in [[0u32, 1, 2], [2, 1, 0]] {
+        let [pi, qi, ri] = order;
+        let mut net = common_test_net(&[&[pi, 3], &[qi, 3], &[ri, 3]], &[12.0; 3], &[30.0, 20.0, 10.0]);
+        let mut x = vec![0.0; 4];
+        (x[pi as usize], x[qi as usize], x[ri as usize], x[3]) = (0.0, 250.0, 500.0, 250.0);
+        (net.st_x, net.st_y) = (x, vec![0.0, 0.0, 0.0, 9000.0]);
+        let g = build_graph(&net, &p);
+        let s = g.n_st;
+        let sk = skims(&g, &p);
+        let walk = p.xfer_min(250.0) * p.w_xfer;
+        let (pi, qi, ri) = (pi as usize, qi as usize, ri as usize);
+        assert!((sk.r[qi * s + 3] - (walk + 12.5)).abs() < 1e-3, "Q walks to R: {}", sk.r[qi * s + 3]);
+        assert!((sk.r[pi * s + 3] - (walk + 22.5)).abs() < 1e-3, "P walks to Q, no further: {}", sk.r[pi * s + 3]);
+        let mut od = vec![0.0; s * s];
+        od[pi * s + 3] = 100.0;
+        let loads = assign(&g, &sk, &od);
+        assert_eq!((loads.board[qi], loads.board[ri], loads.entry[pi]), (100.0, 0.0, 100.0), "{order:?}");
+    }
+}
+
 #[test]
 fn common_lines_use_expected_ride_cost_and_respect_fare_and_crowding() {
     let p = common_test_params();

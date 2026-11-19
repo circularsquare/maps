@@ -8,7 +8,7 @@ A boarding costs half the gap between trains, times the station's wait weight, p
 
 **Changing trains** costs 2 minutes for the bother, plus the walk from one platform to the other, plus the wait for the next train. Inside a [station building](station-buildings.md) the bother is 50% of that. The walk counts extra, as in [perceived minutes](perceived-minutes.md).
 
-Stations within 300 m of each other are close enough to change on foot. A passage you build works over a longer distance, along a straight line at 2 m/s.
+Stations within 300 m of each other are close enough to change on foot. A passage you build works over a longer distance, along a straight line at 2 m/s. A trip can also start or end with that walk, with no bother and no transfer fare, so the way home is the way out reversed.
 
 People don't get off a line to catch the same line back the way they came. On a full line they wait at their own station.
 

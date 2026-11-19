@@ -1000,6 +1000,10 @@ notes/T-420.md has the tables.
 
 - **Station merge and walking transfer distances** (100 m merge, 300 m walks). Fine for US
   stations; very large hubs (Shinjuku, Châtelet) have transfers over much longer underground walks.
+  A trip may start with the same walk it may end with (to a station within 300 m or of its
+  complex, at a walking transfer's cost, no change minutes or transfer fare; T-3718, Anita
+  2026-11-18: "let trips start with walk"), so a commute's way home (its station pair reversed)
+  can take its way out backwards, walk included, without a change its choice never saw.
 - **Complexes as transfer points** (T-161, with the player's links, T-197). Any two stations of a
   complex are a walking transfer however far apart, costed like every walk between stations:
   the distance between the platforms' centres (snapshot stations; within one demand station too,

@@ -625,6 +625,15 @@ fn assign_lanes(g: &Graph, sk: &Skims, cols: &Columns, ix: &XferIndex, xfer: &mu
                 head.fill(NONE);
                 rec.clear();
             }
+            // T-3718: as the kernel's `DestAssign::walk`, riders starting with a walk board where it ends
+            // (all taken before any is put, so none walks on from a station that walks too)
+            let start = &sk.start[slot];
+            if !start.is_empty() {
+                let took: Vec<Lanes> = start.iter().map(|&(a, _)| std::mem::replace(&mut flow[a as usize], ZERO)).collect();
+                for (&(_, b), f) in start.iter().zip(&took) {
+                    add_lanes(&mut flow[b as usize], f);
+                }
+            }
             if bent || based {
                 let st = sk.strategy(slot);
                 trip_km(g, st, dst, &mut km, &mut dep);

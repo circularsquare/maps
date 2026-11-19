@@ -139,6 +139,9 @@ counted in the totals, by no mode. Car ferries don't count as roads.
   left to go back the way they came: on a full line people wait at their station. Where a line
   comes back through a station (a loop on a stalk), people may change there onto the same line
   heading somewhere else, like any change.
+- A trip can start or end with a walk from its station to another within 300 m (or anywhere in
+  its complex), counted like a change's walk but with no fixed 2 minutes and no transfer fare. So
+  a trip home can take the way out backwards, walk included, without an extra change.
 - If the train is full when it arrives, the wait for one with room counts too, minute for minute,
   up to an hour.
 - No more riders than the trains take: once the rest is worked out, everyone who would ride if

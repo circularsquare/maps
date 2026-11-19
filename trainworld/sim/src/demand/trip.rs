@@ -378,7 +378,9 @@ impl Leg {
     /// The leg in a trip answer (`LEG_LEN` numbers, `DemandApi::trip`).
     pub(crate) fn numbers(&self) -> [f64; LEG_LEN] {
         let to = if self.rn_to == NONE { -1.0 } else { self.rn_to as f64 };
-        [self.kind as f64, self.rn_from as f64, to, self.st_from as f64, self.st_to as f64, self.min as f64, self.perc as f64, self.fare as f64, self.wait_min as f64, self.wait_perc as f64, self.stops as f64, self.change as f64, self.full_wait as f64, self.base_mul as f64]
+        // a start walk's station may have no route node (T-3718)
+        let from = if self.rn_from == NONE { -1.0 } else { self.rn_from as f64 };
+        [self.kind as f64, from, to, self.st_from as f64, self.st_to as f64, self.min as f64, self.perc as f64, self.fare as f64, self.wait_min as f64, self.wait_perc as f64, self.stops as f64, self.change as f64, self.full_wait as f64, self.base_mul as f64]
     }
 }
 
@@ -398,7 +400,17 @@ pub(crate) fn routes(g: &Graph, sk: &Skims, p: &Params, a: usize, t: usize, min_
     }
     let mut legs = vec![];
     let at = At { g, p, next, board, cn: &sk.change[slot as usize], rep: &rep, t, min_share };
-    walk(&at, a, None, 1.0, &mut legs, &mut out);
+    // T-3718: a trip that starts with a walk to a station nearby, as a walk leg first; the walk to
+    // the platform there joins it, by the train taken
+    match sk.start[slot as usize].iter().find(|x| x.0 as usize == a) {
+        Some(&(_, b)) => {
+            let i = (g.st_walk_off[a] as usize..g.st_walk_off[a + 1] as usize).find(|&i| g.st_walk_to[i] == b).unwrap();
+            let min = g.st_walk_min[i];
+            legs.push(Leg { kind: 2, rn_from: rep[a], rn_to: rep[b as usize], st_from: a as u32, st_to: b, min, perc: min * p.w_xfer, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0 });
+            walk(&at, b as usize, None, true, 1.0, &mut legs, &mut out);
+        }
+        None => walk(&at, a, None, false, 1.0, &mut legs, &mut out),
+    }
     if !g.fare_curve.is_line() {
         for (_, legs) in &mut out {
             let total: f32 = legs.iter().filter(|l| l.kind == 1).map(|l| l.km).sum();
@@ -436,8 +448,9 @@ struct At<'a> {
 }
 
 /// From node `v`: a station, or a change node (T-575) boarding at its station; `came` the route
-/// node the rider left by an alighting or a walk to it, None at the trip's start.
-fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
+/// node the rider left by an alighting or a walk to it, None at the trip's start; `walked` at a
+/// trip's start reached by its start walk (T-3718), the rider at the station's position.
+fn walk(at: &At, v: usize, came: Option<usize>, walked: bool, share: f32, legs: &mut Vec<Leg>, out: &mut Vec<(f32, Vec<Leg>)>) {
     let At { g, p, next, board, cn, rep, t, min_share } = *at;
     if v == t {
         out.push((share, legs.clone()));
@@ -457,7 +470,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
     }
     let headway = 60.0 / sum;
     let wait_min = headway / 2.0;
-    let arrived = came.map(|c| arrival_at(g, c, v));
+    let arrived = came.map(|c| arrival_at(g, c, v)).or(walked.then_some((0.0, 0.0)));
     for e in edges {
         let r0 = g.adj_to[e] as usize;
         let sh = share * acc(r0 - s) / sum;
@@ -516,7 +529,7 @@ fn walk(at: &At, v: usize, came: Option<usize>, share: f32, legs: &mut Vec<Leg>,
             legs.push(Leg { kind: 2, rn_from: (r - s) as u32, rn_to: rep[to as usize], st_from: here, st_to: to, min: cost / p.w_xfer, perc: cost, fare: 0.0, km: 0.0, wait_min: 0.0, wait_perc: 0.0, full_wait: 0.0, stops: 0, change: 0.0, base_mul: 1.0 });
             pushed += 1;
         }
-        walk(at, nx as usize, Some(r), sh, legs, out);
+        walk(at, nx as usize, Some(r), false, sh, legs, out);
         legs.truncate(legs.len() - pushed);
         if let Some(l) = kept {
             *legs.last_mut().unwrap() = l;

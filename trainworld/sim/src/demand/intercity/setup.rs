@@ -58,7 +58,7 @@ impl IntercityApi {
     pub(super) fn need_km(&self) -> bool {
         !self.zone_fx.is_empty() || self.m.grouped
     }
-    /// `pair_km`'s column towards `dst`, into `col` by node: each one's expected fare there less the
+    /// `pair_km`'s column towards `dst`, into `col` by the station a trip starts from: each one's expected fare there less the
     /// base, perceived minutes: its fare km at the rate plus the curve's extra, times the trip's
     /// km-weighted multiplier (T-1626). `kw`: scratch.
     pub(super) fn fare_col(&self, g: &Graph, st: Strategy, dst: usize, col: &mut Vec<f32>, kw: &mut Vec<f32>, dep: &mut Vec<(u32, f32)>) {
@@ -78,6 +78,8 @@ impl IntercityApi {
                 *v += base_extra(g, m);
             }
         }
+        // T-3718: read by the station a trip starts from
+        st.start_column(col);
     }
     /// T-1229: each served everyday pair's kind, home place, rail legs in period `q` and the
     /// walking legs those riders were taken from (the period's average over crowding rounds).

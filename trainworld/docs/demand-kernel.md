@@ -178,7 +178,16 @@ levels:
    for this destination. A rider may still ride out on one line and back on another (another line
    from the stop upstream, or one parallel to the full line), as any change is allowed. A rider leaving
    a train may walk to another station within 300 m straight line and board there (walk at its
-   weight). **A boarding rides at least one stop** (T-1055, T-200): a route node is offered to its
+   weight). **A trip may start with the same walk** (T-3718, Anita 2026-11-18), so the way home
+   mirrors the way out: from its station to another within 300 m or of its complex, station
+   position to position at a walking transfer's cost, then to the platform of the train taken, no
+   change minutes or transfer fare. It is an origin-only step after each destination's search
+   (`Search::start_walks`, `DestStrategy::start`): where the walk plus the other station's boarding
+   pool beats the trip's own station, the route cost, real minutes, fare km and trip explorer read
+   the other station's plus the walk, and the assignment puts the riders there before loading
+   (`Strategy::fold_start`; the entry stays at the trip's station). No walk follows another, nobody
+   changing trains takes it, and a walk to the destination itself is no rail trip.
+   **A boarding rides at least one stop** (T-1055, T-200): a route node is offered to its
    station at the cost of riding on to the next stop, even where riders already on board do
    better to leave there, and the loading, the fare's km and the trip explorer send its boarders
    along that ride. So boarding only to walk to another station or platform, or to alight again,
