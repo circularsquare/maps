@@ -23,6 +23,13 @@ export const HAND_LABELS = {
   dor: { ja: "ルール地方", "zh-Hans": "鲁尔区", "zh-TW": "魯爾區" },
   luo: { ja: "漯河", "zh-Hans": "漯河", "zh-TW": "漯河" }, // place_names_check.py cannot read 漯 (Luo), T-3324
   ram: { ja: "東エルサレム" }, // Wikidata's ja label came out as エルサレム, which reads as all of Jerusalem, T-3450
+  // T-3756: zones whose item has no ja or zh label (katakana and Xinhua transliteration)
+  ltx: { ja: "ラ・アスンタ", "zh-Hans": "拉阿松塔", "zh-TW": "拉阿松塔" },
+  wae: { ja: "ワルネス" },
+  vlt: { ja: "ビジャ・トゥナリ" },
+  pca: { ja: "プカラニ" },
+  anj: { ja: "ソコポ" },
+  pcc: { ja: "ポコシ" },
 };
 
 const UA = "trainworld-l10n/1.0 (rail game city names; batch label fetch)";
