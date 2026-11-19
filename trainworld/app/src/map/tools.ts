@@ -44,7 +44,7 @@ import { hidden, levelHidden } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, rightHand, say, stationNames, stopsQueued, world } from "../game/world";
 import { hideBusy, showBusy } from "../game/busy";
 import type { ClockEdge, ClockNode, RouteEnd } from "../workers/protocol";
-import { gamesLoaded, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
+import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
@@ -1733,10 +1733,11 @@ export class Tools {
     this.queueStop(station, tier);
   }
 
-  /** T-3731: the click's line and game are taken now; it is sent however stop editing has ended meanwhile, and
-   * dropped only when another game has loaded (its ids are another game's) or the line is gone. */
+  /** T-3731: the click's line and game stamp are taken now; it is sent however stop editing has ended meanwhile, and
+   * dropped only when another game has loaded (its ids are another game's: here, or by the worker, T-3734) or the
+   * line is gone. */
   private queueStop(station: number, tier?: StopTier, oneWay = false) {
-    const id = lineDraft.peek().line, game = gamesLoaded.peek();
+    const id = lineDraft.peek().line, game = gameStamp.peek();
     if (id === null) return;
     if (!tier) {
       const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
@@ -1746,7 +1747,7 @@ export class Tools {
       if (line && !line.planStops && !(oneWay && on)) guessRow(String(station), on, line.num);
     }
     void queueStopEdit(() => this.toggle(station, id, game, tier, oneWay)).catch(() => {
-      if (game === gamesLoaded.peek()) say(tr("tools.stopFailed"), true);
+      if (game === gameStamp.peek()) say(tr("tools.stopFailed"), true);
     }).finally(() => {
       if (tier) return;
       this.stops?.settleClick(id, station);
@@ -1756,7 +1757,7 @@ export class Tools {
   }
 
   private async toggle(station: number, id: number, game: number, tier?: StopTier, oneWay = false) {
-    if (game !== gamesLoaded.peek()) return;
+    if (game !== gameStamp.peek()) return;
     const line = world.peek()?.save.lines.find((l) => Number(l.id) === id);
     if (!line) return;
     const before = planStopsOf(line).map(Number);
@@ -1794,8 +1795,8 @@ export class Tools {
       change = { op: "setStops", line: id, stops, autoFast: this.autoFast(id) };
     }
     // T-2766: answered once the world holds it (the next click reads its stops), its network once the clicks stop
-    const a = await edit(change, false, false, "rows");
-    if (!a.ok || game !== gamesLoaded.peek()) return;
+    const a = await edit(change, false, false, "rows", game);
+    if (!a.ok || game !== gameStamp.peek()) return;
     if (tool.peek() === "line" && lineDraft.peek().line === id) {
       const latest = world.peek()?.save.lines.find((l) => Number(l.id) === id);
       if (latest) lineDraft.value = { line: id, stops: planStopsOf(latest).map(Number) };

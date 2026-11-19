@@ -25,7 +25,7 @@ import { stationsById, world } from "./world";
 import { RIDES_PER_PERSON, sumModes } from "./worldTotals";
 import { zonesLoaded } from "./zones";
 import type { LineInput, LineStats, StationInput, WorldView } from "./types";
-import { gamesLoaded, postAchievements, queryClock } from "../workers/clockClient";
+import { gameStamp, postAchievements, queryClock } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 
 export type Detail = Omit<Achieved, "at">;
@@ -402,7 +402,7 @@ export const longProfitable = signal<Detail | null>(null);
 let profitView: unknown = null;
 let profitHour = NaN, profitGame = -1, profitAsked: unknown = null;
 effect(() => {
-  const m = moneyState.value, g = gamesLoaded.value, dv = demandByDay.value[AVERAGE_DAY]?.view ?? null;
+  const m = moneyState.value, g = gameStamp.value, dv = demandByDay.value[AVERAGE_DAY]?.view ?? null;
   if (g !== profitGame) { profitGame = g; profitHour = NaN; profitAsked = profitView = null; bestProfit.value = undefined; longProfitable.value = null; }
   const hour = m?.hours.at(-1)?.hour;
   if (!m || m.mode === "sandbox" || hour === undefined || (hour === profitHour && dv === profitAsked)) return;
@@ -410,7 +410,7 @@ effect(() => {
   profitAsked = dv;
   void queryClock({ what: "today" }).then((raw) => {
     const w = world.peek();
-    if (!raw || !w || gamesLoaded.peek() !== g) return;
+    if (!raw || !w || gameStamp.peek() !== g) return;
     const t = readToday(raw);
     if (w.twins.size) foldTwins(t, w.twins);
     let best: Detail | null = null, pearl: Detail | null = null;
@@ -431,7 +431,7 @@ effect(() => {
 /** Whether the world has come since the last game was loaded (the last game's stands until then). */
 const worldSinceLoad = signal(false);
 let worldAtLoad: unknown = null;
-effect(() => { void gamesLoaded.value; worldAtLoad = world.peek(); worldSinceLoad.value = false; });
+effect(() => { void gameStamp.value; worldAtLoad = world.peek(); worldSinceLoad.value = false; });
 effect(() => { const w = world.value; if (w && w !== worldAtLoad) worldSinceLoad.value = true; });
 
 /** Every step met now, by key, with what met it, and whether every figure is in for a quiet working-out. */
@@ -470,7 +470,7 @@ export const earned = computed(() => Object.keys(moneyState.value?.achievements 
 // Post the steps met that the worker has not recorded; an older save's once its figures are all in.
 let posted = new Set<string>(), postedGame = -1;
 effect(() => {
-  const g = gamesLoaded.value;
+  const g = gameStamp.value;
   if (g !== postedGame) { postedGame = g; posted = new Set(); }
   const m = moneyState.value;
   if (!m || m.mode === "sandbox") return;

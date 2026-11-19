@@ -17,7 +17,7 @@ import { TOOLS } from "./toolKeys";
 import { ask, selection, tab } from "../game/ui";
 import type { ComponentChildren } from "preact";
 import { t, tRich } from "../i18n";
-import { gamesLoaded } from "../workers/clockClient";
+import { gameStamp } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 import { LeaderboardButton } from "./Leaderboard";
 import { DiagramButton } from "./DiagramButton";
@@ -97,7 +97,7 @@ setHintShower((h) => {
 // what the game had when its first money state came, so only steps earned since then toast
 let known: Set<string> | null = null, knownGame = -1;
 effect(() => {
-  const g = gamesLoaded.value, m = moneyState.value;
+  const g = gameStamp.value, m = moneyState.value;
   if (g !== knownGame) { knownGame = g; known = null; waiting.value = []; }
   const a = m?.achievements;
   if (!m || !a) { known = null; return; }

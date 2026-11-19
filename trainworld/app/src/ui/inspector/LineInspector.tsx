@@ -24,7 +24,7 @@ import { fullParts, fullTip, fullTitle, heldText, heldTip, heldTrains } from "..
 import { toggleEditStops } from "../../game/lineActions";
 import { repeatedEdge } from "../../game/repeatTrack";
 import { runsAgainstOneWay } from "../../game/oneWay";
-import { gamesLoaded } from "../../workers/clockClient";
+import { gameStamp } from "../../workers/clockClient";
 import { noteHeadwayLimits, edit, linesAt, say, stationNames, stationsById, stationsByNum, stepLineCars, pendingCars, world, linesById, linesByNum, pairStats, queueStopEdit } from "../../game/world";
 import { live } from "../../map/live";
 import { setListHot } from "../../map/hovered";
@@ -716,15 +716,15 @@ function RailLineInspector({ id }: { id: string }) {
   // answered, and built then from the stops that one left (`build` gets them), so a quick second edit counts from
   // the new list. `build` answers null when the stop it meant is gone.
   const sendStops = (build: (cur: string[]) => EditOp | null, quiet = false, refused?: (issues: string[]) => void) => {
-    const game = gamesLoaded.peek();
+    const game = gameStamp.peek();
     return queueStopEdit(async () => {
       const w2 = world.peek();
-      const now = w2 && game === gamesLoaded.peek() ? linesById(w2).get(id) : undefined;
+      const now = w2 && game === gameStamp.peek() ? linesById(w2).get(id) : undefined;
       const op = now && build(now.stops.map(String));
       if (!op) return;
-      const a = await edit(op, quiet);
+      const a = await edit(op, quiet, false, false, game);
       if (a.ok) keepDraft();
-      else refused?.(a.issues);
+      else if (game === gameStamp.peek()) refused?.(a.issues);
     }).catch(() => {});
   };
   const setStops = (build: (cur: string[]) => number[] | null) =>

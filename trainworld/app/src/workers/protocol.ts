@@ -258,7 +258,9 @@ export type ToClock =
    * demand is answered before its state is built, so the next ghost is not kept waiting */
   /** `rows` (T-2766, the line tool's stop clicks): the world's rows are posted and the edit answered at once, its
    * network, trips and boarding once no stop click has come for a moment; a stop click before then joins them */
-  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean }
+  /** `game` (T-3734): the game the edit was made in, `loaded`'s `game` when it was made; one of another game is refused
+   * unapplied. Only edits queued behind others carry it (stop edits); an edit without one is the game in hand's. */
+  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean; game?: number }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | ({ kind: "preview"; seq: number } & RouteAsk)
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */
@@ -289,8 +291,8 @@ export type ToClock =
    * speed: game seconds `t` at wall time `at` (performance.timeOrigin + performance.now(), the
    * clock game/clock.ts runs on, never Date.now(): T-488), moving `rate` game s per wall s (0
    * when stopped). The worker settles money by the game hour from it (T-028). `game`: the last
-   * "loaded" message's `game` the main thread had seen; the worker ignores a clock from before
-   * its latest load (T-715). */
+   * "loaded" message's `game` the main thread had seen; the worker drops a clock from before
+   * its latest load (T-715) where it drops a stop edit's (T-3734). */
   | { kind: "clock"; t: number; rate: number; at: number; game: number }
   /** fare income in force, US$M per game hour for each of the five periods (from demand riders,
    * game/money.ts), one table per kind of day (T-260, game/days.ts `DayKind` order); `lines` the
@@ -387,9 +389,10 @@ export interface MoneyState {
   copy?: boolean;
   /** T-3707: played in a page that is not the published game, or with a mod (`SaveHeader.modded`): never ranks */
   modded?: boolean;
-  /** T-3687: the save slot this game is played in ("" for none). A load sends the new game's money before the slot
-   * list says it is playing, so the page scores a game only while the two name the same slot. */
-  slot: string;
+  /** T-3734: the game this money is (the worker's load count, `loaded`'s `game`). A load sends the new game's money
+   * before the slot list says it is playing, so the page scores a game only while this is the slot list's `game`
+   * (T-3687). */
+  game: number;
   /** cars owned, and the cars the running lines need */
   fleet: number;
   carsNeeded: number;
@@ -859,7 +862,8 @@ export type FromClock =
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing;
    * `frame`: the game now in the worker; `converted`: its save was in an older frame and was
-   * converted to the world's on the way in (T-308); `game` counts the worker's loads, for "clock"; `slot`, the
+   * converted to the world's on the way in (T-308); `game` counts the worker's loads: the stamp of the game now in
+   * hand (T-715, T-3734), which "clock", "money", "saveSlots" and stop edits carry; `slot`, the
    * slot the game goes into (a file's new slot is made active only after this message, T-2552) */
   // (`reason` "rebuilt", T-2848: the same game, on a model rebuilt after a panic)
   | { kind: "loaded"; from: "autosave" | "file" | "new"; clock: number; frame: FrameSpec; error?: string; why?: string; converted?: boolean; game: number; slot?: string; reason?: "rebuilt" }
@@ -913,7 +917,9 @@ export type FromClock =
   /** `backups`: the active slot's (T-744), newest first; `newer`: a newer build saved the game in
    * hand, which is not written here (T-1826) */
   /** `viewing` (T-3257): the game in hand is a network viewed from Community, in no slot: its card, `key` "" */
-  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean; viewing?: SaveSlot }
+  /** `game` (T-3734): the game `active` holds, as `loaded`'s `game`; during a load into another slot still the game
+   * being left */
+  | { kind: "saveSlots"; slots: SaveSlot[]; active: string; game: number; writable: boolean; at: number; reason?: string; error?: string; backups: SlotBackup[]; newer?: boolean; viewing?: SaveSlot }
   | { kind: "error"; message: string }
   /** T-988: the server refused the session's token (the main thread signs out) */
   | { kind: "accountGone" }

@@ -354,13 +354,13 @@ export function slotOfGame(id: string): string | null {
  * ones; null with no stored game or no session. A sandbox game's notice goes up even with no figures before it, or the
  * share would not be tagged. Remembered, so a share of a game later deleted here is taken down with it. */
 export async function gameForShare(): Promise<string | null> {
-  const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
+  const s = session.peek(), slot = playingSlot(), m = moneyState.peek(), listed = saveSlotsState.peek().game;
   if (!s || !slot) return null;
   await sendScores(true);
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;
   let e = games()[slot] ?? { id: cid ?? newGameId() };
   if (cid && e.id !== cid) e = { id: cid };
-  if (m && unranked(m) && !e.sandbox && m.slot === slot) {
+  if (m && unranked(m) && !e.sandbox && m.game === listed) {
     try {
       await api("PUT", `trainworld/score/${e.id}`, latch(m));
       e.sandbox = true;
@@ -412,8 +412,8 @@ let sending = false;
 export async function sendScores(now = false) {
   const s = session.peek(), slot = playingSlot(), m = moneyState.peek();
   // T-3687: while a load is under way the money can be the incoming game's and the slot still the one before; a
-  // sandbox or a copy opened from a normal game would latch that game for good
-  if (sending || !s || accountState.peek() !== "on" || !slot || !m || m.slot !== slot) return;
+  // sandbox or a copy opened from a normal game would latch that game for good. T-3734: so both must be one game's.
+  if (sending || !s || accountState.peek() !== "on" || !slot || !m || m.game !== saveSlotsState.peek().game) return;
   const all = games(), acct = s.account.id;
   // T-988: the slot's game id on the account names its figures too (a fork or a kept copy has a new one)
   const cid = saveSlotsState.peek().slots.find((x) => x.key === slot)?.cloud?.id;

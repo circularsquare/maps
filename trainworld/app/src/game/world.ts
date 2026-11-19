@@ -29,9 +29,9 @@ export const flipSites = signal<{ right: boolean; sites: { kind: number; id: num
 /** A short message for the player: why an edit was refused, what a construct cost. */
 export const notice = signal<{ text: string; bad: boolean; at: number } | null>(null);
 
-let sink: ((op: EditOp, early?: boolean | "rows") => Promise<EditAnswer>) | null = null;
+let sink: ((op: EditOp, early?: boolean | "rows", game?: number) => Promise<EditAnswer>) | null = null;
 /** workers/clockClient.ts hands over its edit function. */
-export function setEditSink(f: (op: EditOp, early?: boolean | "rows") => Promise<EditAnswer>) {
+export function setEditSink(f: (op: EditOp, early?: boolean | "rows", game?: number) => Promise<EditAnswer>) {
   sink = f;
 }
 
@@ -103,8 +103,9 @@ export async function afterStopEdits(): Promise<void> {
 }
 
 /** Send an edit; a refusal is explained in `notice`. Resolves with the answer either way. `silent`:
- * its sound was played already (the click that sent it, or the one sound of a run of edits). */
-export async function edit(op: EditOp, quiet = false, silent = false, early: boolean | "rows" = false): Promise<EditAnswer> {
+ * its sound was played already (the click that sent it, or the one sound of a run of edits). `game`: the game stamp
+ * (clockClient `gameStamp`) of an edit sent later than it was made, a queued stop edit's: refused under another. */
+export async function edit(op: EditOp, quiet = false, silent = false, early: boolean | "rows" = false, game?: number): Promise<EditAnswer> {
   if (tracing()) {
     const snapshot = world.peek();
     trace("edit-click", { edit: editTrace(op), version: snapshot?.version,
@@ -120,7 +121,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   if (op.op !== "fares" && op.op !== "undo" && op.op !== "redo") editsSent.value++;
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):
   // the answer comes with `world` holding the edit, its network a moment later
-  const a = await sink(op, early);
+  const a = await sink(op, early, game);
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op), lineVehicle((op as { line?: number }).line)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;

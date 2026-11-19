@@ -54,7 +54,7 @@ export function workerText(s: string | undefined): string | undefined {
   return s && /^(clockWorker|issues|loadText)\.[A-Za-z]+$/.test(s) ? t(s as MessageKey) : s;
 }
 
-export const saveSlotsState = signal<Omit<Extract<FromClock, { kind: "saveSlots" }>, "kind">>({ slots: [], active: "autosave", writable: true, at: 0, backups: [] });
+export const saveSlotsState = signal<Omit<Extract<FromClock, { kind: "saveSlots" }>, "kind">>({ slots: [], active: "autosave", game: 0, writable: true, at: 0, backups: [] });
 /** When the game was last saved by hand in this page (T-1251). */
 export const savedByHand = signal<number | null>(null);
 
@@ -91,8 +91,9 @@ export function onAccountGone(f: () => void) { accountGone = f; }
 export const clockRunning = () => !!current?.running;
 
 export const clockWorkerStatus = signal("loading");
-/** T-2124: counts the games loaded into the worker (each `loaded`), so per-game page state starts again */
-export const gamesLoaded = signal(0);
+/** T-3734: the stamp of the game in hand, `loaded`'s `game` (the worker's load count): per-game page state starts
+ * again when it moves (T-2124), and work taken under one stamp is dropped under another (T-3731's stop clicks) */
+export const gameStamp = signal(0);
 /** The newest network snapshot (what demand runs on); null until the worker has started. */
 const networkSnapshot = signal<NetworkSnapshot | null>(null);
 
@@ -737,7 +738,7 @@ export class ClockClient {
 
   constructor(cityId = HOME_CITY) {
     this.cityId = cityId;
-    setEditSink((op, early) => this.edit(op, early));
+    setEditSink((op, early, game) => this.edit(op, early, game));
     setOpenedSink((zones) => this.post({ kind: "opened", zones }));
     setDemandFineSink((zones, built) => this.post({ kind: "demandFine", zones, built }));
     setHandOrderSink((kind, ids) => this.post({ kind: "listOrder", list: kind === "lines" ? 0 : 1, ids }));
@@ -748,7 +749,7 @@ export class ClockClient {
     if (moddedWhy.length) this.post({ kind: "modded", why: moddedWhy });
     // The worker settles money from the clock (T-028, T-284): tell it each time the
     // clock is set, paused, resumed or sped up.
-    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: this.game });
+    const sendClock = () => this.post({ kind: "clock", t: clock.now(), rate: clock.ticking ? clock.rate() : 0, at: performance.timeOrigin + performance.now(), game: gameStamp.peek() });
     clock.onChange(sendClock);
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
@@ -916,8 +917,6 @@ export class ClockClient {
   private worldBefore: WorldView | null = null;
   /** `?new=1`, `?synth=1` or `?demandTest=1`: no autosave until a copy is saved (T-320) */
   private testPage = false;
-  /** the worker's game the clock messages are for (`loaded`'s `game`, T-715) */
-  private game = 0;
   private forgetSent = () => {};
   private resendFigures = () => {};
   /** T-895: the next game loaded was opened by the player, so the camera fits its network (`fitView`) */
@@ -1235,11 +1234,10 @@ export class ClockClient {
         if (msg.reason !== "rebuilt") flipSites.value = null;
         tool.value = "select";
         lineDraft.value = { line: null, stops: [] };
-        // T-715: the clock the hold above sent is the old game's, which the worker ignores
-        this.game = msg.game;
         this.forgetSent();
         if (msg.reason === "rebuilt") this.resendFigures(); // T-2848: only here; a real load would send the last game's
-        gamesLoaded.value++;
+        // T-715: the clock the hold above sent is the old game's, which the worker ignores
+        gameStamp.value = msg.game;
         clock.set(msg.clock);
         if (msg.from === "file") say(t("clockClient.loaded", { day: Math.floor(msg.clock / 86400) }));
         if (msg.from === "new" && !msg.error) say(t("clockClient.newGame"));
@@ -1262,7 +1260,7 @@ export class ClockClient {
       }
       case "saveSlots": {
         const before = saveSlotsState.value;
-        saveSlotsState.value = { slots: msg.slots, active: msg.active, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };
+        saveSlotsState.value = { slots: msg.slots, active: msg.active, game: msg.game, writable: msg.writable, at: msg.at, reason: workerText(msg.reason), error: workerText(msg.error), backups: msg.backups, newer: msg.newer, viewing: msg.viewing };
         lastSaved.value = msg.at;
         if (msg.at > 0 && !this.testPage) void keepStorage(); // T-1214: a slot is written
         // a test page does not make its slot the one the next page opens, until it changes (T-320)
@@ -1410,16 +1408,17 @@ export class ClockClient {
   }
 
   /** Send an edit; the promise resolves with the worker's answer. `early` "rows": a stop click's (T-2766), answered
-   * once the world holds it, its network a moment after the clicks stop. */
-  edit(op: EditOp, early: boolean | "rows" = false): Promise<EditAnswer> {
-    const seq = ++this.seq;
+   * once the world holds it, its network a moment after the clicks stop. `game`: the `gameStamp` it was made under,
+   * for an edit sent later than made (T-3734). */
+  edit(op: EditOp, early: boolean | "rows" = false, game?: number): Promise<EditAnswer> {
+    const seq = ++this.seq, stamp = game === undefined ? {} : { game };
     if (early === "rows") {
       this.stopsOut++;
       this.lastStopSent = performance.now();
-      this.post({ kind: "edit", seq, op, rows: true });
+      this.post({ kind: "edit", seq, op, rows: true, ...stamp });
       return new Promise((res) => this.pending.set(seq, (a) => { this.stopsOut--; this.lastStopAt = performance.now(); res(a); }));
     }
-    this.post(early ? { kind: "edit", seq, op, early } : { kind: "edit", seq, op });
+    this.post(early ? { kind: "edit", seq, op, early, ...stamp } : { kind: "edit", seq, op, ...stamp });
     this.sent.set(seq, { what: op.op, at: performance.now() });
     return new Promise((res) => this.pending.set(seq, res));
   }

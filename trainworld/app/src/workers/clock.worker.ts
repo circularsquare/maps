@@ -373,8 +373,12 @@ const wallNow = () => performance.timeOrigin + performance.now();
 let clk = { t: START_CLOCK, rate: 0, at: wallNow() };
 /** Loads so far (T-715): a "clock" message the main thread sent before it saw the latest still
  * carries the previous game's time, and settling to it charged the gap's running costs and then
- * held the money until the clock caught up. */
+ * held the money until the clock caught up. T-3734: the stamp of the game in hand, on the page's `gameStamp`. */
 let game = 0;
+/** T-3734: the `game` the active slot holds, sent with the slot list. It moves when a load into the active slot itself
+ * starts a game (`restart`), and for a load into another slot or a view only once that one is made active, so a
+ * slot list sent during the load names the game being left. */
+let slotGame = 0;
 /** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
  * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
  * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole
@@ -556,7 +560,7 @@ async function publishSlots(error?: string) {
     : block === "noLease" && !navigator.locks ? "clockWorker.noLocks"
     : BLOCK_REASON[block];
   const view = viewing !== null ? { viewing: { ...viewCard, key: "", name: viewing, at: 0, day: Math.floor(gameNow() / 86400) } } : {};
-  send({ kind: "saveSlots", slots, active: activeSlot, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}), ...view });
+  send({ kind: "saveSlots", slots, active: activeSlot, game: slotGame, writable, at: slots.find(s => s.key === activeSlot)?.at ?? 0, reason, error, backups, ...(newer ? { newer } : {}), ...view });
 }
 /** T-1829: the playing slot's name as last listed, kept should the database be cleared under it */
 let activeName: { key: string; name: string } | null = null;
@@ -601,6 +605,7 @@ async function intoNewSlot(name: string, load: () => Promise<unknown> | void, wr
   held();
   activeLease?.release();
   activeSlot = key;
+  slotGame = game;
   hold(lease);
   viewing = viewCard = null;
   unwritten = key;
@@ -625,6 +630,7 @@ async function intoView(name: string, load: () => Promise<unknown>) {
   activeLease?.release();
   hold(null);
   activeSlot = "";
+  slotGame = game;
   activeName = null;
   unwritten = null;
   newSlotName = null;
@@ -2317,7 +2323,7 @@ function moneyState(): MoneyState {
     mode,
     ...(copyOf ? { copy: true } : {}),
     ...(modded ? { modded: true } : {}),
-    slot: loadingInto ?? activeSlot,
+    game,
     fleet: a.fleet(),
     carsNeeded: a.cars_needed(),
     fleetFast: a.fleet_fast(),
@@ -2910,7 +2916,6 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         newerFile = null;
         dirty = true;
         savedAt = Date.now();
-        sendMoney(); // T-3687: the money names the slot it is played in
       } catch (err) { lease.release(); throw err; }
     } else if (msg.action === "open") {
       const key = msg.key;
@@ -2926,6 +2931,7 @@ async function manageSlot(msg: Extract<ToClock, { kind: "saveSlot" }>) {
         const converted = await loadGame(stored.bytes, "file").finally(() => { switching = false; loadingInto = null; });
         activeLease?.release();
         activeSlot = key;
+        slotGame = game;
         hold(lease);
         viewing = viewCard = null;
         heldFrom(stored);
@@ -3142,6 +3148,8 @@ function restart(t: number, from: "autosave" | "file" | "new", reason?: "rebuilt
   send({ kind: "hiddenLines", lines: [...hiddenLines] });
   send({ kind: "newHeadway", seconds: newLineHeadway });
   send({ kind: "loaded", from, clock: t, frame: frameSpec(), converted: convertedOnLoad || undefined, game, slot: loadingInto ?? activeSlot, reason });
+  // T-3734: a game started in the active slot itself is that slot's now, and the page hears so
+  if (loadingInto === null) { slotGame = game; void publishSlots(); }
   convertedOnLoad = false;
   sendState();
   clearTimeout(snapTimer);
@@ -4628,6 +4636,12 @@ async function processMessage(msg: ToClock) {
   if (msg.kind === "leave") return await leave(msg);
   if (!api) return;
   if (modelDown) return failAnswer(msg);
+  // T-3734: a message made in a game no longer in hand (T-715's clock, a queued stop edit) is dropped here; an edit is
+  // answered as refused with nothing to say, so nothing waits on it
+  if ((msg.kind === "clock" || msg.kind === "edit") && msg.game !== undefined && msg.game !== game) {
+    if (msg.kind === "edit") send({ kind: "edited", seq: msg.seq, ok: false, issues: [], charge: 0 });
+    return;
+  }
   if (isPreview(msg) && stale(msg.seq)) return sendStale(msg.seq);
   const changes = !isPreview(msg) && msg.kind !== "query";
   if (changes) todayGen++;
@@ -4922,7 +4936,7 @@ async function handleMessage(msg: ToClock) {
     trips && api.has_riders() ? () => (todayGen++, api!.boarding_step(BOARDING_STEP_LINES)) : undefined,
     hold || stops ? rest : undefined, stops);
   } else if (msg.kind === "clock") {
-    if (msg.game === game) clk = { t: msg.t, rate: msg.rate, at: msg.at };
+    clk = { t: msg.t, rate: msg.rate, at: msg.at };
   } else if (msg.kind === "income") {
     incomePerHour = msg.perHour.map((p) => p.slice(0, PERIODS.length));
     lineIncome = new Map((msg.lines ?? []).map((l) => [l.line, l.perHour]));
