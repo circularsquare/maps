@@ -12,12 +12,14 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 1. Landed overnight 11-19 (all on master, pushed): T-3720 autosave latch, T-3746 one track selection, T-3739
    advanced fares + T-3749/T-3751 her polish, T-3748 market fare scale (c012), T-3620 Caribbean/Bolivia/Paraguay
    (17 countries, freeze 20261119-020305, c013), T-3755, T-3756, T-3542 stages 1a and 1b (save level 23, c015),
-   T-3750 station names (level 24, c014; reverses part of T-3288, DECISIONS 11-19). 8800 rebuilding at e8d1dc60
-   with smoke after (~09:30 UTC); push after smoke.
+   T-3750 station names (level 24, c014; reverses part of T-3288, DECISIONS 11-19). 8800 = e8d1dc60, smoke
+   passed 29, pushed (~09:50 UTC).
 2. shonei-server f5309bf (save levels 23-24) committed, not pushed or deployed; `go test` passes against master.
    Deploy needs her yes (ask a-2026-11-19-5), with or before the v0.4.3 publish.
 3. Open asks a-2026-11-19-1..5: text acks (T-3746, T-3542 1b, c013), Guyana/Suriname/French Guiana, the deploy.
-4. Next work: T-3542 stage 2 (period hours, 8-12 h, Opus, from notes/T-3542.md); then T-3346 stage 2 ports (tree
+4. Running: periods2 (Opus, T-3542 stage 2 period hours, tree periods2, port 6144; save level 25, rewords c015;
+   needs a checker, and the server needs level 25 before publish). T-3753 LANDED 20147ede (not on 8800 yet;
+   rebuild with periods2's landing). Then T-3346 stage 2 ports (tree
    tt2). Fares: T-3740 zones (14-20 h: stage it first), T-3744 per-stop fare (design for her first), T-3753 (P3).
    T-3754 La Gonave, T-3747 Brazil RAIS (ends in a rebuild run: overnight).
 5. Requests sorted 11-19 (23 new groups; done ones dismissed, duplicates merged). Open for her: g096 (merge

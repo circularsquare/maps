@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "id": "a-2026-11-19-1",
+    "title": "One track selection text",
+    "text": "T-3746 text (landed, on 8800): panel title hover 'Shift+click to add to selection.' (reused); removed panel strings ('3 pieces of track', 'Limit', 'Remove track', 'Use the Select tool (4) to rebuild longer stretches', Double up label); bar length hover gains 'Upkeep $40k/day'; Remove hover 'Remove the selection (Delete)'; changelog c005 'moved track controls to the bar at the top for one piece or many, speed limit included, and shift click now selects the track in between'. Text acknowledged, or name lines?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-2",
+    "title": "Five service periods text",
+    "text": "T-3542 stage 1b text (landed): 'Periods', 'Set for this line', 'This line', 'Same as game', column 'Period', rows Rush/Morning/Afternoon, hover 'Rush: 06:00-10:00, 16:00-20:00'; down-switch questions ('Morning, midday and afternoon will run 26 trains, the most of the three.' and the headway and game-wide versions), buttons 'Use 3 periods' / 'Keep 5 periods'; 'at high demand' readouts become 'in the morning peak' etc.; changelog c015 'added 4 and 5 service periods (rush, or morning and afternoon apart), set for the whole game or per line in the schedule window'. Text acknowledged, or name lines?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-3",
+    "title": "New countries changelog line",
+    "text": "Changelog c013: 'added Cuba, the Dominican Republic, Haiti, Jamaica, Trinidad and Tobago, the Bahamas, Barbados, Saint Lucia, Curaçao, Grenada, Saint Vincent, Aruba, Antigua, Dominica, the Cayman Islands, Bolivia and Paraguay'. Text acknowledged, or reword?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-4",
+    "title": "Guyana, Suriname, French Guiana",
+    "text": "They are all that is left of the Americas after T-3620. Do them next (one world run, overnight), or leave them?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  },
+  {
+    "id": "a-2026-11-19-5",
+    "title": "Deploy server save levels 23-24",
+    "text": "shonei-server f5309bf teaches the server's save check levels 23 (service periods) and 24 (station names); go test passes against master. It must go out with or before the next publish; early is harmless. Deploy now?",
+    "since": "2026-11-19",
+    "by": "maps-6b"
+  }
+]
