@@ -1,7 +1,7 @@
 // T-3405: a speed limit on a piece of track. On a new game in New York, a straight line of three stations
-// (A, M halfway, B) built with the edit API, so the track is two pieces of about 5 km. In the M-B piece's panel the Top speed
-// row shows 160 km/h; the Limit button beside it adds a Speed limit row at 160 storing no limit (T-3525), whose
-// stepper is clicked down to 60.
+// (A, M halfway, B) built with the edit API, so the track is two pieces of about 5 km. The M-B piece's panel shows Top
+// speed 160 km/h; the selection bar's Speed limit (T-3746: the piece clicked is the pick) opens a stepper at 160
+// storing no limit (T-3525), clicked down to 60, and the panel then shows the limit.
 // Checks M to B takes what a stop-to-stop run at 60 instead of 160 adds and the round trip grows, the stop-time hover
 // names the track's limit, the cash is unchanged, a save reloads with the limit and the same round trip, and turning
 // Limit off restores the first round trip exactly. Screenshots of the panel in artifacts/trainworld/t3405_*.png.
@@ -32,6 +32,8 @@ const limited = () => page.evaluate(() => window.tw.world.value.edges.filter((e)
 const cash = () => page.evaluate(() => window.tw.world.value.save.cash);
 const selectEdge = async (edge) => { await page.evaluate((edge) => { window.tw.selection.value = { kind: 'track', edge }; }, edge); await page.waitForTimeout(1000); };
 const panel = () => page.locator('.top-speed').first();
+// T-3746: the limit is set in the selection bar of the piece clicked; the panel shows it
+const bar = () => page.locator('.blueprint-bar .bp-limit').first();
 const shot = async (file) => {
   const p = await page.$('#inspector, .inspector');
   await page.waitForTimeout(600);
@@ -81,16 +83,17 @@ try {
   const row = panel();
   await row.waitFor({ timeout: 20000 });
   const text0 = (await row.innerText()).replace(/\s+/g, ' ');
-  check(/Top speed 160 km\/h ?Limit/.test(text0), 'the piece shows Top speed 160 km/h with a Limit button', text0);
-  check((await row.locator('.stepper').count()) === 0, 'no Speed limit row while Limit is off');
+  check(/Top speed 160 km\/h/.test(text0) && !/Speed limit/.test(text0), 'the panel shows Top speed 160 km/h and no limit', text0);
+  await bar().waitFor({ timeout: 10000 });
+  check((await bar().locator('.stepper').count()) === 0, 'no stepper in the bar while Speed limit is off');
   await shot('t3405_off_light.png');
 
-  await row.locator('button', { hasText: /^Limit$/ }).click();
+  await bar().locator('button', { hasText: /^Speed limit$/ }).click();
   await page.waitForTimeout(600);
-  // T-3525: a limit at the track's top is none, so Limit on opens the row at 160 and stores nothing
-  check((await limited()).length === 0, 'Limit on stores no limit at the track\'s 160', JSON.stringify(await limited()));
-  check((await row.locator('.stepper').count()) === 1 && /160 km\/h/.test(await row.locator('.stepper').innerText()), 'a Speed limit row with a stepper at 160 appears');
-  const minus = row.locator('.stepper button').first();
+  // T-3525: a limit at the track's top is none, so Speed limit on opens the stepper at 160 and stores nothing
+  check((await limited()).length === 0, 'Speed limit on stores no limit at the track\'s 160', JSON.stringify(await limited()));
+  check((await bar().locator('.stepper').count()) === 1 && /160 km\/h/.test(await bar().locator('.stepper').innerText()), 'a stepper at 160 appears in the bar');
+  const minus = bar().locator('.stepper button').first();
   for (let i = 0; i < 10; i++) { await minus.click(); await page.waitForTimeout(350); }
   await waitFor(async () => (await limited())[0]?.[1] === 60, 'the limit to reach 60');
   await minus.click();
@@ -100,7 +103,7 @@ try {
   await minus.click();
   await waitFor(async () => (await limited())[0]?.[1] === 40, 'the limit to stop at 40');
   check((await limited())[0]?.[1] === 40, 'the stepper stops at 40 km/h', JSON.stringify(await limited()));
-  const plus = row.locator('.stepper button').last();
+  const plus = bar().locator('.stepper button').last();
   await plus.click(); await page.waitForTimeout(600); await plus.click();
   await waitFor(async () => (await limited())[0]?.[1] === 60, 'the limit back at 60');
   await waitFor(async () => (await stats(built.line)).round > s0.round + 100, 'the round trip to grow');
@@ -113,7 +116,7 @@ try {
   check(s1.whys[1] === 4 && s1.limits[1] === 60 && s1.whys[0] !== 4, 'the stop-time hover names the track\'s limit on M-B only', JSON.stringify(s1));
   check(Math.abs((await cash()) - cash0) < 1e-6, 'setting the limit cost nothing', `${cash0} -> ${await cash()}`);
   const text1 = (await row.innerText()).replace(/\s+/g, ' ');
-  check(/Top speed 160 km\/h ?Limit Speed limit 60 km\/h/.test(text1), 'the panel shows Top speed 160 and the 60 km/h limit', text1);
+  check(/Top speed 160 km\/h ?Speed limit 60 km\/h/.test(text1), 'the panel shows Top speed 160 and the 60 km/h limit', text1);
   await shot('t3405_on_light.png');
 
   const dl = page.waitForEvent('download', { timeout: 60000 });
@@ -131,7 +134,7 @@ try {
   await panel().waitFor({ timeout: 20000 });
   await shot('t3405_on_dark.png');
   await page.evaluate(async () => { (await import('/src/game/ui.ts')).shade.value = 'light'; });
-  await panel().locator('button', { hasText: /^Limit$/ }).click();
+  await bar().locator('button', { hasText: /^Speed limit$/ }).click();
   await waitFor(async () => (await limited()).length === 0, 'the limit to turn off');
   await waitFor(async () => Math.abs((await stats(built.line)).round - s0.round) < 0.01, 'the first round trip');
   const off = await stats(built.line);

@@ -5,7 +5,7 @@
 //    every square drawn sits on the track, none round.
 // 2. A double click on blueprint track adds a point there (one undo takes it away), and does not zoom.
 // 3. Dragging the new point bends the track through it; one undo for the drag, one for the point.
-// 4. The track inspector's Add point puts one halfway along.
+// 4. The selection bar's Add point (a clicked blueprint piece, T-3746) puts one halfway along.
 // 5. A double click on constructed track adds nothing and says why.
 // Screenshots to artifacts/trainworld/trackvertex/. One PASS or FAIL line each.
 import { mkdir } from 'node:fs/promises';
@@ -134,12 +134,12 @@ try {
     report((await counts()).edges === c0.edges, 'a second undo takes the point away');
   }
 
-  // 4: the inspector's button
+  // 4: the selection bar's button for the piece clicked (T-3746)
   await page.evaluate(async (e) => { (await import('/src/game/ui.ts')).selection.value = { kind: 'track', edge: e }; }, drawn[0].id);
   await page.waitForTimeout(800);
   const btn = page.locator('button[aria-label="Add point"]');
   const has = await btn.count();
-  report(has === 1, 'a blueprint piece\'s inspector has Add point');
+  report(has === 1, 'a clicked blueprint piece has Add point in the selection bar');
   if (has) {
     const len0 = await page.evaluate((e) => window.tw.world.value.edges.find((x) => x.id === e).lengthM, drawn[0].id);
     await btn.click();

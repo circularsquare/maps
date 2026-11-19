@@ -14,7 +14,7 @@
 import { t } from "../i18n";
 import type { Map as MlMap } from "maplibre-gl";
 import { bpHover } from "../game/blueprintStretches";
-import { panelQuote, rebuildQuote } from "../game/rebuild";
+import { rebuildQuote } from "../game/rebuild";
 import { bpPicked, dragNodes, onlyOneKind, pathTo, removePicked, runOf, togglePicked, unionPicked, withoutPicked, type BpPicked } from "../game/blueprintPick";
 import { SWITCH_PICK_KEY } from "../ui/toolKeys";
 import { designSpeed, selection, tool } from "../game/ui";
@@ -117,7 +117,6 @@ export class BlueprintBox {
       bpPicked.value;
       bpHover.value;
       rebuildQuote.value;
-      panelQuote.value;
       selection.value;
       world.value;
       tool.value;
@@ -229,9 +228,8 @@ export class BlueprintBox {
     // T-1679: the track inspector's piece too; T-2269: the Build tab's breakdown row under the pointer first
     const sel = selection.peek();
     const picked = bpPicked.peek().edges.length > 0;
-    const edges = bpHover.peek().length ? bpHover.peek() : picked ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : sel?.kind === "tracks" ? sel.edges : [];
-    // T-3634: the track panel's Rebuild quote, its refused pieces and ramps drawn as the bar's
-    const quote = picked ? rebuildQuote.peek() : panelQuote.peek();
+    const edges = bpHover.peek().length ? bpHover.peek() : picked ? bpPicked.peek().edges : sel?.kind === "track" ? [sel.edge] : [];
+    const quote = picked ? rebuildQuote.peek() : null;
     if (!n || !edges.length) {
       this.overlay.renderer.setHighlight(null);
     } else {
@@ -432,13 +430,33 @@ export class BlueprintBox {
       bpPicked.value = hit;
       return;
     }
-    // T-1680: Shift+click on track adds the shortest way there from the pick
+    this.shiftAdd(hit);
+  }
+
+  /** T-1680: Shift+click on track adds the shortest way there from the pick; on a picked piece or a station it
+   * takes it out or adds it. */
+  private shiftAdd(hit: BpPicked) {
     const cur = bpPicked.peek();
     if (hit.edges.length && !cur.edges.includes(hit.edges[0])) {
       bpPicked.value = unionPicked(cur, { edges: pathTo(cur, hit.edges[0]), stations: [] });
       return;
     }
     this.toggle(hit);
+  }
+
+  /** T-3746: Shift+click while plain selecting, on the same pick by the tool's own rule (main.ts). False with
+   * nothing under the point (px). */
+  shiftClick(x: number, y: number): boolean {
+    const hit = this.under(x, y);
+    if (!hit.edges.length && !hit.stations.length) return false;
+    this.shiftAdd(hit);
+    return true;
+  }
+
+  /** Whether a station or track piece is under the point (px). */
+  hitAt(x: number, y: number): boolean {
+    const hit = this.under(x, y);
+    return hit.edges.length + hit.stations.length > 0;
   }
 
   /** T-1680: a double click on track picks its run, junction to junction (Shift adds it). */

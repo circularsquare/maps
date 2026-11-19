@@ -4,16 +4,19 @@ import { describeIssues } from "../game/issues";
 import { useLatestAnswer } from "./useClockQuery";
 import { queryClock } from "../workers/clockClient";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
-import type { Level } from "../game/types";
+import type { Level, TrackEdge } from "../game/types";
 import { distUnit, distance, levelLabel, levelName, millions, money, moneyCash, perDistance, speed, unitShort, upkeepText } from "../game/format";
 import { edgeUpkeep, stationUpkeepOf } from "../game/regionMoney";
-import { bpPicked, clearBpPicked, doubleUpPicked, doubleUpPieces, enableAll, limitPieces, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
+import { bpPicked, clearBpPicked, dropPicked, doubleUpPicked, doubleUpPieces, enableAll, limitPieces, oneWayPicked, oneWayPieces, reversePicked, kindPicked, levelPicked, offTotals, pickedState, removePicked, switchPicked, tracksPicked } from "../game/blueprintPick";
 import { canRebuild, type RebuildKind, rebuildKind, rebuildLevel, rebuildPicked, rebuildQuote, rebuildTip, rebuildTracks } from "../game/rebuild";
 import { liveMoney, moneyState } from "../game/money";
 import { tool } from "../game/ui";
 import type { BlueprintItem } from "../game/types";
 import { constructBlueprints } from "../game/lineActions";
-import { world } from "../game/world";
+import { edit, say, world } from "../game/world";
+import { setOneWays } from "../game/oneWay";
+import { mapBearing } from "../map/live";
+import { tipGrid } from "./tip";
 import { useBlueprintPieces, useBlueprintQuote } from "../game/quotes";
 import { blueprintParts, bpHover, switchRow, type BpPart } from "../game/blueprintStretches";
 import { locateNodes } from "./locate";
@@ -227,28 +230,65 @@ function PickDoubleUp() {
   );
 }
 
-/** T-3101: the track panel's one-way switch and Reverse for the picked single-track pieces. */
+/** The way a one-way piece runs, as an arrow turned to where its direction points on screen (its a-to-b bearing minus the map's). */
+function WayArrow({ e }: { e: TrackEdge }) {
+  const nodes = world.value?.nodes, a = nodes?.get(e.a), b = nodes?.get(e.b);
+  if (!a || !b) return null;
+  const [from, to] = e.oneWay === 2 ? [b, a] : [a, b];
+  const north = (to.lat - from.lat), east = (to.lng - from.lng) * Math.cos((from.lat * Math.PI) / 180);
+  const deg = (Math.atan2(east, north) * 180) / Math.PI - mapBearing.value;
+  return <span class="way-arrow" aria-hidden="true" style={{ transform: `rotate(${deg}deg)` }}><Icon.arrowUp /></span>;
+}
+
+/** T-3101: the one-way switch and Reverse for the picked single-track pieces; T-3746: for one piece too, with
+ * its way as an arrow, and Use automatic way (T-3137) for the pieces pinned against the way their run gives. */
 function PickOneWay() {
   const p = bpPicked.value, w = world.value;
   const pieces = useMemo(() => oneWayPieces(p), [p, w]);
-  // one piece: the track panel has the same controls
-  if (pieces.length < 2) return null;
+  if (!pieces.length) return null;
   const all = pieces.every((e) => e.oneWay), some = pieces.some((e) => e.oneWay);
+  const pinned = pieces.filter((e) => !!e.setWay && (e.setWay === 3 ? 0 : e.setWay) !== (e.autoWay ?? 0));
+  const auto = all && pieces.every((e) => !e.setWay);
   return (
     <div class="group">
-      <button class={"btn text" + (all ? " on" : "")} onClick={() => void oneWayPicked(pieces)}>{t("trackInspector.oneWay")}</button>
+      <button class={"btn text" + (all ? " on" : "")} data-tip={auto ? t("trackInspector.oneWayAutoTip") : undefined} onClick={() => void oneWayPicked(pieces)}>{t("trackInspector.oneWay")}</button>
+      {pieces.length === 1 && pieces[0].oneWay ? <WayArrow e={pieces[0]} /> : null}
       {some && <button class="btn text" onClick={() => void reversePicked(pieces)}>{t("trackInspector.reverse")}</button>}
+      {pinned.length > 0 && <button class="btn text" onClick={() => void setOneWays(pinned.map((e) => ({ edge: e.id, dir: 0 })))}>{t("trackInspector.autoWay")}</button>}
     </div>
   );
 }
 
-/** T-3525: the track panel's speed limit for every picked piece but a crossover, one edit and one undo; with the
- * Select tool only, since plain selecting picks one piece whose panel has the same control. */
+/** T-3746: Construct and Add point for a pick of one blueprint piece, as its track panel had them. */
+function PickOnePiece() {
+  const p = bpPicked.value, w = world.value;
+  const e = !p.built && p.edges.length === 1 && !p.stations.length ? w?.edges.find((x) => x.id === p.edges[0]) : undefined;
+  if (!w || !e || e.built) return null;
+  // a crossover is one thing: both diagonals are priced and built together (T-391)
+  const cost = e.cost + (e.crossover ? w.edges.find((x) => x.id === e.partner)?.cost ?? 0 : 0);
+  const construct = async () => {
+    const a = await edit({ op: "construct", edges: [e.id], stations: [] });
+    if (a.ok) say(t("trackInspector.constructed", { crossover: !!e.crossover, price: money(a.charge * 1e6) }));
+  };
+  return (
+    <>
+      {!e.crossover && (
+        <button class="btn icon" data-tip={t("trackInspector.addPointTip")} aria-label={t("trackInspector.addPoint")} onClick={() => void edit({ op: "addPoint", edge: e.id })}>
+          <Icon.addPoint />
+        </button>
+      )}
+      <button class="btn text" onClick={() => void construct()}>{t("trackInspector.construct", { price: money(cost) })}</button>
+    </>
+  );
+}
+
+/** T-3525: the speed limit for every picked piece but a crossover, one edit and one undo; T-3746: while plain
+ * selecting too, one piece included, since the track panel has no controls. */
 function PickLimit() {
   const p = bpPicked.value, w = world.value;
   const pieces = useMemo(() => limitPieces(p), [p, w]);
   const { value, on, toggle, step } = usePieceLimit(pieces);
-  if (!pieces.length || tool.value !== "blueprint") return null;
+  if (!pieces.length) return null;
   const label = t("blueprint.speedLimit");
   return (
     <span class="bp-limit">
@@ -258,16 +298,16 @@ function PickLimit() {
   );
 }
 
-/** T-353, T-815, T-829: while the Select tool has a selection (or a blueprint piece is clicked, T-2283), a bar at the map's top centre, the
- * selection's inspector: how many pieces and how much track, then for blueprint the elevation
- * buttons, regular or high-speed track (T-1898, for its double track), Disable and Enable; Remove
- * and Clear for either kind. Appears and goes in one step. */
+/** T-353, T-815, T-829: while the pick holds anything, a bar at the map's top centre, the selection's
+ * inspector and the one place its track is changed (T-3746: the track panel only informs): how many pieces
+ * and how much track, then for blueprint the elevation buttons, regular or high-speed track (T-1898, for its
+ * double track), Disable and Enable; Remove and Clear for either kind. Appears and goes in one step. */
 export function BlueprintBar() {
   const s = pickedState.value;
   const n = s.edges + s.stations;
   const [levels, setLevels] = useState(false);
   useEffect(() => { if (n === 0) setLevels(false); }, [n]);
-  // T-2283: the plain select tool's pick is the blueprint track clicked (game/blueprintPick.ts)
+  // T-2283, T-3746: plain selecting's pick is the track clicked and Shift+clicked (game/blueprintPick.ts)
   if ((tool.value !== "blueprint" && tool.value !== "select") || n === 0) return null;
   const piece = t("blueprint.piece", { built: s.built, pieces: pieces(s.edges, s.stations) });
   const levelTip = (l: Level) => t("blueprint.levelTip", { level: lowerWord(levelName(l)), label: levelLabel(l) });
@@ -289,14 +329,22 @@ export function BlueprintBar() {
     if (s.built) rebuildTracks.value = n === ownTracks ? null : n;
     else if (n !== ownTracks) void tracksPicked(n);
   };
-  // T-2397: E and Delete act on the pick with the Select tool only (map/blueprintBox.ts); Esc in both
+  // T-2397: E acts on the pick with the Select tool only (map/blueprintBox.ts); Delete and Esc in both (T-3746)
   const keys = tool.value === "blueprint";
   const switchKey = SWITCH_PICK_KEY.toUpperCase();
+  // T-3746: the picked track's upkeep, once built for blueprint, in the length's hover (the track panel's summed upkeep)
+  const m = moneyState.value, w = world.value;
+  let upkeep = 0;
+  if (m && w && s.edges > 0) {
+    const picked = new Set(bpPicked.value.edges);
+    for (const e of w.edges) if (picked.has(e.id) && !e.crossover) upkeep += edgeUpkeep({ ...e, built: true }, m);
+  }
+  const lengthTip = m ? `${t("blueprint.lengthTip")}\n${tipGrid([[t("trackInspector.upkeep"), t("inspector.perDay", { value: money(upkeep) })]])}` : t("blueprint.lengthTip");
   return (
     <>
       <div class="blueprint-bar" role="group" aria-label={t("blueprint.selection")}>
         <span class="count" data-tip={t("blueprint.selectedTip", { piece })}><span class="bp-ico"><Icon.marquee /></span><span class="bp-short">{tNumber(n)}</span><span class="bp-label">{t("blueprint.selected", { count: tNumber(n) })}</span></span>
-        {s.edges > 0 && <span class="num" data-tip={t("blueprint.lengthTip")}>{distance(s.lengthM)}</span>}
+        {s.edges > 0 && <span class="num" data-tip={lengthTip}>{distance(s.lengthM)}</span>}
         {canLevel && <div class="bp-levels"><LevelButtons value={chosenLevel} tip={levelTip} onPick={pickLevel} /></div>}
         {canLevel && (
           <button class={"btn bp-level" + (s.level === null ? "" : " lv on")} style={s.level === null ? undefined : { "--lc": LEVEL_COLOURS[s.level], "--lk": inkOn(LEVEL_COLOURS[s.level]) }}
@@ -314,6 +362,7 @@ export function BlueprintBar() {
       {s.built && (
         <button class="btn text" data-tip={rebuildTip(q)} disabled={!canRebuild(q)} onClick={() => rebuildPicked()}><Icon.wrench /><span class="bp-label">{t("blueprint.rebuild")}</span></button>
       )}
+      <PickOnePiece />
       {!s.built && (
         <div class="group">
           <button class="btn text" data-tip={t("blueprint.disableTip", { keyed: keys && !s.off, key: switchKey })} disabled={!s.on} onClick={() => void switchPicked(true)}><Icon.switchOff /><span class="bp-label">{t("blueprint.disable")}</span></button>
@@ -323,8 +372,8 @@ export function BlueprintBar() {
       <PickDoubleUp />
       <PickOneWay />
       <PickLimit />
-      <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: keys })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
-      <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => clearBpPicked()}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
+      <button class="btn text" data-tip={t("blueprint.removeTip", { keyed: true })} onClick={() => void removePicked()}><Icon.bin /><span class="bp-label">{t("blueprint.remove")}</span></button>
+      <button class="btn text" data-tip={t("blueprint.clearTip")} onClick={() => (keys ? clearBpPicked() : dropPicked())}><Icon.cross /><span class="bp-label">{t("blueprint.clear")}</span></button>
       </div>
       {canLevel && levels && (
         <div class="blueprint-levels touch-levels">

@@ -552,9 +552,6 @@ body.resizing, body.resizing * { user-select: none; }
 .pane-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
 /* T-1134: an inspector's buttons, in a row under its header */
 .inspector-actions { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin: 8px 0; gap: 6px 8px; }
-/* T-3408: a built piece's rebuild choices, then the hint pointing to the Select tool */
-.piece-rebuild { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 8px 0; }
-.piece-rebuild-hint { margin: -2px 0 12px; }
 
 /* a hairline slider (the settings pane's) */
 .slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
@@ -2069,9 +2066,9 @@ button.save-add:hover { color: var(--text); }
   .blueprint-bar .count { min-width: 0; display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; }
   .blueprint-bar .bp-ico { display: inline-flex; }
   .blueprint-bar .bp-levels { display: none; }
-  /* T-3525: no room for the speed limit in the phone's one row */
-  .blueprint-bar .bp-limit { display: none; }
   .blueprint-bar .btn, .blueprint-bar .btn.bp-level { height: calc(36px / var(--ui, 1)); min-width: calc(36px / var(--ui, 1)); padding: 0; }
+  /* T-3746: the bar is the track's only controls, the speed limit included, so the row scrolls; buttons that are only words keep their padding */
+  .blueprint-bar > .btn.text:not(:has(svg)), .blueprint-bar > .group > .btn:not(:has(svg)), .blueprint-bar .bp-limit > .btn { padding: 0 8px; }
   .blueprint-bar .btn.bp-level { display: inline-grid; }
   .blueprint-levels .btn.lv { min-width: calc(40px / var(--ui, 1)); }
   .blueprint-levels { display: block; position: absolute; left: 50%; bottom: calc(36px / var(--ui, 1) + 26px); transform: translateX(-50%); z-index: 4; }

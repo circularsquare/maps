@@ -86,8 +86,8 @@ Full design, numbers and sources: `notes/T-008.md`.
   path): each segment drawn is one edge (each pair's, on quad track), joined to the next at a
   plain node (two edge ends, no station). A route edit given clicked corners (`pis`, as the
   real-network snap sends them, T-727; the drawing tool sends none) makes one piece per corner, cut
-  in the middle of the leg between two corners, the shape unchanged. The delete tool, Construct in the track
-  inspector and the track inspector itself act on one piece, and removing a piece leaves its
+  in the middle of the leg between two corners, the shape unchanged. The delete tool, Construct for a clicked
+  piece (in the selection bar) and the track inspector act on one piece, and removing a piece leaves its
   neighbours with track ends where it was. The joints are not drawn and cost nothing; trains pass
   them with no speed limit or delay (a track section runs on through a plain node, 6.2). A station placed
   within half a platform of joints first joins the pieces there into one edge, joint after joint
@@ -273,7 +273,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   junction with nothing on one side, ways that contradict round a loop) each run takes its way by its own ends,
   and those ending at such a junction run both ways. A pre-0.4 save pins such a group whole when a station is
   on any of it. A line of a loaded save whose path runs against a way its track now takes is moved through its
-  same stops on load (`reroute_against_ways`), as an edit changing a way moves it. The track inspector's "Run trains one way" switch shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
+  same stops on load (`reroute_against_ways`), as an edit changing a way moves it. The selection bar's "Run trains one way" switch (a piece clicked is the pick, T-3746) shows the way the piece runs, taken by itself included (hover "Set by the track it joins" then). Switched on it stores the way (the run's own, else 1), off it stores 3 where the run gives a way (pinned both ways) and 0 where it does not; "Use automatic way", shown only where the stored way differs from the run's, stores 0 again; "Reverse direction" turns it
   round (`TrackApi::set_edge_oneway`, free, one undo step, 0 to 3; `edge_oneway` gives the set value,
   `edge_infer` the run's own way, `edge_way` and `oneway_edges` the way, `join_edges` the joins that count);
   it also moves the piece's joins that count to the double track that carries a set way 1 or 2

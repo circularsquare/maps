@@ -1,4 +1,4 @@
-// T-3137 C4: the track inspector's one-way switch on single track shows the way (inferred included), pins both ways
+// T-3137 C4: the one-way switch (the selection bar's for the piece clicked, T-3746) on single track shows the way (inferred included), pins both ways
 // (stored 3), goes back to automatic, and setting a way moves the piece's end join to the track that carries it.
 // A hand-laid stub off a double main's upper track: its way is inferred. Pictures in artifacts/trainworld/t3137-way-*.png.
 // From the maps root, on a Vite of your own (node trainworld/checks/dev-nowatch.mjs 6203):
@@ -40,7 +40,8 @@ try {
   });
   check(stub.ok && stub.id !== undefined, 'a stub laid off the main\'s upper track', JSON.stringify(stub));
   const row = () => page.evaluate((id) => { const e = window.tw.world.value.edges.find((x) => x.id === id); return { way: e.oneWay ?? 0, set: e.setWay ?? 0, auto: e.autoWay ?? 0, join: e.join ?? 0 }; }, stub.id);
-  const box = () => page.evaluate(() => { const c = document.querySelector('label.check input'); const names = [...document.querySelectorAll('.btn.text')].map((b) => b.textContent.trim()); return { on: c?.checked ?? null, buttons: names }; });
+  // T-3746: the switch is the selection bar's toggle for the one piece clicked
+  const box = () => page.evaluate(() => { const bar = document.querySelector('.blueprint-bar'); const names = [...(bar?.querySelectorAll('.btn.text') ?? [])].map((b) => b.textContent.trim()); const c = [...(bar?.querySelectorAll('.btn.text') ?? [])].find((b) => b.textContent.trim() === 'Run trains one way'); return { on: c ? c.classList.contains('on') : null, buttons: names }; });
   const jump = async (z) => {
     await page.evaluate(async ([id, z]) => {
       const tw = window.tw, w = tw.world.value, e = w.edges.find((x) => x.id === id), a = w.nodes.get(e.a), b = w.nodes.get(e.b);
@@ -60,7 +61,7 @@ try {
   await shot('1-inferred');
 
   // off: pinned both ways (3)
-  await page.locator('label.check').first().click();
+  await page.locator('.blueprint-bar button', { hasText: 'Run trains one way' }).click();
   await wait(900);
   const r1 = await row(), b1 = await box();
   check(r1.set === 3 && r1.way === 0 && r1.join === r0.join, 'switch off stores 3 (both ways pinned), the join stays', JSON.stringify(r1));
@@ -83,11 +84,11 @@ try {
   await shot('3-reversed');
 
   // switch on from both-ways: stores the automatic way
-  await page.locator('label.check').first().click();
+  await page.locator('.blueprint-bar button', { hasText: 'Run trains one way' }).click();
   await wait(900);
   const r4 = await row();
   check(r4.set === 3 && r4.way === 0, 'off again pins both ways', JSON.stringify(r4));
-  await page.locator('label.check').first().click();
+  await page.locator('.blueprint-bar button', { hasText: 'Run trains one way' }).click();
   await wait(900);
   const r5 = await row();
   check(r5.way !== 0 && r5.set === r5.way, 'switching on stores a way', JSON.stringify(r5));

@@ -112,7 +112,7 @@ the map's other controls', and the level buttons' numbers 15 px (also in the pho
   quad is two double tracks' price (2x the cost and upkeep shown). Single goes with every type, High speed and Tram too [T-3352]
   (0.6x of the type's price); quad can be high speed [T-3126]; picking single clears quad. Quad tram is off-street tram track, so
   picking it turns Snap to streets off, and turning that on picks Double again. A browser remembers the
-  count picked (`build.tracks`). Double up (the track inspector's and the selection bar's) still adds the pair beside a run.
+  count picked (`build.tracks`). Double up (the selection bar's) still adds the pair beside a run.
   Then the **keep placing** switch, the **snap switch** ("Snap to real world network") [T-727]:
   while it is on and the track tool is in hand, the real network is drawn at full strength
   ([ui-map.md](ui-map.md) "Real network"); what it does to drawing is [below](#snapping-to-the-real-network);
@@ -751,7 +751,7 @@ changing by any route, and a delete's late reply does not draw it again under an
 and 4 m either side, all of a terminus's), rings and removes the station, with its own question, and the track stays; not
 zoomed out where stations are hidden; track under the station's box that does not touch its node (a siding) is the delete tool's pick instead [T-3629]. A station's short end piece [T-2797; `stationStub` in `game/remove.ts`, `holds_station` in the track
 model], from the station to a bare end and at most 11 m past the platform, also takes the station under the delete tool, bare end included, since
-removing that piece would only lay it back; zoomed out, or from the track inspector or the Select tool's Remove with only such pieces picked, it is refused
+removing that piece would only lay it back; zoomed out, or from the selection bar's Remove with only such pieces picked, it is refused
 ("A station needs this track. Remove the station first."). **Keys** [T-2797]: with the Select tool's pick, Delete or Backspace removes it; with track or a station selected and no tool on,
 Delete or Backspace is its Remove button; with nothing selected, Delete picks the delete tool; while drawing, Delete takes the last segment back like Backspace. A piece beside a through station is drawn red, and named by its
 length, only past the platform's end, which is all that goes ([track-and-service.md](track-and-service.md)
@@ -807,19 +807,24 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   its run, every piece out each way to the next junction or track end (through stations and
   joints where only two pieces meet), stopping where built track meets blueprint; with Shift held
   it adds the run. Shift+click on unpicked track adds it and the shortest way there along track
-  of the pick's kind (by length, from any picked piece's end); with no such way it adds the piece
-  alone. Shift+click on a picked piece or station takes it out; Shift+click on a station adds it.
-  The tool's hover says so. A finger's tap adds or takes out one piece as before.
+  of the pick's kind (by length, from any picked piece's end), never through a crossover; with no such way it adds
+  the piece alone, and so does a detour [T-3746; Anita, 2026-11-19: "add only the clicked piece when way around is a
+  big detour, no key for "just this piece""]: a way more than 3 times the straight distance from the clicked
+  piece's ends to the nearest end of a picked piece, plus 2 km (a parallel line joined only at a terminus). A
+  crossover Shift+clicked goes in alone. Shift+click on a picked piece or station takes it out; Shift+click on a
+  station adds it. The same rule holds while plain selecting ("Shift+click while plain selecting" above). The
+  tool's hover says so. A finger's tap adds or takes out one piece as before.
 - **Right or middle drag moves the map** while the tool is on; the wheel and arrow keys work as
   always. The map's own left drag is off for the tool's time.
 - **The selection bar** [T-353; `BlueprintBar` in `ui/Blueprint.tsx`] sits at the top centre of the
-  map while the tool has a selection, and while plain selecting has a blueprint piece clicked
-  [T-2283]: the click opens the track inspector (which has no level buttons) and makes that one
-  piece the pick, so the bar acts on it; any other selection, Esc or Clear drops it, and built
-  track clicked gets no bar (on the demand buttons' row on a map column over 1350 px, so it
+  map while anything is picked: with the tool, and while plain selecting after a click on track, blueprint or
+  built [T-2283, T-3746], or a Shift+click (above); the click opens the track inspector, which only informs, and
+  the bar is the one place its controls are (on the demand buttons' row on a map column over 1350 px, so it
   clears the status tag beside them [T-349]; one row lower below that, lower again below 680 px; it
-  appears and goes in one step) is the pick's inspector: "N selected" (its hover says blueprint or
-  constructed and lists track and stations), the picked track's total length, and the actions.
+  appears and goes in one step). It is the pick's inspector: "N selected" (its hover says blueprint or
+  constructed and lists track and stations), the picked track's total length (its hover: "Length of the selected
+  track", then the picked track's upkeep a day, once built for blueprint, crossovers left out [T-3746]), and the
+  actions.
   For blueprint: the seven level buttons tinted as in the track bar (the one all the picked
   track is on solid), **Regular**, **High speed** and **Tram** while the pick holds blueprint double track
   [T-1898, T-3108; `kindPicked`, `TrackApi::set_edges_kind`] (the kind all of it is solid, none when
@@ -833,24 +838,26 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   speed, Regular with the speed before it), so the next track placed is laid the same way [T-2474]; a level
   no picked piece could take leaves the tool as it was. Then Disable and Enable as buttons with icon and word (one key, E, enables when any picked piece is off and
   disables when all are on, T-2338; Enable's hover names it, and Disable's while all are on), each greyed when it would change nothing. For either kind: **Double up** while the pick
-  holds double track (the track inspector's icon) [T-1680; `doubleUpPieces`, `doubleUpPicked`]: one
+  holds double track (an icon of two rails and a plus) [T-1680; `doubleUpPieces`, `doubleUpPicked`]: one
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
   one undoable edit a run, so it covers each run whole, junction to junction, even where only part
   is picked; its hover gives the summed price and the runs' count, or the first refusal, greyed
-  when none can; then Remove (key Delete or Backspace) and Clear. E and Delete act on the pick with the Select tool
-  only, so while plain selecting the hovers name no key but Clear's Esc [T-2397]. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
+  when none can; then Remove (key Delete or Backspace) and Clear. E acts on the pick with the Select tool only, so
+  while plain selecting Disable's and Enable's hovers name no key [T-2397]; Delete and Esc act in both [T-3746]. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
   disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable
   them all", which switches every disabled piece on in one undoable edit) [T-1296, T-1420]: the clock's
   `blueprintCost` (everything unbuilt, disabled pieces, their junctions and crossings in it) less the
   quote's rows other than new cars.
   Disabling and enabling are one undoable edit each (Ctrl+Z). Esc clears the pick, then leaves the
-  tool; leaving also clears it. The bar is about 580 px wide with the elevation buttons and keeps
+  tool; leaving keeps it for plain selecting, and picking the tool keeps plain selecting's [T-3746]. The bar is about
+  580 px wide with the elevation buttons and keeps
   260 px clear each side of the map, wrapping onto more rows where the map is narrower [T-841]. On
   a phone ([ui-panels.md](ui-panels.md) "Narrow screens") it sits on the map's bottom edge instead,
-  the map's whole width in one row that fits 390 px (it scrolls sideways only below about 360 px),
-  every button 36 px at least: the tool's icon before the count, one elevation button showing the
-  pick's level that opens the seven above the bar, and the four actions as icons with their hovers.
+  the map's whole width in one row, every button 36 px at least: the tool's icon before the count, one elevation
+  button showing the pick's level that opens the seven above the bar, the actions as icons with their hovers, and
+  the controls that are only words (one way, Speed limit, Construct) as words; the row scrolls sideways when it holds
+  more than fits [T-3746: the bar is the track's only controls].
   It sits under the tool notes that share the corner [T-1263].
 - **Track count** [T-3296, T-3321 (Anita 2026-11-12: "same as for placing new track, just the little 1 ilne or 2
   lines"); `TrackCountButtons` in widgets.tsx, `tracksPicked`, `rebuildTracks`; `TrackApi::set_edges_tracks`,
@@ -867,18 +874,18 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   the hover says what keeps double track double. Either edit is final. Rules in
   [track-and-service.md](track-and-service.md) "Rebuilding constructed track".
 - **Speed limit** [T-3525; `PickLimit` in `ui/Blueprint.tsx`, `usePieceLimit` in `ui/inspector/PieceLimit.tsx`]: the
-  track panel's limit for every picked piece but a crossover, blueprint or built, free and at once (no Rebuild), after
-  the one-way buttons; with the Select tool only (plain selecting picks one piece, whose panel has it). A **Speed
+  limit for every picked piece but a crossover, blueprint or built, free and at once (no Rebuild), after the one-way
+  buttons; one piece included, with the tool or plain selecting (T-3746: the track panel only shows it). A **Speed
   limit** toggle, on while any picked piece has a limit, opens a stepper beside it (steps of 10 km/h, 40 up to the
   highest top speed in the pick) showing the speed all the picked track runs at (its limit, else its kind's top),
   "Mixed" when the pieces differ; from mixed a step down starts from the slowest piece and a step up from the slowest
   piece still under its own top (`nextLimit` in `game/pieceLimit.ts`), so a piece at its top never holds the rest
   back. Each step sets every piece to that speed
   in one edit and one undo; a piece whose top speed it reaches or passes has no limit. The toggle off takes every
-  limit off. Not on the phone's one-row bar.
+  limit off. On the phone's one-row bar too [T-3746].
 - **Level** [T-815; `TrackApi.set_edges_level`]: a button puts every picked blueprint stretch
-  on that level, one undoable edit: each piece's corners as the track inspector's "Level" buttons
-  do for one, and every node all of whose track is picked (a joint, a loose end, a
+  on that level, one undoable edit: each piece's corners, and every node all of whose track is picked (a joint, a
+  loose end, a
   junction, a blueprint station with its platform), so a picked run has no ramps at its joints. A
   node with other track keeps its elevation and the picked piece ramps to it, except a blueprint
   station: it goes with the pick and ramps on the blueprint track beyond it (T-3241,
@@ -891,8 +898,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   change."), or that none could. The phone bar's one button's hover is the level's name ("Viaduct"),
   or "Level of the selected track: mixed".
 - **Rebuild** [T-3059; `game/rebuild.ts`, `TrackApi::rebuild_quote` and `rebuild_pieces` in
-  `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060; one piece also from the track inspector,
-  "Rebuild in the track inspector" below]: a pick of built track and
+  `sim/src/track/wasm/rebuild.rs`; the preview of the new shape is T-3060; one piece clicked too, T-3408, T-3746]: a pick of built track and
   stations has the same level buttons and Regular / High speed as a blueprint pick, plus **Tram** (T-3088, the
   track tool's word), but they only choose (the chosen ones are solid; nothing is chosen at first), and a
   **Rebuild** button (wrench icon and word) spends: it is greyed until a choice is made. The track and the
@@ -952,7 +958,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   on constructed track it is refused ("Built track cannot be moved. Remove it and draw it again."),
   as are a point within 5 m of a piece's end or on a ramp, and one inside a platform. A mouse's
   double click never zooms the map; a finger's double tap still zooms with the select tool, and a
-  finger adds a point with the track inspector's Add point (below). The track tool's double click
+  finger adds a point with the selection bar's Add point. The track tool's double click
   ends a run as before, and the Select tool's picks a run.
 - **Platform ends** [T-1869; `map/dragHandles.ts`, `map/nodeDrag.ts`]: with the select or track
   tool, from zoom 14, where platforms are drawn, both ends of a blueprint station's platform have a
@@ -968,62 +974,39 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   moves less is the click that places or branches track as always (no hold time). Constructed nodes
   are not grabbed. A route being drawn
   from the dragged node is dropped when the drag lets go; a route from another point carries on.
-- **The track inspector** of a blueprint stretch has Construct, "Remove blueprint" (built track
-  says "Remove track", beside Rebuild, below) and the lines here [T-1669]. Its title carries **Add point** [T-2951], an
-  icon of track with a square on it and a plus, on blueprint track that is not a crossover: a point
-  halfway along the piece, as a double click adds one (hover "Add a point halfway along"). On single rail track it has the
-  **Run trains one way** switch, **Reverse direction** and **Use automatic way** ([track-and-service.md](track-and-service.md)
-  6.1 "Track settings"). It has no corner list and
-  no curve radius: corners are dragged on the map. Its level is set in the selection bar, which the
-  click on the piece opens too (`edgesLevel`; a notice says when it cannot change) [T-841, T-244,
-  T-2283]. On double track (blueprint or
-  built) the title carries **Double up** [T-708; `DoubleUp` in `ui/inspector/TrackInspector.tsx`], an
-  icon of two rails and a plus: a click adds the express pair beside its run as blueprint
-  ([track-and-service.md](track-and-service.md) 6.1 "Doubling up"). Its hover gives the price, or
-  why not, greyed (a pair beside already). The title names the track: Double track, Single track
-  or High-speed track [T-817]; high-speed track has no Double up. A **Top speed** row above
-  Slowest curve gives the track's cap, 160 km/h or 320 on high-speed track (the tram kinds' 60 and 80), its hover
-  saying which trains run up to what while no limit is set [T-817]; the slowest curve on high-speed track counts up
-  to 320. Beside the cap a mini **Limit** toggle, as on a line's Top speed row [T-3405; `ui/inspector/PieceLimit.tsx`]:
-  on, a **Speed limit** row with a stepper (steps of 10 km/h, 40 up to the cap, starting at the cap) holds trains on
-  this piece to it; free, one undoable edit a step ([track-and-service.md](track-and-service.md) "A piece's speed
-  limit"). A limit at the cap is none [T-3525], so turning Limit on only opens the row, storing nothing until a step
-  down, and stepping back up to the cap takes the limit off with the row still open. The Select tool's bar sets it on
-  a whole pick ([below](#the-select-tool) "Speed limit").
-- **Rebuild in the track inspector** [T-3408; `ui/inspector/PieceRebuild.tsx`]: built track that is not a crossover
-  has, under its header, the bar's level buttons, the track count buttons (1-line and 2-line icons) and the track
-  type (Regular / High speed on rail, Tram on tram track), the piece's own on; then **Rebuild** (wrench and word) on
-  the left of the row whose right is Remove track; then a grey line "Use the Select tool (4) to rebuild longer
-  stretches" (no key on a phone). A level, and the other family's kinds (Tram on rail, Regular and High speed on
-  tram), show only where the quote for this piece alone changes it and refuses nothing (`rebuildWhole`): the track
-  joined to a piece often ties its level (a piece with no corners between junctions) and its family (anything
-  joined to the other family), and then the buttons are left out, not greyed; with no other level open the level
-  buttons go, and so does a type group of only the piece's own kind. They are asked once a selection and after each
-  edit (Anita, 2026-11-17: "show level and tram as options, if they are options"). It is the Select bar's Rebuild
-  (below) for a pick of this one piece and no stations: the same choices (picking what the piece has drops the
-  choice), quote, hover, question, price and notice, through the same code (`rebuildPieces` in `game/rebuild.ts`),
-  and final like it. Greyed Rebuild has no hover.
-- **Several pieces in the track inspector** [T-3634; `game/trackSet.ts`, `TracksInspector` in
-  `ui/inspector/TrackInspector.tsx`]: with built track selected (one piece or a set), Shift+click on built track that
-  is not a crossover adds the piece, a line on it or not, and Shift+click on a piece in the set takes it out; a set of
-  one is the plain track inspector again, and a plain click selects as always. Any other track Shift+clicked leaves
-  the set as it is; Shift+click with anything else selected does what it did. A Shift press on track then is a
-  click, so MapLibre's Shift+drag zoom starts only off track. The set is the selection (`{ kind: "tracks" }`), apart
-  from the Select tool's pick, whose Shift+click adds the way between. Its inspector is titled "3 pieces of track",
-  with the total length, the kind when all share it and the level or range under it; then the rebuild choices with
-  every level and every type offered, as on the bar, the set's own level, count and type on when all share it;
-  Rebuild and the Select tool line; Cost to construct and Upkeep summed; the lines on any of them. Remove track (T-3638) beside Rebuild, and the Delete key, remove the set
-  as the bar's Remove does a pick (`removeTracks` in `game/remove.ts`, edit `removePieces`): one question naming the
-  total length (as for one piece, built and final), lines that lose a stop listed, the whole set refused with the
-  track model's reason when a piece cannot go, the set deselected after. Touch has no way to build a set.
-  Rebuild is the bar's for a pick of these pieces and no stations: one quote, question and charge for all, final;
-  the pieces it would refuse are red on the map and the ramps beyond in the band, as for the bar (one piece's panel
-  draws its quote that way too). The set is drawn in the pick's band; pieces gone after an edit drop out of it.
-  Hover tags carry the gesture (none on a touch screen): one built piece's title "Shift+click more track to rebuild
-  it together", a set's "Shift+click track to add it or take it out".
-- **On a crossover's diagonal** [T-391] the track inspector is titled "Crossover" and drops the
-  elevation controls; it shows the slowest curve, the price of both diagonals, Construct
-  (builds both) and Remove crossover.
+- **The track inspector** [T-1669, T-3746; `ui/inspector/TrackInspector.tsx`] informs and has no controls of its
+  own (Anita, 2026-11-19: "we can have the controls only show in the selection bar at the top. if 1 piece is
+  selected, or if many pieces"): a click on track while plain selecting opens it and makes that piece the pick, so
+  the selection bar ([below](#the-select-tool)) shows above the map with every control for it. The title names the
+  track: Double track, Single track or High-speed track [T-817], the tram kinds, or Crossover [T-391] (its hover,
+  not on touch: "Shift+click to add to selection.", since the gesture has no control); under it the
+  length, kind and level, "Blueprint" and "Disabled" while they hold. A **Top speed** row gives the track's cap,
+  160 km/h or 320 on high-speed track (the tram kinds' 60 and 80), its hover saying which trains run up to what while
+  no limit is set [T-817]; with a limit set, a **Speed limit** row gives it [T-3405; `ui/inspector/PieceLimit.tsx`];
+  then Slowest curve (on high-speed track counted up to 320), Cost to construct (both diagonals of a crossover) and
+  Upkeep with its hover. Then the lines here, each opening its line, and with none a **+** for a new line from the
+  stations on it [T-1669]. It stays for what the bar cannot hold: the lines through the piece, its slowest curve, its
+  cost and upkeep. It has no corner list and no curve radius: corners are dragged on the map.
+- **One piece in the selection bar** [T-3746, T-2283; `PickOnePiece`, `PickOneWay`, `PickLimit` in
+  `ui/Blueprint.tsx`]: the bar's controls work on a pick of one piece as on many: the levels, track type and count,
+  Rebuild for built track (its choices dropped when a click picks other track; one grown or cut by Shift+click keeps
+  them), Disable and Enable for blueprint, **Double up** [T-708, T-1680] for double track, the **Speed limit**
+  ([below](#the-select-tool) "Speed limit"), Remove and Clear. On single rail track **Run trains one way**,
+  **Reverse direction** and **Use automatic way** for the pieces pinned against the way their run gives (T-3137,
+  [track-and-service.md](track-and-service.md) 6.1 "Track settings"), the switch's hover "Set by the track it joins"
+  while all of them run one way by themselves; one piece running one way shows its way as an arrow beside the
+  switch. A pick of one blueprint piece adds **Add point** [T-2951] (an icon of track with a square on it and a plus,
+  not on a crossover: a point halfway along the piece, as a double click adds one; hover "Add a point halfway
+  along") and **Construct for $X** (the piece, or both diagonals of a crossover, built alone at its own price).
+- **Shift+click while plain selecting** [T-3746; `selectAt` in `main.ts`, `BlueprintBox.shiftClick`]: with anything
+  picked, Shift+click adds to the pick by the Select tool's own rule (the track between, a station, a picked piece
+  taken out; [below](#the-select-tool) "Runs"), a line on the track or not; a Shift+click on nothing pickable keeps
+  the pick. Down to one track piece its inspector opens again; more than one has no inspector and the bar alone
+  holds it. A Shift press on track or a station then is a click, so MapLibre's Shift+drag zoom starts only off them.
+  A plain click on anything drops the pick (track clicked becomes the new one); Esc and the bar's Clear drop it and
+  close the panel; Delete removes a pick of more than one as the bar's Remove does (one piece goes as before). The
+  pick carries over when the Select tool is picked or left, either way (one track piece then opens its inspector, more
+  none); any building tool clears it. A finger has no Shift: a tap selects one piece as before.
 - **The junction inspector** [T-031, T-080] draws the junction as a small diagram with its moves,
   says in plain words that it is flat, and offers "Construct a flyover" (built junction) or "Add a flyover" (blueprint), a button under its header, with its price and the waiting
   it saves ([track-and-service.md](track-and-service.md) 6.2), except at a crossover's end, where

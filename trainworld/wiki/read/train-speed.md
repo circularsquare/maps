@@ -8,7 +8,7 @@ A train goes as fast as the slowest thing in front of it. That is its own top sp
 
 **Speeding up and stopping.** Trains speed up in three bands. They pull hardest at low speed and ease off as they go faster, like a real electric train. Only a high-speed train reaches the last band. Braking is gentler than pulling away: 0.9 m/s². A train waits at each stop for about 30 seconds.
 
-**Speed limit.** You can also cap a line at a speed of your own, anywhere below its train's top speed. Its trains then go no faster than that anywhere on the route, and the round trip grows to match. A piece of track can have a limit of its own too, as low as 40 km/h, set in its panel for free, or on a whole stretch at once with the Select tool. Every train slows down for it there. Where a line limit and a track limit meet, the lower one wins.
+**Speed limit.** You can also cap a line at a speed of your own, anywhere below its train's top speed. Its trains then go no faster than that anywhere on the route, and the round trip grows to match. A piece of track can have a limit of its own too, as low as 40 km/h, set for free in the bar at the top of the map when you click it, or on a whole stretch at once. Every train slows down for it there. Where a line limit and a track limit meet, the lower one wins.
 
 So stations close together mean slow lines, because the train spends its time speeding up and braking. A fast train gains most on long gaps between stops.
 

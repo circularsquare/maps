@@ -7,8 +7,8 @@
 //    two only (T-2019: a piece with an end outside the box is not picked; a click on one still picks
 //    it), and a drag of the pick moves the four nodes inside the box: the run's outer ends stay, its
 //    outer pieces stretch.
-// 2. High speed in the bar makes the picked double piece high-speed track and counts the single one
-//    as not changed; Regular puts it back.
+// 2. High speed in the bar makes the picked double and single pieces high-speed track (single high speed is
+//    allowed since T-3352); Regular puts them back.
 // 3. At 320 km/h (Build tab: High speed) a 3 km straight and a tangent curve from its end at the
 //    design radius (zoom 14): its corner dragged 15 px sharper keeps 300 km/h or more, 15 px gentler
 //    keeps 320, 40 px sharper slows it only to what its legs allow (over 160), and a 15 px drag of
@@ -179,12 +179,12 @@ try {
   const h1 = await hsrOf(), n1 = await notice();
   await bar('bar-high-speed.png');
   await page.screenshot({ path: `${OUT}high-speed.png` });
-  report(h1[0] && !h1[1] && n1 === '1 of 2 pieces set to high-speed track. 1 could not change.', 'High speed makes the picked double track high speed, single track left', `${JSON.stringify(h1)}, "${n1}"`);
+  report(h1.every((v) => v) && n1 === '2 pieces set to high-speed track.', 'High speed makes the picked double and single track high speed (single high speed since T-3352)', `${JSON.stringify(h1)}, "${n1}"`);
   was = await notice();
   await page.click('.blueprint-bar button:has-text("Regular")');
   await said(was);
   const h2 = await hsrOf(), n2 = await notice();
-  report(h2.every((v) => !v) && n2 === '1 of 2 pieces set to regular track. 1 could not change.', 'Regular puts it back', `${JSON.stringify(h2)}, "${n2}"`);
+  report(h2.every((v) => !v) && n2 === '2 pieces set to regular track.', 'Regular puts it back', `${JSON.stringify(h2)}, "${n2}"`);
 
   // 3: 320 km/h
   await page.evaluate(async () => { const ui = await import('/src/game/ui.ts'); ui.setTrackType('hsr'); ui.designSpeed.value = 320; });

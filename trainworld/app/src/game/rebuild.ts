@@ -42,14 +42,12 @@ export interface RebuildQuote {
 
 /** The quote for the pick and choices now; null with nothing chosen, or while it is being worked out. */
 export const rebuildQuote = signal<RebuildQuote | null>(null);
-/** T-3634: the track panel's quote for its piece or pieces and choices, drawn on the map as the bar's is. */
-export const panelQuote = signal<RebuildQuote | null>(null);
 
 const KIND = { regular: 1, hsr: 2, tram: 3 } as const;
 const version = computed(() => world.value?.version);
 
-/** What to rebuild (built pieces and stations) and what to: the Select bar's pick and choices, or one piece's
- * in the track panel (T-3408). A null choice keeps what the pieces have. */
+/** What to rebuild (built pieces and stations) and what to: the selection bar's pick and choices. A null choice
+ * keeps what the pieces have. */
 export interface RebuildTarget { edges: number[]; stations: number[] }
 export interface RebuildChoice { level: Level | null; kind: RebuildKind | null; tracks: 1 | 2 | null }
 
@@ -78,6 +76,16 @@ export async function fetchRebuildQuote(p: RebuildTarget, c: RebuildChoice): Pro
 }
 
 const barChoice = (): RebuildChoice => ({ level: rebuildLevel.peek(), kind: rebuildKind.peek(), tracks: rebuildTracks.peek() });
+
+// T-3746: a pick that shares nothing with the last (a click on other track) starts with nothing chosen; one
+// grown or cut by Shift+click keeps the choices
+let lastPick = new Set<number>();
+effect(() => {
+  const p = bpPicked.value;
+  const now = new Set([...p.edges, ...p.stations.map((s) => -1 - s)]);
+  if (![...now].some((id) => lastPick.has(id))) rebuildLevel.value = rebuildKind.value = rebuildTracks.value = null;
+  lastPick = now;
+});
 
 let seq = 0;
 effect(() => {
@@ -138,9 +146,6 @@ export function rebuildTip(q: RebuildQuote | null): string {
 /** Whether a Rebuild button for quote `q` does anything: it asks, or says why nothing can change. */
 export const canRebuild = (q: RebuildQuote | null) => !!q && (q.changed.length > 0 || q.stations > 0 || q.refused.length > 0);
 
-/** Whether quote `q` changes something and refuses nothing (T-3408: which choices the track panel offers). */
-export const rebuildWhole = (q: RebuildQuote | null) => !!q && !q.refused.length && (q.changed.length > 0 || q.stations > 0);
-
 /** Ask, then rebuild the pick. A short purse, or terrain not loaded, is explained by the refusal; so
  * is a pick none of which can change, which is not asked about. */
 export function rebuildPicked() {
@@ -149,8 +154,7 @@ export function rebuildPicked() {
   rebuildPieces(p, barChoice(), rebuildQuote.peek(), () => { rebuildLevel.value = rebuildKind.value = rebuildTracks.value = null; });
 }
 
-/** Ask, then rebuild `p` to `c` as quoted by `q` (the Select bar's pick, or one piece from the track panel,
- * T-3408); `done` runs once the rebuild has gone through. */
+/** Ask, then rebuild `p` to `c` as quoted by `q`; `done` runs once the rebuild has gone through. */
 export function rebuildPieces(p: RebuildTarget, c: RebuildChoice, q: RebuildQuote | null, done?: () => void) {
   if (!q || !canRebuild(q)) return;
   const { level, kind, tracks } = c;

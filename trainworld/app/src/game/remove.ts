@@ -171,24 +171,3 @@ export async function removeThing(r: Removable) {
   if (!d.built && !lines.length && !big) return go();
   ask.value = { ...removeQuestion(big ? t("remove.track", { length: bigDistance(e!.lengthM - ka - kb), built: d.built }) : d.what, d.built, big), run: () => void go(), lines };
 }
-
-/** T-3638: the pieces of a track set (game/trackSet.ts) removed in one edit, as the selection bar removes a
- * pick of built track: one question naming the total length, refused whole with the track model's reason. */
-export async function removeTracks(edges: number[]) {
-  const w = world.peek();
-  const es = w ? w.edges.filter((e) => edges.includes(e.id) && e.built && !e.crossover) : [];
-  if (!es.length) return;
-  const m = es.reduce((n, e) => { const [ka, kb] = stationTrim(e.id); return n + e.lengthM - ka - kb; }, 0);
-  const big = isBigDelete(m);
-  const ids = es.map((e) => e.id);
-  const go = async () => {
-    ask.value = null;
-    const a = await edit({ op: "removePieces", edges: ids, stations: [] });
-    if (a.ok) {
-      selection.value = null;
-      say(t("remove.done", { what: t("remove.track", { length: distance(m), built: true }) }));
-    } else if (!a.issues.length) say(t("remove.failed"), true);
-  };
-  const lines = await lineEffects(ids, []);
-  ask.value = { ...removeQuestion(t("remove.track", { length: (big ? bigDistance : distance)(m), built: true }), true, big), run: () => void go(), lines };
-}

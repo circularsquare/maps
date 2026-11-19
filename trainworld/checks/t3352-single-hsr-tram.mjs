@@ -78,7 +78,7 @@ try {
   await page.evaluate(async (id) => { const u = await import('/src/game/ui.ts'); u.tool.value = 'select'; u.selection.value = { kind: 'track', edge: id }; }, hs[0].id);
   await wait(800);
   const sw = await page.locator('text=One way').count();
-  check(sw > 0, 'C: the Track inspector shows One way for single high-speed track', String(sw));
+  check(sw > 0, 'C: the selection bar shows One way for a clicked single high-speed piece (T-3746)', String(sw));
   await shot('inspector');
 } catch (e) {
   fail++;

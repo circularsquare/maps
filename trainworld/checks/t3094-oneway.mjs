@@ -60,11 +60,11 @@ try {
   const A = all.find((l) => l.name === 'Ring A'), B = all.find((l) => l.name === 'Ring B');
   check(A.path.length === 1 && B.path.length === 1, 'both lines run the one piece', `A ${A.path} B ${B.path}`);
 
-  // select the piece, make it one way through the inspector
+  // select the piece, make it one way through the selection bar (T-3746)
   await page.evaluate((e) => { window.tw.selection.value = { kind: 'track', edge: e }; }, ring.e01);
   await page.waitForTimeout(1200);
   const sw = page.getByText('Run trains one way');
-  check(await sw.count() === 1, 'the inspector has the switch on single track');
+  check(await sw.count() === 1, 'the selection bar has the switch on single track');
   await page.evaluate(() => { window.tw.map.jumpTo({ center: window.tw.map.getCenter(), zoom: 14.2 }); });
   await sw.click();
   const dialog = page.locator('dialog.confirmation');

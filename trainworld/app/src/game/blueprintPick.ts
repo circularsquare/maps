@@ -1,6 +1,6 @@
-// The pieces picked with the Select tool's drag box (T-333): blueprint, or constructed track when
-// the pick holds no blueprint at all (T-829). Switching blueprint off or on, its elevation (T-815)
-// and removing the lot (T-829). Main thread only, not saved; the off switch itself lives on the
+// The pieces picked with the Select tool's drag box (T-333), or by a click and Shift+click while plain
+// selecting (T-3746): blueprint, or constructed track when the pick holds no blueprint at all (T-829).
+// Switching blueprint off or on, its elevation (T-815) and removing the lot (T-829). Main thread only, not saved; the off switch itself lives on the
 // pieces in the track model (`off`, saved with the game) and Construct and the quote skip what is off.
 
 import { computed, effect, signal } from "@preact/signals";
@@ -109,14 +109,29 @@ export function runOf(edge: number): number[] {
   return [...out];
 }
 
+/** T-3746: a way along track longer than this many times the straight distance to the pick, plus DETOUR_M,
+ * is a detour, and the clicked piece goes in alone. */
+const DETOUR_FACTOR = 3;
+const DETOUR_M = 2000;
+
+/** Straight distance between two nodes, m (flat over a few km is close enough for the detour test). */
+function nodeDist(w: NonNullable<ReturnType<typeof world.peek>>, a: number, b: number): number {
+  const p = w.nodes.get(a), q = w.nodes.get(b);
+  if (!p || !q) return Infinity;
+  const k = Math.cos(((p.lat + q.lat) / 2) * Math.PI / 180);
+  return Math.hypot(q.lat - p.lat, (q.lng - p.lng) * k) * 111_320;
+}
+
 /** T-1680: the pieces on the shortest track path from the pick to `edge` (that piece included),
- * through track of the pick's kind; just the piece when no such path joins them. */
+ * through track of the pick's kind; just the piece when no such path joins them. T-3746: never through
+ * a crossover, and just the piece when the way is a detour (DETOUR_FACTOR). The straight distance is to
+ * the nearest end of a picked piece, so a piece near the pick but far from it along track goes in alone. */
 export function pathTo(p: BpPicked, edge: number): number[] {
   const w = world.peek();
   const target = w?.edges.find((e) => e.id === edge);
-  if (!w || !target || !p.edges.length) return [edge];
+  if (!w || !target || !p.edges.length || target.crossover) return [edge];
   const built = p.built ?? target.built;
-  const usable = w.edges.filter((e) => e.built === built);
+  const usable = w.edges.filter((e) => e.built === built && !e.crossover);
   const adj = adjacency(usable);
   const goal = new Set<number>();
   const picked = new Set(p.edges);
@@ -144,6 +159,10 @@ export function pathTo(p: BpPicked, edge: number): number[] {
       if (dm < (dist.get(m) ?? Infinity)) dist.set(m, dm), via.set(m, e), heap.push([dm, m]);
     }
   }
+  if (found < 0) return [edge];
+  let straight = Infinity;
+  for (const g of goal) straight = Math.min(straight, nodeDist(w, target.a, g), nodeDist(w, target.b, g));
+  if (dist.get(found)! > DETOUR_FACTOR * straight + DETOUR_M) return [edge];
   const out = [edge];
   for (let n = found; n >= 0 && via.has(n);) {
     const e = via.get(n)!;
@@ -337,6 +356,9 @@ export async function removePicked() {
   const go = async () => {
     ask.value = null;
     const a = await edit({ op: "removePieces", edges: p.edges, stations: p.stations });
+    // T-3746: the panel of a removed piece clicked while plain selecting closes with it
+    const sel = selection.peek();
+    if (a.ok && sel?.kind === "track" && p.edges.includes(sel.edge)) selection.value = null;
     if (a.ok) say(t("remove.done", { what }));
     else if (!a.issues.length) say(t("remove.failed"), true);
   };
@@ -345,8 +367,8 @@ export async function removePicked() {
   ask.value = { ...removeQuestion(what, !!p.built, big), run: () => void go(), lines };
 }
 
-// Pieces removed, or no longer of the pick's kind (blueprint constructed), drop out of the pick;
-// leaving the tool clears it.
+// Pieces removed, or no longer of the pick's kind (blueprint constructed), drop out of the pick. T-3746: a piece
+// clicked while plain selecting that is constructed is picked again as built, so its bar stays.
 effect(() => {
   const w = world.value;
   const p = bpPicked.peek();
@@ -354,15 +376,45 @@ effect(() => {
   const edges = new Set(w.edges.filter((e) => e.built === !!p.built).map((e) => e.id));
   const stations = new Set(w.save.stations.filter((s) => s.built === !!p.built).map((s) => s.num));
   const next = trimNodes({ edges: p.edges.filter((e) => edges.has(e)), stations: p.stations.filter((s) => stations.has(s)), built: p.built, ...(p.nodes ? { nodes: p.nodes } : {}) });
+  const sel = selection.peek();
+  if (!next.edges.length && !next.stations.length && tool.peek() === "select" && sel?.kind === "track" && w.edges.some((e) => e.id === sel.edge)) {
+    bpPicked.value = onlyOneKind({ edges: [sel.edge], stations: [] });
+    return;
+  }
   if (next.edges.length !== p.edges.length || next.stations.length !== p.stations.length || next.nodes?.length !== p.nodes?.length) bpPicked.value = next;
 });
-// T-2283: a plain click on blueprint track makes that piece the pick too, so the selection bar shows
-// for it; anything else selected clears it.
+/** T-3746: the one piece of track the pick is, or null. */
+const onePiece = (p: BpPicked) => (p.edges.length === 1 && !p.stations.length ? p.edges[0] : null);
+
+/** T-3746: the panel's selection for the pick while plain selecting: one piece of track opens its track panel
+ * (information only), anything more none, so the selection bar is the one place to act on it. Call after
+ * the pick changes. */
+export function selectPicked() {
+  const one = onePiece(bpPicked.peek());
+  selection.value = one === null ? null : { kind: "track", edge: one };
+}
+
+/** T-3746: Esc and the bar's Clear: the pick goes, and with it the panel of its one piece. */
+export function dropPicked() {
+  clearBpPicked();
+  if (selection.peek()?.kind === "track") selection.value = null;
+}
+
+// T-2283, T-3746: one pick for the Select tool and plain selecting. A plain click on track makes that piece the
+// pick, so the selection bar shows for it; Shift+click adds to it (main.ts). Switching between the Select tool
+// and plain selecting keeps the pick; a building tool, or anything else selected, clears it. With no selection,
+// a pick of more than the one piece the panel showed stays (Shift+click closed the panel).
+let lastTool = tool.peek();
 effect(() => {
-  const t = tool.value, sel = selection.value;
-  if (t === "blueprint") return;
-  const e = t === "select" && sel?.kind === "track" ? world.peek()?.edges.find((x) => x.id === sel.edge) : undefined;
-  if (!e || e.built || e.crossover) return clearBpPicked();
+  const tl = tool.value, sel = selection.value;
+  const from = lastTool;
+  lastTool = tl;
+  if (tl === "blueprint") return;
+  if (tl !== "select") return clearBpPicked();
   const p = bpPicked.peek();
-  if (p.edges.length !== 1 || p.edges[0] !== e.id || p.stations.length) bpPicked.value = { edges: [e.id], stations: [] };
+  if (from === "blueprint" && (p.edges.length || p.stations.length)) return selectPicked();
+  if (sel === null) return void (onePiece(p) !== null && clearBpPicked());
+  const e = sel.kind === "track" ? world.peek()?.edges.find((x) => x.id === sel.edge) : undefined;
+  if (!e) return clearBpPicked();
+  if (onePiece(p) !== e.id) bpPicked.value = onlyOneKind({ edges: [e.id], stations: [] });
 });

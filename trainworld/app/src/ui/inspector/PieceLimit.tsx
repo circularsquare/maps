@@ -1,6 +1,6 @@
-// A piece of track's top speed and its speed limit (T-3405), as a line's (LineTopSpeed, T-2987): the row
-// shows the top speed of the kind of track; its button adds a row with a stepper that holds trains to less.
-// The Select tool's bar sets the same limit on every picked piece at once (T-3525, `PickLimit`).
+// A piece of track's top speed and its speed limit (T-3405), as a line's (LineTopSpeed, T-2987): the toggle
+// opens a stepper that holds trains to less. The selection bar sets it on every picked piece at once (T-3525,
+// `PickLimit`), one piece included (T-3746); the track panel shows it.
 
 import { useEffect, useState } from "preact/hooks";
 import { speed } from "../../game/format";
@@ -8,7 +8,7 @@ import { t } from "../../i18n";
 import { edit } from "../../game/world";
 import { TRACK_SPECS } from "../../game/trackKinds";
 import type { TrackEdge } from "../../game/types";
-import { Row, Stepper } from "../widgets";
+import { Row } from "../widgets";
 
 import { LIMIT_MIN as MIN, nextLimit } from "../../game/pieceLimit";
 
@@ -58,24 +58,17 @@ export function usePieceLimit(edges: readonly TrackEdge[]) {
   return { value, top, on: limited || open, toggle, step };
 }
 
+/** The track panel's top speed and the piece's limit, if any; T-3746: set in the selection bar. */
 export function PieceLimit({ e }: { e: TrackEdge }) {
-  const { value, top, on, toggle, step } = usePieceLimit([e]);
   // the hover says what the kind of track allows; with a limit on, the row below says otherwise
-  const tip = e.kind || on ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal");
+  const tip = e.kind || e.limit ? undefined : t(e.hsr ? "trackInspector.speedHsr" : "trackInspector.speedNormal");
   return (
     <>
       <li data-tip={tip}>
         <span class="grow">{t("trackInspector.topSpeed")}</span>
-        <span class="val">
-          {speed(top)}
-          <button class={"btn text mini" + (on ? " on" : "")} aria-pressed={on} onClick={toggle}>{t("trackInspector.limit")}</button>
-        </span>
+        <span class="val">{speed(kindTop(e))}</span>
       </li>
-      {on && (
-        <Row label={t("trackInspector.speedLimit")}>
-          <Stepper wide label={t("trackInspector.speedLimit")} value={speed(value ?? top)} onStep={step} />
-        </Row>
-      )}
+      {!!e.limit && <Row label={t("trackInspector.speedLimit")}>{speed(e.limit)}</Row>}
     </>
   );
 }

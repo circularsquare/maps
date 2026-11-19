@@ -92,7 +92,7 @@ try {
 
   await select(chord);
   await wait(600);
-  await page.locator('label.check').first().click();
+  await page.locator('.blueprint-bar button', { hasText: 'Run trains one way' }).click();
   await wait(1200);
   await select(null);
   await page.keyboard.press('Escape');
@@ -109,7 +109,7 @@ try {
   // Reverse: one way the other way, joined to the far tracks: no crossover
   await select(chord);
   await wait(600);
-  await page.locator('label.check').first().click();
+  await page.locator('.blueprint-bar button', { hasText: 'Run trains one way' }).click();
   await wait(1200);
   await page.getByText('Reverse direction', { exact: true }).click();
   await wait(1200);

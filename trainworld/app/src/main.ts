@@ -32,7 +32,7 @@ import { stopsById, world } from "./game/world";
 import { hiddenLevels, hiddenLines, hideBuses, levelBits } from "./game/lineVisibility";
 import { setHidden } from "./map/visibility";
 import "./game/capLoad";
-import { removeThing, removeTracks, setTrackHider } from "./game/remove";
+import { removeThing, setTrackHider } from "./game/remove";
 import { redo, undo } from "./game/fareUndo";
 import { followTrack } from "./game/trackZones";
 import { baseTrips, incomeByDay, lastSaved, moneyState } from "./game/money";
@@ -53,8 +53,7 @@ import { StationLabels } from "./map/stationLabels";
 import { stationIndexOf, tripAt } from "./map/network";
 import { cityOverview } from "./map/intercityView";
 import { Overlay } from "./map/overlay";
-import { carryGrids, pick, SLOP_PX, topSeg } from "./map/pick";
-import { selectedPieces, shiftTrack } from "./game/trackSet";
+import { carryGrids, pick } from "./map/pick";
 import { carryEdgeGrid } from "./map/snapIndex";
 import { NetworkRenderer } from "./map/renderer";
 import { followTrain } from "./map/trainFollow";
@@ -69,7 +68,7 @@ import { StopMarkers } from "./map/stopMarkers";
 import { BusStopMarkers } from "./map/busStops";
 import { EdgeEditor } from "./map/edgeEdit";
 import { BlueprintBox } from "./map/blueprintBox";
-import { bpPicked, clearBpPicked, levelPicked, pickedState } from "./game/blueprintPick";
+import { bpPicked, clearBpPicked, dropPicked, levelPicked, pickedState, removePicked, selectPicked } from "./game/blueprintPick";
 import { NodeDrag } from "./map/nodeDrag";
 import { EndMarkers } from "./map/endMarkers";
 import { hoverAbove } from "./map/demandHover";
@@ -572,10 +571,15 @@ map.on("dblclick", (e) => {
 function selectAt(x: number, y: number, add: boolean) {
   // linking a station into a complex (T-197): the station clicked is the other end
   if (linking.peek() !== null) void linkPicked(pick(overlay, x, y, false, selection.peek()));
-  // T-3634: Shift with built track selected adds or takes out the track under the pointer, a line on it or not
-  else if (add && shiftTrackAt(x, y)) return;
+  // T-3746: Shift with track picked adds to the pick by the Select tool's rule (the track between, a line on it
+  // or not); one piece left opens its panel, more none. A Shift+click that misses keeps the pick, as in the tool.
+  else if (add && hasPick()) {
+    if (blueprintBox.shiftClick(x, y)) selectPicked();
+  }
   // lines, stations and trains, then commuter bubbles while they are shown, then the rest (T-1515)
   else {
+    // a plain click drops the pick; track clicked becomes the pick again (game/blueprintPick.ts)
+    clearBpPicked();
     const cur = selection.peek();
     const hit = demandOnTop(x, y, add) ?? pick(overlay, x, y, display.peek().trains && !onMark(x, y), cur, true, (num, seg) => lineSizeAt(overlay, num, seg));
     // a station of the selected complex, or another of a station opened alone from it: that station alone (T-3539);
@@ -589,22 +593,12 @@ function selectAt(x: number, y: number, add: boolean) {
   }
 }
 capacity.selectClick = selectAt;
-/** The piece of track drawn at (x, y) px, or -1. */
-function trackAt(x: number, y: number): number {
-  const n = renderer.net;
-  if (!n) return -1;
-  const [ti] = topSeg(overlay, n.track.seg, n.track.count, x, y, SLOP_PX * SLOP_PX + 1);
-  return ti >= 0 ? n.track.edge[ti] : -1;
-}
-function shiftTrackAt(x: number, y: number): boolean {
-  const edge = trackAt(x, y);
-  return edge >= 0 && shiftTrack(edge);
-}
-// T-3634: a Shift press on track with built track selected is a click, not the start of MapLibre's zoom box
-// (which would swallow the click); elsewhere Shift+drag zooms as before
+const hasPick = () => bpPicked.peek().edges.length + bpPicked.peek().stations.length > 0;
+// T-3634, T-3746: a Shift press on track or a station with something picked is a click, not the start of
+// MapLibre's zoom box (which would swallow the click); elsewhere Shift+drag zooms as before
 map.on("mousedown", (e) => {
   const o = e.originalEvent;
-  if (o.shiftKey && o.button === 0 && tool.peek() === "select" && linking.peek() === null && selectedPieces() && trackAt(e.point.x, e.point.y) >= 0) e.preventDefault();
+  if (o.shiftKey && o.button === 0 && tool.peek() === "select" && linking.peek() === null && hasPick() && blueprintBox.hitAt(e.point.x, e.point.y)) e.preventDefault();
 });
 // Linking stops when its station is no longer the selection or a tool is picked.
 effect(() => {
@@ -712,9 +706,11 @@ window.addEventListener("keydown", (e) => {
     return;
   }
   // the blueprint tool: Esc clears the pick, then leaves the tool; E switches the pick on or off
-  if (tool.peek() === "blueprint" && e.key === "Escape" && (bpPicked.peek().edges.length || bpPicked.peek().stations.length)) {
+  // T-3746: while plain selecting, Esc drops the pick and the panel of its one piece together
+  if ((tool.peek() === "blueprint" || tool.peek() === "select") && e.key === "Escape" && hasPick()) {
     e.preventDefault();
-    clearBpPicked();
+    if (tool.peek() === "blueprint") clearBpPicked();
+    else dropPicked();
     return;
   }
   if (blueprintBox.key(e)) {
@@ -734,9 +730,10 @@ window.addEventListener("keydown", (e) => {
       void removeThing(s.kind === "track" ? { kind: "track", edge: s.edge } : { kind: "station", node: Number(s.station) });
       return;
     }
-    if (s?.kind === "tracks") {
+    // T-3746: a pick of more than one piece (no panel) goes as by the selection bar's Remove
+    if (!s && hasPick()) {
       e.preventDefault();
-      void removeTracks(s.edges);
+      void removePicked();
       return;
     }
     if (!s && e.key === "Delete") {
