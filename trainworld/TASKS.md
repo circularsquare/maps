@@ -221,14 +221,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 2026-11-18, for v0.4.3 ("train adjustments"), from a player: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes) to have finer control over train movements and minimise conflicts between lines that share tracks". Per-train nudges are T-3346's Exact mode (stage 6, 24-34 h); a per-line offset is a smaller piece, but it meets the automatic pacing of lines sharing track (T-3584, `pace_merges`).
   - Goal: A design for you first (per line or per row, how it meets automatic pacing, where the control sits), with an hour estimate.
   - Other: notes/T-3742.md
-- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-18, agent periods0)
+- T-3542 [P2] {L:timetables} Four or five service periods (taking, 2026-11-19, agent periods1)
   - Context: Design done and answered 2026-11-17 (notes/T-3542.md "Her answers"): 5 period slots in the sim; periods and hours set for the whole game by default, per line as an extra step; no cap on a row's headway; about 19-29 h in three stages. You, 2026-11-17: "would also like to separately add the feature where we cn enable 4 tiers (rush, midday, evening=med, night=low) or 5 (morning, midday, afternoon, evening, night) in there [the timetables window]. that should update the always visible in line view to show 5 rows instead of 3. but it sitll shouldnt show weekends separately. similrly the timetables should only show up in the dedicated popup window."
   - Goal: Built in the three stages, reusing T-3346's Detailed mode (rows by hours averaged into demand's five periods, so no extra solve time) and your 2026-11-17 add: "being able to tweak the periods customizably ... set the morning hours to like start an hour earlier".
   - Other: notes/T-3346.md
-- T-3720 [P3] {L:accounts-server} New game in the autosave slot may inherit a sandbox latch (taking, 2026-11-18, agent latchfix2)
-  - Context: Reproduced and fixed in tree autolatch (score entries carry the game's origin; tieNew always mints a new id), but the checker found the fix can retire the same game's entry when the account's newer copy has a different origin (saves from before T-2037 on two devices), deleting its Community share.
-  - Goal: The fix lands with a guard (never retire the slot's own current cloud id) and passes a second checker.
-  - Other: notes/T-3720.md (in tree autolatch)
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h).
@@ -333,19 +329,19 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: Measured in notes/T-909.md option 1.
 
 ## Interface
-- T-3739 [P2] {L:fares} Advanced fare panel with a fare curve (taking, 2026-11-18, agent advfares)
-  - Context: You, 2026-11-18, for v0.4.3: keep the current fare controls, add an "advanced" button that opens a panel like the schedule's advanced one, with everything in the simple view, a list of countries with their multiples (tweak each, or set the reference country), and points you add to the fare curve. Design agreed 11-19 with Lines only, no Steps ("we can just make steps with lines"), and "Add point" then a click on the graph.
-  - Goal: Built and landed, about 7-11 h; a game whose player never opens it gets the same trips to the trip.
-  - Other: notes/T-3739.md ("Her answers")
-- T-3740 [P2] {L:fares} {after:T-3739} Zone fares players draw
+- T-3740 [P2] {L:fares} Zone fares players draw
   - Context: You, 2026-11-18: "people have requested zone fares ... people wanna draw these." Design agreed 11-19: paint stations (A) with a rings helper (B), new stations take their neighbours' zone, a trip leaving its fare area pays distance; drawn outlines (C) later. About 14-20 h.
-- T-3744 [P3] {L:fares} {after:T-3739} Fare per stop made
+- T-3748 [P2] {L:fares} Income short of the fare curve on bent curves
+  - Context: Found by advfares building T-3739, on master too: on a curve where every trip's extra is exactly $1.50, income shows $1.458 a trip; a three-point ramp master already allows is about 7% short. Suspect, not proven: the regional market's extra comes back in curve units without the country's fare scale.
+  - Goal: Income per trip matches what the curve charges, to the cent, on a bent curve and a staircase.
+  - Other: notes/T-3739.md ("Built", in tree advfares until it lands)
+- T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
   - Other: notes/T-3739.md (section 2); research/fares-zones-2026-11-18.md
-- T-3738 [P2] {L:community} Shared save links preview the player's map (taking, 2026-11-18, agent sharebuild)
+- T-3738 [P2] {L:community} {after:a week of Worker request counts} Shared save links preview the player's map
   - Context: You, 2026-11-18: "currently if people share their links to saves, it just shows the generic "train world!" logo banner preview sorta thing. could we have it show the actual image of their map?"
-  - Goal: A design and an hour estimate for you first (where the preview image comes from and what serves it), then built.
+  - Goal: Live since 2026-11-19 on a free Cloudflare Worker; closed after a week of daily request counts stays well under the free plan's 100k a day.
   - Other: notes/T-3738.md
 - T-3729 [P2] {L:steam} {waits:Anita} Steam store page
   - Need from Anita: Start the Steamworks account and put your screenshot picks (from your Twitter posts) in a folder; then agents make the store images from the landing page's "trains world!" logo.
@@ -755,10 +751,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: Design first, then the mode.
 
 ## Track and trains
-- T-3746 [P2] {L:rebuild-track} One selection for track, shared by the track tool and Select (taking, 2026-11-18, agent oneselbuild)
-  - Context: You, 2026-11-19: shift-clicking a run of built track in the track tool (T-3634's several-pieces panel) loses the speed limit; "could we just unify these and have selecting highlight the track segments in the track view actually? i think this duplicated functionality is quite confusing, and not necessary." Also: "if we shift click to add to the track segment, could we also just add all track between the newly added segment and whatever we already have selected? is that feasible? not sure if its well defined."
-  - Goal: A short design for you first (what the shift-click selection becomes, what goes away, the fill-between rule), then built.
-  - Other: design written, two questions for you in it; notes/T-3746.md.
 - T-3691 [P3] {L:track-kinds} {waits:Anita} Track levels -5 to +5
   - Need from Anita: Where it fits (advanced mode only, which task or update); you said you'd give input later.
   - Context: Your old TODO: "-5 to +5 for track level, in advanced mode only? maybe -4 maroon, -5 dark magenta, and lighten +3 to like periwinkle, +4 light purple, +5 light violet".

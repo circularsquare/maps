@@ -8,7 +8,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
 
 ## Next
 0. Live: v0.4.2 (data 2026-11-18b). Unpublished changelog c001-c010 (next update, v0.4.3). Server deployed 01:03
-   UTC (shonei-server 962fcae, pushed). Cap 12 cores ("keep 4 cores free... no need to be super strict").
+   UTC (shonei-server 962fcae, pushed). Cap 10 cores from 03:40 UTC 11-19 ("could we lower the core cap to like 10 for a few hrs?"); back to 12
+   when she says or after a few hours. Player requests fetched 03:38 (41 new), reqsort (Sonnet) sorting them.
 1. T-3542 stage 0 landed 807efd0b by maps-3f (8800 = 807efd0b, smoke passed, pushed; old .terrain files deleted).
 2. Running, reports come to you through the inbox:
    - advfares (Opus) T-3739 advanced fare panel, tree advfares port 6108 (its Vite may have been stopped by a
@@ -17,12 +18,19 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - oneselbuild (Opus) T-3746 one track selection, tree onesel port 6114: controls only in the selection bar for
      1 or many pieces; shift-click fills between, big detour adds only the clicked piece (her answers in
      notes/T-3746.md). Needs a checker (rebuild charges money), then land.
-3. T-3720 back in TASKS.md; latchfix2 (Opus, maps-6b) is adding the guard in tree autolatch (never retire the
-   slot's own cloud id; one dropDeleted at a time), port 6120. Then a fresh checker, then land.
+2b. advfares BUILT (T-3739 archived by it; changelog advfares-1; 14 new strings in its report r-5579da31, to show
+   her at landing). Checker farechk (Sonnet, ports 6124/6125) running; then land. Its pre-existing income bug filed
+   T-3748 (P2). T-3746 LANDED 3d9e0789 (strings shown to her 04:27, no ack yet). T-3739 LANDED 2cc1f856
+   (c011; its 14 strings shown to her 04:40, no ack yet). 8800 rebuild + smoke on master running after them.
+   Fares next: T-3748 income bug (P2, small); T-3740 zones (14-20 h: stage it); T-3744 per-stop fare (design first).
+3. T-3720 LANDED eeb7b975 after two checker rounds (DECISIONS line uncommitted, goes with the next commit).
+3c. Requests: 23 new groups; dismissed done g092 g093 g097 and praise g102; merged g083 g086 g087 g088 g090 g095
+   into their tasks. Open for her: g096 (merge Buenos Aires and La Plata), g094 (no ask), g085, g098 and the rest.
 3b. T-3743 landed 59643a0e. T-2598 done: RAIS is open; build filed as T-3747 (P3, not started: it ends in a
    Brazil rebuild run).
-4. T-3542 next: stage 1 (3/4/5 rows per line) as a fresh Opus agent from notes/T-3542.md "Stage 0" and "Her
-   answers"; then stage 2 (hours). T-3346 stage 2 (tree tt2) ports after T-3542 (DECISIONS 11-18).
+4. T-3542 stage 1 split: 1a (sim + save, per-line rows, measure) running as periods1 (Opus, tree periods1, port
+   6122); 1b (window controls, line panel 4/5 rows, readouts by period) after it; then stage 2 (hours). 1a may
+   bump the save LEVEL: it reports what shonei-server needs (a deploy is her word). T-3346 stage 2 (tree tt2) ports after T-3542 (DECISIONS 11-18).
 5. T-3738 share previews LIVE (worker trainsworld-sharepreview 772a7d85 on anita.garden/trainsworld/* + 13
    no-worker routes; free plan). She couldn't find fail open; skipped (35-51k loads/day vs 100k). Watch daily Workers
    requests for a week (~2.5k in its first 2 h, normal); then close T-3738 (c009). Undo = delete the route.
