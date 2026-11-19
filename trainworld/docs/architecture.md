@@ -801,7 +801,7 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   id made per page load and held in memory only, a second random id kept in localStorage
   (`trainworld.browser`, never tied to the account) so the server counts distinct browsers and each one's
   days and minutes (Anita, 2026-11-06; forgotten after 13 months unseen), the zone the game began in
-  (`gameStartZone`), sandbox or not, the build; signed in, the session rides along like every call, so the server counts minutes per
+  (`gameStartZone`), the focused zone now (`activeCity`; the server counts minutes per city by it, T-3382), sandbox or not, the build; signed in, the session rides along like every call, so the server counts minutes per
   account. The server keeps per-UTC-day aggregates, never the IP; `GET /trainworld/stats` needs the admin key.
   Nothing is sent with `notrack` in localStorage (the website's owner opt-out; `?notrack` sets it,
   `?track` clears it), on localhost or from an automated browser (smoke, screenshots) unless the address

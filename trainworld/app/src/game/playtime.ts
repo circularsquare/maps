@@ -5,7 +5,8 @@
 // the server forgets it after 13 months unseen. While a game is open (not the start menu or the new
 // game sheet) and the tab is visible, one ping about every minute carries both ids, the zone the game
 // began in ("map" for a game started by picking a spot on the map), whether it is a sandbox, the build
-// and the browser language (T-2909). Signed in, the ping carries the session like every
+// and the browser language (T-2909), and the focused zone now (`activeCity`, T-3382), which the server
+// counts minutes by, so it shows where people build and not only where they start. Signed in, the ping carries the session like every
 // other call (game/account.ts), so the server counts minutes per account.
 //
 // Nothing is sent: with `notrack` in localStorage (the website's owner opt-out; `?notrack` sets it,
@@ -15,13 +16,14 @@
 import { moneyState } from "./money";
 import { choosing } from "./loading";
 import { gameStartZone } from "./realms";
+import { activeCity } from "./cities";
 
 declare const __TW_BUILD__: string | undefined;
 const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 const PING_MS = 60_000;
 
-export interface Ping { id: string; b?: string; start: string; sandbox: boolean; v: string; lang?: string }
+export interface Ping { id: string; b?: string; start: string; sandbox: boolean; v: string; lang?: string; city?: string }
 
 const BROWSER_KEY = "trainworld.browser";
 
@@ -77,6 +79,6 @@ export function startPlaytime(send: (ping: Ping) => Promise<unknown>) {
     }
     if (last && now - last < PING_MS) return;
     last = now;
-    void send({ id, b, start: gameStartZone() ?? "map", sandbox: moneyState.peek()!.mode === "sandbox", v: BUILD, lang: navigator.language }).catch(() => {});
+    void send({ id, b, start: gameStartZone() ?? "map", sandbox: moneyState.peek()!.mode === "sandbox", v: BUILD, lang: navigator.language, city: activeCity.peek() }).catch(() => {});
   }, 1000);
 }
