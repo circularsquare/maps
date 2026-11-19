@@ -41,7 +41,7 @@ const DRAG_PX = 6;
  * (alone where there is no figure yet). */
 function PendingRiders({ k, text }: { k: PendingKind; text: string }) {
   return (
-    <span class={"val w-riders pending" + (text ? " stacked" : " muted")} data-tip={t("linesTab.pendingTip")}>
+    <span class={"val w-riders pending" + (text ? " stacked" : " muted")}>
       {text ? <><span class="pending-label muted">{pendingLabel(k)}</span><span>{text}</span></> : pendingLabel(k)}
     </span>
   );

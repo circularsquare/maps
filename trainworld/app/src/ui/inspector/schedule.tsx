@@ -455,7 +455,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
     return (
       <>
         <div class="h divided">{shown !== null && <span class="pending-note muted">{pendingLabel(pending)}</span>}</div>
-        <ul class="rows"><Row label={t("schedule.riders")}>{shown !== null ? count(shown) : <span class="muted" data-tip={t("schedule.recalculating")}>{pendingLabel(pending)}</span>}</Row></ul>
+        <ul class="rows"><Row label={t("schedule.riders")}>{shown !== null ? count(shown) : <span class="muted">{pendingLabel(pending)}</span>}</Row></ul>
       </>
     );
   }
