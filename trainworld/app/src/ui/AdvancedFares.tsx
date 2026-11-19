@@ -113,7 +113,7 @@ function FareAreas({ f, scale }: { f: Fares; scale: number }) {
               <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
               <span class="group">
                 <Check checked={!a.off} onChange={(on) => setAreaOff(a.id, !on)} label={onOff} tip={onOff} />
-                <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.bin /></button>
+                <button class="btn icon mini" aria-label={t("advancedFares.removeArea")} data-tip={t("advancedFares.removeArea")} onClick={() => remove(a)}><Icon.cross /></button>
               </span>
             </li>
             {Array.from({ length: n }, (_, k) => {

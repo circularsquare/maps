@@ -197,7 +197,7 @@ export function FareNodeRows({ nodes, scale, last, remove = false, custom }: { n
   const sp = currencySpec();
   const bin = (i: number) => (
     <button class="btn icon mini" aria-label={t("fareGraph.removePoint")} data-tip={t("fareGraph.removePoint")}
-      onClick={() => { playBuild("pop"); void setFares(nodes.filter((_, k) => k !== i)); }}><Icon.bin /></button>
+      onClick={() => { playBuild("pop"); void setFares(nodes.filter((_, k) => k !== i)); }}><Icon.cross /></button>
   );
   return (
     <ul class="rows fare-rows">
