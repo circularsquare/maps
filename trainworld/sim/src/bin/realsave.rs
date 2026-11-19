@@ -317,7 +317,7 @@ fn main() {
             let name = format!("{} {}", l["feed"].as_str().unwrap(), l["name"].as_str().unwrap());
             let name = names::tidy_line(&name, "").unwrap_or(name);
             let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-            let r = net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }));
+            let r = net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops, path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] }));
             if r.is_ok() {
                 n_lines_ok += 1;
             }
@@ -432,7 +432,7 @@ fn main() {
         let name = names::tidy_line(&name, "").unwrap_or(name);
         // the line's real colour ("#rrggbb", `pipeline/realcolour.py`), else the palette
         let colour = l["colour"].as_str().and_then(|s| u32::from_str_radix(s.trim_start_matches('#'), 16).ok()).unwrap_or(PALETTE[li % PALETTE.len()]);
-        let r = net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default() }));
+        let r = net.set_line(id, Some(LineData { rows: 0, x: Default::default(), symbol: String::new(), trains, auto: None, name, colour, stops: nodes.clone(), path, tph: [tph[0], tph[1], tph[2]], dwell_s: 30.0, turnaround_s: 180.0, cars, fast: false, bus: None, ferry: None, group: 0, group_name: String::new(), group_look: Default::default(), day: 0, hand: false, one_way: false, limit: 0, twin: Default::default(), weekend: Default::default(), ones: vec![] }));
         if r.is_ok() {
             n_lines_ok += 1;
         }
@@ -544,7 +544,7 @@ fn main() {
             let end = |p: &trainworld_sim::track::profile::Profile| p.arr.last().copied().unwrap_or(0.0) - p.dep.first().copied().unwrap_or(0.0);
             free += end(&r.free);
             for lev in 0..3 {
-                held[lev] += end(&r.prof[lev]);
+                held[lev] += end(&r.prof[ROW_SLOT[lev]]);
             }
             worst.push((end(&r.prof[0]) - end(&r.free), li));
             for h in &r.holds[0] {
@@ -557,7 +557,7 @@ fn main() {
         let line_rows: Vec<Value> = line_ids.iter().filter(|&&(_, id)| w.svc.lines[id as usize].running).map(|&(li, id)| {
             let r = &w.svc.lines[id as usize].runs[0];
             let end = |p: &trainworld_sim::track::profile::Profile| p.arr.last().copied().unwrap_or(0.0) - p.dep.first().copied().unwrap_or(0.0);
-            let held: Vec<f64> = (0..3).map(|lev| (end(&r.prof[lev]) - end(&r.free)) / 60.0).collect();
+            let held: Vec<f64> = (0..3).map(|lev| (end(&r.prof[ROW_SLOT[lev]]) - end(&r.free)) / 60.0).collect();
             let at: Vec<Value> = r.holds[0].iter().map(|h| {
                 let k = r.node_s.partition_point(|&s| s <= h.s).saturating_sub(1);
                 let n = r.nodes[k] as usize;
@@ -576,7 +576,7 @@ fn main() {
         for lev in 0..3 {
             let mut kinds = std::collections::BTreeMap::new();
             for (r, x) in cap.res.iter().enumerate() {
-                if cap.rho[r][lev] > 0.9 {
+                if cap.rho[r][ROW_SLOT[lev]] > 0.9 {
                     *kinds.entry(format!("{:?}", x.kind)).or_insert(0) += 1;
                 }
             }
@@ -643,7 +643,7 @@ fn main() {
         let mut t = vec![0f32; 6 * n];
         for lev in 0..3 {
             for run in 0..2 {
-                let p = &svc.runs[run].prof[lev];
+                let p = &svc.runs[run].prof[ROW_SLOT[lev]];
                 for j in 0..n - 1 {
                     let dwell = if j == 0 { 0.0 } else { p.dep[j] - p.arr[j] };
                     let v = (p.arr[j + 1] - p.dep[j] + dwell) as f32;

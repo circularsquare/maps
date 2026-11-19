@@ -30,6 +30,10 @@
     {"id": "shy", "name": "Shenyang", "riders_m": 658, "ship": true},
     {"id": "san", "name": "Santiago", "riders_m": 640, "ship": true},
     {"id": "ber", "name": "Berlin", "riders_m": 554, "ship": true},
-    {"id": "qin", "name": "Qingdao", "riders_m": 531, "ship": true}
+    {"id": "qin", "name": "Qingdao", "riders_m": 531, "ship": true},
+    {"id": "ngo", "name": "Nagoya", "ship": true, "left": true},
+    {"id": "fuk", "name": "Fukuoka", "ship": true, "left": true},
+    {"id": "spk", "name": "Sapporo", "ship": true, "left": true},
+    {"id": "hij", "name": "Hiroshima", "ship": true, "left": true}
   ]
 }
