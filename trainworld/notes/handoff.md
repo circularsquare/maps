@@ -23,8 +23,10 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    Seen: the page's CSP blocks Cloudflare Web Analytics' injected script (pre-existing; told her).
 3. Waiting on her: ask 28 fares design (notes/T-3739.md: four calls, build T-3739 now?). T-3742 nudges: design done,
    {after:v0.4.3} ("not in the same round"); its questions go to her when that round starts.
-4. Up next: T-2901, T-3354, T-3518, T-2598; T-3720 after T-3734; T-3726 comments A/B (design in handoff-log 20:47).
-   No smoke on master since b191eede (T-3734 st2, T-3495, T-3741 landed after): run one with the next batch.
+4. Landed since: T-2054, T-3734 stages 3-4 (closed), T-3518, T-2901 stage 4 (70eec98a). Smoke on 6af04bd4 PASSED.
+   8800 = 6af04bd4 (next snapbuild proves no dist/packs/terrain). After periods0 lands: delete
+   data/terrain/*.terrain (4,631 files, 704 MB; keep world.water). Running: periods0, autolatch (T-3720).
+   Up next: T-3354, T-2598, T-3743; T-3726 comments A/B (design in handoff-log 20:47).
 5. T-3729 Steam: on hold (Anita 23:15 UTC: "dont worry about steam now"). Don't raise it.
 6. T-3395: close after a day of clean daily scans (deployed 11-18 13:30 UTC).
 
