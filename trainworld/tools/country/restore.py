@@ -8,8 +8,7 @@
 Copies every file of data/work/pre-<task>/<stage>/ back to trainworld/ (each through a .part file and
 an atomic replace), and removes the joint files (data/work/*.joint_commutes.json, .joint_report.json,
 .joint_dump.json) written after the backup that it does not hold. Without --go it only lists.
-Run it only while no other run or join writes data/packs or data/terrain, which are the files it
-overwrites. --tw points at another tree of the same layout (a scratch tree).
+Run it only while no other run or join writes data/packs, which are the files it overwrites. --tw points at another tree of the same layout (a scratch tree).
 """
 import argparse
 import glob

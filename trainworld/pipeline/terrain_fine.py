@@ -1,8 +1,9 @@
 """T-1854: the fine terrain intermediate, slope summarised from GEDTM30 at 30 m into 1/960 degree cells.
 
-The 30 m raster is 432 GB and lives on OpenGeoHub's server; this reads only the 2048 px tiles under
-the zone boxes (registry, the plan's unbuilt metros, and the next countries in NEXT_BOXES), by HTTP
-range, and keeps the mean slope of each 1/960 degree cell (about 115 m) and the mean elevation of each
+The 30 m raster is 432 GB and lives on OpenGeoHub's server; this reads only the 2048 px tiles of a block
+list, by HTTP range (`blocks` lists those under the zone boxes, the plan's unbuilt metros and NEXT_BOXES;
+T-2901's world run, `data/work/terrain-fine-world/`, took every block with a non-empty tile, so no new zone
+needs a run), and keeps the mean slope of each 1/960 degree cell (about 115 m) and the mean elevation of each
 1/240 degree cell. Later work (thresholds, smoothing, cell sizes 115-460 m, hexes) starts from these
 files, never from the raster. Only those two planes: the 30 m slope is noisy enough that a plane costs
 about 6 bits a cell even compressed, and the home disk is small (notes/T-1854.md).

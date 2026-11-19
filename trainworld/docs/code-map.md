@@ -477,22 +477,18 @@ Run with `..\venv\Scripts\python.exe` (the maps venv).
   header. `show` prints the table.
 - `terrain_fine.py` (T-1854): the fine terrain intermediate, built once on AWS (`--kind terrain`):
   per one-degree block, the mean slope of GEDTM30's 30 m pixels per 1/960 degree cell and the mean
-  elevation per 1/240 cell, read by HTTP range from OpenGeoHub's 432 GB file, only the tiles under the
-  zone boxes, the plan's unbuilt metros and `NEXT_BOXES` (format in its docstring), with tower fields
-  cut out first (`tower_ground`, GHSL's 1 km built volume, T-1881; `run` fetches it to
-  `data/raw/ghsl/`, `TW_GHSL_30SS` another copy). Kept at home as
-  `data/work/terrain-fine/part*.tar` and `manifest.json` (3.1 GB, never unpacked); `blocks [lat_lon ...]`,
-  `run`, `check` (a block against rasterio's read). `zone_terrain.py` reads a test run's tars before
-  the intermediate's with `TW_FINE_OVER=<dir>`, and the dev server serves `.terrain` files from
-  `TW_TERRAIN=<dir>` before `data/terrain` (`vite.config.ts`).
+  elevation per 1/240 cell, read by HTTP range from OpenGeoHub's 432 GB file (format in its docstring), with
+  tower fields cut out first (`tower_ground`, GHSL's 1 km built volume, T-1881; `run` fetches it to
+  `data/raw/ghsl/`, `TW_GHSL_30SS` another copy). Since T-2901 it holds every block with a non-empty source
+  tile, so a new zone needs no run: kept at home as `data/work/terrain-fine-world/part*.tar` and `manifest.json`
+  (9.35 GB, never unpacked); `blocks [lat_lon ...]`, `run`, `check` (a block against rasterio's read).
+  `zone_terrain.Fine` reads a test run's tars before the intermediate's with `TW_FINE_OVER=<dir>`.
 - `world_terrain.py` (T-2901): the world's terrain classes, one gzip file per degree block with data
   (`build <fine> <out> [--jobs n]`, into `data/terrain-world-v2/` since T-3372; the old `data/terrain-world/` is v1, still on R2 for releases made before it) and `index.bin` (which blocks have a file), read by
   the game (`game/terrainBlocks.ts`, the terrain section of `workers/clock.worker.ts`) and published by `tools/deploy.py --terrain-world`.
-- `zone_terrain.py` (T-1270, T-1854): each registered zone's terrain classes from that intermediate
-  (thresholds, filter and cap in its docstring), written gzip to `data/terrain/<id>.terrain` (never
-  `data/packs`, so joins do not see them); `build [ids] [--force] [--jobs n]` skips files already made
-  (about 25 minutes on one core for every zone), `mix` the class shares over the files, `probe lon
-  lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py slope`, whose
+- `zone_terrain.py` (T-1270, T-1854): the terrain classes from that intermediate (thresholds, filter and
+  cap in its docstring) and the `.terrain` encoding, which `world_terrain.py` uses; there are no per-zone
+  files since T-2901. `mix [dir]` the class shares over the blocks, `probe lon lat km`. Its `Dem` reads GEDTM30 at 240 m (`data/raw/gedtm30/`) for `market_drives.py slope`, whose
   output `data/work/market_drives/slope60.npy` covers the world; the 10 GB raster is not kept on disk
   (T-2554), so download it from `zone_terrain.SRC_URL` only to rerun `slope`.
 - `world_water.py` (T-1285): the world's coarse water mask, `data/terrain/world.water` (served and

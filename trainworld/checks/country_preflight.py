@@ -25,7 +25,7 @@ FLAG lines need a fix before the build:
   (geoBoundaries cuts Russia's ADM2 names at 26 characters, Canada's and Cambodia's with a "*"). Fix: name the
   zone in zone-names.json
 NOTE lines are for the run: built packs of other countries within BORDER_KM (borders.json, the joins); a
-planned row whose data/terrain/<id>.terrain is older than the dry plan (an earlier row's, which the runner
+planned row whose data/work/<id>.outline.geojson is older than the dry plan (an earlier row's, which the runner
 clears, T-1986); far islets with next to no one in them.
 The picture (default ../artifacts/trainworld/preflight/<ISO>.png): the rows' extents, flagged rows in red, far
 parts circled, other countries' packs within BORDER_KM in grey. Exit 1 when anything is flagged."""
@@ -311,10 +311,10 @@ def main(argv):
     # reused ids
     made = planp.stat().st_mtime
     for r in rows:
-        t = TW / f"data/terrain/{r['id']}.terrain"
+        t = TW / f"data/work/{r['id']}.outline.geojson"
         if r.get("status", "planned") == "planned" and t.exists() and t.stat().st_mtime < made:
             import datetime
-            notes.append(f"NOTE reused id: {r['id']} {r['name']}: data/terrain/{r['id']}.terrain of "
+            notes.append(f"NOTE reused id: {r['id']} {r['name']}: data/work/{r['id']}.outline.geojson of "
                          f"{datetime.date.fromtimestamp(t.stat().st_mtime)}, an earlier row's; the runner clears it "
                          f"with the row's other caches (world_run.ROW_CACHES, T-1986)")
 

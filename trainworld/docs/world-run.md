@@ -14,14 +14,14 @@ Logs, check outputs and images go in `../artifacts/trainworld/` (from the maps r
   log path, liveness check and restart command into the task's notes before waiting. Before it, check the
   copy's `data`/`app` junctions and the paths it will write; after it, report `status`'s shipped and parked
   counts with causes (T-613).
-- While a join runs, nothing else writes `data/packs` or `data/terrain`, any country's included: each
+- While a join runs, nothing else writes `data/packs`, any country's included: each
   unit's re-gate compares every registered pack against its snapshot and parks the unit on any change.
 - Anything that writes `data/packs`, `data/terrain` or `data/terrain-world-v2` (or the old `data/terrain-world`) replaces the file (write `<name>.part`,
   then `os.replace`) and never rewrites it in place (`open(..., "wb")` on the pack itself, `r+b`, `np.save` onto it).
   Freezes (`pipeline/freeze.py`), 8800's snapbuild and terrain-world in every build hold those files as hard links, so
   an in-place write changes the served game and the freeze too. Every writer today replaces (`packio.write`,
   `put_arrays`, `nocar.append_array`, `realnet.py ship`, `joint_gravity`, `market_zones`, `zone_outlines`,
-  `realgraph`, `zone_terrain`, `world_terrain`'s blocks and its `index.bin`, since T-3372; `market_drives`' table).
+  `realgraph`, `world_terrain`'s blocks and its `index.bin`, since T-3372; `market_drives`' table).
 - A pack rebuild backs up to `data/work/pre-T###/` first; the backup goes, without asking, once a later
   state is checked clean. `data/work/res9/` stays.
 - Cities added through the plan need no calibration beyond the gate (Anita, 2026-10-16).
@@ -127,8 +127,7 @@ state's units, not geoBoundaries read afresh, T-1239); give a new country one wh
 - **Per row**: a `planned` or `parked` row (new, its units changed, or parked before or after a build) first loses the
   per-city caches named after its id, which an earlier row of that id or its old outline left (T-1743, T-891, T-2437):
   `data/raw/tier0/osm_jobs_<id>`, `osm_education_<id>`, `lsoa2021_bgc_<id>.json`, `data/raw/<id>/<id>_plan_setores.gpkg`, `osm_*_<id>.json.gz` (older ones `.json`) in
-  `data/raw/t142b` and `t196`, `osm_places_<id>.json`, `data/work/<id>`'s outline, units and tier 0 signals, and
-  `data/terrain/<id>.terrain` (`zone_terrain.py` makes a grid only where none is, T-1986). Then
+  `data/raw/t142b` and `t196`, `osm_places_<id>.json`, `data/work/<id>`'s outline, units and tier 0 signals. Then
   `build_city`, `pack_gate stations` (the gate's station file, `docs/adding-a-city-by-hand.md` 8), `places`,
   with `--coarse T` `coarse_zones` (4 km blocks in thin country, T-852; off by default),
   `routes --keep-pbf`, `merge_cells` (which runs `read_pack`'s checks on its output before it

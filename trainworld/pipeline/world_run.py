@@ -1168,15 +1168,13 @@ class Run:
         print(f"  {cid}: built in {time.time() - t0:.0f} s", flush=True)
         return True
 
-    # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern; the
-    # terrain grid too, which zone_terrain.py makes only where none is (T-1986: Australia's lnc)
+    # T-1743, T-891: per-city caches a build reuses when they exist, by folder and name pattern
     ROW_CACHES = (("data/raw/tier0", ("osm_jobs_{}.csv.gz", "osm_education_{}.csv.gz", "lsoa2021_bgc_{}.json")),
                   ("data/raw/ca", ("osm_jobs_{}.csv.gz",)),
                   ("data/raw", ("osm_places_{}.json", "{0}/{0}_plan_setores.gpkg")),  # brazil's tracts (T-2437)
                   ("data/raw/t142b", ("osm_*_{}.json", "osm_*_{}.json.gz")),
                   ("data/raw/t196", ("osm_*_{}.json", "osm_*_{}.json.gz")),
-                  ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")),
-                  ("data/terrain", ("{}.terrain",)))
+                  ("data/work", ("{}.outline.geojson", "{}.units.geojson", "{}.tier0_signals.npz")))
 
     def clear_row_caches(self, cid):
         """A planned row (new, or its units changed since it was last built) is built from scratch: an
@@ -1184,7 +1182,7 @@ class Run:
         gone = []
         for d, pats in self.ROW_CACHES:
             # data/raw is the real tree's in a scratch run too
-            base = (self.root if d in ("data/work", "data/terrain") else REAL) / d
+            base = (self.root if d == "data/work" else REAL) / d
             for pat in pats:
                 for p in base.glob(pat.format(cid)):
                     p.unlink()
@@ -1203,7 +1201,7 @@ class Run:
         old = set()
         pats = [(d, p) for d, ps in self.ROW_CACHES for p in ps] + list(self.ID_FILES)
         for d, pat in pats:
-            base = (self.root if d in ("data/work", "data/terrain") else REAL) / d
+            base = (self.root if d == "data/work" else REAL) / d
             for p in base.glob(pat.format(cid)):
                 if p.is_file() and p.stat().st_mtime < t0 - 60:
                     old.add(p.name)

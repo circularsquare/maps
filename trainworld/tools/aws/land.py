@@ -34,9 +34,8 @@ PACK = (".json", ".bin", ".boundary.geojson", ".places.json")
 
 
 def clear_caches(cid, dry):
-    """The id's per-row caches here, as world_run's build_row clears them (T-2594): an earlier row's terrain grid
-    stayed under 21 landed US zones, since zone_terrain makes a grid only where none is. The landing's own files
-    are placed after."""
+    """The id's per-row caches here, as world_run's build_row clears them (T-2594: an earlier row's cache stayed
+    under 21 landed US zones). The landing's own files are placed after."""
     gone = []
     for d, pats in Run.ROW_CACHES:
         for pat in pats:

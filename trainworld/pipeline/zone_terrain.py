@@ -1,24 +1,20 @@
-"""T-1270, T-1854: each zone's terrain classes, the ground factor on track prices (docs/track-and-service.md 6.4).
+"""T-1270, T-1854: the terrain classes, the ground factor on track prices (docs/track-and-service.md 6.4), and
+the `.terrain` format. `world_terrain.py` makes the game's files with them, one per degree block (T-2901).
 
-Source: the fine terrain intermediate (`terrain_fine.py`, `data/work/terrain-fine/`): the mean slope of
+Source: the fine terrain intermediate (`terrain_fine.py`, `data/work/terrain-fine-world/`): the mean slope of
 GEDTM30's 30 m bare-earth pixels over each cell of the world lattice of PER_DEG cells a degree (about
-115 m north-south). Per zone box (registry.json, widened by PAD_DEG): a class by THRESH_Q (0 flat,
-1 rolling, 2 hilly, 3 mountain; no data counts flat), then a 3 x 3 majority filter (ties keep the
-cell's own class), which drops single-cell specks of the 30 m noise so a route's price does not flicker
-cell to cell but keeps a valley floor two cells (about 230 m) wide, then capped by the coarse ground
-round it (COARSE_THRESH_DEG on the 1/240 degree slope taken bilinearly at the cell's centre, against
-towers and raised roads; T-3372). THRESH_Q was set so the world's mix
-of classes over the zones stayed what the 460 m classes had (notes/T-1854.md). Every zone's grid sits
-on the one lattice, so where boxes overlap the grids agree.
+115 m north-south). A class by THRESH_Q (0 flat, 1 rolling, 2 hilly, 3 mountain; no data counts flat), then a
+3 x 3 majority filter (ties keep the cell's own class), which drops single-cell specks of the 30 m noise so a
+route's price does not flicker cell to cell but keeps a valley floor two cells (about 230 m) wide, then capped
+by the coarse ground round it (COARSE_THRESH_DEG on the 1/240 degree slope taken bilinearly at the cell's
+centre, against towers and raised roads; T-3372). THRESH_Q was set so the world's mix of classes over the
+zones stayed what the 460 m classes had (notes/T-1854.md).
 
-Out: `data/terrain/<id>.terrain`, gzip of the format `sim/src/track/cost.rs` `ClassGrid::decode` reads:
-`TWT1`, u32 w, h, i32 col0, row0 (lattice cell of the south-west corner from 180 W, 90 S), u32 PER_DEG,
-then (class u8, run length LEB128) runs over the grid row-major from the south. The clock worker unzips.
+The format (`encode`), which `sim/src/track/cost.rs` `ClassGrid::decode` reads: gzip of `TWT1`, u32 w, h,
+i32 col0, row0 (lattice cell of the south-west corner from 180 W, 90 S), u32 PER_DEG, then (class u8, run
+length LEB128) runs over the grid row-major from the south. The clock worker unzips.
 
-    zone_terrain.py build [id ...]        every registry zone, or those named; skips files already made
-    zone_terrain.py build --force [id ...] [--jobs n] [--out dir]   (--out: somewhere else than data/terrain)
-    zone_terrain.py mix [dir]             the class shares over every zone file (calibration)
-    zone_terrain.py calibrate [every]     a first guess at THRESH_Q for TARGET_MIX (the filter and cap move it)
+    zone_terrain.py mix [dir]             the class shares over every `.terrain` file in dir (the world's blocks)
     zone_terrain.py probe lon lat [km]    mean slope and class shares round a point
 
 `Dem` reads GEDTM30 at 240 m (data/raw/gedtm30/, see T-1270.md) for market_drives.py.
@@ -28,14 +24,12 @@ import os
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import gzip
-import json
 import logging
 import math
 import struct
 import subprocess
 import sys
 import tarfile
-import time
 from collections import OrderedDict
 from pathlib import Path
 
@@ -47,17 +41,15 @@ HERE = Path(__file__).resolve().parent
 TW = HERE.parent
 SRC = TW / "data" / "raw" / "gedtm30" / "gedtm_rf_m_240m_v1.2.tif"
 SRC_URL = "https://zenodo.org/api/records/18887460/files/gedtm_rf_m_240m_s_20060101_20151231_go_epsg.4326.3855_v1.2.tif/content"
-FINE = TW / "data" / "work" / "terrain-fine"
-OUT = TW / "data" / "terrain"
-REGISTRY = TW / "app" / "src" / "game" / "registry.json"
+FINE = TW / "data" / "work" / "terrain-fine-world"
+BLOCKS = TW / "data" / "terrain-world-v2"
 
 PER_DEG = 960
 # class bounds on the fine cells' mean 30 m slope, in quarter degrees (the intermediate's unit):
-# rolling from 2.5 degrees, hilly from 5.5, mountain from 11 (notes/T-1854.md)
+# rolling from 2.5 degrees, hilly from 5.5, mountain from 11 (notes/T-1854.md), set so the shares of flat,
+# rolling, hilly and mountain ground stayed the 460 m classes' (T-1270) over the 1,243 zones that had them,
+# 0.5888, 0.1617, 0.1081, 0.1414 by area (Anita, 2026-10-30)
 THRESH_Q = (10, 22, 44)
-# the shares of flat, rolling, hilly and mountain ground (by area) with the 460 m classes (T-1270), over
-# the 1,243 zones that had them and are zones still, which the thresholds keep (Anita, 2026-10-30)
-TARGET_MIX = (0.5888, 0.1617, 0.1081, 0.1414)
 # a fine cell's class is at most the class of the ground round it at 1/240 degree (the slope between
 # neighbouring mean elevations, about 920 m apart, taken bilinearly at the fine cell's centre, by
 # COARSE_THRESH_DEG): 30 m bare earth still carries
@@ -65,7 +57,6 @@ TARGET_MIX = (0.5888, 0.1617, 0.1081, 0.1414)
 # rolling or hilly); set as low as keeps Tokyo, Nagoya and Shanghai's centres flat (notes/T-1854.md)
 COARSE_PER_DEG = 240
 COARSE_THRESH_DEG = (1.25, 2.5, 5.0)
-PAD_DEG = 0.03
 M_PER_DEG_LAT = 110_574.0
 M_PER_DEG_LON = 111_320.0
 TILE_CACHE = 24
@@ -289,29 +280,6 @@ def decode(b: bytes) -> tuple[np.ndarray, int, int, int]:
     return out.reshape(h, w), c0, r0, per
 
 
-def zones() -> list[dict]:
-    reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
-    return [c for c in reg["cities"] if c.get("box")]
-
-
-def zone_box(z: dict) -> tuple[int, int, int, int]:
-    w, s, e, n = z["box"]
-    return lattice_box(w - PAD_DEG, s - PAD_DEG, e + PAD_DEG, n + PAD_DEG)
-
-
-def build_one(args) -> tuple[str, int, list[int], int]:
-    zid, box, out_dir, thresh = args
-    fine = _fine()
-    c0, r0, cw, ch = box
-    cls = classes_of(fine.slopes(c0, r0, cw, ch), fine.coarse(c0, r0, cw, ch), thresh)
-    data = encode(cls, c0, r0)
-    path = Path(out_dir) / f"{zid}.terrain"
-    tmp = path.with_suffix(".tmp")
-    tmp.write_bytes(data)
-    os.replace(tmp, path)
-    return zid, len(data), np.bincount(cls.reshape(-1), minlength=4).tolist(), cw * ch
-
-
 _FINE = None
 
 
@@ -320,33 +288,6 @@ def _fine() -> Fine:
     if _FINE is None:
         _FINE = Fine()
     return _FINE
-
-
-def build(ids: list[str], force: bool, jobs: int, out_dir: Path = OUT, thresh=THRESH_Q) -> None:
-    from concurrent.futures import ProcessPoolExecutor
-    out_dir.mkdir(parents=True, exist_ok=True)
-    todo = [z for z in zones() if not ids or z["id"] in ids]
-    todo = [z for z in todo if force or not (out_dir / f"{z['id']}.terrain").exists()]
-    # neighbouring boxes together, so a worker's block cache serves them
-    todo.sort(key=lambda z: (round(z["box"][3] / 4), z["box"][0]))
-    t0 = time.time()
-    size, shares, biggest = 0, np.zeros(4), ("", 0, 0)
-    args = [(z["id"], zone_box(z), str(out_dir), thresh) for z in todo]
-    with ProcessPoolExecutor(max_workers=jobs) as ex:
-        for k, (zid, n, counts, cells) in enumerate(ex.map(build_one, args, chunksize=4)):
-            size += n
-            shares += counts
-            if cells > biggest[2]:
-                biggest = (zid, n, cells)
-            if (k + 1) % 100 == 0 or k == len(args) - 1:
-                print(f"{k + 1}/{len(args)} {zid} {n / 1024:.1f} KB, {time.time() - t0:.0f} s", flush=True)
-    if args:
-        sh = shares / shares.sum()
-        print(f"made {len(args)} files, {size / 1e6:.1f} MB, {time.time() - t0:.0f} s; biggest grid {biggest[0]} "
-              f"{biggest[2] / 1e6:.1f}M cells, {biggest[1] / 1e6:.2f} MB; cells flat {sh[0]:.1%} rolling {sh[1]:.1%} "
-              f"hilly {sh[2]:.1%} mountain {sh[3]:.1%}")
-    else:
-        print("nothing to make")
 
 
 def mix(path: Path) -> None:
@@ -363,37 +304,6 @@ def mix(path: Path) -> None:
     print(f"{len(files)} files: flat {sh[0]:.2%} rolling {sh[1]:.2%} hilly {sh[2]:.2%} mountain {sh[3]:.2%}")
 
 
-def hist_one(args) -> np.ndarray:
-    box = args
-    c0, r0, cw, ch = box
-    q = _fine().slopes(c0, r0, cw, ch)
-    lat = (r0 + np.arange(ch) + 0.5) / PER_DEG - 90
-    w = np.repeat(np.cos(np.radians(lat)), cw)
-    return np.bincount(np.where(q == 255, 0, q).reshape(-1), weights=w, minlength=256)
-
-
-def calibrate(every: int, jobs: int) -> None:
-    """Thresholds whose shares of unsmoothed fine cells match TARGET_MIX, then the shares after the
-    majority filter on every `every`-th zone, to correct by hand."""
-    from concurrent.futures import ProcessPoolExecutor
-    old = TW / "data" / "work" / "pre-T1854" / "terrain"
-    zs = [z for z in zones() if (old / f"{z['id']}.terrain").exists()]  # the zones TARGET_MIX was measured on
-    with ProcessPoolExecutor(max_workers=jobs) as ex:
-        h = sum(ex.map(hist_one, [zone_box(z) for z in zs], chunksize=4))
-    cum = np.cumsum(h) / h.sum()
-    goal = np.cumsum(TARGET_MIX)[:3]
-    th = [int(np.searchsorted(cum, g) + 1) for g in goal]
-    print("slope shares (quarter degrees, cumulative):", {q: round(float(cum[q]), 4) for q in range(0, 120, 4)})
-    print("thresholds for the target before smoothing:", th, [t / 4 for t in th])
-    tmp = FINE / "calib"
-    tmp.mkdir(exist_ok=True)
-    sample = [z["id"] for z in zs[::every]]
-    for f in tmp.glob("*.terrain"):
-        f.unlink()
-    build(sample, True, jobs, tmp, tuple(th))
-    mix(tmp)
-
-
 def probe(lon: float, lat: float, km: float) -> None:
     dlat = km / 110.574
     dlon = dlat / math.cos(math.radians(lat))
@@ -407,16 +317,9 @@ def probe(lon: float, lat: float, km: float) -> None:
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    jobs = int(args[args.index("--jobs") + 1]) if "--jobs" in args else 3
-    out = Path(args[args.index("--out") + 1]) if "--out" in args else OUT
-    rest = [a for i, a in enumerate(args) if a not in ("--jobs", "--out") and (i == 0 or args[i - 1] not in ("--jobs", "--out"))]
-    if rest and rest[0] == "build":
-        build([a for a in rest[1:] if a != "--force"], "--force" in rest, jobs, out)
-    elif rest and rest[0] == "mix":
-        mix(Path(rest[1]) if len(rest) > 1 else OUT)
-    elif rest and rest[0] == "calibrate":
-        calibrate(int(rest[1]) if len(rest) > 1 else 5, jobs)
+    rest = sys.argv[1:]
+    if rest and rest[0] == "mix":
+        mix(Path(rest[1]) if len(rest) > 1 else BLOCKS)
     elif rest and rest[0] == "probe":
         probe(float(rest[1]), float(rest[2]), float(rest[3]) if len(rest) > 3 else 5.0)
     else:

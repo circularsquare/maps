@@ -20,9 +20,9 @@ mkdirSync(OUT, { recursive: true });
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) failed++; };
 
-/** a run of `n` mountain cells along a row of Innsbruck's terrain grid, nearest (lon, lat) (as t1270-terrain.mjs) */
+/** a run of `n` mountain cells along a row of the terrain block holding (lon, lat), nearest it (as t1270-terrain.mjs) */
 function mountainRun(n, lon, lat) {
-  let b = readFileSync(new URL('../data/terrain/ins.terrain', import.meta.url));
+  let b = readFileSync(new URL(`../data/terrain-world-v2/${Math.floor(lat)}_${Math.floor(lon)}.terrain`, import.meta.url));
   if (b[0] === 0x1f && b[1] === 0x8b) b = gunzipSync(b);
   const [w, h] = [b.readUInt32LE(4), b.readUInt32LE(8)], [c0, r0] = [b.readInt32LE(12), b.readInt32LE(16)], per = b.readUInt32LE(20);
   const cls = new Uint8Array(w * h);

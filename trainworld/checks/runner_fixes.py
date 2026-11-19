@@ -4,7 +4,7 @@
 
 1. pair_files' index: a rewritten file is read again; market_zones.Groups for named packs gives
    those packs exactly what Groups for every pack gives them (made-up files in a temp folder).
-2. clear_row_caches clears an old `data/terrain/<id>.terrain` (and data/work caches), lookalikes kept
+2. clear_row_caches clears an old row's data/work caches of its id, lookalikes kept
    (a temp root); a shipped row's cells and walk hand-offs go; Overpass caches are written gzipped and
    old plain ones still read, hashed alike (T-2554).
 3. heal_market picks a registered pack naming a gone place over 400 km away (a copy of the
@@ -86,15 +86,14 @@ def caches_check():
     import world_run
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
-        (root / "data/terrain").mkdir(parents=True)
         (root / "data/work").mkdir(parents=True)
-        made = [root / "data/terrain/zzq.terrain", root / "data/work/zzq.outline.geojson", root / "data/work/zzq.units.geojson"]
-        keep = [root / "data/terrain/zzqa.terrain", root / "data/terrain/world.water", root / "data/work/zzq.cells.json"]
+        made = [root / "data/work/zzq.outline.geojson", root / "data/work/zzq.units.geojson"]
+        keep = [root / "data/work/zzqa.outline.geojson", root / "data/work/zzq.cells.json"]
         for p in made + keep:
             p.write_text("x")
         world_run.Run({"jobs": 1, "root": str(root)}).clear_row_caches("zzq")
         left, kept = [p.name for p in made if p.exists()], [p.name for p in keep if p.exists()]
-        report("clear_row_caches clears an old terrain grid", not left and len(kept) == len(keep), f"left {left}, kept {len(kept)} of {len(keep)}")
+        report("clear_row_caches clears an old outline and units", not left and len(kept) == len(keep), f"left {left}, kept {len(kept)} of {len(keep)}")
         hand = [root / f"data/work/zzq.{x}" for x in ("cells.bin", "cells.json", "walk_zone.u8", "walk_zone.u8.part")]
         stay = [root / "data/work/zzqa.cells.json", root / "data/work/zzq.tier0_signals.npz"]
         for p in hand + stay:

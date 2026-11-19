@@ -1490,8 +1490,8 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   | US$M a km in a -2 tunnel (1.6) | 120 | 120 | 120 | 120 |
 
   The classes come from GEDTM30 (OpenGeoHub's bare-earth terrain model at 30 m, CC BY 4.0, T-1854)
-  by `pipeline/zone_terrain.py` from the intermediate in `data/work/terrain-fine/`
-  (`terrain_fine.py`): the mean slope of the 30 m pixels over each cell of a world lattice of 1/960
+  by `pipeline/world_terrain.py` (with `zone_terrain.py`'s classes) from the intermediate in
+  `data/work/terrain-fine-world/` (`terrain_fine.py`): the mean slope of the 30 m pixels over each cell of a world lattice of 1/960
   degree (about 115 m north-south), classed, a 3 x 3 majority filter (drops single-cell specks, keeps
   a valley floor two cells wide), then capped at the class of the ground around it: the slope between
   the 1/240 degree mean elevations, about 920 m apart (second row), taken bilinearly at the cell's

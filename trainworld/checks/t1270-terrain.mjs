@@ -1,8 +1,8 @@
 // T-1270 in a new game through the edit API: track priced by the ground's terrain class. A
 // kilometre or so at ground level on flat ground in Brooklyn costs 37.5 US$M a km, the same at
 // ground level on mountain ground above Innsbruck 7x that (0.5 + 3, T-1928), and a bored tunnel (-2) there its flat
-// 120; Construct charges the quote. The spots come from the zones' terrain files (a run of cells of
-// one class). Then screenshots: the hillshade (Settings, Terrain) at Innsbruck in both themes, and
+// 120; Construct charges the quote. The spots come from the world's terrain blocks (a run of cells
+// of one class). Then screenshots: the hillshade (Settings, Terrain) at Innsbruck in both themes, and
 // the track tool's tag over a mountain segment. About a minute.
 // Usage: node trainworld/checks/t1270-terrain.mjs [url] (default http://localhost:6184/)
 
@@ -18,11 +18,12 @@ mkdirSync(OUT, { recursive: true });
 let failed = 0;
 const check = (ok, what) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${what}`); if (!ok) failed++; };
 
-/** A zone's terrain file (sim `cost::ClassGrid`; gzip since T-1854). */
-function grid(id) {
-  let b = readFileSync(new URL(`../data/terrain/${id}.terrain`, import.meta.url));
+/** The world's terrain block (T-2901) holding (lon, lat) (sim `cost::ClassGrid`; gzip since T-1854). */
+function grid(lon, lat) {
+  const name = `${Math.floor(lat)}_${Math.floor(lon)}.terrain`;
+  let b = readFileSync(new URL(`../data/terrain-world-v2/${name}`, import.meta.url));
   if (b[0] === 0x1f && b[1] === 0x8b) b = gunzipSync(b);
-  if (b.toString('latin1', 0, 4) !== 'TWT1') throw new Error(`${id}.terrain is not a terrain file`);
+  if (b.toString('latin1', 0, 4) !== 'TWT1') throw new Error(`${name} is not a terrain file`);
   const [w, h] = [b.readUInt32LE(4), b.readUInt32LE(8)], [c0, r0] = [b.readInt32LE(12), b.readInt32LE(16)], per = b.readUInt32LE(20);
   const cls = new Uint8Array(w * h);
   let i = 24, k = 0;
@@ -55,7 +56,7 @@ function runNear(g, cls, n, lon, lat) {
   return best;
 }
 
-const ins = grid('ins'), nyc = grid('nyc');
+const ins = grid(11.39, 47.30), nyc = grid(-73.955, 40.64);
 const mtn = runNear(ins, 3, 6, 11.39, 47.30);
 check(!!mtn, `a run of mountain cells near Innsbruck (${mtn?.a.map((v) => v.toFixed(4))} to ${mtn?.b.map((v) => v.toFixed(4))})`);
 // inland Brooklyn (Flatbush), where a run of flat cells has no water on it

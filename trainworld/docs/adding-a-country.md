@@ -163,13 +163,13 @@ packs in grey); exit 1 when anything is flagged. Open the picture, fix every FLA
    crossings (Ukraine with Russia and Belarus) a pair factor of 0.
 6. **Machine**: smoke 20 of 20 on your own Vite (`checks/smoke.mjs`; a FAIL here is a stale WASM or
    another agent's edit, and every browser check would park); your Vite's and the run's ports free; disk
-   free at least 15 GB plus twice the biggest extract; nobody else's run, join or terrain job writing
-   `data/packs` or `data/terrain`; cores claimed (`cores.py claim`).
+   free at least 15 GB plus twice the biggest extract; nobody else's run or join writing
+   `data/packs`; cores claimed (`cores.py claim`).
 7. **Sim copy**: `<tc>\setup_sim.py <kit>` (HEAD's sim/ in `<kit>\simroot\sim`, with `data` and `app`
    junctions); `setup_sim.py <kit> check` OK. It prints `TW_SIM_DIR` and `TW_CARGO_TARGET_DIR`: both go in
    every .cmd. `setup_sim.py <kit> refresh` after sim/ is committed again.
-8. **Reused ids** (NOTE reused id): the runner clears a planned row's old per-id caches itself, `data/terrain/<id>.terrain`
-   included (T-1743, T-1986); only a cache it does not list (`world_run.ROW_CACHES`) needs deleting by hand.
+8. **Reused ids** (NOTE reused id): the runner clears a planned row's old per-id caches itself (T-1743, T-1986);
+   only a cache it does not list (`world_run.ROW_CACHES`) needs deleting manually.
 
 9. **Phantom people** (FLAG phantom): a unit with a 1 km GHSL pixel of 20,000 or more that is a spike (its
    eight neighbours average under a fifth of it) in no urban centre, or in one first urban in 2020 or later:
@@ -226,7 +226,7 @@ your whole context.
 Several countries at once: one run each with `--no-join`, its own port and log; one join for all.
 
 The gate's browser check serves a copy of app/ frozen at each gate chunk's start (T-2298, after a mid-gate WASM
-rebuild parked 72 of Russia's rows), so app/ and WASM landings need no hold; writes to data/packs and data/terrain
+rebuild parked 72 of Russia's rows), so app/ and WASM landings need no hold; writes to data/packs
 do, from the first register or retire to the join's end (world-run.md's rules). While
 another run or join holds the packs, `--build-only` builds the rows without registering them; a later run gates them.
 
@@ -255,7 +255,7 @@ Done when: every row is gated, dead space, or parked with a filed task.
 
 ## 7. Join (once)
 
-Only while no other run, join or terrain job writes `data/packs` or `data/terrain`. Claim at least 6
+Only while no other run or join writes `data/packs`. Claim at least 6
 cores (a join on 2 timed out). A country whose built packs sum over 400,000 gravity zones (each pack's `zones` in
 `data/packs/<id>.json`; Brazil's 177 rows held 934,191) is refused by the solve and every row parks: before the join,
 give it `world_plan.SOLVE_REGIONS` (first-level units to regions of at most about 300,000, twin cities inside one),
