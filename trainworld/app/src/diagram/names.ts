@@ -427,6 +427,7 @@ export function paintNames(ctx: CanvasRenderingContext2D, plan: NamePlan, d: Dra
   const shown: [number, number, string, CanvasTextAlign, boolean][] = [];
   for (let i = 0; i < L.node.length; i++) {
     const k = L.node[i], b = placedBox(plan, li, i, s);
+    if (d.offNode?.[k]) continue;
     const x0 = sx(b[0]), x1 = sx(b[2]), y0 = sy(b[3]), y1 = sy(b[1]);
     if (x1 < 0 || x0 > w || y1 < 0 || y0 > h) continue;
     // a name left of its pill is set flush right, above or below it centred
@@ -455,6 +456,7 @@ export function nameAt(plan: NamePlan, d: Drawing, px: number, py: number, cx: n
   if (li < 0) return -1;
   const L = plan.at[li], x = cx + px / s, y = cy - py / s;
   for (let i = 0; i < L.node.length; i++) {
+    if (d.offNode?.[L.node[i]]) continue;
     const b = placedBox(plan, li, i, s);
     if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]) return L.node[i];
   }

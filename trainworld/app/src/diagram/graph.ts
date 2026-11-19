@@ -74,6 +74,9 @@ export interface DiagramLine {
   tram?: boolean;
   /** a loop run one way (T-2981), drawn with chevrons */
   oneWay?: boolean;
+  /** T-3360: a bus or ferry line of a network with no rail near it, laid out as a rail line is and drawn thin */
+  bus?: boolean;
+  ferry?: boolean;
   /** the nodes it runs through in order, first stop to last */
   chain: Int32Array;
   /** per chain entry, 1 where the line stops */

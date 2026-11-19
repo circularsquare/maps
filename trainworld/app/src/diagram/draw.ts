@@ -8,6 +8,7 @@ import type { DiagramLayout, Piece } from "./layout";
 import { atan2, DIRS8, hyp } from "./fmath";
 import type { DiagramBorders } from "./borders";
 import type { DiagramWater } from "./water";
+import type { ThinDrawn } from "./thin";
 
 /** a stroke is this share of a pitch wide; the rest is the gap between neighbours */
 export const STROKE_SHARE = 5 / 6.4;
@@ -57,7 +58,7 @@ export interface Drawing {
   casing?: number;
   /** per line its path as commands (`toPath`), built in the layout worker and posted, the Path2D made
    * on the page when first painted */
-  lines: { colour: string; fast: boolean; tram?: boolean; oneWay?: boolean; cmds: Float64Array; path?: Path2D }[];
+  lines: { colour: string; fast: boolean; tram?: boolean; oneWay?: boolean; bus?: boolean; ferry?: boolean; cmds: Float64Array; path?: Path2D }[];
   /** per line, its index in the graph's lines */
   lineOf: number[];
   /** per line, its drawn ribbon sampled: x, y pairs (the names keep off them) */
@@ -76,13 +77,28 @@ export interface Drawing {
   hooks: number[];
   /** per graph node, 1 for a local stop, drawn small (`localStops`) */
   small: Uint8Array;
+  /** T-3360: per graph node, 1 for a bus or ferry stop, drawn as the thin lines' stops (a network of buses alone) */
+  dot?: Uint8Array;
   box: [number, number, number, number];
   /** the zones' borders (borders.ts), set in the layout worker after the names; the Path2D made on the page when
    * first painted */
   borders?: DiagramBorders & { path?: Path2D };
   /** the water (water.ts), set on the page when the layout worker posts it; the Path2Ds made when first painted */
   water?: DiagramWater & { riverPaths?: Path2D[]; endPaths?: Path2D[]; seaPath?: Path2D };
+  /** T-3360: the bus and ferry lines drawn thin under the rail lines (thin.ts), set on the page when the layout worker
+   * posts them */
+  thin?: ThinDrawn[];
+  /** T-3360, T-3785: what is not drawn (the page's mode buttons and the lines hidden on the map), 1 each: per line, per
+   * graph node (its pills and name), per thin line */
+  off?: Uint8Array;
+  offNode?: Uint8Array;
+  offThin?: Uint8Array;
 }
+
+/** T-3360: a bus or ferry line's width, in layout strokes; a ferry's dashes and gaps, in pitches; its stops' fill and
+ * outline, in layout strokes, and their look (Anita's pick from artifacts/trainworld/t3360-options.png; A is
+ * { w: 0.3, stop: "ring" }, B { w: 0.15, stop: "none" }, C { w: 0.55, stopR: 0.5, stop: "dot" }) */
+export const THIN = { w: 0.3, dash: [1.6, 1.1], stopR: 0.36, stopOutline: 0.14, stop: "ring" as "ring" | "dot" | "none" };
 
 /** a polyline offset left by `o`, one point per point (mitred, capped) */
 function offsetKeep(v: Float64Array, o: number): Float64Array {
@@ -146,6 +162,7 @@ export function widened(d: Drawing, m: number): Drawing {
 
 /** a station's pill: its fill's half width and its outline, layout units */
 export function pillSize(d: Drawing, k: number): [number, number] {
+  if (d.dot?.[k]) return [THIN.stopR * d.stroke, THIN.stopOutline * d.stroke];
   return d.small[k] ? [SMALL_R * d.stroke, SMALL_OUTLINE * d.stroke] : [PILL_R * d.stroke, PILL_OUTLINE * d.stroke];
 }
 
@@ -425,7 +442,7 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   const ribbons: Float64Array[] = [], lineOf: number[] = [], chainAt: Int32Array[] = [];
   ribs.forEach(({ r, cmds }, li) => {
     if (!cmds) return;
-    lines.push({ colour: Vs[li][0].colour, fast: !!Vs[li][0].fast, ...(Vs[li][0].tram ? { tram: true } : {}), ...(Vs[li][0].oneWay ? { oneWay: true } : {}), cmds });
+    lines.push({ colour: Vs[li][0].colour, fast: !!Vs[li][0].fast, ...(Vs[li][0].tram ? { tram: true } : {}), ...(Vs[li][0].oneWay ? { oneWay: true } : {}), ...(Vs[li][0].bus ? { bus: true } : {}), ...(Vs[li][0].ferry ? { ferry: true } : {}), cmds });
     ribbons.push(Float64Array.from(r.pts));
     lineOf.push(li);
     const V = Vs[li][1], at = new Int32Array(r.vi.length);
@@ -484,7 +501,9 @@ export function drawing(g: DiagramGraph, lay: DiagramLayout): Drawing {
   for (let i = 0; i < n; i++) {
     x0 = Math.min(x0, lay.x[i]), x1 = Math.max(x1, lay.x[i]), y0 = Math.min(y0, lay.y[i]), y1 = Math.max(y1, lay.y[i]);
   }
-  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, small: localStops(g), box: [x0, y0, x1, y1] };
+  // T-3360: a network of buses and ferries alone (busGraph.ts) has their stops' dots for pills
+  const dot = g.lines.some((l) => l.bus || l.ferry) ? new Uint8Array(n).fill(1) : undefined;
+  return { pitch, stroke: W, lines, lineOf, ribbons, chainAt, pills, pillOf, passages, passageOf, hooks, small: localStops(g), ...(dot ? { dot } : {}), box: [x0, y0, x1, y1] };
 }
 
 /** a line's (or the borders') commands as a Path2D: 0 move to x, y; 1 line to x, y; 2 a quadratic through cx, cy
@@ -617,6 +636,8 @@ export interface DiagramFocus {
   selected: Set<number>;
   /** a drawn line under the pointer, drawn full over the rest; -1 none */
   hot: number;
+  /** T-3360: thin lines (indices into `thin`) drawn full while `lines` is set; the rest muted */
+  thin?: Set<number>;
 }
 /** the muted lines: their width's share and opacity over the background (the map's, renderer.ts MUTE) */
 export const MUTE_WIDTH = 0.45, MUTE_ALPHA = 0.5;
@@ -663,18 +684,26 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     ctx.globalAlpha = 1;
   }
   if (under) (ctx.save(), under(ctx), ctx.restore());
+  const off = d.off, offNode = d.offNode;
+  // T-3360: the buses and ferries, thin and under the rail lines, whose casings cut them where they cross
+  if (d.thin?.length) paintThin(ctx, d, scale, theme, focus);
   // casings first, so neighbours sit a gap apart and bundles read as one ribbon
   const full = (i: number) => !focus?.lines || focus.lines.has(i);
+  // T-3360: a bus or ferry line of a network with no rail near it is drawn as the thin lines are, its casing as much thinner
+  const lineW = (l: Drawing["lines"][number]) => (l.tram ? TRAM_W : l.bus || l.ferry ? THIN.w : RAIL_W);
+  const casingW = (l: Drawing["lines"][number]) => (d.casing ?? d.pitch) - (l.bus || l.ferry ? d.stroke * (1 - THIN.w) : 0);
   const ribbon = (i: number, casing: boolean) => {
     const l = d.lines[i];
     if (casing) {
       ctx.strokeStyle = theme.bg;
-      ctx.lineWidth = d.casing ?? d.pitch;
+      ctx.lineWidth = casingW(l);
       ctx.stroke((l.path ??= toPath(l.cmds)));
     }
     ctx.strokeStyle = l.colour;
-    const sw = d.stroke * (l.tram ? TRAM_W : RAIL_W), thin = width(sw, 1);
+    const sw = d.stroke * lineW(l), thin = width(sw, 1);
+    if (l.ferry) (ctx.lineCap = "butt"), ctx.setLineDash(THIN.dash.map((v) => v * d.pitch));
     ctx.stroke((l.path ??= toPath(l.cmds)));
+    if (l.ferry) (ctx.lineCap = "round"), ctx.setLineDash([]);
     ctx.globalAlpha = 1;
     // a tram: its two wires, a band of the wire colour either side of the middle, its line's colour between and over them
     if (l.tram && sw * scale >= TRAM_WIRE_MIN_PX) {
@@ -732,19 +761,18 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
     return px < 1;
   };
   ctx.strokeStyle = theme.bg;
-  ctx.lineWidth = d.casing ?? d.pitch;
-  for (const l of d.lines) ctx.stroke((l.path ??= toPath(l.cmds)));
+  d.lines.forEach((l, i) => { if (!off?.[i]) (ctx.lineWidth = casingW(l)), ctx.stroke((l.path ??= toPath(l.cmds))); });
   if (focus?.lines) {
     d.lines.forEach((l, i) => {
-      if (full(i) || i === focus.hot) return;
+      if (full(i) || i === focus.hot || off?.[i]) return;
       ctx.strokeStyle = l.colour;
-      width(d.stroke * (l.tram ? TRAM_W : RAIL_W) * MUTE_WIDTH, MUTE_ALPHA);
+      width(d.stroke * lineW(l) * MUTE_WIDTH, MUTE_ALPHA);
       ctx.stroke(l.path!);
     });
     ctx.globalAlpha = 1;
-    for (const i of focus.lines) if (i !== focus.hot && d.lines[i]) ribbon(i, true);
-  } else for (let i = 0; i < d.lines.length; i++) if (i !== focus?.hot) ribbon(i, false);
-  if (focus && focus.hot >= 0 && d.lines[focus.hot]) ribbon(focus.hot, true);
+    for (const i of focus.lines) if (i !== focus.hot && d.lines[i] && !off?.[i]) ribbon(i, true);
+  } else for (let i = 0; i < d.lines.length; i++) if (i !== focus?.hot && !off?.[i]) ribbon(i, false);
+  if (focus && focus.hot >= 0 && d.lines[focus.hot] && !off?.[focus.hot]) ribbon(focus.hot, true);
   // far out a pill is a speck on its lines: none
   if (d.pitch * scale < PILL_MIN_PX) return;
   const faded = (k: number) => !!focus?.stations && !focus.stations.has(k) && !focus.selected.has(k);
@@ -769,30 +797,72 @@ export function paint(ctx: CanvasRenderingContext2D, d: Drawing, w: number, h: n
   // a selected station's outline is half again as thick
   const olOf = (k: number) => (focus?.selected.has(k) ? 1.5 : 1) * pillSize(d, k)[1];
   const rp = (k: number) => pillSize(d, k)[0];
+  // T-3785: a station whose lines are all hidden has no pill
+  const passages = offNode ? d.passages.filter((_, q) => !offNode[d.passageOf[q]]) : d.passages, passageOf = offNode ? d.passageOf.filter((k) => !offNode[k]) : d.passageOf;
+  const pills = offNode ? d.pills.filter((_, i) => !offNode[d.pillOf[i]]) : d.pills, pillOf = offNode ? d.pillOf.filter((k) => !offNode[k]) : d.pillOf;
   if (theme.edge) {
     const e = 2 * EDGE_W * d.stroke, edge = theme.edge;
-    d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2 + 2 * olOf(d.passageOf[q]) + e, edge, faded(d.passageOf[q]) ? FADE_ALPHA : 1));
-    d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * olOf(d.pillOf[i]) + 2 * p[4] + e, edge, faded(d.pillOf[i]) ? FADE_ALPHA : 1));
+    passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(passageOf[q]) * PASSAGE * 2 + 2 * olOf(passageOf[q]) + e, edge, faded(passageOf[q]) ? FADE_ALPHA : 1));
+    pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(pillOf[i]) + 2 * olOf(pillOf[i]) + 2 * p[4] + e, edge, faded(pillOf[i]) ? FADE_ALPHA : 1));
   }
-  d.passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2 + 2 * olOf(d.passageOf[q]), outline(d.passageOf[q]), faded(d.passageOf[q]) ? FADE_ALPHA : 1));
+  passages.forEach(([x0, y0, x1, y1], q) => bar(x0, y0, x1, y1, rp(passageOf[q]) * PASSAGE * 2 + 2 * olOf(passageOf[q]), outline(passageOf[q]), faded(passageOf[q]) ? FADE_ALPHA : 1));
   // a faded pill's white over the background, so it recedes in the dark theme too
   const fill = (x0: number, y0: number, x1: number, y1: number, width: number, k: number) => {
     if (faded(k)) bar(x0, y0, x1, y1, width, theme.bg);
     bar(x0, y0, x1, y1, width, theme.pill, faded(k) ? FADE_ALPHA : 1);
   };
-  d.passages.forEach(([x0, y0, x1, y1], q) => fill(x0, y0, x1, y1, rp(d.passageOf[q]) * PASSAGE * 2, d.passageOf[q]));
-  d.pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * olOf(d.pillOf[i]) + 2 * p[4], outline(d.pillOf[i]), faded(d.pillOf[i]) ? FADE_ALPHA : 1));
-  d.pills.forEach((p, i) => fill(p[0], p[1], p[2], p[3], 2 * rp(d.pillOf[i]) + 2 * p[4], d.pillOf[i]));
+  passages.forEach(([x0, y0, x1, y1], q) => fill(x0, y0, x1, y1, rp(passageOf[q]) * PASSAGE * 2, passageOf[q]));
+  pills.forEach((p, i) => bar(p[0], p[1], p[2], p[3], 2 * rp(pillOf[i]) + 2 * olOf(pillOf[i]) + 2 * p[4], outline(pillOf[i]), faded(pillOf[i]) ? FADE_ALPHA : 1));
+  pills.forEach((p, i) => fill(p[0], p[1], p[2], p[3], 2 * rp(pillOf[i]) + 2 * p[4], pillOf[i]));
+  ctx.globalAlpha = 1;
+}
+
+/** whether thin line i is muted by the focus */
+const thinMuted = (i: number, focus?: DiagramFocus) => !!focus?.lines && !focus.thin?.has(i);
+
+/** T-3360: the bus and ferry lines, a ferry's dashed; muted with the rail lines when something else is picked */
+function paintThin(ctx: CanvasRenderingContext2D, d: Drawing, scale: number, theme: DiagramTheme, focus?: DiagramFocus): void {
+  const T = d.thin!, w = d.stroke * THIN.w;
+  T.forEach((l, i) => {
+    if (d.offThin?.[i]) return;
+    ctx.strokeStyle = l.colour;
+    const px = w * scale, a = thinMuted(i, focus) ? MUTE_ALPHA : 1;
+    ctx.lineWidth = px < 1 ? 1 / scale : w;
+    ctx.globalAlpha = px < 1 ? a * Math.max(THIN_ALPHA, px) : a;
+    if (l.ferry) (ctx.lineCap = "butt"), ctx.setLineDash(THIN.dash.map((v) => v * d.pitch));
+    ctx.stroke((l.path ??= toPath(l.cmds)));
+    if (l.ferry) (ctx.lineCap = "round"), ctx.setLineDash([]);
+  });
+  ctx.globalAlpha = 1;
+  if (d.pitch * scale >= PILL_MIN_PX) paintThinStops(ctx, d, theme, focus);
+}
+
+/** T-3360: the thin lines' stops off any station: small white dots with the ink outline, as the local stops */
+function paintThinStops(ctx: CanvasRenderingContext2D, d: Drawing, theme: DiagramTheme, focus?: DiagramFocus): void {
+  if (THIN.stop === "none") return;
+  const r = THIN.stopR * d.stroke, o = THIN.stopOutline * d.stroke;
+  // "ring": the ink round the background's white; "dot": the line's colour
+  for (const [colour, rad] of (THIN.stop === "dot" ? [[null, r]] : [[theme.ink, r + o], [theme.pill, r]]) as [string | null, number][]) {
+    d.thin!.forEach((l, i) => {
+      if (d.offThin?.[i] || !l.stops.length) return;
+      ctx.fillStyle = colour ?? l.colour;
+      ctx.globalAlpha = thinMuted(i, focus) ? FADE_ALPHA : 1;
+      ctx.beginPath();
+      for (let q = 0; q < l.stops.length; q += 2) (ctx.moveTo(l.stops[q] + rad, l.stops[q + 1]), ctx.arc(l.stops[q], l.stops[q + 1], rad, 0, 2 * Math.PI));
+      ctx.fill();
+    });
+  }
   ctx.globalAlpha = 1;
 }
 
 /** what is under a point (layout units) at `scale` px a layout unit, `slop` px of reach: a station
  * (graph node) by its pill, else a drawn line and where along its ribbon (the point's index) */
-export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: number): { station: number } | { line: number; at: number } | null {
+export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: number): { station: number } | { line: number; at: number } | { thin: number } | null {
   const reach = slop / scale;
   if (d.pitch * scale >= PILL_MIN_PX) {
     let best = -1, bd = Infinity;
     d.pills.forEach((p, i) => {
+      if (d.offNode?.[d.pillOf[i]]) return;
       const [r, o] = pillSize(d, d.pillOf[i]);
       // measured from the outline, so a small stop beside a big one is still picked
       const dd = segDist(x, y, p[0], p[1], p[2], p[3]) - p[4] - r - o;
@@ -801,15 +871,21 @@ export function pickAt(d: Drawing, x: number, y: number, scale: number, slop: nu
     if (best >= 0) return { station: best };
   }
   let line = -1, at = -1, bd = d.stroke / 2 + reach;
-  d.ribbons.forEach((r, i) => {
+  const near = (r: Float64Array, i: number, set: (i: number, j: number) => void) => {
     for (let j = 0; j + 3 < r.length; j += 2) {
       // a cheap box test before the distance
       if (Math.min(r[j], r[j + 2]) - bd > x || Math.max(r[j], r[j + 2]) + bd < x || Math.min(r[j + 1], r[j + 3]) - bd > y || Math.max(r[j + 1], r[j + 3]) + bd < y) continue;
       const dd = segDist(x, y, r[j], r[j + 1], r[j + 2], r[j + 3]);
-      if (dd < bd) (bd = dd), (line = i), (at = j / 2);
+      if (dd < bd) (bd = dd), set(i, j);
     }
-  });
-  return line >= 0 ? { line, at } : null;
+  };
+  d.ribbons.forEach((r, i) => { if (!d.off?.[i]) near(r, i, (i, j) => ((line = i), (at = j / 2))); });
+  if (line >= 0) return { line, at };
+  // T-3360: then a bus or ferry line, which the rail lines cover
+  let thin = -1;
+  bd = (d.stroke * THIN.w) / 2 + reach;
+  d.thin?.forEach((l, i) => { if (!d.offThin?.[i]) near(l.ribbon, i, (i) => (thin = i)); });
+  return thin >= 0 ? { thin } : null;
 }
 
 function segDist(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {

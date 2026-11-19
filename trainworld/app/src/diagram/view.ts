@@ -53,6 +53,11 @@ import { dailyRiders } from "../map/trackHover";
 import { factRow, lineBullet } from "../map/trackTagRows";
 import { TAG_OFFSET_PX, tagLines } from "../map/labelLayout";
 import { ACTION_KEYS, BUS_KEY, FERRY_KEY, TOOL_KEYS, TRIP_KEY } from "../ui/toolKeys";
+import { hiddenLines, hideBuses } from "../game/lineVisibility";
+import { hidden } from "../map/visibility";
+import type { ThinIn } from "./thin";
+import { THIN_BOX_PAD } from "./busGraph";
+import { stationsById, stopsById } from "../game/world";
 
 /** station names are this many CSS px, as the map's, times the interface scale */
 const NAME_PX = 12;
@@ -74,6 +79,27 @@ export const diagramWidth = signal((() => {
     return Number.isFinite(v) && v >= WIDTH_MIN && v <= WIDTH_MAX ? v : WIDTH_MIN;
   } catch { return WIDTH_MIN; }
 })());
+/** T-3360: the kinds of line drawn (the diagram's mode buttons); kept per browser */
+export type DiagramMode = "train" | "tram" | "bus" | "ferry";
+const MODES_STORE = "anitabuilder-diagram-modes";
+export const diagramModes = signal<Record<DiagramMode, boolean>>((() => {
+  const all = { train: true, tram: true, bus: true, ferry: true };
+  try {
+    const v = JSON.parse(localStorage.getItem(MODES_STORE) ?? "null");
+    if (v && typeof v === "object") for (const k of Object.keys(all) as DiagramMode[]) if (v[k] === false) all[k] = false;
+  } catch { /* all shown */ }
+  return all;
+})());
+const ALL_MODES: Record<DiagramMode, boolean> = { train: true, tram: true, bus: true, ferry: true };
+/** the kinds of line a game has; the mode buttons show, and count, only when it has two or more */
+export function lineKinds(w: { save: { lines: { id: string }[] }; lineStats: Record<string, { bus?: { ferry?: unknown }; tram?: boolean } | undefined> } | null): Set<DiagramMode> {
+  const has = new Set<DiagramMode>();
+  for (const l of w?.save.lines ?? []) {
+    const s = w!.lineStats[l.id];
+    if (s) has.add(s.bus?.ferry ? "ferry" : s.bus ? "bus" : s.tram ? "tram" : "train");
+  }
+  return has;
+}
 export const DIAGRAM_KEY = "m";
 /** a pitch this many CSS px when the diagram first opens */
 const START_PITCH_PX = 7;
@@ -126,7 +152,7 @@ function nearestNode(s: Shown, lng: number, lat: number, among?: Iterable<number
 }
 
 /** a region laid out (T-3448): its sig, the seq it came with, its stations' keys and whether its water was asked for */
-type LaidOut = Part & { seq: number; sig: string; keys: Set<number>; water: boolean };
+type LaidOut = Part & { seq: number; sig: string; keys: Set<number>; water: boolean; frame: ZoneFrame; box: [number, number, number, number]; thinSig?: string; thinAsk?: number };
 
 /** of `among`, the node whose place in `xs`, `ys` is nearest (x, y); -1 for none */
 function nearestOf(xs: ArrayLike<number>, ys: ArrayLike<number>, x: number, y: number, among: Iterable<number>): number {
@@ -177,7 +203,10 @@ function namesOf(g: DiagramGraph): DiagramNames {
   const byId = new Map((w?.save.stations ?? []).map((s) => [s.id, s]));
   const stops = new Map<string, number>();
   for (const l of w?.save.lines ?? []) for (const s of l.stops) stops.set(s, (stops.get(s) ?? 0) + 1);
+  // T-3360: a network of buses and ferries alone has no names
+  const thinOnly = g.lines.length > 0 && g.lines.every((l) => l.bus || l.ferry);
   const text = Array.from(g.key, (key) => {
+    if (thinOnly) return "";
     const id = String(key), c = cx.of.get(id), members = c === undefined ? [id] : cx.members[c];
     return pickName(members.flatMap((m) => {
       const s = byId.get(m);
@@ -200,7 +229,8 @@ const BORDER_COLOUR = "#73798b";
 /** T-2168: the frame from mercator to graph metres, by the stations' own places (so it never depends on the
  * anchor the graph was built at), and the box of their lng, lat; null without stations */
 function zoneFrame(g: DiagramGraph): { frame: ZoneFrame; box: [number, number, number, number] } | null {
-  const byId = new Map((world.peek()?.save.stations ?? []).map((s) => [s.id, s]));
+  // T-3360: a bus stop is a node of a network with no rail near it
+  const wv = world.peek(), byId = wv ? stopsById(wv) : new Map<string, { lng: number; lat: number }>();
   const k = g.k / EARTH_C;
   let fx = 0, fy = 0, c = 0, w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
   g.key.forEach((key, i) => {
@@ -242,6 +272,8 @@ interface Shown {
   parts: LaidOut[];
   partOf: Int32Array;
   base: number[];
+  /** T-3360: a line's number to its thin lines (indices into `d.thin`) */
+  thinOf: Map<number, number[]>;
 }
 
 function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64Array, y: Float64Array, parts: LaidOut[], partOf: Int32Array, base: number[]): Shown {
@@ -262,21 +294,110 @@ function indexShown(graph: DiagramGraph, d: Drawing, names: NamePlan, x: Float64
     const id = String(key), c = cx.of.get(id);
     for (const m of c === undefined ? [id] : cx.members[c]) nodeOf.set(m, i);
   });
-  return { graph, d, names, x, y, drawnOf, stopping, stops, nodeOf, parts, partOf, base };
+  const thinOf = new Map<number, number[]>();
+  d.thin?.forEach((l, i) => thinOf.set(l.id, [...(thinOf.get(l.id) ?? []), i]));
+  return { graph, d, names, x, y, drawnOf, stopping, stops, nodeOf, parts, partOf, base, thinOf };
 }
 
-/** the drawn lines a selection stands for, and its station's node; null where it has none here */
-function selectedOn(s: Shown, sel: Selection): { lines: number[]; node: number } | null {
+/** the drawn lines a selection stands for, its thin lines (T-3360), and its station's node; null where it has none here */
+function selectedOn(s: Shown, sel: Selection): { lines: number[]; node: number; thin: number[] } | null {
   if (!sel) return null;
   if (sel.kind === "station") {
     const k = s.nodeOf.get(sel.station);
-    return k === undefined ? null : { lines: s.stopping[k], node: k };
+    return k === undefined ? null : { lines: s.stopping[k], node: k, thin: [] };
   }
   let nums: number[] = [];
   if (sel.kind === "line" || sel.kind === "train") nums = [Number(sel.line)];
   else if (sel.kind === "group") nums = (lineGroups(world.peek()?.save.lines ?? []).get(sel.group) ?? []).map((l) => l.num);
-  const lines = nums.flatMap((n) => s.drawnOf.get(n) ?? []);
-  return lines.length ? { lines, node: -1 } : null;
+  const lines = nums.flatMap((n) => s.drawnOf.get(n) ?? []), thin = nums.flatMap((n) => s.thinOf.get(n) ?? []);
+  return lines.length || thin.length ? { lines, node: -1, thin } : null;
+}
+
+/** T-3360, T-3785: what the mode buttons and the lines hidden on the map leave out of drawing `d` (its lines, the stations
+ * whose every line is left out, its thin lines); null when nothing is */
+function offOf(s: Shown, modes: Record<DiagramMode, boolean>, hid: ReadonlySet<number>): Pick<Drawing, "off" | "offNode" | "offThin"> | null {
+  const g = s.graph, d = s.d;
+  const kindOff = (l: { bus?: boolean; ferry?: boolean; tram?: boolean }) => !modes[l.ferry ? "ferry" : l.bus ? "bus" : l.tram ? "tram" : "train"];
+  let any = false;
+  const off = new Uint8Array(d.lineOf.length);
+  d.lineOf.forEach((li, i) => { const l = g.lines[li]; if (kindOff(l) || hid.has(l.id)) (off[i] = 1), (any = true); });
+  const offNode = new Uint8Array(g.key.length);
+  if (any) s.stopping.forEach((ls, k) => { if (ls.length && ls.every((i) => off[i])) offNode[k] = 1; });
+  const offThin = new Uint8Array(d.thin?.length ?? 0);
+  let anyThin = false;
+  d.thin?.forEach((l, i) => { if (!modes[l.ferry ? "ferry" : "bus"] || hid.has(l.id)) (offThin[i] = 1), (anyThin = true); });
+  return any || anyThin ? { ...(any ? { off, offNode } : {}), ...(anyThin ? { offThin } : {}) } : null;
+}
+
+/** T-3360: the bus and ferry lines each laid-out region draws thin, in its graph's metres: a line goes with the region
+ * holding most of its stations, else most of its stops within the region's box; a bus or ferry line the graph lays out
+ * itself (a network with no rail near it) is not one */
+function thinInputs(parts: readonly LaidOut[]): ThinIn[][] {
+  const w = world.peek(), out: ThinIn[][] = parts.map(() => []);
+  if (!w || !parts.length) return out;
+  const inGraph = new Set<number>();
+  for (const p of parts) for (const l of p.graph.lines) if (l.bus || l.ferry) inGraph.add(l.id);
+  const cx = complexes.peek();
+  /** per part, a station id to its node */
+  const nodeOf = parts.map((p) => {
+    const m = new Map<string, number>();
+    p.graph.key.forEach((key, i) => {
+      const id = String(key), c = cx.of.get(id);
+      for (const s of c === undefined ? [id] : cx.members[c]) m.set(s, i);
+    });
+    return m;
+  });
+  for (const l of w.save.lines) {
+    const st = w.lineStats[l.id], b = st?.bus;
+    if (!b || st.status === "broken" || inGraph.has(l.num) || b.stops.length < 2) continue;
+    let best = -1, score = 0;
+    parts.forEach((p, pi) => {
+      let at = 0, inBox = 0;
+      const [x0, y0, x1, y1] = p.box;
+      for (const s of b.stops) {
+        if (s.station >= 0 && nodeOf[pi].has(String(s.station))) at++;
+        if (s.lng >= x0 - THIN_BOX_PAD && s.lng <= x1 + THIN_BOX_PAD && s.lat >= y0 - THIN_BOX_PAD && s.lat <= y1 + THIN_BOX_PAD) inBox++;
+      }
+      const sc = at * 1e4 + inBox;
+      if (sc > score) (score = sc), (best = pi);
+    });
+    if (best < 0) continue;
+    const [fx, fy, k] = parts[best].frame;
+    const xy = (lng: number, lat: number): [number, number] => { const [mx, my] = toMerc01(lng, lat); return [(mx - fx) * k, -(my - fy) * k]; };
+    const route = new Float64Array(b.routeLL.length);
+    for (let i = 0; i + 1 < b.routeLL.length; i += 2) [route[i], route[i + 1]] = xy(b.routeLL[i], b.routeLL[i + 1]);
+    const stops = new Float64Array(b.stops.length * 2), node = new Int32Array(b.stops.length);
+    b.stops.forEach((s, i) => {
+      [stops[2 * i], stops[2 * i + 1]] = xy(s.lng, s.lat);
+      node[i] = s.station >= 0 ? nodeOf[best].get(String(s.station)) ?? -1 : -1;
+      // a port beside a station drawn here meets its pill (the Staten Island Ferry at South Ferry and St. George)
+      if (node[i] < 0 && b.ferry) {
+        const g = parts[best].graph;
+        let bd = PORT_STATION_M ** 2;
+        for (let q = 0; q < g.key.length; q++) {
+          const dd = (g.x[q] - stops[2 * i]) ** 2 + (g.y[q] - stops[2 * i + 1]) ** 2;
+          if (dd < bd) (bd = dd), (node[i] = q);
+        }
+      }
+    });
+    out[best].push({ id: l.num, colour: l.colour.toLowerCase(), ferry: !!b.ferry, route, stops, node });
+  }
+  return out;
+}
+
+/** a ferry port this near a station drawn on the diagram (m) is drawn at its pill */
+const PORT_STATION_M = 400;
+
+/** a string that changes when a region's thin lines do */
+function thinSig(ins: readonly ThinIn[]): string {
+  let h = 0x811c9dc5;
+  const add = (v: number) => (h = Math.imul(h ^ (Math.round(v * 100) | 0), 16777619));
+  for (const l of ins) {
+    add(l.id), add(l.ferry ? 1 : 0);
+    for (let i = 0; i < l.colour.length; i++) add(l.colour.charCodeAt(i));
+    for (const a of [l.route, l.stops, l.node]) { add(a.length); for (let i = 0; i < a.length; i++) add(a[i]); }
+  }
+  return `${ins.length}:${h >>> 0}`;
 }
 
 /** the nodes a selection's lines stop at, or its station */
@@ -340,7 +461,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   /** the regions laid out, by their sig: the plan's, and old ones drawn until the region that replaces them is */
   const parts = new Map<string, LaidOut>();
   /** per layout asked for, its region's sig and whether its water was asked for */
-  const sigOfSeq = new Map<number, { sig: string; water: boolean }>();
+  const sigOfSeq = new Map<number, { sig: string; water: boolean; frame: ZoneFrame; box: [number, number, number, number] }>();
   const send = (graphs: DiagramGraph[]) => {
     lastGraphs = graphs;
     const c = live.map?.getCenter(), water = diagramWater.peek();
@@ -364,7 +485,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     busy = true;
     // the rubber sheet (T-2568, T-2580), from the water masks of the zones its box meets (T-2591)
     const sheet = { packs: DATA_BASE, zones: zonesTouching(...sheetZoneBox(next.box)).map((c) => c.id), ...(perfOff("carryWasm") ? { carryJs: true } : {}) };
-    sigOfSeq.set(++seq, { sig: next.sig, water: diagramWater.peek() });
+    sigOfSeq.set(++seq, { sig: next.sig, water: diagramWater.peek(), frame: next.frame, box: next.box });
     worker!.postMessage({ kind: "graph", graph: next.graph, names: next.names, seq, frame: next.frame, zones: newZones(next.box), water: diagramWater.peek(), sheet, keep: [...parts.values()].map((p) => p.seq) } satisfies ToDiagram);
   };
   /** the parts drawn and how each is placed, as last composed */
@@ -408,6 +529,30 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     diagramReady.value = true;
     if (!placed) place();
     draw();
+    askThin(list);
+  };
+  // T-3360: each region's bus and ferry lines, fitted by the layout worker into the layout it already has, asked again
+  // only when they change
+  let thinAsks = 0;
+  const askThin = (list: LaidOut[]) => {
+    if (!worker) return;
+    const ins = thinInputs(list);
+    list.forEach((p, i) => {
+      const sig = thinSig(ins[i]);
+      if (sig === p.thinSig) return;
+      (p.thinSig = sig), (p.thinAsk = ++thinAsks);
+      worker!.postMessage({ kind: "thin", seq: p.seq, lines: ins[i], ask: p.thinAsk } satisfies ToDiagram);
+    });
+  };
+  /** what the mode buttons and hidden lines leave out of what is shown, kept while they and the drawing are the same */
+  let offKey: [Shown, Record<DiagramMode, boolean>, number] | null = null, offNow: ReturnType<typeof offOf> = null;
+  const masked = (d: Drawing): Drawing => {
+    const s = shown;
+    if (!s) return d;
+    // a mode set in another game counts only while its button shows
+    const modes = lineKinds(world.peek()).size < 2 ? ALL_MODES : diagramModes.peek();
+    if (!offKey || offKey[0] !== s || offKey[1] !== modes || offKey[2] !== hidden.v) (offKey = [s, modes, hidden.v]), (offNow = offOf(s, modes, hidden.lines));
+    return offNow ? { ...d, ...offNow } : d;
   };
   /** the part a message from the worker is for */
   const partOfSeq = (s: number): LaidOut | undefined => {
@@ -493,6 +638,13 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
           if (p && diagramWater.peek()) (p.d.water = e.data.water), compose();
           return;
         }
+        if (e.data.kind === "thin") {
+          const p = partOfSeq(e.data.seq);
+          // for checks: how long the last fit took and how many lines it drew
+          (window as unknown as { twThin: unknown }).twThin = { ms: e.data.ms, n: e.data.thin.length };
+          if (p && p.thinAsk === e.data.ask) (p.d.thin = e.data.thin.length ? e.data.thin : undefined), compose();
+          return;
+        }
         if (e.data.kind === "sheet") {
           // for checks: the last sheet, its places and lattice (nothing draws it yet)
           (window as unknown as { twSheet: unknown }).twSheet = e.data;
@@ -507,7 +659,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
         busy = false;
         const { graph, layout, drawing: d, names } = e.data, asked = sigOfSeq.get(e.data.seq);
         sigOfSeq.delete(e.data.seq);
-        if (asked) parts.set(asked.sig, { graph, x: layout.x, y: layout.y, d, names, seq: e.data.seq, sig: asked.sig, keys: new Set(graph.key), water: asked.water });
+        if (asked) parts.set(asked.sig, { graph, x: layout.x, y: layout.y, d, names, seq: e.data.seq, sig: asked.sig, keys: new Set(graph.key), water: asked.water, frame: asked.frame, box: asked.box });
         compose();
         const s = shown;
         // for checks and `?debug=1`: the last layout's figures and how to frame a station
@@ -560,7 +712,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     placed = true;
     const c = live.map?.getCenter();
     const on = selectedOn(s, selection.peek());
-    const among = on ? selectedNodes(s, on) : undefined;
+    // a bus or ferry line drawn thin has no nodes: the complex nearest the map's centre
+    const nodes = on ? selectedNodes(s, on) : [], among = nodes.length ? nodes : undefined;
     const best = c ? nearestNode(s, c.lng, c.lat, among) : among?.[0] ?? 0;
     cx = s.x[best] ?? 0;
     cy = s.y[best] ?? 0;
@@ -570,9 +723,9 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   const back = () => {
     const s = shown, map = live.map;
     if (!s || !map || !moved) return;
-    const on = selectedOn(s, selection.peek());
-    const k = nearestOf(s.x, s.y, cx, cy, on ? selectedNodes(s, on) : s.graph.key.keys());
-    const st = world.peek()?.save.stations.find((x) => x.id === String(s.graph.key[k]));
+    const on = selectedOn(s, selection.peek()), nodes = on ? selectedNodes(s, on) : [];
+    const k = nearestOf(s.x, s.y, cx, cy, nodes.length ? nodes : s.graph.key.keys());
+    const w = world.peek(), st = w && stopsById(w).get(String(s.graph.key[k]));
     if (!st) return;
     map.jumpTo({ center: [st.lng, st.lat] });
     activeCity.value = zoneAt(st.lng, st.lat);
@@ -587,7 +740,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     focusKey = [sel, hot];
     const on = selectedOn(s, sel);
     focus = on
-      ? { lines: new Set(on.lines), stations: new Set(selectedNodes(s, on).concat(on.lines.flatMap((i) => s.stops[i]))), selected: new Set(on.node >= 0 ? [on.node] : []), hot }
+      ? { lines: new Set(on.lines), stations: new Set(selectedNodes(s, on).concat(on.lines.flatMap((i) => s.stops[i]))), selected: new Set(on.node >= 0 ? [on.node] : []), hot, thin: new Set(on.thin) }
       : hot >= 0 ? { lines: null, stations: null, selected: new Set(), hot } : undefined;
     return focus;
   };
@@ -610,7 +763,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
       return;
     }
     const f = focusNow();
-    const cn = shown.names.cities, d = widened(shown.d, diagramWidth.peek());
+    const cn = shown.names.cities, d = masked(widened(shown.d, diagramWidth.peek()));
     // the city and zone names under the lines (T-2438, T-2521, T-2640)
     paint(ctx, d, canvas.width, canvas.height, cx, cy, scale * dpr, t, f, cn && ((c) => paintCityNames(c, cn, d.pitch, canvas.width, canvas.height, cx, cy, scale * dpr, dpr, { ink: t.place, font: t.font }, { d, plan: shown!.names })));
     // the map's station names: its ink with a halo of the background
@@ -633,6 +786,14 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     try { localStorage.setItem(WATER_STORE, on ? "1" : "0"); } catch { /* this visit only */ }
     if (!on) return void draw();
     if (shown && lastGraphs && [...parts.values()].some((p) => !p.water)) send(lastGraphs);
+  });
+  // T-3360, T-3785: the mode buttons and the lines hidden on the map are drawn at once (map/visibility.ts `hidden` is
+  // brought up to date from the same signals by main.ts before the frame)
+  effect(() => {
+    const m = diagramModes.value;
+    void hiddenLines.value, hideBuses.value;
+    try { localStorage.setItem(MODES_STORE, JSON.stringify(m)); } catch { /* this visit only */ }
+    if (diagramShown.peek()) draw();
   });
   effect(() => {
     const m = diagramWidth.value;
@@ -670,14 +831,15 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 
   // ---- the pointer: drag to pan, wheel to zoom about the pointer, click and hover as on the map
   /** what is under a point, CSS px in the canvas */
-  const hitAt = (px: number, py: number): { station: number } | { line: number; at: number } | null => {
+  const hitAt = (px: number, py: number): { station: number } | { line: number; at: number } | { thin: number } | null => {
     const s = shown;
     if (!s || !scale) return null;
     const ox = px - canvas.clientWidth / 2, oy = py - canvas.clientHeight / 2;
     const x = cx + ox / scale, y = cy - oy / scale;
-    const hit = pickAt(widened(s.d, diagramWidth.peek()), x, y, scale, PICK_SLOP_PX);
-    if (hit && "station" in hit) return hit;
-    const named = nameAt(s.names, s.d, ox, oy, cx, cy, scale);
+    const hit = pickAt(masked(widened(s.d, diagramWidth.peek())), x, y, scale, PICK_SLOP_PX);
+    // a bus stop of a network of buses alone is no station: nothing to pick, as on the map
+    if (hit && "station" in hit) return s.d.dot?.[hit.station] && !stationsById(world.peek()!).has(stationOf(hit.station)) ? null : hit;
+    const named = nameAt(s.names, masked(s.d), ox, oy, cx, cy, scale);
     return named >= 0 ? { station: named } : hit;
   };
   /** the station a node stands for: its key, the lowest member's id on the lines */
@@ -696,6 +858,14 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     } else if (s && w && hit && "line" in hit) {
       const num = s.graph.lines[s.d.lineOf[hit.line]].id, l = w.save.lines.find((x) => x.num === num);
       if (l) lines = lineTag(l, s, hit.line, hit.at);
+    } else if (s && w && hit && "thin" in hit) {
+      // a bus or ferry line: the map's bullet and name
+      const num = s.d.thin![hit.thin].id, l = w.save.lines.find((x) => x.num === num);
+      if (l) {
+        const row = factRow(lineBullet(l), Object.assign(document.createElement("span"), { textContent: l.name }));
+        row.style.gap = "5px";
+        lines = [row];
+      }
     }
     if (!lines) {
       if (tagShown) (tag.style.display = "none"), (tagShown = false);
@@ -712,6 +882,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     const hit = hitAt(px, py);
     selection.value = !hit ? null
       : "station" in hit ? { kind: "station", station: stationOf(hit.station) }
+      : "thin" in hit ? { kind: "line", line: String(s.d.thin![hit.thin].id) }
       : { kind: "line", line: String(s.graph.lines[s.d.lineOf[hit.line]].id) };
   };
   let drag: { x: number; y: number; x0: number; y0: number; far: boolean } | null = null;
@@ -782,7 +953,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
     afterPaint(() => {
       let blobbing = false;
       try {
-        const out = picture(s, theme());
+        const out = picture(s, theme(), masked);
         if (!out) return;
         blobbing = true;
         // for checks: the picture's size and pitch
@@ -807,8 +978,8 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
 
 /** The whole diagram on a canvas of its own, unselected, at the largest names' level of at most
  * PICTURE_PITCH_PX a pitch that keeps it within PICTURE_MAX_SIDE and PICTURE_MAX_AREA. */
-function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; place: string; font: string; edge?: string; border?: string }): { canvas: HTMLCanvasElement; pitchPx: number } | null {
-  const d = widened(s.d, diagramWidth.peek()), levels = s.names.levels;
+function picture(s: Shown, t: { bg: string; ink: string; pill: string; selected: string; text: string; place: string; font: string; edge?: string; border?: string }, mask: (d: Drawing) => Drawing): { canvas: HTMLCanvasElement; pitchPx: number } | null {
+  const d = mask(widened(s.d, diagramWidth.peek())), levels = s.names.levels;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const r of d.ribbons) for (let j = 0; j + 1 < r.length; j += 2) (x0 = Math.min(x0, r[j])), (x1 = Math.max(x1, r[j])), (y0 = Math.min(y0, r[j + 1])), (y1 = Math.max(y1, r[j + 1]));
   if (!(x1 > x0) || !(y1 > y0)) return null;

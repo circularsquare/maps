@@ -19,8 +19,9 @@ import { placeCityNames, type CityNames, type ZoneLabel } from "../diagram/cityN
 import { groundSea, realWater, type GroundSea, type RealWater, type WaterMask } from "../diagram/waterReal";
 import type { DiagramWater } from "../diagram/water";
 import { rubberSheet, sheetWarp, type Sheet } from "../diagram/sheet";
-import { riverCellM, setCarrySolver, SHEET_LINES, sheetLines, sheetMap, type CarrySolverMaker, type SheetLines } from "../diagram/sheetLines";
+import { carryMap, riverCellM, setCarrySolver, SHEET_LINES, sheetLines, sheetMap, type CarrySolverMaker, type SheetLines } from "../diagram/sheetLines";
 import { wasmCarrySolver } from "../diagram/carryWasm";
+import { thinLines, type ThinDrawn, type ThinIn } from "../diagram/thin";
 
 /** per graph node: its name, and its width in CSS px on one line and on two (0 where not split) */
 export type DiagramNames = { text: string[]; width: Float32Array; width2: Float32Array; fontPx: number };
@@ -33,11 +34,14 @@ export type ZoneTowns = { name: string; width: number; x: number; y: number; big
 export type ToDiagram =
   | { kind: "graph"; graph: DiagramGraph; names: DiagramNames; seq: number; zones?: ZoneOutlines; frame: ZoneFrame; water: boolean; sheet: { packs: string; zones: string[]; carryJs?: boolean }; keep?: number[] }
   | { kind: "zones"; zones: ZoneOutlines }
-  | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] };
+  | { kind: "towns"; towns: { id: string; list: ZoneTowns }[] }
+  /** T-3360: the bus and ferry lines for a layout still drawn, its graph's metres */
+  | { kind: "thin"; seq: number; lines: ThinIn[]; ask: number };
 export type FromDiagram =
   | { kind: "layout"; seq: number; graph: DiagramGraph; layout: DiagramLayout; drawing: Drawing; names: NamePlan; ms: { drawing: number; names: number; borders: number; cities: number } }
   | { kind: "borders"; seq: number; borders: DiagramBorders; cities?: CityNames }
   | { kind: "water"; seq: number; water: DiagramWater }
+  | { kind: "thin"; seq: number; thin: ThinDrawn[]; ask: number; ms: number }
   | { kind: "progress"; seq: number; share: number }
   | { kind: "sheet"; seq: number; sheet: Sheet; ms: { masks: number; ground: number; sheet: number; lines: number; rivers: number; map: number }; lines: SheetLines["info"] & { map: Record<string, number> } };
 
@@ -89,6 +93,14 @@ const keep = (zones: ZoneOutlines) => {
 
 self.onmessage = async (e: MessageEvent<ToDiagram>) => {
   const m = e.data;
+  if (m.kind === "thin") {
+    // fitted into the layout as drawn, from the map carried with its stations; nothing is laid out again
+    const s = shown.get(m.seq);
+    if (!s) return;
+    const t0 = performance.now(), thin = thinLines(m.lines, carryMap(s.sheet.lines.carry), s.sheet.lines.k, s.layout, s.d);
+    (self as unknown as Worker).postMessage({ kind: "thin", seq: m.seq, thin, ask: m.ask, ms: performance.now() - t0 } satisfies FromDiagram);
+    return;
+  }
   if (m.kind === "zones" || m.kind === "towns") {
     if (m.kind === "zones") keep(m.zones);
     else for (const t of m.towns) towns.set(t.id, t.list);

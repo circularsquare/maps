@@ -36,6 +36,7 @@ import { besideSamples } from "../map/corridors";
 import { packCross } from "../map/markData";
 import { bandEdges, diagramGraph } from "../diagram/graph";
 import { nodeLngLat, regionGroups } from "../diagram/regions";
+import { busGraph, stopsIn } from "../diagram/busGraph";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { readOutlinesForPlaces, type PackedOutlines } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
@@ -2793,6 +2794,31 @@ function postDiagram() {
       boxes.forEach((b, r) => { if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && !pts[r].has(id)) pts[r].set(id, q); });
     }
     graphs = groups.map((_, r) => build(ls[r], pts[r]));
+  }
+  // T-3360: bus and ferry lines with no stop near a rail region's stations are a network of their own, laid out as rail is;
+  // the rest are drawn thin into the rail layout by the page (diagram/thin.ts) and change no graph
+  const buses = lines.filter((l) => l.ok && l.bus && l.bus.stops.length >= 2);
+  if (buses.length) {
+    const { lng, lat } = nodeLngLat(whole), boxes = (whole.key.length ? groups : []).map((nodes) => {
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const i of nodes) (b[0] = Math.min(b[0], lng[i])), (b[1] = Math.min(b[1], lat[i])), (b[2] = Math.max(b[2], lng[i])), (b[3] = Math.max(b[3], lat[i]));
+      return b;
+    });
+    const lone = buses.filter((l) => !stopsIn(l, boxes));
+    if (lone.length) {
+      const frameOf = (ls: ClockLine[]) => {
+        let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+        for (const l of ls) for (const p of l.bus!.stops) (w = Math.min(w, p.lng)), (e = Math.max(e, p.lng)), (s = Math.min(s, p.lat)), (n = Math.max(n, p.lat));
+        return makeAnchor(Math.round((w + e) / 2), Math.round((s + n) / 2), 0);
+      };
+      const all = busGraph(lone, complexOfNodes(), frameOf(lone)), byId = new Map(lone.map((l) => [l.id, l]));
+      const bg = regionGroups(all);
+      for (const nodes of bg.length > 1 ? bg : [null]) {
+        if (!nodes) { graphs.push(all); break; }
+        const inIt = new Set(nodes), ls = all.lines.filter((l) => l.chain.length && inIt.has(l.chain[0])).map((l) => byId.get(l.id)!);
+        graphs.push(busGraph(ls, complexOfNodes(), frameOf(ls)));
+      }
+    }
   }
   diagramPts = keep;
   send({ kind: "diagramGraph", graphs, ms: performance.now() - t0 }, graphs.flatMap((g) => [g.key.buffer, g.x.buffer, g.y.buffer, g.ea.buffer, g.eb.buffer, g.first.buffer, g.on.buffer]));

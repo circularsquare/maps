@@ -17,7 +17,7 @@ Its icon is a map folded in three panels (T-2615). Hover: "Show network diagram 
 nothing else is left for it to undo: a question, a drag and the selection come first (`main.ts`, T-2416).
 The diagram is a 2D canvas over the map; the dock and top bar stay, and the map's upper left gives way to
 the diagram's own row (`DiagramTopLeft`): a cross back to the map (hover "Show map (M)", T-2416), the
-water button, the line width slider (hover "Line width", T-2888), the
+mode buttons (below), the water button, the line width slider (hover "Line width", T-2888), the
 save button once a drawing is up, the busy tag, and during the first layout
 the demand status's tag: "Calculating diagram" and a thin loading bar (hover: its
 percent) fed by the layout worker's progress (T-2235; A to 0.2 of the layout, B to 0.7, the routing
@@ -87,6 +87,38 @@ of 0.625 device px, no pills (T-2272).
 
 The drawing is made in the layout worker and posted with the layout: each line's path as commands,
 made a Path2D on the page when first painted.
+
+## Buses and ferries
+
+`diagram/thin.ts`, `diagram/busGraph.ts` (T-3360; Anita, 2026-11-17: "really thin lines, stops not labelled ... draw them
+as the last step, and not have them impact distortion ... relaxed in cases where people are building bus-only
+networks"). The rail lines alone make the graph, so a network's rail layout is the same with or without its buses.
+
+- **Thin, after the layout.** Once a region is laid out, the page sends the layout worker the bus and ferry lines of that
+  region (a line goes with the region holding most of the stations it stops at, else most of its stops within 0.05
+  degrees of the region's stations' box; `thinInputs` in view.ts), in its graph's metres. Each route is carried through
+  the map the carry made (`carryMap`), moved so it meets the pill of every station it stops at (a ferry port within 400 m
+  of a station drawn there counts as that station) and every other stop's own carried place (a ferry's route ends at its
+  berth, its port is on land), the moves between two stops blended along the way; fitted with runs at 0, 45 and 90
+  degrees between the stations (within 2 pitches, a ferry 4, corners rounded at 2 pitches), and posted back. Nothing is
+  laid out again, and a change to the buses alone asks for this only. The names were placed without them, so a thin line
+  can pass under a name.
+- **Drawn** under the rail lines, whose casings cut them where they cross: 0.3 of a stroke wide in the line's colour, a
+  ferry dashed (1.6 pitches on, 1.1 off); each stop off a station a small white dot with the ink outline (0.36 and 0.14 of
+  a stroke), no name. Muted with the rail lines while something else is picked; a click selects the line, a hover shows
+  its bullet and name.
+- **No rail near** (no stop within 0.05 degrees of any rail region's stations' box): those lines make a graph of their own
+  (`busGraph`: their stops the nodes, a station's one per complex; each hop's route kept to 15 m), split into regions as
+  rail is and laid out the same way, so they pull on their own layout; drawn as thin, their stops as the dots above, no
+  names; a stop that is no station is not picked, as on the map.
+
+**Mode buttons** (Anita, 2026-11-17: "toggle their visibility, as well as tram and train visibility ... with buttons on
+the top. can use icons"): one per kind of line the network has (trains, trams, buses, ferries; none when it has one
+kind, and a kind hidden in another game then counts for nothing), each pressed while shown, hovers "Show trains",
+"Show trams", "Show buses", "Show ferries"; kept per browser as `anitabuilder-diagram-modes`. A **line hidden on the map** (the Lines tab's hide mode, Settings' buses and ferries switch)
+is left out the same way (T-3785). Both act at paint time: the line is not drawn, nor the pills and names of stations
+whose every line stopping there is left out, and it cannot be picked; the layout keeps the room it had, so a toggle is
+instant.
 
 ## Zone borders
 

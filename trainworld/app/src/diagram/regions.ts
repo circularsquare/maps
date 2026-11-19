@@ -243,7 +243,8 @@ export function mergeParts(parts: Part[], at: Placed[]): Part & { partOf: Int32A
       for (let q = g.first[e]; q < g.first[e + 1]; q++) on.push(g.on[q] + lb), stroke.push(g.stroke[q] + lb);
     }
     // the drawing
-    for (const l of pd.lines) d.lines.push({ colour: l.colour, fast: l.fast, tram: l.tram, oneWay: l.oneWay, cmds: moveCmds(l.cmds, t) });
+    for (const l of pd.lines) d.lines.push({ colour: l.colour, fast: l.fast, tram: l.tram, oneWay: l.oneWay, bus: l.bus, ferry: l.ferry, cmds: moveCmds(l.cmds, t) });
+    if (pd.dot) (d.dot ??= new Uint8Array(nn)).set(pd.dot, nb);
     for (const li of pd.lineOf) d.lineOf.push(li + lb);
     for (const r of pd.ribbons) d.ribbons.push(movePairs(r, t));
     for (const c of pd.chainAt) d.chainAt.push(c);
@@ -252,6 +253,7 @@ export function mergeParts(parts: Part[], at: Placed[]): Part & { partOf: Int32A
     for (const q of pd.passages) d.passages.push([q[0] * t.s + t.ox, q[1] * t.s + t.oy, q[2] * t.s + t.ox, q[3] * t.s + t.oy]);
     for (const k of pd.passageOf) d.passageOf.push(k + nb);
     for (const k of pd.hooks) d.hooks.push(k + nb);
+    for (const l of pd.thin ?? []) (d.thin ??= []).push({ id: l.id, colour: l.colour, ferry: l.ferry, cmds: moveCmds(l.cmds, t), ribbon: movePairs(l.ribbon, t), stops: movePairs(l.stops, t) });
     const b = pd.box;
     (d.box[0] = Math.min(d.box[0], b[0] * t.s + t.ox)), (d.box[1] = Math.min(d.box[1], b[1] * t.s + t.oy)), (d.box[2] = Math.max(d.box[2], b[2] * t.s + t.ox)), (d.box[3] = Math.max(d.box[3], b[3] * t.s + t.oy));
     if (pd.borders) {
