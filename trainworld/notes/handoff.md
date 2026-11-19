@@ -22,8 +22,9 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      notes/T-3746.md). Needs a checker (rebuild charges money), then land.
 1b. T-3620 DONE and committed 1c2ff68f: 17 countries (Caribbean, Bolivia, Paraguay) joined, freeze 20261119-020305;
    c013 changelog new text for her; Guyana, Suriname, French Guiana left of the Americas (her call); filed T-3754-56.
-   T-3542 stage 1a LANDED c54415b0 (WASM rebuilt). stnames24 (Sonnet) merging master into tree stnames and moving
-   it to level 24; then land stnames, 8800 rebuild, smoke, push, shonei-server `go test` with no override.
+   T-3542 stage 1a LANDED c54415b0, T-3750 LANDED 2e962957 (level 24, c014). 8800 = afe1ac79 (~08:45 UTC), smoke
+   passed 29, pushed; shonei-server `go test ./...` passes against master (f5309bf ready, not pushed or deployed:
+   ask her for the deploy before the v0.4.3 publish). 8800's serve.py was found down ~08:35 and restarted.
    Also started ~08:20 UTC: periods1b (Opus, T-3542 stage 1b UI, tree periods1b, port 6139; needs a checker),
    T-3755 committed a14a79b7 (Haiti none; Trinidad UIS 20,889 kept over the ministry's ~44k). T-3756 LANDED ff80b743.
 2b. advfares BUILT (T-3739 archived by it; changelog advfares-1; 14 new strings in its report r-5579da31, to show
