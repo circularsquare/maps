@@ -2649,8 +2649,8 @@ function sendRows(): boolean {
   return true;
 }
 
-/** `service`: only the service changed (a train count, T-229): the renderer's buffers are not built
- * again, which was about half the edit's time on New York's real network.
+/** `service`: only the service changed (a train count, T-229) or a name (T-3803): the renderer's buffers are not
+ * built again, which was about half the edit's time on New York's real network.
  * `split`: the trips' next hour a task later (`sendTrips`), as after an edit (T-1407) */
 function sendState(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false) {
   if (midLoad) return; // (`restart` sends the loaded game's)
@@ -2678,7 +2678,7 @@ function sendState(service = false, effectiveAt?: number, trips = true, ghostFir
     keepPosted("meta", r.meta);
     postState(s, [s.render.phases.buffer, r.meta.buffer, r.samples.buffer, r.lineTable.buffer]);
     timing.post = performance.now() - t1;
-    sendTrips(split);
+    if (trips) sendTrips(split);
     return;
   }
   // The renderer's buffers are built here too, so the main thread only uploads them (T-063).
@@ -4578,8 +4578,9 @@ async function handleMessage(msg: ToClock) {
     // real save), which the schedule window does not need: its rows go first. The answer stays after the full state,
     // and the follow-up is not held as a stop click's is.
     if (!stops && !early && op.op === "setPeriods") sendRows();
-    // T-3793: a name edit's rows (the world: labels, panels, lists) now and its answer after them; its full state follows
-    // unheld (on a big save that network is most of a second, and nothing drawn in it has a name)
+    // T-3793: a name edit's rows (the world: labels, panels, lists) now and its answer after them; its state follows
+    // unheld. T-3803: that state leaves the renderer's network as it is, as a train count's does (nothing drawn in it
+    // has a name, and on a big save building it took most of a second, which the next edit waited behind)
     const renamed = named && !early && !service && !msg.rows && sendRows();
     if (renamed) answer();
     // T-1407: the state, the trips and the boarding hour (and the answer, so the world is up to
@@ -4594,7 +4595,11 @@ async function handleMessage(msg: ToClock) {
     };
     later(() => {
       timing = {};
-      sendState(service, effectiveAt, trips, early, true);
+      // (a full one after all if the drawn pieces are to move to a new anchor meanwhile)
+      const nameState = renamed && !shiftFrom;
+      sendState(service || nameState, effectiveAt, trips, early, true);
+      // the schematic reads its names off the world when a graph comes, so the same graph again
+      if (nameState && diagramOn) postDiagram();
       if (service) serviceEditMs = performance.now() - tA;
       rest();
     }, () => { if (!early && !stops && !renamed) failAnswer(msg); }, early ? EARLY_WAIT_MS : 0,

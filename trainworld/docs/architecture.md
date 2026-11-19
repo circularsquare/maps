@@ -120,8 +120,9 @@ Web first, so it can be shared as a link.
   stop click has been answered for 500 ms (the panels ask a dozen after each world). The clicked marker is drawn
   in its new tier at the click (`StopMarkers.guessClick`, settled when the edit is answered) and a rows world
   rebuilds no demand layers (`worldIsRows`) [T-3159]. **A name edit's rows go first too** (`nameOnly`: a station,
-  complex or line renamed, a station bound): rows, then the answer, then the full state at once, unheld and with no
-  trips, since the network drawn has no names and no train's run changed [T-3793]. The clicks wait in the page in order (`queueStopEdit` in
+  complex or line renamed, a station bound): rows, then the answer, then a state at once, unheld, with no trips and
+  the renderer's network left as it is (a train count's kind, the schematic's graph sent again for its names), since
+  the network drawn has no names and no train's run changed [T-3793, T-3803]. The clicks wait in the page in order (`queueStopEdit` in
   game/world.ts), each holding its line and game stamp from the click: stop editing ending sends them all (the busy
   tag says "Saving stops" meanwhile) and only a game loaded since drops one, on the page or, for one sent before the
   page heard of the load, in the worker (T-3734); an undo or redo, a save, leaving the game
