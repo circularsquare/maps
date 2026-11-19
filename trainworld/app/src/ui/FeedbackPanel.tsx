@@ -18,6 +18,8 @@ import {
 import { acceptedType, dropImage, imageField, ImageTooBig, MAX_IMAGES, prepareImage, type FeedbackImage } from "../game/feedbackImages";
 import { loadFailure } from "../game/loading";
 import { stateReport } from "../game/diagnostics";
+import { saveStateReport } from "../game/saveState";
+import { saveSlotsState } from "../workers/clockClient";
 import { display } from "../game/ui";
 import { graphicsReport } from "../map/graphicsInfo";
 import { language, t, tDate } from "../i18n";
@@ -49,7 +51,7 @@ export function browserOf(ua: string): string {
 /** T-2826: what a report carries beside the message: the game version, the browser, whether the device
  * reports its memory (Chrome and Edge do, Firefox and Safari do not) and how much, and why demand last
  * failed to load, if it did. T-2853: and the game's language, so Anita knows what to answer in. */
-function reportContext(): Record<string, string> {
+async function reportContext(): Promise<Record<string, string>> {
   const dm = typeof navigator === "undefined" ? undefined : (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   const ctx: Record<string, string> = {
     version: BUILD,
@@ -64,6 +66,8 @@ function reportContext(): Record<string, string> {
   ctx.state = stateReport();
   ctx.graphics = graphicsReport();
   ctx.currency = display.peek().currency;
+  // T-3774
+  ctx.saves = await saveStateReport(saveSlotsState.peek().active);
   return ctx;
 }
 
@@ -164,7 +168,7 @@ function FeedbackPanel() {
     setState("sending"); setMsg("");
     try {
       const pics = room ? await Promise.all(images.map(imageField)) : [];
-      await sendFeedback({ name: name.trim(),message: message.trim(), context: reportContext(), kind: kind || undefined, images: pics });
+      await sendFeedback({ name: name.trim(),message: message.trim(), context: await reportContext(), kind: kind || undefined, images: pics });
       images.forEach(dropImage); setImages([]);
       setMessage(""); setKind(""); setState("");
       close();

@@ -729,6 +729,12 @@ const UNREADABLE_PREFIX = "unreadable-";
  * slot list, the tiers and their trimming); deleted with the slot. */
 export const unreadableKey = (slot: string, at: number) => `${UNREADABLE_PREFIX}${at}:${slot}`;
 
+/** T-3774: how many copies are kept aside as unreadable, across every slot (a count for feedback reports). */
+export async function countUnreadable(): Promise<number> {
+  const keys = await req((await store("readonly")).getAllKeys());
+  return keys.filter((k) => typeof k === "string" && k.startsWith(UNREADABLE_PREFIX)).length;
+}
+
 export async function deleteSlot(key: string): Promise<void> {
   const s = await store("readwrite");
   const done = committed(s.transaction);
