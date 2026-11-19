@@ -295,6 +295,19 @@ async function loadList() {
   } catch (e) { fail(e); }
 }
 
+// T-3770: build id -> release, from tools/feedback-inbox/builds.json (beside this page; deploy.py adds
+// each publish). Without it a report shows its bare id.
+let builds = {};
+fetch("builds.json").then((r) => r.json()).then((j) => { builds = j.builds || {}; if (current) renderThread(); }).catch(() => {});
+function buildLabel(id) {
+  if (typeof id !== "string" || !/^[a-z0-9]{6,10}$/.test(id)) return id;
+  if (builds[id]) return `${builds[id]} (${id})`;
+  const n = parseInt(id, 36);
+  let best = null;
+  for (const b of Object.keys(builds)) { const m = parseInt(b, 36); if (m < n && (best === null || m > parseInt(best, 36))) best = b; }
+  return best ? `after ${builds[best]} (${id})` : id;
+}
+
 function detail(label, value) { return value ? [el("dt", { text: label }), el("dd", { text: value })] : []; }
 
 function renderThread() {
@@ -313,7 +326,7 @@ function renderThread() {
   dl.append(...detail("sent", when(t.created)));
   const ctx = t.context || {};
   const first = ["version", "browser", "memory", "language", "lastFailure"];
-  for (const k of first) dl.append(...detail(k === "lastFailure" ? "last failure" : k, ctx[k]));
+  for (const k of first) dl.append(...detail(k === "lastFailure" ? "last failure" : k, k === "version" ? buildLabel(ctx[k]) : ctx[k]));
   for (const k of Object.keys(ctx).sort()) if (!first.includes(k)) dl.append(...detail(k, ctx[k]));
 
   const actions = el("div", { class: "actions" },

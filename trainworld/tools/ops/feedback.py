@@ -15,6 +15,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "release"))
+import builds  # noqa: E402  T-3770: "v0.4.1 (mwlo7xyt)" for a build id
+
 BASE = "https://market.anita.garden/trainworld/inbox/"
 KEY_FILE = Path.home() / "shonei-feedback-admin-key.txt"
 EXT = {"image/webp": "webp", "image/jpeg": "jpg", "image/png": "png"}
@@ -42,7 +45,7 @@ def show(tid, shot=False):
     t = get("thread/" + tid)
     print(f"== {t['id']}  {t['kind']}  {t['status']}  {who(t)} ({t.get('owner') or '?'})  {when(t['created'])}")
     for k, v in sorted((t.get("context") or {}).items()):
-        print(f"   {k}: {v}")
+        print(f"   {k}: {builds.label(v) if k == 'version' else v}")
     if t.get("contact"):
         print("   contact given")
     for m in t.get("messages") or []:

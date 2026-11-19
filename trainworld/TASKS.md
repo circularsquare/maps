@@ -103,12 +103,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: A cold run takes 4.4-5.1 min at 4 jobs, against the 3 min aimed for; most of it is zone_water's 368 windows.
   - Goal: A cold run is near 3 min.
   - Other: See notes/T-1992.md.
-- T-3757 [P1] {L:memory} Saves of 6-14 GB crash players' games (taking, 2026-11-19, agent savesize)
-  - Context: You, 2026-11-19: "people are having issues with their saves getting too big and crashing. on their computers they're reporting big saves that say like 6GB or even like 14GB used ... i tried loading someones 14GB save and it was using 6GB of ram on my system." Then: the number is the game's estimated memory usage readout, and "its a general pattern that sometimes people are reporting way higher "estimated memory usage" than on our end."
-  - Goal: The cause named and fixed so saves stay their normal size, with existing huge saves loading.
 - T-3767 [P1] {L:timetables} Five service periods for new lines, buses and ferries (taking, 2026-11-19, agent periods5)
   - Context: You, 2026-11-19: "do the auto headways for new lines work with 5 period schedules? they should. currently it just says "14 min, 22 min and 85 min" even if u have 5 intervals", and "the 5 intervals should work for buses/ferries too". T-3542 gave rail lines 3, 4 or 5 period rows; the schedule window opens on rail lines only.
   - Goal: A new line's automatic headways fill every period the game uses (five values with five rows), and bus and ferry lines take 3, 4 or 5 periods like rail lines.
+- T-3768 [P2] {L:small-fixes} Settings controls touching, and a layout check (taking, 2026-11-19, agent settingslayout)
+  - Context: Your pad, 2026-11-19: "in settings the trains run on left/right and switchto sandbox button are touching, they should have margin (we should maybe have a programmatic way of laying this stuff out so i dont have to keep pointing out minor settings layout issues)".
+  - Goal: Every settings row and button has the same gap from one shared rule, and a standing check fails when two controls in a panel touch or overlap.
+- T-3769 [P2] {L:new-countries} Real world network starts for Nagoya and more Japanese cities (taking, 2026-11-19, agent realjapan)
+  - Context: Your pad, 2026-11-19: "we should probably add nagoya and some other japanese cities to real-world network sandbox starts. given how skewed the playerbase is currently". Japan has Tokyo, Osaka and Sendai of 37; `pipeline/realauto.py` builds one for any pack (T-3225).
+  - Goal: Nagoya, Fukuoka, Sapporo, Hiroshima and any other Japanese metro with a pack and a real network worth playing are in the Real world network list and load playable.
 - T-3766 [P2] {L:fares} {after:T-3758} Fare multiples by city
   - Context: You, 2026-11-19: "some people also wanna do fares by city... i guess we can support that maybe? seems like it should be similar to the country fare mult. i think we can just have it that you have to pick either country mults or city mults. cant do both, which would be weird." A player, 11-19: "I would like to adjusts the fare prices for each city individually." Waits for the fare zone trees (T-3758, T-3740 Z2) to land, since they touch the same panels.
   - Goal: Advanced fares has a choice of country or city multiples (never both); in city mode each city has its own multiple, applied the way a country's is.

@@ -15,12 +15,13 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
      some machines, far above ours ("a general pattern"); she saw 6 GB RAM loading a 14 GB-readout save. Checker.
    - zonerule (Opus, T-3758, tree zonerule, 6155): zones counted lowest-to-highest the route touches; per-line
      zone/distance mode kept on copy; may take a save level. Checker. Lands AFTER Z2; fix the wiki rule line then.
-   - namebind (T-3759, tree namebind): done incl. her two changes (setting per player, far out shows the complex's
-     name); level 27 LSN1, server needs it. Checker namechk running; land after it passes.
-   - zonechk2 checking T-3740 Z2 (tree zonefares2, 6162/6163). Her look 14:20: keep B's look but crisp vector
-     Voronoi (not pixelled cells), no overlaps, tint only in painting mode (already), every station/complex shows
-     its zone number in painting mode. After the checker, a FRESH agent on tree zonefares2 does that (zonefares2
-     itself is at 480k), then land Z2 (strings asked, a-? not filed: she reviews on landing).
+   - From her pad 15:00: settingslayout (Opus, T-3768, tree, 6172: one spacing rule for settings, a check that
+     fails on touching controls) and realjapan (Sonnet, T-3769, tree, 6173: realauto starts for Nagoya, Fukuoka,
+     Sapporo, Hiroshima and more; writes only new cities under data/packs/real).
+   - busverify: bus and ferry fleet/headway edits recalculate on master (28 clean steps). Its train control read a
+     4.14 min departure gap at every count (it calls its read invalid for trains): a short probe someday.
+   - 8800 = e764f8a9 since ~15:10.
+   - namebind T-3759 landed 9fa4bf6e (checker 5/5 pass; c019); T-956 Safari 1c1b3d21 (c018); T-3765 1e793d04 (c017).
    - ttport (Opus, T-3346 stage 2, 6159): compares tree tt2 with T-3542 first; may stop and recommend closing.
    - focusload (Opus, T-3686, tree focusload, 6160): focused city slow on big saves; measure, cut save-size steps.
    - commentab (T-3726): setup done (r-c119e957; <S> = maps-6b's scratchpad\commentab, scoring.md there). Arms run
@@ -32,13 +33,18 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    - maps-6f's: namechk (checker on tree namebind, 6166; both of her changes made, r-d4dfa211); busverify (6167,
      master: do bus/ferry fleet edits recalculate? all reports were v0.4.1, T-3704 fixed it in v0.4.2);
      periods5 (Opus, T-3767 P1, tree periods5, 6169: new lines' auto headways for every period, buses and ferries
-     get 3/4/5 periods; same schedule code as ttport); zonerulechk (checker on tree zonerule, 6170/6171;
-     zonerule r-8206de31 done, level 27 LFD1, still lands after Z2).
+     get 3/4/5 periods; same schedule code as ttport). zonerule (T-3758, r-8206de31) checker PASSED (quad twin
+     unchecked; after export/reload a ferry's figure moved 3286 -> 3207, likely load vs live solve, unchased):
+     lands right after Z2, LFD1 renumbered to level 28. fbversion (Sonnet, T-3770, main tree tools only).
+   - zonelook (Opus, T-3740 Z2, tree zonefares2, 6162; maps-6f's): zonechk2 passed (r-c5657fdf); now her look
+     (vector Voronoi B, zone numbers while painting) plus save/reload and station delete/move cases. Then land Z2,
+     then zonerule.
    - T-956 Safari bubbles landed 11-19 (blank overlay canvases hidden); not reproducible here, real Safari check
      at publish.
-   - Landed 1e793d04 T-3765 legacy speed setting (c017); 8800 = 1e793d04 since ~14:36.
-2. Save levels: master 26 (LFZ1). namebind wants 27 (LSN1), zonerule may want one, ttport may: renumber at landing
-   in landing order; then shonei-server needs each (srvlevel's pattern: c19200d; deploy on her yes, not overnight).
+2. Save levels: master 27 (LSN1, namebind landed 9fa4bf6e). zonerule's LFD1 becomes 28 at landing; periods5 and
+   ttport may want more. Then ONE shonei-server change for all new levels (srvlevel's pattern: c19200d; deploy on
+   her yes, not overnight), before the publish.
+   Before the publish: her playtest list (docs/orchestrator.md, her 11-19 ask).
    Open server ask a-2026-11-19-10: deploy 5bf10c7 (twstats minutes per city, T-3382).
 3. Tonight: T-3762 world run: Guyana, Suriname, French Guiana and every Caribbean island group left out (Guadeloupe,
    Martinique, USVI, Saint Kitts, Sint Maarten/Saint-Martin, Caribbean Netherlands, Montserrat, Anguilla, BVI,
@@ -51,8 +57,8 @@ Diary: notes/handoff-log.md. Her local time is UTC-5.
    after clean scans; T-3354 needs her drag. Open ask a-2026-11-19-1 (T-3746 text).
 
 ## Her words
-- 11-19 afternoon: "player complaints take precedent over other new features"; v0.4.3 still aims to ship with the
-  five-period schedules and advanced fares. Fares by city (T-3766): country or city multiples, never both.
+- 11-19 afternoon: "player complaints take precedent over other new features", "only applies to like actual bugs";
+  v0.4.3 still aims to ship with the five-period schedules and advanced fares. Fares by city (T-3766): country or city multiples, never both.
 - 11-19: "the schedule periods look really nice!", "fare fixes also look good"; no changelog text acks needed
   (she reviews the changelog separately; CLAUDE.md); "caribbean" covers the whole Caribbean in the changelog.
 - 11-19 zones: "if a trip from zone 2 to 2 counts as 1 that does feel pretty weird to me"; lines choose zone or

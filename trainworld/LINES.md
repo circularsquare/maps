@@ -56,7 +56,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 
 - community | Community | Sharing games with other players: the community saves, view only links.
 - feedback | Feedback | The in-game feedback form and replies: screenshots, phone layout.
-- twstats | Play stats | The twstats page: who is playing, where, and for how long.
+- twstats | Play stats | The twstats page: who is playing, where, and for how long. | done:2026-11-19
 - open-source | Open source and mods | The public trainsworld repo, contributors' pull requests, and mod support.
 - accounts-server | Accounts and server | Accounts, security, server backups and the website.
 - achievements | Achievements | Achievements and other marks of progress: sea crossings, named crossings, city stamps.

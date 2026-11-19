@@ -64,6 +64,8 @@ sys.path.insert(0, os.path.join(MAPS, "religiondots", "tools"))
 import web_wrap  # noqa: E402  front matter and the site's analytics include
 sys.path.insert(0, HERE)
 import keep_assets  # noqa: E402  T-2962: the previous build's hashed files stay beside the new ones
+sys.path.insert(0, os.path.join(HERE, "release"))
+import builds as builds_table  # noqa: E402  T-3770: build id -> release
 
 DIST = os.path.join(MAPS, ".tw-snap", "trainworld", "app", "dist")
 WEBSITE = os.path.join(os.path.dirname(MAPS), "website")
@@ -328,6 +330,22 @@ def published_builds(dest, stamp):
     return [stamp] + [b for b in old if isinstance(b, str) and b != stamp][:BUILDS_KEPT - 1]
 
 
+def record_release(dist, dry):
+    """T-3770: tools/feedback-inbox/builds.json says which release each build id is (the feedback inbox shows "v0.4.1
+    (mwlo7xyt)"). The release is the newest one in updates.ts, which `changelog.py publish` wrote before the build."""
+    stamp = build_stamp(dist)
+    try:
+        ts = open(os.path.join(TW, "app", "src", "ui", "updates.ts"), encoding="utf-8").read()
+        release = re.search(r'^    version: "(v[\d.]+)"', ts, re.M).group(1)
+    except (OSError, AttributeError):
+        release = None
+    if not stamp or not release:
+        print("   builds.json: build id or release not found, not recorded")
+        return
+    done = False if dry else builds_table.record(stamp, release)
+    print(f"   feedback-inbox/builds.json: {stamp} = {release}" + (" (dry run)" if dry else "" if done else " (already listed)"))
+
+
 def copy_site(dist, dest, base, dry):
     """dist minus packs/ into dest (the website's trainsworld/), index.html wrapped for Jekyll, and the published
     builds list with this build first."""
@@ -568,6 +586,7 @@ def main():
     print("\nwebsite")
     copy_site(a.dist, os.path.join(WEBSITE, SITE_DIR), f"{PUBLIC}/{v}/", a.dry_run)
     write_redirects(os.path.join(WEBSITE, OLD_DIR), a.dry_run)
+    record_release(a.dist, a.dry_run)
 
     if not a.dry_run and not a.skip_data:
         print("\nverifying the data")
